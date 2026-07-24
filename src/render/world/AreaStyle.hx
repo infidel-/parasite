@@ -2,6 +2,17 @@ package render.world;
 
 import render.RenderConfig;
 
+// per-facade entrance-cover geometry (Entrances.placeCover). `rise` is the cover's VERTICAL size and
+// its meaning follows that facade's coverShape: 0 = half-barrel radius, 1 = slab thickness,
+// 2 = eave→ridge rise. sizes are world units except the two fractions
+typedef CoverDim = {
+  widthFrac:Float,  // cover width as a fraction of the door quad side (~ door-panel width, not wall-wide)
+  depth:Float,      // how far it juts OUT from the wall
+  rise:Float,       // vertical size — read per coverShape (barrel radius / slab thickness / gable rise)
+  yFrac:Float,      // cover BOTTOM sits at this fraction of the door quad height
+  matTile:Float,    // world units per material-swatch tile (never stretch the swatch)
+};
+
 // per-area render knobs: the texture sets + facade behavior the world sub-builders
 // (Ground/Buildings/Windows/Roofs) would otherwise hardcode. DEFAULT reuses the exact
 // same TEXTURES arrays and RenderConfig constants the code reads today (identical
@@ -47,8 +58,16 @@ class AreaStyle {
   public var doorsWorn:Array<String>;    // service/maintenance door art for worn faces
   public var doorCovers:Array<String>;   // material swatch for the lintel/canopy over a front door
   public var coverShape:Array<Int>;      // which cover geometry a facade uses: 0 half-barrel, 1 flat metal slab, 2 inset sloped cap
+  public var coverDims:Array<CoverDim> = null; // per facade: that cover's size knobs; null array or null entry = the shape's RenderConfig defaults
   // --- bloom (post-process, per area) ---
   public var bloomThreshold:Float = RenderConfig.BLOOM_THRESHOLD; // luminance a pane must exceed before it visibly blooms — WHEN the glow starts. lower = glows sooner/easier. per-area (downtown can differ from residential); note bloom is one global pass, so this affects all glow in that area's scene
+  // --- debug/editor naming ---
+  // per-facade name used to build the Poly class strings (wall-$n, roof-$n, storefront-$n, door-$n,
+  // door-cover-$n) and the BDump facade label. MUST describe what THIS style puts in that slot: the
+  // classes are the UV editor's handles and Poly.info is first-write-wins across areas, so a style
+  // that borrows the residential names for different art makes the editor claim the wrong texture
+  // and silently share one class between two unrelated surfaces. defaults to the residential naming
+  public var facadeNames:Array<String> = RenderConfig.FACADE_NAMES;
   public var specialSlot:Int;            // metal-warehouse facade slot (gable roof, roll-up door, no windows); -1 = none
   public var roofDowntown:Bool;          // flat roof + mechanical penthouse instead of residential parapet/gable
   public var penthouseWall:String;       // downtown rooftop bulkhead wall (roofDowntown only)
@@ -58,6 +77,35 @@ class AreaStyle {
   // is this facade the metal-warehouse special slot (gable/door/windowless)?
   public inline function isSpecial(f:Int):Bool
     return specialSlot >= 0 && f == specialSlot;
+
+// name of a facade slot in THIS style, for Poly class strings and debug labels
+  public inline function facadeName(f:Int):String
+    return facadeNames[f % facadeNames.length];
+
+// entrance-cover size knobs for a facade slot, falling back to the shape's RenderConfig defaults
+  public function coverDim(f:Int):CoverDim
+    {
+      if (coverDims != null && coverDims[f] != null)
+        return coverDims[f];
+      return defaultCoverDim(coverShape[f]);
+    }
+
+// the historic per-shape cover sizes, straight off the RenderConfig globals. a style that says
+// nothing about a slot renders exactly what it did before coverDims existed
+  public static function defaultCoverDim(shape:Int):CoverDim
+    {
+      return {
+        widthFrac: RenderConfig.COVER_WIDTH_FRAC,
+        depth: RenderConfig.COVER_DEPTH,
+        rise: shape == 0 ? RenderConfig.COVER_BARREL_R
+          : shape == 2 ? RenderConfig.COVER_SLOPE_RISE
+          : RenderConfig.COVER_METAL_H,
+        // the flat slab rides at the door top: a thin sheet can't hide a door poking above it,
+        // so it sits higher than the thick covers' anchor
+        yFrac: shape == 1 ? 0.85 : RenderConfig.COVER_Y_FRAC,
+        matTile: RenderConfig.COVER_MAT_TILE,
+      };
+    }
 
   static var _default:AreaStyle;
   // the residential style — every field is the value/array the sub-builders use today

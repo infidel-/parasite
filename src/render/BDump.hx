@@ -25,7 +25,7 @@ class BDump {
     inline function ivs(a:Array<{a:Float, b:Float}>):String return a.length == 0 ? 'none' : [for (iv in a) '${Math.round(iv.a)}..${Math.round(iv.b)}'].join('+');
     var cov = render.world.Geom.coveredEdges(b);
     var shadow = ' shadowCut[+z=${ivs(cov[0])} -z=${ivs(cov[1])} +x=${ivs(cov[2])} -x=${ivs(cov[3])}]';
-    return '#$i col=${b.col} row=${b.row} w=${b.w} d=${b.d} floors=$floors facade=${b.facade % 2 == 1 ? 'brick' : 'plain'} roof=${b.roof} shapeKeep=${b.shapeKeep} winForce=${arr(b.winForce)} winBlock=${arr(b.winBlock)} skipWindowFloor=${b.skipWindowFloor} shop=${b.shop} open=${b.shopOpen} door=${b.shopDoor}$shadow';
+    return '#$i col=${b.col} row=${b.row} w=${b.w} d=${b.d} floors=$floors facade=${b.facade}:${render.world.WorldCtx.style.facadeName(b.facade)} roof=${b.roof} shapeKeep=${b.shapeKeep} winForce=${arr(b.winForce)} winBlock=${arr(b.winBlock)} skipWindowFloor=${b.skipWindowFloor} shop=${b.shop} open=${b.shopOpen} door=${b.shopDoor}$shadow';
   }
 
   // text dump of the tile map + buildings within radius r (world units) of (x,z)

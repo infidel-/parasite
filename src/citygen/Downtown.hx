@@ -20,8 +20,10 @@ class Downtown {
     return CELL * Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL);
 
   // try to emit a stepped setback tower into `out` from a leaf footprint: N concentric
-  // ground-anchored pieces, each tier inset per side and TALLER than the one below, so
-  // the narrower upper shafts rise out of the wider base's roofline (wedding-cake massing).
+  // pieces, each tier inset per side and TALLER than the one below, so the narrower upper
+  // shafts rise out of the wider base's roofline (wedding-cake massing). only the base
+  // reaches the ground — every tier above records its deck in buriedH and the renderer
+  // starts its box there (Buildings.build), so no shaft stands inside the tier below.
   // pieces are marked shapeKeep so the buried inner tiers survive the landlocked/blank-box
   // drops, and winForce'd on all sides so the exposed shafts get windows all round.
   // returns true if a tower was emitted; false (roll failed / footprint too small) lets

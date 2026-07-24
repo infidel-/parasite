@@ -61,7 +61,7 @@ class Entrances {
       // the style's door set is per facade; wrap for safety (identity on both current styles)
       var di = b.facade % doorTex.length;
       var tx = worn ? doorWornTex[di] : doorTex[di];
-      var k = RenderConfig.FACADE_NAMES[di];
+      var k = st.facadeName(di);
       // s = SQUARE quad side (square texture → no stretch); passed in (full face for front/composite, open-run-capped for side)
       var mat = tag(new MeshStandardMaterial({ map: tx, roughness: 1, metalness: 0,
         transparent: false, alphaTest: 0.5, // hand-painted alpha = cutout: discard the transparent wall surround (wall behind shows). matches windows
@@ -86,11 +86,12 @@ class Entrances {
     // thin tinted slab (lintel/canopy) just above a FRONT door, slightly wider, jutting out.
     // mirrors place()'s lateral (off) + normal (dir) math so it lines up with the door at (off,s).
     inline function placeCover(b:Building, f:{faceW:Float, rotY:Float, dir:Int, fx:Float, fz:Float}, off:Float, s:Float):Void {
-      var cw = s * RenderConfig.COVER_WIDTH_FRAC;                            // ~ door-panel width (not wall-wide)
-      var cd = RenderConfig.COVER_DEPTH;
-      var mt = RenderConfig.COVER_MAT_TILE;
       var di = b.facade % coverTex.length;
-      var k = RenderConfig.FACADE_NAMES[di];
+      var cv = st.coverDim(di);      // per-facade size knobs (style overrides the RenderConfig defaults)
+      var cw = s * cv.widthFrac;                                             // ~ door-panel width (not wall-wide)
+      var cd = cv.depth;
+      var mt = cv.matTile;
+      var k = st.facadeName(di);
       var ct = coverTex[di].clone();
       ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
       ct.needsUpdate = true;
@@ -102,27 +103,26 @@ class Entrances {
         if (f.dir < 2) cover.position.set(f.fx + off, y, f.fz + (f.dir == 0 ? outN : -outN));
         else cover.position.set(f.fx + (f.dir == 2 ? outN : -outN), y, f.fz + off);
       }
-      var anchor = s * RenderConfig.COVER_Y_FRAC; // cover BOTTOM sits here — just above the visible door, small gap
+      var anchor = s * cv.yFrac; // cover BOTTOM sits here — just above the visible door, small gap
       var cover:Mesh;
       switch (st.coverShape[di]) {
         case 0: // concrete: HALF-BARREL — half-cylinder, axis along door width, flat back on wall, curve bulges out
           ct.repeat.set(cw / mt, 1);
-          var R = RenderConfig.COVER_BARREL_R;
+          var R = cv.rise;                                                 // barrel radius = protrusion + vertical half-height
           var geo = new CylinderGeometry(R, R, cw, RenderConfig.COVER_ARC_SEG, 1, false, -Math.PI / 2, Math.PI);
           geo.rotateZ(Math.PI / 2);                                        // cylinder axis Y → X (along door width); retained half faces +z (outward)
           cover = new Mesh(geo, cmat);
           setPos(cover, Math.min(anchor + R, b.h - R), -RenderConfig.COVER_EMBED); // flat diameter vertical on wall; bottom at anchor
         case 2: // stone: sloped slate cap INSET into the wall — ridge buried, only the front slope shows (grows from the wall)
           ct.repeat.set(1, 1);                                             // UVs already world-tiled inside coverGableGeo
-          var geo = Roofs.coverGableGeo(cw, cd, RenderConfig.COVER_SLOPE_RISE, mt);
+          var geo = Roofs.coverGableGeo(cw, cd, cv.rise, mt);
           cover = new Mesh(geo, cmat);
-          setPos(cover, Math.min(anchor + 0.2, b.h - RenderConfig.COVER_SLOPE_RISE), -RenderConfig.COVER_EMBED); // ridge (local z=0) ~at wall → back half embedded; lifted a touch (inset slope reads higher than flat covers)
-        default: // brick: THIN flat painted-metal awning slab (metal = thin)
-          var ch = RenderConfig.COVER_METAL_H;
+          setPos(cover, Math.min(anchor + 0.2, b.h - cv.rise), -RenderConfig.COVER_EMBED); // ridge (local z=0) ~at wall → back half embedded; lifted a touch (inset slope reads higher than flat covers)
+        default: // brick / tower lobby: flat awning slab, thickness = cv.rise
+          var ch = cv.rise;
           ct.repeat.set(cw / mt, cd / mt);
           cover = new Mesh(new BoxGeometry(cw, ch, cd), cmat);
-          var by = s * 0.85; // sit at the door top: a thin sheet can't hide door poking above it, so ride higher than the thick covers' anchor
-          setPos(cover, Math.min(by + ch / 2, b.h - ch / 2), cd / 2 - RenderConfig.COVER_EMBED);
+          setPos(cover, Math.min(anchor + ch / 2, b.h - ch / 2), cd / 2 - RenderConfig.COVER_EMBED);
       }
       scene.add(cover);
     }

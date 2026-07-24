@@ -19,8 +19,8 @@ typedef Occ = {
   b:Building,
   minX:Float, maxX:Float, minZ:Float, maxZ:Float, maxY:Float, cx:Float, cz:Float,
   meshes:Array<FadeMesh>, fade:Float, target:Float,
-  plate:Mesh,   // flat ground fill marker, shown only while this building is faded
-  outline:Mesh  // glowing emissive band hugging the footprint edge (visible under any lighting)
+  plate:Mesh,   // flat ground fill marker, shown only while this building is faded (null for a setback tier — no ground footprint)
+  outline:Mesh  // glowing emissive band hugging the footprint edge (visible under any lighting; null with plate)
 };
 
 // fades a building to a translucent ghost while it sits between the camera and the player, so
@@ -68,8 +68,10 @@ class Occlusion {
             meshes: [],
             fade: 1.0,
             target: 1.0,
-            plate: makePlate(scene, c.x, c.z, b.w * CELL, b.d * CELL),
-            outline: makeOutline(scene, c.x, c.z, b.w * CELL, b.d * CELL),
+            // a setback tier stands on the deck of the tier below, not on the pavement — its
+            // markers would draw a second/third dashed rectangle nested inside the base tier's
+            plate: b.buriedH > 0 ? null : makePlate(scene, c.x, c.z, b.w * CELL, b.d * CELL),
+            outline: b.buriedH > 0 ? null : makeOutline(scene, c.x, c.z, b.w * CELL, b.d * CELL),
           });
           idxOf.set(b, i);
         }
@@ -564,10 +566,13 @@ class Occlusion {
       // footprint marker: fade-in the ground plate + glowing edge outline as the building goes
       // see-through (both hidden while solid). the outline self-emits so it reads under any lighting
       var faded = f < 0.999;
-      o.plate.visible = faded;
-      untyped o.plate.material.opacity = (1 - f) * C.plateAlpha;
-      o.outline.visible = faded;
-      untyped o.outline.material.opacity = (1 - f) * C.outlineAlpha;
+      if (o.plate != null)
+        {
+          o.plate.visible = faded;
+          untyped o.plate.material.opacity = (1 - f) * C.plateAlpha;
+          o.outline.visible = faded;
+          untyped o.outline.material.opacity = (1 - f) * C.outlineAlpha;
+        }
       // the fade SNAPS to its target within `snap` (crisp window bloom on solidify), so the ghost
       // must be fully OUT (solid) above `hi` and flat at the see-through `rest` below `lo` — else the
       // snap jump removes/adds a mid-opacity ghost in one frame = a pop. cross-dissolve only in

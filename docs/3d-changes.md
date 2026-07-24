@@ -1041,3 +1041,58 @@ OPAQUE and warns until its window alpha is hand-cut; `alphaTest 0.5` is a no-op 
 glow the whole cell meanwhile — degrades cleanly). In-engine visual pass still pending (needs a downtown
 area loaded): confirm sleek reads white-pier/dark-ribbon, podium solid, lobby entrance on-grid, no accent
 crash, `window.__check` 0 fails.
+
+## SHIPPED — Setback tiers start at their deck, not the street (2026-07-24)
+
+`Downtown.tryTower` emits N concentric pieces, and every one of them was a **ground-anchored** box: a
+tier's shaft ran all the way down through the tier below to the pavement. Invisible while solid, but two
+artifacts fell out of it. **(a)** Each tier is its own `Occ` record with its own fade, so a sightline that
+clipped the outer tier but missed the inner column left the outer see-through with a fully solid inner box
+standing inside it. **(b)** `Occlusion` builds a plate + dashed footprint outline per building, so a faded
+3-tier tower drew three nested dashed rectangles on the pavement.
+
+Fix is render-side only — the generator already recorded the deck height in `buriedH`, it was just being
+used for window-row skipping. `Buildings.build` now starts the box at `baseY = buriedH - CELL` with
+`boxH = b.h - baseY`, and `Occlusion` skips the plate/outline entirely when `buriedH > 0`. The one-CELL
+overlap below the deck matters twice: the box's bottom face would otherwise be exactly coplanar with the
+roof it lands on (z-fight), and `buriedH` is a CELL multiple, so the cell-locked window grid stays on its
+CELL boundary and the wall UV repeat stays integer. `wallH` and the merged shadow-caster bake follow
+`boxH`/`baseY`.
+
+Nothing else needed changing: the podium band was already skipped for `buriedH > 0`; `addGlassAccents`
+places instances at absolute world Y and already skips rows below `buriedH`; grime is skipped for
+cell-locked facades; `addGround`'s storefront band is skipped because tower tiers are `winForce`'d on all
+four sides; and an inset tier's faces are never street-adjacent, so `Entrances` never doored them.
+
+The `Occ` AABB is deliberately left spanning y `0..maxY` for buried tiers: over-reporting occlusion at
+street level makes an inner shaft fade in step with the base tier it stands on, which is the reading we
+want. Side benefit — the buried shaft geometry (~29% of a stepped tower's wall area) leaves the beauty and
+depth passes.
+
+## SHIPPED — Per-style facade names (Poly classes stopped lying) (2026-07-24)
+
+No visual change; this is a **debugging trap** removed. Every Poly class string (`wall-$n`, `roof-$n`,
+`storefront-$n`, `door-$n`, `door-cover-$n`) was built from the global `RenderConfig.FACADE_NAMES`
+= `['concrete','brick','stone','metal','sleek']`, which is the RESIDENTIAL slot order. Downtown reuses
+the same indices for different art, so slot 1 (stone, `wall-3.png`) was tagged `wall-brick` and slot 2
+(`downtown/glass-light.png`) was tagged `wall-stone`. Two consequences: `Poly.info` is first-write-wins
+across areas, so the UV editor reported the residential texture path for those classes; and
+`Poly.tex['wall-stone']` held residential stone AND downtown glass-light, so one wheel-scroll shifted
+both.
+
+Cost of the lie, measured: chasing why `COVER_SLOPE_RISE` "did nothing" on a downtown setback tower.
+`__dbg.find('door-cover-stone')` returned that tower's canopy, so the stone constant looked like the
+knob — but `door-cover-stone` in downtown is facade 2, `coverShape 1`, a `BoxGeometry` of height
+`COVER_METAL_H = 0.07`. The actual sloped cap on that seed lives under `door-cover-brick` (facade 1,
+`BufferGeometry`, y extent = `COVER_SLOPE_RISE` exactly). `BDump` had the same bug from the other
+direction (`facade % 2 == 1 ? 'brick' : 'plain'`).
+
+Fix: `AreaStyle.facadeNames` (defaults to `FACADE_NAMES`) + `facadeName(f)`, used by `Buildings`,
+`Entrances`, and `BDump` (which now prints `facade=<index>:<name>`, index first — the index is what code
+keys off). Downtown declares `['concrete','stone','glass-light','glass-dark','sleek']`, so slot 1 now
+correctly SHARES `wall-stone`/`door-stone`/`door-cover-stone` with residential (same art) while the glass
+towers get their own classes. `Roofs.brickMats` still uses `FACADE_NAMES` on purpose: it is reached only
+via `addParapet` (`!roofDowntown`), and it already hardcodes `RenderConfig.TEXTURES` for its texture path.
+
+Caveat: any localStorage UV edit under an old downtown class name is now orphaned — `PolyMeta.OVERRIDES`
+is empty, so nothing in-repo needed remapping.

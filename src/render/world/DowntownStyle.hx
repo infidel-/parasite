@@ -137,6 +137,21 @@ class DowntownStyle {
         'textures/downtown/door-cover-sleek.png',
       ];
       s.coverShape = [0, 2, 1, 1, 1]; // concrete half-barrel, stone inset cap, glass + sleek flat canopy
+      // per-slot cover sizes — `rise` means barrel radius (shape 0), gable rise (shape 2) or slab
+      // thickness (shape 1). the mid-rise slots hold the residential values; the three tower slots
+      // are the tunable ones (a 0.07 slab on a 30-storey lobby is the current, thin, look)
+      s.coverDims = [
+        { widthFrac: 0.7, depth: 0.8, rise: 0.5,  yFrac: 0.9,  matTile: 2.5 }, // 0 concrete: half-barrel
+        { widthFrac: 0.7, depth: 0.8, rise: 0.5,  yFrac: 0.9,  matTile: 2.5 }, // 1 stone: sloped cap
+        { widthFrac: 0.7, depth: 0.8, rise: 0.07, yFrac: 0.89, matTile: 2.5 }, // 2 glass-light: flat canopy
+        { widthFrac: 0.7, depth: 0.8, rise: 0.07, yFrac: 0.85, matTile: 2.5 }, // 3 glass-dark: flat canopy
+        { widthFrac: 0.7, depth: 0.8, rise: 0.07, yFrac: 0.85, matTile: 2.5 }, // 4 sleek: flat canopy
+      ];
+      // downtown reuses the facade indices for different art than residential, so it must name its
+      // own slots: slot 1 IS stone here (wall-3, residential's index 2) and slots 2/3 are the glass
+      // curtain walls. without this the UV editor labels a glass tower 'wall-stone' and folds it into
+      // the residential stone class
+      s.facadeNames = ['concrete', 'stone', 'glass-light', 'glass-dark', 'sleek'];
       s.bloomThreshold = 0.5;     // WHEN the skyscraper glow starts (luminance cutoff); lower = glows sooner. per downtown-area, separate from residential
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;

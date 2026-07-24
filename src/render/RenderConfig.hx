@@ -55,10 +55,13 @@ class RenderConfig {
   public static inline var DOOR_PATH_MAX_DEPTH = 5;  // a windowed wall with a clear straight path (≤ this many non-building tiles) to a road earns an extra door, even off the street
 
   // --- front-door entrance covers (thin per-facade lintel/canopy over each FRONT door) ----
+  // DEFAULTS ONLY. a style can override them per facade slot via AreaStyle.coverDims (see
+  // DowntownStyle) — these values are what a slot gets when it says nothing. COVER_EMBED and
+  // COVER_ARC_SEG stay global (not per-facade)
   public static inline var COVER_WIDTH_FRAC = 0.7; // cover width = this fraction of the door quad side (~ door-panel width, not wall-wide)
   public static inline var COVER_DEPTH = 0.8;  // how far it juts OUT from the wall (door sits 0.06 proud; cover overhangs it)
   public static inline var COVER_EMBED = 0.1;  // sink the back/bottom into wall+door so there is no seam/gap
-  public static inline var COVER_Y_FRAC = 0.8; // cover BOTTOM sits at this fraction of the door quad height — just above the visible door, small gap
+  public static inline var COVER_Y_FRAC = 0.9; // cover BOTTOM sits at this fraction of the door quad height — just above the visible door, small gap
   // per-facade cover geometry: brick = thin flat metal awning, stone = inset slope, concrete = half-barrel
   public static inline var COVER_METAL_H  = 0.07; // brick: thin painted-metal awning slab (metal reads thin)
   public static inline var COVER_SLOPE_RISE = 0.5; // stone: eave→ridge rise (inset so only the front slope shows)

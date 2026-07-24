@@ -103,9 +103,16 @@ class Buildings {
       // an integer number of cells). Needs a seamless single-window texture. Others tile normally.
       var wpc = st.winPerCell != null ? st.winPerCell[b.facade % st.winPerCell.length] : 0;
       var cellLock = wpc > 0;
+      // a setback tier starts at the DECK it rises out of, not at the street: a ground-anchored
+      // shaft stands inside the tier below, and shows through as a nested box the moment the outer
+      // tier fades (plus its own footprint marker on the pavement). one CELL of overlap below the
+      // deck buries the bottom face so it can't z-fight the roof it lands on, and keeps the
+      // cell-locked window grid on a CELL boundary (buriedH is a CELL multiple)
+      var baseY = b.buriedH > 0 ? b.buriedH - CELL : 0.0;
+      var boxH = b.h - baseY;
       var wallH = cellLock
-        ? imax(1, Math.round(b.h / (CELL / wpc)))
-        : imax(1, Math.round(b.h / RenderConfig.WALL_TILE));
+        ? imax(1, Math.round(boxH / (CELL / wpc)))
+        : imax(1, Math.round(boxH / RenderConfig.WALL_TILE));
       var clean = wallTex[b.facade % wallTex.length];
       var worn = wornTex[b.facade % wornTex.length];
       var cleanPath = st.walls[b.facade % st.walls.length];
@@ -116,7 +123,7 @@ class Buildings {
         cleanPath = st.metalWalls[mv]; wornPath = st.metalWorn[mv];
       }
       var masonry = b.facade == 1 || b.facade == 2; // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
-      var k = RenderConfig.FACADE_NAMES[b.facade];
+      var k = st.facadeName(b.facade);
       function faceMat(dir:Int, faceLen:Float):MeshStandardMaterial {
         var isWorn = Geom.isWornFace(b, dir);
         var base = isWorn ? worn : clean;
@@ -144,10 +151,10 @@ class Buildings {
         'roof-$k', '$k roof', st.roofBases[b.facade % st.roofBases.length]);
       // collapse the 6-material box to one draw call per distinct image (walls clean/worn + roof
       // -> ~3, from 6) by baking each face's UV transform; walls stay pixel-identical
-      var boxGeo = new BoxGeometry(wWorld, b.h, dWorld);
+      var boxGeo = new BoxGeometry(wWorld, boxH, dWorld);
       var boxMats:Array<Dynamic> = [px, nx, top, px, pz, nz];
       var box = new Mesh(boxGeo, render.Poly.flattenBox(boxGeo, boxMats, 'wall-$k', '$k wall', cleanPath));
-      box.position.set(center.x, b.h / 2, center.z);
+      box.position.set(center.x, baseY + boxH / 2, center.z);
       box.userData.b = b; box.userData.bidx = bi; // Inspector: alt+click → record
       // the building volume is the real shadow caster (moon + nearby lamps) and receiver (neighbour
       // shadows land on its walls). wall-overlay bands stay flush with the box faces, so they don't
@@ -166,7 +173,7 @@ class Buildings {
       var vbase = Std.int(shadowPos.length / 3);
       for (i in 0...(bpos.count : Int)) {
         shadowPos.push(bpos.getX(i) + center.x);
-        shadowPos.push(bpos.getY(i) + b.h / 2);
+        shadowPos.push(bpos.getY(i) + baseY + boxH / 2);
         shadowPos.push(bpos.getZ(i) + center.z);
       }
       for (k in 0...(bgeo.index.count : Int)) shadowIdx.push(vbase + bgeo.index.getX(k));
@@ -372,7 +379,7 @@ class Buildings {
     var mats = [for (i in 0...texes.length)
       tag(new MeshStandardMaterial({ map: texes[i], roughness: 1, metalness: 0,
         polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
-        'storefront-' + RenderConfig.FACADE_NAMES[i % RenderConfig.FACADE_NAMES.length],
+        'storefront-' + st.facadeName(i),
         'storefront band', st.storefronts[i])];
     for (b in buildings) {
       if (b.shop >= 0 || st.isSpecial(b.facade)) continue; // shop face is its own storefront; metal warehouse has doors, no band
