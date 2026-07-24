@@ -128,12 +128,13 @@ class DowntownStyle {
         service,
         service,
       ];
-      var glassCover = 'textures/downtown/door-cover-glass.png';
+      // canopy swatches: light tower gets the gunmetal sheet, dark tower its own near-black
+      // blackened-bronze one (the shared sheet read too pale against the blue-glass wall)
       s.doorCovers = [
         'textures/door-cover-concrete.png',
         'textures/door-cover-stone.png',
-        glassCover,
-        glassCover,
+        'textures/downtown/door-cover-glass.png',
+        'textures/downtown/door-cover-glass-dark.png',
         'textures/downtown/door-cover-sleek.png',
       ];
       s.coverShape = [0, 2, 1, 1, 1]; // concrete half-barrel, stone inset cap, glass + sleek flat canopy
