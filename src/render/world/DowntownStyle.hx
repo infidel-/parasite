@@ -157,6 +157,11 @@ class DowntownStyle {
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;
       s.penthouseWall = 'textures/downtown/wall-mechanical.png';
+      // roughly a third of the roofs big and tall enough for one trade their bulkhead + AC clutter
+      // for a landing deck — rare enough that a lit pad still reads as a landmark from the street
+      s.helipadTex = 'textures/downtown/helipad.png';
+      s.helipadChance = 0.35;
+      s.helipadFacades = [2, 3]; // glass skyscrapers only (light + dark); not concrete/stone mid-rises or the sleek high-rise
       _s = s;
     }
     return _s;

@@ -1096,3 +1096,39 @@ via `addParapet` (`!roofDowntown`), and it already hardcodes `RenderConfig.TEXTU
 
 Caveat: any localStorage UV edit under an old downtown class name is now orphaned — `PolyMeta.OVERRIDES`
 is empty, so nothing in-repo needed remapping.
+
+## SHIPPED — Rooftop helipad decal on tall towers (2026-07-25)
+
+A chance for a tall, wide downtown roof to carry a **centred helicopter landing deck** instead of its
+mechanical penthouse + AC-clutter detail grid. New `downtown/helipad.png` (1k source → 512² opaque
+tile): dark charcoal deck, grey circle + H, corner hatches, dim amber perimeter dots.
+
+Wiring (style-driven, so residential/default is untouched — both new `AreaStyle` fields default to
+off):
+- `AreaStyle.helipadTex` (null = area has no pads) + `helipadChance` (odds an *eligible* roof gets one)
+  + `helipadFacades` (facade slots allowed; null = any). Downtown sets `helipad.png` / `0.35` / `[2,3]`
+  — the two glass **skyscrapers** only, NOT concrete/stone mid-rises or the sleek high-rise (facade 4).
+  Restricted eligibility measured at ~13.8 tall roofs/city × 0.35 ≈ 4.8 pads (facade 2 ≫ 3, tracking
+  the 50/25 light/dark tower split).
+- `RenderConfig.HELIPAD_SIZE 16` (= 4 cells), `HELIPAD_MIN_FLOORS 12`, `HELIPAD_MIN_CELLS 4` (deck
+  side, min tower height, min short-side cells). First cut used `MIN_CELLS 6` and produced **zero**
+  visible pads: measured headlessly (`parasiteHx['citygen.CityGen'].generate(seed, DowntownProfile)`,
+  12 seeds), tall `roofPenthouse` roofs by short-side cells were `{3:61, 4:102, 5:89, 6:50, ...}` —
+  the ≥6 gate left ~11/city × 0.35 ≈ 3–4 pads spread across the whole map, and a setback tower's TOP
+  tier (the only one with `roofPenthouse`) is usually 4–5 cells, so the widest natural candidates were
+  all excluded. Dropping to 4 → ~27/city ≈ 9 pads. Pad side = `min(HELIPAD_SIZE, minSide - 2*margin)`,
+  so a 4-cell top roof (16 world) gets a 12.8-wide deck filling it with a 1.6 margin ring.
+- `Roofs.helipadRect(b,...)` — deterministic from the footprint (`(col*197+row*71)%100 < chance*100`),
+  same pattern as `penthouseRect`, so `addDowntownRoof` and `addRoofDetails` agree on it with no shared
+  state. Gated on `b.roofPenthouse` (only the top tier of a setback tower — a lower deck is a one-cell
+  ring). Pad side = `min(HELIPAD_SIZE, minSide - 2*ROOF_DETAIL_MARGIN)`.
+- A pad **owns the roof**: `addDowntownRoof` early-returns before the penthouse box when a rect exists;
+  `addRoofDetails` drops one centred quad (`roof-helipad`, `userData.b` tagged for Occlusion) and
+  `continue`s past the sector grid. One shared `padMat` city-wide.
+
+Draw-call cost: one extra quad per pad building, in place of ~6–9 sector detail instances that were
+already ~1 call in any street view (rooftops, follow cam is ~30°). Net ≈ neutral; **not re-measured**
+(rooftop decals are off-screen in the follow/tactical cams the census uses — see the roof-detail
+entries above). No new material permutation: `MeshStandard` opaque, same family as the detail decals.
+
+Not verified in-engine yet (reload lands on the menu; needs a downtown save loaded to eyeball a pad).

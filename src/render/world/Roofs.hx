@@ -286,6 +286,32 @@ class Roofs {
     };
   }
 
+// centred helicopter landing deck on a tall, wide roof, or null when this roof carries none.
+// deterministic from the footprint (like penthouseRect) so the roof pass and the detail pass agree
+// on it without sharing state. a pad OWNS the roof: its building gets no mechanical penthouse and
+// no sector detail decals, because both would stand in the middle of the landing area
+  public static function helipadRect(b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float):{x:Float, z:Float, w:Float, d:Float}
+    {
+      var st = WorldCtx.style;
+      if (st.helipadTex == null
+          || !b.roofPenthouse // a lower setback tier's deck is a one-cell ring — nothing lands there
+          || (st.helipadFacades != null && st.helipadFacades.indexOf(b.facade) < 0)) // skyscrapers only, not the mid-rises/sleek
+        return null;
+      var minSide = wWorld < dWorld ? wWorld : dWorld;
+      if (b.h < CityConfig.GROUND_H + RenderConfig.HELIPAD_MIN_FLOORS * CityConfig.FLOOR_H
+          || minSide < RenderConfig.HELIPAD_MIN_CELLS * CELL)
+        return null;
+      if ((b.col * 197 + b.row * 71) % 100 >= Std.int(st.helipadChance * 100))
+        return null;
+      var s = Math.min(RenderConfig.HELIPAD_SIZE, minSide - 2 * RenderConfig.ROOF_DETAIL_MARGIN);
+      return {
+        x: center.x,
+        z: center.z,
+        w: s,
+        d: s,
+      };
+    }
+
   // downtown flat roof: a thin coping ring (like the non-masonry parapet) plus a mechanical
   // penthouse bulkhead box (elevator/stair core + HVAC massing) on tall-enough towers. the
   // penthouse is real occluding massing, so it is baked into the merged moon caster (shadowPos/
@@ -306,6 +332,7 @@ class Roofs {
     parapetRing(scene, b, center.x, center.z, wWorld / 2 + T / 2 + E, dWorld / 2 + T / 2 + E,
       capY, capBoxH, copingMats(copingTex, 8, 0.0), T + 2 * E, covered, 0);
     if (penthouseTex == null) return;
+    if (helipadRect(b, center, wWorld, dWorld) != null) return; // the pad is centred — no bulkhead standing on it
     var r = penthouseRect(b, center, wWorld, dWorld);
     if (r == null) return; // lower setback tiers / too small: coping only, no bulkhead
     var pw = r.w, pd = r.d;
@@ -533,6 +560,13 @@ class Roofs {
     var pos = new Vector3();
     var scl = new Vector3();
     var decalGeo = new PlaneGeometry(1, 1);
+    // one shared helipad material for the whole city (null outside an area style that has pads)
+    var padMat = WorldCtx.style.helipadTex == null ? null : tag(new MeshStandardMaterial({
+      map: Textures.loadTexture(WorldCtx.style.helipadTex, 'facade'),
+      roughness: 1,
+      metalness: 0,
+      side: THREE.DoubleSide,
+    }), 'roof-helipad', 'rooftop helipad', WorldCtx.style.helipadTex);
 
     for (b in buildings) {
       if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof — no rooftop details
@@ -545,6 +579,19 @@ class Roofs {
       var hz = dWorld / 2 - RenderConfig.ROOF_DETAIL_MARGIN;
       if (hx <= 0 || hz <= 0) continue;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      // a helipad takes the whole roof: one centred deck instead of the sector grid (and
+      // addDowntownRoof drops the penthouse for the same building)
+      var pad = helipadRect(b, center, wWorld, dWorld);
+      if (pad != null)
+        {
+          var m = new Mesh(decalGeo, padMat);
+          m.rotation.x = -Math.PI / 2;
+          m.scale.set(pad.w, pad.d, 1);
+          m.position.set(pad.x, b.h + 0.05, pad.z);
+          m.userData.b = b;
+          scene.add(m);
+          continue;
+        }
       // the mechanical penthouse is real massing standing on this roof — a decal under it
       // pokes through its walls, so reserve its footprint
       var pen = WorldCtx.style.roofDowntown && WorldCtx.style.penthouseWall != null

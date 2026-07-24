@@ -71,6 +71,10 @@ class AreaStyle {
   public var specialSlot:Int;            // metal-warehouse facade slot (gable roof, roll-up door, no windows); -1 = none
   public var roofDowntown:Bool;          // flat roof + mechanical penthouse instead of residential parapet/gable
   public var penthouseWall:String;       // downtown rooftop bulkhead wall (roofDowntown only)
+  // --- rooftop helipad (Roofs.helipadRect), tall towers only ---
+  public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
+  public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals
+  public var helipadFacades:Array<Int> = null; // facade slots that may carry a pad; null = any (downtown limits it to the glass skyscrapers, not the mid-rises/sleek high-rise)
 
   public function new() {}
 
