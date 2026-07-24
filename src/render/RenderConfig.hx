@@ -92,7 +92,7 @@ class RenderConfig {
   // (concrete = square, brick = tall); used to cut an opaque window sprite
   public static final WINDOW_SPRITE_CROP:Array<CropXY> = [{ x: 0.42, y: 0.42 }, { x: 0.30, y: 0.52 }, { x: 0.46, y: 0.82 }, { x: 0.42, y: 0.42 }];
   // facade variant names by Building.facade index (inspector tags + per-variant logic)
-  public static final FACADE_NAMES = ['concrete', 'brick', 'stone', 'metal'];
+  public static final FACADE_NAMES = ['concrete', 'brick', 'stone', 'metal', 'sleek'];
   public static inline var WIN_W = 1.6;        // window world width (height derived from sprite aspect)
   public static inline var WIN_PITCH_X = 2.6;  // horizontal center-to-center spacing (vertical = FLOOR_H)
   public static inline var WIN_MARGIN = 0.9;   // min plain-wall border at face edges

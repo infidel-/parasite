@@ -202,7 +202,7 @@ class Windows {
             var r = (hv & 0xffff) / 65536;
             var bucket = -1;
             if (r < st.glassLitRatio) bucket = nVar; // lit pane
-            else if (r < st.glassLitRatio + st.glassAccentRatio) bucket = (hv >>> 16) % nVar; // tint variant
+            else if (nVar > 0 && r < st.glassLitRatio + st.glassAccentRatio) bucket = (hv >>> 16) % nVar; // tint variant (nVar 0 → lit-only slot, e.g. sleek)
             if (bucket < 0) continue; // base cell: baked grid shows through, no instance
             pos.set(p.x, rowH * (j + 0.5), p.z);
             buckets[bucket].push(new Matrix4().compose(pos, q, scl));

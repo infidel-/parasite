@@ -1007,3 +1007,37 @@ hovered, both frustum-culling-exempt small meshes; geometry rebuilt per frame wh
 pattern + budget as `SlimeTrail`, which is also a per-frame strip rebuild). No new `submit` measurement
 taken yet — it only draws during hover and is 2 unlit quads, well under the ~435-call follow-view
 baseline; measure `calls=` before/after a hover in the follow view if it ever looks suspect.
+
+## Downtown: brick high-rise removed, sleek modern high-rise added (facade 4)
+
+**Landed.** Two coupled changes to the downtown facade set. **(1)** Brick/stone (facade 1) is barred
+from high-rise height: `DowntownProfile.floorCap[1]` 10→5 and `maxFloorsBrick` 16→5 (both are needed —
+the L/T/+ centre-strip path `CityGen.finishP` clamps to `maxFloorsBrick`, not `floorCap`). Brick still
+generates, only ever as a short mid-rise now. **(2)** A 5th facade, `4 = 'sleek'` (white precast piers +
+dark vertical glass ribbons, cool-white glow), added as the tall non-glass type. It is minted from the
+existing `leaf()` facade draw with **no new rng** — the one remap line became `>= 5 ? 2 + facade % 3 :
+facade & 1`, so a big footprint's draw `0..3` maps to `{2,3,4,2}` (glass-light 50% / glass-dark 25% /
+sleek 25%). Added to `glassTypes`/`winPerCell`/`noWinSlots`, so it inherits `Downtown.tryTower` setback
+massing, the cell-locked curtain-window grid, the podium band, and the cell-locked lobby entrance with
+no new render code. All downtown `AreaStyle` arrays + `RenderConfig.FACADE_NAMES` extended to length 5.
+
+**"No tint accents" (user choice):** `glassAccents[4] = []` (empty, non-null → the lit path still runs,
+zero tint variants). This forced a one-line guard in `Windows.addGlassAccents` — the tint branch did
+`(hv >>> 16) % nVar`, which is a modulo-zero crash when `nVar == 0`; now gated on `nVar > 0`, so an
+empty accent set is lit-panes-only.
+
+**Measured headless over 40 seeds** (`CityGen.generate(seed, DowntownProfile.INSTANCE)`): brick max
+floors **5**, brick high-rise count **0** (was ~14.9/city), brick still 34.8/city. Sleek 13.1/city, of
+which 11.6 high-rise and 10.3 `shapeKeep` setback towers, **0** non-CELL heights. Glass high-rise
+33.5/city + sleek 11.6 ≈ the old 45/city — no net loss of tall buildings, sleek simply took ~25% of the
+big-footprint slots off glass. **Residential untouched by construction:** the only `generate()`-reachable
+edit is the one `leaf()` line, inside `if (p.downtown)`; every other change is downtown-profile or
+render-only.
+
+**Textures (1k, gpt-image-2):** `downtown/glass-sleek` (baked curtain), `podium-sleek`, `door-cover-sleek`
+(opaque tiles), `entrance-sleek` (opaque, edited from the podium like the other lobby doors), and
+`window-sleek-lit` (the scattered cool-white lit pane — `class:sprite needs_alpha`, currently baked
+OPAQUE and warns until its window alpha is hand-cut; `alphaTest 0.5` is a no-op until then, so lit panes
+glow the whole cell meanwhile — degrades cleanly). In-engine visual pass still pending (needs a downtown
+area loaded): confirm sleek reads white-pier/dark-ribbon, podium solid, lobby entrance on-grid, no accent
+crash, `window.__check` 0 fails.

@@ -40,9 +40,11 @@ class DowntownProfile {
     // footprints climb to the caps as setback towers
     minFloors: 2,
     maxFloors: 24,
-    maxFloorsBrick: 16,
-    // [0 office-concrete, 1 office-stone, 2 glass, 3 full-glass tallest]
-    floorCap: [12, 10, 24, 30],
+    // brick/stone (facade 1) is barred from high-rise: capped below noBackWallsFloors (6) so it
+    // only ever appears as a short mid-rise. the tall non-glass slot is now the sleek type (4)
+    maxFloorsBrick: 5,
+    // [0 office-concrete, 1 office-stone (low mid-rise), 2 glass, 3 full-glass tallest, 4 sleek modern]
+    floorCap: [12, 5, 24, 30, 28],
     // no single-story shops downtown
     downgradeChance: 0.0,
     bigW: 14,
@@ -53,6 +55,6 @@ class DowntownProfile {
     towerMinTiers: 2,
     towerMaxTiers: 4,
     towerInset: 1,
-    glassTypes: [2, 3],
+    glassTypes: [2, 3, 4],
   };
 }

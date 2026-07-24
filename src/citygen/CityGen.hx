@@ -73,8 +73,8 @@ class CityGen {
       var roof = rng() < 0.5 ? 0 : 1;
       var facade = Std.int(rng() * 4); // 0 concrete, 1 brick, 2 stone, 3 metal (one rng draw → stream stays in sync)
       // downtown: remap the one facade draw (no extra rng) so a big footprint reads as a
-      // glass office tower (2 mostly-glass / 3 full-glass) and a small one as a concrete/
-      // stone mid-rise (0/1) — the medium-city buildings interspersed among the towers
+      // glass office tower (2 glass-light / 3 glass-dark / 4 sleek modern) and a small one as
+      // a concrete/stone mid-rise (0/1) — the medium-city buildings interspersed among the towers
       // a glass tower steps TOWER_CLEAR cells back from its SIBLINGS (the interior split
       // lines), so with blockGap 1 it keeps a 3-cell ring of alley. it never steps back
       // from a BLOCK EDGE — that side faces the road setback, and a tower has to sit right
@@ -90,7 +90,9 @@ class CityGen {
         gy0 += (edges & 1) != 0 ? 0 : TOWER_CLEAR;
         gy1 -= (edges & 2) != 0 ? 0 : TOWER_CLEAR;
         var gw = gx1 - gx0 + 1, gd = gy1 - gy0 + 1;
-        facade = (gw < gd ? gw : gd) >= 5 ? (2 + (facade & 1)) : (facade & 1);
+        // big footprint → one of the three tall glass types {2,3,4} via facade%3 (draw 0..3 →
+        // 2,3,4,2: glass-light 50% / glass-dark 25% / sleek 25%); small → concrete/stone {0,1}
+        facade = (gw < gd ? gw : gd) >= 5 ? (2 + facade % 3) : (facade & 1);
         // a mid-rise keeps no clearance ring — it fills its whole leaf, 1 cell from its neighbour
         if (facade < 2)
         {
