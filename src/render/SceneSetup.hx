@@ -82,7 +82,7 @@ class SceneSetup {
     }
 
 // build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city
-  public static function buildScene(renderer:WebGLRenderer, city:City):SceneBundle {
+  public static function buildScene(renderer:WebGLRenderer, city:City, ?style:render.world.AreaStyle):SceneBundle {
     var scene = new Scene();
     scene.background = new Color(0x0a0d15);
     var span = CityConfig.CELL * CityConfig.GRID;
@@ -122,6 +122,14 @@ class SceneSetup {
     // of lamps while NUM_SPOT_LIGHTS stays constant. yaw faces the post toward its road (Lamp.dir);
     // the bulb is pushed out over the road edge (local dz rotated by yaw) so the light lands on the road
     var L = RenderConfig.LAMP_LIGHT;
+    // per-area lamp model + bulb/post offsets (null style or null lamp = residential defaults). only
+    // the placement geometry is per-area; height/cone/pool stay on L, shared, so no shader recompile
+    var lp = style != null ? style.lamp : null;
+    var lampModel = lp != null ? lp.model : RenderConfig.MODELS.streetLamp;
+    var ldx = lp != null ? lp.dx : L.dx;
+    var ldz = lp != null ? lp.dz : L.dz;
+    var lpdx = lp != null ? lp.pdx : L.pdx;
+    var lpdz = lp != null ? lp.pdz : L.pdz;
     var coneGroup = new Group();
     scene.add(coneGroup);
     var lampPosts:Array<LampPost> = [];
@@ -133,10 +141,10 @@ class SceneSetup {
       // dir -> yaw so local +z points toward the road (0:+z, 1:-z, 2:+x, 3:-x)
       var yaw = switch (lamp.dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; };
       var cos = Math.cos(yaw), sin = Math.sin(yaw);
-      var px = w.x + L.pdx * cos + L.pdz * sin; // post nudged within its cell (edge / toward wall)
-      var pz = w.z - L.pdx * sin + L.pdz * cos;
-      var bx = px + L.dx * cos + L.dz * sin;    // bulb offset FROM the post, over the road edge
-      var bz = pz - L.dx * sin + L.dz * cos;
+      var px = w.x + lpdx * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
+      var pz = w.z - lpdx * sin + lpdz * cos;
+      var bx = px + ldx * cos + ldz * sin;    // bulb offset FROM the post, over the road edge
+      var bz = pz - ldx * sin + ldz * cos;
       placements.push({ x: px, z: pz, yaw: yaw });
       bulbs.push({ x: bx, z: bz });
       lampPosts.push({ x: bx, z: bz, col: lamp.col, row: lamp.row });
@@ -146,7 +154,7 @@ class SceneSetup {
       lampCorners.set(ActorAnim.lampVertexKey(a, b), lamp.dir);
     }
     // posts + cones: one instanced draw call each, regardless of lamp count
-    var lampProp = Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
+    var lampProp = Models.instanced(scene, lampModel, placements, CityConfig.CELL * 1.6);
     var bulbY = CityConfig.CELL * L.yMul;
     LightCone.instanced(coneGroup, bulbs, bulbY, bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles

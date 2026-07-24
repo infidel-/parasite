@@ -62,6 +62,32 @@ class Models {
               if (o.material.normalMap != null)
                 o.material.normalScale.set(RenderConfig.MODEL_NORMAL_SCALE, RenderConfig.MODEL_NORMAL_SCALE);
             });
+          // instanced() reads each mesh's RAW geometry and ignores its node transform — so a rotation
+          // authored on the NODE (not baked into the verts) is silently dropped, laying the prop over.
+          // street-lamp2 carries a 90°-about-X node quat that stands its (lying) geometry up; bake every
+          // mesh's world matrix into its geometry here so the verts are self-standing (lamp1's node is
+          // identity → no-op). must run before normalize() measures the box
+          untyped gltf.scene.updateMatrixWorld(true);
+          untyped gltf.scene.traverse(function(o:Dynamic)
+            {
+              if (o.geometry == null)
+                return;
+              o.geometry.applyMatrix4(o.matrixWorld);
+              o.position.set(0, 0, 0);
+              o.quaternion.set(0, 0, 0, 1);
+              o.scale.set(1, 1, 1);
+              o.updateMatrix();
+            });
+          // per-model yaw so the prop's facing matches the placement convention (SceneSetup yaws each
+          // post to face its road, bulb offset along local +X). street-lamp2's arm is authored 90° off
+          // lamp1's, so turn it to match — baked into the (now upright) verts before normalize
+          var ry = yawFix(path);
+          if (ry != 0)
+            untyped gltf.scene.traverse(function(o:Dynamic)
+              {
+                if (o.geometry != null)
+                  o.geometry.rotateY(ry);
+              });
           var t = normalize(gltf.scene);
           cache.set(path, t);
           for (f in waiting.get(path))
@@ -73,6 +99,11 @@ class Models {
           waiting.remove(path);
         });
     }
+
+// per-model yaw correction (radians about the vertical Y) so a prop's facing matches the placement
+// convention; 0 = as-authored. street-lamp2's arm sits 90° off the residential lamp
+  static function yawFix(path:String):Float
+    return path == RenderConfig.MODELS.streetLamp2 ? -Math.PI / 2 : 0.0;
 
 // recenter a loaded root (center X/Z, base at y=0) inside a pivot Group and measure native height
   static function normalize(root:Object3D):ModelTemplate

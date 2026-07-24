@@ -13,6 +13,18 @@ typedef CoverDim = {
   matTile:Float,    // world units per material-swatch tile (never stretch the swatch)
 };
 
+// per-area street-lamp prop: which lamp model to instance + where its bulb/post sit relative to the
+// cell (SceneSetup places the post at pdx/pdz within the cell, the bulb at dx/dz out from the post).
+// the bulb HEIGHT (LAMP_LIGHT.yMul), cone (angle) and the shared live-spotlight pool stay global —
+// only the model geometry differs per area, so a swap never changes NUM_SPOT_LIGHTS (no recompile)
+typedef LampProp = {
+  model:String, // lamp prop glb (render.Models.instanced)
+  dx:Float,     // bulb local +X offset from the post
+  dz:Float,     // bulb local +Z (toward-road) offset from the post
+  pdx:Float,    // post local +X nudge within its cell (slides along the road/wall)
+  pdz:Float,    // post local +Z nudge (+toward road edge, -toward the wall)
+};
+
 // per-area render knobs: the texture sets + facade behavior the world sub-builders
 // (Ground/Buildings/Windows/Roofs) would otherwise hardcode. DEFAULT reuses the exact
 // same TEXTURES arrays and RenderConfig constants the code reads today (identical
@@ -71,6 +83,8 @@ class AreaStyle {
   public var specialSlot:Int;            // metal-warehouse facade slot (gable roof, roll-up door, no windows); -1 = none
   public var roofDowntown:Bool;          // flat roof + mechanical penthouse instead of residential parapet/gable
   public var penthouseWall:String;       // downtown rooftop bulkhead wall (roofDowntown only)
+  // --- street lamp prop (SceneSetup.buildScene) ---
+  public var lamp:LampProp = null;       // lamp model + bulb/post offsets; null = residential (RenderConfig.MODELS.streetLamp + LAMP_LIGHT offsets)
   // --- rooftop helipad (Roofs.helipadRect), tall towers only ---
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals

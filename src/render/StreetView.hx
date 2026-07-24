@@ -277,6 +277,10 @@ class StreetView {
       // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
       var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
       World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true), false);
+      // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
+      // buildScene already compiled — instance one into the warm scene so the first downtown entry
+      // reuses it instead of recompiling on the first frame
+      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6);
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);
@@ -400,7 +404,8 @@ class StreetView {
     city = c;
     shownSeed = seed;
 
-    var bundle = SceneSetup.buildScene(renderer, city);
+    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
+    var bundle = SceneSetup.buildScene(renderer, city, areaStyle);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
@@ -413,7 +418,6 @@ class StreetView {
     // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
     // pass only ever touches static geometry the world builder adds below
     var preBuild = scene.children.copy();
-    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
     World.build(scene, city, seed, areaStyle);
     chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts

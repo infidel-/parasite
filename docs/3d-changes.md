@@ -1132,3 +1132,54 @@ already ~1 call in any street view (rooftops, follow cam is ~30°). Net ≈ neut
 entries above). No new material permutation: `MeshStandard` opaque, same family as the detail decals.
 
 Not verified in-engine yet (reload lands on the menu; needs a downtown save loaded to eyeball a pad).
+
+## SHIPPED — Downtown swaps to the street-lamp2 (PBR) prop (2026-07-25)
+
+Downtown now instances `models/street-lamp2.glb` (PBR: base + normal + metallic-roughness) instead of
+the residential `street-lamp.glb`. Style-driven, so residential is byte-identical.
+
+Lamps are placed once, citywide, in `SceneSetup.buildScene` (not per-`AreaStyle` before). It read
+`RenderConfig.MODELS.streetLamp` + `LAMP_LIGHT` hardcoded. New `AreaStyle.lamp:LampProp`
+(`{model, dx, dz, pdx, pdz}`, null = residential) carries **only the per-model placement geometry** —
+which glb + where the bulb (`dx/dz`) and post (`pdx/pdz`) sit. `buildScene` gained an optional `style`
+arg; `StreetView.buildFrom` now computes `areaStyle` before the call and passes it (moved up from after
+`World.build`, which is where `WorldCtx.style` gets set — too late for SceneSetup).
+
+**Why the light budget stays global (deliberately NOT per-area).** The live spotlights are a fixed pool
+(`LAMP_LIGHT.pool = 12`, `LampLights`) sized to keep `NUM_SPOT_LIGHTS` constant so lit materials never
+recompile. A per-area pool size would change that constant → full shader recompile on the downtown
+transition, the exact hitch the pool exists to avoid. So the pool + shadow casters + bulb height
+(`yMul`) + cone (`angle`) stay on `LAMP_LIGHT`, shared; only the model geometry is per-area. The two
+lamps share `yMul 1.4` / `angle π/5`, so the pool spotlight sits at the right bulb with zero changes to
+`LampLights` (bulb x/z are pre-baked into `lampPosts` at placement time; the pool just reads those).
+
+Warm pass: `street-lamp2` is a distinct PBR material program, so `warmup()` instances one into the warm
+scene (after the downtown `World.build`) — first downtown entry reuses it instead of compiling on frame
+one.
+
+Deleted the dead, incomplete `RenderConfig.LAMP_LIGHT2` (declared, **zero reads** anywhere — it was WIP
+tuning: missing `pdx/pdz`, plus `markerVisible`/`tdx/tdz` which are dead on `LAMP_LIGHT` too). Its live
+values (`dx 1.0, dz 0.0`) moved into `DowntownStyle.lamp`; post nudge starts from the residential kerb
+(`pdx 2.0, pdz 2.6`).
+
+**Placement offsets are WIP starting values — the arm geometry differs, so `dx/dz/pdx/pdz` need an
+in-engine eyeball** (bulb over the road edge, post on the kerb). Verified the wiring headlessly
+(residential `lamp == null`, downtown `lamp.model == street-lamp2`); NOT yet eyeballed in a loaded
+downtown area.
+
+**Fix: bake node transforms into geometry — street-lamp2's upright pose lived in a node quat, and
+`instanced()` discards node transforms.** Reported "lying down"; several blind `rotateX/Z` corrections
+only made it worse (one baked a `rotateX(π/2)` that put the pole on Z, so `normalize()` read
+`height = size.y = 0.13` and scaled the model **48×** — the "huge" sprawl). Real cause, found by measuring
+the mesh node (`o.quaternion`, `o.geometry.boundingBox`): street-lamp2's mesh carries a **90°-about-X node
+quaternion** (`0.707,0,0,0.707`) standing up a raw geometry that is itself lying (`geomSize Z=1.128`).
+`normalize()` measures with `Box3.setFromObject` (world matrices → sees it upright, height right), but
+`Models.instanced` reads the **raw** `firstMesh().geometry` and builds transforms from scratch, ignoring
+the node quat → it draws the lying geometry at the correct height (hence "size ok, lying down"). lamp1's
+node is identity, so it never showed.
+
+Fix in `Models.get`: after load, `updateMatrixWorld` then bake each mesh's `matrixWorld` into its
+geometry (`geometry.applyMatrix4`, also transforms normals) and reset the node to identity. The verts are
+then self-standing, so both the `instanced()` and `place()` paths are correct, and `normalize()` still
+measures the same box. Identity nodes (lamp1) are a no-op. This is the general version of the
+"instanced() assumes the mesh sits at the template root" caveat — now it's guaranteed at load.

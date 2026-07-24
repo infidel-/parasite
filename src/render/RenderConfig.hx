@@ -547,9 +547,10 @@ class RenderConfig {
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
   // target offset by tdx/tdz (also local, rotated) — so the cone is a downward street pool, not an
-  // omni glow on the post. angle = cone half-angle (rad), penumbra = soft edge 0..1. one block per
-  // lamp model (different geometry = different bulb); SceneSetup pairs the placed model with a block
-  public static final LAMP_LIGHT = {         // pairs with MODELS.streetLamp
+  // omni glow on the post. angle = cone half-angle (rad), penumbra = soft edge 0..1. the RESIDENTIAL
+  // defaults; the height/cone/pool are shared across all areas, but a per-area lamp MODEL overrides
+  // the placement offsets (model/dx/dz/pdx/pdz) via AreaStyle.lamp (see DowntownStyle → street-lamp2)
+  public static final LAMP_LIGHT = {         // residential lamp; downtown swaps via AreaStyle.lamp
     yMul: 1.4,   // light height = CityConfig.CELL * this
     dx: 0.0,     // local +X offset toward the bulb (world units)
     dz: 0.6,     // local +Z (toward-road) offset of the bulb — pushes it out over the road edge
@@ -614,16 +615,6 @@ class RenderConfig {
     lenMul: 0.6,        // shadow length = sprite world-height * this * distance falloff (overhead = short)
     op: 0.8,            // per-shadow opacity
     fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
-  };
-  public static final LAMP_LIGHT2 = {        // pairs with MODELS.streetLamp2 (PBR)
-    yMul: 1.4,
-    dx: 1.0,
-    dz: 0.0,
-    angle: Math.PI / 5,
-    penumbra: 0.1,
-    tdx: 0.0,
-    tdz: 0.0,
-    markerVisible: true,
   };
   public static final TEXTURES = {
     asphalt: 'textures/ground-asphalt.png',     // road surface (no markings yet)
