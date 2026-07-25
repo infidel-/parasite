@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityModel.City;
 import render.world.WorldCtx;
 import render.world.Ground;
+import render.world.Lawns;
 import render.world.Buildings;
 import render.world.Roofs;
 import render.world.Entrances;
@@ -37,6 +38,7 @@ class World {
     WorldCtx.doorSpans = [];
 
     Ground.build(scene);          // ground tiles, road markings, kerb edging
+    Lawns.build(scene);           // dead-lawn grass patches around the slums houses (no-op elsewhere)
     Buildings.build(scene);       // per-building box loop (delegates parapet/gable to Roofs)
     Windows.add(scene);
     Windows.addGlassAccents(scene); // sparse scattered tint/lit panes over the baked glass-tower grid

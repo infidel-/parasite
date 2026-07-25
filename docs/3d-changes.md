@@ -1183,3 +1183,113 @@ geometry (`geometry.applyMatrix4`, also transforms normals) and reset the node t
 then self-standing, so both the `instanced()` and `place()` paths are correct, and `normalize()` still
 measures the same box. Identity nodes (lamp1) are a no-op. This is the general version of the
 "instanced() assumes the mesh sits at the template root" caveat — now it's guaranteed at load.
+
+## Slums area style + generator (LANDED) — per-area render + gen split, third variant
+
+Third area variant after downtown, using the same two split points (`citygen.CityProfile` for
+generation, `render.world.AreaStyle` for render). `AREA_CITY_LOW` now generates and renders as slums;
+MEDIUM keeps the residential default and HIGH keeps downtown. New: `citygen.profiles.SlumsProfile`,
+`render.world.SlumsStyle`, `render.world.Lawns`.
+
+**Dispatch moved from a bool to the area type.** `Profiles.forDowntown(Bool)` /
+`AreaStyle.forDowntown(Bool)` became `forArea(_AreaType)`, and the persisted `AreaGame.downtownGen` flag
+was **deleted** — three variants do not fit one bool, and the type is already on the area. Verified an
+existing autosave still loads (the stale `downtownGen` key in the save is simply ignored) and its
+downtown area still renders with `__check.pass`.
+
+**Two new facade slots (4 clapboard cottage, 5 cinderblock bungalow), single-floor.** `CityGen.leaf()`
+remaps the ONE existing facade draw — `facade >= 2 && maxSide <= houseMaxSide` → `houseSlots[facade-2]`
+— exactly like downtown's remap. **No new rng call**, so the seeded stream cannot shift. Single-floor
+comes from `floorCap[4] = floorCap[5] = 1` (`mk()` clamps to it → `h = 8.8`), not from a special case.
+A leaf that small can never reach the courtyard/L/T/+ branches (all need `w >= 7 && d >= 7`), so a house
+is always a plain rectangle — which is what `addGableRoof` requires.
+
+**Measured, 40 seeds, stash-rebuild-rehash against HEAD: the DEFAULT building list is byte-identical**
+(hash of `col,row,w,d,h,roof,facade,shop` matched on all 40). Re-checked after the `houseMaxSide` tune.
+
+**`houseMaxSide` is the knob that matters, and 5 was wrong.** Measured over 30 seeds:
+
+| houseMaxSide | houses | stone (2) | metal (3) |
+|---|---|---|---|
+| 3 | 5.5% | 22.3% | 14.3% |
+| **4** | **21.0%** | **14.3%** | **10.3%** |
+| 5 | 35.6% | 6.9% | 5.3% |
+
+At 5 the two house types all but wipe out stone and the metal warehouses — the district stops reading as
+the same city. Landed on 4. Slums vs MEDIUM over 30 seeds: 231 vs 209 buildings, mean footprint 15.05 vs
+17.39 cells, mean height **10.97 vs 15.09**, building tiles 34.8% vs 36.3% (alley 18.6 vs 17.1). Barrels
+untouched — `courtyardBlockChance` deliberately left at the residential 0.35 because
+`CityAreaGenerator.placeBurningBarrels` places one per carved courtyard (3.5 vs 3.7 courtyards a city).
+
+**Lawns are a render-only pass, NOT a new `Tile`.** A fifth tile value would have rippled into the
+persisted `_cells`, walkability, `WorldCtx.floorY`, `Ground.isLower`, `Debris.isStreet` and `Occlusion`.
+Instead `Lawns.build` paints alpha-cutout quads over the *alley* cells ringing a house, gated by the same
+footprint-hash idiom as `Geom.frontInfo` (deterministic, no rng). Measured: **1 mesh / 1 draw call**, 216
+cells = 9.3% of the city's alley, 50.9% of eligible buildings; the downtown and residential styles emit
+zero (null `lawnTex`). Walkway cells are excluded on purpose — they sit at `CURB_H` and some are
+chamfered (`Ground.bevelAt`), so with `setback: 1` the lawns read as side and back yards. The mesh is
+world-baked with no `userData.b` (it is ground, it must not fade with one building), so it correctly
+shows up in `__occ.skipped()`.
+
+**Four hardcoded facade assumptions had to become style fields**, all defaulting to today's behaviour:
+`masonrySlots` (was `b.facade == 1 || b.facade == 2` in `Buildings`), `noStoreSlots` (folded into
+`Geom.frontInfo` so `Windows`/`Entrances`/`Check` all agree), `gableSlots` + `gableRoofs` (the gable gate
+was `isSpecial`, which also implies a roll-up door and no windows — the two had to be split, or a cottage
+got a warehouse door). `addGableRoof` also took a `roofPath` and now names its Poly classes from
+`style.facadeName` instead of the literal `'roof-gable-metal'`.
+
+**Latent bug found: `Roofs.brickMats` indexed `RenderConfig.FACADE_NAMES[b.facade]` and
+`TEXTURES.walls[b.facade]` RAW.** Harmless while every style had at most 4 masonry slots; with 6 slots it
+reads past the end and tags materials `parapet-null` with an undefined path. Now style-driven and
+modulo-wrapped. Same class of bug as the `facadeNames` lesson above — worth grepping for any other raw
+`[b.facade]` indexing.
+
+**Textures: all 19 generated, nothing borrowed.** Three slums grounds, both house walls + worn, the
+shingle roof, the dead lawn, both window sets + lit, both door sets + worn, both door-cover swatches.
+Every worn/lit variant was made with `edit_image` off its own clean base, not generated fresh, so the
+palette matches across faces of one building — a separately-generated worn wall drifts in hue and the
+seam shows at the corner.
+
+**The doors and windows are chroma-keyed, NOT hand-cut — that is new for cutout art here.** The
+residential doors/windows were hand-edited for alpha, which is why the pipeline only ever gray-keyed roof
+details. Generating a door/window centred on a flat `#5a5d63` field and registering `class:"chroma"`
+gets `make tex` to bake the alpha automatically, with no hand step. Two prompt rules make it safe at
+`tol: 24`: state the exact hex and demand a hard edge with no glow/halo/drop-shadow (a soft falloff
+leaves a grey fringe the key cannot resolve), and explicitly forbid medium neutral grey *inside* the
+subject so nothing in the art falls within tolerance. Verified by measuring baked alpha coverage against
+the prompt's stated geometry — doors 42-49% opaque against ~39% intended (door + casing), windows
+20-27% against 16-19% — i.e. the key removed the field and nothing else. Worth doing this way for any
+future cutout that is a discrete object on a background; it does not suit art that must bleed to the
+tile edge.
+
+**Not yet eyeballed in a loaded slums area.** Coverage so far is `StreetView.warmup()`, which now builds
+a throwaway slums city at boot: every slums render pass (slums ground, facades 4/5, the gable roof,
+`Lawns`, entrances, windows) executed with zero console errors and no `[textures] missing` warnings. The
+open questions a real walk-through has to answer are the ones the numbers cannot: whether the two house
+types read as distinct at street distance, whether `winCrop` frames each new sash correctly (it sets the
+pane's aspect via `winH = WIN_W * y/x`), whether the porch/awning covers sit right on an 8.8-unit wall,
+and whether the lawns land thick enough at `lawnChance 0.5` on alley cells only.
+
+---
+
+## Flat-roof dressing leaked under the slums gable (LANDED)
+
+Reported from a loaded slums area: clapboard cottages had contact shadows and detail decals on their
+roofs, mostly buried under the gable slopes.
+
+`addRoofShadows` and `addRoofDetails` both gated on `style.isSpecial(b.facade)` — "is this the metal
+warehouse", which used to be the only gabled slot. Adding `gableSlots` gave the style a second way to
+be gabled, and neither pass knew about it, so the cottages kept the flat-roof dressing their buried box
+top nominally has. Wasted geometry, and it pokes through the slopes at grazing angles.
+
+The gate is now `Roofs.isGabled(b)` (`b.shop < 0 && style.isGable(b.facade)`) in both passes, and
+`Buildings` derives its own `gable` from the same helper — the three had to agree and were three
+separate expressions. Folding `b.shop < 0` in also fixes a latent case the old gate got backwards: a
+warehouse downgraded to a single-story shop gets a flat parapet from `Buildings`, but `isSpecial` was
+skipping its shadows, so it had a parapet casting nothing.
+
+Measured on the live slums save (245 buildings, 23 gabled cottages + 23 warehouses) by re-running both
+passes into a throwaway `THREE.Scene` and testing against the gabled footprints: **0** detail decals
+tagged to a gabled building (674 remain citywide), **0** of 1592 shadow instances inside a gabled
+footprint at its roof height. The lesson generalises: any pass keyed on `isSpecial` is really asking
+"does this slot have a gable", and needs re-reading whenever a style adds a roof shape.

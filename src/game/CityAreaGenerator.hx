@@ -34,11 +34,10 @@ class CityAreaGenerator
 // generate a city block from the shared procedural generator
   public function generate(state: _GeneratorState, area: AreaGame, info: AreaInfo)
     {
-      // pick and store the seed so the 3D renderer regenerates identical geometry;
-      // record the downtown flag so both logic tiles and render pick the same profile
+      // pick and store the seed so the 3D renderer regenerates identical geometry; both the
+      // logic tiles here and the render pick their profile/style from the same area type
       area.cityGenSeed = Std.random(0x7FFFFFFF);
-      area.downtownGen = (area.typeID == AREA_CITY_HIGH);
-      var city = CityGen.generate(area.cityGenSeed, Profiles.forDowntown(area.downtownGen));
+      var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID));
       // keep the carved inner courtyards for the object pass (barrel placement)
       courtyards = city.courtyards;
 
@@ -152,7 +151,7 @@ class CityAreaGenerator
 // streets visible but unreachable. objects (sewer hatches, etc) are left untouched
   public function rebuildCells(area: AreaGame)
     {
-      var city = CityGen.generate(area.cityGenSeed, Profiles.forDowntown(area.downtownGen));
+      var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID));
       var cells = area.getCells();
       for (x in 0...area.width)
         if (cells[x] == null)

@@ -275,8 +275,13 @@ class StreetView {
       // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
       // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
       // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
-      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
-      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true), false);
+      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_HIGH));
+      World.build(s, dtCity, seed, render.world.AreaStyle.forArea(AREA_CITY_HIGH), false);
+      // and the slums style (house walls/windows/doors, shingle gable, slums ground, the dead-lawn
+      // cutout) on a throwaway low-density city — a NEW GAME starts in AREA_CITY_LOW, so this is the
+      // first city most sessions ever build
+      var slCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_LOW));
+      World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), false);
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
       // buildScene already compiled — instance one into the warm scene so the first downtown entry
       // reuses it instead of recompiling on the first frame
@@ -386,7 +391,7 @@ class StreetView {
     // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
     // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
     if ((running || warming) && shownSeed == seed) return;
-    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(game.area.downtownGen)), seed);
+    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID)), seed);
   }
 
 // show a pre-reconstructed city (old saves with no seed)
@@ -404,7 +409,7 @@ class StreetView {
     city = c;
     shownSeed = seed;
 
-    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
+    var areaStyle = render.world.AreaStyle.forArea(game.area.typeID);
     var bundle = SceneSetup.buildScene(renderer, city, areaStyle);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;

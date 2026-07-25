@@ -1,6 +1,7 @@
 package citygen;
 
 import citygen.profiles.DowntownProfile;
+import citygen.profiles.SlumsProfile;
 
 // per-area-type generation knobs. CityGen is otherwise a pure seed->City function;
 // a profile carries every value/roll that differs between area tiers, so downtown
@@ -44,6 +45,9 @@ typedef CityProfile = {
   towerMaxTiers:Int,        // most tiers in a stepped tower
   towerInset:Int,           // cells each tier steps back per side
   glassTypes:Array<Int>,    // facade indices rendered as glass curtain wall (downtown)
+  // --- slums switches (ignored on the default path) ---
+  houseSlots:Array<Int>,    // facade indices a SMALL leaf drawn as stone/metal is remapped to (the single-floor house types); [] = off
+  houseMaxSide:Int,         // a leaf with both sides <= this is small enough to become a house
 };
 
 // profile registry: DEFAULT (residential, verbatim from CityConfig) + downtown factory
@@ -80,11 +84,17 @@ class Profiles {
     towerMaxTiers: 0,
     towerInset: 0,
     glassTypes: [],
+    houseSlots: [],
+    houseMaxSide: 0,
   };
 
-  // pick the generation profile for an area: downtown when the area was generated as
-  // high-density under the downtown code (area.downtownGen), else the residential default
-  public static function forDowntown(downtown:Bool):CityProfile {
-    return downtown ? DowntownProfile.INSTANCE : DEFAULT;
+  // pick the generation profile for an area type: downtown for the high-density district,
+  // slums for the low-density outskirts, the residential default for everything else
+  public static function forArea(t:_AreaType):CityProfile {
+    return switch (t) {
+      case AREA_CITY_HIGH: DowntownProfile.INSTANCE;
+      case AREA_CITY_LOW: SlumsProfile.INSTANCE;
+      default: DEFAULT;
+    };
   }
 }

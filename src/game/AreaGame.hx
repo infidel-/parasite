@@ -29,7 +29,6 @@ class AreaGame extends _SaveObject
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
   public var cityGenSeed: Int; // seed for the 3D city generator (city areas); -1 = none/old save
-  public var downtownGen: Bool; // generated with the downtown (high-density) profile — drives skyscraper gen + render; false on old saves
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
   public var highCrime: Bool; // low density area can become high crime
@@ -92,7 +91,6 @@ class AreaGame extends _SaveObject
       events = [];
       isGenerated = false;
       cityGenSeed = -1;
-      downtownGen = false;
       isEntering = false;
       isKnown = false;
       isHabitat = false;

@@ -28,9 +28,10 @@ typedef LampProp = {
 // per-area render knobs: the texture sets + facade behavior the world sub-builders
 // (Ground/Buildings/Windows/Roofs) would otherwise hardcode. DEFAULT reuses the exact
 // same TEXTURES arrays and RenderConfig constants the code reads today (identical
-// references → residential output pixel-identical); DOWNTOWN (DowntownStyle) swaps them
-// for the skyscraper look and is the single file to tune it. Selected per build from the
-// area's downtownGen flag (see forDowntown). Threaded via WorldCtx.style.
+// references → residential output pixel-identical); DOWNTOWN (DowntownStyle) swaps them for
+// the skyscraper look and SLUMS (SlumsStyle) for the run-down outskirts — each is the single
+// file to tune its look. Selected per build from the area type (see forArea). Threaded via
+// WorldCtx.style.
 class AreaStyle {
   // --- ground tile textures (Ground.hx) ---
   public var asphalt:String;
@@ -55,6 +56,10 @@ class AreaStyle {
   // --- facade behavior ---
   public var noWinSlots:Array<Int> = null;  // facade slots that skip the window overlay (glass curtain walls carry windows in the facade art); null = none
   public var winPerCell:Array<Int> = null;  // glass curtain slots: windows per CELL. locks the window grid to the cell grid (integer tiling → whole windows, identical pitch CELL/k on every tower); needs a seamless single-window texture. null/0 = normal tiling
+  public var masonrySlots:Array<Int> = null; // facades whose parapet is the WALL texture continuing up (brick/stone look) instead of a thin coping rim; null = the historic [1, 2]
+  public var noStoreSlots:Array<Int> = null; // facades that never grow a ground-floor storefront band, whatever their footprint rolls (a shack is not a shop); null = none
+  public var gableSlots:Array<Int> = null;   // facades roofed with a pitched gable prism instead of a flat parapet, ON TOP of specialSlot (which always gables); null = none
+  public var gableRoofs:Array<String> = null; // per facade: the gable SLOPE texture; null (or null entry) = the shared metal roof
   public var noBackWallsFloors:Int = 0;     // from this storey count up, a building has NO back: every face is clean + windowed, whatever it abuts (a blank worn wall a dozen storeys tall reads as a mistake). 0 = off, backs everywhere
   // --- glass-tower sparse accents (Windows.addGlassAccents), indexed by Building.facade ---
   public var glassAccents:Array<Array<String>> = null; // per facade: the tint-variant tiles scattered over that slot's baked glass grid; null (or null entry) = no accents
@@ -85,6 +90,10 @@ class AreaStyle {
   public var penthouseWall:String;       // downtown rooftop bulkhead wall (roofDowntown only)
   // --- street lamp prop (SceneSetup.buildScene) ---
   public var lamp:LampProp = null;       // lamp model + bulb/post offsets; null = residential (RenderConfig.MODELS.streetLamp + LAMP_LIGHT offsets)
+  // --- dead-lawn ground patches around houses (Lawns.hx) ---
+  public var lawnTex:String = null;          // ragged dead-grass patch (alpha cutout); null = this area has no lawns
+  public var lawnFacades:Array<Int> = null;  // facade slots whose buildings grow a lawn ring on the alley cells around them
+  public var lawnChance:Float = 0;           // odds an eligible building gets one (deterministic per footprint, no rng)
   // --- rooftop helipad (Roofs.helipadRect), tall towers only ---
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals
@@ -99,6 +108,16 @@ class AreaStyle {
 // name of a facade slot in THIS style, for Poly class strings and debug labels
   public inline function facadeName(f:Int):String
     return facadeNames[f % facadeNames.length];
+
+// does this facade's parapet continue the wall texture upward (brick/stone) instead of
+// carrying a thin coping rim? defaults to the historic hardcoded brick+stone slots
+  public inline function isMasonry(f:Int):Bool
+    return masonrySlots == null ? (f == 1 || f == 2) : masonrySlots.indexOf(f) >= 0;
+
+// is this facade roofed with a pitched gable prism? the metal-warehouse slot always is;
+// a style may gable extra slots (the slums clapboard cottage)
+  public inline function isGable(f:Int):Bool
+    return isSpecial(f) || (gableSlots != null && gableSlots.indexOf(f) >= 0);
 
 // entrance-cover size knobs for a facade slot, falling back to the shape's RenderConfig defaults
   public function coverDim(f:Int):CoverDim
@@ -161,8 +180,14 @@ class AreaStyle {
     return _default;
   }
 
-  // pick the render style for a build: downtown for high-density areas generated under the
-  // downtown code (AreaGame.downtownGen), else residential default
-  public static function forDowntown(downtown:Bool):AreaStyle
-    return downtown ? DowntownStyle.get() : DEFAULT;
+  // pick the render style for a build from the area type: downtown for the high-density
+  // district, slums for the low-density outskirts, residential default for everything else.
+  // MUST stay in step with citygen's CityProfile.Profiles.forArea — a style/profile mismatch
+  // renders facade slots the generator never emitted
+  public static function forArea(t:_AreaType):AreaStyle
+    return switch (t) {
+      case AREA_CITY_HIGH: DowntownStyle.get();
+      case AREA_CITY_LOW: SlumsStyle.get();
+      default: DEFAULT;
+    };
 }

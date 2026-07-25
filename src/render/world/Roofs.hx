@@ -182,10 +182,14 @@ class Roofs {
         var t = (wn ? worn : clean).clone();
         t.needsUpdate = true;
         t.repeat.set(ru, rv);
-        var nm = RenderConfig.FACADE_NAMES[b.facade];
+        // style-driven, and wrapped: a style may declare more facade slots than the residential
+        // naming/texture arrays hold, and these were indexing both of them raw
+        var st = WorldCtx.style;
+        var nm = st.facadeName(b.facade);
+        var paths = wn ? st.wornWalls : st.walls;
         return tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
           wn ? 'parapet-$nm-worn' : 'parapet-$nm', wn ? '$nm parapet (worn)' : '$nm parapet',
-          (wn ? RenderConfig.TEXTURES.wornWalls : RenderConfig.TEXTURES.walls)[b.facade]);
+          paths[b.facade % paths.length]);
       }
       // x-faces span z×h, z-faces span w×h; posts use each face's own direction,
       // rims share one outward direction across all faces
@@ -390,13 +394,20 @@ class Roofs {
     return geo;
   }
 
+// does this building carry a gable roof? its flat top is buried under the slopes, so it takes
+// none of the flat-roof dressing (contact shadows, detail decals). must match Buildings' `gable`
+// exactly, or the dressing lands under a gable — or goes missing off a flat one
+  public static inline function isGabled(b:Building):Bool
+    return b.shop < 0 && WorldCtx.style.isGable(b.facade);
+
   // metal warehouse gable ("double slope") roof: a prism of 2 sloped quads + 2 triangular
   // gable ends, capping the box. ridge runs along the LONGER footprint axis. the SLOPES use a
   // dedicated metal-roof texture; the vertical gable-END triangles are wall (clean or worn to
   // match the wall below — a worn back wall gets a worn gable end). world-tiled (no stretch),
-  // ridges run down-slope. only for simple-rectangle metal buildings. DoubleSide so winding
-  // never hides a face. the box's own flat top stays, hidden beneath the slopes.
-  public static function addGableRoof(scene:Scene, b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float, cleanWall:Texture, wornWall:Texture, roofTex:Texture):Void {
+  // ridges run down-slope. only for simple-rectangle buildings (metal warehouses + the slums
+  // single-floor houses). DoubleSide so winding never hides a face. the box's own flat top stays,
+  // hidden beneath the slopes. `roofPath` is the slope texture's source path, for the Poly registry
+  public static function addGableRoof(scene:Scene, b:Building, center:{x:Float, z:Float}, wWorld:Float, dWorld:Float, cleanWall:Texture, wornWall:Texture, roofTex:Texture, roofPath:String):Void {
     var TILE = RenderConfig.WALL_TILE;
     var gV = RenderConfig.GABLE_V; // gable ends sample a CLEAN mid-texture V band (worn metal has a dirty base strip; eaves up high shouldn't show ground grime). ribs are vertical so V-shift keeps corrugation aligned.
     var eaveY = b.h;
@@ -451,10 +462,16 @@ class Roofs {
       mesh.userData.b = b;
       scene.add(mesh);
     }
-    mesh(sP, sU, roofTex, 'roof-gable-metal', 'metal gable roof', RenderConfig.TEXTURES.roofMetal);
+    // name the Poly classes after THIS style's facade slot: a slums cottage roof must not share
+    // the warehouse's handle in the UV editor (Poly.info is first-write-wins across areas)
+    var st = WorldCtx.style;
+    var k = st.facadeName(b.facade);
+    var cleanPath = st.walls[b.facade % st.walls.length];
+    var wornPath = st.wornWalls[b.facade % st.wornWalls.length];
+    mesh(sP, sU, roofTex, 'roof-gable-$k', '$k gable roof', roofPath);
     var aWorn = Geom.isWornFace(b, aDir), bWorn = Geom.isWornFace(b, bDir);
-    mesh(aP, aU, aWorn ? wornWall : cleanWall, 'gable-end-metal' + (aWorn ? '-worn' : ''), 'metal gable end' + (aWorn ? ' (worn)' : ''), RenderConfig.TEXTURES.walls[3]);
-    mesh(bP, bU, bWorn ? wornWall : cleanWall, 'gable-end-metal' + (bWorn ? '-worn' : ''), 'metal gable end' + (bWorn ? ' (worn)' : ''), RenderConfig.TEXTURES.walls[3]);
+    mesh(aP, aU, aWorn ? wornWall : cleanWall, 'gable-end-$k' + (aWorn ? '-worn' : ''), '$k gable end' + (aWorn ? ' (worn)' : ''), aWorn ? wornPath : cleanPath);
+    mesh(bP, bU, bWorn ? wornWall : cleanWall, 'gable-end-$k' + (bWorn ? '-worn' : ''), '$k gable end' + (bWorn ? ' (worn)' : ''), bWorn ? wornPath : cleanPath);
   }
 
   // fake contact shadow under the parapet: instanced gradient decals on the roof
@@ -481,7 +498,7 @@ class Roofs {
       arr.push(new Matrix4().compose(pos, q, scl));
     }
     for (b in buildings) {
-      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof, not a flat parapet roof
+      if (isGabled(b)) continue; // gabled roofs (warehouses, slums cottages) have no flat parapet roof to shade
       var wWorld = b.w * CELL;
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
@@ -569,7 +586,7 @@ class Roofs {
     }), 'roof-helipad', 'rooftop helipad', WorldCtx.style.helipadTex);
 
     for (b in buildings) {
-      if (WorldCtx.style.isSpecial(b.facade)) continue; // metal warehouses have a gable roof — no rooftop details
+      if (isGabled(b)) continue; // gabled roofs (warehouses, slums cottages) — nothing stands on a slope
       // an intermediate setback deck is a one-cell ring around the tier rising out of it —
       // a top-down decal there runs straight into that wall. only lower tiers clear the flag
       if (!b.roofPenthouse) continue;

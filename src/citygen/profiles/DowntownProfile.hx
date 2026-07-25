@@ -5,8 +5,8 @@ import citygen.CityProfile;
 // downtown (skyscraper) generation knobs — the single file to tune the high-density
 // look independently of residential: larger blocks/footprints, wider spacing, taller
 // glass office towers, stepped setback massing, no metal warehouses, no single-story
-// shops. Selected only for areas generated as high-density under the downtown code
-// (AreaGame.downtownGen), so older/other areas keep the residential default.
+// shops. Selected only for AREA_CITY_HIGH (see CityProfile.Profiles.forArea), so every
+// other area type keeps the residential default.
 class DowntownProfile {
   public static final INSTANCE:CityProfile = {
     // larger blocks + more spacing between buildings
@@ -56,5 +56,8 @@ class DowntownProfile {
     towerMaxTiers: 4,
     towerInset: 1,
     glassTypes: [2, 3, 4],
+    // no single-floor houses downtown
+    houseSlots: [],
+    houseMaxSide: 0,
   };
 }
