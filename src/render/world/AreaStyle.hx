@@ -104,6 +104,8 @@ class AreaStyle {
   public var lawnTex:String = null;          // ragged dead-grass patch (alpha cutout); null = this area has no lawns
   public var lawnFacades:Array<Int> = null;  // facade slots whose buildings grow a lawn ring on the alley cells around them
   public var lawnChance:Float = 0;           // odds an eligible building gets one (deterministic per footprint, no rng)
+  public var lawnPatchChance:Float = 0;      // odds any loose alley/courtyard cell seeds a stray patch, away from any building
+  public var lawnCourtPatches:Int = 0;       // patches planted near the centroid of EVERY courtyard, so an open yard is never bare
   // --- rooftop helipad (Roofs.helipadRect), tall towers only ---
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals

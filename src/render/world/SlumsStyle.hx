@@ -161,6 +161,8 @@ class SlumsStyle {
       s.lawnTex = 'textures/slums/grass-dead.png';
       s.lawnFacades = [4, 5];
       s.lawnChance = 0.5;
+      s.lawnPatchChance = 0.03;
+      s.lawnCourtPatches = 2;
       _s = s;
     }
     return _s;

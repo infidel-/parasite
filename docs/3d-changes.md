@@ -1537,8 +1537,71 @@ leaving `alphaTest` at 0.5 with `opacity 0.5` would have discarded every fragmen
 `ALPHA * 0.5`, which keeps exactly the texels that survived before. `renderOrder = ORD_DECAL - 1` so
 blood and debris still draw over the grass rather than under it.
 
+**Stray courtyard patches** (`AreaStyle.lawnPatchChance`, slums `0.03`): a second marking pass over
+every `Tile.Alley` cell, hashed on `(col, row)` with different multipliers from the footprint hash so
+patch placement does not correlate with which houses got a yard. Each seed pulls in whichever of its
+4 neighbours the spare bits of the same hash pick, so they land as 1–5 cell clumps instead of a
+dusting of lone squares. They cost nothing structurally — they mark into the same `taken` grid, so
+the fringe logic gives them dissolving borders for free, and they merge seamlessly where a clump
+happens to touch a house's yard. 150 cells → 316 in the test area.
+
 **Verified:** builds clean, `__check.pass` true / 0 fails, and the placement rule reproduced in-page
 off `WorldCtx.buildings` / `WorldCtx.tiles` → 150 cells, matching the mesh's tri count exactly (300
-before the subdivision, 2700 after, same bbox, still one mesh).
+before the subdivision, 2700 after, same bbox, still one mesh; 5688 after the courtyard pass).
+
+---
+
+## SHIPPED — Dead lawns get round outlines: the shape moves from the mesh to an alphaMap (2026-07-27)
+
+The patches read as "vaguely tile-shaped", and they were: a patch was the union of `CELL = 4` squares,
+so every edge was axis-aligned and every corner 90°. **The vertex-alpha fringe could never fix that**
+— it softens the boundary, but the boundary *is* the geometry. So the shape had to stop coming from
+the cells.
+
+**The outline now comes from a baked coverage mask.** `Lawns.build` draws one soft radial kernel per
+marked cell onto a `1024²` canvas covering the whole city rect, with
+`ctx.globalCompositeOperation = 'lighten'` — a per-channel **max**, i.e. a plain union, so a kernel's
+reach is exactly its own radius no matter how many neighbours pile up. (An additive `lighter`
+composite was rejected on paper: in dense clusters the 0.5 contour creeps outward until it spills
+past the geometry underneath.) Centre and radius are hash-jittered per cell (`KERN_JIT`) so blobs are
+irregular rather than a lattice of identical circles.
+
+**Wiring it needed no second UV set** — the trap that would have cost a `uv1` attribute and an extern
+change. `alphaMap` carries its own texture transform (`vAlphaMapUv = alphaMapTransform * vec3(
+ALPHAMAP_UV, 1 )`) and the lawn's `uv` is already `world / TILE`, so the whole city mapping is
+`repeat = TILE / (GRID*CELL)`, `offset = 0.5`. `flipY = false` so canvas row 0 is `z = -half`.
+`alphamap_fragment` runs **before** `alphatest_fragment` in three's standard shader (checked in the
+vendored r181 bundle), which is the whole trick: the mask's smooth ramp gets cut by the existing
+`alphaTest` along the grass art's own ragged texels, so the edge is a curve that dissolves rather
+than a soft blob.
+
+**`KERN` has a floor, and it is not obvious.** At `KERN = 6.0` (visible blob radius ≈ `KERN*0.45` =
+2.7 against a 4-unit cell pitch) a run of marked cells **beaded into a string of pearls** — adjacent
+kernels pinched hard at their waist. Caught by dumping the mask canvas into a full-screen overlay
+`div` and screenshotting it, then re-dumping it thresholded at the level `alphaTest` actually cuts
+at, which shows the exact outline the grass will take. `KERN = 7.0` merges cleanly. Anything at or
+under `CELL * 0.5 / 0.45 ≈ 4.4` disconnects entirely.
+
+**Geometry got simpler, not more complex:** the 4×4 subdivision, the `color` attribute,
+`vertexColors`, `EDGE` and `FRINGE` are all deleted — one quad per cell again — plus a 1-cell apron
+of alley cells so a blob can round off past its own cell. The mesh existing only on `Tile.Alley` is
+what keeps grass off pavement: a blob that would spill is clipped at the kerb, the one hard edge that
+belongs there. 5688 tris → **2100**, still one mesh, one draw call, plus one 1024² canvas texture.
+
+**Leak closed:** `StreetView.disposeScene` frees geometries and materials but deliberately not
+textures — they are the shared cached ones from `Textures.hx`. This mask is per-area and uncached, so
+`Lawns` holds a `static maskTex` and disposes the previous one at the top of `build()`. (`dispose()`
+and `channel` were missing from the `Texture` extern and were added.)
+
+**Courtyard-centre patches** (`AreaStyle.lawnCourtPatches`, slums `2`): an alley cell is by definition
+one that touches no road (`CityGen.hx:758`), so a 4-neighbour flood fill over `Tile.Alley` returns
+exactly one component per block interior — that IS the courtyard, no new citygen data. Components
+under `MIN_COURT = 6` cells are slivers and skipped; the rest get `lawnCourtPatches` seeds at
+`centroid + dir * spread` on opposite compass headings, snapped to the nearest cell in the component.
+46 courtyards qualified in the test area.
+
+**Verified:** `__check.pass` true / 0 fails, no console errors, `__dbg.find('lawn')` → one mesh, 2100
+tris (1050 emitted cells), bbox unchanged. The mask was inspected directly (raw, then thresholded at
+the alphaTest level) — round merged organic blobs, no straight runs, no 90° corners, no beading.
 Free-cam close-ups show the grass reading across whole cells instead of as isolated streaks. Draw
 calls unchanged by construction (same single mesh); not A/B'd against a `calls=` baseline.
