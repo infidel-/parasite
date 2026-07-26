@@ -1498,3 +1498,47 @@ and a screenshot pair showing a working lamp's pale glowing lens beside a dead l
 head. **Not verified visually:** an actual outage frame — at ~16 % duty a random screenshot rarely
 lands in one, and the timed sampling run was cut short when the app restarted. The head-goes-dark
 half of the outage is by construction, not by observation.
+
+---
+
+## SHIPPED — Dead lawns: tighter repeat, dissolving borders, translucent overlay (2026-07-27)
+
+Three complaints about the slums dead-lawn patches, all fixed in `render/world/Lawns.hx` alone. No
+new mesh, no new material, no new art — same one world-baked mesh, same texture.
+
+**"I don't see the grass anywhere."** It was there (150 quads, 368×388 world units) but `TILE = 6.0`
+world units per repeat against `CELL = 4` meant a cell showed only two thirds of a repeat. The art is
+~40 % opaque after the chroma key with the opaque parts in a few clumps, so whole cells landed on the
+sparse gaps and rendered as bare alley. **`TILE = 3.0`** — every cell now gets more than a full
+repeat, so every cell gets some grass. Still world-aligned on both axes, still never stretched.
+
+**Abrupt ground→grass border.** The patch ended on a straight cell line, because the cutout was
+binary and the mesh is squares. Fixed with a **vertex-alpha ramp**, not a shader: a `color` attribute
+at `itemSize 4` (three then defines `USE_COLOR_ALPHA` and multiplies `vColor` into `diffuseColor`,
+alpha included) carrying, per grid corner, the fraction of the four cells around that corner that are
+lawn. `SlimeTrail` was the existing precedent for the 4-component color attribute. Because
+`alphaTest` still runs on top, the ramp does not fade the border as a soft rectangle: it pushes the
+border texels under the threshold **thinnest-first**, so the patch dissolves along the ragged shapes
+already in the art. Getting the weights out of the patch shape needed `build()` split into two passes
+(mark cells → emit quads); the old single pass emitted a cell before it knew its neighbours.
+
+**The first cut of that ramp put it on the CELL CORNERS, and that was wrong** — a cell is `CELL = 4`
+units wide, so the gradient spanned four units and the grass looked like it started a whole cell short
+of the walkway rather than right where the walkway ends. The lawn ring is often only one cell thick,
+so the transition zone ate the entire patch. Now each marked cell is emitted as a **4×4 vertex grid
+(9 quads)** with a `FRINGE = 0.75`-unit rim inset all round: full-strength grass inside, `EDGE` alpha
+on the rim, and the rim only drops where the patch actually ends — a vertex whose neighbouring cells
+are all lawn stays at 1.0, so abutting cells stay one continuous field. Cost is 150 quads → 1350
+(2700 tris) in the same single mesh; nothing else changed.
+
+**Wanted a translucent overlay.** `transparent: true, opacity: 0.5, depthWrite: false`. **Trap:**
+three tests `alphaTest` against `diffuseColor.a` *after* `opacity` and `vColor` are multiplied in, so
+leaving `alphaTest` at 0.5 with `opacity 0.5` would have discarded every fragment. It is now
+`ALPHA * 0.5`, which keeps exactly the texels that survived before. `renderOrder = ORD_DECAL - 1` so
+blood and debris still draw over the grass rather than under it.
+
+**Verified:** builds clean, `__check.pass` true / 0 fails, and the placement rule reproduced in-page
+off `WorldCtx.buildings` / `WorldCtx.tiles` → 150 cells, matching the mesh's tri count exactly (300
+before the subdivision, 2700 after, same bbox, still one mesh).
+Free-cam close-ups show the grass reading across whole cells instead of as isolated streaks. Draw
+calls unchanged by construction (same single mesh); not A/B'd against a `calls=` baseline.
