@@ -92,7 +92,7 @@ class RenderConfig {
     { tex: 'textures/detail-tank.png',   w: 3.2, d: 3.2, crop: 0.80 },
   ];
   // helicopter pad: a big centred deck marking that takes over a tall tower's roof (the style
-  // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; Roofs.helipadRect)
+  // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; FlatRoofs.helipadRect)
   public static inline var HELIPAD_SIZE = 16.0;      // max pad side (shrinks to fit inside ROOF_DETAIL_MARGIN)
   public static inline var HELIPAD_MIN_FLOORS = 12;  // only towers at least this tall get one
   public static inline var HELIPAD_MIN_CELLS = 4;    // ...and at least this many cells on the short side (a setback tower's top tier is usually 4-5 cells)

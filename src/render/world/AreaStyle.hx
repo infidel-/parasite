@@ -26,7 +26,7 @@ typedef LampProp = {
 };
 
 // per-area render knobs: the texture sets + facade behavior the world sub-builders
-// (Ground/Buildings/Windows/Roofs) would otherwise hardcode. DEFAULT reuses the exact
+// (Ground/Buildings/Windows/roofs.*) would otherwise hardcode. DEFAULT reuses the exact
 // same TEXTURES arrays and RenderConfig constants the code reads today (identical
 // references → residential output pixel-identical); DOWNTOWN (DowntownStyle) swaps them for
 // the skyscraper look and SLUMS (SlumsStyle) for the run-down outskirts — each is the single
@@ -39,7 +39,7 @@ class AreaStyle {
   public var walkway:String;
   public var walkwayBorder:String;
   public var roadPaint:String;
-  // --- facade texture sets, indexed by Building.facade (Buildings.hx/Roofs.hx) ---
+  // --- facade texture sets, indexed by Building.facade (Buildings.hx/roofs/*.hx) ---
   public var walls:Array<String>;        // clean street-facing walls
   public var wornWalls:Array<String>;    // worn/back/buried faces (downtown: dark service back)
   public var storefronts:Array<String>;  // ground-floor band
@@ -106,7 +106,7 @@ class AreaStyle {
   public var lawnChance:Float = 0;           // odds an eligible building gets one (deterministic per footprint, no rng)
   public var lawnPatchChance:Float = 0;      // odds any loose alley/courtyard cell seeds a stray patch, away from any building
   public var lawnCourtPatches:Int = 0;       // patches planted near the centroid of EVERY courtyard, so an open yard is never bare
-  // --- rooftop helipad (Roofs.helipadRect), tall towers only ---
+  // --- rooftop helipad (FlatRoofs.helipadRect), tall towers only ---
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals
   public var helipadFacades:Array<Int> = null; // facade slots that may carry a pad; null = any (downtown limits it to the glass skyscrapers, not the mid-rises/sleek high-rise)

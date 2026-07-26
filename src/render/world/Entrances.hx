@@ -11,8 +11,8 @@ import render.Poly.tag;
 
 // pedestrian entrance / maintenance doors on simple + composite buildings, each with
 // its tinted lintel/canopy cover. Front doors are guaranteed on the widest street face;
-// side doors are deterministic per non-street wall. Face/run classification via Geom;
-// the stone door's gable cover via Roofs.coverGableGeo. Writes doorSeen / noBackDoor.
+// side doors are deterministic per non-street wall. Face/run classification via Geom.
+// Writes doorSeen / noBackDoor.
 class Entrances {
   static inline var CELL = CityConfig.CELL;
 
@@ -115,7 +115,7 @@ class Entrances {
           setPos(cover, Math.min(anchor + R, b.h - R), -RenderConfig.COVER_EMBED); // flat diameter vertical on wall; bottom at anchor
         case 2: // stone: sloped slate cap INSET into the wall — ridge buried, only the front slope shows (grows from the wall)
           ct.repeat.set(1, 1);                                             // UVs already world-tiled inside coverGableGeo
-          var geo = Roofs.coverGableGeo(cw, cd, cv.rise, mt);
+          var geo = coverGableGeo(cw, cd, cv.rise, mt);
           cover = new Mesh(geo, cmat);
           setPos(cover, Math.min(anchor + 0.2, b.h - cv.rise), -RenderConfig.COVER_EMBED); // ridge (local z=0) ~at wall → back half embedded; lifted a touch (inset slope reads higher than flat covers)
         default: // brick / tower lobby: flat awning slab, thickness = cv.rise
@@ -220,5 +220,32 @@ class Entrances {
       if (Geom.expectWindows(b)) for (f in faces)
         if (!doored.exists(f.dir) && !Geom.storefrontFace(b, f.dir) && Geom.faceHasPathToRoad(b, f.dir)) { placeFront(b, f, doorSide(b, f.faceW)); doored.set(f.dir, true); }
     }
+  }
+
+  // small pitched gable cap for a stone FRONT-door cover: 2 sloped quads (ridge parallel to the
+  // wall, along local x) + 2 triangular gable ends. local frame: x = door width, y up from 0,
+  // z out from wall; eaves at z=±cd/2,y=0; ridge at z=0,y=rise. UV world-tiled by `tile`.
+  static function coverGableGeo(cw:Float, cd:Float, rise:Float, tile:Float):BufferGeometry {
+    var hw = cw / 2, hd = cd / 2;
+    var L = Math.sqrt(hd * hd + rise * rise) / tile; // eave→ridge tile span
+    var p = new Array<Float>(), u = new Array<Float>();
+    inline function v(x:Float, y:Float, z:Float, tu:Float, tv:Float):Void {
+      p.push(x); p.push(y); p.push(z); u.push(tu); u.push(tv);
+    }
+    // front slope (+z)
+    v(-hw, 0, hd, -hw / tile, 0); v(hw, 0, hd, hw / tile, 0); v(hw, rise, 0, hw / tile, L);
+    v(-hw, 0, hd, -hw / tile, 0); v(hw, rise, 0, hw / tile, L); v(-hw, rise, 0, -hw / tile, L);
+    // back slope (-z)
+    v(hw, 0, -hd, hw / tile, 0); v(-hw, 0, -hd, -hw / tile, 0); v(-hw, rise, 0, -hw / tile, L);
+    v(hw, 0, -hd, hw / tile, 0); v(-hw, rise, 0, -hw / tile, L); v(hw, rise, 0, hw / tile, L);
+    // gable end +x
+    v(hw, 0, hd, hd / tile, 0); v(hw, 0, -hd, -hd / tile, 0); v(hw, rise, 0, 0, rise / tile);
+    // gable end -x
+    v(-hw, 0, -hd, -hd / tile, 0); v(-hw, 0, hd, hd / tile, 0); v(-hw, rise, 0, 0, rise / tile);
+    var geo = new BufferGeometry();
+    geo.setAttribute('position', new Float32BufferAttribute(p, 3));
+    geo.setAttribute('uv', new Float32BufferAttribute(u, 2));
+    geo.computeVertexNormals();
+    return geo;
   }
 }

@@ -15,7 +15,7 @@ class Downtown {
   // slicing a window in half. the raw GROUND_H + f*FLOOR_H + TOP_MARGIN quantization
   // shares no common grid with CELL and misaligned on ~95% of decks.
   // the top row stays a real window floor: the downtown coping sits ON the wall head instead
-  // of hanging over it (Roofs.addDowntownRoof), so nothing has to be spent capping it
+  // of hanging over it (FlatRoofs.addDowntownRoof), so nothing has to be spent capping it
   public static inline function glassHeight(f:Int):Float
     return CELL * Math.round((GROUND_H + f * FLOOR_H + TOP_MARGIN) / CELL);
 

@@ -7,11 +7,14 @@ import render.RenderConfig;
 import render.RenderConfig.TEXTURES;
 import render.Textures;
 import render.Poly.tag;
+import render.world.roofs.Parapets;
+import render.world.roofs.Gables;
+import render.world.roofs.FlatRoofs;
 
 // per-building box construction: the wall/roof box, storefront overlay, metal-warehouse
 // door, near-ground grime band, and (Buildings.addGround) the ground-floor storefront
-// band. Parapets and gable roofs are delegated to Roofs; face/worn/front classification
-// to Geom. Sets window.__grime for live grime-opacity tuning.
+// band. Parapets and gable roofs are delegated to render.world.roofs; face/worn/front
+// classification to Geom. Sets window.__grime for live grime-opacity tuning.
 class Buildings {
   static inline var CELL = CityConfig.CELL;
   static inline var GROUND_H = CityConfig.GROUND_H;
@@ -229,7 +232,7 @@ class Buildings {
 
       // citygen guarantees all metal is a standalone rectangle, and a slums house is remapped only
       // on a leaf too small to reach the composite shape branches — so every gabled box is a rect
-      var gable = Roofs.isGabled(b);
+      var gable = Gables.isGabled(b);
 
       // metal warehouse: one big closed roll-up door, centred and glued to the ground.
       // prefer a street-facing GABLE-END wall (door "under the angle"); but if neither gable
@@ -301,11 +304,11 @@ class Buildings {
         var gi = gableRoofTex != null ? b.facade % gableRoofTex.length : -1;
         var slope = gi >= 0 && gableRoofTex[gi] != null ? gableRoofTex[gi] : roofMetalTex;
         var slopePath = gi >= 0 && st.gableRoofs[gi] != null ? st.gableRoofs[gi] : TEXTURES.roofMetal;
-        Roofs.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, slope, slopePath);
+        Gables.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, slope, slopePath);
       } else if (st.roofDowntown && !shop) {
-        Roofs.addDowntownRoof(scene, b, center, wWorld, dWorld, copingTex, penthouseTex, shadowPos, shadowIdx);
+        FlatRoofs.addDowntownRoof(scene, b, center, wWorld, dWorld, copingTex, penthouseTex, shadowPos, shadowIdx);
       } else {
-        Roofs.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
+        Parapets.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
       }
     }
     addShadowCaster(scene, shadowPos, shadowIdx);
