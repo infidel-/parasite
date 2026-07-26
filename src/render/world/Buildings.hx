@@ -43,6 +43,9 @@ class Buildings {
     var shopFront      = [for (p in TEXTURES.shopFront) Textures.loadTexture(p, 'wall')];
     var shopFrontNdLit = [for (p in TEXTURES.shopFrontNdLit) Textures.loadTexture(p, 'wall')];
     var shopFrontNd    = [for (p in TEXTURES.shopFrontNd) Textures.loadTexture(p, 'wall')];
+    // area override: one dark image per type, no lit pair (slums shops are all boarded up)
+    var styleFront   = st.shopFronts != null ? [for (p in st.shopFronts) Textures.loadTexture(p, 'wall')] : null;
+    var styleFrontNd = st.shopFrontsNd != null ? [for (p in st.shopFrontsNd) Textures.loadTexture(p, 'wall')] : null;
     var grimeTex = [for (p in TEXTURES.grime) Textures.loadTexture(p, 'wall')]; // near-ground street grime (alpha hand-painted into the source)
     // premultiplied alpha: the hand-painted grime sources carry saturated junk RGB under
     // near-transparent texels (paint-editor leftover); with straight alpha, bilinear/minified
@@ -187,11 +190,15 @@ class Buildings {
       // continuation; lit (open) vs unlit (closed) by shopOpen. b.h = SHOP_H makes each bay
       // exact 16:9 → no distortion, fills width AND height. MeshBasic = full-bright, so open
       // fronts read lit and closed fronts stay dark by the image's own values (bloom at night).
+      // an area that overrides the set (AreaStyle.shopFronts) has no lit variant at all — its art
+      // is dark by its own texels, so shopOpen simply doesn't apply there
       if (shop) {
         var type = b.shop;
         var open = b.shopOpen;
-        var doorTex = open ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length];
-        var ndTex   = open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
+        var doorTex = styleFront != null ? styleFront[type % styleFront.length]
+          : (open ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length]);
+        var ndTex   = styleFrontNd != null ? styleFrontNd[type % styleFrontNd.length]
+          : (open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length]);
         var bayW:Float = CELL * 2;
         // collect all bays, then merge into two draw calls per shop (door image + plain image)
         var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];

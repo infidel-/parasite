@@ -70,6 +70,12 @@ class AreaStyle {
   public var glassLitColor:Array<Int> = null;   // per facade: glow tint of lit glass panes (multiplies the lit texture); null entry = white (texture colour only)
   // --- glass-tower opaque band (Buildings), indexed by Building.facade ---
   public var glassPodium:Array<String> = null;  // per facade: solid street-level plinth over the bottom CityConfig.GLASS_PODIUM_ROWS window rows; null (or null entry) = none
+  // --- single-story shop bays (Buildings), indexed by Building.shop, NOT by facade ---
+  // a whole-area override of the shared RenderConfig.TEXTURES.shopFront* set. non-null means every shop
+  // in this area is dark: Building.shopOpen is ignored and there is no lit variant to pick, which is the
+  // point for slums (boarded up, nobody home). null = the residential lit/unlit pair keyed on shopOpen
+  public var shopFronts:Array<String> = null;   // per shop type: the bay carrying the entrance door
+  public var shopFrontsNd:Array<String> = null; // per shop type: the door-less continuation bay
   // --- entrances (Entrances.hx), indexed by Building.facade ---
   public var doors:Array<String>;        // clean street-facing pedestrian door art
   public var doorsWorn:Array<String>;    // service/maintenance door art for worn faces
@@ -90,6 +96,10 @@ class AreaStyle {
   public var penthouseWall:String;       // downtown rooftop bulkhead wall (roofDowntown only)
   // --- street lamp prop (SceneSetup.buildScene) ---
   public var lamp:LampProp = null;       // lamp model + bulb/post offsets; null = residential (RenderConfig.MODELS.streetLamp + LAMP_LIGHT offsets)
+  // decided per lamp CELL, deterministic, no rng and nothing persisted. these change only WHICH lamps
+  // burn, never LAMP_LIGHT.pool — so NUM_SPOT_LIGHTS stays constant and no lit material recompiles
+  public var lampBrokenRatio:Float = 0;  // odds a lamp is dead: its post still stands, but it gets no light cone and never claims a spotlight slot
+  public var lampFlickerRatio:Float = 0; // odds a WORKING lamp sputters (failing sodium) instead of burning steady
   // --- dead-lawn ground patches around houses (Lawns.hx) ---
   public var lawnTex:String = null;          // ragged dead-grass patch (alpha cutout); null = this area has no lawns
   public var lawnFacades:Array<Int> = null;  // facade slots whose buildings grow a lawn ring on the alley cells around them

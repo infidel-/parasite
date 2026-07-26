@@ -316,6 +316,7 @@ typedef RendererInfo = {
   public var center:Vector2;
   public var rotation:Float;
   public var anisotropy:Int;
+  public var flipY:Bool; // glb textures ship flipY=false; a CanvasTexture defaults to true
   public function clone():Texture;
 }
 @:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {

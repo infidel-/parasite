@@ -44,6 +44,10 @@ class StreetView {
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
+  var lampPropDead:render.Models.InstancedProp; // dead lamps' posts (unlit bulb), culled alongside
+  var coneFlick:render.LightCone.ConeSet; // flickering lamps' cones, repacked per frame so they go out with the bulb
+  var lampMask:Array<Bool>;     // draw mask for lampProp — first entries are the flickering lamps
+  var lampMaskDead:Array<Bool>; // its complement for lampPropDead (same posts, dark material)
   var city:City;
 
   var actorGroup:Group;
@@ -419,6 +423,10 @@ class StreetView {
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
+    lampPropDead = bundle.lampPropDead;
+    coneFlick = bundle.coneFlick;
+    lampMask = bundle.lampMask;
+    lampMaskDead = bundle.lampMaskDead;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
     // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
     // pass only ever touches static geometry the world builder adds below
@@ -910,7 +918,17 @@ class StreetView {
     lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
     // drop offscreen lamp meshes: one InstancedMesh otherwise draws all ~280 whenever any is
     // visible. radius CELL*2 covers a lamp's full height as an edge margin so none pop at screen edges
-    render.Models.cull(lampProp, camera, CityConfig.CELL * 2);
+    // pull the cones of any flickering lamp that is mid-outage out of the draw (no-op most frames),
+    // then hand the same on/off state to the post batches: a lamp that is out draws from the DEAD
+    // batch instead, so its emissive head stops glowing and blooming for the length of the outage
+    render.LightCone.pulse(coneFlick, lampLights.flickT);
+    for (i in 0...coneFlick.on.length)
+      {
+        lampMask[i] = coneFlick.on[i];
+        lampMaskDead[i] = !coneFlick.on[i];
+      }
+    render.Models.cull(lampProp, camera, CityConfig.CELL * 2, lampMask);
+    render.Models.cull(lampPropDead, camera, CityConfig.CELL * 2, lampMaskDead);
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
     shockwave.update();

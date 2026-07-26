@@ -28,7 +28,9 @@ class SlumsProfile {
     lChance: 0.35,
     tChance: 0.6,
     plusChance: 0.85,
-    courtyardBlockChance: 0.35,
+    // derelict inner lots far more often than the mid-density default (0.35): the carved courtyard
+    // is the ONLY burning-barrel site, and at 0.35 a slums city averaged 3.9 courtyards -> too few
+    courtyardBlockChance: 0.6,
     // roads unchanged
     turnChance: 0.55,
     deadendChance: 0.7,

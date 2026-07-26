@@ -40,15 +40,31 @@ class SlumsStyle {
         'textures/slums/wall-clapboard-worn.png',
         'textures/slums/wall-cinderblock-worn.png',
       ];
-      // the houses never grow a storefront band (noStoreSlots), but the array is loaded eagerly —
-      // keep real paths in slots 4/5 so nothing 404s into the procedural fallback
+      // ground-floor band: boarded/grilled and dead, one per masonry slot. only 0-2 ever draw one
+      // (3 is the special slot and skips the band, 4/5 are in noStoreSlots), but the array is loaded
+      // eagerly — keep real paths in 3-5 so nothing 404s into the procedural fallback
       s.storefronts = [
-        t.storefronts[0],
-        t.storefronts[1],
-        t.storefronts[2],
+        'textures/slums/facade-concrete.png',
+        'textures/slums/facade-brick.png',
+        'textures/slums/facade-stone.png',
         t.storefronts[3],
         t.storefronts[0],
         t.storefronts[0],
+      ];
+      // single-story shops, indexed by Building.shop [diner, corner, garage, laundromat]. all dark —
+      // no lit pair, so shopOpen never applies here. the diner keeps its own wrecked front; the other
+      // three share one boarded-up shopfront (a dead corner store reads the same as a dead laundromat)
+      s.shopFronts = [
+        'textures/slums/shop-diner-front.png',
+        'textures/slums/shop-front.png',
+        'textures/slums/shop-front.png',
+        'textures/slums/shop-front.png',
+      ];
+      s.shopFrontsNd = [
+        'textures/slums/shop-diner-front-nd.png',
+        'textures/slums/shop-front-nd.png',
+        'textures/slums/shop-front-nd.png',
+        'textures/slums/shop-front-nd.png',
       ];
       // slot 4 is gabled (its flat top is hidden under the slopes); slot 5's flat tarpaper roof
       // reuses the residential tar base
@@ -137,6 +153,10 @@ class SlumsStyle {
       s.gableRoofs = [null, null, null, null, 'textures/slums/roof-shingle.png', null];
       s.roofDowntown = false;
       s.penthouseWall = null;
+      // half the street lamps are dead (post still standing, no cone, no light) and a third of the
+      // survivors are failing sodium — long dark stretches with a burning barrel as the only steady light
+      s.lampBrokenRatio = 0.5;
+      s.lampFlickerRatio = 0.33;
       // overgrown dead yards around both house types, on about half of them
       s.lawnTex = 'textures/slums/grass-dead.png';
       s.lawnFacades = [4, 5];

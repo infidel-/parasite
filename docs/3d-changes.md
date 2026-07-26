@@ -1293,3 +1293,208 @@ passes into a throwaway `THREE.Scene` and testing against the gabled footprints:
 tagged to a gabled building (674 remain citywide), **0** of 1592 shadow instances inside a gabled
 footprint at its roof height. The lesson generalises: any pass keyed on `isSpecial` is really asking
 "does this slot have a gable", and needs re-reading whenever a style adds a roof shape.
+
+---
+
+## Slums pass 2: barrels, dead shopfronts, broken lamps (LANDED, visual check pending)
+
+Three follow-ups after walking the landed slums area.
+
+**Burning barrels were nearly absent — and it was arithmetic, not a bug.** Measured over 1000 seeds:
+mean **1.52 barrels/city, 23% of slums cities generated ZERO**. Two gates multiply. `carveCourtyard`
+is the only barrel site and fires on `courtyardBlockChance: 0.35` (~3.9 courtyards/city), then
+`placeBurningBarrels` rolled `Std.random(100) >= 60` on top, keeping 40%. Worth recording what was
+NOT the cause: the slums massing knobs are innocent — 3.87 courtyards as shipped vs 4.04 with full
+residential massing (depth 5 / splitOver 12 / maxBuilding 8 / earlyLeaf 0.3). The barrel-less cities
+also silently broke the three profane cult ordeals that `spawnNearType` a barrel.
+
+Fixed by raising slums `courtyardBlockChance` to 0.6 and deleting the second roll — the courtyard roll
+is variety enough. Re-measured over 400 seeds: **mean 6.44 barrels/city, 0.3% zero** (1 city in 400).
+MEDIUM is untouched by construction: `CityGen.hx` and the `DEFAULT` profile were not edited, only a
+slums-only constant. Note this DOES re-roll existing slums saves — `cityGenSeed` persists and
+`AreaGame` rebuilds cells from it, so an old save reloads into a different city while its persisted
+barrels keep their old cells (`rebuildCells` never refreshes `courtyards`). Acceptable pre-release.
+
+**Two unrelated systems share the word "storefront", and only one was style-driven.** The ground-floor
+band reads `AreaStyle.storefronts`; the single-story shop bays read `RenderConfig.TEXTURES.shopFront*`
+directly, with lit/unlit chosen by `Building.shopOpen`. So slums — which generates MORE shops than
+residential (`downgradeChance: 0.45`) — was rendering bright, half-lit diners. Added
+`AreaStyle.shopFronts` / `shopFrontsNd`: non-null means the area's shops are all dark, `shopOpen` no
+longer applies, and there is no lit variant to pick. 4 boarded bays (shop + diner, each door /
+door-less) instead of the residential 16, plus 3 new `slums/facade-*` bands. `shopOpen` turned out to
+have no gameplay reader at all (only `Buildings` and `BDump`), so ignoring it costs nothing.
+
+Texture-shape trap worth keeping: shop bays MUST be 16:9 (`b.h = SHOP_H` makes each bay exactly 16:9
+at `rx = ry = 1`) but the ground-floor band is SQUARE (`rx = faceW/GROUND_H`, `ry = 1`, one square bay
+per 4 world units). The residential `facade-stone`/`facade-metal` are baked 16:9 and are therefore
+vertically squashed on the band — a pre-existing bug, not copied into the slums set.
+
+**Lamps: half dead, a third of the survivors sputtering.** New `AreaStyle.lampBrokenRatio` /
+`lampFlickerRatio`, decided from the lamp CELL with the footprint-hash idiom (no rng, nothing
+persisted, stable across reloads). Both default 0, so residential/downtown are untouched.
+
+The shape that made this cheap: a dead lamp is dropped from `bulbs` AND from `lampPosts` in the one
+`SceneSetup` loop. So it gets no light cone for free, and it never enters `LampLights`' candidate list
+— meaning dead lamps do not consume the 12-slot pool, and the survivors near the player get MORE
+coverage, not less. Critically this never touches `LAMP_LIGHT.pool`, so `NUM_SPOT_LIGHTS` is constant
+and no lit material recompiles — the whole reason that pool exists.
+
+**Killing the spotlight and the cone is NOT enough to make a lamp read dead.** First attempt kept every
+post in the one instanced batch and only removed its light; the bulb still glowed and still fed bloom,
+so a "broken" lamp looked lit from any distance. Both lamp glbs carry `emissiveFactor` +
+`emissiveTexture` + `KHR_materials_emissive_strength` on the head — the glow is emissive, independent
+of every light in the scene, and bloom keys off the rendered texel, not off whether a light exists.
+Fixed with a `darkEmissive` flag on `Models.instanced` that CLONES the material (it comes from the
+shared model cache — editing in place would black out the working lamps too) and zeroes `emissive` /
+`emissiveMap` / `emissiveIntensity`. Dead posts therefore live in their own `InstancedMesh`: **+1 draw
+call** in an area with broken lamps, zero anywhere else. The general lesson: an emissive prop has two
+independent brightness sources, and turning off the light only addresses one of them.
+
+Flicker is `LampLights.flicker(t, phase)`, a port of the failing-sodium model already shipped in
+`MainMenuGL`: steady, then a slow gate sine opens a rare window in which two fast beating sines drop it
+toward blackout. `FlameLights.flicker` was the wrong shape and is deliberately NOT reused — it is a
+warm breathe floored at 0.55 that never goes dark, which is a fire, not a dying bulb. Clock is raw ms
+(bypasses `ANIM_SPEED`, same call as `FLAME.flick*`). The multiplier is applied only at the publish
+line and never to `intens[]`: that array is both the fade ease and the `<= 0.001 -> free the slot`
+test, so scaling it in place would hand a sputtering lamp's slot away mid-blink. The fake ground
+shadow already had a `flicker` field waiting (`CastShadows.ShadowLight`, previously passed 1.0), so
+lamp shadows now breathe with the bulb for one line.
+
+**Deliberately NOT done: a flickering lamp's CONE does not flicker.** All cones are one
+`InstancedMesh` over one shared material with no per-instance channel — `setColorAt` has zero
+occurrences in the repo, and `Models.cull` repacks instances every frame, so any new per-instance
+attribute must be repacked in lockstep. At `LAMP_CONE.opacity = 0.03` the mismatch should sit below
+notice. Upgrade path if it ever reads wrong: a second cone mesh for the flickering subset (1 extra
+draw call, one shared phase) or a real `instanceColor` extern.
+
+Still unverified visually at time of writing (the app was not running): whether 50% broken reads as
+atmospheric or merely dark, whether 1-in-3 flicker is too busy, and whether the boarded shopfronts are
+legible at street distance now that nothing in the area is lit.
+
+---
+
+## SHIPPED — Gable roofs overhang on all sides, slopes are thin slabs (2026-07-26)
+
+Both pitched roofs (metal warehouse, slums clapboard) were two zero-thickness quads sitting exactly on
+the box footprint — flush on all four sides, no eave, no material thickness anywhere on the perimeter,
+so a roof read as a folded sheet pressed onto the walls with no shadow line under it.
+
+Each slope is now a **thin slab** overhanging the box by `GABLE_OVER` on all four sides, with
+`GABLE_THICK` of visible edge. One function does both roofs — `Roofs.addGableRoof` — because
+`Buildings` only varies which slope texture it hands in, so this was one geometry change with no
+per-style work and no new art.
+
+**Extrude the slab VERTICALLY, not along the slope normal.** A normal offset slides each slope's top
+surface sideways by `T*sin(pitch)`, so the two tops stop meeting and a `2*T*sin(pitch)` notch opens
+along the whole ridge — which then needs a ridge cap to hide. Raised straight up, both tops stay on
+their own plane and still meet exactly on the ridge line: a closed prism, no cap, no trig, and the
+fascia and rake come out as genuinely vertical strips, which is what they are on a real roof.
+
+Per slope **5 quads, not 6**: top, soffit, eave fascia, two rakes. The ridge edge strip is skipped
+because both slabs own the same one and two coplanar faces z-fight.
+
+Every face samples the same roof texture, world-tiled on both axes (`u` along the ridge, `v`
+down-slope or up the thickness). The fascia's `v` runs `-T/TILE -> 0` so it continues the top
+surface's eave line rather than restarting.
+
+**The gable-end triangles needed no change at all**, which is the useful part of the construction: the
+slab BOTTOM still passes exactly through `(wall plane, b.h)` and `(ridge, ridgeY)`, so the wall
+triangles still fill the space under the roof precisely, touching along a line (no z-fight), and the
+rake now stands proud of them instead of being flush.
+
+Same change collapsed the `if (wWorld >= dWorld) … else …` duplication into one `along`/`cross` axis
+pair plus a single mapper. The gable-end triangles turn out to be the *same expression* in both
+orientations under that naming, and both `aDir/bDir` pairs fall out of the axis flag — so the slab
+emitter and the ends are each written once. The function got shorter despite doing five times the
+geometry.
+
+**Cost, measured on the live slums save** (48 gabled buildings: 33 warehouses + 15 clapboard):
+`__dbg.count('roof-gable')` = 48 and `count('gable-end')` = 96, i.e. still exactly 3 meshes and 3
+materials per gabled building — mesh count and therefore draw calls unchanged. Tris per roof 4 → 20.
+`__dbg.find` bounding boxes confirm the geometry exactly: a 12×8 box now yields a 13×9 roof
+(footprint + 2×0.5 on both axes) and 2.28 tall (`pitchH 1.76 + THICK 0.3 + eave drop 0.5*tanP 0.22`).
+`__check.pass` true, 0 fails. Visually: rake overhang clearly proud of the gable end head-on, and from
+the side the fascia reads as a dark band with a shadow line over the wall below it.
+
+**Checked before writing, not a problem:** the clapboard cottage's porch cover can't collide with the
+new eave. `Entrances.hx` clamps a cover's bottom to `b.h - rise`, and that cover is itself a gable cap
+whose apex is AT the wall sloping down outward — at 0.5 out it is already ~0.37 below `b.h` where the
+eave underside is only 0.18 below.
+
+**Known ceiling, left in with a `ponytail:` comment:** the overhang is unconditional, so a gabled box
+abutting a *shorter* neighbour pokes an eave over its roof. Upgrade path if it reads wrong is a
+per-face gate on `Geom.faceIsStreet` / real adjacency. Overhang and thickness are global
+`RenderConfig` constants, not `AreaStyle` fields — split them per style only if the warehouse and the
+cottage turn out to want different numbers.
+
+*(Follow-up: `GABLE_THICK` 0.3 → 0.15 → 0.05 by eye. 0.3 read as a slab edge rather than a roof.)*
+
+---
+
+## SHIPPED — Lamp outages: flickering cones, dead lens, whole-lamp blackout (2026-07-26)
+
+Three follow-ups on the broken/flickering slums lamps, and one problem the work uncovered.
+
+**A "turn it off" effect has to turn off every source, and there are four.** This is the through-line
+of the whole entry and the generalisable lesson. A street lamp's brightness comes from (1) its pooled
+`SpotLight`, (2) the additive `LightCone` shaft, (3) the fake ground shadow it casts on actors, and
+(4) the glb material's **emissive head**, which is independent of every light in the scene and feeds
+bloom directly. The previous pass fixed (4) for permanently-dead lamps and (1) for flickering ones;
+this pass had to chase the other three, and (4) again for the temporary case. Each one is a separate
+mechanism with a separate fix — nothing about killing a light propagates to the rest.
+
+**Flickering cones: repack the instance buffer, don't fade a material.** The ceiling named in the
+previous entry — "a second cone mesh for the flickering subset (1 extra draw call, one shared phase)"
+— turned out to be the *wrong* upgrade. One shared material can only fade all flickering cones
+together, so every outage in the area would happen in unison. Instead `LightCone.instanced` now
+returns a `ConeSet` and the flickering subset gets its own mesh whose **matrix buffer is repacked per
+frame**, exactly like `Models.cull`: a cone whose bulb is out is simply not packed into the drawn
+prefix. That buys per-lamp independent phases with no per-instance colour channel (still zero
+`setColorAt` in the repo) and no material work. `pulse()` early-outs when no instance changed state,
+which is almost every frame — outages are seconds apart.
+
+**The emissive head was the sting in the tail, and the fix cost zero draw calls.** With (1)(2)(3)
+handled, a lamp mid-outage still had a glowing, blooming head, because the emissive lives in the
+material shared with every working lamp. The fix: a flickering lamp's post is instanced into **both**
+the lit batch and the existing dead-material batch, at the same index in each, and a per-frame mask
+picks which one draws it. Both batches were already being repacked every frame for the frustum cull,
+so the swap is free — `Models.cull` just gained an optional `mask` parameter. Cost of the whole pass
+is **+1 mesh** (the flicker cone batch) rather than the +3 a naive split would have taken — by
+construction, from the mesh inventory; NOT A/B'd against a `calls=` baseline in a fixed view.
+
+**A dead lamp's head was still pale, and the mask for fixing it already shipped inside the glb.**
+Stripping the emissive stopped the glow and the bloom, but the *base-colour* map paints the lens and
+hood cream (dumped both images out of `street-lamp.glb` to confirm), so the head still read live under
+moonlight. The same material's emissive map is exactly that region in white on black — a ready-made
+mask. `Models.deadMap` bakes `out = base * (1 - mask * (1 - mul))` on a canvas in three composite ops
+(invert the mask, `screen` it with a flat grey(mul) — `screen(1-m, mul) == 1 - m*(1-mul)` exactly —
+then `multiply` onto the base), cached per model path. No per-pixel loop, no new art, no shader cost,
+and only the head darkens: the pole is pixel-identical to a working lamp's. **Trap:** a bare
+`CanvasTexture` defaults to `flipY = true` while glb textures are `false`, so the post comes out
+upside down unless `flipY`/`wrapS`/`wrapT`/`colorSpace` are copied off the source. (`Texture.flipY`
+was missing from the extern and was added.)
+
+**Flicker became TWO gate sines riding on each other.** The old shape was a fast strobe that never
+went dark. Now a slow gate (`flickGate 0.000314`, ~20 s) opens an outage window the bulb ramps down
+into, sits at **exactly 0** through, and ramps back out of; and a fast gate (`flickBurst 0.001396`,
+~4.5 s) interrupts the lit stretches with ~1 s stutter bursts. One gate alone was not enough — with
+only the outage, a "flickering" lamp burned rock-steady for 17 s at a time and read as a working lamp
+that occasionally died. Sampled in-page, the cycle comes out as
+`lit 3.1s / flicker 1.0s / lit 3.5s / flicker 1.0s / lit 2.0s / DARK 3.1s / …` — 15.7 % of the time
+fully out, 18.9 % stuttering. Both gates take their own phase offset so neighbouring lamps neither
+stutter nor die in unison. A burst bottoms out around 0.27, comfortably above `flickOff`, so it dims
+the light without killing the cone or the head — only the full outage does that. The `(1 - d/edge)`
+ramp is what keeps the outage from popping from full brightness straight to black.
+
+**One bug the outage exposed:** `CastShadows` weights a lamp's fake ground shadow by
+`0.7 + 0.3 * flicker`, so a bulb at flicker 0 would still lay a 70 %-strength shadow. `FlameShadows`
+now drops any lamp under `LAMP_LIGHT.flickOff` before building the shadow list. The pool slot is
+deliberately NOT freed during an outage — `intens[]` is untouched, so the lamp comes back on the same
+slot instead of re-easing in from zero.
+
+**Verified:** `__check.pass` true / 0 fails, no console errors, both cone meshes present in
+`__occ.skipped()`, 234 lamps → 116 dead + 45 flickering, the flicker curve sampled in-page as above,
+and a screenshot pair showing a working lamp's pale glowing lens beside a dead lamp's uniformly dark
+head. **Not verified visually:** an actual outage frame — at ~16 % duty a random screenshot rarely
+lands in one, and the timed sampling run was cut short when the app restarted. The head-goes-dark
+half of the outage is by construction, not by observation.

@@ -44,6 +44,8 @@ class RenderConfig {
   public static inline var GRIME_OPACITY = 0.6; // overall grime strength (0 = none .. 1 = full texture alpha)
   public static inline var ROOF_TILE = 16;     // world units per roof-base tile (tiled, not stretched)
   public static inline var GABLE_V = 0.5;      // metal gable-end V anchor: sample a clean mid-texture band so the worn-metal dirty base strip never lands on the high gable triangle
+  public static inline var GABLE_OVER = 0.5;   // gable eave/rake overhang past the box on ALL four sides, world units (CELL = 4). 0 = the old flush roof
+  public static inline var GABLE_THICK = 0.05; // gable slab thickness, measured VERTICALLY — what turns each slope from a bare polygon into a slab with a visible fascia/rake edge
 
   // --- building fronts: stores vs plain entrances (deterministic per footprint, no rng) ----
   public static inline var STORE_PCT = 30;          // % of normal simple buildings that keep a storefront band (rest = plain entrance + windows)
@@ -576,6 +578,25 @@ class RenderConfig {
     shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
     shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the
                           // casting-set boundary — so a lamp crossing the boundary fades its shadow, no pop
+    // failing-sodium lamps, for the ones AreaStyle.lampFlickerRatio marks (LampLights.flicker). TWO
+    // gate sines ride on top of each other: a fast one breaking the lit stretches with ~1s stutter
+    // bursts, and a slow one that every ~20s takes the bulb all the way out for a few seconds. so the
+    // cycle reads lit ~3.5s / flicker ~1s / lit ~3.5s / flicker ~1s / ... / dead ~3s. rates are per RAW
+    // ms and deliberately bypass ANIM_SPEED — a dying bulb is physical, not gameplay-paced (same call
+    // as FLAME.flick*)
+    flickGate: 0.000314,  // outage gate sine rate: 2*PI/this = outage period, ~20s
+    flickGateOn: 0.81,    // gate value above which the outage window is open — 0.81 = 20% of the period, ~4s
+    flickOutEdge: 0.4,    // how deep into that window the stutter gives way to dead black (~3.1s fully dark)
+    flickBurst: 0.001396, // stutter-burst gate rate: 2*PI/this = burst period, ~4.5s
+    flickBurstOn: 0.77,   // gate value above which a burst runs — 0.77 = ~1s of stutter per burst period
+    flickOff: 0.05,       // below this a bulb counts as OUT: its cone stops drawing and it casts no fake shadow.
+                          // a stutter burst bottoms out at ~0.27, well above it, so only the full outage kills them
+    flickFastA: 0.020,    // stutter sine A — used by both the bursts and the outage ramps
+    flickFastB: 0.029,    // stutter sine B — beats against A for an uneven, unrepeating flutter
+    flickSteady: 0.82,    // brightness floor between outages (the +0.18 above it is the per-lamp bias)
+    flickMin: 0.3,        // how dark the stutter dips before the blackout takes over
+    deadLensMul: 0.28,    // a BROKEN lamp's lens/hood texels multiplied down by this (Models.instanced): the
+                          // glb paints them pale cream, so killing the emissive alone still leaves a bright head
   };
   // real moon (DirectionalLight) shadow: a single ortho shadow map that FOLLOWS the player each frame
   // (SceneSetup.fitMoon) — the box tracks the focus so shadows appear across the whole visible area, not

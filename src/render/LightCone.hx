@@ -3,6 +3,16 @@ package render;
 import three.Three;
 import js.Browser;
 
+// one instanced batch of light shafts. a STEADY set (phases empty) is built once and never touched
+// again; a FLICKERING set keeps its per-lamp phases and the on/off state pulse() last packed, so a
+// cone whose bulb is in its dark stretch simply isn't drawn that frame
+typedef ConeSet = {
+  var mesh:InstancedMesh;      // null when the set is empty (no draw call at all)
+  var matrices:Array<Matrix4>; // every instance's transform, in build order
+  var phases:Array<Float>;     // per-instance flicker phase; empty = a steady set
+  var on:Array<Bool>;          // per-instance: was it packed into the draw last pulse()
+};
+
 // a cheap volumetric light shaft: a hollow additive cone shell hung under a lamp's bulb, outlining
 // the (otherwise invisible) cone of lit air the SpotLight throws. three has no volumetric
 // scattering, so this fakes it with one open-ended CylinderGeometry — amber, additive, with a
@@ -39,13 +49,15 @@ class LightCone {
       return 'rgb(' + v + ',' + v + ',' + v + ')';
     }
 
-// build ALL lamp cones as ONE InstancedMesh (shared geometry, one draw call) — a straight-down shell
-// per bulb. `bulbs` = each lamp's bulb ground x/z (already pushed out over the road edge); bulbY =
-// bulb height; radius = cone ground radius. added to `group` (toggled with the lamps in debug)
-  public static function instanced(group:Object3D, bulbs:Array<{ x:Float, z:Float }>, bulbY:Float, radius:Float):Void
+// build a batch of lamp cones as ONE InstancedMesh (shared geometry, one draw call) — a straight-down
+// shell per bulb. `bulbs` = each lamp's bulb ground x/z (already pushed out over the road edge);
+// bulbY = bulb height; radius = cone ground radius. added to `group` (toggled with the lamps in
+// debug). `phases` (optional, same length as bulbs) marks this as a FLICKERING set for pulse()
+  public static function instanced(group:Object3D, bulbs:Array<{ x:Float, z:Float }>, bulbY:Float, radius:Float, ?phases:Array<Float>):ConeSet
     {
+      var set:ConeSet = { mesh: null, matrices: [], phases: phases != null ? phases : [], on: [] };
       if (bulbs.length == 0)
-        return;
+        return set;
       var C = RenderConfig.LAMP_CONE;
       // the shaft spans startFrac..1 of the bulb->ground axis; a top radius that follows the cone there
       var s = C.startFrac;
@@ -76,14 +88,56 @@ class LightCone {
       // reads as fake glass over an untinted object. a UNIQUE order (nothing else sits here) also
       // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom
       untyped inst.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
-      var q = new Quaternion(), mtx = new Matrix4(), pos = new Vector3(), one = new Vector3(1, 1, 1);
+      var q = new Quaternion(), pos = new Vector3(), one = new Vector3(1, 1, 1);
       for (i in 0...bulbs.length)
         {
           pos.set(bulbs[i].x, bulbY, bulbs[i].z);
+          var mtx = new Matrix4();
           mtx.compose(pos, q, one); // identity rotation: straight-down shell
           inst.setMatrixAt(i, mtx);
+          set.matrices.push(mtx); // kept so pulse() can repack a subset of them
+          set.on.push(true);
         }
       untyped inst.instanceMatrix.needsUpdate = true;
       group.add(inst);
+      set.mesh = inst;
+      return set;
+    }
+
+// per-frame on/off for a FLICKERING cone set: a cone whose bulb is in its dark stretch is left out of
+// the packed prefix, exactly the way Models.cull drops off-screen instances. this is why the
+// flickering cones live in their own mesh — a shared material could only fade all of them together,
+// so every outage in the area would happen in unison. no per-instance colour channel is involved.
+// ponytail: on/off only, the cone does not dim through the stutter — at LAMP_CONE.opacity 0.03 that
+// was never visible in the shaft. upgrade path is a real instanceColor extern
+  public static function pulse(set:ConeSet, t:Float):Void
+    {
+      if (set.mesh == null)
+        return;
+      // outages are seconds apart, so on almost every frame nothing changed and the whole repack +
+      // buffer upload is skipped
+      var cut = RenderConfig.LAMP_LIGHT.flickOff;
+      var changed = false;
+      for (i in 0...set.phases.length)
+        {
+          var lit = render.particles.LampLights.flicker(t, set.phases[i]) >= cut;
+          if (lit != set.on[i])
+            {
+              set.on[i] = lit;
+              changed = true;
+            }
+        }
+      if (!changed)
+        return;
+      var k = 0;
+      for (i in 0...set.on.length)
+        {
+          if (!set.on[i])
+            continue;
+          set.mesh.setMatrixAt(k, set.matrices[i]);
+          k++;
+        }
+      set.mesh.count = k;
+      untyped set.mesh.instanceMatrix.needsUpdate = true;
     }
 }

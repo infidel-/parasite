@@ -219,17 +219,24 @@ class FlameShadows {
           x: b.x, z: b.z, range: brange, lenMul: F.shadowLenMul,
           op: F.shadowOp, fade: F.shadowFade, flicker: FlameLights.flicker(flameT, b.phase),
         });
-      // lamps: steady; only the lamps lit this frame are in lampSrc, so no visibility gate needed
+      // lamps: only the lamps lit this frame are in lampSrc, so no visibility gate needed. a healthy
+      // bulb publishes flick 1 (steady); a sputtering one breathes its shadow with the light. a bulb
+      // mid-OUTAGE is dropped outright — CastShadows weights by (0.7 + 0.3 * flicker), so a fully
+      // dark lamp would otherwise still lay a 70%-strength shadow
       var lampLights:Array<CastShadows.ShadowLight> = [];
       if (lampSrc != null)
         {
           var L = RenderConfig.LAMP_SHADOW;
           var lrange = L.rangeCells * CityConfig.CELL;
           for (lp in lampSrc)
-            lampLights.push({
-              x: lp.x, z: lp.z, range: lrange, lenMul: L.lenMul,
-              op: L.op, fade: L.fade, flicker: 1.0,
-            });
+            {
+              if (lp.flick < RenderConfig.LAMP_LIGHT.flickOff)
+                continue;
+              lampLights.push({
+                x: lp.x, z: lp.z, range: lrange, lenMul: L.lenMul,
+                op: L.op, fade: L.fade, flicker: lp.flick,
+              });
+            }
         }
       if (barrelLights.length == 0 &&
           lampLights.length == 0)

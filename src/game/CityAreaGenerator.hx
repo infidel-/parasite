@@ -94,8 +94,11 @@ class CityAreaGenerator
     }
 
 // place impassable burning barrels inside low-tier carved inner courtyards: enclosed open pockets
-// (ringed by buildings), so a barrel here never blocks a through-corridor. one barrel per courtyard
-// at most, at an open interior cell. persisted objects (round-trip by class)
+// (ringed by buildings), so a barrel here never blocks a through-corridor. exactly one barrel per
+// courtyard, at an open interior cell. persisted objects (round-trip by class). the count varies
+// through the profile's courtyardBlockChance alone — an extra per-courtyard roll here used to cut
+// the average to 1.5 barrels/city and left 23% of cities with none at all, which silently broke the
+// profane cult ordeals that muster around a barrel
   function placeBurningBarrels(area: AreaGame)
     {
       if (area.typeID != AREA_CITY_LOW)
@@ -103,10 +106,6 @@ class CityAreaGenerator
 
       for (c in courtyards)
         {
-          // not every courtyard gets one
-          if (Std.random(100) >= 60)
-            continue;
-
           // prefer the courtyard centre, else scan for the first open interior cell
           var cx = Std.int((c.x0 + c.x1) / 2);
           var cy = Std.int((c.y0 + c.y1) / 2);
