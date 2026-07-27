@@ -8,18 +8,37 @@ import render.RenderConfig.TEXTURES;
 import render.Textures;
 import render.Poly.tag;
 
+// one building's switchable window set. BOTH meshes carry EVERY window at the same index — the copy
+// that is not currently showing is written at scale 0 (same position, so the mesh's bounding sphere,
+// which three computes once and caches, stays tight and the mesh keeps its frustum cull). Switching
+// a window is then two setMatrixAt calls: no repack, no count change, no per-instance colour channel
+typedef WinSet = {
+  var dark:InstancedMesh;   // the unlit copy of every window
+  var lit:InstancedMesh;    // the lit copy of every window (emissive, feeds bloom)
+  var on:Array<Matrix4>;    // each window's real transform
+  var off:Array<Matrix4>;   // the same transform at scale 0 — the "not in this mesh" stand-in
+  var isLit:Array<Bool>;    // which mesh each window currently shows in
+  var next:Float;           // ms left on this building's countdown to its next resample
+};
+
 // every upper-floor window as an instance, bucketed by facade variant × lit/dark.
 // Which faces/runs get windows comes from Geom (street frontage, forced courtyard
 // walls, or open L/T/+ inner runs); lit windows emit for the night bloom. Writes winSeen.
+// Windows switch on and off over time — see pulse().
 class Windows {
   static inline var GRID = CityConfig.GRID;
   static inline var CELL = CityConfig.CELL;
   static inline var GROUND_H = CityConfig.GROUND_H;
   static inline var FLOOR_H = CityConfig.FLOOR_H;
 
+  static var ZERO = new Vector3(0, 0, 0); // the "hidden" instance scale (see WinSet)
+  // every windowed building of the current city, driven by pulse(). rebuilt by add()
+  static var sets:Array<WinSet> = [];
+
   static inline function imax(a:Float, b:Float):Float return a > b ? a : b;
 
   public static function add(scene:Scene):Void {
+    sets = []; // fresh city: the previous build's meshes are already disposed
     var buildings = WorldCtx.buildings;
     var st = WorldCtx.style;
     var dark = [for (i in 0...st.windows.length) spriteTex(st.windows[i], st.winCrop[i])];
@@ -39,7 +58,9 @@ class Windows {
       if (st.noWinSlots != null && st.noWinSlots.indexOf(b.facade) >= 0) continue; // glass curtain towers: windows live in the facade art
       if (Geom.frontInfo(b).simple && !Geom.frontInfo(b).windows) continue; // plain (window-roll fail) or small building: no windows
       var v = b.facade % variants;
-      var buckets:Array<Array<Matrix4>> = [[], []]; // this building's [dark, lit] instance matrices
+      var on:Array<Matrix4> = [];    // this building's windows, in index order — shared by both meshes
+      var off:Array<Matrix4> = [];   // the same, at scale 0
+      var isLit:Array<Bool> = [];
       var crop = st.winCrop[v];
       var winH = RenderConfig.WIN_W * (crop.y / crop.x);
       var scl = new Vector3(RenderConfig.WIN_W, winH, 1);
@@ -70,9 +91,9 @@ class Windows {
             if (j == b.skipWindowFloor) continue;
             var y = GROUND_H + (j + 0.5) * FLOOR_H;
             pos.set(p.x, y, p.z);
-            var m = new Matrix4().compose(pos, q, scl);
-            var isLit = Math.random() < st.litRatio ? 1 : 0;
-            buckets[isLit].push(m);
+            on.push(new Matrix4().compose(pos, q, scl));
+            off.push(new Matrix4().compose(pos, q, ZERO));
+            isLit.push(Math.random() < st.litRatio);
           }
         }
         // forced courtyard wall: own centred grid, inset from the face edges. keyed off the
@@ -104,11 +125,13 @@ class Windows {
         }
       }
 
-      // one instanced mesh per lit state actually used, tagged with the building so Occlusion
-      // fades its windows along with the rest of the building box
+      if (on.length == 0) continue;
+      // BOTH meshes are always built, both sized to every window of this building, and tagged with
+      // the building so Occlusion fades its windows along with the rest of the box. A building whose
+      // roll came up all-dark still gets its (currently all-scale-0) lit mesh — it has to exist for a
+      // light in there to ever come on
+      var meshes:Array<InstancedMesh> = [];
       for (l in 0...2) {
-        var mats = buckets[l];
-        if (mats.length == 0) continue;
         var tex = l == 1 ? lit[v] : dark[v];
         var mat = new MeshStandardMaterial({
           map: tex,
@@ -124,14 +147,63 @@ class Windows {
           mat.emissiveMap = tex;
           mat.emissiveIntensity = st.litIntensity;
         }
-        var inst = new InstancedMesh(geo, mat, mats.length);
-        for (k in 0...mats.length) inst.setMatrixAt(k, mats[k]);
+        var inst = new InstancedMesh(geo, mat, on.length);
+        for (k in 0...on.length) inst.setMatrixAt(k, isLit[k] == (l == 1) ? on[k] : off[k]);
         inst.instanceMatrix.needsUpdate = true;
         inst.userData.b = b;
+        inst.userData.rev = 0; // instance-buffer revision — Occlusion re-copies its ghost when this moves
         inst.receiveShadow = true; // so windows darken with the wall in shadow (don't cast — thin planes)
         scene.add(inst);
+        meshes.push(inst);
       }
+      sets.push({
+        dark: meshes[0],
+        lit: meshes[1],
+        on: on,
+        off: off,
+        isLit: isLit,
+        next: nextTick(),
+      });
     }
+  }
+
+// per frame: run every building's switch countdown. On a tick the building RESAMPLES one random
+// window against litRatio rather than flipping it — a plain flip would random-walk the lit fraction
+// up to half, while a resample keeps it stationary at exactly the ratio the build rolled. Most
+// resamples land on the state the window already holds and cost nothing. A window is a SWITCH, not a
+// dimmer: the swap is instant, which is what a real light switch does, so no per-instance opacity
+// channel is needed. dtMs is raw (see RenderConfig.WIN_SWITCH)
+  public static function pulse(dtMs:Float):Void {
+    var ratio = WorldCtx.style.litRatio;
+    for (s in sets) {
+      s.next -= dtMs;
+      if (s.next > 0) continue;
+      s.next = nextTick();
+      var k = Std.random(s.on.length);
+      var want = Math.random() < ratio;
+      if (want != s.isLit[k]) switchWindow(s, k, want);
+    }
+  }
+
+// a fresh countdown to one building's next resample
+  static inline function nextTick():Float {
+    var C = RenderConfig.WIN_SWITCH;
+    return C.minMs + Math.random() * (C.maxMs - C.minMs);
+  }
+
+// switch one window on or off: both meshes hold it at index k, so this is writing the real matrix
+// into the mesh that should show it and the scale-0 stand-in into the other
+  static function switchWindow(s:WinSet, k:Int, wantLit:Bool):Void {
+    s.isLit[k] = wantLit;
+    s.lit.setMatrixAt(k, wantLit ? s.on[k] : s.off[k]);
+    s.dark.setMatrixAt(k, wantLit ? s.off[k] : s.on[k]);
+    s.lit.instanceMatrix.needsUpdate = true;
+    s.dark.instanceMatrix.needsUpdate = true;
+    // an Occlusion ghost snapshots the instance buffer once, when the building first fades, and
+    // while faded the real mesh is HIDDEN — without this bump the faded building would keep drawing
+    // the window pattern frozen at ghost-build time
+    s.lit.userData.rev++;
+    s.dark.userData.rev++;
   }
 
   static function spriteTex(path:String, crop:{ x:Float, y:Float }):Texture {

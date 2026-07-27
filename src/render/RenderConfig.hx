@@ -115,6 +115,18 @@ class RenderConfig {
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
 
+  // --- window light switches (render.world.Windows.pulse) ---------------------
+  // someone in the city flips a light. RAW ms, not BASE_MS multiples, and deliberately so: this is
+  // ambient city life on a wall clock, not a turn-derived animation — the same reasoning that keeps
+  // the failing-lamp flicker on raw ms. each building runs its own countdown, and on each tick it
+  // RESAMPLES one random window against the style's litRatio, so the lit fraction stays where the
+  // build put it instead of drifting to half. a resample that lands on the state the window is
+  // already in is a no-op, which is most of them at ratio 0.1 — hence the short interval
+  public static final WIN_SWITCH = {
+    minMs: 3000.0,  // shortest gap between one building's resamples
+    maxMs: 12000.0, // longest gap; the initial countdown is drawn from the same range so buildings never tick in unison
+  };
+
   // --- ambient occlusion (GTAOPass; only runs when config vidAO) --------------
   // kept subtle on purpose: this should read as contact shadow where geometry meets, not as
   // photoreal dirt — the city art is flat/hand-painted. tune blendIntensity first, radius second
@@ -529,6 +541,13 @@ class RenderConfig {
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
   public static inline var WALLDECAL_PCT = 35;
+  // wall-decal albedo tint — the vertical twin of DECAL.debrisMul above. Poster/graffiti art is
+  // authored at paper-and-paint values while every wall texture is authored dark for the night
+  // palette (worn walls measure ~28-48 mean luma, poster-2 ~98), so an untinted decal reads as lit
+  // from nowhere. 0x8c8c8c is ~0.55 in sRGB and is colour-managed to linear exactly like the map, so
+  // it lands about where debrisMul puts the street trash. cracks are already dark enough and stay
+  // untinted (see WallDecals.cats)
+  public static inline var WALLDECAL_TINT = 0x8c8c8c;
 
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt

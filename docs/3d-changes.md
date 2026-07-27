@@ -1605,3 +1605,189 @@ tris (1050 emitted cells), bbox unchanged. The mask was inspected directly (raw,
 the alphaTest level) — round merged organic blobs, no straight runs, no 90° corners, no beading.
 Free-cam close-ups show the grass reading across whole cells instead of as isolated streaks. Draw
 calls unchanged by construction (same single mesh); not A/B'd against a `calls=` baseline.
+
+## SHIPPED — Slums masonry fronts + downtown lamp offsets (2026-07-27)
+
+Two unrelated fixes, both pure content/constant changes — no new geometry, no new material
+permutation, no draw-call delta by construction.
+
+### Slums walls 0-2 got their own dilapidated art
+
+`SlumsStyle` had been reusing `TEXTURES.walls[0..2]` verbatim for concrete/brick/stone, so a slums
+masonry block showed the *maintained* mid-density wall sitting directly on top of a ground-floor band
+that was already slums-specific and boarded up (`slums/facade-*.png`). The band read derelict, the
+wall above it read fine.
+
+Three new 512² tiles, each an `edit_image` pass over the **residential base** (`wall-1/2/3.png`) so
+the material identity survives: `slums/wall-concrete|brick|stone.png`. `wornWalls[0..2]` deliberately
+stay on the residential `-worn` set — those are the alley/back faces and are already the more
+destroyed of the two, which is the read we want (front = neglected, back = wrecked).
+
+Two gen lessons, both cost a retry:
+- **Brick v1 silently enlarged the brick module** and the decay was invisible at a glance. An
+  `edit_image` will re-author the pattern unless the prompt pins it ("keep the EXACT same brick module
+  size, course height and running-bond layout as the input"), and asking for wear in the abstract gets
+  a slightly sootier copy — the retry named counts ("roughly a dozen chipped bricks", "one crude grey
+  mortar patch").
+- **Stone v1 came back with a dark band across the bottom.** Fine as a standalone image, wrong as a
+  *tile*: `faceMat` repeats it `wallH` times vertically, so a top-to-bottom gradient becomes a
+  repeating dark stripe up the building. The retry demanded "COMPLETELY UNIFORM top edge to bottom
+  edge, NO vertical gradient" and said why. Worth remembering for every wall tile: a bottom-weighted
+  grime gradient is the default thing an image model wants to paint and it is always wrong here.
+
+`facadeNames` for slots 0-2 renamed to `concrete-slum` / `brick-slum` / `stone-slum`. Mandatory, not
+cosmetic — see "Per-style facade names" above: `Poly.info` is first-write-wins, so shipping new art
+under `wall-concrete` would have made the UV editor report the residential path and fold two unrelated
+textures into one editable class. It also closes a pre-existing instance of the same bug: slums has
+been shipping `slums/facade-*.png` under the residential `storefront-concrete|brick|stone` classes
+since it landed. Cost: `door-*`/`roof-*`/`parapet-*-worn` for those slots now have slum-suffixed class
+names pointing at residential art — two names, one path, which is truthful (the failure mode is one
+name, two paths). `PolyMeta.OVERRIDES` is empty, so nothing was orphaned.
+
+Nothing else needed touching: `Buildings.faceMat` and `Parapets.brickMats` are already fully
+style-driven and pick the new art up through `st.walls`.
+
+### Downtown lamp: post off the kerb, cone over the road
+
+`DowntownStyle.lamp` was `dx 1.0, dz 0.0, pdz 2.6` → now `dx 0.0, dz 1.0, pdz 2.0`.
+
+**`pdz`:** `CELL = 4`, so the walkway cell edge is at 2.0 — `2.6` stood the post 0.6 units out in the
+gutter. Now it sits on the edge line. (Residential `LAMP_LIGHT.pdz` is untouched; the residential post
+still overhangs, which suits the narrower pavements.)
+
+**`dx`/`dz` — the real bug.** `Models.yawFix` rotates the street-lamp2 *prop* by an extra `-PI/2`
+because its arm is authored 90° off, but `SceneSetup`'s bulb offset is rotated by the placement `yaw`
+**only**. Local `+Z` is therefore still "toward the road" in the offset frame, and downtown's `dx 1.0`
+was pushing the bulb 1.0 unit *along* the road instead of out over it. Since the bulb is the single
+anchor for the light cone (`LightCone.instanced` places each instance at the bulb x/z) *and* for the
+live `SpotLight` (`LampLights` moves it onto the same point), the cone and the pool light both sat a
+metre to the side of the lamp head they belong to. Swapping the reach into `dz` puts all three back
+together.
+
+Rejected: a separate `coneDx/coneDz`. The cone is the bulb's beam — decoupling them is a lie waiting
+to be debugged, and the coupling is what makes the cone free. If it is ever genuinely needed, it
+belongs in `SceneSetup`'s lamp loop where `cos`/`sin` are in hand, **not** in `LightCone.instanced`: a
+world-space offset there ignores lamp yaw and would shear every cone the same direction regardless of
+which side of the road its lamp stands on.
+
+**Verified (walls/lamps):** `make tex` → 3 tiles built at 512², all three fetch 200 from the running app; live
+`SlumsStyle.get()` reports the new `walls`/`facadeNames` and `DowntownStyle.get().lamp` reports
+`dx 0, dz 1, pdz 2`. Build clean, no console errors. In-world visual pass (masonry block read, parapet
+continuation, cone-under-arm) left to eyeball on the next play session — the `1.0` arm reach is the
+value carried over from `dx` and may want a nudge once seen.
+
+## SHIPPED — Wall decals: albedo tint, shadow receipt, per-image Poly classes (2026-07-27)
+
+Posters read as lit-from-nowhere against the wall behind them. Two independent causes, both fixed;
+plus the editor crash that turned up while tracing it.
+
+**1. No albedo knob.** `DECAL.debrisMul`/`bloodMul` exist because the decal art was authored for the
+unlit 2D view and glows on a lit quad — but that darkening lives in `Sprites.darkenCanvas`, on the
+sprite-atlas path only. `WallDecals` loads its PNGs straight through `Textures.loadTexture` and never
+got an equivalent. Measured mean luma over opaque texels, against the `-worn` walls decals actually
+land on (`Geom.isWornFace`):
+
+| | mean | p95 |
+|---|---|---|
+| `decals/poster-2` | 97.7 | 140.1 |
+| `decals/graffiti-1` | 106.7 | 116.5 |
+| `decals/wall-crack-1` | 50.5 | 67.5 |
+| `wall-1-worn` / `wall-2-worn` / `wall-4-worn` | 41.9 / 28.3 / 47.5 | 48.9 / 36.6 / 61.2 |
+
+2–3.5× the wall mean on every worn wall but pale stone. New `RenderConfig.WALLDECAL_TINT = 0x8c8c8c`
+applied as the material `color`. **Cracks are exempt** (`tint: 0xffffff` in `WallDecals.cats`) — at
+50.5 they already sit in the wall's range, and tinting them to ~28 would erase them on brick.
+
+Why `color` and not a darkened texture copy: the ledger entry above ("Costs ~19MB of GPU texture")
+rejected folding `mul` into `material.color` as "multiplies in linear space, not sRGB like
+`darkenCanvas`". That objection is about `Color.setScalar` (raw linear) and about atlas memory. A
+**hex** is colour-managed sRGB→linear on the way in and the map decodes the same way, so
+`color: 0x8c8c8c` ≈ `darkenCanvas(0.55)` to within ~4% at mid values, diverging only in the darkest
+texels. Here there is no atlas and no memory tradeoff, so `color` is strictly the cheaper knob.
+
+**2. The decal never received shadows.** `Buildings` sets `box.receiveShadow = true`; the decal mesh
+set neither flag, so where the wall sat in a moon or lamp-spot shadow the wall darkened and the decal
+did not. `Windows.add` had already hit and fixed exactly this (`inst.receiveShadow = true; // so
+windows darken with the wall in shadow`) — wall decals are the same thin overlay and were missed.
+This is a *lighting* bug, independent of the albedo one; either alone leaves half the symptom.
+
+**3. One material per IMAGE, not per quad.** Was `new MeshStandardMaterial(...)` inside the placement
+loop — a material and a `Poly` class registration per decal. Now cached by path. Three consequences:
+- every decal image gets its own class (`walldecal-poster-2`, `walldecal-graffiti-1`, …) with its real
+  texture path and `res 256`, so the editor's wheel shifts ONE decal type. Under the old single
+  `'walldecal'` class, `Poly.tex` held all six images and a scroll moved every graffiti, poster and
+  crack in the city together — the same first-write-wins family as the facade-names trap above.
+- `tag(..., texPath)` was being passed **null** (the only such call site in the tree), so
+  `Poly.info['walldecal'].tex` was null and clicking a decal in edit mode threw
+  `Cannot read properties of null (reading 'split')` at `Editor.showHud`. Real classes carry real
+  paths; `Editor` also now guards `info.tex` (`PolyInfo.tex` is typed non-optional and nothing
+  enforced it).
+- fewer allocations, and one shadow-receiving program variant instead of one material per decal.
+
+**Verified:** build clean; live `RenderConfig.WALLDECAL_TINT` = `0x8c8c8c` and the six expected class
+names derive correctly from `TEXTURES.cracks/graffiti/posters`. Not yet eyeballed in-world — needs a
+save loaded to confirm the posters sit in the wall and that cracks are still readable on dark brick.
+
+---
+
+## SHIPPED — Window light switches: dynamic lit/dark windows (2026-07-28)
+
+Windows were rolled lit-or-dark once at build (`Math.random() < litRatio`) and frozen forever. They
+now switch on and off over time. Nothing persists — window state was always render-only, so no save
+touch.
+
+**Lit was never a per-instance property — it is WHICH MESH you are in.** `Windows.add` bucketed each
+window into `[dark, lit]` and made one `InstancedMesh` per non-empty bucket, each with its own
+texture, `emissive`, `emissiveMap` and `emissiveIntensity`. That is the whole reason it could not
+change: a shared material can only light every window of a building at once.
+
+**Not the `LightCone.pulse` repack — a scale-0 stand-in instead.** The obvious move was the lamp-cone
+pattern (repack the drawn prefix, drive `count` down). It is wrong here for a reason specific to
+windows: `InstancedMesh.computeBoundingSphere()` unions over `this.count` and **caches**, so a mesh
+that repacks needs `frustumCulled = false` — which is exactly what `Models.cull` (`Models:236`) and
+`DecalBatch` (`DecalBatch:144`) both do. Lamps and decals are city-wide meshes that never wanted the
+coarse cull. Window meshes are **per building** and depend on it. So instead: both meshes hold EVERY
+window at the same index, `count` is fixed at N forever, and the copy that is not showing is written
+at **scale 0 with its position kept**. The bounding sphere stays tight, frustum culling is untouched,
+and a switch is two `setMatrixAt` calls — no repack, no count change, no `instanceColor` extern
+(still zero `setColorAt` in the repo).
+
+**A resample, not a flip.** Flipping a random window is a random walk: at `litRatio` 0.1 the city
+drifts toward 50% lit. Each tick instead RESAMPLES one random window against `litRatio`, which is
+stationary at exactly the build ratio. Most resamples land on the state the window already holds and
+cost nothing, so the interval is short (3–12s per building) to compensate. Measured over ~800k
+resamples on 3777 windows: lit fraction 0.0998 → 0.1022. Over 51k resamples on the real city:
+0.1038 → 0.1008.
+
+**A switch is instant and that is correct.** No per-window fade. The `LightCone` entry above logs the
+binary on/off as a `ponytail:` shortcut with a real ceiling; here it is not a shortcut — a light
+switch *is* instantaneous, and a cross-fading window would read as wrong.
+
+**The Occlusion ghost was the sting in the tail — same shape as the lamp emissive head.** Window
+meshes carry `userData.b`, so `pick()` buckets them and they get fade ghosts (confirmed: no window
+class in `__occ.skipped()`). `makeGhostMesh` copies `instanceMatrix.array` and `count` **once**, at
+first fade, and `apply()` never refreshed them — and below `ghostCross` the real mesh is **hidden**,
+so the ghost is the only thing drawing. Without a fix, walking near a building freezes its windows at
+whatever pattern was packed when the ghost was born. Fix: `Windows.switchWindow` bumps
+`mesh.userData.rev`; `Occlusion.apply` re-copies the buffer when `rev` moved. The generalisable
+lesson is the one from the lamp-outage entry pointed the other way: **anything that mutates an
+instance buffer after build must tell the ghost**, because the ghost is a snapshot and it is the copy
+that draws precisely when you cannot see the bug coming.
+
+**Cost, measured.** City-wide mesh inventory 2990 → **3027** (+37, `__occ.stats()` before/after): a
+building whose roll came up all-dark now still gets its lit mesh, because a light in there has to be
+able to come on. Instances 3662 → 7324; the hidden half are degenerate and discarded before
+rasterization. **Draw calls: `StreetPerf.lastCalls` 151 in both states**, A/B'd in one fixed view by
+hiding the lit mesh of every all-dark building (35 of them at sample time) — every one was already
+culled. One view only, not a sweep.
+
+**Verified:** build clean, `__check.pass` true / 0 fails, no new console errors, instance buffers
+coherent across all 3662 windows (each slot holds the real matrix in exactly one mesh and the scale-0
+stand-in in the other), `count` fixed on both meshes, `Windows.pulse` confirmed wired into
+`StreetView.loop` by watching the countdowns drain at real frame dt. **Not verified visually:** an
+actual switch on screen, and the ghost re-copy mid-fade — the Electron window was backgrounded from
+WSL, which throttles `rAF` to ~1fps, so a 20s watch caught zero of the ~4/s city-wide switches.
+
+**Left alone:** `addGlassAccents` (downtown glass towers) — same machinery would apply (per-building
+`InstancedMesh`, `userData.b`, `glassLitRatio`, deterministic per-cell hash) but far more instances.
+Separate pass.
