@@ -72,7 +72,7 @@ class Editor {
       if (selCls == null) { panel.style.display = 'none'; return; }
       var info = Poly.info.get(selCls);
       var e = cur.exists(selCls) ? cur.get(selCls) : { u: 0.0, v: 0.0 };
-      var texName = info != null ? info.tex.split('/').pop() : '';
+      var texName = info != null && info.tex != null ? info.tex.split('/').pop() : '';
       var res = info != null ? info.res : 512;
       var name = info != null ? info.name : selCls;
       var data = Json.stringify({ offset: { u: round5(e.u), v: round5(e.v) } });

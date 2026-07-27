@@ -1605,3 +1605,125 @@ tris (1050 emitted cells), bbox unchanged. The mask was inspected directly (raw,
 the alphaTest level) — round merged organic blobs, no straight runs, no 90° corners, no beading.
 Free-cam close-ups show the grass reading across whole cells instead of as isolated streaks. Draw
 calls unchanged by construction (same single mesh); not A/B'd against a `calls=` baseline.
+
+## SHIPPED — Slums masonry fronts + downtown lamp offsets (2026-07-27)
+
+Two unrelated fixes, both pure content/constant changes — no new geometry, no new material
+permutation, no draw-call delta by construction.
+
+### Slums walls 0-2 got their own dilapidated art
+
+`SlumsStyle` had been reusing `TEXTURES.walls[0..2]` verbatim for concrete/brick/stone, so a slums
+masonry block showed the *maintained* mid-density wall sitting directly on top of a ground-floor band
+that was already slums-specific and boarded up (`slums/facade-*.png`). The band read derelict, the
+wall above it read fine.
+
+Three new 512² tiles, each an `edit_image` pass over the **residential base** (`wall-1/2/3.png`) so
+the material identity survives: `slums/wall-concrete|brick|stone.png`. `wornWalls[0..2]` deliberately
+stay on the residential `-worn` set — those are the alley/back faces and are already the more
+destroyed of the two, which is the read we want (front = neglected, back = wrecked).
+
+Two gen lessons, both cost a retry:
+- **Brick v1 silently enlarged the brick module** and the decay was invisible at a glance. An
+  `edit_image` will re-author the pattern unless the prompt pins it ("keep the EXACT same brick module
+  size, course height and running-bond layout as the input"), and asking for wear in the abstract gets
+  a slightly sootier copy — the retry named counts ("roughly a dozen chipped bricks", "one crude grey
+  mortar patch").
+- **Stone v1 came back with a dark band across the bottom.** Fine as a standalone image, wrong as a
+  *tile*: `faceMat` repeats it `wallH` times vertically, so a top-to-bottom gradient becomes a
+  repeating dark stripe up the building. The retry demanded "COMPLETELY UNIFORM top edge to bottom
+  edge, NO vertical gradient" and said why. Worth remembering for every wall tile: a bottom-weighted
+  grime gradient is the default thing an image model wants to paint and it is always wrong here.
+
+`facadeNames` for slots 0-2 renamed to `concrete-slum` / `brick-slum` / `stone-slum`. Mandatory, not
+cosmetic — see "Per-style facade names" above: `Poly.info` is first-write-wins, so shipping new art
+under `wall-concrete` would have made the UV editor report the residential path and fold two unrelated
+textures into one editable class. It also closes a pre-existing instance of the same bug: slums has
+been shipping `slums/facade-*.png` under the residential `storefront-concrete|brick|stone` classes
+since it landed. Cost: `door-*`/`roof-*`/`parapet-*-worn` for those slots now have slum-suffixed class
+names pointing at residential art — two names, one path, which is truthful (the failure mode is one
+name, two paths). `PolyMeta.OVERRIDES` is empty, so nothing was orphaned.
+
+Nothing else needed touching: `Buildings.faceMat` and `Parapets.brickMats` are already fully
+style-driven and pick the new art up through `st.walls`.
+
+### Downtown lamp: post off the kerb, cone over the road
+
+`DowntownStyle.lamp` was `dx 1.0, dz 0.0, pdz 2.6` → now `dx 0.0, dz 1.0, pdz 2.0`.
+
+**`pdz`:** `CELL = 4`, so the walkway cell edge is at 2.0 — `2.6` stood the post 0.6 units out in the
+gutter. Now it sits on the edge line. (Residential `LAMP_LIGHT.pdz` is untouched; the residential post
+still overhangs, which suits the narrower pavements.)
+
+**`dx`/`dz` — the real bug.** `Models.yawFix` rotates the street-lamp2 *prop* by an extra `-PI/2`
+because its arm is authored 90° off, but `SceneSetup`'s bulb offset is rotated by the placement `yaw`
+**only**. Local `+Z` is therefore still "toward the road" in the offset frame, and downtown's `dx 1.0`
+was pushing the bulb 1.0 unit *along* the road instead of out over it. Since the bulb is the single
+anchor for the light cone (`LightCone.instanced` places each instance at the bulb x/z) *and* for the
+live `SpotLight` (`LampLights` moves it onto the same point), the cone and the pool light both sat a
+metre to the side of the lamp head they belong to. Swapping the reach into `dz` puts all three back
+together.
+
+Rejected: a separate `coneDx/coneDz`. The cone is the bulb's beam — decoupling them is a lie waiting
+to be debugged, and the coupling is what makes the cone free. If it is ever genuinely needed, it
+belongs in `SceneSetup`'s lamp loop where `cos`/`sin` are in hand, **not** in `LightCone.instanced`: a
+world-space offset there ignores lamp yaw and would shear every cone the same direction regardless of
+which side of the road its lamp stands on.
+
+**Verified (walls/lamps):** `make tex` → 3 tiles built at 512², all three fetch 200 from the running app; live
+`SlumsStyle.get()` reports the new `walls`/`facadeNames` and `DowntownStyle.get().lamp` reports
+`dx 0, dz 1, pdz 2`. Build clean, no console errors. In-world visual pass (masonry block read, parapet
+continuation, cone-under-arm) left to eyeball on the next play session — the `1.0` arm reach is the
+value carried over from `dx` and may want a nudge once seen.
+
+## SHIPPED — Wall decals: albedo tint, shadow receipt, per-image Poly classes (2026-07-27)
+
+Posters read as lit-from-nowhere against the wall behind them. Two independent causes, both fixed;
+plus the editor crash that turned up while tracing it.
+
+**1. No albedo knob.** `DECAL.debrisMul`/`bloodMul` exist because the decal art was authored for the
+unlit 2D view and glows on a lit quad — but that darkening lives in `Sprites.darkenCanvas`, on the
+sprite-atlas path only. `WallDecals` loads its PNGs straight through `Textures.loadTexture` and never
+got an equivalent. Measured mean luma over opaque texels, against the `-worn` walls decals actually
+land on (`Geom.isWornFace`):
+
+| | mean | p95 |
+|---|---|---|
+| `decals/poster-2` | 97.7 | 140.1 |
+| `decals/graffiti-1` | 106.7 | 116.5 |
+| `decals/wall-crack-1` | 50.5 | 67.5 |
+| `wall-1-worn` / `wall-2-worn` / `wall-4-worn` | 41.9 / 28.3 / 47.5 | 48.9 / 36.6 / 61.2 |
+
+2–3.5× the wall mean on every worn wall but pale stone. New `RenderConfig.WALLDECAL_TINT = 0x8c8c8c`
+applied as the material `color`. **Cracks are exempt** (`tint: 0xffffff` in `WallDecals.cats`) — at
+50.5 they already sit in the wall's range, and tinting them to ~28 would erase them on brick.
+
+Why `color` and not a darkened texture copy: the ledger entry above ("Costs ~19MB of GPU texture")
+rejected folding `mul` into `material.color` as "multiplies in linear space, not sRGB like
+`darkenCanvas`". That objection is about `Color.setScalar` (raw linear) and about atlas memory. A
+**hex** is colour-managed sRGB→linear on the way in and the map decodes the same way, so
+`color: 0x8c8c8c` ≈ `darkenCanvas(0.55)` to within ~4% at mid values, diverging only in the darkest
+texels. Here there is no atlas and no memory tradeoff, so `color` is strictly the cheaper knob.
+
+**2. The decal never received shadows.** `Buildings` sets `box.receiveShadow = true`; the decal mesh
+set neither flag, so where the wall sat in a moon or lamp-spot shadow the wall darkened and the decal
+did not. `Windows.add` had already hit and fixed exactly this (`inst.receiveShadow = true; // so
+windows darken with the wall in shadow`) — wall decals are the same thin overlay and were missed.
+This is a *lighting* bug, independent of the albedo one; either alone leaves half the symptom.
+
+**3. One material per IMAGE, not per quad.** Was `new MeshStandardMaterial(...)` inside the placement
+loop — a material and a `Poly` class registration per decal. Now cached by path. Three consequences:
+- every decal image gets its own class (`walldecal-poster-2`, `walldecal-graffiti-1`, …) with its real
+  texture path and `res 256`, so the editor's wheel shifts ONE decal type. Under the old single
+  `'walldecal'` class, `Poly.tex` held all six images and a scroll moved every graffiti, poster and
+  crack in the city together — the same first-write-wins family as the facade-names trap above.
+- `tag(..., texPath)` was being passed **null** (the only such call site in the tree), so
+  `Poly.info['walldecal'].tex` was null and clicking a decal in edit mode threw
+  `Cannot read properties of null (reading 'split')` at `Editor.showHud`. Real classes carry real
+  paths; `Editor` also now guards `info.tex` (`PolyInfo.tex` is typed non-optional and nothing
+  enforced it).
+- fewer allocations, and one shadow-receiving program variant instead of one material per decal.
+
+**Verified:** build clean; live `RenderConfig.WALLDECAL_TINT` = `0x8c8c8c` and the six expected class
+names derive correctly from `TEXTURES.cracks/graffiti/posters`. Not yet eyeballed in-world — needs a
+save loaded to confirm the posters sit in the wall and that cracks are still readable on dark brick.

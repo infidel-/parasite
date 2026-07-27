@@ -528,6 +528,13 @@ class RenderConfig {
   // static wall decals (graffiti/posters/cracks): % of bare (worn) building faces that get one,
   // deterministic per col/row/dir hash (no rng -> stable across reloads, not saved)
   public static inline var WALLDECAL_PCT = 35;
+  // wall-decal albedo tint — the vertical twin of DECAL.debrisMul above. Poster/graffiti art is
+  // authored at paper-and-paint values while every wall texture is authored dark for the night
+  // palette (worn walls measure ~28-48 mean luma, poster-2 ~98), so an untinted decal reads as lit
+  // from nowhere. 0x8c8c8c is ~0.55 in sRGB and is colour-managed to linear exactly like the map, so
+  // it lands about where debrisMul puts the street trash. cracks are already dark enough and stay
+  // untinted (see WallDecals.cats)
+  public static inline var WALLDECAL_TINT = 0x8c8c8c;
 
   public static inline var BASE_MS = 150;          // base one-turn anim duration; all anims are multiples of it
   public static var ANIM_SPEED = 1.0;              // global anim-speed multiplier (future options: 0.5/1/1.5); bullets etc. bypass and use raw dt

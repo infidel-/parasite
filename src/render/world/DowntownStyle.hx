@@ -157,15 +157,19 @@ class DowntownStyle {
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;
       s.penthouseWall = 'textures/downtown/wall-mechanical.png';
-      // downtown swaps the residential lamp for the PBR street-lamp2 prop. its arm offsets the bulb
-      // differently (dx/dz); the post sits on the same kerb line (pdx/pdz unchanged from residential).
-      // height/cone + the shared live-spotlight pool stay on RenderConfig.LAMP_LIGHT
+      // downtown swaps the residential lamp for the PBR street-lamp2 prop. NOTE the offsets below are
+      // rotated by the lamp yaw ONLY — Models.yawFix's extra -PI/2 for this prop turns the MODEL, not
+      // the offset frame, so local +Z is still "toward the road" here: the arm reach belongs in dz.
+      // the post sits one CELL/2 back from the cell centre, i.e. exactly on the walkway/road edge
+      // (residential pdz 2.6 overhangs the kerb by 0.6; a downtown post standing in the gutter reads
+      // wrong against the wide pavements). height/cone + the shared live-spotlight pool stay on
+      // RenderConfig.LAMP_LIGHT
       s.lamp = {
         model: render.RenderConfig.MODELS.streetLamp2,
-        dx: 1.0,
-        dz: 0.0,
+        dx: 0.0,
+        dz: 0.8,
         pdx: 2.0,
-        pdz: 2.6,
+        pdz: 2.45,
       };
       // roughly a third of the roofs big and tall enough for one trade their bulkhead + AC clutter
       // for a landing deck — rare enough that a lit pad still reads as a landmark from the street

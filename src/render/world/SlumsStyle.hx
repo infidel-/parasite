@@ -3,10 +3,12 @@ package render.world;
 import render.RenderConfig;
 
 // slums (low-density outskirts) render knobs — the single file to tune the run-down look
-// independently of the mid-density residential default. Facade slots 0-3 reuse the residential
-// art verbatim (it is the same kind of city, just poorer); the two new slots are the dilapidated
-// single-floor house types citygen remaps small leaves to: 4 clapboard cottage (pitched shingle
-// gable, wooden porch canopy) and 5 cinderblock bungalow (flat tarpaper roof, rusted awning).
+// independently of the mid-density residential default. Facade slots 0-2 keep the residential
+// MATERIALS (concrete/brick/stone — it is the same kind of city, just poorer) but on their own
+// dilapidated street-facing art; slot 3 is still the residential warehouse verbatim. The two new
+// slots are the dilapidated single-floor house types citygen remaps small leaves to: 4 clapboard
+// cottage (pitched shingle gable, wooden porch canopy) and 5 cinderblock bungalow (flat tarpaper
+// roof, rusted awning).
 // Ground swaps to a holed sidewalk, a cracked/patched road and a dirt alley, and the houses grow
 // dead-lawn patches. Textures live under textures/slums/.
 class SlumsStyle {
@@ -23,15 +25,19 @@ class SlumsStyle {
       s.walkwayBorder = t.walkwayBorder;
       s.roadPaint = t.roadPaint;
       // 6 types [0 concrete, 1 brick, 2 stone, 3 metal warehouse, 4 clapboard cottage,
-      // 5 cinderblock bungalow]. 0-3 are the residential set unchanged
+      // 5 cinderblock bungalow]. 0-2 are neglected editions of the residential art (same palette and
+      // course pattern, plus soot/streaks/crumbling joints) so a masonry block reads as run-down as
+      // the boarded storefront band under it; 3 stays the residential warehouse
       s.walls = [
-        t.walls[0],
-        t.walls[1],
-        t.walls[2],
+        'textures/slums/wall-concrete.png',
+        'textures/slums/wall-brick.png',
+        'textures/slums/wall-stone.png',
         t.walls[3],
         'textures/slums/wall-clapboard.png',
         'textures/slums/wall-cinderblock.png',
       ];
+      // the residential worn set is already a wrecked back-alley wall — no slums edition needed, and
+      // it stays strictly more destroyed than the new fronts above
       s.wornWalls = [
         t.wornWalls[0],
         t.wornWalls[1],
@@ -143,9 +149,12 @@ class SlumsStyle {
         { widthFrac: 0.95, depth: 1.2, rise: 0.55, yFrac: 0.92, matTile: 2.0 }, // 4: wide sagging porch roof
         { widthFrac: 0.85, depth: 1.0, rise: 0.10, yFrac: 0.99, matTile: 2.0 }, // 5: bent sheet-metal awning
       ];
-      // this style reuses the residential indices for the same art, but adds two slots of its own —
-      // it must name all six or the UV editor labels a cottage 'sleek' (Poly.info is first-write-wins)
-      s.facadeNames = ['concrete', 'brick', 'stone', 'metal', 'clapboard', 'cinderblock'];
+      // every slot but 3 draws art residential never draws, so every slot but 3 needs its OWN name:
+      // Poly.info is first-write-wins across areas, so borrowing 'concrete'/'brick'/'stone' would make
+      // the UV editor report the residential wall/storefront path for a slum surface and fold two
+      // unrelated textures into one editable class (docs/3d-changes.md, "Per-style facade names").
+      // the -slum suffix covers the wall AND the storefront band, which was already slums-only art
+      s.facadeNames = ['concrete-slum', 'brick-slum', 'stone-slum', 'metal', 'clapboard', 'cinderblock'];
       s.specialSlot = 3;          // metal warehouses stay
       s.masonrySlots = [1, 2];    // brick + stone parapets, as residential
       s.noStoreSlots = [4, 5];    // a shack is a home, not a shop
