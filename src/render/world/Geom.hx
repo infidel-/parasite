@@ -169,7 +169,11 @@ class Geom {
       return { simple: false, small: false, store: true, windows: true };
     var small = b.w <= 2 && b.d <= 2;
     var h = ((b.col * 73856093) ^ (b.row * 19349663)) & 0x7fffffff;
-    var store = !small && (h % 100) < RenderConfig.STORE_PCT;
+    // a style may bar whole facade slots from ever growing a storefront band (a slums shack is a
+    // home, not a shop). done here rather than in Buildings.addGround so Windows/Entrances/Check
+    // all read the same verdict
+    var noStore = WorldCtx.style.noStoreSlots != null && WorldCtx.style.noStoreSlots.indexOf(b.facade) >= 0;
+    var store = !small && !noStore && (h % 100) < RenderConfig.STORE_PCT;
     // every concrete/brick/stone building gets windows — no blank plain boxes. only a buried
     // face (every wall against a neighbor) yields 0, which the checklist FAILs as a real anomaly.
     return { simple: true, small: small, store: store, windows: true };

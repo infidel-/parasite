@@ -26,6 +26,10 @@ typedef SceneBundle = {
   lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
   lampCorners:Map<Int,Int>, // grid vertex (ActorAnim.lampVertexKey) -> lamp dir, so the slide bends past a post
   lampProp:render.Models.InstancedProp, // instanced lamp meshes, frustum-culled per frame
+  lampPropDead:render.Models.InstancedProp, // dead lamps' posts — same model, emissive stripped so the bulb neither glows nor blooms
+  coneFlick:render.LightCone.ConeSet, // the flickering lamps' cone batch, repacked per frame so a cone goes dark with its bulb
+  lampMask:Array<Bool>,     // per-instance draw mask for lampProp — entries 0..n-1 are the flickering lamps, cleared while one is out
+  lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
 };
 
 class SceneSetup {
@@ -82,7 +86,7 @@ class SceneSetup {
     }
 
 // build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city
-  public static function buildScene(renderer:WebGLRenderer, city:City):SceneBundle {
+  public static function buildScene(renderer:WebGLRenderer, city:City, ?style:render.world.AreaStyle):SceneBundle {
     var scene = new Scene();
     scene.background = new Color(0x0a0d15);
     var span = CityConfig.CELL * CityConfig.GRID;
@@ -122,33 +126,93 @@ class SceneSetup {
     // of lamps while NUM_SPOT_LIGHTS stays constant. yaw faces the post toward its road (Lamp.dir);
     // the bulb is pushed out over the road edge (local dz rotated by yaw) so the light lands on the road
     var L = RenderConfig.LAMP_LIGHT;
+    // per-area lamp model + bulb/post offsets (null style or null lamp = residential defaults). only
+    // the placement geometry is per-area; height/cone/pool stay on L, shared, so no shader recompile
+    var lp = style != null ? style.lamp : null;
+    var lampModel = lp != null ? lp.model : RenderConfig.MODELS.streetLamp;
+    var ldx = lp != null ? lp.dx : L.dx;
+    var ldz = lp != null ? lp.dz : L.dz;
+    var lpdx = lp != null ? lp.pdx : L.pdx;
+    var lpdz = lp != null ? lp.pdz : L.pdz;
     var coneGroup = new Group();
     scene.add(coneGroup);
     var lampPosts:Array<LampPost> = [];
     var lampCorners:Map<Int,Int> = new Map(); // grid vertex -> lamp dir, so the actor/camera slide bends past a post
+    // broken/flickering lamps (slums): decided from the lamp CELL with the footprint-hash idiom, so the
+    // same city always breaks the same lamps with no rng draw and nothing to persist. a dead lamp is
+    // dropped from `bulbs` (no light cone) AND from `lampPosts`, so it never even enters the pool's
+    // candidate list — the survivors near the player get MORE coverage, not less. its POST still stands,
+    // but in its own instanced mesh with the emissive stripped, or the bulb keeps glowing and blooming
+    var brokenPct = style != null ? style.lampBrokenRatio * 1000 : 0;
+    var flickerPct = style != null ? style.lampFlickerRatio * 1000 : 0;
     var placements:Array<{ x:Float, z:Float, yaw:Float }> = [];
+    var dead:Array<{ x:Float, z:Float, yaw:Float }> = [];
+    var flickPlace:Array<{ x:Float, z:Float, yaw:Float }> = []; // posts of the flickering lamps — in BOTH batches, see below
+    // cones are split by fate: the steady ones are built once and never touched, the flickering ones
+    // keep their phases so LightCone.pulse can drop a cone whose bulb is in its dark stretch
     var bulbs:Array<{ x:Float, z:Float }> = [];
+    var bulbsFlick:Array<{ x:Float, z:Float }> = [];
+    var phasesFlick:Array<Float> = [];
     for (lamp in city.lamps) {
       var w = CityConfig.cellToWorld(lamp.col, lamp.row);
       // dir -> yaw so local +z points toward the road (0:+z, 1:-z, 2:+x, 3:-x)
       var yaw = switch (lamp.dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; };
       var cos = Math.cos(yaw), sin = Math.sin(yaw);
-      var px = w.x + L.pdx * cos + L.pdz * sin; // post nudged within its cell (edge / toward wall)
-      var pz = w.z - L.pdx * sin + L.pdz * cos;
-      var bx = px + L.dx * cos + L.dz * sin;    // bulb offset FROM the post, over the road edge
-      var bz = pz - L.dx * sin + L.dz * cos;
-      placements.push({ x: px, z: pz, yaw: yaw });
-      bulbs.push({ x: bx, z: bz });
-      lampPosts.push({ x: bx, z: bz, col: lamp.col, row: lamp.row });
+      var px = w.x + lpdx * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
+      var pz = w.z - lpdx * sin + lpdz * cos;
+      var bx = px + ldx * cos + ldz * sin;    // bulb offset FROM the post, over the road edge
+      var bz = pz - ldx * sin + ldz * cos;
+      var h = ((lamp.col * 73856093) ^ (lamp.row * 19349663)) & 0x7fffffff;
+      if (h % 1000 < brokenPct)
+        dead.push({ x: px, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
+      else
+        {
+          // a separate slice of the same hash, so breaking a lamp doesn't correlate with sputtering
+          var flick = (h >>> 11) % 1000 < flickerPct;
+          var phase = flick ? ((h >>> 17) % 628) / 100 : 0.0;
+          if (flick)
+            {
+              flickPlace.push({ x: px, z: pz, yaw: yaw });
+              bulbsFlick.push({ x: bx, z: bz });
+              phasesFlick.push(phase);
+            }
+          else
+            {
+              placements.push({ x: px, z: pz, yaw: yaw });
+              bulbs.push({ x: bx, z: bz });
+            }
+          lampPosts.push({
+            x: bx,
+            z: bz,
+            col: lamp.col,
+            row: lamp.row,
+            phase: phase,
+            flick: 1.0,
+          });
+        }
       // the cell corner (grid vertex) the post stands on, keyed for cornerBend to query
       var a = (lamp.dir == 1 || lamp.dir == 3) ? lamp.col - 1 : lamp.col;
       var b = (lamp.dir == 1 || lamp.dir == 2) ? lamp.row - 1 : lamp.row;
       lampCorners.set(ActorAnim.lampVertexKey(a, b), lamp.dir);
     }
-    // posts + cones: one instanced draw call each, regardless of lamp count
-    var lampProp = Models.instanced(scene, RenderConfig.MODELS.streetLamp, placements, CityConfig.CELL * 1.6);
+    // posts: one instanced draw call each, regardless of lamp count. an area with broken lamps pays
+    // one more for the dead posts (their material differs, so they cannot share the batch).
+    // a FLICKERING lamp's post sits in BOTH batches, at index 0..n-1 of each, and the per-frame mask
+    // picks which one draws it: its head is emissive, so an outage that only killed the spotlight and
+    // the cone would leave the bulb glowing and blooming. both batches already repack every frame for
+    // the frustum cull, so swapping a lamp between them costs nothing — no third draw call
+    var lampProp = Models.instanced(scene, lampModel, flickPlace.concat(placements), CityConfig.CELL * 1.6);
+    var lampPropDead = Models.instanced(scene, lampModel, flickPlace.concat(dead), CityConfig.CELL * 1.6, true);
+    // prebuilt so the per-frame pass only rewrites the first n entries (the flickering lamps)
+    var lampMask = [for (i in 0...(flickPlace.length + placements.length)) true];
+    var lampMaskDead = [for (i in 0...(flickPlace.length + dead.length)) i >= flickPlace.length];
     var bulbY = CityConfig.CELL * L.yMul;
-    LightCone.instanced(coneGroup, bulbs, bulbY, bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul);
+    // two cone batches, both in coneGroup so debug 5/0 still hides them together: the steady lamps'
+    // (built once, never touched) and the flickering lamps' (repacked by LightCone.pulse so a cone
+    // goes out with its bulb). an area with no flickering lamps builds no second mesh at all
+    var coneR = bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul;
+    LightCone.instanced(coneGroup, bulbs, bulbY, coneR);
+    var coneFlick = LightCone.instanced(coneGroup, bulbsFlick, bulbY, coneR, phasesFlick);
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
     var lampLights = new LampLights(scene);
     for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
@@ -178,7 +242,11 @@ class SceneSetup {
       lampLights: lampLights,
       lampPosts: lampPosts,
       lampCorners: lampCorners,
-      lampProp: lampProp
+      lampProp: lampProp,
+      lampPropDead: lampPropDead,
+      coneFlick: coneFlick,
+      lampMask: lampMask,
+      lampMaskDead: lampMaskDead
     };
   }
 }

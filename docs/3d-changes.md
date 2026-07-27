@@ -1132,3 +1132,476 @@ already ~1 call in any street view (rooftops, follow cam is ~30°). Net ≈ neut
 entries above). No new material permutation: `MeshStandard` opaque, same family as the detail decals.
 
 Not verified in-engine yet (reload lands on the menu; needs a downtown save loaded to eyeball a pad).
+
+## SHIPPED — Downtown swaps to the street-lamp2 (PBR) prop (2026-07-25)
+
+Downtown now instances `models/street-lamp2.glb` (PBR: base + normal + metallic-roughness) instead of
+the residential `street-lamp.glb`. Style-driven, so residential is byte-identical.
+
+Lamps are placed once, citywide, in `SceneSetup.buildScene` (not per-`AreaStyle` before). It read
+`RenderConfig.MODELS.streetLamp` + `LAMP_LIGHT` hardcoded. New `AreaStyle.lamp:LampProp`
+(`{model, dx, dz, pdx, pdz}`, null = residential) carries **only the per-model placement geometry** —
+which glb + where the bulb (`dx/dz`) and post (`pdx/pdz`) sit. `buildScene` gained an optional `style`
+arg; `StreetView.buildFrom` now computes `areaStyle` before the call and passes it (moved up from after
+`World.build`, which is where `WorldCtx.style` gets set — too late for SceneSetup).
+
+**Why the light budget stays global (deliberately NOT per-area).** The live spotlights are a fixed pool
+(`LAMP_LIGHT.pool = 12`, `LampLights`) sized to keep `NUM_SPOT_LIGHTS` constant so lit materials never
+recompile. A per-area pool size would change that constant → full shader recompile on the downtown
+transition, the exact hitch the pool exists to avoid. So the pool + shadow casters + bulb height
+(`yMul`) + cone (`angle`) stay on `LAMP_LIGHT`, shared; only the model geometry is per-area. The two
+lamps share `yMul 1.4` / `angle π/5`, so the pool spotlight sits at the right bulb with zero changes to
+`LampLights` (bulb x/z are pre-baked into `lampPosts` at placement time; the pool just reads those).
+
+Warm pass: `street-lamp2` is a distinct PBR material program, so `warmup()` instances one into the warm
+scene (after the downtown `World.build`) — first downtown entry reuses it instead of compiling on frame
+one.
+
+Deleted the dead, incomplete `RenderConfig.LAMP_LIGHT2` (declared, **zero reads** anywhere — it was WIP
+tuning: missing `pdx/pdz`, plus `markerVisible`/`tdx/tdz` which are dead on `LAMP_LIGHT` too). Its live
+values (`dx 1.0, dz 0.0`) moved into `DowntownStyle.lamp`; post nudge starts from the residential kerb
+(`pdx 2.0, pdz 2.6`).
+
+**Placement offsets are WIP starting values — the arm geometry differs, so `dx/dz/pdx/pdz` need an
+in-engine eyeball** (bulb over the road edge, post on the kerb). Verified the wiring headlessly
+(residential `lamp == null`, downtown `lamp.model == street-lamp2`); NOT yet eyeballed in a loaded
+downtown area.
+
+**Fix: bake node transforms into geometry — street-lamp2's upright pose lived in a node quat, and
+`instanced()` discards node transforms.** Reported "lying down"; several blind `rotateX/Z` corrections
+only made it worse (one baked a `rotateX(π/2)` that put the pole on Z, so `normalize()` read
+`height = size.y = 0.13` and scaled the model **48×** — the "huge" sprawl). Real cause, found by measuring
+the mesh node (`o.quaternion`, `o.geometry.boundingBox`): street-lamp2's mesh carries a **90°-about-X node
+quaternion** (`0.707,0,0,0.707`) standing up a raw geometry that is itself lying (`geomSize Z=1.128`).
+`normalize()` measures with `Box3.setFromObject` (world matrices → sees it upright, height right), but
+`Models.instanced` reads the **raw** `firstMesh().geometry` and builds transforms from scratch, ignoring
+the node quat → it draws the lying geometry at the correct height (hence "size ok, lying down"). lamp1's
+node is identity, so it never showed.
+
+Fix in `Models.get`: after load, `updateMatrixWorld` then bake each mesh's `matrixWorld` into its
+geometry (`geometry.applyMatrix4`, also transforms normals) and reset the node to identity. The verts are
+then self-standing, so both the `instanced()` and `place()` paths are correct, and `normalize()` still
+measures the same box. Identity nodes (lamp1) are a no-op. This is the general version of the
+"instanced() assumes the mesh sits at the template root" caveat — now it's guaranteed at load.
+
+## Slums area style + generator (LANDED) — per-area render + gen split, third variant
+
+Third area variant after downtown, using the same two split points (`citygen.CityProfile` for
+generation, `render.world.AreaStyle` for render). `AREA_CITY_LOW` now generates and renders as slums;
+MEDIUM keeps the residential default and HIGH keeps downtown. New: `citygen.profiles.SlumsProfile`,
+`render.world.SlumsStyle`, `render.world.Lawns`.
+
+**Dispatch moved from a bool to the area type.** `Profiles.forDowntown(Bool)` /
+`AreaStyle.forDowntown(Bool)` became `forArea(_AreaType)`, and the persisted `AreaGame.downtownGen` flag
+was **deleted** — three variants do not fit one bool, and the type is already on the area. Verified an
+existing autosave still loads (the stale `downtownGen` key in the save is simply ignored) and its
+downtown area still renders with `__check.pass`.
+
+**Two new facade slots (4 clapboard cottage, 5 cinderblock bungalow), single-floor.** `CityGen.leaf()`
+remaps the ONE existing facade draw — `facade >= 2 && maxSide <= houseMaxSide` → `houseSlots[facade-2]`
+— exactly like downtown's remap. **No new rng call**, so the seeded stream cannot shift. Single-floor
+comes from `floorCap[4] = floorCap[5] = 1` (`mk()` clamps to it → `h = 8.8`), not from a special case.
+A leaf that small can never reach the courtyard/L/T/+ branches (all need `w >= 7 && d >= 7`), so a house
+is always a plain rectangle — which is what `addGableRoof` requires.
+
+**Measured, 40 seeds, stash-rebuild-rehash against HEAD: the DEFAULT building list is byte-identical**
+(hash of `col,row,w,d,h,roof,facade,shop` matched on all 40). Re-checked after the `houseMaxSide` tune.
+
+**`houseMaxSide` is the knob that matters, and 5 was wrong.** Measured over 30 seeds:
+
+| houseMaxSide | houses | stone (2) | metal (3) |
+|---|---|---|---|
+| 3 | 5.5% | 22.3% | 14.3% |
+| **4** | **21.0%** | **14.3%** | **10.3%** |
+| 5 | 35.6% | 6.9% | 5.3% |
+
+At 5 the two house types all but wipe out stone and the metal warehouses — the district stops reading as
+the same city. Landed on 4. Slums vs MEDIUM over 30 seeds: 231 vs 209 buildings, mean footprint 15.05 vs
+17.39 cells, mean height **10.97 vs 15.09**, building tiles 34.8% vs 36.3% (alley 18.6 vs 17.1). Barrels
+untouched — `courtyardBlockChance` deliberately left at the residential 0.35 because
+`CityAreaGenerator.placeBurningBarrels` places one per carved courtyard (3.5 vs 3.7 courtyards a city).
+
+**Lawns are a render-only pass, NOT a new `Tile`.** A fifth tile value would have rippled into the
+persisted `_cells`, walkability, `WorldCtx.floorY`, `Ground.isLower`, `Debris.isStreet` and `Occlusion`.
+Instead `Lawns.build` paints alpha-cutout quads over the *alley* cells ringing a house, gated by the same
+footprint-hash idiom as `Geom.frontInfo` (deterministic, no rng). Measured: **1 mesh / 1 draw call**, 216
+cells = 9.3% of the city's alley, 50.9% of eligible buildings; the downtown and residential styles emit
+zero (null `lawnTex`). Walkway cells are excluded on purpose — they sit at `CURB_H` and some are
+chamfered (`Ground.bevelAt`), so with `setback: 1` the lawns read as side and back yards. The mesh is
+world-baked with no `userData.b` (it is ground, it must not fade with one building), so it correctly
+shows up in `__occ.skipped()`.
+
+**Four hardcoded facade assumptions had to become style fields**, all defaulting to today's behaviour:
+`masonrySlots` (was `b.facade == 1 || b.facade == 2` in `Buildings`), `noStoreSlots` (folded into
+`Geom.frontInfo` so `Windows`/`Entrances`/`Check` all agree), `gableSlots` + `gableRoofs` (the gable gate
+was `isSpecial`, which also implies a roll-up door and no windows — the two had to be split, or a cottage
+got a warehouse door). `addGableRoof` also took a `roofPath` and now names its Poly classes from
+`style.facadeName` instead of the literal `'roof-gable-metal'`.
+
+**Latent bug found: `Roofs.brickMats` indexed `RenderConfig.FACADE_NAMES[b.facade]` and
+`TEXTURES.walls[b.facade]` RAW.** Harmless while every style had at most 4 masonry slots; with 6 slots it
+reads past the end and tags materials `parapet-null` with an undefined path. Now style-driven and
+modulo-wrapped. Same class of bug as the `facadeNames` lesson above — worth grepping for any other raw
+`[b.facade]` indexing.
+
+**Textures: all 19 generated, nothing borrowed.** Three slums grounds, both house walls + worn, the
+shingle roof, the dead lawn, both window sets + lit, both door sets + worn, both door-cover swatches.
+Every worn/lit variant was made with `edit_image` off its own clean base, not generated fresh, so the
+palette matches across faces of one building — a separately-generated worn wall drifts in hue and the
+seam shows at the corner.
+
+**The doors and windows are chroma-keyed, NOT hand-cut — that is new for cutout art here.** The
+residential doors/windows were hand-edited for alpha, which is why the pipeline only ever gray-keyed roof
+details. Generating a door/window centred on a flat `#5a5d63` field and registering `class:"chroma"`
+gets `make tex` to bake the alpha automatically, with no hand step. Two prompt rules make it safe at
+`tol: 24`: state the exact hex and demand a hard edge with no glow/halo/drop-shadow (a soft falloff
+leaves a grey fringe the key cannot resolve), and explicitly forbid medium neutral grey *inside* the
+subject so nothing in the art falls within tolerance. Verified by measuring baked alpha coverage against
+the prompt's stated geometry — doors 42-49% opaque against ~39% intended (door + casing), windows
+20-27% against 16-19% — i.e. the key removed the field and nothing else. Worth doing this way for any
+future cutout that is a discrete object on a background; it does not suit art that must bleed to the
+tile edge.
+
+**Not yet eyeballed in a loaded slums area.** Coverage so far is `StreetView.warmup()`, which now builds
+a throwaway slums city at boot: every slums render pass (slums ground, facades 4/5, the gable roof,
+`Lawns`, entrances, windows) executed with zero console errors and no `[textures] missing` warnings. The
+open questions a real walk-through has to answer are the ones the numbers cannot: whether the two house
+types read as distinct at street distance, whether `winCrop` frames each new sash correctly (it sets the
+pane's aspect via `winH = WIN_W * y/x`), whether the porch/awning covers sit right on an 8.8-unit wall,
+and whether the lawns land thick enough at `lawnChance 0.5` on alley cells only.
+
+---
+
+## Flat-roof dressing leaked under the slums gable (LANDED)
+
+Reported from a loaded slums area: clapboard cottages had contact shadows and detail decals on their
+roofs, mostly buried under the gable slopes.
+
+`addRoofShadows` and `addRoofDetails` both gated on `style.isSpecial(b.facade)` — "is this the metal
+warehouse", which used to be the only gabled slot. Adding `gableSlots` gave the style a second way to
+be gabled, and neither pass knew about it, so the cottages kept the flat-roof dressing their buried box
+top nominally has. Wasted geometry, and it pokes through the slopes at grazing angles.
+
+The gate is now `Roofs.isGabled(b)` (`b.shop < 0 && style.isGable(b.facade)`) in both passes, and
+`Buildings` derives its own `gable` from the same helper — the three had to agree and were three
+separate expressions. Folding `b.shop < 0` in also fixes a latent case the old gate got backwards: a
+warehouse downgraded to a single-story shop gets a flat parapet from `Buildings`, but `isSpecial` was
+skipping its shadows, so it had a parapet casting nothing.
+
+Measured on the live slums save (245 buildings, 23 gabled cottages + 23 warehouses) by re-running both
+passes into a throwaway `THREE.Scene` and testing against the gabled footprints: **0** detail decals
+tagged to a gabled building (674 remain citywide), **0** of 1592 shadow instances inside a gabled
+footprint at its roof height. The lesson generalises: any pass keyed on `isSpecial` is really asking
+"does this slot have a gable", and needs re-reading whenever a style adds a roof shape.
+
+---
+
+## Slums pass 2: barrels, dead shopfronts, broken lamps (LANDED, visual check pending)
+
+Three follow-ups after walking the landed slums area.
+
+**Burning barrels were nearly absent — and it was arithmetic, not a bug.** Measured over 1000 seeds:
+mean **1.52 barrels/city, 23% of slums cities generated ZERO**. Two gates multiply. `carveCourtyard`
+is the only barrel site and fires on `courtyardBlockChance: 0.35` (~3.9 courtyards/city), then
+`placeBurningBarrels` rolled `Std.random(100) >= 60` on top, keeping 40%. Worth recording what was
+NOT the cause: the slums massing knobs are innocent — 3.87 courtyards as shipped vs 4.04 with full
+residential massing (depth 5 / splitOver 12 / maxBuilding 8 / earlyLeaf 0.3). The barrel-less cities
+also silently broke the three profane cult ordeals that `spawnNearType` a barrel.
+
+Fixed by raising slums `courtyardBlockChance` to 0.6 and deleting the second roll — the courtyard roll
+is variety enough. Re-measured over 400 seeds: **mean 6.44 barrels/city, 0.3% zero** (1 city in 400).
+MEDIUM is untouched by construction: `CityGen.hx` and the `DEFAULT` profile were not edited, only a
+slums-only constant. Note this DOES re-roll existing slums saves — `cityGenSeed` persists and
+`AreaGame` rebuilds cells from it, so an old save reloads into a different city while its persisted
+barrels keep their old cells (`rebuildCells` never refreshes `courtyards`). Acceptable pre-release.
+
+**Two unrelated systems share the word "storefront", and only one was style-driven.** The ground-floor
+band reads `AreaStyle.storefronts`; the single-story shop bays read `RenderConfig.TEXTURES.shopFront*`
+directly, with lit/unlit chosen by `Building.shopOpen`. So slums — which generates MORE shops than
+residential (`downgradeChance: 0.45`) — was rendering bright, half-lit diners. Added
+`AreaStyle.shopFronts` / `shopFrontsNd`: non-null means the area's shops are all dark, `shopOpen` no
+longer applies, and there is no lit variant to pick. 4 boarded bays (shop + diner, each door /
+door-less) instead of the residential 16, plus 3 new `slums/facade-*` bands. `shopOpen` turned out to
+have no gameplay reader at all (only `Buildings` and `BDump`), so ignoring it costs nothing.
+
+Texture-shape trap worth keeping: shop bays MUST be 16:9 (`b.h = SHOP_H` makes each bay exactly 16:9
+at `rx = ry = 1`) but the ground-floor band is SQUARE (`rx = faceW/GROUND_H`, `ry = 1`, one square bay
+per 4 world units). The residential `facade-stone`/`facade-metal` are baked 16:9 and are therefore
+vertically squashed on the band — a pre-existing bug, not copied into the slums set.
+
+**Lamps: half dead, a third of the survivors sputtering.** New `AreaStyle.lampBrokenRatio` /
+`lampFlickerRatio`, decided from the lamp CELL with the footprint-hash idiom (no rng, nothing
+persisted, stable across reloads). Both default 0, so residential/downtown are untouched.
+
+The shape that made this cheap: a dead lamp is dropped from `bulbs` AND from `lampPosts` in the one
+`SceneSetup` loop. So it gets no light cone for free, and it never enters `LampLights`' candidate list
+— meaning dead lamps do not consume the 12-slot pool, and the survivors near the player get MORE
+coverage, not less. Critically this never touches `LAMP_LIGHT.pool`, so `NUM_SPOT_LIGHTS` is constant
+and no lit material recompiles — the whole reason that pool exists.
+
+**Killing the spotlight and the cone is NOT enough to make a lamp read dead.** First attempt kept every
+post in the one instanced batch and only removed its light; the bulb still glowed and still fed bloom,
+so a "broken" lamp looked lit from any distance. Both lamp glbs carry `emissiveFactor` +
+`emissiveTexture` + `KHR_materials_emissive_strength` on the head — the glow is emissive, independent
+of every light in the scene, and bloom keys off the rendered texel, not off whether a light exists.
+Fixed with a `darkEmissive` flag on `Models.instanced` that CLONES the material (it comes from the
+shared model cache — editing in place would black out the working lamps too) and zeroes `emissive` /
+`emissiveMap` / `emissiveIntensity`. Dead posts therefore live in their own `InstancedMesh`: **+1 draw
+call** in an area with broken lamps, zero anywhere else. The general lesson: an emissive prop has two
+independent brightness sources, and turning off the light only addresses one of them.
+
+Flicker is `LampLights.flicker(t, phase)`, a port of the failing-sodium model already shipped in
+`MainMenuGL`: steady, then a slow gate sine opens a rare window in which two fast beating sines drop it
+toward blackout. `FlameLights.flicker` was the wrong shape and is deliberately NOT reused — it is a
+warm breathe floored at 0.55 that never goes dark, which is a fire, not a dying bulb. Clock is raw ms
+(bypasses `ANIM_SPEED`, same call as `FLAME.flick*`). The multiplier is applied only at the publish
+line and never to `intens[]`: that array is both the fade ease and the `<= 0.001 -> free the slot`
+test, so scaling it in place would hand a sputtering lamp's slot away mid-blink. The fake ground
+shadow already had a `flicker` field waiting (`CastShadows.ShadowLight`, previously passed 1.0), so
+lamp shadows now breathe with the bulb for one line.
+
+**Deliberately NOT done: a flickering lamp's CONE does not flicker.** All cones are one
+`InstancedMesh` over one shared material with no per-instance channel — `setColorAt` has zero
+occurrences in the repo, and `Models.cull` repacks instances every frame, so any new per-instance
+attribute must be repacked in lockstep. At `LAMP_CONE.opacity = 0.03` the mismatch should sit below
+notice. Upgrade path if it ever reads wrong: a second cone mesh for the flickering subset (1 extra
+draw call, one shared phase) or a real `instanceColor` extern.
+
+Still unverified visually at time of writing (the app was not running): whether 50% broken reads as
+atmospheric or merely dark, whether 1-in-3 flicker is too busy, and whether the boarded shopfronts are
+legible at street distance now that nothing in the area is lit.
+
+---
+
+## SHIPPED — Gable roofs overhang on all sides, slopes are thin slabs (2026-07-26)
+
+Both pitched roofs (metal warehouse, slums clapboard) were two zero-thickness quads sitting exactly on
+the box footprint — flush on all four sides, no eave, no material thickness anywhere on the perimeter,
+so a roof read as a folded sheet pressed onto the walls with no shadow line under it.
+
+Each slope is now a **thin slab** overhanging the box by `GABLE_OVER` on all four sides, with
+`GABLE_THICK` of visible edge. One function does both roofs — `Roofs.addGableRoof` — because
+`Buildings` only varies which slope texture it hands in, so this was one geometry change with no
+per-style work and no new art.
+
+**Extrude the slab VERTICALLY, not along the slope normal.** A normal offset slides each slope's top
+surface sideways by `T*sin(pitch)`, so the two tops stop meeting and a `2*T*sin(pitch)` notch opens
+along the whole ridge — which then needs a ridge cap to hide. Raised straight up, both tops stay on
+their own plane and still meet exactly on the ridge line: a closed prism, no cap, no trig, and the
+fascia and rake come out as genuinely vertical strips, which is what they are on a real roof.
+
+Per slope **5 quads, not 6**: top, soffit, eave fascia, two rakes. The ridge edge strip is skipped
+because both slabs own the same one and two coplanar faces z-fight.
+
+Every face samples the same roof texture, world-tiled on both axes (`u` along the ridge, `v`
+down-slope or up the thickness). The fascia's `v` runs `-T/TILE -> 0` so it continues the top
+surface's eave line rather than restarting.
+
+**The gable-end triangles needed no change at all**, which is the useful part of the construction: the
+slab BOTTOM still passes exactly through `(wall plane, b.h)` and `(ridge, ridgeY)`, so the wall
+triangles still fill the space under the roof precisely, touching along a line (no z-fight), and the
+rake now stands proud of them instead of being flush.
+
+Same change collapsed the `if (wWorld >= dWorld) … else …` duplication into one `along`/`cross` axis
+pair plus a single mapper. The gable-end triangles turn out to be the *same expression* in both
+orientations under that naming, and both `aDir/bDir` pairs fall out of the axis flag — so the slab
+emitter and the ends are each written once. The function got shorter despite doing five times the
+geometry.
+
+**Cost, measured on the live slums save** (48 gabled buildings: 33 warehouses + 15 clapboard):
+`__dbg.count('roof-gable')` = 48 and `count('gable-end')` = 96, i.e. still exactly 3 meshes and 3
+materials per gabled building — mesh count and therefore draw calls unchanged. Tris per roof 4 → 20.
+`__dbg.find` bounding boxes confirm the geometry exactly: a 12×8 box now yields a 13×9 roof
+(footprint + 2×0.5 on both axes) and 2.28 tall (`pitchH 1.76 + THICK 0.3 + eave drop 0.5*tanP 0.22`).
+`__check.pass` true, 0 fails. Visually: rake overhang clearly proud of the gable end head-on, and from
+the side the fascia reads as a dark band with a shadow line over the wall below it.
+
+**Checked before writing, not a problem:** the clapboard cottage's porch cover can't collide with the
+new eave. `Entrances.hx` clamps a cover's bottom to `b.h - rise`, and that cover is itself a gable cap
+whose apex is AT the wall sloping down outward — at 0.5 out it is already ~0.37 below `b.h` where the
+eave underside is only 0.18 below.
+
+**Known ceiling, left in with a `ponytail:` comment:** the overhang is unconditional, so a gabled box
+abutting a *shorter* neighbour pokes an eave over its roof. Upgrade path if it reads wrong is a
+per-face gate on `Geom.faceIsStreet` / real adjacency. Overhang and thickness are global
+`RenderConfig` constants, not `AreaStyle` fields — split them per style only if the warehouse and the
+cottage turn out to want different numbers.
+
+*(Follow-up: `GABLE_THICK` 0.3 → 0.15 → 0.05 by eye. 0.3 read as a slab edge rather than a roof.)*
+
+---
+
+## SHIPPED — Lamp outages: flickering cones, dead lens, whole-lamp blackout (2026-07-26)
+
+Three follow-ups on the broken/flickering slums lamps, and one problem the work uncovered.
+
+**A "turn it off" effect has to turn off every source, and there are four.** This is the through-line
+of the whole entry and the generalisable lesson. A street lamp's brightness comes from (1) its pooled
+`SpotLight`, (2) the additive `LightCone` shaft, (3) the fake ground shadow it casts on actors, and
+(4) the glb material's **emissive head**, which is independent of every light in the scene and feeds
+bloom directly. The previous pass fixed (4) for permanently-dead lamps and (1) for flickering ones;
+this pass had to chase the other three, and (4) again for the temporary case. Each one is a separate
+mechanism with a separate fix — nothing about killing a light propagates to the rest.
+
+**Flickering cones: repack the instance buffer, don't fade a material.** The ceiling named in the
+previous entry — "a second cone mesh for the flickering subset (1 extra draw call, one shared phase)"
+— turned out to be the *wrong* upgrade. One shared material can only fade all flickering cones
+together, so every outage in the area would happen in unison. Instead `LightCone.instanced` now
+returns a `ConeSet` and the flickering subset gets its own mesh whose **matrix buffer is repacked per
+frame**, exactly like `Models.cull`: a cone whose bulb is out is simply not packed into the drawn
+prefix. That buys per-lamp independent phases with no per-instance colour channel (still zero
+`setColorAt` in the repo) and no material work. `pulse()` early-outs when no instance changed state,
+which is almost every frame — outages are seconds apart.
+
+**The emissive head was the sting in the tail, and the fix cost zero draw calls.** With (1)(2)(3)
+handled, a lamp mid-outage still had a glowing, blooming head, because the emissive lives in the
+material shared with every working lamp. The fix: a flickering lamp's post is instanced into **both**
+the lit batch and the existing dead-material batch, at the same index in each, and a per-frame mask
+picks which one draws it. Both batches were already being repacked every frame for the frustum cull,
+so the swap is free — `Models.cull` just gained an optional `mask` parameter. Cost of the whole pass
+is **+1 mesh** (the flicker cone batch) rather than the +3 a naive split would have taken — by
+construction, from the mesh inventory; NOT A/B'd against a `calls=` baseline in a fixed view.
+
+**A dead lamp's head was still pale, and the mask for fixing it already shipped inside the glb.**
+Stripping the emissive stopped the glow and the bloom, but the *base-colour* map paints the lens and
+hood cream (dumped both images out of `street-lamp.glb` to confirm), so the head still read live under
+moonlight. The same material's emissive map is exactly that region in white on black — a ready-made
+mask. `Models.deadMap` bakes `out = base * (1 - mask * (1 - mul))` on a canvas in three composite ops
+(invert the mask, `screen` it with a flat grey(mul) — `screen(1-m, mul) == 1 - m*(1-mul)` exactly —
+then `multiply` onto the base), cached per model path. No per-pixel loop, no new art, no shader cost,
+and only the head darkens: the pole is pixel-identical to a working lamp's. **Trap:** a bare
+`CanvasTexture` defaults to `flipY = true` while glb textures are `false`, so the post comes out
+upside down unless `flipY`/`wrapS`/`wrapT`/`colorSpace` are copied off the source. (`Texture.flipY`
+was missing from the extern and was added.)
+
+**Flicker became TWO gate sines riding on each other.** The old shape was a fast strobe that never
+went dark. Now a slow gate (`flickGate 0.000314`, ~20 s) opens an outage window the bulb ramps down
+into, sits at **exactly 0** through, and ramps back out of; and a fast gate (`flickBurst 0.001396`,
+~4.5 s) interrupts the lit stretches with ~1 s stutter bursts. One gate alone was not enough — with
+only the outage, a "flickering" lamp burned rock-steady for 17 s at a time and read as a working lamp
+that occasionally died. Sampled in-page, the cycle comes out as
+`lit 3.1s / flicker 1.0s / lit 3.5s / flicker 1.0s / lit 2.0s / DARK 3.1s / …` — 15.7 % of the time
+fully out, 18.9 % stuttering. Both gates take their own phase offset so neighbouring lamps neither
+stutter nor die in unison. A burst bottoms out around 0.27, comfortably above `flickOff`, so it dims
+the light without killing the cone or the head — only the full outage does that. The `(1 - d/edge)`
+ramp is what keeps the outage from popping from full brightness straight to black.
+
+**One bug the outage exposed:** `CastShadows` weights a lamp's fake ground shadow by
+`0.7 + 0.3 * flicker`, so a bulb at flicker 0 would still lay a 70 %-strength shadow. `FlameShadows`
+now drops any lamp under `LAMP_LIGHT.flickOff` before building the shadow list. The pool slot is
+deliberately NOT freed during an outage — `intens[]` is untouched, so the lamp comes back on the same
+slot instead of re-easing in from zero.
+
+**Verified:** `__check.pass` true / 0 fails, no console errors, both cone meshes present in
+`__occ.skipped()`, 234 lamps → 116 dead + 45 flickering, the flicker curve sampled in-page as above,
+and a screenshot pair showing a working lamp's pale glowing lens beside a dead lamp's uniformly dark
+head. **Not verified visually:** an actual outage frame — at ~16 % duty a random screenshot rarely
+lands in one, and the timed sampling run was cut short when the app restarted. The head-goes-dark
+half of the outage is by construction, not by observation.
+
+---
+
+## SHIPPED — Dead lawns: tighter repeat, dissolving borders, translucent overlay (2026-07-27)
+
+Three complaints about the slums dead-lawn patches, all fixed in `render/world/Lawns.hx` alone. No
+new mesh, no new material, no new art — same one world-baked mesh, same texture.
+
+**"I don't see the grass anywhere."** It was there (150 quads, 368×388 world units) but `TILE = 6.0`
+world units per repeat against `CELL = 4` meant a cell showed only two thirds of a repeat. The art is
+~40 % opaque after the chroma key with the opaque parts in a few clumps, so whole cells landed on the
+sparse gaps and rendered as bare alley. **`TILE = 3.0`** — every cell now gets more than a full
+repeat, so every cell gets some grass. Still world-aligned on both axes, still never stretched.
+
+**Abrupt ground→grass border.** The patch ended on a straight cell line, because the cutout was
+binary and the mesh is squares. Fixed with a **vertex-alpha ramp**, not a shader: a `color` attribute
+at `itemSize 4` (three then defines `USE_COLOR_ALPHA` and multiplies `vColor` into `diffuseColor`,
+alpha included) carrying, per grid corner, the fraction of the four cells around that corner that are
+lawn. `SlimeTrail` was the existing precedent for the 4-component color attribute. Because
+`alphaTest` still runs on top, the ramp does not fade the border as a soft rectangle: it pushes the
+border texels under the threshold **thinnest-first**, so the patch dissolves along the ragged shapes
+already in the art. Getting the weights out of the patch shape needed `build()` split into two passes
+(mark cells → emit quads); the old single pass emitted a cell before it knew its neighbours.
+
+**The first cut of that ramp put it on the CELL CORNERS, and that was wrong** — a cell is `CELL = 4`
+units wide, so the gradient spanned four units and the grass looked like it started a whole cell short
+of the walkway rather than right where the walkway ends. The lawn ring is often only one cell thick,
+so the transition zone ate the entire patch. Now each marked cell is emitted as a **4×4 vertex grid
+(9 quads)** with a `FRINGE = 0.75`-unit rim inset all round: full-strength grass inside, `EDGE` alpha
+on the rim, and the rim only drops where the patch actually ends — a vertex whose neighbouring cells
+are all lawn stays at 1.0, so abutting cells stay one continuous field. Cost is 150 quads → 1350
+(2700 tris) in the same single mesh; nothing else changed.
+
+**Wanted a translucent overlay.** `transparent: true, opacity: 0.5, depthWrite: false`. **Trap:**
+three tests `alphaTest` against `diffuseColor.a` *after* `opacity` and `vColor` are multiplied in, so
+leaving `alphaTest` at 0.5 with `opacity 0.5` would have discarded every fragment. It is now
+`ALPHA * 0.5`, which keeps exactly the texels that survived before. `renderOrder = ORD_DECAL - 1` so
+blood and debris still draw over the grass rather than under it.
+
+**Stray courtyard patches** (`AreaStyle.lawnPatchChance`, slums `0.03`): a second marking pass over
+every `Tile.Alley` cell, hashed on `(col, row)` with different multipliers from the footprint hash so
+patch placement does not correlate with which houses got a yard. Each seed pulls in whichever of its
+4 neighbours the spare bits of the same hash pick, so they land as 1–5 cell clumps instead of a
+dusting of lone squares. They cost nothing structurally — they mark into the same `taken` grid, so
+the fringe logic gives them dissolving borders for free, and they merge seamlessly where a clump
+happens to touch a house's yard. 150 cells → 316 in the test area.
+
+**Verified:** builds clean, `__check.pass` true / 0 fails, and the placement rule reproduced in-page
+off `WorldCtx.buildings` / `WorldCtx.tiles` → 150 cells, matching the mesh's tri count exactly (300
+before the subdivision, 2700 after, same bbox, still one mesh; 5688 after the courtyard pass).
+
+---
+
+## SHIPPED — Dead lawns get round outlines: the shape moves from the mesh to an alphaMap (2026-07-27)
+
+The patches read as "vaguely tile-shaped", and they were: a patch was the union of `CELL = 4` squares,
+so every edge was axis-aligned and every corner 90°. **The vertex-alpha fringe could never fix that**
+— it softens the boundary, but the boundary *is* the geometry. So the shape had to stop coming from
+the cells.
+
+**The outline now comes from a baked coverage mask.** `Lawns.build` draws one soft radial kernel per
+marked cell onto a `1024²` canvas covering the whole city rect, with
+`ctx.globalCompositeOperation = 'lighten'` — a per-channel **max**, i.e. a plain union, so a kernel's
+reach is exactly its own radius no matter how many neighbours pile up. (An additive `lighter`
+composite was rejected on paper: in dense clusters the 0.5 contour creeps outward until it spills
+past the geometry underneath.) Centre and radius are hash-jittered per cell (`KERN_JIT`) so blobs are
+irregular rather than a lattice of identical circles.
+
+**Wiring it needed no second UV set** — the trap that would have cost a `uv1` attribute and an extern
+change. `alphaMap` carries its own texture transform (`vAlphaMapUv = alphaMapTransform * vec3(
+ALPHAMAP_UV, 1 )`) and the lawn's `uv` is already `world / TILE`, so the whole city mapping is
+`repeat = TILE / (GRID*CELL)`, `offset = 0.5`. `flipY = false` so canvas row 0 is `z = -half`.
+`alphamap_fragment` runs **before** `alphatest_fragment` in three's standard shader (checked in the
+vendored r181 bundle), which is the whole trick: the mask's smooth ramp gets cut by the existing
+`alphaTest` along the grass art's own ragged texels, so the edge is a curve that dissolves rather
+than a soft blob.
+
+**`KERN` has a floor, and it is not obvious.** At `KERN = 6.0` (visible blob radius ≈ `KERN*0.45` =
+2.7 against a 4-unit cell pitch) a run of marked cells **beaded into a string of pearls** — adjacent
+kernels pinched hard at their waist. Caught by dumping the mask canvas into a full-screen overlay
+`div` and screenshotting it, then re-dumping it thresholded at the level `alphaTest` actually cuts
+at, which shows the exact outline the grass will take. `KERN = 7.0` merges cleanly. Anything at or
+under `CELL * 0.5 / 0.45 ≈ 4.4` disconnects entirely.
+
+**Geometry got simpler, not more complex:** the 4×4 subdivision, the `color` attribute,
+`vertexColors`, `EDGE` and `FRINGE` are all deleted — one quad per cell again — plus a 1-cell apron
+of alley cells so a blob can round off past its own cell. The mesh existing only on `Tile.Alley` is
+what keeps grass off pavement: a blob that would spill is clipped at the kerb, the one hard edge that
+belongs there. 5688 tris → **2100**, still one mesh, one draw call, plus one 1024² canvas texture.
+
+**Leak closed:** `StreetView.disposeScene` frees geometries and materials but deliberately not
+textures — they are the shared cached ones from `Textures.hx`. This mask is per-area and uncached, so
+`Lawns` holds a `static maskTex` and disposes the previous one at the top of `build()`. (`dispose()`
+and `channel` were missing from the `Texture` extern and were added.)
+
+**Courtyard-centre patches** (`AreaStyle.lawnCourtPatches`, slums `2`): an alley cell is by definition
+one that touches no road (`CityGen.hx:758`), so a 4-neighbour flood fill over `Tile.Alley` returns
+exactly one component per block interior — that IS the courtyard, no new citygen data. Components
+under `MIN_COURT = 6` cells are slivers and skipped; the rest get `lawnCourtPatches` seeds at
+`centroid + dir * spread` on opposite compass headings, snapped to the nearest cell in the component.
+46 courtyards qualified in the test area.
+
+**Verified:** `__check.pass` true / 0 fails, no console errors, `__dbg.find('lawn')` → one mesh, 2100
+tris (1050 emitted cells), bbox unchanged. The mask was inspected directly (raw, then thresholded at
+the alphaTest level) — round merged organic blobs, no straight runs, no 90° corners, no beading.
+Free-cam close-ups show the grass reading across whole cells instead of as isolated streaks. Draw
+calls unchanged by construction (same single mesh); not A/B'd against a `calls=` baseline.

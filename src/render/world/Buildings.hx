@@ -7,11 +7,14 @@ import render.RenderConfig;
 import render.RenderConfig.TEXTURES;
 import render.Textures;
 import render.Poly.tag;
+import render.world.roofs.Parapets;
+import render.world.roofs.Gables;
+import render.world.roofs.FlatRoofs;
 
 // per-building box construction: the wall/roof box, storefront overlay, metal-warehouse
 // door, near-ground grime band, and (Buildings.addGround) the ground-floor storefront
-// band. Parapets and gable roofs are delegated to Roofs; face/worn/front classification
-// to Geom. Sets window.__grime for live grime-opacity tuning.
+// band. Parapets and gable roofs are delegated to render.world.roofs; face/worn/front
+// classification to Geom. Sets window.__grime for live grime-opacity tuning.
 class Buildings {
   static inline var CELL = CityConfig.CELL;
   static inline var GROUND_H = CityConfig.GROUND_H;
@@ -43,6 +46,9 @@ class Buildings {
     var shopFront      = [for (p in TEXTURES.shopFront) Textures.loadTexture(p, 'wall')];
     var shopFrontNdLit = [for (p in TEXTURES.shopFrontNdLit) Textures.loadTexture(p, 'wall')];
     var shopFrontNd    = [for (p in TEXTURES.shopFrontNd) Textures.loadTexture(p, 'wall')];
+    // area override: one dark image per type, no lit pair (slums shops are all boarded up)
+    var styleFront   = st.shopFronts != null ? [for (p in st.shopFronts) Textures.loadTexture(p, 'wall')] : null;
+    var styleFrontNd = st.shopFrontsNd != null ? [for (p in st.shopFrontsNd) Textures.loadTexture(p, 'wall')] : null;
     var grimeTex = [for (p in TEXTURES.grime) Textures.loadTexture(p, 'wall')]; // near-ground street grime (alpha hand-painted into the source)
     // premultiplied alpha: the hand-painted grime sources carry saturated junk RGB under
     // near-transparent texels (paint-editor leftover); with straight alpha, bilinear/minified
@@ -60,6 +66,10 @@ class Buildings {
     var doorTex = Textures.loadTexture(TEXTURES.doorMetal, 'wall'); // closed warehouse door (metal facade)
     doorTex.wrapS = doorTex.wrapT = THREE.ClampToEdgeWrapping;       // single image per door, no tiling
     var roofMetalTex = Textures.loadTexture(TEXTURES.roofMetal, 'wall'); // gable-roof slopes (metal warehouse)
+    // per-facade gable slope art, for styles that gable more than the warehouse slot (the slums
+    // clapboard cottage gets shingles); a null array or null entry falls back to the metal roof
+    var gableRoofTex = st.gableRoofs == null ? null
+      : [for (p in st.gableRoofs) p == null ? null : Textures.loadTexture(p, 'wall')];
     // downtown mechanical-penthouse bulkhead wall (flat-roof buildings only)
     var penthouseTex = st.penthouseWall != null ? Textures.loadTexture(st.penthouseWall, 'wall') : null;
     // glass-tower opaque bands. UV repeat is baked into the merged quad verts, so ONE shared
@@ -122,7 +132,7 @@ class Buildings {
         clean = metalWallTex[mv]; worn = metalWornTex[mv];
         cleanPath = st.metalWalls[mv]; wornPath = st.metalWorn[mv];
       }
-      var masonry = b.facade == 1 || b.facade == 2; // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
+      var masonry = st.isMasonry(b.facade); // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
       var k = st.facadeName(b.facade);
       function faceMat(dir:Int, faceLen:Float):MeshStandardMaterial {
         var isWorn = Geom.isWornFace(b, dir);
@@ -183,11 +193,15 @@ class Buildings {
       // continuation; lit (open) vs unlit (closed) by shopOpen. b.h = SHOP_H makes each bay
       // exact 16:9 → no distortion, fills width AND height. MeshBasic = full-bright, so open
       // fronts read lit and closed fronts stay dark by the image's own values (bloom at night).
+      // an area that overrides the set (AreaStyle.shopFronts) has no lit variant at all — its art
+      // is dark by its own texels, so shopOpen simply doesn't apply there
       if (shop) {
         var type = b.shop;
         var open = b.shopOpen;
-        var doorTex = open ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length];
-        var ndTex   = open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length];
+        var doorTex = styleFront != null ? styleFront[type % styleFront.length]
+          : (open ? shopFrontLit[type % shopFrontLit.length] : shopFront[type % shopFront.length]);
+        var ndTex   = styleFrontNd != null ? styleFrontNd[type % styleFrontNd.length]
+          : (open ? shopFrontNdLit[type % shopFrontNdLit.length] : shopFrontNd[type % shopFrontNd.length]);
         var bayW:Float = CELL * 2;
         // collect all bays, then merge into two draw calls per shop (door image + plain image)
         var doorQ:Array<{ fw:Float, h:Float, fx:Float, fz:Float, rotY:Float, rx:Float, ry:Float }> = [];
@@ -216,13 +230,17 @@ class Buildings {
         mergeBand(scene, ndQ, bayMat(ndTex), b, false);
       }
 
-      var gable = !shop && st.isSpecial(b.facade); // citygen guarantees all metal is a standalone rectangle
+      // citygen guarantees all metal is a standalone rectangle, and a slums house is remapped only
+      // on a leaf too small to reach the composite shape branches — so every gabled box is a rect
+      var gable = Gables.isGabled(b);
 
       // metal warehouse: one big closed roll-up door, centred and glued to the ground.
       // prefer a street-facing GABLE-END wall (door "under the angle"); but if neither gable
       // end faces a street, fall back to the street-facing long side so the warehouse always
       // has a door (better than a doorless box).
-      if (gable) {
+      // gated on the SPECIAL slot, not on `gable`: a gabled slums house is a home, and takes its
+      // normal pedestrian entrance from Entrances instead
+      if (!shop && st.isSpecial(b.facade)) {
         var endDirs = wWorld >= dWorld ? [2, 3] : [0, 1]; // gable-end faces (perpendicular to ridge)
         var endStreet = false;
         for (f in Geom.buildingFaces(center, wWorld, dWorld, 0))
@@ -283,11 +301,14 @@ class Buildings {
       // roof: metal warehouses get a gable (no parapet); downtown gets a flat roof + mechanical
       // penthouse; everyone else keeps their parapet
       if (gable) {
-        Roofs.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, roofMetalTex);
+        var gi = gableRoofTex != null ? b.facade % gableRoofTex.length : -1;
+        var slope = gi >= 0 && gableRoofTex[gi] != null ? gableRoofTex[gi] : roofMetalTex;
+        var slopePath = gi >= 0 && st.gableRoofs[gi] != null ? st.gableRoofs[gi] : TEXTURES.roofMetal;
+        Gables.addGableRoof(scene, b, center, wWorld, dWorld, clean, worn, slope, slopePath);
       } else if (st.roofDowntown && !shop) {
-        Roofs.addDowntownRoof(scene, b, center, wWorld, dWorld, copingTex, penthouseTex, shadowPos, shadowIdx);
+        FlatRoofs.addDowntownRoof(scene, b, center, wWorld, dWorld, copingTex, penthouseTex, shadowPos, shadowIdx);
       } else {
-        Roofs.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
+        Parapets.addParapet(scene, b, center, wWorld, dWorld, shop ? shopCopingTex : copingTex, clean, worn, shop ? false : masonry);
       }
     }
     addShadowCaster(scene, shadowPos, shadowIdx);

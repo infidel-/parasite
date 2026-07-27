@@ -44,6 +44,10 @@ class StreetView {
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
+  var lampPropDead:render.Models.InstancedProp; // dead lamps' posts (unlit bulb), culled alongside
+  var coneFlick:render.LightCone.ConeSet; // flickering lamps' cones, repacked per frame so they go out with the bulb
+  var lampMask:Array<Bool>;     // draw mask for lampProp — first entries are the flickering lamps
+  var lampMaskDead:Array<Bool>; // its complement for lampPropDead (same posts, dark material)
   var city:City;
 
   var actorGroup:Group;
@@ -275,8 +279,17 @@ class StreetView {
       // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
       // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
       // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
-      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(true));
-      World.build(s, dtCity, seed, render.world.AreaStyle.forDowntown(true), false);
+      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_HIGH));
+      World.build(s, dtCity, seed, render.world.AreaStyle.forArea(AREA_CITY_HIGH), false);
+      // and the slums style (house walls/windows/doors, shingle gable, slums ground, the dead-lawn
+      // cutout) on a throwaway low-density city — a NEW GAME starts in AREA_CITY_LOW, so this is the
+      // first city most sessions ever build
+      var slCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_LOW));
+      World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), false);
+      // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
+      // buildScene already compiled — instance one into the warm scene so the first downtown entry
+      // reuses it instead of recompiling on the first frame
+      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6);
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);
@@ -382,7 +395,7 @@ class StreetView {
     // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
     // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
     if ((running || warming) && shownSeed == seed) return;
-    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forDowntown(game.area.downtownGen)), seed);
+    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID)), seed);
   }
 
 // show a pre-reconstructed city (old saves with no seed)
@@ -400,7 +413,8 @@ class StreetView {
     city = c;
     shownSeed = seed;
 
-    var bundle = SceneSetup.buildScene(renderer, city);
+    var areaStyle = render.world.AreaStyle.forArea(game.area.typeID);
+    var bundle = SceneSetup.buildScene(renderer, city, areaStyle);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
@@ -409,11 +423,14 @@ class StreetView {
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
+    lampPropDead = bundle.lampPropDead;
+    coneFlick = bundle.coneFlick;
+    lampMask = bundle.lampMask;
+    lampMaskDead = bundle.lampMaskDead;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
     // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
     // pass only ever touches static geometry the world builder adds below
     var preBuild = scene.children.copy();
-    var areaStyle = render.world.AreaStyle.forDowntown(game.area.downtownGen);
     World.build(scene, city, seed, areaStyle);
     chunkStatics(preBuild);
     debug.onRebuild(); // fresh city: reset cycler indices + counts
@@ -901,7 +918,17 @@ class StreetView {
     lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
     // drop offscreen lamp meshes: one InstancedMesh otherwise draws all ~280 whenever any is
     // visible. radius CELL*2 covers a lamp's full height as an edge margin so none pop at screen edges
-    render.Models.cull(lampProp, camera, CityConfig.CELL * 2);
+    // pull the cones of any flickering lamp that is mid-outage out of the draw (no-op most frames),
+    // then hand the same on/off state to the post batches: a lamp that is out draws from the DEAD
+    // batch instead, so its emissive head stops glowing and blooming for the length of the outage
+    render.LightCone.pulse(coneFlick, lampLights.flickT);
+    for (i in 0...coneFlick.on.length)
+      {
+        lampMask[i] = coneFlick.on[i];
+        lampMaskDead[i] = !coneFlick.on[i];
+      }
+    render.Models.cull(lampProp, camera, CityConfig.CELL * 2, lampMask);
+    render.Models.cull(lampPropDead, camera, CityConfig.CELL * 2, lampMaskDead);
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
     shockwave.update();

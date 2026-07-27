@@ -404,6 +404,18 @@ class MainMenu extends UIWindow
 
   override function show(?skipAnimation: Bool = false)
     {
+      // this override does not call super.show(), so cancel the in-flight animatedHide here too:
+      // a MAINMENU -> window -> MAINMENU bounce inside the 200ms close delay (the boot autosave
+      // prompt path) would otherwise let the stale timer hide the menu right after it reopened,
+      // leaving a black screen with no window up and no way back
+      if (closeTimer != null)
+        {
+          closeTimer.stop();
+          closeTimer = null;
+          bg.classList.remove('win-closing');
+          bg.style.zIndex = '';
+          bg.style.pointerEvents = '';
+        }
       update();
       bg.style.display = '';
       bg.style.visibility = 'visible';

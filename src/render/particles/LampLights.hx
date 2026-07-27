@@ -21,6 +21,36 @@ class LampLights {
   var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
   var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
   var bulbY:Float;
+  public var flickT:Float = 0.0;          // raw-ms flicker clock, see flicker() below (read by LightCone.pulse)
+
+// failing-sodium lamp at time t (raw ms) with a per-lamp phase. TWO gate sines ride on top of each
+// other: a fast one that breaks the lit stretches with ~1s stutter bursts, and a slow one that every
+// ~20s takes the bulb all the way out for a few seconds (ramping in and out so it never pops). NOT
+// FlameLights.flicker — that is a warm breathe floored at 0.55 that never goes dark, which is a fire,
+// not a dying bulb. raw ms on purpose: a failing bulb is physical, so it bypasses ANIM_SPEED. every
+// gate takes its own phase offset, so neighbouring lamps neither stutter nor die in unison
+  public static inline function flicker(t:Float, phase:Float):Float
+    {
+      var L = RenderConfig.LAMP_LIGHT;
+      var f = L.flickSteady + (1 - L.flickSteady) * (0.5 + 0.5 * Math.sin(phase * 3.7));
+      // the uneven flutter, shared by the bursts and by the outage ramps
+      var fast = L.flickMin + (1 - L.flickMin) * (0.5 + 0.5 * Math.sin(t * L.flickFastA) * Math.sin(t * L.flickFastB + phase * 4.0));
+      var g = Math.sin(t * L.flickGate + phase * 2.3);
+      if (g > L.flickGateOn)
+        {
+          // the outage: 0 at the window's edges, 1 at its centre
+          var d = (g - L.flickGateOn) / (1 - L.flickGateOn);
+          if (d >= L.flickOutEdge)
+            return 0; // dead black
+          // stuttering down into it and back out — the (1 - d/edge) ramp is what keeps the bulb from
+          // dropping straight from full brightness to black
+          return f * (1 - d / L.flickOutEdge) * fast;
+        }
+      // between outages the bulb is lit, but a faster gate keeps interrupting it with short bursts
+      if (Math.sin(t * L.flickBurst + phase * 1.7) > L.flickBurstOn)
+        return f * fast;
+      return f;
+    }
 
   public function new(group:Object3D)
     {
@@ -77,6 +107,7 @@ class LampLights {
   public function update(lamps:Array<LampPost>, playerCol:Int, playerRow:Int, dtMs:Float):Void
     {
       var L = RenderConfig.LAMP_LIGHT;
+      flickT += dtMs;
       // desired = the pool-nearest in-range lamps, nearest first
       var range2 = L.lightRangeCells * L.lightRangeCells;
       // squared cell distance player->lamp — drives the in-range filter, the nearest-first desired
@@ -140,14 +171,19 @@ class LampLights {
       activeList = [];
       for (i in 0...lights.length)
         {
-          untyped lights[i].intensity = intens[i];
+          var o = owners[i];
+          // flicker MULTIPLIES the published intensity and never touches intens[] — that array is both
+          // the pure fade ease and the `<= 0.001 -> free the slot` test, so scaling it in place would
+          // hand a sputtering lamp's slot away mid-blink
+          var fl = (o != null && o.phase != 0) ? flicker(flickT, o.phase) : 1.0;
+          untyped lights[i].intensity = intens[i] * fl;
           // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
           // so the depth map is otherwise valid); the re-render is dispatched at most one-per-frame below
           if (i < L.shadowCasters && owners[i] != prevOwners[i])
             shadowDirty[i] = true;
-          var o = owners[i];
           if (o != null)
             {
+              o.flick = fl; // read by FlameShadows so the fake ground shadow breathes with the bulb
               lights[i].position.set(o.x, bulbY, o.z);
               targets[i].position.set(o.x, 0, o.z);
               activeList.push(o);

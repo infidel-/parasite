@@ -157,6 +157,16 @@ class DowntownStyle {
       s.specialSlot = -1;      // no metal warehouses
       s.roofDowntown = true;
       s.penthouseWall = 'textures/downtown/wall-mechanical.png';
+      // downtown swaps the residential lamp for the PBR street-lamp2 prop. its arm offsets the bulb
+      // differently (dx/dz); the post sits on the same kerb line (pdx/pdz unchanged from residential).
+      // height/cone + the shared live-spotlight pool stay on RenderConfig.LAMP_LIGHT
+      s.lamp = {
+        model: render.RenderConfig.MODELS.streetLamp2,
+        dx: 1.0,
+        dz: 0.0,
+        pdx: 2.0,
+        pdz: 2.6,
+      };
       // roughly a third of the roofs big and tall enough for one trade their bulkhead + AC clutter
       // for a landing deck — rare enough that a lit pad still reads as a landmark from the street
       s.helipadTex = 'textures/downtown/helipad.png';

@@ -44,6 +44,8 @@ class RenderConfig {
   public static inline var GRIME_OPACITY = 0.6; // overall grime strength (0 = none .. 1 = full texture alpha)
   public static inline var ROOF_TILE = 16;     // world units per roof-base tile (tiled, not stretched)
   public static inline var GABLE_V = 0.5;      // metal gable-end V anchor: sample a clean mid-texture band so the worn-metal dirty base strip never lands on the high gable triangle
+  public static inline var GABLE_OVER = 0.5;   // gable eave/rake overhang past the box on ALL four sides, world units (CELL = 4). 0 = the old flush roof
+  public static inline var GABLE_THICK = 0.05; // gable slab thickness, measured VERTICALLY — what turns each slope from a bare polygon into a slab with a visible fascia/rake edge
 
   // --- building fronts: stores vs plain entrances (deterministic per footprint, no rng) ----
   public static inline var STORE_PCT = 30;          // % of normal simple buildings that keep a storefront band (rest = plain entrance + windows)
@@ -90,7 +92,7 @@ class RenderConfig {
     { tex: 'textures/detail-tank.png',   w: 3.2, d: 3.2, crop: 0.80 },
   ];
   // helicopter pad: a big centred deck marking that takes over a tall tower's roof (the style
-  // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; Roofs.helipadRect)
+  // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; FlatRoofs.helipadRect)
   public static inline var HELIPAD_SIZE = 16.0;      // max pad side (shrinks to fit inside ROOF_DETAIL_MARGIN)
   public static inline var HELIPAD_MIN_FLOORS = 12;  // only towers at least this tall get one
   public static inline var HELIPAD_MIN_CELLS = 4;    // ...and at least this many cells on the short side (a setback tower's top tier is usually 4-5 cells)
@@ -547,9 +549,10 @@ class RenderConfig {
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
   // target offset by tdx/tdz (also local, rotated) — so the cone is a downward street pool, not an
-  // omni glow on the post. angle = cone half-angle (rad), penumbra = soft edge 0..1. one block per
-  // lamp model (different geometry = different bulb); SceneSetup pairs the placed model with a block
-  public static final LAMP_LIGHT = {         // pairs with MODELS.streetLamp
+  // omni glow on the post. angle = cone half-angle (rad), penumbra = soft edge 0..1. the RESIDENTIAL
+  // defaults; the height/cone/pool are shared across all areas, but a per-area lamp MODEL overrides
+  // the placement offsets (model/dx/dz/pdx/pdz) via AreaStyle.lamp (see DowntownStyle → street-lamp2)
+  public static final LAMP_LIGHT = {         // residential lamp; downtown swaps via AreaStyle.lamp
     yMul: 1.4,   // light height = CityConfig.CELL * this
     dx: 0.0,     // local +X offset toward the bulb (world units)
     dz: 0.6,     // local +Z (toward-road) offset of the bulb — pushes it out over the road edge
@@ -575,6 +578,25 @@ class RenderConfig {
     shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
     shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the
                           // casting-set boundary — so a lamp crossing the boundary fades its shadow, no pop
+    // failing-sodium lamps, for the ones AreaStyle.lampFlickerRatio marks (LampLights.flicker). TWO
+    // gate sines ride on top of each other: a fast one breaking the lit stretches with ~1s stutter
+    // bursts, and a slow one that every ~20s takes the bulb all the way out for a few seconds. so the
+    // cycle reads lit ~3.5s / flicker ~1s / lit ~3.5s / flicker ~1s / ... / dead ~3s. rates are per RAW
+    // ms and deliberately bypass ANIM_SPEED — a dying bulb is physical, not gameplay-paced (same call
+    // as FLAME.flick*)
+    flickGate: 0.000314,  // outage gate sine rate: 2*PI/this = outage period, ~20s
+    flickGateOn: 0.81,    // gate value above which the outage window is open — 0.81 = 20% of the period, ~4s
+    flickOutEdge: 0.4,    // how deep into that window the stutter gives way to dead black (~3.1s fully dark)
+    flickBurst: 0.001396, // stutter-burst gate rate: 2*PI/this = burst period, ~4.5s
+    flickBurstOn: 0.77,   // gate value above which a burst runs — 0.77 = ~1s of stutter per burst period
+    flickOff: 0.05,       // below this a bulb counts as OUT: its cone stops drawing and it casts no fake shadow.
+                          // a stutter burst bottoms out at ~0.27, well above it, so only the full outage kills them
+    flickFastA: 0.020,    // stutter sine A — used by both the bursts and the outage ramps
+    flickFastB: 0.029,    // stutter sine B — beats against A for an uneven, unrepeating flutter
+    flickSteady: 0.82,    // brightness floor between outages (the +0.18 above it is the per-lamp bias)
+    flickMin: 0.3,        // how dark the stutter dips before the blackout takes over
+    deadLensMul: 0.28,    // a BROKEN lamp's lens/hood texels multiplied down by this (Models.instanced): the
+                          // glb paints them pale cream, so killing the emissive alone still leaves a bright head
   };
   // real moon (DirectionalLight) shadow: a single ortho shadow map that FOLLOWS the player each frame
   // (SceneSetup.fitMoon) — the box tracks the focus so shadows appear across the whole visible area, not
@@ -614,16 +636,6 @@ class RenderConfig {
     lenMul: 0.6,        // shadow length = sprite world-height * this * distance falloff (overhead = short)
     op: 0.8,            // per-shadow opacity
     fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
-  };
-  public static final LAMP_LIGHT2 = {        // pairs with MODELS.streetLamp2 (PBR)
-    yMul: 1.4,
-    dx: 1.0,
-    dz: 0.0,
-    angle: Math.PI / 5,
-    penumbra: 0.1,
-    tdx: 0.0,
-    tdz: 0.0,
-    markerVisible: true,
   };
   public static final TEXTURES = {
     asphalt: 'textures/ground-asphalt.png',     // road surface (no markings yet)

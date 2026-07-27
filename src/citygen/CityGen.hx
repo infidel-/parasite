@@ -72,6 +72,16 @@ class CityGen {
       var floors = p.minFloors + Std.int(rng() * (p.maxFloors - p.minFloors + 1));
       var roof = rng() < 0.5 ? 0 : 1;
       var facade = Std.int(rng() * 4); // 0 concrete, 1 brick, 2 stone, 3 metal (one rng draw → stream stays in sync)
+      // slums: a SMALL leaf drawn as stone/metal becomes one of the two dilapidated single-floor
+      // house types instead (draw 2 → clapboard cottage, 3 → cinderblock bungalow). a pure remap of
+      // the one draw, like downtown below — no extra rng, so the seeded stream is untouched. small
+      // concrete/brick leaves stay ordinary low boxes, which is what makes houses appear only
+      // "sometimes". a leaf this small can never reach the courtyard/L/T/+ branches (all need
+      // w >= 7 && d >= 7), so a house is always a plain rectangle — what the gable roof needs
+      if (p.houseSlots.length > 0 &&
+          facade >= 2 &&
+          (w > d ? w : d) <= p.houseMaxSide)
+        facade = p.houseSlots[facade - 2];
       // downtown: remap the one facade draw (no extra rng) so a big footprint reads as a
       // glass office tower (2 glass-light / 3 glass-dark / 4 sleek modern) and a small one as
       // a concrete/stone mid-rise (0/1) — the medium-city buildings interspersed among the towers
