@@ -232,11 +232,14 @@ class Actors {
 
 // has the player's move animation finished (its actor settled on its grid cell)? in a host the host
 // AI's sprite is the one that slides, free/attached the parasite rides its own entity. an actor with
-// no anim state yet counts as settled — nothing is moving for it
+// no anim state yet counts as settled — nothing is moving for it. no entity at all counts as settled
+// too: area.leave() drops the host's entity link while the exit outro still ticks this view
   public function playerSettled():Bool
     {
       var e:Entity = game.player.state == _PlayerState.PLR_STATE_HOST ?
         game.player.host.entity : game.playerArea.entity;
+      if (e == null)
+        return true;
       var a = actors.get(e);
       return (a == null ||
         a.t >= 1);
