@@ -22,6 +22,8 @@ class Mouse
   var oldPlayerX: Int; // last player cell the cursor/path was resolved against (3D view: camera + player
   var oldPlayerY: Int; // move under a still cursor, so a stale-check on mouse px alone would freeze it)
   var playerMoved: Bool; // did the player cell change since the last update? (3D view: re-path so it shortens)
+  var kbMoved: Bool; // player moved by keyboard: hover path stays hidden until the mouse really moves
+  var wasFrozen: Bool; // was the hover path frozen last update? (re-path once the walk fully ends)
 
   public function new(g: Game)
     {
@@ -32,8 +34,38 @@ class Mouse
       oldPos = { x: -1, y: -1 };
       oldPlayerX = -1;
       oldPlayerY = -1;
+      kbMoved = false;
+      wasFrozen = false;
       sceneState = game.ui.state;
       forceNextUpdate = 0;
+    }
+
+// a real mousemove event (as opposed to the per-frame re-pick the 3D view does under a still
+// cursor): the cursor genuinely moved, so a path preview hidden by a keyboard move comes back
+  public function onMove()
+    {
+      // force when a keyboard move had hidden the preview: update()'s stale-check would otherwise
+      // early-return for a cursor that stayed inside the same tile and leave it hidden
+      var wasKb = kbMoved;
+      kbMoved = false;
+      update(wasKb);
+    }
+
+// the player moved with the keyboard: hide the hover path preview until the mouse really moves
+// again, instead of re-pathing it from the new cell every step under a still cursor
+  public function onKeyboardMove()
+    {
+      kbMoved = true;
+      game.scene.area.clearPath();
+    }
+
+// is the hover path preview frozen? true while the player walks a clicked path, and on through the
+// last step's slide animation so it only clears once the actor has visibly landed on the final cell
+  inline function pathFrozen(): Bool
+    {
+      return (game.playerArea != null &&
+        (game.playerArea.path != null ||
+         (street() && !game.scene.city3d.playerSettled())));
     }
 
 // is the 3D street view currently showing? cursor picking / path / cursor art route through it then
@@ -199,6 +231,13 @@ class Mouse
       if (forceNextUpdate > 0)
         force = true;
 
+      // the hover path is frozen while the player walks a clicked path; when that releases, force
+      // one update so it re-paths even though the cursor never moved
+      var frozen = pathFrozen();
+      if (wasFrozen && !frozen)
+        force = true;
+      wasFrozen = frozen;
+
       // position and state unchanged, return
       if (!force)
         {
@@ -311,6 +350,12 @@ class Mouse
           return;
         }
 
+      // the player is walking a clicked path: freeze the preview exactly as it was drawn — no
+      // re-path, no clear — until the walk ends AND its last step has landed, when update() forces
+      // one update and the preview re-paths from the new position
+      if (pathFrozen())
+        return;
+
       // out of bounds check
       var c = CURSOR_BLOCKED;
       if (pos.x < 0 || pos.y < 0 ||
@@ -361,9 +406,14 @@ class Mouse
             {
               c = CURSOR_MOVE;
 
+              // no preview after a keyboard move: it would re-path from the new cell every step
+              // under a still cursor. it comes back on the next real mouse move
+              if (kbMoved)
+                game.scene.area.clearPath();
+
               // rebuild the path when the hovered tile changed, or (3D view) when the player advanced
               // along it so the preview re-shortens to the remaining route
-              if (posChanged ||
+              else if (posChanged ||
                   (street() && playerMoved))
                 game.scene.area.updatePath(
                   game.playerArea.x, game.playerArea.y,

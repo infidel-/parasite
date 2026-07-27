@@ -287,7 +287,8 @@ class RenderConfig {
     alpha: 0.85,          // overall ribbon/dot opacity
     widthCells: 0.010,    // ribbon half-width (cells); thinner than the tactical grid marks (0.015)
     dotScaleCells: 0.053, // target-dot disc radius (cells) at the path end
-    dotPulse: 0.18,       // target-dot pulse depth (fraction of its size; 0 = no pulse)
+    dotStartScale: 0.8,   // start-dot radius as a fraction of the target dot (0.8 = 20% smaller)
+    dotPulse: 0.18,       // dot pulse depth (fraction of its size; 0 = no pulse)
     dotPulseMult: 32.0,    // dot pulse speed as a BASE_MS multiplier (one throb per this many base-turns)
     samplesPerCell: 16,   // Catmull-Rom resample density per cell segment (curve smoothness; higher = smoother wavy line at low control)
     waveAmpCells: 0.30,   // max lateral wander of the centerline (cells) at ZERO host control (fully wavy)

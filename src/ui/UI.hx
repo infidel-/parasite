@@ -53,7 +53,7 @@ class UI
       canvas.onmousemove = function (e: MouseEvent) {
         game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
         game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
-        game.scene.mouse.update();
+        game.scene.mouse.onMove();
         hud.onMouseMove(e);
       }
       canvas.onmouseleave = function (_) {
@@ -729,7 +729,11 @@ class UI
 
       // area mode
       if (game.location == LOCATION_AREA)
-        game.playerArea.moveAction(dx, dy);
+        {
+          // hide the hover path preview until the mouse moves again
+          game.scene.mouse.onKeyboardMove();
+          game.playerArea.moveAction(dx, dy);
+        }
 
       // area mode
       else if (game.location == LOCATION_REGION)

@@ -8,7 +8,8 @@ import render.RenderConfig;
 import render.world.WorldCtx;
 
 // the mouse-hover move-path preview in the 3D street view: a thin, greenish, bloom-glowing wavy
-// ribbon from the player to the hovered target tile, ending in a slightly larger target dot. it
+// ribbon from the player to the hovered target tile, capped by a dot at each end (the start one is
+// smaller, see PATH.dotStartScale). it
 // mirrors the old 2D dotted path, but as one triangle-strip ground ribbon (WebGL lines are 1px and
 // can't bloom) plus a small disc at the end. render-only, nothing persisted.
 // waviness is driven by host control: at full control (or as a free parasite) the line is dead
@@ -19,6 +20,7 @@ class PathLine
   var scene:Scene;
   var mesh:Mesh;                                          // the wavy ribbon strip (one draw call)
   var dot:Mesh;                                           // the target dot disc at the path end
+  var dotStart:Mesh;                                      // the smaller start dot disc at the player end
   var geo:BufferGeometry;
   var mat:MeshBasicMaterial;
   var colFull:Color;                                     // HDR line/dot color at full control (green)
@@ -56,14 +58,21 @@ class PathLine
       untyped mesh.frustumCulled = false; // rebuilt every change + always near the player; skip bounds
       mesh.visible = false;
       scene.add(mesh);
-      // target dot: a small filled disc on the same glowing material
-      var dr = CityConfig.CELL * P.dotScaleCells;
-      dot = new Mesh(new RingGeometry(0, dr, 16), mat);
+      // target dot: a small filled disc on the same glowing material, plus a start dot at the player
+      // end that shares the geometry and is scaled down by dotStartScale
+      var dgeo = new RingGeometry(0, CityConfig.CELL * P.dotScaleCells, 16);
+      dot = new Mesh(dgeo, mat);
       dot.rotation.x = -Math.PI / 2;
       dot.renderOrder = 2;
       untyped dot.frustumCulled = false;
       dot.visible = false;
       scene.add(dot);
+      dotStart = new Mesh(dgeo, mat);
+      dotStart.rotation.x = -Math.PI / 2;
+      dotStart.renderOrder = 2;
+      untyped dotStart.frustumCulled = false;
+      dotStart.visible = false;
+      scene.add(dotStart);
     }
 
 // set the previewed path from the pathfinder's cell list (player -> target, inclusive). a copy is
@@ -86,6 +95,7 @@ class PathLine
       cells = [];
       mesh.visible = false;
       dot.visible = false;
+      dotStart.visible = false;
     }
 
 // per frame: advance the wobble phase and rebuild the ribbon when the phase or amplitude moved
@@ -93,20 +103,16 @@ class PathLine
     {
       if (cells.length < 2)
         return;
-      // hide the preview while the player is actually walking a path (it reappears once stopped)
-      if (game.playerArea.path != null)
-        {
-          mesh.visible = false;
-          dot.visible = false;
-          return;
-        }
       var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       phase += step * RenderConfig.PATH.waveSpeedMult;
       pulse += step / RenderConfig.PATH.dotPulseMult;
       rebuild();
-      // throb the target dot around its base size
+      // throb both dots around their base size (ui.Mouse clears the preview while the player walks
+      // a clicked path or moves by keyboard, so there is no walking state to check here)
       var ps = 1.0 + RenderConfig.PATH.dotPulse * Math.sin(pulse * Math.PI * 2);
       dot.scale.set(ps, ps, ps);
+      var pss = ps * RenderConfig.PATH.dotStartScale;
+      dotStart.scale.set(pss, pss, pss);
       // discolor green -> toxic red as control is lost (same factor as the waviness)
       mat.color.lerpColors(colFull, colLost, lostFactor());
     }
@@ -210,9 +216,11 @@ class PathLine
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setIndex(idx);
       mesh.visible = true;
-      // park the dot at the target cell centre
+      // park the dots at the path ends (player cell and target cell centres)
       dot.position.set(cx[n - 1], cy[n - 1], cz[n - 1]);
       dot.visible = true;
+      dotStart.position.set(cx[0], cy[0], cz[0]);
+      dotStart.visible = true;
     }
 
 // uniform Catmull-Rom position at t in [0,1] over segment p1->p2 (p0,p3 are the neighbours)
