@@ -230,6 +230,18 @@ class Actors {
         perfLog(tp, tObj, tAI);
     }
 
+// has the player's move animation finished (its actor settled on its grid cell)? in a host the host
+// AI's sprite is the one that slides, free/attached the parasite rides its own entity. an actor with
+// no anim state yet counts as settled — nothing is moving for it
+  public function playerSettled():Bool
+    {
+      var e:Entity = game.player.state == _PlayerState.PLR_STATE_HOST ?
+        game.player.host.entity : game.playerArea.entity;
+      var a = actors.get(e);
+      return (a == null ||
+        a.t >= 1);
+    }
+
 // frame profiler: accumulate per-pass ms, warn on a spike, log a summary each ~second.
 // objects/AI passes vs my added passes (decals + particles), plus live counts
   function perfLog(t0:Float, tObj:Float, tAI:Float):Void

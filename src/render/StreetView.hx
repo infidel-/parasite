@@ -145,7 +145,7 @@ class StreetView {
       game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
       game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
       if (running && !debug.on && game.playerArea != null)
-        game.scene.mouse.update();
+        game.scene.mouse.onMove();
     });
     // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
     // LMB only; RMB owns camera orbit (handled below) and is left to onClick's own button gating
@@ -799,6 +799,14 @@ class StreetView {
     {
       if (running && pathLine != null)
         pathLine.set(path);
+    }
+
+// has the player's move animation finished? false while its actor is still sliding into its cell,
+// so ui.Mouse can hold the path preview frozen until the last step has visibly landed
+  public function playerSettled():Bool
+    {
+      return (actors == null ||
+        actors.playerSettled());
     }
 
 // hide the move-path preview
