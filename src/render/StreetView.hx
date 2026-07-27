@@ -7,6 +7,7 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
 import _UIState;
+import _LocationType;
 import entities.Entity;
 import render.choreo.Choreo;
 
@@ -144,7 +145,7 @@ class StreetView {
       svMouseY = e.clientY;
       game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
       game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
-      if (running && !debug.on && game.playerArea != null)
+      if (running && !debug.on && game.location == LOCATION_AREA)
         game.scene.mouse.onMove();
     });
     // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
@@ -168,7 +169,7 @@ class StreetView {
       if (e.button != 2 || rig == null) return;
       rig.orbitEnd();
       // restore the game move/attack cursor on release (force re-apply), not the OS arrow
-      if (running && !debug.on && game.playerArea != null)
+      if (running && !debug.on && game.location == LOCATION_AREA)
         game.scene.mouse.update(true);
       else canvas.style.cursor = '';
     });
@@ -947,10 +948,10 @@ class StreetView {
     // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a
     // still cursor, so the picked tile changes with no mousemove. ui.Mouse's own stale-check keeps
     // this to one plane-pick when nothing moved. then scroll/rebuild the path-preview wobble.
-    // gated on a live player so a load/exit transition (running still true, area despawned) can't
-    // fault the render loop
+    // gated on the area still being the live location so a load/exit transition (running still true,
+    // area despawned + entity links dropped) can't fault the render loop
     if (!debug.on &&
-        game.playerArea != null)
+        game.location == LOCATION_AREA)
       game.scene.mouse.update();
     if (pathLine != null)
       pathLine.update(dtMs);
