@@ -686,7 +686,7 @@ unchanged (seeds 1/1337/99999 → 226/221/202).
 
 - **What:** `render/particles/SlimeTrail.hx`. Green slime ribbon behind the free (`PLR_STATE_PARASITE`)
   parasite as it crawls, plus a fading ground puddle on each leap on/off a host. Config in
-  `RenderConfig.SLIME`, texture `textures/slime-trail.png` (chroma `#5a5d63`). Driven from
+  `RenderConfig.SLIME`, texture `textures/fx/slime-trail.png` (chroma `#5a5d63`). Driven from
   `Actors.update` (one `slimeTrail.update` after `decals.paint`); puddles dropped in
   `startJumpOnFace`/`startLeaveHost`.
 - **Chose hand-built triangle strip over `three.meshline`/`TubeGeometry`.** No MeshLine in the vendored
@@ -1791,3 +1791,60 @@ WSL, which throttles `rAF` to ~1fps, so a 20s watch caught zero of the ~4/s city
 **Left alone:** `addGlassAccents` (downtown glass towers) — same machinery would apply (per-building
 `InstancedMesh`, `userData.b`, `glassLitRatio`, deterministic per-cell hash) but far more instances.
 Separate pass.
+
+## SHIPPED — CityStyle: the medium-density style gets its own file, textures sort into city/decals/fx (2026-07-28)
+
+**The gap.** Two of three city densities had a style file — `DowntownStyle` (`AREA_CITY_HIGH`),
+`SlumsStyle` (`AREA_CITY_LOW`). The medium one never got extracted: `AreaStyle.forArea` sent
+`AREA_CITY_MEDIUM` through `default:` to `AreaStyle.DEFAULT`, assembled inline in `get_DEFAULT()`
+out of `RenderConfig.TEXTURES` plus four loose consts (`WINDOW_SPRITE_CROP`, `WINDOW_LIT_COLOR`,
+`LIT_RATIO`, `WINDOW_LIT_INTENSITY`). Tuning the default look meant editing three places, and
+`TEXTURES` was doing double duty as "the residential style" and "the cross-area shared assets" —
+which is why both siblings reached back into it to borrow slots.
+
+**The split, and it is the same split twice.** `render/world/CityStyle.hx` now owns the
+medium-density style; `RenderConfig.TEXTURES` keeps only what every style draws (`coping`,
+`shopWorn`/`shopCoping`, the four `shopFront*` arrays, `grime`, `doorMetal`, `roofMetal`, `flame`,
+the decal sets, `slimeTrail`) plus `DETAIL_TYPES`. `AreaStyle.DEFAULT`/`get_DEFAULT` are gone;
+`forArea`'s `default:` is `CityStyle.get()` and `World.build`'s null fallback follows it. The four
+window consts moved onto the style as `winCrop`/`litColor`/`litRatio`/`litIntensity` — they were
+per-area knobs sitting in a global file.
+
+**Borrows are now explicit.** `SlumsStyle` swapped `var t = RenderConfig.TEXTURES` for
+`var t = CityStyle.get()` — every field it borrows (`walls[3]`, `wornWalls[…]`, `storefronts[3]`,
+`roofBases`, `metalWalls`/`metalWorn`, `windows`/`litWindows`, `doors`/`doorsWorn`/`doorCovers`,
+`walkwayBorder`, `roadPaint`) exists verbatim on `AreaStyle`, so only the initialiser changed.
+`DowntownStyle` had ~21 duplicated root path literals instead; those became `c.walls[0]`/`c.walls[2]`
+etc. The slot remap is the interesting part and it is now visible in the code rather than only in a
+comment: **downtown's slot 1 is STONE** (residential index 2), not brick — `c.walls[2]`,
+`c.storefronts[2]`, `c.doors[2]`, `c.winCrop[2]`. Its hand-tuned `coverDims` and its own
+`textures/downtown/*` art are untouched.
+
+**Textures: the root is empty now.** All 72 loose sources sorted into subfolders — 61 to `city/`
+(walls, windows, facades, doors + covers, ground, roof bases, coping, shop bays, the metal-warehouse
+door/roof), 9 to the existing `decals/` (`grime-1..3`, the six `detail-*` roof sprites), 2 to a new
+`fx/` (`flame`, `slime-trail`). `tools/textures.py` derives the OUTPUT path from the **label**, not
+from `src` (`:103`), so both the label key and `src` take the prefix or the baked file does not move;
+`:104` makedirs the nested dir. 72 rebuilt, 0 warnings, then the 72 superseded root outputs deleted
+along with 16 orphans from an older shop naming scheme. `player.png` was unreferenced and is gone
+(its `TEXTURES.player` field with it).
+
+**The failure mode this had to be checked against.** `render/Textures.hx` falls back to a procedural
+grey canvas on a failed load, **silently** — a stale path renders wrong-looking geometry instead of
+erroring, and 3 of 5 styles' art moved at once. So the check is static, not visual: a script greps
+every `textures/*.png` literal out of the built bundle and diffs it against the files on disk.
+**144 referenced, 0 missing.** (4 unreferenced remain on disk: `downtown/glass-accent-{1..4}.png`,
+pre-existing orphans superseded by the `-light`/`-dark` sets. Left alone.)
+
+**Verified:** build clean — the `RenderConfig` field removals are the real safety net, any missed
+borrow is a compile error, not a grey wall. Path audit 144/144. Runtime, headless via
+`parasiteHx['render.world.AreaStyle'].forArea(...)`: all four area types resolve to the right style
+with the right facade names, and every borrowed slot in downtown/slums lands on the same art it did
+before (downtown slot 1 stone throughout, slums' metal warehouse and masonry doors intact). Glow
+knobs unchanged per area: medium `ffcf8f`/0.15/2.2, downtown `c8d6ec`/0.12/1.9, slums
+`ffd9a0`/0.10/2.2. **Not verified visually** — no save was loaded, so no world was built.
+
+**Why bother, given nothing renders differently.** A style file is where the NEXT medium-density
+change goes. With the knobs split across `RenderConfig.TEXTURES`, four globals and an inline builder,
+every such change had to pick one of three homes and the siblings' borrows silently coupled to that
+choice. Now there is one file per density and one folder per density, and they hold the same list.

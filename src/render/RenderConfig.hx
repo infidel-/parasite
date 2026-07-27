@@ -84,12 +84,12 @@ class RenderConfig {
   public static inline var DETAIL_MAX = 9;         // cap details per roof
   // w×d = footprint world size; crop = sprite crop fraction (object + small margin)
   public static final DETAIL_TYPES:Array<DetailType> = [
-    { tex: 'textures/detail-ac.png',     w: 3.0, d: 3.0, crop: 0.74 },
-    { tex: 'textures/detail-aclong.png', w: 4.8, d: 2.6, crop: 0.80 },
-    { tex: 'textures/detail-vent.png',   w: 2.6, d: 2.6, crop: 0.66 },
-    { tex: 'textures/detail-duct.png',   w: 4.0, d: 4.0, crop: 0.90 },
-    { tex: 'textures/detail-sky.png',    w: 3.4, d: 3.4, crop: 0.82 },
-    { tex: 'textures/detail-tank.png',   w: 3.2, d: 3.2, crop: 0.80 },
+    { tex: 'textures/decals/detail-ac.png',     w: 3.0, d: 3.0, crop: 0.74 },
+    { tex: 'textures/decals/detail-aclong.png', w: 4.8, d: 2.6, crop: 0.80 },
+    { tex: 'textures/decals/detail-vent.png',   w: 2.6, d: 2.6, crop: 0.66 },
+    { tex: 'textures/decals/detail-duct.png',   w: 4.0, d: 4.0, crop: 0.90 },
+    { tex: 'textures/decals/detail-sky.png',    w: 3.4, d: 3.4, crop: 0.82 },
+    { tex: 'textures/decals/detail-tank.png',   w: 3.2, d: 3.2, crop: 0.80 },
   ];
   // helicopter pad: a big centred deck marking that takes over a tall tower's roof (the style
   // supplies the texture + the odds — AreaStyle.helipadTex/helipadChance; FlatRoofs.helipadRect)
@@ -98,19 +98,15 @@ class RenderConfig {
   public static inline var HELIPAD_MIN_CELLS = 4;    // ...and at least this many cells on the short side (a setback tower's top tier is usually 4-5 cells)
 
   // --- windows (instanced quads placed on plain walls) ----------------------
-  // crop fraction of each cell that is just the window+frame, per facade variant
-  // (concrete = square, brick = tall); used to cut an opaque window sprite
-  public static final WINDOW_SPRITE_CROP:Array<CropXY> = [{ x: 0.42, y: 0.42 }, { x: 0.30, y: 0.52 }, { x: 0.46, y: 0.82 }, { x: 0.42, y: 0.42 }];
+  // the per-facade crop/glow knobs are per-AREA, not global: see AreaStyle.winCrop/litColor/
+  // litRatio/litIntensity and the style file that sets them (render.world.CityStyle et al)
   // facade variant names by Building.facade index (inspector tags + per-variant logic)
   public static final FACADE_NAMES = ['concrete', 'brick', 'stone', 'metal', 'sleek'];
   public static inline var WIN_W = 1.6;        // window world width (height derived from sprite aspect)
   public static inline var WIN_PITCH_X = 2.6;  // horizontal center-to-center spacing (vertical = FLOOR_H)
   public static inline var WIN_MARGIN = 0.9;   // min plain-wall border at face edges
 
-  // --- lit windows + bloom --------------------------------------------------
-  public static inline var LIT_RATIO = 0.15;       // fraction of windows that are lit (warm glass)
-  public static inline var WINDOW_LIT_COLOR = 0xffcf8f; // warm glow color for lit windows
-  public static inline var WINDOW_LIT_INTENSITY = 2.2;  // emissive intensity (HDR > 1 so bloom picks it up)
+  // --- bloom ----------------------------------------------------------------
   public static inline var BLOOM_STRENGTH = 0.25;  // overall bloom amount
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
@@ -657,48 +653,26 @@ class RenderConfig {
     op: 0.8,            // per-shadow opacity
     fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
   };
+  // CROSS-AREA textures: the ones every style draws, read straight off here by the sub-builders
+  // instead of going through AreaStyle. Per-area art is NOT here — that lives in the style file
+  // (render.world.CityStyle / DowntownStyle / SlumsStyle), which is also where a new swap belongs
   public static final TEXTURES = {
-    asphalt: 'textures/ground-asphalt.png',     // road surface (no markings yet)
-    walkway: 'textures/ground-walkway.png',     // sidewalk / plaza paving
-    walkwayBorder: 'textures/ground-walkway-border.png', // kerb-edging stripe on walkway outer edges
-    roadPaint: 'textures/ground-road-paint.png', // worn white traffic paint (scuffs chroma-keyed to alpha)
-    alley: 'textures/ground-alley.png',         // grimy back-alley ground
-    roofBases: ['textures/roof-base-concrete.png', 'textures/roof-base.png', 'textures/roof-base.png', 'textures/roof-base.png'], // roof base by facade variant [concrete, brick, stone, metal]; stone+metal reuse tar
-
-    coping: 'textures/coping.png',              // parapet coping cap strip
-    shopWorn: 'textures/shop-wall-worn.png',    // single-story shop box wall (own worn texture)
-    shopCoping: 'textures/shop-coping.png',     // single-story shop parapet coping cap
-    storefronts: ['textures/facade-concrete.png', 'textures/facade-brick.png', 'textures/facade-stone.png', 'textures/facade-metal.png'], // ground-floor storefront bay [concrete, brick, stone, metal]
+    coping: 'textures/city/coping.png',              // parapet coping cap strip
+    shopWorn: 'textures/city/shop-wall-worn.png',    // single-story shop box wall (own worn texture)
+    shopCoping: 'textures/city/shop-coping.png',     // single-story shop parapet coping cap
     // single-story shop storefronts: baked 16:9 (1280x720) from 2K sources via textures.json
     // (non-square res). Indexed by Building.shop (0..3): diner, corner, garage, laundromat.
     // door variant + door-less continuation, each in lit (open) / unlit (closed).
-    shopFrontLit:   ['textures/shop-diner-front-lit.png', 'textures/shop-corner-front-lit.png', 'textures/shop-garage-front-lit.png', 'textures/shop-laundromat-front-lit.png'],
-    shopFront:      ['textures/shop-diner-front.png', 'textures/shop-corner-front.png', 'textures/shop-garage-front.png', 'textures/shop-laundromat-front.png'],
-    shopFrontNdLit: ['textures/shop-diner-front-nd-lit.png', 'textures/shop-corner-front-nd-lit.png', 'textures/shop-garage-front-nd-lit.png', 'textures/shop-laundromat-front-nd-lit.png'],
-    shopFrontNd:    ['textures/shop-diner-front-nd.png', 'textures/shop-corner-front-nd.png', 'textures/shop-garage-front-nd.png', 'textures/shop-laundromat-front-nd.png'],
-    // window sprites by facade [concrete, brick, stone, metal]; stone has its own pale-stone
-    // sprite (window-3), metal reuses square (concrete, unused — metal has no windows)
-    windows: ['textures/window-1.png', 'textures/window-2.png', 'textures/window-3.png', 'textures/window-1.png'],         // dark window sprites
-    litWindows: ['textures/window-lit-1.png', 'textures/window-lit-2.png', 'textures/window-lit-3.png', 'textures/window-lit-1.png'], // warm-lit window sprites
-    walls: ['textures/wall-1.png', 'textures/wall-2.png', 'textures/wall-3.png', 'textures/wall-4.png'],               // street-facing clean walls [concrete, brick, stone, metal]
-    wornWalls: ['textures/wall-1-worn.png', 'textures/wall-2-worn.png', 'textures/wall-3-worn.png', 'textures/wall-4-worn.png'], // alley-facing back walls
-    // metal warehouses pick one of these corrugated-steel variants per-building (ridged rust-red,
-    // galvanized grey-blue, olive box-profile, plus the base wall-4); clean/worn paired by index
-    metalWalls: ['textures/wall-4.png', 'textures/wall-5.png', 'textures/wall-6.png', 'textures/wall-7.png'],
-    metalWorn: ['textures/wall-4-worn.png', 'textures/wall-5-worn.png', 'textures/wall-6-worn.png', 'textures/wall-7-worn.png'],
+    shopFrontLit:   ['textures/city/shop-diner-front-lit.png', 'textures/city/shop-corner-front-lit.png', 'textures/city/shop-garage-front-lit.png', 'textures/city/shop-laundromat-front-lit.png'],
+    shopFront:      ['textures/city/shop-diner-front.png', 'textures/city/shop-corner-front.png', 'textures/city/shop-garage-front.png', 'textures/city/shop-laundromat-front.png'],
+    shopFrontNdLit: ['textures/city/shop-diner-front-nd-lit.png', 'textures/city/shop-corner-front-nd-lit.png', 'textures/city/shop-garage-front-nd-lit.png', 'textures/city/shop-laundromat-front-nd-lit.png'],
+    shopFrontNd:    ['textures/city/shop-diner-front-nd.png', 'textures/city/shop-corner-front-nd.png', 'textures/city/shop-garage-front-nd.png', 'textures/city/shop-laundromat-front-nd.png'],
     // street-level grime variants (alpha ramp applied in code); picked per-building, overlaid on each
     // non-metal street face base. soot/drip, scuff, damp-stain — neutral dark, read over any wall
-    grime: ['textures/grime-1.png', 'textures/grime-2.png', 'textures/grime-3.png'],
-    doorMetal: 'textures/door-metal.png',       // closed roll-up warehouse door (metal facade street faces)
-    // pedestrian entrance doors per masonry facade [concrete, brick, stone]; clean = front/street
-    // (edited from wall-N), worn = side/maintenance door (edited from wall-N-worn). picked by isWornFace
-    doors: ['textures/door-concrete.png', 'textures/door-brick.png', 'textures/door-stone.png'],
-    doorsWorn: ['textures/door-concrete-worn.png', 'textures/door-brick-worn.png', 'textures/door-stone-worn.png'],
-    // per-facade entrance-cover lintel/cornice band [concrete, brick, stone] (over FRONT doors)
-    doorCovers: ['textures/door-cover-concrete.png', 'textures/door-cover-brick.png', 'textures/door-cover-stone.png'],
-    roofMetal: 'textures/roof-metal.png',       // metal warehouse gable-roof slopes (distinct from the wall)
-    player: 'textures/player.png',              // player billboard sprite
-    flame: 'textures/flame.png',                // burning-barrel flame sprite (chroma-keyed alpha)
+    grime: ['textures/decals/grime-1.png', 'textures/decals/grime-2.png', 'textures/decals/grime-3.png'],
+    doorMetal: 'textures/city/door-metal.png',       // closed roll-up warehouse door (metal facade street faces)
+    roofMetal: 'textures/city/roof-metal.png',       // metal warehouse gable-roof slopes (distinct from the wall)
+    flame: 'textures/fx/flame.png',                  // burning-barrel flame sprite (chroma-keyed alpha)
     // wall decals (alpha PNGs, bg removed). bullet holes are spawned dynamically on wall hits;
     // graffiti/posters/cracks are placed statically on bare walls at city build. missing files
     // fall back to a procedural canvas (opaque) until real art is supplied
@@ -708,6 +682,6 @@ class RenderConfig {
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
-    slimeTrail: 'textures/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
+    slimeTrail: 'textures/fx/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
   };
 }

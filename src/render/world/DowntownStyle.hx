@@ -9,19 +9,20 @@ class DowntownStyle {
   public static function get():AreaStyle {
     if (_s == null) {
       var s = new AreaStyle();
+      var c = CityStyle.get();   // the medium-density style, borrowed slot by slot below
       // roads unchanged; unique plaza walkway + clean service alley (border reuses residential kerb)
-      s.asphalt = 'textures/ground-asphalt.png';
+      s.asphalt = c.asphalt;
       s.walkway = 'textures/downtown/ground-walkway.png';
-      s.walkwayBorder = 'textures/ground-walkway-border.png';
-      s.roadPaint = 'textures/ground-road-paint.png';
+      s.walkwayBorder = c.walkwayBorder;
+      s.roadPaint = c.roadPaint;
       s.alley = 'textures/downtown/ground-alley.png';
       // 5 types [0 concrete mid-rise, 1 stone mid-rise, 2 mostly-glass tower, 3 full-glass tallest,
       // 4 sleek modern high-rise]. 0/1 reuse the residential clean walls (medium-city look
       // interspersed among the towers, low only); 2 gets the mullioned curtain art, 3 the dense
       // edge-to-edge full-glass wall, 4 pale precast piers alternating with dark vertical glass ribbons
       s.walls = [
-        'textures/wall-1.png',
-        'textures/wall-3.png',
+        c.walls[0],
+        c.walls[2],
         'textures/downtown/glass-light.png',
         'textures/downtown/glass-dark.png',
         'textures/downtown/glass-sleek.png',
@@ -30,8 +31,8 @@ class DowntownStyle {
       // back ("no back walls")
       var back = 'textures/downtown/facade-glass-back.png';
       s.wornWalls = [
-        'textures/wall-1-worn.png',
-        'textures/wall-3-worn.png',
+        c.wornWalls[0],
+        c.wornWalls[2],
         back,
         back,
         back,
@@ -39,8 +40,8 @@ class DowntownStyle {
       // ground floor: mid-rise bays reuse residential storefronts, glass towers get a glass lobby
       var lobby = 'textures/downtown/storefront-lobby.png';
       s.storefronts = [
-        'textures/facade-concrete.png',
-        'textures/facade-stone.png',
+        c.storefronts[0],
+        c.storefronts[2],
         lobby,
         lobby,
         lobby,
@@ -48,8 +49,8 @@ class DowntownStyle {
       // mid-rises keep a residential tar/concrete roof base; glass towers get the downtown base
       var roofBase = 'textures/downtown/roof-base.png';
       s.roofBases = [
-        'textures/roof-base-concrete.png',
-        'textures/roof-base.png',
+        c.roofBases[0],
+        c.roofBases[1],
         roofBase,
         roofBase,
         roofBase,
@@ -60,10 +61,10 @@ class DowntownStyle {
       // 0/1 use residential punched windows (medium look), 2/3 the glass curtain panels
       var win = 'textures/downtown/window-glass.png';
       var winLit = 'textures/downtown/window-glass-lit.png';
-      s.windows = ['textures/window-1.png', 'textures/window-3.png', win, win, win];
-      s.litWindows = ['textures/window-lit-1.png', 'textures/window-lit-3.png', winLit, winLit, winLit];
+      s.windows = [c.windows[0], c.windows[2], win, win, win];
+      s.litWindows = [c.litWindows[0], c.litWindows[2], winLit, winLit, winLit];
       var glassCrop = { x: 0.5, y: 0.86 };
-      s.winCrop = [{ x: 0.42, y: 0.42 }, { x: 0.46, y: 0.82 }, glassCrop, glassCrop, glassCrop];
+      s.winCrop = [c.winCrop[0], c.winCrop[2], glassCrop, glassCrop, glassCrop];
       s.litColor = 0xc8d6ec;   // neutral cool office glow (warm mid-rise + cool glass share one)
       s.litRatio = 0.12;
       s.litIntensity = 1.9;
@@ -114,16 +115,16 @@ class DowntownStyle {
       // (facade 1 is wall-3/stone downtown, not brick), the glass towers get lobby doors,
       // a shared steel service door on their blanked backs, and a flat metal canopy
       s.doors = [
-        'textures/door-concrete.png',
-        'textures/door-stone.png',
+        c.doors[0],
+        c.doors[2],
         'textures/downtown/entrance-glass-light.png',
         'textures/downtown/entrance-glass-dark.png',
         'textures/downtown/entrance-sleek.png',
       ];
       var service = 'textures/downtown/entrance-service.png';
       s.doorsWorn = [
-        'textures/door-concrete-worn.png',
-        'textures/door-stone-worn.png',
+        c.doorsWorn[0],
+        c.doorsWorn[2],
         service,
         service,
         service,
@@ -131,8 +132,8 @@ class DowntownStyle {
       // canopy swatches: light tower gets the gunmetal sheet, dark tower its own near-black
       // blackened-bronze one (the shared sheet read too pale against the blue-glass wall)
       s.doorCovers = [
-        'textures/door-cover-concrete.png',
-        'textures/door-cover-stone.png',
+        c.doorCovers[0],
+        c.doorCovers[2],
         'textures/downtown/door-cover-glass.png',
         'textures/downtown/door-cover-glass-dark.png',
         'textures/downtown/door-cover-sleek.png',

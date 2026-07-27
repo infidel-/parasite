@@ -1,7 +1,5 @@
 package render.world;
 
-import render.RenderConfig;
-
 // slums (low-density outskirts) render knobs — the single file to tune the run-down look
 // independently of the mid-density residential default. Facade slots 0-2 keep the residential
 // MATERIALS (concrete/brick/stone — it is the same kind of city, just poorer) but on their own
@@ -16,7 +14,7 @@ class SlumsStyle {
   public static function get():AreaStyle {
     if (_s == null) {
       var s = new AreaStyle();
-      var t = RenderConfig.TEXTURES;
+      var t = CityStyle.get();   // the medium-density style, borrowed slot by slot below
       // broken sidewalk + cracked/potholed road + dirt back alley; the kerb edging and the worn
       // road paint are already grimy enough to reuse
       s.asphalt = 'textures/slums/ground-asphalt.png';
@@ -107,11 +105,11 @@ class SlumsStyle {
       // prompt's stated size (4 came out 0.44 x 0.71, not the 0.40 x 0.48 asked for). values below are
       // the measured extents plus a small margin. the ratio IS the pane's aspect (winH = WIN_W * y/x),
       // so 4 reads as a tall double-hung sash and 5 as a squat barred one
-      var wc = RenderConfig.WINDOW_SPRITE_CROP;
+      var wc = t.winCrop;
       s.winCrop = [wc[0], wc[1], wc[2], wc[3], { x: 0.48, y: 0.80 }, { x: 0.68, y: 0.46 }];
       s.litColor = 0xffd9a0;   // warmer + dingier than the residential glow: bare bulbs, not offices
       s.litRatio = 0.10;       // fewer lit windows — half these places are empty
-      s.litIntensity = RenderConfig.WINDOW_LIT_INTENSITY;
+      s.litIntensity = t.litIntensity;
       // entrances: 0-2 keep the residential masonry doors, 3 (warehouse) is driven by its own
       // roll-up art but still wants a real path here. 4 a torn screen door over peeling timber,
       // 5 a padlocked steel slab

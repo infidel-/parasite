@@ -31,7 +31,7 @@ class World {
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
     WorldCtx.seed = seed;
-    WorldCtx.style = style != null ? style : render.world.AreaStyle.DEFAULT;
+    WorldCtx.style = style != null ? style : render.world.CityStyle.get();
     WorldCtx.winSeen = new haxe.ds.ObjectMap();
     WorldCtx.doorSeen = new haxe.ds.ObjectMap();
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();
