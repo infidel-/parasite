@@ -43,7 +43,7 @@ class Parapets {
       var geo = new BoxGeometry(w, rimH, d);
       var mats:Array<Dynamic> = cast matsFor(w, rimH, d, role);
       // single-tex coping collapses to one draw call (baked UVs); mixed-tex brick keeps its array
-      var single = render.Poly.flattenBox(geo, mats, 'parapet-coping', 'parapet coping', 'textures/coping.png');
+      var single = render.Poly.flattenBox(geo, mats, 'parapet-coping', 'parapet coping', RenderConfig.TEXTURES.coping);
       if (!Std.isOfType(single, Array))
         {
           geo.translate(x, yMid, z);
@@ -115,7 +115,7 @@ class Parapets {
         return new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 });
       }
       var VR = rimH / VTILE;
-      var CT = 'textures/coping.png';
+      var CT = RenderConfig.TEXTURES.coping;
       inline function sideMat(worldStart:Float, len:Float, uDir:Int, cls:String, name:String):MeshStandardMaterial {
         var t = tex.clone();
         t.needsUpdate = true;
@@ -209,7 +209,7 @@ class Parapets {
       var geo = new BoxGeometry(bw, capBoxH, bd);
       var mats:Array<Dynamic> = cast copingMats(tex, 8, 0, 'coping-cap', 'cap coping')(bw, capBoxH, bd, role);
       // single coping texture -> collapse the cap block to one draw call
-      var single = render.Poly.flattenBox(geo, mats, 'coping-cap', 'cap coping', 'textures/coping.png');
+      var single = render.Poly.flattenBox(geo, mats, 'coping-cap', 'cap coping', RenderConfig.TEXTURES.coping);
       var m = new Mesh(geo, single != null ? single : mats);
       m.position.set(bx, capY + 0.004, bz);
       scene.add(m);

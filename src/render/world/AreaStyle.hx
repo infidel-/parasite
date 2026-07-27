@@ -26,12 +26,11 @@ typedef LampProp = {
 };
 
 // per-area render knobs: the texture sets + facade behavior the world sub-builders
-// (Ground/Buildings/Windows/roofs.*) would otherwise hardcode. DEFAULT reuses the exact
-// same TEXTURES arrays and RenderConfig constants the code reads today (identical
-// references → residential output pixel-identical); DOWNTOWN (DowntownStyle) swaps them for
-// the skyscraper look and SLUMS (SlumsStyle) for the run-down outskirts — each is the single
-// file to tune its look. Selected per build from the area type (see forArea). Threaded via
-// WorldCtx.style.
+// (Ground/Buildings/Windows/roofs.*) would otherwise hardcode. One style file fills this in per
+// area and is the single file to tune that look: CityStyle for the medium-density default,
+// DowntownStyle for the skyscraper core, SlumsStyle for the run-down outskirts (the latter two
+// borrow the slots they reuse verbatim off CityStyle.get()). Selected per build from the area
+// type (see forArea). Threaded via WorldCtx.style.
 class AreaStyle {
   // --- ground tile textures (Ground.hx) ---
   public var asphalt:String;
@@ -156,50 +155,14 @@ class AreaStyle {
       };
     }
 
-  static var _default:AreaStyle;
-  // the residential style — every field is the value/array the sub-builders use today
-  public static var DEFAULT(get, null):AreaStyle;
-  static function get_DEFAULT():AreaStyle {
-    if (_default == null) {
-      var s = new AreaStyle();
-      var t = RenderConfig.TEXTURES;
-      s.asphalt = t.asphalt;
-      s.alley = t.alley;
-      s.walkway = t.walkway;
-      s.walkwayBorder = t.walkwayBorder;
-      s.roadPaint = t.roadPaint;
-      s.walls = t.walls;
-      s.wornWalls = t.wornWalls;
-      s.storefronts = t.storefronts;
-      s.roofBases = t.roofBases;
-      s.metalWalls = t.metalWalls;
-      s.metalWorn = t.metalWorn;
-      s.windows = t.windows;
-      s.litWindows = t.litWindows;
-      s.winCrop = RenderConfig.WINDOW_SPRITE_CROP;
-      s.litColor = RenderConfig.WINDOW_LIT_COLOR;
-      s.litRatio = RenderConfig.LIT_RATIO;
-      s.litIntensity = RenderConfig.WINDOW_LIT_INTENSITY;
-      s.doors = t.doors;
-      s.doorsWorn = t.doorsWorn;
-      s.doorCovers = t.doorCovers;
-      s.coverShape = [0, 1, 2]; // concrete half-barrel, brick flat slab, stone inset cap
-      s.specialSlot = 3;         // metal warehouse
-      s.roofDowntown = false;
-      s.penthouseWall = null;
-      _default = s;
-    }
-    return _default;
-  }
-
   // pick the render style for a build from the area type: downtown for the high-density
-  // district, slums for the low-density outskirts, residential default for everything else.
+  // district, slums for the low-density outskirts, the medium-density city for everything else.
   // MUST stay in step with citygen's CityProfile.Profiles.forArea — a style/profile mismatch
   // renders facade slots the generator never emitted
   public static function forArea(t:_AreaType):AreaStyle
     return switch (t) {
       case AREA_CITY_HIGH: DowntownStyle.get();
       case AREA_CITY_LOW: SlumsStyle.get();
-      default: DEFAULT;
+      default: CityStyle.get();
     };
 }
