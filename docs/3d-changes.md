@@ -1727,3 +1727,67 @@ loop — a material and a `Poly` class registration per decal. Now cached by pat
 **Verified:** build clean; live `RenderConfig.WALLDECAL_TINT` = `0x8c8c8c` and the six expected class
 names derive correctly from `TEXTURES.cracks/graffiti/posters`. Not yet eyeballed in-world — needs a
 save loaded to confirm the posters sit in the wall and that cracks are still readable on dark brick.
+
+---
+
+## SHIPPED — Window light switches: dynamic lit/dark windows (2026-07-28)
+
+Windows were rolled lit-or-dark once at build (`Math.random() < litRatio`) and frozen forever. They
+now switch on and off over time. Nothing persists — window state was always render-only, so no save
+touch.
+
+**Lit was never a per-instance property — it is WHICH MESH you are in.** `Windows.add` bucketed each
+window into `[dark, lit]` and made one `InstancedMesh` per non-empty bucket, each with its own
+texture, `emissive`, `emissiveMap` and `emissiveIntensity`. That is the whole reason it could not
+change: a shared material can only light every window of a building at once.
+
+**Not the `LightCone.pulse` repack — a scale-0 stand-in instead.** The obvious move was the lamp-cone
+pattern (repack the drawn prefix, drive `count` down). It is wrong here for a reason specific to
+windows: `InstancedMesh.computeBoundingSphere()` unions over `this.count` and **caches**, so a mesh
+that repacks needs `frustumCulled = false` — which is exactly what `Models.cull` (`Models:236`) and
+`DecalBatch` (`DecalBatch:144`) both do. Lamps and decals are city-wide meshes that never wanted the
+coarse cull. Window meshes are **per building** and depend on it. So instead: both meshes hold EVERY
+window at the same index, `count` is fixed at N forever, and the copy that is not showing is written
+at **scale 0 with its position kept**. The bounding sphere stays tight, frustum culling is untouched,
+and a switch is two `setMatrixAt` calls — no repack, no count change, no `instanceColor` extern
+(still zero `setColorAt` in the repo).
+
+**A resample, not a flip.** Flipping a random window is a random walk: at `litRatio` 0.1 the city
+drifts toward 50% lit. Each tick instead RESAMPLES one random window against `litRatio`, which is
+stationary at exactly the build ratio. Most resamples land on the state the window already holds and
+cost nothing, so the interval is short (3–12s per building) to compensate. Measured over ~800k
+resamples on 3777 windows: lit fraction 0.0998 → 0.1022. Over 51k resamples on the real city:
+0.1038 → 0.1008.
+
+**A switch is instant and that is correct.** No per-window fade. The `LightCone` entry above logs the
+binary on/off as a `ponytail:` shortcut with a real ceiling; here it is not a shortcut — a light
+switch *is* instantaneous, and a cross-fading window would read as wrong.
+
+**The Occlusion ghost was the sting in the tail — same shape as the lamp emissive head.** Window
+meshes carry `userData.b`, so `pick()` buckets them and they get fade ghosts (confirmed: no window
+class in `__occ.skipped()`). `makeGhostMesh` copies `instanceMatrix.array` and `count` **once**, at
+first fade, and `apply()` never refreshed them — and below `ghostCross` the real mesh is **hidden**,
+so the ghost is the only thing drawing. Without a fix, walking near a building freezes its windows at
+whatever pattern was packed when the ghost was born. Fix: `Windows.switchWindow` bumps
+`mesh.userData.rev`; `Occlusion.apply` re-copies the buffer when `rev` moved. The generalisable
+lesson is the one from the lamp-outage entry pointed the other way: **anything that mutates an
+instance buffer after build must tell the ghost**, because the ghost is a snapshot and it is the copy
+that draws precisely when you cannot see the bug coming.
+
+**Cost, measured.** City-wide mesh inventory 2990 → **3027** (+37, `__occ.stats()` before/after): a
+building whose roll came up all-dark now still gets its lit mesh, because a light in there has to be
+able to come on. Instances 3662 → 7324; the hidden half are degenerate and discarded before
+rasterization. **Draw calls: `StreetPerf.lastCalls` 151 in both states**, A/B'd in one fixed view by
+hiding the lit mesh of every all-dark building (35 of them at sample time) — every one was already
+culled. One view only, not a sweep.
+
+**Verified:** build clean, `__check.pass` true / 0 fails, no new console errors, instance buffers
+coherent across all 3662 windows (each slot holds the real matrix in exactly one mesh and the scale-0
+stand-in in the other), `count` fixed on both meshes, `Windows.pulse` confirmed wired into
+`StreetView.loop` by watching the countdowns drain at real frame dt. **Not verified visually:** an
+actual switch on screen, and the ghost re-copy mid-fade — the Electron window was backgrounded from
+WSL, which throttles `rAF` to ~1fps, so a 20s watch caught zero of the ~4/s city-wide switches.
+
+**Left alone:** `addGlassAccents` (downtown glass towers) — same machinery would apply (per-building
+`InstancedMesh`, `userData.b`, `glassLitRatio`, deterministic per-cell hash) but far more instances.
+Separate pass.

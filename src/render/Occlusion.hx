@@ -13,7 +13,8 @@ import citygen.CityModel.Tile;
 // the still-solid real (cross-dissolving lit->ghost with no appearance pop); once it fully covers,
 // the real is hidden and the ghost eases on down to see-through. cheap per fragment, so the
 // see-through overdraw no longer pays the full shadowed PBR
-typedef FadeMesh = { mesh:Dynamic, ghost:Dynamic, ghostVisible:Bool, realHidden:Bool };
+// rev = the source's instance-buffer revision the ghost was last copied from (see syncGhost)
+typedef FadeMesh = { mesh:Dynamic, ghost:Dynamic, ghostVisible:Bool, realHidden:Bool, rev:Int };
 // per-building fade record: its world AABB, its fadeable meshes, and the eased fade
 typedef Occ = {
   b:Building,
@@ -96,7 +97,13 @@ class Occlusion {
             return;
           }
         if (o.material == null) return;
-        occ[bi].meshes.push({ mesh: o, ghost: null, ghostVisible: false, realHidden: false });
+        occ[bi].meshes.push({
+          mesh: o,
+          ghost: null,
+          ghostVisible: false,
+          realHidden: false,
+          rev: 0,
+        });
       });
       attachDbg();
     }
@@ -362,6 +369,28 @@ class Occlusion {
       return gm;
     }
 
+// a fadeable mesh's instance-buffer revision: bumped by whoever rewrites its instances after build
+// (render.world.Windows switching a light on or off). 0/absent = static after build, the usual case
+  static inline function meshRev(o:Object3D):Int
+    {
+      // userData is three's free-form extension bag, Dynamic by construction — and `rev` is absent on
+      // every mesh that never rewrites its instances, which is nearly all of them
+      var rev:Null<Int> = o.userData.rev;
+      return rev == null ? 0 : rev;
+    }
+
+// re-copy a changed instance buffer onto its ghost. the ghost is a SNAPSHOT taken the first time the
+// building faded, so a mesh whose instances move afterwards needs this — and it matters most exactly
+// when it is hardest to see coming: below ghostCross the real mesh is hidden and the ghost is the
+// only thing drawing, so a stale copy silently freezes the building's windows. only ever reached for
+// an InstancedMesh, since nothing else bumps a revision
+  static function syncGhost(real:InstancedMesh, ghost:InstancedMesh):Void
+    {
+      ghost.instanceMatrix.array.set(real.instanceMatrix.array);
+      ghost.instanceMatrix.needsUpdate = true;
+      ghost.count = real.count;
+    }
+
 // drive the overlay's blend (all its ghost slots share one eased opacity)
   static function setGhostOpacity(ghost:Dynamic, op:Float):Void
     {
@@ -592,7 +621,15 @@ class Occlusion {
               continue;
             }
           if (fm.ghost == null)
-            fm.ghost = makeGhostMesh(fm.mesh);
+            {
+              fm.ghost = makeGhostMesh(fm.mesh);
+              fm.rev = meshRev(fm.mesh); // built from the live buffer, so it starts in sync
+            }
+          else if (fm.rev != meshRev(fm.mesh))
+            {
+              fm.rev = meshRev(fm.mesh);
+              syncGhost(fm.mesh, fm.ghost);
+            }
           if (!fm.ghostVisible) { fm.ghost.visible = true; fm.ghostVisible = true; }
           var op:Float;
           if (f >= mid)

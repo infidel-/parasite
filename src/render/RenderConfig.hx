@@ -115,6 +115,18 @@ class RenderConfig {
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
   public static inline var BLOOM_THRESHOLD = 0.9;  // luminance above which pixels bloom
 
+  // --- window light switches (render.world.Windows.pulse) ---------------------
+  // someone in the city flips a light. RAW ms, not BASE_MS multiples, and deliberately so: this is
+  // ambient city life on a wall clock, not a turn-derived animation — the same reasoning that keeps
+  // the failing-lamp flicker on raw ms. each building runs its own countdown, and on each tick it
+  // RESAMPLES one random window against the style's litRatio, so the lit fraction stays where the
+  // build put it instead of drifting to half. a resample that lands on the state the window is
+  // already in is a no-op, which is most of them at ratio 0.1 — hence the short interval
+  public static final WIN_SWITCH = {
+    minMs: 3000.0,  // shortest gap between one building's resamples
+    maxMs: 12000.0, // longest gap; the initial countdown is drawn from the same range so buildings never tick in unison
+  };
+
   // --- ambient occlusion (GTAOPass; only runs when config vidAO) --------------
   // kept subtle on purpose: this should read as contact shadow where geometry meets, not as
   // photoreal dirt — the city art is flat/hand-painted. tune blendIntensity first, radius second

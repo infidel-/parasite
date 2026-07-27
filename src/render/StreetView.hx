@@ -908,6 +908,9 @@ class StreetView {
         var w = CityConfig.cellToWorld(tt.x, tt.y);
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
+    // someone in the city flips a light: run the window switch countdowns BEFORE the occlusion pass,
+    // so a building that is mid-fade re-copies its ghost on the same frame the window changed
+    render.world.Windows.pulse(dtMs);
     if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
     cullChunks(p); // hide whole offscreen blocks so three skips their subtrees entirely
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
