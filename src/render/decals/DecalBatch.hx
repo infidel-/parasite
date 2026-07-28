@@ -144,6 +144,10 @@ class DecalBatch
       // whole-mesh cull uses a stale boundingSphere as instances shuffle, so disable it
       untyped mesh.frustumCulled = false;
       untyped mesh.renderOrder = Sprites.ORD_DECAL;
+      // the road under a batched decal is a shadow receiver, so the decal must be one too — else a
+      // blood pool inside a building's moon shadow stays lit over darkened asphalt (the same miss
+      // Windows.add and WallDecals already fixed). free: receiveShadow is a uniform, not a define
+      mesh.receiveShadow = true;
       var g:DecalGroup =
       {
         mesh: mesh,
@@ -180,6 +184,7 @@ class DecalBatch
       var mesh = new InstancedMesh(geo, g.mat, newCap);
       untyped mesh.frustumCulled = false;
       untyped mesh.renderOrder = Sprites.ORD_DECAL;
+      mesh.receiveShadow = true; // carried over from make() — the replacement mesh must still receive
       group.add(mesh);
       g.mesh = mesh;
       g.geo = geo;
