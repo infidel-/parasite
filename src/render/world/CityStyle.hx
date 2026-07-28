@@ -97,6 +97,15 @@ class CityStyle {
       s.specialSlot = 3;        // metal warehouse
       s.roofDowntown = false;
       s.penthouseWall = null;
+      // scruffy weeds in the block interiors (Lawns.hx). no per-building yard ring: the medium profile
+      // has no house slots (CityProfile houseMaxSide 0), so lawnFacades stays EMPTY on purpose — it must
+      // be non-null or Lawns.build bails, but nothing matches it and lawnChance stays 0. only the
+      // courtyard-centroid and stray-cell passes fire, at about a third of the slums coverage: a tuft
+      // or two per yard, not the overgrown dead lot the outskirts get
+      s.lawnTex = 'textures/city/grass.png';
+      s.lawnFacades = [];
+      s.lawnCourtPatches = 1;
+      s.lawnPatchChance = 0.01;
       _s = s;
     }
     return _s;
