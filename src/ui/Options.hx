@@ -88,6 +88,31 @@ class Options extends UIWindow
           game.config.set('vidAntialias', val, true);
           game.scene.city3d.setAA(Std.parseInt(val));
         });
+      // ordered cheapest -> most expensive, like the antialiasing row above
+      addOptSelect('Render scale', 'vidRenderScale', [
+          { title: '50%', val: '50', isSelected: (game.config.vidRenderScale == 50) },
+          { title: '75%', val: '75', isSelected: (game.config.vidRenderScale == 75) },
+          { title: '100%', val: '100', isSelected: (game.config.vidRenderScale == 100) },
+          { title: '125%', val: '125', isSelected: (game.config.vidRenderScale == 125) },
+          { title: '150%', val: '150', isSelected: (game.config.vidRenderScale == 150) },
+          { title: '200%', val: '200', isSelected: (game.config.vidRenderScale == 200) },
+        ],
+        function (val) {
+          game.config.set('vidRenderScale', val, true);
+          game.scene.city3d.setRenderScale(Std.parseInt(val) / 100);
+        });
+      // changing this recompiles every lit material (NUM_SPOT_LIGHTS is in the program key), so it
+      // stalls for a moment on apply — acceptable here, never during play
+      addOptSelect('Lamp lights', 'vidLampLights', [
+          { title: 'Off', val: '0', isSelected: (game.config.vidLampLights == 0) },
+          { title: '4', val: '4', isSelected: (game.config.vidLampLights == 4) },
+          { title: '8', val: '8', isSelected: (game.config.vidLampLights == 8) },
+          { title: '12', val: '12', isSelected: (game.config.vidLampLights == 12) },
+        ],
+        function (val) {
+          game.config.set('vidLampLights', val, true);
+          game.scene.city3d.setLampLights(Std.parseInt(val));
+        });
       addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
         function (on) game.scene.city3d.setAO(on));
 

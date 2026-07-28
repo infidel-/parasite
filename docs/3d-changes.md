@@ -6,6 +6,9 @@ It exists because the expensive mistakes here are the ones already made once: th
 batching below was disproved a second time despite a note already saying so in two lines.
 
 Baseline hardware for all numbers: **RTX 3050**, 60fps cap, 1080p-ish, `vidAntialias=4`.
+Second baseline, added 2026-07-28: an **integrated Vega** (`AMD Radeon(TM) Graphics 0x1638`), where
+the frame is GPU-bound instead of `submit`-bound and most of the guidance below inverts — see the
+last entry in this file before applying anything here to that machine.
 
 **Which view a number came from matters more than the number.** Gameplay is a zoom lerp, not a set of
 modes (`RenderConfig.CAMERA`, `CameraRig`): zoom 0 = close, ~30° above ground; zoom 1 = top-down.
@@ -1979,3 +1982,287 @@ crowd, not `calls=`.
 mostly *away* from the viewer. At near zoom (~30° elevation) a building hides its own moon shadow
 behind itself. Expect the frequent read to be the **lamp spot shadows** (radial, so they fall toward
 the camera too) and the moon at high zoom / tactical / orbit-up.
+
+---
+
+## IN PROGRESS — the frame is GPU-bound on an integrated Radeon (2026-07-28)
+
+**First entry in this file written from the other side of the wall.** Everything above targets
+`submit` on an RTX 3050, under the standing note "submit is the CPU draw-call wall and a better GPU
+does not fix it". On the second dev laptop that note is simply false, and the GTAO entry already said
+so in writing: *"the weak-laptop target is exactly the case these numbers cannot speak for."*
+
+**Second baseline hardware: `ANGLE (AMD, AMD Radeon(TM) Graphics (0x00001638), D3D11)`** — a
+Renoir/Cezanne **integrated Vega**, no dedicated VRAM, sharing DDR bandwidth with the CPU.
+`vidAntialias=0`, `vidAO=0`, `devicePixelRatio 1.25`.
+
+Reported: ~1080p window → **30-45fps at 90% GPU load**; the default ~1600×900 window holds 60 zoomed
+out (224 calls) and drops to **50 zoomed in** (343 calls). CPU 10-20%.
+
+```
+frame=16.59ms(60.24fps) GPU=11.2  submit=6.4   upd=2    idle=8.19 calls=224 tris=89752 programs=74
+frame=16.6ms (60.24fps) GPU=11.78 submit=10.99 upd=1.9  idle=3.69 calls=224 tris=89752 programs=74
+frame=16.7ms (59.88fps) GPU=14.09 submit=7.4   upd=1.69 idle=7.6  calls=224 tris=89752 programs=74
+```
+
+### Reading the trace: `GPU=` > `submit=`, and calls do not move
+
+`calls` and `tris` are **identical** at both window sizes (224 / 89,752) while fps tracks pixel count,
+so the cost is per-pixel, not per-object. `submit` spiking to 10.99 on some frames is not the CPU
+doing more work — it is the CPU blocking on a full driver queue, which `StreetPerf.hx:27-29` already
+documents as the failure mode of reading `submit` while GPU-bound. **Do not chase draw calls here.**
+
+Arithmetic that confirms it before any A/B: 1600×900 × 1.25 = 2.25 Mpix holds 60fps at GPU 11-14;
+1920×1080 × 1.25 = 3.24 Mpix is **1.44× the pixels** and lands at 30-45fps. Pure fill scaling.
+
+### Three findings from source, unmeasured but load-bearing
+
+1. **The renderer draws 1.56× the window's pixels.** `SceneSetup.hx:43` —
+   `setPixelRatio(Math.min(devicePixelRatio, 1.25))`, and `devicePixelRatio` is exactly 1.25 here, so
+   the clamp never fires. There is no render-scale setting: the only video options are `vidAntialias`
+   and `vidAO`.
+2. **9 shadow maps × 17 taps per lit fragment.** `LAMP_LIGHT.pool = 12` unrolled SpotLights,
+   `shadowCasters: 8`, plus the moon. `SHADOWMAP_TYPE_PCF` is **17** `unpackRGBAToDepth(texture2D())`
+   taps — no hardware comparison sampler. This is the same number the previous entry flagged as NOT
+   MEASURED; that open item is what this pass closes. Also worth noting: `MAX_TEXTURE_IMAGE_UNITS` is
+   **16** on this driver and the 9 shadow maps eat 9 of them before any albedo/normal/roughness map.
+3. **Every city surface is `MeshStandardMaterial`** — full GGX specular per light, on art whose own
+   style rules ban "glossy/specular reflections". Buildings, Parapets, Ground, Windows, roofs,
+   WallDecals, Lawns.
+
+Findings 2 and 3 are both pinned by design (`LampLights.hx:59,68-69` fixes the pool precisely so
+`NUM_SPOT_LIGHTS` never changes and nothing recompiles). Correct for the strong-GPU case; it also
+means **there is no runtime dial for either**.
+
+### Landed now: three permanent GPU-side A/B keys
+
+The existing keys were all built for the call-bound regime and conflate what this one needs apart.
+
+| key | what it isolates | why the old keys could not |
+|---|---|---|
+| `V` | render scale, cycling 1.25 / 1.0 / 0.75 / 0.6 | nothing reached pixel count without a rebuild |
+| `Shift`+`1` | bloom **alone** | plain `1` flips lighting *and* bloom together |
+| `Shift`+`5` | light cones **alone** | plain `5` hides the 12 spotlights *and* the cones, so the per-fragment light loop and the additive cone overdraw were one number |
+
+`StreetView.setRenderScale` drives `renderer.setPixelRatio` **and** `composer.setPixelRatio` together
+— `EffectComposer.setPixelRatio` resizes rt1/rt2 and every pass including bloom's mip chain, so
+letting the two drift leaves stale post targets. Added to the `EffectComposer` extern.
+`SceneSetup.SceneBundle` gained a typed `coneGroup` so `Shift`+`5` has something to hold.
+
+Two things noticed in passing and deliberately **not** fixed:
+- `resize()` sizes `gtaoPass` in **CSS** px while the composer sizes everything else at `w × ratio`.
+  Pre-existing, only matters with AO on.
+- `Decals.drawDecals` walks the full 100×100 tile grid every frame for `decalScan=10000 decalDraw=0`.
+  Inside the 0.2ms `obj=` bucket, i.e. not the wall — noted so nobody re-discovers it as a lead.
+
+### MEASURED — the attribution
+
+Driven over CDP with synthetic `keydown` events and a `console.log` tap on the `[street-render]`
+line, so every state is the median of 7-9 post-settle samples with `(COMPILE)` frames filtered out.
+**Street-debug mode was left ON throughout** — it activates the free cam, which freezes the camera,
+and a frozen camera is a far better A/B baseline than a follow rig that drifts between samples.
+
+One pose, one area, `1042×648` CSS → **1.055 Mpix** backbuffer at scale 1.25, **163 calls, 87k tris**,
+baseline **GPU 11.2ms**. Shares, not absolutes, are the transferable part.
+
+| state | key | GPU | Δ | share |
+|---|---|---|---|---|
+| baseline | — | 11.2 | — | — |
+| 12 spotlights off | `5` | 6.57 | **−4.6** | **41%** |
+| bloom off | `Shift`+`1` | 9.78 | −1.45 | 13% |
+| all shadow sampling off | `7` | 9.88 | −1.3 | 12% |
+| light cones off | `Shift`+`5` | 11.27 | **~0** | **0%** |
+| emissive off | `6` | 11.15 | ~0 | 0% |
+| floor: no lights, no bloom, no tonemap | `1` | **2.96** | −8.2 | 26% |
+
+**Every pre-registered hypothesis about where the time went was wrong, in both directions.**
+
+- **Shadows were the prime suspect and they are 12%.** 9 maps × 17 `unpackRGBAToDepth` taps
+  *sounds* like the wall and is not one — `getShadow`'s `frustumTest` early-out evidently rejects
+  most fragments for most maps. This also closes the previous entry's NOT MEASURED item: sprites
+  receiving shadows cost nothing, as it guessed.
+- **The light cones are free.** They were assumed to be meaningful additive overdraw and are 0.0ms,
+  despite being 20,720 of the 87k triangles. `LAMP_CONE.opacity 0.03` on an additive shell is close
+  to the cheapest fragment there is. **Do not spend anything on cones** — that kills the
+  `forceSinglePass` lead for `LightCone` as a perf item (it remains valid as draw-call hygiene).
+- **The 12-spotlight fragment loop is 41%, the single largest term by 3×.** `LAMP_LIGHT.pool = 12`
+  unrolled `MeshStandardMaterial` light evaluations, i.e. **12 × GGX per fragment**, on art that bans
+  specular. Note key `5` also strips the spots' 8 shadow maps, so ~4.6 is the loop plus its share of
+  the 1.3; the loop alone is ~3.7-4.3. Either way it dwarfs everything else.
+- **Lighting + bloom is 73% of the frame** (11.2 → 2.96). The scene itself — all geometry, textures,
+  overdraw, the FP16 composer targets and the `OutputPass` blit — is only 3ms.
+
+### MEASURED — render scale is ~80% of the frame
+
+Same pose, cycled with `V`:
+
+| scale | backbuffer | GPU |
+|---|---|---|
+| 1.25 | 1.055 Mpix | 10.8 |
+| 1.00 | 0.675 | 8.7 |
+| 0.75 | 0.380 | 5.1 |
+| 0.60 | 0.242 | 4.0 |
+
+Fits **`GPU ≈ 2.0ms + 8.3ms × Mpix`** — the 2.0 intercept independently reproduces the 2.96 floor
+measured by key `1` from a completely different direction, which is the reason to trust both.
+**1.25 → 1.00 is −19% GPU for free**, and it is free in the strict sense: `devicePixelRatio` is 1.25
+on this machine, so `SceneSetup.hx:43`'s `min(dpr, 1.25)` never clamps and the game has been
+rendering 1.56× the window's pixels with no setting to say otherwise. 1.25 → 0.75 is −53%.
+
+Because the scaling is multiplicative it discounts **every** row of the table above at once,
+including the 41% spotlight loop. That is what makes it the first lever rather than the last.
+
+### Revised lever ranking (was: shadows first — the measurement inverted it)
+
+1. **Render scale as a video option**, default 1.0 — free, no visual-design risk, and multiplicative
+   so it discounts every other row at once.
+2. **Lamp light count** — attacks the 41%, linear. But it spends a **tuned art value** (how far lamp
+   light reaches), so it ships as an opt-in option at default 12, never as a lowered default.
+3. **`MeshStandardMaterial` → `MeshLambertMaterial` on city surfaces** — attacks the *same* 41% from
+   the other side: the loop is expensive because it is 12 × GGX, and the style rules already forbid
+   the specular that GGX computes. **This is the one that buys frames without spending looks**, so it
+   is the next real lever; it compounds with 2 rather than competing with it.
+4. Bloom (13%) — a real number but it is the look; only worth a low-quality option.
+5. ~~Shadow budget~~ — demoted to 12%. Not worth a setting on this evidence.
+6. ~~`forceSinglePass` on `LightCone`~~ — dropped as a perf item. Cones are 0ms.
+
+**Caveats before acting.** One pose, one area, one small window; the reported problem was 224 calls at
+1600×900. Shares should hold, absolutes will not. Re-measure on the 3050 before changing any default.
+
+---
+
+## SHIPPED — render scale + lamp-light options (2026-07-29)
+
+Acting on the attribution above. Measured at a **pinned, reproducible camera pose**, which is what made
+the numbers usable at all — see the methodology note below.
+
+**Both knobs ship as options; neither changes the default look.** An earlier revision of this entry
+had `pool` lowered to 6 as a new default. That was reverted: the lamp reach is a **tuned art value**,
+and the measurement that justified moving it (a screenshot A/B) was invalid — see "the visual test that
+was wrong" below.
+
+### Methodology: pin the camera, interleave the states, distrust absolutes
+
+This iGPU drifts **±20-40% on clock/thermal between sessions**, and a rebuild forces a session gap.
+Three rules made the measurements reproduce:
+
+- **Pin the pose.** `render.Tools.freeCam` is a **static**, so `parasiteHx['render.Tools'].freeCam
+  .lookFrom(150,40,162, 158,2,130)` reproduces an exact frame across reloads and rebuilds. Verified:
+  **209/210/211 calls and 104,480/104,482/104,484 tris** across three separate builds. Street-debug
+  mode is left ON throughout, because it activates the free cam and a frozen camera beats a follow rig
+  that drifts between samples. This pose sits in the gameplay band (158-288) and near the reported 224.
+- **Interleave A/B/A/B and take the MEDIAN**, never the mean and never a single reading. Raw samples
+  routinely contain a 2× outlier (a `spotsOff` sample read 13.57 against a 5.19 median). Means turned
+  a −19% win into a bogus −7% *loss* once; medians over 5 reps were stable to ±0.3ms.
+- **Warm every shader permutation before sampling.** Keys `5`/`7` change the program key, and the
+  first toggle compiles a fresh permutation set (`__progs()` went 79 → 132 during one sweep). Toggle
+  once and discard, then measure. `(COMPILE)`-tagged trace lines are filtered out regardless.
+- **Only compare within a session.** The same build+pose+scale read 7.36 in one session and 8.40 in
+  the next. Every number below is a within-session interleaved delta; the absolutes are not portable.
+- **This iGPU switches power state mid-run.** The *identical* pinned frame (`calls: 209` verified
+  unchanged, pin confirmed holding) was measured at **11.61ms and then 4.06ms** — a ~3× clock swing,
+  not scene variance. It made one whole run bimodal and unusable (`on` clustering at both 4.1 and
+  11.35). When this happens the wall-clock ms are worthless; only the **share** (`1 − off/on`) inside
+  one tightly interleaved pair survives, because both halves scale together.
+
+Driven over CDP: a `console.log` tap on the `[street-render]` line for the data, synthetic `keydown`
+events for the toggles. No instrumentation was added to shipped code beyond the three keys above.
+
+### Result 1: render scale — `−29%` GPU
+
+`SceneSetup.createCore` took `min(devicePixelRatio, 1.25)`; `devicePixelRatio` is 1.25 here, so the
+clamp never fired and the game rendered **1.56× the window's pixels** with no way to say otherwise.
+Now `config.vidRenderScale` (percent), **default 100**, with a `Render scale` select in Video
+(125/100/75/60) following the `vidAntialias` pattern. Live changes go through
+`StreetView.setRenderScale`, which drives `renderer.setPixelRatio` **and** `composer.setPixelRatio`
+together — the composer caches its own `_pixelRatio` and re-sizes rt1/rt2 plus every pass from it, so
+letting the two drift leaves stale post targets.
+
+Same pose, `pool: 12`, interleaved ×3: **1.25 → 12.34ms, 1.00 → 8.73ms**.
+
+### Result 2: `LAMP_LIGHT.pool` 12 → 6 — `−19%` GPU, and the cost is LINEAR in pool
+
+Same pose, scale 1.0, `5` toggled interleaved ×5, medians:
+
+| | spots on | spots off | spot loop | share |
+|---|---|---|---|---|
+| `pool: 12` | 9.08 | 5.35 | 3.73ms | 41% |
+| `pool: 6` | 7.36 | 5.19 | 2.17ms | 29% |
+
+**0.311 vs 0.362 ms per light — linear, not sublinear.** This is worth stating because the first
+attempt concluded the opposite: comparing the 41% and 38% shares measured at *different poses* looked
+like strong sublinearity and nearly got the change reverted. **Shares are only comparable within one
+pose.** Pinning the camera is what turned a wrong conclusion into the right one.
+
+The "spots off" floors agree across builds (5.35 vs 5.19), as they must — with zero spotlights the two
+builds differ only in `shadowCasters`, which is inert when no spotlight exists.
+
+### The visual test that was wrong — and what it changes
+
+The first pass concluded "visually indistinguishable at the same pose" from a screenshot A/B, and
+nearly shipped `pool: 6` as the default on that basis. **The test was invalid: it used a free-cam pose,
+but the pool follows the PLAYER.** Re-run with the camera framing the player, the difference is plain —
+the lit road pools at the frame edge disappear.
+
+Quantified headlessly (`CityGen.generate` is a pure static, so this needs no loaded save): over 5 seeds
+and 184 sample positions, **a mean of 19.1 lamps sit within `lightRangeCells: 16`** (min 6, max 30).
+So `pool` is not over-provisioned at all — 12 lights ~63% of the nearby lamps, 6 lights ~32%. The ledger
+note that the camera's ground footprint is radius ~69 (≈17 cells) says the in-range set and the visible
+set are essentially the same thing.
+
+**What lowering it actually looks like:** slots go to the nearest lamps, so what goes dark is the
+*furthest* ones — the frame periphery — while lamps around the player are unchanged. Posts, amber
+cones and glowing bulbs keep drawing at every setting (instanced, independent of the pool); only the
+lit circle on the road disappears. Walking, it reads as lamps switching on later as you approach. At
+`Off` there are no road pools anywhere, just cones and bulbs — verified in-game, `prog` 70 → 110 as the
+lit materials recompiled.
+
+**Lesson, and it is the same one as the pool-linearity mistake above: verify the thing the system is
+actually keyed on.** The pool keys on player distance, so a camera-only A/B cannot see it.
+
+### What shipped instead: `vidLampLights`
+
+`Off / 4 / 8 / 12`, **default 12** (seeded from `RenderConfig.LAMP_LIGHT.pool`, which stays the single
+source of truth for the art value). Applies **live** via `StreetView.setLampLights`, which disposes the
+pool and builds a new one; three notices `NUM_SPOT_LIGHTS` changed and recompiles the lit materials by
+itself on the next frame — a one-off stall, which is why this is a settings-screen action and never
+something gameplay does.
+
+Three things that had to be fixed to make the range legal:
+
+- **`shadowCasters` is now derived, not read.** `LampLights` computes `casters = min(pool,
+  L.shadowCasters)` as a field and every caster loop uses it. Previously `update()` walked
+  `0...L.shadowCasters` while indexing arrays sized by `pool` — so **`Off` (pool 0) crashed outright**
+  on `lights[i].shadow.intensity`, and any pool below 8 walked off the end. A local
+  `var casters = L.shadowCasters` was shadowing the fix and had to go.
+- **`LampLights.dispose()`** takes the lights and targets back out of the scene, so a resized pool can
+  replace the old one.
+- **`SceneBundle.lights` is now handed out.** `toggleLighting`/`setLightsOff` close over that array, so
+  after a live swap the debug `1`/`0` keys would have gone on toggling the *disposed* lights and
+  ignoring the new ones. `setLampLights` re-registers into both it and `pointLights`.
+
+The warm-up path passes the same config value — warming at a different pool size would compile programs
+the game then never uses.
+
+### Combined
+
+Render scale alone, default-to-default: **12.34 → 8.73ms, −29% GPU with no visual change at all.**
+Lamp lights on top of that is opt-in, at ~0.32ms (~3.5% of frame) per light:
+
+| lamp lights | est. GPU | vs 12 |
+|---|---|---|
+| 12 (default) | 9.08 | — |
+| 8 | ~7.8 | −14% |
+| 6 | 7.36 *(measured)* | −19% |
+| 4 | ~6.6 | −27% |
+| 0 | 5.27 *(measured)* | −42% |
+
+### Still open, and now better aimed
+
+The spot loop is *still* the largest single term (29% after the pool cut) because each of the 6
+remaining lights runs a full **GGX specular** evaluation — `MeshStandardMaterial` on art whose style
+rules ban specular outright. `MeshLambertMaterial` on the city surfaces attacks the per-light cost
+rather than the light count, so it **compounds** with the pool cut instead of competing with it. That
+is the next lever, and it needs a visual sign-off rather than a measurement to decide.
+
+Not worth pursuing on this evidence: shadow budget (12%), light cones (0%), emissive (0%).

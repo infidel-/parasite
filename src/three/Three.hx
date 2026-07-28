@@ -353,6 +353,7 @@ typedef Intersection = {
   public function addPass(p:Dynamic):Void;
   public function render():Void;
   public function setSize(w:Float, h:Float):Void;
+  public function setPixelRatio(r:Float):Void; // render scale: resizes both targets AND every pass to w*r
   public function dispose():Void; // release the composer's render targets (bloom etc.) on teardown
 }
 @:native("THREE.RenderPass") extern class RenderPass {

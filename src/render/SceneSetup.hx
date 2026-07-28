@@ -20,8 +20,12 @@ typedef SceneBundle = {
   toggleLighting:Void->Bool,
   setLightsOff:Void->Void,
   fill:Array<Object3D>, // [ambient, hemisphere, moon] — the global fill lights (debug 2/3/4 toggles)
+  lights:Array<Object3D>, // every toggleable light, as toggleLighting/setLightsOff see it. handed out so a
+                          // live lamp-pool swap (StreetView.setLampLights) can keep those closures correct
+
   moon:DirectionalLight, // the shadow-casting moon, ticked per frame by fitMoon to follow the player
   pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
+  coneGroup:Object3D, // just the light cones, so debug Shift+5 can price the additive overdraw alone
   lampLights:LampLights, // fixed live-spotlight pool, ticked per frame to follow the player
   lampPosts:Array<LampPost>, // every placed lamp (bulb world x/z + cell) for the pool
   lampCorners:Map<Int,Int>, // grid vertex (ActorAnim.lampVertexKey) -> lamp dir, so the slide bends past a post
@@ -35,12 +39,16 @@ typedef SceneBundle = {
 class SceneSetup {
 // create the renderer + camera once, bound to the given canvas. The resize
 // listener is registered here (once) so it does not pile up per city entry.
-  public static function createCore(canvas:Dynamic):Core {
+// scale = backbuffer pixels per CSS pixel (config vidRenderScale / 100).
+  public static function createCore(canvas:Dynamic, scale:Float):Core {
     // no default-framebuffer MSAA: every city frame goes through the EffectComposer, whose
     // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
     // the composer's offscreen render targets instead (StreetView.setAA, config vidAntialias)
     var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
-    renderer.setPixelRatio(Math.min(Browser.window.devicePixelRatio, 1.25));
+    // NOT devicePixelRatio: the street frame is fill-bound long before it is call-bound, and a
+    // 125%-scaled desktop was silently costing 1.56x the pixels for it. measured GPU ~= 2.0ms +
+    // 8.3ms per megapixel, i.e. ~80% of the frame scales with this one number (docs/3d-changes.md)
+    renderer.setPixelRatio(scale);
     renderer.setSize(Browser.window.innerWidth, Browser.window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -85,8 +93,9 @@ class SceneSetup {
       moon.target.updateMatrixWorld();
     }
 
-// build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city
-  public static function buildScene(renderer:WebGLRenderer, city:City, ?style:render.world.AreaStyle):SceneBundle {
+// build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city.
+// lampPool = how many live lamp spotlights to run (config vidLampLights)
+  public static function buildScene(renderer:WebGLRenderer, city:City, lampPool:Int, ?style:render.world.AreaStyle):SceneBundle {
     var scene = new Scene();
     scene.background = new Color(0x0a0d15);
     var span = CityConfig.CELL * CityConfig.GRID;
@@ -214,7 +223,7 @@ class SceneSetup {
     LightCone.instanced(coneGroup, bulbs, bulbY, coneR);
     var coneFlick = LightCone.instanced(coneGroup, bulbsFlick, bulbY, coneR, phasesFlick);
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
-    var lampLights = new LampLights(scene);
+    var lampLights = new LampLights(scene, lampPool);
     for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
     pts.push(coneGroup); // debug 5/0 hides the cones alongside the lamp lights
 
@@ -237,8 +246,10 @@ class SceneSetup {
       toggleLighting: toggleLighting,
       setLightsOff: setLightsOff,
       fill: [ ambient, hemi, moon ],
+      lights: lights,
       moon: moon,
       pointLights: pts,
+      coneGroup: coneGroup,
       lampLights: lampLights,
       lampPosts: lampPosts,
       lampCorners: lampCorners,

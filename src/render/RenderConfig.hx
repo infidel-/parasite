@@ -581,7 +581,15 @@ class RenderConfig {
     markerVisible: false, // draw a small red sphere at the light position (tuning aid)
     // lamps everywhere, bounded spotlight budget: only POOL live spotlights exist, following the
     // nearest lamps to the player (render.particles.LampLights); every post shows its model + cone
-    pool: 12,            // number of live SpotLights (fixed → NUM_SPOT_LIGHTS constant, no recompile)
+    // number of live SpotLights (fixed → NUM_SPOT_LIGHTS constant, no recompile). three UNROLLS this
+    // loop into every lit material, so each slot is a full extra light evaluation — GGX included — on
+    // every lit fragment in the frame, and it is the single most expensive thing in the street frame:
+    // measured 41% of GPU on the integrated-Radeon laptop, LINEAR at ~0.32ms (~3.5% of frame) per
+    // light (docs/3d-changes.md). 12 is an ART value — it sets how far lamp light reaches from the
+    // player, so lowering it visibly darkens the frame edge. tune for looks, not for frames; the perf
+    // dial for weak GPUs is the render scale. never set BELOW shadowCasters (LampLights sizes its
+    // per-slot arrays from THIS number)
+    pool: 12,
     intensity: 45.0,     // live-lamp spotlight intensity
     lightRangeCells: 16, // a lamp within this many cells of the player may claim one of the pool lights
     fadeMul: 4.0,        // fade in/out duration = BASE_MS * this — ramps intensity so lamps don't blink
@@ -589,7 +597,11 @@ class RenderConfig {
     // frame): castShadow is part of the material program key (NUM_SPOT_LIGHT_SHADOWS), so flipping it
     // live would trigger the very recompile the fixed pool exists to avoid. nearest lit lamps tend to
     // occupy the low-index slots (LampLights fills nearest-first), so these casters follow the player
-    shadowCasters: 8,     // live spotlights that cast real shadows (nearby buildings/objects go radial)
+    // live spotlights that cast real shadows (nearby buildings/objects go radial). MUST be <= pool:
+    // update() walks 0...shadowCasters indexing the per-slot arrays, which are sized by pool, and at
+    // 8 against a 6-slot pool it writes past the end of `lights`. not a perf knob either — ALL shadow
+    // sampling (these plus the moon) measured only 12% of the GPU frame
+    shadowCasters: 8,
     shadowMapSize: 512,   // per-caster shadow map edge — cone is local + small, 512 is plenty
     shadowBias: -0.0009,  // depth bias to kill acne in the cone (tune)
     shadowFadeBand: 4.0,  // cells over which a caster's shadow.intensity ramps to 0 as it nears the
