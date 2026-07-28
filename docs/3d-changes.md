@@ -1848,3 +1848,71 @@ knobs unchanged per area: medium `ffcf8f`/0.15/2.2, downtown `c8d6ec`/0.12/1.9, 
 change goes. With the knobs split across `RenderConfig.TEXTURES`, four globals and an inline builder,
 every such change had to pick one of three homes and the siblings' borrows silently coupled to that
 choice. Now there is one file per density and one folder per density, and they hold the same list.
+
+---
+
+## SHIPPED — Weeds in the medium-density courtyards: four knobs and one texture, zero render code (2026-07-28)
+
+**The whole change is four fields in `CityStyle.get()` plus one new source.** `Lawns.hx` was written
+area-agnostic in the slums pass and never needed a line: it reads `lawnTex`/`lawnFacades`/`lawnChance`/
+`lawnPatchChance`/`lawnCourtPatches` off `WorldCtx.style` and emits nothing when the style is silent,
+which is exactly how medium and downtown have been rendering zero grass. Turning it on for
+`AREA_CITY_MEDIUM` is `lawnTex = 'textures/city/grass.png'`, `lawnFacades = []`,
+`lawnCourtPatches = 1`, `lawnPatchChance = 0.01`. Still **one mesh, one draw call, one 1024² mask
+canvas** — the medium area now pays what a slums area already paid, and no new material permutation
+enters the program cache (same `MeshStandard` + `alphaMap` + `transparent` combination `Lawns`
+already compiled for slums).
+
+**The trap, and it swallows the entire feature silently.** `Lawns.build` bails at `Lawns.hx:50-52` on
+`lawnTex == null || lawnFacades == null` — **both**. A style that sets the texture and the two
+courtyard knobs but leaves `lawnFacades` at its `null` default renders no grass at all, not even the
+courtyard patches, which have nothing to do with facades. `[]` is the facade-less configuration and
+has to be written explicitly. Left the gate alone rather than relaxing it to `lawnTex` only: one
+empty array at the call site is a smaller diff than a second null-check in the pass, and it keeps the
+"a style declares every knob it uses" shape the other slots have.
+
+**Pass 1 can never fire on medium anyway, which is why `lawnFacades` is empty rather than populated.**
+The yard-ring pass rings buildings whose `facade` is in `lawnFacades`, and it was written for the two
+slums house types (4 clapboard, 5 cinderblock). The `DEFAULT` `CityProfile` has `houseMaxSide: 0`, so
+citygen never remaps a leaf to a house slot here — medium only has 0-2 masonry and 3 metal warehouse.
+Ringing a mid-rise or a warehouse in weeds would read as a lawn around an office block, so the two
+passes that ignore facades entirely are the ones doing the work: **courtyard centroids** (flood fill
+over `Tile.Alley`, components under `MIN_COURT = 6` skipped) and **stray alley cells**. `lawnChance`
+stays at its 0 default.
+
+**Density is deliberately a third of the slums.** Slums is `2` court patches + `3%` stray; medium is
+`1` + `1%`. The two styles share every shape constant (`TILE 3.0`, `KERN 7.0`, `ALPHA 0.5`), so the
+only thing separating an overgrown outskirt lot from a tuft in a city courtyard is the seed count and
+the art. No per-style opacity or kernel knob was added — if medium ever needs a visibly different
+blob size that is the moment to promote `KERN`, not before.
+
+**New art rather than borrowing `slums/grass-dead.png`.** Same pipeline slot exactly (`class: chroma`,
+`chroma 0x5a5d63`, `tol 24`, `res 512`, `needs_alpha`), but the medium tile is **living** weeds —
+muted olive and grey-green, ragged islands, bald earth patches, ~50 % of the tile left as key colour —
+against the slums tile's dead yellow-brown. Borrowing would have been a five-line diff and no texture
+work, and was rejected for the same reason the slums entry recorded "all 19 generated, nothing
+borrowed": the dead lawn is load-bearing for the outskirts reading as poorer than the city, and
+sharing it makes a medium courtyard indistinguishable from a slums one at a glance.
+
+**The `DEFAULT` profile has plenty of courtyards, and that was the one number worth measuring first.**
+The whole feature rides on the flood fill finding components of at least `MIN_COURT = 6` cells, and a
+denser profile could in principle leave only slivers. Measured headlessly over 40 seeds via
+`parasiteHx['citygen.CityGen'].generate(seed)` (no profile arg = `Profiles.DEFAULT`), flood-filling
+`Tile.Alley` in the page: **mean 42.7 qualifying components per city, 0 cities with none**, out of 48.8
+components and 1711 alley cells; median component 23 cells, largest 489. That is the same ballpark as
+the slums entry's 46, so the two densities get comparable courtyard coverage from the same rule.
+
+**Verified in a loaded medium area** (`__check.pass` true, 0 fails, 1495 alley cells):
+`__dbg.find('lawn')` → **one mesh, 720 tris**, bbox 368×388, position (0,0,0) — 360 emitted quads
+against the slums area's 1050, i.e. **34 %**, which is the intended third. `__occ.skipped()` lists it
+as `lawn` alongside the ground and lamp meshes, confirming it still carries no `userData.b` and cannot
+fade with a building. Console clean — no errors, no `[textures] missing`. Eyeballed from the free cam
+(`Tools.freeCam.lookFrom`, aimed by reading blob centroids straight out of `Lawns.maskTex.image` — the
+mask canvas is a `CanvasTexture`, so its pixels give exact world coordinates for every patch, which is
+a much faster way to find one than flying around): patches sit in block interiors with round, ragged,
+dissolving outlines, no tile edges, no beading, and they stop at the kerb. At normal night lighting an
+unlamped courtyard patch is very dark and reads as texture rather than colour — correct for the
+palette, and the debug WYSIWYG toggle (`1`) shows the olive-green art underneath.
+
+**Texture pipeline:** `make tex` baked `city/grass.png` 512×512 RGBA with no `needs_alpha` warning;
+the key lifted cleanly, ragged cutout edges survived, ~50 % of the tile keyed out. Build clean.
