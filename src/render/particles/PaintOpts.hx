@@ -21,4 +21,5 @@ typedef PaintOpts = {
   @:optional var faceX:Float;        // horizontal facing mirror in [-1..1], default 1.0
   @:optional var rough:Float;        // material roughness (wet sheen < 1), default 1.0
   @:optional var metal:Float;        // material metalness, default 0
+  @:optional var shadow:Bool;        // sample the moon/lamp shadow maps, default true (false = UI overlay)
 }

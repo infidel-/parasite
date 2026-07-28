@@ -111,6 +111,9 @@ class Sprites {
       untyped mat.depthTest = (o.depthTest != false);
       if (o.depthFunc != null)
         untyped mat.depthFunc = o.depthFunc;
+      // UI overlays (badges, x-ray outline, target markers) stay out of the shadow maps — they must
+      // read at a glance wherever the AI stands. everything else keeps slot()'s default
+      m.receiveShadow = (o.shadow != false);
       m.visible = true;
       idx++;
     }
@@ -241,6 +244,11 @@ class Sprites {
       mat.roughness = 1;
       mat.metalness = 0;
       m.renderOrder = 0;
+      // world sprites/decals darken inside a building's moon/lamp shadow like the ground they stand
+      // on. receiveShadow is a plain uniform in three (not a program define, and USE_SHADOWMAP is
+      // already compiled in scene-wide), so this costs no recompile, no new program and no draw call
+      // — only the shadow taps on the quad's own fragments. UI overlays opt out per paint (see paint)
+      m.receiveShadow = true;
       m.position.set(wx, wy, wz);
       m.scale.set(scale, scale, scale);
       return m;

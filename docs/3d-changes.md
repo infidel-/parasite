@@ -1848,3 +1848,66 @@ knobs unchanged per area: medium `ffcf8f`/0.15/2.2, downtown `c8d6ec`/0.12/1.9, 
 change goes. With the knobs split across `RenderConfig.TEXTURES`, four globals and an inline builder,
 every such change had to pick one of three homes and the siblings' borrows silently coupled to that
 choice. Now there is one file per density and one folder per density, and they hold the same list.
+
+---
+
+## SHIPPED — Actors and ground decals receive shadows (2026-07-28)
+
+**Reported:** building shadows did not darken AI. Confirmed by omission, not by design:
+`Sprites.slot()` builds every pooled quad without `receiveShadow`, and three defaults it `false`.
+`git log -S receiveShadow -- render/particles/Sprites.hx render/Actors.hx` is empty — never set,
+never removed. `SceneSetup.hx:48-51` only ever forbade blanket **casting** for sprites ("would drag
+sprites into the depth pass and cast square blobs"); receiving was never addressed. `DecalBatch`
+(bulk blood/debris) had the same miss, so a blood pool inside a building's moon shadow stayed lit
+over darkened asphalt — the third instance of the exact bug `Windows.add` and then `WallDecals`
+already fixed.
+
+**The change is free, and the reason is worth writing down: `receiveShadow` is a UNIFORM, not a
+define.** In three r181, `lights_pars_begin` declares `uniform bool receiveShadow;` and
+`shadowmask_pars_fragment` reads it as `shadow *= receiveShadow ? getShadow(...) : 1.0`.
+`USE_SHADOWMAP` comes from `shadowMapEnabled: renderer.shadowMap.enabled && shadows.length > 0` —
+**object-independent**. So every sprite program ALREADY carried the full `getShadow` code and was
+multiplying by 1.0. Consequences: no recompile, no new program, no `calls=` delta, and
+`StreetView.warmup` / `Sprites.warmupMeshes` need no matching change. It can also be flipped
+per-quad per-frame for free (`WebGLRenderer` compares against `materialProperties.receiveShadow` and
+just sets the uniform; each pool slot owns its own material, so there is no thrash). This is the
+opposite of `castShadow`, which IS baked into the program key via `NUM_*_LIGHT_SHADOWS` — the whole
+reason `LampLights` pins its casters for life. **Do not generalise from one to the other.**
+
+**Why it reads at all — the sprite faces the moon.** The upright quad's `TILT` puts its normal at
+`(0, sin0.6, cos0.6) = (0, 0.565, 0.825)`; `MOON_DIR` normalised is `(-0.371, 0.743, 0.557)`, so
+**N·L = 0.88**. Linear-space irradiance on an upright sprite splits moon `(0.25, 0.34, 0.61)` against
+ambient+hemi `(0.22, 0.31, 0.58)` — the moon is **~52 %** of the light on an AI, so a full shadow
+roughly halves it. Flat decals: N = (0,1,0), N·L = 0.74, moon ~48 %. If that turns out too dark at
+night the knob is `AmbientLight 1.6` / `HemisphereLight 1.3` in `SceneSetup`, NOT weakening the moon
+(it lights the whole city).
+
+**Scope: world sprites in, UI overlays out.** The `Sprites` pool is shared by actors, corpses, blood,
+debris, particles AND by pure UI, so the flag is `slot()`-default-true with a `PaintOpts.shadow`
+opt-out. Opted out: the badge row (`depthTest:false` always-on-top), the x-ray outline
+(`GreaterDepth` occluded-only glow) and the target frame/reticle — the last one deliberately, since a
+target standing in a shadow would otherwise have its own marker halved exactly when it matters.
+Everything painted through `paintGround`/`paintTopple`/`paintWall`/`paintShadow` inherits the default
+(the fake ground shadow is black albedo, so shading it is a no-op either way).
+
+**Coverage checks that pass, so no follow-up is owed:** the moon box follows the player at
+`halfExtent 90` (22.5 cells) and the ground uses the SAME box, so there is no ground↔actor mismatch —
+outside it `getShadow`'s `frustumTest` returns 1.0, no artifact. No acne risk: sprites are not
+casters and neither is the ground; the only casters are the merged building volume
+(`Buildings.addShadowCaster`) and lamp posts. A faded building keeps shadowing the AI under it
+(`Occlusion` ghosts carry `castShadow`). `transparent` + `depthWrite:false` + `DoubleSide` are all
+orthogonal to receiving.
+
+**NOT MEASURED — the open item.** No A/B against a `calls=` or frame-time baseline was taken. Draw
+calls cannot move (no new objects, no new programs), but the fragment cost can: `PCFShadowMap` is
+**17 taps per map**, and a sprite pixel can now sample 1 moon + `shadowCasters: 8` spot maps = up to
+~153 taps. Sprite quads are small and the ground already pays the same rate over far more screen
+area, so the expectation is noise — but expectation is not measurement. Check `frame`/`gpu` in the
+`[street-render]` trace (the `perf street` console toggle, which leaves input free for walking), in a
+crowd, not `calls=`.
+
+**Honest note on how often it will show.** `MOON_DIR (-1,2,1.5)` puts the moon on the camera's side
+(camera sits at `z 22-24`), so the ground shadow offset per unit of height is `(+0.50x, -0.75z)` —
+mostly *away* from the viewer. At near zoom (~30° elevation) a building hides its own moon shadow
+behind itself. Expect the frequent read to be the **lamp spot shadows** (radial, so they fall toward
+the camera too) and the moon at high zoom / tactical / orbit-up.

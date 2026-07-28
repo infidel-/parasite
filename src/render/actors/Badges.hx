@@ -77,7 +77,9 @@ class Badges {
     }
 
 // lay the target frame (framed) and/or targeting reticle (cursor) as flat ground quads under
-// an entity's slide pos; reticle a hair higher so it wins the ground z-order over the frame
+// an entity's slide pos; reticle a hair higher so it wins the ground z-order over the frame.
+// shadow off on both: they are UI, and a target standing in a building's shadow would otherwise
+// have its own marker halved in brightness exactly when it matters most
   function paintTargetMarker(e:Entity, framed:Bool, cursor:Bool):Void
     {
       if (!framed && !cursor)
@@ -96,6 +98,7 @@ class Badges {
           scale: TARGET_SCALE,
           flat: true,
           order: Sprites.ORD_MARK,
+          shadow: false,
         });
       if (cursor)
         sprites.paint({
@@ -107,6 +110,7 @@ class Badges {
           scale: TARGET_SCALE,
           flat: true,
           order: Sprites.ORD_MARK,
+          shadow: false,
         });
     }
 
@@ -143,6 +147,7 @@ class Badges {
         emissive: col,
         emissiveInt: RenderConfig.XRAY.emissive,
         depthFunc: THREE.GreaterDepth,
+        shadow: false, // occluded-only UI outline: must glow through at full strength
       });
     }
 
@@ -285,6 +290,7 @@ class Badges {
             emissive: 0xffffff,
             emissiveInt: em,
             depthTest: false,
+            shadow: false,
           });
         }
     }
