@@ -31,6 +31,7 @@ class Sprites {
   var texCache:Map<String, CanvasTexture> = new Map();  // atlas-crop / svg -> texture
   var svgImgs:Map<String, Dynamic> = new Map();         // svg cache key -> decoding <img> (async)
   var contentCache:Map<String, GroundSprite> = new Map(); // atlas-crop -> content-trimmed sprite
+  var outlineCache:Map<String, OutlineSprite> = new Map(); // atlas-crop -> outline ring + its quad-scale
   var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
   var rectCache:Map<String, AtlasRect> = new Map();       // atlas cell -> UV rect into the shared atlas texture
   var idx:Int = 0;                                      // next free pool slot this frame
@@ -342,6 +343,52 @@ class Sprites {
       tex.colorSpace = THREE.SRGBColorSpace;
       texCache.set(key, tex);
       return tex;
+    }
+
+// outline ring of an atlas cell (see OutlineSprite): the cell is drawn INSET by `px`, stamped at
+// its 8 neighbour offsets to dilate the alpha outward, then punched back out at the centre and
+// flooded white — what is left is a tintable band hugging the silhouette. the inset is what keeps
+// the ring inside the crop for art that fills the frame; the returned scale undoes it at paint
+// time. null until the atlas image decodes (retry next frame, like tex())
+  public function outlineTex(imageName:String, ix:Int, iy:Int, male:Bool, px:Float, skin:Int = 0):OutlineSprite
+    {
+      var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin;
+      if (outlineCache.exists(key)) return outlineCache.get(key);
+      var src = atlasFor(imageName, male, skin);
+      var img:Dynamic = src.img;
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var t = src.t;
+      var dw = t - 2 * px;                                 // inset content edge (fractional px allowed)
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = t; cv.height = t;
+      var cx = cv.getContext('2d');
+      // dilate: the same inset crop (the +1/-1 kludge avoids atlas bleed) at every neighbour
+      // offset, an octagonal px-wide grow of the sprite's alpha
+      for (dy in -1...2)
+        for (dx in -1...2)
+          {
+            if (dx == 0 &&
+                dy == 0)
+              continue;
+            cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px + dx * px, px + dy * px, dw, dw);
+          }
+      // punch the sprite itself back out, leaving only the band outside its silhouette
+      cx.globalCompositeOperation = 'destination-out';
+      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px, px, dw, dw);
+      // flood what remains white, so the paint-time emissive tint owns the color (the soft alpha
+      // edge survives — source-in multiplies the fill by the ring's own alpha)
+      cx.globalCompositeOperation = 'source-in';
+      cx.fillStyle = '#ffffff';
+      cx.fillRect(0, 0, t, t);
+      cx.globalCompositeOperation = 'source-over';
+      var tex = new CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      var os = { tex: tex, scale: t / dw };
+      outlineCache.set(key, os);
+      return os;
     }
 
 // force every pixel's RGB to white (a tintable mask; the soft alpha edge stays anti-aliased) and
