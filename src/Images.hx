@@ -28,7 +28,6 @@ class Images
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
   public var tileset: Image;
-  public var cursors: Array<Image>;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
   var undergroundLabTileset: UndergroundLab;
@@ -61,15 +60,6 @@ class Images
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
       tileset = defaultTileset.image;
-
-      // load mouse cursors
-      cursors = [];
-      for (i in 0...5)
-        {
-          var img = new Image();
-          img.src = AssetPath.resolve('img/mouse' + i + '.png');
-          cursors.push(img);
-        }
       }
 
 // load the 3 skin-variant 128px atlases for a gender ([yellow, dark, white])
