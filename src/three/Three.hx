@@ -157,6 +157,7 @@ package three;
   public var info:RendererInfo;
   public var autoClear:Bool;
   public function setPixelRatio(r:Float):Void;
+  public function getPixelRatio():Float;                  // current render scale; passes sized outside the composer need it to match
   public function setSize(w:Float, h:Float):Void;
   public function clearDepth():Void;
   public function setViewport(x:Float, y:Float, w:Float, h:Float):Void;
@@ -264,8 +265,17 @@ typedef RendererInfo = {
   public function new(params:Dynamic);
   public var color:Color; // base color (mutate in place, e.g. lerpColors, for live tinting)
 }
+// diffuse-only lit material: per-pixel Lambert, no GGX specular lobe and no IBL. same map/emissive/
+// shadow feature set as Standard minus roughness/metalness, so it is the drop-in for the fully matte
+// city surfaces (all of which set roughness 1 / metalness 0) — see docs/3d-changes.md
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
+  public var map:Texture;
+  public var emissive:Color;
+  public var emissiveMap:Texture;
+  public var emissiveIntensity:Float;
+  public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
+  public var userData:Dynamic;
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
   public function new(params:Dynamic);

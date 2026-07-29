@@ -501,6 +501,7 @@ class StreetView {
     gtaoPass.blendIntensity = RenderConfig.GTAO.blendIntensity;
     gtaoPass.updateGtaoMaterial(RenderConfig.GTAO);
     gtaoPass.enabled = game.config.vidAO;
+    sizeGtao(); // constructed in CSS px above; put its targets on the backbuffer scale
     composer.addPass(gtaoPass);
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
@@ -900,16 +901,27 @@ class StreetView {
 // OutputPass blit scales it back up, so below 1 this trades sharpness for fill — the dominant cost
 // once the frame is GPU-bound. composer.setPixelRatio resizes rt1/rt2 AND every pass (incl. bloom's
 // mip chain), so the renderer and the composer must be kept in step or the post targets stay stale.
-// NOTE gtaoPass is sized in CSS px by resize() below, so with AO on its targets are already out of
-// step with the composer's — pre-existing, and untouched here
   public function setRenderScale(s:Float):Void
     {
       if (composer == null)
         return;
       renderer.setPixelRatio(s);
       composer.setPixelRatio(s);
+      sizeGtao();
       trace('[render-scale] ' + s + 'x -> ' + Math.round(Browser.window.innerWidth * s)
         + 'x' + Math.round(Browser.window.innerHeight * s));
+    }
+
+// size the AO pass to the BACKBUFFER, not the window. gtaoPass owns its depth/normal prepass and
+// denoise targets, and composer.setPixelRatio does not reach them — so it is the one pass that has to
+// be re-sized by hand on every resize AND every render-scale change, or AO samples a depth buffer at
+// a different resolution than the frame it shades
+  function sizeGtao():Void
+    {
+      if (gtaoPass == null)
+        return;
+      var s = renderer.getPixelRatio();
+      gtaoPass.setSize(Browser.window.innerWidth * s, Browser.window.innerHeight * s);
     }
 
 // forward a resize to the renderer/camera
@@ -919,7 +931,7 @@ class StreetView {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (composer != null) composer.setSize(w, h);
-    if (gtaoPass != null) gtaoPass.setSize(w, h); // its own AO/prepass targets aren't sized by the composer
+    sizeGtao();
   }
 
 // rAF loop: follow the player (or fly), mirror actors, render the bloom frame

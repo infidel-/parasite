@@ -2266,3 +2266,62 @@ rather than the light count, so it **compounds** with the pool cut instead of co
 is the next lever, and it needs a visual sign-off rather than a measurement to decide.
 
 Not worth pursuing on this evidence: shadow budget (12%), light cones (0%), emissive (0%).
+
+## MeshStandardMaterial -> MeshLambertMaterial on the city surfaces — LANDED, -42% GPU
+
+The lever the entry above pointed at. Every static city surface sets `roughness: 1, metalness: 0` — a
+*fully matte* material — and then pays `BRDF_GGX` (D_GGX + V_SmithCorrelated + F_Schlick) **per light,
+per fragment** for a 4%-F0 specular lobe so broad it is nearly flat, plus Standard's indirect
+multiscattering energy-conservation term. `MeshLambertMaterial` is, in three r181, **per-pixel** (it
+stopped being Gouraud years ago) and diffuse-only: same map / emissive / alphaTest / shadow feature set,
+`BRDF_Lambert` and nothing else.
+
+Swapped on all static city geometry: `Ground`, `Lawns`, `Windows`, `Buildings` (walls, grime, bands,
+storefronts, doors, roofs), `Entrances`, `WallDecals`, `Poly`, `Parapets`, `FlatRoofs`, `Gables`,
+`RoofDetails`. `roughness`/`metalness` were dropped at every site — they are three's own Standard
+defaults, so their removal is a no-op if this is ever reverted.
+
+**Deliberately NOT swapped**, because these use specular as art:
+- `decals/DecalBatch` — groups its atlas materials *by* `rough`/`metal`; that key is what separates
+  wet blood from matte debris.
+- `particles/Sprites`, `GasCloud3D`, `SlimeTrail` — per-sprite `rough`/`metal` come from the art data.
+- the downtown `street-lamp2` glb — genuinely PBR, with a normal map.
+
+### Measured
+
+Pinned free-cam (`lookFrom(2, 41.6, -79.2, 2, 6.82, -98.96)`, the follow-cam pose reproduced exactly),
+lamp pool 12, render scale 200% on a 1042x648 window = a **2084x1296 / 2.70 Mpix** backbuffer. That is
+deliberately close to the user's actual complaint case (1080p at 100% = 2.07 Mpix), just heavier.
+Medians of 7-11 samples, A/B/**A** across three rebuilds to rule out iGPU clock drift:
+
+| build | GPU median | fps at this load |
+|---|---|---|
+| Standard | **26.73ms** | 30 |
+| Lambert | **15.47ms** | 60 |
+| Lambert (confirm leg) | **15.68ms** | 60 |
+
+**-42% GPU.** Draw calls, triangles and geometry count are unchanged (`calls=158/159`, `tris=87.3k`) —
+this is purely fragment-shader work, exactly as the fill-bound diagnosis predicted. It is by a wide
+margin the largest single win in this ledger, and it **compounds** with render scale and lamp count
+instead of competing with them: the same frame that could not hold 60fps now does, with the pool at
+its full art value of 12.
+
+### Visual
+
+Side-by-side at the identical pinned pose: no difference I can find. Lamp pool falloff, wall tones,
+road, window emissive glow and shadows all read the same. What is gone is a broad 4% dielectric sheen
+at roughness 1 — the thing the art style rules ban outright ("NO glossy/specular reflections"). Also
+worth noting the frame gets a *hair* brighter, since Standard's indirect multiscattering term subtracts
+a little diffuse energy that Lambert does not.
+
+`prog` 72 -> 75 (the scene now carries both Lambert programs for the city and the surviving Standard
+ones for sprites/decals/glb).
+
+### While in here: the AO pass was sized in CSS pixels
+
+`resize()` called `gtaoPass.setSize(w, h)` with **CSS** px while the composer sized rt1/rt2 and every
+other pass at `w * pixelRatio` — the AO pass owns its own depth/normal prepass and denoise targets and
+`composer.setPixelRatio` does not reach them. Harmless while the ratio was a fixed 1.25; the moment
+`vidRenderScale` shipped, a user at 50% or 200% got AO sampling a depth buffer at up to 4x the wrong
+resolution. Now a `sizeGtao()` helper sizes it at `innerWidth * renderer.getPixelRatio()`, called from
+`resize()`, from `setRenderScale()`, and once at construction. Only ever visible with AO on.

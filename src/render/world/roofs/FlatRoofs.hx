@@ -90,7 +90,7 @@ class FlatRoofs {
     t.needsUpdate = true;
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(Geom.imax(1, Math.round(pw / RenderConfig.WALL_TILE)), Geom.imax(1, Math.round(ph / RenderConfig.WALL_TILE)));
-    var mat = tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+    var mat = tag(new MeshLambertMaterial({ map: t }),
       'penthouse', 'mechanical penthouse', WorldCtx.style.penthouseWall);
     var mesh = new Mesh(geo, mat);
     mesh.position.set(px, py, pz);

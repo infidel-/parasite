@@ -126,7 +126,7 @@ class Gables {
       geo.setAttribute('uv', new Float32BufferAttribute(u, 2));
       geo.computeVertexNormals();
       var t = tex.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      var m = tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0, side: THREE.DoubleSide }), nm, desc, path);
+      var m = tag(new MeshLambertMaterial({ map: t, side: THREE.DoubleSide }), nm, desc, path);
       // geometry is baked in world coords (mesh stays at origin), so tag the building
       // explicitly — Occlusion's position bucketing can't place an origin-anchored mesh
       var mesh = new Mesh(geo, m);

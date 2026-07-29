@@ -27,8 +27,8 @@ class WallDecals {
     // wall that rolls it, and a material per image is also what gives each decal its own Poly class:
     // under a single shared 'walldecal' class the editor's wheel shifted every graffiti, poster and
     // crack in the city at once, and Poly.info could hold no texture path for the class at all
-    var mats = new Map<String, MeshStandardMaterial>();
-    function matFor(path:String, tint:Int):MeshStandardMaterial
+    var mats = new Map<String, MeshLambertMaterial>();
+    function matFor(path:String, tint:Int):MeshLambertMaterial
       {
         var m = mats.get(path);
         if (m != null)
@@ -36,7 +36,7 @@ class WallDecals {
         var t = Textures.loadTexture(path, 'wall');
         t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; // one image per decal, never tiled
         var lbl = label(path);
-        m = cast tag(new MeshStandardMaterial({ map: t, color: tint, roughness: 1, metalness: 0,
+        m = cast tag(new MeshLambertMaterial({ map: t, color: tint,
           transparent: true, alphaTest: 0.35, depthWrite: false,
           polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
           'walldecal-$lbl', '$lbl decal', path, RES);

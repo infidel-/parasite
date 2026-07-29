@@ -58,7 +58,7 @@ class Buildings {
     // ONE shared material per grime variant (no per-face texture clone). Horizontal tiling is
     // baked into each quad's UVs instead of texture.repeat.
     var grimeMat = [for (gv in 0...grimeTex.length)
-      tag(new MeshStandardMaterial({ map: grimeTex[gv], roughness: 1, metalness: 0, transparent: true, premultipliedAlpha: true, depthWrite: false,
+      tag(new MeshLambertMaterial({ map: grimeTex[gv], transparent: true, premultipliedAlpha: true, depthWrite: false,
         opacity: RenderConfig.GRIME_OPACITY,
         polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
         'grime-${gv + 1}', 'street grime', TEXTURES.grime[gv])];
@@ -74,12 +74,10 @@ class Buildings {
     var penthouseTex = st.penthouseWall != null ? Textures.loadTexture(st.penthouseWall, 'wall') : null;
     // glass-tower opaque bands. UV repeat is baked into the merged quad verts, so ONE shared
     // material per facade covers the whole city (same trick as the grime band)
-    function bandMats(paths:Array<String>, cls:String, label:String):Array<MeshStandardMaterial> {
+    function bandMats(paths:Array<String>, cls:String, label:String):Array<MeshLambertMaterial> {
       if (paths == null) return null;
-      return [for (i in 0...paths.length) paths[i] == null ? null : tag(new MeshStandardMaterial({
+      return [for (i in 0...paths.length) paths[i] == null ? null : tag(new MeshLambertMaterial({
         map: Textures.loadTexture(paths[i], 'wall'),
-        roughness: 1,
-        metalness: 0,
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,
@@ -134,14 +132,14 @@ class Buildings {
       }
       var masonry = st.isMasonry(b.facade); // brick + stone: wall-continuation parapet (concrete + metal get thin rim)
       var k = st.facadeName(b.facade);
-      function faceMat(dir:Int, faceLen:Float):MeshStandardMaterial {
+      function faceMat(dir:Int, faceLen:Float):MeshLambertMaterial {
         var isWorn = Geom.isWornFace(b, dir);
         var base = isWorn ? worn : clean;
         var t = base.clone(); t.needsUpdate = true;
         // cell-lock: repeat = (whole cells on this face) × windows-per-cell → always integer, whole windows
         var rh = cellLock ? Math.round(faceLen / CELL) * wpc : imax(1, Math.round(faceLen / RenderConfig.WALL_TILE));
         t.repeat.set(rh, wallH);
-        var mat = new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 });
+        var mat = new MeshLambertMaterial({ map: t });
         return tag(mat, 'wall-$k' + (isWorn ? '-worn' : ''), '$k wall' + (isWorn ? ' (worn)' : ''),
           isWorn ? wornPath : cleanPath);
       }
@@ -149,15 +147,15 @@ class Buildings {
       // aspect-fitted 16:9 storefront image is overlaid on each street face below.
       // (per-cell nd tiling + per-cell door overlay are dormant for this test)
       var shop = b.shop >= 0;
-      function shopFace(dir:Int, faceLen:Float):MeshStandardMaterial {
+      function shopFace(dir:Int, faceLen:Float):MeshLambertMaterial {
         var t = shopWornTex.clone(); t.needsUpdate = true;
         t.repeat.set(imax(1, Math.round(faceLen / RenderConfig.WALL_TILE)), wallH);
-        return tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+        return tag(new MeshLambertMaterial({ map: t }),
           'shop-worn', 'shop wall (worn)', TEXTURES.shopWorn);
       }
       var px = shop ? shopFace(2, dWorld) : faceMat(2, dWorld), nx = shop ? shopFace(3, dWorld) : faceMat(3, dWorld);
       var pz = shop ? shopFace(0, wWorld) : faceMat(0, wWorld), nz = shop ? shopFace(1, wWorld) : faceMat(1, wWorld);
-      var top = tag(new MeshStandardMaterial({ map: roof, roughness: 1, metalness: 0 }),
+      var top = tag(new MeshLambertMaterial({ map: roof }),
         'roof-$k', '$k roof', st.roofBases[b.facade % st.roofBases.length]);
       // collapse the 6-material box to one draw call per distinct image (walls clean/worn + roof
       // -> ~3, from 6) by baking each face's UV transform; walls stay pixel-identical
@@ -250,7 +248,7 @@ class Buildings {
           if (endStreet && endDirs.indexOf(f.dir) < 0) continue; // gable end available → don't door the long sides
           var doorW = Math.min(f.faceW * 0.55, CELL * 3); // centred, leaves wall margins
           var doorH = Math.min(b.h * 0.7, CELL * 1.8);    // tall roll-up, wall left above
-          var mat = tag(new MeshStandardMaterial({ map: doorTex, roughness: 1, metalness: 0,
+          var mat = tag(new MeshLambertMaterial({ map: doorTex,
             polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
             'door-metal', 'metal door', TEXTURES.doorMetal);
           var mesh = new Mesh(new PlaneGeometry(doorW, doorH), mat);
@@ -398,7 +396,7 @@ class Buildings {
     // one shared band material per facade; horizontal tiling is baked into the merged quad UVs
     // (so no per-face texture clone), matching the old per-face texture.repeat
     var mats = [for (i in 0...texes.length)
-      tag(new MeshStandardMaterial({ map: texes[i], roughness: 1, metalness: 0,
+      tag(new MeshLambertMaterial({ map: texes[i],
         polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }),
         'storefront-' + st.facadeName(i),
         'storefront band', st.storefronts[i])];
