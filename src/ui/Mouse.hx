@@ -6,7 +6,6 @@ import game.Game;
 import ai.AI;
 import js.Browser;
 import js.html.MouseEvent;
-import mods.AssetPath;
 import objects.AreaObject;
 import objects.base.RivalBaseOrganObject;
 
@@ -223,7 +222,10 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         {
-          game.ui.canvas.style.cursor = 'none';
+          // route through setCursorCSS: in the 3D view #streetview covers #canvas, so writing the
+          // hide to #canvas alone left the cursor visible. -1 so re-enabling re-applies the art
+          setCursorCSS('none');
+          cursor = -1;
           game.scene.area.clearPath();
           return;
         }
@@ -532,28 +534,22 @@ class Mouse
       setCursorCSS(cursorCSS(c));
     }
 
-// the CSS cursor value for a cursor id. the 3D street view uses the new themed SVG cursors (the
-// --ui-cursor* vars in app.css) for destination / cannot-go / info / idle — the old mouseN.png set
-// is retiring; attack + ranged have no new art yet, so they keep the PNGs. the 2D view keeps the
-// legacy PNGs (the window-open arrow clears inline so the #canvas --ui-cursor-default rule shows)
+// the CSS cursor value for a cursor id — the themed SVG cursors (the --ui-cursor* vars in app.css),
+// shared by every view (2D area, region, 3D street). mods retheme them by overriding the vars in
+// their mod.css
   function cursorCSS(c: Int): String
     {
-      if (street())
-        {
-          if (c == CURSOR_MOVE)
-            return 'var(--ui-cursor)';
-          if (c == CURSOR_BLOCKED)
-            return 'var(--ui-cursor-disabled)';
-          if (c == CURSOR_INFO)
-            return 'var(--ui-cursor-help)';
-          if (c == CURSOR_ARROW)
-            return 'var(--ui-cursor-default)';
-        }
-      else if (c == CURSOR_ARROW)
-        return '';
-      return 'url(' +
-        AssetPath.resolve('img/mouse' + c + '.png') + ') ' +
-        '16 16, auto';
+      if (c == CURSOR_MOVE)
+        return 'var(--ui-cursor)';
+      if (c == CURSOR_BLOCKED)
+        return 'var(--ui-cursor-disabled)';
+      if (c == CURSOR_ATTACK)
+        return 'var(--ui-cursor-attack)';
+      if (c == CURSOR_ATTACK_RANGED)
+        return 'var(--ui-cursor-attack-ranged)';
+      if (c == CURSOR_INFO)
+        return 'var(--ui-cursor-help)';
+      return 'var(--ui-cursor-default)';
     }
 
 // write the cursor CSS to the active view's canvas: #streetview in the 3D view (it covers #canvas),
