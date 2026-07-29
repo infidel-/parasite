@@ -673,6 +673,31 @@ hr {
 #hud-debug-info .hud-eyebrow {
   margin-bottom: 11px;
 }
+/* collapse toggle: reuses the info panel's button chrome, but draws a text +/- not an svg */
+#hud-debug-info .hud-compact-btn {
+  font-size: 15px;
+  line-height: 1;
+}
+/* collapsed: shrink to just the word and the +. the eyebrow's trailing hairline stretches to fill
+   the row, so it has to go or the panel keeps the full body width */
+#hud-debug-info.hud-collapsed {
+  min-width: 0;
+  padding: 7px 32px 6px 12px;
+}
+#hud-debug-info.hud-collapsed .hud-eyebrow {
+  margin-bottom: 0;
+}
+#hud-debug-info.hud-collapsed .hud-eyebrow::after {
+  display: none;
+}
+/* short panel: centre the toggle on the single row instead of pinning it to the top */
+#hud-debug-info.hud-collapsed .hud-compact-btn {
+  top: 50%;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+}
 
 /* ============================================================
    HUD REDESIGN ("infected instrument panel")

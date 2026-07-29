@@ -25,6 +25,8 @@ class HUD
   public var aiTooltip: AITooltip;
   // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
+  var debugBody: DivElement;  // the rewritten-every-update readout (the panel header is persistent)
+  var debugBtn: DivElement;   // +/- collapse toggle, top-right of the panel
   public var targeting: Targeting;
   public var command: Command;
   // per-block sub-classes (each owns its DOM, appended to container)
@@ -111,7 +113,28 @@ class HUD
           debugInfo = document.createDivElement();
           debugInfo.className = 'hud-panel hud-text';
           debugInfo.id = 'hud-debug-info';
+          // header + toggle are persistent: updateDebugInfo() rewrites the BODY wholesale every
+          // turn, so anything carrying a listener has to live outside it
+          var eb = document.createDivElement();
+          eb.className = 'hud-eyebrow';
+          eb.textContent = 'Debug';
+          debugInfo.appendChild(eb);
+          debugBtn = document.createDivElement();
+          debugBtn.className = 'hud-compact-btn'; // same chrome as the info panel's toggle
+          debugBtn.onclick = function (e)
+            {
+              var v = !game.config.hudDebugCollapsed;
+              game.config.set('hudDebugCollapsed', v ? '1' : '0', true);
+              game.scene.sounds.play('click-hud');
+              applyDebugCollapsed();
+              if (!v) // expanding: the body went stale while it was hidden
+                updateDebugInfo();
+            }
+          debugInfo.appendChild(debugBtn);
+          debugBody = document.createDivElement();
+          debugInfo.appendChild(debugBody);
           container.appendChild(debugInfo);
+          applyDebugCollapsed();
         }
 
       navbar = new NavbarHud(game, this);
@@ -408,11 +431,23 @@ public function onMouseLeave()
   public function keyAction(key: String): Bool
     return actions.keyAction(key);
 
+// apply the debug panel's collapsed state: fold the body away and flip the +/- glyph
+  function applyDebugCollapsed()
+    {
+      var v = game.config.hudDebugCollapsed;
+      debugBody.style.display = (v ? 'none' : '');
+      debugBtn.textContent = (v ? '+' : '−');
+      debugBtn.title = (v ? 'Expand debug' : 'Collapse debug');
+      debugBtn.classList.toggle('active', v);
+      debugInfo.classList.toggle('hud-collapsed', v);
+    }
+
 // debug info
   function updateDebugInfo()
     {
+      if (game.config.hudDebugCollapsed) // folded away: skip the whole string build
+        return;
       var buf = new StringBuf();
-      buf.add('<div class="hud-eyebrow">Debug</div>');
       buf.add(
         'Tile resolution: ' +
         Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
@@ -433,7 +468,7 @@ public function onMouseLeave()
         buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
-      debugInfo.innerHTML = buf.toString();
+      debugBody.innerHTML = buf.toString();
     }
 
 // reset hud state to default
