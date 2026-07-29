@@ -340,7 +340,7 @@ class Ground {
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
       var map = Textures.loadTexture(types[i].tex, types[i].kind, 1);
-      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshLambertMaterial({ map: map, side: THREE.DoubleSide })));
     }
 
     if (borderBuf.idx.length > 0) {
@@ -350,7 +350,7 @@ class Ground {
       geo.setIndex(borderBuf.idx);
       geo.computeVertexNormals();
       var map = Textures.loadTexture(st.walkwayBorder, 'wall', 1);
-      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshLambertMaterial({ map: map, side: THREE.DoubleSide })));
     }
 
     if (markBuf.idx.length > 0) {
@@ -362,7 +362,7 @@ class Ground {
       var map = Textures.loadTexture(st.roadPaint, 'asphalt', 1);
       // opaque + non-emissive: lit like the road, so it darkens at night / brightens by day with
       // the lighting. the texture's keyed scuff pixels render as opaque grey wear (no cutout jaggies)
-      addRecv(new Mesh(geo, new MeshStandardMaterial({ map: map, roughness: 1, metalness: 0, side: THREE.DoubleSide })));
+      addRecv(new Mesh(geo, new MeshLambertMaterial({ map: map, side: THREE.DoubleSide })));
     }
   }
 }

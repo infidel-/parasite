@@ -25,7 +25,7 @@ class Parapets {
   // while the cap retracts -E to butt against the perpendicular cap's outer edge
   // instead of overrunning the neighbour wall and z-fighting that cap's overhang
   public static function parapetRing(scene:Scene, b:Building, cx:Float, cz:Float, halfX:Float, halfZ:Float, yMid:Float, rimH:Float,
-      matsFor:(Float, Float, Float, Role) -> Array<MeshStandardMaterial>, ?T:Float, ?covered:Array<Array<{a:Float, b:Float}>>, ?extend:Float):Void {
+      matsFor:(Float, Float, Float, Role) -> Array<MeshLambertMaterial>, ?T:Float, ?covered:Array<Array<{a:Float, b:Float}>>, ?extend:Float):Void {
     if (T == null) T = RenderConfig.PARAPET_T;
     var EX = extend == null ? RenderConfig.PARAPET_T : extend;
     var ix = halfX - T / 2, iz = halfZ - T / 2;
@@ -101,29 +101,29 @@ class Parapets {
   // coping face materials: world-tiled side lips (joints on a global grid) + a
   // matching world-tiled flat cap, so joints line up corner↔corner and top↔side
   public static function copingMats(tex:Texture, tileW:Float, vOffset:Float = 0, prefix:String = 'coping', label:String = 'parapet coping')
-      :(Float, Float, Float, Role) -> Array<MeshStandardMaterial> {
-    return function(w:Float, rimH:Float, d:Float, role:Role):Array<MeshStandardMaterial> {
+      :(Float, Float, Float, Role) -> Array<MeshLambertMaterial> {
+    return function(w:Float, rimH:Float, d:Float, role:Role):Array<MeshLambertMaterial> {
       var slice = (w < d ? w : d) / tileW;
       var VTILE = 1.5;
-      inline function mat(ru:Float, rv:Float, rot:Float = 0, offX:Float = 0, offY:Float = 0, cy:Float = 0.5):MeshStandardMaterial {
+      inline function mat(ru:Float, rv:Float, rot:Float = 0, offX:Float = 0, offY:Float = 0, cy:Float = 0.5):MeshLambertMaterial {
         var t = tex.clone();
         t.needsUpdate = true;
         t.center.set(0.5, cy);
         t.repeat.set(ru, rv);
         t.rotation = rot;
         t.offset.set(offX, offY);
-        return new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 });
+        return new MeshLambertMaterial({ map: t });
       }
       var VR = rimH / VTILE;
       var CT = RenderConfig.TEXTURES.coping;
-      inline function sideMat(worldStart:Float, len:Float, uDir:Int, cls:String, name:String):MeshStandardMaterial {
+      inline function sideMat(worldStart:Float, len:Float, uDir:Int, cls:String, name:String):MeshLambertMaterial {
         var t = tex.clone();
         t.needsUpdate = true;
         t.wrapS = t.wrapT = THREE.RepeatWrapping;
         t.center.set(0, 1);
         if (uDir > 0) { t.repeat.set(len / tileW, VR); t.offset.set(worldStart / tileW, vOffset); }
         else { t.repeat.set(-len / tileW, VR); t.offset.set((worldStart + len) / tileW, vOffset); }
-        return tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }), cls, name, CT);
+        return tag(new MeshLambertMaterial({ map: t }), cls, name, CT);
       }
       if (role != null && role.post) {
         var x0 = role.cx - w / 2, z0 = role.cz - d / 2;
@@ -149,7 +149,7 @@ class Parapets {
         flatT.center.set(0, 0); flatT.rotation = Math.PI / 2;
         flatT.repeat.set(-d / tileW, slice); flatT.offset.set((z0 + d) / tileW, 0.5 + slice / 2);
       }
-      var flat = tag(new MeshStandardMaterial({ map: flatT, roughness: 1, metalness: 0 }), '$prefix-top', '$label top', CT);
+      var flat = tag(new MeshLambertMaterial({ map: flatT }), '$prefix-top', '$label top', CT);
       if (isX) {
         var x0 = role.cx - w / 2;
         var io0 = role.outDir == 0 ? 'out' : 'in', io1 = role.outDir == 1 ? 'out' : 'in';
@@ -168,11 +168,11 @@ class Parapets {
   // brick parapet: the wall texture continuing up at a uniform world scale. each
   // face picks worn vs clean to match the wall under it, so a corner post can be
   // worn on its alley side and clean on its street side
-  static function brickMats(b:Building, clean:Texture, worn:Texture):(Float, Float, Float, Role) -> Array<MeshStandardMaterial> {
+  static function brickMats(b:Building, clean:Texture, worn:Texture):(Float, Float, Float, Role) -> Array<MeshLambertMaterial> {
     var c = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
-    return function(w:Float, h:Float, d:Float, role:Role):Array<MeshStandardMaterial> {
+    return function(w:Float, h:Float, d:Float, role:Role):Array<MeshLambertMaterial> {
       inline function rep(m:Float):Float { var r = m / RenderConfig.WALL_TILE; return r >= 1 ? Math.round(r) : r; }
-      inline function faceMat(dir:Int, ru:Float, rv:Float):MeshStandardMaterial {
+      inline function faceMat(dir:Int, ru:Float, rv:Float):MeshLambertMaterial {
         var wn = dir >= 0 && Geom.isWornFace(b, dir);
         var t = (wn ? worn : clean).clone();
         t.needsUpdate = true;
@@ -182,7 +182,7 @@ class Parapets {
         var st = WorldCtx.style;
         var nm = st.facadeName(b.facade);
         var paths = wn ? st.wornWalls : st.walls;
-        return tag(new MeshStandardMaterial({ map: t, roughness: 1, metalness: 0 }),
+        return tag(new MeshLambertMaterial({ map: t }),
           wn ? 'parapet-$nm-worn' : 'parapet-$nm', wn ? '$nm parapet (worn)' : '$nm parapet',
           paths[b.facade % paths.length]);
       }

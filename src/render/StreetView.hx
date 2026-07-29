@@ -31,6 +31,7 @@ class StreetView {
   var shockwave:Shockwave;                                // screen-space ripple pass + pulse driver (silent scream)
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
+  var lightList:Array<Object3D>; // the array toggleLighting/setLightsOff close over — kept in sync by setLampLights
   var moon:DirectionalLight; // shadow-casting moon, repositioned each frame to follow the player
   var perf:StreetPerf; // perf instrumentation + debug keys 7/8/9 (see render.StreetPerf)
   // static-city spatial chunks: the world builder adds ~5.4k flat children to the scene, and three
@@ -40,8 +41,13 @@ class StreetView {
   var chunkFrustum = new Frustum();
   var chunkMat = new Matrix4();
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
+  var coneGroup:Object3D; // just the light cones (debug Shift+5), so cone overdraw prices apart from the spotlights
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
   var emissiveOff = false; // debug 6: kill all emissive (isolate lit/albedo from self-glow)
+  // debug V: live render scale, cycled through RENDER_SCALES. the frame is fill-bound on weak GPUs, so
+  // pixel count is a first-class A/B knob — one that no other debug key can reach
+  static final RENDER_SCALES = [ 1.25, 1.0, 0.75, 0.5 ];
+  var scaleIdx = 0;
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
   var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
@@ -84,10 +90,20 @@ class StreetView {
     debug = new Debug(game, canvas, function() return camera,
       function() return scene, function() return city, function() return shownSeed);
     // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting,
-    // 2/3/4 toggle the ambient / hemisphere / moon fill lights individually (isolate the point lights)
+    // 2/3/4 toggle the ambient / hemisphere / moon fill lights individually (isolate the point lights),
+    // V cycles the render scale, and Shift+1 / Shift+5 narrow 1 and 5 to bloom / cones alone
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
       if (!running) return;
       if (e.code == 'Backquote') setDebug(!debug.on);
+      // Shift+1: bloom ALONE (plain 1 flips lighting and bloom together, so bloom's own cost was only
+      // ever reachable by subtraction). the two share bloomPass.enabled — press one at a time
+      else if (debug.on && e.shiftKey && e.code == 'Digit1' && bloomPass != null)
+        bloomPass.enabled = !bloomPass.enabled;
+      // Shift+5: the light cones ALONE. plain 5 hides the spotlight pool AND the cones (pointLights
+      // bundles both), which cannot separate the 12-light fragment loop from the additive overdraw.
+      // independent flips: 5 also touches the cone group, so return to baseline between measurements
+      else if (debug.on && e.shiftKey && e.code == 'Digit5' && coneGroup != null)
+        coneGroup.visible = !coneGroup.visible;
       else if (debug.on && e.code == 'Digit1' && toggleLighting != null)
         bloomPass.enabled = !toggleLighting();
       else if (debug.on && fill != null && (e.code == 'Digit2' || e.code == 'Digit3' || e.code == 'Digit4')) {
@@ -125,6 +141,13 @@ class StreetView {
             }
           }
         });
+      }
+      // V: cycle the render scale. the frame goes fill-bound long before it goes call-bound on a weak
+      // GPU, so pixel count is the one A/B knob no other debug key reaches (and the only way to price
+      // a render-scale setting without a rebuild)
+      else if (debug.on && e.code == 'KeyV' && composer != null) {
+        scaleIdx = (scaleIdx + 1) % RENDER_SCALES.length;
+        setRenderScale(RENDER_SCALES[scaleIdx]);
       }
       // 7/8/9: perf A/B + readouts (shadow-sampling toggle, peak reset, scene dump) — see render.StreetPerf
       else if (debug.on && perf != null)
@@ -239,7 +262,7 @@ class StreetView {
 // lazily create the persistent renderer/camera (one WebGL context, reused)
   function ensureCore():Void {
     if (core != null) return;
-    core = SceneSetup.createCore(canvas);
+    core = SceneSetup.createCore(canvas, game.config.vidRenderScale / 100);
     renderer = core.renderer;
     camera = core.camera;
     rig = new CameraRig(game, camera);
@@ -274,7 +297,9 @@ class StreetView {
       // real builders on a throwaway city -> exact programs, complete by construction, zero enumeration
       var seed = 1;
       var city = CityGen.generate(seed);
-      var bundle = SceneSetup.buildScene(renderer, city); // base scene + fixed light pools + lamp cones
+      // same lamp pool as the real scene: NUM_SPOT_LIGHTS is part of the program key, so warming at a
+      // different pool size would compile programs the game then never uses
+      var bundle = SceneSetup.buildScene(renderer, city, game.config.vidLampLights); // base scene + fixed light pools + lamp cones
       var s = bundle.scene;
       World.build(s, city, seed, null, false);             // all lit world geometry (instanced MeshStandard); audit off — throwaway city
       // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
@@ -415,12 +440,14 @@ class StreetView {
     shownSeed = seed;
 
     var areaStyle = render.world.AreaStyle.forArea(game.area.typeID);
-    var bundle = SceneSetup.buildScene(renderer, city, areaStyle);
+    var bundle = SceneSetup.buildScene(renderer, city, game.config.vidLampLights, areaStyle);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
+    lightList = bundle.lights;
     moon = bundle.moon;
     pointLights = bundle.pointLights;
+    coneGroup = bundle.coneGroup;
     lampLights = bundle.lampLights;
     lampPosts = bundle.lampPosts;
     lampProp = bundle.lampProp;
@@ -474,6 +501,7 @@ class StreetView {
     gtaoPass.blendIntensity = RenderConfig.GTAO.blendIntensity;
     gtaoPass.updateGtaoMaterial(RenderConfig.GTAO);
     gtaoPass.enabled = game.config.vidAO;
+    sizeGtao(); // constructed in CSS px above; put its targets on the backbuffer scale
     composer.addPass(gtaoPass);
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
@@ -485,6 +513,7 @@ class StreetView {
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, areaStyle.bloomThreshold); // per-area: WHEN the glow starts
+    bloomPass.enabled = game.config.vidBloom; // re-assert per area — a fresh pass defaults to enabled
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
@@ -840,6 +869,77 @@ class StreetView {
         gtaoPass.enabled = on;
     }
 
+// toggle the bloom pass live (config vidBloom). skipped whole by the composer when off, and it is the
+// LARGEST single removable pass on a fill-bound GPU — measured 3.7ms of a 14.7ms frame at lamp pool 12,
+// and 3.4ms of a 9.0ms frame at pool 0, i.e. it matters most to whoever already gave up their lamps
+// (docs/3d-changes.md). the pass is always constructed and only gated here: never skip building it, or
+// the plain `1` debug key below dereferences a null bloomPass. off is a real visual loss, not just a
+// dimmer one — everything authored to glow (lit windows, tracers, the move-path line, the tactical
+// grid) is HDR-multiplied with toneMapped:false and CLAMPS to flat saturated colour without the halo.
+// NOTE debug keys 1 and Shift+1 write this same flag, so they desync the options switch until the next
+// area build re-asserts the config value
+  public function setBloom(on:Bool):Void
+    {
+      if (bloomPass != null)
+        bloomPass.enabled = on;
+    }
+
+// resize the live lamp-spotlight pool (config vidLampLights). measured at ~0.32ms of GPU per light —
+// three UNROLLS the spot loop into every lit material, so each slot is a real per-fragment cost. that
+// same unrolling is why this cannot be free: NUM_SPOT_LIGHTS is part of the material program key, so
+// swapping the pool recompiles every lit material on the next frame (a visible one-off stall, which is
+// why this is a settings-screen action and never something gameplay does). n = 0 is legal and removes
+// the spot block from the shaders entirely; the posts and cones are instanced and keep drawing
+  public function setLampLights(n:Int):Void
+    {
+      if (lampLights == null ||
+          scene == null)
+        return;
+      // drop the old pool out of the scene, stand up a new one, and re-register it everywhere the old
+      // lights were held: pointLights (debug 5/0, also holds the cone group) and lightList (the array
+      // buildScene's toggleLighting/setLightsOff closures read, so debug 1 keeps hiding lamps)
+      for (l in lampLights.debugList())
+        {
+          pointLights.remove(l);
+          lightList.remove(l);
+        }
+      lampLights.dispose();
+      lampLights = new render.particles.LampLights(scene, n);
+      for (l in lampLights.debugList())
+        {
+          pointLights.unshift(l);
+          lightList.push(l);
+        }
+      trace('[lamp-lights] pool -> ' + n);
+    }
+
+// set the render scale (backbuffer pixels per CSS pixel). the scene renders at w*s and the final
+// OutputPass blit scales it back up, so below 1 this trades sharpness for fill — the dominant cost
+// once the frame is GPU-bound. composer.setPixelRatio resizes rt1/rt2 AND every pass (incl. bloom's
+// mip chain), so the renderer and the composer must be kept in step or the post targets stay stale.
+  public function setRenderScale(s:Float):Void
+    {
+      if (composer == null)
+        return;
+      renderer.setPixelRatio(s);
+      composer.setPixelRatio(s);
+      sizeGtao();
+      trace('[render-scale] ' + s + 'x -> ' + Math.round(Browser.window.innerWidth * s)
+        + 'x' + Math.round(Browser.window.innerHeight * s));
+    }
+
+// size the AO pass to the BACKBUFFER, not the window. gtaoPass owns its depth/normal prepass and
+// denoise targets, and composer.setPixelRatio does not reach them — so it is the one pass that has to
+// be re-sized by hand on every resize AND every render-scale change, or AO samples a depth buffer at
+// a different resolution than the frame it shades
+  function sizeGtao():Void
+    {
+      if (gtaoPass == null)
+        return;
+      var s = renderer.getPixelRatio();
+      gtaoPass.setSize(Browser.window.innerWidth * s, Browser.window.innerHeight * s);
+    }
+
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
     if (renderer == null) return;
@@ -847,7 +947,7 @@ class StreetView {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (composer != null) composer.setSize(w, h);
-    if (gtaoPass != null) gtaoPass.setSize(w, h); // its own AO/prepass targets aren't sized by the composer
+    sizeGtao();
   }
 
 // rAF loop: follow the player (or fly), mirror actors, render the bloom frame

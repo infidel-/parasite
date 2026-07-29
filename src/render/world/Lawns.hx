@@ -265,7 +265,7 @@ class Lawns {
     // blended, not a hard cutout: the grass is a half-transparent overlay so the alley shows through it.
     // alphaTest runs AFTER the alphaMap multiply, which is what turns the mask's smooth ramp into a
     // ragged dissolve along the art's own shapes instead of a visible soft blob
-    var mat = tag(new MeshStandardMaterial({ map: map, alphaMap: maskTex, roughness: 1, metalness: 0,
+    var mat = tag(new MeshLambertMaterial({ map: map, alphaMap: maskTex,
       transparent: true, opacity: ALPHA, alphaTest: ALPHA * 0.5, depthWrite: false,
       side: THREE.DoubleSide }),
       'lawn', 'dead lawn grass', st.lawnTex);

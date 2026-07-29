@@ -133,10 +133,8 @@ class Windows {
       var meshes:Array<InstancedMesh> = [];
       for (l in 0...2) {
         var tex = l == 1 ? lit[v] : dark[v];
-        var mat = new MeshStandardMaterial({
+        var mat = new MeshLambertMaterial({
           map: tex,
-          roughness: 1,
-          metalness: 0,
           alphaTest: 0.5,
         });
         tag(mat, l == 1 ? 'window-lit-${v + 1}' : 'window-${v + 1}',
@@ -287,7 +285,7 @@ class Windows {
         if (mats.length == 0) continue;
         var lit = bk == nVar;
         var tex = lit ? litTex : tints[bk];
-        var mat = new MeshStandardMaterial({ map: tex, roughness: 1, metalness: 0 });
+        var mat = new MeshLambertMaterial({ map: tex });
         tag(mat, lit ? 'glass-lit-${b.facade}' : 'glass-accent-${b.facade}-${bk + 1}', lit ? 'lit glass pane' : 'glass accent ${bk + 1}',
           lit ? st.glassAccentLit[b.facade] : st.glassAccents[b.facade][bk]);
         if (lit) {

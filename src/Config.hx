@@ -26,7 +26,10 @@ class Config
   public var aiArtEnabled: Bool;
   public var vidShowFps: Bool;
   public var vidAntialias: Int;
+  public var vidRenderScale: Int; // backbuffer pixels per CSS pixel, in percent (see StreetView.setRenderScale)
+  public var vidLampLights: Int;  // live lamp spotlights (see StreetView.setLampLights); 0 = none
   public var vidAO: Bool;
+  public var vidBloom: Bool;      // window/lamp glow post pass (see StreetView.setBloom); off is a pure perf trade
 
   public var font: String;
   public var fontSize: Int;
@@ -70,7 +73,16 @@ class Config
       vidShowFps = false;
       vidFpsCap = 60;
       vidAntialias = 4;
+      // 100% = one backbuffer pixel per CSS pixel. was min(devicePixelRatio, 1.25), i.e. 1.56x the
+      // pixels on any 125%-scaled display, and measured at ~80% of the street-view GPU frame
+      vidRenderScale = 100;
+      // seeded from the art value so RenderConfig stays the single source of truth for the default
+      // look; lowering it is a perf trade that visibly shortens how far lamp light reaches
+      vidLampLights = render.RenderConfig.LAMP_LIGHT.pool;
       vidAO = false;
+      // on: bloom is what the night look is authored around (lit windows, tracers, the move-path
+      // line). the largest single removable pass, so it is offered — but never off by default
+      vidBloom = true;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -104,7 +116,10 @@ class Config
       map['vidShowFps'] = '0';
       map['vidFpsCap'] = '60';
       map['vidAntialias'] = '4';
+      map['vidRenderScale'] = '100';
+      map['vidLampLights'] = '' + vidLampLights;
       map['vidAO'] = '0';
+      map['vidBloom'] = '1';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -206,8 +221,30 @@ class Config
               vidAntialias != 8)
             vidAntialias = 4;
         }
+      // same trust boundary as the MSAA count above: clamp to the offered range rather than trusting
+      // a hand-edited number, since this one sizes every render target
+      else if (key == 'vidRenderScale')
+        {
+          vidRenderScale = Std.parseInt(val);
+          if (vidRenderScale == null ||
+              vidRenderScale < 50 ||
+              vidRenderScale > 200)
+            vidRenderScale = 100;
+        }
+      // 0 is meaningful here (no lamp spotlights at all); the upper bound only stops a hand-edited
+      // number from unrolling an absurd spot loop into every material
+      else if (key == 'vidLampLights')
+        {
+          vidLampLights = Std.parseInt(val);
+          if (vidLampLights == null ||
+              vidLampLights < 0 ||
+              vidLampLights > 16)
+            vidLampLights = render.RenderConfig.LAMP_LIGHT.pool;
+        }
       else if (key == 'vidAO')
         vidAO = (val == '1');
+      else if (key == 'vidBloom')
+        vidBloom = (val == '1');
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')

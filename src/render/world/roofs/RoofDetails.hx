@@ -22,10 +22,8 @@ class RoofDetails {
     var sprites = [for (t in DETAIL_TYPES) Textures.loadKeyedTexture(t.tex, t.crop, RenderConfig.DETAIL_BOX_COLOR)];
     // one material per detail type, shared by every building: only `map` differs between types, so
     // allocating per building left ~750 identical materials live citywide where 6 do the same job
-    var mats = [for (t in 0...DETAIL_TYPES.length) new MeshStandardMaterial({
+    var mats = [for (t in 0...DETAIL_TYPES.length) new MeshLambertMaterial({
       map: sprites[t],
-      roughness: 1,
-      metalness: 0,
       transparent: false,
       alphaTest: 0.5,
       side: THREE.DoubleSide,
@@ -37,10 +35,8 @@ class RoofDetails {
     var scl = new Vector3();
     var decalGeo = new PlaneGeometry(1, 1);
     // one shared helipad material for the whole city (null outside an area style that has pads)
-    var padMat = WorldCtx.style.helipadTex == null ? null : tag(new MeshStandardMaterial({
+    var padMat = WorldCtx.style.helipadTex == null ? null : tag(new MeshLambertMaterial({
       map: Textures.loadTexture(WorldCtx.style.helipadTex, 'facade'),
-      roughness: 1,
-      metalness: 0,
       side: THREE.DoubleSide,
     }), 'roof-helipad', 'rooftop helipad', WorldCtx.style.helipadTex);
 

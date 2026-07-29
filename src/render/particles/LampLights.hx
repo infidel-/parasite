@@ -12,6 +12,11 @@ import render.RenderConfig;
 class LampLights {
   var lights:Array<SpotLight> = [];
   var targets:Array<Group> = [];
+  var owner:Object3D;                     // the group the pool was added to, so dispose() can take it back out
+  // how many of THIS pool's slots cast a shadow map. derived, never read from config directly: every
+  // caster loop below indexes the per-slot arrays, so a caster count above the pool size walks off the
+  // end of `lights` (and a pool of 0 would crash outright). min() makes any pool size legal by itself
+  var casters:Int;
   var owners:Array<LampPost> = [];        // the lamp each slot currently serves (null = free)
   var prevOwners:Array<LampPost> = [];    // last frame's owner per slot — a change means the caster's shadow map must re-render
   var shadowDirty:Array<Bool> = [];       // caster slots whose owner changed and still owe a shadow re-render
@@ -52,13 +57,17 @@ class LampLights {
       return f;
     }
 
-  public function new(group:Object3D)
+// build a pool of `pool` live spotlights. pool is the config value (vidLampLights), NOT
+// RenderConfig.LAMP_LIGHT.pool — that is only the default the config is seeded from
+  public function new(group:Object3D, pool:Int)
     {
       var L = RenderConfig.LAMP_LIGHT;
+      owner = group;
+      casters = pool < L.shadowCasters ? pool : L.shadowCasters;
       bulbY = CityConfig.CELL * L.yMul;
       // NOTE: never toggle .visible — an invisible spotlight drops out of NUM_SPOT_LIGHTS and forces
       // the very recompile this pool exists to avoid. idle == visible + intensity 0
-      for (i in 0...L.pool)
+      for (i in 0...pool)
         {
           var t = new Group();
           group.add(t);
@@ -68,7 +77,7 @@ class LampLights {
           // life. never toggle castShadow per frame — it is part of the material program key
           // (NUM_SPOT_LIGHT_SHADOWS), so flipping it live forces the recompile this fixed pool avoids.
           // the nearest lit lamps tend to grab these low-index slots (update() fills nearest-first)
-          if (i < L.shadowCasters)
+          if (i < casters)
             {
               l.castShadow = true;
               // static shadow map: the map re-renders only when this slot's owner lamp changes (see
@@ -95,6 +104,21 @@ class LampLights {
 // the lamp spotlights, as plain Object3Ds, for the debug on/off toggles
   public function debugList():Array<Object3D>
     return [for (l in lights) (l : Object3D)];
+
+// take every light + target back out of the scene, so a differently-sized pool can replace this one
+// (config vidLampLights). removing SpotLights changes NUM_SPOT_LIGHTS, which three folds into the
+// material program key — the lit materials recompile on the next frame by themselves
+  public function dispose():Void
+    {
+      for (l in lights)
+        owner.remove(l);
+      for (t in targets)
+        owner.remove(t);
+      lights = [];
+      targets = [];
+      owners = [];
+      activeList = [];
+    }
 
 // the lamps lit this frame — their bulb x/z feed the fake cast-shadow pass
   public inline function active():Array<LampPost>
@@ -179,7 +203,7 @@ class LampLights {
           untyped lights[i].intensity = intens[i] * fl;
           // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
           // so the depth map is otherwise valid); the re-render is dispatched at most one-per-frame below
-          if (i < L.shadowCasters && owners[i] != prevOwners[i])
+          if (i < casters && owners[i] != prevOwners[i])
             shadowDirty[i] = true;
           if (o != null)
             {
@@ -193,29 +217,28 @@ class LampLights {
       // and running all their whole-scene shadow-cull traversals in one frame is the submit spike. spread
       // them round-robin — the <=few-frame lag is hidden by the shadow.intensity cross-fade below
       lastShadowRenders = 0;
-      for (n in 0...L.shadowCasters)
+      for (n in 0...casters)
         {
-          var idx = (shadowCursor + n) % L.shadowCasters;
+          var idx = (shadowCursor + n) % casters;
           if (shadowDirty[idx])
             {
               untyped lights[idx].shadow.needsUpdate = true;
               shadowDirty[idx] = false;
-              shadowCursor = (idx + 1) % L.shadowCasters;
+              shadowCursor = (idx + 1) % casters;
               lastShadowRenders = 1;
               break;
             }
         }
       // publish the remaining backlog for the perf trace (0 normally; jumps on a multi-slot reshuffle)
       lastShadowBacklog = 0;
-      for (i in 0...L.shadowCasters)
+      for (i in 0...casters)
         if (shadowDirty[i])
           lastShadowBacklog++;
       // fade the shadow (not the light) near the casting-set boundary: three's shadow.intensity scales
       // shadow darkness 0..1 without touching brightness. edge = distance of the nearest lamp that did
-      // NOT win a casting slot (owners[shadowCasters]); ramp each caster's shadow to 0 within fadeBand
+      // NOT win a casting slot (owners[casters]); ramp each caster's shadow to 0 within fadeBand
       // cells of that edge, so a lamp swapping across the boundary hands its shadow off instead of
       // popping. no boundary lamp (fewer lit than casters+1) -> full-strength shadows, nothing to fade
-      var casters = L.shadowCasters;
       var edge = (casters < lights.length && owners[casters] != null) ? Math.sqrt(d2(owners[casters])) : 1e9;
       for (i in 0...casters)
         {

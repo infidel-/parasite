@@ -63,7 +63,7 @@ class Entrances {
       var tx = worn ? doorWornTex[di] : doorTex[di];
       var k = st.facadeName(di);
       // s = SQUARE quad side (square texture → no stretch); passed in (full face for front/composite, open-run-capped for side)
-      var mat = tag(new MeshStandardMaterial({ map: tx, roughness: 1, metalness: 0,
+      var mat = tag(new MeshLambertMaterial({ map: tx,
         transparent: false, alphaTest: 0.5, // hand-painted alpha = cutout: discard the transparent wall surround (wall behind shows). matches windows
         // depth-bias BELOW the grime (-1) so the door wins the depth test flush against the wall — no
         // physical gap needed. grime is transparent+depthWrite:false, so a nearer door bias keeps grime off it.
@@ -95,7 +95,7 @@ class Entrances {
       var ct = coverTex[di].clone();
       ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
       ct.needsUpdate = true;
-      var cmat = tag(new MeshStandardMaterial({ map: ct, roughness: 1, metalness: 0, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', st.doorCovers[di]);
+      var cmat = tag(new MeshLambertMaterial({ map: ct, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', st.doorCovers[di]);
       // world pos of the local origin (door-top-center on the wall), shifted `off` along the face,
       // `outN` along the outward normal. rotation.y = f.rotY makes local +z = outward for every dir.
       inline function setPos(cover:Mesh, y:Float, outN:Float):Void {

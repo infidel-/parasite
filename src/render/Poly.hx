@@ -114,7 +114,7 @@ class Poly {
           base.wrapS = untyped THREE.RepeatWrapping;
           base.wrapT = untyped THREE.RepeatWrapping;
           base.needsUpdate = true;
-          out.push(tag(new MeshStandardMaterial({ map: base, roughness: 1, metalness: 0 }),
+          out.push(tag(new MeshLambertMaterial({ map: base }),
             cls, name, texPath));
         }
       // single image: drop the groups so the whole box draws in one call
