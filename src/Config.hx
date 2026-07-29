@@ -18,6 +18,7 @@ class Config
   public var skipTutorial: Bool;
   public var shiftLongActions: Bool;
   public var compactHud: Bool;
+  public var hudDebugCollapsed: Bool;
   // NOTE: new spoon vars will require fixing isSpoonMode() check!
   public var spoonEvolutionBasic: Bool;
   public var spoonHabitats: Bool;
@@ -62,6 +63,7 @@ class Config
       skipTutorial = false;
       shiftLongActions = true;
       compactHud = false;
+      hudDebugCollapsed = false;
       spoonEvolutionBasic = false;
       spoonHabitats = false;
       spoonHabitatAmbush = false;
@@ -94,6 +96,7 @@ class Config
       map['laptopKeyboard'] = '0';
       map['shiftLongActions'] = '1';
       map['compactHud'] = '0';
+      map['hudDebugCollapsed'] = '0';
       map['fullscreen'] = '0';
       map['skipTutorial'] = '0';
       map['spoonEvolutionBasic'] = '0';
@@ -214,6 +217,8 @@ class Config
         shiftLongActions = (val == '1');
       else if (key == 'compactHud')
         compactHud = (val == '1');
+      else if (key == 'hudDebugCollapsed')
+        hudDebugCollapsed = (val == '1');
       else if (key == 'fullscreen')
         {
           fullscreen = (val == '1');
