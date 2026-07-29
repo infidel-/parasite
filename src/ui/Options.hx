@@ -113,6 +113,9 @@ class Options extends UIWindow
           game.config.set('vidLampLights', val, true);
           game.scene.city3d.setLampLights(Std.parseInt(val));
         });
+      // the two post-process passes, both plain enabled flips (see StreetView.setBloom/setAO)
+      addOptToggle('Bloom', 'vidBloom', game.config.vidBloom,
+        function (on) game.scene.city3d.setBloom(on));
       addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
         function (on) game.scene.city3d.setAO(on));
 

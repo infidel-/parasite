@@ -29,6 +29,7 @@ class Config
   public var vidRenderScale: Int; // backbuffer pixels per CSS pixel, in percent (see StreetView.setRenderScale)
   public var vidLampLights: Int;  // live lamp spotlights (see StreetView.setLampLights); 0 = none
   public var vidAO: Bool;
+  public var vidBloom: Bool;      // window/lamp glow post pass (see StreetView.setBloom); off is a pure perf trade
 
   public var font: String;
   public var fontSize: Int;
@@ -79,6 +80,9 @@ class Config
       // look; lowering it is a perf trade that visibly shortens how far lamp light reaches
       vidLampLights = render.RenderConfig.LAMP_LIGHT.pool;
       vidAO = false;
+      // on: bloom is what the night look is authored around (lit windows, tracers, the move-path
+      // line). the largest single removable pass, so it is offered — but never off by default
+      vidBloom = true;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -115,6 +119,7 @@ class Config
       map['vidRenderScale'] = '100';
       map['vidLampLights'] = '' + vidLampLights;
       map['vidAO'] = '0';
+      map['vidBloom'] = '1';
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -238,6 +243,8 @@ class Config
         }
       else if (key == 'vidAO')
         vidAO = (val == '1');
+      else if (key == 'vidBloom')
+        vidBloom = (val == '1');
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')

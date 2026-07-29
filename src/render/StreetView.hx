@@ -513,6 +513,7 @@ class StreetView {
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, areaStyle.bloomThreshold); // per-area: WHEN the glow starts
+    bloomPass.enabled = game.config.vidBloom; // re-assert per area — a fresh pass defaults to enabled
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
@@ -866,6 +867,21 @@ class StreetView {
     {
       if (gtaoPass != null)
         gtaoPass.enabled = on;
+    }
+
+// toggle the bloom pass live (config vidBloom). skipped whole by the composer when off, and it is the
+// LARGEST single removable pass on a fill-bound GPU — measured 3.7ms of a 14.7ms frame at lamp pool 12,
+// and 3.4ms of a 9.0ms frame at pool 0, i.e. it matters most to whoever already gave up their lamps
+// (docs/3d-changes.md). the pass is always constructed and only gated here: never skip building it, or
+// the plain `1` debug key below dereferences a null bloomPass. off is a real visual loss, not just a
+// dimmer one — everything authored to glow (lit windows, tracers, the move-path line, the tactical
+// grid) is HDR-multiplied with toneMapped:false and CLAMPS to flat saturated colour without the halo.
+// NOTE debug keys 1 and Shift+1 write this same flag, so they desync the options switch until the next
+// area build re-asserts the config value
+  public function setBloom(on:Bool):Void
+    {
+      if (bloomPass != null)
+        bloomPass.enabled = on;
     }
 
 // resize the live lamp-spotlight pool (config vidLampLights). measured at ~0.32ms of GPU per light —

@@ -2325,3 +2325,164 @@ other pass at `w * pixelRatio` — the AO pass owns its own depth/normal prepass
 `vidRenderScale` shipped, a user at 50% or 200% got AO sampling a depth buffer at up to 4x the wrong
 resolution. Now a `sizeGtao()` helper sizes it at `innerWidth * renderer.getPixelRatio()`, called from
 `resize()`, from `setRenderScale()`, and once at construction. Only ever visible with AO on.
+
+## Re-attribution AFTER Lambert — the ranking changed
+
+Lambert roughly halved the frame, so every surviving term doubled its *share* even where its absolute
+cost did not move. The pre-Lambert attribution above is stale; this replaces it.
+
+Same conditions as the Lambert measurement: pinned free-cam, lamp pool 12, render scale 200% on a
+1042x648 window = **2084x1296 / 2.70 Mpix**. Shader permutations warmed first (`prog` 75 -> 124 — `5`
+and `7` change the program key, and the first toggle of each compiles a new set that would otherwise
+land inside a measurement window). Each row is base/on/base/on/base interleaved, **medians** of 30
+baseline and 20 toggled samples read off the perf HUD.
+
+**Baseline 14.7ms.**
+
+| key | what it removes | GPU with it off | cost | share |
+|---|---|---|---|---|
+| `1` | WYSIWYG: lights + bloom + tonemap | 4.69 | — | **floor = 4.69 (32%)** |
+| `0` | every light | 7.27 | 7.4 | 50% |
+| `5` | 12 spotlights + cones | 10.07 | 4.6 | **31%** |
+| `Shift+1` | bloom alone | 10.97 | 3.7 | **25%** |
+| `7` | all shadow sampling | 12.48 | 2.2 | 15% |
+| `Shift+5` | light cones alone | 14.56 | 0.03 | **0%** |
+| `6` | emissive | 14.82 | -0.03 | **0%** |
+
+Toggles are not perfectly additive (lights 7.4 + bloom 3.7 + floor 4.69 overshoots the 14.7 baseline),
+which is expected — removing lights also removes the shadow taps those lights drive.
+
+### What moved
+
+- **Bloom is now the largest single removable pass, 13% -> 25%.** Its absolute cost barely changed; the
+  frame around it shrank. It is the top remaining lever.
+- **Per-light cost fell ~58%.** Under Standard at this same 2.70 Mpix the frame was 26.7ms with the spot
+  loop at 41% ≈ 11ms ≈ **0.91ms/light**. Under Lambert it is 4.6ms ≈ **0.38ms/light**. That is where the
+  -42% came from, measured from the other direction and agreeing.
+- **Shadow sampling 12% -> 15%**, absolute cost flat (~2.2ms). Still the weakest of the real terms.
+- **The floor is 32%** — raw texture bandwidth, overdraw, the two RGBA16F composer targets and the
+  OutputPass blit, with no lighting and no post at all. Never reducible to zero, but it is now a third
+  of the frame and has never been attacked.
+- **Cones and emissive re-confirmed at 0%** under a completely different material stack. Two independent
+  measurements now say the same thing; stop revisiting them.
+
+### Next levers, in measured order
+
+1. **Bloom (25%)** — fewer mip levels, lower bloom resolution, or ship it as a video option. Costs
+   looks; needs sign-off, not a measurement.
+2. **Spot loop (31%)** — already has `vidLampLights`. Cheaper per light now; the remaining move is
+   fewer lights, which is an art decision already made.
+3. **The floor (32%)** — stacked transparent overlays (grime, wall decals, storefront bands, doors all
+   draw *over* the wall via polygonOffset, each a full lit fragment pass), and the FP16 composer target
+   format. No existing debug key isolates overlay overdraw.
+4. **Shadow map resolution (15%)** — the invisible knob at this camera distance.
+
+### The same sweep at `Lamp lights: Off`
+
+Re-run identically (pinned pose, 2084x1296, warmed to `prog` 129) with the pool at 0, to see what the
+frame looks like once the biggest term is gone. **Baseline 9.0ms** — dropping the pool from 12 to 0 is
+worth **5.7ms, -39%** at this load.
+
+| key | removes | GPU off | cost | share of 9.0 |
+|---|---|---|---|---|
+| `1` | WYSIWYG | 4.55 | — | **floor = 4.55 (51%)** |
+| `Shift+1` | bloom alone | 5.57 | 3.4 | **38%** |
+| `0` | every light | 6.39 | 2.6 | 29% |
+| `7` | all shadow sampling | 8.18 | 0.8 | 9% |
+| `Shift+5` | light cones alone | 8.99 | 0.3 | 3% |
+
+Side by side with the pool at 12:
+
+| term | lamps 12 (14.7ms) | lamps 0 (9.0ms) |
+|---|---|---|
+| floor | 4.69 (32%) | 4.55 (51%) |
+| bloom | 3.7 (25%) | 3.4 (38%) |
+| all lights | 7.4 (50%) | 2.6 (29%) |
+| shadow sampling | 2.2 (15%) | 0.8 (9%) |
+| cones | 0.03 (0%) | 0.3 (3%) |
+
+Three things worth keeping:
+
+- **The floor is invariant, as it should be** — 4.69 vs 4.55, well inside noise. It is texture bandwidth,
+  overdraw and the composer blits; it does not care how many lights there are. That is what makes it a
+  real, separate target rather than an artefact of the lighting measurement.
+- **The 5.7ms the pool costs is not all light loop.** Shadow sampling drops 2.2 -> 0.8 at the same time,
+  because the lamp shadow casters go with it. Net light-loop cost is ~4.3ms / 12 = **0.36ms per light**,
+  which independently reproduces the 0.38ms/light from the `5` toggle at pool 12.
+- **With lamps off, bloom and the floor are essentially the entire frame** (38% + 51%). There is nothing
+  else left to cut. Anyone running `Lamp lights: Off` for frames is paying 3.4ms for bloom on a 9ms
+  frame — a bloom option would be worth more to them than any further lighting work.
+
+Cones measured 0.3 (3%) here against 0.03 (0%) at pool 12 — both are at the edge of what this rig can
+resolve, and the conclusion is unchanged: not a lever.
+
+## `vidBloom` — bloom as a video option — LANDED
+
+The lever the re-attribution ranked first. Bloom was the largest single removable pass and the only
+large term with no player-facing switch, and it matters most to whoever needs it most: a player who has
+already set `Lamp lights: Off` chasing frames pays ~3.4ms for bloom on a 9ms frame with nothing left to
+give up.
+
+`Off / On`, **default On** — the default look does not change, same rule as render scale and lamp
+lights. Mechanism is one `bloomPass.enabled` flip (`StreetView.setBloom`, next to `setAO`); the
+composer does `if (pass.enabled === false) continue`, and `UnrealBloomPass` has `needsSwap = false` and
+composites additively back into `readBuffer`, so skipping it leaves the buffer topology alone and
+`OutputPass` picks up the same target either way. No reconstruction, no render-target bookkeeping.
+
+### Measured through the real options UI
+
+Pinned pose, 2084x1296, lamp pool 12, medians of 30 on / 20 off, interleaved on/off/on/off/on. Two
+independent reps:
+
+| rep | bloom on | bloom off | cost | share |
+|---|---|---|---|---|
+| 1 | 13.97 | 10.90 | 3.07 | 22% |
+| 2 | 14.15 | 10.70 | 3.45 | 24% |
+
+Against the 3.7ms / 25% that the `Shift+1` debug key measured on the same rig — same number within iGPU
+variance, which is the check that the option reaches the same pass rather than something adjacent.
+`calls` drops **151 -> 138**: bloom's ~13 draws, gone.
+
+### Three implementation notes worth keeping
+
+- **The pass is always constructed, only `enabled` is gated.** Never skip building it:
+  `StreetView.hx:108` (`bloomPass.enabled = !toggleLighting()`, the plain `1` debug key) guards on
+  `toggleLighting != null`, *not* on `bloomPass`, so a null pass would throw there.
+- **The config value is re-asserted per area build**, right after construction and before `addPass`,
+  mirroring the `gtaoPass.enabled = game.config.vidAO` line. A fresh `UnrealBloomPass` defaults to
+  `enabled = true`, so without this the setting is silently ignored on every area entry. Verified by
+  setting it off, doing a full app reload, and re-entering — comes back off.
+- **The boot pre-warm stays unconditional.** It builds a throwaway composer with its own always-on
+  bloom pass, which caches bloom's programs regardless of the setting, so turning bloom on mid-session
+  is hitch-free. `threshold` is a uniform, not a `#define`, so the per-area threshold never forks the
+  program.
+
+### What it costs to look at
+
+Not a neutral trade — a large amount of art is authored as "push past 1.0 and let bloom do the rest":
+lit windows (`litIntensity` 2.2/1.9, and downtown drops `bloomThreshold` to 0.5 specifically so
+skyscraper glass glows sooner), gunfire tracers, spark glow, the black-blood glint. Worse, three
+overlays are `toneMapped: false` and multiplied well past 1.0 so bloom can halo them — `PathLine`
+(`glow: 3.2`, the move-path readout), `TacticalGrid` (`GLOW = 5.0`) and the `Occlusion` footprint
+outline (`outlineGlow: 5.0`). With bloom off those **clamp to flat saturated colour**: still legible,
+but hard-edged and aliased instead of glowing. Deliberately not compensated — that is the trade the
+player opts into, and chasing it would mean those three systems re-reading config and rebuilding
+materials on a toggle.
+
+One genuine upside, already documented at `Occlusion.hx:298`: bloom smears a NaN over the entire frame
+when lit geometry renders without normals. Bloom off removes that whole failure class.
+
+### Rejected: Off / Low / High
+
+"Low" could only mean a lower-resolution mip chain, which needs the pass torn down and rebuilt —
+`UnrealBloomPass.dispose()` is not even bound in the extern, and each rebuild allocates 11 half-float
+targets mid-frame. Raising the bloom threshold instead would be cheap but saves nothing: the cost is
+the 5-level blur chain, not the high-pass.
+
+### Measurement hazard discovered here, worth not repeating
+
+A first sweep came back **inverted** — bloom "off" reading 16.54 against 10.97 "on". The cause was the
+Electron window being **backgrounded**: the compositor throttles to ~1fps and the `EXT_disjoint_timer_query`
+result spans the whole idle gap, so `GPU` read **1015ms**. Every number from that sweep was garbage and
+was discarded. Add this to the weak-GPU rules: **the game window must be focused and foreground**, and a
+sanity filter (`fps` sane, `GPU < 100`) belongs in any scripted sweep.
