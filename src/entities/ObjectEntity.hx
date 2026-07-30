@@ -4,6 +4,7 @@ package entities;
 
 import js.html.CanvasRenderingContext2D;
 import objects.AreaObject;
+import objects.BodyObject;
 import game.Game;
 import objects.base.BaseOrganObject;
 
@@ -31,7 +32,15 @@ class ObjectEntity extends Entity
           Const.FRAME_TARGET_FRAME,
           Const.ROW_REGION_ICON);
 
-      super.draw(ctx);
+      // a corpse wears the dead actor's own sprite in the 3D street view (see
+      // BodyObject.setActorSprite); the 2D tiled view keeps the generic body tile, so paint that
+      // instead of the shared entity icon
+      if (object.type == 'body')
+        {
+          var icon = (cast object : BodyObject).icon2D();
+          drawImage(ctx, game.scene.images.entities, icon.col, icon.row);
+        }
+      else super.draw(ctx);
       if (object.type == 'door')
         {
           var door: objects.Door = cast object;

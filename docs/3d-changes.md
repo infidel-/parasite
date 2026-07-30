@@ -2486,3 +2486,67 @@ Electron window being **backgrounded**: the compositor throttles to ~1fps and th
 result spans the whole idle gap, so `GPU` read **1015ms**. Every number from that sweep was garbage and
 was discarded. Add this to the weak-GPU rules: **the game window must be focused and foreground**, and a
 sanity filter (`fps` sane, `GPU < 100`) belongs in any scripted sweep.
+
+## Object marks: tactical outline ring + through-wall x-ray for world objects — LANDED (2026-07-29)
+
+Objects (pickups, bodies, sewer hatches, mission objects) had no marker of any kind. In the tactical
+view they are small ground icons lost in the street, and a solid building between camera and object
+hides them outright — the exact problem `Badges.drawXray` already solves for AI. Two additions, both
+objects-only, both reusing the AI recipe rather than inventing one:
+
+- **Tactical ring** — while tactical is up, a green ring hugs the object's sprite. New
+  `Sprites.outlineTex()` builds it by canvas compositing, not a per-pixel loop: the atlas cell is drawn
+  INSET by `outlinePx`, stamped at its 8 neighbour offsets (an octagonal alpha dilation), punched back
+  out at the centre with `destination-out`, then flooded white with `source-in`. Cached per atlas cell
+  like every other crop. The inset is what keeps the ring inside the crop for art that fills the frame
+  (corpses do); the returned `scale` (`t / (t - 2*px)`) undoes it at paint time.
+- **Through-wall mark** — the same `silTex` patterned silhouette the AI uses, with
+  `depthFunc = GreaterDepth`. Always on, follow view included.
+
+Emerald green `0x35dd7a` + the `dots` pattern, chosen to sit outside the AI alert ramp (white / amber /
+orange / red / cult-pink / slate, `scan`) so a mark can never be misread as an AI marker, and to split
+objects from the blue navigation overlays (tactical grid, faded-building footprint dashes). Colder and
+bluer than the path line's yellow-green slime (`PATH.color 0x7ddc46`). `RenderConfig.OBJMARK`.
+(First shipped teal `0x4fd1c5`; changed same day — teal read as another blue overlay, not as loot.)
+
+### Why it is painted from `Actors.drawActor`, not from `Badges`
+
+The obvious move — extend `Badges.drawXray` to take objects — is wrong. `Badges` only knows the upright
+billboard pose. A flat corpse carries a `bodyPose` yaw + XZ offset and an upright pickup a `groundAnchor`
+Y drop, both resolved inside `drawActor`; marks painted from `Badges` would float free of the sprite they
+frame. `drawActor` gained a `mark` flag, and its duplicated fx / non-fx `sprites.paint` calls collapsed
+into one pose resolved up front — which the mark pass then reuses verbatim.
+
+The ring shares the sprite's own `renderOrder`. No new `ORD_*` slot: because the crop is inset and the
+quad scaled back up, the ring occupies the annulus just OUTSIDE the silhouette and never overlaps the
+icon it frames. Same for the silhouette — `GreaterDepth` cannot pass where the icon itself drew.
+
+`GreaterDepth` is correct for flat ground objects too: over open street the decal quad sits *nearer*
+than the ground it covers, so the compare fails and nothing shows; behind a wall the wall is nearer and
+it passes. The failure mode is "no mark", never "always on".
+
+### Measured
+
+Pinned free cam `lookFrom(134, 60, -60, 134, 0, -104)` over the player at cell (83,24), residential
+street, tactical off. A/B by temporarily passing `false` for `mark` in the object loop and rebuilding —
+same scene both runs (`geom 1158`):
+
+| | calls | tris |
+|---|---|---|
+| marks off | 304 | 121592 |
+| marks on | **305** | **121594** |
+
+Exactly one marked object survived the frustum in that pose, and the delta is exactly one pooled quad:
+**+1 draw call and +2 tris per marked object that survives culling**, which is the structural cost —
+the sprite pool is one mesh per quad. The tactical ring adds a second quad per marked object by the
+same mechanism; it is NOT separately isolatable in a pinned pose, because entering tactical also swaps
+the camera, adds the grid mesh and builds ghost meshes for the whole selected block (305 -> 335 calls,
+geom 1158 -> 1167 in total).
+
+`AreaObject.visible()` gates it, which is what keeps the count low: `Decoration`, `DecorationExt` and
+`Door` all return false, and those are the bulk of the object list. Marking every object instead would
+roughly double the object pass for street furniture nobody needs outlined.
+
+No ms claim from this session — the Electron window was backgrounded for most captures, so `GPU`/`submit`
+were throttle-poisoned (see the bloom entry's measurement hazard above). `calls`/`tris` are counts and
+are unaffected.

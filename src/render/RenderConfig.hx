@@ -517,6 +517,22 @@ class RenderConfig {
     grow: 1.0,          // silhouette scale vs the sprite
     emissive: 0.9,       // silhouette self-glow (legibility at night)
   };
+  // world-object marks (render.Actors object pass), the object twin of XRAY above: a glowing ring
+  // hugging the object's sprite while the TACTICAL view is up (the icons are tiny at that zoom), and
+  // a patterned silhouette wherever a building hides the object from the camera (GreaterDepth, like
+  // the AI x-ray) — that one is always on. only objects AreaObject.visible() calls player-noticeable
+  // are marked, so decorations/doors stay unmarked. the color and pattern are deliberately outside
+  // the AI alert ramp (white/amber/orange/red/cult-pink/slate, 'scan') so a mark never reads as an AI.
+  // the green also splits objects from the BLUE overlays (tactical grid, faded-building footprints)
+  public static final OBJMARK = {
+    color: 0x35dd7a,     // emerald green — clear of the AI colors, the cool-blue footprint dashes, and
+                         // bluer/colder than the path line's yellow-green slime (PATH.color 0x7ddc46)
+    emissive: 0.9,       // silhouette/ring self-glow (legibility at night), as XRAY.emissive
+    outlinePx: 1.5,      // tactical ring width (crop px; fractional is fine, the dilation is canvas-drawn)
+    fill: 'dots',        // occluded-silhouette pattern: the AI keeps 'scan'
+    hatchSpacing: 6,     // pattern period (crop px)
+    hatchThick: 2,       // pattern dot width (crop px)
+  };
   // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
   // head at any camera pitch — see Actors.drawBadges)
   public static inline var BADGE_LIFT = 0.65;

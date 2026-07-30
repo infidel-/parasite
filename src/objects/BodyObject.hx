@@ -14,6 +14,7 @@ class BodyObject extends AreaObject
   public var isDecayAccel: Bool; // is this body with decay acceleration?
   public var organPoints: Int; // amount of organs on this body
   public var isMaleAtlas: Bool; // actor atlas gender (else male-atlas corpses crop wrong)
+  public var skinColor: _SkinColor; // actor skin tone (3D only, picks the skin-variant sheet)
   var parentType: String;
 
   public function new(g: Game, vaid: Int, vx: Int, vy: Int, parentType: String)
@@ -39,6 +40,7 @@ class BodyObject extends AreaObject
       organPoints = 0;
       isDecayAccel = false;
       isMaleAtlas = false;
+      skinColor = SKIN_YELLOW;
       parentType = 'civilian';
     }
 
@@ -54,18 +56,28 @@ class BodyObject extends AreaObject
       super.initPost(onLoad);
     }
 
-// adopt a dead actor's own sprite cell so the corpse shows the actor, not a generic body tile
-  public function setActorSprite(img: String, ix: Int, iy: Int, male: Bool)
+// adopt a dead actor's own sprite cell so the corpse shows the actor, not a generic body tile.
+// 3D ONLY: this overwrites the shared icon fields, so the 2D tiled view reads icon2D() instead
+  public function setActorSprite(img: String, ix: Int, iy: Int, male: Bool,
+      skin: _SkinColor)
     {
       imageName = img;
       imageCol = ix;
       imageRow = iy;
       isMaleAtlas = male;
+      skinColor = skin;
       if (entity != null)
         {
           entity.setIcon(img, ix, iy);
           entity.isMaleAtlas = male;
+          entity.skinColor = skin;
         }
+    }
+
+// generic body tile for the 2D tiled view (the shared icon fields carry the 3D actor sprite)
+  public inline function icon2D(): _Icon
+    {
+      return iconByType(parentType);
     }
 
 // check if this body can be searched for loot

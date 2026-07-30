@@ -231,6 +231,7 @@ class StreetView {
       tactical = v;
       rig.setTactical(tactical);
       occlusion.setTactical(tactical);
+      actors.setTactical(tactical);
       if (tactical)
         tacticalGrid.show(game.playerArea.x, game.playerArea.y);
       else tacticalGrid.hide();
@@ -527,6 +528,9 @@ class StreetView {
       {
         exiting = false;   // cancel any in-flight outro from a prior area
         tactical = false;
+        // a warm re-show of the same seed skips the rebuild above and reuses the actor layer, which
+        // would otherwise keep the previous visit's tactical flag (and its object outline rings)
+        actors.setTactical(false);
         rig.reset();
         rig.startIntro();  // enter effect: start closest, zoom out to the resting target
         canvas.style.display = 'block';

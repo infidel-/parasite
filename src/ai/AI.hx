@@ -1052,6 +1052,7 @@ public function show()
       var eIx = entity.ix;
       var eIy = entity.iy;
       var eMale = entity.isMaleAtlas;
+      var eSkin = entity.skinColor;
       // 3D: fade the dying billboard out (entity still live here) so it crossfades into the
       // body that spawns just below, instead of the sprite hard-cutting to the corpse
       game.scene.city3d.playDeathFade(entity);
@@ -1068,7 +1069,7 @@ public function show()
       // only flat corpses wear the dead actor's own sprite; upright bodies (choir) keep their
       // dedicated standing dead-body tile from iconByType
       if (o.isGroundDecal())
-        o.setActorSprite(eName, eIx, eIy, eMale);
+        o.setActorSprite(eName, eIx, eIy, eMale, eSkin);
       // 3D: fade the body in from transparent, but only once the dying sprite has fallen flat
       // (bound to the death ghost's landing) so the corpse doesn't appear mid-spin
       game.scene.city3d.bindBodyFadeIn(o.entity, o.id, o.isGroundDecal());

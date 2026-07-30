@@ -12,6 +12,19 @@ import game.Game;
 import entities.Entity;
 import ai.AI;
 
+// the optional resting-pose / object overrides Actors.drawActor() takes — an AI or the free parasite
+// passes none. same pattern as PaintOpts: named fields instead of a tail of bare positional literals
+typedef ActorOpts = {
+  @:optional var baseY:Float;       // lift above the cell ground (the parasite riding a host's head)
+  @:optional var baseScale:Float;   // resting billboard scale, default 1
+  @:optional var flat:Bool;         // lie the sprite flat as a ground decal instead of standing it up
+  @:optional var yaw:Float;         // ground rotation of a flat sprite (a corpse's fallen pose)
+  @:optional var offx:Float;        // world X offset from the cell centre (a corpse's fallen offset)
+  @:optional var offz:Float;        // world Z offset from the cell centre
+  @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
+  @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
+}
+
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
 // position slide + opacity fade + optional transient effect. owns the per-actor anim state and
 // paints through a shared Sprites surface; transient FX (blood, death crossfade) live in a
@@ -56,12 +69,14 @@ class Actors {
   // and handed to decals.paint so blood past the slot in that cell paints over the body
   var _corpseCells:Map<Int,Int> = new Map();
   var lampCorners:Map<Int,Int> = null;                  // grid vertex -> lamp dir; slides bend past a post on the cut corner
+  var tactical = false;                                 // tactical view up: objects get their outline ring (see paintObjMark)
 
   // --- frame profiler (toggle from devtools or `perf street`) ---
   public static var DEBUG_PERF = false;                 // render per-pass timings (toggle: `perf street`)
   var _pf = 0;                                          // frames since last summary
   var _pObj = 0.0; var _pAI = 0.0; var _pPass = 0.0;   // accumulated ms: objects, AI, my passes
 
+  static final NO_OPTS:ActorOpts = {};                 // shared empty override set (read-only) for a bare drawActor
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
   static inline var TURN_SPEED = 2.0;                  // facing flip eases at this * base speed (full turn ~1 BASE_MS)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
@@ -103,6 +118,13 @@ class Actors {
   public function setLampCorners(corners:Map<Int,Int>):Void
     {
       lampCorners = corners;
+    }
+
+// enter/leave the tactical view (StreetView drives it): only the object outline ring is gated on
+// it — the through-wall object mark stays on in the follow view too, like the AI x-ray
+  public function setTactical(v:Bool):Void
+    {
+      tactical = v;
     }
 
 // attach a transient effect to an actor's billboard (build it from render.anim.*, e.g.
@@ -164,7 +186,16 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
-            drawActor(o.entity, vis, dtMs, 0.0, 1.0, o.isGroundDecal(), yaw, ox, oz, true);
+            // player-noticeable objects (visible() drops decorations + doors) carry the green
+            // outline/through-wall marks so they stay findable in tactical and behind buildings
+            drawActor(o.entity, vis, dtMs, {
+              flat: o.isGroundDecal(),
+              yaw: yaw,
+              offx: ox,
+              offz: oz,
+              groundAnchor: true,
+              mark: o.visible(),
+            });
             if (vis)
               badges.drawObjTarget(o);
           }
@@ -200,11 +231,17 @@ class Actors {
       if (st == _PlayerState.PLR_STATE_PARASITE)
         drawActor(game.playerArea.entity, true, dtMs);
       else if (st == _PlayerState.PLR_STATE_ATTACHED)
-        drawActor(game.playerArea.entity, true, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+        drawActor(game.playerArea.entity, true, dtMs, {
+          baseY: ATTACH_HEAD_Y,
+          baseScale: ATTACH_SCALE,
+        });
       // just invaded (now inside the host): keep drawing the parasite on the host's head with
       // vis=false so it fades out smoothly instead of popping; once faded drawActor drops it
       else if (st == _PlayerState.PLR_STATE_HOST)
-        drawActor(game.playerArea.entity, false, dtMs, ATTACH_HEAD_Y, ATTACH_SCALE);
+        drawActor(game.playerArea.entity, false, dtMs, {
+          baseY: ATTACH_HEAD_Y,
+          baseScale: ATTACH_SCALE,
+        });
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)
@@ -625,14 +662,19 @@ class Actors {
     }
 
 // advance one actor's anim state and paint its billboard (no-op if fully faded with no effect
-// running). baseY/baseScale set the resting pose (nonzero for the attached parasite riding a
-// host's head). flat lays the sprite on the ground as a decal instead of standing it up
-  function drawActor(e:Entity, vis:Bool, dtMs:Float, baseY:Float = 0.0, baseScale:Float = 1.0, flat:Bool = false, yaw:Float = 0.0, offx:Float = 0.0, offz:Float = 0.0, groundAnchor:Bool = false):Void
+// running). opts carries the resting pose and the object-only extras — see ActorOpts
+  function drawActor(e:Entity, vis:Bool, dtMs:Float, ?opts:ActorOpts):Void
     {
       var a = actor(e, vis, dtMs);
       if (a.op <= 0.001 &&
           a.fx == null)
         return;
+      // resolve the overrides once; a caller that passes none reads the shared empty set
+      var o = (opts != null ? opts : NO_OPTS);
+      var flat = (o.flat == true);
+      var yaw = (o.yaw != null ? o.yaw : 0.0);
+      var baseY = (o.baseY != null ? o.baseY : 0.0);
+      var baseScale = (o.baseScale != null ? o.baseScale : 1.0);
       // rest on the cell's ground surface (walkway tops sit a curb above the road)
       var floor = WorldCtx.floorY(a.col, a.row);
       // decals hug the ground; upright sprites centre at half their height
@@ -654,7 +696,7 @@ class Actors {
       // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
       // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
       // empty bottom margin so its opaque content rests on the floor
-      if (groundAnchor &&
+      if (o.groundAnchor == true &&
           !flat)
         {
           var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
@@ -665,37 +707,85 @@ class Actors {
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : flames.litAt(a);
-      // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
+      // resolve the transient effect into the final pose; no effect running = the rest pose
+      var wx = a.x + (o.offx != null ? o.offx : 0.0);
+      var wz = a.z + (o.offz != null ? o.offz : 0.0);
+      var sc = baseScale;
       if (a.fx != null)
-        sprites.paint({
-          x: a.x + a.fx.offx + offx,
-          y: wy + a.fx.offy,
-          z: a.z + a.fx.offz + offz,
-          tex: texFor(e),
-          op: a.op,
-          scale: baseScale * a.fx.scale,
-          flat: flat,
-          order: order,
-          emissive: RenderConfig.FLAME.litColor,
-          emissiveInt: emInt,
-          faceX: a.face,
-          yaw: yaw,
-        });
-      else
-        sprites.paint({
-          x: a.x + offx,
-          y: wy,
-          z: a.z + offz,
-          tex: texFor(e),
-          op: a.op,
-          scale: baseScale,
-          flat: flat,
-          order: order,
-          emissive: RenderConfig.FLAME.litColor,
-          emissiveInt: emInt,
-          faceX: a.face,
-          yaw: yaw,
-        });
+        {
+          wx += a.fx.offx;
+          wy += a.fx.offy;
+          wz += a.fx.offz;
+          sc *= a.fx.scale;
+        }
+      // object marks ride the exact same pose, painted before the icon they frame
+      if (o.mark == true)
+        paintObjMark(e, a.op, wx, wy, wz, sc, flat, yaw, order);
+      // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
+      sprites.paint({
+        x: wx,
+        y: wy,
+        z: wz,
+        tex: texFor(e),
+        op: a.op,
+        scale: sc,
+        flat: flat,
+        order: order,
+        emissive: RenderConfig.FLAME.litColor,
+        emissiveInt: emInt,
+        faceX: a.face,
+        yaw: yaw,
+      });
+    }
+
+// paint the two teal marks over a world object's own sprite pose: the outline ring (only while the
+// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette,
+// which depthFunc = GreaterDepth restricts to wherever a building hides the object from the camera,
+// exactly like the AI x-ray. both are UI overlays (no shadow sampling) and both share the sprite's
+// renderOrder: the ring covers only the band just OUTSIDE the silhouette, so it never overlaps the
+// icon it frames, and the silhouette can never pass depth where the icon itself draws
+  function paintObjMark(e:Entity, op:Float, x:Float, y:Float, z:Float, scale:Float, flat:Bool,
+      yaw:Float, order:Int):Void
+    {
+      var C = RenderConfig.OBJMARK;
+      if (tactical)
+        {
+          var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, C.outlinePx, e.skinColor);
+          if (ring != null)
+            sprites.paint({
+              x: x,
+              y: y,
+              z: z,
+              tex: ring.tex,
+              op: op,
+              scale: scale * ring.scale,
+              flat: flat,
+              order: order,
+              emissive: C.color,
+              emissiveInt: C.emissive,
+              yaw: yaw,
+              shadow: false,
+            });
+        }
+      var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
+        C.fill, C.hatchSpacing, C.hatchThick, e.skinColor);
+      if (sil == null)
+        return;
+      sprites.paint({
+        x: x,
+        y: y,
+        z: z,
+        tex: sil,
+        op: op,
+        scale: scale,
+        flat: flat,
+        order: order,
+        emissive: C.color,
+        emissiveInt: C.emissive,
+        yaw: yaw,
+        depthFunc: THREE.GreaterDepth,
+        shadow: false,
+      });
     }
 
 // launch the parasite's leap onto the host's head: snap its slide onto the host cell so
