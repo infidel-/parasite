@@ -27,10 +27,10 @@ class Config
   public var aiArtEnabled: Bool;
   public var vidShowFps: Bool;
   public var vidAntialias: Int;
-  public var vidRenderScale: Int; // backbuffer pixels per CSS pixel, in percent (see StreetView.setRenderScale)
-  public var vidLampLights: Int;  // live lamp spotlights (see StreetView.setLampLights); 0 = none
+  public var vidRenderScale: Int; // backbuffer pixels per CSS pixel, in percent (see render.View.setRenderScale)
+  public var vidLampLights: Int;  // live lamp spotlights (see render.View.setLampLights); 0 = none
   public var vidAO: Bool;
-  public var vidBloom: Bool;      // window/lamp glow post pass (see StreetView.setBloom); off is a pure perf trade
+  public var vidBloom: Bool;      // window/lamp glow post pass (see render.View.setBloom); off is a pure perf trade
 
   public var font: String;
   public var fontSize: Int;

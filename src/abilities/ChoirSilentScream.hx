@@ -51,10 +51,10 @@ class ChoirSilentScream extends Ability
       if (affected == 0)
         return false;
 
-      // 3D street view live: expanding dome + screen shockwave instead of the flat 2D rings
+      // 3D view live: expanding dome + screen shockwave instead of the flat 2D rings
       var scene = target.game.scene;
-      if (scene.city3d == null ||
-          !scene.city3d.playScream(ai.x, ai.y))
+      if (scene.view3d == null ||
+          !scene.view3d.playScream(ai.x, ai.y))
         new ParticleSilentScream(scene, {
           x: ai.x,
           y: ai.y

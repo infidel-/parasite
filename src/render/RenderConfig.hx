@@ -405,12 +405,14 @@ class RenderConfig {
     },
   };
 
-  // 3D thrown-projectile choreography (spit clots / spine needles): an entities-atlas blob with
-  // trailing drips races source->target at chest height, then the impact splat beat (burst
-  // decals + splat sound) fires. timings mirror the 2D ParticleSpit/ParticleNeedle feel
+  // 3D thrown-projectile choreography (spit clots / spine needles / blood clots): an entities-atlas
+  // blob with trailing drips races source->target at chest height, then the impact splat beat (burst
+  // decals + splat sound) fires. timings mirror the 2D ParticleSpit/ParticleNeedle feel.
+  // arc = sine lob peak above the flight line (cells); 0 = the flat chest-height race
   public static final PROJECTILE = {
-    spit:   { travelMs: 150.0, scale: 0.3,  drips: 3 },  // spit clot: fat blob + drip trail
-    needle: { travelMs: 110.0, scale: 0.16, drips: 2 },  // spine needle: small + fast afterimages
+    spit:   { travelMs: 150.0, scale: 0.3,  drips: 3, arc: 0.0 },   // spit clot: fat blob + drip trail
+    needle: { travelMs: 110.0, scale: 0.16, drips: 2, arc: 0.0 },   // spine needle: small + fast afterimages
+    blood:  { travelMs: 220.0, scale: 0.22, drips: 2, arc: 0.55 },  // blood clot: lobbed, short trail
     dripGap: 0.2,        // spacing between trail blobs along the flight line (cells)
     dripSway: 0.1,       // per-drip lateral offset amplitude (cells)
     wobbleAmp: 0.04,     // sine wobble amplitude on the drips (cells)

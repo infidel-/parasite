@@ -30,7 +30,7 @@ typedef ActorOpts = {
 // paints through a shared Sprites surface; transient FX (blood, death crossfade) live in a
 // Particles3D. the ground/wall decals, barrel flame + fake shadows, and AI badge/x-ray/targeting
 // markers are split into per-frame sub-passes (render.actors.*), driven in order by update().
-// StreetView builds one per city and drives it each frame; game logic triggers effects via
+// render.View builds one per area and drives it each frame; game logic triggers effects via
 // playFx() and the melee/death bridges
 class Actors {
   var game:Game;
@@ -467,12 +467,12 @@ class Actors {
       particles.add(new Shot3D(muzzle, impact, startDelay, kind, onImpact));
     }
 
-// spawn one thrown 3D projectile (spit clot / needle) racing src->dst at chest height; the
-// impact beat (splat burst + sound) fires via the onImpact closure on arrival
-  public function projectile(src:Vector3, dst:Vector3, col:Int, row:Int, glow:Int,
-      scale:Float, drips:Int, travelMs:Float, onImpact:Void->Void):Void
+// spawn one thrown 3D projectile (spit clot / needle / blood clot) racing src->dst at chest
+// height, lobbed over a sine arc when arc > 0; the impact beat (splat burst + sound) fires via
+// the onImpact closure on arrival. see render.particles.ProjectileOpts
+  public function projectile(o:render.particles.ProjectileOpts):Void
     {
-      particles.add(new Projectile3D(src, dst, col, row, glow, scale, drips, travelMs, onImpact));
+      particles.add(new Projectile3D(o));
     }
 
 // the standard hit shake on a struck entity (melee/shot/projectile impact, scream front)

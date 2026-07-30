@@ -3,7 +3,7 @@ package render;
 import three.Three;
 import js.Browser;
 
-// street-view perf instrumentation, split out of StreetView so the view stays about rendering.
+// 3D-view perf instrumentation, split out of render.View so the view stays about rendering.
 // owns the frame breakdown (submit/upd/idle), the real GPU timer, the on-screen HUD with its
 // peak-hold, the renderer.info stat capture, and the debug keys 7 (shadow-sampling A/B),
 // 8 (peak reset), 9 (draw-call breakdown dump). live under street-debug mode (`) or `perf street`

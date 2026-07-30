@@ -540,12 +540,12 @@ class Organs extends _SaveObject
       var o = get(IMP_PANIC_GAS);
       o.timeout = params.timeout;
 
-      // spawn visual effects — 3D street view plays a single volumetric dome; else fall back to the
+      // spawn visual effects — the 3D view plays a single volumetric dome; else fall back to the
       // flat 2D per-tile effect tiles (hidden under the 3D canvas when it is live)
       var xo = game.playerArea.x;
       var yo = game.playerArea.y;
-      if (game.scene.city3d == null ||
-          !game.scene.city3d.playGas('panic', xo, yo, params.range))
+      if (game.scene.view3d == null ||
+          !game.scene.view3d.playGas('panic', xo, yo, params.range))
         for (yy in yo - params.range...yo + params.range)
           for (xx in xo - params.range...xo + params.range)
             {
@@ -596,12 +596,12 @@ class Organs extends _SaveObject
       var o = get(IMP_PARALYSIS_GAS);
       o.timeout = params.timeout;
 
-      // spawn visual effects — 3D street view plays a single volumetric dome; else fall back to the
+      // spawn visual effects — the 3D view plays a single volumetric dome; else fall back to the
       // flat 2D per-tile effect tiles (hidden under the 3D canvas when it is live)
       var xo = game.playerArea.x;
       var yo = game.playerArea.y;
-      if (game.scene.city3d == null ||
-          !game.scene.city3d.playGas('paralysis', xo, yo, params.range))
+      if (game.scene.view3d == null ||
+          !game.scene.view3d.playGas('paralysis', xo, yo, params.range))
         for (yy in yo - params.range...yo + params.range)
           for (xx in xo - params.range...xo + params.range)
             {

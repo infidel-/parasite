@@ -331,7 +331,7 @@ typedef RendererInfo = {
   public var channel:Int; // which uv attribute this map samples (0 = `uv`, 1 = `uv1`, ...)
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
-                                  // StreetView.disposeScene deliberately leaves alone (it assumes cached ones)
+                                  // render.View.disposeScene deliberately leaves alone (it assumes cached ones)
 }
 @:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {
   public function new(canvas:Dynamic);
@@ -374,7 +374,7 @@ typedef Intersection = {
   public var enabled:Bool;
 }
 // ground-truth ambient occlusion; renders its own depth + normal prepass of the scene each frame,
-// so it is enabled-gated (a disabled pass is skipped whole by the composer) — see StreetView.setAO
+// so it is enabled-gated (a disabled pass is skipped whole by the composer) — see render.View.setAO
 @:native("THREE.GTAOPass") extern class GTAOPass {
   public function new(scene:Scene, camera:Object3D, width:Float, height:Float);
   public var enabled:Bool;                                 // false = composer skips the pass and its prepass entirely

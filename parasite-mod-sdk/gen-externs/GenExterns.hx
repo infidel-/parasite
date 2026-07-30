@@ -204,23 +204,28 @@ class GenExterns
       return true;
     }
 
-// scrapes the `//` comment block above the source decl of `name` (a var or
-// function) in `file`. returns comment lines (markers stripped), or []
+// scrapes the doc comment for the source decl of `name` (a var or function)
+// in `file` — the `//` block above it, else a trailing `//` on its own line.
+// returns comment lines (markers stripped), or [].
+// matches both typedef styles: the `var name:T;` form and the comma-separated
+// anonymous-structure form (`name: T,` / `?name: T,`), which carries no `var`
   static function docFor(file: Null<String>, name: String): Array<String>
-    return scrapeDocAbove(file,
-      new EReg('\\b(var|function)\\s+' + name + '([^A-Za-z0-9_]|$)', ''));
+    return scrapeDoc(file,
+      new EReg('\\b(var|function)\\s+' + name + '([^A-Za-z0-9_]|$)'
+        + '|^\\s*\\??' + name + '\\s*:', ''));
 
 // scrapes the `//` comment block above an abstract's decl line in `file`
 // (`abstract <name>` / `enum abstract <name>`)
   static function abstractDoc(file: Null<String>, name: String): Array<String>
-    return scrapeDocAbove(file, new EReg('\\babstract\\s+' + name + '([^A-Za-z0-9_]|$)', ''));
+    return scrapeDoc(file, new EReg('\\babstract\\s+' + name + '([^A-Za-z0-9_]|$)', ''));
 
 // shared doc scraper: loads <file>, finds the first line matching `decl`, then
-// walks upward over contiguous `//` lines (skipping @meta/#cond lines) and
+// walks upward over contiguous `//` lines (skipping @meta/#cond lines). when
+// nothing sits above, falls back to a trailing `//` on the decl line itself.
 // returns the comment text with markers stripped, or [] if the file/decl/
 // comment is missing. purely textual — a renamed or duplicated decl can
 // mis-match, acceptable for doc comments
-  static function scrapeDocAbove(file: Null<String>, decl: EReg): Array<String>
+  static function scrapeDoc(file: Null<String>, decl: EReg): Array<String>
     {
       if (file == null || !isEngine(file))
         return [];
@@ -251,6 +256,17 @@ class GenExterns
           if (StringTools.startsWith(t, '@') || StringTools.startsWith(t, '#'))
             { i--; continue; }
           break;
+        }
+      // nothing above: take a trailing comment off the decl line itself, which is how the options
+      // typedefs document their fields (`var x:Float;   // world position`). searched from the
+      // FIRST `;` (the decl terminator) so a `//` inside a string literal cannot be mistaken for
+      // the comment — never the last, which would land inside a comment that has its own `;`
+      if (out.length == 0)
+        {
+          var line = lines[at];
+          var c = line.indexOf('//', line.indexOf(';') + 1);
+          if (c >= 0)
+            out.push(stripComment(StringTools.trim(line.substr(c))));
         }
       return out;
     }

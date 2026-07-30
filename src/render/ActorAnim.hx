@@ -4,7 +4,7 @@ import citygen.CityConfig;
 import render.anim.Effect;
 
 // per-actor 3D animation data + the shared position-slide helper. behavior lives in
-// render.Actors; transient effects live in render.anim.*; StreetView reuses PosSlide +
+// render.Actors; transient effects live in render.anim.*; render.View reuses PosSlide +
 // slideTo for the camera target.
 
 // position channel: smoothstep slide toward a grid cell (also used for the camera)

@@ -907,10 +907,10 @@ class Game extends _SaveObject
       isStarted = true;
       ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
-      // first area render is the LAST act of load (like New Game's restart): drawCity3D's
+      // first area render is the LAST act of load (like New Game's restart): draw3D's
       // fader.cover defers the heavy 3D build on its own timer, so the black cover paints
       // fully before the build stalls the thread. (the mid-load 3D draw was removed from
-      // Loader so this is the first — and only — city entry.)
+      // Loader so this is the first — and only — 3D area entry.)
       scene.updateCamera();
     }
 

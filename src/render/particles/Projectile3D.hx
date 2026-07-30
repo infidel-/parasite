@@ -4,10 +4,11 @@ import three.Three;
 import citygen.CityConfig;
 import render.RenderConfig;
 
-// one thrown organic projectile (spit clot / spine needle) in the 3D view: an entities-atlas
-// blob with a few trailing drips racing source->target at chest height. all visuals paint onto
-// the shared Sprites pool each frame (no owned meshes); the impact beat (splat burst + sound)
-// fires via the onImpact closure on arrival. 3D port of ParticleSpit/ParticleNeedle
+// one thrown organic projectile (spit clot / spine needle / blood clot) in the 3D view: an
+// entities-atlas blob with a few trailing drips racing source->target at chest height, optionally
+// lobbed over a sine arc. all visuals paint onto the shared Sprites pool each frame (no owned
+// meshes); the impact beat (splat burst + sound) fires via the onImpact closure on arrival.
+// 3D port of ParticleSpit/ParticleNeedle (and of a mod's thrown blood spurt)
 class Projectile3D extends Particle3D {
   var mx:Float; var my:Float; var mz:Float;             // source world pos (my = flight height)
   var ix:Float; var iz:Float;                           // impact world pos (same height)
@@ -19,24 +20,25 @@ class Projectile3D extends Particle3D {
   var drips:Int;                                        // trailing drip blobs
   var dripSide:Array<Float>;                            // per-drip lateral bias (-1..1)
   var travelMs:Float;                                   // full flight time
+  var arc:Float;                                        // sine lob peak above the flight line (cells); 0 = flat
   var onImpact:Void->Void;                              // impact beat (splat + sound); nullable
 
   var elapsed:Float = 0.0;
   var impacted:Bool = false;
 
-  public function new(src:Vector3, dst:Vector3, col:Int, row:Int, glow:Int,
-      scale:Float, drips:Int, travelMs:Float, onImpact:Void->Void)
+  public function new(o:ProjectileOpts)
     {
       super();
-      mx = src.x; my = src.y; mz = src.z;
-      ix = dst.x; iz = dst.z;
-      this.col = col;
-      this.row = row;
-      this.glow = glow;
-      this.scale = scale;
-      this.drips = drips;
-      this.travelMs = travelMs;
-      this.onImpact = onImpact;
+      mx = o.src.x; my = o.src.y; mz = o.src.z;
+      ix = o.dst.x; iz = o.dst.z;
+      col = o.col;
+      row = o.row;
+      glow = o.glow;
+      scale = o.scale;
+      drips = o.drips;
+      travelMs = o.travelMs;
+      arc = o.arc;
+      onImpact = o.onImpact;
       var dx = ix - mx, dz = iz - mz;
       len = Math.sqrt(dx * dx + dz * dz);
       if (len < 0.001)
@@ -69,7 +71,9 @@ class Projectile3D extends Particle3D {
       return elapsed < travelMs;
     }
 
-// draw the main blob + trailing drips swaying off the flight line, fading over the last stretch
+// draw the main blob + trailing drips swaying off the flight line, fading over the last stretch.
+// every sprite reads its own height off the same lob curve, keyed to how far along the line it
+// sits — so a lobbed trail hangs behind and below the head instead of shearing off it
   override public function draw(p:Paint3D):Void
     {
       var P = RenderConfig.PROJECTILE;
@@ -77,6 +81,11 @@ class Projectile3D extends Particle3D {
       var t = elapsed / travelMs;
       if (t > 1)
         t = 1;
+      // height at flight fraction f; a zero arc collapses this to the flat chest-height race
+      function lob(f:Float):Float
+        {
+          return my + Math.sin(f * Math.PI) * arc * C;
+        }
       var alpha = 1.0;
       if (t > 1 - P.fadeFrac)
         alpha = (1 - t) / P.fadeFrac;
@@ -95,7 +104,7 @@ class Projectile3D extends Particle3D {
             Math.sin(t * 10 + i * 1.5) * P.wobbleAmp * C;
           g.paint({
             x: mx + dxn * d - dzn * sway,
-            y: my,
+            y: lob(d / len),
             z: mz + dzn * d + dxn * sway,
             tex: tex,
             op: alpha * (0.9 - 0.15 * i),
@@ -107,7 +116,7 @@ class Projectile3D extends Particle3D {
       // main blob on top of the trail
       g.paint({
         x: mx + dxn * headDist,
-        y: my,
+        y: lob(t),
         z: mz + dzn * headDist,
         tex: tex,
         op: alpha,

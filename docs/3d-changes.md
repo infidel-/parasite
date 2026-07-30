@@ -2550,3 +2550,79 @@ roughly double the object pass for street furniture nobody needs outlined.
 No ms claim from this session — the Electron window was backgrounded for most captures, so `GPU`/`submit`
 were throttle-poisoned (see the bloom entry's measurement hazard above). `calls`/`tris` are counts and
 are unaffected.
+
+## Rename — the 3D view sheds its city-only names (2026-07-30)
+
+Pure rename, no render change, no measurement. Recorded here only so the older entries above read:
+every `StreetView` in them is today's `render.View`, and every `#streetview` is `#view`. The 3D view
+will render non-city areas (sewers, facility, lab — `_AreaType` already lists seven non-city types),
+so a name that says "street" or "city" was going to be wrong for most of them.
+
+| was | is |
+|---|---|
+| `render/StreetView.hx`, `class StreetView` | `render/View.hx`, `class View` |
+| `#streetview`, `#streetview-debug` | `#view`, `#view-debug` |
+| `GameScene.city3d` | `GameScene.view3d` |
+| `GameScene._city3dArea` / `_cityEnter` | `_view3dArea` / `_enter3D` |
+| `GameScene.drawCity3D` / `hideCity3D` / `onCityExitDone` | `draw3D` / `hide3D` / `on3DExitDone` |
+
+Both `GameScene.city3d` and `render.StreetView` are in the generated SDK externs, so this would
+normally bump `Const.MOD_API_VERSION`. It stays at 1: no release has shipped the 3D view yet, so no
+published mod can be holding the old names. `make mod-sdk` regenerates the externs; the example mods
+were updated in place.
+
+**Deliberately NOT renamed**, and why:
+
+- `render/StreetPerf.hx`, the `[street-render]` / `[street-warmup]` / `[street-perf]` trace tags, the
+  `perf street` console command, and the "street-debug mode" wording. Same de-city-ing argument
+  applies, but `perf street` is a user-facing command name and the traces are what every entry above
+  greps for — a separate, deliberate change.
+- `faceIsStreet` / `faceStreet` / `streetLamp` / `STREET_DEBRIS_*` and friends: those mean an actual
+  street. They live in city-only builders and are correct there.
+- `citygen.CityConfig` (243 refs / 52 files) — `CELL`, `GRID`, `worldToCell`, `cellToWorld`, floor
+  heights. Not a city thing at all; every 3D area will use it. The rename that would help most, and
+  the one that has to wait on the real question below.
+- `citygen.CityModel.City` is still the view's input type, threaded through `View`, `SceneSetup`,
+  `World`, `Inspector`, `Debug`, `BDump`. A sewer either produces a `City` or the view needs a second
+  model — **decide that before renaming anything else on the city side.** `GameScene.isCityArea()`
+  (`game.area.info.type == 'city'`) is the gate that has to change with it; `AreaStyle.forArea` already
+  switches on `_AreaType` and is the shape to copy.
+
+## Lobbed projectiles + a `'blood'` projectile type (2026-07-30)
+
+`Projectile3D` flew dead flat at chest height, which was right for the two things it shipped for (spit
+clot, spine needle) and wrong for anything thrown in an arc. Gave it an `arc` param — sine lob peak
+above the flight line, in cells — and threaded it through `Actors.projectile` and the `PROJECTILE`
+config. `spit` and `needle` get `arc: 0` explicitly, so their flight is byte-identical; the lob is
+strictly opt-in.
+
+Every sprite in the flight reads its height off the same curve keyed to **its own** distance along
+the line (`lob(d / len)` for each trail drip, `lob(t)` for the head), not off the head's height. Keying
+the trail to the head instead makes the drips shear off it at an angle on a lobbed shot.
+
+Also added `'blood'` to `choreo.Projectile.play`: `blood: { travelMs: 220, scale: 0.22, drips: 2,
+arc: 0.55 }`, flying as a `ParticleSplat.bloodIcon()` cell (one of the 5 splat variants, so it uses the
+same atlas cells the landed burst draws) rather than the `ROW_EFFECT` dart the other types share — which
+is why the hardcoded `Const.ROW_EFFECT` at the `actors.projectile` call became a `row` var. It bursts
+`bloodType` on landing and **skips** the `hitShake` the other types do, because its target is a spray
+cell, not a struck actor.
+
+**Motivation is mod-facing, and there is no engine caller yet.** `examples/chainsaw` throws blood
+spurts that arc from the victim to a nearby cell; in a 3D area its 2D particle painted under `#view`
+and only the landing splat survived. `playProjectile` was already exposed to mods and already aimed
+src→dst, and the alternative — `playSplat` → `Actors.burst` → `BloodDrop3D` — is genuinely ballistic
+but **unaimed** (random direction and speed around a bias vector), so it cannot throw at a chosen cell.
+Extending the aimed one was ~15 lines against a new mod API surface.
+
+`'blood'` is deliberately **3D-only**: `Particle.createProjectile` has no 2D blood-clot particle and
+adding one was not worth it, so a mod wanting the effect in a 2D area ships its own particle for that
+branch (chainsaw keeps `ParticleBloodSpurt` for exactly this). Documented on the `View.playProjectile`
+comment, which the extern generator emits into the SDK.
+
+Not measured: three extra sprites per swing on the existing pooled `Sprites` batch, and one `Math.sin`
+per sprite per frame. Nothing new is allocated and no new material or draw call appears.
+
+Adding `arc` pushed `Actors.projectile` / the `Projectile3D` ctor to 10 positional args, so both took
+the `PaintOpts` treatment: a `render.particles.ProjectileOpts` typedef, all fields required (one
+caller, and it reads every one off a `PROJECTILE` kind). The AGENTS.md style rules now carry this as a
+standing instruction — past ~5 args, convert rather than append.

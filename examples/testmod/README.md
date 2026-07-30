@@ -11,7 +11,7 @@ What it covers:
 - `registerPediaEntry` — a pedia group + article.
 - `registerTrait` / `registerSkill` / `registerEvolution` / `registerGoal`.
 - `parasite.settings` — a boot counter persisted across launches.
-- `AssetPath.resolve` — asset overrides (`assets/img/mouse0.png`,
+- `AssetPath.resolve` — asset overrides (`assets/img/parasite-large.png`,
   `assets/sound/action-fail.mp3`).
 - `parasite.events` — subscribes to all 5 event hooks (`turn:pre`/`turn:post`/
   `area:enter`/`area:leave`/`ai:spawn`); each logs once on first fire.

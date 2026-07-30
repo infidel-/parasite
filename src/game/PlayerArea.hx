@@ -742,7 +742,7 @@ class PlayerArea extends _SaveObject
       game.profile.addPediaArticle('hostInvading');
       // the 3D leap plays the attach sound on landing; play it here only when that view
       // isn't running (other area types / debug) so it isn't doubled or lost
-      if (!game.scene.city3d.running)
+      if (!game.scene.view3d.running)
         game.scene.sounds.play('parasite-attach');
       ai.onAttach(); // callback to AI
 
@@ -755,8 +755,8 @@ class PlayerArea extends _SaveObject
     {
       log('You harden your grip on the host.');
 
-      // 3D street view: parasite + host shake against each other (the struggle)
-      game.scene.city3d.playGripStruggle(entity, attachHost.entity);
+      // 3D view: parasite + host shake against each other (the struggle)
+      game.scene.view3d.playGripStruggle(entity, attachHost.entity);
 
       // improv: harden grip bonus
       var params = player.evolutionManager.getParams(IMP_HARDEN_GRIP);
@@ -1196,7 +1196,7 @@ class PlayerArea extends _SaveObject
           nx = x + Const.dirx[dir];
           ny = y + Const.diry[dir];
           // shake the host as it lurches off the commanded path
-          game.scene.city3d.playResistShake(player.host.entity);
+          game.scene.view3d.playResistShake(player.host.entity);
         }
 
       // frob objects on this position
@@ -1528,7 +1528,7 @@ class PlayerArea extends _SaveObject
 
       // the 3D leap-off plays the detach sound on launch; play it here only when that view
       // isn't running (other area types / debug) so it isn't doubled or lost
-      if (!game.scene.city3d.running)
+      if (!game.scene.view3d.running)
         game.scene.sounds.play('parasite-detach');
     }
 

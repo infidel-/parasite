@@ -919,8 +919,8 @@ class AreaView
     {
       if (clearAll)
         game.playerArea.clearPath();
-      if (scene.city3d != null)
-        scene.city3d.clearPathPreview();
+      if (scene.view3d != null)
+        scene.view3d.clearPathPreview();
       if (path == null)
         return;
       path = null;
@@ -934,19 +934,19 @@ class AreaView
       path = game.area.getPath(x1, y1, x2, y2);
       if (path == null)
         {
-          if (scene.city3d != null)
-            scene.city3d.clearPathPreview();
+          if (scene.view3d != null)
+            scene.view3d.clearPathPreview();
           return;
         }
-      // feed the 3D street view its wavy ribbon preview: getPath excludes the player's own cell and
+      // feed the 3D view its wavy ribbon preview: getPath excludes the player's own cell and
       // includes the goal, so prepend the player cell for a full player -> target line (do this
       // before the pop below, which drops the goal for the 2D dotted overlay)
-      if (scene.city3d != null)
+      if (scene.view3d != null)
         {
           var preview = [ new aPath.Node(x1, y1, 0, null) ];
           for (n in path)
             preview.push(n);
-          scene.city3d.setPathPreview(preview);
+          scene.view3d.setPathPreview(preview);
         }
       path.pop();
       scene.draw();

@@ -86,7 +86,7 @@ class Options extends UIWindow
         ],
         function (val) {
           game.config.set('vidAntialias', val, true);
-          game.scene.city3d.setAA(Std.parseInt(val));
+          game.scene.view3d.setAA(Std.parseInt(val));
         });
       // ordered cheapest -> most expensive, like the antialiasing row above
       addOptSelect('Render scale', 'vidRenderScale', [
@@ -99,7 +99,7 @@ class Options extends UIWindow
         ],
         function (val) {
           game.config.set('vidRenderScale', val, true);
-          game.scene.city3d.setRenderScale(Std.parseInt(val) / 100);
+          game.scene.view3d.setRenderScale(Std.parseInt(val) / 100);
         });
       // changing this recompiles every lit material (NUM_SPOT_LIGHTS is in the program key), so it
       // stalls for a moment on apply — acceptable here, never during play
@@ -111,13 +111,13 @@ class Options extends UIWindow
         ],
         function (val) {
           game.config.set('vidLampLights', val, true);
-          game.scene.city3d.setLampLights(Std.parseInt(val));
+          game.scene.view3d.setLampLights(Std.parseInt(val));
         });
-      // the two post-process passes, both plain enabled flips (see StreetView.setBloom/setAO)
+      // the two post-process passes, both plain enabled flips (see render.View.setBloom/setAO)
       addOptToggle('Bloom', 'vidBloom', game.config.vidBloom,
-        function (on) game.scene.city3d.setBloom(on));
+        function (on) game.scene.view3d.setBloom(on));
       addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
-        function (on) game.scene.city3d.setAO(on));
+        function (on) game.scene.view3d.setAO(on));
 
       // ---- INTERFACE ----
       addCard('Interface');

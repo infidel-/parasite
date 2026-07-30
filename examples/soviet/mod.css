@@ -97,10 +97,16 @@
   --text-color-cult-effect:      var(--soviet-green-dim);
   --text-color-occasio:          var(--soviet-amber);
 
-  /* themed cursors — green dot/ring (default), bright ring (clickable), red (disabled) */
+  /* themed cursors — green dot/ring (default), bright ring (clickable), red (disabled/attack),
+     amber (help). the engine defines six; a mod must override all six or the un-overridden ones
+     stay on the base purple/cyan theme. hex is inlined because var() cannot be used inside a
+     data: URI */
   --ui-cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23aaffbf'/%3E%3Ccircle cx='12' cy='12' r='8.5' fill='none' stroke='%232dff66' stroke-width='2' opacity='.7'/%3E%3C/svg%3E") 12 12, default;
   --ui-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%23ffffff'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23aaffbf' stroke-width='2.2'/%3E%3C/svg%3E") 12 12, pointer;
   --ui-cursor-disabled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='2.6' fill='%23ff4444'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23ff4444' stroke-width='1.5' opacity='.85'/%3E%3Cline x1='5.6' y1='18.4' x2='18.4' y2='5.6' stroke='%23ff4444' stroke-width='1.5' opacity='.85'/%3E%3C/svg%3E") 12 12, not-allowed;
+  --ui-cursor-help: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23ffb454' stroke-width='2.2' opacity='.9'/%3E%3Cpath d='M9.7 9.2 A2.5 2.5 0 1 1 12 11.9 L12 13.4' fill='none' stroke='%23aaffbf' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='12' cy='15.7' r='1.15' fill='%23aaffbf'/%3E%3C/svg%3E") 12 12, help;
+  --ui-cursor-attack: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='3.2' fill='%23ff4444'/%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23ff4444' stroke-width='2.2'/%3E%3Cg stroke='%23ff4444' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='5.1' y1='5.1' x2='2.3' y2='2.3'/%3E%3Cline x1='18.9' y1='5.1' x2='21.7' y2='2.3'/%3E%3Cline x1='5.1' y1='18.9' x2='2.3' y2='21.7'/%3E%3Cline x1='18.9' y1='18.9' x2='21.7' y2='21.7'/%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
+  --ui-cursor-attack-ranged: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23ff4444' stroke-width='2.2'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='%23ff4444'/%3E%3Cg stroke='%23ff4444' stroke-width='1.6' stroke-linecap='round'%3E%3Cline x1='4.6' y1='12' x2='8.6' y2='12'/%3E%3Cline x1='15.4' y1='12' x2='19.4' y2='12'/%3E%3Cline x1='12' y1='4.6' x2='12' y2='8.6'/%3E%3Cline x1='12' y1='15.4' x2='12' y2='19.4'/%3E%3C/g%3E%3C/svg%3E") 12 12, crosshair;
 
   /* global font swap — terminal monospace.
      `!important` required: Config.set('font') writes --text-font inline on <html>,

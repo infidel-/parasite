@@ -29,7 +29,7 @@ typedef Occ = {
 // AABB and buckets every scene mesh into the building it belongs to (by userData.b, else by
 // position + a size guard — see pick). Each frame a segment/AABB slab test picks the occluders and
 // eases a fade; a faded mesh swaps to a cheap ghost material that samples no shadow maps, so the
-// see-through overdraw is affordable. StreetView owns and drives it.
+// see-through overdraw is affordable. render.View owns and drives it.
 class Occlusion {
   static inline var CELL = CityConfig.CELL;
   static var checked = false;

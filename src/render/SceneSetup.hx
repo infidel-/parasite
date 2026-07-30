@@ -21,7 +21,7 @@ typedef SceneBundle = {
   setLightsOff:Void->Void,
   fill:Array<Object3D>, // [ambient, hemisphere, moon] — the global fill lights (debug 2/3/4 toggles)
   lights:Array<Object3D>, // every toggleable light, as toggleLighting/setLightsOff see it. handed out so a
-                          // live lamp-pool swap (StreetView.setLampLights) can keep those closures correct
+                          // live lamp-pool swap (View.setLampLights) can keep those closures correct
 
   moon:DirectionalLight, // the shadow-casting moon, ticked per frame by fitMoon to follow the player
   pointLights:Array<Object3D>, // lamp spotlight pool + cone group (debug 5 toggle)
@@ -43,7 +43,7 @@ class SceneSetup {
   public static function createCore(canvas:Dynamic, scale:Float):Core {
     // no default-framebuffer MSAA: every city frame goes through the EffectComposer, whose
     // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
-    // the composer's offscreen render targets instead (StreetView.setAA, config vidAntialias)
+    // the composer's offscreen render targets instead (View.setAA, config vidAntialias)
     var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
     // NOT devicePixelRatio: the street frame is fill-bound long before it is call-bound, and a
     // 125%-scaled desktop was silently costing 1.56x the pixels for it. measured GPU ~= 2.0ms +

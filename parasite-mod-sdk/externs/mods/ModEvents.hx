@@ -90,8 +90,8 @@ typedef ModAIDiePreEvent = {
 }
 
 // payload for game:finish-pre — fired before the game-over UI window.
-// `text` and `img` start with engine defaults; handlers may mutate them to
-// override the message and event image shown on the finish screen.
+// `text`, `img` and `filter` start with engine defaults; handlers may mutate
+// them to override the message, event image and its grade on the finish screen.
 typedef ModGameFinishPreEvent = {
   > ModEventBase,
   // 'win' or 'lose'
@@ -100,4 +100,8 @@ typedef ModGameFinishPreEvent = {
   var text: String;
   // mutable: event image key (engine default may be null on win)
   var img: String;
+  // mutable: svg filter grading the image — 'lose' | 'alien' | 'cult'. null is
+  // NOT ungraded: ui.Finish falls back to the 'lose' grade, so a mod swapping in
+  // its own win image must set this or the image renders like a death screen
+  var filter: String;
 }

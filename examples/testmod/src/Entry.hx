@@ -308,8 +308,9 @@ class Entry
     {
       var c = js.Browser.console;
       var AP: Dynamic = Reflect.field(parasite.hxClasses, 'mods.AssetPath');
-      c.log('[testmod] resolve(img/mouse0.png) = ' + AP.resolve('img/mouse0.png'));
-      c.log('[testmod] resolve(img/mouse1.png) = ' + AP.resolve('img/mouse1.png'));
+      // shipped -> mod:// URL; not shipped -> returned unchanged
+      c.log('[testmod] resolve(img/parasite-large.png) = ' + AP.resolve('img/parasite-large.png'));
+      c.log('[testmod] resolve(img/creatures64.png) = ' + AP.resolve('img/creatures64.png'));
       c.log('[testmod] resolve(sound/action-fail.mp3) = ' + AP.resolve('sound/action-fail.mp3'));
     }
 

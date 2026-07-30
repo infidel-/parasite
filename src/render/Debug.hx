@@ -7,7 +7,7 @@ import citygen.CityModel.PShape;
 import game.Game;
 
 // street-debug mode (backquote): the HUD overlay + tools — fly cam (F), poly UV editor (E),
-// building inspector (B), shape cyclers, __dbg console helpers. Split out of StreetView so
+// building inspector (B), shape cyclers, __dbg console helpers. Split out of render.View so
 // the view keeps only the render loop; it forwards the toggle and per-frame hooks here.
 // scene/city rebuild per area, so everything reads them through getters.
 class Debug {
@@ -77,12 +77,12 @@ class Debug {
 
 // inject the debug HUD elements the ported tools reference (hidden until debug on)
   function injectHud():Void {
-    if (Browser.document.getElementById('streetview-debug') != null) {
-      el = Browser.document.getElementById('streetview-debug');
+    if (Browser.document.getElementById('view-debug') != null) {
+      el = Browser.document.getElementById('view-debug');
       return;
     }
     var d = Browser.document.createElement('div');
-    d.id = 'streetview-debug';
+    d.id = 'view-debug';
     d.style.display = 'none';
     // cycler rows markup (buttons wired lazily in attachTools)
     var cyc = '';

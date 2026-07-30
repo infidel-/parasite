@@ -49,13 +49,15 @@ class Entry
         messageReceive: 'Time to settle the score.',
       });
 
-      // register shake fx — jitters #canvas via CSS transform, decays to 0.
+      // register shake fx — jitters the live game canvas via CSS transform, decays
+      // to 0. viewport() not canvas(): in a 3D area #view covers #canvas, so shaking
+      // #canvas alone would be invisible there.
       // channel = id so a fresh play() interrupts the prior shake instead of
       // running parallel jitters
       parasite.fx.register('mod-chainsaw-shake', {
         play: function(p: Dynamic): Void
           {
-            var c: Dynamic = parasite.fx.canvas();
+            var c = parasite.fx.viewport();
             if (c == null) return;
             var ms: Int = p.durationMS;
             var px: Int = p.magnitudePX;
@@ -137,6 +139,25 @@ class Entry
         if (e.entity == null)
           return;
         var pos: _Point = { x: e.ai.x, y: e.ai.y };
+        // 3D areas have no sprite-gib primitive a mod can reach, so the halves
+        // become a staggered ring of blood bursts around the death cell instead.
+        // staggered because playSplat fires fx-splat per call — a same-frame ring
+        // would stack 6 copies of the sound. the engine's own death fade already
+        // covers the corpse transition, so this is purely the gore
+        if (e.game.scene.view3d.running)
+          {
+            var scene = e.game.scene;
+            for (i in 0...6)
+              {
+                var a = Math.PI * 2 * i / 6 + Math.random() * 0.5;
+                var rx = pos.x + Math.round(Math.cos(a));
+                var ry = pos.y + Math.round(Math.sin(a));
+                js.Browser.window.setTimeout(function() {
+                  scene.view3d.playSplat('red', rx, ry, pos);
+                }, i * 40);
+              }
+            return;
+          }
         // random cut: angle in [0, π) covers all unique lines; pivot near
         // tile center so both halves stay roughly non-degenerate in area
         var tile = Const.TILE_SIZE;
@@ -159,8 +180,14 @@ class Entry
         var n = parasite.savedata.getInt('kills', 0) + 1;
         parasite.savedata.set('kills', n);
         if (n >= 99)
-          e.game.finish('win', Const.col('red', '<i>Subete no mono o yurushita.</i>'),
-            'chainsaw-win');
+          e.game.finish({
+            result: 'win',
+            text: Const.col('red', '<i>Subete no mono o yurushita.</i>'),
+            img: 'chainsaw-win',
+            // explicit: a null filter falls back to the LOSE grade, which would
+            // render the win image like a death screen
+            filter: 'alien',
+          });
       });
 
       // game-over override: replace the engine death text + image with a
