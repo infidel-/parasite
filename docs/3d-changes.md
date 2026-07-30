@@ -2437,3 +2437,36 @@ Adding `arc` pushed `Actors.projectile` / the `Projectile3D` ctor to 10 position
 the `PaintOpts` treatment: a `render.particles.ProjectileOpts` typedef, all fields required (one
 caller, and it reads every one off a `PROJECTILE` kind). The AGENTS.md style rules now carry this as a
 standing instruction — past ~5 args, convert rather than append.
+
+## `vidBrightness` — 3D view brightness as a video option — LANDED
+
+A comfort knob, not a perf one: the night palette is dark by design and a dim/washed display cannot
+show it. Slider **50–150%, default 100** in the Video card, where 100% is the authored
+`RenderConfig.EXPOSURE = 1.5` (previously a magic literal at `SceneSetup.hx:55`). `View.setExposure`
+does one assignment to `renderer.toneMappingExposure`.
+
+**Why this is the cheapest possible knob.** The street frame renders into the composer's targets, and
+three forces `toneMapping = NoToneMapping` for every material whenever `currentRenderTarget !== null`
+(`three.global.js:36241-36245`). So ACES runs exactly once, in `OutputPass`, which re-reads
+`renderer.toneMappingExposure` into its uniform on **every** `render()` (`three.global.js:46613`).
+Exposure is a uniform, not a `#define`, so it is not in any program cacheKey: no recompile, no pass
+rebuild, no render-target bookkeeping. And unlike `vidBloom` it needs **no per-area re-assert** — the
+renderer is persistent (one per GL context), so `ensureCore` applying it once is the whole lifecycle.
+
+**What it does and does not reach.** It multiplies *before* the tone curve, so it lifts shadows and
+compresses highlights instead of flattening. Bloom is computed upstream of it (threshold 0.9, downtown
+0.5), so halos scale in intensity but never spread — brightness cannot be used to get more glow. The
+fog/sky colour (`0x0a0d15`) tone-maps with everything else and is what greys out first; that is the
+reason for the 150% ceiling, not perf. Debug WYSIWYG (key `1`) swaps to `NoToneMapping`
+(`SceneSetup.hx:239`) and so ignores the setting by design.
+
+**Incidental finding, worth not re-deriving:** the `toneMapped: false` flags on `PathLine`,
+`TacticalGrid` and the `Occlusion` outline are **inert** in this pipeline — per-material tone mapping is
+already off for everything rendering into a composer target, and `OutputPass` tone-maps the composite
+wholesale. Those overlays scale with brightness like the rest of the frame. Harmless, but the comments
+around them imply an exemption that does not exist.
+
+Not measured, and deliberately not: one float multiply in a fullscreen quad's fragment shader that
+already runs. The `Config.set` branch null-checks `parseInt` before clamping (stricter than the
+`hudLogLines` idiom) because an unparseable hand-edited value would reach the shader as NaN and present
+a black frame rather than a wrong-but-visible one.

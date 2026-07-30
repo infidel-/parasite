@@ -263,6 +263,7 @@ class View {
     if (core != null) return;
     core = SceneSetup.createCore(canvas, game.config.vidRenderScale / 100);
     renderer = core.renderer;
+    setExposure(game.config.vidBrightness); // the renderer is persistent, so this is the only place it needs applying
     camera = core.camera;
     rig = new CameraRig(game, camera);
     perf = new StreetPerf(renderer, function() return scene);
@@ -888,6 +889,21 @@ class View {
     {
       if (bloomPass != null)
         bloomPass.enabled = on;
+    }
+
+// set the 3D view brightness as a percentage of the authored exposure (config vidBrightness). the whole
+// street frame renders into the composer's targets, where three forces every material to NoToneMapping,
+// so ACES runs exactly once — in OutputPass, which re-reads renderer.toneMappingExposure EVERY frame.
+// that makes this a pure uniform: no recompile, no pass rebuild, and (unlike vidBloom) no per-area
+// re-assert, since the renderer outlives every scene. it multiplies BEFORE the tone curve, so it lifts
+// the shadows and compresses the highlights rather than washing flat. two things it deliberately does
+// NOT do: bloom is computed upstream of it, so the halos scale but never spread; and the fog/sky colour
+// tone-maps with everything else, which is what greys out first and why the slider stops at 150%
+  public function setExposure(pct:Int):Void
+    {
+      if (renderer == null)
+        return;
+      renderer.toneMappingExposure = RenderConfig.EXPOSURE * pct / 100;
     }
 
 // resize the live lamp-spotlight pool (config vidLampLights). measured at ~0.32ms of GPU per light —

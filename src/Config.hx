@@ -31,6 +31,7 @@ class Config
   public var vidLampLights: Int;  // live lamp spotlights (see render.View.setLampLights); 0 = none
   public var vidAO: Bool;
   public var vidBloom: Bool;      // window/lamp glow post pass (see render.View.setBloom); off is a pure perf trade
+  public var vidBrightness: Int;  // 3D view exposure, in percent of render.RenderConfig.EXPOSURE (see render.View.setExposure)
 
   public var font: String;
   public var fontSize: Int;
@@ -85,6 +86,8 @@ class Config
       // on: bloom is what the night look is authored around (lit windows, tracers, the move-path
       // line). the largest single removable pass, so it is offered — but never off by default
       vidBloom = true;
+      // 100% = the authored exposure. purely a viewing comfort knob for dark displays, not a perf one
+      vidBrightness = 100;
 
       font = 'Virtucorp';
       fontSize = 14;
@@ -123,6 +126,7 @@ class Config
       map['vidLampLights'] = '' + vidLampLights;
       map['vidAO'] = '0';
       map['vidBloom'] = '1';
+      map['vidBrightness'] = '' + vidBrightness;
 
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
@@ -248,6 +252,15 @@ class Config
         vidAO = (val == '1');
       else if (key == 'vidBloom')
         vidBloom = (val == '1');
+      // same trust boundary as the render scale above, and stricter about the null: this multiplies
+      // the tone-map exposure, so an unparseable value would reach the shader as NaN and present black
+      else if (key == 'vidBrightness')
+        {
+          vidBrightness = Std.parseInt(val);
+          if (vidBrightness == null)
+            vidBrightness = 100;
+          vidBrightness = Const.clamp(vidBrightness, 50, 150);
+        }
       else if (key == 'laptopKeyboard')
         laptopKeyboard = (val == '1');
       else if (key == 'shiftLongActions')

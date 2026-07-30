@@ -171,6 +171,7 @@ Bodies in [`3d-changes.md`](3d-changes.md) — grep the change text.
 | Slime trail (crawl ribbon + landing puddle) | hand-built strip, **1 draw call**, ~26 verts | **landed** |
 | Mouse move-path preview + click-to-move in 3D | **2 draw calls** while a walkable tile is hovered | **landed** |
 | Rename `StreetView` → `render.View`, `#streetview` → `#view` | pure rename, no render change | **landed** |
+| `vidBrightness` (50–150%, default 100) | exposure is a per-frame uniform: no recompile, no re-assert | **landed** |
 | Lobbed projectiles (`arc`) + a `'blood'` projectile type | 3 extra sprites per swing on the existing pooled batch | **landed** |
 
 ## Standing notes

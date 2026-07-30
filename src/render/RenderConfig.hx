@@ -106,6 +106,12 @@ class RenderConfig {
   public static inline var WIN_PITCH_X = 2.6;  // horizontal center-to-center spacing (vertical = FLOOR_H)
   public static inline var WIN_MARGIN = 0.9;   // min plain-wall border at face edges
 
+  // --- tone mapping ---------------------------------------------------------
+  // the authored exposure fed to ACES in the composer's OutputPass. the config brightness slider
+  // (vidBrightness) is a percentage OF this, so the art value stays the single source of the default
+  // look. it is a plain uniform read per frame by OutputPass, so changing it live costs nothing
+  public static inline var EXPOSURE = 1.5;
+
   // --- bloom ----------------------------------------------------------------
   public static inline var BLOOM_STRENGTH = 0.25;  // overall bloom amount
   public static inline var BLOOM_RADIUS = 0.1;     // bloom spread radius
