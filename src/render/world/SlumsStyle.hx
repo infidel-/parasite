@@ -150,7 +150,7 @@ class SlumsStyle {
       // every slot but 3 draws art residential never draws, so every slot but 3 needs its OWN name:
       // Poly.info is first-write-wins across areas, so borrowing 'concrete'/'brick'/'stone' would make
       // the UV editor report the residential wall/storefront path for a slum surface and fold two
-      // unrelated textures into one editable class (docs/3d-changes.md, "Per-style facade names").
+      // unrelated textures into one editable class (docs/3d-render.md, "Per-style facade names").
       // the -slum suffix covers the wall AND the storefront band, which was already slums-only art
       s.facadeNames = ['concrete-slum', 'brick-slum', 'stone-slum', 'metal', 'clapboard', 'cinderblock'];
       s.specialSlot = 3;          // metal warehouses stay

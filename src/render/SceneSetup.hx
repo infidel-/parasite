@@ -47,7 +47,7 @@ class SceneSetup {
     var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
     // NOT devicePixelRatio: the street frame is fill-bound long before it is call-bound, and a
     // 125%-scaled desktop was silently costing 1.56x the pixels for it. measured GPU ~= 2.0ms +
-    // 8.3ms per megapixel, i.e. ~80% of the frame scales with this one number (docs/3d-changes.md)
+    // 8.3ms per megapixel, i.e. ~80% of the frame scales with this one number (docs/3d-render.md)
     renderer.setPixelRatio(scale);
     renderer.setSize(Browser.window.innerWidth, Browser.window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;

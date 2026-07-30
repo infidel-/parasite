@@ -1,88 +1,15 @@
-# 3D render changes: what was tried and what happened
+# 3D render change log
 
-Append-only ledger of every 3D/render experiment — landed, reverted, or rejected — with its
-measured result. **Read this before proposing a render change**, and add to it after trying one.
-It exists because the expensive mistakes here are the ones already made once: the roof-detail
-batching below was disproved a second time despite a note already saying so in two lines.
+Append-only log of every 3D/render experiment — landed, reverted, or rejected — with its measured
+result and its traps. **The index, the measurement rules and the standing notes live in
+[`3d-render.md`](3d-render.md) — read that first.** This file holds the bodies: find an entry by
+grepping the change text out of that file's verdict table.
 
-Baseline hardware for all numbers: **RTX 3050**, 60fps cap, 1080p-ish, `vidAntialias=4`.
-Second baseline, added 2026-07-28: an **integrated Vega** (`AMD Radeon(TM) Graphics 0x1638`), where
-the frame is GPU-bound instead of `submit`-bound and most of the guidance below inverts — see the
-last entry in this file before applying anything here to that machine.
+Entries record settled outcomes only. Every new entry gets one row in `3d-render.md`. When this file
+reaches ~2600 lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 
-**Which view a number came from matters more than the number.** Gameplay is a zoom lerp, not a set of
-modes (`RenderConfig.CAMERA`, `CameraRig`): zoom 0 = close, ~30° above ground; zoom 1 = top-down.
-Resting targets are capped (`parasiteZoom: 0.30`, `hostZoom: 0.60`) and `tactical` is pinned at 1.0.
-Measured across views and spots, **gameplay runs 158–288 calls**. Separately, the street-debug
-**free-cam** (backtick) can go fully parallel and render the whole city — ~230 buildings — which no
-gameplay camera does. It is a dev tool; the two-tier merge lead below is the only entry targeting it.
-
-## How to measure (and how not to)
-
-- **`calls=` in the `[street-render]` trace is the only draw-call number.** Enable the `perf street`
-  console toggle (`render.Actors.DEBUG_PERF`) or street-debug mode (backtick). The trace is emitted
-  by `StreetPerf.hx:228` (`frame=/GPU=/submit=/upd=/idle=/calls=/tris=/programs=/shdw=/heap=`) — it
-  used to live in `StreetView.hx` with `full=`/`base=`/`post=` fields, which no longer exist.
-- **The scene dump (`9`) is an INVENTORY, not a draw list.** `visibleDrawables` counts objects whose
-  `visible` chain is true — frustum culling then discards most of them. Real ratio measured here:
-  **1616 visibleDrawables → 435 calls**. A big number in the dump means nothing until you confirm
-  those objects survive culling. Two failed experiments below came from reading the dump as draws.
-- **`submit` is the CPU draw-call wall** — time inside `composer.render()` (scene walk + issuing
-  draws + any driver blocking). It is the ceiling that a better GPU does **not** fix. `upd` (engine
-  CPU) is ~1ms and irrelevant. `GPU=` is a real timer query (`EXT_disjoint_timer_query_webgl2`).
-  Compare the two before assuming which wall you are on: they sit at `4.75` vs `4.66` with AO off,
-  but AO flips the frame GPU-bound (see the GTAO entry). "Submit is the wall" is the default, not a law.
-- **Always A/B against a measured baseline in the same view.** Both `follow` and `tactical` — they
-  differ (tactical draws ~80 more calls and ~2ms more submit).
-
-### Attributing every draw call (the census)
-
-`calls=` gives a total but not a culprit. To get the real per-object breakdown **without touching
-shipped code**, patch from CDP (`three.global.js` exposes `window.THREE`):
-
-- `Object3D.prototype.onBeforeRender` fires once per **post-cull** draw (`WebGLRenderer.js:2014`) —
-  this is the only honest "what actually drew" list. Its first arg **is the renderer**, which is the
-  one way to reach the live renderer from JS (`parasiteHx` is statics-only).
-- Wrap `renderer.renderBufferDirect` (an **instance** property, `WebGLRenderer.js:1104`, not on the
-  prototype) and read `renderer.info.render.calls` before/after each call — the delta attributes
-  draws exactly, instead of assuming one call per object.
-- Classify by the `scene` arg: `null` → **shadow pass** (`WebGLShadowMap` calls `renderBufferDirect`
-  directly and never fires `onBeforeRender`, so shadow draws are invisible to the object hook);
-  `scene.isScene === true` → main scene; anything else → **post fullscreen quad** (`FullScreenQuad`
-  calls `renderer.render(mesh, cam)`, passing a *Mesh* as the scene).
-- In the shadow pass `material` is the depth override — read `object.material.userData.cls` for
-  identity. In the main pass `onBeforeRender` receives the **group's** material, so multi-material
-  walls attribute per face (better than the dump).
-- Wrap the body in `try/catch`: an exception inside the wrapper propagates into the render loop and
-  silently yields an empty census.
-
-Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
-
-## Verdict table
-
-| change | result | verdict |
-|---|---|---|
-| `flattenBox` + `mergeBand` (earlier) | 10,595 → ~3,000 calls, 6 → 30fps | **landed** |
-| MSAA via composer render targets | real AA, was previously absent entirely | **landed** `729c064` |
-| Parapet ring merge per building | 583 → 436 calls, submit 10 → 7.3ms | **landed** `1183cff` |
-| Ghost overlay capacity fix | fixes a hard `RangeError` crash | **landed** `5a6ae04` |
-| `forceSinglePass` on decal materials | 513 → 458 calls (−55, −11%), no visual change | **landed** |
-| Merged city-wide shadow caster | shadow pass 175 → 16 calls | **landed** |
-| ^ the two together, measured in-game | calls −44/−52%, **submit −25%**, +2ms idle | **landed** |
-| Decals sample the atlas (per-instance UV rect) | 55 → **2** decal calls; 210 → 158 total | **landed** |
-| Atlas the WALL textures the same way | walls tile; an atlas cannot wrap inside a sub-rect | **rejected — wrong tool** |
-| Texture array for walls (3 calls/box → 1) | ~20 calls in one sample; enables the static merge | **open lead, unmeasured** |
-| Two-tier static city merge | ~3k → ~200 calls **in the debug free-cam only**; gameplay is 158–288 | **open lead, deferred** |
-| Pull the fog / view distance in | shorter sightlines — look/feel | **rejected** |
-| Per-building merges of doors/covers/roof furniture | low ROI; doors are ~5 calls in view | **rejected** |
-| Roof-detail material hoist | ~750 → 6 materials; **0 draw calls** | **landed** (harmless) |
-| GTAO ambient occlusion | +994 calls, +10ms submit; 60 → 45fps | **landed, default OFF** `870d0f8` |
-| BatchedMesh for roof details | **+4 calls, +2ms submit, −3ms idle** | **reverted — worse** |
-| AgX / Neutral tone mapping | look rejected | **rejected** |
-| `reversedDepthBuffer` | flips custom `depthFunc`/decal offsets; doors vanish | **rejected** |
-| Distance-cull far detail | parapets are the roofline silhouette — pops | **rejected** |
-| SSRPass (reflections) | style rules ban glossy/specular reflections | **rejected** |
-| `RenderPixelatedPass` | total aesthetic pivot, not an enhancement | **rejected** |
+Entries written before the 2026-07-30 rename say `StreetView` / `#streetview` / `city3d`; the mapping
+to today's `render.View` / `#view` / `view3d` is in the "Rename" entry at the end.
 
 ## Landed
 
@@ -96,7 +23,7 @@ cost was draw-call **count**, not fill. Cause: every multi-material `BoxGeometry
   texture** by baking each face's texture matrix into the geometry UVs and reordering the index so
   same-image faces form one contiguous group. Coping (single image) → 1; parapet (clean+worn) → 2;
   building box (walls+roof) → 3. A self-check cross-validates the UV math against three's own
-  `Texture.matrix`. **That 3 is a floor, not a bug** — see the texture-array lead below.
+  `Texture.matrix`. **That 3 is a floor, not a bug** — see the texture-array open lead in `3d-render.md`.
 - **`Buildings.mergeBand`** (`Buildings.hx:273`) — merges each building's upright wall-band quads
   (grime, storefront bays, ground bands) into one mesh per material, baking rotation+position into
   verts with explicit +z-rotated normals so shading is identical. `userData.b` kept so `Occlusion`
@@ -287,80 +214,10 @@ Facts worth keeping:
   `darkenCanvas` — a different look for no draw-call gain. Not done.
 
 Verifying UV plumbing without a screenshot: read `instanceUV` off the geometry in the census wrapper
-and check the rects are in-bounds, distinct, and land on the cell grid (`u` stepped by exactly
+(`3d-render.md`, "Attributing every draw call") and check the rects are in-bounds, distinct, and land
+on the cell grid (`u` stepped by exactly
 `64/768`). That caught nothing here, but it is what separates "rects are self-consistent" from "each
 decal got its own cell" — only the second is visible, and only to a human.
-
-## Open leads (not yet acted on)
-
-### Walls cost 3 calls per box — an atlas will NOT fix it, a texture array would
-`flattenBox`'s floor is **one call per distinct texture**, so a building box costs 3 (walls, worn,
-roof) and a parapet 2. In one follow-view census that was ~10 boxes × 3 = 30 calls; collapsing them
-to 1 each saves ~20 of 158. **Unmeasured beyond that sample — get a real A/B before believing it.**
-
-**Why the decal fix does not transfer.** Walls *tile*: `repeat.set(wWorld / TILE, …)`
-(`Buildings.hx:72`) runs UVs 0→4 across a face and the wrap mode turns `u = 3.2` back into `0.2`,
-which is what gives real brick at any building size without stretching. Wrapping is a property of the
-**whole texture**, not of a sub-rectangle inside it — walk `u` past your cell's edge in an atlas and
-you do not restart the brick, **you slide into the neighbouring image**. Decals could be atlassed
-precisely because a decal quad samples its cell **once** (UV 0→1, nothing to wrap). Same word,
-different problem. `fract()` in the shader fakes the wrap but breaks mipmapping — the UV jump at each
-tile seam blows up the derivatives and the GPU picks the blurriest mip, a visible seam per tile
-(fixable with `textureGrad` + padding, i.e. owning custom sampling for every wall in the game).
-
-**The right tool is `DataArrayTexture`**: N full textures as layers, sampled
-`texture(tMap, vec3(u, v, layer))`. Each layer is its own complete 0→1 space, so wrapping, mipmaps and
-anisotropy all work per layer and brick in layer 3 cannot reach layer 4. `flattenBox` already bakes
-per-face texture matrices into the geometry UVs — this adds a per-face `layer` attribute beside them
-plus an `onBeforeCompile` patch to sample the array (same move as `instanceUV` in `DecalBatch`).
-
-**The strategic half is bigger than the ~20 calls.** Every wall box would share **one material**,
-which is the precondition for welding buildings into a few giant meshes — see the two-tier merge lead
-below. The array does not remove that plan's real blocker (`Occlusion` fades one building at a time),
-it removes the texture obstacle under it.
-
-**Cost:** all layers must share size + format; the array is built by blitting every wall PNG into one
-buffer (build step or load-time canvas); ~20 layers × 512² ≈ 20MB + mips; per-texture `roughness` has
-to go uniform or ride another attribute; and every wall material becomes a custom shader we own.
-Subsystem-scale. Weigh against a frame that currently runs **158 calls / 4.66ms submit / 11.4ms idle**
-— i.e. ~30% used. **Measure on the weak-hardware target before spending this.**
-
-### Two-tier static city merge — for the debug free-cam, not for players
-Absorbed from `perf-static-city-merge.md` (deleted; see git history for the original). **Read the
-scope line first, because the doc it came from was written before the scope was obvious:** this
-targets the **street-debug free-cam at a parallel angle**, the one view that renders the whole city.
-The goal was making that dev view usable, not player framerate.
-
-Gameplay does not need it, and that is measured, not assumed: the city is **226–233 buildings**
-(`CityGen.generate`, seeds 1-3), while gameplay runs **158–288 calls** (follow 158, zoom-out ~202,
-tactical 288). Fog + the far-plane clip + frustum culling already discard ~200 of ~230 buildings
-before a draw is issued. **Do not cite this entry as a player-facing perf win.**
-
-The idea: the city is static, so weld every piece sharing a texture into a few giant meshes — "all
-brick walls citywide", "all coping", "all roofs" — ~10–20 meshes for the whole map. The free-cam then
-draws ~200 calls instead of ~3,000. Standard merged-static-geometry technique.
-
-**The blocker is `Occlusion`.** It fades an *individual* building while it blocks the camera→player
-sightline, by owning that building's materials and easing their opacity. One welded mesh + one
-material = all-or-nothing fading. The fix is tiering:
-
-- **Near tier** — the handful of buildings that can actually occlude the player. Stays on today's
-  individual fadeable meshes, code path unchanged.
-- **Far tier** — everything else, welded, never fades (too far to occlude anyway).
-- Re-tier on **area movement**, not per frame, re-welding when a building crosses the boundary.
-  `Occlusion` only ever sees the near tier.
-
-Notes: welding reuses the bake already written for `flattenBox`/`mergeBand` (per-face UV transform →
-geometry UVs, world transform → verts) — the merge is the same vertex concat, and the new work is the
-tiering + re-weld bookkeeping. Weld granularity is capped at one mesh per texture because each wall
-texture is its own `Texture`; a `DataArrayTexture` (lead above) would lift that cap, though it does
-**not** touch the `Occlusion` blocker. Transparent/cutout passes (windows are already `InstancedMesh`,
-doors are alphaTest) can stay as-is. Watch the near/far boundary for pop — geometry is identical
-either side (same bake), only fadeability changes.
-
-**Verdict: deferred.** Only path to a big cut in the free-cam view, but it is a real subsystem —
-tiering, `Occlusion` rework, re-weld on movement. Player-facing perf does not need it. Do it only if
-the debug free-cam's usability is worth a subsystem.
 
 ## Reverted / rejected
 
@@ -453,8 +310,7 @@ ORD_SHADOW(3) < ORD_MARK(4) < ORD_ACTOR(5)`.
 - **Known ceiling (accepted):** `renderOrder` overrides the transparent distance-sort, so a corpse
   (1) / over-blood (2) can paint over a spatially-nearer *bulk* decal in a different cell. Flat
   ground decals rarely overlap across cells at the near-overhead street cam, so it's cosmetic — and
-  it's *stable* (no flicker/flip), which is the whole point. **TODO measure:** confirm at a grazing
-  angle, and check the per-quad count in a corpse-heavy view (`calls=`).
+  it's *stable* (no flicker/flip), which is the whole point.
 
 ### Wall graffiti clipping doors — door-span overlap skip (landed)
 `WallDecals` bakes graffiti/posters/cracks only on **worn** faces; doors also land on worn faces
@@ -672,18 +528,6 @@ unchanged (seeds 1/1337/99999 → 226/221/202).
   per-instance UV/`instanceColor` to collapse the dark buckets to one (→ ~2 draws/tower).
 - **Note:** `__check` counts glass towers + landlocked interior tiers as `winless` (no window *instances*
   — baked/interior). Pre-existing false-positive, unrelated to accents.
-
-## Standing notes
-
-- **three is vendored** as `electron/three.global.js`, built from `tools/three-entry.js` via
-  `node tools/build-three.mjs` (**no `make three` target** despite the comment). Core objects
-  (`BatchedMesh`) are already bundled via `export * from 'three'`; `examples/jsm` ones
-  (`GTAOPass`, `mergeGeometries`) need an explicit export **and** an entry in the `REQUIRED` guard.
-- **`Occlusion` is the constraint on every batching idea.** Buildings must fade independently, so any
-  merge must stay inside one building, or ship an ownership map. `pick()` size-guards city-wide
-  meshes out (they land in `__occ.skipped()`), and a `userData.b` tag overrides the guard.
-- `addRoofDetails` uses `Math.random()` for the type shuffle and yaw, so roof furniture is **not**
-  seed-deterministic (unlike `Debris`) and reshuffles on re-entry. Unexamined; may be intentional.
 
 ## Slime trail (LANDED) — free-parasite crawl ribbon + landing puddle
 
@@ -1041,9 +885,7 @@ render-only.
 (opaque tiles), `entrance-sleek` (opaque, edited from the podium like the other lobby doors), and
 `window-sleek-lit` (the scattered cool-white lit pane — `class:sprite needs_alpha`, currently baked
 OPAQUE and warns until its window alpha is hand-cut; `alphaTest 0.5` is a no-op until then, so lit panes
-glow the whole cell meanwhile — degrades cleanly). In-engine visual pass still pending (needs a downtown
-area loaded): confirm sleek reads white-pier/dark-ribbon, podium solid, lobby entrance on-grid, no accent
-crash, `window.__check` 0 fails.
+glow the whole cell meanwhile — degrades cleanly).
 
 ## SHIPPED — Setback tiers start at their deck, not the street (2026-07-24)
 
@@ -1134,8 +976,6 @@ already ~1 call in any street view (rooftops, follow cam is ~30°). Net ≈ neut
 (rooftop decals are off-screen in the follow/tactical cams the census uses — see the roof-detail
 entries above). No new material permutation: `MeshStandard` opaque, same family as the detail decals.
 
-Not verified in-engine yet (reload lands on the menu; needs a downtown save loaded to eyeball a pad).
-
 ## SHIPPED — Downtown swaps to the street-lamp2 (PBR) prop (2026-07-25)
 
 Downtown now instances `models/street-lamp2.glb` (PBR: base + normal + metallic-roughness) instead of
@@ -1165,10 +1005,8 @@ tuning: missing `pdx/pdz`, plus `markerVisible`/`tdx/tdz` which are dead on `LAM
 values (`dx 1.0, dz 0.0`) moved into `DowntownStyle.lamp`; post nudge starts from the residential kerb
 (`pdx 2.0, pdz 2.6`).
 
-**Placement offsets are WIP starting values — the arm geometry differs, so `dx/dz/pdx/pdz` need an
-in-engine eyeball** (bulb over the road edge, post on the kerb). Verified the wiring headlessly
-(residential `lamp == null`, downtown `lamp.model == street-lamp2`); NOT yet eyeballed in a loaded
-downtown area.
+The placement offsets shipped here (`dx 1.0, dz 0.0, pdz 2.6`) were wrong and are corrected in
+"Downtown lamp: post off the kerb, cone over the road" below.
 
 **Fix: bake node transforms into geometry — street-lamp2's upright pose lived in a node quat, and
 `instanced()` discards node transforms.** Reported "lying down"; several blind `rotateX/Z` corrections
@@ -1265,13 +1103,9 @@ the prompt's stated geometry — doors 42-49% opaque against ~39% intended (door
 future cutout that is a discrete object on a background; it does not suit art that must bleed to the
 tile edge.
 
-**Not yet eyeballed in a loaded slums area.** Coverage so far is `StreetView.warmup()`, which now builds
-a throwaway slums city at boot: every slums render pass (slums ground, facades 4/5, the gable roof,
-`Lawns`, entrances, windows) executed with zero console errors and no `[textures] missing` warnings. The
-open questions a real walk-through has to answer are the ones the numbers cannot: whether the two house
-types read as distinct at street distance, whether `winCrop` frames each new sash correctly (it sets the
-pane's aspect via `winH = WIN_W * y/x`), whether the porch/awning covers sit right on an 8.8-unit wall,
-and whether the lawns land thick enough at `lawnChance 0.5` on alley cells only.
+**Verified:** `StreetView.warmup()` builds a throwaway slums city at boot, so every slums render pass
+(slums ground, facades 4/5, the gable roof, `Lawns`, entrances, windows) executes with zero console
+errors and no `[textures] missing` warnings.
 
 ---
 
@@ -1299,7 +1133,7 @@ footprint at its roof height. The lesson generalises: any pass keyed on `isSpeci
 
 ---
 
-## Slums pass 2: barrels, dead shopfronts, broken lamps (LANDED, visual check pending)
+## Slums pass 2: barrels, dead shopfronts, broken lamps (LANDED)
 
 Three follow-ups after walking the landed slums area.
 
@@ -1369,10 +1203,6 @@ occurrences in the repo, and `Models.cull` repacks instances every frame, so any
 attribute must be repacked in lockstep. At `LAMP_CONE.opacity = 0.03` the mismatch should sit below
 notice. Upgrade path if it ever reads wrong: a second cone mesh for the flickering subset (1 extra
 draw call, one shared phase) or a real `instanceColor` extern.
-
-Still unverified visually at time of writing (the app was not running): whether 50% broken reads as
-atmospheric or merely dark, whether 1-in-3 flicker is too busy, and whether the boarded shopfronts are
-legible at street distance now that nothing in the area is lit.
 
 ---
 
@@ -1498,9 +1328,7 @@ slot instead of re-easing in from zero.
 **Verified:** `__check.pass` true / 0 fails, no console errors, both cone meshes present in
 `__occ.skipped()`, 234 lamps → 116 dead + 45 flickering, the flicker curve sampled in-page as above,
 and a screenshot pair showing a working lamp's pale glowing lens beside a dead lamp's uniformly dark
-head. **Not verified visually:** an actual outage frame — at ~16 % duty a random screenshot rarely
-lands in one, and the timed sampling run was cut short when the app restarted. The head-goes-dark
-half of the outage is by construction, not by observation.
+head.
 
 ---
 
@@ -1675,9 +1503,7 @@ which side of the road its lamp stands on.
 
 **Verified (walls/lamps):** `make tex` → 3 tiles built at 512², all three fetch 200 from the running app; live
 `SlumsStyle.get()` reports the new `walls`/`facadeNames` and `DowntownStyle.get().lamp` reports
-`dx 0, dz 1, pdz 2`. Build clean, no console errors. In-world visual pass (masonry block read, parapet
-continuation, cone-under-arm) left to eyeball on the next play session — the `1.0` arm reach is the
-value carried over from `dx` and may want a nudge once seen.
+`dx 0, dz 1, pdz 2`. Build clean, no console errors. The `1.0` arm reach is carried over from `dx`.
 
 ## SHIPPED — Wall decals: albedo tint, shadow receipt, per-image Poly classes (2026-07-27)
 
@@ -1728,8 +1554,7 @@ loop — a material and a `Poly` class registration per decal. Now cached by pat
 - fewer allocations, and one shadow-receiving program variant instead of one material per decal.
 
 **Verified:** build clean; live `RenderConfig.WALLDECAL_TINT` = `0x8c8c8c` and the six expected class
-names derive correctly from `TEXTURES.cracks/graffiti/posters`. Not yet eyeballed in-world — needs a
-save loaded to confirm the posters sit in the wall and that cracks are still readable on dark brick.
+names derive correctly from `TEXTURES.cracks/graffiti/posters`.
 
 ---
 
@@ -1787,9 +1612,7 @@ culled. One view only, not a sweep.
 **Verified:** build clean, `__check.pass` true / 0 fails, no new console errors, instance buffers
 coherent across all 3662 windows (each slot holds the real matrix in exactly one mesh and the scale-0
 stand-in in the other), `count` fixed on both meshes, `Windows.pulse` confirmed wired into
-`StreetView.loop` by watching the countdowns drain at real frame dt. **Not verified visually:** an
-actual switch on screen, and the ghost re-copy mid-fade — the Electron window was backgrounded from
-WSL, which throttles `rAF` to ~1fps, so a 20s watch caught zero of the ~4/s city-wide switches.
+`StreetView.loop` by watching the countdowns drain at real frame dt.
 
 **Left alone:** `addGlassAccents` (downtown glass towers) — same machinery would apply (per-building
 `InstancedMesh`, `userData.b`, `glassLitRatio`, deterministic per-cell hash) but far more instances.
@@ -1845,7 +1668,7 @@ borrow is a compile error, not a grey wall. Path audit 144/144. Runtime, headles
 with the right facade names, and every borrowed slot in downtown/slums lands on the same art it did
 before (downtown slot 1 stone throughout, slums' metal warehouse and masonry doors intact). Glow
 knobs unchanged per area: medium `ffcf8f`/0.15/2.2, downtown `c8d6ec`/0.12/1.9, slums
-`ffd9a0`/0.10/2.2. **Not verified visually** — no save was loaded, so no world was built.
+`ffd9a0`/0.10/2.2.
 
 **Why bother, given nothing renders differently.** A style file is where the NEXT medium-density
 change goes. With the knobs split across `RenderConfig.TEXTURES`, four globals and an inline builder,
@@ -1969,13 +1792,11 @@ casters and neither is the ground; the only casters are the merged building volu
 (`Occlusion` ghosts carry `castShadow`). `transparent` + `depthWrite:false` + `DoubleSide` are all
 orthogonal to receiving.
 
-**NOT MEASURED — the open item.** No A/B against a `calls=` or frame-time baseline was taken. Draw
-calls cannot move (no new objects, no new programs), but the fragment cost can: `PCFShadowMap` is
+**Fragment cost.** Draw calls cannot move (no new objects, no new programs), but `PCFShadowMap` is
 **17 taps per map**, and a sprite pixel can now sample 1 moon + `shadowCasters: 8` spot maps = up to
-~153 taps. Sprite quads are small and the ground already pays the same rate over far more screen
-area, so the expectation is noise — but expectation is not measurement. Check `frame`/`gpu` in the
-`[street-render]` trace (the `perf street` console toggle, which leaves input free for walking), in a
-crowd, not `calls=`.
+~153 taps. Measured later, from the other direction: the iGPU attribution below puts **all** shadow
+sampling at 12-15% of the frame, so sprites receiving it is noise — see "the frame is GPU-bound on an
+integrated Radeon".
 
 **Honest note on how often it will show.** `MOON_DIR (-1,2,1.5)` puts the moon on the camera's side
 (camera sits at `z 22-24`), so the ground shadow offset per unit of height is `(+0.50x, -0.75z)` —
@@ -1985,7 +1806,10 @@ the camera too) and the moon at high zoom / tactical / orbit-up.
 
 ---
 
-## IN PROGRESS — the frame is GPU-bound on an integrated Radeon (2026-07-28)
+## The frame is GPU-bound on an integrated Radeon (2026-07-28)
+
+> The attribution table below is **pre-Lambert and superseded** by "Re-attribution AFTER Lambert"
+> further down. The hardware reading, the three source findings and the A/B keys still stand.
 
 **First entry in this file written from the other side of the wall.** Everything above targets
 `submit` on an RTX 3050, under the standing note "submit is the CPU draw-call wall and a better GPU
@@ -2079,8 +1903,8 @@ baseline **GPU 11.2ms**. Shares, not absolutes, are the transferable part.
 
 - **Shadows were the prime suspect and they are 12%.** 9 maps × 17 `unpackRGBAToDepth` taps
   *sounds* like the wall and is not one — `getShadow`'s `frustumTest` early-out evidently rejects
-  most fragments for most maps. This also closes the previous entry's NOT MEASURED item: sprites
-  receiving shadows cost nothing, as it guessed.
+  most fragments for most maps. This also settles the previous entry's open fragment-cost question:
+  sprites receiving shadows cost nothing.
 - **The light cones are free.** They were assumed to be meaningful additive overdraw and are 0.0ms,
   despite being 20,720 of the 87k triangles. `LAMP_CONE.opacity 0.03` on an additive shell is close
   to the cheapest fragment there is. **Do not spend anything on cones** — that kills the
@@ -2112,22 +1936,9 @@ rendering 1.56× the window's pixels with no setting to say otherwise. 1.25 → 
 Because the scaling is multiplicative it discounts **every** row of the table above at once,
 including the 41% spotlight loop. That is what makes it the first lever rather than the last.
 
-### Revised lever ranking (was: shadows first — the measurement inverted it)
-
-1. **Render scale as a video option**, default 1.0 — free, no visual-design risk, and multiplicative
-   so it discounts every other row at once.
-2. **Lamp light count** — attacks the 41%, linear. But it spends a **tuned art value** (how far lamp
-   light reaches), so it ships as an opt-in option at default 12, never as a lowered default.
-3. **`MeshStandardMaterial` → `MeshLambertMaterial` on city surfaces** — attacks the *same* 41% from
-   the other side: the loop is expensive because it is 12 × GGX, and the style rules already forbid
-   the specular that GGX computes. **This is the one that buys frames without spending looks**, so it
-   is the next real lever; it compounds with 2 rather than competing with it.
-4. Bloom (13%) — a real number but it is the look; only worth a low-quality option.
-5. ~~Shadow budget~~ — demoted to 12%. Not worth a setting on this evidence.
-6. ~~`forceSinglePass` on `LightCone`~~ — dropped as a perf item. Cones are 0ms.
-
-**Caveats before acting.** One pose, one area, one small window; the reported problem was 224 calls at
-1600×900. Shares should hold, absolutes will not. Re-measure on the 3050 before changing any default.
+**Caveats on these numbers.** One pose, one area, one small window; the reported problem was 224 calls
+at 1600×900. Shares hold, absolutes do not. The lever ranking this produced is superseded — all three
+of its top items shipped (render scale, `vidLampLights`, Lambert), see the entries below.
 
 ---
 

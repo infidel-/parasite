@@ -603,7 +603,7 @@ class RenderConfig {
     // loop into every lit material, so each slot is a full extra light evaluation — GGX included — on
     // every lit fragment in the frame, and it is the single most expensive thing in the street frame:
     // measured 41% of GPU on the integrated-Radeon laptop, LINEAR at ~0.32ms (~3.5% of frame) per
-    // light (docs/3d-changes.md). 12 is an ART value — it sets how far lamp light reaches from the
+    // light (docs/3d-render.md). 12 is an ART value — it sets how far lamp light reaches from the
     // player, so lowering it visibly darkens the frame edge. tune for looks, not for frames; the perf
     // dial for weak GPUs is the render scale. never set BELOW shadowCasters (LampLights sizes its
     // per-slot arrays from THIS number)

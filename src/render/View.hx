@@ -337,7 +337,7 @@ class View {
       sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
       // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
       // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
-      // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-changes.md).
+      // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).
       // so for every such material in the scene, add explicit FrontSide + BackSide clone meshes so BOTH
       // real programs get cached instead of recompiling on the first render
       var quad = new PlaneGeometry(1, 1);
@@ -878,7 +878,7 @@ class View {
 // toggle the bloom pass live (config vidBloom). skipped whole by the composer when off, and it is the
 // LARGEST single removable pass on a fill-bound GPU — measured 3.7ms of a 14.7ms frame at lamp pool 12,
 // and 3.4ms of a 9.0ms frame at pool 0, i.e. it matters most to whoever already gave up their lamps
-// (docs/3d-changes.md). the pass is always constructed and only gated here: never skip building it, or
+// (docs/3d-render.md). the pass is always constructed and only gated here: never skip building it, or
 // the plain `1` debug key below dereferences a null bloomPass. off is a real visual loss, not just a
 // dimmer one — everything authored to glow (lit windows, tracers, the move-path line, the tactical
 // grid) is HDR-multiplied with toneMapped:false and CLAMPS to flat saturated colour without the halo.

@@ -267,7 +267,7 @@ typedef RendererInfo = {
 }
 // diffuse-only lit material: per-pixel Lambert, no GGX specular lobe and no IBL. same map/emissive/
 // shadow feature set as Standard minus roughness/metalness, so it is the drop-in for the fully matte
-// city surfaces (all of which set roughness 1 / metalness 0) — see docs/3d-changes.md
+// city surfaces (all of which set roughness 1 / metalness 0) — see docs/3d-render.md
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
   public var map:Texture;

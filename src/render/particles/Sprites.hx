@@ -15,7 +15,7 @@ class Sprites {
   public static inline var TILT = 0.6;                 // radians an upright sprite leans back toward the overhead camera
   // transparent draw layering (higher = on top): ground decals < corpse < blood-over-corpse < fake
   // shadow < target markers < upright actor icon. all share this pool + depthWrite:false, so
-  // renderOrder (NOT Y — tiny Y gaps z-fight at this near/far, see docs/3d-changes.md) fixes layering.
+  // renderOrder (NOT Y — tiny Y gaps z-fight at this near/far, see docs/3d-render.md) fixes layering.
   // a corpse sits over the blood already present when it fell (ORD_DECAL, batched); blood sprayed
   // AFTER it (in its cell) is pulled from the batch to ORD_BLOODOVER so it paints over the body
   public static inline var ORD_DECAL = 0;              // debris + batched blood (bulk, + blood predating a corpse in its cell)
