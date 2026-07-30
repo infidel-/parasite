@@ -81,6 +81,44 @@ class ParticleBloodSpurt extends particles.Particle
 }
 ```
 
+### 2D particles are invisible in a 3D area
+
+A `particles.Particle` subclass paints onto the 2D `#canvas`. Some areas — every
+`type: 'city'` area today — render in the 3D view instead, on an opaque
+full-viewport `#view` canvas that **completely covers `#canvas`**, and the engine
+skips the 2D area draw for them entirely. Anything your particle draws there is
+hidden. Worse, `area.addParticle` starts a 100Hz full 2D redraw for the
+particle's lifetime, so you pay for frames nobody sees.
+
+The engine solves this for its own particles by offering the 3D view first
+refusal (see `particles/Particle.hx`), and mods should use the same shape:
+
+```haxe
+if (scene.view3d.running)
+  scene.view3d.playProjectile('blood', tx, ty, landX, landY, true, 'red');
+else
+  new ParticleBloodSpurt(scene, { x: tx, y: ty }, { x: landX, y: landY });
+```
+
+`game.scene.view3d` (`render.View`) exposes the 3D choreography the engine drives
+its own effects through. Each returns `false` when the view is not running, so a
+`play* || fallback` shape works too:
+
+| call | effect |
+|---|---|
+| `playSplat(type, x, y, ?source)` | blood/acid/slime burst at a cell, drops arc and land as decals |
+| `playProjectile(type, sx, sy, tx, ty, hit, bloodType)` | thrown blob races/lobs to a cell, bursts on landing |
+| `playGas(kind, x, y, range)` | additive gas dome: burst then lingering fade |
+| `playMoney(x, y, range)` | tumbling-bill fountain + ground stains |
+| `playScream(x, y)` | ghostly dome + screen shockwave ripple |
+| `playMelee(...)` / `playShot(...)` | full attack choreography (lunge/tracer → impact beat) |
+
+`playProjectile` types are `'acidSpit'`, `'slimeSpit'`, `'paralysisSpit'`,
+`'needle'` and `'blood'`. **`'blood'` is 3D-only** — it lobs a blood clot over an
+arc and bursts on landing, but `Particle.createProjectile` has no 2D
+counterpart, so shipping the 2D fallback for that one stays your job (which is
+exactly what `ParticleBloodSpurt` above is for).
+
 ### Override signatures must match the *extern*, not the engine source
 
 The SDK extern generator falls back to `Dynamic` for any type it cannot resolve
@@ -160,7 +198,7 @@ These events ship currently:
 | `onAIDiePre`   | `ai:die-pre` | inside `AI.die()` after dead state is set but **before** `AreaGame.removeAI` nulls `ai.entity`. carries the live entity ref + attacker (null for non-combat deaths) | `ModAIDiePreEvent { ai: AI, area: AreaGame, entity: AIEntity, attacker: Null<Attacker> }` |
 | `onAIDie`      | `ai:die`     | when an AI dies in the current area (post `onDeath()` hook); area-mode only. `ai.entity` is already `null` here | `ModAIEvent { ai: AI, area: AreaGame }` |
 | `onItemLearn`  | `item:learn` | after the player learns about an item (post `info.onLearn()`, id added to known items) | `ModItemLearnEvent { item: _Item }` |
-| `onGameFinishPre` | `game:finish-pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` to override the game-over screen | `ModGameFinishPreEvent { result: String, text: String, img: String }` |
+| `onGameFinishPre` | `game:finish-pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` / `e.filter` to override the game-over screen. `filter` grades the image (`'lose'` \| `'alien'` \| `'cult'`); `null` is **not** ungraded, it falls back to the `'lose'` grade, so a mod swapping in its own win image must set it or the image renders like a death screen | `ModGameFinishPreEvent { result: String, text: String, img: String, filter: String }` |
 
 Notes:
 
@@ -200,20 +238,23 @@ fx by id (cross-mod reuse) without poking `Browser.document` directly.
 | `parasite.fx.play(id, params)`                                    | look up and run the fx. Unknown id warns once and is a no-op. `params` is `Dynamic`; the impl decides its shape. |
 | `parasite.fx.stop(id)`                                            | call the registered `stop()` hook, if any. Mods that compose with `tick` can use the optional channel to also cancel in-flight frames. |
 | `parasite.fx.tick(durationMS, frameFn, ?onDone, ?channelID)`      | RAF-based scheduler. `frameFn(t)` runs each frame with `t` in `[0..1]`; `onDone()` fires once after `frameFn(1.0)`. If `channelID` is set, a re-play on the same channel cancels the in-flight tick. RAF pauses on tab blur and resumes on return. |
-| `parasite.fx.canvas()`                                            | `Element` — the game `#canvas` (may be `null` before the scene exists).   |
+| `parasite.fx.canvas()`                                            | `Element` — the **2D** `#canvas` specifically (may be `null` before the scene exists). In a 3D area it is completely covered by `#view`, so anything anchored on it is invisible there — use `viewport()` for that. |
+| `parasite.fx.viewport()`                                          | `Element` — whichever canvas the game is currently drawing into: the 3D view canvas (`#view`) while a 3D area is shown, else the 2D `#canvas`. This is the one for viewport-anchored fx (camera shake). |
 | `parasite.fx.overlay()`                                           | `Element` — the engine-owned reusable fullscreen overlay div. Fixed-position, `pointer-events: none`, `z-index: 9999`, initial `opacity: 0`. Mods set their own styles each play; concurrent flashes from different mods stomp each other. |
 
 ### Pattern
 
 Register at boot, fire later (from a weapon hook, an event, anywhere). The
 `channelID` lets a re-play interrupt an in-flight tick instead of running
-parallel frame loops, which is what you want for shake / flash / juice fx:
+parallel frame loops, which is what you want for shake / flash / juice fx.
+Note `viewport()`, not `canvas()` — a shake anchored on the 2D canvas does
+nothing in a 3D area, where `#view` covers it:
 
 ```haxe
 parasite.fx.register('mod-mymod-shake', {
   play: function(p: Dynamic): Void
     {
-      var c: Dynamic = parasite.fx.canvas();
+      var c = parasite.fx.viewport();   // js.html.Element — no Dynamic needed
       if (c == null) return;
       var ms: Int = p.durationMS;
       var px: Int = p.magnitudePX;

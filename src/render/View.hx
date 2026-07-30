@@ -719,7 +719,11 @@ class View {
       return running && render.choreo.Scream.play(choreo, x, y);
     }
 
-// thrown-projectile choreography (spit clot / spine needle -> impact splat beat) — see render.choreo.Projectile
+// thrown-projectile choreography (a blob races source->target, then the impact splat beat) — see
+// render.choreo.Projectile. type: 'acidSpit' | 'slimeSpit' | 'paralysisSpit' | 'needle' | 'blood'.
+// 'blood' lobs a blood clot over a sine arc and bursts bloodType on landing; it has NO 2D
+// counterpart in Particle.createProjectile, so a mod that wants the effect outside a 3D area
+// ships its own 2D particle for that case (see examples/chainsaw)
   public function playProjectile(type:String, sx:Int, sy:Int, tx:Int, ty:Int,
       hit:Bool, bloodType:String):Bool
     {

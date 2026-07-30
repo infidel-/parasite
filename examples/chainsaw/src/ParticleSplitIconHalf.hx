@@ -38,7 +38,7 @@ class ParticleSplitIconHalf extends Particle
 // in tile-local pixel space (0..tile). `half` 0 = negative side of the
 // half-plane normal, 1 = positive side. `ent` is the live AIEntity ref
 // grabbed before AreaGame.removeAI nulled it
-  public function new(s: GameScene, target: _Point, ent: Dynamic,
+  public function new(s: GameScene, target: _Point, ent: entities.AIEntity,
       cutAngleRad: Float, cutTileX: Float, cutTileY: Float, half: Int)
     {
       super(s);
@@ -46,12 +46,11 @@ class ParticleSplitIconHalf extends Particle
       var tile = Const.TILE_SIZE;
       var clean = Const.TILE_SIZE_CLEAN;
 
-      // pull icon source data via untyped — imageName/ix/iy are package-private
-      // on Entity so they're stripped from the SDK extern, but the JS fields
-      // exist (engine builds with -dce no)
-      var imageName: String = untyped ent.imageName;
-      var ix: Int = untyped ent.ix;
-      var iy: Int = untyped ent.iy;
+      // icon source data — imageName/ix/iy/isMaleAtlas are all public on Entity
+      // and present in the SDK extern, so no untyped access is needed
+      var imageName: String = ent.imageName;
+      var ix: Int = ent.ix;
+      var iy: Int = ent.iy;
       var isMale: Bool = ent.isMaleAtlas;
       img = s.images.getImage(imageName, isMale);
 

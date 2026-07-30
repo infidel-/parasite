@@ -5,9 +5,9 @@ import three.Three;
 // options for Sprites.paint(): required position/texture/opacity/scale plus named optional
 // overrides, replacing the old 16-positional-arg signature
 typedef PaintOpts = {
-  var x:Float;                       // world position
-  var y:Float;
-  var z:Float;
+  var x:Float;                       // world position: x
+  var y:Float;                       // world position: y (height)
+  var z:Float;                       // world position: z
   var tex:CanvasTexture;             // sprite texture (null = atlas not decoded yet, no-op)
   var op:Float;                      // opacity
   var scale:Float;                   // uniform scale of SIZE
