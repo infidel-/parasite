@@ -51,9 +51,9 @@ class Sprites {
     }
 
 // throwaway mesh carrying the exact actor-billboard material (MeshStandard, transparent, DoubleSide,
-// map + emissiveMap present), for the boot shader pre-warm (StreetView.warmup): actor sprites spawn on
+// map + emissiveMap present), for the boot shader pre-warm (render.View.warmup): actor sprites spawn on
 // demand so their program is otherwise compiled mid-game on the first actor drawn. one DoubleSide mesh —
-// StreetView's clone pass splits it into the FrontSide/BackSide programs three actually renders. a 1x1
+// render.View's clone pass splits it into the FrontSide/BackSide programs three actually renders. a 1x1
 // placeholder texture is enough: the program key needs the map/emissiveMap DEFINES present, not pixels
   public static function warmupMeshes():Array<Mesh>
     {

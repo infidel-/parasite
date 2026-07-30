@@ -63,12 +63,12 @@ class BurglarKingAI extends HumanAI
 // gas-poof exit: a 3D paralysis cloud where he stood, the gas sound, then
 // removal from the area. removal is deferred a tick so it does not reenter
 // the in-progress setState() that triggered this.
-// he only ever spawns in AREA_CITY_LOW, which always renders in the 3D street
-// view, so there is no 2D particle fallback — playGas no-ops (returns false)
-// in the brief window where the view is not running
+// he only ever spawns in AREA_CITY_LOW, which always renders in the 3D view,
+// so there is no 2D particle fallback — playGas no-ops (returns false) in the
+// brief window where the view is not running
   function vanish(): Void
     {
-      game.scene.city3d.playGas('paralysis', x, y, 1);
+      game.scene.view3d.playGas('paralysis', x, y, 1);
       game.scene.sounds.play('action-gas', { x: x, y: y });
       js.Browser.window.setTimeout(function() game.area.removeAI(this), 10);
     }

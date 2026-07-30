@@ -38,7 +38,7 @@ class Lawns {
   static inline var MIN_COURT = 6;   // alley cells below which a flood-filled region is a sliver, not a courtyard
 
   // the coverage mask is baked per area and is NOT one of the shared cached textures, so
-  // StreetView.disposeScene (which deliberately skips textures) will not free it — do it here
+  // View.disposeScene (which deliberately skips textures) will not free it — do it here
   static var maskTex:Texture = null;
 
   public static function build(scene:Scene):Void {

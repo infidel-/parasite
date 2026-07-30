@@ -464,7 +464,7 @@ public function onMouseLeave()
       // 2D area timing in area mode unless the 3D street view is rendering
       if (game.location == LOCATION_REGION)
         buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
-      else if (!game.scene.city3d.running)
+      else if (!game.scene.view3d.running)
         buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);

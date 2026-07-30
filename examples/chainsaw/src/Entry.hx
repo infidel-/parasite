@@ -159,8 +159,11 @@ class Entry
         var n = parasite.savedata.getInt('kills', 0) + 1;
         parasite.savedata.set('kills', n);
         if (n >= 99)
-          e.game.finish('win', Const.col('red', '<i>Subete no mono o yurushita.</i>'),
-            'chainsaw-win');
+          e.game.finish({
+            result: 'win',
+            text: Const.col('red', '<i>Subete no mono o yurushita.</i>'),
+            img: 'chainsaw-win',
+          });
       });
 
       // game-over override: replace the engine death text + image with a

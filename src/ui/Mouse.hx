@@ -64,14 +64,14 @@ class Mouse
     {
       return (game.playerArea != null &&
         (game.playerArea.path != null ||
-         (street() && !game.scene.city3d.playerSettled())));
+         (street() && !game.scene.view3d.playerSettled())));
     }
 
 // is the 3D street view currently showing? cursor picking / path / cursor art route through it then
   inline function street(): Bool
     {
-      return (game.scene.city3d != null &&
-        game.scene.city3d.running);
+      return (game.scene.view3d != null &&
+        game.scene.view3d.running);
     }
 
 // LOS test that works in both views: the 2D tile cache (area.isVisible) is only maintained while the
@@ -222,7 +222,7 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         {
-          // route through setCursorCSS: in the 3D view #streetview covers #canvas, so writing the
+          // route through setCursorCSS: in the 3D view #view covers #canvas, so writing the
           // hide to #canvas alone left the cursor visible. -1 so re-enabling re-applies the art
           setCursorCSS('none');
           cursor = -1;
@@ -310,7 +310,7 @@ class Mouse
       if (street())
         {
           var dpr = Browser.window.devicePixelRatio;
-          return game.scene.city3d.pickCell(game.scene.mouseX / dpr, game.scene.mouseY / dpr);
+          return game.scene.view3d.pickCell(game.scene.mouseX / dpr, game.scene.mouseY / dpr);
         }
       return {
         x: Math.floor((game.scene.cameraX + game.scene.mouseX) / Const.TILE_SIZE),
@@ -552,12 +552,12 @@ class Mouse
       return 'var(--ui-cursor-default)';
     }
 
-// write the cursor CSS to the active view's canvas: #streetview in the 3D view (it covers #canvas),
+// write the cursor CSS to the active view's canvas: #view in the 3D view (it covers #canvas),
 // else the 2D #canvas
   inline function setCursorCSS(css: String)
     {
       if (street())
-        game.scene.city3d.setCursorCSS(css);
+        game.scene.view3d.setCursorCSS(css);
       else game.ui.canvas.style.cursor = css;
     }
 

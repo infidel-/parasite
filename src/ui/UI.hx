@@ -191,10 +191,10 @@ class UI
     {
       // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
       // listeners) — suppress ALL game input while it is active. backtick toggles it off via
-      // StreetView's own listener, so exiting still works
+      // render.View's own listener, so exiting still works
       if (game.location == LOCATION_AREA &&
-          game.scene.city3d != null &&
-          game.scene.city3d.debugActive())
+          game.scene.view3d != null &&
+          game.scene.view3d.debugActive())
         return;
 
       // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
@@ -268,9 +268,9 @@ class UI
           if (e.code == 'Space')
             {
               if (game.location == LOCATION_AREA &&
-                  game.scene.city3d != null &&
-                  game.scene.city3d.running)
-                game.scene.city3d.toggleTactical();
+                  game.scene.view3d != null &&
+                  game.scene.view3d.running)
+                game.scene.view3d.toggleTactical();
               else hud.toggle();
               return;
             }
@@ -723,8 +723,8 @@ class UI
 
       // street-debug mode owns numpad/arrows for the 3D fly camera
       if (game.location == LOCATION_AREA &&
-          game.scene.city3d != null &&
-          game.scene.city3d.debugActive())
+          game.scene.view3d != null &&
+          game.scene.view3d.debugActive())
         return false;
 
       // area mode

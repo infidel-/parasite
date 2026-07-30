@@ -7,7 +7,7 @@ import game.Game;
 import entities.Entity;
 
 // choir silent-scream pulse: a ghostly additive hemisphere dome expanding from the caster cell
-// to the effect radius while fading out. the screen-space shockwave ripple (StreetView's scream
+// to the effect radius while fading out. the screen-space shockwave ripple (render.View's scream
 // pass) tracks the same wave front through cx/cy/cz + radius()/strength(). actors the front
 // sweeps over get the default hit shake (via onTouch). 3D port of ParticleSilentScream
 class ScreamPulse3D extends Particle3D {

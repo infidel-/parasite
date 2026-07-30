@@ -14,7 +14,7 @@ class GameScene
   public var area: AreaView; // area view
   public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
-  public var city3d: render.StreetView; // 3D street view (city areas only)
+  public var view3d: render.View; // 3D area view (city areas only for now)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -40,8 +40,8 @@ class GameScene
   public var cameraSubY: Int;
 
   var fader: Fader; // full-screen black fade masking area<->region transition stalls
-  var _city3dArea: Int = -1; // id of the area currently shown in the 3D view
-  var _cityEnter: Bool = false; // an enter-city fade+build is in flight (guard re-entry)
+  var _view3dArea: Int = -1; // id of the area currently shown in the 3D view
+  var _enter3D: Bool = false; // a 3D-view enter fade+build is in flight (guard re-entry)
   static inline var FADE_MS = 150; // transition fade duration (1x BASE_MS)
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
   var _renderStatsArea: _RenderStats;
@@ -93,7 +93,7 @@ class GameScene
       area = new AreaView(this);
       areaLighting = new AreaLighting(this);
       region = new RegionView(this);
-      city3d = new render.StreetView(game);
+      view3d = new render.View(game);
       fader = new Fader();
 
       // init sound
@@ -207,26 +207,26 @@ class GameScene
       ctx.textAlign = 'center';
 
       if (game.location == LOCATION_AREA && isCityArea())
-        drawCity3D();
+        draw3D();
 
       else if (game.location == LOCATION_AREA)
         {
-          hideCity3D();
+          hide3D();
           game.scene.area.draw();
         }
 
       else if (game.location == LOCATION_REGION)
         {
           // leaving a city area: let the zoom-in outro finish (it covers the region); its
-          // completion (onCityExitDone) covers to black, then draws/generates the region under
+          // completion (on3DExitDone) covers to black, then draws/generates the region under
           // black. don't draw the region now — that would run the heavy first-draw gen stall
           // straight into the outro's frames
-          if (city3d.running)
+          if (view3d.running)
             {
-              hideCity3D();
+              hide3D();
               return;
             }
-          hideCity3D();
+          hide3D();
           game.scene.region.draw();
         }
     }
@@ -238,25 +238,25 @@ class GameScene
         game.area.info.type == 'city';
     }
 
-// show/refresh the 3D street view for the current city area (skips 2D area draw).
-// (re)builds only when the shown area changes; seeded areas regenerate from the
-// seed, old seedless saves reconstruct plain boxes from the saved tile grid
-  function drawCity3D()
+// show/refresh the 3D view for the current area (skips 2D area draw). (re)builds only
+// when the shown area changes; seeded areas regenerate from the seed, old seedless
+// saves reconstruct plain boxes from the saved tile grid
+  function draw3D()
     {
-      if (_cityEnter)
+      if (_enter3D)
         return;
-      if (game.area.id == _city3dArea && city3d.running)
+      if (game.area.id == _view3dArea && view3d.running)
         return;
       // cover to black, then build the city + arm the zoom-out intro UNDER black (the geometry
       // build + async texture decode is the enter stall), then reveal as the intro plays
-      _cityEnter = true;
-      _city3dArea = game.area.id;
+      _enter3D = true;
+      _view3dArea = game.area.id;
       fader.cover(FADE_MS, function()
         {
           if (game.area.cityGenSeed >= 0)
-            city3d.show(game.area.cityGenSeed);
-          else city3d.showCity(reconstructCity());
-          _cityEnter = false;
+            view3d.show(game.area.cityGenSeed);
+          else view3d.showCity(reconstructCity());
+          _enter3D = false;
           // reveal only once the view has PRESENTED a frame: the first composer.render
           // compiles every scene shader (a multi-second stall on a cold driver cache) and
           // would otherwise run over an already-revealed, never-drawn black canvas.
@@ -269,26 +269,26 @@ class GameScene
               revealed = true;
               fader.reveal(FADE_MS);
             };
-          city3d.onFirstFrame(reveal);
+          view3d.onFirstFrame(reveal);
           Browser.window.setTimeout(reveal, 5000);
         });
     }
 
 // hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
-// onCityExitDone then reveals the region
-  inline function hideCity3D()
+// on3DExitDone then reveals the region
+  inline function hide3D()
     {
-      _city3dArea = -1;
-      city3d.hide(onCityExitDone);
+      _view3dArea = -1;
+      view3d.hide(on3DExitDone);
     }
 
-// city-area exit outro finished: cover to black, tear the 3D view down and draw the region
+// 3D-view exit outro finished: cover to black, tear the 3D view down and draw the region
 // (its first-draw map gen is a heavy synchronous stall) UNDER black, then reveal the region
-  function onCityExitDone()
+  function on3DExitDone()
     {
       fader.cover(FADE_MS, function()
         {
-          city3d.teardown();
+          view3d.teardown();
           game.scene.region.draw();
           fader.reveal(FADE_MS);
         });
@@ -469,8 +469,8 @@ class GameScene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
-      if (city3d != null)
-        city3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
+      if (view3d != null)
+        view3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

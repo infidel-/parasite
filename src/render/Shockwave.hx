@@ -5,9 +5,9 @@ import render.RenderConfig;
 import render.particles.ScreamPulse3D;
 
 // the silent-scream shockwave post pass and its per-frame driver: owns the ShaderPass (inserted
-// before bloom by StreetView) and the live pulse list, projecting each wave front to screen
+// before bloom by render.View) and the live pulse list, projecting each wave front to screen
 // space each frame and filling the shader's uniform slots. the pass is disabled outright when
-// nothing screams (zero post cost). split out of StreetView, which only wires it up
+// nothing screams (zero post cost). split out of render.View, which only wires it up
 class Shockwave {
   public var pass(default, null):ShaderPass;             // the screen-space ripple pass
   var camera:PerspectiveCamera;
@@ -87,7 +87,7 @@ void main() {
 
 // drive the pass from the live scream pulses: prune the dead, project each wave front to screen
 // space (center + world-radius side points, in the shader's aspect-corrected uv metric) and fill
-// the uniform slots. called once a frame by StreetView before the composer renders
+// the uniform slots. called once a frame by render.View before the composer renders
   public function update():Void
     {
       var i = screams.length;

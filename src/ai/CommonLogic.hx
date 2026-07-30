@@ -207,9 +207,9 @@ class CommonLogic
           else
             {
               // 3D gun-shot choreography; when the view handles it, skip the 2D tracer (it is
-              // hidden under the street view) so blood/impact aren't doubled
-              handledShot = game.scene.city3d != null &&
-                game.scene.city3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
+              // hidden under the 3D view) so blood/impact aren't doubled
+              handledShot = game.scene.view3d != null &&
+                game.scene.view3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
                   roll, weapon.spawnBlood, bloodIc.row, bloodIc.col,
                   weapon.sound.file, attacker.isPlayer);
               if (!handledShot)
@@ -224,9 +224,9 @@ class CommonLogic
       inline function melee(sound: AISound, hit: Bool): Bool
         {
           if (weapon.isRanged ||
-              game.scene.city3d == null)
+              game.scene.view3d == null)
             return false;
-          return game.scene.city3d.playMelee(atkE, hit ? tgtE : null,
+          return game.scene.view3d.playMelee(atkE, hit ? tgtE : null,
             attacker.x, attacker.y, target.x, target.y,
             sound != null ? sound.file : null, weapon.attackEffect,
             hit && weapon.spawnBlood, bloodIc.row, bloodIc.col);

@@ -6,18 +6,16 @@ import citygen.CityGen;
 import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
-import _UIState;
-import _LocationType;
 import entities.Entity;
 import render.choreo.Choreo;
 
-// controller for the 3D street view. Owns a persistent renderer/camera on its own
-// WebGL canvas and a per-city scene + bloom composer; runs its own rAF loop while a
-// city area is shown. The game drives it directly (show/hide/resize) — no bridge.
-// Movement stays in the game (PlayerArea); this view mirrors positions and billboards
-// the player/AI/objects from the game's sprite atlas. Backtick toggles street-debug
-// mode (fly cam F, poly UV editor E, building inspector B, lighting 1).
-class StreetView {
+// controller for the 3D area view. Owns a persistent renderer/camera on its own
+// WebGL canvas and a per-area scene + bloom composer; runs its own rAF loop while a
+// 3D area is shown (city areas today). The game drives it directly (show/hide/resize)
+// — no bridge. Movement stays in the game (PlayerArea); this view mirrors positions and
+// billboards the player/AI/objects from the game's sprite atlas. Backtick toggles
+// street-debug mode (fly cam F, poly UV editor E, building inspector B, lighting 1).
+class View {
   var game:Game;
   var canvas:Dynamic;
   var core:SceneSetup.Core;
@@ -74,7 +72,7 @@ class StreetView {
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
 
   public var running(default, null):Bool = false;
-  var svMouseX:Float = 0;                                 // last cursor client px over #streetview (AI-hover tooltip anchor)
+  var svMouseX:Float = 0;                                 // last cursor client px over #view (AI-hover tooltip anchor)
   var svMouseY:Float = 0;
   var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
   var last = 0.0;
@@ -159,10 +157,10 @@ class StreetView {
       if (!running || debug.on || rig == null || game.ui.state != UISTATE_DEFAULT) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
-    // track the cursor over #streetview in raw client px for the AI-hover tooltip (the shared 2D
-    // game.scene.mouseX/Y is device-px and stale here — #streetview sits over #canvas). also feed
+    // track the cursor over #view in raw client px for the AI-hover tooltip (the shared 2D
+    // game.scene.mouseX/Y is device-px and stale here — #view sits over #canvas). also feed
     // game.scene.mouseX/Y (device px, like UI.hx does for #canvas) + drive the mouse cursor/path so
-    // the 3D view gets the old 2D hover behaviour (#streetview covers #canvas, so #canvas never sees it)
+    // the 3D view gets the old 2D hover behaviour (#view covers #canvas, so #canvas never sees it)
     canvas.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       svMouseX = e.clientX;
       svMouseY = e.clientY;
@@ -244,10 +242,10 @@ class StreetView {
 
 // create the overlay WebGL canvas if absent (above the 2D #canvas, below the DOM HUD)
   function ensureCanvas():Void {
-    canvas = Browser.document.getElementById('streetview');
+    canvas = Browser.document.getElementById('view');
     if (canvas != null) return;
     canvas = Browser.document.createElement('canvas');
-    canvas.id = 'streetview';
+    canvas.id = 'view';
     var s = canvas.style;
     s.position = 'absolute';
     s.left = '0';
@@ -584,7 +582,7 @@ class StreetView {
 // area is already despawned by the time this fires (so the outro reads no game state). called
 // every frame while the region shows — a no-op once the outro is already running. onExitDone
 // (if given) runs when the outro completes INSTEAD of teardown, so the caller can cover to
-// black first and tear the view down under it (see GameScene.onCityExitDone)
+// black first and tear the view down under it (see GameScene.on3DExitDone)
   public function hide(?onExitDone:Void->Void):Void {
     if (!running || exiting) return;
     setTactical(false);
@@ -796,7 +794,7 @@ class StreetView {
       // floor so a curb-height tile picks correctly
       var planeY = rig.playerWorld().y;
       var cell = miss;
-      for (pass in 0...2)
+      for (_ in 0...2)
         {
           var t = (planeY - oy) / dy;
           var hx = ox + dx * t;
@@ -816,7 +814,7 @@ class StreetView {
       return cell;
     }
 
-// set the CSS cursor on the street-view canvas (ui.Mouse routes cursor art here in the 3D view)
+// set the CSS cursor on the 3D view canvas (ui.Mouse routes cursor art here in the 3D view)
   public function setCursorCSS(css:String):Void
     {
       if (canvas != null)

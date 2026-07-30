@@ -11,10 +11,10 @@ typedef TacticalCameraState = {
   var sideAngleTarget:Float;
 }
 
-// the street view's follow camera: eases a target toward the player's cell, holds a
+// the 3D view's follow camera: eases a target toward the player's cell, holds a
 // state-driven zoom (parasite close, host pulled out) and derives the camera offset +
 // angle from it (closer = more parallel to the ground). wheel zooms in/out; free-cam
-// (debug) bypasses this and owns the camera itself. StreetView drives it each frame.
+// (debug) bypasses this and owns the camera itself. render.View drives it each frame.
 class CameraRig {
   var game:Game;
   var camera:PerspectiveCamera;

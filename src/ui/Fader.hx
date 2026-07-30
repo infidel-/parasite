@@ -24,7 +24,7 @@ class Fader
           s.width = '100%';
           s.height = '100%';
           s.background = '#000';
-          s.zIndex = '50';          // above #canvas (0) and #streetview (1), below #hud (100)
+          s.zIndex = '50';          // above #canvas (0) and #view (1), below #hud (100)
           s.opacity = '0';
           s.pointerEvents = 'none';
           Browser.document.body.appendChild(e);

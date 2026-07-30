@@ -1054,7 +1054,7 @@ public function show()
       var eMale = entity.isMaleAtlas;
       // 3D: fade the dying billboard out (entity still live here) so it crossfades into the
       // body that spawns just below, instead of the sprite hard-cutting to the corpse
-      game.scene.city3d.playDeathFade(entity);
+      game.scene.view3d.playDeathFade(entity);
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
       onDeath(); // event hook
@@ -1071,7 +1071,7 @@ public function show()
         o.setActorSprite(eName, eIx, eIy, eMale);
       // 3D: fade the body in from transparent, but only once the dying sprite has fallen flat
       // (bound to the death ghost's landing) so the corpse doesn't appear mid-spin
-      game.scene.city3d.bindBodyFadeIn(o.entity, o.id, o.isGroundDecal());
+      game.scene.view3d.bindBodyFadeIn(o.entity, o.id, o.isGroundDecal());
 
       // decay acceleration
       var organ = organs.getActive(IMP_DECAY_ACCEL);

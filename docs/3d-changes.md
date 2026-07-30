@@ -2486,3 +2486,40 @@ Electron window being **backgrounded**: the compositor throttles to ~1fps and th
 result spans the whole idle gap, so `GPU` read **1015ms**. Every number from that sweep was garbage and
 was discarded. Add this to the weak-GPU rules: **the game window must be focused and foreground**, and a
 sanity filter (`fps` sane, `GPU < 100`) belongs in any scripted sweep.
+
+## Rename — the 3D view sheds its city-only names (2026-07-30)
+
+Pure rename, no render change, no measurement. Recorded here only so the older entries above read:
+every `StreetView` in them is today's `render.View`, and every `#streetview` is `#view`. The 3D view
+will render non-city areas (sewers, facility, lab — `_AreaType` already lists seven non-city types),
+so a name that says "street" or "city" was going to be wrong for most of them.
+
+| was | is |
+|---|---|
+| `render/StreetView.hx`, `class StreetView` | `render/View.hx`, `class View` |
+| `#streetview`, `#streetview-debug` | `#view`, `#view-debug` |
+| `GameScene.city3d` | `GameScene.view3d` |
+| `GameScene._city3dArea` / `_cityEnter` | `_view3dArea` / `_enter3D` |
+| `GameScene.drawCity3D` / `hideCity3D` / `onCityExitDone` | `draw3D` / `hide3D` / `on3DExitDone` |
+
+Both `GameScene.city3d` and `render.StreetView` are in the generated SDK externs, so this would
+normally bump `Const.MOD_API_VERSION`. It stays at 1: no release has shipped the 3D view yet, so no
+published mod can be holding the old names. `make mod-sdk` regenerates the externs; the example mods
+were updated in place.
+
+**Deliberately NOT renamed**, and why:
+
+- `render/StreetPerf.hx`, the `[street-render]` / `[street-warmup]` / `[street-perf]` trace tags, the
+  `perf street` console command, and the "street-debug mode" wording. Same de-city-ing argument
+  applies, but `perf street` is a user-facing command name and the traces are what every entry above
+  greps for — a separate, deliberate change.
+- `faceIsStreet` / `faceStreet` / `streetLamp` / `STREET_DEBRIS_*` and friends: those mean an actual
+  street. They live in city-only builders and are correct there.
+- `citygen.CityConfig` (243 refs / 52 files) — `CELL`, `GRID`, `worldToCell`, `cellToWorld`, floor
+  heights. Not a city thing at all; every 3D area will use it. The rename that would help most, and
+  the one that has to wait on the real question below.
+- `citygen.CityModel.City` is still the view's input type, threaded through `View`, `SceneSetup`,
+  `World`, `Inspector`, `Debug`, `BDump`. A sewer either produces a `City` or the view needs a second
+  model — **decide that before renaming anything else on the city side.** `GameScene.isCityArea()`
+  (`game.area.info.type == 'city'`) is the gate that has to change with it; `AreaStyle.forArea` already
+  switches on `_AreaType` and is the shape to copy.

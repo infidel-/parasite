@@ -17,7 +17,7 @@ import ai.AI;
 // paints through a shared Sprites surface; transient FX (blood, death crossfade) live in a
 // Particles3D. the ground/wall decals, barrel flame + fake shadows, and AI badge/x-ray/targeting
 // markers are split into per-frame sub-passes (render.actors.*), driven in order by update().
-// StreetView builds one per city and drives it each frame; game logic triggers effects via
+// render.View builds one per area and drives it each frame; game logic triggers effects via
 // playFx() and the melee/death bridges
 class Actors {
   var game:Game;
