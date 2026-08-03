@@ -115,6 +115,17 @@ class UI
 #if electron
   public function onError(msg: Dynamic, url: String, line: Int, col: Int, err: Dynamic): Bool
     {
+      // benign audio race, not a real fault: a scene transition pauses an ambient/sfx clip while
+      // its play() promise is still pending, and the browser rejects that promise with AbortError.
+      // nothing is broken and the player can do nothing about it, so don't scare them with the
+      // "send me the log" alert or fill the log with it. still traced, so it stays visible in the
+      // devtools console if it ever needs chasing (the real fix is to stop racing play/pause)
+      if (isAudioAbort(msg))
+        {
+          trace('ignored audio abort: ' + msg);
+          return false;
+        }
+
       var date = DateTools.format(Date.now(), "%d %b %Y %H:%M:%S");
       // err may be a non-Error rejection value (no .stack) — fall back to its string form
       var stack = (err != null && err.stack != null) ? err.stack : Std.string(err);
@@ -128,6 +139,15 @@ class UI
       catch (e: Dynamic)
         {}
       return false;
+    }
+
+// is this the harmless play()/pause() media race? covers all three AbortError wordings the
+// browser uses (interrupted by pause, by a new load request, by removal from the document)
+  function isAudioAbort(msg: Dynamic): Bool
+    {
+      var s = Std.string(msg);
+      return s.indexOf('AbortError') >= 0 &&
+        s.indexOf('play()') >= 0;
     }
 #end
 
