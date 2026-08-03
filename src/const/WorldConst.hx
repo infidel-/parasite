@@ -349,8 +349,10 @@ class WorldConst
 // region types
   public static var REGION_CITY = 'city';
 
-// amount of screen cells the AI amount is based for
-  public static var AREA_AI_CELLS = 650;
+// amount of spawn-region cells the AI amount is based for (see AreaGame.getSpawnRect).
+// tuned against the 3D camera footprint: a city spawn region is ~440 cells, so a city area
+// sits below this and keeps the 0.6 curve
+  public static var AREA_AI_CELLS = 500;
 }
 
 

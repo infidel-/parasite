@@ -77,10 +77,21 @@ class Debug
         '<br>Current area, max AI: ' + game.area.getMaxAI() +
         ' = [common AI: ' + game.area.info.commonAI +
         ' * pow(' +
-        'emptyScreenCells: ' + game.scene.area.emptyScreenCells +
+        'spawnCells: ' + game.area.spawnCells +
         ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
-        game.area.getMaxAICoef() + ')]'
+        game.area.getMaxAICoef() + ')]' +
+        '<br>Spawn region: ' + spawnRectText() +
+        ' (2D emptyScreenCells: ' + game.scene.area.emptyScreenCells + ')'
       );
+    }
+
+// describe the AI spawn region: its size and which viewport it came from (the 3D camera
+// footprint in city areas, the 2D screen rect everywhere else)
+  function spawnRectText(): String
+    {
+      var r = game.area.getSpawnRect();
+      return (r.x2 - r.x1) + 'x' + (r.y2 - r.y1) +
+        (game.area.isCity() ? ' (3D camera footprint)' : ' (2D screen rect)');
     }
 
 // toggles debug sound info
