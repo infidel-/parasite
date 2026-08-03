@@ -52,7 +52,8 @@ class SceneSetup {
     renderer.setSize(Browser.window.innerWidth, Browser.window.innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.5;
+    // the authored default; View.setExposure scales it by the config brightness right after this
+    renderer.toneMappingExposure = RenderConfig.EXPOSURE;
     // real shadows: one ortho pass for the moon (follows the player, see fitMoon) + a few fixed lamp
     // spotlight casters (LampLights). PCFSoft = cheap soft edges. casters/receivers are flagged
     // explicitly at each mesh creation site — never a blanket scene.traverse (would drag sprites/

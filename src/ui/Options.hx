@@ -113,6 +113,13 @@ class Options extends UIWindow
           game.config.set('vidLampLights', val, true);
           game.scene.view3d.setLampLights(Std.parseInt(val));
         });
+      // tone-map exposure as a percentage of the authored value. a live uniform, so it previews as the
+      // slider moves; not saved per tick (the window close/Enter/Escape writes it, like the volumes)
+      addOptSlider('Brightness', game.config.vidBrightness, 50, 150, 5, 'int', '%',
+        function (v) {
+          game.config.set('vidBrightness', '' + Std.int(v), false);
+          game.scene.view3d.setExposure(Std.int(v));
+        });
       // the two post-process passes, both plain enabled flips (see render.View.setBloom/setAO)
       addOptToggle('Bloom', 'vidBloom', game.config.vidBloom,
         function (on) game.scene.view3d.setBloom(on));
