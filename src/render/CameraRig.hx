@@ -340,4 +340,31 @@ class CameraRig {
 // wheel zoom-out ceiling per state (host reaches the absolute max, parasite/attached don't)
   inline function maxFor(st:_PlayerState):Float
     return st == _PlayerState.PLR_STATE_HOST ? 1.0 : RenderConfig.CAMERA.parasiteZoom;
+
+// how many city cells of ground the follow camera can cover, at its widest (zoom 1.0, the host
+// wheel-out ceiling from maxFor). PURE: derived from RenderConfig.CAMERA alone, so the game logic
+// can call it with no live camera and no scene — it sizes the AI spawn budget/region, which must
+// track what the player can actually SEE rather than the 2D canvas (the 2D rect scales with pixel
+// count, this does not: fov is fixed and only aspect moves).
+// deliberately always zoom 1.0, never the live/state zoom: a parasite's ceiling is 0.3, so keying
+// off the player state would swing the budget on every attach/detach and churn spawns.
+// the ground patch is a trapezoid (perspective), narrow at the near edge and wide at the far one
+  public static function maxFootprintCells(aspect:Float):Float
+    {
+      var c = RenderConfig.CAMERA;
+      // camera offset at full zoom-out; the rig aims at pWorld.y + 1.5, so pitch is measured to that
+      var camY = c.near.y + (c.far.y - c.near.y) * 1.0;
+      var camZ = c.near.z + (c.far.z - c.near.z) * 1.0;
+      var pitch = Math.atan2(camY - 1.5, camZ);
+      var half = c.fov / 2 * Math.PI / 180;
+      // where the top/bottom frustum planes meet the ground. the near edge can land BEHIND the
+      // camera (pitch + half > 90 degrees at this steep angle) — that is correct, not a bug
+      var zFar = camZ - camY / Math.tan(pitch - half);
+      var zNear = camZ - camY / Math.tan(pitch + half);
+      var tanH = Math.tan(half) * aspect;
+      var wFar = 2 * Math.sqrt((camZ - zFar) * (camZ - zFar) + camY * camY) * tanH;
+      var wNear = 2 * Math.sqrt((camZ - zNear) * (camZ - zNear) + camY * camY) * tanH;
+      var area = Math.abs(zNear - zFar) * (wNear + wFar) / 2;
+      return area / (citygen.CityConfig.CELL * citygen.CityConfig.CELL);
+    }
 }

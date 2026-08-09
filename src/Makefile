@@ -25,10 +25,8 @@ electron: check-port
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js ../app/
 
 electron-demo: check-port
-	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml -debug \
-      -D demo \
-      --connect $(PORT) && \
+      -D demo && \
     cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js ../app/
 
 www-demo: check-port

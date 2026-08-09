@@ -452,8 +452,9 @@ public function onMouseLeave()
         'Tile resolution: ' +
         Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
         Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
-        '<br>emptyScreenCells: ' + game.scene.area.emptyScreenCells +
-        ', maxAI: ' + game.area.getMaxAI() + '<br>');
+        '<br>spawnCells: ' + game.area.spawnCells +
+        ', maxAI: ' + game.area.getMaxAI() +
+        '<br>emptyScreenCells (2D): ' + game.scene.area.emptyScreenCells + '<br>');
       if (!game.group.isKnown)
         buf.add('Group known count: ' + game.group.knownCount + '<br/>');
       buf.add('Group priority: ' + Const.round(game.group.priority) +

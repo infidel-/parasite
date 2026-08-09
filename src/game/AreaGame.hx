@@ -16,6 +16,7 @@ class AreaGame extends _SaveObject
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
     'info', 'clueSpawnPoints', '_decalCells',
+    'spawnCells',
   ];
   var game: Game;
   var region: RegionGame;
@@ -69,6 +70,9 @@ class AreaGame extends _SaveObject
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var generatorInfo: _GeneratorInfo;
+  // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
+  // transient: recomputed on every visibility update, never saved
+  public var spawnCells: Int;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -119,6 +123,7 @@ class AreaGame extends _SaveObject
       _pathEngine = null;
       _tileset = null;
       _decalCells = [];
+      spawnCells = 0;
     }
 
 // called after load or creation
@@ -295,8 +300,12 @@ class AreaGame extends _SaveObject
 
       // spawn some AI around player on entering area
       // called here because it uses player camera x,y
+      // recount the spawn region first: the burst below reads it, and updateVisibility() (the
+      // other place that refreshes it) only runs further down - so without this the arrival
+      // burst would be sized by whatever area the player was last in
       if (game.turns != 0)
         {
+          updateSpawnCells();
           turnSpawnCommonAI(); // spawn AI
           turnSpawnMoreAI(); // spawn AI related to area alertness
           spawnGuards(); // spawn guards and such
@@ -729,8 +738,9 @@ class AreaGame extends _SaveObject
 // find unseen empty location on map (to spawn stuff)
   public function findUnseenEmptyLocation(): _Point
     {
-      // calculate visible rectangle
-      var rect = getVisibleRect();
+      // spawn region: the player's actual viewport (3D camera footprint in city areas,
+      // the 2D screen rect everywhere else)
+      var rect = getSpawnRect();
 
       // TODO: in case if this works slowly i can rewrite it to find all potential free
       // spots and select one of them
@@ -2219,14 +2229,14 @@ class Test {
 // max number of visible AI
   public function getMaxAICoef(): Float
     {
-      return (game.scene.area.emptyScreenCells <
+      return (spawnCells <
         WorldConst.AREA_AI_CELLS ? 0.6 : 0.3);
 
     }
   public function getMaxAI(): Int
     {
       return Std.int(info.commonAI *
-        Math.pow(1.0 * game.scene.area.emptyScreenCells /
+        Math.pow(1.0 * spawnCells /
           WorldConst.AREA_AI_CELLS, getMaxAICoef()));
     }
 
@@ -2304,11 +2314,11 @@ class Test {
 
       // calc max possible number of AI
       var maxAI =
-        Std.int(info.uncommonAI * game.scene.area.emptyScreenCells /
+        Std.int(info.uncommonAI * spawnCells /
           WorldConst.AREA_AI_CELLS);
 /*
       trace('info:' + info.uncommonAI +
-        ' empty:' + game.scene.area.emptyScreenCells +
+        ' empty:' + spawnCells +
         ' res:' + maxAI + ' cnt:' + cnt);
 */
 
@@ -2422,6 +2432,52 @@ class Test {
     }
 
 
+// get the region AI spawn into, and whose walkable cells size the AI budget.
+// city areas render through the 3D street view, whose ground footprint is fixed by the camera
+// (fov is constant, only aspect moves) - so the 2D canvas rect it used to use is wrong there:
+// it grows with pixel count while the player's actual viewport does not, which diluted AI over
+// up to 3.6x the ground on a 4k screen. keyed on isCity() and NOT view3d.running, because
+// enter() spawns its arrival burst before the 3D scene is built
+  public function getSpawnRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      if (!isCity())
+        return getVisibleRect();
+
+      // square of the same area as the camera footprint, centered on the player. a square (not a
+      // disc) keeps the existing rect plumbing, and the camera orbits +-30 degrees anyway, so an
+      // orientation-independent region is what we want
+      var cells = render.CameraRig.maxFootprintCells(
+        game.scene.canvas.width / game.scene.canvas.height);
+      var r = Math.round((Math.sqrt(cells) - 1) / 2);
+      var rect = {
+        x1: game.playerArea.x - r,
+        y1: game.playerArea.y - r,
+        x2: game.playerArea.x + r + 1,
+        y2: game.playerArea.y + r + 1,
+      };
+      if (rect.x1 < 0)
+        rect.x1 = 0;
+      if (rect.y1 < 0)
+        rect.y1 = 0;
+      if (rect.x2 > width)
+        rect.x2 = width;
+      if (rect.y2 > height)
+        rect.y2 = height;
+      return rect;
+    }
+
+// recount the walkable cells in the spawn region (the AI budget input). called on every
+// visibility update and once in enter() before the arrival burst
+  public function updateSpawnCells()
+    {
+      var rect = getSpawnRect();
+      spawnCells = 0;
+      for (y in rect.y1...rect.y2)
+        for (x in rect.x1...rect.x2)
+          if (isWalkable(x, y))
+            spawnCells++;
+    }
+
 // checks if this x,y is on screen
   public inline function inVisibleRect(x: Int, y: Int): Bool
     {
@@ -2435,6 +2491,7 @@ class Test {
 // check AI visibility
   public inline function updateVisibility()
     {
+      updateSpawnCells();
       // NOTE: only used for "player noticed" check now
       if (game.player.state == PLR_STATE_HOST)
         for (ai in _ai)
