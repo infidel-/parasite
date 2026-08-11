@@ -41,8 +41,9 @@ class Inspector {
         var ud:Dynamic = h.object.userData;
         if (ud != null && ud.b != null) { show(out, getCity(), getSeed(), ud.b); return; }
       }
-      // no building under the cursor → report the ground spot we hit (point at a strip)
-      if (hits.length > 0) {
+      // no building under the cursor → report the ground spot we hit (point at a strip).
+      // an underground area has no city to report against, so there is nothing to dump
+      if (hits.length > 0 && getCity() != null) {
         var p:Dynamic = (cast hits[0]).point;
         emit(out, '[block]', BDump.shape('block', getCity(), getSeed(), p.x, p.z, CityConfig.CELL * 6));
       }

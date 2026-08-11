@@ -82,39 +82,10 @@ class Textures {
     return tex;
   }
 
-  // load an opaque tile and bake a VERTICAL alpha ramp into it: transparent at the
-  // top of the image, opaque at the bottom. Drives the street-grime base band that
-  // fades up into the clean wall (the ramp = the base-darkening gradient, the art =
-  // the grime/scuff detail). Tiles horizontally (wrapS), single band vertically (wrapT).
-  public static function loadRampTexture(path:String, peak:Float = 0.95, ease:Float = 1.4):Texture {
-    var tex = new Texture();
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.anisotropy = 4;
-    var img = new js.html.Image();
-    img.onload = function(_) {
-      var w = img.width, h = img.height;
-      var cv = Browser.document.createCanvasElement();
-      cv.width = w; cv.height = h;
-      var ctx = cv.getContext2d();
-      ctx.drawImage(img, 0, 0);
-      var d = ctx.getImageData(0, 0, w, h);
-      var p = d.data;
-      for (y in 0...h) {
-        var t = h <= 1 ? 1.0 : y / (h - 1);       // 0 at top → 1 at bottom (flipY makes bottom = ground)
-        var a = Std.int(Math.pow(t, ease) * peak * 255);
-        var row = y * w * 4;
-        for (x in 0...w) p[row + x * 4 + 3] = a;
-      }
-      ctx.putImageData(d, 0, 0);
-      tex.image = cv;
-      tex.needsUpdate = true;
-    };
-    img.onerror = function(_) { tex.image = proceduralCanvas('wall'); tex.needsUpdate = true; };
-    img.src = path;
-    return tex;
-  }
+  // NO loadRampTexture. it baked a vertical alpha ramp (opaque at the bottom, transparent toward
+  // the top) into an opaque tile, and drove both grime bands until each moved to hand-painted alpha
+  // in the source. one alpha per image ROW is what made a band read as a gradient wash with no
+  // shape of its own — see render.sewer.SewerDetail.grime
 
   // alpha-gradient strip: opaque (white) at v=0 (parapet edge), transparent at v=1
   public static function makeShadowGradient():Texture {

@@ -54,7 +54,7 @@ class Buildings {
     // near-transparent texels (paint-editor leftover); with straight alpha, bilinear/minified
     // filtering bleeds that colour in as vivid cyan/magenta specks on dark walls at distance.
     // premultiply zeroes a transparent texel's colour contribution, killing the bleed.
-    for (g in grimeTex) { untyped g.premultiplyAlpha = true; g.wrapT = THREE.ClampToEdgeWrapping; g.needsUpdate = true; }
+    for (g in grimeTex) { g.premultiplyAlpha = true; g.wrapT = THREE.ClampToEdgeWrapping; g.needsUpdate = true; }
     // ONE shared material per grime variant (no per-face texture clone). Horizontal tiling is
     // baked into each quad's UVs instead of texture.repeat.
     var grimeMat = [for (gv in 0...grimeTex.length)

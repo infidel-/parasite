@@ -2433,21 +2433,28 @@ class Test {
 
 
 // get the region AI spawn into, and whose walkable cells size the AI budget.
-// city areas render through the 3D street view, whose ground footprint is fixed by the camera
-// (fov is constant, only aspect moves) - so the 2D canvas rect it used to use is wrong there:
-// it grows with pixel count while the player's actual viewport does not, which diluted AI over
-// up to 3.6x the ground on a 4k screen. keyed on isCity() and NOT view3d.running, because
-// enter() spawns its arrival burst before the 3D scene is built
+// a 3D area's ground footprint is fixed by its camera preset (fov is constant, only aspect moves) -
+// so the 2D canvas rect it used to use is wrong there: it grows with pixel count while the player's
+// actual viewport does not, which diluted AI over up to 3.6x the ground on a 4k screen. keyed on the
+// area KIND and NOT view3d.running, because enter() spawns its arrival burst before the scene is built
   public function getSpawnRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
-      if (!isCity())
+      // every 3D kind brings its own preset: the tunnels look near straight down and cover far less
+      // ground than a street, so they must not be sized off the city camera
+      var cam:render.RenderConfig.CameraOffsets = switch (info.type)
+        {
+          case 'city': render.RenderConfig.CAMERA;
+          case 'sewers', 'habitat': render.RenderConfig.CAMERA_SEWER;
+          default: null;
+        };
+      if (cam == null)
         return getVisibleRect();
 
       // square of the same area as the camera footprint, centered on the player. a square (not a
       // disc) keeps the existing rect plumbing, and the camera orbits +-30 degrees anyway, so an
       // orientation-independent region is what we want
       var cells = render.CameraRig.maxFootprintCells(
-        game.scene.canvas.width / game.scene.canvas.height);
+        game.scene.canvas.width / game.scene.canvas.height, cam);
       var r = Math.round((Math.sqrt(cells) - 1) / 2);
       var rect = {
         x1: game.playerArea.x - r,

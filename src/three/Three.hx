@@ -328,6 +328,9 @@ typedef RendererInfo = {
   public var rotation:Float;
   public var anisotropy:Int;
   public var flipY:Bool; // glb textures ship flipY=false; a CanvasTexture defaults to true
+  public var premultiplyAlpha:Bool; // premultiply on upload; pairs with material.premultipliedAlpha. needed for
+                                    // hand-painted alpha, whose junk RGB under near-transparent texels otherwise
+                                    // bleeds out as saturated specks once minified
   public var channel:Int; // which uv attribute this map samples (0 = `uv`, 1 = `uv1`, ...)
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which

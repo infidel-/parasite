@@ -22,6 +22,9 @@ class Debris {
       var rng = citygen.CityGen.mulberry32(seed);
       var spots:Array<DebrisSpot> = [];
       var g = CityConfig.GRID;
+      // the ground test, built once and threaded through: it is the ONLY thing the city scatter
+      // and the tunnel one (render.sewer.SewerDebris) do not share
+      var ok = function(x:Int, y:Int):Bool return isStreet(tileAt(tiles, x, y));
       // tiles are [row][col]
       for (y in 0...g)
         for (x in 0...g)
@@ -35,19 +38,19 @@ class Debris {
               continue;
 
             if (rng() < 0.6)
-              addTransformable(spots, tiles, x, y, typeID, rng);
+              addTransformable(spots, ok, x, y, typeID, rng);
             else
-              addFragment(spots, tiles, x, y, Const.STREET_DEBRIS_STATIC, false, rng);
+              addFragment(spots, x, y, Const.STREET_DEBRIS_STATIC, false, rng, ok);
           }
       return spots;
     }
 
 // drop a transformable debris cluster: a center pile plus a radial scatter of smaller piles
-  static function addTransformable(spots:Array<DebrisSpot>, tiles:Array<Array<Tile>>,
+  static function addTransformable(spots:Array<DebrisSpot>, ok:Int->Int->Bool,
       x:Int, y:Int, typeID:_AreaType, rng:Void->Float)
     {
       var centerCount = 3 + Std.int(rng() * 2);
-      spawnCluster(spots, tiles, x, y, centerCount, rng);
+      spawnCluster(spots, ok, x, y, centerCount, rng);
 
       var radius = 1 + Std.int(rng() * 2);
       for (dx in -radius...radius + 1)
@@ -63,27 +66,29 @@ class Debris {
 
             var nx = x + dx;
             var ny = y + dy;
-            if (!isStreet(tileAt(tiles, nx, ny)))
+            if (!ok(nx, ny))
               continue;
 
             var neighbourCount = 1 + Std.int(rng() * 4);
             if (typeID != AREA_CITY_LOW)
               neighbourCount += 1 + Std.int(rng() * 2);
-            spawnCluster(spots, tiles, nx, ny, neighbourCount, rng);
+            spawnCluster(spots, ok, nx, ny, neighbourCount, rng);
           }
     }
 
 // spawn `amount` transformable fragments on one tile
-  static function spawnCluster(spots:Array<DebrisSpot>, tiles:Array<Array<Tile>>,
+  public static function spawnCluster(spots:Array<DebrisSpot>, ok:Int->Int->Bool,
       x:Int, y:Int, amount:Int, rng:Void->Float)
     {
       for (_ in 0...amount)
-        addFragment(spots, tiles, x, y, Const.STREET_DEBRIS_TRANSFORMABLE, true, rng);
+        addFragment(spots, x, y, Const.STREET_DEBRIS_TRANSFORMABLE, true, rng, ok);
     }
 
-// add one debris fragment: pick a sprite, a transform, and a validated sub-cell offset
-  static function addFragment(spots:Array<DebrisSpot>, tiles:Array<Array<Tile>>,
-      x:Int, y:Int, infos:Array<_TileRow>, transformable:Bool, rng:Void->Float)
+// add one debris fragment: pick a sprite, a transform, and a validated sub-cell offset.
+// `ok(col,row)` is the caller's ground test — a street tile in the city, SewerModel.isFloor
+// underground — which is why this is shared rather than reimplemented per area kind
+  public static function addFragment(spots:Array<DebrisSpot>, x:Int, y:Int,
+      infos:Array<_TileRow>, transformable:Bool, rng:Void->Float, ok:Int->Int->Bool)
     {
       var info = infos[Std.int(rng() * infos.length)];
       var ix = Std.int(rng() * info.amount) +
@@ -94,13 +99,13 @@ class Debris {
       var angle = (transformable ? 2 * Math.PI * rng() : 0.0);
       var dx = 0.0;
       var dy = 0.0;
-      // try a few random offsets (±0.4 cell) that keep the fragment over street tiles
+      // try a few random offsets (±0.4 cell) that keep the fragment over eligible ground
       if (transformable)
         for (_ in 0...8)
           {
             var cdx = (rng() - 0.5) * 0.8;
             var cdy = (rng() - 0.5) * 0.8;
-            if (!canPlace(tiles, x, y, cdx, cdy))
+            if (!canPlace(ok, x, y, cdx, cdy))
               continue;
             dx = cdx;
             dy = cdy;
@@ -110,20 +115,20 @@ class Debris {
       spots.push({ col: x, row: y, dx: dx, dy: dy, scale: scale, angle: angle, ix: ix, iy: iy });
     }
 
-// an offset that overhangs a neighbour cell is only allowed if that neighbour is a street tile
-  static inline function canPlace(tiles:Array<Array<Tile>>, x:Int, y:Int, dx:Float, dy:Float):Bool
+// an offset that overhangs a neighbour cell is only allowed if that neighbour is eligible too
+  static inline function canPlace(ok:Int->Int->Bool, x:Int, y:Int, dx:Float, dy:Float):Bool
     {
       if (dx > 0.25 &&
-          !isStreet(tileAt(tiles, x + 1, y)))
+          !ok(x + 1, y))
         return false;
       if (dx < -0.25 &&
-          !isStreet(tileAt(tiles, x - 1, y)))
+          !ok(x - 1, y))
         return false;
       if (dy > 0.25 &&
-          !isStreet(tileAt(tiles, x, y + 1)))
+          !ok(x, y + 1))
         return false;
       if (dy < -0.25 &&
-          !isStreet(tileAt(tiles, x, y - 1)))
+          !ok(x, y - 1))
         return false;
       return true;
     }

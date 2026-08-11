@@ -79,6 +79,33 @@ class SceneSetup {
     return { renderer: renderer, camera: camera };
   }
 
+// the debug-lighting tail every scene ends with: a hidden full-bright WYSIWYG ambient (intensity π,
+// so albedo x 1 = the raw texel) plus the two closures that flip it — debug key 1 and setLightsOff.
+// shared by the city and the sewer rigs so the contract cannot drift between them: this used to be
+// copied into render.sewer.SewerScene, which is exactly where a new fill slot would be forgotten
+  public static function lightingTail(scene:Scene, renderer:WebGLRenderer, lights:Array<Object3D>):
+    { toggleLighting:Void->Bool, setLightsOff:Void->Void }
+    {
+      var debugAmbient = new AmbientLight(0xffffff, Math.PI);
+      debugAmbient.visible = false;
+      scene.add(debugAmbient);
+      var debug = false;
+      return {
+        toggleLighting: function():Bool
+          {
+            debug = !debug;
+            for (l in lights) l.visible = !debug;
+            debugAmbient.visible = debug;
+            renderer.toneMapping = debug ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+            return debug;
+          },
+        setLightsOff: function():Void
+          {
+            for (l in lights) l.visible = false;
+          },
+      };
+    }
+
 // moon direction (light comes FROM here toward the focus) — fixed, matches moon.position hint
   static var MOON_DIR = new Vector3(-1, 2, 1.5).normalize();
 
@@ -228,24 +255,12 @@ class SceneSetup {
     for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
     pts.push(coneGroup); // debug 5/0 hides the cones alongside the lamp lights
 
-    // debug full-bright WYSIWYG: ambient intensity = π so albedo×1 = raw texel
-    var debugAmbient = new AmbientLight(0xffffff, Math.PI);
-    debugAmbient.visible = false;
-    scene.add(debugAmbient);
-    var debug = false;
-    var toggleLighting = function():Bool {
-      debug = !debug;
-      for (l in lights) l.visible = !debug;
-      debugAmbient.visible = debug;
-      renderer.toneMapping = debug ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
-      return debug;
-    };
-    var setLightsOff = function():Void { for (l in lights) l.visible = false; };
+    var tail = lightingTail(scene, renderer, lights);
 
     return {
       scene: scene,
-      toggleLighting: toggleLighting,
-      setLightsOff: setLightsOff,
+      toggleLighting: tail.toggleLighting,
+      setLightsOff: tail.setLightsOff,
       fill: [ ambient, hemi, moon ],
       lights: lights,
       moon: moon,

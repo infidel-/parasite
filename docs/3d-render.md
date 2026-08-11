@@ -163,6 +163,44 @@ Bodies in [`3d-changes.md`](3d-changes.md) — grep the change text.
 | Wall decals: albedo tint, shadow receipt, per-image classes | 2–3.5× too bright → `WALLDECAL_TINT`; fixes an editor crash | **landed** |
 | `CityStyle` extracted; textures sorted `city/decals/fx` | no visual change; 144/144 texture paths verified | **landed** |
 | Weeds in medium courtyards | 4 style knobs + 1 texture, zero render code, 1 draw call | **landed** |
+| 3D sewers (`AREA_SEWERS` + `AREA_HABITAT`) | `Area3D` seam; tunnels from the SAVED cell grid, no seed; **30 calls / 5.4k tris** per level | **landed** |
+| ^ sewer fill at city intensities | renders **black**, not dim — fill IS the frame with no moon; needed ~4× against the near-black first art | **trap — see the entry** |
+| ^ 16-cell chunking for sewers | 4× the calls to buy culling that saves no fill; nothing fades down there | **rejected — dropped from the plan** |
+| ^ sewer pre-warm in its OWN `SewerScene` | boot 64 → 68; entry still **+7** (city's own first entry is +6) | **landed, partial** |
+| `AreaView.draw` early-out on a 3D area | full tile pass + LOS + minimap regen were running under the WebGL canvas | **landed** |
+| Sewer art restyled to the 2D tileset (`app/img/sewers.png`) | warm rose-brown varied masonry + moss + pale cracked floor; `WALL_H` 6→3 | **landed** |
+| ^ retuning albedo-compensating fill on the **sRGB** mean | 127.5/51 = 2.5× vs **6.66×** in linear — would leave it 2.7× too bright | **trap — always ratio in linear** |
+| ^ albedo ratio as the fill ANSWER | holding old brightness = ambient 1.13, too dark to read the new detail; swept live → **3.95 / 1.89** | **landed (ratio is the floor, not the answer)** |
+| ^ `markChannel` = "8-neighbourhood all floor" | true of every interior cell of any open space → flooded the habitat with sludge; needs a 3-wide test | **fixed — 8% of cells** |
+| ^ capping only the solid cells touching floor | interior/diagonal solids left holes through the WALL_H plateau; cap every solid cell | **fixed** |
+| Diagnosing dark patches by eyeballing a JPEG A/B | "looks lighter with shadows off" — sampled luma was byte-identical; blamed wall `castShadow`, reverted | **trap — sample pixels, tint meshes** |
+| Two wall tile variants picked per cell (sewers) | **47% of cell boundaries seam**, median run 1 cell; no blend fixes it (block layouts differ) | **rejected — one base + overlays** |
+| ^ `SewerDetail`: grime band + wall/floor contact shadows | `RoofShadows` minus the parapet-span derivation; gradients are canvas-drawn, **zero art**; +3 calls | **landed** |
+| ^ `Textures.loadRampTexture` revived (was dead code) | bakes the vertical fade into an opaque tile at load → grime source needs **no hand-cut alpha** | **landed** |
+| Sewer warm scene had no `MuzzleLights` pool | `NUM_POINT_LIGHTS` 5 vs 0 keyed every lit material → entry **+10 → +5**, all lambert gone | **fixed (pre-existing)** |
+| Contact shadows `FrontSide` vs `DoubleSide` | transparent DoubleSide = two single-side passes → **36 → 34 calls**; program count unchanged | **landed** |
+| ^ wall detail decals, merged per image | 19 on 104 faces (18.3%); 4 calls not one-per-decal (no `Occlusion` to fade them) | **landed** |
+| **Sewer wall FACES are 0.67% of the view; ledge TOPS 14.68%** | at `WALL_H` 3.0 + top-down cam, 22× more ledge than wall — decals/grime paint <1% of frame | **dress the tops too — one pose, not a verdict on walls** |
+| ^ that 0.67% is the FAR camera | `CAMERA_SEWER.near` is ~53° (faces plainly visible); tactical pins zoom to `far` ~70°, the view where faces matter LEAST | **`WALL_H` stays 3.0** |
+| `SewerGround`: ledge rim darkening | reached **5.83%** of the view (vs the wall decals' 0.12%) and still looked wrong — **nothing stands above a wall cap**, so it is a stripe floating over a BRIGHTER face, hard edge on the silhouette flickers | **rejected — removed** |
+| ^ what that taught | % of frame changed is a REACH number, not a quality one — a big reach makes an unmotivated effect worse | **standing note** |
+| Capturing the scene while the window is backgrounded | throttled to ~1fps, so a 500ms `onBeforeRender` capture returns nothing and reads as "mesh missing" | **trap — capture ≥2.5s** |
+| ^ `SewerGround.scatter`: ledge clutter + floor decals | 8 top-down images, hash-placed per cell, merged per image → **39 → 47 calls** for a whole level | **landed** |
+| ^ DARK art on a lighter surface | puddle core **1.7 vs the walkway's 43**; valve **6.7 vs the cap's 35** (0.46x in bytes = **0.19x in LINEAR**) — reads as a hole | **translucent art → `alpha`; SOLID props → new `lift` gamma in textures.json** |
+| ^ `"lift": 0.75` baked by `make tex` | pipe 0.46→**0.68x**, valve→0.70x, grate→0.61x; ledge dark tail min 3.0→15.0 with median unmoved | **landed — alpha untouched, no re-cut** |
+| **`(col*A) ^ (row*B)` collapses on row 0 / col 0** | one term is ZERO → pure arithmetic sequence → **8 props in a row** on the always-solid area border, the ledge band at the top of screen | **`SewerModel.mix` (xorshift32) on all 3 sewer passes** |
+| ^ why it was missed | grid-wide rate 22.2% and a run histogram matching a true RNG — averaging buries axis-aligned structure | **trap — test down the axes, not over the grid** |
+| ^ per-cell coin flip vs one prop per 2x2 block | mixing alone still deals runs of 7; block placement caps a run at **2** by construction, gate `pct × eligible cells` keeps density | **landed** |
+| A/B'd across a `make reload` | "60% of the band changed" was the log panel + lamp phase + actors, not the decals | **trap — hide/restore inside ONE session** |
+| Wall variants back, picked per **FACE** (`SewerStyle.WALLS`, 4 merged buffers) | the 47%-seam verdict was on a pair with DIFFERENT block layouts, so a switch moved the mortar; repaints of ONE source keep the courses aligned. **40 → 43 calls**, 73.3% of adjacent faces switch (75% ideal), habitat 28/24/28/24 | **landed** |
+| ^ but the sources are near-identical | 2-5 mean bytes apart, 2-5% of texels differ >12, same mean luma; whole-texture swap moves **3.2% of wall pixels >8** head-on | **mechanism fine — variety is capped by the art** |
+| Sludge gutter + ledge pipe run switched OFF | habitat **42 → 40 calls**; `markChannel` stays, so the gutter is one branch away | **landed (author call)** |
+| `SewerGeom.add`: `side: casts ? FrontSide : DoubleSide` | two unrelated decisions on one flag — floor/ledge got DoubleSide only because they do not cast, so ~3k quads rasterized a back face no camera can see | **fixed — all FrontSide** |
+| ^ `SewerScene` put the STEADY cone set in the `coneFlick` slot | that slot is the flickering batch `LightCone.pulse`/lampMask index against; a phase-less set silently no-ops and lampMask walks a zero-length array | **fixed — empty flick set, 0 calls** |
+| `CameraRig.maxFootprintCells` hardcoded `RenderConfig.CAMERA` | the AI spawn region is sized from it, and the presets are per-area now: **city 411 cells vs sewer 180** at aspect 1.92 | **fixed — takes a `CameraOffsets`; `getSpawnRect` keys on area KIND** |
+| Sewer grime band: `loadRampTexture` → hand-painted alpha | a code ramp is ONE alpha per image row, so the band had no shape — only a gradient wash; street grime stopped doing this long ago | **landed — premultiplied, 0 calls** |
+| Sewer/habitat exit laid flat on the floor | the art is a side-on LADDER; `isGroundDecal()` default made it a stripe on the walkway | **landed — override like `BurningBarrel`** |
+| ^ organic floor decals may cross a cell edge | a pool that stops dead on every 4-unit boundary is what gives the grid away; span 3.6 → **7.6** only where the 3x3 is all floor | **landed — 0 decals over a wall cell** |
 
 ### FX, UI and the view itself
 

@@ -40,10 +40,20 @@ class CameraRig {
   var tactical = false;
   var tacticalCamera:TacticalCameraState = null;
 
+  // near/far distance preset for the current area kind; the rig itself persists across areas, so
+  // this is re-asserted on every build (streets are shallow, tunnels look near straight down)
+  var offsets:RenderConfig.CameraOffsets = RenderConfig.CAMERA;
+
   public function new(game:Game, camera:PerspectiveCamera)
     {
       this.game = game;
       this.camera = camera;
+    }
+
+// swap the camera distance preset (per area kind — see RenderConfig.CAMERA / CAMERA_SEWER)
+  public function setOffsets(o:RenderConfig.CameraOffsets):Void
+    {
+      offsets = o;
     }
 
 // receive the lamp-corner map (built once per scene) so the follow target bends past posts
@@ -271,7 +281,7 @@ class CameraRig {
 // offset = lerp(near, far, zoom); lower zoom => lower y/z => more parallel to the ground
   function applyOffset():Void
     {
-      var n = RenderConfig.CAMERA.near, f = RenderConfig.CAMERA.far;
+      var n = offsets.near, f = offsets.far;
       var ox = n.x + (f.x - n.x) * zoom;
       var oy = n.y + (f.y - n.y) * zoom;
       var oz = n.z + (f.z - n.z) * zoom;
@@ -341,22 +351,26 @@ class CameraRig {
   inline function maxFor(st:_PlayerState):Float
     return st == _PlayerState.PLR_STATE_HOST ? 1.0 : RenderConfig.CAMERA.parasiteZoom;
 
-// how many city cells of ground the follow camera can cover, at its widest (zoom 1.0, the host
-// wheel-out ceiling from maxFor). PURE: derived from RenderConfig.CAMERA alone, so the game logic
-// can call it with no live camera and no scene — it sizes the AI spawn budget/region, which must
-// track what the player can actually SEE rather than the 2D canvas (the 2D rect scales with pixel
-// count, this does not: fov is fixed and only aspect moves).
+// how many cells of ground the follow camera can cover, at its widest (zoom 1.0, the host wheel-out
+// ceiling from maxFor). PURE: derived from the passed preset alone, so the game logic can call it
+// with no live camera and no scene — it sizes the AI spawn budget/region, which must track what the
+// player can actually SEE rather than the 2D canvas (the 2D rect scales with pixel count, this does
+// not: fov is fixed and only aspect moves).
+// the preset is an ARGUMENT, not RenderConfig.CAMERA: every 3D area kind has its own (a tunnel looks
+// near straight down from CAMERA_SEWER and covers roughly half the ground a street does), and
+// reading the city constant here would hand a sewer the street's footprint.
 // deliberately always zoom 1.0, never the live/state zoom: a parasite's ceiling is 0.3, so keying
 // off the player state would swing the budget on every attach/detach and churn spawns.
 // the ground patch is a trapezoid (perspective), narrow at the near edge and wide at the far one
-  public static function maxFootprintCells(aspect:Float):Float
+  public static function maxFootprintCells(aspect:Float, c:RenderConfig.CameraOffsets):Float
     {
-      var c = RenderConfig.CAMERA;
       // camera offset at full zoom-out; the rig aims at pWorld.y + 1.5, so pitch is measured to that
       var camY = c.near.y + (c.far.y - c.near.y) * 1.0;
       var camZ = c.near.z + (c.far.z - c.near.z) * 1.0;
       var pitch = Math.atan2(camY - 1.5, camZ);
-      var half = c.fov / 2 * Math.PI / 180;
+      // fov is NOT per preset: the PerspectiveCamera is built once with this one and no area kind
+      // changes it — only the near/far offsets swap (setOffsets)
+      var half = RenderConfig.CAMERA.fov / 2 * Math.PI / 180;
       // where the top/bottom frustum planes meet the ground. the near edge can land BEHIND the
       // camera (pitch + half > 90 degrees at this steep angle) — that is correct, not a bug
       var zFar = camZ - camY / Math.tan(pitch - half);

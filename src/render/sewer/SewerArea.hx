@@ -1,0 +1,99 @@
+package render.sewer;
+
+import three.Three;
+import game.Game;
+import render.Area3D;
+import render.Area3DTickOpts;
+import render.RenderConfig;
+import render.SceneSetup;
+import render.particles.LampLights;
+import render.particles.LampPost;
+import render.sewer.SewerModel.Sewer;
+import render.world.WorldCtx;
+
+// the underground tunnel area kind (AREA_SEWERS + AREA_HABITAT). deliberately much smaller than
+// render.CityArea: there is no ceiling and the camera looks near straight down, so a wall never
+// gets between it and the player — which means no occlusion fade, and with nothing to fade the
+// whole level welds into five merged meshes (see render.sewer.SewerGeom)
+class SewerArea implements Area3D
+{
+  var game:Game;
+  var model:Sewer;
+  var lampLights:LampLights;    // live spotlight pool over the corridor nodes
+  var lampPosts:Array<LampPost>; // node + exit lamps (for the pool)
+
+  public function new(game:Game, model:Sewer)
+    {
+      this.game = game;
+      this.model = model;
+    }
+
+// the tunnel scene: near-black background, fog that closes in within a few cells, no moon, and the
+// same live spotlight pool the streets use hung over the corridor nodes
+  public function scene(renderer:WebGLRenderer, lampPool:Int):SceneSetup.SceneBundle
+    {
+      var bundle = SewerScene.build(renderer, model, lampPool);
+      lampLights = bundle.lampLights;
+      lampPosts = bundle.lampPosts;
+      return bundle;
+    }
+
+// the whole static shell + its dressing, welded into a handful of merged meshes
+  public function build(scene:Scene):Void
+    {
+      // the whole render layer reads ground height through WorldCtx.floorY, and it returns a flat
+      // 0 when there is no city tile grid — which is what lets actors, choreo, particles and decals
+      // run down here untouched. buildings stays a live empty array: the shot pass iterates it
+      WorldCtx.tiles = null;
+      WorldCtx.buildings = [];
+      WorldCtx.seed = -1;
+      SewerGeom.build(scene, model);
+    }
+
+// per-frame world tick — down here that is only the live lamp pool: nothing fades, no windows
+// switch, and there are no chunks to cull (the whole level is a handful of merged meshes)
+  public function tick(opts:Area3DTickOpts):Void
+    {
+      // nothing to fade and no window switches underground; the outro needs no world tick at all
+      if (opts.outro)
+        return;
+      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+    }
+
+// deliberately empty: tactical only changes the building occlusion rule, and a tunnel has no
+// occlusion pass at all
+  public function setTactical(v:Bool):Void
+    {
+    }
+
+// lower than the street's so the few lamps actually bloom against near-black surroundings
+  public function bloomThreshold():Float
+    {
+      return SewerStyle.BLOOM_THRESHOLD;
+    }
+
+// near straight down: the walls are low and there is no ceiling, so the shallow street angle
+// would stare into a wall face
+  public function cameraOffsets():RenderConfig.CameraOffsets
+    {
+      return RenderConfig.CAMERA_SEWER;
+    }
+
+// per-cell-hash litter (no seed underground — the saved cell grid is the layout)
+  public function debris():Array<render.world.Debris.DebrisSpot>
+    {
+      return SewerDebris.build(model);
+    }
+
+// re-bind after a settings change rebuilt the live spotlight pool (View.setLampLights)
+  public function setLampLights(l:LampLights):Void
+    {
+      lampLights = l;
+    }
+
+// no citygen City underground; the debug tools' city readers all handle null
+  public function city():citygen.CityModel.City
+    {
+      return null;
+    }
+}

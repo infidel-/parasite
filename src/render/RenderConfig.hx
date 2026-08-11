@@ -2,6 +2,10 @@ package render;
 
 typedef DetailType = { tex:String, w:Float, d:Float, crop:Float };
 typedef CropXY = { x:Float, y:Float };
+// one camera distance preset: the offsets a CameraRig lerps between at zoom 0 and zoom 1.
+// only the distance differs per area kind — fov, easing and the orbit clamps stay shared
+typedef CamOffset = { x:Float, y:Float, z:Float };
+typedef CameraOffsets = { near:CamOffset, far:CamOffset };
 // one SHOT.kinds entry: per-weapon pellet pattern + tracer style (see the kinds block)
 typedef ShotKind = {
   pellets:Int,
@@ -164,6 +168,14 @@ class RenderConfig {
     orbitReturnLerp: 0.15, // per-BASE_MS ease of the orbit back to 0 on RMB release
     introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
     exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
+  };
+  // enclosed areas (sewer/habitat tunnels) look almost straight down. the walls are only ~1.5 cells
+  // tall and there is no ceiling, so the shallow street angle above would stare into a wall face
+  // instead of down the corridor — and at this pitch a wall occludes almost nothing, which is what
+  // lets the tunnels skip building fading entirely
+  public static final CAMERA_SEWER:CameraOffsets = {
+    near: { x: 0.0, y: 16.0, z: 12.0 },  // zoom=0: close, looking well down into the corridor
+    far:  { x: 0.0, y: 40.0, z: 14.0 },  // zoom=1: near top-down
   };
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
