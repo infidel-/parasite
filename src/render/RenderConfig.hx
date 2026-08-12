@@ -597,6 +597,7 @@ class RenderConfig {
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
+    sewerExit: 'models/sewer-exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
   };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground

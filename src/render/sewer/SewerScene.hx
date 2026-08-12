@@ -78,21 +78,43 @@ class SewerScene
           lampPosts.push({
             x: w.x,
             z: w.z,
+            y: CityConfig.CELL * RenderConfig.LAMP_LIGHT.yMul,
             col: l.col,
             row: l.row,
             phase: 0.0,
             flick: 1.0,
+            mul: 1.0,
           });
         }
       var L = RenderConfig.LAMP_LIGHT;
       var bulbY = CityConfig.CELL * L.yMul;
       var coneR = bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul;
-      // every tunnel lamp is STEADY (phase 0), so this is the city's steady batch: built once and
-      // never touched again. the bundle's coneFlick slot is the FLICKERING batch, which down here is
+      // every NODE lamp is STEADY (phase 0), so this is the city's steady batch: built once and never
+      // touched again. the bundle's coneFlick slot is the FLICKERING cone batch, which down here is
       // empty — an empty set builds no mesh at all, and it keeps the contract honest, so LightCone
-      // .pulse and the lampMask loop stay no-ops instead of silently walking a phase-less set
-      render.LightCone.instanced(coneGroup, bulbs, bulbY, coneR);
-      var coneFlick = render.LightCone.instanced(coneGroup, [], bulbY, coneR, []);
+      // .pulse and the lampMask loop stay no-ops instead of silently walking a phase-less set.
+      // the shaft is far blunter than a street lamp's: this is light down a MANHOLE, already a
+      // manhole wide where it starts (SewerStyle.CONE_TOP_R against the street's 0.2)
+      render.LightCone.instanced({
+        group: coneGroup,
+        bulbs: bulbs,
+        bulbY: bulbY,
+        radius: coneR,
+        topR: SewerStyle.CONE_TOP_R,
+      });
+      var coneFlick = render.LightCone.instanced({
+        group: coneGroup,
+        bulbs: [],
+        bulbY: bulbY,
+        radius: coneR,
+        topR: SewerStyle.CONE_TOP_R,
+        phases: [],
+      });
+      // weak bracketed fixtures along the walls, filling the runs between the junction lamps. their
+      // working bulbs join the same pool, so they light, sputter and cast fake actor shadows with no
+      // further wiring; the glow batch is repacked per frame by SewerArea.tick
+      var wall = SewerLamps.build(scene, coneGroup, m);
+      lampPosts = lampPosts.concat(wall.posts);
       var lampLights = new LampLights(scene, lampPool);
       var pts:Array<Object3D> = [];
       for (l in lampLights.debugList())
@@ -122,6 +144,7 @@ class SewerScene
         coneFlick: coneFlick,
         lampMask: [],
         lampMaskDead: [],
+        wallGlow: wall.glow,
       };
     }
 }

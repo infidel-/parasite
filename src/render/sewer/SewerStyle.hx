@@ -87,7 +87,35 @@ class SewerStyle
   public static inline var DECAL_EPS = 0.05;    // proud of the wall face (avoid z-fight)
   public static inline var DECAL_MARGIN = 0.5;  // keep a decal this far inside the cell's edges
 
-  // bloom threshold underground: lower than the street so the few lamps actually bloom against
-  // near-black surroundings
-  public static inline var BLOOM_THRESHOLD = 0.75;
+  // bloom threshold underground. was 0.75 (below the street's 0.9) so the few lamps would bloom
+  // against near-black surroundings, but the lamps clear 0.9 on their own — their glow quads and
+  // emissives run 2.6-3.2x over the amber. What lived in that 0.75-0.9 band was over-lit SURFACES:
+  // a pale face straight under a bulb (the exit ladder's top rail) haloed onto the floor around it
+  public static inline var BLOOM_THRESHOLD = 0.9;
+
+  // --- overhead node/exit light shafts (render.LightCone via SewerScene) ---
+  // a street shaft tapers to RenderConfig.LAMP_CONE.topR = 0.2, i.e. a point at the bulb, because it
+  // IS a bulb. down here the light falls through a MANHOLE, so the shaft is already a manhole wide
+  // where it starts and only spreads a little on the way down
+  public static inline var CONE_TOP_R = 0.9;
+
+  // --- weak bracketed lamps on the tunnel walls (render.sewer.SewerLamps) ---
+  // these are the between-junctions lighting: the node lamps only land on 3x3 corridor corners and
+  // intersections, so without these a whole run of corridor has no light source of its own
+  public static inline var WALL_LAMP_PCT = 12;         // % of wall faces that get a fixture
+  public static inline var WALL_LAMP_BROKEN_PCT = 30;  // % of those permanently dead (housing only, no light)
+  public static inline var WALL_LAMP_FLICKER_PCT = 35; // % of the SURVIVORS that sputter (failing-sodium)
+  public static inline var WALL_LAMP_Y = 2.2;          // bracket height on the wall face (under WALL_H)
+  public static inline var WALL_LAMP_OUT = 0.6;        // how far the SPOTLIGHT stands off the wall, so its
+                                                       // downward cone lands on floor instead of half inside masonry
+  public static inline var WALL_LAMP_W = 0.75;         // glow quad width in world units
+  public static inline var WALL_LAMP_H = 0.5;          // glow quad height
+  public static inline var WALL_LAMP_HOUSING = 2.6;    // housing/soot quad size, as a multiple of the glow
+  public static inline var WALL_LAMP_MUL = 0.35;       // pooled-spotlight intensity multiplier — a weak fixture
+  public static inline var WALL_LAMP_GLOW = 2.6;       // HDR multiplier on LAMP_CONE.color so the quad clears BLOOM_THRESHOLD
+  public static inline var WALL_LAMP_SOOT = 0.18;      // housing darkness (opacity of the black smudge behind the glow)
+
+  // --- the exit ladder prop (RenderConfig.MODELS.sewerExit via render.world.ObjModels) ---
+  // taller than WALL_H so it visibly climbs PAST the ledge toward the hole we do not render
+  public static inline var EXIT_MODEL_H = 4.0;
 }

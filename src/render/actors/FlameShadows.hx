@@ -248,7 +248,10 @@ class FlameShadows {
       for (o in game.area.getObjects())
         if (o.entity != null &&
             !o.isGroundDecal() &&
-            o.type != 'burning_barrel')
+            o.type != 'burning_barrel' &&
+            // an object drawn as a real 3D prop already casts a REAL shadow map shadow
+            // (render.Models.instanced), so a painted silhouette on top of it is a second shadow
+            render.world.ObjModels.modelFor(o.type) == null)
           actorShadow(o.entity, barrelLights, lampLights);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
         actorShadow(game.playerArea.entity, barrelLights, lampLights);

@@ -25,7 +25,6 @@ class LampLights {
   public static var lastShadowBacklog = 0; // observability: caster slots still owing a re-render (a burst shows here, drains 1/frame)
   var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
   var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
-  var bulbY:Float;
   public var flickT:Float = 0.0;          // raw-ms flicker clock, see flicker() below (read by LightCone.pulse)
 
 // failing-sodium lamp at time t (raw ms) with a per-lamp phase. TWO gate sines ride on top of each
@@ -64,7 +63,6 @@ class LampLights {
       var L = RenderConfig.LAMP_LIGHT;
       owner = group;
       casters = pool < L.shadowCasters ? pool : L.shadowCasters;
-      bulbY = CityConfig.CELL * L.yMul;
       // NOTE: never toggle .visible — an invisible spotlight drops out of NUM_SPOT_LIGHTS and forces
       // the very recompile this pool exists to avoid. idle == visible + intensity 0
       for (i in 0...pool)
@@ -196,11 +194,12 @@ class LampLights {
       for (i in 0...lights.length)
         {
           var o = owners[i];
-          // flicker MULTIPLIES the published intensity and never touches intens[] — that array is both
-          // the pure fade ease and the `<= 0.001 -> free the slot` test, so scaling it in place would
-          // hand a sputtering lamp's slot away mid-blink
+          // flicker and the per-post strength MULTIPLY the published intensity and never touch
+          // intens[] — that array is both the pure fade ease and the `<= 0.001 -> free the slot` test,
+          // so scaling it in place would hand a sputtering lamp's slot away mid-blink (and would let a
+          // weak fixture free its slot the moment it was claimed)
           var fl = (o != null && o.phase != 0) ? flicker(flickT, o.phase) : 1.0;
-          untyped lights[i].intensity = intens[i] * fl;
+          untyped lights[i].intensity = intens[i] * fl * (o != null ? o.mul : 1.0);
           // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
           // so the depth map is otherwise valid); the re-render is dispatched at most one-per-frame below
           if (i < casters && owners[i] != prevOwners[i])
@@ -208,7 +207,9 @@ class LampLights {
           if (o != null)
             {
               o.flick = fl; // read by FlameShadows so the fake ground shadow breathes with the bulb
-              lights[i].position.set(o.x, bulbY, o.z);
+              // the bulb height is the POST's, not the pool's: a sewer wall lamp sits far lower than a
+              // street lamp. the target stays on the floor under it, so every fixture still pools down
+              lights[i].position.set(o.x, o.y, o.z);
               targets[i].position.set(o.x, 0, o.z);
               activeList.push(o);
             }

@@ -120,6 +120,25 @@ class Textures {
     return tex;
   }
 
+  // CENTRED radial falloff: opaque at uv(0.5,0.5), transparent at the quad's rim. the two above are
+  // both anchored at an edge (a parapet strip, a roof corner); this one is the shape of a glow, and
+  // it is what keeps a light-fixture quad from reading as a hard-edged sticker on the wall
+  public static function makeGlowGradient():Texture {
+    var N = 64;
+    var cv = Browser.document.createCanvasElement();
+    cv.width = N; cv.height = N;
+    var ctx = cv.getContext2d();
+    var g = ctx.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+    g.addColorStop(0.0, '#ffffff');
+    g.addColorStop(0.35, '#c8c8c8');
+    g.addColorStop(1.0, '#000000');
+    ctx.fillStyle = cast g;
+    ctx.fillRect(0, 0, N, N);
+    var tex = new CanvasTexture(cv);
+    tex.colorSpace = THREE.NoColorSpace;
+    return tex;
+  }
+
   static function proceduralCanvas(kind:String):CanvasElement {
     var size = 256;
     var c = Browser.document.createCanvasElement();

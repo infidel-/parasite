@@ -23,6 +23,7 @@ typedef ActorOpts = {
   @:optional var offz:Float;        // world Z offset from the cell centre
   @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
+  @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): ring only, no icon and no x-ray
 }
 
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
@@ -195,6 +196,7 @@ class Actors {
               offz: oz,
               groundAnchor: true,
               mark: o.visible(),
+              iconOff: render.world.ObjModels.modelFor(o.type) != null,
             });
             if (vis)
               badges.drawObjTarget(o);
@@ -720,7 +722,22 @@ class Actors {
         }
       // object marks ride the exact same pose, painted before the icon they frame
       if (o.mark == true)
-        paintObjMark(e, a.op, wx, wy, wz, sc, flat, yaw, order);
+        paintObjMark({
+          e: e,
+          op: a.op,
+          x: wx,
+          y: wy,
+          z: wz,
+          scale: sc,
+          flat: flat,
+          yaw: yaw,
+          order: order,
+          xray: o.iconOff != true,
+        });
+      // an object drawn as a real 3D prop keeps its tactical ring (that is how it stays findable with
+      // the view up) but not its icon, which would stand inside the prop
+      if (o.iconOff == true)
+        return;
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       sprites.paint({
         x: wx,
@@ -744,45 +761,47 @@ class Actors {
 // exactly like the AI x-ray. both are UI overlays (no shadow sampling) and both share the sprite's
 // renderOrder: the ring covers only the band just OUTSIDE the silhouette, so it never overlaps the
 // icon it frames, and the silhouette can never pass depth where the icon itself draws
-  function paintObjMark(e:Entity, op:Float, x:Float, y:Float, z:Float, scale:Float, flat:Bool,
-      yaw:Float, order:Int):Void
+  function paintObjMark(o:ObjMarkOpts):Void
     {
       var C = RenderConfig.OBJMARK;
+      var e = o.e;
       if (tactical)
         {
           var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, C.outlinePx, e.skinColor);
           if (ring != null)
             sprites.paint({
-              x: x,
-              y: y,
-              z: z,
+              x: o.x,
+              y: o.y,
+              z: o.z,
               tex: ring.tex,
-              op: op,
-              scale: scale * ring.scale,
-              flat: flat,
-              order: order,
+              op: o.op,
+              scale: o.scale * ring.scale,
+              flat: o.flat,
+              order: o.order,
               emissive: C.color,
               emissiveInt: C.emissive,
-              yaw: yaw,
+              yaw: o.yaw,
               shadow: false,
             });
         }
+      if (!o.xray)
+        return;
       var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
         C.fill, C.hatchSpacing, C.hatchThick, e.skinColor);
       if (sil == null)
         return;
       sprites.paint({
-        x: x,
-        y: y,
-        z: z,
+        x: o.x,
+        y: o.y,
+        z: o.z,
         tex: sil,
-        op: op,
-        scale: scale,
-        flat: flat,
-        order: order,
+        op: o.op,
+        scale: o.scale,
+        flat: o.flat,
+        order: o.order,
         emissive: C.color,
         emissiveInt: C.emissive,
-        yaw: yaw,
+        yaw: o.yaw,
         depthFunc: THREE.GreaterDepth,
         shadow: false,
       });

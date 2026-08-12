@@ -318,6 +318,8 @@ class View {
       var sewerFx = new Group();
       sewerScene.add(sewerFx);
       new render.particles.MuzzleLights(sewerFx);
+      // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
+      // light-count variant), but it has to wait for its glb — see the compile chain below
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
       // buildScene already compiled — instance one into the warm scene so the first downtown entry
       // reuses it instead of recompiling on the first frame
@@ -405,6 +407,20 @@ class View {
         {
           new render.particles.FlameLights(g);
           return renderer.compileAsync(s, camera);
+        }).then(function(_)
+        {
+          // the exit prop's glb arrives over an async load, so it is instanced HERE rather than beside
+          // the rest of the sewer warm scene: added after compileAsync had already walked that scene it
+          // would miss the warm entirely and compile its PBR program on the first real tunnel entry
+          return new js.lib.Promise(function(res, _)
+            {
+              render.Models.get(render.RenderConfig.MODELS.sewerExit, function(_)
+                {
+                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit,
+                    [{ x: 0.0, z: 0.0, yaw: 0.0 }], render.sewer.SewerStyle.EXIT_MODEL_H);
+                  res(null);
+                });
+            });
         }).then(function(_)
         {
           return renderer.compileAsync(sewerScene, camera); // still bound to the linear target

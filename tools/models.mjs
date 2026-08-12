@@ -154,7 +154,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '');
+      const sig = target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -205,6 +205,15 @@ async function main()
               m.setRoughnessFactor(1);
             }
           console.log('     metallic-roughness map dropped (matte 0/1)');
+        }
+      // optional flat tint on the base colour (glTF baseColorFactor, LINEAR — three multiplies it
+      // onto the sRGB-decoded map). for a prop whose authored albedo is far brighter than the game
+      // art: a uniform map has nothing to repaint, so scale it rather than replace it via texSrc
+      if (e.baseColor)
+        {
+          for (const m of doc.getRoot().listMaterials())
+            m.setBaseColorFactor(e.baseColor);
+          console.log('     baseColorFactor <- [' + e.baseColor.join(', ') + ']');
         }
       // decimate only when the target is below the source count; otherwise leave the geometry (and
       // its authored normals/hard edges) untouched — meshopt would keep hi-poly normals that mismatch

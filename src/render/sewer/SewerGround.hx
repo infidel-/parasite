@@ -42,8 +42,8 @@ class SewerGround
       // and letting the walkway read through it is what stops it looking like a pit
       scatter(scene, m, {
         types: [
-          { tex: SewerStyle.FLOOR_PUDDLE, w: 2.8, d: 2.2, alpha: 0.5, organic: true },
-          { tex: SewerStyle.FLOOR_PUDDLE_2, w: 1.8, d: 1.6, alpha: 0.6, organic: true },
+          { tex: SewerStyle.FLOOR_PUDDLE, w: 2.8, d: 2.2, alpha: 0.3, organic: true },
+          { tex: SewerStyle.FLOOR_PUDDLE_2, w: 1.8, d: 1.6, alpha: 0.35, organic: true },
           { tex: SewerStyle.FLOOR_GRATE, w: 1.6, d: 1.6, alpha: 1.0, organic: false },
           { tex: SewerStyle.FLOOR_STAIN, w: 2.6, d: 2.0, alpha: 0.8, organic: true },
         ],

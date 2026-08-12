@@ -34,6 +34,8 @@ typedef SceneBundle = {
   coneFlick:render.LightCone.ConeSet, // the flickering lamps' cone batch, repacked per frame so a cone goes dark with its bulb
   lampMask:Array<Bool>,     // per-instance draw mask for lampProp — entries 0..n-1 are the flickering lamps, cleared while one is out
   lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
+  wallGlow:render.LightCone.ConeSet, // sewer only (null in a city): the wall lamps' emissive quads, repacked
+                                     // like coneFlick so a fixture stops glowing AND blooming while its bulb is out
 };
 
 class SceneSetup {
@@ -221,10 +223,12 @@ class SceneSetup {
           lampPosts.push({
             x: bx,
             z: bz,
+            y: CityConfig.CELL * L.yMul,
             col: lamp.col,
             row: lamp.row,
             phase: phase,
             flick: 1.0,
+            mul: 1.0,
           });
         }
       // the cell corner (grid vertex) the post stands on, keyed for cornerBend to query
@@ -248,8 +252,21 @@ class SceneSetup {
     // (built once, never touched) and the flickering lamps' (repacked by LightCone.pulse so a cone
     // goes out with its bulb). an area with no flickering lamps builds no second mesh at all
     var coneR = bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul;
-    LightCone.instanced(coneGroup, bulbs, bulbY, coneR);
-    var coneFlick = LightCone.instanced(coneGroup, bulbsFlick, bulbY, coneR, phasesFlick);
+    LightCone.instanced({
+      group: coneGroup,
+      bulbs: bulbs,
+      bulbY: bulbY,
+      radius: coneR,
+      topR: RenderConfig.LAMP_CONE.topR,
+    });
+    var coneFlick = LightCone.instanced({
+      group: coneGroup,
+      bulbs: bulbsFlick,
+      bulbY: bulbY,
+      radius: coneR,
+      topR: RenderConfig.LAMP_CONE.topR,
+      phases: phasesFlick,
+    });
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
     var lampLights = new LampLights(scene, lampPool);
     for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
@@ -273,7 +290,8 @@ class SceneSetup {
       lampPropDead: lampPropDead,
       coneFlick: coneFlick,
       lampMask: lampMask,
-      lampMaskDead: lampMaskDead
+      lampMaskDead: lampMaskDead,
+      wallGlow: null // no wall-mounted fixtures on a street
     };
   }
 }

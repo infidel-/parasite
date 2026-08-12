@@ -50,12 +50,14 @@ class LightCone {
     }
 
 // build a batch of lamp cones as ONE InstancedMesh (shared geometry, one draw call) — a straight-down
-// shell per bulb. `bulbs` = each lamp's bulb ground x/z (already pushed out over the road edge);
-// bulbY = bulb height; radius = cone ground radius. added to `group` (toggled with the lamps in
-// debug). `phases` (optional, same length as bulbs) marks this as a FLICKERING set for pulse()
-  public static function instanced(group:Object3D, bulbs:Array<{ x:Float, z:Float }>, bulbY:Float, radius:Float, ?phases:Array<Float>):ConeSet
+// shell per bulb, added to o.group (toggled with the lamps in debug). a non-empty o.phases marks this
+// as a FLICKERING set for pulse()
+  public static function instanced(o:LightConeOpts):ConeSet
     {
-      var set:ConeSet = { mesh: null, matrices: [], phases: phases != null ? phases : [], on: [] };
+      var bulbs = o.bulbs;
+      var bulbY = o.bulbY;
+      var radius = o.radius;
+      var set:ConeSet = { mesh: null, matrices: [], phases: o.phases != null ? o.phases : [], on: [] };
       if (bulbs.length == 0)
         return set;
       var C = RenderConfig.LAMP_CONE;
@@ -63,8 +65,8 @@ class LightCone {
       var s = C.startFrac;
       var h = bulbY * (1 - s);
       var rTop = radius * s;
-      if (rTop < C.topR)
-        rTop = C.topR;
+      if (rTop < o.topR)
+        rTop = o.topR;
       var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true);
       // fold the vertical placement into the geometry so an instance sitting at the bulb has its base
       // on the ground: center offset = -bulbY*(1+startFrac)/2 below the bulb
@@ -99,17 +101,20 @@ class LightCone {
           set.on.push(true);
         }
       untyped inst.instanceMatrix.needsUpdate = true;
-      group.add(inst);
+      o.group.add(inst);
       set.mesh = inst;
       return set;
     }
 
-// per-frame on/off for a FLICKERING cone set: a cone whose bulb is in its dark stretch is left out of
+// per-frame on/off for a FLICKERING set: an instance whose bulb is in its dark stretch is left out of
 // the packed prefix, exactly the way Models.cull drops off-screen instances. this is why the
 // flickering cones live in their own mesh — a shared material could only fade all of them together,
 // so every outage in the area would happen in unison. no per-instance colour channel is involved.
 // ponytail: on/off only, the cone does not dim through the stutter — at LAMP_CONE.opacity 0.03 that
-// was never visible in the shaft. upgrade path is a real instanceColor extern
+// was never visible in the shaft. upgrade path is a real instanceColor extern.
+//
+// nothing here touches cone geometry — it only repacks an instance matrix buffer by the lit mask, so
+// render.sewer.SewerLamps hands it the wall-lamp GLOW quads and gets the same behaviour
   public static function pulse(set:ConeSet, t:Float):Void
     {
       if (set.mesh == null)
@@ -120,7 +125,10 @@ class LightCone {
       var changed = false;
       for (i in 0...set.phases.length)
         {
-          var lit = render.particles.LampLights.flicker(t, set.phases[i]) >= cut;
+          // phase 0 is the STEADY marker LampLights keys on, so it never goes out — which lets one
+          // batch hold the steady and the sputtering lamps together (a tunnel has too few to split)
+          var lit = set.phases[i] == 0 ||
+            render.particles.LampLights.flicker(t, set.phases[i]) >= cut;
           if (lit != set.on[i])
             {
               set.on[i] = lit;

@@ -245,3 +245,120 @@ because a 3-wide corridor only qualifies down its centre line, which is the righ
 **Never A/B across a reload.** The first ledge measurement came out at 60% of the band changed, which
 is not decals — it was a before-reload shot against an after-reload one, with the log panel, the
 lamp phase and the actor state all different. Hide and restore the meshes inside one session.
+
+### Sewer lighting pass: manhole shafts, failing wall fixtures, and the exit as a real prop
+Four changes to the tunnels, none of them a new mechanism — every part already ships in the city.
+Habitat **43 → 46 calls**, tris 5.4k → 11.8k (the prop), boot pre-warm 69 → **73** programs, sewer
+entry **+9** (was +7).
+
+**The overhead shafts are manhole light now.** `LightCone` clamped its top radius to the shared
+`LAMP_CONE.topR 0.2` — a point at the bulb, right for a street lamp because there IS a bulb there.
+Underground the light falls through a HOLE, so the shaft starts a manhole wide: `CONE_TOP_R 0.9`
+against the unchanged 3.66 ground radius. `instanced` was already at 5 positional args, so this went
+to a `LightConeOpts` typedef rather than a 6th. Verified live: sewer cones `radiusTop 0.9`, the city
+warm scene still 0.2 over 239 instances. Zero draw calls either way.
+
+**Puddles 0.5/0.6 → 0.3/0.35.** `alphaTest` is `0.35 * alpha`, so the cut follows the opacity and the
+hand-cut soft edge stays proportional (0.105 / 0.1225 live).
+
+**Weak wall fixtures between the junctions (`SewerLamps`, +2 calls).** `SewerModel` only lights 3x3
+corridor corners and intersections, so a whole run of corridor had no source of its own. 12% of wall
+faces now carry a fixture, placed per 2x2 BLOCK (the run-capping idiom `SewerGround` explains) off
+its own mixed hash; 30% are permanently dead and 35% of the survivors sputter, decided from a second
+mixed word exactly as `SceneSetup` decides it from the lamp cell in the slums. Live in the habitat:
+**12 placed, 8 working, 3 of those with a non-zero phase**.
+
+There is no model and no art. A fixture is two quads on the wall face at `y 2.2`: an additive glow
+whose amber is multiplied 2.6x past 1 so it clears `BLOOM_THRESHOLD 0.75`, over a soot smudge that
+doubles as the dead lamp's entire appearance. Both are `InstancedMesh` + a canvas radial gradient
+(`Textures.makeGlowGradient`), so a level pays two calls however many lamps it has.
+
+Everything else came free. A working fixture is just a `LampPost`, so it competes for the same 12-slot
+pool and therefore casts fake actor shadows (`View` already fed `lampLights.active()` to `Actors` in
+every area); a non-zero phase is all `LampLights` and `CastShadows` need to sputter it and to drop its
+shadow while it is out. Two new `LampPost` fields carry what a wall bracket does not share with a
+street lamp: `y` (2.2 vs 5.6) and `mul` (0.35 — "weak"). Both multiply only at the publish line, never
+into `intens[]`, for the reason already written there: that array is the fade ease AND the
+`<= 0.001 -> free the slot` test.
+
+**`LightCone.pulse` is geometry-agnostic** — it only repacks an instance matrix buffer by the lit
+mask — so the glow batch is a `ConeSet` and gets the city's outage behaviour verbatim. One change
+inside it: `phase == 0` now means always-on, which lets the steady and sputtering fixtures share one
+batch (a tunnel has too few to split) and fixes a latent city case where a hash landing on exactly 0
+put a lamp in the flicker batch that `LampLights` treated as steady. Swept 40s of flicker time over
+the live batch: packed count 8 / 7 / 6, never below 6, i.e. the 5 steady fixtures never drop and the
+3 sputtering ones never go out in unison.
+
+**The exit is `sewer-exit.glb`.** Baked 93,501 → 5,000 tris / 354KB by `make models` (single mesh,
+single material, so `Models.instanced` = 1 call for every exit in the level), stood at
+`EXIT_MODEL_H 4.0` so it climbs past the `WALL_H 3.0` ledge toward the hole nothing renders. New
+`render.world.ObjModels` owns the type → glb map, keyed on `o.type` in the render layer so
+`objects.AreaObject` stays ignorant of glbs. `Actors` gains `ActorOpts.iconOff`: the object keeps its
+teal tactical ring and its through-wall silhouette (that is how an exit stays findable) and loses only
+the icon quad the prop now occupies. Only tunnel areas hold one — `WorldConst` declares
+`exit: 'sewer_exit'` on `AREA_SEWERS` alone.
+
+**Trap: a prop-backed object was casting TWO shadows.** `Models.instanced` sets `castShadow`, so the
+ladder throws a real shadow-map shadow — and `FlameShadows` was still painting a stretched copy of its
+64px sprite silhouette on the floor underneath it. `castShadows` now skips any object with a model.
+
+**Trap: warming an async prop.** Instancing the glb beside the rest of the sewer warm scene warms
+nothing — `Models.instanced` resolves over a `GLTFLoader` callback and the mesh lands after
+`compileAsync` has already walked the scene. It is instanced inside the promise chain instead, behind
+a `Models.get`; boot went 69 → 73 programs, which is the prop's PBR + depth pair moving from entry to
+boot. The 2 `basic` programs still compiling on entry are dir-light-count variants (1 → 0) of
+city-only materials, not the new ones — they were there before this pass.
+
+## The exit ladder marked itself: a green dot grid no lighting toggle could kill
+
+A grid of glowing green squares crawled over the new ladder and moved with the camera. It read as a
+specular pattern and was chased as one — twice, wrongly. It is the object's **own through-wall x-ray**.
+
+`Actors.paintObjMark` paints a hatched silhouette with `depthFunc: GreaterDepth`, i.e. *draw only
+where something occludes this pose* — the whole point, since that is how an object stays findable
+behind a wall. `OBJMARK` carves it as `fill 'dots'`, `hatchSpacing 6`, `hatchThick 2`, colour
+`0x35dd7a` at `emissive 0.9`, so on a 64px crop it is ~10 dots across and bloom washes them to
+yellow-white. Before this prop existed the exit's only occluder was a wall. Now a 4-unit ladder stands
+at exactly that sprite pose, so **the object occludes its own marker** and hatches itself every frame.
+Fixed by making `iconOff` mean ring-only: a modelled object keeps its tactical outline and loses both
+the icon and the x-ray. `paintObjMark` was at 9 positional args, so the switch went into a new
+`ObjMarkOpts` rather than becoming a 10th.
+
+**The trap is that no lighting A/B can find an overlay.** The marker is an emissive UI quad: `1`
+(hide every light, full-bright ambient) leaves it, `M` (force matte) never touches it, and it does not
+care what the model's material says. `6` (kill emissive) is the key that would have pointed at it.
+Proving it took the opposite move — find the one material in the scene with `depthFunc === 6` and
+force `colorWrite = false` on it every frame. Dots gone, ladder untouched.
+
+**Two real material findings came out of the wrong trail, both since reverted.** The glb is a PBR
+export at `metallic=1 roughness=1` **with an MR map** measuring metal **0.71** / rough **0.23**, over
+a base map that is a **flat 198 grey** (range 192–205 across the whole 512², no painted detail; the UV
+layout is dozens of thin packed rail/rung strips, which is why replacing that art was never the
+answer). `dropMR` + a new `baseColor` bake knob flattened and darkened it — and the author wants the
+sheen, so both are off again. Worth keeping written down: `dropMR` alone turns it into a WHITE plastic
+ladder, because metalness 0.71 had been suppressing the diffuse to 29% and hiding that albedo.
+
+**Two things survive.** `models.json` gained `baseColor` — a LINEAR `baseColorFactor` multiplied onto
+the base map, for a prop whose authored albedo is far brighter than the art (scale a uniform map, do
+not repaint it). And debug key **`M`** forces every lit material matte, in `StreetPerf.onKey` (the
+fallback branch for keys `View` ignores, which already owns the scene and the HUD), stashing into
+`userData.spec0`, HUD line `SPECULAR(M)`. It must null the **maps**, not just the factors —
+roughness/metalness are factors the map multiplies, so clearing a factor alone leaves a mapped
+material exactly as glossy. That flips `USE_METALNESSMAP`/`USE_ROUGHNESSMAP`, so one compile stall per
+toggle, same as `7`. It also flattens blood/slime (`BLOOD.wetRough 0.4`/`wetMetal 0.5`), as a global
+A/B should.
+
+**And the glow on the ladder's top rail was bloom, not the sheen.** `Shift`+`1` (bloom alone) over the
+rail region: mean luma **133 → 160**, with the halo spilling onto the floor and the rungs under it.
+The rail is a pale face 1.6 below a bulb, clipped past 1.0 linear long before the pass runs, and
+`SewerStyle.BLOOM_THRESHOLD` was **0.75** — deliberately under the street's 0.9 "so the few lamps
+actually bloom against near-black surroundings". What actually lived in that 0.75-0.9 band was
+over-lit SURFACES, not lamps: raised to **0.9**, near-clipped pixels on the rail go 2.8% → 0.7%, the
+floor halo is gone and the rail caps keep a tight highlight. `baseColor` cannot do this job — the rail
+is far enough over that it would need ~0.4, which is the dark matte ladder again.
+
+Verified the lamps did not pay for it, by scanning the scene for any material whose colour or emissive
+luminance exceeds the threshold: the wall-glow batch is additive at linear **(2.6, 1.25, 0.35)**,
+luminance **1.47**, so it clears 0.9 by 63% — `Color.multiplyScalar` does not clamp, which is why an
+HDR tint stays HDR. Nothing else is authored above 1 (`LAMP_CONE.opacity 0.03` was already written
+against 0.9). That scan is the check to run after ANY threshold move.

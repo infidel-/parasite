@@ -20,7 +20,8 @@ class SewerArea implements Area3D
   var game:Game;
   var model:Sewer;
   var lampLights:LampLights;    // live spotlight pool over the corridor nodes
-  var lampPosts:Array<LampPost>; // node + exit lamps (for the pool)
+  var lampPosts:Array<LampPost>; // node, exit and wall lamps (for the pool)
+  var wallGlow:render.LightCone.ConeSet; // wall-lamp emissive quads, repacked per frame with their bulbs
 
   public function new(game:Game, model:Sewer)
     {
@@ -35,6 +36,7 @@ class SewerArea implements Area3D
       var bundle = SewerScene.build(renderer, model, lampPool);
       lampLights = bundle.lampLights;
       lampPosts = bundle.lampPosts;
+      wallGlow = bundle.wallGlow;
       return bundle;
     }
 
@@ -48,6 +50,25 @@ class SewerArea implements Area3D
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       SewerGeom.build(scene, model);
+      // the exit ladders, as real geometry instead of their sprite. only tunnel areas ever hold one:
+      // WorldConst declares `exit: 'sewer_exit'` on AREA_SEWERS alone and game.AreaGame picks
+      // sewer_exit / habitat_exit by area type, so a city never spawns either
+      render.world.ObjModels.build(scene, game, SewerStyle.EXIT_MODEL_H, exitYaw);
+    }
+
+// which way an exit ladder faces: away from the wall it is bracketed to, or unturned if it stands in
+// the open. dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east)
+  function exitYaw(col:Int, row:Int):Float
+    {
+      if (!SewerModel.isFloor(model, col, row - 1))
+        return 0;
+      if (!SewerModel.isFloor(model, col, row + 1))
+        return Math.PI;
+      if (!SewerModel.isFloor(model, col - 1, row))
+        return Math.PI / 2;
+      if (!SewerModel.isFloor(model, col + 1, row))
+        return -Math.PI / 2;
+      return 0;
     }
 
 // per-frame world tick — down here that is only the live lamp pool: nothing fades, no windows
@@ -58,6 +79,9 @@ class SewerArea implements Area3D
       if (opts.outro)
         return;
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      // a wall fixture's glow quad is its ONLY brightness source (no emissive glb head down here), so
+      // this is what stops a sputtering lamp from glowing and blooming right through its own outage
+      render.LightCone.pulse(wallGlow, lampLights.flickT);
     }
 
 // deliberately empty: tactical only changes the building occlusion rule, and a tunnel has no
