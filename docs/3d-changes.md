@@ -362,3 +362,39 @@ luminance exceeds the threshold: the wall-glow batch is additive at linear **(2.
 luminance **1.47**, so it clears 0.9 by 63% — `Color.multiplyScalar` does not clamp, which is why an
 HDR tint stays HDR. Nothing else is authored above 1 (`LAMP_CONE.opacity 0.03` was already written
 against 0.9). That scan is the check to run after ANY threshold move.
+
+## The ladder flashed on one tile: a lamp light moved, its shadow map did not
+
+Walking past the sewer exit, the ladder blew out white for a frame on one specific step. Not the
+material, not bloom on its own — **the pooled spotlight over it changed slots and left its shadow map
+behind.**
+
+`LampLights.update` re-sorted the slot CONTENTS by distance every frame so the nearest lit lamps hold
+the shadow-casting slots, and published `lights[i].position` for the new owner immediately. But
+casters run `shadow.autoUpdate = false` and the re-render was deferred round-robin, **one slot per
+frame**. three's `WebGLShadowMap.render` `continue`s on `autoUpdate === false && needsUpdate === false`
+*before* `shadow.updateMatrices(light, vp)` — so `shadow.matrix` and the shadow camera stay at the
+**previous** lamp. Lighting comes from the new position, the shadow lookup from the old one. The
+receiver lands outside that map, PCF returns fully lit, and it flashes. A reshuffle could hold that
+mismatch for up to `shadowCasters` (8) frames.
+
+Why that exact tile, from a live scene capture: the habitat puts a lamp **on the exit cell itself**
+(`SewerModel`, bulb y **5.6**) and the ladder tops out at **4.0**, so its entire shading is one 512
+map from 1.6 above it. The nearest wall lamp sits at cell offset **(+4, −1)**. Player at ladder+2:
+d(exit) **2.00** vs d(wall) **2.24** — exit lamp is slot 0. Player at ladder+3: **3.00** vs **1.41** —
+rank flips, slots 0 and 1 trade owners, both maps go stale, one refresh is dispatched. The exit lamp
+then samples a map taken 16 units away and 3.4 lower, the ladder is outside that cone, and its 45-
+intensity spot lights it unshadowed. Bloom does the rest — that rail was already the surface clipping
+at 255.
+
+Fixed by **committing the hand-off and its shadow in the same frame**: the re-sort became ONE adjacent
+transposition per frame, and both swapped slots get `needsUpdate` immediately instead of queueing. The
+array stays a valid permutation at every step, so no lamp is served twice; the ordering is only a
+routing heuristic, so letting it converge over a few frames costs nothing. Budget goes 1 → at most 2
+shadow passes on a swap frame. The round-robin drain stays for the harmless case — a FREE slot
+claiming a lamp moves a light that is still at ~0 intensity, and a stale map contributes nothing
+through a dark light.
+
+**The city has the same bug and it never showed.** The moon carries the street's shadowing, so a lamp
+map handing off is subtle; underground there is no moon, the lamp map is 100% of it, and
+`lightRangeCells 16` against `WALL_LAMP_PCT 12` makes rank swaps fire on nearly every step.
