@@ -222,7 +222,7 @@ class LampLights {
             shadowDirty[i] = true;
           if (o != null)
             {
-              o.flick = fl; // read by FlameShadows so the fake ground shadow breathes with the bulb
+              o.flick = fl; // read by LampShadows so the fake ground shadow breathes with the bulb
               // both the bulb height and the aim point are the POST's, not the pool's: a street lamp
               // hangs high and pools straight down, while a sewer wall bracket sits near the floor and
               // aims metres out along the wall, so its beam rakes the walkway and throws long shadows

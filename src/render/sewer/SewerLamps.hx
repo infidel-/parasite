@@ -19,7 +19,7 @@ import render.sewer.SewerModel.Sewer;
 //
 // everything else comes free from the city rig: a working fixture becomes a LampPost, so it competes
 // for the shared spotlight pool (render.particles.LampLights) and therefore casts fake actor shadows
-// (render.actors.FlameShadows), and a non-zero phase is all LampLights and CastShadows need to make
+// (render.actors.LampShadows), and a non-zero phase is all LampLights and CastShadows need to make
 // it sputter and to drop its shadow while it is out. broken/flickering/steady is decided from the
 // FACE hash, exactly as SceneSetup decides it from the lamp cell in the slums — no rng, nothing
 // persisted, the same tunnel breaks the same lamps on every reload

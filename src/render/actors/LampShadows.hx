@@ -10,12 +10,22 @@ import render.particles.FlameLights.FlameBarrel;
 import game.Game;
 import entities.Entity;
 
-// the burning-barrel + fake-shadow pass of the actor layer: gathers this frame's visible barrels
-// once, throws a warm flicker glow onto nearby actors, draws the flame body/embers + the pooled
-// warm lights, and lays fake cast shadows from BOTH barrels and street lamps. reads actor poses
-// from the shared Actors map (read-only) but never mutates it. only low-tier cities spawn barrels,
-// so the flame-light pool is built only there; the shadow pass runs everywhere (lamps always cast)
-class FlameShadows {
+// the fake cast-shadow pass of the actor layer: lays a black stretched copy of every visible actor's
+// sprite on the ground, one per nearby light source. "lamp" here means ANY pooled LampPost — a street
+// post, a sewer manhole shaft, a sewer wall bracket — plus burning barrels, which are gathered and
+// lit here too because their flicker is what a barrel's shadow breathes with. reads actor poses from
+// the shared Actors map (read-only) but never mutates it.
+//
+// the SHADOW pass runs everywhere: an area always has lamps. the BARREL half is low-tier city only —
+// nothing else spawns them, so the flame-light pool is built only there and every flame path
+// early-outs on the empty barrel list elsewhere.
+//
+// these are painted silhouettes, NOT shadow maps. real per-light shadow maps are the spotlight pool's
+// job (render.particles.LampLights); this class has no notion of light height at all, which is why
+// castShadows has to scale a low fixture's numbers by hand
+//
+// (was FlameShadows — docs entries older than the rename use that name)
+class LampShadows {
   var game:Game;
   var sprites:Sprites;                                   // lit paint surface (shadows)
   var sparks:Sparks;                                     // camera-facing soft-ember pool (flame body)
@@ -42,8 +52,8 @@ class FlameShadows {
         flameLights = new FlameLights(actorGroup);
     }
 
-// receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
-// (mirrors barrels). called each frame; only currently-lit lamps are passed, so no visibility gate
+// receive the lamps lit this frame (the pool's active set, whatever KIND of fixture owns each slot)
+// so actors cast fake shadows from them. called each frame; only lit lamps are passed, no vis gate
   public function setLamps(lamps:Array<LampPost>):Void
     {
       lampSrc = lamps;
@@ -205,9 +215,9 @@ class FlameShadows {
     }
 
 // fake cast shadows: for every visible upright actor, lay a black soft-edged copy of its sprite on
-// the ground, stretched away from each nearby barrel AND street lamp. drawn after the ground decals
-// so a shadow darkens the blood/debris it crosses. runs every frame — barrels may be absent, lamps
-// aren't. builds this frame's light lists once (shared by all casters), then projects per actor
+// the ground, stretched away from each nearby barrel AND lamp. drawn after the ground decals so a
+// shadow darkens the blood/debris it crosses. runs every frame — barrels may be absent, lamps aren't.
+// builds this frame's light lists once (shared by all casters), then projects per actor
   function castShadows():Void
     {
       var F = RenderConfig.FLAME;
@@ -228,8 +238,8 @@ class FlameShadows {
         {
           var L = RenderConfig.LAMP_SHADOW;
           var lrange = L.rangeCells * CityConfig.CELL;
-          // the config above is tuned for a street bulb hanging at refY, and CastShadows has no notion
-          // of light HEIGHT at all — its length is (sprite height * lenMul * distance falloff). so a
+          // the config is tuned for a street bulb hanging at refY, and CastShadows has no notion of
+          // light HEIGHT at all — its length is (sprite height * lenMul * distance falloff). so a
           // sewer wall bracket at 0.6 would rake the walkway with real shadow-map shadows while its
           // fake actor shadow stayed a short overhead smudge. scale both the length and the reach by
           // how far BELOW the reference bulb the fixture sits; a street lamp lands on exactly 1.0.

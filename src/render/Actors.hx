@@ -51,7 +51,7 @@ class Actors {
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
   // per-frame sub-passes: each reads the actor-pose map (read-only), paints through the surfaces
   var decals:Decals;                                     // ground/wall decoration + street debris
-  var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
+  var lampShadows:LampShadows;                           // fake cast shadows (lamps + barrels) + barrel flame body/glow
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
   var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
@@ -99,10 +99,10 @@ class Actors {
       paint = { sprites: sprites, beams: beams, sparks: sparks };
       particles = new Particles3D();
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
-      // read poses (FlameShadows/Badges) — Actors stays its sole writer
+      // read poses (LampShadows/Badges) — Actors stays its sole writer
       decals = new Decals(game, sprites, actorGroup);
       slimeTrail = new SlimeTrail(actorGroup, sprites);
-      flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
+      lampShadows = new LampShadows(game, actorGroup, sprites, sparks, particles, actors);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
       bubbles = game.ui.hud.bubbles;
@@ -113,7 +113,7 @@ class Actors {
 // receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
   public function setLamps(lamps:Array<LampPost>):Void
     {
-      flames.setLamps(lamps);
+      lampShadows.setLamps(lamps);
     }
 
 // receive the lamp-corner map (built once per scene) so the position slide bends past posts
@@ -151,7 +151,7 @@ class Actors {
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
-      flames.gather(dtMs);
+      lampShadows.gather(dtMs);
       badges.tick(dtMs);                                 // advance the looping badge-pulse clock
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
@@ -259,8 +259,8 @@ class Actors {
         st == _PlayerState.PLR_STATE_PARASITE && pp != null,
         pp != null ? pp.x : pw.x,
         pp != null ? pp.z : pw.z);
-      flames.bodyAndShadows(dtMs);
-      flames.driveFireLoop();
+      lampShadows.bodyAndShadows(dtMs);
+      lampShadows.driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -709,7 +709,7 @@ class Actors {
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
-      var emInt = flat ? 0.0 : flames.litAt(a);
+      var emInt = flat ? 0.0 : lampShadows.litAt(a);
       // resolve the transient effect into the final pose; no effect running = the rest pose
       var wx = a.x + (o.offx != null ? o.offx : 0.0);
       var wz = a.z + (o.offz != null ? o.offz : 0.0);
