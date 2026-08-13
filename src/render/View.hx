@@ -7,6 +7,7 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
+import render.Models.ModelVariant;
 import render.choreo.Choreo;
 
 // controller for the 3D area view. Owns a persistent renderer/camera on its own
@@ -323,7 +324,7 @@ class View {
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
       // buildScene already compiled — instance one into the warm scene so the first downtown entry
       // reuses it instead of recompiling on the first frame
-      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6);
+      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6, SOLID);
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);
@@ -411,13 +412,21 @@ class View {
         {
           // the exit prop's glb arrives over an async load, so it is instanced HERE rather than beside
           // the rest of the sewer warm scene: added after compileAsync had already walked that scene it
-          // would miss the warm entirely and compile its PBR program on the first real tunnel entry
+          // would miss the warm entirely and compile its PBR program on the first real tunnel entry.
+          // all THREE variants go in — `transparent` and BackSide are both folded into three's program
+          // cache key, so the ghost and the outline hull each compile a program of their own, and
+          // without this they would compile on the first step onto a ladder / the first tactical toggle
           return new js.lib.Promise(function(res, _)
             {
               render.Models.get(render.RenderConfig.MODELS.sewerExit, function(_)
                 {
-                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit,
-                    [{ x: 0.0, z: 0.0, yaw: 0.0 }], render.sewer.SewerStyle.EXIT_MODEL_H);
+                  var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
+                  var C = render.RenderConfig.OBJMARK;
+                  var h = render.sewer.SewerStyle.EXIT_MODEL_H;
+                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, SOLID);
+                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, GHOST);
+                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h,
+                    HULL(C.color, C.hullW));
                   res(null);
                 });
             });

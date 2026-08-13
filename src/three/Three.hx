@@ -91,6 +91,7 @@ package three;
   public function multiplyScalar(s:Float):Color;
   public function copy(c:Color):Color;                   // copy another color's channels in place
   public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
+  public function setHex(hex:Int):Color;                 // set channels from 0xRRGGBB (sRGB-decoded)
 }
 
 @:native("THREE.Object3D") extern class Object3D {
@@ -209,6 +210,8 @@ typedef RendererInfo = {
   public var penumbra:Float;    // soft-edge fraction (0 = hard, 1 = fully soft)
   public var distance:Float;    // falloff end
   public var intensity:Float;
+  public var color:Color;       // bulb tint. a plain vec3 uniform, NOT in the program cache key, so a
+                                // pooled slot may be recoloured per frame as it changes owner lamp
   public var shadow:Dynamic;    // LightShadow: .mapSize (Vector2), .bias, .camera (perspective, from angle)
 }
 
@@ -245,6 +248,8 @@ typedef RendererInfo = {
   public function setAttribute(name:String, attr:Dynamic):Void;
   public function setIndex(idx:Array<Int>):Void;
   public function computeVertexNormals():Void;
+  public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
+  public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
   public function dispose():Void;
 }
 

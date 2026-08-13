@@ -398,3 +398,143 @@ through a dark light.
 **The city has the same bug and it never showed.** The moon carries the street's shadowing, so a lamp
 map handing off is subtle; underground there is no moon, the lamp map is 100% of it, and
 `lightRangeCells 16` against `WALL_LAMP_PCT 12` makes rank swaps fire on nearly every step.
+
+## The prop layer grows two more batches: ghosting under the player, and a real 3D outline
+
+Five follow-ups off playing the ladder pass. Two of them needed the same machinery, so they landed
+together: **one InstancedMesh carries one material**, so every look a prop can take is its own batch
+over the same placements, with `Models.cull`'s mask picking which draws each one. That is the street
+lamps' lit/dead idiom verbatim. `Models.instanced`'s `?dead:Bool` was *replaced* by a
+`ModelVariant` enum rather than joined by a second flag — arity stays 5 so no opts typedef is owed,
+and two bools would have admitted `dead && ghost`, a state that does not exist.
+
+**Standing on a prop fades it** (`GHOST`): a transparent clone with `depthWrite = false` — that flag
+is the load-bearing one, not the alpha, because the actor billboard is depth-*tested*, so a ladder
+that still writes depth rejects the player however faint it draws. The eased opacity is
+`RenderConfig.PROP_GHOST`, one per batch, which is correct because the player stands in exactly one
+cell. **Its material starts at opacity 1.0**, not `alpha`: the glb resolves through a loader callback
+and can land after `tick`, and until the first cull the batch draws at capacity — at 1.0 that frame is
+pixel-identical to the solid twin under it. Both batches keep `castShadow`: three's shadow pass
+renders its own depth material and ignores transparency, so the handover pops no shadow.
+
+**The tactical mark became an inverted hull** (`HULL`). It was `Sprites.outlineTex` — an outline
+traced from the **alpha silhouette of the 2D atlas cell**, painted at the sprite pose, so with the
+icon suppressed it read as a ladder-shaped green outline around nothing. The replacement is a backface
+shell on geometry cloned with every vertex pushed along its normal; measured on the baked ladder, all
+**4,933 verts displaced by exactly 0.015 local units** = `OBJMARK.hullW 0.06` world ÷ the 3.998
+instance scale (the divide is the whole trick — the band is a world width and the shell is scaled per
+instance). `paintObjMark` is now not called at all for a prop-backed object, so `ObjMarkOpts.xray`
+lost its second value and was deleted.
+
+**Both new materials compile their own program**, verified in the vendored bundle, not assumed:
+`transparent` folds into the cache key at `three.global.js:36302` → `:36541`, and `BackSide` at
+`:36370` → `:36531`. Both variants are warmed inside the existing `Models.get` callback in
+`View.warmup` — outside that promise chain they would warm nothing. Idle they cost **zero draw
+calls**: `renderInstances` early-returns on `primcount === 0` (`three.global.js:33249`) before
+`info.update`, so a masked-empty batch never reaches GL.
+
+**The wall lamps dropped to the floor.** `WALL_LAMP_Y` **2.2 → 0.6**, and `LampPost` gained `tx`/`tz`
+so `LampLights` stops publishing every target straight down: a bracket now aims `WALL_LAMP_AIM 5.0`
+out along its wall normal, a ~7.8° grazing beam. Captured live: every fixture at `y 0.6` with its
+target 4.4 out from the bulb. `CastShadows` has **no notion of light height at all** — its length is
+`spriteHeight * lenMul * distance falloff` — so the fake actor shadows would have stayed short
+overhead smudges under a knee-high lamp while the real maps raked. `FlameShadows` now scales both
+`lenMul` and `range` by `min(LAMP_SHADOW.lowMax, refY / post.y)`; a street lamp lands on exactly 1.0,
+a 0.6 bracket on the 3.0 cap. *(Later: the scaled REACH is separately clamped to
+`LAMP_SHADOW.lowRangeCells 3` — see the row below. The length keeps the full `lowMax`.)* The glow
+quad's ellipse was never drawn — it is a *circular* gradient on
+a square canvas stretched onto a 0.75 × 0.5 quad — so `Textures.makeRectGlowGradient` writes a rounded
+-box SDF per texel instead, where the corner radius and edge softness are numbers rather than a blur's
+guess.
+
+**Litter 3×** (`60`/`24` per 1000, tunnels/rooms): it was never unwired, just swept — headless on the
+warm-up demo tunnel, 117 floor cells now yield **22 fragments**. Its hash was also still the bare
+`(col*A) ^ (row*B)`, the one form the verdict table records as combing on row 0 / col 0, while every
+other sewer pass had moved to `SewerModel.mix`; routed through it.
+
+**The exit shaft steps 2.0 south** (+Z, screen-down, so the lit pool lands on the walkway in front of
+the ladder). `citygen.CityModel.Lamp` could not say which lamp hangs over an exit, so the tunnels took
+their own `SewerLamp` record with an `exit` flag. Cone *and* spotlight move — they are independent
+arrays, but a shaft whose lit pool sat elsewhere reads as two lights. `col`/`row` stay the exit cell,
+which is what the pool gates player distance on.
+
+## Two sewer light colours, and litter that had the wrong suspect
+
+**The tunnels were lit entirely in the street's sodium amber**, shafts and wall brackets alike, so
+neither read as its own kind of light. Splitting them found that `0xffb866` lives in **two** places:
+`RenderConfig.LAMP_CONE.color` *and* a second hardcoded copy in `LampLights`' `new SpotLight(...)`.
+Recolouring the config alone would have desynced every shaft from its own spotlight, in the city too.
+
+The colour also has to be **per post, not per pool**. Node lamps and wall brackets are concatenated
+into one flat `lampPosts` array feeding one 12-slot pool, so a single physical `SpotLight` carries a
+manhole shaft on one frame and a bracket on the next — the same aliasing that produced the shadow-map
+flash two entries up. So `LampPost` gained `color`, published in the publish loop beside the position
+and intensity it already writes. That is free: `getProgramCacheKey` carries light **counts** only, and
+`WebGLLights.setup` re-copies `light.color` unconditionally every frame
+(`three.global.js:36965`) — same cost class as the `intensity` write already there. `LightConeOpts`
+gained `?color` so the shaft batch can differ without touching the city's four cone call sites.
+
+Shafts are **`0x9db4d4`**, cold pale sky down a manhole; brackets **`0xc8d69a`**, a bad fluorescent
+tube. Verified live: all 7 lit lamps at `y 0.6` publish `(0.578, 0.672, 0.323)` and all 4 at `y 5.6`
+publish `(0.337, 0.456, 0.658)`.
+
+**The bloom trap is real and worth stating flatly.** The glow quad is `colour × WALL_LAMP_GLOW 2.6`,
+unclamped, and `UnrealBloomPass` thresholds **linear** Rec.709 luminance where blue weighs only
+**0.0722** — so a cool fixture can look bright and silently stop blooming. Measured after the swap:
+`(1.502, 1.748, 0.840)`, luminance **1.63** against `BLOOM_THRESHOLD 0.9`; the amber it replaced was
+1.47. Compute `Y_linear × GLOW` *before* committing to a hue.
+
+**Litter: the obvious suspect was wrong.** It reads empty, `DECAL.debrisMul 0.55` darkens in sRGB byte
+space (≈0.27× linear), and the sewer floor was re-authored far brighter than city asphalt — so the
+tidy conclusion is "the trash is darker than the floor it lies on". **It is not.** Measured on the
+BUILT art: a static debris sprite peaks at **175 sRGB** → ~96 after the dim, against
+`app/textures/sewer/floor.png` at **66.8 mean / 75.2 max**. Litter is already ~30% *brighter* than its
+floor, and raising the multiplier would have made it glow. The number that led there is in these docs:
+the floor's "0.2206 mean linear" is the **source** in `textures-src`, while the built output under
+`app/textures` measures 0.056 linear — a 4× gap that inverts the argument. Sample the artifact.
+
+The decal reveal radius is not it either: `DECAL.radiusCells 20` is a 1257-cell² disc against a
+166-cell² sewer footprint, and the farthest visible ground point is 11.5 cells — inside the 18.5-cell
+full-opacity core.
+
+**What it actually was: count, size and a grid.** Rates went to **180/1000 tunnels, 120 rooms** — the
+room number lifted 5× because a habitat is pinned to 4-5 rooms of 5x5, so 62-77% of its floor is
+`room` and the low rate was the one underfoot. Size mattered as much: `Debris` rolls
+`scale 0.1 + 0.9 * rng` and draws `Sprites.SIZE(3.0) × contentFraction × scale`, measured in-engine at
+**0.15 / 0.73 / 0.86 / 0.88 / 1.21** world units against a CELL of **4** — the small end is a pixel.
+And a `transformable: false` fragment gets `dx = dy = angle = 0`, so the ~55% of litter big enough to
+see was every piece dead-centre in its cell and axis-aligned. Both fixed in one pass over the tunnels'
+own spots after generation, because the shared placer is the city's too and is already at 7 positional
+args. The jitter needs no ground test — `Debris.canPlace` only rejects past 0.25 of a cell, so
+anything inside that is legal by construction. On screen: **5 → 32 fragments, smallest 0.15 → 0.46,
+largest 1.21 → 1.83**, still one draw call.
+
+## A wall lamp painted through an AI's head: a shaft's render order is not a fixture's
+
+The wall fixtures' glow batch sat at `Sprites.ORD_ACTOR + 1`, the slot `LightCone` uses, and its
+bright core drew straight over an actor standing in front of it — a hard white blob on the sprite's
+forehead, not a bloom halo.
+
+**Nothing in the sprite pool writes depth.** That is deliberate (`Sprites`: tiny Y gaps z-fight at
+this near/far, so renderOrder does the layering), and it means a later transparent draw is never
+rejected by an earlier one — only by the opaque scene. The glow quad sits `DECAL_EPS` proud of the
+wall, so it passes depth against the masonry and then paints over anyone between.
+
+`ORD_ACTOR + 1` is *right* for a light shaft and *wrong* for a fixture, and the difference is what
+the thing is: a shaft is a column of lit air an actor stands **inside**, so drawing it last and
+letting it tint them is the effect. A wall lamp is a quad stuck on masonry **behind** them. New
+`Sprites.ORD_FIXTURE = 4.5`, between the targeting reticle and the actor billboard — fractional so it
+slots in without renumbering the other twenty call sites (`render.decals.Blood` already uses
+fractional orders to break same-cell ties). The shafts stay at 6. Verified: glow batch `renderOrder`
+4.5, head silhouette now cuts the fixture, only the screen-space bloom halo spills — which no depth
+ordering can fix and which reads correctly.
+
+**And the fixtures stopped being placed inside the shafts.** `SewerLamps` rejects any cell within
+`WALL_LAMP_CLEAR = 2` cells of an `m.lamps` entry. The number is derived, not picked: the shaft's
+ground radius is `bulbY * tan(angle) * radiusMul` = 3.66 units (0.92 cells) and a bracket throws its
+own pool `WALL_LAMP_AIM 5.0` (1.25 cells) out from the wall, so they stop touching at ~2.2 cells. The
+test runs on the CELL rather than the shaft's drawn centre — an exit's cone is nudged half a cell
+south and the radius swallows that. It also rejects the cell *before* the block's `faces` list is
+built, and the density gate multiplies by `faces.length`, so blocks near a shaft thin out on their own
+while per-face density everywhere else is untouched. Habitat: **12 → 11 fixtures**, nearest one now
+**10.17 units (2.54 cells)** from any shaft, every other one further. 49 → 44 draw calls.

@@ -15,6 +15,4 @@ typedef ObjMarkOpts = {
   flat:Bool,    // the pose lies flat as a ground decal instead of standing up
   yaw:Float,    // ground rotation of a flat pose
   order:Int,    // render order shared with the icon
-  xray:Bool,    // paint the through-wall silhouette. false where a 3D prop stands AT this pose: the
-                // silhouette draws wherever the pose is occluded, and the prop occludes it itself
 };

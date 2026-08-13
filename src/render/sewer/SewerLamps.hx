@@ -61,7 +61,8 @@ class SewerLamps
                   var row = br + dr;
                   if (col >= m.w ||
                       row >= m.h ||
-                      !m.floor[row][col])
+                      !m.floor[row][col] ||
+                      nearShaft(m, col, row))
                     continue;
                   for (dir in 0...4)
                     if (!SewerModel.isFloor(m, col + faceDC(dir), row + faceDR(dir)))
@@ -119,12 +120,17 @@ class SewerLamps
             gm.compose(new Vector3(px + nx * eps, SewerStyle.WALL_LAMP_Y, pz + nz * eps), q, one);
             glow.push(gm);
             phases.push(phase);
-            // the bulb for the pool stands off the wall so its straight-down cone lands on walkway.
+            // the bulb for the pool stands off the wall so its cone starts in open air, and it AIMS
+            // far out along the same normal: from WALL_LAMP_Y the beam then rakes the walkway instead
+            // of pooling at the fixture's own feet, which is what makes the tunnel throw long shadows.
             // col/row stay the FLOOR cell — that is what the pool gates player distance on
             posts.push({
               x: px + nx * SewerStyle.WALL_LAMP_OUT,
               z: pz + nz * SewerStyle.WALL_LAMP_OUT,
               y: SewerStyle.WALL_LAMP_Y,
+              tx: px + nx * SewerStyle.WALL_LAMP_AIM,
+              tz: pz + nz * SewerStyle.WALL_LAMP_AIM,
+              color: SewerStyle.WALL_LAMP_COLOR, // a bad tube, not the sky coming down a manhole
               col: f.col,
               row: f.row,
               phase: phase,
@@ -135,7 +141,9 @@ class SewerLamps
 
       // the soot/housing smudge: every fixture including the dead ones, and for a dead one it IS the
       // fixture. static — nothing about it changes once built
-      var fade = Textures.makeGlowGradient();
+      // a smooth-cornered BOX, not the round glow: these read as a diffuser panel in a housing, and a
+      // circular falloff on the 3:2 quad came out an ellipse
+      var fade = Textures.makeRectGlowGradient();
       batch(scene, housing, SewerStyle.WALL_LAMP_HOUSING, new MeshBasicMaterial({
         color: 0x000000,
         transparent: true,
@@ -151,21 +159,39 @@ class SewerLamps
       // SewerStyle.BLOOM_THRESHOLD. this is the fixture's ONLY brightness source (there is no
       // emissive glb head down here), so dropping an instance from the pack turns the lamp fully off
       var mesh = batch(coneGroup, glow, 1.0, new MeshBasicMaterial({
-        color: new Color(RenderConfig.LAMP_CONE.color).multiplyScalar(SewerStyle.WALL_LAMP_GLOW),
+        color: new Color(SewerStyle.WALL_LAMP_COLOR).multiplyScalar(SewerStyle.WALL_LAMP_GLOW),
         transparent: true,
         alphaMap: fade,
         depthWrite: false,
         side: THREE.FrontSide,
         blending: untyped THREE.AdditiveBlending,
       }));
-      // the cones' unique slot: additive, drawn after the actors so anything seen through it is
-      // tinted, and never tied with the decal layer
+      // BELOW the actors, unlike the light shafts this batch sits in. a shaft is a column of lit air
+      // that an actor stands inside, so drawing it last and letting it tint them is right. a wall
+      // fixture is a quad stuck on masonry BEHIND them — and since nothing in the sprite pool writes
+      // depth, at the shafts' order it painted its bright core straight through anyone in front of it
       if (mesh != null)
-        untyped mesh.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
+        untyped mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
       return {
         posts: posts,
         glow: { mesh: mesh, matrices: glow, phases: phases, on: [for (_ in glow) true] },
       };
+    }
+
+// does an overhead shaft already light this cell? tested against the lamp CELL rather than the
+// shaft's drawn centre: an exit's cone is nudged half a cell south (SewerStyle.EXIT_LAMP_SOUTH), and
+// the clearance radius swallows that. squared compare, the same form LampLights gates range with
+  static function nearShaft(m:Sewer, col:Int, row:Int):Bool
+    {
+      var r = SewerStyle.WALL_LAMP_CLEAR;
+      for (l in m.lamps)
+        {
+          var dc = l.col - col;
+          var dr = l.row - row;
+          if (dc * dc + dr * dr <= r * r)
+            return true;
+        }
+      return false;
     }
 
 // one InstancedMesh over the fixture quad scaled by `mul`, or null when there is nothing to place

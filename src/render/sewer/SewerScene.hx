@@ -74,12 +74,20 @@ class SewerScene
       for (l in m.lamps)
         {
           var w = CityConfig.cellToWorld(l.col, l.row);
-          bulbs.push({ x: w.x, z: w.z });
+          // an EXIT's light steps south off its own cell, so the ladder prop standing there is not
+          // inside its own shaft and the pool lands on the walkway in front of it. cone and spotlight
+          // move together — they are independent arrays, but a shaft whose lit floor pool sat
+          // elsewhere would read as two different lights
+          var z = w.z + (l.exit ? SewerStyle.EXIT_LAMP_SOUTH : 0.0);
+          bulbs.push({ x: w.x, z: z });
           lampPosts.push({
             x: w.x,
-            z: w.z,
+            z: z,
             y: CityConfig.CELL * RenderConfig.LAMP_LIGHT.yMul,
-            col: l.col,
+            tx: w.x, // a node/exit lamp hangs overhead and pools straight down
+            tz: z,
+            color: SewerStyle.SHAFT_COLOR, // night sky down a manhole, not a sodium bulb
+            col: l.col, // the lamp still BELONGS to its cell: that is the pool's distance gate
             row: l.row,
             phase: 0.0,
             flick: 1.0,
@@ -93,14 +101,16 @@ class SewerScene
       // touched again. the bundle's coneFlick slot is the FLICKERING cone batch, which down here is
       // empty — an empty set builds no mesh at all, and it keeps the contract honest, so LightCone
       // .pulse and the lampMask loop stay no-ops instead of silently walking a phase-less set.
-      // the shaft is far blunter than a street lamp's: this is light down a MANHOLE, already a
-      // manhole wide where it starts (SewerStyle.CONE_TOP_R against the street's 0.2)
+      // the shaft is far blunter than a street lamp's, and a different colour: this is light down a
+      // MANHOLE — already a manhole wide where it starts (SewerStyle.CONE_TOP_R against the street's
+      // 0.2), and cold sky rather than sodium amber
       render.LightCone.instanced({
         group: coneGroup,
         bulbs: bulbs,
         bulbY: bulbY,
         radius: coneR,
         topR: SewerStyle.CONE_TOP_R,
+        color: SewerStyle.SHAFT_COLOR,
       });
       var coneFlick = render.LightCone.instanced({
         group: coneGroup,
@@ -108,6 +118,7 @@ class SewerScene
         bulbY: bulbY,
         radius: coneR,
         topR: SewerStyle.CONE_TOP_R,
+        color: SewerStyle.SHAFT_COLOR,
         phases: [],
       });
       // weak bracketed fixtures along the walls, filling the runs between the junction lamps. their

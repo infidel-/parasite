@@ -28,8 +28,8 @@ class SewerDebris
             if (!m.floor[row][col])
               continue;
             var h = hash(col, row);
-            // rooms are kept tidier than the tunnels, as in the 2D pass (8 vs 20 per 1000)
-            if (h % 1000 >= (m.room[row][col] ? 8 : 20))
+            // rooms are kept tidier than the tunnels, as in the 2D pass
+            if (h % 1000 >= (m.room[row][col] ? SewerStyle.DEBRIS_PCT_ROOM : SewerStyle.DEBRIS_PCT_TUNNEL))
               continue;
             var rng = CityGen.mulberry32(h);
             if (rng() < 0.45)
@@ -37,7 +37,37 @@ class SewerDebris
             else
               Debris.addFragment(spots, col, row, Const.STREET_DEBRIS_STATIC, false, rng, ok);
           }
+      dress(spots);
       return spots;
+    }
+
+// second pass over our own spots, fixing two things the shared placer does that read badly on a
+// tunnel floor. it runs HERE rather than in render.world.Debris because that one is the city's too
+// (and is already at 7 positional args): the streets are seen from much further out, where neither
+// matters. no ground test is needed for the jitter — Debris.canPlace only rejects an offset past
+// 0.25 of a cell, so anything inside DEBRIS_JITTER is legal by construction
+  static function dress(spots:Array<DebrisSpot>):Void
+    {
+      for (s in spots)
+        {
+          // a cluster fragment rolls scale 0.1..1.0, and drawn size is 3.0 * contentFraction * scale —
+          // so the low end of that roll is a fragment a fifth of a metre across, invisible on a 4-unit
+          // cell. clamp rather than rescale, so the spread above the floor is untouched
+          if (s.scale < SewerStyle.DEBRIS_MIN_SCALE)
+            s.scale = SewerStyle.DEBRIS_MIN_SCALE;
+          // a STATIC fragment gets no offset and no rotation at all from addFragment, and static is
+          // the half of the litter big enough to actually see — so the visible half was every piece
+          // dead-centre in its cell and axis-aligned, which reads as a grid
+          if (s.dx == 0.0 &&
+              s.dy == 0.0 &&
+              s.angle == 0.0)
+            {
+              var h = SewerModel.mix((s.col * 92837111) ^ (s.row * 689287499));
+              s.dx = ((h % 1000) / 1000 - 0.5) * 2 * SewerStyle.DEBRIS_JITTER;
+              s.dy = (((h >>> 10) % 1000) / 1000 - 0.5) * 2 * SewerStyle.DEBRIS_JITTER;
+              s.angle = ((h >>> 20) % 628) / 100;
+            }
+        }
     }
 
 // a mild transformable pile on this cell plus a chance of one on each orthogonal neighbour.
@@ -59,9 +89,11 @@ class SewerDebris
           }
     }
 
-// stable per-cell hash — the same footprint-hash idiom the lamp and wall variants use
+// stable per-cell hash, run through SewerModel.mix like every other sewer pass. the bare
+// (col*A) ^ (row*B) footprint hash this used to be COMBS on row 0 / col 0 — one term goes to zero and
+// what is left is an arithmetic sequence, which deals props in a straight line down the area border
   static inline function hash(col:Int, row:Int):Int
     {
-      return ((col * 73856093) ^ (row * 19349663)) & 0x7fffffff;
+      return SewerModel.mix(((col * 73856093) ^ (row * 19349663)) & 0x7fffffff);
     }
 }

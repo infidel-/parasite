@@ -18,6 +18,19 @@ typedef InstancedProp = {
   var centres:Array<Vector3>;  // per-placement world position, for the frustum test
 };
 
+// the material a batch draws with. one InstancedMesh = one material, so a level that wants two looks
+// over the same prop builds TWO batches over the same placements and lets a per-frame cull mask pick
+// which one draws each placement. every variant but SOLID CLONES the material first: it comes from
+// the shared model cache, so editing it in place would change every other batch over the same path —
+// including the solid twin it is meant to swap with
+enum ModelVariant
+{
+  SOLID;
+  DEAD;                          // broken street lamp: emissive killed, lens/hood texels darkened
+  GHOST;                         // see-through twin, for a prop the player is standing on
+  HULL(color:Int, width:Float);  // flat backface shell on normal-offset geometry: the tactical outline
+}
+
 // loads + caches optimized glb props (baked by `make models` into app/models/). one GLTFLoader,
 // one cached template per path; clones are cheap. mirrors render.Textures for models
 class Models {
@@ -192,11 +205,36 @@ class Models {
       return t;
     }
 
+// the tactical outline's shell: every vertex pushed out along its own normal by `w`, so a BackSide
+// draw of it pokes out past the real mesh and what stays visible is a band hugging the silhouette.
+// `w` is in the model's LOCAL units — the caller divides by the instance scale to get a world-constant
+// band. baked once per model+width and cached: the geometry is shared by every instance of the batch
+  static var hullGeos:Map<String, BufferGeometry> = new Map();
+  static function hullGeo(path:String, src:BufferGeometry, w:Float):BufferGeometry
+    {
+      var key = path + '@' + w;
+      if (hullGeos.exists(key))
+        return hullGeos.get(key);
+      var geo = src.clone();
+      var pos:Dynamic = geo.attributes.position;
+      var nor:Dynamic = geo.attributes.normal;
+      for (i in 0...(pos.count : Int))
+        pos.setXYZ(i,
+          pos.getX(i) + nor.getX(i) * w,
+          pos.getY(i) + nor.getY(i) * w,
+          pos.getZ(i) + nor.getZ(i) * w);
+      pos.needsUpdate = true;
+      geo.computeBoundingSphere();
+      hullGeos.set(key, geo);
+      return geo;
+    }
+
 // place MANY copies of a prop as ONE InstancedMesh (shared geometry+material, one draw call) — for
-// props placed in bulk (street lamps). each placement: world (x,z) + yaw, scaled so height == targetH,
-// base on the ground. reuses the prop's single mesh; the template recenter is folded into each
-// instance matrix analytically (assumes the mesh sits at the template root — true for our baked glbs)
-  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float, ?dead:Bool = false):InstancedProp
+// props placed in bulk (street lamps, exit ladders). each placement: world (x,z) + yaw, scaled so
+// height == targetH, base on the ground. reuses the prop's single mesh; the template recenter is
+// folded into each instance matrix analytically (assumes the mesh sits at the template root — true
+// for our baked glbs). `variant` picks the material, see ModelVariant
+  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float, variant:ModelVariant):InstancedProp
     {
       var prop:InstancedProp = { mesh: null, matrices: [], centres: [] };
       if (placements.length == 0)
@@ -210,28 +248,56 @@ class Models {
           var s = t.height > 0 ? targetH / t.height : 1.0;
           // recenter offset baked by normalize() onto root.position — scaled + yaw-rotated per instance
           var rx = root.position.x * s, ry = root.position.y * s, rz = root.position.z * s;
-          // dead street lamps: same post geometry, but its glowing bulb must not glow — and above all
-          // must not feed bloom, which is what still lit a broken lamp's head. clone first: the glb
-          // material comes from the shared model cache, so editing it in place would kill the working
-          // lamps' bulbs too. killing the emissive alone is NOT enough: the base-colour map paints the
-          // lens and hood pale cream, so the head still read bright — hence the masked map below
+          var geo:Dynamic = mesh.geometry;
           var mat:Dynamic = mesh.material;
-          if (dead)
+          var real = true; // enters the shadow passes; false for the outline hull, which is pure UI
+          switch (variant)
             {
-              mat = mesh.material.clone();
-              if (mat.map != null && mesh.material.emissiveMap != null)
-                mat.map = deadMap(path, mat.map, mesh.material.emissiveMap);
-              mat.emissive = new Color(0x000000);
-              mat.emissiveMap = null;
-              mat.emissiveIntensity = 0;
-              mat.needsUpdate = true;
+              case SOLID:
+              // dead street lamps: same post geometry, but its glowing bulb must not glow — and above
+              // all must not feed bloom, which is what still lit a broken lamp's head. killing the
+              // emissive alone is NOT enough: the base-colour map paints the lens and hood pale cream,
+              // so the head still read bright — hence the masked map below
+              case DEAD:
+                mat = mesh.material.clone();
+                if (mat.map != null && mesh.material.emissiveMap != null)
+                  mat.map = deadMap(path, mat.map, mesh.material.emissiveMap);
+                mat.emissive = new Color(0x000000);
+                mat.emissiveMap = null;
+                mat.emissiveIntensity = 0;
+                mat.needsUpdate = true;
+              case GHOST:
+                mat = mesh.material.clone();
+                mat.transparent = true;
+                // opacity is owned by the per-frame ease (render.world.ObjModels.cull) and starts
+                // SOLID on purpose: the glb can land mid-frame, before the first cull trims this
+                // batch, and that one frame draws every ghost over its solid twin — at 1.0 that is
+                // pixel-identical, so nothing shows
+                mat.opacity = 1.0;
+                // the load-bearing flag, not the alpha: the actor billboard is depth-TESTED, so a
+                // prop that still writes depth rejects it however faint the prop is drawn
+                mat.depthWrite = false;
+                mat.needsUpdate = true;
+              case HULL(color, width):
+                // the band is a WORLD width and the shell is scaled by s at every instance, so the
+                // vertex offset baked into the geometry has to be divided by it
+                geo = hullGeo(path, mesh.geometry, width / s);
+                real = false;
+                mat = new MeshBasicMaterial({
+                  color: color,
+                  side: THREE.BackSide,
+                  depthWrite: true,
+                  fog: false, // a marker, not world geometry — it must stay legible into the fog
+                });
             }
-          var inst = new InstancedMesh(mesh.geometry, mat, placements.length);
-          // bulk props (lamp posts) cast AND receive real shadows — the post throws an angled moon
-          // shadow, shows up in nearby lamp-spotlight casters, and self-shadows (crossarm/head shadow
-          // the pole under the angled moon). own-light self-shadow is negligible (bulb straight overhead)
-          inst.castShadow = true;
-          inst.receiveShadow = true;
+          var inst = new InstancedMesh(geo, mat, placements.length);
+          // bulk props (lamp posts, ladders) cast AND receive real shadows — the post throws an angled
+          // moon shadow, shows up in nearby lamp-spotlight casters, and self-shadows (crossarm/head
+          // shadow the pole under the angled moon). own-light self-shadow is negligible (bulb straight
+          // overhead). the GHOST twin keeps casting too: three's shadow pass renders its own depth
+          // material and ignores transparency, so the batch handover never pops a shadow on or off
+          inst.castShadow = real;
+          inst.receiveShadow = real;
           // cull() does exact per-instance frustum culling every frame; three's coarse whole-mesh
           // cull tests a cached boundingSphere built from the reduced count and drops the whole mesh
           // at extreme camera (e.g. full zoom-out) — turn it off so only our cull() decides visibility

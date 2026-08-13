@@ -1,8 +1,16 @@
 package render.sewer;
 
-import citygen.CityModel.Lamp;
 import game.AreaGame;
 import tiles.Sewers;
+
+// a tunnel light. NOT citygen.CityModel.Lamp: that carries a post `dir` (the yaw turning a lamp toward
+// its road) which means nothing underground, and it has no way to say "this one hangs over an exit" —
+// which the shaft offset needs, since only the exit's light steps off its cell
+typedef SewerLamp = {
+  col:Int,
+  row:Int,
+  exit:Bool, // hangs over a sewer_exit / habitat_exit object rather than a corridor junction
+};
 
 // what the 3D tunnel builder needs, derived from an area's SAVED cell grid. there is no seeded
 // sewer generator: `Sewers.TILE_FLOOR` in game.AreaGame's persisted cells IS the layout, so this
@@ -17,8 +25,8 @@ typedef Sewer = {
   floor:Array<Array<Bool>>,
   // [row][col]: inside a generator room rect (rooms are drier and less littered than the tunnels)
   room:Array<Array<Bool>>,
-  // corridor-node and exit light positions (dir is unused underground, always 0)
-  lamps:Array<Lamp>,
+  // corridor-node and exit light positions
+  lamps:Array<SewerLamp>,
 };
 
 class SewerModel
@@ -165,7 +173,7 @@ class SewerModel
             if (!corner &&
                 n < 3)
               continue;
-            m.lamps.push({ col: col + 1, row: row + 1, dir: 0 });
+            m.lamps.push({ col: col + 1, row: row + 1, exit: false });
           }
     }
 
@@ -176,7 +184,7 @@ class SewerModel
         if ((o.type == 'sewer_exit' ||
              o.type == 'habitat_exit') &&
             isFloor(m, o.x, o.y))
-          m.lamps.push({ col: o.x, row: o.y, dir: 0 });
+          m.lamps.push({ col: o.x, row: o.y, exit: true });
     }
 
 // a throwaway tunnel cross for the boot shader pre-warm (see render.View.warmup): the real
@@ -190,7 +198,7 @@ class SewerModel
             m.floor[10 + d][i] = true;
             m.floor[i][10 + d] = true;
           }
-      m.lamps.push({ col: 10, row: 10, dir: 0 });
+      m.lamps.push({ col: 10, row: 10, exit: false });
       return m;
     }
 }

@@ -228,12 +228,22 @@ class FlameShadows {
         {
           var L = RenderConfig.LAMP_SHADOW;
           var lrange = L.rangeCells * CityConfig.CELL;
+          // the config above is tuned for a street bulb hanging at refY, and CastShadows has no notion
+          // of light HEIGHT at all — its length is (sprite height * lenMul * distance falloff). so a
+          // sewer wall bracket at 0.6 would rake the walkway with real shadow-map shadows while its
+          // fake actor shadow stayed a short overhead smudge. scale both the length and the reach by
+          // how far BELOW the reference bulb the fixture sits; a street lamp lands on exactly 1.0.
+          // the REACH is then clamped to lowRangeCells — long shadows, but only in a tight pool,
+          // otherwise every actor in the tunnel drags a smear off a bulb three rooms away
+          var refY = CityConfig.CELL * RenderConfig.LAMP_LIGHT.yMul;
+          var lmax = L.lowRangeCells * CityConfig.CELL;
           for (lp in lampSrc)
             {
               if (lp.flick < RenderConfig.LAMP_LIGHT.flickOff)
                 continue;
+              var low = Math.min(L.lowMax, refY / lp.y);
               lampLights.push({
-                x: lp.x, z: lp.z, range: lrange, lenMul: L.lenMul,
+                x: lp.x, z: lp.z, range: Math.min(lrange * low, lmax), lenMul: L.lenMul * low,
                 op: L.op, fade: L.fade, flicker: lp.flick,
               });
             }

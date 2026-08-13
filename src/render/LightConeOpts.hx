@@ -17,6 +17,9 @@ typedef LightConeOpts = {
   radius:Float,
   // minimum TOP radius. small (LAMP_CONE.topR) reads as a lamp cone; wide reads as a shaft down a hole
   topR:Float,
+  // shaft tint. omitted = LAMP_CONE.color, the street amber every city cone uses. the tunnels pass
+  // their own so a manhole shaft cannot be mistaken for the bracketed fixtures on the walls
+  ?color:Int,
   // per-instance flicker phase, same length as bulbs. omitted or empty = a STEADY set, built once
   // and never touched; a non-empty one marks the batch LightCone.pulse repacks each frame
   ?phases:Array<Float>,

@@ -4,6 +4,7 @@ import three.Three;
 import js.Browser;
 import citygen.CityConfig;
 import citygen.CityModel.City;
+import render.Models.ModelVariant;
 import render.particles.LampLights;
 import render.particles.LampPost;
 
@@ -224,6 +225,9 @@ class SceneSetup {
             x: bx,
             z: bz,
             y: CityConfig.CELL * L.yMul,
+            tx: bx, // a street lamp pools straight down: the aim point is the ground under the bulb
+            tz: bz,
+            color: RenderConfig.LAMP_CONE.color, // sodium amber, matching the shaft hung under it
             col: lamp.col,
             row: lamp.row,
             phase: phase,
@@ -242,8 +246,8 @@ class SceneSetup {
     // picks which one draws it: its head is emissive, so an outage that only killed the spotlight and
     // the cone would leave the bulb glowing and blooming. both batches already repack every frame for
     // the frustum cull, so swapping a lamp between them costs nothing — no third draw call
-    var lampProp = Models.instanced(scene, lampModel, flickPlace.concat(placements), CityConfig.CELL * 1.6);
-    var lampPropDead = Models.instanced(scene, lampModel, flickPlace.concat(dead), CityConfig.CELL * 1.6, true);
+    var lampProp = Models.instanced(scene, lampModel, flickPlace.concat(placements), CityConfig.CELL * 1.6, SOLID);
+    var lampPropDead = Models.instanced(scene, lampModel, flickPlace.concat(dead), CityConfig.CELL * 1.6, DEAD);
     // prebuilt so the per-frame pass only rewrites the first n entries (the flickering lamps)
     var lampMask = [for (i in 0...(flickPlace.length + placements.length)) true];
     var lampMaskDead = [for (i in 0...(flickPlace.length + dead.length)) i >= flickPlace.length];

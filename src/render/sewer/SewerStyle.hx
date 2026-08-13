@@ -98,24 +98,76 @@ class SewerStyle
   // IS a bulb. down here the light falls through a MANHOLE, so the shaft is already a manhole wide
   // where it starts and only spreads a little on the way down
   public static inline var CONE_TOP_R = 0.9;
+  // and it is not lit like a street lamp either. this is the NIGHT SKY falling down a hole, so it is
+  // cold and pale where the street's is sodium amber — which is also what tells it apart from the
+  // wall fixtures at a glance. no bloom constraint: the shaft draws at LAMP_CONE.opacity 0.03, so
+  // even at full luminance it lands three orders under BLOOM_THRESHOLD
+  public static inline var SHAFT_COLOR = 0x9db4d4;
 
   // --- weak bracketed lamps on the tunnel walls (render.sewer.SewerLamps) ---
   // these are the between-junctions lighting: the node lamps only land on 3x3 corridor corners and
   // intersections, so without these a whole run of corridor has no light source of its own
   public static inline var WALL_LAMP_PCT = 12;         // % of wall faces that get a fixture
+  // cells of clearance a fixture keeps from any overhead shaft (render.sewer.SewerLamps.nearShaft).
+  // a bracket standing inside a manhole column is two light sources lighting one pool of floor, and
+  // the weak one only muddies it. derived, not picked: the shaft's ground radius is
+  // bulbY * tan(LAMP_LIGHT.angle) * LAMP_CONE.radiusMul = 3.66 world units (0.92 cells), and a
+  // bracket throws its own pool WALL_LAMP_AIM = 5.0 (1.25 cells) out from the wall — so they stop
+  // touching at ~2.2 cells apart. rejecting a cell also shrinks the block's `faces` count, which the
+  // density gate multiplies by, so blocks near a shaft thin out on their own
+  public static inline var WALL_LAMP_CLEAR = 2;
   public static inline var WALL_LAMP_BROKEN_PCT = 30;  // % of those permanently dead (housing only, no light)
   public static inline var WALL_LAMP_FLICKER_PCT = 35; // % of the SURVIVORS that sputter (failing-sodium)
-  public static inline var WALL_LAMP_Y = 2.2;          // bracket height on the wall face (under WALL_H)
+  // bracket height on the wall face. DOWN at the foot of the wall, not up under the cap: a fixture at
+  // head height pooled its light straight beneath itself and nothing in the tunnel cast a shadow worth
+  // seeing. from here the beam rakes the walkway (see WALL_LAMP_AIM) and everything it touches throws
+  // a long one. the glow quad is WALL_LAMP_H tall, so its bottom edge still clears the floor
+  public static inline var WALL_LAMP_Y = 0.6;
   public static inline var WALL_LAMP_OUT = 0.6;        // how far the SPOTLIGHT stands off the wall, so its
-                                                       // downward cone lands on floor instead of half inside masonry
+                                                       // cone starts in open air instead of half inside masonry
+  // how far out along the wall normal the spotlight AIMS (LampPost.tx/tz). the bulb is WALL_LAMP_Y
+  // high and aims at the floor this far away, i.e. a ~7 degree grazing beam — which is the whole
+  // point of dropping it down here. shorten this to pull the lit pool back off the opposite wall
+  public static inline var WALL_LAMP_AIM = 5.0;
   public static inline var WALL_LAMP_W = 0.75;         // glow quad width in world units
   public static inline var WALL_LAMP_H = 0.5;          // glow quad height
   public static inline var WALL_LAMP_HOUSING = 2.6;    // housing/soot quad size, as a multiple of the glow
   public static inline var WALL_LAMP_MUL = 0.35;       // pooled-spotlight intensity multiplier — a weak fixture
-  public static inline var WALL_LAMP_GLOW = 2.6;       // HDR multiplier on LAMP_CONE.color so the quad clears BLOOM_THRESHOLD
+  // fixture tint, and NOT the street's amber (RenderConfig.LAMP_CONE.color): these are bolted-on
+  // tubes gone bad, not sodium street lighting, and they must read apart from the manhole shafts
+  // overhead. pale olive — deliberately clear of the flame/ember/alert warm band, of the saturated
+  // UI greens (OBJMARK 0x35dd7a, path/slime 0x7ddc46, acid 0x58ff3c) and of the cool UI blues.
+  // CHECK THE BLOOM MATH BEFORE CHANGING IT: the glow quad is this * WALL_LAMP_GLOW, unclamped, and
+  // UnrealBloomPass thresholds LINEAR Rec.709 luminance where blue weighs only 0.0722 — a cool hue
+  // can look bright and silently stop blooming. this one is Y_linear 0.627, so 0.627 * 2.6 = 1.63
+  // against BLOOM_THRESHOLD 0.9 (the amber it replaced was 1.47)
+  public static inline var WALL_LAMP_COLOR = 0xc8d69a;
+  public static inline var WALL_LAMP_GLOW = 2.6;       // HDR multiplier on WALL_LAMP_COLOR so the quad clears BLOOM_THRESHOLD
   public static inline var WALL_LAMP_SOOT = 0.18;      // housing darkness (opacity of the black smudge behind the glow)
 
   // --- the exit ladder prop (RenderConfig.MODELS.sewerExit via render.world.ObjModels) ---
   // taller than WALL_H so it visibly climbs PAST the ledge toward the hole we do not render
   public static inline var EXIT_MODEL_H = 4.0;
+  // the exit's light steps SOUTH (+Z, screen-DOWN under CAMERA_SEWER) off the ladder's own cell, so
+  // the prop is not standing in the middle of its own shaft and the lit pool lands on the walkway in
+  // FRONT of it. the SpotLight moves with the cone — a shaft whose lit floor pool sat somewhere else
+  // would read as two different lights. the lamp's col/row stay the exit cell: that is what
+  // LampLights gates player distance on
+  public static inline var EXIT_LAMP_SOUTH = 2.0;
+
+  // --- ground litter (render.sewer.SewerDebris), per 1000 floor cells ---
+  // rooms stay tidier than the tunnels as the old 2D pass had it, but only just: a habitat is pinned
+  // to 4-5 rooms of 5x5, so 62-77% of its floor IS room and the low rate was the one underfoot. these
+  // were 20/8, then 60/24 — a whole habitat level came to ~9-11 fragments, which reads as swept
+  public static inline var DEBRIS_PCT_TUNNEL = 180;
+  public static inline var DEBRIS_PCT_ROOM = 120;
+  // smallest fragment scale the tunnels will keep. render.world.Debris rolls 0.1 + 0.9 * rng for a
+  // cluster fragment, and the drawn size is Sprites.SIZE (3.0) * contentFraction * scale — so a 0.1
+  // roll on a half-content sprite draws 0.15 world units against a CELL of 4, i.e. a pixel. measured
+  // in the habitat before this: 0.15 / 0.73 / 0.86 / 0.88 / 1.21
+  public static inline var DEBRIS_MIN_SCALE = 0.5;
+  // sub-cell jitter for a STATIC fragment, which render.world.Debris leaves dead-centre and unrotated
+  // (only transformable ones get an offset). stays inside Debris.canPlace's free band, so a fragment
+  // can never end up over a wall and no ground test is needed
+  public static inline var DEBRIS_JITTER = 0.25;
 }

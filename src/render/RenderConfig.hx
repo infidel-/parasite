@@ -552,6 +552,9 @@ class RenderConfig {
     fill: 'dots',        // occluded-silhouette pattern: the AI keeps 'scan'
     hatchSpacing: 6,     // pattern period (crop px)
     hatchThick: 2,       // pattern dot width (crop px)
+    hullW: 0.06,         // an object drawn as a 3D PROP is outlined by a backface shell instead (see
+                         // render.Models ModelVariant.HULL): this is how far the shell stands off the
+                         // real surface, in WORLD units, so it is the outline's thickness
   };
   // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
   // head at any camera pitch — see Actors.drawBadges)
@@ -598,6 +601,15 @@ class RenderConfig {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
     sewerExit: 'models/sewer-exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
+  };
+  // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
+  // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
+  // with a per-frame mask picking which one draws each prop — render.world.ObjModels
+  public static final PROP_GHOST = {
+    alpha: 0.3,  // opacity at full fade (0 = invisible, 1 = solid)
+    lerp: 0.25,  // per-30fps-frame ease toward the target (dt-compensated, as OCCLUSION.lerp)
+    snap: 0.02,  // lock to solid within this of 0 — the handover BACK to the opaque batch is gated on
+                 // it, and an exponential tail never reaches 0 on its own
   };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
@@ -701,6 +713,14 @@ class RenderConfig {
     lenMul: 0.6,        // shadow length = sprite world-height * this * distance falloff (overhead = short)
     op: 0.8,            // per-shadow opacity
     fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
+    lowMax: 3.0,        // both numbers above are tuned for a street bulb at CELL * LAMP_LIGHT.yMul, and
+                        // a LOW fixture (a sewer wall bracket at 0.6) rakes light across the floor
+                        // instead of pooling it — so lenMul and rangeCells are both scaled by
+                        // refY / post.y, capped here. a street lamp lands on exactly 1.0
+    lowRangeCells: 3,   // absolute reach cap in cells for that scaled-up low fixture, so a bracket
+                        // still throws LONG shadows (lenMul keeps the full lowMax) but only over a
+                        // small pool. sits just under the burning barrel's FLAME.shadowRangeCells 4.
+                        // no effect on a street lamp: it scales by 1.0 and stays at rangeCells
   };
   // CROSS-AREA textures: the ones every style draws, read straight off here by the sub-builders
   // instead of going through AreaStyle. Per-area art is NOT here — that lives in the style file

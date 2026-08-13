@@ -23,7 +23,8 @@ typedef ActorOpts = {
   @:optional var offz:Float;        // world Z offset from the cell centre
   @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
-  @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): ring only, no icon and no x-ray
+  @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): no icon and no
+                                    // sprite marks at all — the prop is outlined from its own geometry
 }
 
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
@@ -720,8 +721,13 @@ class Actors {
           wz += a.fx.offz;
           sc *= a.fx.scale;
         }
-      // object marks ride the exact same pose, painted before the icon they frame
-      if (o.mark == true)
+      // object marks ride the exact same pose, painted before the icon they frame. BOTH are carved
+      // from the sprite's ATLAS CELL, so a prop-backed object gets neither: the outline would trace
+      // the 2D art's silhouette around an icon that is no longer drawn, and the through-wall
+      // silhouette would hatch itself over, since the prop stands at that very pose. those objects
+      // are outlined from their real geometry instead — render.world.ObjModels, ModelVariant.HULL
+      if (o.mark == true &&
+          o.iconOff != true)
         paintObjMark({
           e: e,
           op: a.op,
@@ -732,10 +738,8 @@ class Actors {
           flat: flat,
           yaw: yaw,
           order: order,
-          xray: o.iconOff != true,
         });
-      // an object drawn as a real 3D prop keeps its tactical ring (that is how it stays findable with
-      // the view up) but not its icon, which would stand inside the prop
+      // an object drawn as a real 3D prop has no icon quad — it would stand inside the prop
       if (o.iconOff == true)
         return;
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
@@ -756,7 +760,9 @@ class Actors {
     }
 
 // paint the two teal marks over a world object's own sprite pose: the outline ring (only while the
-// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette,
+// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette.
+// NOT called for an object backed by a 3D prop — both marks are carved from the ATLAS CELL, so they
+// would trace the 2D art around a prop that looks nothing like it (see the call site),
 // which depthFunc = GreaterDepth restricts to wherever a building hides the object from the camera,
 // exactly like the AI x-ray. both are UI overlays (no shadow sampling) and both share the sprite's
 // renderOrder: the ring covers only the band just OUTSIDE the silhouette, so it never overlaps the
@@ -784,8 +790,6 @@ class Actors {
               shadow: false,
             });
         }
-      if (!o.xray)
-        return;
       var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
         C.fill, C.hatchSpacing, C.hatchThick, e.skinColor);
       if (sil == null)

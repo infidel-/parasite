@@ -22,6 +22,8 @@ class SewerArea implements Area3D
   var lampLights:LampLights;    // live spotlight pool over the corridor nodes
   var lampPosts:Array<LampPost>; // node, exit and wall lamps (for the pool)
   var wallGlow:render.LightCone.ConeSet; // wall-lamp emissive quads, repacked per frame with their bulbs
+  var props:Array<render.world.ObjModels.PropBatch>; // the exit ladders: solid / ghost / outline batches
+  var tactical = false;                  // tactical view up: the props draw their outline shells
 
   public function new(game:Game, model:Sewer)
     {
@@ -53,7 +55,7 @@ class SewerArea implements Area3D
       // the exit ladders, as real geometry instead of their sprite. only tunnel areas ever hold one:
       // WorldConst declares `exit: 'sewer_exit'` on AREA_SEWERS alone and game.AreaGame picks
       // sewer_exit / habitat_exit by area type, so a city never spawns either
-      render.world.ObjModels.build(scene, game, SewerStyle.EXIT_MODEL_H, exitYaw);
+      props = render.world.ObjModels.build(scene, game, SewerStyle.EXIT_MODEL_H, exitYaw);
     }
 
 // which way an exit ladder faces: away from the wall it is bracketed to, or unturned if it stands in
@@ -75,7 +77,10 @@ class SewerArea implements Area3D
 // switch, and there are no chunks to cull (the whole level is a handful of merged meshes)
   public function tick(opts:Area3DTickOpts):Void
     {
-      // nothing to fade and no window switches underground; the outro needs no world tick at all
+      // ABOVE the outro gate on purpose: a player who left standing ON a ladder would otherwise stay
+      // behind a see-through one for the whole camera pull-out. cull() reads opts.outro itself
+      render.world.ObjModels.cull(props, opts, tactical);
+      // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
         return;
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
@@ -84,10 +89,11 @@ class SewerArea implements Area3D
       render.LightCone.pulse(wallGlow, lampLights.flickT);
     }
 
-// deliberately empty: tactical only changes the building occlusion rule, and a tunnel has no
-// occlusion pass at all
+// a tunnel has no occlusion pass, so the only thing tactical changes down here is the prop outlines:
+// a modelled object drops its sprite icon, and this backface shell is what replaces the green ring
   public function setTactical(v:Bool):Void
     {
+      tactical = v;
     }
 
 // lower than the street's so the few lamps actually bloom against near-black surroundings

@@ -69,7 +69,9 @@ class LampLights {
         {
           var t = new Group();
           group.add(t);
-          var l = new SpotLight(0xffb866, 0, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
+          // the seed tint only matters until a slot has an owner — update() republishes the owning
+          // post's colour every frame (a plain vec3 uniform, not part of the program cache key)
+          var l = new SpotLight(RenderConfig.LAMP_CONE.color, 0, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
           l.target = t;
           // FIXED shadow casters: the first `shadowCasters` slots cast real shadows for their whole
           // life. never toggle castShadow per frame — it is part of the material program key
@@ -221,10 +223,14 @@ class LampLights {
           if (o != null)
             {
               o.flick = fl; // read by FlameShadows so the fake ground shadow breathes with the bulb
-              // the bulb height is the POST's, not the pool's: a sewer wall lamp sits far lower than a
-              // street lamp. the target stays on the floor under it, so every fixture still pools down
+              // both the bulb height and the aim point are the POST's, not the pool's: a street lamp
+              // hangs high and pools straight down, while a sewer wall bracket sits near the floor and
+              // aims metres out along the wall, so its beam rakes the walkway and throws long shadows
               lights[i].position.set(o.x, o.y, o.z);
-              targets[i].position.set(o.x, 0, o.z);
+              targets[i].position.set(o.tx, 0, o.tz);
+              // and the post's own tint: underground the shafts and the wall brackets are different
+              // lights sharing one pool, so a slot has to take the colour of whatever it serves now
+              lights[i].color.setHex(o.color);
               activeList.push(o);
             }
         }

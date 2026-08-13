@@ -72,7 +72,9 @@ class LightCone {
       // on the ground: center offset = -bulbY*(1+startFrac)/2 below the bulb
       geo.translate(0, -bulbY * (1 + s) / 2, 0);
       var mat = new MeshBasicMaterial({
-        color: C.color,
+        // per-batch, not global: the tunnels give their manhole shafts a colour of their own so they
+        // read apart from the wall fixtures. omitting it keeps the street amber
+        color: o.color != null ? o.color : C.color,
         transparent: true,
         opacity: C.opacity,
         depthWrite: false,
