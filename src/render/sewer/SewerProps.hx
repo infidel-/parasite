@@ -37,6 +37,16 @@ class SewerProps
   // never pick the face. costs ~a quarter of the eligible faces, which SewerStyle.PROP_PCT pays back
   static inline var CAM_DIR = 1;
 
+  // an odd modulus folded in before ANY small-pool index. every step from (bcol, brow) to a roll is
+  // linear over GF(2) — SewerModel.mix is a xorshift, and multiply-by-odd and xor are linear too —
+  // so each bit of a roll is a fixed XOR of the coordinate bits and `roll % 2` reads exactly ONE of
+  // them. That is not a coin, it is a plane: measured over 40 blocks, a row band scored only ever 16
+  // or 24 of one pick, never a value between. Shifting first does not help ((roll >>> 16) % 2
+  // quantises just as hard, to 18/22) because a shifted bit is still one linear form; reducing
+  // through an odd number does, since it then depends on all 31 bits at once — the spread opens to
+  // 10..27, sd 3.22 against a fair coin's 3.16
+  static inline var PICK_ODD = 997;
+
 // scatter, then batch: one InstancedMesh per model, so the whole level pays one draw call per prop
 // variant however many it places
   public static function build(scene:Scene, m:Sewer):Void
@@ -58,6 +68,8 @@ class SewerProps
       var half = (CityConfig.GRID * CELL) / 2;
       var models = SewerStyle.PROP_MODELS;
       var places:Array<Array<{ x:Float, z:Float, yaw:Float }>> = [for (_ in models) []];
+      // the two decks the model pick is dealt from, indexed 0 = flat run of wall, 1 = corner
+      var deck:Array<Array<Int>> = [[], []];
       for (brow in 0...Std.int((m.h + 1) / 2))
         for (bcol in 0...Std.int((m.w + 1) / 2))
           {
@@ -104,13 +116,36 @@ class SewerProps
             // the model pick is CONSTRAINED by the spot, not free: SewerProp.corner partitions the
             // table, so a corner deals only from the corner props and a flat run of wall only from
             // the rest. an upright drum against a bare wall reads as dropped in the walkway; in the
-            // angle of two walls it reads as stored there
+            // angle of two walls it reads as stored there.
+            //
+            // and each pool is DEALT, not rolled. an independent roll cannot fix clustering, it can
+            // only be lucky: a habitat puts nearly all of its corners on the one row where the room
+            // walls line up, and on 5 such spots a fair 2-entry coin lands 4-or-more the same way
+            // 37% of the time — which is what a wall of four drums was. The 5-entry flat pool is no
+            // safer; the same level rolled cable for 6 of its 7 flat spots. A deck hands out every
+            // entry once before any of them repeats, so a run is capped by construction, and it is
+            // reshuffled on refill so it never reads as a fixed rotation either
             var h2 = SewerModel.mix(hh ^ 0x85EBCA6B);
-            var cand = [];
-            for (i in 0...models.length)
-              if (models[i].corner == (perp >= 0))
-                cand.push(i);
-            var mi = cand[h2 % cand.length];
+            var pool = (perp >= 0) ? 1 : 0;
+            if (deck[pool].length == 0)
+              {
+                for (i in 0...models.length)
+                  if (models[i].corner == (pool == 1))
+                    deck[pool].push(i);
+                // Fisher-Yates off the same hash chain, so a level stays fully determined by its grid
+                var r = h2;
+                var k = deck[pool].length;
+                while (k > 1)
+                  {
+                    r = SewerModel.mix(r);
+                    k--;
+                    var j = (r % PICK_ODD) % (k + 1);
+                    var t = deck[pool][k];
+                    deck[pool][k] = deck[pool][j];
+                    deck[pool][j] = t;
+                  }
+              }
+            var mi = deck[pool].pop();
             var mdl = models[mi];
             // the standoff, DERIVED rather than authored: r is the prop's footprint radius per unit
             // of height, so r * h is its world radius whatever h is set to and the prop can never be

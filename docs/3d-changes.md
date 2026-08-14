@@ -850,3 +850,41 @@ speck beside its neighbours in a per-batch tint pass; **0.7** is the shipped val
 also what killed the original "single brick" idea outright: a real brick is **0.44 world units**,
 under the 0.46 floor of the 2D `SewerDebris` litter the tunnels already scatter ~22 of per level for
 zero draw calls.
+
+## Four drums in a line: the pool is dealt as a deck, not rolled
+
+A habitat shipped with all four of its drums on one wall. Two separate things were wrong, and only
+one of them was the hash — worth writing down because the hash bug is the more interesting one and
+the *less* important one.
+
+**Every roll in this system is GF(2)-affine, so `% 2` reads a single bit.** `SewerModel.mix` is a
+xorshift, and xorshift, multiply-by-odd and xor are all linear over GF(2) — so the whole chain from
+`(bcol, brow)` to the roll is affine, and every output bit is a fixed XOR of the coordinate bits.
+`roll % cand.length` on the **2**-entry corner pool therefore extracts exactly one linear form.
+Measured over a 40×40 block grid: a row band scored only ever **16 or 24** of one pick out of 40 —
+never a value between — against a fair coin's continuous spread at sd 3.16. Shifting first does not
+help: `(roll >>> 16) % 2` quantises just as hard, to 18/22, because a shifted bit is still one linear
+form. Reducing through an odd number does, since the result then depends on all 31 bits at once
+(spread 10..27, sd **3.22**). Hence `PICK_ODD = 997` before any small-pool index. The 5-entry flat
+pool never had this: 5 is already coprime to 2³².
+
+**But that was not what put four drums on the wall, and shipping it as the fix would have been
+wrong.** With the odd modulus in, the same level still dealt drum ×4 / crates ×2 — it merely swapped
+which cells — and the flat pool got *worse*, rolling cable for **6 of its 7** spots. The reason is
+arithmetic, not hashing: a habitat's rooms are 5×5 in a band, so nearly every corner in the level
+lands on the one row where their walls line up, and on 5 such spots a fair two-sided coin comes up
+4-or-more the same way **37%** of the time. Independent rolls cannot fix clustering; they can only
+be lucky.
+
+**So each pool is now DEALT.** A deck per pool (0 = flat run, 1 = corner), Fisher-Yates'd off the
+same hash chain on refill so a level stays fully determined by its saved grid, and popped one spot
+at a time. Every entry comes out once before any repeats, which caps a run by construction. Demo
+tunnel, 14 props: flat sequence `cable, bricks, block, pipe, bags | block, bags, pipe, bricks,
+cable | block, bags` — each cycle a full permutation, **max run 1**, counts 3/3/2/2/2/1/1, and the
+placement invariants all still hold (zero misplacements). Live habitat, the offending row 8:
+`drum, drum, crates, crates, drum` — **max run 4 → 2**, corner counts 4/2 → 3/3, flat counts
+cable 6-of-7 → 2/2/1/1/1.
+
+Two is the floor for a 2-entry bag: one permutation can end on the same face the next one begins
+with. Left there deliberately — two drums standing together reads as stored, four in a row reads as
+a bug — and forcing perfect alternation would need a carry-over `last` and would look mechanical.
