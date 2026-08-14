@@ -52,15 +52,52 @@ class SewerStyle
 
   // world units per texture repeat. UVs are worldPos / these on BOTH axes, so nothing stretches
   // and the brick keeps one scale everywhere regardless of how long a tunnel run is
+  // none of them a MULTIPLE OF CELL (4), on purpose: the floor and the cap are the two surfaces
+  // that actually fill the screen, and at 8.0 their texture period was exactly two cells, so every
+  // grid line landed on the same point of the tile and the repeat read as a pattern. at 7.0 the
+  // echo only comes back around every 7 cells
   public static inline var WALL_TILE = 6.0;
-  public static inline var FLOOR_TILE = 8.0;
-  public static inline var LEDGE_TILE = 8.0;
+  public static inline var FLOOR_TILE = 7.0;
+  public static inline var LEDGE_TILE = 7.0;
 
   // wall height in world units (CELL is 4, an actor billboard is 3): tall enough to enclose, low
   // enough that the near-top-down sewer camera never has a wall between it and the player. at
   // actor height the walls read as a kerb the tunnel is cut into rather than as a deep shaft,
   // which is what keeps sightlines open on the steeper preset
   public static inline var WALL_H = 3.0;
+
+  // --- the cap edge (render.sewer.SewerGeom) ---
+  // a 45 degree chamfer between the wall face and the ledge cap, and the amount the cap is pulled
+  // back on every edge that overlooks a floor cell so the wedge is what the camera meets at the
+  // drop. ONE number for both, which is what makes it 45 degrees.
+  //
+  // this is the edge the whole look hangs on. wall FACES are 0.67% of the view and the cap tops
+  // 14.68% (docs/3d-render.md), so what reads as "orthogonal" is not the masonry, it is the single
+  // dead-straight high-contrast line where a bright cap meets a near-black face. a DARKENING BAND
+  // painted along that rim was tried and rejected — nothing stands above a wall cap, so it read as
+  // a stripe floating over a brighter surface. this is the opposite move: real geometry with a real
+  // normal, so the lighting produces the rim instead of art faking it, and the silhouette becomes
+  // two edges CAP_CHAMFER apart instead of one
+  // 0.25 measured, not picked: swept live against the habitat. 0.15 was invisible at both camera
+  // presets and 0.45 read as a chunky moulding rather than a worn edge. at 0.25 the wedge covers
+  // ~0.25 world units of screen at either preset (the vertical drop and the horizontal setback
+  // trade places as the pitch goes 53 -> 71 degrees), i.e. a dozen-odd pixels of bevel at a 4-unit
+  // cell — enough to break the line, not enough to become a design feature
+  public static inline var CAP_CHAMFER = 0.25;
+
+  // --- per-vertex tint on the shell (render.sewer.SewerGeom.tint) ---
+  // free unevenness: no art, no draw calls, no tris. keyed off the cell LATTICE, never off the face
+  // — see SewerGeom.tint for why anything per-face seams
+  public static inline var TINT_AMP = 0.15;     // +/- value swing of the lattice noise
+  public static inline var TINT_FOOT = 0.80;    // darkening at the foot of a wall (the floor crease)
+  public static inline var TINT_CORNER = 0.75;  // extra darkening down an inside corner's vertical line
+  // lift on the chamfer, so the bevel still reads in the stretches of tunnel no lamp reaches. small
+  // on purpose, because the hemisphere fill (SewerScene: sky 0x46536e over ground 0x141a22 at 1.89)
+  // already ramps it: a flat cap takes the sky colour whole, a vertical face the midpoint and a 45
+  // degree wedge 85% of the way up, which lands the chamfer ~11% over the face against a large
+  // normal-blind AmbientLight. this roughly doubles that without pushing the wedge past the cap.
+  // 1.0 = pure lighting, and is the value to fall back to if the edge reads as a drawn stripe
+  public static inline var TINT_CHAMFER = 1.08;
 
   // --- damp band at the foot of every wall (render.sewer.SewerDetail) ---
   // RenderConfig.GRIME_H is 3.0, which down here is the ENTIRE wall, so the sewer needs its own

@@ -888,3 +888,95 @@ cable 6-of-7 → 2/2/1/1/1.
 Two is the floor for a 2-entry bag: one permutation can end on the same face the next one begins
 with. Left there deliberately — two drums standing together reads as stored, four in a row reads as
 a bug — and forcing perfect alternation would need a carry-over `last` and would look mechanical.
+
+## The tunnels read as boxes, and the wall art was never the problem
+
+"Walls are awfully orthogonal, 90 degree edges and corners". The instinct is to attack the masonry;
+the measurement says do not. Wall **faces** are 0.67% of the view against the ledge **tops**' 14.68%
+(recorded above), and `app/textures/sewer/wall.png` is already broken bricks, moss and missing
+blocks. What actually reads as orthogonal is the **cap edge**: one dead-straight, dead-level,
+high-contrast line where a lit cap meets a near-black face, repeated on a 4-unit lattice, with every
+arris a 0-width crease.
+
+Three changes, all inside `SewerGeom` + `SewerStyle`, **zero art and zero new draw calls**:
+
+**`CAP_CHAMFER 0.25` — a 45° wedge between face and cap.** The wall face now stops at `WALL_H - c`
+and a second quad carries it up and back to the cap, while the cap quad is pulled back by the same
+`c` on every edge overlooking a floor cell. The two are exactly paired along an EDGE (a cap edge
+insets *iff* its neighbour emits a wall against it). Swept live: **0.15 invisible at both presets,
+0.45 a chunky moulding, 0.25 right** — the wedge covers ~0.25 units of screen at either preset, since
+the vertical drop and the horizontal setback trade places as the pitch goes 53° → 71°. This is the
+same rim the **rejected** ledge-rim darkening was after, and the reason it works here is that it is
+geometry with a normal, not art faking a stripe.
+
+**The wedge is a bevel on a plan OUTLINE, so it has to be MITRED — the first cut shipped without it
+and hung quads in the air.** Run a wedge along a whole cell edge and at an **outside** corner its
+last `c` has nothing underneath: both walls have receded by `d` at height `fh + d`, so the strip
+beyond the corner is over open corridor. Two wedges cross in mid-air past the corner while the cap
+they should have met sits `c` behind them. The dual bug is at an **inside** corner, where the two
+wedges stop short of each other and leave a `c × c` notch straight through to the background.
+
+Both are fixed by classifying each END of the top edge off two neighbours — the cell along the run
+(`perp`) and the one diagonally behind it (`diag`):
+
+| `diag` | `perp` | corner | what the end does |
+|---|---|---|---|
+| floor | — | outside (or two solids pinching at a point) | pull the top edge IN by `c` |
+| solid | floor | straight run | nothing; the next cell emits a collinear wedge |
+| solid | solid | inside | nothing, plus a vertical return triangle |
+
+The outside case costs **no triangle** — the quad just becomes a trapezoid, and since the two wedges
+already share their bottom corner, closing the top closes the whole seam along the 45° mitre. The
+inside case gets a **chamfer stop**, which is how a real chamfer dies into an inside corner; note it
+must NOT be fixed by extending the top edge instead, because that slides the wedge under the diagonal
+cell's un-inset cap and opens a void beneath it (the cap would then need an L-shaped notch, 4 tris
+instead of 2 on the biggest surface in the scene).
+
+Verified headless on the demo tunnel, `SewerGeom.build` into a throwaway `THREE.Scene` from CDP:
+**84 faces, 8 outside ends, 16 inside ends → 352 wall triangles against 84×4 + 16 = 352 exactly**, so
+every stop is present and nothing else is. And the seam invariant: **all 136 interior wedge-top
+vertices land exactly on a corner of the inset cap, 0 misses.** The first attempt at that test —
+"is the vertex over a solid cell?" — passes on the broken build too, because the overshoot is inside
+the solid cell's *footprint* and merely above its bevelled surface. Border verts legitimately miss
+(the demo puts floor on the grid edge, where there is no cap cell); a real area's border is solid.
+
+One emitter now covers all four directions, off `(p, n, s, e)` — the wall plane on the axis the face
+does not run along, the sign of its inward normal there, and the two run coordinates in winding
+order. The four hand-written cases it replaced could not have carried the mitre readably.
+
+**`vertexColors` on the shell, keyed off the cell LATTICE.** A hashed value ±`TINT_AMP 0.15` at each
+lattice point (rounded cell index + a coarse height band), read at the four corners of every quad.
+`MeshBuf` gives each quad its own verts, so anything per-face or per-quad would step hard at every
+cell boundary — the exact seam that killed the two-wall-variant experiment. Two quads meeting at a
+lattice point ask the same question and get the same number, so it interpolates across a whole run
+and *cannot* seam. Same attribute carries the creases: `TINT_FOOT 0.80` at the wall/floor junction,
+`TINT_CORNER 0.75` down an inside corner's vertical line (both faces darken it by the same factor, so
+they agree), `TINT_CHAMFER 1.08` on the wedge. That last one is small because the hemisphere fill
+already ramps it — sky whole on a flat cap, midpoint on a vertical face, 85% of the way up on a 45°
+wedge, ≈11% over the face against a large normal-blind ambient.
+
+**`FLOOR_TILE`/`LEDGE_TILE` 8.0 → 7.0.** Both were exactly two cells, so the texture period landed
+on the same point of the tile at every grid line and the repeat read as a pattern on the two surfaces
+that fill the screen. 7.0 pushes the echo to 7 cells. One constant.
+
+Cost is inventory, not a frame reading: **+1 quad per wall face** (habitat has 104), cap insets move
+vertices without adding any, and every chamfer goes into the wall buffer it beveled — so the shell
+still merges to one mesh per texture. `vertexColors` adds one program permutation per shell material,
+warmed for free because `View.warmup` runs this same builder over `SewerModel.demo()`. **No `calls=`
+or `tris=` claimed**: the window would not foreground, the HUD held **1 FPS**, and the topbar swung
+50–56 dc / 69.9–70.6k tri on camera pose alone between otherwise identical frames.
+
+One clamp followed: `SewerDetail.decals` now bounds decals to `WALL_H - CAP_CHAMFER`, since above
+that the wall recedes and a quad set `DECAL_EPS` proud of the face plane would hang off the bevel.
+
+Not done, and next if the line still reads too ruled: **per-cell cap height jitter** (downward only,
+so the camera-clearance reason `WALL_H` is 3.0 is untouched). It needs a shared `capY()` — the wall
+must take the height of the solid neighbour it faces, adjacent solid cells at different heights need
+a filler quad or the plateau opens, and `SewerGround` places its ledge clutter at a hardcoded
+`WALL_H`.
+
+Also found and NOT acted on: `dir == 1` (south) wall faces have normal `(0,0,-1)` and
+`CAMERA_SEWER` always sits at +Z looking −Z, so **those quads are backface-culled in every pose** —
+along with their grime and decals, which is ~a quarter of both passes wasted. The wall quads
+themselves are not free to drop: `SewerGeom.add(..., casts = true)` and the shadow map renders from
+the light, not the camera.

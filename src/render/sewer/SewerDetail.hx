@@ -49,7 +49,9 @@ class SewerDetail
         { tex: SewerStyle.BROKEN, lo: 1.2, hi: 2.0, baseY: 0.5, tint: 0xffffff },
       ];
       var bufs = [for (_ in cats) MeshBufTools.make()];
-      var H = SewerStyle.WALL_H;
+      // the flat part of the face only: above this the wall recedes into the CAP_CHAMFER bevel, and
+      // a decal set DECAL_EPS proud of the face plane would hang off it
+      var H = SewerStyle.WALL_H - SewerStyle.CAP_CHAMFER;
       var eps = SewerStyle.DECAL_EPS;
       for (row in 0...m.h)
         for (col in 0...m.w)

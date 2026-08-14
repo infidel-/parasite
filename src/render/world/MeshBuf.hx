@@ -1,10 +1,12 @@
 package render.world;
 
-// a growable position/uv/index buffer for hand-built merged geometry, plus the two emitters every
+// a growable position/uv/index buffer for hand-built merged geometry, plus the emitters every
 // world builder needs. one buffer becomes one BufferGeometry and therefore one draw call, which is
 // how the ground, the road markings and the sewer tunnels all stay at a handful of calls each.
-// extracted from render.world.Ground so render.sewer.SewerGeom does not re-write the same emitters
-typedef MeshBuf = { pos:Array<Float>, uv:Array<Float>, idx:Array<Int> };
+// extracted from render.world.Ground so render.sewer.SewerGeom does not re-write the same emitters.
+// `col` is an OPT-IN parallel channel: only quadC fills it, so a buffer built with quad alone
+// leaves it empty and its material never sets vertexColors
+typedef MeshBuf = { pos:Array<Float>, uv:Array<Float>, idx:Array<Int>, col:Array<Float> };
 
 class MeshBufTools
 {
@@ -46,9 +48,36 @@ class MeshBufTools
       b.idx.push(base + 3);
     }
 
+// append one quad plus a per-vertex grey tint, one value per corner in p0..p3 order. flat like the
+// uv argument rather than four floats, so the signature stays the shape quad already had
+  public static function quadC(b:MeshBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>, p3:Array<Float>,
+    uv:Array<Float>, c:Array<Float>):Void
+    {
+      quad(b, p0, p1, p2, p3, uv);
+      for (i in 0...4)
+        {
+          b.col.push(c[i]);
+          b.col.push(c[i]);
+          b.col.push(c[i]);
+        }
+    }
+
+// append one triangle plus a per-vertex grey tint, one value per corner in p0..p2 order
+  public static function triC(b:MeshBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>,
+    uv:Array<Float>, c:Array<Float>):Void
+    {
+      tri(b, p0, p1, p2, uv);
+      for (i in 0...3)
+        {
+          b.col.push(c[i]);
+          b.col.push(c[i]);
+          b.col.push(c[i]);
+        }
+    }
+
 // a fresh empty buffer
   public static function make():MeshBuf
     {
-      return { pos: [], uv: [], idx: [] };
+      return { pos: [], uv: [], idx: [], col: [] };
     }
 }

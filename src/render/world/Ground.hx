@@ -37,9 +37,9 @@ class Ground {
       { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
       { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
-    var bufs = [for (_ in types) { pos: ([] : Array<Float>), uv: ([] : Array<Float>), idx: ([] : Array<Int>) }];
-    var borderBuf:GroundBuf = { pos: [], uv: [], idx: [] }; // kerb-edging stripe on walkway tops (own mesh/tex)
-    var markBuf:GroundBuf = { pos: [], uv: [], idx: [] };   // road markings overlay (lane lines, crosswalks; own mesh/tex)
+    var bufs = [for (_ in types) MeshBufTools.make()];
+    var borderBuf:GroundBuf = MeshBufTools.make(); // kerb-edging stripe on walkway tops (own mesh/tex)
+    var markBuf:GroundBuf = MeshBufTools.make();   // road markings overlay (lane lines, crosswalks; own mesh/tex)
     function bidx(tile:Tile):Int { for (i in 0...types.length) if (types[i].tile == tile) return i; return -1; }
 
     // the emitters live in render.world.MeshBuf (shared with the sewer builder); bound to locals
