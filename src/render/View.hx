@@ -427,18 +427,17 @@ class View {
                   render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, GHOST);
                   render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h,
                     HULL(C.color, C.hullW));
-                  // the wall piles have the same async-load trap, but only ONE variant each: they are
+                  // the wall props have the same async-load trap, but only ONE variant each: they are
                   // decoration, so no ghost and no hull, and the whole set has to land before the
                   // compileAsync below walks this scene
-                  var models = render.sewer.SewerStyle.PILE_MODELS;
+                  var models = render.sewer.SewerStyle.PROP_MODELS;
                   var left = models.length;
                   for (i in 0...models.length)
                     {
                       var p = models[i];
-                      render.Models.get(p, function(_)
+                      render.Models.get(p.path, function(_)
                         {
-                          render.Models.instanced(sewerScene, p, place,
-                            render.sewer.SewerStyle.PILE_H, SOLID);
+                          render.Models.instanced(sewerScene, p.path, place, p.h, SOLID);
                           left--;
                           if (left == 0)
                             res(null);

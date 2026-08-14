@@ -1,5 +1,25 @@
 package render.sewer;
 
+// one entry of PROP_MODELS: a wall-clutter glb and the two numbers that are its own rather than the
+// scatter's. a drum stands tall on a small round footprint and a cable coil is flat on a wide one,
+// so a single global height/standoff pair (which is what this replaced) either floats one prop off
+// the wall or buries the other in it.
+//
+// `r` is a RATIO, not a distance, and that is the whole point. Models.instanced scales a prop by
+// HEIGHT alone (targetH / native height), so its footprint is native radius * h / native height —
+// i.e. r * h. A hand-typed standoff goes stale the moment h changes, which is exactly how the cable
+// ended up 0.33 world units inside the masonry: it was authored at 0.5 for a footprint of 0.83.
+// SewerProps derives the standoff from r instead, so it can never disagree with the mesh again
+typedef SewerProp = {
+  path:String,   // RenderConfig.MODELS entry
+  h:Float,       // world height Models.instanced scales the prop to
+  r:Float,       // footprint radius as a MULTIPLE of h — max XZ distance from the glb's bbox centre,
+                 // divided by its native height. yaw-independent, so PROP_YAW_JITTER cannot break it
+  corner:Bool,   // true = only ever placed where two perpendicular walls meet. this PARTITIONS the
+                 // table: a corner spot deals only from the corner props and a flat run of wall only
+                 // from the rest, so BOTH sides must stay non-empty
+}
+
 // art + dimensions for the 3D sewer tunnels — the render.world.CityStyle of underground areas.
 // there is only one sewer look today, so this is plain constants rather than a swappable instance
 class SewerStyle
@@ -155,25 +175,35 @@ class SewerStyle
   // LampLights gates player distance on
   public static inline var EXIT_LAMP_SOUTH = 2.0;
 
-  // --- 3D clutter heaped against the walls (render.sewer.SewerPiles) ---
+  // --- 3D clutter scattered against the walls (render.sewer.SewerProps) ---
   // the first CONVEX geometry down here. the shell is a concave box and everything dressing it is
-  // flat, so until these a wall bracket's raking beam had nothing to throw a shadow off
-  public static var PILE_MODELS = [
-    render.RenderConfig.MODELS.sewerPile1,
-    render.RenderConfig.MODELS.sewerPile2,
+  // flat, so until these a wall bracket's raking beam had nothing to throw a shadow off.
+  // one entry = one glb = one draw call for however many the level places
+  // r is measured off the baked glb, NOT guessed — max XZ radius from the bbox centre over native
+  // height. re-measure it whenever a source model is regenerated
+  public static var PROP_MODELS:Array<SewerProp> = [
+    { path: render.RenderConfig.MODELS.sewerPile1, h: 0.7, r: 2.04, corner: false },
+    // the two CORNER props: a big upright drum or a crate stack standing against a flat run of wall
+    // reads as dropped in the walkway, while tucked into the angle of two walls it reads as stored
+    // there. corners are ~14% of spots and these two share them, so expect 1-2 of each per level
+    { path: render.RenderConfig.MODELS.sewerDrum, h: 1.8, r: 0.34, corner: true },
+    { path: render.RenderConfig.MODELS.sewerCrates, h: 1.65, r: 0.52, corner: true },
+    { path: render.RenderConfig.MODELS.sewerCable, h: 0.24, r: 2.77, corner: false },
+    // h 1.0 rather than the 0.7 the flat-wide first generation wanted: the charcoal-reference regen
+    // came back a proper pyramid (aspect 1.23 against 1.98), so the old height shrank its footprint
+    // from 1.38 world units across to 0.86 and it read as a pebble
+    { path: render.RenderConfig.MODELS.sewerBags, h: 1.0, r: 0.73, corner: false },
   ];
-  // one pile per 2x2 block, gated per eligible wall FACE exactly as WALL_LAMP_PCT is
-  public static inline var PILE_PCT = 14;
-  // world height. CELL is 4 and WALL_H 3.0, so this is knee-high: tall enough to break the beam of a
-  // bracket at WALL_LAMP_Y 0.6, short enough that it never hides an actor standing behind it
-  public static inline var PILE_H = 0.7;
-  // how far into the cell the pile's centre sits off the wall plane. Models.instanced centres a
-  // prop's footprint, so this is about half a pile's own depth: enough that it does not clip through
-  // the masonry, little enough that it still reads as heaped AGAINST it
-  public static inline var PILE_MARGIN = 0.55;
-  // +/- yaw wobble (radians) around the face's outward facing, so two piles on parallel walls are
+  // breathing room between the prop's footprint circle and the wall plane, on top of r * h. small
+  // on purpose: these are meant to look dumped against the wall, not parked a pace off it
+  public static inline var PROP_CLEAR = 0.05;
+  // one prop per 2x2 block, gated per eligible wall FACE exactly as WALL_LAMP_PCT is. was 14 while
+  // all four wall directions were eligible; SewerProps now rejects the camera-side one, which takes
+  // roughly a quarter of the faces out of the gate, so this is scaled up to hold the same density
+  public static inline var PROP_PCT = 18;
+  // +/- yaw wobble (radians) around the face's outward facing, so two props on parallel walls are
   // not the same silhouette twice
-  public static inline var PILE_YAW_JITTER = 0.5;
+  public static inline var PROP_YAW_JITTER = 0.5;
 
   // --- ground litter (render.sewer.SewerDebris), per 1000 floor cells ---
   // rooms stay tidier than the tunnels as the old 2D pass had it, but only just: a habitat is pinned

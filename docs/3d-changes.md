@@ -696,3 +696,107 @@ nothing left to shade — so a fully metallic prop reads BLACK under WYSIWYG, no
 same generator and same day, came out pure green: a correct rough dielectric, no change needed.
 `dropMR` on pile-2 alone. Dumping the MR texture answers this in one look and is cheaper than any
 amount of in-engine A/B.
+
+## Splitting the composite pile into four simple modern props
+
+`sewer-pile-2` was one generation of *two sacks + rope + a tarp + a broken crate*. It shipped
+undecimated at 19,712 tris with a 1024² map and still read as mush, and it read rustic — hessian and
+plank boards under a present-day city. Both are the same root cause: **the reference asked for a
+composite.** Fixed upstream of every bake knob by generating four separate objects instead — a 200 L
+steel drum, two solid-walled plastic stacking crates, a coiled industrial cable and three tied refuse
+sacks — scattered independently. Sources and outputs both moved under a `sewer/` subfolder
+(`models.mjs` needed one line: `mkdirSync(dirname(out))`, the idiom `textures.json` already uses for
+`decals/`).
+
+**Split ratios, all generated at `decimationTarget 100000` + `remeshProject 0.8`:** drum
+63,617 verts / 48,593 unique positions = **1.31×**, crates 90,764 / 46,236 = **1.96×**, cable
+95,403 / 45,324 = **2.10×**, bags 252,243 / 20,833 = **12.1×**. Bags is the worst measured anywhere —
+252k verts against 293k triangle corners is essentially a per-triangle atlas. Soft goods again, and
+worse than pile-2's 6.8×: three smooth blobs give the unwrapper nothing to chart along.
+
+**Asking meshopt for 1,200 tris got: 4,826 / 23,926 / 30,431 / (bags undecimatable).** So the split
+ratio does not just rank subjects, it says where the floor lands — and ~2× is the line between the
+two workflows. The drum's 4,826 is a normal prop (the exit ladder ships at 5,000) and the
+100k-master-plus-offline-decimate route is right for it. Crates and cable at 22–30k are not usable,
+so those were regenerated with `decimation_target 5000` and `"tris": -1`.
+
+**The `error` sweep that nearly did not happen.** The pile-1 result (3.19×: 0.005 → 54,718,
+0.30 → 52,184) had been generalised into "`error` is not the lever", and a rule was written on that
+basis. Swept properly it is only true for a *shattered* atlas. On the clean drum: 0.005 → 4,826,
+0.01 → 3,762, 0.02 → 3,476, asymptote **3,294** by 0.1 — a real **−32%**. crates moved −8%
+(23,926 → 22,026) and cable −16% (30,431 → 25,447). So sweep `error` before accepting a clean
+subject's tri count, and do not bother on a shattered one. No cap reached the target on any of them.
+
+**Shipped:** drum decimated offline (4,826 tris), crates / cable / bags generated at budget
+(4,818 / 4,891 / 4,769), all four `"tex": 512` = ~54 texels/tri, with `-100k.glb` archival masters for
+the three that were regenerated. **19,304 tris across four props, against 19,712 for the one pile they
+replace.** All four MR maps came back pure green — rough dielectrics, no `dropMR` anywhere, so
+pile-2's cyan map was a one-off and not a property of the generator.
+
+`SewerPiles` → `SewerProps`, and `PILE_H` / `PILE_MARGIN` became per-prop fields on a `SewerProp`
+typedef: a drum is 0.9 tall on a small round footprint and a cable coil is 0.3 on a wide flat one, so
+one global pair either floated one off the wall or buried the other. Placement also gained a corner
+tuck — a cell with two perpendicular wall faces applies both offsets, and the yaw now comes from
+`Math.atan2(nx, nz)` on the summed inward normal, which reproduces the four literals it replaced and
+bisects a corner to 45° for free.
+
+## Sewer props: a derived wall standoff, the camera-side face, and a violet albedo
+
+Three separate faults in the four props above, all found by measuring the baked glbs rather than
+looking at them.
+
+**The standoff was hand-typed and three of five props stood inside the wall.** `Models.instanced`
+scales a prop by HEIGHT alone (`targetH / t.height`), so its footprint is `nativeR/nativeY × h` —
+which means a per-prop `margin` constant is stale the moment anyone edits `h`, and a *flat* prop
+multiplies its width by the same factor that sets its height. Measured world radii (max XZ distance
+from the bbox centre, so yaw-independent) against the authored standoffs: `sewer-pile-1` **1.425**
+vs 0.55, cable **0.830** vs 0.50, bags **0.825** vs 0.40. Drum and crates were inside their margins
+by luck. `SewerProp.margin` is now `r` — the footprint radius *per unit of height*, measured off the
+glb — and `SewerProps` derives `margin = r * h + PROP_CLEAR`. All five clear their wall by 0.05 and
+cannot drift again. Cable also went to `h 0.24` (−20%) and the drum to `h 1.8` (×2) on the same pass.
+
+**A quarter of every prop was invisible by construction.** `CAMERA_SEWER` sits at +Z looking back
+along −Z — 53° at the near preset (y16/z12), 71° at the far one (y40/z14). A prop leaning on the
+SOUTH wall has that wall between it and the camera, and the wall is `WALL_H` 3.0 with a ledge
+plateau on top, so it hides everything within `3.0 / tan(pitch)` = **2.25 units near, 1.05 far**. A
+crate at h 0.75 standing 0.35 off the plane crosses it at y **1.22** against a 3.0 cap: not partly
+occluded, gone at both zooms. Clearing the cap would need a standoff of 1.7 — parked mid-corridor —
+so the fix is to never pick the face. `SewerProps.CAM_DIR` drops dir 1 before the density gate sees
+it, and `PROP_PCT` went 14 → 18 to pay back the ~quarter of faces lost (13 props before, 14 after).
+Cheap proof it holds: with dirs 0/2/3 only, `|yaw|` cannot exceed π/2 + `PROP_YAW_JITTER` = 2.071,
+where a south face would land at ≥ π − 0.5 = 2.642. Measured max **1.923**.
+
+**The big upright props are corner-only, and the flag has to PARTITION rather than filter.** A
+1.8-tall drum or a 1.65 crate stack against a flat run of wall reads as dropped in the walkway; in
+the angle of two walls it reads as stored there. Measuring first is what picked the mechanism:
+corners are only **14%** of spots (2 of 14, and lower than it used to be because dropping the
+camera-side face halved the Z-axis supply), so merely *excluding* a prop from flat walls would leave
+14% × 1-in-5 = **0.4 a level**. Instead `SewerProp.corner` splits the table in two pools — a corner
+deals only from the corner props, a flat run only from the rest — and drum + crates share the corner
+pool. Both pools must stay non-empty; that is the invariant the typedef comment carries. Verified
+against the floor grid rather than against the code that placed them: drum and crates **1/1** each
+on cells with both a Z and an X wall, the three flat props **0/12**, none off a floor cell.
+
+**TRELLIS invents a violet albedo from a near-black reference.** `sewer/bags` baked at mean sRGB
+**77 / 62 / 99** — R above G, B far above G — from a reference painted 68 / 72 / 77 (cool, R<G<B).
+Our bake is not the cause: the source 2048 map and the baked 512 agree to **1/255** on every channel
+(checked on all four props), and drum / crates / cable from the same batch and the same day are all
+correct. Nor is it the seed: a fresh generation came back at mean 110 / 89 / 114 and *bimodal* —
+flat pink charts against black gutters, strictly worse and unfixable by a tint — so it was rolled
+back to the recorded seed 1195164295. What the three correct props share is a mid-value subject
+(reference luma p05 35–45); the bags are the one painted near-black at 30, and the decomposition
+appears to read that darkness as shadow and lift the albedo, hue and all.
+
+A per-channel `"baseColor": [0.32, 0.51, 0.18, 1]` was fitted to neutralise it and did work, but it
+is the fallback, not the fix — a LINEAR multiply cannot recover a channel the generator threw away.
+Repainting the reference does. The same subject at mid charcoal (`#3a3d42`, subject luma p05 30 →
+**48**) came back at **67 / 70 / 78** — cool, neutral, tracking the reference's own 73/80/88, with a
+tight spread (p05 60, p95 79) and no bimodal split. So `baseColor` is now a single uniform 0.47
+darken, hue untouched, purely to land it at the drum's brightness instead of 1.5× over it. The
+regen also changed the silhouette for the better — a pyramid at aspect **1.23** against the flat
+1.98 heap — which cut `SewerProp.r` from 1.17 to 0.73 and wanted `h` 0.7 → 1.0 to keep its footprint.
+
+Two things worth carrying forward. **The reference's VALUE is a generation parameter**, as much as
+`remesh_project` is: paint a dark prop mid-charcoal and darken it in the bake, never paint it black.
+And TRELLIS is **not bit-deterministic** — the same seed and inputs re-ran 4,769 tris as 4,627, so a
+seed reproduces the look, not the file.

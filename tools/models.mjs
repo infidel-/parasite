@@ -123,7 +123,10 @@ async function main()
   for (const [label, e] of Object.entries(info.models))
     {
       const src = join(SRC, e.src);
+      // a label may nest ("sewer/drum" -> models-src/sewer/drum.glb, app/models/sewer/drum.glb),
+      // the same subfolder idiom textures.json uses for decals/ — so make the leaf dir, not just OUT
       const out = join(OUT, label + '.glb');
+      mkdirSync(dirname(out), { recursive: true });
       if (!existsSync(src))
         {
           console.warn('!! missing source ' + e.src + ' for ' + label);

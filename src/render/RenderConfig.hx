@@ -600,9 +600,15 @@ class RenderConfig {
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
-    sewerExit: 'models/sewer-exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
-    sewerPile1: 'models/sewer-pile-1.glb',  // rubble heaped against a tunnel wall (render.sewer.SewerPiles)
-    sewerPile2: 'models/sewer-pile-2.glb',  // ^ the second variant: sacks, a crate and scrap
+    sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
+    // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
+    // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be
+    // decimated (see AGENTS.md), which is why the old sewer-pile-2 sack-and-crate heap is gone
+    sewerPile1: 'models/sewer-pile-1.glb',  // broken masonry rubble (still the old composite; bricks + pipe next pass)
+    sewerDrum: 'models/sewer/drum.glb',     // 200L steel drum, upright
+    sewerCrates: 'models/sewer/crates.glb', // two solid-walled plastic stacking crates
+    sewerCable: 'models/sewer/cable.glb',   // heavy industrial cable coiled flat
+    sewerBags: 'models/sewer/bags.glb',     // three tied refuse sacks heaped together
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements

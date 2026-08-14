@@ -53,8 +53,8 @@ class SewerArea implements Area3D
       WorldCtx.seed = -1;
       SewerGeom.build(scene, model);
       // clutter heaped against the walls. pure decoration — no AreaObject behind it, so no ghost
-      // twin, no outline hull and nothing per-frame; see SewerPiles for why it is not culled
-      SewerPiles.build(scene, model);
+      // twin, no outline hull and nothing per-frame; see SewerProps for why it is not culled
+      SewerProps.build(scene, model);
       // the exit ladders, as real geometry instead of their sprite. only tunnel areas ever hold one:
       // WorldConst declares `exit: 'sewer_exit'` on AREA_SEWERS alone and game.AreaGame picks
       // sewer_exit / habitat_exit by area type, so a city never spawns either
