@@ -182,7 +182,6 @@ class SewerStyle
   // r is measured off the baked glb, NOT guessed — max XZ radius from the bbox centre over native
   // height. re-measure it whenever a source model is regenerated
   public static var PROP_MODELS:Array<SewerProp> = [
-    { path: render.RenderConfig.MODELS.sewerPile1, h: 0.7, r: 2.04, corner: false },
     // the two CORNER props: a big upright drum or a crate stack standing against a flat run of wall
     // reads as dropped in the walkway, while tucked into the angle of two walls it reads as stored
     // there. corners are ~14% of spots and these two share them, so expect 1-2 of each per level
@@ -193,6 +192,15 @@ class SewerStyle
     // came back a proper pyramid (aspect 1.23 against 1.98), so the old height shrank its footprint
     // from 1.38 world units across to 0.86 and it read as a pebble
     { path: render.RenderConfig.MODELS.sewerBags, h: 1.0, r: 0.73, corner: false },
+    // the three the old sewer-pile-1 heap was split into. heights read off the drum as a ruler — it
+    // ships at h 1.8 for a real 0.88m 200L drum, so one world unit is ~0.49m and these are a 0.34m
+    // block, a 0.22m-tall heap 0.75m across, and a 0.39m-bore pipe 0.72m long.
+    // the block is the smallest prop down here by design (it is what the "single brick" idea became
+    // once a real brick measured 0.44 world units, under the 2D litter's own 0.46 floor) — but 0.55
+    // made it a speck beside the others on screen, the same mistake bags started with
+    { path: render.RenderConfig.MODELS.sewerBlock, h: 0.7, r: 0.80, corner: false },
+    { path: render.RenderConfig.MODELS.sewerBricks, h: 0.45, r: 2.06, corner: false },
+    { path: render.RenderConfig.MODELS.sewerPipe, h: 0.8, r: 1.02, corner: false },
   ];
   // breathing room between the prop's footprint circle and the wall plane, on top of r * h. small
   // on purpose: these are meant to look dumped against the wall, not parked a pace off it

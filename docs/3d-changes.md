@@ -800,3 +800,53 @@ Two things worth carrying forward. **The reference's VALUE is a generation param
 `remesh_project` is: paint a dark prop mid-charcoal and darken it in the bake, never paint it black.
 And TRELLIS is **not bit-deterministic** — the same seed and inputs re-ran 4,769 tris as 4,627, so a
 seed reproduces the look, not the file.
+
+## `sewer-pile-1` splits into a block, a brick heap and a broken pipe
+
+The last composite prop underground — one generation of *concrete slabs + bricks + a rusty flanged
+pipe* — and by then the only expensive thing in the tunnels. Its 100k master split **3.19×**
+(131,425 verts / 41,265 positions), so meshopt could never touch it and it shipped undecimated at
+**19,223 tris**, four times every other prop. Live habitat: 5 instances = 96,115 of 139,557 prop
+tris = **69%**. Its footprint was outsized to match — `r` 2.04 at `h` 0.7 = worldR **1.425**, i.e.
+2.85 units across a 4-unit cell, parking it 0.53 off the cell centre.
+
+**The three replacements landed exactly where the split-ratio rule predicts.** Hard surfaces
+(`sewer/block` **1.23×**, `sewer/pipe` **1.32×**, the drum's class) generated once at
+`decimation_target 100000` and decimated offline; rubble (`sewer/bricks`) went straight to the
+budget at 5000 and ships `tris: -1`, and it came back **2.11×** — past the ~2× line, confirming the
+100k route would have been wasted money on it. Nobody had to guess: the ratio was read before any
+bake was chosen.
+
+**`error` 0.01, not the habitual 0.005.** Swept on both clean subjects at target 1200: block
+0.005 → 5,356, **0.01 → 3,198**, 0.02 → 2,496, asymptote 2,314; pipe 0.005 → 7,224,
+**0.01 → 5,890**, 0.02 → 5,670, asymptote 5,602. 0.01 halves the block for no visible loss at prop
+scale, and it is what keeps texels/tri honest — at `tex` 512 the pipe reads **45** texels/tri, right
+on the ~43 a TRELLIS 2048 export is authored at, where 0.005 would have dropped it to 36 and under.
+
+**Both concrete props needed a `baseColor` darken, and the numbers say so before the eye does.** The
+prop family sits at mean sRGB ~46–49 (drum 46/47/52, crates 33/49/59, cable 32/47/56) against a
+floor of 65/68/62. Pipe baked at **86/87/79** (1.8×) and block at **110/110/108** (2.4×) — pale cast
+concrete, a lit lump against flat art. Uniform linear factors 0.35 and 0.22 land them at ~52 and
+~55, computed as `f = (target/measured)^2.2` — the same formula that reproduces the bags' shipped
+0.47 exactly. All three MR maps are pure green (R=0, B=0): rough dielectric, no `dropMR`.
+
+**Result: 17 props for 76,968 tris, against 14 props for 139,557 — −45% while placing three more.**
+Per prop 9,968 → 4,528. Draw calls did not move: with 7 table entries and 5 drawing in this level
+(crates and cable rolled zero placements, and `Models.instanced` builds no mesh for an empty list),
+the topbar read 50–52 dc either side. Not an A/B — the window would not foreground, the HUD held at
+**1 FPS**, and `calls` swings 29–44 on pose alone down there. The tri number is the honest one; it
+is inventory × instance count and pose-independent.
+
+Placement re-verified headless on the demo tunnel with the new table: 14 props over 63 eligible
+faces, **zero misplacements** (every one on a floor cell, pinned to a genuinely solid neighbour at
+exactly its own `r * h + PROP_CLEAR`), 0 duplicate cells, max |yaw| **1.923** against the 2.071
+camera-side bound, 2 corners and both taken by the corner pool. Live, every instance sits at exactly
+`h/2`.
+
+The last knob was scale, and it repeated the bags mistake before catching it. Heights are read off
+the drum as a ruler — it ships at `h` 1.8 for a real 0.88 m 200 L drum, so **one world unit ≈
+0.49 m**. The block went out at `h` 0.55 (a correct 0.40 × 0.27 × 0.19 m half-block) and read as a
+speck beside its neighbours in a per-batch tint pass; **0.7** is the shipped value. That ruler is
+also what killed the original "single brick" idea outright: a real brick is **0.44 world units**,
+under the 0.46 floor of the 2D `SewerDebris` litter the tunnels already scatter ~22 of per level for
+zero draw calls.

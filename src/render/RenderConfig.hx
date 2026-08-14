@@ -603,12 +603,15 @@ class RenderConfig {
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be
-    // decimated (see AGENTS.md), which is why the old sewer-pile-2 sack-and-crate heap is gone
-    sewerPile1: 'models/sewer-pile-1.glb',  // broken masonry rubble (still the old composite; bricks + pipe next pass)
+    // decimated (see AGENTS.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
+    // sewer-pile-2 sack-and-crate heap are both gone, split into the simple objects they were made of
     sewerDrum: 'models/sewer/drum.glb',     // 200L steel drum, upright
     sewerCrates: 'models/sewer/crates.glb', // two solid-walled plastic stacking crates
     sewerCable: 'models/sewer/cable.glb',   // heavy industrial cable coiled flat
     sewerBags: 'models/sewer/bags.glb',     // three tied refuse sacks heaped together
+    sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
+    sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
+    sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
