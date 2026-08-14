@@ -975,6 +975,55 @@ must take the height of the solid neighbour it faces, adjacent solid cells at di
 a filler quad or the plateau opens, and `SewerGround` places its ledge clutter at a hardcoded
 `WALL_H`.
 
+## Contact shadows stood up an inside wall corner
+
+The floor/wall junction has had fake contact shadows since the tunnels landed. The vertical corners
+never did, and that gap is structural rather than a tuning oversight: **nothing in the sewer lighting
+can darken a vertical corner.** `AmbientLight 3.95` is normal-blind; the `HemisphereLight 1.89` keys
+on `normal.y` and *both* faces of a vertical corner are vertical, so they take byte-identical hemi;
+and a pooled spot out in the corridor sees both walls at once. The only engine answer is GTAO, which
+measured **+140 calls / +5.4ms** and ships off.
+
+**It costs no draw call.** The strips ride the floor strips' own `InstancedMesh` — same
+`PlaneGeometry(1,1)`, same material instance, same `makeShadowGradient()` — so a whole level of them
+is extra matrices in an array that already existed. No new program, no warm change, no art. Their
+alpha is `SHADOW_ALPHA` by construction rather than a knob of their own. Live habitat: **21 inside
+corners → 42 strips, 32 emitted**, strip batch **102 → 134**. The 10 dropped are on `dir 1` faces,
+whose inward normal is `-Z` against a camera always at +Z looking back along `-Z` — backface-culled
+in every pose, so those strips could never draw.
+
+**Orientation: a yaw alone cannot place one.** The gradient runs along the quad's local +Y (v=1 is
+the transparent end), so standing it up means a quarter turn about local Z first — and *which*
+quarter turn depends on which END of the face the corner sits at, because yaw sets the normal and the
+fade direction together. Mirroring instead would flip the winding off `FrontSide`. So: two base
+quaternions, picked by `-nz * ax + nx * az < 0` against the wanted fade direction, then
+`Math.atan2(nx, nz)` for the yaw — the same idiom `SewerProps` uses on its summed normal.
+
+**And they must MEET, not cross.** Each strip stands `WALL_SHADOW_EPS` off its own wall, so a strip
+running from the bare corner would poke that same distance past its perpendicular twin and paint a
+small double-dark cross. Each therefore *starts* `WALL_SHADOW_EPS` along the wall as well, which is
+exactly the twin's stand-off. Same lesson as the chamfer mitre, one entry above.
+
+**Draw order was a real bug, not a nicety.** All of this is transparent with `depthWrite` off, and
+every piece is a level-wide merge whose object origin is `(0,0,0)` — so three's transparent sort
+compares an identical `z` for all of them and falls through to `a.id - b.id`, the order the meshes
+were **constructed**. `SewerDetail.build` ran `grime, shadows, decals`, which put an `alphaTest`'d
+crack decal *over* the corner shadow, replacing it rather than tinting under it. Now `grime, decals,
+shadows`. `SewerStyle.WALL_SHADOW_EPS 0.07` also has to clear `DECAL_EPS 0.05` for the same reason,
+as a physical gap rather than `polygonOffset`.
+
+`TINT_CORNER` went **0.75 → 0.90**. The vertex term and the strip stack multiplicatively, and 0.75
+under a 0.55-alpha black put the corner at **0.34 of base** — a hole. The vertex term is now the
+broad wash under the strip, and the only thing covering the chamfer and its stop triangle, which
+stand above the strip's `WALL_H - CAP_CHAMFER` top.
+
+Verified headless on the demo before looking at it, `SewerGeom.build` into a throwaway
+`THREE.Scene`: **96 strip instances = 84 flat + 12 vertical**, against 8 inside corners with 4 of
+them camera-side (8×2 − 4 = 12). Every vertical instance decomposed and checked: spans exactly
+y 0 → 2.75, exactly `WALL_SHADOW_W` wide, normal points into a floor cell with masonry behind it, and
+its opaque end sits at exactly 0.07 **both** off the wall and along it from the corner lattice — the
+meet-don't-cross invariant. Zero failures on all five.
+
 Also found and NOT acted on: `dir == 1` (south) wall faces have normal `(0,0,-1)` and
 `CAMERA_SEWER` always sits at +Z looking −Z, so **those quads are backface-culled in every pose** —
 along with their grime and decals, which is ~a quarter of both passes wasted. The wall quads

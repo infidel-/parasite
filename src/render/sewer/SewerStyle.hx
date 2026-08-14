@@ -90,7 +90,12 @@ class SewerStyle
   // — see SewerGeom.tint for why anything per-face seams
   public static inline var TINT_AMP = 0.15;     // +/- value swing of the lattice noise
   public static inline var TINT_FOOT = 0.80;    // darkening at the foot of a wall (the floor crease)
-  public static inline var TINT_CORNER = 0.75;  // extra darkening down an inside corner's vertical line
+  // extra darkening down an inside corner's vertical line. WALL_SHADOW_W owns that corner now, with
+  // a far tighter falloff than a vertex ramp across a whole 4-unit face can give, so this is only
+  // the broad wash under it — and the one thing covering the chamfer and its stop triangle, which
+  // stand above the strip's WALL_H - CAP_CHAMFER top. it was 0.75 before the strips; stacked with
+  // one that put the corner at 0.75 * (1 - SHADOW_ALPHA) = 0.34 of base, which is a hole
+  public static inline var TINT_CORNER = 0.90;
   // lift on the chamfer, so the bevel still reads in the stretches of tunnel no lamp reaches. small
   // on purpose, because the hemisphere fill (SewerScene: sky 0x46536e over ground 0x141a22 at 1.89)
   // already ramps it: a flat cap takes the sky colour whole, a vertical face the midpoint and a 45
@@ -110,6 +115,22 @@ class SewerStyle
   public static inline var SHADOW_W = 1.1;      // how far the shadow reaches out from the wall
   public static inline var SHADOW_ALPHA = 0.55; // darkness right at the wall, fading to 0 outward
   public static inline var SHADOW_Y = 0.02;     // lift off the floor so it never z-fights the walkway
+
+  // --- the same contact darkening stood UP an inside wall corner (render.sewer.SewerDetail) ---
+  // nothing in the sewer lighting darkens a vertical corner, and that is structural rather than a
+  // tuning gap: AmbientLight is normal-blind, the hemisphere fill keys on normal.y and BOTH faces of
+  // a vertical corner are vertical (so they take byte-identical hemi), and a spotlight out in the
+  // corridor sees both walls at once. the only engine answer is GTAO, which measured +140 calls and
+  // ships off. these rides the floor strips' own InstancedMesh — same PlaneGeometry, same material,
+  // same gradient — so a whole level of them costs no extra draw call and no extra program.
+  // its alpha is therefore SHADOW_ALPHA by construction, not a knob of its own
+  public static inline var WALL_SHADOW_W = 1.1;    // reach along each face, out from the corner
+  // stand-off from the wall plane. must clear DECAL_EPS (0.05) or a crack decal in the corner draws
+  // over the shadow instead of under it, and it is a PHYSICAL gap rather than polygonOffset — see
+  // the standing note in docs/3d-render.md, where polygonOffset alone has failed three times.
+  // it is also the distance the strip starts out from the corner itself, which is the same number
+  // its perpendicular twin stands off by, so the two meet in plan instead of crossing
+  public static inline var WALL_SHADOW_EPS = 0.07;
 
   // ledge-top clutter and floor decals, both TOP-DOWN art laid flat (render.sewer.SewerGround).
   // these dress the two surfaces that actually fill the screen: measured on the habitat, wall faces

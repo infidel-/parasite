@@ -22,9 +22,15 @@ class SewerDetail
 // all sewer dressing into the scene
   public static function build(scene:Scene, m:Sewer):Void
     {
+      // shadows LAST of the three. everything here is transparent with depthWrite off, and three
+      // sorts transparent draws by renderOrder, then by the object's own z — which is identical for
+      // all of them, since each is a level-wide merge whose object origin sits at (0,0,0). So the
+      // tie-break decides, and that is `a.id - b.id`, i.e. the order the meshes were CONSTRUCTED.
+      // a corner shadow has to land over the wear that shares its corner: a decal is alphaTest'd, so
+      // where it is opaque it would otherwise replace the shadow rather than tint under it
       grime(scene, m);
-      shadows(scene, m);
       decals(scene, m);
+      shadows(scene, m);
     }
 
 // ---------------------------------------------------------------------------------------------
@@ -225,6 +231,8 @@ class SewerDetail
 //   radial — a floor cell whose DIAGONAL neighbour alone is solid. that is the one nook two
 //            perpendicular strips cannot reach; at an ordinary inside corner the two strips already
 //            overlap, and their blend is the corner darkening, so a radial there would double-darken
+//   corner — the same strip stood UP an inside corner's two wall faces. rides the strip set's own
+//            InstancedMesh (same quad, same material, same gradient), so it costs no draw call
   static function shadows(scene:Scene, m:Sewer):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
@@ -246,6 +254,27 @@ class SewerDetail
           pos.set(px, y, pz);
           scl.set(sx, sz, 1);
           arr.push(new Matrix4().compose(pos, q, scl));
+        }
+      // and the two quarter turns that stand the same quad UP on a wall face, so local X becomes its
+      // height and local Y the run the gradient fades along. WHICH quarter turn depends on which end
+      // of the face the corner sits at: yaw alone cannot flip the gradient without taking the
+      // normal with it, and a mirror would flip the winding off FrontSide
+      var qzA = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2);
+      var qzB = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -Math.PI / 2);
+      var wh = SewerStyle.WALL_H - SewerStyle.CAP_CHAMFER; // the flat face; the bevel takes the rest
+      var we = SewerStyle.WALL_SHADOW_EPS;
+      // one vertical corner shadow: standing on the face whose inward normal is (nx,nz), opaque at
+      // the corner (cx,cz) and fading out along (ax,az), the direction along that face away from it
+      inline function pushWall(cx:Float, cz:Float, nx:Float, nz:Float, ax:Float, az:Float):Void
+        {
+          // with qzA the transparent end lands at the normal turned a quarter clockwise, so the
+          // other end of the face is the one that needs qzB
+          var flip = -nz * ax + nx * az < 0;
+          var off = we + SewerStyle.WALL_SHADOW_W / 2;
+          q.setFromAxisAngle(up, Math.atan2(nx, nz)).multiply(flip ? qzB : qzA);
+          pos.set(cx + ax * off + nx * we, wh / 2, cz + az * off + nz * we);
+          scl.set(wh, SewerStyle.WALL_SHADOW_W, 1);
+          stripM.push(new Matrix4().compose(pos, q, scl));
         }
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -280,6 +309,28 @@ class SewerDetail
             diag(1, -1, Math.PI / 2, x1 - R / 2, z0 + R / 2);
             diag(-1, 1, -Math.PI / 2, x0 + R / 2, z1 - R / 2);
             diag(1, 1, 0.0, x1 - R / 2, z1 - R / 2);
+            // inside corners, where the walls take the strip the floor already has. the two faces
+            // meeting here are both vertical, so no light in the tunnel tells them apart — see
+            // SewerStyle.WALL_SHADOW_W. the two strips of one corner are perpendicular, each
+            // darkening its own face, and each starts at the other's stand-off so they meet
+            inline function corner(dc:Int, dr:Int):Void
+              {
+                if (SewerModel.isFloor(m, col + dc, row) ||
+                    SewerModel.isFloor(m, col, row + dr))
+                  return;
+                var cx = dc < 0 ? x0 : x1;
+                var cz = dr < 0 ? z0 : z1;
+                // the z face is skipped when it is the camera-side one: its inward normal would be
+                // -Z against a camera that always sits at +Z looking back along -Z, so it is
+                // backface-culled in every pose and the strip could never draw (SewerProps.CAM_DIR)
+                if (dr < 0)
+                  pushWall(cx, cz, 0, -dr, -dc, 0);
+                pushWall(cx, cz, -dc, 0, 0, -dr);
+              }
+            corner(-1, -1);
+            corner(1, -1);
+            corner(-1, 1);
+            corner(1, 1);
           }
       var geo = new PlaneGeometry(1, 1);
       // FrontSide, unlike the RoofShadows original: the quads lie flat with their normal at +Y and
