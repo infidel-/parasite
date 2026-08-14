@@ -109,6 +109,18 @@ class Models {
         }, null, function(_)
         {
           js.Browser.console.warn('[models] load failed ' + path);
+          // hand every waiter an EMPTY template instead of dropping them. instanced() finds no mesh
+          // and draws nothing, place() adds an empty group — but a caller that SEQUENCES on the
+          // callback still advances. dropping them stalled View's boot warm chain on its Promise,
+          // which left the renderer bound to the warm render target and never disposed the composer
+          // same pivot-wraps-root shape normalize() builds, just with nothing in it: instanced()
+          // reads pivot.children[0] unconditionally and would throw on a bare Group
+          var pivot = new Group();
+          pivot.add(new Group());
+          var t:ModelTemplate = { pivot: pivot, height: 0.0 };
+          cache.set(path, t);
+          for (f in waiting.get(path))
+            f(t);
           waiting.remove(path);
         });
     }

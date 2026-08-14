@@ -155,6 +155,26 @@ class SewerStyle
   // LampLights gates player distance on
   public static inline var EXIT_LAMP_SOUTH = 2.0;
 
+  // --- 3D clutter heaped against the walls (render.sewer.SewerPiles) ---
+  // the first CONVEX geometry down here. the shell is a concave box and everything dressing it is
+  // flat, so until these a wall bracket's raking beam had nothing to throw a shadow off
+  public static var PILE_MODELS = [
+    render.RenderConfig.MODELS.sewerPile1,
+    render.RenderConfig.MODELS.sewerPile2,
+  ];
+  // one pile per 2x2 block, gated per eligible wall FACE exactly as WALL_LAMP_PCT is
+  public static inline var PILE_PCT = 14;
+  // world height. CELL is 4 and WALL_H 3.0, so this is knee-high: tall enough to break the beam of a
+  // bracket at WALL_LAMP_Y 0.6, short enough that it never hides an actor standing behind it
+  public static inline var PILE_H = 0.7;
+  // how far into the cell the pile's centre sits off the wall plane. Models.instanced centres a
+  // prop's footprint, so this is about half a pile's own depth: enough that it does not clip through
+  // the masonry, little enough that it still reads as heaped AGAINST it
+  public static inline var PILE_MARGIN = 0.55;
+  // +/- yaw wobble (radians) around the face's outward facing, so two piles on parallel walls are
+  // not the same silhouette twice
+  public static inline var PILE_YAW_JITTER = 0.5;
+
   // --- ground litter (render.sewer.SewerDebris), per 1000 floor cells ---
   // rooms stay tidier than the tunnels as the old 2D pass had it, but only just: a habitat is pinned
   // to 4-5 rooms of 5x5, so 62-77% of its floor IS room and the low rate was the one underfoot. these

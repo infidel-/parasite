@@ -538,3 +538,161 @@ south and the radius swallows that. It also rejects the cell *before* the block'
 built, and the density gate multiplies by `faces.length`, so blocks near a shaft thin out on their own
 while per-face density everywhere else is untouched. Habitat: **12 → 11 fixtures**, nearest one now
 **10.17 units (2.54 cells)** from any shaft, every other one further. 49 → 44 draw calls.
+
+## An image-to-3D pipeline, and the first thing convex in a tunnel
+
+Three glbs had reached `models-src/` before this, all generated from images by hand outside the repo.
+The gap between "gpt-image made a picture" and "a glb is in `models-src/`" is now a tool:
+**`runware-trellis-2` MCP** (`~/git/runware-trellis-2-mcp`, one tool `image_to_3d`), wrapping
+Microsoft TRELLIS 2 on Runware. ~350 lines of node/TS, registered at user scope; the key is read from
+the shell at call time rather than at startup, so the process boots and lists tools without one. Its
+default output dir resolves to `<git root>/models-src`, so a generated model lands where `make models`
+already looks. Two settings are load-bearing: **never send `dracoCompression`** (`Models.get` builds a
+bare `GLTFLoader`, so a Draco glb fails to load behind a `console.warn`), and `textureFormat: "PNG"`
+because the bake re-encodes to PNG anyway. It reports `meshCount`, because `Models.instanced` takes
+`firstMesh` and drops the rest silently. ~$0.02-0.03 a model, about a minute each.
+
+**Trap: `make models` could not reach the tri target, and the error cap was the wrong lever.**
+*(The conclusion drawn here — "decimate on the TRELLIS side, always" — is over-general, and the piles'
+real quality defect was a different setting entirely. See "The setting the web sends and the API does
+not".)* Asking
+TRELLIS for `decimationTarget 20000` and meshopt for 4000 stalled at **15,824 / 13,153 tris**. Raising
+`error` 0.005 → 0.03 — six times the distortion budget — only got to **13,318 / 8,975**. meshopt will
+not collapse across attribute discontinuities, and a TRELLIS mesh is one dense UV atlas full of them;
+the exit ladder hit its 5,000 only because it had 93,501 tris of slack. Decimate where the topology is
+known instead: ask TRELLIS for `decimationTarget 5000` (its API floor) and set `tris: -1`. Result
+**4,771 / 4,845 tris**, 524KB / 491KB — in band, and with authored normals still matching the surface,
+which is the artifact `MODEL_SMOOTH_NORMALS` exists to paper over.
+
+**`SewerPiles`** scatters them against wall faces, one per 2x2 block, gated
+`PILE_PCT 14 × faces.length`, `SewerModel.mix` on its own multipliers, exit cells and their ring
+rejected. Hugging a wall is also what keeps the walkway clear. `PILE_H 0.7`, `PILE_MARGIN 0.55` off
+the wall plane, ±0.5 rad yaw wobble. No per-frame `Models.cull`: two static batches of a dozen could
+never drop below one call each.
+
+Checked headlessly *before the art existed*, through a `places(m)` split out of `build` — on the 21x21
+demo, **13 piles over 84 wall faces (15.5% against `PILE_PCT` 14), longest axis run 2, zero
+misplacements** (every one offset by exactly `CELL/2 − PILE_MARGIN` toward a *solid* neighbour).
+
+**Cost, measured foregrounded and interleaved, medians of 18 samples each** (piles `visible` on/off,
+which touches no program key so there is no compile inside the window):
+
+| | on | off | Δ |
+|---|---|---|---|
+| GPU | **2.83ms** | 2.45ms | **+13.4%** |
+| submit | 1.50ms | 1.60ms | noise — it moved the wrong way |
+| calls | 52 | 50 | **+2** |
+| tris | 79,374 | 12,136 | **+67,238** |
+
+14 piles (8 + 6); the tri delta is exactly `8×4771 + 6×4845`. 13.4% of GPU for a dozen props is real,
+against a 2.83ms frame with a 16.7ms budget. `submit` is untouched, which is the expected shape: two
+more `InstancedMesh` draws are nothing to the CPU and 67k more triangles are something to the GPU.
+
+**Do they finally give a wall bracket something to cast off? Barely — but the shadow is free.** The
+previous pass measured six brackets lighting 0.43% of the view and shadowing nothing, because every
+wall within their reach has rock behind it. In-frame A/B (offscreen target, both renders inside one
+eval, all 12 spot shadows forced to refresh): piles casting vs not = **0.021% of the view, max delta
+18/255**, against a 0-pixel reproducibility control and a 0-pixel restore control. Real and nearly
+invisible — in that view most piles sit outside any lamp pool. But `castShadow` on vs off (both
+permutations warmed first, since it IS a program key) measured **2.65 vs 2.67ms, −0.8%, calls
+identical** — nothing. So the whole 13.4% above is main-pass, the shadow-pass half is free, and there
+is no case for turning it off. The lever moves; it is still not the answer to that open lead.
+
+**Trap, surfaced only because the glbs did not exist yet: a failed model load stalled boot.**
+`Models.get`'s error path dropped its waiting callbacks, and `View.warmup` *sequences* on one — so two
+404s left the warm chain's Promise unresolved forever, with `comp.dispose()` and
+`renderer.setRenderTarget(null)` never running and the renderer left bound to the warm target.
+Pre-existing (the exit ladder had the same exposure); two more paths just made it likely to fire.
+Waiters now get an empty template — `instanced()` finds no mesh and draws nothing, but a sequencing
+caller advances. It has to carry a child Group: `instanced` reads `pivot.children[0]`
+unconditionally and a bare `Group` threw inside `firstMesh`.
+
+## The setting the web sends and the API does not
+
+The piles generated through the new tool came back visibly worse than the same reference run through
+Runware's web playground. Diffing the two request bodies gave three candidates: `decimationTarget`
+(100000 vs the 5000 the tool had settled on), `remeshProject` (**0.8 vs never sent**), and
+`textureFormat` (WEBP vs PNG). PNG is lossless, so it was out. The first diagnosis blamed
+`decimationTarget`, on the strength of the exit ladder arriving at 93,501 tris and looking right — and
+that diagnosis was **wrong**, because the two variables had never been separated: the bad piles had a
+low target *and* no projection factor.
+
+**`remeshProject` is the real defect, and its API default is the wrong one.** Runware documents it as
+*"projection factor for snapping remeshed vertices back to the original surface"*, default **0** — no
+snap-back, so the dual-contour remesh keeps its own rounded-off shape and the detail the reference was
+chosen for never lands. The playground sends 0.8. A further trap: the wire range is `(0, 1]`, so
+sending a literal `0` is **rejected** rather than treated as the default; it has to be omitted.
+`image_to_3d` now sends 0.8 unless told otherwise, plus `remesh_band` and a `meshCluster` pass-through.
+
+**Regenerating at 100k then decimating offline stalled at half the source.** meshopt cannot collapse
+an edge across an attribute discontinuity, so the number that predicts success is vertex count over
+*unique position* count:
+
+| mesh | tris | verts | unique pos | split |
+|---|---|---|---|---|
+| `sewer-exit` (ladder) | 93,501 | 55,080 | 46,778 | **1.18×** |
+| `sewer-pile-1` @100k | 96,577 | 130,974 | 41,042 | **3.19×** |
+| `sewer-pile-2` @100k | 98,961 | 201,441 | 29,452 | **6.8×** |
+| the same reference through the WEB playground | 98,425 | 132,205 | 42,713 | **3.10×** |
+
+That last row is the one that matters: the web export nobody complained about is split exactly as
+badly as ours. A viewer reporting "42,647 verts" is reporting the *welded* count. There was never a
+difference in the mesh — only in `remeshProject`, and in what the bake did next.
+
+The piles have *fewer* real vertices than the ladder and 3-7× as many total: near-per-triangle UV
+charts, a seam on every edge. The ladder is a hard surface with large flat charts; rubble and sacks
+are curved everywhere, so the unwrapper shatters. `meshCluster` tuning — 16 global iterations, 8
+refine, smoothing 4, cone threshold 2.6 rad — moved 3.19× to **3.15×**. A dead end, $0.04 to
+establish. Dropping `remeshProject` reached 2.46×, but that is paying with exactly the detail it buys.
+
+**`error` is not the lever, and the floor is hard.** Sweeping it locally on the 96k source:
+
+```
+weld()          error 0.005  96001 -> 54718
+weld()          error 0.02   96001 -> 52252
+weld()          error 0.30   96001 -> 52184      <- 60x the default cap, same answer
+weldByPosition  error 0.02   96001 ->  3776
+```
+
+**The thing actually killing it was `tex`, and it had nothing to do with the mesh.** The number to
+carry is TEXELS PER TRIANGLE. The source is authored at ~43 (96,971 triangles over a 2048² map). The
+config that shipped was 4,673 triangles at `tex: 256` — **14**. At that density every crack line and
+grain speckle in the atlas is gone and the prop reads as smooth flat shards, which is exactly what
+"looks like garbage" meant. `tex` was not shrinking the map, it was deleting it. Hold the ratio near
+what the source was authored at and the same 4,821-triangle mesh carries full crack detail.
+
+**Dead end worth recording: baking the atlas down to per-vertex `COLOR_0`.** It works mechanically —
+sample the atlas per vertex, drop the texture/UVs/MR map, weld by POSITION, and meshopt is free:
+**96,971 → 3,730 tris, 14,553KB → 77KB**, zero textures, measured at **+6.5% GPU** against the old
+config's +13.4%. Cheaper *and* it carried the full 97k silhouette. It was still wrong, because the
+premise was wrong: the atlas is not a per-triangle patch mosaic. 130,974 verts is **1.36×** the
+triangle count; a true per-triangle atlas would be 3×. Each patch carries real sub-triangle detail,
+and `COLOR_0` throws all of it away — the props came out as smooth white shards. Reverted, code
+removed. Two traps if it is ever right for a genuinely flat-shaded prop: sample the triangle's UV
+**centroid**, never the vertex's own UV (a vertex UV sits on a chart *corner*, which is the gutter
+between patches — sampling there reads the padding and the prop bakes near-black, which looks like a
+lighting bug and shows up in any plain glb viewer); and `COLOR_0` is **LINEAR** while a
+baseColorTexture is sRGB. The check that catches both: baked colour mean vs the atlas's own mean.
+
+**Shipped:** TRELLIS `decimationTarget 20000` + `remeshProject 0.8`, `"tris": -1`, `"tex": 1024`
+(52 texels/tri), with `sewer-pile-{1,2}-100k.glb` kept in `models-src` as archival masters — same
+idiom as the existing `street-lamp-raw.glb`. For a subject meshopt cannot decimate, the file
+`models.json` points at has to arrive at the game budget already; Runware unwraps and bakes *after*
+its own decimation, so its output is clean at any target. **19,223 / 19,712 tris**.
+
+Cost, window focused, interleaved, medians of 17: GPU **3.44 vs 2.44ms = +41%**, `submit` 1.70 vs
+1.29, calls **+2**, tris **+272,056**. Kept, because +41% here is **+1.0ms of a 16.7ms budget in a
+scene reporting 14.79ms idle** — the tunnel is the lightest scene in the game at 52 calls against the
+city's 168, and piles do not exist in the city. Worth stating as a standing note: a percentage means
+nothing without its denominator. The two cheaper configs measured on the same props were +13.4%
+(4,673 tris / `tex: 256`) and +6.5% (vertex colours), and both looked worse. If a weaker machine ever
+makes this hurt, the fallback is `decimationTarget 5000` + `tex: 512` — the same 51 texels/tri,
+verified to carry the crack detail, at 67k tris instead of 272k.
+
+**Then pile-2 rendered pure black under debug key `1`.** Its baked MR map is uniformly **cyan**;
+glTF packs G = roughness, B = metalness, so that is metalness 1 across sacks, wood and cloth alike.
+A metal has no diffuse term, `1` hides every light, and with no analytic light and no env map there is
+nothing left to shade — so a fully metallic prop reads BLACK under WYSIWYG, not chrome. `sewer-pile-1`,
+same generator and same day, came out pure green: a correct rough dielectric, no change needed.
+`dropMR` on pile-2 alone. Dumping the MR texture answers this in one look and is cheaper than any
+amount of in-engine A/B.

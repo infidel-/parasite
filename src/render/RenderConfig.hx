@@ -601,6 +601,8 @@ class RenderConfig {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
     sewerExit: 'models/sewer-exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
+    sewerPile1: 'models/sewer-pile-1.glb',  // rubble heaped against a tunnel wall (render.sewer.SewerPiles)
+    sewerPile2: 'models/sewer-pile-2.glb',  // ^ the second variant: sacks, a crate and scrap
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
