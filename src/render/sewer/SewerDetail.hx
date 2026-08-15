@@ -55,9 +55,6 @@ class SewerDetail
         { tex: SewerStyle.BROKEN, lo: 1.2, hi: 2.0, baseY: 0.5, tint: 0xffffff },
       ];
       var bufs = [for (_ in cats) MeshBufTools.make()];
-      // the flat part of the face only: above this the wall recedes into the CAP_CHAMFER bevel, and
-      // a decal set DECAL_EPS proud of the face plane would hang off it
-      var H = SewerStyle.WALL_H - SewerStyle.CAP_CHAMFER;
       var eps = SewerStyle.DECAL_EPS;
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -83,6 +80,11 @@ class SewerDetail
                 var ci = (hh >> 3) % cats.length;
                 var cat = cats[ci];
                 var s = cat.lo + ((hh >> 11) % 1000) / 1000.0 * (cat.hi - cat.lo);
+                // the flat part of THIS face only: above it the wall recedes into the CAP_CHAMFER
+                // bevel and a decal set DECAL_EPS proud of the face plane would hang off it. per
+                // face rather than one constant, because the top edge now tilts with the sagging
+                // cap (SewerGeom.capY) — faceH takes the LOW end, which is the one that clamps
+                var H = SewerGeom.faceH(x0, x1, z0, z1, dir);
                 // a face is only CELL wide and WALL_H tall, so clamp hard: the quad must clear the
                 // cell's side edges (or it would cut into the neighbouring face at a right angle)
                 // and stay off the floor and the ledge cap
@@ -261,12 +263,18 @@ class SewerDetail
       // normal with it, and a mirror would flip the winding off FrontSide
       var qzA = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2);
       var qzB = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -Math.PI / 2);
-      var wh = SewerStyle.WALL_H - SewerStyle.CAP_CHAMFER; // the flat face; the bevel takes the rest
       var we = SewerStyle.WALL_SHADOW_EPS;
       // one vertical corner shadow: standing on the face whose inward normal is (nx,nz), opaque at
       // the corner (cx,cz) and fading out along (ax,az), the direction along that face away from it
       inline function pushWall(cx:Float, cz:Float, nx:Float, nz:Float, ax:Float, az:Float):Void
         {
+          // the face's top edge tilts (SewerGeom.capY), and one instance matrix cannot taper a quad,
+          // so the strip is a rectangle and something has to give. it takes the height at the CORNER
+          // — where its gradient is fully opaque and a mismatch would read — and lets the far end,
+          // where the gradient has faded to nothing, be the one that disagrees. taking the LOWER of
+          // the two ends instead leaves a lit sliver in the corner itself wherever the edge
+          // descends, which is exactly the wrong place to put the error
+          var wh = SewerGeom.capY(cx, cz) - SewerStyle.CAP_CHAMFER;
           // with qzA the transparent end lands at the normal turned a quarter clockwise, so the
           // other end of the face is the one that needs qzB
           var flip = -nz * ax + nx * az < 0;

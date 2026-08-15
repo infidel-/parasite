@@ -85,6 +85,18 @@ class SewerStyle
   // cell — enough to break the line, not enough to become a design feature
   public static inline var CAP_CHAMFER = 0.25;
 
+  // how far the cap SAGS below WALL_H, hashed per lattice point (render.sewer.SewerGeom.capY).
+  // the chamfer broke the silhouette into two edges; this stops those edges being LEVEL, which is
+  // the other half of "orthogonal". the top of every wall now tilts between its two corners, so a
+  // run of tunnel draws a shallow zigzag instead of a ruled line and no corner is a right angle in
+  // elevation.
+  // keyed off the lattice, not the cell, and that is what makes it free: a per-CELL height steps at
+  // every boundary, and a step between two SOLID cells is a hole through the plateau unless a filler
+  // quad is emitted on it — which then fights the CAP_CHAMFER inset at every corner. sharing the
+  // corner heights instead welds the plateau by construction, with no extra geometry and no cases.
+  // DOWNWARD only: WALL_H is the camera-clearance number and nothing may rise above it
+  public static inline var CAP_SAG = 0.4;
+
   // --- per-vertex tint on the shell (render.sewer.SewerGeom.tint) ---
   // free unevenness: no art, no draw calls, no tris. keyed off the cell LATTICE, never off the face
   // — see SewerGeom.tint for why anything per-face seams
@@ -93,7 +105,7 @@ class SewerStyle
   // extra darkening down an inside corner's vertical line. WALL_SHADOW_W owns that corner now, with
   // a far tighter falloff than a vertex ramp across a whole 4-unit face can give, so this is only
   // the broad wash under it — and the one thing covering the chamfer and its stop triangle, which
-  // stand above the strip's WALL_H - CAP_CHAMFER top. it was 0.75 before the strips; stacked with
+  // stand above the strip's top (capY less the chamfer). it was 0.75 before the strips; stacked with
   // one that put the corner at 0.75 * (1 - SHADOW_ALPHA) = 0.34 of base, which is a hole
   public static inline var TINT_CORNER = 0.90;
   // lift on the chamfer, so the bevel still reads in the stretches of tunnel no lamp reaches. small

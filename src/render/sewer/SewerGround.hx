@@ -32,7 +32,7 @@ class SewerGround
           { tex: SewerStyle.TOP_MOSS, w: 1.3, d: 1.1, alpha: 1.0, organic: true },
         ],
         pct: SewerStyle.LEDGE_PCT,
-        y: SewerStyle.WALL_H + SewerStyle.LEDGE_DECAL_Y,
+        y: SewerStyle.LEDGE_DECAL_Y,
         margin: SewerStyle.LEDGE_MARGIN,
         solid: true,
         cross: false,
@@ -146,7 +146,7 @@ class SewerGround
             ez *= fit;
             var cx = cell.col * CELL - half + CELL / 2 + ((h3 % 1000) / 1000.0 - 0.5) * (span - ex);
             var cz = cell.row * CELL - half + CELL / 2 + (((h3 >> 12) % 1000) / 1000.0 - 0.5) * (span - ez);
-            top(bufs[ti], cx, cz, w, d, o.y, ang);
+            top(bufs[ti], cx, cz, w, d, ang, o);
           }
       for (i in 0...o.types.length)
         {
@@ -196,10 +196,15 @@ class SewerGround
       return organic ? 0.70 + f * 0.65 : 0.85 + f * 0.30;
     }
 
-// one flat top-down quad centred at (cx,cz), w x d world units, at height y, turned `ang` about the
-// vertical. corner order matches SewerGeom.flat, and rotation preserves winding, so the computed
-// normal still comes out at +Y
-  static function top(b:MeshBuf, cx:Float, cz:Float, w:Float, d:Float, y:Float, ang:Float):Void
+// one top-down quad centred at (cx,cz), w x d world units, turned `ang` about the vertical and set
+// o.y above the surface it dresses. corner order matches SewerGeom.flat, and rotation preserves
+// winding, so the computed normal still comes out at +Y.
+//
+// the LEDGE pass takes its corner heights off SewerGeom.capAt, because the plateau sags per lattice
+// point and a rigid quad on a tilted cap sinks at one end and floats at the other. the floor is
+// genuinely flat, so it keeps the single constant. LEDGE_MARGIN (0.3) is wider than a cell's
+// CAP_CHAMFER inset, so every corner of a ledge decal lands on cap and never over the drop
+  static function top(b:MeshBuf, cx:Float, cz:Float, w:Float, d:Float, ang:Float, o:SewerScatterOpts):Void
     {
       var hx = w / 2;
       var hz = d / 2;
@@ -209,11 +214,13 @@ class SewerGround
         return cx + ox * ca - oz * sa;
       inline function pz(ox:Float, oz:Float):Float
         return cz + ox * sa + oz * ca;
+      inline function py(ox:Float, oz:Float):Float
+        return o.solid ? SewerGeom.capAt(px(ox, oz), pz(ox, oz)) + o.y : o.y;
       MeshBufTools.quad(b,
-        [px(-hx, hz), y, pz(-hx, hz)],
-        [px(hx, hz), y, pz(hx, hz)],
-        [px(hx, -hz), y, pz(hx, -hz)],
-        [px(-hx, -hz), y, pz(-hx, -hz)],
+        [px(-hx, hz), py(-hx, hz), pz(-hx, hz)],
+        [px(hx, hz), py(hx, hz), pz(hx, hz)],
+        [px(hx, -hz), py(hx, -hz), pz(hx, -hz)],
+        [px(-hx, -hz), py(-hx, -hz), pz(-hx, -hz)],
         [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]);
     }
 }

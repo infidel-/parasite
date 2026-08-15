@@ -44,21 +44,21 @@ class SewerGeom
             var z0 = row * CELL - half, z1 = z0 + CELL;
             // solid cell: cap it, so the camera looks down on a ledge and not on a paper-thin wall
             // edge. EVERY solid cell, not just the shell orthogonally touching floor — the caps
-            // form one continuous plateau at WALL_H, so an interior or diagonal-only solid cell
-            // left uncapped is a hole straight through the plateau to the background. 2 tris a
-            // cell into an already-merged mesh, so no extra draw call.
+            // form one continuous plateau (which SAGS per lattice point, see capY), so an interior
+            // or diagonal-only solid cell left uncapped is a hole straight through the plateau to
+            // the background. 2 tris a cell into an already-merged mesh, so no extra draw call.
             // every edge that overlooks a FLOOR cell is pulled back by CAP_CHAMFER to make room for
             // the wedge side() raises there — the two are exactly paired (a cap edge is inset iff
             // its neighbour emits a wall against it), so the plateau never opens a gap
             if (!m.floor[row][col])
               {
                 var c = SewerStyle.CAP_CHAMFER;
-                flat(ledge,
+                cap(ledge,
                   SewerModel.isFloor(m, col - 1, row) ? x0 + c : x0,
                   SewerModel.isFloor(m, col + 1, row) ? x1 - c : x1,
                   SewerModel.isFloor(m, col, row - 1) ? z0 + c : z0,
                   SewerModel.isFloor(m, col, row + 1) ? z1 - c : z1,
-                  SewerStyle.WALL_H, SewerStyle.LEDGE_TILE);
+                  SewerStyle.LEDGE_TILE);
                 continue;
               }
             // floor: one continuous walkway. the corridor centreline used to run a sludge tile
@@ -113,6 +113,83 @@ class SewerGeom
       return 1.0 + ((h % 2001) / 1000.0 - 1.0) * SewerStyle.TINT_AMP;
     }
 
+// cap height at a point on the cell lattice: WALL_H less a hashed sag, so the plateau — and the
+// silhouette line its edge draws — is never dead level. see SewerStyle.CAP_SAG for why this is
+// keyed off the LATTICE and not the cell (short version: a per-cell height steps, and a step
+// between two solid cells is a hole through the plateau that needs a filler quad the chamfer then
+// fights). two cells sharing an edge read the same two corner heights, so their caps meet exactly.
+// the CAP_CHAMFER inset is 0.25 of a 4-unit cell, so an inset corner rounds back to the lattice
+// point it came from and takes the height the wedge below it tops out at
+  public static function capY(x:Float, z:Float):Float
+    {
+      var ci = Math.round(x / CELL);
+      var ri = Math.round(z / CELL);
+      // its own multipliers, mixed — must not correlate with the tint, wall-variant, decal, ledge,
+      // floor-decal, wall-lamp, prop or litter rolls (SewerModel.mix on why raw hashes comb)
+      var h = SewerModel.mix((ci * 24036583) ^ (ri * 32582657));
+      return SewerStyle.WALL_H - (h % 1000) / 1000.0 * SewerStyle.CAP_SAG;
+    }
+
+// the cap surface at an arbitrary point, evaluated on the same two triangles cap() emits (quad
+// winds p0..p3 and indexes 0-1-2 / 0-2-3, so the diagonal runs from the -x/+z corner to the +x/-z
+// one, i.e. u + v = 1 in cell-local coordinates). anything laid FLAT on the plateau has to follow
+// this or it sinks into a sagging cap at one end and floats off it at the other
+  public static function capAt(x:Float, z:Float):Float
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var x0 = Math.floor((x + half) / CELL) * CELL - half;
+      var z0 = Math.floor((z + half) / CELL) * CELL - half;
+      var u = (x - x0) / CELL;
+      var v = (z - z0) / CELL;
+      if (u + v >= 1)
+        {
+          var h = capY(x0 + CELL, z0 + CELL);
+          return h + (1 - u) * (capY(x0, z0 + CELL) - h) + (1 - v) * (capY(x0 + CELL, z0) - h);
+        }
+      var h = capY(x0, z0);
+      return h + u * (capY(x0 + CELL, z0) - h) + v * (capY(x0, z0 + CELL) - h);
+    }
+
+// top of the FLAT part of a wall face on a cell edge: the LOWER of its two tilting corners, less
+// the chamfer. dir matches side()'s four. anything laid on a face has to clamp to this — above it
+// the wall recedes into the bevel, and the high end of a tilted top edge is not where the low one is
+  public static function faceH(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Float
+    {
+      var a = 0.0;
+      var b = 0.0;
+      if (dir < 2)
+        {
+          var z = dir == 0 ? z0 : z1;
+          a = capY(x0, z);
+          b = capY(x1, z);
+        }
+      else
+        {
+          var x = dir == 2 ? x0 : x1;
+          a = capY(x, z0);
+          b = capY(x, z1);
+        }
+      return (a < b ? a : b) - SewerStyle.CAP_CHAMFER;
+    }
+
+// one cell's ledge cap. the x/z bounds arrive already pulled in by CAP_CHAMFER on any edge
+// overlooking a floor cell, so a corner is NOT necessarily on the lattice — hence capAt, not capY.
+// an inset corner rounds back to the lattice point it came from, so capY there returns the height
+// of a point CAP_CHAMFER away, while the neighbouring cell (un-inset on that edge, because ITS
+// perpendicular neighbour is masonry) draws a straight line between the same two lattice heights
+// over the full cell. the two then disagree by (CAP_CHAMFER / CELL) * CAP_SAG and the plateau
+// cracks — measured 0.025 world units, one hairline down every inside corner. capAt IS that line
+  static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, t:Float):Void
+    {
+      var h0 = capAt(x0, z1);
+      var h1 = capAt(x1, z1);
+      var h2 = capAt(x1, z0);
+      var h3 = capAt(x0, z0);
+      MeshBufTools.quadC(b, [x0, h0, z1], [x1, h1, z1], [x1, h2, z0], [x0, h3, z0],
+        [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t],
+        [tint(x0, h0, z1), tint(x1, h1, z1), tint(x1, h2, z0), tint(x0, h3, z0)]);
+    }
+
 // one horizontal cell quad at height y, world-aligned UVs (never stretched)
   static function flat(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
     {
@@ -151,9 +228,7 @@ class SewerGeom
       var half = (CityConfig.GRID * CELL) / 2;
       var x0 = col * CELL - half, x1 = x0 + CELL;
       var z0 = row * CELL - half, z1 = z0 + CELL;
-      var H = SewerStyle.WALL_H;
       var k = SewerStyle.CAP_CHAMFER;
-      var fh = H - k;                            // top of the flat part; the wedge takes the rest
       var t = SewerStyle.WALL_TILE;
       var runX = dir < 2;                        // face on a z edge, running along x
       var p = 0.0;                               // wall plane on the other axis
@@ -185,6 +260,17 @@ class SewerGeom
       var o = -n * k;                            // the wedge top recedes into the masonry
       inline function pt(run:Float, y:Float, off:Float):Array<Float>
         return runX ? [run, y, p + off] : [p + off, y, run];
+      // this wall tops out at the CAP of the solid cell it faces, and that cap sags, so each END of
+      // the face has its own height and the top edge tilts between them.
+      // TWO samplers, and the difference between them is what keeps the plateau welded. the FACE
+      // top sits on the cell lattice and takes capY — both faces of an inside corner then read the
+      // same number for the vertical line they share. the WEDGE top sits CAP_CHAMFER further in,
+      // off the lattice, where a neighbouring cap edge is already drawing a straight line between
+      // two lattice heights, so it has to take THAT line (capAt). see cap() for what capY there costs
+      inline function lat(run:Float):Float
+        return runX ? capY(run, p) : capY(p, run);
+      inline function surf(run:Float, off:Float):Float
+        return runX ? capAt(run, p + off) : capAt(p + off, run);
       inline function tv(v:Array<Float>, mul:Float):Float
         return tint(v[0], v[1], v[2]) * mul;
       inline function perpSolid(pd:Int):Bool
@@ -203,17 +289,21 @@ class SewerGeom
       var aoE = perpSolid(pdE) ? SewerStyle.TINT_CORNER : 1.0;
       var f = SewerStyle.TINT_FOOT;
       var lift = SewerStyle.TINT_CHAMFER;
+      var f0 = lat(s) - k;                       // top of the flat face at each end...
+      var f1 = lat(e) - k;
+      var h0 = surf(s2, o);                      // ... and the wedge top above it, on the cap surface
+      var h1 = surf(e2, o);
       var b0 = pt(s, 0, 0);
       var b1 = pt(e, 0, 0);
-      var m0 = pt(s, fh, 0);
-      var m1 = pt(e, fh, 0);
-      var t0 = pt(s2, H, o);
-      var t1 = pt(e2, H, o);
+      var m0 = pt(s, f0, 0);
+      var m1 = pt(e, f1, 0);
+      var t0 = pt(s2, h0, o);
+      var t1 = pt(e2, h1, o);
       MeshBufTools.quadC(b, b0, b1, m1, m0,
-        [s / t, 0, e / t, 0, e / t, fh / t, s / t, fh / t],
+        [s / t, 0, e / t, 0, e / t, f1 / t, s / t, f0 / t],
         [tv(b0, f * aoS), tv(b1, f * aoE), tv(m1, aoE), tv(m0, aoS)]);
       MeshBufTools.quadC(b, m0, m1, t1, t0,
-        [s / t, fh / t, e / t, fh / t, e2 / t, H / t, s2 / t, H / t],
+        [s / t, f0 / t, e / t, f1 / t, e2 / t, h1 / t, s2 / t, h0 / t],
         [tv(m0, aoS), tv(m1, aoE), tv(t1, lift * aoE), tv(t0, lift * aoS)]);
       // chamfer stops. u runs off the OTHER axis here — the return face is parallel to the
       // perpendicular wall it dies into, and that wall's u is world-derived on this same axis
@@ -221,19 +311,23 @@ class SewerGeom
       if (diagSolid(pdS) &&
           perpSolid(pdS))
         {
-          var c1 = pt(s, H, o);
-          var c2 = pt(s, H, 0);
+          // the apex is ON the lattice corner, which is where the diagonal cell's un-inset cap
+          // reaches, so it takes the lattice height while the other top vertex takes the surface
+          var a0 = lat(s);
+          var c1 = pt(s, h0, o);
+          var c2 = pt(s, a0, 0);
           MeshBufTools.triC(b, m0, c1, c2,
-            [p / t, fh / t, (p + o) / t, H / t, p / t, H / t],
+            [p / t, f0 / t, (p + o) / t, h0 / t, p / t, a0 / t],
             [tv(m0, ao), tv(c1, lift * ao), tv(c2, lift * ao)]);
         }
       if (diagSolid(pdE) &&
           perpSolid(pdE))
         {
-          var c1 = pt(e, H, 0);
-          var c2 = pt(e, H, o);
+          var a1 = lat(e);
+          var c1 = pt(e, a1, 0);
+          var c2 = pt(e, h1, o);
           MeshBufTools.triC(b, m1, c1, c2,
-            [p / t, fh / t, p / t, H / t, (p + o) / t, H / t],
+            [p / t, f1 / t, p / t, a1 / t, (p + o) / t, h1 / t],
             [tv(m1, ao), tv(c1, lift * ao), tv(c2, lift * ao)]);
         }
     }

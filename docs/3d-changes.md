@@ -1029,3 +1029,105 @@ Also found and NOT acted on: `dir == 1` (south) wall faces have normal `(0,0,-1)
 along with their grime and decals, which is ~a quarter of both passes wasted. The wall quads
 themselves are not free to drop: `SewerGeom.add(..., casts = true)` and the shadow map renders from
 the light, not the camera.
+
+## The cap stops being LEVEL, and a lattice key is what makes it free
+
+The chamfer broke the silhouette into two edges. It did not stop those edges being dead level, which
+is the other half of "the tunnels read as boxes" — every wall top in the level sits at exactly
+`WALL_H`, so a run of corridor draws a ruled line and every corner is a right angle in elevation too.
+
+The report's proposal was a per-CELL height, `WALL_H − hash ∈ {0, 0.15, 0.30}`. **That formulation
+is what makes the job expensive, and the cost is not the height, it is the STEP.** Two adjacent
+solid cells at different heights leave a vertical gap in their shared edge — the same hole through
+the plateau this doc already records for an uncapped interior cell — so every solid/solid boundary
+needs a filler quad. Then the filler meets `CAP_CHAMFER`: at any corner where a perpendicular
+neighbour is floor, the cap it should reach has been pulled back by `c`, so a full-width filler
+sticks a zero-thickness fin `c` tall up through the bevel, and one inset to the cap's own outline
+leaves a `c`-wide notch between the two cells' wedges. Fixing that is a three-case classification of
+the filler's ends — the mitre problem again, on new geometry.
+
+**Keying the height off the LATTICE instead of the cell removes the entire class.** `capY(x, z)`
+hashes the *rounded* cell index, exactly as `tint` does, so it is a property of a grid POINT and not
+of a cell. Two cells sharing an edge read the same two corner heights and their caps meet exactly;
+a wall takes `capY` at each end of its run and its top edge tilts between them, landing on the same
+two points the neighbour's cap corner does. No step exists anywhere, so no filler exists, no case
+exists, and the tri count is untouched. The `CAP_CHAMFER` inset is 0.25 of a 4-unit cell, so an
+inset corner rounds back to the lattice point it came from and takes the height the wedge below it
+tops out at — the same rounding argument that already made the tint safe on an inset cap edge.
+
+What it costs is that nothing may assume `WALL_H` any more. Three consumers, all real:
+
+- `SewerDetail.decals` clamped to `WALL_H - CAP_CHAMFER`; now `SewerGeom.faceH`, the **lower** of the
+  face's two corners, since a decal has to clear the bevel at the low end of a tilted edge.
+- the vertical corner shadows took the same constant. They stand *off* the wall, so overshooting a
+  descending edge would show a black sliver against the background with nothing to hide it. Each
+  strip now takes the lower of its own two ends — the corner, and `WALL_SHADOW_W` along the edge,
+  interpolated, because the top edge is a straight line between two lattice heights.
+- `SewerGround`'s ledge clutter sat at a hardcoded `WALL_H + LEDGE_DECAL_Y`. A rigid quad on a
+  sagging cap sinks at one end and floats at the other, so `SewerGeom.capAt` evaluates the cap
+  surface at an arbitrary point — on the same two triangles `cap()` emits, diagonal `u + v = 1` —
+  and each decal corner is placed on it. The floor pass is genuinely flat and keeps its constant.
+
+`CAP_SAG` ships at **0.4**, downward only: `WALL_H` is the camera-clearance number and nothing may
+rise above it. 0.4 over a 4-unit cell is a 5.7° tilt, ~3.4° on screen at either preset.
+
+Verified headless on the demo, `SewerGeom.build` into a throwaway `THREE.Scene`: **every cap vertex
+sits on `capY` of its own lattice point (0 off), none above `WALL_H`, none below `WALL_H − CAP_SAG`,
+range 2.601–3.000**. Wall tris **352 against 84 faces × 4 + 16 stops = 352 exactly**, i.e. the sag
+added no geometry. The seam invariant from the mitre entry still holds with the heights moving:
+**0 interior misses**, 48 legitimate border verts (the demo puts floor on the grid edge). Ledge
+decals: 284 verts, every one at exactly `LEDGE_DECAL_Y` above the cap surface, max tilt within a
+single decal 0.182. Vertical corner strips: 12, tops now spread 2.370–2.664 where they were all
+2.750, and **0 standing above their own wall**.
+
+No `calls=` or `tris=` claimed, same limitation as the entries above — the HUD read 1 FPS. The tri
+count is inventory-identical by construction, and no material, program or draw call changed.
+
+## The sag shipped a hairline down every inside corner, and the chamfer inset is why
+
+"There are always seams on inner corners." Real, geometric, and a regression from the entry above.
+A 1-pixel pure-black line running out of every concave corner along the plateau, with the
+world-tiled texture and the shading continuous straight across it — which is the tell that both
+sides are **cap**, not a boundary between two different surfaces.
+
+`cap()` sampled `capY` at its four corners, and a corner overlooking a floor cell is not at a
+lattice point: it has been pulled back by `CAP_CHAMFER`. `capY` rounds it back to the lattice point
+it came from — which is exactly what makes the wedge/cap seam close, and exactly what breaks this.
+The neighbour across that edge is un-inset there (its own perpendicular neighbour is masonry), so it
+draws a straight line between the same two lattice heights over the **full** cell while the inset
+one covers 3.75 of it. Same endpoint values, different spans, so they diverge:
+
+```
+gap = (CAP_CHAMFER / CELL) * Δh = 0.0625 * Δh,   max 0.0625 * CAP_SAG = 0.025
+```
+
+Only at inside corners, because a cap edge-end insets iff its perpendicular neighbour is floor, and
+the two cells across a boundary disagree about that exactly where the corridor turns concave. A
+straight run agrees at both ends and is watertight, which is why the rest of the plateau was fine.
+
+**Fix: a vertex that is not on the lattice takes its height from the SURFACE, not the lattice.**
+`capAt` already evaluates the cap on the same two triangles `cap()` emits, and along a cell boundary
+that reduces to the shared edge — so it *is* the line the neighbour draws. `cap()`'s corners and
+`side()`'s wedge tops (at `(s2, p+o)`, not the un-inset `(s, p)`) now take it. `capAt` is exact at a
+lattice point, so nothing un-inset moves.
+
+The trap, and it is the reason this is two samplers and not one: the wall **face** top must stay on
+the lattice (`capY - k`). Give it `capAt` too and the two perpendicular faces of an inside corner
+sample at their own inset offsets, disagree, and the crack simply moves into the wall. Same for the
+chamfer stop — its apex is on the lattice corner (`capY`), its other top vertex on the inset plane
+(`capAt`), so the stop's top edge now slopes along the diagonal cell's cap edge instead of running
+flat through it. Face and wedge stop being exactly `k` apart, by at most 0.025, which is the point.
+
+Verified by a boundary-edge scan of the real emitted buffers (weld, count edge usage, keep the
+count-1 edges, look for a vertex lying in the plan-interior of one at a different height) on a 44×44
+grid at 50% floor — the demo tunnel is far too regular to exercise this: **295 cracks, max 0.0247,
+mean 0.0082, all 295 on the ledge mesh and all on a cell boundary line → 0 cracks.** Wall tris still
+352 on the demo, cap still inside `[WALL_H - CAP_SAG, WALL_H]`, all 352 face tops still on the
+lattice, 200 wedge tops with 0 interior seam misses.
+
+Second defect, same cause, fixed with it: the vertical corner shadow strip is a rectangle, and one
+instance matrix cannot taper a quad, so a tilting bevel means its top edge must disagree somewhere.
+It took `min` of its two ends, which puts the error **in the corner** — a lit sliver up to 0.072
+where the gradient is fully opaque. It now takes the height at the corner itself and lets the far
+end, where the gradient has faded to nothing, be the end that disagrees. All 12 demo strips land
+exactly on the bevel bottom at their corner.
