@@ -324,6 +324,14 @@ class Actors {
       decals.setDebris(list);
     }
 
+// the batched ground-decal materials (street debris + plain blood), for a caller that has to patch
+// them. they belong to the ACTOR layer rather than to the area, and their groups are built lazily on
+// the first paint that needs one — see render.decals.DecalBatch.materials
+  public function decalMaterials():Array<Dynamic>
+    {
+      return decals.materials();
+    }
+
 // the world point at an actor's head — the anchor every screen overlay projects from (edge
 // indicators, the hover tooltip, chat bubbles)
   inline function headPoint(a:Actor, out:Vector3):Void

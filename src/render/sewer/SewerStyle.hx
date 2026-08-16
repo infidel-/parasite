@@ -249,14 +249,73 @@ class SewerStyle
   // see, which is the one thing that would give the whole effect away
   public static inline var MASK_HIDDEN_ADD = 0.0;
   // mask texels per cell. the shape painted into it is a real visibility POLYGON, so this is only how
-  // finely that polygon is sampled — the canvas fill is antialiased, which carries the edge at
-  // sub-texel precision, and the texture's linear filter reconstructs it. 4 puts a whole 75x60 level
-  // at 300x240, i.e. one texel per world unit and a 288KB upload per player ACTION
-  public static inline var MASK_PX = 4;
+  // finely that polygon is sampled. it does NOT soften anything on its own — MASK_BLUR does that now.
+  // that hard case was briefly blamed on this and it was dropped to 2 — wrong lever, twice over: the
+  // 90-degree lines were the per-cell WALL REVEAL rects (MASK_WALL_FADE ramps those), and the jagged
+  // floor boundary was the blur that did not exist yet. so this is back at 4, where a revealed cell
+  // has enough texels across it to carry a ramp.
+  // 8 puts a habitat at 168x112 and a whole 75x60 level at 600x480. it was 4, and doubling it is only
+  // affordable because fadeCell stopped painting texel by texel — measured 3.78ms of a 3.90ms rebuild
+  // at 8, against 0.02ms for the polygon and 0.10ms for the composite, which is why the strip path in
+  // SewerMask.fadeCell exists. everything else here is resolution-INDEPENDENT: uScale/uOrigin are
+  // normalized, MASK_BLUR is in world units and converts at the filter, and the rest are in cells
+  public static inline var MASK_PX = 8;
+  // gaussian sigma the visibility plane is blurred by on its way into the mask, in WORLD UNITS —
+  // SewerMask.update converts to texels at the filter, so MASK_PX can move without rescaling the
+  // softness. the numbers below were swept at MASK_PX 4, where one texel WAS one world unit, so they
+  // carry over unchanged.
+  // without it the entire lit/dark transition on open floor is ONE antialiased texel — measured: 55
+  // intermediate texels over a whole habitat boundary, i.e. one per unit of boundary length — and a
+  // texel is ~30-38 screen pixels at the sewer camera, so bilinear reconstruction of that single
+  // coverage value puts a staircase of that same period along the edge. that is what read as jagged.
+  // it blurs the RED plane ALONE — the green masonry channel the wobble gates on is composited in
+  // separately and stays crisp, or the wobble would bleed a texel out onto open floor.
+  //
+  // THIS IS A CONVOLUTION, so widening the band has to come out of one side or the other: it eats
+  // into the lit region (a narrow corridor stops reaching full brightness) and it spills onto the
+  // hidden one (a wall's far side lifts off MASK_HIDDEN). there is no setting that only softens.
+  // measured on a habitat, live canvas — band is intermediate texels, dim is the share of genuinely
+  // lit texels that fall under 200, bleed is the mean red over texels the sweep never reached:
+  //   0.75 -> band  867, dim  1.5%, bleed  1.9   (the first version, still visibly a straight edge)
+  //   1.5  -> band 1485, dim  5.6%, bleed  5.2
+  //   2.0  -> HERE
+  //   2.5  -> band 2149, dim 18.8%, bleed  9.8
+  //   4.0  -> band 2874, dim 39.1%, bleed 17.4   (lit ground washes out, hidden walls glow)
+  // 2.0 is the knee: roughly twice the band of the first version, before the dim column runs away.
+  // push it if the boundary still reads as an edge, but check a ONE-CELL corridor when you do —
+  // that is where the dimming shows first, and it is why plain sigma cannot go much past this.
+  // 0 turns it off
+  public static inline var MASK_BLUR = 0.5;
+  // how deep into a lit wall cell the mask fades where it touches masonry the sweep never reached, in
+  // CELLS. this is what stops a run of lit wall ending on a right angle at a cell boundary. the
+  // unreached cell itself is never painted at all, which is what keeps it fully dark — a linear filter
+  // only bleeds half a texel, and holding the last lit texel a texel clear of the shared edge puts the
+  // whole ramp inside the cell that can actually be seen. 0 gives the old hard per-cell reveal back
+  public static inline var MASK_WALL_FADE = 0.5;
+  // how far the LEVEL'S OUTER RIM fades out, in cells — the mask's BLUE channel, which multiplies
+  // sewerVis after everything else.
+  // this is the one edge no amount of MASK_BLUR can soften, and not for want of trying: the blur is a
+  // convolution over the red plane, so it can only average the rim UP toward the lit interior (a sigma
+  // 2 kernel spans ~8 texels against fadeCell's 4, measured: rim vis 0.434 -> 0.511), and even a mask
+  // of exactly 0 still renders at MASK_HIDDEN. SewerGeom caps EVERY solid cell and insets only edges
+  // overlooking floor, so the area border's cap runs flush to the boundary and then there is NO
+  // GEOMETRY — a lit ledge against the clear colour, which is what "you can see where it just ends"
+  // was. blue is static, painted once per level and composited UNBLURRED, so it survives any sigma.
+  // it reaches zero, which is the whole point: SewerScene sets scene.background and scene.fog to the
+  // same DARK, and the opaque branch fades toward fogColor — so vis 0 lands EXACTLY on the background
+  // and the silhouette stops existing rather than merely dimming.
+  // 1.0 = the always-solid border ring and nothing else, so no playable floor is touched. RAISING IT
+  // PAST 1 EATS INTO FLOOR (the ring is one cell thick), which dims ground the player walks on
+  public static inline var MASK_EDGE_FADE = 1.0;
+  // how far the mask boundary wanders from where the polygon actually put it, in WORLD units (a cell
+  // is CityConfig.CELL = 4). WALL CELLS ONLY — the shader gates it on the mask's green channel, so an
+  // open-floor shadow edge keeps the exact polygon the sweep computed. purely cosmetic either way: it
+  // never moves what the player can see, and the actors do not read the mask at all. 0 turns it off
+  public static inline var MASK_WOBBLE = 0.3;
   // how far the SMOOTHED origin must travel, in cells, before the polygon is rebuilt. the mask
   // follows the player's sliding position rather than their logical cell, so this is what stops it
-  // rebuilding on motion nobody can see: one mask texel is 1 / MASK_PX = 0.25 cells, so this is a
-  // fifth of a texel. a move slides one cell over BASE_MS (150ms, ~9 frames at 60Hz) and smoothstep
+  // rebuilding on motion nobody can see: one mask texel is 1 / MASK_PX = 0.125 cells, so this is two
+  // fifths of a texel. a move slides one cell over BASE_MS (150ms, ~9 frames at 60Hz) and smoothstep
   // peaks at ~0.17 cells per frame, so it never merges frames through the middle of a slide — only at
   // its slow ends, which is exactly where nothing is happening. measured cost of one rebuild: 0.30ms
   // in the habitat (0.1 cell scan + 0.2 sweep/fill, upload under the timer's resolution at both mask

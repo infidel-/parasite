@@ -1127,6 +1127,16 @@ class View {
     // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
+    // the batched ground decals — street debris and plain blood — belong to the ACTOR layer, not to
+    // the area, and their instanced groups are built lazily by the paint pass just above, so there is
+    // no build-time moment for the tunnel mask to catch them the way every other surface is caught.
+    // without this the debris underfoot stayed at full brightness in a corridor nobody can see.
+    // gated because Actors is rebuilt per area but the mask uniforms are not: a patched material left
+    // over above ground would sample the last tunnel's canvas. patch() marks its own hook and
+    // early-outs, so a landed group is a couple of reads
+    if (Std.isOfType(area3d, render.sewer.SewerArea))
+      for (m in actors.decalMaterials())
+        render.sewer.SewerMask.patch(m);
     shockwave.update();
     updateHoverTooltip();
     // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a

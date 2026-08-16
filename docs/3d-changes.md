@@ -1214,3 +1214,240 @@ revealed wall cells blink at cell granularity — the loudest remaining disconti
 Side finding: the ~11-texel one-off on the first rebuild noted in the entry above is
 `AreaGame.canSeeThrough` lazily calling `recalcTile` on first touch. First rebuild warms the tiles,
 every one after reads cache.
+
+### Sewer LOS: the cell the origin straddles, and an edge hard only where it was straight
+Two defects in the mask above, both found by probing the live canvas, both shipped with the polygon.
+
+**The wall cell in the player's own column/row stayed dark however hard they stared at it.** Rays are
+aimed ONLY at segment corners, and the blocker one stopped on is recovered by stepping `STEP_EPS` past
+the hit — so a corner LEFT of the origin reveals the cell to its left, one RIGHT reveals the cell to
+its right, and the cell the origin straddles is aimed at by nothing. Measured, player at (10,6): on the
+long north wall column 10 read **0.00** while 9 and 11 read **1.00**; same on the south wall. Sweeping
+the origin across two cells proved the mechanism — the dark column is exactly **`floor(ox)`** at every
+sub-cell position (10.1→10.9 dark col 10, 11.25→11.5 dark col 11) and **vanishes when `ox` sits on a
+cell boundary**, where the corner ray has `rx ≈ 0` and steps into the cell correctly. It only shows on
+a STRAIGHT run: anywhere the geometry is irregular some other corner's ray crosses that face anyway,
+which is why the chamber walls beside the player were lit while the long walls were not. The smoothed
+origin did not cause it (`pcol + 0.5` straddles identically) but did add a ~1-frame flash mid-slide as
+`ox` crosses the integer. **Fix: four cardinal rays** — they hit a face at exactly `x = ox` / `y = oy`,
+which lands the step in precisely that cell. Complete rather than a patch: the straddle can only ever
+hit `floor(ox)` and `floor(oy)`. Cost 4 rays of ~270. After: N and S both **1.00**, and the sweep's
+dark set is a constant `[6,14]` (genuine occlusion) at every origin. No degeneracy — a vertical ray on
+a vertical face gives `|den| ~ 6e-17` and `castRay` rejects it as parallel, correctly.
+
+**The boundary was hard exactly where it was axis-aligned.** Canvas antialiasing writes no partial
+coverage on a texel-aligned straight edge, so a scanline through the player's row was a clean
+black/white step with no intermediate value anywhere, while diagonals ramped over 2-3 texels (107 mid
+texels of 4704, 64 runs, median 2). The tunnels are rectilinear, so most of the boundary was that hard
+case — and both sources are unavoidable: the hit-cell reveal `ctx.rect`s are always texel-aligned, and
+polygon edges run along wall faces. `MASK_PX` 4 → **2** doubles the only softening a straight edge
+gets, the linear ramp between two texels, to half a cell (habitat canvas 84×56 → 42×28, a 75×60 level
+150×120). 1 is the floor: a revealed wall cell would be one texel and could never read fully lit.
+Then `MASK_WOBBLE 1.2` world units of two-octave sine displacement on the sample UV, keyed on
+`vSewerMask` — **WORLD xz and nothing else**, which glues the wobble to the level so the polygon slides
+through it. Key it to anything the player carries and the whole boundary swims on every move, which is
+worse than the straight line it set out to fix. Sines rather than a hash on purpose: the job is to
+break a line, not to be statistically noisy, and a smooth offset keeps an edge an edge where white
+noise would dither it. No new programs (85 before and after), no new fetch, no draw calls.
+
+Rejected: a canvas blur. It keeps `MASK_PX` precision, but the benchmark read **1.6ms at 84×56 and
+0.5ms at 300×240** — cheaper at 15x the pixels, i.e. it measured the `getImageData` flush and not the
+blur. Not worth buying an unmeasured ~1ms per rebuild before looking at the free lever.
+> The REJECTION is SUPERSEDED by "Sewer LOS: blur the visibility plane, and fade the area border"
+> — re-measured with the flush amortized, the blur is **+0.08ms and flat across 15x the pixels**.
+> The free lever was the right thing to try first; it just did not cover open floor.
+
+### Sewer LOS: fade a lit wall into the dark, and wobble over masonry only
+`MASK_PX` 4 → 2 above was the WRONG LEVER and is reverted. The hard 90-degree lines were never the
+sampling density: they were the per-cell wall REVEAL, which painted a flat white rect and stopped at a
+cell boundary. Out on open floor a straight boundary is a real ray cast past a corner and reads wrong
+bent or blurred, so the two halves of the mask wanted opposite treatment, not one global softening.
+
+**A lit wall cell now fades toward masonry the sweep never reached** (`MASK_WALL_FADE`, 0.5 cells),
+painted per TEXEL because a cell can fade toward two sides at once and the value there is the MINIMUM
+of the two — no stack of `createLinearGradient` gives that. Affordable because it only runs at the ENDS
+of a lit run: interior cells still go into one path with one fill. The unreached cell is never painted
+at all, which is what keeps it fully dark — a linear filter bleeds half a texel, so holding the last
+lit texel a texel clear of the shared edge puts the whole ramp inside the cell that can be seen.
+Verified: red texels across a fading cell come out `255,255,191,63` (exactly `min(1, d/0.5)`), mirrored
+on the opposite side, and across ROWS where the dark neighbour is north — and **0 of 294 cells show any
+red bleed into an unreached wall**.
+
+**The wobble is now gated to masonry** by a WALLNESS channel in the mask's GREEN, so open floor keeps
+the exact polygon. Green is static per level — walls do not move — so it is painted once into a
+`wallLayer` canvas and blitted in as each rebuild's clear, which costs one `drawImage` instead of a
+fill per wall cell. Everything after that blit composites `'lighter'` and writes RED ONLY, so the
+visibility paint crosses a wall cell without trampling the wallness under it, which an opaque fill
+would. Verified 294/294 cells: green matches masonry exactly. The shader takes one sample at the true
+uv (for `.r` and `.g`) and one at the wobbled uv, then `mix(straight, wobbled, .g)` — 2 fetches of a
+tiny cache-resident texture, and `.g` interpolating across a wall/floor boundary fades the wobble in
+over a texel instead of switching it on at a seam.
+`buildWallLayer` is called UNCONDITIONALLY from `attach`, not from `ensure`: `ensure` early-outs on
+matching dimensions and every habitat is 21x14, so a layer cached on size alone would be the previous
+level's walls. The hit cells also had to be de-duplicated (generation stamps, no cleared grid) — every
+ray landing on a cell painted it again, which was harmless for a flat rect and is not for a gradient.
+
+Left open: with these changes, `make reload` **while an area is live** logs one `Uncaught (in promise)`
+with no reason — 2/2 with them, 0/2 without, and reloads from the menu are clean either way. An
+`unhandledrejection` handler installed ~100ms into the new page and held 10s catches nothing, so the
+rejection is in the OLD page during teardown and dies with its context. No shader error is ever logged,
+programs stay at 85, and in-game there is nothing: 60fps, 42 forced rebuilds and both `los` paths give
+zero rejections and zero errors. Dev-only, on an action the shipped game never performs.
+
+### Sewer LOS: the ground debris was never masked, and `patch()` now CHAINS
+Ground debris sat at full brightness in a corridor nobody could see. It rides `render.decals
+.DecalBatch`, which was one of the 7 materials the mask census listed as skipped — skipped because it
+carries an `onBeforeCompile` of its OWN (per-instance alpha + the atlas window) that an earlier
+traverse had already overwritten once. So the fix was not to patch it, it was to stop `patch()` from
+replacing: it now CHAINS a pre-existing hook, running it first and injecting into what it produced.
+Safe because the two use different anchors — `<uv_vertex>`/`<opaque_fragment>` against
+`<project_vertex>`/`<fog_fragment>` — and each survives the other's edits.
+
+**The trap, and it blanked the whole frame.** Chaining the cache key the obvious way —
+`prevKey = mat.customProgramCacheKey`, call it, append ours — throws on EVERY draw. three's `Material`
+carries a **default `customProgramCacheKey` on the prototype** that returns
+`this.onBeforeCompile.toString()`, so the field is never null, and calling it with no receiver makes
+`this` undefined: `Cannot read properties of undefined (reading 'onBeforeCompile')`, 838 times, 0 draw
+calls, black screen. Take the previous key only when the material owns one (`hasOwnProperty`) and call
+it through `Reflect.callMethod(mat, ...)` so it gets its receiver. Verified live: the decal material
+comes back keyed **`decalInstanceAlphasewerMaskb`** with both hooks intact, beside the exit ladder's
+`sewerMasks` / `sewerMaskb`.
+
+Where the patch is applied is forced by lifetime. The batch belongs to the ACTOR layer, not the area,
+and its groups are built lazily on the first paint that needs one — so there is no build-time moment,
+and `View`'s render loop patches them right after `actors.update`. Gated on the area being a
+`SewerArea`: `Actors` is rebuilt per area (so the city gets a clean batch) but the mask uniforms are
+static, and a patched material left over above ground would sample the last tunnel's canvas.
+`DecalBatch` exposes MATERIALS rather than meshes because `grow()` swaps a group's mesh and keeps its
+material, so a mesh list would go stale where this cannot.
+
+Still unmasked underground, same class of bug, not touched here: the per-quad `Sprites` path — emissive
+blood, wall holes, star glints. Actors and objects also ride it but are hidden outright by `sees()`, so
+they do not need the mask; those three decorations do.
+
+### Sewer LOS: blur the visibility plane, and fade the area border
+Two complaints, both from standing against the outer wall of a habitat.
+
+**The floor boundary was jagged because the mask has no ramp there at all.** The sweep is innocent —
+scanlines across a diagonal shadow edge read `0 0 0 0 [96] 255 255`, stepping exactly one texel per
+texel row, i.e. a clean antialiased 45 degrees. Whole-canvas census: **55 intermediate texels over the
+entire floor boundary**, about one per unit of boundary length. So the complete lit/dark transition on
+open floor was ONE coverage value, and `MASK_PX 4` over `CELL 4` makes a texel **one world unit** —
+~30-38 screen px at `CAMERA_SEWER` (fov 45, 1920x1003 buffer). Bilinear reconstruction of a single
+antialiased texel puts a staircase of that same period along the edge. Nothing to do with `MASK_WOBBLE`:
+`sewerM.g` is 0 across open floor, so the straight sample is the one used.
+
+`MASK_BLUR` (0.75 texels of gaussian) fixes it, but NOT by blurring the mask. The green masonry channel
+is what the shader gates the wobble on, and smearing it would bleed the wobble a texel out onto floor.
+So the red visibility plane gets a **scratch canvas of its own**: polygon, wall rects and `fadeCell` all
+paint there, and it is composited in through `ctx.filter` on top of an unblurred `wallLayer` blit.
+Measured after: the same scanline reads `0 1 8 41 116 199 243 254 255`, floor intermediates **55 →
+311**, and **`greenNotPure` is 0** — the masonry channel is still exactly 0 or 255 everywhere.
+
+0.75 took the band to ~3 texels, the width `MASK_WALL_FADE` already produces on the wall side, and that
+still read as a straight edge — so it went to **2.0**. Swept on the live canvas (band = intermediate
+texels, dim = share of genuinely lit texels under 200, bleed = mean red over never-reached texels):
+`0.75 -> 867 / 1.5% / 1.9`, `1.5 -> 1485 / 5.6% / 5.2`, `2.0 -> 1826 / 14.6% / 7.5`,
+`2.5 -> 2149 / 18.8% / 9.8`, `4.0 -> 2874 / 39.1% / 17.4`. It is a CONVOLUTION, so the band can only
+widen by eating the lit side or spilling onto the hidden one — there is no setting that only softens,
+and past ~2.5 a one-cell corridor stops reaching full brightness.
+
+**Sigma is free; the filter CALL is what costs.** Re-measured at both: `+0.0985ms` at 84×56 and
+`+0.1035ms` at 300×240 for sigma 2.0, against `+0.0765 / +0.0815` for 0.75 — i.e. flat in radius as
+well as in pixels. So the knob can be tuned on looks alone.
+
+**A bigger sigma FIGHTS the border fade, and that is structural.** `fadeCell` authors its ramp inside
+ONE cell (4 texels at `MASK_PX` 4) while a sigma-2 kernel spans ~8, so the blur averages the ramp back
+up toward the interior: the west border cap's outermost texel — the silhouette against no geometry at
+all — went **79 (vis 0.434) at 0.75 to 103 (vis 0.511) at 2.0**. More blur makes the level's outer edge
+brighter, not softer. And it bottoms out anyway: mask 0 renders at `MASK_HIDDEN` 0.18, so the outer
+silhouette can never fall below 18% of a lit brick over a `0x05070a` clear. Softening THAT edge is not a
+blur problem — it wants either a lower `MASK_HIDDEN` or a falloff applied AFTER the blur (a multiply
+layer of `rgb(v,255,255)` scales red alone and would be blur-proof).
+
+**Cost, and the rejection it overturns.** The earlier entry rejected this on a benchmark reading 1.6ms
+at 84x56 and 0.5ms at 300x240 — cheaper at 15x the pixels, which is the tell that it timed the
+`getImageData` flush. Re-measured with the flush amortized over 200 composites, A/B/A/B x5, median:
+**+0.0765ms at 84x56, +0.0815ms at 300x240**. Flat across 15x the pixels, so it is fixed per-call
+overhead and not fill — against a rebuild already measured at 0.30ms in the habitat.
+
+**The area border never faded, and `dark()` said so on purpose.** It returned false off-grid, reasoning
+that there is no level out there to fade into. Exactly backwards: `SewerGeom` caps EVERY solid cell and
+only insets a cap edge that overlooks floor, so the border's cap runs flush to the boundary and then
+there is no geometry at all — a fully lit ledge meeting the clear colour on a hard rim. That is what
+standing next to the outer wall looked like, and the "fully black next tile" was absent geometry rather
+than a cell at `MASK_HIDDEN`. Off-grid now counts as dark. Measured on the same habitat: col 0 rows 8-12
+went from flat `255 255 255 255` to **`79 175 238 254`** west-to-east, and the south border (row 13)
+with it. The cost the old comment feared does not arrive — only cells the sweep REACHED are ever tested,
+so `MASK_R` bounds it.
+
+Two holes in `dark()` deliberately left: unseen FLOOR still does not count (a one-cell-thick wall with a
+hidden corridor behind it keeps a flat cap), and `fades()` is 4-connected, so a diagonal-only dark
+neighbour leaves a hard corner. Neither was what the report was about.
+
+**The level's outer rim needed a channel, not a bigger sigma.** Two independent reasons no blur setting
+reaches it, both measured above: the kernel averages `fadeCell`'s one-cell ramp UP toward the interior,
+and `mix(sewerMaskFloor, 1.0, m)` bottoms out at `MASK_HIDDEN` whatever `m` does. So the rim went into
+the mask's unused **BLUE** channel — painted once per level beside the green masonry channel, blitted in
+with it and therefore never blurred, and multiplied onto `sewerVis` AFTER the floor mix so it can reach
+a true zero. One extra multiply, no extra fetch, no new programs (85 either side).
+
+That zero is the point rather than a detail: `SewerScene` sets `scene.background` and `scene.fog` to the
+same `0x05070a`, and the opaque branch fades toward `fogColor` — so vis 0 lands EXACTLY on the
+background and the level stops having a silhouette instead of merely dimming toward one.
+
+Painted as a MULTIPLY by `rgba(255,255,0,a)`. Multiply is per channel, so a source of 1 leaves red and
+green exactly as painted and only the zero blue is scaled by `(1 - a)`; the four ramps each cover the
+whole canvas and clamp to their far stop, so inland they are a no-op, and where two meet they multiply,
+dropping a corner faster than an edge. The gradient is anchored at the outermost TEXEL CENTRE (the
+half-texel inset), not at the canvas boundary — a linear fetch clamped to the edge returns that texel,
+so anchoring at the boundary lands the rim at 1/8 lit instead of 0.
+
+`MASK_EDGE_FADE` is 1.0 cell, which is exactly the always-solid border ring: measured blue
+`0, 64, 128, 192, 255…` reaching full one cell in, `1056 / 4704` texels below 255, rim vis **0.000** and
+the wall's inner face still **0.961**. Raising it past 1 would eat into playable floor, since the ring is
+one cell thick.
+
+Trap for anyone comparing two sewer screenshots: a capture taken while the window is throttled to 1 FPS
+can be a **partially loaded scene** and look nothing like the game. The before shot read `110 geom / 177
+tex`, the after `1161 geom / 291 tex` — flat and bright against the real near-black lighting. Check the
+topbar geom/tex counts, not just fps.
+
+### Sewer LOS: MASK_PX 4 → 8, paid for by not painting texel by texel
+Doubling the mask (habitat `84x56 → 168x112`, a full 75x60 level `300x240 → 600x480`) is free in every
+part of the rebuild except one, and ruinous in that one. Component sweep at the live cell counts, with
+the `getImageData` flush amortized over 100 rebuilds:
+
+| | clear+polygon | fadeCell | composite | total |
+|---|---|---|---|---|
+| `MASK_PX` 4 | 0.03 | 0.54 | 0.10 | **0.67ms** |
+| `MASK_PX` 8 | 0.02 | **3.78** | 0.10 | **3.90ms** |
+
+The polygon fill and the blur composite are both FLAT in canvas area (0.02ms at 84x56 and at 600x480;
+the blur was already known flat in radius and in pixels). `fadeCell` was everything, and 7x rather than
+4x, because it emitted a **1x1 `fillRect` with a freshly built `rgb(...)` string per texel** — 56 cells
+x 64 texels = 3584 draw calls, each with a CSS colour parse.
+
+**The ramp only varies along one axis unless the cell fades on both.** The usual case is masonry sitting
+behind a wall the player is looking at — one fading side — and then the value is constant down a column,
+so it goes out as `P` strips instead of `P*P` texels. Measured live: **27 of 37 ramped cells are
+single-axis**, 10 turn a corner and still need the per-texel loop (a minimum over two axes is not a
+stack of linear gradients, which is what the old comment got right). Blended, on the real 27/10 split:
+
+| | fadeCell |
+|---|---|
+| before, `MASK_PX` 4, all per-texel | 0.899ms |
+| `MASK_PX` 8 naive | 3.481ms |
+| **`MASK_PX` 8 with strips** | **1.221ms** (600x480: 1.249) |
+
+So 4x the texels for **+0.32ms**, and the whole rebuild lands ~1.35-1.55ms. It fires on nearly every
+frame of a 9-frame slide, so that is ~9% of a 16.6ms frame while walking and nothing at all at rest.
+
+**`MASK_BLUR` had to change units on the way.** It was a sigma in TEXELS, so doubling `MASK_PX` would
+have silently halved the boundary softness in world terms. It is now in WORLD UNITS and converts at the
+filter (`MASK_BLUR * MASK_PX / CELL`). The sweep table in `SewerStyle` was taken at `MASK_PX` 4 where a
+texel WAS a world unit, so every number in it carries over unchanged. Everything else was already
+resolution-independent: `uScale`/`uOrigin` are normalized, and `MASK_WALL_FADE` / `MASK_EDGE_FADE` /
+`MASK_R` are all in cells. Verified after: canvas `168x112`, blur resolves to 1 texel, the rim ramp is
+now 8 texels (`0 32 64 96 127 160 191 223 255`) and still reaches rim vis **0.000**, green channel still
+exactly 0 or 255, 85 programs.

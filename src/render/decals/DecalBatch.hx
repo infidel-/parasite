@@ -31,6 +31,10 @@ class DecalBatch
 {
   var group:Object3D;                                   // scene group the instanced meshes attach to
   var groups:Map<String, DecalGroup> = new Map();       // key: atlasUuid + rough + metal
+  // the group materials in creation order, so a caller that has to reach them every frame does not
+  // walk the map. MATERIALS and not meshes on purpose: grow() swaps a group's mesh and keeps its
+  // material, so a mesh list would go stale where this cannot
+  var mats:Array<Dynamic> = [];
   // scratch reused per add() so a frame allocates nothing
   var _q = new Quaternion();
   var _e = new Euler();
@@ -161,8 +165,17 @@ class DecalBatch
         count: 0,
       };
       groups.set(key, g);
+      mats.push(mat);
       group.add(mesh);
       return g;
+    }
+
+// the batched materials, for a caller that has to patch them. these groups are built LAZILY, on the
+// first paint that needs one, so there is no build-time moment to catch them — the sewer vision mask
+// (render.sewer.SewerMask) folds itself in from the render loop instead
+  public function materials():Array<Dynamic>
+    {
+      return mats;
     }
 
 // double a group's capacity (guard: a texture group shouldn't exceed CAP in practice). the in-flight
@@ -207,5 +220,6 @@ class DecalBatch
           untyped g.mat.dispose();
         }
       groups = new Map();
+      mats = [];
     }
 }
