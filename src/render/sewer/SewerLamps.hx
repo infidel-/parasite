@@ -201,7 +201,8 @@ class SewerLamps
       if (mats.length == 0)
         return null;
       var inst = new InstancedMesh(
-        new PlaneGeometry(SewerStyle.WALL_LAMP_W * mul, SewerStyle.WALL_LAMP_H * mul), mat, mats.length);
+        new PlaneGeometry(SewerStyle.WALL_LAMP_W * mul, SewerStyle.WALL_LAMP_H * mul),
+        SewerMask.patch(mat), mats.length);
       for (i in 0...mats.length)
         inst.setMatrixAt(i, mats[i]);
       untyped inst.instanceMatrix.needsUpdate = true;

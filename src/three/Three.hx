@@ -20,6 +20,8 @@ package three;
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
+  static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
+  static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
   // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
   // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
   static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
@@ -337,6 +339,9 @@ typedef RendererInfo = {
                                     // hand-painted alpha, whose junk RGB under near-transparent texels otherwise
                                     // bleeds out as saturated specks once minified
   public var channel:Int; // which uv attribute this map samples (0 = `uv`, 1 = `uv1`, ...)
+  public var minFilter:Dynamic; // minification filter; LinearFilter drops the mip chain (see generateMipmaps)
+  public var magFilter:Dynamic; // magnification filter; LinearFilter is what turns a per-cell data map into a soft ramp
+  public var generateMipmaps:Bool; // build a mip chain on upload. false for a small data map rebuilt often
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
                                   // render.View.disposeScene deliberately leaves alone (it assumes cached ones)

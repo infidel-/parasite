@@ -235,6 +235,41 @@ class SewerStyle
   public static inline var WALL_LAMP_GLOW = 2.6;       // HDR multiplier on WALL_LAMP_COLOR so the quad clears BLOOM_THRESHOLD
   public static inline var WALL_LAMP_SOOT = 0.18;      // housing darkness (opacity of the black smudge behind the glow)
 
+  // --- the vision mask: what the player cannot see (render.sewer.SewerMask) ---
+  // how far a hidden fragment sinks toward the fog colour. 0.0 is the 2D view's flat black, and this
+  // is deliberately NOT that: underground the whole screen is tunnel, so blacking out everything past
+  // a corner leaves a mostly-empty frame. at 0.18 the masonry still reads as a silhouette — the
+  // LAYOUT stays legible, which the minimap gives away anyway (AreaView.generateMinimap is not
+  // fog-aware) — while nothing standing in it does, since render.Actors already hides the AI and the
+  // objects outright on the same predicate
+  public static inline var MASK_HIDDEN = 0.18;
+  // the same floor for ADDITIVE emissives: the wall-lamp glow quads and the manhole shafts. harder
+  // than the surfaces they sit on, and not as a taste call — an additive quad adds its colour on top
+  // of whatever is behind it, so an 18% glow is still a bright dot floating in a corridor nobody can
+  // see, which is the one thing that would give the whole effect away
+  public static inline var MASK_HIDDEN_ADD = 0.0;
+  // mask texels per cell. the shape painted into it is a real visibility POLYGON, so this is only how
+  // finely that polygon is sampled — the canvas fill is antialiased, which carries the edge at
+  // sub-texel precision, and the texture's linear filter reconstructs it. 4 puts a whole 75x60 level
+  // at 300x240, i.e. one texel per world unit and a 288KB upload per player ACTION
+  public static inline var MASK_PX = 4;
+  // how far the SMOOTHED origin must travel, in cells, before the polygon is rebuilt. the mask
+  // follows the player's sliding position rather than their logical cell, so this is what stops it
+  // rebuilding on motion nobody can see: one mask texel is 1 / MASK_PX = 0.25 cells, so this is a
+  // fifth of a texel. a move slides one cell over BASE_MS (150ms, ~9 frames at 60Hz) and smoothstep
+  // peaks at ~0.17 cells per frame, so it never merges frames through the middle of a slide — only at
+  // its slow ends, which is exactly where nothing is happening. measured cost of one rebuild: 0.30ms
+  // in the habitat (0.1 cell scan + 0.2 sweep/fill, upload under the timer's resolution at both mask
+  // sizes), ~1.5ms projected on a full 75x60 level, against a 16.6ms frame with 14.5ms idle
+  public static inline var MASK_STEP = 0.05;
+  // radius in cells the polygon is built over. the sweep is O(rays * segments) and both grow with
+  // this, so it is the cost knob. DERIVED, not picked: at the sewer preset pinned to full zoom-out
+  // (CameraRig.maxFootprintCells, 180 cells) the ground the camera can show reaches 5.7 cells ahead of
+  // the player, 3.9 behind and 10.8 to the side — 12.2 at the far corner. 14 covers that with margin,
+  // and the square range bound reaches 19.8 at ITS corners. anything past this is hidden, which is
+  // right for gameplay and visible only under the street-debug free cam, where p.los turns it off
+  public static inline var MASK_R = 14;
+
   // --- the exit ladder prop (RenderConfig.MODELS.sewerExit via render.world.ObjModels) ---
   // taller than WALL_H so it visibly climbs PAST the ledge toward the hole we do not render
   public static inline var EXIT_MODEL_H = 4.0;

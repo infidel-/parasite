@@ -73,6 +73,10 @@ class AreaGame extends _SaveObject
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
+  // bumped by every updateVisibility() call. the 3D layer polls rather than listens (see
+  // render.View's rAF loop), so this is what tells render.sewer.SewerMask that a sightline changed
+  // without the player moving - opening a door is the case that needs it. transient, never saved
+  public var visRev: Int = 0;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -2498,6 +2502,7 @@ class Test {
 // check AI visibility
   public inline function updateVisibility()
     {
+      visRev++;
       updateSpawnCells();
       // NOTE: only used for "player noticed" check now
       if (game.player.state == PLR_STATE_HOST)

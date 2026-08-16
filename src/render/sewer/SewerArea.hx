@@ -59,6 +59,9 @@ class SewerArea implements Area3D
       // WorldConst declares `exit: 'sewer_exit'` on AREA_SEWERS alone and game.AreaGame picks
       // sewer_exit / habitat_exit by area type, so a city never spawns either
       props = render.world.ObjModels.build(scene, game, SewerStyle.EXIT_MODEL_H, exitYaw);
+      // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
+      // the builders above made them; this only has to exist before the first sample
+      SewerMask.attach(model);
     }
 
 // which way an exit ladder faces: away from the wall it is bracketed to, or unturned if it stands in
@@ -83,9 +86,23 @@ class SewerArea implements Area3D
       // ABOVE the outro gate on purpose: a player who left standing ON a ladder would otherwise stay
       // behind a see-through one for the whole camera pull-out. cull() reads opts.outro itself
       render.world.ObjModels.cull(props, opts, tactical);
+      // the exit ladders take the vision mask here rather than in ObjModels, which the city shares:
+      // their glb arrives over a loader callback, so there is no build-time moment to catch. patch()
+      // marks its own hook and early-outs on the next pass, so this is a couple of reads once landed
+      for (b in props)
+        {
+          SewerMask.patchMesh(b.solid.mesh);
+          SewerMask.patchMesh(b.ghost.mesh);
+        }
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
         return;
+      // what the player cannot see. driven by the SMOOTHED position and not opts.playerCol/Row: the
+      // logical cell snaps to the destination the moment an action resolves, so a cell-keyed mask
+      // swung its shadows from a cell the billboard had not reached and held them there for the whole
+      // slide. this rebuilds through the ~9 frames of a move (BASE_MS at 60Hz) and then stops dead —
+      // the slide is finite, so a rested origin re-keys to the same value and this is a no-op again
+      SewerMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       // a wall fixture's glow quad is its ONLY brightness source (no emissive glb head down here), so
       // this is what stops a sputtering lamp from glowing and blooming right through its own outage

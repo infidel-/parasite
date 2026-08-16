@@ -423,10 +423,16 @@ class View {
                   var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
                   var C = render.RenderConfig.OBJMARK;
                   var h = render.sewer.SewerStyle.EXIT_MODEL_H;
-                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, SOLID);
-                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, GHOST);
-                  render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h,
-                    HULL(C.color, C.hullW));
+                  // patched exactly as the tunnel builders patch their own: the vision mask carries a
+                  // customProgramCacheKey, so a prop warmed UNPATCHED warms a program the game never
+                  // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
+                  // which reuses the glb template's own shared material — the very object the real
+                  // build then patches (render.sewer.SewerProps)
+                  var M = render.sewer.SewerMask;
+                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, SOLID).mesh);
+                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, GHOST).mesh);
+                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h,
+                    HULL(C.color, C.hullW)).mesh);
                   // the wall props have the same async-load trap, but only ONE variant each: they are
                   // decoration, so no ghost and no hull, and the whole set has to land before the
                   // compileAsync below walks this scene
@@ -437,7 +443,7 @@ class View {
                       var p = models[i];
                       render.Models.get(p.path, function(_)
                         {
-                          render.Models.instanced(sewerScene, p.path, place, p.h, SOLID);
+                          M.patchMesh(render.Models.instanced(sewerScene, p.path, place, p.h, SOLID).mesh);
                           left--;
                           if (left == 0)
                             res(null);

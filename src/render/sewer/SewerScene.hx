@@ -104,7 +104,7 @@ class SewerScene
       // the shaft is far blunter than a street lamp's, and a different colour: this is light down a
       // MANHOLE — already a manhole wide where it starts (SewerStyle.CONE_TOP_R against the street's
       // 0.2), and cold sky rather than sodium amber
-      render.LightCone.instanced({
+      var coneSteady = render.LightCone.instanced({
         group: coneGroup,
         bulbs: bulbs,
         bulbY: bulbY,
@@ -121,6 +121,11 @@ class SewerScene
         color: SewerStyle.SHAFT_COLOR,
         phases: [],
       });
+      // the shafts take the vision mask from THIS side, not from inside LightCone: the street rig
+      // builds its lamp cones with the same call and must not be masked. an additive shaft burning in
+      // a corridor round a corner is the one thing that would give the whole effect away
+      SewerMask.patchMesh(coneSteady.mesh);
+      SewerMask.patchMesh(coneFlick.mesh);
       // weak bracketed fixtures along the walls, filling the runs between the junction lamps. their
       // working bulbs join the same pool, so they light, sputter and cast fake actor shadows with no
       // further wiring; the glow batch is repacked per frame by SewerArea.tick

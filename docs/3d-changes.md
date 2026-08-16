@@ -1131,3 +1131,86 @@ It took `min` of its two ends, which puts the error **in the corner** — a lit 
 where the gradient is fully opaque. It now takes the height at the corner itself and lets the far
 end, where the gradient has faded to nothing, be the end that disagrees. All 12 demo strips land
 exactly on the bevel bottom at their corner.
+
+### Sewer LOS: a world-space vision mask, folded into the fog
+Indoors the 3D layer hid AI and objects (`Actors`, on `playerArea.sees`) but drew the LEVEL whole —
+you read the whole tunnel corner to corner and only its contents popped. `AreaView.draw` early-outs on
+a 3D area, so the 2D black LOS overlay never ran down here. Now `render.sewer.SewerMask` bakes a
+top-down mask (canvas + `CanvasTexture`, `MASK_PX 4` texels/cell, whole level: 300×240 for a 75×60)
+and every tunnel material samples it by world XZ, mixing toward `fogColor` at `MASK_HIDDEN 0.18`.
+Zero draw calls, zero passes, zero geometry — the five-mesh weld survives untouched.
+
+**Per-cell was built first and replaced.** A cell grid cannot express a shadow edge running diagonally
+off a wall corner, and — decisively — `sees()` takes INTEGER endpoints, so a per-cell mask is quantised
+to the player's cell by construction and no smoothed origin can ever move it. The shape is now the
+2D view's own sweep (`AreaView.buildLOSSegments`/`castLOSRay`) ported from screen px to cell units:
+rays at every exposed blocker corner ±1e-4, nearest hit wins, hits in angle order ARE the polygon,
+`ctx.fill()` antialiases the edge for free. Blocking is `area.canSeeThrough` (object-aware — a closed
+door blocks), not the renderer's floor grid.
+
+`MASK_R 14` is derived, not picked: `maxFootprintCells` at the sewer preset pinned to full zoom-out is
+180 cells = 9.6 deep × 21.6 wide, so the ground reaches 12.2 cells at the far corner. Cost is
+O(rays × segments) and both grow with it. Actors deliberately stay on `sees()`; the two disagree
+within ~a cell of a corner during a move animation, which reads as a soft lead/lag at `FADE_SPEED`.
+
+**Two defects the live census caught, both invisible to a build:**
+`userData` is the WRONG place for an "already patched" flag — `Material.clone()` copies userData but
+NOT `onBeforeCompile`/`customProgramCacheKey`, so every ghost clone `Models.instanced` makes from a
+patched template read as patched and never was. The mark now lives on the hook function itself.
+And **patching by scene traverse is wrong here**: the actor pool, path line, tactical grid and
+`DecalBatch` all land in the same scene later, and the traverse overwrote DecalBatch's own
+`onBeforeCompile` (per-instance alpha + atlas UV) along with its `decalInstanceAlpha` cache key. Each
+tunnel builder now patches its own material as it creates it — which also buys warm parity for free,
+since `View.warmup` runs those same builders. Measured after: 39 materials, 32 masked, and the 7
+skipped are the hull marker (`fog:false`, by design), the actor billboards, and DecalBatch intact.
+Mask programs 13 → 8; total 87 → 85 once the warm props were patched too.
+
+### Sewer LOS: the mask origin follows the SLIDE, not the logical cell
+The mask above keyed on `opts.playerCol/Row` = `game.playerArea.x/y`, which snaps to the destination
+the instant an action resolves. So it did not merely fail to be smooth — it ran a whole `BASE_MS`
+**ahead** of the player, swinging its shadows from a cell the billboard had not reached and holding
+them there for the entire slide. `update` now takes `opts.player.x/z` (the smoothed world position,
+already in `Area3DTickOpts`), converts to continuous cell coords, and keys on that quantised to
+`MASK_STEP 0.05` cells. Four things had to follow the origin: the key, the polygon origin, the scan
+window and the own-cell skip — the last two are the only integers in `polygon()`, and centring them
+on the logical cell instead would leave the window up to a cell off the point the rays leave from
+while the square range bound (built from `ox/oy`) reached past the last column ever scanned.
+
+**It needed no gate.** Isolated, habitat, N=300 forced rebuilds: **0.30ms median** = 0.1 cell scan +
+0.2 sweep/fill. The scan is 841 cells and 3476 `canSeeThrough` **regardless of level size** (a fixed
+`MASK_R` window), so only the sweep grows; ~1.5ms projected on a full 75×60. The envelope is 9 frames:
+`ActorAnim.slideTo` is finite — `t` clamps to 1 and its whole update is gated on `t < 1` — so a rested
+origin sits exactly on the cell centre and stops. Idle costs nothing, as before.
+
+**In-frame A/B, 5 PAIRED rounds** (rebuild forced every frame vs idle, window focused at 59.9fps,
+`GPU < 100` filtered, paired so clock drift cancels). Median deltas: `upd` **+0.60ms** and `submit`
+**+0.30ms**, both positive in all five rounds; `GPU` sign-flips (+0.02/+0.38/−1.39/−0.16/−0.38) =
+noise, as it must be with no added calls and no added fragments; `idle` −0.70 absorbs the CPU added;
+**`frame` delta 0.00 — vsync never missed**. Worst case ~0.9ms on a rebuild frame against 13.9ms of
+idle, and that worst case never happens: 9 frames a move, then nothing.
+
+Two corrections to the numbers above, both from measuring IN the frame instead of beside it. The
+upload is **not** free: an isolated `texImage2D` on a throwaway GL2 context read under the 0.1ms timer
+resolution at both 84×56 and 300×240, while three's real path costs `submit` **+0.30ms**. Probably
+fixed overhead rather than bandwidth — the isolated test saw no scaling across 15x the texels — but a
+full sewer's upload has never been measured in-frame. And in-frame `upd` (+0.60) is **2x** the
+isolated tight-loop rebuild (0.30): cold cache in a real frame.
+
+Verified live (frame timing was impossible — window occluded at 1 FPS, rAF delta 1016ms — but all of
+this is synchronous CPU): at rest the new key is **70/70 = `round(3.5 / 0.05)`**, i.e. it reproduces
+the old `pcol + 0.5` origin exactly; a smoothstepped 1-cell sweep rebuilds on 9 of 9 frames with key
+deltas 1,2,2,3,4,3,2,2,1 (peak 0.20 cells/frame) and a white-texel census walking 2160 → 2230 of 4704
+in steps of 14–25, no jump, antialiased edge texels holding 60–81 at every sub-cell origin; 6/6
+bit-identical rebuilds at a **fractional** origin, which is the shimmer risk the change introduces.
+`p.los false` → 4704/4704, unchanged key early-outs, `visRev++` re-fires with the origin static.
+
+**The cost is a new divergence, and it is the opposite of the accepted one.** Actors still gate on
+`playerArea.sees` at the logical cell, so where mask and actors used to snap *together* at action
+time, the actors now **lead** the mask by up to one move: an AI round a corner appears while its
+corner is still dark. `FADE_SPEED` softens it into a lead rather than a pop. Also unfixed: the hit-cell
+reveal (`wallCol/wallRow`) still paints whole cell rects, so the polygon edge glides while the
+revealed wall cells blink at cell granularity — the loudest remaining discontinuity.
+
+Side finding: the ~11-texel one-off on the first rebuild noted in the entry above is
+`AreaGame.canSeeThrough` lazily calling `recalcTile` on first touch. First rebuild warms the tiles,
+every one after reads cache.

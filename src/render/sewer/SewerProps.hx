@@ -58,7 +58,13 @@ class SewerProps
       // per variant, against a repack that could never take a batch below one call anyway. if a
       // tunnel ever gets big enough for that to matter, Models.cull is one line from SewerArea.tick
       for (i in 0...models.length)
-        Models.instanced(scene, models[i].path, places[i], models[i].h, SOLID);
+        {
+          var prop = Models.instanced(scene, models[i].path, places[i], models[i].h, SOLID);
+          // the vision mask, once the glb is actually here: instanced() fills `prop` from its own
+          // queued Models.get callback, and this one is queued behind it, so the mesh is in place
+          // whether the template was already cached or still loading
+          Models.get(models[i].path, function(_) SewerMask.patchMesh(prop.mesh));
+        }
     }
 
 // the scatter itself: one placement list per PROP_MODELS entry. split out of build so a layout can

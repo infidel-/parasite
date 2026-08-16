@@ -352,11 +352,11 @@ class SewerGeom
       // map, costs no draw call and no attribute the merge did not already need — and the program
       // permutation it adds is warmed for free, because View.warmup runs this same builder over
       // SewerModel.demo()
-      var mesh = new Mesh(geo, new MeshLambertMaterial({
+      var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,
         vertexColors: true,
-      }));
+      })));
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
       scene.add(mesh);

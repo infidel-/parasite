@@ -111,7 +111,7 @@ class SewerDetail
           geo.setAttribute('uv', new Float32BufferAttribute(bufs[i].uv, 2));
           geo.setIndex(bufs[i].idx);
           geo.computeVertexNormals();
-          var mesh = new Mesh(geo, new MeshLambertMaterial({
+          var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
             map: Textures.loadTexture(cats[i].tex, 'wall'),
             color: cats[i].tint,
             transparent: true,
@@ -121,7 +121,7 @@ class SewerDetail
             polygonOffset: true,
             polygonOffsetFactor: -2, // proud of the grime band's -1, so a decal wins over the muck
             polygonOffsetUnits: -2,
-          }));
+          })));
           mesh.receiveShadow = true;
           scene.add(mesh);
         }
@@ -206,7 +206,7 @@ class SewerDetail
       tex.wrapT = THREE.ClampToEdgeWrapping;
       tex.needsUpdate = true;
       // every band in the level on ONE material and ONE mesh: one draw call however big the sewer
-      var mesh = new Mesh(geo, new MeshLambertMaterial({
+      var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
         map: tex,
         transparent: true,
         premultipliedAlpha: true,
@@ -216,7 +216,7 @@ class SewerDetail
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,
-      }));
+      })));
       mesh.receiveShadow = true;
       scene.add(mesh);
     }
@@ -364,7 +364,7 @@ class SewerDetail
         {
           if (s.mats.length == 0)
             continue;
-          var mesh = new InstancedMesh(geo, mat(s.tex), s.mats.length);
+          var mesh = new InstancedMesh(geo, SewerMask.patch(mat(s.tex)), s.mats.length);
           for (k in 0...s.mats.length)
             mesh.setMatrixAt(k, s.mats[k]);
           mesh.instanceMatrix.needsUpdate = true;

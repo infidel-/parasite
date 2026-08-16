@@ -159,7 +159,7 @@ class SewerGround
           geo.computeVertexNormals();
           // same recipe as SewerDetail's wall decals. no tint: unlike the chalky wall seepage, this
           // art is authored against the surface it lands on (rose-brown cap, pale grey-green floor)
-          var mesh = new Mesh(geo, new MeshLambertMaterial({
+          var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
             map: Textures.loadTexture(o.types[i].tex, 'roof'),
             transparent: true,
             opacity: o.types[i].alpha,
@@ -171,7 +171,7 @@ class SewerGround
             polygonOffset: true,
             polygonOffsetFactor: -2,
             polygonOffsetUnits: -2,
-          }));
+          })));
           mesh.receiveShadow = true;
           scene.add(mesh);
         }
