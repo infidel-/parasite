@@ -241,6 +241,18 @@ class GameScene
          game.area.info.type == 'habitat');
     }
 
+// an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
+// placed once at area build, so without this a habitat object grown under the player would draw
+// nothing at all until the area was left and re-entered (its sprite is dropped the moment it has a
+// model). objects drawn as sprites need none of this — the actor layer re-reads them every frame
+  public function updateObjects3D()
+    {
+      if (!is3DArea() ||
+          !view3d.running)
+        return;
+      view3d.refreshObjects();
+    }
+
 // is the current area a city (as opposed to the underground tunnels)?
   inline function isCityArea(): Bool
     {

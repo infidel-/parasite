@@ -197,7 +197,7 @@ class Actors {
               offz: oz,
               groundAnchor: true,
               mark: o.visible(),
-              iconOff: render.world.ObjModels.modelFor(o.type) != null,
+              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null,
             });
             if (vis)
               badges.drawObjTarget(o);

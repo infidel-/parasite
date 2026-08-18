@@ -139,6 +139,16 @@ class SewerScene
           pts.push(l);
         }
       pts.push(coneGroup); // debug 5/0 hides the cones alongside the lamp lights
+      // the glowing object props' own pool. built HERE and not in SewerArea.build, which is the whole
+      // point: render.View.warmup builds its warm tunnel scene by calling THIS function, so the pool is
+      // present when compileAsync walks it and NUM_POINT_LIGHTS matches the real scene — created a
+      // level later, every lit tunnel material would recompile on the first habitat entry
+      var propLights = new render.particles.PropLights(scene);
+      for (l in propLights.debugList())
+        {
+          lights.push(l);
+          pts.push(l);
+        }
 
       // debug full-bright WYSIWYG + the light toggles, shared with the city rig
       var tail = SceneSetup.lightingTail(scene, renderer, lights);
@@ -161,6 +171,7 @@ class SewerScene
         lampMask: [],
         lampMaskDead: [],
         wallGlow: wall.glow,
+        propLights: propLights,
       };
     }
 }

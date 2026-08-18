@@ -132,6 +132,12 @@ class CityArea implements Area3D
       lampLights = l;
     }
 
+// nothing to do: no city object draws as a glb prop, so ObjModels is never built up here and every
+// object on the street is an atlas sprite the actor layer re-reads every frame anyway
+  public function refreshObjects():Void
+    {
+    }
+
 // the city this area was built from (the debug tools report against it)
   public function city():City
     {

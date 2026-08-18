@@ -37,6 +37,8 @@ typedef SceneBundle = {
   lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
   wallGlow:render.LightCone.ConeSet, // sewer only (null in a city): the wall lamps' emissive quads, repacked
                                      // like coneFlick so a fixture stops glowing AND blooming while its bulb is out
+  propLights:render.particles.PropLights, // sewer only (null in a city): fixed point-light pool for the
+                                          // glowing object props, ticked per frame to follow the player
 };
 
 class SceneSetup {
@@ -295,7 +297,11 @@ class SceneSetup {
       coneFlick: coneFlick,
       lampMask: lampMask,
       lampMaskDead: lampMaskDead,
-      wallGlow: null // no wall-mounted fixtures on a street
+      wallGlow: null, // no wall-mounted fixtures on a street
+      // no object prop in a city lights, and an unused slot is not free: three unrolls the point-light
+      // loop into every lit material, so a pool here would cost the street frame a full light
+      // evaluation per fragment for nothing
+      propLights: null
     };
   }
 }

@@ -15,6 +15,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'models-src');
 const OUT = join(ROOT, 'parasite/resources/app/models');
 const INFO = join(SRC, 'models.json');
+// bake-STEP version, folded into every entry's signature so a change to what the bake DOES (as
+// opposed to the per-entry params it does it with) rebuilds every prop once on the next run
+const PIPELINE = 'n1';
 
 // delete Krita/editor backup files (name ends with ~) under a dir, recursively (mirrors textures.py)
 function sweepBackups(dir)
@@ -48,9 +51,83 @@ function countTris(doc)
   return Math.round(tris);
 }
 
+// replace every zero-length vertex normal with one borrowed from an adjacent face, and report how
+// many. THIS IS NOT COSMETIC: `normalize(vec3(0.0))` is NaN in GLSL, so a single such vertex shades a
+// few NaN fragments, they land in the half-float post buffer, and UnrealBloom's downsample-and-blur
+// chain smears the NaN across every texel it touches — the whole frame composites BLACK, flickering
+// in and out as the camera moves those few pixels on and off screen. TRELLIS exports carry a handful
+// (19 on habitat/biomineral, 1 on habitat/assimilation, 0 on the props that shipped before), so the
+// glb is where it has to be caught: nothing downstream can tell a NaN pixel from a dark one
+function fixNormals(doc)
+{
+  let fixed = 0;
+  for (const mesh of doc.getRoot().listMeshes())
+    for (const prim of mesh.listPrimitives())
+      {
+        const nrm = prim.getAttribute('NORMAL');
+        const pos = prim.getAttribute('POSITION');
+        if (nrm == null || pos == null)
+          continue;
+        // find the bad vertices first, so the triangle walk below is skipped outright on a clean mesh
+        const bad = new Set();
+        const n = [];
+        for (let i = 0; i < nrm.getCount(); i++)
+          {
+            nrm.getElement(i, n);
+            if (n[0] * n[0] + n[1] * n[1] + n[2] * n[2] < 1e-12)
+              bad.add(i);
+          }
+        if (bad.size == 0)
+          continue;
+        // accumulate the UNNORMALIZED cross product of every triangle touching a bad vertex, which
+        // weights each face by its own area — the standard smooth-normal sum, so the repaired vertex
+        // agrees with the shading of the surface around it instead of snapping to one arbitrary face
+        const acc = new Map();
+        const idx = prim.getIndices();
+        const count = idx ? idx.getCount() : pos.getCount();
+        const a = [], b = [], c = [];
+        for (let t = 0; t < count; t += 3)
+          {
+            const ia = idx ? idx.getScalar(t) : t;
+            const ib = idx ? idx.getScalar(t + 1) : t + 1;
+            const ic = idx ? idx.getScalar(t + 2) : t + 2;
+            if (!bad.has(ia) && !bad.has(ib) && !bad.has(ic))
+              continue;
+            pos.getElement(ia, a);
+            pos.getElement(ib, b);
+            pos.getElement(ic, c);
+            const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
+            const vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+            const f = [uy * vz - uz * vy, uz * vx - ux * vz, ux * vy - uy * vx];
+            for (const i of [ia, ib, ic])
+              {
+                if (!bad.has(i))
+                  continue;
+                const s = acc.get(i) ?? [0, 0, 0];
+                s[0] += f[0];
+                s[1] += f[1];
+                s[2] += f[2];
+                acc.set(i, s);
+              }
+          }
+        for (const i of bad)
+          {
+            const s = acc.get(i) ?? [0, 0, 0];
+            const len = Math.hypot(s[0], s[1], s[2]);
+            // a vertex whose every adjacent face is degenerate too (or that no triangle references)
+            // has nothing to borrow from. any unit vector will do — it is never visibly shaded, and
+            // the only thing that matters is that it is not zero
+            nrm.setElement(i, len > 0 ? [s[0] / len, s[1] / len, s[2] / len] : [0, 1, 0]);
+            fixed++;
+          }
+      }
+  return fixed;
+}
+
 // dump the embedded textures of a source glb to models-src/ as PNGs, so an emissive map can be
 // traced off the base color (mirrors the street-lamp2 base+emissive workflow). base color goes to
-// <label>-base.png (a reference, not the texSrc override), other maps to <label>-<role>.png.
+// <src>-base.png (a reference, not the texSrc override), other maps to <src>-<role>.png — named off
+// the SOURCE glb's path so the dumps sit next to the mesh they came from.
 // usage: node tools/models.mjs --export <label>
 async function exportTextures(label)
 {
@@ -86,13 +163,17 @@ async function exportTextures(label)
     ])
       if (t != null && !roles.has(t))
         roles.set(t, suffix);
+  // dumped BESIDE the glb, not beside the label: a label's folder and its source's folder are
+  // independent (habitat/assimilation lives at habitat/flat/assimilation.glb), and an export that
+  // followed the label landed a folder away from the mesh it belongs to
+  const stem = e.src.replace(/\.glb$/i, '');
   let n = 0;
   for (const [t, suffix] of roles)
     {
       const img = t.getImage();
       if (img == null)
         continue;
-      const outName = label + suffix + '.png';
+      const outName = stem + suffix + '.png';
       // re-encode to png (glb may store jpeg) so Krita opens it straight
       await sharp(Buffer.from(img)).png().toFile(join(SRC, outName));
       const meta = await sharp(Buffer.from(img)).metadata();
@@ -147,8 +228,12 @@ async function main()
       // picks it up. no default filename — only wired when emissiveSrc is set and the file exists
       const emiSrc = e.emissiveSrc ?? null;
       const emiPath = emiSrc != null ? join(SRC, emiSrc) : null;
-      const hasEmi = emiPath != null && existsSync(emiPath);
       const emiStrength = e.emissiveStrength ?? info.default_emissive_strength ?? 3.0;
+      // strength 0 is glow OFF, and it is off properly: the map is not baked in at all, so the glb
+      // carries no dead texture and the material declares no USE_EMISSIVEMAP (which would be its own
+      // program permutation and a texture fetch per fragment). the manifest keeps pointing at the PNG,
+      // so turning a prop's glow back on is one number
+      const hasEmi = emiPath != null && existsSync(emiPath) && emiStrength > 0;
       // effective source mtime = newest of the glb and any override PNG, so editing any rebuilds
       const srcMtime = Math.max(
         Math.floor(statSync(src).mtimeMs / 1000),
@@ -157,7 +242,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.roughness != null ? '/rf' + e.roughness : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -218,6 +303,24 @@ async function main()
             m.setBaseColorFactor(e.baseColor);
           console.log('     baseColorFactor <- [' + e.baseColor.join(', ') + ']');
         }
+      // optional roughness FACTOR — the specular dial. glTF MULTIPLIES it by the MR map's green
+      // channel, so the map's own variation survives and only its level moves: a TRELLIS bake lands
+      // uniformly matte (measured green p05..p95 of 0.71-0.94 across the habitat organs), which reads
+      // as dead putty because nothing in that band catches a highlight from an analytic light. scaling
+      // the whole map down brings it into highlight range while KEEPING crystal glossier than slime.
+      //
+      // DO NOT take this far below ~0.3, and never to 0. Specular is GGX D = a2 / (PI * d^2) with
+      // a2 = roughness^4, so it blows up as roughness falls: against the tunnel's 45-candela spotlights
+      // a mid-0.1 roughness peaks in the thousands (safe in a half-float buffer), while three's own
+      // 0.0525 clamp peaks past 65504 at grazing incidence — which is INFINITY in the half-float post
+      // buffer, and UnrealBloom's blur turns one such texel into a black frame. That failure is
+      // documented in docs/3d-changes.md; this is the other way to reach it
+      if (e.roughness != null)
+        {
+          for (const m of doc.getRoot().listMaterials())
+            m.setRoughnessFactor(e.roughness);
+          console.log('     roughnessFactor <- ' + e.roughness + ' (multiplies the MR map, not replacing it)');
+        }
       // decimate only when the target is below the source count; otherwise leave the geometry (and
       // its authored normals/hard edges) untouched — meshopt would keep hi-poly normals that mismatch
       // a coarser surface. always shrink the texture + clean up
@@ -229,6 +332,11 @@ async function main()
         console.log('     geometry kept full (' + before + ' tris' + (target >= 0 ? ', target ' + target : ', decimate off') + ')');
       steps.push(textureCompress({ encoder: sharp, resize: [tex, tex], targetFormat: 'png' }), prune(), dedup());
       await doc.transform(...steps);
+      // AFTER the transforms, never on the source: simplify() welds and collapses vertices, so it can
+      // leave a normal degenerate that the export did not
+      const badNormals = fixNormals(doc);
+      if (badNormals > 0)
+        console.log('     ' + badNormals + ' zero-length normal(s) rebuilt from adjacent faces');
       await io.write(out, doc);
       // UTC stamp (keep the Z) so the re-read compares in the same timezone as srcMtime's epoch
       e.last_converted = new Date(srcMtime * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');

@@ -26,6 +26,37 @@ typedef PropBatch = {
                                      // instance: the player stands in exactly one cell
 };
 
+// how a prop is turned on its cell. the area kind owns the actual rule (only it knows what is solid);
+// this only says WHICH rule to ask for
+enum PropYaw {
+  WALL;    // back to the adjacent wall — a ladder is bracketed to masonry and reads wrong free-standing
+  HASHED;  // full-circle turn hashed off the cell, so four of a prop in one level are not clones
+  FRONTAL; // FIXED, facing the resting camera. for a prop whose front IS its read — the assimilation
+           // arch is a doorway with the orifice in one leg, and a hashed turn showed it edge-on as
+           // often as not. fixed and not camera-TRACKING on purpose, the same call the frontal FX
+           // quads make (see render.particles.Sparks): a solid prop that swung with an orbiting camera
+           // would swim against its own shadow and the floor it stands on
+}
+
+// the coloured point light a prop emits. `mul` scales RenderConfig.PROP_LIGHT.intensity rather than
+// setting an absolute one, so a single dial moves every glowing prop and a row only says how bright
+// this one is RELATIVE to its neighbours. the pool that consumes it is render.particles.PropLights
+typedef PropLight = {
+  color:Int, // light colour — each organ's own glow hue, so the light reads as the thing luminescing
+  mul:Float, // multiplier on PROP_LIGHT.intensity
+};
+
+// one object-backed glb prop. `keys` are AreaObject.getModelKey values rather than raw types because
+// several classes can share a type and still want different props (every habitat object is type
+// 'habitat', and that string is persisted game state — see objects.AreaObject.getModelKey)
+typedef ObjModel = {
+  keys:Array<String>, // getModelKey values that draw as this prop
+  path:String,        // RenderConfig.MODELS entry
+  h:Float,            // world height Models.instanced scales the prop to (CityConfig.CELL is 4)
+  yaw:PropYaw,        // which turning rule the area kind is asked for
+  light:PropLight,    // coloured point light this prop emits, or null for one that does not glow
+};
+
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
 // in the render layer, keyed on the object TYPE — objects.AreaObject knows nothing about glbs, the
 // same way it knows nothing about which texture its sprite comes from.
@@ -41,55 +72,130 @@ class ObjModels
   // packed out at the wrong moment would lose its shadow from that map until the next hand-off
   static inline var CULL_R = CityConfig.CELL * 3;
 
-// the baked glb an object type draws as, or null for the ordinary sprite path
-  public static function modelFor(type:String):String
+  // every object-backed prop there is. ONE table: build() places from it, render.View warms every
+  // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
+  // so a new prop is a row here plus its path in RenderConfig.MODELS, nothing to keep in sync by hand.
+  // heights are world units against a 4-unit cell; the sprite each replaces was a 3.0 square.
+  // the habitat organs' light colours are each prop's OWN glow hue, carried over from the emissive map
+  // that used to do this job on the prop's surface alone (see RenderConfig.PROP_LIGHT)
+  public static final MODELS:Array<ObjModel> = [
     {
-      return switch (type)
-        {
-          case 'sewer_exit', 'habitat_exit': RenderConfig.MODELS.sewerExit;
-          default: null;
-        };
+      keys: [ 'sewer_exit', 'habitat_exit' ],
+      path: RenderConfig.MODELS.sewerExit,
+      h: 4.0,
+      yaw: WALL,
+      light: null, // a ladder is masonry and rungs, not a grown thing
+    },
+    {
+      keys: [ 'habitat_biomineral' ],
+      path: RenderConfig.MODELS.habitatBiomineral,
+      h: 2.88,
+      yaw: HASHED,
+      light: { color: 0x33bf59, mul: 1.0 }, // crystal green
+    },
+    {
+      keys: [ 'habitat_assimilation' ],
+      path: RenderConfig.MODELS.habitatAssimilation,
+      h: 2.64, // wider than it is tall, so this spans ~4.8 of the cell and overhangs into its
+               // neighbours — at 1.8 the arch read squat beside the preservator and lost the
+               // "something you could step through" silhouette
+      yaw: FRONTAL,
+      light: { color: 0x8c2ecc, mul: 0.9 }, // maw violet
+    },
+    {
+      keys: [ 'habitat_preservator' ],
+      path: RenderConfig.MODELS.habitatPreservator,
+      h: 3.12,
+      yaw: HASHED,
+      light: { color: 0xd98c26, mul: 1.0 }, // amber core
+    },
+    {
+      keys: [ 'habitat_watcher' ],
+      path: RenderConfig.MODELS.habitatWatcher,
+      h: 2.16,
+      yaw: HASHED,
+      light: { color: 0xf28c80, mul: 1.2 }, // pale flesh-pink eye
+    },
+  ];
+
+// the prop an object draws as, or null for the ordinary sprite path. a linear scan of five rows,
+// which is cheaper than the map it would take to avoid it — render.Actors asks once per object per
+// frame and the answer is null for everything in a city
+  public static function modelFor(key:String):ObjModel
+    {
+      for (m in MODELS)
+        for (k in m.keys)
+          if (k == key)
+            return m;
+      return null;
     }
 
-// place every prop-backed object in the area, grouped per model path. `yaw` decides which way a prop
-// faces from its cell (a ladder wants its back to a wall); the area kind owns that rule, because only
-// it knows what is solid. the returned batches MUST be handed to cull() every frame — Models.instanced
-// turns three's own frustum cull off, so nothing else ever trims their instance counts
-  public static function build(scene:Scene, game:Game, targetH:Float, yaw:Int->Int->Float):Array<PropBatch>
+// place every prop-backed object in the area, grouped per model. `yaw` decides which way a prop faces
+// from its cell and is handed the model's own PropYaw, so one callback serves every kind (a ladder
+// wants its back to a wall, a grown thing a hashed turn, an arch a fixed frontal one); the area kind
+// owns that rule, because only it knows what is solid. the returned batches MUST be handed to cull()
+// every frame — Models.instanced turns three's own frustum cull off, so nothing else trims their counts
+  public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float):Array<PropBatch>
     {
       var byPath:Map<String, Array<{ x:Float, z:Float, yaw:Float }>> = new Map();
       var cellsByPath:Map<String, Array<{ col:Int, row:Int }>> = new Map();
       for (o in game.area.getObjects())
         {
-          var path = modelFor(o.type);
-          if (path == null)
+          var m = modelFor(o.getModelKey());
+          if (m == null)
             continue;
-          if (!byPath.exists(path))
+          if (!byPath.exists(m.path))
             {
-              byPath.set(path, []);
-              cellsByPath.set(path, []);
+              byPath.set(m.path, []);
+              cellsByPath.set(m.path, []);
             }
           var w = CityConfig.cellToWorld(o.x, o.y);
-          byPath.get(path).push({ x: w.x, z: w.z, yaw: yaw(o.x, o.y) });
+          byPath.get(m.path).push({ x: w.x, z: w.z, yaw: yaw(o.x, o.y, m.yaw) });
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade
-          cellsByPath.get(path).push({ col: o.x, row: o.y });
+          cellsByPath.get(m.path).push({ col: o.x, row: o.y });
         }
       var C = RenderConfig.OBJMARK;
       var out:Array<PropBatch> = [];
-      for (path => places in byPath)
-        out.push({
-          solid: Models.instanced(scene, path, places, targetH, SOLID),
-          ghost: Models.instanced(scene, path, places, targetH, GHOST),
-          hull: Models.instanced(scene, path, places, targetH, HULL(C.color, C.hullW)),
-          cells: cellsByPath.get(path),
-          solidMask: [for (_ in places) true],
-          ghostMask: [for (_ in places) false],
-          hullMask: [for (_ in places) false],
-          ghostIdx: -1,
-          t: 0.0,
-        });
+      // walked in TABLE order rather than over the map, so the batch list is deterministic and each
+      // path is instanced at its own authored height
+      for (m in MODELS)
+        {
+          var places = byPath.get(m.path);
+          if (places == null)
+            continue;
+          out.push({
+            solid: Models.instanced(scene, m.path, places, m.h, SOLID),
+            ghost: Models.instanced(scene, m.path, places, m.h, GHOST),
+            hull: Models.instanced(scene, m.path, places, m.h, HULL(C.color, C.hullW)),
+            cells: cellsByPath.get(m.path),
+            solidMask: [for (_ in places) true],
+            ghostMask: [for (_ in places) false],
+            hullMask: [for (_ in places) false],
+            ghostIdx: -1,
+            t: 0.0,
+          });
+        }
       return out;
+    }
+
+// tear every batch out of the scene, so build() can run again after an object was added to or removed
+// from the live area. ONLY the ghost and hull materials are disposed: those are made per batch (a
+// clone and a fresh MeshBasicMaterial), while SOLID reuses the glb template's own shared material and
+// every geometry here — hull shells included — is cached per path in Models, so disposing either
+// would corrupt the next batch built over the same model
+  public static function dispose(scene:Scene, batches:Array<PropBatch>):Void
+    {
+      for (b in batches)
+        {
+          for (p in [ b.solid, b.ghost, b.hull ])
+            if (p.mesh != null)
+              scene.remove(p.mesh);
+          if (b.ghost.mesh != null)
+            b.ghost.mesh.material.dispose();
+          if (b.hull.mesh != null)
+            b.hull.mesh.material.dispose();
+        }
     }
 
 // per-frame prop pass: fade the prop the player is STANDING on to see-through so its body does not

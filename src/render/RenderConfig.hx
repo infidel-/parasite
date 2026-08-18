@@ -612,6 +612,13 @@ class RenderConfig {
     sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
     sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
+    // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
+    // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
+    // the full solid / ghost / outline-hull set rather than one decoration batch
+    habitatBiomineral: 'models/habitat/biomineral.glb',     // crystal spire in a slime mound
+    habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
+    habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
+    habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
@@ -621,6 +628,41 @@ class RenderConfig {
     lerp: 0.25,  // per-30fps-frame ease toward the target (dt-compensated, as OCCLUSION.lerp)
     snap: 0.02,  // lock to solid within this of 0 — the handover BACK to the opaque batch is gated on
                  // it, and an exponential tail never reaches 0 on its own
+  };
+  // coloured point lights for the object props that glow — the habitat's grown organs. the light is
+  // what makes an organ read as luminescing now: an emissive MAP only brightens the prop's own texels
+  // and lights nothing around it, so the two are alternatives rather than a pair (see
+  // render.world.ObjModels.MODELS `light`, and docs/3d-changes.md).
+  //
+  // same fixed-pool discipline as LAMP_LIGHT and FLAME: every slot exists for the whole life of the
+  // scene at intensity 0 and the nearest props claim one per frame, so NUM_POINT_LIGHTS never changes
+  // and no lit material ever recompiles. built ONLY into the tunnel scene (render.sewer.SewerScene) —
+  // three unrolls the point-light loop into every lit material, so a slot a city could never use would
+  // still cost it a full light evaluation on every lit fragment
+  public static final PROP_LIGHT = {
+    // live point lights, and the whole feature's on/off switch: 0 builds none, so NUM_POINT_LIGHTS
+    // drops back to the flame pool's 5 and the point-light block leaves the tunnel shaders entirely.
+    // CURRENTLY 0 — the organs' lighting is being worked case by case and the coloured pools were
+    // pulled for now; the table rows in ObjModels.MODELS keep their colours, so turning it back on is
+    // this one number.
+    // when on: an organ is a room feature and a habitat room holds ~1-3, so size it for what ONE room
+    // shows rather than for the level (4 was the starting value). each slot is a full extra light
+    // evaluation in every lit fragment of the frame — the street spotlight pool measured LINEAR at
+    // ~0.32ms per light on the integrated Radeon (docs/3d-render.md)
+    pool: 0,
+    intensity: 9.0,   // base intensity, scaled per prop by its table row's `mul`
+    distCells: 3.0,   // hard cutoff radius in cells. SHORT on purpose: these cast NO shadow (a point
+                      // shadow is six cube faces per light), so reach is the only thing stopping an
+                      // organ bleeding through a wall into the next corridor. the vision mask hides
+                      // most of what still leaks — a surface the player cannot see is sunk to the fog
+                      // colour whatever lit it
+    decay: 1.6,       // as FLAME/LAMP: softer than physical 2.0 so the pool does not collapse to a dot
+    yMul: 1.15,       // light height = the prop's OWN table height * this, so it sits just above the
+                      // crown. inside the prop it would only reach backfaces and the organ itself
+                      // would read dark; from just above, the near-overhead camera sees a lit crown
+                      // and a coloured pool on the floor around it
+    rangeCells: 9.0,  // player distance at which a prop claims a slot
+    fadeMul: 1.0,     // fade in/out duration as a multiple of BASE_MS — fade, never blink
   };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground

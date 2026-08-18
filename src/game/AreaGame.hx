@@ -693,6 +693,20 @@ class AreaGame extends _SaveObject
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+      refreshObjectProps(o);
+    }
+
+// tell the 3D view to rebuild its object props, when an object that DRAWS as one is added to or
+// removed from the area currently on screen. gated on the model lookup so the ordinary sprite-drawn
+// objects (bodies, items, blood) never trigger a rebuild, and on this being the live area so
+// generating or populating some other area does not reach into the view
+  inline function refreshObjectProps(o: AreaObject)
+    {
+      if (game != null &&
+          game.scene != null &&
+          game.area == this &&
+          render.world.ObjModels.modelFor(o.getModelKey()) != null)
+        game.scene.updateObjects3D();
     }
 
 // get object by id
@@ -736,6 +750,7 @@ class AreaGame extends _SaveObject
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+      refreshObjectProps(o);
     }
 
 

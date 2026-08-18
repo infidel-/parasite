@@ -266,12 +266,16 @@ class LampShadows {
         if (ai.entity != null)
           actorShadow(ai.entity, barrelLights, lampLights);
       for (o in game.area.getObjects())
+        // a prop-backed object casts here TOO, and the guard that used to skip it was wrong. it does
+        // own a real shadow-map shadow (Models.instanced flags SOLID castShadow), but underground the
+        // only casting lights are the pooled spotlights and LAMP_LIGHT.angle is a 36-degree cone from
+        // CELL*yMul up — a pool about two cells across. An organ standing anywhere else is lit by
+        // ambient + hemisphere alone, neither of which casts, so it had NO shadow at all. the
+        // silhouette comes from the atlas cell (Sprites.shadowContent), which iconOff never touched,
+        // so this works unchanged for an object whose icon is suppressed
         if (o.entity != null &&
             !o.isGroundDecal() &&
-            o.type != 'burning_barrel' &&
-            // an object drawn as a real 3D prop already casts a REAL shadow map shadow
-            // (render.Models.instanced), so a painted silhouette on top of it is a second shadow
-            render.world.ObjModels.modelFor(o.type) == null)
+            o.type != 'burning_barrel')
           actorShadow(o.entity, barrelLights, lampLights);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
         actorShadow(game.playerArea.entity, barrelLights, lampLights);

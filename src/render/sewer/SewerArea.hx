@@ -22,7 +22,9 @@ class SewerArea implements Area3D
   var lampLights:LampLights;    // live spotlight pool over the corridor nodes
   var lampPosts:Array<LampPost>; // node, exit and wall lamps (for the pool)
   var wallGlow:render.LightCone.ConeSet; // wall-lamp emissive quads, repacked per frame with their bulbs
-  var props:Array<render.world.ObjModels.PropBatch>; // the exit ladders: solid / ghost / outline batches
+  var propLights:render.particles.PropLights; // point-light pool for the glowing object props (organs)
+  var sceneRef:Scene;                    // held for refreshObjects, which rebuilds the prop batches
+  var props:Array<render.world.ObjModels.PropBatch>; // object props: solid / ghost / outline batches
   var tactical = false;                  // tactical view up: the props draw their outline shells
 
   public function new(game:Game, model:Sewer)
@@ -39,6 +41,7 @@ class SewerArea implements Area3D
       lampLights = bundle.lampLights;
       lampPosts = bundle.lampPosts;
       wallGlow = bundle.wallGlow;
+      propLights = bundle.propLights;
       return bundle;
     }
 
@@ -51,32 +54,61 @@ class SewerArea implements Area3D
       WorldCtx.tiles = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
+      sceneRef = scene;
       SewerGeom.build(scene, model);
       // clutter heaped against the walls. pure decoration — no AreaObject behind it, so no ghost
       // twin, no outline hull and nothing per-frame; see SewerProps for why it is not culled
       SewerProps.build(scene, model);
-      // the exit ladders, as real geometry instead of their sprite. only tunnel areas ever hold one:
-      // WorldConst declares `exit: 'sewer_exit'` on AREA_SEWERS alone and game.AreaGame picks
-      // sewer_exit / habitat_exit by area type, so a city never spawns either
-      props = render.world.ObjModels.build(scene, game, SewerStyle.EXIT_MODEL_H, exitYaw);
+      // the object props, as real geometry instead of their sprites: the exit ladders, and in a
+      // habitat its four grown objects. only tunnel areas ever hold either — WorldConst declares
+      // `exit: 'sewer_exit'` on AREA_SEWERS alone and game.Habitat only ever builds into AREA_HABITAT
+      props = render.world.ObjModels.build(scene, game, objYaw);
       // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
       // the builders above made them; this only has to exist before the first sample
       SewerMask.attach(model);
     }
 
-// which way an exit ladder faces: away from the wall it is bracketed to, or unturned if it stands in
-// the open. dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east)
-  function exitYaw(col:Int, row:Int):Float
+// which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
+// WALL turns its back on the adjacent wall (an exit ladder is bracketed to masonry) or stays unturned
+// in the open; dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east).
+// HASHED takes a full-circle turn hashed off the cell, so four biomineral formations in one habitat
+// are not four clones — and because the hash is the CELL, a level looks the same every time it is
+// entered rather than re-rolling on re-entry.
+// FRONTAL is a plain 0: the tunnel camera rests looking down -Z with no yaw of its own, so unturned IS
+// facing it. a glb whose authored front does not point that way is corrected in render.Models.yawFix,
+// baked into the verts at load — that is a fact about the model, not about how a prop is posed
+  function objYaw(col:Int, row:Int, mode:render.world.ObjModels.PropYaw):Float
     {
-      if (!SewerModel.isFloor(model, col, row - 1))
-        return 0;
-      if (!SewerModel.isFloor(model, col, row + 1))
-        return Math.PI;
-      if (!SewerModel.isFloor(model, col - 1, row))
-        return Math.PI / 2;
-      if (!SewerModel.isFloor(model, col + 1, row))
-        return -Math.PI / 2;
-      return 0;
+      switch (mode)
+        {
+          case FRONTAL:
+            return 0;
+          case HASHED:
+            return (SewerModel.mix((col * 40503151) ^ (row * 57885161)) % 3600) / 3600.0 * 2 * Math.PI;
+          case WALL:
+            if (!SewerModel.isFloor(model, col, row - 1))
+              return 0;
+            if (!SewerModel.isFloor(model, col, row + 1))
+              return Math.PI;
+            if (!SewerModel.isFloor(model, col - 1, row))
+              return Math.PI / 2;
+            if (!SewerModel.isFloor(model, col + 1, row))
+              return -Math.PI / 2;
+            return 0;
+        }
+    }
+
+// rebuild the prop batches, after an object was added to or removed from the area we are already
+// showing. the 3D scene is otherwise built once per area entry (GameScene.draw3D only rebuilds when
+// the area id changes), and an object grown in the habitat the player is standing in would draw
+// NOTHING until re-entry — render.Actors drops its sprite the moment the object has a model.
+// cheap: the glb templates are cached, so nothing reloads and only the instance buffers are remade
+  public function refreshObjects():Void
+    {
+      if (props == null)
+        return;
+      render.world.ObjModels.dispose(sceneRef, props);
+      props = render.world.ObjModels.build(sceneRef, game, objYaw);
     }
 
 // per-frame world tick — down here that is only the live lamp pool: nothing fades, no windows
@@ -104,6 +136,10 @@ class SewerArea implements Area3D
       // the slide is finite, so a rested origin re-keys to the same value and this is a no-op again
       SewerMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      // the organs' own coloured lights. a separate pool from the lamps' on purpose: a bracket is a
+      // SpotLight aimed along its wall, an organ glows omnidirectionally, and sharing one pool would
+      // have the two fighting for slots — the lamps would lose theirs to whatever the player stood near
+      propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
       // a wall fixture's glow quad is its ONLY brightness source (no emissive glb head down here), so
       // this is what stops a sputtering lamp from glowing and blooming right through its own outage
       render.LightCone.pulse(wallGlow, lampLights.flickT);

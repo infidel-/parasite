@@ -330,8 +330,9 @@ class SewerStyle
   public static inline var MASK_R = 14;
 
   // --- the exit ladder prop (RenderConfig.MODELS.sewerExit via render.world.ObjModels) ---
-  // taller than WALL_H so it visibly climbs PAST the ledge toward the hole we do not render
-  public static inline var EXIT_MODEL_H = 4.0;
+  // its height lives in the ObjModels table beside every other object prop's, so one place decides
+  // how tall each of them stands (4.0 there, taller than WALL_H so the ladder visibly climbs PAST the
+  // ledge toward the hole we do not render)
   // the exit's light steps SOUTH (+Z, screen-DOWN under CAMERA_SEWER) off the ladder's own cell, so
   // the prop is not standing in the middle of its own shaft and the lit pool lands on the walkway in
   // FRONT of it. the SpotLight moves with the cone — a shaft whose lit floor pool sat somewhere else

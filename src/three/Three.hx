@@ -202,6 +202,8 @@ typedef RendererInfo = {
 }
 @:native("THREE.PointLight") extern class PointLight extends Object3D {
   public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
+  public var color:Color;      // tint, a plain uniform — safe to rewrite per frame (not in the program key)
+  public var distance:Float;   // falloff end; 0 = never cut off
 }
 // conical light: emits from position within a cone aimed at `target` (must be in the scene graph
 // for its world matrix to update). angle = cone half-angle (rad), penumbra = soft edge 0..1

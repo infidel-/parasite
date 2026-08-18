@@ -1451,3 +1451,231 @@ resolution-independent: `uScale`/`uOrigin` are normalized, and `MASK_WALL_FADE` 
 `MASK_R` are all in cells. Verified after: canvas `168x112`, blur resolves to 1 texel, the rim ramp is
 now 8 texels (`0 32 64 96 127 160 191 223 255`) and still reaches rim vis **0.000**, green channel still
 exactly 0 or 255, 85 programs.
+
+## The habitat's four objects become glb props
+
+The habitat renders through `SewerArea`, so its walls, ledges, chamfers, clutter and exit ladder are all
+real geometry — but its four defining objects were still 64px atlas cells from `entities64.png` drawn as
+3.0-unit upright billboards. They now go through `render.world.ObjModels`, the seam the exit ladder
+already used, at **+4 draw calls and +19,950 tris** for all four.
+
+**`modelFor` could not tell them apart, and retyping them was the wrong fix.** `HabitatObject.init` sets
+`type = 'habitat'` on all four, and `type` is persisted (`Saver` reflects every field not in
+`_ignoredFields`), so splitting it per subclass would leave old saves carrying `'habitat'` while new
+objects carried the new strings — and `Habitat.update` counts habitat energy off exactly that string.
+New virtual `AreaObject.getModelKey()` returns `type` by default and is overridden in the four; the
+three call sites (`ObjModels`, `Actors.iconOff`, `LampShadows`' double-shadow guard) switch to it.
+**No save migration: nothing persisted changed**, and `imageRow`/`imageCol` still point at the atlas.
+
+**A prop-backed object created mid-area drew NOTHING.** `Habitat.putObject` fires while the player is
+standing in the habitat, but the 3D scene only rebuilds when `game.area.id` changes, while `Actors`
+drops the sprite the instant the object has a model — so a freshly grown biomineral was invisible until
+the area was left and re-entered. `Area3D.refreshObjects` (a no-op in the city) rebuilds the batches;
+`AreaGame.addObject`/`removeObject` call it gated on `modelFor(...) != null` **and** on
+`game.area == this`, so ordinary objects and other-area population never reach the view. Verified live:
+the prop appears on the spot, tris 77.7k -> 82.6k (exactly one 4,827-tri biomineral), no fade-to-black.
+
+`build()` lost its single `targetH`/`yaw` pair for a table (`keys`/`path`/`h`/`faceWall`), since one
+height for five props is wrong; `SewerStyle.EXIT_MODEL_H` moved into it. Free-standing props take a
+full-circle yaw hashed off their own cell so four of a kind are not clones. `View`'s warm chain now
+loops that table instead of hardcoding the exit's triple.
+
+**Cost, measured as a controlled A/B in one pose** (`habitat clear` vs `habitat all`, run twice,
+identical both times): **56 dc / 77.7k tri -> 60 dc / 97.7k tri**. One call per distinct prop — the
+ghost and hull batches really do cost **0** while masked empty — and `prog` held at **87** across
+clear/build/tactical, so the boot warm covers every variant with no first-use compile. Standing on a
+prop is **+1** (its ghost instance). Boot went 73 -> **76** programs, not the +12 predicted: all five
+props share one material permutation, so the four new paths reuse the exit's programs.
+
+**Generation: three of four were past the ~2x line, and the split ratio called it before any money was
+spent.** At `decimation_target 100000`: preservator **1.34x** (the drum's class -> offline decimate,
+`error` 0.01 for 48 texels/tri, 98,685 -> 5,452), biomineral **2.41x**, assimilation **2.24x**, watcher
+**2.46x** -> all three regenerated at `decimation_target 5000`, `tris: -1`, landing 4,827 / 4,873 /
+4,798. All four MR maps came back pure green, so **no `dropMR` anywhere**.
+
+**The assimilation reference had to be repainted before it was generated at all.** Its first restyle
+measured subject luma p05 **34** — between the p05 30 that made `sewer/bags` hallucinate a violet albedo
+and the p05 48 repaint that fixed it — and was already R>G, B>>G, the exact failure signature. Repainted
+to p05 **61** first. The other three cleared the band on the first edit (56 / 43 / 44 against `drum`'s
+41). Biomineral still drifted in hue (olive slime -> brown, purple tendrils -> navy) with the crystal
+correct; left alone, because the bags entry records a fresh seed making that kind of drift worse.
+
+**The glow is derived from the baked albedo, not hand-painted.** `emissiveSrc` exists but the street
+lamp's map was painted over a Blender layout; a TRELLIS atlas is a mosaic of hundreds of charts and is
+not paintable freehand. Each prop's emissive is keyed out of its OWN baked base map — same UVs by
+construction — with bands read off that atlas's measured luma percentiles rather than guessed. Guessed
+thresholds produced 0.0% / 0.0% / 1.0% / 100.0% lit on the first attempt. Biomineral and watcher key on
+luma (their crystal and eye discs are clean second modes); preservator does **not** (whole atlas is
+39-76) and keys on **R-B**, where lavender veins sit at -14 and the amber core at +69. All four land at
+11-15% of atlas lit. **No `models.mjs` change** — the output is an ordinary PNG that can be repainted in
+Krita later. Cost: regenerating a glb means regenerating its emissive.
+
+New console command for the work, since the normal path needs a live host and kills it — standing all
+four up to look at them cost a spawn-attach-harden-invade cycle each:
+`hab|habitat [all|biomineral|assimilation|preservator|watcher|clear] [level]`
+(`console/HabitatConsole.hx`), placing on the nearest free cells in widening rings.
+
+**Verdict: landed.** Heights (2.4 / 2.2 / 2.6 / 1.8) and the emissive bands are art values, swept live.
+
+## One zero-length vertex normal blacks out the WHOLE frame
+
+Reported as "the image flickers a lot on mouse movement and sometimes just becomes black". It really
+did go black: the composited canvas measured mean luma **0.24 / 255** while the HUD read a healthy
+60 FPS, 67 draw calls, 117.8k tris.
+
+**The bisection, in order, because every step ruled out a whole layer.** Camera pose was correct
+(follow rig over the player's cell). `SewerMask` was innocent — forcing `uFloor`/`uFloorAdd` to 1.0
+lifted it only 0.24 -> 0.53. Lights were all on and at normal intensity (ambient 3.95, hemi 1.89, 12
+spots at 15-45). Then rendering the same scene and camera STRAIGHT TO THE CANVAS —
+`renderer.setRenderTarget(null); renderer.render(scene, camera)` — gave mean **14.28, max 219**. So the
+scene was fine and the post chain was eating it. Disabling the bloom pass alone: **0.24 -> 14.15**.
+
+**The cause is not bloom.** Reading the half-float post buffer with bloom OFF found **3 NaN texels** in
+a 120x120 window over one prop. UnrealBloom downsamples to 1/32 and gaussians at every level, so one NaN
+texel spreads across the whole chain, and the additive composite back over the base makes every pixel
+NaN — which resolves to black. Hiding meshes one at a time pinned it to `habitat/biomineral`; swapping
+its material for a `MeshBasicMaterial` cleared the frame while killing its emissive, MR maps, base map,
+shadows, fog and tone mapping each changed nothing. That combination only leaves the lighting math, and
+the input the lit path uses that the basic path does not is the **normal**.
+
+`habitat/biomineral` carried **17 zero-length vertex normals**, straight out of the TRELLIS export.
+`normalize(vec3(0.0))` is NaN in GLSL. That is the entire bug.
+
+**It was never habitat-only.** The same sweep over every prop the pipeline builds:
+`sewer/bags` **68**, `habitat/biomineral` 17, `sewer/cable` 2, `sewer/crates` 1, `habitat/assimilation`
+1, everything else 0. So the sewers have shipped this since those props landed — the habitat only made
+it constant, because the biomineral is always on screen while a bags pile usually is not. The
+intermittency IS the mechanism: a zero normal is a single vertex, its interpolated neighbours are
+non-zero, so a NaN fragment only appears on the frames where a pixel centre lands close enough to that
+one vertex. Camera or cursor motion flips it on and off — hence "flickers".
+
+**Fix: `fixNormals()` in `tools/models.mjs`**, run AFTER the transforms (`simplify()` welds and
+collapses, so it can create one the export did not). Each bad vertex takes the area-weighted sum of the
+face normals of the triangles that reference it — the standard smooth-normal sum, so the repair agrees
+with the surface around it — falling back to `(0,1,0)` for a vertex with no non-degenerate neighbour. A
+`PIPELINE` constant now feeds every entry's `last_sig`, so a change to what the bake DOES (not just its
+per-entry params) rebuilds every prop once; bumping it rebuilt all 14.
+
+Measured after: **0 zero normals in every built glb**, 0 NaN and 0 Inf in the post buffer over 12
+frames with the cursor sweeping, and 10 consecutive frames at mean luma **14.24-14.99** where the
+pre-fix frame was pinned at 0.24. Draw calls, tris and program count unchanged.
+
+**The trap that cost the most time: `attributes.normal.array` is a LIE on these glbs.** GLTFLoader
+builds `InterleavedBufferAttribute`s, so `.array` is the whole shared pos+normal+uv buffer — every
+attribute reports the same length (60,720 for a 7,590-vertex prop) and a stride-3 walk reads positions
+as normals. It invented zero normals that were not there and hid the real count. Use
+`attr.getX/getY/getZ(i)` and `attr.count`, never `.array`.
+
+**Verdict: landed.** Pipeline-level, so it covers every prop generated from here on.
+
+## The organs' glow moves from the surface into the air: emissive off, coloured point lights on
+
+Four changes to the habitat props, all author calls, all measured after.
+
+**Emissive OFF on all four, and off properly.** `emissiveStrength: 0` now makes the bake skip the map
+entirely instead of baking a map nobody sees, so the glb carries no dead texture and the material
+declares no `USE_EMISSIVEMAP` — which is its own program permutation and a texture fetch per fragment.
+`prog` **87 → 85**, glbs 1266/1079/1436/1008 → **1175/930/1297/897 KB**. `models.json` keeps its
+`emissiveSrc` pointers, so re-enabling any one prop is a single number.
+
+**Coloured point lights instead** (`render/particles/PropLights.hx`, `RenderConfig.PROP_LIGHT`). The two
+were never a pair: an emissive map only brightens the prop's OWN texels and lights nothing around it,
+while the read wanted is "this organ is a light source in the room". Colour and relative brightness live
+per row in `ObjModels.MODELS.light` — each organ's own former emissive hue (crystal green `0x33bf59`,
+maw violet `0x8c2ecc`, amber `0xd98c26`, flesh-pink `0xf28c80`), so the light IS the glow, relocated.
+
+Three things about it that are not incidental:
+
+- **Built in `SewerScene.build`, NOT `SewerArea.build`.** `View.warmup` builds its warm tunnel scene by
+  calling `SewerScene.build`, so the pool is there when `compileAsync` walks it and `NUM_POINT_LIGHTS`
+  (5 → **9**, the 5 idle flame lights plus 4) matches warm and real. Created a level later instead,
+  every lit tunnel material would recompile on the first habitat entry. Verified by `prog` going DOWN
+  87 → 85 rather than up.
+- **No shadow, deliberately** — a point shadow is six cube faces per light. Reach (`distCells` 3) plus
+  the vision mask are what keep an organ from lighting the corridor behind its wall: a surface the
+  player cannot see is sunk to the fog colour whatever lit it.
+- **No cached list.** `update()` walks the area's objects itself, so an organ grown under the player
+  lights up on the frame it appears with no refresh hook, and a destroyed one fades because it stops
+  being found. Fixed-pool discipline otherwise exactly as `LampLights`: nearest-N claim, fade never
+  blink, `.visible` never touched.
+
+**Specular: a `roughness` FACTOR, and the MR maps were read before guessing.** Measured green channel
+p05..p95 across the four: **0.71-0.94** — uniformly matte, so nothing on them could catch a highlight
+from an analytic light, which is why they read as dead putty. Blue (metalness) ~0 on all four except the
+preservator's 0.14, so they were correctly dielectric and only the LEVEL was wrong. glTF multiplies
+`roughnessFactor` by the map, so scaling it keeps the map's own variation (crystal glossier than slime)
+and only moves the level: **0.35 / 0.45 / 0.35 / 0.30**.
+
+That is the second road to the black frame above, and it was checked rather than assumed. GGX
+`D = a2 / (PI * d^2)` with `a2 = roughness^4` blows up as roughness falls, and three's own 0.0525 clamp
+peaks past the half-float ceiling at grazing incidence. Measured peak linear value in the post buffer
+across four screen zones: **4.58** against 65504, i.e. **~14,000x of headroom**, 0 NaN and 0 Inf. So 0.3
+is safe with margin and the "do not go far below 0.3" note in `models.json` is conservative, not
+borderline.
+
+**+20% on all four**: 2.4 → **2.88**, 2.2 → **2.64**, 2.6 → **3.12**, 1.8 → **2.16**, read back off the
+live `instanceMatrix` scale as exactly those. The exit ladder stays 4.0 — it is a tuned full-cell prop,
+not part of this. The light height is `h * PROP_LIGHT.yMul` and not an absolute, so it moved with them
+(measured y = 3.31 / 3.04 / 3.59 / 2.48 = h x 1.15); it sits just ABOVE the crown on purpose, since a
+light inside the prop reaches only backfaces and would leave the organ itself dark.
+
+`three.PointLight` was missing `color` and `distance` — added typed to the extern rather than reached
+around with `untyped`.
+
+**Cost NOT measured.** Draw calls are unchanged (a light costs none) but the window would not take focus
+and the HUD read 1 FPS, so no GPU number here is worth anything. The per-slot cost is *inferred* from
+the street spotlight pool's measured ~0.32ms per light — three unrolls the point-light loop into every
+lit material the same way — which is why `pool` is 4 and sized for one room, and why the pool is built
+into the tunnel scene alone.
+
+**Verdict: landed, art values open.** With four differently-coloured lights inside 3 cells every organ
+is also lit by its neighbours', so the props read oily-iridescent rather than wet; the dials are
+`PROP_LIGHT.distCells` (isolate each colour) and per-prop `roughness` (raise toward 0.5-0.6 to calm the
+sheen).
+
+## Prop-backed objects had NO shadow at all, and the guard that did it was my own guess
+
+Reported as "habitat objects should throw shadows", and the cause was a comment I had written one entry
+earlier: `LampShadows` skipped any object with a glb, on the reasoning that *"an object drawn as a real
+3D prop already casts a REAL shadow map shadow, so a painted silhouette on top of it is a second
+shadow"*. The first half is true — `Models.instanced` flags the SOLID batch `castShadow` and
+`SewerGeom` builds the floor with `receiveShadow` — and the conclusion was still wrong.
+
+**Underground the only casting lights are the pooled spotlights**, and `LAMP_LIGHT.angle` is a
+36-degree half-cone from `CELL * yMul` = 5.6 up: a pool about two cells across. Ambient 3.95 and
+hemisphere 1.89 carry most of the tunnel's light and neither casts anything. So a prop standing in a
+lamp's pool casts, and a prop standing anywhere else — which in a 5x5 habitat room is nearly all of
+them — cast nothing at all, having also been cut out of the fake pass. The guard removed; the
+silhouette comes from the atlas cell via `Sprites.shadowContent`, which `iconOff` never touched, so an
+object whose icon is suppressed still has one to project. Confirmed live: the exit ladder now throws a
+shadow it did not have before.
+
+Worth knowing: the ladder is the one prop that reliably DOES stand in its own lamp cone, so it is also
+the one that can now show both shadows at once. If that reads wrong the fix is a per-row opt-out in
+`ObjModels.MODELS`, not putting the blanket guard back.
+
+**The assimilation arch stopped spinning.** `faceWall:Bool` could only say wall-or-hashed, so it became
+`enum PropYaw { WALL; HASHED; FRONTAL; }` and the arch takes FRONTAL — a plain yaw 0, since the tunnel
+camera rests looking down -Z with no yaw of its own and every one of these props was generated from a
+front-on reference. It is a doorway with the orifice in one leg, and a hashed turn showed it edge-on as
+often as not. FIXED and not camera-TRACKING, the same call the frontal FX quads make: a solid prop that
+swung with an orbiting camera would swim against its own shadow and the floor it stands on. Verified
+off the live `instanceMatrix`: both arch instances decompose to **yaw 0.0**, every other prop keeps its
+hashed spread (67.7 / 20.1 / 18.3 / -21.9 degrees on the biomineral).
+
+Its glb then turned out to be authored broadside, so an unturned placement showed the arch edge-on.
+Corrected with a 90-degree entry in **`Models.yawFix`**, which bakes the turn into the verts at load —
+the same mechanism street-lamp2's 90-degrees-off arm already used. That is the right home for it
+because it is a fact about the MODEL, not about how a prop is posed: every placement rule inherits it,
+hashed ones included, and `normalize()` measures the box after the turn so the height scaling is
+unaffected. Measured after: the arch's world extents are **5.32 x 2.64 x 2.43** — its long axis now
+runs across screen X (face-on) where it ran along Z (pointing away from the camera) before.
+
+**The coloured point lights are off for now** — `PROP_LIGHT.pool: 0`, which builds none, so
+`NUM_POINT_LIGHTS` drops back to the flame pool's 5 and the point-light block leaves the tunnel shaders
+entirely (verified: 5 lights, all idle flame, `prog` unchanged at 85). Author call while the organs'
+lighting is worked case by case. Nothing else was reverted: the table rows keep their colours, so it is
+that one number to turn back on, and `PropLights.update` early-outs on an empty pool so the per-frame
+object walk goes with it.
+
+**Verdict: landed.**

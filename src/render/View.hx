@@ -203,6 +203,13 @@ class View {
       firstFrame = cb;
     }
 
+// an area object was added or removed in the area on screen — see Area3D.refreshObjects
+  public function refreshObjects():Void
+    {
+      if (area3d != null)
+        area3d.refreshObjects();
+    }
+
 // is street-debug mode active? (the game suppresses movement input while it is)
   public inline function debugActive():Bool return debug.on;
 
@@ -410,46 +417,57 @@ class View {
           return renderer.compileAsync(s, camera);
         }).then(function(_)
         {
-          // the exit prop's glb arrives over an async load, so it is instanced HERE rather than beside
-          // the rest of the sewer warm scene: added after compileAsync had already walked that scene it
-          // would miss the warm entirely and compile its PBR program on the first real tunnel entry.
-          // all THREE variants go in — `transparent` and BackSide are both folded into three's program
-          // cache key, so the ghost and the outline hull each compile a program of their own, and
-          // without this they would compile on the first step onto a ladder / the first tactical toggle
+          // every tunnel prop's glb arrives over an async load, so they are instanced HERE rather than
+          // beside the rest of the sewer warm scene: added after compileAsync had already walked that
+          // scene they would miss the warm entirely and compile their PBR programs on the first real
+          // tunnel entry. the whole set has to land before the compileAsync below walks this scene,
+          // which is what the shared `left` counter is for
           return new js.lib.Promise(function(res, _)
             {
-              render.Models.get(render.RenderConfig.MODELS.sewerExit, function(_)
+              var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
+              var C = render.RenderConfig.OBJMARK;
+              // patched exactly as the tunnel builders patch their own: the vision mask carries a
+              // customProgramCacheKey, so a prop warmed UNPATCHED warms a program the game never
+              // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
+              // which reuses the glb template's own shared material — the very object the real
+              // build then patches (render.sewer.SewerProps)
+              var M = render.sewer.SewerMask;
+              var objModels = render.world.ObjModels.MODELS;
+              var wallProps = render.sewer.SewerStyle.PROP_MODELS;
+              var left = objModels.length + wallProps.length;
+              var done = function()
                 {
-                  var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
-                  var C = render.RenderConfig.OBJMARK;
-                  var h = render.sewer.SewerStyle.EXIT_MODEL_H;
-                  // patched exactly as the tunnel builders patch their own: the vision mask carries a
-                  // customProgramCacheKey, so a prop warmed UNPATCHED warms a program the game never
-                  // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
-                  // which reuses the glb template's own shared material — the very object the real
-                  // build then patches (render.sewer.SewerProps)
-                  var M = render.sewer.SewerMask;
-                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, SOLID).mesh);
-                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h, GHOST).mesh);
-                  M.patchMesh(render.Models.instanced(sewerScene, render.RenderConfig.MODELS.sewerExit, place, h,
-                    HULL(C.color, C.hullW)).mesh);
-                  // the wall props have the same async-load trap, but only ONE variant each: they are
-                  // decoration, so no ghost and no hull, and the whole set has to land before the
-                  // compileAsync below walks this scene
-                  var models = render.sewer.SewerStyle.PROP_MODELS;
-                  var left = models.length;
-                  for (i in 0...models.length)
+                  left--;
+                  if (left == 0)
+                    res(null);
+                };
+              // the object-backed props (exit ladders, the habitat's grown objects) in all THREE
+              // variants — `transparent` and BackSide are both folded into three's program cache key,
+              // so the ghost and the outline hull each compile a program of their own, and without
+              // this they would compile on the first step onto a prop / the first tactical toggle
+              for (i in 0...objModels.length)
+                {
+                  var m = objModels[i];
+                  render.Models.get(m.path, function(_)
                     {
-                      var p = models[i];
-                      render.Models.get(p.path, function(_)
-                        {
-                          M.patchMesh(render.Models.instanced(sewerScene, p.path, place, p.h, SOLID).mesh);
-                          left--;
-                          if (left == 0)
-                            res(null);
-                        });
-                    }
-                });
+                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h, SOLID).mesh);
+                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h, GHOST).mesh);
+                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h,
+                        HULL(C.color, C.hullW)).mesh);
+                      done();
+                    });
+                }
+              // the wall props have the same trap, but only ONE variant each: they are decoration,
+              // so no ghost and no hull
+              for (i in 0...wallProps.length)
+                {
+                  var p = wallProps[i];
+                  render.Models.get(p.path, function(_)
+                    {
+                      M.patchMesh(render.Models.instanced(sewerScene, p.path, place, p.h, SOLID).mesh);
+                      done();
+                    });
+                }
             });
         }).then(function(_)
         {
