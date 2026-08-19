@@ -118,13 +118,25 @@ class SewerArea implements Area3D
       // ABOVE the outro gate on purpose: a player who left standing ON a ladder would otherwise stay
       // behind a see-through one for the whole camera pull-out. cull() reads opts.outro itself
       render.world.ObjModels.cull(props, opts, tactical);
+      // the props' idle clock, above the gate for the same reason — the organs are still on screen
+      // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
+      render.world.PropShader.tick(opts.dtMs);
       // the exit ladders take the vision mask here rather than in ObjModels, which the city shares:
       // their glb arrives over a loader callback, so there is no build-time moment to catch. patch()
       // marks its own hook and early-outs on the next pass, so this is a couple of reads once landed
+      // the idle motion rides the same pass and for the same reason. patched in the SAME ORDER as the
+      // mask here and in render.View's boot warm: both chain onto whatever hook a material already
+      // carries and both extend its program cache key, so a different order underground than at warm
+      // would spell a different key and recompile the lot on the first habitat entry.
+      // the HULL is here where the mask skips it (it early-outs on fog:false, a marker not world
+      // geometry) — an outline that does not move with the body it traces detaches from it
       for (b in props)
         {
           SewerMask.patchMesh(b.solid.mesh);
           SewerMask.patchMesh(b.ghost.mesh);
+          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim);
+          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim);
+          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim);
         }
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)

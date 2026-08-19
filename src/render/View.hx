@@ -450,10 +450,19 @@ class View {
                   var m = objModels[i];
                   render.Models.get(m.path, function(_)
                     {
-                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h, SOLID).mesh);
-                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h, GHOST).mesh);
-                      M.patchMesh(render.Models.instanced(sewerScene, m.path, place, m.h,
-                        HULL(C.color, C.hullW)).mesh);
+                      // the idle-motion patch goes on in the SAME ORDER as render.sewer.SewerArea's
+                      // per-frame pass applies it — both chain onto the mask's hook and extend its
+                      // program cache key, so a swapped order here would warm a key the game never
+                      // asks for. a row with no `anim` is a no-op and keeps the plain program
+                      var s = render.Models.instanced(sewerScene, m.path, place, m.h, SOLID).mesh;
+                      var g = render.Models.instanced(sewerScene, m.path, place, m.h, GHOST).mesh;
+                      var h = render.Models.instanced(sewerScene, m.path, place, m.h,
+                        HULL(C.color, C.hullW)).mesh;
+                      M.patchMesh(s);
+                      M.patchMesh(g);
+                      render.world.PropShader.patchMesh(s, m.anim);
+                      render.world.PropShader.patchMesh(g, m.anim);
+                      render.world.PropShader.patchMesh(h, m.anim);
                       done();
                     });
                 }

@@ -251,8 +251,10 @@ typedef RendererInfo = {
   public var attributes:Dynamic;  // .position.getX/getY/getZ
   public function setAttribute(name:String, attr:Dynamic):Void;
   public function setIndex(idx:Array<Int>):Void;
+  public var boundingBox:Box3;    // null until computeBoundingBox() runs; the geometry's LOCAL extent
   public function computeVertexNormals():Void;
   public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
+  public function computeBoundingBox():Void;      // fills boundingBox; local space, so it is unaffected by any instance transform
   public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
   public function dispose():Void;
 }

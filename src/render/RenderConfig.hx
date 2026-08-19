@@ -664,6 +664,16 @@ class RenderConfig {
     rangeCells: 9.0,  // player distance at which a prop claims a slot
     fadeMul: 1.0,     // fade in/out duration as a multiple of BASE_MS — fade, never blink
   };
+  // idle motion for the grown props, folded into their own materials by render.world.PropShader: a
+  // height-weighted sway that moves the geometry and a finer ripple on the shading normal that a
+  // specular highlight crawls on. costs no draw call, no pass and no geometry.
+  //
+  // there is nothing per-prop here on purpose — amplitudes, speeds and falloffs are the `anim` column
+  // of render.world.ObjModels.MODELS, so a prop's motion lives on the same row as its height, yaw and
+  // light. this is only the master switch, the same role PROP_LIGHT.pool 0 plays for the point lights
+  public static final PROP_ANIM = {
+    enabled: true, // false stops the patch entirely, so every prop keeps the plain unanimated program
+  };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
   // target offset by tdx/tdz (also local, rotated) — so the cone is a downward street pool, not an

@@ -1679,3 +1679,98 @@ that one number to turn back on, and `PropLights.update` early-outs on an empty 
 object walk goes with it.
 
 **Verdict: landed.**
+
+## The assimilation arch is regenerated, and its 90-degree yawFix comes back out
+
+> Corrects the "authored broadside" paragraph of the entry above, which is wrong as written.
+
+The arch was replaced with a fresh generation (the previous one carried too much detail) and
+`models.json` repointed at it: **4,970 tris**, `tris: -1`, `tex: 512` = 52 texels/tri, in band with the
+other three organs. A `texSrc` now points at the atlas dumped back out of the glb, so the base colour
+is repaintable in Krita without regenerating anything.
+
+**`make model-export` was naming its dumps off the LABEL, not the source.** A label's folder and its
+source's folder are independent — `habitat/assimilation` lives at `habitat/flat/assimilation.glb` — so
+the export landed a folder away from the mesh it came from. Named off `e.src` now. Every other prop was
+unaffected because their two paths happened to match.
+
+**The 90-degree `Models.yawFix` entry is removed, and the measurement says it never belonged.** Raw
+AABB of the new glb: **X 0.977 / Y 0.724 / Z 0.470, X/Z 2.08** — broad across X, thin in Z, i.e. the
+arch already spans left-to-right, which is face-on to a camera resting down -Z. The previous model
+measures the same way (**2.27**), so the earlier claim that the glb was authored broadside was wrong
+about which axis, and the fix it justified was turning a face-on prop edge-on. `FRONTAL`'s plain 0 was
+correct from the start. `Models.yawFix` is back to its one-line street-lamp2 form.
+
+**Emissive was tried twice more and removed both times.** A derived map keyed off the new atlas at a
+pale, unsaturated tint (`lit 4.6% of atlas`, `emissiveStrength 1.5`) read no better than the saturated
+violet one before it. Back to `emissiveStrength: 0`, which skips the map entirely. Worth recording that
+a regenerated mesh **invalidates its emissive map outright** — the map is keyed to the atlas, and a new
+generation has entirely different UVs, so the old one lights random patches.
+
+**Verdict: landed.**
+
+## The organs start MOVING: a sway on the geometry, a ripple on the normal alone
+
+Three attempts to make a habitat organ read as alive had all been reverted — a derived emissive map
+twice, and a coloured point light — because every one of them *lit* the prop instead of moving it. So:
+animate it. New `render/world/PropShader.hx` folds two terms into the materials the props already draw
+with, and which props take them is an `anim` column on `ObjModels.MODELS`, beside `h`/`yaw`/`light`.
+A null row is never patched. Zero draw calls, zero passes, zero geometry — same trade `SewerMask` makes.
+
+- **SWAY** displaces `transformed.xz`, weighted `pow(clamp((y - base)/span, 0, 1), bend)` so the feet
+  stay planted. This is the half that reads with no light at all: it moves the silhouette.
+- **SHEEN** perturbs `objectNormal` and displaces nothing. This is what a specular highlight crawls on.
+
+**Per-instance phase comes off `instanceMatrix[3].xz`, never `gl_InstanceID`.** `Models.cull` repacks
+the surviving instances into the front of the buffer every frame, so a given prop's index changes as
+the camera moves and an index-keyed phase would jitter. The translation column is stable, needs no
+extra attribute, and puts two organs of the same kind out of phase by construction.
+
+Every authored value is a **fraction of the prop's own height**, converted at patch time from the
+geometry's bounding box — the `SewerProp.margin` -> `r` lesson: `Models.instanced` scales by height
+alone, so a hand-typed world constant stops meaning what it said the moment `h` is edited. Live:
+`base -0.364 / span 0.724` local, `amp 0.0145` local = **0.053 world** at the instance scale 3.646.
+
+**Two anchors, and they cannot share a local.** The tilt goes in at `<beginnormal_vertex>` so
+`<defaultnormal_vertex>` carries it to view space free; the displacement at `<begin_vertex>`, before
+`<project_vertex>`, which also means `SewerMask` samples the moved position. They recompute the phase
+separately because for an unlit material three wraps `<beginnormal_vertex>` in
+`#if defined( USE_ENVMAP ) || defined( USE_SKINNING )` — a local left there does not exist later. The
+outline hull is `MeshBasicMaterial` and takes the **displacement only**, but it must take it, or the
+tactical outline detaches from the body it traces.
+
+**The bug worth the entry: two chained patches re-wrapped each other every frame.** Both `SewerMask`
+and this test "already patched" by reading a mark on the material's hook — but that test can only see
+the OUTERMOST hook, and each patch replaces it. So the mask read its own mark as absent, re-patched
+(wrapping us, hiding our mark), and we re-patched on the next frame. Measured live: a cache key of
+`sewerMaskspropAnimL` repeated **21 times**, and `progs` climbing **95 -> 129 in four seconds**, one
+new program per frame. Fixed by copying the wrapped hook's own fields onto the new one in **both**
+files, so a marker survives being chained over. After: keys are exactly `sewerMaskspropAnimL` /
+`sewerMaskbpropAnimL` / `propAnimP`, and `progs` held **88 -> 88 over six seconds**.
+
+**The second bug: both injections declare locals in the SAME SCOPE.** `<beginnormal_vertex>` and
+`<begin_vertex>` are both inside `main()`, so the shared `phase`/`wave` strings redeclared `propPh` and
+`propWave` — `ERROR: 0:587: 'propPh' : redefinition`. The program never compiled, and what that looks
+like is worth the entry: three logs the error once, then `WebGL: INVALID_OPERATION: useProgram: program
+not valid` **255 times**, then gives up on the context — and the prop keeps being **submitted every
+frame while rasterizing nothing**. Both blocks are braced now, so each has its own scope.
+
+**Half an hour went into diagnosing that from the wrong end, and the console had it immediately.** The
+prop was invisible, so: it was measured drawing **60 `renderBufferDirect` calls a second** into the
+live scene; `visible` true, `count` 2; the projection was validated against the exit ladder (predicted
+pixel `[1123, 478]`, which is exactly where it is on screen); `emissive` was forced to white and
+`depthTest` to false, and *still* nothing appeared; and the vision mask was sampled straight off its
+canvas at both arch positions and returned `sewerVis` **1.000**, ruling itself out. Every one of those
+said "submitted, produces no fragments", which is the signature of an invalid program — one
+`list_console_messages` at the start would have named it.
+
+Verified after: **0 console errors**, `prog` 88, and a diff of two frames a half-cycle apart (2.36s at
+`rate` 0.2) over a 220px box on each arch — **873 px changed >4 / max 51** and **1482 px / max 107** —
+against a wall control of **0 px changed, max 1**. The arches are the only thing in the frame moving.
+
+**Still not measured: the GPU cost.** And the sheen half will be faint until a prop light is back on:
+specular needs an analytic light, `PROP_LIGHT.pool` is 0, and an organ away from a bracket has only the
+hemisphere term (intensity 1.89 against ambient 3.95), where a ~5-degree tilt is about a **1.4%
+luminance swing**.
+
+**Verdict: landed, art values open.**

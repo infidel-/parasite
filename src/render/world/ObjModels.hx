@@ -16,6 +16,7 @@ typedef PropBatch = {
   solid:Models.InstancedProp,        // the opaque prop, and the only batch that casts
   ghost:Models.InstancedProp,        // see-through twin, drawn for the placement under the player
   hull:Models.InstancedProp,         // backface outline shell, drawn only while the tactical view is up
+  model:ObjModel,                    // the row these batches were built from, for the per-frame patches
   cells:Array<{ col:Int, row:Int }>, // indexed like the placements, so index i IS placement i's cell
   solidMask:Array<Bool>,
   ghostMask:Array<Bool>,
@@ -46,6 +47,20 @@ typedef PropLight = {
   mul:Float, // multiplier on PROP_LIGHT.intensity
 };
 
+// the idle motion folded into a prop's own shaders, or null for one that stands still. every
+// amplitude and frequency here is a FRACTION of the prop's own height rather than a world number:
+// Models.instanced scales by HEIGHT alone, so a hand-typed world constant stops meaning what it said
+// the moment `h` is edited (the lesson SewerProp.margin -> `r` already paid for). the module that
+// consumes it is render.world.PropShader
+typedef PropAnim = {
+  amp:Float,       // sway amplitude at the crown, as a fraction of the prop's height
+  bend:Float,      // height falloff exponent — higher concentrates the motion further up
+  rate:Float,      // sway speed as a BASE_MS multiplier (smaller = slower)
+  strand:Float,    // phase cycles per prop-height across local XZ; 0 = the whole body flexes as one
+  sheen:Float,     // shading-normal ripple amplitude — the crawling specular, no displacement
+  sheenRate:Float, // ripple speed as a BASE_MS multiplier
+};
+
 // one object-backed glb prop. `keys` are AreaObject.getModelKey values rather than raw types because
 // several classes can share a type and still want different props (every habitat object is type
 // 'habitat', and that string is persisted game state — see objects.AreaObject.getModelKey)
@@ -55,6 +70,7 @@ typedef ObjModel = {
   h:Float,            // world height Models.instanced scales the prop to (CityConfig.CELL is 4)
   yaw:PropYaw,        // which turning rule the area kind is asked for
   light:PropLight,    // coloured point light this prop emits, or null for one that does not glow
+  anim:PropAnim,      // idle motion folded into its shaders, or null for a prop that stands still
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -85,6 +101,7 @@ class ObjModels
       h: 4.0,
       yaw: WALL,
       light: null, // a ladder is masonry and rungs, not a grown thing
+      anim: null,  // and bolted to a wall, so it had better not breathe
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -92,6 +109,7 @@ class ObjModels
       h: 2.88,
       yaw: HASHED,
       light: { color: 0x33bf59, mul: 1.0 }, // crystal green
+      anim: null, // worked case by case; a mineral spire is the one organ that should NOT sway
     },
     {
       keys: [ 'habitat_assimilation' ],
@@ -101,6 +119,17 @@ class ObjModels
                // "something you could step through" silhouette
       yaw: FRONTAL,
       light: { color: 0x8c2ecc, mul: 0.9 }, // maw violet
+      // an arch of braided tentacles: the limbs drift, both legs stay planted. `strand` is what
+      // stops it reading as one slab tipping side to side — at 3 cycles over its own height the
+      // near and far braids of the arch are visibly out of step
+      anim: {
+        amp: 0.02,
+        bend: 1.6,
+        rate: 0.2,
+        strand: 3.0,
+        sheen: 0.06,
+        sheenRate: 0.5,
+      },
     },
     {
       keys: [ 'habitat_preservator' ],
@@ -108,6 +137,7 @@ class ObjModels
       h: 3.12,
       yaw: HASHED,
       light: { color: 0xd98c26, mul: 1.0 }, // amber core
+      anim: null, // worked case by case
     },
     {
       keys: [ 'habitat_watcher' ],
@@ -115,6 +145,7 @@ class ObjModels
       h: 2.16,
       yaw: HASHED,
       light: { color: 0xf28c80, mul: 1.2 }, // pale flesh-pink eye
+      anim: null, // worked case by case
     },
   ];
 
@@ -168,6 +199,7 @@ class ObjModels
             solid: Models.instanced(scene, m.path, places, m.h, SOLID),
             ghost: Models.instanced(scene, m.path, places, m.h, GHOST),
             hull: Models.instanced(scene, m.path, places, m.h, HULL(C.color, C.hullW)),
+            model: m,
             cells: cellsByPath.get(m.path),
             solidMask: [for (_ in places) true],
             ghostMask: [for (_ in places) false],

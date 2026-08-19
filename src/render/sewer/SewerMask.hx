@@ -708,6 +708,14 @@ class SewerMask
             StringTools.replace(shader.fragmentShader, '#include <fog_fragment>',
               '#include <fog_fragment>\n' + sample + apply);
         };
+      // carry forward the marks of whatever hook we just wrapped, so the "already patched" test above
+      // — which can only read the OUTERMOST hook — still finds a marker that got chained over.
+      // without it two markers that wrap each other both read as absent and re-patch every frame, a
+      // mutual loop that compiles a new program per round (found live against render.world.PropShader:
+      // a 21-deep cache key and 95 -> 129 programs in four seconds)
+      if (prev != null)
+        for (f in Reflect.fields(prev))
+          Reflect.setField(hook, f, Reflect.field(prev, f));
       hook.sewerMask = true;
       mat.onBeforeCompile = hook;
       // three keys its program cache on base material params, NOT on onBeforeCompile — without a key
