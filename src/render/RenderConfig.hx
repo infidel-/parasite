@@ -674,6 +674,16 @@ class RenderConfig {
   public static final PROP_ANIM = {
     enabled: true, // false stops the patch entirely, so every prop keeps the plain unanimated program
   };
+  // the grown props' living FX, drawn by render.actors.PropFX as additive quads glued to the prop: a
+  // pulsing, writhing knot of innards hung inside it, and a ring of fireflies orbiting it, one per
+  // habitat level. HDR-tinted, so the bloom pass is what gives them their halo.
+  //
+  // nothing per-prop here either, for the same reason as PROP_ANIM — sizes, speeds, colours and the
+  // ring geometry are the `core` and `fly` columns of render.world.ObjModels.MODELS, so a prop's FX
+  // sit on the same row as its height, yaw, light and motion. this is only the master switch
+  public static final PROP_FX = {
+    enabled: true, // false draws none of it, and the pools stay empty
+  };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
   // target offset by tdx/tdz (also local, rotated) — so the cone is a downward street pool, not an
@@ -815,5 +825,9 @@ class RenderConfig {
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
     slimeTrail: 'textures/fx/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
+    // the grown props' living FX (render.actors.PropFX): a knot of tentacles that hangs in the
+    // assimilation arch and writhes, and the mote its fireflies are drawn with. both chroma-keyed
+    fxInnards: 'textures/fx/innards.png',
+    fxFirefly: 'textures/fx/firefly.png',
   };
 }

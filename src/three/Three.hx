@@ -274,7 +274,9 @@ typedef RendererInfo = {
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
   public function new(params:Dynamic);
-  public var color:Color; // base color (mutate in place, e.g. lerpColors, for live tinting)
+  public var color:Color;   // base color (mutate in place, e.g. lerpColors, for live tinting)
+  public var map:Texture;   // base-colour texture; swapped per pool slot on the additive FX quads
+  public var opacity:Float; // 0..1, live per frame on those quads (needs transparent:true)
 }
 // diffuse-only lit material: per-pixel Lambert, no GGX specular lobe and no IBL. same map/emissive/
 // shadow feature set as Standard minus roughness/metalness, so it is the drop-in for the fully matte

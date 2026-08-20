@@ -352,6 +352,14 @@ class View {
       var sparks = new render.particles.Sparks(g, camera);
       sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
       sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
+      // the grown props' writhing core: a plain additive quad EXCEPT for its uv-disturbance patch,
+      // which carries a customProgramCacheKey of its own — so it is a program glowQuad's does not
+      // cover and would otherwise compile on the first habitat entry. its fireflies ARE glowQuad's
+      // material and need nothing. warmed in the CITY scene deliberately: MeshBasic takes no light
+      // count, so the program does not vary by area, and this scene is the one bound to the
+      // composer's linear target below (which the cache key DOES bake in)
+      for (m in render.actors.PropFX.warmupMeshes())
+        g.add(m);
       // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
       // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
       // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).

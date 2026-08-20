@@ -1711,66 +1711,84 @@ generation has entirely different UVs, so the old one lights random patches.
 
 ## The organs start MOVING: a sway on the geometry, a ripple on the normal alone
 
-Three attempts to make a habitat organ read as alive had all been reverted — a derived emissive map
-twice, and a coloured point light — because every one of them *lit* the prop instead of moving it. So:
-animate it. New `render/world/PropShader.hx` folds two terms into the materials the props already draw
-with, and which props take them is an `anim` column on `ObjModels.MODELS`, beside `h`/`yaw`/`light`.
-A null row is never patched. Zero draw calls, zero passes, zero geometry — same trade `SewerMask` makes.
+Three attempts to make an organ read as alive had all been reverted (a derived emissive map twice, a
+coloured point light) because each *lit* the prop instead of moving it. So animate it:
+`render/world/PropShader.hx` folds two terms into the materials the props already draw with, gated by
+an `anim` column on `ObjModels.MODELS` beside `h`/`yaw`/`light`; a null row is never patched. Zero draw
+calls, zero passes, zero geometry. **SWAY** displaces `transformed.xz` weighted
+`pow(clamp((y-base)/span,0,1), bend)` so the feet stay planted — the half that reads with no light,
+because it moves the silhouette. **SHEEN** perturbs `objectNormal` only, for a highlight to crawl on.
 
-- **SWAY** displaces `transformed.xz`, weighted `pow(clamp((y - base)/span, 0, 1), bend)` so the feet
-  stay planted. This is the half that reads with no light at all: it moves the silhouette.
-- **SHEEN** perturbs `objectNormal` and displaces nothing. This is what a specular highlight crawls on.
+- **Per-instance phase off `instanceMatrix[3].xz`, never `gl_InstanceID`.** `Models.cull` repacks
+  survivors into the front of the buffer every frame, so a prop's index changes with the camera and an
+  index-keyed phase jitters. Free, no extra attribute, and puts two organs of a kind out of phase.
+- **Authored values are fractions of the prop's height**, converted at patch time off the geometry's
+  bounding box (the `SewerProp.margin` -> `r` lesson: `Models.instanced` scales by height alone). Live:
+  `span 0.724` local, `amp 0.0145` local = **0.053 world** at instance scale 3.646.
+- **The two anchors cannot share a local.** Tilt at `<beginnormal_vertex>` (so `<defaultnormal_vertex>`
+  carries it to view space free), displacement at `<begin_vertex>` before `<project_vertex>` (so
+  `SewerMask` samples the moved position). The phase is recomputed at each: for an unlit material three
+  wraps `<beginnormal_vertex>` in `#if defined( USE_ENVMAP ) || defined( USE_SKINNING )`. The hull is
+  `MeshBasicMaterial` and takes the displacement ONLY — but must take it, or the outline detaches.
+- **Two chained patches re-wrapped each other every frame.** The "already patched" mark can only be
+  read on the OUTERMOST hook and each patch replaces it, so mask and anim each read the other's mark as
+  absent. Measured: cache key `sewerMaskspropAnimL` **x21**, `progs` **95 -> 129 in four seconds**.
+  Fixed by copying the wrapped hook's own fields onto the new one, in BOTH files.
+- **...and recomputing the phase redeclared the locals: both anchors are inside `main()`.**
+  `ERROR: 0:587: 'propPh' : redefinition`. **An invalid program is invisible, not black** — three logs
+  once, spams `useProgram: program not valid` **x255**, mutes the context, and the prop is still
+  submitted every frame rasterizing nothing. Braced each block.
+- **That took half an hour from the wrong end and the console had it immediately.** Measured 60
+  `renderBufferDirect`/s, `visible` true, projection validated against the ladder, forced `emissive`
+  white AND `depthTest` false, sampled the mask canvas (`sewerVis` **1.000**). All five said "submitted,
+  no fragments" — which IS the signature. `list_console_messages` FIRST, not last.
 
-**Per-instance phase comes off `instanceMatrix[3].xz`, never `gl_InstanceID`.** `Models.cull` repacks
-the surviving instances into the front of the buffer every frame, so a given prop's index changes as
-the camera moves and an index-keyed phase would jitter. The translation column is stable, needs no
-extra attribute, and puts two organs of the same kind out of phase by construction.
+Verified: **0 console errors**, `prog` 88, and two frames a half-cycle apart (2.36s at `rate` 0.2) over
+a 220px box per arch — **873 px changed >4 / max 51** and **1482 px / max 107** — against a wall control
+of **0 px, max 1**. GPU cost **not measured**. The sheen stays faint until a prop light is back on:
+`PROP_LIGHT.pool` is 0, so an organ away from a bracket has only the hemisphere term (1.89 vs ambient
+3.95), where a ~5 degree tilt is a **~1.4% luminance swing**.
 
-Every authored value is a **fraction of the prop's own height**, converted at patch time from the
-geometry's bounding box — the `SewerProp.margin` -> `r` lesson: `Models.instanced` scales by height
-alone, so a hand-typed world constant stops meaning what it said the moment `h` is edited. Live:
-`base -0.364 / span 0.724` local, `amp 0.0145` local = **0.053 world** at the instance scale 3.646.
+**Verdict: landed, art values open.**
 
-**Two anchors, and they cannot share a local.** The tilt goes in at `<beginnormal_vertex>` so
-`<defaultnormal_vertex>` carries it to view space free; the displacement at `<begin_vertex>`, before
-`<project_vertex>`, which also means `SewerMask` samples the moved position. They recompute the phase
-separately because for an unlit material three wraps `<beginnormal_vertex>` in
-`#if defined( USE_ENVMAP ) || defined( USE_SKINNING )` — a local left there does not exist later. The
-outline hull is `MeshBasicMaterial` and takes the **displacement only**, but it must take it, or the
-tactical outline detaches from the body it traces.
+## The organs get insides: a writhing core sprite and orbiting fireflies
 
-**The bug worth the entry: two chained patches re-wrapped each other every frame.** Both `SewerMask`
-and this test "already patched" by reading a mark on the material's hook — but that test can only see
-the OUTERMOST hook, and each patch replaces it. So the mask read its own mark as absent, re-patched
-(wrapping us, hiding our mark), and we re-patched on the next frame. Measured live: a cache key of
-`sewerMaskspropAnimL` repeated **21 times**, and `progs` climbing **95 -> 129 in four seconds**, one
-new program per frame. Fixed by copying the wrapped hook's own fields onto the new one in **both**
-files, so a marker survives being chained over. After: keys are exactly `sewerMaskspropAnimL` /
-`sewerMaskbpropAnimL` / `propAnimP`, and `progs` held **88 -> 88 over six seconds**.
+`render/actors/PropFX.hx` + `core`/`fly` columns on `ObjModels.MODELS`, assimilation only. New sprites
+`fx/innards`, `fx/firefly`. Core = one upright additive quad in the arch's opening, CPU scale-breath
+plus a FRAGMENT-shader uv disturbance; fly = one mote circling parallel to the floor with a fading
+tail, HDR-tinted so the existing bloom pass is its halo. Both columns are fractions of the row's `h`
+(the arch's art is **1.35 h wide, 1 h tall, 0.65 h deep**), so a later 1.3x resize moved the quads free.
 
-**The second bug: both injections declare locals in the SAME SCOPE.** `<beginnormal_vertex>` and
-`<begin_vertex>` are both inside `main()`, so the shared `phase`/`wave` strings redeclared `propPh` and
-`propWave` — `ERROR: 0:587: 'propPh' : redefinition`. The program never compiled, and what that looks
-like is worth the entry: three logs the error once, then `WebGL: INVALID_OPERATION: useProgram: program
-not valid` **255 times**, then gives up on the context — and the prop keeps being **submitted every
-frame while rasterizing nothing**. Both blocks are braced now, so each has its own scope.
+- **`transparent` + `DoubleSide` = TWO draw calls per quad.** three renders it FrontSide then BackSide,
+  each its own call AND program. A/B on 16 quads: **104/72/104 = +32**, double the inventory. The split
+  only orders the two faces, and additive is commutative — `forceSinglePass: true` gives **88/72/88 =
+  +16**, and `propCore` programs 6 -> 3.
+- **Not on `Sparks`' pool**, though `glowQuad` draws exactly the firefly. Its slots are reused by
+  arbitrary callers each frame, so a per-slot shader patch leaks into whoever draws there next; it
+  resets map/colour/opacity but has no uniform reset. Both entry points are at 7 positional args too.
+- **Proving a fragment patch is live.** A failed `StringTools.replace` is silent — uniforms bind, the
+  sprite draws, nothing warps. Frame-diffing cannot settle it (sputtering lamps moved a "static" wall
+  control by 3,135 px, and the sway moves the same box). `warp: 2.0` drives every tap past
+  `ClampToEdgeWrapping` and **all four membranes vanish**. That clamp is load-bearing: under
+  `RepeatWrapping` a disturbed uv wraps to the opposite edge and smears the sprite over itself.
+- **`IMP_ASSIMILATION` caps at level 1**, so "one firefly per level" meant one dot forever (biomineral
+  3, preservator 3, watcher 2). Hence `perLevel` on the row.
+- **A shared ring at one radius is a formation, not a swarm** — evenly spaced dots on a tilted circle
+  read as a triangle turning. Flat ring instead, each dot rolling its own radius/height/speed/tilt from
+  `fract(sin)` keyed on cell phase + index, plus radius breath, vertical wander and twinkle. Derived,
+  so still no state per firefly.
+- **A fading tail wants no history buffer.** The orbit is a closed form in the clock, so segment `j` is
+  the same path at `t - j*gap` — exact, allocation-free, right on the frame a prop appears, and right
+  at 1 FPS, where a per-frame history samples the arc ten times too coarsely.
+- **Upright costs 1.57x of apparent size and no `size` buys it back**: the quad's normal sits 19 deg
+  off the view leaned and 53 deg upright, projecting 0.95 vs **0.60**, and the arch caps `size`. So
+  brightness is the only lever (`alpha` 0.5 -> 0.72). Depth is capped the same way — `z: 0` already
+  puts the braids in front, and moving further back costs `dz*tan(53)` of `y` to stay put, 1.3x the
+  move, through the floor.
 
-**Half an hour went into diagnosing that from the wrong end, and the console had it immediately.** The
-prop was invisible, so: it was measured drawing **60 `renderBufferDirect` calls a second** into the
-live scene; `visible` true, `count` 2; the projection was validated against the exit ladder (predicted
-pixel `[1123, 478]`, which is exactly where it is on screen); `emissive` was forced to white and
-`depthTest` to false, and *still* nothing appeared; and the vision mask was sampled straight off its
-canvas at both arch positions and returned `sewerVis` **1.000**, ruling itself out. Every one of those
-said "submitted, produces no fragments", which is the signature of an invalid program — one
-`list_console_messages` at the start would have named it.
-
-Verified after: **0 console errors**, `prog` 88, and a diff of two frames a half-cycle apart (2.36s at
-`rate` 0.2) over a 220px box on each arch — **873 px changed >4 / max 51** and **1482 px / max 107** —
-against a wall control of **0 px changed, max 1**. The arches are the only thing in the frame moving.
-
-**Still not measured: the GPU cost.** And the sheen half will be faint until a prop light is back on:
-specular needs an analytic light, `PROP_LIGHT.pool` is 0, and an organ away from a bracket has only the
-hemisphere term (intensity 1.89 against ambient 3.95), where a ~5-degree tilt is about a **1.4%
-luminance swing**.
+Cost, 60 FPS foregrounded: **+16 calls** (94/78), `submit` **+0.15..0.30ms**. GPU sits inside the
+noise — 15 interleaved pairs median **5.88/5.43**, but the spread is **4.6-7.1 on both sides** and a
+5-pair sweep came out *inverted*, so call it <=~0.5ms of a 16.6ms frame that already idles 14.2ms.
+`progs` **92 -> 92** across habitat entry (the boot warm covers both materials); 0 console errors.
 
 **Verdict: landed, art values open.**

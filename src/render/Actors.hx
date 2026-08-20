@@ -52,6 +52,7 @@ class Actors {
   // per-frame sub-passes: each reads the actor-pose map (read-only), paints through the surfaces
   var decals:Decals;                                     // ground/wall decoration + street debris
   var lampShadows:LampShadows;                           // fake cast shadows (lamps + barrels) + barrel flame body/glow
+  var propFX:PropFX;                                     // the grown props' living FX (writhing core + orbiting fireflies)
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
   var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
@@ -103,6 +104,8 @@ class Actors {
       decals = new Decals(game, sprites, actorGroup);
       slimeTrail = new SlimeTrail(actorGroup, sprites);
       lampShadows = new LampShadows(game, actorGroup, sprites, sparks, particles, actors);
+      // owns its own quad pools rather than painting through the surfaces above — see PropFX
+      propFX = new PropFX(game, actorGroup);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
       bubbles = game.ui.hud.bubbles;
@@ -260,6 +263,9 @@ class Actors {
         pp != null ? pp.x : pw.x,
         pp != null ? pp.z : pw.z);
       lampShadows.bodyAndShadows(dtMs);
+      // the grown props' core + fireflies. its own pools, so it does not have to sit inside the
+      // sprites/beams/sparks frame below — it is here for locality with the other world-anchored FX
+      propFX.update(dtMs);
       lampShadows.driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes

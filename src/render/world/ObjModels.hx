@@ -61,6 +61,62 @@ typedef PropAnim = {
   sheenRate:Float, // ripple speed as a BASE_MS multiplier
 };
 
+// the pulsing "innards" sprite drawn INSIDE a prop hollow enough to show one: a single frontal
+// additive quad, breathing on a slow scale beat, with its own map UVs disturbed in the FRAGMENT
+// shader so the mass writhes instead of merely resizing. same fraction-of-height rule as PropAnim
+// above, and for the same reason. the module that consumes it is render.actors.PropFX
+typedef PropCore = {
+  tex:String,      // RenderConfig.TEXTURES entry
+  y:Float,         // centre height as a fraction of the prop's height
+  z:Float,         // depth offset toward (+) / away from (-) the resting camera, same fraction
+  size:Float,      // quad edge, same fraction
+  lean:Float,      // radians the quad leans BACK toward the overhead camera. Sprites.TILT is the
+                   // actor-sprite value and the default for anything glued to a leaning billboard;
+                   // 0 stands it upright, which is what a prop of real vertical GEOMETRY wants — the
+                   // lean pushes the quad's top away from the camera and out of the arch's own plane
+  color:Int,       // tint
+  glow:Float,      // HDR multiplier on the tint — what carries it over the bloom threshold
+  alpha:Float,     // additive opacity
+  pulse:Float,     // scale-breath depth (0.15 = +/-15% of `size`)
+  pulseRate:Float, // breath speed as a BASE_MS multiplier
+  warp:Float,      // uv disturbance amplitude, in uv units
+  warpRate:Float,  // disturbance speed as a BASE_MS multiplier
+};
+
+// the fireflies orbiting a prop: as many as the object's habitat LEVEL, circling it MOSTLY PARALLEL
+// TO THE FLOOR. everything below that is per-dot spread, and the spread is the whole point — one
+// shared circle at one radius and one height reads as a rigid formation turning, not as a swarm. each
+// dot rolls its own radius, height, speed and small plane tilt off these bases (stably, off the cell
+// and its own index), then breathes its radius and wanders vertically on beats of its own. same
+// fraction-of-the-prop's-height rule as PropCore and PropAnim
+typedef PropFly = {
+  tex:String,     // RenderConfig.TEXTURES entry — core, halo and flare baked into ONE sprite
+  perLevel:Int,   // fireflies PER habitat level. not always 1: an improvement's cap is its own (see
+                  // const.EvolutionConst — biomineral 3, preservator 3, watcher 2, and the
+                  // assimilation cavity caps at ONE), so a raw level count would leave the arch with
+                  // a single dot for the whole game
+  y:Float,        // base ring height, as a fraction of the prop's height
+  yVar:Float,     // per-dot height spread off it (+/-), same fraction. what puts the swarm in 3D
+  r:Float,        // base ring radius, same fraction. keep it clear of the prop's own footprint
+  rVar:Float,     // per-dot radius spread (+/-), and at half depth the slow breath on top of it
+  tilt:Float,     // per-dot orbit-plane tilt SPREAD off horizontal (+/- radians). small: the ring is
+                  // meant to read as flat, the depth comes from yVar and from the prop occluding it
+  size:Float,     // quad edge, same fraction
+  color:Int,      // tint
+  glow:Float,     // HDR multiplier — this is what makes them bloom
+  alpha:Float,    // additive opacity at the top of the twinkle
+  rate:Float,     // base orbit speed as a BASE_MS multiplier
+  rateVar:Float,  // per-dot speed spread as a fraction of it (+/-) — dots drift apart, then re-cross
+  bob:Float,      // vertical wander amplitude, same fraction
+  twinkle:Float,  // brightness modulation depth, 0..1 (opacity dips to alpha * (1 - twinkle))
+  trail:Int,      // quads trailing BEHIND each dot, 0 for a bare mote. they are not remembered
+                  // positions — the orbit is a closed form in the clock, so each is the same path
+                  // evaluated at an earlier time (see render.actors.PropFX.drawFlies)
+  trailGap:Float, // clock step between trailing samples, in BASE_MS units. trail * this is how far
+                  // back the tail reaches, so the two together set its length
+  trailSize:Float,// the tail-end quad's size as a fraction of the head's
+};
+
 // one object-backed glb prop. `keys` are AreaObject.getModelKey values rather than raw types because
 // several classes can share a type and still want different props (every habitat object is type
 // 'habitat', and that string is persisted game state — see objects.AreaObject.getModelKey)
@@ -71,6 +127,8 @@ typedef ObjModel = {
   yaw:PropYaw,        // which turning rule the area kind is asked for
   light:PropLight,    // coloured point light this prop emits, or null for one that does not glow
   anim:PropAnim,      // idle motion folded into its shaders, or null for a prop that stands still
+  core:PropCore,      // pulsing innards sprite drawn inside it, or null
+  fly:PropFly,        // fireflies orbiting it, one per habitat level, or null
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -102,21 +160,27 @@ class ObjModels
       yaw: WALL,
       light: null, // a ladder is masonry and rungs, not a grown thing
       anim: null,  // and bolted to a wall, so it had better not breathe
+      core: null,  // nor has it any insides
+      fly: null,
     },
     {
       keys: [ 'habitat_biomineral' ],
       path: RenderConfig.MODELS.habitatBiomineral,
-      h: 2.88,
+      h: 3.74, // 1.3x the 2.88 it shipped at, with the other three organs
       yaw: HASHED,
       light: { color: 0x33bf59, mul: 1.0 }, // crystal green
       anim: null, // worked case by case; a mineral spire is the one organ that should NOT sway
+      core: null, // its own treatment comes later, and is meant to be nothing like the arch's
+      fly: null,
     },
     {
       keys: [ 'habitat_assimilation' ],
       path: RenderConfig.MODELS.habitatAssimilation,
-      h: 2.64, // wider than it is tall, so this spans ~4.8 of the cell and overhangs into its
-               // neighbours — at 1.8 the arch read squat beside the preservator and lost the
-               // "something you could step through" silhouette
+      h: 3.43, // 1.3x the 2.64 it shipped at, with the other three organs. wider than it is tall, so
+               // this now spans ~4.6 world units against a 4-unit cell and overhangs a third of a cell
+               // into each neighbour — at 1.8 the arch read squat beside the preservator and lost the
+               // "something you could step through" silhouette. everything hung on it (the core quad,
+               // the firefly ring) is authored as a FRACTION of this, so it all scales with the row
       yaw: FRONTAL,
       light: { color: 0x8c2ecc, mul: 0.9 }, // maw violet
       // an arch of braided tentacles: the limbs drift, both legs stay planted. `strand` is what
@@ -130,22 +194,87 @@ class ObjModels
         sheen: 0.06,
         sheenRate: 0.5,
       },
+      // the arch is a DOORWAY with nothing behind it, so the membrane hangs in the opening rather
+      // than inside a body, sized to fill it and sat at mid-height. the tint is the row's own maw
+      // violet, the one the pulled point light carried.
+      // EVERY number here is in units of `h`, and the arch's own art measures 1.35 h wide, 1 h tall
+      // and 0.65 h deep — quote those ratios rather than world units, or the whole block goes stale
+      // the next time the row is resized (it has been, by 1.3x, once already)
+      core: {
+        tex: RenderConfig.TEXTURES.fxInnards,
+        y: 0.46,
+        // dead centre of the braid depth, which is enough to put the near braids IN FRONT of the
+        // membrane — they occlude it instead of it painting additively over them. going further back
+        // is the tempting move and it is wrong: the tunnel camera looks down ~53 degrees, so moving a
+        // thing away also moves it UP the screen by dz * sin(53), and cancelling that with `y` costs
+        // dz * tan(53) — 1.3x the depth move — which drops the quad's bottom edge through the floor
+        z: 0.0,
+        // 0.99 h of quad. the art's knot fills only the middle ~65% of its frame, so what reads is
+        // ~0.64 h — it fills the opening's height and laps onto the inner edge of each braid, which
+        // additive blending turns into the throat glowing through them. it CANNOT match the old
+        // LEANED look at any value: upright, the quad's height projects by cos(53 deg) = 0.60 against
+        // the leaned version's 0.95, and buying that 1.57x back needs more quad than the arch is tall
+        size: 0.99,
+        lean: 0.0, // UPRIGHT. the arch is real vertical geometry and the membrane hangs in its
+                   // opening, so the actor-sprite lean would tip the quad's top out through the back
+        color: 0x8c2ecc,
+        glow: 2.6, // the WALL_LAMP_GLOW figure — what it takes to clear BLOOM_THRESHOLD 0.9
+        // brighter than the leaned version needed, and this is the only lever left: standing it
+        // upright cost 1.57x of apparent height and the arch caps how much size can buy back
+        alpha: 0.72,
+        // both slow on purpose: `t` runs at 1 per BASE_MS, so 6.67/s — these are a ~17s breath and a
+        // ~7s writhe. anything faster reads as a flicker rather than something alive and idling
+        pulse: 0.14,
+        pulseRate: 0.06,
+        warp: 0.05, // in uv units, so ~5% of the sprite. 2.0 drives every tap past the clamp and the
+                    // membrane disappears outright — which is how the patch was proved to be live
+        warpRate: 0.13,
+      },
+      // ONE mote circling the arch roughly parallel to the floor, dragging a fading tail. in units of
+      // `h` again (the arch is 1.35 h wide, so 0.67 h of half-span): the radius band 0.35..0.55 h is
+      // INSIDE that, so the mote flies through the opening rather than round the outside and laps the
+      // membrane, which is the point. the height band 0.27..0.83 h plus the braids occluding the far
+      // side of the circle is what reads as 3D — the ring's own tilt is only a small per-dot jitter
+      fly: {
+        tex: RenderConfig.TEXTURES.fxFirefly,
+        perLevel: 1, // IMP_ASSIMILATION caps at level 1, so this IS the arch's whole count
+        y: 0.55,
+        yVar: 0.28,
+        r: 0.45,
+        rVar: 0.22,
+        tilt: 0.25,
+        size: 0.22,
+        color: 0xb46bff,
+        glow: 3.0,
+        alpha: 0.8,
+        rate: 0.18,
+        rateVar: 0.45,
+        bob: 0.10,
+        twinkle: 0.5,
+        trail: 9,        // 10 quads all told, so ~10 draw calls for the whole swarm
+        trailGap: 0.5,   // 9 * 0.5 of clock behind the head = ~46 degrees of arc at this speed
+        trailSize: 0.25,
+      },
     },
     {
       keys: [ 'habitat_preservator' ],
       path: RenderConfig.MODELS.habitatPreservator,
-      h: 3.12,
+      h: 4.06, // 1.3x the 3.12 it shipped at, with the other three organs — the tallest of the four
       yaw: HASHED,
       light: { color: 0xd98c26, mul: 1.0 }, // amber core
       anim: null, // worked case by case
+      core: null,
+      fly: null,
     },
     {
       keys: [ 'habitat_watcher' ],
       path: RenderConfig.MODELS.habitatWatcher,
-      h: 2.16,
+      h: 2.81, // 1.3x the 2.16 it shipped at, with the other three organs
       yaw: HASHED,
       light: { color: 0xf28c80, mul: 1.2 }, // pale flesh-pink eye
       anim: null, // worked case by case
+      core: null,
+      fly: null,
     },
   ];
 
