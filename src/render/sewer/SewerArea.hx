@@ -121,6 +121,7 @@ class SewerArea implements Area3D
       // the props' idle clock, above the gate for the same reason — the organs are still on screen
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);
+      render.world.PropGlow.tick(opts.dtMs);
       // the exit ladders take the vision mask here rather than in ObjModels, which the city shares:
       // their glb arrives over a loader callback, so there is no build-time moment to catch. patch()
       // marks its own hook and early-outs on the next pass, so this is a couple of reads once landed
@@ -137,6 +138,10 @@ class SewerArea implements Area3D
           render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim);
           render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim);
           render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim);
+          // the surface glow LAST, and it takes no hull: totalEmissiveRadiance only exists in a lit
+          // shader, and an outline marker must not luminesce anyway
+          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine);
+          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine);
         }
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)

@@ -94,6 +94,9 @@ package three;
   public function copy(c:Color):Color;                   // copy another color's channels in place
   public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
   public function setHex(hex:Int):Color;                 // set channels from 0xRRGGBB (sRGB-decoded)
+  public var r:Float;                                    // LINEAR red 0..1 (setHex decodes sRGB)
+  public var g:Float;                                    // linear green
+  public var b:Float;                                    // linear blue
 }
 
 @:native("THREE.Object3D") extern class Object3D {

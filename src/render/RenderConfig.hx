@@ -642,14 +642,17 @@ class RenderConfig {
   public static final PROP_LIGHT = {
     // live point lights, and the whole feature's on/off switch: 0 builds none, so NUM_POINT_LIGHTS
     // drops back to the flame pool's 5 and the point-light block leaves the tunnel shaders entirely.
-    // CURRENTLY 0 — the organs' lighting is being worked case by case and the coloured pools were
-    // pulled for now; the table rows in ObjModels.MODELS keep their colours, so turning it back on is
-    // this one number.
-    // when on: an organ is a room feature and a habitat room holds ~1-3, so size it for what ONE room
-    // shows rather than for the level (4 was the starting value). each slot is a full extra light
+    // an organ is a room feature and a habitat room holds ~1-3, so this is sized for what ONE room
+    // shows rather than for the level (4 was the original value). each slot is a full extra light
     // evaluation in every lit fragment of the frame — the street spotlight pool measured LINEAR at
-    // ~0.32ms per light on the integrated Radeon (docs/3d-render.md)
-    pool: 0,
+    // ~0.32ms per light on the integrated Radeon (docs/3d-render.md).
+    //
+    // 2 because exactly ONE prop declares a `light` now: the biomineral, which is the energy organ
+    // and the one that should read as lighting its room. A habitat holds several of them (Habitat
+    // .update sums energy over every formation), so a pool of 1 would light the nearest and leave
+    // its neighbour dark. The other three organs' rows are `light: null` with their old colours in
+    // the comment, so giving one of them a light back is an edit to that row, not to this number
+    pool: 2,
     intensity: 9.0,   // base intensity, scaled per prop by its table row's `mul`
     distCells: 3.0,   // hard cutoff radius in cells. SHORT on purpose: these cast NO shadow (a point
                       // shadow is six cube faces per light), so reach is the only thing stopping an
@@ -673,6 +676,17 @@ class RenderConfig {
   // light. this is only the master switch, the same role PROP_LIGHT.pool 0 plays for the point lights
   public static final PROP_ANIM = {
     enabled: true, // false stops the patch entirely, so every prop keeps the plain unanimated program
+  };
+  // the grown props' SURFACE glow, folded into their own materials by render.world.PropGlow: motes
+  // travelling a slow helix through the body, masked to whatever the prop's own baked albedo says is
+  // mineral. costs no draw call, no pass and no art; the halo is the composer's existing bloom pass
+  // catching an HDR tint.
+  //
+  // nothing per-prop here either, for the same reason as PROP_ANIM — the mask band, the tint, the
+  // mote count and every rate are the `shine` column of render.world.ObjModels.MODELS. this is only
+  // the master switch, and it is also the A/B lever: false keeps every prop on the unpatched program
+  public static final PROP_GLOW = {
+    enabled: true,
   };
   // the grown props' living FX, drawn by render.actors.PropFX as additive quads glued to the prop: a
   // pulsing, writhing knot of innards hung inside it, and a ring of fireflies orbiting it, one per

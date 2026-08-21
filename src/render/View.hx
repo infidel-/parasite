@@ -471,6 +471,8 @@ class View {
                       render.world.PropShader.patchMesh(s, m.anim);
                       render.world.PropShader.patchMesh(g, m.anim);
                       render.world.PropShader.patchMesh(h, m.anim);
+                      render.world.PropGlow.patchMesh(s, m.shine);
+                      render.world.PropGlow.patchMesh(g, m.shine);
                       done();
                     });
                 }

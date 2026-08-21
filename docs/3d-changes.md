@@ -1792,3 +1792,207 @@ noise — 15 interleaved pairs median **5.88/5.43**, but the spread is **4.6-7.1
 `progs` **92 -> 92** across habitat entry (the boot warm covers both materials); 0 console errors.
 
 **Verdict: landed, art values open.**
+
+## The biomineral glows on its own SKIN: motes travelling the crystal, keyed off its albedo
+
+`render/world/PropGlow.hx` + a `shine` column on `ObjModels.MODELS`, biomineral only. Two fragment
+terms on the prop's existing material — **0 draw calls, 0 passes, 0 geometry, 0 art**. Mask = the
+prop's own baked albedo keyed on greenness; motes = 8 loci on slow helices through the local bounding
+box, each lighting the surface nearest it. Anchor is `<emissivemap_fragment>`, the one place
+`totalEmissiveRadiance` is live AND `diffuseColor` is still in scope, so one injection gets both the
+additive slot and the mask.
+
+- **Nothing here can be keyed on uv.** The atlas is a shattered mosaic (biomineral **2.41x** split),
+  so a mote walking uv space teleports across the model. Local `position` is continuous by
+  construction. A hand-painted emissive map is worse still: `biomineral-emissive.png` predates the
+  Aug-21 re-bake and its uvs are dead, the case already recorded above.
+- **The mask band must be measured in LINEAR, and per-TRIANGLE.** Reading it off sRGB bytes gave
+  "mineral 2.3 vs body 0.87" and both bands built from that were wrong. Area-weighted over triangle
+  uv centroids the real ratio is body p50 **0.64** / p70 **0.90**, mineral p75 **1.36** / p95 **1.67**
+  — so `[0.95, 1.35]` leaves 23.4% fully lit, 72.5% fully dark, **4.1% ramping**, and that 4.1% is
+  the actual crystal/flesh boundary. Whole-atlas percentiles mislead: most of a 512 map is gutter.
+- **The bug that cost the most: `fract( sin( n ) * 43758.5453 ) amplifies its input's error by
+  43758.`** `vGlowPh` carried raw world coordinates (~50), a varying interpolates at ~24-bit, so it
+  arrived with ~3e-6 of per-fragment error — **~13% of random jitter on every pixel**, seen as dense
+  green speckle over the whole prop. Hash the instance translation in the VERTEX shader and hand the
+  fragment a bounded 0..1 phase: same error becomes ~3e-8, amplified ~1e-3, speckle gone.
+- **It was misdiagnosed twice first, and both were plausible.** (1) the mask band — widening it made
+  it strictly worse, which should have been the tell. (2) the art's own grain: the mineral texels do
+  measure sd **22.8** on mean luma 93.5 with 5.4% of neighbours jumping >12, so the story fit — but
+  the `PROP_GLOW.enabled = false` build brightened 4x shows a **perfectly smooth** crystal. Building
+  the off-switch A/B settled in one shot what two rounds of reasoning could not.
+- **Emissive is added in LINEAR onto an albedo of ~0.03**, so the floor is small: `base` 0.10 put a
+  flat 0.41 green over the mask and the prop read as one solid blob with the motes invisible inside
+  it. 0.015 is a mineral that luminesces. Green is the cheap channel to bloom with — linear luminance
+  weighs it **0.7152** — so `glow` 2.8 puts a mote peak at 1.09 against `BLOOM_THRESHOLD` 0.9 while
+  the resting base (0.11) stays far under, i.e. only the motes halo.
+- **Mote count is per ROW, never per level.** A per-instance count needs an attribute beside
+  `instanceMatrix`, and `Models.cull` repacks that matrix alone every frame — the two would desync
+  the moment the camera moved. The count is a LITERAL loop bound and rides the cache key
+  (`sewerMaskspropGlow8`), so changing it compiles its own program, which is correct.
+- **A per-facet shimmer was the third term, and it is REMOVED.** Object space quantised into cells,
+  each swelling on its own beat, meant as a floor so the crystal was not dead between motes. It read
+  as flat rectangular patches: a cube lattice has no relation to where the mesh's own facets are, and
+  every amplitude big enough to see was big enough to show the lattice. Sizing did not save it —
+  0.14 of height was smaller than a blade and read as noise, 0.22 read as boxes. **Author call: out.**
+  What it was covering was real: at 8 half-size motes, whole seconds passed with every one of them
+  round the back — `hotPx` **26 / 6 / 0** over three captures. Fixed properly by the arc below.
+- **The motes never orbit the far side: the sweep is anchored ON THE CAMERA.** `front` is a half-arc
+  and the angle ping-pongs through `camAng +/- front * sin(phase)` instead of completing a lap, so a
+  mote eases, reverses at the silhouette and comes back. `front = PI` degrades to a full sweep, so
+  the option is kept at no cost. The anchor cannot be a uniform — `yaw` is HASHED per placement, so
+  local +Z points somewhere different for every biomineral — it is `atan2` of the camera in the
+  instance's own frame, computed per vertex from `modelMatrix * instanceMatrix` and passed as a
+  varying. Two traps: **`atan2( x, z )` is the natural spelling and it is 90 degrees WRONG** (the
+  mote sits at `( cos, y, sin )`, so the angle pointing at the camera is `atan2( z, x )`) — it put
+  the whole sweep on the flank and the far side; and the mat3 transpose is written out as two dots
+  because three compiles built-in materials as **GLSL ES 1.00 even on WebGL2**, where `transpose()`
+  does not exist. A 2*PI jump as the camera crosses local -Z is invisible: the angle only reaches the
+  world through cos/sin.
+- **The climb bell wants `sqrt( sin )`, not `sin`.** A plain bell leaves a mote under half brightness
+  for half its climb, so with 8 of them several are always washed out and the prop still read
+  near-empty (`hotPx` 28 / 1 / 5 with the arc alone). sqrt still reaches 0 at both ends — a floor
+  would pop at the wrap — but reaches full in a fifth of the climb. And it needs `max( 0.0, ... )`:
+  `sin` can return a hair below zero at the ends, `sqrt` of that is NaN, and **one NaN texel goes
+  through the bloom downsample and blacks out the entire frame**, which this log already has an
+  entry for. After both: `hotPx` **42 / 24 / 39 / 11** over four captures, never zero.
+- **The chain is one round deep and stays that way**: marks `["sewerMask","propGlow"]`, key
+  `sewerMaskspropGlow4`. The hull is skipped outright (`MeshBasicMaterial` has no
+  `totalEmissiveRadiance`, and an outline marker must not glow); the ghost is patched, so the glow
+  survives standing on the prop. LOS comes free — SewerMask injects after `<fog_fragment>`, i.e.
+  downstream of the emissive, so an unseen crystal sinks to fog colour like everything else.
+
+Cost, 60 FPS foregrounded, 70 samples per leg, A/B/A: GPU median **5.31 / 5.56 / 5.34** — the OFF leg
+is the *highest* of the three, so the delta is inside the noise (range 3.1-8.9 throughout). `calls`
+**88-90 on both**, `submit` 2.10/1.70/1.89 (noise), `progs` **92 -> 94** (+2: the solid and ghost
+permutations, both boot-warmed). Motion verified by frame diff: hottest green pixel walks
+816,382 -> 819,356 -> 791,347, **3.7-4.8k px changed >4** per pair in the crystal box against a wall
+control of **0 px, max 1**. 0 shader errors.
+
+**Verdict: landed, art values open.**
+
+## The biomineral gets a real light, and LIGHTNING — fireflies were tried there first and cut
+
+Two separate things on top of the surface glow above, both existing seams rather than new code: the
+`fly` column that already drives the arch's mote, and `PROP_LIGHT.pool`, which had been sitting at 0
+since the organs' lighting was pulled.
+
+- **`pool` 0 -> 2, and only ONE row declares a `light`.** `PropLights` keys on `m.light != null`, so
+  the other three organs' rows went `light: null` with their old colours kept in the comment — an
+  edit to that row gives one its light back, not an edit to the pool. 2 rather than 1 because a
+  habitat holds SEVERAL biominerals (`Habitat.update` sums energy over every formation), so 1 would
+  light the nearest and leave its neighbour dark.
+- **`NUM_POINT_LIGHTS` 5 -> 7 and `progs` did NOT move: 94 either side.** That is the payoff of
+  `PropLights` being built in `SewerScene.build` rather than `SewerArea.build` — `View.warmup` builds
+  its warm tunnel scene by calling that same function, so warm and real agree and no lit tunnel
+  material recompiles on habitat entry. Recorded because it was predicted and it held.
+- **The light is PALE green (`0x8fe3b0`), not the crystal's saturated `0x33bf59`.** A point light
+  washes every surface it reaches; at full saturation it tints the masonry and floor green instead of
+  reading as light coming off a green thing. The surface glow keeps the saturated tint.
+- **Its cost is not resolvable on this machine.** `pool` 2 vs 0, 70 samples each: GPU median
+  **5.80 vs 5.97** — the OFF leg higher again. The street pool's ~0.32ms/light predicts +0.64ms and
+  that is the number to quote; it does not separate from a 2.5-13.4ms spread.
+**Fireflies were the first answer and are REVERTED** — right vocabulary for the arch, wrong organ.
+This one makes POWER, so it discharges. Worth keeping from that pass, because it is measured:
+**every pooled quad is a draw call**, so `trail` multiplies a swarm by `trail + 1` — 21 dots took
+`calls` **88-90 -> 109-111**, exactly +21, and 9 dots -> 97. The two `PropFly` fields it grew
+(`front`, `weave`) went with it: only the arch uses that column now and it wants neither, so they
+were dead generality on a typedef every row has to fill.
+
+### The lightning
+
+New `arc` column + `PropArc`, drawn by `PropFX` as **ONE mesh and ONE draw call for every bolt on
+every prop in the level** — a ribbon rebuilt from scratch each frame, the `SlimeTrail` idiom. A quad
+per segment would have been 30 calls for six 5-segment bolts. Nothing is stored per bolt: a slot's
+life is derived from which TIME BUCKET the clock is in, so the bucket index seeds where it strikes
+and the position inside the bucket is its age (`BLOOD`'s black-blood glints already work this way).
+`vertexColors` carries both the fade along a bolt and its decay, so there is no map, no per-bolt
+uniform and no opacity write — under additive blending a vertex colour of 0 adds nothing.
+
+**Placement took four passes and every failure was the same mistake seen from a different angle.**
+
+1. **Direction radially from the prop's centre** aimed every high strike at the ceiling — bolts hung
+   in the air well above a crystal that had already narrowed to a point.
+2. **Building the ribbon on the leaned `Sprites.TILT` plane** put every bolt above the body: the
+   camera looks down ~53 degrees, so leaning a point back moves it AWAY as well as down and moving
+   away raises it on screen by `dz*sin(53)` — the two stack. Upright is what the arch's core quad
+   already chose (`lean: 0`) for the same reason: a flat shape hung on real vertical geometry must
+   stay coplanar with it.
+3. **Upright at the prop's own depth** then buried them — the body's near half swallowed the lot.
+4. **Pushing the plane forward** to escape that laid them over the crystal's face like veins, and
+   clawing the screen drop back costs `dz*tan(53)` = 1.3x the move in `y`, which puts every bolt at
+   the crown. The same bind the core quad hit.
+
+**The fix was none of those knobs: strike from the BODY'S OWN SURFACE.** A strike point anywhere
+inside the silhouette puts the first half of the bolt behind the body, and that is what all four
+passes were really fighting. Origin on the surface (`r` narrowed by the prop's own taper at that
+height, the profile the surface motes' helix already uses) and direction straight out from there
+means the bolt cannot re-enter the body whatever the swing — which also makes the whole screen-drop
+problem disappear, since nothing has to be pushed toward the camera to stay visible.
+
+**And then the plane itself had to go.** Confined to one upright plane a bolt can travel left, right
+and up — never toward the camera, which is a third of the directions a discharge should have. The
+path is now built in WORLD 3D: a strike azimuth about the prop's vertical axis (`az`, a half-range
+centred on world +Z so bolts fan forward and across both flanks but not round the hidden back),
+swung up or down by `spread`. Two things that fall out of it:
+
+- **the ribbon has to billboard now.** A flat shape whose plane contains the view direction is
+  invisible edge-on, so the width axis is `normalize(cross(bolt, view))` — perpendicular to both.
+  One axis serves the kink as well, which keeps the zigzag facing the camera too. The view direction
+  is a fixed constant, and that is honest rather than lazy: it is used ONLY to face the ribbon and
+  never to place it, the whole sprite layer already assumes this camera, and a bolt lives 0.27s.
+- **that cross product has a real degeneracy** — a bolt aimed exactly along the view has no width
+  axis, and normalizing a zero vector is NaN. Not cosmetic: one NaN texel goes through the bloom
+  downsample and blacks out the entire frame, which this log already carries an entry for. Guarded
+  with an arbitrary fallback axis, which is correct because such a bolt is a point on screen anyway.
+
+The now-meaningless `z` column was deleted rather than left at 0. Measured after: bolts span
+x 662-841 and y 464-577 around a body whose silhouette is ~780-820, i.e. both flanks and clearly
+forward, at 89 calls.
+
+Also: the kink bells to 0 at the ROOT only (`sqrt(f)`, not `sin(PI*f)`) — belling both ends pulls the
+tip back to the centreline and the bolt reads as a smooth worm rather than something that snapped.
+
+**The bolt was in the bloom path and getting nothing out of it, and only a measurement showed that.**
+It is HDR by construction (`0x8cff9e` linear luma 0.80 x `glow` 3.2 = 2.55 against `BLOOM_THRESHOLD`
+0.9), so "is it blooming?" reads as obviously yes. Perpendicular p95-by-radius profiles say otherwise:
+
+| source | d=0 | 1 | 2 | 4 | 6 | 8 | 10 |
+|---|---|---|---|---|---|---|---|
+| wall lamp (known HDR glow) | 245 | 183 | 111 | 72 | 50 | 41 | 31 |
+| bolt, shipped width, clear of the crystal | 230 | 32 | 32 | 33 | — | — | — |
+| the SAME bolt at `width` 0.15 (probe) | 248 | 248 | 249 | 249 | 250 | 241 | 161 -> 91 by d=18 |
+
+**Bloom output scales with the AREA of over-threshold pixels**, and at `BLOOM_STRENGTH` 0.25 /
+`BLOOM_RADIUS` 0.1 a ~5px thread contributes too little to see. Intensity is not a substitute: at
+`glow` 12 the core read the same 230 (ACES saturates it) and still had no skirt.
+
+So a bolt is now TWO ribbons down the same path — a wide soft halo (`halo` x width, `haloDim` x
+brightness) and the hot core over it. Same mesh, same draw call, only vertices. Two traps in it:
+the halo must carry a real cross-section GRADIENT or it is a fat glowing plank, so the emitter went
+to **three vertices per station** (left edge / centreline / right edge, 4 tris per segment) with the
+core pass setting edge = centre and the halo pass setting edge = 0; and the kink hash is keyed on the
+bucket and slot but NOT on the pass, or the halo would run down a different zigzag than the core.
+That emitter needed 17 positional args and became `render/actors/BoltOpts.hx` under the typedef rule.
+After: **242 -> 181 -> 126 -> 124 -> 69 -> 56 -> 50** out to d=18 against a background of 28.
+
+Two false leads worth naming. A whole-box profile DID show a wide skirt on the un-flared bolt — that
+was the crystal's own emissive and its point light bleeding into the radius bins, and only restricting
+to a bolt segment outside the silhouette gave a clean answer. And the wall-lamp control is nearly
+worthless alone, because a lamp's softness could just as easily be its painted `makeRectGlowGradient`;
+the wide-ribbon probe is what actually settles it.
+
+Cost: `calls` median **85-90** across poses — the pre-firefly baseline, i.e. the lightning is **0-1
+calls** and 0 while nothing is striking, flare included (it is vertices on the same ribbon). `submit`
+1.79-1.90, `frame` pinned at **16.69ms** with **14.1ms idle**, 60 FPS, 0 shader errors. `progs`
+**94 -> 97** at boot; sampled 40x over 6s of firing it holds at 97 with **no growth**, so the warm
+covers the strike path and nothing compiles on first discharge. Which three permutations the +3 is
+was not isolated.
+
+**The GPU timer went unusable partway through and its numbers are NOT quoted.** Early samples read
+median 5.69 (2.4-8.1); later ones on the same scene read median 11.02 with quartiles **5.46 / 11.02 /
+15.85** — while `frame` held 16.69 and `idle` 14.1, which 11ms of GPU work cannot coexist with. That
+is the documented iGPU power-state drift, and with no simultaneous A/B there is no share to extract
+from it. `calls` and `idle` are the honest numbers here.
+
+**Verdict: landed, art values open.**

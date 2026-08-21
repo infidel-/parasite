@@ -117,6 +117,86 @@ typedef PropFly = {
   trailSize:Float,// the tail-end quad's size as a fraction of the head's
 };
 
+// short lightning discharged by a prop that is a POWER source: brief jagged strokes that snap on
+// somewhere round the body, crackle for a fraction of a second and die, another firing elsewhere.
+// every bolt on every prop in the level is ONE mesh and ONE draw call — a hand-built ribbon rebuilt
+// per frame, the idiom render.particles.SlimeTrail already uses — and NOT a quad per segment, which
+// is what a pooled-sprite version would have cost (6 bolts x 5 segments = 30 calls instead of 1).
+//
+// nothing is stored per bolt. a slot's whole life is derived from which TIME BUCKET the clock is in:
+// the bucket index seeds where the bolt strikes, which way it goes and how it kinks, and the position
+// inside the bucket is its age. the shape RenderConfig.BLOOD's black-blood glints already use.
+// same fraction-of-the-prop's-height rule as every column above. consumed by render.actors.PropFX
+typedef PropArc = {
+  perLevel:Int,  // bolt slots PER habitat level, so a grown organ crackles harder
+  period:Float,  // one slot's strike-to-strike interval, in BASE_MS units
+  duty:Float,    // fraction of that interval the bolt is alight — 0.18 means dark 82% of the cycle,
+                 // which is what makes it read as a discharge and not as a permanent fixture
+  segs:Int,      // straight pieces per bolt: the jaggedness resolution, and the vertex cost
+  y:Float,       // strike height, fraction of the prop's height
+  yVar:Float,    // and its spread (+/-)
+  az:Float,      // HALF-RANGE of the strike azimuth about the prop's vertical axis, in radians,
+                 // centred on world +Z where the resting camera is. this is what lets a bolt travel
+                 // toward the camera instead of only across the screen — a plane-confined bolt can
+                 // go left, right and up, and nothing else. a half-range rather than a full circle
+                 // because a strike on the far side is simply hidden behind the body
+  r:Float,       // radius of the strike point off the prop's axis, same fraction — put it ON the
+                 // body's surface, because a strike inside the silhouette puts the first half of
+                 // the bolt behind it
+  rTop:Float,    // and that radius at the CROWN as a fraction of it, so strikes follow the prop's
+                 // own taper. without it a high strike sits at full width and the bolt hangs in the
+                 // air beside a crystal that has already narrowed to a point
+  len:Float,     // bolt length, same fraction. SHORT is the whole look
+  lenVar:Float,  // per-strike length spread as a fraction of it (+/-)
+  spread:Float,  // how far the bolt may swing off straight-out-sideways (radians). NOT off radial —
+                 // radial aims every high strike at the ceiling
+  jag:Float,     // sideways kink amplitude, fraction of height. belled to 0 at both ends, so the
+                 // bolt still starts on the body and ends in a point
+  width:Float,   // ribbon HALF-width at the root, same fraction
+  taper:Float,   // tip width as a fraction of the root's
+  // the FLARE. a second ribbon down the same path, wide and dim, fading to nothing at its edges.
+  // it exists because bloom output scales with the AREA of over-threshold pixels, and the core is a
+  // ~5px thread: measured, it produced no halo whatsoever while an identical ribbon at 7x the width
+  // haloed exactly like a wall lamp. raising `glow` does not substitute — ACES saturates the core
+  // and intensity buys no area. it costs no draw call, only vertices on the same ribbon
+  halo:Float,    // its half-width as a multiple of `width`
+  haloDim:Float, // and its centreline brightness as a fraction of the core's. keep the product with
+                 // `glow` over the bloom threshold or the flare adds light but no halo of its own
+  color:Int,     // tint. a discharge core reads near-white, so pale beats saturated
+  glow:Float,    // HDR multiplier — what carries it over the bloom threshold
+};
+
+// the glow that lives ON a prop's own surface rather than in the air around it: motes travelling a
+// slow helix through the body, masked to the part of the prop the baked albedo says is mineral. same
+// fraction-of-the-prop's-height rule as everything above, and for the same reason. the module that
+// consumes it is render.world.PropGlow
+typedef PropShine = {
+  // the mask. greenness as a RATIO, diffuseColor.g / max(r, b), so it means the same in linear and
+  // sRGB and does not move with how dark a texel is. measured on the shipped biomineral atlas: the
+  // mineral sits near 2.3, the violet body near 0.87, with a clean gap between — these two numbers
+  // are the one thing here that a re-baked mesh could invalidate, so re-measure them if it is
+  keyLo:Float,      // ratio where the glow starts fading in
+  keyHi:Float,      // and where it is fully lit
+  color:Int,        // tint, normally the row's own `light` colour
+  glow:Float,       // HDR multiplier on it — what carries the mote peaks over the bloom threshold
+  base:Float,       // steady floor over the whole mask, so the mineral reads as luminescent at rest
+  // the motes. count is per ROW and NOT per habitat level: a per-instance count would need an
+  // attribute beside instanceMatrix, and Models.cull repacks that matrix alone every frame, so the
+  // two would desync the moment the camera moved
+  motes:Int,        // travelling loci, baked into the shader as a literal loop bound
+  mote:Float,       // peak brightness of one, at its own centre
+  moteR:Float,      // its reach, as a fraction of the prop's height — this is the dot's SIZE
+  r:Float,          // helix radius at the foot, same fraction. track the prop's own profile
+  rTop:Float,       // radius at the crown as a fraction of `r`, so a spire's motes stay on it
+  rise:Float,       // climb speed as a BASE_MS multiplier (one lap foot to crown)
+  spin:Float,       // sweep speed, same units. deliberately unrelated to `rise`, so no mote ever
+                    // retraces its own path
+  front:Float,      // HALF-ARC the sweep is allowed, in radians either side of the CAMERA — not of
+                    // the prop, whose `yaw` is hashed per placement. keeps every mote on the near
+                    // face, at the cost of the lap: the angle ping-pongs instead of orbiting, so a
+                    // mote eases, reverses at the silhouette and comes back. PI is a full sweep
+};
+
 // one object-backed glb prop. `keys` are AreaObject.getModelKey values rather than raw types because
 // several classes can share a type and still want different props (every habitat object is type
 // 'habitat', and that string is persisted game state — see objects.AreaObject.getModelKey)
@@ -129,6 +209,8 @@ typedef ObjModel = {
   anim:PropAnim,      // idle motion folded into its shaders, or null for a prop that stands still
   core:PropCore,      // pulsing innards sprite drawn inside it, or null
   fly:PropFly,        // fireflies orbiting it, one per habitat level, or null
+  shine:PropShine,    // travelling motes on its own surface, or null
+  arc:PropArc,        // short lightning discharged off it, or null
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -162,16 +244,94 @@ class ObjModels
       anim: null,  // and bolted to a wall, so it had better not breathe
       core: null,  // nor has it any insides
       fly: null,
+      shine: null, // and nothing on it is alive enough to luminesce
+      arc: null,   // nor carries any current
     },
     {
       keys: [ 'habitat_biomineral' ],
       path: RenderConfig.MODELS.habitatBiomineral,
       h: 3.74, // 1.3x the 2.88 it shipped at, with the other three organs
       yaw: HASHED,
-      light: { color: 0x33bf59, mul: 1.0 }, // crystal green
+      // THE one organ that really lights its room. pale rather than the saturated crystal green the
+      // surface glow uses: a point light washes every surface it reaches, and at full saturation it
+      // tints the masonry and the floor green instead of reading as light coming off a green thing
+      light: { color: 0x8fe3b0, mul: 1.0 },
       anim: null, // worked case by case; a mineral spire is the one organ that should NOT sway
-      core: null, // its own treatment comes later, and is meant to be nothing like the arch's
-      fly: null,
+      core: null, // it is solid rock — there is nothing hollow to hang a membrane in
+      fly: null,  // the arch owns the orbiting-mote vocabulary; this organ is a POWER source, so it
+                  // discharges instead — see `arc` below
+      // motes travelling up the crystal itself. every number is in units of the prop's own height,
+      // and the helix is fitted to its measured profile: mean surface radius runs 0.264 of the height
+      // at the foot to 0.074 at the crown, so `r`/`rTop` reproduce that taper and `moteR` is wide
+      // enough to reach the surface from just inside it
+      shine: {
+        // the mineral is 23.4% of the baked atlas and it is spread over the WHOLE body, 12-26% in
+        // every height band — so this has to be a colour key, not a region.
+        // MEASURED off the baked atlas in LINEAR, which is the only place this can be read: the
+        // ratio's percentiles are p50 0.62 / p70 0.78 for the body and p80 1.45 / p95 1.67 for the
+        // mineral, so the gap is 0.8..1.4 and NOT the 2.3-vs-0.87 an sRGB reading suggests. get this
+        // wrong and the failure is not a missing glow, it is SPECKLE: a band the mineral never
+        // saturates leaves every mineral texel mid-ramp, where the art's own fine grain modulates
+        // the mask pixel by pixel. this band leaves 23.4% fully lit, 72.5% fully dark and only 4.1%
+        // ramping — and that 4.1% is the real boundary between crystal and flesh
+        keyLo: 0.95,
+        keyHi: 1.35,
+        color: 0x33bf59, // crystal green, the hue the row's own point light carried
+        // 2.8 puts a mote peak at linear luminance 1.09 against BLOOM_THRESHOLD 0.9, so the motes
+        // halo and nothing else does — the resting `base` lands at 0.11, far under
+        glow: 2.8,
+        // the floor is SMALL, and the first pass got this wrong by ~7x. emissive is added in LINEAR
+        // space straight onto the lit colour, and the crystal's albedo is only ~0.03 linear (mean
+        // sRGB 46) — so 0.10 here put a flat 0.41 green over the whole mask and the prop read as one
+        // solid blob with the motes invisible inside it. 0.015 lands the resting glow near 45 sRGB,
+        // which is a mineral that luminesces rather than one that is switched on
+        base: 0.015,
+        // twice as many, half the size. lit AREA therefore drops to a quarter each and to half
+        // overall, so the prop dims a little while reading busier — the peak is unchanged, which is
+        // what keeps every one of them over the bloom threshold
+        motes: 8,
+        mote: 1.6,     // hot enough that the core clips and blooms into a defined dot, not a lit patch
+        moteR: 0.0325, // ~0.12 world units across a body 2.76 wide — a speck, which is the ask
+        r: 0.26,
+        rTop: 0.30,
+        // both slow: `t` runs at 1 per BASE_MS, i.e. 6.67/s, so this is a ~12.5s climb under a ~16s
+        // there-and-back sweep. the two are deliberately unrelated, so a mote never retraces a path
+        rise: 0.012,
+        spin: 0.06,
+        front: 0.9, // ~52 degrees either side of the camera. well short of the 90 where a mote would
+                    // slide behind the body, and short of it by enough that it is not grazing the
+                    // silhouette either — the sweep is SLOWEST at its extremes, so whatever angle
+                    // this is, motes spend most of their time sitting at it
+      },
+      // and the reason this organ exists: it makes POWER. short green discharges snapping off the
+      // crystal, pale-cored the way a real arc is. every number is in units of `h` again
+      arc: {
+        perLevel: 2,   // 2 slots at level 1, 6 at 3 — a grown formation crackles harder
+        // 10 BASE_MS units is ~1.5s per slot and `duty` lights it for ~0.27s of that, so 6 slots
+        // strike ~4x a second and ~1 is alight at any moment. it goes fully dark ~30% of the time,
+        // which is correct for a discharge — the surface motes are what keep the prop alive between
+        period: 10.0,
+        duty: 0.18,
+        segs: 7,    // more pieces than the eye needs, because too few reads as one smooth curve
+        y: 0.5,
+        yVar: 0.3,  // a 0.6 h band — off the body's flanks, not off the point at the crown
+        az: 2.0,    // ~115 degrees either side of the camera direction: forward, and across both
+                    // flanks, stopping short of straight behind where the crystal would hide it
+        r: 0.30,    // the body's measured mean surface radius at its base (0.264 h) with a little
+                    // over, so the root sits on the surface rather than just inside it
+        rTop: 0.28, // and at the crown — the same taper the surface motes' helix is fitted to
+        len: 0.26,
+        lenVar: 0.4, // 0.16..0.36 of h = 0.58..1.36 world. SHORT — a stub, not a fork of sky lightning
+        spread: 0.9, // +/- 52 degrees off horizontal, so some climb and some drop
+        jag: 0.05,   // ~0.19 world of kink across a 0.58-1.36 long bolt
+        width: 0.022, // ~0.08 world half-width, ~5px total at this camera: a bright thread
+        taper: 0.25,
+        halo: 4.0,     // ~40px across, which is the area bloom needs to see
+        haloDim: 0.45, // centreline linear luma 0.80 x glow 3.2 x 0.45 = 1.15, over the 0.9 threshold,
+                       // so the flare blooms in its own right rather than only feeding the core's
+        color: 0x8cff9e, // linear luma 0.80, x3.2 = 2.55 against BLOOM_THRESHOLD 0.9 — it flares hard
+        glow: 3.2,
+      },
     },
     {
       keys: [ 'habitat_assimilation' ],
@@ -182,7 +342,9 @@ class ObjModels
                // "something you could step through" silhouette. everything hung on it (the core quad,
                // the firefly ring) is authored as a FRACTION of this, so it all scales with the row
       yaw: FRONTAL,
-      light: { color: 0x8c2ecc, mul: 0.9 }, // maw violet
+      // null so it claims no pool slot: the pool is live now and the biomineral is the organ that
+      // lights its room. maw violet was 0x8c2ecc / mul 0.9, for when the arch gets its own lighting
+      light: null,
       // an arch of braided tentacles: the limbs drift, both legs stay planted. `strand` is what
       // stops it reading as one slab tipping side to side — at 3 cycles over its own height the
       // near and far braids of the arch are visibly out of step
@@ -255,26 +417,32 @@ class ObjModels
         trailGap: 0.5,   // 9 * 0.5 of clock behind the head = ~46 degrees of arc at this speed
         trailSize: 0.25,
       },
+      shine: null, // its glow is the membrane in the opening, not anything on the braids
+      arc: null,   // and the biomineral is the power organ, not this one
     },
     {
       keys: [ 'habitat_preservator' ],
       path: RenderConfig.MODELS.habitatPreservator,
       h: 4.06, // 1.3x the 3.12 it shipped at, with the other three organs — the tallest of the four
       yaw: HASHED,
-      light: { color: 0xd98c26, mul: 1.0 }, // amber core
+      light: null, // amber core was 0xd98c26 / mul 1.0 — see the assimilation row above
       anim: null, // worked case by case
       core: null,
       fly: null,
+      shine: null,
+      arc: null,
     },
     {
       keys: [ 'habitat_watcher' ],
       path: RenderConfig.MODELS.habitatWatcher,
       h: 2.81, // 1.3x the 2.16 it shipped at, with the other three organs
       yaw: HASHED,
-      light: { color: 0xf28c80, mul: 1.2 }, // pale flesh-pink eye
+      light: null, // pale flesh-pink eye was 0xf28c80 / mul 1.2 — see the assimilation row above
       anim: null, // worked case by case
       core: null,
       fly: null,
+      shine: null,
+      arc: null,
     },
   ];
 
