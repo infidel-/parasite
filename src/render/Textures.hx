@@ -82,39 +82,10 @@ class Textures {
     return tex;
   }
 
-  // load an opaque tile and bake a VERTICAL alpha ramp into it: transparent at the
-  // top of the image, opaque at the bottom. Drives the street-grime base band that
-  // fades up into the clean wall (the ramp = the base-darkening gradient, the art =
-  // the grime/scuff detail). Tiles horizontally (wrapS), single band vertically (wrapT).
-  public static function loadRampTexture(path:String, peak:Float = 0.95, ease:Float = 1.4):Texture {
-    var tex = new Texture();
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.anisotropy = 4;
-    var img = new js.html.Image();
-    img.onload = function(_) {
-      var w = img.width, h = img.height;
-      var cv = Browser.document.createCanvasElement();
-      cv.width = w; cv.height = h;
-      var ctx = cv.getContext2d();
-      ctx.drawImage(img, 0, 0);
-      var d = ctx.getImageData(0, 0, w, h);
-      var p = d.data;
-      for (y in 0...h) {
-        var t = h <= 1 ? 1.0 : y / (h - 1);       // 0 at top → 1 at bottom (flipY makes bottom = ground)
-        var a = Std.int(Math.pow(t, ease) * peak * 255);
-        var row = y * w * 4;
-        for (x in 0...w) p[row + x * 4 + 3] = a;
-      }
-      ctx.putImageData(d, 0, 0);
-      tex.image = cv;
-      tex.needsUpdate = true;
-    };
-    img.onerror = function(_) { tex.image = proceduralCanvas('wall'); tex.needsUpdate = true; };
-    img.src = path;
-    return tex;
-  }
+  // NO loadRampTexture. it baked a vertical alpha ramp (opaque at the bottom, transparent toward
+  // the top) into an opaque tile, and drove both grime bands until each moved to hand-painted alpha
+  // in the source. one alpha per image ROW is what made a band read as a gradient wash with no
+  // shape of its own — see render.sewer.SewerDetail.grime
 
   // alpha-gradient strip: opaque (white) at v=0 (parapet edge), transparent at v=1
   public static function makeShadowGradient():Texture {
@@ -141,6 +112,68 @@ class Textures {
     var g = ctx.createRadialGradient(N, N, 0, N, N, N);
     g.addColorStop(0.0, '#ffffff');
     g.addColorStop(0.5, '#7a7a7a');
+    g.addColorStop(1.0, '#000000');
+    ctx.fillStyle = cast g;
+    ctx.fillRect(0, 0, N, N);
+    var tex = new CanvasTexture(cv);
+    tex.colorSpace = THREE.NoColorSpace;
+    return tex;
+  }
+
+  // SMOOTH-RECTANGULAR falloff: a rounded box, opaque in the middle and easing to nothing before the
+  // quad's rim. this is makeGlowGradient's twin for a fixture that should read as a BOX behind a
+  // diffuser rather than a bare bulb.
+  //
+  // NOTE the round one never drew an oval: it is a CIRCULAR gradient on a square canvas, and the
+  // ellipse comes from UV-mapping that square onto a non-square quad (the sewer glow is 0.75 x 0.5).
+  // The same stretch applies here and is wanted — a rounded box stretched is still a rounded box.
+  //
+  // written per-texel from a rounded-box distance field rather than drawn with a canvas blur: the
+  // corner radius and the edge softness are then exact numbers instead of a filter's guess
+  public static function makeRectGlowGradient():Texture {
+    var N = 64;
+    var rad = N * 0.16;   // corner radius, canvas px
+    var half = N * 0.30;  // half-extent of the box's straight section from the centre
+    var soft = N * 0.16;  // how far the edge fades out past the box
+    var cv = Browser.document.createCanvasElement();
+    cv.width = N; cv.height = N;
+    var ctx = cv.getContext2d();
+    var img = ctx.createImageData(N, N);
+    for (y in 0...N)
+      for (x in 0...N)
+        {
+          // distance to the rounded box, negative inside (the standard 2D rounded-box SDF)
+          var qx = Math.abs(x + 0.5 - N / 2) - (half - rad);
+          var qy = Math.abs(y + 0.5 - N / 2) - (half - rad);
+          var mx = qx > 0 ? qx : 0.0;
+          var my = qy > 0 ? qy : 0.0;
+          var out = Math.sqrt(mx * mx + my * my) + Math.min(Math.max(qx, qy), 0.0) - rad;
+          // smoothstep the band [0, soft] outward, so the falloff has no visible shoulder
+          var t = out <= 0 ? 0.0 : (out >= soft ? 1.0 : out / soft);
+          var v = Std.int(255 * (1 - t * t * (3 - 2 * t)));
+          var i = (y * N + x) * 4;
+          img.data[i] = v;
+          img.data[i + 1] = v;
+          img.data[i + 2] = v;
+          img.data[i + 3] = 255;
+        }
+    ctx.putImageData(img, 0, 0);
+    var tex = new CanvasTexture(cv);
+    tex.colorSpace = THREE.NoColorSpace;
+    return tex;
+  }
+
+  // CENTRED radial falloff: opaque at uv(0.5,0.5), transparent at the quad's rim. the two above are
+  // both anchored at an edge (a parapet strip, a roof corner); this one is the shape of a glow, and
+  // it is what keeps a light-fixture quad from reading as a hard-edged sticker on the wall
+  public static function makeGlowGradient():Texture {
+    var N = 64;
+    var cv = Browser.document.createCanvasElement();
+    cv.width = N; cv.height = N;
+    var ctx = cv.getContext2d();
+    var g = ctx.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N / 2);
+    g.addColorStop(0.0, '#ffffff');
+    g.addColorStop(0.35, '#c8c8c8');
     g.addColorStop(1.0, '#000000');
     ctx.fillStyle = cast g;
     ctx.fillRect(0, 0, N, N);

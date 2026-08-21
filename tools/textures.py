@@ -6,6 +6,8 @@ Driven by textures-src/textures.json. For each tracked texture it:
   2. downscales src -> textures/<label>.png at the entry's res (default_res else),
      only when the source is newer than the last conversion (or output missing),
   3. for class "chroma": bakes the key color to alpha before downscaling,
+  3b. for an entry with "lift": raises its RGB by that gamma, for art gpt painted too
+     dark for the surface it lands on (see lift_gamma; alpha is left alone),
   4. warns when a needs_alpha texture has no real alpha (gpt can't emit it ->
      the source must be human-edited),
   5. rewrites textures.json with the new last_converted timestamps.
@@ -69,6 +71,22 @@ def chroma_key(im, color_hex, tol):
     return Image.fromarray(a, "RGBA")
 
 
+def lift_gamma(im, g):
+    """Brighten a source with out = (v/255)**g. g < 1 lifts the darks and leaves the top end alone.
+
+    For art authored much darker than the surface it lands on. gpt paints a rusted pipe or a drain
+    grate near-black, and three decodes sRGB to LINEAR before the Lambert multiply, so a decal at
+    0.46x the surface in bytes is 0.19x in light — it renders as a HOLE in the ground, not an object
+    (measured: sewer top-valve at luma 6.7 against the ledge cap's 35.7). Dropping material opacity
+    fixes the value but makes a see-through valve; lifting the source keeps it solid. Alpha is
+    untouched, so a hand-cut cut-out survives and needs no re-cutting."""
+    mode = "RGBA" if "A" in im.getbands() else "RGB"
+    a = np.asarray(im.convert(mode)).astype(np.float32)
+    out = a.copy()
+    out[:, :, :3] = np.clip((a[:, :, :3] / 255.0) ** g * 255.0, 0, 255)
+    return Image.fromarray(out.astype(np.uint8), mode)
+
+
 def bleed_alpha(im, iters=20):
     """Overwrite (near-)transparent texels' RGB with their nearest opaque colour.
     Run AFTER the LANCZOS downscale: PIL resizes RGBA without premultiplying, so the
@@ -108,24 +126,38 @@ def convert(label, e, default_res):
 
     src_mtime = datetime.fromtimestamp(os.path.getmtime(src)).replace(microsecond=0)
     last = e.get("last_converted")
+    lift = e.get("lift")
     fresh = (
         not os.path.exists(out)
         or last is None
         or src_mtime > datetime.fromisoformat(last)
+        or lift != e.get("last_lift")  # retuning the lift must rebuild; the source never changed
     )
 
     res = e.get("res", default_res)
     ow, oh = (int(res[0]), int(res[1])) if isinstance(res, (list, tuple)) else (int(res), int(res))
     if fresh:
         im = Image.open(src)
+        # a hand-cut source saved as an 8-bit PALETTE png carries its alpha in a tRNS chunk, which
+        # getbands() reports as ("P",) — every alpha test below would then read it as opaque, the
+        # lift would convert it to RGB and DROP the cut, and the run would end telling you to go
+        # hand-edit a source that already had alpha. normalise it here, once
+        if "transparency" in im.info or im.mode == "LA":
+            im = im.convert("RGBA")
         if e["class"] == "chroma":
             im = chroma_key(im, e.get("chroma", "0x000000"), e.get("tol", 24))
+        if lift:
+            im = lift_gamma(im, lift)
         im = im.resize((ow, oh), Image.LANCZOS)
         if has_alpha(im):
             im = bleed_alpha(im)  # scrub the LANCZOS colour-ring fringe at low alpha
         im.save(out)
         e["last_converted"] = src_mtime.isoformat()
-        print(f"  built {label}.png  {ow}x{oh}  ({im.mode})")
+        if lift is None:
+            e.pop("last_lift", None)
+        else:
+            e["last_lift"] = lift
+        print(f"  built {label}.png  {ow}x{oh}  ({im.mode}){'  lift ' + str(lift) if lift else ''}")
 
     if e.get("needs_alpha") and not has_alpha(Image.open(out)):
         warn(f"{label}: needs transparency but {e['src']} is opaque — human-edit the source")

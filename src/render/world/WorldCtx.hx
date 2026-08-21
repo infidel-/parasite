@@ -27,9 +27,14 @@ class WorldCtx {
   public static var doorSpans:Array<{ b:Building, dir:Int, lo:Float, hi:Float }>;
 
 // ground surface height at grid cell (col,row): walkway tops sit a curb above road/alley, so
-// actors/decals/the ring rest on this instead of sinking through the raised pavement
+// actors/decals/the ring rest on this instead of sinking through the raised pavement.
+// this is the ONE ground-height entry point for the whole render layer (actors, choreo,
+// particles, decals, PathLine, TacticalGrid) — a non-city area sets no tile grid and is flat,
+// so the null case here is what lets all of that run unmodified in e.g. a sewer
   public static function floorY(col:Int, row:Int):Float
     {
+      if (tiles == null)
+        return 0.0;
       if (row < 0 ||
           col < 0 ||
           row >= tiles.length ||

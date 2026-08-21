@@ -6,8 +6,10 @@ import citygen.CityModel.Tile;
 import render.RenderConfig;
 import render.RenderConfig.TEXTURES;
 import render.Textures;
+import render.world.MeshBuf.MeshBufTools;
 
-typedef GroundBuf = { pos:Array<Float>, uv:Array<Float>, idx:Array<Int> };
+// the shared merged-geometry buffer (render.world.MeshBuf), kept under its original local name
+typedef GroundBuf = render.world.MeshBuf.MeshBuf;
 
 // ground surfaces: one merged mesh per surface type (road/alley/walkway), plus the
 // road-markings overlay and the mitered kerb-edging strip. Reads the tile grid only.
@@ -35,30 +37,16 @@ class Ground {
       { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
       { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
-    var bufs = [for (_ in types) { pos: ([] : Array<Float>), uv: ([] : Array<Float>), idx: ([] : Array<Int>) }];
-    var borderBuf:GroundBuf = { pos: [], uv: [], idx: [] }; // kerb-edging stripe on walkway tops (own mesh/tex)
-    var markBuf:GroundBuf = { pos: [], uv: [], idx: [] };   // road markings overlay (lane lines, crosswalks; own mesh/tex)
+    var bufs = [for (_ in types) MeshBufTools.make()];
+    var borderBuf:GroundBuf = MeshBufTools.make(); // kerb-edging stripe on walkway tops (own mesh/tex)
+    var markBuf:GroundBuf = MeshBufTools.make();   // road markings overlay (lane lines, crosswalks; own mesh/tex)
     function bidx(tile:Tile):Int { for (i in 0...types.length) if (types[i].tile == tile) return i; return -1; }
 
-    function vtx(b:GroundBuf, x:Float, y:Float, z:Float, u:Float, v:Float):Void {
-      b.pos.push(x); b.pos.push(y); b.pos.push(z); b.uv.push(u); b.uv.push(v);
-    }
-    function tri(b:GroundBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>, uv:Array<Float>):Void {
-      var base = Std.int(b.pos.length / 3);
-      vtx(b, p0[0], p0[1], p0[2], uv[0], uv[1]);
-      vtx(b, p1[0], p1[1], p1[2], uv[2], uv[3]);
-      vtx(b, p2[0], p2[1], p2[2], uv[4], uv[5]);
-      b.idx.push(base); b.idx.push(base + 1); b.idx.push(base + 2);
-    }
-    function quad(b:GroundBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>, p3:Array<Float>, uv:Array<Float>):Void {
-      var base = Std.int(b.pos.length / 3);
-      vtx(b, p0[0], p0[1], p0[2], uv[0], uv[1]);
-      vtx(b, p1[0], p1[1], p1[2], uv[2], uv[3]);
-      vtx(b, p2[0], p2[1], p2[2], uv[4], uv[5]);
-      vtx(b, p3[0], p3[1], p3[2], uv[6], uv[7]);
-      b.idx.push(base); b.idx.push(base + 1); b.idx.push(base + 2);
-      b.idx.push(base); b.idx.push(base + 2); b.idx.push(base + 3);
-    }
+    // the emitters live in render.world.MeshBuf (shared with the sewer builder); bound to locals
+    // so every call site below reads the same as when they were closures here
+    var vtx = MeshBufTools.vtx;
+    var tri = MeshBufTools.tri;
+    var quad = MeshBufTools.quad;
     function isLower(rr:Int, cc:Int):Bool {
       if (rr < 0 || cc < 0 || rr >= GRID || cc >= GRID) return true;
       var t = tiles[rr][cc];

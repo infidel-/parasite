@@ -31,6 +31,11 @@ class AssimilationCavity extends HabitatObject
     }
 
 
+// every habitat object shares the 'habitat' type, so the 3D prop lookup keys on this instead
+  public override function getModelKey(): String
+    { return 'habitat_assimilation'; }
+
+
 // update actions
   override function updateActionList()
     {

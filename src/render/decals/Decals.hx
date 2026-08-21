@@ -49,6 +49,12 @@ class Decals {
       batch.dispose();
     }
 
+// the batched decal materials, for a caller that has to patch them (see DecalBatch.materials)
+  public function materials():Array<Dynamic>
+    {
+      return batch.materials();
+    }
+
 // set the seed-derived debris scatter for the current city (render-only, rebuilt per show)
   public function setDebris(list:Array<render.world.Debris.DebrisSpot>):Void
     {

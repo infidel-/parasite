@@ -76,6 +76,19 @@ class AreaView
 // redraw area map
   public function draw()
     {
+      // a 3D area draws through render.View instead, and its WebGL canvas sits OVER this one — so
+      // nothing painted here could be seen. plenty of callers (targeting, HUD, the cult base) ask
+      // for a redraw gated only on being in an area, and the tile pass, the LOS overlay, the
+      // minimap regen and the whole AreaLighting stamp/shadow pass behind them are not free.
+      // the particle reap still has to run: addParticle arms the 10ms interval whatever the view is,
+      // and a 2D particle can still be created in a 3D area (the fade window on entry, or a load
+      // before the build lands). skipping it would leak a 100Hz timer for the session AND never fire
+      // onDeath(), which is what persists a splat/money stain onto the tile
+      if (scene.is3DArea())
+        {
+          reapParticles();
+          return;
+        }
       var renderTS = scene.beginRenderSample();
 //      var time = Sys.time();
 //      trace('draw area');
@@ -840,17 +853,28 @@ class AreaView
       for (p in _particles)
         {
           if (p.isDead())
-            {
-              p.onDeath();
-              _particles.remove(p);
-              continue;
-            }
+            continue;
           var dt = (Timer.stamp() * 1000 - p.createdTS) / p.time;
           // most likely final frame
           if (dt > 0.8)
             dt = 1.0;
           p.draw(ctx, dt);
         }
+      reapParticles();
+    }
+
+// retire dead particles and stop the 10ms redraw once nothing needs it. split out of drawParticles
+// because a 3D area returns from draw() before ever reaching it, and this is the only place
+// onDeath() fires (a splat/money stain is persisted from there) and the only place the interval
+// armed by addParticle is cleared
+  function reapParticles()
+    {
+      for (p in _particles)
+        if (p.isDead())
+          {
+            p.onDeath();
+            _particles.remove(p);
+          }
       // stop redrawing
       if (_particles.length == 0 &&
           !scene.areaLighting.hasActiveTransientLights())

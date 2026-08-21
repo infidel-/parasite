@@ -73,6 +73,10 @@ class AreaGame extends _SaveObject
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
+  // bumped by every updateVisibility() call. the 3D layer polls rather than listens (see
+  // render.View's rAF loop), so this is what tells render.sewer.SewerMask that a sightline changed
+  // without the player moving - opening a door is the case that needs it. transient, never saved
+  public var visRev: Int = 0;
 
 
   public function new(g: Game, r: RegionGame, tv: _AreaType, vx: Int, vy: Int)
@@ -689,6 +693,20 @@ class AreaGame extends _SaveObject
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+      refreshObjectProps(o);
+    }
+
+// tell the 3D view to rebuild its object props, when an object that DRAWS as one is added to or
+// removed from the area currently on screen. gated on the model lookup so the ordinary sprite-drawn
+// objects (bodies, items, blood) never trigger a rebuild, and on this being the live area so
+// generating or populating some other area does not reach into the view
+  inline function refreshObjectProps(o: AreaObject)
+    {
+      if (game != null &&
+          game.scene != null &&
+          game.area == this &&
+          render.world.ObjModels.modelFor(o.getModelKey()) != null)
+        game.scene.updateObjects3D();
     }
 
 // get object by id
@@ -732,6 +750,7 @@ class AreaGame extends _SaveObject
           game.scene != null &&
           game.scene.areaLighting != null)
         game.scene.areaLighting.invalidateArea(this);
+      refreshObjectProps(o);
     }
 
 
@@ -2433,21 +2452,28 @@ class Test {
 
 
 // get the region AI spawn into, and whose walkable cells size the AI budget.
-// city areas render through the 3D street view, whose ground footprint is fixed by the camera
-// (fov is constant, only aspect moves) - so the 2D canvas rect it used to use is wrong there:
-// it grows with pixel count while the player's actual viewport does not, which diluted AI over
-// up to 3.6x the ground on a 4k screen. keyed on isCity() and NOT view3d.running, because
-// enter() spawns its arrival burst before the 3D scene is built
+// a 3D area's ground footprint is fixed by its camera preset (fov is constant, only aspect moves) -
+// so the 2D canvas rect it used to use is wrong there: it grows with pixel count while the player's
+// actual viewport does not, which diluted AI over up to 3.6x the ground on a 4k screen. keyed on the
+// area KIND and NOT view3d.running, because enter() spawns its arrival burst before the scene is built
   public function getSpawnRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
-      if (!isCity())
+      // every 3D kind brings its own preset: the tunnels look near straight down and cover far less
+      // ground than a street, so they must not be sized off the city camera
+      var cam:render.RenderConfig.CameraOffsets = switch (info.type)
+        {
+          case 'city': render.RenderConfig.CAMERA;
+          case 'sewers', 'habitat': render.RenderConfig.CAMERA_SEWER;
+          default: null;
+        };
+      if (cam == null)
         return getVisibleRect();
 
       // square of the same area as the camera footprint, centered on the player. a square (not a
       // disc) keeps the existing rect plumbing, and the camera orbits +-30 degrees anyway, so an
       // orientation-independent region is what we want
       var cells = render.CameraRig.maxFootprintCells(
-        game.scene.canvas.width / game.scene.canvas.height);
+        game.scene.canvas.width / game.scene.canvas.height, cam);
       var r = Math.round((Math.sqrt(cells) - 1) / 2);
       var rect = {
         x1: game.playerArea.x - r,
@@ -2491,6 +2517,7 @@ class Test {
 // check AI visibility
   public inline function updateVisibility()
     {
+      visRev++;
       updateSpawnCells();
       // NOTE: only used for "player noticed" check now
       if (game.player.state == PLR_STATE_HOST)

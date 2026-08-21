@@ -145,6 +145,15 @@ class ConsoleCompletion
             { lit: 'improvements' },
             { lit: 'timeline' },
           ] });
+          // habitat object builders — only the primary name goes in, the hab alias routes in the handler
+          rootChildren.push({ lit: 'habitat', next: [
+            { lit: 'all', next: [ { slot: '[level]' } ] },
+            { lit: 'biomineral', next: [ { slot: '[level]' } ] },
+            { lit: 'assimilation', next: [ { slot: '[level]' } ] },
+            { lit: 'preservator', next: [ { slot: '[level]' } ] },
+            { lit: 'watcher', next: [ { slot: '[level]' } ] },
+            { lit: 'clear' },
+          ] });
           // cult sub-commands (shared by the cu/cult aliases)
           var cultSubs: Array<CompNode> = [
             { lit: 'start' },

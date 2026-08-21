@@ -20,6 +20,8 @@ package three;
   static var LessEqualDepth:Dynamic;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
+  static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
+  static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
   // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
   // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
   static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
@@ -91,6 +93,10 @@ package three;
   public function multiplyScalar(s:Float):Color;
   public function copy(c:Color):Color;                   // copy another color's channels in place
   public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
+  public function setHex(hex:Int):Color;                 // set channels from 0xRRGGBB (sRGB-decoded)
+  public var r:Float;                                    // LINEAR red 0..1 (setHex decodes sRGB)
+  public var g:Float;                                    // linear green
+  public var b:Float;                                    // linear blue
 }
 
 @:native("THREE.Object3D") extern class Object3D {
@@ -199,6 +205,8 @@ typedef RendererInfo = {
 }
 @:native("THREE.PointLight") extern class PointLight extends Object3D {
   public function new(color:Int, intensity:Float, ?distance:Float, ?decay:Float);
+  public var color:Color;      // tint, a plain uniform — safe to rewrite per frame (not in the program key)
+  public var distance:Float;   // falloff end; 0 = never cut off
 }
 // conical light: emits from position within a cone aimed at `target` (must be in the scene graph
 // for its world matrix to update). angle = cone half-angle (rad), penumbra = soft edge 0..1
@@ -209,6 +217,8 @@ typedef RendererInfo = {
   public var penumbra:Float;    // soft-edge fraction (0 = hard, 1 = fully soft)
   public var distance:Float;    // falloff end
   public var intensity:Float;
+  public var color:Color;       // bulb tint. a plain vec3 uniform, NOT in the program cache key, so a
+                                // pooled slot may be recoloured per frame as it changes owner lamp
   public var shadow:Dynamic;    // LightShadow: .mapSize (Vector2), .bias, .camera (perspective, from angle)
 }
 
@@ -244,7 +254,11 @@ typedef RendererInfo = {
   public var attributes:Dynamic;  // .position.getX/getY/getZ
   public function setAttribute(name:String, attr:Dynamic):Void;
   public function setIndex(idx:Array<Int>):Void;
+  public var boundingBox:Box3;    // null until computeBoundingBox() runs; the geometry's LOCAL extent
   public function computeVertexNormals():Void;
+  public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
+  public function computeBoundingBox():Void;      // fills boundingBox; local space, so it is unaffected by any instance transform
+  public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
   public function dispose():Void;
 }
 
@@ -263,7 +277,9 @@ typedef RendererInfo = {
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
   public function new(params:Dynamic);
-  public var color:Color; // base color (mutate in place, e.g. lerpColors, for live tinting)
+  public var color:Color;   // base color (mutate in place, e.g. lerpColors, for live tinting)
+  public var map:Texture;   // base-colour texture; swapped per pool slot on the additive FX quads
+  public var opacity:Float; // 0..1, live per frame on those quads (needs transparent:true)
 }
 // diffuse-only lit material: per-pixel Lambert, no GGX specular lobe and no IBL. same map/emissive/
 // shadow feature set as Standard minus roughness/metalness, so it is the drop-in for the fully matte
@@ -328,7 +344,13 @@ typedef RendererInfo = {
   public var rotation:Float;
   public var anisotropy:Int;
   public var flipY:Bool; // glb textures ship flipY=false; a CanvasTexture defaults to true
+  public var premultiplyAlpha:Bool; // premultiply on upload; pairs with material.premultipliedAlpha. needed for
+                                    // hand-painted alpha, whose junk RGB under near-transparent texels otherwise
+                                    // bleeds out as saturated specks once minified
   public var channel:Int; // which uv attribute this map samples (0 = `uv`, 1 = `uv1`, ...)
+  public var minFilter:Dynamic; // minification filter; LinearFilter drops the mip chain (see generateMipmaps)
+  public var magFilter:Dynamic; // magnification filter; LinearFilter is what turns a per-cell data map into a soft ramp
+  public var generateMipmaps:Bool; // build a mip chain on upload. false for a small data map rebuilt often
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
                                   // render.View.disposeScene deliberately leaves alone (it assumes cached ones)

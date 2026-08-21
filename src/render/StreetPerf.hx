@@ -6,7 +6,8 @@ import js.Browser;
 // 3D-view perf instrumentation, split out of render.View so the view stays about rendering.
 // owns the frame breakdown (submit/upd/idle), the real GPU timer, the on-screen HUD with its
 // peak-hold, the renderer.info stat capture, and the debug keys 7 (shadow-sampling A/B),
-// 8 (peak reset), 9 (draw-call breakdown dump). live under street-debug mode (`) or `perf street`
+// 8 (peak reset), 9 (draw-call breakdown dump), M (force every lit material matte).
+// live under street-debug mode (`) or `perf street`
 class StreetPerf {
   public static var lastCalls = 0; // draw calls last frame (HUD counter, when vidShowFps)
   public static var lastTris = 0;  // triangles drawn last frame (HUD counter, when vidShowFps)
@@ -19,6 +20,7 @@ class StreetPerf {
   var getScene:Void->Scene;
   var debugOn = false;             // street-debug mode state, refreshed each frame by the caller
   var shadowsOff = false;          // Digit7: kill real shadow SAMPLING (shadowMap.enabled) for the perf A/B
+  var specOff = false;             // KeyM: force every lit material matte (no metal, no gloss) — art A/B
   var perfDiv:js.html.Element = null; // lazily-built on-screen overlay
   var _lastProgs = 0;              // program count last frame; a jump == a (re)compile stall
   var _perfTick = 0;               // trace sampling counter — only every Nth frame prints
@@ -78,6 +80,53 @@ class StreetPerf {
                   mm.needsUpdate = true;
               });
             trace('[shadows] sampling ' + (shadowsOff ? 'OFF' : 'ON'));
+            return true;
+          // M: A/B — force every lit material matte, so a prop whose authored PBR fights the flat art
+          // style shows up. debug 1 CANNOT find this: it hides every light and adds a full-bright
+          // ambient, and specular only exists under an analytic light, so a gloss problem vanishes with
+          // the lights that cause it. the MAPS must go too — roughness/metalness are FACTORS the maps
+          // multiply, so clearing a factor alone leaves a mapped material as glossy as it was. that
+          // flips USE_*MAP, so expect one compile stall per toggle (same as 7)
+          case 'KeyM':
+            specOff = !specOff;
+            scene.traverse(function(o)
+              {
+                var m:Dynamic = o.material;
+                if (m == null)
+                  return;
+                var mats:Array<Dynamic> = Std.isOfType(m, Array) ? m : [m];
+                for (mm in mats)
+                  {
+                    if (mm.metalness == null)
+                      continue; // MeshStandard/Physical only (MeshBasic/Lambert have no specular lobe)
+                    if (specOff)
+                      {
+                        // one stash object, so a null map restores as null rather than as "never stashed"
+                        if (mm.userData.spec0 == null)
+                          mm.userData.spec0 = {
+                            met: mm.metalness,
+                            rou: mm.roughness,
+                            mMap: mm.metalnessMap,
+                            rMap: mm.roughnessMap,
+                          };
+                        mm.metalness = 0;
+                        mm.roughness = 1;
+                        mm.metalnessMap = null;
+                        mm.roughnessMap = null;
+                        mm.needsUpdate = true;
+                      }
+                    else if (mm.userData.spec0 != null)
+                      {
+                        mm.metalness = mm.userData.spec0.met;
+                        mm.roughness = mm.userData.spec0.rou;
+                        mm.metalnessMap = mm.userData.spec0.mMap;
+                        mm.roughnessMap = mm.userData.spec0.rMap;
+                        mm.userData.spec0 = null;
+                        mm.needsUpdate = true;
+                      }
+                  }
+              });
+            trace('[specular] ' + (specOff ? 'OFF (all matte)' : 'ON'));
             return true;
           // 8: reset the peak-hold (clear the latched worst frame)
           case 'Digit8':
@@ -264,6 +313,8 @@ class StreetPerf {
         }
       var shCol = shadowsOff ? '#ff8a5c' : '#8cff8c';
       var shTxt = shadowsOff ? 'OFF (sampling killed)' : 'ON';
+      var spCol = specOff ? '#ff8a5c' : '#8cff8c';
+      var spTxt = specOff ? 'OFF (all matte)' : 'ON';
       var fCol = frameMs > 20 ? '#ff8a5c' : '#cfe';
       // bold the dominant third of the peak: submit=render, upd=engine update, idle=external vsync/stall
       var pMax = Math.max(peakSubmit, Math.max(peakUpd, peakIdle));
@@ -276,7 +327,8 @@ class StreetPerf {
         + 'shdw ' + shR + '/' + shB + '   heap ' + heapMB + 'M\n'
         + '<span style="color:#ffd27f">PEAK~3s ' + r2(peakFrame) + 'ms  submit ' + b(peakSubmit)
         + '  upd ' + b(peakUpd) + '  idle ' + b(peakIdle) + '  GPU ' + r2(peakGpu) + '</span>\n'
-        + 'SHADOWS(7): <b style="color:' + shCol + '">' + shTxt + '</b>';
+        + 'SHADOWS(7): <b style="color:' + shCol + '">' + shTxt + '</b>\n'
+        + 'SPECULAR(M): <b style="color:' + spCol + '">' + spTxt + '</b>';
     }
 
 // a material's Poly.tag class (userData.cls) for the scene dump — the only meaningful label on these

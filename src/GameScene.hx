@@ -14,7 +14,7 @@ class GameScene
   public var area: AreaView; // area view
   public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
-  public var view3d: render.View; // 3D area view (city areas only for now)
+  public var view3d: render.View; // 3D area view (city streets + the underground tunnels)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
   public var controlPressed: Bool; // Ctrl key pressed?
@@ -206,7 +206,7 @@ class GameScene
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = 'center';
 
-      if (game.location == LOCATION_AREA && isCityArea())
+      if (game.location == LOCATION_AREA && is3DArea())
         draw3D();
 
       else if (game.location == LOCATION_AREA)
@@ -231,7 +231,29 @@ class GameScene
         }
     }
 
-// is the current area a 3D-rendered city area?
+// is the current area rendered in 3D? city streets and the underground tunnels (sewers share
+// their generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid)
+  public inline function is3DArea(): Bool
+    {
+      return game.area != null &&
+        (game.area.info.type == 'city' ||
+         game.area.info.type == 'sewers' ||
+         game.area.info.type == 'habitat');
+    }
+
+// an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
+// placed once at area build, so without this a habitat object grown under the player would draw
+// nothing at all until the area was left and re-entered (its sprite is dropped the moment it has a
+// model). objects drawn as sprites need none of this — the actor layer re-reads them every frame
+  public function updateObjects3D()
+    {
+      if (!is3DArea() ||
+          !view3d.running)
+        return;
+      view3d.refreshObjects();
+    }
+
+// is the current area a city (as opposed to the underground tunnels)?
   inline function isCityArea(): Bool
     {
       return game.area != null &&
@@ -253,7 +275,9 @@ class GameScene
       _view3dArea = game.area.id;
       fader.cover(FADE_MS, function()
         {
-          if (game.area.cityGenSeed >= 0)
+          if (!isCityArea())
+            view3d.showSewer(game.area);
+          else if (game.area.cityGenSeed >= 0)
             view3d.show(game.area.cityGenSeed);
           else view3d.showCity(reconstructCity());
           _enter3D = false;

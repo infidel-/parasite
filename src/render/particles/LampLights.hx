@@ -25,7 +25,6 @@ class LampLights {
   public static var lastShadowBacklog = 0; // observability: caster slots still owing a re-render (a burst shows here, drains 1/frame)
   var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
   var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
-  var bulbY:Float;
   public var flickT:Float = 0.0;          // raw-ms flicker clock, see flicker() below (read by LightCone.pulse)
 
 // failing-sodium lamp at time t (raw ms) with a per-lamp phase. TWO gate sines ride on top of each
@@ -64,14 +63,15 @@ class LampLights {
       var L = RenderConfig.LAMP_LIGHT;
       owner = group;
       casters = pool < L.shadowCasters ? pool : L.shadowCasters;
-      bulbY = CityConfig.CELL * L.yMul;
       // NOTE: never toggle .visible — an invisible spotlight drops out of NUM_SPOT_LIGHTS and forces
       // the very recompile this pool exists to avoid. idle == visible + intensity 0
       for (i in 0...pool)
         {
           var t = new Group();
           group.add(t);
-          var l = new SpotLight(0xffb866, 0, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
+          // the seed tint only matters until a slot has an owner — update() republishes the owning
+          // post's colour every frame (a plain vec3 uniform, not part of the program cache key)
+          var l = new SpotLight(RenderConfig.LAMP_CONE.color, 0, CityConfig.CELL * 12, L.angle, L.penumbra, 1.6);
           l.target = t;
           // FIXED shadow casters: the first `shadowCasters` slots cast real shadows for their whole
           // life. never toggle castShadow per frame — it is part of the material program key
@@ -179,56 +179,94 @@ class LampLights {
             owners[i] = null; // fully dark → free for reuse
         }
       // route nearest lit lamps into the low (shadow-casting) slots: sort the slot CONTENTS (owner +
-      // eased intensity) by distance so slots 0..shadowCasters-1 always serve the nearest lit lamps.
-      // the physical SpotLights and their FIXED castShadow never move — only which lamp each serves —
-      // so no light visibly jumps; only the shadow hands off to the nearer post. dark slots sort last
-      var order = [for (i in 0...lights.length) i];
-      order.sort(function(a, b)
+      // eased intensity) by distance so slots 0..shadowCasters-1 serve the nearest lit lamps. the
+      // physical SpotLights and their FIXED castShadow never move — only which lamp each serves — so
+      // no light visibly jumps; only the shadow hands off to the nearer post. dark slots sort last.
+      //
+      // ONE adjacent transposition per frame, NOT a full re-sort. a hand-off moves the light this
+      // frame but its shadow map is re-rendered on a deferred budget, and the two MUST land together
+      // (see the refresh below), so the number of hand-offs per frame has to be bounded. the ordering
+      // is only a routing heuristic — letting it converge over a few frames costs nothing, and the
+      // array stays a valid permutation at every step, so no lamp is ever served twice or dropped
+      var swapped = -1;
+      for (i in 0...lights.length - 1)
         {
-          var da = owners[a] == null ? 0x7fffffff : d2(owners[a]);
-          var db = owners[b] == null ? 0x7fffffff : d2(owners[b]);
-          return da - db;
-        });
-      owners = [for (i in 0...lights.length) owners[order[i]]];
-      intens = [for (i in 0...lights.length) intens[order[i]]];
-      // publish: apply each slot's intensity and move its SpotLight onto its (distance-sorted) owner
+          var da = owners[i] == null ? 0x7fffffff : d2(owners[i]);
+          var db = owners[i + 1] == null ? 0x7fffffff : d2(owners[i + 1]);
+          if (da <= db)
+            continue;
+          var o = owners[i];
+          owners[i] = owners[i + 1];
+          owners[i + 1] = o;
+          var t = intens[i];
+          intens[i] = intens[i + 1];
+          intens[i + 1] = t;
+          swapped = i;
+          break;
+        }
+      // publish: apply each slot's intensity and move its SpotLight onto its (distance-routed) owner
       activeList = [];
       for (i in 0...lights.length)
         {
           var o = owners[i];
-          // flicker MULTIPLIES the published intensity and never touches intens[] — that array is both
-          // the pure fade ease and the `<= 0.001 -> free the slot` test, so scaling it in place would
-          // hand a sputtering lamp's slot away mid-blink
+          // flicker and the per-post strength MULTIPLY the published intensity and never touch
+          // intens[] — that array is both the pure fade ease and the `<= 0.001 -> free the slot` test,
+          // so scaling it in place would hand a sputtering lamp's slot away mid-blink (and would let a
+          // weak fixture free its slot the moment it was claimed)
           var fl = (o != null && o.phase != 0) ? flicker(flickT, o.phase) : 1.0;
-          untyped lights[i].intensity = intens[i] * fl;
+          untyped lights[i].intensity = intens[i] * fl * (o != null ? o.mul : 1.0);
           // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
-          // so the depth map is otherwise valid); the re-render is dispatched at most one-per-frame below
+          // so the depth map is otherwise valid); the re-render is dispatched below — this frame if
+          // the change came from a swap, else round-robin
           if (i < casters && owners[i] != prevOwners[i])
             shadowDirty[i] = true;
           if (o != null)
             {
-              o.flick = fl; // read by FlameShadows so the fake ground shadow breathes with the bulb
-              lights[i].position.set(o.x, bulbY, o.z);
-              targets[i].position.set(o.x, 0, o.z);
+              o.flick = fl; // read by LampShadows so the fake ground shadow breathes with the bulb
+              // both the bulb height and the aim point are the POST's, not the pool's: a street lamp
+              // hangs high and pools straight down, while a sewer wall bracket sits near the floor and
+              // aims metres out along the wall, so its beam rakes the walkway and throws long shadows
+              lights[i].position.set(o.x, o.y, o.z);
+              targets[i].position.set(o.tx, 0, o.tz);
+              // and the post's own tint: underground the shafts and the wall brackets are different
+              // lights sharing one pool, so a slot has to take the colour of whatever it serves now
+              lights[i].color.setHex(o.color);
               activeList.push(o);
             }
         }
-      // re-render at most ONE caster's shadow per frame: a full reshuffle dirties several slots at once,
-      // and running all their whole-scene shadow-cull traversals in one frame is the submit spike. spread
-      // them round-robin — the <=few-frame lag is hidden by the shadow.intensity cross-fade below
       lastShadowRenders = 0;
-      for (n in 0...casters)
-        {
-          var idx = (shadowCursor + n) % casters;
-          if (shadowDirty[idx])
+      // a SWAP's shadows cannot wait their turn. both slots' lights have ALREADY moved onto each
+      // other's lamp above, and three SKIPS shadow.updateMatrices for a shadow with autoUpdate false
+      // and needsUpdate false (WebGLShadowMap.render) — so a slot whose light moved but whose map has
+      // not re-rendered projects the PREVIOUS lamp's depth from the PREVIOUS position. The receiver
+      // lands outside that map, PCF returns fully lit, and it flashes: measured on the sewer exit
+      // ladder, which stands directly under its own lamp and swaps rank with a wall lamp on one step.
+      // re-render both here, in the same frame the lights moved. the one-swap gate caps this at 2
+      if (swapped >= 0)
+        for (i in swapped...(swapped + 2))
+          if (i < casters)
             {
-              untyped lights[idx].shadow.needsUpdate = true;
-              shadowDirty[idx] = false;
-              shadowCursor = (idx + 1) % casters;
-              lastShadowRenders = 1;
-              break;
+              untyped lights[i].shadow.needsUpdate = true;
+              shadowDirty[i] = false;
+              lastShadowRenders++;
             }
-        }
+      // everything else is a FREE slot claiming a new lamp, whose light is still at ~0 intensity and
+      // ramping — a stale map contributes nothing through a dark light, so those drain one per frame,
+      // round-robin. running every dirtied slot's whole-scene shadow-cull traversal at once is the
+      // submit spike this budget exists to avoid
+      if (lastShadowRenders == 0)
+        for (n in 0...casters)
+          {
+            var idx = (shadowCursor + n) % casters;
+            if (shadowDirty[idx])
+              {
+                untyped lights[idx].shadow.needsUpdate = true;
+                shadowDirty[idx] = false;
+                shadowCursor = (idx + 1) % casters;
+                lastShadowRenders = 1;
+                break;
+              }
+          }
       // publish the remaining backlog for the perf trace (0 normally; jumps on a multi-slot reshuffle)
       lastShadowBacklog = 0;
       for (i in 0...casters)
@@ -238,7 +276,9 @@ class LampLights {
       // shadow darkness 0..1 without touching brightness. edge = distance of the nearest lamp that did
       // NOT win a casting slot (owners[casters]); ramp each caster's shadow to 0 within fadeBand
       // cells of that edge, so a lamp swapping across the boundary hands its shadow off instead of
-      // popping. no boundary lamp (fewer lit than casters+1) -> full-strength shadows, nothing to fade
+      // popping. no boundary lamp (fewer lit than casters+1) -> full-strength shadows, nothing to fade.
+      // the incremental sort above means owners[casters] is the boundary lamp within a few frames
+      // rather than exactly this one — this is a ramp, so converging into it is the same as being in it
       var edge = (casters < lights.length && owners[casters] != null) ? Math.sqrt(d2(owners[casters])) : 1e9;
       for (i in 0...casters)
         {

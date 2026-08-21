@@ -129,6 +129,13 @@ class AreaObject extends _SaveObject
   public function isGroundDecal(): Bool
     { return true; }
 
+// key the 3D view looks a glb prop up by (render.world.ObjModels.modelFor). defaults to the object
+// type, which is what distinguishes most objects; classes that SHARE a type override it, because
+// `type` is persisted into saves and is read as game state (Habitat.update counts 'habitat'), so it
+// cannot be split per subclass just to give the renderer something to switch on
+  public function getModelKey(): String
+    { return type; }
+
 // can be activated when player is next to it?
   public function canActivateNear(): Bool
     { return false; }

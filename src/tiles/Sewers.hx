@@ -58,26 +58,9 @@ class Sewers extends Tileset
         tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
     }
 
-  public static var FLOOR_DECOR_META: Array<_FloorDecorMeta> = [
-    { icon: { row: 3, col: 1 }, motifs: ['green-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 98 },
-    { icon: { row: 3, col: 3 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 86 },
-    { icon: { row: 3, col: 4 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 85 },
-    { icon: { row: 3, col: 5 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 84 },
-    { icon: { row: 4, col: 1 }, motifs: ['crack', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 88 },
-    { icon: { row: 4, col: 2 }, motifs: ['brown-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 97 },
-    { icon: { row: 4, col: 3 }, motifs: ['floor-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 102 },
-    { icon: { row: 4, col: 4 }, motifs: ['purple-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 96 },
-    { icon: { row: 4, col: 5 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 83 },
-    { icon: { row: 4, col: 6 }, motifs: ['scratches', 'grime'], roles: ['entrance', 'storage', 'workshop'], baseWeight: 82 },
-    { icon: { row: 5, col: 0 }, motifs: ['floor-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 101 },
-    { icon: { row: 5, col: 1 }, motifs: ['floor-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 100 },
-    { icon: { row: 5, col: 2 }, motifs: ['floor-hatch', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 104 },
-    { icon: { row: 5, col: 3 }, motifs: ['black-puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 98 },
-    { icon: { row: 5, col: 4 }, motifs: ['puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 95 },
-    { icon: { row: 5, col: 5 }, motifs: ['puddle', 'spill', 'grime'], roles: ['vat', 'workshop', 'storage'], baseWeight: 94 },
-    { icon: { row: 5, col: 6 }, motifs: ['floor-grate', 'machinery'], roles: ['workshop', 'vat', 'research'], baseWeight: 99 },
-  ];
-
+  // no FLOOR_DECOR_META here: the weighted floor-decor table it fed was the 2D generator's
+  // (SewerAreaGenerator.decorateFloors), which is gone — a 3D tunnel is dressed by
+  // render.sewer.SewerGround and render.sewer.SewerDebris instead. UndergroundLab keeps its own
   public static var FLOOR_DECOR_EXTRA_ICONS(get, never): Array<_Icon>;
   static var floorDecorExtraIconsCache: Array<_Icon>;
 

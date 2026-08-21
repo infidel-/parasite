@@ -4,6 +4,7 @@ import three.Three;
 import js.Browser;
 import citygen.CityConfig;
 import citygen.CityModel.City;
+import render.Models.ModelVariant;
 import render.particles.LampLights;
 import render.particles.LampPost;
 
@@ -34,6 +35,10 @@ typedef SceneBundle = {
   coneFlick:render.LightCone.ConeSet, // the flickering lamps' cone batch, repacked per frame so a cone goes dark with its bulb
   lampMask:Array<Bool>,     // per-instance draw mask for lampProp — entries 0..n-1 are the flickering lamps, cleared while one is out
   lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
+  wallGlow:render.LightCone.ConeSet, // sewer only (null in a city): the wall lamps' emissive quads, repacked
+                                     // like coneFlick so a fixture stops glowing AND blooming while its bulb is out
+  propLights:render.particles.PropLights, // sewer only (null in a city): fixed point-light pool for the
+                                          // glowing object props, ticked per frame to follow the player
 };
 
 class SceneSetup {
@@ -78,6 +83,33 @@ class SceneSetup {
 
     return { renderer: renderer, camera: camera };
   }
+
+// the debug-lighting tail every scene ends with: a hidden full-bright WYSIWYG ambient (intensity π,
+// so albedo x 1 = the raw texel) plus the two closures that flip it — debug key 1 and setLightsOff.
+// shared by the city and the sewer rigs so the contract cannot drift between them: this used to be
+// copied into render.sewer.SewerScene, which is exactly where a new fill slot would be forgotten
+  public static function lightingTail(scene:Scene, renderer:WebGLRenderer, lights:Array<Object3D>):
+    { toggleLighting:Void->Bool, setLightsOff:Void->Void }
+    {
+      var debugAmbient = new AmbientLight(0xffffff, Math.PI);
+      debugAmbient.visible = false;
+      scene.add(debugAmbient);
+      var debug = false;
+      return {
+        toggleLighting: function():Bool
+          {
+            debug = !debug;
+            for (l in lights) l.visible = !debug;
+            debugAmbient.visible = debug;
+            renderer.toneMapping = debug ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+            return debug;
+          },
+        setLightsOff: function():Void
+          {
+            for (l in lights) l.visible = false;
+          },
+      };
+    }
 
 // moon direction (light comes FROM here toward the focus) — fixed, matches moon.position hint
   static var MOON_DIR = new Vector3(-1, 2, 1.5).normalize();
@@ -194,10 +226,15 @@ class SceneSetup {
           lampPosts.push({
             x: bx,
             z: bz,
+            y: CityConfig.CELL * L.yMul,
+            tx: bx, // a street lamp pools straight down: the aim point is the ground under the bulb
+            tz: bz,
+            color: RenderConfig.LAMP_CONE.color, // sodium amber, matching the shaft hung under it
             col: lamp.col,
             row: lamp.row,
             phase: phase,
             flick: 1.0,
+            mul: 1.0,
           });
         }
       // the cell corner (grid vertex) the post stands on, keyed for cornerBend to query
@@ -211,8 +248,8 @@ class SceneSetup {
     // picks which one draws it: its head is emissive, so an outage that only killed the spotlight and
     // the cone would leave the bulb glowing and blooming. both batches already repack every frame for
     // the frustum cull, so swapping a lamp between them costs nothing — no third draw call
-    var lampProp = Models.instanced(scene, lampModel, flickPlace.concat(placements), CityConfig.CELL * 1.6);
-    var lampPropDead = Models.instanced(scene, lampModel, flickPlace.concat(dead), CityConfig.CELL * 1.6, true);
+    var lampProp = Models.instanced(scene, lampModel, flickPlace.concat(placements), CityConfig.CELL * 1.6, SOLID);
+    var lampPropDead = Models.instanced(scene, lampModel, flickPlace.concat(dead), CityConfig.CELL * 1.6, DEAD);
     // prebuilt so the per-frame pass only rewrites the first n entries (the flickering lamps)
     var lampMask = [for (i in 0...(flickPlace.length + placements.length)) true];
     var lampMaskDead = [for (i in 0...(flickPlace.length + dead.length)) i >= flickPlace.length];
@@ -221,31 +258,32 @@ class SceneSetup {
     // (built once, never touched) and the flickering lamps' (repacked by LightCone.pulse so a cone
     // goes out with its bulb). an area with no flickering lamps builds no second mesh at all
     var coneR = bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul;
-    LightCone.instanced(coneGroup, bulbs, bulbY, coneR);
-    var coneFlick = LightCone.instanced(coneGroup, bulbsFlick, bulbY, coneR, phasesFlick);
+    LightCone.instanced({
+      group: coneGroup,
+      bulbs: bulbs,
+      bulbY: bulbY,
+      radius: coneR,
+      topR: RenderConfig.LAMP_CONE.topR,
+    });
+    var coneFlick = LightCone.instanced({
+      group: coneGroup,
+      bulbs: bulbsFlick,
+      bulbY: bulbY,
+      radius: coneR,
+      topR: RenderConfig.LAMP_CONE.topR,
+      phases: phasesFlick,
+    });
     // the fixed live-spotlight pool (added to the scene by its ctor); registered for the debug toggles
     var lampLights = new LampLights(scene, lampPool);
     for (l in lampLights.debugList()) { lights.push(l); pts.push(l); } // WYSIWYG (1) + setLightsOff + 5/0
     pts.push(coneGroup); // debug 5/0 hides the cones alongside the lamp lights
 
-    // debug full-bright WYSIWYG: ambient intensity = π so albedo×1 = raw texel
-    var debugAmbient = new AmbientLight(0xffffff, Math.PI);
-    debugAmbient.visible = false;
-    scene.add(debugAmbient);
-    var debug = false;
-    var toggleLighting = function():Bool {
-      debug = !debug;
-      for (l in lights) l.visible = !debug;
-      debugAmbient.visible = debug;
-      renderer.toneMapping = debug ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
-      return debug;
-    };
-    var setLightsOff = function():Void { for (l in lights) l.visible = false; };
+    var tail = lightingTail(scene, renderer, lights);
 
     return {
       scene: scene,
-      toggleLighting: toggleLighting,
-      setLightsOff: setLightsOff,
+      toggleLighting: tail.toggleLighting,
+      setLightsOff: tail.setLightsOff,
       fill: [ ambient, hemi, moon ],
       lights: lights,
       moon: moon,
@@ -258,7 +296,12 @@ class SceneSetup {
       lampPropDead: lampPropDead,
       coneFlick: coneFlick,
       lampMask: lampMask,
-      lampMaskDead: lampMaskDead
+      lampMaskDead: lampMaskDead,
+      wallGlow: null, // no wall-mounted fixtures on a street
+      // no object prop in a city lights, and an unused slot is not free: three unrolls the point-light
+      // loop into every lit material, so a pool here would cost the street frame a full light
+      // evaluation per fragment for nothing
+      propLights: null
     };
   }
 }

@@ -30,6 +30,10 @@ class Biomineral extends HabitatObject
       super.initPost(onLoad);
     }
 
+// every habitat object shares the 'habitat' type, so the 3D prop lookup keys on this instead
+  public override function getModelKey(): String
+    { return 'habitat_biomineral'; }
+
 // show additional info
   public override function onMoveTo()
     {

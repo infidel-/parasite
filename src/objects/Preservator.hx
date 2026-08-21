@@ -34,6 +34,10 @@ class Preservator extends HabitatObject
   public override function canActivateNear(): Bool
     { return true; }
 
+// every habitat object shares the 'habitat' type, so the 3D prop lookup keys on this instead
+  public override function getModelKey(): String
+    { return 'habitat_preservator'; }
+
 // return improvement id
   public override function getImprovementID(): _Improv
     {

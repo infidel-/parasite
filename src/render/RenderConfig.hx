@@ -2,6 +2,10 @@ package render;
 
 typedef DetailType = { tex:String, w:Float, d:Float, crop:Float };
 typedef CropXY = { x:Float, y:Float };
+// one camera distance preset: the offsets a CameraRig lerps between at zoom 0 and zoom 1.
+// only the distance differs per area kind — fov, easing and the orbit clamps stay shared
+typedef CamOffset = { x:Float, y:Float, z:Float };
+typedef CameraOffsets = { near:CamOffset, far:CamOffset };
 // one SHOT.kinds entry: per-weapon pellet pattern + tracer style (see the kinds block)
 typedef ShotKind = {
   pellets:Int,
@@ -164,6 +168,14 @@ class RenderConfig {
     orbitReturnLerp: 0.15, // per-BASE_MS ease of the orbit back to 0 on RMB release
     introMult: 6.0,       // enter effect: zoom-out from closest to resting target, BASE_MS multiples
     exitMult: 6.0         // leave effect: zoom-in to closest over the frozen last frame, then tear down
+  };
+  // enclosed areas (sewer/habitat tunnels) look almost straight down. the walls are only ~1.5 cells
+  // tall and there is no ceiling, so the shallow street angle above would stare into a wall face
+  // instead of down the corridor — and at this pitch a wall occludes almost nothing, which is what
+  // lets the tunnels skip building fading entirely
+  public static final CAMERA_SEWER:CameraOffsets = {
+    near: { x: 0.0, y: 16.0, z: 12.0 },  // zoom=0: close, looking well down into the corridor
+    far:  { x: 0.0, y: 40.0, z: 14.0 },  // zoom=1: near top-down
   };
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
@@ -540,6 +552,9 @@ class RenderConfig {
     fill: 'dots',        // occluded-silhouette pattern: the AI keeps 'scan'
     hatchSpacing: 6,     // pattern period (crop px)
     hatchThick: 2,       // pattern dot width (crop px)
+    hullW: 0.06,         // an object drawn as a 3D PROP is outlined by a backface shell instead (see
+                         // render.Models ModelVariant.HULL): this is how far the shell stands off the
+                         // real surface, in WORLD units, so it is the outline's thickness
   };
   // AI status badges float this fraction of Sprites.SIZE above the head (screen-up lift; clears the
   // head at any camera pitch — see Actors.drawBadges)
@@ -585,6 +600,103 @@ class RenderConfig {
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
+    sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
+    // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
+    // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be
+    // decimated (see AGENTS.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
+    // sewer-pile-2 sack-and-crate heap are both gone, split into the simple objects they were made of
+    sewerDrum: 'models/sewer/drum.glb',     // 200L steel drum, upright
+    sewerCrates: 'models/sewer/crates.glb', // two solid-walled plastic stacking crates
+    sewerCable: 'models/sewer/cable.glb',   // heavy industrial cable coiled flat
+    sewerBags: 'models/sewer/bags.glb',     // three tied refuse sacks heaped together
+    sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
+    sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
+    sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
+    // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
+    // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
+    // the full solid / ghost / outline-hull set rather than one decoration batch
+    habitatBiomineral: 'models/habitat/biomineral.glb',     // crystal spire in a slime mound
+    habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
+    habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
+    habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
+  };
+  // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
+  // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
+  // with a per-frame mask picking which one draws each prop — render.world.ObjModels
+  public static final PROP_GHOST = {
+    alpha: 0.3,  // opacity at full fade (0 = invisible, 1 = solid)
+    lerp: 0.25,  // per-30fps-frame ease toward the target (dt-compensated, as OCCLUSION.lerp)
+    snap: 0.02,  // lock to solid within this of 0 — the handover BACK to the opaque batch is gated on
+                 // it, and an exponential tail never reaches 0 on its own
+  };
+  // coloured point lights for the object props that glow — the habitat's grown organs. the light is
+  // what makes an organ read as luminescing now: an emissive MAP only brightens the prop's own texels
+  // and lights nothing around it, so the two are alternatives rather than a pair (see
+  // render.world.ObjModels.MODELS `light`, and docs/3d-changes.md).
+  //
+  // same fixed-pool discipline as LAMP_LIGHT and FLAME: every slot exists for the whole life of the
+  // scene at intensity 0 and the nearest props claim one per frame, so NUM_POINT_LIGHTS never changes
+  // and no lit material ever recompiles. built ONLY into the tunnel scene (render.sewer.SewerScene) —
+  // three unrolls the point-light loop into every lit material, so a slot a city could never use would
+  // still cost it a full light evaluation on every lit fragment
+  public static final PROP_LIGHT = {
+    // live point lights, and the whole feature's on/off switch: 0 builds none, so NUM_POINT_LIGHTS
+    // drops back to the flame pool's 5 and the point-light block leaves the tunnel shaders entirely.
+    // an organ is a room feature and a habitat room holds ~1-3, so this is sized for what ONE room
+    // shows rather than for the level (4 was the original value). each slot is a full extra light
+    // evaluation in every lit fragment of the frame — the street spotlight pool measured LINEAR at
+    // ~0.32ms per light on the integrated Radeon (docs/3d-render.md).
+    //
+    // 2 because exactly ONE prop declares a `light` now: the biomineral, which is the energy organ
+    // and the one that should read as lighting its room. A habitat holds several of them (Habitat
+    // .update sums energy over every formation), so a pool of 1 would light the nearest and leave
+    // its neighbour dark. The other three organs' rows are `light: null` with their old colours in
+    // the comment, so giving one of them a light back is an edit to that row, not to this number
+    pool: 2,
+    intensity: 9.0,   // base intensity, scaled per prop by its table row's `mul`
+    distCells: 3.0,   // hard cutoff radius in cells. SHORT on purpose: these cast NO shadow (a point
+                      // shadow is six cube faces per light), so reach is the only thing stopping an
+                      // organ bleeding through a wall into the next corridor. the vision mask hides
+                      // most of what still leaks — a surface the player cannot see is sunk to the fog
+                      // colour whatever lit it
+    decay: 1.6,       // as FLAME/LAMP: softer than physical 2.0 so the pool does not collapse to a dot
+    yMul: 1.15,       // light height = the prop's OWN table height * this, so it sits just above the
+                      // crown. inside the prop it would only reach backfaces and the organ itself
+                      // would read dark; from just above, the near-overhead camera sees a lit crown
+                      // and a coloured pool on the floor around it
+    rangeCells: 9.0,  // player distance at which a prop claims a slot
+    fadeMul: 1.0,     // fade in/out duration as a multiple of BASE_MS — fade, never blink
+  };
+  // idle motion for the grown props, folded into their own materials by render.world.PropShader: a
+  // height-weighted sway that moves the geometry and a finer ripple on the shading normal that a
+  // specular highlight crawls on. costs no draw call, no pass and no geometry.
+  //
+  // there is nothing per-prop here on purpose — amplitudes, speeds and falloffs are the `anim` column
+  // of render.world.ObjModels.MODELS, so a prop's motion lives on the same row as its height, yaw and
+  // light. this is only the master switch, the same role PROP_LIGHT.pool 0 plays for the point lights
+  public static final PROP_ANIM = {
+    enabled: true, // false stops the patch entirely, so every prop keeps the plain unanimated program
+  };
+  // the grown props' SURFACE glow, folded into their own materials by render.world.PropGlow: motes
+  // travelling a slow helix through the body, masked to whatever the prop's own baked albedo says is
+  // mineral. costs no draw call, no pass and no art; the halo is the composer's existing bloom pass
+  // catching an HDR tint.
+  //
+  // nothing per-prop here either, for the same reason as PROP_ANIM — the mask band, the tint, the
+  // mote count and every rate are the `shine` column of render.world.ObjModels.MODELS. this is only
+  // the master switch, and it is also the A/B lever: false keeps every prop on the unpatched program
+  public static final PROP_GLOW = {
+    enabled: true,
+  };
+  // the grown props' living FX, drawn by render.actors.PropFX as additive quads glued to the prop: a
+  // pulsing, writhing knot of innards hung inside it, and a ring of fireflies orbiting it, one per
+  // habitat level. HDR-tinted, so the bloom pass is what gives them their halo.
+  //
+  // nothing per-prop here either, for the same reason as PROP_ANIM — sizes, speeds, colours and the
+  // ring geometry are the `core` and `fly` columns of render.world.ObjModels.MODELS, so a prop's FX
+  // sit on the same row as its height, yaw, light and motion. this is only the master switch
+  public static final PROP_FX = {
+    enabled: true, // false draws none of it, and the pools stay empty
   };
   // street-lamp SPOTLIGHT placed relative to the lamp model. the light sits at the bulb (dx/dz =
   // local horizontal offset rotated by the lamp yaw, yMul = height CELL*this) and aims at a ground
@@ -688,6 +800,14 @@ class RenderConfig {
     lenMul: 0.6,        // shadow length = sprite world-height * this * distance falloff (overhead = short)
     op: 0.8,            // per-shadow opacity
     fade: 0.3,          // outer fraction of the range over which a shadow eases to 0
+    lowMax: 3.0,        // both numbers above are tuned for a street bulb at CELL * LAMP_LIGHT.yMul, and
+                        // a LOW fixture (a sewer wall bracket at 0.6) rakes light across the floor
+                        // instead of pooling it — so lenMul and rangeCells are both scaled by
+                        // refY / post.y, capped here. a street lamp lands on exactly 1.0
+    lowRangeCells: 3,   // absolute reach cap in cells for that scaled-up low fixture, so a bracket
+                        // still throws LONG shadows (lenMul keeps the full lowMax) but only over a
+                        // small pool. sits just under the burning barrel's FLAME.shadowRangeCells 4.
+                        // no effect on a street lamp: it scales by 1.0 and stays at rangeCells
   };
   // CROSS-AREA textures: the ones every style draws, read straight off here by the sub-builders
   // instead of going through AreaStyle. Per-area art is NOT here — that lives in the style file
@@ -719,5 +839,9 @@ class RenderConfig {
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
     slimeTrail: 'textures/fx/slime-trail.png', // green slime ribbon behind the free parasite (chroma-keyed, tiled along length)
+    // the grown props' living FX (render.actors.PropFX): a knot of tentacles that hangs in the
+    // assimilation arch and writhes, and the mote its fireflies are drawn with. both chroma-keyed
+    fxInnards: 'textures/fx/innards.png',
+    fxFirefly: 'textures/fx/firefly.png',
   };
 }

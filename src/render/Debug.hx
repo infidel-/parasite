@@ -141,8 +141,11 @@ class Debug {
       var idx = -1;
       var cnt = Browser.document.getElementById('cyc-${c.key}-count');
       function label(n:Int) cnt.textContent = '${c.label}: ${idx + 1}/$n';
+      // shape locators are a city thing; an underground area has no city and no shapes
+      function shapes():Array<citygen.CityModel.PShape>
+        return getCity() == null ? [] : c.spots(getCity());
       function go(d:Int):Void {
-        var spots = c.spots(getCity());
+        var spots = shapes();
         if (spots.length == 0) {
           idx = -1;
           label(0);
@@ -163,7 +166,7 @@ class Debug {
       Browser.document.getElementById('cyc-${c.key}-next').addEventListener('click', function(_) go(1));
       if (c.copy)
         Browser.document.getElementById('cyc-${c.key}-copy').addEventListener('click', function(_) {
-          var spots = c.spots(getCity());
+          var spots = shapes();
           if (spots.length == 0) return;
           // stale index after an area rebuild: renormalize by stepping once
           if (idx < 0 ||
@@ -174,7 +177,7 @@ class Debug {
         });
       function refresh() {
         idx = -1;
-        label(c.spots(getCity()).length);
+        label(shapes().length);
       }
       cycRefresh.push(refresh);
       refresh();

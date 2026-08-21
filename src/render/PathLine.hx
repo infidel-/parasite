@@ -9,7 +9,8 @@ import render.world.WorldCtx;
 
 // the mouse-hover move-path preview in the 3D street view: a thin, greenish, bloom-glowing wavy
 // ribbon from the player to the hovered target tile, capped by a dot at each end (the start one is
-// smaller, see PATH.dotStartScale). it
+// smaller, see PATH.dotStartScale, and it is the one depth-tested piece so a wall standing between
+// the camera and the player does not get it painted on). it
 // mirrors the old 2D dotted path, but as one triangle-strip ground ribbon (WebGL lines are 1px and
 // can't bloom) plus a small disc at the end. render-only, nothing persisted.
 // waviness is driven by host control: at full control (or as a free parasite) the line is dead
@@ -23,6 +24,7 @@ class PathLine
   var dotStart:Mesh;                                      // the smaller start dot disc at the player end
   var geo:BufferGeometry;
   var mat:MeshBasicMaterial;
+  var matStart:MeshBasicMaterial;                         // same material, but depth-tested (see new)
   var colFull:Color;                                     // HDR line/dot color at full control (green)
   var colLost:Color;                                     // HDR color at zero control (discolored, toxic rust-red)
   var cells:Array<{ x:Int, y:Int }> = [];                // current path cells, player -> target (empty = hidden)
@@ -41,8 +43,10 @@ class PathLine
       colFull = new Color(P.color).multiplyScalar(P.glow);
       colLost = new Color(P.lostColor).multiplyScalar(P.glow);
       // HDR green so the bloom pass gives the thin line + dot a soft glow (like TacticalGrid); a plain
-      // alpha blend so PATH.alpha genuinely fades it. depthTest off so it drapes over curbs and stays
-      // readable where the path rounds a corner behind a wall (matches the always-visible slime trail)
+      // alpha blend so PATH.alpha genuinely fades it. depthTest off so it drapes over curbs — the
+      // ribbon's Y is a Catmull-Rom through the cell floor heights, so at a CURB_H step it passes
+      // BELOW the walkway top and a depth test would eat it — and stays readable where the path
+      // rounds a corner behind a wall (matches the always-visible slime trail)
       mat = new MeshBasicMaterial({
         color: new Color(P.color).multiplyScalar(P.glow),
         transparent: true,
@@ -52,6 +56,23 @@ class PathLine
         toneMapped: false,
         side: THREE.DoubleSide,
       });
+      // the START dot is the one exception, and it is depth-TESTED. it sits at the player's own feet,
+      // where there is nothing to read through an occluder — the player already knows where they
+      // stand — while the camera-side wall (the sewer/habitat south wall, which hides everything
+      // within WALL_H / tan(pitch) of it, see render.sewer.SewerProps.CAM_DIR) would otherwise get a
+      // bright green disc painted onto its brick while the actor's own legs are correctly hidden
+      // behind it. the TARGET dot keeps depthTest off on purpose: seeing where a path ENDS around a
+      // corner is the whole point of the preview. the curb case above does not apply either — a dot
+      // is a flat disc at ONE cell's floorY, not an interpolation across two, and PATH.yOff is the
+      // tactical grid's own offset, which is depth-tested and clears the floor at that height
+      matStart = new MeshBasicMaterial({
+        transparent: true,
+        opacity: P.alpha,
+        depthWrite: false,
+        toneMapped: false,
+        side: THREE.DoubleSide,
+      });
+      matStart.color = mat.color; // ONE shared Color instance, so the control-loss lerp tints both
       geo = new BufferGeometry();
       mesh = new Mesh(geo, mat);
       mesh.renderOrder = 2;
@@ -67,7 +88,7 @@ class PathLine
       untyped dot.frustumCulled = false;
       dot.visible = false;
       scene.add(dot);
-      dotStart = new Mesh(dgeo, mat);
+      dotStart = new Mesh(dgeo, matStart);
       dotStart.rotation.x = -Math.PI / 2;
       dotStart.renderOrder = 2;
       untyped dotStart.frustumCulled = false;

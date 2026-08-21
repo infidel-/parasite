@@ -7,11 +7,13 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
+import render.Models.ModelVariant;
 import render.choreo.Choreo;
 
 // controller for the 3D area view. Owns a persistent renderer/camera on its own
 // WebGL canvas and a per-area scene + bloom composer; runs its own rAF loop while a
-// 3D area is shown (city areas today). The game drives it directly (show/hide/resize)
+// 3D area is shown (city streets and the underground tunnels — see render.Area3D for the
+// per-kind half). The game drives it directly (show/hide/resize)
 // — no bridge. Movement stays in the game (PlayerArea); this view mirrors positions and
 // billboards the player/AI/objects from the game's sprite atlas. Backtick toggles
 // street-debug mode (fly cam F, poly UV editor E, building inspector B, lighting 1).
@@ -30,14 +32,7 @@ class View {
   var toggleLighting:Void->Bool;
   var fill:Array<Object3D>; // [ambient, hemi, moon] fill lights (debug 2/3/4 toggles)
   var lightList:Array<Object3D>; // the array toggleLighting/setLightsOff close over — kept in sync by setLampLights
-  var moon:DirectionalLight; // shadow-casting moon, repositioned each frame to follow the player
   var perf:StreetPerf; // perf instrumentation + debug keys 7/8/9 (see render.StreetPerf)
-  // static-city spatial chunks: the world builder adds ~5.4k flat children to the scene, and three
-  // walks + frustum-tests every one of them each frame to find the ~400 it draws. bucketing them under
-  // chunk groups lets projectObject early-out on a whole block at once (an invisible parent is O(1))
-  var chunks:Array<{ g:Group, sphere:Sphere }> = [];
-  var chunkFrustum = new Frustum();
-  var chunkMat = new Matrix4();
   var pointLights:Array<Object3D>; // lamp spotlight pool + cone group (debug 5 toggle)
   var coneGroup:Object3D; // just the light cones (debug Shift+5), so cone overdraw prices apart from the spotlights
   var lightsOff = false; // debug 0: master off-state for all fill + point lights
@@ -47,13 +42,7 @@ class View {
   static final RENDER_SCALES = [ 1.25, 1.0, 0.75, 0.5 ];
   var scaleIdx = 0;
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
-  var lampPosts:Array<render.particles.LampPost>; // every placed lamp (for the pool)
-  var lampProp:render.Models.InstancedProp; // instanced lamp meshes, frustum-culled per frame
-  var lampPropDead:render.Models.InstancedProp; // dead lamps' posts (unlit bulb), culled alongside
-  var coneFlick:render.LightCone.ConeSet; // flickering lamps' cones, repacked per frame so they go out with the bulb
-  var lampMask:Array<Bool>;     // draw mask for lampProp — first entries are the flickering lamps
-  var lampMaskDead:Array<Bool>; // its complement for lampPropDead (same posts, dark material)
-  var city:City;
+  var area3d:Area3D; // the area KIND: scene/lights, static geometry and the per-frame world tick
 
   var actorGroup:Group;
   var ring:Mesh;
@@ -64,7 +53,6 @@ class View {
   var actors:Actors;                                      // the billboard actor layer
   var choreo:Choreo;                                      // combat/particle choreography context (render.choreo modules)
   var rig:CameraRig;                                      // the follow camera + zoom
-  var occlusion:Occlusion;                                // fades buildings blocking the player
   var tacticalGrid:TacticalGrid;
   var pathLine:PathLine;                                  // mouse-hover move-path preview (wavy glowing ribbon + target dot)
   var tactical = false;
@@ -74,9 +62,8 @@ class View {
   public var running(default, null):Bool = false;
   var svMouseX:Float = 0;                                 // last cursor client px over #view (AI-hover tooltip anchor)
   var svMouseY:Float = 0;
-  var shownSeed:Int = -2; // seed of the currently-built city (-2 = nothing built)
+  var shownKey:Int = -2; // identity of the currently-built area: the city seed, or -(area id + 3) for a sewer (-2 = nothing built)
   var last = 0.0;
-  static inline var CHUNK_CELLS = 16; // spatial chunk edge, in city cells (16 * CELL 4 = 64 world units)
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
   var warming = false;    // that warm is in flight: the scene is built but `running` waits on it, so show() must not treat this build as absent and rebuild over it
 
@@ -85,8 +72,11 @@ class View {
     this.game = game;
     filterTextureWarning();
     ensureCanvas();
+    // the city the debug tools report against comes from the built AREA, not a second field kept in
+    // sync by hand — an underground area answers null and every reader already handles that
     debug = new Debug(game, canvas, function() return camera,
-      function() return scene, function() return city, function() return shownSeed);
+      function() return scene, function() return area3d == null ? null : area3d.city(),
+      function() return shownKey);
     // global debug hotkeys: ` toggles street-debug mode, 1 toggles WYSIWYG lighting,
     // 2/3/4 toggle the ambient / hemisphere / moon fill lights individually (isolate the point lights),
     // V cycles the render scale, and Shift+1 / Shift+5 narrow 1 and 5 to bloom / cones alone
@@ -106,7 +96,8 @@ class View {
         bloomPass.enabled = !toggleLighting();
       else if (debug.on && fill != null && (e.code == 'Digit2' || e.code == 'Digit3' || e.code == 'Digit4')) {
         var i = e.code == 'Digit2' ? 0 : (e.code == 'Digit3' ? 1 : 2);
-        fill[i].visible = !fill[i].visible;
+        if (i < fill.length) // underground has no moon, so slot 2 is absent there
+          fill[i].visible = !fill[i].visible;
       }
       else if (debug.on && e.code == 'Digit5' && pointLights != null)
         for (p in pointLights) p.visible = !p.visible;
@@ -212,6 +203,13 @@ class View {
       firstFrame = cb;
     }
 
+// an area object was added or removed in the area on screen — see Area3D.refreshObjects
+  public function refreshObjects():Void
+    {
+      if (area3d != null)
+        area3d.refreshObjects();
+    }
+
 // is street-debug mode active? (the game suppresses movement input while it is)
   public inline function debugActive():Bool return debug.on;
 
@@ -228,7 +226,7 @@ class View {
         return;
       tactical = v;
       rig.setTactical(tactical);
-      occlusion.setTactical(tactical);
+      area3d.setTactical(tactical);
       actors.setTactical(tactical);
       if (tactical)
         tacticalGrid.show(game.playerArea.x, game.playerArea.y);
@@ -312,10 +310,28 @@ class View {
       // first city most sessions ever build
       var slCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_LOW));
       World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), false);
+      // the tunnels get their OWN warm scene, NOT a corner of the city's. a sewer has no
+      // directional light at all, and NUM_DIR_LIGHTS / NUM_DIR_LIGHT_SHADOWS are part of every lit
+      // material's program key — so wall/floor/ledge warmed under the city's moon compile
+      // the wrong variant and recompile on the first real entry anyway (measured: 4 programs).
+      // real builders again, so the match is by construction rather than by bookkeeping
+      var sewerModel = render.sewer.SewerModel.demo();
+      var sewerScene = render.sewer.SewerScene.build(renderer, sewerModel, game.config.vidLampLights).scene;
+      render.sewer.SewerGeom.build(sewerScene, sewerModel);
+      // and the muzzle-flash point-light pool, for the SAME reason the city warm scene parks one
+      // below: Actors adds it to every real scene, tunnels included, and NUM_POINT_LIGHTS is in
+      // every lit material's program key. without it the whole shell warms at 0 point lights and
+      // recompiles at 5 on the first entry — measured by diffing __progs() around a sewer entry,
+      // where every added lambert/basic key differed from its warmed twin in that one field
+      var sewerFx = new Group();
+      sewerScene.add(sewerFx);
+      new render.particles.MuzzleLights(sewerFx);
+      // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
+      // light-count variant), but it has to wait for its glb — see the compile chain below
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
       // buildScene already compiled — instance one into the warm scene so the first downtown entry
       // reuses it instead of recompiling on the first frame
-      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6);
+      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6, SOLID);
       // on-demand effects never present at static-build time: park throwaway instances so they warm too
       var g = new Group();
       s.add(g);
@@ -336,6 +352,14 @@ class View {
       var sparks = new render.particles.Sparks(g, camera);
       sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
       sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
+      // the grown props' writhing core: a plain additive quad EXCEPT for its uv-disturbance patch,
+      // which carries a customProgramCacheKey of its own — so it is a program glowQuad's does not
+      // cover and would otherwise compile on the first habitat entry. its fireflies ARE glowQuad's
+      // material and need nothing. warmed in the CITY scene deliberately: MeshBasic takes no light
+      // count, so the program does not vary by area, and this scene is the one bound to the
+      // composer's linear target below (which the cache key DOES bake in)
+      for (m in render.actors.PropFX.warmupMeshes())
+        g.add(m);
       // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
       // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
       // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).
@@ -401,6 +425,74 @@ class View {
           return renderer.compileAsync(s, camera);
         }).then(function(_)
         {
+          // every tunnel prop's glb arrives over an async load, so they are instanced HERE rather than
+          // beside the rest of the sewer warm scene: added after compileAsync had already walked that
+          // scene they would miss the warm entirely and compile their PBR programs on the first real
+          // tunnel entry. the whole set has to land before the compileAsync below walks this scene,
+          // which is what the shared `left` counter is for
+          return new js.lib.Promise(function(res, _)
+            {
+              var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
+              var C = render.RenderConfig.OBJMARK;
+              // patched exactly as the tunnel builders patch their own: the vision mask carries a
+              // customProgramCacheKey, so a prop warmed UNPATCHED warms a program the game never
+              // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
+              // which reuses the glb template's own shared material — the very object the real
+              // build then patches (render.sewer.SewerProps)
+              var M = render.sewer.SewerMask;
+              var objModels = render.world.ObjModels.MODELS;
+              var wallProps = render.sewer.SewerStyle.PROP_MODELS;
+              var left = objModels.length + wallProps.length;
+              var done = function()
+                {
+                  left--;
+                  if (left == 0)
+                    res(null);
+                };
+              // the object-backed props (exit ladders, the habitat's grown objects) in all THREE
+              // variants — `transparent` and BackSide are both folded into three's program cache key,
+              // so the ghost and the outline hull each compile a program of their own, and without
+              // this they would compile on the first step onto a prop / the first tactical toggle
+              for (i in 0...objModels.length)
+                {
+                  var m = objModels[i];
+                  render.Models.get(m.path, function(_)
+                    {
+                      // the idle-motion patch goes on in the SAME ORDER as render.sewer.SewerArea's
+                      // per-frame pass applies it — both chain onto the mask's hook and extend its
+                      // program cache key, so a swapped order here would warm a key the game never
+                      // asks for. a row with no `anim` is a no-op and keeps the plain program
+                      var s = render.Models.instanced(sewerScene, m.path, place, m.h, SOLID).mesh;
+                      var g = render.Models.instanced(sewerScene, m.path, place, m.h, GHOST).mesh;
+                      var h = render.Models.instanced(sewerScene, m.path, place, m.h,
+                        HULL(C.color, C.hullW)).mesh;
+                      M.patchMesh(s);
+                      M.patchMesh(g);
+                      render.world.PropShader.patchMesh(s, m.anim);
+                      render.world.PropShader.patchMesh(g, m.anim);
+                      render.world.PropShader.patchMesh(h, m.anim);
+                      render.world.PropGlow.patchMesh(s, m.shine);
+                      render.world.PropGlow.patchMesh(g, m.shine);
+                      done();
+                    });
+                }
+              // the wall props have the same trap, but only ONE variant each: they are decoration,
+              // so no ghost and no hull
+              for (i in 0...wallProps.length)
+                {
+                  var p = wallProps[i];
+                  render.Models.get(p.path, function(_)
+                    {
+                      M.patchMesh(render.Models.instanced(sewerScene, p.path, place, p.h, SOLID).mesh);
+                      done();
+                    });
+                }
+            });
+        }).then(function(_)
+        {
+          return renderer.compileAsync(sewerScene, camera); // still bound to the linear target
+        }).then(function(_)
+        {
           renderer.setRenderTarget(null);
           comp.render();
           comp.dispose();
@@ -408,8 +500,9 @@ class View {
           // the materials keeps their programs cached. geometry is deliberately NOT disposed — several
           // geometries here are shared static models / particle quads, and disposing them would break the
           // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
-          // selectively dispose only the per-build World.build geometries (the safe ones) later
-          warmHold = s;
+          // selectively dispose only the per-build World.build geometries (the safe ones) later.
+          // both scenes are held — the tunnels' materials are the sewer half of the cache
+          warmHold = [ s, sewerScene ];
           if (renderer.info.programs != null)
             js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
         });
@@ -420,49 +513,48 @@ class View {
     // a build whose shader warm is still in flight counts as shown: the warm holds `running` false for
     // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
     // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
-    if ((running || warming) && shownSeed == seed) return;
-    buildFrom(CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID)), seed);
+    if ((running || warming) && shownKey == seed) return;
+    var c = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID));
+    buildFrom(new CityArea(game, c, seed), seed);
   }
 
 // show a pre-reconstructed city (old saves with no seed)
   public function showCity(c:City):Void {
-    buildFrom(c, -1);
+    buildFrom(new CityArea(game, c, -1), -1);
   }
 
-// (re)build the scene for a city and start the render loop
-  function buildFrom(c:City, seed:Int):Void {
+// show the 3D sewer/habitat tunnels for an area, built from its saved tile grid (no seed — the
+// grid IS the persisted layout, so this works on every existing save)
+  public function showSewer(area:game.AreaGame):Void
+    {
+      var key = -(area.id + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.sewer.SewerArea(game, render.sewer.SewerModel.fromArea(area)), key);
+    }
+
+// (re)build the scene for an area kind and start the render loop
+  function buildFrom(a:Area3D, key:Int):Void {
     ensureCore();
     // a load/rebuild replaces the scene without going through the menu-exit outro, so free the
     // previous build's GPU resources here too — otherwise every load orphans a whole city's
     // geometry in the (persistent) renderer's cache and geom climbs ~one city per load
     disposeBuild();
-    city = c;
-    shownSeed = seed;
+    area3d = a;
+    shownKey = key;
 
-    var areaStyle = render.world.AreaStyle.forArea(game.area.typeID);
-    var bundle = SceneSetup.buildScene(renderer, city, game.config.vidLampLights, areaStyle);
+    var bundle = a.scene(renderer, game.config.vidLampLights);
     scene = bundle.scene;
     toggleLighting = bundle.toggleLighting;
     fill = bundle.fill;
     lightList = bundle.lights;
-    moon = bundle.moon;
     pointLights = bundle.pointLights;
     coneGroup = bundle.coneGroup;
     lampLights = bundle.lampLights;
-    lampPosts = bundle.lampPosts;
-    lampProp = bundle.lampProp;
-    lampPropDead = bundle.lampPropDead;
-    coneFlick = bundle.coneFlick;
-    lampMask = bundle.lampMask;
-    lampMaskDead = bundle.lampMaskDead;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
-    // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the chunk
-    // pass only ever touches static geometry the world builder adds below
-    var preBuild = scene.children.copy();
-    World.build(scene, city, seed, areaStyle);
-    chunkStatics(preBuild);
-    debug.onRebuild(); // fresh city: reset cycler indices + counts
-    occlusion = new Occlusion(scene, city.buildings, city.tiles);
+    rig.setOffsets(a.cameraOffsets());      // the rig outlives the scene, so re-assert it per build
+    a.build(scene);
+    debug.onRebuild(); // fresh area: reset cycler indices + counts
     tacticalGrid = new TacticalGrid(scene, game.area);
     pathLine = new PathLine(game, scene);
 
@@ -484,10 +576,11 @@ class View {
     // fresh area: new actor layer so billboards/slides/effects start clean
     actors = new Actors(game, actorGroup, camera);
     actors.setLampCorners(bundle.lampCorners); // route the actor slide around lamp posts
-    // seed-derived street debris (render-only, deterministic from the seed — no save cost); old
-    // seedless saves (seed -1) skip it
-    if (seed != -1)
-      actors.setDebris(render.world.Debris.build(seed, city.tiles, game.area.typeID, game.area.highCrime));
+    // ground debris: render-only and deterministic (from the city seed, or the sewer's own cell
+    // hash) — no save cost. null where the area kind has none (a seedless old city save)
+    var deb = a.debris();
+    if (deb != null)
+      actors.setDebris(deb);
 
     // bloom: lit windows/lamps emit HDR (>1); bloom gives them a soft glow
     composer = new EffectComposer(renderer);
@@ -512,7 +605,7 @@ class View {
     choreo = new Choreo(game, actors, rig, shockwave);
     bloomPass = new UnrealBloomPass(
       new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
-      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, areaStyle.bloomThreshold); // per-area: WHEN the glow starts
+      RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, a.bloomThreshold()); // per-area: WHEN the glow starts
     bloomPass.enabled = game.config.vidBloom; // re-assert per area — a fresh pass defaults to enabled
     composer.addPass(bloomPass);
     composer.addPass(new OutputPass());
@@ -615,7 +708,7 @@ class View {
   public function teardown():Void {
     running = false;
     exiting = false;
-    shownSeed = -2;
+    shownKey = -2;
     if (debug.on) setDebug(false);
     disposeBuild();
     scene = null;
@@ -626,7 +719,7 @@ class View {
     ring = null;
     actors = null;
     choreo = null;
-    occlusion = null;
+    area3d = null;
     tacticalGrid = null;
     pathLine = null;
     tactical = false;
@@ -809,10 +902,12 @@ class View {
           var hx = ox + dx * t;
           var hz = oz + dz * t;
           var c = CityConfig.worldToCell(hx, hz);
+          // bound against the AREA, not the city grid: a sewer is smaller than GRID x GRID, and
+          // cells past its edge are not walkable ground
           if (c.col < 0 ||
               c.row < 0 ||
-              c.col >= CityConfig.GRID ||
-              c.row >= CityConfig.GRID)
+              c.col >= game.area.width ||
+              c.row >= game.area.height)
             return miss;
           cell = { x: c.col, y: c.row };
           var fy = render.world.WorldCtx.floorY(c.col, c.row);
@@ -932,6 +1027,7 @@ class View {
           pointLights.unshift(l);
           lightList.push(l);
         }
+      area3d.setLampLights(lampLights); // the world tick drives the pool — re-bind it to the new one
       trace('[lamp-lights] pool -> ' + n);
     }
 
@@ -993,9 +1089,20 @@ class View {
     // down. teardown may fire mid-drift (nulls composer) — guard the render on it
     if (exiting) {
       rig.driftZoom(dtMs);
-      // keep fading buildings that slide between the zooming-in camera and the (frozen) player,
-      // so the marker stays visible through the outro (occlusion reads no game state)
-      occlusion.update(camera.position, rig.playerWorld(), null, false, dtMs);
+      // keep fading whatever slides between the zooming-in camera and the (frozen) player, so the
+      // marker stays visible through the outro. an outro tick reads no game state
+      area3d.tick({
+        camPos: camera.position,
+        player: rig.playerWorld(),
+        target: null,
+        aiming: false,
+        playerCol: 0,
+        playerRow: 0,
+        dtMs: dtMs,
+        outro: true,
+        freeCam: false,
+        camera: camera,
+      });
       if (running && composer != null) {
         renderer.info.reset();
         composer.render();
@@ -1008,8 +1115,6 @@ class View {
     rig.update(dtMs, !freeing);
     if (freeing) debug.freeCam.update(dtMs);
     var p = rig.playerWorld();
-    // keep the moon's shadow box centered on the player so building/lamp shadows track the view
-    SceneSetup.fitMoon(moon, p);
     // rest the ring on the ground under its *smooth* position, at the HIGHEST floor its whole
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
     // straddles gets its overhanging arc buried and blinks. floating over the lower side reads
@@ -1039,32 +1144,36 @@ class View {
         var w = CityConfig.cellToWorld(tt.x, tt.y);
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
-    // someone in the city flips a light: run the window switch countdowns BEFORE the occlusion pass,
-    // so a building that is mid-fade re-copies its ghost on the same frame the window changed
-    render.world.Windows.pulse(dtMs);
-    if (!freeing) occlusion.update(camera.position, p, tgtPos, aiming, dtMs);
-    cullChunks(p); // hide whole offscreen blocks so three skips their subtrees entirely
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
     if (tactical)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
-    // park the live-spotlight pool on the nearest lamps to the player, then hand the lit ones to the
-    // actor layer so it casts fake shadows only from lamps that are actually lit this frame
-    lampLights.update(lampPosts, game.playerArea.x, game.playerArea.y, dtMs);
-    // drop offscreen lamp meshes: one InstancedMesh otherwise draws all ~280 whenever any is
-    // visible. radius CELL*2 covers a lamp's full height as an edge margin so none pop at screen edges
-    // pull the cones of any flickering lamp that is mid-outage out of the draw (no-op most frames),
-    // then hand the same on/off state to the post batches: a lamp that is out draws from the DEAD
-    // batch instead, so its emissive head stops glowing and blooming for the length of the outage
-    render.LightCone.pulse(coneFlick, lampLights.flickT);
-    for (i in 0...coneFlick.on.length)
-      {
-        lampMask[i] = coneFlick.on[i];
-        lampMaskDead[i] = !coneFlick.on[i];
-      }
-    render.Models.cull(lampProp, camera, CityConfig.CELL * 2, lampMask);
-    render.Models.cull(lampPropDead, camera, CityConfig.CELL * 2, lampMaskDead);
+    // the world tick for this area kind: occlusion fades, window switches, chunk culling and the
+    // live lamp pool (see render.CityArea / render.SewerArea)
+    area3d.tick({
+      camPos: camera.position,
+      player: p,
+      target: tgtPos,
+      aiming: aiming,
+      playerCol: game.playerArea.x,
+      playerRow: game.playerArea.y,
+      dtMs: dtMs,
+      outro: false,
+      freeCam: freeing,
+      camera: camera,
+    });
+    // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame
     actors.setLamps(lampLights.active());
     actors.update(dtMs);
+    // the batched ground decals — street debris and plain blood — belong to the ACTOR layer, not to
+    // the area, and their instanced groups are built lazily by the paint pass just above, so there is
+    // no build-time moment for the tunnel mask to catch them the way every other surface is caught.
+    // without this the debris underfoot stayed at full brightness in a corridor nobody can see.
+    // gated because Actors is rebuilt per area but the mask uniforms are not: a patched material left
+    // over above ground would sample the last tunnel's canvas. patch() marks its own hook and
+    // early-outs, so a landed group is a couple of reads
+    if (Std.isOfType(area3d, render.sewer.SewerArea))
+      for (m in actors.decalMaterials())
+        render.sewer.SewerMask.patch(m);
     shockwave.update();
     updateHoverTooltip();
     // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a
@@ -1100,90 +1209,5 @@ class View {
     if (debug.on)
       Gizmo.draw(renderer, camera); // corner XYZ gizmo (after the stat capture)
   }
-
-// a mesh's local bounding radius — used to spot city-spanning geometry that must NOT be chunked
-  static function objRadius(d:Dynamic):Float
-    {
-      var g:Dynamic = d.geometry;
-      if (g == null)
-        return 1e9;
-      var r:Float;
-      if (d.isInstancedMesh == true)
-        {
-          d.computeBoundingSphere(); // instance-aware: a per-building window mesh is small, the city-wide lamp prop is not
-          r = d.boundingSphere != null ? d.boundingSphere.radius : 1e9;
-        }
-      else
-        {
-          if (g.boundingSphere == null)
-            g.computeBoundingSphere();
-          r = g.boundingSphere != null ? g.boundingSphere.radius : 1e9;
-        }
-      var s:Dynamic = d.scale;
-      return r * Math.max(s.x, Math.max(s.y, s.z));
-    }
-
-// bucket the static city into spatial chunk groups. the groups sit at identity, so every child keeps its
-// local position and world matrix — pixel-identical output, only the traversal changes. world matrices
-// are baked once here and the subtree then opts out of the per-frame matrix walk (nothing moves)
-  function chunkStatics(pre:Array<Object3D>):Void
-    {
-      var CH = CityConfig.CELL * CHUNK_CELLS;
-      var skip = new Map<String,Bool>();
-      for (o in pre)
-        skip.set(untyped o.uuid, true);
-      var groups = new Map<String, Group>();
-      for (o in scene.children.copy())
-        {
-          var d:Dynamic = o;
-          if (skip.exists(d.uuid) ||
-              (d.isMesh != true && d.isInstancedMesh != true))
-            continue;
-          // city-spanning meshes (ground, roads) keep their scene parent: bucketed by their single
-          // origin they would pop out entirely the moment that one chunk culls
-          if (objRadius(d) > CH)
-            continue;
-          var key = Math.floor(o.position.x / CH) + ':' + Math.floor(o.position.z / CH);
-          var g = groups.get(key);
-          if (g == null)
-            {
-              g = new Group();
-              groups.set(key, g);
-              scene.add(g);
-            }
-          g.add(o); // reparent — group is at identity, so the child's world transform is unchanged
-        }
-      scene.updateMatrixWorld(true); // bake every world matrix once, before the subtrees freeze
-      chunks = [];
-      for (g in groups)
-        {
-          var b = new Box3().setFromObject(g);
-          var size = b.getSize(new Vector3());
-          var sph = new Sphere();
-          sph.center = b.getCenter(new Vector3());
-          sph.radius = Math.sqrt(size.x * size.x + size.y * size.y + size.z * size.z) / 2;
-          untyped g.matrixWorldAutoUpdate = false; // static: skip this subtree in updateMatrixWorld forever
-          chunks.push({ g: g, sphere: sph });
-        }
-      trace('[chunks] ' + chunks.length + ' groups (' + CHUNK_CELLS + ' cells each)');
-    }
-
-// per frame: frustum-test each CHUNK instead of each mesh. a chunk inside the moon's shadow box stays
-// visible even when offscreen, else its buildings would stop casting shadows into view
-  function cullChunks(p:Vector3):Void
-    {
-      if (chunks.length == 0)
-        return;
-      chunkMat.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-      chunkFrustum.setFromProjectionMatrix(chunkMat);
-      var R = RenderConfig.MOON_SHADOW.halfExtent;
-      for (c in chunks)
-        {
-          var dx = c.sphere.center.x - p.x;
-          var dz = c.sphere.center.z - p.z;
-          var reach = R + c.sphere.radius;
-          c.g.visible = (dx * dx + dz * dz) <= reach * reach || chunkFrustum.intersectsSphere(c.sphere);
-        }
-    }
 
 }

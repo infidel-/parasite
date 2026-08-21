@@ -30,6 +30,10 @@ class Watcher extends HabitatObject
       super.initPost(onLoad);
     }
 
+// every habitat object shares the 'habitat' type, so the 3D prop lookup keys on this instead
+  public override function getModelKey(): String
+    { return 'habitat_watcher'; }
+
 // get static atmosphere light emitted by this object
   public override function getAtmosphereLight(): _AtmosphereLightMeta
     {

@@ -18,6 +18,7 @@ class Console
   var debugConsole: Debug;
   var stageConsole: Stage;
   var cultConsole: Cult;
+  var habitatConsole: HabitatConsole;
   var modsConsole: Mods;
   var perfConsole: Perf;
   public var completion: ConsoleCompletion;
@@ -36,6 +37,7 @@ class Console
       debugConsole = new Debug(this);
       stageConsole = new Stage(this);
       cultConsole = new Cult(this);
+      habitatConsole = new HabitatConsole(this);
       modsConsole = new Mods(this);
       perfConsole = new Perf(this);
       completion = new ConsoleCompletion(this);
@@ -100,10 +102,13 @@ class Console
             setVariableCommand(['set', 'player.godmode', '1' ]);
         }
 
-      // XXX help
+      // XXX hab|habitat commands, help
       else if (char0 == 'h')
         {
-          if (Const.isDebug)
+          if (Const.isDebug &&
+              (arr[0] == 'hab' || arr[0] == 'habitat'))
+            habitatConsole.run(cmd);
+          else if (Const.isDebug)
             log('Available commands: ' +
               // give
               'give effect [name], ' +
@@ -132,6 +137,8 @@ class Console
               'goal complete [id], ' +
               'goal receive [id], ' +
               'god - enable godmode,<br/>' +
+              // habitat
+              'hab|habitat [all|biomineral|assimilation|preservator|watcher|clear] [level],<br/>' +
               // info
               'info improvements, ' +
               'info timeline,<br/>' +

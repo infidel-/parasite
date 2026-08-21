@@ -54,4 +54,9 @@ class HabitatExit extends AreaObject
 
   public override function known(): Bool
     { return true; }
+
+// stand upright in the 3D view instead of lying flat like ground clutter — the art is a LADDER
+// drawn from the side, so laid flat it reads as a stripe painted on the walkway
+  public override function isGroundDecal(): Bool
+    { return false; }
 }

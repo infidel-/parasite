@@ -23,6 +23,8 @@ typedef ActorOpts = {
   @:optional var offz:Float;        // world Z offset from the cell centre
   @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
+  @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): no icon and no
+                                    // sprite marks at all — the prop is outlined from its own geometry
 }
 
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
@@ -49,7 +51,8 @@ class Actors {
   var actors:haxe.ds.ObjectMap<Entity, Actor> = new haxe.ds.ObjectMap();
   // per-frame sub-passes: each reads the actor-pose map (read-only), paints through the surfaces
   var decals:Decals;                                     // ground/wall decoration + street debris
-  var flames:FlameShadows;                               // barrel flame body/glow + fake cast shadows
+  var lampShadows:LampShadows;                           // fake cast shadows (lamps + barrels) + barrel flame body/glow
+  var propFX:PropFX;                                     // the grown props' living FX (writhing core + orbiting fireflies)
   var badges:Badges;                                     // AI badges + x-ray outline + targeting markers
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
   var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
@@ -97,10 +100,12 @@ class Actors {
       paint = { sprites: sprites, beams: beams, sparks: sparks };
       particles = new Particles3D();
       // per-frame sub-passes of the actor layer; each is handed the shared actor-pose map so it can
-      // read poses (FlameShadows/Badges) — Actors stays its sole writer
+      // read poses (LampShadows/Badges) — Actors stays its sole writer
       decals = new Decals(game, sprites, actorGroup);
       slimeTrail = new SlimeTrail(actorGroup, sprites);
-      flames = new FlameShadows(game, actorGroup, sprites, sparks, particles, actors);
+      lampShadows = new LampShadows(game, actorGroup, sprites, sparks, particles, actors);
+      // owns its own quad pools rather than painting through the surfaces above — see PropFX
+      propFX = new PropFX(game, actorGroup);
       badges = new Badges(game, camera, sprites, actors);
       offscreen = game.ui.hud.offscreen;
       bubbles = game.ui.hud.bubbles;
@@ -111,7 +116,7 @@ class Actors {
 // receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
   public function setLamps(lamps:Array<LampPost>):Void
     {
-      flames.setLamps(lamps);
+      lampShadows.setLamps(lamps);
     }
 
 // receive the lamp-corner map (built once per scene) so the position slide bends past posts
@@ -149,7 +154,7 @@ class Actors {
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
-      flames.gather(dtMs);
+      lampShadows.gather(dtMs);
       badges.tick(dtMs);                                 // advance the looping badge-pulse clock
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
@@ -195,6 +200,7 @@ class Actors {
               offz: oz,
               groundAnchor: true,
               mark: o.visible(),
+              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null,
             });
             if (vis)
               badges.drawObjTarget(o);
@@ -256,8 +262,11 @@ class Actors {
         st == _PlayerState.PLR_STATE_PARASITE && pp != null,
         pp != null ? pp.x : pw.x,
         pp != null ? pp.z : pw.z);
-      flames.bodyAndShadows(dtMs);
-      flames.driveFireLoop();
+      lampShadows.bodyAndShadows(dtMs);
+      // the grown props' core + fireflies. its own pools, so it does not have to sit inside the
+      // sprites/beams/sparks frame below — it is here for locality with the other world-anchored FX
+      propFX.update(dtMs);
+      lampShadows.driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -319,6 +328,14 @@ class Actors {
   public function setDebris(list:Array<render.world.Debris.DebrisSpot>):Void
     {
       decals.setDebris(list);
+    }
+
+// the batched ground-decal materials (street debris + plain blood), for a caller that has to patch
+// them. they belong to the ACTOR layer rather than to the area, and their groups are built lazily on
+// the first paint that needs one — see render.decals.DecalBatch.materials
+  public function decalMaterials():Array<Dynamic>
+    {
+      return decals.materials();
     }
 
 // the world point at an actor's head — the anchor every screen overlay projects from (edge
@@ -706,7 +723,7 @@ class Actors {
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
-      var emInt = flat ? 0.0 : flames.litAt(a);
+      var emInt = flat ? 0.0 : lampShadows.litAt(a);
       // resolve the transient effect into the final pose; no effect running = the rest pose
       var wx = a.x + (o.offx != null ? o.offx : 0.0);
       var wz = a.z + (o.offz != null ? o.offz : 0.0);
@@ -718,9 +735,27 @@ class Actors {
           wz += a.fx.offz;
           sc *= a.fx.scale;
         }
-      // object marks ride the exact same pose, painted before the icon they frame
-      if (o.mark == true)
-        paintObjMark(e, a.op, wx, wy, wz, sc, flat, yaw, order);
+      // object marks ride the exact same pose, painted before the icon they frame. BOTH are carved
+      // from the sprite's ATLAS CELL, so a prop-backed object gets neither: the outline would trace
+      // the 2D art's silhouette around an icon that is no longer drawn, and the through-wall
+      // silhouette would hatch itself over, since the prop stands at that very pose. those objects
+      // are outlined from their real geometry instead — render.world.ObjModels, ModelVariant.HULL
+      if (o.mark == true &&
+          o.iconOff != true)
+        paintObjMark({
+          e: e,
+          op: a.op,
+          x: wx,
+          y: wy,
+          z: wz,
+          scale: sc,
+          flat: flat,
+          yaw: yaw,
+          order: order,
+        });
+      // an object drawn as a real 3D prop has no icon quad — it would stand inside the prop
+      if (o.iconOff == true)
+        return;
       // side-view actors (dogs) mirror toward their facing; a.face eases the turn (see actor())
       sprites.paint({
         x: wx,
@@ -739,31 +774,33 @@ class Actors {
     }
 
 // paint the two teal marks over a world object's own sprite pose: the outline ring (only while the
-// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette,
+// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette.
+// NOT called for an object backed by a 3D prop — both marks are carved from the ATLAS CELL, so they
+// would trace the 2D art around a prop that looks nothing like it (see the call site),
 // which depthFunc = GreaterDepth restricts to wherever a building hides the object from the camera,
 // exactly like the AI x-ray. both are UI overlays (no shadow sampling) and both share the sprite's
 // renderOrder: the ring covers only the band just OUTSIDE the silhouette, so it never overlaps the
 // icon it frames, and the silhouette can never pass depth where the icon itself draws
-  function paintObjMark(e:Entity, op:Float, x:Float, y:Float, z:Float, scale:Float, flat:Bool,
-      yaw:Float, order:Int):Void
+  function paintObjMark(o:ObjMarkOpts):Void
     {
       var C = RenderConfig.OBJMARK;
+      var e = o.e;
       if (tactical)
         {
           var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, C.outlinePx, e.skinColor);
           if (ring != null)
             sprites.paint({
-              x: x,
-              y: y,
-              z: z,
+              x: o.x,
+              y: o.y,
+              z: o.z,
               tex: ring.tex,
-              op: op,
-              scale: scale * ring.scale,
-              flat: flat,
-              order: order,
+              op: o.op,
+              scale: o.scale * ring.scale,
+              flat: o.flat,
+              order: o.order,
               emissive: C.color,
               emissiveInt: C.emissive,
-              yaw: yaw,
+              yaw: o.yaw,
               shadow: false,
             });
         }
@@ -772,17 +809,17 @@ class Actors {
       if (sil == null)
         return;
       sprites.paint({
-        x: x,
-        y: y,
-        z: z,
+        x: o.x,
+        y: o.y,
+        z: o.z,
         tex: sil,
-        op: op,
-        scale: scale,
-        flat: flat,
-        order: order,
+        op: o.op,
+        scale: o.scale,
+        flat: o.flat,
+        order: o.order,
         emissive: C.color,
         emissiveInt: C.emissive,
-        yaw: yaw,
+        yaw: o.yaw,
         depthFunc: THREE.GreaterDepth,
         shadow: false,
       });
