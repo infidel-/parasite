@@ -165,7 +165,7 @@ class UI
         {
           game.scene.controlPressed = false;
           game.scene.mouse.update(true);
-          hud.updateAITooltip();
+          hud.updateAreaTooltip();
         }
 
       if (hud.consoleVisible())
@@ -224,7 +224,7 @@ class UI
         {
           game.scene.controlPressed = true;
           game.scene.mouse.update(true);
-          hud.updateAITooltip();
+          hud.updateAreaTooltip();
         }
 
       if (hud.consoleVisible())

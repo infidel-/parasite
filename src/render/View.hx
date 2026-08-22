@@ -855,23 +855,27 @@ class View {
         render.choreo.Reactions.bindBodyFadeIn(choreo, e, id, ground);
     }
 
-// drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and
-// anchor the DOM panel at its projected head px. runs every frame so the beam tracks the
-// follow-camera. the 2D AITooltip stands down while this view runs (see AITooltip.update)
+// drive the hover tooltip while inspecting (Ctrl held): pick the AI or object nearest the cursor
+// and anchor the DOM panel at its projected px. runs every frame so the beam tracks the
+// follow-camera. the 2D AreaTooltip stands down while this view runs (see AreaTooltip.update)
   function updateHoverTooltip():Void {
-    var tip = game.ui.hud.aiTooltip;
+    var tip = game.ui.hud.areaTooltip;
     // not inspecting (no Ctrl / window open / mouse off): make sure it's hidden
-    if (!game.ui.hud.isAIInspectMode()) {
+    if (!game.ui.hud.isInspectMode()) {
       tip.hide();
       return;
     }
     var rect:Dynamic = canvas.getBoundingClientRect();
-    var hit = actors.pickAI(svMouseX, svMouseY, rect);
+    var hit = actors.pickTarget(svMouseX, svMouseY, rect);
     if (hit == null) {
       tip.hide();
       return;
     }
-    tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
+    // the beam id keys BeamTooltip's re-animation and nothing else, so an object's is negated —
+    // AI and object ids come from separate counters and would otherwise collide (AreaTooltip.beamID)
+    if (hit.ai != null)
+      tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
+    else tip.showBeamAt(hit.px, hit.py, ui.AreaTooltip.beamID(hit.obj), tip.getObjectText(hit.obj));
   }
 
 // pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the

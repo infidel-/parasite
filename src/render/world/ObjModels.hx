@@ -134,12 +134,16 @@ typedef PropFly = {
                   // const.EvolutionConst — biomineral 3, preservator 3, watcher 2, and the
                   // assimilation cavity caps at ONE), so a raw level count would leave the arch with
                   // a single dot for the whole game
-  y:Float,        // base ring height, as a fraction of the prop's height
+  y:Float,        // base ring height, as a fraction of the prop's height. this is the CENTRE of a
+                  // tilted circle, so the dot swings above and below it by r * sin(tilt) — budget for
+                  // that before putting the ring near the crown
   yVar:Float,     // per-dot height spread off it (+/-), same fraction. what puts the swarm in 3D
   r:Float,        // base ring radius, same fraction. keep it clear of the prop's own footprint
   rVar:Float,     // per-dot radius spread (+/-), and at half depth the slow breath on top of it
-  tilt:Float,     // per-dot orbit-plane tilt SPREAD off horizontal (+/- radians). small: the ring is
-                  // meant to read as flat, the depth comes from yVar and from the prop occluding it
+  tilt:Float,     // orbit-plane lean off horizontal, in radians, as a MAGNITUDE: each dot varies it
+                  // +/-40% and rolls its own sign (see render.actors.PropFX.drawFlies). NOT a +/-
+                  // spread — that rolls near zero as often as not, and a prop with a single firefly
+                  // then draws a flat hoop. 0 is the only way back to a ring parallel to the floor
   size:Float,     // quad edge, same fraction
   color:Int,      // tint
   glow:Float,     // HDR multiplier — this is what makes them bloom
@@ -255,6 +259,46 @@ typedef PropShine = {
                     // motes on the near face, at the cost of the lap: the angle ping-pongs instead
                     // of orbiting, so a mote eases, reverses at the silhouette and comes back.
                     // PI is a full sweep
+  // the whole glow's own brightness beat, base and motes together. what it buys is a term that
+  // CROSSES the bloom threshold instead of sitting on one side of it: tuned so the mote peaks halo
+  // at the top of the breath and do not at its bottom, which reads as the body pumping light rather
+  // than as a lamp left on. both are UNIFORMS and not literals, so they stay out of the program
+  // cache key and a row that changes them compiles nothing
+  pulse:Float,      // depth as a fraction of the whole glow, 0..1 — the level runs (1 - pulse)..1
+  pulseRate:Float,  // its speed as a BASE_MS multiplier. deliberately unrelated to PropPulse.rate,
+                    // so the body's swell and the light's breath beat against each other instead of
+                    // landing together — the same reason `twist` and `twistRate` are unrelated
+};
+
+// a live cord arcing from this prop to each AI it holds (objects.AreaObject.getLinkedAI). unlike
+// PropArc above it is CONTINUOUS and TARGETED: no strike buckets, no random azimuth and no length of
+// its own — one ribbon per bound actor, anchored on the prop's surface, bowed over the gap and
+// landing on that actor's head, breathing on a slow beat.
+//
+// same fraction-of-the-prop's-height rule as every column above, and for the same reason. consumed
+// by render.actors.PropFX, which appends it into the SAME ribbon buffers the lightning uses — so
+// every cord and every bolt in the level is still ONE draw call
+typedef PropTether = {
+  y:Float,         // where the cord leaves the prop, as a fraction of its height
+  r:Float,         // and how far off its axis, same fraction — put it ON the measured surface, or
+                   // the first stretch of cord is hidden inside the body
+  lift:Float,      // how far the arc bows above the straight chord at midspan, same fraction. this
+                   // is the whole difference between an arc and a wire pulled taut
+  segs:Int,        // straight pieces along the span: the bow's resolution, and the vertex cost
+  jag:Float,       // sideways waver, same fraction, belled to 0 at BOTH ends — a cord is attached at
+                   // each end, unlike a bolt, which only has to start on the body
+  jagRate:Float,   // and its drift speed as a BASE_MS multiplier. a static waver reads as a frozen
+                   // rope; this is what makes it a live thing
+  width:Float,     // ribbon HALF-width at the prop end, same fraction
+  taper:Float,     // and at the head end as a fraction of it, so the prop reads as the source
+  // the FLARE, for the reason PropArc's carries one: bloom output scales with the AREA of
+  // over-threshold pixels, and a ~5px thread has almost none however hard `glow` is pushed
+  halo:Float,      // its half-width as a multiple of `width`
+  haloDim:Float,   // and its centreline brightness as a fraction of the core's
+  color:Int,       // tint
+  glow:Float,      // HDR multiplier — what carries the core over the bloom threshold
+  pulse:Float,     // brightness breath depth, 0..1 — the cord runs (1 - pulse)..1
+  pulseRate:Float, // its speed as a BASE_MS multiplier
 };
 
 // one object-backed glb prop. `keys` are AreaObject.getModelKey values rather than raw types because
@@ -273,6 +317,9 @@ typedef ObjModel = {
   fly:PropFly,        // fireflies orbiting it, one per habitat level, or null
   shine:PropShine,    // travelling motes on its own surface, or null
   arc:PropArc,        // short lightning discharged off it, or null
+  tether:PropTether,  // live cord arcing to each AI this object holds, or null for one that holds
+                      // none. the BINDING is the object's own (AreaObject.getLinkedAI), so nothing
+                      // here knows what a preservator is
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -309,6 +356,7 @@ class ObjModels
       fly: null,
       shine: null, // and nothing on it is alive enough to luminesce
       arc: null,   // nor carries any current
+      tether: null, // and it holds nothing
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -371,6 +419,11 @@ class ObjModels
                     // slide behind the body, and short of it by enough that it is not grazing the
                     // silhouette either — the sweep is SLOWEST at its extremes, so whatever angle
                     // this is, motes spend most of their time sitting at it
+        // no brightness beat: these motes ALREADY clip and bloom at every peak, so a breath under
+        // them would only take the halo away and put it back. the preservator's is the case this
+        // term exists for — a glow that has to cross the threshold to read as one
+        pulse: 0.0,
+        pulseRate: 0.0,
       },
       // and the reason this organ exists: it makes POWER. short green discharges snapping off the
       // crystal, pale-cored the way a real arc is. every number is in units of `h` again
@@ -401,6 +454,7 @@ class ObjModels
         color: 0x8cff9e, // linear luma 0.80, x3.2 = 2.55 against BLOOM_THRESHOLD 0.9 — it flares hard
         glow: 3.2,
       },
+      tether: null, // it holds nothing; the preservator is the organ that does
     },
     {
       keys: [ 'habitat_assimilation' ],
@@ -464,26 +518,34 @@ class ObjModels
                     // membrane disappears outright — which is how the patch was proved to be live
         warpRate: 0.13,
       },
-      // ONE mote circling the arch roughly parallel to the floor, dragging a fading tail. in units of
-      // `h` again (the arch is 1.35 h wide, so 0.67 h of half-span): the radius band 0.35..0.55 h is
-      // INSIDE that, so the mote flies through the opening rather than round the outside and laps the
-      // membrane, which is the point. the height band 0.27..0.83 h plus the braids occluding the far
-      // side of the circle is what reads as 3D — the ring's own tilt is only a small per-dot jitter
+      // ONE mote circling the arch on a LEANING ring, dragging a fading tail. in units of `h` again
+      // (the arch is 1.35 h wide, so 0.67 h of half-span): the radius band 0.35..0.55 h is INSIDE
+      // that, so the mote flies through the opening rather than round the outside and laps the
+      // membrane, which is the point.
+      //
+      // it first shipped centred at 0.55 h on a near-flat ring and read as a hoop lying in the lower
+      // half of the arch. Both halves of that were the same mistake — with `perLevel` 1 there is one
+      // dot, so a per-dot height ROLL and a per-dot +/- tilt SPREAD each collapse to a single value
+      // that can land anywhere, including low and flat. The ring centre is in the upper third now and
+      // its lean is a magnitude rather than a spread (see PropFly.tilt), so neither can roll flat
       fly: {
         tex: RenderConfig.TEXTURES.fxFirefly,
         perLevel: 1, // IMP_ASSIMILATION caps at level 1, so this IS the arch's whole count
-        y: 0.55,
-        yVar: 0.28,
+        y: 0.80,     // ring CENTRE in the upper third (0.67..1.0), just under the arch's crown
+        yVar: 0.10,  // 0.70..0.90 — kept tight so the centre cannot leave that third
         r: 0.45,
         rVar: 0.22,
-        tilt: 0.25,
+        // 0.27..0.63 rad = 15..36 degrees off horizontal. at the top of that the dot swings
+        // r * sin(tilt) = 0.33 h either side of the centre, so it laps from ~0.47 h up to over the
+        // crown — which IS the height variation, rather than a flat ring that merely sits high
+        tilt: 0.45,
         size: 0.22,
         color: 0xb46bff,
         glow: 3.0,
         alpha: 0.8,
         rate: 0.18,
         rateVar: 0.45,
-        bob: 0.10,
+        bob: 0.14, // on a beat unrelated to the orbit, so successive laps do not retrace the ring
         twinkle: 0.5,
         trail: 9,        // 10 quads all told, so ~10 draw calls for the whole swarm
         trailGap: 0.5,   // 9 * 0.5 of clock behind the head = ~46 degrees of arc at this speed
@@ -491,6 +553,7 @@ class ObjModels
       },
       shine: null, // its glow is the membrane in the opening, not anything on the braids
       arc: null,   // and the biomineral is the power organ, not this one
+      tether: null, // an assimilated host walks away; nothing stays bound to the arch
     },
     {
       keys: [ 'habitat_preservator' ],
@@ -555,10 +618,12 @@ class ObjModels
         keyHi: 2.7,
         color: 0xffcc66, // pale warm yellow rather than the albedo's own orange — an emissive term
                          // is LIGHT, and light off a warm surface reads paler than the surface does
-        // 1.0 is not a placeholder: it is the whole point. every other glowing thing in this game
-        // sets this past 1 to clear BLOOM_THRESHOLD 0.9, and this is the one that must NOT — "faint"
-        // and "subtle" means no halo, so the level lives entirely in `base` and `mote` below
-        glow: 1.0,
+        // linear luminance of that tint is 0.654, and it is the constant every figure below is
+        // fitted against. this SHIPPED at 1.0, deliberately under BLOOM_THRESHOLD 0.9 so the pod
+        // would stay "faint and subtle" — and the result was a glow nobody could find, because a
+        // sub-threshold emissive on an already-lit shell is a slightly paler shell and nothing more.
+        // 3.0 is what lets the mote peaks halo; `pulse` below is what stops them haloing constantly
+        glow: 3.0,
         // BOTH of these were first tuned against a pod that was rendering almost black, because the
         // regenerated mesh arrived with a metallic MR map (see models.json) and a metal has no
         // diffuse term. Against the fixed, properly lit shell the old values were invisible: an
@@ -567,15 +632,18 @@ class ObjModels
         // `base` is the STEADY level over the whole mask and `mote` is what moves across it, so
         // "brighter overall" is this one and not that one. it is the dominant term on this prop
         // because the mask covers the whole pod while the three motes cover a fifth of it
-        base: 0.055, // ~52 sRGB of emissive over every amber texel — the shell reads as lit from
-                     // within at rest, which is what the reference art paints. the biomineral's
-                     // equivalent is 0.015 on a `glow` of 2.8, i.e. a quarter of this
+        // READ THESE AS PRODUCTS WITH `glow`, never on their own — that is the whole reason this
+        // number went DOWN while the pod got brighter. glow x base is 0.105 against the 0.055 it
+        // shipped at, so the resting shell is ~1.9x what it was
+        base: 0.035, // steady level 0.048..0.069 of linear luminance over the breath: the shell
+                     // reads as lit from within and never haloes, at any point in the cycle
         motes: 3,    // few, because each is enormous
-        mote: 0.38,  // raised WITH `base`, not left behind it: the blob is judged against the floor
-                     // it crosses, and at the old 0.30 over a floor this high it stopped reading as
-                     // a separate thing. peak total 0.435 -> linear luminance 0.285, still well
-                     // under BLOOM_THRESHOLD 0.9, where the biomineral's motes are ~20x their own
-                     // surface and clip: that gap is what separates a lamp from something lit inside
+        mote: 0.85,  // glow x (base + mote) = 1.74 at the TOP of the breath and 0.70 at its bottom,
+                     // straddling BLOOM_THRESHOLD 0.9. so a blob swells into a halo, holds it for
+                     // roughly the upper third of the cycle and loses it again — which is what
+                     // "pulsating" has to mean for a glow, since a brightness wobble that never
+                     // crosses the threshold is just a slightly different shade of the same thing.
+                     // over-threshold core comes out ~0.16 world in radius, ~25px at this camera
         moteR: 0.13, // ~0.47 world of reach, ~0.9 world across: 4x the biomineral's radius and ~15x
                      // its area, but well under what this first shipped at. 0.20 was measured live
                      // and it was wrong in a way worth recording — at that reach one mote covers the
@@ -595,8 +663,42 @@ class ObjModels
         rise: 0.006, // a ~25s climb under a ~50s sweep. the slowest of any prop here, on purpose
         spin: 0.02,
         front: 1.0,  // ~57 degrees either side of the camera
+        pulse: 0.6,      // the glow runs 0.4..1.0 of the levels above
+        pulseRate: 0.07, // ~14s, against the BODY's ~11s breath (`pulse.rate` 0.09 above). unequal
+                         // on purpose: the two beat every ~50s, so the pod never repeats a state
       },
       arc: null, // the biomineral is the power organ
+      // the cords to whatever hosts this preservator is holding. every number is a fraction of the
+      // row's `h` 3.6, and the span they cross is one cell — the bound hosts stand on the four
+      // orthogonal neighbours, which is where objects.Preservator's own capacity check looks
+      tether: {
+        y: 0.68,    // 2.45 world: high on the pod, just under where the crown starts narrowing
+        r: 0.20,    // 0.72 world, ON the measured surface radius at that height (the profile runs
+                    // 0.33 at h 0.43 down to 0.05 at the crown), so a cord leaves the shell rather
+                    // than emerging out of thin air beside it
+        lift: 0.18, // a 0.65 world bow over a ~3.3 world chord. an ARC is the whole brief: a
+                    // straight segment between two points reads as a debug line, not as something
+                    // the organ has put out
+        segs: 10,
+        jag: 0.012,   // ~0.04 world of waver. a shimmer, not lightning — the biomineral's is 4x this
+        jagRate: 0.35,
+        width: 0.010, // 0.036 world half-width, ~4px at this camera: a thread, and thinner than the
+                      // biomineral's bolt, which is what "faint" buys
+        taper: 0.5,
+        halo: 4.5,    // ~0.32 world across. the core alone would bloom NOTHING — measured on the
+                      // bolts, a thread has no over-threshold area to give the pass
+        haloDim: 0.5, // 0.5 x 2.2 x 0.654 = 0.72, deliberately UNDER BLOOM_THRESHOLD 0.9 at even the
+                      // top of the pulse. it shipped at 0.65 (0.94, over) for one build and that is
+                      // what "faint" rules out: an over-threshold flare 0.3 world wide reads as a
+                      // solid glowing tube leaving the pod, not as light. under the threshold the
+                      // flare is a soft skirt and only the ~4px CORE haloes — which still straddles,
+                      // 1.44 at the peak against 0.50 at the trough, so the pulse reads as intended
+        color: 0xffcc66, // the pod's own shine tint, so the cord reads as its light reaching out
+        glow: 2.2,       // core centreline 1.44 at the peak, 0.50 at the trough
+        pulse: 0.65,
+        pulseRate: 0.05, // ~19s: slower than the body's breath AND slower than the glow's, so all
+                         // three rhythms on this prop are mutually prime-ish and never line up
+      },
     },
     {
       keys: [ 'habitat_watcher' ],
@@ -613,6 +715,7 @@ class ObjModels
       fly: null,
       shine: null,
       arc: null,
+      tether: null,
     },
   ];
 

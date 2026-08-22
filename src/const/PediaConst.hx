@@ -120,7 +120,7 @@ Enter / NumPad5 / LMB on target - confirm selected target<br>
 ESC - clear target<br>
 <br>
 <b>Inspection:</b><br>
-Hold Ctrl + hover over AI - show AI tooltip with known info<br>",
+Hold Ctrl + hover over an NPC or an object - show a tooltip with what you know about it<br>",
         },
         {
           id: 'lifeParasite',

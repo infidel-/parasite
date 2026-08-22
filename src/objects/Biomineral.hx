@@ -34,17 +34,36 @@ class Biomineral extends HabitatObject
   public override function getModelKey(): String
     { return 'habitat_biomineral'; }
 
-// show additional info
-  public override function onMoveTo()
+// a grown body is solid: nothing walks through it. this is also what retires the see-through fade
+// for this prop — the ghost batch in render.world.ObjModels only ever serves the placement the
+// player is STANDING on, and nothing can stand here now
+  public override function isWalkable(): Bool
+    { return false; }
+
+// the habitat's whole balance sheet, which this organ is the source of. it used to be an onMoveTo
+// log line, and blocking the tile above is what took that away — there is no longer any moving onto
+// it. the Ctrl-hover tooltip is a better home anyway: these are numbers you check, not an event
+  public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
     {
       var h = game.area.habitat;
-      game.logsg('[' +
-        h.energyUsed + '/' + h.energy +
-        ' habitat energy used. ' +
-        'Each turn: host energy: +' + h.hostEnergyRestored +
-        ', parasite energy: +' + h.parasiteEnergyRestored +
-        ', parasite health: +' + h.parasiteHealthRestored +
-        ']');
+      return [
+        {
+          name: 'energy',
+          value: h.energyUsed + ' / ' + h.energy + ' used',
+        },
+        {
+          name: 'host energy',
+          value: '+' + h.hostEnergyRestored + ' / turn',
+        },
+        {
+          name: 'parasite energy',
+          value: '+' + h.parasiteEnergyRestored + ' / turn',
+        },
+        {
+          name: 'parasite health',
+          value: '+' + h.parasiteHealthRestored + ' / turn',
+        },
+      ];
     }
 
 // get static atmosphere light emitted by this object

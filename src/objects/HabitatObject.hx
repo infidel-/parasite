@@ -44,7 +44,12 @@ class HabitatObject extends AreaObject
     }
 
 // get evolution params
-  public function getParams()
+// Dynamic because const.EvolutionConst.levelParams is a DIFFERENT anonymous structure per
+// improvement (the preservator's carries hostAmount, the biomineral's energy and three restore
+// rates, and so on), so there is no one type it could be given. it was inferred before, which is
+// worse than declaring it: the first call site to concatenate a field with a string bound the whole
+// return type to String and broke every numeric comparison elsewhere
+  public function getParams(): Dynamic
     {
       return EvolutionConst.getParams(getImprovementID(), level);
     }

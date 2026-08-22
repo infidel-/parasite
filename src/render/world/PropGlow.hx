@@ -20,8 +20,14 @@ import render.world.PropShader.ShaderPatch;
 //
 // the two tunings shipped so far are near opposite ends of what it can do, and both are on one row
 // each in ObjModels: the biomineral's are 8 hard specks that clip and bloom on a hard-edged mask, the
-// preservator's are 3 huge dim blobs on a deliberately soft one, which reads as light inside a shell
+// preservator's are 3 huge blobs on a deliberately soft one, which reads as light inside a shell
 // rather than as anything sitting on it.
+//
+// a third term rides on top of both: a slow BREATH over the whole glow (`pulse` / `pulseRate`). its
+// value is not the wobble, it is WHERE the wobble sits — the preservator's is fitted so a mote peak
+// clears BLOOM_THRESHOLD at the top of the cycle and misses it at the bottom, so the halo itself
+// appears and goes. A brightness change that never crosses the threshold is only a shade, which is
+// what the preservator's first pass shipped as and why nobody could find it.
 //
 // a THIRD term was tried and removed: object space quantised into cells, each swelling on a beat of
 // its own, as a low shimmer so the crystal was not dead between motes. It read as flat rectangular
@@ -110,6 +116,8 @@ class PropGlow
         rise: { value: s.rise },
         spin: { value: s.spin },
         front: { value: s.front },
+        pulse: { value: s.pulse },
+        pulseRate: { value: s.pulseRate },
       };
       var decl =
         'uniform float propGlowTime;\n' +
@@ -127,6 +135,8 @@ class PropGlow
         'uniform float propGlowRise;\n' +
         'uniform float propGlowSpin;\n' +
         'uniform float propGlowFront;\n' +
+        'uniform float propGlowPulse;\n' +
+        'uniform float propGlowPulseRate;\n' +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame
@@ -240,6 +250,13 @@ class PropGlow
         '    float gd = distance( vGlowPos, gp ) / ( propGlowSpan * propGlowMoteR );\n' +
         '    glowSum += propGlowMote * gw * exp( - gd * gd * 6.0 );\n' +
         '  }\n' +
+        // the whole glow's own beat, base and motes TOGETHER — so the level crosses the bloom
+        // threshold rather than wobbling on one side of it, which is the only version of this a
+        // player can actually see. per-instance phase off vGlowPh, so two pods in one room never
+        // breathe in step. at pulse 0 the whole expression is exactly 1.0 and nothing changes, which
+        // is what lets a row opt out without a second program
+        '  glowSum *= 1.0 - propGlowPulse + propGlowPulse *\n' +
+        '    ( 0.5 + 0.5 * sin( propGlowTime * propGlowPulseRate + vGlowPh * 6.2832 ) );\n' +
         '  totalEmissiveRadiance += propGlowColor * glowMask * glowSum;\n' +
         '  }';
       // Dynamic, and it cannot be a typed function: `prev` is CALLED like one below and also carries
@@ -273,6 +290,8 @@ class PropGlow
           shader.uniforms.propGlowRise = u.rise;
           shader.uniforms.propGlowSpin = u.spin;
           shader.uniforms.propGlowFront = u.front;
+          shader.uniforms.propGlowPulse = u.pulse;
+          shader.uniforms.propGlowPulseRate = u.pulseRate;
           shader.vertexShader = 'varying vec3 vGlowPos;\n' +
             'varying float vGlowPh;\n' +
             'varying float vGlowCam;\n' +
@@ -297,7 +316,9 @@ class PropGlow
       // three keys its program cache on base material params, NOT on onBeforeCompile — without a key
       // of our own a glowing program could be handed to an identical unlit-of-this prop. CHAINED,
       // because these materials already carry SewerMask's hook and its key. the mote count and the
-      // mask key are both in it because both are LITERALS in the source above, not uniforms
+      // mask key are both in it because both are LITERALS in the source above, not uniforms — and
+      // the converse is why `pulse` deliberately is one: a row can retune the breath, or turn it off
+      // entirely, without adding a permutation to compile and to warm
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
           'propGlow' + s.motes + s.key;

@@ -9,9 +9,11 @@ import render.RenderConfig;
 import render.particles.Sprites;
 import render.world.ObjModels;
 import render.actors.BoltOpts;
+import render.actors.TetherOpts;
 import render.world.ObjModels.PropArc;
 import render.world.ObjModels.PropCore;
 import render.world.ObjModels.PropFly;
+import render.world.ObjModels.PropTether;
 import render.world.PropShader.ShaderPatch;
 import render.world.WorldCtx;
 
@@ -34,9 +36,14 @@ typedef CoreUniforms = {
 //   FLIES — one firefly per habitat LEVEL, orbiting a tilted ring. HDR-tinted so the composer's
 //           bloom pass gives them their halo, over a sprite that already carries painted flare
 //           spikes; that pairing is what the "fake lens flare" is.
+//   ARCS  — short lightning discharged off a power organ, on a ribbon rebuilt each frame.
+//   CORDS — a live tether arcing from a prop to each AI it holds, so a preservator visibly has hold
+//           of the hosts standing round it. it shares the arcs' ribbon buffers, so both together
+//           are still ONE draw call for the whole level.
 //
-// WHICH props get either is not decided here — it is the `core` and `fly` columns of
-// render.world.ObjModels.MODELS, and a null column is simply never drawn.
+// WHICH props get any of it is not decided here — it is the `core`, `fly`, `arc` and `tether`
+// columns of render.world.ObjModels.MODELS, and a null column is simply never drawn. nor is WHO a
+// cord runs to: that is objects.AreaObject.getLinkedAI, asked of the object every frame.
 //
 // modelled on render.actors.LampShadows, which is this codebase's shape for the job: constructed by
 // render.Actors, walks the area's objects itself, world-anchors FX to them, drives pooled quads, and
@@ -50,8 +57,10 @@ typedef CoreUniforms = {
 // single caller. Its entry points are also both at seven positional args already
 class PropFX {
   static var texCache:Map<String, Texture> = new Map();
-  // scratch for the lightning tint, so the per-frame ribbon rebuild allocates no Colors
-  static var arcTint = new Color();
+  // scratch for whichever ribbon is being emitted, so the per-frame rebuild allocates no Colors.
+  // shared by the bolts and the tethers: each sets it on entry and emits its stations immediately,
+  // so the two never interleave over it
+  static var ribbonTint = new Color();
   // the clock every core material references BY IDENTITY, in BASE_MS units — so the per-prop `rate`
   // values on the table row are plain multipliers, exactly as render.world.PropShader's are
   static var uTime = { value: 0.0 };
@@ -64,14 +73,16 @@ class PropFX {
   var coreU:Array<CoreUniforms> = [];     // indexed with cores
   var flies:Array<Mesh> = [];             // firefly pool
   var flyMat:Array<MeshBasicMaterial> = [];
-  // the lightning. ONE mesh and ONE draw call for every bolt on every prop in the level: a ribbon
-  // rebuilt from scratch each frame, the shape render.particles.SlimeTrail already uses. a pooled
-  // quad per segment would have been 30 calls for six 5-segment bolts
-  var bolts:Mesh;
-  var boltGeo:BufferGeometry;
-  var boltPos:Array<Float> = [];
-  var boltCol:Array<Float> = [];
-  var boltIdx:Array<Int> = [];
+  // the ribbon layer. ONE mesh and ONE draw call for every LIGHTNING BOLT and every TETHER on every
+  // prop in the level: a strip rebuilt from scratch each frame, the shape render.particles.SlimeTrail
+  // already uses. a pooled quad per segment would have been 30 calls for six 5-segment bolts alone.
+  // the two effects share it rather than each taking a mesh precisely because the cost of a second
+  // one is a whole draw call and the cost of sharing is appending into the same three arrays
+  var ribbons:Mesh;
+  var ribbonGeo:BufferGeometry;
+  var ribbonPos:Array<Float> = [];
+  var ribbonCol:Array<Float> = [];
+  var ribbonIdx:Array<Int> = [];
   var ci:Int = 0;                         // next free core slot this frame
   var fi:Int = 0;                         // next free firefly slot this frame
   var t:Float = 0.0;                      // shared clock, in BASE_MS units
@@ -81,14 +92,14 @@ class PropFX {
       this.game = game;
       this.group = actorGroup;
       quad = new PlaneGeometry(1, 1);
-      boltGeo = new BufferGeometry();
-      bolts = new Mesh(boltGeo, boltMaterial());
-      bolts.renderOrder = Sprites.ORD_ACTOR;
-      bolts.visible = false;
+      ribbonGeo = new BufferGeometry();
+      ribbons = new Mesh(ribbonGeo, ribbonMaterial());
+      ribbons.renderOrder = Sprites.ORD_ACTOR;
+      ribbons.visible = false;
       // the ribbon is rebuilt in WORLD coordinates every frame, so three must not frustum-test it
       // against a bounding sphere computed for whatever it happened to hold last frame
-      untyped bolts.frustumCulled = false;
-      group.add(bolts);
+      untyped ribbons.frustumCulled = false;
+      group.add(ribbons);
     }
 
 // place every visible prop's FX for this frame, then hide the pool tail. call once per frame from
@@ -97,9 +108,9 @@ class PropFX {
     {
       ci = 0;
       fi = 0;
-      boltPos.splice(0, boltPos.length);
-      boltCol.splice(0, boltCol.length);
-      boltIdx.splice(0, boltIdx.length);
+      ribbonPos.splice(0, ribbonPos.length);
+      ribbonCol.splice(0, ribbonCol.length);
+      ribbonIdx.splice(0, ribbonIdx.length);
       if (RenderConfig.PROP_FX.enabled)
         {
           t += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
@@ -115,7 +126,8 @@ class PropFX {
               if (m == null ||
                   (m.core == null &&
                    m.fly == null &&
-                   m.arc == null))
+                   m.arc == null &&
+                   m.tether == null))
                 continue;
               // these quads are NOT patched with the tunnel vision mask (nothing in the sprite or
               // spark layers is), so the fog does not hide them and LOS is the only thing that can.
@@ -134,9 +146,13 @@ class PropFX {
                 drawFlies(m.fly, m.h, w.x, floor, w.z, ph, level(o) * m.fly.perLevel);
               if (m.arc != null)
                 drawArcs(m.arc, m.h, w.x, floor, w.z, ph, level(o) * m.arc.perLevel);
+              // the cords to whatever this object holds. asked of the OBJECT, so nothing here knows
+              // what a preservator is or what "preserved" means — see objects.AreaObject.getLinkedAI
+              if (m.tether != null)
+                drawTethers(m.tether, m.h, o, w.x, floor, w.z, ph, los);
             }
         }
-      uploadBolts();
+      uploadRibbons();
       for (i in ci...cores.length)
         cores[i].visible = false;
       for (i in fi...flies.length)
@@ -178,12 +194,16 @@ class PropFX {
       ci++;
     }
 
-// the fireflies: n of them flying round the prop MOSTLY PARALLEL TO THE FLOOR, each on a path of its
-// own. they are evenly spaced only at t = 0 — from there every dot runs its own radius, height, speed
-// and small plane tilt, breathes the radius slowly and wanders vertically on a separate beat, so the
-// swarm drifts apart and re-crosses instead of holding formation. what reads as 3D is the HEIGHT
-// SPREAD plus the prop itself occluding whichever dots are on the far side (depthTest stays on, see
-// the pool below); a tilted ring was tried first and just looked like a hoop turning
+// the fireflies: n of them flying round the prop, each on a path of its own. they are evenly spaced
+// only at t = 0 — from there every dot runs its own radius, height, speed and plane tilt, breathes
+// the radius slowly and wanders vertically on a separate beat, so the swarm drifts apart and
+// re-crosses instead of holding formation. what reads as 3D is the HEIGHT SPREAD, the plane tilt and
+// the prop itself occluding whichever dots are on the far side (depthTest stays on, see the pool
+// below).
+//
+// the tilt was originally a small +/- spread with the ring meant to read as flat. That is wrong for a
+// count of ONE: a symmetric spread rolls near zero as often as not, and the arch — which caps at a
+// single firefly — drew a hoop lying flat on the floor. It is a signed MAGNITUDE now, see below
   function drawFlies(f:PropFly, h:Float, x:Float, floor:Float, z:Float, ph:Float, n:Int):Void
     {
       var step = 2 * Math.PI / n;
@@ -197,9 +217,15 @@ class PropFX {
           var h2 = roll(ph + i * 78.233 + 3.7);
           var h3 = roll(ph + i * 37.719 + 11.3);
           var h4 = roll(ph + i * 21.317 + 27.1);
+          var h5 = roll(ph + i * 55.301 + 41.9);
           var spin = f.rate * (1 + f.rateVar * (h1 * 2 - 1));
           var base = i * step + ph;
-          var tl = f.tilt * (h3 * 2 - 1);
+          // the orbit plane's lean: the row's `tilt` is a MAGNITUDE, varied +/-40% per dot, with the
+          // SIGN rolled separately. not a plain +/- spread — that rolls near zero as often as not and
+          // a ring that lands there is a flat hoop turning, which is exactly what the arch's single
+          // firefly shipped as. this way every ring is visibly off horizontal while two of them still
+          // lean opposite ways, so a swarm's circles are not parallel to each other either
+          var tl = f.tilt * (0.6 + 0.8 * h3) * (h5 < 0.5 ? -1 : 1);
           var cy = floor + h * (f.y + f.yVar * (h4 * 2 - 1));
           // the head at j = 0, then the tail behind it — sampled by evaluating the SAME path at
           // earlier clock values rather than remembering where the dot has been. the orbit is a
@@ -248,7 +274,7 @@ class PropFX {
 // means a bolt is correct on the frame a prop first appears and needs no spawn or despawn hook
   function drawArcs(a:PropArc, h:Float, x:Float, floor:Float, z:Float, ph:Float, n:Int):Void
     {
-      arcTint.setHex(a.color);
+      ribbonTint.setHex(a.color);
       // the resting camera's view direction, ~53 degrees down and looking along -Z. it is used ONLY
       // to face the ribbon and never to place it, which is why a fixed value is honest here: the
       // whole sprite layer already assumes this camera (Sprites.TILT, PropYaw.FRONTAL), and a bolt
@@ -275,7 +301,7 @@ class PropFX {
           // bolt behind it, which is what four earlier placement attempts were really fighting.
           //
           // the AZIMUTH is what lets a bolt travel toward the camera. it is centred on world +Z (the
-          // resting camera's direction) and spans +/- `az`, so bolts fan forward and across both
+          // resting camera's direction) and spans +/- `az`, so ribbons fan forward and across both
           // flanks; a half-range rather than a full circle because a strike on the far side is
           // simply hidden behind the crystal
           var sy = h * (a.y + a.yVar * (b2 * 2 - 1));
@@ -354,6 +380,133 @@ class PropFX {
         }
     }
 
+// the tethers: one live cord per AI this object holds, arcing from the prop's own surface to that
+// actor's head. WHICH actors is the object's own answer (objects.AreaObject.getLinkedAI), so nothing
+// here knows what a preservator is or what "preserved" means — the render layer is handed a list.
+//
+// nothing is stored per cord and none of this is a spawn: the list is asked for every frame, so a
+// host preserved this turn is tethered on the next frame and one that walks away simply stops being
+// returned. the same derive-don't-remember shape the bolts and the fireflies already take
+  function drawTethers(tt:PropTether, h:Float, o:AreaObject, x:Float, floor:Float, z:Float,
+      ph:Float, los:Bool):Void
+    {
+      var linked = o.getLinkedAI();
+      if (linked.length == 0)
+        return;
+      ribbonTint.setHex(tt.color);
+      // the resting camera's view direction, as drawArcs uses it and for the same reason: it faces
+      // the ribbon and never places it
+      var vx = 0.0;
+      var vy = -0.8;
+      var vz = -0.6;
+      for (ai in linked)
+        {
+          // a cord aimed at an actor the player cannot see would advertise them through a wall, the
+          // same way an unmasked firefly would burn in a room never entered
+          if (los &&
+              !game.playerArea.sees(ai.x, ai.y))
+            continue;
+          var aw = CityConfig.cellToWorld(ai.x, ai.y);
+          // the HEAD, not the billboard centre: Sprites.SIZE is the quad's full height and it rests
+          // with its foot on the floor, so 0.8 of it lands just under the top of the sprite. the
+          // actor's LOGICAL cell and not a smoothed pose — a held host does not move, so this needs
+          // no reach into render.Actors' pose map
+          var ex = aw.x;
+          var ey = WorldCtx.floorY(ai.x, ai.y) + Sprites.SIZE * 0.8;
+          var ez = aw.z;
+          // where the cord leaves the body: on its surface at `y`, on the azimuth pointing AT this
+          // host — so four cords leave four different faces instead of all four from one point
+          var ox = ex - x;
+          var oz = ez - z;
+          var ol = Math.sqrt(ox * ox + oz * oz);
+          // an actor standing on the prop's own cell has no azimuth, and normalizing a zero vector
+          // is NaN — which is not cosmetic here: ONE NaN texel goes through the bloom downsample and
+          // blacks out the WHOLE frame. no shipped row can reach this, but getLinkedAI is a hook
+          if (ol < 1e-4)
+            continue;
+          ox /= ol;
+          oz /= ol;
+          var sx = x + ox * h * tt.r;
+          var sy = floor + h * tt.y;
+          var sz = z + oz * h * tt.r;
+          // the width axis, exactly as a bolt's: perpendicular to both the chord and the view
+          var cdx = ex - sx;
+          var cdy = ey - sy;
+          var cdz = ez - sz;
+          var nx = cdy * vz - cdz * vy;
+          var ny = cdz * vx - cdx * vz;
+          var nz = cdx * vy - cdy * vx;
+          var nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+          if (nl < 1e-4)
+            {
+              nx = 1;
+              ny = 0;
+              nz = 0;
+              nl = 1;
+            }
+          nx /= nl;
+          ny /= nl;
+          nz /= nl;
+          // the breath, phased off the actor's own id so four cords on one pod never pulse together
+          var tph = roll(ph + ai.id * 7.13);
+          var bright = 1 - tt.pulse + tt.pulse *
+            (0.5 + 0.5 * Math.sin(t * tt.pulseRate + tph * 2 * Math.PI));
+          // TWO passes down the SAME path, halo then core — see boltRibbon's note for why the wide
+          // dim one is not decoration: bloom output scales with over-threshold AREA, and a thread
+          // this thin has none of its own however hard `glow` is pushed
+          var to:TetherOpts = {
+            tether: tt,
+            h: h,
+            ph: tph,
+            sx: sx,
+            sy: sy,
+            sz: sz,
+            ex: ex,
+            ey: ey,
+            ez: ez,
+            nx: nx,
+            ny: ny,
+            nz: nz,
+            bright: bright * tt.haloDim,
+            wMul: tt.halo,
+            edge: 0.0,
+          };
+          tetherRibbon(to);
+          to.bright = bright;
+          to.wMul = 1.0;
+          to.edge = 1.0;
+          tetherRibbon(to);
+        }
+    }
+
+// emit one pass of one cord. the path is the chord bowed along world +Y, and both the bow and the
+// waver are belled to 0 at BOTH ends — a cord is attached at each end, where a bolt only has to
+// start on the body. brightness is FLAT along it, again unlike a bolt: a discharge fades away from
+// where it left the crystal, while a tether is a link and has to read as lit at the far end too
+  function tetherRibbon(o:TetherOpts):Void
+    {
+      var tt = o.tether;
+      var v0 = Std.int(ribbonPos.length / 3);
+      for (k in 0...(tt.segs + 1))
+        {
+          var f = k / tt.segs;
+          var bell = 4 * f * (1 - f);
+          // the bow, and it is the whole difference between an arc and a wire pulled taut
+          var bow = o.h * tt.lift * bell;
+          // the waver, drifting on its own clock so the cord reads as a live thing. keyed on `ph`
+          // and NOT on the pass, which is what keeps the halo on exactly the path the core runs down
+          var wav = o.h * tt.jag * bell *
+            Math.sin(t * tt.jagRate + f * 9.0 + o.ph * 6.2832);
+          var cx = o.sx + (o.ex - o.sx) * f + o.nx * wav;
+          var cy = o.sy + (o.ey - o.sy) * f + o.ny * wav + bow;
+          var cz = o.sz + (o.ez - o.sz) * f + o.nz * wav;
+          var w = o.h * tt.width * o.wMul * (1 - (1 - tt.taper) * f);
+          ribbonStation(cx, cy, cz, o.nx, o.ny, o.nz, w, o.bright * tt.glow, o.edge);
+          if (k < tt.segs)
+            ribbonQuads(v0 + k * 3);
+        }
+    }
+
 // emit one pass of one bolt: THREE vertices per station (left edge, centreline, right edge) and four
 // triangles per segment, so a pass can carry a real cross-section gradient instead of a flat bar.
 // the core pass sets edge and centre alike and reads as a bright thread with a hard edge; the halo
@@ -361,7 +514,7 @@ class PropFX {
   function boltRibbon(o:BoltOpts):Void
     {
       var a = o.arc;
-      var v0 = Std.int(boltPos.length / 3);
+      var v0 = Std.int(ribbonPos.length / 3);
       for (k in 0...(a.segs + 1))
         {
           var f = k / a.segs;
@@ -376,69 +529,84 @@ class PropFX {
           var cy = o.sy + (o.ey - o.sy) * f + o.ny * kink;
           var cz = o.sz + (o.ez - o.sz) * f + o.nz * kink;
           var w = o.h * a.width * o.wMul * (1 - (1 - a.taper) * f);
-          boltVert(cx + o.nx * w, cy + o.ny * w, cz + o.nz * w);
-          boltVert(cx, cy, cz);
-          boltVert(cx - o.nx * w, cy - o.ny * w, cz - o.nz * w);
           // brightest at the root, where the current is leaving the crystal
           var c = o.bright * (1 - f * 0.75) * a.glow;
-          boltColour(c * o.edge);
-          boltColour(c);
-          boltColour(c * o.edge);
+          ribbonStation(cx, cy, cz, o.nx, o.ny, o.nz, w, c, o.edge);
           if (k < a.segs)
-            {
-              // two quads per segment, centreline to each edge. winding is irrelevant: the material
-              // is DoubleSide, and additive blending has no order to get wrong
-              var q = v0 + k * 3;
-              boltIdx.push(q);
-              boltIdx.push(q + 3);
-              boltIdx.push(q + 1);
-              boltIdx.push(q + 1);
-              boltIdx.push(q + 3);
-              boltIdx.push(q + 4);
-              boltIdx.push(q + 1);
-              boltIdx.push(q + 4);
-              boltIdx.push(q + 2);
-              boltIdx.push(q + 2);
-              boltIdx.push(q + 4);
-              boltIdx.push(q + 5);
-            }
+            ribbonQuads(v0 + k * 3);
         }
+    }
+
+// one cross-section of a ribbon: THREE vertices (left edge, centreline, right edge) with their own
+// brightnesses, so a pass can carry a real gradient across its width instead of a flat bar. `edge`
+// is the ratio the outer pair takes — 1 is a bright thread with a hard edge (the core pass), 0 falls
+// off to nothing, which is the only reason a halo pass reads as a flare and not as a glowing plank.
+// shared by the lightning and the tethers, which is what keeps the two strips byte-compatible in the
+// one buffer they both append into
+  inline function ribbonStation(cx:Float, cy:Float, cz:Float,
+      nx:Float, ny:Float, nz:Float, w:Float, c:Float, edge:Float):Void
+    {
+      ribbonVert(cx + nx * w, cy + ny * w, cz + nz * w);
+      ribbonVert(cx, cy, cz);
+      ribbonVert(cx - nx * w, cy - ny * w, cz - nz * w);
+      ribbonColour(c * edge);
+      ribbonColour(c);
+      ribbonColour(c * edge);
+    }
+
+// stitch one station to the next: two quads, centreline to each edge. `q` is the first vertex index
+// of the NEAR station, so this is only ever called while another station follows it. winding is
+// irrelevant — the material is DoubleSide and additive blending has no order to get wrong
+  inline function ribbonQuads(q:Int):Void
+    {
+      ribbonIdx.push(q);
+      ribbonIdx.push(q + 3);
+      ribbonIdx.push(q + 1);
+      ribbonIdx.push(q + 1);
+      ribbonIdx.push(q + 3);
+      ribbonIdx.push(q + 4);
+      ribbonIdx.push(q + 1);
+      ribbonIdx.push(q + 4);
+      ribbonIdx.push(q + 2);
+      ribbonIdx.push(q + 2);
+      ribbonIdx.push(q + 4);
+      ribbonIdx.push(q + 5);
     }
 
 // one ribbon vertex. the plane is upright and at the prop's own depth, so a bolt's root sits at the
 // crystal's mid-depth and the near half of the body occludes it — which is the read wanted, an arc
 // emerging from inside the mineral rather than one pasted over its silhouette
-  inline function boltVert(wx:Float, wy:Float, wz:Float):Void
+  inline function ribbonVert(wx:Float, wy:Float, wz:Float):Void
     {
-      boltPos.push(wx);
-      boltPos.push(wy);
-      boltPos.push(wz);
+      ribbonPos.push(wx);
+      ribbonPos.push(wy);
+      ribbonPos.push(wz);
     }
 
 // one ribbon vertex colour. HDR: the tint is LINEAR (Color.setHex decodes sRGB) and `c` already
 // carries the row's glow, so a peak lands well over BLOOM_THRESHOLD and the bloom pass is the flare.
 // there is no alpha channel here on purpose — additive blending means brightness IS the opacity
-  inline function boltColour(c:Float):Void
+  inline function ribbonColour(c:Float):Void
     {
-      boltCol.push(arcTint.r * c);
-      boltCol.push(arcTint.g * c);
-      boltCol.push(arcTint.b * c);
+      ribbonCol.push(ribbonTint.r * c);
+      ribbonCol.push(ribbonTint.g * c);
+      ribbonCol.push(ribbonTint.b * c);
     }
 
 // hand this frame's ribbon to the GPU, or hide the mesh if nothing struck. fresh attributes rather
 // than a preallocated buffer with a draw range, which is what render.particles.SlimeTrail does and
-// what the counts here justify: six 5-segment bolts is 72 vertices
-  function uploadBolts():Void
+// what the counts here justify: six 5-segment ribbons is 72 vertices
+  function uploadRibbons():Void
     {
-      if (boltIdx.length == 0)
+      if (ribbonIdx.length == 0)
         {
-          bolts.visible = false;
+          ribbons.visible = false;
           return;
         }
-      boltGeo.setAttribute('position', new Float32BufferAttribute(boltPos, 3));
-      boltGeo.setAttribute('color', new Float32BufferAttribute(boltCol, 3));
-      boltGeo.setIndex(boltIdx);
-      bolts.visible = true;
+      ribbonGeo.setAttribute('position', new Float32BufferAttribute(ribbonPos, 3));
+      ribbonGeo.setAttribute('color', new Float32BufferAttribute(ribbonCol, 3));
+      ribbonGeo.setIndex(ribbonIdx);
+      ribbons.visible = true;
     }
 
 // a stable 0..1 off one float seed. the standard fract(sin(x) * k) hash, which is what the cell phase
@@ -517,7 +685,7 @@ class PropFX {
 // blending brightness IS the opacity and a vertex colour of 0 adds nothing. same forceSinglePass as
 // the quads above: DoubleSide is needed (the ribbon is a flat shape the player can orbit behind) and
 // without the flag three would draw it as two single-side passes for two calls instead of one
-  static function boltMaterial():MeshBasicMaterial
+  static function ribbonMaterial():MeshBasicMaterial
     {
       return new MeshBasicMaterial({
         vertexColors: true,
@@ -606,7 +774,7 @@ class PropFX {
       g.setAttribute('color', new Float32BufferAttribute([ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ], 3));
       return [
         new Mesh(new PlaneGeometry(1, 1), coreMaterial(RenderConfig.TEXTURES.fxInnards, u)),
-        new Mesh(g, boltMaterial()),
+        new Mesh(g, ribbonMaterial()),
       ];
     }
 }

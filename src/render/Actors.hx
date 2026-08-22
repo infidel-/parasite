@@ -27,6 +27,17 @@ typedef ActorOpts = {
                                     // sprite marks at all — the prop is outlined from its own geometry
 }
 
+// what the Ctrl-hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
+// client px the tooltip beam anchors to. one result rather than two pick calls because the two
+// candidate sets compete for the same nearest-anchor slot — an AI standing in front of a prop has
+// to be able to win, which two independent searches could not decide between. see Actors.pickTarget
+typedef PickHit = {
+  ai:AI,                  // the AI under the cursor, or null
+  obj:objects.AreaObject, // the object under it, or null
+  px:Float,               // its anchor projected to client px, for BeamTooltip.showBeamAt
+  py:Float,
+}
+
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
 // position slide + opacity fade + optional transient effect. owns the per-actor anim state and
 // paints through a shared Sprites surface; transient FX (blood, death crossfade) live in a
@@ -59,6 +70,10 @@ class Actors {
   var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
   var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
+  var _pjx = 0.0;                                        // last projDist result in client px, for
+  var _pjy = 0.0;                                        // the pickTarget candidate that wins
+  var _pa = new Vector3();                               // scratch: the two ends of the world
+  var _pb = new Vector3();                               // segment projSeg hit-tests an object by
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
@@ -428,14 +443,15 @@ class Actors {
       slimeTrail.dispose();
     }
 
-// find the visible AI whose head projects nearest the given client point (within a px radius);
-// returns the AI + its projected client px (the tooltip beam anchor), or null. project-nearest
-// rather than raycasting the transparent, entity-less billboard quads
-  public function pickAI(clientX:Float, clientY:Float, rect:Dynamic):{ ai:AI, px:Float, py:Float }
+// find the visible AI or object whose anchor projects nearest the given client point (within a px
+// radius); returns it + its projected client px (the tooltip beam anchor), or null. project-nearest
+// rather than raycasting the transparent, entity-less billboard quads — and for an object backed by
+// a 3D prop there is no billboard to raycast at all
+  public function pickTarget(clientX:Float, clientY:Float, rect:Dynamic):PickHit
     {
-      var best:AI = null;
-      var bestPx = 0.0, bestPy = 0.0, bestD = 1e30;
-      var rad = 46.0;                                            // px hit radius around a head
+      var hit:PickHit = { ai: null, obj: null, px: 0.0, py: 0.0 };
+      var bestD = 1e30;
+      var rad = 46.0;                                            // px hit radius around an anchor
       var los = game.player.vars.losEnabled;
       var v = new Vector3();
       for (ai in game.area.getAllAI())
@@ -448,25 +464,98 @@ class Actors {
               a.op < 0.3)
             continue;
           headPoint(a, v);
-          v.project(camera);
-          if (v.z > 1)                                          // behind the camera
-            continue;
-          var sx = rect.left + (v.x * 0.5 + 0.5) * rect.width;
-          var sy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
-          var dx = sx - clientX, dy = sy - clientY;
-          var d = dx * dx + dy * dy;
+          var d = projDist(v, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
               bestD = d;
-              best = ai;
-              bestPx = sx;
-              bestPy = sy;
+              hit.ai = ai;
+              hit.obj = null;
+              hit.px = _pjx;
+              hit.py = _pjy;
             }
         }
-      if (best == null)
+      // objects compete in the SAME contest, so an AI standing in front of a prop wins its own tile.
+      // visible() is the gate the object marks already use: it drops decorations and doors, which
+      // are exactly the things nobody points at
+      for (o in game.area.getObjects())
+        {
+          if (o.entity == null ||
+              !o.visible() ||
+              (los && !game.playerArea.sees(o.x, o.y)))
+            continue;
+          var a = actors.get(o.entity);
+          if (a == null ||
+              a.op < 0.3)
+            continue;
+          // an object is hit-tested against its whole VERTICAL EXTENT and not against one point on
+          // it. a point plus a fixed radius is fine for an AI (a billboard is about two radii tall)
+          // and wrong for a prop: a 3.6-unit organ stands most of a cell high, so a disc round its
+          // crown left the body and the cell it stands on dead, and the tooltip only appeared over
+          // the top of the cell. the top is the object's own height — a prop's model height (it has
+          // NO icon quad, see drawActor's iconOff), a sprite's full quad, and 0 for a ground decal,
+          // which is drawn flat on the floor and so collapses the segment back to a point
+          var m = render.world.ObjModels.modelFor(o.getModelKey());
+          var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
+          var fy = WorldCtx.floorY(a.col, a.row);
+          var d = projSeg(a.x, fy, a.z, a.x, fy + top, a.z, rect, clientX, clientY);
+          if (d < bestD &&
+              d <= rad * rad)
+            {
+              bestD = d;
+              hit.ai = null;
+              hit.obj = o;
+              hit.px = _pjx;
+              hit.py = _pjy;
+            }
+        }
+      if (hit.ai == null &&
+          hit.obj == null)
         return null;
-      return { ai: best, px: bestPx, py: bestPy };
+      return hit;
+    }
+
+// project a world SEGMENT to client px and return the cursor's SQUARED distance to it, leaving the
+// TOP end's px in _pjx/_pjy — the beam anchors on the crown wherever along the body the cursor sat,
+// which keeps the dot stable while the cursor moves down a tall prop. a degenerate segment (a ground
+// decal) falls out of the same arithmetic as a plain point test, so there is no special case
+  function projSeg(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
+      rect:Dynamic, clientX:Float, clientY:Float):Float
+    {
+      _pa.set(ax, ay, az);
+      var da = projDist(_pa, rect, clientX, clientY);
+      if (da >= 1e30)
+        return 1e30;
+      var fx = _pjx, fy = _pjy;
+      _pb.set(bx, by, bz);
+      var db = projDist(_pb, rect, clientX, clientY);
+      if (db >= 1e30)
+        return 1e30;
+      // _pjx/_pjy now hold the TOP end, which is what the caller wants as the anchor either way
+      var ex = _pjx - fx, ey = _pjy - fy;
+      var l2 = ex * ex + ey * ey;
+      if (l2 < 1e-6)
+        return db;
+      // the closest point on the segment, clamped to its ends so the region is a capsule and not an
+      // infinite band up and down the screen
+      var t = ((clientX - fx) * ex + (clientY - fy) * ey) / l2;
+      t = (t < 0 ? 0 : (t > 1 ? 1 : t));
+      var qx = fx + t * ex - clientX;
+      var qy = fy + t * ey - clientY;
+      return qx * qx + qy * qy;
+    }
+
+// project a world point to client px and return its SQUARED distance to the cursor, leaving the px
+// in _pjx/_pjy for the caller that wins. 1e30 for a point behind the camera, which no radius passes
+  function projDist(v:Vector3, rect:Dynamic, clientX:Float, clientY:Float):Float
+    {
+      v.project(camera);
+      if (v.z > 1)
+        return 1e30;
+      _pjx = rect.left + (v.x * 0.5 + 0.5) * rect.width;
+      _pjy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
+      var dx = _pjx - clientX, dy = _pjy - clientY;
+      return dx * dx + dy * dy;
     }
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and

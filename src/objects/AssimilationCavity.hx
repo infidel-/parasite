@@ -35,6 +35,12 @@ class AssimilationCavity extends HabitatObject
   public override function getModelKey(): String
     { return 'habitat_assimilation'; }
 
+// can be activated when player is next to it?
+// the arch is a DOORWAY 4.6 world units wide and its maw sits in a leg, so standing dead centre on
+// its own cell is the one place a host cannot see what it is reaching into
+  public override function canActivateNear(): Bool
+    { return true; }
+
 
 // update actions
   override function updateActionList()

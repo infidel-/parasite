@@ -1,17 +1,24 @@
-// area AI tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip)
+// area inspect tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip).
+// covers both things worth pointing at in an area: an AI, and an object. it was AI-only and named
+// AITooltip for it, and the stylesheet moved with it — `#hud-area-info` / `.area-tip-*`, which is
+// only safe because no mod's own css under examples/ references either name
 package ui;
 
 import ai.AI;
 import game.Game;
+import objects.AreaObject;
 
-class AITooltip extends BeamTooltip
+class AreaTooltip extends BeamTooltip
 {
   public function new(g: Game, h: HUD)
     {
-      super(g, h, 'hud-ai-info', 'ai-tip');
+      // NOT 'hud-area-info' — ui.RegionTooltip has used that id since before this class was
+      // renamed (its "area" is a tile on the world map, not the area we are standing in), and both
+      // overlays live in the HUD container at once, so sharing it puts two nodes on one id
+      super(g, h, 'hud-inspect-info', 'area-tip');
     }
 
-// show area AI tooltip when inspect mode is active
+// show area tooltip when inspect mode is active
   public function update()
     {
       // the 3D view drives its own hover tooltip (projected anchor via render.View.loop);
@@ -19,7 +26,7 @@ class AITooltip extends BeamTooltip
       if (game.scene.view3d != null &&
           game.scene.view3d.running)
         return;
-      if (!hud.isAIInspectMode())
+      if (!hud.isInspectMode())
         {
           hide();
           return;
@@ -42,13 +49,39 @@ class AITooltip extends BeamTooltip
         }
 
       var ai = game.area.getAI(pos.x, pos.y);
-      if (ai == null)
+      if (ai != null)
+        {
+          showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
+          return;
+        }
+
+      // no AI on the tile: fall through to whatever object stands there. an AI wins the tile it
+      // shares with one — it is the thing that acts
+      var obj = objectAt(pos.x, pos.y);
+      if (obj == null)
         {
           hide();
           return;
         }
+      showBeam(obj.x, obj.y, beamID(obj), getObjectText(obj));
+    }
 
-      showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
+// the first object worth describing on a tile, or null. visible() is what drops decorations and
+// doors — the same test render.Actors uses to decide which objects carry the tactical marks
+  public function objectAt(x: Int, y: Int): AreaObject
+    {
+      for (o in game.area.getObjectsAt(x, y))
+        if (o.visible())
+          return o;
+      return null;
+    }
+
+// beam target id for an object. NEGATED, because AI ids and object ids come from separate counters
+// and BeamTooltip keys its re-animation on this alone — a collision would swallow the beam redraw
+// when the cursor moved from an AI straight onto an object that happened to share its number
+  public static inline function beamID(o: AreaObject): Int
+    {
+      return -o.id - 1;
     }
 
 // get tooltip HTML for hovered AI (public: the 3D view's hover driver reuses it verbatim)
@@ -56,16 +89,16 @@ class AITooltip extends BeamTooltip
     {
       var buf = new StringBuf();
       // header: name + optional cultist mark
-      buf.add('<div class="ai-tip-head"><span class="ai-tip-name">' + ai.getNameCapped() + '</span>');
+      buf.add('<div class="area-tip-head"><span class="area-tip-name">' + ai.getNameCapped() + '</span>');
       if (ai.isCultist)
-        buf.add('<span class="ai-tip-cultmark">' + Icon.cultist + '</span>');
+        buf.add('<span class="area-tip-cultmark">' + Icon.cultist + '</span>');
       buf.add('</div>');
 
       // sub rows: cult affiliation, job
       if (ai.isCultist)
-        buf.add('<div class="ai-tip-sub">' + game.getCultByID(ai.cultID).Name() + '</div>');
+        buf.add('<div class="area-tip-sub">' + game.getCultByID(ai.cultID).Name() + '</div>');
       if (!ai.isIt() && ai.isJobKnown)
-        buf.add('<div class="ai-tip-row"><span class="ai-tip-rk">job</span>' + ai.job + '</div>');
+        buf.add('<div class="area-tip-row"><span class="area-tip-rk">job</span>' + ai.job + '</div>');
 
       // attribute pills
       if (ai.isAttrsKnown)
@@ -81,7 +114,7 @@ class AITooltip extends BeamTooltip
           effects.sort(function(a, b) {
             return (a.name < b.name ? -1 : (a.name > b.name ? 1 : 0));
           });
-          buf.add('<div class="ai-tip-effects">');
+          buf.add('<div class="area-tip-effects">');
           for (effect in effects)
             buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
               (effect.isTimer ? '<span class="body-eff-t">' +
@@ -95,20 +128,40 @@ class AITooltip extends BeamTooltip
       return buf.toString();
     }
 
+// get tooltip HTML for a hovered object (public: the 3D view's hover driver reuses it verbatim).
+// getName() already answers 'unknown object' until the type is learned and already appends the
+// level for a habitat organ, so the header needs no knowledge check of its own
+  public function getObjectText(o: AreaObject): String
+    {
+      var buf = new StringBuf();
+      buf.add('<div class="area-tip-head"><span class="area-tip-name">' +
+        Const.capitalize(o.getName()) + '</span></div>');
+
+      // whatever the object wants to say about itself, but only once the player knows what it is
+      if (o.known())
+        for (row in o.getTooltipRows())
+          buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + row.name + '</span>' +
+            row.value + '</div>');
+
+      if (Const.isDebug)
+        addObjectDebugBlock(buf, o);
+      return buf.toString();
+    }
+
 // build the STR/CON/INT/PSY pill row
   function attrPills(str: Int, con: Int, int: Int, psy: Int): String
     {
-      return '<div class="ai-tip-attrs">' +
-        '<span class="ai-tip-attr">STR<b>' + str + '</b></span>' +
-        '<span class="ai-tip-attr">CON<b>' + con + '</b></span>' +
-        '<span class="ai-tip-attr">INT<b>' + int + '</b></span>' +
-        '<span class="ai-tip-attr">PSY<b>' + psy + '</b></span></div>';
+      return '<div class="area-tip-attrs">' +
+        '<span class="area-tip-attr">STR<b>' + str + '</b></span>' +
+        '<span class="area-tip-attr">CON<b>' + con + '</b></span>' +
+        '<span class="area-tip-attr">INT<b>' + int + '</b></span>' +
+        '<span class="area-tip-attr">PSY<b>' + psy + '</b></span></div>';
     }
 
 // append the debug detail block
   function addDebugBlock(buf: StringBuf, ai: AI)
     {
-      buf.add('<div class="ai-tip-debug">');
+      buf.add('<div class="area-tip-debug">');
       if (!ai.isNameKnown)
         buf.add(Const.smalldebug('[debug] name: ' + ai.name.real) + '<br/>');
       if (!ai.isJobKnown)
@@ -132,6 +185,29 @@ class AITooltip extends BeamTooltip
       addDebugListRow(buf, 'skills', ai.skills.toString());
       addDebugListRow(buf, 'organs', ai.organs.toString());
       addDebugListRow(buf, 'traits', getTraitsText(ai));
+      buf.add('</div>');
+    }
+
+// append the debug detail block for an object. the model key and the two tile flags are here
+// because they are the three things about an object that are invisible on screen and wrong often
+  function addObjectDebugBlock(buf: StringBuf, o: AreaObject)
+    {
+      buf.add('<div class="area-tip-debug">');
+      buf.add(Const.smalldebug('[debug] id: ' + o.id) + '<br/>');
+      buf.add(Const.smalldebug('[debug] type: ' + o.type) + '<br/>');
+      buf.add(Const.smalldebug('[debug] model: ' + o.getModelKey()) + '<br/>');
+      buf.add(Const.smalldebug('[debug] pos: (' + o.x + ',' + o.y + ')') + '<br/>');
+      buf.add(Const.smalldebug('[debug] known: ' + o.known() +
+        ' walk: ' + o.isWalkable() +
+        ' see: ' + o.canSeeThrough()) + '<br/>');
+      var linked = o.getLinkedAI();
+      if (linked.length > 0)
+        {
+          var list = [];
+          for (ai in linked)
+            list.push(ai.id + '@' + ai.x + ',' + ai.y);
+          addDebugListRow(buf, 'linked ai', list.join(', '));
+        }
       buf.add('</div>');
     }
 

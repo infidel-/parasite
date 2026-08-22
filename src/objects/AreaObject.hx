@@ -8,6 +8,13 @@ import entities.ObjectEntity;
 import game.Game;
 import game._Item;
 
+// one key/value row of an object's Ctrl-hover tooltip (see ui.AreaTooltip). plain strings and not
+// numbers: a row is whatever that object wants to say about itself, and the panel only lays it out
+typedef TooltipRow = {
+  name: String,  // left-hand key
+  value: String, // right-hand value
+};
+
 class AreaObject extends _SaveObject
 {
   static var _ignoredFields = [ 'entity' ];
@@ -139,6 +146,19 @@ class AreaObject extends _SaveObject
 // can be activated when player is next to it?
   public function canActivateNear(): Bool
     { return false; }
+
+// dynamic: AI this object logically holds. positional and not stored: a preservator holds whatever
+// preserved host stands on one of its four sides, which is the same rule its own capacity check
+// uses, so there is one definition of "what this thing has hold of" rather than two that can drift.
+// read by game logic AND by render.actors.PropFX, which draws a tether to each without knowing what
+// a preservator is
+  public dynamic function getLinkedAI(): Array<AI>
+    { return []; }
+
+// dynamic: extra rows for this object's Ctrl-hover tooltip, beneath its name. only asked when the
+// player knows what the object is — an unknown one has nothing to say about itself
+  public dynamic function getTooltipRows(): Array<TooltipRow>
+    { return []; }
 
 // get object name considering whether it's known or not
 // can be overridden

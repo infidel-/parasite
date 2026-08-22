@@ -2,6 +2,7 @@
 
 package objects;
 
+import ai.AI;
 import game.Game;
 import lighting.AtmosphereLightProfiles;
 
@@ -33,6 +34,38 @@ class Preservator extends HabitatObject
 // can be activated when player is next to it?
   public override function canActivateNear(): Bool
     { return true; }
+
+// a grown body is solid: nothing walks through it. this is also what retires the see-through fade
+// for this prop — the ghost batch in render.world.ObjModels only ever serves the placement the
+// player is STANDING on, and nothing can stand here now
+  public override function isWalkable(): Bool
+    { return false; }
+
+// the hosts this preservator has hold of: preserved AI on any of its four sides. THE definition —
+// the capacity check below, the tooltip row and the 3D tethers all read it, so what the player is
+// shown and what the game counts can never disagree.
+// a host between two preservators is held by both, which is what the capacity check has always done
+  public override function getLinkedAI(): Array<AI>
+    {
+      var list = [];
+      for (i in 0...Const.dir4x.length)
+        {
+          var ai = game.area.getAI(x + Const.dir4x[i], y + Const.dir4y[i]);
+          if (ai != null &&
+              ai.state == AI_STATE_PRESERVED)
+            list.push(ai);
+        }
+      return list;
+    }
+
+// tooltip: how full it is
+  public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
+    {
+      return [ {
+        name: 'preserved',
+        value: getLinkedAI().length + ' / ' + getParams().hostAmount,
+      } ];
+    }
 
 // every habitat object shares the 'habitat' type, so the 3D prop lookup keys on this instead
   public override function getModelKey(): String
@@ -79,15 +112,8 @@ class Preservator extends HabitatObject
               return true;
             }
           // count preserved hosts around
-          var cnt = 0;
-          for (i in 0...Const.dir4x.length)
-            {
-              var ai = game.area.getAI(x + Const.dir4x[i], y + Const.dir4y[i]);
-              if (ai != null && ai.state == AI_STATE_PRESERVED)
-                cnt++;
-            }
           var params = getParams();
-          if (cnt >= params.hostAmount)
+          if (getLinkedAI().length >= params.hostAmount)
             {
               game.actionFailed('This preservator is full.');
               return true;

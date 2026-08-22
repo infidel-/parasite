@@ -2123,3 +2123,104 @@ is judged as a ratio to the lit surface under it and a black surface flatters an
 its own lesson — **tune emissive last, and never on a prop whose material is still in question.**
 
 **Verdict: landed.**
+
+## The preservator's glow had to CROSS the bloom threshold, not sit under it
+
+The pod shipped with `shine.glow: 1.0`, chosen deliberately so it would stay "faint and subtle".
+Peak emissive was `base 0.055 + mote 0.38 = 0.435` against a tint whose linear luminance is 0.654,
+i.e. **0.285 against `BLOOM_THRESHOLD` 0.9**. It could not halo by construction, and the report back
+was "I don't see the yellow bloom glow. Is it there?" — which is the correct reading of a
+sub-threshold emissive on an already-lit shell: it is a slightly paler shell and nothing more.
+
+**A brightness change that never crosses the threshold is not a glow, it is a shade.** That is the
+whole entry. The fix is not "more" but a term that straddles: two new `PropShine` fields, `pulse` /
+`pulseRate`, multiplying the whole `glowSum` by `1 - pulse + pulse * (0.5 + 0.5 * sin(t * rate +
+vGlowPh * 2pi))`, phased per instance off the hash the motes already carry.
+
+Fitted against luminance 0.654 with `glow 3.0 / base 0.035 / mote 0.85 / pulse 0.6`:
+
+| | breath bottom | breath top | blooms? |
+|---|---|---|---|
+| resting shell (mask only) | 0.048 | 0.069 | never |
+| mote peak | 0.70 | **1.74** | only at the top |
+
+So the three blobs inside the amber swell into a halo, hold it for roughly the upper third of a ~14 s
+cycle and lose it again, over a shell that is ~1.9x brighter than before and never haloes at all
+(`glow x base` 0.055 -> 0.105). Note `base` went DOWN while the pod got brighter — **read these as
+products with `glow`, never on their own.**
+
+Both fields are **uniforms, not literals**, so `customProgramCacheKey` is untouched: verified live,
+the key is still `propGlow3AMBER` and `__progs()` holds at 100. A row can retune or disable the
+breath with nothing to compile and nothing to add to the boot warm. The biomineral takes `pulse: 0`
+— its motes already clip and bloom at every peak, so a breath under them would only take the halo
+away and put it back.
+
+**Verdict: landed.**
+
+## The preservator TETHERS its preserved hosts, on the lightning's ribbon
+
+Preserved hosts stand on the four orthogonal cells around the pod with nothing showing what holds
+them. A first design moved their sprites onto the crown and was dropped before it was written: the
+badge / x-ray / target-ring passes read the *stored* actor pose, not `drawActor`'s offsets, so a
+lifted sprite leaves its re-invade ring on the ground behind it. The arc has no such problem — it is
+drawn between two world points and touches no pose.
+
+New `tether` column + `PropTether`, and a `drawTethers` in `PropFX` that appends into **the same
+three arrays `boltRibbon` already fills**. `boltRibbon`'s station emitter was factored out to
+`ribbonStation` / `ribbonQuads` and both callers share it, so one mesh carries every bolt and every
+cord in the level. The buffers were renamed `bolt*` -> `ribbon*` to stop the names lying.
+
+Cost is **not** "one call per cord" and **not** zero either, and the honest bound is worth writing
+down: the mesh already existed, but it was `visible = false` whenever no bolt happened to be alight
+(`duty 0.18`, dark ~30% of the time). A live cord keeps it up, so the true worst case is **+1 draw
+call**, in those frames only. Measured live with one host preserved: `calls 72`, `submit 2.6 ms`,
+`GPU 4.59 ms`, 60 FPS, `prog 100`.
+
+Two things the bolts do that a cord must not. Its bow and waver are belled to **0 at BOTH ends** — a
+cord is attached at each end, where a bolt only has to start on the body — and its brightness is
+**flat along the span**, where a discharge fades away from the crystal. A link that dims toward the
+far end stops reading as a link.
+
+The flare shipped at `haloDim 0.65` for one build: `0.65 x 2.2 x 0.654 = 0.94`, over the threshold,
+and a self-blooming flare 0.3 world wide reads as **a solid glowing tube leaving the pod**, not as
+light. At 0.5 (0.72, under) the flare is a soft skirt and only the ~4px core straddles — 1.44 at the
+peak, 0.50 at the trough. **On a thin ribbon the flare buys bloom AREA; let it bloom in its own right
+and it stops being a flare.**
+
+WHO a cord runs to is `AreaObject.getLinkedAI`, asked of the object every frame — the render layer
+never learns what a preservator is, and `Preservator.onAction`'s own capacity loop was deleted in
+favour of the same call, so what the player sees and what the game counts cannot drift.
+
+**Verdict: landed.**
+
+## A `+/-` SPREAD is not a variation when the count is ONE
+
+The assimilation arch's firefly flew a flat hoop in the lower half of the prop. Both halves of that
+came from the same mistake, and it is a general one: **every per-dot value in `drawFlies` is rolled
+from a hash, and `perLevel: 1` on a level-1-capped improvement means those rolls collapse to a single
+sample.** A distribution described as "spread" or "variation" then describes nothing — it is one
+fixed number per cell, and it can land anywhere in the range.
+
+Two of them bit at once:
+
+- height `f.y 0.55 +/- f.yVar 0.28` = one draw from 0.27..0.83 h, which in this habitat came up low;
+- tilt `f.tilt * (h3 * 2 - 1)` with `tilt 0.25` — a **symmetric** spread, so it rolls near zero as
+  often as not, and 14 degrees is barely off horizontal even at its extreme.
+
+`tilt` is now a signed MAGNITUDE rather than a spread: `f.tilt * (0.6 + 0.8 * h3) * (h5 < 0.5 ? -1 :
+1)`, on a fifth roll for the sign. At `tilt 0.45` every ring leans 15-36 degrees and two of them
+still lean opposite ways, so a swarm's circles are not parallel to each other either. `0` is the only
+way back to a flat ring, which is the right thing for that to mean.
+
+The row moved to `y 0.80 / yVar 0.10` — ring CENTRE in the upper third, kept tight so the centre
+cannot leave it. The height variation is then the **lean**, not the roll: at the top of the tilt band
+the dot swings `r * sin(tilt)` = 0.33 h either side of the centre, lapping from ~0.47 h up over the
+crown. Measured live half an orbit apart (~2.6 s at `rate 0.18`): the dot moved ~75 px up the screen
+and to the opposite side of the arch, sitting above the crown at one end of the lap and inside the
+opening at the other.
+
+**A ring that merely sits high is still a hoop. The lean is what puts it in 3D** — which is the exact
+opposite of what this function's header used to claim ("a tilted ring was tried first and just looked
+like a hoop turning"). That note was written when the arch had a full swarm to read depth from.
+
+**Verdict: landed.**
