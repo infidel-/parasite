@@ -52,6 +52,18 @@ package three;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
 }
 
+// a 4-component vector. here for UNIFORM ARRAYS more than for maths: three binds an array of these
+// to a GLSL `vec4 name[ N ]` (WebGLUniforms.setValueV4a), which is how a shader patch hands the GPU a
+// per-item table without an attribute — see render.world.PropGlow's eye discs
+@:native("THREE.Vector4") extern class Vector4 {
+  public function new(?x:Float, ?y:Float, ?z:Float, ?w:Float);
+  public var x:Float;
+  public var y:Float;
+  public var z:Float;
+  public var w:Float;
+  public function set(x:Float, y:Float, z:Float, w:Float):Vector4;
+}
+
 @:native("THREE.Euler") extern class Euler {
   public function new(?x:Float, ?y:Float, ?z:Float, ?order:String);
   public var x:Float;

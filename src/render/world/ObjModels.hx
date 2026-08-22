@@ -100,6 +100,55 @@ typedef PropPulse = {
                    // never land together and the body never repeats a pose
 };
 
+// the idle motion of a prop whose moving parts are LIMBS RADIATING FROM A CORE rather than a crown
+// standing over a base: a tangential sweep about the prop's own DEPTH axis, gated to nothing on the
+// core and ramped in toward the tips, with the phase travelling round the fan so that neighbouring
+// limbs never swing together.
+//
+// it exists because neither column above can express that shape, and both failures were measured on
+// the watcher. PropAnim weights by a power of normalized HEIGHT, and this prop's limbs reach full
+// extent in EVERY height band from 0.2 up — so a height weight moves the top ones, leaves the flanking
+// ones planted, and at any amplitude that shows at all it drags the eye-studded core along with them.
+// PropPulse turns about the VERTICAL axis, which on a fan 0.87 of its height wide and only 0.57 deep
+// moves a tip almost entirely in DEPTH, where nothing reads.
+//
+// the axis is the LOCAL Z, and that is the whole point rather than an arbitrary pick: every grown
+// organ takes PropYaw.FRONTAL, so local +Z points at the resting camera and a turn about it sweeps
+// every tip ACROSS THE SCREEN, whichever way that tip happens to stick out.
+//
+// both gates are POSITIONAL and must stay that way. docs/3d-render.md carries the verdict for the
+// preservator: a vertex displacement must not be masked by albedo, because a TRELLIS atlas cuts its
+// charts along high-curvature ridges and a colour boundary therefore lands on a uv seam, pulling the
+// duplicated vertices apart. A position gate cannot do that — duplicated verts share a position, so
+// they share a weight.
+//
+// same fraction-of-the-prop's-height rule as every column here. consumed by render.world.PropShader,
+// folded into the patch it already makes for `anim` and `pulse`
+typedef PropCurl = {
+  curl:Float,   // peak turn about the depth axis at full weight, in radians
+  rate:Float,   // its speed as a BASE_MS multiplier (smaller = slower)
+  lobes:Int,    // phase cycles round the fan. INTEGER, and it HAS to be: the phase term is the
+                // vertex's own azimuth about that axis, which wraps at +/-PI, and only a whole number
+                // of cycles leaves sin() continuous across the wrap — a fraction creases the fan
+                // along one radius
+  wave:Float,   // phase cycles per prop-height of distance OUT from the axis, so the lean varies
+                // along a limb's own length instead of being constant down it. this is what makes a
+                // limb take an S rather than swinging as a rigid arc, and it is the difference
+                // between a fan of hinged spokes and something that undulates. it runs NEGATIVE
+                // against the clock, so the ripple travels from the body out to the tips
+  axis:Float,   // where the depth axis passes through, as a fraction of the prop's height. put it at
+                // the CORE the limbs radiate from, which is not the prop's mid-height
+  yFloor:Float, // fraction of the height below which nothing moves at all. it wants the top of the
+                // prop's own base — the root pool is FARTHER from the depth axis than any tip, so
+                // the radial gate below cannot exclude it and this is the term that does
+  ySoft:Float,  // ramp width above it, same fraction. a hard cut creases a visible ring
+  dFloor:Float, // distance from the depth axis, same fraction, below which nothing moves. THIS is
+                // what keeps the core still while its limbs whip, and it wants the measured gap
+                // between the body's own radius and where the limbs reach
+  dSoft:Float,  // and its ramp width. dFloor..dFloor+dSoft is the taper ALONG a limb, so the tip
+                // sweeps and the root it grows out of does not
+};
+
 // the pulsing "innards" sprite drawn INSIDE a prop hollow enough to show one: a single frontal
 // additive quad, breathing on a slow scale beat, with its own map UVs disturbed in the FRAGMENT
 // shader so the mass writhes instead of merely resizing. same fraction-of-height rule as PropAnim
@@ -270,6 +319,79 @@ typedef PropShine = {
                     // landing together — the same reason `twist` and `twistRate` are unrelated
 };
 
+// one repainted eye. the frame is render.world.PropGlow's: x and z off the bounding box's XZ centre,
+// y off its FLOOR, all as fractions of the box's Y span — so the same numbers survive any edit to the
+// row's `h`, and they are read straight off the baked atlas (see PropEyes)
+typedef PropEye = {
+  x:Float, // centre, fraction of the prop's height off the box's XZ centre
+  y:Float, // and off its floor
+  z:Float,
+  r:Float, // outer radius of the disc that REPLACES the baked eye, same fraction, measured IN THE
+           // EYE'S OWN TANGENT PLANE (which is what render.world.PropGlow's cylinder test uses; a 3D
+           // distance overstates it toward the rim of a curved cap). size it to cover the whole baked
+           // patch and then a little: anything of the original left outside the disc keeps the
+           // original's pupil, and a stale pupil beside a moving one is the one failure this cannot
+           // be tuned out of
+};
+
+// the eyes of a prop that has them, repainted in the fragment shader instead of left as whatever the
+// generator baked into the albedo. it REPLACES the colour inside each disc rather than drawing over
+// it, and that is the only version of this that works: a baked pupil cannot be shifted (a TRELLIS
+// atlas is a shattered mosaic of tiny charts, so nothing can be moved in uv space — see PropKey) and
+// drawing a second pupil over the first simply gives two.
+//
+// what it buys beyond the motion is worth as much as the motion: at 4,754 tris the generator resolved
+// the watcher's eyes as flat faceted DIAMONDS, four to eight triangles each — a pale facet with a
+// darker one inside it — so a clean round sclera carrying a real iris is a better read than the
+// source even standing still.
+//
+// every eye drifts on rates of its own, so no two are ever aimed the same way; there is no shared
+// gaze and nothing here tracks the player or the camera. the whole effect is a closed form in the
+// shared clock, the way every other idle term on these props is, so it stores nothing and survives a
+// reload with no state.
+//
+// same fraction-of-the-prop's-height rule as every column here. consumed by render.world.PropGlow,
+// whose local-position varying, bounding-box frame, clock and per-instance phase it shares — so it
+// costs NO draw call, NO pass, NO geometry and NO art
+typedef PropEyes = {
+  list:Array<PropEye>, // the eyes, MEASURED off the baked atlas and dead the moment the mesh is
+                       // regenerated (the method is in docs/3d-changes.md). its length is a literal
+                       // loop bound in the shader, so it rides the program cache key and a row that
+                       // changes the COUNT compiles its own program while retuning the rest is free
+  ax:Float,       // the point every eye looks AWAY from, same frame as PropEye. it is NOT the
+  ay:Float,       // centroid of the eyes and must not be: they all sit on one near-flat face, so a
+  az:Float,       // centroid among them gives a near-zero and numerically unstable outward direction
+                  // for whichever eye lands closest to it. put it BEHIND the eye field, in the body
+  iris:Float,     // iris radius as a fraction of the eye's own `r`
+  pupil:Float,    // and the pupil's, as a fraction of the IRIS rather than of the eye — so widening
+                  // the iris does not silently widen the pupil with it
+  gaze:Float,     // how far the pupil may travel off centre, fraction of `r`. a HARD ceiling, not a
+                  // typical value: see the 1/sqrt(3) scaling in render.world.PropGlow
+  gazeRate:Float, // FIXATIONS per BASE_MS unit, not a drift speed — the eye holds one aim and then
+                  // flicks to the next. each eye rolls its own spread off this, so they desync by
+                  // construction and never flick together
+  gazeSnap:Float, // fraction of a fixation spent moving, 0..1. SMALL: this is the flick, and at ~0.06
+                  // of a ~2s hold it is about a tenth of a second. raise it and the saccade turns
+                  // back into the smooth sweep this replaced, which read as floating rather than
+                  // looking
+  sclera:Int,     // the white. measured off the baked atlas, so the repaint sits in the art rather
+  irisColor:Int,  // than on top of it
+  pupilColor:Int,
+  lid:Int,        // what an eye fades to when it blinks — the prop's OWN flesh colour, so a shut eye
+                  // reads as skin closing over and not as a hole punched in the body
+  blinkRate:Float,// blink cycles per BASE_MS unit
+  blinkDuty:Float,// fraction of that cycle the eye is shut, 0..1. SMALL is the whole point: a blink
+                  // is an event, and at 0.1 upward it reads as an eye that is mostly closed
+  glint:Float,    // HDR peak of the wet highlight. over BLOOM_THRESHOLD 0.9 is what makes a ~15px eye
+                  // throw a halo BIGGER than itself, and at this camera that halo is most of what
+                  // sells the eye at all — the disc is 15 x 8 px after the tunnel camera's
+                  // foreshortening, so the bloom is doing the reading, not the geometry
+  glintR:Float,   // its radius as a fraction of the eye's `r`
+  glintOff:Float, // and how far off centre it sits, same fraction. it does NOT travel with the pupil:
+                  // a highlight is where the light is, and an eye that carries its own reflection
+                  // around with its gaze reads as a sticker
+};
+
 // a live cord arcing from this prop to each AI it holds (objects.AreaObject.getLinkedAI). unlike
 // PropArc above it is CONTINUOUS and TARGETED: no strike buckets, no random azimuth and no length of
 // its own — one ribbon per bound actor, anchored on the prop's surface, bowed over the gap and
@@ -313,9 +435,13 @@ typedef ObjModel = {
   anim:PropAnim,      // idle motion folded into its shaders, or null for a prop that stands still
   pulse:PropPulse,    // slow breath of everything above a floor line, or null for a body that does
                       // not breathe. shares PropShader's patch with `anim` and is independent of it
+  curl:PropCurl,      // tangential sweep of limbs radiating from a core, or null for a prop with no
+                      // limbs. shares that same patch, and is independent of both of the above
   core:PropCore,      // pulsing innards sprite drawn inside it, or null
   fly:PropFly,        // fireflies orbiting it, one per habitat level, or null
   shine:PropShine,    // travelling motes on its own surface, or null
+  eyes:PropEyes,      // eyes repainted over its baked ones, or null. shares PropGlow's patch with
+                      // `shine` and is independent of it
   arc:PropArc,        // short lightning discharged off it, or null
   tether:PropTether,  // live cord arcing to each AI this object holds, or null for one that holds
                       // none. the BINDING is the object's own (AreaObject.getLinkedAI), so nothing
@@ -352,9 +478,11 @@ class ObjModels
       light: null, // a ladder is masonry and rungs, not a grown thing
       anim: null,  // and bolted to a wall, so it had better not sway
       pulse: null, // nor breathe
+      curl: null,  // and rungs are not limbs
       core: null,  // nor has it any insides
       fly: null,
       shine: null, // and nothing on it is alive enough to luminesce
+      eyes: null,  // nor is anything on it looking at you
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
     },
@@ -372,6 +500,7 @@ class ObjModels
       light: { color: 0x8fe3b0, mul: 1.0 },
       anim: null,  // worked case by case; a mineral spire is the one organ that should NOT sway
       pulse: null, // nor breathe: crystal is the one thing here that is not soft tissue
+      curl: null,  // and a spire has no limbs to whip
       core: null,  // it is solid rock — there is nothing hollow to hang a membrane in
       fly: null,  // the arch owns the orbiting-mote vocabulary; this organ is a POWER source, so it
                   // discharges instead — see `arc` below
@@ -425,6 +554,7 @@ class ObjModels
         pulse: 0.0,
         pulseRate: 0.0,
       },
+      eyes: null, // a mineral does not look back
       // and the reason this organ exists: it makes POWER. short green discharges snapping off the
       // crystal, pale-cored the way a real arc is. every number is in units of `h` again
       arc: {
@@ -482,6 +612,10 @@ class ObjModels
       pulse: null, // an arch is limbs, and limbs drift rather than breathe — the sway above is its
                    // whole motion. a radial swell about the axis of a shape that is a HOLE would
                    // pump the opening open and shut, which is not what a doorway does
+      // null even though an arch IS braided limbs: they run leg to leg through a closed loop rather
+      // than radiating from a core, so there are no free tips for a tangential sweep to whip — the
+      // height-weighted sway above is the right shape for this one, and it already has it
+      curl: null,
       // the arch is a DOORWAY with nothing behind it, so the membrane hangs in the opening rather
       // than inside a body, sized to fill it and sat at mid-height. the tint is the row's own maw
       // violet, the one the pulled point light carried.
@@ -552,6 +686,7 @@ class ObjModels
         trailSize: 0.25,
       },
       shine: null, // its glow is the membrane in the opening, not anything on the braids
+      eyes: null,  // and the watcher is the organ that watches
       arc: null,   // and the biomineral is the power organ, not this one
       tether: null, // an assimilated host walks away; nothing stays bound to the arch
     },
@@ -598,6 +733,8 @@ class ObjModels
                      // leans the thing, while a turn slides the whole vein cage around its own axis
         twistRate: 0.06,
       },
+      curl: null, // the pod is a BODY, and its swirl is the `twist` above — a turn about the vertical
+                  // that slides the vein cage around itself. it has no limbs radiating from it
       core: null, // the pod is not hollow; what is inside it is the `shine` motes
       fly: null,  // the arch owns the orbiting-mote vocabulary
       // a faint, LARGE glow living inside the amber. same machinery as the biomineral's surface
@@ -667,6 +804,7 @@ class ObjModels
         pulseRate: 0.07, // ~14s, against the BODY's ~11s breath (`pulse.rate` 0.09 above). unequal
                          // on purpose: the two beat every ~50s, so the pod never repeats a state
       },
+      eyes: null, // it holds hosts; it does not watch them
       arc: null, // the biomineral is the power organ
       // the cords to whatever hosts this preservator is holding. every number is a fraction of the
       // row's `h` 3.6, and the span they cross is one cell — the bound hosts stand on the four
@@ -703,17 +841,114 @@ class ObjModels
     {
       keys: [ 'habitat_watcher' ],
       path: RenderConfig.MODELS.habitatWatcher,
-      h: 2.81, // 1.3x the 2.16 it shipped at, with the other three organs
-      // the one with the most to lose from a hashed turn: its pale eye discs ARE its read (they are
-      // why the row carries baseColor 0.4 rather than a straight fit to the family mean), and a roll
-      // that put them round the back left a blank lump. They straddle dead-on, 60-120 degrees
+      // the mesh was REGENERATED 2026-08-22 and this is NOT the 2.81 the old one shipped at. that
+      // figure was fitted to a body 1.14 h wide; this one is 0.87 h wide and 0.57 h deep, so at 2.81
+      // it rendered 2.45 world across against the preservator's 4.9 and the arch's 4.6 and read as
+      // the runt of the four. 3.5 puts it at 3.05 wide by 3.5 tall, in family with the preservator's
+      // 2.4 x 3.6 pod and close to the 3.21 the retired mesh covered. EVERYTHING below is a fraction
+      // of this, so it all scales with the row
+      h: 3.5,
+      // the one with the most to lose from a hashed turn: its pale eye discs ARE its read, and a roll
+      // that put them round the back left a blank lump. re-measured on the new mesh as area-weighted
+      // albedo luminance per 30 degrees, it now peaks DEAD-ON (0.0684 against the next bin's 0.0496)
+      // where the retired one straddled 60-120 — so this is still right, and now cleanly so
       yaw: FRONTAL,
       light: null, // pale flesh-pink eye was 0xf28c80 / mul 1.2 — see the assimilation row above
-      anim: null,  // worked case by case
-      pulse: null,
+      anim: null,  // the `curl` below is this prop's motion, and it is a better fit than a sway: see
+      pulse: null, // the PropCurl header for why neither of these two can express a radial fan
+      // the tendrils. a tangential sweep about the DEPTH axis, so every tip moves across the screen
+      // whichever way it sticks out, gated off the core and off the root pool. every gate number is
+      // measured off this mesh, in units of its own height:
+      //   - distance from that axis, above the height floor, runs p50 0.230 / p90 0.342 / max 0.501,
+      //     so dFloor 0.28 -> dSoft 0.14 leaves the median body still, moves 27% of the upper mesh
+      //     partially and the outer 3% fully — a whip that tapers along its own limb
+      //   - the ROOT POOL is 0.47-0.68 from that axis, i.e. FARTHER than any tip, so no radial gate
+      //     can exclude it and yFloor is the term that does. the pool ends by yn 0.2 and the trunk is
+      //     thin (radius p50 0.121) through yn 0.2-0.3, so 0.20 -> 0.32 cuts exactly at the waist
+      //   - the eyes sit at 0.034-0.262 from the axis and their discs reach 0.295, which is weight
+      //     0.026. the eye field does not move, which is the point of gating radially at all
+      curl: {
+        curl: 0.16,   // a tip 0.42 h out swings 0.24 world at h 3.5, ~11px at the resting camera.
+                      // up from 0.13 because `wave` below bends a limb into an S, and the middle of
+                      // an S travels less than a rigid arc's does
+        rate: 0.125,  // `t` runs at 1 per BASE_MS, i.e. 6.67/s, so a ~8s sweep. it shipped at twice
+                      // this and read as a twitch: the tips travel the same distance either way, so
+                      // the only thing speed changes is whether it reads as drifting or as flicking
+        lobes: 3,     // three waves round the fan, so neighbouring tendrils lead and lag each other
+        wave: 2.5,    // the moving part of a limb spans d 0.28..0.50, i.e. 0.22 of the prop's height,
+                      // so 2.5 cycles per height is a bit over half a wave along one — enough for a
+                      // clear S without the limb folding back on itself
+        axis: 0.60,   // the core the tendrils radiate from, which is well above the prop's mid-height
+        yFloor: 0.20,
+        ySoft: 0.12,
+        dFloor: 0.28,
+        dSoft: 0.14,
+      },
       core: null,
       fly: null,
-      shine: null,
+      shine: null, // the glisten is part of `eyes` below, which is per-eye by construction — a shine
+                   // helix would only light an eye when it happened to pass one
+      // the eyes, repainted. eight of them, and there are only eight: two more dots in the art that
+      // look like tiny eyes measure as a vestigial bump and a hole through the flesh, with no sclera
+      // in either.
+      //
+      // every centre and radius is measured off the baked atlas by BARYCENTRIC surface sampling —
+      // never by triangle centroids, which ask "is the middle of this triangle pale" and so miss every
+      // triangle straddling the sclera edge. that bias under-read these radii once already, and the
+      // orthographic check drawn the same way agreed with it. `z` is the cap's APEX (the frontmost
+      // surface in the column) rather than the centroid of the pale ring, because the shader's slab
+      // test is anchored there. the frame is render.world.PropGlow's: x/z off the bounding box's XZ
+      // centre, y off its floor, all over the Y span. docs/3d-changes.md carries the method and its
+      // traps. THESE DIE WITH THE MESH — regenerate it and they paint discs onto flesh
+      eyes: {
+        list: [
+          { x:  0.034, y: 0.605, z: 0.144, r: 0.078 }, // the big central one
+          { x:  0.030, y: 0.788, z: 0.105, r: 0.056 },
+          { x: -0.115, y: 0.717, z: 0.098, r: 0.052 },
+          { x:  0.038, y: 0.387, z: 0.133, r: 0.056 },
+          { x: -0.126, y: 0.518, z: 0.102, r: 0.030 },
+          // on the FLANK, and the one the automated fit could not settle: its axis comes from the
+          // shared anchor, which points too far forward for an eye this far round the body, so the
+          // radial profile smears and never forms a plateau. centre and radius read off an
+          // orthographic dump instead — the profile agreed on y and was 0.01 short on both x and r
+          { x:  0.266, y: 0.599, z: 0.072, r: 0.036 },
+          { x:  0.178, y: 0.489, z: 0.106, r: 0.039 },
+          { x:  0.180, y: 0.700, z: 0.093, r: 0.039 },
+        ],
+        // BEHIND the eye field, not among it. every eye on this prop sits on one near-flat face at
+        // z 0.05-0.12, so their own centroid lands at z 0.10 — a hair in front of the big central eye,
+        // whose outward direction would then be a 0.02-long vector pointing anywhere. from z -0.35 the
+        // whole set gets a stable direction that still tilts the flanking eyes outward
+        ax: 0.0,
+        ay: 0.60,
+        az: -0.35,
+        // iris and gaze are ONE decision, not two: they share the disc, and iris + gaze is how close
+        // to the rim the iris may get. it first shipped 0.52 / 0.30 — a big iris with nowhere to go,
+        // which at 6.6px of eye radius is under a pixel of travel and reads as painted on. traded the
+        // other way round: a smaller iris, and most of the disc given over to somewhere to move
+        iris: 0.42,
+        pupil: 0.55, // of the IRIS, so ~23% of the eye — a ~3px dot on the big one
+        gaze: 0.48,  // 0.42 + 0.48 = 0.90 of the radius at full throw, so the iris reaches the rim
+                     // without crossing it. ~3px of travel on the big eye against the old ~1px
+        gazeRate: 0.07,  // `t` runs at 6.67/s, so a ~2.1s fixation, spread 1.6-3.0s across the eyes
+        gazeSnap: 0.06,  // ~0.13s of that spent moving — the flick
+        sclera: 0xc2b5b0,    // measured means of the baked eye patches, so the repaint sits in the
+        irisColor: 0x6b4a2e, // art rather than on top of it
+        pupilColor: 0x120c10,
+        // the flesh in an ANNULUS just outside the eyes (87/59/84), not the prop's whole-body mean,
+        // which is what it shipped as: that came out 71/41/69 because the root pool and the shaded
+        // back are half the surface and both are much darker than the rim an eye actually sits in.
+        // 1.6x apart in LINEAR, which is why a shut eye read as a hole punched in the body
+        lid: 0x573b54,
+        blinkRate: 0.035,    // ~29s per eye, unsynchronised, so something on the prop blinks every
+                             // few seconds and no two ever go together
+        blinkDuty: 0.05,     // ~1.4s of that shut
+        glint: 2.4,   // sclera linear luma 0.49 x 2.4 = 1.18 against BLOOM_THRESHOLD 0.9, so the wet
+                      // spot haloes and the sclera under it does not
+        glintR: 0.30,
+        glintOff: 0.38, // up and to the left, where the tunnel's fixtures are — see PropGlow for the
+                        // direction, which is shared by every eye because one room has one light
+      },
       arc: null,
       tether: null,
     },

@@ -136,13 +136,14 @@ class SewerArea implements Area3D
         {
           SewerMask.patchMesh(b.solid.mesh);
           SewerMask.patchMesh(b.ghost.mesh);
-          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse);
-          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse);
-          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse);
-          // the surface glow LAST, and it takes no hull: totalEmissiveRadiance only exists in a lit
-          // shader, and an outline marker must not luminesce anyway
-          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine);
-          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine);
+          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          // the surface glow and the repainted eyes LAST, and neither takes a hull: totalEmissiveRadiance
+          // only exists in a lit shader, an outline marker must not luminesce, and an outline that
+          // carried eyes would draw them over the body it is meant to trace
+          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine, b.model.eyes);
+          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine, b.model.eyes);
         }
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
