@@ -1996,3 +1996,130 @@ is the documented iGPU power-state drift, and with no simultaneous A/B there is 
 from it. `calls` and `idle` are the honest numbers here.
 
 **Verdict: landed, art values open.**
+
+## The preservator BREATHES: a swell + twist above a floor line, and an amber glow inside the pod
+
+The third organ. Its mesh was regenerated first — an amber pod caged in purple veins, splayed into a
+flat root pool — and two things about that source had to be measured before any shader work.
+
+**`tris: 1200` silently crushed it to 1,199.** That target was written for a 65,726-vert 100k master
+where the seam network floored meshopt at 5,452. The new source arrives AT the budget (4,871 tris,
+3,435 verts over 2,438 positions = **1.41×**), so meshopt really did reach 1200 — a third of what
+the other three habitat props ship at, sanding off the vein lattice that is the whole read. `tris:
+-1`, the watcher's and crates' case. 4,871 at `tex: 512` = 54 texels/tri, in the 43-55 band.
+
+**`h` 4.06 → 3.6.** The bbox is 1.36 h wide and 1.29 h *deep*, nearly all of it the pool, so height
+is a poor proxy for how much cell a prop eats: 4.06 would have laid a 5.5-unit pool over a 4-unit
+cell. 3.6 puts it at ~4.9, the width the arch already overhangs to.
+
+**The radius profile is what the row is fitted to**, in units of its own height: 0.51 at the pool →
+a **waist of 0.29 at h 0.22** where the splay ends → 0.33 by h 0.43 → 0.05 at the crown. That waist
+is `pulse.floor`, and it is the one line where a discontinuity in the weight is invisible, because
+the silhouette already turns a corner there.
+
+New `pulse` column + `PropPulse`, folded into `PropShader`'s existing patch (one hook, one key). Two
+terms, both gated by `smoothstep(floor, floor+soft, h)` so the roots never move: a radial **SCALE**
+about the prop's own axis — a scale and not an offset, so the displacement is proportional to how
+far out a vertex already is, which is both what an inflating body does and what keeps the field
+continuous under any weight — and a **TWIST** about the same axis. The twist is what actually reads
+as "swirl": on a body of revolution a lateral sway only leans the thing, while a turn slides its
+whole painted surface around itself. It takes the instance phase ONLY, never the sway's `strand`
+term — a breath whose phase varies per vertex is not a breath, it is a shear.
+
+The ask was "swirl the purple parts". **A vertex displacement must not be masked by albedo here**: a
+TRELLIS atlas cuts its charts along high-curvature ridges, which is exactly where the veins are, so a
+purple/amber mask boundary lands on a UV seam and pulls duplicated vertices apart. The cage is the
+only high-contrast detail on the pod, so an unmasked body swell reads as the cage writhing anyway.
+
+The glow reuses `PropGlow` with two additions: a `PropKey` enum picking the mask ratio, and `yLo` so
+the mote climb starts above the root pool (a third of a 3-mote budget otherwise lights nothing). The
+key is **`g / b`** and blue alone is the discriminator — measured per triangle, area-weighted, in
+linear: pod and cage carry nearly the same red and green and differ **6.7× in blue**. `min(r,g)/b`
+is byte-identical on this atlas (g never exceeds r), so that fallback is dead. Modes: cage **0.5**,
+pool brown **1.3**, amber **2.5-3.8** → band `[1.9, 2.7]`, 23.1% of surface lit and spread all round
+the body (9-40% per 30° of azimuth), so `yaw: HASHED` stays.
+
+**The trap: `moteR` 0.20 was too big and it did not look like "too big".** At that reach one mote
+covers the entire amber face, so three of them add to a flat uniform gold panel and the pod's own
+painted shading vanishes under it — it reads as a lit surface, not as something lit from inside.
+0.13 (4× the biomineral's radius, ~15× its area) is a discrete blob rising inside a shell. **An
+effect has to be SMALLER than the region it travels or there is nothing to see it travel against.**
+The band is deliberately soft here (~20% of the surface ramping, against the biomineral's 4%): a
+hard crystal-against-flesh edge was right there and is wrong here, because a soft mask IS the
+gradient of light leaking through a shell.
+
+`glow: 1.0` is not a placeholder. Every other glowing thing in this game sets it past 1 to clear
+`BLOOM_THRESHOLD` 0.9; this is the one that must NOT, so the level lives entirely in `base` (0.055,
+~52 sRGB of emissive over every amber texel) and `mote` (0.38). **`base` is the dominant term on
+this prop and `mote` is not** — the mask covers the whole pod while three motes cover a fifth of it,
+so "brighter overall" is `base`, and `mote` has to be raised with it or the travelling blob stops
+reading against the floor it crosses. Peak total 0.435 → linear luminance 0.285, still well under
+the threshold. The cost of a high `base` is relative contrast: it is an additive constant over an
+albedo whose own variation is smaller than it, so the pod's painted internal shading flattens as it
+rises. That is the dial to turn if the amber ever looks like a panel again.
+
+**Every one of those three numbers was retuned once, and the reason is the entry below**: they were
+first set against a pod that was rendering almost black, because the regenerated mesh arrived with a
+metallic MR map. An emissive term is judged as a RATIO to the lit surface under it, so fixing the
+material moved the target by about the amount the material had been swallowing.
+
+Cost, A/B on the same pinned free-cam pose, same protocol both legs (fresh reload → one spawn →
+pin): `calls` **57 / 57**, i.e. **zero draw-call delta**, which is the whole point of doing this in
+shaders that were already running. `progs` **99 on / 91 off** — the 8 prop permutations, all present
+after boot warm and none compiling on habitat entry. Program keys came out exactly as designed:
+`propAnimSUL` on solid and ghost, `propAnimSUP` on the unlit tactical hull (so the outline swells
+with the body), `propGlow3AMBER`, and the biomineral untouched at `propGlow8GREEN` / `propAnimSL`.
+0 console errors. 60 FPS, `frame` 16.6ms, `idle` 14.8.
+
+Motion verified against the geometry alone, with emissive killed (key `6`) so the glow could not be
+mistaken for it: two frames 5.2s apart (half a ~11s breath) put the top diff-energy tile squarely on
+the pod, and the apex rises ~6% of the prop's height between them.
+
+**Verdict: landed, art values open.**
+
+## The preservator shipped ALMOST BLACK: its regenerated MR map came back metallic
+
+Reported as "something really wrong with texture — almost completely dark, with a little bit of
+specular", which is the exact signature and not a vague complaint. A metal has **no diffuse term**;
+its base colour becomes F0, the specular tint. Underground there is no env map, so with only weak
+analytic light there is nothing left to shade and the prop renders near-black with a tight highlight.
+
+Read the MR map, do not guess. glTF packs **G = roughness, B = metalness**, so one dump settles it:
+
+| prop | MR blue (metalness) | verdict |
+|---|---|---|
+| **preservator** | mean 211, p05 **190**, p50 213, p95 229 | **~0.83 metal over the whole prop** |
+| assimilation | 44.7 | 0.18, mild |
+| watcher | 3.5 | dielectric |
+| biomineral | 0.0 | dielectric |
+
+`metallicFactor` was 1 and glTF MULTIPLIES it by the map, so the effective metalness really was 0.83.
+The 2048² **source** carries it too (metalness 210), so this came out of TRELLIS — not the bake.
+Base colour was never the problem: mean sRGB 83/50/45 (avg 59), in line with the prop family.
+
+Fix is one line, `"dropMR": true` — `sewer-pile-2`'s case exactly. `models.mjs` drops the texture,
+sets `metallicFactor` 0 and `roughnessFactor` 1, and the entry's own `roughness: 0.35` then re-applies
+after it, landing effective roughness at 0.35 — which is where the family already sits (biomineral
+0.986 × 0.35 = 0.345, watcher 0.84 × 0.3 = 0.25, assimilation 0.996 × 0.45 = 0.45). The map's
+roughness variation is discarded with it, and that is a feature here: this prop's green channel spans
+p05 132 to p95 233, so keeping it would have put 5% of the surface at effective roughness 0.18 —
+glossier than any other organ. glb 1123KB → **747KB**, one texture lighter.
+
+**Confirmed live before changing anything, with debug key `M`** (force every lit material matte):
+under it the same three pods render exactly as the reference art, amber shells in purple vein cages.
+That is what separates "the material is metallic" from "the material is metallic AND that is the
+whole story" — and it also cleared the pulse and glow shaders, which were the obvious suspects since
+they had just landed on this prop.
+
+**The trap is documentation, not code.** The retired mesh's entry said "MR map pure green, no
+dropMR", and that line was carried forward verbatim into the rewritten note for the regenerated one
+without re-measuring. It was true of a mesh that no longer existed. TRELLIS is not bit-deterministic
+and metalness is a per-generation lottery — `sewer-pile-1` came back green and `sewer-pile-2` cyan
+from the same generator on the same day. **Re-read the MR map after every regeneration; a previous
+entry's verdict about a prop is a claim about a FILE, not about a subject.**
+
+Knock-on: the glow's `base` / `mote` / `moteR` all had to be retuned upward, because an emissive term
+is judged as a ratio to the lit surface under it and a black surface flatters any addition. That is
+its own lesson — **tune emissive last, and never on a prop whose material is still in question.**
+
+**Verdict: landed.**

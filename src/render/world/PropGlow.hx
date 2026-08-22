@@ -3,18 +3,25 @@ package render.world;
 import three.Three;
 import render.RenderConfig;
 import render.world.ObjModels.PropShine;
+import render.world.ObjModels.PropKey;
 import render.world.PropShader.ShaderPatch;
 
 // the grown props' SURFACE GLOW, folded into the material they already draw with. two terms, both
 // pure fragment shader, both driven by one shared clock:
-//   MASK   — the prop's OWN baked albedo, keyed on greenness, so only the mineral lights and the
-//            tendrils and mound around it stay dark. keying on colour rather than on a painted map is
-//            not a shortcut: a TRELLIS atlas is a shattered mosaic of tiny charts, so nothing here can
-//            be authored in uv space, and a hand-painted emissive map is invalidated the moment the
-//            mesh is regenerated (new uvs, so it lights random patches — see docs/3d-changes.md).
+//   MASK   — the prop's OWN baked albedo, keyed on a channel RATIO the row picks (PropKey), so only
+//            the part of the prop that is supposed to luminesce does. keying on colour rather than on
+//            a painted map is not a shortcut: a TRELLIS atlas is a shattered mosaic of tiny charts, so
+//            nothing here can be authored in uv space, and a hand-painted emissive map is invalidated
+//            the moment the mesh is regenerated (new uvs, so it lights random patches — see
+//            docs/3d-changes.md).
 //   MOTES  — a few loci travelling a slow helix through the prop's own bounding box. each lights the
-//            surface NEAREST to it, so what reads is a bright speck sliding over the mineral, round
-//            the back and up again. this is the term that moves.
+//            surface NEAREST to it, so what reads is a speck sliding over the mineral, round the back
+//            and up again. this is the term that moves.
+//
+// the two tunings shipped so far are near opposite ends of what it can do, and both are on one row
+// each in ObjModels: the biomineral's are 8 hard specks that clip and bloom on a hard-edged mask, the
+// preservator's are 3 huge dim blobs on a deliberately soft one, which reads as light inside a shell
+// rather than as anything sitting on it.
 //
 // a THIRD term was tried and removed: object space quantised into cells, each swelling on a beat of
 // its own, as a low shimmer so the crystal was not dead between motes. It read as flat rectangular
@@ -99,6 +106,7 @@ class PropGlow
         moteR: { value: s.moteR },
         r: { value: s.r },
         rTop: { value: s.rTop },
+        yLo: { value: s.yLo },
         rise: { value: s.rise },
         spin: { value: s.spin },
         front: { value: s.front },
@@ -115,6 +123,7 @@ class PropGlow
         'uniform float propGlowMoteR;\n' +
         'uniform float propGlowR;\n' +
         'uniform float propGlowRTop;\n' +
+        'uniform float propGlowYLo;\n' +
         'uniform float propGlowRise;\n' +
         'uniform float propGlowSpin;\n' +
         'uniform float propGlowFront;\n' +
@@ -147,8 +156,12 @@ class PropGlow
       //
 // vGlowCam is where the CAMERA is, as an azimuth in this instance's own local frame — the anchor the
 // motes' arc is centred on, so they never orbit round the far side. it has to be computed per
-// instance and cannot be a uniform: `yaw` is HASHED per placement, so local +Z points somewhere
-// different for every biomineral in a level. mat3 transpose is written out as two dots because
+// instance and cannot be a uniform, and the reason is the TRANSLATION rather than the rotation: two
+// props of a kind stand in different cells, so the direction from each to the camera differs even
+// when they are posed identically. (It was originally written for a stronger version of the same
+// point — every glowing prop took PropYaw.HASHED then, so local +Z pointed somewhere different for
+// each. They are all FRONTAL now; the per-instance frame is still required.) mat3 transpose is
+// written out as two dots because
 // three compiles its built-in materials as GLSL ES 1.00 even on WebGL2 (`transpose()` is 3.00 only),
 // and the instance scale is uniform so it cancels inside the atan. BRACED: both this and
 // render.world.PropShader's sway inject at <begin_vertex>, which is inside main(), so unbraced
@@ -172,15 +185,20 @@ class PropGlow
         '  }';
       // BRACED, and the loop bound is a LITERAL: the count rides the program cache key below, because
       // GLSL wants a constant bound and because a row that changes it must compile its own program
+      // a RATIO and not a difference. diffuseColor here is LINEAR (three's sampler decoded the sRGB
+      // map), where the albedo's absolute levels are tiny — a difference key would have to be retuned
+      // for every prop, while a ratio is the same number in either space and does not move with how
+      // dark the texel is. WHICH ratio is the row's, because it depends entirely on what the prop's
+      // own art puts next to what: see PropKey in render.world.ObjModels for the measured modes
+      var key = switch (s.key)
+        {
+          case GREEN: 'diffuseColor.g / max( max( diffuseColor.r, diffuseColor.b ), 1e-4 )';
+          case AMBER: 'diffuseColor.g / max( diffuseColor.b, 1e-4 )';
+        };
       var frag =
         '#include <emissivemap_fragment>\n' +
         '  {\n' +
-        // greenness as a RATIO and not a difference. diffuseColor here is LINEAR (three's sampler
-        // decoded the sRGB map), where the albedo's absolute levels are tiny — a difference key would
-        // have to be retuned for every prop, while the ratio is the same number in either space and
-        // does not move with how dark the texel is. measured on the shipped atlas: the mineral sits
-        // near 2.3, the violet body near 0.87
-        '  float glowKey = diffuseColor.g / max( max( diffuseColor.r, diffuseColor.b ), 1e-4 );\n' +
+        '  float glowKey = ' + key + ';\n' +
         '  float glowMask = smoothstep( propGlowKeyLo, propGlowKeyHi, glowKey );\n' +
         '  float glowSum = propGlowBase;\n' +
         '  for ( int i = 0; i < ' + s.motes + '; i ++ )\n' +
@@ -203,7 +221,11 @@ class PropGlow
         '    float gsw = propGlowTime * propGlowSpin * ( 0.7 + 0.6 * g3 ) + g2 * 6.2832;\n' +
         '    float ga = vGlowCam + propGlowFront * sin( gsw );\n' +
         '    float gr = propGlowSpan * propGlowR * mix( 1.0, propGlowRTop, gu );\n' +
-        '    vec3 gp = propGlowCentre + vec3( cos( ga ) * gr, propGlowSpan * gu, sin( ga ) * gr );\n' +
+        // the climb runs yLo..1 of the span rather than the whole of it, for a prop whose glowing
+        // part does not reach the floor — the mask would reject the bottom of the lap anyway, and on
+        // a low mote count that is a real share of the budget spent lighting nothing
+        '    vec3 gp = propGlowCentre + vec3( cos( ga ) * gr,\n' +
+        '      propGlowSpan * mix( propGlowYLo, 1.0, gu ), sin( ga ) * gr );\n' +
         // a bell over the climb: gu wraps at 1, and without this the mote would blink out at the
         // crown and back in at the foot every lap. SQRT of the sine, not the sine: a plain bell has
         // a mote under half brightness for half its climb, so with 8 of them several are always
@@ -247,6 +269,7 @@ class PropGlow
           shader.uniforms.propGlowMoteR = u.moteR;
           shader.uniforms.propGlowR = u.r;
           shader.uniforms.propGlowRTop = u.rTop;
+          shader.uniforms.propGlowYLo = u.yLo;
           shader.uniforms.propGlowRise = u.rise;
           shader.uniforms.propGlowSpin = u.spin;
           shader.uniforms.propGlowFront = u.front;
@@ -273,11 +296,11 @@ class PropGlow
       mat.onBeforeCompile = hook;
       // three keys its program cache on base material params, NOT on onBeforeCompile — without a key
       // of our own a glowing program could be handed to an identical unlit-of-this prop. CHAINED,
-      // because these materials already carry SewerMask's hook and its key, and the mote count is in
-      // it because that count is a literal in the source above
+      // because these materials already carry SewerMask's hook and its key. the mote count and the
+      // mask key are both in it because both are LITERALS in the source above, not uniforms
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
-          'propGlow' + s.motes;
+          'propGlow' + s.motes + s.key;
       mat.needsUpdate = true;
     }
 }

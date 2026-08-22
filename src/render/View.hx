@@ -468,9 +468,9 @@ class View {
                         HULL(C.color, C.hullW)).mesh;
                       M.patchMesh(s);
                       M.patchMesh(g);
-                      render.world.PropShader.patchMesh(s, m.anim);
-                      render.world.PropShader.patchMesh(g, m.anim);
-                      render.world.PropShader.patchMesh(h, m.anim);
+                      render.world.PropShader.patchMesh(s, m.anim, m.pulse);
+                      render.world.PropShader.patchMesh(g, m.anim, m.pulse);
+                      render.world.PropShader.patchMesh(h, m.anim, m.pulse);
                       render.world.PropGlow.patchMesh(s, m.shine);
                       render.world.PropGlow.patchMesh(g, m.shine);
                       done();

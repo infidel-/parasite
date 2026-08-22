@@ -71,9 +71,10 @@ class SewerArea implements Area3D
 // which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
 // WALL turns its back on the adjacent wall (an exit ladder is bracketed to masonry) or stays unturned
 // in the open; dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east).
-// HASHED takes a full-circle turn hashed off the cell, so four biomineral formations in one habitat
-// are not four clones — and because the hash is the CELL, a level looks the same every time it is
-// entered rather than re-rolling on re-entry.
+// HASHED takes a full-circle turn hashed off the cell, so four of a prop in one level are not four
+// clones — and because the hash is the CELL, a level looks the same every time it is entered rather
+// than re-rolling on re-entry. No habitat organ takes it any more: each was generated from a single
+// front-on reference and so has exactly one authored face (see PropYaw in render.world.ObjModels).
 // FRONTAL is a plain 0: the tunnel camera rests looking down -Z with no yaw of its own, so unturned IS
 // facing it. a glb whose authored front does not point that way is corrected in render.Models.yawFix,
 // baked into the verts at load — that is a fact about the model, not about how a prop is posed
@@ -135,9 +136,9 @@ class SewerArea implements Area3D
         {
           SewerMask.patchMesh(b.solid.mesh);
           SewerMask.patchMesh(b.ghost.mesh);
-          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim);
-          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim);
-          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim);
+          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse);
+          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse);
+          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse);
           // the surface glow LAST, and it takes no hull: totalEmissiveRadiance only exists in a lit
           // shader, and an outline marker must not luminesce anyway
           render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine);
