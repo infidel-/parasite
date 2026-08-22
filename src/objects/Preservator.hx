@@ -35,9 +35,10 @@ class Preservator extends HabitatObject
   public override function canActivateNear(): Bool
     { return true; }
 
-// a grown body is solid: nothing walks through it. this is also what retires the see-through fade
+// a grown body is solid: nothing walks through it. that also makes the see-through fade UNREACHABLE
 // for this prop — the ghost batch in render.world.ObjModels only ever serves the placement the
-// player is STANDING on, and nothing can stand here now
+// player is STANDING on, and nothing can stand here now. unreachable, NOT retired: the ghost batch
+// is still built and culled for every model path, because that code also fades the exit ladder
   public override function isWalkable(): Bool
     { return false; }
 

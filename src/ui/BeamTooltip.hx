@@ -120,6 +120,23 @@ class BeamTooltip
       restartBeam();
     }
 
+// re-place an already-shown screen-anchored panel WITHOUT rebuilding its content, returning false if
+// this is a different target and the caller has to go the long way round. it exists purely so a
+// per-frame driver need not build html that showBeamAt would throw away on an unchanged id: an
+// object's rows re-scan the area's whole AI list, and a debug block walks the host's inventory,
+// skills and organs — all of it 60 times a second while Ctrl is held, for a panel already on screen
+  public function trackAnchor(cx: Float, cy: Float, id: Int): Bool
+    {
+      if (!visible ||
+          !screenAnchored ||
+          id != targetID)
+        return false;
+      anchorX = cx;
+      anchorY = cy;
+      updatePosition();
+      return true;
+    }
+
 // show the panel anchored at a fixed viewport px point (3D street view: the projected AI head)
 // instead of a tile. id detects target changes for re-animation; the driver re-calls each frame so
 // the anchor tracks the follow-camera

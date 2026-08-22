@@ -873,9 +873,14 @@ class View {
     }
     // the beam id keys BeamTooltip's re-animation and nothing else, so an object's is negated —
     // AI and object ids come from separate counters and would otherwise collide (AreaTooltip.beamID)
+    var id = (hit.ai != null ? hit.ai.id : ui.AreaTooltip.beamID(hit.obj));
+    // still the same target: just move the anchor. the content build is NOT free (see trackAnchor)
+    // and showBeamAt would discard it, so it must not happen before this test
+    if (tip.trackAnchor(hit.px, hit.py, id))
+      return;
     if (hit.ai != null)
-      tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
-    else tip.showBeamAt(hit.px, hit.py, ui.AreaTooltip.beamID(hit.obj), tip.getObjectText(hit.obj));
+      tip.showBeamAt(hit.px, hit.py, id, tip.getTooltipText(hit.ai));
+    else tip.showBeamAt(hit.px, hit.py, id, tip.getObjectText(hit.obj));
   }
 
 // pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the

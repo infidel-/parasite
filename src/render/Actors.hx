@@ -449,7 +449,12 @@ class Actors {
 // a 3D prop there is no billboard to raycast at all
   public function pickTarget(clientX:Float, clientY:Float, rect:Dynamic):PickHit
     {
-      var hit:PickHit = { ai: null, obj: null, px: 0.0, py: 0.0 };
+      var hit:PickHit = {
+        ai: null,
+        obj: null,
+        px: 0.0,
+        py: 0.0,
+      };
       var bestD = 1e30;
       var rad = 46.0;                                            // px hit radius around an anchor
       var los = game.player.vars.losEnabled;
@@ -463,8 +468,16 @@ class Actors {
           if (a == null ||
               a.op < 0.3)
             continue;
-          headPoint(a, v);
-          var d = projDist(v, rect, clientX, clientY);
+          // an AI is hit-tested as a capsule too, and it HAS to be: objects below are, and both
+          // arms compete on one bestD, so a point-tested actor loses to any tall prop whose
+          // projected column its sprite overlaps. Measured on the preservator — an actor on its
+          // far-side neighbour has its feet inside the pod's projected segment, so hovering the
+          // body picked the pod and only the head still resolved the actor.
+          // FEET to HEAD POINT, not to the top of the quad: the far end is what projSeg leaves as
+          // the anchor, and headPoint is where the beam has always attached. the remaining half of
+          // the sprite is inside the hit radius anyway
+          var fy = WorldCtx.floorY(a.col, a.row);
+          var d = projSeg(a.x, a.z, fy, fy + Sprites.SIZE * 0.5, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
@@ -480,9 +493,16 @@ class Actors {
       // are exactly the things nobody points at
       for (o in game.area.getObjects())
         {
+          // the SAME visibility expression the object draw loop uses, and it has to be copied
+          // whole: a free parasite senses vents and drains through walls, so gating the pick on LOS
+          // alone left objects painted on screen with their through-wall mark and no tooltip
+          var vis =
+            !los ||
+            game.playerArea.sees(o.x, o.y) ||
+            (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
           if (o.entity == null ||
               !o.visible() ||
-              (los && !game.playerArea.sees(o.x, o.y)))
+              !vis)
             continue;
           var a = actors.get(o.entity);
           if (a == null ||
@@ -498,7 +518,7 @@ class Actors {
           var m = render.world.ObjModels.modelFor(o.getModelKey());
           var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
           var fy = WorldCtx.floorY(a.col, a.row);
-          var d = projSeg(a.x, fy, a.z, a.x, fy + top, a.z, rect, clientX, clientY);
+          var d = projSeg(a.x, a.z, fy, fy + top, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
@@ -515,19 +535,22 @@ class Actors {
       return hit;
     }
 
-// project a world SEGMENT to client px and return the cursor's SQUARED distance to it, leaving the
-// TOP end's px in _pjx/_pjy — the beam anchors on the crown wherever along the body the cursor sat,
-// which keeps the dot stable while the cursor moves down a tall prop. a degenerate segment (a ground
-// decal) falls out of the same arithmetic as a plain point test, so there is no special case
-  function projSeg(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
+// project a world VERTICAL segment to client px and return the cursor's SQUARED distance to it,
+// leaving the TOP end's px in _pjx/_pjy — the beam anchors up there wherever along the body the
+// cursor sat, which keeps the dot stable while the cursor moves down a tall prop. a degenerate
+// segment (a ground decal) falls out of the same arithmetic as a plain point test, no special case.
+// ONE x and ONE z rather than two world points, because every caller wants a segment standing
+// straight up out of a cell: that is four fewer args and, more to the point, it removes two
+// interchangeable coordinate triples that would mis-order without a compile error
+  function projSeg(x:Float, z:Float, yLo:Float, yHi:Float,
       rect:Dynamic, clientX:Float, clientY:Float):Float
     {
-      _pa.set(ax, ay, az);
+      _pa.set(x, yLo, z);
       var da = projDist(_pa, rect, clientX, clientY);
       if (da >= 1e30)
         return 1e30;
       var fx = _pjx, fy = _pjy;
-      _pb.set(bx, by, bz);
+      _pb.set(x, yHi, z);
       var db = projDist(_pb, rect, clientX, clientY);
       if (db >= 1e30)
         return 1e30;

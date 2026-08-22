@@ -34,9 +34,11 @@ class Biomineral extends HabitatObject
   public override function getModelKey(): String
     { return 'habitat_biomineral'; }
 
-// a grown body is solid: nothing walks through it. this is also what retires the see-through fade
+// a grown body is solid: nothing walks through it. that also makes the see-through fade UNREACHABLE
 // for this prop — the ghost batch in render.world.ObjModels only ever serves the placement the
-// player is STANDING on, and nothing can stand here now
+// player is STANDING on, and nothing can stand here now. unreachable, NOT retired: build() still
+// makes the ghost batch for every model path and cull() still walks it every frame, because that
+// same code is what fades the exit ladder, which the player must stand on to climb out
   public override function isWalkable(): Bool
     { return false; }
 

@@ -2618,9 +2618,17 @@ class Test {
     }
 
 // get path from x1, y1 -> x2, y2
+// the START is deliberately NOT required to be walkable, only the destination. an actor can legally
+// stand on a tile it could not walk onto: a habitat organ grown under the parasite, an object that
+// became solid while somebody stood there, a save loaded after such a change (recalcAllTiles
+// re-derives walkability from the objects, under whoever is standing on them). while that check was
+// here every one of those left the actor unable to path ANYWHERE — mouse click-to-move dead for the
+// player, and ai.AI.moveToGoal / DefaultLogic / CommandLogic / CustosLogic / RivalBaseOrganAttackLogic
+// all silently pathless for an AI. walking OFF such a tile is fine and always was; aPath.Node tests
+// each NEIGHBOUR it expands, so the start cell's own state never mattered to the search
   public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node>
     {
-      if (!isWalkable(x1, y1) || !isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
+      if (!isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
         return null;
 
       try {

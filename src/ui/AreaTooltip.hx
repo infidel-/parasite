@@ -1,7 +1,8 @@
 // area inspect tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip).
 // covers both things worth pointing at in an area: an AI, and an object. it was AI-only and named
-// AITooltip for it, and the stylesheet moved with it — `#hud-area-info` / `.area-tip-*`, which is
-// only safe because no mod's own css under examples/ references either name
+// AITooltip for it, and the stylesheet moved with it — `#hud-inspect-info` / `.area-tip-*`, which is
+// only safe because no mod's own css under examples/ references either name. NOT `#hud-area-info`:
+// see the constructor, that id belongs to ui.RegionTooltip
 package ui;
 
 import ai.AI;

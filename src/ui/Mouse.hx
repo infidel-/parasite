@@ -75,7 +75,8 @@ class Mouse
     }
 
 // LOS test that works in both views: the 2D tile cache (area.isVisible) is only maintained while the
-// 2D view draws, so in the 3D view fall back to the player's own vision (same source Actors.pickAI uses)
+// 2D view draws, so in the 3D view fall back to the player's own vision (the source
+// render.Actors.pickTarget uses for its AI arm)
   inline function seesTile(x: Int, y: Int): Bool
     {
       if (street())

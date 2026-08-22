@@ -2166,9 +2166,10 @@ lifted sprite leaves its re-invade ring on the ground behind it. The arc has no 
 drawn between two world points and touches no pose.
 
 New `tether` column + `PropTether`, and a `drawTethers` in `PropFX` that appends into **the same
-three arrays `boltRibbon` already fills**. `boltRibbon`'s station emitter was factored out to
-`ribbonStation` / `ribbonQuads` and both callers share it, so one mesh carries every bolt and every
-cord in the level. The buffers were renamed `bolt*` -> `ribbon*` to stop the names lying.
+buffers the lightning already fills**, so one mesh carries every bolt and every cord in the level.
+(As shipped that was a `ribbonStation` / `ribbonQuads` pair factored out of `boltRibbon` inside
+`PropFX`, with the buffers renamed `bolt*` -> `ribbon*`. A later entry below moves the lot into
+`render.actors.Ribbon`; the sharing is the part that survived.)
 
 Cost is **not** "one call per cord" and **not** zero either, and the honest bound is worth writing
 down: the mesh already existed, but it was `visible = false` whenever no bolt happened to be alight
@@ -2224,3 +2225,43 @@ opposite of what this function's header used to claim ("a tilted ring was tried 
 like a hoop turning"). That note was written when the arch had a full swarm to read depth from.
 
 **Verdict: landed.**
+
+## The ribbon layer split out of PropFX, on the second kind of strip and not on line count
+
+`PropFX` reached 780 lines. That number is not why. It is **34% comment** (241 comment + 26 blank, so
+~513 code) and only 5th largest in `render/` behind `View` 1217, `Actors` 1006, `ObjModels` 854 and
+`RenderConfig` 847 — and adding the tethers to it had been *easy*, which is the actual test. What
+changed was that a SECOND kind of strip appeared, and the ribbon subsystem turned out to be **236 of
+those 513 code lines** with its own mesh, material, buffers, vertex format, upload path and warm
+entry. That is a class, and it now is one: `render.actors.Ribbon`.
+
+The two things that made it worth doing:
+
+- **A NaN guard was living in two hand-copies.** `drawArcs` and `drawTethers` carried
+  character-identical width-axis blocks — cross product, length, zero-length guard, normalize —
+  differing only in variable names. Its failure mode is one NaN texel through the bloom downsample
+  blacking out the entire frame, which this log already carries an entry for. **A guard that survives
+  on copy discipline is a matter of time**, and a third strip would have been the third copy.
+- **The one-mesh invariant became structural.** Sharing three arrays is the whole reason a level's
+  every bolt and every cord is one draw call. Between two functions in one file that was a thing to
+  remember; as a class it cannot be got wrong unnoticed.
+
+What did NOT move is the PATH — how a bolt zigzags or a cord bows is prop-specific and stayed. That
+is why the file landed at 630 rather than the ~430 first estimated: the path generators are ~130 code
+lines and they belong where they are. **The duplication and the invariant were the win, not the line
+count.**
+
+`BoltOpts` / `TetherOpts` agreed on fourteen fields, comments and all; both now extend a shared
+`RibbonPass` and add only `arc`/`bucket`/`slot` and `tether`. A follow-up review then took three more
+out of it: `station` was nine all-Float args carrying **three mutually swappable coordinate triples**,
+so it reads the width axis off the Ribbon's own fields instead — six args, one triple, and nothing
+left that mis-orders without a compile error.
+
+Deliberately not split: the core and the fireflies, 61 code lines between them, sharing a clock the
+core material references BY IDENTITY, one per-frame object walk and one hash.
+
+Verified rather than assumed — a refactor that quietly drops a strip looks like nothing at all. Bolts
+alone `calls 73`; then the full path driven live (attach, harden grip x6, invade, preserve) to
+exercise the tether arm specifically, `calls 76`, `prog 100` and zero console errors both times.
+
+**Verdict: landed. Zero behaviour change.**
