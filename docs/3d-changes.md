@@ -2265,3 +2265,280 @@ alone `calls 73`; then the full path driven live (attach, harden grip x6, invade
 exercise the tether arm specifically, `calls 76`, `prog 100` and zero console errors both times.
 
 **Verdict: landed. Zero behaviour change.**
+
+## The watcher's new mesh: three of its row's constants were fitted to the mesh it replaced
+
+A regenerated glb is not a drop-in, and this one silently invalidated most of what its `models.json`
+entry and its `ObjModels` row said. Measured, retired vs 2026-08-22: tris/verts/unique positions
+4,798 vs **4,754 / 4,632 / 2,372 = 1.95x**; bbox in units of height 1.14 x 1 x 0.57 vs **0.87 x 1 x
+0.57**; baked albedo mean sRGB 113/78/83 (avg 91) vs **72/42/69 (avg 61)**; best-facing azimuth
+60-90 degrees straddling vs **dead-on** (0.0684 against the next bin's 0.0496).
+
+- **`h: 2.81` was fitted to a body 1.14 h wide.** At 0.87 h wide the same number renders 2.45 world
+  across against the preservator's 4.9 and the arch's 4.6 — the runt of the four. **3.5.**
+- **`baseColor 0.4` was fitted to an atlas at avg 91**, to pull it to the family's 46-52. The new one
+  bakes at 61 already, so 0.4 would land it near 40 — under the family, and it would crush the pale
+  eye discs the row's own comment calls this prop's whole read. **Dropped.**
+- `emissiveSrc` still pointed at a map painted for the retired uvs (now in `Unused/`). Dropped.
+
+**The rule the preservator's regeneration paid for held again, and further than it was written:** it
+says re-read the MR map after every generation. It should say re-read EVERY measured constant — the
+MR map (0 / 214 / 5, rough dielectric, no `dropMR`) was the one thing here that had NOT changed.
+
+**Verdict: landed.** `h` 3.5, no `baseColor`, no `emissiveSrc`, `yaw: FRONTAL` re-confirmed.
+
+## Reading a BAKED glb's vertices gives garbage: `make models` interleaves, the TRELLIS source does not
+
+Every measurement behind the two entries below is a hand-parse of the glb's BIN chunk. Run against
+`app/models/habitat/watcher.glb` it returned eye clusters at y 1.19 and x 0.896 — outside a bounding
+box 1.0 tall and 0.87 wide — and 76 single-triangle "clusters" out of 79 hits. Diagnosed as texture
+gutter bleed at `tex: 512`, which was **wrong**.
+
+The real cause: gltf-transform writes an INTERLEAVED vertex buffer. The source's bufferViews carry no
+`byteStride`; the bake's carries `byteStride: 32` — POSITION 12 + TEXCOORD_0 8 + NORMAL 12 — so a flat
+`new Float32Array(bin.buffer, offset, count * 3)` reads position, uv and normal as if all three were
+positions. It yields plausible-looking floats, which is what made it read as a subtler bug.
+
+Measure on the **source**. With `tris: -1` there is no weld and no simplify, so the baked geometry is
+vertex-for-vertex identical and only the texture is resized — the source is both correct and higher
+resolution. For a prop that IS decimated, the parse has to honour `byteStride`.
+
+**Verdict: trap.** Check `bufferViews[].byteStride` before trusting a hand-parse — or assert the
+values land inside the accessor's own declared min/max, which is the cheap check that catches it
+immediately.
+
+## The watcher's tendrils: neither `anim` nor `pulse` can move a radial fan, so `PropCurl`
+
+The ask was "make the tentacles swirl". Both existing vertex columns were measured against the prop
+and both fail, for reasons about the SHAPE rather than about tuning:
+
+- **`PropAnim`** weights a lateral offset by a power of normalized HEIGHT. This prop's tendrils reach
+  full extent in *every* height band from 0.2 up (`rMax` 0.39-0.44 throughout), so a height weight
+  moves the top ones, leaves the flanking ones planted, and at any amplitude that shows it drags the
+  eye-studded core with it.
+- **`PropPulse.twist`** turns about the LOCAL VERTICAL. The prop is 0.87 h wide and 0.57 h deep, so a
+  Y-rotation moves a tip almost entirely in DEPTH, where the tunnel camera sees nothing.
+
+`PropCurl` is a rotation about the **local Z** — the depth axis, which under `PropYaw.FRONTAL` points
+at the resting camera, so every tip sweeps ACROSS THE SCREEN whichever way it sticks out. Phase
+travels with the vertex's own azimuth about that axis (`lobes`, which must be an INTEGER or the wrap
+at +/-PI creases the fan along one radius), making it a wave through the fan and not a pinwheel.
+
+**The gate took two attempts and the failed one is the useful part.** A 3D distance-from-the-body's-
+centre gate looks obvious and is useless here: **797 of the 980 vertices past 0.40 are the ROOT
+POOL**, which is farther from the body's centre than any tendril tip — and 0.47-0.68 from the depth
+axis, farther than the tips there too. No radial gate of any kind can exclude it. `yFloor` is the
+term that does, and the radial gate only separates limbs from core ABOVE it.
+
+Measured, in units of height, above `yFloor`: distance from the depth axis runs p50 0.230 / p90 0.342
+/ max 0.501, so `dFloor 0.28 -> dSoft 0.14` leaves the median body still, moves 27% partially and the
+outer 3% fully. The eight eyes sit at 0.034-0.262 and their discs reach 0.295 = weight **0.009**.
+
+Both gates are POSITIONAL, which is not incidental: the preservator entry above records that a vertex
+displacement must not be masked by albedo, because a TRELLIS atlas cuts charts along high-curvature
+ridges, so a colour boundary lands on a uv seam and pulls duplicated vertices apart. Duplicated verts
+share a position, so a position gate cannot do that.
+
+Verified by pixel-diffing two frames 1.8s apart over the prop: **the tendril tips streak and the core
+mass and the root pool are black.** No new draw call, pass, geometry or module — a third block at
+`<begin_vertex>` in `PropShader`, and the program key gains a `C`.
+
+**Verdict: landed.** `curl 0.13` (a tip 0.42 h out moves ~9px), `rate 0.25`, `lobes 3`.
+
+## The watcher's eyes are REPAINTED, not animated — and the mesh is why
+
+"Can the pupils move?" cannot be answered by nudging what the generator baked: a TRELLIS atlas is a
+shattered mosaic, so a baked pupil cannot be moved in uv space, and a second one drawn over it gives
+two. `PropEyes` therefore **overwrites `diffuseColor`** inside a table of measured discs.
+
+Three measurements decided the design:
+
+- **Scale.** At `h 3.5` and the resting parasite zoom (26.4 units out, fov 45) an eye is ~15 x 8 px
+  after the camera's foreshortening and a pupil ~7px. A 2-3px gaze shift only reads if the iris is a
+  large fraction of the eye and the throw is large — which means owning the eye art, not nudging it.
+- **Normals were rejected**, on evidence that turned out not to say what it was read as saying — see
+  the follow-up entry below. Position is what shipped and it works; whether a normal-derived pupil
+  could also have worked is untested.
+- **The eyes look like flat faceted DIAMONDS** in an orthographic dump of the mesh. > CORRECTED
+  below: that was an artefact of the dump, not the mesh.
+
+Every eye drifts on three sines at rates it rolls for itself off the loop index, so no two are ever
+aimed the same way. The gaze is projected onto each eye's own tangent plane by Gram-Schmidt against a
+precomputed outward vector — no cross-product basis, which matters because several of these eyes sit
+where the outward direction is almost straight up and a `cross(up, fwd)` basis would blow up.
+
+**The first tuning shipped with pupils that did not visibly move, and the cause was three compounding
+halvings, not one wrong number:**
+
+- The tangential vector was scaled by **1/sqrt(3)**, the true bound on a vec3 of sines. Correct, and
+  useless: the tangential part has a typical length near 0.8, so the typical throw was **46%** of the
+  ceiling. CLAMPING to unit length instead spends the authored range on the common case and only
+  trims the rare overshoot. The magnitude still varies underneath, which is what keeps a pupil
+  sometimes centred and sometimes at the rim rather than endlessly circling.
+- `iris 0.52` with `gaze 0.30` is a big iris with nowhere to go. **Iris and gaze are ONE decision**:
+  they share the disc, and their sum is how close to the rim the iris may get. Traded to `0.42` /
+  `0.48` — same 0.90 sum, most of the disc now given over to somewhere to move.
+- `gazeRate 0.04` is a ~25s cycle, slower than anyone looks at one prop. **0.14**, a ~7s one.
+
+Together: ~1px of typical travel on a 13px eye became ~3px, at 3.5x the speed. Verified across four
+frames over ~9s — every eye's pupil is visibly elsewhere in each.
+
+**A "match the body" colour has to be measured where the thing SITS.** The blink's `lid` shipped as
+the prop's whole-body albedo mean, 71/41/69, and read as a hole punched in the flesh. The root pool
+and the shaded back are half the surface and both far darker than the rim an eye actually sits in;
+measured in an ANNULUS just outside the eight discs the flesh is **87/59/84**, 1.6x brighter in
+linear. Confirmed by forcing `blinkDuty` to 0.5 temporarily rather than waiting ~29s for a blink:
+a shut eye now reads as mauve flesh.
+
+**The outward anchor must sit BEHIND the eye field, not among it.** All eight are on one near-flat
+face at z 0.05-0.12, so their own centroid lands at z 0.10 — a hair in front of the central eye,
+whose outward direction would then be a 0.02-long vector pointing anywhere.
+
+Two traps in the measurement. The seed threshold is a channel RATIO, and **min/max in sRGB is not
+min/max in linear** (0.82 sRGB is ~0.65 linear) — the too-tight version found 33 of 123 eye triangles
+and split the big central eye into five clusters. And greedy clustering is order-dependent, so it
+needs a merge-to-fixed-point pass with a merge radius at least as large as the biggest eye.
+
+It lives in `PropGlow` rather than a module of its own: every uniform it needs is already there
+(local-position varying, box frame, clock, per-instance phase), and a fourth copy of the hook-chaining
+boilerplate would add another link to a cache key walked on every material. `<emissivemap_fragment>`
+is the right anchor for a diffuse write too — it runs BEFORE `lights_physical_fragment`, so a
+repainted eye is lit like the flesh around it rather than pasted flat over the shading.
+
+Live: keys `propAnimCLpropGlowE8` (solid) and `propAnimCP` (hull — curl but no eyes), with the other
+three organs byte-identical to before, so nothing already warmed recompiled. Zero console errors, and
+the frame diff shows a distinct pupil-shift blob on each of the eight.
+
+**Verdict: landed.** The eye table is measured off this atlas and dies with it — stated in the row.
+
+## The repaint left a RING of every baked eye showing, and a diagnostic tool confirmed the bug it shared
+
+Reported as "the eye overlays don't cover the underlying model eyes fully", and visible at a close
+free-cam as a larger, softer pale ring with the old concentric swirl still in it, outside each clean
+repainted disc. Three separate errors, and they had been propping each other up.
+
+**1. The near-hemisphere clip was cutting the rim off every eye.** `step( 0.0, dot( dv, ef ) )` was
+there to stop a sphere test painting the far side of the body. But the disc's centre sits at or near
+the cap's APEX, so the entire eye lies at NEGATIVE `ax` — measured, the clip rejected **48-76% of
+every disc**, and the rejection rises monotonically with radius (inner deciles ~0, the rim 8 of 9).
+That is the unpainted ring, exactly.
+
+Replaced by a CYLINDER in the eye's own frame: radial distance taken perpendicular to its axis, and
+an axial slab offset back and kept tight in front. The cap spans only ~0.16 of its own radius in
+depth, the far side of the body is 4-11 radii behind, and the one thing that can sit just in front is
+a tendril arcing over the eye — which must not be painted white. The iris and glint moved onto the
+radial component too, so both are true circles on the eye's face rather than sphere intersections.
+
+**2. Per-triangle CENTROID sampling under-read every radius.** A centroid asks "is the middle of this
+triangle pale", so every triangle straddling the sclera edge counts as flesh. Re-measured by
+barycentric surface sampling, the radii move by -25% to +50% — they were not uniformly wrong, which is
+why no single fudge would have fixed them.
+
+**3. And the check inherited the bug.** The orthographic dump used to eyeball the fit painted ONE
+CENTROID COLOUR PER TRIANGLE, so it showed the same under-read the fit was making — and it rendered
+the eyes as flat faceted diamonds, which was then written up as a property of the mesh and used to
+justify the whole design. Per-pixel uv interpolation shows what is actually there: **proper round
+eyeballs, white sclera, brown iris**. The design is unaffected — a baked pupil still cannot be moved
+in uv space — but the stated reason for it was wrong.
+
+**A diagnostic that shares its subject's bias will confirm whatever the bias says.** The dump agreed
+with the fit four times, because both asked the texture the same wrong question.
+
+Also settled: two dots that look like tiny eyes measure as a vestigial bump and a hole through the
+flesh, with no sclera in either. Eight eyes, not ten.
+
+**Verdict: landed.** Full coverage at free-cam range, no spill onto tendrils or flesh.
+
+## The gaze had to be a SACCADE, not a drift
+
+"Jerkier, like humans look from side to side." A sum of sines sweeps smoothly and reads as floating,
+whichever amplitude and rate it runs at — the failure is the shape of the motion, not its size.
+
+An eye now HOLDS one fixation and FLICKS to the next. No state: the fixation index is `floor` of the
+clock and both endpoints are hashed off that index, so `gk + 1` is the same value the next cycle
+reads as its own start and the handover cannot pop. `smoothstep` over the last `gazeSnap` of the
+cycle is the flick — 0.06 of a ~2.1s hold, so ~0.13s. The index wraps at 64 to keep the hash input
+small (it amplifies input error by 43758); the cost is a repeat every 64 fixations, unobservable when
+each eye runs at a rate of its own.
+
+Components are hashed to -1..1 rather than normalized, so the MAGNITUDE varies too and an eye settles
+near centre as often as hard to one side. Then squashed 0.55x in Y, because eyes scan side to side
+far more than up and down — in WORLD axes, which is right only because every grown organ is
+`PropYaw.FRONTAL`, so world Y is up on the prop and lies in every eye's tangent plane.
+
+Verified by per-frame change over five frames at 0.45s: **mean 14.12 on one interval against 1.79,
+2.93 and 3.86 on the others**. Hold, hold, flick — a drift would have been flat across all four.
+
+**Verdict: landed.** `gazeRate 0.07` (~2.1s, spread 1.6-3.0s across the eyes), `gazeSnap 0.06`.
+
+## The FLANK eye cannot be fitted automatically: one shared outward anchor does not serve it
+
+Every eye takes its axis from one anchor behind the eye field, which is right for the seven on the
+prop's face and wrong for the one round its side: that eye's real surface normal points further out
+than the anchor says, so the tangent-plane decomposition is skewed, its radial pale profile smears,
+and no plateau ever forms to measure an edge from. Two independent automated fits disagreed with each
+other on it and both disagreed with what the prop looks like.
+
+A ring-centroid re-fit did converge on the centre (two rounds, 379 then 408 pale samples, stable to
+0.002) and it was RIGHT about y — but 0.01 short on both x and radius, which at this eye's size is
+30%. Read off an orthographic dump instead: the sclera ran visibly down and right of the disc.
+
+**The lesson is not "measure less".** The measurement placed seven of eight eyes to a precision no
+eyeball could, and it was the measurement that showed the eighth was unreliable — the profile refused
+to form a plateau, which is the fit telling you it has failed. Take the number when the shape of the
+evidence is right and look at the thing when it is not.
+
+**Verdict: landed.** `{ x: 0.266, y: 0.599, z: 0.072, r: 0.036 }`, from 0.262 / 0.606 / 0.030. Giving
+this one eye an authored axis of its own was considered and skipped: one number fixed it, and a
+per-eye axis is a field on every row to serve a single case.
+
+## Tendrils that hinge are not tendrils: `wave` puts the bend ALONG the limb
+
+The curl's rotation angle depended on a vertex's AZIMUTH about the depth axis and on the gate, but not
+on how far out it sat — so every vertex of one limb leaned by the same angle and the fan swung as a
+set of rigid spokes with a taper. Adding a phase term proportional to distance from the axis makes the
+lean vary down a limb's own length, which is the difference between hinging and undulating. It is
+SUBTRACTED against the clock, so the ripple travels from the body out to the tips rather than standing.
+
+`wave: 2.5` cycles per prop-height, against a moving span of d 0.28..0.50 = 0.22 of the height, is a
+bit over half a wave along one limb — a clear S without it folding back on itself. `curl` went 0.13 to
+0.16 to compensate: the middle of an S travels less than a rigid arc's does.
+
+**Verdict: landed.** Same cost — one more term in a `sin` already being evaluated.
+
+## Frame-diffing anything in a tunnel is confounded by the wall lamps
+
+An A/B of the tendrils came back 37.7% of pixels changed at mean 24.43, with the whole wall and a
+broad streak lit up. `SewerLamps` runs ~30% of its fixtures dead and ~35% sputtering, so between any
+two captures the lighting has moved more than the prop has.
+
+**Verdict: trap.** Diff a region the lamps do not reach, or compare silhouettes against the dark
+background instead. This is the same family as the "A/B'd across a `make reload`" entry above: hold
+everything that is not the subject still, and in a tunnel the lighting is not still.
+
+## The slime trail drew through walls: `depthTest: false` bought a curb and sold the whole scene
+
+The ribbon shipped with `depthTest: false` on its material, commented "draw over the ground always so
+the raised curb can't occlude it". It is transparent and so renders after the opaque pass, and with no
+depth compare at all it painted over every wall, building and prop standing between it and the camera.
+
+The curb worry it was bought for cannot happen, and the same commit already contains the reason: every
+spine point carries **its own** `floorY(col,row)`, and a height change **forces a commit** rather than
+waiting for the next `sampleW`. So the strip is never left at road height on a walkway — the two
+mechanisms were written together and the flag was belt-and-braces over a fix that already held.
+
+The other half is `Occlusion`: a building that would hide the player is faded, and below `ghostCross`
+its real mesh is hidden outright while only the ghost draws, `depthWrite: false`. So a wall that could
+occlude the trail is by then not writing depth, and the trail reads through it — which is exactly how
+the actor sprites, the blood decals and the trail's own landing puddles have always behaved (they all
+run `depthTest` on). The ribbon was the one thing in the ground-decal family opted out.
+
+Verified in the habitat from a pinned free-cam pose: at `y 6.0` the parasite sits behind a low brick
+wall and the wall face is clean; raise the same pose to `y 12.0` and the green ribbon is there in the
+alley behind it. The selection ring is the control — it is genuinely `depthTest: false` (`Badges.hx`,
+"always-on-top UI") and in the low shot it is drawn across the bricks while the parasite it belongs to
+is hidden. That is what the trail used to do, visible side by side in one frame.
+
+**Verdict: landed.** One flag. Cost is unchanged — same draw call, same material, same everything.
+Note the neighbours that keep `depthTest: false` on purpose and are NOT this bug: `PathLine` (seeing
+where a path ends around a corner is the point) and the entity badges/selection ring.

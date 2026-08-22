@@ -64,8 +64,13 @@ class SlimeTrail {
         transparent: true,
         opacity: S.baseAlpha,           // overall alpha; the tail-fade vertex alpha multiplies on top
         depthWrite: false,
-        depthTest: false,               // draw over the ground always so the raised curb can't occlude it
-                                        // (a flat trail at road height would otherwise vanish under a walkway slab)
+                                        // depthTest stays ON: with it off the ribbon drew through walls
+                                        // and buildings. the curb is handled positionally instead — each
+                                        // spine point carries its own floorY and a crossing forces a
+                                        // commit, so the strip is never left at road height on a walkway.
+                                        // a building that would occlude the trail is faded by Occlusion,
+                                        // and a faded building's ghost has depthWrite off, so the trail
+                                        // still reads through it exactly like the actor sprites do
         vertexColors: true,             // per-vertex RGBA: alpha carries the tail dissolve
         roughness: RenderConfig.BLOOD.wetRough,
         metalness: RenderConfig.BLOOD.wetMetal,
@@ -331,7 +336,7 @@ class SlimeTrail {
           col.push(1);
           col.push(a);
           // strip quad to the next point (two tris); winding irrelevant with DoubleSide. per-point Y +
-          // the forced commit at a curb keep the rise sharp; depthTest off lets it drape over the curb
+          // the forced commit at a curb keep the rise sharp, so the strip climbs the curb face
           if (k < n - 1)
             {
               var a = k * 2;
