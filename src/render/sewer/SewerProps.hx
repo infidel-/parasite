@@ -69,11 +69,11 @@ class SewerProps
 
 // the scatter itself: one placement list per PROP_MODELS entry. split out of build so a layout can
 // be read without a scene — parasiteHx['render.sewer.SewerProps'].places(SewerModel.demo())
-  public static function places(m:Sewer):Array<Array<{ x:Float, z:Float, yaw:Float }>>
+  public static function places(m:Sewer):Array<Array<render.Models.PropPlace>>
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var models = SewerStyle.PROP_MODELS;
-      var places:Array<Array<{ x:Float, z:Float, yaw:Float }>> = [for (_ in models) []];
+      var places:Array<Array<render.Models.PropPlace>> = [for (_ in models) []];
       // the two decks the model pick is dealt from, indexed 0 = flat run of wall, 1 = corner
       var deck:Array<Array<Int>> = [[], []];
       for (brow in 0...Std.int((m.h + 1) / 2))

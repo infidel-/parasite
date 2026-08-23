@@ -9,6 +9,16 @@ typedef ModelTemplate = {
   var height:Float;   // native world height, for target-height scaling
 };
 
+// where one copy of an instanced prop stands. a named typedef rather than an inline structure because
+// `y` is optional and Haxe arrays are INVARIANT: an Array<{x,z,yaw}> literal will not pass as an
+// Array<{x,z,yaw,?y}>, so every producer has to be annotated with this same type
+typedef PropPlace = {
+  x:Float,     // world x
+  z:Float,     // world z
+  yaw:Float,   // turn about the vertical, radians
+  ?y:Float,    // signed offset off the floor; absent = 0, which is where normalize() puts the base
+};
+
 // handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
 // centre, so a per-frame cull() can pack only the visible instances into the draw. three frustum-
 // culls per OBJECT, so one InstancedMesh draws ALL instances whenever any is on screen
@@ -246,7 +256,7 @@ class Models {
 // height == targetH, base on the ground. reuses the prop's single mesh; the template recenter is
 // folded into each instance matrix analytically (assumes the mesh sits at the template root — true
 // for our baked glbs). `variant` picks the material, see ModelVariant
-  public static function instanced(scene:Object3D, path:String, placements:Array<{ x:Float, z:Float, yaw:Float }>, targetH:Float, variant:ModelVariant):InstancedProp
+  public static function instanced(scene:Object3D, path:String, placements:Array<PropPlace>, targetH:Float, variant:ModelVariant):InstancedProp
     {
       var prop:InstancedProp = { mesh: null, matrices: [], centres: [] };
       if (placements.length == 0)
@@ -320,8 +330,12 @@ class Models {
             {
               var pl = placements[i];
               var cos = Math.cos(pl.yaw), sin = Math.sin(pl.yaw);
-              // world = T(x,0,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in
-              var pos = new Vector3(pl.x + rx * cos + rz * sin, ry, pl.z - rx * sin + rz * cos);
+              // world = T(x,y,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in.
+              // normalize() puts the base at 0, so `y` (absent on most placements) is a signed offset
+              // off the floor: negative buries a prop that should read as grown out of it
+              var pos = new Vector3(pl.x + rx * cos + rz * sin,
+                ry + (pl.y != null ? pl.y : 0.0),
+                pl.z - rx * sin + rz * cos);
               q.setFromAxisAngle(up, pl.yaw);
               var mtx = new Matrix4();
               mtx.compose(pos, q, scl);

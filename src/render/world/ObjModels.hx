@@ -430,6 +430,9 @@ typedef ObjModel = {
   keys:Array<String>, // getModelKey values that draw as this prop
   path:String,        // RenderConfig.MODELS entry
   h:Float,            // world height Models.instanced scales the prop to (CityConfig.CELL is 4)
+  sink:Float,         // how far to bury the prop below the floor, as a fraction of `h`. 0 = resting
+                      // on it, which is right for anything PUT there (a ladder, clutter); an organ
+                      // that GREW out of the floor wants its root rim under the surface instead
   yaw:PropYaw,        // which turning rule the area kind is asked for
   light:PropLight,    // coloured point light this prop emits, or null for one that does not glow
   anim:PropAnim,      // idle motion folded into its shaders, or null for a prop that stands still
@@ -474,6 +477,7 @@ class ObjModels
       keys: [ 'sewer_exit', 'habitat_exit' ],
       path: RenderConfig.MODELS.sewerExit,
       h: 4.0,
+      sink: 0.0, // bolted to a wall and standing on the floor, not grown out of it
       yaw: WALL,
       light: null, // a ladder is masonry and rungs, not a grown thing
       anim: null,  // and bolted to a wall, so it had better not sway
@@ -490,6 +494,8 @@ class ObjModels
       keys: [ 'habitat_biomineral' ],
       path: RenderConfig.MODELS.habitatBiomineral,
       h: 3.74, // 1.3x the 2.88 it shipped at, with the other three organs
+      sink: 0.05, // ~0.19 world: enough to take the root lump's rim under the floor so the crystal
+                  // reads as pushed UP through it rather than set down on it
       // its brightest face measures one bin (~30-60 degrees) off dead-on rather than square to the
       // camera like the other three, so it shows a little under half the crystal it could. That is a
       // yawFix in render.Models, not a PropYaw, and it has not been spent
@@ -589,6 +595,7 @@ class ObjModels
     {
       keys: [ 'habitat_assimilation' ],
       path: RenderConfig.MODELS.habitatAssimilation,
+      sink: 0.0, // its legs already splay flat onto the floor and read as rooted
       h: 3.43, // 1.3x the 2.64 it shipped at, with the other three organs. wider than it is tall, so
                // this now spans ~4.6 world units against a 4-unit cell and overhangs a third of a cell
                // into each neighbour — at 1.8 the arch read squat beside the preservator and lost the
@@ -700,6 +707,8 @@ class ObjModels
       // assimilation arch already overhangs to, and leaves the POD itself 2.4 wide by 3.6 tall,
       // beside the biomineral's 2.76 by 3.74. everything below is a fraction of this
       h: 3.6,
+      sink: 0.05, // ~0.18 world. the flat root pool is 47% of this prop's surface, so its OUTER RIM
+                  // is the whole tell: resting on the floor it read as a puddle laid on top
       // the amber is spread all round the body (9-40% of surface lit per 30 degrees of azimuth), so
       // no pose hides the glow — but the richest arc is the camera-facing one, so unturned is still
       // the best of them
@@ -848,6 +857,7 @@ class ObjModels
       // 2.4 x 3.6 pod and close to the 3.21 the retired mesh covered. EVERYTHING below is a fraction
       // of this, so it all scales with the row
       h: 3.5,
+      sink: 0.0, // its root pool is already a thin skirt that dies into the floor
       // the one with the most to lose from a hashed turn: its pale eye discs ARE its read, and a roll
       // that put them round the back left a blank lump. re-measured on the new mesh as area-weighted
       // albedo luminance per 30 degrees, it now peaks DEAD-ON (0.0684 against the next bin's 0.0496)
@@ -973,7 +983,7 @@ class ObjModels
 // every frame — Models.instanced turns three's own frustum cull off, so nothing else trims their counts
   public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float):Array<PropBatch>
     {
-      var byPath:Map<String, Array<{ x:Float, z:Float, yaw:Float }>> = new Map();
+      var byPath:Map<String, Array<Models.PropPlace>> = new Map();
       var cellsByPath:Map<String, Array<{ col:Int, row:Int }>> = new Map();
       for (o in game.area.getObjects())
         {
@@ -986,7 +996,12 @@ class ObjModels
               cellsByPath.set(m.path, []);
             }
           var w = CityConfig.cellToWorld(o.x, o.y);
-          byPath.get(m.path).push({ x: w.x, z: w.z, yaw: yaw(o.x, o.y, m.yaw) });
+          byPath.get(m.path).push({
+            x: w.x,
+            z: w.z,
+            yaw: yaw(o.x, o.y, m.yaw),
+            y: -m.sink * m.h,
+          });
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade
           cellsByPath.get(m.path).push({ col: o.x, row: o.y });

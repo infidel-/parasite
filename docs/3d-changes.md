@@ -2542,3 +2542,40 @@ is hidden. That is what the trail used to do, visible side by side in one frame.
 **Verdict: landed.** One flag. Cost is unchanged — same draw call, same material, same everything.
 Note the neighbours that keep `depthTest: false` on purpose and are NOT this bug: `PathLine` (seeing
 where a path ends around a corner is the point) and the entity badges/selection ring.
+
+## Hiding the UI: a prop's tactical outline is NOT one of the sprite marks
+
+Shift+Space hides the HUD and the world-anchored UI with it. `HUD.isVisible()` is the only state —
+each consumer reads it once per frame and everything re-asserts from live state, so unhiding needs no
+restore path and nothing can desync.
+
+The trap: gating `Actors`' object `mark` flag and the AI badges looked complete in the follow view and
+left every 3D prop **still wearing its green tactical outline**. Those are not sprite marks. A
+model-backed object is outlined from its own geometry — a `ModelVariant.HULL` backface shell, packed
+by `hullMask[i] = tactical` inside `ObjModels.cull`, a path the `mark` flag never reaches (and the row
+comment says so: "the prop is outlined from its own geometry"). It needed a `ui` field on
+`Area3DTickOpts` so the cull can ask for `tactical && opts.ui`.
+
+**Verdict: landed.** The lesson generalises past this feature: "the object's marks" is TWO mechanisms
+with one name, split by whether the object has a glb, and a change that means to reach both has to
+name both.
+
+## `sink`: an organ that GREW out of the floor should not be standing on it
+
+`Models.normalize` puts every prop's base at y=0 and `instanced` places it there, which is right for
+anything PUT somewhere — a ladder, clutter — and wrong for a grown organ, whose root rim then reads as
+a lip laid on the floor. Worst on the preservator, where the flat root pool is 47% of the prop's
+surface, so that rim IS the silhouette at ground level.
+
+New `sink` column on `ObjModel`, a fraction of `h`, resolved to a per-placement `y` at build. Both
+organs at **0.05** — 0.19 world on the biomineral, 0.18 on the preservator. Arch and watcher stay 0
+(the arch's legs already splay flat, the watcher's skirt already dies into the floor).
+
+**The wiring is where the work was.** `Models.instanced` is already at 5 args, so appending a 6th is
+out; the offset belongs with the placement anyway. But **Haxe arrays are INVARIANT**, so adding
+`?y:Float` to the inline `{ x, z, yaw }` structure broke all four producers — an `Array<{x,z,yaw}>`
+will not pass as an `Array<{x,z,yaw,?y}>` even though a single value would. Hence the named
+`Models.PropPlace` typedef and an annotation at each producer. An inline array literal at a call site
+is fine (it types against the expected type); a pre-annotated local is not.
+
+**Verdict: landed.** Free — it moves an instance matrix that was being composed anyway.
