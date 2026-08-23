@@ -17,6 +17,8 @@ typedef PropPlace = {
   z:Float,     // world z
   yaw:Float,   // turn about the vertical, radians
   ?y:Float,    // signed offset off the floor; absent = 0, which is where normalize() puts the base
+  ?scale:Float, // multiplier on the batch's target height; absent = 1. a batch is ONE glb drawn many
+                // times, so without this a stand of trees is one tree repeated
 };
 
 // handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
@@ -330,12 +332,17 @@ class Models {
             {
               var pl = placements[i];
               var cos = Math.cos(pl.yaw), sin = Math.sin(pl.yaw);
+              // per-placement scale rides ON TOP of the batch's height scale, so the recenter offset
+              // (which is in the same local units) has to be scaled by it too or a jittered prop
+              // drifts off its own footprint
+              var ps = (pl.scale != null ? pl.scale : 1.0);
+              scl.set(s * ps, s * ps, s * ps);
               // world = T(x,y,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in.
               // normalize() puts the base at 0, so `y` (absent on most placements) is a signed offset
               // off the floor: negative buries a prop that should read as grown out of it
-              var pos = new Vector3(pl.x + rx * cos + rz * sin,
-                ry + (pl.y != null ? pl.y : 0.0),
-                pl.z - rx * sin + rz * cos);
+              var pos = new Vector3(pl.x + (rx * cos + rz * sin) * ps,
+                ry * ps + (pl.y != null ? pl.y : 0.0),
+                pl.z + (-rx * sin + rz * cos) * ps);
               q.setFromAxisAngle(up, pl.yaw);
               var mtx = new Matrix4();
               mtx.compose(pos, q, scl);

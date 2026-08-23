@@ -177,6 +177,14 @@ class RenderConfig {
     near: { x: 0.0, y: 16.0, z: 12.0 },  // zoom=0: close, looking well down into the corridor
     far:  { x: 0.0, y: 40.0, z: 14.0 },  // zoom=1: near top-down
   };
+  // open wilderness. between the street and the tunnel presets, and for the same reason the tunnel
+  // one is steep: there is NO occlusion fade out here (nothing is a building), so a tree or a rock
+  // between the camera and the player just hides them. a steeper look-down shortens what any prop
+  // can cover, and it is also the honest view of ground whose whole content is what is lying on it
+  public static final CAMERA_WILD:CameraOffsets = {
+    near: { x: 0.0, y: 18.0, z: 20.0 },  // zoom=0: closest, ~42 degrees above ground
+    far:  { x: 0.0, y: 55.0, z: 18.0 },  // zoom=1: near top-down
+  };
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
   public static final OCCLUSION = {
@@ -612,6 +620,14 @@ class RenderConfig {
     sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
     sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
+    // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. the two trees
+    // arrived AT the budget (a canopy and a branch network both shatter their atlas); the two rocks
+    // are hard surfaces and decimate offline — see their models.json notes
+    wildTreeConifer: 'models/wild/tree-conifer.glb',     // dark conifer, one solid canopy mass
+    wildTreeBroadleaf: 'models/wild/tree-broadleaf.glb', // bare broadleaf, thick limbs, no foliage
+    wildRockBoulder: 'models/wild/rock-boulder.glb',     // single weathered boulder
+    wildRockCluster: 'models/wild/rock-cluster.glb',     // three angular slabs fused into one mass
+    wildBushLow: 'models/wild/bush-low.glb',             // low scrubby bush, one solid foliage dome
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

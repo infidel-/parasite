@@ -524,13 +524,28 @@ class View {
   }
 
 // show the 3D sewer/habitat tunnels for an area, built from its saved tile grid (no seed — the
-// grid IS the persisted layout, so this works on every existing save)
+// grid IS the persisted layout, so this works on every existing save).
+//
+// the two grid-built kinds key off the SAME area id, so they take alternate parities of the same
+// negative range: an id is one area and one area is one kind, but a key that collided would let a
+// rebuild of the other kind be mistaken for a warm re-show of this one
   public function showSewer(area:game.AreaGame):Void
     {
-      var key = -(area.id + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+      var key = -(area.id * 2 + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
       if ((running || warming) && shownKey == key)
         return;
       buildFrom(new render.sewer.SewerArea(game, render.sewer.SewerModel.fromArea(area)), key);
+    }
+
+// show the 3D open wilderness for an area, built from its saved tile grid for the same reason the
+// tunnels are: game.AreaGenerator.generateWilderness already wrote where every tree and rock stands,
+// and that grid is what the pathfinder walks around
+  public function showWild(area:game.AreaGame):Void
+    {
+      var key = -(area.id * 2 + 4); // the sewer key's other parity, see showSewer
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.wild.WildArea(game, render.wild.WildModel.fromArea(area)), key);
     }
 
 // (re)build the scene for an area kind and start the render loop
