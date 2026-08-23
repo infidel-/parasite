@@ -620,14 +620,17 @@ class RenderConfig {
     sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
     sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
-    // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. the two trees
-    // arrived AT the budget (a canopy and a branch network both shatter their atlas); the two rocks
-    // are hard surfaces and decimate offline — see their models.json notes
-    wildTreeConifer: 'models/wild/tree-conifer.glb',     // dark conifer, one solid canopy mass
-    wildTreeBroadleaf: 'models/wild/tree-broadleaf.glb', // bare broadleaf, thick limbs, no foliage
-    wildRockBoulder: 'models/wild/rock-boulder.glb',     // single weathered boulder
-    wildRockCluster: 'models/wild/rock-cluster.glb',     // three angular slabs fused into one mass
-    wildBushLow: 'models/wild/bush-low.glb',             // low scrubby bush, one solid foliage dome
+    // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. FOUR trees,
+    // one per tile ID the 2D generator rolls (Const.TILE_TREE1 + 0..3), so the variant already written
+    // into the saved grid picks the model. all arrived AT the budget; the two rocks are hard surfaces
+    // and decimate offline — see their models.json notes
+    wildTreeConifer: 'models/wild/tree-conifer.glb',              // dark conifer, one solid cone
+    wildTreeBroadleaf: 'models/wild/tree-broadleaf.glb',          // bare broadleaf, thick limbs, no foliage
+    wildTreeBroadleafFull: 'models/wild/tree-broadleaf-full.glb', // broadleaf in leaf, broad solid dome
+    wildTreeDead: 'models/wild/tree-dead.glb',                    // dead snag, blunt broken limbs
+    wildRockBoulder: 'models/wild/rock-boulder.glb',              // single weathered boulder
+    wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
+    wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

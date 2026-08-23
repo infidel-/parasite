@@ -164,8 +164,10 @@ async function exportTextures(label)
       if (t != null && !roles.has(t))
         roles.set(t, suffix);
   // dumped BESIDE the glb, not beside the label: a label's folder and its source's folder are
-  // independent (habitat/assimilation lives at habitat/flat/assimilation.glb), and an export that
-  // followed the label landed a folder away from the mesh it belongs to
+  // independent, and an export that followed the label landed a folder away from the mesh it belongs
+  // to. the case that proved it was habitat/assimilation living at habitat/flat/assimilation.glb —
+  // that folder level has since been flattened away, so every label's two paths happen to match
+  // today, which is exactly the state in which this would silently rot if it were keyed on the label
   const stem = e.src.replace(/\.glb$/i, '');
   let n = 0;
   for (const [t, suffix] of roles)

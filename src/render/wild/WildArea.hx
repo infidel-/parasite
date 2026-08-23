@@ -51,6 +51,7 @@ class WildArea implements Area3D
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();
       WildGround.build(scene, model);
+      WildPatches.build(scene, model);
       WildGrass.build(scene, model);
       props = WildProps.build(scene, model);
       // the ground and grass blocks bucket; the prop batches span the whole area and so are left at

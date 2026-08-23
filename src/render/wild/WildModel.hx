@@ -28,12 +28,15 @@ class WildModel
             var t = area.getCellType(x, y);
             if (t == Const.TILE_BUSH)
               m.prop[y][x] = WildStyle.BUSH_LOW;
-            // the four tree tiles split two and two rather than by a hash: the 2D generator already
-            // rolled a variant per cell, so honouring it keeps the 3D area showing the same stand of
-            // trees the tile grid always described (and the same one on every re-entry, for free)
+            // the four tree tiles map ONE TO ONE onto the four tree models, which is what those tile
+            // IDs were always for: the 2D generator already rolls a variant per cell
+            // (AreaGenerator.generateWilderness deals TILE_TREE1 + Std.random(4)), so honouring it
+            // keeps the 3D area showing the same stand of trees the tile grid always described, and
+            // the same one on every re-entry, for free. WildStyle keeps the four PROPS rows first and
+            // in order so this is an offset and not a lookup table
             else if (t >= Const.TILE_TREE1 &&
                 t < Const.TILE_TREE1 + 4)
-              m.prop[y][x] = (t - Const.TILE_TREE1) < 2 ? WildStyle.TREE_CONIFER : WildStyle.TREE_BROADLEAF;
+              m.prop[y][x] = WildStyle.TREE_CONIFER + (t - Const.TILE_TREE1);
             else if (t == Const.TILE_ROCK)
               m.prop[y][x] = (mix((x * 30011) ^ (y * 50021)) % 3 == 0) ? WildStyle.ROCK_CLUSTER : WildStyle.ROCK_BOULDER;
           }

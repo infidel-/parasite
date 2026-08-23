@@ -161,3 +161,129 @@ sets. It measured **2.70×** (0.1357 vs 0.0503 linear; sRGB 104 vs 62, against a
 46-52) — the loudest thing in the area bar the actor. `lift` is `out = (v/255)**g`, a plain power, so
 where every other entry uses g < 1 to brighten, **g 1.4 darkens**: 0.0660 linear, **1.31×** the
 ground, sRGB 73/71/53. Still the lighter of the two, so the field still reads.
+
+## Count a prop's CONNECTED COMPONENTS — the split ratio does not catch "mostly empty"
+
+The user hand-replaced `wild/bush-low` with one generated in the Runware web playground, saying mine
+was "mostly empty", and asked whether our MCP sends the playground's settings. Measuring both settled
+a question the existing rules could not even ask. Components over unique positions, union-find over
+triangle edges:
+
+| glb | tris | verts | uniq | split | **components** | **largest** |
+|---|---|---|---|---|---|---|
+| `rock-boulder` | 97,202 | 54,048 | 48,602 | 1.11x | **1** | 100% |
+| `bush-low` (user's, now shipped) | 4,955 | 4,280 | 2,395 | 1.79x | **8** | 98.7% |
+| `tree-conifer` (old settings) | 4,983 | 5,043 | 2,276 | 2.22x | **12** | 52.9% |
+| `bush-low` (mine, retired) | 4,406 | 5,454 | 2,399 | 2.27x | **96** | **24.3%** |
+| **PROBE — the retired bush's OWN reference, new settings** | 4,777 | — | — | **1.68x** | **1** | **100.0%** |
+
+"Mostly empty" is literal: 96 disconnected blobs with the largest holding a quarter of the mesh — a
+cloud of separate leaf clumps with air between them. Identical bbox and near-identical unique-position
+count to the replacement, so **no existing measurement we take would have flagged it**: the split
+ratio describes the ATLAS, and this is the SURFACE. `tree-conifer` has the same disease at half
+strength and is queued for regeneration.
+
+**The cause is the SETTINGS, and a controlled probe is the only thing that could have shown it.** The
+first read here was that the reference did it — mine painted the dome as discrete leaf clumps with
+dark gaps, and "TRELLIS resolves a dark gap as real air" is a tidy story that fits the data. It was
+wrong. Re-running **that exact reference, unmodified**, with the corrected settings returns **1
+component at 100%**, split 1.68. 96 → 1, one variable changed. Nothing about run-to-run noise reaches
+that far.
+
+So the reasoning that dismissed the settings — "UV chart clustering cannot merge disconnected
+surfaces" — was itself the error: `meshCluster`'s `smoothStrength` and `thresholdConeHalfAngleRad`
+reach the dual-contour remesh, not just the atlas. **Do not reason about which knob can matter; run
+the one-variable job.** It cost $0.03.
+
+**Two of the settings were outright bugs.** Against the playground payload: `meshCluster` was **dead
+code** in the MCP — declared on `Trellis3dOptions` and forwarded by `buildInferenceBody`, but absent
+from the tool's `inputSchema` and never set at the call site, so unreachable from the tool. And
+`remesh_project` defaulted to 0.8 against the playground's 0.9. Both fixed; `mesh_cluster` now
+defaults to `{1, 0, 1, PI/2}`.
+
+The acceptance gate stands, but read it correctly: **few components, each a substantial solid piece**.
+Raw counts mislead in both directions — the shipped conifer is 2 components at 51%/49% (a canopy and a
+trunk, both solid) and `tree-broadleaf-full` is 17 at 93.9% (sixteen specks sharing 6.1%). Neither is
+the failure. The failure is 96 pieces with the largest at 24.3%.
+
+**A `baseColor` is fitted to one bake, and a replaced glb silently invalidates it.** The entry still
+carried `0.11/0.13/0.22`, fitted to the retired mesh's baked mean sRGB 117/124/82. The replacement
+bakes at **84/96/61**, which those same factors land near **29/35/30** against the prop family's
+46-52 — the prop was rendering about a third too dark with nothing to indicate it. Refitted to
+0.26/0.28/0.52. Its MR map was re-read on the new mesh rather than carried forward (pure green,
+0/248/0, no `dropMR`), and its `seed` dropped: it belonged to the retired mesh, and the shipped one is
+not reproducible from this repo at all — its reference lives only on Runware's CDN.
+
+## Ground patches in the wilderness, and two ways a working layer reads as nothing
+
+`render.world.Lawns`' coverage mask — one soft radial kernel per marked cell, `lighten`-unioned onto a
+canvas and handed in as `alphaMap` — is now `render.world.CoverageMask`, shared with a second caller.
+Extracted rather than copied because all four of its decisions are traps (`lighten` is a per-channel
+MAX not an add; `flipY = false`; the repeat/offset rescale; the kernel radius must clear `CELL * 0.5`
+or a run of cells beads into a string of pearls). `render.wild.WildPatches` is the new caller: two
+overlays, bare earth under dead grass, over the turf.
+
+**One deliberate divergence from Lawns: the geometry is emitted per `Chunks.CELLS` block.** Lawns
+affords a single mesh because a city lawn covers a handful of alley cells; a wilderness layer spans
+the whole 400-unit area, which is past `Chunks`' own size guard, so one mesh would sit at the scene
+root and submit the entire area's blended fill every frame. Cost as built: **44 → 57 draw calls,
+177k → 285k tris, still 60 FPS**, for two patch layers plus the small-rock batches.
+
+Both tuning failures were invisible-by-eye and needed a measurement:
+
+- **Coverage too dense reads as SPECKLE, not as patches.** First pass seeded at 0.07 / 0.045, which
+  put **25.8%** and **18.4%** of the mask over the alphaTest line. Tinting the layers magenta showed
+  them covering the entire frame — because what shows through a near-uniform mask is just the art's
+  own ~38% coverage, i.e. grain. Judge the MASK, not the seed count: 0.013 / 0.008 with `KERN` raised
+  7.0 → 11.0 lands 10.0% / 8.7% strong, and the blobs read as islands. `KERN` matters as much as the
+  chance — 7.0 gives a blob radius of ~3.15, under one cell, which from a camera 18-55 units up is
+  grain no matter how few of them there are.
+- **A real value ladder, halved by opacity, drops under threshold.** Measured LINEAR luminance of the
+  three arts as built: earth **0.0348** (0.73×), turf **0.0476**, dead grass **0.0560** (1.18×). At
+  Lawns' own `ALPHA` 0.5 the blend collapses that to 0.87× and 1.09×, which in a frame this dark is
+  nothing at all. 0.85 restores it. The trap on the other side is real too: widening the ladder in the
+  TEXTURE instead, by pushing the earth's `lift` 1.15 → 1.35, computes to 0.0125 — a quarter of the
+  turf, which is the sewer-valve failure where a dark overlay stops being an object and becomes a hole.
+
+## Four trees, one per tile ID
+
+`AreaGenerator.generateWilderness` has always dealt `TILE_TREE1 + Std.random(4)`, and the 3D area was
+collapsing those four IDs two-and-two onto two models. There are four models now — conifer,
+bare broadleaf, broadleaf in leaf, dead snag — mapped **one to one**, so the variant already written
+into every saved grid picks the model, identically on every re-entry, with nothing persisted. Trees
+are also 25% taller by request (conifer 6.0 → 7.5, bare broadleaf 5.2 → 6.5).
+
+The three new meshes, all generated at the budget with the corrected settings:
+
+| prop | tris | split | comps | largest | w/h | `baseColor` |
+|---|---|---|---|---|---|---|
+| `tree-dead` | 4,784 | 1.93 | **1** | 100.0% | 0.47 | 0.5 uniform |
+| `tree-conifer` | 4,880 | **1.27** | 2 | 51.2% | 0.34 | **none** |
+| `tree-broadleaf-full` | 4,660 | 1.79 | 17 | 93.9% | 1.09 | 0.78/0.44/0.53 |
+
+Three things worth carrying:
+
+- **A reference that reads better FLAT can remesh far worse.** The conifer was re-rolled twice. The
+  lumpy tiered spruce outline — the one that looks like a conifer on screen — came back **38
+  components, split 4.70**, worse than anything shipped in this repo, because TRELLIS made each tier
+  its own blob. The smooth cone, which was nearly rejected for looking geometric as a 2D image, came
+  back split **1.27**, the cleanest tree here. From a camera 18-55 units up the two silhouettes are
+  indistinguishable. Both references are in `Unused/` for comparison.
+- **`h` is width, again.** `tree-broadleaf-full` has the widest bbox of the four at **1.09**, so it is
+  held to `h` 5.8 for 6.3 world units across, where the bare broadleaf at 0.84 takes `h` 6.5. The
+  conifer at 0.34 is narrow enough to take the full 7.5 and still draw only 2.55 across.
+- **The conifer's teal correction is gone, and the fix moved upstream.** The retired mesh baked at
+  41/84/69 — twice as green as red — and needed the repo's first per-channel `baseColor`. This
+  reference asks for "muted desaturated dark grey-green, mid-value, not vivid green" in as many words
+  and bakes at **54/58/50**: near-neutral and already inside the prop family's 46-52, so the entry
+  carries no `baseColor` at all. Correcting saturation at the source beats correcting it at the bake.
+  `tree-dead` keeps a **uniform** 0.5 rather than a per-channel fit on purpose — it bakes warm at
+  80/68/55 and is the one warm thing in the area, which a per-channel fit would neutralise away.
+
+Also landed, both small: `TILE_ROCK` is **unwalkable** now, matching the four tree tiles beside it and
+still see-through like them — it is written only by `generateWilderness`, and `WildProps` stands a
+boulder on every one of those cells, so a walkable rock was geometry the player walked through.
+Nothing to migrate: walkability is a static table, entry re-tests it through `findEmptyLocation`, and
+movement tests the target cell. And the same two rock glbs are scattered again at a tenth of their
+height (619 loose stones) on open cells only — `Models` caches one template per path, so a second row
+over the same file is a second `InstancedMesh` and not a second load.

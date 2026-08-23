@@ -60,6 +60,33 @@ class WildProps
               scale: 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.PROPS[mi].jitter,
             });
           }
+      small(m, places, half);
       return places;
+    }
+
+// loose stones on OPEN ground — the same two rock glbs a tenth the size, on cells with no prop of
+// their own. render-only and deliberately so: a full-size rock stands on an unwalkable TILE_ROCK cell,
+// and a stone the player steps over must not block anything, so this scatter touches no tile and no
+// walkability. its own hash multipliers, mixed, so a stone does not land wherever a grass tuft or a
+// prop already rolled over the same cell
+  static function small(m:Wild, places:Array<Array<Models.PropPlace>>, half:Float):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.prop[row][col] >= 0)
+              continue;
+            var h = WildModel.mix((col * 73856093) ^ (row * 19349663));
+            if ((h % 1000) >= WildStyle.SMALL_ROCK_CHANCE * 1000)
+              continue;
+            // one in three is a cluster, the same split the full-size rocks take
+            var mi = (h % 3 == 0) ? WildStyle.ROCK_CLUSTER_SMALL : WildStyle.ROCK_BOULDER_SMALL;
+            places[mi].push({
+              x: (col + 0.2 + (h % 601) / 601.0 * 0.6) * CELL - half,
+              z: (row + 0.2 + ((h >> 9) % 601) / 601.0 * 0.6) * CELL - half,
+              yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
+              scale: 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.PROPS[mi].jitter,
+            });
+          }
     }
 }
