@@ -171,6 +171,10 @@ class Actors {
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
       lampShadows.gather(dtMs);
       badges.tick(dtMs);                                 // advance the looping badge-pulse clock
+      // Shift+Space hides the HUD, and the world-anchored UI goes with it: the object outline/x-ray
+      // marks, the AI badges and the off-screen/bubble markers are all readouts, not scenery. read
+      // once per frame rather than per actor — it is a DOM style probe (see ui.HUD.isVisible)
+      var uiOn = game.ui.hud.isVisible();
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -214,10 +218,10 @@ class Actors {
               offx: ox,
               offz: oz,
               groundAnchor: true,
-              mark: o.visible(),
+              mark: o.visible() && uiOn,
               iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null,
             });
-            if (vis)
+            if (vis && uiOn)
               badges.drawObjTarget(o);
           }
       var tObj = haxe.Timer.stamp();
@@ -231,7 +235,8 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
             drawActor(ai.entity, vis, dtMs);
-            if (vis)
+            if (vis &&
+                uiOn)
               {
                 var bs = ai.getBadges();
                 badges.drawAITarget(ai);

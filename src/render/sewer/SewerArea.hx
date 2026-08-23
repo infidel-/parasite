@@ -118,7 +118,8 @@ class SewerArea implements Area3D
     {
       // ABOVE the outro gate on purpose: a player who left standing ON a ladder would otherwise stay
       // behind a see-through one for the whole camera pull-out. cull() reads opts.outro itself
-      render.world.ObjModels.cull(props, opts, tactical);
+      // the outline shells are a tactical READOUT, so a hidden HUD takes them with it
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       // the props' idle clock, above the gate for the same reason — the organs are still on screen
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);

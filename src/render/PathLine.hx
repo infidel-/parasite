@@ -46,7 +46,8 @@ class PathLine
       // alpha blend so PATH.alpha genuinely fades it. depthTest off so it drapes over curbs — the
       // ribbon's Y is a Catmull-Rom through the cell floor heights, so at a CURB_H step it passes
       // BELOW the walkway top and a depth test would eat it — and stays readable where the path
-      // rounds a corner behind a wall (matches the always-visible slime trail)
+      // rounds a corner behind a wall, which is the whole point of a preview. the slime trail is NOT
+      // this case and is depth-tested: its Y is per-point, not interpolated, and it is scenery
       mat = new MeshBasicMaterial({
         color: new Color(P.color).multiplyScalar(P.glow),
         transparent: true,

@@ -1111,6 +1111,7 @@ class View {
         outro: true,
         freeCam: false,
         camera: camera,
+        ui: game.ui.hud.isVisible(),
       });
       if (running && composer != null) {
         renderer.info.reset();
@@ -1143,6 +1144,16 @@ class View {
     else
       ringY += (tgtY - ringY) * (1 - Math.pow(1 - 0.4, dtMs / (1000 / 30)));
     ring.position.set(p.x, ringY, p.z);
+    // Shift+Space hides the HUD, and the world-anchored UI goes with it: the player marker, the
+    // move-path preview and the tactical grid are readouts drawn in the scene, not scenery. all
+    // three are re-asserted below from live state, so unhiding needs no restore path
+    var uiOn = game.ui.hud.isVisible();
+    ring.visible = uiOn;
+    if (!uiOn)
+      {
+        pathLine.clear();
+        tacticalGrid.hide();
+      }
     // fade buildings in front of the target: the live pick while aiming (wide corridor), else the
     // confirmed target so its occluders stay clear out of targeting mode too
     var aiming = game.ui.hud.state == HUD_TARGETING;
@@ -1154,7 +1165,8 @@ class View {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
-    if (tactical)
+    if (tactical &&
+        uiOn)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
     // the world tick for this area kind: occlusion fades, window switches, chunk culling and the
     // live lamp pool (see render.CityArea / render.SewerArea)
@@ -1169,6 +1181,7 @@ class View {
       outro: false,
       freeCam: freeing,
       camera: camera,
+      ui: uiOn,
     });
     // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame
     actors.setLamps(lampLights.active());
