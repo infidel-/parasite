@@ -20,7 +20,11 @@ import map.Types.RoadSegment;
 
 class Core
 {
-  var HALO_CELLS = 2; // halo tile count around the visible region
+  // halo tile count around the visible region. STATIC and public because it is not just a canvas
+  // margin: the whole map is rasterized in FULL-canvas tile coordinates, so region tile (x,y) is
+  // sampled at (x + HALO_CELLS, y + HALO_CELLS) — and map.Terrain has to sample in the same frame
+  // or the band it names is not the band the map paints (see its header)
+  public static inline var HALO_CELLS = 2;
   var CLEAN_TILE_SIZE = Const.TILE_SIZE_CLEAN; // source pixel size of one region tile
   var PLAN_CELL_SIZE = 8; // raster road cell size in pixels
   var PLAN_CELLS_PER_TILE = 8; // number of road plan cells inside one region tile

@@ -89,8 +89,8 @@ class RoadPlanThinCoverage
       for (regionY in 0...plan.regionHeight)
         for (regionX in 0...plan.regionWidth)
           {
-            var cellX = regionX + plan.HALO_CELLS;
-            var cellY = regionY + plan.HALO_CELLS;
+            var cellX = regionX + Core.HALO_CELLS;
+            var cellY = regionY + Core.HALO_CELLS;
             var areaType = plan.areaTypes[cellX][cellY];
             if (!isSpecialAreaType(areaType) ||
                 hasAdjacentCityTile(cellX, cellY) ||
@@ -180,10 +180,10 @@ class RoadPlanThinCoverage
 // return whether one full-grid tile falls inside the visible region
   function isVisibleRegionTile(cellX: Int, cellY: Int): Bool
     {
-      return cellX >= plan.HALO_CELLS &&
-        cellY >= plan.HALO_CELLS &&
-        cellX < plan.HALO_CELLS + plan.regionWidth &&
-        cellY < plan.HALO_CELLS + plan.regionHeight;
+      return cellX >= Core.HALO_CELLS &&
+        cellY >= Core.HALO_CELLS &&
+        cellX < Core.HALO_CELLS + plan.regionWidth &&
+        cellY < Core.HALO_CELLS + plan.regionHeight;
     }
 
 // collect thin-road attachments whose owning tile is inside the visible region
@@ -226,8 +226,8 @@ class RoadPlanThinCoverage
       for (regionY in 0...plan.regionHeight)
         for (regionX in 0...plan.regionWidth)
           {
-            var xx = regionX + plan.HALO_CELLS;
-            var yy = regionY + plan.HALO_CELLS;
+            var xx = regionX + Core.HALO_CELLS;
+            var yy = regionY + Core.HALO_CELLS;
             if (!gridOps.hasRoadTypeInRegionTile(grid, xx, yy, ROAD1))
               continue;
 
@@ -339,8 +339,8 @@ class RoadPlanThinCoverage
       for (regionY in 0...plan.regionHeight)
         for (regionX in 0...plan.regionWidth)
           {
-            var xx = regionX + plan.HALO_CELLS;
-            var yy = regionY + plan.HALO_CELLS;
+            var xx = regionX + Core.HALO_CELLS;
+            var yy = regionY + Core.HALO_CELLS;
             if (!plan.isCityAreaType(plan.areaTypes[xx][yy]) ||
                 !hasAnyRoadInRegionTile(grid, xx, yy))
               continue;

@@ -52,6 +52,11 @@ class World extends _SaveObject
           // pre-district saves: generate area/district names for areas that lack them
           if (r.needsAreaNames())
             r.assignAreaNames();
+          // saves written before map.Terrain was fixed to sample in the map renderer's own
+          // halo-offset frame: ~40% of ground areas were named from the band two tiles away, so
+          // re-derive the ground blob names alone (the districts above are unaffected)
+          else if (r.needsGroundRename())
+            r.nameGroundBlobs();
         }
       AreaGame._maxID++;
       AreaObject._maxID++;
