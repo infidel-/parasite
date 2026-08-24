@@ -75,7 +75,7 @@ class WildStyle
   // --- the props (render.wild.WildProps) ---
   // `h` IS NOT A FREE NUMBER: render.Models.instanced scales a prop by HEIGHT ALONE, so a row's world
   // WIDTH is `h * (widest / height)` of the glb's own bbox. measured, in that order: conifer 0.34,
-  // broadleaf 0.84, broadleaf-full 1.09, dead 0.47, boulder 3.67, cluster 1.31, bush 1.91,
+  // broadleaf 0.84, broadleaf-full 0.71, dead 0.47, boulder 3.67, cluster 1.31, bush 1.91,
   // bramble 2.86. the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67
   // aspect made it 5.5 units across, well over a cell, and the bush's first mesh came back at 25
   // (see its models.json note).
@@ -85,7 +85,13 @@ class WildStyle
   // canopy and would not be for a rock: a boulder IS its footprint, where an overhanging canopy is
   // what a tree does, and only the trunk has to sit inside the blocked cell. the standing caution is
   // unchanged though: an actor billboard is 3 world units and there is no occlusion fade out here, so
-  // a tree tall enough to be impressive is a tree that hides the player behind it
+  // a tree tall enough to be impressive is a tree that hides the player behind it.
+  //
+  // that 3 units is also a CLEARANCE the canopies have to respect, which the first pass missed: a
+  // crown that skirts down the trunk puts leaves at head height however tall the tree is, and the
+  // player walks into the green. the fix belongs in the MODEL — a crown confined to the top of its
+  // own bbox — and `h` then scales the clearance with it. see the broadleaf-full row below, which is
+  // the only `h` here set by that number rather than by look
   public static var PROPS:Array<WildProp> = [
     {
       path: RenderConfig.MODELS.wildTreeConifer,
@@ -99,10 +105,21 @@ class WildStyle
       r: 0.38,
       jitter: 0.22,
     },
+    // the only prop out here whose `h` is set by CLEARANCE rather than by look, and the tallest thing
+    // in the area because of it. measured on the glb by binning vertices along Y: a bare trunk holding
+    // 13-16% of the max radius up to 0.30 of the height, then the crown flares to 59% at 0.35 and is
+    // at 90% by 0.45. so the height an actor walks under is 0.35 * h, and 3.0 of that is spoken for by
+    // the actor billboard — 9.5 leaves 3.32. the original mesh had no such number at all: its canopy
+    // skirted down to ~22% of its height and the player walked head-first into the foliage.
+    //
+    // being TALL is not what costs footprint here, the bbox is: at aspect 0.71 this is the narrowest
+    // tree of the four for its height, so 9.5 draws 6.7 world units across — LESS than the 7.15 the
+    // first replacement took at h 6.5, and less than the 6.3 of the original at 5.8 is close to.
+    // models.json carries the whole record, including the two retired meshes in Unused/
     {
       path: RenderConfig.MODELS.wildTreeBroadleafFull,
-      h: 5.8,
-      r: 0.55,
+      h: 9.5,
+      r: 0.37,
       jitter: 0.22,
     },
     {
@@ -178,8 +195,10 @@ class WildStyle
   // odds an open cell (no prop, so grass is growing on it) also gets a loose stone
   public static inline var SMALL_ROCK_CHANCE = 0.08;
   // instance cull radius, in world units: a margin around a prop's centre so nothing pops at the
-  // frame edge. sized to the tallest prop, since render.Models.cull tests one sphere for all of them
-  public static inline var PROP_CULL_R = 7.0;
+  // frame edge. sized to the tallest prop, since render.Models.cull tests ONE sphere radius for every
+  // batch. it went 7.0 -> 9.0 with the broadleaf-full's h, which is the standing tie: raise the
+  // tallest prop and this has to follow it or that prop pops in at the frame edge
+  public static inline var PROP_CULL_R = 9.0;
 
   // --- the ground patches (render.wild.WildPatches) ---
   // two ragged overlays laid over the turf, so the base ground varies without a second base texture,

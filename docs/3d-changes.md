@@ -381,3 +381,66 @@ buried by 0.207, over 3x the lift, and the arc clips. Sampled by world position 
 by floating — the side this is allowed to fail on. `PathLine` does not have it (Catmull-Rom through
 cell centres, so it already tracks the surface) and neither does `TacticalGrid` (max of adjacent
 cells, so its crosses float rather than sink).
+
+## A canopy has a CLEARANCE, and it is not the tree's height (`wild/tree-broadleaf-full`)
+
+The player walked head-first into the foliage. The tree was 5.8 world units tall against a 3.0-unit
+actor billboard, which sounds like plenty — but its crown skirted down to **~22%** of its own height,
+so the leaves an actor meets were at **1.3** units. Height is not the number. The number is where the
+crown FLARES, measured by binning the glb's vertices along Y and reading the radius per band:
+
+| mesh | trunk holds | crown flares at | underside at its `h` | bbox w/h |
+|---|---|---|---|---|
+| original (`Unused/…-lowcrown`) | — | ~0.22 | 1.3 @ h 5.8 | 1.09 |
+| parasol (`Unused/…-parasol`) | 7-8% of max radius to 0.45 | 0.55 | 3.58 @ h 6.5 | 1.10 |
+| shipped | 13-16% to 0.30 | **0.35** | **3.32 @ h 9.5** | **0.71** |
+
+**The parasol is the entry worth keeping.** Asked for a crown "clearly wider than it is tall", gpt
+delivered exactly that: a 45%-deep disc on a stick 1/14 the crown's width. It cleared the player
+perfectly and read as an **umbrella** from every camera angle — a field of them looked like mushrooms.
+Clearance was fixed and the prop was still wrong, which is why "does it clear the actor" is not the
+whole acceptance test for a tree. Before it, asking for a "compact rounded canopy" on a tall trunk
+gave the opposite failure: a narrow lollipop at aspect **0.35**, the conifer's silhouette, on the one
+tree of four whose job is to be the broad one.
+
+What works is naming all three fractions at once: thick bare trunk through the bottom 40%, crown a
+deep rounded dome in the top 60% and about half again as wide as it is tall, whole tree taller than
+wide. That landed 4,866 tris, split 2.82, **20 components at 91.8%**, MR pure green (re-read, not
+carried forward), and aspect **0.71**.
+
+**Being tall is not what costs footprint — the bbox is.** At 0.71 this is now the narrowest-for-its-
+height tree of the four, so h **9.5** draws only **6.7** world units across: *less* than the parasol
+took at h 6.5 (7.15) and barely over the original's 6.3 at h 5.8. It is the tallest prop in the area
+by a wide margin, which drags `PROP_CULL_R` 7.0 → 9.0 with it — `Models.cull` tests one sphere radius
+for every batch, so the tallest prop sets it or that prop pops in at the frame edge. Gameplay-pose
+cost went 72 calls / 334k tris → **76 / 406k**, the extra being instances the wider cull keeps.
+
+### …and then it came out covered in coloured dots
+
+Pure cyan, magenta, yellow and green specks all over the foliage. Not a shader problem and not the
+generator's: the **2048 source atlas is clean** (0.001% of texels above saturation 0.75, and every one
+of those is bark brown), while the **built 512 had 2.949%**, with the extremes at literal `0,255,255`
+and `255,0,255`. So `make models` was making them.
+
+The cause is one channel nobody asked for. `wild/tree-broadleaf-full` is the **only prop of 23** whose
+base atlas arrived carrying an alpha channel — 35.4% of its texels at alpha < 8, the UV gutter. Every
+other prop measures ~0%, which is why this had never shown up. That channel is not dead weight, it is
+a live trap: `textureCompress` resizes through sharp, which **premultiplies, averages, and
+unpremultiplies**, so a 4x4 block that is mostly gutter comes out with an averaged alpha near 1/255 and
+its colour divided by that. The proof is exact — **100%** of the blown texels had alpha < 128, mean
+alpha **2**, min **1**. The same bug also darkened the whole map, 85/126/84 -> 73/110/72, which had
+gone unnoticed behind the dots.
+
+The fix is in `tools/models.mjs`, last step before the resize: flatten alpha out of an OPAQUE
+material's base map. **`removeAlpha`, never `flatten({background})`** — TRELLIS had already dilated the
+chart colour into the gutter (its mean rgb matches the atlas mean exactly), so the channel was the only
+thing wrong and compositing would have thrown that dilation away. Rebuilt: **0.002%** and mean
+85/126/85, the source to within a digit.
+
+Two things generalise. **A prop's source atlas can be perfect and its built one wrong** — every number
+`propstat` reports reads the SOURCE, so none of them could have seen this; when a prop looks wrong in
+the game and measures clean, measure the built glb. And the guard is scoped to OPAQUE-material base
+maps because that is where it was measured and where dropping alpha is safe by definition; a prop that
+genuinely needs MASK or BLEND would still explode, and near-zero alpha in its atlas is the tell.
+`sewer/bags` (98.8% under alpha 128) and `wild/rock-boulder` (38.9%) also carry alpha and are NOT
+affected — nothing near zero, so nothing to divide by.

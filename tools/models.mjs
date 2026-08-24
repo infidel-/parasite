@@ -304,6 +304,37 @@ async function main()
             }
           console.log('     baseColor lifted ^' + e.lift + ' (gamma on the map; <1 brightens)');
         }
+      // FLATTEN a stray alpha channel out of an OPAQUE prop's base map. TRELLIS occasionally bakes one
+      // in with the UV gutter at alpha 0, and that is not dead weight, it is a live trap: the resize
+      // below PREMULTIPLIES, averages, then UNPREMULTIPLIES, so a block that is mostly gutter comes out
+      // with an averaged alpha near 1/255 and its colour divided by that — saturated primaries
+      // scattered along every chart boundary, which is worst on a shattered atlas because that is where
+      // the boundaries are.
+      //
+      // measured on wild/tree-broadleaf-full, the one prop of 23 whose atlas carries a gutter (35.4% of
+      // texels at alpha < 8): 2.949% of the built 512 landed at saturation > 0.75, ALL of them at alpha
+      // < 128 with a mean of 2, and the map's own mean darkened 85/126/84 -> 73/110/72. flattening
+      // first puts both back to 0.002% and 85/126/84, i.e. the source exactly.
+      //
+      // removeAlpha, never flatten({background}): the gutter already holds the right COLOUR (TRELLIS
+      // dilates the charts into it — its mean rgb matches the atlas mean), so the channel is the only
+      // thing wrong and compositing would throw the dilation away. safe by definition on an OPAQUE
+      // material, which ignores alpha. scoped to the base map because that is where it was measured;
+      // the same trap would hit any other map that arrived with a transparent gutter. runs LAST before
+      // the resize, so it also strips the alpha `lift`'s ensureAlpha() re-adds
+      for (const m of doc.getRoot().listMaterials())
+        {
+          if (m.getAlphaMode() !== 'OPAQUE')
+            continue;
+          const t = m.getBaseColorTexture();
+          if (t == null)
+            continue;
+          const buf = Buffer.from(t.getImage());
+          if (!(await sharp(buf).metadata()).hasAlpha)
+            continue;
+          t.setImage(new Uint8Array(await sharp(buf).removeAlpha().png().toBuffer())).setMimeType('image/png');
+          console.log('     base map alpha flattened (opaque material; a transparent gutter explodes in the resize)');
+        }
       // add the hand-painted emissive map (same UVs as base) + HDR strength so the head glows + blooms
       if (hasEmi)
         {
