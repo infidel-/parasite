@@ -10,8 +10,9 @@ import render.RenderConfig;
 typedef WildProp = {
   path:String,   // RenderConfig.MODELS entry
   h:Float,       // world height render.Models.instanced scales the prop to
-  r:Float,       // footprint radius as a multiple of h (unused by the scatter today, but it is what
-                 // a future placement rule has to derive its clearance from)
+  r:Float,       // footprint radius as a multiple of h. WildProps.sit reads it: h * r * slope is how far
+                 // a prop is SUNK so its downhill edge meets the ground instead of hanging over it, so
+                 // this is the one field that decides how a prop meets uneven land
   jitter:Float,  // per-instance scale spread, as a fraction of h either side of 1.0. a hundred
                  // identical trees is wallpaper, and this is the cheapest thing that breaks it
 };
@@ -191,6 +192,20 @@ class WildStyle
       r: 1.00,
       jitter: 0.30,
     },
+    // the 2x2 boulder, and the only prop out here whose size is not a taste call: it has to fill the
+    // four cells Const.TILE_ROCK_LARGE blocks and must not spill far past them. aspect 1.68, so h 5.0
+    // draws 8.4 world units across against a blocked footprint of 8.0 — a hand's breadth of overhang,
+    // where the widest point of a boulder sits at mid height anyway. `r` 0.84 is that footprint radius
+    // over `h` (4.2, one CELL), which is exactly what sit() wants to seat an object this wide in a
+    // hillside, and `jitter` is the smallest here for the same reason: a scale roll on this prop moves
+    // its footprint, not just its look. at 5.0 it also stands well over the 3.0 actor billboard, which
+    // is the read a cell that blocks SIGHT has to earn
+    {
+      path: RenderConfig.MODELS.wildRockLarge,
+      h: 5.0,
+      r: 0.84,
+      jitter: 0.08,
+    },
   ];
   // indices into PROPS, named where the model builder picks them. the four trees are FIRST and in
   // order, because render.wild.WildModel maps Const.TILE_TREE1 + 0..3 straight onto them
@@ -206,6 +221,7 @@ class WildStyle
   public static inline var ROCK_CLUSTER_SMALL = 9;
   public static inline var LOG_FALLEN = 10;
   public static inline var ROCK_OUTCROP = 11;
+  public static inline var ROCK_LARGE = 12;
   // WHICH of these a bush, rock or tree tile means is per-band (render.wild.WildBand) — the band holds
   // weighted lists of these indices rather than a chance constant per pair
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
@@ -267,4 +283,51 @@ class WildStyle
   public static inline var FOG_NEAR = 260.0;
   public static inline var FOG_FAR = 560.0;
   public static inline var BLOOM_THRESHOLD = 0.9;   // nothing out here glows; the street's own level
+
+  // --- the vision mask: what the player cannot see (render.world.VisionMask) ---
+  // the wilderness's preset of the tunnel mask. only TWO fields differ from SewerStyle.MASK, which is
+  // the whole reason that file was generalised instead of forked — read the rationale for the other
+  // seven there, because they were measured underground and carry over unchanged.
+  //
+  // what the mask DOES out here is different in kind, and worth knowing before tuning it. underground
+  // it is an atmosphere layer: a tunnel is mostly wall, so most of the frame is behind something and
+  // the mask is on all the time. an open area is 99.5% see-through by construction — the only cells
+  // that block sight are the two large obstacles (Const.TILE_ROCK_LARGE / TILE_TREE_CLUSTER), of which
+  // a mountain area holds ~8 and a forest ~7. measured over 1000 player poses against generated
+  // layouts: ~1.2% of the visible ground is shadowed on average and only ~20% of frames carry any
+  // shadow at all, while standing beside a boulder puts up to 55% of the frame behind it, and the
+  // PLAINS has no blocker of any kind so its mask is uniformly lit forever. so this is a COVER CUE
+  // that fires on contact, not a fog — if it ever reads as "always on" out here, something has started
+  // writing opaque tiles that should not be
+  public static final MASK:render.world.VisionMaskOpts = {
+    // DARKER than the tunnel's 0.18, and for the reason above inverted. underground a hard black would
+    // empty the frame, because the frame IS the thing being hidden; out here the hidden part is a wedge
+    // behind one rock in an otherwise lit field, so it can afford to read as a real shadow — which is
+    // what makes the cover legible at a glance. 0.10 mixes 90% toward WildScene's SKY
+    hidden: 0.10,
+    // nothing out here is additive: no lamps, no glow quads, no cones (see WildScene). kept at the
+    // tunnel's value so an additive effect that does wander in — a muzzle flash, a gas puff — takes the
+    // same hard floor it would anywhere else
+    hiddenAdd: 0.0,
+    // same as the tunnel's, and affordable at four times the canvas because a rebuild is FLAT in canvas
+    // area — every part of it except fadeCell, which is the one thing an open area barely runs. measured
+    // in the live renderer, one full raster: habitat 168x112 0.68ms, sewer 600x480 1.14ms, wilderness
+    // 800x800 1.34ms. 34x the texels for 2x the time
+    px: 8,
+    blur: 0.5,
+    wallFade: 0.5,
+    // the wilderness has no always-solid border ring the way a tunnel does — the turf is walkable right
+    // to the edge — so this does dim the outermost cell of real ground. kept anyway: past that cell the
+    // area simply stops, and a lit rim meeting the background on a hard line is exactly the failure this
+    // channel exists to fix. it only ever shows when the player walks up to the border
+    edgeFade: 1.0,
+    wobble: 0.3,
+    step: 0.05,
+    // 20, against the tunnel's 14, and DERIVED the same way. CAMERA_WILD at full zoom-out covers 305
+    // cells (CameraRig.maxFootprintCells at 16:9) and reaches 7.5 cells ahead of the player, 5.4 behind
+    // and 13.4 to the side — 15.4 at the far corner, against the sewer camera's 12.2. at 14 the square
+    // range bound would have been ON SCREEN, which would read as a vision radius the game logic does
+    // not have (AreaGame.isVisible is unbounded). 20 puts it 4.6 cells past the far corner
+    r: 20,
+  };
 }

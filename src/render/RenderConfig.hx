@@ -636,6 +636,9 @@ class RenderConfig {
     // (render.wild.WildBand), where plains keeps the two rocks above
     wildLogFallen: 'models/wild/log-fallen.glb',                  // fallen trunk, bark all over, broken at both ends
     wildRockOutcrop: 'models/wild/rock-outcrop.glb',              // low wedge of fractured bedrock
+    // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
+    // rect it is placed on (render.wild.WildProps.bigRocks)
+    wildRockLarge: 'models/wild/rock-large.glb',                  // 2x2 boulder, one solid domed mass
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

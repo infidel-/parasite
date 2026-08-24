@@ -28,7 +28,19 @@ class WildProps
       var places = places(m);
       var out = [];
       for (i in 0...models.length)
-        out.push(Models.instanced(scene, models[i].path, places[i], models[i].h, SOLID));
+        {
+          var prop = Models.instanced(scene, models[i].path, places[i], models[i].h, SOLID);
+          // the vision mask, once the glb is actually here: instanced() fills `prop` from its own
+          // queued Models.get callback and this one queues behind it, so the mesh is in place whether
+          // the template was cached or still loading (render.sewer.SewerProps' idiom).
+          // GATED on the batch having anything in it, unlike the tunnel's — instanced() returns early
+          // on an empty list without ever touching the loader, so an unconditional get here would pull
+          // a glb down for a batch that draws nothing. the plains has exactly that case: no band but
+          // the mountains places a large rock
+          if (places[i].length > 0)
+            Models.get(models[i].path, function(_) render.world.VisionMask.patchMesh(prop.mesh));
+          out.push(prop);
+        }
       return out;
     }
 
@@ -61,8 +73,74 @@ class WildProps
               scale: 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.PROPS[mi].jitter,
             });
           }
+      bigRocks(m, places, half);
+      thicket(m, places, half);
       small(m, places, half);
       return places;
+    }
+
+// the 2x2 boulders: ONE instance per rect, standing on the corner its four cells share rather than in
+// any one of them. no seating code of its own — sit() sinks a prop by h * r * slope, and this row's `r`
+// is set so h * r is a whole CELL, which is exactly the footprint radius of a two-cell object. the yaw
+// is a full turn like every other natural object out here, and the scale roll is the tightest in the
+// table because on this prop it moves the FOOTPRINT: the four cells are blocked whatever it draws
+  static function bigRocks(m:Wild, places:Array<Array<Models.PropPlace>>, half:Float):Void
+    {
+      for (r in m.rocks)
+        {
+          var h = WildModel.mix((r.col * 26700001) ^ (r.row * 15485863));
+          var px = (r.col + 1.0) * CELL - half;
+          var pz = (r.row + 1.0) * CELL - half;
+          places[WildStyle.ROCK_LARGE].push({
+            x: px,
+            z: pz,
+            y: sit(WildStyle.ROCK_LARGE, px, pz),
+            yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
+            scale: 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) *
+              WildStyle.PROPS[WildStyle.ROCK_LARGE].jitter,
+          });
+        }
+    }
+
+// the tree thickets: the UNDERSTOREY only. each thicket cell already carries a real tree index, so the
+// scatter above has planted its tree; what a cell blocking SIGHT needs on top of that is something at
+// eye level, because a stand of bare trunks is a thing you can see between however many of them there
+// are. so every cell also gets a bush, and half of them a second tree at half to three-quarter height —
+// which is the point of the second tree as much as the filling is: the scatter deals one size of tree
+// give or take a fifth, and a block holding both full-grown and half-grown ones is what stops a 3x3
+// reading as a tidier patch of the same wood. all of it lands in the batches the band is already
+// drawing, so this costs no draw call
+  static function thicket(m:Wild, places:Array<Array<Models.PropPlace>>, half:Float):Void
+    {
+      for (c in m.thicket)
+        {
+          var h = WildModel.mix((c.col * 83492791) ^ (c.row * 15485863));
+          var bi = WildBand.pick(WildBand.cur.bushes, h);
+          var bs = 0.85 + ((h >> 17) % 1001) / 1000.0 * 0.6;
+          var bx = (c.col + 0.15 + (h % 601) / 601.0 * 0.7) * CELL - half;
+          var bz = (c.row + 0.15 + ((h >> 9) % 601) / 601.0 * 0.7) * CELL - half;
+          places[bi].push({
+            x: bx,
+            z: bz,
+            y: sit(bi, bx, bz, bs),
+            yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
+            scale: bs,
+          });
+          if ((h >> 27) % 2 == 1)
+            continue;
+          h = WildModel.mix(h);
+          var ti = WildBand.pick(WildBand.cur.trees, h);
+          var ts = 0.5 + ((h >> 17) % 1001) / 1000.0 * 0.25;
+          var tx = (c.col + 0.15 + (h % 601) / 601.0 * 0.7) * CELL - half;
+          var tz = (c.row + 0.15 + ((h >> 9) % 601) / 601.0 * 0.7) * CELL - half;
+          places[ti].push({
+            x: tx,
+            z: tz,
+            y: sit(ti, tx, tz, ts),
+            yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
+            scale: ts,
+          });
+        }
     }
 
 // loose stones on OPEN ground — the same two rock glbs a tenth the size, on cells with no prop of
@@ -75,7 +153,8 @@ class WildProps
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (m.prop[row][col] >= 0)
+            // against -1 and not 0, so a cell under a 2x2 boulder (WildModel.OCCUPIED) is skipped too
+            if (m.prop[row][col] != -1)
               continue;
             var h = WildModel.mix((col * 73856093) ^ (row * 19349663));
             if ((h % 1000) >= WildBand.cur.smallRocks * 1000)
@@ -104,9 +183,12 @@ class WildProps
 // earth reads as a rock, a rock floating over it reads as a bug. no TILT, deliberately —
 // render.Models.PropPlace carries a yaw and nothing else, and a tree grows vertical whatever it
 // stands on
-  static inline function sit(mi:Int, x:Float, z:Float):Float
+// `s` is the instance's own scale multiplier, because the footprint it is being sunk by shrinks with
+// it — the scatter's own +/-20-30% jitter is close enough to 1.0 to leave at the default, but a thicket
+// plants trees at half size and a sink computed for a full-grown one would bury them
+  static inline function sit(mi:Int, x:Float, z:Float, s:Float = 1.0):Float
     {
       var p = WildStyle.PROPS[mi];
-      return WildHeight.at(x, z) - p.h * p.r * WildHeight.slope(x, z);
+      return WildHeight.at(x, z) - p.h * p.r * s * WildHeight.slope(x, z);
     }
 }

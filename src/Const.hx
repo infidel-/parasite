@@ -322,6 +322,13 @@ class Const
   public static var TILE_BUSH = 9;
   public static var TILE_GRASS = 10;
   public static var TILE_GRASS_UNWALKABLE = 11;
+  // the two wilderness LARGE obstacles, each covering a rect of cells rather than one
+  // (game.AreaGenerator.generateWilderness stamps them, render.wild.WildProps draws them). they are
+  // the only tiles out there that block SIGHT as well as movement — every rock and tree beside them
+  // is see-through — and tiles.Default already reads 12-15 as unwalkable and opaque, so naming them
+  // is the whole gameplay half. no 2D art needed: a wilderness area always renders in 3D
+  public static var TILE_ROCK_LARGE = 12;
+  public static var TILE_TREE_CLUSTER = 13;
 
   // row 1
   public static var OFFSET_REGION = 16;
@@ -503,7 +510,8 @@ class Const
 
   public static var TILE_CITY_WALKABLE = [ true ];
   public static var TILE_TYPE = [ 'hidden', 'ground', 'building', 'rock',
-    'wall', 'tree', 'tree', 'tree', 'tree', 'grass' ];
+    'wall', 'tree', 'tree', 'tree', 'tree', 'grass', 'grass', 'grass',
+    'largeRock', 'treeCluster' ];
 //  public static var TILE_WALKABLE_REGION = [ true, true, true, true, true, true ];
 //  public static var TILE_TYPE_REGION = [ 'ground', 'cityLow', 'cityMed', 'cityHigh' ];
 

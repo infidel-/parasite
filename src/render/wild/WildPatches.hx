@@ -75,7 +75,10 @@ class WildPatches
       // it. alphaTest runs AFTER the alphaMap multiply, which is what turns the mask's smooth ramp
       // into a ragged dissolve along the art's own island shapes instead of a visible soft blob.
       // FrontSide, where Lawns takes DoubleSide — this only ever faces up
-      var mat = tag(new MeshLambertMaterial({
+      // masked as mode 'b' (alpha scale), which patch() picks off `transparent` — an overlay that
+      // fades out where the player cannot see reveals turf that is itself already sunk to the floor,
+      // so it lands in the same place a colour mix would
+      var mat = render.world.VisionMask.patch(tag(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         alphaMap: mask,
         transparent: true,
@@ -84,7 +87,7 @@ class WildPatches
         depthWrite: false,
         side: THREE.FrontSide,
       }),
-        'wild-patch', 'wilderness ground patch', tex);
+        'wild-patch', 'wilderness ground patch', tex));
       var y = WildStyle.PATCH_Y * (i + 1);
       var B = render.Chunks.CELLS;
       var row = 0;

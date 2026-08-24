@@ -45,7 +45,7 @@ typedef ShaderPatch = {
 //            it, and a turn about the VERTICAL moves a limb on a shallow fan almost entirely in
 //            depth. see the PropCurl header in render.world.ObjModels for the measurements.
 //
-// it deliberately costs NO draw call, NO pass and NO geometry, the same trade render.sewer.SewerMask
+// it deliberately costs NO draw call, NO pass and NO geometry, the same trade render.world.VisionMask
 // makes: the props stay the same instanced batches drawing the same materials, and everything here is
 // arithmetic in a vertex shader that was already running.
 //
@@ -56,7 +56,7 @@ class PropShader
 {
   // the clock every patched material references BY IDENTITY, in BASE_MS units — so per-prop `rate`
   // values are plain multipliers and writing .value here reaches every material at once, exactly the
-  // uniform-sharing SewerMask uses for the mask texture
+  // uniform-sharing VisionMask uses for the mask texture
   static var uTime = { value: 0.0 };
 
 // advance the shared clock. call once per frame from the area kind's tick, BEFORE the patches below
@@ -68,7 +68,7 @@ class PropShader
 
 // patch a mesh's material, tolerating a mesh that is not there yet and a prop that does not animate.
 // every glb-backed prop arrives through a loader callback, so its InstancedMesh is null for the first
-// frames — the same reason SewerMask.patchMesh exists and is called per frame rather than at build
+// frames — the same reason VisionMask.patchMesh exists and is called per frame rather than at build
   public static function patchMesh(o:Object3D, a:PropAnim, p:PropPulse, c:PropCurl):Void
     {
       if ((a == null && p == null && c == null) ||
@@ -96,7 +96,7 @@ class PropShader
     {
       // the mark lives on the HOOK and not in userData: Material.clone() copies userData but NOT
       // onBeforeCompile, so a userData flag would ride onto the GHOST clones render.Models makes from
-      // a patched template and lock them out of the patch they never received (SewerMask.hx carries
+      // a patched template and lock them out of the patch they never received (VisionMask.hx carries
       // the obituary — it was found live, on the exit ladder's ghost)
       if (mat.onBeforeCompile != null &&
           mat.onBeforeCompile.propAnim == true)
@@ -283,7 +283,7 @@ class PropShader
       // an OWN key only. three's Material carries a DEFAULT customProgramCacheKey on the PROTOTYPE
       // returning this.onBeforeCompile.toString(), so the field is never null and taking it blindly
       // yields a function that throws unbound on every draw and blanks the frame — the trap
-      // SewerMask.patch documents, measured at 838 errors and 0 draw calls
+      // VisionMask.patch documents, measured at 838 errors and 0 draw calls
       // Dynamic because it is invoked through Reflect.callMethod with the material as the receiver —
       // a key function is a METHOD and may read `this`, which a typed function value cannot express
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
@@ -359,8 +359,8 @@ class PropShader
               '    cos( position.x * 4.7 / propSpan - propTime * propSheenRate * 1.13 ) );\n' +
               '  objectNormal = normalize( objectNormal );\n' +
               '  }');
-          // and the displacement, BEFORE <project_vertex> — which also means SewerMask samples the
-          // moved position, since its vSewerMask is built from `transformed` after that chunk.
+          // and the displacement, BEFORE <project_vertex> — which also means VisionMask samples the
+          // moved position, since its vVisMask is built from `transformed` after that chunk.
           // the swell goes in AFTER the sway so it scales a body that has already leaned, which is
           // the right order: a lean of an inflated body and an inflation of a leaned one differ only
           // in the second order, but only this one keeps the axis the swell turns about vertical
@@ -391,7 +391,7 @@ class PropShader
       // and unlit forms above would collide with each other. WHICH HALVES are present is in the key
       // for the same reason: they are emitted conditionally, so a sway-only and a pulse-only prop
       // are two different sources. CHAINED, because the props' solid and ghost materials already
-      // carry SewerMask's hook and its key
+      // carry VisionMask's hook and its key
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
           'propAnim' + (hasA ? 'S' : '') + (hasP ? 'U' : '') + (hasC ? 'C' : '') + (lit ? 'L' : 'P');

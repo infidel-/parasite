@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Models;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 
 // 3D clutter scattered against the tunnel walls — the first CONVEX geometry underground. everything
 // else down here is the shell itself (a concave box: a corridor cannot block its own light) or a
@@ -63,7 +64,7 @@ class SewerProps
           // the vision mask, once the glb is actually here: instanced() fills `prop` from its own
           // queued Models.get callback, and this one is queued behind it, so the mesh is in place
           // whether the template was already cached or still loading
-          Models.get(models[i].path, function(_) SewerMask.patchMesh(prop.mesh));
+          Models.get(models[i].path, function(_) VisionMask.patchMesh(prop.mesh));
         }
     }
 

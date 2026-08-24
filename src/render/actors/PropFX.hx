@@ -18,7 +18,7 @@ import render.world.PropShader.ShaderPatch;
 import render.world.WorldCtx;
 
 // the per-slot uniform bag for one core quad, held BY IDENTITY: writing .value here reaches the
-// compiled shader with no bookkeeping, the same uniform sharing render.sewer.SewerMask relies on.
+// compiled shader with no bookkeeping, the same uniform sharing render.world.VisionMask relies on.
 // one bag per pool slot rather than one shared bag, because the phase is what stops two organs of
 // the same kind in one level from writhing in lockstep
 typedef CoreUniforms = {

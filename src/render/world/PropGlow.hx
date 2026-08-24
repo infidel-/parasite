@@ -40,7 +40,7 @@ import render.world.PropShader.ShaderPatch;
 // with a sclera, an iris and a pupil that drift. It lives here rather than in a module of its own
 // because everything it needs already exists in this one — the local-position varying, the bounding
 // box frame, the clock and the per-instance phase — and because a fourth copy of the hook-chaining
-// boilerplate below (there are already three: SewerMask, PropShader and this) would add another link
+// boilerplate below (there are already three: VisionMask, PropShader and this) would add another link
 // to a cache key that is walked on every material.
 //
 // like render.world.PropShader it costs NO draw call, NO pass and NO geometry: the props stay the same
@@ -478,7 +478,7 @@ class PropGlow
       // an OWN key only. three's Material carries a DEFAULT customProgramCacheKey on the PROTOTYPE
       // returning this.onBeforeCompile.toString(), so the field is never null and taking it blindly
       // yields a function that throws unbound on every draw and blanks the frame — the trap
-      // render.sewer.SewerMask.patch documents, measured at 838 errors and 0 draw calls
+      // render.world.VisionMask.patch documents, measured at 838 errors and 0 draw calls
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
       // same reason as `prev`: this function is handed marker fields below, so it is a JS function
@@ -549,7 +549,7 @@ class PropGlow
       mat.onBeforeCompile = hook;
       // three keys its program cache on base material params, NOT on onBeforeCompile — without a key
       // of our own a glowing program could be handed to an identical unlit-of-this prop. CHAINED,
-      // because these materials already carry SewerMask's hook and its key. the mote count, the mask
+      // because these materials already carry VisionMask's hook and its key. the mote count, the mask
       // key and the EYE COUNT are all in it because all three are LITERALS in the source above, not
       // uniforms — and the converse is why `pulse`, the whole eye table and every rate deliberately
       // are: a row can retune any of them, or turn a half off entirely, without adding a permutation

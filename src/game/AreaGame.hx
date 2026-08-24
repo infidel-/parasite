@@ -74,7 +74,7 @@ class AreaGame extends _SaveObject
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
   // bumped by every updateVisibility() call. the 3D layer polls rather than listens (see
-  // render.View's rAF loop), so this is what tells render.sewer.SewerMask that a sightline changed
+  // render.View's rAF loop), so this is what tells render.world.VisionMask that a sightline changed
   // without the player moving - opening a door is the case that needs it. transient, never saved
   public var visRev: Int = 0;
 
@@ -2464,6 +2464,11 @@ class Test {
         {
           case 'city': render.RenderConfig.CAMERA;
           case 'sewers', 'habitat': render.RenderConfig.CAMERA_SEWER;
+          // the wilderness renders in 3D too and was missing from this list, so it took the 2D canvas
+          // rect — the exact dilution the header describes, on the largest grid in the game. it has
+          // been latent rather than live: AREA_GROUND declares commonAI 0, so the turn spawner never
+          // runs out there and nothing reads the rect yet. it will the moment that number moves
+          case 'wilderness': render.RenderConfig.CAMERA_WILD;
           default: null;
         };
       if (cam == null)

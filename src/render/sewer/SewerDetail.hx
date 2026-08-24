@@ -7,6 +7,7 @@ import render.Textures;
 import render.sewer.SewerModel.Sewer;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
+import render.world.VisionMask;
 
 // dressing laid over the SewerGeom shell, and the reason the shell can get away with a single wall
 // texture: a damp grime band at the foot of every wall, and fake contact shadows where wall meets
@@ -111,7 +112,7 @@ class SewerDetail
           geo.setAttribute('uv', new Float32BufferAttribute(bufs[i].uv, 2));
           geo.setIndex(bufs[i].idx);
           geo.computeVertexNormals();
-          var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
+          var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
             map: Textures.loadTexture(cats[i].tex, 'wall'),
             color: cats[i].tint,
             transparent: true,
@@ -206,7 +207,7 @@ class SewerDetail
       tex.wrapT = THREE.ClampToEdgeWrapping;
       tex.needsUpdate = true;
       // every band in the level on ONE material and ONE mesh: one draw call however big the sewer
-      var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
+      var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
         map: tex,
         transparent: true,
         premultipliedAlpha: true,
@@ -364,7 +365,7 @@ class SewerDetail
         {
           if (s.mats.length == 0)
             continue;
-          var mesh = new InstancedMesh(geo, SewerMask.patch(mat(s.tex)), s.mats.length);
+          var mesh = new InstancedMesh(geo, VisionMask.patch(mat(s.tex)), s.mats.length);
           for (k in 0...s.mats.length)
             mesh.setMatrixAt(k, s.mats[k]);
           mesh.instanceMatrix.needsUpdate = true;

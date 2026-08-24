@@ -10,7 +10,7 @@ import render.wild.WildModel.Wild;
 // draw call and render.Chunks drops whole blocks at once.
 //
 // the wind is a vertex-shader term folded into the material the tufts already draw with — the same
-// trade render.world.PropShader and render.sewer.SewerMask make, and for the same reason: no extra
+// trade render.world.PropShader and render.world.VisionMask make, and for the same reason: no extra
 // pass, no extra geometry, no per-frame CPU work beyond advancing one shared clock. the phase and the
 // height weight ride in on ONE vec2 attribute rather than being read off `uv`, because `uv` is only
 // declared when the material happens to define USE_UV and this must not depend on that.
@@ -68,8 +68,10 @@ class WildGrass
             var col = col0 + dc;
             var row = row0 + dr;
             // a tree or a rock stands on its cell, and tufts pushing through its base read as grass
-            // growing out of the trunk. the cell keeps its prop and loses its grass
-            if (m.prop[row][col] >= 0)
+            // growing out of the trunk. the cell keeps its prop and loses its grass — and against -1
+            // rather than 0, so a cell merely COVERED by a multi-cell obstacle (WildModel.OCCUPIED,
+            // which draws from its rect's corner) loses its grass too
+            if (m.prop[row][col] != -1)
               continue;
             // its own multipliers, mixed: must not correlate with the prop yaw/scale rolls
             var h = WildModel.mix((col * 19349663) ^ (row * 83492791));
@@ -205,6 +207,12 @@ class WildGrass
       // three keys its program cache on base material params and NOT on onBeforeCompile, so without a
       // key of our own a moving grass program could be handed to an identical still material
       mm.customProgramCacheKey = function() return 'wildGrass';
+      // the vision mask goes on LAST, over the wind hook: patch() chains whatever hook a material
+      // already carries rather than replacing it, and it reads that hook off the material — so this
+      // has to come after the assignment above or the wind would be the thing that got replaced. it
+      // extends the cache key the same way ('wildGrasssvisMasks'), which is what keeps a masked grass
+      // program from being handed to an unmasked one
+      render.world.VisionMask.patch(mat);
       return mat;
     }
 }

@@ -1,10 +1,10 @@
-package render.sewer;
+package render.world;
 
 import js.Browser;
 import three.Three;
 import game.Game;
 import citygen.CityConfig;
-import render.sewer.SewerModel.Sewer;
+import render.world.VisionMaskOpts;
 
 // one exposed blocker face, in CELL units. it carries no owner cell on purpose: the blocker a ray
 // stopped on is recovered from the hit POINT instead (a hair further along the ray lands inside it),
@@ -16,21 +16,29 @@ typedef MaskSeg = {
   y2:Float,
 }
 
-// the tunnel VISION MASK: a top-down texture saying whether the player can see a point, sampled by
-// world XZ inside every material the tunnel draws with, sinking whatever it hits toward the fog
-// colour where the answer is no.
+// the VISION MASK: a top-down texture saying whether the player can see a point, sampled by world XZ
+// inside every material an area draws with, sinking whatever it hits toward the fog colour where the
+// answer is no.
 //
 // this is the 3D form of the 2D view's black LOS overlay (AreaView.drawSmoothLOSOverlay), which never
-// runs underground — AreaView.draw early-outs on a 3D area — so until this the level itself was drawn
+// runs in a 3D area — AreaView.draw early-outs on one — so until this the level itself was drawn
 // whole, corner to corner, and only its CONTENTS popped in and out. the shape is a real VISIBILITY
 // POLYGON, the same ray-to-every-corner sweep the 2D overlay does, ported from screen pixels to cell
 // units; a per-cell mask was tried first and replaced, because a cell grid cannot express a shadow
 // edge that runs diagonally off a wall corner.
 //
 // it deliberately costs NO draw call, NO pass and NO geometry: the mask is one texture fetch folded
-// into materials that already draw. that is what lets the whole level stay welded into the handful of
+// into materials that already draw. that is what lets the whole tunnel stay welded into the handful of
 // merged meshes render.sewer.SewerGeom builds it as — a per-cell hide would have needed the weld
 // broken, and chunking the tunnels was already measured and rejected (docs/3d-render.md).
+//
+// IT IS NOT TUNNEL-ONLY, and was `render.sewer.SewerMask` until the wilderness grew things that block
+// sight (Const.TILE_ROCK_LARGE / TILE_TREE_CLUSTER). nothing in the algorithm was underground-specific
+// — it sweeps game.area.canSeeThrough over a cell grid — so the port needed only the two things now
+// passed in: the per-area-kind tuning (render.world.VisionMaskOpts) and the STATIC "is this cell a
+// blocker" predicate the green channel is painted from. what differs in practice is DENSITY: a tunnel
+// is mostly wall and an open area is 99.5% see-through, so out there the sweep does ~3% of the ray
+// tests and `fadeCell` — the one part of a rebuild that is not flat in canvas area — barely runs.
 //
 // WHAT BLOCKS IS game.area.canSeeThrough, so a closed door blocks and the renderer's own floor grid
 // is not consulted at all. the ACTORS still run on game.playerArea.sees (render.Actors), which is a
@@ -40,7 +48,7 @@ typedef MaskSeg = {
 // cell snaps at the instant an action resolves while this sweeps over the ~150ms slide, so an actor
 // round a corner now leads the light that should reveal it by up to one move. both read as a soft
 // lead rather than a pop, because an actor eases over FADE_SPEED instead of switching
-class SewerMask
+class VisionMask
 {
   // ray fan: three angles at every corner — the corner itself and a hair either side. the pair is
   // what lets a ray slip PAST a corner and find what is behind it; with the centre ray alone every
@@ -56,10 +64,16 @@ class SewerMask
   // clear of numerical noise on the face it just landed on
   static inline var STEP_EPS = 0.05;
 
+  // the live area kind's tuning, and the STATIC blocker predicate the green channel is painted from.
+  // both are statics rather than arguments threaded through the file because exactly one area is ever
+  // built — the same reason the canvas and the uniforms below are
+  static var opt:VisionMaskOpts = null;
+  static var solid:(Int, Int) -> Bool = null;
+
   static var canvas:js.html.CanvasElement = null;
   static var ctx:js.html.CanvasRenderingContext2D = null;
   static var tex:CanvasTexture = null;
-  static var mw = 0; // grid width in CELLS (the canvas is this times SewerStyle.MASK_PX)
+  static var mw = 0; // grid width in CELLS (the canvas is this times opt.px)
   static var mh = 0;
   // the mask's GREEN channel, painted once per level: masonry or not. static, because walls do not
   // move, so it is held as a canvas and blitted in as each rebuild's clear
@@ -80,17 +94,20 @@ class SewerMask
   // the uniform blocks every patched material references BY IDENTITY. three stores the reference it
   // is handed in onBeforeCompile, so writing .value here reaches every material at once and an update
   // never has to walk them. two floor blocks because an ADDITIVE emissive needs a harder one than the
-  // surface it sits on — see SewerStyle.MASK_HIDDEN_ADD
+  // surface it sits on — see opt.hiddenAdd
   static var uMap:Dynamic = { value: null };
   static var uScale:Dynamic = { value: new Vector2(0, 0) };
   static var uOrigin:Dynamic = { value: new Vector2(0, 0) };
-  static var uFloor:Dynamic = { value: SewerStyle.MASK_HIDDEN };
-  static var uFloorAdd:Dynamic = { value: SewerStyle.MASK_HIDDEN_ADD };
+  // these three carry VALUES from the opts and so are filled by attach(), not here. the OBJECTS still
+  // have to exist from class init: patch() hands one of them to every material it touches and three
+  // keeps the reference, so replacing an object later would strand every material already patched
+  static var uFloor:Dynamic = { value: 0.0 };
+  static var uFloorAdd:Dynamic = { value: 0.0 };
   // boundary wobble amplitude in WORLD units, pre-divided by the 1.5 the two-octave sine sum below
-  // peaks at — so SewerStyle.MASK_WOBBLE reads as the maximum displacement it actually produces
-  static var uWobble:Dynamic = { value: SewerStyle.MASK_WOBBLE / 1.5 };
+  // peaks at — so opt.wobble reads as the maximum displacement it actually produces
+  static var uWobble:Dynamic = { value: 0.0 };
 
-  // dirty key: the SMOOTHED origin quantised to SewerStyle.MASK_STEP, plus the two other things that
+  // dirty key: the SMOOTHED origin quantised to opt.step, plus the two other things that
   // can open a sightline without it moving (AreaGame.visRev, the debug reveal).
   //
   // the origin is the sliding billboard position and NOT the player's logical cell, which is what
@@ -105,34 +122,46 @@ class SewerMask
   static var lastRev = -1;
   static var lastLos = false;
 
-// bind the mask to a level: the texture and the world->uv transform have to exist before anything
-// samples them. MATERIALS are not touched here — every tunnel builder patches its own as it creates
+// bind the mask to an area: the texture and the world->uv transform have to exist before anything
+// samples them. MATERIALS are not touched here — every area builder patches its own as it creates
 // it, which is also what gives the boot pre-warm its parity for free, since render.View.warmup runs
 // those same builders. it is deliberately NOT a scene traverse: the actor pool, the path line, the
 // tactical grid and the batched decals all land in this same scene later, and one of them
-// (render.decals.DecalBatch) carries an onBeforeCompile of its own that a blind walk would overwrite
-  public static function attach(m:Sewer):Void
+// (render.decals.DecalBatch) carries an onBeforeCompile of its own that a blind walk would overwrite.
+//
+// `isSolid` is the STATIC "is this cell a blocker" test the green channel is painted from, and static
+// is the whole requirement — it decides where the boundary may wobble, which is a fact about the level
+// and not about its doors. underground that is SewerModel.isFloor rather than canSeeThrough for exactly
+// that reason; in the open there are no doors, so canSeeThrough IS static and the wilderness passes it
+  public static function attach(o:VisionMaskOpts, w:Int, h:Int, isSolid:(Int, Int) -> Bool):Void
     {
+      opt = o;
+      solid = isSolid;
+      uFloor.value = o.hidden;
+      uFloorAdd.value = o.hiddenAdd;
+      uWobble.value = o.wobble / 1.5;
       lastKX = -1;
       lastKY = -1;
       lastRev = -1;
-      ensure(m);
+      ensure(w, h);
       // UNCONDITIONAL, unlike ensure: two different levels can share dimensions (every habitat is
-      // 21x14), so a masonry layer cached on size alone would be the previous level's walls
-      buildWallLayer(m);
+      // 21x14, every wilderness area is 90 or 100 square), so a blocker layer cached on size alone
+      // would be the previous area's walls
+      buildWallLayer();
     }
 
 // the mask's two STATIC channels, painted once per level and blitted in as each rebuild's clear —
-// which costs one drawImage instead of a fill per cell, and keeps both of them out of MASK_BLUR.
-//   GREEN: 1 where the level has masonry, 0 over open floor. the shader reads it to decide where the
-//     boundary may WOBBLE — a shadow edge out on open floor is a real ray cast past a corner and has
-//     to stay straight, while the same edge crossing a wall is the blocky per-cell reveal that wanted
-//     breaking up. keyed off SewerModel.isFloor and NOT area.canSeeThrough: this asks "is there
-//     masonry here", which is static, where canSeeThrough is object-aware and would call a door a wall
-//   BLUE: the level's outer falloff (SewerStyle.MASK_EDGE_FADE), a plain multiplier on sewerVis
-  static function buildWallLayer(m:Sewer):Void
+// which costs one drawImage instead of a fill per cell, and keeps both of them out of opt.blur.
+//   GREEN: 1 where the area has a blocker, 0 over open ground. the shader reads it to decide where the
+//     boundary may WOBBLE — a shadow edge out on open ground is a real ray cast past a corner and has
+//     to stay straight, while the same edge crossing a blocker is the blocky per-cell reveal that
+//     wanted breaking up. keyed off the STATIC predicate attach() was handed and NOT area.canSeeThrough
+//     directly: this asks "is there something here", which cannot change, where canSeeThrough is
+//     object-aware and would call a door a wall
+//   BLUE: the area's outer falloff (opt.edgeFade), a plain multiplier on visAmt
+  static function buildWallLayer():Void
     {
-      var P = SewerStyle.MASK_PX;
+      var P = opt.px;
       wallLayer = Browser.document.createCanvasElement();
       wallLayer.width = canvas.width;
       wallLayer.height = canvas.height;
@@ -141,19 +170,19 @@ class SewerMask
       // to be an exact 1 or it would dim the whole level
       c.fillStyle = '#0000ff';
       c.fillRect(0, 0, wallLayer.width, wallLayer.height);
-      // green ADDED, so masonry cannot trample the blue underneath it
+      // green ADDED, so a blocker cannot trample the blue underneath it
       c.globalCompositeOperation = 'lighter';
       c.fillStyle = '#00ff00';
-      for (row in 0...m.h)
-        for (col in 0...m.w)
-          if (!SewerModel.isFloor(m, col, row))
+      for (row in 0...mh)
+        for (col in 0...mw)
+          if (solid(col, row))
             c.fillRect(col * P, row * P, P, P);
       // then the rim, as a MULTIPLY by `rgba(255,255,0,a)`: multiply is per channel, so a source of 1
       // leaves red and green EXACTLY as painted and only the zero blue is scaled, by (1 - a). the four
       // ramps each cover the whole canvas and clamp to their far stop, so inland they are a no-op —
       // and where two meet they multiply, which drops a corner faster than an edge, as a corner should
       c.globalCompositeOperation = 'multiply';
-      var f = SewerStyle.MASK_EDGE_FADE * P;
+      var f = opt.edgeFade * P;
       var w = wallLayer.width;
       var h = wallLayer.height;
       rim(c, 0.5, 0, 0.5 + f, 0);
@@ -182,11 +211,11 @@ class SewerMask
       // world -> CONTINUOUS cell coordinate, the space the polygon and the canvas both work in.
       // cellToWorld puts the centre of cell c at (c - GRID/2 + 0.5) * CELL, so this lands on c + 0.5
       // standing there, floor() of it is the cell the origin is in, and it is the canvas x/y over
-      // MASK_PX — the same transform ensure() hands the shader, so mask and polygon cannot drift
+      // opt.px — the same transform ensure() hands the shader, so mask and polygon cannot drift
       var ox = px / CityConfig.CELL + CityConfig.GRID / 2;
       var oy = pz / CityConfig.CELL + CityConfig.GRID / 2;
-      var kx = Math.round(ox / SewerStyle.MASK_STEP);
-      var ky = Math.round(oy / SewerStyle.MASK_STEP);
+      var kx = Math.round(ox / opt.step);
+      var ky = Math.round(oy / opt.step);
       var los = game.player.vars.losEnabled;
       var rev = game.area.visRev;
       if (kx == lastKX &&
@@ -218,7 +247,7 @@ class SewerMask
       else if (game.player.state != _PlayerState.PLR_STATE_HOST)
         box(game);
       else polygon(game, ox, oy);
-      // the wall layer is the clear: black background plus the green masonry channel in one blit, and
+      // the blocker layer is the clear: black background plus the green channel in one blit, and
       // it goes in UNBLURRED so the wobble gate stays a crisp per-cell edge
       ctx.globalCompositeOperation = 'source-over';
       ctx.filter = 'none';
@@ -228,11 +257,11 @@ class SewerMask
       // drawImage treats everything outside the source as transparent, so the blur pulls the outermost
       // texels down — which is right rather than incidental: those are the always-solid area border,
       // and beyond them there is no geometry at all, only the clear colour
-      // MASK_BLUR is in WORLD UNITS and the filter wants TEXELS, so it converts here — otherwise
-      // changing MASK_PX would silently rescale the boundary softness with it
+      // opt.blur is in WORLD UNITS and the filter wants TEXELS, so it converts here — otherwise
+      // changing opt.px would silently rescale the boundary softness with it
       ctx.globalCompositeOperation = 'lighter';
       ctx.filter = 'blur(' +
-        (SewerStyle.MASK_BLUR * SewerStyle.MASK_PX / CityConfig.CELL) + 'px)';
+        (opt.blur * opt.px / CityConfig.CELL) + 'px)';
       ctx.drawImage(scratch, 0, 0);
       ctx.filter = 'none';
       ctx.globalCompositeOperation = 'source-over';
@@ -242,14 +271,14 @@ class SewerMask
 // the parasite's boxed vision, straight off the same predicate the actors read, and painted CELL BY
 // CELL rather than approximated. sees() gives a free parasite a flat 7x7 of CELLS with no occlusion
 // at all, so there is no polygon edge to slide and mirroring it exactly is what keeps the level and
-// the actors saying the same thing in that state — MASK_BLUR still softens the box's rim on the way
+// the actors saying the same thing in that state — opt.blur still softens the box's rim on the way
 // in, which spreads it under a cell, and the mask has never been what decides visibility anyway.
 // it does repaint on every frame of a slide, since the
 // key above moves and this does not: 81 box tests and an 84x56 upload, both under the timer's
 // resolution, which is cheaper than carrying a second dirty key to skip them
   static function box(game:Game):Void
     {
-      var P = SewerStyle.MASK_PX;
+      var P = opt.px;
       var pcol = game.playerArea.x;
       var prow = game.playerArea.y;
       for (row in prow - 4...prow + 5)
@@ -265,8 +294,8 @@ class SewerMask
 // here already worked in floats — only the two INTEGER things below had to follow the origin
   static function polygon(game:Game, ox:Float, oy:Float):Void
     {
-      var P = SewerStyle.MASK_PX;
-      var R = SewerStyle.MASK_R;
+      var P = opt.px;
+      var R = opt.r;
       // the cell the origin actually stands in. the scan window and the own-cell skip both key off
       // THIS rather than off game.playerArea, so they stay centred on the point the rays leave from:
       // a window centred on the logical cell sits up to a cell off the origin mid-slide, and the
@@ -291,8 +320,9 @@ class SewerMask
       // the range bound. every ray has to terminate on something and this is what catches one that
       // escapes down an open corridor; it is also what keeps the cost flat, since the whole sweep is
       // O(rays * segments) and both grow with the radius. a SQUARE rather than a disc — four segments
-      // instead of an arc fan, and its corners reach R * sqrt(2), far past the ~12 cells the sewer
-      // camera can show even pinned at full zoom-out (render.CameraRig.maxFootprintCells)
+      // instead of an arc fan, and its corners reach R * sqrt(2). `r` is DERIVED per area kind from
+      // what that kind's camera can actually show at full zoom-out (render.CameraRig.maxFootprintCells)
+      // — see each preset — so this square always sits off screen and is never a visible vision radius
       seg(ox - R, oy - R, ox + R, oy - R);
       seg(ox + R, oy - R, ox + R, oy + R);
       seg(ox + R, oy + R, ox - R, oy + R);
@@ -415,7 +445,7 @@ class SewerMask
           fadeCell(game, wallCol[i], wallRow[i]);
     }
 
-// does this lit wall cell touch masonry the sweep never reached?
+// does this lit blocker cell touch a blocker the sweep never reached?
   static function fades(game:Game, c:Int, r:Int):Bool
     {
       return dark(game, c - 1, r) ||
@@ -424,15 +454,15 @@ class SewerMask
         dark(game, c, r + 1);
     }
 
-// is this neighbour a blocker the sweep never reached? open floor is not one whatever its state —
-// the fade exists to end a run of lit MASONRY, and floor already ends at the polygon edge.
+// is this neighbour a blocker the sweep never reached? open ground is not one whatever its state —
+// the fade exists to end a run of lit BLOCKER, and ground already ends at the polygon edge.
 // OFF THE GRID counts as dark, and it is the one case that is not about the sweep at all. this used
 // to return false, on the reasoning that there is no level out there to fade into — which is exactly
 // backwards. SewerGeom caps EVERY solid cell and only insets a cap edge that overlooks floor, so the
 // area border's cap runs flush to the boundary and then there is no geometry whatever: a fully lit
 // ledge meeting the clear colour on a hard rim, which is what standing against the outer wall looked
 // like. the black background IS what it should fade into. the cost the old comment worried about does
-// not arrive either — only cells the sweep REACHED are ever tested, so a MASK_R radius bounds it
+// not arrive either — only cells the sweep REACHED are ever tested, so an opt.r radius bounds it
   static function dark(game:Game, c:Int, r:Int):Bool
     {
       if (c < 0 ||
@@ -451,25 +481,28 @@ class SewerMask
       return 'rgb(' + Std.int(Math.min(1, Math.min(a, b) / f) * 255) + ',0,0)';
     }
 
-// one lit wall cell that borders masonry the sweep never reached, so a run of lit wall dims into the
-// dark instead of stopping at a right angle — the hard 90-degree edges the per-cell reveal used to
-// leave all over the tunnels.
+// one lit blocker cell that borders a blocker the sweep never reached, so a run of lit blocker dims
+// into the dark instead of stopping at a right angle — the hard 90-degree edges the per-cell reveal
+// used to leave all over the tunnels, and which a 2x2 boulder or a 3x3 thicket would leave too.
 // the unreached cell is never painted, so the whole authored ramp lives inside the cell that can
-// actually be seen. MASK_BLUR then carries a little of it across the shared edge, which is the point
-// of the blur and not a leak — the dark side lands above MASK_HIDDEN for a texel or so rather than
+// actually be seen. opt.blur then carries a little of it across the shared edge, which is the point
+// of the blur and not a leak — the dark side lands above opt.hidden for a texel or so rather than
 // stepping onto it, and the two ramps read as one.
 //
-// THIS IS THE WHOLE COST OF A REBUILD, so it goes out as STRIPS wherever it can. the value is the
-// minimum of the distances to the fading sides, and a cell that fades on one axis only — which is
-// nearly all of them, since the usual case is masonry sitting behind a wall the player is looking at —
-// has a ramp that does not vary along the other axis at all. so that case is P fillRects instead of
-// P*P. measured at MASK_PX 8, 56 fading cells: 3584 single-texel fills is 3.78ms, against 0.10ms for
+// THIS IS THE WHOLE COST OF A REBUILD UNDERGROUND, so it goes out as STRIPS wherever it can. the value
+// is the minimum of the distances to the fading sides, and a cell that fades on one axis only — which
+// is nearly all of them, since the usual case is masonry sitting behind a wall the player is looking
+// at — has a ramp that does not vary along the other axis at all. so that case is P fillRects instead
+// of P*P. measured at px 8, 56 fading cells: 3584 single-texel fills is 3.78ms, against 0.10ms for
 // the composite and 0.02ms for the polygon. only a cell fading on BOTH axes turns a corner in its
-// iso-contour and needs the per-texel loop
+// iso-contour and needs the per-texel loop.
+// it is also the ONE part of a rebuild that is not flat in canvas area, which is why an open area
+// pays so little for a mask four times the tunnel's: a wilderness holds ~15 blocker rects where a
+// level holds hundreds of wall cells, so there is almost nothing here to fade
   static function fadeCell(game:Game, c:Int, r:Int):Void
     {
-      var P = SewerStyle.MASK_PX;
-      var f = SewerStyle.MASK_WALL_FADE;
+      var P = opt.px;
+      var f = opt.wallFade;
       var fw = dark(game, c - 1, r);
       var fe = dark(game, c + 1, r);
       var fn = dark(game, c, r - 1);
@@ -548,18 +581,18 @@ class SewerMask
       return best;
     }
 
-// (re)build the canvas + texture for this level's dimensions, and the world->uv transform with them
-  static function ensure(m:Sewer):Void
+// (re)build the canvas + texture for this area's dimensions, and the world->uv transform with them
+  static function ensure(w:Int, h:Int):Void
     {
       if (canvas != null &&
-          mw == m.w &&
-          mh == m.h)
+          mw == w &&
+          mh == h)
         return;
-      mw = m.w;
-      mh = m.h;
+      mw = w;
+      mh = h;
       canvas = Browser.document.createCanvasElement();
-      canvas.width = mw * SewerStyle.MASK_PX;
-      canvas.height = mh * SewerStyle.MASK_PX;
+      canvas.width = mw * opt.px;
+      canvas.height = mh * opt.px;
       ctx = canvas.getContext2d();
       scratch = Browser.document.createCanvasElement();
       scratch.width = canvas.width;
@@ -575,21 +608,22 @@ class SewerMask
       tex.flipY = false;
       // linear WITHOUT mipmaps. the polygon edge is already antialiased by the canvas fill, which
       // carries it at sub-texel precision; this reconstructs that, while a mip chain would cost a
-      // regeneration per rebuild and over-blur the edge at the grazing angles the sewer camera lives at
+      // regeneration per rebuild and over-blur the edge at the grazing angles these cameras live at
       tex.generateMipmaps = false;
       tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
       uMap.value = tex;
-      // world XZ -> uv, and note this is RESOLUTION-INDEPENDENT: uv is normalized, so MASK_PX changes
+      // world XZ -> uv, and note this is RESOLUTION-INDEPENDENT: uv is normalized, so opt.px changes
       // how finely the mask is sampled and nothing here. CityConfig.cellToWorld puts the CENTRE of
       // cell (col,row) at (col - GRID/2 + 0.5) * CELL, so the continuous cell coordinate of a world x
-      // is x / CELL + GRID/2 and the canvas is that scaled by MASK_PX
+      // is x / CELL + GRID/2 and the canvas is that scaled by opt.px
       uScale.value.set(1 / (CityConfig.CELL * mw), 1 / (CityConfig.CELL * mh));
       uOrigin.value.set(CityConfig.GRID / 2 / mw, CityConfig.GRID / 2 / mh);
     }
 
-// patch a mesh's material, tolerating a mesh that is not there yet. every glb-backed prop down here
-// arrives through a loader callback, so its InstancedMesh is null for the first frames
+// patch a mesh's material, tolerating a mesh that is not there yet. every glb-backed prop — the wall
+// clutter and ladders underground, every tree and rock in the wilderness — arrives through a loader
+// callback, so its InstancedMesh is null for the first frames
   public static function patchMesh(o:Object3D):Void
     {
       if (o != null &&
@@ -616,51 +650,52 @@ class SewerMask
       // never received. found live, on the exit ladder's ghost, which read as patched and was not
       if (mat.fog == false ||
           (mat.onBeforeCompile != null &&
-           mat.onBeforeCompile.sewerMask == true))
+           mat.onBeforeCompile.visionMask == true))
         return mat;
       var additive = (mat.blending == THREE.AdditiveBlending);
       var floor = additive ? uFloorAdd : uFloor;
       var mode = additive ? 'g' : (mat.transparent == true ? 'b' : 's');
-      // the boundary WANDERS in world space, over WALL CELLS ONLY (see the .g gate below): a shadow
-      // edge out on open floor is a real ray cast past a corner and reads wrong bent, while the same
-      // edge crossing masonry is the per-cell reveal and is exactly what wanted breaking up.
+      // the boundary WANDERS in world space, over BLOCKER CELLS ONLY (see the .g gate below): a shadow
+      // edge out on open ground is a real ray cast past a corner and reads wrong bent, while the same
+      // edge crossing a blocker is the per-cell reveal and is exactly what wanted breaking up.
       // two octaves of sine per axis rather than a hash, because
       // the job is to break a straight line and not to be statistically noisy — a SMOOTH offset keeps
-      // an edge an edge, while white noise would dither it into salt and pepper. keyed on vSewerMask,
+      // an edge an edge, while white noise would dither it into salt and pepper. keyed on vVisMask,
       // i.e. WORLD xz and nothing else: that glues the wobble to the level so the polygon slides
       // THROUGH it, and keying it to anything the player carries would make the whole boundary swim on
       // every move, which is far worse than the straight line it set out to fix. the offset is in world
-      // units and converted by sewerMaskScale, so it stays isotropic and does not change with the
-      // level's dimensions the way a raw uv offset would
+      // units and converted by visMaskScale, so it stays isotropic and does not change with the
+      // area's dimensions the way a raw uv offset would
       var sample =
-        '  vec2 sewerBase = vSewerMask * sewerMaskScale + sewerMaskOrigin;\n' +
-        '  vec4 sewerM = texture2D( sewerMaskMap, sewerBase );\n' +
-        '  vec2 sewerW = vSewerMask;\n' +
-        '  vec2 sewerWob = vec2( sin( sewerW.y * 0.70 + sewerW.x * 0.31 ),\n' +
-        '                        sin( sewerW.x * 0.63 - sewerW.y * 0.27 ) )\n' +
-        '            + 0.5 * vec2( sin( sewerW.y * 1.90 - sewerW.x * 1.13 ),\n' +
-        '                          sin( sewerW.x * 2.10 + sewerW.y * 1.37 ) );\n' +
-        '  float sewerWobbled = texture2D( sewerMaskMap,\n' +
-        '    sewerBase + sewerWob * sewerMaskWobble * sewerMaskScale ).r;\n' +
-        // .g is the masonry channel, so the wobbled sample is taken ONLY over a wall and the straight
-        // one everywhere else. it interpolates across a wall/floor boundary, so the wobble fades in
-        // over a texel rather than switching on at a seam.
-        // .b is the level's outer falloff, and it multiplies AFTER the floor mix rather than feeding
+        '  vec2 visBase = vVisMask * visMaskScale + visMaskOrigin;\n' +
+        '  vec4 visM = texture2D( visMaskMap, visBase );\n' +
+        '  vec2 visW = vVisMask;\n' +
+        '  vec2 visWob = vec2( sin( visW.y * 0.70 + visW.x * 0.31 ),\n' +
+        '                      sin( visW.x * 0.63 - visW.y * 0.27 ) )\n' +
+        '          + 0.5 * vec2( sin( visW.y * 1.90 - visW.x * 1.13 ),\n' +
+        '                        sin( visW.x * 2.10 + visW.y * 1.37 ) );\n' +
+        '  float visWobbled = texture2D( visMaskMap,\n' +
+        '    visBase + visWob * visMaskWobble * visMaskScale ).r;\n' +
+        // .g is the blocker channel, so the wobbled sample is taken ONLY over a blocker and the
+        // straight one everywhere else. it interpolates across a blocker/ground boundary, so the
+        // wobble fades in over a texel rather than switching on at a seam.
+        // .b is the area's outer falloff, and it multiplies AFTER the floor mix rather than feeding
         // into it — that is the whole reason it exists as a separate channel. the mix bottoms out at
-        // sewerMaskFloor, so nothing routed through it can ever reach zero, and the rim has to: fog
-        // and background are the same colour down here, so vis 0 lands exactly on the background and
-        // the level stops having a silhouette. free, since it rides the fetch .r and .g already did
-        '  float sewerVis = mix( sewerMaskFloor, 1.0,\n' +
-        '    mix( sewerM.r, sewerWobbled, sewerM.g ) ) * sewerM.b;\n';
+        // visMaskFloor, so nothing routed through it can ever reach zero, and the rim has to: every
+        // area kind that carries this mask sets fog and background to the SAME colour, so vis 0 lands
+        // exactly on the background and the area stops having a silhouette. free, since it rides the
+        // fetch .r and .g already did
+        '  float visAmt = mix( visMaskFloor, 1.0,\n' +
+        '    mix( visM.r, visWobbled, visM.g ) ) * visM.b;\n';
       var apply = switch (mode)
         {
-          case 'g': '  gl_FragColor.rgb *= sewerVis;\n';
-          case 'b': '  gl_FragColor.a *= sewerVis;\n';
+          case 'g': '  gl_FragColor.rgb *= visAmt;\n';
+          case 'b': '  gl_FragColor.a *= visAmt;\n';
           // no USE_FOG means no fogColor to reach for; a plain scale is the honest fallback
           default: '#ifdef USE_FOG\n' +
-            '  gl_FragColor.rgb = mix( fogColor, gl_FragColor.rgb, sewerVis );\n' +
+            '  gl_FragColor.rgb = mix( fogColor, gl_FragColor.rgb, visAmt );\n' +
             '#else\n' +
-            '  gl_FragColor.rgb *= sewerVis;\n' +
+            '  gl_FragColor.rgb *= visAmt;\n' +
             '#endif\n';
         }
       // a material may already carry a hook of its OWN — render.decals.DecalBatch folds per-instance
@@ -681,30 +716,35 @@ class SewerMask
         {
           if (prev != null)
             prev(shader, renderer);
-          shader.uniforms.sewerMaskMap = uMap;
-          shader.uniforms.sewerMaskScale = uScale;
-          shader.uniforms.sewerMaskOrigin = uOrigin;
-          shader.uniforms.sewerMaskFloor = floor;
-          shader.uniforms.sewerMaskWobble = uWobble;
+          shader.uniforms.visMaskMap = uMap;
+          shader.uniforms.visMaskScale = uScale;
+          shader.uniforms.visMaskOrigin = uOrigin;
+          shader.uniforms.visMaskFloor = floor;
+          shader.uniforms.visMaskWobble = uWobble;
           // the instanceMatrix branch is NOT optional: the wall fixtures, the glow quads, the contact
-          // shadows and every glb prop down here are InstancedMesh, and their placement lives in that
-          // matrix alone — modelMatrix by itself would pin the whole batch to the world origin
-          shader.vertexShader = 'varying vec2 vSewerMask;\n' +
+          // shadows, every glb prop underground and every tree, bush and rock in the wilderness are
+          // InstancedMesh, and their placement lives in that matrix alone — modelMatrix by itself
+          // would pin the whole batch to the world origin.
+          // reading `transformed` rather than `position` also means the wilderness grass is sampled
+          // where its wind term actually put the blade (render.wild.WildGrass injects at
+          // <begin_vertex>, upstream of this): WIND_AMP is 0.11 world units, i.e. under a thirtieth
+          // of a cell, and a leaning blade taking the mask at its leaning position is right anyway
+          shader.vertexShader = 'varying vec2 vVisMask;\n' +
             StringTools.replace(shader.vertexShader, '#include <project_vertex>',
               '#include <project_vertex>\n' +
               '#ifdef USE_INSTANCING\n' +
-              '  vSewerMask = ( modelMatrix * instanceMatrix * vec4( transformed, 1.0 ) ).xz;\n' +
+              '  vVisMask = ( modelMatrix * instanceMatrix * vec4( transformed, 1.0 ) ).xz;\n' +
               '#else\n' +
-              '  vSewerMask = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;\n' +
+              '  vVisMask = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;\n' +
               '#endif');
           // AFTER the fog chunk, which is where three has already left tonemapping and the colour-space
           // conversion behind — so this mixes in the same space the fog it blends toward lives in
-          shader.fragmentShader = 'uniform sampler2D sewerMaskMap;\n' +
-            'uniform vec2 sewerMaskScale;\n' +
-            'uniform vec2 sewerMaskOrigin;\n' +
-            'uniform float sewerMaskFloor;\n' +
-            'uniform float sewerMaskWobble;\n' +
-            'varying vec2 vSewerMask;\n' +
+          shader.fragmentShader = 'uniform sampler2D visMaskMap;\n' +
+            'uniform vec2 visMaskScale;\n' +
+            'uniform vec2 visMaskOrigin;\n' +
+            'uniform float visMaskFloor;\n' +
+            'uniform float visMaskWobble;\n' +
+            'varying vec2 vVisMask;\n' +
             StringTools.replace(shader.fragmentShader, '#include <fog_fragment>',
               '#include <fog_fragment>\n' + sample + apply);
         };
@@ -716,7 +756,7 @@ class SewerMask
       if (prev != null)
         for (f in Reflect.fields(prev))
           Reflect.setField(hook, f, Reflect.field(prev, f));
-      hook.sewerMask = true;
+      hook.visionMask = true;
       mat.onBeforeCompile = hook;
       // three keys its program cache on base material params, NOT on onBeforeCompile — without a key
       // of our own a masked program could be handed to an identical unmasked material, or the three
@@ -726,7 +766,7 @@ class SewerMask
       // called with the material as the RECEIVER: a key function is a method and may read `this`
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
-          'sewerMask' + mode;
+          'visMask' + mode;
       mat.needsUpdate = true;
       return mat;
     }

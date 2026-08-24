@@ -258,18 +258,67 @@ class AreaGenerator
           density: 0.10,
           tree: 50,
           bush: 35,
+          big: Const.TILE_TREE_CLUSTER,
+          bigCount: 7,
         };
       if (band == TERRAIN_MOUNTAIN)
         return {
           density: 0.07,
           tree: 15,
           bush: 25,
+          big: Const.TILE_ROCK_LARGE,
+          bigCount: 8,
         };
       return {
         density: 0.025,
         tree: 20,
         bush: 55,
+        big: -1,
+        bigCount: 0,
       };
+    }
+
+// stamp the band's large obstacles onto clear ground. these are the only cells the wilderness writes
+// that block SIGHT as well as movement, so each one is real cover rather than another tree to walk
+// around: a 2x2 boulder in the mountains, a 2-3 x 2-3 tree thicket in the forest, nothing on the
+// plains. run BEFORE the scatter, while the grid is still uniform ground and nothing can fail to fit
+  static function placeBigObstacles(area: AreaGame, mix: _WildMix, depth: Float)
+    {
+      if (mix.big < 0)
+        return;
+      var count = Std.int(mix.bigCount * (0.8 + 0.4 * depth));
+      for (i in 0...count)
+        {
+          // the rock is its own model and is exactly two cells; a thicket is grown cell by cell out of
+          // the band's own trees and bushes, so it can be any size
+          var w = (mix.big == Const.TILE_ROCK_LARGE ? 2 : 2 + Std.random(2));
+          var h = (mix.big == Const.TILE_ROCK_LARGE ? 2 : 2 + Std.random(2));
+          for (t in 0...20)
+            {
+              var x = 2 + Std.random(area.width - w - 4);
+              var y = 2 + Std.random(area.height - h - 4);
+              if (!isBigObstacleClear(area, x, y, w, h, mix.big))
+                continue;
+              for (dy in 0...h)
+                for (dx in 0...w)
+                  area.setCellType(x + dx, y + dy, mix.big);
+              break;
+            }
+        }
+    }
+
+// is this rect, plus a one-cell margin, free of other large obstacles? the MARGIN is load-bearing and
+// not politeness: render.wild.WildModel recovers each 2x2 rock's rect by looking for the corner with
+// no rock left of it and none above it, and two rocks allowed to touch would read as one L-shaped
+// blob with the model landing on the wrong cell
+  static function isBigObstacleClear(area: AreaGame, x: Int, y: Int, w: Int,
+      h: Int, tile: Int): Bool
+    {
+      for (dy in -1...h + 1)
+        for (dx in -1...w + 1)
+          if (area.getCellType(x + dx, y + dy) == tile)
+            return false;
+      return true;
     }
 
 // generate rocks, trees, etc
@@ -281,12 +330,22 @@ class AreaGenerator
       var mix = wildMix(Terrain.bandAtArea(seed, area.x, area.y));
       // scaled by how deep into its band the area sits, so a wood on the plains edge is thinner than
       // one in the middle of the forest and neither snaps at the threshold
+      var depth = Terrain.depthAt(seed, area.x, area.y);
       var numStuff = Std.int(area.width * area.height * mix.density *
-        (0.8 + 0.4 * Terrain.depthAt(seed, area.x, area.y)));
+        (0.8 + 0.4 * depth));
+      // the large obstacles go down FIRST, onto a grid that is still uniform ground, so none of them
+      // can fail to find room
+      placeBigObstacles(area, mix, depth);
       for (i in 0...numStuff)
         {
           var x = Std.random(area.width);
           var y = Std.random(area.height);
+
+          // a scatter tile dropped into a large obstacle would punch a hole in it, and a rect with a
+          // hole in it stops being a rect. plains passes `big` -1, which an in-bounds getCellType can
+          // never return, so this test simply never fires there
+          if (area.getCellType(x, y) == mix.big)
+            continue;
 
           // one roll across the three, so the percentages mean what they say. the tree tile keeps its
           // 1-of-4 variant: those four IDs are what the 3D area maps onto four models
@@ -665,4 +724,9 @@ typedef _WildMix = {
   tree: Int,
   // percent that take a bush; whatever is left over takes a rock
   bush: Int,
+  // the band's LARGE obstacle tile, or -1 where it has none. these are the only cells the wilderness
+  // writes that block sight as well as movement
+  big: Int,
+  // how many of them to place, before the same band-depth scale the density takes
+  bigCount: Int,
 }

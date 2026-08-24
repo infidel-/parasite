@@ -439,7 +439,7 @@ class View {
               // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
               // which reuses the glb template's own shared material — the very object the real
               // build then patches (render.sewer.SewerProps)
-              var M = render.sewer.SewerMask;
+              var M = render.world.VisionMask;
               var objModels = render.world.ObjModels.MODELS;
               var wallProps = render.sewer.SewerStyle.PROP_MODELS;
               var left = objModels.length + wallProps.length;
@@ -1216,11 +1216,14 @@ class View {
     // no build-time moment for the tunnel mask to catch them the way every other surface is caught.
     // without this the debris underfoot stayed at full brightness in a corridor nobody can see.
     // gated because Actors is rebuilt per area but the mask uniforms are not: a patched material left
-    // over above ground would sample the last tunnel's canvas. patch() marks its own hook and
-    // early-outs, so a landed group is a couple of reads
-    if (Std.isOfType(area3d, render.sewer.SewerArea))
+    // over in a CITY would sample the last masked area's canvas. patch() marks its own hook and
+    // early-outs, so a landed group is a couple of reads.
+    // both kinds that carry a mask are listed: the tunnels, and the wilderness since its large
+    // obstacles became the first open-area tiles that block sight
+    if (Std.isOfType(area3d, render.sewer.SewerArea) ||
+        Std.isOfType(area3d, render.wild.WildArea))
       for (m in actors.decalMaterials())
-        render.sewer.SewerMask.patch(m);
+        render.world.VisionMask.patch(m);
     shockwave.update();
     updateHoverTooltip();
     // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a

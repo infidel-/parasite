@@ -7,6 +7,7 @@ import render.SceneSetup;
 import render.particles.LampLights;
 import render.particles.LampPost;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 
 // the scene + light rig for an underground tunnel area. no sky, no moon, no shadow box: just a
 // near-black background, fog that closes in within a few cells (this is what sells the enclosure
@@ -124,8 +125,8 @@ class SewerScene
       // the shafts take the vision mask from THIS side, not from inside LightCone: the street rig
       // builds its lamp cones with the same call and must not be masked. an additive shaft burning in
       // a corridor round a corner is the one thing that would give the whole effect away
-      SewerMask.patchMesh(coneSteady.mesh);
-      SewerMask.patchMesh(coneFlick.mesh);
+      VisionMask.patchMesh(coneSteady.mesh);
+      VisionMask.patchMesh(coneFlick.mesh);
       // weak bracketed fixtures along the walls, filling the runs between the junction lamps. their
       // working bulbs join the same pool, so they light, sputter and cast fake actor shadows with no
       // further wiring; the glow batch is repacked per frame by SewerArea.tick

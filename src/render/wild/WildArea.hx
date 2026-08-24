@@ -8,6 +8,7 @@ import render.RenderConfig;
 import render.SceneSetup;
 import render.particles.LampLights;
 import render.wild.WildModel.Wild;
+import render.world.VisionMask;
 import render.world.WorldCtx;
 
 // the open wilderness area kind (AREA_GROUND). the smallest of the three: no buildings, so no
@@ -65,6 +66,49 @@ class WildArea implements Area3D
       // the scene root by Chunks' own size guard, which is right — they are frustum-culled per
       // INSTANCE in tick() instead
       chunks.build(scene, pre);
+      // the vision mask's texture and world->uv transform. the builders above patched their own
+      // materials as they made them; this only has to exist before the first sample.
+      //
+      // the blocker predicate is canSeeThrough, where a tunnel deliberately does NOT use it — down
+      // there it is object-aware and would call a closed door a wall, and the green channel it paints
+      // has to be static. out here there is no door and no destructible: the only cells that fail this
+      // test are the two large obstacles the generator stamped (Const.TILE_ROCK_LARGE /
+      // TILE_TREE_CLUSTER), so it IS static, and reading the tiles beats carrying a copy of them
+      VisionMask.attach(WildStyle.MASK, model.w, model.h,
+        function(col, row) return !game.area.canSeeThrough(col, row));
+      attachDbg();
+    }
+
+// console debug helper (persistent) — what this wilderness area actually built.
+//   __wild() -> { ground, reliefAmp, rocks:[{col,row}], thicket:[{col,row}], batches:[{path,count}] }
+//
+// the two lists come back whole rather than as counts, because the first question after "how many"
+// is always "where is one" — an instanced batch carries no userData.cls, so render.Debug.find cannot
+// locate a prop out here and there is nothing else to point a camera or a `go xy` at
+//
+// there is no other way to ask: parasiteHx is the class registry and holds STATICS only, so
+// WildBand.cur reads out fine but the Wild model does not — WildModel.fromArea needs an AreaGame and
+// nothing reaches one from JS. "did eight boulders actually get placed, and did the thicket cells get
+// their understorey" cannot be answered by counting things on screen, and every change out here since
+// the bands has needed that class of question settled numerically rather than off a screenshot
+  function attachDbg():Void
+    {
+      untyped js.Browser.window.__wild = function()
+        {
+          var batches = [];
+          for (i in 0...props.length)
+            batches.push({
+              path: WildStyle.PROPS[i].path,
+              count: props[i].matrices.length,
+            });
+          return {
+            ground: WildBand.cur.ground,
+            reliefAmp: WildBand.reliefAmp,
+            rocks: model.rocks,
+            thicket: model.thicket,
+            batches: batches,
+          };
+        };
     }
 
 // per-frame world tick: the moon's shadow box, the wind clock, the chunk cull and the per-instance
@@ -77,6 +121,11 @@ class WildArea implements Area3D
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);
+      // what the player cannot see, off the SMOOTHED position and not opts.playerCol/Row — see
+      // VisionMask's own note on why the logical cell is the wrong origin. out here the sweep is
+      // cheap: an open area holds ~15 blocker rects against a tunnel's hundreds of wall cells, so it
+      // casts ~7.5k ray/segment tests where a tunnel casts ~250k
+      VisionMask.update(game, opts.player.x, opts.player.z);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in props)
         render.Models.cull(p, opts.camera, WildStyle.PROP_CULL_R);

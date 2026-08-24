@@ -573,3 +573,137 @@ to be thrown away: meshopt floored it at **7,670** tris (error 0.05, flat to 0.3
 scatters ~200 of these per area, 1.5M triangles before culling against a whole area's 334k. So the
 ratio said yes and the SCATTER said no. `tex 384` on the log is the same lesson from the other side:
 3,112 tris at 512 would be 84 texels/tri, a map twice as large as the geometry can show.
+
+## The wilderness gets two things that work like walls (`TILE_ROCK_LARGE`, `TILE_TREE_CLUSTER`)
+
+Everything an open area blocked was one cell wide and **see-through**: `TILE_ROCK` and the four tree
+tiles are `walkable 0 / seeThrough 1`, so there was no cover out there — you walk around a tree and you
+can always see past it. Two multi-cell obstacles now: a **2x2 boulder** in the mountains (8 per area,
+depth-scaled to 9 at the extreme) and a **2-3 x 2-3 tree thicket** in the forest (7 → 8, measured at 48
+cells over 8 blobs, one of every requested shape: 2x2, 2x3, 3x2, 3x3).
+
+**The gameplay half cost no table edit.** Row 0's spare IDs 12-15 already read `0/0` in both
+`tiles.Default` tables — the `TILE_BUILDING`/`TILE_WALL` profile — so naming them was the whole change.
+Verified at the accessor `AreaGame.recalcTile` actually calls: `Default.prototype.canSeeThrough(12)` and
+`(13)` are both false where `ROCK(3)` and `TREE1(5)` are true. Blocking verified end-to-end in-game
+with a control in the same key: from (46,40) `ArrowUp` into the rect does not move, `ArrowDown` does,
+and column 48 — one past a rect at cols 46-47 — walks through. No 2D art: a wilderness area always
+renders in 3D and `AreaView.draw` early-outs, so the tile pass, LOS overlay and minimap never run.
+
+**The one-cell margin is what makes a rect recoverable without persisting it.** Only the rock needs its
+rect back (it is one model over four cells), and `isBigObstacleClear` refusing to place within one cell
+of another means "no rock left of me and none above me" names each 2x2 exactly once. Two allowed to
+touch would read as one L and put the model on the wrong cell.
+
+**The thicket costs zero draw calls and needed no new art**, because `WildProps.small()` had already
+established the idiom: a second pass appending into the same `places[]` arrays. A thicket cell gets a
+REAL tree index in `m.prop` rather than a sentinel, which does three things with one line — the
+existing scatter plants its tree with the yaw and scale spread it already deals, and the cell loses its
+grass and its pebbles the way any prop cell does. The pass only adds the **understorey**, which is what
+a cell blocking SIGHT actually needs: a stand of bare trunks is a thing you see between however many
+there are. Cells with no prop of their own but covered by a neighbour take a new `WildModel.OCCUPIED`
+(-2), and the two suppression tests move from `>= 0` to `!= -1`.
+
+**`r` turned out to be exactly the knob a multi-cell prop wanted.** `sit()` sinks a prop by
+`h * r * slope` so its downhill edge meets the ground, and `r` is documented as footprint radius over
+`h` — so setting the rock's `r` to 0.84 against `h` 5.0 makes `h * r` a whole CELL and the existing
+function is already right for an object two cells wide. No new seating code. `sit()` did gain an
+optional scale: the thicket plants trees at 0.5-0.75 and a sink computed for a full-grown one buries
+them (the scatter's own ±20-30% is close enough to 1.0 to leave alone).
+
+Measured, focused, both bands at 60 FPS with ~14.5ms idle — nowhere near a wall. Forest **56 calls /
+665.5k tris / GPU 7.4-7.9 / submit 1.1**; mountain **51 / 418.2k / 5.1-5.6** away from a boulder and
+**70 / 754.6k / 6.1-7.3 / submit 1.2-1.4** with several in frame. `programs` is **95 in both**, so the
+new glb compiles no permutation the wilderness did not already have. These are new areas at new poses
+and are NOT an A/B against Phase 3's 62/444.5k and 52/501.8k, which were different areas.
+
+## A 2x2 boulder's reference is a CAMERA ANGLE problem, and the components gate has a blind spot
+
+`wild/rock-large`, generated at 2k on request and shipped at 10,000 tris / `tex` 1024.
+
+**The pancake failure is real and it is the reference's camera, not its proportions.** The first roll
+asked for a boulder "seen from a low three-quarter angle... roughly twice as wide as high" and gpt drew
+it from well above; its 2D bbox measured a promising 1.87 and it came back **0.845 x 0.317 x 1.001 —
+widest/height 3.16**, a slab you could see over. Same failure `wild/bush-low` hit at 0.985 x 0.040 x
+0.936. Re-prompted as a strict side elevation at horizon height ("the full height clearly visible as a
+tall silhouette, almost none of its top surface visible") the same subject came back **0.973 x 0.597 x
+1.001 = 1.68**, and at `h` 5.0 that is a boulder 8.4 units across and taller than the 3.0 actor
+billboard. The elevation looked WRONG as a 2D image — a flat cutout with no depth cue at all, nothing
+like `rock-cluster`'s three-quarter reference — and was baked anyway, because **a re-bake is $0.015
+against $0.43 for another reference**. That is the order those two steps belong in, and the first
+reference is kept in `Unused/` as `rock-large-a`.
+
+**`propstat` called both bakes REJECT and was wrong both times.** 2 components at 50/50 reads exactly
+like a blob cloud by the shipped gate (count, and largest share ≥90%). It is not: both components span
+the ENTIRE bbox, their mean radii agree to 0.6%, and every vertex of one is within **0.34% of the bbox
+diagonal** (p50 0.0051 against an average edge length of ~0.008) of a vertex of the other. It is ONE
+closed surface partitioned into two vertex-disjoint patches along a seam. The contrast settles it:
+`rock-boulder` is genuinely 1 component, and `rock-outcrop`'s second piece is a **70-vert speck 29% of
+the diagonal away**. The gate reads component count and largest share and cannot separate "split along
+a seam" from "flying apart" — check whether the pieces occupy the same shell before believing it.
+Split is **1.09x**, the cleanest subject in this repo (below `rock-boulder`'s 1.11x), and meshopt hit
+10,000 exactly.
+
+**`tex` 1024 at 10k tris is ~105 texels/triangle, deliberately double the 43-55 band.** Texels per
+triangle is a proxy for texels per screen PIXEL, and this prop is 8.4 world units across against
+`rock-boulder`'s 3.3 — so it carries 16x the boulder's texels over ~7x the screen area, less than twice
+as dense per pixel. The rule cut `rock-boulder` from 165 to 42 because a small prop cannot show its
+map; the largest prop in the area is the case where it can.
+
+**And its `baseColor` went the opposite way to the boulder's.** `rock-boulder`'s note says a large
+smooth upward face catches the full moon term and has to sit BELOW the arithmetic (0.15 against ~0.25),
+so this one went in at 0.17 — and measured on screen it was **the darkest thing in the frame**, linear
+luma 0.00204 against the ground's 0.00495, the small boulder's 0.00251 and the outcrop's 0.00299. A
+hole, not a rock: the sewer-valve failure. `baseColor` is a linear multiply, so 0.00204 → 0.00300 asks
+for x1.47 and **0.25** landed it at **0.00318**, just above the outcrop, top of the rock family, which
+is where the biggest rock belongs. The overshoot on the prediction is the tone curve. A domed mass
+shows the camera mostly its sides; the boulder's rule was about a face pointing at the moon, and it does
+not generalise by size.
+
+## The tunnel vision mask is now everyone's (`render.sewer.SewerMask` → `render.world.VisionMask`)
+
+The wilderness's two large obstacles gave an open area its first cells that block SIGHT, so the sewers'
+LOS polygon had somewhere to cast from. Nothing in the algorithm was underground-specific — it sweeps
+`game.area.canSeeThrough` over a cell grid — so the port needed exactly two things passed in: the
+per-area-kind tuning (`render.world.VisionMaskOpts`, presets `SewerStyle.MASK` / `WildStyle.MASK`) and
+the STATIC "is this cell a blocker" predicate the green channel is painted from. 14 call sites, and the
+GLSL prefix went `sewerMask*` → `visMask*` with it.
+
+**Only two of nine fields differ, and both are derived rather than tasted.** `r` 14 → **20**: the sweep's
+square range bound has to sit off screen, and `CameraRig.maxFootprintCells` for `CAMERA_WILD` at 16:9 is
+**305 cells** reaching 7.5 ahead / 5.4 behind / 13.4 to the side — **15.4 at the far corner** against the
+sewer camera's 12.2. At 14 the bound would have been visible, reading as a vision radius the game logic
+does not have (`AreaGame.isVisible` is unbounded). `hidden` 0.18 → **0.10**, inverted from the tunnel's
+reasoning: underground a hard black empties the frame because the frame IS what is hidden; out here it is
+one wedge behind one rock in a lit field, so it can afford to read as a real shadow.
+
+**Cost is the opposite of what the canvas size suggests, and this file already said why.** A rebuild is
+FLAT in canvas area — every part except `fadeCell`, which scales with lit BLOCKER cells, and an open area
+holds ~15 blocker rects where a tunnel holds hundreds of wall cells. Measured on the live path (wrapped
+`update`, 4 moves, 36 rebuilds, 800x720 canvas, player ending adjacent to a boulder): **median 0.40ms,
+p90 0.70, max 0.80**, 9 rebuilds per move and then it stops dead. The sewer's own projection for a
+600x480 level was ~1.5ms. Synthetic raster replay in the same renderer: habitat 168x112 0.68ms, sewer
+600x480 1.14ms, wilderness 800x800 **1.34ms** — 34x the texels for 2x the time. The sweep is ~7.5k
+ray/segment tests against a tunnel's ~250k. **0 draw calls, 0 passes, 0 geometry**, as underground.
+
+**What it delivers is a cover cue, not an atmosphere layer, and that was measured before it was built.**
+Over 1000 player poses against generated layouts: **1.20%** of the visible ground shadowed in a mountain
+area, **1.28%** in a forest, **0.00%** on the plains, with only **~20%** of frames carrying any shadow at
+all — but **up to 55%** of the frame standing beside a boulder. So it fires on contact. If it ever reads
+as always-on out there, something has started writing opaque tiles that should not be.
+
+**Verified live, in the mask's own canvas rather than off a screenshot.** Green channel: 36 marked cells
+against 9 rock rects x 4 = 36, all 36 landing on the rects. Red along a ray through the near boulder:
+`255, 0, 0, 0, 0, 0, 0, 0` at 2/4/6/8/12/16/19/22 cells, against a +90° control that stays `255` the whole
+way — and the -90° control going dark at 12 is a SECOND boulder, not an artifact. Blue rim 64 at the
+corner, 255 one cell in. The sewer branch was regression-tested headlessly off `SewerModel.demo()`:
+**324 wall cells, 0 mismatch against `isFloor`**. `progs` 95 → 96, and the grass chain came out as
+`wildGrassvisMasks` — `patch()` wrapping the wind hook instead of replacing it, which is the trap this
+file already carries an obituary for.
+
+**Rider, found while checking the ambush angle: `AreaGame.getSpawnRect` had no `'wilderness'` arm**, so
+the largest grid in the game took the 2D canvas rect — the exact dilution that switch was written to fix.
+Latent rather than live (`AREA_GROUND` declares `commonAI: 0`, so the turn spawner never runs out there),
+and fixed with the one case arm. The ambush mechanism itself needed nothing: `findUnseenEmptyLocation`
+already rejects any cell `isVisible` reaches, and before these obstacles a wilderness area had no unseen
+cell to offer it.

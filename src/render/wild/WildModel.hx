@@ -12,12 +12,25 @@ typedef Wild = {
   w:Int,
   // area height in cells
   h:Int,
-  // [row][col]: index into WildStyle.PROPS, or -1 where the cell carries no prop
+  // [row][col]: index into WildStyle.PROPS, -1 where the cell carries no prop, or OCCUPIED
   prop:Array<Array<Int>>,
+  // top-left cell of each 2x2 large rock. the only prop out here that is not per-cell, so the rect has
+  // to be recovered somewhere and this is it — generation leaves a one-cell margin around every one of
+  // them (AreaGenerator.isBigObstacleClear), which is what makes "no rock left of me and none above
+  // me" name each rect exactly once
+  rocks:Array<{ col:Int, row:Int }>,
+  // every cell of every tree thicket. no rect needed here: a thicket is grown cell by cell out of the
+  // band's own models, so the list is only so the understorey pass does not rescan the grid
+  thicket:Array<{ col:Int, row:Int }>,
 };
 
 class WildModel
 {
+  // a cell covered by a multi-cell obstacle that is drawn from somewhere else: no prop of its own, but
+  // no grass and no loose stones either. render.wild.WildGrass and WildProps.small therefore test
+  // against -1 rather than against 0, and WildProps.places skips anything negative as it always did
+  public static inline var OCCUPIED = -2;
+
 // build the model from an area's saved cells
   public static function fromArea(area:AreaGame):Wild
     {
@@ -45,6 +58,22 @@ class WildModel
               m.prop[y][x] = WildBand.cur.trees[t - Const.TILE_TREE1];
             else if (t == Const.TILE_ROCK)
               m.prop[y][x] = WildBand.pick(WildBand.cur.rocks, mix((x * 30011) ^ (y * 50021)));
+            // the 2x2 boulder: every cell of it is covered, and only the top-left one draws
+            else if (t == Const.TILE_ROCK_LARGE)
+              {
+                m.prop[y][x] = OCCUPIED;
+                if (area.getCellType(x - 1, y) != t &&
+                    area.getCellType(x, y - 1) != t)
+                  m.rocks.push({ col: x, row: y });
+              }
+            // a thicket cell gets a REAL tree index rather than OCCUPIED, which does three jobs with
+            // one line: the scatter below plants the tree with the yaw and scale spread it already
+            // deals, and the cell loses its grass and its loose stones the same way any prop cell does
+            else if (t == Const.TILE_TREE_CLUSTER)
+              {
+                m.prop[y][x] = WildBand.pick(WildBand.cur.trees, mix((x * 60013) ^ (y * 70001)));
+                m.thicket.push({ col: x, row: y });
+              }
           }
       return m;
     }
@@ -56,6 +85,8 @@ class WildModel
         w: w,
         h: h,
         prop: [for (_ in 0...h) [for (_ in 0...w) -1]],
+        rocks: [],
+        thicket: [],
       };
     }
 

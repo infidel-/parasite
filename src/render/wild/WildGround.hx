@@ -30,11 +30,11 @@ class WildGround
       var B = render.Chunks.CELLS;
       // one material for every block: the tint that varies them is per-vertex, so nothing here is
       // per-block except the geometry
-      var mat = new MeshLambertMaterial({
+      var mat = render.world.VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(WildBand.cur.ground, 'asphalt', 1),
         side: THREE.FrontSide,
         vertexColors: true,
-      });
+      }));
       var row = 0;
       while (row < m.h)
         {

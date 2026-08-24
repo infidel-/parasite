@@ -9,6 +9,7 @@ import render.SceneSetup;
 import render.particles.LampLights;
 import render.particles.LampPost;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 import render.world.WorldCtx;
 
 // the underground tunnel area kind (AREA_SEWERS + AREA_HABITAT). deliberately much smaller than
@@ -67,8 +68,12 @@ class SewerArea implements Area3D
       // `exit: 'sewer_exit'` on AREA_SEWERS alone and game.Habitat only ever builds into AREA_HABITAT
       props = render.world.ObjModels.build(scene, game, objYaw);
       // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
-      // the builders above made them; this only has to exist before the first sample
-      SewerMask.attach(model);
+      // the builders above made them; this only has to exist before the first sample.
+      // the blocker predicate is isFloor and NOT area.canSeeThrough, which is object-aware and would
+      // call a closed door a wall — the green channel it paints decides where the boundary may wobble,
+      // and that is a fact about the masonry
+      VisionMask.attach(SewerStyle.MASK, model.w, model.h,
+        function(col, row) return !SewerModel.isFloor(model, col, row));
     }
 
 // which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
@@ -138,8 +143,8 @@ class SewerArea implements Area3D
       // geometry) — an outline that does not move with the body it traces detaches from it
       for (b in props)
         {
-          SewerMask.patchMesh(b.solid.mesh);
-          SewerMask.patchMesh(b.ghost.mesh);
+          VisionMask.patchMesh(b.solid.mesh);
+          VisionMask.patchMesh(b.ghost.mesh);
           render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse, b.model.curl);
           render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse, b.model.curl);
           render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse, b.model.curl);
@@ -157,7 +162,7 @@ class SewerArea implements Area3D
       // swung its shadows from a cell the billboard had not reached and held them there for the whole
       // slide. this rebuilds through the ~9 frames of a move (BASE_MS at 60Hz) and then stops dead —
       // the slide is finite, so a rested origin re-keys to the same value and this is a no-op again
-      SewerMask.update(game, opts.player.x, opts.player.z);
+      VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       // the organs' own coloured lights. a separate pool from the lamps' on purpose: a bracket is a
       // SpotLight aimed along its wall, an organ glows omnidirectionally, and sharing one pool would
