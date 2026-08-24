@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import map.Terrain;
 import Const;
 import objects.*;
 import game.AreaGame;
@@ -239,21 +240,63 @@ class AreaGenerator
         useHabitatExits: true,
       };
     }
+// what grows on a wilderness area, per terrain band. the region map has painted three bands since
+// map.Terrain landed and until now they only named areas, so a forest tile and a mountain tile
+// generated the identical scatter. the render side reads the same band for its ground, relief and
+// models (render.wild.WildBand), but DENSITY has to be decided here: walkability follows the tiles, so
+// a renderer that simply drew fewer trees would leave blocked cells looking like open ground.
+//
+// the FOREST row is held down by the CAMERA and not by the fiction: there is no occlusion fade out
+// here (render.Occlusion buckets buildings and a wilderness area has none), so every canopy between
+// the camera and the player hides the player. it went in at 0.12 / 60% trees and that kept the actor
+// under a crown; 0.10 / 50% still reads as a wood against the plains' 0.025, and takes ~25% of the
+// triangles off with it
+  static function wildMix(band: _TerrainBand): _WildMix
+    {
+      if (band == TERRAIN_FOREST)
+        return {
+          density: 0.10,
+          tree: 50,
+          bush: 35,
+        };
+      if (band == TERRAIN_MOUNTAIN)
+        return {
+          density: 0.07,
+          tree: 15,
+          bush: 25,
+        };
+      return {
+        density: 0.025,
+        tree: 20,
+        bush: 55,
+      };
+    }
+
 // generate rocks, trees, etc
   static function generateWilderness(game: Game, area: AreaGame, info: AreaInfo)
     {
-      var numStuff = Std.int(area.width * area.height / 20);
+      // through regionID rather than game.region: an area can be generated remotely (an event
+      // spawning an object in it) while the player is standing somewhere else entirely
+      var seed = game.world.get(area.regionID).mapSeed;
+      var mix = wildMix(Terrain.bandAtArea(seed, area.x, area.y));
+      // scaled by how deep into its band the area sits, so a wood on the plains edge is thinner than
+      // one in the middle of the forest and neither snaps at the threshold
+      var numStuff = Std.int(area.width * area.height * mix.density *
+        (0.8 + 0.4 * Terrain.depthAt(seed, area.x, area.y)));
       for (i in 0...numStuff)
         {
           var x = Std.random(area.width);
           var y = Std.random(area.height);
 
+          // one roll across the three, so the percentages mean what they say. the tree tile keeps its
+          // 1-of-4 variant: those four IDs are what the 3D area maps onto four models
+          var roll = Std.random(100);
           var t = Const.TILE_BUSH;
-          if (Std.random(100) < 30)
-            t = Const.TILE_ROCK;
-          if (Std.random(100) < 30)
+          if (roll < mix.tree)
             t = Const.TILE_TREE1 +
               Std.random(Const.TILE_BUSH - Const.TILE_TREE1);
+          else if (roll >= mix.tree + mix.bush)
+            t = Const.TILE_ROCK;
 
           area.setCellType(x, y, t);
         }
@@ -612,4 +655,14 @@ typedef _Spot = {
   y: Int,
   dir: Int,
   dir90: Int,
+}
+
+// one terrain band's wilderness scatter (AreaGenerator.wildMix)
+typedef _WildMix = {
+  // share of the area's cells that get a prop tile, before the band-depth scale
+  density: Float,
+  // percent of those cells that take a tree
+  tree: Int,
+  // percent that take a bush; whatever is left over takes a rock
+  bush: Int,
 }

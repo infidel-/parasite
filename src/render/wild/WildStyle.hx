@@ -20,8 +20,12 @@ typedef WildProp = {
 // wilderness look today, so this is plain constants rather than a swappable instance
 class WildStyle
 {
-  public static inline var GROUND = 'textures/wild/ground.png'; // matted grassland turf, full coverage
   public static inline var GRASS = 'textures/wild/grass.png';   // side-on blade cluster, alpha cut
+  // the GROUND texture is per-band and lives in render.wild.WildBand — plains keeps the grassland turf
+  // this section is written about, forest lays leaf litter over it and mountain lays scree. all three
+  // are the same class of art at the same GROUND_TILE, and their lifts are fitted against the turf's
+  // own measured value (textures.json carries each number).
+  //
   // measured mean LINEAR luminance of the two as BUILT (the sRGB byte mean is the wrong number — see
   // render.sewer.SewerScene): ground 0.0503 after its 0.75 lift, blades 0.0660 after their 1.4 one.
   // BOTH lifts are load-bearing and neither is a taste call. the ground as painted was 0.0208, DARKER
@@ -45,22 +49,21 @@ class WildStyle
   // rise for that: the tighter of the field's two octaves is 29 world units, so a 2-unit sample gives
   // it 14 points per period
   public static inline var SUB = 2;
-  // master scale on the relief (render.wild.WildHeight): 1.0 is the field as tuned, 0 is flat ground.
-  // the field's own amplitudes are a SLOPE budget rather than a look — everything downstream is paid
-  // for in slope, not in height — so this is the one knob to move. at 1.0 the ground runs 3.80 units
-  // peak to trough with a p50 slope of 0.110, and an actor crossing a cell steps a measured p50 of
-  // 0.272 world units (the city's own curb step is 0.2). raising this scales that step with it
-  public static inline var RELIEF_AMP = 1.0;
+  // the relief AMPLITUDE is per-band and lives in render.wild.WildBand: the field's own numbers are a
+  // SLOPE budget rather than a look — everything downstream is paid for in slope, not in height — so
+  // the band scales the whole field by one factor and everything follows. at 1.0 the ground runs 3.80
+  // units peak to trough with a p50 slope of 0.110, and an actor crossing a cell steps a measured p50
+  // of 0.272 world units (the city's own curb step is 0.2), so a band that asks for more scales that
+  // step with it
   // low-frequency value swing of the ground mottle, on the per-vertex colour channel. this is what
   // makes the extra polygons pay: dry patches and damp hollows drift across the surface with no
   // second texture, no splat shader and no extra draw call
   public static inline var TINT_AMP = 0.18;
 
   // --- the grass layer (render.wild.WildGrass) ---
-  // tufts per open cell. a tuft is two crossed alpha-tested quads (4 tris), merged per chunk, so a
-  // chunk is one draw call whatever it holds
-  public static inline var TUFTS_PER_CELL = 2;
-  public static inline var TUFT_H = 1.1;         // world height of a tuft
+  // the tuft COUNT per cell and the tuft HEIGHT are per-band (render.wild.WildBand): open plains grow
+  // deep grass, a canopy shades it out and a rock face barely holds any. a tuft is two crossed
+  // alpha-tested quads (4 tris), merged per chunk, so a chunk is one draw call whatever it holds
   public static inline var TUFT_W = 1.5;         // world width of one of its two quads
   public static inline var TUFT_JITTER = 0.35;   // +/- fraction of both, dealt per tuft
   public static inline var TUFT_ALPHA = 0.4;     // alphaTest cut — no transparency, so no sorting
@@ -171,6 +174,23 @@ class WildStyle
       r: 0.55,
       jitter: 0.40,
     },
+    // the two BAND props, both of them variants of a TILE_ROCK cell rather than tiles of their own —
+    // the trick the two bushes already play on TILE_BUSH. a fallen trunk that blocks movement and is
+    // see-through is exactly what a rock tile means, so this costs no tile ID, no walkability entry
+    // and no 2D map art. aspect 3.83 makes the log the widest prop out here: 3.4 units end to end at
+    // h 0.9, which is a cell's worth of trunk lying across it
+    {
+      path: RenderConfig.MODELS.wildLogFallen,
+      h: 0.9,
+      r: 1.90,
+      jitter: 0.25,
+    },
+    {
+      path: RenderConfig.MODELS.wildRockOutcrop,
+      h: 1.8,
+      r: 1.00,
+      jitter: 0.30,
+    },
   ];
   // indices into PROPS, named where the model builder picks them. the four trees are FIRST and in
   // order, because render.wild.WildModel maps Const.TILE_TREE1 + 0..3 straight onto them
@@ -184,16 +204,16 @@ class WildStyle
   public static inline var BUSH_BRAMBLE = 7;
   public static inline var ROCK_BOULDER_SMALL = 8;
   public static inline var ROCK_CLUSTER_SMALL = 9;
-  // odds a TILE_BUSH cell takes the bramble rather than the scrub. under a half on purpose: the
-  // bramble is the odd silhouette out here and the rounded scrub is what a field of them should read
-  // as, so this is the accent and not the default
-  public static inline var BRAMBLE_CHANCE = 0.35;
+  public static inline var LOG_FALLEN = 10;
+  public static inline var ROCK_OUTCROP = 11;
+  // WHICH of these a bush, rock or tree tile means is per-band (render.wild.WildBand) — the band holds
+  // weighted lists of these indices rather than a chance constant per pair
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
   // 0.09 and 0.22 world units tall, i.e. 0.33 and 0.29 across. that is a stone, not a boulder, seen
   // from a camera 18-55 units up, so this is the one knob to raise if they read as nothing at all
   public static inline var SMALL_ROCK_SCALE = 0.1;
-  // odds an open cell (no prop, so grass is growing on it) also gets a loose stone
-  public static inline var SMALL_ROCK_CHANCE = 0.08;
+  // the odds an open cell also gets a loose stone are per-band (render.wild.WildBand): scree country
+  // is made of them, a forest floor mostly is not
   // instance cull radius, in world units: a margin around a prop's centre so nothing pops at the
   // frame edge. sized to the tallest prop, since render.Models.cull tests ONE sphere radius for every
   // batch. it went 7.0 -> 9.0 with the broadleaf-full's h, which is the standing tie: raise the
@@ -230,9 +250,8 @@ class WildStyle
   // merge. these went in at 0.07 / 0.045 and that put 25.8% and 18.4% of the mask over the alphaTest
   // line — so much that the two layers covered the whole frame and read as SPECKLE rather than as
   // patches, since what shows through a near-uniform mask is just the art's own ~40% coverage. the
-  // rule of thumb: judge the mask, not the seed count, and keep the strong coverage near 10%
-  public static inline var PATCH_DEAD_CHANCE = 0.013;
-  public static inline var PATCH_EARTH_CHANCE = 0.008;
+  // rule of thumb: judge the mask, not the seed count, and keep the strong coverage near 10%. the two
+  // chances themselves are per-band (render.wild.WildBand) and the numbers above are the plains row's
 
   // --- the scene (render.wild.WildScene) ---
   public static inline var SKY = 0x0a0f14;          // background + fog: night, a shade greener than the city's

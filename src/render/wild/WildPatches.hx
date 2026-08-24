@@ -38,8 +38,8 @@ class WildPatches
       masks = [];
       // earth first so it sits UNDER the dead grass: bare soil is what is left where nothing grew,
       // and dry grass lying over it reads the right way round
-      layer(scene, m, WildStyle.PATCH_EARTH, WildStyle.PATCH_EARTH_CHANCE, 0);
-      layer(scene, m, WildStyle.PATCH_DEAD, WildStyle.PATCH_DEAD_CHANCE, 1);
+      layer(scene, m, WildStyle.PATCH_EARTH, WildBand.cur.earthChance, 0);
+      layer(scene, m, WildStyle.PATCH_DEAD, WildBand.cur.deadChance, 1);
     }
 
 // one overlay layer: pick its cells, bake its mask, then emit its geometry per chunk block.

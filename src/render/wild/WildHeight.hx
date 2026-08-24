@@ -19,8 +19,10 @@ package render.wild;
 //
 // the AMPLITUDES are a slope budget rather than a look, because slope is what every consumer pays
 // for: a prop's downhill edge hangs by footprint * slope, and WorldCtx.floorY answers per CELL, so an
-// actor's height is exact at its cell centre and steps as it crosses into the next one. measured over
-// a 400x400 sample at RELIEF_AMP 1 — slope p50 0.110 / max 0.164 (9.3 degrees), per-cell step p50
+// actor's height is exact at its cell centre and steps as it crosses into the next one. the master
+// scale on all of it is render.wild.WildBand.reliefAmp, set per area off the terrain band the region
+// map paints, so plains run at 0.30-0.60 and a mountainside at 1.00-1.80. measured over
+// a 400x400 sample at amplitude 1 — slope p50 0.110 / max 0.164 (9.3 degrees), per-cell step p50
 // 0.272 / p95 0.545 against the curb step of 0.2 the city already takes, and 3.80 world units peak to
 // trough, half a conifer. per-octave peak slope is amp * |k| (0.129 and 0.087); the two never fully
 // agree, which is why the measured max is 0.164 and not their sum
@@ -53,21 +55,21 @@ class WildHeight
   public static function at(x:Float, z:Float):Float
     {
       return (Math.sin((x + ox) * A_X + (z + oz) * A_Z) * A_AMP +
-        Math.sin((x + ox) * B_X + (z + oz) * B_Z) * B_AMP) * WildStyle.RELIEF_AMP;
+        Math.sin((x + ox) * B_X + (z + oz) * B_Z) * B_AMP) * WildBand.reliefAmp;
     }
 
 // d(height)/dx at a world point
   public static function gradX(x:Float, z:Float):Float
     {
       return (Math.cos((x + ox) * A_X + (z + oz) * A_Z) * A_AMP * A_X +
-        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_X) * WildStyle.RELIEF_AMP;
+        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_X) * WildBand.reliefAmp;
     }
 
 // d(height)/dz at a world point
   public static function gradZ(x:Float, z:Float):Float
     {
       return (Math.cos((x + ox) * A_X + (z + oz) * A_Z) * A_AMP * A_Z +
-        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_Z) * WildStyle.RELIEF_AMP;
+        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_Z) * WildBand.reliefAmp;
     }
 
 // steepest slope at a world point, as a rise over run. this is what a prop's footprint is multiplied

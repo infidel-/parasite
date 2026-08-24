@@ -45,7 +45,10 @@ class WildArea implements Area3D
       // reads ground height through WorldCtx.floorY. that returns a flat 0 with no city tile grid,
       // which is what lets actors, choreo, particles and decals run untouched in a tunnel — out here
       // WorldCtx.ground redirects it at the height field instead, and nothing else has to know.
-      // buildings stays a live empty array: the shot pass iterates it
+      // buildings stays a live empty array: the shot pass iterates it.
+      //
+      // the field's AMPLITUDE is not set here — WildBand.use does it, from render.View.showWild,
+      // because the Wild model is built before this object exists and already needs the band
       WildHeight.use(game.area.id);
       WorldCtx.tiles = null;
       WorldCtx.ground = WildHeight.at;

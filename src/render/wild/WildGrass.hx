@@ -73,7 +73,7 @@ class WildGrass
               continue;
             // its own multipliers, mixed: must not correlate with the prop yaw/scale rolls
             var h = WildModel.mix((col * 19349663) ^ (row * 83492791));
-            for (k in 0...WildStyle.TUFTS_PER_CELL)
+            for (k in 0...WildBand.cur.tufts)
               {
                 h = WildModel.mix(h);
                 // offsets inset from the cell edge, so a tuft never straddles into a neighbour that
@@ -83,7 +83,7 @@ class WildGrass
                 var yaw = ((h >> 3) % 3600) / 3600.0 * Math.PI;
                 var s = 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.TUFT_JITTER;
                 tuft(pos, nor, uv, wind, idx, px, pz, yaw,
-                  WildStyle.TUFT_W * s, WildStyle.TUFT_H * s, h);
+                  WildStyle.TUFT_W * s, WildBand.cur.tuftH * s, h);
               }
           }
       if (idx.length == 0)

@@ -44,6 +44,21 @@ class Terrain
       return TERRAIN_PLAINS;
     }
 
+// how far into its OWN band an area sits: 0 at the band edge, 1 at the extreme. forest and mountain
+// run outward from their thresholds to the clamped +/-1; plains runs the other way, because it is the
+// band with no character of its own and its "extreme" is the flat middle of the field. the wilderness
+// scales relief and prop density by this, so a deep forest is denser than one a tile from the plains
+// and the two do not snap at the threshold
+  public static function depthAt(seed: Int, x: Int, y: Int): Float
+    {
+      var t = sample(seed, x, y);
+      if (t < FOREST_THRESHOLD)
+        return (FOREST_THRESHOLD - t) / (1.0 + FOREST_THRESHOLD);
+      if (t > MOUNTAIN_THRESHOLD)
+        return (t - MOUNTAIN_THRESHOLD) / (1.0 - MOUNTAIN_THRESHOLD);
+      return 1.0 - Math.abs(t) / MOUNTAIN_THRESHOLD;
+    }
+
 // the raw contrast-scaled field at an area's center tile, in the renderer's own coordinate frame.
 // the clamp mirrors Core.sampleTerrainFieldRawAtCoord: it cannot change a band (both thresholds are
 // well inside +/-1), but it makes the two paths provably identical instead of incidentally so.

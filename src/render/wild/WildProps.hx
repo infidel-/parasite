@@ -78,7 +78,7 @@ class WildProps
             if (m.prop[row][col] >= 0)
               continue;
             var h = WildModel.mix((col * 73856093) ^ (row * 19349663));
-            if ((h % 1000) >= WildStyle.SMALL_ROCK_CHANCE * 1000)
+            if ((h % 1000) >= WildBand.cur.smallRocks * 1000)
               continue;
             // one in three is a cluster, the same split the full-size rocks take
             var mi = (h % 3 == 0) ? WildStyle.ROCK_CLUSTER_SMALL : WildStyle.ROCK_BOULDER_SMALL;

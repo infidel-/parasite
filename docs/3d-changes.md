@@ -482,3 +482,94 @@ disagree with the geometry. `WildGrass` is the only such material in the rendere
 `DoubleSide` Lambert here (city ground, lawns, gables, roof details, door covers) writes face-true
 normals. And it is correct ONLY while the material stays `DoubleSide`: under `BackSide` the added line
 would flip every fragment instead.
+
+## The terrain band decides what a wilderness area IS (`render.wild.WildBand`)
+
+`map.Terrain` has painted three bands over the region map since Phase 0 and nothing but area NAMING
+read them: a forest tile and a mountain tile generated the identical scatter and rendered the identical
+landform, so the map promised a landscape the area did not deliver. `Terrain.sample`'s own header said
+it was exposed "because the wilderness generator wants the VALUE, not just the band" and it had **zero
+callers**. It has two now, plus a new `Terrain.depthAt` — how far into its own band a tile sits, 0 at
+the threshold and 1 at the extreme.
+
+**The split is forced, and it is the reusable part.** Density has to be decided at GENERATION
+(`AreaGenerator.generateWilderness`, persisted, `isGenerated`-gated so areas already visited keep their
+mix) because walkability follows the tiles — a renderer that simply drew fewer trees would leave blocked
+cells looking like open ground. Everything else is render-side (`render.wild.WildBand`, one style record
+per band) and therefore applies retroactively to every wilderness area in every save.
+
+| | forest | plains | mountain |
+|---|---|---|---|
+| cells with a prop tile | 10% | 2.5% | 7% |
+| tree / bush / rock | 50/35/15 | 20/55/25 | 15/25/60 |
+| ground | leaf litter | turf | scree |
+| relief amp (edge → deep) | 0.60 → 1.00 | 0.60 → **0.30** | 1.00 → 1.80 |
+| tufts × height | 2 × 1.0 | 3 × 1.3 | 1 × 0.8 |
+
+Measured on one save, mid-area, same zoom, window focused, against Phase 2's 72 calls / 334k tris:
+
+| band | calls | tris | submit | GPU | FPS |
+|---|---|---|---|---|---|
+| plains | 73 | 314.6k | 1.8ms | **6.95ms** | 60 |
+| forest | 62 | 444.5k | 1.2ms | **4.92ms** | 60 |
+| mountain | 52 | 501.8k | 0.99ms | **7.20ms** (peak 7.62) | 60 |
+
+All three lock 60 with the GPU under half of a 16.7ms budget, and **the triangle count does not order
+them**: the forest draws 41% more triangles than the plains and costs 2ms LESS. Plains runs 3 grass
+tufts per cell against the forest's 2, and an alpha-tested tuft is fill — two crossed quads over the
+whole frame — where a canopy is opaque geometry that depth-rejects. The knob to watch out here is
+`tufts`, not the trees.
+
+Three things worth keeping:
+
+- **The mountain's relief is the one number to re-check if an actor ever reads as climbing stairs.**
+  At amp 1.8, sampled over the 100x100 grid at cell centres: **6.84 units peak to trough, slope p50
+  0.198 / max 0.296 (16.5 degrees), per-cell step p50 0.452 / p95 0.983 / max 1.068**. `WorldCtx.floorY`
+  answers per CELL, so that step is what an actor takes crossing one — a third of its own billboard
+  height at the p95, against the city's 0.2 curb. It looks right walking; the cap if it ever does not is
+  `reliefMax` 1.5.
+- **The plains relief row is REVERSED (max 0.30 below min 0.60) and that is not a typo.** Plains is the
+  band with no character, so `depthAt` peaks where the field is FLATTEST; its deep end must be the
+  gentlest ground and its edge, where the hills start, the roughest. Caught by reading the value back
+  out of `WildBand.reliefAmp` over CDP, not by looking at the screen.
+- **The band has to be set before the MODEL is built, not in `build()`.** `WildModel.fromArea` turns
+  tile IDs into prop indices and is evaluated as the ARGUMENT to `WildArea`'s constructor, so a band set
+  in `build()` would be one area late. `WildBand.use(game)` runs in `View.showWild` instead.
+- **Forest density is set by the CAMERA, not by the fiction.** 0.12 / 60% trees put the actor under a
+  crown most of the time — there is no occlusion fade out here, `render.Occlusion` buckets buildings and
+  a wilderness area has none. 0.10 / 50% still reads as a wood against the plains' 0.025 and took 33%
+  of the triangles off with it (662k → 442k).
+
+Weighted arrays replaced the one-off chance constants: `bushes`, `rocks` and `trees` are lists of PROPS
+indices where repetition IS the weight (`list[hash % list.length]`), so one mechanism covers all three
+and `BRAMBLE_CHANCE` is gone. Finding one area per band to test is free from CDP —
+`parasiteHx['map.Terrain'].bandAtArea(seed, x, y)` is a pure static and the seed reads out of
+`host.save.read(0)`.
+
+## A fallen log came back in three pieces, twice, and it was the ART
+
+`wild/log-fallen`'s first reference was a trunk with a torn root plate of thin broken roots and a long
+strip of bark peeled off to bare wood. TRELLIS returned **3 components, largest 54.3%** — two big blobs
+of ~26k and ~22k verts, i.e. the object in halves, not a speck cloud. A re-roll on a fresh seed
+(everything else identical, $0.01) came back **3 / 55.8%**: reproducible, so it was not the roll.
+
+Repainting the subject as ONE plain solid trunk — same bark all over, no peel, no roots, "no separate
+parts of any kind" in the prompt — came back **1 component / 100% / 1.25 split** in a single run.
+
+**So the settings-first rule still holds, but its second step is a cheap re-roll before a repaint.** The
+corrected `remesh_project` / `mesh_cluster` defaults are what took the gappy bush from 96 components to
+1; they cannot help a reference that paints two materials meeting along a hard edge. A dark gap in the
+art becomes air; a hard value break along a silhouette can become a SEAM.
+
+The pair also settled the two decimation routes against a scatter count:
+
+| prop | split | route | tris | tex | texels/tri |
+|---|---|---|---|---|---|
+| `log-fallen` | 1.25 | 100k master + meshopt | 3,112 | 384 | 47 |
+| `rock-outcrop` | 1.45 | generated AT budget | 4,981 | 512 | 52 |
+
+The outcrop's 100k master decimated fine by every number here — 1.45 split, 1 component — and still had
+to be thrown away: meshopt floored it at **7,670** tris (error 0.05, flat to 0.3) and the mountain band
+scatters ~200 of these per area, 1.5M triangles before culling against a whole area's 334k. So the
+ratio said yes and the SCATTER said no. `tex 384` on the log is the same lesson from the other side:
+3,112 tris at 512 would be 84 texels/tri, a map twice as large as the geometry can show.

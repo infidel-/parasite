@@ -31,7 +31,7 @@ class WildGround
       // one material for every block: the tint that varies them is per-vertex, so nothing here is
       // per-block except the geometry
       var mat = new MeshLambertMaterial({
-        map: Textures.loadTexture(WildStyle.GROUND, 'asphalt', 1),
+        map: Textures.loadTexture(WildBand.cur.ground, 'asphalt', 1),
         side: THREE.FrontSide,
         vertexColors: true,
       });

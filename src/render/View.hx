@@ -545,6 +545,9 @@ class View {
       var key = -(area.id * 2 + 4); // the sewer key's other parity, see showSewer
       if ((running || warming) && shownKey == key)
         return;
+      // the terrain band FIRST: WildModel.fromArea reads it to turn tile IDs into models, and it is
+      // evaluated as the constructor's argument, so WildArea.build would be one area too late
+      render.wild.WildBand.use(game);
       buildFrom(new render.wild.WildArea(game, render.wild.WildModel.fromArea(area)), key);
     }
 

@@ -632,6 +632,10 @@ class RenderConfig {
     wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
     wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
     wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
+    // the two BAND props: what a TILE_ROCK cell means in the forest and in the mountains respectively
+    // (render.wild.WildBand), where plains keeps the two rocks above
+    wildLogFallen: 'models/wild/log-fallen.glb',                  // fallen trunk, bark all over, broken at both ends
+    wildRockOutcrop: 'models/wild/rock-outcrop.glb',              // low wedge of fractured bedrock
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch
