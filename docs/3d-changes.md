@@ -334,3 +334,50 @@ Shipped as the second `TILE_BUSH` model, picked per cell by hash at `BRAMBLE_CHA
 35.7% over a 100x100 grid, and 54.6% agreement with the rock split where independence predicts ~55%).
 Its bbox aspect is **2.86**, the widest prop out here, so `h` 1.0 still draws 2.9 world units across —
 a sprawl beside `bush-low`'s rounded scrub, which is the shape difference doing the work.
+
+## The wilderness ground stops being a plane (`render.wild.WildHeight`)
+
+One analytic height field — two out-of-phase sine octaves, wavelengths **72.8** and **29.0** world
+units — sampled by every builder out there and by the whole actor layer. Phase-offset off the
+persisted `area.id`, so two wilderness areas are not the same landform and each keeps its own hills
+across saves. Measured at `RELIEF_AMP` 1 over a 400x400 sample: **3.80 units peak to trough** (half a
+conifer), slope p50 **0.110** / max **0.164**, per-cell step p50 **0.272** / p95 **0.545**. Cost at
+the gameplay camera: **72 calls / 334k tris**, from 73 / 309k flat — no new draw call, the extra tris
+are the patch subdivision below. Verified in the running game at a grazing free-cam pose: the horizon
+curves, props sit flat on the slopes, no chunk seam.
+
+**The normal cannot be computed, only derived — and the reason is chunking, not cost.** The ground is
+one mesh per `Chunks.CELLS` block, so `computeVertexNormals` on a block averages only the faces *that
+block* holds; every vertex on a block edge is missing its neighbour's triangles, its normal turns, and
+a lit seam runs down every chunk boundary in the area. The field is closed-form differentiable, so the
+normal comes out of `normalize(-dh/dx, 1, -dh/dz)` and cannot know a block exists. Checked against a
+central difference at 160k points: **max error 4e-11**, unit length, up-facing, perpendicular to both
+tangents. Amplitude is a **slope** budget, not a look — every consumer downstream pays in slope.
+
+**A cell-sized overlay quad is a CHORD, and lifting it does not fix that.** `WildPatches` laid one
+flat quad per cell; over relief the ground bulges through its middle by the sagitta — **0.038** units
+for the tight octave alone, against a `PATCH_Y` of 0.02. Lifting the layer clear of the bulge floats
+its *edges*, where the two surfaces do agree. Subdividing to the ground's own `SUB` lattice is the
+only answer that is right at both. `SUB` stays 2: the tighter octave still gets 14 samples per period,
+which retires the deferred `SUB` sweep.
+
+**`WorldCtx.floorY` answers per CELL, and that is the standing limit.** Relief reaches the actor layer
+through one new hook, `WorldCtx.ground` — a world-space `(x,z) -> y` that `WildArea` points at the
+field and that `World`/`SewerArea` clear. `floorY(col,row)` samples it at the cell centre, so an actor
+is exact in the middle of its cell and steps a p50 of 0.272 crossing into the next (the city already
+steps 0.2 over a curb). Anything holding a real world position takes `WorldCtx.floorYAt(x,z)` instead
+— today that is the slime trail, a long thin ribbon that would lose whole segments to the depth test
+where it dipped under a hillside. Props sink by `h * r * slope`, which is exactly the drop from centre
+to downhill edge: half-buried reads as a rock, floating reads as a bug. No tilt — `PropPlace` carries
+a yaw and nothing else, and a tree grows vertical whatever it stands on.
+
+The player ring was the first thing the cell answer broke, and it is the shape of the whole class. It
+already sampled the **highest** of its 4 footprint corners, for exactly this reason on city curbs —
+but each corner was snapped to its grid cell, and the ring radius is 0.448 of a cell, so with the
+player anywhere near a cell centre all four corners land back in that same cell and the ring reads one
+flat height. Measured: ring at 0.766 + 0.06 lift, ground under its uphill arc peaking at **0.973** —
+buried by 0.207, over 3x the lift, and the arc clips. Sampled by world position the max comes out at
+`h + rr * (|dh/dx| + |dh/dz|)`, which is always >= the disc's true peak `h + rr * |grad|`, so it errs
+by floating — the side this is allowed to fail on. `PathLine` does not have it (Catmull-Rom through
+cell centres, so it already tracks the surface) and neither does `TacticalGrid` (max of adjacent
+cells, so its crosses float rather than sink).

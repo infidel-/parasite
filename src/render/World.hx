@@ -30,6 +30,8 @@ class World {
       }
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
+    // a city floor steps per TILE and has no continuous relief; clear whatever the last area set
+    WorldCtx.ground = null;
     WorldCtx.seed = seed;
     WorldCtx.style = style != null ? style : render.world.CityStyle.get();
     WorldCtx.winSeen = new haxe.ds.ObjectMap();

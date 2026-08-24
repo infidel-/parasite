@@ -41,10 +41,14 @@ class WildArea implements Area3D
 // the ground, the grass and the scatter, then the chunk buckets over the result
   public function build(scene:Scene):Void
     {
-      // the whole render layer reads ground height through WorldCtx.floorY, and it returns a flat 0
-      // when there is no city tile grid — which is what lets actors, choreo, particles and decals run
-      // out here untouched. buildings stays a live empty array: the shot pass iterates it
+      // the relief FIRST: every builder below samples it, and so does the whole actor layer, which
+      // reads ground height through WorldCtx.floorY. that returns a flat 0 with no city tile grid,
+      // which is what lets actors, choreo, particles and decals run untouched in a tunnel — out here
+      // WorldCtx.ground redirects it at the height field instead, and nothing else has to know.
+      // buildings stays a live empty array: the shot pass iterates it
+      WildHeight.use(game.area.id);
       WorldCtx.tiles = null;
+      WorldCtx.ground = WildHeight.at;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only

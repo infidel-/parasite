@@ -112,6 +112,13 @@ class WildGrass
     {
       // one phase per TUFT, not per quad: its two blades are the same clump and lean together
       var phase = (hash % 6283) / 1000.0;
+      // the relief under the tuft's CENTRE, sampled here rather than passed in — this already has the
+      // world position, and the signature is long enough. its two quads stay horizontal at the base,
+      // so on a slope one edge digs in by half a quad width times the slope (0.75 * 0.164 = 0.12 world
+      // units at the worst); roots disappearing into the ground is what roots do, and levelling them
+      // would need a
+      // per-corner sample and a normal for a mat of blades whose normals already point at the sky
+      var gy = WildHeight.at(x, z);
       for (q in 0...2)
         {
           var a = yaw + q * Math.PI / 2;
@@ -122,7 +129,7 @@ class WildGrass
           inline function vtx(ox:Float, y:Float, oz:Float, u:Float, v:Float):Void
             {
               pos.push(x + ox);
-              pos.push(y);
+              pos.push(gy + y);
               pos.push(z + oz);
               nor.push(0.0);
               nor.push(1.0);

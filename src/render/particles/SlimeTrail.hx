@@ -181,11 +181,14 @@ class SlimeTrail {
         spine.splice(0, spine.length - maxSpine);
     }
 
-// ground height at a world position, via its grid cell (road/alley = 0, walkway/bevel = CURB_H)
+// ground height at a world position (city: road/alley = 0, walkway/bevel = CURB_H, per cell; an area
+// with continuous relief answers at the point itself). the trail is a long thin ribbon laid at real
+// world positions rather than on cells, so the cell answer is not good enough where the ground rolls:
+// a spine point half a cell from its centre would sit half a cell of slope off the surface, and a
+// ribbon that dips under a hillside loses whole segments to the depth test
   inline function floorYAt(x:Float, z:Float):Float
     {
-      var c = CityConfig.worldToCell(x, z);
-      return WorldCtx.floorY(c.col, c.row);
+      return WorldCtx.floorYAt(x, z);
     }
 
 // a per-point width multiplier jittered around 1 (irregular, non-parallel ribbon edges)

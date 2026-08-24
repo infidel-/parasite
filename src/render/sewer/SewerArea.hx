@@ -50,8 +50,11 @@ class SewerArea implements Area3D
     {
       // the whole render layer reads ground height through WorldCtx.floorY, and it returns a flat
       // 0 when there is no city tile grid — which is what lets actors, choreo, particles and decals
-      // run down here untouched. buildings stays a live empty array: the shot pass iterates it
+      // run down here untouched. buildings stays a live empty array: the shot pass iterates it.
+      // ground is cleared, not left: a tunnel floor is flat, and the wilderness before it may have
+      // pointed that hook at a height field
       WorldCtx.tiles = null;
+      WorldCtx.ground = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       sceneRef = scene;

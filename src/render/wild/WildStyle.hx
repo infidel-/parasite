@@ -41,8 +41,16 @@ class WildStyle
   // a 4-unit flat quad with a tiling texture reads as a tile, and there is no kerb, no road paint and
   // no building to break it up. at 2 the whole area is 200x200 quads = 80k tris, which is why the
   // ground is emitted per CHUNK rather than as one mesh — render.Chunks then only submits the visible
-  // few. it is also the lattice Phase 2 displaces, so raising it buys smoother relief as well
+  // few. it is also the lattice render.wild.WildHeight displaces into relief, and it does NOT have to
+  // rise for that: the tighter of the field's two octaves is 29 world units, so a 2-unit sample gives
+  // it 14 points per period
   public static inline var SUB = 2;
+  // master scale on the relief (render.wild.WildHeight): 1.0 is the field as tuned, 0 is flat ground.
+  // the field's own amplitudes are a SLOPE budget rather than a look — everything downstream is paid
+  // for in slope, not in height — so this is the one knob to move. at 1.0 the ground runs 3.80 units
+  // peak to trough with a p50 slope of 0.110, and an actor crossing a cell steps a measured p50 of
+  // 0.272 world units (the city's own curb step is 0.2). raising this scales that step with it
+  public static inline var RELIEF_AMP = 1.0;
   // low-frequency value swing of the ground mottle, on the per-vertex colour channel. this is what
   // makes the extra polygons pay: dry patches and damp hollows drift across the surface with no
   // second texture, no splat shader and no extra draw call

@@ -13,10 +13,9 @@ import render.wild.WildModel.Wild;
 //    kerb, no road paint and no building edge to break the repeat up. WildStyle.SUB sub-quads per
 //    axis give the surface something to vary ACROSS.
 //  - SHARED VERTICES, and therefore not render.world.MeshBuf, which emits four unshared vertices per
-//    quad. that is right for flat city ground and wrong here: Phase 2 displaces this lattice into
-//    relief and wants computeVertexNormals to produce a smooth surface, which unshared corners
-//    cannot give. building it welded from the start means the height pass only has to move the
-//    position attribute.
+//    quad. that is right for flat city ground and wrong here: the lattice is displaced into relief by
+//    render.wild.WildHeight, and unshared corners would give the surface a faceted crease along every
+//    sub-quad edge whatever the normals said.
 //  - PER-CHUNK. at SUB 2 the whole area is 200x200 quads = 80k tris, so it is emitted as one mesh
 //    per render.Chunks.CELLS block: an offscreen block is then one bounding-sphere reject instead of
 //    40k triangles walked. every block shares ONE material, so this is one program and the blocks
@@ -70,11 +69,13 @@ class WildGround
             var x = (col0 + i / S) * CELL - half;
             var z = (row0 + j / S) * CELL - half;
             pos.push(x);
-            pos.push(0.0);
+            pos.push(WildHeight.at(x, z));
             pos.push(z);
-            nor.push(0.0);
-            nor.push(1.0);
-            nor.push(0.0);
+            WildHeight.pushNormal(nor, x, z);
+            // uv off the FLAT world position, not off the displaced surface. arc length would be the
+            // "correct" unwrap and it is the wrong call here: it needs a running integral along both
+            // axes to stay continuous across chunk blocks, and at these slopes it would buy at most a
+            // 2% stretch back on ground the camera sees at a steep angle anyway
             uv.push(x / WildStyle.GROUND_TILE);
             uv.push(z / WildStyle.GROUND_TILE);
             var t = tint(x, z);
@@ -101,15 +102,17 @@ class WildGround
           }
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
-      // written flat rather than computed: the surface IS flat in this phase, and computeVertexNormals
-      // over 40k triangles per block for a known answer is a build-time cost with no output
+      // ANALYTIC, never computeVertexNormals: this is one mesh per chunk block, so a computed normal
+      // on a block-edge vertex averages only the faces that block happens to hold and turns away from
+      // its neighbour's answer — a lit seam down every chunk boundary. see WildHeight's header
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
       geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
-      // receives, never casts: it is the surface every shadow out here lands on, and a flat plane has
-      // nothing of its own to throw
+      // receives, never casts: it is the surface every shadow out here lands on, and the relief on it
+      // is far too shallow to throw one — the measured peak slope is 0.164, i.e. 9.3 degrees, so the
+      // moon would have to sit inside 9 degrees of the horizon before a hill shaded its own far side
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       scene.add(mesh);

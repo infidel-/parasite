@@ -102,12 +102,20 @@ class WildPatches
         }
     }
 
-// one chunk block of a layer: a flat quad per cell that is marked OR touches a marked one. the apron
-// ring is what lets a blob round off past its own cell instead of being clipped square by it
+// one chunk block of a layer: quads over every cell that is marked OR touches a marked one, lifted a
+// hair off the relief. the apron ring is what lets a blob round off past its own cell instead of
+// being clipped square by it.
+//
+// the cell is SUBDIVIDED to WildStyle.SUB, the same lattice render.wild.WildGround builds the turf
+// on. a cell-sized quad would be a CHORD across the relief and the ground would bulge through its
+// middle by the sagitta — 0.038 world units for the tight octave alone, against a PATCH_Y of 0.02.
+// lifting the layer clear of that instead would float its EDGES, where the two surfaces do agree
   static function block(scene:Scene, mat:MeshLambertMaterial, taken:Array<Array<Bool>>, y:Float,
     col0:Int, row0:Int, cw:Int, ch:Int):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
+      var S = WildStyle.SUB;
+      var step = CELL / S;
       var pos = [];
       var nor = [];
       var uv = [];
@@ -117,37 +125,41 @@ class WildPatches
           {
             if (!near(taken, col0 + dc, row0 + dr))
               continue;
-            var x0 = (col0 + dc) * CELL - half;
-            var z0 = (row0 + dr) * CELL - half;
-            var x1 = x0 + CELL;
-            var z1 = z0 + CELL;
-            var base = Std.int(pos.length / 3);
-            // uv straight off world position, so abutting cells read as one continuous overgrown
-            // field rather than a per-cell stamp — and nothing is stretched on either axis
-            for (p in [[x0, z0], [x1, z0], [x1, z1], [x0, z1]])
-              {
-                pos.push(p[0]);
-                pos.push(y);
-                pos.push(p[1]);
-                nor.push(0.0);
-                nor.push(1.0);
-                nor.push(0.0);
-                uv.push(p[0] / WildStyle.PATCH_TILE);
-                uv.push(p[1] / WildStyle.PATCH_TILE);
-              }
-            idx.push(base);
-            idx.push(base + 2);
-            idx.push(base + 1);
-            idx.push(base);
-            idx.push(base + 3);
-            idx.push(base + 2);
+            var cx = (col0 + dc) * CELL - half;
+            var cz = (row0 + dr) * CELL - half;
+            for (sj in 0...S)
+              for (si in 0...S)
+                {
+                  var x0 = cx + si * step;
+                  var z0 = cz + sj * step;
+                  var x1 = x0 + step;
+                  var z1 = z0 + step;
+                  var base = Std.int(pos.length / 3);
+                  // uv straight off world position, so abutting cells read as one continuous overgrown
+                  // field rather than a per-cell stamp — and nothing is stretched on either axis
+                  for (p in [[x0, z0], [x1, z0], [x1, z1], [x0, z1]])
+                    {
+                      pos.push(p[0]);
+                      pos.push(WildHeight.at(p[0], p[1]) + y);
+                      pos.push(p[1]);
+                      // the turf's own normal, not straight up: an overlay lit flat on a hillside
+                      // reads as a bright sticker on shaded ground
+                      WildHeight.pushNormal(nor, p[0], p[1]);
+                      uv.push(p[0] / WildStyle.PATCH_TILE);
+                      uv.push(p[1] / WildStyle.PATCH_TILE);
+                    }
+                  idx.push(base);
+                  idx.push(base + 2);
+                  idx.push(base + 1);
+                  idx.push(base);
+                  idx.push(base + 3);
+                  idx.push(base + 2);
+                }
           }
       if (idx.length == 0)
         return;
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
-      // written flat, not computed: every quad here faces straight up and computeVertexNormals over
-      // the whole layer for a known answer is build-time cost with no output
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
       geo.setIndex(idx);

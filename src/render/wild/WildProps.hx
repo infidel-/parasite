@@ -54,6 +54,7 @@ class WildProps
             places[mi].push({
               x: px,
               z: pz,
+              y: sit(mi, px, pz),
               // a full turn: every one of these is a natural object with no authored front, so
               // there is nothing for a yaw to get wrong
               yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
@@ -81,12 +82,31 @@ class WildProps
               continue;
             // one in three is a cluster, the same split the full-size rocks take
             var mi = (h % 3 == 0) ? WildStyle.ROCK_CLUSTER_SMALL : WildStyle.ROCK_BOULDER_SMALL;
+            var px = (col + 0.2 + (h % 601) / 601.0 * 0.6) * CELL - half;
+            var pz = (row + 0.2 + ((h >> 9) % 601) / 601.0 * 0.6) * CELL - half;
             places[mi].push({
-              x: (col + 0.2 + (h % 601) / 601.0 * 0.6) * CELL - half,
-              z: (row + 0.2 + ((h >> 9) % 601) / 601.0 * 0.6) * CELL - half,
+              x: px,
+              z: pz,
+              y: sit(mi, px, pz),
               yaw: ((h >> 3) % 3600) / 3600.0 * 2 * Math.PI,
               scale: 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.PROPS[mi].jitter,
             });
           }
+    }
+
+// where a prop's base sits: the relief under it, SUNK by its own footprint against the slope.
+//
+// render.Models.instanced plants a prop's base on a horizontal plane, so on a hillside the plane
+// meets the ground at the centre and the downhill edge hangs in the air. `r` is that footprint as a
+// multiple of `h` (which is exactly why it is stored as a ratio — see WildStyle.WildProp), so
+// h * r * slope is the drop from centre to lowest edge, and burying the prop by it puts the downhill
+// edge on the ground and the uphill edge under it. that is the right way round: a rock half in the
+// earth reads as a rock, a rock floating over it reads as a bug. no TILT, deliberately —
+// render.Models.PropPlace carries a yaw and nothing else, and a tree grows vertical whatever it
+// stands on
+  static inline function sit(mi:Int, x:Float, z:Float):Float
+    {
+      var p = WildStyle.PROPS[mi];
+      return WildHeight.at(x, z) - p.h * p.r * WildHeight.slope(x, z);
     }
 }

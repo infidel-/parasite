@@ -1144,11 +1144,18 @@ class View {
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
     // straddles gets its overhanging arc buried and blinks. floating over the lower side reads
     // fine; sinking under the higher side does not. ease Y to soften the step.
+    //
+    // the corners are sampled by WORLD position, not by their grid cell. on the city's stepped floor
+    // those are the same answer, but on continuous relief a cell-snapped sample is worthless here:
+    // the ring's radius is 0.448 of a cell, so with the player anywhere near a cell centre all four
+    // corners land back in that same cell and the ring reads ONE flat height while the ground uphill
+    // of it has already risen by rr * slope. sampled at the corners themselves the max comes out at
+    // h + rr * (|dh/dx| + |dh/dz|), which is >= the disc's true peak of h + rr * |grad| — so it errs
+    // by floating, which is the side this is allowed to fail on
     var rr = CityConfig.CELL * 0.448;                       // ring outer radius
     function fY(ox:Float, oz:Float):Float
       {
-        var c = CityConfig.worldToCell(p.x + ox, p.z + oz);
-        return render.world.WorldCtx.floorY(c.col, c.row);
+        return render.world.WorldCtx.floorYAt(p.x + ox, p.z + oz);
       }
     var tgtY = Math.max(Math.max(fY(-rr, -rr), fY(rr, -rr)),
                         Math.max(fY(rr, rr), fY(-rr, rr))) + 0.06;
