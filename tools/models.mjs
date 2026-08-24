@@ -244,7 +244,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.roughness != null ? '/rf' + e.roughness : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.roughness != null ? '/rf' + e.roughness : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -267,6 +267,42 @@ async function main()
                 t.setImage(bytes).setMimeType('image/png');
             }
           console.log('     baseColor <- ' + texSrc + ' (' + Math.round(bytes.length / 1024) + 'KB)');
+        }
+      // optional gamma LIFT on the base-colour MAP: out = (v/255)**lift, so lift < 1 brightens. same
+      // knob name and meaning as textures.json's `lift`, and the missing inverse of baseColor below —
+      // that one is a factor in [0,1] and can only multiply DOWN.
+      //
+      // what needs it: a prop dense enough to occlude itself comes back with that occlusion baked
+      // into its albedo. measured on wild/bush-bramble, a lace of interlocking canes — from the same
+      // reference value a conifer bakes at 0.79x and the bramble at 0.44x, landing on 30/29/29
+      // against the prop family's 46-52. repainting the reference does not reach it either: the lift
+      // tracks proportionally (a 28% brighter reference moved the bake 29%), so the reference would
+      // have to out-brighten the flat #5a5d63 backdrop TRELLIS segments it against, which costs the
+      // segmentation. so the correction has to happen here, on the bake.
+      //
+      // runs on the FULL-RES map, before the resize step below, for the same reason texSrc does
+      if (e.lift != null)
+        {
+          const lut = Array.from({ length: 256 }, (_, v) => Math.round(255 * Math.pow(v / 255, e.lift)));
+          for (const m of doc.getRoot().listMaterials())
+            {
+              const t = m.getBaseColorTexture();
+              if (t == null)
+                continue;
+              const { data, info: raw } = await sharp(Buffer.from(t.getImage()))
+                .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              // colour channels only — alpha is coverage, not brightness
+              for (let i = 0; i < data.length; i += 4)
+                {
+                  data[i] = lut[data[i]];
+                  data[i + 1] = lut[data[i + 1]];
+                  data[i + 2] = lut[data[i + 2]];
+                }
+              const png = await sharp(data, { raw: { width: raw.width, height: raw.height, channels: 4 } })
+                .png().toBuffer();
+              t.setImage(new Uint8Array(png)).setMimeType('image/png');
+            }
+          console.log('     baseColor lifted ^' + e.lift + ' (gamma on the map; <1 brightens)');
         }
       // add the hand-painted emissive map (same UVs as base) + HDR strength so the head glows + blooms
       if (hasEmi)

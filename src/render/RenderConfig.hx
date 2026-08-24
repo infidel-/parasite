@@ -631,6 +631,7 @@ class RenderConfig {
     wildRockBoulder: 'models/wild/rock-boulder.glb',              // single weathered boulder
     wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
     wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
+    wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

@@ -66,10 +66,11 @@ class WildStyle
 
   // --- the props (render.wild.WildProps) ---
   // `h` IS NOT A FREE NUMBER: render.Models.instanced scales a prop by HEIGHT ALONE, so a row's world
-  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured, in that order: conifer 0.64,
-  // broadleaf 0.84, boulder 3.67, cluster 1.31, bush 1.75. the boulder is the reason this is written
-  // down — at the 1.5 it went in with, a 3.67 aspect made it 5.5 units across, well over a cell, and
-  // the bush's first mesh came back at 25 (see its models.json note).
+  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured, in that order: conifer 0.34,
+  // broadleaf 0.84, broadleaf-full 1.09, dead 0.47, boulder 3.67, cluster 1.31, bush 1.91,
+  // bramble 2.86. the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67
+  // aspect made it 5.5 units across, well over a cell, and the bush's first mesh came back at 25
+  // (see its models.json note).
   //
   // the trees are 25% taller than they went in at (6.0 / 5.2), by request. that puts the conifer 4.8
   // world units across and the broadleaf 5.5, both over the 4-unit cell — which is CORRECT for a
@@ -120,6 +121,15 @@ class WildStyle
       r: 0.80,
       jitter: 0.28,
     },
+    // the second bush, and the widest prop out here: aspect 2.86 against bush-low's 1.91, so a lower
+    // `h` still draws WIDER — 2.9 world units across at 1.0. that is the shape difference doing the
+    // work, a sprawling bramble beside a rounded scrub, rather than two domes at two sizes
+    {
+      path: RenderConfig.MODELS.wildBushBramble,
+      h: 1.0,
+      r: 1.43,
+      jitter: 0.30,
+    },
     // the same two rock glbs again at SMALL_ROCK_SCALE — loose stones on open ground, where the two
     // full-size rows above stand on a TILE_ROCK cell the player cannot walk through. render.Models
     // caches one template per PATH, so a second row over the same file is a second InstancedMesh and
@@ -146,8 +156,13 @@ class WildStyle
   public static inline var ROCK_BOULDER = 4;
   public static inline var ROCK_CLUSTER = 5;
   public static inline var BUSH_LOW = 6;
-  public static inline var ROCK_BOULDER_SMALL = 7;
-  public static inline var ROCK_CLUSTER_SMALL = 8;
+  public static inline var BUSH_BRAMBLE = 7;
+  public static inline var ROCK_BOULDER_SMALL = 8;
+  public static inline var ROCK_CLUSTER_SMALL = 9;
+  // odds a TILE_BUSH cell takes the bramble rather than the scrub. under a half on purpose: the
+  // bramble is the odd silhouette out here and the rounded scrub is what a field of them should read
+  // as, so this is the accent and not the default
+  public static inline var BRAMBLE_CHANCE = 0.35;
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
   // 0.09 and 0.22 world units tall, i.e. 0.33 and 0.29 across. that is a stone, not a boulder, seen
   // from a camera 18-55 units up, so this is the one knob to raise if they read as nothing at all

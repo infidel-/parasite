@@ -26,8 +26,13 @@ class WildModel
         for (x in 0...area.width)
           {
             var t = area.getCellType(x, y);
+            // one bush TILE, two bush MODELS. unlike the trees below there is no per-cell variant in
+            // the saved grid to honour, so the pick is hashed off the cell — deterministic, so a bush
+            // is the same one on every re-entry, and with its own multipliers so which cells take the
+            // bramble does not correlate with the rock split
             if (t == Const.TILE_BUSH)
-              m.prop[y][x] = WildStyle.BUSH_LOW;
+              m.prop[y][x] = (mix((x * 20011) ^ (y * 40009)) % 100 < WildStyle.BRAMBLE_CHANCE * 100)
+                ? WildStyle.BUSH_BRAMBLE : WildStyle.BUSH_LOW;
             // the four tree tiles map ONE TO ONE onto the four tree models, which is what those tile
             // IDs were always for: the 2D generator already rolls a variant per cell
             // (AreaGenerator.generateWilderness deals TILE_TREE1 + Std.random(4)), so honouring it

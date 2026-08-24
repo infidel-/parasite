@@ -287,3 +287,50 @@ Nothing to migrate: walkability is a static table, entry re-tests it through `fi
 movement tests the target cell. And the same two rock glbs are scattered again at a tenth of their
 height (619 loose stones) on open cells only — `Models` caches one template per path, so a second row
 over the same file is a second `InstancedMesh` and not a second load.
+
+## How much geometry the corrected TRELLIS settings absorb, and the albedo wall behind it
+
+The gappy-bush probe showed the corrected settings (`mesh_cluster {1,0,1,PI/2}` + `remesh_project`
+0.9) taking a reference of discrete leaf clumps from 96 components to 1. That reference was only
+*dark gaps*. `wild/bush-bramble` was generated to find the ceiling: a lace of interlocking arcing
+canes with real see-through holes — thin structure **and** topological holes, hard on both axes.
+
+| reference | tris | split | comps | largest |
+|---|---|---|---|---|
+| gappy bush (dark gaps, no thin structure) | 4,777 | 1.68 | **1** | 100.0% |
+| bramble (thin canes + real holes) | 4,894 | **2.59** | 16 | 94.2% |
+
+**Topology holds.** 15 of those 16 components share 5.8% of vertices and are detached cane *tips* —
+the same speck pattern `tree-broadleaf-full` ships with at 17 / 93.9%. The plan view is a correct
+radial bramble and the holes are real. But split **2.59** is the worst in this repo, so this prop can
+never be decimated offline and has to keep arriving at the budget. So the line is: the settings
+absorb dark-gap art completely, thin interlocking structure only mostly.
+
+**The albedo is where it actually fails, and it is a new mode.** A prop dense enough to occlude
+itself bakes that occlusion into its base colour. From the same reference value a conifer bakes at
+**0.79x** and the bramble at **0.44x** — 30/29/29 against the prop family's 46-52.
+
+Neither existing knob reaches it:
+
+- `baseColorFactor` is a factor in `[0,1]`. It only multiplies **down**. There is no up.
+- Repainting the reference does not either, and that was measured rather than assumed. The same
+  image at subject p50 **53** baked 24/23/21; lifted to p50 **68** it baked 30/29/29 — a 28% brighter
+  reference moved the bake 29%, proportional. Reaching 46-52 that way needs a reference brighter than
+  the flat `#5a5d63` backdrop TRELLIS segments it against, which costs the segmentation.
+
+So the correction moved to the bake: **`lift` in `models.json`**, a gamma on the base-colour MAP
+(`out = (v/255)**lift`, `<1` brightens), same name and meaning as `textures.json`'s. It is the missing
+inverse of `baseColor`, runs full-res before the resize like `texSrc` does, and is folded into
+`last_sig`. `lift` 0.78 lands the bramble at **48/47/47**, inside the band.
+
+Two things that rode along. The reference lift was done **in code, not by re-prompting** — a gamma on
+the subject plus a re-lay on a truly flat `#5a5d63` (gpt paints a vignette: measured backdrop 82/86/91
+against the 90/93/99 it was asked for). That holds the composition fixed, so the two bakes differ by
+value alone, and it is free. And the MR map came back **mean 0/206/128, metalness peaking at 198** —
+cyan, metallic across canes and leaves alike — where `bush-low` from the same generator peaks at 18.
+`dropMR`. Re-read the MR map on every regeneration; the verdict never carries forward.
+
+Shipped as the second `TILE_BUSH` model, picked per cell by hash at `BRAMBLE_CHANCE` 0.35 (measured
+35.7% over a 100x100 grid, and 54.6% agreement with the rock split where independence predicts ~55%).
+Its bbox aspect is **2.86**, the widest prop out here, so `h` 1.0 still draws 2.9 world units across —
+a sprawl beside `bush-low`'s rounded scrub, which is the shape difference doing the work.
