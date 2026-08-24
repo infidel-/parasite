@@ -444,3 +444,41 @@ maps because that is where it was measured and where dropping alpha is safe by d
 genuinely needs MASK or BLEND would still explode, and near-zero alpha in its atlas is the tell.
 `sewer/bags` (98.8% under alpha 128) and `wild/rock-boulder` (38.9%) also carry alpha and are NOT
 affected — nothing near zero, so nothing to divide by.
+
+## Half the grass was dark, and three had been undoing the trick that stops that
+
+The wilderness grass came out in two populations — pale yellow-green tufts and near-black ones,
+interleaved at random across the field. **Debug key `1` settled it in one screenshot**: under WYSIWYG,
+which hides every light and adds a flat ambient, every tuft is the same pale green. So the split was
+never albedo, and nothing in the texture, the `lift` or the `alphaTest` was involved.
+
+`WildGrass.tuft` writes its normals pointing **straight up**, not out of each quad's face. That is a
+deliberate lie and the header already explains why: a vertical quad lit by its true normal goes black
+the moment it turns from the moon, and a field of them flickers as the camera orbits. What the header
+did not say is that writing the normal is only half the job. The material is `DoubleSide`, and three's
+`normal_fragment_begin` does:
+
+```glsl
+float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;
+vec3 normal = normalize( vNormal );
+#ifdef DOUBLE_SIDED
+	normal *= faceDirection;
+#endif
+```
+
+So every **back-facing** fragment got `(0,-1,0)`: no moon term at all, and `getHemisphereLightIrradiance`
+sampling the light's GROUND colour instead of its sky colour. Which of a tuft's two crossed quads faces
+away is a property of the VIEW, so the dark half reshuffled as the camera turned — the exact failure
+the up-normals exist to prevent, reintroduced by the engine underneath them.
+
+The fix is one line appended after the include, `normal *= faceDirection;`, which cancels the flip
+exactly (it is ±1) and lands before `lights_fragment_begin` takes its `geometryNormal = normal`, so the
+moon and the hemisphere both see the sky normal. Measured over one pinned pose: green-leaning pixels
+**0.17% → 0.44%** of the frame (2.6x more grass reading as grass) and frame mean luma **11.80 → 14.22**.
+
+**The trap generalises to any material that lies about its normals.** For a normal that matches its
+face the flip is correct and is exactly what it is for; it only bites where the normal was chosen to
+disagree with the geometry. `WildGrass` is the only such material in the renderer — every other
+`DoubleSide` Lambert here (city ground, lawns, gables, roof details, door covers) writes face-true
+normals. And it is correct ONLY while the material stays `DoubleSide`: under `BackSide` the added line
+would flip every fragment instead.

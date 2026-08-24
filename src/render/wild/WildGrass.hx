@@ -106,7 +106,12 @@ class WildGrass
 // the NORMALS point straight up rather than out of each quad's own face. that is not a shortcut: a
 // vertical quad lit by its true normal goes black the moment it turns away from the moon, and a field
 // of them flickers between bright and dark as the camera orbits. pointing them at the sky lights every
-// tuft like the ground it grows out of, which is what a mass of thin blades actually does
+// tuft like the ground it grows out of, which is what a mass of thin blades actually does.
+//
+// writing them here is only HALF of it, and for a long time the other half was missing: a DoubleSide
+// material has three flip the normal on every back-facing fragment, which turned this lie straight
+// back into the failure it was avoiding. material() cancels that — read its note before touching
+// either end
   static function tuft(pos:Array<Float>, nor:Array<Float>, uv:Array<Float>, wind:Array<Float>,
     idx:Array<Int>, x:Float, z:Float, yaw:Float, w:Float, h:Float, hash:Int):Void
     {
@@ -179,6 +184,23 @@ class WildGrass
               '  transformed.x += wildWindAmp * aWind.y * sin( wildT + aWind.x );\n' +
               '  transformed.z += wildWindAmp * aWind.y * 0.6 * sin( wildT * 0.83 + aWind.x * 1.7 + 1.3 );\n' +
               '  }');
+          // cancel three's DOUBLE_SIDED normal flip, which was quietly undoing the whole point of the
+          // sky-pointing normals in tuft(). those normals are a deliberate LIE — they point up, not out
+          // of each quad's face — and three's normal_fragment_begin does `normal *= faceDirection` on a
+          // double-sided material, so every BACK-facing fragment got (0,-1,0) instead: no moon term at
+          // all, and the hemisphere light sampled from its GROUND colour rather than its sky one. that
+          // split the field into a light half and a dark half that reshuffled as the camera turned,
+          // since which of a tuft's two crossed quads faces away is a property of the view.
+          //
+          // multiplying by faceDirection a second time cancels it exactly (it is +/-1), and it lands
+          // before lights_fragment_begin takes its `geometryNormal = normal`, so the moon and the
+          // hemisphere both see the sky normal. correct ONLY while this material is DoubleSide, which
+          // is set right above — under FrontSide there are no back faces and under BackSide this would
+          // flip every fragment instead
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+            '#include <normal_fragment_begin>',
+            '#include <normal_fragment_begin>\n' +
+            '  normal *= faceDirection;');
         };
       // three keys its program cache on base material params and NOT on onBeforeCompile, so without a
       // key of our own a moving grass program could be handed to an identical still material
