@@ -707,3 +707,449 @@ Latent rather than live (`AREA_GROUND` declares `commonAI: 0`, so the turn spawn
 and fixed with the one case arm. The ambush mechanism itself needed nothing: `findUnseenEmptyLocation`
 already rejects any cell `isVisible` reaches, and before these obstacles a wilderness area had no unseen
 cell to offer it.
+
+## The region map's highway reaches the ground (`map.Highway`, `render.wild.WildRoad`)
+
+`map.RoadPlan` has routed ROAD1 trunk roads across wilderness tiles since long before `AREA_GROUND`
+became a 3D area kind, and the area never looked at them — the map drew a highway and the ground was the
+same uniform scatter as anywhere else. Same class of lie as the terrain bands before Phase 0. An area the
+map runs a road through now gets a **graded asphalt corridor**, a dashed centre line, a guard rail along
+one shoulder and litter that thins with distance from it.
+
+**Three things were free and one was not.** `Const.TILE_ROAD` (32) already existed and already read
+walkable 1 / see-through 1 in both `tiles.Default` tables — row 2, one row below the two IDs the last
+phase claimed — so no tile ID, no table edit, no 2D art. The corridor **persists as tiles**, so
+`WildModel.fromArea` recovers its axis and offset from the road cells' own bounding box (the `rocks`
+trick again) and the whole `generatorInfo` / migration / regenerate-on-entry section the original plan
+carried simply evaporated. And the VisionMask needed nothing, `TILE_ROAD` being see-through.
+
+**What was not free: the road plan is unreachable from area generation.** `roadPlanGrid` lives on the
+`map.Image` at `RegionGame.regionMapImage`, which is in that class's `_ignoredFields` (never saved) and is
+built lazily on the first region-map *view*; generating one allocates seventeen 832x832 grids. So this is
+`map.Terrain`'s play a second time, with one difference — Terrain DUPLICATED the renderer's literals,
+this **extracts** the decision. `RoadPlan.generateRoadGraph` calls `Highway.lines` passing its OWN `rng`,
+so the shared draw stream is untouched; a headless caller passes a fresh `SeededRandom(mapSeed)`, which is
+provably the same state (nothing consumes `rng` between `Core.initRandom` and the ROAD1 block —
+`paintGround` hashes, and `paintGrainOverlay`'s 16k draws come after the roads). ROAD1 makes it small:
+`walkRoad1` is dead straight, edge to edge, one plan cell wide, never overwritten, so the whole highway is
+four numbers.
+
+**That extraction can move every existing region map, so it was gated on a differential.** New
+`Highway.lines` against a JS transcription of the original, over **970 seeds** at four blocker densities,
+comparing all four outputs *and the final `rng.seed`* — **0 mismatches**, with all three internal paths
+covered (clean early return 457, mid-loop reroll 220, fallback 83). The `rng.seed` is the load-bearing
+half: it is what proves ROAD2-5, blocks, parcels and buildings still draw from the same stream.
+
+**The halo frame is the trap, and it is worse here than for terrain.**
+`RoadPlanGridOps.hasRoadTypeInRegionTile` takes FULL-CELL coordinates and does not add the halo itself —
+every existing caller adds it by hand. Getting it wrong does not throw, it answers about the tile two up
+and two left, which is exactly the ~40% disagreement `Terrain.bandAtArea` shipped with. `Highway.atArea`
+takes region coordinates and adds `Core.HALO_CELLS` internally, once. Verified against the drawn map:
+trunk at region column 16, branch on row 13 running right, matching the rendered region map tile for tile.
+
+**The grade is analytic, derivatives included, because it has to be.** `WildHeight`'s ground normal comes
+out of `gradX`/`gradZ` and never out of `computeVertexNormals` (per-chunk averaging would put a lit seam
+down every block boundary), so a corridor term that skipped the derivatives would light the ground wrong
+and sink props wrong. `h = f + w*(g - f)` with `g` the field sampled ON the centreline; measured live:
+**on-road height spread 0.000** across the full 12-unit width with `gx` exactly 0, and **analytic vs
+central-difference gradient error 0** on both axes over corridor, shoulder and far field. Every consumer
+follows for nothing — mesh, patches, grass, `sit()`, actor feet, camera, `pickCell`, slime trail.
+
+**The shoulder is what a level ribbon across falling ground costs, and it is the number to watch.** Over
+a full mountain corridor, peak shoulder slope / worst per-cell step by ramp width: 2 cells 0.576 / 1.96,
+**3 cells 0.494 / 1.69**, 4 cells 0.444 / 1.72, 5 cells 0.406 / 1.59 — against the natural ground's own
+0.259 there. 3 takes the biggest single bite and 4 makes the STEP *worse*, because a wider ramp reaches
+into steeper ground. This is a real embankment rather than a bug (a road cut has steeper batters than the
+hill it crosses, which is also why the rail stands there); `WildBand.reliefMax` 1.5 is the cap already
+left for it if a mountain shoulder ever reads as a cliff.
+
+**Two render calls that went the other way to the patch layer next door.** `WildPatches` chunks because a
+layer spans the area and would submit its whole blended fill every frame; a road is a STRIP — 3 cells
+wide over 100 long is ~3% of the area, about 2,200 triangles of nearly no fill. Chunking it was shipped
+first and measured at **TWELVE** draw calls on a 90-cell mountain area against one merged; **91 → 78 dc**
+at the same pose. The dashes are one root mesh for the same reason. Patch seeding also had to be taught to
+skip corridor cells explicitly: it marks off a pure cell hash and never consults `m.prop`, so unlike the
+grass and the pebbles it does not get the `OCCUPIED` suppression for free.
+
+**The dashes rendered, drew nothing, and it was WINDING.** They fired `onBeforeRender`, passed the frustum
+(camera inside the bounding sphere), sat +0.03 above the asphalt, and stayed invisible through red
+emissive, a 6-unit lift and `fog:false`. The corner order that gives normal +Y for an east-west road gives
+**-Y** for a north-south one — swapping which world axis carries `along` reverses the triangle winding —
+so `FrontSide` culled every dash on one of the two axes. One sign fixes it. The diagnosis only converged
+after tinting the asphalt green proved the corridor itself was correct.
+
+**Measured properly, as a controlled A/B in the SAME frame.** The area regenerates its scatter on every
+entry (`generateWilderness` uses bare `Std.random`), so comparing two visits is worthless — instead the
+road, dash and rail objects were toggled `visible` live on a focused 60 FPS window, interleaved
+A/B/A/B x8, 28/30 samples, medians. Plains corridor, standing on the road: **ON 70 calls / 381,906 tris /
+GPU 6.83ms / submit 1.69; OFF 66 / 178,722 / 6.61 / 1.60** — so **+4 calls, +203,184 tris, +0.22ms GPU,
++0.09ms submit**. The GPU interquartile ranges overlap almost completely (6.29-7.31 against 5.90-7.46), so
+**the whole highway is not measurable in GPU time here**; frame sat at 16.69ms of a 16.7ms VSync budget
+with 14.1ms idle. The 4 calls are asphalt + dashes + rail + the rail's shadow-pass draw.
+
+**But the rail is 53% of the area's triangles, and its SHADOW is half of that.** 21 instances survive the
+cull at 4,782 tris each, drawn twice — main pass and moon shadow. Toggling `castShadow` alone: **100,422
+tris and one draw call, for no measurable GPU change** (6.15 vs 6.31, noise). Kept, because `tris` is an
+inventory number and GPU is the cost — this file's own rule — and the moon shadow is what makes a prop
+read as standing on the ground rather than pasted over it. Written down because it is the cheapest lever
+in the area if the integrated-GPU baseline ever needs one: a 26% tri cut for a shadow you have to look for.
+
+**Guard rail: the gate says REJECT and is wrong, for the third time in this file.** 11 components, largest
+56.7% — but the top two are 27,691 and 17,327 verts, **92% between them**, and they are the beam and the
+posts, which on a real rail are bolted rather than welded. That is the shipped conifer's 2-at-51/49 shape,
+not the 96-at-24% blob cloud the gate exists to catch. Split 1.33x, and meshopt floors at **4,782** from
+97,692 whatever `error` asks for (swept 0.05 and 0.3 for the identical count — the seam network is the
+floor, not the cap, exactly the drum's shape). `tex` 512 = 54 texels/tri. Its `h` is set so the prop is
+exactly CELL wide, so one segment per cell meets end to end; `jitter` is 0, alone in that table, because a
+crash barrier is manufactured and a run at visibly different sizes reads as broken rather than varied.
+
+**And its reference could not be measured the usual way.** gpt returned it at subject p50 121 against the
+69-77 that bakes correctly, but `propstat`'s REPORTED p50 is meaningless on this subject: grey steel
+against the `#5a5d63` backdrop sits so close in value that *brightening* it pushes parts out of the
+distance-from-backdrop mask — coverage 6.8% → 5.4% between two lifts, and the reported p50 moved the wrong
+way. Same too-close-to-its-own-key failure the grass texture hit. `lift`'s internal core mask (alpha > 0.9)
+is the trustworthy one and was targeted at 73. Baked neutral at 112/110/109 with metal 255 across the whole
+MR map → `dropMR` plus a straight `baseColor` darken, landing ~49 in the family's 46-52.
+
+## Wilderness Phase 5b — both shoulders, a wandering road edge, and climbing the rail
+
+Three follow-ups on the highway, all of them things the first pass got visibly wrong.
+
+**The rail goes on BOTH shoulders now.** It shipped on one, chosen from the height field at the corridor
+midpoint on the reasoning that a rail belongs on the side that DROPS. True of a hillside road, wrong here:
+the corridor is GRADED, so `WildHeight` ramps it down symmetrically and *both* shoulders drop away from the
+asphalt — the sampling was choosing between two sides that fall the same way, and a barrier on one side of
+a two-lane highway read as unfinished. The second run **costs no draw call** (`Models.instanced` keeps one
+`InstancedMesh` per PROPS row, so both runs are the same batch) and the placement pass got *shorter*: the
+five lines that sampled the field and picked a side are gone. Measured live in a mountain area: **180
+instances = 2 x 90, one batch.** The far run adds PI to its yaw so both face the road — correct by intent
+and invisible in fact, since the glb is 0.05 deep against 0.40 tall and draws 0.2 world units thick.
+
+**The straight border was TWO straight lines, and the louder one was the grass.** The asphalt ended on a
+cell boundary, dead straight for the area's full ~360 units — but so did the grass, because `WildGrass`
+gates per cell and all-or-nothing (a road cell is `OCCUPIED`), so the field ended in a wall of blades on
+the same line. Blades measure 0.0660 linear against the ground's 0.0503 and stand up; the asphalt edge is a
+value change on flat ground. A third mismatch fed both: `ROAD_RAMP` grades **12 world units** of embankment
+each side while every *material* changed at 0 — the landform said embankment, the texture said ruled line.
+
+**The alpha-ramp route was not taken, and that is this file's own result.** A cross-strip alpha ramp gives
+every texel at a given distance the same alpha, so it trades a straight line for a *blurred* straight line
+— which is exactly why `Textures.loadRampTexture` was deleted and why `SewerDetail.grime` moved to
+hand-painted alpha. So the fix is **geometry plus density, and it needed no texture and no draw call**: the
+asphalt's outer edge wanders (two sine terms of the along-coordinate, +/-1.1 world units, the two sides out
+of phase so the WIDTH breathes rather than the ribbon sliding sideways), and grass thins to nothing over
+the last 2 cells before it. Because the fade measures from the *wandering* edge, the thinning follows every
+kink for free.
+
+Two traps, both settled numerically in the live area rather than off a screenshot. **Tearing:**
+`WildRoad.surface` pushes its own four corners per sub-quad with NO shared vertices, so every boundary
+point is emitted twice and a per-vertex hash would have to agree with itself exactly — a smooth function of
+the along-coordinate cannot disagree. Verified over the live road rect: **720 of 4,320 corners hit the
+boundary branch, 362 distinct boundary points, 362 distinct (point, shift) pairs — bit-identical, tear
+free.** **Agreement:** the grass gate and the asphalt geometry have to measure from the same edge or grass
+grows under the tarmac. `WildRoad.edgeDist` sampled at 800 points sitting exactly on the wobbled edge
+returns **0.000000000** at every one of them. With no road at all it returns 1e9, so an area without a
+highway keeps every tuft it had — no behaviour change anywhere else.
+
+**Climbing the rail is an animation and nothing else.** The rail stamps no tile (`placeHighway` writes only
+`TILE_ROAD`, walkable and see-through), so the player has always walked straight through it and still does.
+New `render.anim.Climb` lays a vertical arc over the ordinary slide — rise, **dwell**, drop — where the
+dwell is the whole difference from `Leap`, whose pure sine reads as a hop; a vault has a beat at the top,
+and from a camera 18-55 units up that beat is the only thing separating "climbed over it" from "jumped near
+it". Verified on the real class: peak exactly 0.9, flat for 30% of the duration, ends at exactly 0, no
+horizontal offset and no scale change.
+
+**The trigger needed a channel, and `WorldCtx.ground` is its shape.** `Actors` is area-kind agnostic and
+holds both cells (`a.col/a.row` and `e.mx/e.my`) right where `cornerBend` already special-cases a move —
+so a nullable `WorldCtx.climbArc` set by `WildArea` and cleared by `World`/`SewerArea` beside `ground` is
+the whole wiring. The rail lines are not stored: they fall out of the corridor rect and `RAIL_OFF`, the
+same two numbers the instances are placed from, so animation and geometry cannot drift — and putting the
+rail on **both** shoulders is what removed the side that would otherwise have had to be remembered. The
+test is a sign change across the line, not a cell match, because the rail stands at a fractional offset.
+Verified live at 33,45 with rails at 29.1 and 33.9: fires on **28->29 and 33->34 only**, both directions,
+diagonals count once, along-road moves never. Gated on `a.fx == null`, so scenery can never clobber a melee
+lunge or a leap onto a host — and `playFx` overwrites unconditionally, so a gameplay beat starting later
+still wins.
+
+**Not measured.** The window was raised but not focused (topbar read 1 FPS, and a raised CDP target is not
+a focused OS window), so no GPU or submit number from this pass is trustworthy and none is recorded. What
+*is* structural: the second rail run adds **0 draw calls**, and the edge wobble and grass fade add none
+either — they are the same meshes with moved vertices and fewer tufts.
+
+## The roadside litter was 3x too bright, and so was every city street
+
+Putting the city's debris art on wilderness turf for the first time is what caught it — on asphalt there
+was no bright ground beside it to be judged against. Measured through the real path (`Sprites.atlasTex`
+→ `darkenCanvas`, RGB × `DECAL.debrisMul` in sRGB **bytes**, alpha untouched → sRGB texture on a lit
+up-facing quad), over the content texels of `Const.STREET_DEBRIS_*`:
+
+| | painted sRGB | delivered LINEAR at mul 0.55 | × turf | × asphalt |
+|---|---|---|---|---|
+| `STREET_DEBRIS_STATIC` (singles) | 199/193/187 | **0.1501** | 3.15x | 4.57x |
+| `STREET_DEBRIS_TRANSFORMABLE` (clusters) | 208/208/205 | **0.1740** | 3.66x | 5.29x |
+
+The art is painted at **paper values** and 0.55 was never going to reach the night palette from there.
+Scale of the miss: the grass blades are **1.41x** the turf and `WildStyle`'s header calls them the
+brightest thing out there bar the actor, while `city/ground-road-paint` — literal white lane paint —
+measures **0.2402**. A crushed can was landing **62% of the way from the ground to a road marking**.
+
+The method reconciles with every number that file already quotes, which is what makes the comparison
+legitimate: turf **0.0476**, blades **0.0673** (header 0.0660), bare earth 0.0349 (0.0348), dead grass
+0.0561 (0.0560), asphalt 0.0329. The one catch is that a texture with alpha must be measured over its
+OPAQUE texels — whole-image gives the grass 0.0477, because it averages in the colour `bleed_alpha`
+scrubbed into the transparent ones.
+
+**`debrisMul` 0.55 → 0.40**, which delivers 0.0773 and, composited through the atlas's own alpha,
+**1.27x turf / 1.57x asphalt** — just under the blades. Applied globally rather than per-area: the city
+streets are that same asphalt and had the identical defect, and a wilderness-only value would have cost
+a second cached atlas canvas (768x3072 RGBA, ~9.4 MB — `atlasTex` keys its cache on the mul).
+
+**A measurement trap worth more than the fix.** Rows 41-47 are the ONLY alpha-capped block in the atlas:
+they peak at alpha **127** where every other row of the 12x48 sheet peaks at 255. So litter draws at ~43%
+opacity and can never read as solid whatever the mul does — and scanning those rows at the usual
+`alpha > 128` reports them as **completely empty**, because nothing in them clears the threshold. Same
+too-close-to-its-own-threshold failure as the guard rail's reference and the grass texture's chroma key,
+and the third time this file has recorded it. `Sprites.contentRect` uses `alpha > 8`; so must any
+measurement of this art.
+
+## The wandering road edge was 2*PI too slow to see, and four other straight lines ran beside it
+
+> SUPERSEDED by "The wandering road edge was retired for an alpha cutout, and it is not the ramp that
+> failed twice" — the geometric edge is gone. The four-other-straight-lines half still stands.
+
+The wobble shipped, ran, and changed nothing the eye could find. Two independent reasons, and the first
+is arithmetic: `edgeWobble` divided the along-coordinate by `ROAD_EDGE_L1`/`L2` **raw**, so 37 and 13 are
+not wavelengths but `1/k` — the real periods were `2*PI` times bigger, **232.5 and 81.7 world units, 58
+and 20 CELLS**. Less than one cycle crossed the screen. Measured over the area's 400-unit span, the edge
+was **never more than 3.27 degrees** off parallel with the cell boundary it was supposed to be leaving,
+and wandered p50 **0.96 units** inside a 15-cell window. That is a straight line, and no amplitude could
+have rescued it — raising AMP alone just slides a still-parallel edge sideways.
+
+Fixed by making the two constants TRUE WAVELENGTHS (`along / L * 2*PI`). The first correction went to
+46.0 / 15.0 at AMP 0.70 and **overshot into "psychedelic"** — which is the more useful half of the
+entry, because of WHERE the overshoot was:
+
+| | reach | edge angle | short wavelength | wander, 15-cell window |
+|---|---|---|---|---|
+| shipped (read as ruled) | 0.23 cell | 3.3 deg | 20.4 cells | 0.96 |
+| first correction (psychedelic) | 0.33 cell | **21.2 deg** | **3.8 cells** | 2.45 |
+| settled — AMP 0.50, L 62 / 27 | 0.25 cell | 9.5 deg | 6.8 cells | 1.71 |
+
+**The reach is the same number in all three rows.** A quarter of a cell, a third of a cell — it never
+mattered. What separates invisible from garish is the EDGE ANGLE and the wavelength that carries it: a
+21-degree turn repeating every 3.8 cells is a scallop, deliberate and decorative, and no amount of
+shrinking the amplitude would have made it read as weathering. So this knob is tuned against degrees,
+not against world units, and the amplitude is close to a free variable.
+
+The second reason is the more useful one. **Five straight edges ran down that boundary and the wobble
+moved one of them.** `WildHeight.grade` (the graded flat band), `WildPatches` (per-cell `isRoad` gate),
+`WildProps.small` (per-cell `m.prop` gate), and the persisted tree/rock scatter all still ended on the
+ruled cell line — so a wobbling asphalt edge lay next to four ruled ones and the frame read as ruled.
+Softening one line in a stack of five buys nothing; that is the transferable result.
+
+Patches and pebbles moved onto `WildRoad.edgeDist` — patches per SUB-QUAD (quad centre, which biases
+toward overlap, harmless because the asphalt sits above them at `ROAD_Y`), pebbles per instance. The
+grade did NOT get a wobble: putting `edgeWobble` inside `WildHeight.blend` makes the blend vary ALONG the
+corridor as well as across it, and both `gradX` and `gradZ` would need a cross term they do not have —
+against the class's whole closed-form-differentiable contract. Instead the flat band is **widened by
+`ROAD_EDGE_AMP * 2` = 1.4 units per side** (half-width 1.50 -> 1.85 cells), which is one addition and
+guarantees the same thing: the asphalt reaches at most 1.34 out, the level ground reaches 1.40, so the
+ribbon is never partly on the ramp. The extra half-cell of flat hides under the verge.
+
+## Trees stood between the guard rail and the traffic lane, 100% of the time
+
+Not intermittent — structural. The rail sits at `half + RAIL_OFF` = **2.4 cells** from the centreline
+(29.1 / 33.9 in the live area), the asphalt edge at 1.5 (30.0 / 33.0), so the strip between them is cells
+**29 and 33**. `WildProps.places` insets a scatter prop to `col + 0.35 .. col + 0.65` — which is *strictly
+inside* 29.1..30.0. Every prop that rolls onto a shoulder cell lands in the strip; none can land outside
+it. At band density 0.025-0.10 over two 100-cell columns that is **~5 (plains) to ~20 (forest)** per area,
+and canopies draw 4.8-6.7 units across a 4-unit cell, so they overhang the traffic lane as well.
+
+`AreaGenerator`'s scatter loop rejected only `cur == Const.TILE_ROAD`. `isBigObstacleClear` had applied a
+**one-cell margin** around `TILE_ROAD` since the phase went in — its comment even says the margin "leaves
+the shoulder cell free for the guard rail" — which is exactly why no boulder or thicket was ever caught
+doing this and only the single-cell scatter was. The fix is that same margin, as `nearRoad(area, x, y)`.
+
+**Not retroactive**, and for once that costs nothing: the scatter persists as tiles, so an
+already-generated area keeps its shoulder trees — but the highway itself is unreleased, so no save
+outside this dev session has a corridor at all. Verifying needs a never-visited wilderness area on a
+highway tile.
+
+## Every ground decal on the highway was drawn UNDER it, and the second bug hid the first
+
+Roadside litter that lands on the asphalt is invisible. Measured live in one area: **54 of 109 spots
+sit on the road and 47 of them were buried**, worst by 0.087 world units.
+
+Two causes, stacked. The **lift ladder is out of order**: the wilderness lays four things over its own
+floor — patch 0.02, patch 0.04, asphalt `ROAD_Y` 0.06, centre line `ROAD_PAINT_Y` 0.09 — and every
+ground decal went down at a hardcoded **0.04**. The road is opaque and writes depth at
+`ORD_DECAL − 1`; the decal batch is `transparent, depthWrite:false` at `ORD_DECAL`, so it loses the
+depth test. And the **wrong sampler**: `Debris.draw` took its height from `WorldCtx.floorY(col, row)`
+— the cell CENTRE — while placing the quad at `col + dx`, up to a quarter cell out. `floorYAt` exists
+for exactly this and says so in its own header. Measured sampling error out here: mean 0.019, max
+0.083.
+
+**The interaction is the part worth keeping.** Fixing the sampler alone makes it *worse*: 47 buried
+becomes **54**, because the seven that escaped only escaped by accident — cell-centre error happened
+to push them high. Two defects of the same magnitude, one masking the other, and either fixed alone
+looks like a regression.
+
+`RenderConfig.DECAL.groundLift` 0.12 (clears the centre line, the tallest layer) plus `floorYAt` at
+all three ground-decal sites — litter, batched blood, over-corpse blood. Re-measured: **0 of 54
+buried.** `floorYAt` falls back to `floorY` when `WorldCtx.ground` is null, which is the city, so that
+half is a no-op there.
+
+## The wandering road edge was retired for an alpha cutout, and it is not the ramp that failed twice
+
+The displaced boundary never worked and could not have. A vertex displacement of a straight line is
+**single-valued** — one offset per along-coordinate, whatever drives it — so it reads as a wave or as
+nothing. Three settings measured, and the edge ANGLE is the whole look while the reach is nearly free:
+0.23 / 0.33 / 0.25 cell of reach for 3.3 / 21.2 / 9.5 degrees, landing on "invisible", "psychedelic"
+and "still dumb". It is also coarse: boundary vertices sit `CELL / SUB` = **2.0 world units** apart, so
+nothing under ~16 units of wavelength survives sampling, while `VisionMask` breaks its own straight
+boundary at 8.2 and 2.8 units and gets away with it only because it runs **per-fragment**.
+
+A mask cut is not single-valued. It leaves bays, spurs, detached slabs and pits, which is what no
+vertex offset can produce. `WildRoad.edgeMask` bakes one: the nominal band filled white, then a pass
+down each edge stamping circles centred ON the nominal line and jittered by their own radius — white
+leaves a spur, black bites a bay, two whites overlapping outside merge into a slab, and one in eight is
+pushed clear as an island. The mesh is emitted `ROAD_EDGE_MARGIN` = 1 cell wider than the road tiles so
+there is material to carve, and `WildHeight.grade` widens with it so a surviving spur still stands on
+level ground.
+
+**This is NOT the ramp `Textures.loadRampTexture` and `SewerDetail.grime` each failed with.** Those gave
+every texel at a given distance the same alpha, so the band had no shape of its own — and both were
+fixed by putting the shape INTO the alpha, which is what this does. The earlier verdict row here read
+that as a verdict on alpha generally. It was not, and reading it that way cost two rounds of tuning
+sines.
+
+The mask is **fitted to the corridor**, not laid over the area rect the way `CoverageMask` is —
+0.098 world units per texel along and 0.083 across, against the 0.39 a 1024² area mask would give for
+comparable memory. That is the opposite call to `CoverageMask`'s and for its own stated reason: its
+field spans the area because its marked cells do, while a road is a strip. Bake cost 2.5 ms, 3 MB.
+
+**`ROAD_EDGE_R_MAX` is the size of one deformity and it is the only number here anyone notices.** It
+has to be judged against the ribbon AND against the screen: the road is 12 world units wide and draws
+about 39 pixels per unit at this camera, so a stamp radius of 1.0 is a **39-pixel notch taking a sixth
+of the road's width**. Three passes, and both of the first two were called out on sight:
+
+| R_MAX | solid to | 50% at | gone by | band | read as |
+|---|---|---|---|---|---|
+| 1.8 | 3.0 | 6.1 | 10.5 | ±4 | ruined |
+| 1.0 | 4.1 | 5.9 | 8.2 | ±2 | chewed |
+| **0.4** | **5.29** | **5.96** | **6.79** | **±0.75** | an edge that has broken away |
+
+The 50% crossing sits on the nominal 6.0 in all three — the band width is what changed, not the
+centre. **Resolution and blob size move together**: a stamp needs ~2 texels of radius or `alphaTest`
+turns it into a speckle, so shrinking the blobs from 1.0 to 0.4 required 2048 x 128 → 4096 x 192 in
+the same change. Shrinking them alone would have deleted them rather than made them finer.
+
+**The trap, and it is the third instance of one already logged twice.** `WildModel.mix` returns
+`x & 0x7fffffff` — **31 bits** — so `h >> 24` leaves 0..127, and the first pass tested that window
+against `ROAD_EDGE_SPUR * 1000` = 120. True 94% of the time. Every stamp came back a forced spur:
+white and pushed outward, baking a solid white halo OUTSIDE the road with a black ring on the nominal
+edge — the exact inverse of a crumbled edge, and a bug no screenshot would have explained. Fixed by
+taking one fresh mix per quantity instead of bit-windowing a single draw, behind a `roll()` helper so
+it cannot come back. Same too-close-to-its-own-threshold class as the litter alpha cap at 127 and the
+guard-rail reference.
+
+`ROAD_EDGE_STEP` must stay under `2 * R_MIN` or consecutive stamps leave gaps, and a gap is a stretch
+of the nominal straight edge showing through untouched — so STEP shrinks with R_MIN, and the stamp
+count with it (2,500 per bake at the shipped values).
+
+**Then the cut became a GRADIENT**, and the reason is not only taste: at 0.098 world units per texel
+against ~39 screen pixels per unit the mask is MAGNIFIED, so one texel is ~3.8 pixels and a hard
+`alphaTest` shows texel stair-stepping along the edge. Blending removes that without touching the
+shape. Two halves:
+
+- each stamp is drawn as a radial gradient, solid to `1 - ROAD_EDGE_SOFT` of its radius then ramping
+  to fully clear. **SOFT stays small (0.45) for the ramp reason all over this entry**: overlapping soft
+  blobs average, and at this stamp density a wide rim would wash the band to one value per distance,
+  which is the distance-only ramp that failed twice. Solid cores keep the union hard so only the outer
+  boundary blends.
+- `transparent = true` with `alphaTest` dropped to 0.12, which discards only the invisible tail.
+
+Measured: the band is unchanged (solid to 5.38, 50% at 5.96, gone by 6.71) and **25% of texels in the
+edge rows are genuinely partial** — peaking exactly at d = ±6.1 and falling to 0% partial both deeper
+in and further out. The gradient softened the boundary in place rather than widening it.
+
+Two orderings are load-bearing. `transparent` is set **after** `VisionMask.patch`, because patch reads
+that flag to choose which mask branch it compiles — set first, the road flips to mode 'b' (alpha
+scale) and hidden road fades out instead of darkening toward the fog, which is decal behaviour, not
+ground behaviour. And the surface moves to `ORD_DECAL - 0.5`: blending puts it in the transparent
+queue beside the two patch overlays at `ORD_DECAL - 1`, and at an equal renderOrder three falls back
+to a distance sort, which between near-coplanar ground layers is a coin toss that flickers. The centre
+line needs no such care — it is opaque, so it draws in the earlier queue and its depth writes reject
+the asphalt behind it.
+
+## The asphalt apron was zero cells wide for a release, and the fix was a verge
+
+`ROAD_EDGE_MARGIN` shipped at 0.5 cells and **bought nothing**. The corridor is 3 cells, so
+`WildModel.recoverRoad` returns `half = 1.5` and `centre = lo + 1.5`, which makes
+`distTo = |row + 0.5 - centre| = |row - lo - 1|` an **integer, always**. `isCorridor` tested
+`distTo < half + MARGIN` = `< 2.0`, and `2.0 < 2.0` is false — so the `distTo == 2` ring was excluded
+and `isCorridor` returned exactly `isRoad`. Confirmed live: rows 71 and 75 (distTo 2) both false.
+
+The mask meanwhile painted to `R_MAX * (1 + SPUR_PUSH)` = 0.88 units past the line, so:
+
+- 25% of `ROAD_MASK_ACROSS`'s texels sat on geometry that does not exist;
+- every stamp was centred **on** the mesh boundary, so half of each was discarded;
+- **all white stamps were no-ops** — inside they whiten an already-white rect, outside they are
+  clipped — which is 50% of stamps plus the whole `ROAD_EDGE_SPUR` mechanism at 100%;
+- the edge could be **bitten, never grown**. Its outer envelope was a ruled line at exactly ±6.0 for
+  360 units, and no mask value could move it.
+
+Typical bite depth from the constants: `r ~ 0.3, jit ~ 0` → **0.17 units ≈ 6.6 screen pixels**, on a
+12-unit ribbon. The gradient pass above then halved even that (`SOFT` shrinks each black core to 55%
+of its radius) and `alphaTest` 0.12 kept 12%-opaque material, so the shallow bites stopped cutting —
+which is why the straight edge came BACK after a change that was measured and correct on its own terms.
+
+**MARGIN 1.0** admits the ring, and the cell gate is rewritten against the cell's NEAR EDGE
+(`distTo - 0.5 < reach`) so a reach landing on an integer cannot silently drop a ring again. Both
+reaches are half-integers on purpose. `ROAD_MASK_ACROSS` 192 → 256 because the band went 16 units wide
+to 20 and 192 would have diluted R_MIN to 1.9 texels, under the ~2 a stamp needs.
+
+**But the real answer was that the asphalt was being asked to do the wrong job.** A real road edge IS
+straight, and every R_MAX looked wrong in its own way — 1.8 ruined, 1.0 chewed, 0.4 invisible — with
+nothing in between, because a believable deformity on a 12-unit manufactured ribbon has to be small.
+So a second ribbon went in: a **verge**, dirt shoulder from the asphalt edge out to 2.75 cells, with
+the guard rail (2.4 cells) standing on it. The burden moves onto a boundary that is genuinely
+irregular in life, where `VERGE_R_MAX` 1.1 is a bush-sized bite and reads as ground, not as damage.
+Second win, free: a bay bitten out of the asphalt now exposes shoulder dirt instead of clean turf.
+
+`RibbonOpts` carries the two ribbons' differences (art, tile, y, renderOrder, nominal half-width, mesh
+reach in cells, stamp min/max/step, mask resolution, hash salt) — twelve values, of which eight would
+have been bare positional floats. **Different salts**, or every bay in the asphalt gets a twin two
+units out in the shoulder.
+
+Measured on the baked masks, as the OUTERMOST texel over 0.5 alpha per along-column:
+
+| ribbon | nominal | min | median | max | spread | % past nominal |
+|---|---|---|---|---|---|---|
+| asphalt | 6.0 | 5.23 | 6.02 | 6.72 | 1.48 | **53.3%** |
+| verge | 11.0 | 8.97 | 10.94 | 12.91 | 3.94 | **49.4%** |
+
+`% past nominal` was **0 by construction** before, with the max pinned at exactly 6.00. Mesh reaches
+are 10.0 and 14.0, so neither envelope is clipped.
+
+**The texture's `lift` had to be fitted TWICE, and the first pass is the lesson.** `wild/ground-verge`
+as painted measured 0.0277 mean linear luminance — DARKER than the city asphalt it abuts at 0.0329.
+`lift` 0.9 put it at 0.0381, a clean 1.16x on paper, and in the built frame the verge measured **12.6
+against the asphalt's 11.3 — 1.11x, invisible**, which is exactly the failure `PATCH_ALPHA` already
+records for the ground patches. 0.84 lands 0.0463 and reads **14.4-15.8 against 11.6-11.8, 1.28-1.36x**,
+still under the plains turf's 0.0476. Judge a ground layer in the built frame against its NEIGHBOUR,
+never as a linear number in isolation.
+
+Four gates had to follow the verge outward or the straight line just relocates: the grass fade
+(`WildGrass`, also HALVED to 1.0 cell — at 2.0 off a verge edge the corridor read 38 units wide
+against a 12-unit road), the patch overlays (`WildPatches`), the loose stones (`WildProps.small`), and
+the scatter exclusion (`AreaGenerator.nearRoad`, 1 cell → 2, generation-side so new areas only). The
+graded flat band moved from the asphalt mesh to the verge's NOMINAL line — the ramp is a smoothstep so
+its derivative is zero where it starts, and the outermost spurs still stand on flat ground without
+paying the steeper batter a wider flat band costs.
+
+Two stale comments died with it: `WildGrass` still claimed the thinning followed `WildRoad.edgeWobble`
+(deleted two entries ago), and `WildArea` cited "1.25 cells" of level ground and a verge that did not
+exist yet.
+
+Cost at a pinned pose: **59 → 60 draw calls, 582.7k → 585.9k tris.**

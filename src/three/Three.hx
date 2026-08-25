@@ -303,6 +303,11 @@ typedef RendererInfo = {
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
   public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
+  // moves the material to the renderer's transparent queue so surviving alpha BLENDS instead of being
+  // a hard cut. settable after construction on purpose: render.world.VisionMask.patch chooses which
+  // mask branch to compile from this flag, so a material that wants the opaque branch AND a blended
+  // edge (render.wild.WildRoad) has to patch first and set this second
+  public var transparent:Bool;
   public var userData:Dynamic;
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {

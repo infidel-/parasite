@@ -22,19 +22,42 @@ typedef Wild = {
   // every cell of every tree thicket. no rect needed here: a thicket is grown cell by cell out of the
   // band's own models, so the list is only so the understorey pass does not rescan the grid
   thicket:Array<{ col:Int, row:Int }>,
+  // the highway corridor, or null where no road crosses this area
+  road:WildRoadRect,
+};
+
+// the highway corridor, in CELL units, recovered from the TILE_ROAD cells rather than persisted
+// alongside them — the same trick `rocks` plays with its 2x2 rects, and it works for the same reason:
+// game.AreaGenerator.placeHighway lays a straight full-span band, so the shape is implied by the cells
+typedef WildRoadRect = {
+  // the corridor runs east-west across the area
+  alongX:Bool,
+  // its centreline, in cell-edge units on the PERPENDICULAR axis
+  centre:Float,
+  // half its width, in cells
+  half:Float,
 };
 
 class WildModel
 {
-  // a cell covered by a multi-cell obstacle that is drawn from somewhere else: no prop of its own, but
-  // no grass and no loose stones either. render.wild.WildGrass and WildProps.small therefore test
-  // against -1 rather than against 0, and WildProps.places skips anything negative as it always did
+  // a cell covered by something drawn from somewhere else: no prop of its own, but no grass and no
+  // loose stones either. render.wild.WildGrass and WildProps.small therefore test against -1 rather
+  // than against 0, and WildProps.places skips anything negative as it always did.
+  //
+  // it means two things now — a cell under a 2x2 boulder, and a cell of highway. neither wants a
+  // suppression test of its own, which is the whole point of the sentinel being about COVERAGE rather
+  // than about which feature did the covering
   public static inline var OCCUPIED = -2;
 
 // build the model from an area's saved cells
   public static function fromArea(area:AreaGame):Wild
     {
       var m = blank(area.width, area.height);
+      // the corridor's bounding box, grown as the scan meets road cells
+      var minCol = area.width;
+      var maxCol = -1;
+      var minRow = area.height;
+      var maxRow = -1;
       for (y in 0...area.height)
         for (x in 0...area.width)
           {
@@ -74,8 +97,43 @@ class WildModel
                 m.prop[y][x] = WildBand.pick(WildBand.cur.trees, mix((x * 60013) ^ (y * 70001)));
                 m.thicket.push({ col: x, row: y });
               }
+            // the highway. OCCUPIED for the same reason a boulder's cells are: the asphalt is drawn by
+            // render.wild.WildRoad, and grass and pebbles must not grow through it
+            else if (t == Const.TILE_ROAD)
+              {
+                m.prop[y][x] = OCCUPIED;
+                if (x < minCol)
+                  minCol = x;
+                if (x > maxCol)
+                  maxCol = x;
+                if (y < minRow)
+                  minRow = y;
+                if (y > maxRow)
+                  maxRow = y;
+              }
           }
+      m.road = recoverRoad(minCol, maxCol, minRow, maxRow);
       return m;
+    }
+
+// turn the road cells' bounding box back into a corridor. the band spans the whole grid on the axis it
+// runs along, so whichever span is the longer names that axis and the other one gives the centreline
+// and the width. no tie is possible in practice — the corridor is 3 cells wide against a 90-100 cell
+// grid — and a square box would mean the generator wrote something this cannot describe anyway
+  static function recoverRoad(minCol:Int, maxCol:Int, minRow:Int, maxRow:Int):WildRoadRect
+    {
+      if (maxCol < 0)
+        return null;
+      var colSpan = maxCol - minCol + 1;
+      var rowSpan = maxRow - minRow + 1;
+      var alongX = colSpan > rowSpan;
+      var lo = (alongX ? minRow : minCol);
+      var hi = (alongX ? maxRow : maxCol);
+      return {
+        alongX: alongX,
+        centre: (lo + hi + 1) / 2.0,
+        half: (hi - lo + 1) / 2.0,
+      };
     }
 
 // an empty model of the given size (also the base for demo())
@@ -87,6 +145,7 @@ class WildModel
         prop: [for (_ in 0...h) [for (_ in 0...w) -1]],
         rocks: [],
         thicket: [],
+        road: null,
       };
     }
 

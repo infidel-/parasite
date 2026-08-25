@@ -75,8 +75,57 @@ class WildProps
           }
       bigRocks(m, places, half);
       thicket(m, places, half);
+      rails(m, places, half);
       small(m, places, half);
       return places;
+    }
+
+// the guard rail along the highway — one segment per cell, on BOTH shoulders, in two continuous runs.
+//
+// it went in on ONE side, chosen from the field at the corridor's midpoint on the reasoning that a
+// rail belongs on the side that DROPS. that is true of a hillside road and wrong here: the corridor
+// is GRADED, so render.wild.WildHeight ramps it down symmetrically and BOTH shoulders drop away from
+// the asphalt. a barrier on one side of a two-lane highway read as unfinished rather than as sited.
+//
+// the second run is free where it matters — render.Models.instanced keeps one InstancedMesh per PROPS
+// row, so both runs are the SAME draw call and only the instance count moves. what it does cost is
+// triangles, and this prop is the area's largest single consumer of them (see docs/3d-render.md): if
+// the wilderness ever needs a triangle back, its castShadow is the lever, not this.
+//
+// the yaw is LOCKED to the corridor axis, alone among the props out here. every other row deals a full
+// turn because a rock and a tree have no authored front; a crash barrier has one, and a run of them at
+// random angles is a scrapyard. the far run adds PI so both face the road — correct by intent and
+// invisible in fact, since the glb is 0.05 deep against 0.40 tall and draws 0.2 world units thick.
+// no sit() call either — `sit` sinks a prop by its footprint against the SLOPE, and the shoulder cell
+// it stands on has just been graded, so the correction it would apply is the one thing this prop must
+// not have: a rail follows the road, level across
+  static function rails(m:Wild, places:Array<Array<Models.PropPlace>>, half:Float):Void
+    {
+      if (m.road == null)
+        return;
+      var off = (m.road.half + WildStyle.RAIL_OFF) * CELL;
+      var c = m.road.centre * CELL - half;
+      var yaw = (m.road.alongX ? 0.0 : Math.PI / 2);
+      // ONE PER CELL, and that is not a spacing choice: WildStyle sizes this prop's `h` so its own
+      // width comes out at exactly CELL, so consecutive segments meet end to end and the run reads
+      // as continuous barrier rather than as fence posts
+      for (i in 0...(m.road.alongX ? m.w : m.h))
+        {
+          var a = (i + 0.5) * CELL - half;
+          for (k in 0...2)
+            {
+              var side = (k == 0 ? -off : off);
+              var px = (m.road.alongX ? a : c + side);
+              var pz = (m.road.alongX ? c + side : a);
+              places[WildStyle.GUARD_RAIL].push({
+                x: px,
+                z: pz,
+                y: WildHeight.at(px, pz),
+                yaw: yaw + k * Math.PI,
+                scale: 1.0,
+              });
+            }
+        }
     }
 
 // the 2x2 boulders: ONE instance per rect, standing on the corner its four cells share rather than in
@@ -163,6 +212,13 @@ class WildProps
             var mi = (h % 3 == 0) ? WildStyle.ROCK_CLUSTER_SMALL : WildStyle.ROCK_BOULDER_SMALL;
             var px = (col + 0.2 + (h % 601) / 601.0 * 0.6) * CELL - half;
             var pz = (row + 0.2 + ((h >> 9) % 601) / 601.0 * 0.6) * CELL - half;
+            // and never on the corridor — the VERGE included, which is what this measures off. the
+            // gate above is m.prop, which is per CELL and only ever marks the road tiles, while the
+            // dirt shoulder reaches 2.75 cells out and is not a tile at all. so without this a stone
+            // seeded on a shoulder cell is buried under the verge, and a loose boulder sitting on a
+            // graded shoulder beside a crash barrier is the wrong read even where it is not
+            if (WildRoad.vergeDist(m, px, pz) < 0)
+              continue;
             places[mi].push({
               x: px,
               z: pz,

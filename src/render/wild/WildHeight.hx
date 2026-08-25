@@ -43,30 +43,140 @@ class WildHeight
   static var ox = 0.0;
   static var oz = 0.0;
 
-// point the field at one area. called FIRST in WildArea.build, before anything samples it
+  // the graded highway corridor, in WORLD units, or off. see the grade() header
+  static var roadOn = false;
+  static var roadAlongX = false;  // the road runs east-west, so its centreline is a constant z
+  static var roadC = 0.0;         // that centreline, on the PERPENDICULAR axis
+  static var roadHalf = 0.0;      // half the road width: the field is fully replaced inside this
+  static var roadRamp = 0.0;      // how far past it the grade blends back into the land
+
+// point the field at one area. called FIRST in WildArea.build, before anything samples it.
+//
+// this CLEARS the corridor, and that is load-bearing rather than tidy: these statics are not reset by
+// World or SewerArea (only WorldCtx.ground is), so an area with no highway would otherwise inherit the
+// last one's, and grade a ribbon across ground that has no road on it
   public static function use(areaID:Int):Void
     {
       var h = WildModel.mix(areaID * 374761393);
       ox = (h % 9973) * 0.1;
       oz = ((h >> 11) % 9973) * 0.1;
+      roadOn = false;
+    }
+
+// grade a highway corridor into the field. called from WildArea.build straight after use(), off the
+// rect render.wild.WildModel recovered from the TILE_ROAD cells.
+//
+// a real road is level across its width and follows the land along its length, and that is exactly
+// what removes the seam problem too: a flat ribbon meets flat ground at its shoulder, so nothing
+// downstream needs a special case. the blend is
+//
+//   h = f + w * (g - f),  f = the field here, g = the field ON THE CENTRELINE, w = 1 inside the road
+//
+// and it has to be ANALYTIC in the derivatives as well, because the ground normal out here comes out
+// of gradX/gradZ and never out of computeVertexNormals (see the class header). every consumer follows
+// for free: the ground mesh, the patch overlays, the grass, WildProps.sit — whose `slope` drops to
+// zero on the ribbon, so a shoulder prop seats itself with no new code — and the whole actor layer
+// through WorldCtx.ground
+  public static function grade(alongX:Bool, centre:Float, half:Float, ramp:Float):Void
+    {
+      roadOn = true;
+      roadAlongX = alongX;
+      roadC = centre;
+      roadHalf = half;
+      roadRamp = ramp;
     }
 
 // ground height at a world point
   public static function at(x:Float, z:Float):Float
     {
-      return (Math.sin((x + ox) * A_X + (z + oz) * A_Z) * A_AMP +
-        Math.sin((x + ox) * B_X + (z + oz) * B_Z) * B_AMP) * WildBand.reliefAmp;
+      var f = field(x, z);
+      if (!roadOn)
+        return f;
+      var w = blend(x, z);
+      if (w <= 0.0)
+        return f;
+      return f + w * (centreline(x, z) - f);
     }
 
 // d(height)/dx at a world point
   public static function gradX(x:Float, z:Float):Float
     {
-      return (Math.cos((x + ox) * A_X + (z + oz) * A_Z) * A_AMP * A_X +
-        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_X) * WildBand.reliefAmp;
+      var g = fieldGradX(x, z);
+      if (!roadOn)
+        return g;
+      var w = blend(x, z);
+      if (w <= 0.0)
+        return g;
+      // an east-west road runs ALONG x, so the centreline sample still varies with x and the two
+      // gradients simply blend. a north-south one has x as its perpendicular axis, which is where the
+      // ramp's own derivative lands
+      if (roadAlongX)
+        return (1.0 - w) * g + w * fieldGradX(x, roadC);
+      return (1.0 - w) * g + slopeOfBlend(x, z) * (centreline(x, z) - field(x, z));
     }
 
 // d(height)/dz at a world point
   public static function gradZ(x:Float, z:Float):Float
+    {
+      var g = fieldGradZ(x, z);
+      if (!roadOn)
+        return g;
+      var w = blend(x, z);
+      if (w <= 0.0)
+        return g;
+      if (!roadAlongX)
+        return (1.0 - w) * g + w * fieldGradZ(roadC, z);
+      return (1.0 - w) * g + slopeOfBlend(x, z) * (centreline(x, z) - field(x, z));
+    }
+
+// the field sampled on the corridor's centreline: level across the road, following the land along it
+  static inline function centreline(x:Float, z:Float):Float
+    {
+      return (roadAlongX ? field(x, roadC) : field(roadC, z));
+    }
+
+// how much the corridor owns this point: 1 on the asphalt, 0 past the ramp, smoothstepped between
+  static inline function blend(x:Float, z:Float):Float
+    {
+      var d = Math.abs((roadAlongX ? z : x) - roadC);
+      if (d <= roadHalf)
+        return 1.0;
+      if (d >= roadHalf + roadRamp)
+        return 0.0;
+      var t = (d - roadHalf) / roadRamp;
+      return 1.0 - t * t * (3.0 - 2.0 * t);
+    }
+
+// d(blend)/d(perpendicular axis). the smoothstep's own derivative, 6t(1-t) over the ramp width, signed
+// by which side of the centreline the point is on. zero on the road and zero past the ramp, which is
+// what keeps the ribbon flat and the far field untouched
+  static inline function slopeOfBlend(x:Float, z:Float):Float
+    {
+      var p = (roadAlongX ? z : x) - roadC;
+      var d = Math.abs(p);
+      if (d <= roadHalf ||
+          d >= roadHalf + roadRamp)
+        return 0.0;
+      var t = (d - roadHalf) / roadRamp;
+      return -6.0 * t * (1.0 - t) / roadRamp * (p < 0 ? -1.0 : 1.0);
+    }
+
+// the raw two-octave field, before any corridor
+  static inline function field(x:Float, z:Float):Float
+    {
+      return (Math.sin((x + ox) * A_X + (z + oz) * A_Z) * A_AMP +
+        Math.sin((x + ox) * B_X + (z + oz) * B_Z) * B_AMP) * WildBand.reliefAmp;
+    }
+
+// d(field)/dx
+  static inline function fieldGradX(x:Float, z:Float):Float
+    {
+      return (Math.cos((x + ox) * A_X + (z + oz) * A_Z) * A_AMP * A_X +
+        Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_X) * WildBand.reliefAmp;
+    }
+
+// d(field)/dz
+  static inline function fieldGradZ(x:Float, z:Float):Float
     {
       return (Math.cos((x + ox) * A_X + (z + oz) * A_Z) * A_AMP * A_Z +
         Math.cos((x + ox) * B_X + (z + oz) * B_Z) * B_AMP * B_Z) * WildBand.reliefAmp;

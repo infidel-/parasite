@@ -1005,6 +1005,20 @@ class Actors {
           actors.set(e, a);
           return a;
         }
+      // climbing over something the area draws but does not block (the wilderness guard rail): an
+      // arc laid over the ordinary slide, which is left to run underneath it untouched. read BEFORE
+      // the slide below, which is what advances a.col/a.row onto the new cell.
+      // gated on nothing else running, so it can never clobber a melee lunge or a leap onto a host —
+      // those are gameplay beats and this is scenery
+      if (WorldCtx.climbArc != null &&
+          a.fx == null &&
+          (a.col != e.mx ||
+            a.row != e.my))
+        {
+          var arc = WorldCtx.climbArc(a.col, a.row, e.mx, e.my);
+          if (arc > 0)
+            a.fx = new Climb(RenderConfig.BASE_MS, arc);
+        }
       // position channel. a one-step diagonal move sharing a corner with a building (or a lamp
       // post) clips it; route it through the open shoulder as an L-path (double orthogonal move)
       var bend = ActorAnim.cornerBend(game.area, a.col, a.row, e.mx, e.my, lampCorners);

@@ -336,7 +336,35 @@ class RenderConfig {
   // (it draws from the source image, not these crops). blood stays a touch more vivid than debris
   public static final DECAL = {
     bloodMul: 0.6,       // blood-splat crop darken factor
-    debrisMul: 0.55,     // street-debris + thrown-money crop darken factor (matte trash, no bright glow)
+    // street-debris + thrown-money crop darken factor (matte trash, no bright glow).
+    //
+    // 0.40 and MEASURED, after the wilderness roadside litter put this art on turf for the first
+    // time and it read as scattered paper. the atlas is painted at sRGB mean 199/193/187 (singles)
+    // and 208/208/205 (clusters) — paper values — and at 0.55 that still delivered LINEAR luminance
+    // 0.1501 / 0.1740, against turf 0.0476, blades 0.0673 and asphalt 0.0329. So 3.15x the ground it
+    // lies on, where the blades are 1.41x and WildStyle's header calls THEM the brightest thing out
+    // there bar the actor; city/ground-road-paint, which is white lane paint, measures 0.2402, so a
+    // crushed can was landing 62% of the way from the ground to a road marking. 0.40 puts it at
+    // 0.0773 — composited over the ground through the atlas's own alpha, 1.27x turf / 1.57x asphalt,
+    // just under the blades.
+    //
+    // the city gets the same correction and wants it: its streets are that same asphalt, so the
+    // defect was identical there and simply had no bright ground beside it to be caught against
+    debrisMul: 0.40,
+    // how far a GROUND decal (litter, blood, bullet holes) is lifted off the floor it lies on.
+    //
+    // 0.12 rather than the 0.04 it ran at, and the number is not a nudge: it has to clear the tallest
+    // ground LAYER an area lays over its own floor, or the layer is drawn on top of the decal and the
+    // decal simply vanishes under it. the wilderness stacks four — patch 0.02, patch 0.04, asphalt
+    // WildStyle.ROAD_Y 0.06, centre line ROAD_PAINT_Y 0.09 — so at 0.04 every piece of roadside litter
+    // that landed on the highway was UNDER it. measured live: 54 of 109 spots on the asphalt, 47 of
+    // them buried, worst by 0.087.
+    //
+    // it pairs with WorldCtx.floorYAt: a decal holds a real world position, so sampling its height at
+    // the CELL CENTRE (floorY) is off by the cell's own slope, measured mean 0.019 / max 0.083 out
+    // here — which is the same order as the gap above and was MASKING it. fixing the sampler alone
+    // took the buried count from 47 to 54, because the seven that escaped only did so by accident
+    groundLift: 0.12,
     actorMul: 0.7,       // actor-sprite crop darken factor (knock the full-bright atlas down so AI
                          // don't read too white in the surrounding night; 1.0 = off, lit-only)
     radiusCells: 20.0,   // ground-decal reveal radius (cells) around the smoothed player pos; replaces LOS
@@ -639,6 +667,9 @@ class RenderConfig {
     // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
     // rect it is placed on (render.wild.WildProps.bigRocks)
     wildRockLarge: 'models/wild/rock-large.glb',                  // 2x2 boulder, one solid domed mass
+    // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
+    // locked to the corridor axis where every other row out there takes a full random turn
+    wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

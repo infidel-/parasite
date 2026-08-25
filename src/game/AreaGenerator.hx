@@ -27,6 +27,12 @@ class AreaGenerator
   public static var DIR_RIGHT = 6;
   public static var DIR_DOWN = 2;
 
+  // wilderness highway width, in cells. an actor billboard is 3 world units against a 4-unit cell, so
+  // a cell is roughly 2.4m and three of them is a two-lane rural highway. two reads as a farm track,
+  // four as a motorway the region map is not drawing. read by render.wild.WildRoad through the
+  // recovered rect rather than directly, so this number lives in one place
+  public static inline var ROAD_W = 3;
+
   public function new(g: Game)
     {
       game = g;
@@ -278,6 +284,38 @@ class AreaGenerator
       };
     }
 
+// lay the region map's highway across the area, where one crosses it at all.
+//
+// the axis and the offset are NOT rolled here — map.Highway reads them off the region's persisted
+// mapSeed, the same way the terrain band is read, so the corridor lands where the region map already
+// paints it and leaves each area exactly where it enters the next. width is the only local decision.
+//
+// through area.regionID rather than game.region, like the band above it: an area can be generated
+// remotely while the player is standing somewhere else entirely
+  static function placeHighway(game: Game, area: AreaGame)
+    {
+      var road = map.Highway.atArea(game.world.get(area.regionID), area.x, area.y);
+      if (road == null)
+        return;
+      // the corridor spans the whole grid on its axis; the offset is a fraction ACROSS the other one
+      var span = (road.horizontal ? area.height : area.width);
+      var mid = Std.int(road.offset * span);
+      var from = mid - Std.int(ROAD_W / 2);
+      for (i in 0...ROAD_W)
+        {
+          var line = from + i;
+          if (line < 0 ||
+              line >= span)
+            continue;
+          if (road.horizontal)
+            for (x in 0...area.width)
+              area.setCellType(x, line, Const.TILE_ROAD);
+          else
+            for (y in 0...area.height)
+              area.setCellType(line, y, Const.TILE_ROAD);
+        }
+    }
+
 // stamp the band's large obstacles onto clear ground. these are the only cells the wilderness writes
 // that block SIGHT as well as movement, so each one is real cover rather than another tree to walk
 // around: a 2x2 boulder in the mountains, a 2-3 x 2-3 tree thicket in the forest, nothing on the
@@ -316,9 +354,37 @@ class AreaGenerator
     {
       for (dy in -1...h + 1)
         for (dx in -1...w + 1)
-          if (area.getCellType(x + dx, y + dy) == tile)
-            return false;
+          {
+            var t = area.getCellType(x + dx, y + dy);
+            // the ROAD is tested over the same margin as another obstacle, and the margin earns its
+            // keep twice here: it keeps a boulder off the asphalt, and it leaves the shoulder cell
+            // free for the guard rail render.wild.WildProps stands there
+            if (t == tile ||
+                t == Const.TILE_ROAD)
+              return false;
+          }
       return true;
+    }
+
+// is this cell on the highway or in the two-cell margin beside it?
+//
+// that margin is the VERGE, and the number is not a taste call: the dirt shoulder reaches
+// WildStyle.VERGE_HALF = 2.75 cells from the centreline, which is 1.25 cells past the asphalt, and the
+// GUARD RAIL stands on it at half + WildStyle.RAIL_OFF = 2.4. so a scatter tile inside this ring is a
+// tree standing on a graded shoulder between the barrier and the road, where nothing can reach it and
+// its canopy (4.8-6.7 world units across, over a 4-unit cell) hangs out over the traffic lane.
+//
+// it went in at ONE cell, sized off the rail alone, and that was already half a cell short of the verge
+// the render layer now lays — a dilation of 1 keeps scatter to 2.5 cells from the centreline against a
+// shoulder that ends at 2.75. isBigObstacleClear applies whatever this returns, which is why no boulder
+// or thicket was ever caught doing it and only the single-cell scatter was
+  static function nearRoad(area: AreaGame, x: Int, y: Int): Bool
+    {
+      for (dy in -2...3)
+        for (dx in -2...3)
+          if (area.getCellType(x + dx, y + dy) == Const.TILE_ROAD)
+            return true;
+      return false;
     }
 
 // generate rocks, trees, etc
@@ -333,8 +399,12 @@ class AreaGenerator
       var depth = Terrain.depthAt(seed, area.x, area.y);
       var numStuff = Std.int(area.width * area.height * mix.density *
         (0.8 + 0.4 * depth));
-      // the large obstacles go down FIRST, onto a grid that is still uniform ground, so none of them
-      // can fail to find room
+      // the highway goes down before anything else: it is the only feature out here whose position is
+      // dictated from OUTSIDE the area, so everything below has to fit around it rather than the
+      // other way round
+      placeHighway(game, area);
+      // then the large obstacles, onto a grid that is still uniform ground apart from the road, so
+      // none of them can fail to find room
       placeBigObstacles(area, mix, depth);
       for (i in 0...numStuff)
         {
@@ -343,8 +413,12 @@ class AreaGenerator
 
           // a scatter tile dropped into a large obstacle would punch a hole in it, and a rect with a
           // hole in it stops being a rect. plains passes `big` -1, which an in-bounds getCellType can
-          // never return, so this test simply never fires there
-          if (area.getCellType(x, y) == mix.big)
+          // never return, so this test simply never fires there. the road is the same argument — a
+          // tree growing out of the asphalt, and a corridor the render layer can no longer recover —
+          // and it takes the guard rail's margin with it (see nearRoad)
+          var cur = area.getCellType(x, y);
+          if (cur == mix.big ||
+              nearRoad(area, x, y))
             continue;
 
           // one roll across the three, so the percentages mean what they say. the tree tile keeps its

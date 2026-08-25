@@ -30,8 +30,10 @@ class World {
       }
     WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
-    // a city floor steps per TILE and has no continuous relief; clear whatever the last area set
+    // a city floor steps per TILE and has no continuous relief; clear whatever the last area set.
+    // the climb hook goes with it — nothing in a street is walked THROUGH and vaulted OVER
     WorldCtx.ground = null;
+    WorldCtx.climbArc = null;
     WorldCtx.seed = seed;
     WorldCtx.style = style != null ? style : render.world.CityStyle.get();
     WorldCtx.winSeen = new haxe.ds.ObjectMap();

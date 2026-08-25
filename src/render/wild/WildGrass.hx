@@ -82,6 +82,21 @@ class WildGrass
                 // decided it had a prop instead
                 var px = (col + 0.15 + (h % 701) / 701.0 * 0.7) * CELL - half;
                 var pz = (row + 0.15 + ((h >> 9) % 701) / 701.0 * 0.7) * CELL - half;
+                // thin out toward the highway rather than stopping dead on its cell line. the odds
+                // ramp from none AT the verge's outer edge to full ROAD_GRASS_FADE cells out, so the
+                // field fades into the dirt shoulder instead of ending in a wall of blades.
+                // the VERGE and not the asphalt: the shoulder is the outermost thing the corridor
+                // lays on the ground, and measuring off the asphalt grew grass straight down the
+                // middle of it. it is a straight NOMINAL line either way — the thinning does not
+                // follow the mask's kinks and is not meant to, see WildRoad.edgeDist on the slack
+                // every one of these gates is deliberately given.
+                // its own roll off a SIDE hash rather than off `h`, which the yaw, scale and wind
+                // phase below all still consume — a tuft that survives this must look exactly as it
+                // did before, or every wilderness area's grass shifts for a highway most of them
+                // do not have
+                if (WildModel.mix(h ^ 0x5bf03635) % 1000 >=
+                    fade(WildRoad.vergeDist(m, px, pz)) * 1000)
+                  continue;
                 var yaw = ((h >> 3) % 3600) / 3600.0 * Math.PI;
                 var s = 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.TUFT_JITTER;
                 tuft(pos, nor, uv, wind, idx, px, pz, yaw,
@@ -102,6 +117,20 @@ class WildGrass
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       scene.add(mesh);
+    }
+
+// how much grass survives at a point `d` world units OUTSIDE the highway's verge edge: none at the
+// edge itself, all of it WildStyle.ROAD_GRASS_FADE cells out. smoothstep and not linear, so the
+// thinning has no visible line where it STOPS either — a linear ramp ends in a corner, and a corner
+// in a density reads as a band of its own
+  static inline function fade(d:Float):Float
+    {
+      var t = d / (WildStyle.ROAD_GRASS_FADE * CELL);
+      if (t <= 0)
+        return 0.0;
+      if (t >= 1)
+        return 1.0;
+      return t * t * (3 - 2 * t);
     }
 
 // one tuft: two quads crossed at right angles about the vertical, base on the ground.

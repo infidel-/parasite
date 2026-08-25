@@ -1,6 +1,7 @@
 package render.wild;
 
 import three.Three;
+import citygen.CityConfig;
 import game.Game;
 import render.Area3D;
 import render.Area3DTickOpts;
@@ -51,8 +52,27 @@ class WildArea implements Area3D
       // the field's AMPLITUDE is not set here — WildBand.use does it, from render.View.showWild,
       // because the Wild model is built before this object exists and already needs the band
       WildHeight.use(game.area.id);
+      // the highway is graded into the field BEFORE any builder samples it, so the ribbon, its
+      // shoulder, the props beside it and every actor that walks it all read one surface. the rect
+      // came out of the saved TILE_ROAD cells in WildModel.fromArea — nothing here re-asks the map
+      // the graded band is WIDENED to the VERGE and not to the road cells, because a dirt shoulder
+      // carrying a run of crash barrier is exactly the part of a road cross-section that IS level —
+      // and because the alpha masks can leave a spur past either nominal edge, and a spur standing on
+      // the ramp would be a tilted slab. it is widened to the verge's NOMINAL line rather than to its
+      // mesh reach on purpose: the ramp is a smoothstep, so its derivative is zero where it starts
+      // and the outermost verge spurs still stand on ground that is flat for practical purposes,
+      // without paying the steeper batter a wider flat band costs (see WildStyle.ROAD_RAMP)
+      if (model.road != null)
+        WildHeight.grade(model.road.alongX,
+          model.road.centre * CityConfig.CELL - (CityConfig.GRID * CityConfig.CELL) / 2,
+          WildStyle.VERGE_HALF * CityConfig.CELL,
+          WildStyle.ROAD_RAMP * CityConfig.CELL);
       WorldCtx.tiles = null;
       WorldCtx.ground = WildHeight.at;
+      // the guard rails, for the actor layer. they are the one thing out here an actor walks THROUGH
+      // in the game and should be seen to climb OVER in the render — nothing is stamped on the tiles
+      // for a rail, so this is a pure animation hook and carries no gameplay with it
+      WorldCtx.climbArc = function(fc, fr, tc, tr) return WildRoad.climbArc(model, fc, fr, tc, tr);
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
@@ -60,6 +80,7 @@ class WildArea implements Area3D
       var pre = scene.children.copy();
       WildGround.build(scene, model);
       WildPatches.build(scene, model);
+      WildRoad.build(scene, model, game.area.id);
       WildGrass.build(scene, model);
       props = WildProps.build(scene, model);
       // the ground and grass blocks bucket; the prop batches span the whole area and so are left at
@@ -80,7 +101,8 @@ class WildArea implements Area3D
     }
 
 // console debug helper (persistent) — what this wilderness area actually built.
-//   __wild() -> { ground, reliefAmp, rocks:[{col,row}], thicket:[{col,row}], batches:[{path,count}] }
+//   __wild() -> { ground, reliefAmp, rocks:[{col,row}], thicket:[{col,row}],
+//                 road:{alongX,centre,half}, batches:[{path,count}] }
 //
 // the two lists come back whole rather than as counts, because the first question after "how many"
 // is always "where is one" — an instanced batch carries no userData.cls, so render.Debug.find cannot
@@ -106,6 +128,7 @@ class WildArea implements Area3D
             reliefAmp: WildBand.reliefAmp,
             rocks: model.rocks,
             thicket: model.thicket,
+            road: model.road,
             batches: batches,
           };
         };
@@ -148,10 +171,12 @@ class WildArea implements Area3D
       return RenderConfig.CAMERA_WILD;
     }
 
-// no street litter in open country; the grass layer is what dresses the ground here
+// no street litter in open country EXCEPT along the highway, where every piece is something thrown
+// out of a car. thins with distance from the corridor and is empty in an area the road misses, which
+// is most of them — so this still returns nothing at all for the open wilderness it always did
   public function debris():Array<render.world.Debris.DebrisSpot>
     {
-      return null;
+      return WildDebris.build(model);
     }
 
 // re-bind after a settings change rebuilt the live spotlight pool (View.setLampLights)

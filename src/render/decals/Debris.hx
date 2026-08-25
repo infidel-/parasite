@@ -23,7 +23,13 @@ class Debris {
     }
 
 // paint the debris as content-cropped flat ground quads, fog-gated per cell like the blood decals.
-// instanced: one draw call per debris texture instead of one quad each
+// instanced: one draw call per debris texture instead of one quad each.
+//
+// the art is the ONLY alpha-capped block in entities64: rows 41-47 (Const.STREET_DEBRIS_*) peak at
+// alpha 127 where every other row of the 12x48 atlas peaks at 255, so litter draws at ~43% opacity
+// and can never read as solid whatever RenderConfig.DECAL.debrisMul does. Worth knowing before
+// measuring it — scan those rows at the usual alpha > 128 and they come back COMPLETELY EMPTY,
+// because nothing in them clears the threshold
   public function draw():Void
     {
       if (list == null)
@@ -40,8 +46,11 @@ class Debris {
           var op = d.radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
-          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size
-          d.batch.add(atlas, r, w.x, WorldCtx.floorY(s.col, s.row) + 0.04, w.z,
+          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size.
+          // height off floorYAt and not floorY: the quad sits at s.col + s.dx, up to a quarter cell
+          // off centre, and floorY answers about the CENTRE — see RenderConfig.DECAL.groundLift for
+          // what that cost on the highway
+          d.batch.add(atlas, r, w.x, WorldCtx.floorYAt(w.x, w.z) + RenderConfig.DECAL.groundLift, w.z,
             Sprites.SIZE * r.fw * s.scale, Sprites.SIZE * r.fh * s.scale, s.angle, op, 1.0, 0.0);
         }
     }

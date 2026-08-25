@@ -206,6 +206,19 @@ class WildStyle
       r: 0.84,
       jitter: 0.08,
     },
+    // the guard rail, and the only row here whose `h` is set so the prop TILES: aspect 2.50, so 1.6
+    // draws exactly 4.0 world units — one CELL — and consecutive segments meet instead of leaving
+    // gaps. that also makes it 0.96m at this scale against a real W-beam's 0.75, which is the right
+    // way to be wrong: it has to read as a barrier from a camera 18-55 units up.
+    // `jitter` is 0, alone in this table. every other prop out here is a natural object where a size
+    // spread is what stops a hundred copies reading as wallpaper; a crash barrier is manufactured, and
+    // a run of them at visibly different sizes reads as broken rather than as varied
+    {
+      path: RenderConfig.MODELS.wildGuardRail,
+      h: 1.6,
+      r: 1.25,
+      jitter: 0.0,
+    },
   ];
   // indices into PROPS, named where the model builder picks them. the four trees are FIRST and in
   // order, because render.wild.WildModel maps Const.TILE_TREE1 + 0..3 straight onto them
@@ -222,6 +235,7 @@ class WildStyle
   public static inline var LOG_FALLEN = 10;
   public static inline var ROCK_OUTCROP = 11;
   public static inline var ROCK_LARGE = 12;
+  public static inline var GUARD_RAIL = 13;
   // WHICH of these a bush, rock or tree tile means is per-band (render.wild.WildBand) — the band holds
   // weighted lists of these indices rather than a chance constant per pair
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
@@ -268,6 +282,211 @@ class WildStyle
   // patches, since what shows through a near-uniform mask is just the art's own ~40% coverage. the
   // rule of thumb: judge the mask, not the seed count, and keep the strong coverage near 10%. the two
   // chances themselves are per-band (render.wild.WildBand) and the numbers above are the plains row's
+
+  // --- the highway (render.wild.WildRoad) ---
+  // the CITY's own asphalt and worn road paint, reused unchanged. the slums variant is the other
+  // candidate — cracked, potholed, arguably the better read for a rural trunk road — but it measures
+  // far darker, and the turf this abuts is already the brightest ground out here at 0.0503 linear
+  public static inline var ROAD = 'textures/city/ground-asphalt.png';
+  public static inline var ROAD_PAINT = 'textures/city/ground-road-paint.png';
+  // world units per repeat. NOT a multiple of CELL, for the reason GROUND_TILE is not: at 12 or 16 the
+  // period would land on the cell grid and the surface would read as a lattice. the city gets away
+  // with its own 16 because kerbs, lane paint and building edges break the repeat up, and out here the
+  // only thing that does is the centre line
+  public static inline var ROAD_TILE = 13.0;
+  // the paint samples on its own world-aligned scale, the city's PAINT_TILE verbatim, so the wear
+  // reads at one size everywhere instead of stretching per dash
+  public static inline var ROAD_PAINT_TILE = 4.0;
+  // above BOTH patch layers (PATCH_Y * 1 and * 2), and the paint above the asphalt
+  public static inline var ROAD_Y = PATCH_Y * 3;
+  public static inline var ROAD_PAINT_Y = PATCH_Y * 4.5;
+  // the centre line, all three verbatim from render.world.Ground: a dash as long as its gap, and a
+  // line under a fifth of a world unit wide
+  public static inline var ROAD_LINE_W = 0.18;
+  public static inline var ROAD_DASH_LEN = 2.0;
+  public static inline var ROAD_DASH_GAP = 2.0;
+  // the asphalt's outer edge is an ALPHA CUTOUT (WildRoad.edgeMask), not a displaced boundary.
+  // it shipped straight, and a straight line 360 world units long is the one thing out here with no
+  // natural counterpart — the ground under it is graded for THREE cells either side (ROAD_RAMP), so
+  // the landform already said "embankment" while the material said "ruled line".
+  //
+  // the displaced boundary that replaced it — two sine terms pushing WildRoad.surface's outer corners
+  // — was RETIRED, and the reason it could never work is worth keeping. a vertex displacement of a
+  // straight line is SINGLE-VALUED: one offset per along-coordinate, whatever function drives it. so
+  // it can only read as a wave. measured across three settings, the edge ANGLE is the whole look and
+  // the reach is nearly a free variable (0.23 / 0.33 / 0.25 cell for 3.3 / 21.2 / 9.5 degrees), and
+  // there is no setting in between "invisible" and "decorative scallop". it is also coarse: boundary
+  // vertices sit CELL / SUB = 2.0 world units apart, so nothing under ~16 units of wavelength survives
+  // sampling, while render.world.VisionMask breaks its own straight boundary at 8.2 and 2.8 units and
+  // gets away with it only because it runs PER-FRAGMENT.
+  //
+  // a mask cut is not single-valued. it leaves bays, spurs, detached slabs past the edge and pits of
+  // ground inside it, which is what a worn road edge is and what no vertex offset can produce. and it
+  // is ten times finer: 0.20 world units per texel along the corridor against geometry's 2.0.
+  //
+  // NOT the alpha RAMP that render.Textures.loadRampTexture and render.sewer.SewerDetail.grime both
+  // failed with — those gave every texel at a given distance the same alpha, so the band had no shape
+  // of its own. both were fixed by putting the shape INTO the alpha, which is exactly what this does
+  // CELLS past the nominal edge the asphalt MESH reaches, giving the mask material to carve.
+  //
+  // it went in at 0.5 AND BOUGHT NOTHING, for a full release: the corridor is 3 cells so `half` is
+  // 1.5, WildModel.recoverRoad puts `centre` on lo + 1.5, and distTo is then |row - lo - 1| — an
+  // INTEGER, always. WildRoad's cell gate tested `distTo < half + MARGIN` = `< 2.0`, which excludes
+  // the distTo == 2 ring, so the mesh was exactly the road cells and the apron was zero cells wide.
+  // the mask meanwhile painted out to R_MAX * (1 + SPUR_PUSH) past the line, so HALF OF EVERY STAMP
+  // landed on triangles that do not exist: white stamps were no-ops (inside they whiten an already
+  // white rect, outside they are clipped), the whole ROAD_EDGE_SPUR mechanism was clipped 100%, and
+  // the edge could be bitten but never grown. its outer envelope was therefore a ruled line at
+  // exactly +/- half * CELL for the length of the area, and no mask value could move it — which is
+  // the straight edge the alpha route was built to remove, surviving the thing built to remove it.
+  //
+  // 1.0 admits that ring. WildRoad.surface's gate is also written against the cell's NEAR EDGE
+  // (distTo - 0.5 < reach) rather than its centre, so a reach landing on an integer cannot silently
+  // drop a ring again — and both reaches here are half-integers on purpose.
+  //
+  // also what WildArea widens the graded flat band by — see VERGE_HALF, which now sets that instead
+  public static inline var ROAD_EDGE_MARGIN = 1.0;
+  // mask resolution. FITTED to the corridor rather than laid over the whole area rect the way
+  // render.world.CoverageMask is, which is the opposite call to that class's and for the reason its
+  // header gives: its field spans the area because its marked cells do, while a road is a STRIP. so
+  // the texels go where the edge is: 0.098 world units per texel along and 0.083 across, against the
+  // 0.39 a 1024^2 area mask would give for more memory.
+  //
+  // this is SET BY THE SMALLEST BLOB, not picked. a stamp has to land on at least ~2 texels of radius
+  // or the alphaTest cut turns it into a single speckle, so R_MIN / resolution is the real constraint
+  // and the two move together — the first pass ran 2048 x 128 with R_MIN 0.5, and shrinking the blobs
+  // without shrinking the texel would have deleted them rather than made them finer
+  public static inline var ROAD_MASK_ALONG = 4096;
+  // 256 and not the 192 it shipped with, because ROAD_EDGE_MARGIN went 0.5 -> 1.0 and the canvas
+  // spans the MESH: the band went 16 world units wide to 20, which at 192 would have diluted R_MIN
+  // to 1.9 texels and put the smallest stamps back under the ~2 the rule above sets. 256 over 20 is
+  // 12.8 texels per unit, 2.56 at R_MIN — a hair better than the 2.4 it had at the narrower band
+  public static inline var ROAD_MASK_ACROSS = 256;
+  // the stamps that carve it: one pass down each edge dropping circles centred ON the nominal line,
+  // jittered by their own radius either way. a white one leaves a spur, a black one bites a bay, and
+  // where two whites overlap outside they merge into a slab.
+  // R_MAX and SPUR are tied to ROAD_EDGE_MARGIN and cannot be raised alone: the furthest texel a
+  // stamp can reach is R_MAX * (1 + SPUR_PUSH), and past the margin the mesh simply is not there, so
+  // the blob would be cut off by a straight mesh edge — the exact artifact this exists to remove.
+  //
+  // R_MAX is the SIZE OF ONE DEFORMITY and it is the only number here anyone will notice. judge it
+  // against the ribbon and against the screen, not in the abstract: the road is 12 world units wide
+  // and draws about 39 pixels per unit at the wilderness camera, so a stamp radius of 1.0 is a 39-pixel
+  // notch taking a sixth of the road's width. it went in at 1.8 (solid over only the middle 5 units,
+  // read as ruined), then 1.0 (still a chewed edge). 0.4 is an 8-16 pixel nick and a crumble band of
+  // about +/-0.9 units, 7% of the width — an edge that has broken away rather than a road with bites
+  // out of it.
+  // STEP must stay UNDER 2 * R_MIN or consecutive stamps leave gaps between them — and a gap is a
+  // stretch of the nominal edge showing through untouched, i.e. the straight line coming back
+  public static inline var ROAD_EDGE_STEP = 0.32;    // world units between stamps down one edge
+  public static inline var ROAD_EDGE_R_MIN = 0.2;
+  public static inline var ROAD_EDGE_R_MAX = 0.4;
+  public static inline var ROAD_EDGE_SPUR = 0.12;    // odds a stamp is pushed clear of the edge as an island
+  public static inline var ROAD_EDGE_SPUR_PUSH = 1.2; // how far out, in radii, when it is
+  // how much of a stamp's radius is a soft rim rather than solid, as a fraction. this is what makes
+  // the cut a GRADIENT instead of a hard edge, and the reason it is small: overlapping soft blobs
+  // average, and at STEP this dense a wide rim would wash the whole band to one value per distance —
+  // which is the distance-only ramp that failed twice and the exact thing the stamps exist to avoid.
+  // solid over the inner 55% keeps the union of cores hard, so only the outer boundary blends.
+  // 0.45 * R is 0.09-0.18 world units, roughly 4-7 screen pixels at the wilderness camera, on top of
+  // the mask's own ~1-texel antialiasing
+  public static inline var ROAD_EDGE_SOFT = 0.45;
+  // the asphalt BLENDS rather than being cut, so the mask's grey becomes real partial opacity. the
+  // alphaTest is kept but dropped near zero: it discards only the invisible tail, so nothing pays
+  // sorting or overdraw for texels at 2% opacity.
+  //
+  // `transparent` is set AFTER render.world.VisionMask.patch has run, and that ordering is
+  // load-bearing rather than tidy: patch picks its mode off `mat.transparent` and bakes it into the
+  // injected GLSL, so setting it first would flip the road to mode 'b' (alpha scale) and hidden road
+  // would FADE OUT instead of darkening toward the fog. a road is a ground surface, not a decal
+  public static inline var ROAD_ALPHA_TEST = 0.12;
+
+  // --- the verge: the dirt shoulder between the asphalt and the turf (render.wild.WildRoad) ---
+  // a SECOND ribbon of exactly the shape above (see RibbonOpts), laid under the asphalt and reaching
+  // past it, and it is what finally answers the straight edge rather than another pass at R_MAX.
+  //
+  // the reason is that the asphalt was being asked to do something it should not: a real road edge IS
+  // straight, and every setting that made it look otherwise looked WRONG in a different way — 1.8 read
+  // as ruined, 1.0 as chewed, 0.4 as invisible, and there is nothing in between because the deformity
+  // has to be small against a 12-unit manufactured ribbon to be believable at all. the verge moves the
+  // burden onto a boundary that is genuinely irregular in life, dirt meeting vegetation, where a
+  // 1.1-unit lump is a bush-sized bite and reads as ground rather than as damage. the asphalt keeps
+  // its own small crumble and now reads as wear against the shoulder instead of as the world's only
+  // straight line.
+  //
+  // the second thing it fixes is FREE: with a verge under it, a bay bitten out of the asphalt exposes
+  // dirt instead of clean turf, which is what a broken road edge actually looks like
+  public static inline var VERGE = 'textures/wild/ground-verge.png';
+  public static inline var VERGE_TILE = 7.0;   // not a multiple of CELL, and off ROAD_TILE and
+                                               // GROUND_TILE too so the three do not beat together
+  // NOMINAL half-width in CELLS. set by the GUARD RAIL and not by taste: the rail stands at
+  // half + RAIL_OFF = 2.4 cells, so anything under that leaves it on the grass, which is what the
+  // shoulder was supposed to stop. 2.75 puts it 1.4 world units inside the verge's own edge
+  public static inline var VERGE_HALF = 2.75;
+  // CELLS past that the verge MESH reaches, sized off its own stamps like ROAD_EDGE_MARGIN: the
+  // furthest texel a verge stamp can paint is R_MAX * (1 + SPUR_PUSH) = 2.42 world units = 0.61
+  // cells. 0.75 clears it, and 2.75 + 0.75 = 3.5 is a half-integer, which is what keeps the cell gate
+  // off the integer distTo values that silently deleted the asphalt's apron
+  public static inline var VERGE_MARGIN = 0.75;
+  // the stamps. BIGGER than the asphalt's by design — see the block header — and STEP still under
+  // 2 * R_MIN so consecutive stamps cannot leave a stretch of the nominal line showing
+  public static inline var VERGE_R_MIN = 0.5;
+  public static inline var VERGE_R_MAX = 1.1;
+  public static inline var VERGE_STEP = 0.8;
+  // mask resolution, and coarser than the asphalt's for the same reason the blobs are bigger. the
+  // band is (VERGE_HALF + VERGE_MARGIN) * CELL * 2 = 28 world units, so 128 across is 4.57 texels per
+  // unit and 2.3 at R_MIN — over the ~2 the stamps need. 2048 along is 5.12 per unit
+  public static inline var VERGE_MASK_ALONG = 2048;
+  public static inline var VERGE_MASK_ACROSS = 128;
+  // between the two patch layers (PATCH_Y * 1 and * 2) and the asphalt (* 3). the verge covers the
+  // patches and the asphalt covers the verge, which is the order the four are laid in
+  public static inline var VERGE_Y = PATCH_Y * 2.5;
+  // how far back from the VERGE's edge the grass thins out, in CELLS.
+  //
+  // the gate was per CELL and all-or-nothing (WildGrass reads m.prop, and a road cell is OCCUPIED),
+  // so the field ended in a straight wall of blades the length of the area — and blades are the
+  // brightest thing out here at 0.0660 linear against the ground's 0.0503, so that wall read LOUDER
+  // than the asphalt edge beside it. this is the other half of the same fix and the cheaper one:
+  // it costs one roll per tuft and no geometry at all.
+  //
+  // HALVED from the 2.0 it went in at, and re-anchored: it used to measure off the ASPHALT, so with a
+  // verge in between the same number would have run the thinning 8 world units past a shoulder that
+  // is already 5 units of bare dirt, and the corridor would have read 38 units wide against a 12-unit
+  // road. 1.0 cell off the verge edge puts the whole read at 30
+  public static inline var ROAD_GRASS_FADE = 1.0;
+  // how far past the asphalt the graded corridor blends back into the landform, in CELLS.
+  //
+  // MEASURED, not picked, and the number that pays for it is the SHOULDER: a level ribbon across
+  // falling ground has to absorb the whole crosswise drop somewhere, and the ramp is where. over a
+  // full mountain corridor (the worst band), peak shoulder slope and worst per-cell step go
+  // 2 cells: 0.576 / 1.96, 3: 0.494 / 1.69, 4: 0.444 / 1.72, 5: 0.406 / 1.59 — against the natural
+  // ground's own 0.259 there. 3 takes the biggest single bite and 4 makes the STEP slightly worse,
+  // because a wider ramp reaches into steeper ground. so this is a real embankment and not a bug:
+  // a road cut has steeper batters than the hill it crosses, which is also why the guard rail stands
+  // on the shoulder. if a mountain shoulder ever reads as a cliff, WildBand.reliefMax 1.5 is the cap
+  // the relief work already left for exactly this
+  public static inline var ROAD_RAMP = 3.0;
+  // how far outside the asphalt the guard rail stands, in CELLS from the corridor edge. there is no
+  // spacing constant to go with it: the prop's `h` is sized so one segment is exactly CELL wide, so
+  // the run is one per cell and they meet
+  public static inline var RAIL_OFF = 0.9;
+  // how high an actor's billboard rises swinging over a rail (render.anim.Climb, reached through
+  // render.world.WorldCtx.climbArc). UNDER the rail's own 1.6, deliberately: the sprite is a whole
+  // body from the feet up, so lifting it by the full barrier draws a man floating over a fence
+  // rather than a man swinging his legs across one
+  public static inline var CLIMB_ARC = 0.9;
+
+  // --- roadside litter (render.wild.WildDebris) ---
+  // how far from the centreline litter can land, in CELLS, and the chance AT the centreline — it
+  // falls off linearly to zero at the reach. 6 cells is the asphalt plus a couple of paces of verge
+  // either side, which is where anything thrown from a car actually stops
+  public static inline var LITTER_REACH = 6.0;
+  public static inline var LITTER_PCT = 0.16;
+  // the tunnels' own two, verbatim, and for the reasons SewerDebris.dress spells out: a cluster
+  // fragment can roll a scale too small to see from a camera 18-55 units up, and a STATIC fragment
+  // comes back with no offset and no rotation, which reads as a grid
+  public static inline var LITTER_MIN_SCALE = 0.5;
+  public static inline var LITTER_JITTER = 0.25;
 
   // --- the scene (render.wild.WildScene) ---
   public static inline var SKY = 0x0a0f14;          // background + fog: night, a shade greener than the city's

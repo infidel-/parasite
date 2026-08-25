@@ -96,7 +96,7 @@ class WildPatches
           var col = 0;
           while (col < m.w)
             {
-              block(scene, mat, taken, y, col, row,
+              block(scene, mat, m, taken, y, col, row,
                 (col + B <= m.w) ? B : m.w - col,
                 (row + B <= m.h) ? B : m.h - row);
               col += B;
@@ -113,8 +113,8 @@ class WildPatches
 // on. a cell-sized quad would be a CHORD across the relief and the ground would bulge through its
 // middle by the sagitta — 0.038 world units for the tight octave alone, against a PATCH_Y of 0.02.
 // lifting the layer clear of that instead would float its EDGES, where the two surfaces do agree
-  static function block(scene:Scene, mat:MeshLambertMaterial, taken:Array<Array<Bool>>, y:Float,
-    col0:Int, row0:Int, cw:Int, ch:Int):Void
+  static function block(scene:Scene, mat:MeshLambertMaterial, m:Wild, taken:Array<Array<Bool>>,
+    y:Float, col0:Int, row0:Int, cw:Int, ch:Int):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var S = WildStyle.SUB;
@@ -137,6 +137,28 @@ class WildPatches
                   var z0 = cz + sj * step;
                   var x1 = x0 + step;
                   var z1 = z0 + step;
+                  // never over the CORRIDOR — the verge as well as the asphalt, since the shoulder is
+                  // bare dirt by definition and dead grass growing across it is the same bug one
+                  // ribbon further out. this pass marks cells off a pure hash and never looks at
+                  // m.prop, so unlike the grass and the pebbles it does NOT get the OCCUPIED
+                  // suppression for free — dead grass would grow straight down the middle of the road.
+                  //
+                  // tested per SUB-QUAD rather than per cell against WildRoad.isRoad: a per-cell gate
+                  // clips these blobs on the ruled cell line, so the frame would get a straight
+                  // overlay boundary lying beside the asphalt's crumbled one and read as ruled anyway.
+                  //
+                  // and it reaches VERGE_R_MAX INSIDE the nominal edge, on purpose. the verge's real
+                  // boundary is an alpha mask crumbling either side of that line, so a bay bitten out
+                  // of the shoulder exposes ground the patches would otherwise have been kept off —
+                  // dead grass and bare earth growing into the broken edge is the read; clean turf in
+                  // a pothole is not. overlap the other way is free: the verge sits above both layers
+                  // at VERGE_Y and hides whatever reaches under it.
+                  // R_MAX * 2 is how far the deepest bite reaches: a black stamp is centred on the
+                  // nominal edge and jittered inward by up to its own radius, so its far side lands
+                  // two radii in
+                  if (WildRoad.vergeDist(m, (x0 + x1) / 2, (z0 + z1) / 2) <
+                      -WildStyle.VERGE_R_MAX * 2)
+                    continue;
                   var base = Std.int(pos.length / 3);
                   // uv straight off world position, so abutting cells read as one continuous overgrown
                   // field rather than a per-cell stamp — and nothing is stretched on either axis

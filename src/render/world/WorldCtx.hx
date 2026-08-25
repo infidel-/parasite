@@ -19,6 +19,13 @@ class WorldCtx {
   // ONE thing an area kind has to set to put every actor, decal, particle, shadow and cursor pick onto
   // a surface that is not y = 0, and it MUST be cleared by the area kinds that have no relief
   public static var ground:(Float, Float)->Float = null;
+  // the arc height, in world units, an actor's billboard takes on a one-cell move from (fromCol,
+  // fromRow) to (toCol,toRow) that climbs over something the area DRAWS but does not BLOCK — 0 for
+  // an ordinary step. null in every area kind with nothing to climb, which is the city and the
+  // tunnels; render.wild.WildArea points it at its highway guard rails.
+  // same contract as `ground` above and cleared in the same two places: the area kind that sets it
+  // owns clearing it, or the next area inherits a barrier that is not there
+  public static var climbArc:(Int, Int, Int, Int)->Float = null;
   // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
   public static var style:AreaStyle;
 

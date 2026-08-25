@@ -360,10 +360,23 @@ class RoadPlan extends Raster
       phaseStartTS = nextMapProfileTimestamp('road.initRoadPlanHelpers', phaseStartTS);
       var grid = gridOps.makeRoadPlanGrid();
       phaseStartTS = nextMapProfileTimestamp('road.makeRoadPlanGrid', phaseStartTS);
-      var primaryHorizontal = rng.nextFloat() < 0.5;
-      var primaryLine = pickCenteredRoad1Line(primaryHorizontal);
+      // the ROAD1 trunk decision lives in map.Highway, because area generation needs the same answer
+      // with no map.Image to ask. `rng` is handed over rather than reproduced, so the draw sequence
+      // is unchanged — see that class's header
+      var road1 = Highway.lines({
+        rng: rng,
+        planWidth: planWidth,
+        planHeight: planHeight,
+        cellsPerTile: PLAN_CELLS_PER_TILE,
+        blocked: function(px, py)
+          return WorldConst.blocksRegionRoad1(gridOps.getAreaTypeAtPlanCell(px, py)),
+        count: function(label, amount) addMapProfileCount(label, amount),
+      });
+      var primaryHorizontal = road1.primaryHorizontal;
+      var primaryLine = road1.primaryLine;
       var primaryWalker = makePrimaryRoad1Walker(primaryHorizontal, primaryLine);
-      var sideWalker = makeSideRoad1Walker(primaryHorizontal, primaryLine);
+      var sideWalker = makeSideRoad1Walker(primaryHorizontal, primaryLine,
+        road1.branchLine, road1.branchSign);
 
       walkRoad1(grid, cloneRoadWalker(primaryWalker));
       walkRoad1(grid, cloneRoadWalker(sideWalker));
@@ -422,110 +435,6 @@ class RoadPlan extends Raster
       };
     }
 
-// return a centered ROAD1 line shifted away from blocked area cells
-  function pickCenteredRoad1Line(horizontal: Bool): Int
-    {
-      var limit = (horizontal ? planHeight : planWidth);
-      var jitter = clampInt(Std.int(limit / 10), 4, PLAN_CELLS_PER_TILE * 2);
-      return pickRoad1LineAvoidingBlockedAreas(horizontal, jitter, 'road1.primary');
-    }
-
-// return a centered ROAD1 branch coordinate shifted away from blocked area cells
-  function pickCenteredRoad1Branch(primaryHorizontal: Bool): Int
-    {
-      var limit = (primaryHorizontal ? planWidth : planHeight);
-      var jitter = clampInt(Std.int(limit / 12), 3, PLAN_CELLS_PER_TILE * 2);
-      return pickRoad1LineAvoidingBlockedAreas(!primaryHorizontal, jitter, 'road1.branch');
-    }
-
-// return the nearest centered ROAD1 line that avoids blocked area cells when possible
-  function pickRoad1LineAvoidingBlockedAreas(horizontal: Bool, jitter: Int, profileLabel: String): Int
-    {
-      var limit = (horizontal ? planHeight : planWidth);
-      var targetLine = clampInt(Std.int(limit / 2) + randomRangeInt(-jitter, jitter),
-        1, limit - 2);
-      var bestLine = targetLine;
-      var bestHitCount = countRoad1BlockedAreaHits(horizontal, targetLine);
-      var bestOffset = 0;
-
-      if (bestHitCount == 0)
-        return targetLine;
-
-      for (offset in 1...limit)
-        {
-          var lowerLine = targetLine - offset;
-          if (lowerLine >= 1)
-            {
-              var lowerHitCount = countRoad1BlockedAreaHits(horizontal, lowerLine);
-              if (lowerHitCount == 0)
-                {
-                  addMapProfileCount(profileLabel + '.blockedAreaRerolls');
-                  addMapProfileCount(profileLabel + '.shiftCells', offset);
-                  return lowerLine;
-                }
-              if (lowerHitCount < bestHitCount ||
-                  (lowerHitCount == bestHitCount &&
-                  offset < bestOffset))
-                {
-                  bestLine = lowerLine;
-                  bestHitCount = lowerHitCount;
-                  bestOffset = offset;
-                }
-            }
-
-          var upperLine = targetLine + offset;
-          if (upperLine <= limit - 2)
-            {
-              var upperHitCount = countRoad1BlockedAreaHits(horizontal, upperLine);
-              if (upperHitCount == 0)
-                {
-                  addMapProfileCount(profileLabel + '.blockedAreaRerolls');
-                  addMapProfileCount(profileLabel + '.shiftCells', offset);
-                  return upperLine;
-                }
-              if (upperHitCount < bestHitCount ||
-                  (upperHitCount == bestHitCount &&
-                  offset < bestOffset))
-                {
-                  bestLine = upperLine;
-                  bestHitCount = upperHitCount;
-                  bestOffset = offset;
-                }
-            }
-        }
-
-      addMapProfileCount(profileLabel + '.fallbacks');
-      addMapProfileCount(profileLabel + '.fallbackBlockedAreaCells', bestHitCount);
-      return bestLine;
-    }
-
-// count how many blocked-area plan cells a 3-cell-wide ROAD1 line would cross
-  function countRoad1BlockedAreaHits(horizontal: Bool, line: Int): Int
-    {
-      var hitCount = 0;
-
-      if (horizontal)
-        {
-          var minY = clampInt(line - 1, 0, planHeight - 1);
-          var maxY = clampInt(line + 1, 0, planHeight - 1);
-
-          for (xx in 0...planWidth)
-            for (yy in minY...maxY + 1)
-              if (WorldConst.blocksRegionRoad1(gridOps.getAreaTypeAtPlanCell(xx, yy)))
-                hitCount++;
-          return hitCount;
-        }
-
-      var minX = clampInt(line - 1, 0, planWidth - 1);
-      var maxX = clampInt(line + 1, 0, planWidth - 1);
-
-      for (yy in 0...planHeight)
-        for (xx in minX...maxX + 1)
-          if (WorldConst.blocksRegionRoad1(gridOps.getAreaTypeAtPlanCell(xx, yy)))
-            hitCount++;
-      return hitCount;
-    }
-
 // build the primary ROAD1 walker configuration
   function makePrimaryRoad1Walker(primaryHorizontal: Bool, primaryLine: Int): RoadWalker
     {
@@ -573,13 +482,15 @@ class RoadPlan extends Raster
       };
     }
 
-// build the side ROAD1 walker configuration
-  function makeSideRoad1Walker(primaryHorizontal: Bool, primaryLine: Int): RoadWalker
+// build the side ROAD1 walker configuration. the branch line and its direction are picked in
+// map.Highway with the trunk's, so this is a pure builder
+  function makeSideRoad1Walker(primaryHorizontal: Bool, primaryLine: Int, branchLine: Int,
+      branchSign: Int): RoadWalker
     {
       if (primaryHorizontal)
         {
-          var branchX = pickCenteredRoad1Branch(true);
-          var branchDy = (rng.nextFloat() < 0.5 ? -1 : 1);
+          var branchX = branchLine;
+          var branchDy = branchSign;
           return {
             x: branchX,
             y: primaryLine,
@@ -601,8 +512,8 @@ class RoadPlan extends Raster
           };
         }
 
-      var branchY = pickCenteredRoad1Branch(false);
-      var branchDx = (rng.nextFloat() < 0.5 ? -1 : 1);
+      var branchY = branchLine;
+      var branchDx = branchSign;
       return {
         x: primaryLine,
         y: branchY,
