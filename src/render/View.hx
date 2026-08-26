@@ -208,6 +208,11 @@ class View {
     {
       if (area3d != null)
         area3d.refreshObjects();
+      // an object can block its own cell (a grown organ, a burning barrel), so this moved the
+      // walkability the tactical grid was built from — and the grid otherwise only rebuilds when
+      // the player's cell changes, which a player standing still growing an organ never does
+      if (tacticalGrid != null)
+        tacticalGrid.invalidate();
     }
 
 // is street-debug mode active? (the game suppresses movement input while it is)

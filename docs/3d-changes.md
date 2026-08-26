@@ -1153,3 +1153,56 @@ Two stale comments died with it: `WildGrass` still claimed the thinning followed
 exist yet.
 
 Cost at a pinned pose: **59 → 60 draw calls, 582.7k → 585.9k tris.**
+
+## The tactical grid could not express a blocked cell, and 80% of them drew as open ground
+
+`TacticalGrid` marks the shared CORNERS of walkable cells. A corner is marked when ANY of the four
+cells touching it is walkable — so an obstacle with open ground around it has all four of its own
+corners marked BY ITS NEIGHBOURS and draws identically to grass. Only a blob of 2x2 or larger drops an
+interior corner, and one missing cross reads as nothing at all.
+
+Measured live in a forest area, 33x30 cells around the player:
+
+| | |
+|---|---|
+| non-walkable cells in window | 83 (22 rock, 44 tree, 17 thicket) |
+| **that cost the lattice ZERO marks** | **66 / 83 (80%)** |
+| corner marks emitted | 1043 of 1054 possible |
+| so all 83 obstacles together cost | **11 marks** |
+
+So the readout had no channel for impassability, and this is not a case where drawing FEWER marks
+would have worked — the marks are on the corners, which the obstacle shares with open ground.
+
+Fix is a second pass in the same `build()`: a dashed perimeter around every blocked cell (edges facing
+a WALKABLE neighbour only — dashing shared edges too would fill a thicket's inside with a lattice),
+plus a diagonal hatch. It borrows `RenderConfig.OCCLUSION.outlineDash`/`outlineGap` outright, which at
+0.6 + 0.4 over a 4-unit cell is exactly four dashes per edge, so it is literally the dashed rectangle
+`Occlusion` already draws around a faded building's footprint.
+
+**The hatch is a WORLD-space line family (`x + z = k * HATCH`) clipped per cell, not a per-cell
+pattern** — a stripe continues into the next blocked cell instead of stopping at the shared edge, so a
+thicket hatches as one shape. `'diag'` was the one unclaimed fill in the game's pattern vocabulary
+(`Sprites.patternWhiten` implements `diag|cross|scan|dots`; XRAY took `scan`, OBJMARK took `dots`).
+
+`HATCH` shipped at 2.0 (3 stripes per cell) and that was WRONG in the frame: three long strokes read
+as random scratches, not as fill, and the corner-to-corner stripe at 5.66 units visually beat the
+0.6-unit dashes it was supposed to sit inside. 1.0 (7 stripes) reads as fill. Density, not width, is
+what turns strokes into a pattern.
+
+**City buildings are excluded**, and that is not a saving — it is a correctness fix. Their footprints
+are unpaved (`Ground` paves road/alley/walkway only), so the dashes hang in midair under a solid wall
+that hides them; and the moment the block DOES fade, which in tactical is the whole selected block,
+`Occlusion` draws that identical rectangle a hair above them — two coincident HDR dash runs through
+bloom. What is left is what actually surprises a player: burning barrels, unwalkable objects, blocking
+decoration.
+
+Two things fell out. `addEdge` became a general `addSeg` (per-endpoint height, arbitrary heading,
+normal-widened) — the hatch is 45 degrees, and endpoint heights let a quad follow wilderness relief
+instead of lying flat at the cell-centre sample. And `View.refreshObjects` now calls a new
+`invalidate()`: the grid rebuilds only when the player's CELL changes, and an organ grown under a
+standing player moves walkability without moving the player. That was invisible before (a blocked cell
+drew like open ground either way) and this pass is exactly what makes it show.
+
+Cost: **0 extra draw calls** — it all goes into the grid's existing single mesh and material. Geometry
+predicted and measured to the quad, twice: 2306 cross + 1268 dash + 609 hatch = **4183 quads / 8366
+tris**, against a 577.8k-tri scene.
