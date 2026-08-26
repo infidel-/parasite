@@ -185,6 +185,17 @@ class RenderConfig {
     near: { x: 0.0, y: 18.0, z: 20.0 },  // zoom=0: closest, ~42 degrees above ground
     far:  { x: 0.0, y: 55.0, z: 18.0 },  // zoom=1: near top-down
   };
+  // a facility compound: an open lot with single-storey buildings standing on it, and the only kind
+  // the player goes INSIDE. between the street and the tunnel presets and for a reason neither of
+  // them has — indoors a south wall is 1.5 cells tall and a corridor 3 cells wide, so the pitch sets
+  // how much of that corridor the near wall eats: 6 / tan(pitch) is 4.9 units here (1.2 cells) and
+  // would be 8.4 at the street's 30 degrees. the rest of that problem is paid for by fading the
+  // south faces with the roof (render.facility.FacilityStyle.WALL_FADE) rather than by going steeper
+  // still, because outdoors the height is what makes the thing read as a building at all
+  public static final CAMERA_FACILITY:CameraOffsets = {
+    near: { x: 0.0, y: 20.0, z: 16.0 },  // zoom=0: closest, ~51 degrees above ground
+    far:  { x: 0.0, y: 48.0, z: 16.0 },  // zoom=1: near top-down
+  };
   // occlusion fade: a building between camera and player eases to this opacity so the player
   // stays visible, then eases back to solid when it no longer blocks the sightline
   public static final OCCLUSION = {

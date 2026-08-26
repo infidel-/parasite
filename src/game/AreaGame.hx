@@ -223,6 +223,7 @@ class AreaGame extends _SaveObject
 
       // reinit spawn points
       initSpawnPoints();
+      repairGeneratorInfo();
 
       // enter habitat with active team
       if (isHabitat && game.group.team != null)
@@ -353,6 +354,7 @@ class AreaGame extends _SaveObject
 
       // reinit spawn points
       initSpawnPoints();
+      repairGeneratorInfo();
 
       // update area view info
       game.scene.area.update();
@@ -361,6 +363,17 @@ class AreaGame extends _SaveObject
       updateVisibility();
 
       game.scene.area.draw();
+    }
+
+// a facility saved before game.FacilityAreaGenerator recorded every structure's rooms carries a
+// record describing its side building alone. the cell grid is persisted verbatim and never
+// regenerated, so fixing the generator does not reach an area anyone has already visited — this
+// re-derives the rects from that grid instead. a no-op on a complete record
+  public function repairGeneratorInfo()
+    {
+      if (info.id != AREA_FACILITY)
+        return;
+      FacilityAreaGenerator.repairRooms(this);
     }
 
 // init spawn points list after generation or loading
@@ -2469,6 +2482,9 @@ class Test {
           // been latent rather than live: AREA_GROUND declares commonAI 0, so the turn spawner never
           // runs out there and nothing reads the rect yet. it will the moment that number moves
           case 'wilderness': render.RenderConfig.CAMERA_WILD;
+          // unlike the wilderness above, this one is LIVE the day it lands: a facility declares
+          // commonAI 5, so the turn spawner runs here and reads the rect every turn
+          case 'facility': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)

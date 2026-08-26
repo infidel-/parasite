@@ -240,7 +240,8 @@ class GameScene
         (game.area.info.type == 'city' ||
          game.area.info.type == 'sewers' ||
          game.area.info.type == 'habitat' ||
-         game.area.info.type == 'wilderness');
+         game.area.info.type == 'wilderness' ||
+         game.area.info.type == 'facility');
     }
 
 // an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
@@ -279,6 +280,8 @@ class GameScene
         {
           if (game.area.info.type == 'wilderness')
             view3d.showWild(game.area);
+          else if (game.area.info.type == 'facility')
+            view3d.showFacility(game.area);
           else if (!isCityArea())
             view3d.showSewer(game.area);
           else if (game.area.cityGenSeed >= 0)

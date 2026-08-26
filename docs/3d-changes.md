@@ -1206,3 +1206,102 @@ drew like open ground either way) and this pass is exactly what makes it show.
 Cost: **0 extra draw calls** — it all goes into the grid's existing single mesh and material. Geometry
 predicted and measured to the quad, twice: 2306 cross + 1268 dash + 609 hatch = **4183 quads / 8366
 tris**, against a 577.8k-tri scene.
+
+## The facility becomes a 3D area kind (`render.facility`) — Phase 0
+
+`AREA_FACILITY` is the first kind with an **outdoors and an indoors at once**: the city has buildings
+and no interiors, the tunnels and the wilderness have interiors and no shell. Fourth `Area3D`, built
+from the SAVED cell grid like both of those — no seed, every existing save. Measured on entry:
+**64-81 calls, 72-271k tris, 101 programs**, against a city's 158-288.
+
+**No `render.Occlusion`, and that is the design.** A city fades a building while it blocks the
+camera-to-player sightline, which is the right question when the player is always outside it. Here
+they walk IN, so the shell fades on being INSIDE: per structure, the interior roof to 0 and the
+SOUTH-facing wall faces to 0.20. South only — the camera heading is fixed with a ±30° orbit clamp, so
+leaving N/E/W solid is what keeps a room reading as a room. `depthWrite` follows the opacity down, or
+the faded wall still rejects everything behind it.
+
+**The planned per-texel version (`alpha = 1 − uReveal * visAmt`) was dropped, and the reason is the
+keeper: hidden ≠ covered.** The roof must be SOLID from outside, and the mask says the opposite there
+— the sweep reaches a building's wall ring and stops, so every interior cell reads hidden and a
+mask-driven roof would fog out into the background exactly when it should be a roof. The window-peek
+half moved to the CPU instead: a structure opens when the player is inside it or within `PEEK_CELLS`
+3 of one of its window cells with line of sight, recomputed only when the player's cell or
+`area.visRev` moves. The roof also **splits in two** — the rim over the wall ring never fades, which
+keeps the outline on screen and removes the `indoorW` vertex weight the mask version needed.
+
+**Every window is a 2- or 3-cell RUN** (measured live: 49 openings, all 2 or 3), so the pane is
+emitted per run and the art's three panes span the opening once. The generator's single-window path
+has been dead for a long time: `TEMP_BUILDING_WINDOW` and `TEMP_BUILDING_VENT` are both `18`, so
+`finalTiles` resolves that cell to wall + a `Vent` and `TILE_WINDOW1` is never written. The quad is
+sized from the art's measured content aspect (2.009) and never stretched, so a 3-cell run stands 5.94
+of `WALL_H` 6.0 and reads floor-to-ceiling while a 2-cell run is 3.96 on a real sill — two window
+sizes out of one image.
+
+**`generatorInfo` was describing one building of three.** `generate()` nulled `state.rooms/doors`
+after the main building and `makeDoors` reassigned rather than appended; the hangar has no inner walls
+and never went through `makeDoors` at all. Fixed at the source AND repaired for existing saves, since
+the cell grid is persisted verbatim and never regenerated: `repairRooms` re-derives the rects by
+flood-filling room floor bounded by walls and by LINO — lino being both the corridor floor and the
+floor under every door is what separates one room from the next. Live save: **7 rooms → 24**, split
+7 / 1 / 16 over the three structures, `missionHints` kept, not one tile touched. The completeness test
+is a COUNT (`stored >= derived` → no-op), which can only err toward rewriting an equivalent record.
+
+**Its own art set**, 10 new 1k sources. Linear values: exterior wall **0.0323** (just under the
+asphalt it stands on), hangar cladding 0.0374, interior wall **0.0689** (2.1× the exterior — indoors
+has to read as a different place the moment the roof goes), floor tile 0.0607, lino 0.0750, hangar
+concrete 0.0353, grate 0.0270. Outdoors keeps `city/*`.
+
+Two alpha traps: the **drain grate wanted no alpha at all** — as a centred sprite its cut never
+happened (min alpha **112 of 255**, so `alphaTest` kept the whole square), but a drain cell is exactly
+one cell, so the honest shape is a full-bleed TILE that REPLACES the floor. And
+**`background:"transparent"` cuts on a generate but not on an `edit_image` re-emit**: unlit window
+60.4% at alpha 0, the lit edit of that same drop **4.3%**. The edit holds composition pixel-exact, so
+the unlit channel IS the lit one's correct cut — transplanted rather than re-rolled.
+
+**Warm, measured not assumed.** First entry compiled **+10** (91 boot → 101). A facility warm scene
+took boot to 96; instancing the park glbs inside the existing glb promise chain took it to 97 —
+entry compiles **10 → 4**, and all five plant models cost **1** program between them. It needs its own
+scene for a reason the tunnels' entry only half covers: the light counts match the city's (there is a
+moon), but every lit surface here carries the vision-mask patch and the mask extends the cache key.
+
+**The build key scheme was out of room** — sewer `-(id*2+3)` and wilderness `-(id*2+4)` are both
+parities of one range, so a third grid-built kind needed the STRIDE: `gridKey(id, kind) =
+-(id*4 + kind + 3)`. Riders: `getSpawnRect` gained its `'facility'` arm and unlike the wilderness's it
+is **live the day it lands** (`commonAI 5`); `MeshLambertMaterial` gained typed `opacity`/`depthWrite`
+rather than an `untyped` write; `Chunks` reports **1 group**, because per-structure meshes span 30×18
+cells and sit past the 16-cell size guard at the scene root.
+
+**The parking lot was the DARKEST surface in the game, and it is most of the frame.** The generator
+fills the whole area with `TEMP_ALLEY` before it draws anything, so the leftover apron arrives as
+`Const.TILE_ALLEY` and the obvious mapping is the city's alley art. Measured as built, linear: alley
+**0.0226**, against roof 0.0275, wall 0.0323, asphalt 0.0329, grass 0.0414, walkway 0.0680. That art
+was painted to be a slot between two buildings — small, and wanting to read as a hole. Out here it is
+a 40-cell car park, and at 0.0226 under a 0.0275 roof the building was **1.22×** its own ground and
+the whole compound read black. Swapped to `city/ground-asphalt` (a car park IS asphalt): the ladder
+becomes lot 0.0329 < grass 0.0414 < walkway 0.0680, and the building reads as a darker mass ON its
+tarmac. One constant.
+
+**`city/grass` is a CUTOUT, not a ground tile, and using it as one perforated the park.** Reported as
+"holes in the grass", and that is literally what they were: **47.6% of that texture is fully
+transparent**, by its own prompt's design — "roughly 45 percent of the tile is left as the untouched
+flat #5a5d63 grey background". It is ragged weed islands meant to be laid OVER paving by
+`render.world.Lawns` with a `CoverageMask` alphaMap. As a standalone opaque surface the transparent
+half renders as the flat grey `bleed_alpha` scrubbed into it, so the lawn read as clumps separated by
+holes. **Full coverage is a different painting, not a setting** — new `facility/grass`, and its `lift`
+0.82 was fitted against the NEIGHBOUR rather than in the abstract: as painted it measured **0.0291
+linear, DARKER than the asphalt lot beside it** (0.0329), a lawn darker than its own car park. Built
+it lands **0.0500**, so the ladder reads lot 0.0329 < lawn 0.0500 < walkway 0.0680. The other two
+reused city tiles were checked the same way and are 100% opaque, so the defect was that one file.
+
+**And the first attempt to judge the lot from a screenshot was invalid.** In a gameplay pose most of the
+lot is outside the player's line of sight, so it renders at `MASK.hidden` 0.14 toward the sky whatever
+its albedo is — the mask, not the art, is what a capture like that shows. Forcing
+`VisionMask.uFloor.value` to 1.0 from CDP (a live static, restored after) is the A/B that separates
+them, and it is what showed the ladder was the real defect rather than the fill.
+
+**Measured, foregrounded at 60 FPS, 36 samples, gameplay pose:** `frame` **16.69ms** (vsync),
+GPU median **7.06ms** (IQR 6.49-7.98), `submit` **1.39ms**, `idle` **14.30ms**, **68 calls /
+250,394 tris**. Fill-bound like every other area on this machine — GPU is 5× submit. That lands the
+facility squarely in the wilderness band (plains 73 calls / 6.95ms, forest 62 / 4.92, mountain
+52 / 7.20) and nowhere near the frame budget.

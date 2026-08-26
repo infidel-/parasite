@@ -55,6 +55,9 @@ class FacilityAreaGenerator
         mainRoadNorth: (Std.random(100) < 50 ? true : false),
         rooms: null,
         doors: null,
+        allRooms: [],
+        allDoors: [],
+        nextRoomID: TEMP_BUILDING_ROOM_ID_START,
       }
       // fill with blank
       var cells = area.getCells();
@@ -77,8 +80,6 @@ class FacilityAreaGenerator
       var mainx = Std.int(mainw / 2),
         mainy = (state.mainRoadNorth ? rw + 2 : area.height - mainh - 2 - rw);
       generateBuilding(state, mainx, mainy, mainw, mainh);
-      state.rooms = null;
-      state.doors = null;
 
       // hole in sidewalk for entry to parking lot
       var hx = mainx + mainw + 10, hy = sidewalky;
@@ -124,8 +125,8 @@ class FacilityAreaGenerator
       finalizeTiles(state);
       trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       state.area.generatorInfo = {
-        rooms: state.rooms,
-        doors: state.doors,
+        rooms: state.allRooms,
+        doors: state.allDoors,
       };
     }
 
@@ -173,6 +174,20 @@ class FacilityAreaGenerator
 
       // draw side door
       cells[bx][by + Std.int(bh / 2)] = TEMP_HANGAR_SIDE_DOOR;
+
+      // the hangar is ONE open space, so it is one room. it has no inner walls and therefore never
+      // went through makeDoors, which is why it used to contribute nothing to generatorInfo at all —
+      // and a room-less structure gets no ceiling light and no room reveal
+      state.allRooms.push({
+        id: state.nextRoomID,
+        x1: bx + 1,
+        y1: by + 1,
+        x2: bx + bw - 2,
+        y2: by + bh - 2,
+        w: bw - 2,
+        h: bh - 2,
+      });
+      state.nextRoomID++;
     }
 
 // generate a single building of a given size at given coordinates
@@ -339,6 +354,13 @@ class FacilityAreaGenerator
       // work on individual rooms
       generateRoomContents(state);
 
+      // fold this building into the area-wide lists. done LAST, because every pass above reads
+      // state.rooms/doors and must only ever see this building's own
+      for (r in state.rooms)
+        state.allRooms.push(r);
+      for (d in state.doors)
+        state.allDoors.push(d);
+
 //      replaceTiles(cells, bx, by, bw, bh,
 //        TEMP_BUILDING_ROOM_MARKED, TEMP_BUILDING_ROOM);
     }
@@ -421,7 +443,7 @@ class FacilityAreaGenerator
     {
       var area = state.area;
       var cells = area.getCells();
-      var roomID = TEMP_BUILDING_ROOM_ID_START - 1;
+      var roomID = state.nextRoomID - 1;
       var doors = [];
       var rooms = [];
       for (y in (by + 1)...(by + bh))
@@ -487,6 +509,7 @@ class FacilityAreaGenerator
           }
       state.doors = doors;
       state.rooms = rooms;
+      state.nextRoomID = roomID + 1;
     }
 
 // remove double doors into the same rooms
@@ -1049,6 +1072,146 @@ class FacilityAreaGenerator
         }
     }
 
+// does this tile belong to a ROOM rather than to a corridor? lino is the corridor floor AND the
+// floor under every door, which is exactly what separates one room from the next
+  static function isRoomFloor(t: Int): Bool
+    {
+      if (t == Const.TILE_FLOOR_LINO)
+        return false;
+      if (t == Const.TILE_FLOOR_TILE ||
+          t == Const.TILE_FLOOR_TILE_UNWALKABLE ||
+          t == Const.TILE_FLOOR_TILE_CANNOTSEE ||
+          t == Const.TILE_FLOOR_CONCRETE ||
+          t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+        return true;
+      if (t >= Const.TILE_FLOOR_TILE_GRATE1 &&
+          t <= Const.TILE_FLOOR_TILE_GRATE3)
+        return true;
+      // every table tile stands on room floor
+      return (t >= Const.OFFSET_ROW8);
+    }
+
+// room id at a cell, or -1
+  static inline function roomAt(mark: Array<Array<Int>>, x: Int, y: Int): Int
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= mark.length ||
+          y >= mark[0].length)
+        return -1;
+      return mark[x][y];
+    }
+
+// re-derive rooms and doors from the saved tile grid, for an area generated before this file
+// recorded every structure's.
+//
+// generate() used to null state.rooms/doors after the main building and makeDoors reassigned rather
+// than appended, so a saved facility describes its SIDE building only and the hangar contributes
+// nothing. that record is persisted, and the cell grid is persisted verbatim and never regenerated,
+// so a fixed generator alone would leave every already-visited facility partial forever. rooms are
+// read by the 3D ceiling-light pass, by AreaView's room reveal and by three cult missions, so the
+// repair is worth more than the renderer.
+//
+// it does NOT touch a single tile and it keeps missionHints: the rects are recovered from the grid
+// the generator already wrote, which is the same trick render.sewer.SewerModel and
+// render.wild.WildModel use to avoid persisting anything at all
+  public static function repairRooms(area: AreaGame)
+    {
+      var cells = area.getCells();
+      var mark = [for (x in 0...area.width) [for (y in 0...area.height) -1]];
+      var rooms: Array<_Room> = [];
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            if (!isRoomFloor(cells[x][y]) ||
+                mark[x][y] >= 0)
+              continue;
+            var id = TEMP_BUILDING_ROOM_ID_START + rooms.length;
+            var room: _Room = {
+              id: id,
+              x1: x,
+              y1: y,
+              x2: x,
+              y2: y,
+              w: 1,
+              h: 1,
+            };
+            var stack = [ { x: x, y: y } ];
+            mark[x][y] = id;
+            while (stack.length > 0)
+              {
+                var c = stack.pop();
+                if (c.x < room.x1)
+                  room.x1 = c.x;
+                if (c.x > room.x2)
+                  room.x2 = c.x;
+                if (c.y < room.y1)
+                  room.y1 = c.y;
+                if (c.y > room.y2)
+                  room.y2 = c.y;
+                for (i in 0...Const.dir4x.length)
+                  {
+                    var nx = c.x + Const.dir4x[i];
+                    var ny = c.y + Const.dir4y[i];
+                    if (roomAt(mark, nx, ny) != -1 ||
+                        !isRoomFloor(cells[nx][ny]))
+                      continue;
+                    mark[nx][ny] = id;
+                    stack.push({ x: nx, y: ny });
+                  }
+              }
+            room.w = room.x2 - room.x1 + 1;
+            room.h = room.y2 - room.y1 + 1;
+            rooms.push(room);
+          }
+      // a complete record already describes at least as many rooms as the grid holds. comparing
+      // COUNTS rather than coverage is what makes this cheap and safe to run on every entry: a
+      // record written by the fixed generator can only ever match or exceed the derivation, and the
+      // partial ones it exists for are short by a whole building
+      if (area.generatorInfo != null &&
+          area.generatorInfo.rooms != null &&
+          area.generatorInfo.rooms.length >= rooms.length)
+        return;
+
+      // doors link the rooms either side of them. a front or side door has a room on one side only
+      // and the outdoors on the other, which is roomID2 0 — the same value the generator writes for
+      // a door opening onto a corridor
+      var doors: Array<_Door> = [];
+      for (o in area.getObjects())
+        {
+          if (o.type != 'door')
+            continue;
+          var a = roomAt(mark, o.x - 1, o.y);
+          var b = roomAt(mark, o.x + 1, o.y);
+          var dir = DIR_RIGHT;
+          if (a < 0 &&
+              b < 0)
+            {
+              a = roomAt(mark, o.x, o.y - 1);
+              b = roomAt(mark, o.x, o.y + 1);
+              dir = DIR_DOWN;
+            }
+          if (a < 0 &&
+              b < 0)
+            continue;
+          doors.push({
+            x: o.x,
+            y: o.y,
+            dir: dir,
+            roomID1: (a >= 0 ? a : b),
+            roomID2: (a >= 0 && b >= 0 ? b : 0),
+            skip: false,
+          });
+        }
+      trace('repaired facility generatorInfo: ' + rooms.length + ' rooms, ' +
+        doors.length + ' doors');
+      area.generatorInfo = {
+        rooms: rooms,
+        doors: doors,
+        missionHints: (area.generatorInfo != null ? area.generatorInfo.missionHints : null),
+      };
+    }
+
 // replace all temp tiles into final ones
   function finalizeTiles(state: _FacilityState)
     {
@@ -1162,7 +1325,19 @@ typedef _FacilityState = {
   var info: AreaInfo;
   var mainRoadNorth: Bool;
 
-  // temp state
+  // temp state: the CURRENT structure's rooms and doors. every pass inside generateBuilding
+  // (fixDoors, makeDoorToCorridor, makeWindows, generateRoomContents) works on these and must not
+  // see a previous structure's, so they are reset per structure and folded into the two lists below
   var rooms: Array<_Room>;
   var doors: Array<_Door>;
+
+  // every structure's rooms and doors, in generation order. this is what lands in
+  // area.generatorInfo: the 3D layer places a ceiling light per room and fades a roof per structure,
+  // and the missions and AreaView's room-reveal read the same record, so it has to describe the
+  // WHOLE area rather than whichever building happened to be generated last
+  var allRooms: Array<_Room>;
+  var allDoors: Array<_Door>;
+  // room ids are unique across the whole area, never restarted per structure: _Door.roomID1/2 and
+  // _GeneratorInfo.getRoom() key on them, and they are also written into the cell grid as marks
+  var nextRoomID: Int;
 }

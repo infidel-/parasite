@@ -331,6 +331,19 @@ class View {
       var sewerFx = new Group();
       sewerScene.add(sewerFx);
       new render.particles.MuzzleLights(sewerFx);
+      // the facility gets its OWN warm scene too, for a reason the tunnels' entry only half covers.
+      // it does have a moon, so the light COUNTS match the city's — what differs is that every lit
+      // surface out there carries the vision-mask patch, and the mask contributes a
+      // customProgramCacheKey. so a facility floor warmed as a city ground material warms a key the
+      // game never asks for. measured before adding this: 91 programs at boot, 101 after the first
+      // facility entry
+      var facModel = render.facility.FacilityModel.demo();
+      var facScene = render.facility.FacilityScene.build(renderer, game.config.vidLampLights).scene;
+      render.facility.FacilityGround.build(facScene, facModel);
+      render.facility.FacilityGeom.build(facScene, facModel);
+      var facFx = new Group();
+      facScene.add(facFx);
+      new render.particles.MuzzleLights(facFx);
       // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
       // light-count variant), but it has to wait for its glb — see the compile chain below
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
@@ -447,7 +460,11 @@ class View {
               var M = render.world.VisionMask;
               var objModels = render.world.ObjModels.MODELS;
               var wallProps = render.sewer.SewerStyle.PROP_MODELS;
-              var left = objModels.length + wallProps.length;
+              // the facility's park plants, which are the wilderness's own tree and bush glbs. same
+              // trap as the wall props and one more reason they cannot ride the city scene: their
+              // material is mask-patched, and the mask extends the program cache key
+              var green = render.facility.FacilityGround.GREEN;
+              var left = objModels.length + wallProps.length + green.length;
               var done = function()
                 {
                   left--;
@@ -492,10 +509,22 @@ class View {
                       done();
                     });
                 }
+              for (i in 0...green.length)
+                {
+                  var p = green[i];
+                  render.Models.get(p.path, function(_)
+                    {
+                      M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
+                      done();
+                    });
+                }
             });
         }).then(function(_)
         {
           return renderer.compileAsync(sewerScene, camera); // still bound to the linear target
+        }).then(function(_)
+        {
+          return renderer.compileAsync(facScene, camera); // ditto
         }).then(function(_)
         {
           renderer.setRenderTarget(null);
@@ -506,8 +535,9 @@ class View {
           // geometries here are shared static models / particle quads, and disposing them would break the
           // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
           // selectively dispose only the per-build World.build geometries (the safe ones) later.
-          // both scenes are held — the tunnels' materials are the sewer half of the cache
-          warmHold = [ s, sewerScene ];
+          // all three scenes are held — the tunnels' and the facility's materials are their own
+          // halves of the cache and three releases a program only on material.dispose()
+          warmHold = [ s, sewerScene, facScene ];
           if (renderer.info.programs != null)
             js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
         });
@@ -528,18 +558,35 @@ class View {
     buildFrom(new CityArea(game, c, -1), -1);
   }
 
+// the build key for one of the grid-built area kinds. an id is one area and one area is one kind,
+// but a key that COLLIDED would let a rebuild of another kind read as a warm re-show of this one —
+// so each kind takes its own residue class rather than a parity. it was 2 residues while there were
+// two such kinds and both were spent; a third needed the stride, not another offset
+  static inline function gridKey(id:Int, kind:Int):Int
+    {
+      return -(id * 4 + kind + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+    }
+
 // show the 3D sewer/habitat tunnels for an area, built from its saved tile grid (no seed — the
-// grid IS the persisted layout, so this works on every existing save).
-//
-// the two grid-built kinds key off the SAME area id, so they take alternate parities of the same
-// negative range: an id is one area and one area is one kind, but a key that collided would let a
-// rebuild of the other kind be mistaken for a warm re-show of this one
+// grid IS the persisted layout, so this works on every existing save)
   public function showSewer(area:game.AreaGame):Void
     {
-      var key = -(area.id * 2 + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+      var key = gridKey(area.id, 0);
       if ((running || warming) && shownKey == key)
         return;
       buildFrom(new render.sewer.SewerArea(game, render.sewer.SewerModel.fromArea(area)), key);
+    }
+
+// show the 3D facility compound for an area, built from its saved tile grid for the same reason the
+// tunnels are: game.FacilityAreaGenerator already wrote every wall, window, floor and door, and
+// that grid is what the pathfinder walks around
+  public function showFacility(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 2);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.facility.FacilityArea(game,
+        render.facility.FacilityModel.fromArea(area)), key);
     }
 
 // show the 3D open wilderness for an area, built from its saved tile grid for the same reason the
@@ -547,7 +594,7 @@ class View {
 // and that grid is what the pathfinder walks around
   public function showWild(area:game.AreaGame):Void
     {
-      var key = -(area.id * 2 + 4); // the sewer key's other parity, see showSewer
+      var key = gridKey(area.id, 1);
       if ((running || warming) && shownKey == key)
         return;
       // the terrain band FIRST: WildModel.fromArea reads it to turn tile IDs into models, and it is

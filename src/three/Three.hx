@@ -308,6 +308,12 @@ typedef RendererInfo = {
   // mask branch to compile from this flag, so a material that wants the opaque branch AND a blended
   // edge (render.wild.WildRoad) has to patch first and set this second
   public var transparent:Bool;
+  // blend level once `transparent` is on. driven per frame by render.facility.FacilityArea, which
+  // fades a structure's roof and its south-facing wall faces as the player walks inside
+  public var opacity:Float;
+  // whether a drawn fragment writes depth. it has to follow `opacity` down: a faded surface that
+  // still wrote depth would reject everything behind it however faint it drew
+  public var depthWrite:Bool;
   public var userData:Dynamic;
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
