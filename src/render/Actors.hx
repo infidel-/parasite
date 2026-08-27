@@ -27,6 +27,17 @@ typedef ActorOpts = {
                                     // sprite marks at all — the prop is outlined from its own geometry
 }
 
+// what the Ctrl-hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
+// client px the tooltip beam anchors to. one result rather than two pick calls because the two
+// candidate sets compete for the same nearest-anchor slot — an AI standing in front of a prop has
+// to be able to win, which two independent searches could not decide between. see Actors.pickTarget
+typedef PickHit = {
+  ai:AI,                  // the AI under the cursor, or null
+  obj:objects.AreaObject, // the object under it, or null
+  px:Float,               // its anchor projected to client px, for BeamTooltip.showBeamAt
+  py:Float,
+}
+
 // the 3D actor billboard layer: mirrors the game's objects/AI/player as sprites, each with a
 // position slide + opacity fade + optional transient effect. owns the per-actor anim state and
 // paints through a shared Sprites surface; transient FX (blood, death crossfade) live in a
@@ -59,6 +70,10 @@ class Actors {
   var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
   var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
+  var _pjx = 0.0;                                        // last projDist result in client px, for
+  var _pjy = 0.0;                                        // the pickTarget candidate that wins
+  var _pa = new Vector3();                               // scratch: the two ends of the world
+  var _pb = new Vector3();                               // segment projSeg hit-tests an object by
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
@@ -156,6 +171,10 @@ class Actors {
       // warm light onto nearby actors, and the flame/shadow pass below reuses the same list
       lampShadows.gather(dtMs);
       badges.tick(dtMs);                                 // advance the looping badge-pulse clock
+      // Shift+Space hides the HUD, and the world-anchored UI goes with it: the object outline/x-ray
+      // marks, the AI badges and the off-screen/bubble markers are all readouts, not scenery. read
+      // once per frame rather than per actor — it is a DOM style probe (see ui.HUD.isVisible)
+      var uiOn = game.ui.hud.isVisible();
       // player state transitions: leap onto the host on attach, leap back off on leaving it
       var st = game.player.state;
       if (st == _PlayerState.PLR_STATE_ATTACHED &&
@@ -199,10 +218,11 @@ class Actors {
               offx: ox,
               offz: oz,
               groundAnchor: true,
-              mark: o.visible(),
-              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null,
+              mark: o.visible() && uiOn,
+              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null ||
+                render.facility.FacilityDoors.draws(game.area, o),
             });
-            if (vis)
+            if (vis && uiOn)
               badges.drawObjTarget(o);
           }
       var tObj = haxe.Timer.stamp();
@@ -216,7 +236,8 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
             drawActor(ai.entity, vis, dtMs);
-            if (vis)
+            if (vis &&
+                uiOn)
               {
                 var bs = ai.getBadges();
                 badges.drawAITarget(ai);
@@ -428,14 +449,20 @@ class Actors {
       slimeTrail.dispose();
     }
 
-// find the visible AI whose head projects nearest the given client point (within a px radius);
-// returns the AI + its projected client px (the tooltip beam anchor), or null. project-nearest
-// rather than raycasting the transparent, entity-less billboard quads
-  public function pickAI(clientX:Float, clientY:Float, rect:Dynamic):{ ai:AI, px:Float, py:Float }
+// find the visible AI or object whose anchor projects nearest the given client point (within a px
+// radius); returns it + its projected client px (the tooltip beam anchor), or null. project-nearest
+// rather than raycasting the transparent, entity-less billboard quads — and for an object backed by
+// a 3D prop there is no billboard to raycast at all
+  public function pickTarget(clientX:Float, clientY:Float, rect:Dynamic):PickHit
     {
-      var best:AI = null;
-      var bestPx = 0.0, bestPy = 0.0, bestD = 1e30;
-      var rad = 46.0;                                            // px hit radius around a head
+      var hit:PickHit = {
+        ai: null,
+        obj: null,
+        px: 0.0,
+        py: 0.0,
+      };
+      var bestD = 1e30;
+      var rad = 46.0;                                            // px hit radius around an anchor
       var los = game.player.vars.losEnabled;
       var v = new Vector3();
       for (ai in game.area.getAllAI())
@@ -447,26 +474,117 @@ class Actors {
           if (a == null ||
               a.op < 0.3)
             continue;
-          headPoint(a, v);
-          v.project(camera);
-          if (v.z > 1)                                          // behind the camera
-            continue;
-          var sx = rect.left + (v.x * 0.5 + 0.5) * rect.width;
-          var sy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
-          var dx = sx - clientX, dy = sy - clientY;
-          var d = dx * dx + dy * dy;
+          // an AI is hit-tested as a capsule too, and it HAS to be: objects below are, and both
+          // arms compete on one bestD, so a point-tested actor loses to any tall prop whose
+          // projected column its sprite overlaps. Measured on the preservator — an actor on its
+          // far-side neighbour has its feet inside the pod's projected segment, so hovering the
+          // body picked the pod and only the head still resolved the actor.
+          // FEET to HEAD POINT, not to the top of the quad: the far end is what projSeg leaves as
+          // the anchor, and headPoint is where the beam has always attached. the remaining half of
+          // the sprite is inside the hit radius anyway
+          var fy = WorldCtx.floorY(a.col, a.row);
+          var d = projSeg(a.x, a.z, fy, fy + Sprites.SIZE * 0.5, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
               bestD = d;
-              best = ai;
-              bestPx = sx;
-              bestPy = sy;
+              hit.ai = ai;
+              hit.obj = null;
+              hit.px = _pjx;
+              hit.py = _pjy;
             }
         }
-      if (best == null)
+      // objects compete in the SAME contest, so an AI standing in front of a prop wins its own tile.
+      // visible() is the gate the object marks already use: it drops decorations and doors, which
+      // are exactly the things nobody points at
+      for (o in game.area.getObjects())
+        {
+          // the SAME visibility expression the object draw loop uses, and it has to be copied
+          // whole: a free parasite senses vents and drains through walls, so gating the pick on LOS
+          // alone left objects painted on screen with their through-wall mark and no tooltip
+          var vis =
+            !los ||
+            game.playerArea.sees(o.x, o.y) ||
+            (game.player.state != _PlayerState.PLR_STATE_HOST && o.sensable());
+          if (o.entity == null ||
+              !o.visible() ||
+              !vis)
+            continue;
+          var a = actors.get(o.entity);
+          if (a == null ||
+              a.op < 0.3)
+            continue;
+          // an object is hit-tested against its whole VERTICAL EXTENT and not against one point on
+          // it. a point plus a fixed radius is fine for an AI (a billboard is about two radii tall)
+          // and wrong for a prop: a 3.6-unit organ stands most of a cell high, so a disc round its
+          // crown left the body and the cell it stands on dead, and the tooltip only appeared over
+          // the top of the cell. the top is the object's own height — a prop's model height (it has
+          // NO icon quad, see drawActor's iconOff), a sprite's full quad, and 0 for a ground decal,
+          // which is drawn flat on the floor and so collapses the segment back to a point
+          var m = render.world.ObjModels.modelFor(o.getModelKey());
+          var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
+          var fy = WorldCtx.floorY(a.col, a.row);
+          var d = projSeg(a.x, a.z, fy, fy + top, rect, clientX, clientY);
+          if (d < bestD &&
+              d <= rad * rad)
+            {
+              bestD = d;
+              hit.ai = null;
+              hit.obj = o;
+              hit.px = _pjx;
+              hit.py = _pjy;
+            }
+        }
+      if (hit.ai == null &&
+          hit.obj == null)
         return null;
-      return { ai: best, px: bestPx, py: bestPy };
+      return hit;
+    }
+
+// project a world VERTICAL segment to client px and return the cursor's SQUARED distance to it,
+// leaving the TOP end's px in _pjx/_pjy — the beam anchors up there wherever along the body the
+// cursor sat, which keeps the dot stable while the cursor moves down a tall prop. a degenerate
+// segment (a ground decal) falls out of the same arithmetic as a plain point test, no special case.
+// ONE x and ONE z rather than two world points, because every caller wants a segment standing
+// straight up out of a cell: that is four fewer args and, more to the point, it removes two
+// interchangeable coordinate triples that would mis-order without a compile error
+  function projSeg(x:Float, z:Float, yLo:Float, yHi:Float,
+      rect:Dynamic, clientX:Float, clientY:Float):Float
+    {
+      _pa.set(x, yLo, z);
+      var da = projDist(_pa, rect, clientX, clientY);
+      if (da >= 1e30)
+        return 1e30;
+      var fx = _pjx, fy = _pjy;
+      _pb.set(x, yHi, z);
+      var db = projDist(_pb, rect, clientX, clientY);
+      if (db >= 1e30)
+        return 1e30;
+      // _pjx/_pjy now hold the TOP end, which is what the caller wants as the anchor either way
+      var ex = _pjx - fx, ey = _pjy - fy;
+      var l2 = ex * ex + ey * ey;
+      if (l2 < 1e-6)
+        return db;
+      // the closest point on the segment, clamped to its ends so the region is a capsule and not an
+      // infinite band up and down the screen
+      var t = ((clientX - fx) * ex + (clientY - fy) * ey) / l2;
+      t = (t < 0 ? 0 : (t > 1 ? 1 : t));
+      var qx = fx + t * ex - clientX;
+      var qy = fy + t * ey - clientY;
+      return qx * qx + qy * qy;
+    }
+
+// project a world point to client px and return its SQUARED distance to the cursor, leaving the px
+// in _pjx/_pjy for the caller that wins. 1e30 for a point behind the camera, which no radius passes
+  function projDist(v:Vector3, rect:Dynamic, clientX:Float, clientY:Float):Float
+    {
+      v.project(camera);
+      if (v.z > 1)
+        return 1e30;
+      _pjx = rect.left + (v.x * 0.5 + 0.5) * rect.width;
+      _pjy = rect.top + (-v.y * 0.5 + 0.5) * rect.height;
+      var dx = _pjx - clientX, dy = _pjy - clientY;
+      return dx * dx + dy * dy;
     }
 
 // throw a burst of blood from a target cell, biased away from the attacker; drops arc and
@@ -887,6 +1005,20 @@ class Actors {
                 op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf };
           actors.set(e, a);
           return a;
+        }
+      // climbing over something the area draws but does not block (the wilderness guard rail): an
+      // arc laid over the ordinary slide, which is left to run underneath it untouched. read BEFORE
+      // the slide below, which is what advances a.col/a.row onto the new cell.
+      // gated on nothing else running, so it can never clobber a melee lunge or a leap onto a host —
+      // those are gameplay beats and this is scenery
+      if (WorldCtx.climbArc != null &&
+          a.fx == null &&
+          (a.col != e.mx ||
+            a.row != e.my))
+        {
+          var arc = WorldCtx.climbArc(a.col, a.row, e.mx, e.my);
+          if (arc > 0)
+            a.fx = new Climb(RenderConfig.BASE_MS, arc);
         }
       // position channel. a one-step diagonal move sharing a corner with a building (or a lamp
       // post) clips it; route it through the open shoulder as an L-path (double orthogonal move)

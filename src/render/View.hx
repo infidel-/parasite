@@ -208,6 +208,11 @@ class View {
     {
       if (area3d != null)
         area3d.refreshObjects();
+      // an object can block its own cell (a grown organ, a burning barrel), so this moved the
+      // walkability the tactical grid was built from — and the grid otherwise only rebuilds when
+      // the player's cell changes, which a player standing still growing an organ never does
+      if (tacticalGrid != null)
+        tacticalGrid.invalidate();
     }
 
 // is street-debug mode active? (the game suppresses movement input while it is)
@@ -326,6 +331,23 @@ class View {
       var sewerFx = new Group();
       sewerScene.add(sewerFx);
       new render.particles.MuzzleLights(sewerFx);
+      // the facility gets its OWN warm scene too, for a reason the tunnels' entry only half covers.
+      // it does have a moon, so the light COUNTS match the city's — what differs is that every lit
+      // surface out there carries the vision-mask patch, and the mask contributes a
+      // customProgramCacheKey. so a facility floor warmed as a city ground material warms a key the
+      // game never asks for. measured before adding this: 91 programs at boot, 101 after the first
+      // facility entry
+      var facModel = render.facility.FacilityModel.demo();
+      var facScene = render.facility.FacilityScene.build(renderer, game.config.vidLampLights).scene;
+      render.facility.FacilityGround.build(facScene, facModel);
+      render.facility.FacilityGeom.build(facScene, facModel);
+      // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not
+      // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
+      // area behind the demo model, so every leaf here is shut and stays that way
+      render.facility.FacilityDoors.build(facScene, facModel, null);
+      var facFx = new Group();
+      facScene.add(facFx);
+      new render.particles.MuzzleLights(facFx);
       // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
       // light-count variant), but it has to wait for its glb — see the compile chain below
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
@@ -439,10 +461,14 @@ class View {
               // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
               // which reuses the glb template's own shared material — the very object the real
               // build then patches (render.sewer.SewerProps)
-              var M = render.sewer.SewerMask;
+              var M = render.world.VisionMask;
               var objModels = render.world.ObjModels.MODELS;
               var wallProps = render.sewer.SewerStyle.PROP_MODELS;
-              var left = objModels.length + wallProps.length;
+              // the facility's park plants, which are the wilderness's own tree and bush glbs. same
+              // trap as the wall props and one more reason they cannot ride the city scene: their
+              // material is mask-patched, and the mask extends the program cache key
+              var green = render.facility.FacilityGround.GREEN;
+              var left = objModels.length + wallProps.length + green.length;
               var done = function()
                 {
                   left--;
@@ -468,11 +494,11 @@ class View {
                         HULL(C.color, C.hullW)).mesh;
                       M.patchMesh(s);
                       M.patchMesh(g);
-                      render.world.PropShader.patchMesh(s, m.anim);
-                      render.world.PropShader.patchMesh(g, m.anim);
-                      render.world.PropShader.patchMesh(h, m.anim);
-                      render.world.PropGlow.patchMesh(s, m.shine);
-                      render.world.PropGlow.patchMesh(g, m.shine);
+                      render.world.PropShader.patchMesh(s, m.anim, m.pulse, m.curl);
+                      render.world.PropShader.patchMesh(g, m.anim, m.pulse, m.curl);
+                      render.world.PropShader.patchMesh(h, m.anim, m.pulse, m.curl);
+                      render.world.PropGlow.patchMesh(s, m.shine, m.eyes);
+                      render.world.PropGlow.patchMesh(g, m.shine, m.eyes);
                       done();
                     });
                 }
@@ -487,10 +513,22 @@ class View {
                       done();
                     });
                 }
+              for (i in 0...green.length)
+                {
+                  var p = green[i];
+                  render.Models.get(p.path, function(_)
+                    {
+                      M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
+                      done();
+                    });
+                }
             });
         }).then(function(_)
         {
           return renderer.compileAsync(sewerScene, camera); // still bound to the linear target
+        }).then(function(_)
+        {
+          return renderer.compileAsync(facScene, camera); // ditto
         }).then(function(_)
         {
           renderer.setRenderTarget(null);
@@ -501,8 +539,9 @@ class View {
           // geometries here are shared static models / particle quads, and disposing them would break the
           // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
           // selectively dispose only the per-build World.build geometries (the safe ones) later.
-          // both scenes are held — the tunnels' materials are the sewer half of the cache
-          warmHold = [ s, sewerScene ];
+          // all three scenes are held — the tunnels' and the facility's materials are their own
+          // halves of the cache and three releases a program only on material.dispose()
+          warmHold = [ s, sewerScene, facScene ];
           if (renderer.info.programs != null)
             js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
         });
@@ -523,14 +562,49 @@ class View {
     buildFrom(new CityArea(game, c, -1), -1);
   }
 
+// the build key for one of the grid-built area kinds. an id is one area and one area is one kind,
+// but a key that COLLIDED would let a rebuild of another kind read as a warm re-show of this one —
+// so each kind takes its own residue class rather than a parity. it was 2 residues while there were
+// two such kinds and both were spent; a third needed the stride, not another offset
+  static inline function gridKey(id:Int, kind:Int):Int
+    {
+      return -(id * 4 + kind + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+    }
+
 // show the 3D sewer/habitat tunnels for an area, built from its saved tile grid (no seed — the
 // grid IS the persisted layout, so this works on every existing save)
   public function showSewer(area:game.AreaGame):Void
     {
-      var key = -(area.id + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+      var key = gridKey(area.id, 0);
       if ((running || warming) && shownKey == key)
         return;
       buildFrom(new render.sewer.SewerArea(game, render.sewer.SewerModel.fromArea(area)), key);
+    }
+
+// show the 3D facility compound for an area, built from its saved tile grid for the same reason the
+// tunnels are: game.FacilityAreaGenerator already wrote every wall, window, floor and door, and
+// that grid is what the pathfinder walks around
+  public function showFacility(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 2);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.facility.FacilityArea(game,
+        render.facility.FacilityModel.fromArea(area)), key);
+    }
+
+// show the 3D open wilderness for an area, built from its saved tile grid for the same reason the
+// tunnels are: game.AreaGenerator.generateWilderness already wrote where every tree and rock stands,
+// and that grid is what the pathfinder walks around
+  public function showWild(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 1);
+      if ((running || warming) && shownKey == key)
+        return;
+      // the terrain band FIRST: WildModel.fromArea reads it to turn tile IDs into models, and it is
+      // evaluated as the constructor's argument, so WildArea.build would be one area too late
+      render.wild.WildBand.use(game);
+      buildFrom(new render.wild.WildArea(game, render.wild.WildModel.fromArea(area)), key);
     }
 
 // (re)build the scene for an area kind and start the render loop
@@ -855,23 +929,32 @@ class View {
         render.choreo.Reactions.bindBodyFadeIn(choreo, e, id, ground);
     }
 
-// drive the AI-hover tooltip while inspecting (Ctrl held): pick the AI nearest the cursor and
-// anchor the DOM panel at its projected head px. runs every frame so the beam tracks the
-// follow-camera. the 2D AITooltip stands down while this view runs (see AITooltip.update)
+// drive the hover tooltip while inspecting (Ctrl held): pick the AI or object nearest the cursor
+// and anchor the DOM panel at its projected px. runs every frame so the beam tracks the
+// follow-camera. the 2D AreaTooltip stands down while this view runs (see AreaTooltip.update)
   function updateHoverTooltip():Void {
-    var tip = game.ui.hud.aiTooltip;
+    var tip = game.ui.hud.areaTooltip;
     // not inspecting (no Ctrl / window open / mouse off): make sure it's hidden
-    if (!game.ui.hud.isAIInspectMode()) {
+    if (!game.ui.hud.isInspectMode()) {
       tip.hide();
       return;
     }
     var rect:Dynamic = canvas.getBoundingClientRect();
-    var hit = actors.pickAI(svMouseX, svMouseY, rect);
+    var hit = actors.pickTarget(svMouseX, svMouseY, rect);
     if (hit == null) {
       tip.hide();
       return;
     }
-    tip.showBeamAt(hit.px, hit.py, hit.ai.id, tip.getTooltipText(hit.ai));
+    // the beam id keys BeamTooltip's re-animation and nothing else, so an object's is negated —
+    // AI and object ids come from separate counters and would otherwise collide (AreaTooltip.beamID)
+    var id = (hit.ai != null ? hit.ai.id : ui.AreaTooltip.beamID(hit.obj));
+    // still the same target: just move the anchor. the content build is NOT free (see trackAnchor)
+    // and showBeamAt would discard it, so it must not happen before this test
+    if (tip.trackAnchor(hit.px, hit.py, id))
+      return;
+    if (hit.ai != null)
+      tip.showBeamAt(hit.px, hit.py, id, tip.getTooltipText(hit.ai));
+    else tip.showBeamAt(hit.px, hit.py, id, tip.getObjectText(hit.obj));
   }
 
 // pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the
@@ -1102,6 +1185,7 @@ class View {
         outro: true,
         freeCam: false,
         camera: camera,
+        ui: game.ui.hud.isVisible(),
       });
       if (running && composer != null) {
         renderer.info.reset();
@@ -1119,11 +1203,18 @@ class View {
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it
     // straddles gets its overhanging arc buried and blinks. floating over the lower side reads
     // fine; sinking under the higher side does not. ease Y to soften the step.
+    //
+    // the corners are sampled by WORLD position, not by their grid cell. on the city's stepped floor
+    // those are the same answer, but on continuous relief a cell-snapped sample is worthless here:
+    // the ring's radius is 0.448 of a cell, so with the player anywhere near a cell centre all four
+    // corners land back in that same cell and the ring reads ONE flat height while the ground uphill
+    // of it has already risen by rr * slope. sampled at the corners themselves the max comes out at
+    // h + rr * (|dh/dx| + |dh/dz|), which is >= the disc's true peak of h + rr * |grad| — so it errs
+    // by floating, which is the side this is allowed to fail on
     var rr = CityConfig.CELL * 0.448;                       // ring outer radius
     function fY(ox:Float, oz:Float):Float
       {
-        var c = CityConfig.worldToCell(p.x + ox, p.z + oz);
-        return render.world.WorldCtx.floorY(c.col, c.row);
+        return render.world.WorldCtx.floorYAt(p.x + ox, p.z + oz);
       }
     var tgtY = Math.max(Math.max(fY(-rr, -rr), fY(rr, -rr)),
                         Math.max(fY(rr, rr), fY(-rr, rr))) + 0.06;
@@ -1134,6 +1225,16 @@ class View {
     else
       ringY += (tgtY - ringY) * (1 - Math.pow(1 - 0.4, dtMs / (1000 / 30)));
     ring.position.set(p.x, ringY, p.z);
+    // Shift+Space hides the HUD, and the world-anchored UI goes with it: the player marker, the
+    // move-path preview and the tactical grid are readouts drawn in the scene, not scenery. all
+    // three are re-asserted below from live state, so unhiding needs no restore path
+    var uiOn = game.ui.hud.isVisible();
+    ring.visible = uiOn;
+    if (!uiOn)
+      {
+        pathLine.clear();
+        tacticalGrid.hide();
+      }
     // fade buildings in front of the target: the live pick while aiming (wide corridor), else the
     // confirmed target so its occluders stay clear out of targeting mode too
     var aiming = game.ui.hud.state == HUD_TARGETING;
@@ -1145,7 +1246,8 @@ class View {
         tgtPos = new Vector3(w.x, p.y, w.z);
       }
     // keep the tactical grid centered on the player (rebuilds only when the cell changes)
-    if (tactical)
+    if (tactical &&
+        uiOn)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
     // the world tick for this area kind: occlusion fades, window switches, chunk culling and the
     // live lamp pool (see render.CityArea / render.SewerArea)
@@ -1160,6 +1262,7 @@ class View {
       outro: false,
       freeCam: freeing,
       camera: camera,
+      ui: uiOn,
     });
     // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame
     actors.setLamps(lampLights.active());
@@ -1169,11 +1272,14 @@ class View {
     // no build-time moment for the tunnel mask to catch them the way every other surface is caught.
     // without this the debris underfoot stayed at full brightness in a corridor nobody can see.
     // gated because Actors is rebuilt per area but the mask uniforms are not: a patched material left
-    // over above ground would sample the last tunnel's canvas. patch() marks its own hook and
-    // early-outs, so a landed group is a couple of reads
-    if (Std.isOfType(area3d, render.sewer.SewerArea))
+    // over in a CITY would sample the last masked area's canvas. patch() marks its own hook and
+    // early-outs, so a landed group is a couple of reads.
+    // both kinds that carry a mask are listed: the tunnels, and the wilderness since its large
+    // obstacles became the first open-area tiles that block sight
+    if (Std.isOfType(area3d, render.sewer.SewerArea) ||
+        Std.isOfType(area3d, render.wild.WildArea))
       for (m in actors.decalMaterials())
-        render.sewer.SewerMask.patch(m);
+        render.world.VisionMask.patch(m);
     shockwave.update();
     updateHoverTooltip();
     // re-evaluate the hovered cell + cursor each frame: the camera (and the player) move under a

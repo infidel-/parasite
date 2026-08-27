@@ -74,7 +74,7 @@ class AreaGame extends _SaveObject
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
   // bumped by every updateVisibility() call. the 3D layer polls rather than listens (see
-  // render.View's rAF loop), so this is what tells render.sewer.SewerMask that a sightline changed
+  // render.View's rAF loop), so this is what tells render.world.VisionMask that a sightline changed
   // without the player moving - opening a door is the case that needs it. transient, never saved
   public var visRev: Int = 0;
 
@@ -223,6 +223,7 @@ class AreaGame extends _SaveObject
 
       // reinit spawn points
       initSpawnPoints();
+      repairGeneratorInfo();
 
       // enter habitat with active team
       if (isHabitat && game.group.team != null)
@@ -353,6 +354,7 @@ class AreaGame extends _SaveObject
 
       // reinit spawn points
       initSpawnPoints();
+      repairGeneratorInfo();
 
       // update area view info
       game.scene.area.update();
@@ -361,6 +363,17 @@ class AreaGame extends _SaveObject
       updateVisibility();
 
       game.scene.area.draw();
+    }
+
+// a facility saved before game.FacilityAreaGenerator recorded every structure's rooms carries a
+// record describing its side building alone. the cell grid is persisted verbatim and never
+// regenerated, so fixing the generator does not reach an area anyone has already visited — this
+// re-derives the rects from that grid instead. a no-op on a complete record
+  public function repairGeneratorInfo()
+    {
+      if (info.id != AREA_FACILITY)
+        return;
+      FacilityAreaGenerator.repairRooms(this);
     }
 
 // init spawn points list after generation or loading
@@ -2464,6 +2477,14 @@ class Test {
         {
           case 'city': render.RenderConfig.CAMERA;
           case 'sewers', 'habitat': render.RenderConfig.CAMERA_SEWER;
+          // the wilderness renders in 3D too and was missing from this list, so it took the 2D canvas
+          // rect — the exact dilution the header describes, on the largest grid in the game. it has
+          // been latent rather than live: AREA_GROUND declares commonAI 0, so the turn spawner never
+          // runs out there and nothing reads the rect yet. it will the moment that number moves
+          case 'wilderness': render.RenderConfig.CAMERA_WILD;
+          // unlike the wilderness above, this one is LIVE the day it lands: a facility declares
+          // commonAI 5, so the turn spawner runs here and reads the rect every turn
+          case 'facility': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)
@@ -2618,9 +2639,17 @@ class Test {
     }
 
 // get path from x1, y1 -> x2, y2
+// the START is deliberately NOT required to be walkable, only the destination. an actor can legally
+// stand on a tile it could not walk onto: a habitat organ grown under the parasite, an object that
+// became solid while somebody stood there, a save loaded after such a change (recalcAllTiles
+// re-derives walkability from the objects, under whoever is standing on them). while that check was
+// here every one of those left the actor unable to path ANYWHERE — mouse click-to-move dead for the
+// player, and ai.AI.moveToGoal / DefaultLogic / CommandLogic / CustosLogic / RivalBaseOrganAttackLogic
+// all silently pathless for an AI. walking OFF such a tile is fine and always was; aPath.Node tests
+// each NEIGHBOUR it expands, so the start cell's own state never mattered to the search
   public function getPath(x1: Int, y1: Int, x2: Int, y2: Int): Array<aPath.Node>
     {
-      if (!isWalkable(x1, y1) || !isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
+      if (!isWalkable(x2, y2) || (x1 == x2 && y1 == y2))
         return null;
 
       try {

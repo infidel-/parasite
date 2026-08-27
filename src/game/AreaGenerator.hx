@@ -3,6 +3,7 @@
 package game;
 
 import const.WorldConst;
+import map.Terrain;
 import Const;
 import objects.*;
 import game.AreaGame;
@@ -25,6 +26,12 @@ class AreaGenerator
   public static var DIR_LEFT = 4;
   public static var DIR_RIGHT = 6;
   public static var DIR_DOWN = 2;
+
+  // wilderness highway width, in cells. an actor billboard is 3 world units against a 4-unit cell, so
+  // a cell is roughly 2.4m and three of them is a two-lane rural highway. two reads as a farm track,
+  // four as a motorway the region map is not drawing. read by render.wild.WildRoad through the
+  // recovered rect rather than directly, so this number lives in one place
+  public static inline var ROAD_W = 3;
 
   public function new(g: Game)
     {
@@ -239,21 +246,190 @@ class AreaGenerator
         useHabitatExits: true,
       };
     }
+// what grows on a wilderness area, per terrain band. the region map has painted three bands since
+// map.Terrain landed and until now they only named areas, so a forest tile and a mountain tile
+// generated the identical scatter. the render side reads the same band for its ground, relief and
+// models (render.wild.WildBand), but DENSITY has to be decided here: walkability follows the tiles, so
+// a renderer that simply drew fewer trees would leave blocked cells looking like open ground.
+//
+// the FOREST row is held down by the CAMERA and not by the fiction: there is no occlusion fade out
+// here (render.Occlusion buckets buildings and a wilderness area has none), so every canopy between
+// the camera and the player hides the player. it went in at 0.12 / 60% trees and that kept the actor
+// under a crown; 0.10 / 50% still reads as a wood against the plains' 0.025, and takes ~25% of the
+// triangles off with it
+  static function wildMix(band: _TerrainBand): _WildMix
+    {
+      if (band == TERRAIN_FOREST)
+        return {
+          density: 0.10,
+          tree: 50,
+          bush: 35,
+          big: Const.TILE_TREE_CLUSTER,
+          bigCount: 7,
+        };
+      if (band == TERRAIN_MOUNTAIN)
+        return {
+          density: 0.07,
+          tree: 15,
+          bush: 25,
+          big: Const.TILE_ROCK_LARGE,
+          bigCount: 8,
+        };
+      return {
+        density: 0.025,
+        tree: 20,
+        bush: 55,
+        big: -1,
+        bigCount: 0,
+      };
+    }
+
+// lay the region map's highway across the area, where one crosses it at all.
+//
+// the axis and the offset are NOT rolled here — map.Highway reads them off the region's persisted
+// mapSeed, the same way the terrain band is read, so the corridor lands where the region map already
+// paints it and leaves each area exactly where it enters the next. width is the only local decision.
+//
+// through area.regionID rather than game.region, like the band above it: an area can be generated
+// remotely while the player is standing somewhere else entirely
+  static function placeHighway(game: Game, area: AreaGame)
+    {
+      var road = map.Highway.atArea(game.world.get(area.regionID), area.x, area.y);
+      if (road == null)
+        return;
+      // the corridor spans the whole grid on its axis; the offset is a fraction ACROSS the other one
+      var span = (road.horizontal ? area.height : area.width);
+      var mid = Std.int(road.offset * span);
+      var from = mid - Std.int(ROAD_W / 2);
+      for (i in 0...ROAD_W)
+        {
+          var line = from + i;
+          if (line < 0 ||
+              line >= span)
+            continue;
+          if (road.horizontal)
+            for (x in 0...area.width)
+              area.setCellType(x, line, Const.TILE_ROAD);
+          else
+            for (y in 0...area.height)
+              area.setCellType(line, y, Const.TILE_ROAD);
+        }
+    }
+
+// stamp the band's large obstacles onto clear ground. these are the only cells the wilderness writes
+// that block SIGHT as well as movement, so each one is real cover rather than another tree to walk
+// around: a 2x2 boulder in the mountains, a 2-3 x 2-3 tree thicket in the forest, nothing on the
+// plains. run BEFORE the scatter, while the grid is still uniform ground and nothing can fail to fit
+  static function placeBigObstacles(area: AreaGame, mix: _WildMix, depth: Float)
+    {
+      if (mix.big < 0)
+        return;
+      var count = Std.int(mix.bigCount * (0.8 + 0.4 * depth));
+      for (i in 0...count)
+        {
+          // the rock is its own model and is exactly two cells; a thicket is grown cell by cell out of
+          // the band's own trees and bushes, so it can be any size
+          var w = (mix.big == Const.TILE_ROCK_LARGE ? 2 : 2 + Std.random(2));
+          var h = (mix.big == Const.TILE_ROCK_LARGE ? 2 : 2 + Std.random(2));
+          for (t in 0...20)
+            {
+              var x = 2 + Std.random(area.width - w - 4);
+              var y = 2 + Std.random(area.height - h - 4);
+              if (!isBigObstacleClear(area, x, y, w, h, mix.big))
+                continue;
+              for (dy in 0...h)
+                for (dx in 0...w)
+                  area.setCellType(x + dx, y + dy, mix.big);
+              break;
+            }
+        }
+    }
+
+// is this rect, plus a one-cell margin, free of other large obstacles? the MARGIN is load-bearing and
+// not politeness: render.wild.WildModel recovers each 2x2 rock's rect by looking for the corner with
+// no rock left of it and none above it, and two rocks allowed to touch would read as one L-shaped
+// blob with the model landing on the wrong cell
+  static function isBigObstacleClear(area: AreaGame, x: Int, y: Int, w: Int,
+      h: Int, tile: Int): Bool
+    {
+      for (dy in -1...h + 1)
+        for (dx in -1...w + 1)
+          {
+            var t = area.getCellType(x + dx, y + dy);
+            // the ROAD is tested over the same margin as another obstacle, and the margin earns its
+            // keep twice here: it keeps a boulder off the asphalt, and it leaves the shoulder cell
+            // free for the guard rail render.wild.WildProps stands there
+            if (t == tile ||
+                t == Const.TILE_ROAD)
+              return false;
+          }
+      return true;
+    }
+
+// is this cell on the highway or in the two-cell margin beside it?
+//
+// that margin is the VERGE, and the number is not a taste call: the dirt shoulder reaches
+// WildStyle.VERGE_HALF = 2.75 cells from the centreline, which is 1.25 cells past the asphalt, and the
+// GUARD RAIL stands on it at half + WildStyle.RAIL_OFF = 2.4. so a scatter tile inside this ring is a
+// tree standing on a graded shoulder between the barrier and the road, where nothing can reach it and
+// its canopy (4.8-6.7 world units across, over a 4-unit cell) hangs out over the traffic lane.
+//
+// it went in at ONE cell, sized off the rail alone, and that was already half a cell short of the verge
+// the render layer now lays — a dilation of 1 keeps scatter to 2.5 cells from the centreline against a
+// shoulder that ends at 2.75. isBigObstacleClear applies whatever this returns, which is why no boulder
+// or thicket was ever caught doing it and only the single-cell scatter was
+  static function nearRoad(area: AreaGame, x: Int, y: Int): Bool
+    {
+      for (dy in -2...3)
+        for (dx in -2...3)
+          if (area.getCellType(x + dx, y + dy) == Const.TILE_ROAD)
+            return true;
+      return false;
+    }
+
 // generate rocks, trees, etc
   static function generateWilderness(game: Game, area: AreaGame, info: AreaInfo)
     {
-      var numStuff = Std.int(area.width * area.height / 20);
+      // through regionID rather than game.region: an area can be generated remotely (an event
+      // spawning an object in it) while the player is standing somewhere else entirely
+      var seed = game.world.get(area.regionID).mapSeed;
+      var mix = wildMix(Terrain.bandAtArea(seed, area.x, area.y));
+      // scaled by how deep into its band the area sits, so a wood on the plains edge is thinner than
+      // one in the middle of the forest and neither snaps at the threshold
+      var depth = Terrain.depthAt(seed, area.x, area.y);
+      var numStuff = Std.int(area.width * area.height * mix.density *
+        (0.8 + 0.4 * depth));
+      // the highway goes down before anything else: it is the only feature out here whose position is
+      // dictated from OUTSIDE the area, so everything below has to fit around it rather than the
+      // other way round
+      placeHighway(game, area);
+      // then the large obstacles, onto a grid that is still uniform ground apart from the road, so
+      // none of them can fail to find room
+      placeBigObstacles(area, mix, depth);
       for (i in 0...numStuff)
         {
           var x = Std.random(area.width);
           var y = Std.random(area.height);
 
+          // a scatter tile dropped into a large obstacle would punch a hole in it, and a rect with a
+          // hole in it stops being a rect. plains passes `big` -1, which an in-bounds getCellType can
+          // never return, so this test simply never fires there. the road is the same argument — a
+          // tree growing out of the asphalt, and a corridor the render layer can no longer recover —
+          // and it takes the guard rail's margin with it (see nearRoad)
+          var cur = area.getCellType(x, y);
+          if (cur == mix.big ||
+              nearRoad(area, x, y))
+            continue;
+
+          // one roll across the three, so the percentages mean what they say. the tree tile keeps its
+          // 1-of-4 variant: those four IDs are what the 3D area maps onto four models
+          var roll = Std.random(100);
           var t = Const.TILE_BUSH;
-          if (Std.random(100) < 30)
-            t = Const.TILE_ROCK;
-          if (Std.random(100) < 30)
+          if (roll < mix.tree)
             t = Const.TILE_TREE1 +
               Std.random(Const.TILE_BUSH - Const.TILE_TREE1);
+          else if (roll >= mix.tree + mix.bush)
+            t = Const.TILE_ROCK;
 
           area.setCellType(x, y, t);
         }
@@ -612,4 +788,19 @@ typedef _Spot = {
   y: Int,
   dir: Int,
   dir90: Int,
+}
+
+// one terrain band's wilderness scatter (AreaGenerator.wildMix)
+typedef _WildMix = {
+  // share of the area's cells that get a prop tile, before the band-depth scale
+  density: Float,
+  // percent of those cells that take a tree
+  tree: Int,
+  // percent that take a bush; whatever is left over takes a rock
+  bush: Int,
+  // the band's LARGE obstacle tile, or -1 where it has none. these are the only cells the wilderness
+  // writes that block sight as well as movement
+  big: Int,
+  // how many of them to place, before the same band-depth scale the density takes
+  bigCount: Int,
 }

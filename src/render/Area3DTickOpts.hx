@@ -26,4 +26,6 @@ typedef Area3DTickOpts = {
   freeCam:Bool,
   // the live camera, for per-frame instanced-prop frustum culling
   camera:PerspectiveCamera,
+  // HUD up (Shift+Space hides it): the props' tactical outline shells are UI and go with it
+  ui:Bool,
 };

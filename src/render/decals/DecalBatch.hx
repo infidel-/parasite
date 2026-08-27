@@ -172,7 +172,7 @@ class DecalBatch
 
 // the batched materials, for a caller that has to patch them. these groups are built LAZILY, on the
 // first paint that needs one, so there is no build-time moment to catch them — the sewer vision mask
-// (render.sewer.SewerMask) folds itself in from the render loop instead
+// (render.world.VisionMask) folds itself in from the render loop instead
   public function materials():Array<Dynamic>
     {
       return mats;

@@ -52,6 +52,18 @@ package three;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
 }
 
+// a 4-component vector. here for UNIFORM ARRAYS more than for maths: three binds an array of these
+// to a GLSL `vec4 name[ N ]` (WebGLUniforms.setValueV4a), which is how a shader patch hands the GPU a
+// per-item table without an attribute — see render.world.PropGlow's eye discs
+@:native("THREE.Vector4") extern class Vector4 {
+  public function new(?x:Float, ?y:Float, ?z:Float, ?w:Float);
+  public var x:Float;
+  public var y:Float;
+  public var z:Float;
+  public var w:Float;
+  public function set(x:Float, y:Float, z:Float, w:Float):Vector4;
+}
+
 @:native("THREE.Euler") extern class Euler {
   public function new(?x:Float, ?y:Float, ?z:Float, ?order:String);
   public var x:Float;
@@ -291,6 +303,17 @@ typedef RendererInfo = {
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
   public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
+  // moves the material to the renderer's transparent queue so surviving alpha BLENDS instead of being
+  // a hard cut. settable after construction on purpose: render.world.VisionMask.patch chooses which
+  // mask branch to compile from this flag, so a material that wants the opaque branch AND a blended
+  // edge (render.wild.WildRoad) has to patch first and set this second
+  public var transparent:Bool;
+  // blend level once `transparent` is on. driven per frame by render.facility.FacilityArea, which
+  // fades a structure's roof and its south-facing wall faces as the player walks inside
+  public var opacity:Float;
+  // whether a drawn fragment writes depth. it has to follow `opacity` down: a faded surface that
+  // still wrote depth would reject everything behind it however faint it drew
+  public var depthWrite:Bool;
   public var userData:Dynamic;
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {

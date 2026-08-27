@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Models;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 
 // 3D clutter scattered against the tunnel walls — the first CONVEX geometry underground. everything
 // else down here is the shell itself (a concave box: a corridor cannot block its own light) or a
@@ -63,17 +64,17 @@ class SewerProps
           // the vision mask, once the glb is actually here: instanced() fills `prop` from its own
           // queued Models.get callback, and this one is queued behind it, so the mesh is in place
           // whether the template was already cached or still loading
-          Models.get(models[i].path, function(_) SewerMask.patchMesh(prop.mesh));
+          Models.get(models[i].path, function(_) VisionMask.patchMesh(prop.mesh));
         }
     }
 
 // the scatter itself: one placement list per PROP_MODELS entry. split out of build so a layout can
 // be read without a scene — parasiteHx['render.sewer.SewerProps'].places(SewerModel.demo())
-  public static function places(m:Sewer):Array<Array<{ x:Float, z:Float, yaw:Float }>>
+  public static function places(m:Sewer):Array<Array<render.Models.PropPlace>>
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var models = SewerStyle.PROP_MODELS;
-      var places:Array<Array<{ x:Float, z:Float, yaw:Float }>> = [for (_ in models) []];
+      var places:Array<Array<render.Models.PropPlace>> = [for (_ in models) []];
       // the two decks the model pick is dealt from, indexed 0 = flat run of wall, 1 = corner
       var deck:Array<Array<Int>> = [[], []];
       for (brow in 0...Std.int((m.h + 1) / 2))

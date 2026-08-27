@@ -592,8 +592,8 @@ class InfoHud
 
       if (hud.regionTooltip.visible)
         hud.regionTooltip.updatePosition();
-      if (hud.aiTooltip.visible)
-        hud.aiTooltip.updatePosition();
+      if (hud.areaTooltip.visible)
+        hud.areaTooltip.updatePosition();
     }
 
 // hover cost preview: hatch the segment a costed action would spend on its bar.

@@ -187,9 +187,9 @@ class SceneSetup {
     // but in its own instanced mesh with the emissive stripped, or the bulb keeps glowing and blooming
     var brokenPct = style != null ? style.lampBrokenRatio * 1000 : 0;
     var flickerPct = style != null ? style.lampFlickerRatio * 1000 : 0;
-    var placements:Array<{ x:Float, z:Float, yaw:Float }> = [];
-    var dead:Array<{ x:Float, z:Float, yaw:Float }> = [];
-    var flickPlace:Array<{ x:Float, z:Float, yaw:Float }> = []; // posts of the flickering lamps — in BOTH batches, see below
+    var placements:Array<Models.PropPlace> = [];
+    var dead:Array<Models.PropPlace> = [];
+    var flickPlace:Array<Models.PropPlace> = []; // posts of the flickering lamps — in BOTH batches, see below
     // cones are split by fate: the steady ones are built once and never touched, the flickering ones
     // keep their phases so LightCone.pulse can drop a cone whose bulb is in its dark stretch
     var bulbs:Array<{ x:Float, z:Float }> = [];

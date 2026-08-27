@@ -7,6 +7,7 @@ import render.Textures;
 import render.LightCone.ConeSet;
 import render.particles.LampPost;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 
 // weak bracketed lamps along the tunnel walls — the lighting BETWEEN the junctions. SewerModel only
 // puts a lamp on a 3x3 corridor corner or intersection (plus one per exit), so a whole run of
@@ -202,7 +203,7 @@ class SewerLamps
         return null;
       var inst = new InstancedMesh(
         new PlaneGeometry(SewerStyle.WALL_LAMP_W * mul, SewerStyle.WALL_LAMP_H * mul),
-        SewerMask.patch(mat), mats.length);
+        VisionMask.patch(mat), mats.length);
       for (i in 0...mats.length)
         inst.setMatrixAt(i, mats[i]);
       untyped inst.instanceMatrix.needsUpdate = true;

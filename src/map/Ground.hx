@@ -35,8 +35,8 @@ class Ground extends Core
       for (yy in 0...fullCellHeight)
         for (xx in 0...fullCellWidth)
           {
-            var srcX = clampInt(xx - HALO_CELLS, 0, regionWidth - 1);
-            var srcY = clampInt(yy - HALO_CELLS, 0, regionHeight - 1);
+            var srcX = clampInt(xx - Core.HALO_CELLS, 0, regionWidth - 1);
+            var srcY = clampInt(yy - Core.HALO_CELLS, 0, regionHeight - 1);
             values[xx][yy] = getAreaDensityValue(cells[srcX][srcY].typeID);
           }
 
@@ -58,8 +58,8 @@ class Ground extends Core
           var col = [];
           for (yy in 0...fullCellHeight)
             {
-              var srcX = clampInt(xx - HALO_CELLS, 0, regionWidth - 1);
-              var srcY = clampInt(yy - HALO_CELLS, 0, regionHeight - 1);
+              var srcX = clampInt(xx - Core.HALO_CELLS, 0, regionWidth - 1);
+              var srcY = clampInt(yy - Core.HALO_CELLS, 0, regionHeight - 1);
               col.push(cells[srcX][srcY].typeID);
             }
           values.push(col);

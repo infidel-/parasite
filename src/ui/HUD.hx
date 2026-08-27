@@ -22,7 +22,7 @@ class HUD
   public var atmo: DivElement;
   // tooltips (shared by mouse glue and the stats block)
   public var regionTooltip: RegionTooltip;
-  public var aiTooltip: AITooltip;
+  public var areaTooltip: AreaTooltip;
   // debug overlay div — created and updated only when Const.isDebug is true
   var debugInfo: DivElement;
   var debugBody: DivElement;  // the rewritten-every-update readout (the panel header is persistent)
@@ -99,7 +99,7 @@ class HUD
       // initialize region tooltip
       regionTooltip = new RegionTooltip(game, this);
       // initialize area AI tooltip
-      aiTooltip = new AITooltip(game, this);
+      areaTooltip = new AreaTooltip(game, this);
 
       // per-block sub-classes
       console = new ConsoleHud(game, this);
@@ -195,13 +195,13 @@ class HUD
         {
           resetRegionTooltipHover();
           regionTooltip.hide();
-          updateAITooltip();
+          updateAreaTooltip();
         }
       else
         {
           resetRegionTooltipHover();
           regionTooltip.hide();
-          aiTooltip.hide();
+          areaTooltip.hide();
         }
 
       lastMouseX = e.clientX;
@@ -214,7 +214,7 @@ public function onMouseLeave()
   {
     resetRegionTooltipHover();
     regionTooltip.hide();
-    aiTooltip.hide();
+    areaTooltip.hide();
   }
 
 // reset cached hovered region tile (and cancel any pending settle)
@@ -308,8 +308,8 @@ public function onMouseLeave()
         resetRegionTooltipHover();
     }
 
-// returns true if area AI inspect mode is active
-  public function isAIInspectMode(): Bool
+// returns true if area inspect mode is active (Ctrl held: hover an AI or an object for a tooltip)
+  public function isInspectMode(): Bool
     {
       return (
         game.location == LOCATION_AREA &&
@@ -321,12 +321,12 @@ public function onMouseLeave()
       );
     }
 
-// updates area AI tooltip state
-  public function updateAITooltip()
+// updates area inspect tooltip state
+  public function updateAreaTooltip()
     {
-      if (isAIInspectMode())
-        aiTooltip.update();
-      else aiTooltip.hide();
+      if (isInspectMode())
+        areaTooltip.update();
+      else areaTooltip.hide();
     }
 
 // show hide HUD
@@ -360,7 +360,7 @@ public function onMouseLeave()
   public function hide()
     {
       regionTooltip.hide();
-      aiTooltip.hide();
+      areaTooltip.hide();
       container.style.visibility = 'hidden';
       navbar.hide();
     }
@@ -392,7 +392,7 @@ public function onMouseLeave()
           regionTooltip.hide();
         }
       if (game.location != LOCATION_AREA)
-        aiTooltip.hide();
+        areaTooltip.hide();
       actions.updateList();
       // NOTE: before info because info uses its height
       actions.updateActions();
@@ -403,7 +403,7 @@ public function onMouseLeave()
       topbar.update();
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
-      updateAITooltip();
+      updateAreaTooltip();
       if (Const.isDebug)
         updateDebugInfo();
     }

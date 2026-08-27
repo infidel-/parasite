@@ -8,1991 +8,1622 @@ grepping the change text out of that file's verdict table.
 Entries record settled outcomes only. Every new entry gets one row in `3d-render.md`. When this file
 reaches ~2600 lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 
-Older entries live in [`3d-changes-2026-08.md`](3d-changes-2026-08.md) (rolled at 2664 lines).
-
-## Landed
-
-### Sewer ledge rim darkening — TRIED, REJECTED, REMOVED
-The wall pass ended on a measurement: at `WALL_H 3.0` and the near-top-down sewer camera, wall FACES
-are 0.67% of the 3D view against ledge TOPS at 14.68%. So the next dressing goes on the horizontal
-surfaces. New `render.sewer.SewerGround` is the horizontal twin of `SewerDetail` (which owns the wall
-face), called from `SewerGeom.build` beside it so `View.warmup` — which runs `SewerModel.demo()`
-through that same function — pre-warms its materials with no second wiring point.
-
-**The problem it solves:** from that pitch the ledge plateau and the floor read as two flat planes
-3 units apart with almost no wall face visible between them, so the tunnel has a weak silhouette. A
-band of grime/occlusion along the inner rim of every ledge is what separates them.
-
-**It is the SAME pass as `SewerDetail.shadows()`'s strips with the cell test inverted** — that one
-walks FLOOR cells and lays a band toward each solid neighbour, this one walks SOLID cells and lays it
-toward each floor neighbour. The yaw table is **identical**, not mirrored: in both cases the
-gradient's opaque end points at the neighbour that triggered the strip, so the same four
-`(yaw, position)` rows apply. Planning notes that said "shift the yaws 180 deg" were wrong.
-
-**No corner radials.** `SewerDetail` needs them for the nook two perpendicular bands cannot reach; a
-ledge's exposed corners are CONVEX, so there is no nook — the two bands already meet there. And no
-art at all: `Textures.makeShadowGradient()` draws the ramp on a canvas at runtime.
-
-**Measured, habitat:** 104 rim instances at `y = 3.02` (`WALL_H + RIM_Y`), scale `4 x 1`
-(`CELL x RIM_W`), opacity 0.45, one `InstancedMesh` — **38 -> 39 draw calls**. 104 rims against 104
-wall faces is the expected identity: every face's solid side has exactly one mirror rim.
-
-**Coverage is the number that matters here.** A rim-on/off PNG diff of the 3D-view crop changed
-**5.83% of the view** (mean luma drop 7.7, max 28.7). The entire four-image wall-decal pass changed
-**0.12%** of the same crop. Roughly 50x the reach for a fifth of the draw calls — which is the whole
-argument for dressing the tops, quantified.
-
-**Trap avoided:** the instanced-mesh lookup by `material.opacity` needs a capture window longer than
-one frame. Backgrounded, the Electron window throttles to ~1fps, so a 500ms
-`Object3D.prototype.onBeforeRender` capture returns an empty set and reads as "the mesh is not in the
-scene". 2500ms found it. Same trap as the GPU-timing one: a backgrounded window lies about everything
-time-based.
-
-**Then it was cut, and the coverage number is exactly why the measurement did not save it.** In
-motion the band shimmers, and zoomed in it plainly reads wrong. The cause is structural, not a
-tuning miss: **nothing STANDS above a wall cap.** A roof gets this band because a parapet rises over
-it; here the cap just ends, so the darkening is an unmotivated stripe floating over a wall face that
-is *brighter* than the stripe — and its hard opaque end lands exactly on the ledge silhouette, where
-subpixel disagreement between the quad edge and the geometry edge flickers as the camera moves.
-Inset it and you get a bright rim line instead; soften it and it stops separating anything.
-
-**Standing lesson: 5.83% of the frame changed is a reach number, not a quality one.** It says the
-effect is visible everywhere, which is exactly what makes an unmotivated effect worse rather than
-better. `SewerStyle` keeps a comment where the constants were so this is not re-derived.
-
-### Sewer ledge-top clutter + floor decals — `SewerGround.scatter`
-8 top-down images (4 on the wall caps: pipe run, valve wheel, rubble, moss; 4 on the walkway: two
-puddles, a drain grate, a spill stain), hash-placed per cell and merged per image — **one draw call
-per image whatever the level size**, because with no `Occlusion` pass underground nothing needs to
-fade individually. `RoofDetails` instances per building for exactly that reason and could not be
-reused. Habitat: **39 -> 47 calls**, 2.2k tris.
-
-One `scatter()` drives both surfaces off `SewerScatterOpts`; `solid:true` walks wall-cap cells and
-also selects the hash multipliers, and gates the two floor-only rules (no decals in the sludge
-channel, halved rate in generator rooms — the 8-vs-20 split `sewer/Debris` already uses). Every quad
-is clamped inside its own cell, which is what stops a prop overhanging the drop — much of a tunnel
-wall is one cell wide.
-
-**Organic vs manufactured is the axis that matters for variety, not per-image tuning.** A puddle, a
-moss patch, a rubble pile take a FREE rotation and independent per-axis scale jitter (0.70-1.35),
-because no two are alike. A pipe, a valve, a drain grate are never turned at all and jitter uniformly
-(0.85-1.15): they came out of a mould, and a grate sitting at 23 degrees reads as a mistake rather
-than as variety. Free rotation is what forces the fit test to use the ROTATED footprint
-(`|w·cosθ| + |d·sinθ|`), shrinking both axes by one factor so the shape survives the clamp.
-
-**The one real trap: DARK art on a lighter surface reads as a HOLE, and opacity is the wrong cure.**
-gpt paints a rusted pipe near-black. Measured in texture space against the surface each lands on:
-pipe **0.46x** the ledge cap, valve 0.48x, grate 0.42x the walkway, puddle 0.37x. Those byte ratios
-understate it — three decodes sRGB to LINEAR before the Lambert multiply, so the valve is **0.19x**
-the cap *in light*, and it rendered at luma 6.7 against 35.7. (That is 0.188, against the predicted
-0.189: the renderer was exactly right, the art was 5x too dark.) Same trap the sludge tile hit.
-
-Dropping material `opacity` fixes the VALUE and ruins the object — a see-through cast-iron valve.
-So it splits by what the thing is: translucent art (both puddles 0.5/0.6, the stain 0.8) keeps a low
-opacity, because shallow water really is see-through and letting the walkway read through it is what
-stops it looking like a pit. Solid props stay at 1.0 and get their source brightened instead, by a
-new per-label `"lift"` gamma in `textures.json` that `make tex` bakes (`out = (v/255)^g`, g<1 lifts
-darks and leaves the top end alone). `lift: 0.75` moved pipe 0.46 -> **0.68x**, valve 0.48 -> 0.70x,
-grate 0.42 -> 0.61x — matching `moss`, which at 0.70x always read correctly. In-render the ledge
-band's dark tail went **min 3.0 -> 15.0, p1 7.7 -> 20.3** with its median untouched at 35: the holes
-filled in, the cap did not change. Alpha is untouched by the lift, so hand-cut cut-outs survive with
-no re-cutting. `alphaTest` is scaled by each type's opacity — three cuts on `opacity * texel alpha`,
-so an unscaled threshold would eat the edges of exactly the types needing the softest ones.
-
-**Rates by eye after measuring, not before:** 15%/12% left the caps visibly bare in the habitat, so
-22% (ledge) / 16% (floor). A/B'd in-session: ledge props alone change 0.33% of the full frame in the
-default pose, floor decals 0.52% of the 3D crop, both far above the wall decals' 0.12%.
-
-### The footprint hash degenerates on row 0 and column 0 — `SewerModel.mix`
-Reported as "top decals in 6 tiles one after another, looks too fake", and it was worse than that:
-**eight in a row**, at `(0,0)` through `(7,0)`.
-
-`hh = (col * A) ^ (row * B)` has no avalanche at all, and on the grid's first row the second term is
-exactly **zero**, so it collapses to a pure arithmetic sequence. At row 0 the ledge hash is `col *
-40503`, and `40503 % 100 == 3`, so `hh % 100 == (col * 3) % 100` and a "22% of cells" test selects
-**cols 0-7, 34-40, 67-73, 100-107** — runs of 8 and 7, repeating every 33 cells. Column 0 collapses
-the same way (`92821 % 100 == 21`) into an even ladder at rows 0, 1, 5, 10, 15, 20, 24... The live
-scene dump matched the prediction cell for cell. Row 0 and column 0 are the always-solid **area
-border**, i.e. the ledge band across the top of the screen, so the worst case sat where the player
-looks. Both sibling passes had it too: floor decals combed row 0 at cols 0, 6, 12, 18, 24, 30 (step
-17), `SewerDetail`'s wall decals at 0, 5, 10, 15, 24, 29 (step 21). `sewer/Debris` is the one that
-got it right — it seeds `CityGen.mulberry32(h)` rather than slicing raw bits.
-
-**Grid-wide statistics actively hid this.** Over 120x120 the raw hash gives a 22.2% rate against a
-22% target and a run histogram nearly identical to a true RNG. The pathology lives only on the lines
-where one term vanishes, and averaging over 14,400 cells buries it. Aggregate randomness tests cannot
-see axis-aligned structure; look down the axes.
-
-Two fixes, both needed, both measured over the same 120x120 grid:
-
-| | worst run |
-|---|---|
-| raw hash | **8** (rows 0 and 41) |
-| `SewerModel.mix` — xorshift32 over the same hash | 7 |
-| + one prop per 2x2 BLOCK instead of a per-cell coin flip | **2** |
-
-`mix` is xorshift32: shifts and xors only, so it is exact in Haxe/JS `Int` with no `Math.imul`
-(`CityGen` needs `js.Syntax` for mulberry32's multiplies), plus a golden-ratio xor to kill the
-`h == 0` fixed point that made cell (0,0) always place. It fixes the collapse — row 0 becomes
-1, 3, 5, 12, 16, 18, 23, 31 — but an independent coin flip at 22% still deals runs of 5-7 somewhere,
-and a run of 5 looks as deliberate as a run of 8. So placement also moved to **one prop per 2x2
-block**, `RoofDetails`' sector idea in miniature, which caps a run at two by construction. The gate
-is `pct * (eligible cells in this block)`, so a one-cell-wide wall — most of a tunnel — comes out at
-the same per-cell density as an open plateau instead of twice it. Live after: worst row run **2** on
-the ledge, **1** on the floor.
-
-### Review fixes over the 3D-tunnel branch
-Thirteen findings from a review of the whole uncommitted branch. The ones that touch the render:
-
-**`DoubleSide` on the floor and the ledge was a side effect of not casting shadows.**
-`SewerGeom.add` wrote `side: casts ? FrontSide : DoubleSide` — two unrelated decisions on one flag.
-Both horizontals are wound so `computeVertexNormals` gives +Y and the sewer camera is always above
-them, so a back face is never seen; the whole level now emits `FrontSide` and the back faces of
-~3k ledge/floor quads stop being rasterized. Verified live: all 18 shell + dressing meshes report
-`side 0`, nothing vanished.
-
-**`SewerScene` returned the ALL-bulbs steady cone set in the bundle's `coneFlick` slot.** That slot
-is documented as the FLICKERING batch, which `LightCone.pulse` and `CityArea.tick`'s lampMask loop
-index against. A tunnel lamp never flickers, so the honest answer is an EMPTY set: the steady batch
-is now built and discarded exactly as the city does it, and `coneFlick` gets
-`LightCone.instanced(coneGroup, [], ...)`, which builds no mesh at all. Zero draw-call change (the
-scene still holds one cone InstancedMesh) and the contract stops lying.
-
-**`CameraRig.maxFootprintCells` hardcoded `RenderConfig.CAMERA`.** It sizes the AI spawn region, and
-the presets went per-area when the tunnels landed. It takes a `CameraOffsets` argument now, and
-`AreaGame.getSpawnRect` picks by area KIND rather than `isCity()` — so sewers and habitats stop
-falling back to the 2D canvas rect (which scales with pixel count, the bug 414648a fixed for
-cities). Measured at aspect 1.92: **city 411 cells, sewer 180**. Passing the city preset to a tunnel
-would have over-sized the spawn region by 2.3x. fov stays global — no area kind changes it.
-
-**Dead weight removed:** `Textures.loadRampTexture` (both grime bands now carry painted alpha),
-`Sewers.FLOOR_DECOR_META` (its last reader went with the 2D sewer decorator), and the `Sewer.channel`
-grid plus the O(w*h*9) pass that filled it on every build and every boot warm.
-
-**`render.sewer.Debris` was `render.world.Debris` retyped**, down to the 8-try offset loop, and it
-shadowed the class name. The sprite/transform/offset placement now lives once in
-`world.Debris.addFragment`, which takes the ground test as an argument — a street tile in the city,
-`SewerModel.isFloor` underground. What is genuinely different stays split: the city's radial cluster
-against the tunnels' orthogonal one (a corridor is 3 cells wide, so a radius-2 spray would spend most
-of its rolls on wall cells). The rest is `render.sewer.SewerDebris`, ~60 lines. Checked through the
-static entry points: city LOW 452 spots / HIGH 58 / LOW+highCrime 1464 (the tier curve intact), all
-in-grid; the warm-up demo tunnel 5 spots, every one on floor and every overhang landing on floor.
-
-### Sewer grime: code ramp -> hand-painted alpha, and the exit ladder stands up
-Two small ones, same theme: stop faking what the art can say.
-
-**The grime band read vague, and the reason was the alpha.** `SewerDetail.grime` loaded an opaque tile
-through `Textures.loadRampTexture`, which writes `alpha = (y/h)^ease * peak` — one alpha value per
-image ROW. So every texel at a given height faded identically: a gradient wash with no shape of its
-own, over a single tile, level-wide. The street path stopped doing this a while ago —
-`render.world.Buildings` loads `decals/grime-1..3` with the alpha HAND-PAINTED into the source, which
-is what lets a drip or a mould bloom read as a separate stain rather than as a stripe.
-
-The sewer band now does the same: plain `loadTexture`, `premultiplyAlpha` on the texture and
-`premultipliedAlpha` on the material, `wrapT` clamped (v spans the band exactly once). The
-premultiply is not optional with hand-painted alpha — saturated junk RGB under near-transparent
-texels bleeds out as coloured specks once minified, the same trap `tools/textures.py`'s `bleed_alpha`
-covers on the downscale. `GRIME_PEAK` / `GRIME_EASE` are gone with the ramp; `GRIME_OPACITY` 0.7 now
-scales the source's own alpha. `Texture.premultiplyAlpha` went into the three extern rather than
-being poked with `untyped` as `Buildings` does. Zero draw-call change (habitat stays 40).
-
-**The sewer/habitat exit was lying on the floor.** Both exits draw `Const.FRAME_SEWER_EXIT`, which is
-a LADDER seen from the side — laid flat by the default `isGroundDecal()` it read as a stripe painted
-on the walkway. One override each (`objects/mission/SewerExit`, `HabitatExit`), the same one
-`BurningBarrel` uses, and it stands upright with the actor tilt like every other vertical prop.
-
-### Wall variants per FACE, sludge and pipes off, decals allowed across a cell edge
-Four things that pull the same way: less repetition per level, less of what did not read.
-
-**Wall variants come back, picked PER FACE — and the old rejection does not apply to them.** That
-verdict ("47% of cell boundaries changed variant, median unbroken run 1 cell") was measured on a
-clean/worn PAIR of independently painted tiles with DIFFERENT block layouts, so every switch MOVED
-the mortar; no blend could fix it either. These four are repaints of one source: the courses line up
-across a switch and only the wear differs, which is a discontinuity in the dirt, not in the masonry.
-`SewerGeom` keeps one `MeshBuf` per variation and each face picks its own with
-`mix((col*30011) ^ (row*50021) ^ (dir*70001)) % 4`, mixed because the raw hash combs the area border
-and with its own multipliers so a face's texture does not correlate with the decal `SewerDetail`
-rolls for it. Merged per variation, so a whole level still costs one draw call each: **40 → 43**.
-Measured over a 120x120 grid the hash switches variant on **73.3%** of horizontal and 70.8% of
-vertical adjacent faces against the 75% ideal, spread 25.1/24.9/25.1/24.9. Live in the habitat: 104
-faces split **28/24/28/24**, median run 1, max 3.
-
-**A caveat the numbers make plain: the art has to carry it.** As painted, the four variants differ by
-a mean of 2-5 bytes out of 255, with only 2-5% of texels differing by more than 12 and identical mean
-luma (79.4 / 80.3 / 79.4 / 79.1) — a 2x2 montage of them reads as one continuous wall. Swapping the
-whole wall texture in-render, head-on at close range where the wall covers 21.5% of the frame, moved
-**3.2% of wall pixels by >8 and 0.8% by >24** against a 0.4% noise floor. The mechanism is doing
-exactly what it is asked to; per-face variety is only ever as visible as the difference between the
-sources.
-
-**Sludge and the pipe run are off.** The gutter read as a dark stripe rather than as water, and the
-ledge pipes never had an orientation that made sense (top-down art, never turned, so every pipe in
-the level ran east–west whatever wall it sat on). `SewerGeom` lays walkway over the channel cells and
-`SewerGround` drops `TOP_PIPE` from its type list: habitat **42 → 40 calls**. The `channel` grid and
-the pass that filled it went with them (see the review-fixes entry) — and with nothing drawn there, the
-floor scatter's "skip the channel" rule went too, which is what stops a bare undecorated stripe down
-the middle of every corridor. `TOP_MOSS` also halved (2.6 x 2.2 → 1.3 x 1.1): at full size a patch
-filled its cell and read as a tile swap rather than as growth.
-
-**Organic decals may now cross a cell edge.** A puddle clamped inside its 4-unit cell announces the
-grid — the outline stops dead on the same line every time. `SewerScatterOpts.cross` widens the span
-from `CELL - 2*margin` (3.6) to `2*CELL - 2*margin` (7.6) for `organic` types only, and only where
-`open3x3` says the whole 3x3 around the cell is the same surface, so the quad can never reach under a
-wall or over the ledge drop. It is off on the ledge entirely: most of a tunnel wall is one cell wide.
-Measured live — every floor decal's AABB covers floor cells only, and the widened span is rare
-because a 3-wide corridor only qualifies down its centre line, which is the right amount.
-
-**Never A/B across a reload.** The first ledge measurement came out at 60% of the band changed, which
-is not decals — it was a before-reload shot against an after-reload one, with the log panel, the
-lamp phase and the actor state all different. Hide and restore the meshes inside one session.
-
-### Sewer lighting pass: manhole shafts, failing wall fixtures, and the exit as a real prop
-Four changes to the tunnels, none of them a new mechanism — every part already ships in the city.
-Habitat **43 → 46 calls**, tris 5.4k → 11.8k (the prop), boot pre-warm 69 → **73** programs, sewer
-entry **+9** (was +7).
-
-**The overhead shafts are manhole light now.** `LightCone` clamped its top radius to the shared
-`LAMP_CONE.topR 0.2` — a point at the bulb, right for a street lamp because there IS a bulb there.
-Underground the light falls through a HOLE, so the shaft starts a manhole wide: `CONE_TOP_R 0.9`
-against the unchanged 3.66 ground radius. `instanced` was already at 5 positional args, so this went
-to a `LightConeOpts` typedef rather than a 6th. Verified live: sewer cones `radiusTop 0.9`, the city
-warm scene still 0.2 over 239 instances. Zero draw calls either way.
-
-**Puddles 0.5/0.6 → 0.3/0.35.** `alphaTest` is `0.35 * alpha`, so the cut follows the opacity and the
-hand-cut soft edge stays proportional (0.105 / 0.1225 live).
-
-**Weak wall fixtures between the junctions (`SewerLamps`, +2 calls).** `SewerModel` only lights 3x3
-corridor corners and intersections, so a whole run of corridor had no source of its own. 12% of wall
-faces now carry a fixture, placed per 2x2 BLOCK (the run-capping idiom `SewerGround` explains) off
-its own mixed hash; 30% are permanently dead and 35% of the survivors sputter, decided from a second
-mixed word exactly as `SceneSetup` decides it from the lamp cell in the slums. Live in the habitat:
-**12 placed, 8 working, 3 of those with a non-zero phase**.
-
-There is no model and no art. A fixture is two quads on the wall face at `y 2.2`: an additive glow
-whose amber is multiplied 2.6x past 1 so it clears `BLOOM_THRESHOLD 0.75`, over a soot smudge that
-doubles as the dead lamp's entire appearance. Both are `InstancedMesh` + a canvas radial gradient
-(`Textures.makeGlowGradient`), so a level pays two calls however many lamps it has.
-
-Everything else came free. A working fixture is just a `LampPost`, so it competes for the same 12-slot
-pool and therefore casts fake actor shadows (`View` already fed `lampLights.active()` to `Actors` in
-every area); a non-zero phase is all `LampLights` and `CastShadows` need to sputter it and to drop its
-shadow while it is out. Two new `LampPost` fields carry what a wall bracket does not share with a
-street lamp: `y` (2.2 vs 5.6) and `mul` (0.35 — "weak"). Both multiply only at the publish line, never
-into `intens[]`, for the reason already written there: that array is the fade ease AND the
-`<= 0.001 -> free the slot` test.
-
-**`LightCone.pulse` is geometry-agnostic** — it only repacks an instance matrix buffer by the lit
-mask — so the glow batch is a `ConeSet` and gets the city's outage behaviour verbatim. One change
-inside it: `phase == 0` now means always-on, which lets the steady and sputtering fixtures share one
-batch (a tunnel has too few to split) and fixes a latent city case where a hash landing on exactly 0
-put a lamp in the flicker batch that `LampLights` treated as steady. Swept 40s of flicker time over
-the live batch: packed count 8 / 7 / 6, never below 6, i.e. the 5 steady fixtures never drop and the
-3 sputtering ones never go out in unison.
-
-**The exit is `sewer-exit.glb`.** Baked 93,501 → 5,000 tris / 354KB by `make models` (single mesh,
-single material, so `Models.instanced` = 1 call for every exit in the level), stood at
-`EXIT_MODEL_H 4.0` so it climbs past the `WALL_H 3.0` ledge toward the hole nothing renders. New
-`render.world.ObjModels` owns the type → glb map, keyed on `o.type` in the render layer so
-`objects.AreaObject` stays ignorant of glbs. `Actors` gains `ActorOpts.iconOff`: the object keeps its
-teal tactical ring and its through-wall silhouette (that is how an exit stays findable) and loses only
-the icon quad the prop now occupies. Only tunnel areas hold one — `WorldConst` declares
-`exit: 'sewer_exit'` on `AREA_SEWERS` alone.
-
-**Trap: a prop-backed object was casting TWO shadows.** `Models.instanced` sets `castShadow`, so the
-ladder throws a real shadow-map shadow — and `FlameShadows` was still painting a stretched copy of its
-64px sprite silhouette on the floor underneath it. `castShadows` now skips any object with a model.
-
-**Trap: warming an async prop.** Instancing the glb beside the rest of the sewer warm scene warms
-nothing — `Models.instanced` resolves over a `GLTFLoader` callback and the mesh lands after
-`compileAsync` has already walked the scene. It is instanced inside the promise chain instead, behind
-a `Models.get`; boot went 69 → 73 programs, which is the prop's PBR + depth pair moving from entry to
-boot. The 2 `basic` programs still compiling on entry are dir-light-count variants (1 → 0) of
-city-only materials, not the new ones — they were there before this pass.
-
-## The exit ladder marked itself: a green dot grid no lighting toggle could kill
-
-A grid of glowing green squares crawled over the new ladder and moved with the camera. It read as a
-specular pattern and was chased as one — twice, wrongly. It is the object's **own through-wall x-ray**.
-
-`Actors.paintObjMark` paints a hatched silhouette with `depthFunc: GreaterDepth`, i.e. *draw only
-where something occludes this pose* — the whole point, since that is how an object stays findable
-behind a wall. `OBJMARK` carves it as `fill 'dots'`, `hatchSpacing 6`, `hatchThick 2`, colour
-`0x35dd7a` at `emissive 0.9`, so on a 64px crop it is ~10 dots across and bloom washes them to
-yellow-white. Before this prop existed the exit's only occluder was a wall. Now a 4-unit ladder stands
-at exactly that sprite pose, so **the object occludes its own marker** and hatches itself every frame.
-Fixed by making `iconOff` mean ring-only: a modelled object keeps its tactical outline and loses both
-the icon and the x-ray. `paintObjMark` was at 9 positional args, so the switch went into a new
-`ObjMarkOpts` rather than becoming a 10th.
-
-**The trap is that no lighting A/B can find an overlay.** The marker is an emissive UI quad: `1`
-(hide every light, full-bright ambient) leaves it, `M` (force matte) never touches it, and it does not
-care what the model's material says. `6` (kill emissive) is the key that would have pointed at it.
-Proving it took the opposite move — find the one material in the scene with `depthFunc === 6` and
-force `colorWrite = false` on it every frame. Dots gone, ladder untouched.
-
-**Two real material findings came out of the wrong trail, both since reverted.** The glb is a PBR
-export at `metallic=1 roughness=1` **with an MR map** measuring metal **0.71** / rough **0.23**, over
-a base map that is a **flat 198 grey** (range 192–205 across the whole 512², no painted detail; the UV
-layout is dozens of thin packed rail/rung strips, which is why replacing that art was never the
-answer). `dropMR` + a new `baseColor` bake knob flattened and darkened it — and the author wants the
-sheen, so both are off again. Worth keeping written down: `dropMR` alone turns it into a WHITE plastic
-ladder, because metalness 0.71 had been suppressing the diffuse to 29% and hiding that albedo.
-
-**Two things survive.** `models.json` gained `baseColor` — a LINEAR `baseColorFactor` multiplied onto
-the base map, for a prop whose authored albedo is far brighter than the art (scale a uniform map, do
-not repaint it). And debug key **`M`** forces every lit material matte, in `StreetPerf.onKey` (the
-fallback branch for keys `View` ignores, which already owns the scene and the HUD), stashing into
-`userData.spec0`, HUD line `SPECULAR(M)`. It must null the **maps**, not just the factors —
-roughness/metalness are factors the map multiplies, so clearing a factor alone leaves a mapped
-material exactly as glossy. That flips `USE_METALNESSMAP`/`USE_ROUGHNESSMAP`, so one compile stall per
-toggle, same as `7`. It also flattens blood/slime (`BLOOD.wetRough 0.4`/`wetMetal 0.5`), as a global
-A/B should.
-
-**And the glow on the ladder's top rail was bloom, not the sheen.** `Shift`+`1` (bloom alone) over the
-rail region: mean luma **133 → 160**, with the halo spilling onto the floor and the rungs under it.
-The rail is a pale face 1.6 below a bulb, clipped past 1.0 linear long before the pass runs, and
-`SewerStyle.BLOOM_THRESHOLD` was **0.75** — deliberately under the street's 0.9 "so the few lamps
-actually bloom against near-black surroundings". What actually lived in that 0.75-0.9 band was
-over-lit SURFACES, not lamps: raised to **0.9**, near-clipped pixels on the rail go 2.8% → 0.7%, the
-floor halo is gone and the rail caps keep a tight highlight. `baseColor` cannot do this job — the rail
-is far enough over that it would need ~0.4, which is the dark matte ladder again.
-
-Verified the lamps did not pay for it, by scanning the scene for any material whose colour or emissive
-luminance exceeds the threshold: the wall-glow batch is additive at linear **(2.6, 1.25, 0.35)**,
-luminance **1.47**, so it clears 0.9 by 63% — `Color.multiplyScalar` does not clamp, which is why an
-HDR tint stays HDR. Nothing else is authored above 1 (`LAMP_CONE.opacity 0.03` was already written
-against 0.9). That scan is the check to run after ANY threshold move.
-
-## The ladder flashed on one tile: a lamp light moved, its shadow map did not
-
-Walking past the sewer exit, the ladder blew out white for a frame on one specific step. Not the
-material, not bloom on its own — **the pooled spotlight over it changed slots and left its shadow map
-behind.**
-
-`LampLights.update` re-sorted the slot CONTENTS by distance every frame so the nearest lit lamps hold
-the shadow-casting slots, and published `lights[i].position` for the new owner immediately. But
-casters run `shadow.autoUpdate = false` and the re-render was deferred round-robin, **one slot per
-frame**. three's `WebGLShadowMap.render` `continue`s on `autoUpdate === false && needsUpdate === false`
-*before* `shadow.updateMatrices(light, vp)` — so `shadow.matrix` and the shadow camera stay at the
-**previous** lamp. Lighting comes from the new position, the shadow lookup from the old one. The
-receiver lands outside that map, PCF returns fully lit, and it flashes. A reshuffle could hold that
-mismatch for up to `shadowCasters` (8) frames.
-
-Why that exact tile, from a live scene capture: the habitat puts a lamp **on the exit cell itself**
-(`SewerModel`, bulb y **5.6**) and the ladder tops out at **4.0**, so its entire shading is one 512
-map from 1.6 above it. The nearest wall lamp sits at cell offset **(+4, −1)**. Player at ladder+2:
-d(exit) **2.00** vs d(wall) **2.24** — exit lamp is slot 0. Player at ladder+3: **3.00** vs **1.41** —
-rank flips, slots 0 and 1 trade owners, both maps go stale, one refresh is dispatched. The exit lamp
-then samples a map taken 16 units away and 3.4 lower, the ladder is outside that cone, and its 45-
-intensity spot lights it unshadowed. Bloom does the rest — that rail was already the surface clipping
-at 255.
-
-Fixed by **committing the hand-off and its shadow in the same frame**: the re-sort became ONE adjacent
-transposition per frame, and both swapped slots get `needsUpdate` immediately instead of queueing. The
-array stays a valid permutation at every step, so no lamp is served twice; the ordering is only a
-routing heuristic, so letting it converge over a few frames costs nothing. Budget goes 1 → at most 2
-shadow passes on a swap frame. The round-robin drain stays for the harmless case — a FREE slot
-claiming a lamp moves a light that is still at ~0 intensity, and a stale map contributes nothing
-through a dark light.
-
-**The city has the same bug and it never showed.** The moon carries the street's shadowing, so a lamp
-map handing off is subtle; underground there is no moon, the lamp map is 100% of it, and
-`lightRangeCells 16` against `WALL_LAMP_PCT 12` makes rank swaps fire on nearly every step.
-
-## The prop layer grows two more batches: ghosting under the player, and a real 3D outline
-
-Five follow-ups off playing the ladder pass. Two of them needed the same machinery, so they landed
-together: **one InstancedMesh carries one material**, so every look a prop can take is its own batch
-over the same placements, with `Models.cull`'s mask picking which draws each one. That is the street
-lamps' lit/dead idiom verbatim. `Models.instanced`'s `?dead:Bool` was *replaced* by a
-`ModelVariant` enum rather than joined by a second flag — arity stays 5 so no opts typedef is owed,
-and two bools would have admitted `dead && ghost`, a state that does not exist.
-
-**Standing on a prop fades it** (`GHOST`): a transparent clone with `depthWrite = false` — that flag
-is the load-bearing one, not the alpha, because the actor billboard is depth-*tested*, so a ladder
-that still writes depth rejects the player however faint it draws. The eased opacity is
-`RenderConfig.PROP_GHOST`, one per batch, which is correct because the player stands in exactly one
-cell. **Its material starts at opacity 1.0**, not `alpha`: the glb resolves through a loader callback
-and can land after `tick`, and until the first cull the batch draws at capacity — at 1.0 that frame is
-pixel-identical to the solid twin under it. Both batches keep `castShadow`: three's shadow pass
-renders its own depth material and ignores transparency, so the handover pops no shadow.
-
-**The tactical mark became an inverted hull** (`HULL`). It was `Sprites.outlineTex` — an outline
-traced from the **alpha silhouette of the 2D atlas cell**, painted at the sprite pose, so with the
-icon suppressed it read as a ladder-shaped green outline around nothing. The replacement is a backface
-shell on geometry cloned with every vertex pushed along its normal; measured on the baked ladder, all
-**4,933 verts displaced by exactly 0.015 local units** = `OBJMARK.hullW 0.06` world ÷ the 3.998
-instance scale (the divide is the whole trick — the band is a world width and the shell is scaled per
-instance). `paintObjMark` is now not called at all for a prop-backed object, so `ObjMarkOpts.xray`
-lost its second value and was deleted.
-
-**Both new materials compile their own program**, verified in the vendored bundle, not assumed:
-`transparent` folds into the cache key at `three.global.js:36302` → `:36541`, and `BackSide` at
-`:36370` → `:36531`. Both variants are warmed inside the existing `Models.get` callback in
-`View.warmup` — outside that promise chain they would warm nothing. Idle they cost **zero draw
-calls**: `renderInstances` early-returns on `primcount === 0` (`three.global.js:33249`) before
-`info.update`, so a masked-empty batch never reaches GL.
-
-**The wall lamps dropped to the floor.** `WALL_LAMP_Y` **2.2 → 0.6**, and `LampPost` gained `tx`/`tz`
-so `LampLights` stops publishing every target straight down: a bracket now aims `WALL_LAMP_AIM 5.0`
-out along its wall normal, a ~7.8° grazing beam. Captured live: every fixture at `y 0.6` with its
-target 4.4 out from the bulb. `CastShadows` has **no notion of light height at all** — its length is
-`spriteHeight * lenMul * distance falloff` — so the fake actor shadows would have stayed short
-overhead smudges under a knee-high lamp while the real maps raked. `FlameShadows` now scales both
-`lenMul` and `range` by `min(LAMP_SHADOW.lowMax, refY / post.y)`; a street lamp lands on exactly 1.0,
-a 0.6 bracket on the 3.0 cap. *(Later: the scaled REACH is separately clamped to
-`LAMP_SHADOW.lowRangeCells 3` — see the row below. The length keeps the full `lowMax`.)* The glow
-quad's ellipse was never drawn — it is a *circular* gradient on
-a square canvas stretched onto a 0.75 × 0.5 quad — so `Textures.makeRectGlowGradient` writes a rounded
--box SDF per texel instead, where the corner radius and edge softness are numbers rather than a blur's
-guess.
-
-**Litter 3×** (`60`/`24` per 1000, tunnels/rooms): it was never unwired, just swept — headless on the
-warm-up demo tunnel, 117 floor cells now yield **22 fragments**. Its hash was also still the bare
-`(col*A) ^ (row*B)`, the one form the verdict table records as combing on row 0 / col 0, while every
-other sewer pass had moved to `SewerModel.mix`; routed through it.
-
-**The exit shaft steps 2.0 south** (+Z, screen-down, so the lit pool lands on the walkway in front of
-the ladder). `citygen.CityModel.Lamp` could not say which lamp hangs over an exit, so the tunnels took
-their own `SewerLamp` record with an `exit` flag. Cone *and* spotlight move — they are independent
-arrays, but a shaft whose lit pool sat elsewhere reads as two lights. `col`/`row` stay the exit cell,
-which is what the pool gates player distance on.
-
-## Two sewer light colours, and litter that had the wrong suspect
-
-**The tunnels were lit entirely in the street's sodium amber**, shafts and wall brackets alike, so
-neither read as its own kind of light. Splitting them found that `0xffb866` lives in **two** places:
-`RenderConfig.LAMP_CONE.color` *and* a second hardcoded copy in `LampLights`' `new SpotLight(...)`.
-Recolouring the config alone would have desynced every shaft from its own spotlight, in the city too.
-
-The colour also has to be **per post, not per pool**. Node lamps and wall brackets are concatenated
-into one flat `lampPosts` array feeding one 12-slot pool, so a single physical `SpotLight` carries a
-manhole shaft on one frame and a bracket on the next — the same aliasing that produced the shadow-map
-flash two entries up. So `LampPost` gained `color`, published in the publish loop beside the position
-and intensity it already writes. That is free: `getProgramCacheKey` carries light **counts** only, and
-`WebGLLights.setup` re-copies `light.color` unconditionally every frame
-(`three.global.js:36965`) — same cost class as the `intensity` write already there. `LightConeOpts`
-gained `?color` so the shaft batch can differ without touching the city's four cone call sites.
-
-Shafts are **`0x9db4d4`**, cold pale sky down a manhole; brackets **`0xc8d69a`**, a bad fluorescent
-tube. Verified live: all 7 lit lamps at `y 0.6` publish `(0.578, 0.672, 0.323)` and all 4 at `y 5.6`
-publish `(0.337, 0.456, 0.658)`.
-
-**The bloom trap is real and worth stating flatly.** The glow quad is `colour × WALL_LAMP_GLOW 2.6`,
-unclamped, and `UnrealBloomPass` thresholds **linear** Rec.709 luminance where blue weighs only
-**0.0722** — so a cool fixture can look bright and silently stop blooming. Measured after the swap:
-`(1.502, 1.748, 0.840)`, luminance **1.63** against `BLOOM_THRESHOLD 0.9`; the amber it replaced was
-1.47. Compute `Y_linear × GLOW` *before* committing to a hue.
-
-**Litter: the obvious suspect was wrong.** It reads empty, `DECAL.debrisMul 0.55` darkens in sRGB byte
-space (≈0.27× linear), and the sewer floor was re-authored far brighter than city asphalt — so the
-tidy conclusion is "the trash is darker than the floor it lies on". **It is not.** Measured on the
-BUILT art: a static debris sprite peaks at **175 sRGB** → ~96 after the dim, against
-`app/textures/sewer/floor.png` at **66.8 mean / 75.2 max**. Litter is already ~30% *brighter* than its
-floor, and raising the multiplier would have made it glow. The number that led there is in these docs:
-the floor's "0.2206 mean linear" is the **source** in `textures-src`, while the built output under
-`app/textures` measures 0.056 linear — a 4× gap that inverts the argument. Sample the artifact.
-
-The decal reveal radius is not it either: `DECAL.radiusCells 20` is a 1257-cell² disc against a
-166-cell² sewer footprint, and the farthest visible ground point is 11.5 cells — inside the 18.5-cell
-full-opacity core.
-
-**What it actually was: count, size and a grid.** Rates went to **180/1000 tunnels, 120 rooms** — the
-room number lifted 5× because a habitat is pinned to 4-5 rooms of 5x5, so 62-77% of its floor is
-`room` and the low rate was the one underfoot. Size mattered as much: `Debris` rolls
-`scale 0.1 + 0.9 * rng` and draws `Sprites.SIZE(3.0) × contentFraction × scale`, measured in-engine at
-**0.15 / 0.73 / 0.86 / 0.88 / 1.21** world units against a CELL of **4** — the small end is a pixel.
-And a `transformable: false` fragment gets `dx = dy = angle = 0`, so the ~55% of litter big enough to
-see was every piece dead-centre in its cell and axis-aligned. Both fixed in one pass over the tunnels'
-own spots after generation, because the shared placer is the city's too and is already at 7 positional
-args. The jitter needs no ground test — `Debris.canPlace` only rejects past 0.25 of a cell, so
-anything inside that is legal by construction. On screen: **5 → 32 fragments, smallest 0.15 → 0.46,
-largest 1.21 → 1.83**, still one draw call.
-
-## A wall lamp painted through an AI's head: a shaft's render order is not a fixture's
-
-The wall fixtures' glow batch sat at `Sprites.ORD_ACTOR + 1`, the slot `LightCone` uses, and its
-bright core drew straight over an actor standing in front of it — a hard white blob on the sprite's
-forehead, not a bloom halo.
-
-**Nothing in the sprite pool writes depth.** That is deliberate (`Sprites`: tiny Y gaps z-fight at
-this near/far, so renderOrder does the layering), and it means a later transparent draw is never
-rejected by an earlier one — only by the opaque scene. The glow quad sits `DECAL_EPS` proud of the
-wall, so it passes depth against the masonry and then paints over anyone between.
-
-`ORD_ACTOR + 1` is *right* for a light shaft and *wrong* for a fixture, and the difference is what
-the thing is: a shaft is a column of lit air an actor stands **inside**, so drawing it last and
-letting it tint them is the effect. A wall lamp is a quad stuck on masonry **behind** them. New
-`Sprites.ORD_FIXTURE = 4.5`, between the targeting reticle and the actor billboard — fractional so it
-slots in without renumbering the other twenty call sites (`render.decals.Blood` already uses
-fractional orders to break same-cell ties). The shafts stay at 6. Verified: glow batch `renderOrder`
-4.5, head silhouette now cuts the fixture, only the screen-space bloom halo spills — which no depth
-ordering can fix and which reads correctly.
-
-**And the fixtures stopped being placed inside the shafts.** `SewerLamps` rejects any cell within
-`WALL_LAMP_CLEAR = 2` cells of an `m.lamps` entry. The number is derived, not picked: the shaft's
-ground radius is `bulbY * tan(angle) * radiusMul` = 3.66 units (0.92 cells) and a bracket throws its
-own pool `WALL_LAMP_AIM 5.0` (1.25 cells) out from the wall, so they stop touching at ~2.2 cells. The
-test runs on the CELL rather than the shaft's drawn centre — an exit's cone is nudged half a cell
-south and the radius swallows that. It also rejects the cell *before* the block's `faces` list is
-built, and the density gate multiplies by `faces.length`, so blocks near a shaft thin out on their own
-while per-face density everywhere else is untouched. Habitat: **12 → 11 fixtures**, nearest one now
-**10.17 units (2.54 cells)** from any shaft, every other one further. 49 → 44 draw calls.
-
-## An image-to-3D pipeline, and the first thing convex in a tunnel
-
-Three glbs had reached `models-src/` before this, all generated from images by hand outside the repo.
-The gap between "gpt-image made a picture" and "a glb is in `models-src/`" is now a tool:
-**`runware-trellis-2` MCP** (`~/git/runware-trellis-2-mcp`, one tool `image_to_3d`), wrapping
-Microsoft TRELLIS 2 on Runware. ~350 lines of node/TS, registered at user scope; the key is read from
-the shell at call time rather than at startup, so the process boots and lists tools without one. Its
-default output dir resolves to `<git root>/models-src`, so a generated model lands where `make models`
-already looks. Two settings are load-bearing: **never send `dracoCompression`** (`Models.get` builds a
-bare `GLTFLoader`, so a Draco glb fails to load behind a `console.warn`), and `textureFormat: "PNG"`
-because the bake re-encodes to PNG anyway. It reports `meshCount`, because `Models.instanced` takes
-`firstMesh` and drops the rest silently. ~$0.02-0.03 a model, about a minute each.
-
-**Trap: `make models` could not reach the tri target, and the error cap was the wrong lever.**
-*(The conclusion drawn here — "decimate on the TRELLIS side, always" — is over-general, and the piles'
-real quality defect was a different setting entirely. See "The setting the web sends and the API does
-not".)* Asking
-TRELLIS for `decimationTarget 20000` and meshopt for 4000 stalled at **15,824 / 13,153 tris**. Raising
-`error` 0.005 → 0.03 — six times the distortion budget — only got to **13,318 / 8,975**. meshopt will
-not collapse across attribute discontinuities, and a TRELLIS mesh is one dense UV atlas full of them;
-the exit ladder hit its 5,000 only because it had 93,501 tris of slack. Decimate where the topology is
-known instead: ask TRELLIS for `decimationTarget 5000` (its API floor) and set `tris: -1`. Result
-**4,771 / 4,845 tris**, 524KB / 491KB — in band, and with authored normals still matching the surface,
-which is the artifact `MODEL_SMOOTH_NORMALS` exists to paper over.
-
-**`SewerPiles`** scatters them against wall faces, one per 2x2 block, gated
-`PILE_PCT 14 × faces.length`, `SewerModel.mix` on its own multipliers, exit cells and their ring
-rejected. Hugging a wall is also what keeps the walkway clear. `PILE_H 0.7`, `PILE_MARGIN 0.55` off
-the wall plane, ±0.5 rad yaw wobble. No per-frame `Models.cull`: two static batches of a dozen could
-never drop below one call each.
-
-Checked headlessly *before the art existed*, through a `places(m)` split out of `build` — on the 21x21
-demo, **13 piles over 84 wall faces (15.5% against `PILE_PCT` 14), longest axis run 2, zero
-misplacements** (every one offset by exactly `CELL/2 − PILE_MARGIN` toward a *solid* neighbour).
-
-**Cost, measured foregrounded and interleaved, medians of 18 samples each** (piles `visible` on/off,
-which touches no program key so there is no compile inside the window):
-
-| | on | off | Δ |
-|---|---|---|---|
-| GPU | **2.83ms** | 2.45ms | **+13.4%** |
-| submit | 1.50ms | 1.60ms | noise — it moved the wrong way |
-| calls | 52 | 50 | **+2** |
-| tris | 79,374 | 12,136 | **+67,238** |
-
-14 piles (8 + 6); the tri delta is exactly `8×4771 + 6×4845`. 13.4% of GPU for a dozen props is real,
-against a 2.83ms frame with a 16.7ms budget. `submit` is untouched, which is the expected shape: two
-more `InstancedMesh` draws are nothing to the CPU and 67k more triangles are something to the GPU.
-
-**Do they finally give a wall bracket something to cast off? Barely — but the shadow is free.** The
-previous pass measured six brackets lighting 0.43% of the view and shadowing nothing, because every
-wall within their reach has rock behind it. In-frame A/B (offscreen target, both renders inside one
-eval, all 12 spot shadows forced to refresh): piles casting vs not = **0.021% of the view, max delta
-18/255**, against a 0-pixel reproducibility control and a 0-pixel restore control. Real and nearly
-invisible — in that view most piles sit outside any lamp pool. But `castShadow` on vs off (both
-permutations warmed first, since it IS a program key) measured **2.65 vs 2.67ms, −0.8%, calls
-identical** — nothing. So the whole 13.4% above is main-pass, the shadow-pass half is free, and there
-is no case for turning it off. The lever moves; it is still not the answer to that open lead.
-
-**Trap, surfaced only because the glbs did not exist yet: a failed model load stalled boot.**
-`Models.get`'s error path dropped its waiting callbacks, and `View.warmup` *sequences* on one — so two
-404s left the warm chain's Promise unresolved forever, with `comp.dispose()` and
-`renderer.setRenderTarget(null)` never running and the renderer left bound to the warm target.
-Pre-existing (the exit ladder had the same exposure); two more paths just made it likely to fire.
-Waiters now get an empty template — `instanced()` finds no mesh and draws nothing, but a sequencing
-caller advances. It has to carry a child Group: `instanced` reads `pivot.children[0]`
-unconditionally and a bare `Group` threw inside `firstMesh`.
-
-## The setting the web sends and the API does not
-
-The piles generated through the new tool came back visibly worse than the same reference run through
-Runware's web playground. Diffing the two request bodies gave three candidates: `decimationTarget`
-(100000 vs the 5000 the tool had settled on), `remeshProject` (**0.8 vs never sent**), and
-`textureFormat` (WEBP vs PNG). PNG is lossless, so it was out. The first diagnosis blamed
-`decimationTarget`, on the strength of the exit ladder arriving at 93,501 tris and looking right — and
-that diagnosis was **wrong**, because the two variables had never been separated: the bad piles had a
-low target *and* no projection factor.
-
-**`remeshProject` is the real defect, and its API default is the wrong one.** Runware documents it as
-*"projection factor for snapping remeshed vertices back to the original surface"*, default **0** — no
-snap-back, so the dual-contour remesh keeps its own rounded-off shape and the detail the reference was
-chosen for never lands. The playground sends 0.8. A further trap: the wire range is `(0, 1]`, so
-sending a literal `0` is **rejected** rather than treated as the default; it has to be omitted.
-`image_to_3d` now sends 0.8 unless told otherwise, plus `remesh_band` and a `meshCluster` pass-through.
-
-**Regenerating at 100k then decimating offline stalled at half the source.** meshopt cannot collapse
-an edge across an attribute discontinuity, so the number that predicts success is vertex count over
-*unique position* count:
-
-| mesh | tris | verts | unique pos | split |
+Older entries live in [`3d-changes-2026-08b.md`](3d-changes-2026-08b.md) (rolled at 2581 lines) and
+[`3d-changes-2026-08.md`](3d-changes-2026-08.md) (rolled at 2664 lines).
+
+---
+
+## The wilderness becomes a 3D area kind (`render.wild`)
+
+`AREA_GROUND` was the last common area kind still drawn by the 2D tile renderer. It is now the third
+`Area3D`: `WildArea` / `WildScene` / `WildGround` / `WildGrass` / `WildProps` / `WildModel` /
+`WildStyle`, built from the area's SAVED cell grid exactly as the tunnels are — no seed, works on
+every existing save, and the tile grid the pathfinder walks around is the one the props stand on.
+
+**Measured on entry** (100x100 cells, 400 world units, host camera): **48-52 draw calls, 137-148k
+tris, 60 FPS, 94 programs**. Against a city's 158-288 gameplay calls that is a cheap area, and the
+whole of it is chunked ground + chunked grass + four instanced prop batches.
+
+Four things worth carrying forward:
+
+- **The ground is emitted per chunk, subdivided, welded and vertex-tinted.** One quad per cell is
+  what the city and the sewers lay and it is not enough here: a 4-unit quad with a tiling texture on
+  it reads as a tile, and open ground has no kerb, no road paint and no building edge to break the
+  repeat. `SUB` 2 sub-quads per axis is 80k tris over the area, so it goes out one mesh per
+  `Chunks.CELLS` block. It is NOT built on `MeshBuf`, which emits four unshared vertices per quad —
+  Phase 2 displaces this lattice into relief and wants `computeVertexNormals` to smooth it, which
+  unshared corners cannot do. The mottle is two low-frequency sines on the `color` channel, NOT a
+  hashed lattice: a hash at sub-quad resolution is white noise and reads as static.
+- **The grass wind is one vec2 attribute, not `uv`.** Phase and height weight ride in on `aWind`
+  rather than being read off the quad's own `uv.y`, because `uv` is only declared when the material
+  happens to define `USE_UV` and a wind term must not depend on that. `alphaTest`, never
+  `transparent`: an alpha-tested opaque material draws `DoubleSide` in ONE pass where a transparent
+  one draws it as two, and at this density the cut is invisible. Verified live by diffing two
+  consecutive captures over a grass-only crop: **6.3% of pixels changed, max delta 45**.
+- **The art carries the brightness, the moon carries the form.** The ground tile as painted measured
+  **0.0208** in linear luminance — *darker* than the city road's 0.0329 — so it was lifted 0.75 in
+  the texture bake to **0.0503**, between the road and the sewer floor's 0.0558. That let the fill
+  come DOWN to 1.5/1.2/1.7, slightly under the city's own, where the moon is **57%** of flat-ground
+  light and a prop's shadow more than halves the ground under it. The earlier pass had it backwards:
+  fill pushed up to 2.1/1.7 over dark art, which flattens the frame by raising the ambient share.
+- **`PropPlace` gained an optional `scale`.** `Models.instanced` scaled every instance by one
+  `targetH`, so a hundred trees were one tree repeated. The per-placement multiplier has to scale the
+  `normalize()` recenter offset too, or a jittered prop drifts off its own footprint.
+
+Not done, and stated rather than skipped quietly: the `SUB` 1/2/4 sweep the plan called for was not
+run. At `SUB` 2 the area draws 46–53 calls and 184–233k tris at a locked 60 FPS, i.e. it is nowhere
+near a wall, and `SUB` 4 buys nothing until Phase 2 puts real relief on the lattice — which is when
+the sweep is worth its measurement.
+
+## Two wilderness bugs that both looked like missing ground
+
+Worth one entry together, because the diagnosis is the same shape twice: something covered half the
+frame in flat dark, and in both cases the geometry was innocent. The tool that settled both was a
+CDP census — hook `Object3D.prototype.onBeforeRender` to capture the live `scene` (`parasiteHx` is
+statics-only), then tint / hide / strip one builder's material at a time and re-measure.
+
+**Fog, sized as if it were keyed on the player.** `FOG_NEAR/FAR` went in at 120/320 on the reasoning
+that open ground should end sooner than a street. Fog is keyed on distance from the **camera**, and
+this one sits 18–55 units up looking down, so at 320 the far half of every frame was already solid
+background: a lit band of ground around the player with black beyond, its edge the iso-distance conic
+on the ground plane — which reads exactly like a coastline, i.e. like absent geometry. Byte-measured:
+with the fog off, the "band" and the "hole" were the same surface (mean 13.65 vs 13.71 over a 120px
+box). Now 260/560, i.e. 0.65 and 1.4 of the 400-unit area span against the city's 0.55 and 1.2.
+
+**A prop with no vertical profile in its reference has none in its mesh.** The bush's first reference
+was a three-quarter view FROM ABOVE, and TRELLIS returned a **pancake**: bbox 0.985 × **0.040** ×
+0.936, 25× wider than tall. `Models.instanced` scales by HEIGHT ALONE, so asking for `h` 1.1
+multiplied it by **28** and laid 218 dark discs ~27 world units across over the whole area — again
+read as terrain, not as a broken prop. Regenerated from a straight side elevation at eye level,
+explicitly "two thirds as tall as it is wide, not a pancake": **0.985 × 0.564 × 0.936**.
+
+The general rule that falls out, and the one number to check on every new prop: **`h` is not free —
+a row's world WIDTH is `h × (widest / height)` of its own bbox.** Measured across this set: conifer
+0.64, broadleaf 0.84, cluster 1.31, bush 1.75, **boulder 3.67**. The boulder was not broken, just
+wide, and at the `h` 1.5 it went in with it drew 5.5 units across — wider than a cell; `h` 0.9 lands
+it at 3.3. Both of these are cheap to catch at generation time and expensive to diagnose in a frame.
+
+## Wilderness art: 5 TRELLIS props, and what the split ratio predicted
+
+Five references at 1k on flat `#5a5d63`, and the split ratio (verts over unique positions) called
+every outcome before a single decimation ran:
+
+| prop | split | source | meshopt target 1200 | ships |
 |---|---|---|---|---|
-| `sewer-exit` (ladder) | 93,501 | 55,080 | 46,778 | **1.18×** |
-| `sewer-pile-1` @100k | 96,577 | 130,974 | 41,042 | **3.19×** |
-| `sewer-pile-2` @100k | 98,961 | 201,441 | 29,452 | **6.8×** |
-| the same reference through the WEB playground | 98,425 | 132,205 | 42,713 | **3.10×** |
-
-That last row is the one that matters: the web export nobody complained about is split exactly as
-badly as ours. A viewer reporting "42,647 verts" is reporting the *welded* count. There was never a
-difference in the mesh — only in `remeshProject`, and in what the bake did next.
-
-The piles have *fewer* real vertices than the ladder and 3-7× as many total: near-per-triangle UV
-charts, a seam on every edge. The ladder is a hard surface with large flat charts; rubble and sacks
-are curved everywhere, so the unwrapper shatters. `meshCluster` tuning — 16 global iterations, 8
-refine, smoothing 4, cone threshold 2.6 rad — moved 3.19× to **3.15×**. A dead end, $0.04 to
-establish. Dropping `remeshProject` reached 2.46×, but that is paying with exactly the detail it buys.
-
-**`error` is not the lever, and the floor is hard.** Sweeping it locally on the 96k source:
-
-```
-weld()          error 0.005  96001 -> 54718
-weld()          error 0.02   96001 -> 52252
-weld()          error 0.30   96001 -> 52184      <- 60x the default cap, same answer
-weldByPosition  error 0.02   96001 ->  3776
-```
-
-**The thing actually killing it was `tex`, and it had nothing to do with the mesh.** The number to
-carry is TEXELS PER TRIANGLE. The source is authored at ~43 (96,971 triangles over a 2048² map). The
-config that shipped was 4,673 triangles at `tex: 256` — **14**. At that density every crack line and
-grain speckle in the atlas is gone and the prop reads as smooth flat shards, which is exactly what
-"looks like garbage" meant. `tex` was not shrinking the map, it was deleting it. Hold the ratio near
-what the source was authored at and the same 4,821-triangle mesh carries full crack detail.
-
-**Dead end worth recording: baking the atlas down to per-vertex `COLOR_0`.** It works mechanically —
-sample the atlas per vertex, drop the texture/UVs/MR map, weld by POSITION, and meshopt is free:
-**96,971 → 3,730 tris, 14,553KB → 77KB**, zero textures, measured at **+6.5% GPU** against the old
-config's +13.4%. Cheaper *and* it carried the full 97k silhouette. It was still wrong, because the
-premise was wrong: the atlas is not a per-triangle patch mosaic. 130,974 verts is **1.36×** the
-triangle count; a true per-triangle atlas would be 3×. Each patch carries real sub-triangle detail,
-and `COLOR_0` throws all of it away — the props came out as smooth white shards. Reverted, code
-removed. Two traps if it is ever right for a genuinely flat-shaded prop: sample the triangle's UV
-**centroid**, never the vertex's own UV (a vertex UV sits on a chart *corner*, which is the gutter
-between patches — sampling there reads the padding and the prop bakes near-black, which looks like a
-lighting bug and shows up in any plain glb viewer); and `COLOR_0` is **LINEAR** while a
-baseColorTexture is sRGB. The check that catches both: baked colour mean vs the atlas's own mean.
-
-**Shipped:** TRELLIS `decimationTarget 20000` + `remeshProject 0.8`, `"tris": -1`, `"tex": 1024`
-(52 texels/tri), with `sewer-pile-{1,2}-100k.glb` kept in `models-src` as archival masters — same
-idiom as the existing `street-lamp-raw.glb`. For a subject meshopt cannot decimate, the file
-`models.json` points at has to arrive at the game budget already; Runware unwraps and bakes *after*
-its own decimation, so its output is clean at any target. **19,223 / 19,712 tris**.
-
-Cost, window focused, interleaved, medians of 17: GPU **3.44 vs 2.44ms = +41%**, `submit` 1.70 vs
-1.29, calls **+2**, tris **+272,056**. Kept, because +41% here is **+1.0ms of a 16.7ms budget in a
-scene reporting 14.79ms idle** — the tunnel is the lightest scene in the game at 52 calls against the
-city's 168, and piles do not exist in the city. Worth stating as a standing note: a percentage means
-nothing without its denominator. The two cheaper configs measured on the same props were +13.4%
-(4,673 tris / `tex: 256`) and +6.5% (vertex colours), and both looked worse. If a weaker machine ever
-makes this hurt, the fallback is `decimationTarget 5000` + `tex: 512` — the same 51 texels/tri,
-verified to carry the crack detail, at 67k tris instead of 272k.
-
-**Then pile-2 rendered pure black under debug key `1`.** Its baked MR map is uniformly **cyan**;
-glTF packs G = roughness, B = metalness, so that is metalness 1 across sacks, wood and cloth alike.
-A metal has no diffuse term, `1` hides every light, and with no analytic light and no env map there is
-nothing left to shade — so a fully metallic prop reads BLACK under WYSIWYG, not chrome. `sewer-pile-1`,
-same generator and same day, came out pure green: a correct rough dielectric, no change needed.
-`dropMR` on pile-2 alone. Dumping the MR texture answers this in one look and is cheaper than any
-amount of in-engine A/B.
-
-## Splitting the composite pile into four simple modern props
-
-`sewer-pile-2` was one generation of *two sacks + rope + a tarp + a broken crate*. It shipped
-undecimated at 19,712 tris with a 1024² map and still read as mush, and it read rustic — hessian and
-plank boards under a present-day city. Both are the same root cause: **the reference asked for a
-composite.** Fixed upstream of every bake knob by generating four separate objects instead — a 200 L
-steel drum, two solid-walled plastic stacking crates, a coiled industrial cable and three tied refuse
-sacks — scattered independently. Sources and outputs both moved under a `sewer/` subfolder
-(`models.mjs` needed one line: `mkdirSync(dirname(out))`, the idiom `textures.json` already uses for
-`decals/`).
-
-**Split ratios, all generated at `decimationTarget 100000` + `remeshProject 0.8`:** drum
-63,617 verts / 48,593 unique positions = **1.31×**, crates 90,764 / 46,236 = **1.96×**, cable
-95,403 / 45,324 = **2.10×**, bags 252,243 / 20,833 = **12.1×**. Bags is the worst measured anywhere —
-252k verts against 293k triangle corners is essentially a per-triangle atlas. Soft goods again, and
-worse than pile-2's 6.8×: three smooth blobs give the unwrapper nothing to chart along.
-
-**Asking meshopt for 1,200 tris got: 4,826 / 23,926 / 30,431 / (bags undecimatable).** So the split
-ratio does not just rank subjects, it says where the floor lands — and ~2× is the line between the
-two workflows. The drum's 4,826 is a normal prop (the exit ladder ships at 5,000) and the
-100k-master-plus-offline-decimate route is right for it. Crates and cable at 22–30k are not usable,
-so those were regenerated with `decimation_target 5000` and `"tris": -1`.
-
-**The `error` sweep that nearly did not happen.** The pile-1 result (3.19×: 0.005 → 54,718,
-0.30 → 52,184) had been generalised into "`error` is not the lever", and a rule was written on that
-basis. Swept properly it is only true for a *shattered* atlas. On the clean drum: 0.005 → 4,826,
-0.01 → 3,762, 0.02 → 3,476, asymptote **3,294** by 0.1 — a real **−32%**. crates moved −8%
-(23,926 → 22,026) and cable −16% (30,431 → 25,447). So sweep `error` before accepting a clean
-subject's tri count, and do not bother on a shattered one. No cap reached the target on any of them.
-
-**Shipped:** drum decimated offline (4,826 tris), crates / cable / bags generated at budget
-(4,818 / 4,891 / 4,769), all four `"tex": 512` = ~54 texels/tri, with `-100k.glb` archival masters for
-the three that were regenerated. **19,304 tris across four props, against 19,712 for the one pile they
-replace.** All four MR maps came back pure green — rough dielectrics, no `dropMR` anywhere, so
-pile-2's cyan map was a one-off and not a property of the generator.
-
-`SewerPiles` → `SewerProps`, and `PILE_H` / `PILE_MARGIN` became per-prop fields on a `SewerProp`
-typedef: a drum is 0.9 tall on a small round footprint and a cable coil is 0.3 on a wide flat one, so
-one global pair either floated one off the wall or buried the other. Placement also gained a corner
-tuck — a cell with two perpendicular wall faces applies both offsets, and the yaw now comes from
-`Math.atan2(nx, nz)` on the summed inward normal, which reproduces the four literals it replaced and
-bisects a corner to 45° for free.
-
-## Sewer props: a derived wall standoff, the camera-side face, and a violet albedo
-
-Three separate faults in the four props above, all found by measuring the baked glbs rather than
-looking at them.
-
-**The standoff was hand-typed and three of five props stood inside the wall.** `Models.instanced`
-scales a prop by HEIGHT alone (`targetH / t.height`), so its footprint is `nativeR/nativeY × h` —
-which means a per-prop `margin` constant is stale the moment anyone edits `h`, and a *flat* prop
-multiplies its width by the same factor that sets its height. Measured world radii (max XZ distance
-from the bbox centre, so yaw-independent) against the authored standoffs: `sewer-pile-1` **1.425**
-vs 0.55, cable **0.830** vs 0.50, bags **0.825** vs 0.40. Drum and crates were inside their margins
-by luck. `SewerProp.margin` is now `r` — the footprint radius *per unit of height*, measured off the
-glb — and `SewerProps` derives `margin = r * h + PROP_CLEAR`. All five clear their wall by 0.05 and
-cannot drift again. Cable also went to `h 0.24` (−20%) and the drum to `h 1.8` (×2) on the same pass.
-
-**A quarter of every prop was invisible by construction.** `CAMERA_SEWER` sits at +Z looking back
-along −Z — 53° at the near preset (y16/z12), 71° at the far one (y40/z14). A prop leaning on the
-SOUTH wall has that wall between it and the camera, and the wall is `WALL_H` 3.0 with a ledge
-plateau on top, so it hides everything within `3.0 / tan(pitch)` = **2.25 units near, 1.05 far**. A
-crate at h 0.75 standing 0.35 off the plane crosses it at y **1.22** against a 3.0 cap: not partly
-occluded, gone at both zooms. Clearing the cap would need a standoff of 1.7 — parked mid-corridor —
-so the fix is to never pick the face. `SewerProps.CAM_DIR` drops dir 1 before the density gate sees
-it, and `PROP_PCT` went 14 → 18 to pay back the ~quarter of faces lost (13 props before, 14 after).
-Cheap proof it holds: with dirs 0/2/3 only, `|yaw|` cannot exceed π/2 + `PROP_YAW_JITTER` = 2.071,
-where a south face would land at ≥ π − 0.5 = 2.642. Measured max **1.923**.
-
-**The big upright props are corner-only, and the flag has to PARTITION rather than filter.** A
-1.8-tall drum or a 1.65 crate stack against a flat run of wall reads as dropped in the walkway; in
-the angle of two walls it reads as stored there. Measuring first is what picked the mechanism:
-corners are only **14%** of spots (2 of 14, and lower than it used to be because dropping the
-camera-side face halved the Z-axis supply), so merely *excluding* a prop from flat walls would leave
-14% × 1-in-5 = **0.4 a level**. Instead `SewerProp.corner` splits the table in two pools — a corner
-deals only from the corner props, a flat run only from the rest — and drum + crates share the corner
-pool. Both pools must stay non-empty; that is the invariant the typedef comment carries. Verified
-against the floor grid rather than against the code that placed them: drum and crates **1/1** each
-on cells with both a Z and an X wall, the three flat props **0/12**, none off a floor cell.
-
-**TRELLIS invents a violet albedo from a near-black reference.** `sewer/bags` baked at mean sRGB
-**77 / 62 / 99** — R above G, B far above G — from a reference painted 68 / 72 / 77 (cool, R<G<B).
-Our bake is not the cause: the source 2048 map and the baked 512 agree to **1/255** on every channel
-(checked on all four props), and drum / crates / cable from the same batch and the same day are all
-correct. Nor is it the seed: a fresh generation came back at mean 110 / 89 / 114 and *bimodal* —
-flat pink charts against black gutters, strictly worse and unfixable by a tint — so it was rolled
-back to the recorded seed 1195164295. What the three correct props share is a mid-value subject
-(reference luma p05 35–45); the bags are the one painted near-black at 30, and the decomposition
-appears to read that darkness as shadow and lift the albedo, hue and all.
-
-A per-channel `"baseColor": [0.32, 0.51, 0.18, 1]` was fitted to neutralise it and did work, but it
-is the fallback, not the fix — a LINEAR multiply cannot recover a channel the generator threw away.
-Repainting the reference does. The same subject at mid charcoal (`#3a3d42`, subject luma p05 30 →
-**48**) came back at **67 / 70 / 78** — cool, neutral, tracking the reference's own 73/80/88, with a
-tight spread (p05 60, p95 79) and no bimodal split. So `baseColor` is now a single uniform 0.47
-darken, hue untouched, purely to land it at the drum's brightness instead of 1.5× over it. The
-regen also changed the silhouette for the better — a pyramid at aspect **1.23** against the flat
-1.98 heap — which cut `SewerProp.r` from 1.17 to 0.73 and wanted `h` 0.7 → 1.0 to keep its footprint.
-
-Two things worth carrying forward. **The reference's VALUE is a generation parameter**, as much as
-`remesh_project` is: paint a dark prop mid-charcoal and darken it in the bake, never paint it black.
-And TRELLIS is **not bit-deterministic** — the same seed and inputs re-ran 4,769 tris as 4,627, so a
-seed reproduces the look, not the file.
-
-## `sewer-pile-1` splits into a block, a brick heap and a broken pipe
-
-The last composite prop underground — one generation of *concrete slabs + bricks + a rusty flanged
-pipe* — and by then the only expensive thing in the tunnels. Its 100k master split **3.19×**
-(131,425 verts / 41,265 positions), so meshopt could never touch it and it shipped undecimated at
-**19,223 tris**, four times every other prop. Live habitat: 5 instances = 96,115 of 139,557 prop
-tris = **69%**. Its footprint was outsized to match — `r` 2.04 at `h` 0.7 = worldR **1.425**, i.e.
-2.85 units across a 4-unit cell, parking it 0.53 off the cell centre.
-
-**The three replacements landed exactly where the split-ratio rule predicts.** Hard surfaces
-(`sewer/block` **1.23×**, `sewer/pipe` **1.32×**, the drum's class) generated once at
-`decimation_target 100000` and decimated offline; rubble (`sewer/bricks`) went straight to the
-budget at 5000 and ships `tris: -1`, and it came back **2.11×** — past the ~2× line, confirming the
-100k route would have been wasted money on it. Nobody had to guess: the ratio was read before any
-bake was chosen.
-
-**`error` 0.01, not the habitual 0.005.** Swept on both clean subjects at target 1200: block
-0.005 → 5,356, **0.01 → 3,198**, 0.02 → 2,496, asymptote 2,314; pipe 0.005 → 7,224,
-**0.01 → 5,890**, 0.02 → 5,670, asymptote 5,602. 0.01 halves the block for no visible loss at prop
-scale, and it is what keeps texels/tri honest — at `tex` 512 the pipe reads **45** texels/tri, right
-on the ~43 a TRELLIS 2048 export is authored at, where 0.005 would have dropped it to 36 and under.
-
-**Both concrete props needed a `baseColor` darken, and the numbers say so before the eye does.** The
-prop family sits at mean sRGB ~46–49 (drum 46/47/52, crates 33/49/59, cable 32/47/56) against a
-floor of 65/68/62. Pipe baked at **86/87/79** (1.8×) and block at **110/110/108** (2.4×) — pale cast
-concrete, a lit lump against flat art. Uniform linear factors 0.35 and 0.22 land them at ~52 and
-~55, computed as `f = (target/measured)^2.2` — the same formula that reproduces the bags' shipped
-0.47 exactly. All three MR maps are pure green (R=0, B=0): rough dielectric, no `dropMR`.
-
-**Result: 17 props for 76,968 tris, against 14 props for 139,557 — −45% while placing three more.**
-Per prop 9,968 → 4,528. Draw calls did not move: with 7 table entries and 5 drawing in this level
-(crates and cable rolled zero placements, and `Models.instanced` builds no mesh for an empty list),
-the topbar read 50–52 dc either side. Not an A/B — the window would not foreground, the HUD held at
-**1 FPS**, and `calls` swings 29–44 on pose alone down there. The tri number is the honest one; it
-is inventory × instance count and pose-independent.
-
-Placement re-verified headless on the demo tunnel with the new table: 14 props over 63 eligible
-faces, **zero misplacements** (every one on a floor cell, pinned to a genuinely solid neighbour at
-exactly its own `r * h + PROP_CLEAR`), 0 duplicate cells, max |yaw| **1.923** against the 2.071
-camera-side bound, 2 corners and both taken by the corner pool. Live, every instance sits at exactly
-`h/2`.
-
-The last knob was scale, and it repeated the bags mistake before catching it. Heights are read off
-the drum as a ruler — it ships at `h` 1.8 for a real 0.88 m 200 L drum, so **one world unit ≈
-0.49 m**. The block went out at `h` 0.55 (a correct 0.40 × 0.27 × 0.19 m half-block) and read as a
-speck beside its neighbours in a per-batch tint pass; **0.7** is the shipped value. That ruler is
-also what killed the original "single brick" idea outright: a real brick is **0.44 world units**,
-under the 0.46 floor of the 2D `SewerDebris` litter the tunnels already scatter ~22 of per level for
-zero draw calls.
-
-## Four drums in a line: the pool is dealt as a deck, not rolled
-
-A habitat shipped with all four of its drums on one wall. Two separate things were wrong, and only
-one of them was the hash — worth writing down because the hash bug is the more interesting one and
-the *less* important one.
-
-**Every roll in this system is GF(2)-affine, so `% 2` reads a single bit.** `SewerModel.mix` is a
-xorshift, and xorshift, multiply-by-odd and xor are all linear over GF(2) — so the whole chain from
-`(bcol, brow)` to the roll is affine, and every output bit is a fixed XOR of the coordinate bits.
-`roll % cand.length` on the **2**-entry corner pool therefore extracts exactly one linear form.
-Measured over a 40×40 block grid: a row band scored only ever **16 or 24** of one pick out of 40 —
-never a value between — against a fair coin's continuous spread at sd 3.16. Shifting first does not
-help: `(roll >>> 16) % 2` quantises just as hard, to 18/22, because a shifted bit is still one linear
-form. Reducing through an odd number does, since the result then depends on all 31 bits at once
-(spread 10..27, sd **3.22**). Hence `PICK_ODD = 997` before any small-pool index. The 5-entry flat
-pool never had this: 5 is already coprime to 2³².
-
-**But that was not what put four drums on the wall, and shipping it as the fix would have been
-wrong.** With the odd modulus in, the same level still dealt drum ×4 / crates ×2 — it merely swapped
-which cells — and the flat pool got *worse*, rolling cable for **6 of its 7** spots. The reason is
-arithmetic, not hashing: a habitat's rooms are 5×5 in a band, so nearly every corner in the level
-lands on the one row where their walls line up, and on 5 such spots a fair two-sided coin comes up
-4-or-more the same way **37%** of the time. Independent rolls cannot fix clustering; they can only
-be lucky.
-
-**So each pool is now DEALT.** A deck per pool (0 = flat run, 1 = corner), Fisher-Yates'd off the
-same hash chain on refill so a level stays fully determined by its saved grid, and popped one spot
-at a time. Every entry comes out once before any repeats, which caps a run by construction. Demo
-tunnel, 14 props: flat sequence `cable, bricks, block, pipe, bags | block, bags, pipe, bricks,
-cable | block, bags` — each cycle a full permutation, **max run 1**, counts 3/3/2/2/2/1/1, and the
-placement invariants all still hold (zero misplacements). Live habitat, the offending row 8:
-`drum, drum, crates, crates, drum` — **max run 4 → 2**, corner counts 4/2 → 3/3, flat counts
-cable 6-of-7 → 2/2/1/1/1.
-
-Two is the floor for a 2-entry bag: one permutation can end on the same face the next one begins
-with. Left there deliberately — two drums standing together reads as stored, four in a row reads as
-a bug — and forcing perfect alternation would need a carry-over `last` and would look mechanical.
-
-## The tunnels read as boxes, and the wall art was never the problem
-
-"Walls are awfully orthogonal, 90 degree edges and corners". The instinct is to attack the masonry;
-the measurement says do not. Wall **faces** are 0.67% of the view against the ledge **tops**' 14.68%
-(recorded above), and `app/textures/sewer/wall.png` is already broken bricks, moss and missing
-blocks. What actually reads as orthogonal is the **cap edge**: one dead-straight, dead-level,
-high-contrast line where a lit cap meets a near-black face, repeated on a 4-unit lattice, with every
-arris a 0-width crease.
-
-Three changes, all inside `SewerGeom` + `SewerStyle`, **zero art and zero new draw calls**:
-
-**`CAP_CHAMFER 0.25` — a 45° wedge between face and cap.** The wall face now stops at `WALL_H - c`
-and a second quad carries it up and back to the cap, while the cap quad is pulled back by the same
-`c` on every edge overlooking a floor cell. The two are exactly paired along an EDGE (a cap edge
-insets *iff* its neighbour emits a wall against it). Swept live: **0.15 invisible at both presets,
-0.45 a chunky moulding, 0.25 right** — the wedge covers ~0.25 units of screen at either preset, since
-the vertical drop and the horizontal setback trade places as the pitch goes 53° → 71°. This is the
-same rim the **rejected** ledge-rim darkening was after, and the reason it works here is that it is
-geometry with a normal, not art faking a stripe.
-
-**The wedge is a bevel on a plan OUTLINE, so it has to be MITRED — the first cut shipped without it
-and hung quads in the air.** Run a wedge along a whole cell edge and at an **outside** corner its
-last `c` has nothing underneath: both walls have receded by `d` at height `fh + d`, so the strip
-beyond the corner is over open corridor. Two wedges cross in mid-air past the corner while the cap
-they should have met sits `c` behind them. The dual bug is at an **inside** corner, where the two
-wedges stop short of each other and leave a `c × c` notch straight through to the background.
-
-Both are fixed by classifying each END of the top edge off two neighbours — the cell along the run
-(`perp`) and the one diagonally behind it (`diag`):
-
-| `diag` | `perp` | corner | what the end does |
-|---|---|---|---|
-| floor | — | outside (or two solids pinching at a point) | pull the top edge IN by `c` |
-| solid | floor | straight run | nothing; the next cell emits a collinear wedge |
-| solid | solid | inside | nothing, plus a vertical return triangle |
-
-The outside case costs **no triangle** — the quad just becomes a trapezoid, and since the two wedges
-already share their bottom corner, closing the top closes the whole seam along the 45° mitre. The
-inside case gets a **chamfer stop**, which is how a real chamfer dies into an inside corner; note it
-must NOT be fixed by extending the top edge instead, because that slides the wedge under the diagonal
-cell's un-inset cap and opens a void beneath it (the cap would then need an L-shaped notch, 4 tris
-instead of 2 on the biggest surface in the scene).
-
-Verified headless on the demo tunnel, `SewerGeom.build` into a throwaway `THREE.Scene` from CDP:
-**84 faces, 8 outside ends, 16 inside ends → 352 wall triangles against 84×4 + 16 = 352 exactly**, so
-every stop is present and nothing else is. And the seam invariant: **all 136 interior wedge-top
-vertices land exactly on a corner of the inset cap, 0 misses.** The first attempt at that test —
-"is the vertex over a solid cell?" — passes on the broken build too, because the overshoot is inside
-the solid cell's *footprint* and merely above its bevelled surface. Border verts legitimately miss
-(the demo puts floor on the grid edge, where there is no cap cell); a real area's border is solid.
-
-One emitter now covers all four directions, off `(p, n, s, e)` — the wall plane on the axis the face
-does not run along, the sign of its inward normal there, and the two run coordinates in winding
-order. The four hand-written cases it replaced could not have carried the mitre readably.
-
-**`vertexColors` on the shell, keyed off the cell LATTICE.** A hashed value ±`TINT_AMP 0.15` at each
-lattice point (rounded cell index + a coarse height band), read at the four corners of every quad.
-`MeshBuf` gives each quad its own verts, so anything per-face or per-quad would step hard at every
-cell boundary — the exact seam that killed the two-wall-variant experiment. Two quads meeting at a
-lattice point ask the same question and get the same number, so it interpolates across a whole run
-and *cannot* seam. Same attribute carries the creases: `TINT_FOOT 0.80` at the wall/floor junction,
-`TINT_CORNER 0.75` down an inside corner's vertical line (both faces darken it by the same factor, so
-they agree), `TINT_CHAMFER 1.08` on the wedge. That last one is small because the hemisphere fill
-already ramps it — sky whole on a flat cap, midpoint on a vertical face, 85% of the way up on a 45°
-wedge, ≈11% over the face against a large normal-blind ambient.
-
-**`FLOOR_TILE`/`LEDGE_TILE` 8.0 → 7.0.** Both were exactly two cells, so the texture period landed
-on the same point of the tile at every grid line and the repeat read as a pattern on the two surfaces
-that fill the screen. 7.0 pushes the echo to 7 cells. One constant.
-
-Cost is inventory, not a frame reading: **+1 quad per wall face** (habitat has 104), cap insets move
-vertices without adding any, and every chamfer goes into the wall buffer it beveled — so the shell
-still merges to one mesh per texture. `vertexColors` adds one program permutation per shell material,
-warmed for free because `View.warmup` runs this same builder over `SewerModel.demo()`. **No `calls=`
-or `tris=` claimed**: the window would not foreground, the HUD held **1 FPS**, and the topbar swung
-50–56 dc / 69.9–70.6k tri on camera pose alone between otherwise identical frames.
-
-One clamp followed: `SewerDetail.decals` now bounds decals to `WALL_H - CAP_CHAMFER`, since above
-that the wall recedes and a quad set `DECAL_EPS` proud of the face plane would hang off the bevel.
-
-Not done, and next if the line still reads too ruled: **per-cell cap height jitter** (downward only,
-so the camera-clearance reason `WALL_H` is 3.0 is untouched). It needs a shared `capY()` — the wall
-must take the height of the solid neighbour it faces, adjacent solid cells at different heights need
-a filler quad or the plateau opens, and `SewerGround` places its ledge clutter at a hardcoded
-`WALL_H`.
-
-## Contact shadows stood up an inside wall corner
-
-The floor/wall junction has had fake contact shadows since the tunnels landed. The vertical corners
-never did, and that gap is structural rather than a tuning oversight: **nothing in the sewer lighting
-can darken a vertical corner.** `AmbientLight 3.95` is normal-blind; the `HemisphereLight 1.89` keys
-on `normal.y` and *both* faces of a vertical corner are vertical, so they take byte-identical hemi;
-and a pooled spot out in the corridor sees both walls at once. The only engine answer is GTAO, which
-measured **+140 calls / +5.4ms** and ships off.
-
-**It costs no draw call.** The strips ride the floor strips' own `InstancedMesh` — same
-`PlaneGeometry(1,1)`, same material instance, same `makeShadowGradient()` — so a whole level of them
-is extra matrices in an array that already existed. No new program, no warm change, no art. Their
-alpha is `SHADOW_ALPHA` by construction rather than a knob of their own. Live habitat: **21 inside
-corners → 42 strips, 32 emitted**, strip batch **102 → 134**. The 10 dropped are on `dir 1` faces,
-whose inward normal is `-Z` against a camera always at +Z looking back along `-Z` — backface-culled
-in every pose, so those strips could never draw.
-
-**Orientation: a yaw alone cannot place one.** The gradient runs along the quad's local +Y (v=1 is
-the transparent end), so standing it up means a quarter turn about local Z first — and *which*
-quarter turn depends on which END of the face the corner sits at, because yaw sets the normal and the
-fade direction together. Mirroring instead would flip the winding off `FrontSide`. So: two base
-quaternions, picked by `-nz * ax + nx * az < 0` against the wanted fade direction, then
-`Math.atan2(nx, nz)` for the yaw — the same idiom `SewerProps` uses on its summed normal.
-
-**And they must MEET, not cross.** Each strip stands `WALL_SHADOW_EPS` off its own wall, so a strip
-running from the bare corner would poke that same distance past its perpendicular twin and paint a
-small double-dark cross. Each therefore *starts* `WALL_SHADOW_EPS` along the wall as well, which is
-exactly the twin's stand-off. Same lesson as the chamfer mitre, one entry above.
-
-**Draw order was a real bug, not a nicety.** All of this is transparent with `depthWrite` off, and
-every piece is a level-wide merge whose object origin is `(0,0,0)` — so three's transparent sort
-compares an identical `z` for all of them and falls through to `a.id - b.id`, the order the meshes
-were **constructed**. `SewerDetail.build` ran `grime, shadows, decals`, which put an `alphaTest`'d
-crack decal *over* the corner shadow, replacing it rather than tinting under it. Now `grime, decals,
-shadows`. `SewerStyle.WALL_SHADOW_EPS 0.07` also has to clear `DECAL_EPS 0.05` for the same reason,
-as a physical gap rather than `polygonOffset`.
-
-`TINT_CORNER` went **0.75 → 0.90**. The vertex term and the strip stack multiplicatively, and 0.75
-under a 0.55-alpha black put the corner at **0.34 of base** — a hole. The vertex term is now the
-broad wash under the strip, and the only thing covering the chamfer and its stop triangle, which
-stand above the strip's `WALL_H - CAP_CHAMFER` top.
-
-Verified headless on the demo before looking at it, `SewerGeom.build` into a throwaway
-`THREE.Scene`: **96 strip instances = 84 flat + 12 vertical**, against 8 inside corners with 4 of
-them camera-side (8×2 − 4 = 12). Every vertical instance decomposed and checked: spans exactly
-y 0 → 2.75, exactly `WALL_SHADOW_W` wide, normal points into a floor cell with masonry behind it, and
-its opaque end sits at exactly 0.07 **both** off the wall and along it from the corner lattice — the
-meet-don't-cross invariant. Zero failures on all five.
-
-Also found and NOT acted on: `dir == 1` (south) wall faces have normal `(0,0,-1)` and
-`CAMERA_SEWER` always sits at +Z looking −Z, so **those quads are backface-culled in every pose** —
-along with their grime and decals, which is ~a quarter of both passes wasted. The wall quads
-themselves are not free to drop: `SewerGeom.add(..., casts = true)` and the shadow map renders from
-the light, not the camera.
-
-## The cap stops being LEVEL, and a lattice key is what makes it free
-
-The chamfer broke the silhouette into two edges. It did not stop those edges being dead level, which
-is the other half of "the tunnels read as boxes" — every wall top in the level sits at exactly
-`WALL_H`, so a run of corridor draws a ruled line and every corner is a right angle in elevation too.
-
-The report's proposal was a per-CELL height, `WALL_H − hash ∈ {0, 0.15, 0.30}`. **That formulation
-is what makes the job expensive, and the cost is not the height, it is the STEP.** Two adjacent
-solid cells at different heights leave a vertical gap in their shared edge — the same hole through
-the plateau this doc already records for an uncapped interior cell — so every solid/solid boundary
-needs a filler quad. Then the filler meets `CAP_CHAMFER`: at any corner where a perpendicular
-neighbour is floor, the cap it should reach has been pulled back by `c`, so a full-width filler
-sticks a zero-thickness fin `c` tall up through the bevel, and one inset to the cap's own outline
-leaves a `c`-wide notch between the two cells' wedges. Fixing that is a three-case classification of
-the filler's ends — the mitre problem again, on new geometry.
-
-**Keying the height off the LATTICE instead of the cell removes the entire class.** `capY(x, z)`
-hashes the *rounded* cell index, exactly as `tint` does, so it is a property of a grid POINT and not
-of a cell. Two cells sharing an edge read the same two corner heights and their caps meet exactly;
-a wall takes `capY` at each end of its run and its top edge tilts between them, landing on the same
-two points the neighbour's cap corner does. No step exists anywhere, so no filler exists, no case
-exists, and the tri count is untouched. The `CAP_CHAMFER` inset is 0.25 of a 4-unit cell, so an
-inset corner rounds back to the lattice point it came from and takes the height the wedge below it
-tops out at — the same rounding argument that already made the tint safe on an inset cap edge.
-
-What it costs is that nothing may assume `WALL_H` any more. Three consumers, all real:
-
-- `SewerDetail.decals` clamped to `WALL_H - CAP_CHAMFER`; now `SewerGeom.faceH`, the **lower** of the
-  face's two corners, since a decal has to clear the bevel at the low end of a tilted edge.
-- the vertical corner shadows took the same constant. They stand *off* the wall, so overshooting a
-  descending edge would show a black sliver against the background with nothing to hide it. Each
-  strip now takes the lower of its own two ends — the corner, and `WALL_SHADOW_W` along the edge,
-  interpolated, because the top edge is a straight line between two lattice heights.
-- `SewerGround`'s ledge clutter sat at a hardcoded `WALL_H + LEDGE_DECAL_Y`. A rigid quad on a
-  sagging cap sinks at one end and floats at the other, so `SewerGeom.capAt` evaluates the cap
-  surface at an arbitrary point — on the same two triangles `cap()` emits, diagonal `u + v = 1` —
-  and each decal corner is placed on it. The floor pass is genuinely flat and keeps its constant.
-
-`CAP_SAG` ships at **0.4**, downward only: `WALL_H` is the camera-clearance number and nothing may
-rise above it. 0.4 over a 4-unit cell is a 5.7° tilt, ~3.4° on screen at either preset.
-
-Verified headless on the demo, `SewerGeom.build` into a throwaway `THREE.Scene`: **every cap vertex
-sits on `capY` of its own lattice point (0 off), none above `WALL_H`, none below `WALL_H − CAP_SAG`,
-range 2.601–3.000**. Wall tris **352 against 84 faces × 4 + 16 stops = 352 exactly**, i.e. the sag
-added no geometry. The seam invariant from the mitre entry still holds with the heights moving:
-**0 interior misses**, 48 legitimate border verts (the demo puts floor on the grid edge). Ledge
-decals: 284 verts, every one at exactly `LEDGE_DECAL_Y` above the cap surface, max tilt within a
-single decal 0.182. Vertical corner strips: 12, tops now spread 2.370–2.664 where they were all
-2.750, and **0 standing above their own wall**.
-
-No `calls=` or `tris=` claimed, same limitation as the entries above — the HUD read 1 FPS. The tri
-count is inventory-identical by construction, and no material, program or draw call changed.
-
-## The sag shipped a hairline down every inside corner, and the chamfer inset is why
-
-"There are always seams on inner corners." Real, geometric, and a regression from the entry above.
-A 1-pixel pure-black line running out of every concave corner along the plateau, with the
-world-tiled texture and the shading continuous straight across it — which is the tell that both
-sides are **cap**, not a boundary between two different surfaces.
-
-`cap()` sampled `capY` at its four corners, and a corner overlooking a floor cell is not at a
-lattice point: it has been pulled back by `CAP_CHAMFER`. `capY` rounds it back to the lattice point
-it came from — which is exactly what makes the wedge/cap seam close, and exactly what breaks this.
-The neighbour across that edge is un-inset there (its own perpendicular neighbour is masonry), so it
-draws a straight line between the same two lattice heights over the **full** cell while the inset
-one covers 3.75 of it. Same endpoint values, different spans, so they diverge:
-
-```
-gap = (CAP_CHAMFER / CELL) * Δh = 0.0625 * Δh,   max 0.0625 * CAP_SAG = 0.025
-```
-
-Only at inside corners, because a cap edge-end insets iff its perpendicular neighbour is floor, and
-the two cells across a boundary disagree about that exactly where the corridor turns concave. A
-straight run agrees at both ends and is watertight, which is why the rest of the plateau was fine.
-
-**Fix: a vertex that is not on the lattice takes its height from the SURFACE, not the lattice.**
-`capAt` already evaluates the cap on the same two triangles `cap()` emits, and along a cell boundary
-that reduces to the shared edge — so it *is* the line the neighbour draws. `cap()`'s corners and
-`side()`'s wedge tops (at `(s2, p+o)`, not the un-inset `(s, p)`) now take it. `capAt` is exact at a
-lattice point, so nothing un-inset moves.
-
-The trap, and it is the reason this is two samplers and not one: the wall **face** top must stay on
-the lattice (`capY - k`). Give it `capAt` too and the two perpendicular faces of an inside corner
-sample at their own inset offsets, disagree, and the crack simply moves into the wall. Same for the
-chamfer stop — its apex is on the lattice corner (`capY`), its other top vertex on the inset plane
-(`capAt`), so the stop's top edge now slopes along the diagonal cell's cap edge instead of running
-flat through it. Face and wedge stop being exactly `k` apart, by at most 0.025, which is the point.
-
-Verified by a boundary-edge scan of the real emitted buffers (weld, count edge usage, keep the
-count-1 edges, look for a vertex lying in the plan-interior of one at a different height) on a 44×44
-grid at 50% floor — the demo tunnel is far too regular to exercise this: **295 cracks, max 0.0247,
-mean 0.0082, all 295 on the ledge mesh and all on a cell boundary line → 0 cracks.** Wall tris still
-352 on the demo, cap still inside `[WALL_H - CAP_SAG, WALL_H]`, all 352 face tops still on the
-lattice, 200 wedge tops with 0 interior seam misses.
-
-Second defect, same cause, fixed with it: the vertical corner shadow strip is a rectangle, and one
-instance matrix cannot taper a quad, so a tilting bevel means its top edge must disagree somewhere.
-It took `min` of its two ends, which puts the error **in the corner** — a lit sliver up to 0.072
-where the gradient is fully opaque. It now takes the height at the corner itself and lets the far
-end, where the gradient has faded to nothing, be the end that disagrees. All 12 demo strips land
-exactly on the bevel bottom at their corner.
-
-### Sewer LOS: a world-space vision mask, folded into the fog
-Indoors the 3D layer hid AI and objects (`Actors`, on `playerArea.sees`) but drew the LEVEL whole —
-you read the whole tunnel corner to corner and only its contents popped. `AreaView.draw` early-outs on
-a 3D area, so the 2D black LOS overlay never ran down here. Now `render.sewer.SewerMask` bakes a
-top-down mask (canvas + `CanvasTexture`, `MASK_PX 4` texels/cell, whole level: 300×240 for a 75×60)
-and every tunnel material samples it by world XZ, mixing toward `fogColor` at `MASK_HIDDEN 0.18`.
-Zero draw calls, zero passes, zero geometry — the five-mesh weld survives untouched.
-
-**Per-cell was built first and replaced.** A cell grid cannot express a shadow edge running diagonally
-off a wall corner, and — decisively — `sees()` takes INTEGER endpoints, so a per-cell mask is quantised
-to the player's cell by construction and no smoothed origin can ever move it. The shape is now the
-2D view's own sweep (`AreaView.buildLOSSegments`/`castLOSRay`) ported from screen px to cell units:
-rays at every exposed blocker corner ±1e-4, nearest hit wins, hits in angle order ARE the polygon,
-`ctx.fill()` antialiases the edge for free. Blocking is `area.canSeeThrough` (object-aware — a closed
-door blocks), not the renderer's floor grid.
-
-`MASK_R 14` is derived, not picked: `maxFootprintCells` at the sewer preset pinned to full zoom-out is
-180 cells = 9.6 deep × 21.6 wide, so the ground reaches 12.2 cells at the far corner. Cost is
-O(rays × segments) and both grow with it. Actors deliberately stay on `sees()`; the two disagree
-within ~a cell of a corner during a move animation, which reads as a soft lead/lag at `FADE_SPEED`.
-
-**Two defects the live census caught, both invisible to a build:**
-`userData` is the WRONG place for an "already patched" flag — `Material.clone()` copies userData but
-NOT `onBeforeCompile`/`customProgramCacheKey`, so every ghost clone `Models.instanced` makes from a
-patched template read as patched and never was. The mark now lives on the hook function itself.
-And **patching by scene traverse is wrong here**: the actor pool, path line, tactical grid and
-`DecalBatch` all land in the same scene later, and the traverse overwrote DecalBatch's own
-`onBeforeCompile` (per-instance alpha + atlas UV) along with its `decalInstanceAlpha` cache key. Each
-tunnel builder now patches its own material as it creates it — which also buys warm parity for free,
-since `View.warmup` runs those same builders. Measured after: 39 materials, 32 masked, and the 7
-skipped are the hull marker (`fog:false`, by design), the actor billboards, and DecalBatch intact.
-Mask programs 13 → 8; total 87 → 85 once the warm props were patched too.
-
-### Sewer LOS: the mask origin follows the SLIDE, not the logical cell
-The mask above keyed on `opts.playerCol/Row` = `game.playerArea.x/y`, which snaps to the destination
-the instant an action resolves. So it did not merely fail to be smooth — it ran a whole `BASE_MS`
-**ahead** of the player, swinging its shadows from a cell the billboard had not reached and holding
-them there for the entire slide. `update` now takes `opts.player.x/z` (the smoothed world position,
-already in `Area3DTickOpts`), converts to continuous cell coords, and keys on that quantised to
-`MASK_STEP 0.05` cells. Four things had to follow the origin: the key, the polygon origin, the scan
-window and the own-cell skip — the last two are the only integers in `polygon()`, and centring them
-on the logical cell instead would leave the window up to a cell off the point the rays leave from
-while the square range bound (built from `ox/oy`) reached past the last column ever scanned.
-
-**It needed no gate.** Isolated, habitat, N=300 forced rebuilds: **0.30ms median** = 0.1 cell scan +
-0.2 sweep/fill. The scan is 841 cells and 3476 `canSeeThrough` **regardless of level size** (a fixed
-`MASK_R` window), so only the sweep grows; ~1.5ms projected on a full 75×60. The envelope is 9 frames:
-`ActorAnim.slideTo` is finite — `t` clamps to 1 and its whole update is gated on `t < 1` — so a rested
-origin sits exactly on the cell centre and stops. Idle costs nothing, as before.
-
-**In-frame A/B, 5 PAIRED rounds** (rebuild forced every frame vs idle, window focused at 59.9fps,
-`GPU < 100` filtered, paired so clock drift cancels). Median deltas: `upd` **+0.60ms** and `submit`
-**+0.30ms**, both positive in all five rounds; `GPU` sign-flips (+0.02/+0.38/−1.39/−0.16/−0.38) =
-noise, as it must be with no added calls and no added fragments; `idle` −0.70 absorbs the CPU added;
-**`frame` delta 0.00 — vsync never missed**. Worst case ~0.9ms on a rebuild frame against 13.9ms of
-idle, and that worst case never happens: 9 frames a move, then nothing.
-
-Two corrections to the numbers above, both from measuring IN the frame instead of beside it. The
-upload is **not** free: an isolated `texImage2D` on a throwaway GL2 context read under the 0.1ms timer
-resolution at both 84×56 and 300×240, while three's real path costs `submit` **+0.30ms**. Probably
-fixed overhead rather than bandwidth — the isolated test saw no scaling across 15x the texels — but a
-full sewer's upload has never been measured in-frame. And in-frame `upd` (+0.60) is **2x** the
-isolated tight-loop rebuild (0.30): cold cache in a real frame.
-
-Verified live (frame timing was impossible — window occluded at 1 FPS, rAF delta 1016ms — but all of
-this is synchronous CPU): at rest the new key is **70/70 = `round(3.5 / 0.05)`**, i.e. it reproduces
-the old `pcol + 0.5` origin exactly; a smoothstepped 1-cell sweep rebuilds on 9 of 9 frames with key
-deltas 1,2,2,3,4,3,2,2,1 (peak 0.20 cells/frame) and a white-texel census walking 2160 → 2230 of 4704
-in steps of 14–25, no jump, antialiased edge texels holding 60–81 at every sub-cell origin; 6/6
-bit-identical rebuilds at a **fractional** origin, which is the shimmer risk the change introduces.
-`p.los false` → 4704/4704, unchanged key early-outs, `visRev++` re-fires with the origin static.
-
-**The cost is a new divergence, and it is the opposite of the accepted one.** Actors still gate on
-`playerArea.sees` at the logical cell, so where mask and actors used to snap *together* at action
-time, the actors now **lead** the mask by up to one move: an AI round a corner appears while its
-corner is still dark. `FADE_SPEED` softens it into a lead rather than a pop. Also unfixed: the hit-cell
-reveal (`wallCol/wallRow`) still paints whole cell rects, so the polygon edge glides while the
-revealed wall cells blink at cell granularity — the loudest remaining discontinuity.
-
-Side finding: the ~11-texel one-off on the first rebuild noted in the entry above is
-`AreaGame.canSeeThrough` lazily calling `recalcTile` on first touch. First rebuild warms the tiles,
-every one after reads cache.
-
-### Sewer LOS: the cell the origin straddles, and an edge hard only where it was straight
-Two defects in the mask above, both found by probing the live canvas, both shipped with the polygon.
-
-**The wall cell in the player's own column/row stayed dark however hard they stared at it.** Rays are
-aimed ONLY at segment corners, and the blocker one stopped on is recovered by stepping `STEP_EPS` past
-the hit — so a corner LEFT of the origin reveals the cell to its left, one RIGHT reveals the cell to
-its right, and the cell the origin straddles is aimed at by nothing. Measured, player at (10,6): on the
-long north wall column 10 read **0.00** while 9 and 11 read **1.00**; same on the south wall. Sweeping
-the origin across two cells proved the mechanism — the dark column is exactly **`floor(ox)`** at every
-sub-cell position (10.1→10.9 dark col 10, 11.25→11.5 dark col 11) and **vanishes when `ox` sits on a
-cell boundary**, where the corner ray has `rx ≈ 0` and steps into the cell correctly. It only shows on
-a STRAIGHT run: anywhere the geometry is irregular some other corner's ray crosses that face anyway,
-which is why the chamber walls beside the player were lit while the long walls were not. The smoothed
-origin did not cause it (`pcol + 0.5` straddles identically) but did add a ~1-frame flash mid-slide as
-`ox` crosses the integer. **Fix: four cardinal rays** — they hit a face at exactly `x = ox` / `y = oy`,
-which lands the step in precisely that cell. Complete rather than a patch: the straddle can only ever
-hit `floor(ox)` and `floor(oy)`. Cost 4 rays of ~270. After: N and S both **1.00**, and the sweep's
-dark set is a constant `[6,14]` (genuine occlusion) at every origin. No degeneracy — a vertical ray on
-a vertical face gives `|den| ~ 6e-17` and `castRay` rejects it as parallel, correctly.
-
-**The boundary was hard exactly where it was axis-aligned.** Canvas antialiasing writes no partial
-coverage on a texel-aligned straight edge, so a scanline through the player's row was a clean
-black/white step with no intermediate value anywhere, while diagonals ramped over 2-3 texels (107 mid
-texels of 4704, 64 runs, median 2). The tunnels are rectilinear, so most of the boundary was that hard
-case — and both sources are unavoidable: the hit-cell reveal `ctx.rect`s are always texel-aligned, and
-polygon edges run along wall faces. `MASK_PX` 4 → **2** doubles the only softening a straight edge
-gets, the linear ramp between two texels, to half a cell (habitat canvas 84×56 → 42×28, a 75×60 level
-150×120). 1 is the floor: a revealed wall cell would be one texel and could never read fully lit.
-Then `MASK_WOBBLE 1.2` world units of two-octave sine displacement on the sample UV, keyed on
-`vSewerMask` — **WORLD xz and nothing else**, which glues the wobble to the level so the polygon slides
-through it. Key it to anything the player carries and the whole boundary swims on every move, which is
-worse than the straight line it set out to fix. Sines rather than a hash on purpose: the job is to
-break a line, not to be statistically noisy, and a smooth offset keeps an edge an edge where white
-noise would dither it. No new programs (85 before and after), no new fetch, no draw calls.
-
-Rejected: a canvas blur. It keeps `MASK_PX` precision, but the benchmark read **1.6ms at 84×56 and
-0.5ms at 300×240** — cheaper at 15x the pixels, i.e. it measured the `getImageData` flush and not the
-blur. Not worth buying an unmeasured ~1ms per rebuild before looking at the free lever.
-> The REJECTION is SUPERSEDED by "Sewer LOS: blur the visibility plane, and fade the area border"
-> — re-measured with the flush amortized, the blur is **+0.08ms and flat across 15x the pixels**.
-> The free lever was the right thing to try first; it just did not cover open floor.
-
-### Sewer LOS: fade a lit wall into the dark, and wobble over masonry only
-`MASK_PX` 4 → 2 above was the WRONG LEVER and is reverted. The hard 90-degree lines were never the
-sampling density: they were the per-cell wall REVEAL, which painted a flat white rect and stopped at a
-cell boundary. Out on open floor a straight boundary is a real ray cast past a corner and reads wrong
-bent or blurred, so the two halves of the mask wanted opposite treatment, not one global softening.
-
-**A lit wall cell now fades toward masonry the sweep never reached** (`MASK_WALL_FADE`, 0.5 cells),
-painted per TEXEL because a cell can fade toward two sides at once and the value there is the MINIMUM
-of the two — no stack of `createLinearGradient` gives that. Affordable because it only runs at the ENDS
-of a lit run: interior cells still go into one path with one fill. The unreached cell is never painted
-at all, which is what keeps it fully dark — a linear filter bleeds half a texel, so holding the last
-lit texel a texel clear of the shared edge puts the whole ramp inside the cell that can be seen.
-Verified: red texels across a fading cell come out `255,255,191,63` (exactly `min(1, d/0.5)`), mirrored
-on the opposite side, and across ROWS where the dark neighbour is north — and **0 of 294 cells show any
-red bleed into an unreached wall**.
-
-**The wobble is now gated to masonry** by a WALLNESS channel in the mask's GREEN, so open floor keeps
-the exact polygon. Green is static per level — walls do not move — so it is painted once into a
-`wallLayer` canvas and blitted in as each rebuild's clear, which costs one `drawImage` instead of a
-fill per wall cell. Everything after that blit composites `'lighter'` and writes RED ONLY, so the
-visibility paint crosses a wall cell without trampling the wallness under it, which an opaque fill
-would. Verified 294/294 cells: green matches masonry exactly. The shader takes one sample at the true
-uv (for `.r` and `.g`) and one at the wobbled uv, then `mix(straight, wobbled, .g)` — 2 fetches of a
-tiny cache-resident texture, and `.g` interpolating across a wall/floor boundary fades the wobble in
-over a texel instead of switching it on at a seam.
-`buildWallLayer` is called UNCONDITIONALLY from `attach`, not from `ensure`: `ensure` early-outs on
-matching dimensions and every habitat is 21x14, so a layer cached on size alone would be the previous
-level's walls. The hit cells also had to be de-duplicated (generation stamps, no cleared grid) — every
-ray landing on a cell painted it again, which was harmless for a flat rect and is not for a gradient.
-
-Left open: with these changes, `make reload` **while an area is live** logs one `Uncaught (in promise)`
-with no reason — 2/2 with them, 0/2 without, and reloads from the menu are clean either way. An
-`unhandledrejection` handler installed ~100ms into the new page and held 10s catches nothing, so the
-rejection is in the OLD page during teardown and dies with its context. No shader error is ever logged,
-programs stay at 85, and in-game there is nothing: 60fps, 42 forced rebuilds and both `los` paths give
-zero rejections and zero errors. Dev-only, on an action the shipped game never performs.
-
-### Sewer LOS: the ground debris was never masked, and `patch()` now CHAINS
-Ground debris sat at full brightness in a corridor nobody could see. It rides `render.decals
-.DecalBatch`, which was one of the 7 materials the mask census listed as skipped — skipped because it
-carries an `onBeforeCompile` of its OWN (per-instance alpha + the atlas window) that an earlier
-traverse had already overwritten once. So the fix was not to patch it, it was to stop `patch()` from
-replacing: it now CHAINS a pre-existing hook, running it first and injecting into what it produced.
-Safe because the two use different anchors — `<uv_vertex>`/`<opaque_fragment>` against
-`<project_vertex>`/`<fog_fragment>` — and each survives the other's edits.
-
-**The trap, and it blanked the whole frame.** Chaining the cache key the obvious way —
-`prevKey = mat.customProgramCacheKey`, call it, append ours — throws on EVERY draw. three's `Material`
-carries a **default `customProgramCacheKey` on the prototype** that returns
-`this.onBeforeCompile.toString()`, so the field is never null, and calling it with no receiver makes
-`this` undefined: `Cannot read properties of undefined (reading 'onBeforeCompile')`, 838 times, 0 draw
-calls, black screen. Take the previous key only when the material owns one (`hasOwnProperty`) and call
-it through `Reflect.callMethod(mat, ...)` so it gets its receiver. Verified live: the decal material
-comes back keyed **`decalInstanceAlphasewerMaskb`** with both hooks intact, beside the exit ladder's
-`sewerMasks` / `sewerMaskb`.
-
-Where the patch is applied is forced by lifetime. The batch belongs to the ACTOR layer, not the area,
-and its groups are built lazily on the first paint that needs one — so there is no build-time moment,
-and `View`'s render loop patches them right after `actors.update`. Gated on the area being a
-`SewerArea`: `Actors` is rebuilt per area (so the city gets a clean batch) but the mask uniforms are
-static, and a patched material left over above ground would sample the last tunnel's canvas.
-`DecalBatch` exposes MATERIALS rather than meshes because `grow()` swaps a group's mesh and keeps its
-material, so a mesh list would go stale where this cannot.
-
-Still unmasked underground, same class of bug, not touched here: the per-quad `Sprites` path — emissive
-blood, wall holes, star glints. Actors and objects also ride it but are hidden outright by `sees()`, so
-they do not need the mask; those three decorations do.
-
-### Sewer LOS: blur the visibility plane, and fade the area border
-Two complaints, both from standing against the outer wall of a habitat.
-
-**The floor boundary was jagged because the mask has no ramp there at all.** The sweep is innocent —
-scanlines across a diagonal shadow edge read `0 0 0 0 [96] 255 255`, stepping exactly one texel per
-texel row, i.e. a clean antialiased 45 degrees. Whole-canvas census: **55 intermediate texels over the
-entire floor boundary**, about one per unit of boundary length. So the complete lit/dark transition on
-open floor was ONE coverage value, and `MASK_PX 4` over `CELL 4` makes a texel **one world unit** —
-~30-38 screen px at `CAMERA_SEWER` (fov 45, 1920x1003 buffer). Bilinear reconstruction of a single
-antialiased texel puts a staircase of that same period along the edge. Nothing to do with `MASK_WOBBLE`:
-`sewerM.g` is 0 across open floor, so the straight sample is the one used.
-
-`MASK_BLUR` (0.75 texels of gaussian) fixes it, but NOT by blurring the mask. The green masonry channel
-is what the shader gates the wobble on, and smearing it would bleed the wobble a texel out onto floor.
-So the red visibility plane gets a **scratch canvas of its own**: polygon, wall rects and `fadeCell` all
-paint there, and it is composited in through `ctx.filter` on top of an unblurred `wallLayer` blit.
-Measured after: the same scanline reads `0 1 8 41 116 199 243 254 255`, floor intermediates **55 →
-311**, and **`greenNotPure` is 0** — the masonry channel is still exactly 0 or 255 everywhere.
-
-0.75 took the band to ~3 texels, the width `MASK_WALL_FADE` already produces on the wall side, and that
-still read as a straight edge — so it went to **2.0**. Swept on the live canvas (band = intermediate
-texels, dim = share of genuinely lit texels under 200, bleed = mean red over never-reached texels):
-`0.75 -> 867 / 1.5% / 1.9`, `1.5 -> 1485 / 5.6% / 5.2`, `2.0 -> 1826 / 14.6% / 7.5`,
-`2.5 -> 2149 / 18.8% / 9.8`, `4.0 -> 2874 / 39.1% / 17.4`. It is a CONVOLUTION, so the band can only
-widen by eating the lit side or spilling onto the hidden one — there is no setting that only softens,
-and past ~2.5 a one-cell corridor stops reaching full brightness.
-
-**Sigma is free; the filter CALL is what costs.** Re-measured at both: `+0.0985ms` at 84×56 and
-`+0.1035ms` at 300×240 for sigma 2.0, against `+0.0765 / +0.0815` for 0.75 — i.e. flat in radius as
-well as in pixels. So the knob can be tuned on looks alone.
-
-**A bigger sigma FIGHTS the border fade, and that is structural.** `fadeCell` authors its ramp inside
-ONE cell (4 texels at `MASK_PX` 4) while a sigma-2 kernel spans ~8, so the blur averages the ramp back
-up toward the interior: the west border cap's outermost texel — the silhouette against no geometry at
-all — went **79 (vis 0.434) at 0.75 to 103 (vis 0.511) at 2.0**. More blur makes the level's outer edge
-brighter, not softer. And it bottoms out anyway: mask 0 renders at `MASK_HIDDEN` 0.18, so the outer
-silhouette can never fall below 18% of a lit brick over a `0x05070a` clear. Softening THAT edge is not a
-blur problem — it wants either a lower `MASK_HIDDEN` or a falloff applied AFTER the blur (a multiply
-layer of `rgb(v,255,255)` scales red alone and would be blur-proof).
-
-**Cost, and the rejection it overturns.** The earlier entry rejected this on a benchmark reading 1.6ms
-at 84x56 and 0.5ms at 300x240 — cheaper at 15x the pixels, which is the tell that it timed the
-`getImageData` flush. Re-measured with the flush amortized over 200 composites, A/B/A/B x5, median:
-**+0.0765ms at 84x56, +0.0815ms at 300x240**. Flat across 15x the pixels, so it is fixed per-call
-overhead and not fill — against a rebuild already measured at 0.30ms in the habitat.
-
-**The area border never faded, and `dark()` said so on purpose.** It returned false off-grid, reasoning
-that there is no level out there to fade into. Exactly backwards: `SewerGeom` caps EVERY solid cell and
-only insets a cap edge that overlooks floor, so the border's cap runs flush to the boundary and then
-there is no geometry at all — a fully lit ledge meeting the clear colour on a hard rim. That is what
-standing next to the outer wall looked like, and the "fully black next tile" was absent geometry rather
-than a cell at `MASK_HIDDEN`. Off-grid now counts as dark. Measured on the same habitat: col 0 rows 8-12
-went from flat `255 255 255 255` to **`79 175 238 254`** west-to-east, and the south border (row 13)
-with it. The cost the old comment feared does not arrive — only cells the sweep REACHED are ever tested,
-so `MASK_R` bounds it.
-
-Two holes in `dark()` deliberately left: unseen FLOOR still does not count (a one-cell-thick wall with a
-hidden corridor behind it keeps a flat cap), and `fades()` is 4-connected, so a diagonal-only dark
-neighbour leaves a hard corner. Neither was what the report was about.
-
-**The level's outer rim needed a channel, not a bigger sigma.** Two independent reasons no blur setting
-reaches it, both measured above: the kernel averages `fadeCell`'s one-cell ramp UP toward the interior,
-and `mix(sewerMaskFloor, 1.0, m)` bottoms out at `MASK_HIDDEN` whatever `m` does. So the rim went into
-the mask's unused **BLUE** channel — painted once per level beside the green masonry channel, blitted in
-with it and therefore never blurred, and multiplied onto `sewerVis` AFTER the floor mix so it can reach
-a true zero. One extra multiply, no extra fetch, no new programs (85 either side).
-
-That zero is the point rather than a detail: `SewerScene` sets `scene.background` and `scene.fog` to the
-same `0x05070a`, and the opaque branch fades toward `fogColor` — so vis 0 lands EXACTLY on the
-background and the level stops having a silhouette instead of merely dimming toward one.
-
-Painted as a MULTIPLY by `rgba(255,255,0,a)`. Multiply is per channel, so a source of 1 leaves red and
-green exactly as painted and only the zero blue is scaled by `(1 - a)`; the four ramps each cover the
-whole canvas and clamp to their far stop, so inland they are a no-op, and where two meet they multiply,
-dropping a corner faster than an edge. The gradient is anchored at the outermost TEXEL CENTRE (the
-half-texel inset), not at the canvas boundary — a linear fetch clamped to the edge returns that texel,
-so anchoring at the boundary lands the rim at 1/8 lit instead of 0.
-
-`MASK_EDGE_FADE` is 1.0 cell, which is exactly the always-solid border ring: measured blue
-`0, 64, 128, 192, 255…` reaching full one cell in, `1056 / 4704` texels below 255, rim vis **0.000** and
-the wall's inner face still **0.961**. Raising it past 1 would eat into playable floor, since the ring is
-one cell thick.
-
-Trap for anyone comparing two sewer screenshots: a capture taken while the window is throttled to 1 FPS
-can be a **partially loaded scene** and look nothing like the game. The before shot read `110 geom / 177
-tex`, the after `1161 geom / 291 tex` — flat and bright against the real near-black lighting. Check the
-topbar geom/tex counts, not just fps.
-
-### Sewer LOS: MASK_PX 4 → 8, paid for by not painting texel by texel
-Doubling the mask (habitat `84x56 → 168x112`, a full 75x60 level `300x240 → 600x480`) is free in every
-part of the rebuild except one, and ruinous in that one. Component sweep at the live cell counts, with
-the `getImageData` flush amortized over 100 rebuilds:
-
-| | clear+polygon | fadeCell | composite | total |
+| `rock-boulder` | **1.11x** | 97,202 | **1,548** | 1,548, `tex` 256 |
+| `rock-cluster` (100k master) | 1.74x | 99,285 | **20,433** | — master deleted |
+| `rock-cluster` (at budget) | 1.39x | 4,736 | n/a (`tris` -1) | 4,736, `tex` 512 |
+| `tree-broadleaf` | 2.17x | at budget | n/a | 4,934, `tex` 512 |
+| `tree-conifer` | 2.21x | at budget | n/a | 4,983, `tex` 512 |
+| `bush-low` | 2.27x | at budget | n/a | 4,406, `tex` 512 |
+
+**The ~2x line is not a cliff, it is a gradient, and `rock-cluster` is the measurement that shows
+it.** At 1.74x it is comfortably UNDER the line the sewer batch drew, and meshopt still stalled at
+20,433 tris — four times the boulder's landing point and unusable for a prop scattered by the
+hundred. Read the whole series instead: 1.11x reached 1,548, 1.31x (the drum) floored at 4,826,
+1.74x at 20,433, 1.96x and up not at all. So the question is never "is it under 2x", it is "where
+will it land, and is that inside the prop budget".
+
+**`tex` had to go DOWN on the one prop that decimated properly.** 1,548 tris at `tex` 512 is 165
+texels per triangle against the ~43 a TRELLIS 2048 export is authored at — a map four times larger
+than the geometry can show. `tex` 256 lands it at 42. The rule cuts both ways: the sewer batch
+learned not to starve a map, and this is the first prop here that had to be stopped from carrying one.
+
+**The frame is what sets `baseColor`, not the albedo arithmetic — twice, in opposite ways.**
+
+- `tree-conifer` needed the **first per-channel `baseColor` in the repo**. Baked at mean sRGB
+  41/84/69, the canopy is twice as green as it is red, and the wilderness moon is `0x8294c0`. A blue
+  key on a green albedo rendered a stand of conifers as saturated **teal** blobs, by far the loudest
+  thing in a near-monochrome night frame. A uniform darken cannot fix that — the saturation is the
+  problem and one factor leaves the ratio untouched. 0.55/0.35/0.45 lands it at ~29/50/46. `bush-low`
+  is the same case (117/124/82 → 0.11/0.13/0.22), so per-channel is now the norm for foliage here.
+- Both rocks needed to go **below** what the arithmetic asked for: 0.15 and 0.18 against the ~0.25
+  and ~0.3 that put them at the prop family's nominal 46-52. The arithmetic was not wrong, the
+  context is. A rock is one large smooth upward-facing surface catching the full moon term, while the
+  ground around it is broken up by grass and by its own mottle — at a "correct" albedo it still read
+  as pale blue ice. The number that matters is where it lands ON SCREEN beside its neighbours.
+
+**The two ground textures, and the contrast between them is the whole read.** `wild/ground` is a
+full-coverage matted-turf tile at `GROUND_TILE` 9.0 world units (deliberately not a multiple of the
+4-unit cell, so the repeat does not land on the grid). `wild/grass` is the tuft sprite and its spec
+is unusual enough to record: **side-on at eye level, blades rooted in and cut off by the BOTTOM edge
+of the frame**, because the quad's v runs 0 at the ground to 1 at the tip — blades that stopped short
+would float, and a top-down lawn tile (which is what the placeholder was) reads as a patch pasted on
+the ground rather than as standing grass. Non-square `res` [256,192] keeps the source's 4:3, matching
+`TUFT_W` 1.5 × `TUFT_H` 1.1. Measured after the bake: ground **0.0503** linear (after its lift),
+blades **0.1385**. The blades being the lighter of the two is what makes a field read at all — there
+is no lamp, no window and no kerb out here to supply a value break.
+
+## The grass sprite: a subject too close to its own backdrop, and a lift run backwards
+
+The tuft sprite came back from two separate faults, both in its `textures.json` entry and neither in
+the shader. Worth an entry because the first is a general rule about the chroma route and the second
+is the first time `lift` has been used to go *down*.
+
+**A subject whose own colour falls inside the chroma tolerance cannot be keyed.** The source was
+hand-cut and still registered `class: "chroma"`, so `make tex` kept re-keying it: blades mean
+(105,104,84) against `0x5a5d63` is a **max channel diff of 15** at `tol` 24, i.e. inside the key. It
+was erasing grass along with the backdrop, and what survived carried a grey wash. `class: "sprite"`
+(no key, hand alpha kept, `bleed_alpha` still scrubs the transparent texels) took opaque coverage
+from **2,759 to 7,666** texels — 20.3% against the source's own 20.4%. The rule that generalises:
+before registering chroma, measure the SUBJECT's distance from the key, not just the backdrop's.
+
+**A dead end on the way, recorded because it nearly shipped.** A claim that "54.5% of partial-alpha
+edge texels carry backdrop grey" bought a pre-resize `bleed_alpha` pass in `tools/textures.py`. The
+metric cannot work on this image at all — blade and key are ~16/255 apart, so it counts blade texels
+as grey. Reverted; `tools/textures.py` is untouched. Same root cause as the fault above.
+
+**Then `lift` backwards, g 1.4, to DARKEN.** The tuft quads carry straight-up `(0,1,0)` normals by
+design (`WildGrass.tuft` — a vertical quad lit by its true normal goes black as it turns from the
+moon, and the field flickers as the camera orbits). So a blade takes *exactly* the ground's
+irradiance, and blade-over-ground on screen is a **pure albedo ratio** that nothing but the texture
+sets. It measured **2.70×** (0.1357 vs 0.0503 linear; sRGB 104 vs 62, against a prop family at
+46-52) — the loudest thing in the area bar the actor. `lift` is `out = (v/255)**g`, a plain power, so
+where every other entry uses g < 1 to brighten, **g 1.4 darkens**: 0.0660 linear, **1.31×** the
+ground, sRGB 73/71/53. Still the lighter of the two, so the field still reads.
+
+## Count a prop's CONNECTED COMPONENTS — the split ratio does not catch "mostly empty"
+
+The user hand-replaced `wild/bush-low` with one generated in the Runware web playground, saying mine
+was "mostly empty", and asked whether our MCP sends the playground's settings. Measuring both settled
+a question the existing rules could not even ask. Components over unique positions, union-find over
+triangle edges:
+
+| glb | tris | verts | uniq | split | **components** | **largest** |
+|---|---|---|---|---|---|---|
+| `rock-boulder` | 97,202 | 54,048 | 48,602 | 1.11x | **1** | 100% |
+| `bush-low` (user's, now shipped) | 4,955 | 4,280 | 2,395 | 1.79x | **8** | 98.7% |
+| `tree-conifer` (old settings) | 4,983 | 5,043 | 2,276 | 2.22x | **12** | 52.9% |
+| `bush-low` (mine, retired) | 4,406 | 5,454 | 2,399 | 2.27x | **96** | **24.3%** |
+| **PROBE — the retired bush's OWN reference, new settings** | 4,777 | — | — | **1.68x** | **1** | **100.0%** |
+
+"Mostly empty" is literal: 96 disconnected blobs with the largest holding a quarter of the mesh — a
+cloud of separate leaf clumps with air between them. Identical bbox and near-identical unique-position
+count to the replacement, so **no existing measurement we take would have flagged it**: the split
+ratio describes the ATLAS, and this is the SURFACE. `tree-conifer` has the same disease at half
+strength and is queued for regeneration.
+
+**The cause is the SETTINGS, and a controlled probe is the only thing that could have shown it.** The
+first read here was that the reference did it — mine painted the dome as discrete leaf clumps with
+dark gaps, and "TRELLIS resolves a dark gap as real air" is a tidy story that fits the data. It was
+wrong. Re-running **that exact reference, unmodified**, with the corrected settings returns **1
+component at 100%**, split 1.68. 96 → 1, one variable changed. Nothing about run-to-run noise reaches
+that far.
+
+So the reasoning that dismissed the settings — "UV chart clustering cannot merge disconnected
+surfaces" — was itself the error: `meshCluster`'s `smoothStrength` and `thresholdConeHalfAngleRad`
+reach the dual-contour remesh, not just the atlas. **Do not reason about which knob can matter; run
+the one-variable job.** It cost $0.03.
+
+**Two of the settings were outright bugs.** Against the playground payload: `meshCluster` was **dead
+code** in the MCP — declared on `Trellis3dOptions` and forwarded by `buildInferenceBody`, but absent
+from the tool's `inputSchema` and never set at the call site, so unreachable from the tool. And
+`remesh_project` defaulted to 0.8 against the playground's 0.9. Both fixed; `mesh_cluster` now
+defaults to `{1, 0, 1, PI/2}`.
+
+The acceptance gate stands, but read it correctly: **few components, each a substantial solid piece**.
+Raw counts mislead in both directions — the shipped conifer is 2 components at 51%/49% (a canopy and a
+trunk, both solid) and `tree-broadleaf-full` is 17 at 93.9% (sixteen specks sharing 6.1%). Neither is
+the failure. The failure is 96 pieces with the largest at 24.3%.
+
+**A `baseColor` is fitted to one bake, and a replaced glb silently invalidates it.** The entry still
+carried `0.11/0.13/0.22`, fitted to the retired mesh's baked mean sRGB 117/124/82. The replacement
+bakes at **84/96/61**, which those same factors land near **29/35/30** against the prop family's
+46-52 — the prop was rendering about a third too dark with nothing to indicate it. Refitted to
+0.26/0.28/0.52. Its MR map was re-read on the new mesh rather than carried forward (pure green,
+0/248/0, no `dropMR`), and its `seed` dropped: it belonged to the retired mesh, and the shipped one is
+not reproducible from this repo at all — its reference lives only on Runware's CDN.
+
+## Ground patches in the wilderness, and two ways a working layer reads as nothing
+
+`render.world.Lawns`' coverage mask — one soft radial kernel per marked cell, `lighten`-unioned onto a
+canvas and handed in as `alphaMap` — is now `render.world.CoverageMask`, shared with a second caller.
+Extracted rather than copied because all four of its decisions are traps (`lighten` is a per-channel
+MAX not an add; `flipY = false`; the repeat/offset rescale; the kernel radius must clear `CELL * 0.5`
+or a run of cells beads into a string of pearls). `render.wild.WildPatches` is the new caller: two
+overlays, bare earth under dead grass, over the turf.
+
+**One deliberate divergence from Lawns: the geometry is emitted per `Chunks.CELLS` block.** Lawns
+affords a single mesh because a city lawn covers a handful of alley cells; a wilderness layer spans
+the whole 400-unit area, which is past `Chunks`' own size guard, so one mesh would sit at the scene
+root and submit the entire area's blended fill every frame. Cost as built: **44 → 57 draw calls,
+177k → 285k tris, still 60 FPS**, for two patch layers plus the small-rock batches.
+
+Both tuning failures were invisible-by-eye and needed a measurement:
+
+- **Coverage too dense reads as SPECKLE, not as patches.** First pass seeded at 0.07 / 0.045, which
+  put **25.8%** and **18.4%** of the mask over the alphaTest line. Tinting the layers magenta showed
+  them covering the entire frame — because what shows through a near-uniform mask is just the art's
+  own ~38% coverage, i.e. grain. Judge the MASK, not the seed count: 0.013 / 0.008 with `KERN` raised
+  7.0 → 11.0 lands 10.0% / 8.7% strong, and the blobs read as islands. `KERN` matters as much as the
+  chance — 7.0 gives a blob radius of ~3.15, under one cell, which from a camera 18-55 units up is
+  grain no matter how few of them there are.
+- **A real value ladder, halved by opacity, drops under threshold.** Measured LINEAR luminance of the
+  three arts as built: earth **0.0348** (0.73×), turf **0.0476**, dead grass **0.0560** (1.18×). At
+  Lawns' own `ALPHA` 0.5 the blend collapses that to 0.87× and 1.09×, which in a frame this dark is
+  nothing at all. 0.85 restores it. The trap on the other side is real too: widening the ladder in the
+  TEXTURE instead, by pushing the earth's `lift` 1.15 → 1.35, computes to 0.0125 — a quarter of the
+  turf, which is the sewer-valve failure where a dark overlay stops being an object and becomes a hole.
+
+## Four trees, one per tile ID
+
+`AreaGenerator.generateWilderness` has always dealt `TILE_TREE1 + Std.random(4)`, and the 3D area was
+collapsing those four IDs two-and-two onto two models. There are four models now — conifer,
+bare broadleaf, broadleaf in leaf, dead snag — mapped **one to one**, so the variant already written
+into every saved grid picks the model, identically on every re-entry, with nothing persisted. Trees
+are also 25% taller by request (conifer 6.0 → 7.5, bare broadleaf 5.2 → 6.5).
+
+The three new meshes, all generated at the budget with the corrected settings:
+
+| prop | tris | split | comps | largest | w/h | `baseColor` |
+|---|---|---|---|---|---|---|
+| `tree-dead` | 4,784 | 1.93 | **1** | 100.0% | 0.47 | 0.5 uniform |
+| `tree-conifer` | 4,880 | **1.27** | 2 | 51.2% | 0.34 | **none** |
+| `tree-broadleaf-full` | 4,660 | 1.79 | 17 | 93.9% | 1.09 | 0.78/0.44/0.53 |
+
+Three things worth carrying:
+
+- **A reference that reads better FLAT can remesh far worse.** The conifer was re-rolled twice. The
+  lumpy tiered spruce outline — the one that looks like a conifer on screen — came back **38
+  components, split 4.70**, worse than anything shipped in this repo, because TRELLIS made each tier
+  its own blob. The smooth cone, which was nearly rejected for looking geometric as a 2D image, came
+  back split **1.27**, the cleanest tree here. From a camera 18-55 units up the two silhouettes are
+  indistinguishable. Both references are in `Unused/` for comparison.
+- **`h` is width, again.** `tree-broadleaf-full` has the widest bbox of the four at **1.09**, so it is
+  held to `h` 5.8 for 6.3 world units across, where the bare broadleaf at 0.84 takes `h` 6.5. The
+  conifer at 0.34 is narrow enough to take the full 7.5 and still draw only 2.55 across.
+- **The conifer's teal correction is gone, and the fix moved upstream.** The retired mesh baked at
+  41/84/69 — twice as green as red — and needed the repo's first per-channel `baseColor`. This
+  reference asks for "muted desaturated dark grey-green, mid-value, not vivid green" in as many words
+  and bakes at **54/58/50**: near-neutral and already inside the prop family's 46-52, so the entry
+  carries no `baseColor` at all. Correcting saturation at the source beats correcting it at the bake.
+  `tree-dead` keeps a **uniform** 0.5 rather than a per-channel fit on purpose — it bakes warm at
+  80/68/55 and is the one warm thing in the area, which a per-channel fit would neutralise away.
+
+Also landed, both small: `TILE_ROCK` is **unwalkable** now, matching the four tree tiles beside it and
+still see-through like them — it is written only by `generateWilderness`, and `WildProps` stands a
+boulder on every one of those cells, so a walkable rock was geometry the player walked through.
+Nothing to migrate: walkability is a static table, entry re-tests it through `findEmptyLocation`, and
+movement tests the target cell. And the same two rock glbs are scattered again at a tenth of their
+height (619 loose stones) on open cells only — `Models` caches one template per path, so a second row
+over the same file is a second `InstancedMesh` and not a second load.
+
+## How much geometry the corrected TRELLIS settings absorb, and the albedo wall behind it
+
+The gappy-bush probe showed the corrected settings (`mesh_cluster {1,0,1,PI/2}` + `remesh_project`
+0.9) taking a reference of discrete leaf clumps from 96 components to 1. That reference was only
+*dark gaps*. `wild/bush-bramble` was generated to find the ceiling: a lace of interlocking arcing
+canes with real see-through holes — thin structure **and** topological holes, hard on both axes.
+
+| reference | tris | split | comps | largest |
 |---|---|---|---|---|
-| `MASK_PX` 4 | 0.03 | 0.54 | 0.10 | **0.67ms** |
-| `MASK_PX` 8 | 0.02 | **3.78** | 0.10 | **3.90ms** |
+| gappy bush (dark gaps, no thin structure) | 4,777 | 1.68 | **1** | 100.0% |
+| bramble (thin canes + real holes) | 4,894 | **2.59** | 16 | 94.2% |
 
-The polygon fill and the blur composite are both FLAT in canvas area (0.02ms at 84x56 and at 600x480;
-the blur was already known flat in radius and in pixels). `fadeCell` was everything, and 7x rather than
-4x, because it emitted a **1x1 `fillRect` with a freshly built `rgb(...)` string per texel** — 56 cells
-x 64 texels = 3584 draw calls, each with a CSS colour parse.
+**Topology holds.** 15 of those 16 components share 5.8% of vertices and are detached cane *tips* —
+the same speck pattern `tree-broadleaf-full` ships with at 17 / 93.9%. The plan view is a correct
+radial bramble and the holes are real. But split **2.59** is the worst in this repo, so this prop can
+never be decimated offline and has to keep arriving at the budget. So the line is: the settings
+absorb dark-gap art completely, thin interlocking structure only mostly.
 
-**The ramp only varies along one axis unless the cell fades on both.** The usual case is masonry sitting
-behind a wall the player is looking at — one fading side — and then the value is constant down a column,
-so it goes out as `P` strips instead of `P*P` texels. Measured live: **27 of 37 ramped cells are
-single-axis**, 10 turn a corner and still need the per-texel loop (a minimum over two axes is not a
-stack of linear gradients, which is what the old comment got right). Blended, on the real 27/10 split:
+**The albedo is where it actually fails, and it is a new mode.** A prop dense enough to occlude
+itself bakes that occlusion into its base colour. From the same reference value a conifer bakes at
+**0.79x** and the bramble at **0.44x** — 30/29/29 against the prop family's 46-52.
 
-| | fadeCell |
+Neither existing knob reaches it:
+
+- `baseColorFactor` is a factor in `[0,1]`. It only multiplies **down**. There is no up.
+- Repainting the reference does not either, and that was measured rather than assumed. The same
+  image at subject p50 **53** baked 24/23/21; lifted to p50 **68** it baked 30/29/29 — a 28% brighter
+  reference moved the bake 29%, proportional. Reaching 46-52 that way needs a reference brighter than
+  the flat `#5a5d63` backdrop TRELLIS segments it against, which costs the segmentation.
+
+So the correction moved to the bake: **`lift` in `models.json`**, a gamma on the base-colour MAP
+(`out = (v/255)**lift`, `<1` brightens), same name and meaning as `textures.json`'s. It is the missing
+inverse of `baseColor`, runs full-res before the resize like `texSrc` does, and is folded into
+`last_sig`. `lift` 0.78 lands the bramble at **48/47/47**, inside the band.
+
+Two things that rode along. The reference lift was done **in code, not by re-prompting** — a gamma on
+the subject plus a re-lay on a truly flat `#5a5d63` (gpt paints a vignette: measured backdrop 82/86/91
+against the 90/93/99 it was asked for). That holds the composition fixed, so the two bakes differ by
+value alone, and it is free. And the MR map came back **mean 0/206/128, metalness peaking at 198** —
+cyan, metallic across canes and leaves alike — where `bush-low` from the same generator peaks at 18.
+`dropMR`. Re-read the MR map on every regeneration; the verdict never carries forward.
+
+Shipped as the second `TILE_BUSH` model, picked per cell by hash at `BRAMBLE_CHANCE` 0.35 (measured
+35.7% over a 100x100 grid, and 54.6% agreement with the rock split where independence predicts ~55%).
+Its bbox aspect is **2.86**, the widest prop out here, so `h` 1.0 still draws 2.9 world units across —
+a sprawl beside `bush-low`'s rounded scrub, which is the shape difference doing the work.
+
+## The wilderness ground stops being a plane (`render.wild.WildHeight`)
+
+One analytic height field — two out-of-phase sine octaves, wavelengths **72.8** and **29.0** world
+units — sampled by every builder out there and by the whole actor layer. Phase-offset off the
+persisted `area.id`, so two wilderness areas are not the same landform and each keeps its own hills
+across saves. Measured at `RELIEF_AMP` 1 over a 400x400 sample: **3.80 units peak to trough** (half a
+conifer), slope p50 **0.110** / max **0.164**, per-cell step p50 **0.272** / p95 **0.545**. Cost at
+the gameplay camera: **72 calls / 334k tris**, from 73 / 309k flat — no new draw call, the extra tris
+are the patch subdivision below. Verified in the running game at a grazing free-cam pose: the horizon
+curves, props sit flat on the slopes, no chunk seam.
+
+**The normal cannot be computed, only derived — and the reason is chunking, not cost.** The ground is
+one mesh per `Chunks.CELLS` block, so `computeVertexNormals` on a block averages only the faces *that
+block* holds; every vertex on a block edge is missing its neighbour's triangles, its normal turns, and
+a lit seam runs down every chunk boundary in the area. The field is closed-form differentiable, so the
+normal comes out of `normalize(-dh/dx, 1, -dh/dz)` and cannot know a block exists. Checked against a
+central difference at 160k points: **max error 4e-11**, unit length, up-facing, perpendicular to both
+tangents. Amplitude is a **slope** budget, not a look — every consumer downstream pays in slope.
+
+**A cell-sized overlay quad is a CHORD, and lifting it does not fix that.** `WildPatches` laid one
+flat quad per cell; over relief the ground bulges through its middle by the sagitta — **0.038** units
+for the tight octave alone, against a `PATCH_Y` of 0.02. Lifting the layer clear of the bulge floats
+its *edges*, where the two surfaces do agree. Subdividing to the ground's own `SUB` lattice is the
+only answer that is right at both. `SUB` stays 2: the tighter octave still gets 14 samples per period,
+which retires the deferred `SUB` sweep.
+
+**`WorldCtx.floorY` answers per CELL, and that is the standing limit.** Relief reaches the actor layer
+through one new hook, `WorldCtx.ground` — a world-space `(x,z) -> y` that `WildArea` points at the
+field and that `World`/`SewerArea` clear. `floorY(col,row)` samples it at the cell centre, so an actor
+is exact in the middle of its cell and steps a p50 of 0.272 crossing into the next (the city already
+steps 0.2 over a curb). Anything holding a real world position takes `WorldCtx.floorYAt(x,z)` instead
+— today that is the slime trail, a long thin ribbon that would lose whole segments to the depth test
+where it dipped under a hillside. Props sink by `h * r * slope`, which is exactly the drop from centre
+to downhill edge: half-buried reads as a rock, floating reads as a bug. No tilt — `PropPlace` carries
+a yaw and nothing else, and a tree grows vertical whatever it stands on.
+
+The player ring was the first thing the cell answer broke, and it is the shape of the whole class. It
+already sampled the **highest** of its 4 footprint corners, for exactly this reason on city curbs —
+but each corner was snapped to its grid cell, and the ring radius is 0.448 of a cell, so with the
+player anywhere near a cell centre all four corners land back in that same cell and the ring reads one
+flat height. Measured: ring at 0.766 + 0.06 lift, ground under its uphill arc peaking at **0.973** —
+buried by 0.207, over 3x the lift, and the arc clips. Sampled by world position the max comes out at
+`h + rr * (|dh/dx| + |dh/dz|)`, which is always >= the disc's true peak `h + rr * |grad|`, so it errs
+by floating — the side this is allowed to fail on. `PathLine` does not have it (Catmull-Rom through
+cell centres, so it already tracks the surface) and neither does `TacticalGrid` (max of adjacent
+cells, so its crosses float rather than sink).
+
+## A canopy has a CLEARANCE, and it is not the tree's height (`wild/tree-broadleaf-full`)
+
+The player walked head-first into the foliage. The tree was 5.8 world units tall against a 3.0-unit
+actor billboard, which sounds like plenty — but its crown skirted down to **~22%** of its own height,
+so the leaves an actor meets were at **1.3** units. Height is not the number. The number is where the
+crown FLARES, measured by binning the glb's vertices along Y and reading the radius per band:
+
+| mesh | trunk holds | crown flares at | underside at its `h` | bbox w/h |
+|---|---|---|---|---|
+| original (`Unused/…-lowcrown`) | — | ~0.22 | 1.3 @ h 5.8 | 1.09 |
+| parasol (`Unused/…-parasol`) | 7-8% of max radius to 0.45 | 0.55 | 3.58 @ h 6.5 | 1.10 |
+| shipped | 13-16% to 0.30 | **0.35** | **3.32 @ h 9.5** | **0.71** |
+
+**The parasol is the entry worth keeping.** Asked for a crown "clearly wider than it is tall", gpt
+delivered exactly that: a 45%-deep disc on a stick 1/14 the crown's width. It cleared the player
+perfectly and read as an **umbrella** from every camera angle — a field of them looked like mushrooms.
+Clearance was fixed and the prop was still wrong, which is why "does it clear the actor" is not the
+whole acceptance test for a tree. Before it, asking for a "compact rounded canopy" on a tall trunk
+gave the opposite failure: a narrow lollipop at aspect **0.35**, the conifer's silhouette, on the one
+tree of four whose job is to be the broad one.
+
+What works is naming all three fractions at once: thick bare trunk through the bottom 40%, crown a
+deep rounded dome in the top 60% and about half again as wide as it is tall, whole tree taller than
+wide. That landed 4,866 tris, split 2.82, **20 components at 91.8%**, MR pure green (re-read, not
+carried forward), and aspect **0.71**.
+
+**Being tall is not what costs footprint — the bbox is.** At 0.71 this is now the narrowest-for-its-
+height tree of the four, so h **9.5** draws only **6.7** world units across: *less* than the parasol
+took at h 6.5 (7.15) and barely over the original's 6.3 at h 5.8. It is the tallest prop in the area
+by a wide margin, which drags `PROP_CULL_R` 7.0 → 9.0 with it — `Models.cull` tests one sphere radius
+for every batch, so the tallest prop sets it or that prop pops in at the frame edge. Gameplay-pose
+cost went 72 calls / 334k tris → **76 / 406k**, the extra being instances the wider cull keeps.
+
+### …and then it came out covered in coloured dots
+
+Pure cyan, magenta, yellow and green specks all over the foliage. Not a shader problem and not the
+generator's: the **2048 source atlas is clean** (0.001% of texels above saturation 0.75, and every one
+of those is bark brown), while the **built 512 had 2.949%**, with the extremes at literal `0,255,255`
+and `255,0,255`. So `make models` was making them.
+
+The cause is one channel nobody asked for. `wild/tree-broadleaf-full` is the **only prop of 23** whose
+base atlas arrived carrying an alpha channel — 35.4% of its texels at alpha < 8, the UV gutter. Every
+other prop measures ~0%, which is why this had never shown up. That channel is not dead weight, it is
+a live trap: `textureCompress` resizes through sharp, which **premultiplies, averages, and
+unpremultiplies**, so a 4x4 block that is mostly gutter comes out with an averaged alpha near 1/255 and
+its colour divided by that. The proof is exact — **100%** of the blown texels had alpha < 128, mean
+alpha **2**, min **1**. The same bug also darkened the whole map, 85/126/84 -> 73/110/72, which had
+gone unnoticed behind the dots.
+
+The fix is in `tools/models.mjs`, last step before the resize: flatten alpha out of an OPAQUE
+material's base map. **`removeAlpha`, never `flatten({background})`** — TRELLIS had already dilated the
+chart colour into the gutter (its mean rgb matches the atlas mean exactly), so the channel was the only
+thing wrong and compositing would have thrown that dilation away. Rebuilt: **0.002%** and mean
+85/126/85, the source to within a digit.
+
+Two things generalise. **A prop's source atlas can be perfect and its built one wrong** — every number
+`propstat` reports reads the SOURCE, so none of them could have seen this; when a prop looks wrong in
+the game and measures clean, measure the built glb. And the guard is scoped to OPAQUE-material base
+maps because that is where it was measured and where dropping alpha is safe by definition; a prop that
+genuinely needs MASK or BLEND would still explode, and near-zero alpha in its atlas is the tell.
+`sewer/bags` (98.8% under alpha 128) and `wild/rock-boulder` (38.9%) also carry alpha and are NOT
+affected — nothing near zero, so nothing to divide by.
+
+## Half the grass was dark, and three had been undoing the trick that stops that
+
+The wilderness grass came out in two populations — pale yellow-green tufts and near-black ones,
+interleaved at random across the field. **Debug key `1` settled it in one screenshot**: under WYSIWYG,
+which hides every light and adds a flat ambient, every tuft is the same pale green. So the split was
+never albedo, and nothing in the texture, the `lift` or the `alphaTest` was involved.
+
+`WildGrass.tuft` writes its normals pointing **straight up**, not out of each quad's face. That is a
+deliberate lie and the header already explains why: a vertical quad lit by its true normal goes black
+the moment it turns from the moon, and a field of them flickers as the camera orbits. What the header
+did not say is that writing the normal is only half the job. The material is `DoubleSide`, and three's
+`normal_fragment_begin` does:
+
+```glsl
+float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;
+vec3 normal = normalize( vNormal );
+#ifdef DOUBLE_SIDED
+	normal *= faceDirection;
+#endif
+```
+
+So every **back-facing** fragment got `(0,-1,0)`: no moon term at all, and `getHemisphereLightIrradiance`
+sampling the light's GROUND colour instead of its sky colour. Which of a tuft's two crossed quads faces
+away is a property of the VIEW, so the dark half reshuffled as the camera turned — the exact failure
+the up-normals exist to prevent, reintroduced by the engine underneath them.
+
+The fix is one line appended after the include, `normal *= faceDirection;`, which cancels the flip
+exactly (it is ±1) and lands before `lights_fragment_begin` takes its `geometryNormal = normal`, so the
+moon and the hemisphere both see the sky normal. Measured over one pinned pose: green-leaning pixels
+**0.17% → 0.44%** of the frame (2.6x more grass reading as grass) and frame mean luma **11.80 → 14.22**.
+
+**The trap generalises to any material that lies about its normals.** For a normal that matches its
+face the flip is correct and is exactly what it is for; it only bites where the normal was chosen to
+disagree with the geometry. `WildGrass` is the only such material in the renderer — every other
+`DoubleSide` Lambert here (city ground, lawns, gables, roof details, door covers) writes face-true
+normals. And it is correct ONLY while the material stays `DoubleSide`: under `BackSide` the added line
+would flip every fragment instead.
+
+## The terrain band decides what a wilderness area IS (`render.wild.WildBand`)
+
+`map.Terrain` has painted three bands over the region map since Phase 0 and nothing but area NAMING
+read them: a forest tile and a mountain tile generated the identical scatter and rendered the identical
+landform, so the map promised a landscape the area did not deliver. `Terrain.sample`'s own header said
+it was exposed "because the wilderness generator wants the VALUE, not just the band" and it had **zero
+callers**. It has two now, plus a new `Terrain.depthAt` — how far into its own band a tile sits, 0 at
+the threshold and 1 at the extreme.
+
+**The split is forced, and it is the reusable part.** Density has to be decided at GENERATION
+(`AreaGenerator.generateWilderness`, persisted, `isGenerated`-gated so areas already visited keep their
+mix) because walkability follows the tiles — a renderer that simply drew fewer trees would leave blocked
+cells looking like open ground. Everything else is render-side (`render.wild.WildBand`, one style record
+per band) and therefore applies retroactively to every wilderness area in every save.
+
+| | forest | plains | mountain |
+|---|---|---|---|
+| cells with a prop tile | 10% | 2.5% | 7% |
+| tree / bush / rock | 50/35/15 | 20/55/25 | 15/25/60 |
+| ground | leaf litter | turf | scree |
+| relief amp (edge → deep) | 0.60 → 1.00 | 0.60 → **0.30** | 1.00 → 1.80 |
+| tufts × height | 2 × 1.0 | 3 × 1.3 | 1 × 0.8 |
+
+Measured on one save, mid-area, same zoom, window focused, against Phase 2's 72 calls / 334k tris:
+
+| band | calls | tris | submit | GPU | FPS |
+|---|---|---|---|---|---|
+| plains | 73 | 314.6k | 1.8ms | **6.95ms** | 60 |
+| forest | 62 | 444.5k | 1.2ms | **4.92ms** | 60 |
+| mountain | 52 | 501.8k | 0.99ms | **7.20ms** (peak 7.62) | 60 |
+
+All three lock 60 with the GPU under half of a 16.7ms budget, and **the triangle count does not order
+them**: the forest draws 41% more triangles than the plains and costs 2ms LESS. Plains runs 3 grass
+tufts per cell against the forest's 2, and an alpha-tested tuft is fill — two crossed quads over the
+whole frame — where a canopy is opaque geometry that depth-rejects. The knob to watch out here is
+`tufts`, not the trees.
+
+Three things worth keeping:
+
+- **The mountain's relief is the one number to re-check if an actor ever reads as climbing stairs.**
+  At amp 1.8, sampled over the 100x100 grid at cell centres: **6.84 units peak to trough, slope p50
+  0.198 / max 0.296 (16.5 degrees), per-cell step p50 0.452 / p95 0.983 / max 1.068**. `WorldCtx.floorY`
+  answers per CELL, so that step is what an actor takes crossing one — a third of its own billboard
+  height at the p95, against the city's 0.2 curb. It looks right walking; the cap if it ever does not is
+  `reliefMax` 1.5.
+- **The plains relief row is REVERSED (max 0.30 below min 0.60) and that is not a typo.** Plains is the
+  band with no character, so `depthAt` peaks where the field is FLATTEST; its deep end must be the
+  gentlest ground and its edge, where the hills start, the roughest. Caught by reading the value back
+  out of `WildBand.reliefAmp` over CDP, not by looking at the screen.
+- **The band has to be set before the MODEL is built, not in `build()`.** `WildModel.fromArea` turns
+  tile IDs into prop indices and is evaluated as the ARGUMENT to `WildArea`'s constructor, so a band set
+  in `build()` would be one area late. `WildBand.use(game)` runs in `View.showWild` instead.
+- **Forest density is set by the CAMERA, not by the fiction.** 0.12 / 60% trees put the actor under a
+  crown most of the time — there is no occlusion fade out here, `render.Occlusion` buckets buildings and
+  a wilderness area has none. 0.10 / 50% still reads as a wood against the plains' 0.025 and took 33%
+  of the triangles off with it (662k → 442k).
+
+Weighted arrays replaced the one-off chance constants: `bushes`, `rocks` and `trees` are lists of PROPS
+indices where repetition IS the weight (`list[hash % list.length]`), so one mechanism covers all three
+and `BRAMBLE_CHANCE` is gone. Finding one area per band to test is free from CDP —
+`parasiteHx['map.Terrain'].bandAtArea(seed, x, y)` is a pure static and the seed reads out of
+`host.save.read(0)`.
+
+## A fallen log came back in three pieces, twice, and it was the ART
+
+`wild/log-fallen`'s first reference was a trunk with a torn root plate of thin broken roots and a long
+strip of bark peeled off to bare wood. TRELLIS returned **3 components, largest 54.3%** — two big blobs
+of ~26k and ~22k verts, i.e. the object in halves, not a speck cloud. A re-roll on a fresh seed
+(everything else identical, $0.01) came back **3 / 55.8%**: reproducible, so it was not the roll.
+
+Repainting the subject as ONE plain solid trunk — same bark all over, no peel, no roots, "no separate
+parts of any kind" in the prompt — came back **1 component / 100% / 1.25 split** in a single run.
+
+**So the settings-first rule still holds, but its second step is a cheap re-roll before a repaint.** The
+corrected `remesh_project` / `mesh_cluster` defaults are what took the gappy bush from 96 components to
+1; they cannot help a reference that paints two materials meeting along a hard edge. A dark gap in the
+art becomes air; a hard value break along a silhouette can become a SEAM.
+
+The pair also settled the two decimation routes against a scatter count:
+
+| prop | split | route | tris | tex | texels/tri |
+|---|---|---|---|---|---|
+| `log-fallen` | 1.25 | 100k master + meshopt | 3,112 | 384 | 47 |
+| `rock-outcrop` | 1.45 | generated AT budget | 4,981 | 512 | 52 |
+
+The outcrop's 100k master decimated fine by every number here — 1.45 split, 1 component — and still had
+to be thrown away: meshopt floored it at **7,670** tris (error 0.05, flat to 0.3) and the mountain band
+scatters ~200 of these per area, 1.5M triangles before culling against a whole area's 334k. So the
+ratio said yes and the SCATTER said no. `tex 384` on the log is the same lesson from the other side:
+3,112 tris at 512 would be 84 texels/tri, a map twice as large as the geometry can show.
+
+## The wilderness gets two things that work like walls (`TILE_ROCK_LARGE`, `TILE_TREE_CLUSTER`)
+
+Everything an open area blocked was one cell wide and **see-through**: `TILE_ROCK` and the four tree
+tiles are `walkable 0 / seeThrough 1`, so there was no cover out there — you walk around a tree and you
+can always see past it. Two multi-cell obstacles now: a **2x2 boulder** in the mountains (8 per area,
+depth-scaled to 9 at the extreme) and a **2-3 x 2-3 tree thicket** in the forest (7 → 8, measured at 48
+cells over 8 blobs, one of every requested shape: 2x2, 2x3, 3x2, 3x3).
+
+**The gameplay half cost no table edit.** Row 0's spare IDs 12-15 already read `0/0` in both
+`tiles.Default` tables — the `TILE_BUILDING`/`TILE_WALL` profile — so naming them was the whole change.
+Verified at the accessor `AreaGame.recalcTile` actually calls: `Default.prototype.canSeeThrough(12)` and
+`(13)` are both false where `ROCK(3)` and `TREE1(5)` are true. Blocking verified end-to-end in-game
+with a control in the same key: from (46,40) `ArrowUp` into the rect does not move, `ArrowDown` does,
+and column 48 — one past a rect at cols 46-47 — walks through. No 2D art: a wilderness area always
+renders in 3D and `AreaView.draw` early-outs, so the tile pass, LOS overlay and minimap never run.
+
+**The one-cell margin is what makes a rect recoverable without persisting it.** Only the rock needs its
+rect back (it is one model over four cells), and `isBigObstacleClear` refusing to place within one cell
+of another means "no rock left of me and none above me" names each 2x2 exactly once. Two allowed to
+touch would read as one L and put the model on the wrong cell.
+
+**The thicket costs zero draw calls and needed no new art**, because `WildProps.small()` had already
+established the idiom: a second pass appending into the same `places[]` arrays. A thicket cell gets a
+REAL tree index in `m.prop` rather than a sentinel, which does three things with one line — the
+existing scatter plants its tree with the yaw and scale spread it already deals, and the cell loses its
+grass and its pebbles the way any prop cell does. The pass only adds the **understorey**, which is what
+a cell blocking SIGHT actually needs: a stand of bare trunks is a thing you see between however many
+there are. Cells with no prop of their own but covered by a neighbour take a new `WildModel.OCCUPIED`
+(-2), and the two suppression tests move from `>= 0` to `!= -1`.
+
+**`r` turned out to be exactly the knob a multi-cell prop wanted.** `sit()` sinks a prop by
+`h * r * slope` so its downhill edge meets the ground, and `r` is documented as footprint radius over
+`h` — so setting the rock's `r` to 0.84 against `h` 5.0 makes `h * r` a whole CELL and the existing
+function is already right for an object two cells wide. No new seating code. `sit()` did gain an
+optional scale: the thicket plants trees at 0.5-0.75 and a sink computed for a full-grown one buries
+them (the scatter's own ±20-30% is close enough to 1.0 to leave alone).
+
+Measured, focused, both bands at 60 FPS with ~14.5ms idle — nowhere near a wall. Forest **56 calls /
+665.5k tris / GPU 7.4-7.9 / submit 1.1**; mountain **51 / 418.2k / 5.1-5.6** away from a boulder and
+**70 / 754.6k / 6.1-7.3 / submit 1.2-1.4** with several in frame. `programs` is **95 in both**, so the
+new glb compiles no permutation the wilderness did not already have. These are new areas at new poses
+and are NOT an A/B against Phase 3's 62/444.5k and 52/501.8k, which were different areas.
+
+## A 2x2 boulder's reference is a CAMERA ANGLE problem, and the components gate has a blind spot
+
+`wild/rock-large`, generated at 2k on request and shipped at 10,000 tris / `tex` 1024.
+
+**The pancake failure is real and it is the reference's camera, not its proportions.** The first roll
+asked for a boulder "seen from a low three-quarter angle... roughly twice as wide as high" and gpt drew
+it from well above; its 2D bbox measured a promising 1.87 and it came back **0.845 x 0.317 x 1.001 —
+widest/height 3.16**, a slab you could see over. Same failure `wild/bush-low` hit at 0.985 x 0.040 x
+0.936. Re-prompted as a strict side elevation at horizon height ("the full height clearly visible as a
+tall silhouette, almost none of its top surface visible") the same subject came back **0.973 x 0.597 x
+1.001 = 1.68**, and at `h` 5.0 that is a boulder 8.4 units across and taller than the 3.0 actor
+billboard. The elevation looked WRONG as a 2D image — a flat cutout with no depth cue at all, nothing
+like `rock-cluster`'s three-quarter reference — and was baked anyway, because **a re-bake is $0.015
+against $0.43 for another reference**. That is the order those two steps belong in, and the first
+reference is kept in `Unused/` as `rock-large-a`.
+
+**`propstat` called both bakes REJECT and was wrong both times.** 2 components at 50/50 reads exactly
+like a blob cloud by the shipped gate (count, and largest share ≥90%). It is not: both components span
+the ENTIRE bbox, their mean radii agree to 0.6%, and every vertex of one is within **0.34% of the bbox
+diagonal** (p50 0.0051 against an average edge length of ~0.008) of a vertex of the other. It is ONE
+closed surface partitioned into two vertex-disjoint patches along a seam. The contrast settles it:
+`rock-boulder` is genuinely 1 component, and `rock-outcrop`'s second piece is a **70-vert speck 29% of
+the diagonal away**. The gate reads component count and largest share and cannot separate "split along
+a seam" from "flying apart" — check whether the pieces occupy the same shell before believing it.
+Split is **1.09x**, the cleanest subject in this repo (below `rock-boulder`'s 1.11x), and meshopt hit
+10,000 exactly.
+
+**`tex` 1024 at 10k tris is ~105 texels/triangle, deliberately double the 43-55 band.** Texels per
+triangle is a proxy for texels per screen PIXEL, and this prop is 8.4 world units across against
+`rock-boulder`'s 3.3 — so it carries 16x the boulder's texels over ~7x the screen area, less than twice
+as dense per pixel. The rule cut `rock-boulder` from 165 to 42 because a small prop cannot show its
+map; the largest prop in the area is the case where it can.
+
+**And its `baseColor` went the opposite way to the boulder's.** `rock-boulder`'s note says a large
+smooth upward face catches the full moon term and has to sit BELOW the arithmetic (0.15 against ~0.25),
+so this one went in at 0.17 — and measured on screen it was **the darkest thing in the frame**, linear
+luma 0.00204 against the ground's 0.00495, the small boulder's 0.00251 and the outcrop's 0.00299. A
+hole, not a rock: the sewer-valve failure. `baseColor` is a linear multiply, so 0.00204 → 0.00300 asks
+for x1.47 and **0.25** landed it at **0.00318**, just above the outcrop, top of the rock family, which
+is where the biggest rock belongs. The overshoot on the prediction is the tone curve. A domed mass
+shows the camera mostly its sides; the boulder's rule was about a face pointing at the moon, and it does
+not generalise by size.
+
+## The tunnel vision mask is now everyone's (`render.sewer.SewerMask` → `render.world.VisionMask`)
+
+The wilderness's two large obstacles gave an open area its first cells that block SIGHT, so the sewers'
+LOS polygon had somewhere to cast from. Nothing in the algorithm was underground-specific — it sweeps
+`game.area.canSeeThrough` over a cell grid — so the port needed exactly two things passed in: the
+per-area-kind tuning (`render.world.VisionMaskOpts`, presets `SewerStyle.MASK` / `WildStyle.MASK`) and
+the STATIC "is this cell a blocker" predicate the green channel is painted from. 14 call sites, and the
+GLSL prefix went `sewerMask*` → `visMask*` with it.
+
+**Only two of nine fields differ, and both are derived rather than tasted.** `r` 14 → **20**: the sweep's
+square range bound has to sit off screen, and `CameraRig.maxFootprintCells` for `CAMERA_WILD` at 16:9 is
+**305 cells** reaching 7.5 ahead / 5.4 behind / 13.4 to the side — **15.4 at the far corner** against the
+sewer camera's 12.2. At 14 the bound would have been visible, reading as a vision radius the game logic
+does not have (`AreaGame.isVisible` is unbounded). `hidden` 0.18 → **0.10**, inverted from the tunnel's
+reasoning: underground a hard black empties the frame because the frame IS what is hidden; out here it is
+one wedge behind one rock in a lit field, so it can afford to read as a real shadow.
+
+**Cost is the opposite of what the canvas size suggests, and this file already said why.** A rebuild is
+FLAT in canvas area — every part except `fadeCell`, which scales with lit BLOCKER cells, and an open area
+holds ~15 blocker rects where a tunnel holds hundreds of wall cells. Measured on the live path (wrapped
+`update`, 4 moves, 36 rebuilds, 800x720 canvas, player ending adjacent to a boulder): **median 0.40ms,
+p90 0.70, max 0.80**, 9 rebuilds per move and then it stops dead. The sewer's own projection for a
+600x480 level was ~1.5ms. Synthetic raster replay in the same renderer: habitat 168x112 0.68ms, sewer
+600x480 1.14ms, wilderness 800x800 **1.34ms** — 34x the texels for 2x the time. The sweep is ~7.5k
+ray/segment tests against a tunnel's ~250k. **0 draw calls, 0 passes, 0 geometry**, as underground.
+
+**What it delivers is a cover cue, not an atmosphere layer, and that was measured before it was built.**
+Over 1000 player poses against generated layouts: **1.20%** of the visible ground shadowed in a mountain
+area, **1.28%** in a forest, **0.00%** on the plains, with only **~20%** of frames carrying any shadow at
+all — but **up to 55%** of the frame standing beside a boulder. So it fires on contact. If it ever reads
+as always-on out there, something has started writing opaque tiles that should not be.
+
+**Verified live, in the mask's own canvas rather than off a screenshot.** Green channel: 36 marked cells
+against 9 rock rects x 4 = 36, all 36 landing on the rects. Red along a ray through the near boulder:
+`255, 0, 0, 0, 0, 0, 0, 0` at 2/4/6/8/12/16/19/22 cells, against a +90° control that stays `255` the whole
+way — and the -90° control going dark at 12 is a SECOND boulder, not an artifact. Blue rim 64 at the
+corner, 255 one cell in. The sewer branch was regression-tested headlessly off `SewerModel.demo()`:
+**324 wall cells, 0 mismatch against `isFloor`**. `progs` 95 → 96, and the grass chain came out as
+`wildGrassvisMasks` — `patch()` wrapping the wind hook instead of replacing it, which is the trap this
+file already carries an obituary for.
+
+**Rider, found while checking the ambush angle: `AreaGame.getSpawnRect` had no `'wilderness'` arm**, so
+the largest grid in the game took the 2D canvas rect — the exact dilution that switch was written to fix.
+Latent rather than live (`AREA_GROUND` declares `commonAI: 0`, so the turn spawner never runs out there),
+and fixed with the one case arm. The ambush mechanism itself needed nothing: `findUnseenEmptyLocation`
+already rejects any cell `isVisible` reaches, and before these obstacles a wilderness area had no unseen
+cell to offer it.
+
+## The region map's highway reaches the ground (`map.Highway`, `render.wild.WildRoad`)
+
+`map.RoadPlan` has routed ROAD1 trunk roads across wilderness tiles since long before `AREA_GROUND`
+became a 3D area kind, and the area never looked at them — the map drew a highway and the ground was the
+same uniform scatter as anywhere else. Same class of lie as the terrain bands before Phase 0. An area the
+map runs a road through now gets a **graded asphalt corridor**, a dashed centre line, a guard rail along
+one shoulder and litter that thins with distance from it.
+
+**Three things were free and one was not.** `Const.TILE_ROAD` (32) already existed and already read
+walkable 1 / see-through 1 in both `tiles.Default` tables — row 2, one row below the two IDs the last
+phase claimed — so no tile ID, no table edit, no 2D art. The corridor **persists as tiles**, so
+`WildModel.fromArea` recovers its axis and offset from the road cells' own bounding box (the `rocks`
+trick again) and the whole `generatorInfo` / migration / regenerate-on-entry section the original plan
+carried simply evaporated. And the VisionMask needed nothing, `TILE_ROAD` being see-through.
+
+**What was not free: the road plan is unreachable from area generation.** `roadPlanGrid` lives on the
+`map.Image` at `RegionGame.regionMapImage`, which is in that class's `_ignoredFields` (never saved) and is
+built lazily on the first region-map *view*; generating one allocates seventeen 832x832 grids. So this is
+`map.Terrain`'s play a second time, with one difference — Terrain DUPLICATED the renderer's literals,
+this **extracts** the decision. `RoadPlan.generateRoadGraph` calls `Highway.lines` passing its OWN `rng`,
+so the shared draw stream is untouched; a headless caller passes a fresh `SeededRandom(mapSeed)`, which is
+provably the same state (nothing consumes `rng` between `Core.initRandom` and the ROAD1 block —
+`paintGround` hashes, and `paintGrainOverlay`'s 16k draws come after the roads). ROAD1 makes it small:
+`walkRoad1` is dead straight, edge to edge, one plan cell wide, never overwritten, so the whole highway is
+four numbers.
+
+**That extraction can move every existing region map, so it was gated on a differential.** New
+`Highway.lines` against a JS transcription of the original, over **970 seeds** at four blocker densities,
+comparing all four outputs *and the final `rng.seed`* — **0 mismatches**, with all three internal paths
+covered (clean early return 457, mid-loop reroll 220, fallback 83). The `rng.seed` is the load-bearing
+half: it is what proves ROAD2-5, blocks, parcels and buildings still draw from the same stream.
+
+**The halo frame is the trap, and it is worse here than for terrain.**
+`RoadPlanGridOps.hasRoadTypeInRegionTile` takes FULL-CELL coordinates and does not add the halo itself —
+every existing caller adds it by hand. Getting it wrong does not throw, it answers about the tile two up
+and two left, which is exactly the ~40% disagreement `Terrain.bandAtArea` shipped with. `Highway.atArea`
+takes region coordinates and adds `Core.HALO_CELLS` internally, once. Verified against the drawn map:
+trunk at region column 16, branch on row 13 running right, matching the rendered region map tile for tile.
+
+**The grade is analytic, derivatives included, because it has to be.** `WildHeight`'s ground normal comes
+out of `gradX`/`gradZ` and never out of `computeVertexNormals` (per-chunk averaging would put a lit seam
+down every block boundary), so a corridor term that skipped the derivatives would light the ground wrong
+and sink props wrong. `h = f + w*(g - f)` with `g` the field sampled ON the centreline; measured live:
+**on-road height spread 0.000** across the full 12-unit width with `gx` exactly 0, and **analytic vs
+central-difference gradient error 0** on both axes over corridor, shoulder and far field. Every consumer
+follows for nothing — mesh, patches, grass, `sit()`, actor feet, camera, `pickCell`, slime trail.
+
+**The shoulder is what a level ribbon across falling ground costs, and it is the number to watch.** Over
+a full mountain corridor, peak shoulder slope / worst per-cell step by ramp width: 2 cells 0.576 / 1.96,
+**3 cells 0.494 / 1.69**, 4 cells 0.444 / 1.72, 5 cells 0.406 / 1.59 — against the natural ground's own
+0.259 there. 3 takes the biggest single bite and 4 makes the STEP *worse*, because a wider ramp reaches
+into steeper ground. This is a real embankment rather than a bug (a road cut has steeper batters than the
+hill it crosses, which is also why the rail stands there); `WildBand.reliefMax` 1.5 is the cap already
+left for it if a mountain shoulder ever reads as a cliff.
+
+**Two render calls that went the other way to the patch layer next door.** `WildPatches` chunks because a
+layer spans the area and would submit its whole blended fill every frame; a road is a STRIP — 3 cells
+wide over 100 long is ~3% of the area, about 2,200 triangles of nearly no fill. Chunking it was shipped
+first and measured at **TWELVE** draw calls on a 90-cell mountain area against one merged; **91 → 78 dc**
+at the same pose. The dashes are one root mesh for the same reason. Patch seeding also had to be taught to
+skip corridor cells explicitly: it marks off a pure cell hash and never consults `m.prop`, so unlike the
+grass and the pebbles it does not get the `OCCUPIED` suppression for free.
+
+**The dashes rendered, drew nothing, and it was WINDING.** They fired `onBeforeRender`, passed the frustum
+(camera inside the bounding sphere), sat +0.03 above the asphalt, and stayed invisible through red
+emissive, a 6-unit lift and `fog:false`. The corner order that gives normal +Y for an east-west road gives
+**-Y** for a north-south one — swapping which world axis carries `along` reverses the triangle winding —
+so `FrontSide` culled every dash on one of the two axes. One sign fixes it. The diagnosis only converged
+after tinting the asphalt green proved the corridor itself was correct.
+
+**Measured properly, as a controlled A/B in the SAME frame.** The area regenerates its scatter on every
+entry (`generateWilderness` uses bare `Std.random`), so comparing two visits is worthless — instead the
+road, dash and rail objects were toggled `visible` live on a focused 60 FPS window, interleaved
+A/B/A/B x8, 28/30 samples, medians. Plains corridor, standing on the road: **ON 70 calls / 381,906 tris /
+GPU 6.83ms / submit 1.69; OFF 66 / 178,722 / 6.61 / 1.60** — so **+4 calls, +203,184 tris, +0.22ms GPU,
++0.09ms submit**. The GPU interquartile ranges overlap almost completely (6.29-7.31 against 5.90-7.46), so
+**the whole highway is not measurable in GPU time here**; frame sat at 16.69ms of a 16.7ms VSync budget
+with 14.1ms idle. The 4 calls are asphalt + dashes + rail + the rail's shadow-pass draw.
+
+**But the rail is 53% of the area's triangles, and its SHADOW is half of that.** 21 instances survive the
+cull at 4,782 tris each, drawn twice — main pass and moon shadow. Toggling `castShadow` alone: **100,422
+tris and one draw call, for no measurable GPU change** (6.15 vs 6.31, noise). Kept, because `tris` is an
+inventory number and GPU is the cost — this file's own rule — and the moon shadow is what makes a prop
+read as standing on the ground rather than pasted over it. Written down because it is the cheapest lever
+in the area if the integrated-GPU baseline ever needs one: a 26% tri cut for a shadow you have to look for.
+
+**Guard rail: the gate says REJECT and is wrong, for the third time in this file.** 11 components, largest
+56.7% — but the top two are 27,691 and 17,327 verts, **92% between them**, and they are the beam and the
+posts, which on a real rail are bolted rather than welded. That is the shipped conifer's 2-at-51/49 shape,
+not the 96-at-24% blob cloud the gate exists to catch. Split 1.33x, and meshopt floors at **4,782** from
+97,692 whatever `error` asks for (swept 0.05 and 0.3 for the identical count — the seam network is the
+floor, not the cap, exactly the drum's shape). `tex` 512 = 54 texels/tri. Its `h` is set so the prop is
+exactly CELL wide, so one segment per cell meets end to end; `jitter` is 0, alone in that table, because a
+crash barrier is manufactured and a run at visibly different sizes reads as broken rather than varied.
+
+**And its reference could not be measured the usual way.** gpt returned it at subject p50 121 against the
+69-77 that bakes correctly, but `propstat`'s REPORTED p50 is meaningless on this subject: grey steel
+against the `#5a5d63` backdrop sits so close in value that *brightening* it pushes parts out of the
+distance-from-backdrop mask — coverage 6.8% → 5.4% between two lifts, and the reported p50 moved the wrong
+way. Same too-close-to-its-own-key failure the grass texture hit. `lift`'s internal core mask (alpha > 0.9)
+is the trustworthy one and was targeted at 73. Baked neutral at 112/110/109 with metal 255 across the whole
+MR map → `dropMR` plus a straight `baseColor` darken, landing ~49 in the family's 46-52.
+
+## Wilderness Phase 5b — both shoulders, a wandering road edge, and climbing the rail
+
+Three follow-ups on the highway, all of them things the first pass got visibly wrong.
+
+**The rail goes on BOTH shoulders now.** It shipped on one, chosen from the height field at the corridor
+midpoint on the reasoning that a rail belongs on the side that DROPS. True of a hillside road, wrong here:
+the corridor is GRADED, so `WildHeight` ramps it down symmetrically and *both* shoulders drop away from the
+asphalt — the sampling was choosing between two sides that fall the same way, and a barrier on one side of
+a two-lane highway read as unfinished. The second run **costs no draw call** (`Models.instanced` keeps one
+`InstancedMesh` per PROPS row, so both runs are the same batch) and the placement pass got *shorter*: the
+five lines that sampled the field and picked a side are gone. Measured live in a mountain area: **180
+instances = 2 x 90, one batch.** The far run adds PI to its yaw so both face the road — correct by intent
+and invisible in fact, since the glb is 0.05 deep against 0.40 tall and draws 0.2 world units thick.
+
+**The straight border was TWO straight lines, and the louder one was the grass.** The asphalt ended on a
+cell boundary, dead straight for the area's full ~360 units — but so did the grass, because `WildGrass`
+gates per cell and all-or-nothing (a road cell is `OCCUPIED`), so the field ended in a wall of blades on
+the same line. Blades measure 0.0660 linear against the ground's 0.0503 and stand up; the asphalt edge is a
+value change on flat ground. A third mismatch fed both: `ROAD_RAMP` grades **12 world units** of embankment
+each side while every *material* changed at 0 — the landform said embankment, the texture said ruled line.
+
+**The alpha-ramp route was not taken, and that is this file's own result.** A cross-strip alpha ramp gives
+every texel at a given distance the same alpha, so it trades a straight line for a *blurred* straight line
+— which is exactly why `Textures.loadRampTexture` was deleted and why `SewerDetail.grime` moved to
+hand-painted alpha. So the fix is **geometry plus density, and it needed no texture and no draw call**: the
+asphalt's outer edge wanders (two sine terms of the along-coordinate, +/-1.1 world units, the two sides out
+of phase so the WIDTH breathes rather than the ribbon sliding sideways), and grass thins to nothing over
+the last 2 cells before it. Because the fade measures from the *wandering* edge, the thinning follows every
+kink for free.
+
+Two traps, both settled numerically in the live area rather than off a screenshot. **Tearing:**
+`WildRoad.surface` pushes its own four corners per sub-quad with NO shared vertices, so every boundary
+point is emitted twice and a per-vertex hash would have to agree with itself exactly — a smooth function of
+the along-coordinate cannot disagree. Verified over the live road rect: **720 of 4,320 corners hit the
+boundary branch, 362 distinct boundary points, 362 distinct (point, shift) pairs — bit-identical, tear
+free.** **Agreement:** the grass gate and the asphalt geometry have to measure from the same edge or grass
+grows under the tarmac. `WildRoad.edgeDist` sampled at 800 points sitting exactly on the wobbled edge
+returns **0.000000000** at every one of them. With no road at all it returns 1e9, so an area without a
+highway keeps every tuft it had — no behaviour change anywhere else.
+
+**Climbing the rail is an animation and nothing else.** The rail stamps no tile (`placeHighway` writes only
+`TILE_ROAD`, walkable and see-through), so the player has always walked straight through it and still does.
+New `render.anim.Climb` lays a vertical arc over the ordinary slide — rise, **dwell**, drop — where the
+dwell is the whole difference from `Leap`, whose pure sine reads as a hop; a vault has a beat at the top,
+and from a camera 18-55 units up that beat is the only thing separating "climbed over it" from "jumped near
+it". Verified on the real class: peak exactly 0.9, flat for 30% of the duration, ends at exactly 0, no
+horizontal offset and no scale change.
+
+**The trigger needed a channel, and `WorldCtx.ground` is its shape.** `Actors` is area-kind agnostic and
+holds both cells (`a.col/a.row` and `e.mx/e.my`) right where `cornerBend` already special-cases a move —
+so a nullable `WorldCtx.climbArc` set by `WildArea` and cleared by `World`/`SewerArea` beside `ground` is
+the whole wiring. The rail lines are not stored: they fall out of the corridor rect and `RAIL_OFF`, the
+same two numbers the instances are placed from, so animation and geometry cannot drift — and putting the
+rail on **both** shoulders is what removed the side that would otherwise have had to be remembered. The
+test is a sign change across the line, not a cell match, because the rail stands at a fractional offset.
+Verified live at 33,45 with rails at 29.1 and 33.9: fires on **28->29 and 33->34 only**, both directions,
+diagonals count once, along-road moves never. Gated on `a.fx == null`, so scenery can never clobber a melee
+lunge or a leap onto a host — and `playFx` overwrites unconditionally, so a gameplay beat starting later
+still wins.
+
+**Not measured.** The window was raised but not focused (topbar read 1 FPS, and a raised CDP target is not
+a focused OS window), so no GPU or submit number from this pass is trustworthy and none is recorded. What
+*is* structural: the second rail run adds **0 draw calls**, and the edge wobble and grass fade add none
+either — they are the same meshes with moved vertices and fewer tufts.
+
+## The roadside litter was 3x too bright, and so was every city street
+
+Putting the city's debris art on wilderness turf for the first time is what caught it — on asphalt there
+was no bright ground beside it to be judged against. Measured through the real path (`Sprites.atlasTex`
+→ `darkenCanvas`, RGB × `DECAL.debrisMul` in sRGB **bytes**, alpha untouched → sRGB texture on a lit
+up-facing quad), over the content texels of `Const.STREET_DEBRIS_*`:
+
+| | painted sRGB | delivered LINEAR at mul 0.55 | × turf | × asphalt |
+|---|---|---|---|---|
+| `STREET_DEBRIS_STATIC` (singles) | 199/193/187 | **0.1501** | 3.15x | 4.57x |
+| `STREET_DEBRIS_TRANSFORMABLE` (clusters) | 208/208/205 | **0.1740** | 3.66x | 5.29x |
+
+The art is painted at **paper values** and 0.55 was never going to reach the night palette from there.
+Scale of the miss: the grass blades are **1.41x** the turf and `WildStyle`'s header calls them the
+brightest thing out there bar the actor, while `city/ground-road-paint` — literal white lane paint —
+measures **0.2402**. A crushed can was landing **62% of the way from the ground to a road marking**.
+
+The method reconciles with every number that file already quotes, which is what makes the comparison
+legitimate: turf **0.0476**, blades **0.0673** (header 0.0660), bare earth 0.0349 (0.0348), dead grass
+0.0561 (0.0560), asphalt 0.0329. The one catch is that a texture with alpha must be measured over its
+OPAQUE texels — whole-image gives the grass 0.0477, because it averages in the colour `bleed_alpha`
+scrubbed into the transparent ones.
+
+**`debrisMul` 0.55 → 0.40**, which delivers 0.0773 and, composited through the atlas's own alpha,
+**1.27x turf / 1.57x asphalt** — just under the blades. Applied globally rather than per-area: the city
+streets are that same asphalt and had the identical defect, and a wilderness-only value would have cost
+a second cached atlas canvas (768x3072 RGBA, ~9.4 MB — `atlasTex` keys its cache on the mul).
+
+**A measurement trap worth more than the fix.** Rows 41-47 are the ONLY alpha-capped block in the atlas:
+they peak at alpha **127** where every other row of the 12x48 sheet peaks at 255. So litter draws at ~43%
+opacity and can never read as solid whatever the mul does — and scanning those rows at the usual
+`alpha > 128` reports them as **completely empty**, because nothing in them clears the threshold. Same
+too-close-to-its-own-threshold failure as the guard rail's reference and the grass texture's chroma key,
+and the third time this file has recorded it. `Sprites.contentRect` uses `alpha > 8`; so must any
+measurement of this art.
+
+## The wandering road edge was 2*PI too slow to see, and four other straight lines ran beside it
+
+> SUPERSEDED by "The wandering road edge was retired for an alpha cutout, and it is not the ramp that
+> failed twice" — the geometric edge is gone. The four-other-straight-lines half still stands.
+
+The wobble shipped, ran, and changed nothing the eye could find. Two independent reasons, and the first
+is arithmetic: `edgeWobble` divided the along-coordinate by `ROAD_EDGE_L1`/`L2` **raw**, so 37 and 13 are
+not wavelengths but `1/k` — the real periods were `2*PI` times bigger, **232.5 and 81.7 world units, 58
+and 20 CELLS**. Less than one cycle crossed the screen. Measured over the area's 400-unit span, the edge
+was **never more than 3.27 degrees** off parallel with the cell boundary it was supposed to be leaving,
+and wandered p50 **0.96 units** inside a 15-cell window. That is a straight line, and no amplitude could
+have rescued it — raising AMP alone just slides a still-parallel edge sideways.
+
+Fixed by making the two constants TRUE WAVELENGTHS (`along / L * 2*PI`). The first correction went to
+46.0 / 15.0 at AMP 0.70 and **overshot into "psychedelic"** — which is the more useful half of the
+entry, because of WHERE the overshoot was:
+
+| | reach | edge angle | short wavelength | wander, 15-cell window |
+|---|---|---|---|---|
+| shipped (read as ruled) | 0.23 cell | 3.3 deg | 20.4 cells | 0.96 |
+| first correction (psychedelic) | 0.33 cell | **21.2 deg** | **3.8 cells** | 2.45 |
+| settled — AMP 0.50, L 62 / 27 | 0.25 cell | 9.5 deg | 6.8 cells | 1.71 |
+
+**The reach is the same number in all three rows.** A quarter of a cell, a third of a cell — it never
+mattered. What separates invisible from garish is the EDGE ANGLE and the wavelength that carries it: a
+21-degree turn repeating every 3.8 cells is a scallop, deliberate and decorative, and no amount of
+shrinking the amplitude would have made it read as weathering. So this knob is tuned against degrees,
+not against world units, and the amplitude is close to a free variable.
+
+The second reason is the more useful one. **Five straight edges ran down that boundary and the wobble
+moved one of them.** `WildHeight.grade` (the graded flat band), `WildPatches` (per-cell `isRoad` gate),
+`WildProps.small` (per-cell `m.prop` gate), and the persisted tree/rock scatter all still ended on the
+ruled cell line — so a wobbling asphalt edge lay next to four ruled ones and the frame read as ruled.
+Softening one line in a stack of five buys nothing; that is the transferable result.
+
+Patches and pebbles moved onto `WildRoad.edgeDist` — patches per SUB-QUAD (quad centre, which biases
+toward overlap, harmless because the asphalt sits above them at `ROAD_Y`), pebbles per instance. The
+grade did NOT get a wobble: putting `edgeWobble` inside `WildHeight.blend` makes the blend vary ALONG the
+corridor as well as across it, and both `gradX` and `gradZ` would need a cross term they do not have —
+against the class's whole closed-form-differentiable contract. Instead the flat band is **widened by
+`ROAD_EDGE_AMP * 2` = 1.4 units per side** (half-width 1.50 -> 1.85 cells), which is one addition and
+guarantees the same thing: the asphalt reaches at most 1.34 out, the level ground reaches 1.40, so the
+ribbon is never partly on the ramp. The extra half-cell of flat hides under the verge.
+
+## Trees stood between the guard rail and the traffic lane, 100% of the time
+
+Not intermittent — structural. The rail sits at `half + RAIL_OFF` = **2.4 cells** from the centreline
+(29.1 / 33.9 in the live area), the asphalt edge at 1.5 (30.0 / 33.0), so the strip between them is cells
+**29 and 33**. `WildProps.places` insets a scatter prop to `col + 0.35 .. col + 0.65` — which is *strictly
+inside* 29.1..30.0. Every prop that rolls onto a shoulder cell lands in the strip; none can land outside
+it. At band density 0.025-0.10 over two 100-cell columns that is **~5 (plains) to ~20 (forest)** per area,
+and canopies draw 4.8-6.7 units across a 4-unit cell, so they overhang the traffic lane as well.
+
+`AreaGenerator`'s scatter loop rejected only `cur == Const.TILE_ROAD`. `isBigObstacleClear` had applied a
+**one-cell margin** around `TILE_ROAD` since the phase went in — its comment even says the margin "leaves
+the shoulder cell free for the guard rail" — which is exactly why no boulder or thicket was ever caught
+doing this and only the single-cell scatter was. The fix is that same margin, as `nearRoad(area, x, y)`.
+
+**Not retroactive**, and for once that costs nothing: the scatter persists as tiles, so an
+already-generated area keeps its shoulder trees — but the highway itself is unreleased, so no save
+outside this dev session has a corridor at all. Verifying needs a never-visited wilderness area on a
+highway tile.
+
+## Every ground decal on the highway was drawn UNDER it, and the second bug hid the first
+
+Roadside litter that lands on the asphalt is invisible. Measured live in one area: **54 of 109 spots
+sit on the road and 47 of them were buried**, worst by 0.087 world units.
+
+Two causes, stacked. The **lift ladder is out of order**: the wilderness lays four things over its own
+floor — patch 0.02, patch 0.04, asphalt `ROAD_Y` 0.06, centre line `ROAD_PAINT_Y` 0.09 — and every
+ground decal went down at a hardcoded **0.04**. The road is opaque and writes depth at
+`ORD_DECAL − 1`; the decal batch is `transparent, depthWrite:false` at `ORD_DECAL`, so it loses the
+depth test. And the **wrong sampler**: `Debris.draw` took its height from `WorldCtx.floorY(col, row)`
+— the cell CENTRE — while placing the quad at `col + dx`, up to a quarter cell out. `floorYAt` exists
+for exactly this and says so in its own header. Measured sampling error out here: mean 0.019, max
+0.083.
+
+**The interaction is the part worth keeping.** Fixing the sampler alone makes it *worse*: 47 buried
+becomes **54**, because the seven that escaped only escaped by accident — cell-centre error happened
+to push them high. Two defects of the same magnitude, one masking the other, and either fixed alone
+looks like a regression.
+
+`RenderConfig.DECAL.groundLift` 0.12 (clears the centre line, the tallest layer) plus `floorYAt` at
+all three ground-decal sites — litter, batched blood, over-corpse blood. Re-measured: **0 of 54
+buried.** `floorYAt` falls back to `floorY` when `WorldCtx.ground` is null, which is the city, so that
+half is a no-op there.
+
+## The wandering road edge was retired for an alpha cutout, and it is not the ramp that failed twice
+
+The displaced boundary never worked and could not have. A vertex displacement of a straight line is
+**single-valued** — one offset per along-coordinate, whatever drives it — so it reads as a wave or as
+nothing. Three settings measured, and the edge ANGLE is the whole look while the reach is nearly free:
+0.23 / 0.33 / 0.25 cell of reach for 3.3 / 21.2 / 9.5 degrees, landing on "invisible", "psychedelic"
+and "still dumb". It is also coarse: boundary vertices sit `CELL / SUB` = **2.0 world units** apart, so
+nothing under ~16 units of wavelength survives sampling, while `VisionMask` breaks its own straight
+boundary at 8.2 and 2.8 units and gets away with it only because it runs **per-fragment**.
+
+A mask cut is not single-valued. It leaves bays, spurs, detached slabs and pits, which is what no
+vertex offset can produce. `WildRoad.edgeMask` bakes one: the nominal band filled white, then a pass
+down each edge stamping circles centred ON the nominal line and jittered by their own radius — white
+leaves a spur, black bites a bay, two whites overlapping outside merge into a slab, and one in eight is
+pushed clear as an island. The mesh is emitted `ROAD_EDGE_MARGIN` = 1 cell wider than the road tiles so
+there is material to carve, and `WildHeight.grade` widens with it so a surviving spur still stands on
+level ground.
+
+**This is NOT the ramp `Textures.loadRampTexture` and `SewerDetail.grime` each failed with.** Those gave
+every texel at a given distance the same alpha, so the band had no shape of its own — and both were
+fixed by putting the shape INTO the alpha, which is what this does. The earlier verdict row here read
+that as a verdict on alpha generally. It was not, and reading it that way cost two rounds of tuning
+sines.
+
+The mask is **fitted to the corridor**, not laid over the area rect the way `CoverageMask` is —
+0.098 world units per texel along and 0.083 across, against the 0.39 a 1024² area mask would give for
+comparable memory. That is the opposite call to `CoverageMask`'s and for its own stated reason: its
+field spans the area because its marked cells do, while a road is a strip. Bake cost 2.5 ms, 3 MB.
+
+**`ROAD_EDGE_R_MAX` is the size of one deformity and it is the only number here anyone notices.** It
+has to be judged against the ribbon AND against the screen: the road is 12 world units wide and draws
+about 39 pixels per unit at this camera, so a stamp radius of 1.0 is a **39-pixel notch taking a sixth
+of the road's width**. Three passes, and both of the first two were called out on sight:
+
+| R_MAX | solid to | 50% at | gone by | band | read as |
+|---|---|---|---|---|---|
+| 1.8 | 3.0 | 6.1 | 10.5 | ±4 | ruined |
+| 1.0 | 4.1 | 5.9 | 8.2 | ±2 | chewed |
+| **0.4** | **5.29** | **5.96** | **6.79** | **±0.75** | an edge that has broken away |
+
+The 50% crossing sits on the nominal 6.0 in all three — the band width is what changed, not the
+centre. **Resolution and blob size move together**: a stamp needs ~2 texels of radius or `alphaTest`
+turns it into a speckle, so shrinking the blobs from 1.0 to 0.4 required 2048 x 128 → 4096 x 192 in
+the same change. Shrinking them alone would have deleted them rather than made them finer.
+
+**The trap, and it is the third instance of one already logged twice.** `WildModel.mix` returns
+`x & 0x7fffffff` — **31 bits** — so `h >> 24` leaves 0..127, and the first pass tested that window
+against `ROAD_EDGE_SPUR * 1000` = 120. True 94% of the time. Every stamp came back a forced spur:
+white and pushed outward, baking a solid white halo OUTSIDE the road with a black ring on the nominal
+edge — the exact inverse of a crumbled edge, and a bug no screenshot would have explained. Fixed by
+taking one fresh mix per quantity instead of bit-windowing a single draw, behind a `roll()` helper so
+it cannot come back. Same too-close-to-its-own-threshold class as the litter alpha cap at 127 and the
+guard-rail reference.
+
+`ROAD_EDGE_STEP` must stay under `2 * R_MIN` or consecutive stamps leave gaps, and a gap is a stretch
+of the nominal straight edge showing through untouched — so STEP shrinks with R_MIN, and the stamp
+count with it (2,500 per bake at the shipped values).
+
+**Then the cut became a GRADIENT**, and the reason is not only taste: at 0.098 world units per texel
+against ~39 screen pixels per unit the mask is MAGNIFIED, so one texel is ~3.8 pixels and a hard
+`alphaTest` shows texel stair-stepping along the edge. Blending removes that without touching the
+shape. Two halves:
+
+- each stamp is drawn as a radial gradient, solid to `1 - ROAD_EDGE_SOFT` of its radius then ramping
+  to fully clear. **SOFT stays small (0.45) for the ramp reason all over this entry**: overlapping soft
+  blobs average, and at this stamp density a wide rim would wash the band to one value per distance,
+  which is the distance-only ramp that failed twice. Solid cores keep the union hard so only the outer
+  boundary blends.
+- `transparent = true` with `alphaTest` dropped to 0.12, which discards only the invisible tail.
+
+Measured: the band is unchanged (solid to 5.38, 50% at 5.96, gone by 6.71) and **25% of texels in the
+edge rows are genuinely partial** — peaking exactly at d = ±6.1 and falling to 0% partial both deeper
+in and further out. The gradient softened the boundary in place rather than widening it.
+
+Two orderings are load-bearing. `transparent` is set **after** `VisionMask.patch`, because patch reads
+that flag to choose which mask branch it compiles — set first, the road flips to mode 'b' (alpha
+scale) and hidden road fades out instead of darkening toward the fog, which is decal behaviour, not
+ground behaviour. And the surface moves to `ORD_DECAL - 0.5`: blending puts it in the transparent
+queue beside the two patch overlays at `ORD_DECAL - 1`, and at an equal renderOrder three falls back
+to a distance sort, which between near-coplanar ground layers is a coin toss that flickers. The centre
+line needs no such care — it is opaque, so it draws in the earlier queue and its depth writes reject
+the asphalt behind it.
+
+## The asphalt apron was zero cells wide for a release, and the fix was a verge
+
+`ROAD_EDGE_MARGIN` shipped at 0.5 cells and **bought nothing**. The corridor is 3 cells, so
+`WildModel.recoverRoad` returns `half = 1.5` and `centre = lo + 1.5`, which makes
+`distTo = |row + 0.5 - centre| = |row - lo - 1|` an **integer, always**. `isCorridor` tested
+`distTo < half + MARGIN` = `< 2.0`, and `2.0 < 2.0` is false — so the `distTo == 2` ring was excluded
+and `isCorridor` returned exactly `isRoad`. Confirmed live: rows 71 and 75 (distTo 2) both false.
+
+The mask meanwhile painted to `R_MAX * (1 + SPUR_PUSH)` = 0.88 units past the line, so:
+
+- 25% of `ROAD_MASK_ACROSS`'s texels sat on geometry that does not exist;
+- every stamp was centred **on** the mesh boundary, so half of each was discarded;
+- **all white stamps were no-ops** — inside they whiten an already-white rect, outside they are
+  clipped — which is 50% of stamps plus the whole `ROAD_EDGE_SPUR` mechanism at 100%;
+- the edge could be **bitten, never grown**. Its outer envelope was a ruled line at exactly ±6.0 for
+  360 units, and no mask value could move it.
+
+Typical bite depth from the constants: `r ~ 0.3, jit ~ 0` → **0.17 units ≈ 6.6 screen pixels**, on a
+12-unit ribbon. The gradient pass above then halved even that (`SOFT` shrinks each black core to 55%
+of its radius) and `alphaTest` 0.12 kept 12%-opaque material, so the shallow bites stopped cutting —
+which is why the straight edge came BACK after a change that was measured and correct on its own terms.
+
+**MARGIN 1.0** admits the ring, and the cell gate is rewritten against the cell's NEAR EDGE
+(`distTo - 0.5 < reach`) so a reach landing on an integer cannot silently drop a ring again. Both
+reaches are half-integers on purpose. `ROAD_MASK_ACROSS` 192 → 256 because the band went 16 units wide
+to 20 and 192 would have diluted R_MIN to 1.9 texels, under the ~2 a stamp needs.
+
+**But the real answer was that the asphalt was being asked to do the wrong job.** A real road edge IS
+straight, and every R_MAX looked wrong in its own way — 1.8 ruined, 1.0 chewed, 0.4 invisible — with
+nothing in between, because a believable deformity on a 12-unit manufactured ribbon has to be small.
+So a second ribbon went in: a **verge**, dirt shoulder from the asphalt edge out to 2.75 cells, with
+the guard rail (2.4 cells) standing on it. The burden moves onto a boundary that is genuinely
+irregular in life, where `VERGE_R_MAX` 1.1 is a bush-sized bite and reads as ground, not as damage.
+Second win, free: a bay bitten out of the asphalt now exposes shoulder dirt instead of clean turf.
+
+`RibbonOpts` carries the two ribbons' differences (art, tile, y, renderOrder, nominal half-width, mesh
+reach in cells, stamp min/max/step, mask resolution, hash salt) — twelve values, of which eight would
+have been bare positional floats. **Different salts**, or every bay in the asphalt gets a twin two
+units out in the shoulder.
+
+Measured on the baked masks, as the OUTERMOST texel over 0.5 alpha per along-column:
+
+| ribbon | nominal | min | median | max | spread | % past nominal |
+|---|---|---|---|---|---|---|
+| asphalt | 6.0 | 5.23 | 6.02 | 6.72 | 1.48 | **53.3%** |
+| verge | 11.0 | 8.97 | 10.94 | 12.91 | 3.94 | **49.4%** |
+
+`% past nominal` was **0 by construction** before, with the max pinned at exactly 6.00. Mesh reaches
+are 10.0 and 14.0, so neither envelope is clipped.
+
+**The texture's `lift` had to be fitted TWICE, and the first pass is the lesson.** `wild/ground-verge`
+as painted measured 0.0277 mean linear luminance — DARKER than the city asphalt it abuts at 0.0329.
+`lift` 0.9 put it at 0.0381, a clean 1.16x on paper, and in the built frame the verge measured **12.6
+against the asphalt's 11.3 — 1.11x, invisible**, which is exactly the failure `PATCH_ALPHA` already
+records for the ground patches. 0.84 lands 0.0463 and reads **14.4-15.8 against 11.6-11.8, 1.28-1.36x**,
+still under the plains turf's 0.0476. Judge a ground layer in the built frame against its NEIGHBOUR,
+never as a linear number in isolation.
+
+Four gates had to follow the verge outward or the straight line just relocates: the grass fade
+(`WildGrass`, also HALVED to 1.0 cell — at 2.0 off a verge edge the corridor read 38 units wide
+against a 12-unit road), the patch overlays (`WildPatches`), the loose stones (`WildProps.small`), and
+the scatter exclusion (`AreaGenerator.nearRoad`, 1 cell → 2, generation-side so new areas only). The
+graded flat band moved from the asphalt mesh to the verge's NOMINAL line — the ramp is a smoothstep so
+its derivative is zero where it starts, and the outermost spurs still stand on flat ground without
+paying the steeper batter a wider flat band costs.
+
+Two stale comments died with it: `WildGrass` still claimed the thinning followed `WildRoad.edgeWobble`
+(deleted two entries ago), and `WildArea` cited "1.25 cells" of level ground and a verge that did not
+exist yet.
+
+Cost at a pinned pose: **59 → 60 draw calls, 582.7k → 585.9k tris.**
+
+## The tactical grid could not express a blocked cell, and 80% of them drew as open ground
+
+`TacticalGrid` marks the shared CORNERS of walkable cells. A corner is marked when ANY of the four
+cells touching it is walkable — so an obstacle with open ground around it has all four of its own
+corners marked BY ITS NEIGHBOURS and draws identically to grass. Only a blob of 2x2 or larger drops an
+interior corner, and one missing cross reads as nothing at all.
+
+Measured live in a forest area, 33x30 cells around the player:
+
+| | |
 |---|---|
-| before, `MASK_PX` 4, all per-texel | 0.899ms |
-| `MASK_PX` 8 naive | 3.481ms |
-| **`MASK_PX` 8 with strips** | **1.221ms** (600x480: 1.249) |
-
-So 4x the texels for **+0.32ms**, and the whole rebuild lands ~1.35-1.55ms. It fires on nearly every
-frame of a 9-frame slide, so that is ~9% of a 16.6ms frame while walking and nothing at all at rest.
-
-**`MASK_BLUR` had to change units on the way.** It was a sigma in TEXELS, so doubling `MASK_PX` would
-have silently halved the boundary softness in world terms. It is now in WORLD UNITS and converts at the
-filter (`MASK_BLUR * MASK_PX / CELL`). The sweep table in `SewerStyle` was taken at `MASK_PX` 4 where a
-texel WAS a world unit, so every number in it carries over unchanged. Everything else was already
-resolution-independent: `uScale`/`uOrigin` are normalized, and `MASK_WALL_FADE` / `MASK_EDGE_FADE` /
-`MASK_R` are all in cells. Verified after: canvas `168x112`, blur resolves to 1 texel, the rim ramp is
-now 8 texels (`0 32 64 96 127 160 191 223 255`) and still reaches rim vis **0.000**, green channel still
-exactly 0 or 255, 85 programs.
-
-## The habitat's four objects become glb props
-
-The habitat renders through `SewerArea`, so its walls, ledges, chamfers, clutter and exit ladder are all
-real geometry — but its four defining objects were still 64px atlas cells from `entities64.png` drawn as
-3.0-unit upright billboards. They now go through `render.world.ObjModels`, the seam the exit ladder
-already used, at **+4 draw calls and +19,950 tris** for all four.
-
-**`modelFor` could not tell them apart, and retyping them was the wrong fix.** `HabitatObject.init` sets
-`type = 'habitat'` on all four, and `type` is persisted (`Saver` reflects every field not in
-`_ignoredFields`), so splitting it per subclass would leave old saves carrying `'habitat'` while new
-objects carried the new strings — and `Habitat.update` counts habitat energy off exactly that string.
-New virtual `AreaObject.getModelKey()` returns `type` by default and is overridden in the four; the
-three call sites (`ObjModels`, `Actors.iconOff`, `LampShadows`' double-shadow guard) switch to it.
-**No save migration: nothing persisted changed**, and `imageRow`/`imageCol` still point at the atlas.
-
-**A prop-backed object created mid-area drew NOTHING.** `Habitat.putObject` fires while the player is
-standing in the habitat, but the 3D scene only rebuilds when `game.area.id` changes, while `Actors`
-drops the sprite the instant the object has a model — so a freshly grown biomineral was invisible until
-the area was left and re-entered. `Area3D.refreshObjects` (a no-op in the city) rebuilds the batches;
-`AreaGame.addObject`/`removeObject` call it gated on `modelFor(...) != null` **and** on
-`game.area == this`, so ordinary objects and other-area population never reach the view. Verified live:
-the prop appears on the spot, tris 77.7k -> 82.6k (exactly one 4,827-tri biomineral), no fade-to-black.
-
-`build()` lost its single `targetH`/`yaw` pair for a table (`keys`/`path`/`h`/`faceWall`), since one
-height for five props is wrong; `SewerStyle.EXIT_MODEL_H` moved into it. Free-standing props take a
-full-circle yaw hashed off their own cell so four of a kind are not clones. `View`'s warm chain now
-loops that table instead of hardcoding the exit's triple.
-
-**Cost, measured as a controlled A/B in one pose** (`habitat clear` vs `habitat all`, run twice,
-identical both times): **56 dc / 77.7k tri -> 60 dc / 97.7k tri**. One call per distinct prop — the
-ghost and hull batches really do cost **0** while masked empty — and `prog` held at **87** across
-clear/build/tactical, so the boot warm covers every variant with no first-use compile. Standing on a
-prop is **+1** (its ghost instance). Boot went 73 -> **76** programs, not the +12 predicted: all five
-props share one material permutation, so the four new paths reuse the exit's programs.
-
-**Generation: three of four were past the ~2x line, and the split ratio called it before any money was
-spent.** At `decimation_target 100000`: preservator **1.34x** (the drum's class -> offline decimate,
-`error` 0.01 for 48 texels/tri, 98,685 -> 5,452), biomineral **2.41x**, assimilation **2.24x**, watcher
-**2.46x** -> all three regenerated at `decimation_target 5000`, `tris: -1`, landing 4,827 / 4,873 /
-4,798. All four MR maps came back pure green, so **no `dropMR` anywhere**.
-
-**The assimilation reference had to be repainted before it was generated at all.** Its first restyle
-measured subject luma p05 **34** — between the p05 30 that made `sewer/bags` hallucinate a violet albedo
-and the p05 48 repaint that fixed it — and was already R>G, B>>G, the exact failure signature. Repainted
-to p05 **61** first. The other three cleared the band on the first edit (56 / 43 / 44 against `drum`'s
-41). Biomineral still drifted in hue (olive slime -> brown, purple tendrils -> navy) with the crystal
-correct; left alone, because the bags entry records a fresh seed making that kind of drift worse.
-
-**The glow is derived from the baked albedo, not hand-painted.** `emissiveSrc` exists but the street
-lamp's map was painted over a Blender layout; a TRELLIS atlas is a mosaic of hundreds of charts and is
-not paintable freehand. Each prop's emissive is keyed out of its OWN baked base map — same UVs by
-construction — with bands read off that atlas's measured luma percentiles rather than guessed. Guessed
-thresholds produced 0.0% / 0.0% / 1.0% / 100.0% lit on the first attempt. Biomineral and watcher key on
-luma (their crystal and eye discs are clean second modes); preservator does **not** (whole atlas is
-39-76) and keys on **R-B**, where lavender veins sit at -14 and the amber core at +69. All four land at
-11-15% of atlas lit. **No `models.mjs` change** — the output is an ordinary PNG that can be repainted in
-Krita later. Cost: regenerating a glb means regenerating its emissive.
-
-New console command for the work, since the normal path needs a live host and kills it — standing all
-four up to look at them cost a spawn-attach-harden-invade cycle each:
-`hab|habitat [all|biomineral|assimilation|preservator|watcher|clear] [level]`
-(`console/HabitatConsole.hx`), placing on the nearest free cells in widening rings.
-
-**Verdict: landed.** Heights (2.4 / 2.2 / 2.6 / 1.8) and the emissive bands are art values, swept live.
-
-## One zero-length vertex normal blacks out the WHOLE frame
-
-Reported as "the image flickers a lot on mouse movement and sometimes just becomes black". It really
-did go black: the composited canvas measured mean luma **0.24 / 255** while the HUD read a healthy
-60 FPS, 67 draw calls, 117.8k tris.
-
-**The bisection, in order, because every step ruled out a whole layer.** Camera pose was correct
-(follow rig over the player's cell). `SewerMask` was innocent — forcing `uFloor`/`uFloorAdd` to 1.0
-lifted it only 0.24 -> 0.53. Lights were all on and at normal intensity (ambient 3.95, hemi 1.89, 12
-spots at 15-45). Then rendering the same scene and camera STRAIGHT TO THE CANVAS —
-`renderer.setRenderTarget(null); renderer.render(scene, camera)` — gave mean **14.28, max 219**. So the
-scene was fine and the post chain was eating it. Disabling the bloom pass alone: **0.24 -> 14.15**.
-
-**The cause is not bloom.** Reading the half-float post buffer with bloom OFF found **3 NaN texels** in
-a 120x120 window over one prop. UnrealBloom downsamples to 1/32 and gaussians at every level, so one NaN
-texel spreads across the whole chain, and the additive composite back over the base makes every pixel
-NaN — which resolves to black. Hiding meshes one at a time pinned it to `habitat/biomineral`; swapping
-its material for a `MeshBasicMaterial` cleared the frame while killing its emissive, MR maps, base map,
-shadows, fog and tone mapping each changed nothing. That combination only leaves the lighting math, and
-the input the lit path uses that the basic path does not is the **normal**.
-
-`habitat/biomineral` carried **17 zero-length vertex normals**, straight out of the TRELLIS export.
-`normalize(vec3(0.0))` is NaN in GLSL. That is the entire bug.
-
-**It was never habitat-only.** The same sweep over every prop the pipeline builds:
-`sewer/bags` **68**, `habitat/biomineral` 17, `sewer/cable` 2, `sewer/crates` 1, `habitat/assimilation`
-1, everything else 0. So the sewers have shipped this since those props landed — the habitat only made
-it constant, because the biomineral is always on screen while a bags pile usually is not. The
-intermittency IS the mechanism: a zero normal is a single vertex, its interpolated neighbours are
-non-zero, so a NaN fragment only appears on the frames where a pixel centre lands close enough to that
-one vertex. Camera or cursor motion flips it on and off — hence "flickers".
-
-**Fix: `fixNormals()` in `tools/models.mjs`**, run AFTER the transforms (`simplify()` welds and
-collapses, so it can create one the export did not). Each bad vertex takes the area-weighted sum of the
-face normals of the triangles that reference it — the standard smooth-normal sum, so the repair agrees
-with the surface around it — falling back to `(0,1,0)` for a vertex with no non-degenerate neighbour. A
-`PIPELINE` constant now feeds every entry's `last_sig`, so a change to what the bake DOES (not just its
-per-entry params) rebuilds every prop once; bumping it rebuilt all 14.
-
-Measured after: **0 zero normals in every built glb**, 0 NaN and 0 Inf in the post buffer over 12
-frames with the cursor sweeping, and 10 consecutive frames at mean luma **14.24-14.99** where the
-pre-fix frame was pinned at 0.24. Draw calls, tris and program count unchanged.
-
-**The trap that cost the most time: `attributes.normal.array` is a LIE on these glbs.** GLTFLoader
-builds `InterleavedBufferAttribute`s, so `.array` is the whole shared pos+normal+uv buffer — every
-attribute reports the same length (60,720 for a 7,590-vertex prop) and a stride-3 walk reads positions
-as normals. It invented zero normals that were not there and hid the real count. Use
-`attr.getX/getY/getZ(i)` and `attr.count`, never `.array`.
-
-**Verdict: landed.** Pipeline-level, so it covers every prop generated from here on.
-
-## The organs' glow moves from the surface into the air: emissive off, coloured point lights on
-
-Four changes to the habitat props, all author calls, all measured after.
-
-**Emissive OFF on all four, and off properly.** `emissiveStrength: 0` now makes the bake skip the map
-entirely instead of baking a map nobody sees, so the glb carries no dead texture and the material
-declares no `USE_EMISSIVEMAP` — which is its own program permutation and a texture fetch per fragment.
-`prog` **87 → 85**, glbs 1266/1079/1436/1008 → **1175/930/1297/897 KB**. `models.json` keeps its
-`emissiveSrc` pointers, so re-enabling any one prop is a single number.
-
-**Coloured point lights instead** (`render/particles/PropLights.hx`, `RenderConfig.PROP_LIGHT`). The two
-were never a pair: an emissive map only brightens the prop's OWN texels and lights nothing around it,
-while the read wanted is "this organ is a light source in the room". Colour and relative brightness live
-per row in `ObjModels.MODELS.light` — each organ's own former emissive hue (crystal green `0x33bf59`,
-maw violet `0x8c2ecc`, amber `0xd98c26`, flesh-pink `0xf28c80`), so the light IS the glow, relocated.
-
-Three things about it that are not incidental:
-
-- **Built in `SewerScene.build`, NOT `SewerArea.build`.** `View.warmup` builds its warm tunnel scene by
-  calling `SewerScene.build`, so the pool is there when `compileAsync` walks it and `NUM_POINT_LIGHTS`
-  (5 → **9**, the 5 idle flame lights plus 4) matches warm and real. Created a level later instead,
-  every lit tunnel material would recompile on the first habitat entry. Verified by `prog` going DOWN
-  87 → 85 rather than up.
-- **No shadow, deliberately** — a point shadow is six cube faces per light. Reach (`distCells` 3) plus
-  the vision mask are what keep an organ from lighting the corridor behind its wall: a surface the
-  player cannot see is sunk to the fog colour whatever lit it.
-- **No cached list.** `update()` walks the area's objects itself, so an organ grown under the player
-  lights up on the frame it appears with no refresh hook, and a destroyed one fades because it stops
-  being found. Fixed-pool discipline otherwise exactly as `LampLights`: nearest-N claim, fade never
-  blink, `.visible` never touched.
-
-**Specular: a `roughness` FACTOR, and the MR maps were read before guessing.** Measured green channel
-p05..p95 across the four: **0.71-0.94** — uniformly matte, so nothing on them could catch a highlight
-from an analytic light, which is why they read as dead putty. Blue (metalness) ~0 on all four except the
-preservator's 0.14, so they were correctly dielectric and only the LEVEL was wrong. glTF multiplies
-`roughnessFactor` by the map, so scaling it keeps the map's own variation (crystal glossier than slime)
-and only moves the level: **0.35 / 0.45 / 0.35 / 0.30**.
-
-That is the second road to the black frame above, and it was checked rather than assumed. GGX
-`D = a2 / (PI * d^2)` with `a2 = roughness^4` blows up as roughness falls, and three's own 0.0525 clamp
-peaks past the half-float ceiling at grazing incidence. Measured peak linear value in the post buffer
-across four screen zones: **4.58** against 65504, i.e. **~14,000x of headroom**, 0 NaN and 0 Inf. So 0.3
-is safe with margin and the "do not go far below 0.3" note in `models.json` is conservative, not
-borderline.
-
-**+20% on all four**: 2.4 → **2.88**, 2.2 → **2.64**, 2.6 → **3.12**, 1.8 → **2.16**, read back off the
-live `instanceMatrix` scale as exactly those. The exit ladder stays 4.0 — it is a tuned full-cell prop,
-not part of this. The light height is `h * PROP_LIGHT.yMul` and not an absolute, so it moved with them
-(measured y = 3.31 / 3.04 / 3.59 / 2.48 = h x 1.15); it sits just ABOVE the crown on purpose, since a
-light inside the prop reaches only backfaces and would leave the organ itself dark.
-
-`three.PointLight` was missing `color` and `distance` — added typed to the extern rather than reached
-around with `untyped`.
-
-**Cost NOT measured.** Draw calls are unchanged (a light costs none) but the window would not take focus
-and the HUD read 1 FPS, so no GPU number here is worth anything. The per-slot cost is *inferred* from
-the street spotlight pool's measured ~0.32ms per light — three unrolls the point-light loop into every
-lit material the same way — which is why `pool` is 4 and sized for one room, and why the pool is built
-into the tunnel scene alone.
-
-**Verdict: landed, art values open.** With four differently-coloured lights inside 3 cells every organ
-is also lit by its neighbours', so the props read oily-iridescent rather than wet; the dials are
-`PROP_LIGHT.distCells` (isolate each colour) and per-prop `roughness` (raise toward 0.5-0.6 to calm the
-sheen).
-
-## Prop-backed objects had NO shadow at all, and the guard that did it was my own guess
-
-Reported as "habitat objects should throw shadows", and the cause was a comment I had written one entry
-earlier: `LampShadows` skipped any object with a glb, on the reasoning that *"an object drawn as a real
-3D prop already casts a REAL shadow map shadow, so a painted silhouette on top of it is a second
-shadow"*. The first half is true — `Models.instanced` flags the SOLID batch `castShadow` and
-`SewerGeom` builds the floor with `receiveShadow` — and the conclusion was still wrong.
-
-**Underground the only casting lights are the pooled spotlights**, and `LAMP_LIGHT.angle` is a
-36-degree half-cone from `CELL * yMul` = 5.6 up: a pool about two cells across. Ambient 3.95 and
-hemisphere 1.89 carry most of the tunnel's light and neither casts anything. So a prop standing in a
-lamp's pool casts, and a prop standing anywhere else — which in a 5x5 habitat room is nearly all of
-them — cast nothing at all, having also been cut out of the fake pass. The guard removed; the
-silhouette comes from the atlas cell via `Sprites.shadowContent`, which `iconOff` never touched, so an
-object whose icon is suppressed still has one to project. Confirmed live: the exit ladder now throws a
-shadow it did not have before.
-
-Worth knowing: the ladder is the one prop that reliably DOES stand in its own lamp cone, so it is also
-the one that can now show both shadows at once. If that reads wrong the fix is a per-row opt-out in
-`ObjModels.MODELS`, not putting the blanket guard back.
-
-**The assimilation arch stopped spinning.** `faceWall:Bool` could only say wall-or-hashed, so it became
-`enum PropYaw { WALL; HASHED; FRONTAL; }` and the arch takes FRONTAL — a plain yaw 0, since the tunnel
-camera rests looking down -Z with no yaw of its own and every one of these props was generated from a
-front-on reference. It is a doorway with the orifice in one leg, and a hashed turn showed it edge-on as
-often as not. FIXED and not camera-TRACKING, the same call the frontal FX quads make: a solid prop that
-swung with an orbiting camera would swim against its own shadow and the floor it stands on. Verified
-off the live `instanceMatrix`: both arch instances decompose to **yaw 0.0**, every other prop keeps its
-hashed spread (67.7 / 20.1 / 18.3 / -21.9 degrees on the biomineral).
-
-Its glb then turned out to be authored broadside, so an unturned placement showed the arch edge-on.
-Corrected with a 90-degree entry in **`Models.yawFix`**, which bakes the turn into the verts at load —
-the same mechanism street-lamp2's 90-degrees-off arm already used. That is the right home for it
-because it is a fact about the MODEL, not about how a prop is posed: every placement rule inherits it,
-hashed ones included, and `normalize()` measures the box after the turn so the height scaling is
-unaffected. Measured after: the arch's world extents are **5.32 x 2.64 x 2.43** — its long axis now
-runs across screen X (face-on) where it ran along Z (pointing away from the camera) before.
-
-**The coloured point lights are off for now** — `PROP_LIGHT.pool: 0`, which builds none, so
-`NUM_POINT_LIGHTS` drops back to the flame pool's 5 and the point-light block leaves the tunnel shaders
-entirely (verified: 5 lights, all idle flame, `prog` unchanged at 85). Author call while the organs'
-lighting is worked case by case. Nothing else was reverted: the table rows keep their colours, so it is
-that one number to turn back on, and `PropLights.update` early-outs on an empty pool so the per-frame
-object walk goes with it.
-
-**Verdict: landed.**
-
-## The assimilation arch is regenerated, and its 90-degree yawFix comes back out
-
-> Corrects the "authored broadside" paragraph of the entry above, which is wrong as written.
-
-The arch was replaced with a fresh generation (the previous one carried too much detail) and
-`models.json` repointed at it: **4,970 tris**, `tris: -1`, `tex: 512` = 52 texels/tri, in band with the
-other three organs. A `texSrc` now points at the atlas dumped back out of the glb, so the base colour
-is repaintable in Krita without regenerating anything.
-
-**`make model-export` was naming its dumps off the LABEL, not the source.** A label's folder and its
-source's folder are independent — `habitat/assimilation` lives at `habitat/flat/assimilation.glb` — so
-the export landed a folder away from the mesh it came from. Named off `e.src` now. Every other prop was
-unaffected because their two paths happened to match.
-
-**The 90-degree `Models.yawFix` entry is removed, and the measurement says it never belonged.** Raw
-AABB of the new glb: **X 0.977 / Y 0.724 / Z 0.470, X/Z 2.08** — broad across X, thin in Z, i.e. the
-arch already spans left-to-right, which is face-on to a camera resting down -Z. The previous model
-measures the same way (**2.27**), so the earlier claim that the glb was authored broadside was wrong
-about which axis, and the fix it justified was turning a face-on prop edge-on. `FRONTAL`'s plain 0 was
-correct from the start. `Models.yawFix` is back to its one-line street-lamp2 form.
-
-**Emissive was tried twice more and removed both times.** A derived map keyed off the new atlas at a
-pale, unsaturated tint (`lit 4.6% of atlas`, `emissiveStrength 1.5`) read no better than the saturated
-violet one before it. Back to `emissiveStrength: 0`, which skips the map entirely. Worth recording that
-a regenerated mesh **invalidates its emissive map outright** — the map is keyed to the atlas, and a new
-generation has entirely different UVs, so the old one lights random patches.
-
-**Verdict: landed.**
-
-## The organs start MOVING: a sway on the geometry, a ripple on the normal alone
-
-Three attempts to make an organ read as alive had all been reverted (a derived emissive map twice, a
-coloured point light) because each *lit* the prop instead of moving it. So animate it:
-`render/world/PropShader.hx` folds two terms into the materials the props already draw with, gated by
-an `anim` column on `ObjModels.MODELS` beside `h`/`yaw`/`light`; a null row is never patched. Zero draw
-calls, zero passes, zero geometry. **SWAY** displaces `transformed.xz` weighted
-`pow(clamp((y-base)/span,0,1), bend)` so the feet stay planted — the half that reads with no light,
-because it moves the silhouette. **SHEEN** perturbs `objectNormal` only, for a highlight to crawl on.
-
-- **Per-instance phase off `instanceMatrix[3].xz`, never `gl_InstanceID`.** `Models.cull` repacks
-  survivors into the front of the buffer every frame, so a prop's index changes with the camera and an
-  index-keyed phase jitters. Free, no extra attribute, and puts two organs of a kind out of phase.
-- **Authored values are fractions of the prop's height**, converted at patch time off the geometry's
-  bounding box (the `SewerProp.margin` -> `r` lesson: `Models.instanced` scales by height alone). Live:
-  `span 0.724` local, `amp 0.0145` local = **0.053 world** at instance scale 3.646.
-- **The two anchors cannot share a local.** Tilt at `<beginnormal_vertex>` (so `<defaultnormal_vertex>`
-  carries it to view space free), displacement at `<begin_vertex>` before `<project_vertex>` (so
-  `SewerMask` samples the moved position). The phase is recomputed at each: for an unlit material three
-  wraps `<beginnormal_vertex>` in `#if defined( USE_ENVMAP ) || defined( USE_SKINNING )`. The hull is
-  `MeshBasicMaterial` and takes the displacement ONLY — but must take it, or the outline detaches.
-- **Two chained patches re-wrapped each other every frame.** The "already patched" mark can only be
-  read on the OUTERMOST hook and each patch replaces it, so mask and anim each read the other's mark as
-  absent. Measured: cache key `sewerMaskspropAnimL` **x21**, `progs` **95 -> 129 in four seconds**.
-  Fixed by copying the wrapped hook's own fields onto the new one, in BOTH files.
-- **...and recomputing the phase redeclared the locals: both anchors are inside `main()`.**
-  `ERROR: 0:587: 'propPh' : redefinition`. **An invalid program is invisible, not black** — three logs
-  once, spams `useProgram: program not valid` **x255**, mutes the context, and the prop is still
-  submitted every frame rasterizing nothing. Braced each block.
-- **That took half an hour from the wrong end and the console had it immediately.** Measured 60
-  `renderBufferDirect`/s, `visible` true, projection validated against the ladder, forced `emissive`
-  white AND `depthTest` false, sampled the mask canvas (`sewerVis` **1.000**). All five said "submitted,
-  no fragments" — which IS the signature. `list_console_messages` FIRST, not last.
-
-Verified: **0 console errors**, `prog` 88, and two frames a half-cycle apart (2.36s at `rate` 0.2) over
-a 220px box per arch — **873 px changed >4 / max 51** and **1482 px / max 107** — against a wall control
-of **0 px, max 1**. GPU cost **not measured**. The sheen stays faint until a prop light is back on:
-`PROP_LIGHT.pool` is 0, so an organ away from a bracket has only the hemisphere term (1.89 vs ambient
-3.95), where a ~5 degree tilt is a **~1.4% luminance swing**.
-
-**Verdict: landed, art values open.**
-
-## The organs get insides: a writhing core sprite and orbiting fireflies
-
-`render/actors/PropFX.hx` + `core`/`fly` columns on `ObjModels.MODELS`, assimilation only. New sprites
-`fx/innards`, `fx/firefly`. Core = one upright additive quad in the arch's opening, CPU scale-breath
-plus a FRAGMENT-shader uv disturbance; fly = one mote circling parallel to the floor with a fading
-tail, HDR-tinted so the existing bloom pass is its halo. Both columns are fractions of the row's `h`
-(the arch's art is **1.35 h wide, 1 h tall, 0.65 h deep**), so a later 1.3x resize moved the quads free.
-
-- **`transparent` + `DoubleSide` = TWO draw calls per quad.** three renders it FrontSide then BackSide,
-  each its own call AND program. A/B on 16 quads: **104/72/104 = +32**, double the inventory. The split
-  only orders the two faces, and additive is commutative — `forceSinglePass: true` gives **88/72/88 =
-  +16**, and `propCore` programs 6 -> 3.
-- **Not on `Sparks`' pool**, though `glowQuad` draws exactly the firefly. Its slots are reused by
-  arbitrary callers each frame, so a per-slot shader patch leaks into whoever draws there next; it
-  resets map/colour/opacity but has no uniform reset. Both entry points are at 7 positional args too.
-- **Proving a fragment patch is live.** A failed `StringTools.replace` is silent — uniforms bind, the
-  sprite draws, nothing warps. Frame-diffing cannot settle it (sputtering lamps moved a "static" wall
-  control by 3,135 px, and the sway moves the same box). `warp: 2.0` drives every tap past
-  `ClampToEdgeWrapping` and **all four membranes vanish**. That clamp is load-bearing: under
-  `RepeatWrapping` a disturbed uv wraps to the opposite edge and smears the sprite over itself.
-- **`IMP_ASSIMILATION` caps at level 1**, so "one firefly per level" meant one dot forever (biomineral
-  3, preservator 3, watcher 2). Hence `perLevel` on the row.
-- **A shared ring at one radius is a formation, not a swarm** — evenly spaced dots on a tilted circle
-  read as a triangle turning. Flat ring instead, each dot rolling its own radius/height/speed/tilt from
-  `fract(sin)` keyed on cell phase + index, plus radius breath, vertical wander and twinkle. Derived,
-  so still no state per firefly.
-- **A fading tail wants no history buffer.** The orbit is a closed form in the clock, so segment `j` is
-  the same path at `t - j*gap` — exact, allocation-free, right on the frame a prop appears, and right
-  at 1 FPS, where a per-frame history samples the arc ten times too coarsely.
-- **Upright costs 1.57x of apparent size and no `size` buys it back**: the quad's normal sits 19 deg
-  off the view leaned and 53 deg upright, projecting 0.95 vs **0.60**, and the arch caps `size`. So
-  brightness is the only lever (`alpha` 0.5 -> 0.72). Depth is capped the same way — `z: 0` already
-  puts the braids in front, and moving further back costs `dz*tan(53)` of `y` to stay put, 1.3x the
-  move, through the floor.
-
-Cost, 60 FPS foregrounded: **+16 calls** (94/78), `submit` **+0.15..0.30ms**. GPU sits inside the
-noise — 15 interleaved pairs median **5.88/5.43**, but the spread is **4.6-7.1 on both sides** and a
-5-pair sweep came out *inverted*, so call it <=~0.5ms of a 16.6ms frame that already idles 14.2ms.
-`progs` **92 -> 92** across habitat entry (the boot warm covers both materials); 0 console errors.
-
-**Verdict: landed, art values open.**
-
-## The biomineral glows on its own SKIN: motes travelling the crystal, keyed off its albedo
-
-`render/world/PropGlow.hx` + a `shine` column on `ObjModels.MODELS`, biomineral only. Two fragment
-terms on the prop's existing material — **0 draw calls, 0 passes, 0 geometry, 0 art**. Mask = the
-prop's own baked albedo keyed on greenness; motes = 8 loci on slow helices through the local bounding
-box, each lighting the surface nearest it. Anchor is `<emissivemap_fragment>`, the one place
-`totalEmissiveRadiance` is live AND `diffuseColor` is still in scope, so one injection gets both the
-additive slot and the mask.
-
-- **Nothing here can be keyed on uv.** The atlas is a shattered mosaic (biomineral **2.41x** split),
-  so a mote walking uv space teleports across the model. Local `position` is continuous by
-  construction. A hand-painted emissive map is worse still: `biomineral-emissive.png` predates the
-  Aug-21 re-bake and its uvs are dead, the case already recorded above.
-- **The mask band must be measured in LINEAR, and per-TRIANGLE.** Reading it off sRGB bytes gave
-  "mineral 2.3 vs body 0.87" and both bands built from that were wrong. Area-weighted over triangle
-  uv centroids the real ratio is body p50 **0.64** / p70 **0.90**, mineral p75 **1.36** / p95 **1.67**
-  — so `[0.95, 1.35]` leaves 23.4% fully lit, 72.5% fully dark, **4.1% ramping**, and that 4.1% is
-  the actual crystal/flesh boundary. Whole-atlas percentiles mislead: most of a 512 map is gutter.
-- **The bug that cost the most: `fract( sin( n ) * 43758.5453 ) amplifies its input's error by
-  43758.`** `vGlowPh` carried raw world coordinates (~50), a varying interpolates at ~24-bit, so it
-  arrived with ~3e-6 of per-fragment error — **~13% of random jitter on every pixel**, seen as dense
-  green speckle over the whole prop. Hash the instance translation in the VERTEX shader and hand the
-  fragment a bounded 0..1 phase: same error becomes ~3e-8, amplified ~1e-3, speckle gone.
-- **It was misdiagnosed twice first, and both were plausible.** (1) the mask band — widening it made
-  it strictly worse, which should have been the tell. (2) the art's own grain: the mineral texels do
-  measure sd **22.8** on mean luma 93.5 with 5.4% of neighbours jumping >12, so the story fit — but
-  the `PROP_GLOW.enabled = false` build brightened 4x shows a **perfectly smooth** crystal. Building
-  the off-switch A/B settled in one shot what two rounds of reasoning could not.
-- **Emissive is added in LINEAR onto an albedo of ~0.03**, so the floor is small: `base` 0.10 put a
-  flat 0.41 green over the mask and the prop read as one solid blob with the motes invisible inside
-  it. 0.015 is a mineral that luminesces. Green is the cheap channel to bloom with — linear luminance
-  weighs it **0.7152** — so `glow` 2.8 puts a mote peak at 1.09 against `BLOOM_THRESHOLD` 0.9 while
-  the resting base (0.11) stays far under, i.e. only the motes halo.
-- **Mote count is per ROW, never per level.** A per-instance count needs an attribute beside
-  `instanceMatrix`, and `Models.cull` repacks that matrix alone every frame — the two would desync
-  the moment the camera moved. The count is a LITERAL loop bound and rides the cache key
-  (`sewerMaskspropGlow8`), so changing it compiles its own program, which is correct.
-- **A per-facet shimmer was the third term, and it is REMOVED.** Object space quantised into cells,
-  each swelling on its own beat, meant as a floor so the crystal was not dead between motes. It read
-  as flat rectangular patches: a cube lattice has no relation to where the mesh's own facets are, and
-  every amplitude big enough to see was big enough to show the lattice. Sizing did not save it —
-  0.14 of height was smaller than a blade and read as noise, 0.22 read as boxes. **Author call: out.**
-  What it was covering was real: at 8 half-size motes, whole seconds passed with every one of them
-  round the back — `hotPx` **26 / 6 / 0** over three captures. Fixed properly by the arc below.
-- **The motes never orbit the far side: the sweep is anchored ON THE CAMERA.** `front` is a half-arc
-  and the angle ping-pongs through `camAng +/- front * sin(phase)` instead of completing a lap, so a
-  mote eases, reverses at the silhouette and comes back. `front = PI` degrades to a full sweep, so
-  the option is kept at no cost. The anchor cannot be a uniform — `yaw` is HASHED per placement, so
-  local +Z points somewhere different for every biomineral — it is `atan2` of the camera in the
-  instance's own frame, computed per vertex from `modelMatrix * instanceMatrix` and passed as a
-  varying. Two traps: **`atan2( x, z )` is the natural spelling and it is 90 degrees WRONG** (the
-  mote sits at `( cos, y, sin )`, so the angle pointing at the camera is `atan2( z, x )`) — it put
-  the whole sweep on the flank and the far side; and the mat3 transpose is written out as two dots
-  because three compiles built-in materials as **GLSL ES 1.00 even on WebGL2**, where `transpose()`
-  does not exist. A 2*PI jump as the camera crosses local -Z is invisible: the angle only reaches the
-  world through cos/sin.
-- **The climb bell wants `sqrt( sin )`, not `sin`.** A plain bell leaves a mote under half brightness
-  for half its climb, so with 8 of them several are always washed out and the prop still read
-  near-empty (`hotPx` 28 / 1 / 5 with the arc alone). sqrt still reaches 0 at both ends — a floor
-  would pop at the wrap — but reaches full in a fifth of the climb. And it needs `max( 0.0, ... )`:
-  `sin` can return a hair below zero at the ends, `sqrt` of that is NaN, and **one NaN texel goes
-  through the bloom downsample and blacks out the entire frame**, which this log already has an
-  entry for. After both: `hotPx` **42 / 24 / 39 / 11** over four captures, never zero.
-- **The chain is one round deep and stays that way**: marks `["sewerMask","propGlow"]`, key
-  `sewerMaskspropGlow4`. The hull is skipped outright (`MeshBasicMaterial` has no
-  `totalEmissiveRadiance`, and an outline marker must not glow); the ghost is patched, so the glow
-  survives standing on the prop. LOS comes free — SewerMask injects after `<fog_fragment>`, i.e.
-  downstream of the emissive, so an unseen crystal sinks to fog colour like everything else.
-
-Cost, 60 FPS foregrounded, 70 samples per leg, A/B/A: GPU median **5.31 / 5.56 / 5.34** — the OFF leg
-is the *highest* of the three, so the delta is inside the noise (range 3.1-8.9 throughout). `calls`
-**88-90 on both**, `submit` 2.10/1.70/1.89 (noise), `progs` **92 -> 94** (+2: the solid and ghost
-permutations, both boot-warmed). Motion verified by frame diff: hottest green pixel walks
-816,382 -> 819,356 -> 791,347, **3.7-4.8k px changed >4** per pair in the crystal box against a wall
-control of **0 px, max 1**. 0 shader errors.
-
-**Verdict: landed, art values open.**
-
-## The biomineral gets a real light, and LIGHTNING — fireflies were tried there first and cut
-
-Two separate things on top of the surface glow above, both existing seams rather than new code: the
-`fly` column that already drives the arch's mote, and `PROP_LIGHT.pool`, which had been sitting at 0
-since the organs' lighting was pulled.
-
-- **`pool` 0 -> 2, and only ONE row declares a `light`.** `PropLights` keys on `m.light != null`, so
-  the other three organs' rows went `light: null` with their old colours kept in the comment — an
-  edit to that row gives one its light back, not an edit to the pool. 2 rather than 1 because a
-  habitat holds SEVERAL biominerals (`Habitat.update` sums energy over every formation), so 1 would
-  light the nearest and leave its neighbour dark.
-- **`NUM_POINT_LIGHTS` 5 -> 7 and `progs` did NOT move: 94 either side.** That is the payoff of
-  `PropLights` being built in `SewerScene.build` rather than `SewerArea.build` — `View.warmup` builds
-  its warm tunnel scene by calling that same function, so warm and real agree and no lit tunnel
-  material recompiles on habitat entry. Recorded because it was predicted and it held.
-- **The light is PALE green (`0x8fe3b0`), not the crystal's saturated `0x33bf59`.** A point light
-  washes every surface it reaches; at full saturation it tints the masonry and floor green instead of
-  reading as light coming off a green thing. The surface glow keeps the saturated tint.
-- **Its cost is not resolvable on this machine.** `pool` 2 vs 0, 70 samples each: GPU median
-  **5.80 vs 5.97** — the OFF leg higher again. The street pool's ~0.32ms/light predicts +0.64ms and
-  that is the number to quote; it does not separate from a 2.5-13.4ms spread.
-**Fireflies were the first answer and are REVERTED** — right vocabulary for the arch, wrong organ.
-This one makes POWER, so it discharges. Worth keeping from that pass, because it is measured:
-**every pooled quad is a draw call**, so `trail` multiplies a swarm by `trail + 1` — 21 dots took
-`calls` **88-90 -> 109-111**, exactly +21, and 9 dots -> 97. The two `PropFly` fields it grew
-(`front`, `weave`) went with it: only the arch uses that column now and it wants neither, so they
-were dead generality on a typedef every row has to fill.
-
-### The lightning
-
-New `arc` column + `PropArc`, drawn by `PropFX` as **ONE mesh and ONE draw call for every bolt on
-every prop in the level** — a ribbon rebuilt from scratch each frame, the `SlimeTrail` idiom. A quad
-per segment would have been 30 calls for six 5-segment bolts. Nothing is stored per bolt: a slot's
-life is derived from which TIME BUCKET the clock is in, so the bucket index seeds where it strikes
-and the position inside the bucket is its age (`BLOOD`'s black-blood glints already work this way).
-`vertexColors` carries both the fade along a bolt and its decay, so there is no map, no per-bolt
-uniform and no opacity write — under additive blending a vertex colour of 0 adds nothing.
-
-**Placement took four passes and every failure was the same mistake seen from a different angle.**
-
-1. **Direction radially from the prop's centre** aimed every high strike at the ceiling — bolts hung
-   in the air well above a crystal that had already narrowed to a point.
-2. **Building the ribbon on the leaned `Sprites.TILT` plane** put every bolt above the body: the
-   camera looks down ~53 degrees, so leaning a point back moves it AWAY as well as down and moving
-   away raises it on screen by `dz*sin(53)` — the two stack. Upright is what the arch's core quad
-   already chose (`lean: 0`) for the same reason: a flat shape hung on real vertical geometry must
-   stay coplanar with it.
-3. **Upright at the prop's own depth** then buried them — the body's near half swallowed the lot.
-4. **Pushing the plane forward** to escape that laid them over the crystal's face like veins, and
-   clawing the screen drop back costs `dz*tan(53)` = 1.3x the move in `y`, which puts every bolt at
-   the crown. The same bind the core quad hit.
-
-**The fix was none of those knobs: strike from the BODY'S OWN SURFACE.** A strike point anywhere
-inside the silhouette puts the first half of the bolt behind the body, and that is what all four
-passes were really fighting. Origin on the surface (`r` narrowed by the prop's own taper at that
-height, the profile the surface motes' helix already uses) and direction straight out from there
-means the bolt cannot re-enter the body whatever the swing — which also makes the whole screen-drop
-problem disappear, since nothing has to be pushed toward the camera to stay visible.
-
-**And then the plane itself had to go.** Confined to one upright plane a bolt can travel left, right
-and up — never toward the camera, which is a third of the directions a discharge should have. The
-path is now built in WORLD 3D: a strike azimuth about the prop's vertical axis (`az`, a half-range
-centred on world +Z so bolts fan forward and across both flanks but not round the hidden back),
-swung up or down by `spread`. Two things that fall out of it:
-
-- **the ribbon has to billboard now.** A flat shape whose plane contains the view direction is
-  invisible edge-on, so the width axis is `normalize(cross(bolt, view))` — perpendicular to both.
-  One axis serves the kink as well, which keeps the zigzag facing the camera too. The view direction
-  is a fixed constant, and that is honest rather than lazy: it is used ONLY to face the ribbon and
-  never to place it, the whole sprite layer already assumes this camera, and a bolt lives 0.27s.
-- **that cross product has a real degeneracy** — a bolt aimed exactly along the view has no width
-  axis, and normalizing a zero vector is NaN. Not cosmetic: one NaN texel goes through the bloom
-  downsample and blacks out the entire frame, which this log already carries an entry for. Guarded
-  with an arbitrary fallback axis, which is correct because such a bolt is a point on screen anyway.
-
-The now-meaningless `z` column was deleted rather than left at 0. Measured after: bolts span
-x 662-841 and y 464-577 around a body whose silhouette is ~780-820, i.e. both flanks and clearly
-forward, at 89 calls.
-
-Also: the kink bells to 0 at the ROOT only (`sqrt(f)`, not `sin(PI*f)`) — belling both ends pulls the
-tip back to the centreline and the bolt reads as a smooth worm rather than something that snapped.
-
-**The bolt was in the bloom path and getting nothing out of it, and only a measurement showed that.**
-It is HDR by construction (`0x8cff9e` linear luma 0.80 x `glow` 3.2 = 2.55 against `BLOOM_THRESHOLD`
-0.9), so "is it blooming?" reads as obviously yes. Perpendicular p95-by-radius profiles say otherwise:
-
-| source | d=0 | 1 | 2 | 4 | 6 | 8 | 10 |
-|---|---|---|---|---|---|---|---|
-| wall lamp (known HDR glow) | 245 | 183 | 111 | 72 | 50 | 41 | 31 |
-| bolt, shipped width, clear of the crystal | 230 | 32 | 32 | 33 | — | — | — |
-| the SAME bolt at `width` 0.15 (probe) | 248 | 248 | 249 | 249 | 250 | 241 | 161 -> 91 by d=18 |
-
-**Bloom output scales with the AREA of over-threshold pixels**, and at `BLOOM_STRENGTH` 0.25 /
-`BLOOM_RADIUS` 0.1 a ~5px thread contributes too little to see. Intensity is not a substitute: at
-`glow` 12 the core read the same 230 (ACES saturates it) and still had no skirt.
-
-So a bolt is now TWO ribbons down the same path — a wide soft halo (`halo` x width, `haloDim` x
-brightness) and the hot core over it. Same mesh, same draw call, only vertices. Two traps in it:
-the halo must carry a real cross-section GRADIENT or it is a fat glowing plank, so the emitter went
-to **three vertices per station** (left edge / centreline / right edge, 4 tris per segment) with the
-core pass setting edge = centre and the halo pass setting edge = 0; and the kink hash is keyed on the
-bucket and slot but NOT on the pass, or the halo would run down a different zigzag than the core.
-That emitter needed 17 positional args and became `render/actors/BoltOpts.hx` under the typedef rule.
-After: **242 -> 181 -> 126 -> 124 -> 69 -> 56 -> 50** out to d=18 against a background of 28.
-
-Two false leads worth naming. A whole-box profile DID show a wide skirt on the un-flared bolt — that
-was the crystal's own emissive and its point light bleeding into the radius bins, and only restricting
-to a bolt segment outside the silhouette gave a clean answer. And the wall-lamp control is nearly
-worthless alone, because a lamp's softness could just as easily be its painted `makeRectGlowGradient`;
-the wide-ribbon probe is what actually settles it.
-
-Cost: `calls` median **85-90** across poses — the pre-firefly baseline, i.e. the lightning is **0-1
-calls** and 0 while nothing is striking, flare included (it is vertices on the same ribbon). `submit`
-1.79-1.90, `frame` pinned at **16.69ms** with **14.1ms idle**, 60 FPS, 0 shader errors. `progs`
-**94 -> 97** at boot; sampled 40x over 6s of firing it holds at 97 with **no growth**, so the warm
-covers the strike path and nothing compiles on first discharge. Which three permutations the +3 is
-was not isolated.
-
-**The GPU timer went unusable partway through and its numbers are NOT quoted.** Early samples read
-median 5.69 (2.4-8.1); later ones on the same scene read median 11.02 with quartiles **5.46 / 11.02 /
-15.85** — while `frame` held 16.69 and `idle` 14.1, which 11ms of GPU work cannot coexist with. That
-is the documented iGPU power-state drift, and with no simultaneous A/B there is no share to extract
-from it. `calls` and `idle` are the honest numbers here.
-
-**Verdict: landed, art values open.**
+| non-walkable cells in window | 83 (22 rock, 44 tree, 17 thicket) |
+| **that cost the lattice ZERO marks** | **66 / 83 (80%)** |
+| corner marks emitted | 1043 of 1054 possible |
+| so all 83 obstacles together cost | **11 marks** |
+
+So the readout had no channel for impassability, and this is not a case where drawing FEWER marks
+would have worked — the marks are on the corners, which the obstacle shares with open ground.
+
+Fix is a second pass in the same `build()`: a dashed perimeter around every blocked cell (edges facing
+a WALKABLE neighbour only — dashing shared edges too would fill a thicket's inside with a lattice),
+plus a diagonal hatch. It borrows `RenderConfig.OCCLUSION.outlineDash`/`outlineGap` outright, which at
+0.6 + 0.4 over a 4-unit cell is exactly four dashes per edge, so it is literally the dashed rectangle
+`Occlusion` already draws around a faded building's footprint.
+
+**The hatch is a WORLD-space line family (`x + z = k * HATCH`) clipped per cell, not a per-cell
+pattern** — a stripe continues into the next blocked cell instead of stopping at the shared edge, so a
+thicket hatches as one shape. `'diag'` was the one unclaimed fill in the game's pattern vocabulary
+(`Sprites.patternWhiten` implements `diag|cross|scan|dots`; XRAY took `scan`, OBJMARK took `dots`).
+
+`HATCH` shipped at 2.0 (3 stripes per cell) and that was WRONG in the frame: three long strokes read
+as random scratches, not as fill, and the corner-to-corner stripe at 5.66 units visually beat the
+0.6-unit dashes it was supposed to sit inside. 1.0 (7 stripes) reads as fill. Density, not width, is
+what turns strokes into a pattern.
+
+**City buildings are excluded**, and that is not a saving — it is a correctness fix. Their footprints
+are unpaved (`Ground` paves road/alley/walkway only), so the dashes hang in midair under a solid wall
+that hides them; and the moment the block DOES fade, which in tactical is the whole selected block,
+`Occlusion` draws that identical rectangle a hair above them — two coincident HDR dash runs through
+bloom. What is left is what actually surprises a player: burning barrels, unwalkable objects, blocking
+decoration.
+
+Two things fell out. `addEdge` became a general `addSeg` (per-endpoint height, arbitrary heading,
+normal-widened) — the hatch is 45 degrees, and endpoint heights let a quad follow wilderness relief
+instead of lying flat at the cell-centre sample. And `View.refreshObjects` now calls a new
+`invalidate()`: the grid rebuilds only when the player's CELL changes, and an organ grown under a
+standing player moves walkability without moving the player. That was invisible before (a blocked cell
+drew like open ground either way) and this pass is exactly what makes it show.
+
+Cost: **0 extra draw calls** — it all goes into the grid's existing single mesh and material. Geometry
+predicted and measured to the quad, twice: 2306 cross + 1268 dash + 609 hatch = **4183 quads / 8366
+tris**, against a 577.8k-tri scene.
+
+## The facility becomes a 3D area kind (`render.facility`) — Phase 0
+
+`AREA_FACILITY` is the first kind with an **outdoors and an indoors at once**: the city has buildings
+and no interiors, the tunnels and the wilderness have interiors and no shell. Fourth `Area3D`, built
+from the SAVED cell grid like both of those — no seed, every existing save. Measured on entry:
+**64-81 calls, 72-271k tris, 101 programs**, against a city's 158-288.
+
+**No `render.Occlusion`, and that is the design.** A city fades a building while it blocks the
+camera-to-player sightline, which is the right question when the player is always outside it. Here
+they walk IN, so the shell fades on being INSIDE: per structure, the interior roof to 0 and the
+SOUTH-facing wall faces to 0.20. South only — the camera heading is fixed with a ±30° orbit clamp, so
+leaving N/E/W solid is what keeps a room reading as a room. `depthWrite` follows the opacity down, or
+the faded wall still rejects everything behind it.
+
+**The planned per-texel version (`alpha = 1 − uReveal * visAmt`) was dropped, and the reason is the
+keeper: hidden ≠ covered.** The roof must be SOLID from outside, and the mask says the opposite there
+— the sweep reaches a building's wall ring and stops, so every interior cell reads hidden and a
+mask-driven roof would fog out into the background exactly when it should be a roof. The window-peek
+half moved to the CPU instead: a structure opens when the player is inside it or within `PEEK_CELLS`
+3 of one of its window cells with line of sight, recomputed only when the player's cell or
+`area.visRev` moves. The roof also **splits in two** — the rim over the wall ring never fades, which
+keeps the outline on screen and removes the `indoorW` vertex weight the mask version needed.
+
+**Every window is a 2- or 3-cell RUN** (measured live: 49 openings, all 2 or 3), so the pane is
+emitted per run and the art's three panes span the opening once. The generator's single-window path
+has been dead for a long time: `TEMP_BUILDING_WINDOW` and `TEMP_BUILDING_VENT` are both `18`, so
+`finalTiles` resolves that cell to wall + a `Vent` and `TILE_WINDOW1` is never written. The quad is
+sized from the art's measured content aspect (2.009) and never stretched, so a 3-cell run stands 5.94
+of `WALL_H` 6.0 and reads floor-to-ceiling while a 2-cell run is 3.96 on a real sill — two window
+sizes out of one image.
+
+**`generatorInfo` was describing one building of three.** `generate()` nulled `state.rooms/doors`
+after the main building and `makeDoors` reassigned rather than appended; the hangar has no inner walls
+and never went through `makeDoors` at all. Fixed at the source AND repaired for existing saves, since
+the cell grid is persisted verbatim and never regenerated: `repairRooms` re-derives the rects by
+flood-filling room floor bounded by walls and by LINO — lino being both the corridor floor and the
+floor under every door is what separates one room from the next. Live save: **7 rooms → 24**, split
+7 / 1 / 16 over the three structures, `missionHints` kept, not one tile touched. The completeness test
+is a COUNT (`stored >= derived` → no-op), which can only err toward rewriting an equivalent record.
+
+**Its own art set**, 10 new 1k sources. Linear values: exterior wall **0.0323** (just under the
+asphalt it stands on), hangar cladding 0.0374, interior wall **0.0689** (2.1× the exterior — indoors
+has to read as a different place the moment the roof goes), floor tile 0.0607, lino 0.0750, hangar
+concrete 0.0353, grate 0.0270. Outdoors keeps `city/*`.
+
+Two alpha traps: the **drain grate wanted no alpha at all** — as a centred sprite its cut never
+happened (min alpha **112 of 255**, so `alphaTest` kept the whole square), but a drain cell is exactly
+one cell, so the honest shape is a full-bleed TILE that REPLACES the floor. And
+**`background:"transparent"` cuts on a generate but not on an `edit_image` re-emit**: unlit window
+60.4% at alpha 0, the lit edit of that same drop **4.3%**. The edit holds composition pixel-exact, so
+the unlit channel IS the lit one's correct cut — transplanted rather than re-rolled.
+
+**Warm, measured not assumed.** First entry compiled **+10** (91 boot → 101). A facility warm scene
+took boot to 96; instancing the park glbs inside the existing glb promise chain took it to 97 —
+entry compiles **10 → 4**, and all five plant models cost **1** program between them. It needs its own
+scene for a reason the tunnels' entry only half covers: the light counts match the city's (there is a
+moon), but every lit surface here carries the vision-mask patch and the mask extends the cache key.
+
+**The build key scheme was out of room** — sewer `-(id*2+3)` and wilderness `-(id*2+4)` are both
+parities of one range, so a third grid-built kind needed the STRIDE: `gridKey(id, kind) =
+-(id*4 + kind + 3)`. Riders: `getSpawnRect` gained its `'facility'` arm and unlike the wilderness's it
+is **live the day it lands** (`commonAI 5`); `MeshLambertMaterial` gained typed `opacity`/`depthWrite`
+rather than an `untyped` write; `Chunks` reports **1 group**, because per-structure meshes span 30×18
+cells and sit past the 16-cell size guard at the scene root.
+
+**The parking lot was the DARKEST surface in the game, and it is most of the frame.** The generator
+fills the whole area with `TEMP_ALLEY` before it draws anything, so the leftover apron arrives as
+`Const.TILE_ALLEY` and the obvious mapping is the city's alley art. Measured as built, linear: alley
+**0.0226**, against roof 0.0275, wall 0.0323, asphalt 0.0329, grass 0.0414, walkway 0.0680. That art
+was painted to be a slot between two buildings — small, and wanting to read as a hole. Out here it is
+a 40-cell car park, and at 0.0226 under a 0.0275 roof the building was **1.22×** its own ground and
+the whole compound read black. Swapped to `city/ground-asphalt` (a car park IS asphalt): the ladder
+becomes lot 0.0329 < grass 0.0414 < walkway 0.0680, and the building reads as a darker mass ON its
+tarmac. One constant.
+
+**`city/grass` is a CUTOUT, not a ground tile, and using it as one perforated the park.** Reported as
+"holes in the grass", and that is literally what they were: **47.6% of that texture is fully
+transparent**, by its own prompt's design — "roughly 45 percent of the tile is left as the untouched
+flat #5a5d63 grey background". It is ragged weed islands meant to be laid OVER paving by
+`render.world.Lawns` with a `CoverageMask` alphaMap. As a standalone opaque surface the transparent
+half renders as the flat grey `bleed_alpha` scrubbed into it, so the lawn read as clumps separated by
+holes. **Full coverage is a different painting, not a setting** — new `facility/grass`, and its `lift`
+0.82 was fitted against the NEIGHBOUR rather than in the abstract: as painted it measured **0.0291
+linear, DARKER than the asphalt lot beside it** (0.0329), a lawn darker than its own car park. Built
+it lands **0.0500**, so the ladder reads lot 0.0329 < lawn 0.0500 < walkway 0.0680. The other two
+reused city tiles were checked the same way and are 100% opaque, so the defect was that one file.
+
+**And the first attempt to judge the lot from a screenshot was invalid.** In a gameplay pose most of the
+lot is outside the player's line of sight, so it renders at `MASK.hidden` 0.14 toward the sky whatever
+its albedo is — the mask, not the art, is what a capture like that shows. Forcing
+`VisionMask.uFloor.value` to 1.0 from CDP (a live static, restored after) is the A/B that separates
+them, and it is what showed the ladder was the real defect rather than the fill.
+
+**Measured, foregrounded at 60 FPS, 36 samples, gameplay pose:** `frame` **16.69ms** (vsync),
+GPU median **7.06ms** (IQR 6.49-7.98), `submit` **1.39ms**, `idle` **14.30ms**, **68 calls /
+250,394 tris**. Fill-bound like every other area on this machine — GPU is 5× submit. That lands the
+facility squarely in the wilderness band (plains 73 calls / 6.95ms, forest 62 / 4.92, mountain
+52 / 7.20) and nowhere near the frame budget.
+
+## Every facility doorway was a 4x6 hole in the wall, and the leaves that fill it are not a glb — Phase 1
+
+Item (b), render half only: `objects.Door` already had `isOpen`, `frob()`, the auto-close at two
+turns and the linked halves. What was missing was any geometry — a door cell finalises to plain
+`Const.TILE_FLOOR_LINO`, so Phase 0's wall pass saw corridor floor and emitted nothing. 30 holes.
+
+**Every facility door is ONE cell; the "double" front door is two of them flanking a pier.**
+`generateBuilding` draws `TEMP_BUILDING_FRONT_DOOR` over a 3-cell `drawChunk` then puts the CENTRE
+cell back to wall. Measured live: 30 openings, 6 glass / 23 cabinet / 1 metal, the glass ones really
+arriving as `(2,11)+(2,13)` and `(36,53)+(38,53)`. A cell is 4 units — a 2 m opening, a DOUBLE door
+in any real building — so it gets two 2-unit leaves.
+
+**A leaf is a textured box, not a generated prop.** TRELLIS was the plan and is the wrong tool: a
+flat slab with a rectangular panel is the worst subject for a dual-contour remesher, which rounds the
+edges off and charges $0.03 for an approximation of eight vertices. Authored in
+`FacilityDoors.leafGeom()` (5 quads, 10 tris, no underside); the ART carries all three looks, which
+also killed the planned `texSrc` repaints — painting into a TRELLIS atlas is per-variant manual work.
+
+**ONE square image holds the COMPLETE shut pair and the second leaf comes free.** Left leaf u 0..0.5,
+right 0.5..1; the box's BACK face carries the SAME u, so from behind it delivers the mirror — and the
+mirror of the left leaf IS the right leaf, which is therefore the same geometry at `yaw + PI`. Exact,
+not approximate: the sources measure **1.8-2.0 sRGB mean absolute difference about their own
+midline**, i.e. grain. `DOOR_H` 4.0 of `WALL_H` 6.0 follows from square art over a 4-unit cell.
+
+**The swing is derived, not cased.** `Ry(yaw)` takes local +x to `(cos, 0, -sin)`, so a direction's
+yaw is `atan2(-z, x)`; the leaf's origin IS its hinge, so the matrix is a plain turn with no
+recentring to undo (which `Models.instanced` would have forced, hence the hand-rolled batch). Leaf 0
+turns by `wrap(openYaw - shutYaw)`, leaf 1 by its negative from `shutYaw + PI` — both finish along
+the swing normal from opposite jambs. Verified numerically: shut `0 / 180`, open `90 / 90`. The four
+combinations of run axis and swing side are what a hand-written switch gets wrong once.
+
+**The head needed closing TWICE, and the second only showed with the camera on the floor.** A wall
+cell is a whole cell, so an opening is a 4-unit-deep reveal and the lintel closes BOTH faces; the
+leaves hang on the plane between them, leaving the strip above the head open. Found by putting the
+free cam at y 0.6 and looking up — a black void over every doorway. The game camera pitches DOWN 51
+degrees and never sees it, which is exactly why it would have shipped. Two triangles a door.
+
+**The hangar's roll-up door existed and was invisible** — `TILE_HANGAR_DOOR` is `Wall.SHUTTER` and
+Phase 0 painted it in plain cladding. Own buffer and texture now, world-aligned at `SHUTTER_TILE`
+**7.0**: 24 slats per repeat puts the pitch at 0.29 units and ~20 slats up a 6-unit wall, which is
+what the built frame shows. Tiling, not mapping across the run — slats are uniform.
+
+**Measured in the built frame under debug key `1` (pure albedo), linear:** glass leaf **0.0191** <
+ext wall 0.0323 < kick plate 0.0389 < walkway 0.0545 < jamb reveal 0.0670 < lino 0.0751; shutter
+**0.0274** vs its own cladding 0.0375. Both reproduce their SOURCE values to four decimals, so key
+`1` is a usable albedo probe. Leaf 0.59x its wall, shutter 0.73x its own — a door reads darker than
+the wall it sits in, which was the ask. The kick plate that looked blown out by eye is 1.2x the
+wall; no `lift` anywhere. Boot warm 97 → **98** (the leaves are an INSTANCED mask-patched lambert and
+`USE_INSTANCING` is a program define, so the merged shell's program does not cover them); first entry
+still compiles **4**. Gameplay pose **68 → 70 calls**, 250.4k → 250.7k tris. Timing NOT re-measured:
+the window was not foregrounded (topbar 1 FPS), and +2 calls on a fill-bound frame is under the noise
+an A/B could resolve.
+
+## Half-tile walls, and the fade that dissolved the wrong ones — Facility Phase 1.5
+
+Six defects from walking the Phase 1 build. All render-side; `FacilityModel` re-derives from the
+saved grid every build, so nothing persisted moved.
+
+**A wall face cannot be judged an occluder by its NORMAL, and the whole `*S` split went.** Phase 0
+routed every `+z` face into `wInS`/`wOutS`/`panesS` and faded them to `WALL_FADE` 0.20 while the
+player was inside, on the theory that a fixed camera heading makes `+z` the only direction that can
+occlude. It cannot answer the question: a `+z` INNER face is, by construction, the south face of a
+wall whose south neighbour is indoor floor — i.e. the NORTH wall of some room — so standing in that
+room dissolved the far wall, which occludes nothing, and the room opened onto the void past the area
+border. Measured at 112 px/cell, scan across the north wall: `SKY 680-1015` and `SKY 1128-1464`, both
+**exactly `0x0a0e14` with min == max**, against `geom 1016-1127 (27,33,33)` for the one solid cell
+between the runs. Pure background with zero variance is nothing drawn, not a ghost.
+
+**Riding along: a faded alpha-tested pane does not fade, it SNAPS OUT.** `addPane` carried
+`alphaTest: 0.5`, three tests it against `map.a * OPACITY` (`alphatest_fragment`), and at 0.20 every
+fragment is discarded — so a window run vanished whole the instant the ease crossed `t = 0.625`. Two
+independent bugs presenting as one symptom; the second is invisible to any reasoning about the fade
+that does not know the alpha test multiplies by opacity.
+
+Fix taken: **fade the roof and nothing else.** Four buffers deleted per structure, `WALL_FADE` gone,
+no shader work, and the alphaTest interaction becomes unreachable. The height it was buying back is
+paid for by the thickness change below — an occluder's reach drops from `4 + 4.9` units of z to
+`2 + 4.9`, −22%.
+
+**Walls are HALF a cell and glazing a QUARTER, off one rule with no cases.** Each side of a cell
+reaches the cell boundary if the wall line *carries on* through that neighbour, else insets by
+`(CELL − T) / 2`. `carries` must count a DOOR cell as well as a wall — a doorway is a hole IN the
+line, not the end of it, and reading it as an end pulls both flanking slabs back and opens a 4-unit
+opening out to **6**. Three things fall out for free: straight runs come out 2 thick; corners come
+out a 3×3 pier that is FLUSH outside (both outer faces sit at the run's own inset) and a pilaster
+inside; and a 1-thick glazing slab sits strictly inside its 2-thick neighbour, so **the neighbour's
+own butt cap IS the jamb reveal**. That last one is what closed the holes between glass and wall —
+they were never a texture problem (the cropped alpha bbox measures ≤1 px margin on all four sides,
+content aspect 2.0088 against crop aspect 2.0088), they were a window cell being a wall cell, and a
+wall only emitting faces toward NON-wall neighbours, so the run's ends emitted nothing at all.
+
+Verified over all 572 wall cells: `run 4x2` 197 + `run 2x4` 182 at exactly 2.0, `run 4x1` 74 +
+`run 1x4` 52 at exactly 1.0, `2way 3x3` 22 corners, `3way` 44, `4way` 1, **0 straight-run failures**;
+**0/30 doorways off `CELL` wide**, **0/49 window runs whose cross-section is not contained** by its
+flanking wall. Screen: **277,078 exact-background pixels → 170**, and the survivors are single-digit
+scattered clusters in fully-hidden corners where `mix(fogColor, rgb, ~0)` lands on the fog value
+honestly.
+
+**A butt cap's texture is decided by the DIAGONAL cell, not the neighbour.** The space a cap faces is
+one step along the line into the neighbour, then one step off the line toward the side the excess
+sits on. Reading the neighbour gets a window jamb right and a corner pier wrong: a corner's shoulder
+looks *past* the run it butts against, into the room behind it.
+
+**Glass is half-transparent with a solid frame in ONE draw, and the split is baked in the texture.**
+The source is bimodal in luma — frame 16-127 at 25.9%, glass 144-207 at 73.4%, a **0.7% valley at
+128-143** — so a threshold separates them outright. New `glass_alpha` key in `tools/textures.py` on
+the `lift` pattern, applied to the full-res source before the LANCZOS resize so the alpha edge
+resamples soft; built map is 71,430 px at alpha 128, 23,050 at ≥250, 156,225 at 0. Material takes
+`transparent` (set AFTER `VisionMask.patch`, the usual trap) and `alphaTest: 0.02`, which now only
+kills the 1 px margin. Measured on screen against the map: pane **(126.4, 149.0, 156.8)** vs the
+texture's glass **(147.7, 172.5, 179.4)** = 0.86×, and the arithmetic closes —
+`0.502 × (147.7 + 0.55 × 147.7) + 0.498 × 30.7 = 130`, against 126 after tone mapping.
+
+**`lift` runs BOTH ways, and this is the first entry that needed `g > 1`.** The repainted
+`wall-interior` came back at linear **0.1077**, the brightest texture in the facility set and above
+its own lit glass at 0.0797. `lift 1.22` put it on 0.0672, holding the green version's 0.0689;
+`window-head` took 1.09 from 0.0461 to 0.0352. Built frame reproduces the sources to within 0.5 sRGB
+(before: `(69.7, 80.6, 74.9)`, green-dominant; after: `(68.0, 74.7, 80.6)` against a source of
+`(67.7, 74.2, 80.0)`, cool and neutral).
+
+**The trap that nearly cost a false regression:** the "before" capture read its room floor at
+`(64.7, 70.7, 74.4)` against the source's `(64, 70, 74)` — a four-decimal albedo match, i.e. debug
+key `1` had been left ON by the previous session. The reload cleared it and the next frame came back
+7× darker and blue, which reads exactly like a lighting regression. It is not: `1` is a full-bright
+albedo probe, and the only safe comparison is probe-to-probe. Check the floor against its own source
+before believing any before/after brightness claim on this area.
+
+**Measured, both frames under key `1`:** calls **53 → 43** (four buffers deleted per structure, one
+`window-head` added), tris **3.7k → 5.0k** (~800 per structure of floor strips — a wall no longer
+fills its cell, so the remainder is emitted as the NEIGHBOUR's floor, indoors by `FacilityGeom` and
+outdoors by `FacilityGround`, both off one shared `strips()`). 0 console errors.
+
+**Windows do not bloom, and did not before either — do not chase it.** `WINDOW_EMISSIVE` 0.55 over an
+emissiveMap whose glass is sRGB 147.7 (linear 0.295) gives 0.162 of emissive radiance against
+`BLOOM_THRESHOLD` **0.9**; at alpha 1.0 it was still ~0.32. Confirmed in the built frame: the wall
+beside a pane sits flat at `(7,16,32)` with no elevation past the geometric edge. Halving the glass
+did not cost a glow that existed. Interior brightness is Phase 3's job (ceiling lights), not the
+pane's.
+
+## Roof line, window proportions and the room/corridor split — Facility Phase 1.6
+
+Four more defects off walking the Phase 1.5 build. Two are the same bug in two places, one is the
+art having moved under a hardcoded crop, and one is a split that had never been made.
+
+**The roof band over a wall was 1.87× the wall, and only the INDOOR side was wrong.** `rimRect` ran
+to the cell boundary on any side whose neighbour was indoor, so the never-fading band was a unit
+wider than the masonry on every inboard face. Measured live over the wall ring before the fix: rim
+**8008** units² against slab **4278**, with only **41 of 572** cells exact — 268 interior partitions
+at 2 → 4 (a full-cell band over a half-cell wall), 126 glazing at 1 → 3, 111 exterior at 2 → 3. Once
+the interior roof faded, every internal wall kept a ledge twice its own width. The band is now the
+slab, and what the slab leaves is the neighbour's cell reaching in, so it takes the neighbour's
+CEILING — the fading roof — exactly as it already took the neighbour's floor. After: **1.056**, and
+the entire remainder is the 126 glazed cells at exactly 2.0 units² each, which is the deliberate
+half-unit external head that keeps the roof line from notching in at every window run. **0**
+non-glazed cells overhang. So: outdoor side keeps `WALL_T`'s inset, indoor side takes the slab's own.
+
+**A door cell is not a wall cell, so it contributed nothing to the rim at all.** `rim` is written
+only by `capTop`, and `capTop` was called only under `if (isWall)` — verified live, **0 of 30** door
+cells is a wall cell. 240 units² of lintel roof therefore sat in the FADING buffer, and every one of
+the 30 doorways read as a notch cut out of the wall-top ring the moment the shell revealed. `slab()`
+was already right on a door (all 30 come back exactly the 2×4 lintel planes, which its own header
+had claimed and nobody had used), so the fix is to run `capTop` and the strips loop for a door cell
+too. Two riders fell out of the same full-cell quad: at the 7 exterior doors it hung **28 units²** of
+roof, and the same 28 of corridor lino, out over the pavement — and `FacilityGround`'s strip pass
+tested `isWall`, so those 7 strips got no ground either. Both passes now test `FacilityGeom.carries`.
+Live census off the 30 door cells: 53 indoor strips, 6 walkway, 1 lot.
+
+**`carries` had also taken both JAMBS off every doorway — a Phase 1.5 regression.** Found by putting
+the free cam on the spine door at (10,6): two black slots, floor to lintel, either side of the
+leaves. Same root as the roof band above. The flanking wall cell sees `carries` on the door cell and
+takes the butt-cap branch, where the two cross-sections are identical (both `WALL_T`) and nothing is
+exposed — which is true of the MASONRY and false of the hole underneath it. Before `carries` existed,
+a door cell was simply a non-wall neighbour and the flanking wall emitted a full face there, so the
+jamb came for free; closing the opening back to one cell removed it and nothing replaced it. The door
+cell now emits its own two side reveals (`jamb`), 0..`DOOR_H`, each wound to look INWARD — `face`
+with one axis collapsed onto the boundary plane, the same trick `butt` uses. +120 tris. Both
+orientations checked on screen, because the two windings are hand-derived and a wrong one is
+invisible from outside the opening and still black from inside. It also covers the front-door pier
+for nothing: a jamb is emitted at the door's own boundary whatever sits on the far side of it.
+
+**A centred crop cannot follow a re-cut alpha.** `loadCroppedTexture(…, 0.895, 0.446)` takes a
+CENTRED rect, and the hand-re-cut lit window's content sits **9 px high of centre** (built 512: bbox
+y 134..359 against a crop of y 142..369). It shaved 8 rows off the top rail and left 10 rows of empty
+alpha under the glass for `alphaTest 0.02` to discard. The old numbers had only ever worked because
+that texture's alpha was transplanted from `window-large.png`, whose bbox IS centred (142/142). Fixed
+by cropping to the image's own alpha bbox at load — `Textures.loadAlphaCropped` — which deletes both
+constants and cannot go stale. Costs one `getImageData` scan per texture, once.
+
+**A window's height is the ART's aspect, and no code change can reach it.** `WINDOW_ASPECT` 2.02 put
+a 3-cell run at 5.94 tall in a 6.0 wall: head 0.03 under the roof deck, and the sill cap skipped
+outright because `lo` 0.0297 is under the 0.05 guard. **28 of 49** runs are 3-cell, so that was the
+common case and not the corner one. Clamping the height in code cannot work — the hole through the
+wall is cut from the same arithmetic, so a shorter pane in a full-height opening is just a gap. New
+art at the measured **2.90**: a 3-cell run is 4.14 tall on a 0.93 sill, a 2-cell 2.76 on 1.62, both
+with real wall above the head and both now getting a sill cap. Two notes on getting it: asking for
+"exactly three times as wide as it is tall" produced a **5.22** letterbox, and what fixed it was
+naming the PANE shape ("each individual pane is almost a square"); and the 1k server cannot render a
+3:1 canvas at all — max edge 1024 against a 655,360-pixel floor caps canvas aspect at **1.6** — so
+the unit sits in a band inside a square frame and the bbox crop takes it out. `glass_alpha [136,128]`
+carried over untouched: the new source is bimodal at frame 16-127 30.6%, glass 144-207 58.8%, a
+**0.2%** valley between.
+
+**Rooms and corridors split off `Surf.LINO`, needing no `generatorInfo`.** LINO is what the generator
+floors every corridor and every door cell with; TILE is room floor. Live over the two lab buildings:
+**538** faces look into rooms against **218** into corridors, 12,912 vs 5,112 units², so a corridor
+wall is **28.4%** of the interior surface — a third of what the player sees indoors, not a detail.
+One local `look(c,r)` closure replaces the `st.hangar || !inner ? wOut : wIn` ternary at all three
+call sites (plain faces, butt caps via the diagonal cell, door lintels), and costs +1 merged mesh per
+non-hangar structure. `wall-interior` stays the CORRIDOR — its prompt already asked for a laboratory
+corridor, so it is the art that did not have to be repainted — and the new `wall-room` is the room:
+a tiled splashback over the lower 40% under painted board. It does not tile vertically and does not
+need to: `face` maps v as `y / WALL_TILE` with both at 6.0, so v runs exactly 0..1 up a wall and
+never wraps, which is the same reason the corridor art can carry a scuff band in its lower third.
+`lift 1.23` took it from linear 0.0982 to **0.0592**, just under the room floor 0.0607 and the
+corridor wall 0.0673, so a corridor still reads as the brighter spine between darker rooms.
+
+**Measured, both frames under key `1` with the same camera:** calls **35 → 32**, tris **5.2k → 5.0k**,
+0 console errors, no persisted change. A vertical profile through the north wall makes the window fix
+visible in pixels: the two captures are identical from y190 to y222 (same camera, same probe), then
+before goes roof → glass → floor with no wall band either side of the glass, while after gains a band
+at y226-250 above it and one at y314-330 below. Phase 1.5's regression test still passes: **0** pixels
+at exactly `0x0a0e14` in the room band.
+
+`window-large.png` and `window-large-lit.png` went to the `textures-src/unused/` shelf and their
+entries out of `textures.json`, the stale outputs deleted — the ribbon art replaced both and nothing
+in `src/` referenced either. 191 → 189 tracked textures, `make tex` clean at 0 warnings (the shelf is
+skipped by the untracked-source sweep, which is what it is for).
+
+## A wall cell is the UNION OF ITS RUNS, not their bounding box — Facility Phase 1.7
+
+**`slab()` is a bounding box and four passes had been reading it as the masonry.** Where the wall line
+turns or branches, the runs through a cell form an L, a T or a cross and the box is strictly bigger:
+a corner came out a 3x3 pier with a 1x1 shoulder standing in the room past both wall lines, which is
+what "room corners have remains of old full-tile geometry" was seeing. Census over the area's 602
+wall+door cells: **535** straight, **22** corners, **44** T-junctions, **1** crossing — so the Ts, at
+two shoulders each, were the bigger half of it, and the crossing filled its cell outright. New
+`notches()` returns the corner squares (one per PAIR of adjacent carrying directions), and the square
+is handed to the DIAGONAL cell exactly as `strips()` hands a run's leftover to the neighbour beside
+it: its floor, its fading ceiling, its wall paint, plus the two faces of masonry looking back at it.
+**114** notches, 1 unit² each, **all 114 with an indoor diagonal**, so `FacilityGround` never sees
+one. Box 4518 → masonry **4404**.
+
+**Three consumers fall out of it and each got simpler, not harder.** `capTop` emits the union as up
+to three rects (the x-run's middle band, the z-run's two arms) — verified against `box − notches` on
+every one of the 602 cells, **exact to 0**, and one early-out for "no x-run" keeps a straight vertical
+wall at one quad instead of three abutting ones (~900 tris). The butt caps stop comparing slab
+extents, which answered the wrong question — at a corner the box reaches the boundary on the side the
+OTHER run leaves through, and that read as an exposed end — and compare THICKNESS instead: 385 butt
+quads → **196**, exactly 49 window runs x 2 ends x 2, i.e. nothing but the glazing reveals the rule
+was ever meant to cap. Net over the whole shell: 1113 → **1338** quads, +450 tris, all of it the
+corner squares gaining real surface.
+
+**`rimRect` deleted; the roof line notches in at a window run.** Its only remaining job was to run
+the band out to `WALL_T`'s inset on an OUTDOOR side — a no-op on solid wall, and half a unit of
+bitumen sitting on the outside of every pane: **126** glazed cells x 2 units² = 252 units² of roof
+texture on the glass. Straight roof line was not worth it. `rimRect ≡ slab` once that goes, so the
+function went with it and `capTop` picks `head` or `rim` off `glazed` alone. Head cap now **504**
+units² over 126 cells = exactly the 1x4 glass slab, and the rim/masonry ratio is **1.000** (1.872
+before Phase 1.6, 1.056 after it).
+
+**`WINDOW_EPS` deleted — the offset WAS the seam.** The pane stood 0.02 proud of the wall plane "so
+nothing depends on polygonOffset", but the emitter cuts the opening OUT of the wall rather than
+painting the pane over it, so the two are never coplanar-and-overlapping and there was nothing to
+fight with. All it bought was a hundredth of a unit of open air along the head and the sill, where
+the reveal's caps stop at the masonry and the glass did not. Flush now, and the run's ends close too
+(the pane edge lands exactly on the flanking wall's butt cap).
+
+**The doorway reveal is CORRIDOR whichever way it faces.** `soffit` used to take whichever of the two
+flanking spaces the `k` loop read first, so an interior door was painted in the room's tile half the
+time and an exterior one in the outside cladding. A doorway belongs to the circulation and not to
+either space it joins — the same reason the generator floors every door cell in lino. `st.hangar ?
+wOut : wCorr`, and the `soffit == null` bookkeeping goes with it. Verified from inside a room: tiled
+wall either side, flat corridor paint on jamb and soffit.
+
+`GRATE_TILE` 4.0 → **2.0**: four gratings to a cell around the central cover instead of one 2 m
+square of it. The one period in `FacilityStyle` that IS a divisor of `CELL`, and deliberately — a
+grating is a lattice already, so landing on the cell grid is the point rather than the mistake the
+others avoid.
+
+> The grate paragraph above is SUPERSEDED by the drain paragraph in Phase 1.8 — a drain is a fitting
+> in the floor and neither one cell-wide grating nor four of them is the right answer.
+
+## The threshold, the drain and the 2D leftovers — Facility Phase 1.8
+
+**A drain is a fitting IN the floor, and one was already being drawn.** The cell carries an
+`objects.FloorDrain`, `isGroundDecal()` true, so the actor layer had been laying its icon flat on the
+floor all along — and `Surf.GRATE` was painting a cell-wide grating underneath it. One grating filling
+a 2 m cell read as a vehicle pit and tiling it 2x2 read as four of them, and both were competing with
+the object's own decal. So the fix is a deletion: `Surf.GRATE` falls through `floorBuf` to room floor,
+and the `fGrate` buffer, `FLOOR_GRATE` and `GRATE_TILE` all go. **23 cells** in a generated area.
+
+**The drain's art was swapped in the ATLAS, which is where that object's image lives.** `FloorDrain`
+draws `ROW_OBJECT2` / `FRAME_FLOOR_DRAIN`, i.e. cell (16, 0) of `app/img/entities64.png`, and the old
+icon measures an alpha bbox of exactly **32x32 centred in the 64** (856 opaque px ≈ a disc of r 16) at
+mean sRGB **163/170/178** — a pale round cover, and by far the brightest thing on a facility floor.
+`facility/floor-grate.png` LANCZOS'd to 32x32 and pasted into a cleared cell holds that footprint to
+the pixel, so the decal's on-screen size does not move, and lands at **39/45/47** — under the 0.0607
+floor it sits in, which is what a recess should read as. Two things to know if it is ever redone:
+`app/` is a SYMLINK to the packaged Electron runtime and is gitignored, so that atlas is the only copy
+and has no tracked source (the original is in the session scratchpad); and `make tex` does not reach
+it — regenerating the source leaves the atlas on the old cut, which is what its `textures.json` note
+now says.
+
+**A doorway's floor is the two spaces it joins, not the door cell's own surface.** `strips()` hands a
+wall cell's leftover to the neighbour beside it, but the door branch was still capping the SLAB in the
+door cell's own lino — and a door cell's slab is its LINTEL, masonry above head height with nothing
+under it, so at an exterior door 2 units of corridor lino ran out past the building line. New
+`floorStrips()` collapses the slab to the wall LINE and re-runs the same decomposition, which IS the
+two halves, so there is no second rule — and `stripsOf` now takes the rect so both share one body.
+Census over the 30 doorways, 480 units² of threshold: TILE 144 → **288**, LINO 304 → **128**, WALKWAY
+24 → **48**, LOT 4 → **8**, CONCRETE 4 → **8**. Outdoor threshold **28 → 56** units², exactly the
+outer half of the 7 exterior doorways. The ceiling still comes off `strips()`: the lintel's own top is
+the rim, so the two decompositions part company at a doorway and nowhere else.
+
+**Every facility doorway had its 2D tile image lying on the threshold under the leaves.** The actor
+layer's `iconOff` is computed as `ObjModels.modelFor(key) != null` and a swinging leaf pair is not a
+glb prop, so a door drew both. Fixed with `FacilityDoors.draws(area, o)` OR'd into that expression —
+scoped to `AREA_FACILITY` on purpose, because the corporate and underground-lab generators deal
+`objects.Door` too and nothing draws leaves for those, so there the icon is still all there is. The
+object marks ride the same flag, and doors never had them (`visible()` is false for a door), so
+nothing else moved.

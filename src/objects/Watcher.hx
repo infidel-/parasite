@@ -34,6 +34,12 @@ class Watcher extends HabitatObject
   public override function getModelKey(): String
     { return 'habitat_watcher'; }
 
+// a grown body is solid, the same as the biomineral and the preservator — an eye-studded mass is
+// not something you walk over. the assimilation cavity is the one organ that stays walkable, and it
+// is not an oversight: that one is a DOORWAY, and stepping through the arch is what it is for
+  public override function isWalkable(): Bool
+    { return false; }
+
 // get static atmosphere light emitted by this object
   public override function getAtmosphereLight(): _AtmosphereLightMeta
     {

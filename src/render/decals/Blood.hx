@@ -92,7 +92,7 @@ class Blood {
           var hash = x * 31 + y * 17 + (dec.dx != null ? dec.dx : 0);
           em = shimmerColor(hash);
           emInt = RenderConfig.BLOOD.blackShimmerInt;
-          drawStar(hash, w.x, WorldCtx.floorY(x, y), w.z, sc, op);
+          drawStar(hash, w.x, WorldCtx.floorYAt(w.x, w.z), w.z, sc, op);
         }
       // corpse layering: a splat whose per-cell push-index reaches the corpse's landing slot was
       // sprayed AFTER the body fell here, so it must paint OVER it — it leaves the batch for an
@@ -100,7 +100,10 @@ class Blood {
       // predating the corpse, and all blood in corpse-free cells, stays batched under the corpse tier
       var cs = d.corpseSlotAt(x, y);
       var over = cs >= 0 && slot >= cs;
-      var fy = WorldCtx.floorY(x, y);
+      // floorYAt and not floorY: a splat holds a real world position (w carries its sub-cell offset)
+      // and floorY answers about the cell CENTRE. same pair of defects the litter had — see
+      // RenderConfig.DECAL.groundLift, which is the other half
+      var fy = WorldCtx.floorYAt(w.x, w.z);
       // wet-blood sheen: BLOOD.wetRough (< 1) makes the flat splat catch a subtle specular glint off
       // the moon/lamp/flame lights. acid/slime/black glow (emInt > 0) keeps the per-quad path
       // (per-instance emissive isn't batched); over-corpse blood goes per-quad too; plain blood batches
@@ -112,7 +115,7 @@ class Blood {
             return false;
           d.sprites.paint({
             x: w.x,
-            y: fy + 0.04,
+            y: fy + RenderConfig.DECAL.groundLift,
             z: w.z,
             tex: tex,
             op: op,
@@ -133,7 +136,7 @@ class Blood {
           if (atlas == null ||
               r == null)
             return false;
-          d.batch.add(atlas, r, w.x, fy + 0.04, w.z,
+          d.batch.add(atlas, r, w.x, fy + RenderConfig.DECAL.groundLift, w.z,
             Sprites.SIZE * sc, Sprites.SIZE * sc, (dec.angle != null ? dec.angle : 0.0),
             op, RenderConfig.BLOOD.wetRough, RenderConfig.BLOOD.wetMetal);
         }
@@ -224,7 +227,7 @@ class Blood {
       var oz = (((hash * 20261) & 0xffff) / 0xffff - 0.5) * 2 * r;
       d.sprites.paint({
         x: wx + ox,
-        y: floorY + 0.06,
+        y: floorY + RenderConfig.DECAL.groundLift + 0.02,
         z: wz + oz,
         tex: tex,
         op: op * e * RenderConfig.BLOOD.blackStarAlpha,

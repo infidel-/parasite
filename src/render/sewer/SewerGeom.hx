@@ -6,6 +6,7 @@ import render.Textures;
 import render.sewer.SewerModel.Sewer;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
+import render.world.VisionMask;
 
 // static tunnel SHELL from a SewerModel: walkway floor, inward-facing walls, the CAP_CHAMFER wedge
 // that turns each wall's top arris into a bevel, and the flat wall tops the overhead camera looks
@@ -352,7 +353,7 @@ class SewerGeom
       // map, costs no draw call and no attribute the merge did not already need — and the program
       // permutation it adds is warmed for free, because View.warmup runs this same builder over
       // SewerModel.demo()
-      var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
+      var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,
         vertexColors: true,

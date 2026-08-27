@@ -310,7 +310,21 @@ class RegionGame extends _SaveObject
 // name all areas: terrain-themed ground + corp HQ names, then city districts
   public function assignAreaNames()
     {
-      // name contiguous forest/hill ground blobs once (one shared name per blob)
+      nameGroundBlobs();
+
+      // corp HQ company names
+      for (a in _list)
+        if (a.typeID == AREA_CORP)
+          a.name = NameConst.generate('%corpA1% %corpB1%');
+
+      assignDistricts();
+    }
+
+// name contiguous forest/mountain ground blobs once (one shared name per blob); plains ground is
+// reset to the generic area name. split out of assignAreaNames because the load-time repair below
+// wants THIS half alone — re-rolling every city district to fix a ground name is collateral damage
+  public function nameGroundBlobs()
+    {
       var seen: Map<Int, Bool> = [];
       for (a in _list)
         {
@@ -319,10 +333,12 @@ class RegionGame extends _SaveObject
               seen[a.id] == true)
             continue;
           var band = Terrain.bandAtArea(mapSeed, a.x, a.y);
-          // plains ground keeps the generic "Uninhabited area"
+          // plains ground keeps the generic "Uninhabited area". ASSIGNED, not skipped: the repair
+          // pass reaches here holding a blob name that the old sampler put on a plains tile
           if (band == TERRAIN_PLAINS)
             {
               seen[a.id] = true;
+              a.name = a.info.name;
               continue;
             }
           // forest (e.g. "Black Forest") / hill (e.g. "Granite Ridge")
@@ -333,13 +349,27 @@ class RegionGame extends _SaveObject
           for (b in blob)
             b.name = name;
         }
+    }
 
-      // corp HQ company names
+// does any ground area carry a name from the wrong terrain band? true for every save written before
+// map.Terrain was fixed to sample in the renderer's own halo-offset frame, which put ~40% of ground
+// names two tiles off the band the map paints — see the header on Terrain.bandAtArea.
+//
+// self-describing rather than version-gated, the same way needsAreaNames is: the invariant is that
+// plains ground carries the generic name and banded ground does not, so a violation either way is
+// the tell. no new persisted field, and it goes quiet for good once the repair has run
+  public function needsGroundRename(): Bool
+    {
       for (a in _list)
-        if (a.typeID == AREA_CORP)
-          a.name = NameConst.generate('%corpA1% %corpB1%');
-
-      assignDistricts();
+        {
+          if (a.typeID != AREA_GROUND ||
+              a.x < 0)
+            continue;
+          var plains = (Terrain.bandAtArea(mapSeed, a.x, a.y) == TERRAIN_PLAINS);
+          if (plains != (a.name == a.info.name))
+            return true;
+        }
+      return false;
     }
 
 // collect contiguous AREA_GROUND tiles sharing one terrain band (4-connectivity)

@@ -588,51 +588,52 @@ hr {
   100% { r: 15; opacity: 0; }
 }
 
-/* area AI inspect tooltip content (panel shell from .beam-tip) */
-#hud-ai-info {
+/* area inspect tooltip content, AI and objects alike (panel shell from .beam-tip).
+   NOT #hud-area-info — that id belongs to the region map's own tooltip (ui.RegionTooltip) */
+#hud-inspect-info {
   max-width: min(44vw, 40ch);
   font-size: calc(var(--tip-font-size) * 0.85);
 }
-.ai-tip-head {
+.area-tip-head {
   display: flex;
   align-items: baseline;
   gap: 8px;
 }
-.ai-tip-name {
+.area-tip-name {
   font-family: var(--text-font-title), sans-serif;
   letter-spacing: 0.04em;
   color: #cdb6ef;
 }
-.ai-tip-cultmark {
+.area-tip-cultmark {
   color: var(--text-color-cultist);
   filter: drop-shadow(0 0 5px rgba(253, 151, 255, 0.6));
 }
-.ai-tip-sub {
+.area-tip-sub {
   margin-top: 3px;
   font-size: calc(var(--text-font-size) * 0.8);
   letter-spacing: 0.04em;
   color: var(--text-color-cultist);
 }
-.ai-tip-row {
+.area-tip-row {
   margin-top: 5px;
   font-size: calc(var(--text-font-size) * 0.85);
   color: #aeb3bd;
 }
 /* small uppercase key label before a value */
-.ai-tip-rk {
+.area-tip-rk {
   font-size: calc(var(--text-font-size) * 0.72);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #7c8088;
   margin-right: 7px;
 }
-.ai-tip-attrs {
+.area-tip-attrs {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
   margin-top: 8px;
 }
-.ai-tip-attr {
+.area-tip-attr {
   font-family: var(--text-font-title), sans-serif;
   font-size: calc(var(--text-font-size) * 0.7);
   letter-spacing: 0.1em;
@@ -642,16 +643,16 @@ hr {
   border-radius: 6px;
   padding: 1px 8px;
 }
-.ai-tip-attr b {
+.area-tip-attr b {
   color: #cdb6ef;
   font-weight: 600;
   margin-left: 5px;
 }
 /* active effects block: rows reuse the body window's effect-row style */
-.ai-tip-effects {
+.area-tip-effects {
   margin-top: 8px;
 }
-.ai-tip-debug {
+.area-tip-debug {
   margin-top: 9px;
   padding-top: 8px;
   border-top: 1px solid rgba(164, 95, 224, 0.16);

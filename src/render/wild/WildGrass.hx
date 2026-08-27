@@ -1,0 +1,247 @@
+package render.wild;
+
+import three.Three;
+import citygen.CityConfig;
+import render.RenderConfig;
+import render.Textures;
+import render.wild.WildModel.Wild;
+
+// the grass layer: cross-quad tufts, hash-placed per cell, merged per chunk block so a block is ONE
+// draw call and render.Chunks drops whole blocks at once.
+//
+// the wind is a vertex-shader term folded into the material the tufts already draw with — the same
+// trade render.world.PropShader and render.world.VisionMask make, and for the same reason: no extra
+// pass, no extra geometry, no per-frame CPU work beyond advancing one shared clock. the phase and the
+// height weight ride in on ONE vec2 attribute rather than being read off `uv`, because `uv` is only
+// declared when the material happens to define USE_UV and this must not depend on that.
+//
+// alphaTest, never transparent: a transparent grass field would sort per mesh against the ground and
+// against itself every frame, and at this density the cut is invisible anyway. DoubleSide is free
+// here for the same reason — an alpha-tested opaque material draws DoubleSide in ONE pass, where a
+// transparent one would draw it as two
+class WildGrass
+{
+  static inline var CELL = CityConfig.CELL;
+
+  // the clock every grass material references BY IDENTITY, in BASE_MS units — so writing .value
+  // reaches every block at once (the uniform sharing render.world.PropShader.uTime uses)
+  static var uTime = { value: 0.0 };
+
+// advance the shared wind clock. called once per frame from WildArea.tick
+  public static function tick(dtMs:Float):Void
+    {
+      uTime.value += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+    }
+
+// emit the grass, one merged mesh per chunk block
+  public static function build(scene:Scene, m:Wild):Void
+    {
+      var B = render.Chunks.CELLS;
+      var mat = material();
+      var row = 0;
+      while (row < m.h)
+        {
+          var col = 0;
+          while (col < m.w)
+            {
+              block(scene, mat, m, col, row,
+                (col + B <= m.w) ? B : m.w - col,
+                (row + B <= m.h) ? B : m.h - row);
+              col += B;
+            }
+          row += B;
+        }
+    }
+
+// every tuft in one chunk block, merged into a single buffer
+  static function block(scene:Scene, mat:MeshLambertMaterial, m:Wild, col0:Int, row0:Int, cw:Int, ch:Int):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var pos = [];
+      var nor = [];
+      var uv = [];
+      var wind = [];
+      var idx = [];
+      for (dr in 0...ch)
+        for (dc in 0...cw)
+          {
+            var col = col0 + dc;
+            var row = row0 + dr;
+            // a tree or a rock stands on its cell, and tufts pushing through its base read as grass
+            // growing out of the trunk. the cell keeps its prop and loses its grass — and against -1
+            // rather than 0, so a cell merely COVERED by a multi-cell obstacle (WildModel.OCCUPIED,
+            // which draws from its rect's corner) loses its grass too
+            if (m.prop[row][col] != -1)
+              continue;
+            // its own multipliers, mixed: must not correlate with the prop yaw/scale rolls
+            var h = WildModel.mix((col * 19349663) ^ (row * 83492791));
+            for (k in 0...WildBand.cur.tufts)
+              {
+                h = WildModel.mix(h);
+                // offsets inset from the cell edge, so a tuft never straddles into a neighbour that
+                // decided it had a prop instead
+                var px = (col + 0.15 + (h % 701) / 701.0 * 0.7) * CELL - half;
+                var pz = (row + 0.15 + ((h >> 9) % 701) / 701.0 * 0.7) * CELL - half;
+                // thin out toward the highway rather than stopping dead on its cell line. the odds
+                // ramp from none AT the verge's outer edge to full ROAD_GRASS_FADE cells out, so the
+                // field fades into the dirt shoulder instead of ending in a wall of blades.
+                // the VERGE and not the asphalt: the shoulder is the outermost thing the corridor
+                // lays on the ground, and measuring off the asphalt grew grass straight down the
+                // middle of it. it is a straight NOMINAL line either way — the thinning does not
+                // follow the mask's kinks and is not meant to, see WildRoad.edgeDist on the slack
+                // every one of these gates is deliberately given.
+                // its own roll off a SIDE hash rather than off `h`, which the yaw, scale and wind
+                // phase below all still consume — a tuft that survives this must look exactly as it
+                // did before, or every wilderness area's grass shifts for a highway most of them
+                // do not have
+                if (WildModel.mix(h ^ 0x5bf03635) % 1000 >=
+                    fade(WildRoad.vergeDist(m, px, pz)) * 1000)
+                  continue;
+                var yaw = ((h >> 3) % 3600) / 3600.0 * Math.PI;
+                var s = 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.TUFT_JITTER;
+                tuft(pos, nor, uv, wind, idx, px, pz, yaw,
+                  WildStyle.TUFT_W * s, WildBand.cur.tuftH * s, h);
+              }
+          }
+      if (idx.length == 0)
+        return;
+      var geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+      geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
+      geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      geo.setAttribute('aWind', new Float32BufferAttribute(wind, 2));
+      geo.setIndex(idx);
+      var mesh = new Mesh(geo, mat);
+      // receives, never casts. a shadow-casting grass field would double the depth pass over hundreds
+      // of thousands of alpha-tested triangles to produce a mat of noise nobody can read as a shadow
+      mesh.receiveShadow = true;
+      mesh.castShadow = false;
+      scene.add(mesh);
+    }
+
+// how much grass survives at a point `d` world units OUTSIDE the highway's verge edge: none at the
+// edge itself, all of it WildStyle.ROAD_GRASS_FADE cells out. smoothstep and not linear, so the
+// thinning has no visible line where it STOPS either — a linear ramp ends in a corner, and a corner
+// in a density reads as a band of its own
+  static inline function fade(d:Float):Float
+    {
+      var t = d / (WildStyle.ROAD_GRASS_FADE * CELL);
+      if (t <= 0)
+        return 0.0;
+      if (t >= 1)
+        return 1.0;
+      return t * t * (3 - 2 * t);
+    }
+
+// one tuft: two quads crossed at right angles about the vertical, base on the ground.
+// the NORMALS point straight up rather than out of each quad's own face. that is not a shortcut: a
+// vertical quad lit by its true normal goes black the moment it turns away from the moon, and a field
+// of them flickers between bright and dark as the camera orbits. pointing them at the sky lights every
+// tuft like the ground it grows out of, which is what a mass of thin blades actually does.
+//
+// writing them here is only HALF of it, and for a long time the other half was missing: a DoubleSide
+// material has three flip the normal on every back-facing fragment, which turned this lie straight
+// back into the failure it was avoiding. material() cancels that — read its note before touching
+// either end
+  static function tuft(pos:Array<Float>, nor:Array<Float>, uv:Array<Float>, wind:Array<Float>,
+    idx:Array<Int>, x:Float, z:Float, yaw:Float, w:Float, h:Float, hash:Int):Void
+    {
+      // one phase per TUFT, not per quad: its two blades are the same clump and lean together
+      var phase = (hash % 6283) / 1000.0;
+      // the relief under the tuft's CENTRE, sampled here rather than passed in — this already has the
+      // world position, and the signature is long enough. its two quads stay horizontal at the base,
+      // so on a slope one edge digs in by half a quad width times the slope (0.75 * 0.164 = 0.12 world
+      // units at the worst); roots disappearing into the ground is what roots do, and levelling them
+      // would need a
+      // per-corner sample and a normal for a mat of blades whose normals already point at the sky
+      var gy = WildHeight.at(x, z);
+      for (q in 0...2)
+        {
+          var a = yaw + q * Math.PI / 2;
+          var dx = Math.cos(a) * w / 2;
+          var dz = Math.sin(a) * w / 2;
+          var base = Std.int(pos.length / 3);
+          // wound base-left, base-right, top-right, top-left; v is 0 at the ground and 1 at the tip
+          inline function vtx(ox:Float, y:Float, oz:Float, u:Float, v:Float):Void
+            {
+              pos.push(x + ox);
+              pos.push(gy + y);
+              pos.push(z + oz);
+              nor.push(0.0);
+              nor.push(1.0);
+              nor.push(0.0);
+              uv.push(u);
+              uv.push(v);
+              wind.push(phase);
+              wind.push(v); // the height weight the wind offset scales by: nothing at the roots
+            }
+          vtx(-dx, 0.0, -dz, 0.0, 0.0);
+          vtx(dx, 0.0, dz, 1.0, 0.0);
+          vtx(dx, h, dz, 1.0, 1.0);
+          vtx(-dx, h, -dz, 0.0, 1.0);
+          idx.push(base);
+          idx.push(base + 1);
+          idx.push(base + 2);
+          idx.push(base);
+          idx.push(base + 2);
+          idx.push(base + 3);
+        }
+    }
+
+// the shared grass material, with the wind folded into its vertex shader
+  static function material():MeshLambertMaterial
+    {
+      var mat = new MeshLambertMaterial({
+        map: Textures.loadTexture(WildStyle.GRASS, 'facade', 1),
+        side: THREE.DoubleSide,
+        alphaTest: WildStyle.TUFT_ALPHA,
+      });
+      var mm:Dynamic = mat;
+      mm.onBeforeCompile = function(shader:Dynamic)
+        {
+          shader.uniforms.wildWindT = uTime;
+          shader.uniforms.wildWindAmp = { value: WildStyle.WIND_AMP };
+          shader.uniforms.wildWindRate = { value: WildStyle.WIND_RATE };
+          // the two axes run at 0.83 of each other and start on different phases, so a tuft traces a
+          // small figure rather than sliding back and forth along one line
+          shader.vertexShader = 'attribute vec2 aWind;\n' +
+            'uniform float wildWindT;\n' +
+            'uniform float wildWindAmp;\n' +
+            'uniform float wildWindRate;\n' +
+            StringTools.replace(shader.vertexShader, '#include <begin_vertex>',
+              '#include <begin_vertex>\n' +
+              '  {\n' +
+              '  float wildT = wildWindT * wildWindRate;\n' +
+              '  transformed.x += wildWindAmp * aWind.y * sin( wildT + aWind.x );\n' +
+              '  transformed.z += wildWindAmp * aWind.y * 0.6 * sin( wildT * 0.83 + aWind.x * 1.7 + 1.3 );\n' +
+              '  }');
+          // cancel three's DOUBLE_SIDED normal flip, which was quietly undoing the whole point of the
+          // sky-pointing normals in tuft(). those normals are a deliberate LIE — they point up, not out
+          // of each quad's face — and three's normal_fragment_begin does `normal *= faceDirection` on a
+          // double-sided material, so every BACK-facing fragment got (0,-1,0) instead: no moon term at
+          // all, and the hemisphere light sampled from its GROUND colour rather than its sky one. that
+          // split the field into a light half and a dark half that reshuffled as the camera turned,
+          // since which of a tuft's two crossed quads faces away is a property of the view.
+          //
+          // multiplying by faceDirection a second time cancels it exactly (it is +/-1), and it lands
+          // before lights_fragment_begin takes its `geometryNormal = normal`, so the moon and the
+          // hemisphere both see the sky normal. correct ONLY while this material is DoubleSide, which
+          // is set right above — under FrontSide there are no back faces and under BackSide this would
+          // flip every fragment instead
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+            '#include <normal_fragment_begin>',
+            '#include <normal_fragment_begin>\n' +
+            '  normal *= faceDirection;');
+        };
+      // three keys its program cache on base material params and NOT on onBeforeCompile, so without a
+      // key of our own a moving grass program could be handed to an identical still material
+      mm.customProgramCacheKey = function() return 'wildGrass';
+      // the vision mask goes on LAST, over the wind hook: patch() chains whatever hook a material
+      // already carries rather than replacing it, and it reads that hook off the material — so this
+      // has to come after the assignment above or the wind would be the thing that got replaced. it
+      // extends the cache key the same way ('wildGrasssvisMasks'), which is what keeps a masked grass
+      // program from being handed to an unmasked one
+      render.world.VisionMask.patch(mat);
+      return mat;
+    }
+}

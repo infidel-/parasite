@@ -6,6 +6,7 @@ import render.Textures;
 import render.sewer.SewerModel.Sewer;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
+import render.world.VisionMask;
 
 // dressing for the two HORIZONTAL surfaces of a tunnel: the ledge plateau the overhead camera looks
 // down on, and the walkway floor. the vertical twin is render.sewer.SewerDetail, which owns the wall
@@ -159,7 +160,7 @@ class SewerGround
           geo.computeVertexNormals();
           // same recipe as SewerDetail's wall decals. no tint: unlike the chalky wall seepage, this
           // art is authored against the surface it lands on (rose-brown cap, pale grey-green floor)
-          var mesh = new Mesh(geo, SewerMask.patch(new MeshLambertMaterial({
+          var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
             map: Textures.loadTexture(o.types[i].tex, 'roof'),
             transparent: true,
             opacity: o.types[i].alpha,

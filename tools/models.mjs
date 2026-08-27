@@ -164,8 +164,10 @@ async function exportTextures(label)
       if (t != null && !roles.has(t))
         roles.set(t, suffix);
   // dumped BESIDE the glb, not beside the label: a label's folder and its source's folder are
-  // independent (habitat/assimilation lives at habitat/flat/assimilation.glb), and an export that
-  // followed the label landed a folder away from the mesh it belongs to
+  // independent, and an export that followed the label landed a folder away from the mesh it belongs
+  // to. the case that proved it was habitat/assimilation living at habitat/flat/assimilation.glb —
+  // that folder level has since been flattened away, so every label's two paths happen to match
+  // today, which is exactly the state in which this would silently rot if it were keyed on the label
   const stem = e.src.replace(/\.glb$/i, '');
   let n = 0;
   for (const [t, suffix] of roles)
@@ -242,7 +244,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.roughness != null ? '/rf' + e.roughness : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.roughness != null ? '/rf' + e.roughness : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -265,6 +267,73 @@ async function main()
                 t.setImage(bytes).setMimeType('image/png');
             }
           console.log('     baseColor <- ' + texSrc + ' (' + Math.round(bytes.length / 1024) + 'KB)');
+        }
+      // optional gamma LIFT on the base-colour MAP: out = (v/255)**lift, so lift < 1 brightens. same
+      // knob name and meaning as textures.json's `lift`, and the missing inverse of baseColor below —
+      // that one is a factor in [0,1] and can only multiply DOWN.
+      //
+      // what needs it: a prop dense enough to occlude itself comes back with that occlusion baked
+      // into its albedo. measured on wild/bush-bramble, a lace of interlocking canes — from the same
+      // reference value a conifer bakes at 0.79x and the bramble at 0.44x, landing on 30/29/29
+      // against the prop family's 46-52. repainting the reference does not reach it either: the lift
+      // tracks proportionally (a 28% brighter reference moved the bake 29%), so the reference would
+      // have to out-brighten the flat #5a5d63 backdrop TRELLIS segments it against, which costs the
+      // segmentation. so the correction has to happen here, on the bake.
+      //
+      // runs on the FULL-RES map, before the resize step below, for the same reason texSrc does
+      if (e.lift != null)
+        {
+          const lut = Array.from({ length: 256 }, (_, v) => Math.round(255 * Math.pow(v / 255, e.lift)));
+          for (const m of doc.getRoot().listMaterials())
+            {
+              const t = m.getBaseColorTexture();
+              if (t == null)
+                continue;
+              const { data, info: raw } = await sharp(Buffer.from(t.getImage()))
+                .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              // colour channels only — alpha is coverage, not brightness
+              for (let i = 0; i < data.length; i += 4)
+                {
+                  data[i] = lut[data[i]];
+                  data[i + 1] = lut[data[i + 1]];
+                  data[i + 2] = lut[data[i + 2]];
+                }
+              const png = await sharp(data, { raw: { width: raw.width, height: raw.height, channels: 4 } })
+                .png().toBuffer();
+              t.setImage(new Uint8Array(png)).setMimeType('image/png');
+            }
+          console.log('     baseColor lifted ^' + e.lift + ' (gamma on the map; <1 brightens)');
+        }
+      // FLATTEN a stray alpha channel out of an OPAQUE prop's base map. TRELLIS occasionally bakes one
+      // in with the UV gutter at alpha 0, and that is not dead weight, it is a live trap: the resize
+      // below PREMULTIPLIES, averages, then UNPREMULTIPLIES, so a block that is mostly gutter comes out
+      // with an averaged alpha near 1/255 and its colour divided by that — saturated primaries
+      // scattered along every chart boundary, which is worst on a shattered atlas because that is where
+      // the boundaries are.
+      //
+      // measured on wild/tree-broadleaf-full, the one prop of 23 whose atlas carries a gutter (35.4% of
+      // texels at alpha < 8): 2.949% of the built 512 landed at saturation > 0.75, ALL of them at alpha
+      // < 128 with a mean of 2, and the map's own mean darkened 85/126/84 -> 73/110/72. flattening
+      // first puts both back to 0.002% and 85/126/84, i.e. the source exactly.
+      //
+      // removeAlpha, never flatten({background}): the gutter already holds the right COLOUR (TRELLIS
+      // dilates the charts into it — its mean rgb matches the atlas mean), so the channel is the only
+      // thing wrong and compositing would throw the dilation away. safe by definition on an OPAQUE
+      // material, which ignores alpha. scoped to the base map because that is where it was measured;
+      // the same trap would hit any other map that arrived with a transparent gutter. runs LAST before
+      // the resize, so it also strips the alpha `lift`'s ensureAlpha() re-adds
+      for (const m of doc.getRoot().listMaterials())
+        {
+          if (m.getAlphaMode() !== 'OPAQUE')
+            continue;
+          const t = m.getBaseColorTexture();
+          if (t == null)
+            continue;
+          const buf = Buffer.from(t.getImage());
+          if (!(await sharp(buf).metadata()).hasAlpha)
+            continue;
+          t.setImage(new Uint8Array(await sharp(buf).removeAlpha().png().toBuffer())).setMimeType('image/png');
+          console.log('     base map alpha flattened (opaque material; a transparent gutter explodes in the resize)');
         }
       // add the hand-painted emissive map (same UVs as base) + HDR strength so the head glows + blooms
       if (hasEmi)

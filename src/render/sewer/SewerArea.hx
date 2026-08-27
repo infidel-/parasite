@@ -9,6 +9,7 @@ import render.SceneSetup;
 import render.particles.LampLights;
 import render.particles.LampPost;
 import render.sewer.SewerModel.Sewer;
+import render.world.VisionMask;
 import render.world.WorldCtx;
 
 // the underground tunnel area kind (AREA_SEWERS + AREA_HABITAT). deliberately much smaller than
@@ -50,8 +51,13 @@ class SewerArea implements Area3D
     {
       // the whole render layer reads ground height through WorldCtx.floorY, and it returns a flat
       // 0 when there is no city tile grid — which is what lets actors, choreo, particles and decals
-      // run down here untouched. buildings stays a live empty array: the shot pass iterates it
+      // run down here untouched. buildings stays a live empty array: the shot pass iterates it.
+      // ground is cleared, not left: a tunnel floor is flat, and the wilderness before it may have
+      // pointed that hook at a height field. climbArc goes the same way and for the same reason —
+      // there is nothing to step over down here, and a stale one would fire on an invisible line
       WorldCtx.tiles = null;
+      WorldCtx.ground = null;
+      WorldCtx.climbArc = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       sceneRef = scene;
@@ -64,16 +70,21 @@ class SewerArea implements Area3D
       // `exit: 'sewer_exit'` on AREA_SEWERS alone and game.Habitat only ever builds into AREA_HABITAT
       props = render.world.ObjModels.build(scene, game, objYaw);
       // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
-      // the builders above made them; this only has to exist before the first sample
-      SewerMask.attach(model);
+      // the builders above made them; this only has to exist before the first sample.
+      // the blocker predicate is isFloor and NOT area.canSeeThrough, which is object-aware and would
+      // call a closed door a wall — the green channel it paints decides where the boundary may wobble,
+      // and that is a fact about the masonry
+      VisionMask.attach(SewerStyle.MASK, model.w, model.h,
+        function(col, row) return !SewerModel.isFloor(model, col, row));
     }
 
 // which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
 // WALL turns its back on the adjacent wall (an exit ladder is bracketed to masonry) or stays unturned
 // in the open; dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east).
-// HASHED takes a full-circle turn hashed off the cell, so four biomineral formations in one habitat
-// are not four clones — and because the hash is the CELL, a level looks the same every time it is
-// entered rather than re-rolling on re-entry.
+// HASHED takes a full-circle turn hashed off the cell, so four of a prop in one level are not four
+// clones — and because the hash is the CELL, a level looks the same every time it is entered rather
+// than re-rolling on re-entry. No habitat organ takes it any more: each was generated from a single
+// front-on reference and so has exactly one authored face (see PropYaw in render.world.ObjModels).
 // FRONTAL is a plain 0: the tunnel camera rests looking down -Z with no yaw of its own, so unturned IS
 // facing it. a glb whose authored front does not point that way is corrected in render.Models.yawFix,
 // baked into the verts at load — that is a fact about the model, not about how a prop is posed
@@ -117,7 +128,8 @@ class SewerArea implements Area3D
     {
       // ABOVE the outro gate on purpose: a player who left standing ON a ladder would otherwise stay
       // behind a see-through one for the whole camera pull-out. cull() reads opts.outro itself
-      render.world.ObjModels.cull(props, opts, tactical);
+      // the outline shells are a tactical READOUT, so a hidden HUD takes them with it
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       // the props' idle clock, above the gate for the same reason — the organs are still on screen
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);
@@ -133,15 +145,16 @@ class SewerArea implements Area3D
       // geometry) — an outline that does not move with the body it traces detaches from it
       for (b in props)
         {
-          SewerMask.patchMesh(b.solid.mesh);
-          SewerMask.patchMesh(b.ghost.mesh);
-          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim);
-          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim);
-          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim);
-          // the surface glow LAST, and it takes no hull: totalEmissiveRadiance only exists in a lit
-          // shader, and an outline marker must not luminesce anyway
-          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine);
-          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine);
+          VisionMask.patchMesh(b.solid.mesh);
+          VisionMask.patchMesh(b.ghost.mesh);
+          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse, b.model.curl);
+          // the surface glow and the repainted eyes LAST, and neither takes a hull: totalEmissiveRadiance
+          // only exists in a lit shader, an outline marker must not luminesce, and an outline that
+          // carried eyes would draw them over the body it is meant to trace
+          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine, b.model.eyes);
+          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine, b.model.eyes);
         }
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
@@ -151,7 +164,7 @@ class SewerArea implements Area3D
       // swung its shadows from a cell the billboard had not reached and held them there for the whole
       // slide. this rebuilds through the ~9 frames of a move (BASE_MS at 60Hz) and then stops dead —
       // the slide is finite, so a rested origin re-keys to the same value and this is a no-op again
-      SewerMask.update(game, opts.player.x, opts.player.z);
+      VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       // the organs' own coloured lights. a separate pool from the lamps' on purpose: a bracket is a
       // SpotLight aimed along its wall, an organ glows omnidirectionally, and sharing one pool would

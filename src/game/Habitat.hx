@@ -96,6 +96,15 @@ class Habitat extends _SaveObject
       // remove and kill host
       game.playerArea.onDetach();
       game.area.removeAI(ai);
+      // the organ grew where the host stood, and some of them are SOLID (AreaObject.isWalkable), so
+      // the parasite is left standing inside one and its sprite is hidden by the 3D prop.
+      // best-effort ONLY: moveToRandom returns false when every neighbour is solid or occupied, and
+      // the result is deliberately not checked because there is nothing useful to do about it. what
+      // makes that acceptable is AreaGame.getPath no longer requiring a walkable START — a parasite
+      // stuck inside the organ can still be walked and clicked out of it, it just looks wrong until
+      // the player moves
+      if (!game.area.isWalkable(ai.x, ai.y))
+        game.playerArea.moveToRandom();
       // object narrative message
       game.narrative(o.spawnMessage, COLOR_ORGAN);
       // update camera

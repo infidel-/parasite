@@ -64,8 +64,13 @@ class SlimeTrail {
         transparent: true,
         opacity: S.baseAlpha,           // overall alpha; the tail-fade vertex alpha multiplies on top
         depthWrite: false,
-        depthTest: false,               // draw over the ground always so the raised curb can't occlude it
-                                        // (a flat trail at road height would otherwise vanish under a walkway slab)
+                                        // depthTest stays ON: with it off the ribbon drew through walls
+                                        // and buildings. the curb is handled positionally instead — each
+                                        // spine point carries its own floorY and a crossing forces a
+                                        // commit, so the strip is never left at road height on a walkway.
+                                        // a building that would occlude the trail is faded by Occlusion,
+                                        // and a faded building's ghost has depthWrite off, so the trail
+                                        // still reads through it exactly like the actor sprites do
         vertexColors: true,             // per-vertex RGBA: alpha carries the tail dissolve
         roughness: RenderConfig.BLOOD.wetRough,
         metalness: RenderConfig.BLOOD.wetMetal,
@@ -176,11 +181,14 @@ class SlimeTrail {
         spine.splice(0, spine.length - maxSpine);
     }
 
-// ground height at a world position, via its grid cell (road/alley = 0, walkway/bevel = CURB_H)
+// ground height at a world position (city: road/alley = 0, walkway/bevel = CURB_H, per cell; an area
+// with continuous relief answers at the point itself). the trail is a long thin ribbon laid at real
+// world positions rather than on cells, so the cell answer is not good enough where the ground rolls:
+// a spine point half a cell from its centre would sit half a cell of slope off the surface, and a
+// ribbon that dips under a hillside loses whole segments to the depth test
   inline function floorYAt(x:Float, z:Float):Float
     {
-      var c = CityConfig.worldToCell(x, z);
-      return WorldCtx.floorY(c.col, c.row);
+      return WorldCtx.floorYAt(x, z);
     }
 
 // a per-point width multiplier jittered around 1 (irregular, non-parallel ribbon edges)
@@ -331,7 +339,7 @@ class SlimeTrail {
           col.push(1);
           col.push(a);
           // strip quad to the next point (two tris); winding irrelevant with DoubleSide. per-point Y +
-          // the forced commit at a curb keep the rise sharp; depthTest off lets it drape over the curb
+          // the forced commit at a curb keep the rise sharp, so the strip climbs the curb face
           if (k < n - 1)
             {
               var a = k * 2;

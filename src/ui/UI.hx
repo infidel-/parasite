@@ -165,7 +165,7 @@ class UI
         {
           game.scene.controlPressed = false;
           game.scene.mouse.update(true);
-          hud.updateAITooltip();
+          hud.updateAreaTooltip();
         }
 
       if (hud.consoleVisible())
@@ -224,7 +224,7 @@ class UI
         {
           game.scene.controlPressed = true;
           game.scene.mouse.update(true);
-          hud.updateAITooltip();
+          hud.updateAreaTooltip();
         }
 
       if (hud.consoleVisible())
@@ -284,10 +284,13 @@ class UI
       if (_state == UISTATE_DEFAULT)
         {
           // 3D city view: Space toggles the tactical overhead view (HUD stays up);
-          // elsewhere it toggles the HUD
+          // elsewhere it toggles the HUD. Shift+Space always toggles the HUD, which is the
+          // only way to reach it in the 3D view — and there it takes the world-anchored UI
+          // with it (player ring, path preview, tactical grid, badges; see render.View)
           if (e.code == 'Space')
             {
-              if (game.location == LOCATION_AREA &&
+              if (!e.shiftKey &&
+                  game.location == LOCATION_AREA &&
                   game.scene.view3d != null &&
                   game.scene.view3d.running)
                 game.scene.view3d.toggleTactical();
