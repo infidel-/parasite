@@ -1444,3 +1444,186 @@ emissiveMap whose glass is sRGB 147.7 (linear 0.295) gives 0.162 of emissive rad
 beside a pane sits flat at `(7,16,32)` with no elevation past the geometric edge. Halving the glass
 did not cost a glow that existed. Interior brightness is Phase 3's job (ceiling lights), not the
 pane's.
+
+## Roof line, window proportions and the room/corridor split — Facility Phase 1.6
+
+Four more defects off walking the Phase 1.5 build. Two are the same bug in two places, one is the
+art having moved under a hardcoded crop, and one is a split that had never been made.
+
+**The roof band over a wall was 1.87× the wall, and only the INDOOR side was wrong.** `rimRect` ran
+to the cell boundary on any side whose neighbour was indoor, so the never-fading band was a unit
+wider than the masonry on every inboard face. Measured live over the wall ring before the fix: rim
+**8008** units² against slab **4278**, with only **41 of 572** cells exact — 268 interior partitions
+at 2 → 4 (a full-cell band over a half-cell wall), 126 glazing at 1 → 3, 111 exterior at 2 → 3. Once
+the interior roof faded, every internal wall kept a ledge twice its own width. The band is now the
+slab, and what the slab leaves is the neighbour's cell reaching in, so it takes the neighbour's
+CEILING — the fading roof — exactly as it already took the neighbour's floor. After: **1.056**, and
+the entire remainder is the 126 glazed cells at exactly 2.0 units² each, which is the deliberate
+half-unit external head that keeps the roof line from notching in at every window run. **0**
+non-glazed cells overhang. So: outdoor side keeps `WALL_T`'s inset, indoor side takes the slab's own.
+
+**A door cell is not a wall cell, so it contributed nothing to the rim at all.** `rim` is written
+only by `capTop`, and `capTop` was called only under `if (isWall)` — verified live, **0 of 30** door
+cells is a wall cell. 240 units² of lintel roof therefore sat in the FADING buffer, and every one of
+the 30 doorways read as a notch cut out of the wall-top ring the moment the shell revealed. `slab()`
+was already right on a door (all 30 come back exactly the 2×4 lintel planes, which its own header
+had claimed and nobody had used), so the fix is to run `capTop` and the strips loop for a door cell
+too. Two riders fell out of the same full-cell quad: at the 7 exterior doors it hung **28 units²** of
+roof, and the same 28 of corridor lino, out over the pavement — and `FacilityGround`'s strip pass
+tested `isWall`, so those 7 strips got no ground either. Both passes now test `FacilityGeom.carries`.
+Live census off the 30 door cells: 53 indoor strips, 6 walkway, 1 lot.
+
+**`carries` had also taken both JAMBS off every doorway — a Phase 1.5 regression.** Found by putting
+the free cam on the spine door at (10,6): two black slots, floor to lintel, either side of the
+leaves. Same root as the roof band above. The flanking wall cell sees `carries` on the door cell and
+takes the butt-cap branch, where the two cross-sections are identical (both `WALL_T`) and nothing is
+exposed — which is true of the MASONRY and false of the hole underneath it. Before `carries` existed,
+a door cell was simply a non-wall neighbour and the flanking wall emitted a full face there, so the
+jamb came for free; closing the opening back to one cell removed it and nothing replaced it. The door
+cell now emits its own two side reveals (`jamb`), 0..`DOOR_H`, each wound to look INWARD — `face`
+with one axis collapsed onto the boundary plane, the same trick `butt` uses. +120 tris. Both
+orientations checked on screen, because the two windings are hand-derived and a wrong one is
+invisible from outside the opening and still black from inside. It also covers the front-door pier
+for nothing: a jamb is emitted at the door's own boundary whatever sits on the far side of it.
+
+**A centred crop cannot follow a re-cut alpha.** `loadCroppedTexture(…, 0.895, 0.446)` takes a
+CENTRED rect, and the hand-re-cut lit window's content sits **9 px high of centre** (built 512: bbox
+y 134..359 against a crop of y 142..369). It shaved 8 rows off the top rail and left 10 rows of empty
+alpha under the glass for `alphaTest 0.02` to discard. The old numbers had only ever worked because
+that texture's alpha was transplanted from `window-large.png`, whose bbox IS centred (142/142). Fixed
+by cropping to the image's own alpha bbox at load — `Textures.loadAlphaCropped` — which deletes both
+constants and cannot go stale. Costs one `getImageData` scan per texture, once.
+
+**A window's height is the ART's aspect, and no code change can reach it.** `WINDOW_ASPECT` 2.02 put
+a 3-cell run at 5.94 tall in a 6.0 wall: head 0.03 under the roof deck, and the sill cap skipped
+outright because `lo` 0.0297 is under the 0.05 guard. **28 of 49** runs are 3-cell, so that was the
+common case and not the corner one. Clamping the height in code cannot work — the hole through the
+wall is cut from the same arithmetic, so a shorter pane in a full-height opening is just a gap. New
+art at the measured **2.90**: a 3-cell run is 4.14 tall on a 0.93 sill, a 2-cell 2.76 on 1.62, both
+with real wall above the head and both now getting a sill cap. Two notes on getting it: asking for
+"exactly three times as wide as it is tall" produced a **5.22** letterbox, and what fixed it was
+naming the PANE shape ("each individual pane is almost a square"); and the 1k server cannot render a
+3:1 canvas at all — max edge 1024 against a 655,360-pixel floor caps canvas aspect at **1.6** — so
+the unit sits in a band inside a square frame and the bbox crop takes it out. `glass_alpha [136,128]`
+carried over untouched: the new source is bimodal at frame 16-127 30.6%, glass 144-207 58.8%, a
+**0.2%** valley between.
+
+**Rooms and corridors split off `Surf.LINO`, needing no `generatorInfo`.** LINO is what the generator
+floors every corridor and every door cell with; TILE is room floor. Live over the two lab buildings:
+**538** faces look into rooms against **218** into corridors, 12,912 vs 5,112 units², so a corridor
+wall is **28.4%** of the interior surface — a third of what the player sees indoors, not a detail.
+One local `look(c,r)` closure replaces the `st.hangar || !inner ? wOut : wIn` ternary at all three
+call sites (plain faces, butt caps via the diagonal cell, door lintels), and costs +1 merged mesh per
+non-hangar structure. `wall-interior` stays the CORRIDOR — its prompt already asked for a laboratory
+corridor, so it is the art that did not have to be repainted — and the new `wall-room` is the room:
+a tiled splashback over the lower 40% under painted board. It does not tile vertically and does not
+need to: `face` maps v as `y / WALL_TILE` with both at 6.0, so v runs exactly 0..1 up a wall and
+never wraps, which is the same reason the corridor art can carry a scuff band in its lower third.
+`lift 1.23` took it from linear 0.0982 to **0.0592**, just under the room floor 0.0607 and the
+corridor wall 0.0673, so a corridor still reads as the brighter spine between darker rooms.
+
+**Measured, both frames under key `1` with the same camera:** calls **35 → 32**, tris **5.2k → 5.0k**,
+0 console errors, no persisted change. A vertical profile through the north wall makes the window fix
+visible in pixels: the two captures are identical from y190 to y222 (same camera, same probe), then
+before goes roof → glass → floor with no wall band either side of the glass, while after gains a band
+at y226-250 above it and one at y314-330 below. Phase 1.5's regression test still passes: **0** pixels
+at exactly `0x0a0e14` in the room band.
+
+`window-large.png` and `window-large-lit.png` went to the `textures-src/unused/` shelf and their
+entries out of `textures.json`, the stale outputs deleted — the ribbon art replaced both and nothing
+in `src/` referenced either. 191 → 189 tracked textures, `make tex` clean at 0 warnings (the shelf is
+skipped by the untracked-source sweep, which is what it is for).
+
+## A wall cell is the UNION OF ITS RUNS, not their bounding box — Facility Phase 1.7
+
+**`slab()` is a bounding box and four passes had been reading it as the masonry.** Where the wall line
+turns or branches, the runs through a cell form an L, a T or a cross and the box is strictly bigger:
+a corner came out a 3x3 pier with a 1x1 shoulder standing in the room past both wall lines, which is
+what "room corners have remains of old full-tile geometry" was seeing. Census over the area's 602
+wall+door cells: **535** straight, **22** corners, **44** T-junctions, **1** crossing — so the Ts, at
+two shoulders each, were the bigger half of it, and the crossing filled its cell outright. New
+`notches()` returns the corner squares (one per PAIR of adjacent carrying directions), and the square
+is handed to the DIAGONAL cell exactly as `strips()` hands a run's leftover to the neighbour beside
+it: its floor, its fading ceiling, its wall paint, plus the two faces of masonry looking back at it.
+**114** notches, 1 unit² each, **all 114 with an indoor diagonal**, so `FacilityGround` never sees
+one. Box 4518 → masonry **4404**.
+
+**Three consumers fall out of it and each got simpler, not harder.** `capTop` emits the union as up
+to three rects (the x-run's middle band, the z-run's two arms) — verified against `box − notches` on
+every one of the 602 cells, **exact to 0**, and one early-out for "no x-run" keeps a straight vertical
+wall at one quad instead of three abutting ones (~900 tris). The butt caps stop comparing slab
+extents, which answered the wrong question — at a corner the box reaches the boundary on the side the
+OTHER run leaves through, and that read as an exposed end — and compare THICKNESS instead: 385 butt
+quads → **196**, exactly 49 window runs x 2 ends x 2, i.e. nothing but the glazing reveals the rule
+was ever meant to cap. Net over the whole shell: 1113 → **1338** quads, +450 tris, all of it the
+corner squares gaining real surface.
+
+**`rimRect` deleted; the roof line notches in at a window run.** Its only remaining job was to run
+the band out to `WALL_T`'s inset on an OUTDOOR side — a no-op on solid wall, and half a unit of
+bitumen sitting on the outside of every pane: **126** glazed cells x 2 units² = 252 units² of roof
+texture on the glass. Straight roof line was not worth it. `rimRect ≡ slab` once that goes, so the
+function went with it and `capTop` picks `head` or `rim` off `glazed` alone. Head cap now **504**
+units² over 126 cells = exactly the 1x4 glass slab, and the rim/masonry ratio is **1.000** (1.872
+before Phase 1.6, 1.056 after it).
+
+**`WINDOW_EPS` deleted — the offset WAS the seam.** The pane stood 0.02 proud of the wall plane "so
+nothing depends on polygonOffset", but the emitter cuts the opening OUT of the wall rather than
+painting the pane over it, so the two are never coplanar-and-overlapping and there was nothing to
+fight with. All it bought was a hundredth of a unit of open air along the head and the sill, where
+the reveal's caps stop at the masonry and the glass did not. Flush now, and the run's ends close too
+(the pane edge lands exactly on the flanking wall's butt cap).
+
+**The doorway reveal is CORRIDOR whichever way it faces.** `soffit` used to take whichever of the two
+flanking spaces the `k` loop read first, so an interior door was painted in the room's tile half the
+time and an exterior one in the outside cladding. A doorway belongs to the circulation and not to
+either space it joins — the same reason the generator floors every door cell in lino. `st.hangar ?
+wOut : wCorr`, and the `soffit == null` bookkeeping goes with it. Verified from inside a room: tiled
+wall either side, flat corridor paint on jamb and soffit.
+
+`GRATE_TILE` 4.0 → **2.0**: four gratings to a cell around the central cover instead of one 2 m
+square of it. The one period in `FacilityStyle` that IS a divisor of `CELL`, and deliberately — a
+grating is a lattice already, so landing on the cell grid is the point rather than the mistake the
+others avoid.
+
+> The grate paragraph above is SUPERSEDED by the drain paragraph in Phase 1.8 — a drain is a fitting
+> in the floor and neither one cell-wide grating nor four of them is the right answer.
+
+## The threshold, the drain and the 2D leftovers — Facility Phase 1.8
+
+**A drain is a fitting IN the floor, and one was already being drawn.** The cell carries an
+`objects.FloorDrain`, `isGroundDecal()` true, so the actor layer had been laying its icon flat on the
+floor all along — and `Surf.GRATE` was painting a cell-wide grating underneath it. One grating filling
+a 2 m cell read as a vehicle pit and tiling it 2x2 read as four of them, and both were competing with
+the object's own decal. So the fix is a deletion: `Surf.GRATE` falls through `floorBuf` to room floor,
+and the `fGrate` buffer, `FLOOR_GRATE` and `GRATE_TILE` all go. **23 cells** in a generated area.
+
+**The drain's art was swapped in the ATLAS, which is where that object's image lives.** `FloorDrain`
+draws `ROW_OBJECT2` / `FRAME_FLOOR_DRAIN`, i.e. cell (16, 0) of `app/img/entities64.png`, and the old
+icon measures an alpha bbox of exactly **32x32 centred in the 64** (856 opaque px ≈ a disc of r 16) at
+mean sRGB **163/170/178** — a pale round cover, and by far the brightest thing on a facility floor.
+`facility/floor-grate.png` LANCZOS'd to 32x32 and pasted into a cleared cell holds that footprint to
+the pixel, so the decal's on-screen size does not move, and lands at **39/45/47** — under the 0.0607
+floor it sits in, which is what a recess should read as. Two things to know if it is ever redone:
+`app/` is a SYMLINK to the packaged Electron runtime and is gitignored, so that atlas is the only copy
+and has no tracked source (the original is in the session scratchpad); and `make tex` does not reach
+it — regenerating the source leaves the atlas on the old cut, which is what its `textures.json` note
+now says.
+
+**A doorway's floor is the two spaces it joins, not the door cell's own surface.** `strips()` hands a
+wall cell's leftover to the neighbour beside it, but the door branch was still capping the SLAB in the
+door cell's own lino — and a door cell's slab is its LINTEL, masonry above head height with nothing
+under it, so at an exterior door 2 units of corridor lino ran out past the building line. New
+`floorStrips()` collapses the slab to the wall LINE and re-runs the same decomposition, which IS the
+two halves, so there is no second rule — and `stripsOf` now takes the rect so both share one body.
+Census over the 30 doorways, 480 units² of threshold: TILE 144 → **288**, LINO 304 → **128**, WALKWAY
+24 → **48**, LOT 4 → **8**, CONCRETE 4 → **8**. Outdoor threshold **28 → 56** units², exactly the
+outer half of the 7 exterior doorways. The ceiling still comes off `strips()`: the lintel's own top is
+the rim, so the two decompositions part company at a doorway and nowhere else.
+
+**Every facility doorway had its 2D tile image lying on the threshold under the leaves.** The actor
+layer's `iconOff` is computed as `ObjModels.modelFor(key) != null` and a swinging leaf pair is not a
+glb prop, so a door drew both. Fixed with `FacilityDoors.draws(area, o)` OR'd into that expression —
+scoped to `AREA_FACILITY` on purpose, because the corporate and underground-lab generators deal
+`objects.Door` too and nothing draws leaves for those, so there the icon is still all there is. The
+object marks ride the same flag, and doors never had them (`visible()` is false for a door), so
+nothing else moved.

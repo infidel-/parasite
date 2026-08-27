@@ -48,6 +48,57 @@ class Textures {
     return tex;
   }
 
+  // load a sprite and crop it to its own ALPHA bounding box, so a quad mapping 0..1 covers exactly
+  // the opaque art. loadCroppedTexture's centred fractions cannot do this job: they are fitted by
+  // hand and go stale the moment the source is re-cut, and a centred rect cannot express a bbox
+  // that is off-centre at all — the lit window's sits 9px high of its image, which shaved the top
+  // rail off the frame and left an empty strip under the glass for alphaTest to discard
+  public static function loadAlphaCropped(path:String):Texture {
+    var tex = new Texture();
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.anisotropy = 4;
+    var img = new js.html.Image();
+    img.onload = function(_) {
+      var cv = Browser.document.createCanvasElement();
+      cv.width = img.width;
+      cv.height = img.height;
+      var ctx = cv.getContext2d();
+      ctx.drawImage(img, 0, 0);
+      var d = ctx.getImageData(0, 0, img.width, img.height).data;
+      var x0 = img.width, y0 = img.height, x1 = -1, y1 = -1;
+      for (y in 0...img.height)
+        for (x in 0...img.width) {
+          if (d[(y * img.width + x) * 4 + 3] <= 8)
+            continue;
+          if (x < x0)
+            x0 = x;
+          if (x > x1)
+            x1 = x;
+          if (y < y0)
+            y0 = y;
+          if (y > y1)
+            y1 = y;
+        }
+      // an opaque source, or one whose cut took everything: the whole image is the crop
+      if (x1 < x0) {
+        x0 = 0;
+        y0 = 0;
+        x1 = img.width - 1;
+        y1 = img.height - 1;
+      }
+      var out = Browser.document.createCanvasElement();
+      out.width = x1 - x0 + 1;
+      out.height = y1 - y0 + 1;
+      out.getContext2d().drawImage(cv, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+      tex.image = out;
+      tex.needsUpdate = true;
+    };
+    img.onerror = function(_) { tex.image = proceduralCanvas('facade'); tex.needsUpdate = true; };
+    img.src = path;
+    return tex;
+  }
+
   // crop a detail sprite to its center, then chroma-key the flat bg color to
   // transparent (gpt can't emit alpha) so only the object shows over the roof
   public static function loadKeyedTexture(path:String, crop:Float, keyColor:Int, tol:Int = 24):Texture {

@@ -36,14 +36,18 @@ class FacilityStyle
   // ---- textures --------------------------------------------------------------------------------
 
   public static inline var WALL_EXTERIOR = 'textures/facility/wall-exterior.png';
-  public static inline var WALL_INTERIOR = 'textures/facility/wall-interior.png';
+  // the two INSIDE faces, picked off the surface of the cell a face looks into (Surf.LINO is a
+  // corridor, anything else indoors is a room). the corridor's file is still called wall-interior:
+  // it was the one interior wall before the split, and its prompt already asked for a laboratory
+  // CORRIDOR, so it is the art that did not have to be repainted
+  public static inline var WALL_CORRIDOR = 'textures/facility/wall-interior.png';
+  public static inline var WALL_ROOM = 'textures/facility/wall-room.png';
   public static inline var WALL_HANGAR = 'textures/facility/wall-hangar.png';
   public static inline var ROOF = 'textures/facility/roof.png';
   public static inline var FLOOR_TILE = 'textures/facility/floor-tile.png';
   public static inline var FLOOR_LINO = 'textures/facility/floor-lino.png';
   public static inline var FLOOR_CONCRETE = 'textures/facility/floor-concrete.png';
-  public static inline var FLOOR_GRATE = 'textures/facility/floor-grate.png';
-  public static inline var WINDOW_LIT = 'textures/facility/window-large-lit.png';
+  public static inline var WINDOW_LIT = 'textures/facility/window-ribbon-lit.png';
   // the aluminium capping that tops a window run, and closes its reveal from above and below. its
   // own texture because the run used to cap in ROOF and read as a strip of bitumen and gravel lying
   // on the glass — and painted flat, with no lengthwise ribs, because it takes world-aligned UVs
@@ -85,9 +89,6 @@ class FacilityStyle
   public static inline var FLOOR_TILE_SZ = 7.0;
   public static inline var ROOF_TILE = 9.0;
   public static inline var GROUND_TILE = 9.0;
-  // the drain grate is ONE cell of art and replaces the floor on that cell, so it maps 0..1 across
-  // the cell rather than tiling by world position
-  public static inline var GRATE_TILE = 4.0;
   // the roll-up shutter TILES rather than mapping across its run: the slats are uniform, so
   // world-aligned UVs cost nothing and no run detection is needed. the art holds 24 slats per repeat,
   // so 7.0 puts the slat pitch at 0.29 world units and ~20 slats up a 6-unit wall — and 7.0 is not a
@@ -120,14 +121,19 @@ class FacilityStyle
 
   // ---- windows ---------------------------------------------------------------------------------
 
-  // the window art's own width:height over its opaque content. the quad is sized FROM this and never
-  // stretched: a 3-cell run is 12 world units wide, so it stands 12 / 2.02 = 5.94 tall against a
-  // WALL_H of 6.0 and reads floor to ceiling, while a 2-cell run is 8 wide and 3.96 tall and sits on
-  // a real sill. the two sizes come free out of one image because the generator deals both runs
-  public static inline var WINDOW_ASPECT = 2.02;
-  // how far the pane stands off the wall plane, world units. a real gap and not polygonOffset:
-  // render.RenderConfig.OVERLAY_EPS records three separate failures of the latter
-  public static inline var WINDOW_EPS = 0.02;
+  // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the
+  // canvas, which is square and mostly cut away. the quad is sized FROM this and never stretched, so
+  // the art's aspect is the only thing that decides how tall a run stands: a 3-cell run is 12 world
+  // units wide and comes out 12 / 2.9 = 4.14 tall on a sill of 0.93, a 2-cell run is 8 wide and 2.76
+  // tall on a sill of 1.62, and both leave real wall above the head.
+  //
+  // it was 2.02, which is what the first art measured, and at that aspect a 3-cell run stood 5.94 in
+  // a 6.0 wall: glazing floor to ceiling, its head 0.03 under the roof deck with no sill ledge at all
+  // (the sill cap skips under 0.05). 28 of the 49 runs a generated area deals are 3-cell, so that was
+  // the common case, not the corner one. the fix is the ART's proportions — clamping the height in
+  // code cannot work, because the hole through the wall is cut from this same arithmetic and a
+  // shorter pane in a full-height opening is just a gap
+  public static inline var WINDOW_ASPECT = 2.90;
   // emissive strength on the lit pane. every window is lit in this phase — the place is staffed at
   // night, and a dark facility gives the player nothing to aim the "see into the room" read at
   public static inline var WINDOW_EMISSIVE = 0.55;

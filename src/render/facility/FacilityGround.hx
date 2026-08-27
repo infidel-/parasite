@@ -91,13 +91,22 @@ class FacilityGround
       // ground of whichever neighbour the strip abuts, laid on the same world-aligned grid so it
       // continues that surface without a seam. render.facility.FacilityGeom emits the indoor half of
       // the same strips off the same FacilityGeom.strips(); this pass takes the outdoor ones because
-      // this is where the ground buffers are
+      // this is where the ground buffers are.
+      //
+      // DOOR cells too, not just walls: a doorway's slab is its lintel, so an exterior door leaves
+      // the same strip of pavement inside its cell that the wall beside it does. tested with isWall
+      // alone, those 7 strips got no ground at all and the door cell's own floor covered them —
+      // 28 square units of corridor lino painted out on the walkway.
+      //
+      // and `floorStrips` rather than `strips`, which is what carries the OUTER HALF of an exterior
+      // doorway: there is no masonry under a lintel, so the threshold's outdoor half is pavement all
+      // the way to the wall line rather than lino to within a unit of it
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (!FacilityModel.isWall(m, col, row))
+            if (!FacilityGeom.carries(m, col, row))
               continue;
-            for (sp in FacilityGeom.strips(m, col, row))
+            for (sp in FacilityGeom.floorStrips(m, col, row))
               {
                 var b = surfBuf(m.surf[sp.row][sp.col], road, walkway, lot, grass);
                 if (b == null)

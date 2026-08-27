@@ -186,6 +186,21 @@ class FacilityDoors
         }
     }
 
+// does this area draw this object's door as real swinging LEAVES, so the actor layer must not also
+// lay its 2D icon flat on the floor under them?
+//
+// the actor layer's `iconOff` is otherwise only ever true for a glb prop out of
+// render.world.ObjModels, and a leaf pair is not one — so every facility doorway had the old tile
+// image painted across its threshold, a pale square lying under geometry that had replaced it.
+// scoped to the facility on purpose: the corporate and underground-lab generators deal
+// objects.Door too and nothing draws leaves for those, so there the icon is still all there is
+  public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
+    {
+      return area != null &&
+        area.typeID == AREA_FACILITY &&
+        o.type == 'door';
+    }
+
 // the live door standing on a cell, or null
   static function doorAt(area:game.AreaGame, col:Int, row:Int):objects.Door
     {
