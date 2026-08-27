@@ -1627,3 +1627,87 @@ scoped to `AREA_FACILITY` on purpose, because the corporate and underground-lab 
 `objects.Door` too and nothing draws leaves for those, so there the icon is still all there is. The
 object marks ride the same flag, and doors never had them (`visible()` is false for a door), so
 nothing else moved.
+
+## A lab bench is a BOX, so it is merged geometry and not a prop — Facility Phase 2
+
+The plan for this phase was two generated glbs, `facility/bench-lab` (a 1-cell casework unit) and
+`facility/bench-island` (the 2x3). Neither was generated. Reading the 2D art first is what killed
+them: rows 8-11 of `tileset64.png` draw a lab table as a plain top-down slab with a thin drawer strip
+along its front, which is a worktop over a run of cabinets and nothing else. Six quads a cell.
+
+What decided it was the SHAPE census, not the art. Over one facility: **207 bench cells in 81
+connected blocks** — 53 of 2x1, 9 of 3x1, 7 islands of 2x3/3x2, and **11 blocks that are not
+rectangles at all**, where a wall run grew into an island or into another run. A prop needs a mesh
+per shape and would have shown a seam at every cell boundary of a run; those 11 have no shape to make
+one for. Merged geometry never names a shape: a face is emitted toward a neighbour that is not a
+bench, exactly as the wall pass emits toward a neighbour that is not a wall, and every block the
+generator can lay falls out of that one predicate. `FacilityModel.tableOf` is a BLOCK test on the
+tileset (rows 8-11, columns 0..7) rather than a list of the 22 `Const` names that spell out its cells
+— the corp and wood/marble tables start at column 8 — and the generator's 1x1/1x3/3x1/2x3/3x2 shapes
+are never read.
+
+**The overhang comes out of the WORKTOP, and that is a UV decision rather than a modelling one.** It
+was built the other way first — casework pulled back `BENCH_LIP` 0.2 from every side that does not
+carry on into another bench cell, one inset rect serving all four directions because the inset and
+the face plane are the same quantity. Geometrically that is fine and the corners close. It is wrong
+for the ART: an inset body starts 0.2 past the cell boundary, so its world-aligned `u` starts
+mid-door and the first and last cabinet of every run are cut. Growing the worktop outward instead
+leaves the body spanning exact cell boundaries. Measured on a synthetic single cell: worktop
+**4.4 x 4.4** = `CELL + 2*LIP`, casework **4.0 x 4.0** exactly.
+
+**The tile period was the other half of the same bug, and `FacilityStyle`'s own note is what caused
+it.** `BENCH_TILE` was set to **1.75** — the cabinet's own height — precisely to keep the horizontal
+period off the cell grid, because every tile size in that file is chosen that way. That is the wrong
+rule here and it shipped a visible defect: 4.0/1.75 is 2.29 repeats a cell, so the door rhythm drifts
+against the grid and a run's ends land at an arbitrary phase — half a drawer, and a different half
+per bench. The blanket rule is about art whose features are IRREGULAR, where a cell-aligned period
+puts the same stain on every grid line and the lattice reads through. Cabinetry is the opposite case:
+the repeat IS a regular rhythm and landing it on the grid is the entire point. **2.0**, half a cell,
+4 doors a cell at 1.0 world unit (0.5 m) each.
+
+Those two together are what make it exact. Over the whole area, every body quad's `u` endpoints land
+on a **whole** repeat: `worstOffGrid` **0**, all **1116** endpoints at fraction **0.0**, 2 repeats a
+face. A door cannot be cut on any face of any block shape, whatever the art's internal layout is.
+
+**Two periods on two axes is why the casework cannot call `FacilityGeom.face`.** `u` is world-aligned
+on `BENCH_TILE`; `v` has to run 0..1 over the body's own height so the bottom-up composition lands
+whole (measured **[0, 1]** exactly). `face` has one `t`. `FacilityTables.panel` is the 8-line
+emitter, going through the same now-public `FacilityGeom.ends` so the winding — the one thing here
+that is invisible until a whole axis of faces disappears — is still derived in exactly one place.
+There is no `BENCH_TILE`-style V constant: the body height IS the V period, by construction.
+
+Counts, unchanged by the rework and predicted to the quad from `cells + openSides`: **764 top quads
+= 206 caps + 558 edge bands** and **558 body quads**. **2 draw calls.**
+
+No soffit under the overhang and no floor under the casework, deliberately: the open ring is 0.2
+wide and at the camera's 51 degrees a ray entering at the bottom of the 0.25 edge band drops 0.25
+units over the 0.2 it travels inward, so it lands on the cabinet face and there is nothing to see
+through. At a CONCAVE corner — where one run meets another and the block is not a rectangle — the two
+grown rects overlap by 0.2 squared; the caps are coplanar with the same texture and the same
+world-aligned UVs, so that resolves to the same pixel either way, and the two edge bands cross by 0.2
+world units, which reads as nothing.
+
+Art: two textures, both 1k. `bench-top` measured **0.0203** linear and was left alone — a black epoxy
+worktop being the darkest surface in the set is what gives a bench its silhouette against the 0.0607
+room floor, and the trap `GROUND_LOT` records (darkest art filling the frame, whole compound reads
+black) is about a ground plane. `bench-body` came back at **0.0891**, brighter than every facility
+surface including the wall behind it and the floor under it, so a room read as a ring of glowing
+cabinets; `lift` **1.23** — the same value its wall neighbour needed — puts it on **0.0537**, just
+under `wall-room`'s 0.0592.
+
+**`WorldCtx.ground` is what stands a decoration on its bench.** The generator writes the table
+decoration onto the SAME cell as the table tile (`FacilityAreaGenerator`'s chem-lab pass), so without
+this every flask and microscope sat at y = 0 with a metre of casework in front of it. `FacilityArea`
+stops clearing `ground` and points it at `FacilityTables.groundY`, which answers `BENCH_H` on a bench
+cell and 0 elsewhere — the one hook that exists for this, so the sprite, its shadow, its fade and the
+cursor pick all follow with no code of their own. Verified both entry points agree: `floorY(22,27)`
+and `floorYAt` = **2**, the cell beside it **0**. **175 of 234** decorations in the area are on a
+bench.
+
+**`objects.Decoration.isGroundDecal()` → false, with no per-row table.** The plan called for one —
+rows 8/13 and 9-11/14 upright, row 12 and the papers flat. The atlas says otherwise: every icon in
+rows 8-14 of `entities64.png` is painted in ELEVATION — fridges, fume cabinets, flasks, microscopes,
+drums, server racks, robot arms — including row 12, which the plan had guessed was floor litter and
+is actually barrels and racks. Laid flat they read as decals of furniture printed on the floor. The
+only two cells that would genuinely lie down are the gloves, which is not worth a table.
+`DecorationExt` keeps the default: that one carries a random angle and scale and IS floor litter.

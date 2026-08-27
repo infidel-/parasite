@@ -47,6 +47,11 @@ class FacilityStyle
   public static inline var FLOOR_TILE = 'textures/facility/floor-tile.png';
   public static inline var FLOOR_LINO = 'textures/facility/floor-lino.png';
   public static inline var FLOOR_CONCRETE = 'textures/facility/floor-concrete.png';
+  // the lab benches: the black epoxy worktop (its top face AND its edge band) and the casework
+  // cabinet fronts under it. two textures rather than a generated prop, because a bench IS a box —
+  // see render.facility.FacilityTables for why the whole run is merged geometry
+  public static inline var BENCH_TOP = 'textures/facility/bench-top.png';
+  public static inline var BENCH_BODY = 'textures/facility/bench-body.png';
   public static inline var WINDOW_LIT = 'textures/facility/window-ribbon-lit.png';
   // the aluminium capping that tops a window run, and closes its reveal from above and below. its
   // own texture because the run used to cap in ROOF and read as a strip of bitumen and gravel lying
@@ -98,6 +103,38 @@ class FacilityStyle
   // not repeat three times inside a single cell — and not a multiple of CELL, for the lattice reason
   // above
   public static inline var HEAD_TILE = 3.0;
+
+  // ---- benches ---------------------------------------------------------------------------------
+
+  // worktop height, world units. WALL_H 6.0 is one 3 m storey, so a unit is half a metre and this is
+  // a 1 m bench — a shade over the 0.9 m a real one stands at, which is deliberate: at this camera's
+  // 51 degrees a bench has to clear the floor enough to read as a solid before its own worktop hides
+  // it, and the decorations that stand ON it (see FacilityTables.groundY) need somewhere to stand
+  public static inline var BENCH_H = 2.0;
+  // how thick the worktop slab is, i.e. the band of BENCH_TOP drawn down the outside of the run.
+  // the top OVERHANGS the casework by BENCH_LIP, which is the whole silhouette: without it a bench
+  // is one flat-sided box and reads as a low wall
+  public static inline var BENCH_EDGE = 0.25;
+  // and the overhang is applied by growing the WORKTOP outward, never by pulling the casework in.
+  // that is a UV decision, not a modelling one: an inset body starts BENCH_LIP past the cell
+  // boundary, so its world-aligned u starts mid-door and the first and last cabinet of every run are
+  // cut. Growing the top instead leaves the body spanning exact cell boundaries, so the door rhythm
+  // below is whole on every face of every block shape and no texture layout can break it
+  public static inline var BENCH_LIP = 0.2;
+  // the worktop's repeat. not a multiple of CELL, for the lattice reason the tile sizes above carry
+  public static inline var BENCH_TOP_TILE = 5.0;
+  // the casework's HORIZONTAL repeat, and it is deliberately HALF A CELL — the one texture period in
+  // this file that IS on the grid, against the blanket rule above. That rule is about art whose
+  // features are irregular, where a cell-aligned period puts the same stain on every grid line and
+  // the lattice reads through. Cabinetry is the opposite case: the repeat IS a regular rhythm, the
+  // art holds two doors, and landing them on the cell grid is exactly what stops a run ending on
+  // half a drawer. 4.0 / 2.0 gives 4 doors a cell at 1.0 world unit (0.5 m) each.
+  //
+  // there is no matching V constant: the body spans y 0..(BENCH_H - BENCH_EDGE) and FacilityTables
+  // maps v over that range directly, so v runs 0..1 up the cabinet by construction and the art's
+  // bottom-up composition — toe kick, doors, the dark band under the overhang — lands whole and
+  // never wraps. Two different periods on the two axes is why the body cannot use FacilityGeom.face
+  public static inline var BENCH_TILE = CityConfig.CELL * 0.5;
 
   // ---- doors -----------------------------------------------------------------------------------
 

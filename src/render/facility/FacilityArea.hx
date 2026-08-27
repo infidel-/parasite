@@ -54,11 +54,13 @@ class FacilityArea implements Area3D
 // the outdoors, then every structure's shell, then the chunk buckets and the vision mask
   public function build(scene:Scene):Void
     {
-      // a facility floor is FLAT and stepped by nothing: no relief field and, in this phase, no kerb.
-      // clearing these is not optional — the kind that sets one owns clearing it, or the next area
-      // inherits the previous one's ground height and climb arc (see render.world.WorldCtx)
+      // a facility floor is FLAT and stepped by nothing — no relief field and, in this phase, no
+      // kerb — but it is not all at y = 0: a lab bench is a metre of solid worktop and the generator
+      // writes its decorations onto the bench's own cell, so `ground` answers the bench height there
+      // and 0 everywhere else. setting these is not optional either way — the kind that sets one owns
+      // it, or the next area inherits the previous one's ground height and climb arc (WorldCtx)
       WorldCtx.tiles = null;
-      WorldCtx.ground = null;
+      WorldCtx.ground = function(x, z) return FacilityTables.groundY(model, x, z);
       WorldCtx.climbArc = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
@@ -68,6 +70,7 @@ class FacilityArea implements Area3D
       built = scene;
       FacilityGround.build(scene, model);
       shells = FacilityGeom.build(scene, model);
+      FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       doors = FacilityDoors.build(scene, model, game.area);
       chunks.build(scene, pre);

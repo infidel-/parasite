@@ -112,6 +112,11 @@ typedef Facility = {
   // asks "does the wall line carry on through here" once per wall cell per side while it emits, and
   // a linear scan of a few dozen doors inside that loop is the wrong shape
   door:Array<Array<Bool>>,
+  // which cells carry a laboratory BENCH. a grid and not a list of rects, because the emitter asks
+  // "does the bench carry on through here" once per bench cell per side, exactly as the wall pass
+  // asks it of the wall line — so a run, an island and an L all fall out of one predicate and no
+  // rect finding is needed
+  table:Array<Array<Bool>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
 };
@@ -128,6 +133,7 @@ class FacilityModel
             var t = area.getCellType(col, row);
             m.surf[row][col] = surfOf(t);
             m.wall[row][col] = wallOf(t);
+            m.table[row][col] = tableOf(t);
           }
       findStructures(m);
       findWindows(m);
@@ -149,6 +155,7 @@ class FacilityModel
         windows: [],
         doors: [],
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
+        table: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };
     }
@@ -182,6 +189,22 @@ class FacilityModel
       if (t >= Const.OFFSET_ROW8)
         return TILE;
       return NONE;
+    }
+
+// does this tile id paint a laboratory bench?
+//
+// the two table families (Const.TILE_LABS_TABLE_* and TILE_LABS_TABLE2_*) occupy columns 0..7 of
+// tileset rows 8..11 and nothing else lives in that block — the corp tables and the wood/marble ones
+// start at column 8 — so this is the block test rather than a list of the twenty-two Const names
+// that spell out its cells. their SHAPE is not read at all: the generator deals 3x1 and 1x3 runs, a
+// 1x1 and a 2x3 or 3x2 island, and the emitter recovers every one of them from neighbours
+  static inline function tableOf(t:Int):Bool
+    {
+      var stride = Const.OFFSET_ROW9 - Const.OFFSET_ROW8;
+      var i = t - Const.OFFSET_ROW8;
+      return i >= 0 &&
+        i < 4 * stride &&
+        i % stride < 8;
     }
 
 // what a tile id blocks
@@ -397,6 +420,13 @@ class FacilityModel
       return inside(m, col, row) && m.door[row][col];
     }
 
+// does this cell carry a laboratory bench? the emitter's own "does it carry on" test, and the one
+// render.world.WorldCtx.ground reads to stand a table decoration on the worktop instead of the floor
+  public static inline function isTable(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.table[row][col];
+    }
+
 // the painted pair a door's shut icon asks for. the front double and the side door are both glazed,
 // so four generator kinds land on three looks
   static function lookOf(closedCol:Int):Look
@@ -450,6 +480,13 @@ class FacilityModel
       m.wall[4][10] = OPEN;
       m.surf[11][5] = LINO;
       m.wall[11][5] = OPEN;
+      // one bench run against the north room's window wall and one island in the south room, so the
+      // warm pass compiles both of render.facility.FacilityTables' materials
+      for (col in 4...7)
+        m.table[3][col] = true;
+      for (row in 9...11)
+        for (col in 13...16)
+          m.table[row][col] = true;
       findStructures(m);
       findWindows(m);
       m.doors.push({

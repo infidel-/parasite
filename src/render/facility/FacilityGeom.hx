@@ -581,8 +581,10 @@ class FacilityGeom
         face(b, plane, plane, a0, a1, dir, 0.0, FacilityStyle.WALL_H, FacilityStyle.WALL_TILE);
     }
 
-// one horizontal cell quad at height y, world-aligned UVs (never stretched)
-  static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
+// one horizontal cell quad at height y, world-aligned UVs (never stretched). public because
+// render.facility.FacilityTables emits its worktops with it — a bench is the same kind of surface as
+// a floor or a roof, and duplicating the winding is how one of them ends up facing the wrong way
+  public static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
     {
       if (x1 - x0 < 0.01 ||
           z1 - z0 < 0.01)
@@ -604,8 +606,10 @@ class FacilityGeom
 // the run endpoints of a cell-edge face, wound so the FRONT face looks at the neighbour in `dir`.
 // derived rather than hand-cased: for a run direction d the quad's normal is (-dz, 0, dx), so each
 // direction fixes which end of the edge is wound first. getting this backwards is invisible until a
-// whole axis of faces disappears — the failure render.wild.WildRoad's dashes recorded
-  static inline function ends(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Array<Float>
+// whole axis of faces disappears — the failure render.wild.WildRoad's dashes recorded.
+// public alongside `face` for render.facility.FacilityTables, which has to emit its cabinet fronts
+// with a different period on each axis and so cannot call `face` — but must not re-derive THIS
+  public static inline function ends(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Array<Float>
     {
       return switch (dir)
         {
@@ -618,8 +622,10 @@ class FacilityGeom
 
 // one vertical wall face spanning y0..y1, UVs world-aligned along the run and up the wall so
 // neighbouring faces of one long wall carry a continuous course. `t` is the repeat period, which the
-// shutter runs take at their own value so their slat pitch is independent of the wall course
-  static function face(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
+// shutter runs take at their own value so their slat pitch is independent of the wall course.
+// public for render.facility.FacilityTables, which emits a bench's sides with it: the `dir` winding
+// is the one thing here that is invisible until a whole axis of faces disappears
+  public static function face(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
       dir:Int, y0:Float, y1:Float, t:Float):Void
     {
       if (y1 - y0 < 0.01)

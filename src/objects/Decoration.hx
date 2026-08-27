@@ -36,4 +36,16 @@ class Decoration extends AreaObject
 
   public override function visible(): Bool
     { return false; }
+
+// stand upright in the 3D view instead of lying flat like ground clutter.
+//
+// every icon these draw with is painted in ELEVATION and not from above - the chem-lab set is
+// fridges, fume cabinets, flasks, microscopes, drums, server racks and robot arms, all seen from the
+// side (Const.CHEM_LABS_DECO_FLOOR_HIGH / _TABLE / _FLOOR_LOW, rows 8-14 of entities64). laid flat
+// they read as decals of furniture printed on the floor. the two glove cells are the only ones that
+// would genuinely lie down, which is not worth a per-row table.
+// objects.DecorationExt keeps the default on purpose: that one carries a random angle and scale and
+// IS floor litter
+  public override function isGroundDecal(): Bool
+    { return false; }
 }
