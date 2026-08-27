@@ -8,6 +8,8 @@ Driven by textures-src/textures.json. For each tracked texture it:
   3. for class "chroma": bakes the key color to alpha before downscaling,
   3b. for an entry with "lift": raises its RGB by that gamma, for art gpt painted too
      dark for the surface it lands on (see lift_gamma; alpha is left alone),
+  3c. for an entry with "glass_alpha": drops the alpha of the BRIGHT half of a glazing
+     texture so the panes go see-through and the dark frame stays solid (see glass_cut),
   4. warns when a needs_alpha texture has no real alpha (gpt can't emit it ->
      the source must be human-edited),
   5. rewrites textures.json with the new last_converted timestamps.
@@ -72,7 +74,10 @@ def chroma_key(im, color_hex, tol):
 
 
 def lift_gamma(im, g):
-    """Brighten a source with out = (v/255)**g. g < 1 lifts the darks and leaves the top end alone.
+    """Re-gamma a source with out = (v/255)**g. g < 1 lifts the darks and leaves the top end alone;
+    g > 1 pulls it DOWN the same way, for the opposite failure — gpt handed back a lab corridor wall
+    at linear 0.1077, the brightest thing in the facility set and above its own lit windows, where
+    the value ladder wanted 0.069 (facility/wall-interior, lift 1.22). Same knob, both directions.
 
     For art authored much darker than the surface it lands on. gpt paints a rusted pipe or a drain
     grate near-black, and three decodes sRGB to LINEAR before the Lambert multiply, so a decal at
@@ -85,6 +90,24 @@ def lift_gamma(im, g):
     out = a.copy()
     out[:, :, :3] = np.clip((a[:, :, :3] / 255.0) ** g * 255.0, 0, 255)
     return Image.fromarray(out.astype(np.uint8), mode)
+
+
+def glass_cut(im, thr, a):
+    """Take every pixel brighter than `thr` down to alpha `a`, leaving darker ones opaque.
+
+    For a window unit painted as one flat elevation: the frame and mullions have to stay solid
+    while the panes go see-through, and a luma threshold separates them outright because the two
+    are the texture's two modes. Measured on facility/window-large-lit: frame at luma 16-127
+    (25.9%), glass at 144-207 (73.4%), and a 0.7% valley at 128-143 to put the threshold in.
+    Run on the FULL-RES source, before the LANCZOS downscale, so the frame/glass alpha edge is
+    resampled soft instead of landing jagged. Pixels already cut (the API's transparent margin)
+    are left alone, so this composes with background:"transparent" rather than fighting it."""
+    im = im.convert("RGBA")
+    px = np.asarray(im).copy()
+    rgb = px[:, :, :3].astype(int)  # explicit: uint8 * 299 overflows in place under NEP 50
+    luma = (rgb[:, :, 0] * 299 + rgb[:, :, 1] * 587 + rgb[:, :, 2] * 114) // 1000
+    px[(luma >= thr) & (px[:, :, 3] > 128), 3] = a
+    return Image.fromarray(px, "RGBA")
 
 
 def bleed_alpha(im, iters=20):
@@ -127,11 +150,13 @@ def convert(label, e, default_res):
     src_mtime = datetime.fromtimestamp(os.path.getmtime(src)).replace(microsecond=0)
     last = e.get("last_converted")
     lift = e.get("lift")
+    glass = e.get("glass_alpha")
     fresh = (
         not os.path.exists(out)
         or last is None
         or src_mtime > datetime.fromisoformat(last)
         or lift != e.get("last_lift")  # retuning the lift must rebuild; the source never changed
+        or glass != e.get("last_glass_alpha")  # and the same for the glazing cut
     )
 
     res = e.get("res", default_res)
@@ -148,6 +173,8 @@ def convert(label, e, default_res):
             im = chroma_key(im, e.get("chroma", "0x000000"), e.get("tol", 24))
         if lift:
             im = lift_gamma(im, lift)
+        if glass:
+            im = glass_cut(im, int(glass[0]), int(glass[1]))
         im = im.resize((ow, oh), Image.LANCZOS)
         if has_alpha(im):
             im = bleed_alpha(im)  # scrub the LANCZOS colour-ring fringe at low alpha
@@ -157,7 +184,12 @@ def convert(label, e, default_res):
             e.pop("last_lift", None)
         else:
             e["last_lift"] = lift
-        print(f"  built {label}.png  {ow}x{oh}  ({im.mode}){'  lift ' + str(lift) if lift else ''}")
+        if glass is None:
+            e.pop("last_glass_alpha", None)
+        else:
+            e["last_glass_alpha"] = glass
+        extra = ("  lift " + str(lift) if lift else "") + ("  glass " + str(glass) if glass else "")
+        print(f"  built {label}.png  {ow}x{oh}  ({im.mode}){extra}")
 
     if e.get("needs_alpha") and not has_alpha(Image.open(out)):
         warn(f"{label}: needs transparency but {e['src']} is opaque — human-edit the source")

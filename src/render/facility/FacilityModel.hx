@@ -27,6 +27,35 @@ enum abstract Wall(Int) from Int to Int
   var SHUTTER = 3;   // the hangar's big door strip: solid, opaque, and not a Door object
 }
 
+// which of the three painted door pairs a cell's leaves draw with. the generator deals FOUR kinds
+// (Const.FRAME_DOOR_DOUBLE / GLASS / CABINET / METAL) and they collapse to three looks, because the
+// front double and the side door are both glazed and the art for them is the same pair
+enum abstract Look(Int) from Int to Int
+{
+  var GLASS = 0;
+  var CABINET = 1;
+  var METAL = 2;
+}
+
+// one door OPENING: a single cell holding a pair of leaves that swing apart.
+//
+// every facility door is exactly one cell wide — the front entrance looks like a double because the
+// generator cuts a 3-cell chunk and puts a mullion back in the middle of it (FacilityAreaGenerator
+// draws TEMP_BUILDING_FRONT_DOOR over `corridorWidth` and then restores the centre cell to wall), so
+// what it really deals is two one-cell doors flanking a pier. a cell is 4 world units, which is a
+// 2 m opening, and that is a DOUBLE door in anyone's building — hence two leaves of 2 units each
+typedef DoorCell = {
+  col:Int,
+  row:Int,
+  // the wall line the shut leaves lie in runs along +x. derived from which neighbours are wall, not
+  // from the generator's own DIR_*, so it works on a saved grid with no generatorInfo at all
+  alongX:Bool,
+  // -1 or +1 on the PERPENDICULAR axis: the side the pair swings into
+  inDir:Int,
+  look:Look,
+  structure:Int,
+};
+
 // one enclosed structure: a connected component of indoor floor, plus the wall ring around it.
 // the facility generator makes exactly three — two lab buildings and a hangar — but nothing here
 // counts on that, because the number falls out of the grid
@@ -75,6 +104,14 @@ typedef Facility = {
   owner:Array<Array<Int>>,
   structures:Array<Structure>,
   windows:Array<Window>,
+  // every door opening. NOT derived from the tile grid — a door cell finalises to plain
+  // Const.TILE_FLOOR_LINO and is indistinguishable from the corridor it stands in, so the objects.Door
+  // objects themselves are what locate one
+  doors:Array<DoorCell>,
+  // the same thing as a grid. a parallel channel and not a search over `doors`, because the shell
+  // asks "does the wall line carry on through here" once per wall cell per side while it emits, and
+  // a linear scan of a few dozen doors inside that loop is the wrong shape
+  door:Array<Array<Bool>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
 };
@@ -94,6 +131,7 @@ class FacilityModel
           }
       findStructures(m);
       findWindows(m);
+      findDoors(m, area);
       m.rooms = (area.generatorInfo != null ? area.generatorInfo.rooms : []);
       return m;
     }
@@ -109,6 +147,8 @@ class FacilityModel
         owner: [for (_ in 0...h) [for (_ in 0...w) -1]],
         structures: [],
         windows: [],
+        doors: [],
+        door: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };
     }
@@ -307,6 +347,68 @@ class FacilityModel
       return inside(m, col, row) && m.wall[row][col] == Wall.WINDOW;
     }
 
+// locate every door opening from the area's own objects.Door objects.
+//
+// off the OBJECTS and not off the tiles, because there is no door tile to find: every one of the
+// generator's four door kinds finalises to Const.TILE_FLOOR_LINO or TILE_FLOOR_TILE_CANNOTSEE, so a
+// shut door is, to the saved grid, a piece of corridor. what the grid DOES answer is the geometry —
+// which way the wall runs, and which side to swing into
+  static function findDoors(m:Facility, area:AreaGame):Void
+    {
+      for (o in area.getObjects())
+        {
+          if (o.type != 'door' ||
+              !inside(m, o.x, o.y))
+            continue;
+          // the wall line is whichever axis has wall on both sides of the cell. a front door's pier
+          // counts as that wall, which is why this reads the grid rather than the door's own dir
+          var alongX = isWall(m, o.x - 1, o.y) && isWall(m, o.x + 1, o.y);
+          var dc = alongX ? 0 : 1;
+          var dr = alongX ? 1 : 0;
+          var a = isIndoor(m, o.x - dc, o.y - dr);
+          var b = isIndoor(m, o.x + dc, o.y + dr);
+          if (!a && !b)
+            continue;
+          // leaves swing INTO the building, and between two indoor sides into the ROOM rather than
+          // into the corridor — which is both what a real door does and what keeps a 3-cell corridor
+          // clear. a tie falls to +1, so the choice is always deterministic
+          var inDir = 1;
+          if (a != b)
+            inDir = (b ? 1 : -1);
+          else if (m.surf[o.y - dr][o.x - dc] == Surf.TILE &&
+                   m.surf[o.y + dr][o.x + dc] != Surf.TILE)
+            inDir = -1;
+          m.doors.push({
+            col: o.x,
+            row: o.y,
+            alongX: alongX,
+            inDir: inDir,
+            look: lookOf(cast(o, objects.Door).closedCol),
+            structure: m.owner[o.y][o.x],
+          });
+          m.door[o.y][o.x] = true;
+        }
+    }
+
+// does this cell hold a door OPENING? the wall pass treats one as the wall line carrying on rather
+// than ending, so the flanking slabs meet the cell boundary and the opening stays one cell wide
+  public static inline function isDoor(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.door[row][col];
+    }
+
+// the painted pair a door's shut icon asks for. the front double and the side door are both glazed,
+// so four generator kinds land on three looks
+  static function lookOf(closedCol:Int):Look
+    {
+      if (closedCol == Const.FRAME_DOOR_DOUBLE ||
+          closedCol == Const.FRAME_DOOR_GLASS)
+        return GLASS;
+      if (closedCol == Const.FRAME_DOOR_METAL)
+        return METAL;
+      return CABINET;
+    }
+
 // xorshift32 avalanche over a cell hash, for every deterministic placement decision in here. the
 // same function render.sewer.SewerModel.mix is, and called through it rather than copied: its header
 // carries the measurement that justifies it (the bare `(col * A) ^ (row * B)` hash collapses to an
@@ -341,8 +443,33 @@ class FacilityModel
           }
       for (col in 8...11)
         m.wall[11][col] = WINDOW;
+      // two doors: one through the spine, one through the south face. pushed by hand rather than
+      // found, because findDoors reads live objects.Door objects and there is no area here — but the
+      // CELLS are opened up first, so the shell builder sees the same hole a real door leaves
+      m.surf[4][10] = LINO;
+      m.wall[4][10] = OPEN;
+      m.surf[11][5] = LINO;
+      m.wall[11][5] = OPEN;
       findStructures(m);
       findWindows(m);
+      m.doors.push({
+        col: 10,
+        row: 4,
+        alongX: false,
+        inDir: 1,
+        look: CABINET,
+        structure: 0,
+      });
+      m.doors.push({
+        col: 5,
+        row: 11,
+        alongX: true,
+        inDir: -1,
+        look: GLASS,
+        structure: 0,
+      });
+      for (d in m.doors)
+        m.door[d.row][d.col] = true;
       return m;
     }
 }

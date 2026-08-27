@@ -1,5 +1,6 @@
 package render.facility;
 
+import citygen.CityConfig;
 import render.world.VisionMaskOpts;
 
 // every art and tuning constant for the facility area kind, in one file, the way
@@ -21,6 +22,17 @@ class FacilityStyle
   // the roof surface, and the ceiling from underneath once the interior roof has faded off
   public static inline var ROOF_Y = WALL_H;
 
+  // how thick a wall actually is, world units — HALF a cell, not the whole one it occupies on the
+  // grid. the grid says a wall cell is impassable and that is a gameplay fact; how much of the cell
+  // the masonry fills is a render one, and filling all 4 units made every doorway a tunnel and every
+  // window a 4-deep slot you could see down. what the slab does not cover comes back as FLOOR, so
+  // the cell is still fully painted (see FacilityGeom.strips)
+  public static inline var WALL_T = CityConfig.CELL * 0.5;
+  // and glazing at a QUARTER, because a glazed panel is not a concrete wall. it also buys the jamb
+  // for nothing: a 1-unit slab sits strictly inside the 2-unit wall that bounds its run, so the
+  // wall's own butt cap IS the reveal return and the run's ends close without a case of their own
+  public static inline var GLASS_T = CityConfig.CELL * 0.25;
+
   // ---- textures --------------------------------------------------------------------------------
 
   public static inline var WALL_EXTERIOR = 'textures/facility/wall-exterior.png';
@@ -31,8 +43,20 @@ class FacilityStyle
   public static inline var FLOOR_LINO = 'textures/facility/floor-lino.png';
   public static inline var FLOOR_CONCRETE = 'textures/facility/floor-concrete.png';
   public static inline var FLOOR_GRATE = 'textures/facility/floor-grate.png';
-  public static inline var WINDOW = 'textures/facility/window-large.png';
   public static inline var WINDOW_LIT = 'textures/facility/window-large-lit.png';
+  // the aluminium capping that tops a window run, and closes its reveal from above and below. its
+  // own texture because the run used to cap in ROOF and read as a strip of bitumen and gravel lying
+  // on the glass — and painted flat, with no lengthwise ribs, because it takes world-aligned UVs
+  // like every other horizontal surface here and a run along +x and one along +z must sample alike
+  public static inline var WINDOW_HEAD = 'textures/facility/window-head.png';
+  // each of these holds the COMPLETE shut pair, left leaf in u 0..0.5 and right in 0.5..1 — see the
+  // leaf geometry in render.facility.FacilityDoors for why one image serves both halves
+  public static inline var DOOR_GLASS = 'textures/facility/door-glass.png';
+  public static inline var DOOR_CABINET = 'textures/facility/door-cabinet.png';
+  public static inline var DOOR_METAL = 'textures/facility/door-metal.png';
+  // the hangar's roll-up shutter (Const.TILE_HANGAR_DOOR). a WALL texture, not a door prop: that
+  // strip is not an objects.Door and never opens
+  public static inline var DOOR_SHUTTER = 'textures/facility/door-hangar.png';
   // the outdoors reuses the city's ground art: a compound's asphalt, pavement and lawn read the same
   // as a street's, and nothing in this phase asks them to differ. the parking bay markings are the
   // one outdoor thing that IS specific, and they arrive with the lot pass
@@ -64,6 +88,35 @@ class FacilityStyle
   // the drain grate is ONE cell of art and replaces the floor on that cell, so it maps 0..1 across
   // the cell rather than tiling by world position
   public static inline var GRATE_TILE = 4.0;
+  // the roll-up shutter TILES rather than mapping across its run: the slats are uniform, so
+  // world-aligned UVs cost nothing and no run detection is needed. the art holds 24 slats per repeat,
+  // so 7.0 puts the slat pitch at 0.29 world units and ~20 slats up a 6-unit wall — and 7.0 is not a
+  // multiple of CELL, for the lattice reason the tile sizes above all carry
+  public static inline var SHUTTER_TILE = 7.0;
+  // the window capping. 3.0 rather than anything nearer the 1-unit band it paints, so the grain does
+  // not repeat three times inside a single cell — and not a multiple of CELL, for the lattice reason
+  // above
+  public static inline var HEAD_TILE = 3.0;
+
+  // ---- doors -----------------------------------------------------------------------------------
+
+  // the opening's height, world units, out of a WALL_H of 6.0. the art is SQUARE and holds the whole
+  // pair, so this also fixes the width: 4.0 tall over a 4-unit cell is 1:1 and nothing is stretched.
+  // at the game's scale (WALL_H 6.0 is one storey) that is a 2 m x 2 m opening, which is what a
+  // corridor pair of swing doors actually measures
+  public static inline var DOOR_H = 4.0;
+  // leaf thickness. it exists only so the top and outer edges have something to draw at this
+  // camera's 51 degrees — a bare quad would vanish edge-on the moment a door swung
+  public static inline var DOOR_T = 0.16;
+  // how long a leaf takes to swing its 90 degrees, in BASE_MS multiples. well under one turn:
+  // objects.Door.turn auto-closes after 2 of them, so a swing that outlasted a turn would still be
+  // opening when the model had already shut it
+  public static inline var DOOR_SWING_MULT = 0.6;
+  // bounding-sphere radius render.Models.cull tests each leaf against. measured off the swing, not
+  // guessed: the centre stored for the test is the SHUT centre and never moves, while the open leaf's
+  // far tip reaches 2.83 units from it, so 3.0 is the smallest radius that cannot pack out a leaf
+  // that is still on screen
+  public static inline var DOOR_CULL_R = 3.0;
 
   // ---- windows ---------------------------------------------------------------------------------
 
@@ -85,11 +138,10 @@ class FacilityStyle
   // BASE_MS multiples. FAST on purpose: this is not an atmosphere beat, it is the view getting out
   // of the player's way, and anything slower reads as a lag between walking in and being able to see
   public static inline var REVEAL_MULT = 0.5;
-  // what the interior roof and the south-facing wall faces fade TO. the roof goes all the way; the
-  // walls stop short of it so the floor plan still has edges — the same call render.Occlusion makes
-  // for a faded city building at 0.22
+  // what the interior roof fades TO. the ROOF ONLY — the south-facing wall faces used to fade with
+  // it to 0.20 and no longer do, because a face cannot be judged an occluder by its NORMAL: see the
+  // header of render.facility.FacilityArea.ease
   public static inline var ROOF_FADE = 0.0;
-  public static inline var WALL_FADE = 0.20;
   // how far from a window the player can be and still have it count as looking in, in cells. this is
   // what makes item (a)'s "see into the room" work without a separate action: standing at a pane and
   // having line of sight to it reveals that structure, and the vision mask then governs how much of

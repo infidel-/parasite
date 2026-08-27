@@ -28,6 +28,8 @@ class FacilityArea implements Area3D
   var lampLights:LampLights;                    // the pool exists for program-key parity, with no bulbs yet
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's trees and bushes
+  var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
+  var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
   var lastCol = -1;                             // the cell the targets were last recomputed for
@@ -63,9 +65,11 @@ class FacilityArea implements Area3D
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();
+      built = scene;
       FacilityGround.build(scene, model);
       shells = FacilityGeom.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
+      doors = FacilityDoors.build(scene, model, game.area);
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];
       target = [for (_ in shells) 0.0];
@@ -112,10 +116,31 @@ class FacilityArea implements Area3D
                 reveal: reveal[i],
               });
             }
+          // every opening with its LIVE state beside its geometry: what the model says, where the
+          // eased swing has got to, and the yaw each of its two leaves is actually holding. that
+          // triple is the whole door pass in one row — a screenshot cannot tell a leaf hinged on the
+          // wrong jamb from one swinging the wrong way, and both just look like "the door is inside
+          // the wall". `live` false means the cell found no objects.Door and can never open
+          var leaves = [];
+          for (b in doors)
+            for (c in 0...b.open.length)
+              leaves.push({
+                col: b.cells[c].col,
+                row: b.cells[c].row,
+                look: b.cells[c].look,
+                alongX: b.cells[c].alongX,
+                inDir: b.cells[c].inDir,
+                isOpen: (b.doors[c] != null && b.doors[c].isOpen),
+                live: (b.doors[c] != null),
+                t: b.open[c],
+                yaw0: b.shut[c * 2] + b.swing[c * 2] * b.open[c],
+                yaw1: b.shut[c * 2 + 1] + b.swing[c * 2 + 1] * b.open[c],
+              });
           return {
             structures: structures,
             rooms: model.rooms,
             windows: model.windows,
+            doors: leaves,
             batches: batches,
           };
         };
@@ -128,6 +153,9 @@ class FacilityArea implements Area3D
       // the reveal runs through the outro as well: the camera is still looking at the area during
       // the pull-out, and a roof snapping back on mid-fade is exactly when it would show
       ease(opts.dtMs);
+      // the leaves turn through the outro too, for the reason the reveal does: the camera is still
+      // on the area during the pull-out, and a door snapping shut mid-swing is exactly when it shows
+      FacilityDoors.tick(doors, opts);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);
@@ -184,7 +212,19 @@ class FacilityArea implements Area3D
     }
 
 // ease every structure toward its target and publish the result. FAST (see FacilityStyle.REVEAL_MULT)
-// — this is the view getting out of the player's way, not an atmosphere beat
+// — this is the view getting out of the player's way, not an atmosphere beat.
+//
+// the ROOF and nothing else. the south-facing wall faces used to fade with it to 0.20, on the theory
+// that the camera heading is fixed so a +z normal is the only thing that can stand between it and
+// the player. the normal cannot answer that: a +z INNER face is, by construction, the south face of
+// a wall whose south neighbour is indoor floor — i.e. the NORTH wall of some room — so whenever the
+// player was in that room the fade dissolved the far wall, which occludes nothing, and the room
+// opened onto the void past the area border. it took the window panes with it, and not gently: they
+// carry alphaTest, three tests it against map.a * OPACITY, and at 0.20 every fragment was discarded,
+// so a run snapped out whole the instant the ease crossed t = 0.625. whether a wall occludes is a
+// question about where it is, which a build-time split by normal cannot see. the height it was
+// buying back is paid for instead by FacilityStyle.WALL_T: an occluder's reach drops from 4 + 4.9
+// units of z to 2 + 4.9
   function ease(dtMs:Float):Void
     {
       if (shells == null)
@@ -200,7 +240,6 @@ class FacilityArea implements Area3D
           else continue;
           reveal[i] = t;
           apply(shells[i].roof, 1.0 - t * (1.0 - FacilityStyle.ROOF_FADE));
-          apply(shells[i].wall, 1.0 - t * (1.0 - FacilityStyle.WALL_FADE));
         }
     }
 
@@ -254,9 +293,18 @@ class FacilityArea implements Area3D
       return null;
     }
 
-// no facility object is drawn as a glb prop yet, so nothing placed once at build goes stale when one
-// is added or removed — every object here is still an actor-layer sprite. the door pass changes that
+// the leaves are placed ONCE at build, off the live objects.Door objects, so an object added to or
+// removed from the area leaves them stale. rebuilt whole rather than patched: a facility holds a few
+// dozen doors, the leaf geometry is shared and cached, and this fires on an object edit and not per
+// frame. what does NOT come back is the LINTEL over the opening — that is merged into the static
+// shell, and no facility door is created or destroyed after generation, so rebuilding the whole
+// shell to cover a case that does not arise would be the wrong trade
   public function refreshObjects():Void
     {
+      if (doors == null)
+        return;
+      FacilityDoors.dispose(built, doors);
+      model.doors = FacilityModel.fromArea(game.area).doors;
+      doors = FacilityDoors.build(built, model, game.area);
     }
 }

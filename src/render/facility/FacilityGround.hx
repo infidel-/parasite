@@ -80,26 +80,57 @@ class FacilityGround
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            var b = switch (m.surf[row][col])
-              {
-                case Surf.ROAD: road;
-                case Surf.WALKWAY: walkway;
-                case Surf.LOT: lot;
-                case Surf.GRASS: grass;
-                default: null;
-              };
+            var b = surfBuf(m.surf[row][col], road, walkway, lot, grass);
             if (b == null)
               continue;
             var x0 = col * CELL - half, x1 = x0 + CELL;
             var z0 = row * CELL - half, z1 = z0 + CELL;
-            var t = FacilityStyle.GROUND_TILE;
-            MeshBufTools.quad(b, [x0, 0, z1], [x1, 0, z1], [x1, 0, z0], [x0, 0, z0],
-              [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
+            quad(b, x0, x1, z0, z1);
+          }
+      // a wall is only HALF a cell thick, so the rest of every wall cell is ground — and it is the
+      // ground of whichever neighbour the strip abuts, laid on the same world-aligned grid so it
+      // continues that surface without a seam. render.facility.FacilityGeom emits the indoor half of
+      // the same strips off the same FacilityGeom.strips(); this pass takes the outdoor ones because
+      // this is where the ground buffers are
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (!FacilityModel.isWall(m, col, row))
+              continue;
+            for (sp in FacilityGeom.strips(m, col, row))
+              {
+                var b = surfBuf(m.surf[sp.row][sp.col], road, walkway, lot, grass);
+                if (b == null)
+                  continue;
+                quad(b, sp.x0, sp.x1, sp.z0, sp.z1);
+              }
           }
       add(scene, road, FacilityStyle.GROUND_ROAD);
       add(scene, walkway, FacilityStyle.GROUND_WALKWAY);
       add(scene, lot, FacilityStyle.GROUND_LOT);
       add(scene, grass, FacilityStyle.GROUND_GRASS);
+    }
+
+// the outdoor buffer a surface belongs in, or null if the surface is not outdoors at all
+  static function surfBuf(s:Surf, road:MeshBuf, walkway:MeshBuf, lot:MeshBuf, grass:MeshBuf):MeshBuf
+    {
+      return switch (s)
+        {
+          case Surf.ROAD: road;
+          case Surf.WALKWAY: walkway;
+          case Surf.LOT: lot;
+          case Surf.GRASS: grass;
+          default: null;
+        };
+    }
+
+// one ground quad at y = 0, world-aligned on BOTH axes so abutting cells share one continuous grid
+// and nothing is ever stretched
+  static function quad(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float):Void
+    {
+      var t = FacilityStyle.GROUND_TILE;
+      MeshBufTools.quad(b, [x0, 0, z1], [x1, 0, z1], [x1, 0, z0], [x0, 0, z0],
+        [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
 // the park's trees and bushes, one instanced batch per model. the tiles are already unwalkable, so

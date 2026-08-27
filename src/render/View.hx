@@ -341,6 +341,10 @@ class View {
       var facScene = render.facility.FacilityScene.build(renderer, game.config.vidLampLights).scene;
       render.facility.FacilityGround.build(facScene, facModel);
       render.facility.FacilityGeom.build(facScene, facModel);
+      // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not
+      // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
+      // area behind the demo model, so every leaf here is shut and stays that way
+      render.facility.FacilityDoors.build(facScene, facModel, null);
       var facFx = new Group();
       facScene.add(facFx);
       new render.particles.MuzzleLights(facFx);

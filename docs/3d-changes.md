@@ -1305,3 +1305,142 @@ GPU median **7.06ms** (IQR 6.49-7.98), `submit` **1.39ms**, `idle` **14.30ms**, 
 250,394 tris**. Fill-bound like every other area on this machine — GPU is 5× submit. That lands the
 facility squarely in the wilderness band (plains 73 calls / 6.95ms, forest 62 / 4.92, mountain
 52 / 7.20) and nowhere near the frame budget.
+
+## Every facility doorway was a 4x6 hole in the wall, and the leaves that fill it are not a glb — Phase 1
+
+Item (b), render half only: `objects.Door` already had `isOpen`, `frob()`, the auto-close at two
+turns and the linked halves. What was missing was any geometry — a door cell finalises to plain
+`Const.TILE_FLOOR_LINO`, so Phase 0's wall pass saw corridor floor and emitted nothing. 30 holes.
+
+**Every facility door is ONE cell; the "double" front door is two of them flanking a pier.**
+`generateBuilding` draws `TEMP_BUILDING_FRONT_DOOR` over a 3-cell `drawChunk` then puts the CENTRE
+cell back to wall. Measured live: 30 openings, 6 glass / 23 cabinet / 1 metal, the glass ones really
+arriving as `(2,11)+(2,13)` and `(36,53)+(38,53)`. A cell is 4 units — a 2 m opening, a DOUBLE door
+in any real building — so it gets two 2-unit leaves.
+
+**A leaf is a textured box, not a generated prop.** TRELLIS was the plan and is the wrong tool: a
+flat slab with a rectangular panel is the worst subject for a dual-contour remesher, which rounds the
+edges off and charges $0.03 for an approximation of eight vertices. Authored in
+`FacilityDoors.leafGeom()` (5 quads, 10 tris, no underside); the ART carries all three looks, which
+also killed the planned `texSrc` repaints — painting into a TRELLIS atlas is per-variant manual work.
+
+**ONE square image holds the COMPLETE shut pair and the second leaf comes free.** Left leaf u 0..0.5,
+right 0.5..1; the box's BACK face carries the SAME u, so from behind it delivers the mirror — and the
+mirror of the left leaf IS the right leaf, which is therefore the same geometry at `yaw + PI`. Exact,
+not approximate: the sources measure **1.8-2.0 sRGB mean absolute difference about their own
+midline**, i.e. grain. `DOOR_H` 4.0 of `WALL_H` 6.0 follows from square art over a 4-unit cell.
+
+**The swing is derived, not cased.** `Ry(yaw)` takes local +x to `(cos, 0, -sin)`, so a direction's
+yaw is `atan2(-z, x)`; the leaf's origin IS its hinge, so the matrix is a plain turn with no
+recentring to undo (which `Models.instanced` would have forced, hence the hand-rolled batch). Leaf 0
+turns by `wrap(openYaw - shutYaw)`, leaf 1 by its negative from `shutYaw + PI` — both finish along
+the swing normal from opposite jambs. Verified numerically: shut `0 / 180`, open `90 / 90`. The four
+combinations of run axis and swing side are what a hand-written switch gets wrong once.
+
+**The head needed closing TWICE, and the second only showed with the camera on the floor.** A wall
+cell is a whole cell, so an opening is a 4-unit-deep reveal and the lintel closes BOTH faces; the
+leaves hang on the plane between them, leaving the strip above the head open. Found by putting the
+free cam at y 0.6 and looking up — a black void over every doorway. The game camera pitches DOWN 51
+degrees and never sees it, which is exactly why it would have shipped. Two triangles a door.
+
+**The hangar's roll-up door existed and was invisible** — `TILE_HANGAR_DOOR` is `Wall.SHUTTER` and
+Phase 0 painted it in plain cladding. Own buffer and texture now, world-aligned at `SHUTTER_TILE`
+**7.0**: 24 slats per repeat puts the pitch at 0.29 units and ~20 slats up a 6-unit wall, which is
+what the built frame shows. Tiling, not mapping across the run — slats are uniform.
+
+**Measured in the built frame under debug key `1` (pure albedo), linear:** glass leaf **0.0191** <
+ext wall 0.0323 < kick plate 0.0389 < walkway 0.0545 < jamb reveal 0.0670 < lino 0.0751; shutter
+**0.0274** vs its own cladding 0.0375. Both reproduce their SOURCE values to four decimals, so key
+`1` is a usable albedo probe. Leaf 0.59x its wall, shutter 0.73x its own — a door reads darker than
+the wall it sits in, which was the ask. The kick plate that looked blown out by eye is 1.2x the
+wall; no `lift` anywhere. Boot warm 97 → **98** (the leaves are an INSTANCED mask-patched lambert and
+`USE_INSTANCING` is a program define, so the merged shell's program does not cover them); first entry
+still compiles **4**. Gameplay pose **68 → 70 calls**, 250.4k → 250.7k tris. Timing NOT re-measured:
+the window was not foregrounded (topbar 1 FPS), and +2 calls on a fill-bound frame is under the noise
+an A/B could resolve.
+
+## Half-tile walls, and the fade that dissolved the wrong ones — Facility Phase 1.5
+
+Six defects from walking the Phase 1 build. All render-side; `FacilityModel` re-derives from the
+saved grid every build, so nothing persisted moved.
+
+**A wall face cannot be judged an occluder by its NORMAL, and the whole `*S` split went.** Phase 0
+routed every `+z` face into `wInS`/`wOutS`/`panesS` and faded them to `WALL_FADE` 0.20 while the
+player was inside, on the theory that a fixed camera heading makes `+z` the only direction that can
+occlude. It cannot answer the question: a `+z` INNER face is, by construction, the south face of a
+wall whose south neighbour is indoor floor — i.e. the NORTH wall of some room — so standing in that
+room dissolved the far wall, which occludes nothing, and the room opened onto the void past the area
+border. Measured at 112 px/cell, scan across the north wall: `SKY 680-1015` and `SKY 1128-1464`, both
+**exactly `0x0a0e14` with min == max**, against `geom 1016-1127 (27,33,33)` for the one solid cell
+between the runs. Pure background with zero variance is nothing drawn, not a ghost.
+
+**Riding along: a faded alpha-tested pane does not fade, it SNAPS OUT.** `addPane` carried
+`alphaTest: 0.5`, three tests it against `map.a * OPACITY` (`alphatest_fragment`), and at 0.20 every
+fragment is discarded — so a window run vanished whole the instant the ease crossed `t = 0.625`. Two
+independent bugs presenting as one symptom; the second is invisible to any reasoning about the fade
+that does not know the alpha test multiplies by opacity.
+
+Fix taken: **fade the roof and nothing else.** Four buffers deleted per structure, `WALL_FADE` gone,
+no shader work, and the alphaTest interaction becomes unreachable. The height it was buying back is
+paid for by the thickness change below — an occluder's reach drops from `4 + 4.9` units of z to
+`2 + 4.9`, −22%.
+
+**Walls are HALF a cell and glazing a QUARTER, off one rule with no cases.** Each side of a cell
+reaches the cell boundary if the wall line *carries on* through that neighbour, else insets by
+`(CELL − T) / 2`. `carries` must count a DOOR cell as well as a wall — a doorway is a hole IN the
+line, not the end of it, and reading it as an end pulls both flanking slabs back and opens a 4-unit
+opening out to **6**. Three things fall out for free: straight runs come out 2 thick; corners come
+out a 3×3 pier that is FLUSH outside (both outer faces sit at the run's own inset) and a pilaster
+inside; and a 1-thick glazing slab sits strictly inside its 2-thick neighbour, so **the neighbour's
+own butt cap IS the jamb reveal**. That last one is what closed the holes between glass and wall —
+they were never a texture problem (the cropped alpha bbox measures ≤1 px margin on all four sides,
+content aspect 2.0088 against crop aspect 2.0088), they were a window cell being a wall cell, and a
+wall only emitting faces toward NON-wall neighbours, so the run's ends emitted nothing at all.
+
+Verified over all 572 wall cells: `run 4x2` 197 + `run 2x4` 182 at exactly 2.0, `run 4x1` 74 +
+`run 1x4` 52 at exactly 1.0, `2way 3x3` 22 corners, `3way` 44, `4way` 1, **0 straight-run failures**;
+**0/30 doorways off `CELL` wide**, **0/49 window runs whose cross-section is not contained** by its
+flanking wall. Screen: **277,078 exact-background pixels → 170**, and the survivors are single-digit
+scattered clusters in fully-hidden corners where `mix(fogColor, rgb, ~0)` lands on the fog value
+honestly.
+
+**A butt cap's texture is decided by the DIAGONAL cell, not the neighbour.** The space a cap faces is
+one step along the line into the neighbour, then one step off the line toward the side the excess
+sits on. Reading the neighbour gets a window jamb right and a corner pier wrong: a corner's shoulder
+looks *past* the run it butts against, into the room behind it.
+
+**Glass is half-transparent with a solid frame in ONE draw, and the split is baked in the texture.**
+The source is bimodal in luma — frame 16-127 at 25.9%, glass 144-207 at 73.4%, a **0.7% valley at
+128-143** — so a threshold separates them outright. New `glass_alpha` key in `tools/textures.py` on
+the `lift` pattern, applied to the full-res source before the LANCZOS resize so the alpha edge
+resamples soft; built map is 71,430 px at alpha 128, 23,050 at ≥250, 156,225 at 0. Material takes
+`transparent` (set AFTER `VisionMask.patch`, the usual trap) and `alphaTest: 0.02`, which now only
+kills the 1 px margin. Measured on screen against the map: pane **(126.4, 149.0, 156.8)** vs the
+texture's glass **(147.7, 172.5, 179.4)** = 0.86×, and the arithmetic closes —
+`0.502 × (147.7 + 0.55 × 147.7) + 0.498 × 30.7 = 130`, against 126 after tone mapping.
+
+**`lift` runs BOTH ways, and this is the first entry that needed `g > 1`.** The repainted
+`wall-interior` came back at linear **0.1077**, the brightest texture in the facility set and above
+its own lit glass at 0.0797. `lift 1.22` put it on 0.0672, holding the green version's 0.0689;
+`window-head` took 1.09 from 0.0461 to 0.0352. Built frame reproduces the sources to within 0.5 sRGB
+(before: `(69.7, 80.6, 74.9)`, green-dominant; after: `(68.0, 74.7, 80.6)` against a source of
+`(67.7, 74.2, 80.0)`, cool and neutral).
+
+**The trap that nearly cost a false regression:** the "before" capture read its room floor at
+`(64.7, 70.7, 74.4)` against the source's `(64, 70, 74)` — a four-decimal albedo match, i.e. debug
+key `1` had been left ON by the previous session. The reload cleared it and the next frame came back
+7× darker and blue, which reads exactly like a lighting regression. It is not: `1` is a full-bright
+albedo probe, and the only safe comparison is probe-to-probe. Check the floor against its own source
+before believing any before/after brightness claim on this area.
+
+**Measured, both frames under key `1`:** calls **53 → 43** (four buffers deleted per structure, one
+`window-head` added), tris **3.7k → 5.0k** (~800 per structure of floor strips — a wall no longer
+fills its cell, so the remainder is emitted as the NEIGHBOUR's floor, indoors by `FacilityGeom` and
+outdoors by `FacilityGround`, both off one shared `strips()`). 0 console errors.
+
+**Windows do not bloom, and did not before either — do not chase it.** `WINDOW_EMISSIVE` 0.55 over an
+emissiveMap whose glass is sRGB 147.7 (linear 0.295) gives 0.162 of emissive radiance against
+`BLOOM_THRESHOLD` **0.9**; at alpha 1.0 it was still ~0.32. Confirmed in the built frame: the wall
+beside a pane sits flat at `(7,16,32)` with no elevation past the geometric edge. Halving the glass
+did not cost a glow that existed. Interior brightness is Phase 3's job (ceiling lights), not the
+pane's.
