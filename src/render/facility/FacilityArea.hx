@@ -30,6 +30,7 @@ class FacilityArea implements Area3D
   var lampLights:LampLights;                    // the shared live spotlight pool, ticked each frame
   var lamps:FacilityLamps.LampSet;              // the outdoor masts and the ceiling fixtures
   var lampPosts:Array<LampPost>;                // both families as one candidate list for the pool
+  var spillPosts:Array<LampPost> = [];          // the openings, as fake-shadow sources only (no pool slot)
   var coneGroup:Object3D;                       // the scene rig's cone parent, held for the mast shafts
   var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
@@ -105,7 +106,7 @@ class FacilityArea implements Area3D
       // same treatment the city's own lamp batch gets
       lamps = FacilityLamps.build(scene, coneGroup, model, game.area, lampCorners);
       lampPosts = lamps.masts.concat(lamps.ceilings);
-      FacilityGlow.build(scene, model);
+      spillPosts = FacilityGlow.build(scene, model);
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];
       target = [for (_ in shells) 0.0];
@@ -363,4 +364,10 @@ class FacilityArea implements Area3D
       model.doors = FacilityModel.fromArea(game.area).doors;
       doors = FacilityDoors.build(built, model, game.area);
     }
+
+// the lit windows and glazed doors, as fake actor-shadow casters. they own no spotlight slot — what
+// they put on the ground is a static quad in render.facility.FacilityGlow, not a light — so this is
+// the only way they reach render.actors.LampShadows. built once, never repacked
+  public function shadowLamps():Array<LampPost>
+    return spillPosts;
 }

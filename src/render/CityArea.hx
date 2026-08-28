@@ -138,6 +138,10 @@ class CityArea implements Area3D
     {
     }
 
+// every light on the street owns a pool slot, so the fake shadows come from LampLights.active()
+  public function shadowLamps():Array<render.particles.LampPost>
+    return [];
+
 // the city this area was built from (the debug tools report against it)
   public function city():City
     {

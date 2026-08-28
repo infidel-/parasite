@@ -181,9 +181,15 @@ class Textures {
   //
   // written per-texel from a rounded-box distance field rather than drawn with a canvas blur: the
   // corner radius and the edge softness are then exact numbers instead of a filter's guess
-  public static function makeRectGlowGradient():Texture {
+  //
+  // `radFrac` is the corner radius as a fraction of the canvas. the default 0.16 against a half-extent
+  // of 0.30 leaves only 0.14 of straight run, which is a squircle and reads as a blob — right for a
+  // wall fixture's diffuser, wrong for the patch of ground outside a window, which has the straight
+  // edges of the opening that cut it. pass 0 for a box with square corners; the falloff still curves
+  // round them, which is what a soft edge does
+  public static function makeRectGlowGradient(radFrac:Float = 0.16):Texture {
     var N = 64;
-    var rad = N * 0.16;   // corner radius, canvas px
+    var rad = N * radFrac; // corner radius, canvas px
     var half = N * 0.30;  // half-extent of the box's straight section from the centre
     var soft = N * 0.16;  // how far the edge fades out past the box
     var cv = Browser.document.createCanvasElement();

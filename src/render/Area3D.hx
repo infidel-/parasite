@@ -28,6 +28,11 @@ interface Area3D
   function city():citygen.CityModel.City;
   // the live lamp pool was rebuilt by a settings change (View.setLampLights) — re-bind to it
   function setLampLights(l:LampLights):Void;
+  // light sources that cast fake actor shadows (render.actors.LampShadows) WITHOUT owning a slot in
+  // the spotlight pool — so they never show up in LampLights.active(), which is where every other
+  // caster comes from. static: read once per frame, never rebuilt. empty for every kind but the
+  // facility, whose lit windows and glazed doors throw light on the pavement no bulb is behind
+  function shadowLamps():Array<render.particles.LampPost>;
   // an area object was added or removed while this area is the one on screen. only matters to a kind
   // that draws objects as glb props, since those are placed once at build() and would otherwise not
   // appear until the area was re-entered

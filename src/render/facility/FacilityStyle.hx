@@ -317,6 +317,18 @@ class FacilityStyle
   // CELL CENTRE rather than at the outer face, so its own near fade is buried inside the masonry and
   // only the bright middle and the outward falloff are ever visible
   public static inline var SPILL_DEPTH = 8.0;
+  // and how much WIDER the far edge is than the opening, per side. a rectangle reads as a projected
+  // slide, not as light: what falls out of a hole in a wall fans, because the opening is a finite
+  // aperture and every point of it lights every point of the ground. one cell per side over two cells
+  // of depth is a ~27 degree fan, which is enough to be read as a fan and not so much that two
+  // neighbouring runs merge into one lit band
+  public static inline var SPILL_SPREAD = 4.0;
+  // the height the spill is treated as coming FROM, for the fake actor shadows only (nothing is drawn
+  // at it). a run's glazing is vertically centred in the wall whatever its length — the pane is sized
+  // off WINDOW_ASPECT and the sill takes up the slack — so this is that centre, and it is what makes
+  // render.actors.LampShadows scale the shadow: at half the reference bulb's height a window rakes
+  // light sideways and throws LONG shadows over a tight pool, which is exactly what a window does
+  public static inline var SPILL_Y = WALL_H / 2;
 
   // ---- the scene -------------------------------------------------------------------------------
 

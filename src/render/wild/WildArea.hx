@@ -199,4 +199,8 @@ class WildArea implements Area3D
   public function refreshObjects():Void
     {
     }
+
+// the wilderness has no light but the moon, and the moon is not a fake-shadow caster
+  public function shadowLamps():Array<render.particles.LampPost>
+    return [];
 }

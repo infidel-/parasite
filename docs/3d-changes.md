@@ -2164,3 +2164,50 @@ fixtures still exist and still claim spotlight slots — only the two drawn quad
 Verified live at 60 FPS: 30 masts, 17 fixtures, 44 window runs, **108 programs, unchanged** (the
 emissive map rides the material the warm scene already compiles). Draw calls unchanged — the glow
 mesh survives on window/door spill alone.
+
+## The window spill fans, and it casts actor shadows — Facility Phase 3b follow-up
+
+Two art notes on the spill quads: the patch outside an opening was a rectangle, and nothing standing
+in it threw a shadow.
+
+**The fan.** A rectangle reads as a projected slide, not as light. An opening is a finite aperture and
+every point of it lights every point of the ground, so what falls out of it widens. `FacilityGlow
+.spill` now emits a trapezoid: the far edge is `FacilityStyle.SPILL_SPREAD` **4.0** wider per side
+over a `SPILL_DEPTH` of **8.0** — one cell per side over two cells of depth, a ~27 degree fan. Wide
+enough to read as a fan, narrow enough that two neighbouring runs do not merge into one lit band. The
+uv stays 0..1 across the quad so the shared rounded-box gradient still fits it: the fan is two numbers
+and no extra geometry, no extra draw.
+
+**The shadows, and the plumbing they needed.** Every fake actor shadow in the game comes from
+`LampLights.active()` — `View` hands that one array to `Actors.setLamps` each frame. A window is a
+light with **no pool slot**: what it puts on the ground is a static quad, and giving it a real
+spotlight would starve the 12 slots the masts and ceiling fixtures already compete for. So it could
+never appear in `active()` and never cast. New `Area3D.shadowLamps()` — a static, built-once list of
+`LampPost`s that reach `LampShadows` and nothing else; `[]` in the city, the tunnels and the
+wilderness, where every light does own a slot. `View` concats only when it is non-empty.
+
+**The height is what makes it look like a window, and it is free.** `CastShadows` has no notion of
+light height; `LampShadows` compensates by scaling both the length and the reach by `refY / post.y`.
+A run's glazing is vertically centred in the wall whatever its length (the pane is sized off
+`WINDOW_ASPECT` and the sill takes up the slack), so `SPILL_Y` is `WALL_H / 2` = **3.0** against a
+reference bulb at `CELL * yMul` = **5.6**: `low` **1.87**, reach `min(2 * 4 * 1.87, 3 * 4)` = **12**
+units = 3 cells, `lenMul` `0.6 * 1.87` = **1.12**. Long shadows over a tight pool — which is what
+light out of a window at chest height does.
+
+**One source per CELL of a run, not one per run.** The reach is 3 cells and a 3-cell run is 3 cells
+long, so an actor standing off one end of a centred source would be shadowed *along* the wall instead
+of away from it. ~120 sources in a generated facility; `CastShadows` sorts and keeps the nearest
+`LAMP_SHADOW.max` 2 per actor, so the cost is one distance test each.
+
+Verified live at 60 FPS: 44 window runs and 23 doors on the built area, **108 programs, unchanged** —
+nothing here touches a material.
+
+**And the trapezoid still read round.** The fan alone did not fix it: the alpha map is
+`Textures.makeRectGlowGradient`, whose corner radius is 0.16 of the canvas against a half-extent of
+0.30 — **0.14 of straight run**, which is a squircle, not a box. That is right for the sewer wall
+fixture's diffuser it was written for and wrong for ground cut by the straight jambs of an opening,
+and worst on a DOOR, whose patch is one cell wide and so read as a plain blob. New optional
+`radFrac`, default 0.16 so the sewer is unchanged byte for byte, `0.0` from `FacilityGlow`. Measured
+on the two generated canvases: corner texel (14,14) **233 → 255**, diagonal (8,8) **0 → 92**, the
+straight edges and the mid-row profile identical. The falloff still curves round the corner, which is
+what a soft edge does.

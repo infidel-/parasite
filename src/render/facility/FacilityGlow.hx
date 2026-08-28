@@ -3,6 +3,7 @@ package render.facility;
 import three.Three;
 import citygen.CityConfig;
 import render.Textures;
+import render.particles.LampPost;
 import render.particles.Sprites;
 import render.facility.FacilityModel.Facility;
 import render.world.MeshBuf.MeshBuf;
@@ -28,11 +29,13 @@ class FacilityGlow
 {
   static inline var CELL = CityConfig.CELL;
 
-// build the whole glow layer. the room pair asks render.facility.FacilityLamps the same `lit`
-// question the fixtures were placed off, so a panel and its bulb cannot drift apart
-  public static function build(scene:Scene, m:Facility):Void
+// build the whole glow layer, and return the openings as fake-shadow sources — see `opening`. the
+// room pair asks render.facility.FacilityLamps the same `lit` question the fixtures were placed off,
+// so a panel and its bulb cannot drift apart
+  public static function build(scene:Scene, m:Facility):Array<LampPost>
     {
       var b = MeshBufTools.make();
+      var lamps = [];
       for (r in m.rooms)
         {
           if (!FacilityStyle.CEIL_GLOW ||
@@ -60,6 +63,11 @@ class FacilityGlow
           var hi = CityConfig.cellToWorld(w.col + (w.alongX ? w.len - 1 : 0),
             w.row + (w.alongX ? 0 : w.len - 1));
           spill(b, lo, hi, w.alongX, w.inDir);
+          // one shadow source per CELL of the run rather than one at its centre. it matters: the
+          // reach is 3 cells and a 3-cell run is 3 cells LONG, so an actor standing off one end of a
+          // centred source would be shadowed along the wall instead of away from it
+          for (i in 0...w.len)
+            lamps.push(opening(w.col + (w.alongX ? i : 0), w.row + (w.alongX ? 0 : i)));
         }
       // and out of a door, which needs no open/shut state at all: a facility door is glazed and
       // objects.Door.canSeeThrough is true for it, so the light crosses a shut leaf as readily as an
@@ -72,8 +80,35 @@ class FacilityGlow
           var c = CityConfig.cellToWorld(d.col, d.row);
           // `spill` speaks the window convention, where the sign points at the INTERIOR
           spill(b, c, c, d.alongX, -out);
+          lamps.push(opening(d.col, d.row));
         }
       add(scene, b);
+      return lamps;
+    }
+
+// one opening as a fake actor-shadow source: a LampPost that never goes near the spotlight pool and
+// so never claims one of its 12 slots, handed straight to render.actors.LampShadows through
+// render.Area3D.shadowLamps.
+//
+// it sits at the wall CELL CENTRE, which is what makes the shadow point out of the building: the
+// projector's only input is the direction away from the light. steady (phase/flick are the STEADY
+// markers), because a window does not sputter, and `mul` is meaningless here — nothing ever reads it
+  static function opening(col:Int, row:Int):LampPost
+    {
+      var c = CityConfig.cellToWorld(col, row);
+      return {
+        x: c.x,
+        z: c.z,
+        y: FacilityStyle.SPILL_Y,
+        tx: c.x,
+        tz: c.z,
+        color: FacilityStyle.LAMP_COLOR,
+        col: col,
+        row: row,
+        phase: 0.0,
+        flick: 1.0,
+        mul: 1.0,
+      };
     }
 
 // one horizontal quad at height y — a ceiling panel seen from above through the faded roof, or a
@@ -93,22 +128,27 @@ class FacilityGlow
 // the patch starts at the wall CELL CENTRE rather than at the outer face of the masonry. that is
 // deliberate and free: the rounded-box gradient this mesh uses as its alpha map fades all four
 // edges, so a patch that began at the face would go dark exactly where it should be brightest —
-// starting a cell-half further in buries that near fade inside the wall, which draws over it
+// starting a cell-half further in buries that near fade inside the wall, which draws over it.
+//
+// it is a TRAPEZOID, not a rectangle: the far edge is FacilityStyle.SPILL_SPREAD wider per side, so
+// the patch fans the way light out of an aperture actually does. the uv stays 0..1 across the quad,
+// so the shared gradient still fits it — the fan costs two numbers and no extra geometry
   static function spill(b:MeshBuf, lo:{ x:Float, z:Float }, hi:{ x:Float, z:Float },
       alongX:Bool, inDir:Int):Void
     {
       var d = -inDir * FacilityStyle.SPILL_DEPTH;
+      var e = FacilityStyle.SPILL_SPREAD;
       if (alongX)
         {
           var z = lo.z + d;
           quad(b, [lo.x - CELL / 2, FacilityStyle.GLOW_Y, lo.z], [hi.x + CELL / 2, FacilityStyle.GLOW_Y, lo.z],
-            [hi.x + CELL / 2, FacilityStyle.GLOW_Y, z], [lo.x - CELL / 2, FacilityStyle.GLOW_Y, z],
+            [hi.x + CELL / 2 + e, FacilityStyle.GLOW_Y, z], [lo.x - CELL / 2 - e, FacilityStyle.GLOW_Y, z],
             FacilityStyle.C_SPILL);
           return;
         }
       var x = lo.x + d;
       quad(b, [lo.x, FacilityStyle.GLOW_Y, lo.z - CELL / 2], [lo.x, FacilityStyle.GLOW_Y, hi.z + CELL / 2],
-        [x, FacilityStyle.GLOW_Y, hi.z + CELL / 2], [x, FacilityStyle.GLOW_Y, lo.z - CELL / 2],
+        [x, FacilityStyle.GLOW_Y, hi.z + CELL / 2 + e], [x, FacilityStyle.GLOW_Y, lo.z - CELL / 2 - e],
         FacilityStyle.C_SPILL);
     }
 
@@ -156,7 +196,9 @@ class FacilityGlow
       var mesh = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
         color: new Color(FacilityStyle.LAMP_COLOR).multiplyScalar(FacilityStyle.GLOW),
         transparent: true,
-        alphaMap: Textures.makeRectGlowGradient(),
+        // square corners: a spill patch is cut by the straight jambs of the opening it falls out of,
+        // and the default rounded box left it reading as a blob
+        alphaMap: Textures.makeRectGlowGradient(0.0),
         vertexColors: true,
         depthWrite: false,
         side: THREE.DoubleSide,

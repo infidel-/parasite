@@ -1341,8 +1341,11 @@ class View {
       camera: camera,
       ui: uiOn,
     });
-    // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame
-    actors.setLamps(lampLights.active());
+    // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame,
+    // plus whatever the area lights with no pool slot behind it (a facility's windows) — empty
+    // everywhere else, so the concat only ever costs the one kind that has any
+    var extra = area3d.shadowLamps();
+    actors.setLamps(extra.length == 0 ? lampLights.active() : lampLights.active().concat(extra));
     actors.update(dtMs);
     // the batched ground decals — street debris and plain blood — belong to the ACTOR layer, not to
     // the area, and their instanced groups are built lazily by the paint pass just above, so there is

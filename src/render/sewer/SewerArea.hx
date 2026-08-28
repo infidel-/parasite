@@ -124,6 +124,11 @@ class SewerArea implements Area3D
       props = render.world.ObjModels.build(sceneRef, game, objYaw);
     }
 
+// every light down here is a pooled fixture — a manhole shaft or a wall bracket — so the fake
+// shadows come from LampLights.active()
+  public function shadowLamps():Array<render.particles.LampPost>
+    return [];
+
 // per-frame world tick — down here that is only the live lamp pool: nothing fades, no windows
 // switch, and there are no chunks to cull (the whole level is a handful of merged meshes)
   public function tick(opts:Area3DTickOpts):Void
