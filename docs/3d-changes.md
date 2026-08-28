@@ -1970,3 +1970,197 @@ Verified live: the grille stands in the wall plane at the reported cell; the roo
 time and `View` skips a rebuild** — reading `WorldCtx` in the same tick as a `teleport` shows the
 PREVIOUS area's hooks, because `GameScene.draw3D` rebuilds on the next frame. That cost a false
 positive here.
+
+## `worldToCell` ROUNDS, so a hatch stripe ending on a cell edge sampled the wrong cell's floor
+
+Reported as the impassable hatch over a laboratory bench being "only half-painted".
+
+`TacticalGrid.blocked` samples the diagonal hatch's height **per endpoint**, `WorldCtx.floorYAt(xa, s
+- xa)`, so a stripe out in the wilderness follows the slope between its two ends. Every one of those
+endpoints lies **exactly on a cell boundary** — the family `x + z = k * HATCH` is clipped to the
+cell, so an end sits on `x0`, `x1`, `z0` or `z1`. And `CityConfig.worldToCell` is `Math.round`, not
+a floor: `x0`/`z0` round back into this cell, `x1`/`z1` round into the NEXT one.
+
+Invisible everywhere it had been used. A city floor steps only at a curb and `floorYAt` routes
+through the tile grid there anyway; the wilderness relief is continuous, so a hair either side of a
+boundary answers the same. A facility bench is the first surface where two edge-sharing cells stand
+**2.0 units** apart — `FacilityTables.groundY` returns `BENCH_H` over a table cell and 0 beside it —
+and a stripe that read the neighbour was drawn at `y = 0.06`, a metre down inside the casework.
+
+Measured on one 3x2 island bench at (5,5)-(7,6), hatch endpoints landing on the worktop:
+
+| cell | before | after |
+|---|---|---|
+| (5,5), (6,5) — far neighbours are bench | 14/14 | 14/14 |
+| (7,5), (5,6), (6,6) — one outer side | 10/14 | 14/14 |
+| (7,6) — far corner, two outer sides | **6/14** | 14/14 |
+
+So it is not a triangle of each cell, it is the block's **+x/+z rim** — which over a whole run reads
+as a table hatched on one half. Inside a run the far neighbour is another bench and the wrong lookup
+happened to give the right answer.
+
+Fix: `hatchY`, which nudges the sample `EPS = 0.01` toward the cell CENTRE before calling `floorYAt`.
+The vertex still lands on the true endpoint, so the stripe geometry is unchanged; only the height
+lookup moves, by far less than any relief the wilderness carries. Verified in the built frame: the
+island and the casework runs hatch edge to edge, and geometry readback over the bench footprint gives
+92 verts at `BENCH_H + Y` and 12 at floor — those 12 are the arms of the neighbouring walkable cells'
+corner crosses, which belong to those cells and are correct.
+
+## The facility gets light SOURCES — masts, ceiling fixtures and window spill — Facility Phase 3b
+
+Phase 3a made a facility interior its own lighting ENVIRONMENT and gave it no light SOURCES. Every
+room was lifted uniformly, which says the lights are on but never says where they are; the compound
+outside had nothing but the moon; and a lit building gave away nothing from across the lot.
+
+**The pool was already paid for.** `FacilityScene` has built the full 12-slot `LampLights` pool since
+phase 0 and handed it no bulbs, purely so `NUM_SPOT_LIGHTS` matches every other area kind. Those
+lights were already in every lit material's program key and already running their per-fragment loop.
+Claiming them costs **zero** new programs — A/B'd, see below — and two features arrive free with
+them, both keyed off `lampLights.active()`: the fake actor ground shadows (`LampShadows`) and the
+real 512² shadow maps on the low 8 slots.
+
+Three pieces, two files.
+
+**`FacilityLamps`** places both bulb families off the tile grid, deterministically, no rng. Outdoor
+masts follow a three-row table of (surface stood on, surface bordered) — walkway/road, lot/walkway,
+grass/walkway — which is the kerb along the main road, the lot's edge against the sidewalk and the
+park path, gated on `(col + row) % 6`. A mast stands on the grid VERTEX and registers in
+`lampCorners`, so `ActorAnim.cornerBend` routes a diagonal slide around it exactly as in a city.
+Ceiling fixtures are one per `m.rooms` entry at `ROOF_Y - 0.2`, aiming straight down. Nothing
+flickers (a powered compound), so `phase` is 0 everywhere, `LightCone.pulse` is never called, and the
+per-frame cost of the whole feature is one `lampLights.update`.
+
+**`FacilityGlow`** is every additive quad in ONE draw call — lamp heads, ceiling panels, room floor
+pools, window/door ground spill. They differ only in brightness, which rides `MeshBufTools.quadC`'s
+per-vertex grey, so the material carries hue and HDR multiplier once. The ceiling panel is its own
+mesh and NOT in `Shell.roof`, so it survives the roof fade and is what the player sees inside; from
+outside the opaque roof depth-rejects it (additive with `depthWrite` off still depth-TESTS). Spill is
+static because a facility door is glazed and `canSeeThrough`, so light crosses a shut leaf.
+
+### The trap: additive quads authored against a 0..1 intuition annihilate this art
+
+`C_POOL` was derived from `LAMP_COLOR`'s own `Y_linear` 0.435 and came out **0.25**. Measured in the
+built frame: **Y 0.530 against a lit lab floor's 0.0168 — 31x the surface it was supposed to be lying
+on**, a white blob with no shape left in it. The error is not in the blend, it is in the SURFACES:
+this game's art is painted very dark (lab floor albedo 0.0607 linear) and its interiors render around
+Y 0.017, so nothing can be predicted from the additive colour alone. Fitted off the frame instead —
+rendered luminance came out **~1.3 per unit C** in this range, not the 2.05 a single blown-out sample
+suggested, so the first correction (0.006, 1.47x) undershot as badly as 0.25 overshot.
+
+| | value | measured |
+|---|---|---|
+| floor pool | `C_POOL` 0.25 -> 0.006 -> **0.012** | 31x -> 1.47x -> **1.93x** the same room's plain floor |
+| ceiling panel | `C_PANEL` 1.0 | Y 0.900, reads as a fitting, blooms |
+| window spill | `C_SPILL` 0.02 | pavement under the openings **0.020-0.038**, the gaps between them **0.006-0.009** |
+
+The spill scan is the one that proves the geometry: 18 samples across the pavement south of a wall,
+lifted 3-5x exactly under each window run and flat everywhere else.
+
+### Zero new programs, and a pre-existing gap found while proving it
+
+A facility entry adds **5 programs, all `depth`** — and it adds the SAME 5 with the whole lighting
+pass switched off behind a temporary `__nolamps` flag (masts 0, ceilings 0). So this change costs
+nothing, and the 5 are a standing gap: `compileAsync` does not compile shadow-map depth programs, and
+the facility warm scene is compiled but never RENDERED, where the city's is (`comp.render()` at the
+end of warmup). A city entry shows the same shape at 12 (5 depth + 5 lambert + 2 physical).
+
+### Things that were nearly wrong
+
+- **The prop's head is not at its centre.** `Models.normalize` centres the bbox in X/Z, and this glb's
+  mast sits at local z -0.062 with the housing hanging off toward +z — so a bulb placed at the
+  placement point would hang in mid air beside the fixture. `LAMP_HEAD_Y/Z` are measured off the built
+  glb, and `LAMP_H` 5.9 is chosen so `LAMP_H * LAMP_HEAD_Y` = 5.60 = the city street bulb's own
+  height, which lands `LampShadows`' `refY / post.y` on exactly 1.0 and needs no tuning.
+- **`DoorCell.inDir` is the side the LEAVES SWING into**, not the side the lot is on. The door spill
+  has to find the outdoor side itself, and only on the PERPENDICULAR axis picked off the same
+  `alongX` the quad is built on — reading a neighbour along the wall line answers about the wrong
+  axis and can spill a doorway's light through the masonry beside it.
+- **`CEIL_MUL` is 3.3 and that is not a taste knob.** `INDOOR.direct` scales every direct light
+  indoors, so a fixture at `mul` 1.0 arrives at 0.3 of a street lamp. `1 / INDOOR.direct` is the
+  compensation; reaching for `LAMP_LIGHT.intensity` instead would move the city and the tunnels.
+- **`VisionMask.patch` is NOT gated on attachment**, so the glow material warms the same program the
+  real build renders. Checked rather than assumed — the indoor mask's `patch` IS gated, which is why
+  `View.hx`'s warm block brackets the facility block with attach/detach.
+
+**Verdict: shipped.** 35 masts, 25 fixtures over 25 rooms, 12 slots claimed. +3 draw calls (mast
+batch, cone batch, glow mesh), 0 new programs, no per-frame work beyond the pool update. Perf in ms
+still unmeasured — the window has never been OS-foregrounded (topbar reads 1 FPS).
+
+## The lamp head glows off the glb, not off a card — and the panes bloom — Facility Phase 3b fixes
+
+Four reports on 3b, all art: the cones started above the lamp, the head glow read as a sticker, the
+ceiling pair was not wanted yet, and the windows did not glow from outside.
+
+**Cones.** `RenderConfig.LAMP_CONE.startFrac` is **−0.1** — negative, which lifts the shaft a tenth
+of the bulb height ABOVE the bulb so it reaches up into a street lamp whose glowing hood sits over
+its light position. A facility mast's `bulbY` (`LAMP_H * LAMP_HEAD_Y` = 5.605) already IS the lens
+plane, so the shaft started at **6.17**, a third of a unit clear of the top of the whole 5.9 post.
+`LightConeOpts` gained an optional `startFrac`; the facility passes 0.
+
+**The head.** It was an additive quad in `FacilityGlow`, posed FRONTAL (fixed yaw, `Sprites.TILT`) —
+the right rule for an effect anchored to a world object, and the wrong tool for one anchored to a
+mast that *yaws to face the surface it lights*. Fixed yaw against arbitrary yaw put the card across
+the housing at whatever angle the placement happened to give it.
+
+It glows off an **emissive map on the glb** now, the way a street lamp's lens does. AGENTS.md said
+hand-painting one into an unknown TRELLIS atlas was not worth it; that is true and it does not have
+to be hand-painted. The mask is **generated** — [`tools/emissive.py`](../tools/emissive.py), which
+took three passes to get right and each failure is the interesting part.
+
+**Pass 1, the whole head box** (centroid y > 0.44, z > 0.035; 220 tris, 7.25% of the atlas). The head
+is a flat SLAB, so its biggest face is the top — pointing straight at a camera that looks down. It
+read as a glowing white card lying on the mast.
+
+**Pass 2, downward-facing triangles** (averaged `NORMAL`, `ny < -0.5`; 160 tris). Reported as *still*
+wrong, with white polys on the pole, blamed on a generated mesh's normals. The normals were fine and
+the diagnosis was wrong, which is why it got measured: rasterize the mask, then test every UNSELECTED
+triangle's UV centroid against it. **22 of them sampled a lit texel, spread from y −0.498 to +0.484
+and z −0.057** — the mast, down to the base plate. It was never the selection. It was the **2px
+dilation**, the one that pushes the mask into the chart gutter so a resize and bilinear sampling do
+not read black at a chart edge: on a mosaic atlas the next chart along is an unrelated part of the
+surface, and 2px is enough to reach it.
+
+**Pass 3, a box and a bleed mask.** Selection is a bounding box on the triangle centroid and nothing
+else — no normals, stated in the coordinates the tool prints, verifiable by eye. The dilation is
+masked against the rasterized coverage of every unselected triangle, and the tool reports how many
+unselected triangles still sample a lit texel. It reported 22 → 0. **It was still wrong**, and the
+specks were still there.
+
+**Pass 4, and the one that actually holds: rasterize CONSERVATIVELY, and check per TRIANGLE.** Both
+halves of pass 3 were too weak in the same way.
+
+- `PIL.ImageDraw.polygon` fills by pixel CENTRE, so **a chart thinner than a texel covers nothing at
+  all** — and a TRELLIS atlas is full of those. A chart that rasterizes to nothing is invisible to
+  the bleed mask while the GPU still samples the texel under it. Fix: rasterize at 4x and max-pool
+  down, so a texel counts as covered if ANY part of a triangle falls in it, plus `outline=255` for a
+  triangle so thin even that misses. And grow the unselected coverage by one texel before
+  subtracting, because a fragment does not sample one texel — bilinear reads a 2x2 neighbourhood.
+- The bleed CHECK sampled each unselected triangle's UV **centroid**. A triangle with one lit corner
+  still draws a speck. Fix: test the triangle's whole conservative footprint, bbox-rejected first so
+  the loop stays cheap.
+
+Re-audited under the strong test, the mask pass 3 called clean bleeds onto **9 triangles, y −0.476
+to +0.463, z −0.074** — the pole, down toward the base plate. Exactly the reported specks. Under the
+new pipeline, 0.
+
+Two more things the passes settled. Author the mask at the entry's own `tex` (320 here), not at 512 —
+`models.mjs` resizes it, and the resize re-introduces the ramp the bleed mask just removed. And
+**where the glow goes is an art call the camera makes, not a physics one**: the head is 0.35 x 0.20 x
+0.43 world units, so its lens faces away from an overhead camera and a physically-correct lens-only
+map is invisible in game. The shipped box is `y ≤ 0.4845` — lens plus the sides, **top excluded**:
+194 tris, 7.0% of the surface, which reads as a bright edge on a dark housing from the game camera
+and as a glowing head from anywhere lower. The top face is what made pass 1 a white card.
+
+**Windows.** `WINDOW_EMISSIVE` 0.55 → **2.2**, and the number is arithmetic. Bloom runs on the
+composer's LINEAR target, before `OutputPass` tone-maps, so a pane blooms when `texel_linear *
+intensity` clears `BLOOM_THRESHOLD` 0.9. The art's glass band is sRGB 144-207 = linear **0.26-0.62**
+(the same histogram `addPane` splits its alpha on), so 0.55 put the brightest glass texel at 0.34 and
+nothing crossed — the panes were bright, never glowing. 2.2 lands the band at 0.57-1.36: the bright
+half of every pane blooms onto the facade around it, the dark frame (16-127) never does.
+
+**Ceiling pair off.** `FacilityStyle.CEIL_GLOW = false` gates the panel and the floor pool. The
+fixtures still exist and still claim spotlight slots — only the two drawn quads are gone.
+
+Verified live at 60 FPS: 30 masts, 17 fixtures, 44 window runs, **108 programs, unchanged** (the
+emissive map rides the material the warm scene already compiles). Draw calls unchanged — the glow
+mesh survives on window/door spill alone.

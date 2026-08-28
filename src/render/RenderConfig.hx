@@ -678,6 +678,10 @@ class RenderConfig {
     // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
     // rect it is placed on (render.wild.WildProps.bigRocks)
     wildRockLarge: 'models/wild/rock-large.glb',                  // 2x2 boulder, one solid domed mass
+    // the facility compound's own lamp, instanced along the walkway kerb, the lot edge and the park
+    // path (render.facility.FacilityLamps). it carries NO emissive map where the two street lamps
+    // above both do — the glowing head is an additive quad in the area's merged glow mesh instead
+    facilityLamp: 'models/facility/lamp-post.glb',        // modern slim mast, shrouded downlight head
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
     wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long

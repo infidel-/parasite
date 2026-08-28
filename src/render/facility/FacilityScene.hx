@@ -10,11 +10,12 @@ import render.particles.LampLights;
 // it, not an enclosed level.
 //
 // CRITICAL, and the same note render.wild.WildScene carries: the live spotlight pool is built at the
-// SAME size every other kind uses even though nothing claims a bulb yet. NUM_SPOT_LIGHTS is baked
-// into every lit material's program key, and the actor billboards, particles and ground decals are
-// shared across every area kind, so a facility that skipped the pool would recompile all of them on
-// entry and again on the way out. the ceiling fixtures that will claim those slots arrive with the
-// lighting pass; the pool has to exist before them or that pass changes the key
+// SAME size every other kind uses. NUM_SPOT_LIGHTS is baked into every lit material's program key,
+// and the actor billboards, particles and ground decals are shared across every area kind, so a
+// facility that sized its pool to its own needs would recompile all of them on entry and again on
+// the way out. it was built here and left EMPTY for three phases for exactly that reason, which is
+// why render.facility.FacilityLamps now costs nothing to add: the 12 spotlights were already in
+// every program key and already running their per-fragment loop with no bulbs to show for it
 class FacilityScene
 {
 // build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city)
@@ -84,8 +85,14 @@ class FacilityScene
         pointLights: pts,
         coneGroup: coneGroup,
         lampLights: lampLights,
-        lampPosts: [],           // no lamps yet, so the pool never claims a bulb
-        lampCorners: new Map(),  // and no posts for the actor/camera slide to bend around
+        // the bulbs are NOT placed here. every other kind's scene() knows its own lamps, but a
+        // facility's come off the tile grid and out of the room list, which is the model the
+        // BUILDERS hold — so render.facility.FacilityArea keeps its own post list and hands it to
+        // the pool per frame, and this map is filled by render.facility.FacilityLamps during
+        // build(). handing it over empty is safe: render.View passes the reference to the camera rig
+        // and the actor layer, and both re-query it every frame
+        lampPosts: [],
+        lampCorners: new Map(),
         lampProp: null,
         lampPropDead: null,
         coneFlick: null,         // nothing flickers: render.LightCone.pulse is never called

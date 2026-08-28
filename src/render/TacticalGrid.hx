@@ -29,6 +29,7 @@ class TacticalGrid
   // the fill reads as fill and not as a second lattice on top of the corner marks
   static inline var HATCH = 1.0;    // world units between diagonal stripes (CELL / 4 = 7 per cell)
   static inline var HATCH_W = 0.010; // hatch line half-width (cells)
+  static inline var EPS = 0.01;      // hatch height sample nudge off a cell boundary (world units)
   // HDR color multiplier: must clear BLOOM_THRESHOLD (0.9) in bloom's luminance metric (blue
   // weighs only 0.11) after the alpha mix, with headroom — subpixel segments get diluted by
   // the AA/downsample average and cut out of the glow otherwise
@@ -198,12 +199,25 @@ class TacticalGrid
           // slope between them. in the city floorYAt routes back to this cell's own step
           if (xb - xa >= 0.001)
             addSeg(pos, idx,
-              xa, s - xa, WorldCtx.floorYAt(xa, s - xa) + Y,
-              xb, s - xb, WorldCtx.floorYAt(xb, s - xb) + Y,
+              xa, s - xa, hatchY(xa, s - xa, c) + Y,
+              xb, s - xb, hatchY(xb, s - xb, c) + Y,
               HATCH_W);
           s += HATCH;
         }
     }
+
+// ground height under one hatch endpoint, sampled a hair INSIDE the cell the stripe belongs to.
+//
+// an endpoint of a clipped stripe lies exactly ON a cell boundary, and citygen.CityConfig.worldToCell
+// ROUNDS, so a boundary coordinate lands in the NEXT cell — x0/z0 round back into this cell, x1/z1
+// into the neighbour. that only shows where the two cells stand at different heights, which in a
+// facility is every edge of a laboratory bench: a stripe ending on the block's +x or +z side read the
+// bare room floor beside the worktop and was drawn a metre down inside the casework. measured on one
+// 3x2 island, endpoints landing on the top: 14/14 for a cell whose far neighbours are bench, 10/14 on
+// an outer cell, 6/14 on the far corner — the half-hatched table it was reported as. the nudge is far
+// under any relief the wilderness carries, so a sloped floor answers with the height it did before
+  inline function hatchY(x:Float, z:Float, c:{x:Float, z:Float}):Float
+    return WorldCtx.floorYAt(x + (x < c.x ? EPS : -EPS), z + (z < c.z ? EPS : -EPS));
 
 // height of a dash on the seam between the cell it outlines (already lifted, `y`) and its neighbour
   inline function edgeY(y:Float, ncol:Int, nrow:Int):Float

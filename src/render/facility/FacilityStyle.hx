@@ -188,8 +188,17 @@ class FacilityStyle
   // shorter pane in a full-height opening is just a gap
   public static inline var WINDOW_ASPECT = 2.90;
   // emissive strength on the lit pane. every window is lit in this phase — the place is staffed at
-  // night, and a dark facility gives the player nothing to aim the "see into the room" read at
-  public static inline var WINDOW_EMISSIVE = 0.55;
+  // night, and a dark facility gives the player nothing to aim the "see into the room" read at.
+  //
+  // it is also what makes the panes GLOW from outside, and that is arithmetic rather than taste: the
+  // bloom pass runs on the composer's LINEAR target, before OutputPass tone-maps, so a pane blooms
+  // when texel_linear * this clears BLOOM_THRESHOLD 0.9. the art's glass band is sRGB 144-207 (see
+  // render.facility.FacilityGeom.addPane, which reads the same histogram for its alpha split) =
+  // linear 0.26-0.62, so 0.55 put the brightest glass texel at 0.34 and NOTHING crossed. 2.2 lands
+  // the band at 0.57-1.36 — the bright half of every pane blooms, the dark frame never does, and the
+  // halo falls on the facade around the opening, which is the "the building is occupied" read the
+  // ground spill alone could not give
+  public static inline var WINDOW_EMISSIVE = 2.2;
 
   // ---- the reveal ------------------------------------------------------------------------------
 
@@ -211,6 +220,103 @@ class FacilityStyle
   // per batch, so the TALLEST prop sets it — the broadleaf in leaf at h 9.5, the same number the
   // wilderness arrived at for the same tree
   public static inline var PROP_CULL_R = 9.0;
+
+  // ---- lamps and fixtures ----------------------------------------------------------------------
+
+  // the compound's own lamp: a modern slim mast with a shrouded downlight head. world HEIGHT, which
+  // through render.Models.instanced is also its width (the glb's bbox is 0.102 x 1 x 0.226, so the
+  // head reaches 1.33 units across the mast). 5.9 is not a round number and is not meant to be — it
+  // is what puts the HEAD at the city street bulb's own height, see LAMP_HEAD_Y
+  public static inline var LAMP_H = 5.9;
+  // where the head sits in the glb's own local frame, as a fraction of its height, with the model
+  // recentred the way render.Models.normalize leaves it (footprint centred in X/Z, base at y = 0).
+  // MEASURED off the built glb, not guessed: the mast stands at z -0.062 and the housing hangs off
+  // it toward +z, so a bulb placed at the model's centre would hang in the air beside the fixture.
+  // LAMP_H * LAMP_HEAD_Y = 5.60 = CityConfig.CELL * RenderConfig.LAMP_LIGHT.yMul, which is what the
+  // whole scale is chosen for: render.actors.LampShadows scales an actor's fake ground shadow by
+  // refY / post.y, so a facility mast lands on the street lamp's own 1.0 and needs no tuning of its own
+  public static inline var LAMP_HEAD_Y = 0.95;
+  public static inline var LAMP_HEAD_Z = 0.06;
+  // one mast every this many cells along a lit line, gated on (col + row), which spaces a run without
+  // needing to detect where the run starts or ends
+  public static inline var LAMP_SPACING = 6;
+  // cool white LED, deliberately OFF the moon's 0x8294c0 and off the street's sodium amber: this is a
+  // maintained compound, not a residential street. shared by the masts, the ceiling fixtures and
+  // every additive quad render.facility.FacilityGlow draws, so the whole facility reads as one
+  // lighting installation
+  public static inline var LAMP_COLOR = 0x9db4d4;
+  // bounding-sphere radius render.Models.cull tests each mast against. the head reaches 0.67 units
+  // off the mast and the thing is LAMP_H tall, so half the height plus that clears it
+  public static inline var LAMP_CULL_R = 3.6;
+  // where the light shaft starts along the bulb->ground axis (render.LightConeOpts.startFrac). the
+  // street's own value is -0.1, which lifts the cone a tenth of the bulb height ABOVE the bulb —
+  // right for a lamp whose glowing hood sits over its light position, wrong here, where LAMP_HEAD_Y
+  // already puts bulbY exactly on the lens plane: it started the shaft at 6.17, a third of a unit
+  // clear of the top of the whole post, and the cone read as hanging in the air over the lamp
+  public static inline var LAMP_CONE_START = 0.0;
+
+  // how far under the roof deck a ceiling fixture's bulb hangs
+  public static inline var CEIL_DROP = 0.2;
+  // intensity multiplier on the pooled spotlight for a CEILING fixture, and the one number in this
+  // section that must not be read as arbitrary. INDOOR.direct scales EVERY direct light indoors —
+  // the shader anchor cannot separate the moon from a spotlight (render.world.IndoorMask.patch) — so
+  // a fixture at mul 1.0 arrives at 0.3 of a street lamp. 1 / INDOOR.direct is the compensation, and
+  // reaching for RenderConfig.LAMP_LIGHT.intensity instead is chasing the wrong knob: that one is
+  // shared with the city and the tunnels
+  public static inline var CEIL_MUL = 3.3;
+
+  // ---- the additive glow layer (render.facility.FacilityGlow) ----------------------------------
+
+  // ONE merged mesh, ONE material, three kinds of quad, and they differ only in BRIGHTNESS — which
+  // rides the per-vertex grey channel render.world.MeshBuf.quadC already carries. so the hue and the
+  // HDR multiplier are set once here and each quad scales them.
+  //
+  // the two C_* below C_HEAD are SMALL, and the arithmetic that says why is worth keeping because a
+  // first pass got it wrong by two orders of magnitude. predicting them from LAMP_COLOR's own
+  // Y_linear 0.435 gave C_POOL 0.25, which MEASURED at Y 0.530 against a lit lab floor's 0.0168 —
+  // THIRTY-ONE TIMES the surface it was supposed to be lying on, a white blob with no shape left in
+  // it. the error is not in the blend, it is in the surfaces: this game's art is painted very dark
+  // (floor albedo 0.0607 linear) and its interiors render around Y 0.017, so ANY additive quad
+  // authored against a 0..1 intuition annihilates them.
+  //
+  // so these are fitted off the built frame, not derived: a quad's rendered luminance came out
+  // ~2.1 * C, which makes C 0.43 the line where BLOOM_THRESHOLD 0.9 is crossed. the ceiling panel
+  // sits at 1.0 and is MEANT to bloom — it is a fitting, the brightest thing in the room; the pool
+  // and the spill sit far under it and are meant to read as lit ground. re-measure rather than
+  // re-derive if the hue moves: blue weighs only 0.0722 linear, so a cooler LAMP_COLOR silently
+  // stops the panel blooming.
+  //
+  // there is NO lamp-head quad here any more. it was one, and it was the wrong tool: a FRONTAL quad
+  // is fixed-yaw by construction, so on a mast that yaws to face the surface it lights the card sat
+  // across the housing at whatever angle the world happened to give it and read as a sticker. the
+  // head glows off the glb's own EMISSIVE MAP now (models-src/facility-lamp-post-emissive.png), the
+  // way a street lamp's lens does — real geometry, correct from every angle, and it blooms
+  public static inline var GLOW = 2.6;
+  public static inline var C_PANEL = 1.0;
+  public static inline var C_POOL = 0.012;
+  public static inline var C_SPILL = 0.02;
+  // how far a ground-lying glow floats over the surface it lies on. under the tactical grid's own
+  // 0.06 so an impassable hatch still reads on top of a lit floor
+  public static inline var GLOW_Y = 0.04;
+  // the room pair — the ceiling panel and the pool under it — off for now. the fittings themselves
+  // (render.facility.FacilityLamps.ceilings) still claim their spotlight slots and still light the
+  // room; this is only the two DRAWN quads. an inline false, so the block folds out of the build
+  public static inline var CEIL_GLOW = false;
+  // the ceiling panel: a light fitting seen from ABOVE, through the roof that faded when the player
+  // walked in. its own quad in the merged mesh and NOT part of FacilityGeom.Shell.roof, so the fade
+  // does not take it with the deck. from outside the solid roof depth-rejects it — additive with
+  // depthWrite off still depth-TESTS — so it is only ever seen from inside
+  public static inline var PANEL_W = 2.4;
+  public static inline var PANEL_H = 1.0;
+  public static inline var PANEL_DROP = 0.05;
+  // and the pool it throws, laid over the room's own rect inset by this. the pooled spotlight only
+  // reaches ~1 cell (a bulb at 5.8 through LAMP_LIGHT.angle) and only the 12 rooms nearest the player
+  // ever claim a slot, so this quad is what makes EVERY lit room read as lit
+  public static inline var POOL_INSET = 2.0;
+  // how far out from a window or an exterior door the ground brightens. the quad starts at the wall
+  // CELL CENTRE rather than at the outer face, so its own near fade is buried inside the masonry and
+  // only the bright middle and the outward falloff are ever visible
+  public static inline var SPILL_DEPTH = 8.0;
 
   // ---- the scene -------------------------------------------------------------------------------
 

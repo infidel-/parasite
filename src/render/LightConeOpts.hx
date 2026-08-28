@@ -17,6 +17,11 @@ typedef LightConeOpts = {
   radius:Float,
   // minimum TOP radius. small (LAMP_CONE.topR) reads as a lamp cone; wide reads as a shaft down a hole
   topR:Float,
+  // where the shaft starts along the bulb->ground axis, overriding LAMP_CONE.startFrac. the street's
+  // is NEGATIVE (-0.1), which lifts the top a tenth of the bulb height ABOVE the bulb so it reaches
+  // up into a lamp whose glowing part sits over the light position. a fixture whose bulbY already IS
+  // its lens plane wants 0 instead, or the shaft starts in mid-air over the whole post
+  ?startFrac:Float,
   // shaft tint. omitted = LAMP_CONE.color, the street amber every city cone uses. the tunnels pass
   // their own so a manhole shaft cannot be mistaken for the bracketed fixtures on the walls
   ?color:Int,

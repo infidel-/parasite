@@ -353,6 +353,22 @@ class View {
       // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
       // area behind the demo model, so every leaf here is shut and stays that way
       render.facility.FacilityDoors.build(facScene, facModel, null);
+      // the additive glow layer, which is a program permutation of its own on TWO counts: it is
+      // vision-mask patched (a customProgramCacheKey) and it carries vertexColors, which three folds
+      // into the key as well. the demo model has rooms and windows, so this emits real quads; the
+      // MAST heads are absent here because the mast glb has not loaded yet — same material either
+      // way, so the program is warmed regardless
+      render.facility.FacilityGlow.build(facScene, facModel);
+      // and one lamp cone, for the same reason: a cone is a MeshBasicMaterial with an alphaMap and
+      // additive blending, which no other material in this scene is
+      render.LightCone.instanced({
+        group: facScene,
+        bulbs: [{ x: 0.0, z: 0.0 }],
+        bulbY: render.facility.FacilityStyle.LAMP_H * render.facility.FacilityStyle.LAMP_HEAD_Y,
+        radius: 1.0,
+        topR: render.RenderConfig.LAMP_CONE.topR,
+        color: render.facility.FacilityStyle.LAMP_COLOR,
+      });
       var facFx = new Group();
       facScene.add(facFx);
       new render.particles.MuzzleLights(facFx);
@@ -482,7 +498,10 @@ class View {
               // trap as the wall props and one more reason they cannot ride the city scene: their
               // material is mask-patched, and the mask extends the program cache key
               var green = render.facility.FacilityGround.GREEN;
-              var left = objModels.length + wallProps.length + green.length;
+              // and the compound's lamp mast, which rides this chain for the same two reasons the
+              // park plants do: its glb arrives asynchronously, and its material is mask-patched
+              var lampPath = render.RenderConfig.MODELS.facilityLamp;
+              var left = objModels.length + wallProps.length + green.length + 1;
               var done = function()
                 {
                   left--;
@@ -546,6 +565,20 @@ class View {
                       done();
                     });
                 }
+              // the mast, bracketed by the same attach/detach for the same reason: a real facility
+              // keeps the indoor mask on for as long as it is shown, so its lamp batch IS patched
+              // with it. the masts stand outdoors and read inAmt 0, so this is about the PROGRAM and
+              // not about how they look
+              render.Models.get(lampPath, function(_)
+                {
+                  render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
+                    facModel.w, facModel.h,
+                    function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
+                  M.patchMesh(render.Models.instanced(facScene, lampPath, place,
+                    render.facility.FacilityStyle.LAMP_H, SOLID).mesh);
+                  render.world.IndoorMask.detach();
+                  done();
+                });
             });
         }).then(function(_)
         {

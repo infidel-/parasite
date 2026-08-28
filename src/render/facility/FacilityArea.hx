@@ -7,6 +7,7 @@ import render.Area3DTickOpts;
 import render.RenderConfig;
 import render.SceneSetup;
 import render.particles.LampLights;
+import render.particles.LampPost;
 import render.facility.FacilityModel.Facility;
 import render.world.IndoorMask;
 import render.world.VisionMask;
@@ -26,7 +27,11 @@ class FacilityArea implements Area3D
   var model:Facility;
   var chunks = new render.Chunks();
   var moon:DirectionalLight;                    // shadow-casting moon, repositioned each frame
-  var lampLights:LampLights;                    // the pool exists for program-key parity, with no bulbs yet
+  var lampLights:LampLights;                    // the shared live spotlight pool, ticked each frame
+  var lamps:FacilityLamps.LampSet;              // the outdoor masts and the ceiling fixtures
+  var lampPosts:Array<LampPost>;                // both families as one candidate list for the pool
+  var coneGroup:Object3D;                       // the scene rig's cone parent, held for the mast shafts
+  var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's trees and bushes
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
@@ -49,6 +54,12 @@ class FacilityArea implements Area3D
       var bundle = FacilityScene.build(renderer, lampPool);
       moon = bundle.moon;
       lampLights = bundle.lampLights;
+      coneGroup = bundle.coneGroup;
+      // held BY REFERENCE and filled later, in build(). render.View.buildFrom hands this same map to
+      // the camera rig and the actor layer before it calls build(), and both keep the reference and
+      // query it per frame — so a map that is empty at handover and populated a line later is read
+      // exactly as a city's fully-built one is
+      lampCorners = bundle.lampCorners;
       return bundle;
     }
 
@@ -89,6 +100,12 @@ class FacilityArea implements Area3D
       FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       doors = FacilityDoors.build(scene, model, game.area);
+      // the light SOURCES, then everything additive they and the windows put on a surface. both are
+      // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
+      // same treatment the city's own lamp batch gets
+      lamps = FacilityLamps.build(scene, coneGroup, model, game.area, lampCorners);
+      lampPosts = lamps.masts.concat(lamps.ceilings);
+      FacilityGlow.build(scene, model);
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];
       target = [for (_ in shells) 0.0];
@@ -155,12 +172,27 @@ class FacilityArea implements Area3D
                 yaw0: b.shut[c * 2] + b.swing[c * 2] * b.open[c],
                 yaw1: b.shut[c * 2 + 1] + b.swing[c * 2 + 1] * b.open[c],
               });
+          // the lighting rig, as the two questions it raises that a screenshot cannot answer: did
+          // the lit-line rules place a mast on every kerb, lot edge and park path (and none in a
+          // tree), and did every room get a fixture. `bulbs` is what the pool actually sees
+          var bulbs = [];
+          for (p in lampPosts)
+            bulbs.push({
+              col: p.col,
+              row: p.row,
+              y: p.y,
+              mul: p.mul,
+            });
           return {
             structures: structures,
             rooms: model.rooms,
             windows: model.windows,
             doors: leaves,
             batches: batches,
+            masts: lamps.masts.length,
+            ceilings: lamps.ceilings.length,
+            bulbs: bulbs,
+            lit: lampLights.active().length,
           };
         };
     }
@@ -193,7 +225,12 @@ class FacilityArea implements Area3D
       // what the player cannot see, off the SMOOTHED position and not opts.playerCol/Row — see
       // VisionMask's own note on why the logical cell is the wrong origin
       VisionMask.update(game, opts.player.x, opts.player.z);
+      // the pool: the nearest bulbs claim the 12 live spotlights, masts and ceiling fixtures
+      // competing in one list. nothing here flickers, so this is the whole per-frame cost of the
+      // lighting pass — no cone repack (render.LightCone.pulse) and no glow rebuild
+      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
+      render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R);
       for (p in green)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R);
     }

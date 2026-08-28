@@ -62,7 +62,7 @@ class LightCone {
         return set;
       var C = RenderConfig.LAMP_CONE;
       // the shaft spans startFrac..1 of the bulb->ground axis; a top radius that follows the cone there
-      var s = C.startFrac;
+      var s = o.startFrac != null ? o.startFrac : C.startFrac;
       var h = bulbY * (1 - s);
       var rTop = radius * s;
       if (rTop < o.topR)
