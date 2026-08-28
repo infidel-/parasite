@@ -3,6 +3,17 @@ package render.world;
 import citygen.CityModel.Building;
 import citygen.CityModel.Tile;
 
+// one exposed face of a wall cell that carries a wall-mounted object, and the pose render.Actors
+// paints that object's icon and its through-wall mark at. see WorldCtx.wallMounts
+typedef WallMount = {
+  x:Float,    // world X of the quad centre, already nudged proud of the face
+  y:Float,    // world Y: the height up the wall the object hangs at
+  z:Float,    // world Z of the quad centre
+  rotY:Float, // outward normal yaw of the face, i.e. the quad's own rotation.y
+  scale:Float,// billboard scale of the quad — the area kind owns it, so the actor layer needs to
+              // know nothing about how thick or how tall that kind builds its walls
+};
+
 // shared state for one city build, set by World.build() and read by every world
 // sub-builder. buildings/tiles are read by nearly every pass; the *Seen maps are
 // written by one pass each (bands/doors/windows) and read only by the checklist.
@@ -26,6 +37,15 @@ class WorldCtx {
   // same contract as `ground` above and cleared in the same two places: the area kind that sets it
   // owns clearing it, or the next area inherits a barrier that is not there
   public static var climbArc:(Int, Int, Int, Int)->Float = null;
+  // the faces of the wall an object standing at (col,row) is mounted IN — null when the cell is not
+  // a wall of this area kind's own making, which is every cell in most areas. an object here is a
+  // grille cut into masonry (objects.Vent) and not a thing lying on the floor: painted on its cell
+  // like anything else it sinks INSIDE two units of wall and only its through-wall mark ever shows.
+  // one pose per EXPOSED face, because a wall has an inside and an outside and the player meets it
+  // from either; the two look opposite ways, so exactly one of them is ever seen.
+  // same contract as `ground` above — the area kind that sets it owns clearing it, or the next area
+  // inherits walls that are not there
+  public static var wallMounts:(Int, Int)->Array<WallMount> = null;
   // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
   public static var style:AreaStyle;
 

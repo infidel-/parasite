@@ -907,6 +907,9 @@ class Game extends _SaveObject
       isStarted = true;
       ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
+      // the 3D view is keyed on the shown area's ID, and a load hands back the same IDs attached to
+      // brand new AreaGames — so it has to be told, or it keeps the previous save's geometry
+      scene.forget3D();
       // first area render is the LAST act of load (like New Game's restart): draw3D's
       // fader.cover defers the heavy 3D build on its own timer, so the black cover paints
       // fully before the build stalls the thread. (the mid-load 3D draw was removed from

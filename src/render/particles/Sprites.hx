@@ -67,7 +67,7 @@ class Sprites {
     {
       var tex = new Texture();
       var m = new Mesh(new PlaneGeometry(SIZE, SIZE),
-        new MeshStandardMaterial({
+        render.world.IndoorMask.patch(new MeshStandardMaterial({
           transparent: true,
           depthWrite: false,
           side: THREE.DoubleSide,
@@ -75,7 +75,7 @@ class Sprites {
           metalness: 0,
           map: tex,
           emissiveMap: tex,
-        }));
+        })));
       return [ m ];
     }
 
@@ -97,10 +97,14 @@ class Sprites {
       if (o.faceX != null &&
           o.faceX != 1.0)
         m.scale.x = o.scale * o.faceX;
-      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
+      // decal: lie flat on the ground (normal up). wall-mounted: stand in the face's own plane,
+      // normal outward along faceRotY — the pose paintWall gives a bullet hole, so a grille cut into
+      // masonry lies in the masonry and not across it. else face the front (fixed yaw, no camera
       // tracking) leaned back toward the overhead camera by TILT so it reads flatter
       if (o.flat)
         m.rotation.set(-Math.PI / 2, 0, yaw);
+      else if (o.faceRotY != null)
+        m.rotation.set(0, o.faceRotY, yaw);
       else
         m.rotation.set(-TILT, 0, yaw); // yaw doubles as in-plane roll for upright sprites (badge wiggle)
       m.renderOrder = (o.order != null ? o.order : 0);
@@ -219,9 +223,17 @@ class Sprites {
       if (m == null)
         {
           // MeshStandard (not Basic) so sprites take the scene lights — ambient/moon/lamp glow —
-          // instead of rendering full-bright and reading pasted-on over the lit world
+          // instead of rendering full-bright and reading pasted-on over the lit world.
+          //
+          // and the indoor swap (render.world.IndoorMask) with them, or an actor standing in a lit
+          // laboratory keeps the moonlight the floor under it just lost. patched UNCONDITIONALLY,
+          // unlike every world surface, which VisionMask gates on the area having a mask: this pool
+          // fills lazily during play and its quads outlive nothing in particular, so a per-area
+          // decision here would either mislight the slots created before the player walked inside or
+          // compile a second program the boot warm never cached. the cost of always is one fetch of a
+          // single black texel on quads this small, against a program that recompiles mid-game
           m = new Mesh(new PlaneGeometry(SIZE, SIZE),
-            new MeshStandardMaterial({
+            render.world.IndoorMask.patch(new MeshStandardMaterial({
               transparent: true,
               depthWrite: false,
               side: THREE.DoubleSide,
@@ -231,7 +243,7 @@ class Sprites {
               // actor later flickers a warm emissive glow onto its own sprite — see paint())
               map: tex,
               emissiveMap: tex,
-            }));
+            })));
           pool[idx] = m;
           actorGroup.add(m);
         }

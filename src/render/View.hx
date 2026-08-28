@@ -338,6 +338,13 @@ class View {
       // game never asks for. measured before adding this: 91 programs at boot, 101 after the first
       // facility entry
       var facModel = render.facility.FacilityModel.demo();
+      // and the indoor mask over the warm model, for the SAME reason the vision mask makes this
+      // scene necessary at all: it contributes a customProgramCacheKey of its own, so a facility wall
+      // warmed without it warms a key the game never asks for and every lit surface in there
+      // recompiles on the first entry. attached around this block only — the sewer scene above and
+      // the city scene below must warm with no indoor swap, which is what they render with
+      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR, facModel.w, facModel.h,
+        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
       var facScene = render.facility.FacilityScene.build(renderer, game.config.vidLampLights).scene;
       render.facility.FacilityGround.build(facScene, facModel);
       render.facility.FacilityGeom.build(facScene, facModel);
@@ -349,6 +356,12 @@ class View {
       var facFx = new Group();
       facScene.add(facFx);
       new render.particles.MuzzleLights(facFx);
+      // and off again before the city block below: everything from here to the end of warmup —
+      // the gas puffs, the sprite pool, the beams and sparks, and the tunnel props in the async
+      // chain — must warm the programs the city and the tunnels really render, which carry no
+      // indoor swap. the facility's own park plants arrive in that same chain and re-attach for
+      // themselves (see the `green` loop)
+      render.world.IndoorMask.detach();
       // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
       // light-count variant), but it has to wait for its glb — see the compile chain below
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
@@ -519,7 +532,17 @@ class View {
                   var p = green[i];
                   render.Models.get(p.path, function(_)
                     {
+                      // a park plant's glb lands here, long after the warm block above put the
+                      // indoor mask away — and a real facility keeps the mask attached for as long
+                      // as it is shown, so its own green props ARE patched. re-attach around this
+                      // one instance or the warm compiles a key the first entry never asks for.
+                      // the plants stand outdoors and read inAmt 0, so this is about the PROGRAM
+                      // and not about how they look
+                      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
+                        facModel.w, facModel.h,
+                        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
                       M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
+                      render.world.IndoorMask.detach();
                       done();
                     });
                 }
@@ -615,6 +638,11 @@ class View {
     // previous build's GPU resources here too — otherwise every load orphans a whole city's
     // geometry in the (persistent) renderer's cache and geom climbs ~one city per load
     disposeBuild();
+    // drop the previous area's indoor lighting mask. the kind that wants one attaches it in its own
+    // build() (only the facility so far), so this is the single point that guarantees every OTHER
+    // kind starts without one — otherwise a tunnel entered straight after a facility would compile
+    // the indoor swap into its walls and sample the compound's floor plan for it
+    render.world.IndoorMask.detach();
     area3d = a;
     shownKey = key;
 
@@ -778,6 +806,21 @@ class View {
       }
     else teardown();
   }
+
+// forget which area is on screen, WITHOUT tearing the view down, so the next draw rebuilds it.
+//
+// for a LOAD, which is the one event that replaces every AreaGame while their ids stay the same —
+// ids are persisted, so the save's facility comes back as a NEW object under the OLD id. both of
+// the guards that skip a rebuild key on that id (GameScene._view3dArea and shownKey here), so
+// without this the view keeps a scene built from the grid the PREVIOUS save had for that id. an
+// area is generated on first visit, so loading an older save while standing in a lab regenerates it
+// to a different layout and the two disagree completely — walls you walk straight through, and
+// invisible ones that stop you. measured on a live 75x60 facility: the shown model matched the
+// area's own grid on 0 of 4500 cells until the view was forgotten, and 4500 of 4500 after
+  public function forget():Void
+    {
+      shownKey = -2;
+    }
 
 // stop rendering and release the scene (fires when the outro completes, or under the exit fade)
   public function teardown():Void {

@@ -240,6 +240,43 @@ class FacilityModel
         s == Surf.CONCRETE;
     }
 
+// is this cell WELL INSIDE a building — floor or wall, with nothing but building on every side?
+//
+// what render.world.IndoorMask is painted from, and neither half of it is what a first guess
+// reaches for. the mask GROWS its region past a cell boundary (IndoorMaskOpts.grow) to reach the
+// inner face of the wall slab beside it, so the question here is not "is this indoors" but "is this
+// far enough in that the grow cannot escape the building".
+//
+// THE FOUR-NEIGHBOUR TEST IS THE WHOLE PREDICATE, and it settles two cases at once that look
+// unrelated:
+//   A ROOM DIVIDER IS NOT FLOOR. isIndoor alone fails a partition, so a divider came back lit as
+//     though it stood outdoors while the rooms either side of it were lit indoors — the grow covers
+//     its two faces from either side but not the strip of mass between them. a partition has
+//     building on all four sides and is included here.
+//   AN EXTERIOR DOOR CELL IS FLOOR AND MUST STILL BE EXCLUDED. it finalises to plain corridor lino,
+//     so isIndoor calls it indoors, and painting it whole put a grow's worth of interior light out
+//     onto the PAVEMENT and onto the outward face of the shut leaves — measured at 6.8x the
+//     surrounding pavement, and read as the building having no lid. one of its neighbours is the
+//     lot, so this excludes it and the doorway is reached by grow from the room behind exactly as
+//     the wall it interrupts is. the leaves sit on the cell centre plane, a sigma outside the grown
+//     region, so a shut door reads as part of the exterior — which is what it is. the light that
+//     SHOULD come out of an open door is an additive spill cone and belongs to the lighting pass,
+//     not to this mask
+  public static inline function isInterior(m:Facility, col:Int, row:Int):Bool
+    {
+      return (isIndoor(m, col, row) || isWall(m, col, row)) &&
+        owned(m, col - 1, row) &&
+        owned(m, col + 1, row) &&
+        owned(m, col, row - 1) &&
+        owned(m, col, row + 1);
+    }
+
+// does a structure claim this cell — its floor or its wall ring?
+  static inline function owned(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.owner[row][col] >= 0;
+    }
+
 // does this cell carry a wall of any kind? the predicate the vision mask's blocker channel and the
 // wall emitter both read. a window counts: it is a wall with a hole you can SEE through, and the
 // mask's green channel is about what the sweep hits, which is handled by canSeeThrough separately

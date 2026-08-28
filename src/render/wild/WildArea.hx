@@ -73,6 +73,9 @@ class WildArea implements Area3D
       // in the game and should be seen to climb OVER in the render — nothing is stamped on the tiles
       // for a rail, so this is a pure animation hook and carries no gameplay with it
       WorldCtx.climbArc = function(fc, fr, tc, tr) return WildRoad.climbArc(model, fc, fr, tc, tr);
+      // nothing out here is a wall, so nothing hangs on one — and a stale hook from a facility would
+      // mount an object on masonry the wilderness never built
+      WorldCtx.wallMounts = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only

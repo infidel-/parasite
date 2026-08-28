@@ -54,10 +54,12 @@ class SewerArea implements Area3D
       // run down here untouched. buildings stays a live empty array: the shot pass iterates it.
       // ground is cleared, not left: a tunnel floor is flat, and the wilderness before it may have
       // pointed that hook at a height field. climbArc goes the same way and for the same reason —
-      // there is nothing to step over down here, and a stale one would fire on an invisible line
+      // there is nothing to step over down here, and a stale one would fire on an invisible line.
+      // wallMounts too — a tunnel wall carries no object, and a stale one would hang a grille on air
       WorldCtx.tiles = null;
       WorldCtx.ground = null;
       WorldCtx.climbArc = null;
+      WorldCtx.wallMounts = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       sceneRef = scene;

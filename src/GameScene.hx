@@ -305,6 +305,16 @@ class GameScene
         });
     }
 
+// forget which area the 3D view is showing, so the next draw3D rebuilds it — the view keeps
+// running and nothing is torn down. BOTH guards have to be cleared or the other one still skips the
+// rebuild. called on LOAD; see render.View.forget for what goes wrong without it
+  public function forget3D()
+    {
+      _view3dArea = -1;
+      if (view3d != null)
+        view3d.forget();
+    }
+
 // hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
 // on3DExitDone then reveals the region
   inline function hide3D()

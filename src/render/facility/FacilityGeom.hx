@@ -9,6 +9,7 @@ import render.facility.FacilityModel.Wall;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
+import render.world.WorldCtx.WallMount;
 
 // what one structure's roof fades. ONLY the roof: the walls used to fade with it, and a wall face
 // was picked for that by its NORMAL, which cannot answer the question it was being asked. see the
@@ -119,6 +120,38 @@ class FacilityGeom
     {
       return FacilityModel.inside(m, col, row) && m.wall[row][col] == Wall.WINDOW ?
         FacilityStyle.GLASS_T : FacilityStyle.WALL_T;
+    }
+
+// where an object standing on a wall cell hangs: one pose per face the wall line does NOT carry
+// into, which for a straight run is its two sides. null for every other cell, so the actor layer
+// pays one grid lookup per object and allocates nothing in the common case.
+//
+// this exists because the generator writes a VENT as a TILE_BUILDING cell and stands an objects.Vent
+// on it. Drawn like any other object the grille lay FLAT on the floor inside two units of masonry,
+// where nothing but its through-wall mark could ever be seen — reported from the game as a dotted
+// mark on the ground that ought to be on the wall
+  public static function wallMounts(m:Facility, col:Int, row:Int):Array<WallMount>
+    {
+      if (!FacilityModel.isWall(m, col, row))
+        return null;
+      var c = CityConfig.cellToWorld(col, row);
+      var out = thick(m, col, row) / 2 + FacilityStyle.MOUNT_PROUD;
+      var mounts = [];
+      for (dir in 0...4)
+        {
+          if (carries(m, col + DC[dir], row + DR[dir]))
+            continue;
+          // the face's outward normal IS (DC,DR) read as (x,z), so its yaw is that vector's angle —
+          // no dir-to-rotation table, and none of render.world.Geom's opposite dir numbering to cross
+          mounts.push({
+            x: c.x + DC[dir] * out,
+            y: FacilityStyle.MOUNT_Y,
+            z: c.z + DR[dir] * out,
+            rotY: Math.atan2(DC[dir], DR[dir]),
+            scale: FacilityStyle.MOUNT_SCALE,
+          });
+        }
+      return mounts;
     }
 
 // the BOUNDING BOX of a wall cell's masonry, in world units — reaching the cell boundary only on the
@@ -705,7 +738,13 @@ class FacilityGeom
       mat.transparent = true;
       var mesh = new Mesh(geom(b), mat);
       mesh.receiveShadow = false;
-      mesh.castShadow = false;
+      // the pane CASTS, and it is the only thing that can: the run's opening is cut OUT of the wall
+      // (see the sill/head pair in `structure`) and the exterior wall is the shell's one caster, so a
+      // non-casting pane left a real hole in the masonry for the moon — one clean parallelogram of
+      // moonlight per window run, lying on the floor inside the wall's own shadow. the depth material
+      // carries alphaTest so the glass casts solid, and shadowSide flips FrontSide to BackSide, which
+      // picks exactly the one of the run's two coplanar faces that looks away from the moon
+      mesh.castShadow = true;
       scene.add(mesh);
     }
 

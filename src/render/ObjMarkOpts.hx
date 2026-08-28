@@ -15,4 +15,5 @@ typedef ObjMarkOpts = {
   flat:Bool,    // the pose lies flat as a ground decal instead of standing up
   yaw:Float,    // ground rotation of a flat pose
   order:Int,    // render order shared with the icon
+  ?faceRotY:Float, // the pose stands on a WALL face with this outward yaw instead (see PaintOpts)
 };

@@ -8,6 +8,7 @@ import render.RenderConfig;
 import render.SceneSetup;
 import render.particles.LampLights;
 import render.facility.FacilityModel.Facility;
+import render.world.IndoorMask;
 import render.world.VisionMask;
 import render.world.WorldCtx;
 
@@ -62,8 +63,23 @@ class FacilityArea implements Area3D
       WorldCtx.tiles = null;
       WorldCtx.ground = function(x, z) return FacilityTables.groundY(model, x, z);
       WorldCtx.climbArc = null;
+      // and the one area kind with walls of its own that carry objects: the generator writes a vent
+      // as a WALL cell and stands an objects.Vent on it, so the grille has to hang on the masonry
+      WorldCtx.wallMounts = function(col, row) return FacilityGeom.wallMounts(model, col, row);
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
+      // the indoor lighting mask, and it goes BEFORE the builders where the vision mask goes after.
+      // both hold their uniforms in statics shared by identity, so either could be filled at any
+      // time — but render.world.IndoorMask.patch reads `on` at MATERIAL-CREATION time to decide
+      // whether to compile the swap into a surface at all, and every material below is created in the
+      // next five lines.
+      //
+      // isInterior, which is neither isIndoor nor `owner >= 0`: an EXTERIOR wall belongs to a
+      // structure and has an outdoor face, so the mask reaches only its inner face and does that by
+      // growing from the floor side (INDOOR.grow). a room divider and an exterior door cell are the
+      // two cases the obvious predicates get wrong — see the predicate's own header
+      IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+        function(col, row) return FacilityModel.isInterior(model, col, row));
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();

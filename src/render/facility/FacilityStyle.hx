@@ -1,6 +1,7 @@
 package render.facility;
 
 import citygen.CityConfig;
+import render.world.IndoorMaskOpts;
 import render.world.VisionMaskOpts;
 
 // every art and tuning constant for the facility area kind, in one file, the way
@@ -156,6 +157,21 @@ class FacilityStyle
   // that is still on screen
   public static inline var DOOR_CULL_R = 3.0;
 
+  // ---- wall-mounted objects --------------------------------------------------------------------
+
+  // a vent grille hangs centred THIS high up the masonry, at THIS fraction of a sprite quad
+  // (render.particles.Sprites.SIZE, 3.0 units), and stands THIS far proud of the wall face — the
+  // same nudge a bullet hole takes, and for the same reason: the quad has to clear the opaque wall
+  // behind it rather than z-fight it.
+  //
+  // the SCALE is of the quad and the art fills 38 of its 64 atlas pixels, so the grille itself comes
+  // out 1.78 units wide. at the game's scale (WALL_H 6.0 is one 3 m storey, so a unit is half a
+  // metre) that is a 0.9 m cover spanning 0.53-1.47 m up the wall — a duct low enough to slither
+  // into, which is what the object does
+  public static inline var MOUNT_Y = 2.0;
+  public static inline var MOUNT_SCALE = 1.0;
+  public static inline var MOUNT_PROUD = 0.12;
+
   // ---- windows ---------------------------------------------------------------------------------
 
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the
@@ -227,5 +243,49 @@ class FacilityStyle
     // so 18 puts the square range bound 5 cells past it. inside a building the sweep is cheap (walls
     // stop it almost immediately); out on the lot it is an open field like the wilderness
     r: 18,
+  };
+
+  // ---- indoor lighting -------------------------------------------------------------------------
+
+  // the facility is the first area kind that is BOTH indoors and outdoors at once, so it is the first
+  // to need render.world.IndoorMask. a tunnel is wholly interior and a wilderness wholly open; each
+  // tunes one scene rig and is done
+  public static final INDOOR:IndoorMaskOpts = {
+    // the vision mask's own, and it is NOT the free knob it looks like: `grow` below is a QUARTER of
+    // a cell, so anything under 4 texels per cell paints a sub-texel overhang, canvas antialiasing
+    // resolves it as partial coverage, and the boundary is already halved before the blur runs.
+    // measured at px 2: a lab floor cell next to its own wall came back 194 of 255 — 24% outdoors,
+    // standing in the middle of a room. 8 keeps the overhang on a whole texel with room to spare
+    px: 8,
+    // the doorway crossfade, and the only transition this has: an actor walking through a door is
+    // relit over roughly this world distance either side of the threshold, which at 1 unit = 0.5 m is
+    // a metre end to end. there is no eased `t` anywhere in the feature.
+    //
+    // IT IS BOUNDED ABOVE BY THE WALL THICKNESS, which is what pins it this small. a wall slab is
+    // WALL_T = 2 units through, and the two faces of it have to land on opposite ends of this ramp —
+    // so a blur anywhere near the slab's own thickness cannot separate them at all. measured at 1.4:
+    // the inner face came back 0.50 and the outer face 0.33, i.e. the whole wall lit halfway indoors
+    blur: 0.5,
+    // PAST the inner face of the wall slab by that blur, not merely to it. the emitter centres a slab
+    // of WALL_T in its cell, so WALL_T / 2 is the distance from the cell edge to the inner face — and
+    // stopping there puts the face on the ramp's MIDPOINT, which is exactly the 0.5 above. another
+    // `blur` further out puts the inner face a sigma inside the region (~0.84 indoors) and leaves the
+    // outer face three sigma outside it (~0)
+    grow: WALL_T * 0.75,
+    // "the lights are on": a cool fluorescent, brighter than the moonlit lot outside, against which
+    // the phase-3b ceiling fixtures then read as local pools rather than as the only light in the
+    // room. it REPLACES the scene's ambient (0x46536b at 1.35) and hemisphere (0x56668c at 1.1)
+    // together, so it is tuned against the pair and is necessarily the larger number
+    ambient: 0x9fb0b4,
+    intensity: 2.4,
+    // how much of the moon gets through a roof that casts no shadow (render.facility.FacilityGeom
+    // .addRoof says why it cannot). not zero: a wall with no directional term at all loses its lit
+    // side, and with it the one cue that a room is a box.
+    //
+    // IT SCALES EVERY DIRECT LIGHT, NOT JUST THE MOON — the shader anchor cannot separate them, see
+    // render.world.IndoorMask.patch. so a ceiling fixture hung in phase 3b is scaled by exactly this
+    // number and has to be tuned WITH it in view; reading its light as too dim and reaching for the
+    // fixture's own intensity is chasing the wrong knob
+    direct: 0.3,
   };
 }

@@ -1711,3 +1711,262 @@ drums, server racks, robot arms — including row 12, which the plan had guessed
 is actually barrels and racks. Laid flat they read as decals of furniture printed on the floor. The
 only two cells that would genuinely lie down are the gloves, which is not worth a table.
 `DecorationExt` keeps the default: that one carries a random angle and scale and IS floor litter.
+
+## Indoor lighting is a world-XZ MASK, not a second set of lights — Facility Phase 3a
+
+A facility interior was lit by the compound's own night rig, so a laboratory read as the yard with a
+lid on. Two causes, not one. The roof deliberately casts no shadow (`FacilityGeom.addRoof`: a roof
+that fades would still shadow, and the shadow could not fade with it), so the moon's directional term
+lands on a lab floor at FULL strength through a solid ceiling — and the fill it lands over is
+moon-blue, the same night as the parking lot.
+
+**`Light.layers` does not do this, and that is worth knowing before anyone tries it again.** three's
+docs read as though a light's layers pick which objects it affects. The renderer tests
+`object.layers.test( camera.layers )` when it COLLECTS lights (`three.global.js:43178`, `:43351`):
+a light is in the whole render or out of it. There is no per-object light filtering anywhere in the
+pipeline, so two ambient lights cannot be aimed at two sets of meshes. Two render passes are the only
+layer-based answer and they cost a second full frame.
+
+What landed instead is the trick `VisionMask` already plays for line of sight.
+`render.world.IndoorMask` paints a blurred step — 1 inside a building, 0 out — into a canvas, and
+every lit material samples it by world XZ after `#include <lights_fragment_begin>`, where three has
+gathered ambient + probe + hemi into `irradiance` and every direct light into `reflectedLight`, and
+before `lights_fragment_end` combines them. So it is real light entering the shading equation, not a
+tint over the result. No draw call, no pass, one fetch. Two properties fall out that a per-mesh or
+per-object scheme would have had to build by hand: **movers are free** (an actor is lit by where it
+STANDS, off the same lookup as the floor under it, with no `isIndoor` call on the CPU), and **the
+transition is spatial** — the mask is blurred, so a doorway crossfades over the blur width with no
+eased `t` and nothing to tick.
+
+It is deliberately independent of `VisionMask` rather than folded into its spare channel: its own
+canvas, varying and uniforms, so the two hooks chain in either order and the actor billboards, which
+need indoor light but not the vision mask, can take it alone.
+
+**Gated at the CALL SITE so it is a permutation and not a tax.** `VisionMask.patch` chains it only
+while a mask is attached, so a city/tunnel/wilderness surface compiles exactly today's shader — a
+wilderness entry added 5 programs, none carrying `indoor`. `Sprites` is the one unconditional caller,
+because its pool fills lazily mid-play: a per-area decision there would either mislight the slots
+made before the player walked inside or compile a program the boot warm never cached.
+
+Three defects, all found by reading the mask canvas rather than the frame:
+
+**`px: 2` halved the boundary before the blur ran.** `grow` is a quarter of a cell, so at 2 texels
+per cell the overhang is a 0.5px `fillRect` edge and canvas resolves it as partial coverage. A lab
+floor cell next to its own wall read **194/255** — 24% outdoors, standing in the middle of a room.
+`px: 8` keeps the overhang on a whole texel.
+
+**The blur is bounded above by the wall thickness.** A slab is `WALL_T` 2 units through and its two
+faces have to land on opposite ends of the ramp, so a blur anywhere near the slab's own thickness
+cannot separate them. At `blur 1.4` the inner face measured **0.50** and the outer **0.33** — the
+whole wall lit halfway indoors. `blur: 0.5`, and `grow: WALL_T * 0.75` — PAST the inner face by that
+blur rather than merely to it, since stopping at `WALL_T / 2` puts the face on the ramp's own
+midpoint, which is exactly that 0.50. Fine scan across one wall after: outer face **1/255**, inner
+face **240/255**.
+
+**`isIndoor` was the wrong predicate, twice over.** The mask GROWS past a cell boundary to reach the
+inner face of the wall beside it, so what the predicate has to answer is not "is this indoors" but
+"is this far enough in that the grow cannot escape the building". Two cases that look unrelated fall
+out of one four-neighbour test, and `FacilityModel.isInterior` is now floor-or-wall with a structure
+owning all four neighbours:
+
+- *A room divider is not floor.* A 1-cell partition is painted only by `grow` from either side, which
+  covers its two faces and not the strip of mass between them — 211 cells inside one building read
+  ~0.3 indoor, so dividers stayed moonlit between two lit rooms. 787 → **983** cells at ≥224, and on
+  the reroll **315 of 315** partitions came back fully indoor.
+- *An exterior door cell IS floor and still has to be excluded.* A door finalises to plain corridor
+  lino, so `isIndoor` calls it indoors; painted whole it put a grow's worth of interior light out onto
+  the PAVEMENT and onto the outward face of the shut leaves. **Reported from the game as "the wall
+  shadows on the pavement behave as if no roof exists", and it was not a shadow at all** — swapping
+  the mask for the black stand-in in a fixed exterior frame showed the door bays and the pavement in
+  front of them lifting by up to **+11.56** mean RGB, a **6.8x** ratio, while the moon toggle barely
+  moved them. One of a door cell's neighbours is the lot, so the same test excludes it and the doorway
+  is reached by grow from the room behind exactly as the wall it interrupts is. After: the largest
+  delta anywhere in that frame is **+0.27** (1.01x). Verified over all 33 doors of a rerolled
+  facility — every interior door **255**, every exterior door **76** or less, no dark band across a
+  lit building and no light on the lot.
+
+The light that SHOULD come out of an open door is an additive spill cone and belongs to phase 3b's
+lighting pass, not to this mask. An earlier draft kept the leak deliberately, calling it a free
+version of that; it is not one — a spill cone is additive and shaped, while this relit the pavement
+and the shut leaves as though they were indoors.
+
+`indoorDirect` scales EVERY direct light and not just the moon: the chunk sums point, spot and
+directional into one `reflectedLight` and there is no anchor between them. Accepted because it is
+compensable — a fixture hung INSIDE is scaled by exactly this number, so phase 3b's ceiling lights
+are tuned with it in view, while an outdoor lamp is untouched (its fragments read `inAmt` 0).
+
+Values: `ambient 0x9fb0b4` at `2.4` and `direct 0.3`, i.e. indoor irradiance (0.83, 1.04, 1.10)
+linear against the outdoor rig's (0.19, 0.27, 0.49) plus a moon term of (0.24, 0.33, 0.58) on a
+floor. Predicted floor ratio **2.10 / 1.92 / 1.18** — twice as bright in R and G, barely moved in B,
+so the hue leaves moon-blue. Measured live by swapping the mask texture for the black stand-in in the
+same frame: the delta is confined to the indoor band and reads 1.13–1.5x in sRGB, which is that
+linear ratio through the encode plus the vision mask's own falloff. Roof, sky and outdoor ground
+measured **+0.00** — the roof is the one facility surface `VisionMask.patch` never touches, so the
+chained hook misses it too, which is correct.
+
+Warm parity: the mask adds a second `customProgramCacheKey`, the same thing that forced a separate
+facility warm scene. `View.warmup` attaches around the facility block only and re-attaches around the
+async park-plant callback; a second facility entry adds **0** programs. 0 console errors.
+
+Not measured in ms: the window has never been OS-foregrounded (topbar reads 1 FPS).
+
+## A LOAD does not invalidate the 3D view, so it keeps the previous save's geometry
+
+Reported from the game as walking straight through every wall into the hangar, and as being blocked
+going south with no wall in sight. Neither is a lighting bug and neither is a coordinate bug — the
+scene was built from a **different cell grid than the one the game was colliding against**.
+
+`GameScene.draw3D` skips a rebuild when `_view3dArea == game.area.id`, and `View.showFacility` skips
+again when `shownKey == gridKey(area.id, 2)`. Both key on the AREA ID, and an id is **persisted** — a
+load hands back the same ids attached to brand-new `AreaGame` objects. Nothing between `Loader.load`
+and `applyLoaded` clears either guard, so the view keeps what it had. It bites because an area is
+generated on FIRST VISIT: load an older save while standing in a facility you generated after it and
+the area regenerates to a different layout under the same id.
+
+Diagnosis, since the symptom points nowhere useful. The grid the game collides against and the model
+the scene was built from were compared cell by cell in four orientations, and the shown model matched
+the live grid on **0 of 4500** cells directly but **4500 of 4500** under a row mirror — this
+generator's layouts differ by which edge takes the entrance road, so two rolls of one area read as
+exact mirrors and the 100% is what proved the grids were simply *different*, not transformed.
+`shownKey` then confirmed the scene belonged to the current area id, which is the whole bug in one
+number. Forcing a rebuild flipped it to **100.0% direct**, so there is no coordinate error anywhere.
+
+Fix: `View.forget()` (clears `shownKey`, tears nothing down) + `GameScene.forget3D()` (clears both
+guards) called from `Game.applyLoaded`. **Both** guards have to go or the other still skips. Verified
+by reproducing exactly: load, enter the facility — 100.0%; load AGAIN with the 3D view live, enter —
+**100.0%**, with the shown structures changed, so it really did rebuild rather than keep the old one.
+
+Worth knowing for anyone driving the game over CDP: `Game.load()` from the console used to leave the
+view stale, which is how this was found and how an hour went into blaming the lighting mask.
+
+## `TILE_BUILDING` is not only a city block, so the tactical grid skipped every facility wall
+
+Reported from the game as the walls having no impassable hashing or dotting in tactical view, "only
+windows for some reason". Exactly right, and the *only* is the clue.
+
+`TacticalGrid.blocked` opened with an unconditional `if (area.getCellType(col, row) ==
+Const.TILE_BUILDING) return;`. The comment above it argues the city case and argues it correctly — a
+city footprint is unpaved, so dashes would hang in midair under a wall that hides them, and when the
+block fades `Occlusion` already draws that same rectangle a hair higher. None of that survives the
+move to a facility, and the guard was never told.
+
+A facility wall IS `TILE_BUILDING`: `FacilityAreaGenerator` maps `TEMP_BUILDING_WALL`,
+`TEMP_BUILDING_INNER_WALL` and `TEMP_BUILDING_VENT` all to tile 2. A facility WINDOW does not — it
+maps to `TILE_WINDOW1`/`WINDOWH1..V3` (35-41). Both are unwalkable; only one hits the guard. So the
+windows drew their dashes and their hatch while the wall they sit in drew nothing, which is the
+inverted-looking result the report describes. `CorpAreaGenerator` uses the same three tiles.
+
+Measured in one tactical window (`RADIUS` 16, player at 25,22): **330** blocked cells, **186 skipped**
+as tile 2, 144 drawn — 38 of those the windows, the rest benches, tables and trees. Area-wide, 457
+tile-2 cells against 117 window cells.
+
+Fix: `area.isCity() &&` in front of the tile test. The city keeps today's behaviour byte for byte. A
+facility wall is a half-cell slab with real floor either side of it (`FacilityGeom.strips`),
+`WorldCtx.floorY` is 0 there, and no `Occlusion` runs on a facility at all, so every reason the guard
+gives is absent and the marks land on visible floor.
+
+`FacilityArea.setTactical` is an empty body whose comment claims the walls "are already handled by
+render.TacticalGrid's blocked-cell pass". That claim is now true.
+
+## A window opening is a real hole in the only mesh that casts, so the moon shone through it
+
+Reported as building shadows still having window holes. They did, and it is not the roof — `addRoof`
+sets `castShadow = false` deliberately, because the moon box follows the player and a roof casting
+over its own lot would black out the building the moment you walked past it.
+
+Two facts met. Over a window run the wall emits only the faces below the sill and above the head, so
+the opening is a genuine hole in the geometry rather than a painted-over one; and of the shell's wall
+buffers only `wOut` casts, while `addPane` set `castShadow = false`. Nothing filled the hole in the
+shadow pass, so the moon went straight through the glass and put one clean parallelogram of light on
+the floor inside the wall's own shadow, per run.
+
+Isolated by flipping `castShadow` on the two live pane meshes and diffing the frame with the camera
+pinned: **49,303** changed pixels in four parallelograms, one per window run of the near wall, max
+channel delta **406/765**, and nothing else in the frame moving. Re-measured after the fix in a
+rebuilt scene: the same four patches, same row bands, ~49k of an 82k total whose remainder is
+frame-to-frame particle and bloom-dither noise.
+
+Fix: `mesh.castShadow = true` in `addPane`. Two things make that enough rather than a first
+approximation. The depth material carries the material's `alphaTest` (0.02), so the glass casts solid
+instead of casting its own texture's holes — right for a night exterior, where a window should read as
+part of the wall. And `shadowSide` flips `FrontSide` to `BackSide`, so of the two coplanar faces every
+run emits (`pane` is called once outward and once inward) the shadow pass takes exactly the one facing
+away from the moon, which is why no acne and no double-cast appeared.
+
+Cost: **70 → 72** draw calls and **+1** program (one depth permutation), for 196 tris across the two
+meshes. 0 console errors.
+
+The alternative — a shadow-only quad filling each opening, or a second uncut wall buffer for the
+shadow pass — buys nothing here and costs a buffer.
+
+## A vent is cut INTO a wall, so its icon has to hang on the masonry
+
+Reported from the game as a dotted through-wall mark lying on the ground north of the player, for
+something that "needs to be on the wall, not flat on the ground".
+
+`FacilityAreaGenerator` writes `TEMP_BUILDING_VENT` as `Const.TILE_BUILDING` and stands an
+`objects.Vent` on that cell — a grille you slither through from one side of a wall to the other.
+`AreaObject.isGroundDecal` defaults to true, so the actor layer laid the icon FLAT on the cell floor,
+which is two units inside a `WALL_T` slab. The icon was never visible from anywhere; the only thing
+that ever showed was `paintObjMark`'s `GreaterDepth` silhouette, which draws exactly where something
+hides the pose — so the bug reported itself, in dots, on the ground.
+
+The five vents in a generated area are the ONLY objects standing on a wall cell (247 objects, 5 on
+masonry), and they always sit in a straight run: `carries` W/E on three of them and N/S on two, so
+the exposed faces are always the two perpendicular to the run.
+
+Fix: a third `WorldCtx` area-kind hook beside `ground` and `climbArc`, with the same contract —
+`wallMounts(col, row)` returns one `WallMount` pose per exposed face, or **null** for every other
+cell, so the actor layer pays one grid lookup per object and allocates nothing in the common case.
+The facility points it at `FacilityGeom.wallMounts`; the city, the tunnels and the wilderness clear
+it. The pose carries its own `scale`, which is what keeps `render.Actors` from importing
+`FacilityStyle` to find out how thick that area kind builds a wall.
+
+Two things fell out that are worth writing down:
+
+- **The face's outward yaw is `Math.atan2(DC[dir], DR[dir])`** — the normal IS the direction vector
+  read as (x, z). No dir-to-rotation table, and no crossing of `render.world.Geom`'s numbering, which
+  orders its dirs differently from `FacilityGeom`'s.
+- **Painting BOTH faces stamped a permanent dotted ghost on the roof.** The far face holds an
+  identical quad that its own masonry hides, and a hidden quad is precisely what the through-wall
+  mark draws — so the near face showed the real grille while the far face's mark hung 60 px above it
+  on the roof. Only the side whose normal faces the camera is painted:
+  `(camPos - pose) · (sin rotY, cos rotY) > 0`. Measured at the reported spot — south face **+18.88**,
+  north face **−21.12**, one quad drawn.
+
+`Sprites.paint` grew a third pose: flat decal / **wall face** / frontal upright. `faceRotY` sets
+`rotation = (0, faceRotY, yaw)`, the same pose `paintWall` gives a bullet hole, and `paintObjMark`
+forwards it so the mark rides the icon exactly as it does in the other two poses.
+
+Values: `MOUNT_Y 2.0`, `MOUNT_SCALE 1.0`, `MOUNT_PROUD 0.12` (a bullet hole's nudge). At the facility
+scale — `WALL_H` 6.0 is one 3 m storey — that is a 0.9 m cover spanning 0.53-1.47 m up the wall, low
+enough to be a duct you slither into. It shipped first at half that size and twice that height.
+
+### The art, and why the honest value was the wrong one
+
+The icon was a flat pale plate with nine painted slats. `facility/vent` replaces it: a generated
+galvanised grille, full-bleed square, four corner screws, real slat/slot contrast and grain. It goes
+into `app/img/entities64.png` cell (row 16, col 1) at **38x40 on offset (13,12)** — the old icon's own
+alpha bbox, which is exactly 1520 opaque pixels = 38x40, so that icon was a solid rect and the new one
+inherits its footprint to the pixel. The 2D view's size therefore does not move, and `MOUNT_SCALE`
+alone decides the 3D one. `make tex` does NOT reach the atlas; the paste is by hand, LANCZOS, cleared
+cell (same trap as `facility/floor-grate`).
+
+**Straight out of the generator it was invisible.** The old icon measured 108/121/121 sRGB against
+`wall-exterior`'s 44/50/57 — more than twice the wall, which is why it read at all. The new art came
+back at 51/60/66, i.e. the *same value as the wall*, and in the built frame the grille measured luma
+**6.9 against the wall's 7.6** — a ratio of **0.9x**. A plate that is honestly the same steel as the
+panel behind it is a plate nobody can see.
+
+`lift` 0.7 in `textures.json` takes it to 81/92/98 and the built frame to **14.6 vs 7.6 = 1.93x**.
+Deliberately UNDER the old 3.1x: the old plate had no internal contrast, so brightness was the only
+thing that made it read, while this one carries its own slat pattern and does not have to be the
+brightest thing on the facade. Net prominence is up regardless — 2x the linear size is 4x the area,
+so 1568 px at 1.93x against 464 px at 3.1x.
+
+Verified live: the grille stands in the wall plane at the reported cell; the roof ghost is gone; and
+`wallMounts` reads **null** in a city and in the wilderness after leaving the facility, `ground` and
+`climbArc` still set where they should be. 0 new console errors. **The hooks are cleared at BUILD
+time and `View` skips a rebuild** — reading `WorldCtx` in the same tick as a `teleport` shows the
+PREVIOUS area's hooks, because `GameScene.draw3D` rebuilds on the next frame. That cost a false
+positive here.

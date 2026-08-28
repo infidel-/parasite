@@ -12,6 +12,8 @@ typedef PaintOpts = {
   var op:Float;                      // opacity
   var scale:Float;                   // uniform scale of SIZE
   @:optional var flat:Bool;          // lie flat on the ground as a decal (default false)
+  @:optional var faceRotY:Float;     // stand the quad on a WALL face with this outward normal yaw,
+                                     // instead of the frontal upright pose (see Sprites.paint)
   @:optional var yaw:Float;          // ground rotation (flat) / in-plane roll (upright), default 0
   @:optional var order:Float;        // renderOrder (ORD_*, fractional allowed to break ties), default 0
   @:optional var emissive:Int;       // self-glow color, default 0 = no glow

@@ -25,6 +25,9 @@ typedef ActorOpts = {
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
   @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): no icon and no
                                     // sprite marks at all — the prop is outlined from its own geometry
+  @:optional var walls:Array<render.world.WorldCtx.WallMount>; // the object is mounted IN a wall (a
+                                    // vent grille): hang it on the faces instead of standing it on
+                                    // the cell, one pass each (see WorldCtx.wallMounts)
 }
 
 // what the Ctrl-hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
@@ -212,8 +215,14 @@ class Actors {
               }
             // player-noticeable objects (visible() drops decorations + doors) carry the green
             // outline/through-wall marks so they stay findable in tactical and behind buildings
+            // an object whose cell is a wall of this area kind's own making is mounted IN it — the
+            // generator writes a vent as a wall cell and stands the object on it. asked per object
+            // rather than per type: only the area kind knows which of its cells are masonry, and the
+            // hook answers null for every other one, so nothing is allocated in the common case
+            var walls = (WorldCtx.wallMounts != null ? WorldCtx.wallMounts(o.x, o.y) : null);
             drawActor(o.entity, vis, dtMs, {
               flat: o.isGroundDecal(),
+              walls: walls,
               yaw: yaw,
               offx: ox,
               offz: oz,
@@ -806,6 +815,50 @@ class Actors {
         return;
       // resolve the overrides once; a caller that passes none reads the shared empty set
       var o = (opts != null ? opts : NO_OPTS);
+      // an object mounted IN a wall hangs on the masonry and takes none of the cell-standing pose
+      // below — no floor height, no ground anchor, no corpse stacking. the faces come from
+      // WorldCtx.wallMounts, one per exposed side, and the wall carries the same grille on each
+      if (o.walls != null)
+        {
+          for (wm in o.walls)
+            {
+              // only the side looking AT the camera. the opposite face holds an identical quad that
+              // its own masonry hides, and a hidden quad is precisely what the through-wall mark
+              // draws — so painting both stamped a permanent dotted ghost of the vent on the roof
+              // above it while the real grille sat plainly visible on the near face
+              var dot = (camera.position.x - wm.x) * Math.sin(wm.rotY) +
+                (camera.position.z - wm.z) * Math.cos(wm.rotY);
+              if (dot <= 0)
+                continue;
+              if (o.mark == true &&
+                  o.iconOff != true)
+                paintObjMark({
+                  e: e,
+                  op: a.op,
+                  x: wm.x,
+                  y: wm.y,
+                  z: wm.z,
+                  scale: wm.scale,
+                  flat: false,
+                  yaw: 0.0,
+                  order: Sprites.ORD_ACTOR,
+                  faceRotY: wm.rotY,
+                });
+              if (o.iconOff == true)
+                continue;
+              sprites.paint({
+                x: wm.x,
+                y: wm.y,
+                z: wm.z,
+                tex: texFor(e),
+                op: a.op,
+                scale: wm.scale,
+                order: Sprites.ORD_ACTOR,
+                faceRotY: wm.rotY,
+              });
+            }
+          return;
+        }
       var flat = (o.flat == true);
       var yaw = (o.yaw != null ? o.yaw : 0.0);
       var baseY = (o.baseY != null ? o.baseY : 0.0);
@@ -915,6 +968,7 @@ class Actors {
               op: o.op,
               scale: o.scale * ring.scale,
               flat: o.flat,
+              faceRotY: o.faceRotY,
               order: o.order,
               emissive: C.color,
               emissiveInt: C.emissive,
@@ -934,6 +988,7 @@ class Actors {
         op: o.op,
         scale: o.scale,
         flat: o.flat,
+        faceRotY: o.faceRotY,
         order: o.order,
         emissive: C.color,
         emissiveInt: C.emissive,

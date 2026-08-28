@@ -156,8 +156,15 @@ class TacticalGrid
       // .Ground paves road/alley/walkway only), so the dashes would hang in midair under a solid
       // wall that hides them — and the moment the block DOES fade, which in tactical is the whole
       // selected block, render.Occlusion already draws that identical rectangle a hair above them.
-      // what is left over is what actually surprises a player: barrels, objects, blocking decoration
-      if (area.getCellType(col, row) == Const.TILE_BUILDING)
+      // what is left over is what actually surprises a player: barrels, objects, blocking decoration.
+      //
+      // the CITY test is load-bearing, not decoration. a facility wall is the same TILE_BUILDING and
+      // not one word of the above holds for it: it is a half-cell slab with real floor either side
+      // (render.facility.FacilityGeom.strips), nothing ever fades it, and no Occlusion runs there.
+      // skipping it left 186 of the 330 blocked cells in one tactical window unmarked, while the
+      // WINDOWS in the same wall — a different tile — drew dashes and hatch in full
+      if (area.isCity() &&
+          area.getCellType(col, row) == Const.TILE_BUILDING)
         return;
       var half = CityConfig.CELL / 2;
       var c = cellToWorld(col, row);

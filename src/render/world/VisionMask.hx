@@ -768,6 +768,17 @@ class VisionMask
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
           'visMask' + mode;
       mat.needsUpdate = true;
+      // and the INDOOR swap on top, where an area asked for one. this is the single place every world
+      // surface a masked area draws with passes through, so one line here reaches the floors, the
+      // walls, the benches, the doors and the ground — the alternative was the same call repeated at
+      // every builder's material site.
+      //
+      // GATED, so it is a program PERMUTATION and not a tax: an area kind that attached no indoor mask
+      // compiles exactly the shader it compiles today, with no extra fetch on its every lit fragment.
+      // render.particles.Sprites is the one caller that does NOT go through here, and it patches
+      // unconditionally for a reason its own call site gives
+      if (IndoorMask.on)
+        IndoorMask.patch(mat);
       return mat;
     }
 }
