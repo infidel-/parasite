@@ -498,10 +498,20 @@ class View {
               // trap as the wall props and one more reason they cannot ride the city scene: their
               // material is mask-patched, and the mask extends the program cache key
               var green = render.facility.FacilityGround.GREEN;
-              // and the compound's lamp mast, which rides this chain for the same two reasons the
-              // park plants do: its glb arrives asynchronously, and its material is mask-patched
-              var lampPath = render.RenderConfig.MODELS.facilityLamp;
-              var left = objModels.length + wallProps.length + green.length + 1;
+              // and the compound's own two props, the lamp mast and the park railing, which ride this
+              // chain for the same two reasons the park plants do: their glbs arrive asynchronously,
+              // and their materials are mask-patched
+              var facProps = [
+                {
+                  path: render.RenderConfig.MODELS.facilityLamp,
+                  h: render.facility.FacilityStyle.LAMP_H,
+                },
+                {
+                  path: render.RenderConfig.MODELS.facilityFence,
+                  h: render.facility.FacilityStyle.FENCE_H,
+                },
+              ];
+              var left = objModels.length + wallProps.length + green.length + facProps.length;
               var done = function()
                 {
                   left--;
@@ -565,20 +575,23 @@ class View {
                       done();
                     });
                 }
-              // the mast, bracketed by the same attach/detach for the same reason: a real facility
-              // keeps the indoor mask on for as long as it is shown, so its lamp batch IS patched
-              // with it. the masts stand outdoors and read inAmt 0, so this is about the PROGRAM and
-              // not about how they look
-              render.Models.get(lampPath, function(_)
+              // the mast and the railing, bracketed by the same attach/detach for the same reason: a
+              // real facility keeps the indoor mask on for as long as it is shown, so both batches
+              // ARE patched with it. both stand outdoors and read inAmt 0, so this is about the
+              // PROGRAM and not about how they look
+              for (i in 0...facProps.length)
                 {
-                  render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
-                    facModel.w, facModel.h,
-                    function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
-                  M.patchMesh(render.Models.instanced(facScene, lampPath, place,
-                    render.facility.FacilityStyle.LAMP_H, SOLID).mesh);
-                  render.world.IndoorMask.detach();
-                  done();
-                });
+                  var p = facProps[i];
+                  render.Models.get(p.path, function(_)
+                    {
+                      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
+                        facModel.w, facModel.h,
+                        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
+                      M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
+                      render.world.IndoorMask.detach();
+                      done();
+                    });
+                }
             });
         }).then(function(_)
         {

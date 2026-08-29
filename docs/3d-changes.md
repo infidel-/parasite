@@ -2211,3 +2211,292 @@ and worst on a DOOR, whose patch is one cell wide and so read as a plain blob. N
 on the two generated canvases: corner texel (14,14) **233 → 255**, diagonal (8,8) **0 → 92**, the
 straight edges and the mid-row profile identical. The falloff still curves round the corner, which is
 what a soft edge does.
+
+## The compound gets a kerb, paint and a real park — Facility Phase 4
+
+Outdoor dressing, and the two asks that came with it: pavement borders "like on the streets", both
+at the road and at the park, and the road and the park ground sitting "a little below the walkway".
+
+**THE SIGN IS THE WHOLE DESIGN, and it is the opposite of the city's.** `render.world.Ground` raises
+its walkway `CURB_H` and leaves the road at 0. A compound cannot: `generateBuilding` writes a 2-cell
+pavement apron around EVERY structure — the walkway is not two strips, it rings all three buildings —
+and an indoor floor is y = 0, so raising the pavement puts a step down into every exterior doorway
+and floats every wall base. So the pavement and the LOT stay at 0 with the floors, the walls, the
+doors, the benches and every glow quad, and only the two surfaces nothing stands on drop under them:
+`FacilityStyle.KERB_DROP` = `RenderConfig.CURB_H` = 0.2, road and grass at **−0.2**. The lot stays up
+for one more reason: the sidewalk's 4×2 parking entry would otherwise be a kerb laid across a
+driveway.
+
+**One hook carried the whole area.** `FacilityTables.groundY` was already `WorldCtx.ground` (the
+worktop, phase 2). Adding the surface step to it moved actors, decals, the slime trail, `PathLine`,
+`TacticalGrid` and the cursor pick with no other edit. Measured over the built grid: road and every
+park tile **−0.20**, walkway/lot/wall/floor **0.00**, bench cells **2.00**.
+
+**The kerb is the city's, extracted.** New `render/world/Kerb.hx` holds the segment collect and the
+mitred emit; `Ground.hx` now calls it with `(BW, BT, H, 0)` and the facility with `(BW, BT, 0,
+−KERB_DROP)` — the two differ only in which of the pair moved. The miter is not optional here: the
+park is *enclosed* by walkway, so its four corners are concave and two unmitred bands at one y
+z-fight. Measured on the built area: **135 kerb segments — 61 walkway→road (the full 65-cell sidewalk
+less its 4-cell driveway) and 74 walkway→grass — and 4 risers**, exactly the driveway, where the lot
+closes its own step in asphalt. **0 wall slots**: no dropped surface touches masonry on a generated
+compound, so that branch is a guard and never fires.
+
+**The paint needed no art.** Lane lines and parking bays are geometry in the city's own
+`ground-road-paint.png`, one merged mesh: the road band is found by its row extent (it is straight,
+full width and has no intersection, so none of `Ground`'s crossing machinery is needed) and takes
+dashed/double/dashed; a bay is struck wherever a LOT cell abuts a pavement apron, which IS the edge
+cars park at, so no rectangle has to be found. Gated on the coordinate ALONG that edge, not on
+`(col + row)` — the diagonal gate a lit line uses comes out stepped on a straight run.
+
+**The park is now a layout, not a dice roll.** `generatePark` writes a 2-cell path down the park's
+long axis as plain WALKWAY, which is the trick: it arrives kerbed and lit for free, because both the
+ground pass and `FacilityLamps`' lit-line table key on a walkway boundary. Benches alternate sides
+every 5 cells as `TILE_GRASS_UNWALKABLE`, and planting comes off 4 clump centres with density falling
+with distance instead of the flat 10/30/60 per-cell roll. Generator-side, so NEW AREAS ONLY, and
+nothing migrates. Verified headlessly by generating throwaway `AreaGame`s into the live region and
+removing them again (768 areas before and after): 4-5 benches alternating on a 5-cell rhythm, planted
+cover **42% → 22%**, and the path a clean 2×30 run from the sidewalk to the far apron.
+
+**And the park needed a cap.** With a path through it, every grass cell down both sides borders a
+walkway and qualifies as a lit line — **16 candidates** on a generated area, which lines a lawn with
+street lamps. `PARK_LAMPS` = 4, the user's own number, taken row-major so which four is deterministic.
+
+The bench is `facility/bench-park`, TRELLIS off a gpt reference: **94,576 → 2,772 tris at tex 352 =
+44 texels/tri**, split 1.27× so the offline route worked, `dropMR` (metal max 255) and a straight
+`baseColor` darken from atlas 86/89/90. Two reference notes worth keeping. `propstat` called the raw
+drop TOUCHING THE EDGE and it was not — `BG_TOL` 60 keys gpt's own vignette as subject, so the
+reported bbox was the whole canvas while the real subject had 80 px of margin; and the drop came in
+at subject p50 **46** against the 69-77 that bakes correctly, fixed by `--lift 73` rather than a
+re-prompt. It is the second prop with an AUTHORED FRONT after the guard rail: **the backrest sits at
+z −0.163**, measured off the built mesh, so the front is local +z and `FacilityGround.facing` turns
+each bench at the walkway beside it. A bench facing the shrubbery is the whole failure mode.
+
+Verified live: **0 console errors**, programs **109** on facility entry — the same +5 depth-only gap
+phase 3b already recorded, so nothing here compiles a new permutation.
+
+## The kerb was drawn on two of four sides — Facility Phase 4 follow-up
+
+`Kerb.emit` wound its two quads off the direction of the segment `a->b`, and `FacilityGround`
+supplies that direction per cell edge. Measured by calling `Kerb.push`/`Kerb.emit` headlessly on one
+cell, four times, once per edge:
+
+| dir | outward n | top band normal | drop face normal | drawn |
+|---|---|---|---|---|
+| 0 (−z) | (0,−1) | **(0,−0.8,0) DOWN** | +z, **inward** | **no** |
+| 1 (+z) | (0,+1) | (0,+0.8,0) | +z | yes |
+| 2 (−x) | (−1,0) | (0,+0.8,0) | −x | yes |
+| 3 (+x) | (+1,0) | **(0,−0.8,0) DOWN** | −x, **inward** | **no** |
+
+So a kerb existed only on a surface's **+z and −x sides**, and both quads of a segment failed
+together. What showed on the other two was `KERB_DROP` = 0.2 of unglazed slit between the walkway lip
+and the surface below — no underside on the slab, so from a camera looking down it read as a **black
+strip**. The bug shipped in the extraction and the city could never show it: `Ground.hx` builds its
+border mesh `DoubleSide`, which flips the normal for a back face in the fragment shader, and
+`FacilityGround.add` builds every ground mesh `FrontSide`.
+
+Fix is four lines in `Kerb.push`: normalise `n` first, then swap the endpoints when
+`(bx−ax)*nz − (bz−az)*nx < 0`. Re-measured after the build, all four dirs now give top +y and face =
+outward. The endpoint SET is unchanged, so the miter's `vkey` join is untouched; the UV runs `0..ul`
+along `a->b`, so a reversed segment tiles the other way and nothing else notices. The city is
+DoubleSide and does not change.
+
+**The trap worth keeping: a winding bug under `DoubleSide` is not latent, it is invisible.** It was
+carried into a `FrontSide` consumer intact and only there did it become a symptom, in the two
+directions out of four that the original author's own cell happened not to exercise.
+
+## Four park lamps, all four on the wrong side of the park — Facility Phase 4 follow-up
+
+`FacilityLamps.LINES` row 2 was `{ on: GRASS, by: WALKWAY }`, and every pavement in a compound
+borders the lawn somewhere: the park is fully RINGED by walkway (measured, 120 grass↔walkway edges,
+all against walkway). Row-major scan plus the hard cap of 4 therefore spent every lamp on the rim
+before reaching the path — replayed against the real `borders()` on a live area, the four masts
+landed at `[5,19] [11,19] [2,22] [13,23]`, i.e. the park's top, left and right edges, **with every
+head aimed OUT of the park** (the head hangs toward `by`).
+
+The test that separates the two is `FacilityModel.isParkPath`: a walkway cell whose walkway RUN,
+measured across one axis, has grass at both ends. The generator writes the path as plain
+`TEMP_WALKWAY` — which is what made it arrive kerbed and lit for free — so there is no id to test and
+no rect in `generatorInfo`; what IS distinctive is lawn on both sides. Capped at `PATH_MAX` 4 cells,
+or a scan crosses a compound and calls the main sidewalk a path. Verified on a live area: it returns
+exactly the 50 cells (7,19)..(8,43), the whole 2×25 path and nothing else.
+
+The scan now COLLECTS and places afterwards, because the cap cannot be applied cell by cell: taking
+the first four of a row-major scan takes the first four ROWS of a path that is twenty-five long. Park
+candidates are thinned with `(i + 0.5) * len / take`. Replayed: 7 candidates, all on the path verge
+(cols 6 and 9 against the path at 7/8), picked at rows 24/30/36/42 over a 19..43 span. Total mast
+count unchanged at 27, matching `__facility().masts`.
+
+Aliasing worth knowing about and NOT worth fixing: candidates alternate sides because the
+`(col + row) % LAMP_SPACING` gate puts one verge on rows ≡ 0 and the other on rows ≡ 3, so an even
+stride lands all four on one side. A path lit down one side is what a real path looks like.
+
+## The park's planting was four dice, not a layout — Facility Phase 4 follow-up
+
+`generatePark` drew `PARK_CLUMPS` = 4 centres uniform over the park rect and planted within
+Manhattan `PARK_CLUMP_R` = 4 of the nearest. On the live 12×25 park that left rows 38-43 — the whole
+south end — with nothing on them. Not luck: re-ran the old planting 2000× on that exact rect and got
+**24.8% lawn planted, 29.1% of park rows completely bare, mean longest unbroken bare band 5.8 rows of
+25**, tail out to 19. Four samples cannot cover a rect however far each one reaches.
+
+Replaced with a LATTICE: a centre every `PARK_CLUMP_STEP` = 6 cells, jittered ±1 off its node, and
+`plantClump` grown around each — a tree ON the centre, trees or bushes to `PARK_CLUMP_R` = 3 halved,
+bushes thinning past that, open lawn beyond. Only `TEMP_GRASS` is overwritten, so the path, the
+benches and the neighbouring clump survive. Measured over 6 fresh in-engine generations: planted
+**30.7-39.0%**, empty rows **0-2 of 25-30**, longest bare band **0-2**. An ASCII dump reads as tree
+cores with bush skirts and real lawn between them.
+
+`PARK_CLUMP_STEP` cannot go past 7 on this park: `gw` is 12 and the lattice starts at `STEP/2`, so
+step 8 puts a single node column at x 6 and leaves the east half to a clump edge.
+
+Dead trees dropped from the park at the same time. `finalizeTiles` picked
+`Const.TILE_TREE1 + Std.random(Const.TILE_BUSH - Const.TILE_TREE1)` = `Std.random(4)`, and id +3 is
+`wild/tree-dead` — 2 of 23 trees on the live area were snags. `Std.random(3)`. A maintained
+institutional park does not keep dead wood.
+
+## The park gets a railing — `facility/fence-park`
+
+One segment per grass cell edge facing the pavement RING, and none against the path: `isParkPath`
+again, the same predicate the lamps needed. No gate cell has to be cut for the way in — the path
+meets the perimeter walkway-to-walkway, so those are not grass edges and the loop never reaches them.
+Measured on a live area: 120 grass↔walkway edges, **70 rim and 50 path**; on a synthetic 12×14 park
+built to exercise the code, 48 rim / 28 path and the batch placed **48**, zero on the path.
+
+Second prop in the repo sized to TILE after the guard rail. `FENCE_H` is DERIVED, not chosen:
+`CityConfig.CELL / FENCE_ASPECT` with the aspect measured off the glb (bbox 1.002 × 0.354 = 2.83), so
+one segment draws 4.0000 units and a run meets end to end. That is also why the reference asks for
+flat square end posts — a finial would show the join. `FENCE_INSET` 0.3 keeps it out of the kerb
+band, which protrudes `WALKWAY_BORDER_W` over the lawn at the higher level.
+
+The prop: **96,220 → 5,056 tris at tex 512 = 51 texels/tri**, split **1.38×** so the offline route
+worked. This is the LACE case `AGENTS.md` warns about — two dozen slim balusters with real
+see-through gaps — and it came back well under the ~2× line anyway, so holes did not cost the offline
+route here. Components 4 at 86.3%, top pieces 41,931 / 2,709 / 1,743 / 1,701: the rail-and-baluster
+span plus the end posts, the bolted-assembly shape the guard rail, the mast and the bench all record,
+not the 96-at-24% blob cloud the gate exists to catch. `dropMR` (metal max 255), and `baseColor`
+`[0.35, 0.52, 0.74]` — a PER-CHANNEL correction, not a flat darken, off a warm atlas mean 80/66/57;
+it lands all three channels on sRGB 48, dead centre of the 46-52 family. Reference came in at subject
+p50 54 and took `--lift 73`, the same too-close-to-its-own-key subject the guard rail logs (grey
+steel against the `#5a5d63` backdrop, subject margin 32).
+
+It rides the `green` array rather than a field of its own: everything that array is FOR applies to it
+unchanged — one `Models.cull` per frame, one row in `__facility().batches`. The batches loop had to
+learn that the last row is not in `GREEN`.
+
+## The dead snag, the overhanging bush, and a park that joins up — Facility Phase 4 follow-up 2
+
+**Dead trees, retroactively.** The generator stopped writing `Const.TILE_TREE1 + 3` last pass, but
+that is new-areas-only and an existing park still has those cells on its grid. So the render side
+drops the row too: `FacilityGround.GREEN` no longer lists `wild/tree-dead`, and `green` folds the id
+onto the conifer on the way in. A REMAP and not a skip — a green cell with nothing drawn on it is a
+wall the player cannot see. Measured on a freshly generated park: batches come back conifer /
+broadleaf / broadleaf-full / bush-low / bench, no `tree-dead` row at all.
+
+**Bushes over the railing and over the path, and the arithmetic was there to be read.** `bush-low`
+measures aspect **1.91**, and `GREEN` draws it at `h` 1.1, so it is **2.10 world units across** — a
+radius of 1.05. Its `jitter` 0.28 of a 4-unit cell reaches 1.12. **1.12 + 1.05 = 2.17 against a
+half-cell of 2.0**, so at full lean a bush crossed its own cell boundary by 0.17, which put it over
+the park path — and 0.47 past the railing, which stands `FENCE_INSET` 0.3 inside that boundary.
+
+`lean()` cancels the offending axis: an offset that points at a cell which is not lawn is dropped,
+one axis at a time, leaving the inward half of the spread untouched. Measured over 140 bushes on a
+generated park, minimum clearance from a bush's rim to any non-lawn boundary went from **−0.17 to
++0.945**, and to the railing's inner face **+0.56**. Nothing to tune: it is a predicate, not a knob.
+
+**Fence corners crossed instead of joining.** A corner cell fences two perpendicular edges, and each
+run reaches its full half-cell along its own axis while the other run's line sits `FENCE_INSET` short
+of it — so the two overlapped by exactly 0.3 at each end and read as one fence laid over another.
+Every end that meets a perpendicular run is now pulled back to that run's line, with the segment
+shifted half of what it lost so its far end stays put. Verified on a synthetic 12x14 park: 48
+instances in **two** scales, 40 at 3.9986 world units and **8 at 3.6987** — 0.925, i.e. 3.7/4.0, and
+8 = 4 corners x 2 runs. The NW corner's north run now spans x [−183.70, −180.00] and its west run z
+[−195.70, −192.00]: each ends exactly on the other's line, meeting at (−183.70, −195.70).
+
+The cost is that shortening is a UNIFORM scale, so a corner segment is 7.5% shorter in height too —
+0.11 world units, under 3% of a cell. The alternative is a second glb cut for corners, which is not
+worth a draw call and an atlas.
+
+**A shrub line under the railing, and the planting doubled.** `generatePark` now walks the park
+rect's border and writes a bush every `PARK_EDGE_BUSH_SPACING` = 3 cells, gated on `(x + y)` — which
+on a rim run has one coordinate fixed and therefore steps evenly along it, the diagonal it would step
+on elsewhere never arising. Only lawn is overwritten, so the two cells where the path crosses the rim
+stay open and the way in does not need cutting.
+
+`PARK_CLUMP_STEP` 6 → 4; clump count goes as the inverse square, so 2.25x the centres. Measured over
+6 fresh in-engine generations against the previous pass:
+
+| | before | after |
+|---|---|---|
+| trees | 26-29 | **45-55** (1.9x) |
+| bushes | 64-102 | **131-174** (1.8x) |
+| lawn planted | 30.7-39.0% | **58.3-70.4%** |
+| rows completely bare | 0-2 | **0-1** |
+| dead-tree tiles | 2 of 23 trees | **0** |
+| rim bushes | — | 35-45 of ~76 rim cells |
+
+Region count 768 before and after every probe, so the throwaway `AreaGame`s leak nothing.
+
+## The bench needed COLOUR, the canopy needed burying — Facility Phase 4 follow-up 3
+
+**Sources moved.** Every facility glb and its archived reference now lives in `models-src/facility/`
+(`bench-park-100k`, `fence-park-100k`, `lamp-post-100k`, each with its `-src.png`, plus
+`lamp-post-emissive.png`), matching what `sewer/` and `wild/` already do. Three `src` / `emissiveSrc`
+paths in `models.json`; `make models` resolves subdirectories already.
+
+**The bench's slats had no gaps, and the cause was that it was GREY ON GREY.** TRELLIS segments the
+subject against the flat `#5a5d63` backdrop, and grey painted steel a couple of values off that
+backdrop gives it nothing to resolve a hole against — so it filled the spaces between the seat slats
+and returned one solid board. The fix was **colour, not settings**: a dark bottle-green cast frame
+with pale olive timber separates on hue as well as value, and the gaps came back as real openings.
+Two other things earned their place in the prompt — saying what the gaps ARE ("clear open gaps of
+empty space… must read as real openings, not painted lines or grooves") with a count, five seat slats
+and four back, and shooting **three-quarter** rather than side-on so the seat top and its gaps are
+both visible to the generator.
+
+The result: **98,934 → 3,650 tris at tex 432 = 51 texels/tri**, split 1.31×, `dropMR`, `baseColor`
+`[0.65, 0.52, 0.66]` — a per-channel correction off a GREEN atlas mean 58/66/59, landing all three
+channels on sRGB 46-48. Components 16 at 59.7%, top five 29,525 / 3,401 / 3,202 / 2,179 / 2,107 —
+and here that is close to a **pass signal**, because those small pieces are the individual slats and
+slats that are separate components are exactly what the regeneration was for.
+
+**A regenerated prop's FRONT is not where the last one's was.** The old bench lay along local z and
+faced +z. This one lies along local Z with its depth on x, and the backrest — being the tall part —
+measures at mean **x −0.138** against the mesh's own −0.012, so it faces local **+X**. The yaw that
+aims a +x front down (dx, dz) is `atan2(−dz, dx)`, which is the mast's `atan2(DC, DR)` **less π/2**,
+and that is the one line in `facing()` that had to move with the model. Verified over every bench in
+a generated park: the front's dot product with the walkway direction beside it is **1.0000**.
+
+`PARK_BENCH_H` moved too, 1.8 → **2.34**, because the aspect went 1.98 → **1.52**. It is sized for
+LENGTH (3.56 units in a 4-unit cell, what reads from overhead), which costs a bench standing 1.17 m
+rather than 0.9 m. The alternative was a stubby 2.74-unit bench, which is worse from above.
+
+**`tree-broadleaf-full` gets buried 7% of its height.** Its canopy runs to the very bottom of the
+model and ends in a ragged fringe of holes and spikes where a trunk ought to be — TRELLIS was never
+given a trunk to build, so no regeneration fixes it, and the wilderness's `r` does not either (that
+one tilts a prop into a SLOPE, and this is worst on FLAT ground). `WildStyle.BROADLEAF_SINK` = 0.07,
+read by `WildProps.sit` for the scatter and by `FacilityGround.GREEN` for the same glb in a park —
+one constant, because it is a property of the mesh and not of either area. In `sit` it rides the same
+instance scale as the slope correction, so a half-size thicket tree is buried half as deep. Measured
+on a built park: base y **0.665 below** the surface, exactly 0.07 × 9.5.
+
+**`tree-broadleaf` is a dead tree.** Its own `models.json` line says "bare broadleaf, thick limbs, no
+foliage" — the previous pass removed only the snag at `TILE_TREE1 + 3` and left this one, which is
+why dead wood was still showing. Both are gone from the park now: the generator deals
+`Std.random(2) * 2` (ids +0 and +2, the two in leaf), and `FacilityGround` folds +1 → +2 and +3 → +0
+on the render side so an area saved earlier is covered too. `GREEN` is four rows. Measured over 6
+fresh parks: tile ids **5, 7, 9, 10, 11 only** — no 6, no 8.
+
+**The railing stops where the path's kerb starts.** A run dying into the path mouth was taken to the
+cell boundary, laying its last stretch on top of the path's own border band, which protrudes
+`WALKWAY_BORDER_W` over the lawn. `endCut` now answers both pull-backs at one end — `FENCE_INSET` at
+a corner, `WALKWAY_BORDER_W` at a path mouth — so the caller shortens by `lo + hi` and shifts by half
+their difference either way. Verified on a synthetic park: 48 instances in **three** scales, 36 at
+3.9986 (straight), **8 at 3.6987** (corners, 0.925) and **4 at 3.7987** (path mouths, 0.95 = a 0.2
+cut) — 4 being 2 mouths × 2 sides, at x −166.10 and −153.90 against cell centres of −166 and −154,
+i.e. shifted ∓0.10 away from the mouth.
+
+**Trees doubled again, bushes untouched.** The tree zone was `d * 2 <= PARK_CLUMP_R` and is now
+`d < PARK_CLUMP_R`. A Manhattan diamond of radius 3 holds 1 / 4 / 8 / 12 cells at d = 0..3, so the
+core goes from 5 cells to 13: trees per clump 1 + 4×0.55 = 3.2 → 1 + 12×0.55 = 7.6, while bushes are
+unmoved at 10.8 either way (12×0.45 core + 12×0.45 skirt against 4×0.45 + 20×0.45). Measured over 6
+generations: **trees 45-55 → 80-102** (1.8×), **bushes 131-174 → 123-179** (flat), lawn planted
+**58-70% → 73-81%**.

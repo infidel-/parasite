@@ -245,6 +245,9 @@ class WildProps
   static inline function sit(mi:Int, x:Float, z:Float, s:Float = 1.0):Float
     {
       var p = WildStyle.PROPS[mi];
-      return WildHeight.at(x, z) - p.h * p.r * s * WildHeight.slope(x, z);
+      // `sink` rides the same instance scale as the slope correction and for the same reason: it is
+      // a fraction of the prop's own height, so a half-size thicket tree must be buried half as deep
+      return WildHeight.at(x, z) - p.h * s *
+        (p.r * WildHeight.slope(x, z) + (p.sink != null ? p.sink : 0.0));
     }
 }

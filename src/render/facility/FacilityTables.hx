@@ -101,17 +101,25 @@ class FacilityTables
         [us, 0, ue, 0, ue, 1, us, 1]);
     }
 
-// worktop height under a WORLD point, for render.world.WorldCtx.ground.
+// the height of whatever an actor or a decal rests on at a WORLD point, for render.world.WorldCtx
+// .ground. two things stack here and neither is optional.
 //
-// this is what stands a table decoration ON its bench instead of inside it. the generator writes the
-// decoration onto the SAME cell as the table tile it belongs to (FacilityAreaGenerator's chem-lab
-// pass), so without this every flask and microscope in the area sits at y = 0 with a metre of
-// casework in front of it. WorldCtx.ground is the one hook for exactly this, and going through it
-// means the sprite, its shadow, its fade and the cursor pick all follow with no code of their own
+// the WORKTOP is what stands a table decoration ON its bench instead of inside it: the generator
+// writes the decoration onto the SAME cell as the table tile it belongs to (FacilityAreaGenerator's
+// chem-lab pass), so without this every flask and microscope in the area sits at y = 0 with a metre
+// of casework in front of it.
+//
+// the SURFACE is the kerb step (FacilityStyle.KERB_DROP), and routing it through here is what makes
+// the whole compound follow for free — actors, decals, the slime trail, the path line, the tactical
+// grid and the cursor pick all read this one hook and nothing else had to be touched
   public static function groundY(m:Facility, x:Float, z:Float):Float
     {
       var c = CityConfig.worldToCell(x, z);
-      return FacilityModel.isTable(m, c.col, c.row) ? FacilityStyle.BENCH_H : 0.0;
+      if (FacilityModel.isTable(m, c.col, c.row))
+        return FacilityStyle.BENCH_H;
+      if (!FacilityModel.inside(m, c.col, c.row))
+        return 0.0;
+      return FacilityGround.surfY(m.surf[c.row][c.col]);
     }
 
 // merge one buffer into a lit mesh. interior surfaces, so they receive the moon's shadow and cast

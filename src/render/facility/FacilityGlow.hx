@@ -62,7 +62,7 @@ class FacilityGlow
           var lo = CityConfig.cellToWorld(w.col, w.row);
           var hi = CityConfig.cellToWorld(w.col + (w.alongX ? w.len - 1 : 0),
             w.row + (w.alongX ? 0 : w.len - 1));
-          spill(b, lo, hi, w.alongX, w.inDir);
+          spill(b, m, lo, hi, w.alongX, w.inDir);
           // one shadow source per CELL of the run rather than one at its centre. it matters: the
           // reach is 3 cells and a 3-cell run is 3 cells LONG, so an actor standing off one end of a
           // centred source would be shadowed along the wall instead of away from it
@@ -79,7 +79,7 @@ class FacilityGlow
             continue;
           var c = CityConfig.cellToWorld(d.col, d.row);
           // `spill` speaks the window convention, where the sign points at the INTERIOR
-          spill(b, c, c, d.alongX, -out);
+          spill(b, m, c, c, d.alongX, -out);
           lamps.push(opening(d.col, d.row));
         }
       add(scene, b);
@@ -132,23 +132,32 @@ class FacilityGlow
 //
 // it is a TRAPEZOID, not a rectangle: the far edge is FacilityStyle.SPILL_SPREAD wider per side, so
 // the patch fans the way light out of an aperture actually does. the uv stays 0..1 across the quad,
-// so the shared gradient still fits it — the fan costs two numbers and no extra geometry
-  static function spill(b:MeshBuf, lo:{ x:Float, z:Float }, hi:{ x:Float, z:Float },
+// so the shared gradient still fits it — the fan costs two numbers and no extra geometry.
+//
+// it lies at the height of the surface it falls ON, sampled at the cell immediately outside the
+// opening — ONE sample, not four. a patch on a window facing the park would otherwise float the
+// kerb step; and a corner sample is worthless anyway, because a quad corner sits exactly on a cell
+// boundary where CityConfig.worldToCell rounds either way (see FacilityTables.hatchY)
+  static function spill(b:MeshBuf, m:Facility, lo:{ x:Float, z:Float }, hi:{ x:Float, z:Float },
       alongX:Bool, inDir:Int):Void
     {
       var d = -inDir * FacilityStyle.SPILL_DEPTH;
       var e = FacilityStyle.SPILL_SPREAD;
+      var o = CityConfig.worldToCell(lo.x - (alongX ? 0 : inDir * CELL),
+        lo.z - (alongX ? inDir * CELL : 0));
+      var y = FacilityStyle.GLOW_Y + (FacilityModel.inside(m, o.col, o.row)
+        ? FacilityGround.surfY(m.surf[o.row][o.col]) : 0.0);
       if (alongX)
         {
           var z = lo.z + d;
-          quad(b, [lo.x - CELL / 2, FacilityStyle.GLOW_Y, lo.z], [hi.x + CELL / 2, FacilityStyle.GLOW_Y, lo.z],
-            [hi.x + CELL / 2 + e, FacilityStyle.GLOW_Y, z], [lo.x - CELL / 2 - e, FacilityStyle.GLOW_Y, z],
+          quad(b, [lo.x - CELL / 2, y, lo.z], [hi.x + CELL / 2, y, lo.z],
+            [hi.x + CELL / 2 + e, y, z], [lo.x - CELL / 2 - e, y, z],
             FacilityStyle.C_SPILL);
           return;
         }
       var x = lo.x + d;
-      quad(b, [lo.x, FacilityStyle.GLOW_Y, lo.z - CELL / 2], [lo.x, FacilityStyle.GLOW_Y, hi.z + CELL / 2],
-        [x, FacilityStyle.GLOW_Y, hi.z + CELL / 2 + e], [x, FacilityStyle.GLOW_Y, lo.z - CELL / 2 - e],
+      quad(b, [lo.x, y, lo.z - CELL / 2], [lo.x, y, hi.z + CELL / 2],
+        [x, y, hi.z + CELL / 2 + e], [x, y, lo.z - CELL / 2 - e],
         FacilityStyle.C_SPILL);
     }
 

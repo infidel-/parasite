@@ -123,6 +123,11 @@ typedef Facility = {
 
 class FacilityModel
 {
+  // how wide a walkway run isParkPath will still cross, in cells. the generator's path is
+  // game.FacilityAreaGenerator.PARK_PATH_W wide; this is that with slack, and low enough that a
+  // compound's own pavement never reads as one
+  static inline var PATH_MAX = 4;
+
 // build the model from an area's saved cells
   public static function fromArea(area:AreaGame):Facility
     {
@@ -238,6 +243,45 @@ class FacilityModel
         s == Surf.LINO ||
         s == Surf.GRATE ||
         s == Surf.CONCRETE;
+    }
+
+// is this walkway cell the PARK PATH rather than perimeter pavement — the run of walkway it lies
+// in, measured across one axis, has GRASS at both ends.
+//
+// there is nothing else to test. game.FacilityAreaGenerator writes the path as plain TEMP_WALKWAY
+// (which is the whole reason it arrives kerbed and lit for free), so by the time it reaches here it
+// is indistinguishable by id from the aprons ringing every structure and from the sidewalk along
+// the road — and the park's own rect is not in generatorInfo either. what IS distinctive is that a
+// path has lawn on BOTH sides of it and a perimeter pavement has lawn on one.
+//
+// the walk is capped at PATH_MAX: unbounded, a scan across a compound's pavement would eventually
+// reach a lawn on the far side of the site and call the main sidewalk a park path
+  public static function isParkPath(m:Facility, col:Int, row:Int):Bool
+    {
+      if (!inside(m, col, row) ||
+          m.surf[row][col] != Surf.WALKWAY)
+        return false;
+      return (grassAcross(m, col, row, -1, 0) && grassAcross(m, col, row, 1, 0)) ||
+        (grassAcross(m, col, row, 0, -1) && grassAcross(m, col, row, 0, 1));
+    }
+
+// step off (col,row) one way over the walkway run it stands in: is the first cell past that run
+// grass? false once the run outlasts PATH_MAX cells, which is what stops a path test crossing a
+// whole compound
+  static function grassAcross(m:Facility, col:Int, row:Int, dc:Int, dr:Int):Bool
+    {
+      var c = col + dc;
+      var r = row + dr;
+      for (_ in 0...PATH_MAX)
+        {
+          if (!inside(m, c, r))
+            return false;
+          if (m.surf[r][c] != Surf.WALKWAY)
+            return m.surf[r][c] == Surf.GRASS;
+          c += dc;
+          r += dr;
+        }
+      return false;
     }
 
 // is this cell WELL INSIDE a building — floor or wall, with nothing but building on every side?

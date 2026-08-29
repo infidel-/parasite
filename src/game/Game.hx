@@ -772,7 +772,10 @@ class Game extends _SaveObject
 // save current game into slot
   public function save(slotID: Int)
     {
-      if (!isStarted ||
+      // isInited for the reason autosave records: a failed load leaves the game wiped but otherwise
+      // looking like a running one, and a manual save then overwrites a slot with an empty world
+      if (!isInited ||
+          !isStarted ||
           state != GAMESTATE_RUNNING)
         {
           debug('Not in game.');
@@ -836,7 +839,14 @@ class Game extends _SaveObject
 // not-allowed-to-save states as manual save (mission/chat/not-running).
   public function autosave(force: Bool = false)
     {
-      if (!isStarted ||
+      // isInited is the WIPED-GAME guard and it is the one that matters here. Loader.load calls
+      // restartPre() before it reads the file, which clears isInited and tears the world down, and
+      // a load that then fails leaves the game sitting there wiped — still isStarted, still
+      // GAMESTATE_RUNNING, so every other test below passes. The next autosave then wrote an EMPTY
+      // world over the reserved slot and destroyed the save the failed load had been reading. A
+      // successful load restores isInited from the save itself, so nothing legitimate is blocked
+      if (!isInited ||
+          !isStarted ||
           state != GAMESTATE_RUNNING ||
           ui.hud.state == HUD_CHAT ||
           player.inMissionArea())
@@ -863,8 +873,9 @@ class Game extends _SaveObject
       var warnings = mods.ModRegistry.diffSaveMods(saveMods);
       if (warnings.length == 0)
         {
-          Loader.load(this, slotID);
-          applyLoaded();
+          // only on a load that actually restored a game graph — see Loader.load's return
+          if (Loader.load(this, slotID))
+            applyLoaded();
           return;
         }
 
@@ -892,8 +903,8 @@ class Game extends _SaveObject
           text: buf.toString(),
           func: function(yes: Bool) {
             if (!yes) return;
-            Loader.load(self, slotID);
-            self.applyLoaded();
+            if (Loader.load(self, slotID))
+              self.applyLoaded();
           }
         }
       });

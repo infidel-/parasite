@@ -20,6 +20,13 @@ typedef LampSet = {
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
 };
 
+// one cell the scan accepted, before anything is built from it
+typedef LampHit = {
+  col:Int,  // the cell the mast stands on
+  row:Int,  // ^
+  dir:Int,  // which of the four cell edges faces the surface it lights (FacilityGeom's numbering)
+};
+
 // the facility's light SOURCES: the masts standing along its outdoor lit lines, and the fixtures
 // hung over its rooms. a mast draws its own model — whose head carries an emissive map and so glows
 // and blooms on its own, the way a street lamp's lens does — plus its cone of lit air; a ceiling
@@ -54,8 +61,9 @@ class FacilityLamps
   //
   // the generator lays a 4-wide main road with a 2-wide sidewalk against it, a 2-wide walkway up the
   // west edge with the park beside it, and fills everything else with lot (game.FacilityAreaGenerator
-  // lines 66-104) — so these three rows are the kerb along the road, the lot's edge against that
-  // sidewalk, and the park path
+  // lines 66-107) — so these three rows are the kerb along the road, the lot's edge against that
+  // sidewalk, and the park path. the last one is NOT satisfied by `by` alone: see the isParkPath
+  // test in `build`, without which it matches the pavement round the park as well as the path in it
   static final LINES = [
     { on: Surf.WALKWAY, by: Surf.ROAD },
     { on: Surf.LOT, by: Surf.WALKWAY },
@@ -71,6 +79,11 @@ class FacilityLamps
       var places:Array<Models.PropPlace> = [];
       var bulbY = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Y;
       var reach = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Z;
+      // the scan COLLECTS rather than places, because the park line cannot be settled cell by cell:
+      // it takes a fixed few posts out of a run whose length is only known once the whole run has
+      // been seen
+      var hits:Array<LampHit> = [];
+      var parkHits:Array<LampHit> = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -89,41 +102,74 @@ class FacilityLamps
                 var dir = borders(m, col, row, ln.by);
                 if (dir < 0)
                   continue;
-                // the post stands on the grid VERTEX between this cell and the surface it lights,
-                // not in the middle of a walkable cell. the free axis takes the +x/+z side, the
-                // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
-                var a = (dir == 2 ? col - 1 : col);
-                var b = (dir == 0 ? row - 1 : row);
-                var v = CityConfig.cellToWorld(a, b);
-                var px = v.x + CELL / 2;
-                var pz = v.z + CELL / 2;
-                // the head hangs off the mast toward the surface being lit, so the yaw is the aim
-                // vector's own angle — the glb's head points at local +z (FacilityStyle.LAMP_HEAD_Z)
-                var yaw = Math.atan2(DC[dir], DR[dir]);
-                places.push({
-                  x: px,
-                  z: pz,
-                  yaw: yaw,
-                });
-                masts.push({
-                  x: px + DC[dir] * reach,
-                  z: pz + DR[dir] * reach,
-                  y: bulbY,
-                  // straight down: the head is a shrouded DOWNlight, so it pools at its own feet
-                  // where a sewer wall bracket rakes metres out along the wall
-                  tx: px + DC[dir] * reach,
-                  tz: pz + DR[dir] * reach,
-                  color: FacilityStyle.LAMP_COLOR,
+                var hit = {
                   col: col,
                   row: row,
-                  phase: 0.0,
-                  flick: 1.0,
-                  mul: 1.0,
-                });
-                corners.set(ActorAnim.lampVertexKey(a, b), BEND_DIR[dir]);
+                  dir: dir,
+                };
+                // the park line is the one that has to ask WHICH walkway. the compound's own
+                // pavement wraps the lawn on every side, so `by: WALKWAY` alone matched the rim
+                // as readily as the path — and with a row-major scan and a hard cap of four, the
+                // rim is all that ever got picked: measured 4 of 4 on the park's top and side
+                // edges, every head aimed OUT of the park. the path is what wants lighting
+                if (ln.on == Surf.GRASS)
+                  {
+                    if (FacilityModel.isParkPath(m, col + DC[dir], row + DR[dir]))
+                      parkHits.push(hit);
+                    break;
+                  }
+                hits.push(hit);
                 break;
               }
           }
+      // and thin the path's candidates to the cap, spread along the run instead of taken off its
+      // head — the scan is row-major, so the first PARK_LAMPS of them are the first PARK_LAMPS
+      // rows of a path that may be twenty-five long
+      var take = (parkHits.length < FacilityStyle.PARK_LAMPS
+        ? parkHits.length : FacilityStyle.PARK_LAMPS);
+      for (i in 0...take)
+        hits.push(parkHits[Std.int((i + 0.5) * parkHits.length / take)]);
+
+      for (h in hits)
+        {
+          // the post stands on the grid VERTEX between this cell and the surface it lights, not in
+          // the middle of a walkable cell. the free axis takes the +x/+z side, the
+          // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
+          var a = (h.dir == 2 ? h.col - 1 : h.col);
+          var b = (h.dir == 0 ? h.row - 1 : h.row);
+          var v = CityConfig.cellToWorld(a, b);
+          var px = v.x + CELL / 2;
+          var pz = v.z + CELL / 2;
+          places.push({
+            x: px,
+            z: pz,
+            // the head hangs off the mast toward the surface being lit, so the yaw is the aim
+            // vector's own angle — the glb's head points at local +z (FacilityStyle.LAMP_HEAD_Z)
+            yaw: Math.atan2(DC[h.dir], DR[h.dir]),
+            // the MODEL follows the surface it stands on — a park mast would otherwise float
+            // the kerb step over its own lawn. the LampPost below deliberately does not: its
+            // `y` is the bulb height render.actors.LampShadows scales an actor's fake shadow
+            // by (refY / post.y), and moving it 0.2 for a mast on grass would rescale every
+            // shadow it throws for nothing anyone can see
+            y: FacilityGround.surfY(m.surf[h.row][h.col]),
+          });
+          masts.push({
+            x: px + DC[h.dir] * reach,
+            z: pz + DR[h.dir] * reach,
+            y: bulbY,
+            // straight down: the head is a shrouded DOWNlight, so it pools at its own feet
+            // where a sewer wall bracket rakes metres out along the wall
+            tx: px + DC[h.dir] * reach,
+            tz: pz + DR[h.dir] * reach,
+            color: FacilityStyle.LAMP_COLOR,
+            col: h.col,
+            row: h.row,
+            phase: 0.0,
+            flick: 1.0,
+            mul: 1.0,
+          });
+          corners.set(ActorAnim.lampVertexKey(a, b), BEND_DIR[h.dir]);
+        }
 
       var ceilings = [];
       for (r in m.rooms)

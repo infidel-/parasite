@@ -100,6 +100,10 @@ class FacilityArea implements Area3D
       shells = FacilityGeom.build(scene, model);
       FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
+      // the park railing rides the same array as the plants, which is not laziness: everything the
+      // array is FOR applies to it unchanged — one per-frame Models.cull, one row in __facility()'s
+      // batches. it is only ever appended, so the plants stay index-aligned with GREEN
+      green.push(FacilityGround.fence(scene, model));
       doors = FacilityDoors.build(scene, model, game.area);
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
@@ -136,7 +140,10 @@ class FacilityArea implements Area3D
           var batches = [];
           for (i in 0...green.length)
             batches.push({
-              path: FacilityGround.GREEN[i].path,
+              // `green` is the GREEN table plus the park railing appended after it (see `build`), so
+              // the last row is the one GREEN cannot name
+              path: (i < FacilityGround.GREEN.length
+                ? FacilityGround.GREEN[i].path : render.RenderConfig.MODELS.facilityFence),
               count: green[i].matrices.length,
             });
           var structures = [];

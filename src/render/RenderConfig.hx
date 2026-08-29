@@ -682,6 +682,14 @@ class RenderConfig {
     // path (render.facility.FacilityLamps). it carries NO emissive map where the two street lamps
     // above both do — the glowing head is an additive quad in the area's merged glow mesh instead
     facilityLamp: 'models/facility/lamp-post.glb',        // modern slim mast, shrouded downlight head
+    // the compound's park bench, one per unwalkable grass cell beside the park path. the second prop
+    // in the game with an AUTHORED FRONT after the guard rail: its yaw is turned at the path, never
+    // random (render.facility.FacilityGround.facing)
+    facilityBenchPark: 'models/facility/bench-park.glb',  // slatted seat and back on cast-steel ends
+    // the railing round the OUTSIDE of the park — never along the path through it. the second prop in
+    // the game sized to TILE after the guard rail: FacilityStyle.FENCE_H is derived from its own
+    // aspect so one segment draws exactly a cell wide and a run meets end to end
+    facilityFence: 'models/facility/fence-park.glb',      // flat-topped steel railing, one cell long
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
     wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long

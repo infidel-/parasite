@@ -15,6 +15,10 @@ typedef WildProp = {
                  // this is the one field that decides how a prop meets uneven land
   jitter:Float,  // per-instance scale spread, as a fraction of h either side of 1.0. a hundred
                  // identical trees is wallpaper, and this is the cheapest thing that breaks it
+  ?sink:Float,   // how far the prop is BURIED below the ground it sits on, as a fraction of its own
+                 // height, on top of whatever the slope correction takes. for a mesh whose bottom is
+                 // not a real footprint but the ragged end of a generated surface. absent on every
+                 // row whose base is solid, which is most of them
 };
 
 // art + dimensions for the 3D wilderness — the render.world.CityStyle of open ground. there is one
@@ -96,6 +100,14 @@ class WildStyle
   // player walks into the green. the fix belongs in the MODEL — a crown confined to the top of its
   // own bbox — and `h` then scales the clearance with it. see the broadleaf-full row below, which is
   // the only `h` here set by that number rather than by look
+  // how far wild/tree-broadleaf-full is buried below the ground it stands on, as a fraction of its
+  // own height. its canopy runs to the very bottom of the model and ends in a ragged fringe of holes
+  // and spikes where a trunk ought to be — TRELLIS was never given a trunk to build, so no
+  // regeneration fixes it and no `r` hides it (that one only tilts a prop into a SLOPE, and it is
+  // worst on flat ground). burying the fringe costs nothing. read by WildProps.sit for the scatter
+  // and by render.facility.FacilityGround.GREEN for the same glb in a park
+  public static inline var BROADLEAF_SINK = 0.09;
+
   public static var PROPS:Array<WildProp> = [
     {
       path: RenderConfig.MODELS.wildTreeConifer,
@@ -125,6 +137,7 @@ class WildStyle
       h: 9.5,
       r: 0.37,
       jitter: 0.22,
+      sink: BROADLEAF_SINK,
     },
     {
       path: RenderConfig.MODELS.wildTreeDead,

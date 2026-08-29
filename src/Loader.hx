@@ -9,8 +9,12 @@ import game.*;
 
 class Loader
 {
-// load game from a slot and restore all runtime links
-  public static function load(game: Game, slotID: Int)
+// load game from a slot and restore all runtime links. returns whether the game graph came back
+// intact: a caller MUST NOT touch the game after a false, because restartPre() has already wiped it
+// and there is nothing valid to read. game.Game.applyLoaded used to run either way, so every failed
+// load threw a SECOND exception out of the HUD refresh (ui.HUD.update -> PlayerArea.updateActionList
+// on a null area) and that is the one the player saw — the real cause was only in the log
+  public static function load(game: Game, slotID: Int): Bool
     {
       // no game graph yet (booted straight to menu without generating a world):
       // build the scaffold init(true) used to create at boot, so the restore has a
@@ -47,9 +51,21 @@ class Loader
           game.ui.onError('load game: ' + e, '', -1, -1, {
             stack: haxe.CallStack.toString(haxe.CallStack.exceptionStack()),
           });
-          return;
+          return false;
         }
 #end
+      // the two pointers above can come back null WITHOUT throwing, when the save names a region or
+      // an area the restored world does not hold — and the ENTER trace on the next line would then
+      // be the throw, outside the try and uncaught. checked here so a bad save fails the same way a
+      // corrupt one does
+      if (game.region == null ||
+          game.area == null)
+        {
+          game.ui.onError('load game: save names region ' + Std.string(game.region) +
+            ' / area ' + Std.string(game.area) + ', which the loaded world does not hold',
+            '', -1, -1, null);
+          return false;
+        }
 
       // run post-load initialization chain
       trace('====== ENTER ' + game.area.id);
@@ -102,6 +118,7 @@ class Loader
               ' from this save because the mod that supplied them is no longer enabled.',
           });
         }
+      return true;
     }
 
 // join a list with commas and a final "and" — "a", "a and b", "a, b and c"

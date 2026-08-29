@@ -87,6 +87,32 @@ class FacilityStyle
   // its transparent half renders as flat scrubbed grey between the clumps — the park read as holes.
   // a full-coverage lawn is a different painting, not a setting
   public static inline var GROUND_GRASS = 'textures/facility/grass.png';
+  // the kerb edging that runs wherever the pavement's edge drops, and the worn traffic paint the
+  // road's lane lines and the parking bays are drawn in. both the city's own files, like the three
+  // grounds above
+  public static inline var GROUND_BORDER = 'textures/city/ground-walkway-border.png';
+  public static inline var GROUND_PAINT = 'textures/city/ground-road-paint.png';
+
+  // how far the road and the park lie BELOW the pavement, world units. the street's own kerb step
+  // verbatim (render.RenderConfig.CURB_H), and render.world.Kerb draws the edging off that file's
+  // WALKWAY_BORDER_W / _TILE too, so a compound's kerb and a street's are the same object.
+  //
+  // THE SIGN IS THE DESIGN. a city raises its walkway and leaves the road at 0; a compound cannot,
+  // because game.FacilityAreaGenerator.generateBuilding writes a 2-cell pavement apron around every
+  // structure and an indoor floor is y = 0 — raise the pavement and every exterior threshold becomes
+  // a step down into the building and every wall base floats. so the pavement and the LOT stay at 0,
+  // with the floors, the walls, the doors, the benches and every glow quad, and the two surfaces
+  // nothing stands on drop under them instead. the lot keeps pavement level for the same reason plus
+  // one more: the sidewalk's parking entry (that generator's 4x2 gap) would otherwise be a kerb laid
+  // across a driveway
+  public static inline var KERB_DROP = render.RenderConfig.CURB_H;
+  // how far the painted lines float over the asphalt they lie on — the street's PAINT_Y, and like it
+  // measured off the ROAD's own surface and not off y = 0
+  public static inline var PAINT_Y = render.RenderConfig.PAINT_Y;
+  // a parking bay is this deep, in cells, and one is struck every this many cells along the apron
+  // edge it is drawn against
+  public static inline var BAY_CELLS = 2;
+  public static inline var BAY_SPACING = 2;
 
   // world units per texture repeat. none of them is a multiple of CELL (4): a period that lands on
   // the cell grid puts the same point of the tile on every grid line and the lattice reads through
@@ -221,6 +247,29 @@ class FacilityStyle
   // wilderness arrived at for the same tree
   public static inline var PROP_CULL_R = 9.0;
 
+  // the park bench's world HEIGHT, which through render.Models.instanced is also its LENGTH: the
+  // regenerated glb measures 0.477 x 0.655 x 0.998, an aspect of 1.52, so this puts a 3.56-unit
+  // bench in a 4-unit cell — the same length the first bench drew, because length is what reads from
+  // an overhead camera and it is sized for that. it is NOT the old 1.8: that model's own aspect was
+  // 1.98, near a real bench's 1.8 m over 0.9 m, and this one is proportionally taller in the back,
+  // so holding the length costs a bench that stands 1.17 m rather than 0.9 m at WALL_H's half-metre
+  // unit. the alternative was a stubby 2.74-unit bench, which is worse from above
+  public static inline var PARK_BENCH_H = 2.34;
+
+
+  // the park railing's world HEIGHT — and here that is a DERIVED number, not a taste one. through
+  // render.Models.instanced a prop's height sets its width too, and this segment has to draw exactly
+  // one cell wide or a run of them leaves gaps between neighbours, so the height is the cell divided
+  // by the glb's own measured aspect (bbox 1.002 x 0.354, so 2.83). the same trick and the same
+  // reason as the wilderness's guard rail. it lands at ~0.85 m against a real park railing's 1.1,
+  // which is the right way to be wrong: it has to read from a camera 18-55 units up
+  public static inline var FENCE_ASPECT = 2.83;
+  public static inline var FENCE_H = citygen.CityConfig.CELL / FENCE_ASPECT;
+  // how far INSIDE the lawn the railing stands, off the boundary it edges, in world units. it is not
+  // zero because the kerb band protrudes RenderConfig.WALKWAY_BORDER_W over the grass at the higher
+  // level: centred on the boundary the railing would stand half inside that band
+  public static inline var FENCE_INSET = 0.3;
+
   // ---- lamps and fixtures ----------------------------------------------------------------------
 
   // the compound's own lamp: a modern slim mast with a shrouded downlight head. world HEIGHT, which
@@ -240,6 +289,10 @@ class FacilityStyle
   // one mast every this many cells along a lit line, gated on (col + row), which spaces a run without
   // needing to detect where the run starts or ends
   public static inline var LAMP_SPACING = 6;
+  // and a hard cap on the PARK's own masts. the lit-line rules key on bordering a walkway, so once
+  // the park has a path through it every cell down both its sides qualifies and the lawn ends up
+  // lined with lamps — right for a kerb along a road, wrong for one lawn
+  public static inline var PARK_LAMPS = 4;
   // cool white LED, deliberately OFF the moon's 0x8294c0 and off the street's sodium amber: this is a
   // maintained compound, not a residential street. shared by the masts, the ceiling fixtures and
   // every additive quad render.facility.FacilityGlow draws, so the whole facility reads as one

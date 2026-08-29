@@ -7,69 +7,96 @@ import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.world.Kerb;
+import render.world.Kerb.KerbSeg;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
-// one greenery model and which tile id plants it
+// one park model and which tile id plants it
 typedef GreenProp = {
-  // the tile the generator wrote (Const.TILE_TREE1..+3 and Const.TILE_BUSH)
+  // the tile the generator wrote (Const.TILE_TREE1..+3, Const.TILE_BUSH, TILE_GRASS_UNWALKABLE)
   tile:Int,
   // RenderConfig.MODELS entry
   path:String,
   // world height, and with it the width: render.Models.instanced scales by HEIGHT alone
   h:Float,
-  // how far off its cell centre a plant may sit, as a fraction of a cell
+  // how far off its cell centre a prop may sit, as a fraction of a cell
   jitter:Float,
+  // how far the prop is SUNK below the ground it stands on, as a fraction of its own height. a
+  // generated canopy tapers to a ragged fringe of holes and spikes where its trunk ought to be, and
+  // burying that fringe is cheaper and better-looking than any amount of regeneration. 0 for
+  // anything whose base is a real footprint
+  sink:Float,
+  // does this prop have an AUTHORED FRONT? a plant takes a full random turn, a bench is turned to
+  // face the path beside it — see `green`, which is where the two yaws part company
+  faces:Bool,
 };
 
-// the facility's OUTDOORS: the four ground surfaces and the park's trees and bushes.
+// the facility's OUTDOORS: the four ground surfaces, the kerb between them, the paint on the
+// asphalt, and the park's trees, bushes and benches.
 //
 // one merged mesh per surface type rather than per cell, exactly as render.world.Ground does for a
 // city street, and world-aligned UVs on both axes so nothing is ever stretched and abutting cells
-// share one continuous grid. flat at y = 0 — a facility has no relief and, in this phase, no kerb
+// share one continuous grid. a facility has no relief, so a surface is flat — but the four are no
+// longer all at one height: see FacilityStyle.KERB_DROP for which two moved and why it is those two
 class FacilityGround
 {
   static inline var CELL = CityConfig.CELL;
+  // the four cell-edge directions, in render.facility.FacilityGeom's own numbering
+  static var DC = [0, 0, -1, 1];
+  static var DR = [-1, 1, 0, 0];
 
-  // the park is dressed with the wilderness's own plants: same night, same style, same four trees
-  // the tile ids already distinguish. mapped ONE TO ONE off the tile, so what the generator wrote is
-  // what grows — the rule render.wild.WildModel settled on after the wilderness collapsed four ids
-  // onto two models
+  // the park is dressed with the wilderness's own plants: same night, same style, and TWO of the
+  // four trees the tile ids distinguish. the other two are dead wood and have no row here — +3 is
+  // the dead snag outright, and +1 is `tree-broadleaf`, a BARE broadleaf with thick limbs and no
+  // foliage, which is a dead tree by any reading however the wilderness files it. `green` folds both
+  // ids onto the two that are in leaf. a maintained institutional park keeps no dead wood, and doing
+  // it on this side as well as in the generator is what makes it RETROACTIVE: an area saved before
+  // the generator stopped dealing those ids still has them on its grid
   public static final GREEN:Array<GreenProp> = [
     {
       tile: Const.TILE_TREE1,
       path: RenderConfig.MODELS.wildTreeConifer,
       h: 7.5,
       jitter: 0.20,
-    },
-    {
-      tile: Const.TILE_TREE1 + 1,
-      path: RenderConfig.MODELS.wildTreeBroadleaf,
-      h: 6.5,
-      jitter: 0.22,
+      faces: false,
+      sink: 0.0,
     },
     {
       tile: Const.TILE_TREE1 + 2,
       path: RenderConfig.MODELS.wildTreeBroadleafFull,
       h: 9.5,
       jitter: 0.22,
-    },
-    {
-      tile: Const.TILE_TREE1 + 3,
-      path: RenderConfig.MODELS.wildTreeDead,
-      h: 5.6,
-      jitter: 0.26,
+      faces: false,
+      // its canopy runs all the way down and ends in a ragged fringe of holes and spikes instead of
+      // a trunk, which stood proud of the lawn and read as torn geometry. sunk, the fringe is under
+      // the ground and the dome above it is all that shows. the SAME constant the wilderness sinks
+      // the same glb by, because it is a property of the mesh and not of either area
+      sink: render.wild.WildStyle.BROADLEAF_SINK,
     },
     {
       tile: Const.TILE_BUSH,
       path: RenderConfig.MODELS.wildBushLow,
       h: 1.1,
       jitter: 0.28,
+      faces: false,
+      sink: 0.0,
+    },
+    // the park bench, which the generator writes as an unwalkable grass cell beside its path. it is
+    // the one entry here that MUST draw: a green cell with nothing on it is a wall the player cannot
+    // see, and unlike a plant this tile has no other meaning
+    {
+      tile: Const.TILE_GRASS_UNWALKABLE,
+      path: RenderConfig.MODELS.facilityBenchPark,
+      h: FacilityStyle.PARK_BENCH_H,
+      jitter: 0.0,
+      faces: true,
+      sink: 0.0,
     },
   ];
 
-// the ground surfaces
+// the ground surfaces, the kerb along every pavement edge that steps down, and the paint
   public static function build(scene:Scene, m:Facility):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
@@ -77,15 +104,46 @@ class FacilityGround
       var walkway = MeshBufTools.make();
       var lot = MeshBufTools.make();
       var grass = MeshBufTools.make();
+      var curbs:Array<KerbSeg> = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            var b = surfBuf(m.surf[row][col], road, walkway, lot, grass);
+            var s = m.surf[row][col];
+            var b = surfBuf(s, road, walkway, lot, grass);
             if (b == null)
               continue;
             var x0 = col * CELL - half, x1 = x0 + CELL;
             var z0 = row * CELL - half, z1 = z0 + CELL;
-            quad(b, x0, x1, z0, z1);
+            var y = surfY(s);
+            quad(b, x0, x1, z0, z1, y);
+            // and the vertical step at every edge where this cell's surface is not its neighbour's.
+            // three cases, and the first is the one the eye reads: a PAVEMENT edge over a lower
+            // neighbour takes the mitred kerb strip, which carries its own face. anything else
+            // higher than its neighbour just needs the gap closing in its own texture, which on a
+            // generated compound is the sidewalk's parking entry and nothing else. and a neighbour
+            // that is MASONRY paints no ground at all, so a dropped surface beside a wall has to
+            // close its own slot upward or the eye looks in under the slab
+            for (dir in 0...4)
+              {
+                var nc = col + DC[dir];
+                var nr = row + DR[dir];
+                var wall = FacilityModel.inside(m, nc, nr) && m.surf[nr][nc] == Surf.NONE;
+                var ny = (FacilityModel.inside(m, nc, nr) ? surfY(m.surf[nr][nc]) : y);
+                if (ny == y ||
+                    (ny > y && !wall))
+                  continue;
+                var ax = (dir == 3 ? x1 : x0);
+                var az = (dir == 1 ? z1 : z0);
+                var bx = (dir == 2 ? x0 : x1);
+                var bz = (dir == 0 ? z0 : z1);
+                if (s == Surf.WALKWAY)
+                  {
+                    Kerb.push(curbs, ax, az, bx, bz,
+                      (x0 + x1) / 2 + DC[dir] * CELL, (z0 + z1) / 2 + DR[dir] * CELL);
+                    continue;
+                  }
+                riser(b, ax, az, bx, bz, dir < 2, Math.min(y, ny), Math.max(y, ny));
+              }
           }
       // a wall is only HALF a cell thick, so the rest of every wall cell is ground — and it is the
       // ground of whichever neighbour the strip abuts, laid on the same world-aligned grid so it
@@ -108,16 +166,131 @@ class FacilityGround
               continue;
             for (sp in FacilityGeom.floorStrips(m, col, row))
               {
-                var b = surfBuf(m.surf[sp.row][sp.col], road, walkway, lot, grass);
+                var s = m.surf[sp.row][sp.col];
+                var b = surfBuf(s, road, walkway, lot, grass);
                 if (b == null)
                   continue;
-                quad(b, sp.x0, sp.x1, sp.z0, sp.z1);
+                quad(b, sp.x0, sp.x1, sp.z0, sp.z1, surfY(s));
               }
           }
       add(scene, road, FacilityStyle.GROUND_ROAD);
       add(scene, walkway, FacilityStyle.GROUND_WALKWAY);
       add(scene, lot, FacilityStyle.GROUND_LOT);
       add(scene, grass, FacilityStyle.GROUND_GRASS);
+      // the kerb edging, in its own mesh because it is the one outdoor surface with a texture of its
+      // own. the pavement is the RAISED side here where a street's is the raised side over a road at
+      // zero, so the pair goes in the other way up — see FacilityStyle.KERB_DROP
+      var border = MeshBufTools.make();
+      Kerb.emit(border, curbs, RenderConfig.WALKWAY_BORDER_W, RenderConfig.WALKWAY_BORDER_TILE,
+        0.0, -FacilityStyle.KERB_DROP);
+      add(scene, border, FacilityStyle.GROUND_BORDER);
+      paint(scene, m);
+    }
+
+// the height a surface's floor lies at. only two of the six move, and FacilityStyle.KERB_DROP says
+// at length why it is the two nothing stands on
+  public static inline function surfY(s:Surf):Float
+    return (s == Surf.ROAD || s == Surf.GRASS ? -FacilityStyle.KERB_DROP : 0.0);
+
+// the vertical face closing a step at a cell edge, in the surface's own texture. `alongX` says which
+// axis the edge runs on, so u follows the run and v the height — world-aligned like everything else
+  static function riser(b:MeshBuf, ax:Float, az:Float, bx:Float, bz:Float, alongX:Bool,
+      y0:Float, y1:Float):Void
+    {
+      var t = FacilityStyle.GROUND_TILE;
+      var u0 = (alongX ? ax : az) / t;
+      var u1 = (alongX ? bx : bz) / t;
+      MeshBufTools.quad(b, [ax, y0, az], [bx, y0, bz], [bx, y1, bz], [ax, y1, az],
+        [u0, y0 / t, u1, y0 / t, u1, y1 / t, u0, y1 / t]);
+    }
+
+// the paint on the asphalt: the main road's lane lines and the parking bays struck against the
+// pavement aprons the lot surrounds. ONE merged mesh in the city's own worn traffic paint, opaque
+// and lit like the ground it lies on (render.world.Ground says why it is not a cutout), floating
+// FacilityStyle.PAINT_Y over the surface it belongs to and NOT over y = 0
+  static function paint(scene:Scene, m:Facility):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var b = MeshBufTools.make();
+      var lw = RenderConfig.LINE_W;
+      // the compound has exactly one road, and it is a straight band laid across the FULL WIDTH at
+      // one edge (game.FacilityAreaGenerator lines 66-69). so the band is its row extent, it never
+      // meets an intersection, and none of render.world.Ground's crossing machinery is needed here
+      var r0 = -1;
+      var r1 = -1;
+      for (row in 0...m.h)
+        if (m.surf[row][0] == Surf.ROAD)
+          {
+            if (r0 < 0)
+              r0 = row;
+            r1 = row;
+          }
+      var w = r1 - r0 + 1;
+      var y = surfY(Surf.ROAD) + FacilityStyle.PAINT_Y;
+      if (w == 4)
+        {
+          var x0 = -half;
+          var x1 = m.w * CELL - half;
+          for (k in 0...3)
+            {
+              var z = (r0 + k + 1) * CELL - half;
+              // the middle boundary is the centre of the road and takes the double solid line; the
+              // two either side are lane dividers and dash
+              if (k != 1)
+                {
+                  var p = x0;
+                  while (p < x1)
+                    {
+                      mark(b, p, Math.min(p + RenderConfig.DASH_LEN, x1), z - lw / 2, z + lw / 2, y);
+                      p += RenderConfig.DASH_LEN + RenderConfig.DASH_GAP;
+                    }
+                  continue;
+                }
+              var g = RenderConfig.DOUBLE_GAP / 2;
+              mark(b, x0, x1, z - g - lw / 2, z - g + lw / 2, y);
+              mark(b, x0, x1, z + g - lw / 2, z + g + lw / 2, y);
+            }
+        }
+      // the bays. a lot cell against a pavement apron IS the edge cars park at, so no rectangle has
+      // to be found: the stripe starts on the kerb and runs BAY_CELLS into the lot, and the rhythm
+      // is gated on the coordinate ALONG that edge rather than on the diagonal (col + row) a lit
+      // line uses, or a run of bays would come out stepped instead of evenly struck
+      var d = FacilityStyle.BAY_CELLS * CELL;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.surf[row][col] != Surf.LOT)
+              continue;
+            for (dir in 0...4)
+              {
+                var nc = col + DC[dir];
+                var nr = row + DR[dir];
+                if (!FacilityModel.inside(m, nc, nr) ||
+                    m.surf[nr][nc] != Surf.WALKWAY)
+                  continue;
+                if ((dir < 2 ? col : row) % FacilityStyle.BAY_SPACING != 0)
+                  break;
+                var x0 = col * CELL - half;
+                var z0 = row * CELL - half;
+                // inward is away from the pavement, so the stripe runs off the kerb into the lot
+                if (dir < 2)
+                  mark(b, x0 - lw / 2, x0 + lw / 2, z0 + (dir == 1 ? CELL - d : 0),
+                    z0 + (dir == 1 ? CELL : d), FacilityStyle.PAINT_Y);
+                else
+                  mark(b, x0 + (dir == 3 ? CELL - d : 0), x0 + (dir == 3 ? CELL : d),
+                    z0 - lw / 2, z0 + lw / 2, FacilityStyle.PAINT_Y);
+                break;
+              }
+          }
+      add(scene, b, FacilityStyle.GROUND_PAINT);
+    }
+
+// one painted rect, its uv world-aligned on both axes so the wear samples at one scale everywhere
+  static inline function mark(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+    {
+      var t = RenderConfig.PAINT_TILE;
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
 // the outdoor buffer a surface belongs in, or null if the surface is not outdoors at all
@@ -133,12 +306,12 @@ class FacilityGround
         };
     }
 
-// one ground quad at y = 0, world-aligned on BOTH axes so abutting cells share one continuous grid
-// and nothing is ever stretched
-  static function quad(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float):Void
+// one ground quad at its surface's own height, world-aligned on BOTH axes so abutting cells share
+// one continuous grid and nothing is ever stretched
+  static function quad(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
     {
       var t = FacilityStyle.GROUND_TILE;
-      MeshBufTools.quad(b, [x0, 0, z1], [x1, 0, z1], [x1, 0, z0], [x0, 0, z0],
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
         [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
@@ -154,6 +327,15 @@ class FacilityGround
             if (m.surf[row][col] != Surf.GRASS)
               continue;
             var t = area.getCellType(col, row);
+            // the two dead-wood ids fold onto the two trees that are in leaf: the bare broadleaf
+            // (+1) onto the full one, the dead snag (+3) onto the conifer. GREEN has no row for
+            // either, and a green cell with nothing drawn on it is a wall the player cannot see, so
+            // this is a REMAP and not a skip. it fires only on areas generated before the park
+            // stopped dealing those ids
+            if (t == Const.TILE_TREE1 + 1)
+              t = Const.TILE_TREE1 + 2;
+            else if (t == Const.TILE_TREE1 + 3)
+              t = Const.TILE_TREE1;
             for (i in 0...GREEN.length)
               {
                 if (GREEN[i].tile != t)
@@ -165,9 +347,17 @@ class FacilityGround
                 var hy = FacilityModel.mix((col * 24036583) ^ (row * 32582657));
                 var j = GREEN[i].jitter;
                 places[i].push({
-                  x: (col + 0.5 + ((hx % 2001) / 1000.0 - 1.0) * j) * CELL - half,
-                  z: (row + 0.5 + ((hz % 2001) / 1000.0 - 1.0) * j) * CELL - half,
-                  yaw: (hy % 6283) / 1000.0,
+                  x: (col + 0.5 + lean(m, col, row, ((hx % 2001) / 1000.0 - 1.0) * j, 1, 0)) * CELL
+                    - half,
+                  z: (row + 0.5 + lean(m, col, row, ((hz % 2001) / 1000.0 - 1.0) * j, 0, 1)) * CELL
+                    - half,
+                  // a plant takes a full random turn; a prop with a front is turned to face the path
+                  // beside it, and a bench facing the shrubbery is the whole failure mode
+                  yaw: (GREEN[i].faces ? facing(m, col, row) : (hy % 6283) / 1000.0),
+                  // the park lies a kerb BELOW the pavement, and nothing here places a prop anywhere
+                  // else — every entry in GREEN is keyed on a grass tile. `sink` then buries a
+                  // fraction of the prop's own height under that
+                  y: surfY(Surf.GRASS) - GREEN[i].sink * GREEN[i].h,
                 });
               }
           }
@@ -183,6 +373,135 @@ class FacilityGround
             Models.get(GREEN[i].path, function(_) VisionMask.patchMesh(p.mesh));
         }
       return props;
+    }
+
+// how far a railing run has to be pulled back at ONE of its ends, in world units. two cases, and
+// both are about the run stopping where the thing it meets begins:
+//
+//   a CORNER, where this cell also fences the perpendicular edge `dir`. each run reaches its full
+//   half-cell along its own axis while the other run's line sits FENCE_INSET short of it, so at full
+//   length the two crossed by that much and read as one fence laid over another rather than a
+//   corner. pulled back by the inset, they end on each other's line and meet.
+//
+//   a PARK PATH, where the run dies into the mouth of the path. the path is pavement and so carries
+//   its own kerb, and that band protrudes WALKWAY_BORDER_W over this lawn — a run taken to the cell
+//   boundary laid its last stretch on top of the border. pulled back by the band's width, it stops
+//   where the turf does.
+//
+// the caller shortens by lo + hi and shifts by half their difference, so whichever end is untouched
+// stays exactly where it was
+  static function endCut(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      if (rimEdge(m, col, row, dir))
+        return FacilityStyle.FENCE_INSET;
+      var c = col + DC[dir];
+      var r = row + DR[dir];
+      if (FacilityModel.inside(m, c, r) &&
+          FacilityModel.isParkPath(m, c, r))
+        return RenderConfig.WALKWAY_BORDER_W;
+      return 0.0;
+    }
+
+// does this grass cell's `dir` edge want a railing: the neighbour is pavement, and pavement that
+// RINGS the park rather than the path running through it
+  static function rimEdge(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      var c = col + DC[dir];
+      var r = row + DR[dir];
+      return FacilityModel.inside(m, c, r) &&
+        m.surf[r][c] == Surf.WALKWAY &&
+        !FacilityModel.isParkPath(m, c, r);
+    }
+
+// one axis of a plant's jitter, CANCELLED when it leans at a cell that is not lawn. bush-low is
+// 2.10 world units across (its own aspect 1.91 at h 1.1, so a radius of 1.05) and the jitter reaches
+// 0.28 of a 4-unit cell = 1.12, which is 2.17 against a half-cell of 2.0 — at full lean a bush
+// crossed its own boundary and came out over the park path, or past the railing, which stands
+// FENCE_INSET inside that boundary. leaning INWARD is untouched, so an edge cell keeps half its
+// spread and only the direction that would overhang is given up
+  static function lean(m:Facility, col:Int, row:Int, off:Float, dc:Int, dr:Int):Float
+    {
+      var c = col + (off < 0 ? -dc : dc);
+      var r = row + (off < 0 ? -dr : dr);
+      if (FacilityModel.inside(m, c, r) &&
+          m.surf[r][c] == Surf.GRASS)
+        return off;
+      return 0.0;
+    }
+
+// the railing round the park: one segment per grass cell edge that faces the pavement RING around
+// the lawn, and NONE against the path through it — which is the whole reason
+// render.facility.FacilityModel.isParkPath exists. fence the path too and the park is not enclosed,
+// it is subdivided.
+//
+// no gate cell has to be cut for the way in, either: the path meets the perimeter pavement
+// walkway-to-walkway, so those edges are not grass edges and this loop never reaches them. measured
+// on a generated compound: 120 grass-to-walkway edges, 70 rim and 50 path, and the two mouths open
+// by themselves.
+//
+// one segment is exactly a cell long (see FacilityStyle.FENCE_H), so consecutive segments meet
+// instead of leaving gaps, and the yaw is the run's own axis rather than a random turn — a railing
+// has an authored front and a run of them at odd angles is a scrapyard, the same rule
+// render.wild.WildProps.rails states for the guard rail
+  public static function fence(scene:Scene, m:Facility):Models.InstancedProp
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var places:Array<Models.PropPlace> = [];
+      var ins = FacilityStyle.FENCE_INSET;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.surf[row][col] != Surf.GRASS)
+              continue;
+            for (dir in 0...4)
+              {
+                if (!rimEdge(m, col, row, dir))
+                  continue;
+                // and where this run has to STOP, one end at a time — see `endCut`
+                var lo = endCut(m, col, row, (dir < 2 ? 2 : 0));
+                var hi = endCut(m, col, row, (dir < 2 ? 3 : 1));
+                var shift = (lo - hi) / 2;
+                places.push({
+                  x: (col + 0.5) * CELL - half + DC[dir] * (CELL / 2 - ins) +
+                    (dir < 2 ? shift : 0.0),
+                  z: (row + 0.5) * CELL - half + DR[dir] * (CELL / 2 - ins) +
+                    (dir < 2 ? 0.0 : shift),
+                  // the glb runs along its own local x, so an edge lying in x needs no turn at all
+                  yaw: (dir < 2 ? 0.0 : Math.PI / 2),
+                  // it is planted in the LAWN, which lies a kerb below the pavement it edges
+                  y: surfY(Surf.GRASS),
+                  scale: (CELL - lo - hi) / CELL,
+                });
+              }
+          }
+      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityFence, places,
+        FacilityStyle.FENCE_H, SOLID);
+      if (places.length > 0)
+        Models.get(RenderConfig.MODELS.facilityFence, function(_) VisionMask.patchMesh(prop.mesh));
+      return prop;
+    }
+
+// which way a prop with an authored front is turned: at the first walkway beside it, so a bench put
+// down by the park path looks along it.
+//
+// the bench's front is local +X, MEASURED off the built mesh — it lies along local z (bbox
+// 0.477 x 0.655 x 0.998) with its depth on x, and the backrest, being the tall part, averages
+// x -0.138 against the whole mesh's -0.012. so the seat overhangs toward +x and the yaw that aims a
+// +x front down (dx, dz) is atan2(-dz, dx), which is the mast's own atan2(DC, DR) less PI/2. THE
+// PREVIOUS BENCH FACED +z and used that atan2 bare; the regenerated one is a different model and
+// this is the line that had to move with it. no walkway at all leaves it unturned, which is what an
+// unplaceable bench deserves
+  static function facing(m:Facility, col:Int, row:Int):Float
+    {
+      for (dir in 0...4)
+        {
+          var c = col + DC[dir];
+          var r = row + DR[dir];
+          if (FacilityModel.inside(m, c, r) &&
+              m.surf[r][c] == Surf.WALKWAY)
+            return Math.atan2(DC[dir], DR[dir]) - Math.PI / 2;
+        }
+      return 0.0;
     }
 
 // merge one surface buffer into a lit mesh
