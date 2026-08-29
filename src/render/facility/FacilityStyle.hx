@@ -270,6 +270,28 @@ class FacilityStyle
   // level: centred on the boundary the railing would stand half inside that band
   public static inline var FENCE_INSET = 0.3;
 
+  // how high an actor's billboard rises swinging over the railing (render.anim.Climb, reached through
+  // render.world.WorldCtx.climbArc). the railing is render-only — nothing is stamped on the tiles for
+  // it, so the park is walked into straight through the fence — and this is the whole of what says
+  // otherwise. a shade under the wilderness guard rail's 0.9 because this bar is the shorter of the
+  // two: FENCE_H 1.41 against the rail's 1.6
+  public static inline var CLIMB_ARC = 0.8;
+
+  // the park litter bin's world HEIGHT, and through render.Models.instanced its width too: the glb's
+  // bbox is 0.540 x 1.001 x 0.540, an aspect of 0.54, so this puts a 0.97-unit drum beside a bench.
+  // ~1.1 m at the bench's own unit, which is a municipal bin
+  public static inline var BIN_H = 1.8;
+  // where it stands, in world units off the BENCH's centre, along the bench's own two local axes —
+  // sideways along the seat, and backwards away from the path it faces. both numbers are geometry and
+  // not taste. the bench is 3.57 long and 1.70 deep, so its own half-extents are 1.79 and 0.85; the
+  // bin's radius is 0.49. SIDE is inside the seat's length, so BACK is what has to clear it, and it
+  // does with 0.08 to spare (1.42 - 0.85 = 0.57 against the radius); both offsets plus the radius stay
+  // inside the cell's half-width of 2.0 (1.94 and 1.91). so the bin sits off the bench's back corner,
+  // touching neither the seat nor the neighbouring cell. `facing` only ever returns a quarter turn, so
+  // those two bounds are the whole test — there is no diagonal case to check
+  public static inline var BIN_SIDE = 1.45;
+  public static inline var BIN_BACK = 1.42;
+
   // ---- lamps and fixtures ----------------------------------------------------------------------
 
   // the compound's own lamp: a modern slim mast with a shrouded downlight head. world HEIGHT, which

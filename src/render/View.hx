@@ -498,9 +498,9 @@ class View {
               // trap as the wall props and one more reason they cannot ride the city scene: their
               // material is mask-patched, and the mask extends the program cache key
               var green = render.facility.FacilityGround.GREEN;
-              // and the compound's own two props, the lamp mast and the park railing, which ride this
-              // chain for the same two reasons the park plants do: their glbs arrive asynchronously,
-              // and their materials are mask-patched
+              // and the compound's own three props — the lamp mast, the park railing and the litter
+              // bin — which ride this chain for the same two reasons the park plants do: their glbs
+              // arrive asynchronously, and their materials are mask-patched
               var facProps = [
                 {
                   path: render.RenderConfig.MODELS.facilityLamp,
@@ -509,6 +509,10 @@ class View {
                 {
                   path: render.RenderConfig.MODELS.facilityFence,
                   h: render.facility.FacilityStyle.FENCE_H,
+                },
+                {
+                  path: render.RenderConfig.MODELS.facilityBin,
+                  h: render.facility.FacilityStyle.BIN_H,
                 },
               ];
               var left = objModels.length + wallProps.length + green.length + facProps.length;
@@ -575,7 +579,7 @@ class View {
                       done();
                     });
                 }
-              // the mast and the railing, bracketed by the same attach/detach for the same reason: a
+              // the mast, the railing and the bin, bracketed by the same attach/detach for the same reason: a
               // real facility keeps the indoor mask on for as long as it is shown, so both batches
               // ARE patched with it. both stand outdoors and read inAmt 0, so this is about the
               // PROGRAM and not about how they look

@@ -2500,3 +2500,78 @@ core goes from 5 cells to 13: trees per clump 1 + 4×0.55 = 3.2 → 1 + 12×0.55
 unmoved at 10.8 either way (12×0.45 core + 12×0.45 skirt against 4×0.45 + 20×0.45). Measured over 6
 generations: **trees 45-55 → 80-102** (1.8×), **bushes 131-174 → 123-179** (flat), lawn planted
 **58-70% → 73-81%**.
+
+## The park railing gets an actor animation, and every bench gets a bin (2026-08-29)
+
+Two asks, one pass. Both are render-only, both are retroactive to every saved compound, and neither
+touches a tile.
+
+**The railing is climbed, not walked through.** `render.anim.Climb` and `WorldCtx.climbArc` were
+built for the wilderness guard rail and had exactly one owner; the facility set `climbArc = null`.
+The park railing is the same kind of object — drawn, never stamped on the tiles — so an actor stepped
+into the lawn straight through the bars. `FacilityArea` now points `climbArc` at
+`FacilityGround.climbArc`, which is the whole reuse: no new effect, no new tick, and `Actors` gates
+it on nothing else running so it can never clobber a lunge or a leap.
+
+**The lines are not stored, they fall back out of the same predicates that placed the instances** —
+the reasoning `WildRoad.climbArc` records. A railing stands between lawn and the pavement that RINGS
+the lawn, so a move crosses one exactly when one end is grass and the other is rim pavement, and
+`rimEdge` was refactored into `isRim` + `isGrass` so the geometry pass and the animation share the
+test rather than each carrying a copy. That reads a DIAGONAL step correctly for free: there is one
+barrier under that move whichever leg `ActorAnim.cornerBend` routes the slide along.
+
+Verified against the compiled statics on a synthetic 9x9 park with a path up the middle — lawn→rim
+**0.8**, rim→lawn **0.8**, the diagonal out **0.8**, and **0** for lawn→path, lawn→lawn, rim→rim and
+a step off the grid. `CLIMB_ARC` 0.8 against the guard rail's 0.9 because this bar is the shorter of
+the two (`FENCE_H` 1.41 against 1.6).
+
+**`facility/trash-bin` — one beside every bench, placed off the BENCH and not off a tile.** That is
+the whole design: a tile id would have meant a generator change, a new `GreenProp` row and new-areas-
+only, where this needs none of it and dresses a park that was saved yesterday. There is no room for
+it INSIDE the bench's footprint — a 2.34-high bench draws **3.57 long in a 4-unit cell** — so it goes
+off the bench's back corner, on two offsets in the bench's own local frame. Both numbers are geometry
+and not taste: the bench's half-extents are 0.852 (depth) and 1.783 (length) and the bin's radius is
+**0.486**, so `BIN_SIDE` 1.45 sits inside the seat's length and `BIN_BACK` 1.42 is what clears it —
+by 0.568 against that radius — while both plus the radius stay inside the cell's half-width of 2.0
+(1.94 and 1.91). `facing()` only ever returns a quarter turn, so those two bounds are the whole test.
+Verified over all 8 cases (4 yaws x 2 hands) off the compiled constants: every one inside the cell,
+every one clearing the bench by 0.568.
+
+**The split ratio LIED about which route to take, and the components gate was right.** The 100k
+master measured **1.30x**, comfortably inside the "offline decimate works" band, so it took the
+master-plus-meshopt route — and meshopt floored at **9,277 tris**, twice the budget for a cylinder.
+The built glb off that route measured **3.86x and 27 components at 43.6%**, and on screen it read as
+torn polygons and smeared texture. The ratio describes the MASTER's atlas and says nothing about what
+the decimation then does to it; the components count on the BUILT glb is what saw this, and the
+"body + lid + base ring + liner, so 97% of the surface" reading of those 27 components was wrong.
+
+**Generated AT the budget instead, and it is better on every number.** `decimation_target` 5000 (the
+API floor — 3k is not reachable) → **4,765 tris**, ships `tris: -1`. The same reference comes back
+**2 components at 58.2%** (1,388 / 996 unique positions, the body and the lid — the shipped conifer's
+own 51/49 shape) at 1.30x. And Runware unwraps and bakes AFTER its own decimation, so the atlas is
+authored FOR 4,765 tris (880 texels/tri at 2048) instead of being a 96k atlas dragged down with the
+mesh: `tex 512` lands on **55**, in band, with no sizing arithmetic at all. `baseColor`
+`[0.14, 0.10, 0.14]` off a green atlas 122/141/121.
+
+**Its MOUTH is local +z where the bench's front is local +x**, so handing the bin the bench's yaw put
+the opening 90° off, looking along the seat instead of at the path. Measured, not guessed, and the
+geometry answers it where the texture does not: the mouth is a hole cut in the lid, so it REMOVES
+surface at one azimuth — bin the lid band's area into 12 sectors and the two straddling +z come back
+at **0.054 / 0.055 against the other ten's 0.085**. (Two things that did NOT answer it: the lid's own
+centroid, displaced 0.0017 of a 0.27 radius, because the cap is symmetric either side of the cut; and
+the darkest 20% of the lid's texture, which found the shadowed side at coherence 0.36. A flat-shaded
+orthographic turntable is what showed it, and per-triangle colour has to be sampled at SEVEN
+barycentric points and medianed — a single UV-centroid sample lands in the gutter often enough to
+speckle a TRELLIS prop grey and read as a texture bug that is not there.) `bins` now holds `look` for
+the placement frame and turns the instance `look + PI/2`; verified over all four directions, mouth ·
+path = **1.0000**.
+
+**Its MR is a per-RUN property, not a family one.** The budget run came back metal max **178** and
+needs `dropMR` like its three facility neighbours; the master run, off the SAME reference, came back
+metal max **1** — a rough dielectric — and the entry said so in writing. Read the map on the glb that
+ships. A uniformly metallic prop renders BLACK under debug key `1`, not chrome.
+
+`green` now carries TWO appended batches after the `GREEN` table, so the ad-hoc `? GREEN[i].path :
+facilityFence` in `__facility()` became a named `EXTRA` list. **Not verified in a live facility:** the
+mod-set dialog on load takes neither a DOM click nor a CDP key, so everything above is measured
+against the compiled `FacilityGround.climbArc`, `FacilityStyle` and `propstat`, not a screenshot.

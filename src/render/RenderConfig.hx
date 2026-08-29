@@ -690,6 +690,10 @@ class RenderConfig {
     // the game sized to TILE after the guard rail: FacilityStyle.FENCE_H is derived from its own
     // aspect so one segment draws exactly a cell wide and a run meets end to end
     facilityFence: 'models/facility/fence-park.glb',      // flat-topped steel railing, one cell long
+    // the park litter bin, one beside every bench. it is placed off the BENCH and not off a tile of
+    // its own, so it needs no generator change and is retroactive to every saved compound
+    // (render.facility.FacilityGround.bins)
+    facilityBin: 'models/facility/trash-bin.glb',         // solid-walled steel bin, domed lid, side mouth
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
     wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long

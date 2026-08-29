@@ -23,6 +23,14 @@ import render.world.WorldCtx;
 // the vision mask governs how much of the inside is then drawn
 class FacilityArea implements Area3D
 {
+  // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing and the
+  // litter bins. they are batches with no GreenProp row, because neither is planted on a tile of its
+  // own, and this is the only place that can name them
+  static final EXTRA = [
+    RenderConfig.MODELS.facilityFence,
+    RenderConfig.MODELS.facilityBin,
+  ];
+
   var game:Game;
   var model:Facility;
   var chunks = new render.Chunks();
@@ -34,7 +42,7 @@ class FacilityArea implements Area3D
   var coneGroup:Object3D;                       // the scene rig's cone parent, held for the mast shafts
   var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
-  var green:Array<render.Models.InstancedProp>; // the park's trees and bushes
+  var green:Array<render.Models.InstancedProp>; // the park's plants, then EXTRA (railing, bins)
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
@@ -74,7 +82,10 @@ class FacilityArea implements Area3D
       // it, or the next area inherits the previous one's ground height and climb arc (WorldCtx)
       WorldCtx.tiles = null;
       WorldCtx.ground = function(x, z) return FacilityTables.groundY(model, x, z);
-      WorldCtx.climbArc = null;
+      // and the compound HAS something to climb: the park railing is render-only, so an actor walks
+      // straight through it into the lawn and this arc is the whole of what says the bar is there —
+      // the same contract the wilderness's guard rail runs on
+      WorldCtx.climbArc = function(fc, fr, tc, tr) return FacilityGround.climbArc(model, fc, fr, tc, tr);
       // and the one area kind with walls of its own that carry objects: the generator writes a vent
       // as a WALL cell and stands an objects.Vent on it, so the grille has to hang on the masonry
       WorldCtx.wallMounts = function(col, row) return FacilityGeom.wallMounts(model, col, row);
@@ -100,10 +111,12 @@ class FacilityArea implements Area3D
       shells = FacilityGeom.build(scene, model);
       FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
-      // the park railing rides the same array as the plants, which is not laziness: everything the
-      // array is FOR applies to it unchanged — one per-frame Models.cull, one row in __facility()'s
-      // batches. it is only ever appended, so the plants stay index-aligned with GREEN
+      // the park railing and the litter bins ride the same array as the plants, which is not
+      // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
+      // one row in __facility()'s batches. they are only ever APPENDED, in the order EXTRA names
+      // them, so the plants stay index-aligned with GREEN
       green.push(FacilityGround.fence(scene, model));
+      green.push(FacilityGround.bins(scene, model, game.area));
       doors = FacilityDoors.build(scene, model, game.area);
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
@@ -140,10 +153,10 @@ class FacilityArea implements Area3D
           var batches = [];
           for (i in 0...green.length)
             batches.push({
-              // `green` is the GREEN table plus the park railing appended after it (see `build`), so
-              // the last row is the one GREEN cannot name
+              // `green` is the GREEN table plus EXTRA appended after it (see `build`), so the tail
+              // rows are the ones GREEN cannot name
               path: (i < FacilityGround.GREEN.length
-                ? FacilityGround.GREEN[i].path : render.RenderConfig.MODELS.facilityFence),
+                ? FacilityGround.GREEN[i].path : EXTRA[i - FacilityGround.GREEN.length]),
               count: green[i].matrices.length,
             });
           var structures = [];

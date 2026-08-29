@@ -404,13 +404,39 @@ class FacilityGround
 
 // does this grass cell's `dir` edge want a railing: the neighbour is pavement, and pavement that
 // RINGS the park rather than the path running through it
-  static function rimEdge(m:Facility, col:Int, row:Int, dir:Int):Bool
+  static inline function rimEdge(m:Facility, col:Int, row:Int, dir:Int):Bool
+    return isRim(m, col + DC[dir], row + DR[dir]);
+
+// is this cell the pavement that RINGS the park, rather than the path running through it? the one
+// thing a railing ever stands against, and so the one thing an actor ever climbs it to reach
+  static inline function isRim(m:Facility, col:Int, row:Int):Bool
+    return FacilityModel.inside(m, col, row) &&
+      m.surf[row][col] == Surf.WALKWAY &&
+      !FacilityModel.isParkPath(m, col, row);
+
+// is this cell lawn?
+  static inline function isGrass(m:Facility, col:Int, row:Int):Bool
+    return FacilityModel.inside(m, col, row) &&
+      m.surf[row][col] == Surf.GRASS;
+
+// the arc an actor takes stepping over the park railing, or 0 for a move that crosses none.
+//
+// the railing lines are not stored anywhere: they fall back out of the two predicates above, the same
+// pair `fence` places the instances from, so the animation and the geometry cannot drift apart — the
+// same reason render.wild.WildRoad.climbArc rebuilds the guard rail's lines instead of remembering
+// them. the railing is render-only, nothing is stamped on the tiles for it and the park is walked
+// straight into through the fence, so this is the whole of what says the bar is there.
+//
+// a railing stands between lawn and the pavement that RINGS it, so a move crosses one exactly when
+// one end is grass and the other is rim pavement. that reads a DIAGONAL step correctly for free:
+// there is one barrier under that move whichever leg render.ActorAnim.cornerBend routes the slide
+// along. a step onto the park PATH crosses nothing, which is right — no railing is drawn there
+  public static function climbArc(m:Facility, fromCol:Int, fromRow:Int, toCol:Int, toRow:Int):Float
     {
-      var c = col + DC[dir];
-      var r = row + DR[dir];
-      return FacilityModel.inside(m, c, r) &&
-        m.surf[r][c] == Surf.WALKWAY &&
-        !FacilityModel.isParkPath(m, c, r);
+      if ((isGrass(m, fromCol, fromRow) && isRim(m, toCol, toRow)) ||
+          (isGrass(m, toCol, toRow) && isRim(m, fromCol, fromRow)))
+        return FacilityStyle.CLIMB_ARC;
+      return 0.0;
     }
 
 // one axis of a plant's jitter, CANCELLED when it leans at a cell that is not lawn. bush-low is
@@ -421,10 +447,7 @@ class FacilityGround
 // spread and only the direction that would overhang is given up
   static function lean(m:Facility, col:Int, row:Int, off:Float, dc:Int, dr:Int):Float
     {
-      var c = col + (off < 0 ? -dc : dc);
-      var r = row + (off < 0 ? -dr : dr);
-      if (FacilityModel.inside(m, c, r) &&
-          m.surf[r][c] == Surf.GRASS)
+      if (isGrass(m, col + (off < 0 ? -dc : dc), row + (off < 0 ? -dr : dr)))
         return off;
       return 0.0;
     }
@@ -478,6 +501,50 @@ class FacilityGround
         FacilityStyle.FENCE_H, SOLID);
       if (places.length > 0)
         Models.get(RenderConfig.MODELS.facilityFence, function(_) VisionMask.patchMesh(prop.mesh));
+      return prop;
+    }
+
+// the park litter bin, one beside every bench. it is placed off the BENCH and not off a tile of its
+// own, which is the whole design: no new tile id, no generator change, and every compound already
+// saved gets its bins the moment it is drawn again.
+//
+// there is no room for it INSIDE the bench's own footprint — a 2.34-high bench draws 3.57 long in a
+// 4-unit cell — so it stands off the bench's back corner, on the two local offsets
+// FacilityStyle.BIN_SIDE and BIN_BACK, which are sized to clear the seat and still land inside the
+// cell. the side is hashed off the cell so a run of benches does not put every bin on the same hand
+  public static function bins(scene:Scene, m:Facility, area:game.AreaGame):Models.InstancedProp
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var places:Array<Models.PropPlace> = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.surf[row][col] != Surf.GRASS ||
+                area.getCellType(col, row) != Const.TILE_GRASS_UNWALKABLE)
+              continue;
+            // the BENCH's own yaw, because the bin is placed in the BENCH's frame: local +x is the
+            // front it looks down the path with, local +z runs along the seat
+            var look = facing(m, col, row);
+            var side = FacilityStyle.BIN_SIDE *
+              (FacilityModel.mix((col * 40009) ^ (row * 15486277)) % 2 == 0 ? 1.0 : -1.0);
+            places.push({
+              x: (col + 0.5) * CELL - half + side * Math.sin(look) -
+                FacilityStyle.BIN_BACK * Math.cos(look),
+              z: (row + 0.5) * CELL - half + side * Math.cos(look) +
+                FacilityStyle.BIN_BACK * Math.sin(look),
+              // and the bin's OWN front is local +z where the bench's is local +x, so it is turned a
+              // further quarter to put its mouth on the same world direction — at the path, where the
+              // people are. MEASURED off the built glb rather than guessed: the mouth is a hole in the
+              // lid, so it REMOVES surface at one azimuth, and binning the lid band's area by azimuth
+              // leaves the two sectors straddling +z at 0.054 / 0.055 against the other ten's 0.085
+              yaw: look + Math.PI / 2,
+              y: surfY(Surf.GRASS),
+            });
+          }
+      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityBin, places,
+        FacilityStyle.BIN_H, SOLID);
+      if (places.length > 0)
+        Models.get(RenderConfig.MODELS.facilityBin, function(_) VisionMask.patchMesh(prop.mesh));
       return prop;
     }
 
