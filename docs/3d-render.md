@@ -138,6 +138,10 @@ Bodies in [`3d-changes.md`](3d-changes.md) — grep the change text.
 | SSRPass (reflections) | style rules ban glossy/specular reflections | **rejected** |
 | `RenderPixelatedPass` | total aesthetic pivot, not an enhancement | **rejected** |
 | `forceSinglePass` on `LightCone` as a perf item | cones measure 0% of the frame, twice | **rejected as perf** (valid hygiene) |
+| Facility frame is **97.8% prop triangles** (28,424 of 1.31M is the built world) | props 3.74ms fixed + 2.6/MP, world 0.46 + 4.39/MP — props are TRIANGLE-bound, world is fill-bound | **diagnosis — inverted the ranking for prop areas** |
+| Sub-pixel triangles: shrub is 4955 tris over a **42px** silhouette = 0.56px/tri | a triangle under a pixel still costs a full 2x2 quad, so the shader runs per-TRIANGLE | **standing note** |
+| **glb props → `MeshLambertMaterial` (`Models.toLambert`)** | shipped build @1920x1017: gameplay **18.5 → 12.5ms**, park in frustum **29.2 → 17.5ms (30 → 47fps)** | **landed — largest facility win** |
+| Park shrub stops casting (`GREEN.casts`) | −292k tris (22% of the frame) for −0.29ms — shadow tris are 0.08ms/100k | **landed** (tri count is not the cost) |
 
 ### Area styles, city gen and art
 

@@ -260,3 +260,52 @@ city and wilderness **0 in 0ms**, repeat calls **0ms**, 3 held scenes, `Warmup.h
 3696ms and 458ms on two runs of the same build, ordered differently.
 
 **Verdict: landed.**
+
+## Props draw MeshLambert, and the shrub stops casting a shadow (2026-08-31)
+
+The facility frame is **97.8% prop triangles**: 1,307,322 tris in a culled follow view, of which the
+built world — ground, walls, roofs, floors, kerbs, paint, doors, tables, lawn — is **28,424**. The
+rest is seven instanced glb batches, each drawn TWICE (main + moon shadow, same instance buffer).
+With the whole park in frustum it is **3,624,932** (163 shrubs at 4955 tris, 84 railing segments at
+5056, 49 conifers, 44 broadleafs).
+
+**Attribution, integrated Radeon, `view3d.perf.lastGpuMs`, medians of interleaved runs.** Props
+swapped material-by-material with the geometry untouched, at 1040x647: base (MeshStandard) **9.02ms**
+-> Lambert **6.26** -> Basic **4.77** -> Basic untextured **4.49** -> props hidden **3.49**. So of the
+5.53ms the props cost, raw geometry for 1.28M tris is **1.00ms**, texture fetch 0.28, Lambert lighting
+1.49, and **the Standard-over-Lambert premium 2.76 — 31% of the whole frame**. Shadow pass off
+(-639k tris) is only **-0.54ms**, i.e. **0.08ms per 100k depth-only tris**.
+
+**The reason tris matter here is NOT vertex throughput, it is 2x2 quads.** Projected median silhouette
+at 1040x647: shrub **42px** for 4955 tris = **0.56 px per front-facing triangle**, bin 0.46, railing
+1.39 (conifer 4.4, broadleaf 5.8). A sub-pixel triangle still costs a full quad, so the fragment
+shader runs per-triangle, not per-pixel. Measured signature: over 0.24 / 0.67 / 2.30 MP the props cost
+4.36 / 5.34 / 9.71ms (fit: **3.74ms fixed + 2.6/MP**) while the rest of the scene runs 1.51 / 3.63 /
+10.55 (0.46 + **4.39/MP**, i.e. pure fill). Prop cost is triangle-linear; world cost is pixel-linear.
+
+**Shipped.** `Models.toLambert` swaps every glb material at load — `map`, `normalMap`, `aoMap`,
+`emissive*` carried, `roughness`/`metalness`/MR map dropped. The switch that keeps a prop on
+MeshStandard is the glb's own `roughnessFactor < 1`, which is what `models.json`'s `roughness` dial
+bakes: only the 4 habitat props (0.30-0.45). Verified live after the build — 26 props Lambert, 4
+Standard. And `FacilityGround.GREEN` gains `casts`, false for the shrub alone: 163 domes 42px across
+were 45% of the park's triangles for a moon shadow of a few lawn pixels.
+
+**Confirmed on the SHIPPED build at a real 1920x1017**, against the original materials reloaded from
+the same glbs by a second in-page `GLTFLoader` with the live `onBeforeCompile` carried across, so both
+sides ran the identical `VisionMask` shader. Gameplay view: **18.48ms / 42.9fps -> 12.25ms / 60fps
+(vsync)**, tris 1,307,386 -> 1,015,041. Split: the material is **-5.94ms (-32%)**, the shrub shadow a
+further **-0.29ms** for -292k tris — which is the point of the entry, since that shadow was 22% of the
+frame's triangles and 2.4% of its time. Whole park in frustum (cull frozen): **29.17ms / 29.9fps ->
+17.45ms / 46.7fps (-40%)**, 3,624,996 -> 2,817,331 tris. The 29.17 reproduces the 30fps this started
+from.
+
+**The trap:** `renderer.info` has `autoReset = false` here (`View.hx:1165` resets by hand), so `tris=`
+is the sum over ALL passes. Half of a facility tri count is the shadow pass, and dividing a saving by
+the headline number understates it by 2x.
+
+**Budget it leaves.** At 1080p on the iGPU, 60fps = 16.6ms, of which the non-prop world is a **10.2ms
+floor** (fill, tri-independent). Props get 6.4ms: at Standard's 0.59ms/100k that was ~1.1M tris, at
+Lambert's 0.28 it is **~2.3M**. The 3.6M worst case is still over — the next lever is triangles, and
+it is `bush-low` (45% of park tris, split ratio 1.79x, the only plant `error` might decimate).
+
+**Verdict: landed.** Largest single win measured in the facility.

@@ -37,6 +37,13 @@ typedef GreenProp = {
   // does this prop have an AUTHORED FRONT? a plant takes a full random turn, a bench is turned to
   // face the path beside it — see `green`, which is where the two yaws part company
   faces:Bool,
+  // does it cast a shadow? every other prop in the game does — render.Models.instanced turns both
+  // shadow flags on for a real batch — and the park shrub is the one thing that says otherwise. an
+  // instanced batch is drawn into the moon's shadow map as many times as it is drawn into the frame,
+  // so 163 shrubs at 4955 tris each were 45% of the park's triangles for a dome 42 screen-pixels
+  // across whose moon shadow is a few pixels of lawn. the trees keep theirs — theirs is the shadow
+  // that reads. receives either way: a shrub standing in a tree's shadow still darkens
+  casts:Bool,
 };
 
 // the facility's OUTDOORS: the four ground surfaces, the kerb between them, the paint on the
@@ -68,6 +75,7 @@ class FacilityGround
       jitter: 0.20,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
+      casts: true,
       sink: 0.0,
     },
     {
@@ -77,6 +85,7 @@ class FacilityGround
       jitter: 0.22,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
+      casts: true,
       // its canopy runs all the way down and ends in a ragged fringe of holes and spikes instead of
       // a trunk, which stood proud of the lawn and read as torn geometry. sunk, the fringe is under
       // the ground and the dome above it is all that shows. the SAME constant the wilderness sinks
@@ -90,6 +99,7 @@ class FacilityGround
       jitter: 0.28,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
+      casts: false,
       sink: 0.0,
     },
     // the park bench, which the generator writes as an unwalkable grass cell beside its path. it is
@@ -105,6 +115,7 @@ class FacilityGround
       // BIN_BACK, both fitted against a fixed 3.57-unit seat), so a scaled bench would walk its bin
       scaleJit: 0.0,
       faces: true,
+      casts: true,
       sink: 0.0,
     },
   ];
@@ -386,11 +397,16 @@ class FacilityGround
         {
           var p = Models.instanced(scene, GREEN[i].path, places[i], GREEN[i].h, SOLID);
           props.push(p);
-          // the mask has to be applied behind the loader callback, because the mesh does not exist
-          // until the glb resolves — and only for a batch that actually placed something, or an
-          // empty batch's material is patched and warmed for nothing
+          // the mask and the shadow flag have to be applied behind the loader callback, because the
+          // mesh does not exist until the glb resolves — and only for a batch that actually placed
+          // something, or an empty batch's material is patched and warmed for nothing
+          var casts = GREEN[i].casts;
           if (places[i].length > 0)
-            Models.get(GREEN[i].path, function(_) VisionMask.patchMesh(p.mesh));
+            Models.get(GREEN[i].path, function(_)
+              {
+                VisionMask.patchMesh(p.mesh);
+                p.mesh.castShadow = casts;
+              });
         }
       return props;
     }

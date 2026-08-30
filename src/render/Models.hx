@@ -75,6 +75,7 @@ class Models {
             {
               if (o.material == null)
                 return;
+              o.material = toLambert(o.material);
               o.material.side = THREE.FrontSide;
               // DEBUG: smooth away the decimation shading artifact (see MODEL_SMOOTH_NORMALS). recomputes
               // per-vertex normals from the coarse geometry, dropping the mismatched authored normals
@@ -143,6 +144,37 @@ class Models {
             f(t);
           waiting.remove(path);
         });
+    }
+
+// swap a glb's PBR material for the flat MeshLambert every other surface in the game already draws
+// with. the night art has no specular in it, and a prop was the last thing in the frame still shading
+// through the full PBR path — which costs far more than its triangles do: a TRELLIS prop is ~5k tris
+// over a 40-pixel silhouette, so its triangles are SUB-PIXEL and the fragment shader runs once per
+// 2x2 quad however small they get, which is why prop cost tracks TRIANGLES and barely moves with
+// resolution. measured on the integrated Radeon with the whole park in frame (3.6M tris, 1080p):
+// 31.4ms -> 20.3ms GPU, and the culled follow view 8.9 -> 6.6. metalness/roughness go with the path,
+// which on a TRELLIS bake is a FIX and not a loss — it lands at metallic 1 with an MR map and reads
+// as chrome against flat art. the one family that really does want specular says so IN THE GLB:
+// models.json's `roughness` dial bakes a roughnessFactor below 1 (the habitat props, 0.30-0.45), and
+// those keep MeshStandard
+  static function toLambert(m:Dynamic):Dynamic
+    {
+      var rough:Null<Float> = m.roughness;
+      if (rough == null ||
+          rough < 1)
+        return m;
+      return new MeshLambertMaterial({
+        name: m.name,
+        map: m.map,
+        color: m.color,
+        normalMap: m.normalMap,
+        aoMap: m.aoMap,
+        emissive: m.emissive,
+        emissiveMap: m.emissiveMap,
+        emissiveIntensity: m.emissiveIntensity,
+        alphaTest: m.alphaTest,
+        transparent: m.transparent,
+      });
     }
 
 // per-model yaw correction (radians about the vertical Y) so a prop's facing matches the placement
