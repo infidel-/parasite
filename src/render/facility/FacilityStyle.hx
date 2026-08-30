@@ -93,6 +93,77 @@ class FacilityStyle
   public static inline var GROUND_BORDER = 'textures/city/ground-walkway-border.png';
   public static inline var GROUND_PAINT = 'textures/city/ground-road-paint.png';
 
+  // --- the park lawn's two dressing layers (render.facility.FacilityLawn) ---
+  // a ragged overlay of tall unmown grass laid OVER the mown lawn, and a few standing tufts inside
+  // the same blobs. one flat map across a whole park reads as felt; the overlay is the
+  // render.world.Lawns / render.wild.WildPatches idiom sharing their render.world.CoverageMask, and
+  // the tufts are render.wild.WildGrass' own emitter and material, called rather than copied.
+  // a CUTOUT like `city/grass`, not a ground tile — see its own note in textures.json
+  public static inline var PATCH_LUSH = 'textures/facility/grass-lush.png';
+  // world units per repeat, both axes, world-aligned, never stretched. under CELL (4) for the reason
+  // Lawns' TILE carries: the art is only ~41% opaque, so a repeat WIDER than a cell leaves whole
+  // cells landing on its gaps and reading as bare lawn
+  public static inline var PATCH_TILE = 3.0;
+  // base opacity — the wilderness's PATCH_ALPHA verbatim and NOT Lawns' 0.5, which was measured over
+  // there to collapse a real value ladder into nothing a night frame can show. built, this art is
+  // 0.0390 linear against the lawn's 0.0499, which composites at 0.85 to 0.0406 = 0.81x
+  public static inline var PATCH_ALPHA = 0.85;
+  public static inline var PATCH_Y = 0.02;       // how far the overlay floats over the lawn it covers
+  // one seed per PATCH_STEP x PATCH_STEP block of lawn, placed inside its block by the hash — a
+  // STRATIFIED roll, not an independent per-cell one, and the difference is the whole reason this is
+  // a step and not a chance.
+  //
+  // an independent roll tuned to the coverage this wants (2% a cell) deals about nine seeds over a
+  // park, and nine independent samples over 14 columns clump: measured over 3,600 synthetic parks at
+  // the live one's size, **20% of them come back with a bare band of 5+ columns** and the worst is 10
+  // of 14 — and the live park drew exactly that, all seven seeds inside three columns with the whole
+  // west half left as flat felt. The lattice takes the same failure to **7%** and its worst to 8, and
+  // on the live park spreads the seeds over 7 columns instead of 3. Precisely the finding
+  // game.FacilityAreaGenerator already records one layer down, where uniform clump centres could not
+  // cover this same park and became PARK_CLUMP_STEP.
+  //
+  // 7 lands 8 seeds / 21 cells / 24.3% of the lawn at the kernel below. Bigger steps thin out fast
+  // (9 gives 5 seeds over 3 columns); smaller ones stop being a lattice — 5 puts 15 seeds in and
+  // takes the lawn to 44%, which reads as abandoned rather than as variety.
+  public static inline var PATCH_STEP = 7;
+  // the coverage kernel's radius in world units, and the per-cell jitter of that radius and of its
+  // centre. FEWER, BIGGER blobs — the opposite end of the same curve the wilderness sits at, and the
+  // ~24% one layer changes here is roughly what its TWO layers at ~10% each change between them. it
+  // must in any case stay well over CELL * 0.5, under which neighbouring kernels pinch at the waist
+  // and a run of marked cells beads into a string of pearls (render.world.CoverageMask's own note),
+  // and the wilderness measured 7.0 as grain from a camera 18-55 units up
+  public static inline var PATCH_KERN = 11.0;
+  public static inline var PATCH_KERN_JIT = 0.35;
+  // the standing tufts, per cell and by what that cell is: denser inside an overgrown patch than out
+  // on the mown lawn between the trees. both counts sit under the wilderness bands' 1-3, and so does
+  // the height under their 0.8-1.3 — a compound park is mown, and these are what got away.
+  //
+  // the SPLIT is the point rather than either number. tufts only in the patches left the bare lawn
+  // as flat felt, which is the thing this whole layer exists to fix; the same count everywhere would
+  // stop the patches reading as patches, since the overlay art would be the only thing marking them.
+  //
+  // and the COUNTS had to go up to be seen at all. a compound park is planted far denser than the
+  // open ground the wilderness tuned its 1-3 against — the live one measures **72.5% under trees and
+  // bushes**, leaving 99 plain cells of 360 — so one tuft a cell put 108 blades in a lawn that big
+  // and read as nothing. 3 and 5 put 315 in, which is where the ground stops being felt
+  public static inline var TUFT_LAWN = 3;
+  public static inline var TUFT_PATCH = 5;
+  public static inline var TUFT_H = 0.9;
+  // how fast the park's blades lean against the wilderness's own wind rate. HALF: a compound park is
+  // a sheltered box with buildings and a perimeter wall round it, where the wilderness's grassland is
+  // open ground, and at the shared rate a walled lawn read as breezier than the moor. the AMPLITUDE
+  // is untouched — the blades travel as far, they just take twice as long about it. free, because
+  // render.wild.WildGrass.material takes the rate as a UNIFORM and not a program define
+  public static inline var TUFT_WIND_MUL = 0.5;
+
+  // per-instance size spread on the park's PLANTS, as a fraction either side of 1.0. a batch is one
+  // glb drawn many times, so at 0 a park of 163 bushes is one bush repeated 163 times — which is what
+  // it was. deliberately half the wilderness's own spread for these same three models (conifer 0.20,
+  // broadleaf 0.22, bush 0.28): those are wild growth, these are planted stock in a maintained
+  // compound, where a lawn of visibly mismatched shrubs reads as neglect rather than as nature.
+  // the BENCH takes 0 and is not covered by this — see its row in FacilityGround.GREEN
+  public static inline var PLANT_SCALE_JIT = 0.10;
+
   // how far the road and the park lie BELOW the pavement, world units. the street's own kerb step
   // verbatim (render.RenderConfig.CURB_H), and render.world.Kerb draws the edging off that file's
   // WALKWAY_BORDER_W / _TILE too, so a compound's kerb and a street's are the same object.

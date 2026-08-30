@@ -35,6 +35,12 @@ class FacilityWarm
       var bundle = FacilityScene.build(renderer, lampPool);
       var sc = bundle.scene;
       FacilityGround.build(sc, model);
+      // the park's two dressing layers, which are TWO program permutations neither of the four ground
+      // surfaces covers: the overlay is transparent with an alphaMap, which flips the vision mask to
+      // its alpha-scale mode and so to a different customProgramCacheKey, and the tufts carry
+      // WildGrass' own wind hook and 'wildGrass' key on top of that. no area behind the demo model,
+      // so every marked cell counts as plain lawn and the tufts all land
+      FacilityLawn.build(sc, model);
       FacilityGeom.build(sc, model);
       FacilityTables.build(sc, model);
       // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not

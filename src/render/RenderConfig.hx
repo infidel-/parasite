@@ -643,6 +643,12 @@ class RenderConfig {
   // hi-poly vertex normals that light faces turning away (shading artifacts); recomputing smooths
   // them (fixes the artifact but loses hard-edge detail). true = smooth, false = keep authored normals
   public static inline var MODEL_SMOOTH_NORMALS = false;
+  // anisotropic filtering on a loaded glb's textures. GLTFLoader leaves every texture it makes at 1,
+  // while render.Textures.loadTexture sets 4 on everything the game loads BY HAND — so the ground,
+  // the walkway and the grass sprite were filtered and every PROP was not. Anisotropy 1 blurs hardest
+  // at grazing angles, which from a camera 18-55 units up is a tree's flank and a bush's top, i.e.
+  // most of what a prop shows. 4 to match Textures, so a prop and the ground it stands on sample alike
+  public static inline var MODEL_ANISO = 4;
   // baked glb props (make models -> app/models/), loaded via render.Models
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',

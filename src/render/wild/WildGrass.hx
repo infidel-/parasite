@@ -99,8 +99,25 @@ class WildGrass
                   continue;
                 var yaw = ((h >> 3) % 3600) / 3600.0 * Math.PI;
                 var s = 1.0 + (((h >> 17) % 2001) / 1000.0 - 1.0) * WildStyle.TUFT_JITTER;
-                tuft(pos, nor, uv, wind, idx, px, pz, yaw,
-                  WildStyle.TUFT_W * s, WildBand.cur.tuftH * s, h);
+                tuft({
+                  pos: pos,
+                  nor: nor,
+                  uv: uv,
+                  wind: wind,
+                  idx: idx,
+                  x: px,
+                  // the relief under the tuft's CENTRE. its two quads stay horizontal at the base, so
+                  // on a slope one edge digs in by half a quad width times the slope (0.75 * 0.164 =
+                  // 0.12 world units at the worst); roots disappearing into the ground is what roots
+                  // do, and levelling them would need a per-corner sample and a normal for a mat of
+                  // blades whose normals already point at the sky
+                  y: WildHeight.at(px, pz),
+                  z: pz,
+                  yaw: yaw,
+                  w: WildStyle.TUFT_W * s,
+                  h: WildBand.cur.tuftH * s,
+                  hash: h,
+                });
               }
           }
       if (idx.length == 0)
@@ -142,57 +159,71 @@ class WildGrass
 // writing them here is only HALF of it, and for a long time the other half was missing: a DoubleSide
 // material has three flip the normal on every back-facing fragment, which turned this lie straight
 // back into the failure it was avoiding. material() cancels that — read its note before touching
-// either end
-  static function tuft(pos:Array<Float>, nor:Array<Float>, uv:Array<Float>, wind:Array<Float>,
-    idx:Array<Int>, x:Float, z:Float, yaw:Float, w:Float, h:Float, hash:Int):Void
+// either end.
+//
+// public, and taking its ground height from the caller, because render.facility.FacilityLawn plants
+// the same tufts on a compound's park lawn. it must NOT be forked for that: the normals above and
+// the faceDirection cancel in material() are one mechanism written in two places, and two copies of
+// it would drift
+  public static function tuft(o:TuftOpts):Void
     {
       // one phase per TUFT, not per quad: its two blades are the same clump and lean together
-      var phase = (hash % 6283) / 1000.0;
-      // the relief under the tuft's CENTRE, sampled here rather than passed in — this already has the
-      // world position, and the signature is long enough. its two quads stay horizontal at the base,
-      // so on a slope one edge digs in by half a quad width times the slope (0.75 * 0.164 = 0.12 world
-      // units at the worst); roots disappearing into the ground is what roots do, and levelling them
-      // would need a
-      // per-corner sample and a normal for a mat of blades whose normals already point at the sky
-      var gy = WildHeight.at(x, z);
+      var phase = (o.hash % 6283) / 1000.0;
       for (q in 0...2)
         {
-          var a = yaw + q * Math.PI / 2;
-          var dx = Math.cos(a) * w / 2;
-          var dz = Math.sin(a) * w / 2;
-          var base = Std.int(pos.length / 3);
+          var a = o.yaw + q * Math.PI / 2;
+          var dx = Math.cos(a) * o.w / 2;
+          var dz = Math.sin(a) * o.w / 2;
+          var base = Std.int(o.pos.length / 3);
           // wound base-left, base-right, top-right, top-left; v is 0 at the ground and 1 at the tip
           inline function vtx(ox:Float, y:Float, oz:Float, u:Float, v:Float):Void
             {
-              pos.push(x + ox);
-              pos.push(gy + y);
-              pos.push(z + oz);
-              nor.push(0.0);
-              nor.push(1.0);
-              nor.push(0.0);
-              uv.push(u);
-              uv.push(v);
-              wind.push(phase);
-              wind.push(v); // the height weight the wind offset scales by: nothing at the roots
+              o.pos.push(o.x + ox);
+              o.pos.push(o.y + y);
+              o.pos.push(o.z + oz);
+              o.nor.push(0.0);
+              o.nor.push(1.0);
+              o.nor.push(0.0);
+              o.uv.push(u);
+              o.uv.push(v);
+              o.wind.push(phase);
+              o.wind.push(v); // the height weight the wind offset scales by: nothing at the roots
             }
           vtx(-dx, 0.0, -dz, 0.0, 0.0);
           vtx(dx, 0.0, dz, 1.0, 0.0);
-          vtx(dx, h, dz, 1.0, 1.0);
-          vtx(-dx, h, -dz, 0.0, 1.0);
-          idx.push(base);
-          idx.push(base + 1);
-          idx.push(base + 2);
-          idx.push(base);
-          idx.push(base + 2);
-          idx.push(base + 3);
+          vtx(dx, o.h, dz, 1.0, 1.0);
+          vtx(-dx, o.h, -dz, 0.0, 1.0);
+          o.idx.push(base);
+          o.idx.push(base + 1);
+          o.idx.push(base + 2);
+          o.idx.push(base);
+          o.idx.push(base + 2);
+          o.idx.push(base + 3);
         }
     }
 
-// the shared grass material, with the wind folded into its vertex shader
-  static function material():MeshLambertMaterial
+// the shared grass material, with the wind folded into its vertex shader. public for the same reason
+// tuft() is — the park lawn draws with this exact material, and the wind hook, the cache key and the
+// faceDirection cancel are the whole reason it cannot be rebuilt by hand elsewhere.
+//
+// `rate` is per CALLER because a compound park is a sheltered box of buildings where open grassland
+// is not, and the facility runs it at half. it costs nothing to vary: the rate is a UNIFORM and not
+// a program define, so both materials still share one program and one cache key — only the clock
+// they read it against is shared, by identity, which is what makes one tick() drive every blade
+  public static function material(rate:Float = WildStyle.WIND_RATE):MeshLambertMaterial
     {
+      // CLAMPED, and this is not a detail. render.Textures.loadTexture hands every caller
+      // RepeatWrapping because almost everything it loads tiles — but a tuft maps uv 0..1 across the
+      // sprite exactly ONCE, so v=1 sits on the texture's outer edge and bilinear there wraps around
+      // and blends in row 0. This sprite is authored side-on rooted in the frame's BOTTOM edge, so
+      // its two outer rows are the worst possible pair: the top (the blade tips, v=1) measures 0%
+      // opaque and the bottom (the roots) 66.4% at alpha up to 255. The wrap put a half-strength line
+      // of ROOT along the top edge of every quad — blending to ~128, over this material's alphaTest
+      // of 102, so it survived the cut and read as a 1px line capping every tuft in the field
+      var map = Textures.loadTexture(WildStyle.GRASS, 'facade', 1);
+      map.wrapS = map.wrapT = THREE.ClampToEdgeWrapping;
       var mat = new MeshLambertMaterial({
-        map: Textures.loadTexture(WildStyle.GRASS, 'facade', 1),
+        map: map,
         side: THREE.DoubleSide,
         alphaTest: WildStyle.TUFT_ALPHA,
       });
@@ -201,7 +232,7 @@ class WildGrass
         {
           shader.uniforms.wildWindT = uTime;
           shader.uniforms.wildWindAmp = { value: WildStyle.WIND_AMP };
-          shader.uniforms.wildWindRate = { value: WildStyle.WIND_RATE };
+          shader.uniforms.wildWindRate = { value: rate };
           // the two axes run at 0.83 of each other and start on different phases, so a tuft traces a
           // small figure rather than sliding back and forth along one line
           shader.vertexShader = 'attribute vec2 aWind;\n' +

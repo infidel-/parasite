@@ -537,6 +537,17 @@ class FacilityModel
       for (row in 0...m.h)
         for (col in 0...m.w)
           m.surf[row][col] = LOT;
+      // park along the south and east edges. it is here for the WARM and not for the look: the four
+      // ground surfaces all compile ONE program between them, but the lawn's two dressing layers
+      // (render.facility.FacilityLawn) are permutations of their own, and with no GRASS on this grid
+      // neither would be built at all and both would compile on the first real facility entry.
+      // 144 cells rather than a token strip because the patch roll is a per-cell chance — too few and
+      // the coverage bake comes back null and warms nothing
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          if (row >= 12
+            || col >= 20)
+            m.surf[row][col] = GRASS;
       // one building: a wall ring, rooms either side of a corridor, and a window run on the south
       // face. a wall cell carries NO surface, which is the invariant every builder here relies on
       for (row in 2...12)

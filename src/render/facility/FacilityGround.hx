@@ -23,6 +23,12 @@ typedef GreenProp = {
   h:Float,
   // how far off its cell centre a prop may sit, as a fraction of a cell
   jitter:Float,
+  // per-instance SIZE spread, as a fraction of h either side of 1.0. a batch is one glb drawn many
+  // times, so without this 163 bushes are one bush repeated — render.Models.PropPlace.scale carries
+  // the same obituary. 0 for anything MANUFACTURED: the wilderness's guard rail is alone in its own
+  // table at 0 for exactly this reason, a run of made objects at visibly different sizes reads as
+  // broken rather than as varied
+  scaleJit:Float,
   // how far the prop is SUNK below the ground it stands on, as a fraction of its own height. a
   // generated canopy tapers to a ragged fringe of holes and spikes where its trunk ought to be, and
   // burying that fringe is cheaper and better-looking than any amount of regeneration. 0 for
@@ -60,6 +66,7 @@ class FacilityGround
       path: RenderConfig.MODELS.wildTreeConifer,
       h: 7.5,
       jitter: 0.20,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       sink: 0.0,
     },
@@ -68,6 +75,7 @@ class FacilityGround
       path: RenderConfig.MODELS.wildTreeBroadleafFull,
       h: 9.5,
       jitter: 0.22,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       // its canopy runs all the way down and ends in a ragged fringe of holes and spikes instead of
       // a trunk, which stood proud of the lawn and read as torn geometry. sunk, the fringe is under
@@ -80,6 +88,7 @@ class FacilityGround
       path: RenderConfig.MODELS.wildBushLow,
       h: 1.1,
       jitter: 0.28,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       sink: 0.0,
     },
@@ -91,6 +100,10 @@ class FacilityGround
       path: RenderConfig.MODELS.facilityBenchPark,
       h: FacilityStyle.PARK_BENCH_H,
       jitter: 0.0,
+      // and it does NOT vary in size. it is manufactured, so a run of them at different sizes reads
+      // as broken; and `bins` places the litter bin off this bench's own half-extents (BIN_SIDE /
+      // BIN_BACK, both fitted against a fixed 3.57-unit seat), so a scaled bench would walk its bin
+      scaleJit: 0.0,
       faces: true,
       sink: 0.0,
     },
@@ -346,6 +359,9 @@ class FacilityGround
                 var hz = FacilityModel.mix((col * 19349663) ^ (row * 83492791));
                 var hy = FacilityModel.mix((col * 24036583) ^ (row * 32582657));
                 var j = GREEN[i].jitter;
+                // the size roll rides the HIGH bits of the yaw hash, which only spends its low ones
+                // (% 6283) — the same pair of ranges render.wild.WildProps takes off one hash
+                var s = 1.0 + (((hy >> 17) % 2001) / 1000.0 - 1.0) * GREEN[i].scaleJit;
                 places[i].push({
                   x: (col + 0.5 + lean(m, col, row, ((hx % 2001) / 1000.0 - 1.0) * j, 1, 0)) * CELL
                     - half,
@@ -356,8 +372,12 @@ class FacilityGround
                   yaw: (GREEN[i].faces ? facing(m, col, row) : (hy % 6283) / 1000.0),
                   // the park lies a kerb BELOW the pavement, and nothing here places a prop anywhere
                   // else — every entry in GREEN is keyed on a grass tile. `sink` then buries a
-                  // fraction of the prop's own height under that
-                  y: surfY(Surf.GRASS) - GREEN[i].sink * GREEN[i].h,
+                  // fraction of the prop's own height under that, and it has to ride the instance
+                  // SCALE with it: the ragged fringe being buried shrinks when the tree does, so a
+                  // fixed burial would leave a small broadleaf standing on its own torn edge. the
+                  // reasoning render.wild.WildProps.sit carries for the same glb
+                  y: surfY(Surf.GRASS) - GREEN[i].sink * GREEN[i].h * s,
+                  scale: s,
                 });
               }
           }

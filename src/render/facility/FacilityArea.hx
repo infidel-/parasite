@@ -108,6 +108,9 @@ class FacilityArea implements Area3D
       var pre = scene.children.copy();
       built = scene;
       FacilityGround.build(scene, model);
+      // the park's overlay patches and the tufts standing in them, straight after the lawn they lie
+      // on so the two are built from one pass over the same grid
+      FacilityLawn.build(scene, model, game.area);
       shells = FacilityGeom.build(scene, model);
       FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
@@ -214,6 +217,10 @@ class FacilityArea implements Area3D
             ceilings: lamps.ceilings.length,
             bulbs: bulbs,
             lit: lampLights.active().length,
+            // the park's overgrown patches. `strong` is the number the layer is TUNED on and the one
+            // no screenshot gives: what shows through a near-uniform coverage field is just the
+            // art's own opacity, i.e. grain, so the mask has to be judged and not the seed count
+            patches: FacilityLawn.stats(),
           };
         };
     }
@@ -228,6 +235,9 @@ class FacilityArea implements Area3D
       // the leaves turn through the outro too, for the reason the reveal does: the camera is still
       // on the area during the pull-out, and a door snapping shut mid-swing is exactly when it shows
       FacilityDoors.tick(doors, opts);
+      // and the park's grass keeps moving through it for the same reason. this is the whole per-frame
+      // cost of the tuft layer — one shared uniform, advanced once, read by every blade in the mesh
+      render.wild.WildGrass.tick(opts.dtMs);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);

@@ -86,6 +86,14 @@ class Models {
               // the normal map down (0 = ignore it, flat shading from geometry only)
               if (o.material.normalMap != null)
                 o.material.normalScale.set(RenderConfig.MODEL_NORMAL_SCALE, RenderConfig.MODEL_NORMAL_SCALE);
+              // and anisotropic filtering on every map the glb carries — see MODEL_ANISO for why a
+              // prop is the ONE thing in the frame that was not getting it. safe to set here without
+              // needsUpdate: these textures are minutes old and have never been uploaded, so the
+              // value is read on their first upload rather than forcing a second one
+              for (t in [ o.material.map, o.material.normalMap, o.material.roughnessMap,
+                o.material.metalnessMap, o.material.emissiveMap, o.material.aoMap ])
+                if (t != null)
+                  t.anisotropy = RenderConfig.MODEL_ANISO;
             });
           // instanced() reads each mesh's RAW geometry and ignores its node transform — so a rotation
           // authored on the NODE (not baked into the verts) is silently dropped, laying the prop over.
