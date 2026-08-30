@@ -20,6 +20,11 @@
 </head>
 <body>
 
+<!-- boot warmup screen: on screen from the document's first paint, removed by Main once
+     render.View.warmup() settles. static markup on purpose — it is up before parasite.js
+     has even parsed, so none of the game is ever seen mid-warm -->
+<div id="warmup">warmup phase<span class="d">.</span><span class="d">.</span><span class="d">.</span></div>
+
 <!-- SVG filter bank for message/dialog imagery (referenced via CSS filter:url(#...)) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <filter id="msgSpecimen" x="-6%" y="-6%" width="112%" height="112%" color-interpolation-filters="sRGB">

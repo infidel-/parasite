@@ -7,7 +7,6 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import game.Game;
 import entities.Entity;
-import render.Models.ModelVariant;
 import render.choreo.Choreo;
 
 // controller for the 3D area view. Owns a persistent renderer/camera on its own
@@ -280,345 +279,114 @@ class View {
       };
   }
 
-// boot shader pre-warm: compile every street shader program on a THROWAWAY city (built by the real
+// boot shader pre-warm: compile every CITY shader program on a THROWAWAY city (built by the real
 // builders, so the material / instancing / light-count set matches the game exactly) BEFORE the player
 // ever enters one, so the first real city entry reuses the cached programs and presents instantly
 // instead of stalling ~2s under black compiling MeshStandard permutations on demand. runs once per GL
-// context, off the menu idle (Main). the throwaway scene is retained (warmHold) so its materials keep
-// their programs in three's refcounted, cacheKey-shared cache; a matching-key material in the real
-// build then reuses them. covers the full static city + post-FX + gas + actor sprites + beams/sparks
-// (ring/tactical share those programs — blending is render state, not a shader define). NOT covered, on
-// purpose: silent-scream (its ctor needs live area state) and occlusion ghosts (compile on first fade) —
-// both cheap one-off first-use hitches, warmed later via their own warmupMeshes if ever noticed
-  static var warmHold:Dynamic = null;   // retains the warm scene so its materials' programs stay cached
-  public function warmup():Void
+// context, from Main, with the boot screen (#warmup in app.html) held up on `onDone`. WHAT it builds
+// is render.CityWarm — a warm scene is a copy of a real build, so it lives next to the builders it
+// copies; this end owns only the guard, the timing and the reporting.
+// the TUNNELS and the FACILITY used to warm here too and no longer do: their props are ~20 glbs
+// between them, and waiting for those loads put 7.6s on the boot screen (measured: 0.6s of blocked
+// thread, 7s of glb reads and embedded-texture decodes) for art most sessions never reach. each is
+// warmed on the FIRST ENTRY to its kind instead — see warmKind, which runs under the fader
+// GameScene.draw3D has already brought to black.
+// `onDone` fires exactly once, whichever way this ends — resolved, already warmed, or failed. the
+// boot screen is held up by it, so a path that never calls it leaves a black screen the player cannot
+// get past, which is why the chain below carries a catch
+  static var warmedKinds:Map<String, Bool> = new Map(); // which per-kind warms have already run, keyed as warmKind keys them
+  public function warmup(?onDone:Void->Void):Void
     {
-      if (_warmed || warmHold != null)
-        return;
+      if (_warmed)
+        {
+          if (onDone != null)
+            onDone();
+          return;
+        }
       _warmed = true;
+      // the synchronous head of the build below is a second or more of blocked main thread. the boot
+      // screen sits there for exactly that long plus the async tail, so both halves are reported on
+      // the line at the end — CityWarm hands back the stamp it latched between them
+      var t0 = haxe.Timer.stamp();
       ensureCore();
-      // real builders on a throwaway city -> exact programs, complete by construction, zero enumeration
-      var seed = 1;
-      var city = CityGen.generate(seed);
-      // same lamp pool as the real scene: NUM_SPOT_LIGHTS is part of the program key, so warming at a
-      // different pool size would compile programs the game then never uses
-      var bundle = SceneSetup.buildScene(renderer, city, game.config.vidLampLights); // base scene + fixed light pools + lamp cones
-      var s = bundle.scene;
-      World.build(s, city, seed, null, false);             // all lit world geometry (instanced MeshStandard); audit off — throwaway city
-      // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
-      // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
-      // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
-      var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_HIGH));
-      World.build(s, dtCity, seed, render.world.AreaStyle.forArea(AREA_CITY_HIGH), false);
-      // and the slums style (house walls/windows/doors, shingle gable, slums ground, the dead-lawn
-      // cutout) on a throwaway low-density city — a NEW GAME starts in AREA_CITY_LOW, so this is the
-      // first city most sessions ever build
-      var slCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_LOW));
-      World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), false);
-      // the tunnels get their OWN warm scene, NOT a corner of the city's. a sewer has no
-      // directional light at all, and NUM_DIR_LIGHTS / NUM_DIR_LIGHT_SHADOWS are part of every lit
-      // material's program key — so wall/floor/ledge warmed under the city's moon compile
-      // the wrong variant and recompile on the first real entry anyway (measured: 4 programs).
-      // real builders again, so the match is by construction rather than by bookkeeping
-      var sewerModel = render.sewer.SewerModel.demo();
-      var sewerScene = render.sewer.SewerScene.build(renderer, sewerModel, game.config.vidLampLights).scene;
-      render.sewer.SewerGeom.build(sewerScene, sewerModel);
-      // and the muzzle-flash point-light pool, for the SAME reason the city warm scene parks one
-      // below: Actors adds it to every real scene, tunnels included, and NUM_POINT_LIGHTS is in
-      // every lit material's program key. without it the whole shell warms at 0 point lights and
-      // recompiles at 5 on the first entry — measured by diffing __progs() around a sewer entry,
-      // where every added lambert/basic key differed from its warmed twin in that one field
-      var sewerFx = new Group();
-      sewerScene.add(sewerFx);
-      new render.particles.MuzzleLights(sewerFx);
-      // the facility gets its OWN warm scene too, for a reason the tunnels' entry only half covers.
-      // it does have a moon, so the light COUNTS match the city's — what differs is that every lit
-      // surface out there carries the vision-mask patch, and the mask contributes a
-      // customProgramCacheKey. so a facility floor warmed as a city ground material warms a key the
-      // game never asks for. measured before adding this: 91 programs at boot, 101 after the first
-      // facility entry
-      var facModel = render.facility.FacilityModel.demo();
-      // and the indoor mask over the warm model, for the SAME reason the vision mask makes this
-      // scene necessary at all: it contributes a customProgramCacheKey of its own, so a facility wall
-      // warmed without it warms a key the game never asks for and every lit surface in there
-      // recompiles on the first entry. attached around this block only — the sewer scene above and
-      // the city scene below must warm with no indoor swap, which is what they render with
-      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR, facModel.w, facModel.h,
-        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
-      var facScene = render.facility.FacilityScene.build(renderer, game.config.vidLampLights).scene;
-      render.facility.FacilityGround.build(facScene, facModel);
-      render.facility.FacilityGeom.build(facScene, facModel);
-      render.facility.FacilityTables.build(facScene, facModel);
-      // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not
-      // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
-      // area behind the demo model, so every leaf here is shut and stays that way
-      render.facility.FacilityDoors.build(facScene, facModel, null);
-      // the additive glow layer, which is a program permutation of its own on TWO counts: it is
-      // vision-mask patched (a customProgramCacheKey) and it carries vertexColors, which three folds
-      // into the key as well. the demo model has rooms and windows, so this emits real quads; the
-      // MAST heads are absent here because the mast glb has not loaded yet — same material either
-      // way, so the program is warmed regardless
-      render.facility.FacilityGlow.build(facScene, facModel);
-      // and one lamp cone, for the same reason: a cone is a MeshBasicMaterial with an alphaMap and
-      // additive blending, which no other material in this scene is
-      render.LightCone.instanced({
-        group: facScene,
-        bulbs: [{ x: 0.0, z: 0.0 }],
-        bulbY: render.facility.FacilityStyle.LAMP_H * render.facility.FacilityStyle.LAMP_HEAD_Y,
-        radius: 1.0,
-        topR: render.RenderConfig.LAMP_CONE.topR,
-        color: render.facility.FacilityStyle.LAMP_COLOR,
-      });
-      var facFx = new Group();
-      facScene.add(facFx);
-      new render.particles.MuzzleLights(facFx);
-      // and off again before the city block below: everything from here to the end of warmup —
-      // the gas puffs, the sprite pool, the beams and sparks, and the tunnel props in the async
-      // chain — must warm the programs the city and the tunnels really render, which carry no
-      // indoor swap. the facility's own park plants arrive in that same chain and re-attach for
-      // themselves (see the `green` loop)
-      render.world.IndoorMask.detach();
-      // the exit ladder prop warms in the SEWER scene (the city's moon would compile the wrong
-      // light-count variant), but it has to wait for its glb — see the compile chain below
-      // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
-      // buildScene already compiled — instance one into the warm scene so the first downtown entry
-      // reuses it instead of recompiling on the first frame
-      render.Models.instanced(s, render.RenderConfig.MODELS.streetLamp2, [{ x: 0.0, z: 0.0, yaw: 0.0 }], CityConfig.CELL * 1.6, SOLID);
-      // on-demand effects never present at static-build time: park throwaway instances so they warm too
-      var g = new Group();
-      s.add(g);
-      // the muzzle-flash point-light pool the real build adds via Actors: it sits in the scene forever at
-      // intensity 0 so NUM_POINT_LIGHTS is constant, and that count is baked into EVERY lit material's
-      // program — so the warm scene must carry it or every MeshStandard program compiles at the wrong
-      // light count and recompiles on entry. this is the 5-light count (every non-barrel city); the
-      // 10-light AREA_CITY_LOW variant is warmed by the second compile pass below (FlameLights added)
-      new render.particles.MuzzleLights(g);
-      for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
-        g.add(m);
-      for (m in render.particles.Sprites.warmupMeshes())    // actor billboards (MeshStandard + map/emissiveMap)
-        g.add(m);
-      // beams + hit sparks: spawn once via the REAL code so the exact materials get built (no config to
-      // drift). streak (no map) + glow (map) cover both MeshBasic variants; beams share streak's program
-      var beams = new render.particles.Beams(g);
-      beams.quad(0, 0, 0, 1, 0, 0, 0xffffff, 1);
-      var sparks = new render.particles.Sparks(g, camera);
-      sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
-      sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
-      // the grown props' writhing core: a plain additive quad EXCEPT for its uv-disturbance patch,
-      // which carries a customProgramCacheKey of its own — so it is a program glowQuad's does not
-      // cover and would otherwise compile on the first habitat entry. its fireflies ARE glowQuad's
-      // material and need nothing. warmed in the CITY scene deliberately: MeshBasic takes no light
-      // count, so the program does not vary by area, and this scene is the one bound to the
-      // composer's linear target below (which the cache key DOES bake in)
-      for (m in render.actors.PropFX.warmupMeshes())
-        g.add(m);
-      // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
-      // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
-      // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).
-      // so for every such material in the scene, add explicit FrontSide + BackSide clone meshes so BOTH
-      // real programs get cached instead of recompiling on the first render
-      var quad = new PlaneGeometry(1, 1);
-      var seen = new haxe.ds.ObjectMap<Dynamic, Bool>();
-      var clones:Array<Mesh> = [];
-      s.traverse(function(o:Object3D)
+      var warm = CityWarm.build(renderer, camera, game.config.vidLampLights);
+      // the chain is held in a TYPED local only so the catch below compiles to `.catch`: three's
+      // compileAsync extern returns Dynamic, and `catchError` on a Dynamic is emitted verbatim, which
+      // is not a method any promise has
+      var chain:js.lib.Promise<Dynamic> = warm.p;
+      chain.then(function(_)
         {
-          var mat:Dynamic = untyped o.material;
-          if (mat == null)
-            return;
-          var mats:Array<Dynamic> = Std.isOfType(mat, Array) ? mat : [ mat ];
-          for (mm in mats)
-            {
-              if (mm == null
-                || seen.exists(mm))
-                continue;
-              seen.set(mm, true);
-              if (mm.transparent == true
-                && mm.side == THREE.DoubleSide
-                && mm.forceSinglePass != true)
-                for (side in [ THREE.FrontSide, THREE.BackSide ])
-                  {
-                    var c = mm.clone();
-                    c.side = side;
-                    clones.push(new Mesh(quad, c));
-                  }
-            }
+          js.Browser.console.log('[street-warmup] boot pre-warm: ' +
+            (renderer.info.programs != null ? renderer.info.programs.length : -1) + ' programs cached, sync ' +
+            StreetPerf.r2((warm.tSync - t0) * 1000) + 'ms, total ' +
+            StreetPerf.r2((haxe.Timer.stamp() - t0) * 1000) + 'ms');
+          if (onDone != null)
+            onDone();
         });
-      for (c in clones)
-        s.add(c);
-      // park the moon's shadow box over the city so the composer pass below actually runs the shadow
-      // depth pass — otherwise the box sits at world origin, the city-wide shadow caster falls outside it,
-      // no depth material renders, and the position-only shadow programs compile on the first real frame
-      var span = CityConfig.CELL * CityConfig.GRID;
-      SceneSetup.fitMoon(bundle.moon, new Vector3(span / 2, 0, span / 2));
-      // minimal composer (RenderPass + bloom + output) to warm the always-on post-FX programs; GTAO and
-      // the shockwave pass are disabled/on-demand and compile on toggle regardless, so they're left out
-      var comp = new EffectComposer(renderer);
-      comp.addPass(new RenderPass(s, camera));
-      comp.addPass(new UnrealBloomPass(
-        new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
-        RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD));
-      comp.addPass(new OutputPass());
-      // CRITICAL: the game renders scene -> the composer's LINEAR intermediate target (srgb-linear),
-      // then OutputPass converts to sRGB. a program's cacheKey bakes in the bound target's color space,
-      // so compileAsync against the default framebuffer (srgb) compiles the WRONG variant and the real
-      // srgb-linear programs still compile on entry. bind the composer's linear target first so compile
-      // produces exactly the programs the real render uses. compile walks the whole scene (not frustum-
-      // culled), so this warms every material's real program in parallel, view-independent
-      renderer.setRenderTarget(comp.renderTarget1);
-      // compileAsync hands all scene programs to the driver in parallel (KHR_parallel_shader_compile)
-      // without blocking; one composer pass then warms the post-FX programs compile can't reach.
-      // TWO passes: NUM_POINT_LIGHTS is baked into every lit material's program, and low-tier cities
-      // (AREA_CITY_LOW, where a NEW GAME starts) carry the barrel FlameLights pool -> 10 point lights
-      // vs 5 everywhere else. warm the 5-count first, then add FlameLights and warm the 10-count, so
-      // both variants are cached and neither the new-game start nor any later city recompiles on entry
-      renderer.compileAsync(s, camera).then(function(_)
+      chain.catchError(function(e:Dynamic)
         {
-          new render.particles.FlameLights(g);
-          return renderer.compileAsync(s, camera);
-        }).then(function(_)
+          // a warm that throws used to just stop: the scene was never retained, the composer never
+          // disposed and the renderer left bound to the warm target, which is a dead renderer. now it
+          // also strands the boot screen, so unbind, say so, and let the game start unwarmed
+          renderer.setRenderTarget(null);
+          js.Browser.console.warn('[street-warmup] boot pre-warm failed, starting unwarmed: ' + e);
+          if (onDone != null)
+            onDone();
+        });
+    }
+
+// per-kind shader warm, run once per area KIND on the FIRST entry to it, from GameScene.draw3D with
+// the fader already black. the boot warm covers the city only; a tunnel's and a facility's props are
+// ~20 glbs between them and waiting for those at boot put 7.6s on the warmup screen for art most
+// sessions never reach. `kind` is game.area.info.type, and everything that is not a city, a
+// wilderness or a facility renders through the tunnel view, so it warms as one. WHAT each kind
+// builds is its own render.*Warm, next to the builders it copies; this end owns only the once-per-
+// kind guard and the reporting.
+// `done` fires exactly once, whichever way this ends — the fader stays black until it does, so a
+// path that never calls it is a black screen the player cannot get past. that is what the catch and
+// the timer are for; the timer is deliberately long, because cutting a warm short only moves the
+// stall into the frame the player is about to see
+  public function warmKind(kind:String, done:Void->Void):Void
+    {
+      var fired = false;
+      var fire = function()
         {
-          // every tunnel prop's glb arrives over an async load, so they are instanced HERE rather than
-          // beside the rest of the sewer warm scene: added after compileAsync had already walked that
-          // scene they would miss the warm entirely and compile their PBR programs on the first real
-          // tunnel entry. the whole set has to land before the compileAsync below walks this scene,
-          // which is what the shared `left` counter is for
-          return new js.lib.Promise(function(res, _)
-            {
-              var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
-              var C = render.RenderConfig.OBJMARK;
-              // patched exactly as the tunnel builders patch their own: the vision mask carries a
-              // customProgramCacheKey, so a prop warmed UNPATCHED warms a program the game never
-              // uses and recompiles on the first tunnel entry. it bites the SOLID variant hardest,
-              // which reuses the glb template's own shared material — the very object the real
-              // build then patches (render.sewer.SewerProps)
-              var M = render.world.VisionMask;
-              var objModels = render.world.ObjModels.MODELS;
-              var wallProps = render.sewer.SewerStyle.PROP_MODELS;
-              // the facility's park plants, which are the wilderness's own tree and bush glbs. same
-              // trap as the wall props and one more reason they cannot ride the city scene: their
-              // material is mask-patched, and the mask extends the program cache key
-              var green = render.facility.FacilityGround.GREEN;
-              // and the compound's own three props — the lamp mast, the park railing and the litter
-              // bin — which ride this chain for the same two reasons the park plants do: their glbs
-              // arrive asynchronously, and their materials are mask-patched
-              var facProps = [
-                {
-                  path: render.RenderConfig.MODELS.facilityLamp,
-                  h: render.facility.FacilityStyle.LAMP_H,
-                },
-                {
-                  path: render.RenderConfig.MODELS.facilityFence,
-                  h: render.facility.FacilityStyle.FENCE_H,
-                },
-                {
-                  path: render.RenderConfig.MODELS.facilityBin,
-                  h: render.facility.FacilityStyle.BIN_H,
-                },
-              ];
-              var left = objModels.length + wallProps.length + green.length + facProps.length;
-              var done = function()
-                {
-                  left--;
-                  if (left == 0)
-                    res(null);
-                };
-              // the object-backed props (exit ladders, the habitat's grown objects) in all THREE
-              // variants — `transparent` and BackSide are both folded into three's program cache key,
-              // so the ghost and the outline hull each compile a program of their own, and without
-              // this they would compile on the first step onto a prop / the first tactical toggle
-              for (i in 0...objModels.length)
-                {
-                  var m = objModels[i];
-                  render.Models.get(m.path, function(_)
-                    {
-                      // the idle-motion patch goes on in the SAME ORDER as render.sewer.SewerArea's
-                      // per-frame pass applies it — both chain onto the mask's hook and extend its
-                      // program cache key, so a swapped order here would warm a key the game never
-                      // asks for. a row with no `anim` is a no-op and keeps the plain program
-                      var s = render.Models.instanced(sewerScene, m.path, place, m.h, SOLID).mesh;
-                      var g = render.Models.instanced(sewerScene, m.path, place, m.h, GHOST).mesh;
-                      var h = render.Models.instanced(sewerScene, m.path, place, m.h,
-                        HULL(C.color, C.hullW)).mesh;
-                      M.patchMesh(s);
-                      M.patchMesh(g);
-                      render.world.PropShader.patchMesh(s, m.anim, m.pulse, m.curl);
-                      render.world.PropShader.patchMesh(g, m.anim, m.pulse, m.curl);
-                      render.world.PropShader.patchMesh(h, m.anim, m.pulse, m.curl);
-                      render.world.PropGlow.patchMesh(s, m.shine, m.eyes);
-                      render.world.PropGlow.patchMesh(g, m.shine, m.eyes);
-                      done();
-                    });
-                }
-              // the wall props have the same trap, but only ONE variant each: they are decoration,
-              // so no ghost and no hull
-              for (i in 0...wallProps.length)
-                {
-                  var p = wallProps[i];
-                  render.Models.get(p.path, function(_)
-                    {
-                      M.patchMesh(render.Models.instanced(sewerScene, p.path, place, p.h, SOLID).mesh);
-                      done();
-                    });
-                }
-              for (i in 0...green.length)
-                {
-                  var p = green[i];
-                  render.Models.get(p.path, function(_)
-                    {
-                      // a park plant's glb lands here, long after the warm block above put the
-                      // indoor mask away — and a real facility keeps the mask attached for as long
-                      // as it is shown, so its own green props ARE patched. re-attach around this
-                      // one instance or the warm compiles a key the first entry never asks for.
-                      // the plants stand outdoors and read inAmt 0, so this is about the PROGRAM
-                      // and not about how they look
-                      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
-                        facModel.w, facModel.h,
-                        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
-                      M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
-                      render.world.IndoorMask.detach();
-                      done();
-                    });
-                }
-              // the mast, the railing and the bin, bracketed by the same attach/detach for the same reason: a
-              // real facility keeps the indoor mask on for as long as it is shown, so both batches
-              // ARE patched with it. both stand outdoors and read inAmt 0, so this is about the
-              // PROGRAM and not about how they look
-              for (i in 0...facProps.length)
-                {
-                  var p = facProps[i];
-                  render.Models.get(p.path, function(_)
-                    {
-                      render.world.IndoorMask.attach(render.facility.FacilityStyle.INDOOR,
-                        facModel.w, facModel.h,
-                        function(col, row) return render.facility.FacilityModel.isInterior(facModel, col, row));
-                      M.patchMesh(render.Models.instanced(facScene, p.path, place, p.h, SOLID).mesh);
-                      render.world.IndoorMask.detach();
-                      done();
-                    });
-                }
-            });
-        }).then(function(_)
+          if (fired)
+            return;
+          fired = true;
+          done();
+        };
+      // the city is the boot warm's own scene; the wilderness has never had a warm scene at all, and
+      // giving it one is its own job. `!_warmed` means the boot warm never ran, in which case
+      // buildFrom's own inline warm is still live and this must not get in front of it
+      var key = (kind == 'facility' ? 'facility' : 'sewer');
+      if (kind == 'city'
+        || kind == 'wilderness'
+        || !_warmed
+        || warmedKinds.exists(key))
         {
-          return renderer.compileAsync(sewerScene, camera); // still bound to the linear target
-        }).then(function(_)
+          fire();
+          return;
+        }
+      warmedKinds.set(key, true);
+      var t0 = haxe.Timer.stamp();
+      var chain:js.lib.Promise<Dynamic> = (key == 'facility'
+        ? render.facility.FacilityWarm.build(renderer, camera, game.config.vidLampLights)
+        : render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights));
+      chain.then(function(_)
         {
-          return renderer.compileAsync(facScene, camera); // ditto
-        }).then(function(_)
+          js.Browser.console.log('[street-warmup] ' + key + ' warm: ' +
+            (renderer.info.programs != null ? renderer.info.programs.length : -1) + ' programs cached, ' +
+            StreetPerf.r2((haxe.Timer.stamp() - t0) * 1000) + 'ms');
+          fire();
+        });
+      chain.catchError(function(e:Dynamic)
         {
           renderer.setRenderTarget(null);
-          comp.render();
-          comp.dispose();
-          // retain the whole warm scene: three releases a program only on material.dispose(), so holding
-          // the materials keeps their programs cached. geometry is deliberately NOT disposed — several
-          // geometries here are shared static models / particle quads, and disposing them would break the
-          // real build. ponytail: one throwaway city's geometry stays resident; if boot RAM matters,
-          // selectively dispose only the per-build World.build geometries (the safe ones) later.
-          // all three scenes are held — the tunnels' and the facility's materials are their own
-          // halves of the cache and three releases a program only on material.dispose()
-          warmHold = [ s, sewerScene, facScene ];
-          if (renderer.info.programs != null)
-            js.Browser.console.log('[street-warmup] boot pre-warm: ' + renderer.info.programs.length + ' programs cached');
+          js.Browser.console.warn('[street-warmup] ' + key + ' warm failed, entering unwarmed: ' + e);
+          fire();
         });
+      Browser.window.setTimeout(fire, 20000);
     }
 
 // show a city generated from a seed (new areas)

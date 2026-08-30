@@ -278,30 +278,38 @@ class GameScene
       _view3dArea = game.area.id;
       fader.cover(FADE_MS, function()
         {
-          if (game.area.info.type == 'wilderness')
-            view3d.showWild(game.area);
-          else if (game.area.info.type == 'facility')
-            view3d.showFacility(game.area);
-          else if (!isCityArea())
-            view3d.showSewer(game.area);
-          else if (game.area.cityGenSeed >= 0)
-            view3d.show(game.area.cityGenSeed);
-          else view3d.showCity(reconstructCity());
-          _enter3D = false;
-          // reveal only once the view has PRESENTED a frame: the first composer.render
-          // compiles every scene shader (a multi-second stall on a cold driver cache) and
-          // would otherwise run over an already-revealed, never-drawn black canvas.
-          // timeout = backstop so black never sticks if the loop dies before a frame
-          var revealed = false;
-          var reveal = function()
+          // the boot pre-warm covers the CITY only, because waiting for the tunnels' and the
+          // facility's ~20 glbs put 7.6s on the warmup screen for art most sessions never reach.
+          // so a kind pays for its own warm here, on the first entry to it, under the black this
+          // fader has already brought up — and warmKind is a straight call-through for a city, a
+          // wilderness, or a kind already warmed (see render.View.warmKind)
+          view3d.warmKind(game.area.info.type, function()
             {
-              if (revealed)
-                return;
-              revealed = true;
-              fader.reveal(FADE_MS);
-            };
-          view3d.onFirstFrame(reveal);
-          Browser.window.setTimeout(reveal, 5000);
+              if (game.area.info.type == 'wilderness')
+                view3d.showWild(game.area);
+              else if (game.area.info.type == 'facility')
+                view3d.showFacility(game.area);
+              else if (!isCityArea())
+                view3d.showSewer(game.area);
+              else if (game.area.cityGenSeed >= 0)
+                view3d.show(game.area.cityGenSeed);
+              else view3d.showCity(reconstructCity());
+              _enter3D = false;
+              // reveal only once the view has PRESENTED a frame: the first composer.render
+              // compiles every scene shader (a multi-second stall on a cold driver cache) and
+              // would otherwise run over an already-revealed, never-drawn black canvas.
+              // timeout = backstop so black never sticks if the loop dies before a frame
+              var revealed = false;
+              var reveal = function()
+                {
+                  if (revealed)
+                    return;
+                  revealed = true;
+                  fader.reveal(FADE_MS);
+                };
+              view3d.onFirstFrame(reveal);
+              Browser.window.setTimeout(reveal, 5000);
+            });
         });
     }
 
