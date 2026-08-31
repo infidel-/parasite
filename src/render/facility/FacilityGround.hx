@@ -46,13 +46,15 @@ typedef GreenProp = {
   casts:Bool,
 };
 
-// the facility's OUTDOORS: the four ground surfaces, the kerb between them, the paint on the
-// asphalt, and the park's trees, bushes and benches.
+// the facility's OUTDOORS: the four ground surfaces, the kerb between them, and the park's trees,
+// bushes, benches and railing. what is PAINTED on the asphalt — the parking lot and the road's lane
+// lines — is render.facility.FacilityPaint, which `build` calls last and which reads its heights
+// back off `surfY` here.
 //
 // one merged mesh per surface type rather than per cell, exactly as render.world.Ground does for a
 // city street, and world-aligned UVs on both axes so nothing is ever stretched and abutting cells
-// share one continuous grid. a facility has no relief, so a surface is flat — but the four are no
-// longer all at one height: see FacilityStyle.KERB_DROP for which two moved and why it is those two
+// share one continuous grid. a facility has no relief, so a surface is flat — but the four are not
+// all at one height: see FacilityStyle.KERB_DROP for which three dropped and why it is those three
 class FacilityGround
 {
   static inline var CELL = CityConfig.CELL;
@@ -208,13 +210,14 @@ class FacilityGround
       Kerb.emit(border, curbs, RenderConfig.WALKWAY_BORDER_W, RenderConfig.WALKWAY_BORDER_TILE,
         0.0, -FacilityStyle.KERB_DROP);
       add(scene, border, FacilityStyle.GROUND_BORDER);
-      paint(scene, m);
+      FacilityPaint.build(scene, m);
     }
 
-// the height a surface's floor lies at. only two of the six move, and FacilityStyle.KERB_DROP says
-// at length why it is the two nothing stands on
+// the height a surface's floor lies at. only the pavement and the indoor floors hold 0, and
+// FacilityStyle.KERB_DROP says at length why it is those and not the three outdoors ones
   public static inline function surfY(s:Surf):Float
-    return (s == Surf.ROAD || s == Surf.GRASS ? -FacilityStyle.KERB_DROP : 0.0);
+    return (s == Surf.ROAD || s == Surf.GRASS || s == Surf.LOT
+      ? -FacilityStyle.KERB_DROP : 0.0);
 
 // the vertical face closing a step at a cell edge, in the surface's own texture. `alongX` says which
 // axis the edge runs on, so u follows the run and v the height — world-aligned like everything else
@@ -226,95 +229,6 @@ class FacilityGround
       var u1 = (alongX ? bx : bz) / t;
       MeshBufTools.quad(b, [ax, y0, az], [bx, y0, bz], [bx, y1, bz], [ax, y1, az],
         [u0, y0 / t, u1, y0 / t, u1, y1 / t, u0, y1 / t]);
-    }
-
-// the paint on the asphalt: the main road's lane lines and the parking bays struck against the
-// pavement aprons the lot surrounds. ONE merged mesh in the city's own worn traffic paint, opaque
-// and lit like the ground it lies on (render.world.Ground says why it is not a cutout), floating
-// FacilityStyle.PAINT_Y over the surface it belongs to and NOT over y = 0
-  static function paint(scene:Scene, m:Facility):Void
-    {
-      var half = (CityConfig.GRID * CELL) / 2;
-      var b = MeshBufTools.make();
-      var lw = RenderConfig.LINE_W;
-      // the compound has exactly one road, and it is a straight band laid across the FULL WIDTH at
-      // one edge (game.FacilityAreaGenerator lines 66-69). so the band is its row extent, it never
-      // meets an intersection, and none of render.world.Ground's crossing machinery is needed here
-      var r0 = -1;
-      var r1 = -1;
-      for (row in 0...m.h)
-        if (m.surf[row][0] == Surf.ROAD)
-          {
-            if (r0 < 0)
-              r0 = row;
-            r1 = row;
-          }
-      var w = r1 - r0 + 1;
-      var y = surfY(Surf.ROAD) + FacilityStyle.PAINT_Y;
-      if (w == 4)
-        {
-          var x0 = -half;
-          var x1 = m.w * CELL - half;
-          for (k in 0...3)
-            {
-              var z = (r0 + k + 1) * CELL - half;
-              // the middle boundary is the centre of the road and takes the double solid line; the
-              // two either side are lane dividers and dash
-              if (k != 1)
-                {
-                  var p = x0;
-                  while (p < x1)
-                    {
-                      mark(b, p, Math.min(p + RenderConfig.DASH_LEN, x1), z - lw / 2, z + lw / 2, y);
-                      p += RenderConfig.DASH_LEN + RenderConfig.DASH_GAP;
-                    }
-                  continue;
-                }
-              var g = RenderConfig.DOUBLE_GAP / 2;
-              mark(b, x0, x1, z - g - lw / 2, z - g + lw / 2, y);
-              mark(b, x0, x1, z + g - lw / 2, z + g + lw / 2, y);
-            }
-        }
-      // the bays. a lot cell against a pavement apron IS the edge cars park at, so no rectangle has
-      // to be found: the stripe starts on the kerb and runs BAY_CELLS into the lot, and the rhythm
-      // is gated on the coordinate ALONG that edge rather than on the diagonal (col + row) a lit
-      // line uses, or a run of bays would come out stepped instead of evenly struck
-      var d = FacilityStyle.BAY_CELLS * CELL;
-      for (row in 0...m.h)
-        for (col in 0...m.w)
-          {
-            if (m.surf[row][col] != Surf.LOT)
-              continue;
-            for (dir in 0...4)
-              {
-                var nc = col + DC[dir];
-                var nr = row + DR[dir];
-                if (!FacilityModel.inside(m, nc, nr) ||
-                    m.surf[nr][nc] != Surf.WALKWAY)
-                  continue;
-                if ((dir < 2 ? col : row) % FacilityStyle.BAY_SPACING != 0)
-                  break;
-                var x0 = col * CELL - half;
-                var z0 = row * CELL - half;
-                // inward is away from the pavement, so the stripe runs off the kerb into the lot
-                if (dir < 2)
-                  mark(b, x0 - lw / 2, x0 + lw / 2, z0 + (dir == 1 ? CELL - d : 0),
-                    z0 + (dir == 1 ? CELL : d), FacilityStyle.PAINT_Y);
-                else
-                  mark(b, x0 + (dir == 3 ? CELL - d : 0), x0 + (dir == 3 ? CELL : d),
-                    z0 - lw / 2, z0 + lw / 2, FacilityStyle.PAINT_Y);
-                break;
-              }
-          }
-      add(scene, b, FacilityStyle.GROUND_PAINT);
-    }
-
-// one painted rect, its uv world-aligned on both axes so the wear samples at one scale everywhere
-  static inline function mark(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
-    {
-      var t = RenderConfig.PAINT_TILE;
-      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
-        [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
 // the outdoor buffer a surface belongs in, or null if the surface is not outdoors at all

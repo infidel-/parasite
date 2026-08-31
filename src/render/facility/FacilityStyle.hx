@@ -164,26 +164,32 @@ class FacilityStyle
   // the BENCH takes 0 and is not covered by this — see its row in FacilityGround.GREEN
   public static inline var PLANT_SCALE_JIT = 0.10;
 
-  // how far the road and the park lie BELOW the pavement, world units. the street's own kerb step
-  // verbatim (render.RenderConfig.CURB_H), and render.world.Kerb draws the edging off that file's
-  // WALKWAY_BORDER_W / _TILE too, so a compound's kerb and a street's are the same object.
+  // how far the road, the park and the lot lie BELOW the pavement, world units. the street's own
+  // kerb step verbatim (render.RenderConfig.CURB_H), and render.world.Kerb draws the edging off that
+  // file's WALKWAY_BORDER_W / _TILE too, so a compound's kerb and a street's are the same object.
   //
   // THE SIGN IS THE DESIGN. a city raises its walkway and leaves the road at 0; a compound cannot,
   // because game.FacilityAreaGenerator.generateBuilding writes a 2-cell pavement apron around every
   // structure and an indoor floor is y = 0 — raise the pavement and every exterior threshold becomes
-  // a step down into the building and every wall base floats. so the pavement and the LOT stay at 0,
-  // with the floors, the walls, the doors, the benches and every glow quad, and the two surfaces
-  // nothing stands on drop under them instead. the lot keeps pavement level for the same reason plus
-  // one more: the sidewalk's parking entry (that generator's 4x2 gap) would otherwise be a kerb laid
-  // across a driveway
+  // a step down into the building and every wall base floats. so the PAVEMENT holds 0, with the
+  // floors, the walls, the doors, the benches and every glow quad, and the three surfaces a building
+  // does not open onto drop under it instead.
+  //
+  // the LOT is one of the three, and it is the one that reads: it is a driving surface, so it meets
+  // the road flush at the sidewalk's parking entry (that generator's 4x2 gap) instead of stepping up
+  // out of it, and dropping it is what gives the pavement a kerb along its whole lot edge rather
+  // than a seam. the one structure that opens straight onto asphalt is the hangar, whose door then
+  // has the same shallow lip a real loading apron has
   public static inline var KERB_DROP = render.RenderConfig.CURB_H;
   // how far the painted lines float over the asphalt they lie on — the street's PAINT_Y, and like it
   // measured off the ROAD's own surface and not off y = 0
   public static inline var PAINT_Y = render.RenderConfig.PAINT_Y;
   // a parking bay is this deep, in cells, and one is struck every this many cells along the apron
-  // edge it is drawn against
+  // edge it is drawn against. AISLE_CELLS is the driving lane left between one row of bays and the
+  // next as the rows march on inward to fill the middle of the lot
   public static inline var BAY_CELLS = 2;
   public static inline var BAY_SPACING = 2;
+  public static inline var AISLE_CELLS = 2;
 
   // world units per texture repeat. none of them is a multiple of CELL (4): a period that lands on
   // the cell grid puts the same point of the tile on every grid line and the lattice reads through

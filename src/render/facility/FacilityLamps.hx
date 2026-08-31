@@ -102,6 +102,13 @@ class FacilityLamps
                 var dir = borders(m, col, row, ln.by);
                 if (dir < 0)
                   continue;
+                // the lot line runs right through the sidewalk's parking ENTRY, whose asphalt has a
+                // pavement beside it like any other lot cell — and a post there stands in the middle
+                // of the gateway the cars come in through. FacilityPaint strikes no bay on it for
+                // the same reason
+                if (ln.on == Surf.LOT &&
+                    FacilityPaint.isEntry(m, col, row, dir))
+                  break;
                 var hit = {
                   col: col,
                   row: row,
@@ -137,6 +144,18 @@ class FacilityLamps
           // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
           var a = (h.dir == 2 ? h.col - 1 : h.col);
           var b = (h.dir == 0 ? h.row - 1 : h.row);
+          // that vertex is a cell BOUNDARY on the free axis, and along a lot kerb every other
+          // boundary carries a bay divider — so the rule above stands a mast in the paint. step one
+          // cell back along the kerb, onto the boundary that falls mid-bay. never forward: back is
+          // always a boundary the run either divides on the other phase or does not reach at all
+          if (m.surf[h.row][h.col] == Surf.LOT &&
+              ((h.dir < 2 ? h.col + 1 : h.row + 1)
+                - FacilityPaint.runStart(m, h.col, h.row, h.dir))
+                % FacilityStyle.BAY_SPACING == 0)
+            {
+              a -= (h.dir < 2 ? 1 : 0);
+              b -= (h.dir < 2 ? 0 : 1);
+            }
           var v = CityConfig.cellToWorld(a, b);
           var px = v.x + CELL / 2;
           var pz = v.z + CELL / 2;
