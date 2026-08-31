@@ -53,6 +53,9 @@ class FacilityStyle
   // see render.facility.FacilityTables for why the whole run is merged geometry
   public static inline var BENCH_TOP = 'textures/facility/bench-top.png';
   public static inline var BENCH_BODY = 'textures/facility/bench-body.png';
+  // the lit glazing, ONE ART PER RUN LENGTH — three panes and two. a run maps one unit of u across
+  // its whole length, so how many panes it shows is a property of the image (see WINDOW_ASPECT_2,
+  // which carries the argument and the measurements)
   public static inline var WINDOW_LIT = 'textures/facility/window-ribbon-lit.png';
   // the aluminium capping that tops a window run, and closes its reveal from above and below. its
   // own texture because the run used to cap in ROOF and read as a strip of bitumen and gravel lying
@@ -285,8 +288,9 @@ class FacilityStyle
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the
   // canvas, which is square and mostly cut away. the quad is sized FROM this and never stretched, so
   // the art's aspect is the only thing that decides how tall a run stands: a 3-cell run is 12 world
-  // units wide and comes out 12 / 2.9 = 4.14 tall on a sill of 0.93, a 2-cell run is 8 wide and 2.76
-  // tall on a sill of 1.62, and both leave real wall above the head.
+  // units wide and comes out 12 / 2.9 = 4.14 tall on a sill of 0.93. THIS ONE IS THE THREE-PANE
+  // UNIT's and answers for a 3-cell run alone — see WINDOW_ASPECT_2 below and
+  // render.facility.FacilityGeom.paneTall, which is where both lengths are sized.
   //
   // it was 2.02, which is what the first art measured, and at that aspect a 3-cell run stood 5.94 in
   // a 6.0 wall: glazing floor to ceiling, its head 0.03 under the roof deck with no sill ledge at all
@@ -295,6 +299,50 @@ class FacilityStyle
   // code cannot work, because the hole through the wall is cut from this same arithmetic and a
   // shorter pane in a full-height opening is just a gap
   public static inline var WINDOW_ASPECT = 2.90;
+  // and the TWO-PANE unit, for the 2-cell runs, with the aspect of its own opaque content.
+  //
+  // ONE ART PER RUN LENGTH, because render.facility.FacilityGeom.pane maps one unit of u across a
+  // whole run: drawing the three-pane art on a 2-cell opening squeezed three panes into two cells'
+  // width and read as the same window at two thirds scale beside its full-size neighbour on the same
+  // facade. 27 of the 45 runs a generated area deals are 2-cell, so that is the common length rather
+  // than the corner one.
+  //
+  // it is NOT the three-pane art cropped, which is what this was for one build. Cropping is possible
+  // — the members are regular enough to cut at a mullion, and it drew correctly — but it can only
+  // ever hand back a strip of an image authored for a different pane count, and its arithmetic has to
+  // be re-measured against the art every time either changes. A second file states the same thing
+  // once, in the place that owns it, and costs nothing at runtime that the crop did not already cost:
+  // either way a run's panes go in the buffer for their own length.
+  //
+  // MEASURED off the BUILT texture and against the loader's OWN threshold, which is the only bbox
+  // that matters: Textures.loadAlphaCropped skips alpha <= 8, and read back off the live material it
+  // crops this art to 316x161 = 1.963 where it crops the three-pane one to 464x160 = 2.900. (The
+  // source measures 1.972 at a stricter threshold — a third of a percent out, which is a 0.01-unit
+  // stretch, but there is no reason to carry the wrong one.) Its three dark members are 16/17/16px
+  // with the mullion dead centre, so its panes come out the same width as the other's — the same
+  // pane, one fewer of them. That is what puts a 2-cell run at 4.08 tall on a 0.96 sill against a
+  // 3-cell run's 4.14 on 0.93: the two lengths course together on one facade instead of the shorter
+  // standing a third of a storey lower
+  public static inline var WINDOW_LIT_2 = 'textures/facility/window-ribbon-2tile-lit.png';
+  public static inline var WINDOW_ASPECT_2 = 1.963;
+  // how much BIGGER than its opening a pane is drawn, as a fraction of its own size, half of it at
+  // each edge. IN BOTH AXES, so the art keeps its aspect and nothing is stretched — the extra is
+  // buried in the masonry either way, because the glazing slab is GLASS_T thick inside a WALL_T wall
+  // and so sits half a unit behind the wall face on both sides.
+  //
+  // it exists because the OUTERMOST TEXEL ROW OF AN ART IS NOT RELIABLY OPAQUE, and alphaTest then
+  // deletes it. Reported as a thin slit along the top of the 2-cell windows with the interior visible
+  // through it: measured, that art's top row comes back at alpha 4.4 against the addPane alphaTest's
+  // own 0.02 * 255 = 5.1, so the row is discarded and the opening is short by one texel. It is a
+  // property of the CUT and not of this drop — the three-pane art's top row happens to land opaque,
+  // which is the only reason it never showed. Textures.loadAlphaCropped crops to alpha > 8, so a row
+  // between 9 and 5.1... is impossible, but one between 9 and 128 is not, and every partly-covered
+  // edge row is a candidate.
+  //
+  // 0.025 puts 1.25% at each edge, which is 0.051 world units = TWO texel rows at either art's
+  // density (the 2-pane art is 161 rows over 4.08 units, the 3-pane one 160 over 4.14). One would do;
+  // two also covers the bilinear tap that reads the discarded row's neighbour
+  public static inline var WINDOW_OVERLAP = 0.025;
   // emissive strength on the lit pane. every window is lit in this phase — the place is staffed at
   // night, and a dark facility gives the player nothing to aim the "see into the room" read at.
   //

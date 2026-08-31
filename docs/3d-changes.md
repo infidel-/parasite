@@ -706,3 +706,72 @@ mouth, each car's length on its bay's depth axis. Material color 0.53 flat, map 
 and its duplicate reference are deleted; `models-src/facility/car-src.png` is the archive.
 
 **Verdict: landed.**
+
+## A 2-cell window run stops drawing all three panes (2026-08-31)
+
+*"there are 3tile and 2tile wide windows and they utilize the same texture, that looks dumb because
+it scales."* Exactly right, and it was the common case rather than the corner one: **27 of the 45
+runs a generated area deals are 2-cell**. `pane` emitted `u` 0..1 whatever the run's length, so a
+2-cell opening drew the whole three-pane ribbon squeezed into two cells' width — the same window at
+two thirds scale, next to its full-size neighbour on the same facade.
+
+**The answer is a SECOND ART, `facility/window-ribbon-2tile-lit`** — the same unit with one mullion
+and two panes, hand-derived by the user from the three-pane drop. How many panes a run shows is a
+property of the image and not of the geometry, so that is where it should be said.
+
+**Cropping the three-pane art was tried first and rejected, and it is worth knowing that it WORKS.**
+Binning the built art's 464 columns by luminance puts its four dark members at u
+**0.0000-0.0345 / 0.3211-0.3578 / 0.6422-0.6767 / 0.9655-1.0000** — frame, mullion, mullion, frame,
+all 16-17px — so a crop can be cut at the first mullion's LEFT EDGE (`0.3211`, not a flat ⅓, which
+cuts 6px into it and leaves the opening's left edge two thirds the thickness of its right) and
+anchored at u = 1 to keep the right frame whole. Built that way it drew correctly. It is still the
+worse answer: a crop can only ever hand back a strip of an image authored for a different pane count,
+its offset has to be re-measured against the art whenever either changes, and its 2-pane strip
+carries three members to the other's four so its panes come out 1.7% narrow. *"not good enough"* —
+and a second file states the same thing once, in the place that owns it, for the same runtime cost.
+
+**Measure against the LOADER's own threshold, not a convenient one.** `Textures.loadAlphaCropped`
+skips alpha <= 8, and read back off the live material it crops the new art to **316x161 = 1.963**
+against the three-pane one's 464x160 = 2.900. The source measures 1.972 at a stricter cut — a third
+of a percent, a 0.01-unit stretch, but there is no reason to carry the wrong number. The three dark
+members are 16/17/16px with the mullion dead centre, so its panes come out the same width as the
+other's: the same pane, one fewer of them.
+
+**The height had to follow, and that is the half of this that reads from across the lot.** Nothing is
+ever stretched, so a run's height is its width over the aspect of the art it draws — new
+`FacilityGeom.paneTall(len)`, called by BOTH passes over `m.windows` (the one that records the hole
+for the wall emitter to leave, and the one that fills it). A 2-cell run goes from **2.76 tall on a
+1.62 sill to 4.08 on 0.96**, against a 3-cell run's 4.14 on 0.93. The two lengths now stand level on
+the same facade, which is the correct answer and not a coincidence: **a pane is a pane**, so a
+shorter opening is fewer of them and not smaller ones.
+
+The art drops in with nothing else to re-tune, because it is the parent with the third pane cut away:
+same 1024 canvas, same y band, same left origin, and `glass_alpha [136,128]` still lands — luma over
+the opaque content is bimodal at frame 16-127 **31.2%**, glass 144-207 **56.4%**, a 0.25% valley
+between, within a point of the parent on every band.
+
+**Then the new art showed a thin slit along the top of every 2-cell window with the interior visible
+through it** — *"its just a little too low… increase scale a little?"* — and the cause is worth
+keeping because it is a property of the CUT and not of this drop. Dumping the built art's top rows:
+**row 0 comes back at alpha 4.4**, against `addPane`'s own `alphaTest` 0.02 * 255 = **5.1**. So the
+outermost texel row is discarded and the glass is one row short of the opening. The three-pane art
+never showed it only because its own top row happens to land opaque (alpha 254); the rest of the
+image is identical, frame rows 1-15 dark and glass from row 16.
+
+The fix is `WINDOW_OVERLAP` **0.025**: the pane quad is drawn 1.25% bigger at each edge, **in both
+axes so the art keeps its aspect and nothing is stretched**, grown along the run's own axis (never
+across, which would move the quad off the glazing slab's face rather than lengthen it). That is 0.051
+world units = **two texel rows** at either art's density — one would close the slit, two also cover
+the bilinear tap that reads the discarded row's neighbour. The extra is invisible because the glazing
+slab is `GLASS_T` 1 thick inside a `WALL_T` 2 wall, so it sits half a unit behind the wall face on
+both sides and the overhang is buried in masonry. The head and sill caps keep the opening's true
+size; only the glass grows.
+
+**Verified live** on a facade carrying both (structure 0, row 6, runs at cols 17/21 len 3, 25/28 len
+2, 31 len 3, 35 len 2, 40/44 len 3): the pane materials read **464x160, 316x161, 464x160, 316x161**
+with `repeat` 1 and `offset` 0 on all four, every 2-cell opening draws two panes at the 3-cell run's
+own pane size, the heads line up, and the slit is gone from a camera looking down on the head.
+`paneTall` 4.075 / 4.138, sills 0.962 / 0.931. Both structures with windows carry both lengths, so
+pane meshes go **2 → 4**.
+
+**Verdict: landed.**

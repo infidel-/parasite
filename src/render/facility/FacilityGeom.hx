@@ -64,6 +64,19 @@ class FacilityGeom
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
+// how tall a window run of this many cells stands, world units. NOTHING is ever stretched, so the
+// height is the run's width over the ASPECT OF THE ART IT DRAWS — and there is one art per run
+// length, so the two lengths are two different numbers rather than one aspect and a fraction.
+//
+// they come out very nearly the same height (2-cell 4.08, 3-cell 4.14) where before the shorter one
+// was 2.76, a third of a storey lower than its neighbour on the same facade. that is the correct
+// answer and not a coincidence: a pane is a pane, so a shorter opening is fewer of them and not
+// smaller ones. read by BOTH passes over m.windows — the one that records the hole for the wall
+// emitter to leave, and the one that fills it — which is why it is a function and not a line in either
+  public static inline function paneTall(len:Int):Float
+    return len * CELL /
+      (len == 2 ? FacilityStyle.WINDOW_ASPECT_2 : FacilityStyle.WINDOW_ASPECT);
+
 // build every structure's shell, and hand back what fades
   public static function build(scene:Scene, m:Facility):Array<Shell>
     {
@@ -77,8 +90,7 @@ class FacilityGeom
         doorAt[m.doors[i].row][m.doors[i].col] = i;
       for (w in m.windows)
         {
-          var wide = w.len * CELL;
-          var tall = wide / FacilityStyle.WINDOW_ASPECT;
+          var tall = paneTall(w.len);
           var lo = (FacilityStyle.WALL_H - tall) / 2;
           if (lo < 0)
             lo = 0;
@@ -330,8 +342,10 @@ class FacilityGeom
       // rim is what keeps the building's outline on screen once you are inside it
       var roof = MeshBufTools.make();
       var rim = MeshBufTools.make();
-      // window panes, and the aluminium capping that tops a run and closes its reveal
+      // window panes, and the aluminium capping that tops a run and closes its reveal. TWO pane
+      // buffers, one per run length, because each length draws its OWN art (see `addPane`)
       var panes = MeshBufTools.make();
+      var panes2 = MeshBufTools.make();
       var head = MeshBufTools.make();
       // which wall buffer a face looking into (c,r) belongs in. the hangar wears its cladding on
       // both sides, so it never reaches the interior pair; a corridor is Surf.LINO, the surface the
@@ -489,7 +503,7 @@ class FacilityGeom
           if (w.structure != si)
             continue;
           var wide = w.len * CELL;
-          var tall = wide / FacilityStyle.WINDOW_ASPECT;
+          var tall = paneTall(w.len);
           var lo = (FacilityStyle.WALL_H - tall) / 2;
           if (lo < 0)
             lo = 0;
@@ -504,8 +518,22 @@ class FacilityGeom
           // the exterior face is the one AWAY from the interior, and the interior face its opposite
           var outDir = w.alongX ? (w.inDir > 0 ? 0 : 1) : (w.inDir > 0 ? 2 : 3);
           var inFace = w.alongX ? (w.inDir > 0 ? 1 : 0) : (w.inDir > 0 ? 3 : 2);
-          pane(panes, x0, x1, z0, z1, outDir, lo, lo + tall);
-          pane(panes, x0, x1, z0, z1, inFace, lo, lo + tall);
+          // the run goes in the buffer for its OWN length, because that is what picks the art it
+          // draws — see `addPane` and FacilityStyle.WINDOW_LIT_2.
+          //
+          // and the pane is drawn a hair BIGGER than the opening it fills (WINDOW_OVERLAP), grown
+          // along the RUN's own axis and in height — never across, which would move the quad off the
+          // glazing slab's face rather than lengthen it. the head and sill caps below keep the
+          // opening's true size, so only the glass grows and the extra is buried in the masonry
+          var pb = (w.len == 2 ? panes2 : panes);
+          var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
+          var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
+          pane(pb, (w.alongX ? x0 - gr : x0), (w.alongX ? x1 + gr : x1),
+            (w.alongX ? z0 : z0 - gr), (w.alongX ? z1 : z1 + gr),
+            outDir, lo - gy, lo + tall + gy);
+          pane(pb, (w.alongX ? x0 - gr : x0), (w.alongX ? x1 + gr : x1),
+            (w.alongX ? z0 : z0 - gr), (w.alongX ? z1 : z1 + gr),
+            inFace, lo - gy, lo + tall + gy);
           // the reveal, top and bottom. the jambs at the run's ends are already closed by the
           // flanking wall cells' butt caps, because a glazing slab is thinner than the wall it sits
           // in — these two are the only sides with nothing on the far end to cap them
@@ -526,7 +554,8 @@ class FacilityGeom
       add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
       add(scene, shut, FacilityStyle.DOOR_SHUTTER, true, true);
       add(scene, head, FacilityStyle.WINDOW_HEAD, true, false);
-      addPane(scene, panes);
+      addPane(scene, panes, FacilityStyle.WINDOW_LIT);
+      addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
@@ -726,11 +755,17 @@ class FacilityGeom
 // `transparent` is set AFTER VisionMask.patch on purpose: the mask reads that flag to choose which
 // branch it compiles, and set first it would pick the alpha-scaling branch and fade a hidden window
 // OUT instead of sinking it toward the fog (see render.wild.WildRoad)
-  static function addPane(scene:Scene, b:MeshBuf):Void
+//
+// `tex` is the art for ONE RUN LENGTH, which is why the caller keeps two buffers and calls this
+// twice. `pane` maps one unit of u across a whole run, so the number of panes a run shows is a
+// property of the IMAGE and not of the geometry: the three-pane art drawn on a 2-cell opening is that
+// window at two thirds scale. It costs one extra mesh per structure carrying both lengths — measured
+// on a generated compound, the two structures with windows both do, so 2 pane meshes became 4
+  static function addPane(scene:Scene, b:MeshBuf, path:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var tex = Textures.loadAlphaCropped(FacilityStyle.WINDOW_LIT);
+      var tex = Textures.loadAlphaCropped(path);
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: tex,
         emissiveMap: tex,
