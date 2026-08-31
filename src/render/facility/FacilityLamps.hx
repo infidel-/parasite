@@ -102,12 +102,12 @@ class FacilityLamps
                 var dir = borders(m, col, row, ln.by);
                 if (dir < 0)
                   continue;
-                // the lot line runs right through the sidewalk's parking ENTRY, whose asphalt has a
-                // pavement beside it like any other lot cell — and a post there stands in the middle
-                // of the gateway the cars come in through. FacilityPaint strikes no bay on it for
-                // the same reason
+                // the lot line runs right through the parking ENTRY, whose asphalt has a pavement
+                // beside it like any other lot cell — and a post there stands in the middle of the
+                // gateway the cars come in through. FacilityPaint strikes no bay on it for the same
+                // reason
                 if (ln.on == Surf.LOT &&
-                    FacilityPaint.isEntry(m, col, row, dir))
+                    FacilityPaint.isEntry(m, col, row))
                   break;
                 var hit = {
                   col: col,

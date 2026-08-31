@@ -190,6 +190,11 @@ class FacilityStyle
   public static inline var BAY_CELLS = 2;
   public static inline var BAY_SPACING = 2;
   public static inline var AISLE_CELLS = 2;
+  // and this many cells of bare asphalt are left round every structure. a lab building already has
+  // its 2-wide pavement apron and so clears this on its own; the hangar is the one that opens
+  // straight onto the lot, and a bay struck against its wall is a spot with a blank six-metre face
+  // where the car's nose goes
+  public static inline var BUILD_GAP = 2;
 
   // world units per texture repeat. none of them is a multiple of CELL (4): a period that lands on
   // the cell grid puts the same point of the tile on every grid line and the lattice reads through

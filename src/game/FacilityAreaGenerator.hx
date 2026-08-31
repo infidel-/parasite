@@ -113,11 +113,14 @@ class FacilityAreaGenerator
         sideh = (state.mainRoadNorth ? area.height - sidey - 2 : mainy - 4);
       generateBuilding(state, sidex, sidey, sidew, sideh);
 
-      // hangar
+      // hangar. it is pushed off the main building's apron by HANGAR_GAP and SHORTENED by the same,
+      // so the far end stays where it was — the yard it faces is the compound's own, and moving that
+      // end would take the gap out of the lot on the other side instead
       var hangarx = sidex + sidew + 16,
-        hangary = (state.mainRoadNorth ? mainy + mainh + 4 : 4),
+        hangary = (state.mainRoadNorth ? mainy + mainh + 2 + HANGAR_GAP : 4),
         hangarw = Std.int(area.width * 0.2),
-        hangarh = (state.mainRoadNorth ? area.height - sidey - 6 : mainy - 8);
+        hangarh = (state.mainRoadNorth ? area.height - sidey - 4 - HANGAR_GAP
+          : mainy - 6 - HANGAR_GAP);
 //      trace(hangarx + ',' + hangary + ' : ' + hangarw + ',' + hangarh);
       generateHangar(state, hangarx, hangary, hangarw, hangarh);
 
@@ -1409,6 +1412,11 @@ class FacilityAreaGenerator
   static var PARK_CLUMP_R = 3;
   // one shrub every this many cells along the park's outer edge, under the railing
   static var PARK_EDGE_BUSH_SPACING = 3;
+  // cells of open lot left between the hangar and the nearest building's pavement apron. the hangar
+  // is the one structure with no apron of its own, and its wall is a blank storey-and-a-half face:
+  // at the game's camera pitch that face SILHOUETTES the cell in front of it, so a gap of two read
+  // as one on screen and the yard between the lab and the hangar looked like a slot
+  static var HANGAR_GAP = 3;
   static var TEMP_ROAD = 0;
   static var TEMP_WALKWAY = 1;
   static var TEMP_ALLEY = 2;

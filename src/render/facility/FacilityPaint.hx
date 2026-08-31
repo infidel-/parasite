@@ -29,6 +29,9 @@ class FacilityPaint
   // opposite of a direction, which is how a bay line marches away from the kerb it hangs off
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
+  // how wide the pavement band beside the main road is, in cells — the generator's own `sidewalkw`.
+  // `isEntry` measures against it and nothing else here does
+  static inline var SIDEWALK_W = 2;
 
 // every painted line in the compound, merged into one mesh
   public static function build(scene:Scene, m:Facility):Void
@@ -91,14 +94,13 @@ class FacilityPaint
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (m.surf[row][col] != Surf.LOT)
+            if (m.surf[row][col] != Surf.LOT ||
+                isEntry(m, col, row))
               continue;
             for (dir in 0...4)
               {
                 if (!isSurf(m, col + DC[dir], row + DR[dir], Surf.WALKWAY))
                   continue;
-                if (isEntry(m, col, row, dir))
-                  break;
                 // the run's rhythm, struck on the cell's OWN west (or north) edge and counted from
                 // the CORNER the run starts at, not from the world grid — a run that begins on an
                 // odd cell would otherwise open with a half-width spot. the lot test is what keeps
@@ -194,6 +196,12 @@ class FacilityPaint
           var r = row + dr * i;
           if (!isSurf(m, c, r, Surf.LOT))
             return false;
+          // and the whole BAY the divider opens has to keep off a structure, not just the divider's
+          // own cells — the line down the middle of a marching band runs the bay's full width, so a
+          // strip checked one cell wide would let that one reach a wall the divider stopped short of
+          for (j in 0...FacilityStyle.BAY_SPACING)
+            if (nearBuild(m, c + (dir < 2 ? j : 0), r + (dir < 2 ? 0 : j)))
+              return false;
           if (!inner)
             continue;
           for (d in 0...4)
@@ -206,6 +214,26 @@ class FacilityPaint
             }
         }
       return true;
+    }
+
+// is this cell within FacilityStyle.BUILD_GAP of a structure — a wall, a shutter or an indoor floor?
+// the four outdoor surfaces are the only ones a car ever stands on, so anything else is a building
+  static function nearBuild(m:Facility, col:Int, row:Int):Bool
+    {
+      var g = FacilityStyle.BUILD_GAP;
+      for (r in row - g...row + g + 1)
+        for (c in col - g...col + g + 1)
+          {
+            if (!FacilityModel.inside(m, c, r))
+              continue;
+            var s = m.surf[r][c];
+            if (s != Surf.ROAD &&
+                s != Surf.WALKWAY &&
+                s != Surf.LOT &&
+                s != Surf.GRASS)
+              return true;
+          }
+      return false;
     }
 
 // which of the four kerb directions the compound parks against most. only that one's lines march
@@ -229,13 +257,27 @@ class FacilityPaint
       return best;
     }
 
-// is this lot cell part of the sidewalk's parking ENTRY — a run of asphalt that begins off the ROAD
-// rather than against a pavement? it is the gateway the cars drive through, so nothing is struck on
-// it and, as render.facility.FacilityLamps asks the same question, nothing stands in it either
-  public static function isEntry(m:Facility, col:Int, row:Int, dir:Int):Bool
+// is this cell part of the parking ENTRY — the mouth cut through the pavement that the cars drive in
+// by? it is the gateway, so nothing is struck on it and, as render.facility.FacilityLamps asks the
+// same question, nothing stands in it either.
+//
+// the test is the cell's own distance to the ROAD, not the shape of the run it belongs to. the
+// generator punches the entry as a plain 4x2 hole of asphalt through the pavement band beside the
+// road (game.FacilityAreaGenerator lines 86-88), so every cell of it — and nothing else in the lot,
+// which always has that whole band between it and the road — lies within the band's width of the
+// kerb. the run-shaped test this replaces read the entry as "a run that begins off the road", which
+// is what the mouth looks like only when it is cut in a pavement running ACROSS the lot: where the
+// hole is cut in the road's own sidewalk the run it starts is one cell long and turns the corner,
+// and a lamp went up in the middle of the gateway
+  public static function isEntry(m:Facility, col:Int, row:Int):Bool
     {
-      var s = runStart(m, col, row, dir);
-      return isSurf(m, (dir < 2 ? s - 1 : col), (dir < 2 ? row : s - 1), Surf.ROAD);
+      if (!isSurf(m, col, row, Surf.LOT))
+        return false;
+      for (dir in 0...4)
+        for (i in 1...SIDEWALK_W + 1)
+          if (isSurf(m, col + DC[dir] * i, row + DR[dir] * i, Surf.ROAD))
+            return true;
+      return false;
     }
 
 // the coordinate along the kerb where this cell's bay run BEGINS — walk back while the cells keep
