@@ -56,18 +56,33 @@ class FacilityLamps
   static var BEND_DIR = [1, 0, 3, 2];
 
   // where a mast goes: the surface it stands on, and the surface it must border to be a lit LINE
-  // rather than a lamp in the middle of a field. one row per line the compound actually has, and a
-  // cell can match at most one because `on` is different in every row.
+  // rather than a lamp in the middle of a field. the generator lays a 4-wide main road with a 2-wide
+  // sidewalk against it, a 2-wide walkway up the west edge with the park beside it, and fills
+  // everything else with lot (game.FacilityAreaGenerator lines 66-107) — so these three rows are the
+  // kerb along the road, the lot's edge against that sidewalk, and the park path.
   //
-  // the generator lays a 4-wide main road with a 2-wide sidewalk against it, a 2-wide walkway up the
-  // west edge with the park beside it, and fills everything else with lot (game.FacilityAreaGenerator
-  // lines 66-107) — so these three rows are the kerb along the road, the lot's edge against that
-  // sidewalk, and the park path. the last one is NOT satisfied by `by` alone: see the isParkPath
-  // test in `build`, without which it matches the pavement round the park as well as the path in it
+  // EVERY LINE STANDS THE MAST ON THE WALKWAY and aims it at what it lights. That is the whole table
+  // now, and it used to be a split: the road line stood on the PAVEMENT, while the lot and park
+  // lines stood on the ASPHALT and on the LAWN and aimed back at the pavement. Reported from the game
+  // as exactly that dichotomy — "normal lamps are all on walkways while park and parking lot ones are
+  // on ground/asphalt". A lamp column is planted in paving; it is not planted in a parking bay or in
+  // a flower bed.
+  //
+  // the fix is not a new rule, it is the two rows written the right way round: `on` and `by` swapped
+  // puts the mast on the pavement and turns the head to light the lot or the park instead of the
+  // pavement it stands on. THE MAST DOES NOT MOVE — the vertex the placer picks is the boundary
+  // between those same two cells either way, so all that changes is which side of the kerb the base
+  // sits on and which way the head faces.
+  //
+  // a cell CAN now match more than one row, where the old table's `on` surfaces made that impossible,
+  // so the order is load-bearing: a pavement between the road and the lot takes the ROAD line and
+  // reads as a street lamp. And the park row is still not satisfied by `by` alone — the compound's
+  // pavement wraps the lawn on every side, so it takes the isParkPath test in `build`, which is now
+  // asked of the mast's OWN cell rather than of its neighbour
   static final LINES = [
     { on: Surf.WALKWAY, by: Surf.ROAD },
-    { on: Surf.LOT, by: Surf.WALKWAY },
-    { on: Surf.GRASS, by: Surf.WALKWAY },
+    { on: Surf.WALKWAY, by: Surf.LOT },
+    { on: Surf.WALKWAY, by: Surf.GRASS },
   ];
 
 // place every mast and every ceiling fixture, build the mast batch and its cones, and fill `corners`
@@ -105,9 +120,10 @@ class FacilityLamps
                 // the lot line runs right through the parking ENTRY, whose asphalt has a pavement
                 // beside it like any other lot cell — and a post there stands in the middle of the
                 // gateway the cars come in through. FacilityPaint strikes no bay on it for the same
-                // reason
-                if (ln.on == Surf.LOT &&
-                    FacilityPaint.isEntry(m, col, row))
+                // reason. the ENTRY CELL is the one being lit and no longer the one being stood on,
+                // so the test moved to the neighbour with the mast
+                if (ln.by == Surf.LOT &&
+                    FacilityPaint.isEntry(m, col + DC[dir], row + DR[dir]))
                   break;
                 var hit = {
                   col: col,
@@ -115,13 +131,15 @@ class FacilityLamps
                   dir: dir,
                 };
                 // the park line is the one that has to ask WHICH walkway. the compound's own
-                // pavement wraps the lawn on every side, so `by: WALKWAY` alone matched the rim
-                // as readily as the path — and with a row-major scan and a hard cap of four, the
-                // rim is all that ever got picked: measured 4 of 4 on the park's top and side
-                // edges, every head aimed OUT of the park. the path is what wants lighting
-                if (ln.on == Surf.GRASS)
+                // pavement wraps the lawn on every side, so bordering grass alone matched the rim as
+                // readily as the path — and with a row-major scan and a hard cap of four, the rim is
+                // all that ever got picked: measured 4 of 4 on the park's top and side edges, every
+                // head aimed OUT of the park. the path is what wants lighting, and now that the mast
+                // stands ON the walkway the question is asked of its own cell, which is exactly what
+                // FacilityModel.isParkPath tests for — a walkway with lawn across it both ways
+                if (ln.by == Surf.GRASS)
                   {
-                    if (FacilityModel.isParkPath(m, col + DC[dir], row + DR[dir]))
+                    if (FacilityModel.isParkPath(m, col, row))
                       parkHits.push(hit);
                     break;
                   }
@@ -144,12 +162,18 @@ class FacilityLamps
       // road, is -x. skipped where the scan has already put a mast on that cell: (col + row) %
       // LAMP_SPACING lands on it once in LAMP_SPACING compounds, and two masts on one vertex is one
       // mast drawn twice
+      //
+      // it stands on the SIDEWALK BAND, not on the lot: `lampCol` is outside the hole, so the band's
+      // own rows are still pavement there, and that is both the rule every other line now follows and
+      // the nearest cell to the boom. it takes the barrier's own row — the hole row facing the lot,
+      // FacilityEntry.barrier's expression verbatim — so the two are on one line across the mouth
       var gate = FacilityEntry.find(m);
+      var gateRow = (gate == null ? 0 : gate.row + (gate.lotDR < 0 ? 0 : gate.h - 1));
       if (gate != null &&
-          !taken(hits, gate.lampCol, gate.mouthRow))
+          !taken(hits, gate.lampCol, gateRow))
         hits.push({
           col: gate.lampCol,
-          row: gate.mouthRow,
+          row: gateRow,
           dir: 2,
         });
 
@@ -160,14 +184,38 @@ class FacilityLamps
           // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
           var a = (h.dir == 2 ? h.col - 1 : h.col);
           var b = (h.dir == 0 ? h.row - 1 : h.row);
-          // that vertex is a cell BOUNDARY on the free axis, and along a lot kerb every other
-          // boundary carries a bay divider — so the rule above stands a mast in the paint. step one
-          // cell back along the kerb, onto the boundary that falls mid-bay. never forward: back is
-          // always a boundary the run either divides on the other phase or does not reach at all
-          if (m.surf[h.row][h.col] == Surf.LOT &&
-              ((h.dir < 2 ? h.col + 1 : h.row + 1)
-                - FacilityPaint.runStart(m, h.col, h.row, h.dir))
-                % FacilityStyle.BAY_SPACING == 0)
+          // that vertex is a cell BOUNDARY on the free axis, and TWO things pull it one cell back
+          // along that axis. Either is one step, and back is always a boundary the run either
+          // divides on the other phase or does not reach at all.
+          //
+          // a BAY DIVIDER: along a lot kerb every other boundary carries one, so the rule above
+          // stands a mast in the paint. step onto the boundary that falls mid-bay instead.
+          //
+          // or a DIFFERENT SURFACE on that side, which in a generated compound is the parking ENTRY
+          // and only the entry. A post stands on a VERTEX — a corner shared by FOUR cells — while
+          // its `y` below comes from ONE of them, and everywhere else that is harmless because the
+          // free axis runs ALONG the kerb, so the two cells it straddles are the same surface and the
+          // step is only ever across the aim axis, where the kerb edging covers it. The hole punched
+          // through the sidewalk band breaks exactly that: at its corners the four cells are not one
+          // surface, and both masts at the gate were reported from the game — the one beside the
+          // booth stood on walkway with three quadrants hanging over the 0.2 kerb into the hole ("on
+          // the kerb and on empty space"), and the gate's own mast stood on lot with the fourth
+          // quadrant buried in the band ("too low, goes into the walkway AND on top of the walkway")
+          var fc = (h.dir < 2 ? h.col + 1 : h.col);
+          var fr = (h.dir < 2 ? h.row : h.row + 1);
+          // the bay run belongs to the cell being LIT now that the mast stands on the pavement, so
+          // both the surface test and FacilityPaint.runStart read the neighbour, walking it back the
+          // other way (`dir ^ 1` is the opposite of any of the four). the FREE-axis coordinate is
+          // untouched by the swap — the two cells differ only along the aim axis — so the phase
+          // arithmetic below is the same as it ever was
+          var bc = h.col + DC[h.dir];
+          var br = h.row + DR[h.dir];
+          if ((m.surf[br][bc] == Surf.LOT &&
+                ((h.dir < 2 ? h.col + 1 : h.row + 1)
+                  - FacilityPaint.runStart(m, bc, br, h.dir ^ 1))
+                  % FacilityStyle.BAY_SPACING == 0) ||
+              !FacilityModel.inside(m, fc, fr) ||
+              m.surf[fr][fc] != m.surf[h.row][h.col])
             {
               a -= (h.dir < 2 ? 1 : 0);
               b -= (h.dir < 2 ? 0 : 1);

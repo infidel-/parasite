@@ -461,10 +461,185 @@ unwalkable, 56 and 58 untouched, `getPath(55,43 → 59,43)` detours through row 
 shape worth generating — 1.26x split, 3 components at 71.0/28.9/0.1. A box is not. So the question to
 ask before spending $0.03 is not "will TRELLIS manage this?" but *"is this thing's silhouette worth
 generating, or is it axis-aligned slabs I could emit exactly?"*
+> SUPERSEDED by "The boom barrier stops being a prop too, and the line moves" — the barrier did not
+> stay a prop, and this paragraph drew the line in the wrong place.
 
 **Verified live** on the same compound: `__facility().batches` drops from 7 rows to 6 (booth gone,
 barrier still 1). The three booth meshes read 16/10/8 tris, footprint 3.4 x 3.4 centred on (30, −26),
 walls −0.2 → 4.2 on the kerb-dropped asphalt, roof 4.2 → 4.5 at 4.3 wide, glass 1.5 → 3.6 — every
 number the constants predict. Walls cast, roof does not, `make models` reports 31 up to date.
+
+**Verdict: landed.**
+
+## The boom barrier stops being a prop too, and the line moves (2026-08-31)
+
+Reported from the game as two complaints in one breath: *"texture issues for the red-white part are
+still there"* and *"3k tris for a box and a bar seems like a lot"*. They are the same complaint, and
+the entry directly above is why they were still open — it wrote down "a box is not a prop, **but the
+barrier stays one**: an arm, a counterweight and a cabinet is a shape worth generating". That
+exemption survived exactly one entry.
+
+**The barrier scored the same way the booth had.** `propstat` on the shipped `barrier.glb`: **3,098
+tris**, 2.07x split (undecimatable), **3 connected components with the largest holding 65.9%** — a
+REJECT by the gate's own rule — and an albedo of **145/125/105** against the prop family's 46-52. The
+`models.json` note carried a `baseColor` of 82/72/65 fitted by hand, 30 points off the family, with a
+paragraph explaining that the bake had come back "warm and LOW-CONTRAST — orange chevrons on tan
+where the reference painted brick red on off-white" and that `baseColor` is a per-channel MULTIPLY
+and so cannot add contrast back. That note was a workaround written down as a justification.
+
+**The test was wrong, not the exemption.** "Is it a box" is a rule about SHAPE, and an arm plus a
+cabinet genuinely is more shape than a kiosk. But a boom barrier is not carried by its outline at
+all — **it is carried by its hazard bands**, and that is a SURFACE. So the question that actually
+predicts the outcome is *is this object carried by its silhouette or by its surface?* A silhouette is
+what a mesh generator is for. A stripe pattern is what a tiling texture is for: it cannot lose
+contrast, cannot smear, holds its density at any length, and costs $0.01 to repaint.
+
+**Built, it is 22 triangles.** `FacilityEntry.barrier` emits a cabinet (four `face` calls and a `cap`,
+**10 tris**, no floor) and the boom (four faces, a `cap` and a `capDown`, **12 tris**), against
+**3,098**. The whole checkpoint is now **58 tris** in 5 meshes. The arm's LENGTH is derived from the
+gate hole rather than named, which is the one thing the prop could never do: `Models.instanced` scales
+a glb uniformly, so its height fixed its reach and the barrier spanned 14.7 units whatever the
+generator had cut. Here the two ends are the hole's own outer cell boundaries.
+
+**The art is prompted UNIFORM TOP TO BOTTOM, and that is load-bearing rather than stylistic.**
+`FacilityGeom.face`/`cap` take ONE period for both axes, so on a 0.3-unit-thick bar `v` is a thin
+horizontal slice of the image at an arbitrary offset — and a different one on the sides (`y/t`) from
+the lid (`z/t`). Vertical bands with no vertical structure make every slice identical, so the bands
+line up across the lid and both sides for free and no second period is needed (contrast
+`FacilityTables.panel`, which needed one). Measured on the drop: **max row deviation 0.010 on a mean
+of 0.311, i.e. 3.3%**. The wrap is a band boundary too — left edge mid-red, right edge white.
+`BARRIER_ARM_TILE` 6.0 over the art's six bands gives a **1.0-unit band** (0.5 m at the half-metre
+unit, a real boom's pitch), ~13 along the arm, at **85 texels per world unit** against the ground's 57.
+
+**`lift` could not do the level fit, and that is worth knowing generally.** The art lands at **0.311
+mean linear** — high-vis paint, 9.5x the asphalt. `lift` is a GAMMA, and on two-tone art a gamma moves
+the two tones the wrong way round: it darkens the ALREADY-DARK red far harder than the white, so lift
+1.6 takes the red to **0.0276** (under the asphalt it stands over) and blows the red/white ratio from
+**6.8x to 13.8x** — white dashes floating, red gone. A scalar on the material's own `color` is LINEAR,
+holds both the ratio and the hue, and moves only the level, which is the one thing that is wrong. So
+the arm gets its own tiny `addArm` rather than a plain `FacilityGeom.add`. `BARRIER_TINT` A/B'd live
+at the game camera: **0.40** red gone, **0.55** muddy brick, **0.75** signal red from 22 units up and
+still plainly dimmer than the booth's lit windows two cells away. The red fails first every time.
+
+**And the boom needed its underside**, which is the booth roof's lesson repeated one entry later: it
+hangs at y 1.3–1.6 over open asphalt, so every ray through it exits the bottom, and a `FrontSide`
+material renders BACK faces into the shadow map. `capDown` closes it. The cabinet needs none — it
+stands ON the ground, where those rays land under the box itself. Verified live as a solid unbroken
+shadow bar the full length; the moon throws it only 0.82 x / −1.24 z, a stripe hugging the bar.
+
+**Verified live**: `__facility().batches` 7 → 6 rows (barrier gone from the prop path, so `EXTRA` is
+down to fence + bin and `green` stays index-aligned). Cabinet 1.2 × 2.0 × 1.2, arm 13.8 long at
+y 1.3–1.6 × z 0.34, the two abutting exactly at the cabinet's far face; mouth x 32.0–48.0 (4 cells),
+tip 0.6 short. Arm `color` 0.75, casts. `make models` reports 30 up to date — `facility/barrier`
+deleted along with its 100k master, its reference and its built glb.
+
+**Verdict: landed.**
+
+## The checkpoint's four follow-ups, and a mast bug they uncovered (2026-08-31)
+
+Four things reported against the rebuilt barrier in one pass, plus a fifth that turned out to be a
+placement bug older than any of this.
+
+**The cabinet wanted art of its own.** It shipped in `facility/booth-roof` — the booth's painted
+decking, on the argument that a machine housing standing beside a kiosk wants the kiosk's material —
+and that came straight back as wrong. It is: a LID material reads as a lid material stood on end.
+New `facility/barrier-post`, louvred dark grey-green steel, built the same way the arm's art is
+(vertical, uniform top to bottom, so one UV period serves the sides and the lid). **0.0441 linear**,
+which puts it between the asphalt it stands on (0.0329) and the park lawn (0.0414) and at half the
+roof it used to wear (0.0849) — a dark box UNDER a pale cap instead of more of the cap, so no `lift`.
+`BARRIER_CAB_TILE` **4.8** over the art's 16 slots gives a 0.3-unit louvre pitch, 4 across a 1.2-unit
+face: deliberately coarser than realism wants, because from 18–55 units up a 7.5 cm slot is one pixel
+and reads as noise. That constant is derived from the slot count and moves with a repaint.
+
+**And it took two drops, which is the part worth keeping.** The first was prompted "COMPLETELY
+UNIFORM FROM TOP TO BOTTOM" and gpt drew the slots with **rounded ends a few pixels inside the top
+and bottom edges**. A rounded end is a horizontal feature, so it is a tile SEAM — and it showed up as
+a plain band with slot stubs under it **10% up** the cabinet's faces (`v = y / TILE` crosses a whole
+number at world y = 0, which is 0.2 above the kerb-dropped base) and **somewhere else entirely on the
+lid**, because `cap` maps `v` to `z` where `face` maps it to `y`. Reported as "the box texture needs
+to be a bit lower on the quads", which is exactly right about the side faces and is not a fix: a `v`
+offset hides one of the two seams and leaves the other, and both positions move with the gate's world
+position, so there is no per-compound shift that works. The art was the fix. Re-prompted with the
+slots stated to run OFF the edges and be cut flat by them, and the tiling stated on **both** axes:
+max row deviation **0.00706 → 0.00150** linear, a 4.7x improvement that puts it level with the arm,
+and the top and bottom rows now differ by **0.0078** per pixel, i.e. it really does tile vertically.
+**The lesson generalises to any art for an emitted box: ask for "tiles seamlessly on both axes", not
+for "uniform" — uniform is what you want and tiling is what makes it true.**
+
+**It also intersected the kerb.** The cabinet started flush with the gate hole's own boundary, and
+the kerb edging protrudes `WALKWAY_BORDER_W` over the lower surface at every curbed edge — the same
+fact `FENCE_INSET` already exists for. `BARRIER_INSET` is **two** of those: one width clears the
+edging and the second is the gap. Live: x 32.4–33.6 against a boundary at 32.0.
+
+**And the bar ended on half a band.** World-aligned UVs put the band grid on the WORLD while the
+arm's length is derived from the gate, so the free end landed wherever the arithmetic left it —
+reported as the tip split red/white. The art is laid out red-first and white-last, so a `u` that
+reaches a whole number at the tip ends on the END of a white band, and `map.offset.x = ceil(u) − u`
+is a pure PHASE change: same period, same texel density, nothing stretched. `Textures.loadTexture`
+builds a fresh `Texture` per call, so the offset belongs to that one mesh. Live: 47.4 / 6.0 = 7.9,
+offset 0.1, sampled 8.0 exactly, and the tip draws as a full white band.
+
+**Then the lamps.** Two more reports — the mast beside the booth "goes onto the kerb and on empty
+space", the gate's own mast "too low, goes into the walkway AND on top of the walkway" — and they are
+one bug. **A mast stands on a VERTEX, a corner shared by four cells, but takes its `y` from ONE of
+them.** That is harmless everywhere else in the compound, and the reason is worth stating because it
+is what makes the entry special: the free axis runs ALONG the kerb, so the two cells it straddles are
+the same surface, and the 0.2 step is only ever crossed on the AIM axis, where the kerb edging covers
+it. The hole punched through the sidewalk band breaks exactly that — at its corners the four cells
+are not one surface. The booth-side mast stood on walkway with **three** quadrants hanging over the
+drop into the hole; the gate mast stood on lot with the **fourth** buried in the band.
+
+The fix rides machinery that was already there. The free axis already had a step-back rule (a bay
+divider otherwise stands the mast in the paint); it gained a second trigger — the + side carrying a
+different surface — and one step settles both cases. Booth mast x **32 → 28**, gate mast z **−24 →
+−28**, mast count still **25**, and every base now reads 0.01 (walkway) or −0.19 (lot) with no mixed
+corner left. The gate mast is 6 units from the boom rather than 2, which is the cost: −28 is the
+nearest clean vertex on that flank, since moving it in x instead would put a post in the gateway —
+the one thing the lit-line rules refuse outright.
+> The gate mast's −28 is SUPERSEDED by "Every mast stands on the walkway" below, which puts it back
+> at −20. The free-axis rule itself stands and still fires.
+
+**Verdict: landed.**
+
+## Every mast stands on the walkway (2026-08-31)
+
+Reported as a dichotomy, and it was sitting in plain sight in the `LINES` table: *"normal lamps are
+all on walkways while park and parking lot ones are on ground/asphalt. let's put them on walkway too
+(NOT on kerb)."* The table read
+
+    { on: WALKWAY, by: ROAD }      // stands on the pavement, lights the road
+    { on: LOT,     by: WALKWAY }   // stands on the TARMAC, lights the pavement
+    { on: GRASS,   by: WALKWAY }   // stands on the LAWN,   lights the pavement
+
+so two of the three rows were written the wrong way round. **The fix is not a new rule — it is those
+two rows swapped**: `on: WALKWAY, by: LOT` and `on: WALKWAY, by: GRASS`. A lamp column is planted in
+paving; it is not planted in a parking bay or a flower bed.
+
+**And it costs no repositioning**, which is the part worth knowing. The placer puts the mast on the
+VERTEX at the corner of the `on` cell facing `by` — and that vertex is the boundary between the same
+two cells whichever way round the row is written. So swapping `on` and `by` moves nothing: it changes
+which side of the kerb the base sits on (`surfY` reads the mast's own cell) and which way the head
+faces, and nothing else.
+
+Three tests had to follow the mast across, because all of them were written against it standing on
+the lot: the parking-entry exclusion and the bay-divider surface test now read `h.col + DC[dir]`, and
+`FacilityPaint.runStart` walks from there with `dir ^ 1` (the opposite of any of the four). The FREE
+axis is untouched by the swap — the two cells differ only along the AIM axis — so the bay-phase
+arithmetic is unchanged. `isParkPath` went the other way and got simpler: it is now asked of the
+mast's OWN cell, which is literally what it tests for (a walkway with lawn across it both ways),
+where before it had to be asked of the neighbour.
+
+The gate's own mast comes back with it. It was pushed manually on the LOT flank, and the free-axis
+rule from the entry above then walked it a full cell into the car park to escape a mixed corner —
+*"lol, you moved the barrier lamp a full tile away"*. On the sidewalk BAND instead (`lampCol` is
+outside the hole, so the band's own rows are still pavement there), taking the barrier's own row —
+`FacilityEntry.barrier`'s expression verbatim, so mast and boom line up across the mouth. It lands at
+z **−20**, two units from the boom rather than six, on a clean 2/2 kerb line.
+
+**Verified live**: every mast base now reads **0.01** where the set was a mix of 0.01 and −0.19; the
+four park lamps sit in one even column **down the path** (col 7 at x −170, z −106/−82/−58/−34, six
+cells apart) instead of on the lawn beside it; the gate mast is at (48, −20). Mast count **25 → 29**,
+because the `(col + row) % LAMP_SPACING` gate now runs on the walkway cells and a different set
+qualifies.
 
 **Verdict: landed.**

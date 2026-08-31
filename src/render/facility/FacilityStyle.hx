@@ -376,16 +376,58 @@ class FacilityStyle
 
   // ---- the parking entry's checkpoint ------------------------------------------------------------
 
-  // the boom barrier's world HEIGHT, and that is the PEDESTAL's height — the cabinet is the tallest
-  // part of the glb — so through render.Models.instanced it fixes the ARM's reach as well: the mesh
-  // measures 1.002 x 0.136 x 0.102, an aspect of 7.37, so 2.0 stands a 1 m cabinet under a 14.7-unit
-  // span. the entry game.FacilityAreaGenerator cuts is 4 cells (16 units) wide, so the arm crosses
-  // the whole mouth with a little asphalt to spare at either end.
+  // the boom barrier, in world units, and MERGED GEOMETRY like the booth below it — so like the
+  // booth's these are read straight rather than through render.Models.instanced's uniform height
+  // scale. that scale is the whole reason the prop needed a reference regenerated three times: a
+  // glb's height fixes its width, so its proportion was an art problem with a $0.03 feedback loop.
   //
-  // the reference was regenerated TWICE for this number and for the atlas — see the prop's note in
-  // models.json. at the first drop's aspect of 1.93 the cabinet would have had to stand 2.6 m for
-  // the arm to cross one lane, which from this camera reads as a second booth rather than as a barrier
-  public static inline var BARRIER_H = 2.0;
+  // the ARM'S LENGTH IS NOT HERE, and that is the one thing the prop could not do at all: it is
+  // derived from the gate hole itself, so a mouth of any width is crossed exactly, where the prop
+  // had a single 14.7-unit span whatever the generator cut (see FacilityEntry.barrier).
+  //
+  // sized off the half-metre unit WALL_H 6.0 fixes: a 0.6 m cabinet standing 1 m tall, and a boom
+  // 0.17 m deep hinged 0.75 m up — just under the cabinet's own top, which is what reads as a hinge
+  public static inline var BARRIER_CAB_W = 1.2;   // the cabinet's footprint, square in plan
+  public static inline var BARRIER_CAB_H = 2.0;   // and its height, the tallest part of the assembly
+  public static inline var BARRIER_ARM_W = 0.34;  // the boom's cross-section, across and through
+  public static inline var BARRIER_ARM_T = 0.30;
+  public static inline var BARRIER_ARM_Y = 1.5;   // the UNDERSIDE of the boom, off the asphalt
+  public static inline var BARRIER_TIP = 0.6;     // and how far short of the far kerb its tip stops
+  // how far INSIDE the mouth the cabinet stands, off the hole's own boundary. TWO kerb widths, which
+  // is the one number here that is measured off something else rather than chosen: the kerb edging
+  // protrudes RenderConfig.WALKWAY_BORDER_W over the lower surface at every curbed edge (the same
+  // reason FENCE_INSET exists), so flush with the boundary the cabinet stood IN the edging. one width
+  // clears it and the second is the gap
+  public static inline var BARRIER_INSET = render.RenderConfig.WALKWAY_BORDER_W * 2;
+  // the hazard bands, and the cabinet's own louvred steel. the cabinet wore BOOTH_ROOF for one build
+  // — a machine housing beside a kiosk taking the kiosk's material — and a lid material read as a lid
+  // material stood on end. 4.8 puts 4 of the art's 16 louvres across a 1.2-unit face, a 0.3-unit
+  // pitch: deliberately coarse, because from 18-55 units up a realistic 7.5 cm slot is one pixel and
+  // reads as noise. it is DERIVED FROM THE SLOT COUNT, so a repaint that deals a different one moves
+  // this with it or the pitch changes under it
+  public static inline var BARRIER_ARM_TEX = 'textures/facility/barrier-arm.png';
+  public static inline var BARRIER_CAB_TEX = 'textures/facility/barrier-post.png';
+  public static inline var BARRIER_CAB_TILE = 4.8;
+  // world units per band repeat. the art holds SIX bands, so 6.0 puts each at 1.0 unit — 0.5 m, a
+  // real boom's pitch — and about 13 of them along the arm. it is also 512/6.0 = 85 texels per world
+  // unit against the ground's 57, so the bands are sharper than the asphalt under them
+  public static inline var BARRIER_ARM_TILE = 6.0;
+  // a NEUTRAL multiplier on the arm's albedo, and the one number here fitted live rather than
+  // derived. the art is high-vis paint and gpt painted it as such: 0.311 mean linear, 9.5x the
+  // asphalt and 1.6x the booth roof that was itself called a white card before it was lifted down.
+  //
+  // it is a material `color` and NOT textures.json's `lift` because lift is a GAMMA, and on this art
+  // a gamma moves the two bands the wrong way round — it darkens the already-dark red far harder
+  // than the white, taking the red UNDER the asphalt it stands over and blowing the 6.8x ratio to
+  // 13.8x, which reads as white dashes floating with the red gone. A scalar is LINEAR, so it holds
+  // both the ratio and the hue and only moves the level, which is the one thing that is wrong.
+  //
+  // A/B'd live at the game camera against 0.40 and 0.55, and the RED is what fails first every time:
+  // at 0.40 it lands under the asphalt and the bar reads as white dashes with gaps between them, at
+  // 0.55 it is a muddy brick that answers "red" only from close up. 0.75 is where the bands read as
+  // signal red from 22 units up, which is what a hazard boom is for, and the arm is still plainly
+  // dimmer than the booth's own lit windows two cells away
+  public static inline var BARRIER_TINT = 0.75;
   // the guard booth, in world units. it is MERGED GEOMETRY and not a prop (see the header of
   // render.facility.FacilityEntry), so unlike every other number in this section these are read
   // straight rather than through render.Models.instanced's uniform height scale — a box wants its

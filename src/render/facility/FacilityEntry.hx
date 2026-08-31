@@ -2,8 +2,6 @@ package render.facility;
 
 import three.Three;
 import citygen.CityConfig;
-import render.Models;
-import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -39,20 +37,36 @@ typedef Gate = {
 // stamped on the tiles for them, which is what makes the whole feature retroactive — and a gate a
 // car drives through is the wrong place to start blocking cells anyway.
 //
-// THE BARRIER IS A PROP AND THE BOOTH IS MERGED GEOMETRY, and that split is the one decision worth
-// recording. The booth is a BOX — four clad faces, a glazing band and a flat slab over them, about
-// thirty triangles — and the same reasoning render.facility.FacilityTables wrote down for a bench
-// applies to it exactly: put a box through the generator and you pay for an unwrap lottery you did
-// not need. It was tried, and it lost on every number the acceptance gate reports (tools/propstat.py
-// on the drop: 40 connected components with the largest holding 58.1%, a 3.14x split ratio that no
-// decimator can touch, an albedo baked at 91/97/104 against the prop family's 46-52). Built here it
-// is instead exact, it wears the compound's OWN cladding and roofing tiled world-aligned at full
-// texel density rather than a 2048 atlas smeared over a 4-unit box, and the glowing window band is
-// the same lit-ribbon art every window run in the area already takes — so the whole
-// tools/emissive.py step, and the hand-authored emissive map with it, simply stops existing.
+// NEITHER IS A PROP. Both were generated first and both were rebuilt here, and the second rebuild is
+// the one worth reading, because the first had a rule drawn round it that turned out to be wrong.
 //
-// The barrier stays a prop because it is not a box: an arm, a counterweight and a cabinet, a shape
-// worth generating, and it unwraps at 1.26x with 3 components
+// The booth went first, and the argument was that it is a BOX — four clad faces, a glazing band and
+// a flat slab over them, about thirty triangles — so the reasoning render.facility.FacilityTables
+// wrote down for a bench applies to it exactly: put a box through the generator and you pay for an
+// unwrap lottery you did not need. It lost on every number the acceptance gate reports
+// (tools/propstat.py on the drop: 40 connected components with the largest holding 58.1%, a 3.14x
+// split ratio no decimator can touch, an albedo baked at 91/97/104 against the prop family's 46-52).
+//
+// THE LINE DRAWN THEN was "a box is not a prop, but the barrier stays one — an arm, a counterweight
+// and a cabinet is a shape worth generating". THAT LINE WAS IN THE WRONG PLACE. An arm and a cabinet
+// are two boxes at right angles, and the generator scored them almost exactly as it scored the
+// booth: 3 components with the largest holding 65.9%, a 2.07x split, and an albedo of 145/125/105.
+// Worse, the part everything hinged on came back UNUSABLE — a boom barrier is its hazard bands, and
+// the bake returned orange chevrons on tan where the reference had painted red on off-white. There
+// was no fix on that path: `baseColor` is a per-channel MULTIPLY, so it can move the level and can
+// never put back contrast the generator merged away, which is a note models.json ended up carrying
+// as a justification for a fitted-by-hand value 30 points off the family.
+//
+// SO THE REAL TEST IS NOT "IS IT A BOX", IT IS WHETHER THE THING THAT CARRIES THE OBJECT IS ITS
+// SILHOUETTE OR ITS SURFACE. A silhouette is what a mesh generator is for. A stripe pattern is what
+// a TILING TEXTURE is for, and a tiling texture cannot lose contrast, cannot smear, holds its
+// density at any length, and costs $0.01 to repaint. Built here the barrier is 22 triangles against
+// 3,098, its arm is banded by textures/facility/barrier-arm.png at 85 texels per world unit, and its
+// LENGTH is derived from the gate hole rather than fixed by a glb's aspect ratio — so a mouth of any
+// width is spanned exactly. The booth is exact in the same way, wears the compound's OWN cladding and
+// roofing world-aligned at full density rather than a 2048 atlas smeared over a 4-unit box, and takes
+// the same lit-ribbon art every window run in the area already does — so the whole tools/emissive.py
+// step, and the hand-authored emissive map with it, simply stopped existing
 class FacilityEntry
 {
   static inline var CELL = CityConfig.CELL;
@@ -105,31 +119,103 @@ class FacilityEntry
       return gate;
     }
 
-// the checkpoint: the booth's own meshes, and the barrier batch the caller appends to `green`
-  public static function build(scene:Scene, m:Facility):Array<Models.InstancedProp>
+// the checkpoint, merged straight into the scene — nothing here is instanced any more, so this
+// hands nothing back and the caller has no batch row to keep index-aligned
+  public static function build(scene:Scene, m:Facility):Void
     {
       var gate = find(m);
-      var barrier:Array<Models.PropPlace> = [];
-      if (gate != null)
-        {
-          // both stand on asphalt, which lies a kerb below the pavement (FacilityStyle.KERB_DROP)
-          var y = FacilityGround.surfY(Surf.LOT);
-          booth(scene, gate, y);
-          // the arm lies ACROSS the mouth, so the prop is centred on the hole's own columns and
-          // stands on whichever of its two rows faces the lot — a car meets the barrier on its way
-          // in, not out on the kerb. the cabinet is at the glb's +x end (measured: the low half of
-          // its long axis spans 0.035 in y against the high half's 0.147), so the whole thing is
-          // turned PI to stand it on the booth's flank with the arm reaching away
-          var v = CityConfig.cellToWorld(gate.col + (gate.w - 1) / 2.0,
-            gate.row + (gate.lotDR < 0 ? 0 : gate.h - 1));
-          barrier.push({
-            x: v.x,
-            z: v.z,
-            yaw: Math.PI,
-            y: y,
-          });
-        }
-      return [add(scene, RenderConfig.MODELS.facilityBarrier, barrier, FacilityStyle.BARRIER_H)];
+      if (gate == null)
+        return;
+      // both stand on asphalt, which lies a kerb below the pavement (FacilityStyle.KERB_DROP)
+      var y = FacilityGround.surfY(Surf.LOT);
+      booth(scene, gate, y);
+      barrier(scene, gate, y);
+    }
+
+// the boom barrier: a cabinet standing on the booth's own flank, and an arm reaching from it across
+// the mouth.
+//
+// THE ARM'S LENGTH IS DERIVED AND NOT NAMED, which is the whole of what the prop could not do. A glb
+// scales UNIFORMLY through render.Models.instanced, so its height fixed its reach and the barrier
+// spanned 14.7 units whatever the generator had cut; here the two ends are the hole's OWN outer cell
+// boundaries, so the arm crosses exactly, stopping FacilityStyle.BARRIER_TIP short of the far kerb.
+//
+// the mouth runs along X — the hole is read as a span of COLUMNS with the lot a ROW step away — and
+// that is not a new assumption: `find` only ever tests the row direction for the lot, `boothCol` and
+// `lampCol` are column steps either side, and the prop this replaces stood on a hardcoded yaw of PI
+  static function barrier(scene:Scene, gate:Gate, y:Float):Void
+    {
+      // the row of the hole that faces the LOT: a car meets the barrier on its way in, not out on
+      // the kerb behind it
+      var row = gate.row + (gate.lotDR < 0 ? 0 : gate.h - 1);
+      var a = CityConfig.cellToWorld(gate.col, row);
+      var b = CityConfig.cellToWorld(gate.col + gate.w - 1, row);
+      var x0 = a.x - CELL / 2;
+      var x1 = b.x + CELL / 2;
+      var cab = MeshBufTools.make();
+      var arm = MeshBufTools.make();
+      // the cabinet, standing on the booth's flank (gate.boothCol is the low column, so this end)
+      // and held BARRIER_INSET off the mouth's own boundary, because the kerb edging protrudes over
+      // the asphalt there and flush with the boundary the box stood in it. four faces and a lid, and
+      // NO floor: it is a closed vertical box on the ground, where the far faces span its whole
+      // height and so carry the whole shadow — the case the booth's walls already prove, and the one
+      // its roof slab does not (see `booth`)
+      var cx0 = x0 + FacilityStyle.BARRIER_INSET;
+      var cx1 = cx0 + FacilityStyle.BARRIER_CAB_W;
+      var cz0 = a.z - FacilityStyle.BARRIER_CAB_W / 2;
+      var cz1 = a.z + FacilityStyle.BARRIER_CAB_W / 2;
+      var top = y + FacilityStyle.BARRIER_CAB_H;
+      for (dir in 0...4)
+        FacilityGeom.face(cab, cx0, cx1, cz0, cz1, dir, y, top, FacilityStyle.BARRIER_CAB_TILE);
+      FacilityGeom.cap(cab, cx0, cx1, cz0, cz1, top, FacilityStyle.BARRIER_CAB_TILE);
+      // and the boom, hinged off the cabinet's far face. it takes ONE period on every face it has,
+      // and that works only because the art is uniform top to bottom: on the sides v is y / TILE over
+      // a 0.3-unit bar and on the lid v is z / TILE over a 0.34-unit one, so both are thin horizontal
+      // slices of the same image at unrelated offsets. u is world-aligned on both, so the bands line
+      // up across the lid and the two sides for free — see the note on the texture in textures.json
+      var az0 = a.z - FacilityStyle.BARRIER_ARM_W / 2;
+      var az1 = a.z + FacilityStyle.BARRIER_ARM_W / 2;
+      var ay0 = y + FacilityStyle.BARRIER_ARM_Y;
+      var ay1 = ay0 + FacilityStyle.BARRIER_ARM_T;
+      var tip = x1 - FacilityStyle.BARRIER_TIP;
+      for (dir in 0...4)
+        FacilityGeom.face(arm, cx1, tip, az0, az1, dir, ay0, ay1, FacilityStyle.BARRIER_ARM_TILE);
+      FacilityGeom.cap(arm, cx1, tip, az0, az1, ay1, FacilityStyle.BARRIER_ARM_TILE);
+      // and the UNDERSIDE, which is the booth roof's lesson repeated: a FrontSide material renders
+      // BACK faces into the shadow map, so an open-bottomed box floating in the air has its lid
+      // culled from the light's side and every ray through it exits into open asphalt. The cabinet
+      // above needs none because it stands ON the ground, where those rays land under the box itself
+      FacilityGeom.capDown(arm, cx1, tip, az0, az1, ay0, FacilityStyle.BARRIER_ARM_TILE);
+      FacilityGeom.add(scene, cab, FacilityStyle.BARRIER_CAB_TEX, true, true);
+      // and the bands are PHASED so the free end lands on a whole white one. world-aligned UVs put
+      // the band grid on the world and the tip wherever the gate's arithmetic leaves it, which cut
+      // the last band in half — reported from the game as the bar ending split red/white. the art is
+      // laid out red-first and white-last, so a `u` that reaches a whole number at the tip ends on
+      // the end of a white band, and shifting the map by the fraction it falls short is a pure phase
+      // change: same period, same texel density, nothing stretched
+      var u = tip / FacilityStyle.BARRIER_ARM_TILE;
+      addArm(scene, arm, Math.ceil(u) - u);
+    }
+
+// the boom's own mesh, and the TWO reasons it is not a plain FacilityGeom.add. The hazard art is
+// high-vis paint at 0.311 mean linear, and the level has to come down without the two bands moving
+// relative to each other — `color` is a LINEAR multiply and does exactly that where textures.json's
+// `lift`, a gamma, does not (see FacilityStyle.BARRIER_TINT). And the band grid needs phasing by
+// `uPhase` so the tip ends on white; `Textures.loadTexture` builds a fresh Texture per call, so the
+// offset is this mesh's own and nothing else samples it
+  static function addArm(scene:Scene, b:MeshBuf, uPhase:Float):Void
+    {
+      var tex = Textures.loadTexture(FacilityStyle.BARRIER_ARM_TEX, 'wall', 1);
+      tex.offset.x = uPhase;
+      var mat = VisionMask.patch(new MeshLambertMaterial({
+        map: tex,
+        side: THREE.FrontSide,
+      }));
+      mat.color.multiplyScalar(FacilityStyle.BARRIER_TINT);
+      var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
     }
 
 // the guard booth, standing centred on the bay FacilityPaint leaves unstriped for it: four clad
@@ -219,17 +305,6 @@ class FacilityEntry
       // a building. Opaque here rather than alpha-keyed, so it casts solid with nothing to tune
       mesh.castShadow = true;
       scene.add(mesh);
-    }
-
-// one gate batch, mask-patched behind the loader callback — the mesh does not exist until the glb
-// resolves, and an empty batch must not have its material patched and warmed for nothing
-  static function add(scene:Scene, path:String, places:Array<Models.PropPlace>,
-      h:Float):Models.InstancedProp
-    {
-      var prop = Models.instanced(scene, path, places, h, SOLID);
-      if (places.length > 0)
-        Models.get(path, function(_) VisionMask.patchMesh(prop.mesh));
-      return prop;
     }
 
 // is this cell open asphalt? false off the grid

@@ -82,9 +82,10 @@ class FacilityWarm
           // the park plants, which are the wilderness's own tree and bush glbs — mask-patched here,
           // which is why they cannot ride the city scene
           var green = FacilityGround.GREEN;
-          // and the compound's own props — the lamp mast, the park railing, the litter bin and the
-          // barrier at the gate. the booth is not among them: it is merged geometry taking the same
-          // cladding, roof and lit-window materials the shell already warms
+          // and the compound's own props — the lamp mast, the park railing and the litter bin.
+          // NOTHING from the gate is among them: the booth and the barrier are both merged geometry,
+          // taking the cladding, roof and lit-window materials the shell already warms, plus the one
+          // hazard-band material the boom adds
           var facProps = [
             {
               path: RenderConfig.MODELS.facilityLamp,
@@ -97,10 +98,6 @@ class FacilityWarm
             {
               path: RenderConfig.MODELS.facilityBin,
               h: FacilityStyle.BIN_H,
-            },
-            {
-              path: RenderConfig.MODELS.facilityBarrier,
-              h: FacilityStyle.BARRIER_H,
             },
           ];
           var left = green.length + facProps.length;
