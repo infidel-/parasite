@@ -626,8 +626,9 @@ class FacilityGeom
         [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
-// the same quad wound the other way, so it is seen from BELOW — a door head's soffit
-  static function capDown(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
+// the same quad wound the other way, so it is seen from BELOW — a door head's soffit. public for
+// render.facility.FacilityEntry, whose booth roof is a free-standing slab and so needs its own
+  public static function capDown(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
     {
       if (x1 - x0 < 0.01 ||
           z1 - z0 < 0.01)
@@ -673,14 +674,15 @@ class FacilityGeom
     }
 
 // one window pane over a whole run: the same face winding, but the texture maps 0..1 across it
-// rather than tiling.
+// rather than tiling. public for render.facility.FacilityEntry, whose booth is glazed on all four
+// sides and so wants the same 0..1 mapping over a face that is not part of any wall run
 //
 // FLUSH with the wall plane. it used to stand a hundredth of a unit proud of it "so nothing depends
 // on polygonOffset" — but the emitter cuts the opening OUT of the wall rather than painting the pane
 // over it, so the two are never coplanar-and-overlapping and there was nothing to fight with. All
 // the offset bought was a seam of open air along the head and the sill, where the reveal's own caps
 // stop at the masonry and the glass no longer did
-  static function pane(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
+  public static function pane(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
       dir:Int, y0:Float, y1:Float):Void
     {
       var e = ends(x0, x1, z0, z1, dir);
@@ -690,8 +692,10 @@ class FacilityGeom
     }
 
 // merge a buffer into one lit mesh. every one of these is OPAQUE now: the walls stopped fading with
-// the roof, so nothing here needs `transparent` and nothing here pays for the sorted pass
-  static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Void
+// the roof, so nothing here needs `transparent` and nothing here pays for the sorted pass.
+// public for render.facility.FacilityEntry, whose booth is a shell like any other — walls in the
+// same cladding, a roof in the same felt, and no reason to carry a second copy of this
+  public static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Void
     {
       if (b.idx.length == 0)
         return;
@@ -773,7 +777,7 @@ class FacilityGeom
     }
 
 // one merged buffer as a BufferGeometry
-  static function geom(b:MeshBuf):BufferGeometry
+  public static function geom(b:MeshBuf):BufferGeometry
     {
       var g = new BufferGeometry();
       g.setAttribute('position', new Float32BufferAttribute(b.pos, 3));

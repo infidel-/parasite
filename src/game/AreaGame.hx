@@ -16,7 +16,7 @@ class AreaGame extends _SaveObject
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
     'info', 'clueSpawnPoints', '_decalCells',
-    'spawnCells',
+    'spawnCells', '_boothX', '_boothY',
   ];
   var game: Game;
   var region: RegionGame;
@@ -69,6 +69,12 @@ class AreaGame extends _SaveObject
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
+  // the cell the parking entry's guard booth stands on, or -1,-1 where there is no gate. the booth
+  // is render-only geometry with no tile of its own, so this is the only thing that knows it is
+  // solid; transient, because initSpawnPoints re-derives it from the cell grid on every load (see
+  // gate()) and a saved copy would only be a second answer to disagree with
+  var _boothX: Int = -1;
+  var _boothY: Int = -1;
   public var generatorInfo: _GeneratorInfo;
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
@@ -453,8 +459,109 @@ class AreaGame extends _SaveObject
                 }
             }
         }
+      // and the parking entry's own post, which no door can ever give: the compound's gate is a
+      // hole in the pavement with a boom barrier across it and a guard booth beside it, and a
+      // checkpoint with nobody standing on it is not a checkpoint
+      _boothX = -1;
+      _boothY = -1;
+      var gate = gate();
+      if (gate != null)
+        {
+          importantGuardSpawnPoints.push({
+            x: gate.postX,
+            y: gate.postY,
+          });
+          // and the booth's own bay stops being walkable. it is a solid box a metre and a half across
+          // and the player was walking through it — but nothing is stamped on the tiles for it (that
+          // is what makes the whole checkpoint retroactive), so the block has to be derived here too
+          // and re-derived on every load. recalcTile because gate() reached isWalkable on the way in
+          // and the cache may already hold this cell
+          _boothX = gate.boothX;
+          _boothY = gate.boothY;
+          recalcTile(_boothX, _boothY);
+        }
 //      trace(importantGuardSpawnPoints);
 //      trace(guardSpawnPoints);
+    }
+
+// the parking entry's two cells: the guard post at the mouth of the drive the cars come in by, and
+// the bay beside it that the booth stands on and blocks.
+//
+// read off the TILE GRID and not off an object, exactly as render.facility.FacilityEntry reads the
+// gate furniture this guard stands among — so a compound saved long before any of it existed gets
+// its checkpoint the next time it is entered. game.FacilityAreaGenerator punches the entry as a
+// plain 4x2 hole of alley through the sidewalk band beside the road, so an alley cell within that
+// band's width of the road is one of the hole's eight and nothing else in the lot is: the band
+// always lies between the lot and the road
+  function gate(): { boothX: Int, boothY: Int, postX: Int, postY: Int }
+    {
+      var x0 = width, x1 = -1, y0 = height, y1 = -1, dir = 0;
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            if (_cells[x][y] != Const.TILE_ALLEY)
+              continue;
+            var d = roadSide(x, y);
+            if (d == 0)
+              continue;
+            dir = d;
+            if (x < x0)
+              x0 = x;
+            if (x > x1)
+              x1 = x;
+            if (y < y0)
+              y0 = y;
+            if (y > y1)
+              y1 = y;
+          }
+      if (dir == 0)
+        return null;
+      // one row further from the road than the hole reaches: the first lot cell past the mouth. the
+      // booth takes the bay in the column before this one, so the guard ends up between it and the
+      // barrier, which is where a gate guard stands
+      var y = (dir < 0 ? y1 + 1 : y0 - 1);
+      // BOTH flanking bays have to be bays, which is the same guard render.facility.FacilityEntry
+      // .find makes before it builds anything — and here it is load-bearing rather than tidy: the
+      // renderer draws no booth at all if either fails, so blocking on a weaker test walks the player
+      // into an obstacle that is not on screen
+      if (!isLot(x0 - 1, y) ||
+          !isLot(x1 + 1, y) ||
+          !isWalkable(x0, y))
+        return null;
+      return {
+        boothX: x0 - 1,
+        boothY: y,
+        postX: x0,
+        postY: y,
+      };
+    }
+
+// is this cell open lot? false off the grid. Const.TILE_ALLEY is what the generator fills the
+// parking lot and the yard with, and what render.facility.FacilityModel reads back as Surf.LOT
+  inline function isLot(x: Int, y: Int): Bool
+    {
+      return x >= 0 &&
+        y >= 0 &&
+        x < width &&
+        y < height &&
+        _cells[x][y] == Const.TILE_ALLEY;
+    }
+
+// which way the main road lies from this cell, or 0 if it is further off than the sidewalk band is
+// wide (game.FacilityAreaGenerator lays that band 2 cells deep, and render.facility.FacilityPaint
+// .isEntry measures against the same number)
+  function roadSide(x: Int, y: Int): Int
+    {
+      for (i in 1...3)
+        {
+          if (y - i >= 0 &&
+              _cells[x][y - i] == Const.TILE_ROAD)
+            return -1;
+          if (y + i < height &&
+              _cells[x][y + i] == Const.TILE_ROAD)
+            return 1;
+        }
+      return 0;
     }
 
 // leave this area: hide gui, despawn, etc
@@ -1313,6 +1420,13 @@ class AreaGame extends _SaveObject
         tileset.canSeeThrough(tileID));
       tile.isWalkable = (tileset != null &&
         tileset.isWalkable(tileID));
+      // the parking entry's guard booth stands here. it is a solid box drawn straight into the scene
+      // with no tile and no object behind it (see gate()), so nothing above this line can know. it
+      // still SEES through: the box is glazed on all four sides, and render.world.VisionMask blocks
+      // on walls alone, so making it opaque here would put a shadow on the lot that is not on screen
+      if (x == _boothX &&
+          y == _boothY)
+        tile.isWalkable = false;
       if (!tile.canSeeThrough &&
           !tile.isWalkable)
         return;

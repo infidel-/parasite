@@ -374,6 +374,48 @@ class FacilityStyle
   public static inline var BIN_SIDE = 1.45;
   public static inline var BIN_BACK = 1.42;
 
+  // ---- the parking entry's checkpoint ------------------------------------------------------------
+
+  // the boom barrier's world HEIGHT, and that is the PEDESTAL's height — the cabinet is the tallest
+  // part of the glb — so through render.Models.instanced it fixes the ARM's reach as well: the mesh
+  // measures 1.002 x 0.136 x 0.102, an aspect of 7.37, so 2.0 stands a 1 m cabinet under a 14.7-unit
+  // span. the entry game.FacilityAreaGenerator cuts is 4 cells (16 units) wide, so the arm crosses
+  // the whole mouth with a little asphalt to spare at either end.
+  //
+  // the reference was regenerated TWICE for this number and for the atlas — see the prop's note in
+  // models.json. at the first drop's aspect of 1.93 the cabinet would have had to stand 2.6 m for
+  // the arm to cross one lane, which from this camera reads as a second booth rather than as a barrier
+  public static inline var BARRIER_H = 2.0;
+  // the guard booth, in world units. it is MERGED GEOMETRY and not a prop (see the header of
+  // render.facility.FacilityEntry), so unlike every other number in this section these are read
+  // straight rather than through render.Models.instanced's uniform height scale — a box wants its
+  // three dimensions named, not one dimension and an aspect ratio.
+  //
+  // sized off the half-metre unit WALL_H 6.0 fixes: a 1.7 m square kiosk standing 2.2 m to the eave,
+  // with a 0.85-1.9 m glazing band, on a 4-unit (2 m) parking bay
+  public static inline var BOOTH_W = 3.4;        // footprint, square
+  public static inline var BOOTH_H = 4.4;        // wall height, to the underside of the roof slab
+  public static inline var BOOTH_SILL = 1.7;     // the glazing band's bottom and top, off the asphalt
+  public static inline var BOOTH_HEAD = 3.8;
+  public static inline var BOOTH_EAVE = 0.45;    // how far the roof slab overhangs the walls, each side
+  public static inline var BOOTH_FASCIA = 0.3;   // and how thick it is, i.e. the band that reads as its edge
+  // and how hard that band glows. it is NOT WINDOW_EMISSIVE, and the gap is not a taste difference:
+  // a window run's panes are half-transparent, sunk in a reveal and read from one side, while these
+  // are opaque and wrap a free-standing box, so four of them face the camera at once with no masonry
+  // taking any of it. At 2.2 the booth was a white lantern with its mullions blown out. 1.4 puts it
+  // level with the lab windows across the lot — a bloom halo, and the frames still legible under it.
+  // fitted live at the game camera against those windows, not derived
+  public static inline var BOOTH_EMISSIVE = 1.4;
+  // and its own roofing, which is NOT the buildings' ROOF. that one is bitumen membrane under gravel
+  // ballast, which is what a flat industrial roof over a whole storey is made of and what a kiosk cap
+  // is not; on a 4.3-unit slab beside the same aggregate the lot is paved in, it read as one more
+  // piece of concrete. Painted steel decking instead — as generated it is 0.1886 linear, 6.9x the
+  // bitumen roof and a white card at night, so textures.json lifts it DOWN to 0.0849, a deliberate
+  // 3.1x that roof, fitted live at the game camera. It TILES ON ROOF_TILE all the same:
+  // 13 seams in the art over 9.0 units is a 0.35 m pan at the half-metre unit, about six of them
+  // across the slab, at the ground's own 57 texels per world unit
+  public static inline var BOOTH_ROOF = 'textures/facility/booth-roof.png';
+
   // ---- lamps and fixtures ----------------------------------------------------------------------
 
   // the compound's own lamp: a modern slim mast with a shrouded downlight head. world HEIGHT, which

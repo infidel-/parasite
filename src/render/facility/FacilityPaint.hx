@@ -91,11 +91,18 @@ class FacilityPaint
   static function bays(b:MeshBuf, m:Facility):Void
     {
       var dom = dominant(m);
+      // and the one bay that is spoken for: the gate's guard booth stands on it, and a spot marked
+      // out under a building is the same mistake `nearBuild` exists to stop (render.facility
+      // .FacilityEntry, which reads the entry hole this pass already knows how to find)
+      var gate = FacilityEntry.find(m);
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
             if (m.surf[row][col] != Surf.LOT ||
-                isEntry(m, col, row))
+                isEntry(m, col, row) ||
+                (gate != null &&
+                 col == gate.boothCol &&
+                 row == gate.mouthRow))
               continue;
             for (dir in 0...4)
               {

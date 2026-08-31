@@ -136,6 +136,22 @@ class FacilityLamps
         ? parkHits.length : FacilityStyle.PARK_LAMPS);
       for (i in 0...take)
         hits.push(parkHits[Std.int((i + 0.5) * parkHits.length / take)]);
+      // and the GATE's own mast, which the lit-line scan above cannot ever deal: every entry cell is
+      // excluded from the lot line (a post in the gateway stands in the way of the cars), and the
+      // boom barrier across that gateway is the one thing out on the asphalt that has to be seen.
+      // it stands on the flank OPPOSITE the guard booth so the booth throws nothing on the arm it
+      // lights, aimed at the entry — which on the generator's only entry shape, a hole cut along the
+      // road, is -x. skipped where the scan has already put a mast on that cell: (col + row) %
+      // LAMP_SPACING lands on it once in LAMP_SPACING compounds, and two masts on one vertex is one
+      // mast drawn twice
+      var gate = FacilityEntry.find(m);
+      if (gate != null &&
+          !taken(hits, gate.lampCol, gate.mouthRow))
+        hits.push({
+          col: gate.lampCol,
+          row: gate.mouthRow,
+          dir: 2,
+        });
 
       for (h in hits)
         {
@@ -244,6 +260,16 @@ class FacilityLamps
 // it, and nothing else here trusts it to still describe the saved grid
   public static inline function lit(m:Facility, r:_Room):Bool
     return FacilityModel.isIndoor(m, Std.int((r.x1 + r.x2) / 2), Std.int((r.y1 + r.y2) / 2));
+
+// does the scan already stand a mast on this cell?
+  static function taken(hits:Array<LampHit>, col:Int, row:Int):Bool
+    {
+      for (h in hits)
+        if (h.col == col &&
+            h.row == row)
+          return true;
+      return false;
+    }
 
 // the first of the four cell-edge directions whose neighbour paints `by`, or -1 for none
   static function borders(m:Facility, col:Int, row:Int, by:Surf):Int

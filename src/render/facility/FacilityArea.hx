@@ -23,12 +23,15 @@ import render.world.WorldCtx;
 // the vision mask governs how much of the inside is then drawn
 class FacilityArea implements Area3D
 {
-  // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing and the
-  // litter bins. they are batches with no GreenProp row, because neither is planted on a tile of its
-  // own, and this is the only place that can name them
+  // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing, the
+  // litter bins and the gate's barrier. they are batches with no GreenProp row, because none of them
+  // is planted on a tile of its own, and this is the only place that can name them. the booth is not
+  // here and never appears in __facility()'s batches: it is merged geometry, not a prop (see the
+  // header of render.facility.FacilityEntry)
   static final EXTRA = [
     RenderConfig.MODELS.facilityFence,
     RenderConfig.MODELS.facilityBin,
+    RenderConfig.MODELS.facilityBarrier,
   ];
 
   var game:Game;
@@ -120,6 +123,11 @@ class FacilityArea implements Area3D
       // them, so the plants stay index-aligned with GREEN
       green.push(FacilityGround.fence(scene, model));
       green.push(FacilityGround.bins(scene, model, game.area));
+      // the checkpoint at the gate. it builds the booth's own meshes and hands back the barrier
+      // batch, which rides this array for the reason the two above do — everything the array is for
+      // (one Models.cull, one __facility() batch row) applies to a batch of ONE unchanged
+      for (p in FacilityEntry.build(scene, model))
+        green.push(p);
       doors = FacilityDoors.build(scene, model, game.area);
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the

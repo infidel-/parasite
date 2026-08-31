@@ -309,3 +309,162 @@ Lambert's 0.28 it is **~2.3M**. The 3.6M worst case is still over — the next l
 it is `bush-low` (45% of park tris, split ratio 1.79x, the only plant `error` might decimate).
 
 **Verdict: landed.** Largest single win measured in the facility.
+
+## The parking entry gets a checkpoint (2026-08-31)
+
+Two new props at the compound gate — a boom barrier across the drive and a glazed guard booth on the
+bay beside it — plus the one lamp mast the lit-line rules can never place, and a guard post in the
+tile grid. `render.facility.FacilityEntry` owns the arithmetic; `FacilityPaint`, `FacilityLamps` and
+`game.AreaGame.initSpawnPoints` read it. **Nothing is persisted and no tile changes**: the entry is
+already the only lot cell within the sidewalk band's width of the road (`FacilityPaint.isEntry`), so
+its bounding box IS the hole, and every compound already saved gets its checkpoint on re-entry.
+
+**The barrier's PROPORTION was a prompt problem, not a settings one.** Asked for "an arm about five
+times as long as the pedestal is tall" in an ordinary three-quarter prompt, gpt returned widest/height
+**1.93** — a full-height cabinet with a stub. `Models.instanced` scales uniformly, so at that aspect
+the cabinet has to stand **2.6 m** for the arm to cross one 4 m lane, which from this camera reads as
+a second booth. Restated as the FIRST paragraph, in caps, with the parts placed in the frame by hand
+("the pedestal occupies only the far LEFT eighth"), it came back at **6.81**, and the game sizes off
+that: `BARRIER_H` is the PEDESTAL's height.
+
+**Then the same prop cost a THIRD generation, and that one is the real finding: "three-quarter" is
+about the ATLAS, not the silhouette.** The fixed-proportion drop was a near-flat SIDE ELEVATION. Its
+mesh was fine — **2 components at 86.2/13.8**, 1.22x split, correct proportions — and its **texture
+was junk**: the arm's top and back faces are not in a side view, so TRELLIS invented them, and the
+baked hazard stripes came back bleached and disagreeing chart to chart. Re-shot ISOMETRIC at ~35°
+from one corner, with the top face AND a side face of every part in frame and the stripes stated to
+wrap continuously over the edge, the same object baked a coherent atlas: **3 components at
+71.0 / 28.9 / 0.1**, 1.26x, widest/height **7.36**, so `BARRIER_H` 2.0 is a 1 m cabinet under a
+**14.7-unit** span across the 16-unit entry. That drop touched the frame edge (margin l 13 r 2 t 0),
+which is the other new tool: **`propstat --fit 80`** shrinks the subject about the centre and re-lays
+it on the flat backdrop — scale 0.947, margins → 89/79/187 — holding the composition where a re-roll
+gives a different one. Its key has to measure the backdrop gpt ACTUALLY painted: keyed against
+nominal `#5a5d63` the vignette sits ~24% opaque, invisible when `lift` re-lays the whole frame and a
+**hard rectangle border** when `fit` pastes a sub-rect.
+
+**Its `baseColor` is deliberately OFF the 46-52 family, at 82/72/65.** The isometric bake came back
+warm and LOW-CONTRAST — orange chevrons on tan where the reference painted brick red on off-white —
+and the family factor (fitted at `[0.09,0.12,0.2]` = 46/45/48) left the arm a black bar with the
+chevrons gone. `baseColor` is a per-channel multiply and cannot add contrast back; the only lever is
+level, and a hazard-striped boom is high-vis paint that should be the brightest thing at an unlit
+gate after the booth's own windows. Fitted live on the material's `color` at the game camera.
+
+**A flat emissive mask is right for a LENS and wrong for a WINDOW RUN.** (This paragraph and the next
+are SUPERSEDED by *The guard booth stops being a prop* below — the booth has no glb, no atlas and no
+generated emissive map any more. `--modulate` itself stands; nothing here uses it today.) The booth's
+glazing lit by
+`emissive.py`'s flat tinted mask came back as a **white card stuck on a black box** — the same failure
+`facility/lamp-post` logs for its whole-head box, one scale up. Dropping `emissiveStrength` 2.2 → 1.1
+live only dimmed the card: the halo went and the card stayed, because **the failure is uniformity, not
+level**. New `--modulate` multiplies the mask by the glb's own base map, whose panes already sit ~3x
+over its mullions, so the glow lands on the glass and the frames stay dark for free. Lit texels
+**255 → mean 117**, so the strength goes the other way — **3.5** against a window pane's
+`WINDOW_EMISSIVE` 2.2 — and only the panes then clear `BLOOM_THRESHOLD`.
+
+**Booth `error` 0.05, not the usual 0.005.** At 0.005 meshopt floors a BOX at **11,364 tris** (23
+texels/tri at `tex` 512, under the 43-55 band); 0.05 lands **7,431** (35). The number that predicts
+blur is texels per WORLD unit, and at `BOOTH_H` 4.4 that is **55** against the ground's own
+512/`GROUND_TILE` 9.0 = **57**, so 512 is matched to the surface it covers.
+
+**Verified live** on a generated 65x50 south-layout compound: entry cols 58-61 / rows 44-45, booth
+(57,43), gate mast (62,43) — masts **24 → 25** — barrier centred on the hole. **0 paint quads overlap
+the booth cell** (the bay run that opened it is gone, its neighbours at col 56 and col 61 untouched),
+and `spawnGuards` puts a security guard on **(58,43)** off the new `importantGuardSpawnPoints` entry.
+`calls` 57-59 in the free-cam gate view, GPU 8.3-9.2ms; two batches of one instance each, so there is
+no perf question to answer here.
+
+**Verdict: landed.**
+
+## The guard booth stops being a prop (2026-08-31)
+
+Reported from the game: *"converted booth has surprisingly awful texture. why do we even need to
+generate a 100k booth which is < 10 real polygons?"* Both halves are right, and the second one is the
+finding.
+
+**`propstat` on the shipped drop is a straight REJECT, and the entry above talked itself past it.**
+40 connected components, largest **58.1%**; 3.14x split, so undecimatable at any `error`; albedo
+**91/97/104** against the prop family's 46-52. The `models.json` note argued the component count was
+a false positive because "the preview shows a box, not a blob cloud" — the preview showed a box
+because a box is what it is, and the gate was reporting, correctly, that the SURFACE had been
+shattered into forty pieces. A rectangular object with four flat faces has no business going through
+a mesh generator at all.
+
+**The replacement is 34 triangles in three draw calls**, built in `FacilityEntry` off
+`FacilityGeom.face` / `pane` / `cap` — the same public emitters `FacilityTables` has used for a bench
+since it was written, for the same reason, written down in its own header: *"a bench is a BOX … six
+quads a cell against a glb's unwrap lottery."* 16 wall tris (four faces, each split around the
+glazing band), 10 roof (a cap on the grown rect plus its fascia), 8 glass. Three visibility changes
+in `FacilityGeom` (`pane`, `add`, `geom` → public) and no duplicated code.
+
+What that buys beyond the tri count is the part the atlas could never do: the booth wears the
+compound's OWN `wall-exterior` and `roof`, tiled world-aligned at `WALL_TILE`/`ROOF_TILE`, so its
+texel density is the buildings' and its courses line up with them — instead of a 2048 atlas spread
+over a 4-unit box and then resized to 512. And its glowing band is the same `window-ribbon-lit` art
+every window run in the area already draws, so **`emissive.py --modulate`, `booth-emissive.png`, the
+hand-editable `booth.png` `texSrc` and the whole `models.json` entry stop existing** — as does the
+`FacilityWarm` row that was there only because an `emissiveMap` is a program define.
+
+**The glazing is OPAQUE, and that forced its own emissive level.** A run's panes are half-transparent
+by design (`tools/textures.py`'s `glass_alpha` keys the bright half to 128) because a window is read
+from both sides of one wall; on a BOX that means looking in the near face and out the far one, at an
+interior nobody is going to model. Opaque, `transparent` is off and there is no sorted pass, while
+`alphaTest` still kills the art's cut margin. But at the run's `WINDOW_EMISSIVE` **2.2** the booth was
+a white lantern with its mullions blown out — four faces at the camera at once, none of them sunk in
+a reveal, none of them dimmed by an alpha of 128. New `FacilityStyle.BOOTH_EMISSIVE` **1.4**, fitted
+live against the lab windows across the lot: a bloom halo, and the frames still legible under it.
+
+**It also wanted its own ROOFING, and "lighter" was the wrong axis to fix it on.** Wearing the
+buildings' `facility/roof` — bitumen membrane under gravel ballast — a 4.3-unit kiosk cap read as one
+more piece of the aggregate the lot is paved in. The fix is a different MATERIAL, not a lighter
+bitumen: new `facility/booth-roof`, painted steel decking with standing seams, on the same
+`ROOF_TILE` 9.0 as the roof it replaced (the art carries 13 seams, so a **0.69-unit pan** — 0.35 m at
+the half-metre unit, a real standing-seam pitch — about six of them across the slab, at 512/9.0 = 57
+texels per world unit, the ground's own density). The fascia band moved from `WALL_TILE` to
+`ROOF_TILE` with it, so the trim is a slice of the same pan as the cap above it. As generated the art
+is **0.1886 linear**, 6.9x the bitumen roof and a white card at night, so it is lifted DOWN: 1.8 / 1.6
+/ 1.4 A/B'd live on the material's own `color` in one pinned frame — 1.8 is smooth dark grey and
+answers "less concrete" but not "lighter", 1.4 makes the cap the brightest thing in the lot after the
+lit windows — and **lift 1.5** bakes to **0.0849**, 3.1x that roof and 2.6x the wall.
+
+**Its shadow had HOLES in it, and the cause was already written down one file over.** The glazing
+band is cut OUT of the walls (a face floor-to-sill, another head-to-eave), so with the glass mesh not
+casting, the opening is a real hole in the caster and the moon shines straight through the box — a
+bright band across the middle of the ground shadow, which is exactly the parallelogram of moonlight
+`FacilityGeom.addPane` records for a non-casting window run inside a building. Same one-line fix, and
+opaque here rather than alpha-keyed so it casts solid with nothing to tune. The ROOF now casts too:
+`addRoof` refuses that for a building's, but that rule is about a roof over a whole lot under a moon
+box that follows the player, and this is a 4.3-unit cap — not casting it, the shadow stopped at the
+WALL line and the overhang, the one feature of the silhouette, threw none.
+
+**That left a SECOND set of holes, and the lesson is that the shadow pass does not look from the
+camera.** The roof slab was a cap plus four fascia bands and nothing underneath — deliberately, on
+the same reasoning `FacilityTables` gives for leaving its bench lip open: the camera pitches 51° down
+and a ray reaching under a `BOOTH_EAVE` overhang has already met the wall. True of the CAMERA and
+irrelevant to the LIGHT. A `FrontSide` material renders BACK faces into the shadow map, so from above
+the top cap's front face is culled and an open-bottomed box casts only from the inside of its own
+fascia. Adding the soffit (`FacilityGeom.capDown`, now public) closes the slab: roof **10 → 12 tris**,
+and the soffit is the face actually carrying the slab's shadow. The wall and glass rings never had
+this problem — a closed vertical tube's back faces ARE its silhouette from any direction.
+
+**And it BLOCKS.** The booth is still render-only — nothing is stamped on the tiles for it, which is
+what keeps the checkpoint retroactive — so the block is derived the same way everything else at this
+gate is: `AreaGame.gatePost` became `gate()`, returning the booth's bay alongside the guard post, and
+`initSpawnPoints` (which already runs on generation AND on load) caches it in a transient `_boothX/Y`
+that `recalcTile` reads. It gained the renderer's own both-flanks-are-bays guard, and that is
+load-bearing rather than tidy here: `FacilityEntry.find` draws no booth at all if either flank fails,
+so blocking on a weaker test walks the player into an obstacle that is not on screen. It still SEES
+through — the box is glazed on four sides and `VisionMask` blocks on walls alone. Live: (57,43)
+unwalkable, 56 and 58 untouched, `getPath(55,43 → 59,43)` detours through row 42, the guard post at
+(58,43) unchanged.
+
+**The barrier stays a prop, and the split is the rule.** An arm, a counterweight and a cabinet is a
+shape worth generating — 1.26x split, 3 components at 71.0/28.9/0.1. A box is not. So the question to
+ask before spending $0.03 is not "will TRELLIS manage this?" but *"is this thing's silhouette worth
+generating, or is it axis-aligned slabs I could emit exactly?"*
+
+**Verified live** on the same compound: `__facility().batches` drops from 7 rows to 6 (booth gone,
+barrier still 1). The three booth meshes read 16/10/8 tris, footprint 3.4 x 3.4 centred on (30, −26),
+walls −0.2 → 4.2 on the kerb-dropped asphalt, roof 4.2 → 4.5 at 4.3 wide, glass 1.5 → 3.6 — every
+number the constants predict. Walls cast, roof does not, `make models` reports 31 up to date.
+
+**Verdict: landed.**

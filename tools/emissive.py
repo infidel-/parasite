@@ -36,6 +36,7 @@ game samples, and decimation moves charts.
 """
 
 import argparse
+import io
 import json
 import struct
 import sys
@@ -98,6 +99,24 @@ def cover(uvs, res, ss=4):
     return np.asarray(im).reshape(res, ss, res, ss).max(axis=(1, 3)) > 0
 
 
+# the glb's OWN base-colour map, resized to res: what --modulate multiplies the flat mask by.
+#
+# a flat mask is right for a LENS, which is one small bright thing, and wrong for a WINDOW RUN, which
+# is a big region whose whole read is its structure. lit flat, facility/booth's glazing came back as
+# a white card stuck on a black box -- the same failure the lamp head's whole-head box produced, one
+# scale up. the base map already separates the panes from the mullions by a factor of ~3 in value, so
+# multiplying by it puts the glow ON THE GLASS and leaves the frames dark for free.
+def basemap(g, bin_, res):
+    mat = g['materials'][0]
+    tex = mat.get('pbrMetallicRoughness', {}).get('baseColorTexture')
+    if tex is None:
+        sys.exit('--modulate: the glb carries no base-colour texture')
+    bv = g['bufferViews'][g['images'][g['textures'][tex['index']]['source']]['bufferView']]
+    off = bv.get('byteOffset', 0)
+    im = Image.open(io.BytesIO(bin_[off:off + bv['byteLength']])).convert('RGB')
+    return np.asarray(im.resize((res, res), Image.LANCZOS)).astype(np.float64) / 255.0
+
+
 # grow a bool mask by r texels (chebyshev)
 def grow(m, r):
     if r <= 0:
@@ -139,6 +158,9 @@ def main():
     ap.add_argument('--res', type=int, default=512)
     ap.add_argument('--dilate', type=int, default=2, help='px pushed into the chart gutter')
     ap.add_argument('--tint', default='ffffff', help='RRGGBB; models.mjs pins emissiveFactor to 1,1,1')
+    ap.add_argument('--modulate', action='store_true',
+                    help="multiply the mask by the glb's own base map, so a window run keeps its "
+                         'mullions dark instead of reading as one glowing card')
     ap.add_argument('--preview', help='write a 3-view selection check here')
     a = ap.parse_args()
 
@@ -195,9 +217,12 @@ def main():
             bad += 1
     print('bleed onto unselected tris: %d  (must be 0)' % bad)
 
-    col = [int(a.tint[i:i + 2], 16) for i in (0, 2, 4)]
-    out = Image.fromarray((kept * 255).astype(np.uint8), 'L')
-    Image.merge('RGB', tuple(out.point(lambda v, c=c: v * c // 255) for c in col)).save(a.out)
+    col = np.array([int(a.tint[i:i + 2], 16) for i in (0, 2, 4)], dtype=np.float64)
+    px = kept[..., None] * col
+    if a.modulate:
+        px = px * basemap(g, bin_, a.res)
+        print('modulated by the base map: lit texels mean %.0f of 255' % px[kept].mean())
+    Image.fromarray(np.clip(px, 0, 255).astype(np.uint8), 'RGB').save(a.out)
     print('wrote ' + a.out)
 
     if a.preview:

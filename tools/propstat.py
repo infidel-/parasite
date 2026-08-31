@@ -7,7 +7,8 @@ So this reports all of them at once, before a prop is wired in.
 
   python3 tools/propstat.py models-src/wild/bush-bramble.glb      mesh + bake
   python3 tools/propstat.py models-src/wild/bush-bramble-src.png  the reference
-  python3 tools/propstat.py ref.png --lift 70 -o lifted.png       correct a reference
+  python3 tools/propstat.py ref.png --lift 70 -o lifted.png       correct a reference's VALUE
+  python3 tools/propstat.py ref.png --fit 80 -o fitted.png        pull it off the frame edge
 
 What a .glb reports and why each number is there:
 
@@ -207,14 +208,25 @@ def stat_png(path):
         *bg.mean(axis=0).round(), bg.mean() - p50))
 
 
+# soft subject coverage, ramped across the antialiased edge so a composite leaves no halo.
+#
+# keyed against the backdrop gpt ACTUALLY PAINTED, not against the BG it was asked for. gpt vignettes:
+# asked for 90/93/99 it delivers ~76/80/84, which is 42 away in this metric -- past the ramp's foot,
+# so keying on nominal BG leaves the whole backdrop ~24% opaque. Uniform, that residue is invisible
+# and `lift` shipped four props with it; `fit` pastes a SUB-RECT and the same residue draws a hard
+# rectangle border round the pasted region, which is a segmentation edge that is not on the object
+def key(im):
+    d = np.abs(im - BG).sum(axis=2)
+    bg = np.median(im[d < 30], axis=0) if (d < 30).any() else BG
+    return np.clip((np.abs(im - bg).sum(axis=2) - 30.0) / 50.0, 0, 1)
+
+
 # gamma the subject to a target median and re-lay it on a truly flat backdrop. holds the
 # composition fixed, so the next bake differs from the last by VALUE ALONE -- and it also
 # scrubs the vignette gpt paints instead of the flat grey it was asked for
 def lift(path, out, target):
     im = np.asarray(Image.open(path).convert('RGB')).astype(np.float64)
-    d = np.abs(im - BG).sum(axis=2)
-    # soft coverage, ramped across the antialiased edge so the composite leaves no halo
-    alpha = np.clip((d - 30.0) / 50.0, 0, 1)[..., None]
+    alpha = key(im)[..., None]
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
     p50 = np.percentile(lum[alpha[..., 0] > 0.9], 50)
     # a gamma rather than a scale: it lifts the darks hardest and leaves the few light texels
@@ -226,12 +238,40 @@ def lift(path, out, target):
         p50, target, gam, out))
 
 
+# shrink the subject about the frame centre until it clears every edge by `margin` px, and re-lay it
+# on the flat backdrop. THE COMPOSITION IS UNTOUCHED -- only its size in the frame -- which is what
+# makes this cheaper and safer than a re-prompt: gpt lays a long diagonal object corner to corner
+# however loudly the prompt asks for a margin, and re-rolling gives a DIFFERENT composition where
+# this gives the same one, smaller. It flattens the vignette on the way through, exactly as lift does
+def fit(path, out, margin):
+    im = np.asarray(Image.open(path).convert('RGB')).astype(np.float64)
+    alpha = key(im)
+    h, w = im.shape[:2]
+    ys, xs = np.where(alpha > 0.5)
+    cx, cy = w / 2.0, h / 2.0
+    # scale about the CENTRE, so the worst-reaching corner of the subject is what sets it
+    reach = max(cx - xs.min(), xs.max() - cx, cy - ys.min(), ys.max() - cy)
+    s = min(1.0, (min(cx, cy) - margin) / reach)
+    sw, sh = int(round(w * s)), int(round(h * s))
+    rgba = Image.fromarray(np.dstack([im, alpha * 255.0]).astype(np.uint8), 'RGBA')
+    small = rgba.resize((sw, sh), Image.LANCZOS)
+    canvas = Image.new('RGB', (w, h), tuple(int(v) for v in BG))
+    canvas.paste(small, ((w - sw) // 2, (h - sh) // 2), small)
+    canvas.save(out)
+    print('  scaled %.3f about the centre for a %dpx margin, backdrop flattened -> %s'
+          % (s, margin, out))
+
+
 args = sys.argv[1:]
 if not args:
     sys.exit(__doc__)
 path = args[0]
 print(path.split('/')[-1])
-if '--lift' in args:
+if '--fit' in args:
+    i = args.index('--fit')
+    o = args[args.index('-o') + 1] if '-o' in args else path.replace('.png', '-fitted.png')
+    fit(path, o, float(args[i + 1]))
+elif '--lift' in args:
     i = args.index('--lift')
     o = args[args.index('-o') + 1] if '-o' in args else path.replace('.png', '-lifted.png')
     lift(path, o, float(args[i + 1]))

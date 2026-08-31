@@ -700,6 +700,10 @@ class RenderConfig {
     // its own, so it needs no generator change and is retroactive to every saved compound
     // (render.facility.FacilityGround.bins)
     facilityBin: 'models/facility/trash-bin.glb',         // solid-walled steel bin, domed lid, side mouth
+    // the parking entry's barrier (render.facility.FacilityEntry), one per compound. the guard booth
+    // beside it is NOT here: it is a box, so it is merged geometry rather than a prop — see that
+    // file's header for the numbers the generated one lost on
+    facilityBarrier: 'models/facility/barrier.glb',       // boom barrier, striped arm across the drive
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
     wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long
