@@ -374,6 +374,21 @@ class FacilityStyle
   public static inline var BIN_SIDE = 1.45;
   public static inline var BIN_BACK = 1.42;
 
+  // ---- the parked cars ---------------------------------------------------------------------------
+
+  // a car's world HEIGHT, and through render.Models.instanced its length and width too: the built
+  // glb's bbox is 0.456 x 0.374 x 1.000, so this draws a car 7.48 long and 3.41 wide. at the
+  // half-metre unit WALL_H 6.0 fixes that is 3.7 m by 1.71 m by 1.4 m — a compact hatchback, and it
+  // is sized for the BAY rather than for realism: a bay is BAY_SPACING x BAY_CELLS cells, i.e. 8
+  // units square, so this leaves 0.26 units at each end and 2.3 each side. a full 4.3 m car would
+  // overhang the spot at both ends and read as badly parked in every bay at once
+  public static inline var CAR_H = 2.8;
+  // how many are parked, and one bay in this many is left EMPTY. both are about the same thing:
+  // there is one car model, so a lot parked solid is one car repeated the length of the kerb. the
+  // gaps are what make a run of them read as a car park (see render.facility.FacilityCars.fill)
+  public static inline var CAR_COUNT = 5;
+  public static inline var CAR_EMPTY = 3;
+
   // ---- the parking entry's checkpoint ------------------------------------------------------------
 
   // the boom barrier, in world units, and MERGED GEOMETRY like the booth below it — so like the

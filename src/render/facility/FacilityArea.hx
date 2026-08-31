@@ -23,14 +23,15 @@ import render.world.WorldCtx;
 // the vision mask governs how much of the inside is then drawn
 class FacilityArea implements Area3D
 {
-  // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing and the
-  // litter bins. they are batches with no GreenProp row, because neither is planted on a tile of its
-  // own, and this is the only place that can name them. NOTHING from the gate is here and nothing
-  // from it appears in __facility()'s batches: the booth and the barrier are both merged geometry
-  // rather than props (see the header of render.facility.FacilityEntry)
+  // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing, the
+  // litter bins and the parked cars. they are batches with no GreenProp row, because none of them is
+  // planted on a tile of its own, and this is the only place that can name them. NOTHING from the
+  // gate is here and nothing from it appears in __facility()'s batches: the booth and the barrier are
+  // both merged geometry rather than props (see the header of render.facility.FacilityEntry)
   static final EXTRA = [
     RenderConfig.MODELS.facilityFence,
     RenderConfig.MODELS.facilityBin,
+    RenderConfig.MODELS.facilityCar,
   ];
 
   var game:Game;
@@ -122,6 +123,10 @@ class FacilityArea implements Area3D
       // them, so the plants stay index-aligned with GREEN
       green.push(FacilityGround.fence(scene, model));
       green.push(FacilityGround.bins(scene, model, game.area));
+      // and the cars, which ride it for the same two reasons and are the one batch out on the
+      // ASPHALT rather than in the park — the array is a cull list and a batch listing, and neither
+      // cares which surface a prop stands on
+      green.push(FacilityCars.build(scene, model));
       // the checkpoint at the gate, which rides nothing: the booth and the barrier are both merged
       // straight into the scene, so this appends no batch and `green` stays index-aligned with
       // GREEN plus EXTRA

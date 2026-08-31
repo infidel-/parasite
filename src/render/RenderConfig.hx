@@ -700,6 +700,10 @@ class RenderConfig {
     // its own, so it needs no generator change and is retroactive to every saved compound
     // (render.facility.FacilityGround.bins)
     facilityBin: 'models/facility/trash-bin.glb',         // solid-walled steel bin, domed lid, side mouth
+    // the cars parked in the lot, in the bays nearest the gate (render.facility.FacilityCars). the
+    // one prop in the compound the silhouette-vs-surface test says yes to outright — a car is nothing
+    // but its outline, where the booth and the barrier beside it are boxes and a stripe pattern
+    facilityCar: 'models/facility/car.glb',               // modern compact hatchback, four wheels, dark glass
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

@@ -643,3 +643,66 @@ because the `(col + row) % LAMP_SPACING` gate now runs on the walkway cells and 
 qualifies.
 
 **Verdict: landed.**
+
+## Cars park in the lot, and a per-channel `baseColor` browned their windows (2026-08-31)
+
+*"let's add a couple of cars — generate one model and put a few near the parking lot entryway."* The
+generate half needed no argument: a car is nothing but its OUTLINE, which is exactly what the
+silhouette-vs-surface test two entries up says a mesh generator is for, and the opposite of the booth
+and the boom standing ten units from it. One gpt reference shot isometric from above a front corner,
+`--lift 73` (gpt returned it at p50 47 — the band that makes TRELLIS read darkness as shadow and
+invent an albedo).
+
+**It shipped on the 100k-master route first, and that was wrong — the split ratio lied again.** The
+master measured **1.47x**, comfortably inside the "offline decimate works" band, so it took the
+`tree-broadleaf-full` treatment: `error` swept (0.005 floors at 9,037 tris, 0.05 at 7,583, 0.2 at
+7,579, so the asymptote is reached by 0.05 for a free −16%). Reported straight back from the game:
+*"texture became quite shit possibly due to decimation. can you generate 10k tris from the get go?"*
+Correct on both counts. The decimated glb's own atlas measured **2.68x**, i.e. meshopt had shattered
+the very thing the master's 1.47x was supposed to guarantee. **The ratio describes the master's atlas
+and says nothing about what the decimation does to it** — precisely what `facility/trash-bin` already
+records, one step worse.
+
+Regenerated at `decimationTarget` 10000 → **9,773 tris at 1.65x**, `tris: -1`. Runware unwraps and
+bakes AFTER its own decimation, so the atlas is authored FOR 9,773 tris (429 texels/tri at 2048)
+instead of being a 95k atlas dragged down with the mesh. Components read 11 at 32.6% and the gate
+calls that a REJECT; it is not one — outer shell (1,593 unique positions), a cabin floor (1,335) and
+a greenhouse interior (1,322) because the body is HOLLOW, a bulkhead (118), and **114 / 109 / 106 /
+92 at x ±0.156..0.201, y −0.185..−0.039, at the four corners in z**, i.e. the wheels. Eight pieces
+hold 98.0%.
+
+**`tex` is 1024 and the per-triangle rule would have shipped 512.** That rule looks at 9,773 tris and
+calls 512 a healthy 27 texels/tri. Measured the other way — area-weighted UV texels over world area
+at the `h` the game draws it — 1024 lands on **58.7 texels per world unit** against the
+ground/walkway/lot tiling's own 512/`GROUND_TILE` 9.0 = **57**, level with the asphalt the car stands
+on; 512 would have halved that. This prop hits the trap harder than `tree-broadleaf-full` did, and
+the reason is worth keeping: **the atlas is spread over the three inner surfaces too**, 221.8 square
+units of skin for a car showing about half of it.
+
+**The `baseColor` finding is the one to carry, and it belongs to the retired bake.** That one came
+back TEAL — atlas mean 60/91/104, tri-sampled 51/80/93, from a near-neutral cool 70/73/76 reference —
+so `propstat` suggested the usual per-channel fit, `[0.65, 0.27, 0.2]`, which neutralises the mean by
+lifting R against G and B. Built and looked at from the game camera, **every windscreen and side
+window came out rust brown**. The cast was not uniform over the model: the body was teal and the dark
+glazing was not, so a factor with a 2.4x R-to-G ratio corrects the body and warms the glass by the
+same 2.4x. **A per-channel factor is only right when the cast it corrects belongs to the whole
+surface; here it belonged to one material.** Same shape as the boom barrier's `lift`-vs-`color`
+finding one entry up: when two tones must keep their relationship, the correction has to be the one
+that cannot change it. The at-budget bake has no cast to correct at all (63/67/74 atlas, 64/68/73
+sampled, tracking the reference's own hue), so its `baseColor` is a plain level fit — flat **0.53**,
+landing it at 46/49/53.
+
+Placement is `render/facility/FacilityCars.hx`, render-only and derived like everything else at this
+gate: the bays are not stored anywhere, they fall out of `FacilityPaint.runStart`'s own rhythm, so a
+car lands centred in a painted spot rather than beside one. Bays are sorted by distance from the gate
+mouth and the nearest `CAR_COUNT` filled, with one in `CAR_EMPTY` left open — there is one car model,
+so a solid run of them is one car repeated, the obituary `GreenProp.scaleJit` already carries for 163
+identical bushes, and a size spread is not available on a manufactured object. The only variety left
+is a hashed half-turn, which is free.
+
+**Verified live**: batch `models/facility/car.glb` count **5**, three in a row at z −172 (x 4/12/20,
+one bay apart, yaw 0) and two at x 4 (z −156/−148, yaw −π/2) — the two kerb runs either side of the
+mouth, each car's length on its bay's depth axis. Material color 0.53 flat, map 1024. The 100k master
+and its duplicate reference are deleted; `models-src/facility/car-src.png` is the archive.
+
+**Verdict: landed.**
