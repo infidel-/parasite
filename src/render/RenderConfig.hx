@@ -709,6 +709,13 @@ class RenderConfig {
     // geometry, the same call the guard booth's rebuild settled
     facilityRoofAc: 'models/facility/roof-ac.glb',        // rooftop condenser, fan guard on the lid, coil louvres
     facilityRoofDish: 'models/facility/roof-dish.glb',    // comms dish on a solid pedestal, feed horn on one arm
+    // the junk standing about in the parking lot (render.facility.FacilityDebris), which scatters
+    // flat litter decals over the same asphalt. all three are DROPPED objects and take a free turn,
+    // unlike the parked cars and the roof condensers above; all three are carried by their outline
+    // and none of them is a box, which is what the emit-it test in FacilityEntry's header asks
+    facilityLotCone: 'models/facility/lot-cone.glb',      // traffic cone, weighted square base, one collar
+    facilityLotTyres: 'models/facility/lot-tyres.glb',    // three worn car tyres stacked flat, no rims
+    facilityLotReel: 'models/facility/lot-reel.glb',      // empty steel cable reel standing on its flanges
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

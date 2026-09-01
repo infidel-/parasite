@@ -18,6 +18,39 @@ typedef RoofProp = {
   structure:Int,
 };
 
+// one hangar's barrel vault, as the numbers it was DERIVED from rather than as geometry. every
+// question an arch raises is numeric and a screenshot cannot answer any of them: is the section
+// really a circle segment (radius against span and rise), how much of a circle is it actually
+// taking, did the ridge pick the long axis, did both gable crescents emit
+typedef Vault = {
+  structure:Int,
+  span:Float,        // the chord, outer wall plane to outer wall plane across the SHORT axis
+  rise:Float,        // the segment height over that chord
+  radius:Float,
+  arcDeg:Float,      // the whole subtended angle — a half-round barrel would read 180
+  seg:Int,
+  quads:Int,         // the arch itself, in the FADING deck
+  gables:Int,        // and the two crescents closing its ends, in the structure's own WALL buffer
+  ridgeAlongX:Bool,
+  // how long the ridge is. `span` alone cannot catch a box fitted to the wrong rect — see `ring`,
+  // where a door in the wall ring stretched exactly this and left the span correct
+  ridge:Float,
+};
+
+// the vault's section, derived once and read by both halves of it — the arch, which fades with the
+// deck, and the gable crescents, which are cladding and stay with the walls
+typedef Arc = {
+  alongX:Bool,          // does the ridge run along x
+  a0:Float,             // the ridge's two ends, on the outer masonry planes
+  a1:Float,
+  cs:Array<Float>,      // the arc, per node: its coordinate on the CROSS axis
+  ys:Array<Float>,      // and its height
+  span:Float,
+  rise:Float,
+  r:Float,
+  theta:Float,          // HALF the subtended angle
+};
+
 // the two instanced batches, what they stand on, and how many hatches were built
 typedef Roof = {
   ac:Models.InstancedProp,
@@ -27,6 +60,7 @@ typedef Roof = {
   dishOf:Array<Int>,
   props:Array<RoofProp>,
   hatches:Int,
+  vaults:Array<Vault>,
 };
 
 // what stands on a facility building's roof: condenser units, one comms dish and one access hatch
@@ -52,8 +86,10 @@ class FacilityRoof
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
-// everything on every non-hangar roof. the hangar is skipped whole — its roofline is a job of its
-// own and the parapet skips it for the same reason
+// every roof in the compound, and the two kinds are not variations of one thing. a LAB BUILDING is a
+// parapeted box with a flat deck and objects standing on it; a HANGAR is a shed, so it takes no
+// parapet, carries nothing, and its roofline IS its roof — the arched vault `vault` springs between
+// its long walls, which is the job FacilityGeom.structure's parapet skip has been deferring
   public static function build(scene:Scene, m:Facility, shells:Array<Shell>):Roof
     {
       var acPlaces:Array<Models.PropPlace> = [];
@@ -65,11 +101,15 @@ class FacilityRoof
         dishOf: [],
         props: [],
         hatches: 0,
+        vaults: [],
       };
       for (si in 0...m.structures.length)
         {
           if (m.structures[si].hangar)
-            continue;
+            {
+              out.vaults.push(vault(scene, m, si, shells[si]));
+              continue;
+            }
           // the hatch housing rides the structure's OWN buffer so it can be pushed into Shell.roof
           // and fade with the deck it stands on
           var hatch = MeshBufTools.make();
@@ -210,6 +250,198 @@ class FacilityRoof
         FacilityGeom.face(b, x - w, x + w, z - d, z + d, dir, FacilityStyle.ROOF_Y, y1,
           FacilityStyle.COPING_TILE);
       FacilityGeom.cap(b, x - w, x + w, z - d, z + d, y1, FacilityStyle.COPING_TILE);
+    }
+
+// the hangar's roof: a barrel vault of ribbed sheet metal arching between its two long walls. its
+// section is `section` below, and the crescent closing each end is `crescents`, which is CLADDING
+// and belongs to the walls rather than to this.
+//
+// it goes in the FADING buffer, so walking in opens the shed exactly as walking into a lab building
+// opens its deck. nothing in FacilityArea.ease has to be told: it eases whatever Shell.roof holds
+  static function vault(scene:Scene, m:Facility, si:Int, shell:Shell):Vault
+    {
+      var s = section(m, si);
+      var n = FacilityStyle.HANGAR_ARC_SEG;
+      var t = FacilityStyle.HANGAR_ROOF_TILE;
+      var b = MeshBufTools.make();
+      // the one place that knows which world axis is the ridge and which is the arc
+      var put = function(along:Float, y:Float, cross:Float, u:Float, v:Float):Void
+        {
+          MeshBufTools.vtx(b, (s.alongX ? along : cross), y, (s.alongX ? cross : along), u, v);
+        };
+      // the vault as a SHARED-VERTEX grid rather than as n loose quads. MeshBufTools.quad pushes
+      // four fresh vertices every call and FacilityGeom.geom derives normals with
+      // computeVertexNormals, so loose quads shade FLAT — and a faceted barrel is the one failure a
+      // curve cannot survive, its whole read being that it is smooth. sharing the columns makes
+      // each seam average to the radial normal for free
+      for (i in 0...n + 1)
+        {
+          // v runs on ARC LENGTH and not on the chord projection, which is the whole of "never
+          // stretch" on a curve: projected, the ribs would crowd together toward both springings
+          var v = (2 * s.theta * i / n) * s.r / t;
+          put(s.a0, s.ys[i], s.cs[i], s.a0 / t, v);
+          put(s.a1, s.ys[i], s.cs[i], s.a1 / t, v);
+        }
+      for (i in 0...n)
+        {
+          var k = 2 * i;
+          tri(b, k, k + 1, k + 3);
+          tri(b, k, k + 3, k + 2);
+        }
+      FacilityGeom.addDeck(scene, b, FacilityStyle.ROOF_HANGAR, true, shell);
+      return {
+        structure: si,
+        span: s.span,
+        rise: s.rise,
+        radius: s.r,
+        arcDeg: 2 * s.theta * 180 / Math.PI,
+        seg: n,
+        quads: n,
+        gables: 2 * n,
+        ridgeAlongX: s.alongX,
+        ridge: Math.abs(s.a1 - s.a0),
+      };
+    }
+
+// the crescent of masonry closing each end of the vault, between the wall head and the arch.
+//
+// IT IS NOT ROOFING AND IT IS NOT IN THE ROOF BUFFER. a gable end is the wall carrying on upward, so
+// it goes into the structure's OWN wOut buffer at the caller's hand — same cladding, same mesh, same
+// world-aligned WALL_TILE course as the masonry it stands on, so it continues the wall's texture
+// exactly rather than butting a second material against it, and it costs no draw call. it also then
+// STAYS when the player walks in, which is what the parapet ring one building over already does:
+// walls do not fade, only the lid over your head does.
+//
+// loose quads on purpose, unlike the arch: a crescent is PLANAR, so there is no curvature for a
+// shared-vertex grid to smooth
+  public static function crescents(m:Facility, si:Int, b:render.world.MeshBuf.MeshBuf):Void
+    {
+      var s = section(m, si);
+      var n = FacilityStyle.HANGAR_ARC_SEG;
+      var t = FacilityStyle.WALL_TILE;
+      var pt = function(along:Float, y:Float, cross:Float):Array<Float>
+        {
+          return (s.alongX ? [along, y, cross] : [cross, y, along]);
+        };
+      for (end in 0...2)
+        {
+          var a = (end == 0 ? s.a0 : s.a1);
+          for (i in 0...n)
+            {
+              var q0 = pt(a, FacilityStyle.ROOF_Y, s.cs[i]);
+              var q1 = pt(a, s.ys[i], s.cs[i]);
+              var q2 = pt(a, s.ys[i + 1], s.cs[i + 1]);
+              var q3 = pt(a, FacilityStyle.ROOF_Y, s.cs[i + 1]);
+              // u on the CROSS axis and v on y, both over WALL_TILE — FacilityGeom.face's own
+              // mapping for a wall running this way, which is what makes the join invisible
+              var u0 = s.cs[i] / t, u1 = s.cs[i + 1] / t;
+              var w = FacilityStyle.ROOF_Y / t;
+              // wound to look OUT along the ridge, so the far end takes the cycle backwards
+              if (end == 0)
+                MeshBufTools.quad(b, q0, q1, q2, q3,
+                  [u0, w, u0, s.ys[i] / t, u1, s.ys[i + 1] / t, u1, w]);
+              else
+                MeshBufTools.quad(b, q3, q2, q1, q0,
+                  [u1, w, u1, s.ys[i + 1] / t, u0, s.ys[i] / t, u0, w]);
+            }
+        }
+    }
+
+// the arch's section, from the structure's own wall ring and the two constants and nothing else.
+//
+// THE SECTION IS A CIRCULAR SEGMENT: for a chord S and a segment height H the tangent-chord angle
+// gives tan(theta / 2) = H / (S / 2), so theta = 2 * atan(2H / S) is HALF the subtended angle,
+// R = (S / 2) / sin(theta), and the centre sits at ROOF_Y + H - R, well below the springing
+  public static function section(m:Facility, si:Int):Arc
+    {
+      var r0 = ring(m, si);
+      // the ridge takes the LONGER span and the arc crosses the shorter one, which is
+      // render.world.roofs.Gables' rule for a pitched roof. it is also what puts the arch over the
+      // DOORS: game.FacilityAreaGenerator.generateHangar draws its shutter row across the short wall
+      var alongX = (r0.x1 - r0.x0) >= (r0.z1 - r0.z0);
+      var a0 = (alongX ? r0.x0 : r0.z0), a1 = (alongX ? r0.x1 : r0.z1);
+      var c0 = (alongX ? r0.z0 : r0.x0), c1 = (alongX ? r0.z1 : r0.x1);
+      var span = c1 - c0;
+      var cc = (c0 + c1) / 2;
+      var rise = Math.min(span * FacilityStyle.HANGAR_RISE_FRAC, FacilityStyle.HANGAR_RISE_MAX);
+      var theta = 2 * Math.atan(2 * rise / span);
+      var r = (span / 2) / Math.sin(theta);
+      var cy = FacilityStyle.ROOF_Y + rise - r;
+      var n = FacilityStyle.HANGAR_ARC_SEG;
+      // WHICH WAY THE ARC IS WALKED IS NOT COSMETIC. the two orientations map (along, cross) onto
+      // (x, z) with opposite handedness, so one winding rule would emit an upward-facing vault for
+      // one and a downward-facing — i.e. INVISIBLE, `addDeck` being FrontSide — one for the other.
+      // walking the arc backwards when the ridge runs along x cancels that, so the winding at both
+      // call sites is written once. cos is even, so the heights are untouched by the sign
+      var sgn = (alongX ? -1.0 : 1.0);
+      var cs = [], ys = [];
+      for (i in 0...n + 1)
+        {
+          var phi = sgn * (2 * theta * i / n - theta);
+          cs.push(cc + r * Math.sin(phi));
+          ys.push(cy + r * Math.cos(phi));
+        }
+      return {
+        alongX: alongX,
+        a0: a0,
+        a1: a1,
+        cs: cs,
+        ys: ys,
+        span: span,
+        rise: rise,
+        r: r,
+        theta: theta,
+      };
+    }
+
+// the structure's WALL RING as a world rect, pulled in to the OUTER MASONRY PLANE — the same plane
+// the lab buildings' parapets stand on, so the compound has one roofline rule and the vault springs
+// exactly where a coping would have sat.
+//
+// it is measured off the cells this structure OWNS and NOT off st.ox1..ox2, which is the flood
+// fill's own bbox grown by one cell and is wrong the moment a doorway sits in the ring. a door cell
+// finalises to plain corridor lino, so isIndoor calls it indoors and the fill's bbox ALREADY reaches
+// into the masonry there; growing that by another cell puts the box a whole cell outside the wall on
+// that side alone. measured on the generated compound: the hangar's own side door at col 44 took
+// ox1 to 43 and the vault overhung its west gable by exactly one cell, 4 world units, with the other
+// three sides landing correctly — which is what an asymmetric error looks like from the game camera
+  static function ring(m:Facility, si:Int):{ x0:Float, x1:Float, z0:Float, z1:Float }
+    {
+      var st = m.structures[si];
+      var c0 = st.ox2, c1 = st.ox1, r0 = st.oy2, r1 = st.oy1;
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si)
+              continue;
+            if (col < c0)
+              c0 = col;
+            if (col > c1)
+              c1 = col;
+            if (row < r0)
+              r0 = row;
+            if (row > r1)
+              r1 = row;
+          }
+      var half = (CityConfig.GRID * CELL) / 2;
+      var e = FacilityStyle.PARAPET_INSET;
+      return {
+        x0: c0 * CELL - half + e,
+        x1: (c1 + 1) * CELL - half - e,
+        z0: r0 * CELL - half + e,
+        z1: (r1 + 1) * CELL - half - e,
+      };
+    }
+
+// three indices straight into a buffer's own vertex list, for geometry built as a shared grid rather
+// than as loose quads — MeshBufTools has no emitter for that, every other surface in the game being
+// flat enough not to want one
+  static inline function tri(b:render.world.MeshBuf.MeshBuf, i0:Int, i1:Int, i2:Int):Void
+    {
+      b.idx.push(i0);
+      b.idx.push(i1);
+      b.idx.push(i2);
     }
 
 // which instances may draw this frame: an instance goes when the deck it stands on has faded far

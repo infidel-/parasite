@@ -143,20 +143,23 @@ class FacilityGround
             var y = surfY(s);
             quad(b, x0, x1, z0, z1, y);
             // and the vertical step at every edge where this cell's surface is not its neighbour's.
-            // three cases, and the first is the one the eye reads: a PAVEMENT edge over a lower
+            // two cases, and the first is the one the eye reads: a PAVEMENT edge over a lower
             // neighbour takes the mitred kerb strip, which carries its own face. anything else
             // higher than its neighbour just needs the gap closing in its own texture, which on a
-            // generated compound is the sidewalk's parking entry and nothing else. and a neighbour
-            // that is MASONRY paints no ground at all, so a dropped surface beside a wall has to
-            // close its own slot upward or the eye looks in under the slab
+            // generated compound is the sidewalk's parking entry and nothing else.
+            //
+            // MASONRY is NOT a third case, and it used to be one. a wall cell paints no ground, so
+            // a dropped surface beside it was made to close its own slot upward — but the strip
+            // INSIDE that wall cell is laid at the neighbour's height by the floorStrips pass below,
+            // so both sides of the riser came out at -KERB_DROP and it stood in the lot as a 0.2 fin
+            // one unit off the hangar wall, with the 0.2 gap it was meant to close still open at the
+            // wall face beyond it. the masonry closes it now, from FacilityStyle.WALL_BASE
             for (dir in 0...4)
               {
                 var nc = col + DC[dir];
                 var nr = row + DR[dir];
-                var wall = FacilityModel.inside(m, nc, nr) && m.surf[nr][nc] == Surf.NONE;
                 var ny = (FacilityModel.inside(m, nc, nr) ? surfY(m.surf[nr][nc]) : y);
-                if (ny == y ||
-                    (ny > y && !wall))
+                if (ny >= y)
                   continue;
                 var ax = (dir == 3 ? x1 : x0);
                 var az = (dir == 1 ? z1 : z0);

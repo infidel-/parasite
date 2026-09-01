@@ -83,7 +83,8 @@ class FacilityWarm
           // which is why they cannot ride the city scene
           var green = FacilityGround.GREEN;
           // and the compound's own props — the lamp mast, the park railing, the litter bin and the
-          // parked car.
+          // parked car, plus the lot's standing junk, appended off its own table so a fourth piece
+          // of junk needs no edit here.
           // NOTHING from the gate is among them: the booth and the barrier are both merged geometry,
           // taking the cladding, roof and lit-window materials the shell already warms, plus the one
           // hazard-band material the boom adds
@@ -104,7 +105,7 @@ class FacilityWarm
               path: RenderConfig.MODELS.facilityCar,
               h: FacilityStyle.CAR_H,
             },
-          ];
+          ].concat(FacilityDebris.PROPS);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the
           // header of render.facility.FacilityRoof). the patch is a PROGRAM KEY, so warming them

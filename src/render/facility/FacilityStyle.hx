@@ -22,6 +22,31 @@ class FacilityStyle
   public static inline var WALL_H = 6.0;
   // the roof surface, and the ceiling from underneath once the interior roof has faded off
   public static inline var ROOF_Y = WALL_H;
+  // how far the window capping sinks below that plane. a window run's wall top is capped in
+  // WINDOW_HEAD rather than roof (see FacilityGeom.capTop) and that is right ONLY once the deck has
+  // faded — from outside it is a strip of aluminium lying IN the bitumen, 0.78 units of it left
+  // uncovered by the coping at every glazed cell. so the deck's own art is laid over the capping in
+  // the FADING buffer and the capping drops out of its plane to let it: the aluminium sinks and not
+  // the deck, because the deck has to stay dead flat with the rest of itself while the capping's
+  // neighbour is a rim band it may sit 0.02 under unseen. a physical gap and not polygonOffset —
+  // docs/3d-render.md records that failing three times on coplanar overlays
+  public static inline var HEAD_DROP = 0.02;
+  // where the masonry STARTS, world units — below zero, and below every surface in the compound.
+  //
+  // an indoor floor is y = 0 and so is the pavement, but KERB_DROP puts the road, the park and the
+  // LOT a fifth of a unit under them. that is invisible against a lab building, which the generator
+  // rings with a 2-cell pavement apron; the HANGAR is the one structure with no apron at all
+  // (game.FacilityAreaGenerator.generateHangar leaves that write commented out), so every cell
+  // touching it is asphalt at -KERB_DROP while its wall face started at 0 — a 0.2 slot of daylight
+  // round the whole building, reported as the walls hanging in the air.
+  //
+  // THE MASONRY GOES DOWN TO MEET THE ASPHALT AND THE GROUND DOES NOT STEP UP TO MEET THE MASONRY.
+  // that is how a building beside a lower road is actually built, it is what render.facility
+  // .FacilityEntry already did to the guard booth standing on the same lot, and it is one constant
+  // rather than a per-face test of what surface each side happens to be. everywhere else the skirt
+  // is simply buried: it hangs UNDER an opaque pavement or floor plane whose top edge is its own
+  // top edge, and a camera pitched 51 degrees down cannot see under a step
+  public static inline var WALL_BASE = -KERB_DROP;
 
   // how thick a wall actually is, world units — HALF a cell, not the whole one it occupies on the
   // grid. the grid says a wall cell is impassable and that is a gameplay fact; how much of the cell
@@ -62,6 +87,30 @@ class FacilityStyle
   // separate capping rather than as the top of the wall
   public static inline var COPING_OUT = 0.12;
 
+  // ---- the hangar's barrel vault ---------------------------------------------------------------
+  //
+  // the hangar takes no parapet and never did: a shed is not a parapeted box, and its roofline is
+  // the arched sheet-metal vault render.facility.FacilityRoof.vault springs between its two long
+  // walls. THE SECTION IS A CIRCULAR SEGMENT, derived from the two numbers below and nothing else —
+  // for a chord S and a segment height H the tangent-chord angle gives tan(theta / 2) = H / (S / 2),
+  // so theta = 2 * atan(2H / S) is HALF the subtended angle and R = (S / 2) / sin(theta). the arc is
+  // then a small piece of a big circle rather than anything near a semicircle: on the generated
+  // hangar, MEASURED (11 cells across the short axis, so S = 38), these give H 3.42, R 54.5 and
+  // 40.8 degrees of arc, less than a quarter of the 180 a half-round barrel would take. the rise
+  // FRACTION is what fixes that angle and the span only scales it, so every hangar arches alike
+  public static inline var HANGAR_RISE_FRAC = 0.09;
+  // and a ceiling on it, world units, because the rise is what the compound PAYS for: every unit of
+  // height hides another 1 / tan(51 degrees) = 0.81 units of lot behind the building — read WALL_H's
+  // own header — and the hangar is the tallest thing on the site with a car park behind it
+  public static inline var HANGAR_RISE_MAX = 7.5;
+  // how many strips the arc is cut into. the vault is emitted as a SHARED-VERTEX grid so
+  // computeVertexNormals averages each seam into the radial normal, which is what makes a curve read
+  // as a curve; the count is only about the silhouette, and 16 puts the facet step at 2.6 degrees
+  public static inline var HANGAR_ARC_SEG = 16;
+  // world units per repeat on the vault. the deck's own period, so the sheeting keeps the ribbed
+  // roof's density level with the ground tiling's 512 / GROUND_TILE = 57 texels per world unit
+  public static inline var HANGAR_ROOF_TILE = ROOF_TILE;
+
   // ---- textures --------------------------------------------------------------------------------
 
   public static inline var WALL_EXTERIOR = 'textures/facility/wall-exterior.png';
@@ -73,6 +122,11 @@ class FacilityStyle
   public static inline var WALL_ROOM = 'textures/facility/wall-room.png';
   public static inline var WALL_HANGAR = 'textures/facility/wall-hangar.png';
   public static inline var ROOF = 'textures/facility/roof.png';
+  // and the hangar's, which is not that roof at all: a shed is sheeted, not membraned. it SHARES its
+  // source png with city/roof-metal and carries a lift of its own — that entry's note says why — and
+  // the art needed none of the usual argument, because ribs one way and lap seams the other IS a
+  // curved roof's fall line and its sheet laps
+  public static inline var ROOF_HANGAR = 'textures/facility/roof-hangar.png';
   public static inline var FLOOR_TILE = 'textures/facility/floor-tile.png';
   public static inline var FLOOR_LINO = 'textures/facility/floor-lino.png';
   public static inline var FLOOR_CONCRETE = 'textures/facility/floor-concrete.png';
@@ -226,6 +280,37 @@ class FacilityStyle
   // straight onto the lot, and a bay struck against its wall is a spot with a blank six-metre face
   // where the car's nose goes
   public static inline var BUILD_GAP = 2;
+
+  // ---- what the lot is littered with (render.facility.FacilityDebris) ---------------------------
+
+  // how often a lot cell rolls a piece of ground litter, and how much likelier it is against an
+  // EDGE. two tiers rather than a distance field, because litter does not fall off smoothly with
+  // distance the way the wilderness's roadside scatter does — it collects where something stops it
+  // blowing, i.e. against a kerb, a wall or the park railing, and the middle of a lot is swept by
+  // the cars driving over it.
+  //
+  // HALVED off the first fitted pair (0.06 / 0.26), which dealt 41 fragments over the lot and read
+  // as a dump rather than as a working compound — this is a maintained site with a guard on the
+  // gate, not the wilderness roadside those two were ported from. the RATIO between them is what
+  // does the work and it is untouched at 4.3x, so litter still collects against the edges
+  public static inline var LITTER_PCT = 0.03;
+  public static inline var LITTER_EDGE_PCT = 0.13;
+  // the tunnels' own two, verbatim, for the reasons render.sewer.SewerDebris.dress spells out: a
+  // cluster fragment can roll a scale too small to see from a camera 18-55 units up, and a STATIC
+  // fragment comes back with NO offset and NO rotation at all, which reads as a grid
+  public static inline var LITTER_MIN_SCALE = 0.5;
+  public static inline var LITTER_JITTER = 0.25;
+  // and the standing junk: one candidate cell in this many, then the list is STRIDED down to this
+  // many props. the stride is not a cap — FacilityRoof.fill records what a running counter does to a
+  // row-major scan, which is spend the whole allowance on the first two rows
+  public static inline var LOT_PROP_STEP = 3;
+  public static inline var LOT_PROP_MAX = 14;
+  // world heights, and with them the widths: render.Models.instanced scales by HEIGHT alone. at the
+  // half-metre unit WALL_H 6.0 fixes, these are a 0.75 m road cone, a 0.6 m stack of three tyres
+  // (1.36 units across, a 0.68 m tyre) and a 1.2 m cable drum
+  public static inline var LOT_CONE_H = 1.5;
+  public static inline var LOT_TYRES_H = 1.2;
+  public static inline var LOT_REEL_H = 2.4;
 
   // world units per texture repeat. none of them is a multiple of CELL (4): a period that lands on
   // the cell grid puts the same point of the tile on every grid line and the lattice reads through

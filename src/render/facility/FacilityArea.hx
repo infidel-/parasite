@@ -24,15 +24,16 @@ import render.world.WorldCtx;
 class FacilityArea implements Area3D
 {
   // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing, the
-  // litter bins and the parked cars. they are batches with no GreenProp row, because none of them is
-  // planted on a tile of its own, and this is the only place that can name them. NOTHING from the
-  // gate is here and nothing from it appears in __facility()'s batches: the booth and the barrier are
-  // both merged geometry rather than props (see the header of render.facility.FacilityEntry)
+  // litter bins, the parked cars and the lot's standing junk. they are batches with no GreenProp row,
+  // because none of them is planted on a tile of its own, and this is the only place that can name
+  // them. NOTHING from the gate is here and nothing from it appears in __facility()'s batches: the
+  // booth and the barrier are both merged geometry rather than props (see the header of
+  // render.facility.FacilityEntry)
   static final EXTRA = [
     RenderConfig.MODELS.facilityFence,
     RenderConfig.MODELS.facilityBin,
     RenderConfig.MODELS.facilityCar,
-  ];
+  ].concat([for (p in FacilityDebris.PROPS) p.path]);
 
   var game:Game;
   var model:Facility;
@@ -133,6 +134,11 @@ class FacilityArea implements Area3D
       // ASPHALT rather than in the park — the array is a cull list and a batch listing, and neither
       // cares which surface a prop stands on
       green.push(FacilityCars.build(scene, model));
+      // and the junk lying about the same asphalt, which rides the array for the same two reasons.
+      // its OTHER half — the flat litter decals — appears nowhere here: that one goes out through
+      // `debris()` onto the shared decal batch and owns no mesh of its own
+      for (p in FacilityDebris.props(scene, model))
+        green.push(p);
       // the checkpoint at the gate, which rides nothing: the booth and the barrier are both merged
       // straight into the scene, so this appends no batch and `green` stays index-aligned with
       // GREEN plus EXTRA
@@ -253,6 +259,13 @@ class FacilityArea implements Area3D
               parapets: parapets,
               props: roof.props,
               hatches: roof.hatches,
+              // and the hangar's vault, as the numbers it was derived from. an arch is the one
+              // roof here a screenshot cannot check at all: whether the section is really a circle
+              // segment is `radius` against `span` and `rise`, whether it is the shallow arc it is
+              // meant to be is `arcDeg` against the 180 a half-round barrel would read, and whether
+              // the ridge took the long axis (which is what puts the arch over the shutter row) is
+              // `ridgeAlongX`. `quads` is read off the emitter, so it cannot drift from the geometry
+              hangar: roof.vaults,
             },
             // the park's overgrown patches. `strong` is the number the layer is TUNED on and the one
             // no screenshot gives: what shows through a near-uniform coverage field is just the
@@ -405,10 +418,12 @@ class FacilityArea implements Area3D
       return RenderConfig.CAMERA_FACILITY;
     }
 
-// no render-only ground litter here yet: the lot pass is what will scatter it
+// the lot's ground litter. render-only and derived from the cell grid, so it costs no save space and
+// is retroactive to every compound already saved — and it owns no mesh: these go onto the shared
+// decal batch, which is why the pass appears here and not beside the props in `build`
   public function debris():Array<render.world.Debris.DebrisSpot>
     {
-      return null;
+      return FacilityDebris.build(model);
     }
 
 // re-bind after a settings change rebuilt the live spotlight pool (View.setLampLights)

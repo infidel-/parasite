@@ -222,8 +222,21 @@ class FacilityDoors
       return a;
     }
 
-// one leaf: hinge edge at local x = 0, free edge at +LEAF_W, base at y = 0, so the instance matrix is
-// a plain turn about the hinge with no recentring correction to undo
+// one leaf: hinge edge at local x = 0, free edge at +LEAF_W, head at y = DOOR_H, so the instance
+// matrix is a plain turn about the hinge with no recentring correction to undo.
+//
+// it does NOT start at y = 0, and that is item (c) of the hangar's wall base. a leaf stands on the
+// FLOOR, y = 0, and the surface a doorway opens ONTO need not be that floor: FacilityStyle.KERB_DROP
+// puts the lot a fifth of a unit under it, and the hangar is the one structure that opens straight
+// onto the lot, so its side doors hung over 0.2 of daylight exactly as its walls did. the walls were
+// answered by FacilityStyle.WALL_BASE and this is the same answer in the one place that could not
+// take it: the leaf keeps its hinge at floor level, because that is what the swing turns about and
+// what DOOR_H is measured from, and grows a SKIRT downward instead.
+//
+// its v goes NEGATIVE over that skirt and the art is loaded ClampToEdgeWrapping (see `batch`), so
+// the skirt samples the leaf's own bottom texel row rather than wrapping to its head — the one thing
+// that makes this free of a second art and free of any stretch. everywhere but the hangar the skirt
+// is simply buried under an opaque pavement or floor plane whose top edge is y = 0
   static function leafGeom():BufferGeometry
     {
       if (geo != null)
@@ -231,23 +244,25 @@ class FacilityDoors
       var b = MeshBufTools.make();
       var w = LEAF_W;
       var h = FacilityStyle.DOOR_H;
+      var y0 = -FacilityStyle.KERB_DROP;
+      var v0 = y0 / h;
       var t = FacilityStyle.DOOR_T * 0.5;
       // the face the art reads off, and its back carrying the SAME u. seen from behind, local +x runs
       // the other way across the screen, so one mapping delivers the mirror of the front — and the
       // mirror of the left leaf IS the right leaf. that is why one square image serves both halves,
       // and it is exact rather than approximate: the source measures 2.0 sRGB mean absolute
       // difference about its own midline, which is film grain
-      MeshBufTools.quad(b, [0, 0, t], [w, 0, t], [w, h, t], [0, h, t],
-        [0, 0, 0.5, 0, 0.5, 1, 0, 1]);
-      MeshBufTools.quad(b, [w, 0, -t], [0, 0, -t], [0, h, -t], [w, h, -t],
-        [0.5, 0, 0, 0, 0, 1, 0.5, 1]);
+      MeshBufTools.quad(b, [0, y0, t], [w, y0, t], [w, h, t], [0, h, t],
+        [0, v0, 0.5, v0, 0.5, 1, 0, 1]);
+      MeshBufTools.quad(b, [w, y0, -t], [0, y0, -t], [0, h, -t], [w, h, -t],
+        [0.5, v0, 0, v0, 0, 1, 0.5, 1]);
       // the hinge edge, the free edge and the top, each sampling a sliver of the art's own frame
       // rather than a flat colour. they exist because this camera looks down at 51 degrees, where a
       // bare quad would vanish edge-on the moment the leaf swung square to the view
-      MeshBufTools.quad(b, [0, 0, -t], [0, 0, t], [0, h, t], [0, h, -t],
-        [0.005, 0, 0.02, 0, 0.02, 1, 0.005, 1]);
-      MeshBufTools.quad(b, [w, 0, t], [w, 0, -t], [w, h, -t], [w, h, t],
-        [0.48, 0, 0.495, 0, 0.495, 1, 0.48, 1]);
+      MeshBufTools.quad(b, [0, y0, -t], [0, y0, t], [0, h, t], [0, h, -t],
+        [0.005, v0, 0.02, v0, 0.02, 1, 0.005, 1]);
+      MeshBufTools.quad(b, [w, y0, t], [w, y0, -t], [w, h, -t], [w, h, t],
+        [0.48, v0, 0.495, v0, 0.495, 1, 0.48, 1]);
       MeshBufTools.quad(b, [0, h, t], [w, h, t], [w, h, -t], [0, h, -t],
         [0, 0.985, 0.5, 0.985, 0.5, 1, 0, 1]);
       // no underside: it stands on the floor and is never seen, and this is per leaf

@@ -934,3 +934,175 @@ a coping painted pure RED for an A/B did not show at all. Set `VisionMask.uFloor
 look, and reload after.
 
 **Verdict: landed.**
+
+## The window capping was right in one reveal state and wrong in the other (2026-09-01)
+
+Reported from the game: the wall top over a window run wears `facility/window-head`, which is correct
+while the roof is transparent and wrong while it is up.
+
+`FacilityGeom.capTop` picked its buffer off one flag — `glazed ? head : rim` — so the band it lays at
+`ROOF_Y` was aluminium capping over glazing and bitumen everywhere else. That band is IN the roof deck
+plane. How much of it shows from outside is arithmetic: a glazed cell is `GLASS_T` 1.0, so its slab
+spans 1.5..2.5 of the cell and the band is 4.0 x 1.0; the parapet reaches `PARAPET_INSET` 1.0 +
+`PARAPET_T` 0.6 + `COPING_OUT` 0.12 = **1.72**, and the fading deck starts at 2.5. **0.78 x 4.0 per
+glazed cell is bare, at 108 of them in a generated area** — measured, 65 on the big lab and 43 on the
+small one.
+
+Built art: `facility/roof` **0.0275** linear against `window-head` **0.0352**, and the tile pitch
+differs 3x (`ROOF_TILE` 9.0 vs `HEAD_TILE` 3.0). The read is the pattern, not the level.
+
+**Both states want a different texture in the same place, so emit both.** One extra call after the
+existing one, `capTop(roof, head, m, col, row, false)` — the same extents into the FADING deck buffer
+with the deck's own art — and the capping sinks `HEAD_DROP` 0.02 out of plane under it. `capTop`'s
+first parameter is now `deck` rather than `rim` for exactly that second call; no argument was added.
+
+**Sink the capping, not the deck.** The deck has to stay dead flat with the rest of itself, and what
+the capping abuts is a rim band it can sit 0.02 under unseen at this camera. A physical gap and not
+`polygonOffset`, per the standing note.
+
+**`FacilityArea.apply` already was the crossfade** — `mesh.visible = opacity > 0.02` and
+`depthWrite = opacity > 0.5` — so nothing had to be told about the swap. Measured inside structure 0:
+deck `visible false / opacity 0 / depthWrite false`, capping drawing clean underneath.
+
+**Verified**: every one of the 65 + 43 capping quads at y 5.98 has an exactly coincident deck quad at
+y 6.0 (rect keys compared off both index buffers). A/B in one pinned pose by pushing the capping to
+6.04 and back — the old build puts a pale strip along the whole roofline of the south and east walls;
+the new one is unbroken bitumen. Stepping inside, the capping is back over every run. +108 quads into
+meshes that already exist: no draw call, no new material.
+
+**Verdict: landed.**
+
+## The hangar meets the ground, and gets an arched roof to be a hangar (2026-09-01)
+
+Four reports in one pass: the hangar's walls hanging in the air, its roof wanting to be curved metal
+on a real circular arc, and the parking lot wanting debris.
+
+**(a) Two defects under one wall, not one.** `baec60d` dropped `Surf.LOT` to `-KERB_DROP` (−0.2)
+while every wall in `FacilityGeom` was emitted from a literal `0.0`. `FacilityStyle.KERB_DROP`'s own
+header had predicted it — *"raise the pavement and every wall base floats"* — and assumed the 2-cell
+pavement apron protected every structure. `generateHangar` is the one that has that write
+**commented out** (`FacilityAreaGenerator.hx:265-269`), so the whole hangar perimeter is asphalt at
+−0.2. The second defect was hiding inside the first: `FacilityGround`'s masonry riser closed the slot
+at the CELL BOUNDARY, but the wall cell's own margin strip is laid at the *neighbour's* height by the
+`floorStrips` pass, so both sides of that riser sat at −0.2 and it stood in the lot as a **0.2 fin one
+unit off the wall**, with the gap it was meant to close still open behind it.
+
+Fixed the way `FacilityEntry` already fixed the guard booth standing on the same asphalt: **the
+masonry goes down to meet the ground, the ground does not step up to meet the masonry** — new
+`FacilityStyle.WALL_BASE = -KERB_DROP` through the wall faces, `butt` and `jamb`, plus a `threshold`
+pair on every exterior door cell (there is no masonry under a lintel, so the hangar's side door had
+the same slot with nothing to close it). The riser branch then deleted, not kept. Everywhere else the
+skirt is free: it hangs under an opaque plane whose top edge is its own top edge, and a camera
+pitched 51 degrees down cannot see under a step. Measured live: `wall-hangar` and `door-hangar`
+minY **0 → −0.2**, and the lot mesh reads **`nY 1`, min = max = −0.2 over 2,368 tris** — dead flat,
+so the fin is gone.
+
+**(b)/(c) The vault is DERIVED, not drawn.** Span and rise are the only inputs: for a chord S and a
+segment height H the tangent-chord angle gives `tan(theta/2) = H/(S/2)`, so `theta = 2·atan(2H/S)` is
+half the subtended angle and `R = (S/2)/sin(theta)`. On the generated hangar: span **38**, rise
+**3.42**, **R 54.49**, **40.8 degrees of arc** — a small piece of a big circle, which is what "much
+less than a half-circle" asks for. Live: 96 tris = **48 quads = 3 × 16 seg**, y 6 → **9.42**
+(= ROOF_Y + rise, exactly), and **9 distinct heights over 17 columns** — the symmetry a circular
+segment must have, and a cheaper proof than any picture.
+
+Three things it turned on. **The arc is walked BACKWARDS when the ridge runs along x**: the two
+orientations map (along, cross) onto (x, z) with opposite handedness, so one winding rule emits an
+upward-facing vault for one and an invisible downward-facing one for the other (`addDeck` is
+`FrontSide`) — one sign cancels it and the winding is written once. **v runs on ARC LENGTH, not the
+chord projection**, or the ribs crowd together toward both springings, which is "never stretch" on a
+curve. And the vault is a **SHARED-VERTEX grid** rather than n loose quads: `MeshBufTools.quad`
+pushes four fresh vertices every call and `geom` derives normals with `computeVertexNormals`, so
+loose quads shade FLAT — and a faceted barrel is the one failure a curve cannot survive, its whole
+read being that it is smooth. `MeshBuf` has no emitter for a shared grid because every other surface
+in this game is flat enough not to want one.
+
+The flat deck is skipped on a hangar (dead geometry under the vault, and dead transparent overdraw);
+the **rim stays**, capping the wall head under the springing. Vault and both crescents ride ONE
+buffer at `addDeck(..., fades = true)`, so walking in opens the shed exactly as walking into a lab
+building opens its deck and `FacilityArea.ease` needed to be told nothing.
+
+**The art existed and the LEVEL did not.** `city/roof-metal` is already ribs one way and lap seams
+the other, which IS a fall line and a sheet lap — no generation spend. But it measures **0.0913
+linear**, 2.4x the hangar's own cladding (0.0373) and brighter than the coping (0.0840), which is the
+brightest thing on a roofline by design; on a vault that size it is a white lid. A second label
+`facility/roof-hangar` on the SAME source with `lift 1.32` lands it on **0.0450**, a shade over the
+cladding it springs from. A second label rather than a lift on the city entry, which would repaint
+every metal warehouse in the city.
+
+**(d) Litter and junk, and they are not each other's fallback.** `FacilityDebris` fills the
+`debris()` hook `FacilityArea` had been reserving (*"the lot pass is what will scatter it"*) — the
+`WildDebris` shape with its distance falloff replaced by a two-tier EDGE test, because litter does
+not fall off smoothly with distance, it collects where something stops it blowing. **41 fragments
+live, 0 draw calls** (shared `DecalBatch`). But those atlas rows are the only alpha-capped block in
+`entities64` (peak 127), so litter can never read as more than scraps — hence three new props at one
+batch each: `facility/lot-cone`, `lot-tyres`, `lot-reel`, all generated at budget, all free-yawed
+because dropped junk lies any way up where a parked car and a roof condenser take a quarter turn.
+
+Two prop notes worth keeping. `lot-cone`'s reference came back at subject p50 **88 with a subject
+margin of MINUS ONE** — the mirror of the `sewer/bags` failure, a subject too BRIGHT to segment
+against its own backdrop; `propstat --lift 72` fixed value and margin (→ 22) in one pass while
+holding the composition, so no re-roll. And `lot-tyres` asked for **mid-grey sun-faded** rubber
+rather than black on purpose, which is the `sewer/bags` lesson applied before the fact: it came back
+**1 component at 100%**, the cleanest drop of the three despite being a stack of toroids with real
+holes through it.
+
+Cone (2 at 71.6%) and reel (6 at 44.5%) both trip `propstat`'s raw 90% gate and neither is a reject —
+the orthographic preview settles both, as it did for `roof-dish`: the cone's two pieces are its shell
+and its square base (the shipped conifer's 51/49 shape) and the reel's top five hold **97.6%** and
+are its flanges, barrel and hub boss.
+
+**Verdict: landed.** +3 draw calls for the lot props, ±0 for the vault (the hangar's flat deck mesh
+goes as the vault arrives), 0 for the litter. No persisted change: everything is derived from the
+saved cell grid, so every compound already saved gets all of it on the next draw.
+
+## The vault was fitted to the wrong rectangle, and its gables were roofing (2026-09-01)
+
+Four reports off the entry above. Three are the same object.
+
+**The vault overhung one gable by exactly one cell**, reported as the roof being too big. It took its
+box from `st.ox1..ox2` — the structure's own bbox pulled out by one cell for the wall ring — and that
+is right only when the bbox is the pure interior. It is not: `findStructures` floods over `isIndoor`,
+and **a door cell finalises to plain corridor lino**, so a doorway in the wall ring is already inside
+the fill's bbox and growing it by another cell lands a whole cell outside the masonry *on that side
+alone*. The generated hangar has one side door, at col 44 in a west wall that runs at col 44, so
+`ox1` came back 43 and the roof hung 4 units past the wall — while the other three sides landed
+correctly, which is what made it read as an odd bulge rather than as an oversized roof.
+
+What made it invisible to the debug block is worth more than the fix: `span`, `rise`, `radius` and
+`arcDeg` are all measured across the SHORT axis and were all correct. Only the ridge was long. The
+box is now measured off the cells the structure OWNS — walls, doors and floor — which is the ring
+itself and needs no assumption about what the bbox means. Live: `ridge` **54 → 50**, and the vault
+mesh's x extent now equals the wall mesh's to the unit (`[-23, 27]` both). `ridge` is now in
+`__facility().roof.hangar` for exactly this reason.
+
+**The gable crescents were in the roof buffer and are cladding.** They were emitted with the arch, in
+`ROOF_HANGAR` sheet metal, in the fading deck — so a hangar had a horizontal seam at `ROOF_Y` where
+one material butted another, and walking in took both gable ends away with the lid. A gable is the
+wall carrying on upward, which is the same object the lab buildings' parapet ring already is: it goes
+in `wOut`, the structure's own exterior buffer, at `WALL_TILE` on the cross axis and on y, which is
+`FacilityGeom.face`'s own mapping for a wall running that way. **Same mesh, same course, no draw
+call, and it stays when the roof fades.** The seam is gone because there is no longer a join —
+verified straight-on at both gables, the corrugation runs unbroken from the asphalt to the arch.
+
+Normals checked rather than eyeballed, since a reversed crescent is invisible and not inverted:
+**30 outward / 2 inward per end, and the 2 are the zero-area triangles at the springings** where
+`ys[i] == ROOF_Y` makes the quad degenerate. Vault: 32 tris, all up.
+
+**The side doors hung in the air**, which is `WALL_BASE` reaching the one place it could not. A leaf
+stands on the floor at y = 0 and the surface a doorway opens ONTO need not be that floor — the hangar
+is the one structure that opens straight onto the dropped lot. The hinge cannot move: it is what the
+swing turns about and what `DOOR_H` is measured from. So the leaf grows a **skirt** downward instead,
+with **v going negative over it** and the art already loaded `ClampToEdgeWrapping`, so the skirt
+samples the leaf's own bottom texel row — no second art, no stretch, and everywhere but the hangar it
+is buried under an opaque plane whose top edge is y = 0. Live: leaf local y **[0, 4] → [−0.2, 4]**,
+head unchanged.
+
+**And the litter was halved** — 0.06/0.26 → 0.03/0.13, the ratio held at 4.3x so it still collects
+against the edges. Verified as arithmetic rather than by eye, because the accept test is
+`h % 1000 < chance * 1000` and `h` does not depend on `chance`: over the 878 candidate cells the
+window takes **225 → 113, a ratio of 0.502**, with `mix` measured uniform across its ten deciles
+(67–105 against an expectation of 88). Note the old entry's "41 fragments" was a `DecalBatch` **draw**
+count and is camera-dependent; the stable number is the spot list, which reads 53 at the new rate.
+
+**Verdict: landed.** −1 draw call (the crescents merge into a mesh that already existed), no
+persisted change.
