@@ -34,6 +34,34 @@ class FacilityStyle
   // wall's own butt cap IS the reveal return and the run's ends close without a case of their own
   public static inline var GLASS_T = CityConfig.CELL * 0.25;
 
+  // ---- the parapet ring ------------------------------------------------------------------------
+  //
+  // the exterior cladding continuing above the roof deck, capped by a coping band. it is what gives
+  // the compound a ROOFLINE: without it the wall stops dead at ROOF_Y and every building reads as a
+  // flat lid from a camera pitched 51 degrees down.
+  //
+  // the whole design turns on PARAPET_INSET being a CONSTANT and not the cell's own
+  // (CELL - thick) / 2. following the slab would jog the ring half a unit in and out at every window
+  // run — GLASS_T is half WALL_T — and the generator deals ~45 runs, i.e. ~90 jogs, each needing a
+  // step cap or becoming a hole. a sawtooth in the building's silhouette line does not read as a
+  // recessed window bay, it reads as the roof sagging at every window. holding it constant also
+  // takes the plane-mismatch case out of the joint test: two bands meeting at a cell boundary are
+  // ALWAYS collinear, so a window run's ends need nothing at all
+  public static inline var PARAPET_INSET = (CityConfig.CELL - WALL_T) / 2;
+  // how thick the ring is, inward from that plane. bounded at BOTH ends and neither is taste:
+  // at least (WALL_T - GLASS_T) / 2 = 0.5 or a band over a glazed cell has no masonry under its
+  // inner half, and strictly under PARAPET_INSET or a corner cell's x-band, trimmed at both ends,
+  // comes back inside out
+  public static inline var PARAPET_T = 0.6;
+  // how far the cladding rises above the deck, and the coping band on top of it. together they put
+  // the roofline at 7.35, which is 1.35 over ROOF_Y — read WALL_H's own header before raising it,
+  // because every unit here is another 1/tan(51 degrees) = 0.81 units of lot the wall hides
+  public static inline var PARAPET_H = 1.10;
+  public static inline var COPING_H = 0.25;
+  // and how far the coping oversails the cladding, each face. it is what makes the cap read as a
+  // separate capping rather than as the top of the wall
+  public static inline var COPING_OUT = 0.12;
+
   // ---- textures --------------------------------------------------------------------------------
 
   public static inline var WALL_EXTERIOR = 'textures/facility/wall-exterior.png';
@@ -343,6 +371,24 @@ class FacilityStyle
   // density (the 2-pane art is 161 rows over 4.08 units, the 3-pane one 160 over 4.14). One would do;
   // two also covers the bilinear tap that reads the discarded row's neighbour
   public static inline var WINDOW_OVERLAP = 0.025;
+  // and how far the pane then stands PROUD of the glazing slab's own face, on each side.
+  //
+  // WINDOW_OVERLAP is what makes this necessary, and the two arrived one build apart. The wall above
+  // and below an opening is emitted on the WINDOW CELL's slab (FacilityGeom.structure's sill/head
+  // pair), which is the glazing plane, and `pane` is flush with it — so the moment the pane grew past
+  // the opening it was overlapping a coplanar surface, and the head and the sill z-fought. That is
+  // the exact case docs/3d-render.md's standing note is about: give a coplanar overlay a PHYSICAL
+  // gap, not polygonOffset, which three passes have already lost — here it would be dropped outright,
+  // since the pane casts through a swapped depth material.
+  //
+  // it does NOT re-open the seam that deleted the old WINDOW_EPS, and for a reason that only holds
+  // now: back then the pane matched the opening exactly, so standing it proud left open air where the
+  // reveal caps stopped at the masonry. With the overlap the pane already runs past the head cap,
+  // past the sill cap and into the flanking cells' butt caps, so a hair of standoff moves it within
+  // geometry that covers it. 0.02 is render.world.Buildings.OVERLAY_EPS, tuned there against exactly
+  // this question (0.06 read as a visible gap, 0.01 as flush), and it is 4% of the half unit the pane
+  // is recessed behind the wall face, so the glass stays plainly inside its reveal
+  public static inline var WINDOW_EPS = 0.02;
   // emissive strength on the lit pane. every window is lit in this phase — the place is staffed at
   // night, and a dark facility gives the player nothing to aim the "see into the room" read at.
   //
@@ -437,6 +483,31 @@ class FacilityStyle
   public static inline var CAR_COUNT = 5;
   public static inline var CAR_EMPTY = 3;
 
+  // ---- what stands on the roof (render.facility.FacilityRoof) -------------------------------------
+
+  // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too:
+  // the glb's bbox is 0.586 x 0.691 x 0.994, so this draws it 3.16 long, 1.86 wide and 1.1 m tall at
+  // the half-metre unit WALL_H 6.0 fixes. it has to fit INSIDE one cell with room to spare — a
+  // candidate is a whole cell and the prop stands at its centre — and 3.16 in a 4.0 cell does
+  public static inline var ROOF_AC_H = 2.2;
+  // and a comms dish's, drawing it 2.66 across on a 1.8 m pedestal. it is the tallest thing on the
+  // roof deliberately: one per building, so it is the silhouette that says which building this is
+  public static inline var ROOF_DISH_H = 3.6;
+  // the access hatch housing, in world units. MERGED GEOMETRY and not a prop, because it is a box —
+  // the guard booth's own finding (see the header of render.facility.FacilityEntry), and here it is
+  // free: it wears the coping's painted steel at full tiling density and costs ten quads
+  public static inline var HATCH_W = 2.4;
+  public static inline var HATCH_D = 2.0;
+  public static inline var HATCH_H = 1.2;
+  // one candidate cell in this rhythm carries something. the same device
+  // render.facility.FacilityLamps uses on its lit lines: a phase over (col, row) spreads the picks
+  // without a list and without a per-cell roll, so re-entering an area lays them out identically
+  public static inline var ROOF_PROP_STEP = 5;
+  // and at most this many condensers per building. it is not a cap on a running count — the
+  // candidate list is STRIDED down to this plus the dish and the hatch, so what a big roof loses is
+  // density and not its far half (see render.facility.FacilityRoof.fill)
+  public static inline var ROOF_PROP_MAX = 8;
+
   // ---- the parking entry's checkpoint ------------------------------------------------------------
 
   // the boom barrier, in world units, and MERGED GEOMETRY like the booth below it — so like the
@@ -520,6 +591,22 @@ class FacilityStyle
   // 13 seams in the art over 9.0 units is a 0.35 m pan at the half-metre unit, about six of them
   // across the slab, at the ground's own 57 texels per world unit
   public static inline var BOOTH_ROOF = 'textures/facility/booth-roof.png';
+  // the parapet's coping cap: precast concrete coping stones, its own art.
+  //
+  // it wore BOOTH_ROOF for one build, and that was the barrier cabinet's mistake made a second time —
+  // a kiosk's painted steel decking is a LID art stood on end, and it was reached for because it
+  // MEASURED right (0.0849 linear, 2.6x the cladding) rather than because a coping is made of it. The
+  // value was the only part worth keeping, and the new art is lifted onto the same 0.0851.
+  //
+  // the level is not taste: the coping has to read as a line along the roofline or the parapet is
+  // just a taller wall, and both obvious hand-me-downs fail that outright — the street's own
+  // city/coping is 0.0320 linear against facility/wall-exterior's 0.0323, and facility/window-head is
+  // 0.0462, tried, built and photographed at the game camera, where it was indistinguishable from the
+  // cladding under it. UNIFORM TOP TO BOTTOM with VERTICAL joints is the other half, and it is the
+  // barrier arm's rule for the same reason: `band` emits the cap and both fascias through face/cap on
+  // ONE period, so each is a thin horizontal slice of the image at its own arbitrary offset
+  public static inline var COPING = 'textures/facility/coping.png';
+  public static inline var COPING_TILE = ROOF_TILE;
 
   // ---- lamps and fixtures ----------------------------------------------------------------------
 

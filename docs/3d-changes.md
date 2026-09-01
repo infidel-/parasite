@@ -775,3 +775,162 @@ own pane size, the heads line up, and the slit is gone from a camera looking dow
 pane meshes go **2 → 4**.
 
 **Verdict: landed.**
+
+## The lab buildings get a parapet, and a roof to stand things on (2026-09-01)
+
+The facility's roof was a flat plane of tiled quads at `ROOF_Y` 6.0 with the wall stopping dead at
+it and nothing standing on it — from a camera pitched 51 degrees down, a lid. The city has solved
+both halves for years (`render/world/roofs/Parapets.hx`, `RoofDetails.hx`) and the facility
+inherited neither. The hangar is skipped whole; its roofline is a job of its own.
+
+**The parapet is a MITRE, and getting that wrong is the entry.** Every band's outer plane sits at a
+constant `PARAPET_INSET` = `(CELL - WALL_T)/2` = 1.0 in from the cell boundary — never at `slab()`'s
+plane, which is `GLASS_T` on a glazed cell and would jog the ring half a unit in and out at each of
+the ~90 window-run ends. It costs one `capDown` soffit per glazed band (the ring oversails the
+thinner slab) and buys a dead straight roofline plus a joint test that never compares planes.
+
+A joint between two perpendicular bands then had **one** growth number per end — retract `T` at a
+convex corner, extend `T` at a concave one — and it was wrong in a way no number printed: **both the
+outer and the inner face retracted, so the T x T corner square's own OUTWARD face was never
+emitted.** Photographed at every building corner as a vertical slot you can see straight through
+onto the deck; a raycast down the slot at 910px x 250..430 came back `roof.png` at y 6.0 for five
+consecutive samples between two `booth-roof` hits at 7.35. The fix is five parts per band, not one:
+**both OUTER faces run to the corner and meet in a line, both INNER faces stop one thickness short**,
+so the square is enclosed and solid. The coping's two fascias mitre the same way one thickness wider.
+Only the coping's TOP keeps an owner/yielder split, because it is the one HORIZONTAL part and two of
+them meeting would overlap and z-fight — z-bands own every corner, x-bands yield, which is
+`Parapets.parapetRing`'s always-emitted corner post transposed to an axis rule.
+
+**`carries`, not `isWall`.** A door cell never enters `structure()`'s `for (dir in 0...4)` loop, so
+keying the band predicate on `isWall` opens a 4-unit gap over each of the area's exterior doors.
+`slab()` on a door cell is already inset by exactly `PARAPET_INSET`, so the band runs straight over
+the opening with no case of its own.
+
+**The cladding costs NO draw call** — it merges into `wOut`, which is the exterior wall's own buffer
+at the same texture and the same world-aligned UVs, already casts and receives, and is already
+`VisionMask`-patched at the same XZ. `wall-exterior.png`'s horizontal joints are on a 192px pitch =
+1.125 world units at `WALL_TILE` 6.0 with no vertical composition, and `WALL_H == WALL_TILE`, so the
+panel course simply carries up past the roofline.
+
+**The coping took three materials to get right and the first two are the finding.** A coping has to
+read as a LINE along the roofline or the parapet is just a taller wall. Mean linear luminance:
+`facility/wall-exterior` **0.0323**, `city/coping` **0.0320**, `facility/window-head` **0.0462**,
+`facility/booth-roof` **0.0849**. The street's own `city/coping` is within **1%** of the wall — a
+coping nobody can see, and a material `color` scalar can only move it DOWN, so brightening it needs a
+`lift` on a new `textures.json` entry, i.e. new art after all. `window-head` at 1.43x was built,
+shipped and photographed at the game camera: **indistinguishable from the cladding under it**, and it
+took painting the material pure red in a live frame to prove the geometry was there at all. Shipped
+on `booth-roof`, 2.6x the wall and 5.1x the bitumen roof behind it — the guard booth's own painted
+steel decking, on `ROOF_TILE`, because a coping IS a lid and that is not the mistake the barrier
+cabinet made borrowing it. It is the parapet's one draw call per structure; it does not cast (the
+cladding under it does, and at the moon box's 0.088 units/shadow-texel a 0.25-tall band overhanging
+0.12 adds three texels to a silhouette already thrown).
+
+**On the roof: two generated props and one box.** `facility/roof-ac` (a condenser, 5,619 tris) and
+`facility/roof-dish` (a comms dish, 5,800), both generated AT the budget with `tris: -1`. The dish
+took two references and the first is the lesson: an open square-tube pedestal with three thin feed
+struts and a clipped cable came back **20 components at 74.4%** — the lace-and-holes case. Repainted
+as ONE SOLID CONNECTED OBJECT (closed tapered pedestal, one thick arm, unbroken shell) it comes back
+**8 at 47.8% with the top five holding 93%**, and those five ARE its parts. The raw largest-share
+number went DOWN and the prop got better; the orthographic preview (`tools/emissive.py` over the
+whole bbox, everything selected) is what settled both it and the AC's 88.6%. Split also fell 2.28x ->
+1.48x on the repaint. The access hatch is merged geometry — a box, so the booth's own rule — 10 quads
+in the coping's material.
+
+**`propstat`'s per-channel `baseColor` was wrong on the AC, which is `facility/car`'s finding on a
+prop with only ONE material.** The bake is 55/64/60, neutral leaning very slightly green, so the fit
+that neutralises that mean is `[0.87, 0.64, 0.73]` — a 1.36x red-to-green ratio that turns a
+grey-green steel box **TAN**. Seen standing on a grey roof and invisible in every number propstat
+prints. A flat **0.72** keeps the hue and moves only the level.
+
+**Placement is strided, not capped.** Candidates are interior floor cells whose four neighbours are
+also this structure's interior floor (which is what keeps everything clear of the wall ring the
+parapet stands on), thinned on `(col*3 + row) % 5`. A running cap on top of a row-major scan spent
+the 31x24 building's whole allowance on **rows 8 and 9** with the rest of the deck bare; striding the
+list to `ROOF_PROP_MAX + 2` spreads it — rows 8, 9, 16, 17, 19, 25, 26, 28 across cols 18-38. One
+dish and one hatch per building, the hatch nearest the middle where a stair core comes up.
+
+**They have to go when the deck does.** `Models.cull` already took an optional `mask`, so the two
+batches take `reveal[structOf[i]] < 0.5` on top of the frustum test; the hatch is merged into the
+structure's own fading roof mesh through a generalised `addRoof` -> `addDeck(scene, b, tex, fades,
+shell)`. Verified with the free cam PINNED over structure 0's roof and only the player moving:
+player inside -> AC drawing **0**, dish **0**; player outside -> **7** and **1**, exactly that
+structure's own. The hatch reads `opacity 0, visible false` for structure 0 while structure 1's stays
+at 1, and both copings stay opaque and visible throughout — the roofline survives the fade, which is
+the rim's whole job. It is a hard cut at 0.5 and not a cross-fade (`ponytail:` a per-instance alpha
+attribute is a lot of machinery for a prop the player is walking under at the time).
+
+Live: parapets **110 cells / 635 quads** and **78 / 453**, hangar **skipped, 0/0**; 14 condensers, 2
+dishes, 2 hatches. Cost, measured in one pinned game-camera frame by flipping `visible` on the six
+new objects: **111 -> 101 calls, 41,302 -> 33,270 tris**. 0 console errors, no persisted change.
+
+**Verdict: landed.**
+
+## Five reports off the parapet build, and two sources that never tiled (2026-09-01)
+
+*"a) z-fighting from 2-tile wide window. b) probe polygon should display texture name under the
+texture. c) upper parapet part should use concrete blocks tex. c) upper parapet bottom quad is
+missing. d) wall parapet continuation wall-exterior is not seamless."* All five confirmed, all five
+fixed. Two of them are the same lesson about a tiling source, and one is a rule this repo already
+wrote down and this code then broke.
+
+**`WINDOW_OVERLAP` made the pane coplanar-and-overlapping, which is exactly what the deleted
+`WINDOW_EPS` row said could never happen.** The wall above and below an opening is emitted on the
+WINDOW CELL's own slab (`structure()`'s sill/head pair at `FacilityGeom.hx:411,453`), i.e. the
+GLAZING plane, and `pane` is flush with it. That was safe while the pane matched the opening exactly
+— the emitter cuts the hole rather than painting over it — and stopped being safe the moment the pane
+grew 0.051 past the head and the sill to cover the texel row `alphaTest` eats. Two coplanar quads
+overlapping is the case `docs/3d-render.md`'s standing note is about: **give it a physical gap, not
+`polygonOffset`**, which has lost three times here and would be dropped outright anyway, since the
+pane casts through a swapped depth material. New `WINDOW_EPS` **0.02** (`Buildings.OVERLAY_EPS`,
+tuned there against this exact question: 0.06 read as a gap, 0.01 as flush) widens the pane's rect on
+the CROSS axis, which pushes both faces off the plane at once, each in its own outward direction. It
+cannot re-open the old seam **because of the overlap**: the pane already runs past both caps and into
+the flanking cells' butt caps, so a hair of standoff moves within geometry that covers it.
+
+**A coping is not a kiosk lid — `facility/coping`, its own art.** `booth-roof` was reached for
+because it MEASURED right, not because a coping is made of painted steel decking; the level was the
+only part worth keeping, and the new stones are lifted onto **0.0840** against its 0.0849. Same
+VERTICAL-JOINTS, UNIFORM-TOP-TO-BOTTOM construction as `barrier-arm`: `band` emits the cap and both
+fascias through `face`/`cap` on ONE period, so the 0.25-tall fascias sample **2.8% of the image**
+(`y/9.0`) and the top cap a different slice again (`z/9.0`).
+
+**The drop did not tile, and neither did `wall-exterior` — same fix, and the second one is what
+report (d) was.** gpt draws a regular pattern on an exact pitch and then cuts the frame wherever it
+likes. `wall-exterior`: 192 px courses, but **79 px below the last joint and 175 above the first**,
+so the wrap made ONE course 254 px = 1.5 units against its neighbours' 1.125 — invisible for two
+years because `WALL_H == WALL_TILE` means a wall spans v 0..1 and never wraps, and the parapet is the
+first thing to run past 1.0. Measured, top row against bottom **5.24/255 on a 1.73 row step**.
+Coping: six stones on a 204.75 px pitch with the sixth joint cut at the edge, **48.5** left-to-right.
+Both corrected in the SOURCE — crop to a whole number of periods between two joint CENTRES, resample
+back to 1024, feather what the crop could not land — rather than re-rolled: it holds the composition
+fixed and costs nothing. Source seams **0.00** on both.
+
+**Then measure the BUILT file, because the downscale un-tiles a joint sitting on the edge.** The
+coping's source measured 0.00 and its 512 output came back at **7.88 on a 3.04 column step**: a joint
+centred on column 0 is split across the two sides, and `tools/textures.py`'s resample blends each
+half with its own neighbours only, so half a joint lands at each edge. **Rolled 128 px** so the wrap
+falls on flat stone and the built tile measures **2.05**, under its own noise. `wall-exterior`'s
+built vseam is **0.35** against a 1.73 row step, five times under it.
+
+**The coping's underside was a deliberate omission and a wrong one.** "Nothing downward-facing at the
+roofline is ever seen" is true of the DECK, which is enclosed; the coping oversails `COPING_OUT` on
+both sides and its underside is the only thing there to see from under the parapet. One `capDown` on
+the `P_COPE` extents — one quad, not the two 0.12 strips, since the middle 0.6 is buried either way —
+which inherits the corner mitre for free. Coping quads per band **3 → 4**; parapet totals **635 →
+749** and **453 → 535**, exactly +1 per band (114 and 82).
+
+**`PolyProbe` now names the art under each pane**, because `name` is the only provenance that
+survives: a cropped or chroma-keyed variant hands three.js a CANVAS, so `image.src` is gone, and a
+glb's maps are embedded. All four `Textures` loaders stamp the path, and `Models.get` stamps it on
+every map a glb carries (base and emissive both). `three.Texture` gained a typed `name` field rather
+than an `untyped` write.
+
+**Verified live**: probe on the parapet reads `textures/facility/coping.png`; a raycast under the
+overhang hits `coping.png` at y **7.100** across the whole 0.12 strip; a 2-cell run photographed
+head-on has clean head and sill. One trap worth keeping — **the free cam cannot judge any of this**:
+every shell surface is `VisionMask`-patched, so away from the player it sinks to the fog colour and
+a coping painted pure RED for an A/B did not show at all. Set `VisionMask.uFloor.value = 1` for the
+look, and reload after.
+
+**Verdict: landed.**

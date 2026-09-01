@@ -356,6 +356,8 @@ typedef RendererInfo = {
 @:native("THREE.Texture") extern class Texture {
   public function new();
   public var uuid:String;
+  public var name:String; // three leaves it '', and render.Textures stamps the source path on it so
+                          // render.PolyProbe can name the art under a clicked face
   public var image:Dynamic;
   public var needsUpdate:Bool;
   public var colorSpace:Dynamic;

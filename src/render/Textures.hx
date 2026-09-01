@@ -6,7 +6,12 @@ import js.html.CanvasElement;
 
 // texture loaders. If a file is missing, swap in a procedurally drawn canvas so
 // the prototype still renders. Cropped / chroma-keyed variants build a canvas off
-// the source image. Gradient canvases drive the fake roof contact shadows
+// the source image. Gradient canvases drive the fake roof contact shadows.
+//
+// every loader here stamps `name` with the path it loaded, which is the only place that survives:
+// a keyed or cropped variant hands three.js a CANVAS, so `image.src` is gone and the material has
+// no idea what art it is wearing. render.PolyProbe prints it under the texture view — clicking a
+// surface and being told which file to go and repaint is the whole point of that tool
 class Textures {
   static var loader = new TextureLoader();
 
@@ -22,6 +27,7 @@ class Textures {
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.repeat.set(repeat, repeat);
     tex.anisotropy = 4;
+    tex.name = path;
     return tex;
   }
 
@@ -31,6 +37,7 @@ class Textures {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.anisotropy = 4;
+    tex.name = path;
     var img = new js.html.Image();
     img.onload = function(_) {
       var cw = Math.round(img.width * cropX);
@@ -58,6 +65,7 @@ class Textures {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
     tex.anisotropy = 4;
+    tex.name = path;
     var img = new js.html.Image();
     img.onload = function(_) {
       var cv = Browser.document.createCanvasElement();
@@ -104,6 +112,7 @@ class Textures {
   public static function loadKeyedTexture(path:String, crop:Float, keyColor:Int, tol:Int = 24):Texture {
     var tex = new Texture();
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.name = path;
     var kr = (keyColor >> 16) & 255;
     var kg = (keyColor >> 8) & 255;
     var kb = keyColor & 255;

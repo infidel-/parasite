@@ -105,7 +105,22 @@ class FacilityWarm
               h: FacilityStyle.CAR_H,
             },
           ];
-          var left = green.length + facProps.length;
+          // and the two that stand on the ROOF, which are the only props here that are NOT
+          // mask-patched — they follow the deck they stand on, which takes no mask either (see the
+          // header of render.facility.FacilityRoof). the patch is a PROGRAM KEY, so warming them
+          // patched would compile a permutation the first entry never asks for and leave the one it
+          // does ask for to compile on the frame it appears
+          var roofProps = [
+            {
+              path: RenderConfig.MODELS.facilityRoofAc,
+              h: FacilityStyle.ROOF_AC_H,
+            },
+            {
+              path: RenderConfig.MODELS.facilityRoofDish,
+              h: FacilityStyle.ROOF_DISH_H,
+            },
+          ];
+          var left = green.length + facProps.length + roofProps.length;
           var done = function()
             {
               left--;
@@ -136,6 +151,15 @@ class FacilityWarm
                   mask();
                   VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
                   IndoorMask.detach();
+                  done();
+                });
+            }
+          for (i in 0...roofProps.length)
+            {
+              var p = roofProps[i];
+              render.Models.get(p.path, function(_)
+                {
+                  render.Models.instanced(sc, p.path, place, p.h, SOLID);
                   done();
                 });
             }

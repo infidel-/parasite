@@ -46,6 +46,9 @@ class FacilityArea implements Area3D
   var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's plants, then EXTRA (railing, bins)
+  // what stands on the roofs. NOT in `green`, and that is the one thing separating it: `green` is
+  // culled by the frustum alone, while these two also have to go when the deck they stand on fades
+  var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
@@ -115,6 +118,9 @@ class FacilityArea implements Area3D
       // on so the two are built from one pass over the same grid
       FacilityLawn.build(scene, model, game.area);
       shells = FacilityGeom.build(scene, model);
+      // the condensers, the dish and the access hatch, straight after the shell they stand on: the
+      // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
+      roof = FacilityRoof.build(scene, model, shells);
       FacilityTables.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
@@ -153,7 +159,7 @@ class FacilityArea implements Area3D
     }
 
 // console debug helper (persistent) — what this facility actually built.
-//   __facility() -> { structures:[{hangar,x1,y1,x2,y2,cells}], rooms, windows, reveal, batches }
+//   __facility() -> { structures:[{hangar,x1,y1,x2,y2,cells}], rooms, windows, reveal, batches, roof }
 //
 // the same reasoning render.wild.WildArea's __wild carries: an instanced batch has no
 // userData.cls so render.Debug.find cannot reach a tree out here, parasiteHx is statics-only so the
@@ -218,6 +224,14 @@ class FacilityArea implements Area3D
               y: p.y,
               mul: p.mul,
             });
+          var parapets = [];
+          for (i in 0...shells.length)
+            parapets.push({
+              structure: i,
+              skipped: model.structures[i].hangar,
+              cells: shells[i].paraCells,
+              quads: shells[i].paraQuads,
+            });
           return {
             structures: structures,
             rooms: model.rooms,
@@ -228,6 +242,18 @@ class FacilityArea implements Area3D
             ceilings: lamps.ceilings.length,
             bulbs: bulbs,
             lit: lampLights.active().length,
+            // the roofline and what stands on it, which is two questions a screenshot cannot
+            // answer. the parapet: did it close on every structure and is the HANGAR really left
+            // alone (skipped reads off the flag, quads off the buffers the emitter actually wrote,
+            // so it cannot drift from the geometry). the props: an instanced batch carries no
+            // userData.cls, so render.Debug.find cannot reach a condenser, and `structure` is what
+            // drives whether it draws at all — a prop keyed to the wrong deck vanishes when the
+            // player enters the building NEXT DOOR
+            roof: {
+              parapets: parapets,
+              props: roof.props,
+              hatches: roof.hatches,
+            },
             // the park's overgrown patches. `strong` is the number the layer is TUNED on and the one
             // no screenshot gives: what shows through a near-uniform coverage field is just the
             // art's own opacity, i.e. grain, so the mask has to be judged and not the seed count
@@ -275,6 +301,12 @@ class FacilityArea implements Area3D
       render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R);
       for (p in green)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R);
+      // and the roof's two batches, which take the frustum test with a MASK on top of it: a
+      // condenser standing on a deck that has faded off would be left hanging over an open room
+      render.Models.cull(roof.ac, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.acOf, reveal));
+      render.Models.cull(roof.dish, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.dishOf, reveal));
     }
 
 // which structures should be open. INSIDE is the obvious half; the other is looking in through a

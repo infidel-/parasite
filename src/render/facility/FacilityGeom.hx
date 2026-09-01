@@ -16,6 +16,10 @@ import render.world.WorldCtx.WallMount;
 // header of render.facility.FacilityArea.ease
 typedef Shell = {
   roof:Array<Mesh>,
+  // what the parapet ring emitted on this structure, for __facility().roof. a hangar's are both 0
+  // by construction — its roofline is a later job and `parapet` is not called on one at all
+  paraCells:Int,
+  paraQuads:Int,
 };
 
 // an axis-aligned footprint in world units, used for both a wall cell's slab and its roof band
@@ -342,6 +346,10 @@ class FacilityGeom
       // rim is what keeps the building's outline on screen once you are inside it
       var roof = MeshBufTools.make();
       var rim = MeshBufTools.make();
+      // and the parapet's coping cap, which is the ONE piece of it that needs a buffer of its own:
+      // the cladding merges into wOut for free, but a coping in the wall's own art is invisible and
+      // the whole point of it is the line it draws along the roofline (see FacilityStyle.COPING)
+      var cope = MeshBufTools.make();
       // window panes, and the aluminium capping that tops a run and closes its reveal. TWO pane
       // buffers, one per run length, because each length draws its OWN art (see `addPane`)
       var panes = MeshBufTools.make();
@@ -522,18 +530,25 @@ class FacilityGeom
           // draws — see `addPane` and FacilityStyle.WINDOW_LIT_2.
           //
           // and the pane is drawn a hair BIGGER than the opening it fills (WINDOW_OVERLAP), grown
-          // along the RUN's own axis and in height — never across, which would move the quad off the
-          // glazing slab's face rather than lengthen it. the head and sill caps below keep the
-          // opening's true size, so only the glass grows and the extra is buried in the masonry
+          // along the RUN's own axis and in height, so alphaTest eating the art's outermost texel row
+          // cannot open a slit. the head and sill caps below keep the opening's true size, so only
+          // the glass grows and the extra is buried in the masonry.
+          //
+          // ACROSS the run it grows by WINDOW_EPS instead, which is a standoff and not an overlap:
+          // the masonry above and below an opening is emitted on THIS cell's slab, i.e. the glazing
+          // plane, and a flush pane that overlaps it is two coplanar surfaces z-fighting along the
+          // head and the sill. Widening the rect on the cross axis pushes BOTH faces off that plane
+          // at once, each away from the slab's centre and so each in its own outward direction
           var pb = (w.len == 2 ? panes2 : panes);
           var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
           var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
-          pane(pb, (w.alongX ? x0 - gr : x0), (w.alongX ? x1 + gr : x1),
-            (w.alongX ? z0 : z0 - gr), (w.alongX ? z1 : z1 + gr),
-            outDir, lo - gy, lo + tall + gy);
-          pane(pb, (w.alongX ? x0 - gr : x0), (w.alongX ? x1 + gr : x1),
-            (w.alongX ? z0 : z0 - gr), (w.alongX ? z1 : z1 + gr),
-            inFace, lo - gy, lo + tall + gy);
+          var ge = FacilityStyle.WINDOW_EPS;
+          var px0 = w.alongX ? x0 - gr : x0 - ge;
+          var px1 = w.alongX ? x1 + gr : x1 + ge;
+          var pz0 = w.alongX ? z0 - ge : z0 - gr;
+          var pz1 = w.alongX ? z1 + ge : z1 + gr;
+          pane(pb, px0, px1, pz0, pz1, outDir, lo - gy, lo + tall + gy);
+          pane(pb, px0, px1, pz0, pz1, inFace, lo - gy, lo + tall + gy);
           // the reveal, top and bottom. the jambs at the run's ends are already closed by the
           // flanking wall cells' butt caps, because a glazing slab is thinner than the wall it sits
           // in — these two are the only sides with nothing on the far end to cap them
@@ -542,9 +557,13 @@ class FacilityGeom
             cap(head, x0, x1, z0, z1, lo, FacilityStyle.HEAD_TILE);
         }
 
+      // the parapet ring, once the wall ring it stands on is complete. the hangar is left alone
+      // deliberately: its roofline is a job of its own and nothing here has an opinion about it yet
       var wallTex = st.hangar ? FacilityStyle.WALL_HANGAR : FacilityStyle.WALL_EXTERIOR;
       var shell:Shell = {
         roof: [],
+        paraCells: st.hangar ? 0 : ringCells(m, si),
+        paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
       add(scene, fTile, FacilityStyle.FLOOR_TILE, true, false);
       add(scene, fLino, FacilityStyle.FLOOR_LINO, true, false);
@@ -554,14 +573,18 @@ class FacilityGeom
       add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
       add(scene, shut, FacilityStyle.DOOR_SHUTTER, true, true);
       add(scene, head, FacilityStyle.WINDOW_HEAD, true, false);
+      // the coping does not cast: the cladding under it is in wOut, which does, and at the moon
+      // box's 0.088 units per shadow texel a 0.25-tall band overhanging 0.12 adds at most three
+      // texels to a silhouette that is already thrown
+      add(scene, cope, FacilityStyle.COPING, true, false);
       addPane(scene, panes, FacilityStyle.WINDOW_LIT);
       addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
       // from every angle outside it
-      addRoof(scene, rim, false, shell);
-      addRoof(scene, roof, true, shell);
+      addDeck(scene, rim, FacilityStyle.ROOF, false, shell);
+      addDeck(scene, roof, FacilityStyle.ROOF, true, shell);
       return shell;
     }
 
@@ -616,6 +639,238 @@ class FacilityGeom
       cap(b, s.x0, s.x1, za, zb, FacilityStyle.ROOF_Y, t);
       cap(b, xa, xb, s.z0, za, FacilityStyle.ROOF_Y, t);
       cap(b, xa, xb, zb, s.z1, FacilityStyle.ROOF_Y, t);
+    }
+
+// does this cell stand a length of OUTWARD parapet in `dir`? the wall LINE has to carry through the
+// cell and the neighbour it looks at has to be outdoors.
+//
+// `carries` and not `isWall`, which is the whole difference between a roofline and a roofline with
+// holes in it: a DOOR cell is a hole in the wall line, not the end of it, and it never enters the
+// `for (dir in 0...4)` loop in structure() at all — its outward face comes from the `di >= 0` branch
+// instead. keyed on isWall the parapet opens a 4-unit gap over every one of the area's 7 exterior
+// doors. slab() on a door cell returns the lintel planes, already inset by exactly PARAPET_INSET,
+// so the band runs dead straight over the opening with no case of its own
+  static inline function outward(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      return carries(m, col, row) &&
+        !carries(m, col + DC[dir], row + DR[dir]) &&
+        !FacilityModel.isIndoor(m, col + DC[dir], row + DR[dir]);
+    }
+
+// slab() with the SOLID wall's inset FORCED, whatever this cell's own masonry is.
+//
+// it is a near-copy rather than an optional argument on slab(), because slab is public and its
+// contract — the bounding box of a cell's MASONRY — is load-bearing for strips, floorStrips, capTop
+// and the window-run loop, and a second inset would make its header a lie.
+//
+// the forcing is the point: a glazed cell's slab is GLASS_T where its neighbours' are WALL_T, so a
+// parapet following the slab would jog half a unit in and out at every window run's two ends. what
+// that costs is one soffit quad per glazed band (the ring stands 0.5 proud of the glass, with air
+// under it); what it buys is a dead straight roofline and, less obviously, a joint test that never
+// has to compare planes — two bands meeting at a cell boundary are always collinear
+  static function ringRect(m:Facility, col:Int, row:Int):Rect
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var e = FacilityStyle.PARAPET_INSET;
+      var x0 = col * CELL - half;
+      var z0 = row * CELL - half;
+      return {
+        x0: x0 + (carries(m, col - 1, row) ? 0.0 : e),
+        x1: x0 + CELL - (carries(m, col + 1, row) ? 0.0 : e),
+        z0: z0 + (carries(m, col, row - 1) ? 0.0 : e),
+        z1: z0 + CELL - (carries(m, col, row + 1) ? 0.0 : e),
+      };
+    }
+
+// how the perimeter behaves past one end of a band, where `q` is the run direction leaving it.
+// 0 = the line carries on (or the band simply ends), 1 = CONVEX — the perpendicular band on THIS
+// cell overlaps it in a T x T square, 2 = CONCAVE — the perimeter steps and the two leave one empty.
+//
+// the fourth combination cannot happen and needs no branch: if the neighbour along the run is
+// outdoors then this cell's own face in `q` looks at it, so `outward` there is true by construction
+  static function endCase(m:Facility, col:Int, row:Int, dir:Int, q:Int):Int
+    {
+      if (carries(m, col + DC[q], row + DR[q]))
+        return outward(m, col + DC[q], row + DR[q], dir) ? 0 : 2;
+      return outward(m, col, row, q) ? 1 : 0;
+    }
+
+// the five parts of a band, which do NOT share a run extent — see grow()
+  static inline var P_OUT = 0;    // cladding, outer face
+  static inline var P_IN = 1;     // cladding, inner face
+  static inline var P_COPE = 2;   // the coping's top
+  static inline var P_CO_OUT = 3; // its outer fascia
+  static inline var P_CO_IN = 4;  // its inner fascia
+
+// how far one PART of a band grows OUTWARD past the rect it came from at one end — negative
+// retracts. five parts and not one number, which is the whole of getting a corner right:
+//
+// a joint between two perpendicular bands is a MITRE. both OUTER faces run all the way to the
+// corner and meet there in a line; both INNER faces stop one thickness short of it, so the T x T
+// corner square is enclosed by the two outer faces and solid. retracting the outer face with the
+// inner one is what a single growth number does, and it leaves the corner square's own outward face
+// unemitted: photographed from the game camera as a slot at every building corner that you can see
+// straight through onto the roof deck. the coping's two fascias mitre the same way, one thickness
+// wider.
+//
+// the coping's TOP is the exception and the reason `alongX` is here at all. it is the one part that
+// is HORIZONTAL, so two of them meeting cannot simply share a line — they would overlap and
+// z-fight. z-bands own every corner square and x-bands yield, which is render.world.roofs.Parapets'
+// always-emitted corner post transposed to an axis rule (there is no post here to be one)
+  static inline function grow(kase:Int, alongX:Bool, part:Int):Float
+    {
+      var t = FacilityStyle.PARAPET_T;
+      var co = FacilityStyle.COPING_OUT;
+      if (kase == 0)
+        return 0.0;
+      var sgn = (kase == 1 ? -1.0 : 1.0); // convex retracts, concave extends
+      return switch (part)
+        {
+          case P_OUT: 0.0;
+          case P_IN: sgn * t;
+          case P_CO_OUT: co;
+          case P_CO_IN: sgn * (t + co);
+          default: alongX ? -(kase == 1 ? t + co : co) : (kase == 1 ? co : t + co);
+        };
+    }
+
+// one length of parapet: two faces of cladding standing on the roof deck and a four-quad coping over
+// them, plus the soffit a band over GLAZING needs because it oversails the thinner slab.
+//
+// the coping's UNDERSIDE is one of those four, and it was left out of the first build on the rule
+// that nothing downward-facing at the roofline is ever seen. That rule is about the DECK, which is
+// enclosed; the coping oversails the cladding by COPING_OUT on both sides and its underside is the
+// only thing there to see from below the parapet — reported from the game as the cap having no
+// bottom. It is emitted as ONE quad on the coping's own footprint rather than as the two 0.12
+// overhang strips it is visible along: the middle 0.6 is buried inside the parapet either way, and
+// one quad is cheaper than two. Taking the P_COPE extents also hands it the corner mitre for free
+//
+// `p` is the outer plane and `b0/b1` the run ends of the rect it came from; every part works out
+// its own two ends off those and the end cases `k0/k1`. a degenerate rect is how a plane gets
+// handed to `face`, the same trick butt() uses
+  static function band(wOut:MeshBuf, cope:MeshBuf, dir:Int, p:Float, b0:Float, b1:Float,
+      k0:Int, k1:Int, soffit:Bool):Void
+    {
+      var alongX = (dir < 2);
+      var inw = -(alongX ? DR[dir] : DC[dir]);
+      var pi = p + inw * FacilityStyle.PARAPET_T;
+      var o0 = p - inw * FacilityStyle.COPING_OUT;
+      var o1 = pi + inw * FacilityStyle.COPING_OUT;
+      var lo = o0 < o1 ? o0 : o1;
+      var hi = o0 < o1 ? o1 : o0;
+      var y0 = FacilityStyle.ROOF_Y;
+      var y1 = y0 + FacilityStyle.PARAPET_H;
+      var y2 = y1 + FacilityStyle.COPING_H;
+      var wt = FacilityStyle.WALL_TILE;
+      var ct = FacilityStyle.COPING_TILE;
+      inline function a0(part:Int):Float
+        return b0 - grow(k0, alongX, part);
+      inline function a1(part:Int):Float
+        return b1 + grow(k1, alongX, part);
+      if (alongX)
+        {
+          face(wOut, a0(P_OUT), a1(P_OUT), p, p, dir, y0, y1, wt);
+          face(wOut, a0(P_IN), a1(P_IN), pi, pi, dir ^ 1, y0, y1, wt);
+          face(cope, a0(P_CO_OUT), a1(P_CO_OUT), o0, o0, dir, y1, y2, ct);
+          face(cope, a0(P_CO_IN), a1(P_CO_IN), o1, o1, dir ^ 1, y1, y2, ct);
+          cap(cope, a0(P_COPE), a1(P_COPE), lo, hi, y2, ct);
+          capDown(cope, a0(P_COPE), a1(P_COPE), lo, hi, y1, ct);
+          if (soffit)
+            capDown(wOut, a0(P_OUT), a1(P_OUT), p < pi ? p : pi, p < pi ? pi : p, y0, wt);
+          return;
+        }
+      face(wOut, p, p, a0(P_OUT), a1(P_OUT), dir, y0, y1, wt);
+      face(wOut, pi, pi, a0(P_IN), a1(P_IN), dir ^ 1, y0, y1, wt);
+      face(cope, o0, o0, a0(P_CO_OUT), a1(P_CO_OUT), dir, y1, y2, ct);
+      face(cope, o1, o1, a0(P_CO_IN), a1(P_CO_IN), dir ^ 1, y1, y2, ct);
+      cap(cope, lo, hi, a0(P_COPE), a1(P_COPE), y2, ct);
+      capDown(cope, lo, hi, a0(P_COPE), a1(P_COPE), y1, ct);
+      if (soffit)
+        capDown(wOut, p < pi ? p : pi, p < pi ? pi : p, a0(P_OUT), a1(P_OUT), y0, wt);
+    }
+
+// the parapet ring for one structure: the exterior cladding continuing PARAPET_H above the roof
+// deck and a coping band capping it. it is what gives the compound a ROOFLINE — without it the wall
+// stops dead at ROOF_Y and a single-storey building reads as a flat lid from a camera pitched 51
+// degrees down.
+//
+// it costs NO draw call. the cladding merges into wOut, which is already the exterior wall's own
+// buffer at the same texture and the same world-aligned UVs (so the panel course simply carries up
+// past the roofline), already casts and receives, and is already VisionMask-patched at the same XZ
+// as the wall under it. the coping merges into `head`, the window capping — measured, and the
+// obvious city/coping.png is the wrong answer: it sits within 1% of facility/wall-exterior's own
+// linear luminance and produces a coping nobody can see, where window-head is 1.43x the wall, which
+// is a capping band rather than a white outline round every building. it is also what a coping IS,
+// the same flashing system the window heads already wear
+//
+// returns the quad count, read straight off the buffers so it cannot drift from what was emitted
+  static function parapet(m:Facility, si:Int, wOut:MeshBuf, cope:MeshBuf):Int
+    {
+      var st = m.structures[si];
+      var before = wOut.idx.length + cope.idx.length;
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si ||
+                !carries(m, col, row))
+              continue;
+            var r = ringRect(m, col, row);
+            var glazed = FacilityModel.isWall(m, col, row) &&
+              m.wall[row][col] == Wall.WINDOW;
+            for (dir in 0...4)
+              {
+                if (!outward(m, col, row, dir))
+                  continue;
+                var alongX = (dir < 2);
+                var p = alongX ? (dir == 0 ? r.z0 : r.z1) : (dir == 2 ? r.x0 : r.x1);
+                var b0 = alongX ? r.x0 : r.z0;
+                var b1 = alongX ? r.x1 : r.z1;
+                band(wOut, cope, dir, p, b0, b1,
+                  endCase(m, col, row, dir, alongX ? 2 : 0),
+                  endCase(m, col, row, dir, alongX ? 3 : 1), glazed);
+              }
+            // the reentrant corners. a notch's two faces are the only thing that carries the
+            // perimeter round the inside of an L, and they are stated here rather than left out
+            // because the generator draws rectangular rings TODAY and a flood fill that ever merged
+            // two touching footprints would leave a T x T hole in the ring at every turn. the corner
+            // is the notch's own inner corner, which is the CONCAVE case at exactly one end of each
+            // band while the other end carries on into the neighbouring cell's
+            for (n in notches(m, col, row))
+              {
+                if (FacilityModel.isIndoor(m, n.col, n.row))
+                  continue;
+                var zc = (n.dz == 1);
+                var xc = (n.dx == 3);
+                band(wOut, cope, n.dx, xc ? n.x0 : n.x1, n.z0, n.z1,
+                  zc ? 2 : 0, zc ? 0 : 2, false);
+                band(wOut, cope, n.dz, zc ? n.z0 : n.z1, n.x0, n.x1,
+                  xc ? 2 : 0, xc ? 0 : 2, false);
+              }
+          }
+      return Std.int((wOut.idx.length + cope.idx.length - before) / 6);
+    }
+
+// how many cells of this structure stand a length of parapet — the ring's own cell count, for
+// __facility().roof beside the quad count parapet() returns
+  static function ringCells(m:Facility, si:Int):Int
+    {
+      var st = m.structures[si];
+      var n = 0;
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si)
+              continue;
+            for (dir in 0...4)
+              if (outward(m, col, row, dir))
+                {
+                  n++;
+                  break;
+                }
+          }
+      return n;
     }
 
 // the two side reveals of a door opening, from the floor up to the lintel. both lie in the cell
@@ -787,15 +1042,19 @@ class FacilityGeom
       scene.add(mesh);
     }
 
-// the roof. no vision mask (see the call site) and no shadow casting: the moon box follows the
-// player, so a roof casting over its own lot would put the whole building in shadow the moment the
-// player walked past it
-  static function addRoof(scene:Scene, b:MeshBuf, fades:Bool, shell:Shell):Void
+// the roof, and anything STANDING on it that has to fade with it. no vision mask (see the call
+// site) and no shadow casting: the moon box follows the player, so a roof casting over its own lot
+// would put the whole building in shadow the moment the player walked past it.
+//
+// `tex` is a parameter because render.facility.FacilityRoof's access hatches come through here too:
+// they stand on the fading deck, so a hatch that did not fade with it would be left hanging in the
+// air the moment the player stepped inside, and `Shell.roof` is what FacilityArea.apply eases
+  public static function addDeck(scene:Scene, b:MeshBuf, tex:String, fades:Bool, shell:Shell):Void
     {
       if (b.idx.length == 0)
         return;
       var mat = new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.ROOF, 'roof', 1),
+        map: Textures.loadTexture(tex, 'roof', 1),
         side: THREE.FrontSide,
       });
       if (fades)

@@ -94,7 +94,12 @@ class Models {
               for (t in [ o.material.map, o.material.normalMap, o.material.roughnessMap,
                 o.material.metalnessMap, o.material.emissiveMap, o.material.aoMap ])
                 if (t != null)
-                  t.anisotropy = RenderConfig.MODEL_ANISO;
+                  {
+                    t.anisotropy = RenderConfig.MODEL_ANISO;
+                    // and where it came from, for render.PolyProbe's caption. a glb's maps are
+                    // embedded, so nothing else in the renderer knows their provenance
+                    t.name = path;
+                  }
             });
           // instanced() reads each mesh's RAW geometry and ignores its node transform — so a rotation
           // authored on the NODE (not baked into the verts) is silently dropped, laying the prop over.

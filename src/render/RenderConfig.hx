@@ -704,6 +704,11 @@ class RenderConfig {
     // one prop in the compound the silhouette-vs-surface test says yes to outright — a car is nothing
     // but its outline, where the booth and the barrier beside it are boxes and a stripe pattern
     facilityCar: 'models/facility/car.glb',               // modern compact hatchback, four wheels, dark glass
+    // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
+    // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
+    // geometry, the same call the guard booth's rebuild settled
+    facilityRoofAc: 'models/facility/roof-ac.glb',        // rooftop condenser, fan guard on the lid, coil louvres
+    facilityRoofDish: 'models/facility/roof-dish.glb',    // comms dish on a solid pedestal, feed horn on one arm
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar
