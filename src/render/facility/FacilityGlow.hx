@@ -11,9 +11,11 @@ import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
 // every additive glow in a facility, in ONE draw call: the ceiling panels, the pool each panel
-// throws on its own floor, and the light that falls out of a window or a door onto the ground
-// outside it. the lamp HEADS are not here — they glow off the mast glb's own emissive map, see
-// FacilityStyle's GLOW block.
+// throws on its own floor, the light that falls out of a WINDOW onto the ground outside it, and the
+// lens of the bulkhead lamp over each exterior door. the lamp HEADS are not here — they glow off the
+// mast glb's own emissive map, see FacilityStyle's GLOW block. nor is anything on the ground under a
+// DOOR: a doorway has a fitting over it and the fitting's own cone and spotlight light the asphalt,
+// where a window is a hole and has nothing but this.
 //
 // they are one mesh because they differ only in BRIGHTNESS, and brightness is a per-vertex grey
 // (render.world.MeshBuf.quadC, the channel render.sewer.SewerGeom already uses for its wall bands).
@@ -25,9 +27,28 @@ import render.world.VisionMask;
 // which says the lights are on but never says WHERE they are; the pooled spotlights say where, but
 // only for the 12 fixtures nearest the player and only over about a cell each. these quads cover
 // both gaps for one call and no per-frame work at all — nothing here moves, fades or is repacked
+// where the bulkhead lamp over an exterior door hangs, and which way it faces. shared rather than
+// re-derived, because THREE passes need the same point and would drift apart: FacilityGeom emits the
+// hood, this file lights its lens and the ground under it, and FacilityLamps hangs the spotlight and
+// its cone off it
+typedef DoorLamp = {
+  x:Float,      // the lens centre — the wall face pushed out by the hood's own depth
+  y:Float,
+  z:Float,
+  nx:Float,     // the outward normal, one of the four axis directions
+  nz:Float,
+  dir:Int,      // and the same direction in FacilityGeom's cell-edge numbering
+};
+
 class FacilityGlow
 {
   static inline var CELL = CityConfig.CELL;
+  // the door lamp's hue as a MULTIPLIER on the shared mesh's own colour, so one additive material
+  // draws two lights. the merged mesh is `new Color(LAMP_COLOR) * GLOW` and multiplies a per-vertex
+  // colour on top, so this ratio turns any quad that carries it into `new Color(DOOR_LAMP_COLOR) *
+  // GLOW` exactly — and it is right whatever colour space `new Color` works in, both terms being in
+  // the same one
+  static var WARM:Array<Float> = null;
 
 // build the whole glow layer, and return the openings as fake-shadow sources — see `opening`. the
 // room pair asks render.facility.FacilityLamps the same `lit` question the fixtures were placed off,
@@ -69,26 +90,110 @@ class FacilityGlow
           for (i in 0...w.len)
             lamps.push(opening(w.col + (w.alongX ? i : 0), w.row + (w.alongX ? 0 : i)));
         }
-      // and out of a door, which needs no open/shut state at all: a facility door is glazed and
-      // objects.Door.canSeeThrough is true for it, so the light crosses a shut leaf as readily as an
-      // open one. that is what keeps this whole mesh static
+      // a door gets ONLY its lamp's lens. NO SPILL PATCH AND NO SHADOW SOURCE, and both went for the
+      // same reason: an exterior doorway is now lit by a real fitting — a hood, a lens, a half cone
+      // and a pooled spotlight (render.facility.FacilityLamps) — so the flat trapezoid a window
+      // throws is a SECOND light in the same place, drawn from a different height, with an unrelated
+      // shape. Reported from the game as exactly that, a rectangle on the ground under the lamp.
+      //
+      // it had already been cut back once, from every exterior doorway to the glazed ones alone
+      // (the hangar's solid METAL shutter was spilling light out of a sheet of steel). What that
+      // pass got wrong is that GLAZING was never the question either: a lit doorway is lit by the
+      // thing over it whatever the leaves are made of, and a window's spill exists because a window
+      // has no fitting of its own.
+      //
+      // the fake-shadow source goes with it. `opening` puts one at the wall CELL CENTRE at
+      // SPILL_Y — the right stand-in for a light that IS the aperture, and a duplicate of the
+      // hood's own LampPost, which is a metre and a half further out and a metre and a half higher.
+      // Windows keep both; they are still the only thing here that lights the ground by being a hole
       for (d in m.doors)
         {
-          var out = outward(m, d);
-          if (out == 0)
+          if (outward(m, d) == 0)
             continue;
-          var c = CityConfig.cellToWorld(d.col, d.row);
-          // `spill` speaks the window convention, where the sign points at the INTERIOR
-          spill(b, m, c, c, d.alongX, -out);
-          lamps.push(opening(d.col, d.row));
+          door(b, m, d);
         }
       add(scene, b);
       return lamps;
     }
 
-// one opening as a fake actor-shadow source: a LampPost that never goes near the spotlight pool and
-// so never claims one of its 12 slots, handed straight to render.actors.LampShadows through
+// where the hood over an exterior door hangs, or null for an interior one.
+//
+// the point is the LENS PLANE — the wall's outer face pushed out by the hood's whole depth, that
+// face being PARAPET_INSET in from the cell boundary, which is `slab`'s own plane on a door cell.
+// so the hood hangs BACK from it to the masonry, the lens sits a hair proud of it, and the cone
+// and the spotlight hang under it. one point, three files, nothing to drift
+  public static function lamp(m:Facility, d:FacilityModel.DoorCell):DoorLamp
+    {
+      var out = outward(m, d);
+      if (out == 0)
+        return null;
+      var c = CityConfig.cellToWorld(d.col, d.row);
+      var nx = (d.alongX ? 0.0 : out * 1.0);
+      var nz = (d.alongX ? out * 1.0 : 0.0);
+      var r = CELL / 2 - FacilityStyle.PARAPET_INSET + FacilityStyle.DOOR_LAMP_D;
+      return {
+        x: c.x + nx * r,
+        y: FacilityStyle.DOOR_LAMP_Y + FacilityStyle.DOOR_LAMP_H / 2,
+        z: c.z + nz * r,
+        nx: nx,
+        nz: nz,
+        dir: (d.alongX ? (out > 0 ? 1 : 0) : (out > 0 ? 3 : 2)),
+      };
+    }
+
+// the door lamp's LENS, on the front of its hood, carrying the WARM tint — so one additive mesh
+// draws the compound's cool installation and this one amber fitting for the same draw call.
+//
+// ONE quad and not two: it had a ground pool under it for a build, and that is not how an outdoor
+// lamp works in this compound. A mast draws a CONE and claims a spotlight and puts no additive quad
+// on the ground at all; C_POOL and C_SPILL are for a room seen through its own faded roof and for
+// what falls out of a window, neither of which this is. Built, the pool read as exactly what it was
+// — a flat amber card lying on the asphalt with the cone's own shaft landing inside it
+  static function door(b:MeshBuf, m:Facility, d:FacilityModel.DoorCell):Void
+    {
+      var l = lamp(m, d);
+      if (l == null)
+        return;
+      // the lens, a fraction of the hood's face so the housing round it stays dark
+      var hw = FacilityStyle.DOOR_LAMP_W * FacilityStyle.DOOR_LENS_W / 2;
+      var hh = FacilityStyle.DOOR_LAMP_H * FacilityStyle.DOOR_LENS_H / 2;
+      var e = FacilityStyle.DOOR_LENS_EPS;
+      // along the wall line, which is the axis the normal is NOT on
+      var ax = (l.nx != 0 ? 0.0 : 1.0);
+      var az = (l.nx != 0 ? 1.0 : 0.0);
+      var px = l.x + l.nx * e;
+      var pz = l.z + l.nz * e;
+      warm(b,
+        [px - ax * hw, l.y - hh, pz - az * hw],
+        [px + ax * hw, l.y - hh, pz + az * hw],
+        [px + ax * hw, l.y + hh, pz + az * hw],
+        [px - ax * hw, l.y + hh, pz - az * hw],
+        FacilityStyle.C_DOOR_LENS);
+    }
+
+// one quad at a brightness the door lamp's hue is folded into. the shared `quad` below pushes a
+// GREY, which is all the cool installation needs; this pushes the ratio that recolours the material
+  static function warm(b:MeshBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>,
+      p3:Array<Float>, c:Float):Void
+    {
+      if (WARM == null)
+        {
+          var a = new Color(FacilityStyle.LAMP_COLOR);
+          var w = new Color(FacilityStyle.DOOR_LAMP_COLOR);
+          WARM = [w.r / a.r, w.g / a.g, w.b / a.b];
+        }
+      MeshBufTools.quad(b, p0, p1, p2, p3, [0, 0, 1, 0, 1, 1, 0, 1]);
+      for (i in 0...4)
+        for (k in 0...3)
+          b.col.push(WARM[k] * c);
+    }
+
+// one WINDOW cell as a fake actor-shadow source: a LampPost that never goes near the spotlight pool
+// and so never claims one of its 12 slots, handed straight to render.actors.LampShadows through
 // render.Area3D.shadowLamps.
+//
+// windows only. a door had one too and it was a second light in the same place as the hood's own
+// pooled LampPost, an aperture stand-in for a doorway that is no longer lit by being an aperture.
 //
 // it sits at the wall CELL CENTRE, which is what makes the shadow point out of the building: the
 // projector's only input is the direction away from the light. steady (phase/flick are the STEADY

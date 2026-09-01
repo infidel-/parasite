@@ -1106,3 +1106,151 @@ count and is camera-dependent; the stable number is the spot list, which reads 5
 
 **Verdict: landed.** −1 draw call (the crescents merge into a mesh that already existed), no
 persisted change.
+
+## A solid door was spilling light, and every exterior door gets a lamp instead (2026-09-01)
+
+**The hangar threw a lit trapezoid across the lot out of a sheet of steel.** `FacilityGlow` spilled
+out of every exterior doorway, on the reasoning its own comment states — "a facility door is glazed
+and `objects.Door.canSeeThrough` is true for it, so the light crosses a shut leaf as readily as an
+open one". True of the seven `GLASS` doors the generator deals, false of the eighth. The gate is
+`look`, the painted pair the leaves draw with, which is the one field that already says whether
+light passes: `GLASS` spills, `METAL` and `CABINET` do not. Measured on the generated compound —
+27 doors, 8 exterior, and exactly one of those solid.
+
+**What a solid door gets instead is a lamp over it, and so does every other exterior door.** The
+read being bought is "that dark rectangle is a way in", and that only works if a lit doorway is
+always lit the same way; restricting it to the hangar would need a test with no principle behind it,
+where `FacilityGlow.outward` already answers "does this doorway face outdoors" for free.
+
+**No glb, and the rule already settled it.** A hood on a wall is axis-aligned slabs — the guard
+booth's finding. Emitted it is **four quads** (three sides and a top; no back, it is against the
+masonry, and no underside, this camera pitching 51° down) in `wOut`, the exterior cladding's own
+buffer, at the wall's own tiling art and world-aligned course. **Zero draw calls**, exact
+proportions, no unwrap lottery. Generated it would have been ~5k tris for something 1.4 units wide.
+The stronger silhouette-vs-surface test agrees: a box hood has neither an outline worth generating
+nor a pattern worth painting, and what actually reads is the glow on it. (The NOT-A-GLB half of that
+still stands; the `wOut` / zero-draw-calls half does not — see the next entry, where the hood takes
+its own art because the cladding made it read as a lump of wall.)
+
+**The warm hue costs no material.** `LAMP_COLOR` is a cool 0x9db4d4 shared by every mast, fixture
+and glow quad in the compound, so a doorway lit in it is one more lit surface; amber, it is a way
+in. The additive mesh is already `new Color(LAMP_COLOR) * GLOW` with `vertexColors` on, and that
+channel had only ever carried a GREY brightness — pushing the ratio
+`linear(DOOR_LAMP_COLOR) / linear(LAMP_COLOR)` instead turns one quad amber inside the shared mesh,
+and it is right whatever colour space `new Color` works in, both terms being in the same one.
+Verified off the built buffer: the lens vertices carry **(2.373, 0.790, 0.077)**, which is that
+ratio × `C_DOOR_LENS` 0.8 to rounding. The spotlight needed nothing at all — `LampPost` has carried
+a per-post `color` all along. Only the CONE is a second batch, `LightCone` taking its tint as one
+uniform: **8 instances at ffb347** beside the masts' 27 at 9db4d4, and **that is the one draw call
+this fitting costs.**
+
+Two things caught by measuring rather than by looking. The shared point is the **lens plane**, not
+the hood's centre, so centring the box on it floated the hood **0.3 off the wall with daylight
+behind it** — visible in the vertex dump (x −23.9..−23.3 against a wall face at −23.0) and not in a
+night screenshot; it now reads −23.6..−23.0. And the lamp had a **ground pool** for one build, which
+is not how an outdoor lamp works here: a mast draws a cone and claims a spotlight and puts no
+additive quad on the ground at all, `C_POOL` and `C_SPILL` being for a room seen through its own
+faded roof and for what falls out of a window. Built, it was a flat amber card lying on the lot with
+the cone's own shaft landing inside it. Dropped — the cone and the pooled spotlight light the
+asphalt, exactly as they do under a mast.
+
+**Verdict: landed.** +1 draw call (the warm cone batch), no persisted change. The hood, the lens and
+the spotlight all hang off one shared `FacilityGlow.lamp` point across three files, so a hood that
+drifted from its own light is not a thing any of them can do alone.
+
+## The door lamp's hood gets its own art, its cone stops at the door, and an outdoor lamp stops shadowing indoors (2026-09-02)
+
+Three reports on the fitting landed above, and the third is not about the fitting at all.
+
+**The hood wore the cladding and read as a lump of wall.** It rode `wOut` for the zero draw calls,
+which is exactly what the parapet ring and the gable crescents are right to do — they ARE wall. A
+lamp housing is not. New `facility/door-lamp`, and it is **featureless on purpose**: the box is
+1.4 × 0.6 × 0.5, so `face` samples a 20%-tall slice of the image up the sides and `cap` a different
+one across the lid on the same single period — the thin-bar case `BARRIER_ARM_TILE` and
+`BARRIER_CAB_TILE` both record, where a horizontal feature becomes a seam in one place and a
+different seam in another. Art with no feature in it has no slice to misalign, so nothing has to
+tile and no second period is needed. Measured on the drop: row deviation 0.0090 and column deviation
+0.0056 on a mean of 0.610. As painted it is **0.3295 linear**, the brightest source in the facility
+set by a wide margin; `lift 2.3` lands it on **0.0825**, which is the coping's own 0.0851 and 2.5×
+the cladding — the level this repo has twice measured as reading as a separate element on a wall.
+ONE buffer for the whole compound rather than one per structure: the exterior cladding does not
+fade, so there is no reveal state to keep apart. A/B'd in a pinned frame by hiding the mesh:
+**calls 67 / 66 / 67**, so **+1 draw call**. `castShadow` is OFF — with it on the same A/B read
+68 / 66 / 68, for two screenshots that cannot be told apart, and nothing here stands between a
+caster and a surface (the only casting spotlights hang below the hood's own top and aim down).
+
+**The cone hung off the hood's lip, because it rode the lens plane.** The shared `FacilityGlow.lamp`
+point is the housing's FRONT FACE, so the shaft's top disc sat half in front of the fitting and half
+depth-rejected behind it. Pulled back `DOOR_LAMP_D / 2` onto the hood's own centre line the whole
+disc is inside the box, hidden by the housing's opaque faces, and the shaft comes out from under it.
+Verified off the instance matrices: every cone sits at the exact centre of its hood's xz bbox.
+
+**And it went straight through the closed door.** It took the mast's geometric radius —
+`bulbY * tan(LAMP_LIGHT.angle) * LAMP_CONE.radiusMul` = **3.11** at the lens height — about an axis
+only **1.3** units out from the door cell's centre, so the near side of the shell reached **half a
+unit past the wall's inner face** and laid an amber arc on the floor inside the building.
+
+**The first fix was a smaller cone, and it was wrong in a way worth recording.** A radius under 1.22
+(the axis, less the shut leaves' `DOOR_T / 2` in the cell's centre plane) does keep the shell clear
+of the leaves, and it was defended as the better art too — a 13° downlight against a mast's 36°.
+Reported straight back from the game: **the light circle no longer matched the cone.** That is not
+taste, it is arithmetic. `LAMP_LIGHT.angle` is shared by the whole pool, so the SpotLight under a
+hood still throws the same wide circle a mast does, and a shaft exists to OUTLINE that circle —
+`LAMP_CONE.radiusMul` is called "scale on the geometric ground radius to match the lit circle" in
+its own comment. Narrowing the shaft left a pencil standing in the middle of its own pool.
+
+**The right fix is HALF a cone, cut vertically.** A mast stands in the open and its shaft is a full
+shell; a fitting bolted to a wall has its light cut off flat by the masonry, so the half that would
+be inside the building is not built at all. `LightConeOpts` gains `arc` and a per-instance `yaws`,
+`CylinderGeometry` already takes `thetaStart`/`thetaLength`, and the wedge is built centred on local
++z (`thetaStart = -arc/2`) then yawed to the outward normal — so no caller has to know how three
+numbers its theta, and a full-circle batch keeps its single shared identity rotation and pays
+nothing. The flat cut is left OPEN: a face there is a second additive surface lying flat on the
+wall, which reads as a bright band up the masonry. Radius goes back to the mast's own formula.
+
+Verified over every vertex of every instance, projected on each one's own outward normal: extent
+**[0, 3.106]**. The 0 is exact — nothing is ever on the wall side of the axis plane, at any height
+and for any radius. That is a stronger guarantee than the bound it replaces, which held only for one
+number.
+
+**Which then moves the shaft ONTO the wall, and that is the same fact read the other way.** The cut
+plane passes through the axis, so where the axis stands is where the light is cut off. It began on
+the shared lamp point — the LENS PLANE, a whole hood's depth out in the air — and the half-cone pass
+put it on the hood's centre line, which still hung the cut 0.3 clear of the masonry. It sits on the
+wall face now, `DOOR_LENS_EPS` (0.02) proud of it: that constant and not a new one, because it is
+the same job it already does for the lens, a physical gap so two coplanar surfaces cannot z-fight —
+`3d-render.md`'s standing note has polygonOffset losing that three times. Half a cone is what makes
+it reachable at all: the kept wedge's top spans outward only, so a `topR` disc sitting on the wall
+face is still inside the hood, where a full one would have put half of it inside the building.
+Measured on every hood: cut plane **−0.02** off the masonry, cone top **y 4.75**, inside the hood's
+own 4.5–5.0 band.
+
+**The third report is a hole in `LampShadows` and not in this fitting.** The fake-shadow pass
+projects an actor away from any lit `LampPost` in range and **has no occlusion test of any kind** —
+it never asks whether a building is between the two. Outdoors that is invisible; in a facility, the
+one area kind that is indoors and outdoors at once, it puts a shadow on a room's floor from the mast
+on the kerb outside it. The bulkhead lamp only made it impossible to miss, being by construction the
+closest outdoor light there can be to an indoor actor. So the fix is not per fixture:
+`render.world.IndoorMask` now retains the predicate it was painted from and exposes
+`indoorAt(col, row)`, the lamps are split into an indoor and an outdoor list once a frame, and each
+actor takes the list its own cell is on. `indoorAt` is false wherever no mask is attached, so a
+street, a tunnel and a wilderness put every lamp in one list, every actor reads that list, and
+nothing outside a facility changes at all. The partition is **54 of 54 clean**: 27 masts and 8 door
+lamps outdoor, 19 ceiling fixtures indoor.
+
+**And the door spill goes entirely, which retires the `look` gate above.** Reported as visible
+rectangles on the ground under the lamps. That gate — spill from a GLAZED exterior door, not from
+the hangar's solid steel one — fixed the symptom it was aimed at and kept the wrong rule: glazing
+was never the question. A doorway now has a hood, a lens, a half cone and a pooled spotlight, so a
+flat trapezoid lying under the same lamp is a **second light in the same place**, thrown from a
+different height with an unrelated shape. What actually separates a window from a door is that a
+window has no fitting at all — it lights the ground by BEING A HOLE, which is precisely what the
+quad draws. So the whole door branch collapses to one `door()` call for the lens.
+
+The fake actor-shadow source goes with it. `opening()` put a `LampPost` at the wall CELL CENTRE at
+`SPILL_Y` 3.0, which is the right stand-in for a light that IS the aperture and a duplicate of the
+hood's own pooled `LampPost` a metre and a half further out and a metre and a half higher. Windows
+keep both. Measured on the built glow mesh afterwards: **43 quads at y 0.04, exactly the 43 window
+runs, and 7 at y 4.89, exactly the 7 door lenses** — no ground quad at any door cell.
+
+**Verdict: landed.** +1 draw call (the hood mesh), one new 256² texture, no persisted change.

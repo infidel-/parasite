@@ -148,7 +148,7 @@ class FacilityArea implements Area3D
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
       // same treatment the city's own lamp batch gets
       lamps = FacilityLamps.build(scene, coneGroup, model, game.area, lampCorners);
-      lampPosts = lamps.masts.concat(lamps.ceilings);
+      lampPosts = lamps.masts.concat(lamps.ceilings).concat(lamps.doors);
       spillPosts = FacilityGlow.build(scene, model);
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];

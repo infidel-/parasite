@@ -789,9 +789,14 @@ class FacilityStyle
   // reaches ~1 cell (a bulb at 5.8 through LAMP_LIGHT.angle) and only the 12 rooms nearest the player
   // ever claim a slot, so this quad is what makes EVERY lit room read as lit
   public static inline var POOL_INSET = 2.0;
-  // how far out from a window or an exterior door the ground brightens. the quad starts at the wall
-  // CELL CENTRE rather than at the outer face, so its own near fade is buried inside the masonry and
-  // only the bright middle and the outward falloff are ever visible
+  // how far out from a WINDOW the ground brightens. a window only — an exterior door threw one of
+  // these too and no longer does: a doorway has a real fitting over it now (see the bulkhead block
+  // below), so a flat trapezoid under the same lamp is a second light in the same place, drawn from
+  // a different height and with an unrelated shape. what makes a window different is that a window
+  // has no fitting at all; it lights the ground by BEING A HOLE, which is what this quad draws.
+  //
+  // the quad starts at the wall CELL CENTRE rather than at the outer face, so its own near fade is
+  // buried inside the masonry and only the bright middle and the outward falloff are ever visible
   public static inline var SPILL_DEPTH = 8.0;
   // and how much WIDER the far edge is than the opening, per side. a rectangle reads as a projected
   // slide, not as light: what falls out of a hole in a wall fans, because the opening is a finite
@@ -805,6 +810,67 @@ class FacilityStyle
   // render.actors.LampShadows scale the shadow: at half the reference bulb's height a window rakes
   // light sideways and throws LONG shadows over a tight pool, which is exactly what a window does
   public static inline var SPILL_Y = WALL_H / 2;
+
+  // ---- the bulkhead lamp over an exterior door -------------------------------------------------
+  //
+  // NOT A GLB, and the rule that says so is the guard booth's: a hood on a wall is axis-aligned
+  // slabs, so it is emitted (see render.facility.FacilityGeom.doorLamp) and gets exact proportions,
+  // a tiling texture at full texel density and no unwrap lottery, for FOUR QUADS. generated it would
+  // be ~5k tris for something 1.4 units wide. the stronger silhouette-vs-surface test lands the same
+  // way: a box hood has neither an outline worth generating nor a pattern worth painting, and what
+  // actually reads is the glow on it.
+  //
+  // it hangs over EVERY exterior door and not only the hangar's, because the read it is there for —
+  // "that dark rectangle is a way in" — only works if a door is the thing that is always lit this
+  // way. one predicate either way: FacilityGlow.outward says whether a doorway faces outdoors
+  public static inline var DOOR_LAMP_W = 1.4;    // across the doorway
+  public static inline var DOOR_LAMP_H = 0.5;    // and the hood's own height
+  public static inline var DOOR_LAMP_D = 0.6;    // how far it stands off the wall face
+  // the hood's own art, and its ONE draw call. it wore WALL_EXTERIOR for a build — merged into the
+  // cladding buffer for nothing at all — and a fitting painted in the wall's own art is not a
+  // fitting, it is a lump of wall. the file is FEATURELESS on purpose and that is what makes the
+  // single period below enough: the hood is 1.4 x 0.6 x 0.5, so `face` samples a 20%-tall slice of
+  // the image up the sides and `cap` a different one across the lid, which is the thin-bar slice
+  // problem BARRIER_ARM_TILE and BARRIER_CAB_TILE both record. art with no feature in it has no
+  // slice to misalign. 2.5 is not a divisor of CELL, for the lattice reason the tile block carries,
+  // and puts 256 / 2.5 = 102 texels per world unit on it against the ground's 57
+  public static inline var DOOR_LAMP_TEX = 'textures/facility/door-lamp.png';
+  public static inline var DOOR_LAMP_TILE = 2.5;
+  // the hood's UNDERSIDE, off the floor. clear of DOOR_H 4.0 so it sits on masonry over the lintel
+  // and not across the opening, and well under WALL_H 6.0 so it is not confused for a roofline
+  public static inline var DOOR_LAMP_Y = 4.5;
+  // there is NO cone radius here, and that is worth stating because there was one for a build. the
+  // shaft under a hood takes the mast's own geometric radius (see render.facility.FacilityLamps),
+  // because a shaft is drawn to outline the circle the SpotLight throws and the SpotLight's angle is
+  // shared. what makes it fit a WALL-MOUNTED fitting is that it is half a cone, cut vertically —
+  // not that it is a narrower whole one, which was tried and read as a pencil standing in the middle
+  // of its own lit circle.
+  //
+  // how much of the hood's front face the lens is, each axis. the rest of it stays dark housing —
+  // a face lit corner to corner is the white-card failure render.facility.FacilityEntry's booth
+  // glazing and tools/emissive.py's --modulate both record
+  public static inline var DOOR_LENS_W = 0.75;
+  public static inline var DOOR_LENS_H = 0.55;
+  // and how far the lens stands proud of that face, so it cannot z-fight it. a PHYSICAL gap, which
+  // docs/3d-render.md's standing note says three passes of polygonOffset have already lost
+  public static inline var DOOR_LENS_EPS = 0.02;
+  // WARM, and that is the whole point of it: LAMP_COLOR is a cool 0x9db4d4 LED shared by every mast,
+  // fixture and glow quad in the compound, so a doorway lit in the same white is one more lit
+  // surface. this is the one light out here that is not that installation, and it marks a door as a
+  // door from across the lot. it is a TINT on the shared additive mesh and not a second material —
+  // that mesh already multiplies a per-vertex colour, so the hue costs no draw call (see
+  // FacilityGlow.WARM) — and a per-post `color` on the spotlight, which LampPost already carries
+  public static inline var DOOR_LAMP_COLOR = 0xffb347;
+  // the lens's own brightness. read C_PANEL's header before touching it: a quad's rendered
+  // luminance is ~2.1 * C at LAMP_COLOR, so 0.43 is where BLOOM_THRESHOLD 0.9 is crossed — and this
+  // hue is 1.24x that luminance for the same C (Y_linear 0.540 against 0.435), so the line is 0.35
+  // here. a lens is a FITTING and is meant to bloom, like the ceiling panel and unlike the pool.
+  //
+  // there is NO ground quad under it, and that is the same finding the lamp-head quad in this
+  // file's own header records: what lights the asphalt is the CONE and the pooled spotlight, which
+  // is all a mast has ever had out here. tried as one, it read as a flat amber card lying on the
+  // lot with the cone's shaft landing inside it
+  public static inline var C_DOOR_LENS = 0.8;
 
   // ---- the scene -------------------------------------------------------------------------------
 

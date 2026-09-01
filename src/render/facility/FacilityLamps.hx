@@ -17,6 +17,7 @@ import render.world.VisionMask;
 typedef LampSet = {
   masts:Array<LampPost>,     // the outdoor lamp posts, one bulb each at the head
   ceilings:Array<LampPost>,  // one fixture per lit room, hung under the roof deck
+  doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
 };
 
@@ -276,6 +277,38 @@ class FacilityLamps
           });
         }
 
+      // the bulkhead lamps over the exterior doors. they are real bulbs in the same shared pool the
+      // masts and the fixtures claim from, and the ONLY thing here that is not LAMP_COLOR: a
+      // doorway lit in the compound's own cool white is one more lit surface, and lit amber it is a
+      // way in. LampPost has carried a per-post `color` all along, so the hue costs nothing.
+      //
+      // aimed STRAIGHT DOWN, like a mast head and unlike a sewer wall bracket: a hood over a door
+      // is a downlight and pools at its own feet, a foot and a half out from the masonry
+      var doors = [];
+      // the hood each of those bulbs hangs under, kept in step with `doors` so the cone below can
+      // ride the housing's centre line rather than its lens plane
+      var hoods:Array<FacilityGlow.DoorLamp> = [];
+      for (d in m.doors)
+        {
+          var l = FacilityGlow.lamp(m, d);
+          if (l == null)
+            continue;
+          hoods.push(l);
+          doors.push({
+            x: l.x,
+            z: l.z,
+            y: l.y,
+            tx: l.x,
+            tz: l.z,
+            color: FacilityStyle.DOOR_LAMP_COLOR,
+            col: d.col,
+            row: d.row,
+            phase: 0.0,
+            flick: 1.0,
+            mul: 1.0,
+          });
+        }
+
       var prop = Models.instanced(scene, RenderConfig.MODELS.facilityLamp, places,
         FacilityStyle.LAMP_H, SOLID);
       // the mask has to go on behind the loader callback — the mesh does not exist until the glb
@@ -295,9 +328,56 @@ class FacilityLamps
         color: FacilityStyle.LAMP_COLOR,
         startFrac: FacilityStyle.LAMP_CONE_START,
       });
+      // and the door lamps' own shafts, which have to be a SECOND batch: LightCone takes its tint
+      // as one uniform per batch, and the whole point of these is that they are not the mast's
+      // white. that is the one draw call this fitting costs.
+      //
+      // TWO things separate it from the mast batch above and both are about the WALL, which a mast
+      // does not stand against.
+      //
+      // it is HALF A CONE, cut vertically. a mast is out in the open and its shaft is a full shell;
+      // a fitting bolted to a wall has its light cut off flat by the masonry, and a full shell there
+      // puts half a cone of lit air INSIDE the building — which is what it did, straight through the
+      // shut door. the fix is not a smaller cone. That was tried: a radius under 1.22 does keep the
+      // shell clear of the leaves, and it also makes the shaft a 13-degree pencil standing in the
+      // middle of the wide circle the SpotLight actually throws, which is the mismatch it was
+      // reported as. So the radius goes back to the mast's own geometric one — the lit circle,
+      // which is what a shaft is drawn to outline — and the half that would be inside the building
+      // is simply not built. The cut plane passes through the shaft's axis, i.e. flush with the
+      // middle of the hood, and the kept wedge spans a right angle either side of the outward
+      // normal, so it never crosses the wall face at any height.
+      //
+      // and the shaft is pulled BACK off the shared lamp point, which is the LENS PLANE — the
+      // housing's front face — because the cut plane passes through the axis and that is where the
+      // light is cut off. On the lens plane the shaft stood a whole hood's depth out in the air; on
+      // the hood's CENTRE line, which it took next, the cut still hung 0.3 clear of the masonry.
+      // It sits on the WALL FACE now, DOOR_LENS_EPS proud of it — that constant and not a new one,
+      // because it is the same job it already does for the lens: a physical gap so two coplanar
+      // surfaces cannot z-fight, which docs/3d-render.md's standing note says polygonOffset has
+      // lost three times. Half a cone is what lets it go this far back at all: the kept wedge's top
+      // spans only outward, so a disc of `topR` at the wall face is still inside the hood, where a
+      // FULL one would have put half of it inside the building
+      var doorY = FacilityStyle.DOOR_LAMP_Y + FacilityStyle.DOOR_LAMP_H / 2;
+      if (doors.length > 0)
+        LightCone.instanced({
+          group: coneGroup,
+          bulbs: [for (h in hoods) {
+            x: h.x - h.nx * (FacilityStyle.DOOR_LAMP_D - FacilityStyle.DOOR_LENS_EPS),
+            z: h.z - h.nz * (FacilityStyle.DOOR_LAMP_D - FacilityStyle.DOOR_LENS_EPS),
+          }],
+          bulbY: doorY,
+          radius: doorY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul,
+          topR: RenderConfig.LAMP_CONE.topR,
+          color: FacilityStyle.DOOR_LAMP_COLOR,
+          startFrac: FacilityStyle.LAMP_CONE_START,
+          arc: Math.PI,
+          // the outward normal read as a heading, the same atan2(x, z) the mast heads take
+          yaws: [for (h in hoods) Math.atan2(h.nx, h.nz)],
+        });
       return {
         masts: masts,
         ceilings: ceilings,
+        doors: doors,
         prop: prop,
       };
     }

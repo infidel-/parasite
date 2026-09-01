@@ -233,7 +233,20 @@ class LampShadows {
       // bulb publishes flick 1 (steady); a sputtering one breathes its shadow with the light. a bulb
       // mid-OUTAGE is dropped outright — CastShadows weights by (0.7 + 0.3 * flicker), so a fully
       // dark lamp would otherwise still lay a 70%-strength shadow
-      var lampLights:Array<CastShadows.ShadowLight> = [];
+      // SPLIT BY WHICH SIDE OF A WALL THE FIXTURE IS ON, because this pass has no occlusion test of
+      // any kind: it projects away from a light within range and nothing asks whether there is a
+      // building between the two. Outdoors that is invisible; in a facility, which is the one area
+      // kind that is indoors and outdoors at once, it puts a shadow on the floor INSIDE a room from
+      // the mast on the kerb outside it — and the bulkhead lamp over an exterior door made it
+      // impossible to miss, being by construction the closest outdoor light there can be to an
+      // indoor actor. reported from the game as exactly that.
+      //
+      // one list per side, built once for the whole frame, and an actor takes the one its own cell
+      // is on. render.world.IndoorMask.indoorAt is false everywhere no mask is attached, so every
+      // other area kind puts every lamp in `lampOut`, every actor reads `lampOut`, and nothing about
+      // a street or a tunnel changes
+      var lampOut:Array<CastShadows.ShadowLight> = [];
+      var lampIn:Array<CastShadows.ShadowLight> = [];
       if (lampSrc != null)
         {
           var L = RenderConfig.LAMP_SHADOW;
@@ -252,19 +265,20 @@ class LampShadows {
               if (lp.flick < RenderConfig.LAMP_LIGHT.flickOff)
                 continue;
               var low = Math.min(L.lowMax, refY / lp.y);
-              lampLights.push({
+              (render.world.IndoorMask.indoorAt(lp.col, lp.row) ? lampIn : lampOut).push({
                 x: lp.x, z: lp.z, range: Math.min(lrange * low, lmax), lenMul: L.lenMul * low,
                 op: L.op, fade: L.fade, flicker: lp.flick,
               });
             }
         }
       if (barrelLights.length == 0 &&
-          lampLights.length == 0)
+          lampOut.length == 0 &&
+          lampIn.length == 0)
         return;
       // AI + non-flat objects (skip the barrels themselves) + a free parasite are the casters
       for (ai in game.area.getAllAI())
         if (ai.entity != null)
-          actorShadow(ai.entity, barrelLights, lampLights);
+          actorShadow(ai.entity, barrelLights, lampOut, lampIn);
       for (o in game.area.getObjects())
         // a prop-backed object casts here TOO, and the guard that used to skip it was wrong. it does
         // own a real shadow-map shadow (Models.instanced flags SOLID castShadow), but underground the
@@ -276,14 +290,19 @@ class LampShadows {
         if (o.entity != null &&
             !o.isGroundDecal() &&
             o.type != 'burning_barrel')
-          actorShadow(o.entity, barrelLights, lampLights);
+          actorShadow(o.entity, barrelLights, lampOut, lampIn);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
-        actorShadow(game.playerArea.entity, barrelLights, lampLights);
+        actorShadow(game.playerArea.entity, barrelLights, lampOut, lampIn);
     }
 
 // cast one actor's shadows: fetch its black silhouette once, then project it away from the barrels
-// and the lamps (each capped by its own max). all direction/length/opacity math lives in CastShadows
-  function actorShadow(e:Entity, barrelLights:Array<CastShadows.ShadowLight>, lampLights:Array<CastShadows.ShadowLight>):Void
+// and the lamps (each capped by its own max). all direction/length/opacity math lives in CastShadows.
+//
+// the lamps come in as the two lists castShadows split them into and the actor's OWN cell picks one
+// — see there. the barrels are not split: they burn in the street and there is no facility that
+// spawns one
+  function actorShadow(e:Entity, barrelLights:Array<CastShadows.ShadowLight>,
+      lampOut:Array<CastShadows.ShadowLight>, lampIn:Array<CastShadows.ShadowLight>):Void
     {
       var a = actors.get(e);
       if (a == null ||
@@ -294,6 +313,8 @@ class LampShadows {
         return;
       var floor = WorldCtx.floorY(a.col, a.row) + 0.06;   // just above the splat/debris plane (+0.04)
       CastShadows.project(sprites, gs, a.x, a.z, floor, a.op, barrelLights, RenderConfig.FLAME.shadowMax);
-      CastShadows.project(sprites, gs, a.x, a.z, floor, a.op, lampLights, RenderConfig.LAMP_SHADOW.max);
+      CastShadows.project(sprites, gs, a.x, a.z, floor, a.op,
+        render.world.IndoorMask.indoorAt(a.col, a.row) ? lampIn : lampOut,
+        RenderConfig.LAMP_SHADOW.max);
     }
 }

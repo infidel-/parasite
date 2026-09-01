@@ -40,6 +40,9 @@ class IndoorMask
   // exactly one area is ever built
   static var opt:IndoorMaskOpts = null;
   public static var on(default, null):Bool = false;
+  // the predicate the mask was painted from, kept so the CPU side can ask the same question the
+  // shader is answering — see `indoorAt`
+  static var pred:(Int, Int) -> Bool = null;
 
   static var canvas:js.html.CanvasElement = null;
   static var tex:CanvasTexture = null;
@@ -66,6 +69,7 @@ class IndoorMask
     {
       opt = o;
       on = true;
+      pred = isIndoor;
       paint(w, h, isIndoor);
       uMap.value = tex;
       // the fill as three itself would build it: an sRGB hex decoded to linear by Color, then scaled
@@ -82,9 +86,23 @@ class IndoorMask
     {
       opt = null;
       on = false;
+      pred = null;
       uMap.value = ensureBlank();
       uDirect.value = 1.0;
     }
+
+// is this cell inside a building — the same predicate the mask was painted from, asked on the CPU.
+// false everywhere no mask is attached, which is every area kind but the facility and is what makes
+// a caller need no branch of its own.
+//
+// it exists for render.actors.LampShadows, and the case it answers is a real one that a purely
+// visual mask cannot: the fake shadow pass has no occlusion test at all, so a lamp OUTSIDE a wall
+// throws an actor shadow onto the floor INSIDE it. keying on this rather than on any single fixture
+// covers the whole family at once — the bulkhead lamp over a door, which is the closest outdoor
+// light to an indoor actor by construction, the masts along the kerb, and in the other direction a
+// ceiling fixture shadowing someone standing outside the window
+  public static inline function indoorAt(col:Int, row:Int):Bool
+    return pred != null && pred(col, row);
 
 // paint the mask and upload it.
 //

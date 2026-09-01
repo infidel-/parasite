@@ -28,4 +28,13 @@ typedef LightConeOpts = {
   // per-instance flicker phase, same length as bulbs. omitted or empty = a STEADY set, built once
   // and never touched; a non-empty one marks the batch LightCone.pulse repacks each frame
   ?phases:Array<Float>,
+  // how much of the shaft's circle to build, radians. omitted = the whole 2*PI, which is right for
+  // anything standing in the open — a mast, a manhole. A WALL-MOUNTED fitting is the case it exists
+  // for: its light is cut off flat by the masonry it is bolted to, so a full shell puts half a cone
+  // of lit air inside the building. PI is that half, and `yaws` is what aims it
+  ?arc:Float,
+  // per-instance heading, same length as bulbs, and only meaningful with `arc`: the kept wedge is
+  // centred on the geometry's +z and this turns it to face outward. a full-circle batch does not
+  // need one and does not pay for one — the whole set then shares an identity rotation
+  ?yaws:Array<Float>,
 };

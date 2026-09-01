@@ -114,10 +114,20 @@ class FacilityGeom
         sill: sill,
         head: head,
         doorAt: doorAt,
+        hood: MeshBufTools.make(),
       };
       var out = [];
       for (si in 0...m.structures.length)
         out.push(structure(scene, m, si, g));
+      // and the bulkhead hoods, merged across every structure at once — see the field's own comment.
+      // it does NOT cast, which is the one place it departs from the cladding it used to ride: a
+      // shadow-map draw is a real draw call, and MEASURED in a pinned frame at the hangar's side
+      // door, hiding the mesh took `calls` 68 -> 66 with castShadow on and 68 -> 67 with it off,
+      // for two screenshots that cannot be told apart. nothing here is between a caster and a
+      // surface — the compound's only spotlights that cast hang BELOW the hood's own top and aim
+      // straight down. the buffer is empty in a compound with no exterior door and `add` emits no
+      // mesh then
+      add(scene, g.hood, FacilityStyle.DOOR_LAMP_TEX, true, false);
       return out;
     }
 
@@ -517,6 +527,12 @@ class FacilityGeom
                 // and the threshold under them, for the surface the doorway opens onto being lower
                 // than the floor it leads to — see `threshold`
                 threshold(soffit, m.doors[di].alongX, s);
+                // and the bulkhead lamp's hood, over an EXTERIOR doorway only. it rode wOut for a
+                // build — the exterior cladding's own buffer, for no draw call at all, the way the
+                // parapet ring and the gable crescents do — and a fitting painted in the wall's own
+                // art is not a fitting, it is a lump of wall. it takes its own now, in the ONE
+                // buffer `build` merges for the whole compound
+                doorLamp(g.hood, m, m.doors[di]);
                 continue;
               }
             if (flatDeck)
@@ -934,6 +950,40 @@ class FacilityGeom
 // BOTH planes, wound OUTWARD, and no test of which one faces out: the indoor one is buried under
 // that cell's own floor cap, whose top edge is this quad's top edge, and a camera pitched 51 degrees
 // down cannot see under a step. the same thing that makes the skirt free everywhere else
+// the hood of the bulkhead lamp over an exterior door, as FOUR QUADS in the compound's one hood
+// buffer — its own art, so it can no longer ride the cladding (see FacilityShellOpts.hood).
+//
+// NOT A GLB — see FacilityStyle.DOOR_LAMP_W's header for why, and render.facility.FacilityEntry's
+// for the general rule. no BACK face (it is against the masonry) and no UNDERSIDE: this camera
+// pitches 51 degrees DOWN, so the soffit of a thing standing off a wall is never in frame, which is
+// the same reason FacilityRoof.box has no bottom either.
+//
+// the position comes from FacilityGlow.lamp and is not recomputed here, because the lens quad and
+// the spotlight are hung off that same point and a hood that drifted from its own light is the one
+// error none of the three files could see alone
+  static function doorLamp(b:MeshBuf, m:Facility, d:FacilityModel.DoorCell):Void
+    {
+      var l = FacilityGlow.lamp(m, d);
+      if (l == null)
+        return;
+      // the box: half the hood's width along the wall line, and its depth reaching BACK from the
+      // shared point to the masonry. that point is the LENS PLANE, i.e. the hood's front face and
+      // not its centre, so the box hangs behind it — centred on it, the hood floated 0.3 off the
+      // wall with daylight behind it
+      var hw = FacilityStyle.DOOR_LAMP_W / 2;
+      var hd = FacilityStyle.DOOR_LAMP_D / 2;
+      var cx = l.x - l.nx * hd;
+      var cz = l.z - l.nz * hd;
+      var x0 = cx - (l.nx != 0 ? hd : hw), x1 = cx + (l.nx != 0 ? hd : hw);
+      var z0 = cz - (l.nz != 0 ? hd : hw), z1 = cz + (l.nz != 0 ? hd : hw);
+      var y0 = FacilityStyle.DOOR_LAMP_Y;
+      var y1 = y0 + FacilityStyle.DOOR_LAMP_H;
+      for (dir in 0...4)
+        if (dir != (l.dir ^ 1))
+          face(b, x0, x1, z0, z1, dir, y0, y1, FacilityStyle.DOOR_LAMP_TILE);
+      cap(b, x0, x1, z0, z1, y1, FacilityStyle.DOOR_LAMP_TILE);
+    }
+
   static function threshold(b:MeshBuf, alongX:Bool, s:Rect):Void
     {
       if (alongX)

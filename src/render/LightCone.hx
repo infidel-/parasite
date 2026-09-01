@@ -67,7 +67,12 @@ class LightCone {
       var rTop = radius * s;
       if (rTop < o.topR)
         rTop = o.topR;
-      var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true);
+      // a PARTIAL shell is built centred on local +z (thetaStart = -arc/2) so the per-instance yaw
+      // below is just the outward heading and nothing has to know how three numbers its theta. still
+      // openEnded: the flat cut is left open on purpose, because a face there is a second additive
+      // surface stacked on the wall it is cut against and reads as a bright band up the masonry
+      var arc = (o.arc != null ? o.arc : Math.PI * 2);
+      var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true, -arc / 2, arc);
       // fold the vertical placement into the geometry so an instance sitting at the bulb has its base
       // on the ground: center offset = -bulbY*(1+startFrac)/2 below the bulb
       geo.translate(0, -bulbY * (1 + s) / 2, 0);
@@ -93,11 +98,16 @@ class LightCone {
       // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom
       untyped inst.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
       var q = new Quaternion(), pos = new Vector3(), one = new Vector3(1, 1, 1);
+      var up = new Vector3(0, 1, 0);
       for (i in 0...bulbs.length)
         {
           pos.set(bulbs[i].x, bulbY, bulbs[i].z);
+          // identity rotation for a full shell — a straight-down cone has no heading. a PARTIAL one
+          // does: its wedge is centred on +z, so this turns that at the surface it lights
+          if (o.yaws != null)
+            q.setFromAxisAngle(up, o.yaws[i]);
           var mtx = new Matrix4();
-          mtx.compose(pos, q, one); // identity rotation: straight-down shell
+          mtx.compose(pos, q, one);
           inst.setMatrixAt(i, mtx);
           set.matrices.push(mtx); // kept so pulse() can repack a subset of them
           set.on.push(true);
