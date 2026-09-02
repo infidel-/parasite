@@ -740,6 +740,28 @@ class FacilityStyle
   // reaching for RenderConfig.LAMP_LIGHT.intensity instead is chasing the wrong knob: that one is
   // shared with the city and the tunnels
   public static inline var CEIL_MUL = 3.3;
+  // the longest a ROOM axis may run before the fixture pass splits it again, in cells — the count is
+  // ceil(axis / this), so it is a CEILING on the gap and not the gap itself. the pass used to hang
+  // exactly ONE fitting over every room whatever its size, which is a fixture per building and not
+  // per room: on a generated compound that left the two big labs (9x10 and 10x8 cells) and the
+  // hangar (11x8) on a single bulb each. at 6 a room under that size is unchanged at one bulb, those
+  // three come back with four, and 12 rooms yield 30 fittings
+  public static inline var ROOM_SPACING = 6;
+
+  // and how far apart the CORRIDOR pass stands two of them. corridors had no light source of any
+  // kind until it: the room pass reads area.generatorInfo's room rects and a corridor is never in
+  // one, so slightly MORE than half the interior floor (405 lino cells against 383 of room tile on a
+  // generated compound) sat at the flat IndoorMask ambient and nothing else. 6 puts about four down
+  // a 24-cell corridor — the pools just touch, so there is no dark stretch, and half the 12-slot
+  // pool is still free for the rooms seen through the doorways as the player walks
+  public static inline var CORR_SPACING = 6;
+  // how bright one reads against a room's. a corridor is circulation and a room is where the work
+  // happens, so it sits under it
+  public static inline var CORR_DIM = 0.7;
+  // DERIVED, deliberately. CEIL_MUL above is 1 / INDOOR.direct and not a taste value, so writing the
+  // corridor as a FRACTION of it means this follows any future move of INDOOR.direct instead of
+  // quietly going stale at an absolute number fitted against the old one
+  public static inline var CORR_MUL = CEIL_MUL * CORR_DIM;
 
   // ---- the additive glow layer (render.facility.FacilityGlow) ----------------------------------
 

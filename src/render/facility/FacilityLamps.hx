@@ -16,7 +16,8 @@ import render.world.VisionMask;
 // draw, and __facility() reports them as two counts
 typedef LampSet = {
   masts:Array<LampPost>,     // the outdoor lamp posts, one bulb each at the head
-  ceilings:Array<LampPost>,  // one fixture per lit room, hung under the roof deck
+  ceilings:Array<LampPost>,  // the room fixtures, a ROOM_SPACING lattice over each lit room
+  corridors:Array<LampPost>, // the corridor fixtures, which no room rect can reach — see `corridors`
   doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
 };
@@ -29,9 +30,14 @@ typedef LampHit = {
 };
 
 // the facility's light SOURCES: the masts standing along its outdoor lit lines, and the fixtures
-// hung over its rooms. a mast draws its own model — whose head carries an emissive map and so glows
-// and blooms on its own, the way a street lamp's lens does — plus its cone of lit air; a ceiling
-// fixture draws nothing at all, and what lands on the surfaces is render.facility.FacilityGlow.
+// hung over its rooms and its corridors. a mast draws its own model — whose head carries an emissive
+// map and so glows and blooms on its own, the way a street lamp's lens does — plus its cone of lit
+// air; a ceiling fixture draws nothing at all, and what lands on the surfaces is
+// render.facility.FacilityGlow.
+//
+// the two indoor families are placed by two different rules because they are found two different
+// ways. a ROOM is a rect in area.generatorInfo and takes a lattice over it; a CORRIDOR is in no list
+// at all — it is whatever indoor lino is left over — and is scanned off the grid, see `corridors`.
 //
 // both families become plain LampPosts and go into the SHARED spotlight pool
 // (render.particles.LampLights), which the facility has been building at full size since phase 0 and
@@ -255,26 +261,50 @@ class FacilityLamps
           corners.set(ActorAnim.lampVertexKey(a, b), BEND_DIR[h.dir]);
         }
 
+      // the room fixtures, as a LATTICE over each room rather than one bulb at its centre. a
+      // downlight has a reach and a room has an area, and the old rule ignored the second: the two
+      // big labs and the hangar are 80 to 90 cells each and were lit by one fitting apiece.
+      //
+      // the count comes off the rect and the positions off FacilityStyle.ROOM_SPACING, so a room
+      // under that size is unchanged — nx and ny both fall to 1 and the single point lands back on
+      // the centre the old expression picked. the (i + 0.5) / n form is the one the park line above
+      // already uses to spread a fixed count along a run instead of taking it off the head
       var ceilings = [];
       for (r in m.rooms)
         {
           if (!lit(m, r))
             continue;
-          var c = CityConfig.cellToWorld(Std.int((r.x1 + r.x2) / 2), Std.int((r.y1 + r.y2) / 2));
-          ceilings.push({
-            x: c.x,
-            z: c.z,
-            y: FacilityStyle.ROOF_Y - FacilityStyle.CEIL_DROP,
-            tx: c.x,
-            tz: c.z,
-            color: FacilityStyle.LAMP_COLOR,
-            col: Std.int((r.x1 + r.x2) / 2),
-            row: Std.int((r.y1 + r.y2) / 2),
-            phase: 0.0,
-            flick: 1.0,
-            // see FacilityStyle.CEIL_MUL: this is the compensation for INDOOR.direct, not a taste knob
-            mul: FacilityStyle.CEIL_MUL,
-          });
+          var nx = Math.ceil(r.w / FacilityStyle.ROOM_SPACING);
+          var ny = Math.ceil(r.h / FacilityStyle.ROOM_SPACING);
+          for (i in 0...nx)
+            for (j in 0...ny)
+              {
+                var col = r.x1 + Std.int((i + 0.5) * r.w / nx);
+                var row = r.y1 + Std.int((j + 0.5) * r.h / ny);
+                // `lit` guards the room's CENTRE against a stale generatorInfo, and away from the
+                // centre a lattice point can land on a divider the saved grid has and the rect does
+                // not. the same predicate, asked per point. NOTE if FacilityStyle.CEIL_GLOW is ever
+                // turned back on: render.facility.FacilityGlow walks these same rects for the panel
+                // and the floor pool and must take this lattice with it, or a room gets one fitting
+                // drawn over several bulbs
+                if (!FacilityModel.isIndoor(m, col, row))
+                  continue;
+                var c = CityConfig.cellToWorld(col, row);
+                ceilings.push({
+                  x: c.x,
+                  z: c.z,
+                  y: FacilityStyle.ROOF_Y - FacilityStyle.CEIL_DROP,
+                  tx: c.x,
+                  tz: c.z,
+                  color: FacilityStyle.LAMP_COLOR,
+                  col: col,
+                  row: row,
+                  phase: 0.0,
+                  flick: 1.0,
+                  // see FacilityStyle.CEIL_MUL: the compensation for INDOOR.direct, not a taste knob
+                  mul: FacilityStyle.CEIL_MUL,
+                });
+              }
         }
 
       // the bulkhead lamps over the exterior doors. they are real bulbs in the same shared pool the
@@ -377,9 +407,116 @@ class FacilityLamps
       return {
         masts: masts,
         ceilings: ceilings,
+        corridors: corridors(m),
         doors: doors,
         prop: prop,
       };
+    }
+
+// hang a fixture over the corridors, which the room pass above cannot reach at all: `m.rooms` is
+// area.generatorInfo's TEMP_BUILDING_ROOM blocks, a corridor is never one, and so until this every
+// corridor cell in the compound — 405 of them against 383 of room tile, i.e. slightly MORE than half
+// the interior floor — had no light source of any kind and read at the flat IndoorMask ambient and
+// nothing else. that is also the only surface indoors that the gameplay camera really sees: standing
+// inside, FacilityStyle.ROOF_FADE drops the deck to nothing and a two-cell corridor reads as the
+// roof rim, the floor, and the rim again, with both wall faces edge-on.
+//
+// row-major greedy against a spacing test, and it finds no RUNS first: a corridor is an L, a T and a
+// ring as often as it is a straight length, so the thing a run-finder would have to deal in does not
+// exist here. taking the first cell far enough from everything already placed covers any of those
+// shapes, and reads only the saved grid — no seed and no Math.random, the rule render.world.Debris
+// follows for the same reason
+  static function corridors(m:Facility):Array<LampPost>
+    {
+      var out = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            // Surf.LINO is the corridor floor AND every door cell. isCorr's own isInterior throws
+            // out the EXTERIOR doors — one of their four neighbours is the lot — and isDoor throws
+            // out the rest: a doorway is a piece of the CIRCULATION, the same call
+            // render.facility.FacilityGeom makes when it paints a reveal in the corridor's texture
+            // whichever way the door faces, and not somewhere to hang a fitting
+            if (!isCorr(m, col, row) ||
+                FacilityModel.isDoor(m, col, row) ||
+                near(out, col, row))
+              continue;
+            // and it goes over the middle of the PASSAGE, not over the cell the scan happened to
+            // reach first — which on a two-wide corridor is the same side of it every time. the two
+            // runs through the cell are its width and its length; the SHORTER is the cross-section,
+            // and the longer is what the spacing test above already deals with
+            var c = CityConfig.cellToWorld(col, row);
+            var rx = run(m, col, row, true);
+            var rz = run(m, col, row, false);
+            var x = c.x;
+            var z = c.z;
+            if (rx.lo + rx.hi <= rz.lo + rz.hi)
+              x += (rx.hi - rx.lo) * CELL / 2;
+            else
+              z += (rz.hi - rz.lo) * CELL / 2;
+            out.push({
+              x: x,
+              z: z,
+              y: FacilityStyle.ROOF_Y - FacilityStyle.CEIL_DROP,
+              // straight down, like a room fixture and unlike a sewer wall bracket
+              tx: x,
+              tz: z,
+              color: FacilityStyle.LAMP_COLOR,
+              // the CELL and not the shifted point: this pair is what render.particles.LampLights
+              // sorts the pool on and what render.world.IndoorMask.indoorAt reads to keep this lamp
+              // out of the outdoor fake-shadow list
+              col: col,
+              row: row,
+              phase: 0.0,
+              flick: 1.0,
+              mul: FacilityStyle.CORR_MUL,
+            });
+          }
+      return out;
+    }
+
+// is this a corridor FLOOR cell — lino that a structure owns on all four sides?
+  static inline function isCorr(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        m.surf[row][col] == Surf.LINO &&
+        FacilityModel.isInterior(m, col, row);
+    }
+
+// how many cells the corridor through (col,row) carries on for either way along one axis. a door
+// cell stops it: it is lino, so counting it would widen a cross-section by the depth of a doorway
+// and pull the fixture off centre into the opening
+  static function run(m:Facility, col:Int, row:Int, alongX:Bool):{lo:Int, hi:Int}
+    {
+      var dc = (alongX ? 1 : 0);
+      var dr = (alongX ? 0 : 1);
+      var lo = 0;
+      while (open(m, col - (lo + 1) * dc, row - (lo + 1) * dr))
+        lo++;
+      var hi = 0;
+      while (open(m, col + (hi + 1) * dc, row + (hi + 1) * dr))
+        hi++;
+      return {
+        lo: lo,
+        hi: hi,
+      };
+    }
+
+// corridor floor that is not a doorway — what `run` walks over
+  static inline function open(m:Facility, col:Int, row:Int):Bool
+    return isCorr(m, col, row) && !FacilityModel.isDoor(m, col, row);
+
+// is a corridor fixture already standing within FacilityStyle.CORR_SPACING cells?
+  static function near(out:Array<LampPost>, col:Int, row:Int):Bool
+    {
+      for (p in out)
+        {
+          var dc = p.col - col;
+          var dr = p.row - row;
+          if (dc * dc + dr * dr < FacilityStyle.CORR_SPACING * FacilityStyle.CORR_SPACING)
+            return true;
+        }
+      return false;
     }
 
 // does this room get a fixture? public because render.facility.FacilityGlow asks the same question

@@ -1254,3 +1254,62 @@ keep both. Measured on the built glow mesh afterwards: **43 quads at y 0.04, exa
 runs, and 7 at y 4.89, exactly the 7 door lenses** — no ground quad at any door cell.
 
 **Verdict: landed.** +1 draw call (the hood mesh), one new 256² texture, no persisted change.
+
+## A corridor is not a room, and had no light at all
+
+Reported from the game, standing in a lab corridor: "completely empty and has no light except
+ambient". Not a regression — the fixture pass walks `m.rooms`, which is `area.generatorInfo`'s
+`TEMP_BUILDING_ROOM` blocks, and **a corridor is never in one**. So every corridor cell in the
+compound had no light source of any kind and rendered at the flat `IndoorMask` ambient and nothing
+else. Counted off the saved grid: **405 `TILE_FLOOR_LINO` cells against 383 of room tile and 88 of
+hangar concrete** — slightly MORE than half the interior floor, holding **0 of the 12 fittings**.
+
+That is also the half that matters. Standing inside, `ROOF_FADE` 0.0 drops the fading deck to
+nothing, so a two-cell corridor reads as `rim 2u | floor 8u | rim 2u` with both wall faces edge-on:
+the floor is the entire canvas indoors, and a pooled spotlight lands straight on it.
+
+**Corridors are scanned, not listed, because a corridor has no rect.** It is an L, a T and a ring as
+often as it is a straight length, so the object a run-finder would deal in does not exist. The pass
+is row-major greedy against a spacing test — take the first cell far enough from everything already
+placed — which covers any of those shapes and reads only the saved grid, so it is deterministic with
+no seed and no `Math.random`. Measured: **18 fixtures, minimum pair spacing exactly 6.00 cells,
+18/18 standing on lino.**
+
+**`Surf.LINO` IS ALSO EVERY DOOR CELL, and that is the trap.** An exterior doorway finalises to plain
+corridor lino, so a scan on the surface alone hangs a fitting in the front door. Two predicates that
+already exist settle it: `isInterior` throws out the exterior doors (one of their four neighbours is
+the lot — the same test the indoor mask needed) and `isDoor` throws out the interior ones, a doorway
+being circulation, which is the call `FacilityGeom` already makes when it paints a reveal in the
+corridor's own texture whichever way the door faces.
+
+**A fixture goes over the middle of the PASSAGE, not over the cell the scan reached first** — on a
+two-wide corridor that is the same side of it every time. The two runs of corridor floor through the
+cell are its width and its length; the SHORTER is the cross-section and the fixture takes its
+midpoint, while the longer is what the spacing test already deals with. `col`/`row` stay the accepted
+cell: that pair is what `LampLights` sorts the pool on and what `IndoorMask.indoorAt` reads to keep
+the lamp out of the outdoor fake-shadow list. Verified in the live scene — a corridor light sits on a
+cell BOUNDARY (world/CELL lands on an integer) where a room light sits on a cell centre (.5).
+
+**Rooms had the same bug one size up: one bulb per room whatever its area.** The two big labs (9x10
+and 10x8) and the hangar (11x8) ran on a single fitting each — a fixture per building, not per room.
+Now `ceil(w / ROOM_SPACING) x ceil(h / ROOM_SPACING)` on a centred lattice, the `(i + 0.5) / n` form
+the park line already uses. `ROOM_SPACING` 6 is a CEILING on the gap, not the gap: **12 rooms yield
+30 fittings** and a small room is unchanged at one. `lit` is asked per lattice point and not only at
+the room centre, because away from the centre a point can land on a divider the rect does not know
+about.
+
+**`CORR_MUL` is derived and not a second fitted number.** `CEIL_MUL` 3.3 is `1 / INDOOR.direct`
+rather than a taste value, so the corridor is written as `CEIL_MUL * CORR_DIM` (0.7) and follows any
+future move of `INDOOR.direct` instead of going stale against the old one. Measured on the live
+spotlights: rooms **148.5**, corridors **103.95**, i.e. 3.3 and 2.31 on the shared base 45.
+
+**Verdict: landed, and it is FREE.** 48 candidate bulbs became **84** (29 masts + 30 room + 18
+corridor + 7 door) and `lit` is still **12**: `LAMP_LIGHT.pool` has been built at full size — and so
+has been in every lit material's program key and per-fragment light loop — since facility Phase 0
+with no bulbs handed to it, so more candidates only change which 12 win. The walked pose measured
+**86 calls / 80 programs** against a pre-change **88 / 82**; neither went up, and per-frame cost is
+still one `LampLights.update`. No geometry, no new art, nothing persisted — the corridor pass reads
+the saved cell grid and needs no `generatorInfo`, so it works on every existing save.
+
+Killed an invariant in `docs/debug-surface.md` on the way: **`ceilings` no longer equals `rooms`**,
+and `__facility()` gains `corridors`.

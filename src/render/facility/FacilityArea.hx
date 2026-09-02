@@ -148,7 +148,7 @@ class FacilityArea implements Area3D
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
       // same treatment the city's own lamp batch gets
       lamps = FacilityLamps.build(scene, coneGroup, model, game.area, lampCorners);
-      lampPosts = lamps.masts.concat(lamps.ceilings).concat(lamps.doors);
+      lampPosts = lamps.masts.concat(lamps.ceilings).concat(lamps.corridors).concat(lamps.doors);
       spillPosts = FacilityGlow.build(scene, model);
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];
@@ -219,9 +219,11 @@ class FacilityArea implements Area3D
                 yaw0: b.shut[c * 2] + b.swing[c * 2] * b.open[c],
                 yaw1: b.shut[c * 2 + 1] + b.swing[c * 2 + 1] * b.open[c],
               });
-          // the lighting rig, as the two questions it raises that a screenshot cannot answer: did
-          // the lit-line rules place a mast on every kerb, lot edge and park path (and none in a
-          // tree), and did every room get a fixture. `bulbs` is what the pool actually sees
+          // the lighting rig, as the questions it raises that a screenshot cannot answer: did the
+          // lit-line rules place a mast on every kerb, lot edge and park path (and none in a tree),
+          // did every room get its lattice, and did the corridor scan reach the passages the room
+          // rects cannot describe — `corridors` is 0 only in a compound that has none. `bulbs` is
+          // what the pool actually sees, all four families in one array
           var bulbs = [];
           for (p in lampPosts)
             bulbs.push({
@@ -246,6 +248,7 @@ class FacilityArea implements Area3D
             batches: batches,
             masts: lamps.masts.length,
             ceilings: lamps.ceilings.length,
+            corridors: lamps.corridors.length,
             bulbs: bulbs,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
