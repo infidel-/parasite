@@ -656,7 +656,7 @@ class RenderConfig {
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be
-    // decimated (see AGENTS.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
+    // decimated (see docs/3d-models.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
     // sewer-pile-2 sack-and-crate heap are both gone, split into the simple objects they were made of
     sewerDrum: 'models/sewer/drum.glb',     // 200L steel drum, upright
     sewerCrates: 'models/sewer/crates.glb', // two solid-walled plastic stacking crates

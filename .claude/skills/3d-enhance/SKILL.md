@@ -12,9 +12,10 @@ The art style is FIXED and not up for improvement: moody-night roguelike, flat m
 desaturated, even flat lighting, no specular, no photoreal. A good addition is invisible AS an
 addition — it looks like it was always there.
 
-`AGENTS.md` (loaded as CLAUDE.md) already governs textures, glb props, debug hooks, measurement and
-the docs log. Do not restate it. This skill is only the part it does not cover: how to read an area,
-what is reusable, and what each kind of addition COSTS.
+`CLAUDE.md` carries the always-on guards; the detail lives in `docs/3d-models.md`,
+`docs/3d-textures.md`, `docs/debug-surface.md` and `docs/3d-render.md` (skills `3d-art`,
+`live-debug`). Do not restate them. This skill is only the part they do not cover: how to read an
+area, what is reusable, and what each kind of addition COSTS.
 
 ## Phase 1 — study the area as it is
 

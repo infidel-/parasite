@@ -2102,7 +2102,7 @@ the right rule for an effect anchored to a world object, and the wrong tool for 
 mast that *yaws to face the surface it lights*. Fixed yaw against arbitrary yaw put the card across
 the housing at whatever angle the placement happened to give it.
 
-It glows off an **emissive map on the glb** now, the way a street lamp's lens does. AGENTS.md said
+It glows off an **emissive map on the glb** now, the way a street lamp's lens does. The models doc said
 hand-painting one into an unknown TRELLIS atlas was not worth it; that is true and it does not have
 to be hand-painted. The mask is **generated** — [`tools/emissive.py`](../tools/emissive.py), which
 took three passes to get right and each failure is the interesting part.
@@ -2368,7 +2368,7 @@ flat square end posts — a finial would show the join. `FENCE_INSET` 0.3 keeps 
 band, which protrudes `WALKWAY_BORDER_W` over the lawn at the higher level.
 
 The prop: **96,220 → 5,056 tris at tex 512 = 51 texels/tri**, split **1.38×** so the offline route
-worked. This is the LACE case `AGENTS.md` warns about — two dozen slim balusters with real
+worked. This is the LACE case `3d-models.md` warns about — two dozen slim balusters with real
 see-through gaps — and it came back well under the ~2× line anyway, so holes did not cost the offline
 route here. Components 4 at 86.3%, top pieces 41,931 / 2,709 / 1,743 / 1,701: the rail-and-baluster
 span plus the end posts, the bolted-assembly shape the guard rail, the mast and the bench all record,

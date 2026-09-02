@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prop acceptance gate: measure a TRELLIS reference or the glb it produced.
 
-Every rule in AGENTS.md's "3D models" section is written in these numbers, and each one
+Every rule in docs/3d-models.md is written in these numbers, and each one
 was learned by shipping a prop that was wrong in a way nothing already measured could see.
 So this reports all of them at once, before a prop is wired in.
 
