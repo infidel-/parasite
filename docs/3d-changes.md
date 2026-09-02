@@ -1321,3 +1321,123 @@ the saved cell grid and needs no `generatorInfo`, so it works on every existing 
 
 Killed an invariant in `docs/debug-surface.md` on the way: **`ceilings` no longer equals `rooms`**,
 and `__facility()` gains `corridors`.
+
+## The facility gets the contact shadows the tunnels have had all along
+
+> SUPERSEDED by "A contact shadow is a FIELD, not a set of quads" — the strips shipped visibly
+> broken and the whole instanced-quad approach was replaced. Kept because the failure is the entry.
+
+Phase 1 of dressing the interiors. Standing inside, `ROOF_FADE` 0.0 drops the deck to nothing, so an
+interior reads as the roof rim, the floor, and the rim again — the floor is the whole canvas at the
+gameplay pitch, and it met its own walls at a bare value step (lino mean **77.29** against the rim's
+bitumen **45.65**) with nothing grounding it. The corridor read as a ribbon laid on top of the
+building rather than inside it. `render.sewer.SewerDetail` has had the fix since the sewers landed,
+and it is itself `render.world.roofs.RoofShadows` with the outline derivation deleted; the facility
+has a cell grid too, so the sewer's shape is the one to copy.
+
+New `render.facility.FacilityDetail`, called from `FacilityArea.build` after the benches. One
+`InstancedMesh` of **681 strips** over a shared `PlaneGeometry(1,1)`, black `MeshBasicMaterial` with
+`Textures.makeShadowGradient()` as its `alphaMap` — a runtime canvas, so **zero art and nothing added
+to `textures.json`**. `SHADOW_W` 1.1 / `SHADOW_ALPHA` 0.55 / `SHADOW_Y` 0.02, the tunnels' own three.
+
+**A FACILITY WALL IS A SLAB WITH THICKNESS, and that is the whole port.** `FacilityGeom.slab` insets
+by `(CELL - thick)/2` on every side the wall line does not carry into, so the masonry face is up to a
+unit inside the cell boundary and a strip laid on the boundary floats in mid-floor. Emission
+therefore mirrors `FacilityGeom.structure`'s own loop: iterate WALL cells, take `slab()`, and emit
+wherever that loop emits a `face()` — which also means a doorway takes no strip from its flanking
+piers, `carries` counting a door cell.
+
+**The notch faces take the OPPOSITE edge**, and getting this backwards puts the strip inside the
+masonry. A notch is the corner square the slab BOX holds that the masonry does not; it is FLOOR
+belonging to the diagonal cell, so its face plane is the edge of the floor, not of the wall. The two
+calls are written to mirror `structure()`'s own pair of `butt()` calls argument for argument.
+
+**Three things from the sewer deliberately did not come across.** The `capY`/`CAP_CHAMFER` taper
+(a sewer wall top sags per lattice point; the facility's is a flat `WALL_H`, so it collapses to a
+constant). `SewerModel.isFloor`. And the `dr < 0` skip — that drops the one face a sewer's FIXED
+camera backface-culls in every pose, while the facility rig rests at yaw 180 but carries a walkway
+side-angle and a hold-RMB orbit, so **copying it would have silently deleted half the corner strips.**
+
+**GRID-CELL SAMPLING CANNOT VERIFY THIS PASS, and two attempts died on it before a third worked.**
+A wall cell's own footprint CONTAINS floor — the leftover `floorStrips` hands to the neighbour — so
+sampling the cell a strip's centre falls in reports the WALL cell, and an exterior wall is
+`indoorAt == false` by construction (298 false positives). Probing outward from the strip does not
+escape either: a window slab is `GLASS_T` 1.0 in a 4.0 cell, so a probe 1.3 units off the face is
+still inside the window cell and reads back tile ids 36-41 (341 false positives). The test that
+actually works is containment: **681 of 681 strips fall inside a structure's grown bbox, 0 outdoors.**
+
+**Verdict: landed. +1 draw call** — measured interleaved A/B/A/B on one pinned pose, 77/77 hidden
+against 78/78 shown — and **+1 program** (80 → 81) for the material. Zero art, nothing persisted.
+The sewer's RADIAL set and its vertical corner strips are deliberately NOT built: the notch pass
+already reaches the facility's version of that diagonal nook, and a vertical strip lands on wall
+faces, of which only ~half face the camera at any moment. Both can be added to this same batch later.
+
+## A contact shadow is a FIELD, not a set of quads
+
+Reported from the game one build after the entry above: "wall corner shadow is just missing producing
+a visible line", and the same beside doors. Both true, and both symptoms of something worse. Measured
+by counting how many strips covered each sample point along ONE STRAIGHT RUN of wall:
+
+```
+111...1111211132     <- gaps AND 1/2/3 stacks, in a single straight run
+```
+
+**The band was discontinuous everywhere, not just at corners and doors.** `FacilityGeom.slab` insets
+by `(CELL - thick)/2` on every side the wall line does not carry into, so per-cell strips GAP at every
+inset and DOUBLE or TRIPLE at every notch. A quad's alpha is uniform along its run, so every one of
+those count changes is a hard edge. Corners and doorways were only where it showed first.
+
+**The slab fact was already written down and half-applied.** The superseded entry names it as "the
+whole port" and uses it to PLACE each strip correctly — and misses that the same insets destroy the
+strips' CONTINUITY. `SewerDetail` and `RoofShadows` get away with per-face quads because a sewer wall
+face IS the cell boundary and a parapet span is derived as a run; neither has a slab.
+
+**So it is a blurred field instead** — `render.world.ContactMask`, the third member of a family this
+repo already had two of. A canvas of the masonry footprint, gaussian-blurred, sampled by world XZ and
+multiplied into `irradiance` and `reflectedLight.direct*`. A field has no tiles to fail to meet, so
+corners, doorways, slab insets, notches, T-junctions and the hangar all fall out of one blur with
+nothing written for any of them. `FacilityDetail` drops from an emitter to 50 lines that return
+rectangles: **401 slab boxes as solid, notches punched back out as holes** (a wall cell is the union
+of its runs, never its box), and door cells skipped — no masonry at floor level, so the band fades
+into an opening over the blur width with no code for it.
+
+**IT SHIPPED ONCE MORE BROKEN, AND THE SECOND FAILURE IS WORTH MORE THAN THE FIRST.** The first
+version scaled `irradiance` at `<lights_fragment_end>`, reasoning only about `IndoorMask`. Reported
+from the game as **holes in the LOS shadow** — and the cause is that `VisionMask` does not DARKEN a
+hidden surface, it **mixes it toward the fog colour** (`VisionMask.hx:642-644`, and its own header
+says why: so the hidden region "adds no new silhouette to the frame"). Any term applied upstream of
+that mix therefore survives into the veil at the floor weight — `MASK.hidden` **0.14** — so the wall
+footprint printed through as blotches at roughly 6% modulation, putting structure into the one region
+whose whole job is to have none. It was also shading floor the player cannot see.
+
+**So the rule is: anything that must not be seen through the mask is applied AT OR AFTER
+`<fog_fragment>`, keyed on the mask.** `ContactMask` now multiplies `gl_FragColor.rgb` there.
+
+**The key is `visMaskRaw`, NOT `visAmt`.** `visAmt` is floored at `visMaskFloor` and bottoms out at
+0.14, so gating on it would have left 14% of the same artefact. `VisionMask` now publishes the raw
+pre-floor blend as a fragment global — declared unconditionally so it is a contract a downstream
+patcher can rely on rather than something it must detect. Measured live: **`visMaskRaw` is exactly
+1.0 on a visible cell and exactly 0 on a hidden one.**
+
+**Ordering is bought by the NESTING, not by the anchor.** Both hooks replace `<fog_fragment>` with
+itself plus their code, so whoever patches FIRST lands LAST in `main()` — `addFloor` is therefore
+`VisionMask.patch(ContactMask.patch(mat))`, and swapping it makes the shader read an unassigned
+global. Note `VisionMask.patch` itself calls `IndoorMask.patch` on the way out, so one line there
+reaches every world surface.
+
+Profile measured across a wall afterwards, in cell coordinates (masonry spans 30.25-30.75): peak
+mask 215 mid-slab, **~40% darkening at the masonry edge**, ramp dying to 0 by 31.15 — about **1.6
+world units** of visible falloff, against the quad version's `SHADOW_W` 1.1. Peak is 215 and not 255
+because a 2-unit wall is only 12 texels against a 4.2-texel blur, so a thin wall occludes less than a
+thick one, which is the right way round.
+
+Only the three interior FLOORS take the patch, through a new `FacilityGeom.addFloor` rather than a
+sixth argument to `add`: a WALL cannot take it at all, the mask being top-down, so every fragment of
+a 6-unit face would sample the same xz and the column would darken by one flat amount.
+
+**Verdict: landed, and it GIVES BACK the draw call.** 77 calls against the strip version's 78 and the
+pre-phase 77 — the quad mesh is gone and nothing replaces it. 81 programs, unchanged from the strips
+(one key either way, `contact` instead of a new material). Warmed in `FacilityWarm` beside the indoor
+mask, or the floors would compile on the frame the player walks in. Zero art both ways. `px` 24 and
+not `IndoorMask`'s 8: that mask only has to land a step in the right place, this one is a ramp the eye
+reads directly as shading, and at 8 it quantises into bands.

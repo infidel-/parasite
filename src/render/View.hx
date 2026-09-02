@@ -461,6 +461,7 @@ class View {
     // kind starts without one — otherwise a tunnel entered straight after a facility would compile
     // the indoor swap into its walls and sample the compound's floor plan for it
     render.world.IndoorMask.detach();
+    render.world.ContactMask.detach();
     area3d = a;
     shownKey = key;
 

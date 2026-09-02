@@ -750,8 +750,8 @@ class FacilityStyle
 
   // and how far apart the CORRIDOR pass stands two of them. corridors had no light source of any
   // kind until it: the room pass reads area.generatorInfo's room rects and a corridor is never in
-  // one, so slightly MORE than half the interior floor (405 lino cells against 383 of room tile on a
-  // generated compound) sat at the flat IndoorMask ambient and nothing else. 6 puts about four down
+  // one, so 37% of the interior floor (279 lino cells against 384 of room tile and 88 of hangar
+  // concrete) sat at the flat IndoorMask ambient and nothing else. 6 puts about four down
   // a 24-cell corridor — the pools just touch, so there is no dark stretch, and half the 12-slot
   // pool is still free for the rooms seen through the doorways as the player walks
   public static inline var CORR_SPACING = 6;
@@ -762,6 +762,29 @@ class FacilityStyle
   // corridor as a FRACTION of it means this follows any future move of INDOOR.direct instead of
   // quietly going stale at an absolute number fitted against the old one
   public static inline var CORR_MUL = CEIL_MUL * CORR_DIM;
+
+  // ---- fake contact shadow where a wall meets an interior floor (render.world.ContactMask) ------
+
+  // the tunnels and the streets do this with one gradient QUAD per wall face (SewerDetail,
+  // RoofShadows) and the facility cannot: that shape needs the wall face to BE the cell boundary,
+  // which it is underground and is not here, because a facility wall is a slab that insets wherever
+  // the wall line does not carry. Built that way first and measured, the strips gapped at every
+  // inset and stacked at every notch — see ContactMask's header for the coverage census. So this one
+  // is a blurred field instead, and these three replace the quad version's SHADOW_W / SHADOW_ALPHA /
+  // SHADOW_Y plus the gradient texture it needed
+  public static final CONTACT:render.world.ContactMaskOpts = {
+    // the indoor mask runs at 8, but that one only has to land a step in the right place while this
+    // is a ramp the eye reads directly as shading on the floor — at 8 it quantises into bands
+    px: 24,
+    // the entire reach of the shadow, in world units. the tunnels' quad reaches 1.1 with a gradient
+    // painted across it; a gaussian's visible ramp runs to roughly twice its sigma either way, so
+    // this is that reach expressed as the one number a field needs
+    blur: 0.7,
+    // how dark the floor goes where the mask reads solid. the blurred step sits at HALF strength on
+    // the masonry boundary, so the darkest floor fragment there is one touching the wall face at
+    // about strength/2 — this is fitted against that and not against anything that renders at 0.9
+    strength: 0.9,
+  };
 
   // ---- the additive glow layer (render.facility.FacilityGlow) ----------------------------------
 

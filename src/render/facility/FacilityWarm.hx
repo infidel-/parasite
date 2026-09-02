@@ -6,6 +6,7 @@ import render.RenderConfig;
 import render.SceneSetup;
 import render.Warmup;
 import render.Models.ModelVariant;
+import render.world.ContactMask;
 import render.world.IndoorMask;
 import render.world.VisionMask;
 
@@ -27,10 +28,17 @@ class FacilityWarm
       // the indoor mask goes over the warm model, for the SAME reason the vision mask makes this scene
       // necessary at all: it contributes a customProgramCacheKey of its own, so a facility wall warmed
       // without it warms a key the game never asks for and every lit surface in there recompiles on
-      // the first entry
+      // the first entry. the CONTACT mask rides along with it and for the same reason one step
+      // further in: it contributes a SECOND key and only the three interior FLOORS carry it, so
+      // warming without it warms a floor key the game never asks for and leaves the one it does ask
+      // for to compile on the frame the player walks in
+      var masonry = FacilityDetail.masonry(model);
       var mask = function()
-        IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
-          function(col, row) return FacilityModel.isInterior(model, col, row));
+        {
+          IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+            function(col, row) return FacilityModel.isInterior(model, col, row));
+          ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
+        }
       mask();
       var bundle = FacilityScene.build(renderer, lampPool);
       var sc = bundle.scene;
@@ -69,6 +77,7 @@ class FacilityWarm
       // and off again: the glb callbacks below re-attach around themselves, and nothing else in this
       // process may warm with an indoor swap the area it belongs to does not render with
       IndoorMask.detach();
+      ContactMask.detach();
       // park the moon's shadow box over the compound, so Warmup.compile's render actually runs the
       // shadow depth pass — otherwise the box sits at world origin, the caster falls outside it and
       // the position-only depth programs compile on the first real frame instead. the compound is
@@ -141,6 +150,7 @@ class FacilityWarm
                   mask();
                   VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
                   IndoorMask.detach();
+                  ContactMask.detach();
                   done();
                 });
             }
@@ -152,6 +162,7 @@ class FacilityWarm
                   mask();
                   VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
                   IndoorMask.detach();
+                  ContactMask.detach();
                   done();
                 });
             }

@@ -6,6 +6,7 @@ import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityModel.Wall;
+import render.world.ContactMask;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -608,9 +609,9 @@ class FacilityGeom
         paraCells: st.hangar ? 0 : ringCells(m, si),
         paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
-      add(scene, fTile, FacilityStyle.FLOOR_TILE, true, false);
-      add(scene, fLino, FacilityStyle.FLOOR_LINO, true, false);
-      add(scene, fConcrete, FacilityStyle.FLOOR_CONCRETE, true, false);
+      addFloor(scene, fTile, FacilityStyle.FLOOR_TILE);
+      addFloor(scene, fLino, FacilityStyle.FLOOR_LINO);
+      addFloor(scene, fConcrete, FacilityStyle.FLOOR_CONCRETE);
       add(scene, wOut, wallTex, true, true);
       add(scene, wRoom, FacilityStyle.WALL_ROOM, true, false);
       add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
@@ -1100,6 +1101,29 @@ class FacilityGeom
       var mesh = new Mesh(geom(b), mat);
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
+      scene.add(mesh);
+    }
+
+// the same merge as `add`, for a surface the contact shadow lies ON — the three interior floors and
+// nothing else. it is a separate entry point rather than a sixth argument to `add` because that is
+// the arg count this repo's style guide says to stop appending at, and because the answer is not a
+// caller's taste: a WALL cannot take this patch at all. render.world.ContactMask is top-down, so
+// every fragment of a 6-unit wall face samples the same xz and the whole column would darken by one
+// flat amount. the mask darkens the ground a wall stands on, never the wall
+  static function addFloor(scene:Scene, b:MeshBuf, tex:String):Void
+    {
+      if (b.idx.length == 0)
+        return;
+      // CONTACT FIRST, VISION SECOND, and the order is load-bearing in both directions. both hooks
+      // replace <fog_fragment> with itself plus their code, so whoever patches first lands LAST in
+      // main() — and the contact term reads `visMaskRaw`, which VisionMask assigns. Swap these and
+      // the shader either fails to compile or reads an unassigned global
+      var mat = VisionMask.patch(ContactMask.patch(new MeshLambertMaterial({
+        map: Textures.loadTexture(tex, 'wall', 1),
+        side: THREE.FrontSide,
+      })));
+      var mesh = new Mesh(geom(b), mat);
+      mesh.receiveShadow = true;
       scene.add(mesh);
     }
 

@@ -685,8 +685,15 @@ class VisionMask
         // area kind that carries this mask sets fog and background to the SAME colour, so vis 0 lands
         // exactly on the background and the area stops having a silhouette. free, since it rides the
         // fetch .r and .g already did
-        '  float visAmt = mix( visMaskFloor, 1.0,\n' +
-        '    mix( visM.r, visWobbled, visM.g ) ) * visM.b;\n';
+        '  float visBlend = mix( visM.r, visWobbled, visM.g );\n' +
+        // PUBLISHED for downstream patchers, as a global assigned here — see the declaration in the
+        // prelude below. it is the RAW visibility and deliberately not visAmt: visAmt is floored at
+        // visMaskFloor so a hidden surface still lands at 0.14 and never reaches zero, which is
+        // right for what this file does with it (a hidden thing has to stay visible enough to read
+        // as fog) and wrong for anything that wants to switch OFF where the player cannot see. the
+        // rim .b is in it, so an effect keyed on this fades out at the area edge with everything else
+        '  visMaskRaw = visBlend * visM.b;\n' +
+        '  float visAmt = mix( visMaskFloor, 1.0, visBlend ) * visM.b;\n';
       var apply = switch (mode)
         {
           case 'g': '  gl_FragColor.rgb *= visAmt;\n';
@@ -745,6 +752,13 @@ class VisionMask
             'uniform float visMaskFloor;\n' +
             'uniform float visMaskWobble;\n' +
             'varying vec2 vVisMask;\n' +
+            // the published raw visibility, declared here and assigned in `sample` above. a GLOBAL
+            // and not a varying: it is computed per fragment from a texture fetch, and the only
+            // readers are injections that run LATER IN THE SAME main(). declaring it
+            // unconditionally, even where nothing reads it, is what makes it a contract a downstream
+            // patcher can rely on rather than something it has to detect — an unread global costs
+            // nothing, the compiler drops it
+            'float visMaskRaw;\n' +
             StringTools.replace(shader.fragmentShader, '#include <fog_fragment>',
               '#include <fog_fragment>\n' + sample + apply);
         };

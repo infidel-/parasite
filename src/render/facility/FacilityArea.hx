@@ -9,6 +9,7 @@ import render.SceneSetup;
 import render.particles.LampLights;
 import render.particles.LampPost;
 import render.facility.FacilityModel.Facility;
+import render.world.ContactMask;
 import render.world.IndoorMask;
 import render.world.VisionMask;
 import render.world.WorldCtx;
@@ -110,6 +111,11 @@ class FacilityArea implements Area3D
       // two cases the obvious predicates get wrong — see the predicate's own header
       IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
         function(col, row) return FacilityModel.isInterior(model, col, row));
+      // and the fake ambient occlusion on the floor, which has to be attached here for exactly the
+      // same reason: ContactMask.patch reads `on` at MATERIAL-CREATION time, and the floors are
+      // created three lines into FacilityGeom.build below
+      var masonry = FacilityDetail.masonry(model);
+      ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();
@@ -250,6 +256,10 @@ class FacilityArea implements Area3D
             ceilings: lamps.ceilings.length,
             corridors: lamps.corridors.length,
             bulbs: bulbs,
+            // how many masonry rects the contact mask was painted from, read off the array the
+            // painter actually consumed. it is a FIELD and not geometry, so it draws nothing and
+            // there is no instance count to compare it against — this is the only handle on it
+            shadows: render.world.ContactMask.count,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
             // answer. the parapet: did it close on every structure and is the HANGAR really left
