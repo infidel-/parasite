@@ -21,9 +21,12 @@ typedef VisionMaskOpts = {
   // how deep into a lit blocker cell the mask fades where it touches one the sweep never reached, in cells
   wallFade:Float,
   // how far the reveal of a blocker cell is pulled in, in cells, on each side the WALL LINE does not
-  // carry into — i.e. how much of a blocker cell is open floor rather than masonry. 0 where a solid
-  // cell is solid corner to corner (the tunnels, the wilderness's rocks); a facility wall slab is
-  // half a cell thick and centred, so a quarter of every wall cell is floor on each open side
+  // carry into. 0 where a solid cell is solid corner to corner (the tunnels, the wilderness's rocks).
+  //
+  // it is NOT the masonry footprint, and stopping there was measured and rejected: it puts the wall's
+  // outer FACE on the ramp's midpoint, where `wobble` then drags the sample back and forth across the
+  // steepest part of the blur and the face reads mottled. aim it at the slab's CENTRE-LINE instead —
+  // the same reasoning IndoorMaskOpts.grow is written up with — so both faces sit clear of the ramp
   blockerInset:Float,
   // how far the AREA'S OUTER RIM fades out, in cells (the mask's blue channel)
   edgeFade:Float,

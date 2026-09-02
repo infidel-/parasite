@@ -508,8 +508,29 @@ class VisionMask
 // masonry face, 178 a unit out and 76 half a unit past that, i.e. a full unit of near-white floor
 // outside the room before the shadow started, plus a blur skirt. render.world.IndoorMask hit the same
 // cell-vs-slab mismatch from the other side and bought its way out with IndoorMaskOpts.grow; this is
-// that correction for the reveal, and it lands the boundary on the masonry face with only opt.blur
-// straddling it.
+// that correction for the reveal.
+//
+// THE BOUNDARY GOES ON THE SLAB'S CENTRE-LINE, NOT ON ITS FACE, and that is opt.blockerInset's whole
+// second term. stopping at the masonry face is the obvious reading and it shipped: it puts the wall's
+// OUTER face exactly on the ramp's 50% point, which is where opt.blur is steepest, and the wobble then
+// drags the sample back and forth across it — measured along one run, the same face swung between
+// 0.278 and 0.722, reported from the game as a patchy-black wall. the slab is 2 units through against
+// a blur sigma of 0.5, i.e. its two faces are 4 SIGMA apart, so the centre-line is the unique placement
+// that leaves both of them 2 sigma clear and the wobble's 0.6 sigma of throw cannot reach either
+  static function inset(c:Int, r:Int, dc:Int, dr:Int):Int
+    {
+      if (insetPx == 0 ||
+          !openSide(c, r, dc, dr))
+        return 0;
+      // BOTH sides of this axis open onto floor — a free-standing pier, or the end cell of a wall stub
+      // reached through the end face, where the two flanking faces are edge-on and castRay rejects
+      // them as parallel. pulling both to the centre-line would collapse the reveal to a line and
+      // leave a black hole where the wall is, so each pulls half as far, which for a centred slab is
+      // its own two faces. rare enough not to earn a second plane in the opts
+      return openSide(c, r, -dc, -dr) ? insetPx >> 1 : insetPx;
+    }
+
+// does this side of a blocker cell open onto floor the reveal has to be pulled back from?
 //
 // KEYED ON `carries`, NOT ON `solid`, and the difference is the whole trap. a door and a window are
 // both see-through, so neither is a blocker and neither is ever painted here — but the wall line RUNS
@@ -517,19 +538,18 @@ class VisionMask
 // reveal back off masonry that is really there and cut a dark notch into a lit wall at every doorway
 // and every window jamb, which is the artefact this set out to remove, moved one cell along.
 //
-// AND NEVER THE FACE THE SWEEP CAME IN THROUGH, which is the other half and was found by shipping the
-// first half alone. a wall cell has open floor on BOTH sides, and only the far one is hidden: the near
-// one is the floor the player is standing on. the polygon covers it only as far as the CELL boundary,
-// so insetting that side too left the strip between the masonry face and the cell edge painted by
-// neither — a dark band a unit wide at the foot of every wall, measured at 91 of 255 where the two
-// should have met at 255. the entry face is where the ray's own hit landed, accumulated above
-  static function inset(c:Int, r:Int, dc:Int, dr:Int):Int
+// AND THE FACE THE SWEEP CAME IN THROUGH IS NEVER OPEN, which is the other half and was found by
+// shipping the first half alone. a wall cell has floor on BOTH sides, and only the far one is hidden:
+// the near one is what the player is standing on. the polygon covers it only as far as the CELL
+// boundary, so treating that side as open too left the strip between the masonry face and the cell
+// edge painted by neither — a dark band a unit wide at the foot of every wall, measured at 91 of 255
+// where the two should have met at 255. the entry face is where the ray's own hit landed, accumulated
+// into sideAt above
+  static function openSide(c:Int, r:Int, dc:Int, dr:Int):Bool
     {
-      if (insetPx == 0)
-        return 0;
       var bit = dc < 0 ? S_W : (dc > 0 ? S_E : (dr < 0 ? S_N : S_S));
       if ((sideAt[r * mw + c] & bit) != 0)
-        return 0;
+        return false;
       var nc = c + dc;
       var nr = r + dr;
       // off the grid there is no cell to carry the wall line on, and no floor to spill onto either:
@@ -538,8 +558,8 @@ class VisionMask
           nr < 0 ||
           nc >= mw ||
           nr >= mh)
-        return 0;
-      return carries(nc, nr) ? 0 : insetPx;
+        return false;
+      return !carries(nc, nr);
     }
 
 // does this lit blocker cell touch a blocker the sweep never reached?

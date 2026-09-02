@@ -937,11 +937,20 @@ class FacilityStyle
     px: 8,
     blur: 0.5,
     wallFade: 0.5,
-    // DERIVED, not tuned: the emitter centres a slab of WALL_T in its cell (FacilityGeom.slab insets
-    // a side by exactly this where the wall line does not carry on), so this IS that inset read as a
-    // fraction of a cell. it is the one field the tunnels and the wilderness leave at 0 — a facility
-    // wall is the first blocker in the game thinner than the cell the mask grids it on
-    blockerInset: (CityConfig.CELL - WALL_T) / 2 / CityConfig.CELL,
+    // DERIVED, not tuned, and read as "out to the masonry face, then half way THROUGH the slab": the
+    // emitter centres a slab of WALL_T in its cell, so the first term is FacilityGeom.slab's own inset
+    // and the second lands the boundary on the wall's centre-line. it is the one field the tunnels and
+    // the wilderness leave at 0 — a facility wall is the first blocker in the game thinner than the
+    // cell the mask grids it on.
+    //
+    // THE SECOND TERM IS WHAT MAKES IT HOLD STILL, and it cost a round to learn. stopping at the face
+    // put the wall's outer face on the ramp's 50% point, and `wobble` 0.3 then swung it between 0.278
+    // and 0.722 along a single run — measured, and reported from the game as a patchy-black wall. the
+    // slab is WALL_T = 2 units through against a `blur` sigma of 0.5, i.e. the two faces are 4 SIGMA
+    // apart, so a boundary on the centre-line is the unique placement leaving both of them 2 sigma
+    // clear: the inner face lands at ~0.98 and the outer at ~0.02, and the wobble's 0.6 sigma of
+    // throw cannot reach either
+    blockerInset: ((CityConfig.CELL - WALL_T) / 2 + WALL_T / 2) / CityConfig.CELL,
     // a facility area is ringed by road, lot and grass right out to the border, like the wilderness
     // and unlike a tunnel, so the outer rim has to dissolve into the background or it draws a hard
     // line with nothing past it

@@ -1444,6 +1444,9 @@ reads directly as shading, and at 8 it quantises into bands.
 
 ## The vision mask reveals a CELL, and a facility wall is half a cell (2026-09-03)
 
+> The boundary PLACEMENT below was corrected the same day — it lands on the slab's centre-line, not
+> on its face. See "A boundary on a wall's face is a boundary the wobble can shake".
+
 Reported from the game as **wide strips of undarkened floor outside the room before the LOS shadow
 starts**, and it is not the contact pass at all — it predates the whole phase and would have been
 there since `VisionMask` reached the facility.
@@ -1495,3 +1498,41 @@ its neighbour's across the shared edge.
 The green (blocker) channel is deliberately left whole-cell. It gates the wobble, and the boundary it
 now wobbles is the per-cell reveal edge sitting on the masonry face, which is exactly the edge that
 wanted breaking up.
+
+## A boundary on a wall's face is a boundary the wobble can shake (2026-09-03)
+
+Reported from the game as **the outer wall reads patchy-black from inside the room** — "can we make it
+fully dark too?". Not a new defect; the entry above put the boundary there.
+
+**A blur boundary is not a place to put a SURFACE.** Landing the reveal exactly on the masonry face is
+the obvious reading of "reveal what the wall occupies", and it puts the wall's outer face on the ramp's
+50% point — the steepest part of `blur`. `wobble` 0.3 then displaces the sample **0.6 sigma** either
+way along the run, and 0.6 sigma either side of a midpoint is a huge swing. Measured along one run's
+outer face: **0.278 to 0.722, mean 0.507**. The inner face, a whole slab away, sat at 0.999–1.000.
+
+The fix is FORCED, not tuned. The slab is `WALL_T` = 2 units through and `blur` sigma is 0.5, so the
+two faces are **4 sigma apart** — which makes the centre-line the unique placement leaving both of them
+2 sigma clear. `blockerInset` becomes `(CELL - WALL_T)/2 + WALL_T/2`, read as "out to the masonry face,
+then half way through the slab", and it is the same argument `IndoorMaskOpts.grow` is written up with:
+aim past the surface by the blur, never at it.
+
+Measured after, over EVERY exposed hidden-side wall face in the level (273 samples, the shader's own
+`visMaskRaw` recomputed in JS — canvas fetch, wobble, `.g` gate and rim, so it is what the fragment
+sees and not what the canvas holds): **p50 0.033, p90 0.061**, 6 samples over 0.15. Visible-side faces
+(252 samples) **p50 0.973, p10 0.941** — a ~6% ripple bought for a 12.7x drop on the hidden side.
+Walking the door wall's room-facing face through both jambs: 0.938–1.000, no notch.
+
+**It also kills the residual skirt the entry above shipped with.** Floor a hair outside the masonry
+now reads **0.002 mean** where the face-aligned boundary left 0.66 world units of visible ramp.
+
+One guard, and it is not hypothetical: where BOTH sides of an axis open onto floor, pulling both to the
+centre-line collapses the reveal to a line and leaves a black hole where the wall is. That is the end
+cell of a wall stub reached through its end face — its two flanking faces are edge-on and `castRay`
+rejects them as parallel, so neither is ever the entry face. Each side pulls half as far there, which
+for a centred slab is its own two faces. `inset()` split into `openSide()` + `inset()` to ask it.
+
+**Trap for the next reader: a point on a wall's face plane is not always an exposed face.** The first
+census flagged a 0.441 spike and it was a corner — `carries(26,19)` is true, the wall line turns, and
+that sample sat inside masonry. Census only where the neighbour does not carry.
+
+**Verdict: landed, +0 draw calls, +0 programs.** No geometry, no material, no permutation.
