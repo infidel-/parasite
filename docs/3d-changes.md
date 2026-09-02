@@ -1261,12 +1261,20 @@ Reported from the game, standing in a lab corridor: "completely empty and has no
 ambient". Not a regression — the fixture pass walks `m.rooms`, which is `area.generatorInfo`'s
 `TEMP_BUILDING_ROOM` blocks, and **a corridor is never in one**. So every corridor cell in the
 compound had no light source of any kind and rendered at the flat `IndoorMask` ambient and nothing
-else. Counted off the saved grid: **405 `TILE_FLOOR_LINO` cells against 383 of room tile and 88 of
-hangar concrete** — slightly MORE than half the interior floor, holding **0 of the 12 fittings**.
+else. Counted off the saved grid: **279 `TILE_FLOOR_LINO` cells against 384 of room tile and 88 of
+hangar concrete — 37% of a 751-cell interior floor**, holding **0 of the 12 fittings**.
 
-That is also the half that matters. Standing inside, `ROOF_FADE` 0.0 drops the fading deck to
-nothing, so a two-cell corridor reads as `rim 2u | floor 8u | rim 2u` with both wall faces edge-on:
-the floor is the entire canvas indoors, and a pooled spotlight lands straight on it.
+**That count was first written up as 405 and "more than half", and it was wrong**: the sum had swept
+in `TILE_FLOOR_CONCRETE` (88), `TILE_FLOOR_TILE_UNWALKABLE` (29) and `TILE_HANGAR_DOOR` (9) — three
+ids that neighbour `TILE_FLOOR_LINO` (116) in the 112–120 block and are not corridor. **Read a tile
+histogram by NAME, never by summing an id range.** The conclusion did not move — 0 fittings is 0
+whatever the denominator — but the denominator is the whole argument for the pass's priority.
+
+Standing inside, `ROOF_FADE` 0.0 drops the fading deck to nothing, so a corridor reads as
+`rim 2u | floor 8u | rim 2u` and a pooled spotlight lands straight on the floor. **The first write-up
+also said "with both wall faces edge-on", and that generalised from ONE corridor**: the rig rests at
+yaw 180, so a run's walls are edge-on one way and broadside the other — measured across this
+compound, **120 of 243 corridor wall faces (49.4%) face the resting camera.**
 
 **Corridors are scanned, not listed, because a corridor has no rect.** It is an L, a T and a ring as
 often as it is a straight length, so the object a run-finder would deal in does not exist. The pass

@@ -415,11 +415,11 @@ class FacilityLamps
 
 // hang a fixture over the corridors, which the room pass above cannot reach at all: `m.rooms` is
 // area.generatorInfo's TEMP_BUILDING_ROOM blocks, a corridor is never one, and so until this every
-// corridor cell in the compound — 405 of them against 383 of room tile, i.e. slightly MORE than half
-// the interior floor — had no light source of any kind and read at the flat IndoorMask ambient and
-// nothing else. that is also the only surface indoors that the gameplay camera really sees: standing
-// inside, FacilityStyle.ROOF_FADE drops the deck to nothing and a two-cell corridor reads as the
-// roof rim, the floor, and the rim again, with both wall faces edge-on.
+// corridor cell in the compound — 279 of them, against 384 of room tile and 88 of hangar concrete,
+// so 37% of the 751-cell interior floor — had no light source of any kind and read at the flat
+// IndoorMask ambient and nothing else. the floor is also what the gameplay camera mostly sees
+// indoors: standing inside, FacilityStyle.ROOF_FADE drops the deck to nothing, so a corridor reads
+// as the roof rim, the floor, and the rim again.
 //
 // row-major greedy against a spacing test, and it finds no RUNS first: a corridor is an L, a T and a
 // ring as often as it is a straight length, so the thing a run-finder would have to deal in does not
