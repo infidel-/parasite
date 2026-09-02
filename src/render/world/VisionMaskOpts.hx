@@ -20,6 +20,11 @@ typedef VisionMaskOpts = {
   blur:Float,
   // how deep into a lit blocker cell the mask fades where it touches one the sweep never reached, in cells
   wallFade:Float,
+  // how far the reveal of a blocker cell is pulled in, in cells, on each side the WALL LINE does not
+  // carry into — i.e. how much of a blocker cell is open floor rather than masonry. 0 where a solid
+  // cell is solid corner to corner (the tunnels, the wilderness's rocks); a facility wall slab is
+  // half a cell thick and centred, so a quarter of every wall cell is floor on each open side
+  blockerInset:Float,
   // how far the AREA'S OUTER RIM fades out, in cells (the mask's blue channel)
   edgeFade:Float,
   // how far the boundary wanders from where the polygon put it, in WORLD units. blocker cells only

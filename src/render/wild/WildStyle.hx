@@ -548,6 +548,9 @@ class WildStyle
     px: 8,
     blur: 0.5,
     wallFade: 0.5,
+    // 0: out here a blocker is a boulder or a thicket stamped on a whole cell, with no thin wall line
+    // running through it, so its reveal has nothing to be pulled back off
+    blockerInset: 0.0,
     // the wilderness has no always-solid border ring the way a tunnel does — the turf is walkable right
     // to the edge — so this does dim the outermost cell of real ground. kept anyway: past that cell the
     // area simply stops, and a lit rim meeting the background on a hard line is exactly the failure this

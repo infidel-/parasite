@@ -63,12 +63,27 @@ class VisionMask
   // how far past a hit to step when recovering the blocker cell. well inside a 1-cell wall, well
   // clear of numerical noise on the face it just landed on
   static inline var STEP_EPS = 0.05;
+  // how close to a cell boundary a hit has to land to count as having come in through that FACE. the
+  // segments are axis-aligned on cell boundaries, so a real hit sits on an exact integer and this only
+  // has to clear castRay's own rounding
+  static inline var FACE_EPS = 0.000001;
+  // the four faces of a blocker cell, as a bitmask of the ones the sweep came in through
+  static inline var S_W = 1;
+  static inline var S_E = 2;
+  static inline var S_N = 4;
+  static inline var S_S = 8;
 
   // the live area kind's tuning, and the STATIC blocker predicate the green channel is painted from.
   // both are statics rather than arguments threaded through the file because exactly one area is ever
   // built — the same reason the canvas and the uniforms below are
   static var opt:VisionMaskOpts = null;
   static var solid:(Int, Int) -> Bool = null;
+  // does the WALL LINE run on through this cell — a different question from `solid`, and the reason
+  // the two are separate statics is that they differ at exactly the cells a reveal inset gets wrong.
+  // see inset() below. defaulted to `solid` by attach(), so a kind with no thin walls never says it
+  static var carries:(Int, Int) -> Bool = null;
+  // opt.blockerInset in TEXELS, resolved once per area rather than per lit wall cell per rebuild
+  static var insetPx = 0;
 
   static var canvas:js.html.CanvasElement = null;
   static var ctx:js.html.CanvasRenderingContext2D = null;
@@ -90,6 +105,10 @@ class VisionMask
   // whether the masonry beside it was reached
   static var seen:Array<Int> = null;
   static var seenGen = 0;
+  // per reached blocker cell, the faces the sweep came in through (S_W..S_S). read only where `seen`
+  // says this generation reached the cell, so it needs no clearing of its own — inset() below is the
+  // only reader and it runs over the cells the sweep just collected
+  static var sideAt:Array<Int> = null;
 
   // the uniform blocks every patched material references BY IDENTITY. three stores the reference it
   // is handed in onBeforeCompile, so writing .value here reaches every material at once and an update
@@ -133,10 +152,18 @@ class VisionMask
 // is the whole requirement — it decides where the boundary may wobble, which is a fact about the level
 // and not about its doors. underground that is SewerModel.isFloor rather than canSeeThrough for exactly
 // that reason; in the open there are no doors, so canSeeThrough IS static and the wilderness passes it
-  public static function attach(o:VisionMaskOpts, w:Int, h:Int, isSolid:(Int, Int) -> Bool):Void
+//
+// `carriesWall` is the second static predicate and is only ever asked where opt.blockerInset is
+// non-zero — i.e. by the facility, whose wall is thinner than the cell it is gridded on. it is
+// OPTIONAL because a kind whose blocker fills its cell has no use for it and would only be passing
+// isSolid twice
+  public static function attach(o:VisionMaskOpts, w:Int, h:Int, isSolid:(Int, Int) -> Bool,
+      ?carriesWall:(Int, Int) -> Bool):Void
     {
       opt = o;
       solid = isSolid;
+      carries = carriesWall != null ? carriesWall : isSolid;
+      insetPx = Math.round(o.blockerInset * o.px);
       uFloor.value = o.hidden;
       uFloorAdd.value = o.hiddenAdd;
       uWobble.value = o.wobble / 1.5;
@@ -400,10 +427,12 @@ class VisionMask
           else sctx.lineTo(hx * P, hy * P);
           n++;
           // the blocker this ray stopped on, recovered by stepping a hair further along it. revealing
-          // that whole cell is what makes a wall the player is LOOKING AT read solid instead of
-          // half-lit — the 2D view punches out the same tiles (addLOSHitOpaqueTilePaths) — and down
-          // here it lights the wall's near face AND its ledge cap, which are the two parts of it the
-          // overhead camera actually sees. the range bound lands on open floor and fails this test
+          // it is what makes a wall the player is LOOKING AT read solid instead of half-lit — the 2D
+          // view punches out the same tiles (addLOSHitOpaqueTilePaths) — and down here it lights the
+          // wall's near face AND its ledge cap, which are the two parts of it the overhead camera
+          // actually sees. the range bound lands on open floor and fails this test.
+          // it used to reveal the whole CELL, which is right only where the blocker fills one; see
+          // inset() for what a facility wall does with the rest of its cell
           var wc = Math.floor(hx + rx * STEP_EPS);
           var wr = Math.floor(hy + ry * STEP_EPS);
           // stamped, so a cell a dozen rays land on is collected once. it used to be painted once per
@@ -414,12 +443,27 @@ class VisionMask
               wr >= 0 &&
               wc < mw &&
               wr < mh &&
-              seen[wr * mw + wc] != seenGen &&
               !game.area.canSeeThrough(wc, wr))
             {
-              seen[wr * mw + wc] = seenGen;
-              wallCol.push(wc);
-              wallRow.push(wr);
+              var wi = wr * mw + wc;
+              if (seen[wi] != seenGen)
+                {
+                  seen[wi] = seenGen;
+                  sideAt[wi] = 0;
+                  wallCol.push(wc);
+                  wallRow.push(wr);
+                }
+              // and the FACE it came in through, accumulated over every ray that lands here rather
+              // than taken from the first — a corner pier is looked at from two sides at once. this is
+              // what inset() reads to leave the side the player is standing on at full reveal
+              if (hx - wc < FACE_EPS)
+                sideAt[wi] |= S_W;
+              else if (wc + 1 - hx < FACE_EPS)
+                sideAt[wi] |= S_E;
+              if (hy - wr < FACE_EPS)
+                sideAt[wi] |= S_N;
+              else if (wr + 1 - hy < FACE_EPS)
+                sideAt[wi] |= S_S;
             }
         }
       // fail OPEN, never dark. fewer than three hits means the sweep found nothing to stand on, and
@@ -437,12 +481,65 @@ class VisionMask
       sctx.beginPath();
       for (i in 0...wallCol.length)
         if (!fades(game, wallCol[i], wallRow[i]))
-          sctx.rect(wallCol[i] * P, wallRow[i] * P, P, P);
+          {
+            // the cell rect pulled back to the MASONRY the cell actually holds — see inset()
+            var c = wallCol[i];
+            var r = wallRow[i];
+            var ix = inset(c, r, -1, 0);
+            var iy = inset(c, r, 0, -1);
+            sctx.rect(c * P + ix, r * P + iy,
+              P - ix - inset(c, r, 1, 0), P - iy - inset(c, r, 0, 1));
+          }
       sctx.fill();
       // and the handful at the ends of a run are painted per texel
       for (i in 0...wallCol.length)
         if (fades(game, wallCol[i], wallRow[i]))
           fadeCell(game, wallCol[i], wallRow[i]);
+    }
+
+// how far a blocker cell's reveal is pulled in from one side, in TEXELS.
+//
+// the mask grids the level in CELLS and reveals a blocker as a whole one, which held for as long as
+// the only blockers were the tunnels' — SewerGeom fills a solid cell corner to corner, so the cell IS
+// the masonry. a facility wall is not: FacilityGeom.slab centres a slab of FacilityStyle.WALL_T =
+// CELL/2 in the cell and insets each side the wall line does not carry into, so a QUARTER of every
+// wall cell is open floor on that side. revealing the cell whole lit that floor, and the floor is on
+// the far side of the wall — measured in a corridor, a scanline across a wall read 254 at the outer
+// masonry face, 178 a unit out and 76 half a unit past that, i.e. a full unit of near-white floor
+// outside the room before the shadow started, plus a blur skirt. render.world.IndoorMask hit the same
+// cell-vs-slab mismatch from the other side and bought its way out with IndoorMaskOpts.grow; this is
+// that correction for the reveal, and it lands the boundary on the masonry face with only opt.blur
+// straddling it.
+//
+// KEYED ON `carries`, NOT ON `solid`, and the difference is the whole trap. a door and a window are
+// both see-through, so neither is a blocker and neither is ever painted here — but the wall line RUNS
+// ON through both and slab() therefore does not inset toward them. asking `solid` would pull the
+// reveal back off masonry that is really there and cut a dark notch into a lit wall at every doorway
+// and every window jamb, which is the artefact this set out to remove, moved one cell along.
+//
+// AND NEVER THE FACE THE SWEEP CAME IN THROUGH, which is the other half and was found by shipping the
+// first half alone. a wall cell has open floor on BOTH sides, and only the far one is hidden: the near
+// one is the floor the player is standing on. the polygon covers it only as far as the CELL boundary,
+// so insetting that side too left the strip between the masonry face and the cell edge painted by
+// neither — a dark band a unit wide at the foot of every wall, measured at 91 of 255 where the two
+// should have met at 255. the entry face is where the ray's own hit landed, accumulated above
+  static function inset(c:Int, r:Int, dc:Int, dr:Int):Int
+    {
+      if (insetPx == 0)
+        return 0;
+      var bit = dc < 0 ? S_W : (dc > 0 ? S_E : (dr < 0 ? S_N : S_S));
+      if ((sideAt[r * mw + c] & bit) != 0)
+        return 0;
+      var nc = c + dc;
+      var nr = r + dr;
+      // off the grid there is no cell to carry the wall line on, and no floor to spill onto either:
+      // the border run stands flush to the boundary, which is what dark() already assumes of it
+      if (nc < 0 ||
+          nr < 0 ||
+          nc >= mw ||
+          nr >= mh)
+        return 0;
+      return carries(nc, nr) ? 0 : insetPx;
     }
 
 // does this lit blocker cell touch a blocker the sweep never reached?
@@ -507,31 +604,39 @@ class VisionMask
       var fe = dark(game, c + 1, r);
       var fn = dark(game, c, r - 1);
       var fs = dark(game, c, r + 1);
-      // fades east/west only: constant down a column, so one full-height strip per column
+      // the masonry inset per side (see inset()), which is what every fill below is clipped to. a side
+      // that FADES is never inset — it fades into a blocker, so the wall line carries on through it —
+      // and saying so here keeps the ramps below measured over the whole cell, which is what makes
+      // them meet a neighbour's ramp across the shared edge
+      var iw = fw ? 0 : inset(c, r, -1, 0);
+      var ie = fe ? 0 : inset(c, r, 1, 0);
+      var inr = fn ? 0 : inset(c, r, 0, -1);
+      var isr = fs ? 0 : inset(c, r, 0, 1);
+      // fades east/west only: constant down a column, so one strip per column
       if (!fn && !fs)
         {
-          for (i in 0...P)
+          for (i in iw...P - ie)
             {
               var u = (i + 0.5) / P;
               sctx.fillStyle = ramp(fw ? u : 1.0, fe ? 1 - u : 1.0, f);
-              sctx.fillRect(c * P + i, r * P, 1, P);
+              sctx.fillRect(c * P + i, r * P + inr, 1, P - inr - isr);
             }
           return;
         }
       // fades north/south only: constant along a row
       if (!fw && !fe)
         {
-          for (j in 0...P)
+          for (j in inr...P - isr)
             {
               var v = (j + 0.5) / P;
               sctx.fillStyle = ramp(fn ? v : 1.0, fs ? 1 - v : 1.0, f);
-              sctx.fillRect(c * P, r * P + j, P, 1);
+              sctx.fillRect(c * P + iw, r * P + j, P - iw - ie, 1);
             }
           return;
         }
       // both axes: the ramp turns a corner, and no stack of linear gradients gives a minimum
-      for (j in 0...P)
-        for (i in 0...P)
+      for (j in inr...P - isr)
+        for (i in iw...P - ie)
           {
             // texel centre as a fraction of the cell, then the distance to the nearest fading side
             var u = (i + 0.5) / P;
@@ -600,6 +705,7 @@ class VisionMask
       sctx = scratch.getContext2d();
       // stamps start at 0 and seenGen is already past it, so a fresh grid reads as nothing reached
       seen = [for (i in 0...mw * mh) 0];
+      sideAt = [for (i in 0...mw * mh) 0];
       tex = new CanvasTexture(canvas);
       // DATA, not colour: an sRGB decode on the way in would bend the ramp between a seen and an
       // unseen point into something neither end asked for

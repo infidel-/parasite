@@ -164,9 +164,15 @@ class FacilityArea implements Area3D
       // canSeeThrough is object-aware. it is also the right answer here for a second reason — a
       // facility door never blocks sight at all (objects.Door.canSeeThrough), and the door leaves
       // are glazed, so the only real blockers are walls and the hangar's shutter
+      // and the second predicate the other three kinds do not pass: FacilityGeom.carries, which is
+      // what slab() insets against, so the mask pulls its reveal back off exactly the floor the
+      // masonry left open and off nothing else. a door and a window are see-through and so are not
+      // blockers, but the wall line runs on through both — asking the blocker test instead would cut
+      // a dark notch into a lit wall at every doorway and window jamb
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
         function(col, row) return FacilityModel.isWall(model, col, row) &&
-          model.wall[row][col] != FacilityModel.Wall.WINDOW);
+          model.wall[row][col] != FacilityModel.Wall.WINDOW,
+        function(col, row) return FacilityGeom.carries(model, col, row));
       attachDbg();
     }
 

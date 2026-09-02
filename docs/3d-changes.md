@@ -1441,3 +1441,57 @@ pre-phase 77 — the quad mesh is gone and nothing replaces it. 81 programs, unc
 mask, or the floors would compile on the frame the player walks in. Zero art both ways. `px` 24 and
 not `IndoorMask`'s 8: that mask only has to land a step in the right place, this one is a ramp the eye
 reads directly as shading, and at 8 it quantises into bands.
+
+## The vision mask reveals a CELL, and a facility wall is half a cell (2026-09-03)
+
+Reported from the game as **wide strips of undarkened floor outside the room before the LOS shadow
+starts**, and it is not the contact pass at all — it predates the whole phase and would have been
+there since `VisionMask` reached the facility.
+
+`VisionMask.polygon` reveals the blocker cell a ray stopped on as a WHOLE SQUARE, and its LOS segments
+sit on cell boundaries. That held for as long as the only blockers were the tunnels' — `SewerGeom`
+fills a solid cell corner to corner, so the cell IS the masonry. **A facility wall is the first blocker
+in the game thinner than the cell the mask grids it on**: `FacilityGeom.slab` centres `WALL_T = CELL/2`
+and insets each side the wall line does not carry into, so **a quarter of every wall cell is open
+floor, on each open side** — and the far one is floor behind the wall.
+
+Measured on a corridor scanline (cell coords, masonry face at 27.25), before: mask **50% at 27.001,
+10% at 26.835** — a full world unit of near-white floor past the face, dying only 1.66 units out. The
+contact field is no help there, reading 9% at 1 unit and 2% at 1.5, so it is lit floor with no shading
+on it sitting between the wall and the shadow.
+
+Fix is `VisionMaskOpts.blockerInset`, in cells, **derived and not tuned**: `(CELL - WALL_T)/2 / CELL` =
+0.25, i.e. `slab`'s own inset. Tunnels and wilderness stay 0 and `inset()` early-outs on that, so
+neither compiles a behaviour change. `IndoorMask` hit the identical cell-vs-slab mismatch from the
+other side and bought its way out with `IndoorMaskOpts.grow`; this is that correction for the reveal.
+
+**TWO predicates, and each half was found the hard way.**
+
+**It is keyed on `carries` (wall‖door), NOT on the mask's own `solid`.** They differ at exactly the
+cells that matter: a door and a window are see-through so neither is ever a blocker, but the wall line
+RUNS ON through both and `slab` does not inset toward them. Asking `solid` pulls the reveal off masonry
+that is really there and cuts a dark notch into a lit wall at every doorway and window jamb — the same
+artefact, moved a cell along. So `attach` takes an optional second predicate; only the facility passes
+one.
+
+**And never the face the sweep CAME IN THROUGH — the first half shipped alone and broke the near side.**
+A wall cell has open floor on BOTH sides and only the far one is hidden; the near one is the floor the
+player is standing on, and the polygon covers it only as far as the CELL boundary. Insetting that side
+too left the strip between masonry face and cell edge painted by neither: measured **91 of 255** where
+the two should have met at 255 — a dark band a unit wide at the foot of every wall, i.e. the reported
+bug inverted. The entry face is recovered from the ray's own hit against the cell bounds (`FACE_EPS`,
+segments are axis-aligned on integers) and accumulated over every ray into `sideAt`, not taken from the
+first — a corner pier is looked at from two sides at once.
+
+**Verdict: landed, +0 draw calls and +0 programs** — the mask adds no geometry, no material and no
+program permutation, so this cannot move either by construction. Three faces measured after, in cell
+coords: **50% crossing at 27.251, 34.749 and 30.749 against masonry faces at 27.25, 34.75 and 30.75.**
+Full-lit overhang **1.0 world unit → 0**; total skirt **1.66 → 0.66 units**, which is `blur` 0.5 and
+nothing else. Along the wall through both jambs of a real door the profile is flat at **240** with no
+notch. `fadeCell`'s ramps stay measured over the whole cell — a side that FADES fades into a blocker,
+so the wall line carries on through it and its inset is 0 — which is what keeps a run's ramp meeting
+its neighbour's across the shared edge.
+
+The green (blocker) channel is deliberately left whole-cell. It gates the wobble, and the boundary it
+now wobbles is the per-cell reveal edge sitting on the masonry face, which is exactly the edge that
+wanted breaking up.

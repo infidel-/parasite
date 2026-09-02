@@ -937,6 +937,11 @@ class FacilityStyle
     px: 8,
     blur: 0.5,
     wallFade: 0.5,
+    // DERIVED, not tuned: the emitter centres a slab of WALL_T in its cell (FacilityGeom.slab insets
+    // a side by exactly this where the wall line does not carry on), so this IS that inset read as a
+    // fraction of a cell. it is the one field the tunnels and the wilderness leave at 0 — a facility
+    // wall is the first blocker in the game thinner than the cell the mask grids it on
+    blockerInset: (CityConfig.CELL - WALL_T) / 2 / CityConfig.CELL,
     // a facility area is ringed by road, lot and grass right out to the border, like the wilderness
     // and unlike a tunnel, so the outer rim has to dissolve into the background or it draws a hard
     // line with nothing past it

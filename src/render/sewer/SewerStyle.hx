@@ -297,6 +297,10 @@ class SewerStyle
     // only bleeds half a texel, and holding the last lit texel a texel clear of the shared edge puts the
     // whole ramp inside the cell that can actually be seen. 0 gives the old hard per-cell reveal back
     wallFade: 0.5,
+    // 0, and structurally so rather than by taste: SewerGeom fills a solid cell corner to corner, so a
+    // blocker cell here IS masonry all the way to its edges and there is nothing to pull the reveal
+    // back off. the facility is the one kind whose wall is thinner than its cell
+    blockerInset: 0.0,
     // how far the LEVEL'S OUTER RIM fades out, in cells — the mask's BLUE channel, which multiplies
     // visAmt after everything else.
     // this is the one edge no amount of `blur` can soften, and not for want of trying: the blur is a
