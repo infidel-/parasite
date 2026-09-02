@@ -46,6 +46,15 @@ camera actually sees**. Gameplay is a zoom lerp capped at `parasiteZoom` 0.30 / 
 tactical is pinned top-down at 1.0 — measured in the tunnels, wall FACES are 0.67% of the view while
 ledge TOPS are 14.68%. Dressing a surface nobody looks at is the cheapest way to waste a pass.
 
+**That number prices a SURFACE, and it is NOT a veto on OBJECTS.** % of view is a REACH number, not a
+quality one (Phase 4 repeats it) — the sewers shipped wall decals AND a grime band at that same
+0.67%. A prop is priced by SILHOUETTE: at a measured 65.6° facility pitch a 2-unit prop still
+projects ~0.8 units of screen height, occludes floor and takes a shadow, which is why the park trees
+and the lot cones read fine. And **check ORIENTATION before calling a wall unseen** — the rig rests
+at yaw 180 plus a walkway side-angle and an RMB orbit, so a run's walls are edge-on one way and
+broadside the other: measured 49.4% of a facility's corridor wall faces broadside (120 of 243).
+Never carry a pitch or coverage finding from one run, one wall or one surface to a whole family.
+
 ## Phase 2 — inventory what already ships
 
 Reuse beats generation; a prop from another area costs one `models.json` label and no art budget.
@@ -65,6 +74,8 @@ Reuse beats generation; a prop from another area costs one `models.json` label a
     seed/grid-deterministic clutter scatter, never persisted
   - `world/VisionMask.hx`, `world/IndoorMask.hx` — canvas masks sampled inside existing materials
   - `particles/Sprites.hx`, `particles/GroundSprite.hx` — pooled frontal quads
+  - `world/WorldCtx.wallMounts` (facility) / `world/WallDecals.hx` (city) / `sewer/SewerDetail.hx`
+    `decals` — the WALL as a placement surface, which every area kind but the wilderness already uses
   - `facility/FacilityGeom.hx` (`face`/`pane`/`cap`/`add`/`geom`) and `world/Geom.hx` / `MeshBuf.hx` —
     emitted boxes with the game's own tiling textures
 
@@ -96,6 +107,10 @@ One table, best impact-per-tier first, then a short "what I would do first" line
 Rules for the list: 4–8 variants, each buildable on its own, no variant that only makes sense after
 another. Say the cost as a bound, not rounded to zero ("+1 call worst case", not "free"). Every
 variant names the file it edits. If a variant needs new art, say gen or reuse and which label.
+
+The list must SPAN the families — lighting, FX, glb prop (reused **and** generated), emitted
+geometry, texture, decal, wall-mounted — and any family it leaves out gets ONE line saying why. Four
+decals and a knob is not a search. "Reuse beats generation" is a tiebreak, not a veto on generating.
 
 An effect must be MOTIVATED by something already in the area's fiction — a light that has a fixture,
 grime under a thing that drips. Standing note from a rejected pass: *% of frame changed is a REACH
