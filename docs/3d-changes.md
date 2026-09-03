@@ -1965,3 +1965,69 @@ usual, whose plan view now reads as four round cylinder tops where the grey bake
 Draw cost unchanged: **+2 calls with both batches in view** (102/100), `programs` 83, counts 5 and 4.
 
 **Verdict: landed, +0 draw calls over the phase-6 entry, 1 glb regenerated, 2 `baseColor` refits.**
+
+## The contact field learns what stands ON the floor, and "no shadows indoors" is a RIG fact (2026-09-03)
+
+Reported as "we have zero shadows indoors". It is true, and the obvious fix is worth nothing.
+
+**Nothing inside a building casts, in five places, all deliberate.** `FacilityGeom.build` gives
+`casts = true` to the exterior wall and the shutter only — `wRoom` and `wCorr` are false, `addDeck`
+is false (the moon box follows the player, so a casting roof would shadow its own lot), and
+`FacilityTables`, `FacilityKit` and the indoor bins all switch theirs off to save the shadow-map
+draw. A live scene traverse agrees: indoors the whole caster set is `wall-exterior`, `wall-hangar`,
+the door leaves and the window panes.
+
+**Turning them on buys 10 of 255.** `castShadow = true` forced onto both `wall-room` meshes, both
+`wall-interior` meshes and both bench meshes, all 8 spot maps refreshed, pinned pose, restore diff
+byte-exact: **max delta 10/255 over 3.38% of the frame**. Because there is nothing to remove —
+killing each light in turn on the same floor box (green, base 78.63) gives **moon 5.3%, all twelve
+spotlights 12.8%, and ~82% flat indoor ambient**, which is normal-blind and shadow-blind. `INDOOR`
+is `0x9fb0b4` at 2.4 replacing the whole scene fill, with `direct` 0.3 on every direct light.
+
+And it is not one bad number. Gutting the interior to a third of its ambient took the best shadow a
+caster can throw to **12**; a third of the ambient AND `direct` raised 0.3 → 0.9 reached **24**, at a
+frame mean of 59.2 against the shipped 69.6. **A real shadow cannot be the answer in this room.**
+
+**What already worked was the fake one.** `ContactMask` multiplies `gl_FragColor` at `<fog_fragment>`
+and so is immune to the ambient entirely: measured at **max 35/255** where a real shadow reaches 10.
+It was only painting masonry — 401 slab rects and nothing else — so every bench, cabinet run and
+piece of lab kit met the floor on a hard line.
+
+So the field was given the footprints. `ContactMask.prop(x0,x1,z0,z1)` collects them and
+`ContactMask.repaint()` redraws the canvas once at the end of the area build. **The repaint exists
+because attach must come FIRST** — `patch()` reads `on` at material-creation time and the floors are
+built three lines later — while a prop position is not known until its builder runs. No material is
+touched and none has to be: they hold `uMap` by identity and `on` never changed. Props go in AFTER
+the holes, so a notch cannot erase a pool.
+
+Three families report: a bench cell hands over its PLAIN cell (not the grown worktop — the lip is an
+overhang a metre above the floor), a cabinet unit hands over its post-clamp `CASE_D` body rect, and
+the kit hands over `w` x `d` about its placement point. `KIT_GAS_W`/`KIT_TROLLEY_W` are new and
+derived exactly as the depths were, off each glb bbox (0.875 and 0.990 of height).
+
+Measured on a built compound, same pose, restore byte-exact: **178 prop rects**, and the props alone
+are worth **max 27/255 over 3.02% of the frame**. The whole mask goes from **3.91% to 6.18%** of the
+frame and mean delta 0.435 → 0.755. **83 calls / 20,857 tris / 82 programs, identical with the props
+painted and with them stripped.** All nine kit pools land on their drawn prop to within **0.005
+units**, verified by transforming the geometry bounding box; the yaw jitter is ignored on purpose,
+growing a trolley AABB from 1.98 x 0.90 to 2.05 x 1.07 against a blur wider than the error itself.
+
+**`CONTACT.blur` was then swept and left where it was.** Live on one pinned pose against the mask
+switched off: **0.7 = 4.16% of the frame at max 34/255, 0.9 = 5.78% at 35, 1.2 = 7.98% at 32.** So up
+to about 1.0 a wider ramp costs no depth at all — the pools are small enough that the blur is still
+spreading them rather than flattening them — and only at 1.2 does the peak start trading away. 0.9
+was built and shipped for a look and REJECTED on it: the extra 39% of reach reads as a wash under the
+furniture rather than as contact, and the tighter ramp is what says a bench is sitting on the floor.
+**A knob being free is not an argument for turning it.** Kept at 0.7.
+
+**And a wrong finding, corrected in the same pass: `CityConfig.CELL` is 4, not 2.** The investigation
+reported that a ceiling fixture kills the fake ACTOR shadow — `refY / lp.y` = 2.8 / 5.8 = 0.483,
+reach under a cell — and proposed flooring the ratio. Both numbers came from substituting CELL = 2.
+refY is **5.6**, the fixture hangs at 5.8, `low` is **0.966**: one interior fixture is the reference
+street bulb to within 4%, reach 7.72 units against 8.0. The floor was written, measured, and
+reverted. The pass does run indoors — proved by bumping `LAMP_SHADOW.op` to 3.0 live, which put a
+hard black silhouette beside the player; at the shipped 0.8 and 5.66 units from the nearest fixture
+it lands at op 0.19, which is faint and correct.
+
+**Verdict: landed. +0 draw calls, +0 programs, +0 triangles, 0 art. The one lever this interior has
+is the field, because it is the only shading term the flat indoor ambient cannot fill back in.**

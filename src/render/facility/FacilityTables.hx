@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.world.ContactMask;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -49,6 +50,9 @@ class FacilityTables
               continue;
             var x0 = col * CELL - half, x1 = x0 + CELL;
             var z0 = row * CELL - half, z1 = z0 + CELL;
+            // the contact pool takes the PLAIN cell and not the grown worktop: the field darkens the
+            // floor the casework stands on, and the lip is an overhang a metre above it
+            ContactMask.prop(x0, x1, z0, z1);
             // the worktop, GROWN outward by BENCH_LIP on every side that does not carry on into
             // another bench cell — that overhang is the bench's silhouette, and taking it out of the
             // top rather than out of the casework is what keeps the cabinet fronts whole (see
@@ -213,6 +217,9 @@ class FacilityTables
             x1 = s.x0;
             x0 = s.x0 - FacilityStyle.CASE_D;
         }
+      // and the same plain body rect the benches hand over — after the slab clamp and the CASE_D
+      // depth, before the lip grows the worktop out over it
+      ContactMask.prop(x0, x1, z0, z1);
       // the grown worktop: out over the front always, and over an end only where the run stops
       var lip = FacilityStyle.BENCH_LIP;
       var ox0 = x0, ox1 = x1, oz0 = z0, oz1 = z1;

@@ -6,6 +6,7 @@ import render.Models;
 import render.RenderConfig;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.world.ContactMask;
 import render.world.VisionMask;
 
 // one kind of lab kit and the model that draws it
@@ -16,6 +17,8 @@ typedef KitProp = {
   h:Float,
   // and its depth ACROSS the wall it stands against, world units
   d:Float,
+  // and its width ALONG that wall — the other half of the footprint the contact field darkens
+  w:Float,
   // the turn that puts THIS glb's back at local -z, radians. it is per model and not a constant
   // because TRELLIS does not hold orientation across runs — the amber rack came back with its frame
   // at +z where the grey bake it replaced had it at -z, off the same reference composition
@@ -62,6 +65,7 @@ class FacilityKit
       path: RenderConfig.MODELS.facilityKitGas,
       h: FacilityStyle.KIT_GAS_H,
       d: FacilityStyle.KIT_GAS_D,
+      w: FacilityStyle.KIT_GAS_W,
       yaw0: Math.PI,
       jit: 0.0,
     },
@@ -69,6 +73,7 @@ class FacilityKit
       path: RenderConfig.MODELS.facilityKitTrolley,
       h: FacilityStyle.KIT_TROLLEY_H,
       d: FacilityStyle.KIT_TROLLEY_D,
+      w: FacilityStyle.KIT_TROLLEY_W,
       yaw0: 0.0,
       jit: FacilityStyle.KIT_YAW_JIT,
     },
@@ -133,11 +138,13 @@ class FacilityKit
           // off the WALL FACE, and the prop's centre half its own depth clear of it
           var s = FacilityGeom.slab(m, c.col + DC[c.dir], c.row + DR[c.dir]);
           var off = p.d / 2 + FacilityStyle.KIT_GAP;
+          var px = (c.dir == 2 ? s.x1 + off :
+            (c.dir == 3 ? s.x0 - off : (c.col + 0.5) * CELL - half));
+          var pz = (c.dir == 0 ? s.z1 + off :
+            (c.dir == 1 ? s.z0 - off : (c.row + 0.5) * CELL - half));
           places[i].push({
-            x: (c.dir == 2 ? s.x1 + off :
-              (c.dir == 3 ? s.x0 - off : (c.col + 0.5) * CELL - half)),
-            z: (c.dir == 0 ? s.z1 + off :
-              (c.dir == 1 ? s.z0 - off : (c.row + 0.5) * CELL - half)),
+            x: px,
+            z: pz,
             // the turn that puts a back to the wall aims the prop's front at the OPPOSITE hand of
             // the same axis — dir ^ 1 — the same atan2(DC, DR) shape the bins face their mouth out
             // of a corner with, plus whatever `yaw0` this particular bake needs to face front at all
@@ -145,6 +152,14 @@ class FacilityKit
               (((h >>> 8) % 1000) / 1000 - 0.5) * 2 * p.jit,
             y: FacilityGround.surfY(Surf.TILE),
           });
+          // the floor pool under it. width runs ALONG the wall and depth across it, so which of the
+          // two lands on x is what `dir` says. THE YAW JITTER IS IGNORED here on purpose: it is
+          // KIT_YAW_JIT 0.18 rad, which grows a trolley's axis-aligned box by 0.16 units at the
+          // worst corner, and the field is blurred over 0.7 — the correction is a quarter of the
+          // ramp it would be applied to
+          var pw = (c.dir < 2 ? p.w : p.d) / 2;
+          var pd = (c.dir < 2 ? p.d : p.w) / 2;
+          ContactMask.prop(px - pw, px + pw, pz - pd, pz + pd);
         }
     }
 

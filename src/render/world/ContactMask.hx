@@ -55,6 +55,17 @@ class ContactMask
   // how many rectangles the last paint drew, for __facility()
   public static var count(default, null) = 0;
 
+  // the footprints of what STANDS on the floor — benches, casework, the lab kit — collected by the
+  // builders as they place and painted by `repaint` at the end of the area build. they are a
+  // separate list rather than more `solid` because they arrive AFTER attach: a prop's position is
+  // not known until its builder runs, and attach has to come first (see its header)
+  static var propRects:Array<ContactRect> = [];
+  // what the last paint was given, so `repaint` can redo it with the props added
+  static var lastW = 0;
+  static var lastH = 0;
+  static var lastSolid:Array<ContactRect> = [];
+  static var lastHoles:Array<ContactRect> = [];
+
 // bind the mask to an area, painting it from the masonry footprint.
 //
 // CALL THIS BEFORE THE AREA'S BUILDERS RUN, the same ordering IndoorMask.attach needs and for the
@@ -68,10 +79,40 @@ class ContactMask
     {
       opt = o;
       on = true;
+      propRects = [];
       paint(w, h, solid, holes);
       uMap.value = tex;
       uAmt.value = o.strength;
       count = solid.length;
+    }
+
+// add one floor-standing thing's footprint, in world xz. called by the builders as they place;
+// nothing is drawn until `repaint`. a no-op where no mask is attached, so a builder can call it
+// unconditionally and every other area kind ignores it
+  public static function prop(x0:Float, x1:Float, z0:Float, z1:Float):Void
+    {
+      if (!on)
+        return;
+      propRects.push({
+        x0: x0,
+        x1: x1,
+        z0: z0,
+        z1: z1,
+      });
+    }
+
+// repaint the mask with everything `prop` has collected since attach. CALL ONCE, after the last
+// builder that stands something on an interior floor.
+//
+// no material is touched and none has to be: they hold `uMap` BY IDENTITY, and `on` — the flag
+// patch() reads at material-creation time — has not changed. so this is one canvas and one upload
+  public static function repaint():Void
+    {
+      if (!on ||
+          propRects.length == 0)
+        return;
+      paint(lastW, lastH, lastSolid, lastHoles);
+      uMap.value = tex;
     }
 
 // release it. every OTHER area kind runs through this, so a facility exit cannot leave the sewer
@@ -83,6 +124,9 @@ class ContactMask
       uMap.value = ensureBlank();
       uAmt.value = 0.0;
       count = 0;
+      propRects = [];
+      lastSolid = [];
+      lastHoles = [];
     }
 
 // paint the mask and upload it. white where the masonry stands, blurred outward, and the blur IS the
@@ -94,6 +138,10 @@ class ContactMask
 // rects rather than a per-cell predicate is that the masonry's real edge is what gets blurred
   static function paint(w:Int, h:Int, solid:Array<ContactRect>, holes:Array<ContactRect>):Void
     {
+      lastW = w;
+      lastH = h;
+      lastSolid = solid;
+      lastHoles = holes;
       var P = opt.px;
       var half = (CityConfig.GRID * CityConfig.CELL) / 2;
       var src = Browser.document.createCanvasElement();
@@ -116,6 +164,14 @@ class ContactMask
       c.fillStyle = '#000000';
       for (r in holes)
         rect(r);
+      // the floor-standing things LAST, so a notch cannot erase a pool that happens to reach into
+      // one. they go in at the same full value as the masonry, which is the darkest this field can
+      // draw: `strength` is one number for the whole mask, so a prop's pool is as deep as a wall's
+      // band and the only thing separating them is how much of it the blur keeps — a 2.6-unit rack
+      // holds far less of it than a wall run does, which is the right way round
+      c.fillStyle = '#ff0000';
+      for (r in propRects)
+        rect(r);
       canvas = Browser.document.createCanvasElement();
       canvas.width = src.width;
       canvas.height = src.height;
@@ -125,6 +181,10 @@ class ContactMask
       d.filter = 'blur(' + (opt.blur * P / CityConfig.CELL) + 'px)';
       d.drawImage(src, 0, 0);
       d.filter = 'none';
+      // paint runs twice per area now (attach, then repaint with the props), so the previous upload
+      // has to go or every compound entry leaks one full-size texture
+      if (tex != null)
+        tex.dispose();
       tex = new CanvasTexture(canvas);
       // DATA, not colour, and the same four settings VisionMask.ensure and IndoorMask.paint land on:
       // an sRGB decode would bend the ramp, v has to run with the row index, and a mip chain would

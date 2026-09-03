@@ -396,6 +396,12 @@ class FacilityStyle
   // face into a centre — half of it, plus the gap
   public static inline var KIT_GAS_D = KIT_GAS_H * 0.317;
   public static inline var KIT_TROLLEY_D = KIT_TROLLEY_H * 0.451;
+  // and the WIDTHS along that wall, off the same glbs' x extents (0.875 and 0.990). render.Models
+  // .instanced scales by height alone, so these are what the props already draw at — nothing here
+  // sets a size. they exist because render.world.ContactMask needs a FOOTPRINT to darken the floor
+  // under, and the placer only ever had to know the depth
+  public static inline var KIT_GAS_W = KIT_GAS_H * 0.875;
+  public static inline var KIT_TROLLEY_W = KIT_TROLLEY_H * 0.990;
   // and how far the prop's back stands off that face. the corridor casework is bolted to the wall
   // and takes none; these two are STOOD there, and a hair of daylight behind them is what says so.
   //
@@ -921,7 +927,15 @@ class FacilityStyle
     px: 24,
     // the entire reach of the shadow, in world units. the tunnels' quad reaches 1.1 with a gradient
     // painted across it; a gaussian's visible ramp runs to roughly twice its sigma either way, so
-    // this is that reach expressed as the one number a field needs
+    // this is that reach expressed as the one number a field needs.
+    //
+    // SWEPT once the field carried the furniture as well as the masonry, live on one pinned pose
+    // against the mask switched off: 0.7 covers 4.16% of the frame at max 34/255, 0.9 covers 5.78%
+    // at 35, 1.2 covers 7.98% but the peak falls to 32. so up to about 1.0 a wider ramp costs no
+    // depth at all — the pools are small enough that the blur is still spreading them rather than
+    // flattening them — and only 1.2 starts trading the peak away. 0.9 was tried and rejected on
+    // looks: the extra 39% of reach reads as a wash under the furniture rather than as contact, and
+    // the tighter ramp is what says a bench is SITTING on the floor
     blur: 0.7,
     // how dark the floor goes where the mask reads solid. the blurred step sits at HALF strength on
     // the masonry boundary, so the darkest floor fragment there is one touching the wall face at

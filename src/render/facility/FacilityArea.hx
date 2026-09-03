@@ -161,6 +161,12 @@ class FacilityArea implements Area3D
       // stands outdoors, where the mask reads 1
       for (p in FacilityKit.props(scene, model))
         green.push(p);
+      // and now that every family that stands something on an interior floor has placed, the contact
+      // field is repainted with their footprints in it. it CANNOT be done in the attach above: a
+      // prop's position is not known until its builder runs, and attach has to come first because
+      // ContactMask.patch reads `on` when a floor material is created. one canvas, one upload, no
+      // material touched — the whole reason to reach for the field rather than lay a quad per prop
+      ContactMask.repaint();
       // the checkpoint at the gate, which rides nothing: the booth and the barrier are both merged
       // straight into the scene, so this appends no batch and `green` stays index-aligned with
       // GREEN plus EXTRA

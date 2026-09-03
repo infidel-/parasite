@@ -257,7 +257,12 @@ class LampShadows {
           // fake actor shadow stayed a short overhead smudge. scale both the length and the reach by
           // how far BELOW the reference bulb the fixture sits; a street lamp lands on exactly 1.0.
           // the REACH is then clamped to lowRangeCells — long shadows, but only in a tight pool,
-          // otherwise every actor in the tunnel drags a smear off a bulb three rooms away
+          // otherwise every actor in the tunnel drags a smear off a bulb three rooms away.
+          //
+          // a HIGH fixture scales the other way and it does not matter here: a facility ceiling light
+          // hangs at ROOF_Y - CEIL_DROP = 5.8 against refY 5.6, so `low` is 0.966 and its pool is the
+          // street lamp's to within 4%. NOTHING NEEDS A FLOOR ON THIS — checked while chasing "no
+          // shadows indoors", which turned out to be about the lighting rig and not about this pass
           var refY = CityConfig.CELL * RenderConfig.LAMP_LIGHT.yMul;
           var lmax = L.lowRangeCells * CityConfig.CELL;
           for (lp in lampSrc)

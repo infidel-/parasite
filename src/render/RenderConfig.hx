@@ -919,7 +919,10 @@ class RenderConfig {
     lowMax: 3.0,        // both numbers above are tuned for a street bulb at CELL * LAMP_LIGHT.yMul, and
                         // a LOW fixture (a sewer wall bracket at 0.6) rakes light across the floor
                         // instead of pooling it — so lenMul and rangeCells are both scaled by
-                        // refY / post.y, capped here. a street lamp lands on exactly 1.0
+                        // refY / post.y, capped here. a street lamp lands on exactly 1.0, and a
+                        // facility ceiling fixture at 5.8 against refY 5.6 lands on 0.966 — so the
+                        // one HIGH fixture in the game is the reference bulb to within 4% and needs
+                        // no floor under this ratio
     lowRangeCells: 3,   // absolute reach cap in cells for that scaled-up low fixture, so a bracket
                         // still throws LONG shadows (lenMul keeps the full lowMax) but only over a
                         // small pool. sits just under the burning barrel's FLAME.shadowRangeCells 4.
