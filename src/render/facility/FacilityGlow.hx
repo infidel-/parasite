@@ -273,8 +273,11 @@ class FacilityGlow
 // opens has nothing to do with which side the lot is on. and only the PERPENDICULAR axis is tested,
 // picked off the same `alongX` the quad is then built on — along the wall line there is nothing but
 // more wall, so reading a neighbour there would answer about the wrong axis and could spill a
-// doorway's light out through the masonry beside it
-  static function outward(m:Facility, d:FacilityModel.DoorCell):Int
+// doorway's light out through the masonry beside it.
+//
+// public for render.facility.FacilityExit, which needs the same question for a different reason: an
+// exit sign belongs over a door that IS an exit, and "leads outdoors" is exactly that test
+  public static function outward(m:Facility, d:FacilityModel.DoorCell):Int
     {
       for (s in [-1, 1])
         if (d.alongX ? open(m, d.col, d.row + s) : open(m, d.col + s, d.row))

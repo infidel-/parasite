@@ -1670,3 +1670,89 @@ facility is a black slab from the gameplay camera whoever emitted it. Nothing wa
 because a fix belongs to the bench family and not to this pass.
 
 **Verdict: landed, +1 draw call, +0 programs, no new art.**
+
+## The exit signage, and three wrong placement rules before the regulation's own (2026-09-03)
+
+The first visible light FITTING indoors. `FacilityExit.hx`: TERMINAL signs over the inside face of a
+door that leads outdoors, DIRECTIONAL signs on the corridor walls the escape route runs into, one
+merged mesh, one atlas. **16 signs = 6 + 10, +1 call, +32 tris, +1 program** — three interleaved
+pairs, identical every time (66/36,401 against 65/36,361 on the phase-4 pinned pose at 20 signs,
+before the mullion test below took four out).
+
+**It cannot ride `FacilityGlow`,** which is where every other additive glow in the compound lives for
+one draw call. That mesh shares ONE `alphaMap` (`makeRectGlowGradient`) and 0..1 uv across every quad
+in it, so it can draw a soft rect and nothing else. A pictogram needs its own image, hence its own
+material and its own call. It takes the LIT WINDOW PANE's material instead (`FacilityGeom.addPane`):
+the art is its own `emissiveMap`, so one Lambert mesh draws the dark housing and the glowing face
+together because the brightness difference is already painted into the bytes. No second glow quad
+behind it — the plan offered one and it would be invisible under an opaque sign.
+
+**THE PLACEMENT IS THE REGULATION AND NOT A TASTE CALL,** and three rules shipped before the right
+one. The plan's "over interior doorways" is wrong outright: signage marks the MEANS OF EGRESS, so a
+room door opening onto a corridor is not an exit and takes nothing — NFPA 101 and BS 5499 want a door
+that could be *mistaken* for one marked NOT AN EXIT, so signing every lab door is the thing the rule
+pushes against. Built that way it also hung an ARROW over an office, which reads as "the exit is
+through this room". **17 signs, 11 of them on doors that are not exits.**
+
+**Then the arrow could not be read.** Second rule put directional signs on the corridor's own SIDE
+wall, every N cells along the route plus at every turn: **45 signs, edge-on to anyone walking the
+corridor they were signing, and a green ribbon down every wall from anywhere else.** A flat sign can
+only carry a direction on the wall you are WALKING AT — a corridor end, the far side of a T — which
+is also where a real one is. Everything else in a real building is flag-mounted or ceiling-hung.
+
+**Then the 2-cell corridor broke the route test.** Third rule asked "do travellers arrive from that
+neighbour", off the flood's own distances. A corridor here is 2 cells wide and the flood reaches one
+lane a step before the other, so every cell of a straight run reads as *the lane beside me is further
+from the exit, therefore people come from there* — **127 signs**. What fixes it is geometric and not
+topological: `EXIT_APPROACH` requires the corridor to actually RUN into the wall for 3 cells behind.
+Measured: 2 → 24 signs, **3 → 14**, 4 → 9. It is the only density knob left, because the sign has to
+face the traveller to carry an arrow at all and there is no such wall on a straight run.
+
+**The route is a flood, so the arrow points at the NEAREST exit through the building** and not at the
+one closest as the crow flies — breadth-first from every exit door at once over corridor lino, one
+grid walk at area build and nothing per frame. It cannot leak: a room is tile, the hangar is
+concrete, the lot outside a door is walkway. A structure with no exterior door comes back unflooded
+and takes no directional signs, which is the right answer.
+
+**AND A FOURTH: AN ARROW BETWEEN TWO DOORS.** Reported from the game. The generator cuts an
+entrance as two leaves flanking a MULLION, so the mullion is a wall cell with an exit door either
+side of it — a traveller walks straight into it, so the approach test fires, and the arrow it took
+had to pick one of two doors 4 units away that BOTH already carry a terminal sign. A directional is
+now dropped where the wall it would hang on already carries a terminal one cell along it, which is
+the general statement of the same thing: an arrow is redundant beside the sign it points at.
+**20 → 16 signs** (4 gone: 2 mullions and 2 beside single side doors).
+
+**ONE TEXTURE, TWO PICTOGRAMS.** Two images would be two materials, two meshes and two draw calls to
+change a glyph, so it is a 2-cell atlas (1008x1344, `res` [252,336]) with the cell picked by a v
+sub-rect — four numbers. Cell order is TOP terminal, BOTTOM directional; three flips y, so the
+terminal is v 0.5..1. A sign that must point the other way MIRRORS u, which flips the running man
+with it exactly as a real mirrored drop does — **7 of the 14 came out mirrored.**
+
+**A bright source is correct here and a `lift` would be wrong.** Every other facility texture is
+dialled DOWN to the value ladder; this one is the `map` AND the `emissiveMap`, so its own bytes are
+what glows. As painted it measures **0.1616 linear** against `facility/wall-interior`'s 0.0673.
+`EXIT_EMISSIVE` 1.6 renders the face at luma **149** beside a lintel wall at **35.6** — 4.2x, the
+brightest thing in the interior, and still under the 0.9 `BLOOM_THRESHOLD`, so it glows without a
+halo. A `lift` would move the lit face and the dark housing together, and only one is a light.
+
+**Verdict: landed, +1 draw call, +1 program, 1 new texture.**
+
+## The grime band stopped a unit short of every inside corner (2026-09-03)
+
+Reported from the game: the damp band runs along a wall and dies on the cell edge at a corner.
+
+**A wall cell is the union of the RUNS through it, never its bounding box.** Where the line turns, the
+two runs form an L and `FacilityGeom.notches` hands the 1x1 square in the angle to the DIAGONAL cell
+as floor — so the room's own corner is made of the notch's two sides, which are masonry facing the
+room and are emitted as geometry by `structure`'s `butt` pair. `FacilityGrime` never saw them: its
+loop skips every direction the wall line `carries` into, and at a turn those are exactly the two.
+So every reentrant corner lost 1 unit of band on each of its two walls.
+
+**Fixed by mirroring the emitter's own notch loop** — same two planes `butt` is given, fed to `band`
+as the degenerate rects it winds against. No overlap with the cell loop is possible: those faces are
+on the carried directions, which that loop has already skipped, and at a different plane.
+
+Measured: **400 → 528 faces**, exactly 2 per indoor notch over **64 notches on 42 corner cells**, and
+**+0 draw calls** — it is the same merged mesh. `__facility().grime` is the only handle on it.
+
+**Verdict: landed, +0 draw calls, +128 quads, no new art.**

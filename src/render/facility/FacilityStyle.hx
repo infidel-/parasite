@@ -431,6 +431,45 @@ class FacilityStyle
   public static inline var BOARD_Y = 3.0;
   public static inline var BOARD_TEX = 'textures/facility/notice-board.png';
 
+  // ---- the exit signage (render.facility.FacilityExit) -------------------------------------------
+
+  // a 0.75 m by 0.5 m sign box, at the half-metre unit WALL_H 6.0 fixes. LANDSCAPE where the notice
+  // board is square, and for the same reason it is square: the art decides, a texture is never
+  // stretched, and a running man beside an arrow is a 3:2 cell (1008x672).
+  //
+  // EXIT_Y is the quad's CENTRE. DOOR_H is 4.0 and a lintel runs from there to WALL_H 6.0, so 4.75
+  // puts a terminal sign in the lower half of that band — over the opening the way a real one is,
+  // and not adrift halfway up the masonry — and puts a directional sign on the corridor wall at the
+  // same height, which is what makes the two read as one installation. it stands MOUNT_PROUD off the
+  // face, the same nudge the vent grille and the notice board take, because this repo has lost three
+  // times to polygonOffset
+  public static inline var EXIT_W = 1.5;
+  public static inline var EXIT_H = 1.0;
+  public static inline var EXIT_Y = 4.75;
+  public static inline var EXIT_TEX = 'textures/facility/exit-sign.png';
+  // the two cells of the atlas, as the v of each one's BOTTOM edge; each is half the image tall.
+  // the source stacks TOP terminal, BOTTOM directional and three flips y, so the terminal is the
+  // UPPER v range. one texture and not two because two would be two materials, two meshes and two
+  // draw calls to change a pictogram
+  public static inline var EXIT_V_TERM = 0.5;
+  public static inline var EXIT_V_DIR = 0.0;
+  // how many cells of corridor have to RUN INTO a wall before a directional sign goes on it. it is
+  // what separates a wall you walk at from a wall you walk past, and a corridor here is 2 cells wide,
+  // so anything under 3 starts calling the long side wall of a straight corridor an approach.
+  //
+  // MEASURED over the compound's 280 flooded corridor cells: 2 -> 24 signs, 3 -> 14, 4 -> 9. This is
+  // the ONLY density knob, because the sign now has to face the traveller to carry an arrow at all,
+  // and there is no such wall on a straight run. The pass that shipped for one build placed one
+  // every N cells along the route as well, on the corridor's own SIDE wall — 45 signs, edge-on to
+  // anyone walking that corridor, and a green ribbon down every wall from anywhere else
+  public static inline var EXIT_APPROACH = 3;
+  // and how hard it glows. the art is its OWN emissiveMap, so this multiplies bytes that already
+  // measure 0.1616 linear — 2.4x facility/wall-interior before anything is dialled, which is why it
+  // is under WINDOW_EMISSIVE 2.2 rather than at it. dial the sign HERE and never with a `lift` on
+  // the source: a lift moves the lit green face and the dark housing together, and only one of them
+  // is supposed to be a light
+  public static inline var EXIT_EMISSIVE = 1.6;
+
   // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
 
   // the damp band at the foot of an interior wall. `decals/grime-1..3` are BAND art and not marks —

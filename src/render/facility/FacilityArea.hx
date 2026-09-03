@@ -55,6 +55,7 @@ class FacilityArea implements Area3D
   var cabinets = 0;                             // corridor casework cells merged into the bench meshes
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
   var grime = 0;                                // interior wall faces carrying a damp band
+  var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -136,6 +137,7 @@ class FacilityArea implements Area3D
       // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
       grime = FacilityGrime.build(scene, model);
+      exits = FacilityExit.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -282,13 +284,29 @@ class FacilityArea implements Area3D
             // and how many interior wall faces carry a damp band. same problem as `boards` and as
             // `shadows` — one merged mesh with no instance count, over a face set nothing else
             // enumerates. every eligible face takes one, so this IS the interior-face count, and a
-            // 0 means the face predicate broke rather than that the building is clean
+            // 0 means the face predicate broke rather than that the building is clean.
+            //
+            // it counts REENTRANT CORNER faces too, and that is what it is worth reading for: an
+            // inside corner shows the room the two sides of the notch the wall's L leaves in its
+            // angle, and neither is in the cell's own face loop. 400 cell faces + 2 per indoor
+            // notch = **528** on a generated compound, against 64 notches over 42 corner cells
             grime: grime,
             // and how many corridor cells stand a run of storage casework. the same merged-mesh
             // blindness a third time: it goes into the SAME two buffers the generator's own benches
             // do, so nothing in the scene separates the two and this is the only count of the half
             // that is render-only. 0 in a compound with corridors means the run predicate broke
             cabinets: cabinets,
+            // and how many exit signs are lit — TERMINAL over an exit door plus DIRECTIONAL on the
+            // walls the route runs into. merged mesh again, and the two halves are separable
+            // nowhere else, so the number is read against the two things that generate it: the
+            // terminals are one per exterior door with circulation behind it, and the
+            // directionals are one per approach wall that survives `EXIT_APPROACH` and does not
+            // already carry a terminal sign along it. Measured on a generated compound:
+            // **16 = 6 + 10** against 18 doors, 6 of the 10 mirrored. A
+            // terminal count under the exterior-door count means the lino test broke; a
+            // directional count in the dozens means `EXIT_APPROACH` stopped separating a wall you
+            // walk AT from a wall you walk PAST, which at 2 costs 24 and at 0 would cost 127
+            exits: exits,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
             // answer. the parapet: did it close on every structure and is the HANGAR really left

@@ -54,6 +54,34 @@ class FacilityGrime
                 band(b, dir, s);
                 n++;
               }
+            // and the REENTRANT CORNERS, which the loop above cannot reach: where the wall line
+            // turns, it skips both of the sides the line carries into, and those are exactly the two
+            // the room's own corner is made of. a wall cell is the union of the RUNS through it, so
+            // an L leaves a 1x1 notch in its angle (FacilityGeom.notches) and the notch's two sides
+            // are masonry facing the room — emitted as geometry by FacilityGeom.structure's `butt`
+            // pair, and until now bare. The band stopped a unit short of every inside corner, which
+            // is the one place a mop actually misses
+            for (nt in FacilityGeom.notches(m, col, row))
+              {
+                if (!FacilityModel.isIndoor(m, nt.col, nt.row))
+                  continue;
+                // the same two planes `butt` is given, as the degenerate rects `band` winds against
+                var x = (nt.dx == 3 ? nt.x0 : nt.x1);
+                band(b, nt.dx, {
+                  x0: x,
+                  x1: x,
+                  z0: nt.z0,
+                  z1: nt.z1,
+                });
+                var z = (nt.dz == 1 ? nt.z0 : nt.z1);
+                band(b, nt.dz, {
+                  x0: nt.x0,
+                  x1: nt.x1,
+                  z0: z,
+                  z1: z,
+                });
+                n += 2;
+              }
           }
       add(scene, b);
       return n;
