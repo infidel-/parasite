@@ -1756,3 +1756,37 @@ Measured: **400 → 528 faces**, exactly 2 per indoor notch over **64 notches on
 **+0 draw calls** — it is the same merged mesh. `__facility().grime` is the only handle on it.
 
 **Verdict: landed, +0 draw calls, +128 quads, no new art.**
+
+## The interior got repainted light, and ASK FOR A VALUE, NOT A WORD (2026-09-03)
+
+Reported from the game: the inside read grey and depressing, where the fiction is a working modern
+research facility. Three textures repainted — `facility/wall-interior`, `wall-room`, `floor-tile` —
+old sources archived under `textures-src/unused/*-grey.png`. No render code, no draw calls.
+
+| | grey | light | rendered on the same corridor |
+|---|---|---|---|
+| wall-interior | 0.069 | **0.1595** | luma 35.6 → **68.5** |
+| wall-room | 0.058 | **0.1394** | |
+| floor-tile | 0.0607 | **0.12** | |
+
+The ladder that mattered is kept: `wall-room` stays under `wall-interior`, so a corridor is still the
+brighter spine between its rooms, and the floor stays under both. The exit sign's own face renders at
+**129.8** against the wall's 68.5, so a lit fitting still reads as a light and not as brighter wall.
+
+**ASK FOR A VALUE, NOT A WORD — the finding.** "PALE OFF-WHITE ... LIGHT and BRIGHT ... the palest
+surface in the set" returns **0.79 linear**, which is paper, not paint. The only knob for pulling a
+drop back is `lift`, and `lift` is a GAMMA: it amplifies whatever channel imbalance the drop already
+has. The gamma needed to bring 0.79 down to 0.16 is **8.17**, and at 8.17 a neutral-looking drop
+comes out at rgb 111/111/101, its `wall-room` sibling at **109/103/80** and the floor at **98/97/74**
+— beige, which is the one thing every one of these prompts has always forbidden.
+
+Re-rolled naming the number instead: *"a LIGHT NEUTRAL GREY at roughly 55 percent brightness — NOT
+white, NOT near-white, NOT pale cream"* plus *"HUE: PERFECTLY NEUTRAL, the red, green and blue values
+are equal"*. That returns **0.285 at rgb 146/146/143**, and lands on target with a lift of **1.48** —
+mild enough that the hue survives (111/111/109). Same for the other two at 1.91 and 2.18.
+
+**Left alone deliberately: `facility/floor-lino` at 0.0749**, the corridor floor, which is now the
+darkest interior surface by a wide margin. It was not in the ask, and it is the next thing to look at
+if the corridors now read as a dark trough between light walls.
+
+**Verdict: landed, +0 draw calls, +0 programs, 3 textures repainted, 2 rolls each.**
