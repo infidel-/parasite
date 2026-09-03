@@ -52,6 +52,7 @@ class FacilityArea implements Area3D
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
+  var cabinets = 0;                             // corridor casework cells merged into the bench meshes
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
   var grime = 0;                                // interior wall faces carrying a damp band
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
@@ -130,7 +131,7 @@ class FacilityArea implements Area3D
       // the condensers, the dish and the access hatch, straight after the shell they stand on: the
       // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
       roof = FacilityRoof.build(scene, model, shells);
-      FacilityTables.build(scene, model);
+      cabinets = FacilityTables.build(scene, model);
       // the lobby notice board and the interior wall grime, both after the shell because both hang
       // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
@@ -283,6 +284,11 @@ class FacilityArea implements Area3D
             // enumerates. every eligible face takes one, so this IS the interior-face count, and a
             // 0 means the face predicate broke rather than that the building is clean
             grime: grime,
+            // and how many corridor cells stand a run of storage casework. the same merged-mesh
+            // blindness a third time: it goes into the SAME two buffers the generator's own benches
+            // do, so nothing in the scene separates the two and this is the only count of the half
+            // that is render-only. 0 in a compound with corridors means the run predicate broke
+            cabinets: cabinets,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
             // answer. the parapet: did it close on every structure and is the HANGAR really left

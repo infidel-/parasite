@@ -457,9 +457,14 @@ class FacilityGround
       return prop;
     }
 
-// the park litter bin, one beside every bench. it is placed off the BENCH and not off a tile of its
-// own, which is the whole design: no new tile id, no generator change, and every compound already
-// saved gets its bins the moment it is drawn again.
+// the litter bins: one beside every park bench, and one tucked into the angle at a corridor's dead
+// end. ONE BATCH for both, which is the whole reason the indoor pass lives in here rather than beside
+// the corridor's other fittings — a second batch of the same glb would be a second draw call for
+// nothing.
+//
+// the park half is placed off the BENCH and not off a tile of its own, which is the same design: no
+// new tile id, no generator change, and every compound already saved gets its bins the moment it is
+// drawn again.
 //
 // there is no room for it INSIDE the bench's own footprint — a 2.34-high bench draws 3.57 long in a
 // 4-unit cell — so it stands off the bench's back corner, on the two local offsets
@@ -494,11 +499,67 @@ class FacilityGround
               y: surfY(Surf.GRASS),
             });
           }
+      indoorBins(m, places);
       var prop = Models.instanced(scene, RenderConfig.MODELS.facilityBin, places,
         FacilityStyle.BIN_H, SOLID);
+      // and this batch CASTS NOTHING, which the corridor half is what forced. an instanced batch is
+      // drawn into the moon's shadow map as many times as it is drawn into the frame, so the second
+      // draw is a second call the moment the batch is in view at all: measured from a corridor with
+      // one bin visible, 66 calls with the shadow against 65 without and 64 with the batch hidden
+      // outright. one 0.97-unit drum is not worth half the cost of the whole fitting, which is the
+      // park shrub's own finding (see GreenProp.casts) reached from the other end
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityBin, function(_) VisionMask.patchMesh(prop.mesh));
+        Models.get(RenderConfig.MODELS.facilityBin, function(_)
+          {
+            VisionMask.patchMesh(prop.mesh);
+            prop.mesh.castShadow = false;
+          });
       return prop;
+    }
+
+// the corridor half: one bin in the angle where a corridor's own two walls meet, which on this
+// generator's plan is the dead end every passage finishes in.
+//
+// the CORNER is the whole placement rule, and it is the same predicate the corridor casework rejects
+// on (FacilityTables.hugs) — so the two families divide the corridor between them without either
+// having to run first or read the other's list. It is also the right fiction on its own terms: junk
+// collects where something stops it, which is what stood the lot's own drums against a kerb rather
+// than out in the aisle (FacilityDebris.place)
+  static function indoorBins(m:Facility, places:Array<Models.PropPlace>):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.surf[row][col] != Surf.LINO ||
+                FacilityModel.nearDoor(m, col, row))
+              continue;
+            // which hand each wall is on, in FacilityGeom's own direction numbering. a bin needs one
+            // wall on EACH axis or there is no angle to stand in — a cell with a single wall is a
+            // straight stretch and belongs to the casework
+            var dz = (FacilityModel.isSolidWall(m, col, row - 1) ? 0 :
+              (FacilityModel.isSolidWall(m, col, row + 1) ? 1 : -1));
+            var dx = (FacilityModel.isSolidWall(m, col - 1, row) ? 2 :
+              (FacilityModel.isSolidWall(m, col + 1, row) ? 3 : -1));
+            if (dz < 0 ||
+                dx < 0)
+              continue;
+            if (FacilityModel.mix((col * 16777619) ^ (row * 87178291)) % 1000 >=
+                FacilityStyle.BIN_IN_PCT * 1000)
+              continue;
+            // off the WALL FACE and not off the cell, which is a unit away: FacilityGeom.slab insets
+            // a straight run, so the corridor floor carries on under the masonry's overhang
+            var sz = FacilityGeom.slab(m, col, row + (dz == 0 ? -1 : 1));
+            var sx = FacilityGeom.slab(m, col + (dx == 2 ? -1 : 1), row);
+            places.push({
+              x: (dx == 2 ? sx.x1 + FacilityStyle.BIN_IN_GAP : sx.x0 - FacilityStyle.BIN_IN_GAP),
+              z: (dz == 0 ? sz.z1 + FacilityStyle.BIN_IN_GAP : sz.z0 - FacilityStyle.BIN_IN_GAP),
+              // the bin's mouth is its local +z, measured off the built glb by the park pass above.
+              // here it is turned to look OUT of the angle it stands in, away from both walls at once
+              yaw: Math.atan2(dx == 2 ? 1.0 : -1.0, dz == 0 ? 1.0 : -1.0),
+              y: surfY(Surf.LINO),
+            });
+          }
     }
 
 // which way a prop with an authored front is turned: at the first walkway beside it, so a bench put

@@ -1629,3 +1629,44 @@ off**. One program of its own, compiled by the BOOT warm pass — `FacilityModel
 interior faces — so nothing compiles on first facility entry.
 
 **Verdict: landed, +1 draw call, +1 program (warmed at boot).**
+
+## The corridors get storage casework, and a bin at every dead end (2026-09-03)
+
+Two families of standing fitting, both promised at **+0 draw calls** because both ride something that
+already draws. One of them was; the other was not, and that gap is the entry.
+
+**The casework.** `FacilityTables` gained a second pass merging shallow cabinet runs into the SAME
+two buffers the generator's benches go into (`BENCH_TOP` / `BENCH_BODY`) — zero art, zero new
+material. The generator furnishes ROOMS only: benches under every window wall, an island in a room
+big enough, and a corridor comes out of it as bare lino between two bare walls. A run is gated ON THE
+RUN and never per cell, or a wall becomes a dotted line of single boxes. Measured: **8 runs, 30
+cells** out of 24 eligible runs of 3+; **+0 calls** (64 with the bin batch hidden, against 64 with the
+whole pass compiled out).
+
+**The depth is a gameplay number.** Nothing here is stamped into the tiles, so clearance is the only
+thing stopping a run being walked through. `slab()`'s wall face sits a unit INSIDE the wall cell, so
+`CASE_D` 1.4 reaches only 0.4 past the corridor cell's own boundary and leaves **1.6 units** to the
+line of cell centres an actor walks.
+
+**The bins.** `FacilityGround.bins` gained an indoor pass appending to the SAME `facility/trash-bin`
+batch: one bin in the angle where a corridor's own two walls meet. The corner is also what DIVIDES
+the two families — the casework rejects exactly the cells the bins take, both derived off the model,
+so neither pass reads the other's list or has to run first. Measured: **7 bins over 8 corner
+candidates** (4 park bins before it).
+
+**A MERGED REUSE IS FREE; AN INSTANCED ONE IS NOT.** The plan called both "+0, it rides a batch that
+already draws", and for merged geometry that is exactly true. An `InstancedMesh` only draws when
+something of it is in VIEW — indoors the bin batch was culled outright, so the first corridor bin
+turns it back on, and a batch in view costs **two** calls, not one: the colour pass and the moon's
+shadow map. Measured from a corridor with ONE bin visible: **66 with the shadow, 65 without, 64 with
+the batch hidden.** Dropping the batch's `castShadow` — the park shrub's own finding reached from the
+other end — lands the whole phase at **+1 call, +5,009 tris, +0 programs** (65/36,361 against
+64/31,352 on the same pinned pose, reveal `[1,0,0]`).
+
+**And a merged reuse inherits the host's ALBEDO.** `facility/bench-top` is mean **39** against
+`facility/floor-lino`'s **77**, so a corridor run reads at **9/255** beside a floor at **44** — and
+the generator's own benches read **7** in the same frame. Consistent, and dark: a bench in this
+facility is a black slab from the gameplay camera whoever emitted it. Nothing was dialled for it,
+because a fix belongs to the bench family and not to this pass.
+
+**Verdict: landed, +1 draw call, +0 programs, no new art.**

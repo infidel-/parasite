@@ -4,12 +4,14 @@ import three.Three;
 import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
-// the laboratory benches: the casework runs the generator lays beside every window wall, and the
-// island it puts in the middle of a room big enough to hold one.
+// the laboratory benches: the casework runs the generator lays beside every window wall, the island
+// it puts in the middle of a room big enough to hold one, and — added here rather than by the
+// generator — the shallow storage runs standing against the corridor walls (see `cabinets`).
 //
 // MERGED GEOMETRY and not a generated prop, which is the one decision worth recording here. A bench
 // is a BOX — a worktop slab over a run of cabinet fronts — so the whole thing is six quads a cell
@@ -33,8 +35,9 @@ class FacilityTables
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
-// every bench in the area, in two merged meshes
-  public static function build(scene:Scene, m:Facility):Void
+// every bench in the area, in two merged meshes. returns how many CABINET cells the corridor pass
+// added to them, which is the only number here a screenshot cannot give (see `cabinets`)
+  public static function build(scene:Scene, m:Facility):Int
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var top = MeshBufTools.make();
@@ -80,8 +83,163 @@ class FacilityTables
       // grown rects overlap by BENCH_LIP squared. The caps are coplanar, same texture, same
       // world-aligned UVs, so that overlap resolves to the same pixel either way; the two edge bands
       // cross, each poking BENCH_LIP past the other, which is 0.2 world units and reads as nothing
+      var n = cabinets(m, top, body);
       add(scene, top, FacilityStyle.BENCH_TOP);
       add(scene, body, FacilityStyle.BENCH_BODY);
+      return n;
+    }
+
+// the storage casework standing against the corridor walls, merged into the SAME two buffers the
+// benches are — so a corridor full of it costs no draw call and no art at all.
+//
+// the generator furnishes ROOMS and nothing else: it lays a run of benches under every window wall
+// and drops an island in a room big enough, and a corridor comes out of it as bare lino between two
+// bare walls. this is the corridor's half of that, and it is not a bench — a bench is a whole cell
+// deep and the tiles say so, while these are render-only and CASE_D shallow, which is what lets them
+// stand in the one place the player actually walks (see FacilityStyle.CASE_D).
+//
+// RUNS AND NOT CELLS. the gate is rolled once per run and the whole run stands or does not: gating
+// per cell turns a wall into a dotted line of isolated boxes, which reads as dropped junk rather than
+// as fitted casework. a run is claimed as it is walked, so the outer scan never restarts inside one
+  static function cabinets(m:Facility, top:MeshBuf, body:MeshBuf):Int
+    {
+      var seen = new Map<Int, Bool>();
+      var n = 0;
+      for (dir in 0...4)
+        {
+          // a run follows the WALL, so it advances along x for a wall in z and along z for one in x
+          var sc = (dir < 2 ? 1 : 0);
+          var sr = (dir < 2 ? 0 : 1);
+          for (row in 0...m.h)
+            for (col in 0...m.w)
+              {
+                if (seen.exists(key(m, col, row, dir)) ||
+                    !hugs(m, col, row, dir))
+                  continue;
+                // walk to the run's end, claiming every cell on the way
+                var len = 0;
+                while (hugs(m, col + sc * len, row + sr * len, dir))
+                  {
+                    seen.set(key(m, col + sc * len, row + sr * len, dir), true);
+                    len++;
+                  }
+                if (len < FacilityStyle.CASE_RUN_MIN)
+                  continue;
+                var h = FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ (dir * 83492791));
+                if (h % 1000 >= FacilityStyle.CASE_PCT * 1000)
+                  continue;
+                if (len > FacilityStyle.CASE_RUN_MAX)
+                  len = FacilityStyle.CASE_RUN_MAX;
+                for (i in 0...len)
+                  {
+                    unit(top, body, m, col + sc * i, row + sr * i, dir, i == 0, i == len - 1);
+                    n++;
+                  }
+              }
+        }
+      return n;
+    }
+
+// one cell's slot in the claimed-cell set. a cell is claimed PER DIRECTION and not outright: a
+// corridor two cells wide has a wall on either hand, and a cell already standing a run against its
+// north wall is still a candidate for the one against its south
+  static inline function key(m:Facility, col:Int, row:Int, dir:Int):Int
+    {
+      return ((dir * m.h + row) * m.w) + col;
+    }
+
+// may a cabinet stand on this corridor cell, against the wall in `dir`?
+//
+// the CORNER exclusion is what divides this pass from the litter bins, which take exactly the cells
+// this rejects (FacilityGround.bins). Both derive the same predicate off the model rather than
+// sharing a list, so neither has to run before the other and neither can drop a bin inside a cabinet
+  static function hugs(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      if (!FacilityModel.inside(m, col, row) ||
+          m.surf[row][col] != Surf.LINO ||
+          !FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
+        return false;
+      // a cell with walls on two PERPENDICULAR hands is a dead end or an inside corner, and that is
+      // the bin's cell
+      if ((FacilityModel.isSolidWall(m, col, row - 1) ||
+           FacilityModel.isSolidWall(m, col, row + 1)) &&
+          (FacilityModel.isSolidWall(m, col - 1, row) ||
+           FacilityModel.isSolidWall(m, col + 1, row)))
+        return false;
+      return !FacilityModel.nearDoor(m, col, row);
+    }
+
+// one cabinet cell: the worktop cap, and an edge band plus a cabinet front on every side that is not
+// the wall behind it and not the next cabinet of its own run.
+//
+// the rect is taken off the WALL FACE and not off the cell boundary — FacilityGeom.slab insets a
+// straight run by a unit, so a cabinet built on the cell edge would float a unit clear of its own
+// wall. the worktop is grown by BENCH_LIP on the open sides exactly as a bench's is, and NEVER on the
+// wall side, where the overhang would poke into the masonry
+  static function unit(top:MeshBuf, body:MeshBuf, m:Facility, col:Int, row:Int, dir:Int,
+      first:Bool, last:Bool):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
+      var x0 = col * CELL - half, x1 = x0 + CELL;
+      var z0 = row * CELL - half, z1 = z0 + CELL;
+      switch (dir)
+        {
+          case 0:
+            z0 = s.z1;
+            z1 = s.z1 + FacilityStyle.CASE_D;
+          case 1:
+            z1 = s.z0;
+            z0 = s.z0 - FacilityStyle.CASE_D;
+          case 2:
+            x0 = s.x1;
+            x1 = s.x1 + FacilityStyle.CASE_D;
+          default:
+            x1 = s.x0;
+            x0 = s.x0 - FacilityStyle.CASE_D;
+        }
+      // the grown worktop: out over the front always, and over an end only where the run stops
+      var lip = FacilityStyle.BENCH_LIP;
+      var ox0 = x0, ox1 = x1, oz0 = z0, oz1 = z1;
+      if (dir == 0)
+        oz1 += lip;
+      else if (dir == 1)
+        oz0 -= lip;
+      else if (dir == 2)
+        ox1 += lip;
+      else
+        ox0 -= lip;
+      if (dir < 2)
+        {
+          if (first)
+            ox0 -= lip;
+          if (last)
+            ox1 += lip;
+        }
+      else
+        {
+          if (first)
+            oz0 -= lip;
+          if (last)
+            oz1 += lip;
+        }
+      FacilityGeom.cap(top, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H, FacilityStyle.BENCH_TOP_TILE);
+      // the run's two ends, in the direction numbering: the axis the wall does NOT lie on
+      var head = (dir < 2 ? 2 : 0);
+      for (d in 0...4)
+        {
+          // the wall side is closed, the front is always open — dir ^ 1 is the opposite hand of the
+          // same axis — and an end is open only where this cabinet is the run's first or last
+          var open = (d == (dir ^ 1)) ||
+            (d == head && first) ||
+            (d == head + 1 && last);
+          if (!open)
+            continue;
+          FacilityGeom.face(top, ox0, ox1, oz0, oz1, d,
+            FacilityStyle.BENCH_H - FacilityStyle.BENCH_EDGE, FacilityStyle.BENCH_H,
+            FacilityStyle.BENCH_TOP_TILE);
+          panel(body, x0, x1, z0, z1, d);
+        }
     }
 
 // one cabinet-front quad.

@@ -361,6 +361,27 @@ class FacilityStyle
   // never wraps. Two different periods on the two axes is why the body cannot use FacilityGeom.face
   public static inline var BENCH_TILE = CityConfig.CELL * 0.5;
 
+  // ---- corridor casework -----------------------------------------------------------------------
+
+  // the storage runs standing against a corridor wall. they are the SAME two meshes the benches are
+  // merged into and wear the same two textures, so the whole family costs no draw call and no art —
+  // what makes them a corridor fitting rather than a bench is the depth alone.
+  //
+  // and the depth is a GAMEPLAY number before it is an art one. the wall face a run stands on is
+  // FacilityGeom.slab's, which is inset one unit INTO the wall cell, so a cabinet 1.4 deep reaches
+  // only 0.4 past the corridor cell's own boundary and leaves 1.6 units of clearance to the line of
+  // cell centres an actor walks down. nothing here is stamped into the tiles, so that clearance is
+  // the whole of what keeps a run from being walked through
+  public static inline var CASE_D = 1.4;
+  // how much of the wall a run may take, in cells, and the shortest that is worth standing: one
+  // cabinet alone reads as a dropped box, three in a row read as fitted casework
+  public static inline var CASE_RUN_MIN = 3;
+  public static inline var CASE_RUN_MAX = 4;
+  // and how many of the eligible runs actually get one. gated on the RUN and never on the cell: a
+  // per-cell gate breaks a run into a dotted line of single cabinets, which is the one thing
+  // CASE_RUN_MIN exists to prevent
+  public static inline var CASE_PCT = 0.4;
+
   // ---- doors -----------------------------------------------------------------------------------
 
   // the opening's height, world units, out of a WALL_H of 6.0. the art is SQUARE and holds the whole
@@ -590,6 +611,17 @@ class FacilityStyle
   // those two bounds are the whole test — there is no diagonal case to check
   public static inline var BIN_SIDE = 1.45;
   public static inline var BIN_BACK = 1.42;
+
+  // the same bin standing INDOORS, at a corridor's dead end. it is the same glb at the same BIN_H, so
+  // it rides the park's own batch and costs nothing — see FacilityGround.bins.
+  //
+  // GAP is measured off the WALL FACE (FacilityGeom.slab's, one unit inside the wall cell) to the
+  // bin's centre: the drum's radius is 0.49, so 0.55 tucks it into the angle with 0.06 to spare and
+  // still leaves 1.45 units of clearance to the line of cell centres an actor walks down
+  public static inline var BIN_IN_GAP = 0.55;
+  // and how many of the eligible corners get one. a dead end is 2 cells wide, so its two cells are
+  // both candidates and an ungated pass stands a matched pair in every one of them
+  public static inline var BIN_IN_PCT = 0.5;
 
   // ---- the parked cars ---------------------------------------------------------------------------
 

@@ -337,6 +337,13 @@ class FacilityModel
       return inside(m, col, row) && m.wall[row][col] != Wall.OPEN;
     }
 
+// and is it a wall a FITTING may stand against? plain masonry only: a window's sill is exactly where
+// a worktop would be, and the hangar's shutter is a door that slides
+  public static inline function isSolidWall(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.wall[row][col] == Wall.SOLID;
+    }
+
 // flood-fill the indoor floor into connected components, then grow each by its wall ring.
 // 4-connected, and a door cell is ordinary LINO floor, so one lab building comes back as ONE
 // component however many rooms and corridors it holds — which is exactly the granularity the roof
@@ -516,6 +523,19 @@ class FacilityModel
   public static inline function isTable(m:Facility, col:Int, row:Int):Bool
     {
       return inside(m, col, row) && m.table[row][col];
+    }
+
+// is this cell a doorway or touching one? the clearance test every INDOOR fitting shares — a cabinet
+// run or a bin standing in a doorway's swing reads as blocking a door the player then walks through,
+// and the leaves themselves sweep a cell either side (see FacilityDoors). diagonal counts: a fitting
+// on the corner cell of a doorway is still in the way of everything coming through it
+  public static function nearDoor(m:Facility, col:Int, row:Int):Bool
+    {
+      for (dr in -1...2)
+        for (dc in -1...2)
+          if (isDoor(m, col + dc, row + dr))
+            return true;
+      return false;
     }
 
 // the painted pair a door's shut icon asks for. the front double and the side door are both glazed,
