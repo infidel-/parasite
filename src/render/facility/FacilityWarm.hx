@@ -92,8 +92,15 @@ class FacilityWarm
           // which is why they cannot ride the city scene
           var green = FacilityGround.GREEN;
           // and the compound's own props — the lamp mast, the park railing, the litter bin and the
-          // parked car, plus the lot's standing junk, appended off its own table so a fourth piece
-          // of junk needs no edit here.
+          // parked car, plus the lot's standing junk and the indoor lab kit, both appended off their
+          // own tables so a fourth piece of junk needs no edit here. the two tables are re-laid into
+          // this one's shape rather than concatenated whole: each carries fields of its own (a kit
+          // prop's depth and yaw jitter) that the warm has no use for
+          //
+          // the KIT is patched with the rest, and it is the one family here that will really read
+          // through the mask — everything else stands outdoors. what it must NOT do is skip the
+          // warm on that account: the patch is a PROGRAM KEY, and an unpatched warm compiles a
+          // permutation the first entry never asks for.
           // NOTHING from the gate is among them: the booth and the barrier are both merged geometry,
           // taking the cladding, roof and lit-window materials the shell already warms, plus the one
           // hazard-band material the boom adds
@@ -114,7 +121,8 @@ class FacilityWarm
               path: RenderConfig.MODELS.facilityCar,
               h: FacilityStyle.CAR_H,
             },
-          ].concat(FacilityDebris.PROPS);
+          ].concat([for (p in FacilityDebris.PROPS) { path: p.path, h: p.h }])
+            .concat([for (p in FacilityKit.PROPS) { path: p.path, h: p.h }]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the
           // header of render.facility.FacilityRoof). the patch is a PROGRAM KEY, so warming them

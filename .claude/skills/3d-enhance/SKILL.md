@@ -8,9 +8,16 @@ description: Study one 3D area of the parasite game (city / facility / sewers / 
 Four phases: **study → inventory → rank → build the picked one**. Stop after phase 3 and let the
 user choose. Never build the whole list.
 
-The art style is FIXED and not up for improvement: moody-night roguelike, flat matte, dark muted
-desaturated, even flat lighting, no specular, no photoreal. A good addition is invisible AS an
-addition — it looks like it was always there.
+The art style is FIXED and not up for improvement: moody-night roguelike, flat matte, dark, low
+value, even flat lighting, no specular, no photoreal. A good addition is invisible AS an addition —
+it looks like it was always there.
+
+**"Dark" is a VALUE rule and it was being read as a saturation rule.** Surfaces are desaturated
+because a wall really is grey; OBJECTS keep their own colour, and a manufactured thing that comes
+back grey is a bug — 9 of 38 props shipped neutral before this line was written. Value and chroma are
+independent: `facility/lot-cone` sits at luma 47 with a channel spread of 45. Pick an accent hue
+AGAINST the light, not with it: the compound is lit by a `0x46536b` ambient, a `0x56668c` hemisphere
+and a `0x8294c0` moon, so a blue prop disappears into the lamp and a warm one survives it.
 
 `CLAUDE.md` carries the always-on guards; the detail lives in `docs/3d-models.md`,
 `docs/3d-textures.md`, `docs/debug-surface.md` and `docs/3d-render.md` (skills `3d-art`,

@@ -382,6 +382,40 @@ class FacilityStyle
   // CASE_RUN_MIN exists to prevent
   public static inline var CASE_PCT = 0.4;
 
+  // ---- the lab kit standing in the rooms (render.facility.FacilityKit) ---------------------------
+
+  // world HEIGHTS, and through render.Models.instanced the widths with them. at the half-metre unit
+  // WALL_H 6.0 fixes these are a 1.5 m cylinder rack and a 1 m trolley, which is what both objects
+  // really stand at — a rare case where the honest number is also the readable one, because both are
+  // wide for their height (the rack draws 2.63 across, the trolley 1.98) and width is what an
+  // overhead camera sees
+  public static inline var KIT_GAS_H = 3.0;
+  public static inline var KIT_TROLLEY_H = 2.0;
+  // and their DEPTHS across the wall they stand against, off each glb's own measured z extent
+  // (0.317 and 0.451 of its height). the placer works off the wall FACE, so this is what turns a
+  // face into a centre — half of it, plus the gap
+  public static inline var KIT_GAS_D = KIT_GAS_H * 0.317;
+  public static inline var KIT_TROLLEY_D = KIT_TROLLEY_H * 0.451;
+  // and how far the prop's back stands off that face. the corridor casework is bolted to the wall
+  // and takes none; these two are STOOD there, and a hair of daylight behind them is what says so.
+  //
+  // it is also what has to ABSORB THE YAW JITTER, which is where the number comes from rather than
+  // from taste: turning a box about its own centre swings its far corner back, and the trolley's
+  // half-length 0.99 over its half-depth 0.45 makes that 0.45 * cos(J) + 0.99 * sin(J) - 0.45 =
+  // 0.177 at KIT_YAW_JIT. measured live at 0.15, a jittered trolley stood 0.04 off the wall face and
+  // the worst case was 0.02 THROUGH it
+  public static inline var KIT_GAP = 0.2;
+  // a free turn either side of square, radians. a trolley is pushed and parked, never squared to the
+  // grid, so it takes ~10 degrees hashed off its cell — the same discipline every other prop in the
+  // compound turns on, and never Math.random()
+  public static inline var KIT_YAW_JIT = 0.18;
+  // one candidate cell in this many, then the list is STRIDED down to this many props, exactly as
+  // the lot's junk is thinned (LOT_PROP_STEP / LOT_PROP_MAX and the reason there). rooms are the one
+  // interior surface with nothing on it, so the temptation is to fill them — but a lab with kit
+  // against every wall reads as a store room
+  public static inline var KIT_STEP = 3;
+  public static inline var KIT_MAX = 10;
+
   // ---- doors -----------------------------------------------------------------------------------
 
   // the opening's height, world units, out of a WALL_H of 6.0. the art is SQUARE and holds the whole

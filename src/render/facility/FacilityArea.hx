@@ -25,7 +25,8 @@ import render.world.WorldCtx;
 class FacilityArea implements Area3D
 {
   // what `build` appends to `green` after the GREEN table, IN THIS ORDER — the park railing, the
-  // litter bins, the parked cars and the lot's standing junk. they are batches with no GreenProp row,
+  // litter bins, the parked cars, the lot's standing junk and the indoor lab kit. they are batches
+  // with no GreenProp row,
   // because none of them is planted on a tile of its own, and this is the only place that can name
   // them. NOTHING from the gate is here and nothing from it appears in __facility()'s batches: the
   // booth and the barrier are both merged geometry rather than props (see the header of
@@ -34,7 +35,8 @@ class FacilityArea implements Area3D
     RenderConfig.MODELS.facilityFence,
     RenderConfig.MODELS.facilityBin,
     RenderConfig.MODELS.facilityCar,
-  ].concat([for (p in FacilityDebris.PROPS) p.path]);
+  ].concat([for (p in FacilityDebris.PROPS) p.path])
+    .concat([for (p in FacilityKit.PROPS) p.path]);
 
   var game:Game;
   var model:Facility;
@@ -153,6 +155,11 @@ class FacilityArea implements Area3D
       // its OTHER half — the flat litter decals — appears nowhere here: that one goes out through
       // `debris()` onto the shared decal batch and owns no mesh of its own
       for (p in FacilityDebris.props(scene, model))
+        green.push(p);
+      // and the lab kit standing INDOORS, which rides the array for the third and fourth time. it is
+      // the one family in here the vision mask really matters to — everything else on this list
+      // stands outdoors, where the mask reads 1
+      for (p in FacilityKit.props(scene, model))
         green.push(p);
       // the checkpoint at the gate, which rides nothing: the booth and the barrier are both merged
       // straight into the scene, so this appends no batch and `green` stays index-aligned with

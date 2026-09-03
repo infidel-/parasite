@@ -1814,3 +1814,154 @@ already being emitted, so **+0 draw calls and +0 tris**.
 the lip is for: it is a worktop's edge, not the carcass.
 
 **Verdict: landed, +0 draw calls, no new art.**
+
+## The lab kit: two generated props standing INDOORS (2026-09-03)
+
+`facility/gas-cylinders` (a four-bottle rack) and `facility/lab-trolley`, the first glb props in the
+compound that are not outdoors. Both pass the silhouette-vs-surface test outright — a rack of domed
+bottles under a strap rail is outline, and an open wheeled frame is the case an emitted box cannot
+state at all — where the corridor casework standing ten units away is merged geometry.
+
+**They went in the ROOMS, and that is what keeps the pass from having to know about any other one.**
+The corridor already carries three families and every one of them is gated on `Surf.LINO` (casework,
+dead-end bins, directional signs), so a pass gated on `Surf.TILE` cannot collide with any of them
+however they are retuned later — no shared claimed-cell list, no ordering between builders. It is
+also where the objects belong: the generator furnishes a room with benches under its window wall and
+leaves every other wall in it bare.
+
+**A prop cannot be clamped to the slab, so the CELL is rejected instead.** The casework's own trap
+(entry above) reaches this pass from the other side: `slab()` insets a wall face by 1.0 wherever the
+line stops there, and a 3-unit rack standing on the cell centre would hang off the end. A run can be
+clamped; a prop is one rigid object, so `FacilityKit.wall` requires the wall line to CARRY ON past
+the cell both ways and drops the candidate otherwise.
+
+**`KIT_GAP` has to absorb the yaw jitter, and 0.15 did not.** Turning a box about its own centre
+swings its far corner back: at `KIT_YAW_JIT` 0.18 the trolley's half-length 0.99 over its half-depth
+0.45 gives `0.45·cos J + 0.99·sin J − 0.45` = **0.177**. Measured live at 0.15, a jittered trolley
+stood **0.04** off its wall face and the worst case was 0.02 THROUGH it. 0.2 clears it.
+
+**Both glbs were flagged REJECT by the components gate and both are fine** — the third and fourth
+false positive in this repo after `facility/car` and `roof-dish`. Cylinders **10 components at
+68.9%**: 1,884 unique positions carrying the bottles and the rack, then 173/167/160/157, which are
+the four valve collars. Trolley **24 at 51.1%**: 1,530 frame, 406 and 388 the two shelves, 74 and 71
+two castors. The orthographic preview settled both in one look, as it did for those two.
+
+**Cost, measured interleaved on two pinned poses**: one batch in view **+1 call** (72/71 with two
+racks visible, 73/72 with one trolley), both families in view **+2** (108/106), `programs` 83
+throughout — the warm chain covers them, and both are appended off `FacilityKit.PROPS` so a third
+piece of kit needs no edit in `FacilityWarm`. Neither batch casts: that is the corridor bin's own
+finding taken up front rather than paid for twice.
+
+**Two traps worth the next reader's time.** `mesh.count` on an `InstancedMesh` is what `Models.cull`
+packed THIS FRAME, not the placement count — matching a batch on `count` found a 2-triangle quad
+batch instead, and the placement count is `instanceMatrix.count` (or the `batches` row in
+`__facility()`). And the instance matrix translation is not the `PropPlace`: `normalize()` bakes a
+recentre offset onto the root, so a placement is verified by transforming the geometry's bounding box
+and reading where the prop actually stands. Doing that: rack #1 spans z −188.85..−187.84 against a
+wall face at −189.00, i.e. exactly `KIT_GAP` clear, 3.00 wide and 3.00 tall.
+
+**The 46-52 prop family is still right indoors, after the repaint.** The worry was that a prop fitted
+against outdoor asphalt would read as a hole in a room whose floor is now luma 86. It does not:
+sampled on the same frame the trolley's shelf top renders **13.9** against the generator's own bench
+top at **16.1** — the new kit is exactly as dark as the furniture that was already there, which is
+what "it looks like it was always there" means. `baseColor` is a FLAT scalar on both (0.17 and 0.21);
+propstat's per-channel fit for the trolley was `[0.27, 0.22, 0.19]`, a 1.42x red-to-blue ratio that
+turns brushed steel tan — `facility/car`'s rust-brown-windscreen rule, hit again.
+
+**Verdict: landed, +2 draw calls worst case, +0 programs, 2 new glbs, 9 props on a generated
+compound (5 racks, 4 trolleys).**
+
+## The pipeline was deleting colour by policy (2026-09-03)
+
+Reported from the game: *"it's starting to get on my nerves that there's almost no color in the
+resulting models and textures. wall textures are mostly fine."* The report is about OBJECTS and it is
+correct. Measured across all 38 shipped props: **17 ship with a channel spread under 2**, i.e.
+functionally grey, and the losses are not subtle.
+
+| prop | atlas chroma | shipped | fit |
+|---|---|---|---|
+| `wild/tree-broadleaf-full` | 41.5 | **3.8** | per-channel |
+| `wild/bush-low` | 35.5 | 9.0 | per-channel |
+| `wild/log-fallen` | 24.4 | **0.4** | per-channel |
+| `facility/fence-park` | 23.7 | **0.4** | per-channel |
+| `facility/trash-bin` | 20.1 | **0.1** | per-channel |
+
+A tree in leaf bakes a 41-chroma green canopy and ships grey. The bin's own note says "the body is
+bottle green"; it shipped at 49/49/49.
+
+**Three causes, all confirmed, none of them the generator.**
+
+**(1) The reference prompt.** `textures.json`'s `style` says *"very dark and muted desaturated
+palette, low contrast"*, and four files mandated appending it verbatim to every gen — reference
+images included (`CLAUDE.md`, `docs/3d-textures.md`, `docs/3d-models.md`, `3d-art/SKILL.md`), with
+`3d-enhance/SKILL.md` calling the whole thing "FIXED and not up for improvement". Correct for a wall,
+which really is grey; wrong for a manufactured object, whose colour is a fact about it. There is now
+a second string, **`style_prop`**, identical but for that clause, and the five sites say which is
+which.
+
+**(2) The `baseColor` fit.** Shipped sRGB chroma is atlas chroma × `f`^(1/2.2), verified to within
+0.1 on three props (trolley 16.2 × 0.21^0.4545 = 8.0, measured 8.0; car 10.9 → 8.2; cone 49.3 →
+44.6). Worse, **9 of 38 props carry a PER-CHANNEL factor, which is a neutraliser by construction** —
+it solves every channel onto one number. `propstat` printed that form as the primary suggestion
+(`want = 49.0`), so the tool WAS the policy. On a genuinely coloured bake it does not even return a
+legal factor: the amber rack below asks for a **blue factor of 2.7**.
+
+**(3) Reading the family as an RGB target.** 46-52 is a **LUMA** band. `facility/lot-cone` is luma 47
+with a spread of 45 — value and chroma are independent, and nothing in the pipeline said so.
+
+`propstat` now prints a `chroma` line beside the albedo, labels the band `luma 46-52 OUTDOORS`,
+suggests a FLAT scalar, and offers the per-channel form only where there is under 8 chroma to lose.
+
+**And a fourth thing that is not a bug but decides the hue: the lamp supplies most of the colour in
+the frame.** `FacilityScene` lights the compound with ambient `0x46536b`, hemisphere `0x56668c` and a
+`0x8294c0` moon, all strongly blue. Measured: `facility/floor-tile`'s texture carries chroma **3.2**
+and renders at **18.3**; the grey rack's albedo carried **0.7** and rendered **7.7**. Both numbers are
+the light. **Blue was the hue asked for first and is the one hue that cannot read here** — it lands on
+the lamp's own. Amber was chosen against it.
+
+**Verdict: landed. `style_prop` added, five mandate sites updated, `propstat` no longer recommends
+the neutralisation. No render code, +0 draw calls.**
+
+## The gas cylinders redone in amber, and indoor props raised off the outdoor family (2026-09-03)
+
+Two changes to the same two props, from the same report.
+
+**Amber.** Re-generated against `style_prop` with the colour named and defended in the prompt
+("clearly orange, never brown, never tan, never grey"). Atlas came back **135/91/27, chroma 108.7**
+against the grey bake's chroma 2. Rendered at the game camera it reads **106.9/61.6/6.1, luma 67.3,
+chroma 101** — the first object in the compound whose own colour beats the lamp's.
+
+**The reference was NOT lifted, and that is the finding.** `propstat --lift` keys against the backdrop
+gpt actually painted, and this drop's vignette was deep enough that the key called most of the
+backdrop SUBJECT: the gamma then landed on the whole frame and took the backdrop from 87/90/92 down
+to ~72 instead of flattening it onto the nominal 90/93/99 — closing the very margin the lift exists
+to open. Shipped unlifted at subject p50 87, bright for the 69-77 band, which is the right direction
+when `baseColor` can only multiply DOWN and the target is 78.
+
+**TRELLIS does not hold orientation across runs.** The amber bake came back with its rack frame at
+**+z** where the grey one had it at **−z**, off the same reference composition. Measured on the
+extremes: the +z slab carries 1.173 of 6.535 over y −0.492..0.387 (the frame and its uprights,
+nearly full height) against the −z slab's 0.214 over y −0.491..0.025 (the strap and foot rails
+alone). `KitProp` gained a per-model **`yaw0`** rather than the placer assuming a hand; the rack takes
+`PI`, the trolley 0. Confirmed on screen: bottles to the room, frame to the wall, on both a north
+wall and a west one.
+
+**The value raise.** The 46-52 family was fitted OUTDOORS against asphalt. After the interior repaint
+the room floor's albedo is 95 and the wall's 111, so an indoor prop at 49 is a hole: measured, the
+trolley's shelf top rendered at luma **13.9**, level with the generator's own bench tops at 16.1 and a
+sixth of the floor's 86. Both props refitted to albedo **78** — rack `baseColor` 0.17 → **0.65**,
+trolley 0.21 → **0.60**, both flat.
+
+**The response is not linear, because ACES has a toe.** Raising the rack's albedo by 1.6× lifted its
+rendered luma **17.7 → 67.3**, a factor of **3.8** — the 46-52 family sits deep in the crush, which is
+also why the old props read as flat black rather than as dark objects. Fit an indoor prop live at the
+game camera; do not predict it from the albedo. After: trolley **47.9** against an unlit floor at 59.2
+and a wall at 116.9, rack 67.3 against a lit floor at 76.1.
+
+The new bake is 5,710 tris, **29 components at 56.6%** (1,598 rack and bottles, then 175/171/169/160
+= the four valve collars) — the gate's fifth false positive, settled by the orthographic preview as
+usual, whose plan view now reads as four round cylinder tops where the grey bake's did not. bbox
+0.875 × 0.999 × 0.317, so `KIT_GAS_D` moved to `KIT_GAS_H * 0.317` and the rack draws 2.63 wide.
+Draw cost unchanged: **+2 calls with both batches in view** (102/100), `programs` 83, counts 5 and 4.
+
+**Verdict: landed, +0 draw calls over the phase-6 entry, 1 glb regenerated, 2 `baseColor` refits.**

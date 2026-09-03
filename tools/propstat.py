@@ -153,8 +153,15 @@ def stat_glb(path):
         px = np.clip((c * [im.shape[1], im.shape[0]]).astype(int), 0,
                      [im.shape[1] - 1, im.shape[0] - 1])
         s = im[px[:, 1], px[:, 0]].mean(axis=0)
-        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family 46-52)' % (
-            '%dpx' % im.shape[0], *im.reshape(-1, 3).mean(axis=0).round(), *s.round()))
+        # the family band is a LUMA band and says nothing about chroma -- lot-cone ships at luma 47
+        # with a channel spread of 45, so a prop can be dead on the family and vividly coloured. the
+        # spread is printed beside it because that is the number nobody was looking at: 9 of 38 props
+        # shipped with a per-channel factor and every one of them came out neutral
+        rgb = im.reshape(-1, 3).mean(axis=0)
+        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family luma 46-52 OUTDOORS)' % (
+            '%dpx' % im.shape[0], *rgb.round(), *s.round()))
+        print('  chroma         atlas %.1f   sampled %.1f   (max-min; a coloured prop wants > 25)'
+              % (rgb.max() - rgb.min(), s.max() - s.min()))
         # texels per triangle, and the `tex` that holds it near what the source was authored at.
         # this is only meaningful against the BAKED tex -- on a models-src source it is just the
         # 2048 export over a small tri count, which is why the recommendation is what gets printed
@@ -163,14 +170,27 @@ def stat_glb(path):
         print('  texels/tri     %d at %dpx  ->  tex %d gives %d  (hold near the ~43-55 band)' % (
             im.shape[0] * im.shape[1] / len(tri), im.shape[0], edge, edge * edge / len(tri)))
         # baseColor multiplies DOWN, lift gammas UP -- name whichever one this bake needs. a
-        # STARTING POINT only: it solves for a flat 49, where a fit by hand usually keeps some of
-        # the prop's own lean (bush-low is deliberately left at 44/50/44, greener than neutral)
+        # STARTING POINT only, and a FLAT one on purpose: a flat scalar is linear, so it moves the
+        # level and holds the hue and the channel ratios, where the per-channel solve below is by
+        # construction a NEUTRALISER -- it drives every channel onto one number. That form shipped 9
+        # of 38 props grey, wild/tree-broadleaf-full losing a 41.5-chroma green canopy to 3.8 and
+        # facility/trash-bin a bottle-green body to 0.1, and on a strongly coloured bake it does not
+        # even return a legal factor (facility/gas-cylinders' amber asks for a BLUE factor of 2.7).
+        # So it is offered only where there is almost no chroma to lose.
+        #
+        # `want` is the OUTDOOR family. An indoor prop stands against a floor of albedo ~95 and a
+        # wall of ~111 and wants ~78, which is a per-prop call the tool cannot make -- read the
+        # target off the surface the prop stands on, not off this number.
         want = 49.0
         if abs(s.mean() - want) > 6:
             if s.mean() > want:
-                f = [round(((want / 255) ** 2.2) / max((v / 255) ** 2.2, 1e-6), 2) for v in s]
-                print('  -> baseColor   [%s, %s, %s, 1]  (LINEAR, per-channel, darkens; start here)'
-                      % tuple(f))
+                flat = round(((want / 255) ** 2.2) / max((s.mean() / 255) ** 2.2, 1e-6), 2)
+                print('  -> baseColor   %.2f  (LINEAR, FLAT, darkens; holds hue -- start here)'
+                      % flat)
+                if s.max() - s.min() < 8:
+                    f = [round(((want / 255) ** 2.2) / max((v / 255) ** 2.2, 1e-6), 2) for v in s]
+                    print('     per-channel [%s, %s, %s, 1] neutralises the mean -- ONLY for a cast '
+                          'over the WHOLE surface, never on a prop with a colour' % tuple(f))
             else:
                 print('  -> lift        %.2f  (gamma on the MAP; baseColor cannot brighten)'
                       % (np.log(want / 255) / np.log(max(s.mean(), 1) / 255)))

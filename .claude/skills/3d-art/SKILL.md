@@ -29,8 +29,10 @@ Worked examples of the emitted route: `FacilityTables.hx`, `FacilityEntry.hx`.
 ## A prop → `docs/3d-models.md`
 
 1. `generate_image` (gpt-image-2) — ONE modern object, centred, whole, clear of the frame edges,
-   **isometric from above one corner**, on flat solid grey `#5a5d63`, canonical `style` string
-   appended verbatim.
+   **isometric from above one corner**, on flat solid grey `#5a5d63`, canonical **`style_prop`**
+   string appended verbatim — a reference image is an OBJECT, so it takes the prop string and never
+   `style`, which is the surface one and carries the "muted desaturated palette" clause that shipped
+   9 of 38 props grey. Name the object's colour and say it must stay saturated.
 2. `python3 tools/propstat.py <ref>.png` — subject value against the p50 **69-77** that bakes
    correctly, frame margin, backdrop colour. Fix in code (`--lift`, `--fit`) before re-prompting.
 3. `image_to_3d` (`runware-trellis-2`) — omit `remesh_project`/`mesh_cluster`, the defaults are now
@@ -55,6 +57,8 @@ route is the fallback and is still mandatory for TRELLIS references.
 | smeared, mush, "quite shit" | the atlas, not the mesh — re-measure the BUILT glb's split ratio; regenerate at budget | Generation settings |
 | shattered, blobby, rounded off | the settings, not the reference — re-run with the corrected defaults first | Generation settings |
 | too dark, half the prop family | self-occlusion baked into the albedo → `lift` (a gamma), not `baseColor` | Materials |
+| grey, colourless, "reads as a hole" | the reference took `style` instead of `style_prop`, and/or a per-channel `baseColor` neutralised the bake — check `propstat`'s `chroma` line | Materials |
+| a prop INDOORS reads as a black card | the 46-52 family is the OUTDOOR one; against the repainted interior (floor 95, wall 111) an indoor prop wants ~78 | Materials |
 | wrong hue on one part only (teal body, rust windows) | a per-channel `baseColor` correcting a per-material cast → use a flat scalar | Materials |
 | chrome / black under debug key `1` | metalness — read the MR map (G = roughness, B = metalness) | Materials |
 | glow in the wrong place, speckles | emissive mask dilation bleeding into the next chart — `tools/emissive.py`, ship only at bleed **0** | Making a prop glow |

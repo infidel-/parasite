@@ -716,6 +716,12 @@ class RenderConfig {
     facilityLotCone: 'models/facility/lot-cone.glb',      // traffic cone, weighted square base, one collar
     facilityLotTyres: 'models/facility/lot-tyres.glb',    // three worn car tyres stacked flat, no rims
     facilityLotReel: 'models/facility/lot-reel.glb',      // empty steel cable reel standing on its flanges
+    // the lab kit standing INDOORS, against the room walls (render.facility.FacilityKit) — the first
+    // two glb props in the compound that are not outdoors. both earn a glb on the same test the
+    // corridor's casework fails: a rack of domed bottles and an open wheeled frame are silhouette,
+    // where a cabinet run is a box and is merged geometry
+    facilityKitGas: 'models/facility/gas-cylinders.glb',  // four-bottle cylinder rack, strap rail, foot rail
+    facilityKitTrolley: 'models/facility/lab-trolley.glb', // two-shelf trolley on castors, push handle
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar
