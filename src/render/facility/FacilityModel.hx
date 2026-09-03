@@ -53,6 +53,14 @@ typedef DoorCell = {
   // -1 or +1 on the PERPENDICULAR axis: the side the pair swings into
   inDir:Int,
   look:Look,
+  // cut as the building's FRONT ENTRANCE, i.e. one of the two leaves flanking the mullion.
+  //
+  // the generator's own marker does NOT survive: finalTiles resolves TEMP_BUILDING_FRONT_DOOR to
+  // plain Const.TILE_FLOOR_LINO, exactly what a side door and an inner door resolve to, and
+  // generatorInfo.doors only ever records the INNER ones. it survives on the OBJECT alone —
+  // Const.FRAME_DOOR_DOUBLE is dealt to the entrance and to nothing else — which is why `look`
+  // cannot be asked instead: lookOf collapses DOUBLE and GLASS onto one painted pair
+  front:Bool,
   structure:Int,
 };
 
@@ -482,12 +490,14 @@ class FacilityModel
           else if (m.surf[o.y - dr][o.x - dc] == Surf.TILE &&
                    m.surf[o.y + dr][o.x + dc] != Surf.TILE)
             inDir = -1;
+          var closed = cast(o, objects.Door).closedCol;
           m.doors.push({
             col: o.x,
             row: o.y,
             alongX: alongX,
             inDir: inDir,
-            look: lookOf(cast(o, objects.Door).closedCol),
+            look: lookOf(closed),
+            front: closed == Const.FRAME_DOOR_DOUBLE,
             structure: m.owner[o.y][o.x],
           });
           m.door[o.y][o.x] = true;
@@ -587,14 +597,19 @@ class FacilityModel
         alongX: false,
         inDir: 1,
         look: CABINET,
+        front: false,
         structure: 0,
       });
+      // and the south one is the ENTRANCE, so the warm pass also compiles the lobby notice board's
+      // material. it is a single leaf with no mullion, which is deliberate: that is the fallback
+      // branch of render.facility.FacilityBoard, and a grid with a mullion would never warm it
       m.doors.push({
         col: 5,
         row: 11,
         alongX: true,
         inDir: -1,
         look: GLASS,
+        front: true,
         structure: 0,
       });
       for (d in m.doors)

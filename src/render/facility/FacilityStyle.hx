@@ -396,6 +396,20 @@ class FacilityStyle
   public static inline var MOUNT_SCALE = 1.0;
   public static inline var MOUNT_PROUD = 0.12;
 
+  // ---- the lobby notice board ------------------------------------------------------------------
+
+  // a SQUARE 1.1 m corkboard hung centred 1.5 m up the entrance wall, at the half-metre unit WALL_H
+  // 6.0 fixes. square because the ART is square and a texture is never stretched — a landscape board
+  // would have to be sized off its own drop's aspect, which is machinery the window runs genuinely
+  // need (WINDOW_ASPECT) and one quad on a pier does not.
+  //
+  // 2.2 across the 4-unit mullion leaves 0.9 of masonry either side, and 1.9..4.1 up a 6-unit wall
+  // stands clear of the floor and well under the roof deck. it stands MOUNT_PROUD off the face, the
+  // vent grille's own nudge — see render.facility.FacilityBoard.quad
+  public static inline var BOARD_W = 2.2;
+  public static inline var BOARD_Y = 3.0;
+  public static inline var BOARD_TEX = 'textures/facility/notice-board.png';
+
   // ---- windows ---------------------------------------------------------------------------------
 
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the

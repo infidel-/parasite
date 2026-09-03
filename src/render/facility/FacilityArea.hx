@@ -52,6 +52,7 @@ class FacilityArea implements Area3D
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
+  var boards = 0;                               // lobby notice boards emitted: one per front entrance
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -129,6 +130,8 @@ class FacilityArea implements Area3D
       // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
       roof = FacilityRoof.build(scene, model, shells);
       FacilityTables.build(scene, model);
+      // the lobby notice board, after the shell because it hangs on FacilityGeom.slab's own face
+      boards = FacilityBoard.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -225,6 +228,7 @@ class FacilityArea implements Area3D
                 look: b.cells[c].look,
                 alongX: b.cells[c].alongX,
                 inDir: b.cells[c].inDir,
+                front: b.cells[c].front,
                 isOpen: (b.doors[c] != null && b.doors[c].isOpen),
                 live: (b.doors[c] != null),
                 t: b.open[c],
@@ -266,6 +270,11 @@ class FacilityArea implements Area3D
             // painter actually consumed. it is a FIELD and not geometry, so it draws nothing and
             // there is no instance count to compare it against — this is the only handle on it
             shadows: render.world.ContactMask.count,
+            // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
+            // whole question it answers is whether the front-entrance detection found anything at
+            // all: `boards` short of the number of `doors` rows with front true means a structure's
+            // entrance wall had nowhere to hang one
+            boards: boards,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
             // answer. the parapet: did it close on every structure and is the HANGAR really left

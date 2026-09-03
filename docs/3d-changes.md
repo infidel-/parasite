@@ -1536,3 +1536,49 @@ census flagged a 0.441 spike and it was a corner — `carries(26,19)` is true, t
 that sample sat inside masonry. Census only where the neighbour does not carry.
 
 **Verdict: landed, +0 draw calls, +0 programs.** No geometry, no material, no permutation.
+
+## The lobby gets a notice board, hung on the mullion the entrance cut leaves (2026-09-03)
+
+The facility had no wall-mounted anything indoors. `facility/wall-interior` is sd **3.00** and
+`facility/floor-lino` sd **2.37** — the flattest large surfaces in the game — so micro-detail in a
+tiling texture cannot carry an 8x24-unit ribbon at any period. Contrast has to be PLACED.
+
+**New `render.facility.FacilityBoard`: one 0..1 quad, its own art, `MOUNT_PROUD` (0.12) off the wall
+face.** A corkboard is the SILHOUETTE-vs-SURFACE guard read from the other side — its outline is a
+rectangle, and everything that says "notice board" rather than "grey panel" is a RHYTHM of pinned
+sheets. So it is a texture, and it must be its OWN texture: row 855 already settled that a fitting
+painted in the wall's own art is a lump of wall.
+
+**Finding the entrance was the work, and `look` cannot answer it.** `finalTiles` resolves
+`TEMP_BUILDING_FRONT_DOOR` to plain `TILE_FLOOR_LINO`, identical to a side door and an inner one;
+`generatorInfo.doors` records only INNER doors; and `FacilityModel.lookOf` collapses
+`FRAME_DOOR_DOUBLE` and `_GLASS` onto one painted pair. It survives on `objects.Door.closedCol`
+alone, so `DoorCell` gained `front:Bool`. `closedCol` is already persisted on the object and
+`DoorCell` is derived at build time, so no Saver/Loader change, no migration, and old saves work.
+
+**The MULLION is the placement and it is free.** The generator cuts the entrance 3 cells wide and
+restores the centre to wall, so a front entrance is two one-cell leaves flanking a 4-unit pier —
+dead ahead of anyone walking in, and the one candidate that does not depend on what the rest of the
+facade holds. Pass 0 takes a wall cell with a `front` leaf on BOTH sides; pass 1 takes any flanking
+masonry, so a single-leaf entrance still gets one. `demo()`'s entrance is deliberately single-leaf:
+it is the fallback branch, and a grid with a mullion would never warm it.
+
+**No `lift`, which is the unusual half.** The drop measures **0.0732 linear** as painted — between
+`facility/wall-interior` 0.0673 and `facility/door-lamp` after its own 2.3 (0.0825) — so it reads as
+a fitting with nothing dialled. sd **34.3**, the highest-variance surface in the facility set
+(bench-body 18.6). SQUARE because the art is square and a texture is never stretched; the frame IS
+the image border, since any margin gpt left would draw as wall-coloured nothing standing proud.
+
+Measured live: `boards` **2** on a generated compound (4 `front` leaves, two entrances), both landing
+on the mullion — verts at `slab.x0 - 0.12` / `slab.x1 + 0.12`, y **1.9..4.1**, 2.2 across. Interleaved
+A/B on a pinned pose, median of 9 frames x 4: **91 / 91 / 91 / 91 on, 90 / 90 / 90 / 90 off**.
+Programs unchanged — the material shares program 64 with the interior walls, same
+`customProgramCacheKey` `visMasksindoor`.
+
+**Trap: both entrances on this seed face ±x, not ±z.** The plan predicted a road-facing ±z normal
+broadside to the resting camera; the generator gave neither. From the resting yaw the board is a
+foreshortened slice, and it only reads square once the rig orbits. That is a placement fact about
+the compound, not a bug — but do not size an interior fitting on the assumption that the resting
+camera sees its face.
+
+**Verdict: landed, +1 draw call, +0 programs.**
