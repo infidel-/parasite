@@ -534,6 +534,31 @@ class FacilityStyle
   // as on a cell wall
   public static inline var GRIME_EPS = 0.05;
 
+  // ---- the vertical darkening down a reentrant corner (render.facility.FacilityDetail) -----------
+
+  // NOTHING IN THE INDOOR RIG CAN DARKEN A VERTICAL CORNER, and that is structural rather than a
+  // tuning gap — the tunnels' own finding, and it applies here harder. render.world.IndoorMask
+  // replaces the fill with an AmbientLight-shaped term, which is normal-blind; the hemisphere it
+  // replaces keyed on normal.y and BOTH faces of a vertical corner are vertical; a ceiling fixture
+  // over the passage sees both walls at once. And measured while chasing "zero shadows indoors": the
+  // whole direct term indoors is 18% of an interior floor, so a REAL shadow tops out at 10/255 —
+  // GTAO is the only engine answer and it ships off at +140 calls.
+  //
+  // render.world.ContactMask cannot reach this either, and that one is not a budget problem: the
+  // field is TOP-DOWN, so every fragment of a 6-unit wall face samples the same xz and the whole
+  // column would darken by one flat amount. Its own header says so. The floor crease is a field; the
+  // wall corner has to be geometry.
+  //
+  // THE REACH IS NOT A KNOB. It is the notch — FacilityGeom.notches leaves exactly (CELL - WALL_T)/2
+  // = 1.0 unit of masonry facing the room on each side of a corner, which is the piece the wall line
+  // turning leaves behind, and the strip is that face and no more. The tunnels' WALL_SHADOW_W 1.1 is
+  // the same number arrived at by hand on a 4-unit cell
+  public static inline var CORNER_ALPHA = 0.5;
+  // proud of the wall face, and it must CLEAR GRIME_EPS 0.05 or the damp band in the same corner
+  // draws over the strip instead of under it. a PHYSICAL gap and never polygonOffset — the tunnels'
+  // own value and the same reasoning
+  public static inline var CORNER_EPS = 0.07;
+
   // ---- windows ---------------------------------------------------------------------------------
 
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the

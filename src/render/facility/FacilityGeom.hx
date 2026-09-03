@@ -1052,6 +1052,24 @@ class FacilityGeom
         };
     }
 
+// a rect's face in `dir`, collapsed to the plane that face lies on and pushed `eps` out of the
+// masonry — the degenerate rect the wall-decal passes wind a quad against.
+//
+// the four cases are the one thing here that is invisible when they are wrong: a quad emitted
+// against dir 2 where the caller meant dir 3 lands INSIDE the wall and simply never appears. two
+// passes need it (render.facility.FacilityGrime's damp band, FacilityDetail's corner strips) and a
+// third would have copied it, so it lives here with `ends`, which is the other half of the same job
+  public static inline function plane(s:Rect, dir:Int, eps:Float):Rect
+    {
+      return switch (dir)
+        {
+          case 0: { x0: s.x0, x1: s.x1, z0: s.z0 - eps, z1: s.z0 - eps };
+          case 1: { x0: s.x0, x1: s.x1, z0: s.z1 + eps, z1: s.z1 + eps };
+          case 2: { x0: s.x0 - eps, x1: s.x0 - eps, z0: s.z0, z1: s.z1 };
+          default: { x0: s.x1 + eps, x1: s.x1 + eps, z0: s.z0, z1: s.z1 };
+        };
+    }
+
 // one vertical wall face spanning y0..y1, UVs world-aligned along the run and up the wall so
 // neighbouring faces of one long wall carry a continuous course. `t` is the repeat period, which the
 // shutter runs take at their own value so their slat pitch is independent of the wall course.

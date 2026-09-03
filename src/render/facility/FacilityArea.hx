@@ -139,6 +139,12 @@ class FacilityArea implements Area3D
       // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
       grime = FacilityGrime.build(scene, model);
+      // and the corner strips AFTER the band, which is a draw-order fact and not a preference: both
+      // are transparent with depthWrite off and both are one compound-wide merge sitting at the
+      // origin, so three compares an identical sort z and falls through to `a.id - b.id`, i.e.
+      // CONSTRUCTION order. Built first, the band would draw over the strip in the one corner they
+      // share — the tunnels' own `grime, decals, shadows` finding
+      FacilityDetail.corners(scene, model);
       exits = FacilityExit.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not

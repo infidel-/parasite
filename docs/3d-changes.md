@@ -2031,3 +2031,130 @@ it lands at op 0.19, which is faint and correct.
 
 **Verdict: landed. +0 draw calls, +0 programs, +0 triangles, 0 art. The one lever this interior has
 is the field, because it is the only shading term the flat indoor ambient cannot fill back in.**
+
+## The two interior surfaces the repaint skipped, and a lift is a hue AMPLIFIER (2026-09-04)
+
+The interior relay lifted `floor-tile` 2.18, `wall-room` 1.91, `wall-interior` 1.48 and `bench-body`
+1.23. It left `facility/bench-top` and `facility/floor-lino` alone, and both entries had already
+written down the relationship that the relay then broke.
+
+| | note said | after the relay | now |
+|---|---|---|---|
+| `bench-top` | "its silhouette against the 0.0607 room floor" = **0.334x** | floor went to 0.12, ratio halved to **0.169** | lift **0.799** -> 0.0401 linear, 0.334x restored |
+| `floor-lino` | "1.24x the room tile so a corridor reads as its own surface" | floor-tile 0.0607 -> 0.12 **INVERTED** it to 0.63x | 0.1367 linear, 1.14x, re-rolled |
+
+**Neither target was chosen — both are RATIOS the entries already named.** `bench-top` restores the
+floor multiple it was fitted on. `floor-lino` takes the room own floor:wall ratio (0.12 / 0.1394 =
+0.861) applied to the corridor own wall, `wall-interior` at 0.1595, so a corridor reads as light walls
+over a slightly darker floor exactly as a room does. Rendered, the bench top goes **16.1 -> 24.3**
+against an unlit room floor at 63.2.
+
+**A LIFT IS A HUE AMPLIFIER, AND THE SPREAD IS NOT THE TELL — THE VALUE IS.** The lino was first done
+as a lift alone, 0.749, which hit 0.1373 exactly. It shipped a visibly GREEN corridor. The byte
+spread did not move: 77/78/67 spread 10.8 in, 104/104/93 spread 10.8 out. What changed is that a
+cast you cannot see at 0.075 linear you can see at 0.137. Measured in one corridor frame, floor and
+wall in the same lighting band:
+
+| | R / G / B | G - B |
+|---|---|---|
+| lifted olive lino | 59.4 / 71.2 / 64.3 | **+4.7** |
+| its own wall | 56.2 / 66.4 / 69.0 | -2.6 |
+
+Every neutral surface in the compound sits at G - B around -2.6, because the rig is blue and they
+carry no cast of their own. The lino sat 7.3 points off it.
+
+So it was RE-ROLLED on the same "ask for a value, not a word" spec the other three interior surfaces
+took — a named brightness plus "HUE: PERFECTLY NEUTRAL, the red, green and blue values are equal"
+and an explicit list of what olive is not. Drop came back **0.2299 linear, spread 10.8 -> 3.8**, and
+lift **1.361** lands it on 0.1367 at 105/103/101. Rendered: **60.4 / 69.3 / 72.0, G - B -2.7** against
+the wall -2.6 — the same hue as everything around it. Old source archived at
+`unused/facility-floor-lino-olive.png`.
+
+**The rule this adds to the existing one.** `3d-changes` already records that a lift amplifies an
+imbalance, from the 8.17 gamma that went beige. That was a big gamma changing the spread. This is a
+MILD gamma that did not change the spread at all and exposed the cast anyway, because it raised the
+value the cast is read at. **Before lifting any surface past about 2x, check the drop channel spread,
+not just its luminance** — over about 6 and the lift will publish it.
+
+**Verdict: landed, +0 draw calls, +0 programs, 2 textures, 1 re-roll. `bench-top` 0.799 and
+`floor-lino` 1.361, and the interior value ladder is now complete: wall-interior 0.1595, wall-room
+0.1394, floor-lino 0.1367, floor-tile 0.12, bench-top 0.0401.**
+
+## The one shading term a top-down field cannot reach: the vertical corner (2026-09-04)
+
+Item 4 of the "no shadows indoors" list, and the last of it. `ContactMask` darkens the floor crease
+and CANNOT darken a wall — the field is top-down, so every fragment of a 6-unit face samples the
+same xz and the whole column would darken by one flat amount. Its own header says so. Meanwhile
+nothing in the indoor rig can darken a corner either, and that is structural: `IndoorMask` replaces
+the fill with an AmbientLight-shaped term (normal-blind), the hemisphere it replaces keyed on
+`normal.y` and BOTH faces of a vertical corner are vertical, and a ceiling fixture sees both walls at
+once. The whole direct term indoors is 18% of an interior floor, so a REAL shadow tops out at 10/255.
+
+**THIS IS QUADS AND THAT IS NOT A CONTRADICTION OF "A CONTACT SHADOW IS A FIELD".** That verdict
+killed per-cell floor strips because `slab` insets by (CELL - thick)/2 wherever the wall line does not
+carry, so a RUN of strips gapped and doubled — coverage census `111...1111211132`. A corner is a
+POINT feature. Each strip stands on one face of one notch, meets nothing, and has nothing to fail to
+meet. The slab fact that destroys a run is irrelevant to a point.
+
+**The corners were already enumerated and the reach is not a knob.** A reentrant corner IS a notch:
+a wall cell whose line carries both ways is an L, `FacilityGeom.notches` punches the square out of
+its angle, and the two sides of that square are the masonry the room corner is made of —
+`FacilityGrime` has walked exactly this list since the grime pass. The notch leaves
+(CELL - WALL_T)/2 = **1.0 unit** of face per side, so that is the reach: the strip is the notch and
+no more. The tunnels arrived at `WALL_SHADOW_W` 1.1 by hand on a 4-unit cell.
+
+**MERGED, not instanced, which is where the port parts company with its source.** Down in the
+tunnels the corner strips ride the floor strips own `InstancedMesh` for free. Up here the floor
+strips do not exist — a field replaced them — so there is no batch to ride, and a merge is then
+strictly better than an instance: one call either way, and no per-frame cull on static geometry.
+
+**The camera-side skip was NOT ported.** `SewerDetail` emits the z face only at `dr < 0`, because the
+sewer camera is FIXED and the other one is backface-culled in every pose. The facility rig orbits, so
+copying it would have silently deleted half the strips. Both faces, everywhere: **128 quads = 64
+corners x 2**.
+
+**IT SHIPPED WITH A HARD LINE DOWN EVERY CORNER, and the source had already written the fix down.**
+Reported from the game as "a dark line produced by the intersection of two dark quads", and that is
+exactly what it was. Each strip ran to the corner ITSELF while standing `CORNER_EPS` 0.07 off its own
+wall — so each one`s fully-opaque edge overhung its twin`s plane by that gap, and with both
+transparent and `depthWrite` off the overhanging sliver blends straight THROUGH its twin: two 0.5
+layers stacking to 1 - 0.5 x 0.5 = **0.75** on the seam. `SewerStyle.WALL_SHADOW_EPS` carries the
+answer in its own comment — "it is also the distance the strip starts out from the corner itself,
+which is the same number its perpendicular twin stands off by, so the two meet in plan instead of
+crossing" — and the port took the stand-off and dropped the start-off. **A ported constant can have
+two jobs, and a comment that names both is not decoration.**
+
+Fixed by trimming each run by `CORNER_EPS` at its corner end. Measured: **max 43 -> 30/255**, with
+reach and mean UNCHANGED (0.65% -> 0.67% of frame, mean 0.072 either way) — so the trim removed the
+seam and nothing else, which is the whole of what it was supposed to do.
+
+**Verified headless before looking, and the decomposition is the check.** Every quad: height span
+exactly **6.0** (`WALL_H`), run exactly **0.93** (the notch face less the corner stand-off),
+perfectly planar, exactly 2 vertices at the gradient opaque end. **0 failures on 128 quads across 4
+checks.** And the two strips of every corner now share an opaque end EXACTLY: **max pair gap 0.000000
+over all 128, 0 unpaired**, both ending at the point where each one`s offset plane crosses the
+other`s — a sample corner at (-188.93, -188.93) about a masonry corner of (-189, -189). Before the
+trim the same measurement read a pair SEPARATION of 0.099, which is the bug stated as a number, and
+the check that was run first only asked for "within 0.2" and passed it.
+
+**Cost, interleaved A/B/A/B on a pinned pose: 75 / 74 / 75 / 74 / 75 — +1 draw call, +256 tris.**
+Effect, same pose, restore byte-exact: **max 30/255 over 0.67% of the frame.** Comparable to the
+contact field own 35, over a much smaller area — which is what a corner is. The heat grid puts every
+one of them on a room corner and nothing anywhere else.
+
+Two smaller things. The gradient RUNS ALONG THE FACE rather than up it, so the uv turns
+`Textures.makeShadowGradient` on its side: `u` constant (the ramp is 4 texels wide and carries no
+shape across them), `v` 0 at the corner and 1 at the far end. And WHICH end is the corner is
+measured, not cased — `ends` winds a face differently per `dir` and hand-casing which of its two
+returns is the near one would be re-deriving that table backwards, so the nearer of the two to the
+corner point wins and the code cannot go stale if `ends` is ever retuned.
+
+Built AFTER `FacilityGrime` and that is draw order, not preference: both are transparent with
+`depthWrite` off and both are one compound-wide merge at the origin, so three compares an identical
+sort z and falls through to `a.id - b.id` — construction order. `CORNER_EPS` 0.07 also clears
+`GRIME_EPS` 0.05, so the strip stands physically outside the band it shares a corner with.
+
+`FacilityGeom.plane` was extracted while doing this: the face-plane-pushed-out-by-eps switch had two
+consumers and a third would have copied it.
+
+**Verdict: landed. +1 draw call, +256 tris, 0 art, 64 corners.**

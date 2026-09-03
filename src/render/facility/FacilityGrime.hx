@@ -98,17 +98,9 @@ class FacilityGrime
 // which at a corner or a jamb is genuinely shorter than a cell
   static function band(b:MeshBuf, dir:Int, s:FacilityGeom.Rect):Void
     {
-      var e = FacilityStyle.GRIME_EPS;
-      // the face plane pushed `e` out into the room, as the degenerate rect FacilityGeom.ends winds
-      // a quad against. the four cases are the one thing here that is invisible when it is wrong: a
-      // band emitted against dir 2 where the emitter meant dir 3 lands inside the masonry
-      var p:FacilityGeom.Rect = switch (dir)
-        {
-          case 0: { x0: s.x0, x1: s.x1, z0: s.z0 - e, z1: s.z0 - e };
-          case 1: { x0: s.x0, x1: s.x1, z0: s.z1 + e, z1: s.z1 + e };
-          case 2: { x0: s.x0 - e, x1: s.x0 - e, z0: s.z0, z1: s.z1 };
-          default: { x0: s.x1 + e, x1: s.x1 + e, z0: s.z0, z1: s.z1 };
-        };
+      // the face plane pushed GRIME_EPS out into the room, as the degenerate rect FacilityGeom.ends
+      // winds a quad against
+      var p = FacilityGeom.plane(s, dir, FacilityStyle.GRIME_EPS);
       var q = FacilityGeom.ends(p.x0, p.x1, p.z0, p.z1, dir);
       var t = FacilityStyle.GRIME_TILE;
       var us = (dir < 2 ? q[0] : q[1]) / t;
