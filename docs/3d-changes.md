@@ -1790,3 +1790,27 @@ darkest interior surface by a wide margin. It was not in the ask, and it is the 
 if the corridors now read as a dark trough between light walls.
 
 **Verdict: landed, +0 draw calls, +0 programs, 3 textures repainted, 2 rolls each.**
+
+## A casework run ran a unit past the end of its wall (2026-09-03)
+
+Reported from the game. `FacilityTables.unit` took its extent ACROSS the wall from `slab()` — that
+is where `CASE_D` is measured from — but ALONG the wall from the cell boundary, `col * CELL` to
+`+ CELL`. Those are not the same thing at the end of a run: `slab()` insets a side by
+`(CELL - WALL_T) / 2` = 1.0 wherever the wall line stops there, so the last cell of a wall shows
+**3 units of face in a 4-unit cell**, and the cabinet hung a whole unit past the masonry it is
+bolted to, floating over the corridor floor.
+
+Fixed by clamping the along-wall extent to the wall cell's own slab. Two lines, and it is the same
+rule the rest of the file already follows — the standing note for this whole area is that the
+facility wall plane is `slab()` and never the cell edge, and this was the one axis that had not read
+it.
+
+Measured over the compound's 8 runs, comparing each run's last cell's `cellHi` against the wall
+slab's own: **7 flush, 1 overhanging by exactly 1.00** — the `dir` 2 run at col 25, rows 27..30,
+which is the one that was reported. `cabinets` stays 30, and the fix is inside geometry that was
+already being emitted, so **+0 draw calls and +0 tris**.
+
+`BENCH_LIP` 0.2 still overhangs the clamped end where the RUN stops, which is correct and is what
+the lip is for: it is a worktop's edge, not the carcass.
+
+**Verdict: landed, +0 draw calls, no new art.**

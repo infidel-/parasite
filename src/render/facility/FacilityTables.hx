@@ -183,6 +183,21 @@ class FacilityTables
       var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
       var x0 = col * CELL - half, x1 = x0 + CELL;
       var z0 = row * CELL - half, z1 = z0 + CELL;
+      // ALONG the wall the unit takes the MASONRY's extent and not the cell's. slab() insets a side
+      // by (CELL - WALL_T) / 2 wherever the wall line stops there, so the last cell of a run shows
+      // 3 units of face in a 4-unit cell — and a unit built on the cell boundary hung a whole unit
+      // past the end of the wall it is bolted to. across the wall it is already the slab's, which is
+      // where CASE_D is measured from
+      if (dir < 2)
+        {
+          x0 = Math.max(x0, s.x0);
+          x1 = Math.min(x1, s.x1);
+        }
+      else
+        {
+          z0 = Math.max(z0, s.z0);
+          z1 = Math.min(z1, s.z1);
+        }
       switch (dir)
         {
           case 0:
