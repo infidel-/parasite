@@ -65,9 +65,12 @@ class FacilityGeom
   static inline var CELL = CityConfig.CELL;
 
   // cell offsets of the neighbour each wall face looks at. 0 = north (-z), 1 = south (+z),
-  // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds
-  static var DC = [0, 0, -1, 1];
-  static var DR = [-1, 1, 0, 0];
+  // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds, and the order
+  // `ends` winds a face against. PUBLIC so a second pass over the same faces cannot get its own copy
+  // slightly wrong: render.world.Geom numbers its four directions differently, and a decal emitted
+  // on dir 2 when the emitter meant dir 3 lands inside the masonry with nothing to see
+  public static var DC = [0, 0, -1, 1];
+  public static var DR = [-1, 1, 0, 0];
 
 // how tall a window run of this many cells stands, world units. NOTHING is ever stretched, so the
 // height is the run's width over the ASPECT OF THE ART IT DRAWS — and there is one art per run

@@ -53,6 +53,7 @@ class FacilityArea implements Area3D
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
+  var grime = 0;                                // interior wall faces carrying a damp band
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -130,8 +131,10 @@ class FacilityArea implements Area3D
       // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
       roof = FacilityRoof.build(scene, model, shells);
       FacilityTables.build(scene, model);
-      // the lobby notice board, after the shell because it hangs on FacilityGeom.slab's own face
+      // the lobby notice board and the interior wall grime, both after the shell because both hang
+      // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
+      grime = FacilityGrime.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -275,6 +278,11 @@ class FacilityArea implements Area3D
             // all: `boards` short of the number of `doors` rows with front true means a structure's
             // entrance wall had nowhere to hang one
             boards: boards,
+            // and how many interior wall faces carry a damp band. same problem as `boards` and as
+            // `shadows` — one merged mesh with no instance count, over a face set nothing else
+            // enumerates. every eligible face takes one, so this IS the interior-face count, and a
+            // 0 means the face predicate broke rather than that the building is clean
+            grime: grime,
             lit: lampLights.active().length,
             // the roofline and what stands on it, which is two questions a screenshot cannot
             // answer. the parapet: did it close on every structure and is the HANGAR really left

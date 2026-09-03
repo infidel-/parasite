@@ -410,6 +410,30 @@ class FacilityStyle
   public static inline var BOARD_Y = 3.0;
   public static inline var BOARD_TEX = 'textures/facility/notice-board.png';
 
+  // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
+
+  // the damp band at the foot of an interior wall. `decals/grime-1..3` are BAND art and not marks —
+  // measured on the drop, the opaque part of each is the bottom 31-37% of the image at full width,
+  // which is the alpha ramp render.world.Buildings and render.sewer.SewerDetail both tile a strip
+  // with. Emitted as a square decal it draws a wide flat dash and nothing else, which is how the
+  // first build of this pass shipped.
+  //
+  // GRIME_H is therefore the FADE height and not the mark: at 3.0 the art's own ramp leaves about a
+  // unit of visible muck at the floor, half a metre at the half-metre unit WALL_H 6.0 fixes — which
+  // is what a mopped corridor wall has. It is also the city's own value, on a wall of the same 6.0.
+  //
+  // OPACITY is well under both parents (city 0.6, tunnels 0.7) and was HALVED again after the first
+  // build: at 0.45 it read as a dilapidated building rather than a used one, and this is a working
+  // research facility. The same call cut the crack layer that shipped beside it
+  public static inline var GRIME = 'textures/decals/grime-2.png';
+  public static inline var GRIME_H = 3.0;
+  public static inline var GRIME_TILE = 3.0;
+  public static inline var GRIME_OPACITY = 0.225;
+  // proud of the wall face. a PHYSICAL gap and never polygonOffset — three losses to the depth-bias
+  // route are on record — and the tunnels' own value, a band being the same thing on a 2-unit slab
+  // as on a cell wall
+  public static inline var GRIME_EPS = 0.05;
+
   // ---- windows ---------------------------------------------------------------------------------
 
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the

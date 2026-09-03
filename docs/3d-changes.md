@@ -1582,3 +1582,50 @@ the compound, not a bug — but do not size an interior fitting on the assumptio
 camera sees its face.
 
 **Verdict: landed, +1 draw call, +0 programs.**
+
+## A damp band at the foot of every interior wall, and the crack layer that got cut (2026-09-03)
+
+Second half of the same argument as the notice board — `facility/wall-interior` is sd 3.00, so
+placed contrast is the only contrast a corridor wall can carry. New `render.facility.FacilityGrime`,
+**zero art**: `decals/grime-2` already ships for the city and the tunnels.
+
+**It takes `SewerDetail`'s BATCHING and not `WallDecals`'.** WallDecals emits one Mesh PER DECAL
+because `Occlusion` fades each with its building; a facility has no occlusion pass — the walls
+stopped fading with the roof — so the whole compound's 400 bands merge into ONE call.
+
+**THE ART DECIDES WHICH LAYER IT IS, and reading that off the file is the entry.** The plan listed
+`decals/grime-1..3` and `decals/wall-crack-1..2` as one reusable pile. They are not one pile:
+measured on the drops, the part of a grime image that clears alphaTest is the bottom **31–37% at
+FULL width** (grime-1 rows 353..511 of 512, grime-2 321.., grime-3 326..) — the alpha RAMP that
+`Buildings` and `SewerDetail` both tile a strip with. Emitted as a square decal it draws one wide
+flat dash and nothing else, which is exactly how the first build shipped. So grime went to a band
+and `GRIME_H` 3.0 is the FADE height rather than the mark: the ramp leaves about a unit of visible
+muck at the floor, half a metre at the half-metre unit `WALL_H` 6.0 fixes.
+
+**A CRACK LAYER WAS BUILT ALONGSIDE IT AND CUT, and the reason is worth more than the layer was.**
+It rode the same pass over the same faces for one more draw call, and it was answering the wrong
+question about the place: this is a working research facility at the start of the game, not a ruin.
+`wall-crack-2` turned out to be an impact SPALL — a hole blown out of concrete — which reads as
+battle damage, and even `-1`'s vertical hairline says the building is coming apart, which nothing
+else in the compound says. Mopping wear does not. **Cut from the game side, not the render side: the
+numbers were fine** (60 marks over 400 faces = 15.0% against a `DECAL_PCT` of 14, +1 call, its
+program warmed at boot). The `blockerInset` lesson one entry up is the render version of this —
+measure before you believe it; this is the version where the measurement was never the question.
+
+The sewer's SIZES did not port either and that also shipped before it was caught: a sewer wall is
+3.0 units and these land on 6.0, so with the tunnels' own bands every crack sat in the bottom quarter
+of the face, and at the camera's 65.6 degree pitch a wall foreshortens to ~40% of its height and each
+read as a dash along the floor line. Recorded because the band inherits the same trap.
+
+**OPACITY was then HALVED, 0.45 → 0.225**, for the same reason the cracks went — at 0.45 the wall
+read as dilapidated rather than used. A/B'd against the same pinned frame with the mesh hidden, over
+the band's own 16-px footprint: **0.45 peaked at −29.8% and averaged −16.5%; 0.225 peaks at −16.5%
+and averages −9.4%**. Above the ramp the delta is 0.00 either way, so nothing but the wall foot moves.
+Both parents sit higher still (city 0.6, tunnels 0.7).
+
+Measured live: **400 interior faces** (97/101/101/101 by direction) off 252 solid lab wall cells.
+Interleaved A/B on a pinned pose, median of 9 frames x 4: **62 / 62 / 62 / 62 on, 61 / 61 / 61 / 61
+off**. One program of its own, compiled by the BOOT warm pass — `FacilityModel.demo()` has 55
+interior faces — so nothing compiles on first facility entry.
+
+**Verdict: landed, +1 draw call, +1 program (warmed at boot).**
