@@ -171,30 +171,46 @@ class FacilityDetail
         FacilityStyle.HALO_FADE), FacilityStyle.HALO_ALPHA);
     }
 
-// one silhouette, on the room-facing plane of the masonry behind it.
+// how far a quad is grown past its object on one axis, world units.
 //
-// THE QUAD IS THE OBJECT BLOWN UP BY 1 / HALO_CORE about its own centre, and that one line is the
-// whole sizing: the art is a rounded-box field that is opaque over the middle HALO_CORE of itself
-// and fades out over HALO_FADE beyond, so scaling the object by the inverse lands the opaque part
-// exactly on the object and the falloff exactly outside it. Nothing here picks a reach — see
-// FacilityStyle.HALO_CORE for the fades that fall out of it.
+// THE ART FIXES THE RATIO. The rounded-box field is opaque over the middle HALO_CORE of itself and
+// fades out over HALO_FADE beyond, so growing an extent to extent / HALO_CORE lands the opaque part
+// exactly on the object and the falloff exactly outside it — nothing here picks a reach. What the
+// CAP is for is the one case that breaks: the reach is a FRACTION of the object, which is right for
+// a bookcase and absurd for a 16-unit casework run. Past the cap the object's own edge maps outside
+// the opaque core, so the halo thins along the run rather than ending on a line — see
+// FacilityStyle.HALO_GROW_MAX
+  static inline function grow(extent:Float):Float
+    {
+      return Math.min(extent / 2 * (1 / FacilityStyle.HALO_CORE - 1), FacilityStyle.HALO_GROW_MAX);
+    }
+
+// one silhouette, on the room-facing plane of the masonry behind it.
 //
 // CLAMPED ALONG THE WALL and not up it. FacilityGeom.slab insets a face by a unit wherever the wall
 // line stops there, so a quad grown past its object's ends can hang off the end of the masonry and
 // draw a gradient on open air; the vertical overhang has nowhere to go wrong, and the part below the
 // floor is hidden by the floor itself. `u` is taken off the UNCLAMPED span, so a clamp CUTS the
-// falloff rather than squeezing it — the stretch this repo does not do
+// falloff rather than squeezing it — the stretch this repo does not do.
+//
+// THE CLAMP IS THE WHOLE RUN'S MASONRY, not the first cell's. `slab` is per cell and a cell is 4
+// units, so clamping a 4-cell casework run to it would cut the run to a quarter of itself — the two
+// END slabs bound it instead, and for the single-cell case they are the same slab
   static function halo(b:MeshBuf, m:Facility, o:FacilityHaloOpts):Void
     {
+      var sc = (o.dir < 2 ? o.len - 1 : 0);
+      var sr = (o.dir < 2 ? 0 : o.len - 1);
       var s = FacilityGeom.slab(m, o.col + DC[o.dir], o.row + DR[o.dir]);
+      var t = FacilityGeom.slab(m, o.col + sc + DC[o.dir], o.row + sr + DR[o.dir]);
       var p = FacilityGeom.plane(s, o.dir ^ 1, FacilityStyle.HALO_EPS);
-      var g = (1 / FacilityStyle.HALO_CORE - 1) / 2;
-      var qa0 = o.a0 - (o.a1 - o.a0) * g;
-      var qa1 = o.a1 + (o.a1 - o.a0) * g;
-      var qy0 = o.y - o.h * g;
-      var qy1 = o.y + o.h * (1 + g);
-      var ca0 = Math.max(qa0, o.dir < 2 ? s.x0 : s.z0);
-      var ca1 = Math.min(qa1, o.dir < 2 ? s.x1 : s.z1);
+      var ga = grow(o.a1 - o.a0);
+      var gy = grow(o.h);
+      var qa0 = o.a0 - ga;
+      var qa1 = o.a1 + ga;
+      var qy0 = o.y - gy;
+      var qy1 = o.y + o.h + gy;
+      var ca0 = Math.max(qa0, Math.min(o.dir < 2 ? s.x0 : s.z0, o.dir < 2 ? t.x0 : t.z0));
+      var ca1 = Math.min(qa1, Math.max(o.dir < 2 ? s.x1 : s.z1, o.dir < 2 ? t.x1 : t.z1));
       if (ca1 - ca0 < 0.01)
         return;
       // the collapsed axis comes from the plane and the running one from the clamp, which of the two

@@ -713,6 +713,15 @@ class FacilityStyle
   // the tallest quad tops out at the gas rack's 3.0 + 0.333 * 3.0 = 4.0, well under WALL_H 6.0
   public static inline var HALO_CORE = 0.60;
   public static inline var HALO_FADE = 0.16;
+  // and the CAP on that, in world units, which is what lets a RUN take the same quad as a fitting.
+  // the reach above is a FRACTION of the object, which is right for a bookcase and absurd for a
+  // 16-unit casework run — 4.3 units of wash up a 6-unit wall. Capping the grown margin holds a long
+  // thing to a contact-scale fade and costs nothing at the ends: past the cap the object's own edge
+  // maps outside the art's opaque core, so the halo simply thins out along the run instead of ending
+  // on a line. 1.1 is set ABOVE the largest margin anything already emitting asks for (the gas rack's
+  // 3.0 height wants exactly 1.0), so every fitting and every piece of kit is untouched by it, and it
+  // holds a run's fade to 0.88 — inside the same band CONTACT.blur 0.7 was swept in
+  public static inline var HALO_GROW_MAX = 1.1;
   // how dark it goes where the object meets the masonry. it BUILT at the corner strip's own 0.5 —
   // the only other thing in the compound doing this job, and the two are read side by side in a room
   // corner — and that was rejected on looks as too heavy. measured on one pinned pose against the

@@ -18,6 +18,10 @@ typedef FacilityHaloOpts = {
   // callers have already slid or clamped their object against the wall's own ends
   a0:Float,
   a1:Float,
+  // how many CELLS it runs along that wall — 1 for a single object, more for a bench block or a
+  // casework run. it exists only so the emitter can clamp to the whole run's masonry rather than to
+  // the first cell's slab, which would cut a 4-cell run down to one
+  len:Int,
   // the floor it stands on, world units
   y:Float,
   // and how tall it stands off that floor

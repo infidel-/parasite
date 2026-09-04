@@ -87,10 +87,84 @@ class FacilityTables
       // grown rects overlap by BENCH_LIP squared. The caps are coplanar, same texture, same
       // world-aligned UVs, so that overlap resolves to the same pixel either way; the two edge bands
       // cross, each poking BENCH_LIP past the other, which is 0.2 world units and reads as nothing
+      halos(m);
       var n = cabinets(m, top, body);
       add(scene, top, FacilityStyle.BENCH_TOP);
       add(scene, body, FacilityStyle.BENCH_BODY);
       return n;
+    }
+
+// every BENCH run that has plain masonry behind it, as one wall halo each — the contact shadow the
+// fittings and the lab kit already lay (see render.facility.FacilityDetail.halos).
+//
+// THE RUNS HAVE TO BE FOUND HERE, which is the whole reason this is not three lines in the loop
+// above. The generator deals 1x1, 1x3, 3x1, 2x3 and 3x2 blocks and `build` emits per CELL toward any
+// neighbour that is not a bench, so nothing upstream ever names a run or a direction. A halo per cell
+// is not an option: the quads are transparent with depthWrite off, so two overlapping along one wall
+// blend through each other into a hard band — the seam FacilityStyle.CORNER_EPS exists for.
+//
+// CLAIMED PER DIRECTION, the same slot `key` cuts for the casework and for the same reason: a block
+// in a room corner backs onto two walls and wants a halo on each of them.
+//
+// MOST OF A BLOCK GETS NOTHING AND THAT IS RIGHT — the generator lays its runs under WINDOW walls,
+// and isSolidWall answers false for glazing, so a bench is grounded where it meets real masonry and
+// nowhere else. Measured on one compound: 139 bench cells carry 71 solid-wall sides against 75
+// glazed ones, and 76 of the cells touch no masonry at all
+  static function halos(m:Facility):Void
+    {
+      var seen = new Map<Int, Bool>();
+      for (dir in 0...4)
+        {
+          var sc = (dir < 2 ? 1 : 0);
+          var sr = (dir < 2 ? 0 : 1);
+          for (row in 0...m.h)
+            for (col in 0...m.w)
+              {
+                if (seen.exists(key(m, col, row, dir)) ||
+                    !backs(m, col, row, dir))
+                  continue;
+                var len = 0;
+                while (backs(m, col + sc * len, row + sr * len, dir))
+                  {
+                    seen.set(key(m, col + sc * len, row + sr * len, dir), true);
+                    len++;
+                  }
+                halo(m, col, row, dir, len);
+              }
+        }
+    }
+
+// is this a bench cell with plain masonry on that hand?
+  static inline function backs(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        m.table[row][col] &&
+        FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]);
+    }
+
+// hand one run of worktop to the wall behind it.
+//
+// the span is the run's own CELLS and the clamp to the masonry is the emitter's — a bench is a whole
+// cell where a cabinet is already slab-clamped, and letting FacilityDetail cut both keeps the rule
+// that a halo never hangs off the end of a wall in one place.
+//
+// `y` is a literal 0 and NOT FacilityGround.surfY, because 0 is where this file actually builds:
+// `panel` emits from it and `cap` sits at BENCH_H over it, so the halo has to stand on the plane the
+// geometry is on rather than on the one the surface grid would name
+  static function halo(m:Facility, col:Int, row:Int, dir:Int, len:Int):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var a0 = (dir < 2 ? col : row) * CELL - half;
+      FacilityDetail.stand({
+        col: col,
+        row: row,
+        dir: dir,
+        a0: a0,
+        a1: a0 + len * CELL,
+        len: len,
+        y: 0.0,
+        h: FacilityStyle.BENCH_H,
+      });
     }
 
 // the storage casework standing against the corridor walls, merged into the SAME two buffers the
@@ -139,6 +213,12 @@ class FacilityTables
                     unit(top, body, m, col + sc * i, row + sr * i, dir, i == 0, i == len - 1);
                     n++;
                   }
+                // and ONE halo for the whole run on the masonry behind it — see
+                // render.facility.FacilityDetail.halos. per RUN and never per cell: the quads are
+                // transparent with depthWrite off, so two of them overlapping along one wall blend
+                // through each other and stack to a hard band, which is the seam the corner strips
+                // shipped with once
+                halo(m, col, row, dir, len);
               }
         }
       return n;

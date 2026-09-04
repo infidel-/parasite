@@ -175,6 +175,7 @@ class FacilityKit
             dir: c.dir,
             a0: (c.dir < 2 ? px : pz) - p.w / 2,
             a1: (c.dir < 2 ? px : pz) + p.w / 2,
+            len: 1,
             y: FacilityGround.surfY(Surf.TILE),
             h: p.h,
           });

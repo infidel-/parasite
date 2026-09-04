@@ -8,6 +8,49 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## The benches and the casework get the wall halo too — a RUN is a point once you merge it (2026-09-05)
+
+The half the halo pass held back. The fittings and the lab kit went in because each is one object on
+one cell with the hand of its wall already computed; the benches and the corridor casework did not,
+because a quad per CELL would overlap along one wall and **two of these at 0.5 compound to 0.75** —
+the seam the corner strips shipped with once.
+
+**MERGING THE RUNS IS THE WHOLE OF IT, and only one family already had them.** `cabinets` walks runs
+already (it computes `first`/`last` for the end caps), so that one is a single call at the end of the
+walk. The benches never did: the generator deals 1x1, 1x3, 3x1, 2x3 and 3x2 blocks and `build` emits
+per cell toward any neighbour that is not a bench, so nothing upstream names a run **or** a direction.
+New `FacilityTables.halos` finds them with the same claimed-per-direction walk `cabinets` runs on —
+`key` cuts a slot per (cell, dir), which is what lets a block in a room corner take one halo on each
+of its two walls.
+
+**+0 DRAW CALLS, +0 PROGRAMS, +88 TRIANGLES.** 44 run halos land in the mesh and the material that
+already existed. Whole mesh interleaved A/B/A/B, 4 rounds identical: **+1 call, +124 tris (62 quads),
+programs unchanged**. Measured on the casework band in a corridor: **max 19.0/255, touch line
+68.7 → 49.7 (28% drop)** — the same family as the fittings' 16.7 and 27%.
+
+**THE REACH HAD TO STOP BEING A PURE FRACTION.** The art fixes fade = 0.2667 x the object, which is
+right for a bookcase and absurd for a 16-unit casework run: **4.3 units of wash up a 6-unit wall**.
+`HALO_GROW_MAX` 1.1 caps the grown margin, and the number is set ABOVE the largest margin anything
+already emitting asks for — the gas rack's 3.0 height wants exactly 1.0 — so **every fitting and
+every kit prop is untouched by it**, while a run is held to a 0.88 fade, inside the band
+`CONTACT.blur` 0.7 was swept in.
+
+**The cap needs no end cap and leaves no hard edge**, which is the part worth writing down. Past it
+the object's own edge maps OUTSIDE the art's opaque core, so the alpha at a long run's end is already
+near zero — the halo thins along its length rather than stopping on a line. The band ABOVE the run
+keeps its full profile the whole way, because the rounded-box field is a `max` and a point over the
+middle of a long edge reads the short axis.
+
+**The clamp grew a `len`.** `FacilityGeom.slab` is per CELL and a cell is 4 units, so clamping a
+4-cell run to the first slab would cut it to a quarter of itself; the two END slabs bound it instead,
+and for a single object they are the same slab. Built widths read off the geometry: **4 / 8 / 12 /
+15 / 16**, with the masonry visibly cutting the last two.
+
+**Most of a bench block gets nothing and that is correct.** The generator lays its runs under WINDOW
+walls and `isSolidWall` answers false for glazing, so a bench is grounded where it meets real masonry
+and nowhere else. Measured on one compound: **139 bench cells carry 71 solid-wall sides against 75
+glazed ones**, and 76 of the cells touch no masonry at all.
+
 ## A box on a shelf carries its own shading, because the room has none to give it (2026-09-05)
 
 The other half of the thing the wall halo did not fix. **Three shelf plates 0.83 units apart in one

@@ -207,6 +207,7 @@ class FacilityDeco
           dir: dir,
           a0: (dir < 2 ? x0 : z0),
           a1: (dir < 2 ? x1 : z1),
+          len: 1,
           y: y,
           h: h,
         });
