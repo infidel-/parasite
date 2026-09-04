@@ -169,6 +169,12 @@ def convert(label, e, default_res):
         # hand-edit a source that already had alpha. normalise it here, once
         if "transparency" in im.info or im.mode == "LA":
             im = im.convert("RGBA")
+        # "crop": [x, y, w, h] takes one sub-rect of the source, so SEVERAL labels can share one
+        # generated sheet (four 512 tiles packed into one 1024 gen — a quarter of the image cost).
+        # cropped before the lift, so each tile on a shared sheet still takes its own gamma
+        cr = e.get("crop")
+        if cr:
+            im = im.crop((int(cr[0]), int(cr[1]), int(cr[0]) + int(cr[2]), int(cr[1]) + int(cr[3])))
         if e["class"] == "chroma":
             im = chroma_key(im, e.get("chroma", "0x000000"), e.get("tol", 24))
         if lift:

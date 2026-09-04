@@ -5,6 +5,9 @@ it is meant to stay small. The full write-up of every experiment — landed, rev
 its numbers and its traps — lives in [`3d-changes.md`](3d-changes.md). Find an entry there by grepping
 the heading named in the verdict table below.
 
+Building a thing out of quads rather than generating it: [`3d-geometry.md`](3d-geometry.md) is the
+how-to — the per-face texture split, the 0..1 aspect lock, values, wiring and warm.
+
 **Appending after you try something:** write the entry in `3d-changes.md`, add **one row** here. The
 row is the index; an entry with no row is invisible. Keep entries to ~25 lines — what changed, the
 measured numbers, the trap, the verdict. Record settled outcomes only: no `IN PROGRESS`, no `pending`,

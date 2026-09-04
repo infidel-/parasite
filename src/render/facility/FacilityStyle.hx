@@ -447,9 +447,10 @@ class FacilityStyle
   //
   // TWO OF THE DEPTHS/WIDTHS ARE NOT FREE. A face carrying a 0..1-mapped image has to match that
   // image's aspect or the art is STRETCHED, so DECO_SHELF_D is its end frame's 656 x 1024 and
-  // DECO_BOOKCASE_W is its front's 768 x 1024, each written as the product that produced it.
-  // (both sizes are also the narrowest gpt-image-2 will emit at 1k: a source has to clear 655,360
-  // pixels with no edge over 1024, which caps the aspect at about 0.64.)
+  // DECO_BOOKCASE_W is its front's 616 x 1024, each written as the product that produced it.
+  // DECO_SHELF_D's 0.640625 is also the narrowest a STANDALONE gpt-image-2 gen will emit at 1k — a
+  // source has to clear 655,360 pixels with no edge over 1024. A CROP off a packed sheet has no such
+  // floor, which is how the bookcase front reaches 0.6016: it is a sub-rect of one 1024 square.
   //
   // depth is otherwise a LOOK decision and not a gameplay one, unlike the corridor casework's
   // CASE_D: a fitting stands on a cell the generator already wrote unwalkable, so nothing can walk
@@ -459,7 +460,7 @@ class FacilityStyle
   public static inline var DECO_SHELF_H = 2.6;
   public static inline var DECO_SHELF_D = DECO_SHELF_H * 0.640625;
   public static inline var DECO_BOOKCASE_H = 2.8;
-  public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.75;
+  public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.6015625;
   public static inline var DECO_BOOKCASE_D = 1.05;
   public static inline var DECO_RACK_W = 1.6;
   public static inline var DECO_RACK_H = 2.9;
