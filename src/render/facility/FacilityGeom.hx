@@ -1225,12 +1225,19 @@ class FacilityGeom
         shell.roof.push(mesh);
     }
 
-// one merged buffer as a BufferGeometry
+// one merged buffer as a BufferGeometry.
+//
+// `col` is an OPT-IN channel (render.world.MeshBuf's own word for it): only the quadC/quadRGB
+// emitters fill it, so the attribute is attached when it is filled and every buffer built with plain
+// `quad` comes out exactly as it did. DERIVED and not a flag, so the geometry and the material that
+// reads it cannot disagree — the caller sets `vertexColors` off the same test
   public static function geom(b:MeshBuf):BufferGeometry
     {
       var g = new BufferGeometry();
       g.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
       g.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
+      if (b.col.length == b.pos.length)
+        g.setAttribute('color', new Float32BufferAttribute(b.col, 3));
       g.setIndex(b.idx);
       g.computeVertexNormals();
       return g;

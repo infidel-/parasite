@@ -1,0 +1,26 @@
+package render.facility;
+
+// one box standing on a shelf, the shape render.facility.FacilityDeco.crate emits.
+//
+// replaces crate(b, cx, cz, hw, hd, y0, y1, yaw, ph, ao) — ten positional arguments, of which four
+// are a bare Float pair the caller already builds through a `dir < 2 ?` ternary each. A call site
+// reading `(dir < 2 ? bw : 2 * hd) / 2, (dir < 2 ? 2 * hd : bw) / 2` is exactly the silently
+// mis-orderable list the style guide says to stop appending to.
+typedef FacilityCrateOpts = {
+  // the box's centre in world xz, on the shelf's own plane
+  cx:Float,
+  cz:Float,
+  // its half-extents about that centre BEFORE the turn — hw runs along the wall, hd across it
+  hw:Float,
+  hd:Float,
+  // the shelf it stands on, and the top of the box
+  y0:Float,
+  y1:Float,
+  // its turn about its own vertical axis, radians
+  yaw:Float,
+  // where its faces start reading the cardboard sheet, 0..1. per box, so no two show the same patch
+  ph:Float,
+  // and how much light the bay it stands in gets, 0 = black .. 1 = the top shelf. carried on the
+  // vertex colour channel because nothing in the room can supply it — see FacilityStyle.DECO_BOX_AO_LOW
+  ao:Float,
+}

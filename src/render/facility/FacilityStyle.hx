@@ -518,6 +518,20 @@ class FacilityStyle
   // by the turn and no two boxes show the same patch
   public static inline var DECO_BOX_YAW = 0.25;
   public static inline var DECO_BOX_TILE = 0.5;
+  // THE ONLY SHADING A BOX ON A SHELF CAN GET, and it is baked into the vertex channel because the
+  // room cannot supply it. Every shelf plate is a FacilityGeom.cap with a +Y normal and the indoor
+  // fill is normal-blind (see IndoorMask), so three plates 0.83 units apart in one unit rendered
+  // 53.6 / 52.8 / 53.0 — identical to within 0.8/255 — and a box met its plate at 69.7-on-53.0 with
+  // nothing between. No light in the compound can separate them: it is not a tuning gap, it is what
+  // an AmbientLight-shaped term IS.
+  //
+  // _LOW is the LOWEST shelf's weight against the top one's 1.0, interpolated over the bays: an open
+  // frame is closed above every shelf but its last, so the bay's own lid is the occluder and the top
+  // shelf takes none of it. _FOOT is how far each box darkens toward the plate it stands on, which is
+  // its own contact shadow — the wall halo cannot reach this one (at 51 degrees down you look INTO
+  // the unit and a box is read against its SHELF, not against the masonry)
+  public static inline var DECO_BOX_AO_LOW = 0.78;
+  public static inline var DECO_BOX_AO_FOOT = 0.70;
 
   // the server rack's LIGHTS. one additive mesh for every rack in the compound, blinking off a
   // shared clock with a per-light phase — see render.facility.FacilityDeco.lamps

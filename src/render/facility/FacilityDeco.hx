@@ -303,6 +303,12 @@ class FacilityDeco
   static function boxes(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, room:Float,
       dir:Int, col:Int, row:Int, lvl:Int):Void
     {
+      // how much light this bay gets, which the room cannot say — see FacilityStyle.DECO_BOX_AO_LOW.
+      // the TOP shelf is the one bay an open frame leaves no lid over, so it takes the full 1.0 and
+      // the rest ramp down to _LOW at the floor
+      var n1 = FacilityStyle.DECO_SHELF_Y.length - 1;
+      var ao = FacilityStyle.DECO_BOX_AO_LOW + (1 - FacilityStyle.DECO_BOX_AO_LOW) *
+        (n1 > 0 ? lvl / n1 : 1.0);
       var g = FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ (lvl * 83492791));
       var n = 1 + g % FacilityStyle.DECO_BOX_MAX;
       // the run along the wall, shared out into one bay per box, and the shelf's own depth
@@ -333,10 +339,17 @@ class FacilityDeco
           var ext = bw / 2 * c + hd * s;
           var lo = a0 + ext, hi = a0 + span * n - ext;
           ac = (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, ac)));
-          crate(b,
-            (dir < 2 ? ac : dc), (dir < 2 ? dc : ac),
-            (dir < 2 ? bw : 2 * hd) / 2, (dir < 2 ? 2 * hd : bw) / 2,
-            y, y + bh, yaw, ((hh >>> 14) % 1000) / 1000);
+          crate(b, {
+            cx: (dir < 2 ? ac : dc),
+            cz: (dir < 2 ? dc : ac),
+            hw: (dir < 2 ? bw : 2 * hd) / 2,
+            hd: (dir < 2 ? 2 * hd : bw) / 2,
+            y0: y,
+            y1: y + bh,
+            yaw: yaw,
+            ph: ((hh >>> 14) % 1000) / 1000,
+            ao: ao,
+          });
         }
     }
 
@@ -346,38 +359,48 @@ class FacilityDeco
 // point: a rank of square-on cuboids reads as one machined object rather than as things someone
 // put there. `u` runs along each face's own length at WORLD scale from a per-box phase rather than
 // 0..1 across it, so the cardboard is never stretched by the turn and no two boxes show the same
-// patch of the sheet
-  static function crate(b:MeshBuf, cx:Float, cz:Float, hw:Float, hd:Float, y0:Float, y1:Float,
-      yaw:Float, ph:Float):Void
+// patch of the sheet.
+//
+// AND IT CARRIES ITS OWN SHADING, on the vertex channel, because the room has none to give it: the
+// bay's weight over the whole box and a darkening down each side to the plate it stands on. The
+// buffer this writes into is the ONLY one keyed to a colour — B_BOX is written by this function and
+// nothing else — so no shared surface has to learn to push a channel it does not use
+  static function crate(b:MeshBuf, o:FacilityCrateOpts):Void
     {
-      var c = Math.cos(yaw), s = Math.sin(yaw);
+      var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
       // the corners in the one cyclic order that winds every face OUTWARD: sides walk i -> i + 1,
       // the top takes the same cycle starting one step later (see FacilityGeom.cap's winding)
-      var lx = [ -hw, -hw, hw, hw ];
-      var lz = [ -hd, hd, hd, -hd ];
+      var lx = [ -o.hw, -o.hw, o.hw, o.hw ];
+      var lz = [ -o.hd, o.hd, o.hd, -o.hd ];
       var wx = [], wz = [];
       for (i in 0...4)
         {
-          wx.push(cx + lx[i] * c - lz[i] * s);
-          wz.push(cz + lx[i] * s + lz[i] * c);
+          wx.push(o.cx + lx[i] * c - lz[i] * s);
+          wz.push(o.cz + lx[i] * s + lz[i] * c);
         }
       var t = FacilityStyle.DECO_BOX_TILE;
-      var u = ph;
+      var foot = o.ao * FacilityStyle.DECO_BOX_AO_FOOT;
+      var u = o.ph;
       for (i in 0...4)
         {
           var j = (i + 1) % 4;
           var dx = wx[j] - wx[i], dz = wz[j] - wz[i];
           var un = u + Math.sqrt(dx * dx + dz * dz) / t;
-          MeshBufTools.quad(b,
-            [wx[i], y0, wz[i]], [wx[j], y0, wz[j]], [wx[j], y1, wz[j]], [wx[i], y1, wz[i]],
-            [u, y0 / t, un, y0 / t, un, y1 / t, u, y1 / t]);
+          // p0 and p1 are the two on the shelf, p2 and p3 the two at the lid — so the contact runs
+          // up the face and never across it, whichever way the box was turned
+          MeshBufTools.quadC(b,
+            [wx[i], o.y0, wz[i]], [wx[j], o.y0, wz[j]], [wx[j], o.y1, wz[j]], [wx[i], o.y1, wz[i]],
+            [u, o.y0 / t, un, o.y0 / t, un, o.y1 / t, u, o.y1 / t],
+            [foot, foot, o.ao, o.ao]);
           u = un;
         }
-      // the top, mapped along the box's OWN axes so the flute lines turn with it
-      var u0 = ph, u1 = ph + 2 * hw / t, v0 = ph, v1 = ph + 2 * hd / t;
-      MeshBufTools.quad(b,
-        [wx[1], y1, wz[1]], [wx[2], y1, wz[2]], [wx[3], y1, wz[3]], [wx[0], y1, wz[0]],
-        [u0, v1, u1, v1, u1, v0, u0, v0]);
+      // the top, mapped along the box's OWN axes so the flute lines turn with it. flat at the bay's
+      // own weight: it is the face furthest from the shelf and the one this camera mostly sees
+      var u0 = o.ph, u1 = o.ph + 2 * o.hw / t, v0 = o.ph, v1 = o.ph + 2 * o.hd / t;
+      MeshBufTools.quadC(b,
+        [wx[1], o.y1, wz[1]], [wx[2], o.y1, wz[2]], [wx[3], o.y1, wz[3]], [wx[0], o.y1, wz[0]],
+        [u0, v1, u1, v1, u1, v0, u0, v0],
+        [o.ao, o.ao, o.ao, o.ao]);
     }
 
 // one rack's lights: a field of specks on its front face, each with its own blink phase and its own
@@ -421,7 +444,12 @@ class FacilityDeco
 // in the indoor lighting swap, so nothing else has to be asked for here.
 //
 // `both` is for a surface with NO THICKNESS — the shelving's bare shelf quads, which have to be
-// seen from under as well as over. an opaque material draws DoubleSide in ONE pass
+// seen from under as well as over. an opaque material draws DoubleSide in ONE pass.
+//
+// `vertexColors` is DERIVED from the buffer and never passed in, which is what stops it drifting out
+// of step with FacilityGeom.geom's own test: exactly one of these six carries a colour channel
+// (B_BOX, filled by `crate`), and a mismatch either way is silent — an attribute nothing samples, or
+// a shader reading one that is not there
   static function solid(scene:Scene, b:MeshBuf, tex:String, both:Bool):Void
     {
       if (b.idx.length == 0)
@@ -429,6 +457,7 @@ class FacilityDeco
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: both ? THREE.DoubleSide : THREE.FrontSide,
+        vertexColors: b.col.length > 0,
       })));
       mesh.receiveShadow = true;
       mesh.castShadow = false;
