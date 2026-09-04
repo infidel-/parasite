@@ -1,5 +1,5 @@
 // offline model bake: mirror of tools/textures.py for .glb props.
-// walks models-src/models.json, decimates each source to a target tri count (meshopt) and shrinks
+// walks art/models.json, decimates each source to a target tri count (meshopt) and shrinks
 // its embedded texture, writes a self-contained optimized glb into parasite/resources/app/models/.
 // models.json is both manifest and cache: a per-entry last_converted stamp drives the mtime-skip.
 import { NodeIO } from '@gltf-transform/core';
@@ -14,7 +14,10 @@ import { dirname, join, resolve } from 'node:path';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'models-src');
 const OUT = join(ROOT, 'parasite/resources/app/models');
-const INFO = join(SRC, 'models.json');
+// the manifest is TRACKED and lives in the repo, while the sources it points at do not: it carries
+// every entry's params and notes, so a commit stays explainable even though the art store is not
+// versioned (mirrors textures.py's art/textures.json)
+const INFO = join(ROOT, 'art/models.json');
 // bake-STEP version, folded into every entry's signature so a change to what the bake DOES (as
 // opposed to the per-entry params it does it with) rebuilds every prop once on the next run
 const PIPELINE = 'n1';

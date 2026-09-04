@@ -21,8 +21,8 @@ git-diff:
 	@git --no-pager status --short
 
 # 3D street-view texture pipeline: downscale/bake textures-src/ 1024px sources
-# straight into the app dir (app/textures/, per textures.json). textures-src is a
-# symlink to the asset store; sources are NOT committed.
+# straight into the app dir (app/textures/, per art/textures.json). textures-src is a
+# symlink to the asset store; the sources are NOT committed, the manifest IS.
 tex:
 	python3 tools/textures.py
 
@@ -39,7 +39,8 @@ model-deps:
 	npm --prefix tools install
 
 # 3D model pipeline: decimate + shrink embedded textures of models-src/ .glb sources
-# straight into app/models/ (per models.json). models-src is a symlink; sources are NOT committed.
+# straight into app/models/ (per art/models.json). models-src is a symlink; the sources are NOT
+# committed, the manifest IS.
 models:
 	node tools/models.mjs
 

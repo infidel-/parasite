@@ -1,0 +1,578 @@
+{
+  "default_tris": 200,
+  "default_tex": 256,
+  "default_error": 0.01,
+  "default_emissive_strength": 3,
+  "_doc": "src: glb filename under models-src/. texSrc: optional hand-edited PNG (Krita) replacing the glb's embedded base-color texture; defaults to <label>.png if present. emissiveSrc: optional hand-painted emissive PNG (black except glowing parts, same UVs as base) — added as the emissive map, scaled by emissiveStrength (HDR>1 so bloom catches it); emissiveStrength 0 means GLOW OFF and skips the map entirely, so the glb carries no dead texture — re-enabling a prop's glow is one number. roughness: optional roughnessFactor, which glTF MULTIPLIES by the MR map's green channel, so the map's own variation survives and only its level moves — the specular dial, since a TRELLIS bake lands uniformly matte (green p05..p95 ~0.71-0.94) and catches no highlight. Do not take it far below 0.3 or to 0: GGX specular is a2/(PI*d^2) with a2 = roughness^4, and against the tunnel's 45-candela spotlights a near-mirror surface peaks past the half-float post buffer's 65504 = Infinity, which UnrealBloom smears into a black frame (docs/3d-changes.md). tris: meshopt-simplify target tri count (<= source); -1 keeps full geometry (no decimate). error: meshopt distortion cap (smaller=more detail). tex: baked-texture max edge px. dropMR: true strips the metallic-roughness map (matte 0/1) — temp kill of metal/gloss. baseColor: [r,g,b,a] LINEAR baseColorFactor multiplied onto the base map — darkens a prop whose authored albedo is far brighter than the game art. lift: gamma on the base-colour MAP itself, out = (v/255)**lift, so <1 BRIGHTENS — the inverse of baseColor, which is a factor in [0,1] and can only go down. For a prop the generator bakes too dark: a subject dense enough to occlude itself has that occlusion baked into its albedo (wild/bush-bramble, 0.44x where a conifer is 0.79x), and repainting the reference cannot fix it without out-brightening the flat backdrop TRELLIS segments against. Same knob name and meaning as textures.json's lift. tex is not free to lower: divide it by the tri count to get TEXELS PER TRIANGLE and keep it near what the source was authored at (a TRELLIS 2048 export is ~43), or the map is not shrunk but deleted. seed/seed100k: the TRELLIS seeds this glb and its -100k master were generated with, so either can be reproduced from the archived <label>-src.png with image_to_3d at the same decimation_target — but STATE THE SETTINGS EXPLICITLY for anything generated before 2026-08-23: the MCP default moved remesh_project 0.8 -> 0.9 and now also sends meshCluster {1,0,1,PI/2}, so those props do NOT reproduce on today's defaults. TRELLIS is not bit-deterministic anyway, so a seed reproduces the look, not the file. provenance only — make models never reads them. last_converted/last_sig: mtime+param cache written by make models — editing any input or param rebuilds automatically.",
+  "models": {
+    "street-lamp": {
+      "src": "street-lamp.glb",
+      "texSrc": "street-lamp.png",
+      "emissiveSrc": "street-lamp-emissive.png",
+      "emissiveStrength": 3,
+      "dropMR": false,
+      "tris": 500,
+      "tex": 256,
+      "error": 0.005,
+      "last_converted": "2026-07-14T18:34:13Z",
+      "last_sig": "n1/500/256/0.005/street-lamp.png/street-lamp-emissive.png@3"
+    },
+    "street-lamp2": {
+      "src": "street-lamp2.glb",
+      "texSrc": "street-lamp2.png",
+      "emissiveSrc": "street-lamp2-emissive.png",
+      "emissiveStrength": 3,
+      "tris": 3000,
+      "tex": 256,
+      "error": 0.005,
+      "last_converted": "2026-07-06T19:19:51Z",
+      "last_sig": "n1/3000/256/0.005/street-lamp2.png/street-lamp2-emissive.png@3"
+    },
+    "sewer/exit": {
+      "src": "sewer/exit.glb",
+      "tris": 5000,
+      "tex": 512,
+      "error": 0.005,
+      "note": "sewer/habitat exit ladder, stood up at the exit cell (render.world.ObjModels)",
+      "last_converted": "2026-08-11T20:10:41Z",
+      "last_sig": "n1/5000/512/0.005/-/-"
+    },
+    "sewer/block": {
+      "src": "sewer/block.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.01,
+      "seed": 1008451542,
+      "baseColor": [
+        0.22,
+        0.22,
+        0.22,
+        1
+      ],
+      "note": "tunnel clutter: the broken half of a modern hollow concrete block, rebar stub through the fracture (render.sewer.SewerProps). a hard surface unwraps clean — 57,212 verts over 46,514 unique positions = 1.23x, the lowest ratio of any prop here — so block.glb is both the 100k master and the game source. error 0.01 rather than the usual 0.005 because the sweep is steep on this one: 0.005 -> 5,356, 0.01 -> 3,198, 0.02 -> 2,496, asymptote 2,314. 3,198 tris at tex 512 is 82 texels/tri, comfortably over the ~43 a TRELLIS 2048 export is authored at. baseColor is the brightest correction of any prop here: pale cast concrete baked at mean sRGB 110/110/108, 2.4x the 46-49 the drum/crates/cable family sits at and well over the floor's own 65, so it read as a lit lump. 0.22 LINEAR lands it at ~55 — still the lightest thing in the tunnel, which a freshly broken block should be",
+      "last_converted": "2026-08-14T17:42:14Z",
+      "last_sig": "n1/1200/512/0.01/-/-/bc0.22,0.22,0.22,1"
+    },
+    "sewer/bricks": {
+      "src": "sewer/bricks.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 906887906,
+      "note": "tunnel clutter: a low heap of broken bricks and concrete fragments — the rubble half of the old sewer-pile-1 (render.sewer.SewerProps). rubble shatters its atlas, so this is generated AT the budget (decimationTarget 5000 -> 4,659 tris) and ships tris -1: 5,125 verts over 2,430 positions = 2.11x, past the ~2x line where the 100k-master-plus-offline-decimate route stops working. tex 512 = 56 texels/tri",
+      "last_converted": "2026-08-14T17:42:45Z",
+      "last_sig": "n1/-1/512/0.005/-/-"
+    },
+    "sewer/pipe": {
+      "src": "sewer/pipe.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.01,
+      "seed": 284540772,
+      "baseColor": [
+        0.35,
+        0.35,
+        0.35,
+        1
+      ],
+      "note": "tunnel clutter: a short broken section of large-bore concrete sewer pipe, lying on its side (render.sewer.SewerProps). baked at mean sRGB 86/87/79, 1.8x the prop family, so baseColor 0.35 LINEAR brings it to ~52 beside the drum's 47. 65,405 verts over 49,577 positions = 1.32x, the drum's class, so pipe.glb is both the 100k master and the game source. error 0.01: 0.005 -> 7,224, 0.01 -> 5,890, 0.02 -> 5,670, asymptote 5,602 — and 5,890 tris at tex 512 is 45 texels/tri, right on the source's own ratio, where 0.005 would have been 36 and under it",
+      "last_converted": "2026-08-14T17:41:56Z",
+      "last_sig": "n1/1200/512/0.01/-/-/bc0.35,0.35,0.35,1"
+    },
+    "sewer/drum": {
+      "src": "sewer/drum.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 2068147569,
+      "note": "tunnel clutter: 200L steel drum, upright (render.sewer.SewerProps). the ONE prop of this batch meshopt could decimate offline: 63,617 verts over 48,593 unique positions = 1.31x, so drum.glb is both the 100k master and the game source. tris 1200 is 'as low as it will go' — the seam network floors it at 4,826, and tex 512 is sized for THAT count (54 texels/tri), not for the target",
+      "last_converted": "2026-08-14T10:01:38Z",
+      "last_sig": "n1/1200/512/0.005/-/-"
+    },
+    "sewer/crates": {
+      "src": "sewer/crates.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 129903507,
+      "seed100k": 1197534341,
+      "note": "tunnel clutter: two solid-walled plastic stacking crates (render.sewer.SewerProps). solid-walled is deliberate: a lattice crate is all holes and holes shatter the atlas. even so, at decimationTarget 100000 it was 90,764 verts over 46,236 positions = 1.96x and meshopt stalled at 23,926 tris against a 1200 target, so that master was deleted (reproduce from crates-src.png at decimation_target 100000 with seed100k). generated AT the budget instead (decimationTarget 5000 -> 4,818 tris), tris -1, tex 512 for 54 texels/tri",
+      "last_converted": "2026-08-14T10:28:46Z",
+      "last_sig": "n1/-1/512/0.005/-/-"
+    },
+    "sewer/cable": {
+      "src": "sewer/cable.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1418641152,
+      "seed100k": 374771293,
+      "note": "tunnel clutter: heavy industrial cable coiled flat (render.sewer.SewerProps). the helical turns chart badly — at decimationTarget 100000 it was 95,403 verts over 45,324 positions = 2.10x and meshopt stalled at 30,431 tris against a 1200 target, so that master was deleted (reproduce from cable-src.png at decimation_target 100000 with seed100k). generated AT the budget instead (decimationTarget 5000 -> 4,891 tris), tris -1, tex 512 for 54 texels/tri",
+      "last_converted": "2026-08-14T10:26:23Z",
+      "last_sig": "n1/-1/512/0.005/-/-"
+    },
+    "sewer/bags": {
+      "src": "sewer/bags.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1416542188,
+      "baseColor": [
+        0.47,
+        0.47,
+        0.47,
+        1
+      ],
+      "note": "tunnel clutter: three tied refuse sacks heaped in a pyramid (render.sewer.SewerProps). soft goods, so the game source is generated AT the budget (decimationTarget 5000 -> 4,496 tris), tris -1, tex 512 for 58 texels/tri. THE REFERENCE IS THE WHOLE STORY HERE: painted near-black, this subject came back with a hallucinated VIOLET albedo (mean sRGB 77/62/99 from a 68/72/77 reference) — not our bake (source 2048 and baked 512 agree to 1/255) and not the seed (a second seed came back brighter and bimodal pink-on-black, worse). Repainted at mid charcoal, subject luma p05 30 -> 48, and the same generator returned 67/70/78, cool and neutral, tracking the reference. baseColor is now only a uniform darken (one factor on all three channels, hue untouched) that lands it at the drum's brightness instead of 1.5x over it",
+      "last_converted": "2026-08-14T15:17:27Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.47,0.47,0.47,1"
+    },
+    "wild/tree-conifer": {
+      "src": "wild/tree-conifer.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "seed": 286963498,
+      "note": "wilderness: a dark conifer, the forest band's bulk tree (render.wild.WildProps). REGENERATED 2026-08-23 with mesh_cluster {1,0,1,PI/2} + remesh_project 0.9, and both the mesh and the entry are a different animal from what this row used to describe. 4,880 tris, split 1.27 - the CLEANEST of any tree here - and 2 connected components at 51.2%/48.8%, which is the canopy and the trunk as two solid shells, NOT the blob cloud that number would mean on a foliage prop (see wild/bush-low). tex 512 = 54 texels/tri. bbox widest/height 0.34, so h 7.5 draws 2.55 world units across. MR map pure green (0/216/0), no dropMR. NO baseColor, and its absence is the result: the retired mesh baked at 41/84/69, twice as green as red, and under the 0x8294c0 moon a stand of them rendered as saturated TEAL - it needed the repo's first per-channel correction, 0.55/0.35/0.45. This one bakes at 54/58/50, near-neutral and already at the prop family's 46-52, because the fix moved to the REFERENCE: it asks for 'muted desaturated dark grey-green, mid-value, not vivid green' in as many words. Correcting saturation at the source beats correcting it at the bake. TWO REFERENCE ROLLS ARE IN Unused/ and the comparison is the lesson: tree-conifer-scalloped-src.png asked for a lumpy tiered spruce outline and TRELLIS resolved every tier as its own blob - 38 components, split 4.70, worse than anything shipped in this repo. The smooth cone that shipped looked too geometric as a 2D image and was nearly rejected for it; at a camera 18-55 units up the silhouettes are indistinguishable and only the topology differs. Judge a reference by what it will REMESH into, not by how it reads flat TEX RAISED 512 -> 1024, and the reason is that texels/tri CANNOT SEE THIS. That band (~43-55) was written for the decimate-a-100k-master route, where the atlas and the tri count shrink together. This prop is `tris: -1` - generated AT the budget - so Runware baked a 2048 atlas for a 4.9k-tri mesh, about 862 texels/tri at source, and 512 threw away ~16x the texels while still reporting a healthy 53/tri. The metric that catches it is TEXELS PER WORLD UNIT, area weighted over the mesh at the height the game draws it: 44 at 512, 87 at 1024, off 76 u2 of surface at h 7.5. Ground, walkway and lawn tile at 512/GROUND_TILE 9.0 = 57 and the grass tuft sprite runs 171, so at 512 this prop was the softest thing in the frame by a wide margin - reported as 'blurry compared to grass/ground/walkway'. Anisotropy was ruled out first and is NOT the fix: forcing every glb map 1 -> 4 moved 0.25% of pixels by more than 2 in a frozen A/B.",
+      "last_converted": "2026-08-23T18:22:00Z",
+      "last_sig": "n1/-1/1024/0.005/-/-"
+    },
+    "wild/tree-broadleaf-full": {
+      "src": "wild/tree-broadleaf-full.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "seed": 633200386,
+      "baseColor": [
+        0.33,
+        0.16,
+        0.33,
+        1
+      ],
+      "note": "wilderness: a broadleaf tree in full leaf, a deep rounded dome crown on a THICK BARE TRUNK - the third of the four tree tiles (render.wild.WildProps). REGENERATED, and the brief was CLEARANCE: the original crown skirted down to ~22% of its height, so at h 5.8 its lowest leaves sat 1.3 world units up and the player's 3-unit sprite walked head-first into the foliage. The number that matters is where the crown FLARES, measured by binning the glb's vertices along Y - here 0.35 of the height (trunk holds 13-16% of max radius below that, crown is at 90% by 0.45) - because the height an actor walks under is that fraction times h, and it is the only reason h is 9.5. Two retired attempts sit in Unused/ and both are worth reading: -lowcrown is the original, and -parasol is what asking for a crown 'clearly wider than it is tall' produces - a 45%-deep disc on a 7%-radius stick that cleared the player fine at h 6.5 and read as an UMBRELLA from every angle, not a tree. The prompt that works names the fractions: thick bare trunk through the bottom 40%, crown a deep rounded dome in the top 60% about half again as wide as it is tall, whole tree taller than wide. generated AT the budget (decimationTarget 5000 -> 4,866 tris), tris -1, tex 512 = 53 texels/tri. split 2.82 so it can never be decimated offline. 20 connected components with the largest at 91.8%, the 19 extras specks off the crown edge. bbox widest/height 0.71 - it is now the NARROWEST-for-its-height tree of the four, so h 9.5 still only draws 6.7 world units across, LESS than the 7.15 the parasol took at h 6.5. MR map pure green (0/249/0, metal max 12), no dropMR - re-read on the regeneration rather than carried forward. baseColor is per-channel for the conifer's old reason: baked at 85/126/84, the brightest tree bake here, and a blue moon on a green albedo is what turned the first conifers teal. 0.33/0.16/0.33 LINEAR lands it at 48/51/48. ALSO the one prop of 23 whose base atlas arrived with an ALPHA CHANNEL - 35.4% of texels at alpha < 8, the UV gutter - which made the tex resize scatter saturated primaries over the whole tree: 2.949% of the built 512 at saturation > 0.75, every one of them at alpha < 128. tools/models.mjs now flattens that channel before the resize and the map comes out matching the source, so nothing here has to work around it TEX RAISED 512 -> 1024, and the reason is that texels/tri CANNOT SEE THIS. That band (~43-55) was written for the decimate-a-100k-master route, where the atlas and the tri count shrink together. This prop is `tris: -1` - generated AT the budget - so Runware baked a 2048 atlas for a 4.9k-tri mesh, about 862 texels/tri at source, and 512 threw away ~16x the texels while still reporting a healthy 53/tri. The metric that catches it is TEXELS PER WORLD UNIT, area weighted over the mesh at the height the game draws it: 25 at 512 - less than HALF the ground - and 49 at 1024, off 292 u2 of canopy at h 9.5, which is why this one is the worst of the three. Ground, walkway and lawn tile at 512/GROUND_TILE 9.0 = 57 and the grass tuft sprite runs 171, so at 512 this prop was the softest thing in the frame by a wide margin - reported as 'blurry compared to grass/ground/walkway'. Anisotropy was ruled out first and is NOT the fix: forcing every glb map 1 -> 4 moved 0.25% of pixels by more than 2 in a frozen A/B.",
+      "last_sig": "n1/-1/1024/0.005/-/-/bc0.33,0.16,0.33,1",
+      "last_converted": "2026-08-24T10:04:00Z"
+    },
+    "wild/tree-dead": {
+      "src": "wild/tree-dead.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1466505024,
+      "baseColor": [
+        0.5,
+        0.5,
+        0.5,
+        1
+      ],
+      "note": "wilderness: a dead standing snag, one thick trunk with four blunt broken limbs - the fourth tree tile (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,784 tris), tris -1, tex 512 = 55 texels/tri. THE BEST-BEHAVED SUBJECT OF THE BATCH: split 1.93 and ONE connected component at 100%, which is what a hard-surfaced subject with no foliage gives. bbox widest/height 0.47, so h 5.6 draws 2.6 across - a snag is deliberately shorter and narrower than the living trees. MR map pure green (0/212/0), no dropMR. baseColor is UNIFORM 0.5 and not per-channel on purpose: baked at 80/68/55 it is the one warm thing in the area, and a per-channel fit would neutralise exactly the quality that makes dead wood read as dead wood. 0.5 keeps the hue and lands it near 60/52/42, avg 51, in the prop family",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.5,0.5,0.5,1",
+      "last_converted": "2026-08-23T18:18:51Z"
+    },
+    "wild/tree-broadleaf": {
+      "src": "wild/tree-broadleaf.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1914397698,
+      "baseColor": [
+        0.2,
+        0.2,
+        0.2,
+        1
+      ],
+      "note": "wilderness: a bare broadleaf tree, no foliage — the plains band's lone tree (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,934 tris), tris -1: 5,094 verts over 2,351 positions = 2.17x. tex 512 = 54 texels/tri. the reference asks for a FEW thick solid limbs and no fine twigs: a true branch network is all holes, the failure the split-ratio rule names. baked at mean sRGB 128/121/102 (avg 117), 2.3x the prop family's 46-52, so baseColor 0.2 LINEAR lands it near 48. MR map pure green, no dropMR",
+      "last_converted": "2026-08-23T14:42:03Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.2,0.2,0.2,1"
+    },
+    "wild/bush-low": {
+      "src": "wild/bush-low.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "baseColor": [
+        0.26,
+        0.28,
+        0.52,
+        1
+      ],
+      "note": "wilderness: a low scrubby bush, the TILE_BUSH cell (render.wild.WildProps). REPLACED BY HAND 2026-08-23 - the shipped mesh was generated by the user in the Runware web playground and is NOT reproducible from this repo: its reference lives only on Runware's CDN, there is no <label>-src.png beside it, and the `seed` this entry used to carry belonged to the retired mesh and has been dropped. The retired one and its reference are in Unused/. 4,955 tris over 4,280 verts / 2,395 unique positions = 1.79x, tex 512 = 85 texels/tri. MR map re-read on THIS mesh and pure green (0/248/0, metalness max 18/255), so still no dropMR - re-read it after every regeneration rather than carrying the old verdict forward, the way the preservator's came back cyan on its own. baseColor REFITTED and this is why the entry had to be revisited at all: the 0.11/0.13/0.22 it carried was fitted to the retired mesh's baked mean sRGB 117/124/82, and this one bakes at 84/96/61 - the same factors would have landed it near 29/35/30, a third under the prop family's 46-52, i.e. the prop would have been silently too dark. 0.26/0.28/0.52 LINEAR puts it back near 44/50/44. THE LESSON: baseColor is fitted to a specific bake, so a replaced glb invalidates it. WHY THE RETIRED MESH WAS REPLACED, measured: 96 CONNECTED COMPONENTS with the largest holding only 24.3% of vertices - a cloud of separate leaf blobs with air between them, which is what 'mostly empty' looks like as a number. This one is 8 components at 98.7%. THE CAUSE WAS THE SETTINGS, NOT THE REFERENCE, and the probe in Unused/bush-low-gappy-probe.glb is the proof: that exact retired reference, unmodified, re-run with mesh_cluster {1,0,1,PI/2} + remesh_project 0.9, comes back 1 component at 100% and split 1.68. 96 -> 1 on one variable. The tidy story that TRELLIS resolves every dark gap in the art as real air fits the data and is still wrong; meshCluster's smoothStrength and thresholdConeHalfAngleRad reach the dual-contour remesh, not just the atlas. Count components on any new prop, and read the gate as few components each holding a substantial share - the shipped conifer is 2 at 51/49 (canopy plus trunk) and that is fine. Also still true of the retired mesh and worth keeping: THE CAMERA ANGLE OF THE REFERENCE IS LOAD-BEARING - its FIRST reference was a three-quarter view FROM ABOVE and TRELLIS returned a PANCAKE, bbox 0.985 x 0.040 x 0.936, 25x wider than tall. render.Models.instanced scales by HEIGHT ALONE, so h 1.1 multiplied it by 28 and put 218 dark discs ~27 world units across over the area; it read as a landmass, not as a bad prop.",
+      "last_converted": "2026-08-23T16:59:06Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.26,0.28,0.52,1"
+    },
+    "wild/bush-bramble": {
+      "src": "wild/bush-bramble.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1450662847,
+      "dropMR": true,
+      "lift": 0.78,
+      "note": "wilderness: a low sprawling thorny bramble, the second TILE_BUSH model beside wild/bush-low (render.wild.WildProps splits the cells by hash). generated AT the budget (decimationTarget 5000 -> 4,894 tris), tris -1, tex 512 = 54 texels/tri. THIS PROP EXISTS AS AN EXPERIMENT and its numbers are the point: it is the hardest geometry attempted here, a lace of interlocking arcing canes with real see-through holes, run to find out how much the corrected generator settings (mesh_cluster {1,0,1,PI/2} + remesh_project 0.9) can absorb. VERDICT, topology: they hold. 16 components with the largest at 94.2%, so the 15 others share 5.8% and are detached cane TIPS, not structure - the same speck pattern wild/tree-broadleaf-full ships with at 17/93.9%. The plan view is a correct radial bramble and the holes are real. But split is 2.59x, the WORST of any prop in this repo, so this one can never be decimated offline and has to keep arriving at the budget. Read that against the gappy probe in Unused/, which was dark GAPS with no thin structure and came back 1 component at 100%/1.68x: the settings absorb dark-gap art completely, thin interlocking structure only mostly. VERDICT, albedo: A NEW FAILURE MODE, and the reason `lift` was added to tools/models.mjs. A prop dense enough to occlude itself bakes that occlusion into its base colour - from the same reference value a conifer bakes at 0.79x and this at 0.44x, landing on 30/29/29 against the prop family's 46-52. baseColorFactor cannot fix it: it is a factor in [0,1] and only multiplies DOWN. Repainting the reference cannot either - Unused/bush-bramble-dark.glb is that experiment, the SAME image at subject p50 53 (bake 24/23/21) against this one lifted to p50 68 (bake 30/29/29), so a 28% brighter reference moved the bake 29%, proportional, and reaching 46-52 that way needs a reference brighter than the flat #5a5d63 backdrop TRELLIS segments it against. So the correction moved to the bake: lift 0.78 is a gamma on the MAP, out = (v/255)**0.78. dropMR because the MR map came back mean 0/206/128 with metalness peaking at 198 - cyan, metallic across canes and leaves alike - where wild/bush-low from the same generator peaks at 18. Re-read the MR map on every regeneration; the verdict does not carry forward. bbox widest/height 2.86, the widest prop here, so h stays low.",
+      "last_converted": "2026-08-23T19:08:55Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/lf0.78"
+    },
+    "wild/rock-boulder": {
+      "src": "wild/rock-boulder.glb",
+      "tris": 1200,
+      "tex": 256,
+      "error": 0.005,
+      "seed100k": 1941390287,
+      "baseColor": [
+        0.15,
+        0.15,
+        0.15,
+        1
+      ],
+      "note": "wilderness: a single weathered boulder, the scattered rock (render.wild.WildProps). 54,048 verts over 48,602 unique positions = 1.11x, the CLEANEST subject generated here — below even the drum's 1.31x — so boulder.glb is both the 100k master (97,202 tris) and the game source, and meshopt really does reach its target: 97,202 -> 1,548 against 1200, where the drum's 1.31x floored at 4,826. tex 256 and not the 512 every other prop here takes, precisely BECAUSE of that: 1,548 tris at 512 would be 165 texels/tri against the ~43 a TRELLIS 2048 export is authored at, i.e. a map four times larger than the geometry can show. 256 lands it at 42. baked at mean sRGB 110/132/139 (avg 127), and baseColor is 0.15 rather than the ~0.25 that arithmetic alone asks for. the arithmetic was not wrong, the CONTEXT is: a rock is one large smooth upward-facing surface catching the full moon term, while the ground around it is broken up by grass and by its own mottle — so at the family's nominal 50 it still read as pale blue ice, the brightest thing in the frame by a distance. 0.15 lands it near 50 in albedo and finally at the ground's level on screen, which is the number that matters",
+      "last_converted": "2026-08-23T14:42:33Z",
+      "last_sig": "n1/1200/256/0.005/-/-/bc0.15,0.15,0.15,1"
+    },
+    "wild/rock-cluster": {
+      "src": "wild/rock-cluster.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 223706091,
+      "seed100k": 1824230806,
+      "baseColor": [
+        0.18,
+        0.18,
+        0.18,
+        1
+      ],
+      "note": "wilderness: three fused angular slabs, the mountain band's rock (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,736 tris), tris -1, tex 512 for 54 texels/tri. THE ~2x LINE IS NOT A CLIFF, and this is the measurement that shows it: at decimationTarget 100000 it came back 82,526 verts over 47,470 positions = 1.74x — comfortably UNDER the line — and meshopt still stalled at 20,433 tris against a 1200 target, four times the boulder's landing point and unusable for a prop scattered by the hundred. so that master was deleted (reproduce from rock-cluster-src.png at decimation_target 100000 with seed100k). read the ratio as a gradient: 1.11x reached 1,548, 1.31x floored at 4,826, 1.74x at 20,433. baked at mean sRGB 89/100/105 (avg 98), and baseColor 0.18 rather than the ~0.3 the arithmetic asks for, for exactly the reason its boulder sibling above carries 0.15: a big smooth upward face under the only directional light in the area outruns its own albedo number",
+      "last_converted": "2026-08-23T14:50:23Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.18,0.18,0.18,1"
+    },
+    "wild/log-fallen": {
+      "src": "wild/log-fallen.glb",
+      "tris": 1200,
+      "tex": 384,
+      "error": 0.05,
+      "seed100k": 314983066,
+      "baseColor": [
+        0.24,
+        0.3,
+        0.45,
+        1
+      ],
+      "note": "wilderness: a fallen trunk, the FOREST band's variant of a TILE_ROCK cell (render.wild.WildBand). 100k master + offline decimate: 94,566 tris, 59,201 verts over 47,278 positions = 1.25x, 1 component at 100%, landing at 3,112 tris. error 0.05 is the knee of its sweep (0.005 -> 3,644, 0.05 -> 3,112, 0.3 -> 3,112, i.e. flat past 0.05) and tex 384 rather than 512 is sized for THAT count: 47 texels/tri against the ~43 a TRELLIS 2048 export is authored at, where 512 would have been 84 - a map twice as large as the geometry can show. TWO EARLIER ROLLS OF A RICHER REFERENCE BOTH CAME BACK IN THREE PIECES (largest 54.3% and 55.8%, two big blobs of ~26k and ~22k verts each) - that reference had a torn root plate of thin broken roots AND a long strip of bark peeled off to bare wood, and re-rolling it on a fresh seed reproduced the split exactly, so it was the ART and not the roll. repainting it as ONE plain solid trunk - same bark all over, no peel, no roots, no separate parts - took it to 1 component in a single run. baked at mean sRGB 97/87/73, warm; baseColor per-channel pulls it back to the family's 46-52 without leaving it brown",
+      "last_converted": "2026-08-24T13:12:24Z",
+      "last_sig": "n1/1200/384/0.05/-/-/bc0.24,0.3,0.45,1"
+    },
+    "wild/rock-outcrop": {
+      "src": "wild/rock-outcrop.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 833603916,
+      "seed100k": 1597190133,
+      "baseColor": [
+        0.22,
+        0.17,
+        0.16,
+        1
+      ],
+      "note": "wilderness: a low wedge of fractured bedrock, the MOUNTAIN band's variant of a TILE_ROCK cell (render.wild.WildBand). generated AT the budget (decimationTarget 5000 -> 4,981 tris), tris -1, tex 512 for 52 texels/tri, 2 components at 97.2%. the 100k master route WORKED here and was still wrong for this prop: 1.45x split, 1 component, but meshopt floored at 7,670 tris (error 0.05, flat to 0.3) and the mountain band scatters ~200 of these per area - 1.5M triangles before culling against a whole area's 334k. so the ratio said yes and the SCATTER said no; reproduce the master from rock-outcrop-src.png at decimation_target 100000 with seed100k if it is ever wanted as a landmark. its reference came back BRIGHT (subject luma p50 122 against the 69-77 that bakes correctly) and baked at mean sRGB 102/112/115, which is the harmless direction: baseColor multiplies DOWN and the arithmetic still lands inside the family",
+      "last_converted": "2026-08-24T13:16:48Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.22,0.17,0.16,1"
+    },
+    "wild/rock-large": {
+      "src": "wild/rock-large.glb",
+      "tris": 10000,
+      "tex": 1024,
+      "error": 0.005,
+      "seed100k": 427019730,
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "note": "wilderness: the 2x2 LARGE ROCK, one instance per Const.TILE_ROCK_LARGE rect (render.wild.WildProps.bigRocks), ~8 per mountain area. the CAMERA ANGLE OF THE REFERENCE IS THE WHOLE STORY HERE and it cost a re-shoot: the first roll asked for a boulder 'seen from a low three-quarter angle' and gpt drew it from well above, which came back 0.845 x 0.317 x 1.001 - widest/height 3.16, a PANCAKE, the same failure bush-low hit at 0.985 x 0.040 x 0.936. re-prompted as a strict side elevation at horizon height, 'the full height clearly visible as a tall silhouette, almost none of its top surface visible', and the same subject came back 0.973 x 0.597 x 1.001 = 1.68, a boulder taller than an actor. the pure elevation looked WRONG as a 2D image (a flat cutout with no depth cue at all, nothing like rock-cluster's three-quarter reference) and was baked anyway because a re-bake is $0.015 against $0.43 for another reference - which is the order these two steps belong in. attempt A kept in Unused/ as rock-large-a. split 1.09x, the cleanest subject in this repo, below even rock-boulder's 1.11x, so the offline route decimates. COMPONENTS READ 2 AT 50/50 AND propstat CALLS THAT A REJECT, WRONGLY: both components span the entire bbox, their mean radii agree to 0.6%, and every vertex of one is within 0.34% of the bbox diagonal of a vertex of the other (below one edge length) - it is ONE closed surface partitioned into two vertex-disjoint patches along a seam, not a blob cloud. the gate reads count and largest share and cannot tell the two apart; rock-boulder by contrast is genuinely 1 component and rock-outcrop's second piece is a 70-vert speck 29% of the diagonal away. tex 1024 at ~10k tris is ~105 texels/tri, about double the 43-55 band every scatter prop holds, and that is deliberate: texels-per-triangle is a proxy for texels-per-screen-PIXEL, and this prop is 8.4 world units across against rock-boulder's 3.3, so it carries 16x the boulder's texels over ~7x the screen area - less than twice as dense per pixel. the rule cut rock-boulder from 165 to 42 because a small prop cannot show the map; the largest prop in the area is the case where it can. baked neutral at mean sRGB 88/89/90, and baseColor goes BELOW the arithmetic for the same reason the boulder's does, harder: this is the biggest smooth upward-facing surface in the game and it catches the full moon term",
+      "last_converted": "2026-08-24T18:24:44Z",
+      "last_sig": "n1/10000/1024/0.005/-/-/bc0.25,0.25,0.25,1"
+    },
+    "habitat/biomineral": {
+      "src": "habitat/biomineral.glb",
+      "emissiveSrc": "habitat/biomineral-emissive.png",
+      "emissiveStrength": 0,
+      "roughness": 0.35,
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1350699514,
+      "seed100k": 1959111938,
+      "note": "habitat growth: a pale crystal spire wrapped in tendrils, rooted in a slime mound (objects.Biomineral, placed by render.world.ObjModels). generated AT the budget (decimationTarget 5000 -> 4,827 tris), tris -1, tex 512 for 54 texels/tri: at decimationTarget 100000 it was 106,638 verts over 44,311 positions = 2.41x, past the ~2x line where the offline-decimate route stops working, so that master was deleted (reproduce from biomineral-src.png with seed100k). no baseColor — it baked at mean sRGB 44/46/52, already the drum/crates/cable family's own level. MR map pure green, no dropMR. NOTE the generator drifted the hue off the reference: olive slime came back brown and the purple tendrils navy, while the crystal stayed correct. left as-is deliberately — the reference is already well inside the safe band (subject luma p05 56) so a re-roll is a gamble, and the sewer/bags entry above records a fresh seed making exactly this kind of drift worse, not better",
+      "last_converted": "2026-08-20T20:12:40Z",
+      "last_sig": "n1/-1/512/0.005/-/-/rf0.35"
+    },
+    "habitat/assimilation": {
+      "src": "habitat/assimilation.glb",
+      "texSrc": "habitat/assimilation-base.png",
+      "emissiveSrc": "habitat/assimilation-emissive.png",
+      "emissiveStrength": 0,
+      "roughness": 0.45,
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 352244330,
+      "seed100k": 1576840261,
+      "baseColor": [
+        0.65,
+        0.65,
+        0.65,
+        1
+      ],
+      "note": "habitat growth: an arch of braided tentacles with a puckered orifice in one leg (objects.AssimilationCavity, placed by render.world.ObjModels). generated AT the budget (decimationTarget 5000 -> 4,873 tris), tris -1, tex 512 for 54 texels/tri: at decimationTarget 100000 it was 102,500 verts over 45,805 positions = 2.24x, so that master was deleted (reproduce from assimilation-src.png with seed100k). its FIRST reference sat at subject luma p05 34 — between the p05 30 that made sewer/bags hallucinate violet and the p05 48 repaint that fixed it — and was already R>G, B>>G, the exact failure hue, so it was repainted to p05 61 before generating. baked 77/51/84 (avg 71) against the prop family's 46-52, so baseColor 0.65 LINEAR lands it near 58. MR map pure green, no dropMR",
+      "last_converted": "2026-08-18T19:18:17Z",
+      "last_sig": "n1/-1/512/0.005/habitat/assimilation-base.png/-/bc0.65,0.65,0.65,1/rf0.45"
+    },
+    "habitat/preservator": {
+      "src": "habitat/preservator.glb",
+      "emissiveSrc": "habitat/preservator-emissive.png",
+      "emissiveStrength": 0,
+      "roughness": 0.35,
+      "dropMR": true,
+      "tris": -1,
+      "tex": 512,
+      "error": 0.01,
+      "note": "habitat growth: an upright amber pod caged in a lattice of purple veins, splayed into a flat pool of roots across its bottom fifth (objects.Preservator, placed by render.world.ObjModels). REGENERATED 2026-08-21 and the source is a different animal from the one this entry was written for: 4,871 tris over 3,435 verts / 2,438 unique positions = 1.41x, i.e. it arrived AT the budget rather than as a 100k master, the watcher's and crates' case. so tris -1: the old 1200 target was written for a 65k source and meshopt really did reach it here, crushing the prop to 1,199 tris — a third of what its three siblings ship — which sands off the vein lattice that is the whole read. 4,871 at tex 512 is 54 texels/tri, in the ~43-55 band the other habitat props sit in. measured profile, in units of its own height: mean surface radius 0.51 at the pool, a WAIST at 0.29 around h 0.22 where the splay ends, a pod bulging back to 0.33 by h 0.43, then a taper to 0.05 at the crown — render.world.ObjModels fits the pulse floor and the mote helix to exactly those numbers. whole prop is 1.36 h wide and 1.29 h deep, nearly all of it the pool. dropMR TRUE, and this generation is the reason: its MR map came back CYAN — metalness p05 190 / p50 213 / p95 229, i.e. ~0.83 over the whole prop, against biomineral 0, watcher 3.5 and assimilation 45. glTF multiplies metallicFactor by the map's blue, and a metal has no diffuse term, so underground with no env map the pod rendered ALMOST BLACK with a tight specular and nothing else — sewer-pile-2's case exactly, and confirmed live by debug key M, under which the same prop reads correctly. the retired mesh WAS pure green, so this is a property of the generation and not of the subject: re-read the MR map after every regeneration and never carry the old entry's verdict forward. no baseColor: baked at mean sRGB 83/50/45 (avg 59), in line with the prop family. `seed` dropped: the one recorded here belonged to the retired mesh, and reproducing this one is image_to_3d on the archived preservator-src.png at decimation_target 5000 with remesh_project 0.8",
+      "last_converted": "2026-08-21T17:16:53Z",
+      "last_sig": "n1/-1/512/0.01/-/-/noMR/rf0.35"
+    },
+    "habitat/watcher": {
+      "src": "habitat/watcher.glb",
+      "roughness": 0.3,
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "note": "habitat growth: a fleshy eye-studded mass ringed by curling tendrils, on a stubby trunk and a flat root pool (objects.Watcher, placed by render.world.ObjModels). REGENERATED 2026-08-22, and every constant the old entry carried was refitted against it because three of them had silently stopped being true. 4,754 tris over 4,632 verts / 2,372 unique positions = 1.95x, i.e. it arrived AT the budget rather than as a 100k master (the preservator's and the crates' case), so tris -1: 4,754 at tex 512 is 55 texels/tri, in the 43-55 band the other habitat props sit in. bbox 0.87 h wide by 0.57 h deep against the retired mesh's 1.14 x 0.57 — a taller, NARROWER animal, which is why render.world.ObjModels went h 2.81 -> 3.5: at 2.81 the new proportions render 2.45 world across, against the preservator's 4.9 and the arch's 4.6, and it read as the runt of the four. baseColor DROPPED: the old 0.4 existed to pull a 113/78/83 (avg 91) atlas down to the family's 46-52, and this one bakes at 72/42/69 (avg 61, beside the preservator's 59) — 0.4 would land it near 40, under the family, and crush the pale eye discs that ARE this prop's read. emissiveSrc dropped with it: watcher-emissive.png was painted against the retired uvs and is in Unused/. MR map re-read and pure green (R 0 / G 214 / B 5, i.e. metalness ~0.02), so still no dropMR — but that is a property of THIS generation and not of the subject, the way the preservator's came back cyan on its own regeneration; re-read it after every one. best-facing azimuth re-measured as area-weighted albedo luminance per 30 degrees: it peaks DEAD-ON (0.0684 against the next bin's 0.0496) where the retired mesh straddled 60-90, so PropYaw.FRONTAL is still right and now cleanly so. measured profile, in units of its own height: cylindrical radius about the vertical axis is BIMODAL above the root pool at EVERY height — a thin core at p50 0.12-0.21 and tendril tips at 0.39-0.44 — which is what the PropCurl gate in render.world.ObjModels is fitted to, and why a height-only weight cannot express this prop. eye-mass centre (0.031, 0.610, 0.102) in that same frame; the per-eye table in the watcher's row is measured off THIS atlas and dies with it. seed/seed100k dropped: they belonged to the retired mesh, and reproducing this one is image_to_3d on the archived watcher-src.png",
+      "last_converted": "2026-08-22T17:45:22Z",
+      "last_sig": "n1/-1/512/0.005/-/-/rf0.3"
+    },
+    "wild/guard-rail": {
+      "src": "wild/guard-rail.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.05,
+      "seed100k": 1798857033,
+      "dropMR": true,
+      "baseColor": [
+        0.16,
+        0.17,
+        0.17,
+        1
+      ],
+      "note": "wilderness: a W-beam highway guard rail, instanced along the shoulder of the corridor game.AreaGenerator.placeHighway lays (render.wild.WildProps.rails). the only prop out here with an AUTHORED FRONT, so its yaw is locked to the corridor axis where every other wilderness row takes a full random turn. 100k master + offline decimate: 1.33x split, so the offline route works. COMPONENTS READ 11 AT 56.7% AND THE GATE CALLS THAT A REJECT - it is not one: the top two pieces are 27,691 and 17,327 verts, 92% of the mesh between them, and they are the BEAM and the POSTS, which on a real rail are bolted rather than welded. that is the shipped conifer's 2-at-51/49 shape (canopy plus trunk), not the 96-at-24% blob cloud the gate exists to catch; the nine remaining specks share 8%. its reference needed the in-code correction rather than a re-prompt: gpt returned it at subject p50 121 against the 69-77 that bakes correctly, and propstat's REPORTED p50 cannot be trusted on this subject at all - grey steel against the #5a5d63 backdrop sits so close in value that brightening the subject pushes parts of it OUT of the distance-from-backdrop mask (coverage 6.8% -> 5.4% between two lifts), the same too-close-to-its-own-key failure the grass texture hit. lift's INTERNAL core mask (alpha > 0.9) is the trustworthy one and was targeted at 73. baked at mean sRGB 112/110/109, neutral, so baseColor is a straight darken. its MR came back metal 255 across the whole map - dropMR, or it renders BLACK under key 1 rather than chrome. meshopt floors at 4,782 from 97,692 whatever error asks for - swept 0.05 and 0.3 for the identical count, so the seam network is the floor here and not the cap, exactly the drum shape (1.31x -> 4,826). error stays at the lower value because it costs nothing and keeps the silhouette",
+      "last_converted": "2026-08-25T08:25:24Z",
+      "last_sig": "n1/1200/512/0.05/-/-/noMR/bc0.16,0.17,0.17,1"
+    },
+    "facility/lamp-post": {
+      "src": "facility/lamp-post-100k.glb",
+      "emissiveSrc": "facility/lamp-post-emissive.png",
+      "tris": 1500,
+      "tex": 320,
+      "error": 0.005,
+      "seed100k": 793476705,
+      "dropMR": true,
+      "baseColor": [
+        0.1,
+        0.1,
+        0.1,
+        1
+      ],
+      "note": "the facility compound's own lamp: a modern slim tapered mast with a shrouded downlight head cantilevered on a short arm, instanced along the walkway kerb and through the park (render.facility.FacilityLamps). the `src` IS the 100k master - there is no second generation run, because models.mjs decimates out of it into app/models and never writes back over it, so the archive and the source are one file. 1.22x split, so the offline route works. COMPONENTS READ 3 AT 70.4% AND THE GATE CALLS THAT A REJECT - it is not one, for exactly the reason wild/guard-rail records: the three pieces are the MAST (34,840 verts), the HEAD (12,211) and the BASE PLATE (2,439), which is what the object is made of, and that is the shipped conifer's 2-at-51/49 shape rather than the 96-at-24% blob cloud the gate exists to catch. its reference came back IN BAND on the first try (subject luma p50 71 against the 69-77 that bakes correctly) and needed no in-code correction - and propstat's own --lift must NOT be used on it: charcoal steel against the #5a5d63 backdrop leaves a subject margin of only 14, so lift's soft key lands at alpha 0.54 and would composite the mast half-dissolved into its own backdrop. baked at atlas mean 139/140/141, far over the 46-52 family, so baseColor is a straight linear darken. MR came back metal max 219 - dropMR, or it renders BLACK under debug key 1 rather than chrome. THE EMISSIVE MAP IS GENERATED, NOT PAINTED, and that is the answer to \"the atlas layout is unknown\" that an earlier pass gave up on: it is built by tools/emissive.py off the BUILT glb (never the master, or the mask misses a chart the decimation moved), regenerate with: python3 tools/emissive.py app/models/facility/lamp-post.glb -o models-src/facility-lamp-post-emissive.png --box=-0.05,0.05,0.445,0.4845,0.036,0.13 --res 320 --dilate 1 --tint 9db4d4 --preview /tmp/prev.png. that box is the head's LENS AND SIDES WITH THE TOP EXCLUDED (the top face is the band y > 0.4859): 194 tris, 7.0% of the surface, 4.4% of the atlas. three earlier boxes are worth not repeating. the WHOLE head box read as a glowing white card, because the head is a flat slab whose biggest face is the top and the camera looks down. filtering that by averaged NORMAL (ny < -0.5) fixed nothing, because the strays it was blamed for were the DILATION crossing into neighbouring charts - 22 unselected triangles lit from y -0.498 to +0.484, i.e. the mast down to the base plate. and the LENS ALONE (y up to 0.456) is physically right and invisible: the head is 0.35 x 0.20 x 0.43 world units and its underside faces away from an overhead camera, so nothing on the fixture glowed and only the cone and the ground pool said it was on. author at tex (320), not 512, or models.mjs's resize puts back the ramp the bleed mask removed. it replaced an additive quad hung at the bulb, which was fixed-yaw (the render.particles.Sprites FRONTAL pose) on a mast that yaws to face the surface it lights, so the card sat across the housing at an arbitrary angle and read as a sticker. tris 1500 is 'as low as it will go' — the seam network floors it at 2,434 — and tex is sized for THAT count and not for a power of two: 256 put it at 26 texels/tri, well under the ~43-55 a TRELLIS 2048 export is authored at, which does not shrink the map but deletes it. 320 lands on 42",
+      "last_converted": "2026-08-28T19:28:14Z",
+      "last_sig": "n1/1500/320/0.005/-/facility/lamp-post-emissive.png@3/noMR/bc0.1,0.1,0.1,1"
+    },
+    "facility/bench-park": {
+      "src": "facility/bench-park-100k.glb",
+      "tris": 1500,
+      "tex": 432,
+      "error": 0.005,
+      "seed100k": 1690733738,
+      "dropMR": true,
+      "baseColor": [
+        0.65,
+        0.52,
+        0.66,
+        1
+      ],
+      "note": "the park bench, one per Const.TILE_GRASS_UNWALKABLE cell the facility generator writes beside its park path (render.facility.FacilityGround.GREEN). REGENERATED: the first one was asked for as grey painted steel on the #5a5d63 grey backdrop, and TRELLIS filled in the gaps between the seat slats - a grey subject a couple of values off a grey backdrop gives the generator nothing to segment the holes against, so it read the slats as one solid board. the fix was COLOUR, not settings: dark bottle-green cast frame with pale olive timber slats separates from the backdrop on hue as well as value, and the gaps came back as real openings you can see the backdrop through. the prompt also had to say what the gaps ARE ('clear open gaps of empty space', 'must read as real openings, not painted lines or grooves') and give a count - five seat slats, four back slats. shot in THREE-QUARTER view rather than side-on so the seat top and its gaps are both visible to the generator. 1.31x split, so the offline route works and the `src` IS the 100k master. COMPONENTS READ 16 AT 59.7% AND THE GATE CALLS THAT A REJECT - it is not one, and on this prop it is close to a PASS SIGNAL: the top piece is 29,525 verts and the next four are 3,401 / 3,202 / 2,179 / 2,107, which is the frame plus the individual SLATS, and slats that are separate components are exactly what the regeneration was for. ITS FRONT MOVED. the old model lay along local z and faced +z; this one lies along local Z with its DEPTH on x, and the backrest measures at mean x -0.138 against the mesh's own -0.012, so the bench faces local +X and render.facility.FacilityGround.facing carries a -PI/2 for it. bbox widest/height 1.52, not the old 1.98, so FacilityStyle.PARK_BENCH_H had to move too - it is sized for the LENGTH, which is what reads from overhead. reference took propstat's --lift 73 (subject p50 58 against the 69-77 that bakes correctly). baked at atlas mean 58/66/59, GREEN rather than neutral, so baseColor is a per-channel correction and not a flat darken. MR came back metal max 255 - dropMR, or it renders BLACK under debug key 1 rather than chrome",
+      "last_converted": "2026-08-29T17:26:54Z",
+      "last_sig": "n1/1500/432/0.005/-/-/noMR/bc0.65,0.52,0.66,1"
+    },
+    "facility/fence-park": {
+      "src": "facility/fence-park-100k.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.05,
+      "seed100k": 1799210375,
+      "dropMR": true,
+      "baseColor": [
+        0.35,
+        0.52,
+        0.74,
+        1
+      ],
+      "note": "the park's outer railing, one segment per grass cell edge that faces the pavement RING round the park and not the path through it (render.facility.FacilityGround.fence). the second prop in this repo sized so it TILES - like wild/guard-rail, `h` is set from the measured aspect 2.83 so one segment draws exactly CityConfig.CELL wide and consecutive segments meet end to end instead of leaving gaps. that is why the reference asks for FLAT SQUARE END POSTS: a finial or a rounded cap would show the join. 1.38x split, so the offline route works and the `src` IS the 100k master. COMPONENTS READ 4 AT 87.2% AND THE GATE CALLS THAT A REJECT - it is not one, for the reason wild/guard-rail, facility/lamp-post and facility/bench-park all record: the largest piece is 41,931 unique positions and the next three are 2,709 / 1,743 / 1,701, which is the rail-and-balusters span plus the two end posts, i.e. what a railing is BOLTED together from, not the 96-at-24% blob cloud the gate exists to catch. this is also the LACE case AGENTS.md warns about - two dozen slim balusters with real see-through gaps - and it came back at 1.38x anyway, well under the ~2x line, so holes did not cost the offline route here. its reference needed the in-code correction: gpt returned it at subject p50 54 against the 69-77 that bakes correctly, and propstat's --lift 73 held the composition fixed. same too-close-to-its-own-key subject wild/guard-rail logs - grey steel against the #5a5d63 backdrop left a subject margin of 32 - so the REPORTED p50 is not the one to trust, lift's internal core mask is. baked at atlas mean 80/66/57, warm against the 46-52 family, so baseColor is not a flat darken but a per-channel one. MR came back metal max 255 - dropMR, or it renders BLACK under debug key 1 rather than chrome",
+      "last_converted": "2026-08-29T15:02:54Z",
+      "last_sig": "n1/1200/512/0.05/-/-/noMR/bc0.35,0.52,0.74,1"
+    },
+    "facility/trash-bin": {
+      "src": "facility/trash-bin.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1824855304,
+      "dropMR": true,
+      "baseColor": [
+        0.14,
+        0.1,
+        0.14,
+        1
+      ],
+      "note": "the park litter bin, one beside every bench (render.facility.FacilityGround.bins). it is placed off the BENCH and not off a tile of its own, so it needed no generator change and is retroactive to every saved compound. GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,765 tris) and ships tris -1, and the FIRST prop in this repo where the split ratio LIED about which route to take: the 100k master measured 1.30x, comfortably inside the 'offline decimate works' band, and meshopt still floored at 9,277 tris - twice the budget for a cylinder - because the ratio describes the master's atlas and says nothing about what the decimation does to it. the BUILT glb off that route measured 3.86x and 27 components at 43.6%, and it read on screen as torn polygons and smeared texture. the gate was right and the 'body + lid + base ring + liner' reading of those 27 components was wrong. generated at budget instead, the same reference comes back 2 COMPONENTS AT 58.2% (1,388 / 996 unique positions - the body and the lid, the shipped conifer's own 51/49 shape) at 1.30x, and Runware unwraps and bakes AFTER its own decimation so the atlas is authored FOR 4,765 tris (880 texels/tri at 2048) instead of being a 96k atlas dragged down with the mesh - tex 512 then lands on 55, in band, with no sizing arithmetic needed. reference took propstat's --lift 73 (subject p50 49 against the 69-77 that bakes correctly), and the subject margin against the #5a5d63 backdrop was a comfortable 38 because the body is bottle green rather than the grey steel the railing and the mast both had to fight. baked at atlas mean 122/141/121, well over the 46-52 family and green with it, so baseColor is a per-channel darken. MR came back metal max 178 - dropMR, or it renders BLACK under debug key 1 rather than chrome (the master run's own MR came back metal max 1 off the SAME reference, so this is a per-run property of the bake and has to be read per glb, never assumed from a sibling)",
+      "last_converted": "2026-08-29T18:59:57Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.14,0.1,0.14,1"
+    },
+    "facility/car": {
+      "src": "facility/car.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "seed": 982199388,
+      "dropMR": true,
+      "baseColor": [
+        0.53,
+        0.53,
+        0.53,
+        1
+      ],
+      "note": "a parked car, a few of them standing in the parking bays nearest the compound's gate (render.facility.FacilityCars). it is the FIRST facility prop that is neither a plant nor a piece of street furniture, and the one thing this repo's silhouette-vs-surface test says yes to without argument: a car is carried entirely by its OUTLINE - the roof line, the glasshouse taper, the wheel arches - and there is no pattern on it a tiling texture could hold and no way to state its shape as boxes. that is the opposite of the guard booth and the boom barrier standing ten units away, both of which were generated props and are merged geometry now (see the header of render.facility.FacilityEntry). GENERATED AT THE BUDGET (decimationTarget 10000 -> 9,773 tris) and ships tris -1, and it is the SECOND prop here where the split ratio lied about which route to take - facility/trash-bin logs the first and this one is the same story with the numbers one step worse. the 100k master measured 1.47x, comfortably inside the 'offline decimate works' band, and meshopt floored at 7,583 tris whose atlas measured 2.68x: reported straight back from the game as the texture having 'become quite shit'. THE RATIO DESCRIBES THE MASTER'S ATLAS AND SAYS NOTHING ABOUT WHAT THE DECIMATION DOES TO IT. generated at budget instead, the same reference comes back at 1.65x, and Runware unwraps and bakes AFTER its own decimation so the atlas is authored FOR 9,773 tris (429 texels/tri at 2048) rather than being a 95k atlas dragged down with the mesh. COMPONENTS READ 11 AT 32.6% AND THE GATE CALLS THAT A REJECT - it is not one, for the reason facility/lamp-post, facility/bench-park and facility/fence-park all record, and here the piece list says it outright: 1,593 unique positions spanning the whole bbox (the outer shell), 1,335 and 1,322 spanning it inside (the body is HOLLOW - a cabin floor at y -0.132..0.059 and a greenhouse interior at y -0.108..0.181), 118 a bulkhead at z 0.148..0.206, and then 114 / 109 / 106 / 92 sitting at x +-0.156..0.201, y -0.185..-0.039, at the four corners in z - THE FOUR WHEELS. eight pieces hold 98.0% between them and the three specks share 2.0%, which is the shipped conifer's 2-at-51/49 shape and not the 96-at-24% blob cloud the gate exists to catch. reference took propstat's --lift 73 (subject p50 47 against the 69-77 that bakes correctly), and it is what the whole prop turned on: gpt returned a car asked for in MID slate blue-grey at p50 47, which is the band that makes TRELLIS read darkness as SHADOW and invent an albedo. shot ISOMETRIC from above one front corner so the roof, bonnet and boot lid are in frame with the flank and the front end - a near-side elevation is what gave the retired facility/barrier a junk atlas. IT LIES ALONG LOCAL Z (bbox 0.456 x 0.374 x 1.000), so at yaw 0 a car parks nose-to-tail along world z, and FacilityStyle.CAR_H is read through render.Models.instanced's height scale: 2.8 draws it 7.48 long and 3.41 wide, a 3.7 m car in an 8-unit bay at the half-metre unit WALL_H 6.0 fixes. MR came back metal max 255 - dropMR, or it renders BLACK under debug key 1 rather than chrome (the 100k run's own MR came back metal max 230 off the SAME reference, so this is a per-run property of the bake and has to be read per glb, never carried forward). TEX IS SIZED ON TEXELS PER WORLD UNIT AND NOT ON TEXELS PER TRIANGLE, which is the trap wild/tree-broadleaf-full records and this prop hits harder than that tree did, for a reason worth keeping: the atlas is spread over the outer shell AND the three inner surfaces nobody ever sees, so a car carries about twice the skin its silhouette suggests. measured area-weighted at the h the game draws it, tex 1024 lands on 58.7 texels per world unit against the ground/walkway/lot tiling's own 512/GROUND_TILE 9.0 = 57 - level with the asphalt it stands on - while the per-triangle rule looked at 9,773 tris and would have called 512 a healthy 27 per triangle. BASECOLOR IS A FLAT DARKEN, AND THE ONE BEFORE IT WAS PER-CHANNEL AND WRONG, which is the finding of this prop worth carrying even though the bake it was fitted to is gone. the 100k route's bake came back TEAL (atlas 60/91/104 from a near-neutral cool 70/73/76 reference), propstat suggested the usual per-channel fit [0.65, 0.27, 0.2] to neutralise the mean, and the cast was NOT uniform over the model: the body was teal and the dark glazing was not, so a factor with a 2.4x R-to-G ratio corrected the body and turned every windscreen and side window RUST BROWN, seen live from the game camera and invisible in every number propstat prints. a per-channel factor can only be right when the cast it corrects is the whole surface's; here it was one material's. this bake does not have the problem at all - 63/67/74 atlas, 64/68/73 sampled, tracking the reference's own hue - so the flat 0.53 is simply a level fit, landing it at 46/49/53",
+      "last_converted": "2026-08-31T17:53:55Z",
+      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc0.53,0.53,0.53,1"
+    },
+    "facility/roof-ac": {
+      "src": "facility/roof-ac.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 304411785,
+      "dropMR": true,
+      "baseColor": [
+        0.72,
+        0.72,
+        0.72,
+        1
+      ],
+      "note": "a rooftop condenser unit, a few per lab building (render.facility.FacilityRoof). it is the prop the box-vs-silhouette test says NO to on a first reading and yes to on a second: a plain rectangular housing is exactly what the guard booth was, and a mesh generator handed one returns a blob cloud - but a condenser is not carried by its outline, it is carried by the FAN GUARD in its top face, and the camera pitches 51 degrees DOWN, so the one face the player sees most is the one a box emitter would have to paint with art it does not have. generated with that in view and gated on propstat: 5,619 tris, 13 COMPONENTS AT 88.6% with the next piece 157 tris (the fan guard's own rings) and the rest specks - two units under the 90% line and the same shape as facility/car's eight-pieces-hold-98%, not the 96-at-24% cloud the gate exists to catch. the ORTHOGRAPHIC PREVIEW is what settled it (tools/emissive.py --box over the whole bbox, everything selected, silhouette in red): a clean rectangular housing with corner lifting lugs and four feet, correct in all three views. GENERATED AT THE BUDGET (decimationTarget 6000 -> 5,619) and ships tris -1, per the trash-bin and car findings that a comfortable master ratio says nothing about what a decimation does to the atlas. reference took propstat's --lift 72 (subject p50 57 against the 69-77 that bakes correctly) and the lift was capped there ON PURPOSE: this is a MID-GREY box on a mid-grey backdrop, so pushing the subject further toward 72 collapses the very margin TRELLIS segments on - propstat's own subject mask fell from 35.1% of the frame to 9.6% at --lift 88, which is the measurement telling you the subject is dissolving into the backdrop. p05 26 -> 37 puts it in the 35-45 band the drum, crates and cable all baked correctly from. shot ISOMETRIC from above one corner so the top face carries the fan guard and the two visible sides carry the coil louvres. tex 512 lands 46 texels/tri and, at ROOF_AC_H 2.2 over ~32 world units of skin, 90 texels per world unit against the ground tiling's 57. BASECOLOR IS A FLAT DARKEN AND PROPSTAT'S SUGGESTION WAS WRONG HERE, which is facility/car's finding hit a second time on a prop with only ONE material: the bake is 55/64/60, i.e. neutral leaning very slightly green, so the per-channel fit that neutralises that mean is [0.87, 0.64, 0.73] - a 1.36x red-to-green ratio, which turns a grey-green steel box TAN. Seen from the game camera standing on a grey roof and invisible in every number propstat prints. the flat 0.72 keeps the hue the reference asked for and moves only the level",
+      "last_converted": "2026-08-31T19:25:15Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.72,0.72,0.72,1"
+    },
+    "facility/roof-dish": {
+      "src": "facility/roof-dish.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1836948204,
+      "dropMR": true,
+      "baseColor": [
+        0.19,
+        0.17,
+        0.18,
+        1
+      ],
+      "note": "a rooftop comms dish, at most one per lab building (render.facility.FacilityRoof). pure silhouette - a parabolic face, a feed arm and a pedestal, with no pattern a tiling texture could hold - which is what a mesh generator is for, the same argument facility/car turned on. IT TOOK TWO REFERENCES AND THE FIRST ONE'S FAILURE IS THE ENTRY: asked for an open square-tube pedestal frame with three thin feed struts and a clipped cable, it came back 20 components at 74.4% - the lace-and-holes case, every gap in the art becoming real air and every thin member its own island. repainted as ONE SOLID CONNECTED OBJECT - a closed tapered box pedestal on a slab base, a single thick arm to a blunt feed horn, an unbroken dish shell - it comes back 8 components at 47.8% with the top five holding 93%, and those five ARE the object's parts (dish shell, pedestal, base slab, arm, horn). the raw largest-share number went DOWN and the prop got better, which is the gate's own 'few components each holding a substantial share' reading against its 90% line, and the orthographic preview (tools/emissive.py over the whole bbox) confirms it: dish, arm, horn, tapered pedestal and base all read correctly in side, front and plan. split also fell 2.28x -> 1.48x on the repaint. GENERATED AT THE BUDGET (decimationTarget 6000 -> 5,800) and ships tris -1. reference took propstat's --lift 74 (subject p50 56). BASECOLOR IS NEAR-FLAT ON PURPOSE: the prop is TWO-TONE, a pale dish face against a dark frame, and that is exactly the case facility/car's rust-brown-windscreen finding says a per-channel factor cannot be trusted on - 0.19/0.17/0.18 is a level fit that holds the face-to-frame ratio, not a hue correction. the bake needs a big one (atlas 105/113/109 against the 46-52 family) because a pale dish is the brightest thing the reference had",
+      "last_converted": "2026-08-31T19:29:03Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.19,0.17,0.18,1"
+    },
+    "facility/lot-cone": {
+      "src": "facility/lot-cone.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1708287659,
+      "baseColor": [
+        0.8,
+        0.8,
+        0.8,
+        1
+      ],
+      "note": "a traffic cone, dropped junk in the compound's parking lot (render.facility.FacilityDebris). pure silhouette - a tapered shell on a square base - so the box test says yes to generating it. GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,798) and ships tris -1, per the trash-bin and car findings. COMPONENTS READ 2 AT 71.6% AND THE GATE CALLS THAT A REJECT: it is not one, and the orthographic preview (tools/emissive.py --box over the whole bbox) says why in one look - the two pieces are the CONE SHELL (1,673 unique positions) and the SQUARE BASE SLAB (664), which is the shipped conifer's own canopy-plus-trunk 51/49 shape. THE REFERENCE WAS CORRECTED IN CODE AND THAT IS THE ENTRY: gpt returned the cone at subject p50 88 with a subject margin of MINUS ONE against its own backdrop - a bright object is the mirror of the sewer/bags failure, and TRELLIS had nothing to segment on. propstat's --lift 72 took it to p50 72, inside the 69-77 that bakes correctly, and opened the margin to 22 in the same pass, while holding the composition fixed so no re-roll was needed. it also flattened gpt's vignette back onto the nominal 90/93/99. tex 512 lands 54 texels/tri. MR came back metal max 254 but mean B 20 - propstat reads it as a rough dielectric and it needs no dropMR, which is moot anyway on the Lambert path. BASECOLOR IS A FLAT DARKEN and must stay one: the prop is TWO-TONE (orange shell, near-black base, white collar), the case facility/car's rust-brown-windscreen finding says a per-channel factor cannot be trusted on. 0.80 is a level fit off atlas 77/51/28 (luma 55) onto the 46-52 family, holding the orange the lot is meant to read as an accent",
+      "last_converted": "2026-09-01T17:46:49Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.8,0.8,0.8,1"
+    },
+    "facility/lot-tyres": {
+      "src": "facility/lot-tyres.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1312091227,
+      "dropMR": true,
+      "baseColor": [
+        0.64,
+        0.64,
+        0.64,
+        1
+      ],
+      "note": "a stack of three worn car tyres, dropped junk in the compound's parking lot (render.facility.FacilityDebris). GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,865) and ships tris -1. THE CLEANEST DROP OF THE THREE: 1 COMPONENT AT 100%, which is what a stack of touching toroids should be and is not what a lace-and-holes subject usually returns - the holes cost the offline decimate route (split 1.86x) and not the prop, exactly as wild/bush-bramble records. the reference needed NO correction: subject p50 65 against the 69-77 band and a subject margin of 24, because the prompt asked for MID GREY sun-faded rubber rather than black. THAT WORDING IS THE WHOLE ENTRY - a black tyre stack is the sewer/bags case verbatim (near-black subject, TRELLIS reads the darkness as SHADOW and invents a hue), and the fix is painting the reference mid-value and letting baseColor darken the bake, which is the direction that works. tex 512 lands 53 texels/tri. MR came back metal max 165 - dropMR, read per glb and never assumed from a sibling. baseColor is a FLAT 0.64 rather than propstat's near-identical per-channel fit: the bake is 63/62/61, neutral, so there is no cast to correct and only a level to move, onto the 46-52 family",
+      "last_converted": "2026-09-01T17:47:50Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.64,0.64,0.64,1"
+    },
+    "facility/lot-reel": {
+      "src": "facility/lot-reel.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 418719173,
+      "dropMR": true,
+      "baseColor": [
+        0.19,
+        0.19,
+        0.19,
+        1
+      ],
+      "note": "an empty steel cable reel standing on its flanges, dropped junk in the compound's parking lot (render.facility.FacilityDebris). two flanges, a core barrel and a hub boss - nothing a tiling texture could state - so the silhouette test says generate it. GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,960) and ships tris -1. COMPONENTS READ 6 AT 44.5% AND THE GATE CALLS THAT A REJECT, and this is facility/roof-dish's finding a second time: the TOP FIVE HOLD 97.6% (1,107 / 769 / 301 / 140 / 110 of 2,486) and those five ARE the object's parts, with two specks after them. the orthographic preview settled it - upper flange, lower flange, barrel and hub boss all read correctly in side, front and plan. the reference needed no correction (subject p50 71, margin 13). tex 512 lands 52 texels/tri, and at LOT_REEL_H 2.4 over ~35 world units of skin that is ~86 texels per world unit against the ground tiling's 512/GROUND_TILE 9.0 = 57 - the density check that matters on anything bigger than a bush, per wild/tree-broadleaf-full. MR came back metal max 227 - dropMR. baseColor is a FLAT 0.19 and it is a big darken because the bake is genuinely pale (atlas 111/113/114, the reference being weathered light-grey steel); flat rather than per-channel because the bake is neutral and there is no cast to correct",
+      "last_converted": "2026-09-01T17:48:51Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.19,0.19,0.19,1"
+    },
+    "facility/gas-cylinders": {
+      "src": "facility/gas-cylinders.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 721870788,
+      "baseColor": [
+        0.95,
+        0.95,
+        0.95,
+        1
+      ],
+      "note": "a four-bottle compressed-gas cylinder rack standing against a lab wall (render.facility.FacilityKit). PURE SILHOUETTE - four domed bottles, a strap rail, a foot rail and two leg braces, all of it outline and none of it pattern - so the silhouette-vs-surface test says generate it, where the storage casework standing against the corridor wall next door is merged geometry. GENERATED AT THE BUDGET (decimationTarget 6000 -> 5,710) and ships tris -1, per the trash-bin and car findings that a comfortable master ratio says nothing about what a decimation does to the atlas. IT IS AMBER, AND IT IS THE FIRST PROP IN THIS REPO GENERATED AGAINST style_prop RATHER THAN style: the grey-green version it replaces baked at atlas 110/111/109 - two counts of chroma - and shipped at 49/49/48, which from the game camera was a black blob. THE HUE IS PICKED AGAINST THE LIGHT AND NOT AGAINST TASTE: FacilityScene lights the compound with ambient 0x46536b, hemisphere 0x56668c and a 0x8294c0 moon, all strongly blue, so a near-neutral albedo simply takes the light's own hue - measured, facility/floor-tile's texture carries chroma 3.2 and renders at 18.3, i.e. all of the colour in that surface is the lamp. Blue was asked for first and would have been the one hue that cannot read here; amber sits opposite the light and survives it. PROPSTAT'S PER-CHANNEL SUGGESTION IS THE PROOF THAT IT IS A NEUTRALISER, not advice: on this bake it returns [0.16, 0.34, 2.7], a BLUE FACTOR OF 2.7 - outside the legal range - because the only way to put a 135/90/26 atlas on a flat 49 is to invent blue. Use a FLAT scalar, always, on anything that is meant to have a colour. THE VALUE TARGET IS 78, NOT THE 46-52 FAMILY, and that is deliberate: the family was fitted outdoors against asphalt, and after the interior repaint the room floor's albedo is 95 and the wall's 111, so a prop at 49 is a hole in the floor. flat 0.65 puts the atlas on 111/74/21, luma 78, chroma 90. COMPONENTS READ 29 AT 56.6% AND THE GATE CALLS THAT A REJECT: it is not one, and the orthographic preview says why in one look - 1,598 unique positions carrying the bottles and the rack, then 175 / 171 / 169 / 160, which are the FOUR VALVE COLLARS, and specks after those; the amber-to-steel material boundary is what raised the count over the grey bake's 10. the plan view reads as four round cylinder tops in a rack, which the grey bake's did not. THE REFERENCE WAS NOT LIFTED, AND THAT IS A FINDING: propstat's --lift keys against the backdrop gpt actually painted, and on this drop the vignette was deep enough that the key called most of the backdrop SUBJECT - the gamma then landed on the whole frame and took the backdrop from 87/90/92 down to ~72 instead of flattening it onto the nominal 90/93/99, which closes the very margin the lift exists to open. Shipped unlifted at subject p50 87: bright for the 69-77 band, which is the right direction here because baseColor can only multiply DOWN and the target is 78. IT IS LONG IN LOCAL X AND ITS BACK IS AT +z - THE OPPOSITE HAND FROM THE GREY BAKE - measured by binning triangle area along each axis and confirmed on the extremes: the +z slab carries 1.173 of 6.535 over y -0.492..0.387 (the back frame and its uprights, nearly full height) against the -z slab's 0.214 over y -0.491..0.025 (the strap and foot rails alone). TRELLIS DOES NOT HOLD ORIENTATION ACROSS RUNS, which is why KitProp now carries a per-model yaw0 rather than the placer assuming a hand. tex 512 lands 45 texels/tri and, at KIT_GAS_H 3.0 over ~59 world units of skin, ~67 texels per world unit against the ground tiling's 512/GROUND_TILE 9.0 = 57. bbox 0.875 x 0.999 x 0.317, so the rack draws 2.63 wide and 0.95 deep at KIT_GAS_H 3.0. MR came back metal mean 0, a rough dielectric, so no dropMR RE-FITTED 0.65 -> 0.95 for the reason lab-trolley records at length. At 0.65 the rack measured prop-minus-background of -3.8 over its own 14,066 pixels - DARKER than the floor behind it - against +8.0 at 0.90 and +12.3 at 1.0. Its MR map is no help either and for the opposite reason to the trolley's: the metallic channel is mean 0.0 sd 0.3, flat zero everywhere, so there is no metal in it to restore. Unlike lab-trolley this bake IS bimodal - 52.04% of the atlas at luma 128-143 (the amber bottles) against 28.83% at 32-47 (the steel rack) - which is why this prop reads as two materials and the trolley reads as one slab. A `roughness` key was tried here too and reverted for the reason the trolley's note records at length: holding it on MeshStandard buys a specular term that the indoor light budget cannot feed.",
+      "last_converted": "2026-09-03T17:19:45Z",
+      "last_sig": "n1/-1/512/0.005/-/-/bc0.95,0.95,0.95,1/ao0.55,-,-",
+      "ao": 0.55
+    },
+    "facility/lab-trolley": {
+      "src": "facility/lab-trolley.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1680419749,
+      "dropMR": true,
+      "baseColor": [
+        0.85,
+        0.85,
+        0.85,
+        1
+      ],
+      "note": "a two-shelf laboratory trolley, parked against a lab wall (render.facility.FacilityKit). AN OPEN FRAME IS THE WORST POSSIBLE CASE FOR AN EMITTED BOX, which is exactly what earns it a glb: four legs, four castors, a push handle and two shelf slabs with daylight through the whole middle of the object, and a box emitter can only state that as solid. GENERATED AT THE BUDGET (decimationTarget 6000 -> 5,915) and ships tris -1. COMPONENTS READ 24 AT 51.1% AND THE GATE CALLS THAT A REJECT, which is facility/car's finding a third time: 1,530 unique positions hold the frame, 406 and 388 the two shelves, 74 and 71 two of the castors, and the orthographic preview reads correctly in all three views - two shelves, four legs, four castors and the handle. THE HOLES ARE WHY THE COUNT IS HIGH AND THEY ARE NOT DISQUALIFYING (wild/bush-bramble records that), but they are why this one had to be generated at the budget rather than decimated: split 1.57x is already borderline. reference took propstat's --lift 72, which here was a gamma of 0.986 - i.e. the subject was already at p50 71 and the lift was run for its OTHER effect, flattening gpt's vignetted 78/81/82 backdrop back to the nominal 90/93/99. the reference asked for CHUNKY tube stock in as many words; hair-thin tubing is what a voxel generator loses first. it is long in local x and near-symmetric in z (the two z eighths carry 0.890 and 0.906 of 4.423), so at yaw 0 it stands broadside to a wall on either z hand and the KIT_YAW_JIT jitter reads as a trolley pushed and left rather than one squared to the grid. tex 512 lands 44 texels/tri and, at KIT_TROLLEY_H 2.0 over ~18 world units of skin, ~122 texels per world unit against the ground tiling's 57. baseColor is a FLAT 0.21 and propstat's per-channel suggestion was rejected on facility/car's rule: the bake is 91/100/108, cool by 17 counts across the channels, and the factor that neutralises that mean is [0.27, 0.22, 0.19] - a 1.42x red-to-blue ratio that turns brushed steel TAN. MR came back metal mean 132 - dropMR, which strips a map the Lambert path never samples anyway. THE VALUE WAS RAISED FROM 49 TO 78 (baseColor 0.21 -> 0.60), which is the same call facility/gas-cylinders records and applies to every prop that stands INDOORS: the 46-52 family was fitted outdoors against asphalt, and after the interior repaint the room floor's albedo is 95 and the wall's 111, so a prop at 49 renders as a hole. measured before the raise, on one frame, this trolley's shelf top rendered at luma 13.9 - level with the generator's own bench tops at 16.1 and a sixth of the floor's 86. it stays NEUTRAL, and that is correct rather than an oversight: a trolley is bare steel, so the flat 0.60 moves only the level and the bake's own cool 91/100/108 lean survives into 72/79/86 RE-FITTED 0.60 -> 0.85 once the indoor fill stopped being flat (IndoorMaskOpts.bounce). The 0.60 was measured against a normal-blind ambient that rendered every face of this prop as one value, and a baseColor FACTOR is linear - it scales the albedo's own frame-vs-shelf SEPARATION by exactly as much as it scales the level. Measured on one frame over the prop's own 2,476 pixels: 0.60 gives sd 12.00 at prop-minus-background +11.8, 0.75 gives 12.97 at +19.0, 0.85 gives 13.64 at +22.6, 1.0 gives 15.31 at +36.2. THE ALBEDO IS WHAT CARRIES THE METAL READ and this is the knob that buys it: the reference is bright tube frames against dark shelf slabs and near-black castors with almost no highlight anywhere in it, and the MR map cannot help - measured, its metallic channel is mean 132 sd 22.9 with p05..p95 of 105..149, i.e. UNIFORM half-metal carrying no frame-vs-shelf information at all, which is what dropMR above was right to throw away. AND THE ALBEDO HAS NO FRAME-VS-SHELF SEPARATION EITHER, which corrects the paragraph above: the luma histogram of the baked 2048 atlas puts 88.19% of its texels in a SINGLE 16-count band (96-111), with 9.46% in 80-95 and ~2% of unwrapped gutter below 48. The reference's bright tubes against dark slabs is not in the bake at all, so baseColor moves the LEVEL and nothing else, and the sd it was fitted against was shading, AO and the indoor fill rather than albedo. A `roughness` KEY WAS TRIED HERE AND REVERTED: 0.4 holds the prop on MeshStandard (render.Models.toLambert returns unchanged below 1) and gives it a real GGX specular, and it is worth exactly nothing indoors - measured over the prop's own 23.6k pixels, roughness 1.0/0.4/0.2 read mean 66.41/66.25/65.98 with p99 and max BIT-IDENTICAL, because every analytic light in the room is only 3.3% of this prop's pixel. The glint lives in render.world.PropEnv's `sheen` lobe instead; do not re-add the key.",
+      "last_converted": "2026-09-03T14:44:51Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.85,0.85,0.85,1/ao0.55,-,-",
+      "ao": 0.55
+    }
+  }
+}

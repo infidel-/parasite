@@ -1,6 +1,6 @@
 # 3D models: image → glb → the game
 
-`generate_image` → `image_to_3d` (TRELLIS 2 on Runware) → an entry in `models-src/models.json` →
+`generate_image` → `image_to_3d` (TRELLIS 2 on Runware) → an entry in `art/models.json` →
 `make models`. Loaded on demand; the `3d-art` skill triggers it. `CLAUDE.md` keeps only the guards
 that fire before this doc is opened (a box is not a prop; warm the new glb path).
 
@@ -14,7 +14,7 @@ See also [`3d-textures.md`](3d-textures.md) (reference images and tiling art) an
 
 ## The pipeline, and the tool every number comes from
 
-- **A new prop is generated, not hand-modelled.** Four steps: `generate_image` (gpt-image-2) → **`image_to_3d`** (the `runware-trellis-2` MCP, Microsoft TRELLIS 2 on Runware) → an entry in `models-src/models.json` → **`make models`**. ~$0.03 and a couple of minutes per prop. The MCP server lives at `~/git/runware-trellis-2-mcp` (one tool, node/TS, `pnpm build`); `RUNWARE_API_KEY` comes from the shell env, and its default output dir already resolves to `<git root>/models-src`, so **do not `mv` the glb** — it lands where `make models` looks.
+- **A new prop is generated, not hand-modelled.** Four steps: `generate_image` (gpt-image-2) → **`image_to_3d`** (the `runware-trellis-2` MCP, Microsoft TRELLIS 2 on Runware) → an entry in `art/models.json` → **`make models`**. ~$0.03 and a couple of minutes per prop. The MCP server lives at `~/git/runware-trellis-2-mcp` (one tool, node/TS, `pnpm build`); `RUNWARE_API_KEY` comes from the shell env, and its default output dir already resolves to `<git root>/models-src`, so **do not `mv` the glb** — it lands where `make models` looks.
 - **Every number the rules below are written in comes out of [`tools/propstat.py`](../tools/propstat.py), and it takes either end of the pipeline.** `python3 tools/propstat.py <prop>.glb` reports tris, split ratio, connected components + largest share, bbox `widest/height`, albedo (whole-atlas AND sampled at tri UV centroids), texels-per-triangle with the `tex` that lands in band, and the MR verdict — each with a pass/REJECT read, and a starting `baseColor` or `lift` when the bake is out of the 46-52 family. `<ref>.png` reports subject value against the p50 69-77 that bakes correctly, frame margin, bbox aspect and the backdrop's real colour. `<ref>.png --lift 70 -o out.png` and `--fit 80 -o out.png` apply the two in-code reference corrections below. Run it on the source before wiring a prop in, and on the built glb after `make models`.
 
 ## The reference image

@@ -66,9 +66,9 @@ Never carry a pitch or coverage finding from one run, one wall or one surface to
 
 Reuse beats generation; a prop from another area costs one `models.json` label and no art budget.
 
-- props: `python3 -c "import json;print(sorted(json.load(open('models-src/models.json'))['models']))"`
+- props: `python3 -c "import json;print(sorted(json.load(open('art/models.json'))['models']))"`
   (36 today, under `sewer/`, `wild/`, `facility/`, `habitat/`, plus `street-lamp`/`street-lamp2`)
-- textures: same one-liner over `textures-src/textures.json` (200 today: `city/`, `downtown/`,
+- textures: same one-liner over `art/textures.json` (200 today: `city/`, `downtown/`,
   `slums/`, `sewer/`, `wild/`, `facility/`, `decals/`, `fx/`)
 - area-agnostic systems worth borrowing before writing anything:
   - `particles/LampLights.hx` — the shared 12-slot spotlight pool, keyed on distance to the PLAYER

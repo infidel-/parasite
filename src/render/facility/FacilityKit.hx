@@ -59,7 +59,7 @@ class FacilityKit
 
   // both props run long in local x, and `yaw0` is which way round each one's BACK faces — measured
   // off each built mesh by binning triangle area along the axes rather than read off the reference.
-  // see the notes in models-src/models.json
+  // see the notes in art/models.json
   public static final PROPS:Array<KitProp> = [
     {
       path: RenderConfig.MODELS.facilityKitGas,

@@ -39,7 +39,7 @@ class SewerStyle
   public static inline var LEDGE = 'textures/sewer/ledge.png';   // flat top of a wall, seen from the overhead camera
   public static inline var GRIME = 'textures/sewer/grime.png';   // damp base band; alpha is hand-painted into the source
   // NO sludge gutter and NO ledge pipe run. both are switched off, so their paths are not listed
-  // here — the art itself is still registered in textures-src/textures.json (sewer/sludge,
+  // here — the art itself is still registered in art/textures.json (sewer/sludge,
   // sewer/top-pipe-1) and still builds, so reviving either is a path plus its emit
 
   // wall detail decals. these ARE the old wall-worn variant, broken into pieces: everything that

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Texture build: textures-src/ (1024 sources) -> textures/ (downscaled runtime).
 
-Driven by textures-src/textures.json. For each tracked texture it:
+Driven by art/textures.json (tracked; the sources it points at are not). For each texture it:
   1. renames freshly generated gpt files (image-*/edit-* -> <label>.png) in src,
   2. downscales src -> textures/<label>.png at the entry's res (default_res else),
      only when the source is newer than the last conversion (or output missing),
@@ -31,7 +31,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(ROOT, "textures-src")
 # runtime textures are served from the electron app dir (staged into app/ by the build)
 OUT_DIR = os.path.join(ROOT, "parasite", "resources", "app", "textures")
-INFO = os.path.join(SRC_DIR, "textures.json")
+# the manifest is TRACKED and lives in the repo, while the sources it points at do not: it carries
+# every prompt, crop and lift, so a commit's measured constants (an aspect lock, a rail fraction)
+# stay explainable even though the art store is unversioned
+INFO = os.path.join(ROOT, "art", "textures.json")
 GPT_PREFIX = re.compile(r"^(image|edit)-\d+-\d+-[0-9a-f]+-(.+)$")
 
 warnings = []
@@ -245,7 +248,7 @@ def main():
             if f.endswith(".kra"):
                 continue
             rel = os.path.relpath(os.path.join(root, f), SRC_DIR)
-            if f == "textures.json" or GPT_PREFIX.match(f) or rel in tracked:
+            if GPT_PREFIX.match(f) or rel in tracked:
                 continue
             warn(f"untracked source {rel} (add it to textures.json or delete it)")
 

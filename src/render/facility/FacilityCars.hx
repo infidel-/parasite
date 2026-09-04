@@ -153,7 +153,7 @@ class FacilityCars
       return {
         x: x,
         z: z,
-        // the glb lies along its own local z (see its note in models-src/models.json), so a bay whose
+        // the glb lies along its own local z (see its note in art/models.json), so a bay whose
         // depth runs in z needs no turn at all and one whose depth runs in x takes a quarter
         yaw: (dir < 2 ? 0.0 : Math.PI / 2),
         col: col,
