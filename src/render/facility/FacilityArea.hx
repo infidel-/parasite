@@ -122,6 +122,11 @@ class FacilityArea implements Area3D
       // created three lines into FacilityGeom.build below
       var masonry = FacilityDetail.masonry(model);
       ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
+      // and what a METAL prop reflects, which is the third of the same family and attaches here for
+      // the third time for the same reason: render.world.PropEnv.apply reads `on` before it will
+      // inject, and the lab kit's materials arrive from a glb promise that may resolve at any point
+      // after this line
+      render.world.PropEnv.attach(FacilityStyle.PROP_ENV);
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();

@@ -2158,3 +2158,288 @@ sort z and falls through to `a.id - b.id` — construction order. `CORNER_EPS` 0
 consumers and a third would have copied it.
 
 **Verdict: landed. +1 draw call, +256 tris, 0 art, 64 corners.**
+
+## The moon was already casting indoors and nobody could see it — BUILT AND REJECTED (2026-09-04)
+
+> Corrects the REASONING behind the `castShadow = true on interior meshes` row of the 2026-09-03
+> entry above, which read **10 of 255, rejected — not the lever**. The number was right and the
+> reason was wrong. The fix that follows from the right reason was then built, measured, and thrown
+> away on looks — see the verdict at the bottom, which is the useful half of this entry.
+
+Reported from the game as "why the fuck was castShadow rejected?" — and it deserved the challenge.
+
+**What the rejection got wrong.** The investigation reasoned that a shadow indoors can only remove
+the moon, the moon is 5.3% of an indoor pixel, so a shadow removes nothing. That skipped the fact
+that `RenderConfig.LAMP_LIGHT.shadowCasters` is **8** — 8 of the 12 pool slots are real
+shadow-casting `SpotLight`s with 512px maps (`LampLights.hx:80-93`), and measured live in a lab all
+8 were owned by ceiling fixtures at y 5.8 with `shadow.intensity` 0.67-1.0. There was never a
+shortage of shadow-casting light indoors. `FacilityKit.hx`'s own comment made the same mistake in
+the other direction, arguing the batch off on the moon's shadow-map cost alone.
+
+**Why nothing appeared anyway, and it is not lighting — it is geometry.** Spot half-angle 0.6283 rad
+against a 5.8-unit hang is a floor pool of radius **4.21**. Measured over this seed: nearest fixture
+to any of the 9 lab-kit props **6.32 units**, median 8.63, max 11.09 — **0 of 9 inside any cone**.
+And the same test from the other end: of 48 indoor fixtures, distance to the nearest wall is min 4,
+median 8, max 12, so **3 of 48** can reach a wall at all. The fixture lattice sits at room centres on
+a 16-unit pitch throwing 8.4-unit pools; every prop family in the compound hugs a wall by rule. **The
+props and the light have never been in the same place.** Flipping `castShadow` on trolley + gas +
+bench live cost +3 calls and +7.9k tris for a frame that did not change by eye.
+
+**What the moon was doing the whole time.** `FacilityGeom.addRoof` casts nothing on purpose — a roof
+that fades would still shadow and the shadow could not fade with it — so the moon's shadow map
+already contains the entire interior, at 2048² over a 180-unit box = **11.4 texels per world unit**,
+following the player, and every indoor surface already has `receiveShadow`. Proved it by setting
+`IndoorMask.uAmb` to black and the moon to 4.0: crisp directional silhouettes off the trolley, both
+bench runs, the casework and the shelving, with nothing added to the scene.
+
+So the shadow was always rendered and always drowned. `IndoorMask` replaces the interior fill with
+`indoorAmbient` — about **82%** of an indoor pixel — and ambient is shadow-blind by construction;
+`indoorDirect` 0.3 then cuts what is left. A PERFECT shadow could remove roughly a sixth of the
+value. **10 of 255 was the correct measurement of the wrong quantity.**
+
+**The fix is `ContactMask`'s trick, one level up.** Sample the moon's shadow map a SECOND time in
+`IndoorMask`'s existing inject and apply it as a plain multiply on the finished pixel — `irradiance`
+and `reflectedLight` alike — instead of as light. The fill is multiplied too, so the depth stops
+being a share of a term and becomes a free parameter: new `IndoorMaskOpts.sun`, shipped at
+`FacilityStyle.INDOOR.sun` **0.45**. Everything the call needs is already in scope at
+`<lights_fragment_begin>`: `getShadow`, `directionalShadowMap[0]`, `directionalLightShadows[0]`,
+`vDirectionalShadowCoord[0]`, and `receiveShadow` so a mesh can still opt out.
+
+**Index 0 is the moon and nothing can take that slot** — every area rig (`FacilityScene`,
+`SceneSetup`, `WildScene`) adds exactly one `DirectionalLight`, so `NUM_DIR_LIGHT_SHADOWS` is 1
+wherever this compiles at all. The `#if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0` guard
+is what keeps it out of the tunnels, where the actor billboards carry the same patch.
+
+**Outdoors is bit-identical and that is structural, not tested-and-hoped:** the multiplier is
+`mix( 1.0, x, inAmt )` and `inAmt` is exactly 0 outside a building, so the whole injection collapses
+to `*= 1.0`. `detach()` zeroes `sun` for the same reason `direct` goes back to 1.
+
+**Cost, interleaved A/B/A/B on a pinned pose, 7 rounds each: 83 / 86 — +3 draw calls, dead stable
+(7/7 identical both ways), +7.9k tris.** That is one extra shadow-map draw per casting batch:
+`FacilityTables` (bench top, bench body) and `FacilityKit` (gas cylinders, lab trolley). **No new
+light, no new pass, no new program, no art** — the moon's map already rendered every frame.
+
+**Effect: max 38.3/255 over 4.33% of the frame**, full-frame diff at `sun` 0 vs 0.45. Deeper than the
+contact field's own 35 and over a comparable reach, which is right — this is a cast silhouette and
+that is a crease.
+
+**And then it was reverted, on looks, and the reason is the entry.** Reported from the game
+immediately: *"the moon shadows inside are from the same angle as outside."* Every lab, every
+corridor, every room in the compound gets shadows raking on the moon's azimuth — so an interior reads
+as lit from the same sky as the car park outside it, while the ceiling fixtures throw pools that
+agree with nothing. The depth was never the missing part. **A cast shadow's DIRECTION has to be
+motivated by a fixture the room can see, and the moon is not one indoors** — it only ever reached
+that floor because `addRoof` declines to cast, which is a dodge for the FILL and does not survive
+being promoted to the thing that draws silhouettes.
+
+Everything in this entry that is a MEASUREMENT still stands and is why it is worth keeping: the
+8 spotlight casters, the 4.21-unit pool against a 6.32-unit nearest prop, the 11.4 texels per unit,
+the 82% shadow-blind fill, and the multiply-on-the-finished-pixel trick working exactly as
+`ContactMask` does. What does not stand is the assumption that a shadow deep enough to see is a
+shadow worth having.
+
+**The obvious follow-on is the thing that is never free.** An indoor sun on its own azimuth is a
+SECOND `DirectionalLight`: `NUM_DIR_LIGHTS` and `NUM_DIR_LIGHT_SHADOWS` are both in every lit
+material's program key, so it recompiles the world once at area build and adds a full shadow-map
+pass — and it would light the OUTDOORS too, which `Light.layers` cannot prevent (the obituary is in
+the `IndoorMask` header). The map could at least be static indoors (`autoUpdate = false`, re-rendered
+on area build only), leaving the extra caster draws as the whole per-frame bill, but nothing in the
+rig can cancel the light's own contribution outside. Not attempted.
+
+**Verdict: REVERTED. It worked, it was cheap, and it was the wrong picture.**
+
+## "The trolley is a grey boring slab": three causes, none of them shadows (2026-09-04)
+
+Reported from the game, and the diagnosis in the report was right: *"in a normal lab room there are
+many lamps, which results in that an object like trolley would not be a grey boring slab."*
+
+**THE PROP WAS 0.9 OF 255 DIFFERENT FROM THE FLOOR BEHIND IT.** Measured by rendering the frame with
+the batch hidden and again with it shown, keeping only the pixels that changed — 1,110 of them — the
+lab trolley's mean was **43.2 against a background of 42.3**. That is the complaint as a number, and
+it is not a shadow problem. Three separate causes, measured one at a time:
+
+**1. The fill was normal-blind and it was ~93% of the pixel.** `IndoorMask` replaced the scene's
+ambient AND its hemisphere with a single flat term, and ambient is direction-blind by construction.
+With direct light zeroed the trolley's own standard deviation was **7.14**; shipped, **7.02**; with
+`indoorDirect` swept 0.3 -> 2.0, flooding every light in the room 6.7x, **7.48**. The lighting
+contributed no form at all — every bit of variation was the albedo (512x512, sd 10.37).
+
+**2. Nothing in the room lights a vertical face.** All 48 indoor fixtures hang at exactly y 5.8 and
+`tx,tz` equals each lamp's own `x,z` on all 48 — zero aim offset, every one of them straight down.
+Meanwhile **55.1%** of the trolley's normals face sideways (N.y sd 0.647), and 74.7% of the gas
+cylinders'. More lamps would not have helped; they are all the same lamp.
+
+**3. The props carried no occlusion and no specular.** Neither had `COLOR_0`, UV2, `aoMap` or
+`normalMap` — while `Models.toLambert` has been forwarding `normalMap` and `aoMap` all along, with
+nothing to forward. And both ship from TRELLIS at metallicFactor 1 / roughnessFactor 1, so
+`toLambert` converted them and Lambert has no specular lobe at all.
+
+### What landed
+
+**A hemisphere fill** — `IndoorMaskOpts.bounce`, shipped 0.5. The fill is scaled by
+`1 + bounce * dot(N, worldUp)`, so up-faces take 1.5x, down-faces 0.5x and a **vertical face is
+untouched at any value**, which is what lets it land without moving the interior value ladder off its
+anchor. Four instructions. **World up comes through `viewMatrix`** and is not read off
+`geometryNormal.y`: everything at that anchor is in VIEW space and the facility camera sits at 65
+degrees of pitch, so the naive version shades against the camera.
+
+**Baked per-vertex AO** — `tools/models.mjs` `bakeAO`, manifest key `ao`, shipped 0.55 on both lab
+props. Voxelize the mesh into an occupancy grid, then DDA-march a golden-angle cosine hemisphere per
+vertex, into `COLOR_0`. **Voxels and not ray-triangle for a measured reason**: 5k verts x 24 rays x
+6k tris is 700M tests, the grid makes it 5M lookups, and it runs in **44ms** per prop. Deterministic,
+no dependency added, and `prune()` runs before it so the attribute survives. Effect is small and
+correctly placed: **max 8/255 over 141 pixels**, mean 3.4 where it lands — the crevices, which is
+what AO is for.
+
+**A painted reflection** — `render.world.PropEnv`, three colour stops picked by the reflection
+vector's world Y times a Schlick edge term, added in the shader. Zero texture, zero draw calls.
+
+### Two things that cost most of the day, both worth writing down
+
+**PMREMGenerator's blurred mips come out black in this build.** The physical route — `roughness` in
+models.json to keep a prop on MeshStandard, plus a prefiltered `envMap` — was built first and does
+not work. Isolated scene, one sphere, nothing else, a pure white equirect at envMapIntensity 1:
+roughness 0.05 -> **108.2**, 0.15 -> 45.1, 0.25 -> **1.2**, 0.45 and 0.8 -> **0**. Only mip 0 carries
+anything. Reproduced with a fresh PMREMGenerator, a settled renderer and a clean unpatched material,
+so it is neither this codebase's shader patches nor a timing problem. The band it does work in
+(under ~0.2 roughness) is exactly the band `models.mjs` documents as the half-float bloom
+catastrophe. **There is no safe setting, so metal here is a look and not a BRDF.** An early readback
+said the PMREM target was black at every mip — that was a `Float32Array` read of a `HalfFloatType`
+target and it lied; the correct `Uint16Array` read gives 1.0. Read a half-float target with a
+half-float buffer.
+
+**`reflectedLight.indirectSpecular` is silently discarded on Lambert.** It is the obvious accumulator
+for a reflection and it compiles clean. This three emits, for a Lambert program:
+`vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse +
+totalEmissiveRadiance;` — no specular terms in the sum at all. Written that way first and measured at
+exactly **zero** effect with the inject verifiably present in the compiled shader source, which is
+what forced dumping `gl.getShaderSource` rather than trusting the patch. It goes into
+`indirectDiffuse` instead; nothing downstream treats the two differently.
+
+### Result
+
+Same prop, same pose, prop-only pixel mask:
+
+| | mean | sd (its own form) | **prop - background** |
+|---|---|---|---|
+| before | 43.3 | 4.02 | **+0.9** |
+| after | 65.3 | 8.73 | **+17.2** |
+
+`PROP_ENV.intensity` was swept against that last column — 0.12 -> +14.2, 0.18 -> +17.2, 0.25 ->
++20.6, 0.55 -> +34.0 — and **0.55 was built and rejected on looks**: past about 0.25 the frame stops
+reading as steel and starts reading as a light source.
+
+**Verdict: landed. 83 calls / 85 programs / 21,113 tris — +0 draw calls, +0 triangles, no new light,
+no new pass, no new texture, no art.** All three are folded into materials that already draw or into
+a glb that already loads.
+
+### Addendum: "the source looks more metallic than the ingame variant" — and the MR map cannot fix it
+
+Reported from the game while the above was landing, and it is a fair reading of the frame. Three
+things checked, in order.
+
+**Nothing was destroyed in this change.** Source vs baked: `lab-trolley` goes metal 1 + MR texture ->
+**metal 0, MR stripped**, and that is `dropMR: true`, already in the manifest before any of this
+(`last_sig` carried `noMR`). `gas-cylinders` keeps metal 1 and its MR texture; a `dropMR` added while
+trying the PBR route was removed again and the rebake restored it. The only manifest delta from
+before this session is `ao`.
+
+**The real destroyer is `Models.toLambert` and it hits both.** Anything at roughnessFactor 1 becomes
+`MeshLambertMaterial`, which has no specular term at all — so the cylinders' surviving MR map ships
+bytes that are never sampled, on every load, forever.
+
+**But restoring the map would buy nothing, which is the finding.** Measured on the 2048² sources:
+
+| MR metallic (blue) channel | mean | sd | p05 -> p95 |
+|---|---|---|---|
+| `lab-trolley` | 132.1 (~0.52) | 22.9 | 105 -> 149 |
+| `gas-cylinders` | **0.0** | 0.3 | 0 -> 0 |
+
+The trolley's is **uniform half-metal** — 90% of its texels inside 0.41..0.58 — carrying no
+frame-vs-shelf information whatsoever, and the cylinders' is flat zero. Neither holds the "this part
+is steel and that part is not" signal that would make a spatially varying reflection worth a texture
+fetch. `dropMR` was right.
+
+**What actually reads as metal is the ALBEDO'S VALUE SEPARATION.** The archived reference
+(`models-src/facility/lab-trolley-src.png`) is bright tube frames against dark shelf slabs against
+near-black castors, with almost no highlight anywhere in it. That structure is in the bake — and
+`baseColor` was scaling it down. A baseColor factor is LINEAR, so it shrinks the frame-vs-shelf
+DIFFERENCE by exactly as much as it shrinks the level. Measured over the trolley's own 2,476 pixels:
+
+| `baseColor` | prop sd (its own structure) | prop - background |
+|---|---|---|
+| 0.60 (shipped) | 12.00 | +11.8 |
+| 0.75 | 12.97 | +19.0 |
+| **0.85** | **13.64** | +22.6 |
+| 1.00 | 15.31 | +36.2 |
+
+**Per point of brightness the albedo factor buys nearly twice the structure `PROP_ENV` does** —
+0.18 -> 0.55 on the env is +16 contrast for +1.8 sd, 0.60 -> 0.85 on baseColor is +11 contrast for
++1.6 sd — because one scales the bake's own separation and the other lays a flat wash over
+everything. So the albedo carries the metal and the reflection only puts an edge on it.
+
+Both factors were fitted against the OLD normal-blind fill, which rendered every face of a prop as
+one value, and both are over-corrected now that `bounce` exists. Re-fitted: trolley **0.60 -> 0.85**,
+cylinders **0.65 -> 0.95** (at 0.65 the rack measured prop-minus-background of **-3.8** over its own
+14,066 pixels — darker than the floor behind it), and `PROP_ENV.intensity` **0.18 -> 0.06**.
+
+Trolley on the original pose, 1,223-pixel mask: **mean 43.2 -> 76.5, prop-minus-background
++0.9 -> +28.6.** Still +0 draw calls and +0 triangles — a bake factor and a uniform.
+
+## The glint is not a BRDF and never could be: `PropEnv` grows a lobe (2026-09-04)
+
+Reported with two viewer screenshots: the SOURCE `lab-trolley.glb` shows a moving metallic glint when
+the camera turns, the converted one is uniform grey, and the game has no glint at all.
+
+**All three are true, and the cause is different in each.** Source vs shipped, dumped:
+`metallicFactor` 1 -> 0 and the 2048² MR texture stripped — that is `dropMR`, which pre-dates this
+work. `gas-cylinders` is untouched (its MR blue channel is flat zero, so nothing to strip). The
+viewer's glint is ENV-MAP specular off metal 0.518 / roughness 0.635; this build has no environment,
+because PMREM's blurred mips render black.
+
+### The albedo claim in the entry above is WRONG for this prop
+
+The previous entry said the metal read is the albedo's frame-vs-shelf value separation. Histogram of
+the trolley's baked 2048² atlas: **88.19% of texels inside a single 16-count luma band (96-111)**,
+9.46% in 80-95, ~2% of unwrapped gutter below 48. There is no separation in the bake to scale —
+`baseColor` moves the LEVEL and nothing else, and the sd it was fitted against was shading, AO and
+the indoor fill. `gas-cylinders` IS bimodal (52.04% at 128-143 amber against 28.83% at 32-47 steel),
+which is exactly why that prop reads as two materials and this one reads as a slab.
+
+### A real specular highlight cannot reach an indoor prop, measured three ways
+
+Holding a prop on MeshStandard is one manifest key (`roughness` < 1 stops `Models.toLambert`). Built,
+shipped, verified live — material came back `MeshStandardMaterial` roughness 0.4 metalness 0 — and
+worth **nothing**. Over the prop's own 23.6k pixels: roughness **1.0 / 0.4 / 0.2 -> mean 66.41 /
+66.25 / 65.98**, p99 and max BIT-IDENTICAL.
+
+Knocking out each term says why. Of the trolley's 66.72 mean: every analytic light in the room — the
+moon plus all 12 pooled spots — is **2.19, i.e. 3.3%**; `PropEnv` at 0.06 is 3.31; `IndoorMask`'s
+flat fill plus albedo plus baked AO is the remaining **~92%**. A specular lobe can only modulate that
+3.3%. Reaching for a stronger F0 via `metalness` makes it worse and fast, because diffuse scales by
+(1 - metalness): metal 0.3 took prop-minus-background **+11.4 -> -2.6** (darker than its own floor),
+and metal 0.5 at `indoorDirect` 3.0 blew the whole room out before the prop caught a highlight. Both
+manifest keys reverted; the notes in `models.json` say do not re-add them.
+
+### So the glint goes in the fake environment
+
+`render.world.PropEnv` already owns the only view-dependent term the props have. It grew four
+instructions: a world-space `keyDir`, `pow(dot(reflect(V,N), key), gloss) * sheen`, added beside the
+existing Fresnel wash. Not an analytic light, so `IndoorMask.direct`'s 0.3 never touches it.
+
+**The fit is worthless from the wrong camera and that is the trap.** The first sweep read as pure
+noise — a 17° free cam reflects a horizontal face back out at 73° off vertical, and cos(73°)^48 is
+zero, so the lobe CANNOT land whatever it is set to. Re-pinned at the rig's own **65.6° pitch** the
+same sweep separates cleanly, against sheen 0's mean 76.19 / p99 83.5: gloss 8 is a wash (mean
+104.1), 20 -> 81.2 / p99 167, **48 -> 78.0 / p99 153**, 120 -> 76.6 / p99 105.
+
+### Result
+
+Shipped `gloss: 48, sheen: 1.0, keyDir: [0.35, 1.0, 0.25], key: 0xd8e2e6`. On the shipped Lambert
+path, trolley over 53.8k px: **mean 76.03 -> 78.03, median 78.8 -> 79.3, p99 83.5 -> 149.4, sd 10.37
+-> 15.25.** The median not moving while the tail nearly doubles is the definition of a highlight
+rather than a brightening. Orbiting the pinned cam through 0 / 0.5 / 1.0 / 1.5 rad, the pixels the
+lobe lifts by more than 40/255 are **1191 / 136 / 6366 / 6277** — a different set of facets at every
+yaw, which is the deliverable. **57 calls / 85 programs / 24.1k tris — +0 calls, +0 programs, +0
+triangles, no new light, no new pass, no new texture, no art.** Uniforms only, so the program cache
+key is unchanged.

@@ -2,6 +2,7 @@ package render.facility;
 
 import citygen.CityConfig;
 import render.world.IndoorMaskOpts;
+import render.world.PropEnvOpts;
 import render.world.VisionMaskOpts;
 
 // every art and tuning constant for the facility area kind, in one file, the way
@@ -1188,5 +1189,68 @@ class FacilityStyle
     // number and has to be tuned WITH it in view; reading its light as too dim and reaching for the
     // fixture's own intensity is chasing the wrong knob
     direct: 0.3,
+    // and the fill leans this far toward a hemisphere. an up-facing surface takes 1.5x the value
+    // above, a down-facing one 0.5x, and a WALL is untouched — which is what lets this land without
+    // moving the interior value ladder off its anchor (the ladder is
+    // wall 0.1595 / 0.1394, floor 0.1367 / 0.12, bench top 0.0401, all of them TEXTURE values).
+    //
+    // the floor is the surface that moves most, and it moving is the point: the fixtures are on the
+    // CEILING, so a lit room's up-facing surfaces do get more. see IndoorMaskOpts.bounce for the
+    // measurement that says a flat fill was ~93% of a prop's pixel
+    bounce: 0.5,
+  };
+
+  // what a METAL prop indoors reflects — see render.world.PropEnv for why it has to exist before the
+  // two lab props can go back on MeshStandard at all.
+  //
+  // the three stops are the room read off its own value ladder rather than picked: the ceiling
+  // carries the fixtures and is the only thing in here emitting, the walls are what a vertical face
+  // spends most of its reflection on, and the floor is the darkest of the three. all three sit near
+  // INDOOR.ambient's own hue (0x9fb0b4) because everything in a lab is lit by the same cool tubes
+  public static final PROP_ENV:PropEnvOpts = {
+    sky: 0xc8d4d8,
+    horizon: 0x8a969c,
+    ground: 0x4e565c,
+    // OFF-VERTICAL ON PURPOSE. A lab's lamp banks are overhead, so this leans that way — but aimed
+    // dead-up it lands the glint on the shelf tops alone, which are the faces a top-down camera
+    // already reads, and the tube frame gets nothing. Tilted, the lobe crosses the round stock as
+    // the camera orbits, which is the whole point of it
+    keyDir: [ 0.35, 1.0, 0.25 ],
+    // one step above `sky`: the fixture itself is brighter than the ceiling it hangs off
+    key: 0xd8e2e6,
+    // DELIBERATELY SMALL, because this is the WEAKER of the two levers and finding that out is worth
+    // recording. Swept against prop-minus-background — the number the whole exercise exists to move,
+    // since the trolley shipped 0.9 of 255 different from the floor behind it — it reads
+    // 0 -> +8.0, 0.12 -> +14.2, 0.18 -> +17.2, 0.25 -> +20.6, 0.55 -> +34.0. But compare what each
+    // lever does to the prop's own INTERNAL spread, which is what actually reads as metal:
+    //   PROP_ENV 0.18 -> 0.55 buys +16 of contrast for +1.8 of sd
+    //   baseColor 0.60 -> 0.85 (models.json) buys +11 of contrast for +1.6 of sd
+    // per point of brightness the albedo factor buys nearly twice the structure, because it scales
+    // the bake's own frame-vs-shelf separation while this adds a flat wash over everything. So the
+    // albedo carries the metal and this only puts the edge on it. 0.55 was built and rejected on
+    // looks for exactly that — past ~0.25 the frame stops reading as steel and starts reading as a
+    // light source, the failure render.Models.toLambert's header records from the other direction
+    //
+    // CORRECTION, measured since: on THIS prop there is no frame-vs-shelf separation for the albedo
+    // factor to scale. The trolley's baked 2048 atlas puts 88.2% of its texels in a single 16-count
+    // luma band (96-111), so the reference's bright-tubes-against-dark-slabs is not in the bake at
+    // all and baseColor moves the LEVEL and nothing else. gas-cylinders IS bimodal (52% at 128-143
+    // amber against 29% at 32-47 steel) and that is why it reads and the trolley does not
+    intensity: 0.06,
+    // the lobe's tightness, fitted live over the trolley's own 54k pixels from a cam pinned at the
+    // rig's OWN 65.6-degree pitch — which is not optional, and a shallower pose says the opposite.
+    // The whole sweep read as noise from a 17-degree cam because a horizontal face reflects a low
+    // view back out at 73 degrees off vertical, and cos(73)^48 is zero: at a shallow angle the lobe
+    // CANNOT land whatever it is set to. Measured at the real pitch, against sheen 0's mean 76.19 /
+    // p99 83.5:  gloss 8 is a wash (mean 104.1), 20 -> mean 81.2 p99 167, 48 -> mean 78.0 p99 153,
+    // 120 -> mean 76.6 p99 105. 48 is where the MEDIAN stops moving (79.1 -> 79.3) while the tail
+    // triples — which is the definition of a highlight rather than a brightening
+    gloss: 48.0,
+    // and its strength. `intensity` above fills the shape in flat; this is the only term in the game
+    // that puts a MOVING highlight on a prop, which is what a viewer's env map was doing to the
+    // source glb and what nothing in this build could do until it existed. Orbiting the pinned cam
+    // through 0 / 0.5 / 1.0 / 1.5 rad, the pixels it lifts by more than 40/255 are 1191 / 136 / 6366
+    // / 6277 — a different set of facets at every yaw, which is the deliverable
+    sheen: 1.0,
   };
 }

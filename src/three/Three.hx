@@ -285,6 +285,10 @@ typedef RendererInfo = {
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
   public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
+  public var roughness:Float;  // GGX lobe width; 1 is fully matte and is what render.Models.toLambert tests
+  public var metalness:Float;  // 0 dielectric, 1 metal — and a metal has NO diffuse term at all, so 1
+                               // with nothing to reflect renders BLACK. there is nothing to reflect in
+                               // this build (see the PMREM note above), so treat this as pinned near 0
   public var userData:Dynamic;
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
@@ -383,6 +387,13 @@ typedef RendererInfo = {
 @:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {
   public function new(canvas:Dynamic);
 }
+// NO EXTERN FOR PMREMGenerator, DELIBERATELY. Image-based lighting is not available in this build:
+// PMREM's blurred mips render BLACK, measured on an isolated scene holding one sphere and nothing
+// else (white equirect at intensity 1 — roughness 0.05 gives 108.2, 0.25 gives 1.2, 0.45 and up give
+// 0). Only mip 0 carries anything, and the roughness band where that mip is selected is the same one
+// tools/models.mjs documents as the half-float bloom catastrophe. Binding it would compile, run, and
+// hand back black. render.world.PropEnv paints a reflection in the shader instead; its header and
+// docs/3d-changes.md carry the full measurement
 @:native("THREE.TextureLoader") extern class TextureLoader {
   public function new();
   public function load(path:String, ?onLoad:Dynamic, ?onProgress:Dynamic, ?onError:Dynamic):Texture;

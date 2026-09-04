@@ -95,6 +95,10 @@ class FacilityKit
             Models.get(PROPS[i].path, function(_)
               {
                 VisionMask.patchMesh(p.mesh);
+                // and the room, for the metal to reflect. a no-op unless the prop stayed
+                // MeshStandard, which is the `roughness` key in models.json — see PropEnv's header
+                // for why that number is unsafe to set without this call beside it
+                render.world.PropEnv.apply(p.mesh.material);
                 // and NEITHER BATCH CASTS, which is the indoor litter bin's own finding (see
                 // FacilityGround.bins): an instanced batch is drawn into the moon's shadow map as
                 // many times as it is drawn into the frame, so the second draw is a second call the

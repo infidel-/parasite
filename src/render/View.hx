@@ -462,6 +462,7 @@ class View {
     // the indoor swap into its walls and sample the compound's floor plan for it
     render.world.IndoorMask.detach();
     render.world.ContactMask.detach();
+    render.world.PropEnv.detach();
     area3d = a;
     shownKey = key;
 

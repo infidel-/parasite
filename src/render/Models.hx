@@ -172,6 +172,12 @@ class Models {
         name: m.name,
         map: m.map,
         color: m.color,
+        // the baked per-vertex AO (tools/models.mjs `bakeAO`, manifest key `ao`), which arrives as
+        // COLOR_0 and is multiplied into the base colour by three's own shader. CARRIED EXPLICITLY
+        // because this builds a NEW material rather than editing the loaded one — GLTFLoader sets the
+        // flag on the material it made, and dropping it here would throw the bake away silently, with
+        // the attribute still in the glb and nothing to show for it
+        vertexColors: m.vertexColors,
         normalMap: m.normalMap,
         aoMap: m.aoMap,
         emissive: m.emissive,

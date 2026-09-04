@@ -59,6 +59,7 @@ class IndoorMask
   static var uOrigin:Dynamic = { value: new Vector2(0, 0) };
   static var uAmb:Dynamic = { value: new Color(0x000000) };
   static var uDirect:Dynamic = { value: 1.0 };
+  static var uBounce:Dynamic = { value: 0.0 };
 
 // bind the mask to an area, painting it from the STATIC "is this cell inside a building" predicate.
 //
@@ -77,6 +78,7 @@ class IndoorMask
       // ambientLightColor. so this number is comparable with the scene rig's own
       uAmb.value = new Color(o.ambient).multiplyScalar(o.intensity);
       uDirect.value = o.direct;
+      uBounce.value = o.bounce;
     }
 
 // release it. every OTHER area kind runs through this, so a facility exit cannot leave the sewer
@@ -89,6 +91,7 @@ class IndoorMask
       pred = null;
       uMap.value = ensureBlank();
       uDirect.value = 1.0;
+      uBounce.value = 0.0;
     }
 
 // is this cell inside a building — the same predicate the mask was painted from, asked on the CPU.
@@ -220,13 +223,36 @@ class IndoorMask
       // reflectedLight and there is no seam between them to inject at. it is compensable, because a
       // fixture hung INSIDE is scaled by exactly this number — a ceiling light is tuned against it,
       // not around it. an outdoor lamp is untouched, since its own fragments read inAmt 0
+      //
+      // AND THE FILL IS A HEMISPHERE, NOT A CONSTANT, which is the one thing in here that shades a
+      // SHAPE rather than a place. an AmbientLight is normal-blind by construction, and indoors it
+      // was ~93% of a prop's pixel: measured on the lab trolley, the fill alone gave sd 7.14 over a
+      // 44x44 box, the shipped frame 7.02, and sweeping `indoorDirect` from 0.3 to 2.0 — flooding
+      // every light in the room 6.7x — moved it to 7.48. The lighting contributed NO form at all;
+      // every bit of variation on that prop was its own albedo. It is not a shortage of light and it
+      // is not a shadow problem: all 48 indoor fixtures hang at exactly 5.8 and aim straight down
+      // (`tx,tz` equals each lamp's own `x,z` on all 48), while 55% of the trolley's normals face
+      // SIDEWAYS, so N dot L is ~0 on the faces the camera mostly sees.
+      //
+      // `1 + bounce * dot(N, up)` is the cheapest term that has a direction at all — four
+      // instructions, no light, no draw call, no program permutation. A VERTICAL surface lands on
+      // exactly `indoorAmbient`, so the interior value ladder keeps its anchor and `bounce` 0 is a
+      // byte-exact no-op.
+      //
+      // UP IS TAKEN THROUGH `viewMatrix` AND NOT READ OFF `geometryNormal.y`. Everything three hands
+      // us at this anchor is in VIEW space — `geometryNormal` is the normalized `vNormal` varying —
+      // and the facility camera sits at 65 degrees of pitch, so view-space y is nowhere near world
+      // up. Rotating the world up vector into view space costs one mat4-vec4 and is the only form of
+      // this that does not silently shade against the camera
       var inject =
         '  float inAmt = texture2D( indoorMap, vIndoorXZ * indoorScale + indoorOrigin ).r;\n' +
         '  float inDir = mix( 1.0, indoorDirect, inAmt );\n' +
         '  reflectedLight.directDiffuse *= inDir;\n' +
         '  reflectedLight.directSpecular *= inDir;\n' +
         '#if defined( RE_IndirectDiffuse )\n' +
-        '  irradiance = mix( irradiance, indoorAmbient, inAmt );\n' +
+        '  float inUp = dot( geometryNormal, normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz ) );\n' +
+        '  vec3 inFill = indoorAmbient * max( 0.0, 1.0 + indoorBounce * inUp );\n' +
+        '  irradiance = mix( irradiance, inFill, inAmt );\n' +
         '#endif\n';
       var prev:Dynamic = mat.onBeforeCompile;
       // an OWN key only. three's Material carries a DEFAULT customProgramCacheKey on the PROTOTYPE
@@ -243,6 +269,7 @@ class IndoorMask
           shader.uniforms.indoorOrigin = uOrigin;
           shader.uniforms.indoorAmbient = uAmb;
           shader.uniforms.indoorDirect = uDirect;
+          shader.uniforms.indoorBounce = uBounce;
           // the instanceMatrix branch is NOT optional: the door leaves and the park plants are
           // InstancedMesh and their placement lives in that matrix alone, so modelMatrix by itself
           // would pin a whole batch to the world origin and light it as whatever stands there
@@ -259,6 +286,7 @@ class IndoorMask
             'uniform vec2 indoorOrigin;\n' +
             'uniform vec3 indoorAmbient;\n' +
             'uniform float indoorDirect;\n' +
+            'uniform float indoorBounce;\n' +
             'varying vec2 vIndoorXZ;\n' +
             StringTools.replace(shader.fragmentShader, '#include <lights_fragment_begin>',
               '#include <lights_fragment_begin>\n' + inject);
