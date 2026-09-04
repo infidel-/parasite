@@ -125,6 +125,14 @@ typedef Facility = {
   // asks it of the wall line — so a run, an island and an L all fall out of one predicate and no
   // rect finding is needed
   table:Array<Array<Bool>>,
+  // which cells stand a piece of 3D FURNITURE, as the fitting kind PLUS ONE — 0 is "nothing here",
+  // so the grid needs no second channel to say whether a cell is empty. a grid for the same reason
+  // `table` is one: two passes ask it per cell (the emitter, and FacilityKit's own placement gate),
+  // and a scan over the area's objects inside either loop is the wrong shape.
+  //
+  // the kind is derived from the decoration's ATLAS FRAME (Const.fittingOf) rather than persisted
+  // on the object: the frames were already in every save, so this needs no migration
+  deco:Array<Array<Int>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
 };
@@ -151,6 +159,7 @@ class FacilityModel
       findStructures(m);
       findWindows(m);
       findDoors(m, area);
+      findDeco(m, area);
       m.rooms = (area.generatorInfo != null ? area.generatorInfo.rooms : []);
       return m;
     }
@@ -169,6 +178,7 @@ class FacilityModel
         doors: [],
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
+        deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         rooms: [],
       };
     }
@@ -511,6 +521,26 @@ class FacilityModel
         }
     }
 
+// stamp the cells standing a piece of 3D furniture, off the DECORATION OBJECTS the generator left —
+// the same source findDoors above reads, and for the same reason: a decoration is an object standing
+// on a plain unwalkable floor cell, so the tile grid can say THAT one is occupied but not by what.
+//
+// the kind comes out of the object's atlas frame (Const.fittingOf), which is why this works on a
+// save made long before any of this existed: those decorations already carry the frames
+  static function findDeco(m:Facility, area:AreaGame):Void
+    {
+      for (o in area.getObjects())
+        {
+          if (o.type != 'decoration' ||
+              !inside(m, o.x, o.y))
+            continue;
+          var kind = Const.fittingOf(o.imageRow, o.imageCol);
+          if (kind < 0)
+            continue;
+          m.deco[o.y][o.x] = kind + 1;
+        }
+    }
+
 // does this cell hold a door OPENING? the wall pass treats one as the wall line carrying on rather
 // than ending, so the flanking slabs meet the cell boundary and the opening stays one cell wide
   public static inline function isDoor(m:Facility, col:Int, row:Int):Bool
@@ -523,6 +553,13 @@ class FacilityModel
   public static inline function isTable(m:Facility, col:Int, row:Int):Bool
     {
       return inside(m, col, row) && m.table[row][col];
+    }
+
+// does this cell stand a piece of 3D furniture? the gate render.facility.FacilityKit takes to keep a
+// gas rack out of a shelving unit — one fitting to a tile
+  public static inline function isFitting(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.deco[row][col] > 0;
     }
 
 // is this cell a doorway or touching one? the clearance test every INDOOR fitting shares — a cabinet
@@ -609,6 +646,14 @@ class FacilityModel
       for (row in 9...11)
         for (col in 13...16)
           m.table[row][col] = true;
+      // one of each fitting against the north room's own wall, clear of the bench run beside them.
+      // stamped by hand for the reason the doors below are: findDeco reads live objects.Decoration
+      // objects and there is no area here. all THREE kinds, because the rack is the only one that
+      // emits into the second (additive, shader-patched) buffer — without it that program compiles
+      // on the first real facility entry instead
+      m.deco[3][7] = _FittingKind.FIT_SHELVING + 1;
+      m.deco[3][8] = _FittingKind.FIT_BOOKCASE + 1;
+      m.deco[3][9] = _FittingKind.FIT_RACK + 1;
       findStructures(m);
       findWindows(m);
       m.doors.push({

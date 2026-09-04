@@ -2443,3 +2443,127 @@ lobe lifts by more than 40/255 are **1191 / 136 / 6366 / 6277** — a different 
 yaw, which is the deliverable. **57 calls / 85 programs / 24.1k tris — +0 calls, +0 programs, +0
 triangles, no new light, no new pass, no new texture, no art.** Uniforms only, so the program cache
 key is unchanged.
+
+## The room furniture stops being 2D sprites
+> ONE TEXTURE PER FAMILY SUPERSEDED by "The room furniture: one texture per FACE". Everything about
+> the data contract, the collision fix and the lights below still stands.
+
+The chem-lab pass has always stood its floor decorations up as billboards
+(`objects.Decoration.isGroundDecal` false, `Sprites.SIZE` 3.0 off `entities64` rows 8/12/13). Three
+of them read as real furniture — a bookcase, an open metal shelving unit with boxes, and a server
+rack — and they stood on the same room cells `FacilityKit` picks from, so a gas rack was sometimes
+drawn inside a shelving unit.
+
+**Geometry, not glbs, and the margin is bigger than the tri count.** A merged buffer is ONE draw
+call for every unit in the compound; an instanced glb is one per model kind in view plus a few
+thousand triangles off an unwrap lottery. Three families, three tiling textures, three meshes, plus
+the rack lights: **measured on the pinned rack camera, 79 calls with all four visible against 74
+without — +5 for 4 meshes** (the extra one tracks the additive mesh through the composer). Geometry
+came to **204 tris for the whole compound**: 7 bookcases at 4 quads, 2 shelving units at ~35, 1 rack
+at 4, 18 LED quads.
+
+**Nothing is persisted and no save was touched.** `Const.FACILITY_FITTINGS` names each kind's own
+atlas frames; the generator picks a KIND and takes a frame from it, and `FacilityModel.findDeco`
+reads the kind back OUT of the frame (`Const.fittingOf`) into a `deco` grid beside `table` — the
+same `area.getObjects()` walk `findDoors` already makes inside `fromArea`. A save made long before
+any of this existed already carries those frames: the loaded autosave came back with **10 fittings —
+2 shelving, 7 bookcase, 1 rack** — with no migration and no Saver change. `FacilityKit.wall` gained
+one `isFitting` rejection and the collision is closed; it is the only other pass wanting room cells
+(bins and casework are `Surf.LINO`-gated, debris and cars outdoors).
+
+**A LID ON THE SHELVING UNDID THE WHOLE COMPOSITE.** Built with a top cap the unit read as a closed
+grey slab from the game camera — which pitches 51° DOWN, so the top is half of what is seen and it
+hid every box under it. That is exactly what a texture on a box could already have said. Open, the
+top shelf's own boxes are what the player looks at and the carcass panels standing past them are
+what a steel upright does. Boxes also shipped as flat TRAYS at 0.45+0.35 of the bay: a bay here is
+0.75 world, so the bottom of that band is 0.34 tall against a 0.7-0.9 wide box. 0.58+0.30.
+
+**The bookcase's own sheet is wrong laid flat, and a world-aligned uv cannot be aimed.** Capped in
+its own texture it had book spines lying across its top face; the cap now goes in the SHELVING's
+plain steel, which costs no call because that mesh exists the moment any fitting stands anywhere.
+
+**An interior vertical face renders at about a fifth of its albedo here, and that is the black-card
+trap from the other side.** Measured at the game camera: bookcase front **15** against a floor at 79
+and a wall at 64, off a 47-mean albedo. `lift` 0.669 (a gamma, g < 1 BRIGHTENS) took the albedo to
+82 and the front to **44.3**, with the top at 53 — the spines read. The rack took 0.739 for the same
+reason at 36. The shelving needed none: at albedo 75 its panels measure 38, slabs 52, back 62.
+
+**The lights are one additive mesh with THREE numbers per vertex.** `MeshBufTools.quadRGB` carries
+level in r, blink phase in g, hue in b, and the patch REPLACES `<color_fragment>` rather than adding
+to it — three's own include multiplies the vertex colour into the diffuse, which would have made the
+phase tint every light green. Reading the channels apart is what puts amber and green lights on one
+mesh. Clock is `WildGrass.tick`'s shared uniform, `dtMs * ANIM_SPEED / BASE_MS`. Verified live: two
+frames of the same pinned rack differ by **max 106/255** over the light field. They are invisible
+outside LOS and that is correct — `VisionMask`'s `hiddenAdd` is 0 for the facility, the same cut the
+ceiling panels take.
+
+`FacilityWarm` mirrors the pass and `FacilityModel.demo` stamps one cell of each kind, the rack
+included: without it the additive material's program would compile on the first facility entry.
+
+## The room furniture: one texture per FACE
+
+The build above dressed each fitting in ONE sheet, and every face it was wrong on was wrong the same
+way: book spines lying flat across a bookcase's top and running down its sides, cardboard boxes
+wearing the shelving's steel, a rack's own vent panel seen from above. **A face is a different
+SURFACE from the face beside it.** Seven textures now, and the buffers are keyed by TEXTURE rather
+than by family — so the rack's sides and top ride the shelving's steel, which really is the same
+material, for the same draw call.
+
+**Measured at the gameplay camera: 78 calls with all of it visible against 72 without — +6 for the
+6 meshes in frame (8 exist; the rack and its lights were in the other building). 240 tris for the
+whole compound.** Packing them back into one atlas is the open question, not this.
+
+### Two faces are aspect-LOCKED, and one of them could not be authored at 1k
+
+A face carrying a 0..1-mapped image must match that image's aspect or the art is stretched, so
+`DECO_SHELF_D` **is** its end frame's 656x1024 and `DECO_BOOKCASE_W` **is** its front's 768x1024,
+written as those products. It also caps what the aspect can be: **gpt-image-2 at 1k needs 655,360
+pixels with no edge over 1024**, so nothing narrower than ~0.64 exists. A 1024x512 top (aspect 2.0)
+is 524k and is refused outright — which is why every OTHER face here tiles, and why depth stayed a
+free number everywhere but the shelving. Same reason `fit` SLIDES a unit along its wall to clear the
+slab inset instead of clamping its width the way the corridor casework does: a clamp is a stretch.
+
+### The shelving is a frame, not a box
+
+Two alpha-cut end frames (`alphaTest`, opaque, DoubleSide — one pass, still writes depth), a bare
+quad per shelf, the boxes, **and no back and no top.** Both of those were in the first build and
+both were wrong for the same reason: this camera pitches 51 degrees down, so a lid is most of what
+is seen and it hid every box under it.
+
+**THE SHELF HEIGHTS ARE READ OFF THE ART, not chosen.** Binning opaque coverage per row of the built
+alpha puts the frame's cross rails at **0.063 / 0.381 / 0.699 / 0.954** of the height; shelves take
+the first three. Spaced evenly against whatever the art drew instead, a shelf floats between two
+rails and the unit reads as a wire cage with slabs in it. The bottom shelf being off the floor is
+not cosmetic either — at 0 it is coplanar with the room floor and z-fights across its footprint.
+
+**The frame was regenerated once for MEMBER WIDTH.** At ~4.6% upright width it drew 0.077 world
+units of steel per upright — honest angle iron, and on screen a wire cage. 12% uprights and 5% rails
+take the opaque fraction **26% -> 39%**.
+
+### Boxes: world units, a turn, and the swing paid for twice
+
+Sized as a fraction of the bay they land in, one box on a 2.6 shelf came out **1.6 wide**. A packing
+box is a packing box whatever it stands on, so the band is in world units (0.55-1.0) and the bay only
+caps it. The turn is `DECO_BOX_YAW` 0.25 rad, and it costs geometry twice: a box turned about its
+centre reaches `hd·cos J + hw·sin J`, so the half-depth that still fits is `(deep/2 - hw·sin J)/cos J`
+— the lab trolley's `KIT_GAP` arithmetic solved for the box — and the same swing ALONG the wall is
+clamped separately, which is what stopped an end-bay box turning its corner out through the upright.
+
+### THE CARDBOARD'S CHROMA IS UNREACHABLE FROM PROSE — three rolls prove it
+
+"warm tan-brown" returned **R-B 67 at mean 108**; "greyed dusty, very low chroma" returned **R-B 8.5
+at 66.5**; naming the number outright ("the red channel about 25 to 30 points above the blue")
+returned **R-B 58.6 at 112**. And `lift` cannot split the difference, because it is a GAMMA: it
+SCALES a cast rather than shrinking it (at g 1.28 the warm roll's R-B goes 58.6 -> 59.3). So the
+neutral roll ships and the boxes are separated from the steel by **value**, not hue — which is also
+the honest answer for a compound lit `0x46536b` / `0x8294c0`, where the rig desaturates everything
+anyway. Fitted live: lift 0.66 put the box tops at **79 against a floor at 79**, the brightest thing
+in the room; **0.79** lands them 68 top / 58 front over the shelf steel's 54.
+
+### And two lifts that were the black-card trap again
+
+`deco-bookcase-front` and `-side` at 45 mean, `deco-shelf-side` at 61: an interior VERTICAL face here
+renders at roughly a fifth of its albedo, so all three drew as near-black. 0.654 / 0.654 / 0.771. The
+horizontal faces keep far more (measured 0.71), so `-top` took a gentler 0.777. **`deco-shelf-top`
+was also re-rolled for HUE** — the first roll measured channel spread **13.4** and the shelves
+rendered visibly teal (24.5/39.5/45.8); with the neutral clause it came back at **1.7**.

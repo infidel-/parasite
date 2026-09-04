@@ -175,6 +175,12 @@ class FacilityKit
       if (!FacilityModel.inside(m, col, row) ||
           m.surf[row][col] != Surf.TILE ||
           FacilityModel.isTable(m, col, row) ||
+          // ONE FITTING TO A TILE. a floor decoration finalises to a plain unwalkable ROOM tile, so
+          // it passes the surface test above and the wall test below — this pass and
+          // render.facility.FacilityDeco want exactly the same cells, and without this a gas rack
+          // is drawn standing inside a shelving unit. asked of the model rather than of a shared
+          // claimed-cell list, so neither pass has to run before the other
+          FacilityModel.isFitting(m, col, row) ||
           FacilityModel.nearDoor(m, col, row))
         return -1;
       for (dir in 0...4)

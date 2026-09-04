@@ -51,6 +51,11 @@ class FacilityWarm
       FacilityLawn.build(sc, model);
       FacilityGeom.build(sc, model);
       FacilityTables.build(sc, model);
+      // the room furniture, which is TWO program permutations the shell above does not cover — the
+      // three families share one lambert but the shelving's is DOUBLE_SIDED, which three folds into
+      // the program key — plus the rack lights' own patched additive material. the demo model stamps
+      // one cell of each kind for exactly this reason, see FacilityModel.demo
+      FacilityDeco.build(sc, model);
       // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not
       // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
       // area behind the demo model, so every leaf here is shut and stays that way

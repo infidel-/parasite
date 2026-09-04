@@ -140,6 +140,9 @@ class FacilityArea implements Area3D
       // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
       roof = FacilityRoof.build(scene, model, shells);
       cabinets = FacilityTables.build(scene, model);
+      // and the room furniture that used to be an upright sprite, straight after the casework it is
+      // the same kind of thing as: merged geometry standing against a wall, one mesh per family
+      FacilityDeco.build(scene, model);
       // the lobby notice board and the interior wall grime, both after the shell because both hang
       // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
@@ -372,6 +375,9 @@ class FacilityArea implements Area3D
       // and the park's grass keeps moving through it for the same reason. this is the whole per-frame
       // cost of the tuft layer — one shared uniform, advanced once, read by every blade in the mesh
       render.wild.WildGrass.tick(opts.dtMs);
+      // and the server racks' lights, which are the same one shared uniform advanced once — and
+      // through the outro for the third time, because the camera is still on the compound
+      FacilityDeco.tick(opts.dtMs);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);

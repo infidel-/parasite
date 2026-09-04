@@ -137,6 +137,64 @@ class Const
     { row: 12, amount: 11 },
   ];
 
+  // the floor decorations the 3D view draws as REAL GEOMETRY instead of an upright atlas quad
+  // (render.facility.FacilityDeco). the generator picks a KIND off this table and takes its frame
+  // from it; the renderer reads the kind back out of the frame with fittingOf below, which is what
+  // lets every save made before this table existed light up as geometry with nothing migrated —
+  // the frames were already there.
+  //
+  // the 2D area view is not affected at all: a fitting is still an objects.Decoration drawing the
+  // same entities64 cell it always drew
+  public static var FACILITY_FITTINGS: Array<_Fitting> = [
+    // the open metal shelving with boxes on it, the one kind emitted as a composite rather than a box
+    {
+      kind: FIT_SHELVING,
+      frames: [
+        { row: 8, col: 9 },
+        { row: 8, col: 10 },
+      ],
+    },
+    {
+      kind: FIT_BOOKCASE,
+      frames: [
+        { row: 13, col: 0 },
+        { row: 13, col: 1 },
+        { row: 13, col: 2 },
+        // the wooden shelf of books and bottles: the same silhouette as the three above, so it
+        // rides the same geometry rather than earning a fourth kind
+        { row: 8, col: 11 },
+      ],
+    },
+    {
+      kind: FIT_RACK,
+      frames: [
+        { row: 13, col: 3 },
+        { row: 13, col: 4 },
+        { row: 13, col: 5 },
+        { row: 13, col: 6 },
+      ],
+    },
+  ];
+
+  // how often a high floor decoration comes out as one of the fittings above rather than as one of
+  // the plain sprites. the nine fitting frames were already ~47% of CHEM_LABS_DECO_FLOOR_HIGH, so
+  // this leans the mix toward 3D without emptying the rooms of the fridges, fume cabinets and
+  // machines, which exist on floor cells and nowhere else
+  public static inline var FACILITY_FITTING_PCT = 60;
+
+// which fitting an atlas frame draws as, or -1 for a decoration that keeps its sprite. an Int and
+// not a Null<_FittingKind> because every consumer stores it in an Int channel anyway — the render
+// grid holds kind + 1 with 0 for "nothing here"
+  public static function fittingOf(row: Int, col: Int): Int
+    {
+      for (f in FACILITY_FITTINGS)
+        for (fr in f.frames)
+          if (fr.row == row &&
+              fr.col == col)
+            return f.kind;
+      return -1;
+    }
+
   // row 15 - doors
   public static var ROW_DOORS = 15;
   public static var FRAME_DOOR_CABINET = 0;
@@ -738,4 +796,18 @@ class Const
 
 typedef _TileGroup = Array<_TileRow>;
 typedef _TileRow = { row: Int, ?col: Int, amount: Int }
+// one entities64 cell (Const._Fitting)
+typedef _FittingFrame = {
+  // atlas row
+  row: Int,
+  // and column
+  col: Int,
+}
+// one 3D fitting and the entities64 frames that draw it (Const.FACILITY_FITTINGS)
+typedef _Fitting = {
+  // what render.facility.FacilityDeco emits for it
+  kind: _FittingKind,
+  // every frame that draws as this kind, across whatever rows they sit on
+  frames: Array<_FittingFrame>,
+}
 typedef _TileBlock = { row: Int, col: Int, width: Int, height: Int }

@@ -889,18 +889,28 @@ class FacilityAreaGenerator
                         {
                           if (Std.random(100) < 70)
                             {
-                              var arr = (Std.random(100) < 50 ?
-                                Const.CHEM_LABS_DECO_FLOOR_HIGH :
-                                Const.CHEM_LABS_DECO_FLOOR_LOW);
+                              var high = Std.random(100) < 50;
                               var nextToWindow = nextToWindow(cells, tx, ty);
+                              // a decoration beside glazing has to be a LOW one or it stands in
+                              // the window
                               if (nextToWindow)
-                                arr = Const.CHEM_LABS_DECO_FLOOR_LOW;
+                                high = false;
                               // leave space for
                               if (nextToWindow && Std.random(100) < 70)
                                 hasVentSpace = true;
                               else
                                 {
-                                  addDecoration(state, tx, ty, arr);
+                                  // a HIGH decoration has plain masonry behind it, which is what a
+                                  // piece of standing furniture needs, so it may come out as real
+                                  // 3D geometry instead of an upright sprite — see
+                                  // Const.FACILITY_FITTINGS and render.facility.FacilityDeco
+                                  if (high &&
+                                      Std.random(100) < Const.FACILITY_FITTING_PCT)
+                                    addFitting(state, tx, ty);
+                                  else
+                                    addDecoration(state, tx, ty, high ?
+                                      Const.CHEM_LABS_DECO_FLOOR_HIGH :
+                                      Const.CHEM_LABS_DECO_FLOOR_LOW);
                                   // change to unwalkable tile
                                   cells[tx][ty] =
                                     Const.TILE_FLOOR_TILE_UNWALKABLE;
@@ -1095,6 +1105,21 @@ class FacilityAreaGenerator
             }
         }
       return true;
+    }
+
+// add a decoration that the 3D view draws as real furniture: a KIND off Const.FACILITY_FITTINGS,
+// carrying one of that kind's own atlas frames.
+//
+// the frame is what the 2D view keeps drawing and what render.facility.FacilityModel reads the kind
+// back out of, so nothing new is written to the object and every save made before this existed
+// still resolves — see Const.fittingOf
+  function addFitting(state: _FacilityState, x: Int, y: Int)
+    {
+      var f = Const.FACILITY_FITTINGS[Std.random(Const.FACILITY_FITTINGS.length)];
+      var fr = f.frames[Std.random(f.frames.length)];
+      var o = new Decoration(game, state.area.id,
+        x, y, fr.row, fr.col);
+      state.area.addObject(o);
     }
 
 // add decoration from a list

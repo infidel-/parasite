@@ -136,6 +136,22 @@ class FacilityStyle
   // see render.facility.FacilityTables for why the whole run is merged geometry
   public static inline var BENCH_TOP = 'textures/facility/bench-top.png';
   public static inline var BENCH_BODY = 'textures/facility/bench-body.png';
+  // the three pieces of room furniture that used to be upright 2D sprites (render.facility
+  // .FacilityDeco). ONE TEXTURE PER FACE, not per family: the first build dressed a whole unit in
+  // one sheet and every face it was wrong on was wrong in the same way — book spines lying across
+  // a bookcase's top and running down its sides, cardboard boxes wearing the shelving's steel.
+  //
+  // two of them map 0..1 over their face rather than tiling, and both HAVE to: the shelving's end
+  // is one authored frame with holes in it, and the bookcase front is one authored composition
+  // with three different rows in it. That locks each one's face aspect to its image's — see
+  // DECO_SHELF_D and DECO_BOOKCASE_W, which are DERIVED and not chosen
+  public static inline var DECO_SHELF_SIDE = 'textures/facility/deco-shelf-side.png';
+  public static inline var DECO_SHELF_TOP = 'textures/facility/deco-shelf-top.png';
+  public static inline var DECO_BOX = 'textures/facility/deco-box.png';
+  public static inline var DECO_BOOKCASE_FRONT = 'textures/facility/deco-bookcase-front.png';
+  public static inline var DECO_BOOKCASE_SIDE = 'textures/facility/deco-bookcase-side.png';
+  public static inline var DECO_BOOKCASE_TOP = 'textures/facility/deco-bookcase-top.png';
+  public static inline var DECO_RACK = 'textures/facility/deco-rack.png';
   // the lit glazing, ONE ART PER RUN LENGTH — three panes and two. a run maps one unit of u across
   // its whole length, so how many panes it shows is a property of the image (see WINDOW_ASPECT_2,
   // which carries the argument and the measurements)
@@ -422,6 +438,112 @@ class FacilityStyle
   // against every wall reads as a store room
   public static inline var KIT_STEP = 3;
   public static inline var KIT_MAX = 10;
+
+  // ---- room furniture (render.facility.FacilityDeco) ---------------------------------------------
+
+  // the three fittings that replaced an upright 2D sprite. every W and H is the SPRITE's own alpha
+  // bbox carried into world units — the quad was Sprites.SIZE 3.0 across 64 px, so a 45 x 61 px
+  // bookcase is 2.11 x 2.86 and these are those numbers rounded.
+  //
+  // TWO OF THE DEPTHS/WIDTHS ARE NOT FREE. A face carrying a 0..1-mapped image has to match that
+  // image's aspect or the art is STRETCHED, so DECO_SHELF_D is its end frame's 656 x 1024 and
+  // DECO_BOOKCASE_W is its front's 768 x 1024, each written as the product that produced it.
+  // (both sizes are also the narrowest gpt-image-2 will emit at 1k: a source has to clear 655,360
+  // pixels with no edge over 1024, which caps the aspect at about 0.64.)
+  //
+  // depth is otherwise a LOOK decision and not a gameplay one, unlike the corridor casework's
+  // CASE_D: a fitting stands on a cell the generator already wrote unwalkable, so nothing can walk
+  // into it however far it reaches — and off the wall FACE, a unit inside the wall cell, even the
+  // deepest of these takes under a fifth of its own cell
+  public static inline var DECO_SHELF_W = 2.6;
+  public static inline var DECO_SHELF_H = 2.6;
+  public static inline var DECO_SHELF_D = DECO_SHELF_H * 0.640625;
+  public static inline var DECO_BOOKCASE_H = 2.8;
+  public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.75;
+  public static inline var DECO_BOOKCASE_D = 1.05;
+  public static inline var DECO_RACK_W = 1.6;
+  public static inline var DECO_RACK_H = 2.9;
+  public static inline var DECO_RACK_D = 1.2;
+  // the TILING faces' periods, in world units. these are material scales and nothing else — a
+  // perforation pitch, a wood grain, a rack's unit height — so they are chosen against the thing
+  // they draw and never against the unit's own size the way the first build's were
+  public static inline var DECO_SHELF_TILE = 0.55;
+  public static inline var DECO_BOOKCASE_TILE = 1.4;
+  public static inline var DECO_RACK_TILE = DECO_RACK_H / 2;
+  // how far a fitting's back stands off the wall FACE. far less than the lab kit's KIT_GAP, and for
+  // the reason that constant's header gives: this furniture is squared to the wall and takes no yaw
+  // jitter, so there is no swung corner for the gap to absorb — it is only there so a face and the
+  // masonry never z-fight
+  public static inline var DECO_GAP = 0.05;
+  // where the alpha-cut end frame stops being frame and starts being air. an OPAQUE alphaTest and
+  // not a transparent material: an alpha-tested opaque draws DoubleSide in ONE pass and still
+  // writes depth, which is what render.wild.WildGrass' own header records
+  public static inline var DECO_CUT = 0.5;
+
+  // the shelving's composite: two alpha-cut end frames, a bare quad per shelf and the boxes on
+  // them. NO BACK and NO TOP — an open steel unit has neither, and a lid is the one thing that
+  // could hide the top shelf's boxes from a camera pitched 51 degrees down.
+  //
+  // the shelf heights are the frame's OWN CROSS RAILS, MEASURED off the built alpha channel by
+  // binning opaque coverage per row of facility/deco-shelf-side (rails at 0.052, 0.287, 0.695 and
+  // 0.974 of the height, the last being the top rail, which carries no shelf). Read the other way
+  // round — three evenly spaced shelves against whatever the art happened to draw — a shelf floats
+  // between two rails and the unit reads as a wire cage with slabs inside it, which is how the
+  // first build shipped. The art is the source of truth here and the code follows it.
+  //
+  // the bottom shelf being OFF THE FLOOR is not cosmetic either: at 0 it is coplanar with the room
+  // floor and z-fights across its whole footprint
+  public static final DECO_SHELF_Y = [ 0.063, 0.381, 0.699 ];
+  // and where the frame stops, so the top bay knows how much room it has
+  public static inline var DECO_SHELF_TOP_Y = 0.954;
+  // boxes per shelf, and the size band each is rolled in — in WORLD UNITS and not as a fraction of
+  // the bay it lands in, which is what the first build did and what produced a single 1.6-wide
+  // monster whenever the roll came back with one box on a 2.6 shelf. A packing box is a packing
+  // box whatever it is standing on: at the half-metre unit WALL_H fixes, this is a 27-50 cm carton.
+  // the bay still CAPS it, so three on one shelf are three small ones and never three overlapping
+  public static inline var DECO_BOX_MAX = 3;
+  public static inline var DECO_BOX_W = 0.55;
+  public static inline var DECO_BOX_W_VAR = 0.45;
+  public static inline var DECO_BOX_H = 0.45;
+  public static inline var DECO_BOX_H_VAR = 0.30;
+  // and its depth, as a fraction of the shelf's. it is a CEILING and not the value: `boxes` shrinks
+  // it further so that the turned box's own swung corner still clears the shelf front, the same
+  // arithmetic KIT_GAP carries for the lab trolley
+  public static inline var DECO_BOX_D = 0.8;
+  // a free turn either side of square, radians, hashed off the box. ~14 degrees: boxes are PUT on a
+  // shelf, never squared to it, and a rank of axis-aligned cuboids is what made the first build
+  // read as one machined object rather than as stuff someone left there. the cardboard is tiled at
+  // WORLD scale along each turned face rather than mapped 0..1 across it, so nothing is stretched
+  // by the turn and no two boxes show the same patch
+  public static inline var DECO_BOX_YAW = 0.25;
+  public static inline var DECO_BOX_TILE = 0.5;
+
+  // the server rack's LIGHTS. one additive mesh for every rack in the compound, blinking off a
+  // shared clock with a per-light phase — see render.facility.FacilityDeco.lamps
+  public static inline var DECO_LED_ROWS = 6;
+  public static inline var DECO_LED_COLS = 3;
+  // one light's quad edge, world units. small enough to be a speck at this camera, which is what
+  // makes the bloom do the reading rather than the geometry (the watcher's eyes' own finding)
+  public static inline var DECO_LED_SIZE = 0.11;
+  // the band of the rack's front the field covers, as a fraction of its height — the top of the
+  // face, above whatever the art puts at the foot
+  public static inline var DECO_LED_Y0 = 0.30;
+  public static inline var DECO_LED_Y1 = 0.93;
+  // and how far proud of that face they sit, so the additive quad is never coplanar with it
+  public static inline var DECO_LED_EPS = 0.03;
+  // blink speed as a BASE_MS multiplier, and the depth of the dip. a UNIFORM and not a literal in
+  // the patched shader, so retuning either compiles nothing (the PropShine pulse's own note)
+  public static inline var DECO_LED_RATE = 0.35;
+  // 1.0 would switch a light fully OFF, which reads as a dead port rather than as traffic
+  public static inline var DECO_LED_DEPTH = 0.75;
+  // the two hues, mixed per light off its own vertex channel — so one mesh carries both. AMBER and
+  // GREEN because the compound is lit blue throughout (FacilityScene's ambient 0x46536b, moon
+  // 0x8294c0) and blue is the one accent that cannot read against it
+  public static inline var DECO_LED_AMBER = 0xffb066;
+  public static inline var DECO_LED_GREEN = 0x86ffa8;
+  // the HDR multiplier that carries a light over BLOOM_THRESHOLD, the same job GLOW does for the
+  // ceiling panels
+  public static inline var DECO_LED_GLOW = 2.6;
 
   // ---- doors -----------------------------------------------------------------------------------
 
