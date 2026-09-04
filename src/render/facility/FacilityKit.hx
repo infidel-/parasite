@@ -164,6 +164,20 @@ class FacilityKit
           var pw = (c.dir < 2 ? p.w : p.d) / 2;
           var pd = (c.dir < 2 ? p.d : p.w) / 2;
           ContactMask.prop(px - pw, px + pw, pz - pd, pz + pd);
+          // and the shadow on the wall behind, which the top-down field cannot reach — see
+          // render.facility.FacilityDetail.halos. `wall` above returns -1 on a cell with no masonry
+          // and the loop skipped it, so a placed prop always has a hand. THE YAW JITTER IS IGNORED
+          // here for the same reason it is above: 0.18 rad grows a trolley's box by 0.16 against a
+          // falloff of 0.53
+          FacilityDetail.stand({
+            col: c.col,
+            row: c.row,
+            dir: c.dir,
+            a0: (c.dir < 2 ? px : pz) - p.w / 2,
+            a1: (c.dir < 2 ? px : pz) + p.w / 2,
+            y: FacilityGround.surfY(Surf.TILE),
+            h: p.h,
+          });
         }
     }
 

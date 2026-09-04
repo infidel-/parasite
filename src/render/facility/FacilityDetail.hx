@@ -9,7 +9,7 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
-// the two pieces of fake ambient occlusion the compound's interior gets, and they are fake for the
+// the three pieces of fake ambient occlusion the compound's interior gets, and they are fake for the
 // same reason and different SHAPES for a reason of their own.
 //
 // `masonry` is the floor crease, and it emits no geometry at all — it hands rectangles to
@@ -29,8 +29,34 @@ import render.world.VisionMask;
 // tiling failure that killed the floor strips cannot happen here, because a corner is a POINT
 // feature and not a RUN — each strip stands on one face of one notch, meets nothing, and has nothing
 // to fail to meet.
+//
+// `halos` is the shadow a thing STANDING against a wall lays on it, and it is a quad for exactly the
+// corner's reason. The floor already knows: every builder that stands something indoors hands its
+// footprint to ContactMask.prop and the field darkens the tile under it. The wall knew nothing —
+// measured on a shelving unit, the floor at its foot reads 67.6 against 79.1 of open floor while the
+// masonry beside it reads 63.93 against the same run's 63.95 a few units along. 11.5/255 on one
+// surface and 0.02 on the other, so every fitting and every piece of lab kit met its wall on a hard
+// line. And the field cannot reach it: ContactMask is top-down and a wall face is vertical. A
+// standing thing is a POINT — one known cuboid on one known plane, meeting nothing — so it is one
+// quad, and the whole compound's worth of them merge into one mesh and one draw call.
+//
+// WHAT IS IN AND WHAT IS NOT follows from that same word. The fittings (render.facility.FacilityDeco)
+// and the lab kit (FacilityKit) are isolated: one object, one cell, one wall, and both already
+// compute the hand it is on. The BENCHES and the corridor casework are RUNS — FacilityTables emits
+// per bench CELL with no hand at all, and its cabinet `unit` is called once per cell inside a run —
+// so a quad each would OVERLAP along the wall, and two of these at 0.5 compound to 0.75, which is the
+// bug CORNER_EPS below exists for. They would want their runs merged first.
 class FacilityDetail
 {
+  // the four cell-edge directions, in render.facility.FacilityGeom's own numbering:
+  // 0 = -z, 1 = +z, 2 = -x, 3 = +x
+  static var DC = [0, 0, -1, 1];
+  static var DR = [-1, 1, 0, 0];
+
+  // what `stand` has collected since the last drain. a list rather than a walk of the model for the
+  // reason ContactMask.propRects is one: a thing's position is not known until its own builder has
+  // run, and re-deriving it here would be re-deriving FacilityDeco's slab clamp backwards
+  static var standing:Array<FacilityHaloOpts> = [];
 // every rectangle of masonry in the compound, as the SOLID boxes and the HOLES punched back out of
 // them. ContactMask paints them in that order.
 //
@@ -119,7 +145,71 @@ class FacilityDetail
                 }, cx, cz);
               }
           }
-      add(scene, b);
+      add(scene, b, Textures.makeShadowGradient(), FacilityStyle.CORNER_ALPHA);
+    }
+
+// collect one wall-hugging thing's silhouette. called by the builders as they place, exactly as
+// render.world.ContactMask.prop is and beside it; nothing is drawn until `halos`
+  public static function stand(o:FacilityHaloOpts):Void
+    standing.push(o);
+
+// every collected silhouette as ONE mesh, and the list CLEARED.
+//
+// the clear is load-bearing and not tidiness: render.facility.FacilityWarm runs FacilityDeco.build
+// over FacilityModel.demo(), so a drain that did not empty the list would carry the warm scene's
+// three fittings into the first real compound as quads floating at demo-model coordinates. Calling
+// this from the warm pass is therefore not optional either — and it warms the program for free.
+//
+// CALL IT AFTER THE LAST BUILDER THAT STANDS SOMETHING AGAINST A WALL, which is FacilityKit
+  public static function halos(scene:Scene, m:Facility):Void
+    {
+      var b = MeshBufTools.make();
+      for (o in standing)
+        halo(b, m, o);
+      standing = [];
+      add(scene, b, Textures.makeRectGlowGradient(0, FacilityStyle.HALO_CORE / 2,
+        FacilityStyle.HALO_FADE), FacilityStyle.HALO_ALPHA);
+    }
+
+// one silhouette, on the room-facing plane of the masonry behind it.
+//
+// THE QUAD IS THE OBJECT BLOWN UP BY 1 / HALO_CORE about its own centre, and that one line is the
+// whole sizing: the art is a rounded-box field that is opaque over the middle HALO_CORE of itself
+// and fades out over HALO_FADE beyond, so scaling the object by the inverse lands the opaque part
+// exactly on the object and the falloff exactly outside it. Nothing here picks a reach — see
+// FacilityStyle.HALO_CORE for the fades that fall out of it.
+//
+// CLAMPED ALONG THE WALL and not up it. FacilityGeom.slab insets a face by a unit wherever the wall
+// line stops there, so a quad grown past its object's ends can hang off the end of the masonry and
+// draw a gradient on open air; the vertical overhang has nowhere to go wrong, and the part below the
+// floor is hidden by the floor itself. `u` is taken off the UNCLAMPED span, so a clamp CUTS the
+// falloff rather than squeezing it — the stretch this repo does not do
+  static function halo(b:MeshBuf, m:Facility, o:FacilityHaloOpts):Void
+    {
+      var s = FacilityGeom.slab(m, o.col + DC[o.dir], o.row + DR[o.dir]);
+      var p = FacilityGeom.plane(s, o.dir ^ 1, FacilityStyle.HALO_EPS);
+      var g = (1 / FacilityStyle.HALO_CORE - 1) / 2;
+      var qa0 = o.a0 - (o.a1 - o.a0) * g;
+      var qa1 = o.a1 + (o.a1 - o.a0) * g;
+      var qy0 = o.y - o.h * g;
+      var qy1 = o.y + o.h * (1 + g);
+      var ca0 = Math.max(qa0, o.dir < 2 ? s.x0 : s.z0);
+      var ca1 = Math.min(qa1, o.dir < 2 ? s.x1 : s.z1);
+      if (ca1 - ca0 < 0.01)
+        return;
+      // the collapsed axis comes from the plane and the running one from the clamp, which of the two
+      // being which is what `dir` says
+      var e = FacilityGeom.ends(
+        (o.dir < 2 ? ca0 : p.x0), (o.dir < 2 ? ca1 : p.x1),
+        (o.dir < 2 ? p.z0 : ca0), (o.dir < 2 ? p.z1 : ca1), o.dir ^ 1);
+      // and WHICH end of the wound quad is which is measured off the world coordinate rather than
+      // cased per direction, the same call `post` above makes and for the same reason: `ends` winds
+      // a face differently per dir, and hand-casing it would be re-deriving that table backwards
+      var ua = ((o.dir < 2 ? e[0] : e[1]) - qa0) / (qa1 - qa0);
+      var ub = ((o.dir < 2 ? e[2] : e[3]) - qa0) / (qa1 - qa0);
+      MeshBufTools.quad(b,
+        [e[0], qy0, e[1]], [e[2], qy0, e[3]], [e[2], qy1, e[3]], [e[0], qy1, e[1]],
+        [ua, 0, ub, 0, ub, 1, ua, 1]);
     }
 
 // one strip: the whole height of one notch face, opaque where that face meets its perpendicular twin
@@ -147,27 +237,29 @@ class FacilityDetail
         [0.5, va, 0.5, vb, 0.5, vb, 0.5, va]);
     }
 
-// every strip in the compound as ONE mesh.
+// one buffer of dark quads as ONE mesh. shared by the corner strips and the standing halos, which
+// differ in nothing but their ramp and their weight — two calls and two programs, because an
+// alphaMap is a material and a material is a draw call.
 //
 // BASIC and not Lambert, unlike the grime band beside it: this is not a surface taking the room's
 // light, it is the absence of light, and a lit black quad would brighten with the wall it is meant
 // to be darkening. It is the tunnels' own choice for the same quads.
 //
 // FrontSide matters and is worth a draw call: three renders a transparent DoubleSide material as TWO
-// single-side passes, measured 36 -> 34 in the habitat. Each strip faces the room it is in and is
+// single-side passes, measured 36 -> 34 in the habitat. Each quad faces the room it is in and is
 // never seen from behind.
 //
 // `transparent` is set AFTER VisionMask.patch, the order render.facility.FacilityGeom.addPane and
 // FacilityGrime both need: the mask reads that flag at patch time to choose its branch, and set
 // first it would fade a hidden strip OUT rather than sinking it toward the fog with its wall
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, ramp:Texture, alpha:Float):Void
     {
       if (b.idx.length == 0)
         return;
       var mat = VisionMask.patch(new MeshBasicMaterial({
         color: 0x000000,
-        alphaMap: Textures.makeShadowGradient(),
-        opacity: FacilityStyle.CORNER_ALPHA,
+        alphaMap: ramp,
+        opacity: alpha,
         depthWrite: false,
         side: THREE.FrontSide,
       }));

@@ -683,6 +683,35 @@ class FacilityStyle
   // own value and the same reasoning
   public static inline var CORNER_EPS = 0.07;
 
+  // ---- the shadow a thing STANDING against a wall lays on it (render.facility.FacilityDetail) -----
+
+  // THE REACH IS NOT A KNOB HERE EITHER, and this time it is the ART that fixes it.
+  // Textures.makeRectGlowGradient draws a rounded-box field that is opaque over the middle HALO_CORE
+  // of the canvas and fades out over HALO_FADE beyond it, so FacilityDetail.halo sizes its quad as
+  // the object divided by HALO_CORE and the falloff lands OUTSIDE the object by
+  // HALO_FADE / HALO_CORE = 0.2667 of the object's own size on each axis. What that gives, against
+  // CONTACT.blur 0.7 and the sweep that found no depth cost below about 1.0:
+  //   shelving 2.6 x 2.6 -> 0.69 / 0.69     bookcase 1.68 x 2.8 -> 0.45 / 0.75
+  //   rack 1.6 x 2.9     -> 0.43 / 0.77     gas rack 2.63 x 3.0 -> 0.70 / 0.80
+  //   trolley 1.98 x 2.0 -> 0.53 / 0.53
+  // every one of them in range, which is why these are the generator's own defaults and not a fitted
+  // pair. a BIGGER object throwing a WIDER halo is also the right way round, and it is free here.
+  // the tallest quad tops out at the gas rack's 3.0 + 0.333 * 3.0 = 4.0, well under WALL_H 6.0
+  public static inline var HALO_CORE = 0.60;
+  public static inline var HALO_FADE = 0.16;
+  // how dark it goes where the object meets the masonry. it BUILT at the corner strip's own 0.5 —
+  // the only other thing in the compound doing this job, and the two are read side by side in a room
+  // corner — and that was rejected on looks as too heavy. measured on one pinned pose against the
+  // mesh hidden: 0.5 puts max 27.7/255 on the wall and takes the touch line down 44%, which reads as
+  // a painted shadow rather than as contact; 0.32 is max 16.7 and 27%. A CORNER AND A FITTING ARE NOT
+  // THE SAME WEIGHT — the corner is masonry meeting masonry over a whole 6-unit column, this is a
+  // cabinet resting against a wall, and matching them was an assumption and not a measurement
+  public static inline var HALO_ALPHA = 0.32;
+  // proud of the wall face. it must clear GRIME_EPS 0.05 AND CORNER_EPS 0.07, because a fitting can
+  // stand in a corner and the damp band runs behind every one of them: this quad is the outermost of
+  // the three and draws last. a PHYSICAL gap and never polygonOffset, the same reasoning as above
+  public static inline var HALO_EPS = 0.09;
+
   // ---- windows ---------------------------------------------------------------------------------
 
   // the window art's own width:height over its OPAQUE CONTENT — measured off the source, not the

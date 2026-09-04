@@ -145,6 +145,9 @@ class FacilityDeco
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
       var dir = wall(m, col, row);
+      // remembered, because the fallback below FORCES a hand on a unit that has none and the wall
+      // shadow must not be laid on masonry that is not there
+      var hasWall = (dir >= 0);
       var x0 = cx - w / 2, x1 = cx + w / 2;
       var z0 = cz - d / 2, z1 = cz + d / 2;
       if (dir < 0)
@@ -195,6 +198,18 @@ class FacilityDeco
       // the floor pool under it, on the plain rect — the field is what darkens the tile a standing
       // thing sits on, and it is repainted once after every prop pass has placed
       ContactMask.prop(x0, x1, z0, z1);
+      // and the other half of the same job, on the wall behind: the field is top-down and cannot
+      // reach a vertical face, so that one is a quad. see render.facility.FacilityDetail.halos
+      if (hasWall)
+        FacilityDetail.stand({
+          col: col,
+          row: row,
+          dir: dir,
+          a0: (dir < 2 ? x0 : z0),
+          a1: (dir < 2 ? x1 : z1),
+          y: y,
+          h: h,
+        });
       // the axis the wall does NOT lie on: the two ends of any of these
       var head = (dir < 2 ? 2 : 0);
       switch (kind)

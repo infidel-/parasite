@@ -175,6 +175,11 @@ class FacilityArea implements Area3D
       // stands outdoors, where the mask reads 1
       for (p in FacilityKit.props(scene, model))
         green.push(p);
+      // and now that every family that stands something against a WALL has placed, the halos those
+      // things lay on the masonry behind them. after the damp band and the corner strips, which is
+      // the same construction-order fact recorded above and what this quad's larger eps says it
+      // should be: it stands proud of both and so has to draw over both
+      FacilityDetail.halos(scene, model);
       // and now that every family that stands something on an interior floor has placed, the contact
       // field is repainted with their footprints in it. it CANNOT be done in the attach above: a
       // prop's position is not known until its builder runs, and attach has to come first because

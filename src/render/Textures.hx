@@ -196,11 +196,18 @@ class Textures {
   // wall fixture's diffuser, wrong for the patch of ground outside a window, which has the straight
   // edges of the opening that cut it. pass 0 for a box with square corners; the falloff still curves
   // round them, which is what a soft edge does
-  public static function makeRectGlowGradient(radFrac:Float = 0.16):Texture {
+  //
+  // `halfFrac` and `softFrac` are the shape's other two numbers, defaulted to what every glow here
+  // was drawn with. They are arguments and not literals because one caller SIZES ITS QUAD off them:
+  // render.facility.FacilityDetail.halo scales an object by 1 / (2 * halfFrac) so the opaque core
+  // lands exactly on the object, and mirroring 0.30 over there would be a silent coupling across two
+  // files that a retune here would break without a compile error
+  public static function makeRectGlowGradient(radFrac:Float = 0.16, halfFrac:Float = 0.30,
+      softFrac:Float = 0.16):Texture {
     var N = 64;
     var rad = N * radFrac; // corner radius, canvas px
-    var half = N * 0.30;  // half-extent of the box's straight section from the centre
-    var soft = N * 0.16;  // how far the edge fades out past the box
+    var half = N * halfFrac;  // half-extent of the box's straight section from the centre
+    var soft = N * softFrac;  // how far the edge fades out past the box
     var cv = Browser.document.createCanvasElement();
     cv.width = N; cv.height = N;
     var ctx = cv.getContext2d();

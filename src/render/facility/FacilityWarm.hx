@@ -56,6 +56,12 @@ class FacilityWarm
       // the program key — plus the rack lights' own patched additive material. the demo model stamps
       // one cell of each kind for exactly this reason, see FacilityModel.demo
       FacilityDeco.build(sc, model);
+      // and the halos those three just handed over, which is a program permutation of its own (a
+      // mask-patched transparent basic with an alphaMap) AND NOT OPTIONAL FOR A SECOND REASON:
+      // FacilityDetail.halos is what CLEARS the collector, so skipping it here would carry these
+      // three demo-model quads into the first real compound. the demo stamps its fittings against
+      // the north room's wall, so all three land
+      FacilityDetail.halos(sc, model);
       // the door leaves are an INSTANCED mask-patched lambert, which the merged shell above does not
       // cover: USE_INSTANCING is a program define, so the walls' own program is a different one. no
       // area behind the demo model, so every leaf here is shut and stays that way
