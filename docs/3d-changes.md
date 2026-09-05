@@ -8,6 +8,36 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## The corridor floor goes blue-cyan, and the value does not move (2026-09-05)
+
+Called on the game: drab grey was already everywhere indoors. `facility/floor-lino` had been re-rolled
+PERFECTLY NEUTRAL one repaint earlier, so this is that clause inverted rather than a lift on top of it
+— hue is fixed by re-rolling, and a gamma cannot put a cast in any more than it can take one out.
+
+**THE VALUE IS THE PART THAT HAD TO SURVIVE.** The corridor's brightness is not a taste number: it is
+the room's own floor:wall ratio (0.12 / 0.1394 = **0.861**) applied to the corridor's own wall,
+`facility/wall-interior` at 0.1595, which is what makes a corridor read as light walls over a slightly
+darker floor exactly as a room does. New drop 116.9/135.5/140.3 = **0.2358 linear**, so `lift` was
+re-solved against the drop rather than carried over: **1.361 → 1.38**, landing 0.1365 against the grey
+roll's 0.1361. Same surface, same ladder, different hue.
+
+**MEASURED AGAINST ITS OWN WALL IN ONE LIGHTING BAND**, which is the only comparison worth making
+indoors: floor **60.2/95.5/107.2** (G−B **−11.7**) against the wall at 66.4/77.2/79.9 (G−B −2.7 — the
+number every neutral surface here sits at, because the rig is blue). So the tint is **9 points of cyan
+beyond the ambient**, with R 6 under the wall's and B 27 over it, and not just the blue rig showing
+through a grey.
+
+**THE 24.9 BYTE SPREAD IS DELIBERATE AND DOES NOT BREAK THE >6 RE-ROLL RULE.** That rule exists
+because a lift PUBLISHES a cast nobody asked for — the olive drop's whole story. Here the cast is the
+brief, so the gamma widening the drop's 23.4 to 24.9 is the knob working. What did carry over from
+that story is the spec: the prompt names the bytes outright (**88/104/112**) instead of saying "light
+blue", because a chroma target is unreachable from prose.
+
+One wrinkle worth knowing: `filename_prefix` was `facility-floor-lino`, and `make adopt` strips only
+the `image-<ts>-<hash>-` part, so the source landed as `facility/facility-floor-lino.png` rather than
+`facility/floor-lino.png`. `src` points at what is actually there instead of moving a generated drop
+by hand; the superseded grey is on the `unused/` shelf as `facility-floor-lino-grey.png`.
+
 ## The plate under the box gets the wall halo laid flat (2026-09-05)
 
 The other half of "shadows on the shelves". The box's vertex channel darkens its own SIDES down to
