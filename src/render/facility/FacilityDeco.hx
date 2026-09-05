@@ -340,16 +340,40 @@ class FacilityDeco
           var ext = bw / 2 * c + hd * s;
           var lo = a0 + ext, hi = a0 + span * n - ext;
           ac = (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, ac)));
+          var cx = (dir < 2 ? ac : dc);
+          var cz = (dir < 2 ? dc : ac);
+          var hw = (dir < 2 ? bw : 2 * hd) / 2;
+          var hdd = (dir < 2 ? 2 * hd : bw) / 2;
           crate(b, {
-            cx: (dir < 2 ? ac : dc),
-            cz: (dir < 2 ? dc : ac),
-            hw: (dir < 2 ? bw : 2 * hd) / 2,
-            hd: (dir < 2 ? 2 * hd : bw) / 2,
+            cx: cx,
+            cz: cz,
+            hw: hw,
+            hd: hdd,
             y0: y,
             y1: y + bh,
             yaw: yaw,
             ph: ((hh >>> 14) % 1000) / 1000,
             ao: ao,
+          });
+          // and the shadow it lays on the plate under it, which the box's own vertex shading cannot
+          // be: that darkens the box's SIDES down to the plate, and this is the patch of plate the
+          // box sits in. render.world.ContactMask does the same job on the floor and cannot reach a
+          // shelf two units up — it is one top-down field, so a box up here would darken the tile
+          // below the whole unit. emitted from HERE and not from `crate` because the clamp needs the
+          // plate's own extent, which is this function's argument
+          FacilityDetail.pool({
+            cx: cx,
+            cz: cz,
+            hw: hw,
+            hd: hdd,
+            yaw: yaw,
+            y: y,
+            plate: {
+              x0: x0,
+              x1: x1,
+              z0: z0,
+              z1: z1,
+            },
           });
         }
     }

@@ -40,12 +40,20 @@ import render.world.VisionMask;
 // standing thing is a POINT — one known cuboid on one known plane, meeting nothing — so it is one
 // quad, and the whole compound's worth of them merge into one mesh and one draw call.
 //
-// WHAT IS IN AND WHAT IS NOT follows from that same word. The fittings (render.facility.FacilityDeco)
-// and the lab kit (FacilityKit) are isolated: one object, one cell, one wall, and both already
-// compute the hand it is on. The BENCHES and the corridor casework are RUNS — FacilityTables emits
-// per bench CELL with no hand at all, and its cabinet `unit` is called once per cell inside a run —
-// so a quad each would OVERLAP along the wall, and two of these at 0.5 compound to 0.75, which is the
-// bug CORNER_EPS below exists for. They would want their runs merged first.
+// A RUN IS A POINT ONCE YOU MERGE IT, which is what took the benches and the corridor casework the
+// long way round. The fittings (render.facility.FacilityDeco) and the lab kit (FacilityKit) went in
+// first because each is one object on one cell with the hand of its wall already computed;
+// FacilityTables emits per bench CELL with no hand at all and calls its cabinet `unit` once per cell
+// inside a run, so a quad each would OVERLAP along the wall and two of these at 0.5 compound to
+// 0.75 — the bug CORNER_EPS below exists for. FacilityTables.halos finds the runs with the same
+// claimed-per-direction walk its cabinets already use, and one merged run is then a point like any
+// other. `len` on the opts is what a merged one carries, and 1 is a single object.
+//
+// `pool` is the SAME QUAD LAID FLAT, under a box on a shelf plate, and it is here rather than a
+// second family because it shares the mesh, the ramp and the weight — the wall gets the shadow of a
+// thing standing against it, a shelf gets the shadow of a thing standing on it, and the compound's
+// FLOOR field cannot reach either. See `pooled` for the one thing that differs: a plate is small, so
+// the quad is shrunk to stay on it.
 class FacilityDetail
 {
   // the four cell-edge directions, in render.facility.FacilityGeom's own numbering:
@@ -57,6 +65,9 @@ class FacilityDetail
   // reason ContactMask.propRects is one: a thing's position is not known until its own builder has
   // run, and re-deriving it here would be re-deriving FacilityDeco's slab clamp backwards
   static var standing:Array<FacilityHaloOpts> = [];
+
+  // and what `pool` has collected, drained by the same call and into the same buffer
+  static var lying:Array<FacilityPoolOpts> = [];
 // every rectangle of masonry in the compound, as the SOLID boxes and the HOLES punched back out of
 // them. ContactMask paints them in that order.
 //
@@ -153,6 +164,11 @@ class FacilityDetail
   public static function stand(o:FacilityHaloOpts):Void
     standing.push(o);
 
+// collect one thing standing on a surface that is NOT the floor — a box on a shelf plate. same
+// collector, same drain, same mesh; the quad is laid flat instead of stood up
+  public static function pool(o:FacilityPoolOpts):Void
+    lying.push(o);
+
 // every collected silhouette as ONE mesh, and the list CLEARED.
 //
 // the clear is load-bearing and not tidiness: render.facility.FacilityWarm runs FacilityDeco.build
@@ -167,6 +183,9 @@ class FacilityDetail
       for (o in standing)
         halo(b, m, o);
       standing = [];
+      for (o in lying)
+        pooled(b, o);
+      lying = [];
       add(scene, b, Textures.makeRectGlowGradient(0, FacilityStyle.HALO_CORE / 2,
         FacilityStyle.HALO_FADE), FacilityStyle.HALO_ALPHA);
     }
@@ -226,6 +245,55 @@ class FacilityDetail
       MeshBufTools.quad(b,
         [e[0], qy0, e[1]], [e[2], qy0, e[3]], [e[2], qy1, e[3]], [e[0], qy1, e[1]],
         [ua, 0, ub, 0, ub, 1, ua, 1]);
+    }
+
+// one TURNED horizontal quad, on the plate the thing stands on.
+//
+// the wall halo laid flat, and it is here rather than on the shelf's own surface for the reason the
+// wall one is not a field: a box's footprint is a patch INSIDE one plate quad, and a vertex channel
+// cannot paint a patch inside a quad — it can only ramp between its corners. Subdividing the plate
+// to hold one would cost more geometry than the quad does, and the plate is shared with the rack's
+// sides in B_SHELF_TOP anyway.
+//
+// TURNED WITH ITS BOX: the quad is built in the box's own frame and rotated out of it, so a box that
+// was set down askew has a shadow that is askew with it. The plate is axis-aligned and the quad is
+// not, which is what the clamp below has to live with — it measures the room on the box's
+// AXIS-ALIGNED extent and then spends it on a LOCAL margin, which is conservative by the corner's
+// own swing and nothing worse, at DECO_BOX_YAW's 0.25 rad.
+//
+// CLAMPED PER SIDE AND CUT, NEVER SQUEEZED, which is the wall halo's own rule and here it is what
+// makes the thing work at all. The plate rarely has the whole reach: a box fitted to the full depth
+// FacilityDeco.boxes allows leaves 0.17 of a 1.67-deep shelf, and one pushed against the end of a
+// 2.6 run leaves nothing at all on that side. Shrinking the whole quad by its tightest side (built
+// that way first) drops it to nothing and 3 of 12 boxes came out with NO shadow, because `boxes`
+// fits its big ones by an equality and their room is exactly zero. Each side takes the room it
+// actually has instead; the art stays centred on the BOX and not on the quad, and a clamped side's
+// uv is cut off the IDEAL reach — so the falloff stops where the plate does and nowhere else
+  static function pooled(b:MeshBuf, o:FacilityPoolOpts):Void
+    {
+      var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
+      var a = Math.abs(s);
+      var ax = o.hw * c + o.hd * a;
+      var az = o.hw * a + o.hd * c;
+      var rw = o.hw * FacilityStyle.POOL_GROW;
+      var rd = o.hd * FacilityStyle.POOL_GROW;
+      var mw0 = Math.min(rw, Math.max(0, o.cx - ax - o.plate.x0));
+      var mw1 = Math.min(rw, Math.max(0, o.plate.x1 - o.cx - ax));
+      var md0 = Math.min(rd, Math.max(0, o.cz - az - o.plate.z0));
+      var md1 = Math.min(rd, Math.max(0, o.plate.z1 - o.cz - az));
+      var lx = [-(o.hw + mw0), o.hw + mw1];
+      var lz = [-(o.hd + md0), o.hd + md1];
+      var u = [0.5 + 0.5 * lx[0] / (o.hw + rw), 0.5 + 0.5 * lx[1] / (o.hw + rw)];
+      var v = [0.5 + 0.5 * lz[0] / (o.hd + rd), 0.5 + 0.5 * lz[1] / (o.hd + rd)];
+      // wound so the face looks UP: this is the only quad here that is not vertical, and FrontSide on
+      // the shared material would cull a back-facing one to nothing
+      var y = o.y + FacilityStyle.POOL_EPS;
+      MeshBufTools.quad(b,
+        [o.cx + lx[0] * c - lz[1] * s, y, o.cz + lx[0] * s + lz[1] * c],
+        [o.cx + lx[1] * c - lz[1] * s, y, o.cz + lx[1] * s + lz[1] * c],
+        [o.cx + lx[1] * c - lz[0] * s, y, o.cz + lx[1] * s + lz[0] * c],
+        [o.cx + lx[0] * c - lz[0] * s, y, o.cz + lx[0] * s + lz[0] * c],
+        [u[0], v[1], u[1], v[1], u[1], v[0], u[0], v[0]]);
     }
 
 // one strip: the whole height of one notch face, opaque where that face meets its perpendicular twin

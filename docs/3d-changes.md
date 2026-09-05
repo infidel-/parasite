@@ -8,6 +8,57 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## The plate under the box gets the wall halo laid flat (2026-09-05)
+
+The other half of "shadows on the shelves". The box's vertex channel darkens its own SIDES down to
+the plate; the patch of PLATE the box sits in still had nothing, so a box met the shelf on the same
+hard line a fitting used to meet its wall on.
+
+**NEITHER OF THE TWO THINGS ALREADY THERE CAN DO IT.** `ContactMask` is one top-down field painted
+from footprints with no Y, so a box on shelf 2 would darken the floor tile under the whole unit. And
+the vertex channel cannot either, which is the part worth writing down: a box's footprint is a patch
+INSIDE one plate quad, and a channel only ramps between a quad's corners — painting a patch means
+subdividing the plate, which lives in `B_SHELF_TOP` with the rack's two sides and its top.
+
+**SO IT IS THE WALL HALO, LAID FLAT.** New `FacilityDetail.pool` is the same collector, the same
+drain, the same merged mesh, the same ramp and the same `HALO_ALPHA` as `stand`. **12 quads, +24
+triangles, +0 draw calls, +0 programs, 0 art.** The halo mesh went 62 → 74 quads with `calls` 75 and
+`programs` 91 unchanged, and read 74 again after a reload — the drain's clear still holds. Measured
+against the 12 quads collapsed at one pinned pose: **max 10.3/255 over 1.9% of the unit**.
+
+**THE REACH IS THE ONE NUMBER THE WALL HALO DOES NOT SHARE, AND WITH THIS RAMP IT COSTS THE CONTACT
+LINE.** Up there the quad is the object over `HALO_CORE`, so the art's opaque core lands exactly on
+the object's edge — and that pins the visible ring at **0.533 of the object's half-extent**, which is
+locked by the art. It is too wide for a 0.55-wide box on a 1.67-deep plate. **A single linear uv over
+a single ramp cannot narrow it**: pinning both edges of the box at the core boundary DETERMINES the
+slope, and with it the ring. So the core is allowed to shrink INSIDE the footprint instead — the quad
+is the box plus `POOL_GROW` 0.4 of its own half-extent with the art mapped 0..1 over that — which
+costs nothing where the box is standing. Ring **0.533 → 0.288** of the half-extent and the peak
+**27.7 → 10.3**, because the box's own edge now sits partway down the falloff at 0.66 alpha. Holding
+the core on the edge AND narrowing the ring wants a second ramp with its own `halfFrac`, i.e. a
+second alphaMap, a second material and the draw call this whole family exists to avoid.
+
+**TURNED WITH ITS BOX.** Built axis-aligned first and reported from the game as not respecting the
+box's angle, which it did not: a rotated rect clamped against an axis-aligned plate is no longer a
+quad, so the first cut used the turned box's AABB. Building the quad in the box's own frame and
+rotating it out costs one thing — the clamp measures the room on the AABB and then spends it on a
+LOCAL margin, which is conservative by the corner's swing. Measured on the built geometry: edge
+bearings **−14.0 to +12.7 degrees** against `DECO_BOX_YAW`'s ±14.3, and the worst quad overhangs its
+plate by **0.04 units**, inside the fade's own tail.
+
+**CUT PER SIDE, BECAUSE SHRINKING BY THE TIGHTEST SIDE GIVES 3 OF 12 BOXES NOTHING.** The plate
+rarely has the whole reach: a full-depth box leaves 0.17 of a 1.67-deep shelf and one against the end
+of a 2.6 run leaves nothing on that side. Built first as one scalar, the largest fraction that fits
+all four sides — **9 pool quads came out for 12 boxes**, because `FacilityDeco.boxes` fits its big
+ones EXACTLY (`hd = (deep/2 − bw/2·sin)/cos` is an equality), so the room is 0 and so is the scalar.
+Each side takes the room it actually has instead, with the art centred on the BOX rather than on the
+quad and a clamped side's uv cut off the ideal reach, so the falloff stops where the plate does.
+
+`POOL_EPS` is **0.01** and not `HALO_EPS` 0.09. That ladder is a WALL ladder — it clears the grime
+band and the corner strips, which are other things drawn on the same masonry — and there is nothing
+else on a shelf plate. 0.09 in a 0.83 bay is a ninth of the bay and at the camera's 51 degrees it
+slides the shadow 0.07 out from under its box.
+
 ## The benches and the casework get the wall halo too — a RUN is a point once you merge it (2026-09-05)
 
 The half the halo pass held back. The fittings and the lab kit went in because each is one object on

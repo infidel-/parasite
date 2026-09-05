@@ -734,6 +734,23 @@ class FacilityStyle
   // stand in a corner and the damp band runs behind every one of them: this quad is the outermost of
   // the three and draws last. a PHYSICAL gap and never polygonOffset, the same reasoning as above
   public static inline var HALO_EPS = 0.09;
+  // and the same quad laid FLAT, under a box on a shelf plate — see FacilityDetail.pool. it stands
+  // off by a tenth of the wall halo's gap and not by the same number, because the ladder that fixes
+  // that one is a WALL ladder: GRIME_EPS and CORNER_EPS are other things drawn on the same masonry,
+  // and there is nothing else on a shelf plate to get above. 0.09 in a 0.83 bay is a ninth of the
+  // bay, and at the camera's 51 degrees it slides the shadow 0.07 out from under its box
+  public static inline var POOL_EPS = 0.01;
+  // and its REACH, which is the one number here the wall halo does not share. Up there the quad is
+  // the object divided by HALO_CORE, so the art's opaque core lands exactly on the object's edge and
+  // the ring outside it is a fixed 0.533 of the object's half-extent — locked by the art. Down here
+  // that ring is too wide for a 0.55-wide box on a 1.67-deep plate, and the ONLY way to narrow it
+  // with this ramp is to let the core shrink INSIDE the footprint, which costs nothing because the
+  // box is standing on it: the quad is the box plus POOL_GROW of its own half-extent with the art
+  // mapped 0..1 over that, so the falloff starts under the box and the visible ring comes out
+  // 0.92 * (1 + POOL_GROW) - 1 = 0.29 of the half-extent. A second ramp with its own halfFrac would
+  // hold the core on the edge AND narrow the ring, and it would also be a second alphaMap, a second
+  // material and the draw call this whole family exists to avoid
+  public static inline var POOL_GROW = 0.4;
 
   // ---- windows ---------------------------------------------------------------------------------
 
