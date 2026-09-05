@@ -133,6 +133,10 @@ typedef Facility = {
   // the kind is derived from the decoration's ATLAS FRAME (Const.fittingOf) rather than persisted
   // on the object: the frames were already in every save, so this needs no migration
   deco:Array<Array<Int>>,
+  // which cells stand an objects.FloorDrain. the OBJECT and not `Surf.GRATE`: the generator lays a
+  // grate TILE on one cell of every chemistry lab and then stands a drain on it only 30% of the
+  // time, so the surface says where a drain COULD be and the object says where one is
+  drain:Array<Array<Bool>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
 };
@@ -179,6 +183,7 @@ class FacilityModel
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
+        drain: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };
     }
@@ -531,8 +536,16 @@ class FacilityModel
     {
       for (o in area.getObjects())
         {
-          if (o.type != 'decoration' ||
-              !inside(m, o.x, o.y))
+          if (!inside(m, o.x, o.y))
+            continue;
+          // the drain rides this pass rather than earning its own: it is the same question asked of
+          // the same objects, and it is an OBJECT and not a tile for the reason `drain` records
+          if (o.type == 'floor_drain')
+            {
+              m.drain[o.y][o.x] = true;
+              continue;
+            }
+          if (o.type != 'decoration')
             continue;
           var kind = Const.fittingOf(o.imageRow, o.imageCol);
           if (kind < 0)

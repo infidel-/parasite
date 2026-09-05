@@ -157,6 +157,9 @@ class FacilityStyle
   public static inline var DECO_RACK = 'textures/facility/deco-rack.png';
   public static inline var DECO_RACK_SIDE = 'textures/facility/deco-rack-side.png';
   public static inline var DECO_RACK_TOP = 'textures/facility/deco-rack-top.png';
+  // and the floor drain, which is a FITTING IN THE FLOOR and reaches the 3D view the same way the
+  // rest of this family did: as geometry, not as its atlas icon laid flat. See DECO_DRAIN_SZ
+  public static inline var DECO_DRAIN = 'textures/facility/floor-grate.png';
   // the lit glazing, ONE ART PER RUN LENGTH — three panes and two. a run maps one unit of u across
   // its whole length, so how many panes it shows is a property of the image (see WINDOW_ASPECT_2,
   // which carries the argument and the measurements)
@@ -490,6 +493,20 @@ class FacilityStyle
   // and v lands on exactly 2.0
   public static inline var DECO_RACK_H = DECO_RACK_W * 2;
   public static inline var DECO_RACK_D = 1.2;
+  // the floor drain's side, world units, and it is a MEASUREMENT and not a choice: the atlas icon it
+  // replaces drew on a render.particles.Sprites quad of SIZE 3.0 with its art occupying the middle
+  // 32 px of a 64 px cell, i.e. 1.5 units. Kept to the pixel so the swap changes the RESOLUTION and
+  // nothing else — 32 texels over 1.5 units is 21 per unit against the floor tile's own 73, which is
+  // the blur that was reported; a 256 source over the same 1.5 units is 170.
+  //
+  // the art fills its image edge to edge (unlike the atlas cell, which centres it in an alpha
+  // margin), so mapping the source 0..1 over this square reproduces the icon's on-screen size
+  public static inline var DECO_DRAIN_SZ = 1.5;
+  // and how far it floats over the floor it is set into. a FLOOR eps and nothing to do with the wall
+  // ladder (GRIME/CORNER/HALO) — the neighbour here is one opaque floor quad, so this only has to
+  // beat depth precision. the atlas sprite it replaces sat at 0.05, which is five times what that
+  // needs and reads as a plate lying ON the floor rather than a grate set INTO it
+  public static inline var DECO_DRAIN_EPS = 0.01;
   // the TILING faces' periods, in world units. these are material scales and nothing else — a
   // perforation pitch, a wood grain, a rack's unit height — so they are chosen against the thing
   // they draw and never against the unit's own size the way the first build's were

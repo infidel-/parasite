@@ -8,6 +8,78 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## An atlas icon caps a floor fitting at 32 texels: the drain becomes geometry (2026-09-06)
+
+Reported as blurry, standing on it. Measured live: the drain drew on a `Sprites` quad of **3.0**
+world units with the whole **64 x 64** atlas cell as its map, its art the middle **32 x 32** of that —
+so **32 texels over 1.5 world units = 21 per unit**, against `floor-tile`'s 512 over `FLOOR_TILE_SZ`
+7.0 = **73**. **3.4x coarser than the floor it is set into**, and about 7 screen pixels per texel at
+that camera.
+
+**WHY IT WAS IN THE ATLAS AT ALL, because two of the three reasons are still good.** `objects.FloorDrain`
+is a game OBJECT and every object's art is an `entities64.png` cell — the 2D area view needs it there
+regardless. And the 3D ground-decal path BATCHES by sampling that one atlas with a per-instance UV
+rect, because `tex()`/`texContent()` cut each cell into its own texture and force a draw call per
+cell (`Sprites.hx:517`). The third reason was the one that did not hold: `FacilityGeom.floorBuf`
+refuses `Surf.GRATE` because a cell-wide 2 m square of grating read as a vehicle pit and tiled down
+as four drains — **that finding is about the SIZE, not about the route**, and a centred 1.5-unit quad
+was never tried.
+
+New `FacilityDeco.drain`: one 0..1-mapped square per drain, `DECO_DRAIN_SZ` **1.5** kept to the pixel
+so the swap changes resolution and nothing else, merged into one mesh for the compound. **256 over
+1.5 units = 170 texels per unit, 8x.** `+1 draw call` measured by hiding the mesh at the pose
+(**81 → 80 → 81**). The atlas cell STAYS for the 2D view; `FacilityDeco.draws` now returns true for
+`floor_drain` so the icon is not also laid flat under the geometry.
+
+**AND IT CONFIRMS THE SPRITE DEFICIT FROM THE DOOR PASS.** As an atlas sprite the drain rendered at
+scene **0.0183** against the floor's 0.1526 = **0.120**, where its albedo ratio was 0.195 — 0.62x of
+prediction, the same shortfall the vent shows at 0.53x. Re-emitted as ordinary lit geometry with
+`lift 0.783` (0.445 x `floor-tile` 0.118 = 0.0525) it measures scene **0.0685** against **0.1526** =
+**0.449**, i.e. exactly its albedo ratio. **So the deficit is the sprite path and not the art**, and
+moving one fitting off that path fixed its value and its sharpness in the same edit. sRGB on screen
+**9.0 → 38.1**.
+
+## The doors went dark when the WALLS were repainted, and ACES doubled the gap (2026-09-05)
+
+Reported as "the facility doors are way too dark compared to texture and walls around". Not a
+lighting bug and worth saying how that was settled: door and wall carry the same patches
+(`visionMask` + `indoorMask`, key `visMasksindoor`), the indoor mask reads **255** at the door's own
+xz and the vision mask reads **255** too, and disabling `shadowMap` left the door byte-identical
+while the floor moved 0.0727 → 0.0782. **Inverting ACES** (tone mapping 4, exposure 1.5) gave
+scene-linear **0.0236** for the door against **0.1078** for the wall, ratio **0.219**, against an
+albedo ratio of **0.2216** — 1% apart. Same light, both vertical, both on exactly `indoorAmbient`.
+
+**THE ART WENT STALE UNDER A NEIGHBOUR'S REPAINT.** On 2026-09-03 `wall-interior` took lift 1.48
+(0.069 → **0.1561** built) and `wall-room` lift 1.91 (0.058 → **0.1341**). The three door sources are
+`last_converted` 2026-08-26/27 and carried **no lift at all**. `door-cabinet` was designed at
+0.0319/0.0689 = **0.46** of its wall and was left at **0.19**.
+
+**AND THE TONEMAPPER IS NOT A SCALE DOWN THERE.** At these levels ACES is
+`(0.0246x − 0.00009) / (0.238 + 0.433x)`, which crosses zero at x ≈ **0.0037** — darks are crushed,
+not scaled. Measured in one frame: **2.1x** in the files (48.5 vs 103.6 sRGB) drew as **4.8x** on
+screen (12.9 vs 61.8). A stale ratio costs double what the file says it should.
+
+`lift 0.721` on `door-cabinet` alone, solved through the same crop-lift-LANCZOS path `make tex`
+takes: built **0.0724** linear, and in one frame the door goes sRGB **12.9 → 33.9** against the same
+wall's 61.8, scene ratio **0.52**. Taken KNOWING it publishes the cast — spread 10.8 → **12.6**, over
+the >6 re-roll rule — because the prompt asked for grey-GREEN laminate, so the hue is the brief.
+
+**THE OTHER TWO DOORS WERE CHECKED AND ARE CORRECT**, which is the useful half: `door-glass` hangs on
+`wall-exterior` (**0.0341** built, never repainted) at ratio **0.62** against a design 0.64, and
+`door-metal` on `wall-hangar` (**0.0374**) at **0.83** against 0.80. Only the surfaces facing the
+REPAINTED walls drifted. Same test found `floor-grate` stale the same way — **0.026** against
+`floor-tile` 0.118 = **0.23** where it was designed at 0.445 — and that one turned into its own
+change, below.
+
+**Open lead, measured but not chased: an object SPRITE renders at about half what its albedo says.**
+`vent`'s atlas cell is **0.1073** against `wall-room`'s 0.1341 = **0.80**, a sensible grille ratio;
+in game on an interior wall mount, same normal, same cell, it reads scene **0.0438** against the
+wall's 0.1038 = **0.42**, i.e. **0.53x** of prediction. Not shadows (disabled, byte-identical), not
+the vision mask, not a tint (`color` 1,1,1, metalness 0, roughness 1). The one structural difference
+is the material: the sprite pool is `MeshStandardMaterial` + `IndoorMask.patch`, the walls are
+`MeshLambertMaterial` + `VisionMask.patch`. If that is real it applies to every object sprite in the
+game and no texture lift can fix it.
+
 ## A server made out of shelves: "same material" is not a reason to share a texture (2026-09-05)
 
 Reported from the game in four words — *"lol, server made out of shelves"*. The rack was already a
@@ -17,9 +89,11 @@ emitted into `B_SHELF_TOP`, the shelving's perforated shelf plate, on the argume
 cabinet's flank has no holes in it, and the holes are what the eye picks up — the unit read as
 shelving with a server front stuck on it.
 
-**A PACK4 SHEET, AND THE RACK'S WHOLE CABINET IN IT.** One 1024 generation, `$0.2138`, four
-quadrants: front (a re-roll), blank side panel, top lid with slots and grommets, and a
-blanking/cable panel nothing draws yet. Front / side / lid wired, `+2 draw calls` measured by hiding
+**A PACK4 SHEET, AND THE RACK'S WHOLE CABINET IN IT.** One 1024 generation, four quadrants: front (a
+re-roll), blank side panel, top lid with slots and grommets, and a blanking/cable panel nothing draws
+yet. It cost **$0.2138 and should have cost $0.053** — the call passed `quality: "high"` where the
+tool's own default is `medium`, and at 1k the tiers are low $0.006 / medium $0.053 / high $0.211 for
+art that is downsampled to 512 before it is drawn. Front / side / lid wired, `+2 draw calls` measured by hiding
 the two new meshes at the pose (**111 → 109 → 111**).
 
 **THE SHEET HAS A DARK 2px FRAME, NOT JUST A SEAM BAND, AND IT POISONS EVERY WRAP MEASUREMENT.**

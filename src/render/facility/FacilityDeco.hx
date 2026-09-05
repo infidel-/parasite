@@ -72,9 +72,14 @@ class FacilityDeco
 // atlas frame and of nothing else, so render.Actors can ask it without a model
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
-      return area != null &&
-        area.typeID == AREA_FACILITY &&
-        o.type == 'decoration' &&
+      if (area == null ||
+          area.typeID != AREA_FACILITY)
+        return false;
+      // the drain has geometry of its own now (see `drain`), so its icon must stop being laid flat
+      // under it — two coplanar copies of the same art, the sharp one 0.04 under the blurred one
+      if (o.type == 'floor_drain')
+        return true;
+      return o.type == 'decoration' &&
         Const.fittingOf(o.imageRow, o.imageCol) >= 0;
     }
 
@@ -96,11 +101,13 @@ class FacilityDeco
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...9) MeshBufTools.make()];
+      var b = [for (_ in 0...10) MeshBufTools.make()];
       var leds = MeshBufTools.make();
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
+            if (m.drain[row][col])
+              drain(b[B_DRAIN], col, row, half);
             var kind = m.deco[row][col] - 1;
             if (kind < 0)
               continue;
@@ -117,6 +124,7 @@ class FacilityDeco
       solid(scene, b[B_RACK], FacilityStyle.DECO_RACK, false);
       solid(scene, b[B_RACK_SIDE], FacilityStyle.DECO_RACK_SIDE, false);
       solid(scene, b[B_RACK_TOP], FacilityStyle.DECO_RACK_TOP, false);
+      solid(scene, b[B_DRAIN], FacilityStyle.DECO_DRAIN, false);
       lamps(scene, leds);
     }
 
@@ -135,6 +143,7 @@ class FacilityDeco
   static inline var B_RACK = 6;
   static inline var B_RACK_SIDE = 7;
   static inline var B_RACK_TOP = 8;
+  static inline var B_DRAIN = 9;
 
 // one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
 // made of
@@ -310,6 +319,30 @@ class FacilityDeco
       var v = (z1 - z0) / t;
       MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
         [0, v, u, v, u, 0, 0, 0]);
+    }
+
+// one floor drain, centred on its cell.
+//
+// IT USED TO BE ITS OWN ATLAS ICON LAID FLAT, and that is the whole reason this exists. The icon is
+// baked into app/img/entities64.png at 32 x 32 inside a 64 cell, drawn on a render.particles.Sprites
+// quad of SIZE 3.0 — 21 texels per world unit against the floor tile's own 73, and reported from the
+// game as blurry. The atlas is right for the 2D view and right for BATCHING (see Sprites.atlasTex:
+// per-cell textures open a draw call each), but it caps a floor fitting at 32 px forever.
+//
+// emitted here it takes the 256 source directly, mapped 0..1 over its own square: 170 texels per
+// world unit, one merged mesh for every drain in the compound, and a normal `lift` for its value.
+// render.facility.FacilityGeom.floorBuf still refuses to paint Surf.GRATE as a floor — a cell-wide
+// 2 m square of grating read as a vehicle pit, and that finding is about the SIZE, not the route
+  static function drain(b:MeshBuf, col:Int, row:Int, half:Float):Void
+    {
+      var cx = (col + 0.5) * CELL - half;
+      var cz = (row + 0.5) * CELL - half;
+      var s = FacilityStyle.DECO_DRAIN_SZ / 2;
+      var y = FacilityGround.surfY(Surf.TILE) + FacilityStyle.DECO_DRAIN_EPS;
+      // FacilityGeom.cap's winding, so it faces up, with the art over the square instead of tiled
+      MeshBufTools.quad(b,
+        [cx - s, y, cz + s], [cx + s, y, cz + s], [cx + s, y, cz - s], [cx - s, y, cz - s],
+        [0, 1, 1, 1, 1, 0, 0, 0]);
     }
 
 // the shelving: two alpha-cut end frames, a bare quad per shelf, and the boxes standing on them.
