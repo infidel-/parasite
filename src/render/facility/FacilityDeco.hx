@@ -168,12 +168,12 @@ class FacilityDeco
               x1 = r[1];
               if (dir == 0)
                 {
-                  z0 = s.z1 + FacilityStyle.DECO_GAP;
+                  z0 = s.z1 + FacilityStyle.STAND_GAP;
                   z1 = z0 + d;
                 }
               else
                 {
-                  z1 = s.z0 - FacilityStyle.DECO_GAP;
+                  z1 = s.z0 - FacilityStyle.STAND_GAP;
                   z0 = z1 - d;
                 }
             }
@@ -184,12 +184,12 @@ class FacilityDeco
               z1 = r[1];
               if (dir == 2)
                 {
-                  x0 = s.x1 + FacilityStyle.DECO_GAP;
+                  x0 = s.x1 + FacilityStyle.STAND_GAP;
                   x1 = x0 + d;
                 }
               else
                 {
-                  x1 = s.x0 - FacilityStyle.DECO_GAP;
+                  x1 = s.x0 - FacilityStyle.STAND_GAP;
                   x0 = x1 - d;
                 }
             }

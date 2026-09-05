@@ -842,6 +842,22 @@ class FacilityAreaGenerator
               var x = spot.x, y = spot.y;
               var tx = 0, ty = 0; // table x,y
               var noTable = false;
+              // the door-clearance box one BLOCK of tables needs: its length along the run and its
+              // one cell across it
+              var tw = (spot.dir == DIR_DOWN ? 1 : windowSize);
+              var th = (spot.dir == DIR_RIGHT ? 1 : windowSize);
+              // does THIS block of tables stand beside a doorway? two things differ from the test it
+              // replaces. It is taken on the TABLE line and not the window line, because a doorway
+              // one row PAST the tables is still a doorway a bench stands in the swing of and a box
+              // centred on the glazing does not reach it. And it is evaluated HERE as well as at
+              // each block boundary, because that branch only fires once windowSize cells have gone
+              // by — a run's OPENING block was never tested at all, which is the block the bench
+              // reported as clipping an open door was in.
+              //
+              // per block and not latched like noTable above: a run that passes a door in the middle
+              // carries on tabling afterwards
+              var doorBlock = isBlockNearDoor(cells, spot.x + delta.x + delta90.x,
+                spot.y + delta.y + delta90.y, tw, th);
               var hasVentSpace = false; // space near window corner
               while (true)
                 {
@@ -862,10 +878,7 @@ class FacilityAreaGenerator
                       else if (spot.dir == DIR_RIGHT &&
                           x > room.x2 - windowSize)
                         noTable = true;
-                      if (isBlockNearDoor(cells, x, y,
-                          (spot.dir == DIR_DOWN ? 1 : windowSize),
-                          (spot.dir == DIR_RIGHT ? 1 : windowSize)))
-                        noTable = true;
+                      doorBlock = isBlockNearDoor(cells, tx, ty, tw, th);
                       continue;
                     }
                   if (spot.dir == DIR_RIGHT && x >= room.x2 + 1)
@@ -881,7 +894,7 @@ class FacilityAreaGenerator
                   // already table or decoration there
                   if (cells[tx][ty] != TEMP_BUILDING_ROOM)
                     continue;
-                  if (noTable)
+                  if (noTable || doorBlock)
                     {
                       // no table - add floor decoration
                       if (!nextTo(cells, tx, ty, TEMP_BUILDING_INNER_DOOR) &&
@@ -894,6 +907,13 @@ class FacilityAreaGenerator
                               // a decoration beside glazing has to be a LOW one or it stands in
                               // the window
                               if (nextToWindow)
+                                high = false;
+                              // and so does the one standing in for a bench beside a DOORWAY: a
+                              // 2.8-tall fitting there reads as blocking the opening, where a bin or
+                              // a drum reads as something somebody left by the door. the cell
+                              // orthogonally next to the opening still gets nothing at all — the
+                              // nextTo test above keeps the doorway itself walkable
+                              if (doorBlock)
                                 high = false;
                               // leave space for
                               if (nextToWindow && Std.random(100) < 70)

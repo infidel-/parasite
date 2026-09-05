@@ -40,14 +40,18 @@ import render.world.VisionMask;
 // standing thing is a POINT — one known cuboid on one known plane, meeting nothing — so it is one
 // quad, and the whole compound's worth of them merge into one mesh and one draw call.
 //
-// A RUN IS A POINT ONCE YOU MERGE IT, which is what took the benches and the corridor casework the
-// long way round. The fittings (render.facility.FacilityDeco) and the lab kit (FacilityKit) went in
-// first because each is one object on one cell with the hand of its wall already computed;
-// FacilityTables emits per bench CELL with no hand at all and calls its cabinet `unit` once per cell
-// inside a run, so a quad each would OVERLAP along the wall and two of these at 0.5 compound to
-// 0.75 — the bug CORNER_EPS below exists for. FacilityTables.halos finds the runs with the same
-// claimed-per-direction walk its cabinets already use, and one merged run is then a point like any
-// other. `len` on the opts is what a merged one carries, and 1 is a single object.
+// A RUN IS A POINT ONCE YOU MERGE IT, which is what took the corridor casework the long way round.
+// The fittings (render.facility.FacilityDeco) and the lab kit (FacilityKit) went in first because
+// each is one object on one cell with the hand of its wall already computed; FacilityTables calls its
+// cabinet `unit` once per cell inside a run, so a quad each would OVERLAP along the wall and two of
+// these at 0.5 compound to 0.75 — the bug CORNER_EPS below exists for. Its `cabinets` pass hands over
+// one halo per claimed run instead, and a merged run is then a point like any other. `len` on the
+// opts is what a merged one carries, and 1 is a single object.
+//
+// THE BENCHES CAME THROUGH HERE AND WENT BACK OUT AGAIN. A bench sits on its CELLS and FacilityGeom
+// .slab insets a wall's room face a whole unit into the wall cell, so it never touches the masonry —
+// 0.8 at worktop height, 25 px at the game camera. That is a stain on a wall and not a contact
+// shadow, and moving the block onto the wall to earn one was built and reverted.
 //
 // `pool` is the SAME QUAD LAID FLAT, under a box on a shelf plate, and it is here rather than a
 // second family because it shares the mesh, the ramp and the weight — the wall gets the shadow of a

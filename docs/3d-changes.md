@@ -8,6 +8,61 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## Everything that stands against a wall was standing in the wrong place (2026-09-05)
+
+Three things reported from the game in one breath — "the bookcase halo clips the bookcase", "the
+opened door clips the table", "move the table closer to both walls, the halo looks dumb" — and the
+first and third are the same fact from opposite sides: **the tile grid and the masonry are not in the
+same place.** `FacilityGeom.slab` insets a solid wall's room face by `(CELL - WALL_T) / 2` = **1.0**,
+so a thing built on its cell is a unit off the wall, and a thing built off the slab face is as close
+as its own gap constant says.
+
+**A HALO IS A PLANE AT `HALO_EPS`, SO A BACK CLOSER THAN THAT IS BEHIND IT.** `DECO_GAP` shipped at
+**0.05** against `HALO_EPS` **0.09**: read live, the bookcase back sat at x −112.95 and its halo quad
+centre at **−112.91**, the plane **0.04 INSIDE the box**. It cuts both side faces and the top cap
+along a line and everything deeper than 0.09 along a view ray draws over them — a sliver from
+straight above at 71°, opening up as the hold-RMB orbit drops the pitch. `DECO_GAP` is gone;
+`STAND_GAP = HALO_EPS + 0.03` lives in the halo block because that is what fixes it, and both
+families that stand against masonry read it. All **10 fittings** in the compound (2 shelving, 7
+bookcase, 1 rack) now measure exactly **0.12** off their own wall face.
+
+**THE BENCH SLIDE WAS BUILT, MEASURED AND REVERTED — A BENCH DOES NOT TOUCH ITS WALL, SO IT DOES NOT
+GET A CONTACT SHADOW.** A bench block sits on its CELLS, so its halo was painted on masonry **25 px
+away** at the game camera (1.0 world, 0.8 at worktop height after the lip) — a shadow with bare floor
+under it. The built answer moved the bench: `BENCH_SLIDE = (CELL - WALL_T) / 2 - STAND_GAP` = 0.88,
+per BLOCK via a flood fill over `m.table` (per cell tears a 2-deep block into two rows), a side moving
+only when the WHOLE of it stands against solid masonry so an L of two touching rectangles stays put,
+`ContactMask.prop` and the halo span moving with it. It worked — 0.12 off both walls, window runs
+byte-identical, 0 quads in masonry (27 overlapped a `slab` BOX and every one was inside a `notches`
+corner square, which is room floor). **Rejected on looks anyway: called on the game as "revert the
+table movement and just remove the haloes for them because of distance."** The right read, and it is
+the cheaper one — the halo family exists to say *this is touching that*, and 0.8 of floor is not
+touching. `FacilityTables.halos`/`backs`/`slide`/`faces` are gone, **halo mesh 74 → 38 quads, 36
+bench run halos removed, `calls` 91 / `programs` 91 unchanged**. The corridor casework keeps its
+halos: `unit` builds off the wall FACE (`x0 = s.x1`), so a cabinet really does touch.
+
+**THE DOOR IS A GENERATOR BUG AND IT IS FIXED THERE.** Door (24,8) is open in the save, leaf 0 hinges
+at world **(−104, −166)** and swings to (−104, −168); bench (23,7)'s worktop reached **−103.8** after
+`BENCH_LIP`, so the leaf's last **0.2** was inside it and the whole quarter disc crossed the corner.
+`FacilityAreaGenerator` already had `isBlockNearDoor` and it missed this in two ways. It is called
+inside the `len >= windowSize` branch, which fires at a block BOUNDARY — **a run's OPENING block was
+never tested at all**, and that is the block this bench was in. And it was taken on the WINDOW line,
+whose ±1 border does not reach a doorway one row PAST the tables. Now taken on the TABLE line, and
+evaluated once before the loop for the first block; the flag is per block rather than latched like
+`noTable`, so a run that passes a door carries on tabling afterwards. The freed cells fall through the
+branch that was already there and get a floor decoration, forced LOW — a bin or a drum beside an
+opening, where a 2.8-tall fitting reads as blocking it. The cell orthogonally next to the doorway
+still gets nothing, which the existing `nextTo(... INNER_DOOR)` guard was already doing.
+
+**AND THE RENDERER KEEPS A GUARD, BECAUSE TILES ARE PERSISTED.** The generator change reaches only
+newly generated areas; this compound still has **1 table cell in a door's 8-neighbourhood**. So
+`facesDoor` stays in `FacilityTables.build` — `FacilityModel.nearDoor`'s diagonal reach narrowed to a
+single face, dropping the `BENCH_LIP` overhang only on the side a leaf swings past and leaving the
+silhouette on the other three. With the slide reverted it carries the case alone: **0 of 169 worktop
+quads** intersect any leaf's swing quadrant, down from 1.
+
+`STAND_GAP` is the part of this that stayed.
+
 ## The corridor floor goes blue-cyan, and the value does not move (2026-09-05)
 
 Called on the game: drab grey was already everywhere indoors. `facility/floor-lino` had been re-rolled

@@ -377,6 +377,13 @@ class FacilityStyle
   // bottom-up composition — toe kick, doors, the dark band under the overhang — lands whole and
   // never wraps. Two different periods on the two axes is why the body cannot use FacilityGeom.face
   public static inline var BENCH_TILE = CityConfig.CELL * 0.5;
+  // A BENCH GETS NO WALL HALO and there is no constant here for one, which is the point worth
+  // recording: it does not TOUCH its wall. FacilityGeom.slab insets a solid room face
+  // (CELL - WALL_T) / 2 = 1.0 into the wall cell and a bench sits on its own cells, so the nearest a
+  // worktop comes is 0.8 and its body 1.0 — 25 px of bare floor at the game camera between the
+  // shadow and its caster, which reads as a stain and not as contact. Sliding the block onto the
+  // masonry to earn one was built, measured and reverted; the corridor casework below is the family
+  // that DOES touch, and it keeps its halo
 
   // ---- corridor casework -----------------------------------------------------------------------
 
@@ -455,13 +462,20 @@ class FacilityStyle
   // depth is otherwise a LOOK decision and not a gameplay one, unlike the corridor casework's
   // CASE_D: a fitting stands on a cell the generator already wrote unwalkable, so nothing can walk
   // into it however far it reaches — and off the wall FACE, a unit inside the wall cell, even the
-  // deepest of these takes under a fifth of its own cell
+  // deepest of these takes under a fifth of its own cell.
+  //
+  // THE BOOKCASE ALONE DEPARTS FROM THE SPRITE BBOX, by a flat 1.2 on all three axes, called on the
+  // game. The scale is written as the product so the departure stays visible and the SPRITE numbers
+  // stay readable behind it. It costs nothing anywhere: 3.36 is well under WALL_H 6.0 and the
+  // generator never deals a HIGH fitting beside glazing, so there is no sill to clear; the 2.02 width
+  // still slides inside the 3.0 a run-end wall cell offers, so `fit` never has to squeeze it; and the
+  // aspect lock rides along untouched because W is DERIVED from H
   public static inline var DECO_SHELF_W = 2.6;
   public static inline var DECO_SHELF_H = 2.6;
   public static inline var DECO_SHELF_D = DECO_SHELF_H * 0.640625;
-  public static inline var DECO_BOOKCASE_H = 2.8;
+  public static inline var DECO_BOOKCASE_H = 2.8 * 1.2;
   public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.6015625;
-  public static inline var DECO_BOOKCASE_D = 1.05;
+  public static inline var DECO_BOOKCASE_D = 1.05 * 1.2;
   public static inline var DECO_RACK_W = 1.6;
   public static inline var DECO_RACK_H = 2.9;
   public static inline var DECO_RACK_D = 1.2;
@@ -471,11 +485,9 @@ class FacilityStyle
   public static inline var DECO_SHELF_TILE = 0.55;
   public static inline var DECO_BOOKCASE_TILE = 1.4;
   public static inline var DECO_RACK_TILE = DECO_RACK_H / 2;
-  // how far a fitting's back stands off the wall FACE. far less than the lab kit's KIT_GAP, and for
-  // the reason that constant's header gives: this furniture is squared to the wall and takes no yaw
-  // jitter, so there is no swung corner for the gap to absorb — it is only there so a face and the
-  // masonry never z-fight
-  public static inline var DECO_GAP = 0.05;
+  // how far a fitting's back stands off the wall FACE is NOT a deco number and no longer lives here —
+  // it is STAND_GAP, in the halo block below, because the halo plane is what fixes it
+  //
   // where the alpha-cut end frame stops being frame and starts being air. an OPAQUE alphaTest and
   // not a transparent material: an alpha-tested opaque draws DoubleSide in ONE pass and still
   // writes depth, which is what render.wild.WildGrass' own header records
@@ -705,12 +717,12 @@ class FacilityStyle
   // the object divided by HALO_CORE and the falloff lands OUTSIDE the object by
   // HALO_FADE / HALO_CORE = 0.2667 of the object's own size on each axis. What that gives, against
   // CONTACT.blur 0.7 and the sweep that found no depth cost below about 1.0:
-  //   shelving 2.6 x 2.6 -> 0.69 / 0.69     bookcase 1.68 x 2.8 -> 0.45 / 0.75
-  //   rack 1.6 x 2.9     -> 0.43 / 0.77     gas rack 2.63 x 3.0 -> 0.70 / 0.80
+  //   shelving 2.6 x 2.6 -> 0.69 / 0.69     bookcase 2.02 x 3.36 -> 0.54 / 1.10 (CAPPED)
+  //   rack 1.6 x 2.9     -> 0.43 / 0.77     gas rack 2.63 x 3.0  -> 0.70 / 0.80
   //   trolley 1.98 x 2.0 -> 0.53 / 0.53
   // every one of them in range, which is why these are the generator's own defaults and not a fitted
   // pair. a BIGGER object throwing a WIDER halo is also the right way round, and it is free here.
-  // the tallest quad tops out at the gas rack's 3.0 + 0.333 * 3.0 = 4.0, well under WALL_H 6.0
+  // the tallest quad tops out at the bookcase's 3.36 + 1.1 = 4.46, well under WALL_H 6.0
   public static inline var HALO_CORE = 0.60;
   public static inline var HALO_FADE = 0.16;
   // and the CAP on that, in world units, which is what lets a RUN take the same quad as a fitting.
@@ -718,9 +730,11 @@ class FacilityStyle
   // 16-unit casework run — 4.3 units of wash up a 6-unit wall. Capping the grown margin holds a long
   // thing to a contact-scale fade and costs nothing at the ends: past the cap the object's own edge
   // maps outside the art's opaque core, so the halo simply thins out along the run instead of ending
-  // on a line. 1.1 is set ABOVE the largest margin anything already emitting asks for (the gas rack's
-  // 3.0 height wants exactly 1.0), so every fitting and every piece of kit is untouched by it, and it
-  // holds a run's fade to 0.88 — inside the same band CONTACT.blur 0.7 was swept in
+  // on a line. 1.1 was set ABOVE the largest margin anything then emitting asked for (the gas rack's
+  // 3.0 height wants exactly 1.0), so no fitting and no kit prop was touched by it — the BOOKCASE now
+  // is, by 0.02: scaled 1.2 it stands 3.36 and wants 1.12. Left alone deliberately, because the cap
+  // is doing exactly its job there and 0.02 of 1.12 is nothing; it holds a run's fade to 0.88 —
+  // inside the same band CONTACT.blur 0.7 was swept in
   public static inline var HALO_GROW_MAX = 1.1;
   // how dark it goes where the object meets the masonry. it BUILT at the corner strip's own 0.5 —
   // the only other thing in the compound doing this job, and the two are read side by side in a room
@@ -734,6 +748,20 @@ class FacilityStyle
   // stand in a corner and the damp band runs behind every one of them: this quad is the outermost of
   // the three and draws last. a PHYSICAL gap and never polygonOffset, the same reasoning as above
   public static inline var HALO_EPS = 0.09;
+  // and how far ANYTHING STANDING AGAINST A WALL keeps its own back off that face.
+  //
+  // IT MUST CLEAR HALO_EPS, and that is the whole of the number. The halo lies on a plane HALO_EPS
+  // proud of the masonry, so a back any closer than that puts the quad INSIDE the object: the plane
+  // cuts both side faces and the top cap along a line, and every fragment deeper than HALO_EPS along
+  // a view ray draws over them. It shipped at 0.05 — the plane 0.04 inside every fitting in the
+  // compound — which is a sliver from straight above and opens up as the hold-RMB orbit drops the
+  // pitch. The margin over HALO_EPS is small on purpose: this is a depth-ordering number and not a
+  // look one, and the shadow is meant to be darkest exactly where the object meets the wall.
+  //
+  // read by the fittings (render.facility.FacilityDeco.unit), whose back is the wall face plus this.
+  // the benches do NOT read it and get no halo either: they sit on their CELLS, a whole unit off the
+  // masonry, and a shadow that far from its caster is a stain — see FacilityTables' header
+  public static inline var STAND_GAP = HALO_EPS + 0.03;
   // and the same quad laid FLAT, under a box on a shelf plate — see FacilityDetail.pool. it stands
   // off by a tenth of the wall halo's gap and not by the same number, because the ladder that fixes
   // that one is a WALL ladder: GRIME_EPS and CORNER_EPS are other things drawn on the same masonry,

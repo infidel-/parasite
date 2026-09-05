@@ -27,6 +27,15 @@ import render.world.VisionMask;
 // job: the worktop overhangs the casework by FacilityStyle.BENCH_LIP and that shadow line is what
 // stops a bench reading as a low wall. The overhang is taken out of the TOP, which is grown outward,
 // and never out of the casework, which is pulled in — see BENCH_LIP for why that is a UV decision
+//
+// AND A BENCH GETS NO WALL HALO, which is the one place this family departs from every other thing
+// that stands against masonry. It does not stand against it: a bench sits on its CELLS and
+// FacilityGeom.slab insets a wall's room face a whole unit into the wall cell, so the nearest a
+// worktop ever comes is 0.8 and its body 1.0 — 25 px of bare floor at the game camera between the
+// shadow and the thing casting it, which reads as a stain on the wall rather than as contact. A
+// contact shadow is for something TOUCHING. Sliding the block onto the wall to earn one was built and
+// reverted (see docs/3d-changes.md); the fittings and the corridor casework keep theirs because both
+// are built off the wall FACE and really do touch it
 class FacilityTables
 {
   static inline var CELL = CityConfig.CELL;
@@ -58,11 +67,20 @@ class FacilityTables
             // top rather than out of the casework is what keeps the cabinet fronts whole (see
             // FacilityStyle.BENCH_LIP). a side that continues reaches the plain boundary, so
             // abutting cells of one run still share a world-aligned grid and a 3-cell bench is one
-            // unbroken sheet of resin
-            var ox0 = FacilityModel.isTable(m, col - 1, row) ? x0 : x0 - FacilityStyle.BENCH_LIP;
-            var ox1 = FacilityModel.isTable(m, col + 1, row) ? x1 : x1 + FacilityStyle.BENCH_LIP;
-            var oz0 = FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
-            var oz1 = FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
+            // unbroken sheet of resin.
+            //
+            // ONE SIDE GETS NO LIP: the one a door leaf swings past, because the leaf meets the
+            // overhang edge-on (see `facesDoor`). The generator no longer lays a bench block beside a
+            // doorway at all, so this only fires on areas that were already in a save when that
+            // changed — the tiles are persisted and nothing migrates them
+            var ox0 = facesDoor(m, col, row, 2) ||
+              FacilityModel.isTable(m, col - 1, row) ? x0 : x0 - FacilityStyle.BENCH_LIP;
+            var ox1 = facesDoor(m, col, row, 3) ||
+              FacilityModel.isTable(m, col + 1, row) ? x1 : x1 + FacilityStyle.BENCH_LIP;
+            var oz0 = facesDoor(m, col, row, 0) ||
+              FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
+            var oz1 = facesDoor(m, col, row, 1) ||
+              FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
             FacilityGeom.cap(top, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
               FacilityStyle.BENCH_TOP_TILE);
             for (dir in 0...4)
@@ -87,71 +105,44 @@ class FacilityTables
       // grown rects overlap by BENCH_LIP squared. The caps are coplanar, same texture, same
       // world-aligned UVs, so that overlap resolves to the same pixel either way; the two edge bands
       // cross, each poking BENCH_LIP past the other, which is 0.2 world units and reads as nothing
-      halos(m);
       var n = cabinets(m, top, body);
       add(scene, top, FacilityStyle.BENCH_TOP);
       add(scene, body, FacilityStyle.BENCH_BODY);
       return n;
     }
 
-// every BENCH run that has plain masonry behind it, as one wall halo each — the contact shadow the
-// fittings and the lab kit already lay (see render.facility.FacilityDetail.halos).
+// does a door opening lie past this cell's `dir` face — straight through it, or diagonally past
+// either of its corners?
 //
-// THE RUNS HAVE TO BE FOUND HERE, which is the whole reason this is not three lines in the loop
-// above. The generator deals 1x1, 1x3, 3x1, 2x3 and 3x2 blocks and `build` emits per CELL toward any
-// neighbour that is not a bench, so nothing upstream ever names a run or a direction. A halo per cell
-// is not an option: the quads are transparent with depthWrite off, so two overlapping along one wall
-// blend through each other into a hard band — the seam FacilityStyle.CORNER_EPS exists for.
+// a leaf hinges ON the cell boundary and swings a quarter turn through its OWN cell, so the quadrant
+// it sweeps is the quarter of the door cell nearest whatever stands beside it. A worktop lip grown
+// that way is met edge-on by the swing: measured on the compound's one such bench, the leaf's last
+// 0.2 units ended up inside the worktop and the whole quarter disc crossed its corner.
 //
-// CLAIMED PER DIRECTION, the same slot `key` cuts for the casework and for the same reason: a block
-// in a room corner backs onto two walls and wants a halo on each of them.
-//
-// MOST OF A BLOCK GETS NOTHING AND THAT IS RIGHT — the generator lays its runs under WINDOW walls,
-// and isSolidWall answers false for glazing, so a bench is grounded where it meets real masonry and
-// nowhere else. Measured on one compound: 139 bench cells carry 71 solid-wall sides against 75
-// glazed ones, and 76 of the cells touch no masonry at all
-  static function halos(m:Facility):Void
+// the same DIAGONAL reach FacilityModel.nearDoor takes, narrowed to ONE face — a bench beside a
+// doorway keeps its overhang on the other three sides, where the silhouette is the point of it
+  static function facesDoor(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
-      var seen = new Map<Int, Bool>();
-      for (dir in 0...4)
-        {
-          var sc = (dir < 2 ? 1 : 0);
-          var sr = (dir < 2 ? 0 : 1);
-          for (row in 0...m.h)
-            for (col in 0...m.w)
-              {
-                if (seen.exists(key(m, col, row, dir)) ||
-                    !backs(m, col, row, dir))
-                  continue;
-                var len = 0;
-                while (backs(m, col + sc * len, row + sr * len, dir))
-                  {
-                    seen.set(key(m, col + sc * len, row + sr * len, dir), true);
-                    len++;
-                  }
-                halo(m, col, row, dir, len);
-              }
-        }
+      var c = col + DC[dir];
+      var r = row + DR[dir];
+      var pc = (dir < 2 ? 1 : 0);
+      var pr = (dir < 2 ? 0 : 1);
+      return FacilityModel.isDoor(m, c, r) ||
+        FacilityModel.isDoor(m, c - pc, r - pr) ||
+        FacilityModel.isDoor(m, c + pc, r + pr);
     }
 
-// is this a bench cell with plain masonry on that hand?
-  static inline function backs(m:Facility, col:Int, row:Int, dir:Int):Bool
-    {
-      return FacilityModel.inside(m, col, row) &&
-        m.table[row][col] &&
-        FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]);
-    }
-
-// hand one run of worktop to the wall behind it.
+// hand one run of CORRIDOR CASEWORK to the wall behind it. benches do not come through here — a
+// bench sits on its cells and never touches its wall, so it gets no halo at all (see the header).
 //
-// the span is the run's own CELLS and the clamp to the masonry is the emitter's — a bench is a whole
-// cell where a cabinet is already slab-clamped, and letting FacilityDetail cut both keeps the rule
-// that a halo never hangs off the end of a wall in one place.
+// the span is the run's own CELLS and the clamp to the masonry is the emitter's — a cabinet is
+// already slab-clamped along the wall, and letting FacilityDetail cut it keeps the rule that a halo
+// never hangs off the end of a wall in one place.
 //
 // `y` is a literal 0 and NOT FacilityGround.surfY, because 0 is where this file actually builds:
 // `panel` emits from it and `cap` sits at BENCH_H over it, so the halo has to stand on the plane the
 // geometry is on rather than on the one the surface grid would name
-  static function halo(m:Facility, col:Int, row:Int, dir:Int, len:Int):Void
+  static function halo(col:Int, row:Int, dir:Int, len:Int):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var a0 = (dir < 2 ? col : row) * CELL - half;
@@ -218,7 +209,7 @@ class FacilityTables
                 // transparent with depthWrite off, so two of them overlapping along one wall blend
                 // through each other and stack to a hard band, which is the seam the corner strips
                 // shipped with once
-                halo(m, col, row, dir, len);
+                halo(col, row, dir, len);
               }
         }
       return n;
