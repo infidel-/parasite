@@ -24,8 +24,12 @@ import render.world.VisionMask;
 // spines lying flat across a bookcase's top and running down its sides, cardboard boxes wearing the
 // shelving's steel, a rack's own vent panel seen from above. A face is a different SURFACE from the
 // face beside it, so it gets a different image, and the buffers here are keyed by texture rather
-// than by kind — which is also why the rack's sides and top ride the shelving's steel: they are the
-// same material, and a shared buffer is a shared draw call.
+// than by kind.
+//
+// AND "THE SAME MATERIAL" IS NOT A REASON TO SHARE ONE. The rack's sides and lid rode the
+// shelving's perforated shelf plate — both are dark steel, and the shared buffer was a shared draw
+// call — and the unit read as a server made out of shelves, because a cabinet's flank has no holes
+// in it and the holes were what the eye picked up. Two more surfaces, two more calls.
 //
 // WHICH CELLS is not this file's decision and never was. The generator stands an objects.Decoration
 // on a room cell one step in from a window wall (game.FacilityAreaGenerator's chem-lab pass) and
@@ -92,7 +96,7 @@ class FacilityDeco
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...7) MeshBufTools.make()];
+      var b = [for (_ in 0...9) MeshBufTools.make()];
       var leds = MeshBufTools.make();
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -111,12 +115,17 @@ class FacilityDeco
       solid(scene, b[B_BC_SIDE], FacilityStyle.DECO_BOOKCASE_SIDE, false);
       solid(scene, b[B_BC_TOP], FacilityStyle.DECO_BOOKCASE_TOP, false);
       solid(scene, b[B_RACK], FacilityStyle.DECO_RACK, false);
+      solid(scene, b[B_RACK_SIDE], FacilityStyle.DECO_RACK_SIDE, false);
+      solid(scene, b[B_RACK_TOP], FacilityStyle.DECO_RACK_TOP, false);
       lamps(scene, leds);
     }
 
   // which merged surface a face goes in — the buffers are keyed by TEXTURE, so two families
-  // sharing a material share a draw call. B_SHELF_TOP is the one that does: it carries the
-  // shelving's shelves AND the rack's sides and top, which really are the same perforated steel
+  // sharing a material would share a draw call. NONE DO ANY MORE. The rack's sides and lid rode
+  // B_SHELF_TOP, the shelving's perforated shelf plate, on the argument that both are steel — and a
+  // cabinet drawn with shelf holes in its flanks reads as SHELVING, which is what it was reported
+  // as. A rack's side is a blank painted sheet and its lid is slots and grommets; those are two
+  // more surfaces and two more calls, and the call is what the read costs
   static inline var B_SHELF_SIDE = 0;
   static inline var B_SHELF_TOP = 1;
   static inline var B_BOX = 2;
@@ -124,6 +133,8 @@ class FacilityDeco
   static inline var B_BC_SIDE = 4;
   static inline var B_BC_TOP = 5;
   static inline var B_RACK = 6;
+  static inline var B_RACK_SIDE = 7;
+  static inline var B_RACK_TOP = 8;
 
 // one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
 // made of
@@ -228,14 +239,12 @@ class FacilityDeco
               FacilityStyle.DECO_BOOKCASE_TILE);
             FacilityGeom.cap(b[B_BC_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_BOOKCASE_TILE);
           default:
-            // the rack: its own front panel, and plain steel everywhere else
-            FacilityGeom.face(b[B_RACK], x0, x1, z0, z1, dir ^ 1, y, y + h,
-              FacilityStyle.DECO_RACK_TILE);
-            FacilityGeom.face(b[B_SHELF_TOP], x0, x1, z0, z1, head, y, y + h,
-              FacilityStyle.DECO_SHELF_TILE);
-            FacilityGeom.face(b[B_SHELF_TOP], x0, x1, z0, z1, head + 1, y, y + h,
-              FacilityStyle.DECO_SHELF_TILE);
-            FacilityGeom.cap(b[B_SHELF_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_SHELF_TILE);
+            // the rack: three faces of one cabinet, each on its own surface, and all of them laid
+            // from the UNIT'S OWN CORNER rather than off the world — see `localFace`
+            localFace(b[B_RACK], x0, x1, z0, z1, dir ^ 1, y, y + h);
+            localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head, y, y + h);
+            localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
+            localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h);
             lights(leds, x0, x1, z0, z1, y, h, dir, col, row);
         }
     }
@@ -268,6 +277,39 @@ class FacilityDeco
         if (FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
           return dir;
       return -1;
+    }
+
+// one vertical face of a fitting, its art laid from the UNIT'S OWN CORNER.
+//
+// FacilityGeom.face divides the WORLD coordinate by the period, which is exactly what a wall run
+// wants — two neighbouring cells then carry one continuous course — and exactly what a cabinet does
+// not. Measured on the compound's rack: its left edge stands at world x −48.88, so u opened at
+// −33.71 and the art began 0.29 of a tile in; the front is an authored composition with an end rail
+// down each side and both rails landed in the middle of the face. Reported from the game as "front
+// and top look like they're drawn with a u or v shift", which is what it was.
+//
+// the winding is FacilityGeom.ends' and must never be re-derived here — a quad wound for the wrong
+// hand lands inside the object and simply never appears
+  static function localFace(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int, y0:Float,
+      y1:Float):Void
+    {
+      var e = FacilityGeom.ends(x0, x1, z0, z1, dir);
+      var t = FacilityStyle.DECO_RACK_TILE;
+      var u = (dir < 2 ? x1 - x0 : z1 - z0) / t;
+      var v = (y1 - y0) / t;
+      MeshBufTools.quad(b, [e[0], y0, e[1]], [e[2], y0, e[3]], [e[2], y1, e[3]], [e[0], y1, e[1]],
+        [0, 0, u, 0, u, v, 0, v]);
+    }
+
+// and the lid, the same mapping laid flat: u across the unit's width, v across its depth, both from
+// its own corner. FacilityGeom.cap's winding, for the same reason as above
+  static function localCap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+    {
+      var t = FacilityStyle.DECO_RACK_TILE;
+      var u = (x1 - x0) / t;
+      var v = (z1 - z0) / t;
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        [0, v, u, v, u, 0, 0, 0]);
     }
 
 // the shelving: two alpha-cut end frames, a bare quad per shelf, and the boxes standing on them.
@@ -428,27 +470,39 @@ class FacilityDeco
         [o.ao, o.ao, o.ao, o.ao]);
     }
 
-// one rack's lights: a field of specks on its front face, each with its own blink phase and its own
-// hue. all of them in ONE additive mesh with the compound's other racks (see `lamps`), so a wall of
-// them costs one draw call and no per-frame work beyond the shared clock
+// one rack's lights: a pair of specks on each CHASSIS of its front face, each with its own blink
+// phase and its own hue. all of them in ONE additive mesh with the compound's other racks (see
+// `lamps`), so a wall of them costs one draw call and no per-frame work beyond the shared clock.
+//
+// the field is READ OFF THE ART: rows on the units the image draws, columns in the blank strip
+// beside their vent panels. It shipped as an even 6 x 3 grid over a band of the face, which put
+// specks across the vent mesh and across the recessed gaps between chassis — a lattice on a rack
+// rather than a rack's own ports
   static function lights(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, h:Float,
       dir:Int, col:Int, row:Int):Void
     {
       var e = FacilityStyle.DECO_LED_EPS;
       // the plane the field lies in, a hair proud of the face so the additive quad is never coplanar
       var f = (dir == 0 ? z1 + e : (dir == 1 ? z0 - e : (dir == 2 ? x1 + e : x0 - e)));
-      var a0 = (dir < 2 ? x0 : z0);
-      var a1 = (dir < 2 ? x1 : z1);
-      var y0 = y + h * FacilityStyle.DECO_LED_Y0;
-      var y1 = y + h * FacilityStyle.DECO_LED_Y1;
+      // ACROSS the face from the TEXTURE'S OWN u ORIGIN and not from the lower coordinate: `localFace`
+      // opens u at FacilityGeom.ends' first vertex, which is x1 or z1 on two of the four hands. The
+      // old even grid was symmetric about the face and could not tell the difference; a band pinned
+      // to a strip of the art can, and pinned the wrong way round it lands on the vent panel
+      var w = FacilityGeom.ends(x0, x1, z0, z1, dir ^ 1);
+      var a0 = (dir < 2 ? w[0] : w[1]);
+      var a1 = (dir < 2 ? w[2] : w[3]);
+      // one row per CHASSIS, over however many repeats of the art the face is tall
+      var rows = Math.round(h / FacilityStyle.DECO_RACK_TILE * FacilityStyle.DECO_LED_PER_TILE);
       var s = FacilityStyle.DECO_LED_SIZE / 2;
       var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
-      for (r in 0...FacilityStyle.DECO_LED_ROWS)
+      for (r in 0...rows)
         for (c in 0...FacilityStyle.DECO_LED_COLS)
           {
             var hh = FacilityModel.mix(g ^ ((r * FacilityStyle.DECO_LED_COLS + c) * 40503));
-            var ac = a0 + (a1 - a0) * (c + 1) / (FacilityStyle.DECO_LED_COLS + 1);
-            var yc = y0 + (y1 - y0) * (r + 0.5) / FacilityStyle.DECO_LED_ROWS;
+            var uf = FacilityStyle.DECO_LED_U0 + (FacilityStyle.DECO_LED_U1 -
+              FacilityStyle.DECO_LED_U0) * (c + 0.5) / FacilityStyle.DECO_LED_COLS;
+            var ac = a0 + (a1 - a0) * uf;
+            var yc = y + h * (r + 0.5) / rows;
             // r = level, g = blink phase, b = which of the two hues. see MeshBufTools.quadRGB and
             // the shader patch in `blink` — the three are read apart there rather than multiplied in
             var lvl = 0.7 + ((hh % 1000) / 1000) * 0.3;

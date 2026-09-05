@@ -1800,7 +1800,7 @@
       "needs_alpha": false,
       "prompt": "A SEAMLESS TILEABLE texture of a perforated steel shelf panel seen from DIRECTLY ABOVE, flat top-down, no perspective. An even grid of small round perforations pressed into a dark cool grey steel sheet, with faint scuffs, a little dust caught in the holes and a few pale scratches. The pattern must tile seamlessly on both axes with no visible border and no frame. No edges, no lip, no brackets, no objects standing on it. [append textures.json style]",
       "prompt_exact": true,
-      "note": "the shelving's shelves, AND the server rack's sides and top - they are the same perforated steel, so they are the same buffer and the same draw call. TOP-DOWN art on purpose: it is laid flat far more often than not, and the first build put a side-elevation sheet here. No lip in the art, because a shelf is emitted as a bare quad with no thickness. DECO_SHELF_TILE 0.55 is a perforation pitch and nothing to do with the unit's own size. NOW CUT FROM facility/deco-pack4.png, the 2x2 sheet this tile shares with deco-box, deco-bookcase-side and deco-bookcase-top (crop 512,0,512,512). Four 512 tiles out of ONE 1024 generation - a quarter of the cost, and exactly the resolution the runtime ships at; measured on screen against the four solo sources the bookcase differed by mean |d| 0.5 / 255. Two prices: tiling wrap error roughly doubles, because a quadrant was composed to butt against its NEIGHBOURS and not against itself (3.4-4.5 H / 3.8-9.9 V against the solo rolls' 1.2-2.5 / 2.0-4.3), and a quadrant is square, so an aspect-locked 0..1 face or an alpha cut still takes its own image. lift 0.846 lands it at built mean 73.4, the value the solo roll shipped at, so the swap changed the ART and not the exposure.",
+      "note": "the shelving's shelves. It ALSO carried the server rack's sides and top - same perforated steel, same buffer, same draw call - until the rack read as a server made out of shelves and took its own facility/deco-rack-side and facility/deco-rack-top. TOP-DOWN art on purpose: it is laid flat far more often than not, and the first build put a side-elevation sheet here. No lip in the art, because a shelf is emitted as a bare quad with no thickness. DECO_SHELF_TILE 0.55 is a perforation pitch and nothing to do with the unit's own size. NOW CUT FROM facility/deco-pack4.png, the 2x2 sheet this tile shares with deco-box, deco-bookcase-side and deco-bookcase-top (crop 512,0,512,512). Four 512 tiles out of ONE 1024 generation - a quarter of the cost, and exactly the resolution the runtime ships at; measured on screen against the four solo sources the bookcase differed by mean |d| 0.5 / 255. Two prices: tiling wrap error roughly doubles, because a quadrant was composed to butt against its NEIGHBOURS and not against itself (3.4-4.5 H / 3.8-9.9 V against the solo rolls' 1.2-2.5 / 2.0-4.3), and a quadrant is square, so an aspect-locked 0..1 face or an alpha cut still takes its own image. lift 0.846 lands it at built mean 73.4, the value the solo roll shipped at, so the swap changed the ART and not the exposure.",
       "crop": [
         512,
         0,
@@ -1886,15 +1886,55 @@
       "last_converted": "2026-09-04T23:04:43"
     },
     "facility/deco-rack": {
-      "src": "facility/deco-rack.png",
+      "src": "facility/deco-rack-pack4.png",
       "class": "tile",
       "needs_alpha": false,
-      "lift": 0.739,
+      "lift": 0.824,
       "prompt": "A SEAMLESS TILEABLE texture of the front of a stack of rack-mounted server units, seen straight on, flat elevation, FILLING THE ENTIRE IMAGE EDGE TO EDGE. Three horizontal server chassis stacked one above another, each a dark charcoal metal face split into a wide perforated mesh vent panel and a narrow blank section, separated by thin recessed gaps, with small dark screw heads at the left and right ends of each unit and a couple of tiny dark unlit indicator ports. Very dark cool grey, near black in the gaps, mid-dark on the faces. The pattern must tile seamlessly on both axes with no visible border and no frame. No lit lights, no glowing dots, no bright colours, no cables, no text, no labels, no logos, no brand marks. [append textures.json style]",
       "prompt_exact": true,
-      "note": "the server rack in a lab room (render.facility.FacilityDeco). UNLIT ON PURPOSE - the lights are additive quads emitted over this face and blinking off a shared clock (FacilityDeco.lamps), so anything glowing baked into the albedo would sit under them and never move. Painted at mean sRGB 36, the darkest surface in the compound - which is what a rack IS, and which at this rig is also the black-card failure: an interior vertical face renders at roughly a fifth of its albedo here (measured on the bookcase, 47 -> 15). lift 0.739 BRIGHTENS it to ~60, still under every other surface in the room, and the lights are what carry the rest.",
-      "last_converted": "2026-09-04T19:02:35",
-      "last_lift": 0.739
+      "note": "the server rack's FRONT in a lab room (render.facility.FacilityDeco). UNLIT ON PURPOSE - the lights are additive quads emitted over this face and blinking off a shared clock (FacilityDeco.lamps), so anything glowing baked into the albedo would sit under them and never move. Painted at mean sRGB 36 as a solo roll, the darkest surface in the compound - which is what a rack IS, and which at this rig is also the black-card failure: an interior vertical face renders at roughly a fifth of its albedo here (measured on the bookcase, 47 -> 15). NOW CUT FROM facility/deco-rack-pack4.png, the 2x2 sheet carrying the rack's WHOLE cabinet: this front top-left, the blank side panel top-right, the top lid bottom-left, and a blanking/cable panel bottom-right that nothing draws yet. Drawn together so the three faces of one unit agree, the argument the bookcase's own pack already made. THE SHEET HAS A DARK 2px FRAME AS WELL AS ITS SEAM BAND - column means run 1.9 / 8.6 / 47.5 at the left edge and the seam sits at 511-513 - so every crop insets from BOTH, and measuring wrap without that inset reports the frame instead of the tile (23.7 against the true 2.7). Vertical wrap actually IMPROVED over the solo roll, 18.0 -> 8.0. lift 0.824 lands it back on the ~60 the solo roll shipped at, so the swap changed the ART and not the exposure.",
+      "crop": [
+        2,
+        2,
+        508,
+        508
+      ],
+      "last_converted": "2026-09-05T17:18:00",
+      "last_lift": 0.824
+    },
+    "facility/deco-rack-side": {
+      "src": "facility/deco-rack-pack4.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.839,
+      "prompt": "The blank sheet-steel SIDE PANEL of the same cabinet, seen straight on, flat elevation. A plain unbroken painted dark cool grey steel sheet with a very faint fine brushed grain, a scattering of small dark flush rivet heads, faint scuffs and a little settled dust. NO holes, no perforations, no vents, no mesh, no shelves, no rails, no horizontal bands or stripes, no panel seams. [one quadrant of the facility/deco-rack-pack4 sheet - see that prompt]",
+      "prompt_exact": true,
+      "note": "the two ENDS of the server rack (render.facility.FacilityDeco). Its own surface at last: the sides rode the shelving's deco-shelf-top perforated plate for months and a cabinet wearing shelf holes reads as SHELVING - the user's whole report was 'server made out of shelves'. A rack side is a blank painted sheet and the art says so, which is also why nothing else can share this buffer: it is the one surface in the family with no pattern to hide a repeat behind. Cut from facility/deco-rack-pack4.png top-right, inset from the sheet's 2px frame and its 511-513 seam band; wrapH 4.0 / wrapV 2.2. lift 0.839 lands it near 67, above the front's 60 and under the shelving steel's 73.4 - a cabinet's side is lighter than its own vented face and darker than open galvanised shelving.",
+      "crop": [
+        514,
+        2,
+        508,
+        508
+      ],
+      "last_converted": "2026-09-05T17:18:00",
+      "last_lift": 0.839
+    },
+    "facility/deco-rack-top": {
+      "src": "facility/deco-rack-pack4.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.839,
+      "prompt": "The TOP LID of the same cabinet seen from DIRECTLY ABOVE, flat top-down, no perspective. A dark cool grey steel lid with a few short recessed vent slots, two small round cable grommets, a scattering of flush screw heads, faint scuffs and settled dust. Nothing standing on it. [one quadrant of the facility/deco-rack-pack4 sheet - see that prompt]",
+      "prompt_exact": true,
+      "note": "the rack's LID (render.facility.FacilityDeco). TOP-DOWN art, because at this camera's pitch the lid is most of what a 2.9-tall cabinet shows - the same finding the bookcase's top and the shelving's shelves both landed on, and the reason a side-elevation sheet cannot serve here. Slots and grommets rather than the side's blank sheet: a lid is where a rack's cabling and its fans actually are. Cut from facility/deco-rack-pack4.png bottom-left; wrapH 4.0 / wrapV 10.4, and neither figure bites because the lid is laid from the UNIT'S OWN CORNER (FacilityDeco.localCap) at DECO_RACK_TILE 1.6 - u 0..0.75, v 0..1, under one repeat both ways, so no wrap is ever drawn. Same lift as the side, 0.839: it is the same steel and the rig's own bounce term is what lifts a horizontal face.",
+      "crop": [
+        2,
+        514,
+        508,
+        508
+      ],
+      "last_converted": "2026-09-05T17:18:00",
+      "last_lift": 0.839
     },
     "facility/floor-grate": {
       "src": "facility/floor-grate.png",

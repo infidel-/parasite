@@ -151,7 +151,12 @@ class FacilityStyle
   public static inline var DECO_BOOKCASE_FRONT = 'textures/facility/deco-bookcase-front.png';
   public static inline var DECO_BOOKCASE_SIDE = 'textures/facility/deco-bookcase-side.png';
   public static inline var DECO_BOOKCASE_TOP = 'textures/facility/deco-bookcase-top.png';
+  // and the rack takes THREE of its own. The sides and the lid rode the shelving's perforated shelf
+  // plate until a cabinet wearing shelf holes read as exactly that — a server made out of shelves.
+  // All three are quadrants of one 2x2 sheet, so the cabinet's faces agree with each other
   public static inline var DECO_RACK = 'textures/facility/deco-rack.png';
+  public static inline var DECO_RACK_SIDE = 'textures/facility/deco-rack-side.png';
+  public static inline var DECO_RACK_TOP = 'textures/facility/deco-rack-top.png';
   // the lit glazing, ONE ART PER RUN LENGTH — three panes and two. a run maps one unit of u across
   // its whole length, so how many panes it shows is a property of the image (see WINDOW_ASPECT_2,
   // which carries the argument and the measurements)
@@ -477,14 +482,25 @@ class FacilityStyle
   public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.6015625;
   public static inline var DECO_BOOKCASE_D = 1.05 * 1.2;
   public static inline var DECO_RACK_W = 1.6;
-  public static inline var DECO_RACK_H = 2.9;
+  // DERIVED, and by the same kind of lock as DECO_SHELF_D and DECO_BOOKCASE_W above — only this one
+  // is fixed by what the art CONTAINS rather than by its aspect. The front tiles at the unit's own
+  // width (see DECO_RACK_TILE) and the image holds THREE chassis, so one chassis is 1.6 / 3 and a
+  // height that is not a whole number of those cuts the top one in half at the lid. It stood at 2.9
+  // = 5.44 chassis and the half unit up there was reported from the game. 2 x W is 6 whole chassis
+  // and v lands on exactly 2.0
+  public static inline var DECO_RACK_H = DECO_RACK_W * 2;
   public static inline var DECO_RACK_D = 1.2;
   // the TILING faces' periods, in world units. these are material scales and nothing else — a
   // perforation pitch, a wood grain, a rack's unit height — so they are chosen against the thing
   // they draw and never against the unit's own size the way the first build's were
   public static inline var DECO_SHELF_TILE = 0.55;
   public static inline var DECO_BOOKCASE_TILE = 1.4;
-  public static inline var DECO_RACK_TILE = DECO_RACK_H / 2;
+  // and the rack's is the ONE exception to the line above, because its three faces are not material
+  // swatches: the front is an authored composition with an end rail down each side and the lid has
+  // its grommets in a fixed place. Those faces are laid from the unit's OWN corner
+  // (FacilityDeco.localFace) rather than off the world, so the period IS the unit's width — u runs
+  // exactly 0..1 across the front and across the lid, which is what puts the rails on the corners
+  public static inline var DECO_RACK_TILE = DECO_RACK_W;
   // how far a fitting's back stands off the wall FACE is NOT a deco number and no longer lives here —
   // it is STAND_GAP, in the halo block below, because the halo plane is what fixes it
   //
@@ -547,15 +563,23 @@ class FacilityStyle
 
   // the server rack's LIGHTS. one additive mesh for every rack in the compound, blinking off a
   // shared clock with a per-light phase — see render.facility.FacilityDeco.lamps
-  public static inline var DECO_LED_ROWS = 6;
-  public static inline var DECO_LED_COLS = 3;
+  // THE FIELD IS READ OFF THE ART AND NOT CHOSEN. It shipped as an even 6 x 3 grid over a band of
+  // the face, which is a lattice of specks floating across three server chassis and their recessed
+  // gaps; a rack's ports are ON a unit, in the narrow blank strip beside its vent panel. The front
+  // image holds _PER_TILE chassis per repeat, so a face h/DECO_RACK_TILE repeats tall carries that
+  // many times as many rows, each on its own unit. Measured on the built 512: the recessed gaps sit
+  // at v 0.34-0.37 and 0.66-0.69 of the tile, so a row at (k + 0.5) / rows lands inside a chassis
+  // every time, within 0.05 world of its true centre
+  public static inline var DECO_LED_PER_TILE = 3;
+  public static inline var DECO_LED_COLS = 2;
   // one light's quad edge, world units. small enough to be a speck at this camera, which is what
   // makes the bloom do the reading rather than the geometry (the watcher's eyes' own finding)
-  public static inline var DECO_LED_SIZE = 0.11;
-  // the band of the rack's front the field covers, as a fraction of its height — the top of the
-  // face, above whatever the art puts at the foot
-  public static inline var DECO_LED_Y0 = 0.30;
-  public static inline var DECO_LED_Y1 = 0.93;
+  public static inline var DECO_LED_SIZE = 0.09;
+  // the strip of the face they sit in, ACROSS it, as a fraction from the texture's own u origin.
+  // measured off the same drop: the vent mesh's per-column deviation falls off a cliff past u 0.66
+  // (18.5 -> 10.1) and the screw column stands at 0.91, so 0.72-0.90 is the blank panel between them
+  public static inline var DECO_LED_U0 = 0.72;
+  public static inline var DECO_LED_U1 = 0.90;
   // and how far proud of that face they sit, so the additive quad is never coplanar with it
   public static inline var DECO_LED_EPS = 0.03;
   // blink speed as a BASE_MS multiplier, and the depth of the dip. a UNIFORM and not a literal in
@@ -718,7 +742,7 @@ class FacilityStyle
   // HALO_FADE / HALO_CORE = 0.2667 of the object's own size on each axis. What that gives, against
   // CONTACT.blur 0.7 and the sweep that found no depth cost below about 1.0:
   //   shelving 2.6 x 2.6 -> 0.69 / 0.69     bookcase 2.02 x 3.36 -> 0.54 / 1.10 (CAPPED)
-  //   rack 1.6 x 2.9     -> 0.43 / 0.77     gas rack 2.63 x 3.0  -> 0.70 / 0.80
+  //   rack 1.6 x 3.2     -> 0.43 / 0.85     gas rack 2.63 x 3.0  -> 0.70 / 0.80
   //   trolley 1.98 x 2.0 -> 0.53 / 0.53
   // every one of them in range, which is why these are the generator's own defaults and not a fitted
   // pair. a BIGGER object throwing a WIDER halo is also the right way round, and it is free here.

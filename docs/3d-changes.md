@@ -8,6 +8,63 @@ lines, `git mv` it to `3d-changes-<YYYY-MM>.md` and start a fresh one.
 Older entries live in [`3d-changes-2026-09.md`](3d-changes-2026-09.md) (rolled at 2634 lines) and
 `3d-changes-2026-08c.md` and its predecessors.
 
+## A server made out of shelves: "same material" is not a reason to share a texture (2026-09-05)
+
+Reported from the game in four words — *"lol, server made out of shelves"*. The rack was already a
+cuboid with a per-face split; what was wrong was WHICH faces shared. Its two ends and its lid were
+emitted into `B_SHELF_TOP`, the shelving's perforated shelf plate, on the argument recorded in
+`FacilityDeco`'s own header: both are dark steel, and a shared buffer is a shared draw call. But a
+cabinet's flank has no holes in it, and the holes are what the eye picks up — the unit read as
+shelving with a server front stuck on it.
+
+**A PACK4 SHEET, AND THE RACK'S WHOLE CABINET IN IT.** One 1024 generation, `$0.2138`, four
+quadrants: front (a re-roll), blank side panel, top lid with slots and grommets, and a
+blanking/cable panel nothing draws yet. Front / side / lid wired, `+2 draw calls` measured by hiding
+the two new meshes at the pose (**111 → 109 → 111**).
+
+**THE SHEET HAS A DARK 2px FRAME, NOT JUST A SEAM BAND, AND IT POISONS EVERY WRAP MEASUREMENT.**
+Column means at the left edge run `1.9 / 8.6 / 47.5`, and the seam sits at **511-513**. Slicing the
+naive `[0:512]` quadrants reported wrapH/wrapV **23.7 / 21.5** on the front and **32.6** on the lid —
+all of it the frame, none of it the tile. Inset from BOTH (crops `[2,2,508,508]`, `[514,2,508,508]`,
+`[2,514,508,508]`) and the real numbers are **2.7/8.0**, **4.0/2.2**, **4.0/10.4**, in line with the
+pack4 rule's own 3.4-4.5 / 3.8-9.9. Insetting from the seam ALONE is worse than not insetting: it
+puts the crop's edge two pixels inside the dark band and reports **50+**.
+
+Vertical wrap on the front actually IMPROVED over the solo roll it replaces, **18.0 → 8.0**. Lifts
+solved so the swap changes art and not exposure: front `0.824` → built **58.9** against the solo
+roll's 59.1; side and lid share `0.839` → **66.4 / 66.2**, above the front's 59 and under the
+shelving steel's 73.4.
+
+**AND THEN THE ART CAME OUT PHASE-SHIFTED, WHICH IS `FacilityGeom.face` DOING ITS JOB.** Reported as
+"front and top look like they're drawn with a u or v shift" — and they were. `face` and `cap` divide
+the WORLD coordinate by the period, which is what makes two neighbouring wall cells carry one
+continuous course, and is wrong for a cabinet: the rack's left edge stands at world x **−48.88**, so
+u opened at **−33.71** and the art began **0.29 of a tile in**. On a material swatch nobody can see
+that; the rack's front is an authored composition with an end rail down each side, and both rails
+landed in the middle of the face. New `FacilityDeco.localFace`/`localCap` lay these three faces from
+the UNIT'S OWN CORNER, on `FacilityGeom.ends`' winding rather than a re-derived one, and
+`DECO_RACK_TILE` becomes the unit's WIDTH (1.6) instead of half its height: read off the built mesh,
+the front is now u **0..1** exactly with the rails on the corners, v 0..1.8125; the sides 0..0.75;
+the lid 0..0.75 x 0..1, under one repeat both ways so it never draws a wrap.
+
+**THE HEIGHT IS THEN A DERIVED NUMBER, AND THE LIGHTS ARE READ OFF THE ART.** Laying the front from
+the unit's corner makes `DECO_RACK_H` a texture constant: the image holds **3 chassis per repeat**,
+so a height that is not a whole number of thirds of the tile cuts the top unit in half at the lid.
+It stood at 2.9 = **5.44 chassis** and the half unit was reported. `DECO_RACK_H = DECO_RACK_W * 2` →
+v exactly **2.0**, 6 whole chassis. The LED field followed: it shipped as an even **6 x 3** grid over
+a band of the face, i.e. specks across the vent mesh and across the recessed gaps, and is now **one
+pair per chassis** — rows at `(k + 0.5) / rows` with `rows = h / tile * 3` (measured: the gaps sit at
+v 0.34-0.37 and 0.66-0.69 of the tile, so every row lands inside a unit within 0.05 world of its
+centre), columns in the blank strip at u **0.72-0.90** (the vent mesh's per-column deviation falls
+18.5 → 10.1 past u 0.66 and the screw column stands at 0.91). 18 lights → 12. **The band has to be
+measured from the TEXTURE'S u origin**, which `FacilityGeom.ends` puts at x1 or z1 on two of the four
+hands — the old grid was symmetric about the face and could not tell; a strip pinned the wrong way
+round lands on the vent panel.
+
+Verdict: KEEP. Three traps worth carrying forward — two surfaces being the same MATERIAL says
+nothing about whether they can be the same IMAGE; world-aligned UVs are for RUNS, not for objects;
+and once a face is laid from its own corner, the object's SIZE is downstream of its art.
+
 ## Everything that stands against a wall was standing in the wrong place (2026-09-05)
 
 Three things reported from the game in one breath — "the bookcase halo clips the bookcase", "the
