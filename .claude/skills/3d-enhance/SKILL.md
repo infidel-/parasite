@@ -44,9 +44,11 @@ Read in this order, no skipping:
 3. `docs/3d-render.md` verdict table — grep the area name and every layer name. Rows record what was
    already tried **and rejected** there. Re-proposing a rejected idea is this skill's main failure
    mode (see: sewer ledge-rim darkening, per-cell wall variants, sewer chunking).
-4. live, if the game is running: `make reload`, then the hook — `__facility()`, `__wild()`, `__check`
-   — for what this seed ACTUALLY built (counts, positions, per-structure state). `node sshot.mjs` for
-   a frame. Console `go area <x> <y>` teleports, `go xy <x> <y>` moves inside the area.
+4. live, if the game is running: **`make reload-load`** (plain `make reload` lands on the main menu,
+   where no area is built and every hook below reads nothing), then the hook — `__facility()`,
+   `__wild()`, `__check` — for what this seed ACTUALLY built (counts, positions, per-structure
+   state). `node sshot.mjs --wait` for a frame. Console `go area <x> <y>` teleports, `go xy <x> <y>`
+   moves inside the area.
 
 Note for the proposal: which layers are thin (count 0 or single digits), and **what the gameplay
 camera actually sees**. Gameplay is a zoom lerp capped at `parasiteZoom` 0.30 / `hostZoom` 0.60, and
@@ -132,6 +134,8 @@ number, not a quality one — a big reach makes an unmotivated effect worse.*
 - props draw Lambert (`Models.toLambert`); only `roughness`-dialled habitat props keep MeshStandard,
   so do not plan on a specular highlight.
 - new glb path → add a warm entry in `View.hx`'s `Models.get` chain, one per material variant.
-- `cd src && make`, then `make reload`, then verify with the hook and numbers — not by eye.
+- `cd src && make`, then `make reload-load`, then verify with the hook and numbers — not by eye.
+- a surface's built value is `built_linear` in `art/textures.json` (stamped by `make tex`); measure
+  anything it does not hold — a frame region, an atlas cell — with `python3 tools/pix.py`.
 - A/B with `perf street` on a pinned free-cam, interleaved, median, same view.
 - append the entry to `docs/3d-changes.md` and one row to `docs/3d-render.md`, including failures.

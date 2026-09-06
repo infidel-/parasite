@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export ai
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -12,6 +12,12 @@ sshot:
 # dev: reload the running renderer over CDP to pull in fresh build artifacts (debug port 9300)
 reload:
 	node reload.mjs
+
+# dev: reload AND carry on through the boot — waits out the warm, answers the autosave offer and
+# returns once the first frame presented, so the hooks (__facility(), __wild(), __check) and
+# `make sshot` see a built area instead of the main menu. usage: make reload-load [slot=1]
+reload-load:
+	node reload.mjs --load $(slot)
 
 # dev: show working-tree diff (stat + full) without a pager
 git-diff:

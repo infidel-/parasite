@@ -27,6 +27,8 @@ from datetime import datetime
 import numpy as np
 from PIL import Image
 
+from pix import measure  # one copy of the value statistic, shared with the measuring tool
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(ROOT, "textures-src")
 # runtime textures are served from the electron app dir (staged into app/ by the build)
@@ -202,6 +204,16 @@ def convert(label, e, default_res):
 
     if e.get("needs_alpha") and not has_alpha(Image.open(out)):
         warn(f"{label}: needs transparency but {e['src']} is opaque — human-edit the source")
+
+    # record what the surface ACTUALLY came out at. Nearly every judgement in docs/3d-render.md is a
+    # ratio between two of these ("a ground layer at 1.11x its neighbour is invisible"), and until
+    # now each one cost a throwaway measuring script, so the numbers only survived in prose. Written
+    # for every entry, not just rebuilt ones, so an untouched tree backfills on the next run; the
+    # lift notes above are the same statistic, so old and new rows compare directly.
+    if fresh or "built_linear" not in e:
+        lum, srgb = measure(out)
+        e["built_linear"] = round(lum, 4)
+        e["built_srgb"] = round(srgb, 1)
     return fresh
 
 

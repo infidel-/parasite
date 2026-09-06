@@ -48,6 +48,14 @@ gameplay camera does. It is a dev tool; the two-tier merge lead below is the onl
   the default, not a law — and on the iGPU it is simply false.
 - **Always A/B against a measured baseline in the same view.** Both `follow` and `tactical` — they
   differ (tactical draws ~80 more calls and ~2ms more submit).
+- **A surface's value is `built_linear` in `art/textures.json`** — stamped for every entry by
+  `make tex`, so the ladder is a grep and shows up in a diff. It is mean linear LUMINANCE (Rec.709,
+  per pixel, over the OPAQUE texels), which is the statistic every row below is written in and is
+  *not* the flat channel mean: on the green-dominant wilderness set the two differ by 3-9%, enough to
+  invert which of two layers reads lighter. For what the manifest does not hold — a region of a
+  captured frame, an atlas cell, a prop's hue split — `python3 tools/pix.py <img> [--box
+  name,x0,y0,x1,y1] [--scene] [--atlas r,c] [--hue]`, same statistic. Reproduces the recorded
+  asphalt 0.0329, walkway 0.0680, turf 0.0476, earth 0.0348 and roof 0.0275.
 
 ### Measuring on a weak / integrated GPU
 

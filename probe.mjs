@@ -1,29 +1,33 @@
 // dev tooling: evaluate JS in the running Parasite game over CDP, print result.
 // usage: node probe.mjs "<js expression>"
-const HOST = '172.18.208.1:9300';
-const expr = process.argv[2] || '1';
+//        node probe.mjs --wait "<js expression>" [timeoutMs]   poll until truthy, print elapsed
+// --wait is the primitive that replaces a sleep: "until the area rebuilt", "until __facility()
+// answers", "until the fader lifted". It exits 2 on timeout, so it chains with && in a shell.
+import { connect, evaluate, waitFor } from './tools/cdp.mjs';
 
-const targets = await (await fetch(`http://${HOST}/json`)).json();
-const page = targets.find(t => t.type === 'page' && t.url.startsWith('file:') && t.url.includes('app.html'));
-if (!page) { console.error('no app.html page target'); process.exit(1); }
+const args = process.argv.slice(2);
 
-const ws = new WebSocket(page.webSocketDebuggerUrl);
-let id = 0;
-const pending = new Map();
-const send = (method, params = {}) =>
-  new Promise(res => { const i = ++id; pending.set(i, res); ws.send(JSON.stringify({ id: i, method, params })); });
-ws.onmessage = e => {
-  const m = JSON.parse(e.data);
-  if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); }
-};
-const fail = setTimeout(() => { console.error('timed out'); process.exit(2); }, 15000);
-ws.onopen = async () => {
-  const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
-  clearTimeout(fail);
-  if (r.result && r.result.exceptionDetails)
-    console.log('EXCEPTION:', JSON.stringify(r.result.exceptionDetails, null, 1));
-  else
-    console.log(typeof r.result.result.value === 'string' ? r.result.result.value : JSON.stringify(r.result.result.value, null, 1));
+if (args[0] === '--wait') {
+  const expr = args[1] || '1';
+  const ms = parseInt(args[2] || '30000');
+  const cdp = await connect({ timeoutMs: 0 });
+  const t = await waitFor(cdp, expr, ms);
+  cdp.close();
+  if (t < 0) {
+    console.error(`timed out after ${ms}ms waiting for: ${expr}`);
+    process.exit(2);
+  }
+  console.log(`ready in ${t}ms`);
   process.exit(0);
-};
-ws.onerror = e => { console.error('ws error', e.message || e); process.exit(4); };
+}
+
+const cdp = await connect({ timeoutMs: 15000 });
+try {
+  const v = await evaluate(cdp, args[0] || '1');
+  console.log(typeof v === 'string' ? v : JSON.stringify(v, null, 1));
+}
+catch (e) {
+  console.log('EXCEPTION:', e.message);
+}
+cdp.close();
+process.exit(0);
