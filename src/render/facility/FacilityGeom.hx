@@ -17,10 +17,11 @@ import render.world.WorldCtx.WallMount;
 // header of render.facility.FacilityArea.ease
 typedef Shell = {
   roof:Array<Mesh>,
-  // this structure's window panes, as the MATERIALS render.facility.FacilityArea.glaze dims once the
-  // player walks in. one entry per RUN LENGTH the structure carries, so 0..2 — the panes are not in
-  // `roof` and must not be: a roof fades to nothing and glass only changes what it is
-  panes:Array<MeshLambertMaterial>,
+  // the shared uniform this structure's window panes dim on, 0 lit from the lot .. 1 seen from
+  // inside — one object handed to both run lengths' materials, so FacilityArea writes ONE float per
+  // structure per frame and touches no material property at all. the panes are not in `roof` and
+  // must not be: a roof fades to nothing and glass only changes what it is
+  glaze:Dynamic,
   // what the parapet ring emitted on this structure, for __facility().roof. a hangar's are both 0
   // by construction — its roofline is a later job and `parapet` is not called on one at all
   paraCells:Int,
@@ -613,7 +614,7 @@ class FacilityGeom
         FacilityRoof.crescents(m, si, wOut);
       var shell:Shell = {
         roof: [],
-        panes: [],
+        glaze: { value: 0.0 },
         paraCells: st.hangar ? 0 : ringCells(m, si),
         paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
@@ -1181,9 +1182,8 @@ class FacilityGeom
       if (b.idx.length == 0)
         return;
       var tex = Textures.loadAlphaCropped(path);
-      // held as its own typed local rather than as `patch`'s Dynamic return, because `Shell.panes`
-      // carries it on to FacilityArea and a material driven per frame should not be Dynamic there.
-      // `patch` folds the mask into this same object and hands it straight back
+      // held as its own typed local rather than as `patch`'s Dynamic return, because `glaze` below
+      // hooks it before the mask does. `patch` folds the mask into this same object and hands it back
       var mat = new MeshLambertMaterial({
         map: tex,
         emissiveMap: tex,
@@ -1192,11 +1192,12 @@ class FacilityGeom
         alphaTest: 0.02,
         side: THREE.FrontSide,
       });
+      // BEFORE the mask, so the mask chains onto this hook rather than the other way round. the two
+      // use different anchors (<map_fragment> / <emissivemap_fragment> against <fog_fragment>) and
+      // VisionMask carries a chained hook's cache key forward, which is the whole contract here
+      glaze(mat, shell.glaze);
       VisionMask.patch(mat);
       mat.transparent = true;
-      // and the structure gets the handle, so walking in can dim BOTH of this run's faces at once —
-      // see FacilityStyle.WINDOW_TINT_IN for why one material is the right answer and not a limit
-      shell.panes.push(mat);
       var mesh = new Mesh(geom(b), mat);
       mesh.receiveShadow = false;
       // the pane CASTS, and it is the only thing that can: the run's opening is cut OUT of the wall
@@ -1207,6 +1208,73 @@ class FacilityGeom
       // picks exactly the one of the run's two coplanar faces that looks away from the moon
       mesh.castShadow = true;
       scene.add(mesh);
+    }
+
+// the tint every pane's GLASS takes when the player is inside, as one shared uniform — the value is
+// a constant and every pane in the game wants the same one
+  static var uPaneTint:Dynamic = null;
+
+// fold the "player is inside this building" dimmer into one pane material's own shader. `u` is the
+// structure's amount, 0 lit .. 1 seen from inside, and it is the ONLY thing that moves per frame.
+//
+// IT HAS TO BE A SHADER, and the frames are why. This was `material.color` for a build, which
+// multiplies the whole map, and the art's frame members are already sRGB 16-127 — tinted, they
+// crushed into the glass and an opening read as one flat black rectangle. Reported from the game as
+// exactly that. The only thing that separates frame from glass is the ALPHA the art already carries
+// (tools/textures.py's `glass_alpha`: bright half to 128, frame left at 255, which the source's own
+// luma histogram splits outright), and nothing but a fragment can read it. See
+// FacilityStyle.WINDOW_TINT_IN.
+//
+// the two anchors are chosen and not interchangeable: <map_fragment> is where `diffuseColor` has
+// just taken the map and so is the only point the alpha means the art's alpha, and it runs BEFORE
+// <alphatest_fragment>, which this must not disturb — only `.rgb` is touched. <emissivemap_fragment>
+// is where `totalEmissiveRadiance` exists at all
+  static function glaze(mat:MeshLambertMaterial, u:Dynamic):Void
+    {
+      // three's shader hooks are an untyped API — `onBeforeCompile` and `customProgramCacheKey` are
+      // on no extern and cannot be, being a compiler callback and a cache-key method. Same boundary
+      // render.world.VisionMask.patch crosses, in the same way
+      var d:Dynamic = mat;
+      if (uPaneTint == null)
+        uPaneTint = { value: new Color(FacilityStyle.WINDOW_TINT_IN) };
+      d.onBeforeCompile = function(shader:Dynamic, renderer:Dynamic)
+        {
+          shader.uniforms.paneGlaze = u;
+          shader.uniforms.paneTint = uPaneTint;
+          // the mask is DILATED before it is thresholded — see FacilityStyle.WINDOW_TINT_GROW. min
+          // of a plus-shaped tap, which is a morphological grow: a fragment counts as glass if
+          // anything within GROW texels of it is. Four taps and not eight because the members this
+          // has to reach under are a mullion and a rail, both axis-aligned; a corner nick two texels
+          // across is not visible. `textureSize` rather than a uniform: the art is cropped to its own
+          // alpha bbox at LOAD, so its size is not known when this material is built.
+          //
+          // smoothstep and not step on the result: the ramp is what keeps the grown edge from
+          // drawing a hard line of its own one texel further out
+          shader.fragmentShader = 'uniform float paneGlaze;\n' +
+            'uniform vec3 paneTint;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <map_fragment>',
+              '#include <map_fragment>\n' +
+              // `float( .. )` around the constant on purpose: Haxe prints 2.0 as "2", and a bare
+              // integer literal divided by a vec2 leans on ESSL 3.00's implicit conversion
+              '  vec2 paneTx = float( ' + FacilityStyle.WINDOW_TINT_GROW +
+                ' ) / vec2( textureSize( map, 0 ) );\n' +
+              '  float paneA = diffuseColor.a;\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv + vec2( paneTx.x, 0.0 ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv - vec2( paneTx.x, 0.0 ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv + vec2( 0.0, paneTx.y ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv - vec2( 0.0, paneTx.y ) ).a );\n' +
+              '  float paneGlass = smoothstep( 0.90, 0.70, paneA );\n' +
+              '  diffuseColor.rgb *= mix( vec3( 1.0 ), paneTint, paneGlaze * paneGlass );');
+          // the glow goes with the WHOLE pane, frame included — it is what carries the glass over
+          // BLOOM_THRESHOLD, and the frame never crossed it at any intensity anyway
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+            '#include <emissivemap_fragment>',
+            '#include <emissivemap_fragment>\n' +
+            '  totalEmissiveRadiance *= 1.0 - paneGlaze;');
+        };
+      // an own key, or three hands this program to any other material the mask keys the same way —
+      // the trap VisionMask documents. It reads `hasOwnProperty` here and chains what it finds
+      d.customProgramCacheKey = function() return 'paneGlaze';
     }
 
 // the roof, and anything STANDING on it that has to fade with it. no vision mask (see the call

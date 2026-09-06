@@ -72,10 +72,6 @@ class FacilityArea implements Area3D
   // is the one thing this must not do. `inside` is the cell's own owner and nothing else
   var inside:Array<Float>;                      // per structure, 0 seen from the lot .. 1 stood in
   var inTarget:Array<Float>;
-  // the pane's two ends, lazily built: a static `new Color` would run at class init, before THREE
-  // is loaded (the reason render.facility.FacilityGlow.warm defers its own the same way)
-  static var GLAZE_LIT:Color = null;
-  static var GLAZE_IN:Color = null;
   var lastCol = -1;                             // the cell the targets were last recomputed for
   var lastRow = -1;
   var lastVis = -1;                             // and the visibility revision, so an opened door counts
@@ -509,7 +505,7 @@ class FacilityArea implements Area3D
           if (d != inside[i])
             {
               inside[i] = d;
-              glaze(shells[i].panes, d);
+              shells[i].glaze.value = d;
             }
         }
     }
@@ -525,28 +521,6 @@ class FacilityArea implements Area3D
       return cur;
     }
 
-// dim one structure's window panes as the player walks into it. `t` 0 = lit and blooming, read from
-// across the lot; 1 = seen from inside, where a night window is not a light source and the glass
-// darkens the lot behind it instead.
-//
-// BOTH FACES of every run take it, because a run's two faces share one material — see
-// FacilityStyle.WINDOW_TINT_IN, which is where the argument for that lives. Nothing here touches
-// geometry, `castShadow` or `opacity`, so the pane goes on casting the same solid shadow it always
-// did (FacilityGeom.addPane) and the alphaTest-vs-opacity trap the roof fade hit cannot apply
-  static function glaze(mats:Array<MeshLambertMaterial>, t:Float):Void
-    {
-      if (GLAZE_LIT == null)
-        {
-          GLAZE_LIT = new Color(0xffffff);
-          GLAZE_IN = new Color(FacilityStyle.WINDOW_TINT_IN);
-        }
-      for (mat in mats)
-        {
-          mat.emissiveIntensity = FacilityStyle.WINDOW_EMISSIVE +
-            (FacilityStyle.WINDOW_EMISSIVE_IN - FacilityStyle.WINDOW_EMISSIVE) * t;
-          mat.color.lerpColors(GLAZE_LIT, GLAZE_IN, t);
-        }
-    }
 
 // set one group's opacity. depthWrite follows it rather than staying on: a faded surface that still
 // wrote depth would reject everything behind it however faint it drew, which is the trap

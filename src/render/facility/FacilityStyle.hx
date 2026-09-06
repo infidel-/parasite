@@ -1022,29 +1022,48 @@ class FacilityStyle
   // halo falls on the facade around the opening, which is the "the building is occupied" read the
   // ground spill alone could not give
   public static inline var WINDOW_EMISSIVE = 2.2;
-  // and what the same pane drops to once the player is INSIDE the structure it stands in, eased over
-  // REVEAL_MULT beside the roof (render.facility.FacilityArea.glaze). two numbers because the read
-  // has two halves and one knob cannot do both.
+  // what the pane's GLASS is multiplied by once the player is INSIDE the structure it stands in,
+  // eased over REVEAL_MULT beside the roof (render.facility.FacilityGeom.glaze folds it into the
+  // pane's own shader; FacilityArea drives the amount).
   //
-  // the EMISSIVE goes to zero: from a lit room a night window is not a light source, and this is also
-  // what kills the bloom. 0.9 / 0.62 = 1.45 is where the brightest glass texel stops clearing
-  // BLOOM_THRESHOLD, so anything under that is enough for the halo and nowhere near enough for the
-  // eye — the glass would still read as a bright panel at 1.4.
+  // THE GLASS AND NOT THE WHOLE PANE, and that is the one thing to hold here. This was a plain
+  // `material.color` for a build, which multiplies the entire map — and the art's frame members are
+  // already sRGB 16-127, so tinting them crushed the mullions into the glass and every opening read
+  // as one flat black rectangle. Reported from the game as exactly that. What separates the two is
+  // the ALPHA the art already carries (tools/textures.py's `glass_alpha`: bright half to 128, frame
+  // left at 255), which only a fragment can read — hence the shader.
   //
-  // the TINT is what darkens the LOT SEEN THROUGH the opening, and it comes free from the art: the
-  // glass half is alpha 128 (tools/textures.py's `glass_alpha`), so the pane composites as
-  // 0.5 * tint + 0.5 * outside and halves everything behind it. 0x39424a fitted live against the
-  // interior value ladder — dark enough to read as glazing, light enough that the mullions still
-  // separate from it.
+  // it is also what darkens the LOT SEEN THROUGH the opening, and that comes free from the same
+  // alpha: the glass half is half see-through, so the pane composites as 0.5 * tint + 0.5 * outside.
+  // 0x39424a fitted live against the interior value ladder — dark enough to read as glazing, light
+  // enough that the frame still stands off it.
   //
-  // BOTH FACES OF A RUN TAKE IT, and that is the whole reason this is one material rather than two
-  // meshes. The interior face cannot be seen while a structure is solid — its own roof is over it —
-  // and the face the camera reads at the NEAR wall of a room the player is standing in is the
-  // EXTERIOR one. So "dark from inside" and "no bloom on the outer part indoors" are not two
-  // features; they are the same switch, and splitting the buffer would buy nothing and cost 4 draw
-  // calls, a program and the pane's shadow caster (see FacilityGeom.addPane on which face casts)
-  public static inline var WINDOW_EMISSIVE_IN = 0.0;
+  // the EMISSIVE goes to zero with it and takes the WHOLE pane, frame included: from a lit room a
+  // night window is not a light source, and that term is also what carries the glass over
+  // BLOOM_THRESHOLD. 0.9 / 0.62 = 1.45 is where the brightest glass texel stops crossing, so a
+  // "dimmed" 1.4 would kill the halo and still read as a lit panel — it is 0 or it is nothing.
+  //
+  // BOTH FACES OF A RUN TAKE ALL OF IT, and that is why this is one material rather than two meshes.
+  // The interior face cannot be seen while a structure is solid — its own roof is over it — and the
+  // face the camera reads at the NEAR wall of a room the player is standing in is the EXTERIOR one.
+  // So "dark from inside" and "no bloom on the outer part indoors" are the same switch, and
+  // splitting the buffer would buy nothing and cost 4 draw calls, a program and the pane's shadow
+  // caster (see FacilityGeom.addPane on which of the two faces actually casts)
   public static inline var WINDOW_TINT_IN = 0x39424a;
+  // how far the tinted region is GROWN into the frame, in texels of the art's own level 0.
+  //
+  // the alpha split is exact in the source and fuzzy on screen: the texture is minified through
+  // mipmaps and sampled bilinearly, so every glass/member boundary comes back as a RAMP from 0.5 up
+  // to 1.0 across a texel or two. `paneGlass`'s threshold sits at 0.90-0.70, so the outermost row of
+  // each pane reads as frame and stays undimmed — a bright hairline round every light, reported from
+  // the game as "small issues on the tex".
+  //
+  // so the mask is DILATED before it is thresholded: a fragment counts as glass if anything within
+  // this many texels of it is. 2 covers the bilinear tap and the row it reads from. It is a
+  // morphological grow (min of a plus-shaped tap) and NOT a wider smoothstep band — widening the
+  // band would have to reach past the frame's own 253/255 = 0.992 to catch that row, which dims the
+  // whole frame instead of the hairline
+  public static inline var WINDOW_TINT_GROW = 2.0;
 
   // ---- the reveal ------------------------------------------------------------------------------
 

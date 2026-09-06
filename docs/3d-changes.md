@@ -687,3 +687,63 @@ Verified live, standing in the south lab: that structure's two meshes (14 + 24 q
 `alphaTest` 0.02 and `castShadow` unchanged on all of them. **+0 meshes and +0 materials by
 construction** — nothing is created, four existing materials take different uniform values — so
 there is no draw call and no program to A/B. No geometry, no art, no persisted change.
+
+> The `material.color` half of this was WRONG and lasted one build — see the next entry. Everything
+> else here stands: one material, the interior quad as caster, and `model.owner` over `reveal`.
+
+## `material.color` cannot dim glass without dimming the frame — the alpha already knew (2026-09-07)
+
+Reported one build after the entry above: **"the window frames also go dark"**. Correct, and obvious
+in hindsight — `material.color` multiplies the WHOLE map. The art's frame members are already sRGB
+**16-127**; multiplied by 0x39424a (linear ~0.036/0.050/0.066) they land near zero, so the mullions
+crushed into the glass and every opening read as one flat black rectangle instead of glazing in a
+frame.
+
+The thing that separates them was already in the file and had already been measured twice for other
+reasons: **the ALPHA**. `tools/textures.py`'s `glass_alpha` took the bright half of the art to 128
+and left the frame at 253-255, off a luma histogram that splits outright (frame 16-127 at 30.6%,
+glass 144-207 at 58.8%, a 0.2% valley between). It is a PER-TEXEL split, so nothing but a fragment
+can read it — which is the whole reason this had to stop being a material property.
+
+New `FacilityGeom.glaze` folds the dimmer into the pane's own shader, installed BEFORE
+`VisionMask.patch` so the mask chains onto it:
+
+- `<map_fragment>` — `diffuseColor.rgb *= mix( vec3(1.0), paneTint, paneGlaze * paneGlass )`, where
+  `paneGlass = smoothstep( 0.90, 0.70, diffuseColor.a )`. That anchor is the only point the alpha
+  means the ART's alpha, and it runs BEFORE `<alphatest_fragment>`, which this must not disturb —
+  only `.rgb` is touched. `smoothstep` and not `step`: bilinear filtering leaves intermediate alphas
+  along every member edge and a hard cut draws a bright fringe round each mullion.
+- `<emissivemap_fragment>` — `totalEmissiveRadiance *= 1.0 - paneGlaze`, the WHOLE pane. The frame
+  never crossed `BLOOM_THRESHOLD` at any intensity, so there is nothing to preserve there.
+
+**The per-frame cost went DOWN, not up.** The transition is now one shared uniform per structure
+(`Shell.panes:Array<Material>` became `Shell.glaze:Dynamic`), so `FacilityArea` writes ONE float per
+structure per frame and touches no material property at all — `emissiveIntensity` stays 2.2 and
+`color` stays ffffff for the life of the area. The `Three.hx` `color` extern added a build ago was
+deleted again with it.
+
+**+0 programs**, and the cache key is why: `customProgramCacheKey` returns `'paneGlaze'`, which
+`VisionMask` chains, so the four panes read **`paneGlazevisMasksindoor`** against the entry booth's
+**`visMasksindoor`** — distinct, so three can never hand a pane's program to a plain masked material
+(the trap `VisionMask` documents). Live: **90 programs**, the same count the colour version ran at,
+60 FPS, 118 calls.
+
+Verified live standing in structure 0 of three: `inside` **[1,0,0]** = `glaze` **[1,0,0]**, so the
+hangar and the far lab stay lit and blooming while the room the player is in reads dark glass with
+the frame plainly standing off it. `transparent`, `alphaTest` 0.02 and `castShadow` unchanged on all
+four panes.
+
+**The threshold alone left a bright hairline, and the mask had to be GROWN.** Reported straight after
+as "small issues on the tex": the alpha split is exact in the SOURCE and fuzzy on SCREEN — the pane
+minifies through mipmaps and samples bilinearly, so every glass/member boundary arrives as a ramp
+from 0.5 up to 1.0 across a texel or two, and the outermost row of each light reads as frame at the
+0.90 threshold and stays undimmed. Widening the smoothstep band cannot fix it: to catch that row the
+band has to reach past the frame's own **253/255 = 0.992** and then the whole frame dims, which is
+the bug this entry started from. So the mask is DILATED before it is thresholded — `paneA` is the
+`min` of a plus-shaped tap at `FacilityStyle.WINDOW_TINT_GROW` **2.0** texels, i.e. a fragment counts
+as glass if anything within two texels of it is. Four taps and not eight: the members are a mullion
+and a rail, both axis-aligned, and a corner nick two texels across is not visible. `textureSize( map,
+0 )` rather than a uniform, because the art is cropped to its own alpha bbox at LOAD and its size is
+not known when the material is built — and `float( .. )` wraps the constant, since Haxe prints 2.0 as
+"2" and a bare integer over a vec2 leans on ESSL 3.00's implicit conversion. Live after: **90
+programs**, 112 calls, 60 FPS, 0 console errors, `inside` **[1,0,0]** = `glaze` **[1,0,0]**.
