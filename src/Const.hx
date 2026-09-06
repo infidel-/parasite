@@ -182,6 +182,20 @@ class Const
         { row: 13, col: 6 },
       ],
     },
+    // the top of the HIGH list, four frames on ONE kind: a fridge, a glass-door freezer, a twin-door
+    // storage cabinet and a biohazard safety cabinet are the same tall two-door case seen from the
+    // front, and what separates them in the atlas is a decal at 64 px. One emitted unit and one
+    // authored front serves all four — see art/textures.json's facility/deco-cabinet-front
+    {
+      kind: FIT_CABINET,
+      high: true,
+      frames: [
+        { row: 8, col: 0 },
+        { row: 8, col: 1 },
+        { row: 8, col: 2 },
+        { row: 8, col: 3 },
+      ],
+    },
     // the LOW list's four stacked-server icons: the same cabinet as the rack above, one tile tall
     // rather than two, so they cost NO new art and NO new draw call — same three surfaces
     {

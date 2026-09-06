@@ -505,3 +505,46 @@ placements and adds no mesh, so a livery this compound does not deal costs nothi
 **steel 0, bio 1, rad 3**, exactly the atlas histogram, so this seed pays **2** batches and not 3.
 `EXTRA`, `FacilityWarm` and `FacilityArea` all derive their rows from `FacilityDeco.PROPS`, so a
 fourth livery is one table row.
+
+## Four atlas frames on one emitted kind: the twin-door lab case (2026-09-06)
+
+`entities64` 8/0-3 draws a fridge, a glass-door freezer, a twin-door storage cabinet and a biohazard
+safety cabinet. At 64 px those are ONE silhouette with a different decal on it, so they became ONE
+kind — `FIT_CABINET` — with one authored front and two tiling swatches, not four of anything.
+
+**One 1024 packed sheet, laid out like the bookcase's**: the front as a tall sub-rect on the left,
+the side swatch top-right, the top swatch bottom-right. `quality: "medium"`, **$0.056**.
+
+**THE MODEL MISSED THE STATED SPLIT BY MORE THAN LAST TIME, and the sheet has a RIM as well as a
+seam.** Asked for three quarters (768) it drew the vertical seam at **587** — per-column mean |diff|
+**75.4 at 566**, which is the front's own right upright, and **43.3 at 587**, which is the split —
+and put the horizontal one at 512 as asked. On top of that a 1px dark rim runs along the top, bottom
+and left edges (col 0 at **93** against the sheet's 123). Every crop insets from both. The front is
+`[2,2,584,1022]`, and **584 x 1022 is exactly 4/7**: that is what `DECO_CABINET_W` is locked to, the
+third aspect lock in this family. The swatches are `[600,40,400,400]` and `[600,560,400,400]`,
+wrapH/wrapV **3.1-3.5**, in line with what a packed quadrant costs elsewhere.
+
+**THE HEIGHT CARRIES THE EMPHASIS, NOT THE WIDTH.** 4/7 is narrower than any of the four sprites read
+(2.25 / 1.64 / 2.53 / 2.86 units over their alpha bboxes), and the width is not free — it is the
+lock. So `DECO_CABINET_H` takes the same flat **1.2** the bookcase beside it took, `2.86 * 1.2 =
+3.43`, and the width follows at **1.96**. Under `WALL_H` 6.0, dealt on the HIGH list only so there is
+never a sill to clear, and it still slides inside the 3.0 a run-end wall cell offers.
+
+**THE FIRST LIFT IN THIS FAMILY THAT DARKENS.** The drop came back at **0.180 linear**, the palest
+surface generated for this compound, against a `facility/wall-room` of **0.1375** — and a fitting
+cannot read lighter than the wall it stands against. g **1.394 / 1.632 / 1.624** (over 1 darkens)
+lands **0.0952 / 0.0948 / 0.0860**: just over the shelving steel's 0.1034, clear of the bookcase's
+0.0852, the top authored darker than the front because a horizontal face keeps 0.71 of its albedo
+against a vertical's ~0.2. All three solved off `built_linear` in the manifest rather than a
+throwaway measuring script — the first change to use the tooling pass that put it there.
+
+**A CAST KEPT ON PURPOSE, against this file's own re-roll-over-6 rule**: chroma **9.6** with G over B.
+The four icons it replaces are pale grey-green themselves (atlas chroma **15.2 / 11.8 / 13.6**), so a
+neutral roll would have been the wrong OBJECT. The rule is about a cast the art did not ask for.
+
+**+3 CALLS AND NO PROGRAM.** A/B'd on the three meshes' `visible` at a pinned free-cam pose:
+**81 → 78 → 81**, exactly +3 for the compound's 3 units and **24 tris**. The material config is the
+bookcase's exactly, and that is verified rather than argued —
+`renderer.properties.get(mat).currentProgram.cacheKey` is byte-identical to the bookcase front's — so
+`FacilityModel.demo` needs no cell for the new kind. Controls unmoved: `cabinets` 30, `boards` 2,
+`exits` 16, `shadows` 401, `grime` 528.

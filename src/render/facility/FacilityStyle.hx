@@ -157,6 +157,12 @@ class FacilityStyle
   public static inline var DECO_RACK = 'textures/facility/deco-rack.png';
   public static inline var DECO_RACK_SIDE = 'textures/facility/deco-rack-side.png';
   public static inline var DECO_RACK_TOP = 'textures/facility/deco-rack-top.png';
+  // and the twin-door lab case takes three more, off a sheet of its own. Its front is the second
+  // 0..1 composition in the family (after the bookcase's) and locks DECO_CABINET_W; its side and top
+  // tile, so the depth stays free
+  public static inline var DECO_CABINET_FRONT = 'textures/facility/deco-cabinet-front.png';
+  public static inline var DECO_CABINET_SIDE = 'textures/facility/deco-cabinet-side.png';
+  public static inline var DECO_CABINET_TOP = 'textures/facility/deco-cabinet-top.png';
   // and the floor drain, which is a FITTING IN THE FLOOR and reaches the 3D view the same way the
   // rest of this family did: as geometry, not as its atlas icon laid flat. See DECO_DRAIN_SZ
   public static inline var DECO_DRAIN = 'textures/facility/floor-grate.png';
@@ -484,6 +490,16 @@ class FacilityStyle
   public static inline var DECO_BOOKCASE_H = 2.8 * 1.2;
   public static inline var DECO_BOOKCASE_W = DECO_BOOKCASE_H * 0.6015625;
   public static inline var DECO_BOOKCASE_D = 1.05 * 1.2;
+  // the twin-door lab case, and the THIRD aspect lock in the family: its front is one authored
+  // composition mapped 0..1, so the width follows the crop and is not chosen. The sheet drew that
+  // front 584 x 1022, which is exactly 4/7 — narrower than the four sprites it replaces read
+  // (2.25 / 1.64 / 2.53 / 2.86 units over their alpha bboxes), so the HEIGHT carries the same flat
+  // 1.2 emphasis the bookcase beside it took rather than the width being squeezed to fit. 3.43 is
+  // then the tallest fitting in the compound, under WALL_H 6.0 and dealt on the HIGH list only, so
+  // there is never a sill to clear
+  public static inline var DECO_CABINET_H = 2.86 * 1.2;
+  public static inline var DECO_CABINET_W = DECO_CABINET_H * 0.5714285714;
+  public static inline var DECO_CABINET_D = 1.2;
   public static inline var DECO_RACK_W = 1.6;
   // DERIVED, and by the same kind of lock as DECO_SHELF_D and DECO_BOOKCASE_W above — only this one
   // is fixed by what the art CONTAINS rather than by its aspect. The front tiles at the unit's own
@@ -526,6 +542,11 @@ class FacilityStyle
   // they draw and never against the unit's own size the way the first build's were
   public static inline var DECO_SHELF_TILE = 0.55;
   public static inline var DECO_BOOKCASE_TILE = 1.4;
+  // the cabinet's side and top are plain painted sheet with nothing in them to count, so the period
+  // is set to the unit's own DEPTH: an end face then shows exactly one repeat and no wrap line is
+  // ever drawn across it — the same protection FacilityDeco.localCap buys the rack's lid, bought
+  // here with a number instead of a mapping
+  public static inline var DECO_CABINET_TILE = DECO_CABINET_D;
   // and the rack's is the ONE exception to the line above, because its three faces are not material
   // swatches: the front is an authored composition with an end rail down each side and the lid has
   // its grommets in a fixed place. Those faces are laid from the unit's OWN corner

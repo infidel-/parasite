@@ -661,10 +661,12 @@ class FacilityModel
           m.table[row][col] = true;
       // one of each EMITTED fitting against the north room's own wall, clear of the bench run beside
       // them. stamped by hand for the reason the doors below are: findDeco reads live
-      // objects.Decoration objects and there is no area here. these three and not all six, because
-      // what a cell here buys is a MATERIAL: the rack is the only kind emitting into the second
-      // (additive, shader-patched) buffer, FIT_RACK_LOW is that same rack at another height, and the
-      // two round kinds are instanced glbs warmed off FacilityWarm's own prop list instead
+      // objects.Decoration objects and there is no area here. these three and not all of them,
+      // because what a cell here buys is a MATERIAL: the rack is the only kind emitting into the
+      // second (additive, shader-patched) buffer, FIT_RACK_LOW is that same rack at another height,
+      // FIT_CABINET takes the bookcase's material config exactly (a mapped FrontSide lambert, no
+      // vertex colour) and so compiles no program of its own, and the round kinds are instanced glbs
+      // warmed off FacilityWarm's own prop list instead
       m.deco[3][7] = _FittingKind.FIT_SHELVING + 1;
       m.deco[3][8] = _FittingKind.FIT_BOOKCASE + 1;
       m.deco[3][9] = _FittingKind.FIT_RACK + 1;

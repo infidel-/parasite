@@ -2336,6 +2336,69 @@
       "built_linear": 0.0551,
       "built_srgb": 66.2
     },
+    "facility/deco-cabinet-front": {
+      "src": "facility/deco-cabinet-pack.png",
+      "class": "tile",
+      "res": [
+        292,
+        511
+      ],
+      "needs_alpha": false,
+      "prompt": "A TEXTURE SHEET for one tall laboratory storage cabinet, split by a perfectly straight VERTICAL line at exactly THREE QUARTERS of the image width, with the right-hand quarter split again by a perfectly straight HORIZONTAL line at exactly half the image height. Hard butt joins on those two lines. NO gutters, NO margins, NO borders, NO frames, NO drop shadows, NO separator lines, NO labels, NO text, NO letters, NO numbers. All three regions are the same pale cool grey-green painted sheet steel and must read as parts of ONE piece of laboratory furniture.\n\nLEFT REGION (the wide left three quarters, full height) - the complete front of the cabinet, seen straight on, flat elevation, FILLING THAT REGION EDGE TO EDGE with no margin and no wall or floor visible around it. TWO tall doors side by side meeting on a straight vertical centre joint that runs the full height, each door carrying ONE tall rectangular glazed vision panel of dull pale teal glass in the upper two thirds, and a long slim vertical steel handle either side of the centre joint. A plain painted rail across the very top edge, a plain recessed kick plinth across the very bottom edge, and a narrow painted upright at the far left and far right edges of this region. One SMALL yellow-and-black hazard warning triangle placard low on the left door, no bigger than about a twelfth of the region's width, its symbol a plain abstract dark shape - NEVER readable words, NEVER letters, NEVER numbers. Faint scuffs, a few small flush hinge plates and a small dark keyhole escutcheon. Dull matte paint, no shine.\n\nTOP-RIGHT REGION (upper half of the narrow right quarter) - a SEAMLESS TILEABLE swatch of the cabinet's side panel, seen straight on, flat elevation. A plain unbroken pale cool grey-green painted steel sheet with a very faint fine brushed grain, a scattering of small flush rivet heads, faint scuffs and a little settled dust. NO glass, no doors, no handles, no hardware, no panel seams, no bands or stripes.\n\nBOTTOM-RIGHT REGION (lower half of the narrow right quarter) - a SEAMLESS TILEABLE swatch of the cabinet's top seen from DIRECTLY ABOVE, flat top-down, no perspective. A plain pale cool grey-green painted steel lid with a light film of dust, a couple of faint ring marks and a few small scuffs. NO objects standing on it, no edges, no lip, no shelf below. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the twin-door lab cabinet's front, mapped 0..1 over the face (render.facility.FacilityDeco) - ONE authored composition, two doors either side of a centre joint, so it cannot tile. It serves FOUR atlas frames at once: the fridge, the glass-door freezer, the twin-door cabinet and the biohazard safety cabinet (entities64 row 8 cols 0-3), which is why the art is a generic tall lab case with one small hazard placard rather than any one of them. CUT FROM facility/deco-cabinet-pack.png, one 1024 generation carrying the whole family: the front on the left, the side panel top-right, the top bottom-right - drawn together for the reason the bookcase's own pack records, so the three faces of one unit agree. The model did not honour the stated split AGAIN and by more this time: asked for three quarters it drew the vertical seam at 587 (per-column mean |diff| 75.4 at 566 and 43.3 at 587, the front's own right upright between them) and the horizontal one at 512 as asked. The sheet also carries a 1px dark rim on its top, bottom and left edges, so the crop insets from both. 584 x 1022 is EXACTLY 4/7, and that is what DECO_CABINET_W is locked to. lift 1.394 DARKENS (a gamma, g > 1): the drop came out at 0.180 linear, the palest surface generated for this compound, and a fitting standing against facility/wall-room 0.1375 has to read below its own wall - 0.095 puts it just over the shelving's steel (0.1034) and clear of the bookcase (0.0852). Chroma 9.6 with G above B is a CAST KEPT ON PURPOSE, against the doc's re-roll-over-6 rule: the four icons it replaces are pale grey-green themselves (atlas chroma 15.2 / 11.8 / 13.6) and a neutral roll would have been the wrong object.",
+      "crop": [
+        2,
+        2,
+        584,
+        1022
+      ],
+      "lift": 1.394,
+      "last_converted": "2026-09-06T19:59:53",
+      "last_lift": 1.394,
+      "built_linear": 0.0952,
+      "built_srgb": 82.4
+    },
+    "facility/deco-cabinet-side": {
+      "src": "facility/deco-cabinet-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "one region of the facility/deco-cabinet-pack.png sheet - the whole prompt is on facility/deco-cabinet-front.",
+      "prompt_exact": true,
+      "note": "the cabinet's two ends. Tiling and not 0..1, so the unit's DEPTH stays a free number - only the front is aspect-locked, the split every family here makes. Cut from the sheet's right strip, inset from the 587 vertical seam, the 512 horizontal one and the 1px rim; wrapH 3.1 / wrapV 3.2, in line with what a packed quadrant costs elsewhere (3.4-4.5 / 3.8-9.9) and low enough for a plain panel that shows about one repeat at DECO_CABINET_TILE 1.2. lift 1.632 lands it at 0.0948 linear, the front's own value: a cabinet's flank is the same painted sheet as its doors, and here the two really are one material rather than the rack's vented face against its blank side.",
+      "crop": [
+        600,
+        40,
+        400,
+        400
+      ],
+      "lift": 1.632,
+      "last_converted": "2026-09-06T19:59:53",
+      "last_lift": 1.632,
+      "built_linear": 0.0948,
+      "built_srgb": 83.2
+    },
+    "facility/deco-cabinet-top": {
+      "src": "facility/deco-cabinet-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "one region of the facility/deco-cabinet-pack.png sheet - the whole prompt is on facility/deco-cabinet-front.",
+      "prompt_exact": true,
+      "note": "the cabinet's top. TOP-DOWN art, dusty, the finding the bookcase's top and the shelving's shelves both landed on before it: this camera pitches 51 degrees down, so the top of a 3.4-tall unit is half of what is read of it. Cut from the sheet's right strip below the 512 seam; wrapH 3.5 / wrapV 3.1. lift 1.624 lands it at 0.0860 against the front's 0.0952 - a HORIZONTAL face keeps far more of its albedo than a vertical one here (measured 0.71 against ~0.2), so the top is authored darker for the two to read alike, which is the same gap the bookcase carries (0.0759 against 0.0852).",
+      "crop": [
+        600,
+        560,
+        400,
+        400
+      ],
+      "lift": 1.624,
+      "last_converted": "2026-09-06T19:59:53",
+      "last_lift": 1.624,
+      "built_linear": 0.086,
+      "built_srgb": 79.2
+    },
     "facility/floor-grate": {
       "src": "facility/floor-grate.png",
       "class": "tile",

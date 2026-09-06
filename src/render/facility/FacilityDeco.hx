@@ -24,8 +24,8 @@ typedef DrumProp = {
 };
 
 // the room furniture that used to be an upright 2D sprite: a bookcase, an open metal shelving unit
-// with boxes on it, a server rack and the same rack one tile tall, plus the two ROUND things that
-// stand on the same cells — a hazard drum and a lidded bin.
+// with boxes on it, a server rack and the same rack one tile tall, a twin-door lab case, plus the
+// two ROUND things that stand on the same cells — a hazard drum and a lidded bin.
 //
 // MERGED GEOMETRY and not a glb wherever there is a choice, the call render.facility.FacilityTables
 // already made for the benches: a merged buffer is ONE draw call for every unit in the compound,
@@ -143,17 +143,18 @@ class FacilityDeco
           case _FittingKind.FIT_BOOKCASE: FacilityStyle.DECO_BOOKCASE_H;
           case _FittingKind.FIT_RACK: FacilityStyle.DECO_RACK_H;
           case _FittingKind.FIT_RACK_LOW: FacilityStyle.DECO_RACK_LOW_H;
+          case _FittingKind.FIT_CABINET: FacilityStyle.DECO_CABINET_H;
           default: 0.0;
         };
     }
 
-// every fitting in the compound. one merged mesh per SURFACE — six of them plus the rack lights
+// every fitting in the compound. one merged mesh per SURFACE — thirteen of them plus the rack lights
   public static function build(scene:Scene, m:Facility):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...10) MeshBufTools.make()];
+      var b = [for (_ in 0...13) MeshBufTools.make()];
       var leds = MeshBufTools.make();
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -177,6 +178,9 @@ class FacilityDeco
       solid(scene, b[B_RACK], FacilityStyle.DECO_RACK, false);
       solid(scene, b[B_RACK_SIDE], FacilityStyle.DECO_RACK_SIDE, false);
       solid(scene, b[B_RACK_TOP], FacilityStyle.DECO_RACK_TOP, false);
+      solid(scene, b[B_CAB_FRONT], FacilityStyle.DECO_CABINET_FRONT, false);
+      solid(scene, b[B_CAB_SIDE], FacilityStyle.DECO_CABINET_SIDE, false);
+      solid(scene, b[B_CAB_TOP], FacilityStyle.DECO_CABINET_TOP, false);
       solid(scene, b[B_DRAIN], FacilityStyle.DECO_DRAIN, false);
       lamps(scene, leds);
     }
@@ -196,7 +200,10 @@ class FacilityDeco
   static inline var B_RACK = 6;
   static inline var B_RACK_SIDE = 7;
   static inline var B_RACK_TOP = 8;
-  static inline var B_DRAIN = 9;
+  static inline var B_CAB_FRONT = 9;
+  static inline var B_CAB_SIDE = 10;
+  static inline var B_CAB_TOP = 11;
+  static inline var B_DRAIN = 12;
 
 // one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
 // made of
@@ -214,6 +221,11 @@ class FacilityDeco
         {
           w = FacilityStyle.DECO_RACK_W;
           d = FacilityStyle.DECO_RACK_D;
+        }
+      else if (kind == _FittingKind.FIT_CABINET)
+        {
+          w = FacilityStyle.DECO_CABINET_W;
+          d = FacilityStyle.DECO_CABINET_D;
         }
       var h = heightOf(kind);
       var cx = (col + 0.5) * CELL - half;
@@ -301,6 +313,17 @@ class FacilityDeco
             FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
               FacilityStyle.DECO_BOOKCASE_TILE);
             FacilityGeom.cap(b[B_BC_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_BOOKCASE_TILE);
+          case _FittingKind.FIT_CABINET:
+            // the bookcase's own shape, one surface family over: an authored front mapped 0..1 by
+            // `pane`, two tiling ends and a tiling top, and no back and no bottom for the same
+            // reason — the back is buried in the masonry and nothing at this pitch sees under a
+            // fitting
+            FacilityGeom.pane(b[B_CAB_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
+            FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head, y, y + h,
+              FacilityStyle.DECO_CABINET_TILE);
+            FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
+              FacilityStyle.DECO_CABINET_TILE);
+            FacilityGeom.cap(b[B_CAB_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_CABINET_TILE);
           default:
             // the rack: three faces of one cabinet, each on its own surface, and all of them laid
             // from the UNIT'S OWN CORNER rather than off the world — see `localFace`
