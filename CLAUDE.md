@@ -30,6 +30,7 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
 - When modifying AI logic, see if additional ai traces are needed
+- **NEVER conclude the game is not running from a WSL-side port check.** The Electron app runs on the WINDOWS HOST and its CDP port is reached across the WSL boundary (`172.18.208.1:9300`), so `ss`/`lsof`/`netstat` inside WSL see nothing however open the game is. The ONLY test is `mcp__chrome-devtools__list_pages` or `node probe.mjs`. See [`docs/debug-surface.md`](docs/debug-surface.md).
 
 ## Code style (Haxe)
 
