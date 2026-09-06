@@ -664,9 +664,9 @@ class FacilityModel
       // objects.Decoration objects and there is no area here. these three and not all of them,
       // because what a cell here buys is a MATERIAL: the rack is the only kind emitting into the
       // second (additive, shader-patched) buffer, FIT_RACK_LOW is that same rack at another height,
-      // FIT_CABINET takes the bookcase's material config exactly (a mapped FrontSide lambert, no
-      // vertex colour) and so compiles no program of its own, and the round kinds are instanced glbs
-      // warmed off FacilityWarm's own prop list instead
+      // FIT_CABINET and both FIT_MACHINE kinds take the bookcase's material config exactly (a mapped
+      // FrontSide lambert, no vertex colour) and so compile no program of their own, and the round
+      // kinds are instanced glbs warmed off FacilityWarm's own prop list instead
       m.deco[3][7] = _FittingKind.FIT_SHELVING + 1;
       m.deco[3][8] = _FittingKind.FIT_BOOKCASE + 1;
       m.deco[3][9] = _FittingKind.FIT_RACK + 1;

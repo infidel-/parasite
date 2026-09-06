@@ -163,6 +163,12 @@ class FacilityStyle
   public static inline var DECO_CABINET_FRONT = 'textures/facility/deco-cabinet-front.png';
   public static inline var DECO_CABINET_SIDE = 'textures/facility/deco-cabinet-side.png';
   public static inline var DECO_CABINET_TOP = 'textures/facility/deco-cabinet-top.png';
+  // and the machine casing takes the last three, off a 2x2 sheet of its own. NONE OF THEM TILE
+  // despite being drawn as swatches — every one carries discrete features that only read whole, so
+  // all three map 0..1 and the unit is a cube. See DECO_MACHINE_SZ, where the report is
+  public static inline var DECO_MACHINE_FRONT = 'textures/facility/deco-machine-front.png';
+  public static inline var DECO_MACHINE_SIDE = 'textures/facility/deco-machine-side.png';
+  public static inline var DECO_MACHINE_TOP = 'textures/facility/deco-machine-top.png';
   // and the floor drain, which is a FITTING IN THE FLOOR and reaches the 3D view the same way the
   // rest of this family did: as geometry, not as its atlas icon laid flat. See DECO_DRAIN_SZ
   public static inline var DECO_DRAIN = 'textures/facility/floor-grate.png';
@@ -500,6 +506,23 @@ class FacilityStyle
   public static inline var DECO_CABINET_H = 2.86 * 1.2;
   public static inline var DECO_CABINET_W = DECO_CABINET_H * 0.5714285714;
   public static inline var DECO_CABINET_D = 1.2;
+  // the machine casing, and the one fitting that is a CUBE — ONE number per kind for all three axes.
+  //
+  // it was built to TILE, on the argument that a machine's read is a rhythm rather than a
+  // composition, and that is what would have let one image serve two heights with no aspect lock at
+  // all. It came back from the game as "both top and front are misaligned", and the report is right:
+  // the sheet drew DISCRETE features — a control strip of buttons and dials, bolt columns down the
+  // two edges, two grille patches and a cable gland on the lid — so it only reads WHOLE. A tiled face
+  // takes an arbitrary sub-rect of it at an arbitrary world phase, which cuts a dial in half and
+  // loses the lid's corner bolts. So every face maps 0..1, and THAT is what fixes the size: a 0..1
+  // face must match its image's aspect, all three images are square, so the unit is square on every
+  // axis. It costs nothing to say so — four of the seven sprites this replaces measure square
+  // themselves (61x61, 60x60, 60x60, 48x48), and 2.8 is their own 2.81
+  public static inline var DECO_MACHINE_SZ = 2.8;
+  // and the LOW list's two, on the sprite bbox alone (12/0 at 1.59 x 2.06, 12/6 at 2.25 x 2.25). The
+  // SECOND height is still free off one image, which was the point of the kind — a square image
+  // fits a square face at any size, so only the tiling mechanism was wrong, not the plan
+  public static inline var DECO_MACHINE_LOW_SZ = 2.2;
   public static inline var DECO_RACK_W = 1.6;
   // DERIVED, and by the same kind of lock as DECO_SHELF_D and DECO_BOOKCASE_W above — only this one
   // is fixed by what the art CONTAINS rather than by its aspect. The front tiles at the unit's own
@@ -547,6 +570,8 @@ class FacilityStyle
   // ever drawn across it — the same protection FacilityDeco.localCap buys the rack's lid, bought
   // here with a number instead of a mapping
   public static inline var DECO_CABINET_TILE = DECO_CABINET_D;
+  // the machine has NO period at all — every one of its faces maps 0..1, which is what its own size
+  // block above records. A tiling entry here would be the bug that was reported
   // and the rack's is the ONE exception to the line above, because its three faces are not material
   // swatches: the front is an authored composition with an end rail down each side and the lid has
   // its grommets in a fixed place. Those faces are laid from the unit's OWN corner
@@ -667,6 +692,37 @@ class FacilityStyle
   // the HDR multiplier that carries a light over BLOOM_THRESHOLD, the same job GLOW does for the
   // ceiling panels
   public static inline var DECO_LED_GLOW = 2.6;
+
+  // and the MACHINE's control strip, which rides the very same mesh, material and clock as the rack
+  // lights above — so it costs no draw call and no program — but runs a DIFFERENT pattern off them.
+  // A rack's ports are independent traffic and a square wave is exactly right for that; a machine
+  // panel is a SEQUENCER, so this one is a single lit dot running the row with a decaying tail. The
+  // two are told apart in the patched shader by the vertex channel that carries the hue (see
+  // FacilityDeco.blink): 0..1 is a rack, 2..3 a machine.
+  //
+  // THE SLOTS ARE READ OFF THE ART, like the rack's band was, and here they can be read exactly:
+  // the machine front maps 0..1 over its face, so one measurement serves every unit at every size.
+  // Per-column means over the built 500 in the button band (py 438-474, background 72.2) give five
+  // dark runs 19-24 px wide at these centres — the three-button bank on the left and the two-button
+  // bank on the right. The 5-9 px runs between them at u 0.43-0.66 are the two DIALS and are
+  // deliberately skipped: a dial is not a lamp
+  public static final DECO_MACH_LED_U = [ 0.132, 0.218, 0.304, 0.767, 0.853 ];
+  // and the band's own centre, v from the foot of the face (py 438-474 of 500)
+  public static inline var DECO_MACH_LED_V = 0.088;
+  // one light's quad edge as a fraction of the face WIDTH, not a world size: this kind comes in two
+  // sizes off one image, so a world constant would cover its slot on the 2.8 unit and overflow it on
+  // the 2.2. The slots themselves are 0.038-0.048 of the face and the quad is a little wider, because
+  // the alpha gradient's soft round core is smaller than the quad it is drawn on
+  public static inline var DECO_MACH_LED_SIZE = 0.05;
+  // how fast the dot runs the row, as a BASE_MS multiplier — faster than the rack's blink, because a
+  // sequencer that steps slower than the traffic beside it reads as the broken one
+  public static inline var DECO_MACH_LED_RATE = 0.55;
+  // and the tail's falloff exponent: on = (1 - phase distance)^TAIL, so 6 leaves the slot behind the
+  // dot at 0.26 and the one before that at 0.12 — a comet over two slots of the five
+  public static inline var DECO_MACH_LED_TAIL = 6.0;
+  // which slot the hue changes at: the left bank runs amber and the right bank green, so the run
+  // crosses two banks the way a real panel's does rather than being one undifferentiated row
+  public static inline var DECO_MACH_LED_GREEN_FROM = 3;
 
   // ---- doors -----------------------------------------------------------------------------------
 

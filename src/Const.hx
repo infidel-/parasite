@@ -196,6 +196,32 @@ class Const
         { row: 8, col: 3 },
       ],
     },
+    // the rest of the HIGH list, five frames on one kind: a hopper/conveyor filler, an analyser
+    // console, a CNC enclosure, a gear press and a bench lathe are all one boxed machine casing at
+    // this size, and what a lathe actually is — a bed, a headstock and a tailstock — is the composite
+    // silhouette a mesh generator returns as mush (see docs/3d-render.md's sewer-pile row)
+    {
+      kind: FIT_MACHINE,
+      high: true,
+      frames: [
+        { row: 8, col: 4 },
+        { row: 8, col: 5 },
+        { row: 8, col: 6 },
+        { row: 8, col: 7 },
+        { row: 8, col: 8 },
+      ],
+    },
+    // and the two LOW frames that are the same casing knee-high: a radiation placard panel and a grey
+    // appliance cabinet. They cost no new art at all — the machine's front TILES, so one image serves
+    // both heights where an aspect-locked 0..1 front would have needed a second kind and a second sheet
+    {
+      kind: FIT_MACHINE_LOW,
+      high: false,
+      frames: [
+        { row: 12, col: 0 },
+        { row: 12, col: 6 },
+      ],
+    },
     // the LOW list's four stacked-server icons: the same cabinet as the rack above, one tile tall
     // rather than two, so they cost NO new art and NO new draw call — same three surfaces
     {
@@ -264,6 +290,17 @@ class Const
               fr.col == col)
             return f.kind;
       return -1;
+    }
+
+// is this fitting kind dealt on the LOW list? read off FACILITY_FITTINGS itself so the two can never
+// drift apart, the same stateless shape fittingOf takes. render.facility.FacilityDeco asks it for one
+// thing: a low fitting may stand against GLAZING where a high one may not
+  public static function isLowFitting(kind: Int): Bool
+    {
+      for (f in FACILITY_FITTINGS)
+        if (f.kind == kind)
+          return !f.high;
+      return false;
     }
 
 // the kinds the generator may DEAL on a high floor cell. the low kinds are in the same table because

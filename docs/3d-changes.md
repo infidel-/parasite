@@ -548,3 +548,93 @@ bookcase's exactly, and that is verified rather than argued —
 `renderer.properties.get(mat).currentProgram.cacheKey` is byte-identical to the bookcase front's — so
 `FacilityModel.demo` needs no cell for the new kind. Controls unmoved: `cabinets` 30, `boards` 2,
 `exits` 16, `shadows` 401, `grime` 528.
+
+## A PROMPTED "seamless tile" is not one, and the object pays for it: the machine casing (2026-09-06)
+
+The last seven floor frames: `entities64` 8/4-8 (hopper filler, analyser console, CNC enclosure, gear
+press, bench lathe) on the HIGH list at **2.81** units, and 12/0 and 12/6 (radiation placard panel,
+grey appliance cabinet) on the LOW one at **2.06-2.25**. Two heights, and every earlier kind in this
+family would have needed two of everything for that.
+
+**THE PLAN WAS A TILING FRONT, AND IT SHIPPED WRONG.** An authored 0..1 front locks the face aspect
+(`DECO_SHELF_D`, `DECO_BOOKCASE_W`, `DECO_CABINET_W` are all that lock), so two heights would be two
+kinds, two crops and two images. A machine's read looked like a RHYTHM — louvre band, panel joint,
+control strip — so `face`/`cap` replaced `pane` and both heights came off one image. Reported from
+the game within one pass: **"both top and front are misaligned"**, and on another unit a lid
+**"missing corners"**.
+
+**THE PROMPT ASKED FOR A SEAMLESS TILE. THE MODEL DREW A COMPOSITION.** All three quadrants carry
+DISCRETE, PLACED features — a control strip of buttons and two round dials along the bottom edge, a
+bolt column down each side, two grille patches and a cable gland on the lid — and a swatch with
+placed features in it can only be shown WHOLE. `FacilityGeom.face`/`cap` divide the WORLD coordinate
+by the period, so every unit took a different sub-rect at a different phase: a dial cut in half, a
+bolt column landing mid-face, the lid's corner bolts outside the rect entirely. **Wrap error said
+nothing about this** — wrapH/wrapV measured **2.9-4.9 / 2.6-3.0**, better than a packed quadrant
+usually costs, because wrap only measures whether the EDGES join. It cannot see that the interior is
+a composition. *Look at the drop and ask what is placed in it; the tiling statistic will not tell
+you.*
+
+**The fix was the mapping, not the art.** Every face maps 0..1 — `pane` for the front and both
+flanks, `localCap` at the unit's own width for the lid (that helper gained a period argument; the
+rack still passes `DECO_RACK_TILE` and keeps its u 0..0.75). Verified live: every UV in all three
+merged buffers spans **exactly 0 to 1**.
+
+**And 0..1 on a square image makes the object a CUBE.** That is the aspect lock arriving by the back
+door, and it costs nothing here: four of the seven sprites this replaces measure square themselves
+(61x61, 60x60, 60x60, 48x48), so `DECO_MACHINE_SZ` **2.8** (their own 2.81) and
+`DECO_MACHINE_LOW_SZ` **2.2** are one number each for all three axes. **The second height is still
+free off one image** — a square image fits a square face at any size — so the plan's actual goal
+survived; only its mechanism was wrong. Verified in the built geometry: one unit at 2.8 and four at
+2.2, cubic. The `fit` squeeze is no longer free (a narrowed front would now stretch), same as the
+bookcase and the cabinet; at 2.8 against the 3.0 a run-end wall cell offers it has not fired.
+
+**The 2x2 came back honest for once** — vertical seam at **509/513**, horizontal at **508**, against a
+per-column background of 2.2 — but it carries a dark **4px rim down the LEFT and RIGHT edges only**
+(col means 22.5 / 13.6 / 22.8 at the left, 24.3 at 1021) and none top or bottom. Crops
+`[6,4,500,500]` / `[516,4,500,500]` / `[6,516,500,500]`. **$0.056, medium.**
+
+**The darkest drop this compound has ever taken**, and the mirror of the cabinet's problem one entry
+up: **0.0268 linear**, below even the server rack's own front (0.0473). g **0.722 / 0.730 / 0.750**
+brightens to **0.0651 / 0.0701 / 0.0632** — a machine casing between the rack and the bookcase
+(0.0852). Side over front by the rack's own margin, because a front that is half black louvre slot
+measures darker than the plain flank it shares paint with; top authored 0.90x under the side for the
+horizontal/vertical albedo ratio. Chroma **9.1** with B over G over R kept, the cabinet's call in the
+other direction: the frames it replaces run 0.6 to 32.4 and the two blue ones are the cool-steel read
+the prompt asked for.
+
+**THE ROW-12 PLACEMENT TRAP WAS REAL AND THE FALLBACK LOOKED WRONG.** `nextToWindow` FORCES the low
+list beside glazing and `isSolidWall` rejects `Wall.WINDOW`, so `FacilityDeco.wall()` returned -1 and
+the "stood square in the cell, dir 0" fallback fired. On screen at (46,28) the machine floated a
+clear half cell off the glass with floor all round it. Fix: `wall()` now takes masonry on any hand
+FIRST and falls back to glazing, for a LOW kind only — the rule `placeRound` already ran the drums
+and bins on. The halo is the part that does NOT follow: `hasWall` became an `isSolidWall` test of the
+chosen hand rather than `dir >= 0`, or a wall shadow lands on the pane. The plan had assumed a
+2.2-unit machine clears the sill; measured, **the sill is 0.93** (a 4.14-tall pane centred in
+`WALL_H` 6.0), so it takes the bottom third of the opening — which is where a machine in a lab
+stands anyway, and a HIGH fitting still refuses glazing outright for the same arithmetic.
+
+**TWO BLINK PATTERNS OFF ONE PROGRAM, and the vertex channel that pays for it.** The 0..1 front put
+the control strip at a FIXED place on every unit, so its lights could be read off the art exactly:
+per-column means over the built 500 in the button band (py 438-474, background 72.2) give five dark
+runs 19-24 px wide at u **0.132 / 0.218 / 0.304 / 0.767 / 0.853** — the three-button bank, then the
+two-button bank. The 5-9 px runs between them at u 0.43-0.66 are the DIALS and are skipped.
+
+A rack's ports are independent traffic and its square wave says so; a machine panel is a SEQUENCER,
+and five specks twinkling at random on one reads as a small rack. So the machine runs ONE lit dot
+along the row with a decaying tail, `(1 - fract(t*chase - phase))^6` — 0.26 one slot behind, 0.12
+two. Both patterns share the same buffer, mesh, material and clock as the rack's lights, so this is
+**+0 draw calls and +0 programs** (91 either way, one `decoled` cache key). The mode had to travel
+per VERTEX and there are only three channels, so **it rides the hue**: `vColor.b` in 0..1 is a rack
+burning `mix(A, B, b)`, in 2..3 a machine burning `mix(A, B, b - 2)`. Safe because the include that
+would otherwise sample this attribute is the one being replaced, and a varying is not clamped — a 2
+reaches the fragment stage untouched. Both branches are evaluated and `mix`ed rather than branched
+on. One per-cell offset added to every slot's phase, or every machine in a room steps in lockstep
+off the shared clock. Verified live: 73 quads in the lamps mesh, **25 machine** (5 units x 5 slots)
+and 48 rack.
+
+**+3 CALLS.** A/B'd on the three meshes' `visible` at a pinned free-cam pose: **102 → 99 → 102**
+tiled, **132 → 129 → 132** after the remap, for 5 units and 40 tris either way — the mapping changed
+no geometry, and the lights added none. No new program (the bookcase's material config again). Controls unmoved:
+`cabinets` 30, `boards` 2, `exits` 16, `shadows` 401, `grime` 528; console at 0 errors. That closes
+the FLOOR families — rows 8, 12 and 13 are entirely 3D, and the 43 TABLE frames stay sprites by
+decision.

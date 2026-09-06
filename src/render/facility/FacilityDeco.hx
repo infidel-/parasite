@@ -24,8 +24,9 @@ typedef DrumProp = {
 };
 
 // the room furniture that used to be an upright 2D sprite: a bookcase, an open metal shelving unit
-// with boxes on it, a server rack and the same rack one tile tall, a twin-door lab case, plus the
-// two ROUND things that stand on the same cells — a hazard drum and a lidded bin.
+// with boxes on it, a server rack and the same rack one tile tall, a twin-door lab case, a machine
+// casing and that casing knee-high, plus the two ROUND things that stand on the same cells — a
+// hazard drum and a lidded bin.
 //
 // MERGED GEOMETRY and not a glb wherever there is a choice, the call render.facility.FacilityTables
 // already made for the benches: a merged buffer is ONE draw call for every unit in the compound,
@@ -60,7 +61,8 @@ typedef DrumProp = {
 //
 // AGAINST THE WALL, and the direction is free: the generator only ever places these one cell in
 // from a wall run, and a HIGH decoration is never dealt beside glazing (nextToWindow forces the low
-// list), so the masonry behind one is always plain. The rect is taken off FacilityGeom.slab's own
+// list), so the masonry behind one is always plain. A LOW one is the opposite case and takes the
+// glazing rather than nothing — see `wall`. The rect is taken off FacilityGeom.slab's own
 // face, which is a unit inside the cell boundary — the trap the corridor casework and the lab kit
 // both record. Where the wall line stops beside the cell the unit is SLID along the wall to fit,
 // and only squeezed if the masonry is genuinely narrower than it is: a squeeze is a stretch on the
@@ -144,17 +146,19 @@ class FacilityDeco
           case _FittingKind.FIT_RACK: FacilityStyle.DECO_RACK_H;
           case _FittingKind.FIT_RACK_LOW: FacilityStyle.DECO_RACK_LOW_H;
           case _FittingKind.FIT_CABINET: FacilityStyle.DECO_CABINET_H;
+          case _FittingKind.FIT_MACHINE: FacilityStyle.DECO_MACHINE_SZ;
+          case _FittingKind.FIT_MACHINE_LOW: FacilityStyle.DECO_MACHINE_LOW_SZ;
           default: 0.0;
         };
     }
 
-// every fitting in the compound. one merged mesh per SURFACE — thirteen of them plus the rack lights
+// every fitting in the compound. one merged mesh per SURFACE — sixteen of them plus the rack lights
   public static function build(scene:Scene, m:Facility):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...13) MeshBufTools.make()];
+      var b = [for (_ in 0...16) MeshBufTools.make()];
       var leds = MeshBufTools.make();
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -181,6 +185,9 @@ class FacilityDeco
       solid(scene, b[B_CAB_FRONT], FacilityStyle.DECO_CABINET_FRONT, false);
       solid(scene, b[B_CAB_SIDE], FacilityStyle.DECO_CABINET_SIDE, false);
       solid(scene, b[B_CAB_TOP], FacilityStyle.DECO_CABINET_TOP, false);
+      solid(scene, b[B_MACH_FRONT], FacilityStyle.DECO_MACHINE_FRONT, false);
+      solid(scene, b[B_MACH_SIDE], FacilityStyle.DECO_MACHINE_SIDE, false);
+      solid(scene, b[B_MACH_TOP], FacilityStyle.DECO_MACHINE_TOP, false);
       solid(scene, b[B_DRAIN], FacilityStyle.DECO_DRAIN, false);
       lamps(scene, leds);
     }
@@ -203,7 +210,10 @@ class FacilityDeco
   static inline var B_CAB_FRONT = 9;
   static inline var B_CAB_SIDE = 10;
   static inline var B_CAB_TOP = 11;
-  static inline var B_DRAIN = 12;
+  static inline var B_MACH_FRONT = 12;
+  static inline var B_MACH_SIDE = 13;
+  static inline var B_MACH_TOP = 14;
+  static inline var B_DRAIN = 15;
 
 // one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
 // made of
@@ -227,13 +237,22 @@ class FacilityDeco
           w = FacilityStyle.DECO_CABINET_W;
           d = FacilityStyle.DECO_CABINET_D;
         }
+      else if (kind == _FittingKind.FIT_MACHINE ||
+               kind == _FittingKind.FIT_MACHINE_LOW)
+        {
+          // a CUBE, and the height is the same number — see FacilityStyle.DECO_MACHINE_SZ
+          w = heightOf(kind);
+          d = w;
+        }
       var h = heightOf(kind);
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
-      var dir = wall(m, col, row);
-      // remembered, because the fallback below FORCES a hand on a unit that has none and the wall
-      // shadow must not be laid on masonry that is not there
-      var hasWall = (dir >= 0);
+      var dir = wall(m, col, row, Const.isLowFitting(kind));
+      // whether the wall shadow may be laid, and it is NOT the same question as `dir >= 0`: the
+      // fallback below forces a hand on a unit that has none, and a halo on a WINDOW cell would land
+      // on the glazing. SOLID masonry only, the test `placeRound` makes for the same reason
+      var hasWall = (dir >= 0 &&
+        FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]));
       var x0 = cx - w / 2, x1 = cx + w / 2;
       var z0 = cz - d / 2, z1 = cz + d / 2;
       if (dir < 0)
@@ -324,13 +343,27 @@ class FacilityDeco
             FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
               FacilityStyle.DECO_CABINET_TILE);
             FacilityGeom.cap(b[B_CAB_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_CABINET_TILE);
+          case _FittingKind.FIT_MACHINE | _FittingKind.FIT_MACHINE_LOW:
+            // the same four faces again, and the ONLY kind here where EVERY one of them maps 0..1 —
+            // the lid included. It was emitted with `face`/`cap` first, tiling off the world the way
+            // the bookcase's flanks do, and came back from the game as a misaligned front and a lid
+            // with its corners cut off: all three of these images carry discrete features (a strip of
+            // dials, bolt columns down the edges, two grille patches and a gland) and a swatch that
+            // only reads whole cannot be shown in part. `localCap` at the unit's own width is a full
+            // 0..1 across the lid because this unit is a CUBE, which is what an aspect-locked face on
+            // a square image costs and the reason it is one
+            FacilityGeom.pane(b[B_MACH_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
+            FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head, y, y + h);
+            FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
+            localCap(b[B_MACH_TOP], x0, x1, z0, z1, y + h, x1 - x0);
+            machLights(leds, x0, x1, z0, z1, y, h, dir, col, row);
           default:
             // the rack: three faces of one cabinet, each on its own surface, and all of them laid
             // from the UNIT'S OWN CORNER rather than off the world — see `localFace`
             localFace(b[B_RACK], x0, x1, z0, z1, dir ^ 1, y, y + h);
             localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head, y, y + h);
             localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
-            localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h);
+            localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_RACK_TILE);
             lights(leds, x0, x1, z0, z1, y, h, dir, col, row);
         }
     }
@@ -356,11 +389,26 @@ class FacilityDeco
 
 // which hand this cell's wall is on, or -1 for a cell with none. the first hand that answers is
 // taken, exactly as the lab kit's own test does: a cell with masonry on two hands is a room corner,
-// and either face stands the fitting in the same corner
-  static function wall(m:Facility, col:Int, row:Int):Int
+// and either face stands the fitting in the same corner.
+//
+// MASONRY FIRST AND GLAZING ONLY AFTER IT, and only for a LOW fitting — the rule `placeRound` below
+// already runs the round ones on. FacilityModel.isSolidWall rules a window out, and the generator
+// FORCES the low list beside glazing (game.FacilityAreaGenerator's nextToWindow test), so on masonry
+// alone most of that family has no wall on any hand and takes the stood-square-in-the-cell fallback.
+// Measured in game on a machine at a window run: it stood a clear half cell off the glass with floor
+// all round it, which is what a fitting is not. A HIGH fitting still refuses glazing outright, and
+// the sill is why: it sits at 0.93 world units (FacilityGeom.build's own centring of a pane
+// 4.14 tall in WALL_H 6.0), so a 3.4-tall cabinet would blank the whole opening where a 2.2 machine
+// takes the bottom third of it — which is where a machine in a lab stands anyway
+  static function wall(m:Facility, col:Int, row:Int, low:Bool):Int
     {
       for (dir in 0...4)
         if (FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
+          return dir;
+      if (!low)
+        return -1;
+      for (dir in 0...4)
+        if (FacilityModel.isWall(m, col + DC[dir], row + DR[dir]))
           return dir;
       return -1;
     }
@@ -388,10 +436,14 @@ class FacilityDeco
     }
 
 // and the lid, the same mapping laid flat: u across the unit's width, v across its depth, both from
-// its own corner. FacilityGeom.cap's winding, for the same reason as above
-  static function localCap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+// its own corner. FacilityGeom.cap's winding, for the same reason as above.
+//
+// the period is an ARGUMENT because two kinds want two answers off one mapping: the rack passes its
+// own DECO_RACK_TILE and gets u 0..0.75 over a lid narrower than the art, and the machine passes its
+// own WIDTH and gets exactly 0..1, which is the only thing that shows that lid's corner bolts
+  static function localCap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float,
+      t:Float):Void
     {
-      var t = FacilityStyle.DECO_RACK_TILE;
       var u = (x1 - x0) / t;
       var v = (z1 - z0) / t;
       MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
@@ -756,6 +808,53 @@ class FacilityDeco
           }
     }
 
+// the machine's control strip: one lit dot RUNNING the row of five buttons, with a decaying tail.
+//
+// same buffer, same mesh, same material and same clock as `lights` above, so a compound full of
+// machines and racks together is still ONE additive draw call — but a different PATTERN off them,
+// which is the whole point. A rack's ports are independent traffic and the square wave beside this
+// says so; a machine panel is a sequencer, and a row of specks blinking at random on one would read
+// as a small rack rather than as a machine doing something. The two are told apart in the shader by
+// the hue channel: `blink` treats 0..1 as a rack and 2..3 as a machine (see FacilityStyle
+// .DECO_MACH_LED_U for the measured slots, and `blink` for what the channel costs).
+//
+// the face maps 0..1 here, unlike the rack's, so a slot's u IS the texture's u and one measurement
+// off the art serves both heights at any width
+  static function machLights(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, h:Float,
+      dir:Int, col:Int, row:Int):Void
+    {
+      var e = FacilityStyle.DECO_LED_EPS;
+      // the plane the strip lies in, a hair proud of the FRONT — the face opposite the wall
+      var f = (dir == 0 ? z1 + e : (dir == 1 ? z0 - e : (dir == 2 ? x1 + e : x0 - e)));
+      // ACROSS the face from the TEXTURE'S OWN u origin and not from the lower coordinate, the trap
+      // `lights` records: FacilityGeom.ends opens u at x1 or z1 on two of the four hands
+      var w = FacilityGeom.ends(x0, x1, z0, z1, dir ^ 1);
+      var a0 = (dir < 2 ? w[0] : w[1]);
+      var a1 = (dir < 2 ? w[2] : w[3]);
+      var us = FacilityStyle.DECO_MACH_LED_U;
+      var s = Math.abs(a1 - a0) * FacilityStyle.DECO_MACH_LED_SIZE / 2;
+      var yc = y + h * FacilityStyle.DECO_MACH_LED_V;
+      // and one OFFSET per unit, so two machines in a room are not stepping in lockstep — the clock
+      // is shared by identity and the slot phases below are fixed, so this is the only thing that
+      // can separate them
+      var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
+      var off = ((g % 1000) / 1000);
+      for (i in 0...us.length)
+        {
+          var ac = a0 + (a1 - a0) * us[i];
+          // the light's PLACE in the run, which is what the shader's chase reads its phase as
+          var ph = off + i / us.length;
+          var hue = (i >= FacilityStyle.DECO_MACH_LED_GREEN_FROM ? 1.0 : 0.0);
+          var p0 = (dir < 2 ? [ac - s, yc - s, f] : [f, yc - s, ac - s]);
+          var p1 = (dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
+          var p2 = (dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
+          var p3 = (dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
+          // b carries the hue OFFSET BY 2, which is the mode flag as well — see `blink`
+          MeshBufTools.quadRGB(b, p0, p1, p2, p3,
+            [0, 0, 1, 0, 1, 1, 0, 1], 1.0, ph, 2.0 + hue);
+        }
+    }
+
 // merge one surface's buffer into a lit mesh. interior surfaces, so they receive the moon's shadow
 // and cast none of their own — the pair every indoor buffer in FacilityGeom takes, and the same
 // merge render.facility.FacilityTables makes for its benches. VisionMask.patch is what also folds
@@ -838,7 +937,18 @@ class FacilityDeco
 // the light green. Here the three channels are read APART — r is the light's level, g its phase, b
 // which of the two hues it burns — so one mesh carries a whole rack of independent lights.
 //
-// rate and depth are UNIFORMS and not literals, so retuning either compiles nothing; the chaining
+// AND TWO PATTERNS OFF ONE PROGRAM, which is what the b channel is doing double duty for. A rack's
+// ports are independent traffic (a square wave, each light on its own phase); a machine's control
+// strip is a SEQUENCER (one dot running the row with a decaying tail). Both live in the same mesh
+// and material because a second one is a second draw call, so the mode has to travel per VERTEX —
+// and there are only three channels. It rides the hue: b in 0..1 is a RACK burning `mix(A, B, b)`,
+// b in 2..3 is a MACHINE burning `mix(A, B, b - 2)`. Nothing else samples this attribute (the
+// include that would is the one being replaced) and a varying is not clamped, so a 2 or a 3 reaches
+// the fragment stage untouched. Both branches are evaluated and mixed rather than branched on: they
+// are a handful of instructions each and this mesh is a few hundred specks.
+//
+// every rate, depth and falloff is a UNIFORM and not a literal, so retuning any of them compiles
+// nothing (the PropShine pulse's own note); the chaining
 // and the customProgramCacheKey are render.world.PropEnv.apply's, whose header carries the trap
 // (three's Material has a DEFAULT customProgramCacheKey on the PROTOTYPE, so it must be taken as an
 // own property or it is called unbound every draw)
@@ -846,14 +956,21 @@ class FacilityDeco
     {
       var uRate = { value: FacilityStyle.DECO_LED_RATE };
       var uDepth = { value: FacilityStyle.DECO_LED_DEPTH };
+      var uChase = { value: FacilityStyle.DECO_MACH_LED_RATE };
+      var uTail = { value: FacilityStyle.DECO_MACH_LED_TAIL };
       var uA = { value: new Color(FacilityStyle.DECO_LED_AMBER)
         .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
       var uB = { value: new Color(FacilityStyle.DECO_LED_GREEN)
         .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
       var inject =
-        '  float ledOn = 1.0 - decoLedDepth + decoLedDepth *\n' +
+        '  float decoMode = step( 1.5, vColor.b );\n' +
+        '  float decoHue = vColor.b - 2.0 * decoMode;\n' +
+        '  float decoBlink = 1.0 - decoLedDepth + decoLedDepth *\n' +
         '    step( 0.5, fract( decoLedTime * decoLedRate + vColor.g ) );\n' +
-        '  diffuseColor.rgb = mix( decoLedA, decoLedB, vColor.b ) * ( vColor.r * ledOn );\n';
+        '  float decoRun = pow( 1.0 -\n' +
+        '    fract( decoLedTime * decoLedChase - vColor.g ), decoLedTail );\n' +
+        '  diffuseColor.rgb = mix( decoLedA, decoLedB, decoHue ) *\n' +
+        '    ( vColor.r * mix( decoBlink, decoRun, decoMode ) );\n';
       var prev:Dynamic = mat.onBeforeCompile;
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
@@ -864,11 +981,15 @@ class FacilityDeco
           shader.uniforms.decoLedTime = uTime;
           shader.uniforms.decoLedRate = uRate;
           shader.uniforms.decoLedDepth = uDepth;
+          shader.uniforms.decoLedChase = uChase;
+          shader.uniforms.decoLedTail = uTail;
           shader.uniforms.decoLedA = uA;
           shader.uniforms.decoLedB = uB;
           shader.fragmentShader = 'uniform float decoLedTime;\n' +
             'uniform float decoLedRate;\n' +
             'uniform float decoLedDepth;\n' +
+            'uniform float decoLedChase;\n' +
+            'uniform float decoLedTail;\n' +
             'uniform vec3 decoLedA;\n' +
             'uniform vec3 decoLedB;\n' +
             StringTools.replace(shader.fragmentShader, '#include <color_fragment>', inject);
