@@ -66,6 +66,16 @@ class FacilityArea implements Area3D
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
+  // and the same pair for the GLAZING, which is a different question from the reveal and must not
+  // ride it: `reveal` also opens a structure the player is merely peeking INTO from the lot
+  // (FacilityStyle.PEEK_CELLS), and dimming a facade the player is standing outside and looking at
+  // is the one thing this must not do. `inside` is the cell's own owner and nothing else
+  var inside:Array<Float>;                      // per structure, 0 seen from the lot .. 1 stood in
+  var inTarget:Array<Float>;
+  // the pane's two ends, lazily built: a static `new Color` would run at class init, before THREE
+  // is loaded (the reason render.facility.FacilityGlow.warm defers its own the same way)
+  static var GLAZE_LIT:Color = null;
+  static var GLAZE_IN:Color = null;
   var lastCol = -1;                             // the cell the targets were last recomputed for
   var lastRow = -1;
   var lastVis = -1;                             // and the visibility revision, so an opened door counts
@@ -210,6 +220,8 @@ class FacilityArea implements Area3D
       chunks.build(scene, pre);
       reveal = [for (_ in shells) 0.0];
       target = [for (_ in shells) 0.0];
+      inside = [for (_ in shells) 0.0];
+      inTarget = [for (_ in shells) 0.0];
       // the blocker predicate is the TILE grid and not canSeeThrough, because the mask's green
       // channel is painted once and has to be static: a facility door is an object that opens, and
       // canSeeThrough is object-aware. it is also the right answer here for a second reason — a
@@ -435,7 +447,12 @@ class FacilityArea implements Area3D
     {
       var here = FacilityModel.inside(model, col, row) ? model.owner[row][col] : -1;
       for (i in 0...target.length)
-        target[i] = (i == here ? 1.0 : 0.0);
+        {
+          target[i] = (i == here ? 1.0 : 0.0);
+          // the glazing's target is THIS line and never the peek pass below, which is the whole of
+          // the difference between the two — see the field declarations
+          inTarget[i] = target[i];
+        }
       if (here >= 0)
         return;
       var reach = FacilityStyle.PEEK_CELLS;
@@ -480,14 +497,54 @@ class FacilityArea implements Area3D
       var step = dtMs / (RenderConfig.BASE_MS * FacilityStyle.REVEAL_MULT);
       for (i in 0...shells.length)
         {
-          var t = reveal[i];
-          if (t < target[i])
-            t = (t + step > target[i] ? target[i] : t + step);
-          else if (t > target[i])
-            t = (t - step < target[i] ? target[i] : t - step);
-          else continue;
-          reveal[i] = t;
-          apply(shells[i].roof, 1.0 - t * (1.0 - FacilityStyle.ROOF_FADE));
+          var t = toward(reveal[i], target[i], step);
+          if (t != reveal[i])
+            {
+              reveal[i] = t;
+              apply(shells[i].roof, 1.0 - t * (1.0 - FacilityStyle.ROOF_FADE));
+            }
+          // the glazing on the SAME clock as the roof: they are two halves of one transition, and a
+          // pane still glowing after the ceiling has gone reads as a lag rather than as a fade
+          var d = toward(inside[i], inTarget[i], step);
+          if (d != inside[i])
+            {
+              inside[i] = d;
+              glaze(shells[i].panes, d);
+            }
+        }
+    }
+
+// one value's move toward its target, clamped so it lands on it exactly. two things ease on this
+// clock now and neither may overshoot: an unclamped step leaves a pane's tint a hair off white
+  static inline function toward(cur:Float, tgt:Float, step:Float):Float
+    {
+      if (cur < tgt)
+        return (cur + step > tgt ? tgt : cur + step);
+      if (cur > tgt)
+        return (cur - step < tgt ? tgt : cur - step);
+      return cur;
+    }
+
+// dim one structure's window panes as the player walks into it. `t` 0 = lit and blooming, read from
+// across the lot; 1 = seen from inside, where a night window is not a light source and the glass
+// darkens the lot behind it instead.
+//
+// BOTH FACES of every run take it, because a run's two faces share one material — see
+// FacilityStyle.WINDOW_TINT_IN, which is where the argument for that lives. Nothing here touches
+// geometry, `castShadow` or `opacity`, so the pane goes on casting the same solid shadow it always
+// did (FacilityGeom.addPane) and the alphaTest-vs-opacity trap the roof fade hit cannot apply
+  static function glaze(mats:Array<MeshLambertMaterial>, t:Float):Void
+    {
+      if (GLAZE_LIT == null)
+        {
+          GLAZE_LIT = new Color(0xffffff);
+          GLAZE_IN = new Color(FacilityStyle.WINDOW_TINT_IN);
+        }
+      for (mat in mats)
+        {
+          mat.emissiveIntensity = FacilityStyle.WINDOW_EMISSIVE +
+            (FacilityStyle.WINDOW_EMISSIVE_IN - FacilityStyle.WINDOW_EMISSIVE) * t;
+          mat.color.lerpColors(GLAZE_LIT, GLAZE_IN, t);
         }
     }
 

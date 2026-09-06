@@ -17,6 +17,10 @@ import render.world.WorldCtx.WallMount;
 // header of render.facility.FacilityArea.ease
 typedef Shell = {
   roof:Array<Mesh>,
+  // this structure's window panes, as the MATERIALS render.facility.FacilityArea.glaze dims once the
+  // player walks in. one entry per RUN LENGTH the structure carries, so 0..2 — the panes are not in
+  // `roof` and must not be: a roof fades to nothing and glass only changes what it is
+  panes:Array<MeshLambertMaterial>,
   // what the parapet ring emitted on this structure, for __facility().roof. a hangar's are both 0
   // by construction — its roofline is a later job and `parapet` is not called on one at all
   paraCells:Int,
@@ -609,6 +613,7 @@ class FacilityGeom
         FacilityRoof.crescents(m, si, wOut);
       var shell:Shell = {
         roof: [],
+        panes: [],
         paraCells: st.hangar ? 0 : ringCells(m, si),
         paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
@@ -624,8 +629,8 @@ class FacilityGeom
       // box's 0.088 units per shadow texel a 0.25-tall band overhanging 0.12 adds at most three
       // texels to a silhouette that is already thrown
       add(scene, cope, FacilityStyle.COPING, true, false);
-      addPane(scene, panes, FacilityStyle.WINDOW_LIT);
-      addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2);
+      addPane(scene, panes, FacilityStyle.WINDOW_LIT, shell);
+      addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2, shell);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
@@ -1171,20 +1176,27 @@ class FacilityGeom
 // property of the IMAGE and not of the geometry: the three-pane art drawn on a 2-cell opening is that
 // window at two thirds scale. It costs one extra mesh per structure carrying both lengths — measured
 // on a generated compound, the two structures with windows both do, so 2 pane meshes became 4
-  static function addPane(scene:Scene, b:MeshBuf, path:String):Void
+  static function addPane(scene:Scene, b:MeshBuf, path:String, shell:Shell):Void
     {
       if (b.idx.length == 0)
         return;
       var tex = Textures.loadAlphaCropped(path);
-      var mat = VisionMask.patch(new MeshLambertMaterial({
+      // held as its own typed local rather than as `patch`'s Dynamic return, because `Shell.panes`
+      // carries it on to FacilityArea and a material driven per frame should not be Dynamic there.
+      // `patch` folds the mask into this same object and hands it straight back
+      var mat = new MeshLambertMaterial({
         map: tex,
         emissiveMap: tex,
         emissive: new Color(0xffffff),
         emissiveIntensity: FacilityStyle.WINDOW_EMISSIVE,
         alphaTest: 0.02,
         side: THREE.FrontSide,
-      }));
+      });
+      VisionMask.patch(mat);
       mat.transparent = true;
+      // and the structure gets the handle, so walking in can dim BOTH of this run's faces at once —
+      // see FacilityStyle.WINDOW_TINT_IN for why one material is the right answer and not a limit
+      shell.panes.push(mat);
       var mesh = new Mesh(geom(b), mat);
       mesh.receiveShadow = false;
       // the pane CASTS, and it is the only thing that can: the run's opening is cut OUT of the wall

@@ -303,6 +303,9 @@ typedef RendererInfo = {
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
   public var map:Texture;
+  // the diffuse tint the map is multiplied by, white by default. driven per frame by
+  // render.facility.FacilityArea, which darkens a window pane's glass once the player is inside
+  public var color:Color;
   public var emissive:Color;
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;

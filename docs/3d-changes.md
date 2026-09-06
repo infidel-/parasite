@@ -638,3 +638,52 @@ no geometry, and the lights added none. No new program (the bookcase's material 
 `cabinets` 30, `boards` 2, `exits` 16, `shadows` 401, `grime` 528; console at 0 errors. That closes
 the FLOOR families — rows 8, 12 and 13 are entirely 3D, and the 43 TABLE frames stay sprites by
 decision.
+
+## A window looked the same from both sides, and splitting the buffer was the WRONG fix (2026-09-07)
+
+Reported from the game, standing in a lab room: every pane read as the same white glowing slab from
+inside as from outside, with the same bloom halo on the masonry — and the lot seen through the glass
+came out WASHED BRIGHTER instead of darkened.
+
+Cause is one line of `FacilityGeom.structure`: a run's exterior and interior quads go into the same
+`MeshBuf`, picked by RUN LENGTH alone, so one material serves both facings. Measured live — **4 pane
+meshes**, 30 + 14 = **44 quads on the 3-cell art (22 runs x 2 faces)** and 18 + 24 = **42 on the
+2-cell (21 x 2)**, and 22 + 21 = **43** = `__facility().windows`. All four at `emissiveIntensity`
+2.2, `emissive` ffffff.
+
+The obvious fix is a second buffer and a dark interior material. **It is wrong, and the second half
+of the ask is what proves it**: the OUTER face must also stop blooming indoors. The camera pitches
+51 degrees down from outside the building, so the face it reads at the NEAR wall of the room the
+player stands in is the EXTERIOR one, and the interior face cannot be seen at all while a structure
+is solid — its own roof is over it. Both faces want the same value in both states. The split would
+have bought nothing and cost 4 → 8 pane meshes, a program, and the shadow caster:
+
+**THE CASTER IS THE INTERIOR QUAD.** `side` is `FrontSide`, so three forces `shadowSide = BackSide`
+and the depth pass draws the face pointing AWAY from the moon — the inward one. An interior-only
+mesh with `castShadow` off re-opens the "window holes in building shadows" bug the pane was given
+`castShadow = true` to close in the first place.
+
+Landed as one per-structure material lerp instead. `Shell.panes` carries the structure's 0..2 pane
+materials, `FacilityArea.glaze` drives `emissiveIntensity` **2.2 → 0** and `color` **ffffff →
+0x39424a** on the roof fade's own `REVEAL_MULT` clock.
+
+**Keyed off the player's OWN CELL (`model.owner`), NOT off `reveal`.** `reveal` also opens a
+structure the player is merely peeking into from the lot (`PEEK_CELLS` 3), and dimming a facade you
+are standing outside and looking at is the one thing this must not do. It is the same easing loop
+and a second target array, not a second clock.
+
+The bloom half needs no pass change: bloom is ONE global `UnrealBloomPass` (threshold **0.9**,
+strength 0.25) with no layers and no selective mask, so "stop blooming" is arithmetic on the pane.
+The art's glass band is linear 0.26-0.62, so **0.9 / 0.62 = 1.45** is where the brightest texel stops
+crossing — anything under that is dark enough for the bloom pass and nowhere near dark enough for the
+eye, which is why this goes to 0 and not to 1.4.
+
+Darkening the lot THROUGH the opening is then free: the glass half of the art is alpha 128
+(`glass_alpha`), so the pane composites as `0.5 * tint + 0.5 * outside`.
+
+Verified live, standing in the south lab: that structure's two meshes (14 + 24 quads) read
+`emissiveIntensity` **0** / colour **39424a**, the other structure's (30 + 18) stay **2.2** /
+**ffffff**, and `FacilityEntry`'s own opaque booth band is untouched at 1.4. `transparent`,
+`alphaTest` 0.02 and `castShadow` unchanged on all of them. **+0 meshes and +0 materials by
+construction** — nothing is created, four existing materials take different uniform values — so
+there is no draw call and no program to A/B. No geometry, no art, no persisted change.

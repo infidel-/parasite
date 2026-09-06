@@ -1022,6 +1022,29 @@ class FacilityStyle
   // halo falls on the facade around the opening, which is the "the building is occupied" read the
   // ground spill alone could not give
   public static inline var WINDOW_EMISSIVE = 2.2;
+  // and what the same pane drops to once the player is INSIDE the structure it stands in, eased over
+  // REVEAL_MULT beside the roof (render.facility.FacilityArea.glaze). two numbers because the read
+  // has two halves and one knob cannot do both.
+  //
+  // the EMISSIVE goes to zero: from a lit room a night window is not a light source, and this is also
+  // what kills the bloom. 0.9 / 0.62 = 1.45 is where the brightest glass texel stops clearing
+  // BLOOM_THRESHOLD, so anything under that is enough for the halo and nowhere near enough for the
+  // eye — the glass would still read as a bright panel at 1.4.
+  //
+  // the TINT is what darkens the LOT SEEN THROUGH the opening, and it comes free from the art: the
+  // glass half is alpha 128 (tools/textures.py's `glass_alpha`), so the pane composites as
+  // 0.5 * tint + 0.5 * outside and halves everything behind it. 0x39424a fitted live against the
+  // interior value ladder — dark enough to read as glazing, light enough that the mullions still
+  // separate from it.
+  //
+  // BOTH FACES OF A RUN TAKE IT, and that is the whole reason this is one material rather than two
+  // meshes. The interior face cannot be seen while a structure is solid — its own roof is over it —
+  // and the face the camera reads at the NEAR wall of a room the player is standing in is the
+  // EXTERIOR one. So "dark from inside" and "no bloom on the outer part indoors" are not two
+  // features; they are the same switch, and splitting the buffer would buy nothing and cost 4 draw
+  // calls, a program and the pane's shadow caster (see FacilityGeom.addPane on which face casts)
+  public static inline var WINDOW_EMISSIVE_IN = 0.0;
+  public static inline var WINDOW_TINT_IN = 0x39424a;
 
   // ---- the reveal ------------------------------------------------------------------------------
 
