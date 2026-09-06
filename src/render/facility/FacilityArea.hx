@@ -36,7 +36,12 @@ class FacilityArea implements Area3D
     RenderConfig.MODELS.facilityBin,
     RenderConfig.MODELS.facilityCar,
   ].concat([for (p in FacilityDebris.PROPS) p.path])
-    .concat([for (p in FacilityKit.PROPS) p.path]);
+    .concat([for (p in FacilityKit.PROPS) p.path])
+    // and the hazard barrels standing on the LOW decoration cells, one batch per LIVERY, appended
+    // off their own table so a fourth needs no edit here (render.facility.FacilityDeco.drums).
+    // their sibling the BIN is deliberately absent: it rides the compound's existing bin batch,
+    // four rows up, rather than opening a call of its own
+    .concat([for (p in FacilityDeco.PROPS) p.path]);
 
   var game:Game;
   var model:Facility;
@@ -174,6 +179,11 @@ class FacilityArea implements Area3D
       // the one family in here the vision mask really matters to — everything else on this list
       // stands outdoors, where the mask reads 1
       for (p in FacilityKit.props(scene, model))
+        green.push(p);
+      // and the hazard barrels standing on the room floor's own LOW decoration cells, one batch per
+      // livery and last because EXTRA names them last. the other half of that family, the bins,
+      // appended nothing here: they went into FacilityGround.bins' places above and share its batch
+      for (p in FacilityDeco.drums(scene, model))
         green.push(p);
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is

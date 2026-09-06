@@ -500,6 +500,11 @@ class FacilityGround
             });
           }
       indoorBins(m, places);
+      // and the LOW floor decorations that ARE a lidded bin (Const.FACILITY_FITTINGS, FIT_BIN). they
+      // ride this batch rather than earning one of their own, which is the whole reason the bin was
+      // the glb picked for them: a handful of bins in the labs would otherwise be a second draw call
+      // for the same model. BIN_H is already FacilityStyle.DECO_ROUND_H, so they are the same size
+      FacilityDeco.placeRound(m, _FittingKind.FIT_BIN, places);
       var prop = Models.instanced(scene, RenderConfig.MODELS.facilityBin, places,
         FacilityStyle.BIN_H, SOLID);
       // and this batch CASTS NOTHING, which the corridor half is what forced. an instanced batch is

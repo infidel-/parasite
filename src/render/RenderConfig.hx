@@ -722,6 +722,14 @@ class RenderConfig {
     // where a cabinet run is a box and is merged geometry
     facilityKitGas: 'models/facility/gas-cylinders.glb',  // four-bottle cylinder rack, strap rail, foot rail
     facilityKitTrolley: 'models/facility/lab-trolley.glb', // two-shelf trolley on castors, push handle
+    // the three hazard barrels standing on a LOW decoration cell (render.facility.FacilityDeco).
+    // ONE MESH, THREE PAINTS — all three are art/models.json labels over the tunnels' own
+    // sewer/drum.glb source, recoloured by tools/livery.py, so they cost three batches and no new
+    // geometry. They are separate paths because a batch is keyed by path and carries no
+    // per-instance UV offset, which is the whole reason a livery costs a draw call
+    facilityDrumSteel: 'models/facility/drum-steel.glb', // grey drum, clean steel, hoop ribs
+    facilityDrumBio: 'models/facility/drum-bio.glb',     // yellow drum, biohazard livery
+    facilityDrumRad: 'models/facility/drum-rad.glb',     // red drum, radioactive livery
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

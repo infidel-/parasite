@@ -362,3 +362,146 @@ same fact. `col` is opt-in (only quadC/quadRGB fill it — `MeshBuf`'s own word)
 `B_SHELF_TOP`, shared with the rack's two sides and its top, so giving them a channel means every
 quad in that buffer pushes one — i.e. colour-carrying variants of `FacilityGeom.face`/`cap`. Darker
 boxes on lower shelves buys most of the depth cue for none of that.
+
+## The facility's LOW list goes 3D with no new art at all (2026-09-06)
+
+Inventory first. `entities64` rows 8-14 hold **73** facility decoration frames, `FACILITY_FITTINGS`
+had claimed **10**, and all 63 left drew at **21.3 texels per world unit** — 64 px over a
+`Sprites.SIZE` 3.0 quad, the number the drain migration recorded as blurry (floor tile 73, emitted
+drain 170). Live area: **132 decorations = 29 floor + 103 table**, the 29 matching the corridor
+-lighting pass's own `TILE_FLOOR_TILE_UNWALKABLE` count exactly.
+
+**Three of the four new kinds cost NO ART AND NO CALL, and that is the entry.** `FIT_RACK_LOW`
+(12/7-10, **6 here**) is the existing rack cabinet at `DECO_RACK_LOW_H = DECO_RACK_TILE` 1.6 — one
+exact repeat, so v lands on 1.0 with no wrap seam; same three textures, same three buffers, and 3 LED
+rows fall out of `h / DECO_RACK_TILE * DECO_LED_PER_TILE` untuned. `FIT_BIN` (12/3-4, **1 here**)
+costs no BATCH either: `FacilityGround.bins` already instances `facility/trash-bin` and already
+places indoor corridor bins, so these push into its own `places` — **11 → 12**. Only `FIT_DRUM`
+(12/1,2,5, **4 here**) opens one, reusing the tunnels' `sewer/drum` (`Models.cache` is keyed by path).
+
+**A DRUM AND A BIN HAVE NO QUAD ROUTE AT ALL** — `FacilityGeom` emits axis-aligned rects — which is
+what put them on the glb side of silhouette-vs-surface. They are still in `FACILITY_FITTINGS`,
+because being there is what turns the sprite off AND what stamps `m.deco`, and stamping is what keeps
+`FacilityKit` off the cell. Before this, `findDeco` stamped only frames WITH a kind, so a plain
+-sprite decoration cell was invisible to `isFitting` while passing every test `FacilityKit.wall`
+makes: **a gas rack could be drawn standing inside a 2D fridge.** Now every row-8/12/13 frame carries
+a kind and the overlap is impossible by construction.
+
+**A WINDOW COUNTS AS A WALL FOR THESE AND MUST.** `isSolidWall` rules one out for a fitting because a
+sill is where a worktop would be — right for a 2.8 cabinet, wrong at 1.8 — and the generator FORCES
+the low list beside glazing (`nextToWindow`), so on masonry alone most of this family stands adrift
+mid-cell. Off the instance matrices: all 4 drums landed **2.28 off their cell centre** (the slab
+face), base y **0.0005**, height **0.9895 × 1.819 = 1.80**. The wall halo stays SOLID-only — on a
+window cell it would land on the glazing.
+
+**Measured on one pinned pose (`p -74/48/-78`, identical quaternion): `calls` 103 → 98, `tris`
+56,684 → 76,034, `programs` 93 → 94.** Calls went DOWN because the sprite pool is one Mesh per quad,
+so 11 suppressed icons outweigh the one new batch. The whole tri delta is the drum — **4,826 each,
+19,304 in frame** — and it costs nothing: batch `visible` A/B, 4 interleaved phases, 48 samples each,
+GPU median **1.672 vs 1.664 ms**, delta **0.008**. `cabinets` 30 / `boards` 2 / `exits` 16 /
+`shadows` 401 all unmoved.
+
+**AND THE 43 TABLE FRAMES ARE NOT MIGRATING — SHRINKING THEM IS THE SAME FIX.** `groundY` anchors a
+bench decoration at `BENCH_H` 2.0 and the quad is 3.0 square, so their alpha bboxes put them at
+**1.03-2.25 world units on a 1 m worktop**: a microscope 1.08 m tall, two thirds of the wall.
+`DECO_TABLE_SCALE` fixes size and resolution in one constant. A flask is what a mesh generator is for
+and what an emitted box cannot state, so 43 glbs was never the answer: the blur was a SCALE bug
+wearing a resolution costume.
+
+**IT SHIPS AT 0.54 AND NOT THE 0.36 THE MEASUREMENT ASKS FOR**, called on the game. True size puts
+the biggest icon at 0.81 units — 40 cm, correct for a distillation rig and a SPECK at the resting
+camera, where the whole job of bench clutter is that the room reads as worked-in from across it.
+**1.5x true size** is the emphasis every icon in this game already carries; the bug was never that
+they were emphasised, it was that they were emphasised by **2.8x**. At 0.54 the 64 px covers 1.62
+units = **40 texels per unit** against the floor tile's 73 — still 1.9x the 21.3 it started at.
+
+**Two things that scale broke.** `Actors.drawActor`'s ground anchor dropped a sprite by
+`Sprites.SIZE * gs.by` with no scale in it, so a scaled quad sinks — the correction is
+`0.5 * (1 - s) + s * by`, collapsing to the old expression at s = 1. The CENTRE at `Actors.hx:870` is
+deliberately untouched: the attached-parasite pose reads it and has its own tuned `ATTACH_HEAD_Y`.
+And `CastShadows.project` sizes its silhouette off the full `Sprites.SIZE` with no scale hook, so a
+20 cm flask laid a blob three times its own width; `LampShadows` skips a bench decoration outright
+rather than plumbing a scale through every call site.
+
+**The generator needed one guard.** `addFitting` picks a random kind off `FACILITY_FITTINGS` and only
+ever runs on HIGH cells, so three new low kinds would have been **3 of every 6** high fittings —
+drums where fume cabinets belong. `_Fitting` gained `high: Bool` and `Const.highFittings()`.
+
+**Nothing persisted**: a kind is still recovered from the decoration's own atlas frame, verified by
+loading a pre-existing slot — **6 rack-low, 4 drum, 1 bin, 8 still sprites**, all off frames that
+were in the save already. Those 8 (8/0-3 cabinets, 8/4-8 machines, 12/0 placard, 12/6 appliance) are
+what the two packed sheets of phases 3-4 are for.
+
+## Reusing a prop indoors published a colour bug the docs had already named (2026-09-06)
+
+Reported from the game against the model viewer: the litter bin, newly standing in a lit corridor,
+was a **black cylinder** where the viewer shows a green bin with a grey lid.
+
+**IT WAS NOT TOO DARK, IT WAS NEUTRALISED, AND THIS IS THE FLAT-SCALAR RULE'S OWN WORKED EXAMPLE.**
+`propstat app/models/facility/trash-bin.glb` reads the bake as **atlas 122/142/122, chroma 20.1** —
+genuinely green — and `models.json` shipped `baseColor [0.14, 0.1, 0.14]`, a per-channel factor with
+**G below R and B**. Shipped sRGB is atlas × f^(1/2.2), so 122·0.412 / 142·0.351 / 122·0.412 =
+**50/50/50 at chroma 0.4**. `3d-render.md`'s colour-deletion row names this prop by number already
+("bottle-green body 20.1 → **0.1**"); nothing had gone back to fix the entry it was measured from.
+
+**AND THE LEVEL WAS STALE, WHICH IS THE PART THE REUSE EXPOSED.** 46-52 is a luma family fitted
+OUTDOORS. The interior was repainted ~2x linear afterwards (`wall-interior` 0.069 → 0.1595,
+`floor-tile` 0.0607 → 0.12) and this prop was not, so a bin that reads fine on a night lawn reads as
+a hole in a pale corridor. `propstat` suggests a flat **0.12** to hold the old band; **0.30** follows
+the repaint instead.
+
+Measured on one pinned pose, before/after, with the lino and end wall in frame as controls
+(**identical to within 1.2**, so only the bin moved): bin luma **23.5 / 18.7 → 49.2 / 49.4**, chroma
+**8.8 / 6.3 → 25.1 / 22.5**, rgb 16.6/25.4/25.4 → **30.3/55.3/44.2** — G now the top channel, against
+lino at 89 and wall at 68.
+
+**ONE MATERIAL HAD TO SERVE BOTH, and it does.** `SOLID` does not clone, and this glb is the park's,
+the lot's, the corridor dead ends' and now the deco cells' — so a second label would have split
+`FacilityGround.bins` into two batches and given back the +0 draw call the deco bins had just won.
+Checked outdoors at a park bench: **luma 20.7 / 21.6 against a lawn at 11.6 and a walkway at 20.3**.
+A moon-only park is far too dark for a 1.55x albedo lift to blow out, so the fallback was never
+needed. **The general form: a prop fitted before an area was repainted is fitted to a surface that no
+longer exists — re-check the props when the ground under them moves.**
+
+## Three drums off one mesh: repainting a glb without an image model (2026-09-06)
+
+The reused drum read correctly as a 200 L barrel and wrongly as a GRIMY one — it is the tunnels'.
+And collapsing the low list's three barrels (12/1 grey + hazard triangle, 12/2 yellow biohazard,
+12/5 red radioactive) onto one prop had thrown away the marking, which is most of what those three
+icons ARE.
+
+**THE PLANNED `edit_image` PASS WAS REJECTED ON INSPECTION, and the reason generalises.** Exporting
+the base map (`make model-export label=sewer/drum`) shows a **fragmented UV ATLAS** — circular
+lid/base charts scattered through rectangular body panels — not a picture. An image model
+regenerates the whole canvas; this file already records gpt refusing to honour even a stated seam
+position (asked 768, drew 616). A chart that moves a few texels is a smeared prop. **Do not send a
+UV atlas to an image model.**
+
+**ONE HSV PASS DOES BOTH JOBS, and that is a property of this bake worth measuring for.** The rust
+and the steel have nearly the same LUMA — 54/44/42 against 44/47/54 — and differ only in HUE: **17%
+of saturated texels at hue 0-30 against 71% at 210-240**. So assigning ONE hue to every saturated
+texel deletes the grime and applies the livery in the same operation, and the untouched value
+channel keeps the dents and weld seams reading as wear. Near-neutral texels (`SAT_MIN` 0.12: dark
+lid rims, baked contact shadows) are left alone or the shadows take the paint. `tools/livery.py`,
+~90 lines, and it cannot move a texel by construction.
+
+Three labels, all `"src": "sewer/drum.glb"`: **steel** (hue 212, sat 0.22, gain 1.63 → atlas
+72.6/79.4/87.3, luma 78.5), **bio** (hue 48, 0.62, 1.85 → 99.2/88.4/52.6, luma 88.1), **rad**
+(hue 6, 0.58, 1.97 → 105.9/62.7/59.6, luma 71.7). No `baseColor` on any: the gain lands the atlas
+ON the ~78 indoor band `facility/lab-trolley` fixes, so the map IS the shipped albedo. Built chroma
+**45.9 / 45.5** against the sewer drum's **6.3**, texels/tri 54, in band. Red takes the HIGHEST gain
+and still lands the LOWEST luma — at hue 6 the G and B channels carry almost none of the luminance —
+and is left there, because a red drum brighter than the yellow beside it reads as orange.
+
+**`tris` IS LOAD-BEARING AND WAS GOT WRONG ONCE, which is the entry's second lesson.** `propstat` on
+the BUILT sewer drum prints "UNDECIMATABLE, generate AT the budget with `tris -1`". That is advice
+about the 4,826-tri file it was handed; `models-src/sewer/drum.glb` is the **100k MASTER**, so `-1`
+built a **97,214-tri** drum. `sewer/drum`'s own 1200 is what meshopt floors to 4,826. **Read a
+`propstat` line against the file it was run on.**
+
+**A LIVERY IS A DRAW CALL and there is no way around it**: `Models.instanced` is keyed by path and
+carries no per-instance UV offset. But an EMPTY one is free — `instanced` returns early on zero
+placements and adds no mesh, so a livery this compound does not deal costs nothing. Verified live:
+**steel 0, bio 1, rad 3**, exactly the atlas histogram, so this seed pays **2** batches and not 3.
+`EXTRA`, `FacilityWarm` and `FacilityArea` all derive their rows from `FacilityDeco.PROPS`, so a
+fourth livery is one table row.

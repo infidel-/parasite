@@ -1135,7 +1135,10 @@ class FacilityAreaGenerator
 // still resolves — see Const.fittingOf
   function addFitting(state: _FacilityState, x: Int, y: Int)
     {
-      var f = Const.FACILITY_FITTINGS[Std.random(Const.FACILITY_FITTINGS.length)];
+      // the HIGH kinds only: the table also holds the low list's drums, bins and short server
+      // stacks, and none of those is a piece of standing furniture
+      var kinds = Const.highFittings();
+      var f = kinds[Std.random(kinds.length)];
       var fr = f.frames[Std.random(f.frames.length)];
       var o = new Decoration(game, state.area.id,
         x, y, fr.row, fr.col);

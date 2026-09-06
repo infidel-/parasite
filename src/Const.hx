@@ -137,11 +137,16 @@ class Const
     { row: 12, amount: 11 },
   ];
 
-  // the floor decorations the 3D view draws as REAL GEOMETRY instead of an upright atlas quad
-  // (render.facility.FacilityDeco). the generator picks a KIND off this table and takes its frame
-  // from it; the renderer reads the kind back out of the frame with fittingOf below, which is what
-  // lets every save made before this table existed light up as geometry with nothing migrated —
+  // the floor decorations the 3D view draws as a REAL 3D OBJECT instead of an upright atlas quad
+  // (render.facility.FacilityDeco). the generator picks a `high` KIND off this table and takes its
+  // frame from it; the renderer reads the kind back out of the frame with fittingOf below, which is
+  // what lets every save made before this table existed light up as geometry with nothing migrated —
   // the frames were already there.
+  //
+  // MOST are merged geometry and two are not: a drum and a bin are round, and FacilityGeom emits
+  // axis-aligned quads only, so those two are instanced glbs the compound already ships. Being in
+  // this table is what turns their sprite off and what stamps their cell, which is the same job for
+  // both routes.
   //
   // the 2D area view is not affected at all: a fitting is still an objects.Decoration drawing the
   // same entities64 cell it always drew
@@ -149,6 +154,7 @@ class Const
     // the open metal shelving with boxes on it, the one kind emitted as a composite rather than a box
     {
       kind: FIT_SHELVING,
+      high: true,
       frames: [
         { row: 8, col: 9 },
         { row: 8, col: 10 },
@@ -156,6 +162,7 @@ class Const
     },
     {
       kind: FIT_BOOKCASE,
+      high: true,
       frames: [
         { row: 13, col: 0 },
         { row: 13, col: 1 },
@@ -167,11 +174,61 @@ class Const
     },
     {
       kind: FIT_RACK,
+      high: true,
       frames: [
         { row: 13, col: 3 },
         { row: 13, col: 4 },
         { row: 13, col: 5 },
         { row: 13, col: 6 },
+      ],
+    },
+    // the LOW list's four stacked-server icons: the same cabinet as the rack above, one tile tall
+    // rather than two, so they cost NO new art and NO new draw call — same three surfaces
+    {
+      kind: FIT_RACK_LOW,
+      high: false,
+      frames: [
+        { row: 12, col: 7 },
+        { row: 12, col: 8 },
+        { row: 12, col: 9 },
+        { row: 12, col: 10 },
+      ],
+    },
+    // and the LOW list's round things, which are glbs and not geometry. they are in this table for
+    // the same two reasons every kind above is: it is what turns the 2D sprite off (FacilityDeco
+    // .draws) and what stamps the cell in FacilityModel.deco, which is the gate keeping the lab kit
+    // out of an occupied tile
+    // one kind per BARREL, because each livery is its own glb and the atlas really does draw three
+    // different drums — a grey one with a hazard triangle, a yellow biohazard one and a red
+    // radioactive one. Collapsing them onto one prop was the first build and it threw the marking
+    // away, which is most of what those three icons ARE
+    {
+      kind: FIT_DRUM_STEEL,
+      high: false,
+      frames: [
+        { row: 12, col: 1 },
+      ],
+    },
+    {
+      kind: FIT_DRUM_BIO,
+      high: false,
+      frames: [
+        { row: 12, col: 2 },
+      ],
+    },
+    {
+      kind: FIT_DRUM_RAD,
+      high: false,
+      frames: [
+        { row: 12, col: 5 },
+      ],
+    },
+    {
+      kind: FIT_BIN,
+      high: false,
+      frames: [
+        { row: 12, col: 3 },
+        { row: 12, col: 4 },
       ],
     },
   ];
@@ -193,6 +250,25 @@ class Const
               fr.col == col)
             return f.kind;
       return -1;
+    }
+
+// the kinds the generator may DEAL on a high floor cell. the low kinds are in the same table because
+// fittingOf has to find them, but a drum or a knee-high server stack is not standing furniture and
+// must not be dealt where a fume cabinet belongs — see game.FacilityAreaGenerator.addFitting
+  public static function highFittings(): Array<_Fitting>
+    {
+      return [for (f in FACILITY_FITTINGS) if (f.high) f];
+    }
+
+// does this atlas row draw a decoration that stands ON A BENCH rather than on the floor? read off
+// CHEM_LABS_DECO_TABLE itself so the two can never drift apart. STATELESS, the same shape fittingOf
+// takes: the answer is a property of the frame and of nothing else
+  public static function isTableDeco(row: Int): Bool
+    {
+      for (t in CHEM_LABS_DECO_TABLE)
+        if (t.row == row)
+          return true;
+      return false;
     }
 
   // row 15 - doors
@@ -805,8 +881,12 @@ typedef _FittingFrame = {
 }
 // one 3D fitting and the entities64 frames that draw it (Const.FACILITY_FITTINGS)
 typedef _Fitting = {
-  // what render.facility.FacilityDeco emits for it
+  // what render.facility.FacilityDeco draws for it
   kind: _FittingKind,
+  // may the generator DEAL this kind outright on a high floor cell? false for a kind whose frames
+  // all live in the LOW list — those arrive through addDecoration like any other low decoration, and
+  // dealing a knee-high drum where a 2.8-tall fitting belongs would empty the rooms of furniture
+  high: Bool,
   // every frame that draws as this kind, across whatever rows they sit on
   frames: Array<_FittingFrame>,
 }

@@ -2,6 +2,7 @@ package render.facility;
 
 import three.Three;
 import citygen.CityConfig;
+import render.Models;
 import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
@@ -12,12 +13,30 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
+// one hazard-barrel livery and the fitting kind that deals it. all three share a mesh and differ
+// only in their baked paint, so this carries no size — they take FacilityStyle.DECO_ROUND_H like
+// every other round low fitting
+typedef DrumProp = {
+  // which _FittingKind stands this drum
+  kind:Int,
+  // and the RenderConfig.MODELS entry that draws it
+  path:String,
+};
+
 // the room furniture that used to be an upright 2D sprite: a bookcase, an open metal shelving unit
-// with boxes on it, and a server rack.
+// with boxes on it, a server rack and the same rack one tile tall, plus the two ROUND things that
+// stand on the same cells — a hazard drum and a lidded bin.
 //
-// MERGED GEOMETRY and not a glb, the call render.facility.FacilityTables already made for the
-// benches: a merged buffer is ONE draw call for every unit in the compound, where an instanced glb
-// is one call per model kind in view and arrives at a few thousand triangles off an unwrap lottery.
+// MERGED GEOMETRY and not a glb wherever there is a choice, the call render.facility.FacilityTables
+// already made for the benches: a merged buffer is ONE draw call for every unit in the compound,
+// where an instanced glb is one call per model kind in view and arrives at a few thousand triangles
+// off an unwrap lottery.
+//
+// THE DRUM AND THE BIN ARE THE CASE WITH NO CHOICE, and they are worth naming as such: the emitters
+// below take axis-aligned rects, so a cylinder has no quad route at all. Both are glbs the compound
+// ALREADY SHIPS — the tunnels' drum and the lot's own bin — so neither cost a generation, and the
+// bin does not even cost a batch, because render.facility.FacilityGround.bins already instances that
+// model and simply takes these placements into its own list (see `placeRound`).
 //
 // ONE TEXTURE PER FACE, not per family, and that is the whole shape of this file. The first build
 // dressed each unit in a single sheet and every face it was wrong on was wrong the same way: book
@@ -83,6 +102,38 @@ class FacilityDeco
         Const.fittingOf(o.imageRow, o.imageCol) >= 0;
     }
 
+// how big this object's sprite draws in the facility, as a fraction of the full billboard. 1.0 for
+// everything except a decoration standing on a laboratory BENCH.
+//
+// those 43 icons keep their sprite — a flask, a retort stand and a microscope are what a mesh
+// generator is for and what an emitted box cannot state at all — but they were drawing at full size,
+// which put a 1.08 m microscope on a 1 m worktop. See FacilityStyle.DECO_TABLE_SCALE, where the
+// measurement is; shrinking them is also what takes them from 21.3 texels per world unit to 59.
+//
+// STATELESS like `draws` above and for the same reason: the answer is a property of the object's
+// atlas ROW and of nothing else, so render.Actors can ask it without a model
+  public static function spriteScale(area:game.AreaGame, o:objects.AreaObject):Float
+    {
+      if (area == null ||
+          area.typeID != AREA_FACILITY ||
+          o.type != 'decoration' ||
+          !Const.isTableDeco(o.imageRow))
+        return 1.0;
+      return FacilityStyle.DECO_TABLE_SCALE;
+    }
+
+// is this kind drawn as an instanced glb rather than emitted here? the two ROUND ones — a drum and a
+// bin are cylinders and FacilityGeom emits axis-aligned quads only, so there is no quad route to
+// take. they are in the deco grid for what READS it: the sprite gate above, and the one-fitting-to-
+// a-tile test render.facility.FacilityKit makes of it. not for the emitters below
+  public static inline function isProp(kind:Int):Bool
+    {
+      return kind == _FittingKind.FIT_BIN ||
+        kind == _FittingKind.FIT_DRUM_STEEL ||
+        kind == _FittingKind.FIT_DRUM_BIO ||
+        kind == _FittingKind.FIT_DRUM_RAD;
+    }
+
 // how tall a fitting of this kind stands, world units
   static function heightOf(kind:Int):Float
     {
@@ -91,6 +142,7 @@ class FacilityDeco
           case _FittingKind.FIT_SHELVING: FacilityStyle.DECO_SHELF_H;
           case _FittingKind.FIT_BOOKCASE: FacilityStyle.DECO_BOOKCASE_H;
           case _FittingKind.FIT_RACK: FacilityStyle.DECO_RACK_H;
+          case _FittingKind.FIT_RACK_LOW: FacilityStyle.DECO_RACK_LOW_H;
           default: 0.0;
         };
     }
@@ -109,7 +161,8 @@ class FacilityDeco
             if (m.drain[row][col])
               drain(b[B_DRAIN], col, row, half);
             var kind = m.deco[row][col] - 1;
-            if (kind < 0)
+            if (kind < 0 ||
+                isProp(kind))
               continue;
             unit(m, b, leds, col, row, kind, half);
           }
@@ -156,7 +209,8 @@ class FacilityDeco
           w = FacilityStyle.DECO_BOOKCASE_W;
           d = FacilityStyle.DECO_BOOKCASE_D;
         }
-      else if (kind == _FittingKind.FIT_RACK)
+      else if (kind == _FittingKind.FIT_RACK ||
+               kind == _FittingKind.FIT_RACK_LOW)
         {
           w = FacilityStyle.DECO_RACK_W;
           d = FacilityStyle.DECO_RACK_D;
@@ -343,6 +397,135 @@ class FacilityDeco
       MeshBufTools.quad(b,
         [cx - s, y, cz + s], [cx + s, y, cz + s], [cx + s, y, cz - s], [cx - s, y, cz - s],
         [0, 1, 1, 1, 1, 0, 0, 0]);
+    }
+
+// where the ROUND low fittings stand, appended to `places`. shared by the drum batch below and by
+// the bin batch in render.facility.FacilityGround, which the compound's OUTDOOR bins already own — a
+// second batch for a handful of indoor bins would be a second draw call for nothing.
+//
+// AGAINST THE WALL where the cell has one, and a WINDOW COUNTS here where it does not for a fitting.
+// FacilityModel.isSolidWall rules a window out because a sill is exactly where a worktop would be,
+// which is the right answer for a 2.8-tall cabinet and the wrong one for something 1.8 high — and it
+// matters because the generator FORCES the low list beside glazing (FacilityAreaGenerator's
+// nextToWindow test), so on masonry alone most of this family would stand adrift in the middle of
+// its cell. With no wall on any hand it does stand in the middle, which the cell is unwalkable for
+// either way.
+//
+// the yaw is FREE: a drum is a cylinder, and a bin's mouth may as well look anywhere indoors — where
+// the outdoor bins aim theirs at the path, these have no path to aim at
+  public static function placeRound(m:Facility, kind:Int, places:Array<Models.PropPlace>):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var y = FacilityGround.surfY(Surf.TILE);
+      var r = FacilityStyle.DECO_ROUND_D / 2;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.deco[row][col] - 1 != kind)
+              continue;
+            var cx = (col + 0.5) * CELL - half;
+            var cz = (row + 0.5) * CELL - half;
+            var dir = -1;
+            for (i in 0...4)
+              if (FacilityModel.isWall(m, col + DC[i], row + DR[i]))
+                {
+                  dir = i;
+                  break;
+                }
+            // off the WALL FACE and not the cell boundary, which is a unit away — the trap the
+            // corridor casework and the lab kit both record
+            if (dir >= 0)
+              {
+                var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
+                var off = r + FacilityStyle.STAND_GAP;
+                cx = (dir == 2 ? s.x1 + off : (dir == 3 ? s.x0 - off : cx));
+                cz = (dir == 0 ? s.z1 + off : (dir == 1 ? s.z0 - off : cz));
+              }
+            // TURNED AWAY from the masonry it stands against. the bin's mouth is a hole in its lid
+            // and its own front is local +z (measured off the built glb — see FacilityGround.bins),
+            // so a free turn would put a third of them face to the wall. a drum is a cylinder and
+            // does not care either way, so one rule serves both; with no wall on any hand the turn
+            // goes back to being free
+            var h = FacilityModel.mix((col * 668265263) ^ (row * 374761393));
+            places.push({
+              x: cx,
+              z: cz,
+              yaw: (dir >= 0 ? Math.atan2(DC[dir ^ 1], DR[dir ^ 1]) :
+                ((h % 1000) / 1000) * 2 * Math.PI),
+              y: y,
+            });
+            // the floor pool under it, on the plain square: the field is what darkens the tile a
+            // standing thing sits on, and it is repainted once after every prop pass has placed
+            ContactMask.prop(cx - r, cx + r, cz - r, cz + r);
+            // and the shadow on the masonry behind, which a top-down field cannot reach. SOLID walls
+            // only — a halo laid on a window cell would land on the glazing
+            if (dir >= 0 &&
+                FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
+              FacilityDetail.stand({
+                col: col,
+                row: row,
+                dir: dir,
+                a0: (dir < 2 ? cx : cz) - r,
+                a1: (dir < 2 ? cx : cz) + r,
+                len: 1,
+                y: y,
+                h: FacilityStyle.DECO_ROUND_H,
+              });
+          }
+    }
+
+// the hazard barrels: ONE BATCH PER LIVERY, all three off the same source mesh.
+//
+// the atlas draws three different drums and the low list deals all three, so each is its own
+// art/models.json label over the TUNNELS' own sewer/drum.glb — repainted, not regenerated (see
+// art/models.json's facility/drum-steel for why an edit_image pass was rejected for a per-pixel
+// transform). They are three PATHS and not one because render.Models.instanced is keyed by path and
+// carries no per-instance UV offset: a livery is a batch and a batch is a draw call. That is the
+// price of the marking, paid knowingly.
+//
+// the BIN is the round fitting with no entry here, and it is the one that costs nothing: the
+// compound's outdoor bin batch already exists, so those placements go into it — see `placeRound`
+// and render.facility.FacilityGround.bins
+  public static final PROPS:Array<DrumProp> = [
+    {
+      kind: _FittingKind.FIT_DRUM_STEEL,
+      path: RenderConfig.MODELS.facilityDrumSteel,
+    },
+    {
+      kind: _FittingKind.FIT_DRUM_BIO,
+      path: RenderConfig.MODELS.facilityDrumBio,
+    },
+    {
+      kind: _FittingKind.FIT_DRUM_RAD,
+      path: RenderConfig.MODELS.facilityDrumRad,
+    },
+  ];
+
+// one instanced batch per livery, index-aligned with PROPS — the shape render.facility.FacilityKit
+// .props takes, so render.facility.FacilityGround.EXTRA and FacilityWarm both derive their rows off
+// the table above and a fourth livery needs no edit in either
+  public static function drums(scene:Scene, m:Facility):Array<Models.InstancedProp>
+    {
+      var out = [];
+      for (p in PROPS)
+        {
+          var places:Array<Models.PropPlace> = [];
+          placeRound(m, p.kind, places);
+          var prop = Models.instanced(scene, p.path, places, FacilityStyle.DECO_ROUND_H, SOLID);
+          out.push(prop);
+          // behind the loader callback, because the mesh does not exist until the glb resolves —
+          // and only for a batch that placed something, or an empty one is patched for nothing.
+          // NOT CASTING, the indoor litter bin's own finding: an instanced batch is drawn into the
+          // moon's shadow map as many times as it is drawn into the frame, so the second draw is a
+          // second call the moment the batch is in view at all, and these stand under a faded roof
+          if (places.length > 0)
+            Models.get(p.path, function(_)
+              {
+                VisionMask.patchMesh(prop.mesh);
+                prop.mesh.castShadow = false;
+              });
+        }
+      return out;
     }
 
 // the shelving: two alpha-cut end frames, a bare quad per shelf, and the boxes standing on them.

@@ -429,14 +429,14 @@
       "seed": 1824855304,
       "dropMR": true,
       "baseColor": [
-        0.14,
-        0.1,
-        0.14,
+        0.3,
+        0.3,
+        0.3,
         1
       ],
-      "note": "the park litter bin, one beside every bench (render.facility.FacilityGround.bins). it is placed off the BENCH and not off a tile of its own, so it needed no generator change and is retroactive to every saved compound. GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,765 tris) and ships tris -1, and the FIRST prop in this repo where the split ratio LIED about which route to take: the 100k master measured 1.30x, comfortably inside the 'offline decimate works' band, and meshopt still floored at 9,277 tris - twice the budget for a cylinder - because the ratio describes the master's atlas and says nothing about what the decimation does to it. the BUILT glb off that route measured 3.86x and 27 components at 43.6%, and it read on screen as torn polygons and smeared texture. the gate was right and the 'body + lid + base ring + liner' reading of those 27 components was wrong. generated at budget instead, the same reference comes back 2 COMPONENTS AT 58.2% (1,388 / 996 unique positions - the body and the lid, the shipped conifer's own 51/49 shape) at 1.30x, and Runware unwraps and bakes AFTER its own decimation so the atlas is authored FOR 4,765 tris (880 texels/tri at 2048) instead of being a 96k atlas dragged down with the mesh - tex 512 then lands on 55, in band, with no sizing arithmetic needed. reference took propstat's --lift 73 (subject p50 49 against the 69-77 that bakes correctly), and the subject margin against the #5a5d63 backdrop was a comfortable 38 because the body is bottle green rather than the grey steel the railing and the mast both had to fight. baked at atlas mean 122/141/121, well over the 46-52 family and green with it, so baseColor is a per-channel darken. MR came back metal max 178 - dropMR, or it renders BLACK under debug key 1 rather than chrome (the master run's own MR came back metal max 1 off the SAME reference, so this is a per-run property of the bake and has to be read per glb, never assumed from a sibling)",
+      "note": "THE PER-CHANNEL FACTOR IT SHIPPED WITH WAS A NEUTRALISER AND IT ATE THE WHOLE BODY COLOUR, reported from the game against the model viewer. The bake is GREEN - propstat on the built glb reads atlas 122/142/122 at chroma 20.1 - and [0.14, 0.1, 0.14] puts G BELOW R and B, so shipped sRGB (atlas x f^(1/2.2)) came out 50/50/50 at chroma 0.4. This is the prop docs/3d-render.md's colour-deletion row already names by number (bottle-green body 20.1 -> 0.1); it is the flat-scalar rule's own worked example. AND THE LEVEL WAS STALE TOO: 46-52 is a luma family fitted OUTDOORS, and the interior was repainted about 2x linear afterwards (wall-interior 0.069 -> 0.1595, floor-tile 0.0607 -> 0.12) while this prop was not - so at a corridor dead end it read as a black cylinder against pale lino. propstat suggests a flat 0.12 to hold the old band; 0.30 follows the repaint instead. One material serves the park, the lot, the corridor dead ends and the new FIT_BIN deco cells, so it is fitted to be legible in the lit interior and accepted slightly bright on the night lot - splitting it into a second label would split FacilityGround.bins into two batches and give back a draw call. ORIGINAL NOTE: the park litter bin, one beside every bench (render.facility.FacilityGround.bins). it is placed off the BENCH and not off a tile of its own, so it needed no generator change and is retroactive to every saved compound. GENERATED AT THE BUDGET (decimationTarget 5000 -> 4,765 tris) and ships tris -1, and the FIRST prop in this repo where the split ratio LIED about which route to take: the 100k master measured 1.30x, comfortably inside the 'offline decimate works' band, and meshopt still floored at 9,277 tris - twice the budget for a cylinder - because the ratio describes the master's atlas and says nothing about what the decimation does to it. the BUILT glb off that route measured 3.86x and 27 components at 43.6%, and it read on screen as torn polygons and smeared texture. the gate was right and the 'body + lid + base ring + liner' reading of those 27 components was wrong. generated at budget instead, the same reference comes back 2 COMPONENTS AT 58.2% (1,388 / 996 unique positions - the body and the lid, the shipped conifer's own 51/49 shape) at 1.30x, and Runware unwraps and bakes AFTER its own decimation so the atlas is authored FOR 4,765 tris (880 texels/tri at 2048) instead of being a 96k atlas dragged down with the mesh - tex 512 then lands on 55, in band, with no sizing arithmetic needed. reference took propstat's --lift 73 (subject p50 49 against the 69-77 that bakes correctly), and the subject margin against the #5a5d63 backdrop was a comfortable 38 because the body is bottle green rather than the grey steel the railing and the mast both had to fight. baked at atlas mean 122/141/121, well over the 46-52 family and green with it, so baseColor is a per-channel darken. MR came back metal max 178 - dropMR, or it renders BLACK under debug key 1 rather than chrome (the master run's own MR came back metal max 1 off the SAME reference, so this is a per-run property of the bake and has to be read per glb, never assumed from a sibling)",
       "last_converted": "2026-08-29T18:59:57Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.14,0.1,0.14,1"
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.3,0.3,0.3,1"
     },
     "facility/car": {
       "src": "facility/car.glb",
@@ -573,6 +573,39 @@
       "last_converted": "2026-09-03T14:44:51Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.85,0.85,0.85,1/ao0.55,-,-",
       "ao": 0.55
+    },
+    "facility/drum-steel": {
+      "src": "sewer/drum.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "texSrc": "facility/drum-steel-base.png",
+      "note": "THREE LABELS OFF ONE SOURCE MESH — this, facility/drum-bio and facility/drum-rad are the SAME glb as sewer/drum, repainted. The low decoration list holds three distinct barrels (entities64 12/1 grey with a hazard triangle, 12/2 yellow biohazard, 12/5 red radioactive) and render.facility.FacilityDeco draws one kind per livery, so each is its own label, its own path and therefore its own instanced batch — render.Models.instanced is keyed by path and there is no per-instance UV offset, so a livery costs a draw call and there is no way around that. NO NEW MESH AND NO TRELLIS RUN: the drum was already correct as a shape, and only its paint was wrong (reported as 'it's a dirty sewers drum'). AN edit_image PASS WAS THE PLAN AND WAS REJECTED ON INSPECTION: a TRELLIS base map is a fragmented UV ATLAS — circular lid/base charts scattered through rectangular body panels — and an image model regenerates the whole canvas rather than preserving chart boundaries to the texel (docs/3d-textures.md records it refusing to honour even a stated seam position), so a chart that moves a few texels is a smeared prop. tools/livery.py does it as a per-pixel HSV transform instead, which cannot move a texel by construction. ONE OPERATION COVERS BOTH JOBS, and that is a property of this particular bake: the rust and the steel have nearly the same LUMA (54/44/42 against 44/47/54) and differ only in HUE — 17% of saturated texels at hue 0-30 against 71% at 210-240 — so assigning ONE hue to every saturated texel deletes the grime and applies the livery at once, while the untouched value channel keeps the dents and weld seams reading as wear. Near-neutral texels (SAT_MIN 0.12: the dark lid rims and baked contact shadows) are left alone, or the shadows would take the paint. Built with --hue 212 --sat 0.22 --gain 1.63 and carries NO baseColor: the gain lands the atlas at 72.6/79.4/87.3, luma 78.5, which IS the shipped albedo. 78 is the indoor number facility/lab-trolley and facility/gas-cylinders both record — the 46-52 family was fitted OUTDOORS against asphalt, and after the interior repaint the room floor's albedo is 95 and the wall's 111, so a prop at 49 renders as a hole. dropMR because propstat reads the source at metallic 1 with an MR map whose metal max is 168; it only fails to render black because Models.toLambert drops the PBR path, and stripping it also drops a texture the Lambert path never samples. tris 1200 IS LOAD-BEARING AND WAS GOT WRONG ONCE: propstat on the BUILT sewer drum reads split 2.53x and prints 'UNDECIMATABLE, generate AT the budget with tris -1', which is advice about the 4,826-tri thing it was handed and NOT about the source — models-src/sewer/drum.glb is the 100k MASTER, so -1 built a 97,214-tri drum. sewer/drum's own 1200 is what meshopt floors to 4,826, and copying it is what makes these three the same mesh as the tunnels' drum with only the paint changed. READ A propstat LINE AGAINST THE FILE IT WAS RUN ON.",
+      "last_converted": "2026-09-06T13:24:23Z",
+      "last_sig": "n1/1200/512/0.005/facility/drum-steel-base.png/-/noMR"
+    },
+    "facility/drum-bio": {
+      "src": "sewer/drum.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "texSrc": "facility/drum-bio-base.png",
+      "note": "the YELLOW BIOHAZARD barrel (entities64 12/2). One of three liveries off one source mesh — the whole derivation, and why an edit_image pass was rejected for a per-pixel HSV transform, is on facility/drum-steel. Built with --hue 48 --sat 0.62 --gain 1.85: atlas 99.2/88.4/52.6, chroma 46.6, luma 88.1, no baseColor. Chroma 46.6 is well over propstat's 'a coloured prop wants > 25' and is the whole point of the exercise — the sibling it replaces shipped at 6.3. It is the BRIGHTEST of the three on purpose: a hazard yellow that is not brighter than the steel drum beside it is not a hazard yellow, and 88 is still inside the indoor band the trolley's note fixes at ~78. NO SYMBOL IS PAINTED ON IT and that is a size call, not an oversight: the drum stands DECO_ROUND_H 1.8 world units and draws around 40 screen pixels at the resting camera, where a trefoil is about 8 px and the atlas is fragmented across charts with no way to know which one faces the room. The COLOUR is the read at that size, which is also how the 2D icons separate at a glance.",
+      "last_converted": "2026-09-06T13:24:28Z",
+      "last_sig": "n1/1200/512/0.005/facility/drum-bio-base.png/-/noMR"
+    },
+    "facility/drum-rad": {
+      "src": "sewer/drum.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "texSrc": "facility/drum-rad-base.png",
+      "note": "the RED RADIOACTIVE barrel (entities64 12/5), and the commonest of the three on a generated compound — 3 of the 4 drums this seed deals. One of three liveries off one source mesh; the derivation is on facility/drum-steel. Built with --hue 6 --sat 0.58 --gain 1.97: atlas 105.9/62.7/59.6, chroma 46.3, luma 71.7, no baseColor. It takes the HIGHEST gain of the three and still lands the LOWEST luma, which is not a mis-fit but what red is: at hue 6 the green and blue channels carry almost none of the luminance, so the same value multiplier buys far less brightness than it does at the yellow's hue 48. Left there rather than pushed to match — a red drum brighter than the yellow one beside it would read as orange.",
+      "last_converted": "2026-09-06T13:24:33Z",
+      "last_sig": "n1/1200/512/0.005/facility/drum-rad-base.png/-/noMR"
     }
   }
 }

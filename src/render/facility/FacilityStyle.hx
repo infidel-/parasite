@@ -493,6 +493,20 @@ class FacilityStyle
   // and v lands on exactly 2.0
   public static inline var DECO_RACK_H = DECO_RACK_W * 2;
   public static inline var DECO_RACK_D = 1.2;
+  // and the LOW list's stacked server units, which are that same cabinet ONE tile tall instead of
+  // two. Everything about it is the rack's — width, depth, all three textures, the LED band — so it
+  // costs no art and no draw call; only the height differs, and by the same whole-chassis rule the
+  // line above records: one tile is exactly 3 chassis and v lands on 1.0, so there is no wrap seam
+  // at all. The sprite it replaces measures 1.83-2.25 units tall over its alpha bbox
+  public static inline var DECO_RACK_LOW_H = DECO_RACK_TILE;
+  // the two ROUND low fittings — the hazard drum and the waste bin — which are instanced glbs and
+  // not geometry (render.facility.FacilityDeco.placeRound). ONE height and ONE footprint for both:
+  // 1.8 is already what the tunnels give the same drum glb (render.sewer.SewerStyle) and what BIN_H
+  // gives the compound's own bin, so the two really are one size, and their diameters are within a
+  // few centimetres of each other against a contact field blurred over 0.7. The footprint sizes that
+  // pool and nothing else — render.Models.instanced scales a batch by HEIGHT alone
+  public static inline var DECO_ROUND_H = 1.8;
+  public static inline var DECO_ROUND_D = 1.2;
   // the floor drain's side, world units, and it is a MEASUREMENT and not a choice: the atlas icon it
   // replaces drew on a render.particles.Sprites quad of SIZE 3.0 with its art occupying the middle
   // 32 px of a 64 px cell, i.e. 1.5 units. Kept to the pixel so the swap changes the RESOLUTION and
@@ -525,6 +539,26 @@ class FacilityStyle
   // not a transparent material: an alpha-tested opaque draws DoubleSide in ONE pass and still
   // writes depth, which is what render.wild.WildGrass' own header records
   public static inline var DECO_CUT = 0.5;
+
+  // how big a TABLE decoration's sprite draws, as a fraction of the full billboard.
+  //
+  // it is a MEASUREMENT and not a taste call. Those 43 icons keep their sprite — flasks, retort
+  // stands and microscopes are exactly what a mesh generator is for and exactly what an emitted box
+  // cannot state — but they were drawing at full size, and full size here is Sprites.SIZE 3.0 over
+  // the icon's own alpha bbox: 1.03 to 2.25 world units, standing on a BENCH_H 2.0 worktop. A
+  // microscope was 1.08 m tall on a 1 m bench and reached two thirds of the 3 m wall.
+  //
+  // AND IT IS ALSO THE RESOLUTION FIX, which is why the family needs no migration: 64 px over 3.0
+  // units is 21.3 texels per world unit, the number the floor drain's own header records as the blur
+  // that was reported. At this scale the same 64 px covers 1.62 units — 40 per unit, against the
+  // floor tile's 73.
+  //
+  // DELIBERATELY LARGER THAN LIFE, and that is the reason it is not the 0.36 the measurement asks
+  // for. True size puts the biggest icon at 0.81 units — 40 cm, correct for a distillation rig and
+  // a speck at the resting camera, where the whole point of bench clutter is that the room reads as
+  // WORKED IN from across it. 1.5x true size is the emphasis every icon in this game already
+  // carries; the bug was never that they were emphasised, it was that they were emphasised by 2.8x
+  public static inline var DECO_TABLE_SCALE = 0.54;
 
   // the shelving's composite: two alpha-cut end frames, a bare quad per shelf and the boxes on
   // them. NO BACK and NO TOP — an open steel unit has neither, and a lid is the one thing that

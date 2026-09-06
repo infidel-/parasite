@@ -227,6 +227,10 @@ class Actors {
               offx: ox,
               offz: oz,
               groundAnchor: true,
+              // a facility bench decoration draws at a fraction of the full billboard — at full
+              // size a microscope stood a metre tall on a metre-high worktop. asked per object like
+              // the two gates below, and 1.0 for everything else
+              baseScale: render.facility.FacilityDeco.spriteScale(game.area, o),
               mark: o.visible() && uiOn,
               iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null ||
                 render.facility.FacilityDoors.draws(game.area, o) ||
@@ -884,13 +888,19 @@ class Actors {
         }
       // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
       // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
-      // empty bottom margin so its opaque content rests on the floor
+      // empty bottom margin so its opaque content rests on the floor.
+      //
+      // AND THE DROP CARRIES baseScale, which the centre above does not: `wy` was set to
+      // floor + SIZE / 2 for a full-size quad, so a scaled one has to come back down by the half it
+      // no longer spans as well as by its own (scaled) bottom margin. At scale 1 the whole
+      // correction collapses to the plain SIZE * by it has always been. The centre itself is left
+      // alone on purpose — the attached-parasite pose reads that line and has its own tuned baseY
       if (o.groundAnchor == true &&
           !flat)
         {
           var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
           if (gs != null)
-            wy -= Sprites.SIZE * gs.by;
+            wy -= Sprites.SIZE * (0.5 * (1 - baseScale) + baseScale * gs.by);
         }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite

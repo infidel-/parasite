@@ -292,9 +292,15 @@ class LampShadows {
         // ambient + hemisphere alone, neither of which casts, so it had NO shadow at all. the
         // silhouette comes from the atlas cell (Sprites.shadowContent), which iconOff never touched,
         // so this works unchanged for an object whose icon is suppressed
+        // a facility BENCH decoration is the one caster skipped, and the reason is arithmetic:
+        // it draws at render.facility.FacilityDeco.spriteScale of a billboard while CastShadows
+        // .project sizes its silhouette off the full Sprites.SIZE, so a 20 cm flask would lay a
+        // blob three times its own width on the worktop. Skipped rather than plumbing a scale
+        // through project's call sites — at that size there is no silhouette to read
         if (o.entity != null &&
             !o.isGroundDecal() &&
-            o.type != 'burning_barrel')
+            o.type != 'burning_barrel' &&
+            render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0)
           actorShadow(o.entity, barrelLights, lampOut, lampIn);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
         actorShadow(game.playerArea.entity, barrelLights, lampOut, lampIn);

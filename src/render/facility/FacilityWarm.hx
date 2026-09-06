@@ -133,7 +133,13 @@ class FacilityWarm
               h: FacilityStyle.CAR_H,
             },
           ].concat([for (p in FacilityDebris.PROPS) { path: p.path, h: p.h }])
-            .concat([for (p in FacilityKit.PROPS) { path: p.path, h: p.h }]);
+            .concat([for (p in FacilityKit.PROPS) { path: p.path, h: p.h }])
+            // and the three hazard-barrel liveries on the LOW decoration cells, off their own table
+            // like the two above. all three are the same MESH repainted, but each is its own path
+            // and so its own material and its own program key — warming one would leave the other
+            // two to compile on the frame they first appear
+            .concat([for (p in FacilityDeco.PROPS)
+              { path: p.path, h: FacilityStyle.DECO_ROUND_H }]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the
           // header of render.facility.FacilityRoof). the patch is a PROGRAM KEY, so warming them
