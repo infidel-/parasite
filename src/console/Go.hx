@@ -94,12 +94,42 @@ class Go
         }
       var x = Std.parseInt(arr[2]);
       var y = Std.parseInt(arr[3]);
-      log('Teleporting to location (' + x + ',' + y + ').');
       if (game.location == LOCATION_AREA)
-        game.playerArea.moveTo(x, y);
-      else game.playerRegion.moveTo(x, y, false);
+        {
+          // a wall, a closed door or a piece of furniture makes the target unwalkable, and moveTo
+          // then returns false and does nothing while the log still claimed a teleport. land on the
+          // nearest free tile instead — an unwalkable cell is usually exactly what you aimed at
+          var to = walkableNear(x, y);
+          if (to == null)
+            {
+              log('Cannot teleport to (' + x + ',' + y + '): tile and all its neighbours are blocked.');
+              return;
+            }
+          if (to.x != x ||
+              to.y != y)
+            log('(' + x + ',' + y + ') is blocked, teleporting to adjacent (' + to.x + ',' +
+              to.y + ').');
+          else log('Teleporting to location (' + x + ',' + y + ').');
+          game.playerArea.moveTo(to.x, to.y);
+        }
+      else
+        {
+          log('Teleporting to location (' + x + ',' + y + ').');
+          game.playerRegion.moveTo(x, y, false);
+        }
       game.scene.updateCamera();
       game.scene.draw();
+    }
+
+// the target tile if it is walkable, else its first walkable neighbour, else null
+  function walkableNear(x: Int, y: Int): { x: Int, y: Int }
+    {
+      if (game.area.isWalkable(x, y))
+        return { x: x, y: y };
+      for (i in 0...Const.dirx.length)
+        if (game.area.isWalkable(x + Const.dirx[i], y + Const.diry[i]))
+          return { x: x + Const.dirx[i], y: y + Const.diry[i] };
+      return null;
     }
 
 // log shortcut
