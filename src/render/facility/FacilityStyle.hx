@@ -318,6 +318,62 @@ class FacilityStyle
   // where the car's nose goes
   public static inline var BUILD_GAP = 2;
 
+  // ---- the aisle marking on the INDOOR floors (render.facility.FacilityPaint.indoor) ------------
+
+  // an aisle is marked at its EDGES and never down its middle, which is the one thing a first build
+  // got backwards: a centre line is ROAD logic, a lane divider for two streams passing in opposite
+  // directions, and indoors nothing divides. what a building marks is a strip that has to stay
+  // clear, i.e. a zone, so it takes a PAIR of lines bounding the walkway.
+  //
+  // the tint the pair is drawn in. YELLOW is not decoration: ANSI Z535.1 fixes yellow as caution and
+  // the floor-marking convention every warehouse and lab runs on assigns it to aisles, traffic lanes
+  // and work cells, where WHITE means equipment and fixtures and RED means fire equipment. the lot's
+  // own bays and the road's lane lines stay white, which is what they should have been all along
+  public static inline var MARK_COLOR = 0xffc61a;
+  public static inline var PAINT_COLOR = 0xffffff;
+  // a room's long axis must run at least this many cells for it to have an aisle at all, and a line
+  // stops this far short of whatever ends its run
+  public static inline var MARK_AISLE_MIN = 5;
+  public static inline var MARK_AISLE_INSET = 1.2;
+  // how far a line is set in from the thing that stopped the walk, and the two are different numbers
+  // because the two things are different. THE QUESTION IS "DID FURNITURE STOP ME", NOT "IS THAT A
+  // WALL", and the first build asked the wrong one: a DOORWAY is not masonry, so every cell beside an
+  // opening took the furniture number and its lane edge stepped 0.5 toward the door — reported from
+  // the game as a line moved at every door, and measured at col 14.30 against 14.425 everywhere else.
+  // A doorway, a window cell and the grid edge all END the floor exactly as a wall does.
+  //
+  // A BOUNDARY has to clear what stands against it: CASEWORK is CASE_D 1.4 off a wall face
+  // (render.facility.FacilityTables) and a corridor bin stands in the corner. That number is also
+  // what keeps the paint out of the contact crease — the paint mesh carries render.world.VisionMask
+  // but NOT render.world.ContactMask (only the three interior floors do), so a line laid against
+  // masonry draws at full value over floor the field has darkened and reads as lying ON TOP of the
+  // shading rather than under it.
+  //
+  // FURNITURE has to clear what it HIDES, which is a camera number and was fitted as one. The first
+  // build set 0.3 on the reasoning that nothing stands off the front of a bench, and the near line
+  // came out INVISIBLE for the length of every bench run: measured in the frame, the far line read
+  // over its whole run and the near one only in the gaps between the benches. A worktop is
+  // `WorldCtx.ground` **2.0** units tall and overhangs its cell by BENCH_LIP 0.2, and
+  // CAMERA_FACILITY pitches between atan(20/16) = 51.3 and atan(48/16) = 71.6 degrees, so a bench
+  // hides `2.0 / tan(pitch)` = 1.60 / 0.91 / 0.67 units of the floor behind it. 0.2 + 0.91 at the
+  // measured gameplay 65.6 is the line this has to clear
+  public static inline var MARK_WALL_CLEAR = 1.7;
+  public static inline var MARK_FURN_CLEAR = 1.2;
+  // the narrowest lane worth marking, applied to a room and a corridor alike, and it is ONE WHOLE
+  // CELL of clear floor between the pair rather than a token gap. FLOOR MARKING IS FOR TRAFFIC, and
+  // the gap between two bench runs is a work aisle and not a traffic lane: the first build set 1.5,
+  // which let a 3-cell room benched down both long walls through on 1.6 units — measured at rows
+  // 14.30 and 14.70 — and a pair 1.6 apart reads as one thick line, which is the figure the guard
+  // exists to stop drawing. a ONE-cell corridor is 4 units and loses 3.4 to its two boundary
+  // clearances, so it stays unmarked at either setting
+  public static inline var MARK_LANE_MIN = 4.0;
+  // and the widest a ROOM's pair may be before it stops being a lane and becomes a room OUTLINE. a
+  // corridor's width is decided by its walls and needs no cap, but a room's is decided by how far the
+  // benches stand apart, so a big open lab threw its pair against both walls: measured 25.6 units
+  // apart in a 9x10 room, which reads as the room's own edge and not as a route across it. over this,
+  // both edges are pulled in equally and the lane stays centred where the clear floor put it
+  public static inline var MARK_ROOM_MAX = 8.0;
+
   // ---- what the lot is littered with (render.facility.FacilityDebris) ---------------------------
 
   // how often a lot cell rolls a piece of ground litter, and how much likelier it is against an

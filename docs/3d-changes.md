@@ -747,3 +747,241 @@ and a rail, both axis-aligned, and a corner nick two texels across is not visibl
 not known when the material is built — and `float( .. )` wraps the constant, since Haxe prints 2.0 as
 "2" and a bare integer over a vec2 leans on ESSL 3.00's implicit conversion. Live after: **90
 programs**, 112 calls, 60 FPS, 0 console errors, `inside` **[1,0,0]** = `glaze` **[1,0,0]**.
+
+## The room floors get MARKINGS, and they ride the mesh the parking lot is already struck on (2026-09-07)
+
+> SUPERSEDED by "An aisle is marked at its EDGES" below, which reversed both of this entry's figures
+> — reported from the game within one build. The measurement of the two surfaces, the decomposition
+> method and the `ContactMask`-vs-`VisionMask` trap all still stand.
+
+Phase 1 of the lab-interior pass. Measured first, by hiding a layer, diffing the frame and restoring:
+standing in room 109 (10x3 lab, cell 8,14) the **room walls are 10.25% of the frame** and the **room
+floor 12.05%** — 22% between them, and both are undressed. A room wall carries the damp band and
+nothing else (the exit signs are `Surf.LINO`-gated, the notice board is entrance-only); a room floor
+carries the contact field and the spotlight falloff and **no decals at all** — `FacilityDebris` is
+lot-only and `FacilityPaint` was asphalt-only. The wall also renders **2.8x darker than the floor**
+(srgb 53.4 / linear 0.0417 against 93.9 / 0.1163) despite the authored ladder saying the opposite
+(`wall-room` 0.1375 > `floor-tile` 0.1185): `IndoorMask` fill is ambient-flat and the ceiling spots
+land on the floor.
+
+**+0 DRAW CALLS, +0 ART, AND THE +0 IS THE WHOLE POINT.** `FacilityPaint` already merges the road's
+lane lines and the lot's bays into ONE area-wide mesh in `city/ground-road-paint`, already
+`VisionMask`-patched — and `VisionMask.patch` calls `IndoorMask.patch` (`VisionMask.hx:921`), so that
+mesh lights correctly indoors with nothing added. A room floor takes the same worn paint a lot does,
+so the indoor half is a third emitter into the same buffer. Live: **112 calls before, 112 after**;
+hiding the whole mesh reads **111**, so the pass is one call and it was already being paid.
+
+Two figures, both OUTLINES — the paint is 0.2405 linear against a room floor at 0.1185, so anything
+filled would be a white slab at twice the value of everything round it:
+
+- a **keep-clear box** on the room side of a doorway: two sides `MARK_KEEP_D` 2.4 deep plus the line
+  closing them. `MARK_KEEP_W` **3.0** is deliberately under a cell's 4.0 so the sides stand inside
+  the opening rather than out on the flanking masonry.
+- an **aisle line** down a room's long axis, `MARK_AISLE_MIN` 5 cells minimum, stopped
+  `MARK_AISLE_INSET` 1.2 short of both end walls.
+
+**THE PAINT MESH TAKES `VisionMask` BUT NOT `ContactMask`**, and that is what both clearances are
+for. Only the three interior FLOORS carry the contact patch (`FacilityGeom.addFloor`), so a line laid
+into a wall's crease draws at full value over floor that has been darkened and reads as sitting on
+top of the shading. The one place the box is allowed to touch the wall line is its threshold, and
+that is correct rather than lucky: a doorway carries no masonry at floor level at all —
+`FacilityDetail.masonry` skips it and `FacilityGeom.floorStrips` runs the floor straight through.
+
+Gated on **`Surf.TILE` and nothing else**, the gate `FacilityKit` runs on: every corridor family is
+gated on `Surf.LINO` (casework, dead-end bins, directional signs), so this cannot collide with any of
+them however they are retuned, with no shared claimed-cell list and no ordering between builders.
+`freeRoom` also asks `isWall`/`isDoor` separately — a door cell finalises to corridor lino and a wall
+cell keeps whatever surface it was laid over, so the surface alone answers neither (the pair
+`FacilityExit.corridor` makes for the same reason) — plus `isTable`/`isFitting`. **The aisle needs no
+stale-`generatorInfo` guard** where `FacilityLamps.lit` does: it walks `m.rooms` but strikes per CELL
+off the saved grid, so a rect that no longer describes the building lays nothing, one cell at a time.
+
+**Verified by DECOMPOSITION, before looking at it.** The mesh splits cleanly by y — **456 verts at
+0.0300** (indoor, `PAINT_Y` off a floor at 0) and **888 at -0.1700** (the lot, `KERB_DROP` 0.2 below,
+untouched). That is **114 indoor quads = +228 tris**, 0 non-planar vertices, and **every one exactly
+0.180 thick** (`LINE_W`). The length histogram is the real check and it accounts for all 114:
+**2.40 x 22** (11 boxes x 2 sides), **3.18 x 11** (`MARK_KEEP_W` + `LINE_W`, one closing line each),
+**2.80 x 20** (10 rooms x 2 ends trimmed by the 1.2 inset) and **4.00 x 61** (whole-cell aisle
+segments). So `marks` **92 = 11 boxes + 81 segments**. Two of the twelve rooms take no aisle end: one
+is the HANGAR, which is `Surf.CONCRETE` and correctly strikes nothing at all.
+
+Rendered: the line reads **srgb 148.8 / linear 0.3022** against the floor beside it at **104.3 /
+0.1417** — **2.13x in light**, the authored 2.03x carried through, and far under `BLOOM_THRESHOLD`
+0.9. Reach **0.48% of the frame at delta > 8, max delta 180/255, mean 39.8 over covered pixels** —
+small area, hard local contrast, which is what a placed line is. Controls unmoved: `boards` 2,
+`grime` 528, `cabinets` 30, `exits` 16, `shadows` 401. Nothing persisted, so no Saver/Loader change
+and every compound already saved gets its markings the moment it is drawn again.
+
+`__facility()` gains **`marks`**, a static on `FacilityPaint` in `ContactMask.count`'s shape: the
+indoor half shares its mesh with the lot's own lines, so nothing in the scene separates the two and
+this is the only count of it.
+
+## An aisle is marked at its EDGES, and the marking convention is a colour ladder, not a taste (2026-09-07)
+
+Both figures of the entry above came back from the game as wrong, and the reason each was wrong is
+worth more than the fix.
+
+**A CENTRE LINE IS ROAD LOGIC.** A lane divider only means anything where two streams pass in
+opposite directions; indoors nothing divides. What a building marks is a strip that has to stay
+CLEAR — a zone — so the marking is a PAIR of lines bounding the walkway. OSHA 1910.22(b) requires
+permanent aisles be marked and fixes neither colour nor shape, but the convention every warehouse
+and lab runs on is unambiguous about both: **yellow = aisles, traffic lanes, work cells; white =
+equipment and fixtures; red = fire equipment**, with ANSI Z535.1 fixing yellow as caution and OSHA
+1910.144 red for fire equipment. So the aisle went yellow and the lot's bays and the road's lane
+lines stayed white — which is what they should always have been.
+
+**AND A KEEP-CLEAR BOX DOES NOT BELONG TO A DOORWAY.** Zones belong to fire equipment, electrical
+panels and exits. Signing every interior door is the same error `FacilityExit` already recorded from
+the other side (NFPA 101 wants a door that could be MISTAKEN for an exit marked NOT AN EXIT), so the
+per-door box was cut outright. It comes back in a later phase attached to real equipment.
+
+**TWO MESHES, SPLIT BY COLOUR AND NOTHING ELSE: +1 CALL, +0 PROGRAMS.** One shared
+`city/ground-road-paint` map, two `color` uniforms — `color` is a Lambert UNIFORM and not a program
+key, so the second mesh compiles nothing. Measured **112 → 113 calls, 90 → 90 programs, +732 tris**
+(366 quads, exactly one per segment). Rendered, the yellow reads by HUE rather than by value:
+**rgb 124/113/32, chroma 91.5, linear 0.1663** against a floor at **0.1368, chroma 21.2** — only
+**1.22x** in light where the white version was 2.13x, so it stops reading as a light strip and starts
+reading as paint. That is the accent-against-the-rig rule doing exactly what it says: the compound is
+lit `0x46536b` / `0x8294c0`, so a warm mark survives on chroma with almost no value to spare.
+
+**THE PAIR'S OFFSET IS DERIVED, NOT SET.** `reach` walks out from the middle until something stops it
+and reports WHAT stopped it, because the two answers take different clearances. Rooms take the
+MINIMUM reach over the whole run, so the pair comes out straight where a per-cell edge would wobble
+at every bench end; a cell whose middle is not free breaks the run instead of collapsing it.
+
+**`MARK_FURN_CLEAR` IS A CAMERA NUMBER AND THE FIRST VALUE MADE THE NEAR LINE INVISIBLE.** 0.3 was
+reasoned from "nothing stands off the front of a bench" and it is the wrong question. Measured in the
+frame by scanning rows for `(r+g)/2 - b`: the FAR line banded over its whole run and the NEAR one
+only in the gaps between benches — it was inside the bench's own occlusion. A worktop is
+`WorldCtx.ground` **2.0** tall and overhangs its cell by `BENCH_LIP` 0.2, and `CAMERA_FACILITY`
+pitches between `atan(20/16)` **51.3°** and `atan(48/16)` **71.6°**, so a bench hides
+`2.0 / tan(pitch)` = **1.60 / 0.91 / 0.67** units of the floor behind it. At **1.2** both lines band
+across the full width — verified at three x windows, `(501-508, 546-553)` at every one. The wall
+clearance is a different number for a different reason and stayed at 1.7: it clears `CASE_D` 1.4 and
+keeps the paint out of the contact crease.
+
+**CORRIDORS ARE IN, AND THEY NEEDED NO CLAIMED-CELL LIST.** The obvious objection to a fourth family
+on corridor lino is the three already there — casework, dead-end bins, directional signs. Everything
+those stand is against masonry, and `MARK_WALL_CLEAR` 1.7 clears `CASE_D` 1.4 outright, so a
+clearance replaced a coupling. A corridor is also in no list anywhere and is an L, a T and a ring as
+often as a length, so it is read per CELL off the two runs through it — the SHORTER is the passage's
+cross-section — which is `FacilityLamps`' own reading of a corridor cell. Emitted once per section
+and not once per lane, or a two-wide corridor lays the same pair twice, coplanar.
+
+**AND THE HOLE IN THE LINE WAS A GRATE.** Reported from the game as a gap with nothing visible in it,
+and that is exactly what it was: cell (4,14) is `TILE_FLOOR_TILE_GRATE2` → `Surf.GRATE` with **no
+`FloorDrain` object on it**. The generator lays a grate tile in every chemistry lab and stands a
+drain on it about a third of the time, and `FacilityGeom.floorBuf` deliberately routes GRATE to the
+ROOM floor buffer — a drain is a fitting IN the floor, not a floor of its own — so a bare grate cell
+draws as ordinary tile. `FacilityModel`'s own comment already stated the rule the first build broke:
+*the surface says where a drain COULD be and the object says where one is.* `freeFloor` now accepts
+GRATE and rejects `m.drain`. Verified: room 109's run comes back **10 segments per line, unbroken
+through col 4, symmetric at z −143.70 / −140.30**.
+
+`marks` **366**, controls unmoved (`boards` 2, `grime` 528, `cabinets` 30, `exits` 16, `shadows`
+401). Still nothing persisted.
+
+## Three reports off the aisle build, and all three are one question asked wrongly (2026-09-07)
+
+Reported from the game standing in the corridor: *"each door has a line near it moved towards it"*,
+*"wall ending one triangle looks fine, the other one has line moved — other corridors ending in a
+wall/window do not even have these additional lines, which is correct?"*, and *"i thought yellow
+lines should start at the door, no? they dont"*. Diagnosed off the emitted geometry and the tile
+grid, not off the frame.
+
+**A DOORWAY IS NOT MASONRY, AND `reach` WAS ASKING `isWall`.** Measured: the N–S corridor's lane edge
+sat at col **14.30** on row 14 and at **14.425** on every other row of the same run — a step of
+exactly **0.5**, which is `MARK_WALL_CLEAR - MARK_FURN_CLEAR`. Row 14 is the one beside the door at
+(13,14): `isWall` is false at a door cell, so the clearance flipped to the furniture number and the
+edge jumped toward the opening. **The question is "did FURNITURE stop me", not "is that a wall"** — a
+wall, a doorway, a window cell and the edge of the grid all END the floor, and only a bench or a
+fitting is a thing STANDING on floor that carries on underneath. `Reach.wall` became `Reach.furn`,
+read off `isTable || isFitting`.
+
+**`reach` CANNOT TELL A PASSAGE FROM A BRANCH, AND AT A T-JUNCTION IT MEASURED THE BRANCH.** The
+stray perpendicular lines were emitted by cells **(14,11)** and **(15,11)** — where the E–W corridor
+meets the N–S one. Their perpendicular run walked four cells DOWN the side corridor, so the
+"cross-section" came back **5 and 7 cells** and the far edge landed at row **15.70**, four cells away
+and nowhere near the cell that drew it. Reconstructed from the arithmetic before it was fixed:
+`e1 = r + 1 + hi.cells - clear` solves to `r + hi.cells = 15.0` at r = 11, hi = 4. New
+`MARK_LANE_MAX` **3**: wider than that is a junction or a hall and takes no lane at all, which is
+also what a real marked floor does — a lane cannot run across the junction it ends at. **So the
+corridors with no extra lines were the correct ones**, and the answer to the report is that the
+junction should have had none either.
+
+**AND A ROUTE GOES THROUGH THE DOOR.** `MARK_AISLE_INSET` was applied to both ends of every run
+unconditionally, so a lane stopped 1.2 units short of the one opening it leads to and read as a line
+that leads nowhere. The inset is now taken only where MASONRY ends the run: at a doorway the line
+carries to the threshold. A doorway also holds no masonry at floor level (`FacilityDetail.masonry`
+skips it), so there is no contact crease to keep off there either — the same fact the cut keep-clear
+box was standing on.
+
+Verified by re-dumping the same region. The N–S corridor pair now reads **14.40..14.45 and
+15.55..15.60 on every one of rows 12, 13, 14, 15** — no step at the door — and both lines run
+`r[15.00..16.00]`, into the doorway at (14,16) rather than stopping at 15.70. Room 109's pair runs
+`c[..13.00]` into its own door at (13,14), where room 110's west end correctly keeps its inset
+because col 16 there is masonry. **Zero corridor cells now carry both an X and a Z quad**, against
+four before (14,15 / 15,15 / 24,42 / 34,42).
+
+`marks` **366 → 358**, the eight segments the junction cap removed. A/B interleaved on a pinned pose:
+**104 → 105 calls, +716 tris**, still +1 and +0 programs. Controls unmoved: `boards` 2, `grime` 528,
+`cabinets` 30, `exits` 16, `shadows` 401.
+
+## Floor marking is a NETWORK, and four reports were four ways of saying it wasn't one (2026-09-07)
+
+Four reports off the aisle build: should the lines connect, there are no corners, some doors have a
+line in front and others don't, and should a line start from a door at all. The last two are design
+questions and the convention answers both. A line does NOT start at a door — the lines are the
+aisle's EDGES and an aisle starts where the route starts — but an aisle exists to serve traffic, so
+one that ends at a door runs to the threshold and one a door opens onto from the SIDE breaks for the
+door's width. That break is the missing figure. And corners: a corner belongs only at an L, where an
+aisle changes direction with no through route. **Measured the corridor topology first — dumped the
+LINO cells: every junction in this generator is a T or a cross, zero L-bends.** So no corner is
+called for anywhere here; the correct figure at every meeting is a break, and what shipped was the
+right figure at the wrong size.
+
+Three defects, all one cause. **The whole cross-section was the wrong question.** The pass asked
+`lo.cells + hi.cells + 1 > MARK_LANE_MAX` and rejected the cell, which at a T drops BOTH lines though
+the branch opens off only one — so the through lane broke on its far side too, over cols 14..16 and
+19..21, and over the *union* 24..27 of two branches that are not even opposite each other. Asking
+per EDGE answers all of it: `cells == 0` on a side means this cell touches that boundary, so the edge
+is struck there and nowhere else. A two-wide corridor has each cell strike one line, a three-wide
+leaves its middle cell striking neither, and at a branch mouth the near side carries straight past
+while the far side strikes nothing. It also makes the old stray stub impossible by construction — an
+edge can only land on the boundary of the cell that emitted it — so `MARK_LANE_MAX` is deleted along
+with the bug it guarded.
+
+**A branch stopped 1.7 units short of the line it met**, at the cell boundary rather than at the
+through lane's line. `trim` now has four answers instead of three: passage carries on → 0; masonry →
+the inset; doorway → 0; **boundary ends but floor does not → NEGATIVE `MARK_WALL_CLEAR`**, because
+the through lane's line sits exactly that far past the cell boundary. The mouth mitres.
+
+**And most rooms should not be marked at all.** Marking is for TRAFFIC; the gap between two bench
+runs is a work aisle. `MARK_LANE_MIN` 1.5 → **4.0** (one clear cell), which drops the 1.6-unit pairs
+that read as one thick line — 6 rooms of 12, including the two reported. The opposite failure needed
+its own knob: a big lab has its benches against the walls, so the derived pair landed **25.6 units
+apart in a 9x10 room** and outlined the room instead of marking a route across it. `MARK_ROOM_MAX`
+8.0 pulls both edges in equally, keeping the lane centred where the clear floor put it.
+
+Verified by re-dumping every segment as cell coords. Branch `col 14.42` runs `11.58..14, 15..16` —
+meets the spine's south line at **11.58** (was 12.00), breaks at the door (13,14), runs into the door
+(14,16). Spine `row 11.58` runs `3.3..14.42, 15.58..22, 23..27` — breaks over the mouth exactly and
+meets both branch lines, plus a break at the side door (22,12). Spine `row 9.42` now **carries across
+col 14** and breaks only at cols 7, 15, 24 (its three side doors) and at the cols 19–20 mouth. In
+structure 2 the two spine lines break at *different* columns for the first time — `row 31.43` over
+25..26 and 35..36 (the north branches), `row 33.57` over 24..25 and 34..35 (the south ones). Rooms:
+5 marked of 12; room 102 clamped 39.3/45.7 → **41.5/43.5**, room 105 36.3/38.7 → 36.5/38.5.
+
+`marks` **358 → 246**. A/B interleaved ×3 on a pinned pose: **104 → 105 calls, +492 tris**, still +1
+and +0 programs. Controls unmoved: `boards` 2, `grime` 528, `cabinets` 30, `exits` 16, `shadows` 401.
+
+Follow-up, reported from the game as bends that overlap. **A junction mouth's two lines are a BEND,
+and run to the same point they lie ON each other** — coplanar at `PAINT_Y`, the intersection is a
+quarter of a line width of doubled paint at every corner in the compound. Made a BUTT JOINT instead:
+the X-running line runs on to the FAR edge of the line it meets (`-(MARK_WALL_CLEAR + LINE_W/2)`) and
+the Z-running one starts at that far edge (`-(MARK_WALL_CLEAR - LINE_W/2)`), a half width apart, so
+no overlap and no gap. Which of the two extends is arbitrary and has only to be the same everywhere,
+or a compound's bends are made two different ways. Verified directly on the mesh by intersecting
+every quad pair in XZ: **0 overlapping pairs, 207 touching**, against 246 quads. Corner reads
+`row 11.58` → 14.4425 and `col 14.42` → 11.6025, exactly `LINE_W/2` either side of 14.42 / 11.58.
+`marks` 246 unchanged, +492 tris unchanged, +1 call.

@@ -326,6 +326,13 @@ class FacilityArea implements Area3D
             // painter actually consumed. it is a FIELD and not geometry, so it draws nothing and
             // there is no instance count to compare it against — this is the only handle on it
             shadows: render.world.ContactMask.count,
+            // and how many segments are struck on the INDOOR floors — one per cell of one line of
+            // an aisle PAIR, so a marked room contributes about twice its long axis and a corridor
+            // cell contributes one per lane boundary it TOUCHES. the same merged-mesh blindness
+            // again: the aisle is one mesh with no instance count, and this static is the only count
+            // of it. most rooms correctly take none, marking being for TRAFFIC and not for the gap
+            // between two bench runs, so a 0 EVERYWHERE is the gate breaking and a 0 in a room is not
+            marks: FacilityPaint.marks,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's
