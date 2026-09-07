@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.RenderConfig;
 import render.Textures;
+import render.facility.FacilityModel.DoorCell;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
@@ -39,6 +40,11 @@ typedef Reach = {
 // so the second mesh is +1 call and +0 programs — `color` is a uniform in Lambert, not a program
 // key. see `indoor`.
 //
+// and a THIRD mesh for the keep-clear hatch inside every exit. it could not share the map — it is a
+// CUTOUT, red stripes with the real floor between them, where every texel of the paint map is paint.
+// an opaque hatch has to paint a floor it cannot match, on hue or across two different floors;
+// FacilityStyle.ZONE_COLOR carries the measurements. see `keepClear`.
+//
 // the lot's geometry is never searched for as a rectangle. a lot cell against a pavement apron IS
 // the edge cars park at, so the whole lattice falls out of the tile grid: a RUN is the stretch of
 // asphalt holding its pavement on one side, and the run decides both phases — the rhythm along the
@@ -60,18 +66,104 @@ class FacilityPaint
   // with no instance count. the shape render.world.ContactMask.count already uses. 0 in a compound
   // with rooms means the gate broke, not that the floors are bare
   public static var marks = 0;
+  // and how many keep-clear ZONES were struck — one per exterior door leaf with circulation behind
+  // it. same blindness, same reason: this is a merged mesh with no instance count
+  public static var zones = 0;
+  // the cells a zone covers, which the aisle then refuses to strike on. MARKINGS NEVER CROSS, and
+  // this is the first family in the compound that needs a claimed-cell list to say so rather than a
+  // clearance — MARK_WALL_CLEAR separated the aisle from the casework because everything the corridor
+  // families stand is against masonry, and a zone lies in the OPEN floor a lane runs down.
+  //
+  // it is read at EMISSION and never inside `reach`, which is not a detail: `reach` walks clear floor
+  // to derive where a lane's edges go, so a zone cell answering "not floor" there would move the
+  // whole section's lines as if a wall had appeared in the corridor. The zone takes segments out of a
+  // line; it does not change where that line runs
+  static var claimed:Array<Array<Bool>>;
 
-// every painted line in the compound. TWO meshes, split by colour and by nothing else — see the
-// header
+// every painted line in the compound. THREE meshes, split by MAP and by TINT — see the header. the
+// zones are struck before the aisle because the aisle reads what they claimed
   public static function build(scene:Scene, m:Facility):Void
     {
       var b = MeshBufTools.make();
       lanes(b, m);
       bays(b, m);
-      add(scene, b, FacilityStyle.PAINT_COLOR);
+      add(scene, b, FacilityStyle.PAINT_COLOR, FacilityStyle.GROUND_PAINT, 0);
+      var hz = MeshBufTools.make();
+      keepClear(hz, m);
+      add(scene, hz, FacilityStyle.ZONE_COLOR, FacilityStyle.ZONE_TEX, FacilityStyle.ZONE_CUT);
       var mk = MeshBufTools.make();
       indoor(mk, m);
-      add(scene, mk, FacilityStyle.MARK_COLOR);
+      add(scene, mk, FacilityStyle.MARK_COLOR, FacilityStyle.GROUND_PAINT, 0);
+    }
+
+// the keep-clear hatch inside every door that leads outdoors, and the list it works off is
+// render.facility.FacilityExit's own terminal-door test rather than one of its own: a door earning a
+// zone is exactly a door earning an exit sign, so asking twice could only let the two disagree — the
+// argument that file already makes about seeding its route flood in the same pass.
+//
+// `freeFloor` IS the "circulation behind it" test and needs nothing added to it. The other side of an
+// exterior door is walkway or lot, which is not an indoor surface, and the hangar's shutter has
+// concrete behind it, which is not one either — so the shutter drops out with no case of its own,
+// exactly as it does for the signage
+  static function keepClear(b:MeshBuf, m:Facility):Void
+    {
+      zones = 0;
+      claimed = [for (_ in 0...m.h) [for (_ in 0...m.w) false]];
+      var y = FacilityGround.surfY(Surf.LINO) + FacilityStyle.PAINT_Y;
+      for (d in m.doors)
+        {
+          if (FacilityGlow.outward(m, d) == 0)
+            continue;
+          for (s in [-1, 1])
+            {
+              var col = d.col + (d.alongX ? 0 : s);
+              var row = d.row + (d.alongX ? s : 0);
+              if (!freeFloor(m, col, row))
+                continue;
+              zone(b, m, d, s, y);
+              claimed[row][col] = true;
+              zones++;
+            }
+        }
+    }
+
+// one door's zone: the door cell's full width, running ZONE_D into the building from the threshold.
+//
+// the near edge is the SLAB's face and not the cell boundary — FacilityGeom.slab returns the lintel
+// box, whose two perpendicular sides come back inset a unit, so the boundary is under the opening and
+// the face is where the floor inside it starts. taking the cell boundary instead would lay a unit of
+// hatch across the threshold itself.
+//
+// and the width is the door cell's own, exactly. that is what keeps the near edge out of the contact
+// crease: this mesh carries render.world.VisionMask but NOT render.world.ContactMask, so a hatch
+// reaching past the opening onto the masonry either side would draw at full value over floor the
+// field has darkened. A doorway carries no masonry at floor level to begin with (FacilityDetail
+// .masonry skips it), which is the same reason the aisle runs its lines to a threshold unindented
+  static function zone(b:MeshBuf, m:Facility, d:DoorCell, s:Int, y:Float):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var sl = FacilityGeom.slab(m, d.col, d.row);
+      var t = FacilityStyle.ZONE_D * s;
+      if (d.alongX)
+        {
+          var e = (s < 0 ? sl.z0 : sl.z1);
+          var x0 = d.col * CELL - half;
+          hatch(b, x0, x0 + CELL, Math.min(e, e + t), Math.max(e, e + t), y);
+          return;
+        }
+      var e = (s < 0 ? sl.x0 : sl.x1);
+      var z0 = d.row * CELL - half;
+      hatch(b, Math.min(e, e + t), Math.max(e, e + t), z0, z0 + CELL, y);
+    }
+
+// one hatched rect, its uv world-aligned on both axes exactly as `mark` does — but on the hatch's own
+// period, because the stripe pitch has to be the same at every door and the hatch holds four bands
+// where the paint map holds wear
+  static inline function hatch(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+    {
+      var t = FacilityStyle.ZONE_TILE;
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
     }
 
 // the main road's lane lines. the compound has exactly one road, and it is a straight band laid
@@ -424,7 +516,8 @@ class FacilityPaint
         {
           var col = (alongX ? base + k : mid);
           var row = (alongX ? mid : base + k);
-          if (!freeFloor(m, col, row))
+          if (!freeFloor(m, col, row) ||
+              claimed[row][col])
             continue;
           // and the line breaks where a DOOR opens onto the side it bounds — the gap is the opening,
           // and it is the figure that ties the room's lane to the corridor's. walked from the middle
@@ -470,6 +563,7 @@ class FacilityPaint
         for (col in 0...m.w)
           {
             if (!freeFloor(m, col, row) ||
+                claimed[row][col] ||
                 m.surf[row][col] != Surf.LINO)
               continue;
             var xLo = reach(m, col, row, -1, 0);
@@ -651,10 +745,15 @@ class FacilityPaint
     }
 
 // merge one paint buffer into a lit mesh, the same pair of shadow flags every outdoor surface takes.
-// `tint` multiplies the shared worn-paint map, which is what makes an aisle yellow and a bay white
-// off one texture: `color` is a Lambert UNIFORM and not a program key, so the second mesh compiles
-// nothing of its own
-  static function add(scene:Scene, b:MeshBuf, tint:Int):Void
+// `tint` multiplies `tex`, which is what makes an aisle yellow and a bay white off ONE map: `color`
+// is a Lambert UNIFORM and not a program key, so a second tint compiles nothing of its own. a second
+// MAP does not compile anything either — same material, same defines — it just cannot be shared.
+//
+// `cut` is the one argument here that DOES touch the program, and only the hatch passes it: three
+// defines USE_ALPHATEST off `alphaTest > 0`, so the two solid paint meshes passing 0 compile exactly
+// what they compiled before. opaque and alpha-tested, never `transparent` — one pass, still writes
+// depth, nothing to sort against the floor under it
+  static function add(scene:Scene, b:MeshBuf, tint:Int, tex:String, cut:Float):Void
     {
       if (b.idx.length == 0)
         return;
@@ -664,8 +763,9 @@ class FacilityPaint
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
       var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.GROUND_PAINT, 'ground', 1),
+        map: Textures.loadTexture(tex, 'ground', 1),
         color: tint,
+        alphaTest: cut,
         side: THREE.FrontSide,
       })));
       mesh.receiveShadow = true;

@@ -214,6 +214,9 @@ class FacilityStyle
   // grounds above
   public static inline var GROUND_BORDER = 'textures/city/ground-walkway-border.png';
   public static inline var GROUND_PAINT = 'textures/city/ground-road-paint.png';
+  // and the diagonal hazard hatch struck inside every exterior door. the one indoor mark that does
+  // NOT come off GROUND_PAINT, and it cannot — see ZONE_D
+  public static inline var ZONE_TEX = 'textures/facility/floor-hazard.png';
 
   // --- the park lawn's two dressing layers (render.facility.FacilityLawn) ---
   // a ragged overlay of tall unmown grass laid OVER the mown lawn, and a few standing tufts inside
@@ -373,6 +376,52 @@ class FacilityStyle
   // apart in a 9x10 room, which reads as the room's own edge and not as a route across it. over this,
   // both edges are pulled in equally and the lane stays centred where the clear floor put it
   public static inline var MARK_ROOM_MAX = 8.0;
+
+  // ---- the keep-clear zones (render.facility.FacilityPaint.keepClear) ---------------------------
+
+  // A ZONE BELONGS TO FIRE EQUIPMENT, AN ELECTRICAL PANEL OR AN EXIT — never to a doorway as such,
+  // which is what a first pass at the aisle above was going to strike and what it correctly dropped.
+  // Every interior door boxed off says nothing; the floor is marked where obstructing it is the
+  // thing that kills someone. So the input here is FacilityExit's own terminal-door test —
+  // FacilityGlow.outward plus circulation behind it — and no placement rule of its own.
+  //
+  // AND IT IS HATCHED, NOT OUTLINED. An outline is a FOOTPRINT: it says a thing stands here. The
+  // hatch is what says do not obstruct, and it is the whole reason this needs art at all.
+  //
+  // AND IT IS A CUTOUT, because an OPAQUE hatch has to paint a floor it cannot match. It shipped
+  // opaque for one build, with the gap painted as floor, and that is the version this block exists
+  // to warn off. VALUE it can match: the drop's gap measured 0.1575 linear against the corridor
+  // lino's 0.1353, 1.16x and close. HUE it cannot — `facility/floor-lino` is deliberately a pale
+  // blue-cyan and a neutral grey band on it reads as a different material however well the value
+  // lands. Nor can ONE bake serve TWO floors: every zone here is on lino at 0.1353 and the storage
+  // hatch that comes later goes under drums standing in ROOMS, on floor-tile at 0.1185.
+  //
+  // the cut costs an `alphaTest`, which IS a program key — but not a new program here: the compound
+  // already draws alpha-cut Lambert indoors (FacilityDeco's DECO_CUT end frames, FacilityGeom
+  // .addPane's glazing), so the permutation exists. Opaque and alpha-tested, never `transparent`:
+  // an alpha-tested opaque draws in one pass and still writes depth, which is the argument
+  // render.wild.WildGrass' header makes.
+  //
+  // the tint then stays WHITE, and that is a choice rather than a constraint. A tint multiplies only
+  // what survives the cut, so neutral stripes plus one `color` per mesh would serve red and yellow
+  // off one map — the trick the aisle runs on, which an opaque gap had made impossible. This art's
+  // stripes are painted red, so a yellow panel hatch is still a second drop; the trade is recorded
+  // here, not taken
+  public static inline var ZONE_COLOR = 0xffffff;
+  // where the hatch stops being paint and starts being floor. mid-scale rather than the 0.02 the
+  // glazing takes: that one only has a transparent MARGIN to throw away, where this is a real
+  // stencil edge and the cut is what gives a chipped band its shape
+  public static inline var ZONE_CUT = 0.5;
+  // how deep the zone runs into the building from the door's SLAB face — not from the cell boundary,
+  // which is a unit further out and under the lintel (see FacilityGeom.slab). 3.0 is 1.5 m at the
+  // half-metre unit WALL_H fixes: one unit of it finishes the door cell and two reach into the
+  // corridor cell behind, which is the cell the aisle then has to break for
+  public static inline var ZONE_D = 3.0;
+  // world units per hatch repeat, world-aligned on both axes like every other floor mark, so the
+  // stripe pitch is the same at every door however the door is turned. NOT RenderConfig.PAINT_TILE:
+  // the art holds four bands per repeat, so 3.0 puts a band at 0.75 units (~37 cm) and a 4x3 zone
+  // shows about one whole repeat — which is also why the drop's approximate tiling never shows
+  public static inline var ZONE_TILE = 3.0;
 
   // ---- what the lot is littered with (render.facility.FacilityDebris) ---------------------------
 

@@ -985,3 +985,99 @@ or a compound's bends are made two different ways. Verified directly on the mesh
 every quad pair in XZ: **0 overlapping pairs, 207 touching**, against 246 quads. Corner reads
 `row 11.58` → 14.4425 and `col 14.42` → 11.6025, exactly `LINE_W/2` either side of 14.42 / 11.58.
 `marks` 246 unchanged, +492 tris unchanged, +1 call.
+
+## A keep-clear zone belongs to the EXIT, and the opaque hatch cannot borrow the aisle's map (2026-09-07)
+
+Phase 1a step 1 of the lab-interior plan. The aisle pass had already cut its per-door keep-clear box
+on the grounds that a **zone belongs to fire equipment, an electrical panel or an exit — never to a
+doorway as such**; every interior door boxed off says nothing, and the floor is marked where
+obstructing it is what kills someone. So the input here is `FacilityExit`'s own terminal-door test
+(`FacilityGlow.outward` plus circulation behind it) and no placement rule of its own: **6 zones on
+this seed**, exactly the terminal half of `exits` 16.
+
+`freeFloor` turns out to BE the "circulation behind it" test with nothing added. The far side of an
+exterior door is walkway or lot, neither an indoor surface, and the hangar's shutter has concrete
+behind it — so the shutter drops out with no case of its own, exactly as it does for the signage.
+
+**The red is baked into the art and is NOT a `color` tint, and that is the finding.** The plan had
+this sharing `city/ground-road-paint` the way the yellow aisle does: one map, one Lambert `color` per
+mesh, +1 call and +0 programs. That works for the aisle only because **every texel of that map is
+paint**. A hatch's gap has to read as the FLOOR, and a tint multiplies the gap too — the room floor's
+0.1163 linear through a signal red is a dark maroon, so the zone would have drawn as a dark slab with
+the floor showing nowhere. **One map per colour is what an opaque hatch costs.** It changes nothing
+about the bill (same material, same defines, +1 call either way); it changes what a later yellow
+panel hatch costs, which is a second gen and not a second uniform. *(That argument holds only while
+the hatch is OPAQUE. `FacilityStyle.ZONE_COLOR` carries why it stopped being: a painted gap can match
+the floor's value and not its HUE, and cannot serve lino 0.1353 and room tile 0.1185 off one bake.
+A cut re-opens the tint; this art's stripes are painted red, so the trade is recorded, not taken.)*
+
+Art: `facility/floor-hazard`, 1k medium, 45° stripes, opaque — `alphaTest` is a program key and this
+was the one phase in the set that could have bought a program. It did not: **progs 90 either way**.
+The drop came back with the gap at **0.1575 linear** and was pulled to **0.1132** by `lift` 1.18 —
+*and that lift was fitted against a WRONG NUMBER, corrected here because it stands in this log: the
+corridor lino these zones land on is `built_linear` **0.1353**, not the 0.0749 quoted from the
+verdict row above, which was true before the lino was re-rolled blue-cyan and is now stale text
+inside `floor-tile`'s own note. So the raw gap was 1.16× the floor, already close, and the lift moved
+it to 0.84×. Value was never the failure.* Tiling is approximate and accepted: gpt drew nearer 34° than 45 (6 stripe transitions across
+the top edge against 4 down the left), so the two axes cannot both close on a whole period — measured
+wrap error 3.1/255 on x and 7.2 on y, which never shows, because a zone is 4×3 units against
+`ZONE_TILE` 3.0 and shows about one repeat.
+
+The near edge is the **slab's face and not the cell boundary**. `slab()` returns the lintel box,
+whose two perpendicular sides come back inset a unit, so the boundary is under the opening and the
+face is where the floor inside it starts; taking the boundary would lay a unit of hatch across the
+threshold. Width is the door cell's own exactly, which is what keeps it out of the contact crease —
+this mesh carries `VisionMask` but not `ContactMask`, the same reason `MARK_WALL_CLEAR` exists.
+
+**First real claimed-cell coupling in the family.** Markings never cross, and `MARK_WALL_CLEAR` could
+not answer this one: it separated the aisle from the casework because everything the corridor
+families stand is against masonry, and a zone lies in the OPEN floor a lane runs down. So the zone
+pass writes an `Array<Bool>` and the aisle reads it — **at EMISSION and never inside `reach`**, which
+is the trap: `reach` walks clear floor to derive where a lane's edges GO, so a zone cell answering
+"not floor" there would move a whole section's lines as if a wall had appeared in the corridor. The
+zone takes segments out of a line; it does not move the line. It also forces the build order, zones
+before aisle in `FacilityPaint.build`.
+
+`marks` **246 → 240**, one per zone cell. `zones` **6**. A/B interleaved ×3 on a pinned pose:
+**102 → 103 calls, +12 tris, progs 90 unmoved**. Controls unmoved: `boards` 2, `grime` 528,
+`cabinets` 30, `exits` 16, `shadows` 401. Verified no marking crosses another by intersecting every
+aisle quad against every zone quad in XZ: **0 crossings**, 240 against 6.
+
+Follow-up, same day, asked as "is that a correct real-world thing? should it be red on lino instead
+(with transparency)?" — and the answer to the first half is yes. **Red-and-white diagonal hatch is
+the floor-marking code's own figure for "keep clear for safety/compliance"** — in front of
+extinguishers, electrical panels, eyewash stations and emergency exits (OSHA 1910.144 / ANSI Z535.1
+put red on fire protection and danger; yellow-and-black diagonal is the *caution / physical hazard*
+figure and is a different statement). Two legitimate physical forms exist, though, and the opaque
+build was neither cleanly: **(a)** a fully painted red/WHITE hatch, contiguous bands, no floor
+showing — for which opaque is correct; **(b)** red stripes stencilled on bare floor, which needs a
+cut. Ours had red bands with a NEUTRAL MID-GREY band: not white paint, not the floor.
+
+**Went to (b), and the reason is HUE, not value.** With the lino's real 0.1353 in hand the value case
+collapses — the raw gap was 1.16× the floor, which is close, and the lift had moved it to 0.84×. What
+opaque cannot do is match `facility/floor-lino`'s deliberate pale BLUE-CYAN with a neutral grey band;
+a neutral patch on a cyan floor reads as a different material however well the value lands. Nor can
+one bake serve two floors: every zone on this compound is on lino at 0.1353, and the storage hatch
+planned under drums stands in ROOMS, on neutral floor-tile at 0.1185. A cut serves both.
+
+Source hand-edited to carry alpha; `needs_alpha: true` is the gate (the bake refuses an opaque source
+with a named warning, which is what caught it), `lift` dropped with the gap it was fitted to. Built:
+**42.8% opaque, 54.3% fully clear**, kept pixels **0.0905 linear** = 0.67× the lino they lie on.
+`ZONE_CUT` **0.5** — mid-scale, not `addPane`'s 0.02, which only has a transparent margin to throw
+away where this is a real stencil edge. Opaque + `alphaTest`, never `transparent`: one pass, still
+writes depth, nothing to sort against the floor under it. `add` takes the cut as an argument and the
+two solid paint meshes pass **0**, so they compile exactly what they compiled before — three defines
+`USE_ALPHATEST` off `alphaTest > 0`.
+
+**It cost the program the plan budgeted for, and the guess that it would not was wrong.** progs
+**90 → 91**; the compound already draws alpha-cut Lambert indoors (`FacilityDeco`'s `DECO_CUT` end
+frames, `FacilityGeom.addPane`'s glazing) but those are different permutations — different sides,
+different shadow flags, different mask key. It is WARMED, not compiled on first entry: the facility
+warm went **83 → 84 programs cached**, so there is no first-entry hitch, and the later storage hatch
+now costs +0 programs against it. Everything else held: **102 → 103 calls, +12 tris**, `marks` 240,
+`zones` 6, **0 crossings** of 240 aisle quads against 6, controls unmoved.
+
+The cut also **re-opens the `color` tint the opaque gap had closed** — a tint multiplies only what
+survives `alphaTest`, so neutral stripes plus one uniform per mesh would serve red and yellow off one
+map. This art's stripes are painted red, so a yellow panel hatch is still a second drop. Recorded,
+not taken.

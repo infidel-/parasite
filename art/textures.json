@@ -2135,6 +2135,18 @@
       "built_linear": 0.0352,
       "built_srgb": 52.7
     },
+    "facility/floor-hazard": {
+      "src": "facility/floor-hazard.png",
+      "class": "tile",
+      "res": 256,
+      "needs_alpha": true,
+      "prompt": "A SEAMLESS TILEABLE top-down texture of a painted floor HAZARD KEEP-CLEAR zone, seen from DIRECTLY ABOVE, straight on, no perspective, filling the whole image edge to edge. Bold DIAGONAL stripes at exactly 45 degrees running corner to corner, alternating painted RED bands and bare floor between them, both the same width. The RED bands are worn scuffed floor paint: matte, chipped and flaking along their edges, scuffed thin by traffic in places. Their colour is a medium-dark warm signal red at roughly red 140, green 45, blue 38 out of 255 - clearly RED, not orange, not pink, not maroon, not brown, not crimson. The bare floor between the bands is a PERFECTLY NEUTRAL GREY at roughly 94 out of 255 - the red, green and blue values are equal. It is plain clean lab vinyl floor: no tiles, no grout lines, no grid, no pattern, no speckle, no warm cast, no beige, no cream, no blue tint. TILING: exactly FOUR full red bands across the width of the image, evenly spaced, so the diagonal pattern repeats seamlessly on BOTH axes with no visible border, no seam and no offset at the edges. No text, no symbols, no arrows, no lettering, no objects, no border frame, no vignette. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the keep-clear zone struck inside every exterior door (render.facility.FacilityPaint.zones). A CUTOUT: the gap between the stripes is ALPHA and the floor is the real floor, cut by hand off the opaque drop. It shipped opaque for one build with the gap painted as floor, and that is the version this note exists to warn off. AN OPAQUE HATCH HAS TO PAINT A FLOOR IT CANNOT MATCH. Value it can: measured, the drop's gap came back 0.1575 linear against the corridor lino's 0.1353, which is 1.16x and close. HUE it cannot - facility/floor-lino is deliberately a pale blue-cyan (roughly r88 g104 b112) and a neutral grey band on it reads as a different material however well the value lands. Nor can one bake serve two floors: every zone on the generated compound is on lino at 0.1353, and phase 7's storage hatch goes under drums standing in ROOMS, on neutral floor-tile at 0.1185. A cut serves both and needs no second bake. A first pass chased the value with lift 1.18 (gap to 0.1132) against a corridor lino misread as 0.0749 - that number is stale text inside floor-tile's own note, written before the lino was re-rolled blue-cyan, and the real figure is 0.1353. The lift is gone with the gap it was fitted to, so the red bands keep the drop's own 0.0903 linear, 0.67x the lino they lie on. WITH A CUT THE `color` TINT BECOMES POSSIBLE AGAIN and is deliberately not taken here: a tint only multiplies what survives alphaTest, so neutral stripes plus one uniform per mesh would serve red and yellow off one map. This art's stripes are painted red, so a yellow panel hatch is still a second drop - the trade is recorded, not made. Tiling is approximate and deliberately accepted: the drop came back nearer 34 degrees than 45 (6 stripe transitions across the top edge against 4 down the left, where a true 45 gives the same count both ways), so the two axes cannot both close on a whole period - measured wrap error 3.1/255 on x and 7.2 on y, which does not show because a zone is 4x3 world units against a ZONE_TILE 3.0 repeat and shows about one repeat.",
+      "last_converted": "2026-09-07T20:55:32",
+      "built_linear": 0.07,
+      "built_srgb": 72.8
+    },
     "facility/bench-top": {
       "src": "facility/bench-top.png",
       "class": "tile",

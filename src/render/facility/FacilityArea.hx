@@ -333,6 +333,10 @@ class FacilityArea implements Area3D
             // of it. most rooms correctly take none, marking being for TRAFFIC and not for the gap
             // between two bench runs, so a 0 EVERYWHERE is the gate breaking and a 0 in a room is not
             marks: FacilityPaint.marks,
+            // and how many KEEP-CLEAR zones, one per exterior door leaf with circulation behind it.
+            // it should track `exits`' terminal half exactly, both being that same list, so the two
+            // disagreeing means one of them has grown a placement rule of its own
+            zones: FacilityPaint.zones,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's
