@@ -64,6 +64,7 @@ class FacilityArea implements Area3D
   var grime = 0;                                // interior wall faces carrying a damp band
   var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
   var points = 0;                               // corridor wall fittings: fire points and panels
+  var placards = 0;                             // room wall safety signage: one per run of masonry
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -171,6 +172,11 @@ class FacilityArea implements Area3D
       // under it — FacilityPoint.places is a pure function of the grid and FacilityPaint called it
       // for exactly that reason (see that file's header)
       points = FacilityPoint.build(scene, model);
+      // and the safety signage on the ROOM walls, which is every other wall in the building: the
+      // three families above are all Surf.LINO-gated and none of them ever reached a room. it needs
+      // no ordering against anything either — PLACARD_Y hangs it clear of the tallest fitting that
+      // can share a cell, so the collision the fire points had to answer does not arise up there
+      placards = FacilityPlacard.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -354,6 +360,15 @@ class FacilityArea implements Area3D
             // family exists to respect — a `points` that jumps when CASE_PCT moves means that
             // exclusion broke
             points: points,
+            // and how many ROOM wall placards stand, which is the same merged-mesh blindness once
+            // more and the one counter here that reads a surface rather than a family: every other
+            // wall fitting in the compound is Surf.LINO-gated, so this is the only number that says
+            // anything at all about what a room's walls carry. one per run of unbroken solid masonry
+            // hugged by room tile, over PLACARD_RUN_MIN cells, on the run's middle cell — so a wall
+            // with a doorway in it is two runs and contributes 2, and a 0 in a compound with rooms
+            // means the Surf.TILE gate or the carries-both-ways test broke rather than that the
+            // rooms are bare
+            placards: placards,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's

@@ -1258,3 +1258,51 @@ Final: **9 of 12**, the three misses being the two work aisles and the concrete 
 `boards` 2, `shadows` 401. **0 crossings** of 275 aisle quads against 17 zone quads, and the new
 check the widened offsets made necessary: every one of the 275 quads binned to its centre cell and
 asked for that cell's tile — **0 buried**, none on a bench or a fitting.
+
+## The room walls finally carry something — the safety placards, phase 2 (2026-09-08)
+
+The surface the whole interior phase was aimed at. A room wall is **10.25% of the frame** and carried
+the damp band and **nothing else**: `FacilityExit`, `FacilityPoint` and `FacilityTables` are all
+`Surf.LINO`-gated and `FacilityBoard` is one per front entrance, so **every fitting in the compound
+was hung in the circulation and none of them ever reached a room.**
+
+New `render/facility/FacilityPlacard.hx`, `FacilityExit`'s shape verbatim: one quad per sign, one
+atlas, one merged mesh. **`placards` 30** on a generated compound.
+
+**ONE PER RUN, ON THE RUN'S MIDDLE CELL.** A run is a stretch of room tile hugging unbroken solid
+masonry — and the DOORWAY is what ends one, a door cell not being `isSolidWall` — so a wall with an
+opening in it is two runs and takes two signs, which is where a real pair is (confirmed in room 103:
+two on the east wall, split by the door between them). Middle and not end, or the sign lands beside
+the doorway that broke the run. `PLACARD_RUN_MIN` 3 drops the stubs.
+
+**IT NEEDS NO CLAIMED-CELL LIST, AND THAT IS BOUGHT WITH HEIGHT.** `PLACARD_Y` 4.75 spans 3.85..5.65
+and clears `DECO_CABINET_H` **3.43** — the tallest thing that can share a room cell — by 0.42, so the
+collision the fire points had to answer against `FacilityTables.runs` simply does not arise. It never
+meets `EXIT_Y` 4.75 either despite reading as the same band: those are LINO and these are TILE.
+
+**`runsOn` earned its keep a second time.** The wall line must `FacilityGeom.carries` past the wall
+cell both ways, so an inside corner is refused — which is why the pair-intersection test came back
+**0 crossings of 30 quads** rather than finding the corner X two perpendicular runs would otherwise
+put there. Note the cell binning does NOT show this: a quad's perpendicular coordinate sits inside
+the WALL cell, so two signs round one corner bin to the same key and look like a duplicate. The pair
+test is the check; the bin is not.
+
+Art: `facility/placards`, one 1k sheet, **2x2 four square cells**, both divisions landed **dead on
+512** so a cell is an exact quarter and no crop rect is needed. **NO lift** — and this is the entry
+where a fitting reads AT its wall rather than below it, the opposite of `facility/wall-points` and
+deliberately so: a fire point is painted steel, a placard is a printed plate. Against `wall-room`
+0.1375: biohazard 0.93x, laser 0.95x, no-entry 1.06x, eye protection 0.76x, sd 35.4-38.7 (inside
+`notice-board`'s placed-contrast band 34.3, not a tiling surface's 3.0). *Ask for a value, not a
+word* held again — naming 55% brightness with equal RGB landed 0.1268 built first try.
+
+Cost **+1 call, +60 tris, +0 programs.** The +0 by IDENTITY and not by the counter:
+`renderer.properties.get(mat).currentProgram` is **64** for the placards, the interior walls, the
+room walls, the notice board and the wall fittings alike, all `visMasksindoor`. **And the call/tri
+delta needed a control** — measured in room 109 the toggle read +2 calls / +120 tris, because that
+pose renders the scene twice; `wall-points` A/B'd in the same pose read +2 / +44 against its known 11
+quads, i.e. the same doubling. Per scene pass it is +1 and +60, and 30 quads x 2 tris = 60 confirms
+it off the geometry. **A toggle delta is only a per-pass number once a known family has been toggled
+in the same pose.**
+
+Controls unmoved: `points` 11, `zones` 17, `marks` 275, `exits` 16, `boards` 2, `grime` 528,
+`cabinets` 30, `shadows` 401.

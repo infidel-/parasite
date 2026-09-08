@@ -967,6 +967,47 @@ class FacilityStyle
   // by distance to their own structure's entrance
   public static inline var POINT_SPACING = 8;
 
+  // ---- the room wall placards (render.facility.FacilityPlacard) -----------------------------------
+
+  // the safety signage on a lab ROOM's walls, and the one family in the compound that is not hung in
+  // the circulation. measured on a pinned pose, a room wall is 10.25% of the frame and carried the
+  // damp band and nothing else — EXIT_TEX is Surf.LINO-gated, POINT_TEX is Surf.LINO-gated and
+  // BOARD_TEX is one per front entrance, so every fitting above this line is a corridor fitting.
+  //
+  // A TEXTURE AND NOT A PROP, the same reading of the silhouette-vs-surface guard BOARD_TEX takes: a
+  // sign plate's outline is a rectangle, and everything that says "hazard placard" rather than "grey
+  // square" is a pictogram on its face
+  public static inline var PLACARD_TEX = 'textures/facility/placards.png';
+  // how many cells the atlas holds. it is a 2x2 and both of its divisions landed dead on 512, so a
+  // cell is an exact quarter and its u/v are DERIVED from the index in FacilityPlacard.pane rather
+  // than named one by one the way POINT_U and EXIT_V are — a regular grid does not need eight
+  // constants, and eight would be eight chances to name a corner twice
+  public static inline var PLACARD_CELLS = 4;
+  // the quad, world units. THE ASPECT IS THE ART'S and only the scale is free, the lock POINT_W and
+  // DECO_BOOKCASE_W both carry — but here the cells are SQUARE, so the height simply follows. at the
+  // half-metre unit WALL_H 6.0 fixes this is a 0.9 m sign, which is large for a real placard and is
+  // the scale POINT_W had to be pushed to before the fittings were seen at all
+  public static inline var PLACARD_W = 1.8;
+  public static inline var PLACARD_H = PLACARD_W;
+  // and the quad's CENTRE, so it spans 3.85 to 5.65 up a 6-unit wall. HIGH, and that height is what
+  // buys the family its whole collision story: it clears DECO_CABINET_H 3.43, the tallest thing that
+  // can share a room cell, by 0.42 — so unlike the fire points this needs no check against any other
+  // builder's placements, and unlike the aisle it needs no claimed-cell grid. it is 0.35 under
+  // WALL_H 6.0 at the top.
+  //
+  // it never meets EXIT_Y 4.75 despite reading as the same band: those are Surf.LINO and these are
+  // Surf.TILE, so the two families cannot share a wall face.
+  //
+  // AND IT LEAVES 0.35 OF WALL ABOVE IT, which is the number a high-level SERVICE RUN has to be
+  // written against: anything hung over a room wall from here on either shares this band, gates off
+  // a different surface the way the corridor families do, or comes in under 0.35 tall. Not pulled
+  // down in advance to make room for one — this height is measured against the fittings that exist
+  public static inline var PLACARD_Y = 4.75;
+  // the shortest run of unbroken masonry that takes a sign, in cells. a run is ended by a DOORWAY —
+  // a door cell is not isSolidWall — so this is what stops a 2-cell stub between two openings from
+  // carrying one, and it is the whole density rule: one sign per run, on the run's middle cell
+  public static inline var PLACARD_RUN_MIN = 3;
+
   // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
 
   // the damp band at the foot of an interior wall. `decals/grime-1..3` are BAND art and not marks —
