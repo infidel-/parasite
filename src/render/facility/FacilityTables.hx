@@ -10,6 +10,19 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
+// one run of corridor casework, as `runs` walks it off the grid
+typedef CaseRun = {
+  // the run's FIRST cell — the corridor floor cell the first cabinet stands on, not the wall's
+  col:Int,
+  row:Int,
+  // which of that cell's four sides the masonry is on, in render.facility.FacilityGeom.face's
+  // numbering (0 = -z, 1 = +z, 2 = -x, 3 = +x)
+  dir:Int,
+  // and how many cells of it actually stand, AFTER the CASE_RUN_MAX clamp — so a face past the clamp
+  // is free floor and free wall as far as anything reading this list is concerned
+  len:Int,
+};
+
 // the laboratory benches: the casework runs the generator lays beside every window wall, the island
 // it puts in the middle of a room big enough to hold one, and — added here rather than by the
 // generator — the shallow storage runs standing against the corridor walls (see `cabinets`).
@@ -158,22 +171,21 @@ class FacilityTables
       });
     }
 
-// the storage casework standing against the corridor walls, merged into the SAME two buffers the
-// benches are — so a corridor full of it costs no draw call and no art at all.
-//
-// the generator furnishes ROOMS and nothing else: it lays a run of benches under every window wall
-// and drops an island in a room big enough, and a corridor comes out of it as bare lino between two
-// bare walls. this is the corridor's half of that, and it is not a bench — a bench is a whole cell
-// deep and the tiles say so, while these are render-only and CASE_D shallow, which is what lets them
-// stand in the one place the player actually walks (see FacilityStyle.CASE_D).
+// every corridor casework RUN the compound stands: the run's first cell, the wall it is bolted to
+// and how many cells of it actually stand after the CASE_RUN_MAX clamp.
 //
 // RUNS AND NOT CELLS. the gate is rolled once per run and the whole run stands or does not: gating
 // per cell turns a wall into a dotted line of isolated boxes, which reads as dropped junk rather than
-// as fitted casework. a run is claimed as it is walked, so the outer scan never restarts inside one
-  static function cabinets(m:Facility, top:MeshBuf, body:MeshBuf):Int
+// as fitted casework. a run is claimed as it is walked, so the outer scan never restarts inside one.
+//
+// PUBLIC AND RECOMPUTED RATHER THAN RECORDED, which is what lets render.facility.FacilityPoint keep a
+// wall fitting off a cabinet with no ordering between the two builders: this is a pure function of
+// the saved grid, so asking it twice cannot give two answers. Exactly the discipline `hugs` and
+// FacilityGround.bins already keep between the casework and the litter bins
+  public static function runs(m:Facility):Array<CaseRun>
     {
       var seen = new Map<Int, Bool>();
-      var n = 0;
+      var out = [];
       for (dir in 0...4)
         {
           // a run follows the WALL, so it advances along x for a wall in z and along z for one in x
@@ -197,20 +209,43 @@ class FacilityTables
                 var h = FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ (dir * 83492791));
                 if (h % 1000 >= FacilityStyle.CASE_PCT * 1000)
                   continue;
-                if (len > FacilityStyle.CASE_RUN_MAX)
-                  len = FacilityStyle.CASE_RUN_MAX;
-                for (i in 0...len)
-                  {
-                    unit(top, body, m, col + sc * i, row + sr * i, dir, i == 0, i == len - 1);
-                    n++;
-                  }
-                // and ONE halo for the whole run on the masonry behind it — see
-                // render.facility.FacilityDetail.halos. per RUN and never per cell: the quads are
-                // transparent with depthWrite off, so two of them overlapping along one wall blend
-                // through each other and stack to a hard band, which is the seam the corner strips
-                // shipped with once
-                halo(col, row, dir, len);
+                out.push({
+                  col: col,
+                  row: row,
+                  dir: dir,
+                  len: (len > FacilityStyle.CASE_RUN_MAX ? FacilityStyle.CASE_RUN_MAX : len),
+                });
               }
+        }
+      return out;
+    }
+
+// the storage casework standing against the corridor walls, merged into the SAME two buffers the
+// benches are — so a corridor full of it costs no draw call and no art at all.
+//
+// the generator furnishes ROOMS and nothing else: it lays a run of benches under every window wall
+// and drops an island in a room big enough, and a corridor comes out of it as bare lino between two
+// bare walls. this is the corridor's half of that, and it is not a bench — a bench is a whole cell
+// deep and the tiles say so, while these are render-only and CASE_D shallow, which is what lets them
+// stand in the one place the player actually walks (see FacilityStyle.CASE_D)
+  static function cabinets(m:Facility, top:MeshBuf, body:MeshBuf):Int
+    {
+      var n = 0;
+      for (r in runs(m))
+        {
+          var sc = (r.dir < 2 ? 1 : 0);
+          var sr = (r.dir < 2 ? 0 : 1);
+          for (i in 0...r.len)
+            {
+              unit(top, body, m, r.col + sc * i, r.row + sr * i, r.dir, i == 0, i == r.len - 1);
+              n++;
+            }
+          // and ONE halo for the whole run on the masonry behind it — see
+          // render.facility.FacilityDetail.halos. per RUN and never per cell: the quads are
+          // transparent with depthWrite off, so two of them overlapping along one wall blend
+          // through each other and stack to a hard band, which is the seam the corner strips
+          // shipped with once
+          halo(r.col, r.row, r.dir, r.len);
         }
       return n;
     }
@@ -227,8 +262,11 @@ class FacilityTables
 //
 // the CORNER exclusion is what divides this pass from the litter bins, which take exactly the cells
 // this rejects (FacilityGround.bins). Both derive the same predicate off the model rather than
-// sharing a list, so neither has to run before the other and neither can drop a bin inside a cabinet
-  static function hugs(m:Facility, col:Int, row:Int, dir:Int):Bool
+// sharing a list, so neither has to run before the other and neither can drop a bin inside a cabinet.
+//
+// public because render.facility.FacilityPoint stands its wall fittings on the same predicate, and
+// gets the bin exclusion for free by doing so: the corner cells this rejects are the bins' cells
+  public static function hugs(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
       if (!FacilityModel.inside(m, col, row) ||
           m.surf[row][col] != Surf.LINO ||

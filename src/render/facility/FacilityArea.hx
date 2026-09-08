@@ -63,6 +63,7 @@ class FacilityArea implements Area3D
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
   var grime = 0;                                // interior wall faces carrying a damp band
   var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
+  var points = 0;                               // corridor wall fittings: fire points and panels
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -165,6 +166,11 @@ class FacilityArea implements Area3D
       // share — the tunnels' own `grime, decals, shadows` finding
       FacilityDetail.corners(scene, model);
       exits = FacilityExit.build(scene, model);
+      // and the fire points and electrical panels on the same corridor walls, beside the signage
+      // they are the same kind of thing as. it needs no ordering against the hatch already struck
+      // under it — FacilityPoint.places is a pure function of the grid and FacilityPaint called it
+      // for exactly that reason (see that file's header)
+      points = FacilityPoint.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -333,10 +339,21 @@ class FacilityArea implements Area3D
             // of it. most rooms correctly take none, marking being for TRAFFIC and not for the gap
             // between two bench runs, so a 0 EVERYWHERE is the gate breaking and a 0 in a room is not
             marks: FacilityPaint.marks,
-            // and how many KEEP-CLEAR zones, one per exterior door leaf with circulation behind it.
-            // it should track `exits`' terminal half exactly, both being that same list, so the two
-            // disagreeing means one of them has grown a placement rule of its own
+            // and how many KEEP-CLEAR zones are struck. TWO sources feed it and it is only readable
+            // as their sum: one per exterior door leaf with circulation behind it, which should
+            // track `exits`' terminal half exactly (both being that same list, so the two disagreeing
+            // means one has grown a placement rule of its own), plus one per wall fitting below.
+            // `zones` under `points` means a fitting landed on a cell a door zone already claimed
             zones: FacilityPaint.zones,
+            // and how many wall FITTINGS stand — fire points plus electrical panels, the things a
+            // zone belongs to. merged mesh with no instance count, the same blindness as `exits`
+            // above, and the number is read against two rules: exactly ONE PANEL PER STRUCTURE with
+            // a free corridor wall (so `points` minus the panel count is the fire points), and no
+            // two inside POINT_SPACING cells of each other. It cannot exceed the free corridor wall
+            // faces left after FacilityTables.runs takes the casework's, which is the collision this
+            // family exists to respect — a `points` that jumps when CASE_PCT moves means that
+            // exclusion broke
+            points: points,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's

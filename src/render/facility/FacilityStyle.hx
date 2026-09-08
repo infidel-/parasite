@@ -917,6 +917,56 @@ class FacilityStyle
   // is supposed to be a light
   public static inline var EXIT_EMISSIVE = 1.6;
 
+  // ---- the corridor wall fittings (render.facility.FacilityPoint) --------------------------------
+
+  // the FIRE POINT and the ELECTRICAL PANEL: the two things a keep-clear zone on the floor is
+  // actually FOR, and the reason ZONE_D's block can say a zone belongs to fire equipment and a panel
+  // rather than to a doorway. a zone with nothing standing over it is a stain.
+  //
+  // BOTH ARE WALL QUADS AND NEITHER IS A PROP, which the silhouette-vs-surface guard answers
+  // outright: a distribution panel is a flat door with a label and has no silhouette at all, and a
+  // fire point reads from this camera as its red backboard — at the measured 65.6 degree gameplay
+  // pitch an extinguisher on a bracket is a few pixels of edge. So they are two cells of ONE atlas
+  // on ONE mesh, which is FacilityExit's shape verbatim and costs the family a single draw call
+  public static inline var POINT_TEX = 'textures/facility/wall-points.png';
+  // the two cells of that atlas, as the u of each one's LEFT edge; each is half the image wide. the
+  // source draws them SIDE BY SIDE where the exit signs are stacked, because both fittings are
+  // PORTRAIT and the exit signs are landscape — the art decides, here as there
+  public static inline var POINT_U_FIRE = 0.0;
+  public static inline var POINT_U_PANEL = 0.5;
+  // the quad, world units. THE ASPECT IS THE ART'S AND ONLY THE SCALE IS FREE: each atlas cell is
+  // 512x1024 and a 0..1-mapped face must match its image or the fitting is stretched — the same lock
+  // DECO_SHELF_D and DECO_BOOKCASE_W carry, and it is why the number below is the ONLY lever this
+  // family has on how big it reads.
+  //
+  // it shipped at 1.6 (a 0.8 m by 1.6 m backboard at the half-metre unit WALL_H 6.0 fixes, which is
+  // about a real fire point's) and came back from the game as "i see no panel, no fire point". They
+  // were drawing: the miss is that a wall fitting is pitched AWAY at the 65.6 degree gameplay camera
+  // while its own floor hatch lies flat and facing it, so the mark reads at 4x3 units and the thing
+  // it belongs to is a ~50x55 px patch at 0.11x its wall. 2.0 is +56% area for +0 art, and it is the
+  // most the height ceiling below allows
+  public static inline var POINT_W = 2.0;
+  public static inline var POINT_H = POINT_W * 2;
+  // and the quad's CENTRE, so it spans 0.1 to 4.1 up a 6-unit wall. LOW, unlike everything else
+  // mounted in this compound — BOARD_Y is 3.0 and EXIT_Y is 4.75 — because a fire point's whole
+  // point is that the extinguisher is within reach, and a panel is opened by hand. Standing it
+  // nearly ON the floor is also what glues it to its own hatch, which is the pair the whole family
+  // exists to make.
+  //
+  // THE TOP IS WHAT CAPS POINT_W, and by 0.15: a terminal exit sign's bottom edge is
+  // EXIT_Y - EXIT_H / 2 = 4.25 and the two hang on the SAME corridor walls at the same MOUNT_PROUD,
+  // so anything over 2.05 here puts a fire point through the sign above it.
+  //
+  // it CLEARS BENCH_H 2.0 nowhere and does not need to — `FacilityPoint.places` takes the casework's
+  // own run list out of the candidates before it places anything, so a fitting and a cabinet never
+  // share a face to begin with
+  public static inline var POINT_Y = 2.1;
+  // how many cells apart two fittings stand, measured between their CELLS and not along one wall —
+  // so a corridor cannot take one on each hand of the same two-wide stretch. the only density knob
+  // here, the way EXIT_APPROACH is the signage's, and it is applied greedily over candidates sorted
+  // by distance to their own structure's entrance
+  public static inline var POINT_SPACING = 8;
+
   // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
 
   // the damp band at the foot of an interior wall. `decals/grime-1..3` are BAND art and not marks —

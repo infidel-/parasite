@@ -1081,3 +1081,180 @@ The cut also **re-opens the `color` tint the opaque gap had closed** — a tint 
 survives `alphaTest`, so neutral stripes plus one uniform per mesh would serve red and yellow off one
 map. This art's stripes are painted red, so a yellow panel hatch is still a second drop. Recorded,
 not taken.
+
+## A zone with nothing over it is a stain — the fire points and panels, phase 1a step 2 (2026-09-08)
+
+Step 1 struck a keep-clear hatch inside every exit and left the other two things the convention marks
+a floor for standing nowhere. `render.facility.FacilityPoint` stands them: a **fire point** and an
+**electrical panel**, both as wall QUADS off ONE atlas (`facility/wall-points`, two 512x1024 portrait
+cells side by side, `POINT_U_FIRE` 0.0 / `POINT_U_PANEL` 0.5). Neither earns a glb — the
+silhouette-vs-surface guard answers a panel outright (a flat door with a label, no silhouette at all)
+and a fire point reads from this camera as its red backboard, since at the measured 65.6° pitch an
+extinguisher on a bracket is a few pixels of edge. `FacilityExit`'s shape verbatim, so the whole
+family is **one draw call**: **95 → 96 calls, +22 tris** (11 quads), interleaved A/B ×3 on a pinned
+pose. `points` **11 = 2 panels + 9 fire points**, `zones` **6 → 17**, `marks` **240 → 229**.
+
+**+0 programs, and this time it is proved by identity rather than by a count.** The material is Lambert
++ map + `FrontSide` + `VisionMask.patch`, `receiveShadow` on, which is the interior-wall permutation:
+`renderer.properties.get(mat).currentProgram` is **program 64 for the fitting mesh and 64 for the
+benches**, `usedTimes` 53. Worth doing that way — the renderer's `info.programs.length` is a
+session-cumulative cache and read across two poses it looked like +1.
+
+**The zones ride the hatch mesh already built, so they are +0 calls**, and they are the ones the aisle
+really breaks for: a door zone lies in a cell the lane already ran to and stopped at, where a fitting
+stands mid-corridor and `MARK_WALL_CLEAR` 1.7 puts the lane's edge line 1.7 off the same wall face the
+zone reaches `ZONE_D` 3.0 from. Without the claim the line runs straight through the hatch. `marks`
+dropped by exactly 11, one per fitting cell, and **0 crossings** of 229 aisle quads against 17 zone
+quads in XZ.
+
+**The casework collision is real and got a real check, not a clearance.** Casework, dead-end bins and
+directional signs are all `Surf.LINO`-gated and a cabinet and a fitting want the same wall face —
+`MARK_WALL_CLEAR` works for the aisle only because a lane runs down the MIDDLE of a corridor.
+`FacilityTables`' run walk is now a public `runs(m):Array<CaseRun>` that both `cabinets()` and
+`FacilityPoint.places` call: a pure function of the saved grid, so no ordering between the two
+builders and no shared list to go stale — the discipline `hugs` and `FacilityGround.bins` already
+keep. The refactor is behaviour-identical, checked on `cabinets` **30 before and after**. The BINS
+need no test of their own: `hugs` rejects the dead-end and inside-corner cells, which are the bins'.
+
+Placement is one sort and one greedy pass, not two rules. Candidates are the free corridor wall faces
+ordered by cell distance to their own structure's nearest exterior door, so a structure's first kept
+face is the one by its entrance — that is the **panel**, one per structure, and everything after it in
+that structure is a fire point. `POINT_SPACING` **8** thins the rest, measured between CELLS and not
+along one wall so a two-wide corridor cannot take one on each hand. 2 panels on this compound = the 2
+lab buildings; the hangar is concrete, has no corridor and correctly takes nothing.
+
+**No lift, and the fire point is deliberately the darker half.** Against the corridor wall
+(`facility/wall-interior` **0.1578**) the drop is panel **0.0750 = 0.48×** — within a hair of
+`facility/notice-board`'s 0.46× — and fire point **0.0519 = 0.33×**, sheet 0.0635 = 0.40×. A FITTING
+READS BELOW ITS OWN WALL here (`deco-cabinet-front` 0.60×, notice board 0.46×), so lifting toward the
+wall is the mistake those two entries record. In the frame the tonemapper crushes both further —
+panel 0.0236 against a wall at 0.0649 (**0.36×**), fire point 0.0075 (**0.11×**) — and the fire point
+still reads, because its read is CHROMA: rgb 34.8/8.1/10.3, chroma 26.7 on screen off a source at
+107.6/32.0/28.1, spread **79.6**. One lift moves both halves and would push the panel past
+`deco-cabinet-front`; chasing the darker half would cost the one that is already right.
+
+`POINT_Y` **2.1** puts the quad at 0.1..4.1, LOW where everything else in the compound is hung high
+(`BOARD_Y` 3.0, `EXIT_Y` 4.75) — an extinguisher is meant to be in reach, and standing it nearly on
+the floor is what glues it to its own hatch. It clears `BENCH_H` 2.0 nowhere and does not need to,
+the casework being excluded before anything is placed. The span along the wall is clamped to the slab
+for `FacilityTables.unit`'s reason, and the plane is the slab FACE: measured, all 11 quads came back
+at the full `POINT_W` on this seed, so the clamp did not fire — it is there for the run end that
+will. Controls unmoved: `exits` 16, `cabinets` 30, `grime` 528, `boards` 2, `shadows` 401.
+
+**`POINT_W` shipped at 1.6 and came back from the game as "i see no panel, no fire point".** They
+were drawing — mesh visible, 11 quads, texture loaded — and the miss is a geometry one, not a bug:
+**a wall fitting is pitched AWAY at the 65.6° gameplay camera while its own floor hatch lies flat and
+facing it.** Measured in one frame, the hatch renders **0.0588 linear against a wall at 0.0636**, and
+the fire point on that same wall **0.0078** — the mark is **7.5× the fitting it belongs to**. That is
+row 912's finding restated one surface over: the indoor fill is ambient-flat and the ceiling spots
+land on the floor, so paint on the floor is lit and a plate on the wall is not.
+
+The aspect is locked by the art at 1:2, so **scale is the only lever without a re-gen**: 1.6 → **2.0**
+(+56% area, +0 art), with `POINT_Y` 2.2 → 2.1 to keep the top clear. **The ceiling is the exit sign**
+and it is 0.15 away — a terminal sign's bottom edge is `EXIT_Y - EXIT_H / 2` = 4.25 and the two hang
+on the same corridor walls at the same `MOUNT_PROUD`, so anything over `POINT_W` 2.05 puts a fire
+point through the sign above it.
+
+**SIZE WAS THE WHOLE FIX AND THE VALUE NEEDED NOTHING — a re-gen was proposed off ONE POSE and is
+withdrawn.** The 0.0078 / 0.12x-its-wall figure above was measured on a stretch of corridor with no
+ceiling spot on that wall, and generalised to the family, which is the mistake this paragraph exists
+to record: **an indoor wall's value is a POSE number here, not a surface one.** Measured again in a
+normally lit corridor, the same fitting reads **0.0142 linear against a wall at 0.0550 = 0.26x**, at
+**chroma 46.5** against the earlier pose's 26.7 — it reads as red. The hatch is still the brighter
+half (0.0676, so 4.8x the fitting rather than 7.5x) but that is a lit floor against a lit wall, which
+is true of every pair of surfaces in the compound. **Measure a wall fitting in at least two poses
+before fitting a `lift` to it**; one dark corridor is not the family.
+
+**Then lifted anyway, on the call — and TWO things turned up on the way that matter more than the
+gamma.** First, the source in `textures-src` was **not the drop**: it had been hand-edited, and the
+edit was **value-neutral** — fire cell 93.4/45.1/42.5 against the gen's 107.6/32.0/28.1, chroma
+**79.6 → 50.9**, luma **0.0518 against 0.0519**. It moved saturation and not value, which is exactly
+why it was invisible in the game. A texture source here is not safe to assume is the last thing
+generated: diff it against the drop before touching it, and never archive it as "raw".
+
+Second, **that is why the gamma stays in `textures.json` and is not baked into the source.** A file
+being hand-edited will lose a baked gamma on the next edit or take it twice; `lift` is declared, is
+re-applied by every bake, and is one line.
+
+**The PANEL caps the lift, not the fire point.** Swept in source space against `facility/wall-interior`
+0.1578: g 0.90 gives fire **0.41x** / panel **0.60x**, g 0.85 gives **0.46x / 0.68x**, g 0.80 gives
+**0.52x / 0.77x**, g 0.70 gives **0.67x / 0.98x** — the panel reaching the value of the wall it hangs
+on. So the half that was already right runs out first, and chasing the fire point past about 0.5x
+costs it. **`lift` 0.85**, built fire **0.45x** and panel **0.67x** (the bake comes out over the
+source-space prediction because LANCZOS averages in sRGB and high-variance content — the panel's
+louvres and frame — reads brighter in linear afterwards).
+
+In the frame, same lit corridor, as a ratio to its own wall so the pose cancels: fire point
+**0.26x → 0.38x**, absolute linear 0.0142 → 0.0230, **+62%**. **It costs saturation and that is
+structural, not tuning**: a gamma raises the low channels proportionally more than the high one, so
+the source R/B goes 2.20 → 1.97 and on-screen chroma **46.5 → 26.0**. Brighter and less red is the
+only thing one gamma can do to a red plate. A re-roll of the left cell is the lever that separates
+the two, and is now wanted for SATURATION rather than for the value it was first proposed for.
+
+**And a fitting must not stand on the LAST CELL of a wall run**, reported as "we have an extinguisher
+right on the corner where i'm standing". Measured at the reported cell **(34,31)**: the wall at row 30
+runs cols **32..34** and col 35 is the mouth of a passage, so `FacilityGeom.slab` insets that face by
+a unit, the masonry shows 3 units of a 4-unit cell, and a `POINT_W` quad centred on the cell lands
+flush against the inset end — which is the corner. The clamp is no defence and that is why nothing
+caught it: the quad fits the inset face EXACTLY, so it measured at full width and never reported.
+
+The guard is `FacilityKit.wall`'s own, verbatim — the wall line has to `FacilityGeom.carries` past
+the cell BOTH ways. `FacilityTables.hugs` does not ask it and should not: a casework RUN answers the
+same fact by CLAMPING to the slab, which shortens the last cabinet and looks right, where a single
+fixed-width quad has nothing to clamp and rejects the cell instead, exactly as a kit prop does. A
+DOOR cell carries and that is correct — the wall line runs on through a doorway — and `hugs` has
+already refused the door's own neighbours through `nearDoor`. `points` stays **11**: rejecting the
+run-end candidates frees the `POINT_SPACING` budget for cells further along, so the compound places
+the same number in better places.
+
+## A one-cell gap in a bench run was costing four rooms their aisle, INVERTED (2026-09-08)
+
+Reported as "why the fuck the majority of the rooms have no lines". Binned every aisle quad into the
+room rect it lands in: **5 of 12 marked**. Two of the misses are the documented work aisles (10x3,
+benched down both long walls) and one is the hangar (`Surf.CONCRETE`, `least < 0`). **The other four
+are a defect, and the shape of the rule is what is wrong, not the thresholds** — no room in the
+compound fails `MARK_AISLE_MIN`.
+
+`roomAisle` took the **minimum** clear reach over every cell of the middle run. The generator cuts a
+**one-cell walkway through each bench run**, and on those four rooms that gap lands exactly on the
+centre line — so the middle cell of a bench run is free floor with casework on both hands, reports
+reach **0**, and sets the whole room's lane to **1.6**, under `MARK_LANE_MIN` 4.0. Room 100, middle
+column 20:
+
+```
+col   17 18 19 20 21 22 23
+row20  w  x  y  .  w  x  y     <- free, reach 0 both ways -> least = 0 for the whole run
+row21  .  .  .  .  .  .  .     <- reach 3 each way
+```
+
+**It was INVERTED, which is how it hid.** The 9x10 that IS marked has a bench sitting *on* col 42 at
+row 20: not free floor, skipped by the existing `freeFloor` test, never contributes a reach, and the
+room keeps its real 25.6. A bench run that BLOCKS the centre line earns a lane; one with a doorway
+through it does not.
+
+Three changes, and the second two are what the first needs to be safe:
+
+1. **a cell with reach 0 is dropped from the minimum** — it is not part of the lane.
+2. **`strikes` asks the LINE's own cell, not the run's.** Dropping the pinch widens the offsets, so
+   the line can now sit whole cells from the run it was derived from — and testing the run cell said
+   "free floor" while the paint lay under the casework, exactly what `freeFloor`'s header forbids.
+   The run cell is still asked too (an island breaks the lane rather than collapsing it).
+3. **both lines must PAINT at least half the run before either is struck**, or (1) hands a lane to
+   the 3-cell work aisle, whose clear columns are the *gaps* in the casework.
+
+**Guard (3) was got wrong twice and both wrongs are the point.** First as *longest unbroken stretch ≥
+`MARK_AISLE_MIN`*, with the door break inside `strikes` — that counts the design as damage (the break
+at a doorway is the figure tying a room's lane to the corridor's), cut the 8x5's run from 7 to 3 and
+**rejected every room in the compound, 0 of 12**. The door test moved out to `line` alone. Then as
+*longest unbroken ≥ 5* — still wrong, because **a lane is allowed to break**: an island splits the
+9x10's ten cells into 2 and 4 while it draws 6 good segments a side. **7 of 12.** Then as *total ≥ 5*
+— one too many for a small room, the 5x5 and 6x5 painting 4 on one side, blocked at both ends by
+fittings. **9 of 12** at *total ≥ half the run*, and the two families separate on the FRACTION and
+not on the count: every real lane paints **50-100%** (5/10, 6/10, 6/8, 7/8, 8/8, 4/5), the work
+aisles **30% and 40%**.
+
+Final: **9 of 12**, the three misses being the two work aisles and the concrete hangar. `marks`
+**229 → 275**. Controls unmoved — `zones` 17, `points` 11, `exits` 16, `cabinets` 30, `grime` 528,
+`boards` 2, `shadows` 401. **0 crossings** of 275 aisle quads against 17 zone quads, and the new
+check the widened offsets made necessary: every one of the 275 quads binned to its centre cell and
+asked for that cell's tile — **0 buried**, none on a bench or a fitting.

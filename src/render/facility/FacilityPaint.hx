@@ -125,6 +125,51 @@ class FacilityPaint
               zones++;
             }
         }
+      // and one in front of every corridor wall FITTING, off render.facility.FacilityPoint's own
+      // list rather than a placement rule of this file's — a fire point and an electrical panel are
+      // what the convention actually marks a floor for, and this file only knows how to strike it.
+      //
+      // THESE ARE THE ONES THE AISLE REALLY BREAKS FOR. A door zone lies in a cell the lane already
+      // ran to and stopped at; a fitting stands mid-corridor, and MARK_WALL_CLEAR 1.7 puts the lane's
+      // edge line 1.7 off the same wall face this reaches ZONE_D 3.0 from — so without the claim
+      // below the line would run straight through the hatch
+      for (p in FacilityPoint.places(m))
+        {
+          if (claimed[p.row][p.col])
+            continue;
+          fitting(b, m, p, y);
+          claimed[p.row][p.col] = true;
+          zones++;
+        }
+    }
+
+// one fitting's zone: the cell's own width along the wall, running ZONE_D out from the SLAB face the
+// fitting hangs on.
+//
+// the same rect the door zones take and clamped the same way FacilityTables.unit clamps a cabinet —
+// slab() insets a side wherever the wall line stops there, so a zone on the cell boundary at a run's
+// end would reach past the end of the masonry the thing above it is bolted to
+  static function fitting(b:MeshBuf, m:Facility, p:FacilityPoint.Point, y:Float):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var s = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
+      var d = FacilityStyle.ZONE_D;
+      if (p.dir < 2)
+        {
+          var a0 = p.col * CELL - half;
+          var x0 = Math.max(a0, s.x0);
+          var x1 = Math.min(a0 + CELL, s.x1);
+          var e = (p.dir == 0 ? s.z1 : s.z0);
+          var t = (p.dir == 0 ? d : -d);
+          hatch(b, x0, x1, Math.min(e, e + t), Math.max(e, e + t), y);
+          return;
+        }
+      var a0 = p.row * CELL - half;
+      var z0 = Math.max(a0, s.z0);
+      var z1 = Math.min(a0 + CELL, s.z1);
+      var e = (p.dir == 2 ? s.x1 : s.x0);
+      var t = (p.dir == 2 ? d : -d);
+      hatch(b, Math.min(e, e + t), Math.max(e, e + t), z0, z1, y);
     }
 
 // one door's zone: the door cell's full width, running ZONE_D into the building from the threshold.
@@ -465,6 +510,18 @@ class FacilityPaint
               if (!freeFloor(m, col, row))
                 continue;
               var e = reach(m, col, row, (alongX ? 0 : s), (alongX ? s : 0));
+              // A CELL WITH NOTHING CLEAR BESIDE IT IS NOT PART OF THE LANE, and taking its 0 as the
+              // minimum is what left 4 of this compound's 12 rooms unmarked. The generator cuts a
+              // ONE-CELL walkway through each bench run, and on those four rooms that gap lands
+              // exactly on the centre line — so the middle cell of a bench run is free floor with
+              // casework on both hands, reports reach 0, and sets the whole room's lane to 1.6.
+              //
+              // it was INVERTED, which is how it hid: a room whose bench run BLOCKS the centre line
+              // has that cell skipped by `freeFloor` above and keeps its real lane (the marked 9x10
+              // measures 25.6), while a room with a doorway through the run loses everything. What
+              // the line does at those cells is `strikes`' job, not this loop's
+              if (e.cells == 0)
+                continue;
               if (least >= 0 &&
                   e.cells >= least)
                 continue;
@@ -490,8 +547,69 @@ class FacilityPaint
       if (w > FacilityStyle.MARK_ROOM_MAX)
         for (i in 0...2)
           off[i] -= (w - FacilityStyle.MARK_ROOM_MAX) / 2;
+      // and BOTH lines have to PAINT somewhere before EITHER is struck. dropping the pinched cells
+      // above buys back the rooms a one-cell bench gap was costing, but on its own it would also
+      // hand a lane to the 3-cell room that is genuinely a WORK AISLE between two bench runs: there
+      // the clear columns are the GAPS in the casework, so a line derived off them lands buried under
+      // the cabinets for most of its length and draws as a row of disconnected dashes. Measured, that
+      // room's two lines paint 3 and 4 cells of 10 where every real lane in the compound paints 5+.
+      //
+      // A LANE HAS TO BE PAINT FOR AT LEAST HALF ITS LENGTH — a FRACTION and not a cell count, which
+      // was tried at MARK_AISLE_MIN 5 and is one too many for a small room: the 5x5 and 6x5 labs
+      // paint 4 of 5 and 4 of 6 on one side, blocked at both ends by fittings, and both are perfectly
+      // good lanes. Measured over the compound, the two families separate cleanly on the fraction and
+      // not on the count — every real lane paints 50-100% (5/10, 6/10, 6/8, 7/8, 8/8, 4/5) and the
+      // work aisles paint 30% and 40%. Both sides, because a pair with one side missing is not a pair
+      for (i in 0...2)
+        if (drawn(m, alongX, base, len, mid, i * 2 - 1, off[i]) * 2 < len)
+          return;
       for (i in 0...2)
         line(b, m, alongX, base, len, mid, i * 2 - 1, off[i], y);
+    }
+
+// how many cells this line would actually paint — what the room is gated on before either line of
+// the pair is struck.
+//
+// TOTAL and not the longest unbroken stretch, which was tried and is wrong: a lane is allowed to
+// BREAK. It breaks at a doorway by design and at an island bench because the middle is blocked, and
+// neither says the route stopped — measured, longest-run rejected the 9x10 lab (an island splits its
+// 10 cells into 2 and 4) while it drew 6 perfectly good segments a side
+  static function drawn(m:Facility, alongX:Bool, base:Int, len:Int, mid:Int, s:Int,
+      off:Float):Int
+    {
+      var n = 0;
+      for (k in 0...len)
+        if (strikes(m, alongX, base, len, mid, s, off, k))
+          n++;
+      return n;
+    }
+
+// is cell `k` of the run PAINTABLE on the line standing `off` out from the middle on side `s`?
+//
+// TWO CELLS ARE ASKED AND THEY ARE NOT THE SAME CELL, which is the other half of the bench-gap fix.
+// The line lies `off` out from the middle, so it may sit whole cells away from the run it is derived
+// from: asking only the RUN cell said "free floor" while the paint itself lay under the casework,
+// which is exactly what `freeFloor`'s own header says a mark must never do. So the LINE's cell has to
+// be clear floor and unclaimed, and the RUN cell still has to be clear too — a cell whose middle is
+// an island bench breaks the lane rather than collapsing it, which is the rule this file already had.
+//
+// THE DOOR BREAK IS DELIBERATELY NOT ASKED HERE and `line` applies it separately. That gap is the
+// figure that ties a room's lane to the corridor's — the line breaks where a door opens onto the side
+// it bounds — so counting it as a break is counting the design as damage: measured, it cut the 8x5
+// room's `span` from 7 to 3 and `span` then rejected every room in the compound
+  static function strikes(m:Facility, alongX:Bool, base:Int, len:Int, mid:Int, s:Int, off:Float,
+      k:Int):Bool
+    {
+      var q = Std.int(mid + 0.5 + s * off / CELL);
+      var lc = (alongX ? base + k : q);
+      var lr = (alongX ? q : base + k);
+      if (!freeFloor(m, lc, lr) ||
+          claimed[lr][lc])
+        return false;
+      var col = (alongX ? base + k : mid);
+      var row = (alongX ? mid : base + k);
+      return freeFloor(m, col, row) &&
+        !claimed[row][col];
     }
 
 // one of a room pair, walked cell by cell along the run at a fixed offset from the middle cell's
@@ -514,16 +632,15 @@ class FacilityPaint
       var e = (mid + 0.5) * CELL - half + s * off;
       for (k in 0...len)
         {
-          var col = (alongX ? base + k : mid);
-          var row = (alongX ? mid : base + k);
-          if (!freeFloor(m, col, row) ||
-              claimed[row][col])
+          if (!strikes(m, alongX, base, len, mid, s, off, k))
             continue;
           // and the line breaks where a DOOR opens onto the side it bounds — the gap is the opening,
           // and it is the figure that ties the room's lane to the corridor's. walked from the middle
           // outward on this line's own side, so a bench standing between the lane and the door means
-          // the door does not open onto the lane and the line runs on
-          if (reach(m, col, row, (alongX ? 0 : s), (alongX ? s : 0)).door)
+          // the door does not open onto the lane and the line runs on. NOT part of `strikes`, because
+          // `span` must not read a deliberate gap as the lane ending
+          if (reach(m, (alongX ? base + k : mid), (alongX ? mid : base + k),
+              (alongX ? 0 : s), (alongX ? s : 0)).door)
             continue;
           var s0 = Math.max(a0, (base + k) * CELL - half);
           var s1 = Math.min(a1, (base + k + 1) * CELL - half);
