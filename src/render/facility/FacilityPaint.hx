@@ -547,6 +547,22 @@ class FacilityPaint
       if (w > FacilityStyle.MARK_ROOM_MAX)
         for (i in 0...2)
           off[i] -= (w - FacilityStyle.MARK_ROOM_MAX) / 2;
+      // AND THE CAP ABOVE CAN PUT A LINE BACK UNDER A WORKTOP, which is the one thing the two derived
+      // clearances were careful about — it moves both lines with no clearance term in it at all. Pull
+      // each one back inside its own cell by MARK_LIP_CLEAR, the overhang plus half the line; see that
+      // knob for what it was measured against. Deliberately NOT re-testing MARK_LANE_MIN afterwards:
+      // this can only take 0.29 off a side, and a lane that measured as traffic before the cap is
+      // still traffic 0.58 narrower
+      for (i in 0...2)
+        {
+          var s = i * 2 - 1;
+          var q = Std.int(mid + 0.5 + s * off[i] / CELL);
+          // the outward face of the cell the line stands in, as a distance out from the middle cell's
+          // own centre — the frame `off` is already measured in
+          var edge = (s > 0 ? q + 1 - (mid + 0.5) : mid + 0.5 - q) * CELL;
+          if (off[i] > edge - FacilityStyle.MARK_LIP_CLEAR)
+            off[i] = edge - FacilityStyle.MARK_LIP_CLEAR;
+        }
       // and BOTH lines have to PAINT somewhere before EITHER is struck. dropping the pinched cells
       // above buys back the rooms a one-cell bench gap was costing, but on its own it would also
       // hand a lane to the 3-cell room that is genuinely a WORK AISLE between two bench runs: there
@@ -590,8 +606,14 @@ class FacilityPaint
 // The line lies `off` out from the middle, so it may sit whole cells away from the run it is derived
 // from: asking only the RUN cell said "free floor" while the paint itself lay under the casework,
 // which is exactly what `freeFloor`'s own header says a mark must never do. So the LINE's cell has to
-// be clear floor and unclaimed, and the RUN cell still has to be clear too — a cell whose middle is
-// an island bench breaks the lane rather than collapsing it, which is the rule this file already had.
+// be clear floor and unclaimed, and so does the cell ONE STEP INSIDE it — the lane the line bounds —
+// so an island bench standing against the line breaks it rather than collapsing the room's pair.
+//
+// THE LANE AND NOT `mid`, which is what this asked first and is wrong whenever the two offsets are
+// not symmetric — and they are derived independently, so the room's middle can BE one line's own
+// cell. Measured on a 7x10 lab: `mid` was line 1's cell, and the island bench standing on it removed
+// THREE cells of line 2 as well, though line 2's own column and the whole walkway between the pair
+// were clear floor. With the door break beside it that read as a 4-cell hole in a walkable lane.
 //
 // THE DOOR BREAK IS DELIBERATELY NOT ASKED HERE and `line` applies it separately. That gap is the
 // figure that ties a room's lane to the corridor's — the line breaks where a door opens onto the side
@@ -606,8 +628,8 @@ class FacilityPaint
       if (!freeFloor(m, lc, lr) ||
           claimed[lr][lc])
         return false;
-      var col = (alongX ? base + k : mid);
-      var row = (alongX ? mid : base + k);
+      var col = (alongX ? base + k : q - s);
+      var row = (alongX ? q - s : base + k);
       return freeFloor(m, col, row) &&
         !claimed[row][col];
     }
@@ -644,6 +666,19 @@ class FacilityPaint
             continue;
           var s0 = Math.max(a0, (base + k) * CELL - half);
           var s1 = Math.min(a1, (base + k + 1) * CELL - half);
+          // AND A SEGMENT'S END STOPS SHORT OF A WORKTOP THE SAME WAY ITS SIDE DOES. MARK_LIP_CLEAR
+          // holds the line off the bench beside it, but a bench in the next cell ALONG the run lips
+          // BENCH_LIP back over this one, so a segment ending flush on the cell boundary runs its last
+          // 0.29 under the top and reads as going INTO the table rather than up to it. Asked of
+          // `strikes`, because the two cells it tests are exactly the two that can lip over this line:
+          // its own and the one inside it. A neighbour dropped by the DOOR break still strikes, so the
+          // door gap keeps the width it was measured at — there is no worktop at a doorway to clear
+          if (k > 0 &&
+              !strikes(m, alongX, base, len, mid, s, off, k - 1))
+            s0 += FacilityStyle.MARK_LIP_CLEAR;
+          if (k < len - 1 &&
+              !strikes(m, alongX, base, len, mid, s, off, k + 1))
+            s1 -= FacilityStyle.MARK_LIP_CLEAR;
           if (s1 <= s0)
             continue;
           if (alongX)

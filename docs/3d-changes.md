@@ -1306,3 +1306,117 @@ in the same pose.**
 
 Controls unmoved: `points` 11, `zones` 17, `marks` 275, `exits` 16, `boards` 2, `grime` 528,
 `cabinets` 30, `shadows` 401.
+
+## The placard names what is under it — eight signs picked off the room's own contents (2026-09-08)
+
+The plates above shipped with the pictogram rolled off a cell hash, which hung a biohazard triangle
+over a bookcase and an eye-protection disc over a server rack. This picks the sign — and the cell it
+hangs on — off what actually stands against that wall.
+
+**THE CONTENT IS WALL-HUGGING BY CONSTRUCTION, which is why this works at all.**
+`game.FacilityAreaGenerator.makeWindows` stamps every bench and every fitting on `tx,ty`, the
+interior cell directly against the wall line, and that wall alternates window run / plain masonry —
+so about half of what a room holds sits under exactly the solid masonry a placard needs. Measured by
+re-deriving the runs through the engine's own `FacilityModel.fromArea` and `FacilityGeom.carries`:
+**all 30 runs find something, 0 fall back**, where the middle cell alone gave eye protection 13 times
+and 11 runs with nothing to say.
+
+**DERIVED, NEVER PERSISTED.** `m.deco` (the fitting kind), `m.table`, `m.drain` and `Surf.GRATE` are
+all off the saved grid and the decoration objects already in every save. A room `role` was the
+obvious alternative and is the wrong answer twice: `_Room.role` is optional and the facility
+generator sets it on nothing (`generateRoomContents` makes every room a `roomChemistryLab`), and a
+role written at generation would be null on every compound already saved — the contract
+`FacilityModel`'s header exists to keep.
+
+**BOTH PROBES MUST BE SCORED, AND THE FIRST BUILD SCORED ONE.** Asking the cell one step into the
+room only when the wall cell itself is bare loses the drum every time, because the wall cell is a
+BENCH. 6 of the 30 runs are `bench|drum-rad`, `bench|rack`, `bookcase|drum-bio` and the like, and the
+bench answered for all six: biohazard 2, laser 3, radiation 2, gloves 8 on the first build against
+biohazard 5, laser 3, radiation 3, gloves 5 once both probes score. The score is
+`PRIO * 100 + back * 50 + distance-from-middle`, one comparable number, hazard loudest.
+
+**TWO SHEETS, AND THAT IS WHAT EIGHT PICTOGRAMS COST.** Four cells cannot name a bench, a server
+rack, a drum and a shelf of boxes; a 2x2 is the largest cell a 1k drop holds at the 256 the built
+sheet keeps, so the fifth sign is a second sheet or a smaller plate. **+1 call.** A hazard triangle is
+placed AT its hazard and a mandatory blue disc is a ROOM rule, which is what answers the storage
+majority — 15 of 30 nearest fittings are a bookcase, a shelf or a cabinet, and no hazard pictogram
+names one. Shipped spread: biohazard 5, laser 3, no food 3, eye protection 4, radiation 3, electrical
+7, corrosive 0, gloves 5 — **15 on each sheet**, and the corrosive 0 is right, `FIT_DRUM_STEEL` being
+0 on this seed.
+
+Art: sheet B one 2x2 1k gen reusing sheet A's BODY paragraph verbatim, which landed it on A's value
+with nothing else holding it there (built cells 0.1258/0.1303/0.1277/0.1230 against A's
+0.1278/0.1307). Sheet A's no-entry plate was replaced — **a no-entry sign is a DOOR sign, nothing in
+a room can trigger it, and the hash was dealing it 11 times in 30** — by a solo 1024 drop pasted into
+the quarter rather than an `edit_image` over the sheet, which would redraw all four cells when three
+were right. **The solo plate came back at 0.2123 linear against its neighbours' 0.1220 and 0.1243**:
+a prohibition disc is mostly pale off-white field, so the value clause that holds for a triangle does
+not hold for a disc. `lift` cannot answer that, being per LABEL and dragging all four cells, so a
+gamma of **1.450** was fitted and applied to that one cell at composite time — 0.1220. All eight
+plates now sit 0.75x to 0.95x of `wall-room` 0.1375.
+
+Cost **+2 calls, +60 tris, +0 programs** for the family (was +1). `currentProgram` **64** for BOTH
+sheets, the same `visMasksindoor` permutation as the walls. **The A/B needs `StreetPerf.lastCalls`
+and not `renderer.info` read live** — `info` is reset per render and a CDP eval lands after a 1-call
+UI pass, which reads back `calls 1 / tris 1` however busy the scene is; that cost an entire
+measurement round before the HUD's own `167dc` gave it away. Control in the same pose: `wall-points`
++2 calls / +44 tris for its known 11 quads, i.e. the same doubling, so per pass this is +2 and +60.
+
+**The corner test had to be re-run and it is the placement that moved, not the geometry.** The run's
+middle cell made a corner crossing impossible on its own; a content cell beside one does not. XZ pair
+intersection over BOTH meshes: **0 crossings, 0 touching of 30**. Controls unmoved: `placards` 30,
+`points` 11, `zones` 17, `marks` 275, `exits` 16, `boards` 2, `grime` 528, `cabinets` 30,
+`shadows` 401. Warm still 84 cached.
+
+## Two aisle-marking defects a cell bin could not see (2026-09-08)
+
+Both reported by eye — *"yellow lines go under tables"* and *"large break in the second yellow
+line"* — in rooms whose numbers had all been green since the aisle shipped.
+
+**A LINE WAS BEING PAINTED UNDER A BENCH WORKTOP.** `MARK_ROOM_MAX` moves BOTH lines inward after
+`MARK_WALL_CLEAR` 1.7 and `MARK_FURN_CLEAR` 1.2 have been applied, and re-checks no clearance at all.
+A worktop overhangs its cell by `BENCH_LIP` **0.2** on every open side and stands at `BENCH_H` 2.0;
+the line is `LINE_W` **0.18**. So anything within **0.29** of a boundary a bench is across is under
+the top. On the 6x8 lab the cap's arithmetic landed both lines EXACTLY on a cell boundary and the
+whole line width sat inside the lip: 6 of 13 quads touched a top and **two were 100% hidden** — both
+of them the one-cell walkway gap the generator cuts through a bench run at each end of the room.
+`MARK_LIP_CLEAR` = `BENCH_LIP + LINE_W / 2` now holds each line that far inside its own cell. Applied
+after the cap, per LINE and not per cell (a line has one position for its whole run), so it costs at
+most 0.29 a side and `MARK_LANE_MIN` is deliberately not re-tested — a lane that measured as traffic
+before the cap is still traffic 0.58 narrower. That lab: 6 touching → **2**, 100% hidden → **0**.
+
+**NEITHER CELL TEST COULD SEE IT, AND THAT IS THE PART WORTH KEEPING.** `strikes` bins the line to
+`int(mid + 0.5 + s * off / CELL)` and `buried.mjs` bins the quad's CENTRE — on a boundary both round
+to the free side while half the paint lies in the bench's. `buried` read **0 of 275** through every
+build that had this. A cell bin cannot answer a sub-cell overlap; the check that finds it is a pair
+intersection of aisle quads against BENCH-TOP quads with the lip included, and it has to report
+covered AREA, not covered WIDTH — width alone calls a 0.2 overlap at a quad's tip "100% of the line"
+while it hides 5% of the quad.
+
+**`strikes` ASKED `mid`, AND `mid` IS NOT IN THE LANE.** The two offsets are derived independently and
+are not symmetric, so the room's middle can BE one line's own cell. On the 7x10 lab it was: `mid` was
+line 1's column, an island bench stood on it for three cells, and that removed **line 2** as well —
+though line 2's own column and the whole walkway between the pair were clear floor. With the door
+break beside it that read as a 4-cell hole in a lane you can walk down. It asks the cell one step
+INSIDE the line (`q - s`) now, which is the lane it bounds. Line 2 gets its three cells back and the
+hole is the 1-cell door break, which is the design.
+
+That second fix also DROPS segments, and correctly: a line whose inward cell is a bench is bounding
+furniture and not a lane, which is exactly the line sitting in the one-cell bench-run gap — the other
+half of *"lines go under tables"*, and the half `MARK_LIP_CLEAR` does not reach. Net `marks`
+**275 → 270**.
+
+**AND THE OVERHANG HAS TWO AXES, WHICH THE FIRST PASS AT THIS ONLY HALF ANSWERED.** Holding the line
+off the bench BESIDE it leaves the bench in the next cell ALONG the run lipping 0.2 back over the
+segment's END, so a segment ending flush on the cell boundary still runs its last 0.29 under the top —
+reported straight back as *"line going straight into table"*, and sitting in the measurements as the
+5% figure the first pass had looked at and left. The same knob insets the end, and there it IS per
+cell: `strikes` is asked of the neighbour along the run, because the two cells IT tests are exactly
+the two that can lip over this line. A neighbour dropped by the DOOR break still strikes, so the door
+gap keeps the width it was measured at — there is no worktop at a doorway to clear. Whole compound
+after: **0 of 270 aisle quads touch a bench worktop**, where it was 6 of 13 and 7 of 11 in the two
+rooms reported.
+
+Rooms marked still **9 of 12** (the two 10x3 work aisles and the concrete hangar, as before), `buried`
+**0 of 270**, **0 crossings** against 17 zone quads. Controls unmoved: `zones` 17, `points` 11,
+`placards` 30, `exits` 16, `boards` 2, `grime` 528, `cabinets` 30, `shadows` 401.

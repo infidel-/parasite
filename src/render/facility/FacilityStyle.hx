@@ -376,6 +376,26 @@ class FacilityStyle
   // apart in a 9x10 room, which reads as the room's own edge and not as a route across it. over this,
   // both edges are pulled in equally and the lane stays centred where the clear floor put it
   public static inline var MARK_ROOM_MAX = 8.0;
+  // how far a line's OUTER EDGE must stay from the boundary of its own cell, and it exists because
+  // MARK_ROOM_MAX above moves a line AFTER the two clearances have been applied and re-checks
+  // nothing. A bench worktop OVERHANGS its cell by BENCH_LIP 0.2 on every open side
+  // (render.facility.FacilityTables.unit) and stands at BENCH_H 2.0, so a line closer than
+  // BENCH_LIP + RenderConfig.LINE_W / 2 to a boundary a bench cell is on the far side of is drawn
+  // UNDER the worktop. Measured on a 6x8 lab where the cap's arithmetic landed both lines exactly ON
+  // a cell boundary: 6 of its 13 quads touched a top and TWO WERE 100% HIDDEN, both of them the
+  // one-cell walkway gap the generator cuts through a bench run at each end of the room.
+  //
+  // NOT a per-cell test where it moves the LINE, because a line has ONE position for its whole run
+  // and the cell on its outward hand changes along it — so it is paid everywhere, and it costs at
+  // most 0.29 of lane width on each side. The cell test in `strikes` cannot see this and is not the
+  // place to fix it: it bins the line to `int(mid + 0.5 + s * off / CELL)`, which on a boundary
+  // rounds to the free side while half the paint lies in the bench's.
+  //
+  // THE SAME FIGURE INSETS A SEGMENT'S END, and there it IS per cell: a bench in the next cell ALONG
+  // the run lips back over this one, so a segment ending flush on the cell boundary runs its last
+  // 0.29 under the top and reads as the line going INTO the table rather than up to it. Side and end
+  // are the same overhang seen on the two axes and they take the same clearance
+  public static inline var MARK_LIP_CLEAR = BENCH_LIP + RenderConfig.LINE_W / 2;
 
   // ---- the keep-clear zones (render.facility.FacilityPaint.keepClear) ---------------------------
 
@@ -977,11 +997,21 @@ class FacilityStyle
   // A TEXTURE AND NOT A PROP, the same reading of the silhouette-vs-surface guard BOARD_TEX takes: a
   // sign plate's outline is a rectangle, and everything that says "hazard placard" rather than "grey
   // square" is a pictogram on its face
+  // TWO SHEETS AND NOT ONE, which costs the second mesh a draw call and is what eight pictograms are
+  // worth: the signs are picked off what stands under them (see FacilityPlacard.classOf) and four
+  // cells cannot name a bench, a server rack, a drum and a shelf of boxes between them. A 2x2 is also
+  // the largest cell a 1k drop can hold at the 256 the built sheet keeps, so the eighth sign is a
+  // second sheet or it is a smaller plate. Sheet B carries the rarer half and a compound with no
+  // racks and no drums simply emits an empty buffer, which FacilityGeom.add drops
   public static inline var PLACARD_TEX = 'textures/facility/placards.png';
-  // how many cells the atlas holds. it is a 2x2 and both of its divisions landed dead on 512, so a
+  public static inline var PLACARD_TEX2 = 'textures/facility/placards2.png';
+  // how many cells ONE sheet holds. each is a 2x2 and both of its divisions landed dead on 512, so a
   // cell is an exact quarter and its u/v are DERIVED from the index in FacilityPlacard.pane rather
   // than named one by one the way POINT_U and EXIT_V are — a regular grid does not need eight
-  // constants, and eight would be eight chances to name a corner twice
+  // constants, and eight would be eight chances to name a corner twice.
+  //
+  // a sign index runs 0..7 across BOTH sheets, so the sheet is index / PLACARD_CELLS and the cell in
+  // it is index % PLACARD_CELLS
   public static inline var PLACARD_CELLS = 4;
   // the quad, world units. THE ASPECT IS THE ART'S and only the scale is free, the lock POINT_W and
   // DECO_BOOKCASE_W both carry — but here the cells are SQUARE, so the height simply follows. at the
@@ -1005,7 +1035,8 @@ class FacilityStyle
   public static inline var PLACARD_Y = 4.75;
   // the shortest run of unbroken masonry that takes a sign, in cells. a run is ended by a DOORWAY —
   // a door cell is not isSolidWall — so this is what stops a 2-cell stub between two openings from
-  // carrying one, and it is the whole density rule: one sign per run, on the run's middle cell
+  // carrying one, and it is the whole density rule: ONE sign per run, on whichever of the run's cells
+  // has something worth naming under it and falling back to the middle when none has
   public static inline var PLACARD_RUN_MIN = 3;
 
   // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
