@@ -322,6 +322,35 @@ class Const
       return false;
     }
 
+  // the bench decorations the 3D view lays FLAT on the worktop instead of standing up as a
+  // billboard. every icon in this family is painted in elevation, which is why objects.Decoration
+  // stands them all up — but three of them are drawn looking DOWN at a thing lying on a bench, and
+  // stood upright they read as a pair of gloves balanced on one cuff.
+  //
+  // PER FRAME AND NOT PER ROW, which is the whole reason this is its own table: the gloves sit at
+  // 9/4 and 10/4 among eleven upright flasks and microscopes each, so the row-keyed shape
+  // isTableDeco takes cannot express it. Const.fittingOf's shape instead — and, like that one, read
+  // off this table alone so the two can never drift apart
+  public static var FACILITY_FLAT_DECO: Array<_FittingFrame> = [
+    // the yellow pair
+    { row: 9, col: 4 },
+    // and the blue
+    { row: 10, col: 4 },
+    // the calculator, which is drawn face-up already
+    { row: 9, col: 9 },
+  ];
+
+// does this atlas frame draw a bench decoration that LIES DOWN? STATELESS, the shape fittingOf and
+// isTableDeco both take: the answer is a property of the frame and of nothing else
+  public static function isFlatDeco(row: Int, col: Int): Bool
+    {
+      for (f in FACILITY_FLAT_DECO)
+        if (f.row == row &&
+            f.col == col)
+          return true;
+      return false;
+    }
+
   // row 15 - doors
   public static var ROW_DOORS = 15;
   public static var FRAME_DOOR_CABINET = 0;

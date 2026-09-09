@@ -1420,3 +1420,146 @@ rooms reported.
 Rooms marked still **9 of 12** (the two 10x3 work aisles and the concrete hangar, as before), `buried`
 **0 of 270**, **0 crossings** against 17 zone quads. Controls unmoved: `zones` 17, `points` 11,
 `placards` 30, `exits` 16, `boards` 2, `grime` 528, `cabinets` 30, `shadows` 401.
+
+## Every sprite in the game had a black outline, and the atlas was innocent (2026-09-09)
+
+Reported against the laboratory bench decorations: *"all objects have something black on the edges
+after transparency"*, plus too small, too bright, no contact shadow, and a few that should lie flat.
+
+**THE ART WAS RULED OUT FIRST AND THAT IS WHAT MADE THE REST FINDABLE.** Over all 43 cells of
+`CHEM_LABS_DECO_TABLE`, the silhouette ring measures luminance **181.8** against an interior core of
+**183.9** — 2/255, i.e. no authored outline anywhere. What the atlas does carry is mean RGB **(3,3,3)
+under every alpha-0 texel**, and the sprite pool was uploading its crops NON-premultiplied with
+mipmaps on. Read live off the running game: `premultiplyAlpha:false`, `generateMipmaps:true`,
+`minFilter:LinearMipmapLinear`, `anisotropy:1`. Eight bench quads on screen were drawing a 64x64
+texture into **36x37 device px = 1.78 texels/pixel**, so the tap lands on **mip 1** — where the whole
+silhouette has already been averaged against that black.
+
+**THE OBVIOUS FIX IS IMPOSSIBLE.** Bleeding edge RGB outward into the transparent texels cannot work
+through a `CanvasTexture`: a Canvas2D backing store is premultiplied, so RGB written under alpha 0 is
+destroyed before upload. `patternWhiten` has been writing 255s there since it was authored and not one
+has ever survived. So the filtering moves into premultiplied space instead — the space it is correct
+in — and is undone per fragment.
+
+**AND `SRGBColorSpace` + `premultiplyAlpha` DO NOT COMPOSE. This shipped wrong for one build.**
+`UNPACK_PREMULTIPLY_ALPHA_WEBGL` multiplies the sRGB-ENCODED bytes (three `WebGLTextures:883`) while
+`SRGBColorSpace` allocates `SRGB8_ALPHA8` (same file, `:214`), so the GPU applies the EOTF *after* the
+multiply and *before* filtering: the sampler returns `c_linear * a^2.4` and a divide by `a` leaves
+`c_linear * a^1.4`. Simulated through this file's own crop, mip-1 silhouette, alpha-weighted mean back
+in sRGB — authored **175.8**, the bug being fixed **161.7**, the sRGB-decoded divide **140.8**. It was
+1.5x DARKER than the defect it replaced, and it would have passed any test built from hard 0/255
+alpha: only 1,510 of 68,267 silhouette texels are hard, and **97.8% of the band is antialiased**.
+`NoColorSpace` stores RGBA8, nothing is decoded before filtering, the divide is an exact inverse, and
+the shader runs `sRGBTransferEOTF` once at the end: **176.0**.
+
+Order in the patch is therefore the whole content of it — **divide, decode, then saturate**: Rec. 709
+weights are a linear-light instrument and cannot move above the EOTF. The divide is on the sampled
+texel and never on `diffuseColor`, which already carries `material.opacity` — this pool fades quads
+constantly and dividing there makes a fading sprite BRIGHTEN. `material.premultipliedAlpha` stays
+false; three's `<premultiplied_alpha_fragment>` would multiply by alpha a second time.
+
+**THE INVARIANT IS ENFORCED AT THE BIND, NOT AT CREATION**, and that is the other trap. `mkTex` covers
+this file's six crop builders and structurally cannot reach a texture it did not make —
+`render.decals.WallHole` hands `paintWall` four loader PNGs of its own. Divided by an alpha they were
+never multiplied by, an alpha-0.1 texel of `bullet-hole-1` renders at **229** of an authored 79 and
+anything under 0.05 clips to white and feeds the bloom pass. `slot()` now forces both flags on
+whatever it is handed; `loadHoleTex` also sets them at the source, since those files carry RGB 8-23
+under alpha 0 and had the original bleed on their own account. `atlasTex` is the deliberate exception
+and is commented as one: it feeds the BATCHED decal mesh, which has neither half of this.
+
+The other four, all on the bench family: `DECO_TABLE_SCALE` **0.54 -> 0.81** (a knowing reversal — the
+tallest icon goes 1.215 -> 1.82 units, a 0.91 m microscope on a 1 m bench, where that constant's own
+header calls 1.08 m the reported bug; texel density 39.5 -> 26.3 per world unit); `DECO_TABLE_SAT`
+**0.5**, carried as a shader uniform on the quad's own material rather than a second cached crop,
+because the divide has the texel open anyway; a ROUND contact pool on the worktop
+(`FacilityDetail.deck`, the shelf-plate quad with `makeRectGlowGradient`'s corner radius set equal to
+its half-extent, which collapses the SDF to a circle) — **+1 draw call, +0 programs**; and
+`Const.FACILITY_FLAT_DECO`, a per-FRAME table of three, because the gloves sit among eleven upright
+flasks on their own rows and a per-ROW table cannot say it.
+
+Live after: `premultiplyAlpha:true` / `NoColorSpace` / key `indoorunpremul` on the pool, **96
+programs** (no split), pool mesh **97 quads all at y 2.01** at opacity 0.26 — 97 being exactly the
+area's 103 table decorations minus the 6 flat ones — and the halo mesh unmoved at 56 quads / 0.32.
+
+## The bench pool was under the cell, and the object is not over the cell (2026-09-09)
+
+Reported one build later: *"objs are moved from center by logic but the contact shadow doesn't"*, and
+*"still these black things on both sides"*. **They are one defect.** The A/B settles it: hiding the
+pool mesh takes the black away completely, and the sprite edge underneath is clean.
+
+**THE SPRITE IS NOT WHERE ITS ANCHOR IS.** `Sprites.paint` leans every upright quad back by `TILT`
+0.6 rad about world X, and the rotation is about the quad's **centre**, so everything below the
+centre swings toward +z. Measured live on all 8 bench quads in view: the quad's bottom edge sits
+**+0.69** world units in front of its own anchor, and `poolOffsetWorldXZ` was `[0,0]` — the pool was
+exactly on the anchor and exactly not under the object. Against a pool whose falloff reached 0.71,
+that is a full radius of displacement, so essentially all of the shade lay outside the thing casting
+it. The diff crops show what is left as an L — a band down one flank and along the bottom, which is
+the "both sides".
+
+**AND IT IS NOT ONE NUMBER, WHICH IS WHY IT IS NOT A CONSTANT.** The drop below the quad centre is
+`SIZE * DECO_TABLE_SCALE * (0.5 - by)`, and `by` — the icon's own alpha bottom margin — runs 0.125 to
+0.391 over the 43 frames. So `dz` spans **0.150 to 0.514**, mean 0.372: a single offset would be 0.25
+out at the extremes. It is read off `Sprites.texContent`'s content box instead, per frame.
+
+**THE RADIUS CAME OFF THE SAME BOX FOR FREE, and it needed to.** `TABLE_POOL_R` shipped as a flat
+0.55 → a 0.71 falloff, against a MEDIAN icon half-width of 0.72: as wide as the object it was under,
+so it showed at the flanks no matter where it sat, and it put one puddle under both a bare retort
+stand (0.76 wide) and a distillation rig (1.82 — a 2.4x range). Now `r = span * fw / 2 * FOOT` with
+`TABLE_POOL_FOOT` **0.55**, so the falloff lands at **0.71 of the icon's own half-width on every one
+of the 43** — constant by construction, because both terms scale with `fw`. Radii now 0.21-0.50.
+
+**THE LOOKUP IS A FUNCTION PARAMETER AND NOT A REACH**, and the first cut of it reached anyway and
+died. `FacilityModel` is a grid deriver that knows nothing about the renderer and should keep not
+knowing, so `render.View.showFacility` passes the lookup in and `FacilityDeco.poolOf` — beside
+`spriteScale`/`spriteSat`/`spriteFlat`, because this too is a property of the sprite — turns a box
+into a `TableDeco`. What it passes is the part that had to be learned twice: **the sprite pool does
+not exist yet.** `View` creates the actor layer inside `buildFrom`, which runs ON the model this call
+returns, so `actors` is null on EVERY facility entry — not just the first. Handing over
+`actors.iconBox` compiled clean, then threw `Cannot read properties of null` and the area built and
+never presented a frame. The box comes off the decoded atlas IMAGE instead, through a new static
+`Sprites.cellBox`, which also collapsed the alpha scan that `texContent` and `contentRect` had been
+carrying a byte-identical copy of each into one `boxOf`. Omitted, or before that atlas decodes, both
+numbers fall back to `TABLE_POOL_R` / `TABLE_POOL_DZ` — the median and the mean of the measured 43.
+
+Live after: 97 pool quads, `dz` **0.150-0.515 over 15 distinct values** where it was a flat 0, radius
+**0.23-0.501 over 17** where it was a flat 0.55, opacity and draw calls unmoved.
+
+**NOT FIXED, AND DELIBERATELY.** `drawActor`'s `groundAnchor` drop is computed for an UPRIGHT quad,
+so the same tilt also lifts an icon's base **0.05-0.16** off the worktop. Correcting it would move
+every ground-anchored object icon in the game — pickups, hatches, vents, every floor decoration — and
+that is a change to how the whole game looks, not to this shadow. The same anchor-vs-drawn-pose gap
+applies to every `ContactMask.prop` footprint and to `CastShadows.project`; the bench pool is simply
+the first place anything was drawn at the true position for it to be measured against.
+
+## The other axis: the art is not centred in its cell either (2026-09-09)
+
+Reported a third time — *"black splotches on both sides are still there"* — after `dz` had been
+measured correct to three decimals. It was: the pool's z was **exact**, and the black was still there,
+because the offset that was left is on **x**, and `dz` can never touch x.
+
+**THE QUAD IS CENTRED ON THE ANCHOR; THE ART IS NOT CENTRED ON THE QUAD.** The 43 frames were drawn
+to a sheet, not to a plumb line. Read live off each drawn crop's own alpha box against its anchor:
+flask **-0.494**, microscope **+0.152**, machine **-0.114** world units. That is why it was "both
+sides" and never one — the sign is per frame. At a 0.71 falloff against the flask's 0.835-wide icon,
+a 0.49 displacement puts the entire pool clear of the object, which is a detached blob and reads as
+nothing to do with a shadow.
+
+**IT IS THE SAME BOX AGAIN AND COSTS ONE LINE**: `dx = span * ((b.x + b.w / 2) / t - 0.5)`, no tilt
+term, because the lean is about world X and moves nothing sideways. `TableDeco` carries three numbers
+now instead of two and `FacilityTables` adds it to `cx`.
+
+**AND THE WIDTH WAS ONLY EVER JUDGED BESIDE THE OBJECT.** `TABLE_POOL_FOOT` **0.55 -> 0.66**: with
+`POOL_GROW` and the ramp's own 0.30 + 0.16 the visible falloff is `FOOT * 1.288` of the icon's content
+width, so 0.55 was a puddle the object stood *over* at 0.71 of its width. 0.85 is one it stands in.
+Fallback `TABLE_POOL_R` follows the same median icon, 0.40 -> 0.475.
+
+Live after, all 8 bench quads in view: `errX` and `errZ` **0.000 on every one**, visible diameter
+**0.85 x content width on every one** — both constant by construction, since every term scales with
+the same box. 178 draw calls and **96 programs**, unmoved. The one sprite with no pool is the flat
+glove at (-74,-30), which is correct: `FACILITY_FLAT_DECO` frames are excluded by `findDeco`.
+
+**THE LESSON IS THE MEASUREMENT, NOT THE FIX.** Two rounds were spent proving `dz` right while the
+error sat on the other axis, because the check compared the pool to the ANCHOR. A sprite's anchor is
+not where the sprite is drawn on either axis, and the only honest check reconstructs the drawn content
+box through the mesh's own world matrix and compares against that.
+

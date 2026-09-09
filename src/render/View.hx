@@ -432,8 +432,20 @@ class View {
       if ((running || warming) && shownKey == key)
         return;
       buildFrom(new render.facility.FacilityArea(game,
-        render.facility.FacilityModel.fromArea(area)), key);
+        render.facility.FacilityModel.fromArea(area, iconBox)), key);
     }
+
+// the opaque box of one entities64 frame, which the facility model places a bench decoration's
+// contact pool off (see render.facility.FacilityModel.fromArea). null until the atlas decodes, and
+// then those pools take their fallbacks.
+//
+// OFF THE IMAGE AND NOT OFF THE SPRITE POOL, which is the whole reason it lives here rather than on
+// render.Actors beside the other atlas lookups: `actors` is created inside `buildFrom`, from the
+// very model this feeds, so it is null on every call. Asking it there was a null dereference that
+// killed every facility entry — the area built, then never presented a frame
+  function iconBox(row:Int, col:Int):render.particles.AtlasBox
+    return render.particles.Sprites.cellBox(game.scene.images.getImage('entities'),
+      Const.TILE_SIZE_CLEAN, col, row);
 
 // show the 3D open wilderness for an area, built from its saved tile grid for the same reason the
 // tunnels are: game.AreaGenerator.generateWilderness already wrote where every tree and rock stands,

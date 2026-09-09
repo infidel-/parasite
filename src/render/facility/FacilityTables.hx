@@ -48,7 +48,12 @@ typedef CaseRun = {
 // shadow and the thing casting it, which reads as a stain on the wall rather than as contact. A
 // contact shadow is for something TOUCHING. Sliding the block onto the wall to earn one was built and
 // reverted (see docs/3d-changes.md); the fittings and the corridor casework keep theirs because both
-// are built off the wall FACE and really do touch it
+// are built off the wall FACE and really do touch it.
+//
+// WHAT THE WORKTOP DOES GET is the shadow of the things standing ON it, which is the opposite case
+// and the one the rule above argues FOR: a flask really does touch the resin it stands on. Those are
+// 2D sprites and not geometry, so nothing here knows their size — see `build` and FacilityStyle
+// .TABLE_POOL_R — but their CELLS are in the model, and a bench cell is already being walked
 class FacilityTables
 {
   static inline var CELL = CityConfig.CELL;
@@ -96,6 +101,38 @@ class FacilityTables
               FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
             FacilityGeom.cap(top, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
               FacilityStyle.BENCH_TOP_TILE);
+            // and the round pool of shade under whatever the generator stood on this worktop —
+            // FacilityDetail's own flat quad, the one it already lays under a box on a shelf plate,
+            // because the compound's floor field cannot reach a surface two units up.
+            //
+            // `dz` IS NOT A NUDGE. The thing standing here is a BILLBOARD, and Sprites leans every
+            // upright quad back by TILT about its own centre, so the icon's drawn base lands well in
+            // FRONT of the cell it belongs to — up to half a unit. A pool on the cell centre is a
+            // pool the object is standing clear of, and that is how the first build was reported.
+            // `dx` is the other half of the same story and is NOT the tilt: the art inside the cell
+            // is not centred on it, so the icon is drawn up to half a unit off its own anchor.
+            // All three come off the icon's own alpha box, per frame, which is why none of them is
+            // a number this file owns — see FacilityModel.TableDeco.
+            //
+            // the PLATE is the GROWN rect and not the plain cell: the lip is real worktop, so a
+            // decoration near the edge is allowed to cast onto it, and `pooled`'s per-side clamp is
+            // what stops the gradient hanging off the front
+            var td = m.tableDeco[row][col];
+            if (td != null)
+              FacilityDetail.deck({
+                cx: (col + 0.5) * CELL - half + td.dx,
+                cz: (row + 0.5) * CELL - half + td.dz,
+                hw: td.r,
+                hd: td.r,
+                yaw: 0.0,
+                y: FacilityStyle.BENCH_H,
+                plate: {
+                  x0: ox0,
+                  x1: ox1,
+                  z0: oz0,
+                  z1: oz1,
+                },
+              });
             for (dir in 0...4)
               {
                 if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]))

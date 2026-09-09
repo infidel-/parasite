@@ -713,23 +713,33 @@ class FacilityStyle
 
   // how big a TABLE decoration's sprite draws, as a fraction of the full billboard.
   //
-  // it is a MEASUREMENT and not a taste call. Those 43 icons keep their sprite — flasks, retort
-  // stands and microscopes are exactly what a mesh generator is for and exactly what an emitted box
-  // cannot state — but they were drawing at full size, and full size here is Sprites.SIZE 3.0 over
-  // the icon's own alpha bbox: 1.03 to 2.25 world units, standing on a BENCH_H 2.0 worktop. A
-  // microscope was 1.08 m tall on a 1 m bench and reached two thirds of the 3 m wall.
+  // A DELIBERATE REVERSAL, ASKED FOR IN GAME, and the number it reverses is worth keeping because
+  // it was a measurement. Those 43 icons keep their sprite — flasks, retort stands and microscopes
+  // are exactly what a mesh generator is for and exactly what an emitted box cannot state — and they
+  // first shipped at FULL size, which is Sprites.SIZE 3.0 over the icon's own alpha bbox: 1.03 to
+  // 2.25 world units on a BENCH_H 2.0 worktop, a 1.08 m microscope on a 1 m bench reaching two
+  // thirds of the 3 m wall. That was cut to 0.54 — 1.5x true size, the emphasis every icon in this
+  // game carries — and reported back as too small.
   //
-  // AND IT IS ALSO THE RESOLUTION FIX, which is why the family needs no migration: 64 px over 3.0
-  // units is 21.3 texels per world unit, the number the floor drain's own header records as the blur
-  // that was reported. At this scale the same 64 px covers 1.62 units — 40 per unit, against the
-  // floor tile's 73.
+  // so this is 1.5x again, i.e. 2.25x true size, and it costs what the first cut bought:
+  //   the tallest icon goes 1.215 -> 1.82 units, a 0.91 m microscope on a 1 m bench — 80% of the
+  //     way back to the 1.08 m that was the reported bug, which is the trade being made knowingly
+  //   texel density goes 39.5 -> 26.3 per world unit against the floor tile's 73. The floor drain's
+  //     header records 21.3 as the blur that was reported, so this lands between the two
+  // one thing IMPROVES: 64 px over a 2.43-unit quad is ~54 device px at the resting camera, 1.19
+  // texels per pixel, so these stop leaning on mip 1 — which is where render.particles.Sprites
+  // .unpremul measured the black outline coming from
+  public static inline var DECO_TABLE_SCALE = 0.81;
+
+  // and how much of its own chroma one keeps. the art is flat-design vector work — measured over the
+  // 43 cells, saturation 0.06 to 0.54 and value 0.56 to 0.92 — which is a cheerful icon sheet in a
+  // dark laboratory, and it was reported as exactly that.
   //
-  // DELIBERATELY LARGER THAN LIFE, and that is the reason it is not the 0.36 the measurement asks
-  // for. True size puts the biggest icon at 0.81 units — 40 cm, correct for a distillation rig and
-  // a speck at the resting camera, where the whole point of bench clutter is that the room reads as
-  // WORKED IN from across it. 1.5x true size is the emphasis every icon in this game already
-  // carries; the bug was never that they were emphasised, it was that they were emphasised by 2.8x
-  public static inline var DECO_TABLE_SCALE = 0.54;
+  // A SHADER UNIFORM AND NOT A SECOND CACHED CROP. render.particles.Sprites already opens the texel
+  // to undo its premultiply, so the desaturation is two more instructions there against a second
+  // entry in every sprite cache — see Sprites.unpremul. Half is the point of the number: a blue
+  // flask still reads blue, it just stops being the loudest thing in the room
+  public static inline var DECO_TABLE_SAT = 0.5;
 
   // the shelving's composite: two alpha-cut end frames, a bare quad per shelf and the boxes on
   // them. NO BACK and NO TOP — an open steel unit has neither, and a lid is the one thing that
@@ -1158,6 +1168,42 @@ class FacilityStyle
   // hold the core on the edge AND narrow the ring, and it would also be a second alphaMap, a second
   // material and the draw call this whole family exists to avoid
   public static inline var POOL_GROW = 0.4;
+  // and the same quad again under a decoration standing on a WORKTOP, which is the one member of
+  // this family whose footprint nothing can look up from the geometry — a bench decoration is a 2D
+  // sprite painted by render.Actors, not something a builder emitted.
+  //
+  // IT IS READ OFF THE ICON'S OWN ALPHA BOX, per frame, and the numbers below are only what a pool
+  // falls back to when that box is not available (the atlas still decoding). The lookup goes
+  // FacilityModel.fromArea -> FacilityDeco.poolOf; see FacilityModel.TableDeco.
+  //
+  // THIS SHIPPED AS A SINGLE CONSTANT 0.55 AND WAS REPORTED BACK, which is the note worth keeping:
+  // over the 43 frames the content width spans 0.76 to 1.82 world units, a 2.4x range, so one
+  // radius put the same puddle under a bare retort stand and under a distillation rig — and at 0.55
+  // it reached 0.71, against a median icon half-width of 0.72. It was as wide as the object it was
+  // meant to sit under, so it showed at both flanks whatever else was wrong.
+  //
+  // the fallback is the MEDIAN icon's own answer rather than a round number: 1.44 / 2 * FOOT
+  public static inline var TABLE_POOL_R = 0.475;
+  // how much of an icon's opaque WIDTH actually touches the resin. a silhouette is wider than a
+  // footprint — a microscope's base is narrower than its arm, a retort stand is mostly air — so this
+  // is a fraction of the width and never the whole of it. With POOL_GROW and the ramp's own
+  // 0.30 + 0.16, the visible falloff comes out at FOOT * 1.288 of the icon's content width.
+  //
+  // 0.55 shipped first and read as too small once the pool was finally under the object rather than
+  // beside it: 0.71 of the icon is a puddle the object stands over, not one it stands in
+  public static inline var TABLE_POOL_FOOT = 0.66;
+  // and where the pool sits, when the icon's box is not there to say. world +z from the cell centre.
+  //
+  // IT IS NOT ZERO, AND THAT IS THE BUG THIS NUMBER EXISTS FOR. render.particles.Sprites leans every
+  // upright quad back by TILT about world X, about the quad's CENTRE, so an icon's drawn base ends
+  // up in FRONT of the cell it stands on — measured in game at 0.69 for a quad's bottom edge and
+  // 0.150 to 0.514 for the 43 icons' actual content bottoms. The pool was at the cell centre and the
+  // object was drawn ahead of it, which is how it was reported. This is the mean of those 43
+  public static inline var TABLE_POOL_DZ = 0.37;
+  // and its weight. LIGHTER than the wall halo's HALO_ALPHA 0.32, which is a cabinet resting against
+  // masonry over its whole back; this is a flask standing on a worktop, and the same weight read as
+  // a painted blob rather than as contact
+  public static inline var TABLE_POOL_ALPHA = 0.26;
 
   // ---- windows ---------------------------------------------------------------------------------
 

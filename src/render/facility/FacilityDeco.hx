@@ -7,6 +7,8 @@ import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.facility.FacilityModel.TableDeco;
+import render.particles.AtlasBox;
 import render.particles.Sprites;
 import render.world.ContactMask;
 import render.world.MeshBuf.MeshBuf;
@@ -116,12 +118,69 @@ class FacilityDeco
 // atlas ROW and of nothing else, so render.Actors can ask it without a model
   public static function spriteScale(area:game.AreaGame, o:objects.AreaObject):Float
     {
-      if (area == null ||
-          area.typeID != AREA_FACILITY ||
-          o.type != 'decoration' ||
-          !Const.isTableDeco(o.imageRow))
-        return 1.0;
-      return FacilityStyle.DECO_TABLE_SCALE;
+      return onBench(area, o) ? FacilityStyle.DECO_TABLE_SCALE : 1.0;
+    }
+
+// is this object one of the laboratory BENCH decorations — the family that keeps its 2D sprite and
+// stands on a worktop instead of on the floor? the shared gate of the three hooks around it, all of
+// which render.Actors asks per object with no model in hand
+  static inline function onBench(area:game.AreaGame, o:objects.AreaObject):Bool
+    {
+      return area != null &&
+        area.typeID == AREA_FACILITY &&
+        o.type == 'decoration' &&
+        Const.isTableDeco(o.imageRow);
+    }
+
+// how much of its own chroma one of those keeps. the art is a flat-design icon sheet and reads
+// cheerful in a dark laboratory — see FacilityStyle.DECO_TABLE_SAT, where the measurement is.
+//
+// it costs no second texture: render.particles.Sprites carries the knob as a shader uniform on the
+// quad's own material, so this is a number handed to a paint and nothing else
+  public static function spriteSat(area:game.AreaGame, o:objects.AreaObject):Float
+    {
+      return onBench(area, o) ? FacilityStyle.DECO_TABLE_SAT : 1.0;
+    }
+
+// and does it LIE DOWN on the worktop rather than stand up on it? three of the 43 do — see
+// Const.FACILITY_FLAT_DECO, which is a per-FRAME table because the gloves sit among eleven upright
+// flasks on their own rows.
+//
+// nothing else has to be arranged for it: render.world.WorldCtx.floorY already routes through
+// FacilityTables.groundY, so a flat quad on a bench cell lands on BENCH_H and not on the floor
+  public static function spriteFlat(area:game.AreaGame, o:objects.AreaObject):Bool
+    {
+      return onBench(area, o) &&
+        Const.isFlatDeco(o.imageRow, o.imageCol);
+    }
+
+// the contact pool one of them wants, worked out from the icon's own alpha box. `null` in means the
+// atlas has not decoded, and then both numbers fall back to FacilityStyle's measured averages.
+//
+// BOTH ARE PROPERTIES OF THE SPRITE, which is the reason this sits here beside spriteScale rather
+// than at the emitter: render.facility.FacilityTables knows where a bench cell is and nothing at all
+// about how a billboard is posed over one. See FacilityModel.TableDeco for the measurements
+  public static function poolOf(b:AtlasBox):TableDeco
+    {
+      if (b == null)
+        return {
+          dx: 0.0,
+          dz: FacilityStyle.TABLE_POOL_DZ,
+          r: FacilityStyle.TABLE_POOL_R,
+        };
+      // the quad the icon is drawn on leans back by Sprites.TILT about world X, and that rotation is
+      // about its CENTRE — so the content bottom, which is the part that reads as resting on the
+      // worktop, swings toward the camera by its own drop below that centre times sin(TILT).
+      //
+      // sideways there is no rotation to account for and the art's own offset is the whole of it:
+      // the opaque box's centre against the cell's, which is where the object is actually drawn
+      var t = Const.TILE_SIZE_CLEAN;
+      var span = Sprites.SIZE * FacilityStyle.DECO_TABLE_SCALE;
+      return {
+        dx: span * ((b.x + b.w * 0.5) / t - 0.5),
+        dz: span * (0.5 - Sprites.bottomOf(b, t)) * Math.sin(Sprites.TILT),
+        r: span * (b.w / t) * 0.5 * FacilityStyle.TABLE_POOL_FOOT,
+      };
     }
 
 // is this kind drawn as an instanced glb rather than emitted here? the two ROUND ones — a drum and a

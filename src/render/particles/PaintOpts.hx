@@ -23,5 +23,7 @@ typedef PaintOpts = {
   @:optional var faceX:Float;        // horizontal facing mirror in [-1..1], default 1.0
   @:optional var rough:Float;        // material roughness (wet sheen < 1), default 1.0
   @:optional var metal:Float;        // material metalness, default 0
+  @:optional var sat:Float;          // how much of its own chroma the sprite keeps, default 1.0 =
+                                     // untouched (see Sprites.unpremul for where it is applied)
   @:optional var shadow:Bool;        // sample the moon/lamp shadow maps, default true (false = UI overlay)
 }

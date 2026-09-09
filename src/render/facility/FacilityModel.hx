@@ -1,6 +1,7 @@
 package render.facility;
 
 import game.AreaGame;
+import render.particles.AtlasBox;
 
 // what a facility cell IS to the renderer, derived from its Const.TILE_* id. NONE is a cell with no
 // horizontal surface of its own: a wall, or a hangar door strip
@@ -98,6 +99,40 @@ typedef Window = {
   structure:Int,  // index into Facility.structures
 };
 
+// one laboratory-bench decoration, as the contact pool under it needs it — and ALL THREE numbers are
+// properties of the SPRITE and not of the cell, which is the whole reason they are carried here
+// rather than derived at the emitter.
+//
+// a bench decoration is a 2D billboard, and render.particles.Sprites leans every upright quad back
+// by TILT about world X. That rotation is about the quad's CENTRE, so everything below the centre
+// swings toward +z: measured in game, a bench quad's bottom edge sits 0.69 world units in front of
+// its own anchor. The pool sat at the anchor and the object was drawn in front of it, which is
+// exactly how it was reported — "objects are moved from center but the contact shadow doesn't".
+//
+// THE ICON IS NOT CENTRED IN ITS CELL EITHER, and that one was reported twice before it was found.
+// The quad is centred on the object's anchor, but the ART inside it is not centred on the quad: the
+// 43 frames were drawn to a sheet, not to a plumb line, and measured live their opaque centres sit
+// -0.49 to +0.15 world units off the anchor. So a pool on the anchor lands BESIDE the object — to
+// the right of a flask, to the left of a microscope, which is exactly what "black splotches on both
+// sides" was. `dz` alone could never fix it: that offset is on the OTHER axis.
+//
+// AND NO NUMBER HERE IS ONE NUMBER, which is what makes them per cell rather than constants. All
+// three come off the icon's own alpha box (render.particles.Sprites.cellBox), and over the 43 frames
+// that box moves a long way: `dz` spans 0.150 to 0.514 and the content width 0.76 to 1.82 world
+// units — a 2.4x range. A single offset would be 0.25 out on the extremes, and a single radius
+// would put the same puddle under a retort stand and under a distillation rig
+typedef TableDeco = {
+  // how far the icon's opaque CENTRE sits from the cell centre along world x. no tilt term: the
+  // lean is about world X and moves nothing sideways, so this is the art's own offset and nothing else
+  dx:Float,
+  // how far the sprite's drawn base sits from the cell centre toward the camera, world +z.
+  // SIZE * DECO_TABLE_SCALE * (0.5 - by) * sin(TILT), where `by` is the icon's bottom margin
+  dz:Float,
+  // and the pool's half extent, off the icon's own opaque WIDTH — see FacilityStyle.TABLE_POOL_FOOT
+  // for why it is a fraction of that and not the whole of it
+  r:Float,
+};
+
 // everything the 3D facility builder needs, derived from the area's SAVED cell grid the way
 // render.sewer.SewerModel and render.wild.WildModel derive theirs. no seed and nothing new
 // persisted, so this works on every existing save.
@@ -133,6 +168,14 @@ typedef Facility = {
   // the kind is derived from the decoration's ATLAS FRAME (Const.fittingOf) rather than persisted
   // on the object: the frames were already in every save, so this needs no migration
   deco:Array<Array<Int>>,
+  // and which cells stand a decoration on the WORKTOP — the family `deco` above does not hold,
+  // because those keep their 2D sprite and so have no fitting kind at all (Const.fittingOf is -1 for
+  // every one of them). A grid and not a list for the third time: FacilityTables walks the bench
+  // cells it is already emitting and asks this once per cell.
+  //
+  // null is "nothing here". The frames that LIE DOWN are excluded on the way in — a thing already
+  // flat on the worktop is not standing on it
+  tableDeco:Array<Array<TableDeco>>,
   // which cells stand an objects.FloorDrain. the OBJECT and not `Surf.GRATE`: the generator lays a
   // grate TILE on one cell of every chemistry lab and then stands a drain on it only 30% of the
   // time, so the surface says where a drain COULD be and the object says where one is
@@ -148,8 +191,18 @@ class FacilityModel
   // compound's own pavement never reads as one
   static inline var PATH_MAX = 4;
 
-// build the model from an area's saved cells
-  public static function fromArea(area:AreaGame):Facility
+// build the model from an area's saved cells.
+//
+// `icon` looks one entities64 frame's ATLAS CONTENT BOX up, by (row, col), and is the one thing here
+// not derived from the grid — a bench decoration's contact pool is sized and placed off the icon's
+// own opaque box (see TableDeco), which is pixels and not tiles.
+//
+// A FUNCTION AND NOT A REACH, for two reasons. This file has no business knowing about the renderer,
+// and — the one that bites — the SPRITE POOL DOES NOT EXIST YET: render.View builds the actor layer
+// inside `buildFrom`, which runs on the model this call returns. An earlier cut asked `actors` here
+// and every facility entry died on a null. render.View supplies it off the decoded atlas instead.
+// omitted, or before that atlas decodes, every pool falls back to FacilityStyle's own averages
+  public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
     {
       var m = blank(area.width, area.height);
       for (row in 0...m.h)
@@ -163,7 +216,7 @@ class FacilityModel
       findStructures(m);
       findWindows(m);
       findDoors(m, area);
-      findDeco(m, area);
+      findDeco(m, area, icon);
       m.rooms = (area.generatorInfo != null ? area.generatorInfo.rooms : []);
       return m;
     }
@@ -183,6 +236,7 @@ class FacilityModel
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
+        tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],
         drain: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };
@@ -532,7 +586,7 @@ class FacilityModel
 //
 // the kind comes out of the object's atlas frame (Const.fittingOf), which is why this works on a
 // save made long before any of this existed: those decorations already carry the frames
-  static function findDeco(m:Facility, area:AreaGame):Void
+  static function findDeco(m:Facility, area:AreaGame, icon:(Int, Int)->AtlasBox):Void
     {
       for (o in area.getObjects())
         {
@@ -547,6 +601,17 @@ class FacilityModel
             }
           if (o.type != 'decoration')
             continue;
+          // the BENCH family rides this pass rather than earning its own, exactly as the drain
+          // above does: same question, same objects, one walk. it takes the other branch, because a
+          // table decoration has no fitting kind — it keeps its sprite. the ones that LIE DOWN are
+          // left out: nothing stands there to cast a shadow
+          if (Const.isTableDeco(o.imageRow))
+            {
+              if (!Const.isFlatDeco(o.imageRow, o.imageCol))
+                m.tableDeco[o.y][o.x] = FacilityDeco.poolOf(
+                  icon != null ? icon(o.imageRow, o.imageCol) : null);
+              continue;
+            }
           var kind = Const.fittingOf(o.imageRow, o.imageCol);
           if (kind < 0)
             continue;

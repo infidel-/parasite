@@ -17,6 +17,8 @@ import ai.AI;
 typedef ActorOpts = {
   @:optional var baseY:Float;       // lift above the cell ground (the parasite riding a host's head)
   @:optional var baseScale:Float;   // resting billboard scale, default 1
+  @:optional var texSat:Float;      // how much of its own chroma the sprite keeps, default 1 =
+                                    // untouched (see render.facility.FacilityDeco.spriteSat)
   @:optional var flat:Bool;         // lie the sprite flat as a ground decal instead of standing it up
   @:optional var yaw:Float;         // ground rotation of a flat sprite (a corpse's fallen pose)
   @:optional var offx:Float;        // world X offset from the cell centre (a corpse's fallen offset)
@@ -221,7 +223,11 @@ class Actors {
             // hook answers null for every other one, so nothing is allocated in the common case
             var walls = (WorldCtx.wallMounts != null ? WorldCtx.wallMounts(o.x, o.y) : null);
             drawActor(o.entity, vis, dtMs, {
-              flat: o.isGroundDecal(),
+              // a decoration stands up (objects.Decoration.isGroundDecal), with three frames of the
+              // bench family excepted: gloves and a calculator are drawn looking DOWN at a thing
+              // lying on a worktop, and stood upright they read as gloves balanced on one cuff
+              flat: o.isGroundDecal() ||
+                render.facility.FacilityDeco.spriteFlat(game.area, o),
               walls: walls,
               yaw: yaw,
               offx: ox,
@@ -231,6 +237,9 @@ class Actors {
               // size a microscope stood a metre tall on a metre-high worktop. asked per object like
               // the two gates below, and 1.0 for everything else
               baseScale: render.facility.FacilityDeco.spriteScale(game.area, o),
+              // and it keeps half its chroma: the same 43 icons are flat-design vector art and read
+              // cheerful in a dark lab. asked the same way, 1.0 for everything else
+              texSat: render.facility.FacilityDeco.spriteSat(game.area, o),
               mark: o.visible() && uiOn,
               iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null ||
                 render.facility.FacilityDoors.draws(game.area, o) ||
@@ -952,6 +961,7 @@ class Actors {
         emissiveInt: emInt,
         faceX: a.face,
         yaw: yaw,
+        sat: o.texSat,
       });
     }
 

@@ -72,6 +72,11 @@ class FacilityDetail
 
   // and what `pool` has collected, drained by the same call and into the same buffer
   static var lying:Array<FacilityPoolOpts> = [];
+
+  // and what `deck` has collected. same drain, same opts, but its OWN buffer and its own mesh: the
+  // ramp is a circle where the other two take a rounded box, and a ramp is an alphaMap, an alphaMap
+  // is a material and a material is a draw call. see `halos`
+  static var decks:Array<FacilityPoolOpts> = [];
 // every rectangle of masonry in the compound, as the SOLID boxes and the HOLES punched back out of
 // them. ContactMask paints them in that order.
 //
@@ -173,6 +178,12 @@ class FacilityDetail
   public static function pool(o:FacilityPoolOpts):Void
     lying.push(o);
 
+// collect one thing standing on a laboratory WORKTOP — same opts, same drain, its own mesh because
+// its ramp is ROUND. a bench decoration is a flask, a retort stand or a microscope on a bench, and
+// the square-cornered field the other two share reads as a mat under one
+  public static function deck(o:FacilityPoolOpts):Void
+    decks.push(o);
+
 // every collected silhouette as ONE mesh, and the list CLEARED.
 //
 // the clear is load-bearing and not tidiness: render.facility.FacilityWarm runs FacilityDeco.build
@@ -192,6 +203,21 @@ class FacilityDetail
       lying = [];
       add(scene, b, Textures.makeRectGlowGradient(0, FacilityStyle.HALO_CORE / 2,
         FacilityStyle.HALO_FADE), FacilityStyle.HALO_ALPHA);
+      // and the worktop pools, which are the same quad through the same emitter and still cost a
+      // SECOND mesh: `add` is parameterised on the ramp and the weight, and this family differs in
+      // both. Passing HALO_CORE / 2 as the corner radius AS WELL as the half-extent collapses the
+      // rounded-box SDF to a CIRCLE — render.facility.FacilityDeco.lamps' own reading of that
+      // generator, and the reason nothing new had to be drawn for it.
+      //
+      // drained HERE and not from a call of its own, which is the load-bearing part: FacilityWarm
+      // runs the builders over FacilityModel.demo() and `halos` is what CLEARS the collectors, so a
+      // list drained anywhere else would carry demo-model quads into the first real compound
+      var d = MeshBufTools.make();
+      for (o in decks)
+        pooled(d, o);
+      decks = [];
+      add(scene, d, Textures.makeRectGlowGradient(FacilityStyle.HALO_CORE / 2,
+        FacilityStyle.HALO_CORE / 2, FacilityStyle.HALO_FADE), FacilityStyle.TABLE_POOL_ALPHA);
     }
 
 // how far a quad is grown past its object on one axis, world units.

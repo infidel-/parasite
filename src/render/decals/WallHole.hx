@@ -67,13 +67,26 @@ class WallHole {
       return holeTex;
     }
 
-// load a set of clamp-wrapped alpha hole PNGs
+// load a set of clamp-wrapped alpha hole PNGs.
+//
+// these are the ONE family of textures bound to the sprite pool that render.particles.Sprites did
+// not build: its own `mkTex` covers the six crop builders in that file and cannot reach a loader
+// PNG. The pool uploads premultiplied and un-premultiplies per fragment, so a texture arriving
+// without the flag gets divided by an alpha it was never multiplied by — measured on
+// bullet-hole-1, whose edge band is 2.8% of the image at a mean RGB 79: an alpha-0.1 texel renders
+// at 229 and anything under 0.05 clips to white and feeds the bloom pass.
+//
+// they want it on their OWN account as well, which is why this is set at the source rather than
+// left to the guard in Sprites.slot: RGB under alpha 0 in these four files is 8 to 23, so they
+// carry the same black bleed the atlas crops did
   function loadHoleTex(paths:Array<String>):Array<Texture>
     {
       return [for (p in paths)
         {
           var tx = render.Textures.loadTexture(p, 'wall');
           tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
+          tx.premultiplyAlpha = true;
+          tx.colorSpace = THREE.NoColorSpace;
           tx;
         }];
     }
