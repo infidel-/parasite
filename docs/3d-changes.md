@@ -1563,3 +1563,34 @@ error sat on the other axis, because the check compared the pool to the ANCHOR. 
 not where the sprite is drawn on either axis, and the only honest check reconstructs the drawn content
 box through the mesh's own world matrix and compares against that.
 
+## The black on both sides was GTAO, and it was on every sprite in the game (2026-09-09)
+
+The pool was innocent. After `dx` landed the bracket of shade was still there, and the report came
+back with the culprit named: *"it's ambient occlusion — it works weird with ALL sprites in the game,
+ai, floor objects, table objects"*. Correct, and the pass's own AO buffer says exactly why.
+
+**A BILLBOARD IS A SOLID SLAB TO GTAO.** `GTAOPass` renders its own depth + normal prepass of the
+whole scene through ONE opaque `MeshNormalMaterial` override — no map, so **no alpha cut** — which
+puts every sprite quad in as a full rectangle standing on the ground. A thin upright plane occludes
+the floor along both its edges, so what came out around every sprite was a **U**: a band under it and
+a stub at each side, sitting out at the QUAD's corners where there is no art at all. Read straight off
+`gtaoPass.output = OUTPUT.AO` (values 229-244 over a bench, stretched to that range): four brackets
+down the near bench and one around the actor, and putting the sprite pool on a layer the camera
+skipped removed all five and left the bench edge lines untouched.
+
+**HIDING THE LAYER FOR THE PREPASS IS THE WHOLE FIX**, because the prepass is the only thing in the
+pass that reads the scene — the composite is a full-screen quad. `render.View` wraps `gtaoPass.render`
+and sets `actorGroup.visible = false` around the call, restoring what it found. Sprites still RECEIVE
+the world's AO; they stop casting it. `actorGroup` holds 5 point lights and 18 quads and NO props —
+glbs live in the area builders' groups — so nothing that should occlude is in there, and the unlit
+override means the hidden lights cannot matter either.
+
+A/B on the same frame: the difference is that bracket around all six sprites in view and **nothing
+else** — max 18/255, brightest at the two stubs. 175 draw calls, 98 programs; the prepass draws less
+than it did.
+
+**WHAT IS LEFT, AND IS RIGHT.** A sprite is still MULTIPLIED by the AO of whatever geometry the
+prepass saw behind it, so a billboard in front of a wall corner picks that corner's shade up. That is
+the pass working as designed on a flat cutout and reads as the sprite sitting in the room; masking it
+out needs a stencil and buys little.
+

@@ -440,6 +440,10 @@ typedef Intersection = {
   public function setSize(w:Float, h:Float):Void;          // resize the AO/denoise/prepass render targets
   public function updateGtaoMaterial(params:Dynamic):Void; // radius/distanceExponent/thickness/scale/samples
   public function dispose():Void;                          // frees its RTs/noise textures — composer.dispose() does NOT touch passes
+  // the composer's per-frame entry, as a FIELD so it can be wrapped: the prepass renders the whole
+  // scene with one opaque override material and a billboard goes into it as a solid slab. See
+  // render.View, which hides the sprite layer for the duration of this call
+  public var render:Dynamic;
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();

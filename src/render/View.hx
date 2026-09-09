@@ -530,6 +530,27 @@ class View {
     gtaoPass.updateGtaoMaterial(RenderConfig.GTAO);
     gtaoPass.enabled = game.config.vidAO;
     sizeGtao(); // constructed in CSS px above; put its targets on the backbuffer scale
+    // A BILLBOARD IS A SOLID SLAB TO THIS PASS. Its depth+normal prepass draws the whole scene
+    // through ONE opaque override material — no map, so no alpha cut — which puts every sprite
+    // quad in as a full rectangle standing on the ground. A thin upright plane occludes the floor
+    // along both its edges, so every actor, floor object and bench decoration in the game wore a
+    // bracket of shade: a band under it and a stub at each side, out at the quad's corners where
+    // there is no art at all. Measured by hiding the layer for the prepass only — the difference
+    // is that bracket and nothing else.
+    //
+    // the prepass is the only thing in here that reads the scene (the composite is a full-screen
+    // quad), so hiding the sprite layer around the whole call is the whole fix. Sprites still
+    // RECEIVE the world's AO; they stop casting it. Restores whatever it found, since the group's
+    // visibility is not this pass's to own
+    var fx = actorGroup;
+    var gtaoRender = gtaoPass.render;
+    gtaoPass.render = function(renderer, writeBuffer, readBuffer, deltaTime, maskActive)
+      {
+        var was = fx.visible;
+        fx.visible = false;
+        gtaoRender.call(gtaoPass, renderer, writeBuffer, readBuffer, deltaTime, maskActive);
+        fx.visible = was;
+      };
     composer.addPass(gtaoPass);
     // silent-scream shockwave: warps the scene under the wave front; before bloom so the window
     // glow ripples with it. disabled (zero post cost) unless a pulse is live
