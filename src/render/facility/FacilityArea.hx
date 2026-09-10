@@ -65,6 +65,7 @@ class FacilityArea implements Area3D
   var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
   var points = 0;                               // corridor wall fittings: fire points and panels
   var placards = 0;                             // room wall safety signage: one per run of masonry
+  var sinks = 0;                                // bench sinks: one per block with a free edge cell
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -153,6 +154,9 @@ class FacilityArea implements Area3D
       // hatches are merged into the structures' OWN fading roof meshes, so `shells` has to exist
       roof = FacilityRoof.build(scene, model, shells);
       cabinets = FacilityTables.build(scene, model);
+      // and the sinks standing on those worktops, straight after them: the pass reads the same
+      // `table` grid and stands on the BENCH_H the run above just emitted
+      sinks = FacilitySink.build(scene, model);
       // and the room furniture that used to be an upright sprite, straight after the casework it is
       // the same kind of thing as: merged geometry standing against a wall, one mesh per family
       FacilityDeco.build(scene, model);
@@ -369,6 +373,14 @@ class FacilityArea implements Area3D
             // means the Surf.TILE gate or the carries-both-ways test broke rather than that the
             // rooms are bare
             placards: placards,
+            // and how many bench SINKS stand. merged-mesh blindness for the third time, and the
+            // number is read against the bench blocks rather than against the bench CELLS: one per
+            // connected block of table tiles that had a free edge cell, so it is bounded above by the
+            // block count and below by nothing. A 0 in a compound with benches is the block walk or
+            // the edge predicate broken; a number far under the block count is the occupancy gate
+            // eating them, which is a real outcome and not a bug — the generator decorates about 70%
+            // of bench cells and forces one on every room corner
+            sinks: sinks,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's

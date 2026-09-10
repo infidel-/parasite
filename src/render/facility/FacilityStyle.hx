@@ -136,6 +136,12 @@ class FacilityStyle
   // see render.facility.FacilityTables for why the whole run is merged geometry
   public static inline var BENCH_TOP = 'textures/facility/bench-top.png';
   public static inline var BENCH_BODY = 'textures/facility/bench-body.png';
+  // and the sink that terminates a bench run (render.facility.FacilitySink): ONE sheet holding BOTH
+  // of its quads — the basin seen from above on the left, the tap in elevation on the right — for
+  // PLACARD_TEX's reason. Two images would be two materials, two meshes and two draw calls to draw
+  // one fixture, where a u/v sub-rect is four numbers. See the SINK_ block down in the bench section
+  // for the rects, which are the drop's own measured alpha bboxes and not a designed grid
+  public static inline var SINK_TEX = 'textures/facility/sink.png';
   // the three pieces of room furniture that used to be upright 2D sprites (render.facility
   // .FacilityDeco). ONE TEXTURE PER FACE, not per family: the first build dressed a whole unit in
   // one sheet and every face it was wrong on was wrong in the same way — book spines lying across
@@ -529,6 +535,62 @@ class FacilityStyle
   // shadow and its caster, which reads as a stain and not as contact. Sliding the block onto the
   // masonry to earn one was built, measured and reverted; the corridor casework below is the family
   // that DOES touch, and it keeps its halo
+
+  // ---- bench sinks -----------------------------------------------------------------------------
+
+  // the sink standing on the end cell of a bench block (render.facility.FacilitySink). TWO QUADS off
+  // ONE SHEET: a flat basin lying on the worktop and an upright tap at its back edge.
+  //
+  // EVERY RECT HERE IS MEASURED OFF THE DROP AND NOT DESIGNED. The sheet was generated with
+  // background:"transparent", so there is no seam to find — the two objects' own alpha bboxes ARE
+  // the cells, and each is padded outward 2px at the 1024 source so the edge ramp falls inside the
+  // rect and alphaTest trims it instead of clipping the silhouette. Basin 618x449, tap 344x493; the
+  // numbers below are those pixel rects turned into u/v, with y flipped the way three samples it
+  public static inline var SINK_BASIN_U0 = 0.030273;
+  public static inline var SINK_BASIN_U1 = 0.633789;
+  public static inline var SINK_BASIN_V0 = 0.280273;
+  public static inline var SINK_BASIN_V1 = 0.718750;
+  public static inline var SINK_FAUCET_U0 = 0.654297;
+  public static inline var SINK_FAUCET_U1 = 0.990234;
+  public static inline var SINK_FAUCET_V0 = 0.281250;
+  public static inline var SINK_FAUCET_V1 = 0.762695;
+  // the basin's width across the bench, world units — the ONE free number of the pair. 62.5% of a
+  // 4-unit cell, which still leaves 0.74 of worktop clear on each side after the depth lock below,
+  // so the rim never reaches a cell boundary even where the lip was suppressed for a doorway
+  public static inline var SINK_BASIN_W = 2.5;
+  // and its depth, DERIVED: the face maps its crop 0..1, so its aspect is the crop's or the art is
+  // stretched. 449 / 618 of the measured rect, written as the product that produced it so the
+  // coupling cannot be edited away by accident — the lock DECO_SHELF_D and DECO_BOOKCASE_W carry
+  public static inline var SINK_BASIN_D = SINK_BASIN_W * 0.726537;
+  // the tap's drawn height. the second free number, and it is NOT the real-world proportion: this
+  // quad is VERTICAL and unleaned, so at the camera's 51 degrees it foreshortens to cos 51 = 0.63 of
+  // whatever is written here. 1.6 draws as ~1.0 on screen, which sits under the 2.43 a bench sprite
+  // draws (Sprites.SIZE * DECO_TABLE_SCALE) — a tap is shorter than a retort stand.
+  //
+  // AND IT IS INDEPENDENT OF THE BASIN ON PURPOSE. The sheet's own ratio is 0.557 (the tap rect is
+  // 344 of the basin's 618), which the pair matched exactly while SINK_BASIN_W was 2.0; the basin was
+  // then taken up to 2.5 alone, so the tap is now drawn at 0.45 of it rather than 0.56. That is a
+  // bigger BOWL under the same tap, which is what a deeper sink actually is — the two numbers are
+  // free of each other and only their own crop's aspect is locked
+  public static inline var SINK_FAUCET_H = 1.6;
+  // and its width, DERIVED off the same 0..1 lock: 344 / 493 of the measured rect
+  public static inline var SINK_FAUCET_W = SINK_FAUCET_H * 0.697769;
+  // how far the tap's own COLUMN sits left of the centre of its rect, as a fraction of that rect's
+  // width. it is not centred and cannot be: the bbox is the whole silhouette, and the handle sticks
+  // out to the left while the spout arches to the right. Measured off the foot alone (the mounting
+  // base spans x 739..909, centre 824, against a rect centre of 841.5), and the quad slides by this
+  // so the tap STANDS on the cell centre rather than being hung by its bounding box
+  public static inline var SINK_FAUCET_AXIS = 0.05087;
+  // how far the basin floats over the worktop it lies on. it MUST clear zero — the worktop cap sits
+  // at exactly BENCH_H (FacilityTables.build) and a coplanar quad z-fights across its whole
+  // footprint — and it must clear POOL_EPS 0.01 as well, so that where a neighbouring cell's deck
+  // pool reaches this one the opaque basin wins the depth test and the transparent pool is hidden
+  // under it rather than painted over it
+  public static inline var SINK_Y = 0.02;
+  // where the sheet's alpha stops being metal and starts being air. DECO_CUT's own value and for its
+  // reason: an OPAQUE alphaTest draws DoubleSide in one pass and still writes depth, where a
+  // transparent twin would sort against every other see-through thing in the compound for nothing
+  public static inline var SINK_CUT = DECO_CUT;
 
   // ---- corridor casework -----------------------------------------------------------------------
 

@@ -51,6 +51,12 @@ class FacilityWarm
       FacilityLawn.build(sc, model);
       FacilityGeom.build(sc, model);
       FacilityTables.build(sc, model);
+      // and the bench sinks, which are a program permutation NEITHER bench material covers: the sheet
+      // is alpha-cut, and three defines USE_ALPHATEST off `alphaTest > 0`, so a mapped lambert with a
+      // cut is a different program from the two mapped lamberts above it. the demo model's two bench
+      // blocks are undecorated, so both find a free edge cell and this really does emit — which is
+      // the whole reason the pass reads `m.table` and not `m.rooms`, that list being empty here
+      FacilitySink.build(sc, model);
       // the room furniture, which is TWO program permutations the shell above does not cover — the
       // three families share one lambert but the shelving's is DOUBLE_SIDED, which three folds into
       // the program key — plus the rack lights' own patched additive material. the demo model stamps

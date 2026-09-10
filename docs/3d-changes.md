@@ -1594,3 +1594,147 @@ prepass saw behind it, so a billboard in front of a wall corner picks that corne
 the pass working as designed on a flat cutout and reads as the sprite sitting in the room; masking it
 out needs a stencil and buys little.
 
+
+## The benches got their sinks — two quads, one sheet, one draw call (2026-09-09)
+
+A lab bench run terminates in a sink and the compound had none — `facility/bench-top`'s own prompt
+says *"no sink, no taps"* outright. `render.facility.FacilitySink` puts one on the end cell of every
+bench block that has a free one: a **flat basin decal** lying on the worktop and an **upright tap**
+standing at its back edge.
+
+**TWO QUADS, and the triage answers it twice.** A basin at this camera's 51 degrees is not a
+silhouette — it is a shape ON the worktop, a rim and a well and a drain, which is a surface and so a
+texture. A tap is a thin bent OUTLINE with air either side, which is an alpha cut. Neither wants a
+glb, and a box states neither.
+
+**ONE SHEET AND NOT TWO TEXTURES.** `docs/3d-textures.md` warns a packed sheet cannot serve an alpha
+cut, because `background:"transparent"` cuts the whole image — but here BOTH cells want the cut, so
+the objection inverts into the argument for packing. Measured: **+1 draw call, 9 of 9 A/B pairs**, and
+**+0 programs** — and that one is measured rather than reasoned, which it had to be, because the
+obvious "94 before and after" reading was worthless: the first frame already had the sinks in it. The
+honest check is the program itself. The sink's material binds program **71, `usedTimes` 3, and exactly
+ONE program in `renderer.info.programs` carries that cacheKey**, so a mask-patched alpha-cut
+DoubleSide lambert really is the permutation `FacilityDeco.cut`'s shelving frame already warms. 24
+sinks in the compound = 48 quads, **96 triangles**, one mesh.
+
+**AND THE SHEET HAS NO GRID.** Nothing was split at a half or a third: with the background genuinely
+empty (**69.80% of pixels at alpha 0**) each object's own alpha bbox IS its cell, padded outward 2px
+so the edge ramp falls inside the rect and `alphaTest` trims it instead of clipping the silhouette.
+Basin **618x449**, tap **344x493**, and those aspects are what `SINK_BASIN_D` and `SINK_FAUCET_W` are
+locked to. The tap's column is not centred in its own rect — handle out to the left, spout arching
+right — so its FOOT is measured separately (x 739..909, centre 824 against a rect centre of 841.5) and
+`SINK_FAUCET_AXIS` **0.05087** slides the quad so the tap stands on the cell centre rather than being
+hung by its bounding box.
+
+**THE FIRST TAP SHIPPED AS WIRE, which is the entry's real lesson.** Drawn at honest proportions it
+came back **18.4% opaque** over its rect at srgb 105.6, and in game it was a faint scribble on black
+resin — `docs/3d-geometry.md`'s *honest member width reads as WIRE*, the shelving frame's own failure
+at 26%. Re-rolled SOLO at 640x1024 demanding massively thick members and naming srgb 160 outright,
+then PIL-pasted into the sheet with the basin untouched: the placards' route, and for their reason —
+an `edit_image` over the sheet redraws the cell that was already right. Second roll: opaque fraction
+**0.3290**, srgb **156.4**, channel spread **0.6** against the basin's 4.4.
+
+**AND THE FIRST VALUE MEASUREMENT WAS OF THE WORKTOP.** The patch put over the thin tap was mostly
+background, so it read **36.4** and implied a vertical face renders at 0.34x its albedo. Sampling only
+the metal after the re-roll gives **114.4 from a 156.4 source = 0.73x**, next to the basin's 0.64x —
+*a patch over a thin object measures the thing behind it, and the ratio it yields is fiction.*
+Built at the game camera against a bare worktop at srgb 32.9: basin **footprint** (rim plus its
+shaded well, unthresholded) **56.7 = 1.72x**, the rim alone **95.3**, tap metal **116.1 = 3.53x**.
+The tap reading well over the basin is right and not a miss — polished steel standing up into the
+room light against a shaded recess lying flat — and it lands in the same value family as the flask
+and scale sprites sharing its bench.
+
+**RES 256, WHICH IS A DENSITY DECISION AND NOT A MEMORY ONE.** The basin draws `SINK_BASIN_W` 2.5
+world units off a 154-texel crop = **61.6 texels per world unit**, and the bench sprites beside it sit
+at **59** — the number `DECO_TABLE_SCALE` was itself fitted to — so the sink samples at the density of
+the family it shares a worktop with. The tap lands at 76.1. Halving the sheet moved neither value
+(footprint 55.7 → 56.7, tap 114.4 → 116.1 on identically thresholded patches): a box downscale
+averages texels and does not shift their mean. One cost, and it is why the 2px pad is quoted at the
+SOURCE and not at the output — 2px at 1024 is **half a texel at 256**, so the silhouette now reaches
+the outermost texel row of both rects and `alphaTest` trims about one texel off each outer edge. At
+61.6 texels per world unit that is 0.016 world units and invisible; a res below 256 starts eating the
+rim. **`res` is also NOT in `tools/textures.py`'s freshness test** — it tracks `lift` and
+`glass_alpha` but not the output size, so changing it alone reports *up to date* and rebuilds nothing.
+Null the label's `last_converted` to force it.
+
+**NO `lift` ON THE LABEL, and it could not have helped anyway:** `lift` is per LABEL and the two cells
+wanted opposite moves. If the tap ever needs moving alone it is a per-cell gamma at composite time,
+the way `facility/placards`' prohibition disc was fixed.
+
+**THE OCCUPANCY GRID WAS A HOLE.** `FacilityModel.tableDeco` is null for the three frames that LIE
+DOWN (`Const.FACILITY_FLAT_DECO`) — nothing lying flat casts the shadow that grid exists to place —
+so a null check there would have laid a basin through a pair of gloves. `tableTaken` is a second grid
+stamped before the flat test. It matters: the compound has **139 bench cells, 103 of them taken**
+(74%, the generator's 70% roll plus its forced room corners), **46 blocks**, and **24 sinks** — the 22
+blocks with every edge cell occupied correctly get none. 24 over 12 rooms is **2.0 per room**.
+
+**NOT GATED ON `m.rooms`**, which the pass had to be built around rather than into: `FacilityModel
+.demo()` leaves that list empty, so a rooms-gated family emits nothing in the warm scene and compiles
+on the frame the player first walks in. Gated on `m.table` it warms for free — the demo's two bench
+blocks emit **2 sinks**, and between them they exercise both halves of the edge predicate (a run END
+at 1 table neighbour, an island CORNER at 2 on perpendicular hands).
+
+## `alphaToCoverage` REJECTED — it dithers a minified alpha cut instead of smoothing it (2026-09-10)
+
+Started from a correct observation and a correct mechanism, and the fix still lost on measurement.
+Kept because the mechanism is right and the trap is subtle.
+
+**The correct part.** AA here is MSAA on the composer's targets (`SceneSetup.hx:52` builds the
+renderer `antialias: false`; `View.setAA` puts samples on `rt1`/`rt2`). MSAA resolves TRIANGLE
+COVERAGE. An `alphaTest` silhouette is a `discard`, the fragment shader runs once per PIXEL, and one
+discard kills all 8 samples — so a cut edge really is the one edge in the game the AA option does
+nothing for, at any sample count. That much holds.
+
+**Why the fix fails anyway.** three's chunk is
+`diffuseColor.a = smoothstep(alphaTest, alphaTest + fwidth(a), a)`. It assumes the alpha is a smooth
+analytic coverage function, i.e. that its ramp spans about a pixel. The sink's does not: projecting
+the basin quad's real vertices puts it at **2.32 texels per pixel at 27.5 units** and 2.88 at 44
+(256² sheet, trilinear, aniso 4), so the ramp is SUB-PIXEL, `fwidth(a)` is order 1, and it differs
+between adjacent 2x2 derivative quads. The same fully-opaque texel then gets a different coverage in
+each quad, which MSAA dithers into a 9-level mask. The result modulates up to **1.5 px inside** the
+silhouette.
+
+**Measured, render scale 100%, AA 8x, AO off, on the basin's four edges.** Sampled PERPENDICULAR to
+the true edge line recovered from the projected vertices — axis-aligned scans are worthless here and
+gave window-dependent garbage (RMS 0.14 to 8.7 depending on the window) before that was fixed:
+
+| basin edge | angle | cut | +a2c |
+|---|---|---|---|
+| **lower-left** | 28 deg | **0.149 px** | **0.296 px** |
+| lower-right | 50 deg | 0.124 | 0.170 |
+| upper-right | 27 deg | 0.137 | 0.155 |
+| upper-left | 46 deg | 0.140 | 0.172 |
+
+a2c DOUBLES the edge-position wander on the lower-left edge (peak-to-peak 0.74 → **1.37 px**) and is
+worse on all four. Stable over four window/step choices (a2c 0.227-0.296, cut 0.149-0.152) and
+frame-to-frame noise is zero. Raw pixels one px inside that edge, walking along it: the cut holds a
+flat ~70 (69.5 68.3 70.7 71.6 71.5 73.3 70.7 60.0 75.6 76.5 73.0 65.5), a2c swings 34 to 73 position
+by position (57.7 62.6 49.6 62.3 43.7 73.3 44.8 60.0 38.4 34.5 58.1 39.7). That alternation is the
+artifact, and it is visible at 1x.
+
+**THE TRAP, and the reason this entry exists.** The first pass measured a "silhouette ring mean" —
+the mean value of the outermost lit pixels — and read 51.9 → 48.4 as a win. It is not a measure of
+antialiasing. It rewards DIM edge pixels, and a2c dims them by ERODING the silhouette: body pixels
+(>= 60) fell 1293 → 1149, **-11.1%**, with the peak value unchanged at 151. Dimmer edge pixels are
+not a straighter edge. **An AA metric has to measure edge POSITION — how far the recovered sub-pixel
+boundary wanders from a straight line — not edge intensity.** Every conclusion from the ring metric
+was wrong, including a +0-draw-calls / program-swap result that was real but irrelevant.
+
+**VERDICT: reverted** on `FacilitySink`, `WildGrass` and `FacilityPaint`, and the `alphaToCoverage`
+extern field removed from `three/Three.hx` with them. `WildGrass` and `FacilityPaint` were never
+measured and are subject to the same mechanism, so they went back rather than stay as unmeasured
+bets. Do not re-try this on a MINIFIED cut. It is only defensible where the alpha ramp already spans
+about a pixel — a magnified sprite, or an alpha authored as a distance field.
+
+**What actually drives the sink's edge quality is texel density, and it is unaddressed:** 2.32
+texels/px means the art is minified ~2.3x at a normal viewing distance, so `res: 512` on the sink
+sheet (against the shipped 256) would put it near mip 0, which is also the only regime where three's
+a2c formulation would have worked. Not attempted here.
+
+**Also found, unrelated and still live: the sink casts AO as solid slabs.** `GTAOPass` runs its
+depth+normal prepass through `new MeshNormalMaterial()` (`three.global.js:46112`) — no map, so no
+alpha cut. The sprite fix at `View.hx:545-553` hides only `actorGroup`, and `FacilitySink`'s mesh is
+a direct child of `Scene` (verified live), so it is not covered. With `vidAO` on, the faucet quad
+(32.9% opaque) and the basin quad occlude as full rectangles — the same bracket-of-shade bug the
+sprite entry above fixed. `vidAO` was off during this session, so it contributed nothing to the
+symptom that started it.

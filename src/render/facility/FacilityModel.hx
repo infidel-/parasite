@@ -176,6 +176,13 @@ typedef Facility = {
   // null is "nothing here". The frames that LIE DOWN are excluded on the way in — a thing already
   // flat on the worktop is not standing on it
   tableDeco:Array<Array<TableDeco>>,
+  // and which worktop cells are OCCUPIED at all, which is a different question from the one above and
+  // not the same grid however much it looks like one. `tableDeco` carries the pool geometry a
+  // STANDING sprite needs and is null for the three frames that lie down (Const.FACILITY_FLAT_DECO),
+  // because nothing lying flat casts the shadow that grid exists to place. This one counts them: a
+  // pair of gloves is still a thing on the worktop, and render.facility.FacilitySink has to know the
+  // cell is spoken for before it lays a basin through them
+  tableTaken:Array<Array<Bool>>,
   // which cells stand an objects.FloorDrain. the OBJECT and not `Surf.GRATE`: the generator lays a
   // grate TILE on one cell of every chemistry lab and then stands a drain on it only 30% of the
   // time, so the surface says where a drain COULD be and the object says where one is
@@ -237,6 +244,7 @@ class FacilityModel
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],
+        tableTaken: [for (_ in 0...h) [for (_ in 0...w) false]],
         drain: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };
@@ -607,6 +615,9 @@ class FacilityModel
           // left out: nothing stands there to cast a shadow
           if (Const.isTableDeco(o.imageRow))
             {
+              // OCCUPANCY FIRST and outside the flat test, which is the whole point of the second
+              // grid: the pool below is for a thing that STANDS, and the cell is spoken for either way
+              m.tableTaken[o.y][o.x] = true;
               if (!Const.isFlatDeco(o.imageRow, o.imageCol))
                 m.tableDeco[o.y][o.x] = FacilityDeco.poolOf(
                   icon != null ? icon(o.imageRow, o.imageCol) : null);
