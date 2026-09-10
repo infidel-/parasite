@@ -57,6 +57,12 @@ class FacilityWarm
       // blocks are undecorated, so both find a free edge cell and this really does emit — which is
       // the whole reason the pass reads `m.table` and not `m.rooms`, that list being empty here
       FacilitySink.build(sc, model);
+      // and the worktop clutter. NOT a new program permutation — it is the same mapped lambert with
+      // the same alphaTest and the same DoubleSide as the sink above, so three hands back the cached
+      // program. It is here for the TEXTURE: a 1024 sheet decoded and uploaded on first area entry is
+      // a hitch whether or not anything had to compile. The demo model's two bench blocks take a sink
+      // each and have cells left over, so this really does emit
+      FacilityClutter.build(sc, model);
       // the room furniture, which is TWO program permutations the shell above does not cover — the
       // three families share one lambert but the shelving's is DOUBLE_SIDED, which three folds into
       // the program key — plus the rack lights' own patched additive material. the demo model stamps

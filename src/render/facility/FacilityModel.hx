@@ -183,6 +183,15 @@ typedef Facility = {
   // pair of gloves is still a thing on the worktop, and render.facility.FacilitySink has to know the
   // cell is spoken for before it lays a basin through them
   tableTaken:Array<Array<Bool>>,
+  // and which worktop cells a SINK owns, filled by render.facility.FacilitySink as it emits. a THIRD
+  // grid over the same cells, and it cannot be folded into either above it because the question
+  // render.facility.FacilityClutter asks is three-way: an empty cell takes clutter anywhere, a
+  // DECORATED cell takes it around the pool in `tableDeco`, and a SINK cell takes none at all —
+  // SINK_BASIN_W is 2.5 of a 4.0 cell, so there is no usable worktop left beside one.
+  //
+  // written by a RENDER pass rather than by findDeco, unlike the two above: a sink is not an object
+  // in the save, it is picked per bench block at build time
+  tableSink:Array<Array<Bool>>,
   // which cells stand an objects.FloorDrain. the OBJECT and not `Surf.GRATE`: the generator lays a
   // grate TILE on one cell of every chemistry lab and then stands a drain on it only 30% of the
   // time, so the surface says where a drain COULD be and the object says where one is
@@ -245,6 +254,7 @@ class FacilityModel
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],
         tableTaken: [for (_ in 0...h) [for (_ in 0...w) false]],
+        tableSink: [for (_ in 0...h) [for (_ in 0...w) false]],
         drain: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
       };

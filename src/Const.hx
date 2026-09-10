@@ -124,12 +124,19 @@ class Const
     { row: 13, amount: 7 },
   ];
 
-  // row 9-11 - chem laboratory decoration table
+  // rows 9-11, 14 and 48-49 - chem laboratory decoration table.
+  //
+  // 43 frames became 64 with the pack16 sheets (FACILITY_DECO_HD below): row 14's five free columns
+  // were filled, and rows 48-49 are NEW — entities64 grew from 48 rows to 50, which reaches nothing
+  // else because no other family addresses down there. The 64 px icons for the 21 invented frames
+  // are baked out of the pack art by tools/atlaspaste.py, so the 2D area view draws them too
   public static var CHEM_LABS_DECO_TABLE: Array<_TileRow> = [
     { row: 9, amount: 12 },
     { row: 10, amount: 12 },
     { row: 11, amount: 12 },
-    { row: 14, amount: 7 },
+    { row: 14, amount: 12 },
+    { row: 48, amount: 12 },
+    { row: 49, amount: 4 },
   ];
 
   // row 12 - chem laboratory decoration floor (low)
@@ -339,6 +346,146 @@ class Const
     // the calculator, which is drawn face-up already
     { row: 9, col: 9 },
   ];
+
+  // ---- pack16: the hi-res bench decoration sheets --------------------------------------------
+  //
+  // one 1024 image carries SIXTEEN decorations at 256 px each, against the 64 an entities64 cell
+  // gives one. A 3D-ONLY REDIRECTION, exactly the trade the 128 px actor atlases make: the 2D area
+  // view still draws every decoration from entities64, and render.particles.Sprites.atlasFor swaps
+  // the pack cell in underneath it for the sprite pool alone. So nothing is persisted, nothing is
+  // migrated, and a save made before any of this lights up the moment it is drawn again.
+  //
+  // WHAT IT BUYS is texel density and nothing else. A bench sprite spans Sprites.SIZE 3.0 x
+  // FacilityStyle.DECO_TABLE_SCALE 0.81 = 2.43 world units, so a 64 px cell is 26.3 texels per world
+  // unit against facility/floor-tile's own 73 — reported from the game as blurry, the same complaint
+  // art/textures.json's facility/floor-grate note records at 21.3. At 256 it is 105.3.
+  //
+  // it costs NO draw call: the pool binds one cached crop per quad either way (docs/3d-render.md:
+  // "every pooled quad is a draw call"), and a sheet is only ever cropped, never bound whole
+  public static inline var DECO_PACK_CELL = 256;
+  public static inline var DECO_PACK_COLS = 4;
+  public static inline var DECO_PACK_CELLS = DECO_PACK_COLS * DECO_PACK_COLS;
+
+  // index = the pack cell, counted across sheets in reading order (sheet DECO_PACK_CELLS at a time,
+  // then row-major inside it); value = the entities64 bench frame that cell redraws.
+  //
+  // AUTHORED BESIDE THE GENERATION PROMPT — cell i's art IS the frame it names here, so the 2D icon
+  // and the 3D sprite stay the same object and a decoration does not change identity between views.
+  // The prompts are in art/textures.json under facility/bench-pack<n>, one numbered line per cell in
+  // this same order
+  public static var FACILITY_DECO_HD: Array<_FittingFrame> = [
+    // sheet 1 — row 9 entire, then the head of row 10
+    { row: 9, col: 0 },
+    { row: 9, col: 1 },
+    { row: 9, col: 2 },
+    { row: 9, col: 3 },
+    { row: 9, col: 4 },
+    { row: 9, col: 5 },
+    { row: 9, col: 6 },
+    { row: 9, col: 7 },
+    { row: 9, col: 8 },
+    { row: 9, col: 9 },
+    { row: 9, col: 10 },
+    { row: 9, col: 11 },
+    { row: 10, col: 0 },
+    { row: 10, col: 1 },
+    { row: 10, col: 2 },
+    { row: 10, col: 3 },
+    // sheet 2 — the rest of row 10, then the head of row 11
+    { row: 10, col: 4 },
+    { row: 10, col: 5 },
+    { row: 10, col: 6 },
+    { row: 10, col: 7 },
+    { row: 10, col: 8 },
+    { row: 10, col: 9 },
+    { row: 10, col: 10 },
+    { row: 10, col: 11 },
+    { row: 11, col: 0 },
+    { row: 11, col: 1 },
+    { row: 11, col: 2 },
+    { row: 11, col: 3 },
+    { row: 11, col: 4 },
+    { row: 11, col: 5 },
+    { row: 11, col: 6 },
+    { row: 11, col: 7 },
+    // sheet 3 — the rest of row 11, then row 14. its last FIVE cells are decorations that did
+    // not exist: 14/7-11 were free columns, which is why CHEM_LABS_DECO_TABLE's row 14 above
+    // deals 12 and not 7. tools/atlaspaste.py bakes their 64 px icons into the atlas for the 2D view
+    { row: 11, col: 8 },
+    { row: 11, col: 9 },
+    { row: 11, col: 10 },
+    { row: 11, col: 11 },
+    { row: 14, col: 0 },
+    { row: 14, col: 1 },
+    { row: 14, col: 2 },
+    { row: 14, col: 3 },
+    { row: 14, col: 4 },
+    { row: 14, col: 5 },
+    { row: 14, col: 6 },
+    { row: 14, col: 7 },
+    { row: 14, col: 8 },
+    { row: 14, col: 9 },
+    { row: 14, col: 10 },
+    { row: 14, col: 11 },
+    // sheet 4 — SIXTEEN decorations that never existed, on two atlas rows that never existed
+    // either: entities64 grew from 48 rows to 50 for them. Nothing else in the game addresses
+    // rows 48-49, so growing the sheet downward reaches only this family
+    { row: 48, col: 0 },
+    { row: 48, col: 1 },
+    { row: 48, col: 2 },
+    { row: 48, col: 3 },
+    { row: 48, col: 4 },
+    { row: 48, col: 5 },
+    { row: 48, col: 6 },
+    { row: 48, col: 7 },
+    { row: 48, col: 8 },
+    { row: 48, col: 9 },
+    { row: 48, col: 10 },
+    { row: 48, col: 11 },
+    { row: 49, col: 0 },
+    { row: 49, col: 1 },
+    { row: 49, col: 2 },
+    { row: 49, col: 3 },
+  ];
+
+// how many pack sheets the table above spans — read off it so adding sixteen rows is the whole edit
+  public static function decoPackCount(): Int
+    {
+      return Math.ceil(FACILITY_DECO_HD.length / DECO_PACK_CELLS);
+    }
+
+// which pack cell redraws this bench frame, or -1 for one that has no hi-res art yet (it keeps its
+// entities64 cell and simply stays soft). STATELESS, the shape fittingOf and isTableDeco both take.
+//
+// a LINEAR SCAN and deliberately so: it is asked once per sprite CACHE MISS, not per frame — every
+// reader in render.particles.Sprites keys its cache on the entities64 coordinates and returns before
+// reaching this
+  public static function decoHD(row: Int, col: Int): Int
+    {
+      for (i in 0...FACILITY_DECO_HD.length)
+        if (FACILITY_DECO_HD[i].row == row &&
+            FACILITY_DECO_HD[i].col == col)
+          return i;
+      return -1;
+    }
+
+// which sheet a pack cell lives on, and its column and row inside that sheet. three one-liners here
+// rather than the arithmetic open at both call sites (Sprites.atlasFor and render.View.iconBox),
+// which is where a 4 and a 16 would drift apart
+  public static inline function decoHDPack(hd: Int): Int
+    {
+      return Std.int(hd / DECO_PACK_CELLS);
+    }
+
+  public static inline function decoHDCol(hd: Int): Int
+    {
+      return hd % DECO_PACK_COLS;
+    }
+
+  public static inline function decoHDRow(hd: Int): Int
+    {
+      return Std.int((hd % DECO_PACK_CELLS) / DECO_PACK_COLS);
+    }
 
 // does this atlas frame draw a bench decoration that LIES DOWN? STATELESS, the shape fittingOf and
 // isTableDeco both take: the answer is a property of the frame and of nothing else

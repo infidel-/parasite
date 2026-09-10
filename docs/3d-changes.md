@@ -1738,3 +1738,110 @@ a direct child of `Scene` (verified live), so it is not covered. With `vidAO` on
 (32.9% opaque) and the basin quad occlude as full rectangles — the same bracket-of-shade bug the
 sprite entry above fixed. `vidAO` was off during this session, so it contributed nothing to the
 symptom that started it.
+## pack16 — the bench decorations get 256 px art, sixteen to a sheet (2026-09-10)
+
+**The complaint:** the laboratory worktops were dressed out of `entities64` and read blurry and
+off-style. Both halves are measurable. A bench sprite spans `Sprites.SIZE 3.0 * DECO_TABLE_SCALE
+0.81` = **2.43 world units**, so a 64 px cell is **26.3 texels per world unit** against
+`facility/floor-tile`'s own 73 — the same number `facility/floor-grate`'s note records at 21.3 when
+that one was reported as blurry. And the sheet is stock flat-design vector art: cell 9/10 measures
+chroma **42.4** at linear **0.5592**, five times the brightness of anything else in the room, which
+is why `DECO_TABLE_SAT` was halving it in the first place.
+
+**What shipped:** four 1024 generations, sixteen decorations each at 256 px a cell —
+**105.3 texels/unit**, 4x. `Sprites.atlasFor` now takes the cell coordinates and returns them, so a
+pack cell can live anywhere on its sheet; the five pixel readers take their cell from that record
+and their cache key from the arguments, keeping one cache entry per `entities64` frame. 3D-only, the
+same trade the 128 px actor atlases make — the 2D path is untouched, `Const.decoHD` is stateless off
+the frame, nothing is persisted and no save is migrated. `AtlasBox` had to start carrying its own
+cell size (`t`): every consumer turns the box into a cell fraction and divided by
+`TILE_SIZE_CLEAN` to do it, which is off by 4x for a pack cell, and `View.iconBox` had to be taught
+to ask the pack sheet — a contact pool measured on one silhouette and a quad drawn from another are
+two different objects.
+
+**The cost, A/B'd in one pinned pose, 120 GPU samples a leg:** `calls` 102 = 102, `tris` 26,430 =
+26,430, `info.memory.textures` 378 = 378, heap 133 MB = 133 MB, GPU median **9.69 on vs 9.97 off**
+(p10/p90 8.86-10.52 vs 8.80-11.08) — inside the noise and signed the wrong way. Nothing moves
+because nothing changes: the pool binds one cached crop per quad either way and a sheet is only ever
+cropped, never bound whole. The real cost is bytes, which that counter cannot see — 40 distinct
+frames x 256²x4 = **10.5 MB** of crops against 0.66 MB, plus 4 x 4 MB of decoded sheet.
+
+**The prompt carries sixteen cells; the SPLIT is what it will not honour.** Every named subject
+landed in its named cell on all four sheets, companion items included. Sheet 1's columns straddled
+256/512/768 cleanly and its rows landed at **261/495/731** — two gaps 17 and 37 px high, with **7 of
+16 groups crossing a nominal boundary**. `tools/pack16.py` derives the seams off the alpha coverage
+profile and re-pastes each group into an exact cell at ONE sheet-wide scale, centred and
+bottom-aligned; that also zeroes the offset `FacilityModel`'s own note measured on the stock icons
+(opaque centres **-0.49..+0.15 world units** off the anchor, which is what put a pool BESIDE a
+flask). Sheet 4's first roll was **refused** by the tool — thinnest column near 256 still carried 49
+opaque px — and the re-roll leads with SEPARATION IS THE MOST IMPORTANT REQUIREMENT plus a stated
+15% gutter. **Put that clause first on any future sheet:** it costs nothing and a re-roll costs
+$0.057.
+
+**Values.** Sheet 2's darkest cell came back at **0.0336** linear under `facility/bench-top`'s own
+0.0401 — `lift_gamma`'s hole-in-the-ground failure. Lift fitted per sheet on the median so the
+family lands on sheet 1's 0.109 (which needed none): 0.79 / 0.80 / 0.89 → built 0.1065 / 0.1050 /
+0.1048. That breaks the re-roll-over-6-points-of-spread rule deliberately: chroma median 10.4 over
+64 cells is tinted liquid and painted casing, and that rule is about a neutral surface hiding a
+cast. `DECO_TABLE_SAT` went PER FRAME — 1.0 for a frame with a pack cell, the old 0.5 for one
+without — so the knob still records why it exists and the transition needed no flag day.
+
+**x4 bench density is ART and not more sprites.** Every pooled quad is a draw call, and this
+compound stands **103 bench decorations over 139 bench cells**: four sprites a cell would be **+309
+calls** on a frame that runs 102. A 256 cell holds a CLUSTER instead — measured 3.2 drawn items a
+cell on sheet 1, ~4.2 on sheets 2-4 after the prompt went from "two or three" companions to "THREE
+OR FOUR". Same quads, same calls, about four times the things on the worktop.
+
+**And 21 of the 64 decorations are frames that never existed.** `entities64` had 5 free columns on
+row 14 and nothing below row 47, so the sheet grew **48 → 50 rows** (768x3200) and
+`CHEM_LABS_DECO_TABLE` gained row 14 amount 7 → 12 plus rows 48 and 49: the bench family goes **43
+kinds → 64**. `tools/atlaspaste.py` bakes the 64 px icon out of the pack cell so the frame exists
+wherever it is addressed — insurance rather than a live path (`GameScene.is3DArea` lists 'facility',
+so a compound never takes the 2D branch), and the four-item clusters were checked to still be
+nameable at 64. It writes via a temp file and `os.replace`: PIL's `save` opens `w+b`, which the
+Windows DrvFs mount answers with `OSError 22 Invalid argument`.
+
+**VERDICT: landed.** Free in the frame, +~26 MB of texture, 43 bench kinds → 64.
+
+## worktop clutter — 148 flat decals over the benches for one draw call (2026-09-10)
+
+The worktops carried one standing sprite per decorated cell and then bare resin. `FacilityClutter`
+scatters small FLAT things over what is left — a clipboard, a petri dish, a coiled cable — at free
+position and free yaw, off one 8x8 sheet (`facility/worktop-clutter`, 64 cells of 128 px).
+
+**RENDER-ONLY.** No `objects.Decoration`, no atlas frame, nothing persisted. Every position, size,
+turn and cell index rolls off `FacilityModel.mix`, so an area comes back identical and no save moved.
+
+**Measured live:** `calls` **102 → 103**, confirmed by toggling the mesh's `visible` (102 off / 103
+on). 148 decals, 296 tris, 592 verts, one merged mesh. Warm 84 → 88 programs. Count stable at 148
+across three area rebuilds. The material is `FacilitySink`'s exactly — opaque `alphaTest`,
+`DoubleSide`, `VisionMask.patch` — so it adds no program permutation; the warm entry is for the
+texture upload.
+
+**8x8 is the wrong grid for a billboard and the right one here.** 89 art px an object (median
+long-axis fill 0.695 × 128). Over a bench sprite's 2.43 units that is 52.7 texels/unit, under
+`floor-tile`'s 73. Over the 0.8 units these draw at it is 111. Density is art px over the size a
+thing is DRAWN at, never over the cell it was cut from — judging on cell size alone rejects 8x8 for
+both routes and gets one wrong.
+
+**The trap: "darker than the surface reads as a hole" is not the rule.** Twelve cells come in under
+`bench-top`'s 0.0401, which the pack16 entry above would condemn wholesale. In game the tweezers at
+0.0198 and the cable at 0.0195 read fine as dark objects; the tablet at 0.0266 read as a gap punched
+through the bench. The separator is **solidity** — opaque px over bbox area, filled slab vs outline
+with worktop showing through. Offenders are all >0.62 (tablet 1.00, calculator 0.98, pouch 0.94,
+mouse mat 0.94, hole punch 0.87, keyboard 0.70, radio 0.67); every dark cell under it was left in
+(stoppers 0.56, cable 0.50, glasses 0.49, torch 0.40, iron 0.30). Seven skipped, 57 dealt.
+
+A lift cannot express that: the gamma needed to clear 0.0177 is 0.78, which drags the sheet median
+0.1202 → 0.191 and washes out the 52 cells that were already right.
+
+**Three occupancy answers on the same cells**, which is why `m.tableSink` is a third grid: an empty
+cell takes clutter anywhere, a decorated cell takes it around `m.tableDeco`'s contact circle
+(measured off the icon's alpha box, so a flask whose opaque box sits to one side keeps clearance on
+that side), and a sink cell takes none — `SINK_BASIN_W` is 2.5 of a 4.0 cell. Cross-cell overlap is
+impossible by construction: an offset is inset by the item's own half size.
+
+The per-cell count rolls 0..3 and **reaching zero is the point** — flooring it at 1 puts something on
+all 139 bench cells and rebuilds the rhythm this family exists to break. 148 over 115 non-sink cells.
+
+**VERDICT: landed.** +1 draw call, +296 tris, 57 subjects on one $0.058 sheet.

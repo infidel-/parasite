@@ -434,14 +434,45 @@ class Sprites {
       return m;
     }
 
-// resolve an actor atlas to its source image + file tile px. male/female use the new 128px
-// skin-variant sheets (3D only); every other atlas stays on the 64px sheet the 2D view shares
-  function atlasFor(imageName:String, male:Bool, skin:Int):{ img:Dynamic, t:Int }
+// resolve an atlas cell to the image, cell size and coordinates its pixels actually come from.
+//
+// TWO REDIRECTIONS LIVE HERE AND BOTH ARE 3D-ONLY — the 2D view goes through Images.getImage and
+// keeps drawing the 64 px sheets in every case:
+//   male/female actors take the 128 px skin-variant atlases, at the same (ix, iy);
+//   a facility BENCH decoration takes its 256 px cell off a pack sheet (Const.FACILITY_DECO_HD).
+//
+// the second one is why this returns COORDINATES and not just an image: a pack cell is not at the
+// frame's own (col, row) — sixteen decorations sit on a 4x4 sheet in the table's own order — so the
+// caller cannot crop with the numbers it handed in. Every reader below takes its cell from the
+// returned record and its cache KEY from the arguments, which is what keeps one cache entry per
+// entities64 frame however its pixels are sourced
+  function atlasFor(imageName:String, ix:Int, iy:Int, male:Bool, skin:Int):AtlasSrc
     {
       if (imageName == 'male' ||
           imageName == 'female')
-        return { img: game.scene.images.getAtlas128(imageName, male, skin), t: 128 };
-      return { img: game.scene.images.getImage(imageName, male), t: Const.TILE_SIZE_CLEAN };
+        return {
+          img: game.scene.images.getAtlas128(imageName, male, skin),
+          t: 128,
+          ix: ix,
+          iy: iy,
+        };
+      if (imageName == 'entities')
+        {
+          var hd = Const.decoHD(iy, ix);
+          if (hd >= 0)
+            return {
+              img: game.scene.images.getDecoPack(Const.decoHDPack(hd)),
+              t: Const.DECO_PACK_CELL,
+              ix: Const.decoHDCol(hd),
+              iy: Const.decoHDRow(hd),
+            };
+        }
+      return {
+        img: game.scene.images.getImage(imageName, male),
+        t: Const.TILE_SIZE_CLEAN,
+        ix: ix,
+        iy: iy,
+      };
     }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture; null until the image decodes.
@@ -450,7 +481,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
@@ -462,7 +493,7 @@ class Sprites {
       cv.width = t; cv.height = t;
       var cx = cv.getContext('2d');
       // mirror Entity.drawImage crop (the +1/-1 kludge avoids atlas bleed)
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       if (mul < 1.0)
         darkenCanvas(cx, t, t, mul);
       var tex = mkTex(cv);
@@ -503,7 +534,7 @@ class Sprites {
     {
       var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -514,7 +545,7 @@ class Sprites {
       cv.width = t; cv.height = t;
       var cx = cv.getContext('2d');
       // same crop as tex() (the +1/-1 kludge avoids atlas bleed), then whiten + carve the pattern
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       patternWhiten(cx, t, t, fill, spacing, thick);
       var tex = mkTex(cv);
       texCache.set(key, tex);
@@ -530,7 +561,7 @@ class Sprites {
     {
       var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin;
       if (outlineCache.exists(key)) return outlineCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -549,11 +580,11 @@ class Sprites {
             if (dx == 0 &&
                 dy == 0)
               continue;
-            cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px + dx * px, px + dy * px, dw, dw);
+            cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, px + dx * px, px + dy * px, dw, dw);
           }
       // punch the sprite itself back out, leaving only the band outside its silhouette
       cx.globalCompositeOperation = 'destination-out';
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px, px, dw, dw);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, px, px, dw, dw);
       // flood what remains white, so the paint-time emissive tint owns the color (the soft alpha
       // edge survives — source-in multiplies the fill by the ring's own alpha)
       cx.globalCompositeOperation = 'source-in';
@@ -623,7 +654,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (contentCache.exists(key)) return contentCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -634,7 +665,7 @@ class Sprites {
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
       var cx = cv.getContext('2d');
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       var b = boxOf(cx, t);
       // tight-cropped texture holding just the content rect
       var tc:Dynamic = Browser.document.createElement('canvas');
@@ -692,8 +723,8 @@ class Sprites {
           }
       // fully transparent cell: fall back to the whole cell so we still return something valid
       if (maxX < minX)
-        return { x: 0, y: 0, w: t, h: t };
-      return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
+        return { x: 0, y: 0, w: t, h: t, t: t };
+      return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, t: t };
     }
 
 // the empty space BELOW a content box as a cell fraction — 0 means the content reaches the cell's
@@ -810,16 +841,17 @@ class Sprites {
       if (base == null)
         return null;
       var tx:Dynamic = base.tex;
-      var src:Dynamic = tx.image;                        // the tight crop canvas (cw x ch)
+      var img:Dynamic = tx.image;                        // the tight crop canvas (cw x ch)
       var pad = RenderConfig.FLAME.shadowSoftPx * 2;      // blur bleeds beyond the edge -> pad so it isn't clipped
       var bc:Dynamic = Browser.document.createElement('canvas');
-      bc.width = src.width + pad * 2;
-      bc.height = src.height + pad * 2;
+      bc.width = img.width + pad * 2;
+      bc.height = img.height + pad * 2;
       var bcx = bc.getContext('2d');
       bcx.filter = 'blur(' + RenderConfig.FLAME.shadowSoftPx + 'px)';
-      bcx.drawImage(src, pad, pad);
+      bcx.drawImage(img, pad, pad);
       var tex = mkTex(bc);
-      var t = atlasFor(imageName, male, skin).t; // 128 for actor sheets, 64 otherwise
+      // 256 for a bench decoration pack cell, 128 for an actor sheet, 64 otherwise
+      var t = atlasFor(imageName, ix, iy, male, skin).t;
       var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: 0.0 };
       shadowCache.set(key, gs);
       return gs;

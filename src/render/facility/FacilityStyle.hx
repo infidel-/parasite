@@ -592,6 +592,60 @@ class FacilityStyle
   // transparent twin would sort against every other see-through thing in the compound for nothing
   public static inline var SINK_CUT = DECO_CUT;
 
+  // ---- worktop clutter -------------------------------------------------------------------------
+
+  // the small FLAT things scattered over the bench tops — a clipboard, a petri dish, a coiled cable.
+  // one 1024 sheet, an 8x8 grid of 128 px cells, every cell a top-down cut-out. see
+  // render.facility.FacilityClutter and docs/3d-textures.md's PACK-N section for why 8x8 is the right
+  // grid HERE and the wrong one for a billboard: density is art px over the world size a thing is
+  // DRAWN at, and at CLUTTER_SZ these get 111 texels per unit against facility/floor-tile's 73
+  public static inline var CLUTTER_TEX = 'textures/facility/worktop-clutter.png';
+  public static inline var CLUTTER_COLS = 8;
+  public static inline var CLUTTER_CELLS = CLUTTER_COLS * CLUTTER_COLS;
+  // DECO_CUT again, and for SINK_CUT's reason: an opaque alphaTest draws DoubleSide in one pass and
+  // still writes depth, so nothing has to sort against the worktop under it
+  public static inline var CLUTTER_CUT = DECO_CUT;
+  // how far a decal floats over the worktop. UNDER SINK_Y 0.02 on purpose — a clutter cell and a sink
+  // cell are mutually exclusive (see FacilityClutter.build), so these two never meet, and staying
+  // below the basin means a future pass that did overlap would be hidden by it rather than fighting
+  // it. still well clear of zero, which is where the worktop cap itself sits, and of POOL_EPS 0.01
+  public static inline var CLUTTER_Y = 0.015;
+  // how big one decal draws, world units, before its own variance. the bench scale is ~2.08 units to
+  // the metre (DECO_TABLE_SCALE's own measurement: a 1.08 m microscope at 2.25 units), so 0.8 is a
+  // ~38 cm object — a clipboard, a keyboard, a folded pair of gloves
+  public static inline var CLUTTER_SZ = 0.8;
+  public static inline var CLUTTER_SZ_VAR = 0.3;
+  // most cells get one or two, some none, some three. THE EMPTY CELLS ARE THE POINT: floor this at 1
+  // and 139 bench cells read as a grid again, which is the rhythm this family exists to break
+  public static inline var CLUTTER_MAX = 3;
+  // how many offsets a decal tries before it gives up and simply is not placed. a cell is 4 units and
+  // a decal is under one, so a rejection is rare and an exhausted item rarer still
+  public static inline var CLUTTER_TRIES = 8;
+  // the radius to keep clear around a decoration that LIES DOWN. those leave no pool in
+  // FacilityModel.tableDeco (nothing flat casts the shadow that grid exists to place) but they are
+  // still art on the worktop, so they get a nominal footprint rather than being treated as empty
+  public static inline var CLUTTER_FLAT_R = 0.9;
+  // and how much clear worktop to leave around every decal, on top of its own half-size — without it
+  // two items merely touching read as one broken object
+  public static inline var CLUTTER_GAP = 0.12;
+  // the sheet cells that are never dealt, 0-based, because they read as a HOLE PUNCHED IN THE BENCH
+  // rather than as a thing lying on it.
+  //
+  // AND THE TEST IS NOT DARKNESS ALONE, which is what makes this a list and not a lift. Twelve of the
+  // 64 cells come in under facility/bench-top's own 0.0401 linear, but in game the tweezers at 0.0198
+  // and the coiled cable at 0.0195 read perfectly as dark objects while the tablet at 0.0266 read as
+  // a gap in the worktop. What separates them is SOLIDITY — opaque px over bounding-box area, i.e.
+  // whether the silhouette is a filled slab or an outline with worktop showing through it. Every cell
+  // here is dark AND over 0.62 solid; every dark cell under that threshold was left in and looks
+  // right. Measured: 15 tablet 1.00, 14 calculator 0.98, 64 screwdriver pouch 0.94, 17 mouse mat 0.94,
+  // 56 hole punch 0.87, 16 keyboard 0.70, 48 radio 0.67 — against 54 stoppers 0.56, 21 cable 0.50,
+  // 59 glasses 0.49, 49 torch 0.40, 62 soldering iron 0.30.
+  //
+  // A LIFT CANNOT DO THIS JOB and that was checked before reaching for a list: the gamma needed to
+  // bring 0.0177 over the worktop is 0.78, which drags the sheet's median from 0.1202 to 0.191 and
+  // washes out the 52 cells that were already right
+  public static var CLUTTER_SKIP:Array<Int> = [ 13, 14, 15, 16, 47, 55, 63 ];
+
   // ---- corridor casework -----------------------------------------------------------------------
 
   // the storage runs standing against a corridor wall. they are the SAME two meshes the benches are

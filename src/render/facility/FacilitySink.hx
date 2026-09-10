@@ -65,6 +65,9 @@ class FacilitySink
             if (c == null)
               continue;
             emit(b, c.col, c.row);
+            // and claim the cell, which is what render.facility.FacilityClutter reads: a basin is
+            // 2.5 of a 4.0 cell, so nothing else may lie on this worktop
+            m.tableSink[c.row][c.col] = true;
             n++;
           }
       add(scene, b);

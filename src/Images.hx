@@ -27,6 +27,7 @@ class Images
   public var female: Image;
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
+  public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
   public var tileset: Image;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -56,6 +57,7 @@ class Images
       // 3D-only 128px skin-variant atlases (2D views keep using the 64px sheets above)
       male128 = loadAtlas128('male');
       female128 = loadAtlas128('female');
+      decoPacks = loadDecoPacks();
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
@@ -73,6 +75,30 @@ class Images
           out.push(img);
         }
       return out;
+    }
+
+// load the hi-res facility bench decoration sheets (3D only; the 2D view keeps entities64).
+//
+// out of textures/ and not img/, which is where every other atlas here lives: these are BUILT ART —
+// art/textures.json carries their prompts and `make tex` writes them — and the img/ sheets are
+// hand-maintained. They are still plain <img> and not render.Textures loads, because the sprite pool
+// crops cells out of a canvas rather than binding a whole texture
+  function loadDecoPacks(): Array<Image>
+    {
+      var out = [];
+      for (i in 0...Const.decoPackCount())
+        {
+          var img = new Image();
+          img.src = AssetPath.resolve('textures/facility/bench-pack' + (i + 1) + '.png');
+          out.push(img);
+        }
+      return out;
+    }
+
+// one hi-res bench decoration sheet, by the index Const.decoHDPack returns
+  public function getDecoPack(n: Int): Image
+    {
+      return decoPacks[n];
     }
 
 // 3D actor atlas: pick the 128px skin-variant sheet for a gender.

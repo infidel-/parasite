@@ -66,6 +66,7 @@ class FacilityArea implements Area3D
   var points = 0;                               // corridor wall fittings: fire points and panels
   var placards = 0;                             // room wall safety signage: one per run of masonry
   var sinks = 0;                                // bench sinks: one per block with a free edge cell
+  var clutter = 0;                              // flat decals scattered over the worktops
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -157,6 +158,10 @@ class FacilityArea implements Area3D
       // and the sinks standing on those worktops, straight after them: the pass reads the same
       // `table` grid and stands on the BENCH_H the run above just emitted
       sinks = FacilitySink.build(scene, model);
+      // then the clutter scattered over what is left of those worktops. AFTER the sinks and not
+      // before: the pass above is what fills `tableSink`, and a decal laid across a basin is exactly
+      // the failure that grid exists to stop
+      clutter = FacilityClutter.build(scene, model);
       // and the room furniture that used to be an upright sprite, straight after the casework it is
       // the same kind of thing as: merged geometry standing against a wall, one mesh per family
       FacilityDeco.build(scene, model);
@@ -381,6 +386,13 @@ class FacilityArea implements Area3D
             // eating them, which is a real outcome and not a bug — the generator decorates about 70%
             // of bench cells and forces one on every room corner
             sinks: sinks,
+            // and how many flat DECALS landed on those worktops. merged-mesh blindness for the
+            // fourth time, and the only readout that can catch the two ways this family fails
+            // silently: a 0 in a compound with benches is the `table`/`tableSink` gate broken, and a
+            // number near 3x the bench cell count means the rejection sampling in
+            // FacilityClutter.cell stopped rejecting — the count is rolled 0..3 per cell, so it
+            // should land near 1.5x the cells that are neither sink nor fully blocked
+            clutter: clutter,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's

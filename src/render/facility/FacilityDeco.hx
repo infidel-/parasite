@@ -132,14 +132,22 @@ class FacilityDeco
         Const.isTableDeco(o.imageRow);
     }
 
-// how much of its own chroma one of those keeps. the art is a flat-design icon sheet and reads
-// cheerful in a dark laboratory — see FacilityStyle.DECO_TABLE_SAT, where the measurement is.
+// how much of its own chroma one of those keeps.
+//
+// PER FRAME, AND THE TEST IS WHETHER IT HAS HI-RES ART. The knob exists because the stock icon
+// sheet is flat-design vector work that reads cheerful in a dark laboratory — measured on the frame
+// it was fitted against, entities64 9/10 comes in at chroma 42.4 and linear 0.5592, five times the
+// brightness of anything else in the room. A pack16 cell is drawn IN the game's palette instead
+// (chroma 1.7-34.7 over sheet 1, mean linear 0.1105 against the worktop's own 0.0401), so halving it
+// again would only turn a tinted liquid grey. A frame with no pack cell yet keeps the old taming.
 //
 // it costs no second texture: render.particles.Sprites carries the knob as a shader uniform on the
 // quad's own material, so this is a number handed to a paint and nothing else
   public static function spriteSat(area:game.AreaGame, o:objects.AreaObject):Float
     {
-      return onBench(area, o) ? FacilityStyle.DECO_TABLE_SAT : 1.0;
+      if (!onBench(area, o))
+        return 1.0;
+      return Const.decoHD(o.imageRow, o.imageCol) >= 0 ? 1.0 : FacilityStyle.DECO_TABLE_SAT;
     }
 
 // and does it LIE DOWN on the worktop rather than stand up on it? three of the 43 do — see
@@ -174,7 +182,10 @@ class FacilityDeco
       //
       // sideways there is no rotation to account for and the art's own offset is the whole of it:
       // the opaque box's centre against the cell's, which is where the object is actually drawn
-      var t = Const.TILE_SIZE_CLEAN;
+      // the box's OWN cell, which is 256 for a frame redrawn off a pack sheet and 64 for one still
+      // on entities64 (Const.FACILITY_DECO_HD) — every number below is a cell fraction, so reading
+      // it off the box is what keeps a pool the same size whichever sheet the art came from
+      var t = b.t;
       var span = Sprites.SIZE * FacilityStyle.DECO_TABLE_SCALE;
       return {
         dx: span * ((b.x + b.w * 0.5) / t - 0.5),

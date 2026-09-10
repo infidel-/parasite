@@ -435,17 +435,29 @@ class View {
         render.facility.FacilityModel.fromArea(area, iconBox)), key);
     }
 
-// the opaque box of one entities64 frame, which the facility model places a bench decoration's
-// contact pool off (see render.facility.FacilityModel.fromArea). null until the atlas decodes, and
-// then those pools take their fallbacks.
+// the opaque box of one bench decoration's art, which the facility model places its contact pool
+// off (see render.facility.FacilityModel.fromArea). null until the atlas decodes, and then those
+// pools take their fallbacks.
+//
+// IT ASKS THE SAME SHEET THE SPRITE WILL BE DRAWN FROM, which for a frame with hi-res art is a
+// pack cell at Const.DECO_PACK_CELL and not the entities64 frame at all — a pool measured on one
+// and a quad drawn from the other are two different silhouettes. The box carries its own cell size
+// (AtlasBox.t) so the fractions downstream cannot be taken against the wrong one.
 //
 // OFF THE IMAGE AND NOT OFF THE SPRITE POOL, which is the whole reason it lives here rather than on
 // render.Actors beside the other atlas lookups: `actors` is created inside `buildFrom`, from the
 // very model this feeds, so it is null on every call. Asking it there was a null dereference that
 // killed every facility entry — the area built, then never presented a frame
   function iconBox(row:Int, col:Int):render.particles.AtlasBox
-    return render.particles.Sprites.cellBox(game.scene.images.getImage('entities'),
-      Const.TILE_SIZE_CLEAN, col, row);
+    {
+      var hd = Const.decoHD(row, col);
+      if (hd >= 0)
+        return render.particles.Sprites.cellBox(
+          game.scene.images.getDecoPack(Const.decoHDPack(hd)),
+          Const.DECO_PACK_CELL, Const.decoHDCol(hd), Const.decoHDRow(hd));
+      return render.particles.Sprites.cellBox(game.scene.images.getImage('entities'),
+        Const.TILE_SIZE_CLEAN, col, row);
+    }
 
 // show the 3D open wilderness for an area, built from its saved tile grid for the same reason the
 // tunnels are: game.AreaGenerator.generateWilderness already wrote where every tree and rock stands,
