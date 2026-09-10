@@ -890,6 +890,23 @@ class MainElectron
       IpcMain.handle('host:fullscreen:off', function(e) {
         win.fullScreen = false;
       });
+      // minimise/restore, for driving the game over CDP: a minimised window stops compositing, so
+      // every PAGE call (evaluate_script, take_screenshot) hangs until the debugger's own timeout
+      // while browser-level calls still answer. That makes it useful — the window can be parked out
+      // of the way through a build and woken for the next measurement — and makes it a trap, so
+      // docs/debug-surface.md carries the rule: raise BEFORE touching the page, never poke it down
+      IpcMain.handle('host:window:minimize', function(e) {
+        win.minimize();
+      });
+      // restore() alone leaves the window unfocused on some window managers, and an unfocused window
+      // throttles to ~1fps — which silently corrupts any timing measured right after the wake
+      IpcMain.handle('host:window:restore', function(e) {
+        win.restore();
+        win.focus();
+      });
+      IpcMain.handle('host:window:isMinimized', function(e) {
+        return win.isMinimized();
+      });
 
       // debug-only writes: handlers always registered, gated at runtime.
       // when sentinel (.debug) absent, all calls refuse with false
