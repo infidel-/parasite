@@ -1197,11 +1197,20 @@ class FacilityStyle
   // sixteen — and the run would still have to be the only cable on a plate that draws two. A bare
   // faceplate says nothing our own geometry then has to agree with
   public static var SOCK_SKIP:Array<Int> = [ 6, 7, 15 ];
-  // and the two corridor-fitting cells that may CARRY a lead but can never SOURCE one: sheet cell 20
-  // is a red emergency-stop mushroom button and 26 a bank of light switches. Neither has an outlet,
-  // so a cable leaving one is a cable plugged into a button — reported from the game, where a floor
-  // unit was wired to the e-stop. They stay on the wall; they just feed nothing
-  public static var FIT_NO_FEED:Array<Int> = [ 20, 26 ];
+  // and the corridor-fitting cells a lead may actually LEAVE, which is an ALLOWLIST and was a
+  // blocklist for one pass. The blocklist named the two cells that were obviously wrong — cell 20 is a
+  // red emergency-stop mushroom button, 26 a bank of light switches — and shipped the other fourteen
+  // as sources, so the game went on reporting leads growing out of a sealed breaker board, an
+  // electricity meter and a battery box. The question is not "is this one absurd" but "does this one
+  // draw somewhere a cable can come out of", and only six of the sixteen do: 16 a junction box with
+  // four cable glands, 22 a run of steel conduit, 23 a cable tray with cables already lying in it, 27
+  // a bracket holding a coiled reel, 29 a bundle leaving the wall through a grommet plate, 31 a socket
+  // outlet box with an isolator lever. Everything else is a sealed enclosure and stays unattached —
+  // the compound supplies the emptiness, the same argument `links` runs on.
+  //
+  // A ROOM SOCKET NEEDS NO SUCH LIST: every cell of its own band is an outlet by construction, less
+  // the three SOCK_SKIP deals out for drawing their own cable
+  public static var FIT_FEED:Array<Int> = [ 16, 22, 23, 27, 29, 31 ];
   // and the cell that REFILLED one of the three, a bare plug head with a gland collar at its foot and
   // no cable on it. It is what a run arriving at a socket ends in, drawn over the ribbon's cut end.
   //
@@ -1284,6 +1293,18 @@ class FacilityStyle
   // inside its own cell — measured over the sheet's own vertical fills, 0.065 to 0.18, mean 0.12. In
   // frame the untuned version put a lead's end visibly under a unit that was floating over it
   public static inline var UNIT_SINK = 0.12;
+  // what fraction of its own quad the ART actually fills, across and up. MEASURED off the built sheet
+  // over all sixteen standing cells (opaque bbox, alpha > pack16's own CUT 24): width mean 0.637
+  // median 0.637, height mean 0.767 median 0.754.
+  //
+  // IT IS THE SHADOW THAT NEEDS IT AND NOTHING ELSE. Both contacts a standing unit lays — the wall
+  // halo behind it and the floor field under it — take an EXTENT, and handing them UNIT_SZ hands them
+  // the QUAD, which is a third wider and a quarter taller than anything drawn in it. Reported from the
+  // game as a wall shadow far too large for the thing casting it, and it was: 2.6 grown by
+  // FacilityDetail.grow is 4.33 of gradient for 1.66 of art. A sprite's quad is not its silhouette,
+  // which is the same fact CABLE_LID_H is a third rather than a lid for
+  public static inline var UNIT_FILL_W = 0.64;
+  public static inline var UNIT_FILL_H = 0.77;
   // how far its base stands off the wall's slab FACE, world units. it is parked against the wall and
   // not stood in the middle of its cell: the cell is 4.0 and its own face is a unit in from the cell
   // edge, so this leaves the lane down the middle of the room clear

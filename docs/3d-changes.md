@@ -2194,3 +2194,47 @@ draw their own.
 
 **VERDICT: landed.** +0 draw calls, +16 tris, one $0.054 image into a cell that was already dead.
 Cells 7 and 15 are still dead and are where the next one goes.
+
+## A BLOCKLIST WAS THE WRONG SHAPE, and a sprite's quad is not its silhouette
+
+Two reports off one corridor, and they answer two different questions the family had been getting
+wrong quietly.
+
+**THE FEED LIST HAD TO BE AN ALLOWLIST.** `FacilityStyle.FIT_NO_FEED` named the two corridor cells
+that were obviously absurd — sheet cell 20 a red emergency-stop mushroom button, 26 a bank of light
+switches — and shipped the other **fourteen** of the band as cable sources, so the game went on
+reporting leads growing out of a sealed breaker board, an electricity meter and a battery box. The
+question a blocklist asks is *"is this one absurd"*, and the question that actually decides it is
+*"does this one draw somewhere a cable can come out of"*. Only **6 of the 16** do: cell 16 a junction
+box with four cable glands, 22 a run of steel conduit, 23 a cable tray with cables already lying in
+it, 27 a bracket holding a coiled reel, 29 a bundle leaving the wall through a grommet plate, 31 a
+socket outlet box with an isolator lever. `FIT_FEED` is that list, `sources(p)` is the one predicate,
+and it is asked at **every end of every run** — `units` and both ends of `links` — where the old test
+was asked in one place. A room socket needs no such list: every cell of its own band is an outlet by
+construction, less the three `SOCK_SKIP` deals out for drawing their own cable.
+
+Measured, same compound, same seed: **44 mounts unchanged, 14 of them corridor fittings; runs 16 → 11,
+units 8 → 3**, and the three fitting cells left wired are **16, 23 and 29** — all three in the list.
+Five units went away and that is the whole point; the compound supplies the emptiness, the same
+argument `links` runs on. Corridors are also the only place a unit ever stood: of 30 room sockets,
+zero reach a clear span, because `run` needs free floor AND unbroken masonry for 2 to 4 cells and a
+laboratory is mostly bench.
+
+**BOTH CONTACTS WERE SIZED TO THE QUAD.** A standing unit handed `FacilityDetail.stand` its own
+`UNIT_SZ` 2.6 as the extent, and `grow` turned that into **4.33 of gradient for 1.66 of art** —
+reported from the game as a wall shadow far too large for the thing casting it, and it was. A sprite
+does not fill its quad, which is the same fact `CABLE_LID_H` is a third rather than a lid for.
+Measured off the built sheet over all sixteen standing cells (opaque bbox, alpha > `pack16.py`'s own
+`CUT` 24): width mean **0.637** median 0.637, height mean **0.767** median 0.754 — shipped as
+`UNIT_FILL_W` 0.64 / `UNIT_FILL_H` 0.77, so the halo is now 1.66 × 2.00 grown to 2.77 × 3.33.
+
+**AND THE FLOOR HAD NOTHING AT ALL.** Every builder that stands something indoors feeds
+`render.world.ContactMask.prop` and this one never did, so the units alone sat on the floor with no
+darkening under them. One call with the same art-sized footprint, square because a sprite has no depth
+to read one off. **No quad, no mesh, no draw call** — it is a field. A/B on one pinned pose by setting
+`ContactMask.uAmt.value` to 0 and back, on the floor beside a wired cable drum: **92–99 flat with the
+field off, 73 / 61 / 53 / 44 / 37 / 31 with it on**. The rects are in `propRects` at the exact 1.664
+extent, which is the check that survives the corridor being unlit.
+
+**VERDICT: landed.** +0 draw calls, +0 programs, −5 floor units and −5 runs, and the two shadows a
+standing thing is supposed to lay.

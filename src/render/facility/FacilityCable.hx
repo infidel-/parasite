@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.world.ContactMask;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -330,6 +331,16 @@ class FacilityCable
       return out;
     }
 
+// may a cable LEAVE this mount at all — asked of every end of every run, and it is the corridor half
+// that needs asking. A room socket is an outlet by construction; a corridor fitting is whatever cell
+// of the band it drew, and ten of the sixteen are sealed enclosures with nothing to plug into. See
+// FacilityStyle.FIT_FEED, which is an allowlist because the blocklist it replaced only caught the two
+// cells that were absurd and left a lead growing out of a breaker board
+  static inline function sources(p:Mount):Bool
+    {
+      return !p.fit || FacilityStyle.FIT_FEED.indexOf(p.cell) >= 0;
+    }
+
 // does a fitting of this kind have a cable to run — the two machines and the two racks
   static inline function feeds(kind:Int):Bool
     {
@@ -478,10 +489,12 @@ class FacilityCable
         for (q in list)
           {
             // one direction only, so a pair is not run twice — and ONE CABLE PER MOUNT, so a link
-            // needs BOTH of its ends still free
+            // needs BOTH of its ends still free AND both of them able to source a lead at all
             if (q.dir != p.dir ||
                 p.used ||
                 q.used ||
+                !sources(p) ||
+                !sources(q) ||
                 !before(p, q) ||
                 !joins(m, p, q))
               continue;
@@ -654,10 +667,9 @@ class FacilityCable
       for (p in list)
         {
           // ONE CABLE PER MOUNT, so a socket that already took a machine's lead or a link is done —
-          // and A BUTTON IS NOT AN OUTLET: an emergency stop and a bank of light switches stay on the
-          // wall but can never be the end of a lead (FacilityStyle.FIT_NO_FEED)
+          // and only a mount that DRAWS somewhere a cable can leave from may source one
           if (p.used ||
-              FacilityStyle.FIT_NO_FEED.indexOf(p.cell) >= 0)
+              !sources(p))
             continue;
           // ALONG the wall and never out from it. Straight out was the first cut and it is the one
           // thing this family must not do: in a ROOM it walks the lead across the aisle markings
@@ -699,16 +711,25 @@ class FacilityCable
           var g = FacilityModel.mix((c * 971658137) ^ (r * 1266489917));
           var b = base(m, c, r, p.dir);
           stand(pack, b, FacilityStyle.ELEC_UNIT + g % FacilityStyle.ELEC_BAND);
+          // BOTH CONTACTS ARE SIZED TO THE ART AND NOT THE QUAD (FacilityStyle.UNIT_FILL_W/_H), which
+          // is the whole of the wall shadow being too large: the sprite fills 0.64 across and 0.77 up
+          // of what it was handing over
+          var hw = FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_FILL_W / 2;
           FacilityDetail.stand({
             col: c,
             row: r,
             dir: p.dir,
-            a0: (p.dir < 2 ? b[0] : b[2]) - FacilityStyle.UNIT_SZ / 2,
-            a1: (p.dir < 2 ? b[0] : b[2]) + FacilityStyle.UNIT_SZ / 2,
+            a0: (p.dir < 2 ? b[0] : b[2]) - hw,
+            a1: (p.dir < 2 ? b[0] : b[2]) + hw,
             len: 1,
             y: b[1],
-            h: FacilityStyle.UNIT_SZ,
+            h: FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_FILL_H,
           });
+          // and the FLOOR under it, which it had nothing on at all. a footprint goes to the field
+          // every builder that stands something indoors feeds — no quad, no mesh, no draw call — and
+          // it is square because a sprite has no depth to read one off: a floor-standing cabinet is
+          // about as deep as it is wide
+          ContactMask.prop(b[0] - hw, b[0] + hw, b[2] - hw, b[2] + hw);
           strip(cab, {
             a: anchor(m, p, 0),
             c: [b[0], b[1] + FacilityStyle.CABLE_FLOOR_Y, b[2]],
