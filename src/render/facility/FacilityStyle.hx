@@ -1211,6 +1211,17 @@ class FacilityStyle
   // A ROOM SOCKET NEEDS NO SUCH LIST: every cell of its own band is an outlet by construction, less
   // the three SOCK_SKIP deals out for drawing their own cable
   public static var FIT_FEED:Array<Int> = [ 16, 22, 23, 27, 29, 31 ];
+  // and the two STANDING cells that may not be the end of a lead either, for a third reason again:
+  // sheet cell 35 is a distribution board up on four long spindly legs and 43 an extension block on a
+  // splayed stand. UNIT_FOOT lands a run a tenth of the way up the quad, which on those two is the
+  // OPEN AIR BETWEEN THE LEGS — reported from the game as a cable ending in nothing under the object.
+  //
+  // A PER-CELL FOOT HEIGHT IS THE THING NOT WORTH BUILDING, which is the judgement here. It would be
+  // sixteen numbers measured off the art to spare two cells, and the band has fourteen others that
+  // stand on a base, feet or castors and take the lead at a tenth with nothing to say about it. So
+  // these two come out of the deal entirely — a standing unit exists only because a run stood it, so
+  // "cannot be wired" and "is never dealt" are the same sentence here. SOCK_SKIP's own shape
+  public static var UNIT_SKIP:Array<Int> = [ 35, 43 ];
   // and the cell that REFILLED one of the three, a bare plug head with a gland collar at its foot and
   // no cable on it. It is what a run arriving at a socket ends in, drawn over the ribbon's cut end.
   //
@@ -1293,6 +1304,24 @@ class FacilityStyle
   // inside its own cell — measured over the sheet's own vertical fills, 0.065 to 0.18, mean 0.12. In
   // frame the untuned version put a lead's end visibly under a unit that was floating over it
   public static inline var UNIT_SINK = 0.12;
+  // how far a standing unit leans BACK, radians, and it is the one sprite family here that stands
+  // UPRIGHT. render.particles.Sprites.TILT 0.6 is what every actor and bench decoration leans by, and
+  // a unit is the only one of them parked ON a wall rather than out in the room: at 2.6 tall the lean
+  // carries its top sin(0.6) * 2.6 = 1.47 backwards, against the UNIT_OFF 0.9 it has to give, so the
+  // top third of the art is inside the masonry and CUT OFF — reported from the game. Vertical is the
+  // trade, and what it costs is the coplanarity the tilt buys: a unit no longer leans with the
+  // sprites beside it. It is the cheaper of the two, because nothing is cut
+  public static inline var UNIT_TILT = 0.0;
+  // and how far up the unit a lead ARRIVES, as a fraction of UNIT_SZ. not the floor: half this band
+  // stands on LEGS, castors or a pallet, so a cable ending at the base ends under the object rather
+  // than at it
+  public static inline var UNIT_FOOT = 0.10;
+  // and how far BEHIND it, as a fraction of UNIT_SZ — toward the wall, which is the body depth a flat
+  // sprite does not have and where a lead plugs in anyway. THE QUAD IS ITS OWN PLANE now that
+  // UNIT_TILT is 0: a lead ending at the base point ended exactly coplanar with the art and drew over
+  // it, reported as the cable being in front of the object. 0.15 of 2.6 is 0.39 back, against the
+  // UNIT_OFF 0.9 the unit stands clear of, so the end is behind the sprite and still well off the wall
+  public static inline var UNIT_BACK = 0.15;
   // what fraction of its own quad the ART actually fills, across and up. MEASURED off the built sheet
   // over all sixteen standing cells (opaque bbox, alpha > pack16's own CUT 24): width mean 0.637
   // median 0.637, height mean 0.767 median 0.754.

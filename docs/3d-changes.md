@@ -2238,3 +2238,59 @@ extent, which is the check that survives the corridor being unlit.
 
 **VERDICT: landed.** +0 draw calls, +0 programs, −5 floor units and −5 runs, and the two shadows a
 standing thing is supposed to lay.
+
+## A STANDING SPRITE PARKED ON A WALL CANNOT AFFORD THE TILT, and what going upright costs
+
+Reported from one corridor: a floor unit's **top was cut off**, and its lead **came out under it**
+because half the band stands on legs.
+
+**THE TOP WAS INSIDE THE MASONRY.** `render.particles.Sprites.TILT` is 0.6 rad — **34.4°** — and every
+actor sprite and bench decoration in the compound leans back by it. A unit is the only one of them
+parked ON a wall, and the arithmetic is not close: at `UNIT_SZ` 2.6 the lean carries the quad's top
+**sin(34.4°) × 2.6 = 1.47** backwards against the **`UNIT_OFF` 0.9** it stands clear of, so the top
+**0.57 of depth is behind the slab face** and the depth test eats it. `FacilityStyle.UNIT_TILT` is a
+knob of its own and it is **0**; `stand` keeps the general basis so it stays a knob.
+
+**AND WHAT UPRIGHT COSTS IS MEASURED, because it is not free.** The tilt is not decoration — it is
+what points a sprite at a camera that looks **65.6° below horizontal** (read off
+`view3d.camera.getWorldDirection`). A quad's apparent height is the cosine of the angle between its
+own plane and the view:
+
+| lean | angle off perpendicular | height kept |
+|---|---|---|
+| `Sprites.TILT` 34.4° | 31.2° | **0.855** |
+| upright 0° | 65.6° | **0.413** |
+
+So going vertical **halves the art's apparent height** — measured in frame on the same unit, 43 → 28
+screen px. It buys a silhouette that is whole and sells one that is tall, and the two other ways out
+both keep the tilt: stand the unit further off the wall (`UNIT_OFF` 0.9 → 1.6 clears 1.47 and is still
+inside its own 4.0 cell), or make it shorter. Written down here because the next family that stands a
+sprite against a wall meets the same three.
+
+**THE LEAD ARRIVES ON THE BODY.** `UNIT_FOOT` 0.10 of `UNIT_SZ` — 0.26 world — instead of the floor
+height the run used to end at. Half this band stands on **legs, castors, feet or a pallet** (the
+sheet's own rows 5 and 6 say so in as many words), so a cable ending at the base ends **under** the
+object rather than at it. One site, `run`'s `c`; the wall-plane runs are unaffected because they never
+touch the floor.
+
+**AND IT ARRIVES BEHIND THE UNIT, WHICH IS THE UPRIGHT CHANGE'S OWN BILL.** Leaning, the quad swept a
+range of depths and its base point sat at the front of that range; **upright, the base point IS the
+plane**, so a lead ending at `b` ended exactly coplanar with the art and won the depth test often
+enough to draw over it — reported as the cable being in front of the object. `UNIT_BACK` 0.15 of
+`UNIT_SZ` = **0.39** toward the wall gives the sprite the body depth it does not have, against the
+`UNIT_OFF` 0.9 it stands clear of, so the end is behind the art and still well off the masonry. Where
+a lead plugs in anyway.
+
+**AND TWO CELLS OF THE BAND CANNOT TAKE IT AT ALL.** Sheet cell **35** is a distribution board up on
+four long spindly legs and **43** an extension block on a splayed stand; a tenth of the way up either
+of those is the **open air between the legs**, reported from the game as a lead ending in nothing.
+The thing not worth building here is a per-cell foot height — sixteen numbers measured off the art to
+spare two cells, when the other fourteen stand on a base, feet or castors and take the lead at a tenth
+with nothing to say about it. So `FacilityStyle.UNIT_SKIP` deals them out, `STAND` derives the dealt
+list off it exactly as `PICK` does off `SOCK_SKIP`, and a standing unit exists only because a run
+stood it — so *cannot be wired* and *is never dealt* are the same sentence here. Verified by decoding
+the emitted pack mesh's own UVs back to cell indices rather than by looking: the standing cells drawn
+are **39, 42 and 47**.
+
+**VERDICT: landed, and the upright half is a LOOK the user asked to see rather than a settled
+number.** +0 draw calls, +0 tris, counts unchanged at 44 mounts / 11 runs / 3 units / 37 scatter.

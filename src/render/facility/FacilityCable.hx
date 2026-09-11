@@ -110,6 +110,13 @@ class FacilityCable
       if (FacilityStyle.SOCK_SKIP.indexOf(FacilityStyle.ELEC_SOCKET + i) < 0) i
   ];
 
+  // and the standing cells actually dealt, the same derivation off FacilityStyle.UNIT_SKIP — two of
+  // the sixteen stand on legs a lead would end in the air between
+  static var STAND:Array<Int> = [
+    for (i in 0...FacilityStyle.ELEC_BAND)
+      if (FacilityStyle.UNIT_SKIP.indexOf(FacilityStyle.ELEC_UNIT + i) < 0) i
+  ];
+
   // every cell the compound strikes a KEEP-CLEAR hatch on, filled once per build. see `hatched`
   static var zones:Map<Int, Bool>;
 
@@ -710,7 +717,7 @@ class FacilityCable
             continue;
           var g = FacilityModel.mix((c * 971658137) ^ (r * 1266489917));
           var b = base(m, c, r, p.dir);
-          stand(pack, b, FacilityStyle.ELEC_UNIT + g % FacilityStyle.ELEC_BAND);
+          stand(pack, b, FacilityStyle.ELEC_UNIT + STAND[g % STAND.length]);
           // BOTH CONTACTS ARE SIZED TO THE ART AND NOT THE QUAD (FacilityStyle.UNIT_FILL_W/_H), which
           // is the whole of the wall shadow being too large: the sprite fills 0.64 across and 0.77 up
           // of what it was handing over
@@ -730,12 +737,21 @@ class FacilityCable
           // it is square because a sprite has no depth to read one off: a floor-standing cabinet is
           // about as deep as it is wide
           ContactMask.prop(b[0] - hw, b[0] + hw, b[2] - hw, b[2] + hw);
+          // and BEHIND it, not on its face. the quad is vertical and its base point IS its plane, so a
+          // lead ending at `b` ended coplanar with the art and drew OVER it — reported as the cable
+          // being in front of the object. UNIT_BACK gives the sprite the body depth it does not have,
+          // toward the wall, which is where a lead plugs in anyway
+          var f = p.dir ^ 1;
+          var bk = FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_BACK;
           strip(cab, {
             a: anchor(m, p, 0),
-            c: [b[0], b[1] + FacilityStyle.CABLE_FLOOR_Y, b[2]],
+            // ARRIVING ON THE BODY AND NOT AT THE FOOT: half this band stands on legs, castors or a
+            // pallet, so a lead ending at the floor ends UNDER the object rather than at it
+            c: [b[0] - NX[f] * bk, b[1] + FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_FOOT,
+              b[2] - NZ[f] * bk],
             n: UP,
             // out into the room, so the slack in the lead bows away from the wall rather than into it
-            side: [NX[p.dir ^ 1], 0.0, NZ[p.dir ^ 1]],
+            side: [NX[f], 0.0, NZ[f]],
             bow: FacilityStyle.CABLE_SNAKE,
             wave: FacilityStyle.CABLE_WAVE,
             seed: g,
@@ -770,12 +786,17 @@ class FacilityCable
         }
     }
 
-// one unit STANDING on the floor: a frontal quad, fixed yaw, leaned back by Sprites.TILT.
+// one unit STANDING on the floor: a frontal quad, fixed yaw, leaned back by FacilityStyle.UNIT_TILT.
 //
 // FRONTAL AND NOT CAMERA-FACING, the rule the object-effect guard draws: this is glued to a world
-// cell, so it leans exactly as far as every actor sprite and bench decoration beside it and stays
-// coplanar with them from any camera angle. render.particles.Sparks.flameQuad builds the same basis
-// out of a rotation; here the four corners are written out, because a merged buffer has no transform.
+// cell, so it holds its yaw and stays coplanar with the sprites beside it from any camera angle.
+// render.particles.Sparks.flameQuad builds the same basis out of a rotation; here the four corners
+// are written out, because a merged buffer has no transform.
+//
+// IT DOES NOT LEAN, which is where it parts company with every other sprite here and the reason is
+// geometric rather than stylistic: UNIT_TILT is 0 because a unit is the only one of them parked ON a
+// wall, and Sprites.TILT 0.6 puts the top of a 2.6-unit quad 1.47 back into masonry it stands 0.9
+// clear of. The basis is kept general so the knob is a knob
 //
 // the quad is pinned by its BASE, so the lean tips the top back toward the wall and the feet stay on
 // the floor — flameQuad's own correction, arrived at from the other side (it shifts a centre, this
@@ -784,9 +805,10 @@ class FacilityCable
     {
       var h = FacilityStyle.UNIT_SZ;
       var hw = h / 2;
-      // up, after leaning back by TILT: the quad's own +y rotated -TILT about x
-      var uy = Math.cos(render.particles.Sprites.TILT) * h;
-      var uz = -Math.sin(render.particles.Sprites.TILT) * h;
+      // up, after leaning back by UNIT_TILT: the quad's own +y rotated -UNIT_TILT about x. that knob
+      // is 0 and the whole of why is on it — a unit parked against a wall has no room to lean into
+      var uy = Math.cos(FacilityStyle.UNIT_TILT) * h;
+      var uz = -Math.sin(FacilityStyle.UNIT_TILT) * h;
       // and the base dropped through the floor by the art's own margin, so its FEET meet it
       var y = p[1] - FacilityStyle.UNIT_SINK * uy;
       var z = p[2] - FacilityStyle.UNIT_SINK * uz;
