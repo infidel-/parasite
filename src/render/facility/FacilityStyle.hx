@@ -854,7 +854,12 @@ class FacilityStyle
   // A SHADER UNIFORM AND NOT A SECOND CACHED CROP. render.particles.Sprites already opens the texel
   // to undo its premultiply, so the desaturation is two more instructions there against a second
   // entry in every sprite cache — see Sprites.unpremul. Half is the point of the number: a blue
-  // flask still reads blue, it just stops being the loudest thing in the room
+  // flask still reads blue, it just stops being the loudest thing in the room.
+  //
+  // it applies to EVERY bench frame, hi-res pack cell included — that gate was tried and reverted,
+  // see FacilityDeco.spriteSat — and the flat clutter lying on the same worktops carries the same 0.5
+  // baked into its sheet, because a merged lambert has no uniform to hand it to (art/textures.json
+  // facility/worktop-clutter's `sat`, mixed in linear light so the two mean the same thing)
   public static inline var DECO_TABLE_SAT = 0.5;
 
   // the shelving's composite: two alpha-cut end frames, a bare quad per shelf and the boxes on
@@ -1164,6 +1169,179 @@ class FacilityStyle
   // carrying one, and it is the whole density rule: ONE sign per run, on whichever of the run's cells
   // has something worth naming under it and falling back to the middle when none has
   public static inline var PLACARD_RUN_MIN = 3;
+
+  // ---- the electrical service: sockets, fittings, floor units and cable (FacilityCable) ----------
+
+  // ONE PACK64 FOR FOUR FAMILIES, and the only sheet in the tree drawn in two projections: its first
+  // four rows are FRONT ELEVATION and hang on walls, its last four are TOP-DOWN and lie flat on
+  // floors. That is what makes the whole electrical service one draw call — see
+  // art/textures.json facility/electrical-pack, which also carries why the wall half alone is capped
+  public static inline var ELEC_TEX = 'textures/facility/electrical-pack.png';
+  public static inline var ELEC_COLS = 8;
+  // the four sixteens, as the first cell of each band
+  public static inline var ELEC_SOCKET = 0;
+  public static inline var ELEC_FITTING = 16;
+  public static inline var ELEC_UNIT = 32;
+  public static inline var ELEC_SCATTER = 48;
+  public static inline var ELEC_BAND = 16;
+  // the cut-out threshold, the worktop clutter's own — the same kind of alpha-boxed pack art
+  public static inline var ELEC_CUT = DECO_CUT;
+  // how far a floor decal floats over the surface it lies on. THE STACK IS THREE DEEP AND THE ORDER
+  // IS THE WHOLE OF IT: render.RenderConfig.PAINT_Y 0.03 is the aisle marking, CABLE_FLOOR_Y 0.05 the
+  // lead lying over it, and this the loose kit lying over that. The first cut put the cable at 0.02
+  // and this at exactly 0.03, so a lead ran UNDER the yellow lines and the scatter z-fought them —
+  // reported from the game, and a decal family that lands on painted floor has to be written against
+  // the paint's own height rather than against y = 0
+  public static inline var ELEC_FLOOR_Y = 0.07;
+
+  // the socket quad, world units — SQUARE, because the art is an alpha cut-out in a square cell and
+  // its own silhouette is the shape. 1.0 is half a metre at the half-metre unit WALL_H 6.0 fixes,
+  // which is a surface-mounted industrial socket box with its isolator rather than a faceplate.
+  //
+  // AND IT IS SCALE AND NOT VALUE THAT DECIDES WHETHER A SMALL WALL FITTING IS SEEN, which POINT_W
+  // already records ("the scale POINT_W had to be pushed to before the fittings were seen at all")
+  // and this family re-learned from the bottom. Measured in frame off the rack beside it: one world
+  // unit is about 4.2 device px from the resting camera, and the art fills 0.7 of its own cell — so
+  // 1.0 drew a SEVEN-PIXEL smudge with a cable arriving at it. 1.4 draws about 1 unit of art, still
+  // comfortably under the 1.8-wide panel this replaced
+  public static inline var SOCK_W = 1.4;
+  // and its CENTRE, so the quad spans 0.15 to 1.55 and the art inside it about 0.36 to 1.34 — a
+  // socket a foot or two off the floor, where one is. IT CANNOT GO UNDER SOCK_W / 2: the quad is
+  // square and a centre lower than its own half-width puts its bottom edge through the floor.
+  //
+  // THE BAND NEEDS NO COLLISION TEST for the reason the placards' 4.75 needs none from the other end:
+  // nothing else in the compound is hung on a room wall under BENCH_H 2.0, and a bench stands on its
+  // own CELL a clear unit off the slab face rather than against it. GRIME_H's damp band is on the
+  // wall and this is MOUNT_PROUD of the wall, so it draws over it
+  public static inline var SOCK_Y = 0.85;
+  // where a run LEAVES a socket, as a fraction of SOCK_W out from its centre. it is measured against
+  // the ART and not against the quad, which is the whole point of the constant: the pack's cells fill
+  // 0.49 to 0.87 of their own square, so a run inset by the quad's half-width less its own thickness
+  // — the obvious number, and the first one tried — ends in the transparent margin BESIDE the socket
+  // with a visible gap. A quarter of the quad is inside the drawn art of every cell on the sheet
+  public static inline var SOCK_LEAD = 0.25;
+  // how far apart two sockets must be, in cells. the panel family this replaced settled here for a
+  // measured reason that still holds: a lab room is 6 to 10 cells across, so POINT_SPACING 8 would
+  // allow one per room, 3 hung 52 of them and read as wallpaper, and 5 left the compound one link
+  public static inline var SOCK_SPACING = 4;
+
+  // the corridor wall fitting — a junction box, a breaker board, an isolator. bigger than a socket
+  // because it is a thing on a wall rather than a plate in it, 65 cm at the same unit
+  public static inline var FIT_W = 1.3;
+  // and its centre, so it spans 1.95 to 3.25.
+  //
+  // THREE FAMILIES ALREADY OWN THE CORRIDOR WALL and this one is fitted between them rather than
+  // against them: POINT_Y's fittings span 0.1 to 4.1 but only on the cells FacilityPoint.places
+  // takes, which this excludes outright; the casework's own run list is excluded the same way; and
+  // EXIT_Y 4.75 puts the signage band's floor at 4.25, a unit clear of the top of this one
+  public static inline var FIT_Y = 2.6;
+  // and how far apart two of them go, in cells. between POINT_SPACING 8 and the socket's 4: a
+  // corridor is long, but a fitting every 8 cells on top of a fire point every 8 is a bare wall
+  public static inline var FIT_SPACING = 6;
+
+  // the floor unit a floor cable leads to — a cable drum, a welding set, a distribution board. it
+  // STANDS, which is the whole of cells 32-47 of the pack: drawn overhead and laid flat they read as
+  // equipment PAINTED ON THE FLOOR, so those two rows were re-drawn in elevation and this is a
+  // frontal quad leaned back by render.particles.Sprites.TILT, like every actor and bench decoration.
+  //
+  // SQUARE, because the pack's cells are square and nothing is ever stretched. 2.6 is 1.3 m at the
+  // half-metre unit WALL_H 6.0 fixes, just under DECO_MACHINE_SZ 2.8 — the biggest thing that should
+  // be parked against a laboratory wall is smaller than the machinery bolted to it
+  public static inline var UNIT_SZ = 2.6;
+  // how far the quad is sunk into the floor, as a fraction of UNIT_SZ, so the ART's feet land on it
+  // rather than the quad's own bottom edge. tools/pack16.py CENTRES each cell's content (the right
+  // call for the other two bands on this sheet, and see art/textures.json facility/electrical-pack
+  // for why one --valign has to serve all three), which leaves a standing unit's feet a margin up
+  // inside its own cell — measured over the sheet's own vertical fills, 0.065 to 0.18, mean 0.12. In
+  // frame the untuned version put a lead's end visibly under a unit that was floating over it
+  public static inline var UNIT_SINK = 0.12;
+  // how far its base stands off the wall's slab FACE, world units. it is parked against the wall and
+  // not stood in the middle of its cell: the cell is 4.0 and its own face is a unit in from the cell
+  // edge, so this leaves the lane down the middle of the room clear
+  public static inline var UNIT_OFF = 0.9;
+  // how far ALONG its wall from its mount one stands, in cells, and how far apart two of them must
+  // be. ALONG and never out: a lead run straight out into the room crosses the aisle markings and, in
+  // a corridor, the corridor itself. the reach is a RANGE because the run needs free floor and
+  // unbroken masonry the whole way, and the nearest clear distance is taken
+  public static inline var UNIT_REACH_MIN = 2;
+  public static inline var UNIT_REACH_MAX = 4;
+  public static inline var UNIT_SPACING = 5;
+  // and the loose electrical scatter lying about on the floors — an offcut coil, a taped-down run, a
+  // dropped plug. one cell in SCAT_ODDS carries one
+  public static inline var SCAT_SZ = 1.6;
+  public static inline var SCAT_SZ_VAR = 0.5;
+  public static inline var SCAT_ODDS = 11;
+
+  // the cable itself. u maps 0..1 ACROSS the ribbon (the art is one cable edge to edge, and its
+  // cross-section shading is what makes a flat strip read as round) and v tiles along the run
+  public static inline var CABLE_TEX = 'textures/facility/cable.png';
+  // the ribbon's width, world units. 0.18 went to 0.126 — reported from the game as too thick, and
+  // 30% off it is a 6 cm cable at the half-metre unit WALL_H 6.0 fixes: still building service and
+  // not a flex, but no longer a hose
+  public static inline var CABLE_W = 0.126;
+  // and the world length one repeat of the art covers. it does NOT hold the source's own aspect and
+  // does not need to: the sheath is prompted featureless, so the only thing a stretch could distort
+  // is grain
+  public static inline var CABLE_TILE = 1.0;
+  // how far a run droops below the straight line between its two ends, WORLD UNITS at mid-span. the
+  // whole point of the family — a cable that leaves a fitting on a straight line reads as a pipe. IT
+  // IS A CAP AND NOT THE DROOP: `FacilityCable.droop` takes the smaller of this and the headroom the
+  // run's own lowest anchor leaves over the floor, because everything this family is bolted to came
+  // down the wall and a fixed 0.45 now puts a mid-span UNDER it — measured at min y **0.0203** on the
+  // emitted ribbon against `render.RenderConfig.PAINT_Y` 0.03, so the cable was inside the floor.
+  //
+  // ABSOLUTE AND NOT A FRACTION OF THE SPAN, which is the trap this was built with and had to be
+  // taken back out of. A droop of 0.14 of length is a fine number on the 2-unit drop off a machine
+  // lid and 1.68 units on a 3-cell link — a cable hanging to knee height across a laboratory — and
+  // every time CABLE_RUN_MAX went up it got worse. The physics agrees with the fix: a strung cable's
+  // sag is set by how much SLACK was left in it, not by how far apart its ends are. 0.45 is a
+  // quarter-metre at the half-metre unit WALL_H 6.0 fixes. `strip` still tapers it away on a run
+  // shorter than one cell, so the machine drop does not swing like a skipping rope
+  public static inline var CABLE_SAG = 0.45;
+  // and a slow lateral wander on top of the droop, same units, so two runs on one wall are not
+  // parallel curves. render.PathLine does this per frame off a scrolling phase; here it is rolled once
+  // off FacilityModel.mix and baked, because a cable does not move
+  public static inline var CABLE_WAVE = 0.12;
+  // and the same thing for a run lying ON THE FLOOR, where there is no gravity term at all: the
+  // whole offset is the wander, and it is bigger than the wall's because a cable dropped across a
+  // floor is not under tension. it is what "less straight movement" means for the floor runs — a
+  // cable that crosses a lab in a straight line reads as a painted stripe
+  public static inline var CABLE_SNAKE = 0.55;
+  // how far a floor run floats over the surface: OVER render.RenderConfig.PAINT_Y 0.03, so a lead
+  // crossing an aisle line is drawn on top of it, and under ELEC_FLOOR_Y so the scatter still covers
+  // a run's cut end. see that constant for the stack
+  public static inline var CABLE_FLOOR_Y = 0.05;
+  // where a lead leaves a MACHINE, as a fraction of the unit's own height. NOT the lid, which is what
+  // it was first and what the game reported: a fitting's sprite does not fill its quad's top corners,
+  // so a cable anchored at q.h left from a point OUTSIDE the drawn object. Down at a third of its
+  // height the anchor is inside the art of every fitting in the family
+  public static inline var CABLE_LID_H = 0.35;
+  // segments per run. the sag is a parabola and the wander a single sine, so this is only about how
+  // straight the polyline looks — 10 puts a vertex every 1.2 units on a 3-cell run
+  public static inline var CABLE_STEPS = 10;
+  // the longest run between two panels, in cells. a run is rejected outright if it crosses a cell
+  // carrying any fitting, so this is the cap and not the rule.
+  //
+  // IT HAS TO BE MORE THAN FIX_SPACING AND BY MORE THAN ONE. The thinning above puts the nearest two
+  // panels on a wall line exactly FIX_SPACING apart, so a cap equal to it links only pairs at exactly
+  // that distance — which the greedy deal almost never produces, and the first build came back with
+  // 52 panels and ZERO runs partly on this. At 5 against a spacing of 3 the window was 3, 4 or 5 and
+  // the whole compound offered 19 candidate PAIRS; 8 took that to 30 and produced no extra runs at
+  // all, because what actually refuses a link is the masonry in between and not the distance. It is
+  // kept at 8 anyway — the reach costs nothing and a long run is the one that reads — and it only
+  // became safe at all once CABLE_SAG stopped being a fraction of the span: at the old knob an
+  // 8-cell run drooped 4.5 units
+  public static inline var CABLE_RUN_MAX = 8;
+  // and how far along the wall off the unit's centre it leaves, as a fraction of the unit's span —
+  // toward the socket, so the drop is a diagonal with something to sag across rather than the
+  // straight vertical a centred gland would give. 0.35 and not the old 0.22 for CABLE_LID_H's reason:
+  // measured from the unit's own edge, the corners are where the art is not
+  public static inline var CABLE_LID_D = 0.35;
+  // and how far PAST the panels the ribbon sits. it is not a coplanarity fix for the wall — the
+  // panels are already MOUNT_PROUD of that — it is one for the PANELS: a run's ends are drawn over
+  // the plate they leave, and the standing note says give an overlay a physical gap rather than a
+  // polygonOffset. small, because the two surfaces are parallel and this is only a depth order
+  public static inline var CABLE_EPS = 0.03;
 
   // ---- interior wall grime (render.facility.FacilityGrime) ---------------------------------------
 

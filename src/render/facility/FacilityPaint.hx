@@ -831,7 +831,7 @@ class FacilityPaint
 // the wall and doorway tests are not covered by the surface either: a door cell finalises to
 // corridor lino and a wall cell keeps whatever surface it was laid over, so both are asked
 // separately — the pair render.facility.FacilityExit.corridor makes for the same reason
-  static inline function freeFloor(m:Facility, col:Int, row:Int):Bool
+  public static inline function freeFloor(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityModel.inside(m, col, row) &&
         (m.surf[row][col] == Surf.TILE ||

@@ -65,6 +65,13 @@ class FacilityArea implements Area3D
   var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
   var points = 0;                               // corridor wall fittings: fire points and panels
   var placards = 0;                             // room wall safety signage: one per run of masonry
+  var elec:render.facility.FacilityCable.ElecCounts =
+    {
+      mounts: [],
+      runs: 0,
+      units: 0,
+      scatter: 0,
+    };                                          // the whole electrical service, four ways
   var sinks = 0;                                // bench sinks: one per block with a free edge cell
   var clutter = 0;                              // flat decals scattered over the worktops
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
@@ -186,6 +193,13 @@ class FacilityArea implements Area3D
       // no ordering against anything either — PLACARD_Y hangs it clear of the tallest fitting that
       // can share a cell, so the collision the fire points had to answer does not arise up there
       placards = FacilityPlacard.build(scene, model);
+      // and the electrical service LAST of the wall families, because it is the only one that reads
+      // three of the others: the room sockets share FacilityPlacard.hangs (and sit at 0.25 to 0.95, a
+      // whole storey under the signage), and the corridor fittings exclude FacilityTables.runs and
+      // FacilityPoint.places outright. None of that is an ordering — all three are pure functions of
+      // the saved grid, which is why FacilityPoint can be asked for its own placements here without
+      // having run, and why this can equally go before FacilityDeco while asking it for machine rects
+      elec = FacilityCable.build(scene, model);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -378,6 +392,23 @@ class FacilityArea implements Area3D
             // means the Surf.TILE gate or the carries-both-ways test broke rather than that the
             // rooms are bare
             placards: placards,
+            // and the ELECTRICAL SERVICE off two merged meshes: the wall mounts AS A LIST and three
+            // counts. FOUR readouts and not one because every part of this family fails
+            // INDEPENDENTLY and merged geometry has no instance count to read them off — its first
+            // build shipped 52 wall mounts and 0 runs with BOTH halves broken at once behind a single
+            // counter, which is the whole argument for the split. The mounts are a LIST rather than a
+            // number for a reason the counts do not have: `cell` is the sheet cell each one draws,
+            // and a room picking ONE socket for all of its walls cannot be checked any other way.
+            // `fit` false reads against `placards` — both run on FacilityPlacard.hangs, so placards
+            // with no sockets is the bare-cell gate eating every candidate and a number near
+            // `placards` means SOCK_SPACING stopped thinning; `fit` true reads against `points`,
+            // whose faces it excludes. `runs` sits far under mounts + `units` and that is the
+            // compound's geometry rather than a roll: a link is refused wherever the masonry between
+            // two sockets is glazing or a doorway or the floor between them carries a fitting.
+            // `units` is bounded by how much clear floor stands within UNIT_REACH_MAX of a wall, and
+            // `scatter` is a flat one-in-SCAT_ODDS over every free floor cell, so it is the one of
+            // the four that should track the compound's SIZE and nothing else
+            elec: elec,
             // and how many bench SINKS stand. merged-mesh blindness for the third time, and the
             // number is read against the bench blocks rather than against the bench CELLS: one per
             // connected block of table tiles that had a free edge cell, so it is bounded above by the

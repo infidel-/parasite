@@ -68,6 +68,15 @@ class FacilityWarm
       // the program key — plus the rack lights' own patched additive material. the demo model stamps
       // one cell of each kind for exactly this reason, see FacilityModel.demo
       FacilityDeco.build(sc, model);
+      // and the electrical service, which is NOT a new program permutation either — the pack mesh is
+      // FacilityClutter's alphaTest DoubleSide lambert and the cable is the shell's plain mapped one
+      // — but IS a 1024 pack and a 256 tile to decode and upload, which is the reason FacilityClutter
+      // is on this list too. It is placed after FacilityDeco because it asks that file for its
+      // machine rects, though the call order does not actually matter: rectOf is a pure function of
+      // the grid. Whether the demo model emits anything is NOT assumed: FacilityModel.demo leaves
+      // `rooms` empty, which the socket's own roomKey falls back past, and its floor SCATTER lands on
+      // free floor alone — so the pack mesh is warmed even in a model with no wall a socket will take
+      FacilityCable.build(sc, model);
       // and the halos those three just handed over, which is a program permutation of its own (a
       // mask-patched transparent basic with an alphaMap) AND NOT OPTIONAL FOR A SECOND REASON:
       // FacilityDetail.halos is what CLEARS the collector, so skipping it here would carry these

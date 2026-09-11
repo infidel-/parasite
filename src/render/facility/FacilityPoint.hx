@@ -165,7 +165,7 @@ class FacilityPoint
 // a DOOR cell carries, which is correct and not an oversight: the wall LINE runs on through a
 // doorway, so a fitting beside one is standing on masonry that continues — and `hugs` has already
 // refused the door's own neighbours through nearDoor
-  static inline function runsOn(m:Facility, col:Int, row:Int, dir:Int):Bool
+  public static inline function runsOn(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
       var c = col + DC[dir];
       var r = row + DR[dir];

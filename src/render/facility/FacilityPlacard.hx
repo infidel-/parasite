@@ -135,8 +135,12 @@ class FacilityPlacard
 // the carries-both-ways half is FacilityKit.wall's rule and is here for FacilityPoint's reason:
 // FacilityGeom.slab insets a face by a unit wherever the wall line STOPS at that cell, so on the last
 // cell of a run the masonry shows 3 units of a 4-unit cell and a PLACARD_W quad centred on the cell
-// would hang past the end of the wall it is bolted to
-  static function hangs(m:Facility, col:Int, row:Int, dir:Int):Bool
+// would hang past the end of the wall it is bolted to.
+//
+// PUBLIC because render.facility.FacilityCable's panels want the same three facts and a third copy of
+// this test is a third place to get the carries-both-ways half wrong. It is a pure function of the
+// saved grid, so either family may run first — FacilityPoint.places' own discipline
+  public static function hangs(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
       if (!FacilityModel.inside(m, col, row) ||
           m.surf[row][col] != Surf.TILE ||

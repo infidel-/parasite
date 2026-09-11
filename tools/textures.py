@@ -10,6 +10,11 @@ Driven by art/textures.json (tracked; the sources it points at are not). For eac
      dark for the surface it lands on (see lift_gamma; alpha is left alone),
   3c. for an entry with "glass_alpha": drops the alpha of the BRIGHT half of a glazing
      texture so the panes go see-through and the dark frame stays solid (see glass_cut),
+  3d. for an entry with "sat": mixes it toward its own luminance, for art painted in a
+     chroma the room's palette cannot take (see sat_mix; luma is preserved),
+  3e. for an entry with "cells": scales any cell of a PACK sheet that is brighter than the
+     stated cap down onto it, and leaves the rest alone — over the whole sheet or over one
+     row band of it (see cell_cap),
   4. warns when a needs_alpha texture has no real alpha (gpt can't emit it ->
      the source must be human-edited),
   5. rewrites textures.json with the new last_converted timestamps.
@@ -97,6 +102,90 @@ def lift_gamma(im, g):
     return Image.fromarray(out.astype(np.uint8), mode)
 
 
+# sRGB <-> linear, the IEC transfer, on 0..255 float arrays. tools/pix.py carries the forward half
+# because measuring only ever goes one way; both directions are needed here, because every knob below
+# does its arithmetic in LIGHT and has to hand bytes back.
+def to_linear(v):
+    v = v / 255.0
+    return np.where(v <= 0.04045, v / 12.92, ((v + 0.055) / 1.055) ** 2.4)
+
+
+def to_srgb(v):
+    v = np.clip(v, 0.0, 1.0)
+    return np.where(v <= 0.0031308, v * 12.92, 1.055 * v ** (1 / 2.4) - 0.055) * 255.0
+
+
+W709 = np.array([0.2126, 0.7152, 0.0722], np.float32)
+
+
+def sat_mix(im, s):
+    """Mix every pixel toward its own Rec.709 luminance: s = 1 is a byte-exact no-op, 0 is grey.
+
+    For art whose chroma the room's palette cannot take — flat-design vector work in a dark laboratory,
+    the case render.facility.FacilityStyle.DECO_TABLE_SAT exists for.
+
+    DELIBERATELY THE SAME INSTRUMENT IN THE SAME SPACE as the `spriteSat` uniform that
+    render.particles.Sprites patches into the sprite pool: Rec.709 weights are a linear-light
+    instrument, so a mix taken above the EOTF desaturates by a different amount at every value and a
+    number baked here would stop meaning what the same number means handed to that uniform. Luminance
+    is preserved by construction, so this moves chroma and not value — pair it with `cell_cap` or
+    `lift_gamma` if the level is wrong too. Alpha is untouched."""
+    mode = "RGBA" if "A" in im.getbands() else "RGB"
+    a = np.asarray(im.convert(mode)).astype(np.float32)
+    lin = to_linear(a[:, :, :3])
+    y = (lin * W709).sum(axis=2, keepdims=True)
+    out = a.copy()
+    out[:, :, :3] = to_srgb(y + (lin - y) * s)
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), mode)
+
+
+def cell_cap(im, grid, cap, rows=None):
+    """Scale any cell of a grid:grid pack sheet whose mean linear luminance is over `cap` down onto it,
+    in LINEAR light, and leave every cell already at or under it alone. Returns (image, cells moved).
+
+    `rows` is an optional [first, last) ROW BAND, for a pack whose halves land on different surfaces:
+    facility/electrical-pack draws its first four rows on a WALL (0.55x facility/wall-room is the band
+    every shipped wall fitting sits in) and its last four flat on a FLOOR, where the same cap would
+    take a dull orange lead and a yellow warning plate down to a quarter of the tile they lie on.
+
+    THE ONLY THING THAT CAN SAY "these cells and not those". `lift` is one number over a whole sheet,
+    and on a pack whose subjects genuinely differ in albedo it cannot be fitted at all: measured on
+    facility/worktop-clutter, whose 57 dealt cells run 0.0476 at p10 to 0.3171 at p90, the gamma that
+    lands the sheet on the bench family's band (1.25) takes the cells rendering UNDER their own worktop
+    from 5 to 13 and the darkest to 0.24x it — lift_gamma's own hole-in-the-ground failure, reached
+    from the other direction.
+
+    A LINEAR SCALE AND NOT A SECOND GAMMA, for the other half of the same reason: the paper cells on
+    that sheet want a factor of 0.24, which as a gamma is 2.66 and crushes their printed detail to
+    black. A multiply moves a cell's level and holds its internal contrast.
+
+    AND IT CAN ONLY EVER DARKEN. A cell under the cap is not touched, so the dark cells that read
+    correctly as dark objects (the finding docs/3d-render.md records against condemning them by value)
+    survive by construction rather than by a skip list.
+
+    Measured over OPAQUE pixels only — tools/pix.py prints its `opaque` column for this reason:
+    including a cut-out sheet's transparent margin reports 0.0686 where its subjects are at 0.1528."""
+    mode = "RGBA" if "A" in im.getbands() else "RGB"
+    a = np.asarray(im.convert(mode)).astype(np.float32)
+    h, w = a.shape[:2]
+    ch, cw = h // grid, w // grid
+    moved = 0
+    r0, r1 = (rows if rows else (0, grid))
+    for r in range(r0, r1):
+        for c in range(grid):
+            cell = a[r * ch:(r + 1) * ch, c * cw:(c + 1) * cw]
+            op = cell[:, :, 3] > 128 if mode == "RGBA" else np.ones(cell.shape[:2], bool)
+            if not op.any():
+                continue
+            lin = to_linear(cell[:, :, :3])
+            m = float((lin * W709).sum(axis=2)[op].mean())
+            if m <= cap:
+                continue
+            cell[:, :, :3] = to_srgb(lin * (cap / m))
+            moved += 1
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), mode), moved
+
+
 def glass_cut(im, thr, a):
     """Take every pixel brighter than `thr` down to alpha `a`, leaving darker ones opaque.
 
@@ -156,12 +245,16 @@ def convert(label, e, default_res):
     last = e.get("last_converted")
     lift = e.get("lift")
     glass = e.get("glass_alpha")
+    sat = e.get("sat")
+    cells = e.get("cells")
     fresh = (
         not os.path.exists(out)
         or last is None
         or src_mtime > datetime.fromisoformat(last)
         or lift != e.get("last_lift")  # retuning the lift must rebuild; the source never changed
         or glass != e.get("last_glass_alpha")  # and the same for the glazing cut
+        or sat != e.get("last_sat")  # and the desaturation
+        or cells != e.get("last_cells")  # and the per-cell cap
     )
 
     res = e.get("res", default_res)
@@ -186,6 +279,15 @@ def convert(label, e, default_res):
             im = lift_gamma(im, lift)
         if glass:
             im = glass_cut(im, int(glass[0]), int(glass[1]))
+        # chroma first and then level, which is an order and not a preference: `sat_mix` preserves
+        # luminance, so the cap below measures the same number either way, while a cap taken first
+        # would still be correct only by that same accident. Both run on the FULL-RES source, ahead of
+        # the LANCZOS downscale, for glass_cut's reason — and the cap needs the source's own grid
+        if sat is not None:
+            im = sat_mix(im, float(sat))
+        capped = 0
+        if cells:
+            im, capped = cell_cap(im, int(cells["grid"]), float(cells["cap"]), cells.get("rows"))
         im = im.resize((ow, oh), Image.LANCZOS)
         if has_alpha(im):
             im = bleed_alpha(im)  # scrub the LANCZOS colour-ring fringe at low alpha
@@ -199,7 +301,18 @@ def convert(label, e, default_res):
             e.pop("last_glass_alpha", None)
         else:
             e["last_glass_alpha"] = glass
+        if sat is None:
+            e.pop("last_sat", None)
+        else:
+            e["last_sat"] = sat
+        if cells is None:
+            e.pop("last_cells", None)
+        else:
+            e["last_cells"] = cells
         extra = ("  lift " + str(lift) if lift else "") + ("  glass " + str(glass) if glass else "")
+        extra += ("  sat " + str(sat) if sat is not None else "")
+        extra += (f"  cap {cells['cap']} on {capped}/{cells['grid'] ** 2}"
+                  + (f" rows {cells['rows']}" if cells.get("rows") else "") if cells else "")
         print(f"  built {label}.png  {ow}x{oh}  ({im.mode}){extra}")
 
     if e.get("needs_alpha") and not has_alpha(Image.open(out)):

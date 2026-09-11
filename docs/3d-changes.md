@@ -1845,3 +1845,280 @@ The per-cell count rolls 0..3 and **reaching zero is the point** — flooring it
 all 139 bench cells and rebuilds the rhythm this family exists to break. 148 over 115 non-sink cells.
 
 **VERDICT: landed.** +1 draw call, +296 tris, 57 subjects on one $0.058 sheet.
+
+## A per-cell LINEAR CAP, which is the thing a per-sheet lift cannot be
+
+Reported from the game: the worktop clutter is too bright. `facility/worktop-clutter` ships **no
+`lift`, deliberately** — the entry above records why. Measured, the sheet is **bimodal**, and that is
+the whole finding. Over the 57 dealt cells: p10 0.0476, p25 0.0663, **p50 0.1281**, p75 0.2757,
+p90 0.3171. The top quarter is white PAPER — index cards 0.3751 (**9.4×** `bench-top`'s 0.0401),
+powder heap 0.3741, loose papers 0.3508, label sheet, weigh boat, schematic, floor plan, dust mask,
+printout, notebook, logbook, cup lid, barcodes, calendar, clock. In frame, `--scene`: the envelope
+decal read **3.80×** its own bare worktop and the barcode sheet 2.37×, against the sink basin's
+fitted 2.68× — the only other flat thing on that worktop.
+
+**A lift cannot express it, in either direction.** The gamma that lands the whole sheet on the bench
+family's band is 1.25, and it takes the cells rendering under their own worktop from **5 to 13** and
+the darkest to 0.0095 = **0.24×** it. The gamma that lands the PAPER at 2× is **2.66 per cell**,
+which also crushes its printed detail to black. This is the entry above hit from the opposite side.
+
+**`cells` in `art/textures.json`** — `{"grid": 8, "cap": 0.105}`, ~12 lines in `tools/textures.py`
+beside `lift_gamma`. Per cell: mean linear luminance over **opaque pixels only**, and where it is over
+the cap, multiply that cell's **linear** RGB by `cap / measured`.
+
+- **A multiply and not a gamma**, because a gamma of 2.66 destroys the contrast inside the cell.
+- **It can only ever darken**, so the dark cells are untouched *by construction* rather than by a
+  skip list — which is what makes it composable with the solidity finding above.
+- `cap` 0.105 is the bench packs' own built value: the clutter and the standing decorations share a
+  worktop, so they now share a number.
+
+**Measured after:** 35 of 64 cells moved, all of them ones already over 0.105 and none under it;
+whole sheet 0.1528 → 0.0796; brightest cell 0.3751 → 0.104 = **2.59×** the worktop, down from 9.4×;
+cells under `bench-top` **5 → 5, unchanged**. In frame the envelope went 3.80× → **1.51×** and the
+barcode sheet 2.37× → **1.78×**.
+
+**The trap:** measure on opaque pixels only. Over the whole array the same sheet reports 0.0686
+against a true 0.1528 — `tools/pix.py` masks this way and its `opaque 27.8%` column is the tell.
+Second trap: `textures.py`'s `fresh` test tracks `lift` and `glass_alpha` and not `res`, so any new
+knob must be added to it or an edit reports *up to date* and rebuilds nothing.
+
+**VERDICT: landed.** Zero runtime cost, zero draw calls, zero programs.
+
+## `DECO_TABLE_SAT` goes back to every frame, and the clutter gets it baked
+
+> SUPERSEDES the per-frame split in "PACK16 — the bench decorations get 256 px art"
+
+That split returned 1.0 for any frame with a pack cell, on the argument that pack cells are drawn in
+the game's palette already (chroma median 10.4, p90 26.4) so halving them would only turn a tinted
+liquid grey. Reported from the game: it does not. `FacilityDeco.spriteSat` now returns
+`DECO_TABLE_SAT` for every bench decoration — one line, and **zero cost**, because the uniform already
+exists and `Sprites.paint` already writes it per quad.
+
+The flat clutter beside them has no such uniform — it is a merged lambert, not a sprite — so it takes
+the same 0.5 through a new **`sat`** key baked by `tools/textures.py`. Mixed toward Rec.709 luminance
+**in linear light**, deliberately the same instrument in the same space as `Sprites.unpremul`'s
+shader knob: a mix taken above the EOTF desaturates by a different amount at every value, and the two
+numbers have to mean the same thing. Luma-preserving, so it composes with `cells` in one pass and
+neither knob disturbs the other's measurement. Clutter per-cell chroma ran median 10.2, **p90 50.1,
+max 78.9** — a heavier tail than the bench packs'.
+
+**VERDICT: landed.** One line of Haxe, three of Python, no new material and no new program.
+
+## `FacilityCable` — wall cable panels and the runs that sag between them
+
+> SUPERSEDED by *The electrical service — one pack64, four families, still two draw calls*. The
+> panels became floor-level SOCKETS and `facility/fixture-panel` was deleted with them; the
+> socket-to-socket runs moved into the floor plane. The parabola, the width-axis trap and the
+> count-not-a-screenshot findings below all still stand.
+
+Room walls carried placards and nothing electrical. Two merged meshes: the panels, and the runs.
+
+**The art cost $0.0544 for one image and nothing for the other.** `facility/deco-rack-pack4.png`'s
+bottom-right quadrant has been a *"blanking/cable panel that nothing draws yet"* since the rack's own
+pack landed — a panel with rails, screw columns and heavy cables draped across it. Cropped on the
+art's own seams (per-row |diff| peaks at 598/685/772/859/944, an 86.5 px rack-unit pitch; rails at
+x 529-548 and 988-991) it is `facility/fixture-panel` at exactly 2:1. **Check the unused quadrants
+before generating a wall fitting.** `deco-machine-pack.png`'s spare was looked at and **rejected** —
+featureless, so cropped to a fitting it reads as a smudge. A fitting needs a frame.
+
+`facility/cable` is the one generation: an opaque tiling tile, one cable edge to edge, no alpha and
+no cut, because **the ribbon geometry is the cable's silhouette**. Prompted featureless on purpose —
+v tiles ~4× a cell, so any placed feature would repeat with it.
+
+**Two lifts, both fitted against the built frame and not on paper.** The cable came back at linear
+**0.0093** (srgb 23.9), a fifteenth of `wall-room` — black rubber painted honestly is `lift_gamma`'s
+hole failure at full strength. **lift 0.64 is the steepest in the file**; it lands 0.0394, just under
+the rack front's 0.0473, and the thing to check was that the cross-section survives a gamma under 1
+(it lifts darks hardest): 44.0 at the edges to 75.2 down the middle, still **1.71:1**, which is what
+makes a 0.18-unit ribbon read as round. The panel shipped at lift 0.84 = 0.0519 linear, correct as
+steel and **wrong in the room** — it read as a black slot punched in the wall. **0.72 → 0.56× the
+wall**, at the top of the band `wall-points` measured. Growing it instead was not available: `FIX_Y`'s
+band is 0.9 tall between the machine tops at 2.8 and the placards' floor at 3.85, and the crop is
+aspect-locked, so `FIX_H` 0.9 caps `FIX_W` at 1.8. **Value is the only lever a wall fitting has left
+once its band is fixed.**
+
+**The band is what removes the collision problem**, `PLACARD_Y`'s own trick upside down: 2.9 clears
+`DECO_MACHINE_SZ` 2.8 below, 3.8 clears the signage floor above, and nothing else in the compound is
+hung on a room wall between them — so this family checks against no other builder.
+
+**A parabola and not a spline.** `PathLine` and `SlimeTrail` build exactly this ribbon and are the
+wrong shape to borrow: both rebuild per frame from a PATH of many cells, and a cable has **two
+anchors**. Straight chord, sag term, `4t(1-t)` taper (zero at both ends, `PathLine`'s taper reached
+from the other side), one sine rolled once off `mix` and baked. Nothing ticks.
+
+**The width axis and the sag axis are the same vector and must not be the same variable.** `w =
+n × t` is what the ribbon is widened along and what winds the quads; negate it and every face turns
+into the masonry and never appears. The sag rides the same axis with its own SIGN, chosen so it
+points down where the run has a down — a horizontal run droops, a vertical drop bows sideways, one
+rule.
+
+**Four bugs, and every one of them was found by a COUNT and not by a screenshot:**
+
+1. **52 panels, 0 runs.** Both halves broken at once, which one counter could not have said. Splitting
+   the readout into panels/wired/runs is what separated them.
+2. **`wired` 0** — the greedy spacing deal essentially never lands on the one cell beside a machine.
+   Machines now claim their neighbour in a **first pass**, and the thinning works around it.
+3. **`links` 0** — the span test borrowed the panels' own predicates wholesale. A bench between two
+   panels is not a collision (it is 2.0 tall and stands a clear unit off the slab face, so it
+   *occludes* the cable, which is correct), and `hangs`' carries-both-ways clause is a plate's
+   problem, not a cable's. A **fitting height** test against the run's own lowest point replaced a
+   bare `m.deco > 0`: half that family is low enough to pass under.
+4. **`CABLE_SAG` as a fraction of span** — fine on a 2-unit drop, **1.68 units** of droop on a 3-cell
+   link, and worse every time the reach went up. It is world units now: a strung cable's sag is set by
+   its slack, not by how far apart its ends are, with a taper for runs under a cell.
+
+**And two knobs measured to be doing nothing.** Reach 5 → 8 took candidate pairs 19 → 30 and produced
+**no extra runs at all** — what refuses a link is the masonry in between, not the distance. A 1-in-3
+skip roll was built to keep the compound from reading as a diagram and then **deleted**: only 4 of 30
+candidates are eligible in the first place, so the roll was throwing away the scarce half of the
+family to manufacture the abundant one. Emptiness comes from the geometry for free.
+
+**Measured live:** 30 panels / 8 wired / 9 runs, 60 + 180 tris. `calls` **105 → 103 → 105** by
+toggling both meshes at one pinned pose. Warm unchanged at **84 programs** — two plain mapped
+lamberts through `FacilityGeom.add` is `FacilityPoint`'s existing permutation, so the warm entry is
+for the texture upload alone.
+
+**VERDICT: landed.** +2 draw calls, +240 tris, one generation.
+
+## `facility/electrical-pack` — one pack64 in TWO projections, and a cap that reads a row band
+
+Sixty-four pieces of industrial electrical kit on one 1024 sheet, 8x8, and the only sheet in the tree
+whose cells are not all drawn from the same angle: **rows 1-6 are front elevation and rows 7-8 are
+straight top-down**. That is the whole reason four families that look nothing alike — wall sockets,
+corridor fittings, standing floor units, flat floor scatter — cost **one draw call between them**.
+
+**The four sixteens:** 0-15 sockets, 16-31 corridor fittings, 32-47 floor units, 48-63 floor scatter.
+
+**The second roll moved 32-47 from top-down to elevation, and that is the entry.** They were drawn
+overhead like the scatter and laid flat, and read exactly as what they were: a welding set, a
+compressor and a control cabinet **painted on the floor**. A thing that STANDS has to stand, whatever
+its neighbours on the sheet do. Re-prompted onto a common ground line; the runtime stands them as
+frontal quads leaned back by `Sprites.TILT`. Rows 7-8 stayed overhead because a cable coil, a
+taped-down run and a rubber mat genuinely are flat. **$0.0596 + $0.0604**, gpt-image-2.5-**sunburst**
+at quality high both times — sunburst because the risk here is LAYOUT, a strict grid with a projection
+change partway down it, and it honoured the split exactly on both rolls.
+
+**The alpha survived a prompt that names a vertical face**, which `worktop-clutter`'s note says it
+should not have: 48.3% alpha 0 plus 13.9% in the 1-15 wash `pack16.py` flattens, against that sheet's
+51.3%. The difference is **what** the surface is attached to — *"as if bolted to a vertical face"*
+names the VIEW; the roll that lost its transparency named what the objects were LYING ON.
+
+**Packed `--valign center`, which is the right compromise and not the right answer for all three
+bands.** Correct for the top-down band (no ground line exists, and the runtime rotates those quads
+about their own centres) and for the wall band; it leaves a standing unit's feet a margin up inside
+its own quad, so `UNIT_SINK` 0.12 drops the quad through the floor by the sheet's own mean vertical
+margin (fills 0.64-0.87). Untuned, a lead's end was visibly under a unit floating over it.
+
+**`cells` grew a ROW BAND, and the measurement is why one number could not serve the sheet.** The wall
+band's median **0.109** is 0.80x `wall-room` 0.1375 — a fitting that close in value to its own wall is
+not seen, which is `fixture-panel`'s failure from the other end (0.38x read as a black slot). Capping
+rows 0-4 at **0.0756 = 0.55x** the room wall / 0.48x `wall-interior` puts it inside the band
+`wall-points` measured. **Nothing below row 4 is capped and both halves would be ruined by it:** the
+standing units run a median 0.061 against `floor-tile` 0.1185, already half the floor they stand on,
+and the same cap would take the sheet's only industrial colour — a yellow transformer 0.1931, an
+extension block 0.1555, a warning plate 0.2737 — down to a fraction of the tile it lies on.
+
+**VERDICT: landed.** One sheet, four families, two generations, `--tol 4` on the second roll (the
+first needed 50: a welding set's cable crossed the y-640 seam).
+
+## The electrical service — one pack64, four families, still two draw calls
+
+`FacilityCable` rebuilt around the report *"not wall fixtures but wall sockets — smaller, near the
+floor"*. The panels came down the wall and the family grew three more halves. Two merged meshes: the
+pack (one alphaTest DoubleSide lambert, `FacilityClutter`'s own material and so its own program) and
+the cable.
+
+**Measured live:** 44 mounts / 22 runs / 13 units / 61 scatter, 236 + 440 tris. `calls` **104 → 105 →
+106** by toggling each mesh at one pinned pose — **+2** for the whole service, the same budget the two
+panel families cost. Warm unchanged at **84 programs**.
+
+**A socket is the same in every socket of one room.** The choice is rolled off the ROOM's own id
+(`m.rooms`, falling back to the structure index — `demo()` leaves that list empty, which is not a
+nicety but what keeps the warm scene emitting), so a lab is fitted throughout with one pattern and the
+lab next door with another. Verified from `__facility()`: four sockets in the player's room, all
+`cell: 6`; the corridor fitting beside them `cell: 20`.
+
+**Scale and not value is what decides whether a small wall fitting is SEEN**, and this family learned
+it from the bottom after `POINT_W` learned it from the top. One world unit is about **4.2 device px**
+from the resting camera; the art fills 0.7 of its cell; `SOCK_W` 1.0 therefore drew a **seven-pixel
+smudge with a cable arriving at it**. 1.4 works and is still well under the 1.8 panel it replaced.
+`SOCK_LEAD` came out of the same frame: a run inset by the quad's half-width less its own thickness —
+the obvious number — ends in the transparent margin BESIDE the socket. The inset is measured against
+the ART (a quarter of the quad, inside every cell on the sheet at fills 0.64-0.87).
+
+**The sockets moving down the wall changed the cable family, not just its height.** A run between two
+fittings at head height sags under gravity; between two sockets a foot off the ground there is nothing
+to sag INTO and the old 0.45 droop is underground at mid-span. So a socket-to-socket run lies in the
+**floor** plane and its whole offset is lateral — `CABLE_SNAKE` 0.55, a cable bowing out into the room
+and back. `strip` took a `StripOpts` for it: the plane became a NORMAL (wall face or straight up) and
+the bow's sign became a **hint vector** the caller supplies, falling through to the seed when the
+chord is too nearly parallel to answer. Five positional args would have become nine.
+
+**Two corrections came from the game, and both were about where a cable is allowed to be:**
+
+1. **Floor leads ran straight OUT from the wall** — across the aisle markings in a room, across the
+   corridor itself in a corridor. A lead laid over the route everyone walks reads as a mistake. They
+   run ALONG the wall now, and the span test wants free floor **and unbroken masonry** beside it, so a
+   run can never be laid across a threshold either. Units **25 → 13**: the constraint is real.
+2. **The floor units were flat decals** — see the art entry above.
+
+**And one exclusion that was a spacing by mistake.** The corridor fittings exclude
+`FacilityPoint.places`, `FacilityTables.runs` and `FacilityTables.hugs`' own corner rule — all three
+pure functions of the grid, so nothing has to run first. Running the fire points through this pass's
+**own** `FIT_SPACING` thinning instead left **three fittings in the whole compound**: 11 points at a
+reach of 6 cells sterilise almost every corridor wall. An exclusion says *not here*; a spacing says
+*not near anything of MINE*, and only the second is about rhythm.
+
+`CABLE_W` **0.18 → 0.126** on a report that it was too thick — 6 cm at the half-metre unit `WALL_H`
+fixes. `facility/fixture-panel` was deleted with the panels it drew.
+
+**VERDICT: landed.** +2 draw calls, +676 tris, +0 programs, four families off one sheet.
+
+## The electrical service, second pass — seven reports, and two of them were the same bug
+
+All seven off one look at the built area. Worth keeping because five of the seven are the same shape:
+**a family written against `y = 0` and against its own CELL, in a room that has neither.**
+
+**Kit was in the middle of the floor** — corridors and rooms both. `freeFloor` is not the predicate: a
+corridor is **two cells wide**, so BOTH its cells touch a wall and a decal centred in one is still dead
+in the walking lane. The scatter now needs a `hug` — masonry, a bench or a standing fitting on one
+hand — **and** is slid to that hand's cell edge. 61 → **36**.
+
+**A floor lead ran UNDER the yellow aisle lines.** `RenderConfig.PAINT_Y` is 0.03, the lead was at
+0.02 and the scatter at exactly 0.03 (z-fighting it). The stack is three deep and has to be written
+against the paint's own height rather than against the floor: **paint 0.03 → cable 0.05 → scatter
+0.07**.
+
+**A lead stopped short of the wall.** It began on the FLOOR under its socket, which is a socket's
+height away from the socket it is plugged into. Every cable in the file now leaves from one
+`anchor` — the mount's own low edge — and a floor lead simply lets its chord fall to the floor: with
+`n` straight up, `n × t` stays horizontal however the chord is tilted, so the ribbon does not care.
+
+**A machine's lead left from its LID and hung in the air beside it.** These fittings are SPRITES and a
+sprite does not fill its quad's top corners, so `q.h` is a point outside the drawn object. Anchored at
+`CABLE_LID_H` 0.35 of the unit's height and 0.35 in from its edge, it is inside the art of all four
+kinds.
+
+**And that one broke the sag**, which is the entry inside the entry. Anchors at 0.98 and 0.50 with a
+fixed `CABLE_SAG` 0.45 plus `CABLE_WAVE` 0.12 put the mid-span **through the floor** — measured on the
+emitted ribbon at **min y 0.0203**, under the aisle paint it had just been lifted over. `CABLE_SAG` is
+a **cap** now and `droop()` is the value: the run's own lowest anchor less the floor height, the
+ribbon's half-width and the wander. Re-measured **min y 0.0500**, exactly `CABLE_FLOOR_Y`. The
+short-lived `CABLE_SAG_LOW` the wall links had been given went with it — one rule, both cases.
+
+**Two cables reached one socket.** The sheet's socket cells draw ONE outlet, so a second lead arriving
+at the same plate is plugged into nothing: it is a fact about the ART, not a density rule. `Mount.used`
+is claimed in order — drops, then links (which need BOTH ends free), then floor leads. On this compound
+that costs the links their one eligible pair, which is the honest trade. **`used` == `runs` + links**
+is the invariant, and it reads 20 == 20 + 0.
+
+**And the sheet was never desaturated.** Chroma **10.1** whole against `worktop-clutter`'s own
+post-`sat` 1.9 and `bench-pack1`'s 3.3 — the electrical kit shipped as the most saturated thing in a
+lab room, the exact complaint those two answered. Missed because industrial colour is the one thing
+this family is FOR, and that read as a reason to leave it. It is not. `sat` 0.5 → chroma **4.7**, and
+the red, yellow and blue are all still legible as red, yellow and blue.
+
+**Measured after:** 44 mounts / 20 runs / 12 units / 36 scatter, 184 + 400 tris, `calls` **104 → 105 →
+106** unchanged, counts identical across a full area rebuild.
+
+**VERDICT: landed.**

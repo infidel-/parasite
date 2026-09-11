@@ -15,6 +15,24 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
+// where one fitting stands, as `rectOf` works it out — the answer both this file's emitters and
+// render.facility.FacilityCable's panels are written against
+typedef DecoRect = {
+  // the footprint, world, already slid along its wall and squeezed to the masonry
+  x0:Float,
+  x1:Float,
+  z0:Float,
+  z1:Float,
+  // which of the cell's four sides that masonry is on, in FacilityGeom.face's numbering. never -1:
+  // a unit with no wall on any hand is stood square in its cell facing 0
+  dir:Int,
+  // and whether that hand is really SOLID masonry rather than glazing or the fallback above — the
+  // test anything laid ON the wall has to make
+  hasWall:Bool,
+  // how tall it stands
+  h:Float,
+};
+
 // one hazard-barrel livery and the fitting kind that deals it. all three share a mesh and differ
 // only in their baked paint, so this carries no size — they take FacilityStyle.DECO_ROUND_H like
 // every other round low fitting
@@ -134,20 +152,21 @@ class FacilityDeco
 
 // how much of its own chroma one of those keeps.
 //
-// PER FRAME, AND THE TEST IS WHETHER IT HAS HI-RES ART. The knob exists because the stock icon
-// sheet is flat-design vector work that reads cheerful in a dark laboratory — measured on the frame
-// it was fitted against, entities64 9/10 comes in at chroma 42.4 and linear 0.5592, five times the
-// brightness of anything else in the room. A pack16 cell is drawn IN the game's palette instead
-// (chroma 1.7-34.7 over sheet 1, mean linear 0.1105 against the worktop's own 0.0401), so halving it
-// again would only turn a tinted liquid grey. A frame with no pack cell yet keeps the old taming.
+// EVERY FRAME, PACK CELL OR NOT. The knob was fitted against the stock icon sheet, which is
+// flat-design vector work that reads cheerful in a dark laboratory — entities64 9/10 comes in at
+// chroma 42.4 and linear 0.5592, five times the brightness of anything else in the room — and it was
+// then made per-FRAME on the argument that a pack16 cell is already drawn in the game's palette
+// (chroma median 10.4, p90 26.4) so halving it again would only turn a tinted liquid grey. Reported
+// from the game: it does not. The pack cells still read as the most saturated thing in a lab room,
+// and the worktop clutter beside them was tamed by the same 0.5 in the same space at the same time
+// (art/textures.json facility/worktop-clutter's `sat`, baked because a merged lambert has no uniform
+// to hand it to). The two families share a worktop and now share a number.
 //
 // it costs no second texture: render.particles.Sprites carries the knob as a shader uniform on the
 // quad's own material, so this is a number handed to a paint and nothing else
   public static function spriteSat(area:game.AreaGame, o:objects.AreaObject):Float
     {
-      if (!onBench(area, o))
-        return 1.0;
-      return Const.decoHD(o.imageRow, o.imageCol) >= 0 ? 1.0 : FacilityStyle.DECO_TABLE_SAT;
+      return onBench(area, o) ? FacilityStyle.DECO_TABLE_SAT : 1.0;
     }
 
 // and does it LIE DOWN on the worktop rather than stand up on it? three of the 43 do — see
@@ -206,8 +225,11 @@ class FacilityDeco
         kind == _FittingKind.FIT_DRUM_RAD;
     }
 
-// how tall a fitting of this kind stands, world units
-  static function heightOf(kind:Int):Float
+// how tall a fitting of this kind stands, world units. public for render.facility.FacilityCable,
+// which has to know whether a fitting between two of its panels reaches the cable strung over it —
+// the LOW half of this family (a 1.8 drum, a 2.2 machine) passes under a run that a 3.43 cabinet
+// would be drawn straight through
+  public static function heightOf(kind:Int):Float
     {
       return switch (kind)
         {
@@ -239,7 +261,7 @@ class FacilityDeco
             if (kind < 0 ||
                 isProp(kind))
               continue;
-            unit(m, b, leds, col, row, kind, half);
+            unit(m, b, leds, col, row, kind);
           }
       // the end frame is the one CUT surface; everything else is plain opaque merged geometry
       cut(scene, b[B_SHELF_SIDE], FacilityStyle.DECO_SHELF_SIDE);
@@ -285,11 +307,18 @@ class FacilityDeco
   static inline var B_MACH_TOP = 14;
   static inline var B_DRAIN = 15;
 
-// one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
-// made of
-  static function unit(m:Facility, b:Array<MeshBuf>, leds:MeshBuf, col:Int, row:Int, kind:Int,
-      half:Float):Void
+// where a fitting of this kind on this cell actually stands: the rect its faces are emitted on, the
+// hand its wall is on, and whether that wall is solid masonry.
+//
+// PULLED OUT OF `unit` SO A SECOND FAMILY CAN ASK. render.facility.FacilityCable hangs a panel over a
+// machine and drops a cable onto its lid, and neither the lid's height nor the back edge it leaves
+// from is derivable from the cell — `fit` slides a unit along its wall and the slab face is a whole
+// unit inside the cell boundary, so a hand-written second copy would be wrong in exactly the two
+// places that are hard to see. Computed twice and shared nowhere, FacilityPoint.places' own
+// discipline: it is a pure function of the saved grid, so either caller may run first
+  public static function rectOf(m:Facility, col:Int, row:Int, kind:Int):DecoRect
     {
+      var half = (CityConfig.GRID * CELL) / 2;
       var w = FacilityStyle.DECO_SHELF_W, d = FacilityStyle.DECO_SHELF_D;
       if (kind == _FittingKind.FIT_BOOKCASE)
         {
@@ -314,7 +343,6 @@ class FacilityDeco
           w = heightOf(kind);
           d = w;
         }
-      var h = heightOf(kind);
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
       var dir = wall(m, col, row, Const.isLowFitting(kind));
@@ -369,6 +397,25 @@ class FacilityDeco
                 }
             }
         }
+      return {
+        x0: x0,
+        x1: x1,
+        z0: z0,
+        z1: z1,
+        dir: dir,
+        hasWall: hasWall,
+        h: heightOf(kind),
+      };
+    }
+
+// one fitting: work out the rect it stands on, then hand each of its faces to the surface it is
+// made of
+  static function unit(m:Facility, b:Array<MeshBuf>, leds:MeshBuf, col:Int, row:Int,
+      kind:Int):Void
+    {
+      var r = rectOf(m, col, row, kind);
+      var x0 = r.x0, x1 = r.x1, z0 = r.z0, z1 = r.z1;
+      var dir = r.dir, hasWall = r.hasWall, h = r.h;
       var y = FacilityGround.surfY(Surf.TILE);
       // the floor pool under it, on the plain rect — the field is what darkens the tile a standing
       // thing sits on, and it is repainted once after every prop pass has placed
