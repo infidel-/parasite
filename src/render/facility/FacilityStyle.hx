@@ -1186,6 +1186,35 @@ class FacilityStyle
   public static inline var ELEC_BAND = 16;
   // the cut-out threshold, the worktop clutter's own — the same kind of alpha-boxed pack art
   public static inline var ELEC_CUT = DECO_CUT;
+  // the three socket cells that DRAW THEIR OWN CABLE, never dealt. sheet cell 6 is a plug with a stub
+  // hanging down, 7 a pair of plugs with a tangle, 15 a box with armoured cable entering its side.
+  //
+  // BOTH WAYS ROUND ARE WRONG, which is why this is a skip and not a pairing. Reported from one room:
+  // the socket that HAD one of our leads had it arrive on the plate's left while the drawn stub left
+  // downward, so the plate grew two cables going two ways; the socket that had none showed a plug
+  // whose stub simply stopped in mid-air. Matching an emitted run to each cell's own drawn exit would
+  // need a per-cell table of a point AND a direction, measured off the art, for three cells out of
+  // sixteen — and the run would still have to be the only cable on a plate that draws two. A bare
+  // faceplate says nothing our own geometry then has to agree with
+  public static var SOCK_SKIP:Array<Int> = [ 6, 7, 15 ];
+  // and the two corridor-fitting cells that may CARRY a lead but can never SOURCE one: sheet cell 20
+  // is a red emergency-stop mushroom button and 26 a bank of light switches. Neither has an outlet,
+  // so a cable leaving one is a cable plugged into a button — reported from the game, where a floor
+  // unit was wired to the e-stop. They stay on the wall; they just feed nothing
+  public static var FIT_NO_FEED:Array<Int> = [ 20, 26 ];
+  // and the cell that REFILLED one of the three, a bare plug head with a gland collar at its foot and
+  // no cable on it. It is what a run arriving at a socket ends in, drawn over the ribbon's cut end.
+  //
+  // IT COST NOTHING BUT THE IMAGE: `SOCK_SKIP` left cells 6, 7 and 15 drawn by nothing, and
+  // tools/pastecell.py drops a freshly generated object into one cell of an already-packed sheet, so
+  // the plug rides the same texture, the same mesh and the same draw call as everything else here.
+  // NO CABLE ON IT, which is the whole lesson those three skipped cells taught: art that draws its own
+  // lead cannot be placed by a family that emits one
+  public static inline var ELEC_PLUG = 6;
+  // the plug quad, world units — square, and about half the socket plate it plugs into. only a
+  // SOCKET gets one: a lead leaving a corridor junction box leaves through a GLAND, which is what
+  // those cells already draw
+  public static inline var PLUG_W = 0.75;
   // how far a floor decal floats over the surface it lies on. THE STACK IS THREE DEEP AND THE ORDER
   // IS THE WHOLE OF IT: render.RenderConfig.PAINT_Y 0.03 is the aisle marking, CABLE_FLOOR_Y 0.05 the
   // lead lying over it, and this the loose kit lying over that. The first cut put the cable at 0.02

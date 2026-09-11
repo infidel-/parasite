@@ -2122,3 +2122,75 @@ the red, yellow and blue are all still legible as red, yellow and blue.
 106** unchanged, counts identical across a full area rebuild.
 
 **VERDICT: landed.**
+
+## Three more, and two of them were the ART disagreeing with the geometry
+
+**A socket that draws its own cable cannot be used by a family that draws one too, and both ways round
+are wrong.** One room, two sockets, both on sheet cell 6 (*a plug pushed in with a short stub hanging
+down*): the one carrying one of our leads grew **two cables going two ways** — the drawn stub down, the
+emitted run out to the left — and the one carrying none showed a plug whose stub **stopped in mid-air**.
+Pairing the two would need a per-cell table of a point AND a direction, measured off the art, for three
+cells in sixteen, and the run would still have to be the only cable on a plate that draws two. So
+`SOCK_SKIP` = **6, 7, 15** and the band deals thirteen BARE faceplates. **A bare plate says nothing the
+geometry then has to agree with** — which is the general rule, and the same one `deco-machine-pack`'s
+rejected quadrant records from the other end.
+
+`anchor` also went from the mount's low edge to its **centre height**, which the same look made
+obvious: a run leaving the bottom reads as plugged into the wall UNDER the socket. A plate is opaque
+where the art is, so a run leaving its middle has its cut end hidden by the thing it leaves — and the
+extra half unit hands `droop` its full `CABLE_SAG` back on a short hop.
+
+**A button is not an outlet.** A floor unit came back wired to a red emergency-stop mushroom. Sheet
+cells 20 (e-stop) and 26 (a bank of light switches) stay on the wall and are fine there; they just
+cannot SOURCE a lead — `FIT_NO_FEED`, tested where the lead is claimed rather than where the fitting is
+drawn, because the wall wants the variety and only the cable wants the rule.
+
+**And the floor is already telling you where not to put things.** A unit stood in the middle of a fire
+point's keep-clear hatch, which is the one mark in the compound that means exactly that. Not a
+clearance this file invents: re-derived off the same two pure functions `FacilityPaint` strikes them
+from (`m.doors` filtered by `FacilityGlow.outward`, and `FacilityPoint.places`), so neither builder has
+to run before the other. **Per CELL is the whole of it** — a zone reaches `ZONE_D` 3.0 off the SLAB
+FACE, and the face is already a unit inside the wall cell, so a hatch covers 2 units of the fitting's
+own 4-unit cell and never leaves it. The scatter and the lead's whole span take the same gate.
+
+**Verified on the emitted geometry and not by eye**, which is the only way to check a thing that is
+correct when it is ABSENT: walking the hazard mesh's 17 quads as xz rects and every standing quad's
+base point in the pack mesh gives **0 of 52 on a hatch** (52 because the test catches every wall mount
+too, not just the 8 units — a stricter check than the one the report asked for). `fedByButton` 0,
+`drawnCableCells` 0, cable min y still **0.0500**.
+
+**Measured after:** 44 mounts / 16 runs / 8 units / 37 scatter, `calls` **103 → 104 → 105**, unchanged
+at +2. Units 12 → 8 is what the two new gates cost, and it is the right price.
+
+**VERDICT: landed.**
+
+## `tools/pastecell.py` — refill ONE dead cell of a packed sheet, and the plug that needed it
+
+`SOCK_SKIP` left `facility/electrical-pack` cells 6, 7 and 15 drawn by nothing, and a run arriving at
+a socket wanted a **plug head** to end in rather than merging into the plate. Those two facts answer
+each other: **the packed sheet is the source of record**, so a single cell can be refilled without
+paying for the other 63.
+
+`pastecell.py` is `pack16.py`'s other half — same `CUT` 24, same margin convention, same alpha-box
+crop and one-scale fit — but it writes into a cell of an existing sheet instead of re-packing a whole
+drop. The plug therefore rides **the same texture, the same mesh and the same draw call** as
+everything else in the family: measured, `calls` 104 → 105 → 106, unchanged at +2, pack 184 → 194
+tris (8 plugs at 2, less the 4 units the new gates cost, plus a scatter).
+
+**NO CABLE ON THE PLUG**, which is the same finding the three skipped cells taught, applied forward:
+art that draws its own lead cannot be placed by a family that emits one. The head has a gland collar
+and nothing leaving it. gpt-image-2.5-**flare** at quality high, **$0.0541** — flare and not sunburst
+because one centred object is not a layout problem, which is the whole reason to reach for sunburst.
+
+**IT IS BUILT FROM A WORLD BASIS AND NOT THROUGH `pane`**, which is the only interesting line of the
+emitter. The art has to TURN so its gland follows the cable, and `pane` takes an axis-aligned rect and
+an upright v. So the quad picks the art's own UP — down the wall for a lead heading into the room,
+along the wall for one running to a neighbour or up to a machine — and the rest falls out of
+**`R = U × n`**, which reproduces `FacilityGeom.ends`' handedness on every face with no table (face
+0's "right" really is −x) and keeps the front face looking into the room by construction.
+
+**Sockets only.** A lead leaving a corridor junction box leaves through a **gland**, and those cells
+draw their own.
+
+**VERDICT: landed.** +0 draw calls, +16 tris, one $0.054 image into a cell that was already dead.
+Cells 7 and 15 are still dead and are where the next one goes.

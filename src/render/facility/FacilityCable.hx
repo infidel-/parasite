@@ -101,17 +101,29 @@ class FacilityCable
   // straight up, for a ribbon lying on a floor
   static var UP = [0.0, 1.0, 0.0];
 
+  // the socket cells actually dealt, built once off FacilityStyle.SOCK_SKIP. derived rather than
+  // written out so the skip list stays the one place the finding lives — see its comment for why a
+  // socket that draws its own cable cannot be used by a family that draws one too
+  static var PICK:Array<Int> = [
+    for (i in 0...FacilityStyle.ELEC_BAND)
+      if (FacilityStyle.SOCK_SKIP.indexOf(FacilityStyle.ELEC_SOCKET + i) < 0) i
+  ];
+
+  // every cell the compound strikes a KEEP-CLEAR hatch on, filled once per build. see `hatched`
+  static var zones:Map<Int, Bool>;
+
 // the whole service, as two merged meshes
   public static function build(scene:Scene, m:Facility):ElecCounts
     {
       var pack = MeshBufTools.make();
       var cab = MeshBufTools.make();
+      hatch(m);
       var socks = sockets(m);
       var fits = fittings(m);
       var all = socks.concat(fits);
       for (p in all)
         mount(pack, m, p);
-      var runs = drops(cab, m, socks) + links(cab, m, socks);
+      var runs = drops(cab, pack, m, socks) + links(cab, pack, m, socks);
       var us = units(pack, cab, m, all);
       var scat = scatter(pack, m, us);
       add(scene, pack);
@@ -124,6 +136,44 @@ class FacilityCable
         units: us.length,
         scatter: scat,
       };
+    }
+
+// every cell the compound strikes a KEEP-CLEAR hatch on, as a set.
+//
+// THE HATCH IS THE FLOOR TELLING YOU NOT TO PUT ANYTHING THERE, and this family was putting a cable
+// drum in the middle of one — a fire point's zone, which is the single mark in the compound that means
+// exactly that. So it is not a clearance this file invents: it is re-derived off the same two pure
+// functions render.facility.FacilityPaint strikes them from (`m.doors` filtered by FacilityGlow
+// .outward, and FacilityPoint.places), which is why neither builder has to run before the other.
+//
+// PER CELL IS THE WHOLE OF IT: a zone reaches ZONE_D 3.0 off the SLAB FACE, and the face is already a
+// unit inside the wall cell, so the hatch covers 2 units of the fitting's own 4-unit cell and never
+// leaves it
+  static function hatch(m:Facility):Void
+    {
+      zones = new Map();
+      for (d in m.doors)
+        {
+          if (FacilityGlow.outward(m, d) == 0)
+            continue;
+          for (s in [-1, 1])
+            zones.set(cell(m, d.col + (d.alongX ? 0 : s), d.row + (d.alongX ? s : 0)), true);
+        }
+      for (p in FacilityPoint.places(m))
+        zones.set(cell(m, p.col, p.row), true);
+    }
+
+// one cell's slot in that set
+  static inline function cell(m:Facility, col:Int, row:Int):Int
+    {
+      return row * m.w + col;
+    }
+
+// may this family put anything ON this cell at all: free floor that carries no keep-clear hatch
+  static inline function open(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityPaint.freeFloor(m, col, row) &&
+        !zones.exists(cell(m, col, row));
     }
 
 // every socket the rooms carry: which cell, which wall of it, and which machine if any feeds it.
@@ -194,7 +244,7 @@ class FacilityCable
         row: row,
         dir: dir,
         cell: FacilityStyle.ELEC_SOCKET +
-          FacilityModel.mix(roomKey(m, col, row) * 1597334677) % FacilityStyle.ELEC_BAND,
+          PICK[FacilityModel.mix(roomKey(m, col, row) * 1597334677) % PICK.length],
         fit: false,
         mcol: mcol,
         mrow: mrow,
@@ -368,7 +418,7 @@ class FacilityCable
 // keeps the whole ribbon in ONE plane — a cable leaving the middle of the lid would have a depth
 // component. CABLE_LID_D moves it ALONG the wall off the unit's centre so the drop is a diagonal with
 // something to sag against rather than the straight vertical a centred gland would give
-  static function drops(b:MeshBuf, m:Facility, list:Array<Mount>):Int
+  static function drops(b:MeshBuf, pack:MeshBuf, m:Facility, list:Array<Mount>):Int
     {
       var n = 0;
       for (p in list)
@@ -400,6 +450,7 @@ class FacilityCable
             wave: FacilityStyle.CABLE_WAVE,
             seed: FacilityModel.mix((p.mcol * 971658137) ^ (p.mrow * 1266489917)),
           });
+          plug(pack, m, p, -s);
           p.used = true;
           n++;
         }
@@ -420,7 +471,7 @@ class FacilityCable
 // roll. A skip roll was built here first, on the argument that a compound where every socket is wired
 // to both its neighbours reads as a diagram — and then measured: of 30 candidate pairs only 4 were
 // eligible at all. The compound supplies far more emptiness than any roll could
-  static function links(b:MeshBuf, m:Facility, list:Array<Mount>):Int
+  static function links(b:MeshBuf, pack:MeshBuf, m:Facility, list:Array<Mount>):Int
     {
       var n = 0;
       for (p in list)
@@ -446,6 +497,8 @@ class FacilityCable
               seed: FacilityModel.mix((p.col * 374761393) ^ (p.row * 668265263) ^
                 (q.col * 1103515245) ^ (q.row * 12345)),
             });
+            plug(pack, m, p, 1);
+            plug(pack, m, q, -1);
             p.used = true;
             q.used = true;
             n++;
@@ -503,6 +556,46 @@ class FacilityCable
       return true;
     }
 
+// the plug on the end of a run, over the point it leaves a SOCKET from.
+//
+// NOT THROUGH `pane`, which is the one reason this is fifteen lines instead of one: the art has to
+// TURN so its gland collar follows the cable, and `pane` takes an axis-aligned rect and an upright v.
+// So the quad is built from a world basis instead — pick the art's own UP and the rest falls out of
+// `R = U cross n`, which reproduces `FacilityGeom.ends`' handedness on every face without a table
+// (face 0's right really is -x) and keeps the front face looking into the room by construction.
+//
+// the gland points DOWN for a lead heading out into the room (`s` 0) and ALONG THE WALL for one
+// running to a neighbour or up to a machine, which is the same hand `anchor` slid the cable to.
+//
+// SOCKETS ONLY: a lead leaving a corridor junction box leaves through a gland, and those cells draw
+// their own
+  static function plug(b:MeshBuf, m:Facility, p:Mount, s:Int):Void
+    {
+      if (p.fit)
+        return;
+      var f = p.dir ^ 1;
+      var n = [NX[f], 0.0, NZ[f]];
+      // the axis `anchor` slides along, which is the wall's own in-plane horizontal
+      var sv = (p.dir < 2 ? [1.0, 0.0, 0.0] : [0.0, 0.0, 1.0]);
+      var u = (s == 0 ? [0.0, 1.0, 0.0] : [-s * sv[0], 0.0, -s * sv[2]]);
+      var r = [u[1] * n[2] - u[2] * n[1], u[2] * n[0] - u[0] * n[2], u[0] * n[1] - u[1] * n[0]];
+      var c = anchor(m, p, s);
+      // proud of the ribbon it covers, which is itself proud of the plate — three parallel surfaces,
+      // and the standing note says separate them with a gap and never with a polygonOffset
+      var e = FacilityStyle.CABLE_EPS;
+      var h = FacilityStyle.PLUG_W / 2;
+      var t = FacilityStyle.ELEC_COLS;
+      var cc = FacilityStyle.ELEC_PLUG % t, cr = Std.int(FacilityStyle.ELEC_PLUG / t);
+      var u0 = cc / t, u1 = (cc + 1) / t;
+      var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
+      inline function at(a:Float, b2:Float)
+        return [c[0] + n[0] * e + r[0] * a + u[0] * b2,
+                c[1] + n[1] * e + r[1] * a + u[1] * b2,
+                c[2] + n[2] * e + r[2] * a + u[2] * b2];
+      MeshBufTools.quad(b, at(-h, -h), at(h, -h), at(h, h), at(-h, h),
+        [u0, v0, u1, v0, u1, v1, u0, v1]);
+    }
+
 // how far a WALL run may droop: its own lowest anchor, less the height a run lies at on the floor,
 // the ribbon's own half-width and the wander that rides on top of the sag — capped at CABLE_SAG,
 // which is the slack a cable actually has.
@@ -521,11 +614,16 @@ class FacilityCable
 // THE ONE POINT EVERY CABLE IN THIS FILE LEAVES A MOUNT FROM, slid along the wall by the hand `s`
 // (0 is dead under it, which is what a lead heading out into the room wants).
 //
-// THE SOCKET'S OWN LOW EDGE and not the floor beneath it, which is the second thing the game reported
+// ON THE MOUNT'S OWN FACE and not the floor beneath it, which is the second thing the game reported
 // about this family: a floor lead that begins at floor level begins a socket's height away from the
 // socket it is supposed to be plugged into, so it reads as stopping short of the wall. Starting it
 // here and letting the chord fall to the floor costs nothing — `strip` bows about n cross t, and with
 // n straight up that stays horizontal however the chord is tilted.
+//
+// AT THE MOUNT'S CENTRE HEIGHT and not its low edge, which was the first cut and read as a cable
+// plugged into the wall UNDER the socket. A plate is opaque where the art is, so a run leaving its
+// middle has its cut end hidden by the thing it leaves; and the extra half-unit of height is what
+// gives `droop` its full CABLE_SAG back on a short hop.
 //
 // and WELL INSIDE the drawn art rather than at the quad's edge, for FacilityStyle.SOCK_LEAD's reason
   static function anchor(m:Facility, p:Mount, s:Int):Array<Float>
@@ -534,7 +632,7 @@ class FacilityCable
       var c = CityConfig.cellToWorld(p.col, p.row);
       var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
       var h = w * FacilityStyle.SOCK_LEAD;
-      var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y) - h;
+      var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);
       var dir = p.dir ^ 1;
       var e = FacilityStyle.MOUNT_PROUD + FacilityStyle.CABLE_EPS;
       if (dir < 2)
@@ -555,8 +653,11 @@ class FacilityCable
       var out:Array<Unit> = [];
       for (p in list)
         {
-          // ONE CABLE PER MOUNT, so a socket that already took a machine's lead or a link is done
-          if (p.used)
+          // ONE CABLE PER MOUNT, so a socket that already took a machine's lead or a link is done —
+          // and A BUTTON IS NOT AN OUTLET: an emergency stop and a bank of light switches stay on the
+          // wall but can never be the end of a lead (FacilityStyle.FIT_NO_FEED)
+          if (p.used ||
+              FacilityStyle.FIT_NO_FEED.indexOf(p.cell) >= 0)
             continue;
           // ALONG the wall and never out from it. Straight out was the first cut and it is the one
           // thing this family must not do: in a ROOM it walks the lead across the aisle markings
@@ -589,7 +690,7 @@ class FacilityCable
         {
           var c = p.col + sc * d;
           var r = p.row + sr * d;
-          if (!FacilityPaint.freeFloor(m, c, r) ||
+          if (!open(m, c, r) ||
               !FacilityModel.isSolidWall(m, c + DC[p.dir], r + DR[p.dir]))
             return false;
           if (d < FacilityStyle.UNIT_REACH_MIN ||
@@ -618,6 +719,7 @@ class FacilityCable
             wave: FacilityStyle.CABLE_WAVE,
             seed: g,
           });
+          plug(pack, m, p, 0);
           p.used = true;
           out.push({
             col: c,
@@ -703,7 +805,7 @@ class FacilityCable
           {
             var g = FacilityModel.mix((col * 374761393) ^ (row * 40503));
             if (g % FacilityStyle.SCAT_ODDS != 0 ||
-                !FacilityPaint.freeFloor(m, col, row))
+                !open(m, col, row))
               continue;
             // AND IT HAS TO BE AGAINST SOMETHING. Reported from the game twice, once of the rooms and
             // once of the corridors: kit dropped in the middle of the floor is kit dropped in the
