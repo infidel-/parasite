@@ -32,10 +32,12 @@ class World {
     WorldCtx.tiles = city.tiles;
     // a city floor steps per TILE and has no continuous relief; clear whatever the last area set.
     // the climb hook goes with it — nothing in a street is walked THROUGH and vaulted OVER, and so
-    // does the wall-mount hook: a city block is citygen geometry and carries no object of its own
+    // does the wall-mount hook: a city block is citygen geometry and carries no object of its own.
+    // the stand-offset hook likewise: a street prop stands on its cell centre
     WorldCtx.ground = null;
     WorldCtx.climbArc = null;
     WorldCtx.wallMounts = null;
+    WorldCtx.standOff = null;
     WorldCtx.seed = seed;
     WorldCtx.style = style != null ? style : render.world.CityStyle.get();
     WorldCtx.winSeen = new haxe.ds.ObjectMap();

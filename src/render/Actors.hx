@@ -215,6 +215,19 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
+            // a fitting the area kind stands OFF A WALL FACE rather than on its cell centre. the two
+            // cannot both fire — a corpse does not lie on an impassable fitting cell — and the hook
+            // answers null for every other cell and in every other area kind, so nothing is allocated
+            // in the common case. see WorldCtx.standOff
+            else if (WorldCtx.standOff != null)
+              {
+                var so = WorldCtx.standOff(o.x, o.y);
+                if (so != null)
+                  {
+                    ox = so.x;
+                    oz = so.z;
+                  }
+              }
             // player-noticeable objects (visible() drops decorations + doors) carry the green
             // outline/through-wall marks so they stay findable in tactical and behind buildings
             // an object whose cell is a wall of this area kind's own making is mounted IN it — the
@@ -794,7 +807,7 @@ class Actors {
         return;
       var w = CityConfig.cellToWorld(e.mx, e.my);
       actors.set(e, { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                      op: 0.0, opTarget: 1.0, fx: null, face: 1.0 });
+                      op: 0.0, opTarget: 1.0, fx: null, face: 1.0, offx: 0.0, offz: 0.0 });
     }
 
 // stable pseudo-random in [-1,1) from an int key+salt (so a corpse keeps its fallen pose
@@ -829,6 +842,11 @@ class Actors {
         return;
       // resolve the overrides once; a caller that passes none reads the shared empty set
       var o = (opts != null ? opts : NO_OPTS);
+      // the resting offset goes ONTO THE POSE and not just onto this frame's quad, so every other
+      // reader of the pose lands where the thing is actually drawn — render.actors.LampShadows
+      // projects its fake cast shadow from here (see ActorAnim.Actor)
+      a.offx = (o.offx != null ? o.offx : 0.0);
+      a.offz = (o.offz != null ? o.offz : 0.0);
       // an object mounted IN a wall hangs on the masonry and takes none of the cell-standing pose
       // below — no floor height, no ground anchor, no corpse stacking. the faces come from
       // WorldCtx.wallMounts, one per exposed side, and the wall carries the same grille on each
@@ -916,8 +934,8 @@ class Actors {
       var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : lampShadows.litAt(a);
       // resolve the transient effect into the final pose; no effect running = the rest pose
-      var wx = a.x + (o.offx != null ? o.offx : 0.0);
-      var wz = a.z + (o.offz != null ? o.offz : 0.0);
+      var wx = a.x + a.offx;
+      var wz = a.z + a.offz;
       var sc = baseScale;
       if (a.fx != null)
         {
@@ -1078,7 +1096,8 @@ class Actors {
         {
           var w = CityConfig.cellToWorld(e.mx, e.my);
           a = { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf };
+                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf,
+                offx: 0.0, offz: 0.0 };
           actors.set(e, a);
           return a;
         }

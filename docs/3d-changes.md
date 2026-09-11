@@ -2294,3 +2294,54 @@ are **39, 42 and 47**.
 
 **VERDICT: landed, and the upright half is a LOOK the user asked to see rather than a settled
 number.** +0 draw calls, +0 tris, counts unchanged at 44 mounts / 11 runs / 3 units / 37 scatter.
+
+## AN ACTOR POSE IS NOT WHERE THE THING IS DRAWN, and a fake cast shadow is the one reader that shows it
+
+Reported from the game as *"the barrel tile looks like there is a contact shadow patch in the centre, but
+the barrel is near the wall — probably all near-the-wall glb have this issue"*. Right about the symptom,
+and the first pass chased the wrong subsystem: `ContactMask` is correct here and always was. Its rect for
+that drum is `x -104.32..-103.12, z -94.60..-93.40`, centre `(-103.72, -94.00)`, which is the glb
+instance position to the digit.
+
+**WHAT IT ACTUALLY IS.** A raycast through the smudge pixel hits a mesh a clean floor pixel does not:
+a single quad at `y = 0.06`, 3x3 base scaled `(0.72, 0.64)`, laid flat and turned `-0.785` about z,
+`opacity 0.191`, `depthWrite false`, `renderOrder 3`. The `0.06` is literal — `LampShadows.actorShadow`
+lays its fake cast shadows on `WorldCtx.floorY(...) + 0.06`. Proved by knockout: `LAMP_SHADOW.op = 0`
+removes the smudge and nothing else; `renderer.shadowMap.enabled = false` moves **3** of 255 in the whole
+crop; `ContactMask.uAmt` 0 <-> 0.9 moves only a band on the wall and under the barrel and **nothing** at
+the smudge.
+
+**THE BUG IS ONE LINE OLD AND STRUCTURAL.** `LampShadows` projects from `a.x, a.z` — the Actors-map
+pose, which is the cell centre. Every facility fitting family is drawn OFF THE WALL FACE instead, and
+the face is a whole unit inside the cell boundary, so the offsets are large: **2.28** of a 4-unit cell
+for a drum, a bin, a rack or a cabinet (3.0 - (half-depth 0.6 + `STAND_GAP` 0.12)), 2.25 for a bookcase,
+1.78 for a low machine, 1.48 for a full one. The contact pool, the wall halo and the glb placement are
+all built off that same moved rect and all agree; the POSE was the one thing left on the cell centre.
+It never showed as a misplaced icon because `FacilityDeco.draws` suppresses the icon — the fake shadow
+is the only consumer of the pose that draws anything, which is why a structural mismatch surfaced as
+one smudge beside one barrel.
+
+**THE FIX PUTS THE OFFSET ON THE POSE, not on the frame.** `ActorOpts.offx/offz` already existed for a
+fallen corpse, but it was applied at draw time only (`wx = a.x + o.offx`) and never reached the map —
+so corpses had the same bug at smaller amplitude. `ActorAnim.Actor` now carries `offx/offz`,
+`Actors.drawActor` writes them from the opts before anything reads the pose, and `LampShadows` projects
+from `a.x + a.offx`. The facility supplies its offset through a new per-cell hook,
+`WorldCtx.standOff`, the same shape and the same null-elsewhere contract as `wallMounts` —
+`FacilityDeco.standOff` answers it off `rectOf` for the emitted family and off a new `roundAt` for the
+two glb ones (pulled out of `placeRound` exactly as `rectOf` was pulled out of `unit`, so there is no
+second hand-written copy of the slab arithmetic).
+
+**VERIFIED IN GAME.** Poses now read `(-106, -94) + (2.28, 0) = (-103.72, -94)`, matching the instance
+matrix; the low machine at (23,24) reads `+1.78`; a fitting with no wall on any hand reads `+0`. The
+two drum shadow quads moved from `(-105.33, -94.67)` and `(-105.33, -85.33)` — mid-tile — to
+`(-102.76, -94.61)` and `(-102.76, -85.39)`, anchored on the drums.
+
+**AND THE SHADOWS ALL BUT VANISHED, WHICH IS THE CORRECT ANSWER AND WORTH KNOWING.** `LAMP_SHADOW` is
+`rangeCells` 2 with a `fade` of 0.3 and a `distFade` of `1 - d/range`, so pushing a fitting 2.28 further
+from its lamp drops those two from `op 0.191` to **0.003**. The mid-tile smudge was not a shadow in the
+wrong place so much as a shadow that should never have been cast at that strength: the fitting was
+being measured against the lamp from a spot it does not occupy. If wall-hugging props should read as
+shadowed at all, that is a `rangeCells` / `lenMul` conversation and not this one.
+
+**VERDICT: landed.** +0 draw calls, +0 programs, +0 meshes — two floats on a record that already
+existed per actor, and one hook that is null in every area kind but the facility.

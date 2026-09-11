@@ -125,6 +125,9 @@ class FacilityArea implements Area3D
       // and the one area kind with walls of its own that carry objects: the generator writes a vent
       // as a WALL cell and stands an objects.Vent on it, so the grille has to hang on the masonry
       WorldCtx.wallMounts = function(col, row) return FacilityGeom.wallMounts(model, col, row);
+      // and the one area kind that does not stand its props on the cell centre: a fitting is pushed
+      // off the WALL FACE, so the actor pose behind it has to be pushed with it
+      WorldCtx.standOff = function(col, row) return FacilityDeco.standOff(model, col, row);
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       // the indoor lighting mask, and it goes BEFORE the builders where the vision mask goes after.

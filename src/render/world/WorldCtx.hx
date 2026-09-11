@@ -46,6 +46,14 @@ class WorldCtx {
   // same contract as `ground` above — the area kind that sets it owns clearing it, or the next area
   // inherits walls that are not there
   public static var wallMounts:(Int, Int)->Array<WallMount> = null;
+  // the world offset from a cell's CENTRE to where the area kind actually DRAWS the thing standing on
+  // it — null on a cell that stands its thing in the middle, which is every cell in most area kinds.
+  // a facility fitting is pushed off the WALL FACE, which is a whole unit inside the cell boundary,
+  // so a 1.2-wide drum ends up 2.28 of a 4-unit cell from where its object sits. the pose is what
+  // render.actors.LampShadows projects a fake cast shadow from, and without this the shadow lands in
+  // the middle of the tile while the drum stands against the wall — reported from the game as exactly
+  // that. same contract as `ground` above — the area kind that sets it owns clearing it
+  public static var standOff:(Int, Int)->{ x:Float, z:Float } = null;
   // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
   public static var style:AreaStyle;
 

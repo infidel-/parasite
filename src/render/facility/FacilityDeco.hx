@@ -603,11 +603,90 @@ class FacilityDeco
 // its cell. With no wall on any hand it does stand in the middle, which the cell is unwalkable for
 // either way.
 //
+// where a ROUND fitting on this cell stands, and which hand its wall is on. the job `rectOf` does for
+// the emitted family, and pulled out of `placeRound` for the same reason that one was pulled out of
+// `unit`: `standOff` below has to answer where the glb is DRAWN, and a hand-written second copy of
+// the slab arithmetic would be wrong in exactly the place that is hard to see — the face is a whole
+// unit inside the cell boundary. dir -1 = no masonry on any hand, and then it stands in the middle
+  public static function roundAt(m:Facility, col:Int, row:Int):{ x:Float, z:Float, dir:Int }
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var cx = (col + 0.5) * CELL - half;
+      var cz = (row + 0.5) * CELL - half;
+      var dir = -1;
+      for (i in 0...4)
+        if (FacilityModel.isWall(m, col + DC[i], row + DR[i]))
+          {
+            dir = i;
+            break;
+          }
+      // off the WALL FACE and not the cell boundary, which is a unit away — the trap the corridor
+      // casework and the lab kit both record
+      if (dir >= 0)
+        {
+          var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
+          var off = FacilityStyle.DECO_ROUND_D / 2 + FacilityStyle.STAND_GAP;
+          cx = (dir == 2 ? s.x1 + off : (dir == 3 ? s.x0 - off : cx));
+          cz = (dir == 0 ? s.z1 + off : (dir == 1 ? s.z0 - off : cz));
+        }
+      return {
+        x: cx,
+        z: cz,
+        dir: dir,
+      };
+    }
+
+// how far the thing standing on this cell is DRAWN from the cell's centre, in world xz — null where
+// it stands in the middle, which is every cell with no fitting on it and every fitting with no wall
+// on any hand.
+//
+// THE POSE HAS TO FOLLOW THE GEOMETRY, and this is the hook that lets it. render.Actors holds one
+// pose per object and that pose is the cell centre; the fitting families here all stand OFF THE WALL
+// FACE instead, which is a whole unit inside the cell boundary, so a 1.2-wide drum is drawn 2.28 of a
+// 4-unit cell away from its own object. Everything that reads the geometry already agrees — the
+// contact pool, the wall halo and the glb placement are all built off the same rect — and the actor
+// POSE was the one thing left behind. It is not seen as a misplaced icon because `draws` suppresses
+// that icon; it is seen as render.actors.LampShadows projecting the fake cast shadow from the middle
+// of the tile while the drum stands against the wall, which is how it was reported.
+//
+// reached from render.Actors through render.world.WorldCtx.standOff, the same per-cell hook
+// FacilityGeom.wallMounts answers on — a pure function of the saved grid, asked per object per frame
+  public static function standOff(m:Facility, col:Int, row:Int):{ x:Float, z:Float }
+    {
+      if (!FacilityModel.inside(m, col, row))
+        return null;
+      var kind = m.deco[row][col] - 1;
+      if (kind < 0)
+        return null;
+      var half = (CityConfig.GRID * CELL) / 2;
+      var cx = (col + 0.5) * CELL - half;
+      var cz = (row + 0.5) * CELL - half;
+      var x, z;
+      if (isProp(kind))
+        {
+          var p = roundAt(m, col, row);
+          x = p.x;
+          z = p.z;
+        }
+      else
+        {
+          var r = rectOf(m, col, row, kind);
+          x = (r.x0 + r.x1) / 2;
+          z = (r.z0 + r.z1) / 2;
+        }
+      if (x == cx &&
+          z == cz)
+        return null;
+      return {
+        x: x - cx,
+        z: z - cz,
+      };
+    }
+
 // the yaw is FREE: a drum is a cylinder, and a bin's mouth may as well look anywhere indoors — where
 // the outdoor bins aim theirs at the path, these have no path to aim at
   public static function placeRound(m:Facility, kind:Int, places:Array<Models.PropPlace>):Void
     {
-      var half = (CityConfig.GRID * CELL) / 2;
       var y = FacilityGround.surfY(Surf.TILE);
       var r = FacilityStyle.DECO_ROUND_D / 2;
       for (row in 0...m.h)
@@ -615,24 +694,8 @@ class FacilityDeco
           {
             if (m.deco[row][col] - 1 != kind)
               continue;
-            var cx = (col + 0.5) * CELL - half;
-            var cz = (row + 0.5) * CELL - half;
-            var dir = -1;
-            for (i in 0...4)
-              if (FacilityModel.isWall(m, col + DC[i], row + DR[i]))
-                {
-                  dir = i;
-                  break;
-                }
-            // off the WALL FACE and not the cell boundary, which is a unit away — the trap the
-            // corridor casework and the lab kit both record
-            if (dir >= 0)
-              {
-                var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
-                var off = r + FacilityStyle.STAND_GAP;
-                cx = (dir == 2 ? s.x1 + off : (dir == 3 ? s.x0 - off : cx));
-                cz = (dir == 0 ? s.z1 + off : (dir == 1 ? s.z0 - off : cz));
-              }
+            var p = roundAt(m, col, row);
+            var cx = p.x, cz = p.z, dir = p.dir;
             // TURNED AWAY from the masonry it stands against. the bin's mouth is a hole in its lid
             // and its own front is local +z (measured off the built glb — see FacilityGround.bins),
             // so a free turn would put a third of them face to the wall. a drum is a cylinder and

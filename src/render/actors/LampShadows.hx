@@ -323,8 +323,14 @@ class LampShadows {
       if (gs == null)
         return;
       var floor = WorldCtx.floorY(a.col, a.row) + 0.06;   // just above the splat/debris plane (+0.04)
-      CastShadows.project(sprites, gs, a.x, a.z, floor, a.op, barrelLights, RenderConfig.FLAME.shadowMax);
-      CastShadows.project(sprites, gs, a.x, a.z, floor, a.op,
+      // THE RESTING OFFSET IS PART OF THE POSE, and taking a.x/a.z bare was the bug: a facility
+      // fitting is drawn pushed off its wall FACE — up to 2.28 of a 4-unit cell — while its object
+      // sits on the cell centre, so the shadow landed in the middle of the tile with the drum against
+      // the wall. a fallen corpse carries the same offset for its own reason. see ActorAnim.Actor
+      var ax = a.x + a.offx;
+      var az = a.z + a.offz;
+      CastShadows.project(sprites, gs, ax, az, floor, a.op, barrelLights, RenderConfig.FLAME.shadowMax);
+      CastShadows.project(sprites, gs, ax, az, floor, a.op,
         render.world.IndoorMask.indoorAt(a.col, a.row) ? lampIn : lampOut,
         RenderConfig.LAMP_SHADOW.max);
     }
