@@ -2345,3 +2345,61 @@ shadowed at all, that is a `rangeCells` / `lenMul` conversation and not this one
 
 **VERDICT: landed.** +0 draw calls, +0 programs, +0 meshes — two floats on a record that already
 existed per actor, and one hook that is null in every area kind but the facility.
+
+## THE BENCH FAMILY REPAINTED FLAT, and a sprite that leans back does not stand where it is anchored
+
+**The ask was an art pass and the bug underneath it was geometry.** All four `facility/bench-pack`
+sheets were repainted flatter by `edit_image` (gpt-image-2.5-sunburst, quality high,
+`background:"transparent"`, **$0.064 a sheet**) — the prompt locks layout, positions, sizes and
+colours and changes only the painting, with a named list of micro-detail to delete. Layout held on
+all 64 cells; `pack16.py` found clean corridors on every sheet. It came back **+30% brighter and
++40% chroma** on all four, carried by per-sheet `lift`/`sat`. **The `lift` response is not the naive
+gamma model**: the first fit undershot at 1.20x against a 1.30x target, and the second pass had to be
+taken off the measured ln-gain per unit lift (~1.5–1.8). Budget two `make tex` passes and read
+`built_linear` back.
+
+**THEN EVERY DECORATION WAS REPORTED HANGING IN THE AIR, and the art was not the cause.** Content
+boxes and bottom margins came back byte-identical to the old sheets, so the anchor had not moved —
+but `Sprites.TILT` is 0.6 rad and the quad leans about its own CENTRE, so every point below that
+centre swings toward the camera **and rises**. The content bottom — the part that reads as resting on
+the worktop — came up by `d·(1−cos TILT)` = `3.0 × 0.81 × (0.5 − 0.031) × 0.1747` = **0.199 world
+units**, a fifth of a tile of clear air, which is also why each group sat visibly behind its own
+contact pool. `groundAnchor` already dropped them by the sprite's empty bottom margin; nothing took
+the lean back out. Fixed with `ActorOpts.tiltSink`, applied inside that same drop and gated by
+`FacilityDeco.spriteSinks`. **Opt-in on purpose**: every upright sprite has this rise, but an actor's
+art is posed against the same lean and was tuned with it, so sinking those would bury their feet.
+
+**AND "no shadow" IN A REPAINT PROMPT TAKES THE GROUNDING WITH IT.** The old sheets carried a painted
+contact shadow. The runtime pool (`TABLE_POOL_*`) is a decal on the WORKTOP and the tilt carries the
+drawn base off it, so the art was always the half that closed the gap. `pack16.py --shadow 0.35`
+bakes it back deterministically instead of re-rolling sixteen cells and hoping — ellipse first, art
+`alpha_composite`d over it (plain `paste` REPLACES alpha and punches the shadow back out). Pure
+black, so `lift` and `sat` both leave it alone.
+
+**THE CLUTTER THEN READ BRIGHTER THAN THE STANDING KIT, AND THE TEXTURE NUMBERS SAID THE OPPOSITE.**
+`worktop-clutter` builds at 0.0796 linear against the packs' 0.128–0.144 — the art that is 1.7x
+brighter lost on screen, because a flat decal takes the overhead term square-on while a leaning quad
+takes ~`sin(56°)` of it. **The first knob was the wrong one**: `lift 1.12` moved the offenders by
+nothing (mouse mat 112.2 → 112.6), because they sit pinned AT the `cells` cap and a gamma under it
+cannot reach them. `cap` 0.105 → **0.08** (26/64 → 38/64 cells moved): mat 45.6 → 40.9, paper
+43.6 → 39.4, standing rack **unchanged at 43.0** as the control. Which pixels were even clutter was
+measured, not eyeballed — rebuilt at `lift 3.5` to black the family out and read off the frame, which
+corrected a guess.
+
+**THE SINK WAS LAST, AND `lift` COULD NOT TOUCH IT EITHER.** `facility/sink` is a flat basin and an
+upright tap on one sheet, and its own note had already called this: lift is per LABEL and the two
+cells want different moves. Tap p90 **132.7** against the sprites sharing its bench at 61.7–64.0.
+Per-cell gamma at composite time — the `facility/placards` route, promoted to **`tools/cellgamma.py`**
+now that a second sheet needs it. Tap 2.0 (srgb 157.0 → 98.8, screen 93.7 → 72.7); the rim was then
+the brightest thing left, unchanged at 94.0 while the tap came down past it, so basin 1.27
+(84.7 → 63.1, screen 94.0 → 66.0). Final: tap 71.7, rim 66.0, against scale 64.0 and rack 61.7
+**unchanged in the same frame** — two still controls are what prove only two rects moved. Pristine
+source parked at `textures-src/facility/Unused/sink.png`; a gamma stacks, so every retune starts there.
+
+**VERDICT: landed.** +0 draw calls, +0 programs, +0 meshes — one bool on an opts record, one
+null-elsewhere gate, and four texture constants.
+
+**THE TRAP THAT COST THE MOST TIME HAS NOTHING TO DO WITH ANY OF IT: `make tex` runs `adopt` FIRST.**
+A drop left in `textures-src/` as `edit-<ts>-<hash>-bench-pack1.png` is renamed in place over the
+packed sheet and built, with a build line that reads exactly as it should. Delete the drop, or
+generate outside the tree, before `make tex`.

@@ -104,6 +104,29 @@ def box(alpha):
     return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
 
 
+def shadow(cell, cx, cy, w, h, strength):
+    """A soft contact ellipse to sit UNDER a group, as an RGBA layer the size of one cell.
+
+    The pack16 sheets used to carry a painted shadow of their own, and the runtime pool
+    (render.facility.FacilityStyle.TABLE_POOL_*) was only ever the other half of the grounding:
+    the pool is a decal on the WORKTOP, so the sprite's tilt carries the drawn base away from
+    it, and what closed that gap was the art. A repaint that drops the shadow leaves every
+    decoration hanging over its own pool. This puts it back deterministically instead of
+    re-rolling sixteen cells and hoping the model draws one.
+
+    Centred on the group's bottom edge, so it reads as contact and not as a cast shadow: the
+    art is pasted over the top half of it."""
+    rx = max(2.0, w * 0.60)
+    ry = max(1.5, h * 0.055)
+    yy, xx = np.mgrid[0:cell, 0:cell]
+    d = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+    # squared falloff: a soft edge with no visible rim, zero outside the ellipse
+    a = np.clip(1.0 - d, 0.0, 1.0) ** 2 * (255.0 * strength)
+    lay = np.zeros((cell, cell, 4), dtype=np.uint8)
+    lay[:, :, 3] = a.astype(np.uint8)
+    return Image.fromarray(lay, "RGBA")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src")
@@ -116,6 +139,8 @@ def main():
                     help="opaque px a seam line may still carry (8x8 only — see bands())")
     ap.add_argument("--valign", choices=("bottom", "center"), default="bottom",
                     help="bottom for a sprite on a ground line, center for a top-down object")
+    ap.add_argument("--shadow", type=float, default=0.0,
+                    help="peak alpha of a baked contact ellipse under each group (0 = none)")
     a = ap.parse_args()
     out = a.out or os.path.splitext(a.src)[0] + "-grid.png"
 
@@ -154,7 +179,14 @@ def main():
         cx = (i % a.cols) * a.cell + (a.cell - w) // 2
         cy = (i // a.cols) * a.cell + ((a.cell - h) // 2 if a.valign == "center"
                                        else a.cell - a.margin - h)
-        sheet.paste(g, (cx, cy))
+        # the shadow goes down FIRST, so the art sits on top of its own near half
+        if a.shadow > 0:
+            lay = shadow(a.cell, cx - (i % a.cols) * a.cell + w / 2.0,
+                         cy - (i // a.cols) * a.cell + h, w, h, a.shadow)
+            sheet.alpha_composite(lay, ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
+        # composite and not paste: paste REPLACES alpha, which would punch the shadow back out
+        # everywhere the group's own bounding box is transparent
+        sheet.alpha_composite(g, (cx, cy))
     sheet.save(out)
     print(f"  wrote  {out}  {sheet.width}x{sheet.height}")
 

@@ -169,6 +169,18 @@ class FacilityDeco
       return onBench(area, o) ? FacilityStyle.DECO_TABLE_SAT : 1.0;
     }
 
+// does it need the LEAN taken back out of its resting height? every upright sprite leans back by
+// Sprites.TILT about its own centre, which lifts its content bottom clear of the surface it is
+// standing on — 0.199 world units for this family, reported from the game as decorations hanging in
+// the air over their own contact pool. render.Actors does the arithmetic; this is only the gate, and
+// it is the bench family alone because an ACTOR's art is posed against that same lean already
+//
+// STATELESS like the three hooks above, asked per object with no model in hand
+  public static function spriteSinks(area:game.AreaGame, o:objects.AreaObject):Bool
+    {
+      return onBench(area, o);
+    }
+
 // and does it LIE DOWN on the worktop rather than stand up on it? three of the 43 do — see
 // Const.FACILITY_FLAT_DECO, which is a per-FRAME table because the gloves sit among eleven upright
 // flasks on their own rows.

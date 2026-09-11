@@ -24,6 +24,7 @@ typedef ActorOpts = {
   @:optional var offx:Float;        // world X offset from the cell centre (a corpse's fallen offset)
   @:optional var offz:Float;        // world Z offset from the cell centre
   @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
+  @:optional var tiltSink:Bool;     // and take the LEAN back out of it too (see the drop in drawActor)
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
   @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): no icon and no
                                     // sprite marks at all — the prop is outlined from its own geometry
@@ -246,6 +247,8 @@ class Actors {
               offx: ox,
               offz: oz,
               groundAnchor: true,
+              // a bench decoration also sinks by what the lean lifted it — see the drop in drawActor
+              tiltSink: render.facility.FacilityDeco.spriteSinks(game.area, o),
               // a facility bench decoration draws at a fraction of the full billboard — at full
               // size a microscope stood a metre tall on a metre-high worktop. asked per object like
               // the two gates below, and 1.0 for everything else
@@ -927,7 +930,20 @@ class Actors {
         {
           var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
           if (gs != null)
-            wy -= Sprites.SIZE * (0.5 * (1 - baseScale) + baseScale * gs.by);
+            {
+              wy -= Sprites.SIZE * (0.5 * (1 - baseScale) + baseScale * gs.by);
+              // AND THE LEAN PUTS IT BACK UP, which is what "they all hang in the air" was. The quad
+              // leans back by Sprites.TILT about its own CENTRE, so every point below that centre
+              // swings toward the camera AND rises: the content bottom — the part that reads as
+              // resting on the surface — comes up by its own drop below the centre times
+              // (1 - cos TILT). On a bench decoration that is 3.0 * 0.81 * (0.5 - 0.031) * 0.1747 =
+              // 0.199 world units, a fifth of a tile of clear air under a flask.
+              //
+              // OPT-IN and not applied to every ground-anchored sprite: an actor's own art is posed
+              // against this same lean and was tuned with it, so sinking those would bury their feet
+              if (o.tiltSink == true)
+                wy -= Sprites.SIZE * baseScale * (0.5 - gs.by) * (1 - Math.cos(Sprites.TILT));
+            }
         }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
