@@ -498,6 +498,80 @@ class Const
     { row: 49, col: 3 },
   ];
 
+  // ---- the clue pack: the reports and books a facility hands out --------------------------------
+  //
+  // THE SAME REDIRECTION ONE FAMILY OVER, and a second table rather than more rows on the one above,
+  // because the cell SIZE differs and DECO_PACK_CELL is inline at 256. 24 subjects on a 6x4 sheet of
+  // 170 px cells (art/textures.json facility/clue-pack carries why that grid and not a pack64's 8x8),
+  // against the 64 px an entities64 cell gave them — the clue documents were the last family in the
+  // compound still drawn straight off the atlas, i.e. at 26 texels per world unit.
+  //
+  // 3D-ONLY, like the bench packs: the 2D area view, the inventory and every window still draw the
+  // entities64 frame, which tools/atlaspaste.py bakes from these same cells, so the two are one
+  // object drawn twice. Nothing is persisted and nothing is migrated
+  public static inline var CLUE_PACK_CELL = 170;
+  public static inline var CLUE_PACK_COLS = 6;
+  // index = the pack cell in reading order; value = the entities64 frame it redraws. The DOCUMENTS
+  // row first (CHEM_LABS_DOCUMENTS, row 17) and then the BOOKS row (CHEM_LABS_BOOKS, row 19), which
+  // is the order the generation prompt lists its 24 subjects in.
+  //
+  // THREE CELLS ARE RETIRED and the order is what retires them: sheet cells 8 (the fanfold printout),
+  // 9 (the photostat) and 15 (the stack of three books) came back in THREE-QUARTER PERSPECTIVE rather
+  // than the top-down the prompt asked for, so they cannot lie on a worktop. A cell's pack coordinates
+  // come from its INDEX here (clueHDCol/clueHDRow), so a cell cannot be deleted from this table —
+  // instead the three are mapped to the TAIL frames of their own atlas row and the deal is shortened
+  // to stop before them (CHEM_LABS_DOCUMENTS 12 -> 10, CHEM_LABS_BOOKS 12 -> 11). The good cells
+  // behind them shift down to close the gap, so the dealt frames stay contiguous from col 0
+  public static var CLUE_HD: Array<_FittingFrame> = [
+    // cells 0-11 — row 17, the paperwork
+    { row: 17, col: 0 },
+    { row: 17, col: 1 },
+    { row: 17, col: 2 },
+    { row: 17, col: 3 },
+    { row: 17, col: 4 },
+    { row: 17, col: 5 },
+    { row: 17, col: 6 },
+    { row: 17, col: 7 },
+    { row: 17, col: 10 },   // retired: the fanfold, drawn in perspective
+    { row: 17, col: 11 },   // retired: the photostat, drawn in perspective
+    { row: 17, col: 8 },
+    { row: 17, col: 9 },
+    // cells 12-23 — row 19, the books
+    { row: 19, col: 0 },
+    { row: 19, col: 1 },
+    { row: 19, col: 2 },
+    { row: 19, col: 11 },   // retired: the stack of three, drawn in perspective
+    { row: 19, col: 3 },
+    { row: 19, col: 4 },
+    { row: 19, col: 5 },
+    { row: 19, col: 6 },
+    { row: 19, col: 7 },
+    { row: 19, col: 8 },
+    { row: 19, col: 9 },
+    { row: 19, col: 10 },
+  ];
+
+// which clue pack cell redraws this frame, or -1. decoHD's own shape and its own reason for being a
+// linear scan: it is asked once per sprite cache MISS
+  public static function clueHD(row: Int, col: Int): Int
+    {
+      for (i in 0...CLUE_HD.length)
+        if (CLUE_HD[i].row == row &&
+            CLUE_HD[i].col == col)
+          return i;
+      return -1;
+    }
+
+  public static inline function clueHDCol(hd: Int): Int
+    {
+      return hd % CLUE_PACK_COLS;
+    }
+
+  public static inline function clueHDRow(hd: Int): Int
+    {
+      return Std.int(hd / CLUE_PACK_COLS);
+    }
+
 // how many pack sheets the table above spans — read off it so adding sixteen rows is the whole edit
   public static function decoPackCount(): Int
     {
@@ -578,15 +652,20 @@ class Const
   public static var FRAME_CLONE_VAT = FRAME_SUMMONING_PORTAL;
   public static var FRAME_CLONE_VAT_FLUSHED = FRAME_BROKEN_PORTAL;
 
-  // row 17,18 - documents
+  // row 17 - documents, row 19 - books. ONE ROW EACH and not the two they were dealt from: rows 17
+  // and 19 are repainted from the clue pack (CLUE_HD, art/textures.json facility/clue-pack) and rows
+  // 18 and 20 still hold the old 2D-era icons, so dealing those would mix two families of art in one
+  // room. The 24 that are drawn is the whole deal; the two stale rows are left in the atlas rather
+  // than cleared, because a save made before this holds documents pointing at them and an object
+  // whose frame is blank is worse than one whose frame is old.
+  //
+  // 10 AND 11, NOT 12 AND 12: three of the sheet's 24 subjects came back in perspective and are
+  // retired at the tail of their row (see CLUE_HD), so the deal stops one short of them
   public static var CHEM_LABS_DOCUMENTS = [
-    { row: 17, amount: 12 },
-    { row: 18, amount: 12 },
+    { row: 17, amount: 10 },
   ];
-  // row 19,20 - books
   public static var CHEM_LABS_BOOKS = [
-    { row: 19, amount: 12 },
-    { row: 20, amount: 12 },
+    { row: 19, amount: 11 },
   ];
 
   // row 21,22 - spaceship

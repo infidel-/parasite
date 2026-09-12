@@ -187,6 +187,26 @@ class FacilityCable
         !zones.exists(cell(m, col, row));
     }
 
+// and may a lead merely PASS along it on its way out to a unit — `open` widened by exactly one thing,
+// the bench.
+//
+// STANDING ON A CELL AND CROSSING IT ARE DIFFERENT QUESTIONS, which `run` asked as one and got the
+// wrong answer to. A unit stood on a bench cell would be a cabinet standing in a worktop, so the
+// STANDING test keeps every clause of `open`; a lead passing one runs in the strip between the wall
+// and the bench, because a bench stands on its own CELL a clear unit off the slab face and the ribbon
+// is laid on the wall's own hand of it. `joins` has always let a run past a bench for exactly this
+// reason and said so — this is that argument applied to the family next door, and it opens up the
+// rooms this compound is mostly made of.
+//
+// THE HATCH IS STILL A HATCH: a keep-clear mark means nothing goes over it, cable included, so the
+// zone test is asked of a passing cell too
+  static inline function passes(m:Facility, col:Int, row:Int):Bool
+    {
+      return open(m, col, row) ||
+        (FacilityModel.isTable(m, col, row) &&
+         !zones.exists(cell(m, col, row)));
+    }
+
 // every socket the rooms carry: which cell, which wall of it, and which machine if any feeds it.
 //
 // THE PREDICATE IS THE PLACARDS' OWN — FacilityPlacard.hangs: room floor (Surf.TILE, which is what
@@ -205,6 +225,18 @@ class FacilityCable
       // essentially never the one cell that happens to have a machine beside it — built the other way
       // round the compound came back with 52 mounts and NOT ONE of them fed.
       //
+      // AND A FED SOCKET TAKES NO SPACING AND REACHES TWO CELLS, which is the correction this pass
+      // needed: every rack in the compound is supposed to be plugged in, and with SOCK_SPACING on
+      // the machine pass most of them were not. A rack standing in a run of fittings has BOTH its
+      // neighbours taken, so the old hands — the cell either side and nothing further — simply
+      // failed; and two racks inside four cells of each other wired only the first, because the
+      // second fell inside the first's neighbourhood. Neither rejection is about the wall's rhythm,
+      // which is the only thing SOCK_SPACING was fitted for (3 hung 52 plates and read as
+      // wallpaper): A SOCKET BESIDE THE MACHINE IT FEEDS IS JUSTIFIED BY THE MACHINE. So the walk
+      // goes out to two cells on each hand and the only thinning left is "not the cell some other
+      // mount already took", i.e. `spaced` at 1. The bare pass below still sees these in `out` and
+      // still keeps its full spacing off them, so the wall does not fill up behind this.
+      //
       // THE ELECTRICAL KINDS AND NOT THE FURNITURE: the two machines and the two racks. A bookcase
       // has no cable to run and a drum is not plugged into anything, and all four of these carry a
       // drawn gland on their own lid art already (art/textures.json facility/deco-machine-top,
@@ -221,12 +253,14 @@ class FacilityCable
             // BESIDE it and never under it: a socket under a machine is behind the machine
             var sc = (q.dir < 2 ? 1 : 0);
             var sr = (q.dir < 2 ? 0 : 1);
-            for (s in [-1, 1])
+            // the near hands first, so a lead stays as short as the wall allows
+            for (s in [-1, 1, -2, 2])
               {
                 var c = col + sc * s;
                 var r = row + sr * s;
                 if (!bare(m, c, r, q.dir) ||
-                    !spaced(out, c, r, FacilityStyle.SOCK_SPACING))
+                    !walled(m, col, row, q.dir, sc * s, sr * s) ||
+                    !spaced(out, c, r, 1))
                   continue;
                 out.push(sock(m, c, r, q.dir, col, row, kind));
                 break;
@@ -243,6 +277,33 @@ class FacilityCable
               out.push(sock(m, col, row, dir, -1, -1, -1));
             }
       return out;
+    }
+
+// is the masonry UNBROKEN from a machine's own cell to a socket `dc, dr` cells along its wall — the
+// test that keeps a drop off a doorway.
+//
+// A DROP IS A RIBBON AND NOT A RUN: `drops` joins the machine's lid straight to its socket's plate, so
+// unlike `joins` and `run` it never walks the cells in between and never asked anything of them. That
+// was survivable while the walk reached ONE cell each way, because a socket in front of a doorway is
+// already rejected — `FacilityPlacard.hangs` wants the wall line to carry on past its own cell. At two
+// cells it is not: the socket lands on good masonry on the FAR side of a door and the cable is drawn
+// across the open threshold, which is what came back from the game.
+//
+// so the span is tested here, where the socket is CHOSEN, rather than in `drops`: a machine whose only
+// legal plate is over a doorway is a machine with no plate, and the walk simply moves on to its next
+// hand. `isSolidWall` and not `hangs` for `joins`' own reason — a cable passing a cell has nothing to
+// hang past and only needs masonry to run along. A BENCH DOES NOT BREAK IT and is not asked about:
+// the ribbon is in the wall's plane, a bench stands a clear unit off the slab face, and the strip
+// behind one is exactly where a lead belongs
+  static function walled(m:Facility, col:Int, row:Int, dir:Int, dc:Int, dr:Int):Bool
+    {
+      var n = (dc != 0 ? (dc > 0 ? dc : -dc) : (dr > 0 ? dr : -dr));
+      var sc = (dc != 0 ? (dc > 0 ? 1 : -1) : 0);
+      var sr = (dr != 0 ? (dr > 0 ? 1 : -1) : 0);
+      for (i in 1...n + 1)
+        if (!FacilityModel.isSolidWall(m, col + sc * i + DC[dir], row + sr * i + DR[dir]))
+          return false;
+      return true;
     }
 
 // one socket, with the sheet cell its ROOM picked. see the header: the roll is on the room and not
@@ -361,16 +422,29 @@ class FacilityCable
     }
 
 // may a socket hang on the `dir` wall of this room cell at all: the placards' own predicate, plus a
-// cell with nothing standing on it
+// cell with nothing standing AGAINST that wall.
+//
+// A BENCH IS NOT SUCH A THING, and excluding one was this predicate reading its own comment too
+// broadly. The argument for the exclusion is real and is about the FITTINGS: a plate spans 0.25 to
+// 0.95 and a cabinet, a rack or a machine is bolted TO the wall, so it stands through the plate
+// whatever its own height. A bench does not touch the wall at all — it stands on its own cell a clear
+// unit off the slab face, which is the very fact `joins` has always used to let a run past one. So
+// the strip behind a bench is masonry with nothing on it, which is where a socket goes in a real
+// laboratory and where the lead to one is out of the way.
+//
+// MEASURED, and it is the difference between a wired compound and a half-wired one: of 28 machines
+// and racks standing against a wall here, 15 could take a plate with bench cells excluded and 23 with
+// them allowed. The eight are machines at the end of a bench run, whose only free neighbour is the
+// bench — and before `walled` they were being wired ACROSS A DOORWAY instead.
+//
+// `true` widens the surface gate to a researcher's OFFICE: the room the compound's other electrical
+// kit stays out of for no reason at all — an office has sockets and a skirting run like every other
+// room, and the desks and the workstations on them are what they feed
   static inline function bare(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
-      // `true` widens the surface gate to a researcher's OFFICE: the room the compound's other
-      // electrical kit stays out of for no reason at all — an office has sockets and a skirting run
-      // like every other room, and the desks and the workstations on them are what they feed
       return FacilityModel.inside(m, col, row) &&
         FacilityPlacard.hangs(m, col, row, dir, true) &&
-        m.deco[row][col] == 0 &&
-        !m.table[row][col];
+        m.deco[row][col] == 0;
     }
 
 // and is it far enough from every mount already dealt. FacilityPoint.places' own thinning, measured
@@ -605,7 +679,16 @@ class FacilityCable
       var sv = (p.dir < 2 ? [1.0, 0.0, 0.0] : [0.0, 0.0, 1.0]);
       var u = (s == 0 ? [0.0, 1.0, 0.0] : [-s * sv[0], 0.0, -s * sv[2]]);
       var r = [u[1] * n[2] - u[2] * n[1], u[2] * n[0] - u[0] * n[2], u[0] * n[1] - u[1] * n[0]];
-      var c = anchor(m, p, s);
+      // ON THE PLATE'S CENTRE AND NOT ON THE CABLE'S EXIT POINT, which is `anchor`'s hand 0 rather
+      // than `s`. The two are different points by construction: `anchor` slides SOCK_W * SOCK_LEAD
+      // along the wall so the ribbon's CUT END is hidden well inside the plate's art, and hanging the
+      // plug there put its centre 0.35 off a plate whose half-width is 0.7 — so the plug covered the
+      // plate's far HALF and the rest of it hung on bare wall, reported as the two overlapping only
+      // partially. A plug goes on its socket; the lead still leaves from `anchor`, which stays inside
+      // this quad (0.35 against the plug's own half-width of PLUG_W / 2), so the cable comes out from
+      // under the plug's body and not out of thin air. The basis above still keys off `s`, so the
+      // gland collar goes on turning to follow the lead
+      var c = anchor(m, p, 0);
       // proud of the ribbon it covers, which is itself proud of the plate — three parallel surfaces,
       // and the standing note says separate them with a gap and never with a polygonOffset
       var e = FacilityStyle.CABLE_EPS;
@@ -669,11 +752,11 @@ class FacilityCable
 // the floor units, and the cable that leads to each: a drum, a welding set, a distribution board
 // standing out in the room with a trailing lead back to the wall.
 //
-// THE REACH IS THE NEAREST CLEAR ONE and not a rolled distance. The unit walks straight out from its
-// mount's wall and takes the first cell from UNIT_REACH_MIN out that has free floor all the way —
-// so a unit is never stood through a bench, and the cable to it never crosses one either. A mount
-// with a bench two cells out simply gets no unit, which is the same "the compound supplies the
-// emptiness" argument the links run on
+// THE REACH IS THE NEAREST CLEAR ONE and not a rolled distance. The unit walks along its mount's wall
+// and takes the first cell from UNIT_REACH_MIN out that it may STAND on, with a lead that may pass
+// every cell before it — two different questions, see `passes`. A unit is never stood in a worktop;
+// the lead behind one is where a lead goes. A mount whose wall is blocked outright simply gets no
+// unit, which is the same "the compound supplies the emptiness" argument the links run on
   static function units(pack:MeshBuf, cab:MeshBuf, m:Facility, list:Array<Mount>):Array<Unit>
     {
       var out:Array<Unit> = [];
@@ -715,10 +798,11 @@ class FacilityCable
         {
           var c = p.col + sc * d;
           var r = p.row + sr * d;
-          if (!open(m, c, r) ||
+          if (!passes(m, c, r) ||
               !FacilityModel.isSolidWall(m, c + DC[p.dir], r + DR[p.dir]))
             return false;
           if (d < FacilityStyle.UNIT_REACH_MIN ||
+              !open(m, c, r) ||
               !clearOf(out, c, r))
             continue;
           var g = FacilityModel.mix((c * 971658137) ^ (r * 1266489917));

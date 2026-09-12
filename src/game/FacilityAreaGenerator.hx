@@ -1001,6 +1001,58 @@ class FacilityAreaGenerator
                     cells[x][y] = TEMP_BUILDING_VENT;
                 }
             }
+          // and with the room's benches dealt, make sure a clue still has somewhere to land on them
+          clearTableSpots(state, room);
+        }
+    }
+
+// leave at least TABLE_CLEAR_MIN of this room's bench cells bare, by taking decorations back off.
+//
+// A CLUE SPOT IS A BENCH TILE WITH NO OBJECT ON IT (game.AreaGame.initSpawnPoints) and this pass is
+// the only thing that can promise one exists. The walk above decorates about 70% of bench cells and
+// FORCES one on all four room corners, and two render-only families then cover more of what is left —
+// render.facility.FacilitySink takes a free edge cell of every bench block for its basin and
+// render.facility.FacilityWork stands a workstation on the office desks (render.facility
+// .FacilityClues prunes both out of the list). On a small room the three together reached zero, and a
+// facility with no legal spot simply stops handing out clues.
+//
+// THE CORNERS ARE NEVER FREED and that is the one hard rule here: the walk forces a decoration onto
+// them precisely so a clue cannot spawn there, because the activation range cross would reach through
+// the wall. So the reserve is taken out of the middle of a run, where a bare metre of worktop is what
+// a bench looks like anyway
+  function clearTableSpots(state: _FacilityState, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var free = 0;
+      var taken = [];
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          {
+            if (cells[x][y] < Const.TILE_LABS_TABLE_3X3_7 ||
+                cells[x][y] > Const.TILE_LABS_TABLE2_1X1)
+              continue;
+            if (!area.hasObjectAt(x, y))
+              {
+                free++;
+                continue;
+              }
+            // a corner cell is spoken for, and so is anything that is not a plain decoration — a
+            // fitting or a generated object on a bench cell is somebody else's placement
+            if ((x == room.x1 || x == room.x2) &&
+                (y == room.y1 || y == room.y2))
+              continue;
+            for (o in area.getObjectsAt(x, y))
+              if (o.type == 'decoration')
+                taken.push(o);
+          }
+      var i = 0;
+      while (free < TABLE_CLEAR_MIN &&
+             i < taken.length)
+        {
+          area.removeObject(taken[i]);
+          free++;
+          i++;
         }
     }
 
@@ -1139,10 +1191,10 @@ class FacilityAreaGenerator
       var cells = state.area.getCells();
       // the dividing wall goes in FIRST: it takes cells out of the wall runs below, and the two it
       // deliberately leaves bare are passages that nothing else may stand in
-      var pass = toiletPartition(state, room);
+      var split = toiletPartition(state, room);
       var edges = roomWallRuns(state, room);
       for (run in edges)
-        for (p in pass)
+        for (p in split.pass)
           {
             for (i in 0...run.length)
               if (run[i].x == p.x && run[i].y == p.y)
@@ -1151,27 +1203,65 @@ class FacilityAreaGenerator
                   break;
                 }
           }
-      // longest first: cubicles want the long walls, the basin counter takes the next, and the
-      // SHORTEST run is left bare whatever it is — a washroom ranked out on all four walls is a
-      // corridor with nowhere to turn round
-      edges.sort(function(a, b) return b.length - a.length);
+      // AND EACH HALF IS FURNISHED ON ITS OWN, which the one-room pass could not do. Sorting all four
+      // walls together and giving the longest two cubicles put every cubicle on one side of the T and
+      // every basin on the other — two rooms, one of them with nowhere to wash and the other with
+      // nothing to use. Split by which side of the stem a cell is on and the same rule runs twice:
+      // the half's longest wall takes cubicles, its next takes basins.
+      //
+      // the LOBBY comes out of every run first. It is the strip you stand in with the door at your
+      // back, one cell deep, and a cubicle in it is a cubicle across the entrance
       var stalls = 0;
-      for (e in 0...edges.length - 1)
+      for (half in 0...2)
         {
-          var run = edges[e];
-          if (run.length < 2)
-            continue;
-          // the first two walls are cubicles, the next is basins
-          var kind: _FittingKind = (e < 2 ? FIT_STALL : FIT_BASIN);
-          var n = (kind == FIT_STALL ? 2 + Std.random(3) : 2 + Std.random(2));
-          if (n > run.length)
-            n = run.length;
-          if (kind == FIT_STALL && stalls + n > TOILET_STALL_MAX)
-            n = TOILET_STALL_MAX - stalls;
-          for (i in 0...n)
-            placeFitting(state, run[i].x, run[i].y, kind);
-          if (kind == FIT_STALL)
-            stalls += n;
+          var runs = [];
+          for (run in edges)
+            {
+              var keep = [];
+              for (c in run)
+                {
+                  var o = (split.vertical ? c.x : c.y);
+                  if (split.lobby >= 0 &&
+                      o == split.lobby)
+                    continue;
+                  // a room with no stem has no halves, so the whole of it is dealt on the first pass
+                  if (split.stem >= 0)
+                    {
+                      var s = (split.vertical ? c.y : c.x);
+                      if (s == split.stem ||
+                          (s < split.stem) != (half == 0))
+                        continue;
+                    }
+                  else if (half > 0)
+                    continue;
+                  keep.push(c);
+                }
+              runs.push(keep);
+            }
+          // longest first: cubicles want the long wall, the basin counter takes the next, and
+          // whatever is shortest is left bare — a half ranked out on every wall is a corridor with
+          // nowhere to turn round
+          runs.sort(function(a, b) return b.length - a.length);
+          // TWO walls of the four, never more: the rest of the half is floor
+          for (e in 0...2)
+            {
+              if (e >= runs.length)
+                break;
+              var run = runs[e];
+              if (run.length < 2)
+                continue;
+              // the first wall of the half is cubicles, the next is basins
+              var kind: _FittingKind = (e < 1 ? FIT_STALL : FIT_BASIN);
+              var n = (kind == FIT_STALL ? 2 + Std.random(2) : 1 + Std.random(2));
+              if (n > run.length)
+                n = run.length;
+              if (kind == FIT_STALL && stalls + n > TOILET_STALL_MAX)
+                n = TOILET_STALL_MAX - stalls;
+              for (i in 0...n)
+                placeFitting(state, run[i].x, run[i].y, kind);
+              if (kind == FIT_STALL)
+                stalls += n;
+            }
         }
       paintRoomFloor(state, room, Const.TILE_FLOOR_MARBLE1);
 
@@ -1187,7 +1277,7 @@ class FacilityAreaGenerator
         }
     }
 
-// split the washroom into its two halves and return the two cells left open as passages.
+// split the washroom into its two halves and say where the split went.
 //
 // A LINE OF FITTINGS AND NOT A WALL. state.rooms is frozen at makeDoors and the room ids are already
 // written into the cell grid, so masonry stamped here would leave two halves sharing one _Room, one
@@ -1195,37 +1285,141 @@ class FacilityAreaGenerator
 // each cell unwalkable exactly as a cubicle does, and render.facility.FacilityDeco stands a
 // full-height slab on it (FacilityStyle.PART_T).
 //
-// the line runs ACROSS the room's short axis, so the two halves come out square rather than as a pair
-// of slots, and the cell at each end of it is left bare — those are the passages
-  function toiletPartition(state: _FacilityState, room: _Room): Array<{ x: Int, y: Int }>
+// AND IT IS A T, WHICH IS THE WHOLE POINT AND WAS A SINGLE LINE FOR ONE BUILD. That line ran down the
+// middle with the cell at EACH end left open, and two halves joined at both ends are not two rooms —
+// you walked in and could see and reach the whole place, which is the one thing a washroom may not
+// do. A T fixes it with the same fittings:
+//
+//   * the BAR runs parallel to the entrance wall, ONE CELL IN FROM IT. The strip it leaves against
+//     that wall is the lobby, i.e. the bit you stand in with the door behind you, and the cell at
+//     each END of the bar is left open — those two are the passages, one into each half.
+//   * the STEM runs from the middle of the bar to the opposite wall, so everything past the bar is
+//     split in two and there is NO path from one half to the other.
+//
+// so the walk is door -> lobby -> the men's gap or the women's, and each half is closed. The bar's
+// own middle cell is where the two lines meet, and render.facility.FacilityDeco.rectOf emits a CROSS
+// there rather than one slab (see its FIT_PARTITION branch) — without that the stem stops
+// (CELL - PART_T) / 2 short of the bar and the T has a hole in it.
+//
+// A ROOM TOO SMALL FOR A T FALLS BACK to the old single line: the bar needs three cells to have a
+// middle that is not one of its own passages, and the stem needs a cell to stand in past it
+  function toiletPartition(state: _FacilityState, room: _Room): _ToiletSplit
     {
-      var cells = state.area.getCells();
-      // down the middle, and on an even span the line goes on the near side of centre rather than
-      // splitting a cell that does not exist
+      // which wall the door is in, as the hand pointing INTO the room off it. the door cell itself is
+      // in the wall ring, i.e. outside the room's own rect, which is what makes this a comparison
+      var side = -1;
+      for (d in getRoomDoors(state, room))
+        {
+          if (d.x < room.x1)
+            side = 3;
+          else if (d.x > room.x2)
+            side = 2;
+          else if (d.y < room.y1)
+            side = 1;
+          else if (d.y > room.y2)
+            side = 0;
+          if (side >= 0)
+            break;
+        }
+      // the BAR is parallel to that wall, so it runs on the axis the hand is NOT on
+      var vertical = (side >= 2);
+      var barLen = (vertical ? room.h : room.w);
+      var deep = (vertical ? room.w : room.h);
+      if (side < 0 ||
+          barLen < 3 ||
+          deep < 3)
+        return toiletLine(state, room);
+      // one cell in from the entrance wall, which leaves exactly one cell of lobby against it
+      var bar = (vertical ?
+        (side == 3 ? room.x1 + 1 : room.x2 - 1) :
+        (side == 1 ? room.y1 + 1 : room.y2 - 1));
+      var lobby = (vertical ?
+        (side == 3 ? room.x1 : room.x2) :
+        (side == 1 ? room.y1 : room.y2));
+      // and the stem leaves the bar at its middle, on the same even-span rule the old line took
+      var stem = (vertical ?
+        room.y1 + Std.int(room.h / 2) :
+        room.x1 + Std.int(room.w / 2));
+      var pass = [];
+      for (i in 0...barLen)
+        {
+          var x = (vertical ? bar : room.x1 + i);
+          var y = (vertical ? room.y1 + i : bar);
+          // the two ends of the bar are the passages
+          if (i == 0 ||
+              i == barLen - 1)
+            {
+              pass.push({ x: x, y: y });
+              continue;
+            }
+          partitionCell(state, x, y);
+        }
+      // the stem, from the cell past the bar to the far wall
+      for (i in 0...deep)
+        {
+          var o = (vertical ? room.x1 + i : room.y1 + i);
+          // past the bar only: the lobby side of it is the entrance and must stay open. which way
+          // "past" is depends on which wall the door was in, and sides 1 and 3 are the two the hand
+          // runs with the axis on
+          var beyond = (side == 3 || side == 1 ? o > bar : o < bar);
+          if (!beyond)
+            continue;
+          if (vertical)
+            partitionCell(state, o, stem);
+          else partitionCell(state, stem, o);
+        }
+      return {
+        pass: pass,
+        vertical: vertical,
+        bar: bar,
+        lobby: lobby,
+        stem: stem,
+      };
+    }
+
+// the single centre line the T falls back to on a room with no room for one. the shape this family
+// shipped with, kept whole rather than special-cased inside the T: both ends open, no stem, and so no
+// halves — `stem` comes back -1 and roomToilet furnishes the room as one space
+  function toiletLine(state: _FacilityState, room: _Room): _ToiletSplit
+    {
       var vertical = (room.w >= room.h);
-      var mx = room.x1 + Std.int(room.w / 2);
-      var my = room.y1 + Std.int(room.h / 2);
+      var bar = (vertical ?
+        room.x1 + Std.int(room.w / 2) :
+        room.y1 + Std.int(room.h / 2));
       var len = (vertical ? room.h : room.w);
       var pass = [];
       for (i in 0...len)
         {
-          var x = (vertical ? mx : room.x1 + i);
-          var y = (vertical ? room.y1 + i : my);
-          // the two ends are the passages, and a cell already taken (a doorway's clearance, an
-          // object) is simply skipped — a wider gap in the middle of the wall is still a washroom
+          var x = (vertical ? bar : room.x1 + i);
+          var y = (vertical ? room.y1 + i : bar);
           if (i == 0 ||
               i == len - 1)
             {
               pass.push({ x: x, y: y });
               continue;
             }
-          if (cells[x][y] != TEMP_BUILDING_ROOM ||
-              nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) ||
-              state.area.hasObjectAt(x, y))
-            continue;
-          placeFitting(state, x, y, FIT_PARTITION);
+          partitionCell(state, x, y);
         }
-      return pass;
+      return {
+        pass: pass,
+        vertical: vertical,
+        bar: bar,
+        lobby: -1,
+        stem: -1,
+      };
+    }
+
+// one cell of either line. a cell already taken — a doorway's clearance, an object — is simply
+// skipped: a wider gap in the middle of a partition is still a washroom, where a slab standing in a
+// doorway is not
+  function partitionCell(state: _FacilityState, x: Int, y: Int)
+    {
+      var cells = state.area.getCells();
+      if (cells[x][y] != TEMP_BUILDING_ROOM ||
+          nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) ||
+          state.area.hasObjectAt(x, y))
+        return;
+      placeFitting(state, x, y, FIT_PARTITION);
     }
 
 // repaint a themed room's floor, walkable cells in `tile` and the cells furniture stands on in its
@@ -1787,6 +1981,11 @@ class FacilityAreaGenerator
   // is often nowhere at all
   static var OFFICE_FITTING_MIN = 1;
   static var OFFICE_FITTING_MAX = 3;
+  // how many of a room's bench cells clearTableSpots keeps bare, so a clue always has a legal spot.
+  // THREE and not one: render.facility.FacilitySink takes a free edge cell of every bench block in the
+  // room for its basin, and the clue's own activation range then wants the remaining two not to be the
+  // same corner of the same run
+  static var TABLE_CLEAR_MIN = 3;
   // the park: how wide its path is, how far apart the benches down it sit, how far apart the clump
   // centres are laid, and how far one clump reaches (both in cells, the second Manhattan). the step
   // is what sets DENSITY — clump count goes as its inverse square, so 6 -> 4 is 2.25x the centres

@@ -466,6 +466,16 @@ class Sprites {
               ix: Const.decoHDCol(hd),
               iy: Const.decoHDRow(hd),
             };
+          // and the clue documents, off a sheet of their own — a second table because its cells are
+          // 170 px where the bench packs' are 256 (Const.CLUE_PACK_CELL)
+          var clue = Const.clueHD(iy, ix);
+          if (clue >= 0)
+            return {
+              img: game.scene.images.cluePack,
+              t: Const.CLUE_PACK_CELL,
+              ix: Const.clueHDCol(clue),
+              iy: Const.clueHDRow(clue),
+            };
         }
       return {
         img: game.scene.images.getImage(imageName, male),

@@ -84,6 +84,7 @@ class FacilityArea implements Area3D
     };                                          // the whole electrical service, four ways
   var sinks = 0;                                // bench sinks: one per block with a free edge cell
   var clutter = 0;                              // flat decals scattered over the worktops
+  var clues = 0;                                // clue spots dropped for carrying a basin or a screen
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
   var target:Array<Float>;                      // what each is easing toward
@@ -190,6 +191,11 @@ class FacilityArea implements Area3D
       var workLeds = MeshBufTools.make();
       var workCable = MeshBufTools.make();
       work = FacilityWork.build(scene, model, workLeds, workCable);
+      // and with both worktop families now standing, the clue spots they have covered come out of the
+      // area's own list. AFTER the sinks and the workstations because it reads what those two placed,
+      // and a prune rather than a check at spawn time because a document arrives in the turn loop
+      // long after this — see FacilityClues
+      clues = FacilityClues.prune(model, game.area);
       // and the room furniture that used to be an upright sprite, straight after the casework it is
       // the same kind of thing as: merged geometry standing against a wall, one mesh per family
       FacilityDeco.build(scene, model, workLeds);
@@ -460,6 +466,12 @@ class FacilityArea implements Area3D
             // FacilityClutter.cell stopped rejecting — the count is rolled 0..3 per cell, so it
             // should land near 1.5x the cells that are neither sink nor fully blocked
             clutter: clutter,
+            // and how many clue spots came OUT of game.AreaGame.clueSpawnPoints because a basin or a
+            // workstation is standing on them. it is the only handle on FacilityClues, and the number
+            // to read it against is `sinks` plus `work`: a prune far under that sum means the
+            // generator had already decorated those cells (so they were never clue spots), and a 0 in
+            // a compound that reports either means the list was empty or the indexing is transposed
+            clues: clues,
             // notice boards emitted. it is one MERGED mesh with no instance count to read, and the
             // whole question it answers is whether the front-entrance detection found anything at
             // all: `boards` short of the number of `doors` rows with front true means a structure's

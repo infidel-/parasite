@@ -2136,7 +2136,7 @@
       "lift": 0.854,
       "prompt": "Redraw this swatch as a SEAMLESS TILEABLE washroom cubicle partition panel WITH A VISIBLE DOOR LINE, flat elevation, composed BOTTOM-UP. Keep the existing laminate material, colour, value and speckled core pattern exactly as they are - only the layout changes. The bottom 12 percent stays empty dark shadow under the panel. Above it, the panel face is now divided by TWO STRONG DARK VERTICAL GAPS into a clear repeating rhythm: a wide DOOR LEAF between the two gaps, and a narrower fixed pilaster strip outside each of them. The gaps are deep dark shadow slots, plainly visible from a distance, running the full height of the panel. On the door leaf, near the top, add one small dark rectangular indicator latch plate, and at mid height a slim dark horizontal pull handle. On each pilaster strip keep one small dark round bolt head near the top and one near the bottom. The gaps must sit so this swatch STILL TILES SEAMLESSLY LEFT TO RIGHT - the left edge of the image continues into its right edge exactly, so the pilaster strip is split in half across the seam. No text, no lettering, no numbers. [append textures.json style]",
       "prompt_exact": false,
-      "note": "every flat surface of the washroom's casework - the cubicle partitions, the door leaves, the basin counter's front and ends, and the full-height wall dividing the room's two halves (render.facility.FacilityDeco.stall / basin / partition). ONE buffer and one draw call for the lot. Composed BOTTOM-UP: FacilityGeom.face maps v as y / period, and every caller passes a period equal to the thing's own height (STALL_H 3.8, BASIN_H 1.8, PART_H 6.0), so v runs 0..1 up each and the drawn features land where they were drawn. The counter's LID is deliberately NOT this art - a bottom-up elevation laid flat reads as an elevation lying down, so it takes facility/desk-top. lift 0.854 carried over from the pack4 quadrant this replaces, which measured 0.0654 raw and built to 0.0929. IT LEFT THE PACK4 SHEET AND TOOK A FILE OF ITS OWN, which is the entry worth keeping: the first version was one flat laminate panel with a bolt at each end, and in game a rank of cubicles read as one continuous wall - no door line, nothing saying where one cubicle stopped and the next began, which is what was reported. The fix is the ART and not the geometry: the emitted partitions are already one per cell boundary and correct (see FacilityStyle.STALL_W), so what was missing was the leaf. Re-rolled as an EDIT of the extracted quadrant rather than of the sheet, because an edit_image over the whole sheet redraws all four quadrants and three of them were right - facility/placards' own finding, and the reason tools/pastecell.py exists. Editing the quadrant alone then made the crop pointless, so the label now owns its source outright and the pack4 sheet keeps three tenants.",
+      "note": "THE CUBICLE DOOR LEAF, and since facility/wash-pack it is nothing else. It carried the whole washroom - the side partitions, the leaves, the counter's front and ends and the full-height divider between the two halves - on the argument that all of it is one laminate and so one draw call, and the art it was re-rolled with is a DOOR: a leaf between two pilasters with a latch plate and a pull handle on it. Worn by everything, that put a door on the cubicle's blank side panels, a door on the basin counter's apron and a door on the wall dividing the men's from the women's, which is what was reported. So the family is four surfaces now (facility/wash-partition, facility/wash-counter, facility/stall-side and this) at three more draw calls in the one room that has any of them - the rack's own trade, where the call is what the read costs. Composed BOTTOM-UP: FacilityGeom.face maps v as y / period, and every caller passes a period equal to the thing's own height (STALL_H 3.8, BASIN_H 1.8, PART_H 6.0), so v runs 0..1 up each and the drawn features land where they were drawn. The counter's LID is deliberately NOT this art - a bottom-up elevation laid flat reads as an elevation lying down, so it takes facility/desk-top. lift 0.854 carried over from the pack4 quadrant this replaces, which measured 0.0654 raw and built to 0.0929. IT LEFT THE PACK4 SHEET AND TOOK A FILE OF ITS OWN, which is the entry worth keeping: the first version was one flat laminate panel with a bolt at each end, and in game a rank of cubicles read as one continuous wall - no door line, nothing saying where one cubicle stopped and the next began, which is what was reported. The fix is the ART and not the geometry: the emitted partitions are already one per cell boundary and correct (see FacilityStyle.STALL_W), so what was missing was the leaf. Re-rolled as an EDIT of the extracted quadrant rather than of the sheet, because an edit_image over the whole sheet redraws all four quadrants and three of them were right - facility/placards' own finding, and the reason tools/pastecell.py exists. Editing the quadrant alone then made the crop pointless, so the label now owns its source outright and the pack4 sheet keeps three tenants.",
       "last_converted": "2026-09-12T05:55:44",
       "last_lift": 0.854,
       "built_linear": 0.0887,
@@ -2156,21 +2156,104 @@
       "last_lift": 0.947
     },
     "facility/mirror": {
-      "src": "facility/facility-deco-office-pack4.png",
+      "src": "facility/mirror.png",
       "class": "tile",
       "needs_alpha": false,
+      "lift": 2.05,
+      "prompt": "A single square texture of a MISTED-OVER washroom MIRROR seen flat-on, filling the whole image edge to edge. A slim dark grey-green metal frame runs right around the outer 6 percent of the square. Inside it the glass is BRIGHT and PALE - a cool light blue-white sheet fogged with condensation, clearly the lightest thing in the room, reading as a soft glowing rectangle from across the room rather than as a dark hole. The fog is uneven in a simple hand-painted way: paler in the middle, a little cooler and greyer toward the frame, with two or three soft vertical wipe streaks where a hand has cleared it and a few slow condensation runs trickling down from the top edge. Nothing is reflected in it - no room, no figure, no window, no bright highlight, no specular glare, just fogged pale glass. A faint darker dust line along the bottom inside edge of the frame. Flat and even overall, low contrast, no vignette, no border outside the frame, no drop shadow. No text, no lettering, no numbers. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the ONE face of the washroom set that maps 0..1 rather than tiling: a single authored object with a frame round it, so it is shown whole or not at all. The source is SQUARE, which is what locks FacilityStyle.MIRROR_W == MIRROR_H == 2.0 - a texture is never stretched, so the quad is sized off the art exactly as the notice board's is. IT LEFT THE PACK4 SHEET FOR A SOLO ROLL AND WENT FROM DARK TO MISTED, which is the entry worth keeping. The pack4 quadrant was painted as dark glass on the reasoning that a mirror in a dark room reflects a dark room - true, and it built to 0.0335 linear, which against facility/wall-wash is a BLACK RECTANGLE hanging over the basins and was reported as one. A reflection cannot be painted here in any case: the art is fixed and the room behind the player is not, so anything recognisable in it is wrong from every angle but one. CONDENSATION IS THE WAY OUT - a fogged mirror reflects nothing by definition, so the one thing this surface may not show is exactly the thing it now has an excuse not to show, and it lands the value where a lit washroom wants it instead of under the wall it hangs on.",
+      "last_converted": "2026-09-12T17:57:07",
+      "built_linear": 0.2657,
+      "built_srgb": 131.1,
+      "last_lift": 2.05
+    },
+    "facility/wash-partition": {
+      "src": "facility/wash-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        2,
+        2,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/wash-pack.png] TOP-LEFT quadrant: a full-height DIVIDING WALL panel, flat front elevation, composed BOTTOM-UP: the bottom 8 percent is a dark skirting shadow band; above it a plain unbroken expanse of the laminate wall skin, with one slim dark horizontal joint line about two thirds of the way up and nothing else. NO door, NO door line, NO gaps, NO handles. It must tile seamlessly LEFT TO RIGHT. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4 quadrant 1 of the washroom casework sheet (the other three are wash-counter, stall-side and wash-counter-top). The full-height wall render.facility.FacilityDeco.partition stands between the washroom's two halves, and it is the one piece of that room that is a WALL rather than a fitting - so it is the piece a cubicle door drawn on it looked silliest on. Composed BOTTOM-UP and does NOT tile vertically: FacilityGeom.face maps v as y / period and partition() passes PART_TILE = PART_H, so v runs exactly 0..1 up the 6-unit wall and the skirting band lands on the floor. THAT PERIOD IS A FIX AND NOT A DETAIL - the shared-art version passed STALL_TILE 3.8 on a 6.0-tall wall, so the art wrapped at 63 percent of the height and drew a second skirting shadow straight across the middle of the divider.",
+      "last_converted": "2026-09-12T17:56:58",
+      "built_linear": 0.1304,
+      "built_srgb": 97.7
+    },
+    "facility/wash-counter": {
+      "src": "facility/wash-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        514,
+        2,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/wash-pack.png] TOP-RIGHT quadrant: the FRONT APRON of a washbasin counter, flat front elevation, composed BOTTOM-UP: the bottom 10 percent a dark recessed toe shadow, then a plain laminate apron panel, and across the very top 6 percent a slim dark shadow line where the worktop overhangs it. Two small dark round fixing bolts, one near the left and one near the right, at mid height. It must tile seamlessly LEFT TO RIGHT. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4 quadrant 2: the basin counter's front and its two ends (render.facility.FacilityDeco.basin). Composed BOTTOM-UP with the counter's own height as the period (BASIN_H 1.8), so v runs 0..1 up it and the toe shadow lands on the floor while the overhang line lands under the worktop. It is an APRON and not a cabinet - no doors and no drawers, because a washroom vanity is a shelf on brackets with the trap under it, which is also what keeps it apart from facility/bench-body next door.",
+      "last_converted": "2026-09-12T17:56:58",
+      "built_linear": 0.1227,
+      "built_srgb": 94.1
+    },
+    "facility/stall-side": {
+      "src": "facility/wash-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.1,
+      "crop": [
+        2,
+        514,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/wash-pack.png] BOTTOM-LEFT quadrant: a WC cubicle SIDE partition panel seen edge-on from inside the room, flat front elevation, composed BOTTOM-UP: the bottom 12 percent is empty dark shadow under the panel, then a plain laminate panel face with one narrow vertical pilaster strip of slightly darker laminate down the middle, one small dark round bolt head near the top of that strip and one near its bottom. NO door, NO door leaf, NO door line, NO deep vertical gaps, NO handle, NO latch. It must tile seamlessly LEFT TO RIGHT. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4 quadrant 3: the partitions either side of a WC cubicle (render.facility.FacilityDeco.stall's `head` faces), which is the BOUNDARY between two cubicles and never a door. It is facility/stall-panel with the leaf, the latch plate, the handle and the two deep shadow gaps taken out and the pilaster kept - so a rank of cubicles still reads as a rank, but the door line is now only on the face that is actually a door. Same bottom-up composition and same period (STALL_TILE = STALL_H 3.8) as the leaf it stands beside, which is what keeps the two agreeing across the corner they meet at.",
+      "last_converted": "2026-09-12T17:56:58",
+      "built_linear": 0.0963,
+      "built_srgb": 83.5,
+      "last_lift": 1.1
+    },
+    "facility/wash-counter-top": {
+      "src": "facility/wash-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.57,
       "crop": [
         514,
         514,
         508,
         508
       ],
-      "prompt": "[quadrant of facility/facility-deco-office-pack4.png] BOTTOM-RIGHT quadrant: ONE washroom mirror seen straight on, filling its quadrant edge to edge - a plain rectangular sheet of dark glass in a thin flat metal surround, the glass a flat very dark neutral grey with a faint diagonal sheen band and a few faint smears, reflecting nothing recognisable. This swatch does NOT tile. [append textures.json style]",
+      "prompt": "[quadrant of facility/wash-pack.png] BOTTOM-RIGHT quadrant: the counter's WORKTOP seen from DIRECTLY OVERHEAD, a flat pale laminate work surface with a faint fine speckle, a few very subtle water marks and one hairline scratch, slightly lighter in value than the other three swatches. It must tile seamlessly in BOTH directions, left to right and top to bottom, and must read as a horizontal surface looked down on rather than as a wall. [append textures.json style]",
       "prompt_exact": false,
-      "note": "PACK4 quadrant 4, and the ONE face of the set that maps 0..1 rather than tiling: it is a single authored object with a frame round it, so it is shown whole or not at all. The crop is SQUARE, which is what locks FacilityStyle.MIRROR_W == MIRROR_H == 2.0 - a texture is never stretched, so the quad is sized off the art exactly as the notice board's is. 0.0335 linear and taking no lift: a mirror in a dark room reflects a dark room, and it is the darkest surface in the washroom on purpose.",
-      "last_converted": "2026-09-12T02:59:23",
-      "built_linear": 0.0335,
-      "built_srgb": 49.6
+      "note": "PACK4 quadrant 4: the LID of the basin counter, world-tiled on both axes like every other horizontal surface in the compound. It replaces facility/desk-top, which is the researcher's office desk laminate and was the one piece of cross-ROOM reuse in the washroom - a vanity top wearing the office's desk. The one thing this quadrant may not be is a bottom-up elevation, for the reason the counter's own faces are one: an elevation laid flat reads as an elevation lying down. Drawn a shade lighter than the three panels beside it, which is what a wet-room worktop is against its own casework.",
+      "last_converted": "2026-09-12T17:56:58",
+      "built_linear": 0.1543,
+      "built_srgb": 106.8,
+      "last_lift": 1.57
+    },
+    "facility/clue-pack": {
+      "src": "facility/clue-pack.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "res": [
+        1020,
+        680
+      ],
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT. The image is a 6 COLUMN by 4 ROW grid of 24 completely separate small objects, one object per cell, and there must be a clean empty corridor at least 20 PERCENT of a cell wide between every column and between every row. No object may touch, overlap or lean into another object or into a grid line, and none may touch the outer edges of the frame. Each object sits centred in its own cell, drawn as an ISOLATED CUT-OUT SEEN FROM DIRECTLY OVERHEAD, looking straight down at it. All 24 are drawn at one consistent scale relative to each other, as paperwork and books of roughly the same real size. No drop shadow, no ground plane, no surface, no backdrop, no frame, no grid lines drawn, no text, no lettering, no numbers, no legible writing anywhere - printed matter is suggested with abstract flat grey rules and blocks only. The 24 objects in reading order, left to right then top to bottom: ROW 1: 1 a stapled multi-page report, squared up. 2 a loose stack of printed sheets, slightly fanned. 3 a closed buff document folder. 4 a bundle of pages held by a bulldog clip. 5 a single memo sheet lying flat. 6 a set of carbon-copy forms, edges offset. ROW 2: 7 a rolled-up printout, loosely curled. 8 a punched file with a paper tag on a string. 9 a fanfold computer printout, half concertina'd. 10 a photostat sheet with one dark bar struck across it. 11 a slim ring binder, closed. 12 a torn half-sheet with a ragged edge. ROW 3: 13 a closed hardback book. 14 an open hardback book, pages flat. 15 a closed hardback with a worn dust jacket. 16 a stack of three books, squared. 17 a tall thin ledger, closed. 18 a spiral-bound manual lying open. ROW 4: 19 a cloth-bound volume, closed. 20 a slim paperback, closed. 21 a closed book with several paper slips marking pages. 22 two books lying across each other. 23 a boxed two-volume set in its slipcase. 24 a bound thesis with a plain cover. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "THE CLUE ITEMS - the reports and books game.AreaGame.turnSpawnClues drops on a facility's worktops (objects.Document, Const.CHEM_LABS_DOCUMENTS row 17 and CHEM_LABS_BOOKS row 19). They were the last family in the compound still drawn from the 64 px entities64 atlas alone, i.e. at 26 texels per world unit, which is the number Const.FACILITY_DECO_HD exists to fix; this is the same redirect for them (Const.CLUE_HD), with tools/atlaspaste.py baking each cell back down to its 64 px frame so the 2D view and the inventory keep drawing the same object. PACK-24, 6 COLUMNS BY 4 ROWS AT 170 PX, which is neither of the two grids docs/3d-textures.md has shipped and is the right one here: the user asked for about half a pack64's subjects, and 24 of 64 cells would have left five eighths of the canvas unpainted while still cutting each object down to 128 px. Six by four spends the whole 1024 on 24 subjects and lands 170 px cells - the pack36 density band (70 texels/unit on the 2.43-unit sprite route, against pack64's 52.7), packed by tools/pack16.py --cols 6 --rows 4 --cell 170 --valign center. CENTER and not bottom: these are top-down cut-outs with no ground line, FacilityClutter's own case. NO `sat` AND NO `cells` CAP, deliberately and against the rest of the pack family: every other sheet here is dressing and takes 0.5, where a clue is a STORY OBJECT the player has to notice on a bench - it is the one thing in the room that should keep its colour, and FacilityDeco.spriteSat already leaves it alone (it gates on a 'decoration' whose row isTableDeco, which a 'document' is not). Do not add either key. THREE OF THE 24 CAME BACK IN PERSPECTIVE AND ARE RETIRED, which is the drop's one real failure and the prompt is not obviously at fault - 'ISOLATED CUT-OUT SEEN FROM DIRECTLY OVERHEAD, looking straight down at it' is in it, and 21 subjects honoured it. The three that did not are cells 8 (the fanfold concertina), 9 (the photostat) and 15 (the stack of three books), i.e. exactly the subjects whose READ depends on their thickness - a concertina, a struck-through sheet on a pile and a stack are all things an image model draws by showing you the side of them. Retired in Const.CLUE_HD by mapping them to the tail frames of their atlas rows and shortening the deal (12/12 -> 10/11) rather than by regenerating the sheet: an edit_image pass over three cells of a packed 24 re-renders the whole canvas and puts the 21 good ones at risk. IF THIS SHEET IS EVER REGENERATED, name the thickness in the prompt for those three ('seen from above, its own depth not visible') or drop them for flat subjects.",
+      "last_converted": "2026-09-12T17:57:07",
+      "built_linear": 0.1558,
+      "built_srgb": 96.2
     },
     "facility/office-clutter": {
       "src": "facility/facility-office-clutter.png",

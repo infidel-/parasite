@@ -44,7 +44,7 @@ class FacilityWork
 // depend on having run first — FacilityTables for the contact pool under the screen, FacilityClutter
 // for the footprint its paper has to keep clear of, and `build` below for the geometry itself. The
 // same discipline FacilityPoint.places and FacilityDeco.rectOf already keep
-  public static function at(m:Facility, col:Int, row:Int):{ x:Float, z:Float, dir:Int }
+  public static function at(m:Facility, col:Int, row:Int):WorkSpot
     {
       if (!m.table[row][col] ||
           m.surf[row][col] != Surf.OFFICE ||
@@ -59,10 +59,21 @@ class FacilityWork
       var c = CityConfig.cellToWorld(col, row);
       // back of the desk = the wall hand, measured from the CELL's own edge on that side
       var back = CELL / 2 - FacilityStyle.WORK_BACK;
+      var x = c.x + DC[dir] * back;
+      var z = c.z + DR[dir] * back;
+      // and which hand the TOWER stands on, off the same hash `set` rolls it from — asked for here
+      // rather than re-derived, because FacilityClutter puts the desk's paperwork on the OTHER end and
+      // a second copy of this roll is a second place for it to drift
+      var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
+      var ts = (g % 2 == 0 ? 1.0 : -1.0);
+      var tx = (dir < 2 ? 1.0 : 0.0), tz = (dir < 2 ? 0.0 : 1.0);
       return {
-        x: c.x + DC[dir] * back,
-        z: c.z + DR[dir] * back,
+        x: x,
+        z: z,
         dir: dir,
+        tx: x + tx * ts * FacilityStyle.WORK_TOWER_OFF,
+        tz: z + tz * ts * FacilityStyle.WORK_TOWER_OFF,
+        side: ts,
       };
     }
 
@@ -80,7 +91,7 @@ class FacilityWork
             var p = at(m, col, row);
             if (p == null)
               continue;
-            set(b, leds, cab, m, col, row, p.x, p.z, p.dir);
+            set(b, leds, cab, m, col, row, p);
             n++;
           }
       FacilityGeom.add(scene, b, FacilityStyle.WORK_TEX, true, false);
@@ -91,8 +102,9 @@ class FacilityWork
 // so the whole thing is emitted in world coordinates with no transform and no per-instance matrix,
 // which is what lets the compound's workstations merge into one mesh
   static function set(b:MeshBuf, leds:MeshBuf, cab:MeshBuf, m:Facility, col:Int, row:Int,
-      cx:Float, cz:Float, dir:Int):Void
+      p:WorkSpot):Void
     {
+      var cx = p.x, cz = p.z, dir = p.dir;
       // `out` is the way the screen looks, i.e. away from the wall and at whoever sits there — the
       // bug this pass was opened on was a screen facing the masonry
       var out = dir ^ 1;
@@ -101,8 +113,9 @@ class FacilityWork
       var tx = (dir < 2 ? 1.0 : 0.0), tz = (dir < 2 ? 0.0 : 1.0);
       var y = FacilityStyle.BENCH_H;
       var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
-      // which hand the tower stands on, off the cell's own hash so a run of desks is not a rank
-      var ts = (g % 2 == 0 ? 1.0 : -1.0);
+      // which hand the tower stands on — `at` rolled it off this same hash and hands it over, so the
+      // geometry and everything that dodges it cannot disagree
+      var ts = p.side;
 
       // the monitor's foot and the post under the screen, both on the screen's own centre line
       box(b, cx, y, cz, FacilityStyle.WORK_FOOT_W, FacilityStyle.WORK_FOOT_H,
@@ -115,9 +128,8 @@ class FacilityWork
       box(b, cx, sy, cz, FacilityStyle.WORK_SCREEN_W, FacilityStyle.WORK_SCREEN_H,
         FacilityStyle.WORK_SCREEN_D, nx, nz, tx, tz, FacilityStyle.WORK_C_SCREEN);
 
-      // the tower, stood on end beside it
-      var wx = cx + tx * ts * FacilityStyle.WORK_TOWER_OFF;
-      var wz = cz + tz * ts * FacilityStyle.WORK_TOWER_OFF;
+      // the tower, stood on end beside it — its centre comes off `at` with the hand it stands on
+      var wx = p.tx, wz = p.tz;
       box(b, wx, y, wz, FacilityStyle.WORK_TOWER_W, FacilityStyle.WORK_TOWER_H,
         FacilityStyle.WORK_TOWER_D, nx, nz, tx, tz, FacilityStyle.WORK_C_TOWER);
       lights(leds, wx, y, wz, nx, nz, tx, tz, g);

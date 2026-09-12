@@ -28,6 +28,7 @@ class Images
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
   public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
+  public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
   public var tileset: Image;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -58,6 +59,9 @@ class Images
       male128 = loadAtlas128('male');
       female128 = loadAtlas128('female');
       decoPacks = loadDecoPacks();
+      // and the clue sheet, the same built-art route for one sheet instead of four
+      cluePack = new Image();
+      cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();

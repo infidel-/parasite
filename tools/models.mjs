@@ -381,7 +381,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.sat != null ? '/st' + e.sat : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -440,6 +440,55 @@ async function main()
               t.setImage(new Uint8Array(png)).setMimeType('image/png');
             }
           console.log('     baseColor lifted ^' + e.lift + ' (gamma on the map; <1 brightens)');
+        }
+      // optional DESATURATION of the base-colour map: mix every pixel toward its own Rec.709
+      // luminance, s = 1 a byte-exact no-op and 0 grey. DELIBERATELY THE SAME INSTRUMENT IN THE SAME
+      // SPACE as textures.json's own `sat` (tools/textures.py sat_mix) and as the runtime `spriteSat`
+      // uniform, so 0.5 means one thing across all three manifests — Rec.709 weights are a
+      // linear-light instrument, so the mix is taken there and not on the sRGB bytes.
+      //
+      // what needs it: a prop whose colour is a FACT about it (a hazard drum, an amber gas bottle) is
+      // generated against style_prop, which deliberately keeps it saturated — and a roomful of those
+      // reads as toys beside surfaces painted against `style`. baseColor cannot do this job: it is a
+      // per-channel FACTOR, so the only way it can flatten a 135/90/26 atlas is to invent blue, which
+      // is the neutraliser facility/gas-cylinders' own note rejects. LUMINANCE IS PRESERVED BY
+      // CONSTRUCTION, so this commutes with `lift` and with baseColor and leaves a fitted value alone.
+      //
+      // runs on the FULL-RES map, before the resize, for `lift`'s reason
+      if (e.sat != null)
+        {
+          // sRGB EOTF both ways, so the mix happens in linear light
+          const lin = Array.from({ length: 256 }, (_, v) =>
+            {
+              const c = v / 255;
+              return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+          const enc = (c) =>
+            {
+              const v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+              return Math.max(0, Math.min(255, Math.round(v * 255)));
+            };
+          for (const m of doc.getRoot().listMaterials())
+            {
+              const t = m.getBaseColorTexture();
+              if (t == null)
+                continue;
+              const { data, info: raw } = await sharp(Buffer.from(t.getImage()))
+                .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              // colour channels only — alpha is coverage, not colour
+              for (let i = 0; i < data.length; i += 4)
+                {
+                  const r = lin[data[i]], g = lin[data[i + 1]], b = lin[data[i + 2]];
+                  const y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                  data[i] = enc(y + (r - y) * e.sat);
+                  data[i + 1] = enc(y + (g - y) * e.sat);
+                  data[i + 2] = enc(y + (b - y) * e.sat);
+                }
+              const png = await sharp(data, { raw: { width: raw.width, height: raw.height, channels: 4 } })
+                .png().toBuffer();
+              t.setImage(new Uint8Array(png)).setMimeType('image/png');
+            }
+          console.log('     baseColor desaturated x' + e.sat + ' (Rec.709 in linear light)');
         }
       // FLATTEN a stray alpha channel out of an OPAQUE prop's base map. TRELLIS occasionally bakes one
       // in with the UV gutter at alpha 0, and that is not dead weight, it is a live trap: the resize

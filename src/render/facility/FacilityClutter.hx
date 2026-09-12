@@ -50,6 +50,10 @@ typedef ClutterSpot = {
 // nothing ever crosses a cell boundary.
 class FacilityClutter
 {
+  // the four cell-edge directions, in FacilityGeom.face's order: 0 = -z, 1 = +z, 2 = -x, 3 = +x
+  static var DC = [0, 0, -1, 1];
+  static var DR = [-1, 1, 0, 0];
+
   // the sheet cells actually dealt, built once off FacilityStyle.CLUTTER_SKIP. derived rather than
   // written out so the skip list stays the one place the measurement lives — see its comment for why
   // seven of the 64 read as a hole in the worktop and why a lift cannot fix them
@@ -80,7 +84,7 @@ class FacilityClutter
                 m.tableSink[row][col])
               continue;
             var office = (m.surf[row][col] == Surf.OFFICE);
-            n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK);
+            n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK, office);
           }
       add(scene, b, FacilityStyle.CLUTTER_TEX);
       add(scene, bOffice, FacilityStyle.CLUTTER_OFFICE_TEX);
@@ -93,12 +97,26 @@ class FacilityClutter
 //
 // THE ROLLED COUNT REACHES ZERO ON PURPOSE. `h % (CLUTTER_MAX + 1)` gives 0..3 evenly, and the empty
 // cells are what stop 139 worktops reading as a grid again — which is the whole complaint this family
-// answers. Flooring it at 1 would put a thing on every cell and rebuild the rhythm
-  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>):Int
+// answers. Flooring it at 1 would put a thing on every cell and rebuild the rhythm.
+//
+// EXCEPT ON A WORKSTATION DESK, which is the one cell where the empty roll is the wrong answer: a
+// researcher's desk is a SET — the desk, the chair, the machine and something of the occupant's lying
+// beside the keyboard — and a screen and a tower with a bare worktop around them reads as stock
+// rather than as somebody's place. So such a cell gets one PLACED item on top of whatever it rolls
+// (see the block below), and the rolled count keeps reaching zero. The lab's own rhythm is untouched
+// either way, because a lab has no workstation on it: FacilityWork.at is Surf.OFFICE only
+  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>,
+      office:Bool):Int
     {
       var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
+      // the office desk's workstation, which stands on the worktop and is not a decoration at all —
+      // it is emitted by FacilityWork off the grid, so it is asked for rather than read out of a grid
+      // this pass could have run before. Asked HERE because it floors the count as well as taking
+      // room
+      var pc = FacilityWork.at(m, col, row);
       var want = g % (FacilityStyle.CLUTTER_MAX + 1);
-      if (want == 0)
+      if (want == 0 &&
+          pc == null)
         return 0;
       var c = CityConfig.cellToWorld(col, row);
       // what is already standing here. the pool is the STANDING decoration's own contact circle, which
@@ -121,35 +139,79 @@ class FacilityClutter
           z: c.z,
           r: FacilityStyle.CLUTTER_FLAT_R,
         });
-      // and the office desk's workstation, which stands on the worktop and is not a decoration at all
-      // — it is emitted by FacilityWork off the grid, so it is asked for rather than read out of a
-      // grid this pass could have run before
-      var pc = FacilityWork.at(m, col, row);
+      // WORK_CLEAR and not WORK_R: that one is the contact pool's radius and leaves no worktop at
+      // all once the wander is held to the desk — see its own note
       if (pc != null)
         spots.push({
           x: pc.x,
           z: pc.z,
-          r: FacilityStyle.WORK_R,
+          r: FacilityStyle.WORK_CLEAR,
         });
+      // WHERE THE WORKTOP ACTUALLY IS, which on an office desk is not the cell. A desk is a bench cut
+      // to FacilityStyle.DESK_D on its OPEN side (FacilityTables.build, `var cut`), so a decal
+      // wandering the whole cell lands up to (CELL - DESK_D) / 2 past the front edge and lies at
+      // BENCH_H over bare floor — reported from the game as a table decoration floating in the air
+      // beside the desk. The centre slides back toward the wall by exactly that cut and the span
+      // shrinks by it, so the rect this rolls in IS the worktop; both numbers come off DESK_D and
+      // FacilityTables' own hand search, so the geometry and the dressing cannot drift apart
+      var hand = (office ? FacilityTables.wallHand(m, col, row) : -1);
+      var dx = 0.0, dz = 0.0;
+      var deep:Float = CityConfig.CELL;
+      if (hand >= 0)
+        {
+          var cut = (CityConfig.CELL - FacilityStyle.DESK_D) / 2;
+          deep = FacilityStyle.DESK_D;
+          dx = DC[hand] * cut;
+          dz = DR[hand] * cut;
+        }
       var n = 0;
+      // THE DESK'S OWN ITEM IS PLACED AND NOT ROLLED, and that is what makes the bundle a bundle.
+      // Everything else in this family finds its spot by rejection sampling, which works on a bench
+      // because a bench is 4 x 4 of free worktop; a workstation desk is 4 x 2.6 with a screen, a
+      // stand, a keyboard and a tower already on it, so MEASURED over the compound's ten desks the
+      // sampler placed one on five of them and nothing on the other five — half the offices with a
+      // machine and a bare worktop. There is exactly ONE free area on such a desk and geometry knows
+      // where it is: the END the tower is not on (FacilityWork.at hands over `side`), against the
+      // desk's front edge. So it is put there outright and the rolled items sample around it
+      if (pc != null)
+        {
+          var sz = FacilityStyle.CLUTTER_SZ;
+          var run = (hand < 2 ? CityConfig.CELL : FacilityStyle.DESK_D) / 2 - sz * 0.5;
+          var rx = (hand < 2 ? -pc.side * run : 0.0);
+          var rz = (hand < 2 ? 0.0 : -pc.side * run);
+          var px = c.x + dx + rx, pz = c.z + dz + rz;
+          spots.push({
+            x: px,
+            z: pz,
+            r: sz * 0.5 + FacilityStyle.CLUTTER_GAP,
+          });
+          emit(b, px, pz, sz, ((g >>> 12) % 1000) / 1000 * 2 * Math.PI,
+            pick[(g >>> 22) % pick.length]);
+          n++;
+        }
       for (i in 0...want)
         {
           var h = FacilityModel.mix(g ^ ((i + 1) * 40503));
           var sz = FacilityStyle.CLUTTER_SZ +
             ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR;
           var r = sz * 0.5 + FacilityStyle.CLUTTER_GAP;
-          // how far the CENTRE may wander: half the cell, less the item's own half size, so the quad
-          // never crosses into a neighbour and no cross-cell test is needed
+          // how far the CENTRE may wander: half the worktop, less the item's own half size, so the
+          // quad never crosses into a neighbour and no cross-cell test is needed. PER AXIS, because
+          // a desk is only `deep` on the hand its own wall is on
           var room = CityConfig.CELL / 2 - sz * 0.5;
-          if (room <= 0)
+          var roomD = deep / 2 - sz * 0.5;
+          if (room <= 0 ||
+              roomD <= 0)
             continue;
+          var rx = (hand >= 2 ? roomD : room);
+          var rz = (hand >= 0 && hand < 2 ? roomD : room);
           var ok = false;
-          var x = c.x, z = c.z;
+          var x = c.x + dx, z = c.z + dz;
           for (t in 0...FacilityStyle.CLUTTER_TRIES)
             {
               var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
-              x = c.x + (((hh % 1000) / 1000) * 2 - 1) * room;
-              z = c.z + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * room;
+              x = c.x + dx + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              z = c.z + dz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
               ok = true;
               for (s in spots)
                 {

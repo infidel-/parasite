@@ -2548,3 +2548,197 @@ through the wall AND through the shut private door, true the moment it opens), `
 themed room's door, 3 workstations, 2 chairs, 3 WC pans, 3 signs, **0 console errors**. One thing seen
 and NOT fixed, because it is pass-1 art and nobody asked: `facility/mirror` at 0.0335 linear reads as a
 black rectangle against the wash wall in a close shot — the dark-AND-solid failure, from the other side.
+
+## Pass 3 on the room templates: the T, one laminate per surface, and a `sat` for glbs (2026-09-12)
+
+Nine things reported off the shipped pass 2, and they divide into three groups. **PLACEMENT**: server
+racks standing unwired, clue documents spawning through basins and monitors, a desk decal hanging in
+mid-air off a desk's front edge. **VALUE**: the gas rack, the hazard drums and the office chair
+reading as toys, the mirror reading as a hole. **THE TEMPLATES THEMSELVES**: a washroom whose divider
+divided nothing, one texture worn by four different surfaces, and an office with two machines and
+four bare desks.
+
+**A FED SOCKET IS JUSTIFIED BY ITS MACHINE AND NOT BY THE WALL'S RHYTHM.** `FacilityCable.sockets`
+deals the machines first — the ordering that whole family turns on — but it tried only the cell either
+side of the unit and then put the candidate through `SOCK_SPACING` 4. A rack in a run of fittings has
+both neighbours taken, and two racks inside four cells wire only the first. **MEASURED on one compound
+of 35 racks and machines: 11 wired.** The walk now reaches two cells on each hand and the only
+thinning left is "not a cell some other mount already took" (`spaced` at 1): **25 of 35, every one of
+them `used: true`**, with 30 of 35 having an eligible cell at all and the residue being two racks that
+want the same one. The bare pass below still keeps its full spacing off these, so the wall does not
+fill up behind it.
+
+**A `sat` KEY FOR `art/models.json`, and it is the same instrument in the same space as the two that
+already existed** — `textures.json`'s own `sat`, `tools/textures.py sat_mix`, and the `spriteSat`
+uniform: mix every pixel toward its own Rec.709 luminance IN LINEAR LIGHT, `1.0` a byte-exact no-op.
+There was no saturation knob in the glb pipeline at all, only `baseColor` (a per-channel factor) and
+`lift` (a gamma), and neither can do this: the only way a factor flattens a 135/91/26 atlas is to
+invent blue, which is the neutraliser `facility/gas-cylinders`' own note rejects. At 0.5, MEASURED
+atlas chroma: **gas-cylinders 108.7 → 39.8, drum-bio 45.9 → 19.1, drum-rad 45.5 → 23.7, chair 69.5 →
+21.6**. `facility/drum-steel` did NOT take the key — measured at 15.0 it is already a blue-grey steel
+drum and halving that is a dead neutral. **THE TRAP: the atlas channel MEAN MOVES ANYWAY** (135/91/27
+→ 121/97/81) because propstat prints an sRGB-byte average and the transfer curve is concave, so three
+channels converging on one luminance average higher. Per-pixel luminance is untouched by construction.
+Do not read the rise as a brightening and do not chase it with `baseColor`.
+
+**AND 0.5 IS NOT ONE NUMBER FOR THE WHOLE FAMILY — THE GAS RACK CAME BACK REJECTED AT IT** ("there
+were orange, now it's almost white") while the three drums and the chair were accepted at the same
+key. Two things compound on that one prop and neither is in its chroma figure. Its albedo is a FLAT
+`baseColor` 0.95 against the drums' gain-fitted ~78 luma, and **a desaturated BRIGHT surface is a pale
+surface where a desaturated MID one is a grey one**; and the room's light is strongly blue (ambient
+0x46536b, hemisphere 0x56668c, a 0x8294c0 moon), so it ADDS blue back to whatever chroma the albedo
+has left and an amber loses twice. Re-fitted to **0.75: atlas chroma 63.2, sampled 46.9** (0.5 was
+39.8/29.5, the raw bake 108.7/81.6), atlas 128/94/65. **READ THE LEVEL AND THE HUE TOGETHER when
+picking this key: the sat that mutes a prop at luma 78 washes one out at luma 110.**
+
+**THE WASHROOM'S DIVIDER IS A T NOW, AND THE SINGLE LINE NEVER DIVIDED ANYTHING.** Pass 2 ran one line
+down the middle with the cell at EACH end left open, so the two halves were joined at both ends — you
+walked in and could see and reach the whole room, which is the one thing a washroom may not do. The T
+is the same fittings in a different shape: a BAR parallel to the entrance wall and **one cell in from
+it** (the strip it leaves is the lobby) with its two end cells open, plus a STEM from the middle of the
+bar to the far wall. Door → lobby → one gap into each half, and no path between them. Checked by
+replicating the placement over **every room the generator can deal — 3x3 to 7x7 by four door walls,
+100 cases — flood-filling each: two non-empty halves, both reached from the lobby, none reached from
+the other**. `roomToilet` then furnishes each half on its own (its longest wall cubicles, its next
+basins), because sorting all four walls together put every cubicle on one side of the T.
+
+**A T JUNCTION NEEDS A SECOND ARM, WHICH `rectOf` CANNOT STATE.** A partition cell gets ONE rect,
+spanning its cell on its own line's axis and `PART_T` across — so where a second line arrives on
+another hand, that neighbour's slab reaches the shared cell boundary while this cell's reaches
+`PART_T / 2` from its centre: **(CELL − PART_T) / 2 = 1.7 units of daylight straight through the
+wall**. `FacilityDeco.partition` now patches exactly that gap per crossing hand, from its own arm's
+SURFACE out to the boundary — not from the centre, which would overlap its own lid on a 0.6 x 0.3
+square of coplanar quad and z-fight at the top of the wall. Verified on a synthetic T stamped into
+`FacilityModel.demo()`: the partition mesh comes back with **6 patch quads (extent 1.7) and `ymax`
+6.0**, three per crossing hand, and the neighbour's end face was already being skipped there.
+
+**ONE LAMINATE IS NOT ONE SURFACE.** `facility/stall-panel` was re-rolled in pass 2 as a cubicle DOOR
+— a leaf between two pilasters with a latch plate and a pull handle — and it was worn by the cubicle's
+blank SIDE panels, by the basin counter's apron and by the full-height wall between the two halves, so
+the compound grew a door on all three. The counter's LID wore `facility/desk-top`, the researcher's
+office desk. Four labels off one packed 2x2 (`facility/wash-pack`, seams measured at x 511 / y 511,
+crops inset 2 px): `wash-partition`, `wash-counter`, `stall-side` and `wash-counter-top`, built to
+**0.1304 / 0.1227 / 0.0963 / 0.1543** linear — the side panel fitted to the leaf's own 0.0887 so the
+two agree across the corner they meet at. **+3 draw calls, in the one room that has any of them**,
+which is the rack's trade again: the call is what the read costs. And `PART_TILE`: the divider was
+passing `STALL_TILE` 3.8 as its period on a 6.0-tall wall, so a bottom-up composition wrapped at 63%
+of the height and drew a second skirting shadow across the middle of it.
+
+**A MISTED MIRROR REFLECTS NOTHING BY DEFINITION, which is the way out of a problem the art could not
+otherwise solve.** The pass-2 mirror was painted as dark glass — correct reasoning (a mirror in a dark
+room reflects a dark room) and 0.0335 linear, a black rectangle over the basins. A reflection cannot
+be painted here at all: the art is fixed and the room behind the player is not, so anything
+recognisable in it is wrong from every angle but one. Condensation makes the blankness the subject.
+Solo roll (a 0..1 square face cannot come off a shared sheet's wrap error), `lift` **2.05** → **0.2657
+linear against `wall-wash`'s 0.1593**, i.e. 1.67x the wall it hangs on and the lightest thing in the
+room, where it was 0.21x.
+
+**`WORK_EVERY` 3 → 1 WAS THE LAB'S ARGUMENT IN THE WRONG ROOM.** "A workstation on every cell reads as
+a computer lab" is true of a laboratory BENCH — a work surface with a screen every metre is a server
+room — and false of a desk, which is somebody's PLACE. The compound's offices deal 4-9 desk cells, so
+at 3 a room came back with two machines and four bare desks. Live: **`work` 10 on 10 office desk
+cells**, each with the screen, the tower, the keyboard, the leads, the lights and a chair behind it.
+
+**AND THE DESK'S OWN ITEM IS PLACED, NOT ROLLED.** `FacilityClutter` finds a spot by rejection
+sampling, which works on a bench because a bench is 4 x 4 of free worktop; a workstation desk is 4 x
+2.6 with a screen, a stand, a keyboard and a tower on it. **MEASURED: the sampler dressed 5 of the 10
+desks and left the other five bare** — and that was with a keep-clear cut from `WORK_R` 1.6 (the
+contact POOL's radius, which as a clearance leaves no desk at all) to `WORK_CLEAR` 1.05. There is
+exactly ONE free area on such a desk and geometry knows where it is, so `FacilityWork.at` now hands
+over the tower's hand (`WorkSpot.side`, rolled off the hash `set` already used) and the item goes at
+the other END of the desk outright. **10 of 10 dressed, 12 decals.**
+
+**A DECAL WANDERED THE WHOLE CELL WHERE THE DESK IS ONLY `DESK_D` 2.6 OF IT**, so it could land
+`(CELL - DESK_D) / 2` = 0.7 past the front edge and lie at `BENCH_H` over bare floor — reported as a
+table decoration floating in the air beside the desk. The wander is now per axis against the desk's
+real rect, both numbers off `DESK_D` and `FacilityTables`' own hand search. **MEASURED after: 12 office
+decals, 0 outside the worktop, worst overhang 0.000.**
+
+**A CLUE SPOT IS A BENCH TILE WITH NO OBJECT ON IT, AND TWO FAMILIES DRESS SUCH CELLS WITHOUT BEING
+OBJECTS.** `FacilitySink` takes a free edge cell of every bench block and `FacilityWork` stands a
+workstation on an office desk; both are render-only by contract, so `AreaGame.initSpawnPoints` could
+not see either and documents spawned through a basin and through a monitor. `FacilityClues.prune`
+drops those cells from the area's own list on entry — a prune and not a re-derivation, because the
+list is already a persisted array and both predicates are pure functions of the same saved grid.
+**Live: 15 spots dropped against 22 sinks and 10 workstations**, and the generator now keeps
+`TABLE_CLEAR_MIN` 3 bench cells per room bare (corners excluded — a decoration is forced onto those
+precisely so a clue's activation cross cannot reach through the wall).
+
+**PACK-24 AT 6x4x170 AND NOT A HALF-EMPTY PACK64.** The clue documents were the last family in the
+compound drawn straight off `entities64`, i.e. 64 px over a 2.43-unit quad = 26 texels per unit. 24
+subjects were wanted; 24 of a pack64's 64 cells would have left five eighths of the canvas unpainted
+AND cut each object to 128 px, where 6x4 spends the whole 1024 and lands **170 px cells = 70 texels
+per unit on the sprite route, against pack64's 52.7** (the pack36 band `3d-textures.md` measures as
+the floor for a billboard). `tools/pack16.py --cols 6 --rows 4 --cell 170 --valign center`, seams
+found at x 167/360/507/689/828 and y 270/490/698. `tools/atlaspaste.py` took `--cols`/`--cell` and
+baked the 24 cells back into atlas rows 17 and 19, so the 2D view and the inventory still draw the
+same object; `Const.CLUE_HD` is a sibling table to `FACILITY_DECO_HD` rather than more rows on it,
+because `DECO_PACK_CELL` is inline at 256. The deal drops from 48 looks to 24: rows 18 and 20 hold the
+old 2D-era art and mixing two families of art in one room is worse than fewer looks. **NO `sat` AND NO
+`cells` CAP on this one sheet, deliberately** — every other pack here is dressing and takes 0.5, where
+a clue is a story object the player has to notice on a bench.
+
+**THREE OF THE 24 CLUE CELLS CAME BACK IN PERSPECTIVE AND ARE RETIRED BY REORDERING, not regenerated.**
+The prompt said "ISOLATED CUT-OUT SEEN FROM DIRECTLY OVERHEAD, looking straight down at it" and 21
+subjects honoured it; the three that did not are **exactly the subjects whose READ depends on their own
+thickness** — a fanfold concertina, a photostat on a pile, a stack of three books — which an image
+model draws by showing you the side of them. A pack cell's coordinates come from its INDEX in
+`Const.CLUE_HD`, so a cell cannot be deleted from that table: the three are mapped to the TAIL frames
+of their own atlas row instead, the good cells behind them shift down to close the gap, and the deal
+stops short (`CHEM_LABS_DOCUMENTS` 12 → 10, `CHEM_LABS_BOOKS` 12 → 11). Verified from the live
+registry: the 21 dealt frames resolve to cells `0-7,10,11` and `12-14,16-23`, **no retired cell, no
+duplicate, no −1**. An `edit_image` pass over three cells was rejected for the drum livery's reason one
+step up the pipeline — a model re-renders the whole canvas, so fixing 3 cells risks the 21 good ones.
+**If a packed sheet ever needs a top-down subject with real depth, name the depth in the prompt.**
+
+**A PLUG GOES ON ITS SOCKET, AND IT WAS HUNG ON THE CABLE'S EXIT POINT INSTEAD.** `plug` centred its
+quad on `anchor(m, p, s)` — the one point in this file a cable leaves a mount from, which is
+deliberately slid `SOCK_W * SOCK_LEAD` = **0.35** along the wall so the ribbon's CUT END is buried
+well inside the plate's art. As a plug position that is simply the wrong point: the plate's half-width
+is **0.7** and the plug's is `PLUG_W / 2` = **0.375**, so the body sat from 0.025 short of the plate's
+centre to 0.025 PAST its far edge — covering exactly the far HALF of the socket and hanging the rest on
+bare tile, which is how it was reported. Centred now (`anchor(m, p, 0)`), and the lead still leaves
+from the offset point, which is **inside** the plug's own half-width, so the cable comes out from under
+the plug body rather than out of thin air. The world basis still keys off `s`, so the gland collar goes
+on turning to follow the run.
+
+**AND THE TOWER STOOD AGAINST THE MONITOR.** `WORK_TOWER_OFF` was 1.25, which is
+`WORK_SCREEN_W / 2 + WORK_TOWER_W / 2` **to the millimetre** — two slabs sharing a full-height edge
+read as one object with a step in it, not as two machines. **1.5**, so 0.25 of worktop shows between
+them; the tower's outer face lands 1.9 from the screen's centre, inside the cell's own 2.0 half-width,
+and two towers on adjacent desks still clear each other by 0.2 (measured on this compound's 41/42 pair
+at row 25). Nothing else moves — the LEDs and the lead are already taken off `WorkSpot.tx/tz`.
+
+**A DROP NEVER WALKED THE CELLS BETWEEN ITS TWO ENDS, AND THE WIDENED SOCKET WALK MADE THAT MATTER.**
+`drops` joins a machine's lid straight to its socket's plate — two anchors, one ribbon, no path — so
+unlike `joins` and `run` it asks nothing of the ground in between. That was safe while the walk reached
+ONE cell each way, because the cell in front of a doorway is already rejected (`FacilityPlacard.hangs`
+wants the wall line to carry on past its own cell). At TWO it is not: the plate lands on good masonry
+on the far side of a door and the cable is drawn across the open threshold — reported from the game
+standing next to one. `walled` now tests unbroken `isSolidWall` from the machine's cell to the
+candidate, at the point the socket is CHOSEN rather than in `drops`: a machine whose only legal plate
+is over a doorway is a machine with no plate, and the walk moves to its next hand. **Measured on this
+compound, 28 machines and racks standing against a wall: 22 could take a plate, 15 once door hops are
+refused — i.e. SEVEN of the widened walk's wins were hops over a threshold.**
+
+**AND THE SEVEN COME BACK, BECAUSE A BENCH IS NOT SOMETHING STANDING AGAINST A WALL.** `bare` excluded
+`m.table`, which was this predicate reading its own comment too broadly: the exclusion is about
+FITTINGS — a plate spans 0.25 to 0.95 and a cabinet or a rack is bolted TO the masonry, so it stands
+through the plate whatever its height — and a bench touches no wall at all. It stands on its own cell a
+clear unit off the slab face, the very fact `joins` has always used to let a run past one. So the strip
+behind a bench is bare masonry, which is where a socket goes in a real laboratory: the plate's top
+lands at `SOCK_Y + SOCK_W / 2` = **1.55** under a `BENCH_H` **2.0** worktop, 0.12 (`MOUNT_PROUD`) off
+the wall with the bench body a unit further out. `run` takes the same widening as a two-question split
+(`passes` vs `open`): **standing** on a cell still needs every clause of `open` — a unit on a bench cell
+would be a cabinet standing in a worktop — while a lead may **pass** one. The hatch stays a hatch in
+both. **Live: 22 of 28 machines fed and all 22 `used` (15 with bench cells still excluded), mounts 56 →
+69, runs 22 → 35, units 5 → 7, and 0 of the 22 drops crosses a door cell.** Unit reach went 12 → 20
+mounts, most of it latent — the built count is held down by `used` and `clearOf`, not by the walk.
+
+**VERDICT: landed.** Live on the shipped compound: 25 of 35 racks and machines wired (from 11), `work`
+10, 15 clue spots pruned, 12 office decals none of them off a desk, mirrors reading as the brightest
+thing in the washroom, `sprites.tex('entities', 0, 17)` coming back a **170 px** canvas, **0 console
+errors**. The T and its junction are verified on 100 synthetic rooms and on a stamped `demo()` model
+rather than in the frame, because a partition is written at GENERATION time and the shipped save's
+washroom keeps the single line it was built with — the first newly generated compound is where it
+shows. This file is at the ~2600-line cap: roll it before the next entry.

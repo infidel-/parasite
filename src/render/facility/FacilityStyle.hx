@@ -145,6 +145,20 @@ class FacilityStyle
   public static inline var DESK_TOP = 'textures/facility/desk-top.png';
   public static inline var DESK_BODY = 'textures/facility/desk-body.png';
   public static inline var STALL_PANEL = 'textures/facility/stall-panel.png';
+  // and the three surfaces that USED TO BE that one panel, off a 2x2 sheet of their own
+  // (art/textures.json facility/wash-pack). ONE LAMINATE IS NOT ONE SURFACE, which is the lesson:
+  // stall-panel's art is a cubicle DOOR — a leaf between two pilasters with a latch plate and a pull
+  // handle on it — and worn by the whole family it put a door on the cubicle's blank side panels, a
+  // door on the basin counter's apron and a door on the wall dividing the men's from the women's.
+  // Three more textures and three more draw calls in the one room that has any of them, which is the
+  // rack's own trade (see DECO_RACK): the call is what the read costs
+  public static inline var STALL_SIDE = 'textures/facility/stall-side.png';
+  public static inline var WASH_PARTITION = 'textures/facility/wash-partition.png';
+  public static inline var WASH_COUNTER = 'textures/facility/wash-counter.png';
+  // and the counter's LID, which was the office desk's laminate — the one piece of cross-ROOM reuse
+  // in the washroom. A bottom-up elevation laid flat reads as an elevation lying down, so this is
+  // drawn top-down like every other horizontal surface in the compound
+  public static inline var WASH_COUNTER_TOP = 'textures/facility/wash-counter-top.png';
   // the mirror over the basin run: the one 0..1 face of the set, so its aspect is locked to the art's
   public static inline var MIRROR = 'textures/facility/mirror.png';
   // the lab benches: the black epoxy worktop (its top face AND its edge band) and the casework
@@ -708,10 +722,16 @@ class FacilityStyle
   // the dividing wall between the washroom's two halves (render.facility.FacilityDeco.partition).
   // FULL HEIGHT, unlike the cubicle partitions beside it, and that is the read: a cubicle is a box
   // inside a room and this is what makes two rooms of one. 0.6 thick = 30 cm, which is a stud wall
-  // with a skin either side, and it wears the cubicle laminate so the whole washroom's casework stays
-  // ONE draw call
+  // with a skin either side
   public static inline var PART_T = 0.6;
   public static inline var PART_H = WALL_H;
+  // and its texture period, which is its OWN HEIGHT and was STALL_TILE 3.8 for one build. The art is
+  // composed bottom-up — a skirting shadow at the floor and nothing repeating above it — and
+  // FacilityGeom.face maps v as y / period, so a 3.8 period on a 6.0 wall wrapped the composition at
+  // 63% of the height and drew a second skirting band straight across the middle of the divider.
+  // Every caller in this family passes the thing's own height for exactly this reason (STALL_H 3.8,
+  // BASIN_H 1.8), and this is the one that was not
+  public static inline var PART_TILE = PART_H;
   // ---- the researcher's office ------------------------------------------------------------------
 
   // the office desk is the lab bench MADE THINNER, and this is the only geometry difference between
@@ -771,14 +791,41 @@ class FacilityStyle
   // own centre to one side of it, and the keyboard forward of the screen. all measured from the
   // WALL edge of the cell, the hand the desk backs onto
   public static inline var WORK_BACK = 1.0;
-  public static inline var WORK_TOWER_OFF = 1.25;
+  // 1.5 AND NOT THE 1.25 IT SHIPPED AT, which was exactly WORK_SCREEN_W / 2 + WORK_TOWER_W / 2 — the
+  // two slabs touched along their whole height and read as one object with a step in it. A gap is what
+  // says they are two things, so the offset carries 0.25 of clear worktop between them; the tower's
+  // outer face lands 1.9 from the screen's centre, still inside the cell's own 2.0 half-width
+  public static inline var WORK_TOWER_OFF = 1.5;
   public static inline var WORK_KEY_FWD = 1.05;
-  // one desk cell in this many carries a set. a workstation on every cell reads as a computer lab, and
-  // the roll is off FacilityModel.mix so it comes back identical on every rebuild
-  public static inline var WORK_EVERY = 3;
+  // one desk cell in this many carries a set, and it is ONE — every desk in a researcher's office has
+  // a machine on it.
+  //
+  // IT WAS 3 AND THAT WAS THE LAB'S ARGUMENT IN THE WRONG ROOM. The reasoning was that a workstation
+  // on every cell reads as a computer lab, which is true of a laboratory BENCH run — a bench is a work
+  // surface and a screen on every metre of it is a server room. A desk is not a work surface, it is
+  // somebody's PLACE: the compound's offices deal 4-9 desk cells, so at 3 a room came back with two
+  // machines and four bare desks, reported as exactly that. Every cell that carries a set carries the
+  // whole set — screen, tower, keyboard, leads, lights, a chair behind it (FacilityWork.chairs) and one
+  // item of the occupant's on the worktop (FacilityClutter.cell's floor) — which is the consistency
+  // the thinning was costing.
+  //
+  // the gate STAYS rather than becoming a constant 1: it is the one knob between here and a computer
+  // lab, and the roll is off FacilityModel.mix so it comes back identical on every rebuild
+  public static inline var WORK_EVERY = 1;
   // the footprint the clutter sheet keeps clear around it, exactly as it keeps clear of a standing
   // decoration. grown with the set: it now covers a screen, a tower and a keyboard rather than one glb
   public static inline var WORK_R = 1.6;
+  // and a SECOND, smaller one for the clutter alone, which is the one number the desk bundle turned
+  // on. WORK_R is the contact POOL's radius — the round patch of shade FacilityTables lays under the
+  // set — and a pool may be generous. As a keep-clear it is not: a desk is DESK_D 2.6 deep, so once
+  // the decal's wander was confined to the worktop (see FacilityClutter.cell) a 1.6 circle plus the
+  // decal's own 0.67 left nowhere on the desk at all, and MEASURED over the compound's ten office
+  // desks it placed ZERO — a bundle with a screen, a tower and a bare worktop. 1.05 leaves the two
+  // ENDS of the desk open, which is 2.0 units from the set's centre against the 1.72 it now needs,
+  // and the end of the desk is where somebody's paperwork actually is. It is deliberately NOT a
+  // rect: the set is a screen on the centre line with a tower on one hand, so the circle is honest
+  // about the middle and only ever wrong on the tower's own side, where the roll simply re-tries
+  public static inline var WORK_CLEAR = 1.05;
   // the tower's status LEDs: how many, how big, and how far proud of its front face they float. they
   // go into render.facility.FacilityDeco's OWN led buffer through its extra-buffer hook, so they cost
   // no mesh, no material, no program and no per-frame work — the rack's blink branch and the rack's

@@ -298,7 +298,7 @@ class FacilityDeco
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...20) MeshBufTools.make()];
+      var b = [for (_ in 0...23) MeshBufTools.make()];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -331,9 +331,13 @@ class FacilityDeco
       // DoubleSide: a partition and a door leaf are bare quads with no thickness, seen from both
       // sides of the cubicle. free on an opaque material, which draws DoubleSide in one pass
       solid(scene, b[B_STALL], FacilityStyle.STALL_PANEL, true);
+      solid(scene, b[B_STALL_SIDE], FacilityStyle.STALL_SIDE, true);
+      // the divider is a solid stud wall and not a panel, so it takes no DoubleSide
+      solid(scene, b[B_PART], FacilityStyle.WASH_PARTITION, false);
+      solid(scene, b[B_COUNTER], FacilityStyle.WASH_COUNTER, false);
       // the basin and its tap are CUT, exactly as render.facility.FacilitySink draws the same sheet
       cut(scene, b[B_BASIN], FacilityStyle.SINK_TEX);
-      solid(scene, b[B_BASIN_TOP], FacilityStyle.DESK_TOP, false);
+      solid(scene, b[B_BASIN_TOP], FacilityStyle.WASH_COUNTER_TOP, false);
       solid(scene, b[B_MIRROR], FacilityStyle.MIRROR, false);
       lamps(scene, leds);
     }
@@ -360,15 +364,21 @@ class FacilityDeco
   static inline var B_MACH_SIDE = 13;
   static inline var B_MACH_TOP = 14;
   static inline var B_DRAIN = 15;
-  // the washroom's three. the cubicle partitions, its door leaves AND the basin counter are ONE
-  // laminate and so one buffer; the basin bowl and its tap are the laboratory sink's own sheet, which
-  // this family gets for free; and the mirror is the one face here that maps its art 0..1
+  // the washroom's, and there are SIX of them because one laminate turned out not to be one surface.
+  // The leaf, the side panels, the divider and the counter's apron shared B_STALL on the argument
+  // that they are all the same board — and the art is a DOOR, so the compound grew a door on every
+  // blank side panel, on the vanity apron and on the wall between the two halves. The bowl and its
+  // tap are the laboratory sink's own sheet, which this family gets for free, and the mirror is the
+  // one face here that maps its art 0..1
   static inline var B_STALL = 16;
   static inline var B_BASIN = 17;
   static inline var B_MIRROR = 18;
-  // the counter's LID is the office desk's laminate and not the panel: a panel is drawn bottom-up as
-  // an elevation and laid flat it reads as an elevation lying down
+  // the counter's LID: drawn top-down, where every panel above is a bottom-up elevation and laid
+  // flat would read as an elevation lying down
   static inline var B_BASIN_TOP = 19;
+  static inline var B_STALL_SIDE = 20;
+  static inline var B_PART = 21;
+  static inline var B_COUNTER = 22;
 
 // where a fitting of this kind on this cell actually stands: the rect its faces are emitted on, the
 // hand its wall is on, and whether that wall is solid masonry.
@@ -683,10 +693,12 @@ class FacilityDeco
   static function stall(b:Array<MeshBuf>, m:Facility, col:Int, row:Int, x0:Float, x1:Float,
       z0:Float, z1:Float, y:Float, h:Float, dir:Int, head:Int):Void
     {
+      // the sides take the BLANK panel and the leaf takes the one with a door drawn on it, which is
+      // the whole of FacilityStyle.STALL_SIDE's reason for existing
       var t = FacilityStyle.STALL_TILE;
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head, y, y + h, t);
+      FacilityGeom.face(b[B_STALL_SIDE], x0, x1, z0, z1, head, y, y + h, t);
       if (!isStall(m, col + DC[head + 1], row + DR[head + 1]))
-        FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head + 1, y, y + h, t);
+        FacilityGeom.face(b[B_STALL_SIDE], x0, x1, z0, z1, head + 1, y, y + h, t);
       // the leaf, standing STALL_DOOR_GAP clear of the floor the way every public one does
       FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1,
         y + FacilityStyle.STALL_DOOR_GAP, y + h, t);
@@ -713,24 +725,76 @@ class FacilityDeco
 // no end-cap rule like `stall`'s: this is a full-height wall meeting its neighbours on the shared
 // cell boundary, and two coplanar end faces inside a solid run would z-fight where a cubicle's
 // chest-high partitions cannot. So the ends are emitted ONLY where the line actually stops, which is
-// at a passage or at the room wall
+// at a passage or at the room wall.
+//
+// AND THE T JUNCTION IS A SECOND ARM, which a cell gets ONE rect and so cannot state on its own.
+// `rectOf` spans the cell on the axis its own line runs along and is PART_T across — so where a
+// second line arrives on one of the OTHER two hands, the neighbour's slab reaches the shared cell
+// boundary and this cell's reaches only PART_T / 2 from its centre, leaving (CELL - PART_T) / 2 =
+// 1.7 units of daylight straight through the wall. The patch is exactly that gap and no more: from
+// this arm's own SURFACE out to the boundary, PART_T across, two long faces and a lid.
+//
+// STARTED AT THE SURFACE AND NOT AT THE CENTRE, which is the one trap here: from the centre its lid
+// would overlap this arm's lid on a 0.6 x 0.3 square of coplanar quad, i.e. a z-fight at the top of
+// the wall where it is most visible. Started at the surface, the patch's inner end is closed by this
+// arm's own long face and its outer end by the neighbour's — whose end face was skipped for exactly
+// this reason — so the union is solid with no face inside it and none doubled
   static function partition(b:Array<MeshBuf>, m:Facility, col:Int, row:Int, x0:Float, x1:Float,
       z0:Float, z1:Float, y:Float, h:Float, dir:Int):Void
     {
       var head = (dir < 2 ? 2 : 0);
-      var t = FacilityStyle.STALL_TILE;
+      // ITS OWN ART AND ITS OWN PERIOD: a full-height wall wearing a cubicle door was the first
+      // build, and PART_TILE carries why the period is the wall's own height and not STALL_TILE
+      var t = FacilityStyle.PART_TILE;
       // the two long faces, one into each half
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir, y, y + h, t);
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
+      FacilityGeom.face(b[B_PART], x0, x1, z0, z1, dir, y, y + h, t);
+      FacilityGeom.face(b[B_PART], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
       // and an end wherever the line does not carry on
       for (k in 0...2)
         {
           var d = head + k;
           if (isKind(m, col + DC[d], row + DR[d], _FittingKind.FIT_PARTITION))
             continue;
-          FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, d, y, y + h, t);
+          FacilityGeom.face(b[B_PART], x0, x1, z0, z1, d, y, y + h, t);
         }
-      FacilityGeom.cap(b[B_STALL], x0, x1, z0, z1, y + h, t);
+      FacilityGeom.cap(b[B_PART], x0, x1, z0, z1, y + h, t);
+      // the crossing arm, on either of the two hands this one does not run along
+      var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      var hp = FacilityStyle.PART_T / 2;
+      var half = CELL / 2;
+      for (k in 0...2)
+        {
+          var d = (head + 2 + k) % 4;
+          if (!isKind(m, col + DC[d], row + DR[d], _FittingKind.FIT_PARTITION))
+            continue;
+          var px0 = cx - hp, px1 = cx + hp;
+          var pz0 = cz - hp, pz1 = cz + hp;
+          if (d == 0)
+            {
+              pz0 = cz - half;
+              pz1 = cz - hp;
+            }
+          else if (d == 1)
+            {
+              pz0 = cz + hp;
+              pz1 = cz + half;
+            }
+          else if (d == 2)
+            {
+              px0 = cx - half;
+              px1 = cx - hp;
+            }
+          else
+            {
+              px0 = cx + hp;
+              px1 = cx + half;
+            }
+          // the patch's long faces are the pair perpendicular to the hand it reaches on
+          var lf = (d < 2 ? 2 : 0);
+          FacilityGeom.face(b[B_PART], px0, px1, pz0, pz1, lf, y, y + h, t);
+          FacilityGeom.face(b[B_PART], px0, px1, pz0, pz1, lf + 1, y, y + h, t);
+          FacilityGeom.cap(b[B_PART], px0, px1, pz0, pz1, y + h, t);
+        }
     }
 
 // one washbasin: a counter in the cubicles' own laminate, the laboratory sink's basin lying on it,
@@ -745,15 +809,16 @@ class FacilityDeco
     {
       // the counter: a top, the front under it, and the two ends. no back — it is against masonry.
       //
-      // TWO PERIODS AND TWO SURFACES, which is this file's own rule and not a detail. The top is the
-      // office desk's laminate, world-tiled both ways like every other horizontal here; the sides are
-      // the cubicle panel, whose art is composed BOTTOM-UP and does not tile vertically, so its
-      // period is the counter's own height and v runs exactly 0..1 up it
+      // TWO PERIODS AND TWO SURFACES, which is this file's own rule and not a detail. The top is
+      // world-tiled both ways like every other horizontal here; the apron is composed BOTTOM-UP and
+      // does not tile vertically, so its period is the counter's own height and v runs exactly 0..1
+      // up it. BOTH ARE THE WASHROOM'S OWN ART NOW — the top wore the researcher's desk laminate and
+      // the apron wore a cubicle door, which were the set's two reuses
       var t = FacilityStyle.BASIN_H;
       FacilityGeom.cap(b[B_BASIN_TOP], x0, x1, z0, z1, y + h, FacilityStyle.BENCH_TOP_TILE);
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head, y, y + h, t);
-      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head + 1, y, y + h, t);
+      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
+      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head, y, y + h, t);
+      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head + 1, y, y + h, t);
       // the bowl, centred on the counter and lying on it. FacilityGeom.cap's winding with the sheet's
       // own sub-rect instead of a world period, and v is flipped, so the art's top row lands on the
       // BACK edge — FacilitySink.emit's own trap, one axis at a time here because a washroom wall may
