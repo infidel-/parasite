@@ -8,6 +8,7 @@ import render.Warmup;
 import render.Models.ModelVariant;
 import render.world.ContactMask;
 import render.world.IndoorMask;
+import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
 // the facility's warm scene. it gets its OWN for a reason the tunnels' one only half covers: a
@@ -67,7 +68,12 @@ class FacilityWarm
       // three families share one lambert but the shelving's is DOUBLE_SIDED, which three folds into
       // the program key — plus the rack lights' own patched additive material. the demo model stamps
       // one cell of each kind for exactly this reason, see FacilityModel.demo
-      FacilityDeco.build(sc, model);
+      // and the workstations first, because their two borrowed buffers have to be filled before the
+      // families that merge them run — the same ordering FacilityArea keeps, for the same reason
+      var workLeds = MeshBufTools.make();
+      var workCable = MeshBufTools.make();
+      FacilityWork.build(sc, model, workLeds, workCable);
+      FacilityDeco.build(sc, model, workLeds);
       // and the electrical service, which is NOT a new program permutation either — the pack mesh is
       // FacilityClutter's alphaTest DoubleSide lambert and the cable is the shell's plain mapped one
       // — but IS a 1024 pack and a 256 tile to decode and upload, which is the reason FacilityClutter
@@ -76,7 +82,7 @@ class FacilityWarm
       // the grid. Whether the demo model emits anything is NOT assumed: FacilityModel.demo leaves
       // `rooms` empty, which the socket's own roomKey falls back past, and its floor SCATTER lands on
       // free floor alone — so the pack mesh is warmed even in a model with no wall a socket will take
-      FacilityCable.build(sc, model);
+      FacilityCable.build(sc, model, workCable);
       // and the halos those three just handed over, which is a program permutation of its own (a
       // mask-patched transparent basic with an alphaMap) AND NOT OPTIONAL FOR A SECOND REASON:
       // FacilityDetail.halos is what CLEARS the collector, so skipping it here would carry these
@@ -160,7 +166,19 @@ class FacilityWarm
             // and so its own material and its own program key — warming one would leave the other
             // two to compile on the frame they first appear
             .concat([for (p in FacilityDeco.PROPS)
-              { path: p.path, h: FacilityStyle.DECO_ROUND_H }]);
+              { path: p.path, h: FacilityStyle.DECO_ROUND_H }])
+            // and the two ROOM TEMPLATE props, for the same reason as everything above them: a path
+            // is a material is a program key
+            .concat([
+              {
+                path: RenderConfig.MODELS.facilityToilet,
+                h: FacilityStyle.TOILET_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityChair,
+                h: FacilityStyle.CHAIR_H,
+              },
+            ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the
           // header of render.facility.FacilityRoof). the patch is a PROGRAM KEY, so warming them

@@ -45,6 +45,7 @@ class FacilityAreaGenerator
         TEMP_HANGAR_DOOR => Const.TILE_HANGAR_DOOR,
         TEMP_HANGAR_SIDE_DOOR => Const.TILE_FLOOR_TILE_CANNOTSEE,
         TEMP_BUILDING_VENT => Const.TILE_BUILDING,
+        TEMP_BUILDING_WINDOW_HIGH => Const.TILE_WINDOW_HIGH,
       ];
     }
 
@@ -463,6 +464,10 @@ class FacilityAreaGenerator
       // various door fixes
       fixDoors(state, bx, by, bw, bh);
 
+      // hand each room its template. BEFORE makeWindows, which is where the bench runs are laid: a
+      // washroom must never get one, and a researcher's office wants desks and not laboratory glassware
+      assignRoomThemes(state);
+
       // make windows
       makeWindows(state, bx, by, bw, bh);
 
@@ -792,6 +797,14 @@ class FacilityAreaGenerator
         {
           // clear room to default tile
           drawBlock(cells, room.x1, room.y1, room.w, room.h, TEMP_BUILDING_ROOM);
+          // a washroom takes NONE of what follows: not the ribbon glazing, not the bench runs, not
+          // the floor decoration. it gets light wells up one wall and is otherwise dressed entirely
+          // by its own template
+          if (room.role == ROLE_TOILET)
+            {
+              toiletWindows(cells, room);
+              continue;
+            }
           var corners = getRoomWallCorners(room);
 //          trace(room + ' ' + corners);
           for (spot in corners)
@@ -924,7 +937,15 @@ class FacilityAreaGenerator
                                   // piece of standing furniture needs, so it may come out as real
                                   // 3D geometry instead of an upright sprite — see
                                   // Const.FACILITY_FITTINGS and render.facility.FacilityDeco
-                                  if (high &&
+                                  // an office takes STANDING furniture and nothing else: a crate of
+                                  // flasks or a waste drum on the floor is the laboratory's clutter,
+                                  // and the low list is all laboratory
+                                  if (room.role == ROLE_CABINET)
+                                    {
+                                      if (high)
+                                        addFitting(state, tx, ty, room.role);
+                                    }
+                                  else if (high &&
                                       Std.random(100) < Const.FACILITY_FITTING_PCT)
                                     addFitting(state, tx, ty);
                                   else
@@ -932,8 +953,9 @@ class FacilityAreaGenerator
                                       Const.CHEM_LABS_DECO_FLOOR_HIGH :
                                       Const.CHEM_LABS_DECO_FLOOR_LOW);
                                   // change to unwalkable tile
-                                  cells[tx][ty] =
-                                    Const.TILE_FLOOR_TILE_UNWALKABLE;
+                                  if (area.hasObjectAt(tx, ty))
+                                    cells[tx][ty] =
+                                      Const.TILE_FLOOR_TILE_UNWALKABLE;
                                 }
                             }
                         }
@@ -982,13 +1004,277 @@ class FacilityAreaGenerator
         }
     }
 
+// a washroom's glazing: small light wells up ONE wall and nothing on the other three.
+//
+// one wall because that is what a washroom has — a room you are not seen into gets its light from a
+// single external face — and because every cell of the other three is then free for cubicles and
+// basins, which is what roomToilet wants and what roomWallRuns measures.
+//
+// EVERY OTHER CELL and not a run: these are separate openings, not a ribbon, so the renderer maps one
+// image across each rather than one across the whole length. the first and last cell of the wall are
+// left as masonry so an opening never lands in a corner
+  function toiletWindows(cells: Array<Array<Int>>, room: _Room)
+    {
+      var spot = exteriorWall(cells, room);
+      if (spot == null)
+        return;
+      var delta = deltaMap[spot.dir];
+      var len = (spot.dir == DIR_RIGHT ? room.w : room.h);
+      for (i in 1...len - 1)
+        if (i % 2 == 1)
+          cells[spot.x + delta.x * (i + 1)][spot.y + delta.y * (i + 1)] =
+            TEMP_BUILDING_WINDOW_HIGH;
+    }
+
+// the first wall of this room that is EXTERIOR masonry for its whole length, or null for a room in
+// the middle of a building. an inner wall faces another room or a corridor and has nothing to be a
+// light well onto, so this is both what toiletWindows paints and what assignRoomThemes prefers a
+// washroom to have — asked before the roles are dealt, which is why it is its own function
+  function exteriorWall(cells: Array<Array<Int>>, room: _Room): _Spot
+    {
+      for (spot in getRoomWallCorners(room))
+        {
+          var delta = deltaMap[spot.dir];
+          var len = (spot.dir == DIR_RIGHT ? room.w : room.h);
+          var solid = true;
+          for (i in 0...len)
+            if (cells[spot.x + delta.x * (i + 1)][spot.y + delta.y * (i + 1)] != TEMP_BUILDING_WALL)
+              solid = false;
+          if (solid)
+            return spot;
+        }
+      return null;
+    }
+
+// hand each room of this structure a template.
+//
+// the same shape game.CorpAreaGenerator uses for its four office themes: size, a quota and dice, with
+// no persisted tag — the room's FLOOR TILE is what carries the theme out of here, and the 3D layer
+// reads the theme back off that tile alone (render.facility.FacilityModel.surfOf)
+  function assignRoomThemes(state: _FacilityState)
+    {
+      // a big room is a laboratory: the bench runs, the island and the aisle markings all want the
+      // space, and a compound of nothing but small offices reads as an office block
+      var cells = state.area.getCells();
+      var cand = [for (room in state.rooms)
+        if (room.w <= ROOM_SIZE && room.h <= ROOM_SIZE) room];
+      if (cand.length == 0)
+        return;
+      // THE WASHROOM IS PICKED FIRST AND PICKED FOR ITS WALL. Its light wells need one wall that is
+      // exterior masonry end to end, and a room in the middle of a building has none — so a plain
+      // first-come roll put the compound's only washroom in an interior core about half the time and
+      // it came out with no glazing at all. The lab and the office are indifferent to this, so the
+      // toilet gets first refusal on a perimeter room and they take what is left
+      var wash = -1;
+      for (i in 0...cand.length)
+        if (exteriorWall(cells, cand[i]) != null)
+          {
+            wash = i;
+            break;
+          }
+      if (wash < 0)
+        wash = 0;
+      if (Std.random(100) < 60)
+        cand[wash].role = ROLE_TOILET;
+      var cabinets = 0;
+      for (i in 0...cand.length)
+        {
+          if (cand[i].role != null ||
+              cabinets >= 2)
+            continue;
+          if (Std.random(100) < 85)
+            {
+              cabinets++;
+              cand[i].role = ROLE_CABINET;
+            }
+        }
+    }
+
 // fill rooms with content
   function generateRoomContents(state: _FacilityState)
     {
       for (room in state.rooms)
         {
-          roomChemistryLab(state, room);
+          if (room.role == ROLE_CABINET)
+            roomCabinet(state, room);
+          else if (room.role == ROLE_TOILET)
+            roomToilet(state, room);
+          else roomChemistryLab(state, room);
         }
+    }
+
+// make this room a researcher's office: the desks are already standing (makeWindows lays them as
+// bench runs, which is the same furniture one texture family apart), so all this owes is the floor.
+//
+// the tiles are written FINAL and not TEMP, exactly as roomChemistryLab writes its drain and its
+// unwalkable cells — finalizeTiles only rewrites ids it has a row for and leaves these alone
+  function roomCabinet(state: _FacilityState, room: _Room)
+    {
+      // the bookcases, document cabinets and server racks, placed OUTRIGHT on the free wall cells the
+      // washroom's own machinery finds. they used to arrive only through makeWindows' leftover-cell
+      // roll, which fires where a desk could not go and on a small office is often nowhere
+      var edges = roomWallRuns(state, room);
+      edges.sort(function(a, b) return b.length - a.length);
+      var want = OFFICE_FITTING_MIN +
+        Std.random(OFFICE_FITTING_MAX - OFFICE_FITTING_MIN + 1);
+      // one per wall before a second goes on any wall, so a small office does not get its whole set
+      // stacked down one side
+      for (i in 0...want)
+        {
+          var run = edges[i % edges.length];
+          var k = Std.int(i / edges.length);
+          if (k >= run.length)
+            continue;
+          addFitting(state, run[k].x, run[k].y, ROLE_CABINET);
+          if (state.area.hasObjectAt(run[k].x, run[k].y))
+            state.area.getCells()[run[k].x][run[k].y] = Const.TILE_FLOOR_TILE_UNWALKABLE;
+        }
+      paintRoomFloor(state, room, Const.TILE_FLOOR_WOOD1);
+    }
+
+// make this room a washroom: a run of cubicles against the best wall, a basin counter against the
+// next best, and no benches at all (makeWindows skipped it)
+  function roomToilet(state: _FacilityState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      // the dividing wall goes in FIRST: it takes cells out of the wall runs below, and the two it
+      // deliberately leaves bare are passages that nothing else may stand in
+      var pass = toiletPartition(state, room);
+      var edges = roomWallRuns(state, room);
+      for (run in edges)
+        for (p in pass)
+          {
+            for (i in 0...run.length)
+              if (run[i].x == p.x && run[i].y == p.y)
+                {
+                  run.splice(i, 1);
+                  break;
+                }
+          }
+      // longest first: cubicles want the long walls, the basin counter takes the next, and the
+      // SHORTEST run is left bare whatever it is — a washroom ranked out on all four walls is a
+      // corridor with nowhere to turn round
+      edges.sort(function(a, b) return b.length - a.length);
+      var stalls = 0;
+      for (e in 0...edges.length - 1)
+        {
+          var run = edges[e];
+          if (run.length < 2)
+            continue;
+          // the first two walls are cubicles, the next is basins
+          var kind: _FittingKind = (e < 2 ? FIT_STALL : FIT_BASIN);
+          var n = (kind == FIT_STALL ? 2 + Std.random(3) : 2 + Std.random(2));
+          if (n > run.length)
+            n = run.length;
+          if (kind == FIT_STALL && stalls + n > TOILET_STALL_MAX)
+            n = TOILET_STALL_MAX - stalls;
+          for (i in 0...n)
+            placeFitting(state, run[i].x, run[i].y, kind);
+          if (kind == FIT_STALL)
+            stalls += n;
+        }
+      paintRoomFloor(state, room, Const.TILE_FLOOR_MARBLE1);
+
+      // a washroom keeps the floor drain the laboratory rolls
+      var cx = room.x1 + 1 + Std.random(room.w - 2),
+        cy = room.y1 + 1 + Std.random(room.h - 2);
+      if (cells[cx][cy] == TEMP_BUILDING_ROOM &&
+          Std.random(100) < 50)
+        {
+          cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
+          var o = new FloorDrain(game, state.area.id, cx, cy);
+          state.area.addObject(o);
+        }
+    }
+
+// split the washroom into its two halves and return the two cells left open as passages.
+//
+// A LINE OF FITTINGS AND NOT A WALL. state.rooms is frozen at makeDoors and the room ids are already
+// written into the cell grid, so masonry stamped here would leave two halves sharing one _Room, one
+// id, one ceiling light and one stale mark. A fitting line costs none of that: placeFitting stamps
+// each cell unwalkable exactly as a cubicle does, and render.facility.FacilityDeco stands a
+// full-height slab on it (FacilityStyle.PART_T).
+//
+// the line runs ACROSS the room's short axis, so the two halves come out square rather than as a pair
+// of slots, and the cell at each end of it is left bare — those are the passages
+  function toiletPartition(state: _FacilityState, room: _Room): Array<{ x: Int, y: Int }>
+    {
+      var cells = state.area.getCells();
+      // down the middle, and on an even span the line goes on the near side of centre rather than
+      // splitting a cell that does not exist
+      var vertical = (room.w >= room.h);
+      var mx = room.x1 + Std.int(room.w / 2);
+      var my = room.y1 + Std.int(room.h / 2);
+      var len = (vertical ? room.h : room.w);
+      var pass = [];
+      for (i in 0...len)
+        {
+          var x = (vertical ? mx : room.x1 + i);
+          var y = (vertical ? room.y1 + i : my);
+          // the two ends are the passages, and a cell already taken (a doorway's clearance, an
+          // object) is simply skipped — a wider gap in the middle of the wall is still a washroom
+          if (i == 0 ||
+              i == len - 1)
+            {
+              pass.push({ x: x, y: y });
+              continue;
+            }
+          if (cells[x][y] != TEMP_BUILDING_ROOM ||
+              nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) ||
+              state.area.hasObjectAt(x, y))
+            continue;
+          placeFitting(state, x, y, FIT_PARTITION);
+        }
+      return pass;
+    }
+
+// repaint a themed room's floor, walkable cells in `tile` and the cells furniture stands on in its
+// unwalkable twin one tileset row below. the bench tiles are left alone: a desk is a prop standing ON
+// the floor, and the renderer takes a table cell's surface off the ROOM it sits in
+  function paintRoomFloor(state: _FacilityState, room: _Room, tile: Int)
+    {
+      var cells = state.area.getCells();
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          {
+            if (cells[x][y] == TEMP_BUILDING_ROOM)
+              cells[x][y] = tile;
+            else if (cells[x][y] == Const.TILE_FLOOR_TILE_UNWALKABLE)
+              cells[x][y] = tile + UNWALKABLE_TILE_OFFSET;
+          }
+    }
+
+// the cells of each wall of this room a piece of standing furniture may take: on the room's edge,
+// backed by SOLID masonry (a high fitting against glazing is dropped by the renderer), clear of every
+// doorway and of whatever is standing there already. one array per wall, longest run wins
+  function roomWallRuns(state: _FacilityState, room: _Room): Array<Array<{ x: Int, y: Int }>>
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var out = [];
+      var walls = [
+        { x: room.x1, y: room.y1, dx: 1, dy: 0, len: room.w, nx: 0, ny: -1 }, // top
+        { x: room.x1, y: room.y2, dx: 1, dy: 0, len: room.w, nx: 0, ny: 1 },  // bottom
+        { x: room.x1, y: room.y1, dx: 0, dy: 1, len: room.h, nx: -1, ny: 0 }, // left
+        { x: room.x2, y: room.y1, dx: 0, dy: 1, len: room.h, nx: 1, ny: 0 },  // right
+      ];
+      for (w in walls)
+        {
+          var run = [];
+          for (i in 0...w.len)
+            {
+              var x = w.x + w.dx * i, y = w.y + w.dy * i;
+              var back = cells[x + w.nx][y + w.ny];
+              if (cells[x][y] != TEMP_BUILDING_ROOM ||
+                  (back != TEMP_BUILDING_WALL && back != TEMP_BUILDING_INNER_WALL) ||
+                  nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) ||
+                  area.hasObjectAt(x, y))
+                continue;
+              run.push({ x: x, y: y });
+            }
+          out.push(run);
+        }
+      return out;
     }
 
 // make this room a chem lab
@@ -1133,16 +1419,29 @@ class FacilityAreaGenerator
 // the frame is what the 2D view keeps drawing and what render.facility.FacilityModel reads the kind
 // back out of, so nothing new is written to the object and every save made before this existed
 // still resolves — see Const.fittingOf
-  function addFitting(state: _FacilityState, x: Int, y: Int)
+  function addFitting(state: _FacilityState, x: Int, y: Int, ?role: String)
     {
       // the HIGH kinds only: the table also holds the low list's drums, bins and short server
-      // stacks, and none of those is a piece of standing furniture
-      var kinds = Const.highFittings();
+      // stacks, and none of those is a piece of standing furniture. an office takes the narrower
+      // list — a bench lathe against the wall of a researcher's room is the laboratory's furniture
+      var kinds = (role == ROLE_CABINET ? Const.officeFittings() : Const.highFittings());
       var f = kinds[Std.random(kinds.length)];
       var fr = f.frames[Std.random(f.frames.length)];
       var o = new Decoration(game, state.area.id,
         x, y, fr.row, fr.col);
       state.area.addObject(o);
+    }
+
+// stand one fitting of a NAMED kind, for a room template placing its own furniture instead of rolling
+// it. the cell goes unwalkable here and the template's own floor pass repaints it in its finish
+  function placeFitting(state: _FacilityState, x: Int, y: Int, kind: _FittingKind)
+    {
+      var frames = Const.framesOf(kind);
+      var fr = frames[Std.random(frames.length)];
+      var o = new Decoration(game, state.area.id,
+        x, y, fr.row, fr.col);
+      state.area.addObject(o);
+      state.area.getCells()[x][y] = Const.TILE_FLOOR_TILE_UNWALKABLE;
     }
 
 // add decoration from a list
@@ -1176,6 +1475,23 @@ class FacilityAreaGenerator
           tile = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
           if (tile >= TEMP_BUILDING_WINDOW &&
               tile <= TEMP_BUILDING_WINDOWV3)
+            return true;
+        }
+      return false;
+    }
+
+// does this doorway open onto a themed room — a washroom or a researcher's office? the floor tile is
+// the theme record (see assignRoomThemes), so this is a four-neighbour test on the FINAL ids the
+// templates painted, walkable cell or the unwalkable twin one tileset row below
+  function opensOnPrivateRoom(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        {
+          var tile = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (tile == Const.TILE_FLOOR_WOOD1 ||
+              tile == Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET ||
+              tile == Const.TILE_FLOOR_MARBLE1 ||
+              tile == Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET)
             return true;
         }
       return false;
@@ -1401,9 +1717,15 @@ class FacilityAreaGenerator
               }
             else if (tileID == TEMP_BUILDING_INNER_DOOR)
               {
+                // a door into a PRIVATE room takes the solid leaf that blocks sight. read off the
+                // floor on the far side of the opening and off nothing else, the same way the whole
+                // theme travels: generateRoomContents has already painted those tiles final by here
+                var priv = opensOnPrivateRoom(cells, x, y);
                 var o = new Door(game, area.id, x, y,
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CABINET },
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_CABINET_OPEN });
+                  { row: Const.ROW_DOORS, col: (priv ? Const.FRAME_DOOR_PRIVATE :
+                    Const.FRAME_DOOR_CABINET) },
+                  { row: Const.ROW_DOORS, col: (priv ? Const.FRAME_DOOR_PRIVATE_OPEN :
+                    Const.FRAME_DOOR_CABINET_OPEN) });
                 state.area.addObject(o);
               }
             else if (tileID == TEMP_HANGAR_SIDE_DOOR)
@@ -1451,6 +1773,20 @@ class FacilityAreaGenerator
 
   static var ROOM_SIZE = 7; // 6 + 1 wall
   static var BIG_TABLE_DOOR_CLEARANCE = 3;
+  // the two room templates besides the laboratory, written into _Room.role. a null role is a lab
+  static var ROLE_CABINET = 'cabinet';
+  static var ROLE_TOILET = 'toilet';
+  // a floor tile's unwalkable twin sits exactly one tileset row below it (Const.OFFSET_ROW12 ->
+  // OFFSET_ROW13), which is how game.CorpAreaGenerator addresses the pair too
+  static var UNWALKABLE_TILE_OFFSET = 16;
+  // how many cubicles one washroom may rank out in total, across every wall it builds on. a room is
+  // at most 7x7 here, so two full walls would deal 14 and the place would read as a cell block
+  static var TOILET_STALL_MAX = 8;
+  // and how many wall fittings a researcher's office gets, placed outright rather than rolled: the
+  // leftover-cell route in makeWindows only fires where a desk could not go, which on a small office
+  // is often nowhere at all
+  static var OFFICE_FITTING_MIN = 1;
+  static var OFFICE_FITTING_MAX = 3;
   // the park: how wide its path is, how far apart the benches down it sit, how far apart the clump
   // centres are laid, and how far one clump reaches (both in cells, the second Manhattan). the step
   // is what sets DENSITY — clump count goes as its inverse square, so 6 -> 4 is 2.25x the centres
@@ -1493,12 +1829,15 @@ class FacilityAreaGenerator
   static var TEMP_HANGAR_DOOR = 26;
   static var TEMP_HANGAR_SIDE_DOOR = 27;
   static var TEMP_BUILDING_VENT = 18;
+  // the washroom's light well. its own temp id and not one of the six window ones, because it is not
+  // part of a RUN: each cell is a separate opening and the renderer maps one image across each
+  static var TEMP_BUILDING_WINDOW_HIGH = 28;
 
   static var TEMP_BUILDING_ROOM_ID_START = 100;
   static var mapTempTiles = [
     '0', '1', '2', '%', '%', 't', 'b', 'B', '%', '%',
-    '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w', 
-    '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z',
+    '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w',
+    '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z', '=',
   ];
 }
 

@@ -31,4 +31,15 @@ enum abstract _FittingKind(Int) from Int to Int
   var FIT_DRUM_BIO = 8;   // yellow drum, biohazard trefoil (12/2)
   var FIT_DRUM_RAD = 9;   // red drum, radiation trefoil (12/5)
   var FIT_BIN = 10;       // a lidded waste bin, the compound's own outdoor bin standing indoors
+  // the washroom's two, dealt by room TEMPLATE and never by the random floor roll (Const._Fitting
+  // .themed): a cubicle is two side partitions and a door leaf with a toilet glb standing in it, and
+  // a basin is a counter run with the lab sink's own art on top and a mirror on the masonry above
+  var FIT_STALL = 11;
+  var FIT_BASIN = 12;
+  // and the dividing wall between the washroom's two halves. a FITTING and not masonry, because
+  // game.FacilityAreaGenerator freezes its room rects at makeDoors and a real wall stamped after that
+  // leaves two halves sharing one _Room, one id and one stale grid mark. as a fitting it is a line of
+  // unwalkable cells the renderer stands a full-height slab on, and the cells left bare are the
+  // passages — see FacilityStyle.PART_T
+  var FIT_PARTITION = 13;
 }

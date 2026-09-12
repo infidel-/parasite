@@ -49,6 +49,7 @@ class FacilityDoors
     FacilityStyle.DOOR_GLASS,
     FacilityStyle.DOOR_CABINET,
     FacilityStyle.DOOR_METAL,
+    FacilityStyle.DOOR_PRIVATE,
   ];
 
   // one leaf's geometry, shared by every batch: the looks differ only in their map

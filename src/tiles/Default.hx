@@ -52,8 +52,9 @@ class Default extends Tileset
     0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    // row 2 - roads, indoor
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 2 - roads, indoor. index 10 is Const.TILE_WINDOW_HIGH and is the one window tile that does
+    // NOT pass sight: it is a light well up under the ceiling, not a pane you look out of
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
 
     // row 3+ - region tiles
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

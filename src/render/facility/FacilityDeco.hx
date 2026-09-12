@@ -120,8 +120,36 @@ class FacilityDeco
       // under it — two coplanar copies of the same art, the sharp one 0.04 under the blurred one
       if (o.type == 'floor_drain')
         return true;
+      // and a bench decoration standing on an OFFICE desk keeps no sprite either: the generator deals
+      // the laboratory's own table frames in every room (the corner cells MUST carry one, or a clue
+      // can spawn there), and a rack of test tubes on a researcher's writing desk is the laboratory's
+      // glassware. what stands in for it is FacilityClutter's office sheet, which is not an object at
+      // all. NOTHING is drawn here for it — suppressing an icon is all this hook can do
+      if (onOfficeDesk(area, o))
+        return true;
       return o.type == 'decoration' &&
         Const.fittingOf(o.imageRow, o.imageCol) >= 0;
+    }
+
+// is this object a bench decoration lying on an office DESK rather than on a laboratory bench?
+//
+// OFF THE NEIGHBOURING TILES and not off the surface grid, because this hook has no model: a desk
+// cell is a bench tile like any other, and what makes it a desk is the room around it, which the
+// generator floors in Const.TILE_FLOOR_WOOD1. a run of desks always has that floor on some hand — the
+// room's own — so one four-neighbour look answers it
+  static function onOfficeDesk(area:game.AreaGame, o:objects.AreaObject):Bool
+    {
+      if (o.type != 'decoration' ||
+          !Const.isTableDeco(o.imageRow))
+        return false;
+      for (dir in 0...4)
+        {
+          var t = area.getCellType(o.x + DC[dir], o.y + DR[dir]);
+          if (t == Const.TILE_FLOOR_WOOD1 ||
+              t == Const.TILE_FLOOR_WOOD1 + 16)
+            return true;
+        }
+      return false;
     }
 
 // how big this object's sprite draws in the facility, as a fraction of the full billboard. 1.0 for
@@ -252,18 +280,25 @@ class FacilityDeco
           case _FittingKind.FIT_CABINET: FacilityStyle.DECO_CABINET_H;
           case _FittingKind.FIT_MACHINE: FacilityStyle.DECO_MACHINE_SZ;
           case _FittingKind.FIT_MACHINE_LOW: FacilityStyle.DECO_MACHINE_LOW_SZ;
+          case _FittingKind.FIT_STALL: FacilityStyle.STALL_H;
+          case _FittingKind.FIT_BASIN: FacilityStyle.BASIN_H;
+          case _FittingKind.FIT_PARTITION: FacilityStyle.PART_H;
           default: 0.0;
         };
     }
 
-// every fitting in the compound. one merged mesh per SURFACE — sixteen of them plus the rack lights
-  public static function build(scene:Scene, m:Facility):Void
+// every fitting in the compound. one merged mesh per SURFACE — sixteen of them plus the rack lights.
+//
+// `leds` comes in ALREADY FILLED by render.facility.FacilityWork, whose towers carry status lights of
+// exactly the shape this family's server racks do. A borrowed buffer and not a second additive mesh:
+// every blinking speck in the compound then shares one draw call, one material and one clock, and a
+// workstation's lights cost nothing at all beyond their four vertices
+  public static function build(scene:Scene, m:Facility, leds:MeshBuf):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       // indexed by Buf below, so a face names the surface it is made of rather than the kind it
       // belongs to
-      var b = [for (_ in 0...16) MeshBufTools.make()];
-      var leds = MeshBufTools.make();
+      var b = [for (_ in 0...20) MeshBufTools.make()];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -293,6 +328,13 @@ class FacilityDeco
       solid(scene, b[B_MACH_SIDE], FacilityStyle.DECO_MACHINE_SIDE, false);
       solid(scene, b[B_MACH_TOP], FacilityStyle.DECO_MACHINE_TOP, false);
       solid(scene, b[B_DRAIN], FacilityStyle.DECO_DRAIN, false);
+      // DoubleSide: a partition and a door leaf are bare quads with no thickness, seen from both
+      // sides of the cubicle. free on an opaque material, which draws DoubleSide in one pass
+      solid(scene, b[B_STALL], FacilityStyle.STALL_PANEL, true);
+      // the basin and its tap are CUT, exactly as render.facility.FacilitySink draws the same sheet
+      cut(scene, b[B_BASIN], FacilityStyle.SINK_TEX);
+      solid(scene, b[B_BASIN_TOP], FacilityStyle.DESK_TOP, false);
+      solid(scene, b[B_MIRROR], FacilityStyle.MIRROR, false);
       lamps(scene, leds);
     }
 
@@ -318,6 +360,15 @@ class FacilityDeco
   static inline var B_MACH_SIDE = 13;
   static inline var B_MACH_TOP = 14;
   static inline var B_DRAIN = 15;
+  // the washroom's three. the cubicle partitions, its door leaves AND the basin counter are ONE
+  // laminate and so one buffer; the basin bowl and its tap are the laboratory sink's own sheet, which
+  // this family gets for free; and the mirror is the one face here that maps its art 0..1
+  static inline var B_STALL = 16;
+  static inline var B_BASIN = 17;
+  static inline var B_MIRROR = 18;
+  // the counter's LID is the office desk's laminate and not the panel: a panel is drawn bottom-up as
+  // an elevation and laid flat it reads as an elevation lying down
+  static inline var B_BASIN_TOP = 19;
 
 // where a fitting of this kind on this cell actually stands: the rect its faces are emitted on, the
 // hand its wall is on, and whether that wall is solid masonry.
@@ -331,6 +382,29 @@ class FacilityDeco
   public static function rectOf(m:Facility, col:Int, row:Int, kind:Int):DecoRect
     {
       var half = (CityConfig.GRID * CELL) / 2;
+      // THE PARTITION IS THE ONE FITTING THAT DOES NOT STAND AGAINST A WALL — it IS one — so it takes
+      // none of the wall search, the slide or the stand-off below. It spans its cell exactly on the
+      // axis its own line runs along, which is what makes a column of them one unbroken wall rather
+      // than a row of slabs with seams between, and PART_T across. The axis comes off the NEIGHBOURS
+      // and not off the room, the same way FacilityDeco.stall reads its own run
+      if (kind == _FittingKind.FIT_PARTITION)
+        {
+          var cx = (col + 0.5) * CELL - half;
+          var cz = (row + 0.5) * CELL - half;
+          var alongX = isKind(m, col - 1, row, kind) || isKind(m, col + 1, row, kind);
+          var hw = (alongX ? CELL : FacilityStyle.PART_T) / 2;
+          var hd = (alongX ? FacilityStyle.PART_T : CELL) / 2;
+          return {
+            x0: cx - hw,
+            x1: cx + hw,
+            z0: cz - hd,
+            z1: cz + hd,
+            // the hand its long faces look out of: a wall between two halves faces both of them
+            dir: (alongX ? 0 : 2),
+            hasWall: false,
+            h: FacilityStyle.PART_H,
+          };
+        }
       var w = FacilityStyle.DECO_SHELF_W, d = FacilityStyle.DECO_SHELF_D;
       if (kind == _FittingKind.FIT_BOOKCASE)
         {
@@ -354,6 +428,16 @@ class FacilityDeco
           // a CUBE, and the height is the same number — see FacilityStyle.DECO_MACHINE_SZ
           w = heightOf(kind);
           d = w;
+        }
+      else if (kind == _FittingKind.FIT_STALL)
+        {
+          w = FacilityStyle.STALL_W;
+          d = FacilityStyle.STALL_D;
+        }
+      else if (kind == _FittingKind.FIT_BASIN)
+        {
+          w = FacilityStyle.BASIN_W;
+          d = FacilityStyle.BASIN_D;
         }
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
@@ -472,6 +556,12 @@ class FacilityDeco
             FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
               FacilityStyle.DECO_CABINET_TILE);
             FacilityGeom.cap(b[B_CAB_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_CABINET_TILE);
+          case _FittingKind.FIT_STALL:
+            stall(b, m, col, row, x0, x1, z0, z1, y, h, dir, head);
+          case _FittingKind.FIT_BASIN:
+            basin(b, m, col, row, x0, x1, z0, z1, y, h, dir, head);
+          case _FittingKind.FIT_PARTITION:
+            partition(b, m, col, row, x0, x1, z0, z1, y, h, dir);
           case _FittingKind.FIT_MACHINE | _FittingKind.FIT_MACHINE_LOW:
             // the same four faces again, and the ONLY kind here where EVERY one of them maps 0..1 —
             // the lid included. It was emitted with `face`/`cap` first, tiling off the world the way
@@ -577,6 +667,144 @@ class FacilityDeco
       var v = (z1 - z0) / t;
       MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
         [0, v, u, v, u, 0, 0, 0]);
+    }
+
+// one WC cubicle: the partitions either side of it, and the door leaf across its open face.
+//
+// THE PARTITION IS A BOUNDARY AND NOT A SIDE, which is the whole of this function's care. Two
+// cubicles side by side share one divider; emitted per unit, both would land on the same plane and
+// z-fight down their whole height. So a unit takes its `head` side ALWAYS and its `head + 1` side
+// only where the next cell is not another cubicle — n cubicles, n + 1 partitions, no duplicate. It
+// works because STALL_W is exactly one cell: every plane lands on the grid the cells do.
+//
+// no lid and no back: the back is the masonry it stands against, and at this camera's 51 degrees a
+// ceiling over the cubicle would hide everything in it — FacilityRoof.box's finding, and the same
+// one the bookcase's missing top rides on
+  static function stall(b:Array<MeshBuf>, m:Facility, col:Int, row:Int, x0:Float, x1:Float,
+      z0:Float, z1:Float, y:Float, h:Float, dir:Int, head:Int):Void
+    {
+      var t = FacilityStyle.STALL_TILE;
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head, y, y + h, t);
+      if (!isStall(m, col + DC[head + 1], row + DR[head + 1]))
+        FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head + 1, y, y + h, t);
+      // the leaf, standing STALL_DOOR_GAP clear of the floor the way every public one does
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1,
+        y + FacilityStyle.STALL_DOOR_GAP, y + h, t);
+    }
+
+// is there another cubicle on this cell? the partition rule above is the only caller
+  static inline function isStall(m:Facility, col:Int, row:Int):Bool
+    {
+      return isKind(m, col, row, _FittingKind.FIT_STALL);
+    }
+
+// does this cell carry a fitting of exactly this kind? bounds-safe, and the test every family that
+// reads its own RUN out of the grid makes
+  static inline function isKind(m:Facility, col:Int, row:Int, kind:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        m.deco[row][col] - 1 == kind;
+    }
+
+// the washroom's dividing wall, one cell of it. four faces and a lid, all in the cubicle laminate —
+// the same buffer the partitions and the basin counter go in, so the whole washroom's casework is
+// still ONE draw call however it is divided.
+//
+// no end-cap rule like `stall`'s: this is a full-height wall meeting its neighbours on the shared
+// cell boundary, and two coplanar end faces inside a solid run would z-fight where a cubicle's
+// chest-high partitions cannot. So the ends are emitted ONLY where the line actually stops, which is
+// at a passage or at the room wall
+  static function partition(b:Array<MeshBuf>, m:Facility, col:Int, row:Int, x0:Float, x1:Float,
+      z0:Float, z1:Float, y:Float, h:Float, dir:Int):Void
+    {
+      var head = (dir < 2 ? 2 : 0);
+      var t = FacilityStyle.STALL_TILE;
+      // the two long faces, one into each half
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir, y, y + h, t);
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
+      // and an end wherever the line does not carry on
+      for (k in 0...2)
+        {
+          var d = head + k;
+          if (isKind(m, col + DC[d], row + DR[d], _FittingKind.FIT_PARTITION))
+            continue;
+          FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, d, y, y + h, t);
+        }
+      FacilityGeom.cap(b[B_STALL], x0, x1, z0, z1, y + h, t);
+    }
+
+// one washbasin: a counter in the cubicles' own laminate, the laboratory sink's basin lying on it,
+// its tap standing at the back, and a mirror on the masonry above.
+//
+// THE BOWL AND THE TAP ARE THE LAB SINK'S SHEET, not new art. facility/sink.png holds both quads
+// already (the basin top-down on the left, the tap in elevation on the right) and a washroom basin is
+// the same fixture as a laboratory one at this distance — what says washroom is the counter it sits
+// in and the mirror over it, and both of those are here
+  static function basin(b:Array<MeshBuf>, m:Facility, col:Int, row:Int, x0:Float, x1:Float,
+      z0:Float, z1:Float, y:Float, h:Float, dir:Int, head:Int):Void
+    {
+      // the counter: a top, the front under it, and the two ends. no back — it is against masonry.
+      //
+      // TWO PERIODS AND TWO SURFACES, which is this file's own rule and not a detail. The top is the
+      // office desk's laminate, world-tiled both ways like every other horizontal here; the sides are
+      // the cubicle panel, whose art is composed BOTTOM-UP and does not tile vertically, so its
+      // period is the counter's own height and v runs exactly 0..1 up it
+      var t = FacilityStyle.BASIN_H;
+      FacilityGeom.cap(b[B_BASIN_TOP], x0, x1, z0, z1, y + h, FacilityStyle.BENCH_TOP_TILE);
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head, y, y + h, t);
+      FacilityGeom.face(b[B_STALL], x0, x1, z0, z1, head + 1, y, y + h, t);
+      // the bowl, centred on the counter and lying on it. FacilityGeom.cap's winding with the sheet's
+      // own sub-rect instead of a world period, and v is flipped, so the art's top row lands on the
+      // BACK edge — FacilitySink.emit's own trap, one axis at a time here because a washroom wall may
+      // be on any of the four hands
+      var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      var bw = FacilityStyle.SINK_BASIN_W / 2;
+      var bd = FacilityStyle.SINK_BASIN_D / 2;
+      var by = y + h + FacilityStyle.SINK_Y;
+      var alongX = (dir < 2);
+      var ax0 = cx - (alongX ? bw : bd), ax1 = cx + (alongX ? bw : bd);
+      var az0 = cz - (alongX ? bd : bw), az1 = cz + (alongX ? bd : bw);
+      MeshBufTools.quad(b[B_BASIN], [ax0, by, az1], [ax1, by, az1], [ax1, by, az0],
+        [ax0, by, az0], [
+        FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V0,
+        FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V0,
+        FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V1,
+        FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V1,
+      ]);
+      // the tap, standing on the counter at its wall edge and looking into the room
+      var fw = FacilityStyle.SINK_FAUCET_W;
+      var fh = FacilityStyle.SINK_FAUCET_H;
+      var e = FacilityGeom.ends(cx - fw / 2, cx + fw / 2, cz - fw / 2, cz + fw / 2, dir ^ 1);
+      var back = FacilityStyle.SINK_BASIN_D / 2;
+      var dx = (dir == 2 ? -back : (dir == 3 ? back : 0.0));
+      var dz = (dir == 0 ? -back : (dir == 1 ? back : 0.0));
+      MeshBufTools.quad(b[B_BASIN],
+        [e[0] + dx, y + h, e[1] + dz], [e[2] + dx, y + h, e[3] + dz],
+        [e[2] + dx, y + h + fh, e[3] + dz], [e[0] + dx, y + h + fh, e[1] + dz], [
+        FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V0,
+        FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V0,
+        FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V1,
+        FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V1,
+      ]);
+      // and the mirror, on the MASONRY's own face pushed MOUNT_PROUD clear of it — the notice board's
+      // mounting exactly, and never the cell boundary, which is a whole unit inside the room
+      var mw = FacilityStyle.MIRROR_W / 2;
+      var my = FacilityStyle.MIRROR_Y;
+      var mh = FacilityStyle.MIRROR_H / 2;
+      var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
+      var e = FacilityStyle.MOUNT_PROUD;
+      var inw = dir ^ 1;
+      if (alongX)
+        {
+          var mz = (inw == 0 ? s.z0 - e : s.z1 + e);
+          FacilityGeom.pane(b[B_MIRROR], cx - mw, cx + mw, mz, mz, inw, my - mh, my + mh);
+        }
+      else
+        {
+          var mx = (inw == 2 ? s.x0 - e : s.x1 + e);
+          FacilityGeom.pane(b[B_MIRROR], mx, mx, cz - mw, cz + mw, inw, my - mh, my + mh);
+        }
     }
 
 // one floor drain, centred on its cell.
@@ -767,6 +995,47 @@ class FacilityDeco
       path: RenderConfig.MODELS.facilityDrumRad,
     },
   ];
+
+// the WC pans, one batch for the compound. a glb and not geometry for the drum's own reason: a pan
+// is a curved shell with a cistern behind it and FacilityGeom emits axis-aligned quads only.
+//
+// PLACED OFF THE CUBICLE'S OWN RECT and not off the cell: `rectOf` has already slid the cubicle along
+// its wall, so the pan goes against the BACK of that rect on its centre line, turned to face the door
+  public static function toilets(scene:Scene, m:Facility):Models.InstancedProp
+    {
+      var y = FacilityGround.surfY(Surf.TILE);
+      var places:Array<Models.PropPlace> = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.deco[row][col] - 1 != _FittingKind.FIT_STALL)
+              continue;
+            var r = rectOf(m, col, row, _FittingKind.FIT_STALL);
+            // the back of the cubicle is the wall hand; the pan stands half its own depth off it
+            var back = FacilityStyle.TOILET_D / 2 + FacilityStyle.STAND_GAP;
+            var cx = (r.x0 + r.x1) / 2, cz = (r.z0 + r.z1) / 2;
+            var x = (r.dir == 2 ? r.x0 + back : (r.dir == 3 ? r.x1 - back : cx));
+            var z = (r.dir == 0 ? r.z0 + back : (r.dir == 1 ? r.z1 - back : cz));
+            places.push({
+              x: x,
+              z: z,
+              // looking the way the door does, i.e. away from the masonry — placeRound's own turn
+              yaw: Math.atan2(DC[r.dir ^ 1], DR[r.dir ^ 1]),
+              y: y,
+            });
+          }
+      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityToilet, places,
+        FacilityStyle.TOILET_H, SOLID);
+      // NOT CASTING, the drums' own finding: an instanced batch is drawn into the moon's shadow map
+      // as many times as into the frame, and these stand under a faded roof
+      if (places.length > 0)
+        Models.get(RenderConfig.MODELS.facilityToilet, function(_)
+          {
+            VisionMask.patchMesh(prop.mesh);
+            prop.mesh.castShadow = false;
+          });
+      return prop;
+    }
 
 // one instanced batch per livery, index-aligned with PROPS — the shape render.facility.FacilityKit
 // .props takes, so render.facility.FacilityGround.EXTRA and FacilityWarm both derive their rows off

@@ -730,6 +730,14 @@ class RenderConfig {
     facilityDrumSteel: 'models/facility/drum-steel.glb', // grey drum, clean steel, hoop ribs
     facilityDrumBio: 'models/facility/drum-bio.glb',     // yellow drum, biohazard livery
     facilityDrumRad: 'models/facility/drum-rad.glb',     // red drum, radioactive livery
+    // the two ROOM TEMPLATE props, and the pair is worth reading together because a third one was
+    // DELETED from between them. A WC pan is a curved shell with a cistern behind it and a chair is a
+    // shaped back over a five-star base on castors: both are silhouettes no axis-aligned quad states,
+    // which is what earns a mesh generator. facility/computer.glb was neither — a monitor, a tower and
+    // a keyboard are three slabs, it came back blocky, and render.facility.FacilityWork emits the
+    // whole set as 22 quads off one sheet instead
+    facilityToilet: 'models/facility/toilet.glb',        // WC pan, closed cistern, lid down
+    facilityChair: 'models/facility/chair.glb',          // office swivel chair, arms, star base
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

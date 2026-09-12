@@ -2403,3 +2403,148 @@ null-elsewhere gate, and four texture constants.
 A drop left in `textures-src/` as `edit-<ts>-<hash>-bench-pack1.png` is renamed in place over the
 packed sheet and built, with a build line that reads exactly as it should. Delete the drop, or
 generate outside the tree, before `make tex`.
+
+## THE FACILITY GETS TWO MORE ROOM TEMPLATES — and the theme is the FLOOR TILE
+
+**Every room in the compound was the same chem lab.** `FacilityAreaGenerator.generateRoomContents`
+called `roomChemistryLab` on all of them, every room floor finalised to `TILE_FLOOR_TILE`, and the
+3D layer bucketed every interior face into `wall-room` vs `wall-interior` and every interior floor
+into three textures. `CorpAreaGenerator:292` has had four office THEMES all along — size, a quota and
+dice, each theme painting its own floor tile and drawing from its own furniture set, with no enum, no
+typedef and no persisted tag. That shape is what was copied.
+
+**THE FLOOR TILE IS THE WHOLE RECORD, and it reuses ids that already exist.** A researcher's OFFICE
+floors in corp's `TILE_FLOOR_WOOD1` and a WASHROOM in `TILE_FLOOR_MARBLE1`, both with the unwalkable
+twin one tileset row below that the cells under furniture take. **No tile id, no `tiles.Default` row,
+no `generatorInfo` field, no migration, no Saver work** — `FacilityModel.surfOf` maps the two ids to
+new `Surf.OFFICE` / `Surf.WASH` before the row-8 catch-all, and `FacilityGeom.look`/`floorBuf` pick
+wall and floor off the cell a face looks INTO, exactly as the room/corridor split already did. Old
+saves hold neither id and come back all-lab. The facility has had no 2D view since `showFacility`,
+so tile ART never entered it and a fitting's atlas frame is a KEY `Const.fittingOf` reads back.
+
+**A DESK CELL IS A BENCH TILE, so the surface has to be SPREAD over the room's rect.** `surfOf`
+resolves every table tile to `Surf.TILE` through the row-8 catch-all, so the floor under an office's
+desks and the wall behind them stayed laboratory. `FacilityModel.themeRooms` walks `generatorInfo`'s
+room rects after the grid is built and stamps every `TILE` cell of a rect that holds a themed one.
+A pre-change save holds no themed cell in any rect, so it is a no-op there by construction.
+
+**THE DESK IS THE LAB BENCH ONE TEXTURE FAMILY APART.** The generator lays both as the same runs off
+the same table tiles, so the split is two more `MeshBuf`s in `FacilityTables.build` picked off the
+cell's own `Surf` and no geometry at all; `FacilitySink` skips an OFFICE run, and `FacilityClutter`
+picks its 8x8 sheet the same way. The washroom is `FacilityDeco`'s two new fitting kinds:
+`FIT_STALL` (two partitions and a door leaf, a `facility/toilet` glb inside) and `FIT_BASIN` (a
+counter, the lab sink's OWN sheet for bowl and tap, a mirror on the masonry above). Cubicles,
+leaves and counter are one laminate and so **one buffer and one draw call**.
+
+**A PARTITION IS A BOUNDARY AND NOT A SIDE.** Emitted per unit, two neighbouring cubicles both draw
+the divider between them on the same plane and z-fight down its whole height. Each unit takes its
+`head` side ALWAYS and its `head + 1` side only where the next cell is not another cubicle: n
+cubicles, n + 1 partitions. It works only because `STALL_W` is exactly one cell, so every plane
+lands on the grid the cells do.
+
+**THE PAN'S VALUE COULD NOT BE FIXED WITH `--lift` AND THE MONITOR'S HAD TO BE.** The ceramic
+reference came back at p50 **207**; the lift to 120 is a gamma of **3.588** and published the drop's
+own warm cast — channel spread **26 -> 54**, a tan toilet. A lift moves VALUE and cannot fix hue, so
+the pan ships the untouched reference and `baseColor` **0.22** flat, landing the 230/210/203 bake near
+110 srgb, just over `facility/floor-wash` 100.5. The workstation went the other way: p50 **40**, which
+propstat calls TOO DARK and bakes crushed, lifted to 73 (gamma 0.671) BEFORE TRELLIS saw it, then
+`baseColor` 0.51 to the indoor 78 the trolley and the drums record. `tex` 256 and not 512 — at 1,200
+tris the larger map reads 218 texels/tri against the 43-55 band.
+
+**THE LAB'S CLUTTER SKIP LIST DOES NOT PORT.** `facility/office-clutter` is the same PACK64 shape as
+`worktop-clutter` (sunburst, transparent, SEPARATION clause leading): **66.5% transparent, all 14 seam
+lanes at ZERO opaque px**, so `pack16.py --cols 8 --rows 8 --cell 128 --valign center` packed it at
+**tol 0** where the lab sheet needed `--tol 4`. But the dark-AND-solid test was measured against
+`bench-top` **0.0401** and a desk top is **0.1168**, so the same relative threshold condemns half the
+sheet — a dark object on a PALE desk is an object. `CLUTTER_OFFICE_SKIP` stays empty until something
+reads as a hole in game.
+
+**VERDICT: landed.** **+8 draw calls** on a pinned office pose (10 merged meshes, interleaved A/B,
+median of 7 frames: **119 on / 111 off / 119 on**), plus 2 glb batches. On one generated compound:
+**1 washroom + 2 offices** over 19 rooms, 2 cubicles, 2 basins, 7 workstations. Fitting cells
+unwalkable (`MARBLE1 + 16`), room floors walkable, **0 console errors**.
+
+## THE WASHROOM WAS A ROOM WITH NO PRIVACY AND THE WORKSTATION WAS A BOX — pass 2 on the room templates
+
+Reported against the shipped templates, in the reporter's own order: the toilet took the lab's
+ordinary ribbon glazing and its ordinary see-through door, it was one undivided room, its cubicle
+laminate had no door line; and the office reused the lab bench whole — full depth, drawers on every
+face, no sockets, no cables, no chairs, and a blocky glb computer facing the wall.
+
+**THE LIGHT WELL IS A NEW `Wall` VALUE AND NOT A FLAG ON `WINDOW`, and that is what made it free.**
+`render.world.VisionMask`'s blocker test reads `isWall && wall != WINDOW`, so a fourth enum value is
+taken as solid by the render mask with no edit at all; `tiles.Default.TILE_SEETHROUGH` row 2 index 10
+goes to 0 and the game's own `canSeeThrough` agrees. It took the DEAD `Const.TILE_XXX` slot — one
+declaration, zero uses in the tree — so there is still no new tile id in this feature. `FacilityGlow`
+skips `w.high` in both of its loops: no ground trapezoid and no fake shadow source, because a slot
+1.2 tall with its head 0.9 under the deck throws light UP and out, not down onto the pavement.
+Measured from outside: two lit slots high on the wall and the apron under them dark.
+
+**THE ART CAME BACK OPAQUE TWICE AND THE FIX WAS A CROP.** `background:"transparent"` failed at
+0.0% on a prompt that said "no wall, no masonry, no sill" — the NAMING A SURFACE trap — and failed
+again at 0.0% on a re-roll that said only "the ONLY thing in the picture". This style prompt asks for
+a dark moody field and the model paints one. So the unit was MEASURED instead: glass thresholds at
+luma > 120 to x 146..876, and walking outward the aluminium (luma ~58) runs to x 130..892 / y 384..618
+against a background of ~35. That rect is the `crop`, the file is opaque, `loadAlphaCropped` finds
+nothing to trim, and `WINDOW_HIGH_ASPECT` 3.2405 comes off the 512x158 output exactly as the two
+ribbons' aspects come off theirs.
+
+**THE MALE/FEMALE SPLIT IS A LINE OF FITTINGS AND NOT MASONRY.** `state.rooms` is frozen at
+`makeDoors` and the room ids are already stamped into the cell grid, so a wall written after that
+leaves two halves sharing one `_Room`, one id, one ceiling light and one stale mark — and
+`makeWindows` would `drawBlock` the whole stale rect back over it. `FIT_PARTITION` costs none of
+that: `placeFitting` stamps each cell unwalkable exactly as a cubicle does, `FacilityDeco.partition`
+stands a full-height slab on it in the cubicle laminate (**B_STALL, so zero new draw calls**), and the
+cell left bare at each end of the line IS the passage. One room, one corridor door, and the men's and
+women's plates flank that one opening.
+
+**A THEMED ROOM'S DOOR WAS SWINGING INTO THE CORRIDOR, and pass 1 put it there.**
+`FacilityModel.findDoors` picks the swing side with `m.surf[..] == Surf.TILE` on both hands, which was
+"is this a room" until a room could be `OFFICE` or `WASH`. With those, neither hand read as a room,
+the tie fell through to `+1`, and half of them opened the wrong way — the very doors that most need to
+swing inward, being the only ones that shut. The test is now `!= Surf.LINO`.
+
+**THE WASHROOM IS PICKED FOR ITS WALL.** Its light wells need one wall that is exterior masonry end to
+end, and a room in the middle of a building has none, so a plain first-come roll put the compound's
+only washroom in an interior core and it came out with no glazing at all — observed on the first
+generated area. `assignRoomThemes` now gives the toilet first refusal on a perimeter candidate; the
+lab and the office are indifferent. Over 8 regenerations of one compound: a toilet in 5 (the 60% roll,
+per structure), and **every one of them got its light wells** — 2-3 cells, 24-35 marble, 4-8 cubicles,
+3 basins, 2-3 partition cells.
+
+**THE WORKSTATION WENT THE OTHER WAY DOWN THE TRIAGE: glb → GEOMETRY.** `facility/computer.glb` spent
+1,200 triangles rounding the corners off three axis-aligned slabs — CLAUDE.md's own "a box is not a
+prop" answered a build late. `render.facility.FacilityWork` emits the set as 22 quads, and **every
+face samples ONE sheet by sub-rect** (the `facility/sink` idiom): four labels would be four materials,
+four meshes and four draw calls to draw one desk toy. At `WORK_SCREEN_W` 1.7 the screen cell gives 150
+texels per world unit against `floor-tile`'s 73. The CHAIR stayed a glb and that is the same rule
+answered the other way — a shaped back over a five-star base on castors is an outline no quad states.
+
+**THE TOWER'S LIGHTS AND THE DESK LEADS COST NOTHING, because both families already had a buffer.**
+`FacilityDeco.build` and `FacilityCable.build` each take a borrowed `MeshBuf` now, filled by
+`FacilityWork` before they merge: the status specks join the server racks' additive mesh (same shared
+`uTime`, same `blink` patch, same draw call, no per-frame work), and the keyboard leads ride
+`FacilityCable`'s ribbon through `strip`, which was already a general world-space function and needed
+only `public`. The one ordering constraint in `FacilityArea.build` is that the borrower runs first.
+
+**SOCKETS IN AN OFFICE COST ONE OPTIONAL ARG.** `FacilityPlacard.hangs` is shared by the signage and
+by `FacilityCable.sockets`, and its `Surf.TILE` gate was keeping the electrical service out of a room
+that plainly wants it. It takes an `office` flag that only the cable family passes — the eight plates
+on the two placard sheets are laboratory hazard signage, and a biohazard trefoil over a desk is
+exactly what that gate exists to prevent.
+
+**THE ROOM SIGNS HANG OUTSIDE, WHICH IS THE OPPOSITE OF EVERY OTHER SIGN HERE.** The hazard placards
+are gated on `Surf.TILE`, hang on the room's own side and are chosen by what stands under them; these
+hang on the CORRIDOR face beside a themed room's door and are chosen by what the room IS. The two
+nameplates are deliberately ILLEGIBLE smudge bars and the prompt spends four clauses on it: a legible
+plate has to say a name and no researcher in this game has one. Asked that way the model drew bars,
+not glyphs.
+
+**VERDICT: landed.** **+3 draw calls** measured on a pinned office pose (interleaved A/B ×4, median
+of 5 frames each: **114 on / 111 off**) for `desk-side`, `workstation` and `room-signs`; the light-well
+pane and the chair batch are one call each where they appear, against the deleted computer batch's −1.
+Live on one generated compound: light wells blocking sight (`canSeeThrough` false, `isVisible` false
+through the wall AND through the shut private door, true the moment it opens), `closedCol` 12 on every
+themed room's door, 3 workstations, 2 chairs, 3 WC pans, 3 signs, **0 console errors**. One thing seen
+and NOT fixed, because it is pass-1 art and nobody asked: `facility/mirror` at 0.0335 linear reads as a
+black rectangle against the wash wall in a close shot — the dark-AND-solid failure, from the other side.

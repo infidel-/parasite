@@ -11,6 +11,7 @@ import render.particles.LampPost;
 import render.facility.FacilityModel.Facility;
 import render.world.ContactMask;
 import render.world.IndoorMask;
+import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 import render.world.WorldCtx;
 
@@ -41,7 +42,14 @@ class FacilityArea implements Area3D
     // off their own table so a fourth needs no edit here (render.facility.FacilityDeco.drums).
     // their sibling the BIN is deliberately absent: it rides the compound's existing bin batch,
     // four rows up, rather than opening a call of its own
-    .concat([for (p in FacilityDeco.PROPS) p.path]);
+    .concat([for (p in FacilityDeco.PROPS) p.path])
+    // and the two ROOM TEMPLATE batches, last because `green` pushes them last: the cubicles' WC pans
+    // and the chairs at the office desks. the workstations themselves are NOT here and no longer a
+    // batch at all — they are emitted geometry now (render.facility.FacilityWork)
+    .concat([
+      RenderConfig.MODELS.facilityToilet,
+      RenderConfig.MODELS.facilityChair,
+    ]);
 
   var game:Game;
   var model:Facility;
@@ -65,6 +73,8 @@ class FacilityArea implements Area3D
   var exits = 0;                                // lit exit signs: one per lintel face onto a corridor
   var points = 0;                               // corridor wall fittings: fire points and panels
   var placards = 0;                             // room wall safety signage: one per run of masonry
+  var signs = 0;                                // room signs on the corridor side of a themed door
+  var work = 0;                                 // workstations emitted on the office desks
   var elec:render.facility.FacilityCable.ElecCounts =
     {
       mounts: [],
@@ -172,9 +182,17 @@ class FacilityArea implements Area3D
       // before: the pass above is what fills `tableSink`, and a decal laid across a basin is exactly
       // the failure that grid exists to stop
       clutter = FacilityClutter.build(scene, model);
+      // the workstations on the office desks, between the two families whose buffers they BORROW: the
+      // status lights on their towers go into FacilityDeco's additive LED mesh and their desk leads
+      // into FacilityCable's ribbon, so the whole set costs exactly one draw call of its own. those
+      // two buffers are the only ordering constraint in this whole block, and they are a real one —
+      // the borrower has to fill before the owner merges
+      var workLeds = MeshBufTools.make();
+      var workCable = MeshBufTools.make();
+      work = FacilityWork.build(scene, model, workLeds, workCable);
       // and the room furniture that used to be an upright sprite, straight after the casework it is
       // the same kind of thing as: merged geometry standing against a wall, one mesh per family
-      FacilityDeco.build(scene, model);
+      FacilityDeco.build(scene, model, workLeds);
       // the lobby notice board and the interior wall grime, both after the shell because both hang
       // on FacilityGeom.slab's own faces
       boards = FacilityBoard.build(scene, model);
@@ -196,13 +214,16 @@ class FacilityArea implements Area3D
       // no ordering against anything either — PLACARD_Y hangs it clear of the tallest fitting that
       // can share a cell, so the collision the fire points had to answer does not arise up there
       placards = FacilityPlacard.build(scene, model);
+      // and the room signs on the CORRIDOR side of every themed room's door, which is the opposite
+      // wall and the opposite question — see that pass's own header
+      signs = FacilityPlacard.rooms(scene, model);
       // and the electrical service LAST of the wall families, because it is the only one that reads
       // three of the others: the room sockets share FacilityPlacard.hangs (and sit at 0.25 to 0.95, a
       // whole storey under the signage), and the corridor fittings exclude FacilityTables.runs and
       // FacilityPoint.places outright. None of that is an ordering — all three are pure functions of
       // the saved grid, which is why FacilityPoint can be asked for its own placements here without
       // having run, and why this can equally go before FacilityDeco while asking it for machine rects
-      elec = FacilityCable.build(scene, model);
+      elec = FacilityCable.build(scene, model, workCable);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
       // laziness: everything the array is FOR applies to them unchanged — one per-frame Models.cull,
@@ -229,6 +250,10 @@ class FacilityArea implements Area3D
       // appended nothing here: they went into FacilityGround.bins' places above and share its batch
       for (p in FacilityDeco.drums(scene, model))
         green.push(p);
+      // and the two ROOM TEMPLATE batches, in EXTRA's own order: the WC pans standing in the
+      // washroom's cubicles, and the chairs pushed up to the offices' workstations
+      green.push(FacilityDeco.toilets(scene, model));
+      green.push(FacilityWork.chairs(scene, model));
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
       // the same construction-order fact recorded above and what this quad's larger eps says it
@@ -395,6 +420,14 @@ class FacilityArea implements Area3D
             // means the Surf.TILE gate or the carries-both-ways test broke rather than that the
             // rooms are bare
             placards: placards,
+            // and the two ROOM TEMPLATE families, both merged and so both invisible to `batches`
+            // below. `signs` counts one per office door and TWO per washroom door (the men's and the
+            // women's flank the same opening), so an odd number against a compound with a washroom in
+            // it means one side of that doorway is not corridor. `work` is one per office desk cell
+            // the WORK_EVERY roll dealt AND that has a wall hand to face away from — a 0 in a compound
+            // whose rooms list an office means either the hash gate or the hand search broke
+            signs: signs,
+            work: work,
             // and the ELECTRICAL SERVICE off two merged meshes: the wall mounts AS A LIST and three
             // counts. FOUR readouts and not one because every part of this family fails
             // INDEPENDENTLY and merged geometry has no instance count to read them off — its first

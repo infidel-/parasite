@@ -80,6 +80,13 @@ class FacilityGlow
       // granularity render.facility.FacilityGeom cuts the opening at
       for (w in m.windows)
         {
+          // a washroom's LIGHT WELL throws neither. it is a 1.2-tall slot with its head 0.9 under the
+          // deck, so what leaves it goes UP and outward over the pavement rather than down onto it —
+          // a lit rectangle on the ground under a clerestory is the one thing a clerestory does not
+          // make. And the fake shadow source goes with it, for `door`'s reason one block down: it
+          // stands at SPILL_Y = WALL_H / 2, which is a metre below this opening's own sill
+          if (w.high)
+            continue;
           var lo = CityConfig.cellToWorld(w.col, w.row);
           var hi = CityConfig.cellToWorld(w.col + (w.alongX ? w.len - 1 : 0),
             w.row + (w.alongX ? 0 : w.len - 1));

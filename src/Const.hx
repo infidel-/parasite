@@ -278,6 +278,36 @@ class Const
         { row: 12, col: 4 },
       ],
     },
+    // the washroom pair. `high` so they are standing furniture and not a knee-high drum, `themed` so
+    // highFittings() never deals one on a laboratory floor cell — game.FacilityAreaGenerator.roomToilet
+    // places them itself, by kind and in a run. their frames are free cells of the HIGH row: the
+    // facility has no 2D view at all any more, so a fitting frame is a KEY fittingOf reads back and
+    // nothing draws it
+    {
+      kind: FIT_STALL,
+      high: true,
+      themed: true,
+      frames: [
+        { row: 13, col: 7 },
+      ],
+    },
+    {
+      kind: FIT_BASIN,
+      high: true,
+      themed: true,
+      frames: [
+        { row: 13, col: 8 },
+      ],
+    },
+    // and the washroom's dividing wall, on the same terms
+    {
+      kind: FIT_PARTITION,
+      high: true,
+      themed: true,
+      frames: [
+        { row: 13, col: 9 },
+      ],
+    },
   ];
 
   // how often a high floor decoration comes out as one of the fittings above rather than as one of
@@ -315,7 +345,27 @@ class Const
 // must not be dealt where a fume cabinet belongs — see game.FacilityAreaGenerator.addFitting
   public static function highFittings(): Array<_Fitting>
     {
-      return [for (f in FACILITY_FITTINGS) if (f.high) f];
+      return [for (f in FACILITY_FITTINGS) if (f.high && f.themed != true) f];
+    }
+
+// the same list narrowed to what belongs against the wall of a RESEARCHER'S OFFICE: a bookcase, a
+// document cabinet and a server rack read as office furniture, where a hopper filler, a CNC enclosure
+// and a bench lathe are the laboratory's own and nothing else
+  public static function officeFittings(): Array<_Fitting>
+    {
+      return [for (f in highFittings())
+        if (f.kind == FIT_BOOKCASE ||
+            f.kind == FIT_CABINET ||
+            f.kind == FIT_RACK) f];
+    }
+
+// the frames one kind draws with, for a template placing that kind outright rather than rolling one
+  public static function framesOf(kind: Int): Array<_FittingFrame>
+    {
+      for (f in FACILITY_FITTINGS)
+        if (f.kind == kind)
+          return f.frames;
+      return [];
     }
 
 // does this atlas row draw a decoration that stands ON A BENCH rather than on the floor? read off
@@ -512,6 +562,11 @@ class Const
   public static var FRAME_DOOR_CORP_OPEN = 9;
   public static var FRAME_DOOR_ELEVATOR = 10;
   public static var FRAME_DOOR_ELEVATOR_OPEN = 11;
+  // the solid-leaf door a PRIVATE room takes — a washroom or a researcher's office. the one facility
+  // door that blocks line of sight when it is shut (objects.Door.canSeeThrough), which is why it has
+  // no vision panel in its art either
+  public static var FRAME_DOOR_PRIVATE = 12;
+  public static var FRAME_DOOR_PRIVATE_OPEN = 13;
 
   // row 16 - objects
   public static var ROW_OBJECT2 = 16;
@@ -713,7 +768,11 @@ class Const
   public static var TILE_WINDOWV1 = OFFSET_AREA + 7;
   public static var TILE_WINDOWV2 = OFFSET_AREA + 8;
   public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
-  public static var TILE_XXX = OFFSET_AREA + 10;
+  // a HIGH window: a small light well set near the ceiling, the washroom's own glazing. unwalkable
+  // like every other window tile and, unlike them, NOT see-through (tiles.Default.TILE_SEETHROUGH) —
+  // that is the whole point of it, a room that is lit and still private. it took the dead TILE_XXX
+  // slot, which had one declaration and no use anywhere in the tree
+  public static var TILE_WINDOW_HIGH = OFFSET_AREA + 10;
   public static var TILE_ROAD_UNWALKABLE = OFFSET_AREA + 11;
   public static var TILE_ALLEY_UNWALKABLE = OFFSET_AREA + 12;
   public static var TILE_WALKWAY_UNWALKABLE = OFFSET_AREA + 13;
@@ -1114,6 +1173,9 @@ typedef _Fitting = {
   // all live in the LOW list — those arrive through addDecoration like any other low decoration, and
   // dealing a knee-high drum where a 2.8-tall fitting belongs would empty the rooms of furniture
   high: Bool,
+  // placed by a room TEMPLATE and never by the random high roll: a toilet cubicle is furniture of the
+  // washroom and of nowhere else, so it is high (it stands) and still out of highFittings()
+  ?themed: Bool,
   // every frame that draws as this kind, across whatever rows they sit on
   frames: Array<_FittingFrame>,
 }

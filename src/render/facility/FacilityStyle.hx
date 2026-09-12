@@ -131,6 +131,22 @@ class FacilityStyle
   public static inline var FLOOR_TILE = 'textures/facility/floor-tile.png';
   public static inline var FLOOR_LINO = 'textures/facility/floor-lino.png';
   public static inline var FLOOR_CONCRETE = 'textures/facility/floor-concrete.png';
+  // and one wall + one floor per ROOM TEMPLATE. picked off the cell a face looks into exactly as the
+  // room/corridor pair is (render.facility.FacilityGeom.look), so a themed room costs no generatorInfo
+  // and works on the saved grid alone
+  public static inline var WALL_OFFICE = 'textures/facility/wall-office.png';
+  public static inline var WALL_WASH = 'textures/facility/wall-wash.png';
+  public static inline var FLOOR_OFFICE = 'textures/facility/floor-office.png';
+  public static inline var FLOOR_WASH = 'textures/facility/floor-wash.png';
+  // the office desk, which is the LAB BENCH one texture family apart: same runs, same lip, same
+  // casework, so it costs two textures and no geometry (render.facility.FacilityTables picks the pair
+  // off the cell's own Surf). And the washroom's cubicle partition, which tiles for the same reason
+  // the bench body does — a door rhythm at a fixed pitch, not an authored composition
+  public static inline var DESK_TOP = 'textures/facility/desk-top.png';
+  public static inline var DESK_BODY = 'textures/facility/desk-body.png';
+  public static inline var STALL_PANEL = 'textures/facility/stall-panel.png';
+  // the mirror over the basin run: the one 0..1 face of the set, so its aspect is locked to the art's
+  public static inline var MIRROR = 'textures/facility/mirror.png';
   // the lab benches: the black epoxy worktop (its top face AND its edge band) and the casework
   // cabinet fronts under it. two textures rather than a generated prop, because a bench IS a box —
   // see render.facility.FacilityTables for why the whole run is merged geometry
@@ -192,6 +208,11 @@ class FacilityStyle
   public static inline var DOOR_GLASS = 'textures/facility/door-glass.png';
   public static inline var DOOR_CABINET = 'textures/facility/door-cabinet.png';
   public static inline var DOOR_METAL = 'textures/facility/door-metal.png';
+  // and the PRIVATE leaf a washroom or an office takes. the one door in the compound with NO vision
+  // panel, and that is the art saying what the code does — objects.Door.canSeeThrough is false while
+  // this one is shut, where facility/door-cabinet's own note records that no other facility door
+  // blocks sight and that its panel exists to say so
+  public static inline var DOOR_PRIVATE = 'textures/facility/door-private.png';
   // the hangar's roll-up shutter (Const.TILE_HANGAR_DOOR). a WALL texture, not a door prop: that
   // strip is not an objects.Door and never opens
   public static inline var DOOR_SHUTTER = 'textures/facility/door-hangar.png';
@@ -645,6 +666,170 @@ class FacilityStyle
   // bring 0.0177 over the worktop is 0.78, which drags the sheet's median from 0.1202 to 0.191 and
   // washes out the 52 cells that were already right
   public static var CLUTTER_SKIP:Array<Int> = [ 13, 14, 15, 16, 47, 55, 63 ];
+  // and the office desks' sheet, cut the same way: paper, folders, a keyboard, a mug. its own skip
+  // list, MEASURED against facility/desk-top the same way the one above was measured against the
+  // bench — dark AND solid is the test, and an empty list means the measurement says nothing reads as
+  // a hole in the desk
+  public static inline var CLUTTER_OFFICE_TEX = 'textures/facility/office-clutter.png';
+  public static var CLUTTER_OFFICE_SKIP:Array<Int> = [];
+
+  // ---- the washroom (render.facility.FacilityDeco's two themed fittings) -------------------------
+
+  // all of these are written at the compound's own scale, where WALL_H 6.0 is one 3 m storey and a
+  // world unit is half a metre.
+  //
+  // a cubicle is exactly ONE CELL wide (4.0) and that is not a taste number: the partition between two
+  // of them stands on the shared cell boundary, so a run of them only reads as a rank of cubicles if
+  // every plane lands on the same grid the cells do. Emitted ONCE per boundary — see FacilityDeco
+  // .stall, which takes its `head` side always and its `head + 1` side only at the end of a run
+  public static inline var STALL_W = CityConfig.CELL;
+  // 1.4 m deep and 1.9 m to the top of the partition: a real WC cubicle, and low enough under WALL_H
+  // that the room reads OVER the rank rather than as a set of closed boxes
+  public static inline var STALL_D = 2.8;
+  public static inline var STALL_H = 3.8;
+  // the leaf's own clearance over the floor, 12 cm — the gap under every public stall door there is,
+  // and what stops the rank reading as a row of lockers
+  public static inline var STALL_DOOR_GAP = 0.5;
+  // the laminate's period. the HEIGHT, so one panel is one image top to bottom and the art's rails
+  // and its door line land where they were drawn; u then tiles by the panel's own length
+  public static inline var STALL_TILE = STALL_H;
+  // the basin counter: one per cell, 1.1 m deep so the 1.82-deep basin art lies on it with a margin
+  // fore and aft, and 0.9 m to the rim. the counter wears the cubicle's laminate — one buffer, one
+  // draw call for the whole washroom's casework
+  public static inline var BASIN_W = CityConfig.CELL;
+  public static inline var BASIN_D = 2.2;
+  public static inline var BASIN_H = 1.8;
+  // the mirror over it. SQUARE because the art is square, the notice board's own rule — a texture is
+  // never stretched, so a 0..1 face is sized off its image and not off the wall it hangs on. centred
+  // 1.7 m up, MOUNT_PROUD off the masonry face like every other wall-mounted quad in the compound
+  public static inline var MIRROR_W = 2.0;
+  public static inline var MIRROR_H = 2.0;
+  public static inline var MIRROR_Y = 3.4;
+  // the dividing wall between the washroom's two halves (render.facility.FacilityDeco.partition).
+  // FULL HEIGHT, unlike the cubicle partitions beside it, and that is the read: a cubicle is a box
+  // inside a room and this is what makes two rooms of one. 0.6 thick = 30 cm, which is a stud wall
+  // with a skin either side, and it wears the cubicle laminate so the whole washroom's casework stays
+  // ONE draw call
+  public static inline var PART_T = 0.6;
+  public static inline var PART_H = WALL_H;
+  // ---- the researcher's office ------------------------------------------------------------------
+
+  // the office desk is the lab bench MADE THINNER, and this is the only geometry difference between
+  // them. a bench is a full cell deep (4.0) because a laboratory worktop is a working surface with
+  // services behind it; a writing desk is 80 cm, and at this camera the difference is the whole read —
+  // a full-cell desk is a counter. Applied to the OPEN side alone (the side away from the wall the
+  // run hugs), so the worktop still meets the masonry and no gap opens behind it
+  public static inline var DESK_D = 2.6;
+  // and the desk's END panels, which take art of their own: a run's short faces are a plain carcass
+  // side, where the long face into the room is the drawer front. It is facility/desk-body with the
+  // drawers painted out — one edit, not a second family
+  public static inline var DESK_SIDE = 'textures/facility/desk-side.png';
+
+  // ---- the workstation (render.facility.FacilityWork) --------------------------------------------
+  //
+  // EMITTED GEOMETRY AND NOT A GLB, which is this family's second opinion on itself. It shipped as
+  // facility/computer.glb and was reported as blocky — correctly: a monitor, a tower and a keyboard
+  // are three axis-aligned slabs, which is CLAUDE.md's own "a box is not a prop" case, and a mesh
+  // generator spends 1,200 triangles rounding the corners off shapes that are eight vertices each.
+  // Emitted, the whole set is ~11 quads, its proportions are these numbers rather than a bake's
+  // approximation of them, and every face samples the game's own art at full texel density.
+  //
+  // ONE TEXTURE FOR THE WHOLE SET, sub-rected per face — the facility/sink idiom (see SINK_BASIN_U0),
+  // not one image per face. Four authored cells in a 2x2 sheet: screen, case, tower front, keyboard.
+  // Four textures would be four materials, four meshes and four draw calls to draw one desk toy
+  public static inline var WORK_TEX = 'textures/facility/workstation.png';
+  // its four cells, as indices into a 2x2 read left to right and TOP ROW FIRST — the placards' own
+  // convention, so the v flip lives in one helper rather than in four call sites
+  public static inline var WORK_COLS = 2;
+  public static inline var WORK_C_SCREEN = 0;
+  public static inline var WORK_C_CASE = 1;
+  public static inline var WORK_C_TOWER = 2;
+  public static inline var WORK_C_KEY = 3;
+  // the monitor: 0.9 m to the top of the screen, 0.6 m across, a hand's depth front to back. HALF AS
+  // BIG AGAIN as the glb it replaces (COMPUTER_H was 1.2), because that one was reported as not
+  // reading at all — the facility camera is 18-55 units up and a 1.2-unit object on a 2.0-unit worktop
+  // is 24 device px
+  public static inline var WORK_SCREEN_W = 1.7;
+  public static inline var WORK_SCREEN_H = 1.25;
+  public static inline var WORK_SCREEN_D = 0.18;
+  // its stand: the post under it and the foot the post stands on
+  public static inline var WORK_STAND_W = 0.30;
+  public static inline var WORK_STAND_H = 0.45;
+  public static inline var WORK_FOOT_W = 0.75;
+  public static inline var WORK_FOOT_D = 0.5;
+  public static inline var WORK_FOOT_H = 0.07;
+  // the tower standing beside it, ON the worktop: 1.1 m tall, 0.4 wide, 0.85 deep at the half-metre
+  // unit. a desktop case stood on end, which is where one lives on a desk with no pedestal under it
+  public static inline var WORK_TOWER_W = 0.8;
+  public static inline var WORK_TOWER_H = 1.75;
+  public static inline var WORK_TOWER_D = 1.5;
+  // and the keyboard lying in front of the screen
+  public static inline var WORK_KEY_W = 1.5;
+  public static inline var WORK_KEY_D = 0.6;
+  public static inline var WORK_KEY_H = 0.1;
+  // where the set sits on the cell: the screen's centre back from the desk's open edge, the tower's
+  // own centre to one side of it, and the keyboard forward of the screen. all measured from the
+  // WALL edge of the cell, the hand the desk backs onto
+  public static inline var WORK_BACK = 1.0;
+  public static inline var WORK_TOWER_OFF = 1.25;
+  public static inline var WORK_KEY_FWD = 1.05;
+  // one desk cell in this many carries a set. a workstation on every cell reads as a computer lab, and
+  // the roll is off FacilityModel.mix so it comes back identical on every rebuild
+  public static inline var WORK_EVERY = 3;
+  // the footprint the clutter sheet keeps clear around it, exactly as it keeps clear of a standing
+  // decoration. grown with the set: it now covers a screen, a tower and a keyboard rather than one glb
+  public static inline var WORK_R = 1.6;
+  // the tower's status LEDs: how many, how big, and how far proud of its front face they float. they
+  // go into render.facility.FacilityDeco's OWN led buffer through its extra-buffer hook, so they cost
+  // no mesh, no material, no program and no per-frame work — the rack's blink branch and the rack's
+  // shared uTime already do all of it. DECO_LED_RATE 0.35 is one blink per ~3 turn-durations, which
+  // is the slow pulse a machine at rest has
+  public static inline var WORK_LED_N = 2;
+  public static inline var WORK_LED_SIZE = 0.12;
+  public static inline var WORK_LED_EPS = 0.03;
+  // and the leads: keyboard to screen and keyboard to tower, drawn with render.facility.FacilityCable
+  // .strip into that family's OWN ribbon buffer, so they ride its texture, its mesh and its draw call.
+  // a flatter bow than a wall drop's — a lead lying on a desk sags across the surface, it does not
+  // hang — and the wave is what stops two runs on neighbouring desks reading as one ruled line
+  public static inline var WORK_CABLE_BOW = 0.22;
+  public static inline var WORK_CABLE_WAVE = 0.09;
+  // how far the lead floats over the worktop it lies on. between CLUTTER_Y and SINK_Y for their
+  // reason: the cap itself is at zero and a coplanar ribbon z-fights the whole length of its run
+  public static inline var WORK_CABLE_Y = 0.018;
+
+  // the office chair, the one glb of the researcher's set — a real irregular silhouette (a shaped
+  // back, arms, a five-star base on castors) and so the case FOR a mesh generator, where the
+  // workstation above is the case against one. 1.05 m to the top of the back
+  public static inline var CHAIR_H = 2.1;
+  // how far its centre stands off the desk's open edge, and the jitter on its yaw either side of
+  // square. a chair pushed dead square under every desk reads as a showroom
+  public static inline var CHAIR_OUT = 1.5;
+  public static inline var CHAIR_YAW_JIT = 0.35;
+
+  // the WC pan itself, the other glb of the set: 0.75 m to the cistern top and 0.7 m front to back.
+  // render.Models.instanced scales by HEIGHT alone, so TOILET_D is only used to stand it off the wall
+  public static inline var TOILET_H = 1.5;
+  public static inline var TOILET_D = 1.4;
+
+  // ---- the room signs (render.facility.FacilityPlacard.rooms) -------------------------------------
+  //
+  // the plate beside a THEMED room's door, on the CORRIDOR side — which is the side that needs it, and
+  // the side the lab placards never reach (those are gated on Surf.TILE and hang inside the room).
+  // ONE 2x2 sheet for all four: men, women, and two office nameplates whose text is deliberately
+  // illegible, because a legible one would have to say a name and the compound has no names
+  public static inline var SIGN_TEX = 'textures/facility/room-signs.png';
+  public static inline var SIGN_COLS = 2;
+  public static inline var SIGN_MEN = 0;
+  public static inline var SIGN_WOMEN = 1;
+  public static inline var SIGN_OFFICE_A = 2;
+  public static inline var SIGN_OFFICE_B = 3;
+  // the cells are square and the art is square, so W == H and nothing is stretched — the notice
+  // board's rule. smaller than a PLACARD_W 1.8 hazard plate: a door sign is read from a metre away
+  public static inline var SIGN_W = 1.3;
+  public static inline var SIGN_H = 1.3;
+  // how high its centre hangs. over head height and under the lab placards' 4.75, so a corridor with
+  // both in it reads as two registers of signage rather than one ragged line
+  public static inline var SIGN_Y = 4.0;
 
   // ---- corridor casework -----------------------------------------------------------------------
 
@@ -1620,6 +1805,34 @@ class FacilityStyle
   // standing a third of a storey lower
   public static inline var WINDOW_LIT_2 = 'textures/facility/window-ribbon-2tile-lit.png';
   public static inline var WINDOW_ASPECT_2 = 1.963;
+  // ---- the washroom's LIGHT WELLS (Wall.WINDOW_HIGH) --------------------------------------------
+  //
+  // the opposite design to the two ribbons above and every number says so. A ribbon is sized FROM its
+  // art and the sill takes up the slack, because a run is 2 or 3 cells and one image spans the whole
+  // of it. A light well is ONE CELL and the generator writes them every other cell, so there is no run
+  // to span: one image maps 0..1 across each opening, the aspect is fixed here rather than measured off
+  // the drop, and the art is painted to THIS shape instead of the shape being read back off the art.
+  //
+  // the art's own width:height, MEASURED off the built crop (512 x 158) exactly as the two ribbons'
+  // aspects are measured off theirs — the art is never stretched, so the height is DERIVED and not
+  // chosen. One cell wide gives 4.0 / 3.2405 = 1.234 tall: 0.62 m of glass at the half-metre unit
+  // WALL_H fixes, which is a real WC light well
+  public static inline var WINDOW_HIGH_ASPECT = 3.2405;
+  public static inline var WINDOW_HIGH_H = CityConfig.CELL / WINDOW_HIGH_ASPECT;
+  // and how far its HEAD sits under the roof deck, which is the number that actually matters: a slot
+  // is placed off the ceiling and not off the floor. 0.9 = 45 cm of masonry over it, so the sill lands
+  // at 3.87 — chest-high plus a metre, and nothing in the room is seen through it from outside
+  public static inline var WINDOW_HIGH_DROP = 0.9;
+  public static inline var WINDOW_HIGH_SILL = WALL_H - WINDOW_HIGH_DROP - WINDOW_HIGH_H;
+  // it spans its cell's FULL WIDTH, and that is a geometry decision rather than a taste one: the hole
+  // a wall face leaves is recorded per cell as one sill/head pair (render.facility.FacilityGeom.build),
+  // so a slot narrower than its cell would need the masonry on each hand emitted as a special case for
+  // the one family that wants it. The generator writes a well every OTHER cell instead, which buys the
+  // same punched rhythm out of the grid and costs nothing — a 4-unit slot with 4 units of wall between
+  // it and the next
+  // its own art, which is a single sash and not a run of panes. it maps 0..1 over the opening, so this
+  // file's aspect above is the whole contract with it
+  public static inline var WINDOW_HIGH_TEX = 'textures/facility/window-high.png';
   // how much BIGGER than its opening a pane is drawn, as a fraction of its own size, half of it at
   // each edge. IN BOTH AXES, so the art keeps its aspect and nothing is stretched — the extra is
   // buried in the masonry either way, because the glazing slab is GLASS_T thick inside a WALL_T wall

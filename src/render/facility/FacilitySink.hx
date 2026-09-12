@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -58,7 +59,10 @@ class FacilitySink
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
+            // an OFFICE desk takes none: a laboratory bench terminates in a sink, a writing desk does
+            // not, and the washroom's own basins are its template's furniture
             if (!m.table[row][col] ||
+                m.surf[row][col] == Surf.OFFICE ||
                 seen.exists(key(m, col, row)))
               continue;
             var c = pick(m, block(m, col, row, seen));

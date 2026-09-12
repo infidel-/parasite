@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -56,6 +57,12 @@ class FacilityClutter
     for (i in 0...FacilityStyle.CLUTTER_CELLS)
       if (FacilityStyle.CLUTTER_SKIP.indexOf(i) < 0) i
   ];
+  // and the office desks' own sheet, cut the same 8x8 way. a second SHEET and not more cells on the
+  // first: a beaker, a petri dish and a pipette stand are the laboratory's, and a desk wants paper
+  static var PICK_OFFICE:Array<Int> = [
+    for (i in 0...FacilityStyle.CLUTTER_CELLS)
+      if (FacilityStyle.CLUTTER_OFFICE_SKIP.indexOf(i) < 0) i
+  ];
 
 // every decal in the compound as ONE merged mesh. returns how many landed, for __facility() — a
 // merged mesh has no instance count and this is the only handle on the family, the same reason
@@ -63,6 +70,7 @@ class FacilityClutter
   public static function build(scene:Scene, m:Facility):Int
     {
       var b = MeshBufTools.make();
+      var bOffice = MeshBufTools.make();
       var n = 0;
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -71,9 +79,11 @@ class FacilityClutter
             if (!m.table[row][col] ||
                 m.tableSink[row][col])
               continue;
-            n += cell(b, m, col, row);
+            var office = (m.surf[row][col] == Surf.OFFICE);
+            n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK);
           }
-      add(scene, b);
+      add(scene, b, FacilityStyle.CLUTTER_TEX);
+      add(scene, bOffice, FacilityStyle.CLUTTER_OFFICE_TEX);
       return n;
     }
 
@@ -84,7 +94,7 @@ class FacilityClutter
 // THE ROLLED COUNT REACHES ZERO ON PURPOSE. `h % (CLUTTER_MAX + 1)` gives 0..3 evenly, and the empty
 // cells are what stop 139 worktops reading as a grid again — which is the whole complaint this family
 // answers. Flooring it at 1 would put a thing on every cell and rebuild the rhythm
-  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int):Int
+  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>):Int
     {
       var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
       var want = g % (FacilityStyle.CLUTTER_MAX + 1);
@@ -110,6 +120,16 @@ class FacilityClutter
           x: c.x,
           z: c.z,
           r: FacilityStyle.CLUTTER_FLAT_R,
+        });
+      // and the office desk's workstation, which stands on the worktop and is not a decoration at all
+      // — it is emitted by FacilityWork off the grid, so it is asked for rather than read out of a
+      // grid this pass could have run before
+      var pc = FacilityWork.at(m, col, row);
+      if (pc != null)
+        spots.push({
+          x: pc.x,
+          z: pc.z,
+          r: FacilityStyle.WORK_R,
         });
       var n = 0;
       for (i in 0...want)
@@ -152,7 +172,7 @@ class FacilityClutter
           });
           emit(b, x, z, sz,
             ((h >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            PICK[(h >>> 22) % PICK.length]);
+            pick[(h >>> 22) % pick.length]);
           n++;
         }
       return n;
@@ -199,12 +219,12 @@ class FacilityClutter
 // NO CONTACT POOL, unlike everything that STANDS on a bench. A pool is the shadow of a thing meeting
 // the surface it rests on; this IS the surface it rests on, with nothing between. The basin beside it
 // gets none for the same reason
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.CLUTTER_TEX, 'wall', 1),
+        map: Textures.loadTexture(tex, 'wall', 1),
         alphaTest: FacilityStyle.CLUTTER_CUT,
         side: THREE.DoubleSide,
       })));

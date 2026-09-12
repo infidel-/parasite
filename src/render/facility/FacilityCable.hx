@@ -121,10 +121,13 @@ class FacilityCable
   static var zones:Map<Int, Bool>;
 
 // the whole service, as two merged meshes
-  public static function build(scene:Scene, m:Facility):ElecCounts
+// `extra` is a ribbon buffer somebody else filled — render.facility.FacilityWork's desk leads — and
+// it is merged with this family's own so the whole compound's cable, wall to worktop, stays ONE draw
+// call. a borrowed buffer and not a second mesh, for the reason the pack sheet itself exists
+  public static function build(scene:Scene, m:Facility, extra:MeshBuf):ElecCounts
     {
       var pack = MeshBufTools.make();
-      var cab = MeshBufTools.make();
+      var cab = extra;
       hatch(m);
       var socks = sockets(m);
       var fits = fittings(m);
@@ -361,8 +364,11 @@ class FacilityCable
 // cell with nothing standing on it
   static inline function bare(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
+      // `true` widens the surface gate to a researcher's OFFICE: the room the compound's other
+      // electrical kit stays out of for no reason at all — an office has sockets and a skirting run
+      // like every other room, and the desks and the workstations on them are what they feed
       return FacilityModel.inside(m, col, row) &&
-        FacilityPlacard.hangs(m, col, row, dir) &&
+        FacilityPlacard.hangs(m, col, row, dir, true) &&
         m.deco[row][col] == 0 &&
         !m.table[row][col];
     }
@@ -934,7 +940,7 @@ class FacilityCable
 //
 // v runs along the length at CABLE_TILE and u across the ribbon 0..1, which is the mapping the art's
 // cross-section shading exists for — that is what makes a flat strip read as round
-  static function strip(b:MeshBuf, o:StripOpts):Void
+  public static function strip(b:MeshBuf, o:StripOpts):Void
     {
       var dx = o.c[0] - o.a[0], dy = o.c[1] - o.a[1], dz = o.c[2] - o.a[2];
       var len = Math.sqrt(dx * dx + dy * dy + dz * dz);

@@ -16,6 +16,11 @@ enum abstract Surf(Int) from Int to Int
   var LINO = 6;      // corridor floor, and every door cell
   var GRATE = 7;     // a drain cell: one cell of art that REPLACES the floor rather than overlaying it
   var CONCRETE = 8;  // hangar floor
+  // the two ROOM TEMPLATES besides the laboratory. the generator writes one floor tile per template
+  // (game.FacilityAreaGenerator.roomCabinet / roomToilet) and that tile is the whole record — these
+  // two values are what every pass downstream reads a themed room off
+  var OFFICE = 9;    // a researcher's office: desks, bookcases, office clutter
+  var WASH = 10;     // a washroom: cubicles, basins, a mirror
 }
 
 // what a cell blocks. windows are their own value because they are the one wall that is
@@ -26,6 +31,11 @@ enum abstract Wall(Int) from Int to Int
   var SOLID = 1;
   var WINDOW = 2;
   var SHUTTER = 3;   // the hangar's big door strip: solid, opaque, and not a Door object
+  // the washroom's light well: glazed, but set so high in the wall that neither the player nor the
+  // camera sees through it. it is its own value rather than a flag on WINDOW because EVERY predicate
+  // that asks "is this see-through" has to answer NO for it — including render.world.VisionMask's
+  // blocker test, which reads `wall != WINDOW` and so takes this one as solid with no edit at all
+  var WINDOW_HIGH = 4;
 }
 
 // which of the three painted door pairs a cell's leaves draw with. the generator deals FOUR kinds
@@ -36,6 +46,10 @@ enum abstract Look(Int) from Int to Int
   var GLASS = 0;
   var CABINET = 1;
   var METAL = 2;
+  // and the PRIVATE leaf, which the washroom and the researcher's office take. a fourth look and not
+  // a repaint of CABINET because it is a different door: no vision panel in the art, and
+  // objects.Door.canSeeThrough returns false while it is shut
+  var PRIVATE = 3;
 }
 
 // one door OPENING: a single cell holding a pair of leaves that swing apart.
@@ -93,10 +107,15 @@ typedef Structure = {
 typedef Window = {
   col:Int,        // first cell of the run
   row:Int,
-  len:Int,        // 2 or 3
+  len:Int,        // 2 or 3, and always 1 for a light well
   alongX:Bool,    // an H run goes along +x, a V run along +z
   inDir:Int,      // -1 or +1 on the PERPENDICULAR axis, pointing at the interior
   structure:Int,  // index into Facility.structures
+  // a washroom LIGHT WELL rather than a ribbon: one cell, set high, opaque to sight, and — the part
+  // that matters outdoors — it throws NO light rectangle on the ground and stands in for no shadow
+  // source (render.facility.FacilityGlow skips these), because a slot under the eaves does not
+  // spill a lit floor onto the pavement the way a full-height pane does
+  high:Bool,
 };
 
 // one laboratory-bench decoration, as the contact pool under it needs it — and ALL THREE numbers are
@@ -234,7 +253,35 @@ class FacilityModel
       findDoors(m, area);
       findDeco(m, area, icon);
       m.rooms = (area.generatorInfo != null ? area.generatorInfo.rooms : []);
+      themeRooms(m);
       return m;
+    }
+
+// spread a themed room's surface over the WHOLE of its rect.
+//
+// a desk cell is a bench TILE and every bench tile resolves to Surf.TILE by the row-8 catch-all in
+// surfOf, so without this the floor under an office's desks — and the wall face behind them, which
+// FacilityGeom.look takes off the cell it looks INTO — stays laboratory. the rect comes from
+// generatorInfo, so a save made before room templates existed holds no themed cell in any rect and
+// this is a no-op on it
+  static function themeRooms(m:Facility):Void
+    {
+      for (room in m.rooms)
+        {
+          var theme = Surf.NONE;
+          for (row in room.y1...room.y2 + 1)
+            for (col in room.x1...room.x2 + 1)
+              if (inside(m, col, row) &&
+                  isThemed(m.surf[row][col]))
+                theme = m.surf[row][col];
+          if (theme == Surf.NONE)
+            continue;
+          for (row in room.y1...room.y2 + 1)
+            for (col in room.x1...room.x2 + 1)
+              if (inside(m, col, row) &&
+                  m.surf[row][col] == Surf.TILE)
+                m.surf[row][col] = theme;
+        }
     }
 
 // an empty model of the given size (also the base for demo())
@@ -285,6 +332,14 @@ class FacilityModel
           t == Const.TILE_FLOOR_TILE_UNWALKABLE ||
           t == Const.TILE_FLOOR_TILE_CANNOTSEE)
         return TILE;
+      // the two themed floors, each with the unwalkable twin one tileset row below it that the cells
+      // under furniture take. BEFORE the row-8 catch-all below, which would swallow both
+      if (t == Const.TILE_FLOOR_WOOD1 ||
+          t == Const.TILE_FLOOR_WOOD1 + 16)
+        return OFFICE;
+      if (t == Const.TILE_FLOOR_MARBLE1 ||
+          t == Const.TILE_FLOOR_MARBLE1 + 16)
+        return WASH;
       // every table tile, and anything else the chem-lab block adds later, stands on room floor
       if (t >= Const.OFFSET_ROW8)
         return TILE;
@@ -316,6 +371,8 @@ class FacilityModel
         return SHUTTER;
       if (t >= Const.TILE_WINDOWH1 && t <= Const.TILE_WINDOWV3)
         return WINDOW;
+      if (t == Const.TILE_WINDOW_HIGH)
+        return WINDOW_HIGH;
       return OPEN;
     }
 
@@ -328,7 +385,7 @@ class FacilityModel
         row < m.h;
     }
 
-// is this an INDOOR floor cell — the four surfaces that only ever exist inside a structure?
+// is this an INDOOR floor cell — the six surfaces that only ever exist inside a structure?
   public static inline function isIndoor(m:Facility, col:Int, row:Int):Bool
     {
       if (!inside(m, col, row))
@@ -337,7 +394,18 @@ class FacilityModel
       return s == Surf.TILE ||
         s == Surf.LINO ||
         s == Surf.GRATE ||
-        s == Surf.CONCRETE;
+        s == Surf.CONCRETE ||
+        s == Surf.OFFICE ||
+        s == Surf.WASH;
+    }
+
+// is this cell a themed ROOM floor — an office or a washroom? the passes that furnish a LABORATORY
+// gate on Surf.TILE and so skip these for free; this is for the ones that have to tell the two
+// themes apart rather than tell them from the lab
+  public static inline function isThemed(s:Surf):Bool
+    {
+      return s == Surf.OFFICE ||
+        s == Surf.WASH;
     }
 
 // is this walkway cell the PARK PATH rather than perimeter pavement — the run of walkway it lies
@@ -543,6 +611,39 @@ class FacilityModel
               alongX: alongX,
               inDir: inDir,
               structure: m.owner[ir][ic],
+              high: false,
+            });
+          }
+      findHighWindows(m);
+    }
+
+// and the washroom's light wells, which are one cell each and never a run — the generator writes them
+// every OTHER cell, so there is nothing to group. their own pass rather than a branch in the one
+// above, because the whole of that function is about recovering a run's length and its axis
+  static function findHighWindows(m:Facility):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.wall[row][col] != Wall.WINDOW_HIGH)
+              continue;
+            // the run axis is the wall line, i.e. whichever axis has wall on both hands
+            var alongX = isWall(m, col - 1, row) && isWall(m, col + 1, row);
+            var dc = alongX ? 0 : 1;
+            var dr = alongX ? 1 : 0;
+            var inDir = isIndoor(m, col + dc, row + dr) ? 1 : -1;
+            var ic = col + dc * inDir;
+            var ir = row + dr * inDir;
+            if (!isIndoor(m, ic, ir))
+              continue;
+            m.windows.push({
+              col: col,
+              row: row,
+              len: 1,
+              alongX: alongX,
+              inDir: inDir,
+              structure: m.owner[ir][ic],
+              high: true,
             });
           }
     }
@@ -581,8 +682,13 @@ class FacilityModel
           var inDir = 1;
           if (a != b)
             inDir = (b ? 1 : -1);
-          else if (m.surf[o.y - dr][o.x - dc] == Surf.TILE &&
-                   m.surf[o.y + dr][o.x + dc] != Surf.TILE)
+          // A ROOM IS ANYTHING INDOORS THAT IS NOT THE CORRIDOR, and the test used to be
+          // `== Surf.TILE` on both hands — which was the same thing until the room TEMPLATES arrived
+          // and a room could be OFFICE or WASH. With those, neither hand of a themed room's door read
+          // as a room, the tie fell through to +1, and half of them swung into the corridor instead:
+          // the very doors that most need to swing inward, since they are the ones that shut
+          else if (m.surf[o.y - dr][o.x - dc] != Surf.LINO &&
+                   m.surf[o.y + dr][o.x + dc] == Surf.LINO)
             inDir = -1;
           var closed = cast(o, objects.Door).closedCol;
           m.doors.push({
@@ -683,6 +789,8 @@ class FacilityModel
         return GLASS;
       if (closedCol == Const.FRAME_DOOR_METAL)
         return METAL;
+      if (closedCol == Const.FRAME_DOOR_PRIVATE)
+        return PRIVATE;
       return CABINET;
     }
 
@@ -756,6 +864,32 @@ class FacilityModel
       m.deco[3][7] = _FittingKind.FIT_SHELVING + 1;
       m.deco[3][8] = _FittingKind.FIT_BOOKCASE + 1;
       m.deco[3][9] = _FittingKind.FIT_RACK + 1;
+      // and one room of each TEMPLATE, because each is its own material: two wall textures, two floor
+      // textures, the desk pair, the cubicle laminate, the mirror and the office clutter sheet are all
+      // programs that would otherwise compile on the first real facility entry.
+      //
+      // the OFFICE is the south-west room, with a desk run against the ring wall so
+      // FacilityTables.computerAt finds a hand and the workstation batch warms too
+      for (row in 8...11)
+        for (col in 3...10)
+          m.surf[row][col] = OFFICE;
+      for (col in 4...7)
+        m.table[10][col] = true;
+      // and the WASHROOM is the north-east one: a rank of cubicles against the ring wall and a basin
+      // beside them, which between them warm the laminate, the sink sheet and the mirror
+      for (row in 3...6)
+        for (col in 11...19)
+          m.surf[row][col] = WASH;
+      m.deco[3][12] = _FittingKind.FIT_STALL + 1;
+      m.deco[3][13] = _FittingKind.FIT_STALL + 1;
+      m.deco[3][16] = _FittingKind.FIT_BASIN + 1;
+      // the dividing wall between its two halves, and two LIGHT WELLS in the ring wall over it. the
+      // wells are a material of their own (their own art, their own pane buffer) and the partition
+      // rides the cubicle laminate, but both still have to EXIST here or the washroom's geometry is
+      // first built on a real entry
+      m.deco[4][15] = _FittingKind.FIT_PARTITION + 1;
+      m.wall[2][14] = WINDOW_HIGH;
+      m.wall[2][16] = WINDOW_HIGH;
       findStructures(m);
       findWindows(m);
       m.doors.push({
@@ -777,6 +911,17 @@ class FacilityModel
         inDir: -1,
         look: GLASS,
         front: true,
+        structure: 0,
+      });
+      // and one PRIVATE leaf, the washroom's own: a fourth look is a fourth material and a fourth
+      // instanced batch, so without one here it compiles on the first compound that has a washroom
+      m.doors.push({
+        col: 14,
+        row: 6,
+        alongX: true,
+        inDir: -1,
+        look: PRIVATE,
+        front: false,
         structure: 0,
       });
       for (d in m.doors)

@@ -2,6 +2,8 @@ package render.facility;
 
 import three.Three;
 import citygen.CityConfig;
+import render.Models;
+import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -70,13 +72,42 @@ class FacilityTables
       var half = (CityConfig.GRID * CELL) / 2;
       var top = MeshBufTools.make();
       var body = MeshBufTools.make();
+      // a desk is this same run in the office's own finish. the generator lays it with the SAME bench
+      // tiles — the furniture is identical, a worktop over casework, and only the material differs —
+      // so the split is two more buffers and no geometry at all (see FacilityStyle.DESK_TOP)
+      var deskTop = MeshBufTools.make();
+      var deskBody = MeshBufTools.make();
+      // and the desk's END panels, which take the drawerless carcass side. a run's short faces are
+      // not its drawer front, and one texture over all four was the same mistake FacilityStyle's
+      // DECO_ block records for a bookcase wearing its own spines on its top
+      var deskSide = MeshBufTools.make();
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
             if (!m.table[row][col])
               continue;
+            var office = (m.surf[row][col] == Surf.OFFICE);
+            var bTop = (office ? deskTop : top);
+            var bBody = (office ? deskBody : body);
             var x0 = col * CELL - half, x1 = x0 + CELL;
             var z0 = row * CELL - half, z1 = z0 + CELL;
+            // A DESK IS A THINNER BENCH, and it is the only geometry difference between the two. the
+            // cell is shrunk on its OPEN side — the hand away from the wall the run backs onto — so
+            // the carcass still meets the masonry and only the front edge comes forward less. every
+            // rect below is taken off this one, so the lip, the edge band, the casework and the
+            // contact pool all follow with no further arithmetic
+            var hand = (office ? wallHand(m, col, row) : -1);
+            if (hand >= 0)
+              {
+                var cut = CELL - FacilityStyle.DESK_D;
+                switch (hand ^ 1)
+                  {
+                    case 0: z0 += cut;
+                    case 1: z1 -= cut;
+                    case 2: x0 += cut;
+                    default: x1 -= cut;
+                  }
+              }
             // the contact pool takes the PLAIN cell and not the grown worktop: the field darkens the
             // floor the casework stands on, and the lip is an overhang a metre above it
             ContactMask.prop(x0, x1, z0, z1);
@@ -99,7 +130,7 @@ class FacilityTables
               FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
             var oz1 = facesDoor(m, col, row, 1) ||
               FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
-            FacilityGeom.cap(top, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
+            FacilityGeom.cap(bTop, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
               FacilityStyle.BENCH_TOP_TILE);
             // and the round pool of shade under whatever the generator stood on this worktop —
             // FacilityDetail's own flat quad, the one it already lays under a box on a shelf plate,
@@ -117,7 +148,18 @@ class FacilityTables
             // the PLATE is the GROWN rect and not the plain cell: the lip is real worktop, so a
             // decoration near the edge is allowed to cast onto it, and `pooled`'s per-side clamp is
             // what stops the gradient hanging off the front
-            var td = m.tableDeco[row][col];
+            // an office desk never takes the laboratory sprite's pool: that decoration's icon is
+            // suppressed (the glassware is the lab's) and the clutter standing in for it carries its
+            // own shadow in the art. what it CAN carry is the workstation's, which is a real object
+            // standing on the worktop
+            var cp = (office ? FacilityWork.at(m, col, row) : null);
+            var td = (office ?
+              (cp == null ? null : {
+                dx: cp.x - ((col + 0.5) * CELL - half),
+                dz: cp.z - ((row + 0.5) * CELL - half),
+                r: FacilityStyle.WORK_R,
+              }) :
+              m.tableDeco[row][col]);
             if (td != null)
               FacilityDetail.deck({
                 cx: (col + 0.5) * CELL - half + td.dx,
@@ -138,12 +180,14 @@ class FacilityTables
                 if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]))
                   continue;
                 // the worktop's edge band, out on the grown rect with it
-                FacilityGeom.face(top, ox0, ox1, oz0, oz1, dir,
+                FacilityGeom.face(bTop, ox0, ox1, oz0, oz1, dir,
                   FacilityStyle.BENCH_H - FacilityStyle.BENCH_EDGE, FacilityStyle.BENCH_H,
                   FacilityStyle.BENCH_TOP_TILE);
                 // and the casework on the plain cell, so u spans exactly CELL and the door rhythm
-                // lands whole
-                panel(body, x0, x1, z0, z1, dir);
+                // lands whole. an office desk's two END faces — the ones on the axis the run travels
+                // along — take the drawerless side instead
+                var end = (hand >= 0 && (dir < 2) != (hand < 2));
+                panel(end ? deskSide : bBody, x0, x1, z0, z1, dir);
               }
           }
       // no soffit under the overhang and no floor under the casework. the ring left open at the top
@@ -158,7 +202,24 @@ class FacilityTables
       var n = cabinets(m, top, body);
       add(scene, top, FacilityStyle.BENCH_TOP);
       add(scene, body, FacilityStyle.BENCH_BODY);
+      add(scene, deskTop, FacilityStyle.DESK_TOP);
+      add(scene, deskBody, FacilityStyle.DESK_BODY);
+      add(scene, deskSide, FacilityStyle.DESK_SIDE);
       return n;
+    }
+
+// which side of this table cell the run backs onto, or -1 for a free-standing one.
+//
+// a desk is laid under the GLAZING, so the hand it stands against is usually a window and the test is
+// isWall and not isSolidWall — a desk is against whatever the desk is against. PUBLIC because
+// render.facility.FacilityWork needs the same answer to face a screen the right way, and two copies
+// of a wall search is exactly how a desk and the thing standing on it end up disagreeing
+  public static function wallHand(m:Facility, col:Int, row:Int):Int
+    {
+      for (d in 0...4)
+        if (FacilityModel.isWall(m, col + DC[d], row + DR[d]))
+          return d;
+      return -1;
     }
 
 // does a door opening lie past this cell's `dir` face — straight through it, or diagonally past

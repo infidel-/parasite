@@ -151,6 +151,9 @@ class Door extends AreaObject
         return 'glass';
       else if (closedCol < 12)
         return 'elevator';
+      // the private leaf is the cabinet door with a different face on it, and it sounds like one
+      else if (closedCol < 14)
+        return 'cabinet';
       return 'metal';
     }
 
@@ -275,6 +278,12 @@ class Door extends AreaObject
 // check if line of sight can pass through this door object
   public override function canSeeThrough(): Bool
     {
+      // a PRIVATE door is solid: a washroom and an office are rooms you cannot be seen into, which is
+      // the whole reason they take their own leaf. the test is the closed frame and not the area kind,
+      // so it travels with the object and needs nothing persisted beyond the icon that already is
+      if (closedRow == Const.ROW_DOORS &&
+          closedCol == Const.FRAME_DOOR_PRIVATE)
+        return isOpen;
       if (imageName != UndergroundLab.OBJECTS_IMAGE)
         return true;
       return (imageRow == openRow &&

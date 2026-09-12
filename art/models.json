@@ -574,6 +574,38 @@
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.85,0.85,0.85,1/ao0.55,-,-",
       "ao": 0.55
     },
+    "facility/toilet": {
+      "src": "facility/toilet.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 684411432,
+      "baseColor": [
+        0.22,
+        0.22,
+        0.22,
+        1
+      ],
+      "note": "the WC pan standing in a washroom cubicle (render.facility.FacilityDeco.toilets). A GLB AND NOT GEOMETRY for the drum's reason: a pan is a curved shell on a pedestal with a cistern behind it, and FacilityGeom emits axis-aligned quads only - the cubicle AROUND it is the emitted half of the same fitting (two partitions and a door leaf in facility/stall-panel), which is the silhouette-vs-surface split drawn straight through the middle of one object. COMPONENTS READ 9 AT 51.0% AND THE GATE CALLS THAT A REJECT: that is facility/lab-trolley's finding again - the pan, the pedestal, the cistern, the lid and the seat really are five parts of one fixture, and split 1.22x says the master decimates cleanly, so it ships tris 1200 rather than being generated at the budget. THE REFERENCE WAS LEFT AT p50 207 ON PURPOSE and the value is corrected HERE instead: propstat's --lift to 120 is a gamma of 3.588, which published the drop's own warm cast - channel spread 26 -> 54, a tan toilet - and the whole rule is that a lift moves value and cannot fix hue. baseColor is the flat scalar that does: the bake is 230/210/203 and 0.22 lands it near 110 srgb, which puts white ceramic just over facility/floor-wash's 100.5 and facility/wall-wash's 110.4. It is deliberately ABOVE the 78 the indoor props record - those are painted steel and this is the one thing in the room that is meant to be the light object.",
+      "last_converted": "2026-09-11T22:07:17Z",
+      "last_sig": "n1/1200/512/0.005/-/-/bc0.22,0.22,0.22,1"
+    },
+    "facility/chair": {
+      "src": "facility/chair.glb",
+      "tris": 1200,
+      "tex": 512,
+      "error": 0.005,
+      "seed": 1110801811,
+      "baseColor": [
+        0.45,
+        0.45,
+        0.45,
+        1
+      ],
+      "note": "the chair at a researcher's workstation (render.facility.FacilityWork.chairs). IT IS THE HALF OF THAT FAMILY THAT EARNED A MESH GENERATOR, and the pair is the triage rule drawn straight through one desk: the workstation beside it was a glb, came back blocky, and is emitted geometry now (22 quads off facility/workstation) because a monitor, a tower and a keyboard are three axis-aligned slabs; a task chair is a shaped back, two arms, a column and a five-star base on castors, which is an outline no quad states. COMPONENTS READ 9 AT 57.7% AND THE GATE CALLS THAT A REJECT - facility/toilet's finding verbatim, and the same answer: those really are nine parts of one chair, and split 1.35x says the master decimates cleanly, so it ships at tris 1200 rather than being generated at the budget. The reference needed NO lift: propstat read p50 75, inside the 69-77 band that bakes correctly, with margins clear on all four sides. baseColor 0.45 flat takes the 60/127/117 bake from luma 112 to ~78 srgb, the indoor number facility/lab-trolley, the drums and the deleted computer all record - and flat rather than per-channel on facility/car's rule, because the teal is the BRIEF here and not a cast. It is the most saturated thing in an office at chroma 69.5, which is deliberate: a compound of grey boxes gets one accent, and the style_prop string exists to keep a manufactured colour readable. tex 512 AND THE TEXELS-PER-TRI BAND IS DELIBERATELY MISSED, which is the one number here that wanted an argument. The budget was not reached - the error cap holds it at 2,930 tris against the 1,200 asked - so 256 lands 22 texels/tri and 512 lands 89, and neither is the ~43-55 band. The band is a triangle-density heuristic; BLURRINESS is measured per WORLD UNIT, and this is the biggest prop of the set at CHAIR_H 2.1 against facility/toilet's 1.5. At 512 it samples 244 texels per world unit where that one samples 341, so it is already the softer of the two; 384 would put it at 183 and make the larger prop visibly blurrier than the smaller one standing across the corridor from it.",
+      "last_converted": "2026-09-12T01:06:55Z",
+      "last_sig": "n1/1200/512/0.005/-/-/bc0.45,0.45,0.45,1"
+    },
     "facility/drum-steel": {
       "src": "sewer/drum.glb",
       "tris": 1200,

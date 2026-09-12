@@ -140,11 +140,19 @@ class FacilityPlacard
 // PUBLIC because render.facility.FacilityCable's panels want the same three facts and a third copy of
 // this test is a third place to get the carries-both-ways half wrong. It is a pure function of the
 // saved grid, so either family may run first — FacilityPoint.places' own discipline
-  public static function hangs(m:Facility, col:Int, row:Int, dir:Int):Bool
+// `office` widens the surface gate to a researcher's office as well, and ONLY the electrical family
+// passes it: an office is a room with sockets and skirting runs in it like any other, but the eight
+// plates on the two sheets here are laboratory hazard signage — a biohazard trefoil over a desk is
+// the exact failure the Surf.TILE gate exists to prevent
+  public static function hangs(m:Facility, col:Int, row:Int, dir:Int, ?office:Bool):Bool
     {
-      if (!FacilityModel.inside(m, col, row) ||
-          m.surf[row][col] != Surf.TILE ||
-          !FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
+      if (!FacilityModel.inside(m, col, row))
+        return false;
+      var s = m.surf[row][col];
+      if (s != Surf.TILE &&
+          !(office == true && s == Surf.OFFICE))
+        return false;
+      if (!FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
         return false;
       var c = col + DC[dir];
       var r = row + DR[dir];
@@ -264,6 +272,90 @@ class FacilityPlacard
         }
       var x = (d == 2 ? s.x0 - e : s.x1 + e);
       pane(b, x, x, c.z - h, c.z + h, d, y0, y1, i);
+    }
+
+// the ROOM SIGNS: one plate on the corridor wall beside a themed room's door.
+//
+// A SEPARATE PASS AND A SEPARATE SHEET, because it is the opposite of everything above it. The eight
+// hazard plates hang INSIDE a laboratory, on the room's own side of the wall, chosen by what stands
+// under them. These hang OUTSIDE, on the corridor side, chosen by what the room IS — which is the one
+// question the corridor asks and the one the room's own signage never answers.
+//
+// a washroom gets TWO, one flanking each side of its door, and that is not decoration: it has two
+// halves behind one opening (see game.FacilityAreaGenerator.toiletPartition), and a pair of plates
+// either side of the door is exactly how a shared entrance to both says so
+  public static function rooms(scene:Scene, m:Facility):Int
+    {
+      var b = MeshBufTools.make();
+      var n = 0;
+      for (d in m.doors)
+        {
+          var dc = d.alongX ? 0 : 1;
+          var dr = d.alongX ? 1 : 0;
+          var s = surfOfRoom(m, d.col + dc * d.inDir, d.row + dr * d.inDir);
+          if (s < 0)
+            continue;
+          // the corridor side of the wall line, and the face on it that looks back down the corridor
+          var face = (d.alongX ? (d.inDir > 0 ? 1 : 0) : (d.inDir > 0 ? 3 : 2));
+          var sc = (d.alongX ? 1 : 0);
+          var sr = (d.alongX ? 0 : 1);
+          var wash = (s == Surf.WASH);
+          var put = 0;
+          for (k in 0...2)
+            {
+              var side = (k == 0 ? -1 : 1);
+              // the masonry the plate is bolted to, and the corridor cell it hangs over
+              var wc = d.col + sc * side, wr = d.row + sr * side;
+              var cc = wc - dc * d.inDir, cr = wr - dr * d.inDir;
+              if (!FacilityModel.isSolidWall(m, wc, wr) ||
+                  !FacilityModel.inside(m, cc, cr) ||
+                  m.surf[cr][cc] != Surf.LINO)
+                continue;
+              var cell = (wash ? (put == 0 ? FacilityStyle.SIGN_MEN : FacilityStyle.SIGN_WOMEN) :
+                (FacilityModel.mix((d.col * 374761393) ^ (d.row * 40503)) % 2 == 0 ?
+                  FacilityStyle.SIGN_OFFICE_A : FacilityStyle.SIGN_OFFICE_B));
+              sign(b, m, cc, cr, face, cell);
+              put++;
+              n++;
+              // an office says its name once; a washroom names both its halves
+              if (!wash)
+                break;
+            }
+        }
+      FacilityGeom.add(scene, b, FacilityStyle.SIGN_TEX, true, false);
+      return n;
+    }
+
+// the themed surface of the room on the far side of a door, or -1 for anything else. off the FLOOR
+// TILE like every other themed test in the compound, so it needs no generatorInfo and works on a
+// grid saved before any of it existed
+  static function surfOfRoom(m:Facility, col:Int, row:Int):Int
+    {
+      if (!FacilityModel.inside(m, col, row))
+        return -1;
+      var s = m.surf[row][col];
+      return (s == Surf.OFFICE || s == Surf.WASH ? s : -1);
+    }
+
+// one room sign, on the slab face of the masonry at (col,row)'s `dir` hand and MOUNT_PROUD clear of
+// it — `quad`'s own geometry at this family's own size
+  static function sign(b:MeshBuf, m:Facility, col:Int, row:Int, dir:Int, cell:Int):Void
+    {
+      var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
+      var e = FacilityStyle.MOUNT_PROUD;
+      var h = FacilityStyle.SIGN_W / 2;
+      var c = CityConfig.cellToWorld(col, row);
+      var y0 = FacilityStyle.SIGN_Y - FacilityStyle.SIGN_H / 2;
+      var y1 = FacilityStyle.SIGN_Y + FacilityStyle.SIGN_H / 2;
+      var d = dir ^ 1;
+      if (d < 2)
+        {
+          var z = (d == 0 ? s.z0 - e : s.z1 + e);
+          pane(b, c.x - h, c.x + h, z, z, d, y0, y1, cell);
+          return;
+        }
+      var x = (d == 2 ? s.x0 - e : s.x1 + e);
+      pane(b, x, x, c.z - h, c.z + h, d, y0, y1, cell);
     }
 
 // FacilityGeom.pane with the uv opened up to one cell of a 2x2 sheet. three flips y, so the source's

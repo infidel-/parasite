@@ -69,6 +69,10 @@ class FacilityGeom
 {
   static inline var CELL = CityConfig.CELL;
 
+  // how many floor buffers `structure` allocates: one slot per Surf value, so a surface indexes its
+  // own buffer and most of them come back empty and emit no mesh at all
+  static inline var FLOOR_SURFS = 11;
+
   // cell offsets of the neighbour each wall face looks at. 0 = north (-z), 1 = south (+z),
   // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds, and the order
   // `ends` winds a face against. PUBLIC so a second pass over the same faces cannot get its own copy
@@ -103,8 +107,11 @@ class FacilityGeom
         doorAt[m.doors[i].row][m.doors[i].col] = i;
       for (w in m.windows)
         {
-          var tall = paneTall(w.len);
-          var lo = (FacilityStyle.WALL_H - tall) / 2;
+          // a LIGHT WELL is not sized off its art the way a ribbon is: it is one cell, one image maps
+          // 0..1 across it, and where it sits in the wall is the whole design (see WINDOW_HIGH_SILL)
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(w.len));
+          var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
+            (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)
             lo = 0;
           var hi = lo + tall;
@@ -354,9 +361,10 @@ class FacilityGeom
       var flatDeck = !st.hangar;
       // floors, one buffer per surface. a hangar rolls no lab tile and a lab building no concrete,
       // so most of these come back empty and emit no mesh at all
-      var fTile = MeshBufTools.make();
-      var fLino = MeshBufTools.make();
-      var fConcrete = MeshBufTools.make();
+      //
+      // INDEXED BY Surf and not five named locals: the list grew with the room templates, and every
+      // call site passing the whole set positionally is the arg list this file does not want
+      var floors = [for (_ in 0...FLOOR_SURFS) MeshBufTools.make()];
       // walls. NOT split by facing any more — see the Shell header. the two INTERIOR buffers are
       // split by the SPACE a face looks into instead: a corridor is painted board and a lab room is
       // tiled, and they are 218 faces against 538 in a generated area, so the corridor is a real
@@ -364,6 +372,10 @@ class FacilityGeom
       var wOut = MeshBufTools.make();
       var wRoom = MeshBufTools.make();
       var wCorr = MeshBufTools.make();
+      // and one more pair for the two ROOM TEMPLATES: an office is painted and a washroom is glazed
+      // tile floor to ceiling, and neither is the laboratory's finish
+      var wOffice = MeshBufTools.make();
+      var wWash = MeshBufTools.make();
       // the hangar's roll-up shutter strips. their own buffer because they take their own texture:
       // painted in plain cladding they were a door you could not see
       var shut = MeshBufTools.make();
@@ -379,6 +391,7 @@ class FacilityGeom
       // buffers, one per run length, because each length draws its OWN art (see `addPane`)
       var panes = MeshBufTools.make();
       var panes2 = MeshBufTools.make();
+      var panesHigh = MeshBufTools.make();
       var head = MeshBufTools.make();
       // which wall buffer a face looking into (c,r) belongs in. the hangar wears its cladding on
       // both sides, so it never reaches the interior pair; a corridor is Surf.LINO, the surface the
@@ -388,7 +401,13 @@ class FacilityGeom
         {
           if (st.hangar || !FacilityModel.isIndoor(m, c, r))
             return wOut;
-          return m.surf[r][c] == Surf.LINO ? wCorr : wRoom;
+          return switch (m.surf[r][c])
+            {
+              case Surf.LINO: wCorr;
+              case Surf.OFFICE: wOffice;
+              case Surf.WASH: wWash;
+              case _: wRoom;
+            }
         }
 
       for (row in st.oy1...st.oy2 + 1)
@@ -419,7 +438,7 @@ class FacilityGeom
                       FacilityStyle.ROOF_TILE);
                 for (sp in floorStrips(m, col, row))
                   if (FacilityModel.isIndoor(m, sp.col, sp.row))
-                    cap(floorBuf(m, sp.col, sp.row, fTile, fLino, fConcrete),
+                    cap(floorBuf(m, sp.col, sp.row, floors),
                       sp.x0, sp.x1, sp.z0, sp.z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
                 // a corner square is floor and ceiling like any other strip — the loop above has
                 // just laid both — and the two runs it sits in the angle of stand at its edges. one
@@ -546,7 +565,7 @@ class FacilityGeom
               }
             if (flatDeck)
               cap(roof, x0, x1, z0, z1, FacilityStyle.ROOF_Y, FacilityStyle.ROOF_TILE);
-            cap(floorBuf(m, col, row, fTile, fLino, fConcrete),
+            cap(floorBuf(m, col, row, floors),
               x0, x1, z0, z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
           }
 
@@ -558,8 +577,9 @@ class FacilityGeom
           if (w.structure != si)
             continue;
           var wide = w.len * CELL;
-          var tall = paneTall(w.len);
-          var lo = (FacilityStyle.WALL_H - tall) / 2;
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(w.len));
+          var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
+            (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)
             lo = 0;
           // the run's own footprint: full length along its axis and the GLAZING slab's one unit
@@ -586,7 +606,7 @@ class FacilityGeom
           // plane, and a flush pane that overlaps it is two coplanar surfaces z-fighting along the
           // head and the sill. Widening the rect on the cross axis pushes BOTH faces off that plane
           // at once, each away from the slab's centre and so each in its own outward direction
-          var pb = (w.len == 2 ? panes2 : panes);
+          var pb = (w.high ? panesHigh : (w.len == 2 ? panes2 : panes));
           var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
           var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
           var ge = FacilityStyle.WINDOW_EPS;
@@ -618,12 +638,16 @@ class FacilityGeom
         paraCells: st.hangar ? 0 : ringCells(m, si),
         paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
-      addFloor(scene, fTile, FacilityStyle.FLOOR_TILE);
-      addFloor(scene, fLino, FacilityStyle.FLOOR_LINO);
-      addFloor(scene, fConcrete, FacilityStyle.FLOOR_CONCRETE);
+      addFloor(scene, floors[Surf.TILE], FacilityStyle.FLOOR_TILE);
+      addFloor(scene, floors[Surf.LINO], FacilityStyle.FLOOR_LINO);
+      addFloor(scene, floors[Surf.CONCRETE], FacilityStyle.FLOOR_CONCRETE);
+      addFloor(scene, floors[Surf.OFFICE], FacilityStyle.FLOOR_OFFICE);
+      addFloor(scene, floors[Surf.WASH], FacilityStyle.FLOOR_WASH);
       add(scene, wOut, wallTex, true, true);
       add(scene, wRoom, FacilityStyle.WALL_ROOM, true, false);
       add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
+      add(scene, wOffice, FacilityStyle.WALL_OFFICE, true, false);
+      add(scene, wWash, FacilityStyle.WALL_WASH, true, false);
       add(scene, shut, FacilityStyle.DOOR_SHUTTER, true, true);
       add(scene, head, FacilityStyle.WINDOW_HEAD, true, false);
       // the coping does not cast: the cladding under it is in wOut, which does, and at the moon
@@ -632,6 +656,7 @@ class FacilityGeom
       add(scene, cope, FacilityStyle.COPING, true, false);
       addPane(scene, panes, FacilityStyle.WINDOW_LIT, shell);
       addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2, shell);
+      addPane(scene, panesHigh, FacilityStyle.WINDOW_HIGH_TEX, shell);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
@@ -646,14 +671,15 @@ class FacilityGeom
 // objects.FloorDrain standing on the cell that paints it, one centred decal — see the atlas note on
 // `facility/floor-grate` in textures.json. Painted as a cell-wide surface here instead, a 2 m square
 // of grating read as a vehicle pit, and tiled down it read as four of them
-  static function floorBuf(m:Facility, col:Int, row:Int, tile:MeshBuf, lino:MeshBuf,
-      concrete:MeshBuf):MeshBuf
+  static function floorBuf(m:Facility, col:Int, row:Int, floors:Array<MeshBuf>):MeshBuf
     {
       return switch (m.surf[row][col])
         {
-          case Surf.LINO: lino;
-          case Surf.CONCRETE: concrete;
-          default: tile;
+          case Surf.LINO: floors[Surf.LINO];
+          case Surf.CONCRETE: floors[Surf.CONCRETE];
+          case Surf.OFFICE: floors[Surf.OFFICE];
+          case Surf.WASH: floors[Surf.WASH];
+          default: floors[Surf.TILE];
         };
     }
 

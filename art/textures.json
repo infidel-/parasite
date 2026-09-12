@@ -2041,6 +2041,159 @@
       "built_linear": 0.1375,
       "built_srgb": 102.1
     },
+    "facility/wall-office": {
+      "src": "facility/facility-wall-office.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.387,
+      "prompt": "A SEAMLESS TILEABLE texture of the interior wall of a small utilitarian office, seen straight on, flat elevation, no perspective. Composed BOTTOM-UP: the bottom 12 percent is a plain flat skirting board band slightly darker than the wall; above it, filling the rest of the image, is plain painted plasterboard with a faint roller texture and slight unevenness in the paint; one thin horizontal picture rail line crosses the wall about three quarters of the way up. A few faint scuffs and thin scratches near the skirting. VALUE: a LIGHT NEUTRAL GREY at roughly 55 percent brightness - clearly lighter than mid grey, a clean painted office wall, but NOT white, NOT near-white, NOT pale cream, NOT washed out. HUE: PERFECTLY NEUTRAL - the red, green and blue values are equal. No warm cast, no beige, no cream, no yellow, no green, no olive, no blue tint. The pattern must tile seamlessly LEFT TO RIGHT with no visible vertical border, and the horizontal composition must run edge to edge. No windows, no doors, no shelves, no pictures, no signage, no sockets, no power outlets, no furniture, no floor, no ceiling. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the RESEARCHER'S OFFICE wall, the first of the two ROOM TEMPLATE finishes (render.facility.FacilityModel.Surf.OFFICE, picked by FacilityGeom.look off the cell a face looks into). Composed BOTTOM-UP and does not tile vertically, exactly like facility/wall-room: v is y / WALL_TILE 6.0 over WALL_H 6.0, so it runs 0..1 up the wall and never wraps. What tells it from the laboratory wall beside it is the ABSENCE of the tiled dado - plain paint with a skirting and a picture rail is an office and a splashback is a lab. Drop measured 0.2512 linear, chroma 0.1; lift 1.387 darkens it to sit just over wall-room's 0.1375 and just under the corridor's 0.1595.",
+      "last_converted": "2026-09-12T02:57:38",
+      "last_lift": 1.387,
+      "built_linear": 0.1497,
+      "built_srgb": 107.3
+    },
+    "facility/wall-wash": {
+      "src": "facility/facility-wall-wash.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.449,
+      "prompt": "A SEAMLESS TILEABLE texture of the interior wall of a public washroom, seen straight on, flat elevation, no perspective: large square glazed wall tiles laid in an even square grid from top to bottom, roughly five tiles across, with thin slightly darker grout lines and a faint uneven glaze mottling across the tile faces. A little grime settled in the grout lines and a couple of faint hairline cracks. VALUE: a LIGHT NEUTRAL GREY at roughly 55 percent brightness - clearly lighter than mid grey, the finish of a clean public washroom, but NOT white, NOT near-white, NOT pale cream, NOT washed out. HUE: PERFECTLY NEUTRAL - the red, green and blue values are equal. No warm cast, no beige, no cream, no yellow, no green, no olive, no blue tint. The pattern must tile seamlessly on both axes with no visible border. No windows, no doors, no mirrors, no fixtures, no signage, no pipes, no floor, no ceiling. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the WASHROOM wall (Surf.WASH). Glazed tile FLOOR TO CEILING, which is the one thing separating it from wall-room's tiled dado under paint - and unlike that one it really does tile on both axes, so a 6-unit wall showing v 0..1 is a choice and not a constraint. Drop 0.2794 linear, chroma 2.3; lift 1.449 puts it on the light end of the interior set, just under the corridor, because a tiled washroom is the brightest room in the building.",
+      "last_converted": "2026-09-12T02:58:22",
+      "last_lift": 1.449,
+      "built_linear": 0.1593,
+      "built_srgb": 110.4
+    },
+    "facility/floor-office": {
+      "src": "facility/facility-floor-office.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.757,
+      "prompt": "A SEAMLESS TILEABLE texture of an office floor seen from DIRECTLY ABOVE: narrow vinyl plank flooring laid in a regular offset brick bond, planks running left to right, thin dark joint lines between planks, a faint straight wood grain along each plank and a few subtle knots. VALUE: a MID-DARK NEUTRAL GREY-BROWN at roughly 35 percent brightness - clearly darker than mid grey, the floor of a small utilitarian office, but NOT black, NOT rich brown, NOT orange, NOT golden, NOT warm honey. Keep the chroma very low: only the faintest hint of brown over grey. The pattern must tile seamlessly on both axes with no visible border. No objects, no furniture, no rugs, no skirting, no shadows. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the RESEARCHER'S OFFICE floor, written by game.FacilityAreaGenerator.roomCabinet as Const.TILE_FLOOR_WOOD1 - an EXISTING corp tile id, so the template cost no tile id, no tiles.Default row and no migration. Chroma 8.0 is over the 6-point re-roll threshold ON PURPOSE: that rule is about a cast hiding in a surface that should be neutral, and a wood-effect plank floor is the one interior surface here whose colour is a fact about it. lift 0.757 BRIGHTENS 0.0460 toward the interior band, so it lands between the corridor lino 0.0749 and the lab tile 0.1185 - an office reads as the darker-floored room, which is what a plank floor among tiled labs is.",
+      "last_converted": "2026-09-12T02:57:15",
+      "last_lift": 0.757,
+      "built_linear": 0.0915,
+      "built_srgb": 84.5
+    },
+    "facility/floor-wash": {
+      "src": "facility/facility-floor-wash.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.396,
+      "prompt": "A SEAMLESS TILEABLE texture of a washroom floor seen from DIRECTLY ABOVE: small square ceramic mosaic floor tiles in a tight regular grid, roughly ten tiles across the image, with clearly visible slightly darker grout lines and a faint mottling within each tile. VALUE: a LIGHT NEUTRAL GREY at roughly 50 percent brightness - clearly lighter than mid grey, the floor of a clean public washroom, but NOT white, NOT near-white, NOT pale cream, NOT washed out. HUE: PERFECTLY NEUTRAL - the red, green and blue values are equal. No warm cast, no beige, no cream, no yellow, no green, no olive, no blue tint. The pattern must tile seamlessly on both axes with no visible border. No objects, no fixtures, no drains, no shadows. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the WASHROOM floor, written as Const.TILE_FLOOR_MARBLE1 for floor-office's reason. Its grid is DENSER than facility/floor-tile's on purpose - a mosaic against a lab's large vinyl squares is what tells the two tiled floors apart at the game's pitch, since both are light neutral grey. lift 1.396 lands it just over the lab floor's 0.1185.",
+      "last_converted": "2026-09-12T02:58:00",
+      "last_lift": 1.396,
+      "built_linear": 0.1317,
+      "built_srgb": 100.5
+    },
+    "facility/desk-top": {
+      "src": "facility/facility-deco-office-pack4.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.04,
+      "crop": [
+        2,
+        2,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/facility-deco-office-pack4.png] TOP-LEFT quadrant: a SEAMLESS TILEABLE office desk top seen from DIRECTLY ABOVE - pale grey-brown wood-effect laminate with a fine straight grain running left to right and a few faint scuffs and ring marks. Mid value, clearly lighter than the other three swatches. This swatch must tile seamlessly on both axes. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4, quadrant 1 of 4 on the ROOM TEMPLATE furniture sheet (the other three are desk-body, stall-panel and mirror). The office DESK is the laboratory bench one texture family apart - render.facility.FacilityTables lays both as the same runs off the same table tiles and only picks a different buffer - so this is the worktop's own top face AND its edge band, the job facility/bench-top does for a lab. It is DELIBERATELY NOT the bench's ratio: bench-top is black epoxy at 0.334x the floor it stands on, and a pale laminate desk is meant to be the lighter thing in the room. Seams measured off the drop at col 511 and row 511 (per-column mean |diff| 40.2 and 44.9 against a background of 1.5-2.5), so every crop insets 2 px from them. 0.1272 linear as drawn; lift 1.04 leaves it there, over the 0.085 office floor.",
+      "last_converted": "2026-09-12T02:59:23",
+      "last_lift": 1.04,
+      "built_linear": 0.1168,
+      "built_srgb": 94.7
+    },
+    "facility/desk-body": {
+      "src": "facility/facility-deco-office-pack4.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        514,
+        2,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/facility-deco-office-pack4.png] TOP-RIGHT quadrant: a SEAMLESS TILEABLE office desk pedestal front, flat elevation, composed BOTTOM-UP - the bottom 10 percent a recessed dark shadowed plinth strip running the full width; above it a stack of THREE plain rectangular drawer fronts in muted mid-dark grey painted steel, separated by thin dark shadow gaps, each drawer carrying one slim recessed horizontal bar handle; the top 10 percent a plain flat dark band. This swatch must tile seamlessly LEFT TO RIGHT. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4 quadrant 2: the casework under an office desk, facility/bench-body's opposite number. Composed BOTTOM-UP and does NOT tile vertically for that file's exact reason - FacilityTables.panel maps v literally 0..1 up the body - and a DRAWER stack rather than the lab's two cupboard doors is most of what separates a desk from a bench at this distance. 0.0440 linear as drawn, just under bench-body's 0.0537 and taking no lift: it is the darkest thing in the office and the room's floor is darker than a lab's, so the contrast the bench needed a gamma to hold is already here.",
+      "last_converted": "2026-09-12T02:59:23",
+      "built_linear": 0.044,
+      "built_srgb": 58.2
+    },
+    "facility/stall-panel": {
+      "src": "facility/stall-panel.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.854,
+      "prompt": "Redraw this swatch as a SEAMLESS TILEABLE washroom cubicle partition panel WITH A VISIBLE DOOR LINE, flat elevation, composed BOTTOM-UP. Keep the existing laminate material, colour, value and speckled core pattern exactly as they are - only the layout changes. The bottom 12 percent stays empty dark shadow under the panel. Above it, the panel face is now divided by TWO STRONG DARK VERTICAL GAPS into a clear repeating rhythm: a wide DOOR LEAF between the two gaps, and a narrower fixed pilaster strip outside each of them. The gaps are deep dark shadow slots, plainly visible from a distance, running the full height of the panel. On the door leaf, near the top, add one small dark rectangular indicator latch plate, and at mid height a slim dark horizontal pull handle. On each pilaster strip keep one small dark round bolt head near the top and one near the bottom. The gaps must sit so this swatch STILL TILES SEAMLESSLY LEFT TO RIGHT - the left edge of the image continues into its right edge exactly, so the pilaster strip is split in half across the seam. No text, no lettering, no numbers. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "every flat surface of the washroom's casework - the cubicle partitions, the door leaves, the basin counter's front and ends, and the full-height wall dividing the room's two halves (render.facility.FacilityDeco.stall / basin / partition). ONE buffer and one draw call for the lot. Composed BOTTOM-UP: FacilityGeom.face maps v as y / period, and every caller passes a period equal to the thing's own height (STALL_H 3.8, BASIN_H 1.8, PART_H 6.0), so v runs 0..1 up each and the drawn features land where they were drawn. The counter's LID is deliberately NOT this art - a bottom-up elevation laid flat reads as an elevation lying down, so it takes facility/desk-top. lift 0.854 carried over from the pack4 quadrant this replaces, which measured 0.0654 raw and built to 0.0929. IT LEFT THE PACK4 SHEET AND TOOK A FILE OF ITS OWN, which is the entry worth keeping: the first version was one flat laminate panel with a bolt at each end, and in game a rank of cubicles read as one continuous wall - no door line, nothing saying where one cubicle stopped and the next began, which is what was reported. The fix is the ART and not the geometry: the emitted partitions are already one per cell boundary and correct (see FacilityStyle.STALL_W), so what was missing was the leaf. Re-rolled as an EDIT of the extracted quadrant rather than of the sheet, because an edit_image over the whole sheet redraws all four quadrants and three of them were right - facility/placards' own finding, and the reason tools/pastecell.py exists. Editing the quadrant alone then made the crop pointless, so the label now owns its source outright and the pack4 sheet keeps three tenants.",
+      "last_converted": "2026-09-12T05:55:44",
+      "last_lift": 0.854,
+      "built_linear": 0.0887,
+      "built_srgb": 81.3
+    },
+    "facility/desk-side": {
+      "src": "facility/desk-side.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.947,
+      "prompt": "Redraw this swatch as the PLAIN DRAWERLESS END PANEL of the same office desk, a SEAMLESS TILEABLE flat elevation, composed BOTTOM-UP. Keep the existing painted steel material, colour, value and grain exactly as they are - only the features change. REMOVE ALL DRAWERS AND ALL HANDLES completely. The bottom 10 percent stays a recessed dark shadowed plinth strip running the full width. Above it the whole face is ONE continuous blank carcass side panel: an even flat sheet of the same muted mid-dark grey painted steel, carrying only a very faint shallow recessed border line inset from its edges, a few faint scuffs low down, and one barely visible vertical seam. The top 10 percent stays a plain flat dark band. No drawer fronts, no handles, no gaps, no bars, no hardware. This swatch must tile seamlessly LEFT TO RIGHT. No text, no lettering. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the END faces of an office desk run - the short ones, on the axis the run travels along (render.facility.FacilityTables.build). A DESK IS NOT DRAWERS ON FOUR SIDES, which is what it was: facility/desk-body carries a stack of three drawer fronts and it was worn by every face of every cell, so a run capped both ends with a pedestal nobody could open. This is that art with the drawers taken out and nothing else touched - an EDIT of the extracted quadrant, so the material, the grain and the value all still agree with the front it butts against, which is the whole reason it is an edit and not a fresh roll. Same bottom-up composition and same vertical lock: FacilityTables.panel maps v literally 0..1 up the body, so the plinth strip lands on the floor and the dark band under the worktop lands under the worktop.",
+      "last_converted": "2026-09-12T05:56:30",
+      "built_linear": 0.0428,
+      "built_srgb": 57.5,
+      "last_lift": 0.947
+    },
+    "facility/mirror": {
+      "src": "facility/facility-deco-office-pack4.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        514,
+        514,
+        508,
+        508
+      ],
+      "prompt": "[quadrant of facility/facility-deco-office-pack4.png] BOTTOM-RIGHT quadrant: ONE washroom mirror seen straight on, filling its quadrant edge to edge - a plain rectangular sheet of dark glass in a thin flat metal surround, the glass a flat very dark neutral grey with a faint diagonal sheen band and a few faint smears, reflecting nothing recognisable. This swatch does NOT tile. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4 quadrant 4, and the ONE face of the set that maps 0..1 rather than tiling: it is a single authored object with a frame round it, so it is shown whole or not at all. The crop is SQUARE, which is what locks FacilityStyle.MIRROR_W == MIRROR_H == 2.0 - a texture is never stretched, so the quad is sized off the art exactly as the notice board's is. 0.0335 linear and taking no lift: a mirror in a dark room reflects a dark room, and it is the darkest surface in the washroom on purpose.",
+      "last_converted": "2026-09-12T02:59:23",
+      "built_linear": 0.0335,
+      "built_srgb": 49.6
+    },
+    "facility/office-clutter": {
+      "src": "facility/facility-office-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Every object must sit ENTIRELY INSIDE ITS OWN CELL with a WIDE EMPTY GUTTER around it: at least 20% of the cell width must be completely empty on every side of each object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run unbroken from one edge of the image to the other. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness. Keep all 64 objects at roughly similar scale to each other. Nothing may touch the outer edges of the frame.\n\nThe 64 objects, in reading order, left to right then top to bottom:\n\nRow 1: 1. a loose stack of printed papers, slightly fanned 2. an open ring binder with printed pages 3. a closed cardboard document folder 4. a desk telephone handset in its cradle 5. a ceramic coffee mug seen from above 6. a pen pot holding several pens 7. a small stapler 8. a pocket notebook, closed\n\nRow 2: 9. a paper desk calendar page 10. a pair of reading glasses, folded 11. a manila envelope, sealed 12. a small desk lamp base with its arm folded flat 13. a hole punch 14. a roll of sticky tape in a dispenser 15. a bundle of printed spreadsheets clipped together 16. a small potted succulent seen from above\n\nRow 3: 17. a wireless computer mouse 18. a coiled black cable tied with a twist 19. a plastic in-tray holding a few sheets 20. a hardback book, closed 21. a scattering of loose paper clips 22. a rubber date stamp 23. a printed line-chart report sheet 24. a metal ruler and a pencil side by side\n\nRow 4: 25. a folded newspaper 26. a small travel thermos flask standing upright 27. a stack of business cards 28. an eraser and a pencil sharpener side by side 29. a plastic water bottle lying on its side 30. a flat USB memory stick 31. a spiral-bound report with a plastic cover 32. a crumpled ball of paper\n\nRow 5: 33. a desk blotter pad corner with a pen resting on it 34. a small framed photograph lying face up 35. a pair of scissors 36. a pack of sticky notes with one note peeled up 37. a wristwatch lying flat 38. a small electric fan seen from above 39. a printed memo with a signature 40. a highlighter pen and a marker side by side\n\nRow 6: 41. a plastic clipboard with a form on it 42. a sandwich in an open paper wrapper 43. a compact desk calculator 44. a small tin of pins 45. a rolled-up technical drawing tied with a band 46. a set of keys on a ring 47. a paper cup with a plastic lid 48. a stack of three thin folders\n\nRow 7: 49. a plastic name plate 50. a small first-aid tin, closed 51. a laptop computer, closed 52. a pair of headphones, coiled 53. a printed bar-chart page 54. a small tape measure 55. a torn envelope with a letter half out 56. a bundle of pencils held by a band\n\nRow 8: 57. a magnifying glass 58. a small cardboard box, open, with papers in it 59. a chequebook, closed 60. a pocket radio 61. a stack of index cards 62. a paperweight, a smooth flat stone 63. a small hand mirror 64. a cloth duster, folded\n\n[append textures.json style]",
+      "prompt_exact": true,
+      "note": "PACK64, the office desks' own clutter sheet - facility/worktop-clutter's opposite number, drawn from the same prompt shape and cut the same 8x8 way by render.facility.FacilityClutter, which picks the sheet off the cell's Surf. A SECOND SHEET and not more cells on the first: a petri dish and a pipette rack are the laboratory's and a desk wants paper. Generated with gpt-image-2.5-sunburst, background transparent: 66.5% of the drop came back transparent and ALL FOURTEEN seam lanes carried ZERO opaque px, so tools/pack16.py --cols 8 --rows 8 --cell 128 --valign center packed it at tol 0 (worktop-clutter needed --tol 4) at scale 0.9655. valign CENTER and not bottom - these are top-down cut-outs with no ground line. The pristine raw drop is parked at Unused/facility-office-clutter-raw.png; the src here is the PACKED sheet. cap 0.10 governs the bright end against facility/desk-top's own 0.11; FacilityStyle.CLUTTER_OFFICE_SKIP is the dark-AND-solid list and is empty until measured in game.",
+      "last_converted": "2026-09-12T03:02:31",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "built_linear": 0.0752,
+      "built_srgb": 71.4
+    },
     "facility/wall-hangar": {
       "src": "facility/wall-hangar.png",
       "class": "tile",
@@ -2129,6 +2282,30 @@
       "built_linear": 0.121,
       "built_srgb": 87.1,
       "last_converted": "2026-09-08T20:01:03"
+    },
+    "facility/room-signs": {
+      "src": "facility/room-signs.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A 2x2 GRID of four separate flat game-texture swatches in one square image. SEPARATION IS THE MOST IMPORTANT REQUIREMENT: the image is divided by one vertical line at exactly 50 percent and one horizontal line at exactly 50 percent, and each of the four quadrants is filled edge to edge by its own swatch with NO gap, NO gutter and NO frame between them. Nothing crosses a quadrant boundary. TOP-LEFT quadrant - ONE MEN'S WASHROOM DOOR SIGN filling its quadrant edge to edge: a plain square brushed stainless steel plate with rounded corners and four small screw heads, carrying ONE large centred white pictogram of a standing MALE figure (plain circle head, plain rectangular torso, two straight legs, no arms detail). The pictogram is a simple flat solid white silhouette. NO text, NO lettering, NO letters, NO words. TOP-RIGHT quadrant - ONE WOMEN'S WASHROOM DOOR SIGN filling its quadrant edge to edge: the identical brushed steel plate, same size, same screws, carrying ONE large centred white pictogram of a standing FEMALE figure (plain circle head, triangular dress-shaped torso, two straight legs). Flat solid white silhouette. NO text, NO lettering, NO letters, NO words. BOTTOM-LEFT quadrant - ONE OFFICE DOOR NAMEPLATE filling its quadrant edge to edge: a square dark plastic sign holder with a thin metal surround, holding a pale off-white paper card. On the card are FOUR SHORT HORIZONTAL DARK GREY BARS of varying length stacked in the upper half, and TWO SHORTER BARS below them - these are ABSTRACT BLURRED SMUDGE BARS standing in for unreadable printed lines. They must NOT be letters, NOT words, NOT numbers, NOT any script - just soft rectangular smudges, illegible at any zoom. BOTTOM-RIGHT quadrant - A SECOND OFFICE DOOR NAMEPLATE filling its quadrant edge to edge: the same sign holder in the same materials but a different layout - a narrow dark grey header band across the top of the card, then THREE longer illegible smudge bars beneath it and one very short bar at the bottom right, plus a small dark square in the top-left corner standing in for a photo. Again ABSTRACT SMUDGES only: NOT letters, NOT words, NOT numbers, NOT any script. All four plates are seen STRAIGHT ON, flat elevation, no perspective, no tilt, no shadow cast on any surface, no wall behind them. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4, and the one sign family in the compound that hangs OUTSIDE the room it names (render.facility.FacilityPlacard.rooms). The eight hazard plates on facility/placards + placards2 are gated on Surf.TILE and hang on a laboratory's own walls, chosen by what stands under them; these four hang on the CORRIDOR side of a themed room's door and are chosen by what the room IS. Cells read left to right, TOP ROW FIRST: 0 men, 1 women, 2 office nameplate A, 3 office nameplate B - the same index convention FacilityStyle.WORK_C_* uses, with the v flip in one helper. A washroom takes TWO of them, one flanking each side of its single opening, because it has two halves behind that opening (game.FacilityAreaGenerator.toiletPartition). THE NAMEPLATES ARE DELIBERATELY ILLEGIBLE and the prompt spends four clauses on it: a legible plate has to say a NAME, and the compound has none - no researcher in this game has one - so the card carries abstract smudge bars standing in for printed lines. Asked that way the model drew bars and not glyphs, which is the opposite outcome to asking for 'small text'. gpt-image-2.5-sunburst rather than flare, the pack-sheet rule: layout adherence is the whole question and it put the split on 512 within a few px on both axes (col peaks 504-518, row 504-560 against a background of 3.2/4.0). Square cells, so SIGN_W == SIGN_H and nothing is stretched.",
+      "last_converted": "2026-09-12T05:54:06",
+      "built_linear": 0.1602,
+      "built_srgb": 97.6
+    },
+    "facility/workstation": {
+      "src": "facility/workstation.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.853,
+      "prompt": "A 2x2 GRID of four separate flat game-texture swatches in one square image. SEPARATION IS THE MOST IMPORTANT REQUIREMENT: the image is divided by one vertical line at exactly 50 percent and one horizontal line at exactly 50 percent, and each of the four quadrants is filled edge to edge by its own swatch with NO gap, NO gutter and NO frame between them. Nothing crosses a quadrant boundary. TOP-LEFT quadrant - THE FRONT OF A COMPUTER MONITOR, seen straight on, flat elevation, filling its quadrant edge to edge: a thin dark charcoal plastic bezel running right around the outside, and inside it a screen. The screen is a dark cold blue-grey display faintly glowing, carrying a few rows of small pale green-white ABSTRACT SMUDGE BARS of varying length standing in for unreadable terminal text, and one slightly brighter horizontal band near the top. The smudges must NOT be letters, NOT words, NOT numbers, NOT any script. A small dark power LED in the bottom bezel. NO text, NO lettering anywhere. TOP-RIGHT quadrant - A BLANK MOULDED PLASTIC CARCASS PANEL, a seamless tileable swatch of dark desaturated warm grey computer-case plastic filling its quadrant edge to edge: an even matte surface with a very faint fine pebbled texture, a few shallow straight moulding lines, a scatter of faint dust and scuffs. No vents, no logos, no buttons, no text. This swatch must tile seamlessly on both axes. BOTTOM-LEFT quadrant - THE FRONT OF A DESKTOP COMPUTER TOWER, seen straight on, flat elevation, filling its quadrant edge to edge: an upright dark grey steel case front, composed TOP-DOWN - a horizontal slot-shaped optical drive bay near the top with a small eject button, below it a second blank drive bay, then a large matte front panel carrying a chunky recessed round power button and two tiny indicator lights, and across the bottom third a wide dark recessed mesh intake grille. Slim dark shadow gaps between the sections. NO text, NO lettering, NO logos. BOTTOM-RIGHT quadrant - A COMPUTER KEYBOARD SEEN FROM DIRECTLY ABOVE, straight top-down, filling its quadrant edge to edge: a dark grey plastic keyboard chassis with a full field of small square matte keys in even rows, a wider bar along the bottom row, a block of smaller keys to the right, and three tiny indicator lights in the top right. The keys are plain flat blank caps. NO text, NO lettering, NO legends on the keys. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK4, and it is the whole of a workstation: screen, carcass, tower front, keyboard, on ONE 512 sheet addressed by sub-rect (render.facility.FacilityWork). ONE LABEL AND NOT FOUR CROPS, unlike every other pack4 in this file - four labels would be four materials, four meshes and four draw calls to draw one desk toy, where a u/v sub-rect is four numbers. facility/sink's own argument, and the reason FacilityWork.uv exists. IT REPLACED A GLB: facility/computer.glb spent 1,200 triangles rounding the corners off three axis-aligned slabs and was reported as blocky, which is the repo's own 'a box is not a prop' test answered late. Emitted, the set is 22 quads and every face samples this art at full density - at WORK_SCREEN_W 1.7 the screen cell gives 150 texels per world unit against facility/floor-tile's 73. Cells read left to right, TOP ROW FIRST: 0 screen, 1 carcass, 2 tower front, 3 keyboard. Only cell 1 tiles; the other three map 0..1 over their face, which is what locks nothing at all here - unlike the bookcase front, these are BOXES whose proportions are FacilityStyle's numbers, so the art was drawn to the shape rather than the shape derived from the art. gpt-image-2.5-sunburst, the pack-sheet rule, and it put the split DEAD ON 512: per-column mean |diff| peaks at 510-513 and per-row at 511-513, against a background of 2.9/3.6. The screen's terminal lines are abstract smudge bars for facility/room-signs' reason - a legible screen has to say something, and nothing in this compound has anything to say at 150 texels per unit.",
+      "last_converted": "2026-09-12T05:54:48",
+      "built_linear": 0.0483,
+      "built_srgb": 60.4,
+      "last_lift": 0.853
     },
     "facility/placards2": {
       "src": "facility/placards2.png",
@@ -2851,6 +3028,40 @@
       "last_lift": 0.721,
       "built_linear": 0.0761,
       "built_srgb": 75.3
+    },
+    "facility/door-private": {
+      "src": "facility/door-private.png",
+      "class": "window",
+      "needs_alpha": false,
+      "lift": 0.8,
+      "prompt": "One closed modern pair of SOLID interior doors, seen straight on, flat elevation, no perspective, no vanishing point. The pair of doors FILLS THE ENTIRE IMAGE EDGE TO EDGE with absolutely no margin, no border and no background visible: the left leaf occupies exactly the left half of the image and the right leaf exactly the right half, meeting at a slim vertical seam down the exact middle of the image. Each leaf is a flat solid painted slab in dark desaturated warm grey-brown laminate with a faint fine woodgrain. THERE IS NO WINDOW AND NO VISION PANEL IN EITHER LEAF - the slab is completely blank and unbroken from top to bottom. Each leaf carries a slim vertical brushed metal pull handle beside the central seam, a small plain rectangular brushed metal sign plate set high in the leaf with NO text or lettering on it, and a narrow scuffed kick plate along the bottom. No wall, no floor, no doorframe, no threshold, no ceiling, no text, no lettering. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the door into a PRIVATE room - a washroom or a researcher's office (Const.FRAME_DOOR_PRIVATE, render.facility.FacilityModel.Look.PRIVATE, the fourth entry in FacilityDoors.TEX). Same one-image-holds-the-pair layout as the other three, left leaf u 0..0.5 and right 0.5..1. THE MISSING VISION PANEL IS THE WHOLE POINT OF THE ART. facility/door-cabinet's note records the inverse - it carries a panel BECAUSE no facility door blocked sight, and the art had to say so - and this is the first one that does: objects.Door.canSeeThrough returns false while this leaf is shut, so a blank slab is not decoration, it is the rule drawn. The blank metal sign plate high in each leaf is deliberate and is NOT where the room is named: the name hangs on the corridor wall beside the opening (facility/room-signs), because a plate on a leaf swings away with the door.",
+      "last_converted": "2026-09-12T05:53:06",
+      "built_linear": 0.0729,
+      "built_srgb": 75.4,
+      "last_lift": 0.8
+    },
+    "facility/window-high": {
+      "src": "facility/window-high.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "res": [
+        512,
+        158
+      ],
+      "crop": [
+        130,
+        384,
+        763,
+        235
+      ],
+      "prompt": "An isolated cut-out of ONE modern aluminium HIGH-LEVEL SLOT WINDOW unit, seen straight on in flat elevation, no perspective, no vanishing point. Its overall shape is a WIDE LOW rectangle, exactly THREE TIMES AS WIDE AS IT IS TALL - if it is 900 pixels wide it is 300 pixels tall. It is divided by two slim vertical mullions into THREE equal panes, and each individual pane is wider than it is tall. The frame and both mullions are slim matte dark blue-grey aluminium, and the mullions are exactly as thick as the outer frame. The glass is OBSCURED PRIVACY GLASS - reeded and fluted, with faint evenly spaced vertical ribbing across each pane - lit from behind by cold pale fluorescent light: an even flat pale grey-cyan glow, very slightly brighter near the top of each pane. Nothing is visible through it, no shapes, no silhouettes. The glass must be clearly PALER and LIGHTER than the dark frame and mullions. The unit is the ONLY thing in the picture, centred, whole, with generous empty margin above and below it. Nothing is drawn around it and nothing is drawn behind it. No text, no lettering. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the washroom's LIGHT WELL (Const.TILE_WINDOW_HIGH, FacilityModel.Wall.WINDOW_HIGH), the one window in the compound that does not pass sight - tiles.Default.TILE_SEETHROUGH row 2 index 10 is 0, and render.world.VisionMask's blocker test reads `wall != WINDOW` so it takes this one as solid with no edit. It is a CLERESTORY: WINDOW_HIGH_SILL puts its head 0.9 under the deck, 1.2 tall, and render.facility.FacilityGlow skips it in both of its loops, so it throws no light rectangle on the pavement and stands in for no fake shadow source. A ribbon is a hole you see a room through and this is a slot that lights one. IT IS CROPPED AND NOT ALPHA-CUT, and that is the entry: the first roll asked for the unit with 'no wall, no masonry, no sill, no sky' and came back 0.0% transparent at alpha min 232 - the trap docs/3d-textures.md records under NAMING A SURFACE, where saying what is NOT behind an object still describes a background. The re-roll deleted every such clause ('the ONLY thing in the picture') and still came back opaque, alpha min 8 and 0.0% at zero: this style prompt asks for a dark moody field and the model paints one. So the frame is found by MEASUREMENT instead - the glass thresholds at luma > 120 to x 146..876 / y 401..605, and walking outward along the centre row and column the aluminium (luma ~58) runs to x 130..892 and y 384..618 against a background of ~35. That rect IS the crop, the image is opaque, and addPane's Textures.loadAlphaCropped finds nothing to trim. res is the crop at 512 wide, 3.24:1, which is where WINDOW_HIGH_ASPECT comes from - the geometry is sized off the art exactly as the two ribbons are, and the 763/235 = 3.2468 crop against the 512/158 = 3.2405 output is a 0.2% stretch.",
+      "last_converted": "2026-09-12T05:58:12",
+      "built_linear": 0.3952,
+      "built_srgb": 157.5
     },
     "facility/door-metal": {
       "src": "facility/door-metal.png",
