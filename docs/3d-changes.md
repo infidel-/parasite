@@ -901,3 +901,54 @@ UNDECIMATABLE; both gates are TRELLIS gates — three components is a foot, a ne
 **VERDICT: landed.** Live on the shipped compound: `work` 14, three batches at 14 placements each,
 warm 85 programs, 0 console errors. The leads and the status lights did not move — they still go into
 `FacilityCable`'s ribbon and `FacilityDeco`'s additive mesh and still cost no call.
+
+## A hole is deep and water is the end of a profile (2026-09-14)
+
+Two in-game reports on the pair that shipped yesterday. **The WC pan wants a water line with a water
+texture.** **The litter bin's mouth "exposes bad polygon work — just flat surface that's not even
+black + green parts coming up a little too high and are visible".** Both answers are geometry.
+
+**The pan: the bowl ENDS at the water.** The obvious move is a disc at the water height inside the
+lathe, and it is wrong twice — a free plane inside a closed vessel is twenty edges carrying ONE face
+each (twenty holes on `buildlib.check`), and it can only sit clear of the porcelain it should meet.
+Instead `PROFILE` stops at `WATER_Z` **0.60** and `tube` caps it, so the last ring's cap IS the
+surface: no extra face, no hole, an exact meeting — and the prop got **smaller, 692 → 652 tris**,
+because nothing below an opaque surface is worth keeping. `WATER_R` **0.180** is 0.75 of the bowl's
+opening, so a ring of dry porcelain still shows inside the seat.
+
+The swatch is **64×64 painted into the strip below the steel band**, where the sheet drew two bolt
+heads no rect ever reached: mean luma **47.5 against the porcelain band's 108, ratio 0.44**, two
+crossed swells, a fine cross-ripple, grain, and one soft off-centre sheen. **At a 51° pitch the sheen
+is the only thing that says LIQUID rather than a dark hole.** Square on purpose — `disc_uv` puts x on
+u and y on v linearly, so a 512×64 strip would arrive with ripples eight times wider than they are
+tall; and it is passed the OVAL's long half-axis (`WATER_R * AY`), not the radius, or v runs past the
+patch into the band above.
+
+**The bin: the can is open now.** The lining texel was never the fault — 44.5 against the hood's 75.5
+is ratio **0.59**, and `trash-bin-src.png` draws its slot interior at **38.1 against a hood side of
+66.5 = 0.57**. The fault was that the body was CAPPED at the collar, which put a horizontal disc
+**0.028 under the sill** filling the whole mouth: one plane, one normal, one value — and a +z face
+takes more ambient than any wall around it, so the darkest texel on the sheet still rendered LIGHTER
+than the charcoal framing it. The collar also stood **0.020 proud of `AP_Z0`**, so a strip of the
+body's green ran along the bottom of the hole.
+
+Fixed by carrying the profile OVER the lip and back down a throat to a floor 0.8 m below — the same
+vessel rule the pan runs — and dropping `COLLAR_TOP` 1.440 → **1.412**, under the sill. **+96 tris,
+572 → 668.** Two things the throat forces: its bands are UV'd separately, because one `lathe_uv` over
+the whole profile puts v on z and the throat runs back down through the z the body already used (it
+would wear the ribbed green a second time, mirrored, inside the hole); and it takes its OWN texel at
+luma **23.4**, 0.31 of the hood, against the mouth's 44.5. The reference's 0.57 is a ratio measured
+off art carrying its own ambient, where the game draws a shaft down a closed can with **no baked AO
+anywhere on a hand-made prop**. Two values in one hole is what stops it reading as the painted
+rectangle this rebuild exists to replace.
+
+**One library fix underneath both.** `buildlib.material` loads the sheet with `check_existing=True`,
+so a repainted PNG exports with the pixels the session first loaded and nothing errors —
+`make models` hashes the glb and the sig, not the sheet. `tex.image.reload()` after the load.
+
+**VERDICT: landed.** Both `holes 0, coplanar 0`, **0 uv smears**, every locked dimension unchanged
+(bin 0.970 × 0.970 × 1.800 aspect 0.539, pan 0.760 × 1.400 × 1.500). Verified in a free-cam frame on
+a corridor bin and a cubicle pan: the mouth reads as a black letterbox with no plate and no green in
+it, and the water reads as a blue-green oval with its sheen inside the white bowl. The pan's sampled
+luma moves 94 → **86** — the water is dark and it is a third of what the camera sees of this prop.
+
