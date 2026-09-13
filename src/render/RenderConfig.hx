@@ -692,9 +692,10 @@ class RenderConfig {
     // in the game with an AUTHORED FRONT after the guard rail: its yaw is turned at the path, never
     // random (render.facility.FacilityGround.facing)
     facilityBenchPark: 'models/facility/bench-park.glb',  // slatted seat and back on cast-steel ends
-    // and the same bench hand-modelled (models-src/facility/bench_build.py), 1,620 tris against
+    // and the same bench hand-modelled (models-src/facility/bench_build.py), 1,660 tris against
     // 3,650 — five seat slats and four back slats, the count the generated one's reference asked
-    // for, with the gaps as real gaps rather than as something a bake had to resolve
+    // for, with the gaps as real gaps rather than as something a bake had to resolve, and all nine
+    // placed by ARC LENGTH on one lumbar curve rather than square to a flat seat
     facilityBenchParkHand: 'models/facility/bench-park-hand.glb', // same slats, stated not segmented
     // the railing round the OUTSIDE of the park — never along the path through it. the second prop in
     // the game sized to TILE after the guard rail: FacilityStyle.FENCE_H is derived from its own
@@ -768,6 +769,14 @@ class RenderConfig {
     // which is what earns a mesh generator
     facilityToilet: 'models/facility/toilet.glb',        // WC pan, closed cistern, lid down
     facilityChair: 'models/facility/chair.glb',          // office swivel chair, arms, star base
+    // and the same two hand-modelled (models-src/facility/toilet_build.py, chair_build.py), 692 and
+    // 1,072 tris against 4,068 and 2,930. THE PAN IS BUILT TO TOILET_D AND THE BAKE WAS NOT: 1.4 is
+    // what FacilityDeco.toilets stands it off the cubicle wall by, and the generated mesh is 0.954
+    // deep at TOILET_H, so the shipped pan floats 0.22 off the masonry. The chair is the closest
+    // call of the eleven — CHAIR_H's own note argues it is the case FOR a generator — but five arms
+    // at 72 degrees is a loop index, and the bake was a REJECT at 9 components / 61.8% anyway
+    facilityToiletHand: 'models/facility/toilet-hand.glb',  // open bowl, seat ring, 692 tris
+    facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The
     // GENERATED facility/computer.glb died correctly: 1,200 triangles rounding the corners off three

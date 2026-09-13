@@ -171,11 +171,11 @@ class FacilityWarm
             // is a material is a program key
             .concat([
               {
-                path: RenderConfig.MODELS.facilityToilet,
+                path: FacilityDeco.TOILET_PATH,
                 h: FacilityStyle.TOILET_H,
               },
               {
-                path: RenderConfig.MODELS.facilityChair,
+                path: FacilityWork.CHAIR_PATH,
                 h: FacilityStyle.CHAIR_H,
               },
               // and the three the workstation is made of, which are three paths and therefore three

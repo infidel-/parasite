@@ -45,6 +45,10 @@ class FacilityWork
   // the plane a ribbon lying on a desk is bowed in
   static var UP = [0.0, 1.0, 0.0];
 
+  // the chair the flag picks, resolved once so the batch and its warm row cannot disagree
+  public static final CHAIR_PATH = FacilityStyle.CHAIR_BLENDER ?
+    RenderConfig.MODELS.facilityChairHand : RenderConfig.MODELS.facilityChair;
+
 // where the workstation on this office desk cell stands, or null for a cell that carries none.
 //
 // A PURE FUNCTION OF THE SAVED GRID, and deliberately so: three passes ask it and none of them may
@@ -435,8 +439,14 @@ class FacilityWork
               continue;
             var out = p.dir ^ 1;
             var c = CityConfig.cellToWorld(col, row);
-            var x = c.x + DC[out] * (CELL / 2 + FacilityStyle.CHAIR_OUT);
-            var z = c.z + DR[out] * (CELL / 2 + FacilityStyle.CHAIR_OUT);
+            // MEASURED OFF THE DESK'S OWN FACE, not off the cell edge, and the difference is 1.2.
+            // An office desk is DESK_D 2.6 deep in a 4.0 cell — thinned on the OPEN side alone, so
+            // the run hugs the wall — plus a BENCH_LIP overhang past that. Placing the chair off the
+            // CELL edge therefore left it 1.2 further out than it looked, which is a gap wider than
+            // the chair is deep and put it in the walkway rather than at the desk
+            var face = FacilityStyle.DESK_D + FacilityStyle.BENCH_LIP - CELL / 2;
+            var x = c.x + DC[out] * (face + FacilityStyle.CHAIR_OUT);
+            var z = c.z + DR[out] * (face + FacilityStyle.CHAIR_OUT);
             // the cell it would stand in has to be clear floor — a desk run facing another run, or
             // one against the far side of a narrow room, has nowhere to put a seat
             var nc = col + DC[out], nr = row + DR[out];
@@ -455,12 +465,12 @@ class FacilityWork
             });
             ContactMask.prop(x - CELL / 4, x + CELL / 4, z - CELL / 4, z + CELL / 4);
           }
-      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityChair, places,
+      var prop = Models.instanced(scene, CHAIR_PATH, places,
         FacilityStyle.CHAIR_H, SOLID);
       // NOT CASTING, the indoor drums' own finding: an instanced batch is drawn into the moon's
       // shadow map as many times as into the frame, and these stand under a faded roof
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityChair, function(_)
+        Models.get(CHAIR_PATH, function(_)
           {
             VisionMask.patchMesh(prop.mesh);
             prop.mesh.castShadow = false;

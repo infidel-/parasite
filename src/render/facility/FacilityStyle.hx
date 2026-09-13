@@ -891,9 +891,21 @@ class FacilityStyle
   // back, arms, a five-star base on castors) and so the case FOR a mesh generator, where the
   // workstation above is the case against one. 1.05 m to the top of the back
   public static inline var CHAIR_H = 2.1;
-  // how far its centre stands off the desk's open edge, and the jitter on its yaw either side of
-  // square. a chair pushed dead square under every desk reads as a showroom
-  public static inline var CHAIR_OUT = 1.5;
+  // how far its CENTRE stands off the desk's own open FACE — not off the cell edge, which is what
+  // it used to mean and is where a 1.35 gap came from: an office desk is DESK_D 2.6 deep in a 4.0
+  // cell, thinned on the OPEN side alone so the run hugs the wall, so its face sits
+  // DESK_D + BENCH_LIP - CELL/2 = 0.8 from the cell centre and a full 1.2 INSIDE the cell edge.
+  // FacilityWork.chairs derives that rather than carrying the number, so it cannot drift from DESK_D.
+  //
+  // AND THE FLOOR ON THIS IS THE JITTER, NOT THE CHAIR. The plan footprint is 1.231 by 1.294, so a
+  // yaw of CHAIR_YAW_JIT swings the reach along the desk axis to
+  // 0.647*cos(0.35) + 0.616*sin(0.35) = 0.819 — at 0.87 the front wheels just touch the desk at full
+  // jitter and clear it by 0.22 when square. Anything smaller drives the chair through the casework,
+  // which is solid to BENCH_H 2.0 with no knee-hole to tuck into.
+  //
+  // A chair pushed dead square under every desk reads as a showroom, which is what the jitter buys
+  // and what it costs: every centimetre of yaw play is a centimetre the chair has to stand back
+  public static inline var CHAIR_OUT = 0.87;
   public static inline var CHAIR_YAW_JIT = 0.35;
 
   // the WC pan itself, the other glb of the set: 0.75 m to the cistern top and 0.7 m front to back.
@@ -1109,10 +1121,22 @@ class FacilityStyle
   // which is the whole risk on this one: the height IS the width here, and a segment that is not
   // exactly a cell long gaps or overlaps at every cell boundary in the park
   public static inline var FENCE_BLENDER = true;
-  // and the PARK BENCH, 1,620 authored triangles against 3,650 generated ones. Its aspect 1.52 and
+  // and the PARK BENCH, 1,660 authored triangles against 3,650 generated ones. Its aspect 1.52 and
   // its 3.557 x 1.70 footprint are both held: PARK_BENCH_H is fitted to the first and BIN_SIDE /
-  // BIN_BACK to the second, so the litter bin beside it does not move
+  // BIN_BACK to the second, so the litter bin beside it does not move. The nine slats sit on ONE
+  // lumbar curve — the first cut stood the back dead vertical and lost to the bake it replaced
   public static inline var BENCH_BLENDER = true;
+  // the WC PAN, 692 authored triangles against 4,068 generated ones — and the one prop in the set
+  // whose rebuild fixes a PLACEMENT bug rather than a triangle count. TOILET_D 1.4 is what
+  // FacilityDeco.toilets stands the pan off the cubicle wall by; the generated mesh is 0.954 deep at
+  // TOILET_H, and Models.instanced scales by HEIGHT alone, so the shipped pan floats 0.22 off the
+  // masonry it is bolted to. The hand model is 1.400 deep and lands on the wall
+  public static inline var TOILET_BLENDER = true;
+  // and the OFFICE CHAIR, 1,072 against 2,930 — the closest call of the eleven, and CHAIR_H's own
+  // comment below argues the other side of it. That comment is right about the shaped back and wrong
+  // about the five-star base it names first: five arms at 72 degrees is a loop index, not a
+  // silhouette a generator has to find, and the bake was a REJECT at 9 components / 61.8% regardless
+  public static inline var CHAIR_BLENDER = true;
   // the two ROUND low fittings — the hazard drum and the waste bin — which are instanced glbs and
   // not geometry (render.facility.FacilityDeco.placeRound). ONE height and ONE footprint for both:
   // 1.8 is already what the tunnels give the same drum glb (render.sewer.SewerStyle) and what BIN_H

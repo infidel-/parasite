@@ -5,6 +5,214 @@ verdict. Settled outcomes only. Every entry needs a matching row in
 [`3d-render.md`](3d-render.md)'s verdict table, or it is invisible. Earlier entries are in
 `3d-changes-2026-09b.md` and its predecessors.
 
+## `unwrap` GOES DEGENERATE ON A CURVED FACE, and the poly probe found it (2026-09-13)
+
+Reported from the game by clicking three faces with `P` and pasting the reports back. All three came
+back with **three UVs landing on two points** — a zero-area UV triangle spanning the plastic rect's
+full diagonal, i.e. the band smeared across the face:
+
+```
+face #32    local 0.521,0.173,0.01     uv  0.03,0.52 | 0.03,0.52 | 0.97,0.73
+face #1302  local 0.341,1.05,-0.261    uv  0.97,0.73 | 0.97,0.73 | 0.03,0.52
+face #1247  local -0.341,1.114,-0.234  uv  0.97,0.73 | 0.03,0.52 | 0.03,0.52
+```
+
+A wheel and the two armrests — **exactly the pieces that stopped being boxes in the previous pass.**
+
+**THIS IS THE BENCH SLATS' TRAP IN ITS OTHER FORM.** `unwrap` maps a face over its own bounding box
+in the two axes it measures WIDEST. On an axis-aligned box that guess is unambiguous and it has
+served every prop here. On a CURVED piece it is not merely wrong, it is **degenerate**: a face on a
+bar or a wheel can project to a LINE in the two axes the guess picks, and then every vertex lands on
+one corner of the rect or the other. The bench found the wrong-90°-rotation half of this; this is the
+zero-area half, and it only appears once a prop has faces that are not axis-aligned.
+
+Three fixes, by what the piece is:
+
+- **A lathe has `lathe_uv`** — u once around from the seam, v up the piece. Wheels and the hub.
+- **A swept bar has nothing** (its rings share no axis), so it takes a rect **collapsed to one
+  texel**, which no projection can degenerate. The band's pebble grain is sub-texel on a
+  0.055-radius bar at this camera; it was never carrying anything the flat colour does not.
+- **A pad takes `flat_uv` over its OWN two axes.** `lathe_uv` was tried here first and is wrong for a
+  different reason: it runs u once around the whole perimeter, which **compressed the weave into a
+  coarse mesh screen**. A pad's art is flat art on a flat face.
+
+**The check is now a line in `propstat`, i.e. part of the acceptance gate**: count triangles whose UV
+triangle has zero area, and report the ones spanning more than two texels. A one-texel rect is
+degenerate *on purpose* — it is how a flat colour is stated here — so the area test alone over-reports
+wildly and the bracketed count is printed only as context. Swept across every hand-modelled prop:
+chair 14 zero-area / **0 smears**, bin 32 / 0, bench 136 / 0, cone 24 / 0, reel 30 / 0, fence 0 / 0,
+basin, bookcase, cabinet, machine, drum and gas rack 0 / 0 — and it caught **8 real smears on the WC
+pan's flush plate**, whose side faces are constant in x or y under the `(x, y)` map its top face
+needs. Same fix: one texel for every face but the one the camera looks down on. `facility/desk-plant`
+reports 144, spanning ≤3 texels on leaf stems, which is the threshold being tight rather than a fault
+worth chasing.
+
+**AND THE CHAIR STOOD IN THE WALKWAY, BECAUSE `CHAIR_OUT` WAS MEASURED OFF THE WRONG THING.**
+Reported as the chair intersecting the player. `FacilityWork.chairs` placed it at `CELL/2 +
+CHAIR_OUT` from the desk cell's centre — i.e. off the **CELL EDGE** — and an office desk does not
+reach its cell edge: `DESK_D` is **2.6** in a 4.0 cell, thinned on the OPEN side alone so the run
+hugs its wall, so the desk's face sits `DESK_D + BENCH_LIP − CELL/2` = **0.8** from the cell centre
+and a full **1.2 INSIDE** the edge the placement measured from. Every chair stood 1.2 further out
+than the constant said.
+
+**THE FIRST FIX WAS A GUESS AND IT BARELY MOVED.** Cutting `CHAIR_OUT` 1.5 → 0.85 on the reasoning
+above closed 0.65 and was reported back as no visible change — correctly, because the remaining gap
+was still **1.35, wider than the chair is deep**. Two capture attempts then failed to prove anything
+either way: `reload.mjs` lands the camera slightly differently each time, so a before/after pair of
+screenshots is not the same view. **Raycasting is what settled it** — cast straight down across the
+desk and the chair at 0.1 intervals and read the hit heights: worktop (y 2.0) from x −132.10 to
+**−129.15**, bare floor to **−127.80**, then the chair. The gap is a measurement, not an impression.
+
+Fixed at the source: `FacilityWork.chairs` now derives the desk's face from `DESK_D` rather than
+carrying a number that can drift from it, and `CHAIR_OUT` **0.87** means what it says — how far the
+chair's centre stands off **the desk's own open face**. Re-measured the same way: desk edge −129.15,
+chair now starts **−128.90**, so the gap is **0.25 where it was 1.35** and the chair sits 1.77 clear
+of the next cell's centre. **The floor on that number is the JITTER, not the chair**: the plan
+footprint is 1.231 × 1.294, so a yaw of `CHAIR_YAW_JIT` 0.35 swings the reach along the desk axis to
+`0.647·cos(0.35) + 0.616·sin(0.35)` = **0.819** — at 0.87 the front wheels just touch the desk at
+full jitter and clear it by 0.22 when square. Every centimetre of yaw play is a centimetre the chair
+has to stand back, and the casework is solid to `BENCH_H` 2.0 with no knee-hole to tuck into.
+
+**AND THE CHAIR'S LOWER HALF WAS TOO BRIGHT UNDER AMBIENT**, reported from the game. That was me
+chasing the indoor family's ~78 with a per-band lift: the mean was low because the prop gained dark
+AREA (swept arms, wheels, a turned hub), not because the object was dark, and lifting the bands to
+fix the mean made a black plastic base read as light grey. Pulled back — plastic ×0.517 to luma 52.4,
+gunmetal ×0.584 to 59.7 — and the prop now samples **61** rather than 74. That is under the family
+number on purpose: **a five-star base IS a dark object**, and the alternative lever (`baseColor`, a
+flat scalar on the whole prop) would have taken the teal down with it. Split ratio also fell 3.34 →
+2.47, the one-texel rects sharing more vertices than a per-face bbox map ever could.
+
+## The litter bin gets a real hole, and the chair gets curves (2026-09-13)
+
+Both props' second cut, and the same lesson twice: **a shape stated as boxes and flat art measures
+well and reads wrong.** Bin **572 tris** (was 504), chair **1,344** (was 1,072), both still
+`holes 0, coplanar 0` and both still hitting every locked number.
+
+**THE BIN'S MOUTH WAS PAINTED AND IS NOW A HOLE.** The first cut stated the bin the way its art
+does — one green can wearing a wrap with the litter aperture painted on it at u 0.311..0.644, the
+mouth landing wherever the seam put that paint. It is the cheapest possible statement of the shape
+and it is wrong, because **a painted mouth has no depth and the one thing a litter bin IS, is a
+hole.** Rebuilt to the reference the generator itself worked from: a charcoal **hood** over the top
+quarter instead of a domed lid the colour of the body, a real **letterbox slot** through that hood's
+wall (four of sixteen sectors = 90°, centred on local +Z), and the green ribbed body below.
+
+**THE SLOT GOES THROUGH THE WALL, SO IT IS MISSING FROM BOTH SURFACES.** Cutting it out of the outer
+wall alone left the sill and the lintel meeting an inner wall that was still whole — **three faces on
+one edge, ten non-manifold edges**, and a mouth sealed shut by a skin you cannot see. With both cut
+the eye goes in and lands on the FAR inner wall, which is where the depth comes from. The hood is
+built ring by ring rather than with `tube`, because a lathe cannot miss out four sectors of one band;
+its winding is not reasoned about at all — **`recalc_face_normals` on a closed shell is one call
+against sixteen chances to get a quad backwards.**
+
+**AND THE HOOD'S GREY WAS MEASURED OFF THE REFERENCE, WHICH IS THE ENTRY.** I guessed it at luma
+44.5 against the body green's 76.1 — ratio 0.58 — on the reasoning that the reference's hood "is
+charcoal". It is not: `trash-bin-src.png` draws the hood at **75.4 against the body's 72.9, ratio
+1.035**, the *same value*. It reads as dark because it is **NEUTRAL beside a green**, not because it
+is darker. The guess cost the prop's sampled level 68 → **48**, against the generated bin's effective
+78 (map 138 × `baseColor` 0.30). At the measured ratio it sits at 64 with the slot lining — which is
+darker, at the reference's own 0.588 — doing the rest. Both swatches are painted into **the part of
+the sheet nothing reads any more**: with the mouth in geometry the body wraps only the lower 60% of
+the art, leaving the old painted mouth and the old rim band dead, so a neutral the sheet never had
+costs no second file and no second bind. `SEAM` drops 0.7726 → **0.75**: it existed to land the
+painted mouth on +Z, and with the mouth in the geometry its only job is to hide itself at the back.
+
+**THE CHAIR: NOTHING ON A TASK CHAIR IS STRAIGHT.** The castors were the worst of it — boxes, on the
+argument that a castor is three texels at this camera. True of ONE castor and false of five: the base
+is the widest thing on the prop and its rim is the whole of what an overhead camera gets, so **five
+square blobs read as a cross and five wheels read as a chair.** A wheel is a lathe lying on its side,
+tipped a quarter turn about x so it turns about the TANGENT, with the tyre's crown in its profile.
+The arms under them are **swept bars** on a path from hub to wheel (a star base's arms sweep down and
+out; a box states neither half), the hub is **turned** (it sits dead centre of the star where the
+camera looks straight down, and a square one showed its corners between the arms), the armrests are
+**one bent bar** each rather than a pad on a post, and the seat and both back panels are **rounded
+lathes** — `roundrect` carrying the plan, the profile rounding the two edges the eye crosses, which
+is the WC pan's rim trick one prop over. +272 tris for all of it.
+
+**A POLYGON STANDS ON ITS FLAT, NOT ON ITS RADIUS.** A 10-gon's lowest vertex is `R*cos(18°)` below
+centre, so wheels hung at `WHEEL_R` left the whole chair floating **4.2 mm** off the floor — `z_min`
+caught it. And the fabric/plastic split now takes its axis as an ARGUMENT: picking those faces by
+area fixed the box version and cannot work on a lathe of fifty small quads, so it is by normal
+against a given axis — guessing the axis is what upholstered the first backrest's *edges*.
+
+Levels refitted after both rebuilds, because added dark area moves the mean: chair back to **74**
+(plastic band ×1.45, gunmetal ×1.20 on top of the earlier per-band fit), bin left at **64** — its
+green is untouched and only the new hood and lining moved it, where the generated bin's 78 includes
+no real hole at all.
+
+## The WC pan and the office chair: A REBUILD THAT FIXES A PLACEMENT BUG (2026-09-13)
+
+The washroom and the workstation, step 5 of the rebuild order. **692 tris against 4,068** and
+**1,072 against 2,930**, both `holes 0, coplanar 0`.
+
+**THE PAN IS BUILT TO A NUMBER THE BAKE MISSED, and that is the whole argument for the fourth route
+in one line.** `FacilityStyle.TOILET_D` **1.4** is what `FacilityDeco.toilets` stands the pan off the
+cubicle wall by — `back = TOILET_D / 2 + STAND_GAP` — and its own comment says "0.7 m front to back".
+The generated mesh is **0.954 deep** at `TOILET_H` 1.5, because `Models.instanced` scales by HEIGHT
+alone and nothing ever checked the other axis: **the shipped pan floats 0.22 off the masonry it is
+bolted to.** Built to 1.400 exactly, `TOILET_D` stops being nominal. Not a triangle count, a bug.
+
+**The bowl is OPEN and that is the point** — the camera pitches 51° down, so what it sees of a WC is
+the ring and the hole inside it, `roof-ac`'s fan-guard argument indoors. ONE `tube` states it:
+`buildlib.tube`'s vessel rule runs the profile out to the rim, over the seat and back DOWN the inside
+to the bowl floor, so pan, seat ring and bowl are one closed surface with **no ring to cap and no
+hole to leave**. Two fits behind it: the `roundrect` corner radius at 0.55 of the half-width came back
+a rounded RECTANGLE (a modern square pan), **0.9** is what makes it an oval at forty tiles; and the
+flush plate is what MEASURES H, so the cistern lid drops by what the plate stands proud, or the prop
+is 1.521 tall and `TOILET_H` is the number that scales everything else. **A white fixture takes a
+white arris** — the chamfer strips are one texel of PORCELAIN, not the dark texel the bench uses,
+because a pan outlined in black reads as a decal.
+
+**THE CHAIR IS THE CLOSEST CALL OF THE ELEVEN AND THE GAME ARGUES THE OTHER SIDE.** `CHAIR_H`'s own
+comment says the chair is the case FOR a mesh generator — "a real irregular silhouette (a shaped
+back, arms, a five-star base on castors)". Right about the back, wrong about the base it names first:
+**five arms at 72° is a loop index**, not a symmetry a generator has to find in a bake. And the bake
+was a REJECT anyway (9 components at 61.8%, split 2.36×), so the silhouette it was supposed to buy
+never arrived. **THE BACK IS SPLIT** because `CHAIR_H` 2.1 is 1.05 m to the top over a seat at 0.425
+m: 0.6 m of backrest is geometrically right and, as one panel, reads as a **throne**. A lumbar panel,
+a gap and a headrest is what a task chair looks like at that height, and the gap does the work.
+
+**THE MATERIAL SPLIT DOES THE JOB A UV SPLIT WOULD** — the bench's lesson taken cheaply. Seat and
+back panels wear FABRIC on their two BIGGEST faces and PLASTIC on the other four, which is truer to
+the object (fabric really does stop at the moulded shell) and skips a three-way `flat_uv`. Choosing
+those faces by NORMAL is the trap: it worked on the seat and silently upholstered the backrest's top
+and bottom EDGES, because a raked panel's big faces are its ±y pair. **Area is the property that
+means "the face a person meets", at any angle.**
+
+**A PIECE IS COLLECTED BY IDENTITY, NEVER BY INDEX SLICE.** `bm.verts[n0:]` after an
+`ensure_lookup_table` looks like "the piece I just built" and is not — `bmesh.ops.bevel` reallocates
+and REORDERS the vert table. The slice came back holding part of the headrest, a second rotation was
+applied to it, and the chair measured **3.510 against CHAIR_H 2.1** and 0.67 too deep with no error
+raised anywhere: the `measure` print was the only thing that caught it. `[v for v in bm.verts if v
+not in pre]` is the fix. **The bench's script had the same latent slice** and happened to survive it;
+fixed there too, rebuild byte-identical at 1,660 tris and every locked number unchanged.
+
+**`check` found two more numbers.** An arm of half-width 0.06 is clear of its 72° neighbour only
+outside `r = 0.06 / tan(36°)` = 0.083 — started at 0.05, the five arms overlapped **each other** near
+the hub and put five top faces on one plane, so `ARM_IN` 0.11. And `BACK_W` 0.58 rather than 0.62,
+because the lumbar panel's foot sits INSIDE the seat pad (that is the join) and at 0.62 its ±x faces
+ran 0.01 from the pad's own — a back narrower than its seat is also simply what a task chair is.
+
+**ONE 1152×576 PACK2, CROPPED TO TWO NATIVE 512s.** A 2×2 would have wasted half the image on two
+props; 2:1 at the pixel floor gives each a 576 cell for **$0.026**, cheaper than one 1k square.
+Bands at v 0.497 and 0.743 on both halves: porcelain / charcoal seat / brushed steel, and teal
+fabric / black plastic / gunmetal.
+
+**AND THE CHAIR'S LEVEL IS PER-BAND, WHICH IS NEW.** `sheetlevel.py` scales a whole file, right when
+a sheet is one object's art and wrong when it is a SWATCH CHART. The chair's teal already sat at
+luma 75 where an indoor prop wants to be, while its black plastic sat at 37 — one factor fixing the
+mean either leaves the plastic black or takes the fabric to a **157-chroma scream**. Per-band
+(plastic ×2.55, gunmetal ×1.25, fabric untouched) still holds every ratio inside the band it touches,
+which is all the linear rule protects. Sampled **72**, against the generated chair's `baseColor` 0.45
+landing it ~74. The pan took a whole-sheet ×0.227 then ×0.844 to sampled **94** — the hand-made
+basin's number exactly, and two white fixtures in one washroom have to agree.
+
+**A LOGGED USER VERDICT ALMOST GOT OVERTURNED HERE.** The generated chair's own `models.json` note
+records that its first teal was "reported back from the game as a chair that does not belong in the
+room" and was cut from sampled chroma 37.4 to 11.7. That history was not in front of me when the
+palette question was asked, and "push the teal" was answered against the *shipped* 11.7. The new
+fabric is drawn at chroma 100 in its own band but the prop samples at **atlas 49.5** — between the
+two, which is where it should be, and checked in game at the real camera before it shipped.
+
 ## The park bench: A BENCH IS ONE CURVE, and MAP BEFORE YOU CHAMFER (2026-09-13)
 
 Last of the four kerbside props. **1,660 tris against the generated bench's 3,650**, measured

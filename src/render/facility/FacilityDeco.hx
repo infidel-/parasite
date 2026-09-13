@@ -97,6 +97,10 @@ class FacilityDeco
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
+  // the WC pan the flag picks, resolved once so the batch and its warm row cannot disagree
+  public static final TOILET_PATH = FacilityStyle.TOILET_BLENDER ?
+    RenderConfig.MODELS.facilityToiletHand : RenderConfig.MODELS.facilityToilet;
+
   // the blink clock every rack's lights reference BY IDENTITY, in BASE_MS units — so writing .value
   // reaches every light at once. the shared-uniform idiom render.wild.WildGrass' wind runs on
   static var uTime = { value: 0.0 };
@@ -1135,12 +1139,12 @@ class FacilityDeco
               y: y,
             });
           }
-      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityToilet, places,
+      var prop = Models.instanced(scene, TOILET_PATH, places,
         FacilityStyle.TOILET_H, SOLID);
       // NOT CASTING, the drums' own finding: an instanced batch is drawn into the moon's shadow map
       // as many times as into the frame, and these stand under a faded roof
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityToilet, function(_)
+        Models.get(TOILET_PATH, function(_)
           {
             VisionMask.patchMesh(prop.mesh);
             prop.mesh.castShadow = false;

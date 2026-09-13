@@ -27,6 +27,14 @@ What a .glb reports and why each number is there:
   albedo mean sRGB against the prop family's 46-52, whole-atlas and sampled at triangle UV
     CENTROIDS (a vertex UV sits on a chart corner, which is the gutter). The two disagreeing
     means the atlas is mostly padding.
+  UV SMEARS: triangles whose three UVs enclose ZERO AREA, so the face samples a LINE of the
+    atlas and stretches it. This is a HAND-MODELLING fault, not a bake one: buildlib's
+    `unwrap` maps a face over its bbox in the two axes it measures widest, which is
+    unambiguous on an axis-aligned box and degenerate on a swept bar or a wheel, where a
+    face can project to a line in those two axes. The count in brackets is zero-area
+    triangles ON PURPOSE -- a 1-texel rect is how a flat colour is stated here -- so read
+    the first number only. Fix by mapping those faces by axis (lathe_uv for a turned piece,
+    flat_uv for a flat one) or by collapsing their rect to one texel.
   the MR map: glTF packs G = roughness, B = metalness. Pure green is a rough dielectric and
     is fine; cyan is metalness ~1 across the whole prop, which underground with no env map
     renders BLACK rather than chrome, and needs dropMR. Re-read it after every regeneration
@@ -162,6 +170,27 @@ def stat_glb(path):
             '%dpx' % im.shape[0], *rgb.round(), *s.round()))
         print('  chroma         atlas %.1f   sampled %.1f   (max-min; a coloured prop wants > 25)'
               % (rgb.max() - rgb.min(), s.max() - s.min()))
+        # UV SMEARS. A triangle whose three UVs enclose ZERO AREA samples a LINE of the atlas and
+        # stretches it across the whole face. buildlib's `unwrap` makes them on CURVED geometry:
+        # it maps a face over its bbox in the two axes it measures widest, which is unambiguous on
+        # an axis-aligned box and DEGENERATE on a swept bar or a wheel, where a face can project to
+        # a line in those two axes and every vertex lands on one corner of the rect. Found first by
+        # clicking three office-chair faces with the poly probe (debug `P`); this counts them.
+        #
+        # A ONE-TEXEL RECT IS DEGENERATE ON PURPOSE -- it is how a flat colour is stated here, and it
+        # renders as that colour -- so zero area alone over-reports wildly (the bench has 136 and not
+        # one of them is wrong). Only a degenerate triangle whose UVs span more than TWO TEXELS is
+        # actually smearing something.
+        ua, ub, uc = uv[tri[:, 0]], uv[tri[:, 1]], uv[tri[:, 2]]
+        flat = np.where(np.abs((ub[:, 0] - ua[:, 0]) * (uc[:, 1] - ua[:, 1])
+                               - (uc[:, 0] - ua[:, 0]) * (ub[:, 1] - ua[:, 1])) < 1e-9)[0]
+        smear = 0
+        if len(flat):
+            t = uv[tri[flat]]
+            smear = int(((t.max(axis=1) - t.min(axis=1)).max(axis=1) > 2.0 / im.shape[0]).sum())
+        print('  uv smears      %d  (of %d zero-area tris; a 1-texel rect is zero-area ON PURPOSE)'
+              '  -> %s' % (smear, len(flat), 'ok' if smear == 0 else
+                           'SMEARED: map those faces by axis (lathe_uv/flat_uv) or give them 1 texel'))
         # texels per triangle, and the `tex` that holds it near what the source was authored at.
         # this is only meaningful against the BAKED tex -- on a models-src source it is just the
         # 2048 export over a small tri count, which is why the recommendation is what gets printed
