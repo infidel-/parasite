@@ -43,12 +43,33 @@ class FacilityArea implements Area3D
     // their sibling the BIN is deliberately absent: it rides the compound's existing bin batch,
     // four rows up, rather than opening a call of its own
     .concat([for (p in FacilityDeco.PROPS) p.path])
-    // and the two ROOM TEMPLATE batches, last because `green` pushes them last: the cubicles' WC pans
-    // and the chairs at the office desks. the workstations themselves are NOT here and no longer a
-    // batch at all — they are emitted geometry now (render.facility.FacilityWork)
+    // and the ROOM TEMPLATE batches, last because `green` pushes them last: the cubicles' WC pans,
+    // the chairs at the office desks and the three objects standing on those desks. the workstation
+    // is three batches and not one because the tower stands on a hand rolled per desk — see the
+    // header of render.facility.FacilityWork
     .concat([
       RenderConfig.MODELS.facilityToilet,
       RenderConfig.MODELS.facilityChair,
+      RenderConfig.MODELS.facilityMonitor,
+      RenderConfig.MODELS.facilityTower,
+      RenderConfig.MODELS.facilityKeyboard,
+      // and the desk trinkets, in FacilityWork.TRINKETS' own order
+      RenderConfig.MODELS.facilityDeskMug,
+      RenderConfig.MODELS.facilityDeskPlant,
+      RenderConfig.MODELS.facilityDeskLamp,
+      RenderConfig.MODELS.facilityDeskTray,
+      // and the FITTINGS that ship as glbs (render.facility.FacilityDeco.fittings): the two server
+      // racks, which are two MESHES and not one at two scales, then the storage cabinet. Every row
+      // stays even when its family's ..._GLB flag is off — an empty batch is a row with a count of
+      // 0, and this list has to stay index-aligned with `green`
+      RenderConfig.MODELS.facilityRack,
+      RenderConfig.MODELS.facilityRackLow,
+      RenderConfig.MODELS.facilityCabinet,
+      // the machine twice, because two HEIGHTS off one path are still two batches
+      RenderConfig.MODELS.facilityMachine,
+      RenderConfig.MODELS.facilityMachine,
+      RenderConfig.MODELS.facilityBookcase,
+      RenderConfig.MODELS.facilityBasin,
     ]);
 
   var game:Game;
@@ -190,7 +211,7 @@ class FacilityArea implements Area3D
       // the borrower has to fill before the owner merges
       var workLeds = MeshBufTools.make();
       var workCable = MeshBufTools.make();
-      work = FacilityWork.build(scene, model, workLeds, workCable);
+      work = FacilityWork.build(model, workLeds, workCable);
       // and with both worktop families now standing, the clue spots they have covered come out of the
       // area's own list. AFTER the sinks and the workstations because it reads what those two placed,
       // and a prune rather than a check at spawn time because a document arrives in the turn loop
@@ -260,6 +281,15 @@ class FacilityArea implements Area3D
       // washroom's cubicles, and the chairs pushed up to the offices' workstations
       green.push(FacilityDeco.toilets(scene, model));
       green.push(FacilityWork.chairs(scene, model));
+      // and the monitor, the tower and the keyboard standing on the desks those chairs are pushed up
+      // to. their leads and status lights went out through `build` above, into the two buffers this
+      // family borrows — only the three objects themselves are batches
+      for (p in FacilityWork.props(scene, model))
+        green.push(p);
+      // and the hand-modelled fittings, last because EXTRA names them last — one batch per mesh,
+      // each empty when its family's quads are the ones shipping (FacilityDeco.fittings)
+      for (p in FacilityDeco.fittings(scene, model))
+        green.push(p);
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
       // the same construction-order fact recorded above and what this quad's larger eps says it

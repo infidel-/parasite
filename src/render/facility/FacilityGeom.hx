@@ -601,19 +601,22 @@ class FacilityGeom
           // cannot open a slit. the head and sill caps below keep the opening's true size, so only
           // the glass grows and the extra is buried in the masonry.
           //
-          // ACROSS the run it grows by WINDOW_EPS instead, which is a standoff and not an overlap:
-          // the masonry above and below an opening is emitted on THIS cell's slab, i.e. the glazing
-          // plane, and a flush pane that overlaps it is two coplanar surfaces z-fighting along the
-          // head and the sill. Widening the rect on the cross axis pushes BOTH faces off that plane
-          // at once, each away from the slab's centre and so each in its own outward direction
+          // ACROSS the run it SHRINKS instead, by WINDOW_INSET, and that is the glass being set into
+          // its opening rather than glazed onto the face of it. The masonry above and below is
+          // emitted on THIS cell's slab, i.e. the glazing plane, so a pane flush with that plane is
+          // coplanar with the spandrel it meets — z-fighting at best and, as reported from the game,
+          // a window that reads as painted ON the wall instead of in it. Narrowing the rect pulls
+          // BOTH faces off the plane at once, each toward the slab's centre, so each ends up inside
+          // its own side and the head and sill caps below — which keep the opening's TRUE size —
+          // stand proud of the glass as the reveal
           var pb = (w.high ? panesHigh : (w.len == 2 ? panes2 : panes));
           var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
           var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
-          var ge = FacilityStyle.WINDOW_EPS;
-          var px0 = w.alongX ? x0 - gr : x0 - ge;
-          var px1 = w.alongX ? x1 + gr : x1 + ge;
-          var pz0 = w.alongX ? z0 - ge : z0 - gr;
-          var pz1 = w.alongX ? z1 + ge : z1 + gr;
+          var ge = FacilityStyle.WINDOW_INSET;
+          var px0 = w.alongX ? x0 - gr : x0 + ge;
+          var px1 = w.alongX ? x1 + gr : x1 - ge;
+          var pz0 = w.alongX ? z0 + ge : z0 - gr;
+          var pz1 = w.alongX ? z1 - ge : z1 + gr;
           pane(pb, px0, px1, pz0, pz1, outDir, lo - gy, lo + tall + gy);
           pane(pb, px0, px1, pz0, pz1, inFace, lo - gy, lo + tall + gy);
           // the reveal, top and bottom. the jambs at the run's ends are already closed by the

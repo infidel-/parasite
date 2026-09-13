@@ -730,14 +730,64 @@ class RenderConfig {
     facilityDrumSteel: 'models/facility/drum-steel.glb', // grey drum, clean steel, hoop ribs
     facilityDrumBio: 'models/facility/drum-bio.glb',     // yellow drum, biohazard livery
     facilityDrumRad: 'models/facility/drum-rad.glb',     // red drum, radioactive livery
-    // the two ROOM TEMPLATE props, and the pair is worth reading together because a third one was
-    // DELETED from between them. A WC pan is a curved shell with a cistern behind it and a chair is a
+    // and the same four ROUND props hand-modelled instead of generated — a twelve-sided can and four
+    // eight-sided bottles in an angle-iron frame, wearing a pack4 of flat UNROLLED cylinder wraps
+    // rather than a bake (models-src/facility/drum_build.py). FacilityStyle.DECO_DRUM_BLENDER picks
+    // between the pairs; no draw call is at stake here, only triangles and control of the palette
+    facilityDrumSteelHand: 'models/facility/drum-steel-hand.glb', // 44 tris against 1,200
+    facilityDrumBioHand: 'models/facility/drum-bio-hand.glb',     // same can, yellow cell
+    facilityDrumRadHand: 'models/facility/drum-rad-hand.glb',     // same can, orange-red cell
+    facilityGasHand: 'models/facility/gas-rack-hand.glb',         // 284 tris against 5,710
+    // the four things that stand ON the researcher's desk, all off one pack4 and all NEW — nothing
+    // was there before but the three machines (models-src/facility/desk_build.py). Placed by
+    // render.facility.FacilityWork.trinket, two per desk
+    facilityDeskMug: 'models/facility/desk-mug.glb',           // cup, 28 tris
+    facilityDeskPlant: 'models/facility/desk-plant.glb',       // pot and a leaf cone, 56
+    facilityDeskLamp: 'models/facility/desk-lamp.glb',         // foot, stem, shade, 52
+    facilityDeskTray: 'models/facility/desk-tray.glb',         // a sheaf and a folder, 24
+    // the ROOM TEMPLATE props. A WC pan is a curved shell with a cistern behind it and a chair is a
     // shaped back over a five-star base on castors: both are silhouettes no axis-aligned quad states,
-    // which is what earns a mesh generator. facility/computer.glb was neither — a monitor, a tower and
-    // a keyboard are three slabs, it came back blocky, and render.facility.FacilityWork emits the
-    // whole set as 22 quads off one sheet instead
+    // which is what earns a mesh generator
     facilityToilet: 'models/facility/toilet.glb',        // WC pan, closed cistern, lid down
     facilityChair: 'models/facility/chair.glb',          // office swivel chair, arms, star base
+    // and the workstation on the desk in front of that chair, which is the one family here to have
+    // been a glb, then emitted quads, and now a glb again — for a different reason each time. The
+    // GENERATED facility/computer.glb died correctly: 1,200 triangles rounding the corners off three
+    // slabs, reported as blocky. The 22 emitted quads that replaced it were right about the
+    // proportions and could state no silhouette at all. These three are HAND-MODELLED IN BLENDER
+    // (models-src/facility/computer_build.py) on the same FacilityStyle numbers, at 268/116/44 tris,
+    // and they wear the game's OWN facility/workstation sheet rather than a bake — so the screen
+    // tilts, the tower's front panel is recessed and the keyboard is a wedge, which is what the
+    // quads could not do. THREE PATHS AND NOT ONE PROP: the tower stands on a hand rolled per desk
+    // (WorkSpot.side), so a fused set could only ever stand on one of them
+    facilityMonitor: 'models/facility/computer-monitor.glb',   // screen on a tapered neck, tilted 8° back
+    facilityTower: 'models/facility/computer-tower.glb',       // desktop case on end, front panel recessed
+    facilityKeyboard: 'models/facility/computer-keyboard.glb', // keyboard wedge, front lip low
+    // the server rack, the first of the room FITTINGS down that same route
+    // (models-src/facility/rack_build.py, 156 tris). It does NOT replace the four quads
+    // render.facility.FacilityDeco still emits — FacilityStyle.DECO_RACK_GLB picks between them and
+    // both ship, because a fitting on a wall is exactly the axis-aligned slab the triage says to
+    // EMIT and the only way to settle that is to measure both in the same frame
+    facilityRack: 'models/facility/deco-rack.glb',             // six chassis in a skirted frame
+    // and the one-tile cabinet, which is a SECOND MESH and not the first one scaled. DECO_RACK_LOW_H
+    // is DECO_RACK_TILE, i.e. exactly three chassis, and FacilityDeco.lights deals its status specks
+    // off that same arithmetic — Models.instanced scales by HEIGHT alone, so the six-chassis mesh
+    // drawn at the low height gave six squashed units under three rows of lights
+    facilityRackLow: 'models/facility/deco-rack-low.glb',      // three of them, same frame
+    // and the storage cabinet, same switch and same argument: three labels emitted is three calls,
+    // one packed sheet is one. Its shape claim is smaller than the rack's — two proud door LEAVES,
+    // for a reveal at their edges and a toe kick under them (models-src/facility/cabinet_build.py)
+    facilityCabinet: 'models/facility/deco-cabinet.glb',       // double-door case, leaves proud
+    // and the lab machine, ONE mesh for both of its heights — DECO_MACHINE_LOW_SZ is not a count of
+    // anything, the unit is a cube at either size and `machLights` reads fractions, so scaling by
+    // height (which is all Models.instanced does) is exactly right here and was wrong for the rack
+    facilityMachine: 'models/facility/deco-machine.glb',       // three bands, louvre panel set back
+    // and the bookcase, whose whole read at this camera is that the BOARDS stand in front of the
+    // spines — four proud boxes running between the stiles (models-src/facility/bookcase_build.py)
+    facilityBookcase: 'models/facility/deco-bookcase.glb',     // four boards, books behind them
+    // and the washroom counter, whose bowl is a real RECESS and whose tap is two boxes — which
+    // between them retire the family's only alpha-cut mesh (models-src/facility/basin_build.py)
+    facilityBasin: 'models/facility/deco-basin.glb',           // counter, sunk bowl, mixer tap
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

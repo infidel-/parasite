@@ -14,19 +14,26 @@ import render.world.VisionMask;
 // the workstation standing on a researcher's desk: a monitor on a stand, a tower beside it, a
 // keyboard in front, two leads between them and a pair of status lights on the tower.
 //
-// IT WAS A GLB AND THAT WAS THE WRONG CALL. facility/computer.glb spent 1,200 triangles on three
-// axis-aligned slabs and was reported, correctly, as blocky — which is CLAUDE.md's own test: a
-// silhouette earns a mesh generator and a SURFACE does not, and a monitor is a rectangle with a
-// picture on it. Emitted, the whole set is 22 quads, its proportions are FacilityStyle's numbers
-// rather than a bake's approximation of them, and every face samples the game's own art at full
-// texel density. The one piece of the set that IS a silhouette — the chair, with its shaped back and
-// its five-star base — stayed a glb, which is the same test answered the other way.
+// THIS FAMILY HAS BEEN A GLB, THEN QUADS, THEN A GLB AGAIN, and the three verdicts do not contradict
+// each other. The GENERATED facility/computer.glb was wrong and stays dead: 1,200 triangles rounding
+// the corners off three axis-aligned slabs, reported as blocky, which is CLAUDE.md's "a box is not a
+// prop" answered late. The 22 emitted quads that replaced it were right about everything the
+// generator got wrong — FacilityStyle's proportions exactly, the game's own art at full texel
+// density, one draw call for the compound — and could state no silhouette at all: five flat faces,
+// a screen with no tilt and no bezel, a keyboard that is a 0.1-tall box.
 //
-// ONE TEXTURE FOR THE WHOLE SET and not one per face. Four authored cells on a 2x2 sheet, addressed
-// by sub-rect: the facility/sink idiom, where two images would have been two materials, two meshes
-// and two draw calls to draw one fixture. So a compound's every workstation is ONE draw call, and
-// the leads and the lights cost none at all — they are pushed into buffers two other families
-// already merge (render.facility.FacilityCable's ribbon and FacilityDeco's additive LED mesh)
+// What ships now is the third answer, HAND-MODELLED IN BLENDER off those same constants
+// (models-src/facility/computer_build.py, docs/3d-models.md's fourth route): 268 + 116 + 44 tris for
+// a screen that tilts 8° back on a real bezel, a tower with its front panel recessed, and a keyboard
+// that is a wedge. It keeps the quads' art — the UVs land on the same facility/workstation cells —
+// so the only thing that changed is the shape, which is the only thing that was wrong.
+//
+// THREE PROPS AND NOT ONE. The tower stands on a hand rolled per desk (WorkSpot.side), so a fused
+// set could stand on one of them only. The cost is three instanced batches where the quads were one
+// merged mesh; the leads and the lights still cost nothing, being pushed into buffers two other
+// families already merge (render.facility.FacilityCable's ribbon and FacilityDeco's additive LED
+// mesh). The chair behind the desk was a glb through all three passes — a shaped back on a five-star
+// base is a silhouette whichever way the rest of the set went
 class FacilityWork
 {
   static inline var CELL = CityConfig.CELL;
@@ -77,13 +84,120 @@ class FacilityWork
       };
     }
 
-// every workstation in the compound, merged. `leds` and `cab` belong to other families and are
-// borrowed: the lights go in render.facility.FacilityDeco's additive mesh and the leads in
-// FacilityCable's ribbon, so this whole pass costs exactly ONE draw call however many desks it
-// dresses. Returns how many it stood
-  public static function build(scene:Scene, m:Facility, leds:MeshBuf, cab:MeshBuf):Int
+// the four things that stand on a desk BESIDE the machines, and which of them this cell carries.
+//
+// PURE, LIKE `at` ITSELF, and that is the point of it being here rather than inside `props`: the
+// placement is a function of the saved grid alone, so render.facility.FacilityClutter can ask for it
+// and keep its paperwork off them without either pass having to run first.
+//
+// A MUG ON EVERY DESK and one of the other three rolled, both at the BACK on the hand the tower is
+// not on — the tower takes one half of the worktop and the keyboard the front of the other, so this
+// is the strip that is left. Returns kind (an index into TRINKETS) and where
+  public static function trinket(m:Facility, col:Int, row:Int):Array<TrinketSpot>
     {
-      var b = MeshBufTools.make();
+      var p = at(m, col, row);
+      if (p == null)
+        return [];
+      // along the wall, away from the tower — `at` has already rolled which hand that is
+      var ax = (p.dir < 2 ? 1.0 : 0.0), az = (p.dir < 2 ? 0.0 : 1.0);
+      var s = -p.side;
+      var g = FacilityModel.mix((col * 668265263) ^ (row * 83492791));
+      return [
+        {
+          kind: 0,
+          x: p.x + ax * s * FacilityStyle.WORK_TRINKET_NEAR,
+          z: p.z + az * s * FacilityStyle.WORK_TRINKET_NEAR,
+        },
+        {
+          kind: 1 + g % 3,
+          x: p.x + ax * s * FacilityStyle.WORK_TRINKET_FAR,
+          z: p.z + az * s * FacilityStyle.WORK_TRINKET_FAR,
+        },
+      ];
+    }
+
+// the four of them, index-aligned with `trinket`'s kind — so render.facility.FacilityGround.EXTRA and
+// FacilityWarm both derive their rows off this table and a fifth trinket needs no edit in either
+  public static final TRINKETS:Array<{ path:String, h:Float, w:Float, d:Float }> = [
+    {
+      path: RenderConfig.MODELS.facilityDeskMug,
+      h: FacilityStyle.WORK_MUG_H,
+      w: FacilityStyle.WORK_MUG_W,
+      d: FacilityStyle.WORK_MUG_W,
+    },
+    {
+      path: RenderConfig.MODELS.facilityDeskPlant,
+      h: FacilityStyle.WORK_PLANT_H,
+      w: FacilityStyle.WORK_PLANT_W,
+      d: FacilityStyle.WORK_PLANT_W,
+    },
+    {
+      path: RenderConfig.MODELS.facilityDeskLamp,
+      h: FacilityStyle.WORK_LAMP_H,
+      w: FacilityStyle.WORK_LAMP_W,
+      d: FacilityStyle.WORK_LAMP_W,
+    },
+    {
+      path: RenderConfig.MODELS.facilityDeskTray,
+      h: FacilityStyle.WORK_TRAY_H,
+      w: FacilityStyle.WORK_TRAY_W,
+      d: FacilityStyle.WORK_TRAY_D,
+    },
+  ];
+
+// the contact shade under one desk's set: three quads, one per object, each on its own footprint.
+//
+// ONE ROUND POOL WAS WRONG AND THE SHAPE IS WHY. render.facility.FacilityTables used to lay a single
+// FacilityDetail.deck of radius WORK_R here — the ROUND ramp, which is right for a flask or a
+// microscope standing alone on a bench and is a MAT under three rectangular machines spread
+// WORK_TOWER_OFF apart. Reported from the game as the monitor having no contact shadow at all, which
+// is what a gradient whose edge is nowhere near the object reads as. `pool` is the square-cornered
+// ramp and takes the object's own half extents, so each of the three meets its own footprint.
+//
+// EMITTED HERE AND DRAINED THERE: the collector is FacilityDetail's and the PLATE is the worktop's
+// grown rect, which only FacilityTables knows, so it hands it in and this decides the rest off `at`
+  public static function pools(m:Facility, col:Int, row:Int, plate:FacilityGeom.Rect):Void
+    {
+      var p = at(m, col, row);
+      if (p == null)
+        return;
+      var out = p.dir ^ 1;
+      var yaw = Math.atan2(DC[out], DR[out]);
+      // the half extents are in each glb's OWN frame, before `yaw` turns it — authored front +z, so
+      // width is x and depth is z, exactly as the constants are written
+      lay(plate, p.x, p.z, FacilityStyle.WORK_FOOT_W, FacilityStyle.WORK_FOOT_D, yaw);
+      lay(plate, p.tx, p.tz, FacilityStyle.WORK_TOWER_W, FacilityStyle.WORK_TOWER_D, yaw);
+      lay(plate, p.x + DC[out] * FacilityStyle.WORK_KEY_FWD,
+        p.z + DR[out] * FacilityStyle.WORK_KEY_FWD,
+        FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_D, yaw);
+      // and one under each trinket, off the same table the batches are sized by
+      for (t in trinket(m, col, row))
+        lay(plate, t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d, yaw);
+    }
+
+// one of those three. `pooled` clamps per side to the plate, so a keyboard near the desk's open edge
+// keeps its gradient on the worktop instead of hanging it off the front
+  static function lay(plate:FacilityGeom.Rect, cx:Float, cz:Float, w:Float, d:Float,
+      yaw:Float):Void
+    {
+      FacilityDetail.pool({
+        cx: cx,
+        cz: cz,
+        hw: w / 2,
+        hd: d / 2,
+        yaw: yaw,
+        y: FacilityStyle.BENCH_H,
+        plate: plate,
+      });
+    }
+
+// the LEADS and the LIGHTS of every workstation in the compound. `leds` and `cab` belong to other
+// families and are borrowed: the lights go in render.facility.FacilityDeco's additive mesh and the
+// leads in FacilityCable's ribbon, so this pass costs NO draw call of its own however many desks it
+// dresses. The three objects on the worktop are props and come out of `props` below. Returns how
+// many desks it dressed
+  public static function build(m:Facility, leds:MeshBuf, cab:MeshBuf):Int
+    {
       var n = 0;
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -91,17 +205,106 @@ class FacilityWork
             var p = at(m, col, row);
             if (p == null)
               continue;
-            set(b, leds, cab, m, col, row, p);
+            set(leds, cab, m, col, row, p);
             n++;
           }
-      FacilityGeom.add(scene, b, FacilityStyle.WORK_TEX, true, false);
       return n;
     }
 
-// one set. everything here is axis-aligned, because a desk hugs a wall and a wall runs on an axis —
-// so the whole thing is emitted in world coordinates with no transform and no per-instance matrix,
-// which is what lets the compound's workstations merge into one mesh
-  static function set(b:MeshBuf, leds:MeshBuf, cab:MeshBuf, m:Facility, col:Int, row:Int,
+// the three objects standing on those desks, one instanced batch each. a SECOND walk of the grid
+// rather than a second return value out of `build`: `at` is a pure function of the saved grid and
+// four passes already ask it that way (FacilityTables, FacilityClutter, FacilityClues, `build`), and
+// the batches have to be made where FacilityArea's cull list is, which is long after the two
+// borrowed buffers have to be filled
+  public static function props(scene:Scene, m:Facility):Array<Models.InstancedProp>
+    {
+      var mon:Array<Models.PropPlace> = [];
+      var tow:Array<Models.PropPlace> = [];
+      var key:Array<Models.PropPlace> = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            var p = at(m, col, row);
+            if (p == null)
+              continue;
+            // every piece faces the way the screen looks — away from the wall and at whoever sits
+            // there. a glb's authored front is +z, so this is the chairs' own yaw convention
+            var out = p.dir ^ 1;
+            var yaw = Math.atan2(DC[out], DR[out]);
+            mon.push({
+              x: p.x,
+              z: p.z,
+              yaw: yaw,
+              y: FacilityStyle.BENCH_H,
+            });
+            tow.push({
+              x: p.tx,
+              z: p.tz,
+              yaw: yaw,
+              y: FacilityStyle.BENCH_H,
+            });
+            key.push({
+              x: p.x + DC[out] * FacilityStyle.WORK_KEY_FWD,
+              z: p.z + DR[out] * FacilityStyle.WORK_KEY_FWD,
+              yaw: yaw,
+              y: FacilityStyle.BENCH_H,
+            });
+          }
+      // the heights are the constants and not the meshes' own bboxes, which differ by the bevel: the
+      // monitor measures 1.7751 against the 1.77 its three constants sum to and the keyboard 0.0992
+      // against 0.1, so the batch scale lands at 0.997 and 1.008. Feeding the measured number instead
+      // would put a second copy of the model's dimensions in this file, where they would drift the
+      // first time the bevel changes
+      var out = [
+        batch(scene, RenderConfig.MODELS.facilityMonitor, mon, FacilityStyle.WORK_FOOT_H +
+          FacilityStyle.WORK_STAND_H + FacilityStyle.WORK_SCREEN_H),
+        batch(scene, RenderConfig.MODELS.facilityTower, tow, FacilityStyle.WORK_TOWER_H),
+        batch(scene, RenderConfig.MODELS.facilityKeyboard, key, FacilityStyle.WORK_KEY_H),
+      ];
+      // and the trinkets, one batch per kind — a second walk of the same grid, because `trinket` is
+      // pure and asking it twice is cheaper than carrying its answer through this function
+      var tr = [for (_ in TRINKETS) new Array<Models.PropPlace>()];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            var p = at(m, col, row);
+            if (p == null)
+              continue;
+            var yaw = Math.atan2(DC[p.dir ^ 1], DR[p.dir ^ 1]);
+            for (t in trinket(m, col, row))
+              tr[t.kind].push({
+                x: t.x,
+                z: t.z,
+                yaw: yaw,
+                y: FacilityStyle.BENCH_H,
+              });
+          }
+      for (i in 0...TRINKETS.length)
+        out.push(batch(scene, TRINKETS[i].path, tr[i], TRINKETS[i].h));
+      return out;
+    }
+
+// one of those batches. behind the loader callback because the mesh does not exist until the glb
+// resolves, and only for a batch that placed something. NOT CASTING and MASK-PATCHED, both
+// FacilityKit's own findings: an instanced batch is drawn into the moon's shadow map as many times
+// as into the frame, and these stand on a desk indoors under a roof that fades
+  static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>,
+      h:Float):Models.InstancedProp
+    {
+      var p = Models.instanced(scene, path, places, h, SOLID);
+      if (places.length > 0)
+        Models.get(path, function(_)
+          {
+            VisionMask.patchMesh(p.mesh);
+            p.mesh.castShadow = false;
+          });
+      return p;
+    }
+
+// one desk's leads and lights. everything here is axis-aligned, because a desk hugs a wall and a
+// wall runs on an axis — so both borrowed buffers take world coordinates with no transform, which is
+// what lets them merge into the two meshes they belong to
+  static function set(leds:MeshBuf, cab:MeshBuf, m:Facility, col:Int, row:Int,
       p:WorkSpot):Void
     {
       var cx = p.x, cz = p.z, dir = p.dir;
@@ -113,33 +316,16 @@ class FacilityWork
       var tx = (dir < 2 ? 1.0 : 0.0), tz = (dir < 2 ? 0.0 : 1.0);
       var y = FacilityStyle.BENCH_H;
       var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
-      // which hand the tower stands on — `at` rolled it off this same hash and hands it over, so the
-      // geometry and everything that dodges it cannot disagree
-      var ts = p.side;
-
-      // the monitor's foot and the post under the screen, both on the screen's own centre line
-      box(b, cx, y, cz, FacilityStyle.WORK_FOOT_W, FacilityStyle.WORK_FOOT_H,
-        FacilityStyle.WORK_FOOT_D, nx, nz, tx, tz, FacilityStyle.WORK_C_CASE);
-      box(b, cx, y + FacilityStyle.WORK_FOOT_H, cz, FacilityStyle.WORK_STAND_W,
-        FacilityStyle.WORK_STAND_H, FacilityStyle.WORK_STAND_W, nx, nz, tx, tz,
-        FacilityStyle.WORK_C_CASE);
-      // the screen itself, its FRONT face carrying the one cell of the sheet that is a picture
-      var sy = y + FacilityStyle.WORK_FOOT_H + FacilityStyle.WORK_STAND_H;
-      box(b, cx, sy, cz, FacilityStyle.WORK_SCREEN_W, FacilityStyle.WORK_SCREEN_H,
-        FacilityStyle.WORK_SCREEN_D, nx, nz, tx, tz, FacilityStyle.WORK_C_SCREEN);
-
-      // the tower, stood on end beside it — its centre comes off `at` with the hand it stands on
+      // the tower's status lights, on the front face of the prop standing at `at`'s tower centre —
+      // `at` rolled that hand off this same hash and hands it over, so the lights and the batch that
+      // draws the case cannot disagree about which end it is on
       var wx = p.tx, wz = p.tz;
-      box(b, wx, y, wz, FacilityStyle.WORK_TOWER_W, FacilityStyle.WORK_TOWER_H,
-        FacilityStyle.WORK_TOWER_D, nx, nz, tx, tz, FacilityStyle.WORK_C_TOWER);
       lights(leds, wx, y, wz, nx, nz, tx, tz, g);
+      // and the screen itself, into the same buffer and so onto the same one draw call
+      screen(leds, cx, y, cz, nx, nz, tx, tz, g);
 
-      // and the keyboard lying in front of the screen
       var kx = cx + nx * FacilityStyle.WORK_KEY_FWD;
       var kz = cz + nz * FacilityStyle.WORK_KEY_FWD;
-      box(b, kx, y, kz, FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_H,
-        FacilityStyle.WORK_KEY_D, nx, nz, tx, tz, FacilityStyle.WORK_C_KEY);
-
       // the two leads. both leave the keyboard's BACK edge and both lie on the worktop, so the bow
       // rides the horizontal perpendicular of their own chord — see FacilityCable.strip, whose
       // `side` hint is what decides which way a run curves when the seed would otherwise
@@ -163,58 +349,6 @@ class FacilityWork
         wave: FacilityStyle.WORK_CABLE_WAVE,
         seed: g ^ 40503,
       });
-    }
-
-// one axis-aligned box standing on `y`, 5 faces and no underside — it sits on a worktop and the
-// bottom is never seen. `front` names the sheet cell its OUT face takes; every other face takes the
-// case, which is what makes a monitor a screen on a plastic carcass rather than five screens
-  static function box(b:MeshBuf, cx:Float, y:Float, cz:Float, w:Float, h:Float, d:Float,
-      nx:Float, nz:Float, tx:Float, tz:Float, front:Int):Void
-    {
-      // half extents on the two world axes, resolved off which axis is depth here
-      var hx = Math.abs(tx) * w / 2 + Math.abs(nx) * d / 2;
-      var hz = Math.abs(tz) * w / 2 + Math.abs(nz) * d / 2;
-      var x0 = cx - hx, x1 = cx + hx;
-      var z0 = cz - hz, z1 = cz + hz;
-      var y1 = y + h;
-      // the out face carries the authored cell, the three others the carcass
-      for (dir in 0...4)
-        {
-          var cell = (DC[dir] == nx && DR[dir] == nz ? front : FacilityStyle.WORK_C_CASE);
-          face(b, x0, x1, z0, z1, dir, y, y1, cell);
-        }
-      lid(b, x0, x1, z0, z1, y1, FacilityStyle.WORK_C_CASE);
-    }
-
-// one upright face of a box, mapped 0..1 over a single cell of the sheet. FacilityGeom.face cannot
-// serve: it tiles world-aligned, and every cell here is an authored picture that has to land whole
-  static function face(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int,
-      y0:Float, y1:Float, cell:Int):Void
-    {
-      var e = FacilityGeom.ends(x0, x1, z0, z1, dir);
-      var u = uv(cell);
-      MeshBufTools.quad(b,
-        [e[0], y0, e[1]], [e[2], y0, e[3]], [e[2], y1, e[3]], [e[0], y1, e[1]],
-        [u[0], u[2], u[1], u[2], u[1], u[3], u[0], u[3]]);
-    }
-
-// and its lid, wound to FacilityGeom.cap's winding so it faces up
-  static function lid(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, cell:Int):Void
-    {
-      var u = uv(cell);
-      MeshBufTools.quad(b,
-        [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
-        [u[0], u[2], u[1], u[2], u[1], u[3], u[0], u[3]]);
-    }
-
-// one cell of the 2x2 sheet as u0,u1,v0,v1. the index reads left to right and TOP ROW FIRST, and
-// three flips y, so row 0 of the image is the HIGH v — the placards' own convention
-  static inline function uv(cell:Int):Array<Float>
-    {
-      var t = FacilityStyle.WORK_COLS;
-      var cc = cell % t;
-      var cr = Std.int(cell / t);
-      return [cc / t, (cc + 1) / t, 1 - (cr + 1) / t, 1 - cr / t];
     }
 
 // the tower's status lights: a column of specks on its front face, each with its own blink phase.
@@ -247,6 +381,45 @@ class FacilityWork
             [px - tx * s, yc + s, pz - tz * s],
             [0, 0, 1, 0, 1, 1, 0, 1], lvl, ph, hue);
         }
+    }
+
+// the glow of a screen that is ON: one quad lying on the monitor's own glass, in the same additive
+// mesh as the tower's lights and burning that mesh's THIRD pattern (see FacilityDeco.blink) — two
+// sines with no common period, shallow, so it wobbles and never loops. A monitor blinking like a rack
+// port would be a fault light and a monitor running a chase would be a sequencer; what a screen does
+// is neither, and it is three instructions on a mesh that already exists.
+//
+// THE FACE IS TILTED AND SO IS THIS. The shell leans WORK_SCREEN_TILT back about its own base, so the
+// glass has an up axis and an outward normal that are not the world's — both are built here off the
+// one constant the model was authored with, which is why that angle stopped being a number private to
+// computer_build.py. The quad is the art's LIT rect and not the screen's full face: the glass ends
+// where the modelled bezel begins and lighting the frame would read as a glowing slab
+  static function screen(b:MeshBuf, cx:Float, y:Float, cz:Float, nx:Float, nz:Float,
+      tx:Float, tz:Float, g:Int):Void
+    {
+      var a = FacilityStyle.WORK_SCREEN_TILT * Math.PI / 180;
+      var ct = Math.cos(a), st = Math.sin(a);
+      // the glass's own frame: `n` out of it, `u` up it, and the run axis across it unturned
+      var n = [nx * ct, st, nz * ct];
+      var u = [-nx * st, ct, -nz * st];
+      var hw = FacilityStyle.WORK_SCREEN_W * FacilityStyle.WORK_SCREEN_GLOW_W / 2;
+      var hh = FacilityStyle.WORK_SCREEN_H * FacilityStyle.WORK_SCREEN_GLOW_H / 2;
+      // the shell turns about its base, so its centre rides `u` up from there — and the glass sits a
+      // half depth out of that, plus the standoff every additive quad in this family keeps
+      var d = FacilityStyle.WORK_SCREEN_D / 2 + FacilityStyle.WORK_LED_EPS;
+      var by = y + FacilityStyle.WORK_FOOT_H + FacilityStyle.WORK_STAND_H;
+      var mh = FacilityStyle.WORK_SCREEN_H / 2;
+      var c = [cx + u[0] * mh + n[0] * d,
+               by + u[1] * mh + n[1] * d,
+               cz + u[2] * mh + n[2] * d];
+      inline function at(s:Float, t:Float)
+        return [c[0] + tx * hw * s + u[0] * hh * t,
+                c[1] + u[1] * hh * t,
+                c[2] + tz * hw * s + u[2] * hh * t];
+      // a phase of its own per desk, so no two screens in a room wobble together
+      var ph = ((FacilityModel.mix(g ^ 971658137) >>> 7) % 1000) / 1000;
+      MeshBufTools.quadRGB(b, at(-1, -1), at(1, -1), at(1, 1), at(-1, 1),
+        [0, 0, 1, 0, 1, 1, 0, 1], FacilityStyle.WORK_SCREEN_LEVEL, ph, 4.0);
     }
 
 // the chairs, one instanced batch for the compound. one per workstation and none anywhere else: a

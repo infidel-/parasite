@@ -72,7 +72,7 @@ class FacilityWarm
       // families that merge them run — the same ordering FacilityArea keeps, for the same reason
       var workLeds = MeshBufTools.make();
       var workCable = MeshBufTools.make();
-      FacilityWork.build(sc, model, workLeds, workCable);
+      FacilityWork.build(model, workLeds, workCable);
       FacilityDeco.build(sc, model, workLeds);
       // and the electrical service, which is NOT a new program permutation either — the pack mesh is
       // FacilityClutter's alphaTest DoubleSide lambert and the cable is the shell's plain mapped one
@@ -177,6 +177,66 @@ class FacilityWarm
               {
                 path: RenderConfig.MODELS.facilityChair,
                 h: FacilityStyle.CHAIR_H,
+              },
+              // and the three the workstation is made of, which are three paths and therefore three
+              // materials and three program keys — the drums' own reason for being listed one by one
+              {
+                path: RenderConfig.MODELS.facilityMonitor,
+                h: FacilityStyle.WORK_FOOT_H + FacilityStyle.WORK_STAND_H +
+                  FacilityStyle.WORK_SCREEN_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityTower,
+                h: FacilityStyle.WORK_TOWER_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityKeyboard,
+                h: FacilityStyle.WORK_KEY_H,
+              },
+              // and the four desk trinkets, off FacilityWork's own table so a fifth needs no edit here
+              {
+                path: FacilityWork.TRINKETS[0].path,
+                h: FacilityWork.TRINKETS[0].h,
+              },
+              {
+                path: FacilityWork.TRINKETS[1].path,
+                h: FacilityWork.TRINKETS[1].h,
+              },
+              {
+                path: FacilityWork.TRINKETS[2].path,
+                h: FacilityWork.TRINKETS[2].h,
+              },
+              {
+                path: FacilityWork.TRINKETS[3].path,
+                h: FacilityWork.TRINKETS[3].h,
+              },
+              // and the hand-modelled fittings, one path and so one program each — the low rack is
+              // its own MESH (three chassis, not six squashed), see FacilityDeco.fittings
+              {
+                path: RenderConfig.MODELS.facilityRack,
+                h: FacilityStyle.DECO_RACK_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityRackLow,
+                h: FacilityStyle.DECO_RACK_LOW_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityCabinet,
+                h: FacilityStyle.DECO_CABINET_H,
+              },
+              // the machine ONCE, even though it draws at two heights: a program is keyed by the
+              // material and the variant, and both batches share one of each
+              {
+                path: RenderConfig.MODELS.facilityMachine,
+                h: FacilityStyle.DECO_MACHINE_SZ,
+              },
+              {
+                path: RenderConfig.MODELS.facilityBookcase,
+                h: FacilityStyle.DECO_BOOKCASE_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityBasin,
+                h: FacilityStyle.BASIN_MESH_H,
               },
             ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT

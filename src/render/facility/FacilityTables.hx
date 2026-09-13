@@ -150,31 +150,31 @@ class FacilityTables
             // what stops the gradient hanging off the front
             // an office desk never takes the laboratory sprite's pool: that decoration's icon is
             // suppressed (the glassware is the lab's) and the clutter standing in for it carries its
-            // own shadow in the art. what it CAN carry is the workstation's, which is a real object
-            // standing on the worktop
-            var cp = (office ? FacilityWork.at(m, col, row) : null);
-            var td = (office ?
-              (cp == null ? null : {
-                dx: cp.x - ((col + 0.5) * CELL - half),
-                dz: cp.z - ((row + 0.5) * CELL - half),
-                r: FacilityStyle.WORK_R,
-              }) :
-              m.tableDeco[row][col]);
-            if (td != null)
-              FacilityDetail.deck({
-                cx: (col + 0.5) * CELL - half + td.dx,
-                cz: (row + 0.5) * CELL - half + td.dz,
-                hw: td.r,
-                hd: td.r,
-                yaw: 0.0,
-                y: FacilityStyle.BENCH_H,
-                plate: {
-                  x0: ox0,
-                  x1: ox1,
-                  z0: oz0,
-                  z1: oz1,
-                },
-              });
+            // own shadow in the art. What it carries instead is the WORKSTATION's, and that is three
+            // square quads rather than one round one — FacilityWork.pools owns the footprints,
+            // because they are its objects' and not this file's
+            var plate = {
+              x0: ox0,
+              x1: ox1,
+              z0: oz0,
+              z1: oz1,
+            };
+            if (office)
+              FacilityWork.pools(m, col, row, plate);
+            else
+              {
+                var td = m.tableDeco[row][col];
+                if (td != null)
+                  FacilityDetail.deck({
+                    cx: (col + 0.5) * CELL - half + td.dx,
+                    cz: (row + 0.5) * CELL - half + td.dz,
+                    hw: td.r,
+                    hd: td.r,
+                    yaw: 0.0,
+                    y: FacilityStyle.BENCH_H,
+                    plate: plate,
+                  });
+              }
             for (dir in 0...4)
               {
                 if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]))

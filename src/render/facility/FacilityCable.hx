@@ -679,15 +679,12 @@ class FacilityCable
       var sv = (p.dir < 2 ? [1.0, 0.0, 0.0] : [0.0, 0.0, 1.0]);
       var u = (s == 0 ? [0.0, 1.0, 0.0] : [-s * sv[0], 0.0, -s * sv[2]]);
       var r = [u[1] * n[2] - u[2] * n[1], u[2] * n[0] - u[0] * n[2], u[0] * n[1] - u[1] * n[0]];
-      // ON THE PLATE'S CENTRE AND NOT ON THE CABLE'S EXIT POINT, which is `anchor`'s hand 0 rather
-      // than `s`. The two are different points by construction: `anchor` slides SOCK_W * SOCK_LEAD
-      // along the wall so the ribbon's CUT END is hidden well inside the plate's art, and hanging the
-      // plug there put its centre 0.35 off a plate whose half-width is 0.7 — so the plug covered the
-      // plate's far HALF and the rest of it hung on bare wall, reported as the two overlapping only
-      // partially. A plug goes on its socket; the lead still leaves from `anchor`, which stays inside
-      // this quad (0.35 against the plug's own half-width of PLUG_W / 2), so the cable comes out from
-      // under the plug's body and not out of thin air. The basis above still keys off `s`, so the
-      // gland collar goes on turning to follow the lead
+      // ON THE PLATE'S CENTRE, which is where the lead now ends too — `anchor` drops its slide for a
+      // socket exactly because this quad is here to cover the cut end (see that function). The plug
+      // was hung off-centre once, at the slid exit point, and covered the plate's far HALF with the
+      // rest of it on bare wall; the answer to that was this hand 0, and the answer to the lead then
+      // stopping at the plug's rim was to bring the ribbon to the same point. The basis above still
+      // keys off `s`, so the gland collar goes on turning to follow the lead
       var c = anchor(m, p, 0);
       // proud of the ribbon it covers, which is itself proud of the plate — three parallel surfaces,
       // and the standing note says separate them with a gap and never with a polygonOffset
@@ -735,12 +732,20 @@ class FacilityCable
 // gives `droop` its full CABLE_SAG back on a short hop.
 //
 // and WELL INSIDE the drawn art rather than at the quad's edge, for FacilityStyle.SOCK_LEAD's reason
+//
+// THE SLIDE IS A FITTING'S AND NOT A SOCKET'S, which is the part that was wrong. A junction box draws
+// no plug, so the only thing that can hide its lead's cut end is its own art and the slide is what
+// puts it there. A SOCKET does draw one, dead on the plate's centre and a third of a unit proud of
+// the ribbon — so sliding the cable 0.35 out from under it left the end at the plug's own rim
+// (PLUG_W / 2 = 0.375) and read as a lead stopping beside its plug instead of going into it. At hand
+// 0 the ribbon runs to the plate centre and the plug covers the last 0.375 of it. `s` still reaches
+// the fittings, and still tells `plug` which way to turn its gland collar
   static function anchor(m:Facility, p:Mount, s:Int):Array<Float>
     {
       var sl = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
       var c = CityConfig.cellToWorld(p.col, p.row);
       var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
-      var h = w * FacilityStyle.SOCK_LEAD;
+      var h = (p.fit ? w * FacilityStyle.SOCK_LEAD : 0.0);
       var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);
       var dir = p.dir ^ 1;
       var e = FacilityStyle.MOUNT_PROUD + FacilityStyle.CABLE_EPS;

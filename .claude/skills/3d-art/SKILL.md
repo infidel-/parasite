@@ -1,6 +1,6 @@
 ---
 name: 3d-art
-description: Generate or fix 3D art for the parasite game — a glb prop, a tiling texture, a decal, a sprite, an emissive map, or a TRELLIS reference image. Use when asked for "new images", a new prop/texture/decal, when a prop or surface reads wrong (blurry, shiny, too dark, wrong colour, smeared, mush), before running `make tex` / `make models`, or when deciding whether a new object should be a generated prop, emitted geometry, or just a texture. Loads the pipeline docs; do not work these pipelines from memory.
+description: Generate, hand-model or fix 3D art for the parasite game — a glb prop (generated with TRELLIS or MODELLED IN BLENDER over the `blender` MCP), a tiling texture, a decal, a sprite, an emissive map, or a TRELLIS reference image. Use when asked for "new images", a new prop/texture/decal, for an object whose brief is an exact dimension, when a prop or surface reads wrong (blurry, shiny, too dark, wrong colour, smeared, mush), before running `make tex` / `make models`, or when deciding whether a new object should be a generated prop, a hand-modelled one, emitted geometry, or just a texture. Loads the pipeline docs; do not work these pipelines from memory.
 ---
 
 # 3D art: prop, texture, or neither
@@ -18,6 +18,7 @@ Ask what CARRIES the object: its **silhouette** or its **surface**?
 | axis-aligned slabs — kiosk, bench, cabinet, low wall, skip | **emitted geometry**, `render/facility/FacilityGeom.hx` (`face`/`pane`/`cap`/`add`/`geom`) + a tiling texture | exact proportions, the game's own textures at full texel density, no unwrap lottery. Guard booth **7,431 tris → 34** |
 | a stripe, a rhythm, a material, a pattern you can name in one sentence | **a tiling texture** on emitted geometry | a bake cannot lose contrast the way TRELLIS lost the barrier's hazard bands (red-on-white → orange-on-tan). Boom barrier **3,098 tris → 22** |
 | a real irregular silhouette — plant, rock, vehicle, machine, fixture | **a generated glb prop** | this is what a mesh generator is for |
+| the brief is a NUMBER — an exact height, a parametric splay, a boolean cut, a shape that must land on existing constants | **hand-modelled in Blender over the `blender` MCP**, exported as a glb | dimensions are guaranteed rather than approximated, and it can wear the game's OWN textures instead of a bake. The workstation: **268/116/44 tris** against the generated one's 1,200 |
 | several objects at once (crate + sack + cable coil) | **split it and say so** — one prop each | a composite bake shatters the atlas and no tri budget buys the silhouette back |
 
 Two smells that the surface is doing the work and you are about to generate the wrong thing: the
@@ -41,6 +42,28 @@ Worked examples of the emitted route: `FacilityTables.hx`, `FacilityEntry.hx`.
    texels per world unit at the `h` the game draws it**. Then the `models.json` entry, `make models`,
    and **re-measure the built glb**.
 5. Warm the new path in `View.hx`'s `Models.get` chain, one entry per material variant.
+
+## A hand-modelled prop → `docs/3d-models.md` § Hand-modelling in Blender over MCP
+
+The `blender` MCP drives the user's running Blender (registered at USER scope — it is already there,
+`claude mcp list` is the check; nothing to install per repo). It is the route when the brief is a
+number, and it buys no cheapness — argue the triangle budget separately.
+
+1. **The build is a SCRIPT in `models-src/`, never hand-clicking** — `computer_build.py` is the
+   worked example: constants at the top copied from `FacilityStyle`, one function per part, an
+   explicit per-face UV table, `export_scene.gltf` per object, `save_as_mainfile` at the end. Run it
+   with `exec(compile(open(path).read(), path, "exec"))` through `execute_blender_code`, so a fix is
+   an edit to a file in the repo and not a lost click.
+2. **Quads in, not `convex_hull`** — the hull comes back triangulated and any per-face UV map then
+   puts the whole cell on each half of every face.
+3. **Measure the EVALUATED mesh** (`o.evaluated_get(depsgraph)`) for dims and tris — a bevel moves
+   the numbers the brief is written in.
+4. **Reuse the game's art**: UV onto an existing sheet's cells and let the exporter pack it, then
+   carry NO `baseColor`/`lift`/`sat` — that sheet is already fitted. Crop each cell to its measured
+   CONTENT: an authored cell is often an object on a plate (`docs/3d-textures.md`).
+5. `"tris": -1` in `models.json` — it was authored at the budget, so `propstat`'s split /
+   UNDECIMATABLE / components lines are TRELLIS gates reading a hand-made assembly. Then
+   `make models`, the `RenderConfig.MODELS` path, the batch, and the warm row.
 
 ## A texture → `docs/3d-textures.md`
 

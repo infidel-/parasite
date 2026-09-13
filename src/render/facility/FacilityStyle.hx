@@ -747,24 +747,19 @@ class FacilityStyle
 
   // ---- the workstation (render.facility.FacilityWork) --------------------------------------------
   //
-  // EMITTED GEOMETRY AND NOT A GLB, which is this family's second opinion on itself. It shipped as
-  // facility/computer.glb and was reported as blocky — correctly: a monitor, a tower and a keyboard
-  // are three axis-aligned slabs, which is CLAUDE.md's own "a box is not a prop" case, and a mesh
-  // generator spends 1,200 triangles rounding the corners off shapes that are eight vertices each.
-  // Emitted, the whole set is ~11 quads, its proportions are these numbers rather than a bake's
-  // approximation of them, and every face samples the game's own art at full texel density.
+  // EVERY NUMBER BELOW IS ALSO THE MODEL'S, and that is the point of the route it takes now. The set
+  // was a generated glb (blocky, 1,200 tris on three slabs), then 22 emitted quads off the
+  // facility/workstation sheet (right proportions, no silhouette at all), and is now three glbs
+  // HAND-MODELLED IN BLENDER against these constants — models-src/facility/computer_build.py reads
+  // them off this block, so a dimension changed here is a re-run of that script and `make models`,
+  // not a re-fit. See the header of render.facility.FacilityWork for the three verdicts.
   //
-  // ONE TEXTURE FOR THE WHOLE SET, sub-rected per face — the facility/sink idiom (see SINK_BASIN_U0),
-  // not one image per face. Four authored cells in a 2x2 sheet: screen, case, tower front, keyboard.
-  // Four textures would be four materials, four meshes and four draw calls to draw one desk toy
-  public static inline var WORK_TEX = 'textures/facility/workstation.png';
-  // its four cells, as indices into a 2x2 read left to right and TOP ROW FIRST — the placards' own
-  // convention, so the v flip lives in one helper rather than in four call sites
-  public static inline var WORK_COLS = 2;
-  public static inline var WORK_C_SCREEN = 0;
-  public static inline var WORK_C_CASE = 1;
-  public static inline var WORK_C_TOWER = 2;
-  public static inline var WORK_C_KEY = 3;
+  // THE SHEET IS STILL THE ART and is no longer sampled at runtime: facility/workstation's four
+  // authored cells (screen, case, tower front, keyboard) are UV'd onto those meshes at BAKE time and
+  // packed into each glb, so the cell indices live in the build script rather than here. What the
+  // script does NOT take from the art is a cell's full quadrant — two of the four draw an object on
+  // a plate, see that file's SUB table
+  //
   // the monitor: 0.9 m to the top of the screen, 0.6 m across, a hand's depth front to back. HALF AS
   // BIG AGAIN as the glb it replaces (COMPUTER_H was 1.2), because that one was reported as not
   // reading at all — the facility camera is 18-55 units up and a 1.2-unit object on a 2.0-unit worktop
@@ -797,6 +792,25 @@ class FacilityStyle
   // outer face lands 1.9 from the screen's centre, still inside the cell's own 2.0 half-width
   public static inline var WORK_TOWER_OFF = 1.5;
   public static inline var WORK_KEY_FWD = 1.05;
+  // and the TRINKETS, which stand at the back of the desk on the hand the TOWER is not on — a mug on
+  // every one and a second piece rolled off the cell. Both distances are measured along the wall from
+  // the screen's centre and both keep inside the cell's own 2.0 half-width with the widest of the
+  // four (the tray) on the far one. render.facility.FacilityClutter takes a keep-clear off each, so
+  // its paperwork and these cannot land on each other
+  public static inline var WORK_TRINKET_NEAR = 0.95;
+  public static inline var WORK_TRINKET_FAR = 1.55;
+  // how much worktop one of them keeps to itself, and the four objects' own extents — measured off
+  // the built meshes (models-src/facility/desk_build.py), which is what the contact pools take
+  public static inline var WORK_TRINKET_CLEAR = 0.65;
+  public static inline var WORK_MUG_H = 0.34;
+  public static inline var WORK_MUG_W = 0.40;
+  public static inline var WORK_PLANT_H = 0.72;
+  public static inline var WORK_PLANT_W = 0.64;
+  public static inline var WORK_LAMP_H = 1.12;
+  public static inline var WORK_LAMP_W = 0.70;
+  public static inline var WORK_TRAY_H = 0.19;
+  public static inline var WORK_TRAY_W = 1.00;
+  public static inline var WORK_TRAY_D = 0.75;
   // one desk cell in this many carries a set, and it is ONE — every desk in a researcher's office has
   // a machine on it.
   //
@@ -812,12 +826,14 @@ class FacilityStyle
   // the gate STAYS rather than becoming a constant 1: it is the one knob between here and a computer
   // lab, and the roll is off FacilityModel.mix so it comes back identical on every rebuild
   public static inline var WORK_EVERY = 1;
-  // the footprint the clutter sheet keeps clear around it, exactly as it keeps clear of a standing
-  // decoration. grown with the set: it now covers a screen, a tower and a keyboard rather than one glb
-  public static inline var WORK_R = 1.6;
-  // and a SECOND, smaller one for the clutter alone, which is the one number the desk bundle turned
-  // on. WORK_R is the contact POOL's radius — the round patch of shade FacilityTables lays under the
-  // set — and a pool may be generous. As a keep-clear it is not: a desk is DESK_D 2.6 deep, so once
+  // the footprint the clutter sheet keeps clear around the set.
+  //
+  // THERE WAS A SECOND, LARGER ONE AND IT IS GONE. WORK_R 1.6 was the radius of a single ROUND
+  // contact pool laid under the whole set, and a round ramp under three rectangular machines spread
+  // WORK_TOWER_OFF apart reads as a mat and not as contact — render.facility.FacilityWork.pools now
+  // lays one square quad per object off each one's own W and D, so there is no radius to state.
+  //
+  // WHAT IS LEFT IS THE KEEP-CLEAR, and it is 1.05 because a desk is DESK_D 2.6 deep: once
   // the decal's wander was confined to the worktop (see FacilityClutter.cell) a 1.6 circle plus the
   // decal's own 0.67 left nowhere on the desk at all, and MEASURED over the compound's ten office
   // desks it placed ZERO — a bundle with a screen, a tower and a bare worktop. 1.05 leaves the two
@@ -834,6 +850,33 @@ class FacilityStyle
   public static inline var WORK_LED_N = 2;
   public static inline var WORK_LED_SIZE = 0.12;
   public static inline var WORK_LED_EPS = 0.03;
+  // how far the screen leans BACK, degrees. THE ONE MODEL NUMBER THAT WAS NOT A CONSTANT: the tilt
+  // lived only in models-src/facility/computer_build.py, and the moment anything in the game had to
+  // know where the screen's FACE is — the glow below does — it needed the same angle the mesh was
+  // built with. That file copies this block verbatim, so the two cannot drift
+  public static inline var WORK_SCREEN_TILT = 8.0;
+  // the glow ON that face, and it is the SCREEN'S OWN art that picks its colour, not taste. The glass
+  // cell of facility/workstation.png measures rgb 45/59/65 with 88% of its texels in hue 180-210
+  // (tools/pix.py --box glass,9,9,247,233 --hue), so the accent here is that ratio taken up to
+  // something a lit panel would be. FacilityStyle's own warning that BLUE is the accent which cannot
+  // read against this compound's blue lighting is about a DIFFUSE accent; this one is ADDITIVE, so it
+  // arrives as brightness and the hue only tints it
+  public static inline var WORK_SCREEN_GLOW = 0xb6e4f4;
+  // and its level. FITTED DOWN FROM 0.35 AND THE SHAPE IS WHY, not the brightness alone: this quad
+  // rides the LED mesh, whose alpha ramp is Textures.makeRectGlowGradient(0.30) — a soft ROUND dot,
+  // which is what a 0.12 speck wants and what a 1.7 x 1.25 panel gets an OVAL out of. At 0.35 that
+  // oval read as a white card stuck on the monitor. The answer is the one docs/3d-models.md records
+  // for the booth's glazing: the failure is the uniform FLAT read, so drop the level until the glow
+  // is the screen's own light rather than a second object, and keep it well under the ~0.43 that
+  // crosses BLOOM_THRESHOLD so it never haloes like a light fitting
+  public static inline var WORK_SCREEN_LEVEL = 0.10;
+  // the lit part of that face as a fraction of the screen's own W and H. computer_build.py's SUB table
+  // crops the UVs to the art's measured CONTENT — rows/cols 9..247 and 9..233 of the cell's 256, i.e.
+  // 0.93 and 0.875 — and these are inside THAT, for the round ramp's sake: an ellipse drawn on the
+  // full glass touches the bezel at the centre of each edge and leaves the corners black, so the quad
+  // is pulled in until the whole ellipse sits within the glass
+  public static inline var WORK_SCREEN_GLOW_W = 0.78;
+  public static inline var WORK_SCREEN_GLOW_H = 0.72;
   // and the leads: keyboard to screen and keyboard to tower, drawn with render.facility.FacilityCable
   // .strip into that family's OWN ribbon buffer, so they ride its texture, its mesh and its draw call.
   // a flatter bow than a wall drop's — a lead lying on a desk sags across the surface, it does not
@@ -1011,6 +1054,45 @@ class FacilityStyle
   // line above records: one tile is exactly 3 chassis and v lands on 1.0, so there is no wrap seam
   // at all. The sprite it replaces measures 1.83-2.25 units tall over its alpha bbox
   public static inline var DECO_RACK_LOW_H = DECO_RACK_TILE;
+  // WHICH RACK SHIPS, and both do. false emits the four quads render.facility.FacilityDeco.unit has
+  // always emitted; true stands an instanced glb there instead — hand-modelled in Blender off the
+  // constants above (models-src/facility/rack_build.py), six chassis set back behind their own
+  // bezels on a skirted foot under an overhanging lid, 156 tris against the quads' 8.
+  //
+  // A FLAG AND NOT A DELETION because the two answers disagree on principle: docs/3d-models.md's
+  // triage says an axis-aligned slab against a wall gets EMITTED, and a rack is one; what the quads
+  // cannot say is that it holds six things. The lights are outside the switch and unchanged — they
+  // key off the same chassis count either way, which is why the glb's skirt and lid take no height
+  public static inline var DECO_RACK_GLB = true;
+  // and the same switch for the storage cabinet, where the argument is only the CALL: a cabinet is
+  // the slab the triage describes, and what buys the glb its place is that the quads spend THREE
+  // labels on it — front, flank and lid — while the packed sheet spends one. Its own shape claim is
+  // the two door leaves standing proud (models-src/facility/cabinet_build.py, 36 tris against 8)
+  public static inline var DECO_CABINET_GLB = true;
+  // and the lab machine, three labels again and two batches back (one per height, off ONE mesh).
+  // Its shape claim is the louvre band set back between its two neighbours, which the art draws and
+  // the flat plane contradicted — and the control strip does NOT move, because `machLights` stands
+  // five specks 0.03 proud of the front face inside it (models-src/facility/machine_build.py)
+  public static inline var DECO_MACHINE_GLB = true;
+  // and the bookcase, three labels again. Its shape claim is the one this family most obviously
+  // wanted: four boards standing PROUD of the spines, which a flat plane can only paint
+  // (models-src/facility/bookcase_build.py)
+  public static inline var DECO_BOOKCASE_GLB = true;
+  // and the washroom basin — everything but its MIRROR, which hangs on the wall and not on the unit.
+  // The strongest shape claim in the set: a basin is a HOLE, and the quads laid it on the counter as
+  // a flat alpha-cut quad with a second one standing up for the tap
+  // (models-src/facility/basin_build.py)
+  public static inline var DECO_BASIN_GLB = true;
+  // the basin glb's OWN height, tap included, and the number the batch is sized by: Models.instanced
+  // scales a mesh to the height it is given, so passing BASIN_H would squash the counter by the
+  // tap's share. BASIN_H stays the counter's height and this is only ever the scale
+  public static inline var BASIN_MESH_H = BASIN_H + 1.1;
+  // and the ROUND props — three drums and the gas rack — hand-modelled instead of generated. NO DRAW
+  // CALL IS AT STAKE, unlike every flag above it: both routes are one instanced batch per livery.
+  // What is on trial is 1,200 and 5,710 generated triangles against 44 and 284 authored ones, and a
+  // palette that is a CELL OF A SHEET rather than whatever a bake came back as — the generated rack
+  // took a baseColor fit, a sat fit and two rounds of reported-from-the-game correction to settle
+  public static inline var DECO_DRUM_BLENDER = true;
   // the two ROUND low fittings — the hazard drum and the waste bin — which are instanced glbs and
   // not geometry (render.facility.FacilityDeco.placeRound). ONE height and ONE footprint for both:
   // 1.8 is already what the tunnels give the same drum glb (render.sewer.SewerStyle) and what BIN_H
@@ -1211,6 +1293,21 @@ class FacilityStyle
   // which slot the hue changes at: the left bank runs amber and the right bank green, so the run
   // crosses two banks the way a real panel's does rather than being one undifferentiated row
   public static inline var DECO_MACH_LED_GREEN_FROM = 3;
+
+  // and the THIRD pattern on that one mesh, material and clock: a lit SCREEN. Told apart the same way
+  // the machine is — the vertex channel carrying the hue is 0..1 for a rack, 2..3 for a machine and
+  // 4..5 for a screen — because a third mesh is a third draw call and there are only three channels.
+  //
+  // NEITHER OF THE OTHER TWO PATTERNS FITS. A square wave is a port blinking and a chase is a
+  // sequencer; a monitor showing something does neither. What it does is wobble slightly and never
+  // repeat, so this is two sines at rates with no common period, summed 60/40 — the cheapest thing
+  // that has no visible loop, three instructions, and no noise texture. Both rates are BASE_MS
+  // multipliers and both are uniforms, so retuning them compiles nothing
+  public static inline var DECO_SCREEN_RATE = 0.21;
+  public static inline var DECO_SCREEN_RATE2 = 0.0873;
+  // the depth of the wobble. SHALLOW ON PURPOSE: at 0.75, the depth a rack port takes, a screen reads
+  // as a fault light. 0.12 is a panel refreshing
+  public static inline var DECO_SCREEN_DEPTH = 0.12;
 
   // ---- doors -----------------------------------------------------------------------------------
 
@@ -1495,11 +1592,16 @@ class FacilityStyle
   // own CELL a clear unit off the slab face rather than against it. GRIME_H's damp band is on the
   // wall and this is MOUNT_PROUD of the wall, so it draws over it
   public static inline var SOCK_Y = 0.85;
-  // where a run LEAVES a socket, as a fraction of SOCK_W out from its centre. it is measured against
-  // the ART and not against the quad, which is the whole point of the constant: the pack's cells fill
-  // 0.49 to 0.87 of their own square, so a run inset by the quad's half-width less its own thickness
-  // — the obvious number, and the first one tried — ends in the transparent margin BESIDE the socket
-  // with a visible gap. A quarter of the quad is inside the drawn art of every cell on the sheet
+  // where a run LEAVES a corridor FITTING, as a fraction of FIT_W out from its centre. it is measured
+  // against the ART and not against the quad, which is the whole point of the constant: the pack's
+  // cells fill 0.49 to 0.87 of their own square, so a run inset by the quad's half-width less its own
+  // thickness — the obvious number, and the first one tried — ends in the transparent margin BESIDE
+  // the box with a visible gap. A quarter of the quad is inside the drawn art of every cell.
+  //
+  // A SOCKET NO LONGER TAKES IT (render.facility.FacilityCable.anchor): a fitting has only its own art
+  // to hide the lead's cut end with, while a socket has a PLUG drawn over its plate centre, and the
+  // slide put the end 0.35 out — against the plug's own half-width of PLUG_W / 2 = 0.375, i.e. at its
+  // rim, which reads as a cable stopping beside its plug rather than going into it
   public static inline var SOCK_LEAD = 0.25;
   // how far apart two sockets must be, in cells. the panel family this replaced settled here for a
   // measured reason that still holds: a lab room is 6 to 10 cells across, so POINT_SPACING 8 would
@@ -1898,24 +2000,26 @@ class FacilityStyle
   // density (the 2-pane art is 161 rows over 4.08 units, the 3-pane one 160 over 4.14). One would do;
   // two also covers the bilinear tap that reads the discarded row's neighbour
   public static inline var WINDOW_OVERLAP = 0.025;
-  // and how far the pane then stands PROUD of the glazing slab's own face, on each side.
+  // and how far the pane sits BEHIND the glazing slab's own face, on each side.
   //
-  // WINDOW_OVERLAP is what makes this necessary, and the two arrived one build apart. The wall above
-  // and below an opening is emitted on the WINDOW CELL's slab (FacilityGeom.structure's sill/head
-  // pair), which is the glazing plane, and `pane` is flush with it — so the moment the pane grew past
-  // the opening it was overlapping a coplanar surface, and the head and the sill z-fought. That is
-  // the exact case docs/3d-render.md's standing note is about: give a coplanar overlay a PHYSICAL
-  // gap, not polygonOffset, which three passes have already lost — here it would be dropped outright,
-  // since the pane casts through a swapped depth material.
+  // IT USED TO STAND 0.02 PROUD AND THAT IS THE BUG THIS REPLACES. WINDOW_OVERLAP is what forced a
+  // standoff at all: the wall above and below an opening is emitted on the WINDOW CELL's slab
+  // (FacilityGeom.structure's sill/head pair), which is the glazing plane, and `pane` was flush with
+  // it — so the moment the pane grew past the opening it overlapped a coplanar surface and the head
+  // and the sill z-fought. docs/3d-render.md's standing note says give a coplanar overlay a PHYSICAL
+  // gap and never a polygonOffset, and a hair outward answered it. What it also did was put the glass
+  // in the same plane as the masonry it is set into, so from inside the room a window read as painted
+  // ON the wall — reported from the game as needing to be inset a little.
   //
-  // it does NOT re-open the seam that deleted the old WINDOW_EPS, and for a reason that only holds
-  // now: back then the pane matched the opening exactly, so standing it proud left open air where the
-  // reveal caps stopped at the masonry. With the overlap the pane already runs past the head cap,
-  // past the sill cap and into the flanking cells' butt caps, so a hair of standoff moves it within
-  // geometry that covers it. 0.02 is render.world.Buildings.OVERLAY_EPS, tuned there against exactly
-  // this question (0.06 read as a visible gap, 0.01 as flush), and it is 4% of the half unit the pane
-  // is recessed behind the wall face, so the glass stays plainly inside its reveal
-  public static inline var WINDOW_EPS = 0.02;
+  // The gap works in either direction and INWARD is the one that costs nothing else: the head and
+  // sill caps (FacilityGeom.structure) span the slab's full 1.0 cross-section and keep the opening's
+  // true size, so pulling the glass back turns them into a visible soffit and a visible sill with no
+  // new geometry at all. The glazing slab is GLASS_T 1.0 against a solid wall's WALL_T 2.0, so the
+  // pane already sat 0.5 behind the neighbouring wall FACE and this adds to the reveal rather than
+  // creating it. 0.12 is a tenth of the slab and well inside the 0.5 the flanking cells' butt caps
+  // close at a run's ends, so nothing new is exposed there. A WINDOW_HIGH cell is not in `thick`'s
+  // test and keeps the full WALL_T, so its light well takes the same inset into a 2.0 slab
+  public static inline var WINDOW_INSET = 0.12;
   // emissive strength on the lit pane. every window is lit in this phase — the place is staffed at
   // night, and a dark facility gives the player nothing to aim the "see into the room" read at.
   //

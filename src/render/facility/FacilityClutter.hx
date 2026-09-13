@@ -139,13 +139,22 @@ class FacilityClutter
           z: c.z,
           r: FacilityStyle.CLUTTER_FLAT_R,
         });
-      // WORK_CLEAR and not WORK_R: that one is the contact pool's radius and leaves no worktop at
-      // all once the wander is held to the desk — see its own note
+      // WORK_CLEAR is the keep-clear and nothing else: the set's contact shade is three square quads
+      // laid per object by FacilityWork.pools and is not a radius this pass could use — see its note
       if (pc != null)
         spots.push({
           x: pc.x,
           z: pc.z,
           r: FacilityStyle.WORK_CLEAR,
+        });
+      // and one per TRINKET, which is why FacilityWork.trinket is a pure function of the grid: the
+      // mug and its neighbour take the back of the desk's free end, which is exactly where a loose
+      // sheet of paperwork would otherwise land
+      for (t in FacilityWork.trinket(m, col, row))
+        spots.push({
+          x: t.x,
+          z: t.z,
+          r: FacilityStyle.WORK_TRINKET_CLEAR,
         });
       // WHERE THE WORKTOP ACTUALLY IS, which on an office desk is not the cell. A desk is a bench cut
       // to FacilityStyle.DESK_D on its OPEN side (FacilityTables.build, `var cut`), so a decal

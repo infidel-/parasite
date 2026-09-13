@@ -61,12 +61,15 @@ class FacilityKit
   // off each built mesh by binning triangle area along the axes rather than read off the reference.
   // see the notes in art/models.json
   public static final PROPS:Array<KitProp> = [
+    // the hand-modelled rack's back is at +y by construction, which glTF's y-up export turns into
+    // +z, so it needs no turn at all where the generated bake needed half a circle
     {
-      path: RenderConfig.MODELS.facilityKitGas,
+      path: (FacilityStyle.DECO_DRUM_BLENDER ?
+        RenderConfig.MODELS.facilityGasHand : RenderConfig.MODELS.facilityKitGas),
       h: FacilityStyle.KIT_GAS_H,
       d: FacilityStyle.KIT_GAS_D,
       w: FacilityStyle.KIT_GAS_W,
-      yaw0: Math.PI,
+      yaw0: (FacilityStyle.DECO_DRUM_BLENDER ? 0.0 : Math.PI),
       jit: 0.0,
     },
     {

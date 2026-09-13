@@ -549,23 +549,31 @@ class FacilityDeco
             // front, two ends, a top, and no back and no bottom: the back is buried in the masonry
             // and this camera pitches 51 degrees down, so nothing ever sees under a fitting —
             // render.facility.FacilityRoof.box's own finding
-            FacilityGeom.pane(b[B_BC_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
-            FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head, y, y + h,
-              FacilityStyle.DECO_BOOKCASE_TILE);
-            FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
-              FacilityStyle.DECO_BOOKCASE_TILE);
-            FacilityGeom.cap(b[B_BC_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_BOOKCASE_TILE);
+            if (!FacilityStyle.DECO_BOOKCASE_GLB)
+              {
+                FacilityGeom.pane(b[B_BC_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
+                FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head, y, y + h,
+                  FacilityStyle.DECO_BOOKCASE_TILE);
+                FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
+                  FacilityStyle.DECO_BOOKCASE_TILE);
+                FacilityGeom.cap(b[B_BC_TOP], x0, x1, z0, z1, y + h,
+                  FacilityStyle.DECO_BOOKCASE_TILE);
+              }
           case _FittingKind.FIT_CABINET:
             // the bookcase's own shape, one surface family over: an authored front mapped 0..1 by
             // `pane`, two tiling ends and a tiling top, and no back and no bottom for the same
             // reason — the back is buried in the masonry and nothing at this pitch sees under a
-            // fitting
-            FacilityGeom.pane(b[B_CAB_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
-            FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head, y, y + h,
-              FacilityStyle.DECO_CABINET_TILE);
-            FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
-              FacilityStyle.DECO_CABINET_TILE);
-            FacilityGeom.cap(b[B_CAB_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_CABINET_TILE);
+            // fitting. UNLESS the glb is on, in which case `fittings` stands one here instead
+            if (!FacilityStyle.DECO_CABINET_GLB)
+              {
+                FacilityGeom.pane(b[B_CAB_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
+                FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head, y, y + h,
+                  FacilityStyle.DECO_CABINET_TILE);
+                FacilityGeom.face(b[B_CAB_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
+                  FacilityStyle.DECO_CABINET_TILE);
+                FacilityGeom.cap(b[B_CAB_TOP], x0, x1, z0, z1, y + h,
+                  FacilityStyle.DECO_CABINET_TILE);
+              }
           case _FittingKind.FIT_STALL:
             stall(b, m, col, row, x0, x1, z0, z1, y, h, dir, head);
           case _FittingKind.FIT_BASIN:
@@ -581,18 +589,27 @@ class FacilityDeco
             // only reads whole cannot be shown in part. `localCap` at the unit's own width is a full
             // 0..1 across the lid because this unit is a CUBE, which is what an aspect-locked face on
             // a square image costs and the reason it is one
-            FacilityGeom.pane(b[B_MACH_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
-            FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head, y, y + h);
-            FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
-            localCap(b[B_MACH_TOP], x0, x1, z0, z1, y + h, x1 - x0);
+            if (!FacilityStyle.DECO_MACHINE_GLB)
+              {
+                FacilityGeom.pane(b[B_MACH_FRONT], x0, x1, z0, z1, dir ^ 1, y, y + h);
+                FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head, y, y + h);
+                FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
+                localCap(b[B_MACH_TOP], x0, x1, z0, z1, y + h, x1 - x0);
+              }
             machLights(leds, x0, x1, z0, z1, y, h, dir, col, row);
           default:
             // the rack: three faces of one cabinet, each on its own surface, and all of them laid
-            // from the UNIT'S OWN CORNER rather than off the world — see `localFace`
-            localFace(b[B_RACK], x0, x1, z0, z1, dir ^ 1, y, y + h);
-            localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head, y, y + h);
-            localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
-            localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_RACK_TILE);
+            // from the UNIT'S OWN CORNER rather than off the world — see `localFace`. UNLESS the
+            // glb is switched on, in which case `racks` stands one here instead and this emits
+            // nothing; the LIGHTS are outside the switch, because both answers put six chassis in
+            // the same six places (FacilityStyle.DECO_RACK_GLB)
+            if (!FacilityStyle.DECO_RACK_GLB)
+              {
+                localFace(b[B_RACK], x0, x1, z0, z1, dir ^ 1, y, y + h);
+                localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head, y, y + h);
+                localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
+                localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_RACK_TILE);
+              }
             lights(leds, x0, x1, z0, z1, y, h, dir, col, row);
         }
     }
@@ -757,7 +774,7 @@ class FacilityDeco
             continue;
           FacilityGeom.face(b[B_PART], x0, x1, z0, z1, d, y, y + h, t);
         }
-      FacilityGeom.cap(b[B_PART], x0, x1, z0, z1, y + h, t);
+      cope(b, x0, x1, z0, z1, y + h);
       // the crossing arm, on either of the two hands this one does not run along
       var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
       var hp = FacilityStyle.PART_T / 2;
@@ -793,9 +810,25 @@ class FacilityDeco
           var lf = (d < 2 ? 2 : 0);
           FacilityGeom.face(b[B_PART], px0, px1, pz0, pz1, lf, y, y + h, t);
           FacilityGeom.face(b[B_PART], px0, px1, pz0, pz1, lf + 1, y, y + h, t);
-          FacilityGeom.cap(b[B_PART], px0, px1, pz0, pz1, y + h, t);
+          cope(b, px0, px1, pz0, pz1, y + h);
         }
     }
+
+// the divider's LID, and it is not the divider's art.
+//
+// FacilityGeom.cap maps a horizontal face WORLD-ALIGNED — u = x / t, v = z / t — while
+// facility/wash-partition is a bottom-up ELEVATION that does not tile vertically: a dark skirting
+// band across its bottom 8% and a joint line two thirds up. At PART_TILE 6.0 the EAST-WEST arm's lid
+// spans z by PART_T 0.6, so dv = 0.1 and it lands on one flat band; the NORTH-SOUTH arm spans z by a
+// whole CELL, so dv = 0.667 and it drags the skirting and the joint straight across the top. Reported
+// from the game as black bars on the north-south part, and it is the one axis that can show it.
+//
+// So the lid takes the counter's laminate, which is the family's own top-down art (its note: "must
+// read as a horizontal surface looked down on", tiling on BOTH axes) at the period every other
+// horizontal surface in the compound uses. Same buffer as the basin counter's own lid, so a washroom
+// with both still costs one draw call for the pair
+  static function cope(b:Array<MeshBuf>, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+    FacilityGeom.cap(b[B_BASIN_TOP], x0, x1, z0, z1, y, FacilityStyle.BENCH_TOP_TILE);
 
 // one washbasin: a counter in the cubicles' own laminate, the laboratory sink's basin lying on it,
 // its tap standing at the back, and a mirror on the masonry above.
@@ -814,44 +847,50 @@ class FacilityDeco
       // does not tile vertically, so its period is the counter's own height and v runs exactly 0..1
       // up it. BOTH ARE THE WASHROOM'S OWN ART NOW — the top wore the researcher's desk laminate and
       // the apron wore a cubicle door, which were the set's two reuses
-      var t = FacilityStyle.BASIN_H;
-      FacilityGeom.cap(b[B_BASIN_TOP], x0, x1, z0, z1, y + h, FacilityStyle.BENCH_TOP_TILE);
-      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
-      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head, y, y + h, t);
-      FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head + 1, y, y + h, t);
-      // the bowl, centred on the counter and lying on it. FacilityGeom.cap's winding with the sheet's
-      // own sub-rect instead of a world period, and v is flipped, so the art's top row lands on the
-      // BACK edge — FacilitySink.emit's own trap, one axis at a time here because a washroom wall may
-      // be on any of the four hands
+      //
+      // ALL OF IT EXCEPT THE MIRROR is switched off when the glb ships (FacilityStyle
+      // .DECO_BASIN_GLB): the mirror hangs on the WALL and not on the unit, so it stays a quad here
       var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
-      var bw = FacilityStyle.SINK_BASIN_W / 2;
-      var bd = FacilityStyle.SINK_BASIN_D / 2;
-      var by = y + h + FacilityStyle.SINK_Y;
       var alongX = (dir < 2);
-      var ax0 = cx - (alongX ? bw : bd), ax1 = cx + (alongX ? bw : bd);
-      var az0 = cz - (alongX ? bd : bw), az1 = cz + (alongX ? bd : bw);
-      MeshBufTools.quad(b[B_BASIN], [ax0, by, az1], [ax1, by, az1], [ax1, by, az0],
-        [ax0, by, az0], [
-        FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V0,
-        FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V0,
-        FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V1,
-        FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V1,
-      ]);
-      // the tap, standing on the counter at its wall edge and looking into the room
-      var fw = FacilityStyle.SINK_FAUCET_W;
-      var fh = FacilityStyle.SINK_FAUCET_H;
-      var e = FacilityGeom.ends(cx - fw / 2, cx + fw / 2, cz - fw / 2, cz + fw / 2, dir ^ 1);
-      var back = FacilityStyle.SINK_BASIN_D / 2;
-      var dx = (dir == 2 ? -back : (dir == 3 ? back : 0.0));
-      var dz = (dir == 0 ? -back : (dir == 1 ? back : 0.0));
-      MeshBufTools.quad(b[B_BASIN],
-        [e[0] + dx, y + h, e[1] + dz], [e[2] + dx, y + h, e[3] + dz],
-        [e[2] + dx, y + h + fh, e[3] + dz], [e[0] + dx, y + h + fh, e[1] + dz], [
-        FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V0,
-        FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V0,
-        FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V1,
-        FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V1,
-      ]);
+      if (!FacilityStyle.DECO_BASIN_GLB)
+        {
+          var t = FacilityStyle.BASIN_H;
+          FacilityGeom.cap(b[B_BASIN_TOP], x0, x1, z0, z1, y + h, FacilityStyle.BENCH_TOP_TILE);
+          FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, dir ^ 1, y, y + h, t);
+          FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head, y, y + h, t);
+          FacilityGeom.face(b[B_COUNTER], x0, x1, z0, z1, head + 1, y, y + h, t);
+          // the bowl, centred on the counter and lying on it. FacilityGeom.cap's winding with the
+          // sheet's own sub-rect instead of a world period, and v is flipped, so the art's top row
+          // lands on the BACK edge — FacilitySink.emit's own trap, one axis at a time here because a
+          // washroom wall may be on any of the four hands
+          var bw = FacilityStyle.SINK_BASIN_W / 2;
+          var bd = FacilityStyle.SINK_BASIN_D / 2;
+          var by = y + h + FacilityStyle.SINK_Y;
+          var ax0 = cx - (alongX ? bw : bd), ax1 = cx + (alongX ? bw : bd);
+          var az0 = cz - (alongX ? bd : bw), az1 = cz + (alongX ? bd : bw);
+          MeshBufTools.quad(b[B_BASIN], [ax0, by, az1], [ax1, by, az1], [ax1, by, az0],
+            [ax0, by, az0], [
+            FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V0,
+            FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V0,
+            FacilityStyle.SINK_BASIN_U1, FacilityStyle.SINK_BASIN_V1,
+            FacilityStyle.SINK_BASIN_U0, FacilityStyle.SINK_BASIN_V1,
+          ]);
+          // the tap, standing on the counter at its wall edge and looking into the room
+          var fw = FacilityStyle.SINK_FAUCET_W;
+          var fh = FacilityStyle.SINK_FAUCET_H;
+          var fe = FacilityGeom.ends(cx - fw / 2, cx + fw / 2, cz - fw / 2, cz + fw / 2, dir ^ 1);
+          var back = FacilityStyle.SINK_BASIN_D / 2;
+          var dx = (dir == 2 ? -back : (dir == 3 ? back : 0.0));
+          var dz = (dir == 0 ? -back : (dir == 1 ? back : 0.0));
+          MeshBufTools.quad(b[B_BASIN],
+            [fe[0] + dx, y + h, fe[1] + dz], [fe[2] + dx, y + h, fe[3] + dz],
+            [fe[2] + dx, y + h + fh, fe[3] + dz], [fe[0] + dx, y + h + fh, fe[1] + dz], [
+            FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V0,
+            FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V0,
+            FacilityStyle.SINK_FAUCET_U1, FacilityStyle.SINK_FAUCET_V1,
+            FacilityStyle.SINK_FAUCET_U0, FacilityStyle.SINK_FAUCET_V1,
+          ]);
+        }
       // and the mirror, on the MASONRY's own face pushed MOUNT_PROUD clear of it — the notice board's
       // mounting exactly, and never the cell boundary, which is a whole unit inside the room
       var mw = FacilityStyle.MIRROR_W / 2;
@@ -1046,18 +1085,25 @@ class FacilityDeco
 // the BIN is the round fitting with no entry here, and it is the one that costs nothing: the
 // compound's outdoor bin batch already exists, so those placements go into it — see `placeRound`
 // and render.facility.FacilityGround.bins
+//
+// AND THE PATHS ARE A SWITCH, FacilityStyle.DECO_DRUM_BLENDER: the hand-modelled barrels are the
+// same three liveries off the same three batches, so nothing above changes — what changes is 1,200
+// generated triangles against 44 authored ones, and a WRAP instead of a bake
   public static final PROPS:Array<DrumProp> = [
     {
       kind: _FittingKind.FIT_DRUM_STEEL,
-      path: RenderConfig.MODELS.facilityDrumSteel,
+      path: (FacilityStyle.DECO_DRUM_BLENDER ?
+        RenderConfig.MODELS.facilityDrumSteelHand : RenderConfig.MODELS.facilityDrumSteel),
     },
     {
       kind: _FittingKind.FIT_DRUM_BIO,
-      path: RenderConfig.MODELS.facilityDrumBio,
+      path: (FacilityStyle.DECO_DRUM_BLENDER ?
+        RenderConfig.MODELS.facilityDrumBioHand : RenderConfig.MODELS.facilityDrumBio),
     },
     {
       kind: _FittingKind.FIT_DRUM_RAD,
-      path: RenderConfig.MODELS.facilityDrumRad,
+      path: (FacilityStyle.DECO_DRUM_BLENDER ?
+        RenderConfig.MODELS.facilityDrumRadHand : RenderConfig.MODELS.facilityDrumRad),
     },
   ];
 
@@ -1100,6 +1146,97 @@ class FacilityDeco
             prop.mesh.castShadow = false;
           });
       return prop;
+    }
+
+// every FITTING KIND that ships as a hand-modelled glb instead of emitted quads, ONE BATCH EACH.
+// A row is here only while its family's ..._GLB flag is on, and `unit` above emits that family's
+// quads only while it is off — so the A/B is a rebuild and never a deletion.
+//
+// THE ROW IS PER MESH AND NOT PER FAMILY, which cost the low rack a second path, material, program
+// and warm row and is still the only right answer. Models.instanced sizes a batch by HEIGHT alone,
+// and DECO_RACK_LOW_H is DECO_RACK_TILE — exactly three chassis — while `lights` below deals
+// `h / DECO_RACK_TILE * DECO_LED_PER_TILE` rows off that same arithmetic. Drawing the six-chassis
+// mesh at the low height therefore gave six SQUASHED units standing under three rows of lights: the
+// cheap version was not a compromise, it was wrong
+  public static function fittings(scene:Scene, m:Facility):Array<Models.InstancedProp>
+    {
+      var rows:Array<{ kind:Int, path:String, h:Float, on:Bool }> = [
+        {
+          kind: _FittingKind.FIT_RACK,
+          path: RenderConfig.MODELS.facilityRack,
+          h: FacilityStyle.DECO_RACK_H,
+          on: FacilityStyle.DECO_RACK_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_RACK_LOW,
+          path: RenderConfig.MODELS.facilityRackLow,
+          h: FacilityStyle.DECO_RACK_LOW_H,
+          on: FacilityStyle.DECO_RACK_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_CABINET,
+          path: RenderConfig.MODELS.facilityCabinet,
+          h: FacilityStyle.DECO_CABINET_H,
+          on: FacilityStyle.DECO_CABINET_GLB,
+        },
+        // both machine heights off ONE path, which is the rack's trap the other way up: nothing in
+        // this family is a count, so scaling the cube by height is the whole difference
+        {
+          kind: _FittingKind.FIT_MACHINE,
+          path: RenderConfig.MODELS.facilityMachine,
+          h: FacilityStyle.DECO_MACHINE_SZ,
+          on: FacilityStyle.DECO_MACHINE_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_MACHINE_LOW,
+          path: RenderConfig.MODELS.facilityMachine,
+          h: FacilityStyle.DECO_MACHINE_LOW_SZ,
+          on: FacilityStyle.DECO_MACHINE_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_BOOKCASE,
+          path: RenderConfig.MODELS.facilityBookcase,
+          h: FacilityStyle.DECO_BOOKCASE_H,
+          on: FacilityStyle.DECO_BOOKCASE_GLB,
+        },
+        // sized by the mesh's OWN height and not by BASIN_H — the tap is part of it
+        {
+          kind: _FittingKind.FIT_BASIN,
+          path: RenderConfig.MODELS.facilityBasin,
+          h: FacilityStyle.BASIN_MESH_H,
+          on: FacilityStyle.DECO_BASIN_GLB,
+        },
+      ];
+      var out = [];
+      for (r in rows)
+        {
+          var places:Array<Models.PropPlace> = [];
+          if (r.on)
+            for (row in 0...m.h)
+              for (col in 0...m.w)
+                {
+                  if (m.deco[row][col] - 1 != r.kind)
+                    continue;
+                  var rect = rectOf(m, col, row, r.kind);
+                  places.push({
+                    x: (rect.x0 + rect.x1) / 2,
+                    z: (rect.z0 + rect.z1) / 2,
+                    // facing away from the masonry it is bolted to, the toilets' own turn
+                    yaw: Math.atan2(DC[rect.dir ^ 1], DR[rect.dir ^ 1]),
+                    y: FacilityGround.surfY(Surf.TILE),
+                  });
+                }
+          var prop = Models.instanced(scene, r.path, places, r.h, SOLID);
+          out.push(prop);
+          // NOT CASTING and mask-patched, the drums' own two findings — see `drums` below
+          if (places.length > 0)
+            Models.get(r.path, function(_)
+              {
+                VisionMask.patchMesh(prop.mesh);
+                prop.mesh.castShadow = false;
+              });
+        }
+      return out;
     }
 
 // one instanced batch per livery, index-aligned with PROPS — the shape render.facility.FacilityKit
@@ -1463,15 +1600,18 @@ class FacilityDeco
 // the light green. Here the three channels are read APART — r is the light's level, g its phase, b
 // which of the two hues it burns — so one mesh carries a whole rack of independent lights.
 //
-// AND TWO PATTERNS OFF ONE PROGRAM, which is what the b channel is doing double duty for. A rack's
+// AND THREE PATTERNS OFF ONE PROGRAM, which is what the b channel is doing triple duty for. A rack's
 // ports are independent traffic (a square wave, each light on its own phase); a machine's control
-// strip is a SEQUENCER (one dot running the row with a decaying tail). Both live in the same mesh
-// and material because a second one is a second draw call, so the mode has to travel per VERTEX —
-// and there are only three channels. It rides the hue: b in 0..1 is a RACK burning `mix(A, B, b)`,
-// b in 2..3 is a MACHINE burning `mix(A, B, b - 2)`. Nothing else samples this attribute (the
-// include that would is the one being replaced) and a varying is not clamped, so a 2 or a 3 reaches
-// the fragment stage untouched. Both branches are evaluated and mixed rather than branched on: they
-// are a handful of instructions each and this mesh is a few hundred specks.
+// strip is a SEQUENCER (one dot running the row with a decaying tail); a workstation's SCREEN is
+// neither, and is two sines with no common period summed shallow, so it wobbles and never loops. All
+// three live in the same mesh and material because a second one is a second draw call, so the mode
+// has to travel per VERTEX — and there are only three channels. It rides the hue: b in 0..1 is a RACK
+// burning `mix(A, B, b)`, b in 2..3 a MACHINE burning `mix(A, B, b - 2)`, b in 4..5 a SCREEN burning
+// C outright (one colour, off the screen art's own measured hue — see WORK_SCREEN_GLOW). Nothing else
+// samples this attribute (the include that would is the one being replaced) and a varying is not
+// clamped, so a 2 or a 4 reaches the fragment stage untouched. Every branch is evaluated and mixed
+// rather than branched on: they are a handful of instructions each and this mesh is a few hundred
+// specks.
 //
 // every rate, depth and falloff is a UNIFORM and not a literal, so retuning any of them compiles
 // nothing (the PropShine pulse's own note); the chaining
@@ -1488,15 +1628,23 @@ class FacilityDeco
         .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
       var uB = { value: new Color(FacilityStyle.DECO_LED_GREEN)
         .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
+      var uC = { value: new Color(FacilityStyle.WORK_SCREEN_GLOW) };
+      var uScr = { value: FacilityStyle.DECO_SCREEN_RATE };
+      var uScr2 = { value: FacilityStyle.DECO_SCREEN_RATE2 };
+      var uScrD = { value: FacilityStyle.DECO_SCREEN_DEPTH };
       var inject =
-        '  float decoMode = step( 1.5, vColor.b );\n' +
-        '  float decoHue = vColor.b - 2.0 * decoMode;\n' +
+        '  float decoScr = step( 3.5, vColor.b );\n' +
+        '  float decoMode = step( 1.5, vColor.b ) * ( 1.0 - decoScr );\n' +
+        '  float decoHue = vColor.b - 2.0 * decoMode - 4.0 * decoScr;\n' +
         '  float decoBlink = 1.0 - decoLedDepth + decoLedDepth *\n' +
         '    step( 0.5, fract( decoLedTime * decoLedRate + vColor.g ) );\n' +
         '  float decoRun = pow( 1.0 -\n' +
         '    fract( decoLedTime * decoLedChase - vColor.g ), decoLedTail );\n' +
-        '  diffuseColor.rgb = mix( decoLedA, decoLedB, decoHue ) *\n' +
-        '    ( vColor.r * mix( decoBlink, decoRun, decoMode ) );\n';
+        '  float decoFlick = 1.0 - decoScrDepth + decoScrDepth * ( 0.5 + 0.5 * (\n' +
+        '    0.6 * sin( decoLedTime * decoScrRate + vColor.g * 6.2831 ) +\n' +
+        '    0.4 * sin( decoLedTime * decoScrRate2 + vColor.g * 19.739 ) ) );\n' +
+        '  diffuseColor.rgb = mix( mix( decoLedA, decoLedB, decoHue ), decoLedC, decoScr ) *\n' +
+        '    ( vColor.r * mix( mix( decoBlink, decoRun, decoMode ), decoFlick, decoScr ) );\n';
       var prev:Dynamic = mat.onBeforeCompile;
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
@@ -1511,13 +1659,21 @@ class FacilityDeco
           shader.uniforms.decoLedTail = uTail;
           shader.uniforms.decoLedA = uA;
           shader.uniforms.decoLedB = uB;
+          shader.uniforms.decoLedC = uC;
+          shader.uniforms.decoScrRate = uScr;
+          shader.uniforms.decoScrRate2 = uScr2;
+          shader.uniforms.decoScrDepth = uScrD;
           shader.fragmentShader = 'uniform float decoLedTime;\n' +
             'uniform float decoLedRate;\n' +
             'uniform float decoLedDepth;\n' +
             'uniform float decoLedChase;\n' +
             'uniform float decoLedTail;\n' +
+            'uniform float decoScrRate;\n' +
+            'uniform float decoScrRate2;\n' +
+            'uniform float decoScrDepth;\n' +
             'uniform vec3 decoLedA;\n' +
             'uniform vec3 decoLedB;\n' +
+            'uniform vec3 decoLedC;\n' +
             StringTools.replace(shader.fragmentShader, '#include <color_fragment>', inject);
         };
       if (prev != null)
