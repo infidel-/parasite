@@ -5,6 +5,228 @@ verdict. Settled outcomes only. Every entry needs a matching row in
 [`3d-render.md`](3d-render.md)'s verdict table, or it is invisible. Earlier entries are in
 `3d-changes-2026-09b.md` and its predecessors.
 
+## The park bench: A BENCH IS ONE CURVE, and MAP BEFORE YOU CHAMFER (2026-09-13)
+
+Last of the four kerbside props. **1,660 tris against the generated bench's 3,650**, measured
+1.700 x 3.5568 x 2.340, `holes 0, coplanar 0`. Three numbers are locked and the mesh hits all three:
+**aspect 1.5200** (`PARK_BENCH_H` 2.34 is fitted to it, and `Models.instanced` scales by height
+alone), **3.557 long by 1.700 deep** (`BIN_SIDE` 1.45 / `BIN_BACK` 1.42 are fitted against those, so
+a wrong depth walks the litter bin into the seat), and **length on local Z facing local +X**, which
+is what `FacilityGround.facing`'s −π/2 exists for. Verified in game: the seat faces the path and the
+bin still sits clear at the back corner.
+
+It is the railing's argument one prop over — **a bench is SLATS, and a slat is a rhythm**. The
+generated one reached 15 components at 35.3% and split **2.73x**, the worst-conditioned of the four,
+and its whole regeneration story was about getting the gaps between the slats to come back as real
+openings at all (the first bake filled them in: a grey subject on a grey backdrop gives a generator
+nothing to segment holes against). Stated as boxes there is nothing to segment — **the gaps ARE
+gaps**. Five seat slats and four back slats, the count that reference asked for in as many words.
+
+**THE GRAIN HAS TO RUN ALONG THE SLAT, which rules `unwrap` out.** Its widest-two guess puts u on a
+slat's SHORT axis and lays the art's horizontal grain ACROSS the slat. `flat_uv` with u forced onto
+the length fixes it. Every mesh slat wears ONE band of the art (v 0.270..0.355, clear of the gaps the
+sheet paints at 0.250 and 0.375) because they are the same slat — picking a band per slat only risks
+landing one on a painted gap.
+
+**AND A SLAT HAS THREE KINDS OF FACE, NOT ONE — one `flat_uv` over all six is not enough.** With v on
+X for every face the map is right only for the two the sitter meets: on the long EDGES x is constant,
+so it collapsed to a single texel ROW stretched down the face, and on the ENDS y is constant, so it
+collapsed to a single COLUMN. Both read as fine stripes running the **wrong way round the arris** —
+grain crossing the timber, which is not a thing wood does, and the first thing anyone notices about
+the prop after the silhouette. Now split by face normal: ±z unchanged; **±x keeps u on the length and
+takes v from the THICKNESS**, over a v-band of the art scaled by `SLAT_T / w` so a texel is the same
+size on the edge as on the face, and the grain turns the corner and keeps going; **±y, the sawn ends,
+take a flat two-texel patch** (`R_SLAT_END`, the bin lid's trick). End grain is the one place the art
+cannot be turned to help — a cut end shows rings and pores, so whichever way stripes run there they
+are wrong, and at 0.16 x 0.10 plain timber is exactly what a real end reads as.
+
+**MAP FIRST, THEN CHAMFER, and the order is forced:** `bmesh.ops.bevel` REPLACES the faces it bevels,
+so touching them afterwards raises `BMesh data of type BMFace has been removed`. It is also the
+correct order — `chamfer` collects its edges *before* bevelling, and `flat_uv` is a LINEAR map over
+explicit ranges, so the inset corners the bevel leaves interpolate to exactly the UVs they should
+have. The new strips are re-tagged by `chamfer` and mapped by `unwrap`, so nothing carries a smear.
+
+**THE FIRST CUT SHIPPED A CRATE AND THAT IS THE ENTRY.** It stood the back dead vertical over a flat
+seat on three straight boxes per end, hit every locked number, measured `holes 0, coplanar 0` at
+1,620 tris — and read **worse than the bake it replaced**, which is the only comparison that counts.
+A generator carries a curve for free; boxes do not, and a 90-degree back is the one thing no amount
+of slat rhythm survives. **A bench is ONE PROFILE, not a seat with a back bolted on.** The nine slats
+are now placed by ARC LENGTH along a single curve whose tangent turns **-6 degrees at the seat front
+(a dished seat), through 10 at the seat rear, to 31 degrees off vertical at the foot of the back and
+6 at its top** — a lumbar S. **The curve costs ZERO triangles**: each slat is still one box, pitched
+to the tangent where it sits, which is a rotation about Y and the one `buildlib.place` cannot state
+(it pitches about X). The +40 tris are the frame: three straight boxes per end became **two SWEPT
+BARS**, 8-sided and smooth-shaded, which is the only genuinely round thing on the prop.
+
+**THE BAR MUST CLEAR THE TIMBER, AND THAT IS A FIT.** It rides at a constant offset along the
+profile's NORMAL, which is what keeps it tangent to the slats the whole way round — but the first
+build put it **0.075 behind a 0.10-thick slat with a 0.065 radius**, i.e. buried 40 mm in the wood,
+and what that reads as in game is the slats disappearing INTO the frame instead of sitting on it.
+Exactly tangent is `SLAT_T/2 + BAR_R`; shipped at **BAR_OFF 0.100 against a tangent 0.105**, 5 mm of
+bite, which hides the contact behind the slat's own back face and leaves no hairline gap where the
+curve falls away under a straight slat (the sag over half a back slat is 2.5 mm at that radius).
+**BAR_R came down 0.065 → 0.055 to pay for it**, because the offset costs depth at the back of the
+rake and there was nothing spare:
+
+**DEPTH IS THE BINDING CONSTRAINT AND IT IS TIGHT.** A raked back travels backwards as it climbs, and
+1.700 has to hold the seat run, the rake AND the bar's own radius. The shipped profile measures
+**1.684 wide — 16 mm spare in the entire prop**, and the seat run had to come down from 1.45 to 1.008
+to buy the rake. The front foot and the top rail are placed at ±(DEPTH/2 − BAR_R) *by hand* so the
+measured depth is 1.700 by construction; the curve is centred between them by a build-time span scan
+with an `assert` behind it, which is the check for the whole arc — rake harder and it fails loudly.
+
+**`sweep` SQUARES EACH RING TO THE DIRECTION OF TRAVEL, so a leaning end lands a TILTED CAP.** The
+rear leg leans 7.5 degrees at its foot and dug **8 mm under the floor**; the top rail put the mesh
+**11 mm over H**, which is the aspect lock broken by a cap. Both feet and the rail now end on a short
+vertical stub and `z_min` is 0.0 with `h` exactly 2.340. Also: the slats, not the frame, now measure
+the 3.557 — a swept bar is 0.13 thick and would read as the end of the bench, so the slats run the
+full length and the frames stand inside them.
+
+**`check` EARNED ITS KEEP ON THE WAY: eight exactly coplanar pairs at gap 0.** In the straight
+version all three boxes of an end frame shared one Y band, so the seat bearer's ±Y faces landed on
+the SAME PLANE as the stile's and the leg's and overlapped where the boxes crossed — the server
+rack's own logged z-fight in another shape, and the first thing the new separating-axis test caught
+that was real. Moot in the shipped mesh (the boxes are gone), but it is what the test is for.
+
+**AND NO, THE BAKE COULD NOT HAVE BEEN CLEANED UP INSTEAD.** Asked directly, and `propstat` answers
+it: the generated bench is **15 components at 35.3% with split 2.73x**, which is the definition of
+UNDECIMATABLE in this pipeline. Every slat is its own shell, and quadric decimation eats thin plates
+first — it takes the slats before it takes the blocky ends, so the rhythm that IS the prop is the
+first thing to go. The split ratio says the UV islands are already torn 2.7 ways per vertex, so
+fewer triangles buys *worse* texels/tri, not better. "Fix the issues" on a 15-shell blob cloud means
+welding it into one surface and re-cutting its UVs by hand, which is modelling it — at which point
+the script is cheaper, holds the locked numbers by construction, and wears the game's own atlas.
+
+**Level: linear x0.60, atlas luma 74.3 -> 57.4**, R:G 1.054 -> 1.056 so the timber-to-steel ratio is
+untouched. 74 was well over the 46-52 outdoor family (the drum and gas rack sit at 66) and read as
+the brightest thing in the park; the generated bench it replaces shipped at chroma **8**, i.e. the
+timber and the steel had merged into one grey. 20.1 keeps them apart without shouting.
+
+## The park railing: the one prop whose HEIGHT IS ITS WIDTH (2026-09-13)
+
+Fourth kerbside prop and the only one with a hard geometric contract. `FacilityStyle.FENCE_H` is not
+a chosen number, it is `CityConfig.CELL / FENCE_ASPECT` **2.83**, and `Models.instanced` scales by
+HEIGHT alone — so a segment draws exactly one cell wide **only if the mesh's own width/height is
+exactly that aspect**. Wrong by a percent and every run round every park gaps or overlaps at each
+cell boundary. Built at LEN 4.0 by LEN / 2.83: measured **4.000 x 0.150 x 1.4134, `widest/height`
+2.83**, so the batch's scale is 1 and neither `FENCE_H` nor the `CLIMB_ARC` 0.8 fitted against it
+moves. **564 tris against the generated railing's 5,056**, `holes 0, coplanar 0`.
+
+**WHAT EARNS IT A MESH IS THE OPPOSITE OF WHAT EARNED THE CONE ONE.** A railing is carried by
+RHYTHM — not by silhouette, not by surface. The balusters ARE the object, and a mesh generator spent
+5,056 triangles on them (4 components at 86.3%, split 2.65x, UNDECIMATABLE) to arrive at a blur,
+where stating them as eleven boxes costs a tenth of that and comes out crisp. The art correspondingly
+does almost nothing: one plain 16-texel swatch off `fence-sheet.png`, **shared with the cable reel**
+— two props wanting the same material is the one case where sharing a sheet file is right, against
+the per-prop rule the bin's entry sets.
+
+**THE FLAT SQUARE ENDS ARE A CONTRACT, NOT A STYLE CALL.** Two segments abut at a cell boundary, so
+A's +x post face and B's -x post face land on ONE PLANE; flat and square they meet invisibly and
+FrontSide culls whichever faces away, the normals being opposed. A finial, a rounded cap or any
+overhang shows the join at every boundary in the park. Verified by rendering two segments one CELL
+apart before wiring anything: no gap, and the baluster pitch **0.308** is within a hair of the 0.30
+two abutting posts make, so the rhythm carries across the join instead of stuttering at it. Confirmed
+again in game on a real run of five plus a corner — continuous, and `endCut`'s shortening behaves.
+
+**No chamfer on the balusters** — 0.06 across, an edge break there is under a texel at any camera
+this game has, and it would double the triangle count of the part that is already eleven boxes. Posts
+and rails get one (EDGE 0.012). `propstat` REJECTs it at 15 components / 17.9% and calls it
+UNDECIMATABLE at 3.21x: fifteen components is fifteen boxes, and both lines are TRELLIS gates reading
+a hand-made assembly — the rack's own 9-at-12.5% reading.
+
+## The lot's cone and reel: a reel is ONE lathe, and a level fit must be LINEAR (2026-09-13)
+
+Second and third kerbside props. **Cone 360 tris against the generated 4,798; reel 676 against
+4,960.** Both `holes 0, coplanar 0`, both built at world size so `LOT_CONE_H` 1.5 and `LOT_REEL_H`
+2.4 scale them by 1. Dropped junk takes a free yaw, so neither has an authored front and no constant
+is fitted to their aspect. The **tyre stack stays generated**: it is the only glb in the compound
+that PASSES its own gate (1 component / 100%), and three touching toroids with real holes is a
+silhouette a lathe would have to fake.
+
+**A CABLE REEL IS ONE LATHE, AND THE GATE ITSELF PROVES IT.** It *looks* like an assembly — two
+flanges, a barrel, a hub each end — and the generated one came back as **6 components at 44.5%,
+REJECT**, trying to be exactly that. Stated as a single (radius, z) table turned once, it comes back
+**1 component at 100%, the first "ok" of the whole rebuild**. The profile runs out along the bottom
+face, over the rim, in to the barrel, along it and out to the top flange, CCW throughout. It also
+**stands axis-UP**, which is read off the old glb rather than chosen: bbox 0.999 x 0.901 x 0.999 —
+two EQUAL horizontal extents and a shorter height — is a reel resting on a flange FACE. The first
+build laid it on its rims and it read as a dumbbell. `REEL_R` 1.33 against 2.4 reproduces the old
+aspect 1.109 to three places.
+
+**A FLAT ANNULUS TAKES `disc_uv`, NEVER `lathe_uv`** — the latter puts the seam on a radius and
+converges every wedge on the axis, which is the bin's lid wedge in another shape. So the reel's
+bands are mapped separately: flats radially, turned surfaces by angle on one continuous v, and only
+the turned ones shaded smooth. The top flange is what this camera looks at and was a featureless
+2.66-wide disc, so it gained a stiffening rib and a raised hub — two rings, +80 tris.
+
+**THE FINDING: A GAMMA IS THE WRONG TOOL FOR A LEVEL FIT ON A SATURATED COLOUR.** The cone came off
+the gen at sampled luma **88** against the old prop's effective ~49, so it wanted darkening. A gamma
+of 1.49 did that — and it is per-channel and concave, so it dragged the low channel down far harder
+than the high one and took the cone's 222/72/4 orange to a **RED**, visibly a different hue from the
+prop it replaces, seen side by side in game. Same mechanism `lift` is already logged for on the
+hazard bands. **A multiply in LINEAR light** scales all three channels by one factor, so every ratio
+between them — hue and saturation — is untouched and only the level moves: x0.47 put it on **59.3**
+with R:G 0.472 -> **0.458**. This is the authored-sheet form of the standing "flat scalar, never
+per-channel" rule, and the bin's own fit was redone the same way.
+
+**`buildlib.check` grew a real overlap test, and this prop is why.** The reel reported **136 coplanar
+pairs at gap 0** — every one a pair of wedges two to four sectors apart in the SAME flat annulus,
+whose axis-aligned BOUNDING BOXES overlap while the wedges never touch. Adjacent wedges were already
+skipped for sharing a vert; these are the ones that do not. `_overlaps` is a separating-axis test on
+the two mapped axes now, with the cheap box test still in front of it. The danger was never the
+noise: a real fault would have been invisible inside 136 false ones. It is strictly more
+conservative, so every prop that read 0 before still does. `buildlib.selfcheck()` is the runnable
+check behind it.
+
+## The litter bin, and a pack4 is a GENERATION not a FILE (2026-09-13)
+
+First of the kerbside props off the Blender route, and the widest-reaching prop in the compound: one
+instanced batch serves the park (one bin per bench), the corridor dead ends and every `FIT_BIN`
+fitting, so one mesh is three populations. **504 tris against the generated bin's 4,765**, 0.984 x
+0.984 x 1.800, z_min 0, `holes 0, coplanar 0`. Built AT world size — aspect 0.547 against the old
+0.540, radius 0.492 against the 0.49 that `BIN_SIDE` 1.45 / `BIN_BACK` 1.42 are fitted to, inside
+their 0.08 spare — so the batch's scale stays 1 and **not one placement constant moved**.
+
+**A PACK4 IS AN ARGUMENT ABOUT THE GENERATION, NOT ABOUT THE SHIPPED FILE, and this is where the two
+come apart.** `drum-sheet.png` ships packed because the three drums share one MESH and differ only by
+cell. Bin, bench, fence and cone share nothing and use one cell each, so shipping them packed would
+hand every glb a 512 texture it uses a quarter of. They were **generated packed** (one 1k gen, four
+cells drawn side by side — the coherence argument, unchanged) and **shipped cropped**, four native
+512s. Same bytes, four times the texels. It also bought the level fit below, which a shared file
+could not have taken.
+
+**THE LEVEL IS PER PROP AND THE BIN IS THE ONE THAT GOES INDOORS.** 46-52 is a luma family fitted
+OUTDOORS against asphalt; the crop came off the gen at **45.7** and read as a black cylinder in a
+corridor, which is the generated bin's own logged failure reached from the other end. Measured
+sampled luma on the rest of the hand-modelled family: basin **93**, drum **66**, gas rack **66**.
+A **linear x2.18 in linear light** put it on **68.6**, chroma 23.8 -> **32.8** (over propstat's >25
+line). No `baseColor`, no `lift`, no `sat` — the sheet is authored, so a knob would be a second
+correction over a fitted one. Bench and fence never go indoors and keep the outdoor band.
+(A gamma was the first answer here and is the wrong tool — see the cone entry above.)
+
+**THE SEAM IS ARITHMETIC, NOT A GUESS.** The wrap PAINTS the aperture (u 0.311..0.644, centre
+0.4774) so the mesh has no hole in it, and the game needs that paint on local **+Z** —
+`FacilityGround.bins` yaws by `look + PI/2`. `export_yup` sends Blender **-Y** to glTF +Z, i.e.
+theta = -pi/2, and `lathe_uv` reads `u = (theta/2pi + 0.5 - seam) % 1`, so the seam landing 0.4774
+there is `0.25 - 0.4774` = **0.7726** — which also drops the seam itself at the back, the drum's own
+0.75 one notch over.
+
+**Two traps, both mine, both cheap to repeat.** A 0.015 gap under the lid to draw a shadow line left
+a **SEE-THROUGH SLOT**: the two discs that close it are edge-on to a horizontal eye, so the
+background showed through the bin. Seated on the rim it is covered, the coincident pair is harmless
+(FrontSide culls whichever faces away, the dome occludes the other) and the 0.022 overhang draws the
+shadow line anyway. And **a dome cannot take a swatch through `lathe_uv`**: u runs once across the
+rect and the seam lays the swatch's left edge against its right, so a 16-texel patch with 2 counts of
+gradient arrived as a hard line — and on a dome every sector converges at the apex, so it read as a
+bright **WEDGE** across the whole lid. `R_LID` is the same green collapsed to ONE TEXEL: no width, no
+seam to be across.
+
+Sixteen sides, not the drum's twenty (0.97 across against 1.2, and smooth-shaded sides buy the
+silhouette alone). No chamfer — a lathe's arrises ARE its profile. `FacilityStyle.BIN_BLENDER`
+switches the pair and the generated bin stays. **No call A/B was available**: the sample area carries
+one bin, and an instanced batch's `count` is the CULLED count rewritten per frame by `Models.cull`,
+not its placement count — which is why it first read 0 and looked like a wiring fault.
+
 ## The detail pass: flat shading was the bug, not the side count (2026-09-13)
 
 Reported on the twelve props of the two entries below: the round ones want curves, the drum's top is

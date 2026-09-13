@@ -62,6 +62,20 @@ class FacilityGround
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
+  // which litter bin the compound draws (FacilityStyle.BIN_BLENDER). Resolved ONCE and read from
+  // here by all four places that need the same answer — this file's own batch and its VisionMask
+  // patch, FacilityWarm's row and FacilityArea's EXTRA list — because a batch is keyed by PATH, and
+  // a site left on the other branch would quietly cost a second draw call for the same bins
+  public static final BIN_PATH = FacilityStyle.BIN_BLENDER ?
+    RenderConfig.MODELS.facilityBinHand : RenderConfig.MODELS.facilityBin;
+  // and the park railing, resolved here for the same reason (FacilityStyle.FENCE_BLENDER)
+  public static final FENCE_PATH = FacilityStyle.FENCE_BLENDER ?
+    RenderConfig.MODELS.facilityFenceHand : RenderConfig.MODELS.facilityFence;
+  // and the park bench (FacilityStyle.BENCH_BLENDER). Read by the GREEN table below, which is what
+  // `green` batches and what FacilityArea's EXTRA list is index-aligned with
+  public static final BENCH_PATH = FacilityStyle.BENCH_BLENDER ?
+    RenderConfig.MODELS.facilityBenchParkHand : RenderConfig.MODELS.facilityBenchPark;
+
   // the park is dressed with the wilderness's own plants: same night, same style, and TWO of the
   // four trees the tile ids distinguish. the other two are dead wood and have no row here — +3 is
   // the dead snag outright, and +1 is `tree-broadleaf`, a BARE broadleaf with thick limbs and no
@@ -109,7 +123,7 @@ class FacilityGround
     // see, and unlike a plant this tile has no other meaning
     {
       tile: Const.TILE_GRASS_UNWALKABLE,
-      path: RenderConfig.MODELS.facilityBenchPark,
+      path: BENCH_PATH,
       h: FacilityStyle.PARK_BENCH_H,
       jitter: 0.0,
       // and it does NOT vary in size. it is manufactured, so a run of them at different sizes reads
@@ -450,10 +464,10 @@ class FacilityGround
                 });
               }
           }
-      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityFence, places,
+      var prop = Models.instanced(scene, FENCE_PATH, places,
         FacilityStyle.FENCE_H, SOLID);
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityFence, function(_) VisionMask.patchMesh(prop.mesh));
+        Models.get(FENCE_PATH, function(_) VisionMask.patchMesh(prop.mesh));
       return prop;
     }
 
@@ -505,7 +519,7 @@ class FacilityGround
       // the glb picked for them: a handful of bins in the labs would otherwise be a second draw call
       // for the same model. BIN_H is already FacilityStyle.DECO_ROUND_H, so they are the same size
       FacilityDeco.placeRound(m, _FittingKind.FIT_BIN, places);
-      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityBin, places,
+      var prop = Models.instanced(scene, BIN_PATH, places,
         FacilityStyle.BIN_H, SOLID);
       // and this batch CASTS NOTHING, which the corridor half is what forced. an instanced batch is
       // drawn into the moon's shadow map as many times as it is drawn into the frame, so the second
@@ -514,7 +528,7 @@ class FacilityGround
       // outright. one 0.97-unit drum is not worth half the cost of the whole fitting, which is the
       // park shrub's own finding (see GreenProp.casts) reached from the other end
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityBin, function(_)
+        Models.get(BIN_PATH, function(_)
           {
             VisionMask.patchMesh(prop.mesh);
             prop.mesh.castShadow = false;

@@ -1093,6 +1093,26 @@ class FacilityStyle
   // palette that is a CELL OF A SHEET rather than whatever a bake came back as — the generated rack
   // took a baseColor fit, a sat fit and two rounds of reported-from-the-game correction to settle
   public static inline var DECO_DRUM_BLENDER = true;
+  // and the LITTER BIN, the same argument one prop over and the widest-reaching of the set: this one
+  // batch serves the park, the corridor dead ends and every FIT_BIN fitting, so it is three
+  // populations off one mesh. 504 authored triangles against 4,765 generated ones, and the generated
+  // bin is the prop docs/3d-render.md's colour-deletion row names by number — a 20.1-chroma
+  // bottle-green body shipped at 0.1 — so the palette is the point here as much as the count
+  public static inline var BIN_BLENDER = true;
+  // and the LOT's standing junk — the cone and the cable reel, 360 and 676 authored triangles
+  // against 4,798 and 4,960 generated ones. The TYRE STACK is not switched by this and has no hand
+  // model: it is the only glb in the compound that passes its own propstat gate (1 component at
+  // 100%), and three touching toroids with real holes is a silhouette a lathe would have to fake
+  public static inline var LOT_BLENDER = true;
+  // and the PARK RAILING, 564 authored triangles against 5,056 generated ones. The mesh is built at
+  // CELL by CELL / FENCE_ASPECT, so FENCE_H below and the CLIMB_ARC fitted against it do not move —
+  // which is the whole risk on this one: the height IS the width here, and a segment that is not
+  // exactly a cell long gaps or overlaps at every cell boundary in the park
+  public static inline var FENCE_BLENDER = true;
+  // and the PARK BENCH, 1,620 authored triangles against 3,650 generated ones. Its aspect 1.52 and
+  // its 3.557 x 1.70 footprint are both held: PARK_BENCH_H is fitted to the first and BIN_SIDE /
+  // BIN_BACK to the second, so the litter bin beside it does not move
+  public static inline var BENCH_BLENDER = true;
   // the two ROUND low fittings — the hazard drum and the waste bin — which are instanced glbs and
   // not geometry (render.facility.FacilityDeco.placeRound). ONE height and ONE footprint for both:
   // 1.8 is already what the tunnels give the same drum glb (render.sewer.SewerStyle) and what BIN_H

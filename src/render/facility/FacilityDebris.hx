@@ -44,15 +44,21 @@ class FacilityDebris
   // none of them takes the quarter-turn the parked cars and the roof condensers do — see `place`
   public static final PROPS:Array<LotProp> = [
     {
-      path: RenderConfig.MODELS.facilityLotCone,
+      path: (FacilityStyle.LOT_BLENDER ?
+        RenderConfig.MODELS.facilityLotConeHand : RenderConfig.MODELS.facilityLotCone),
       h: FacilityStyle.LOT_CONE_H,
     },
+    // the TYRE STACK IS THE ONE PROP IN THIS FAMILY THAT STAYS GENERATED, and it is not an
+    // oversight: it is the only glb in the whole compound that PASSES its own propstat gate at 1
+    // component / 100%, and three touching toroids with real see-through holes is a silhouette a
+    // (radius, z) lathe would have to fake rather than state
     {
       path: RenderConfig.MODELS.facilityLotTyres,
       h: FacilityStyle.LOT_TYRES_H,
     },
     {
-      path: RenderConfig.MODELS.facilityLotReel,
+      path: (FacilityStyle.LOT_BLENDER ?
+        RenderConfig.MODELS.facilityLotReelHand : RenderConfig.MODELS.facilityLotReel),
       h: FacilityStyle.LOT_REEL_H,
     },
   ];

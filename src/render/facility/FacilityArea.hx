@@ -33,8 +33,8 @@ class FacilityArea implements Area3D
   // booth and the barrier are both merged geometry rather than props (see the header of
   // render.facility.FacilityEntry)
   static final EXTRA = [
-    RenderConfig.MODELS.facilityFence,
-    RenderConfig.MODELS.facilityBin,
+    FacilityGround.FENCE_PATH,
+    FacilityGround.BIN_PATH,
     RenderConfig.MODELS.facilityCar,
   ].concat([for (p in FacilityDebris.PROPS) p.path])
     .concat([for (p in FacilityKit.PROPS) p.path])

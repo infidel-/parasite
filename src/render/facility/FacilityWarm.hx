@@ -148,11 +148,11 @@ class FacilityWarm
               h: FacilityStyle.LAMP_H,
             },
             {
-              path: RenderConfig.MODELS.facilityFence,
+              path: FacilityGround.FENCE_PATH,
               h: FacilityStyle.FENCE_H,
             },
             {
-              path: RenderConfig.MODELS.facilityBin,
+              path: FacilityGround.BIN_PATH,
               h: FacilityStyle.BIN_H,
             },
             {

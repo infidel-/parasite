@@ -692,14 +692,26 @@ class RenderConfig {
     // in the game with an AUTHORED FRONT after the guard rail: its yaw is turned at the path, never
     // random (render.facility.FacilityGround.facing)
     facilityBenchPark: 'models/facility/bench-park.glb',  // slatted seat and back on cast-steel ends
+    // and the same bench hand-modelled (models-src/facility/bench_build.py), 1,620 tris against
+    // 3,650 — five seat slats and four back slats, the count the generated one's reference asked
+    // for, with the gaps as real gaps rather than as something a bake had to resolve
+    facilityBenchParkHand: 'models/facility/bench-park-hand.glb', // same slats, stated not segmented
     // the railing round the OUTSIDE of the park — never along the path through it. the second prop in
     // the game sized to TILE after the guard rail: FacilityStyle.FENCE_H is derived from its own
     // aspect so one segment draws exactly a cell wide and a run meets end to end
     facilityFence: 'models/facility/fence-park.glb',      // flat-topped steel railing, one cell long
+    // and the same railing hand-modelled (models-src/facility/fence_build.py), 564 tris against
+    // 5,056 — two end posts, two rails and eleven balusters, built at LEN 4.0 by LEN / FENCE_ASPECT
+    // so the segment is exactly a cell wide and a run still meets end to end
+    facilityFenceHand: 'models/facility/fence-park-hand.glb', // boxes, because a railing is a RHYTHM
     // the park litter bin, one beside every bench. it is placed off the BENCH and not off a tile of
     // its own, so it needs no generator change and is retroactive to every saved compound
     // (render.facility.FacilityGround.bins)
     facilityBin: 'models/facility/trash-bin.glb',         // solid-walled steel bin, domed lid, side mouth
+    // and the same bin hand-modelled (models-src/facility/bin_build.py), 504 tris against 4,765 — a
+    // sixteen-sided lathe with a rolled foot and a rolled rim, wearing a FLAT UNROLLED WRAP whose
+    // painted aperture the seam lands on local +Z. FacilityStyle.BIN_BLENDER picks between the pair
+    facilityBinHand: 'models/facility/trash-bin-hand.glb', // same can, cell of a sheet not a bake
     // the cars parked in the lot, in the bays nearest the gate (render.facility.FacilityCars). the
     // one prop in the compound the silhouette-vs-surface test says yes to outright — a car is nothing
     // but its outline, where the booth and the barrier beside it are boxes and a stripe pattern
@@ -716,6 +728,12 @@ class RenderConfig {
     facilityLotCone: 'models/facility/lot-cone.glb',      // traffic cone, weighted square base, one collar
     facilityLotTyres: 'models/facility/lot-tyres.glb',    // three worn car tyres stacked flat, no rims
     facilityLotReel: 'models/facility/lot-reel.glb',      // empty steel cable reel standing on its flanges
+    // and the two of those three that are hand-modelled (models-src/facility/lot_build.py), 360 and
+    // 676 tris against 4,798 and 4,960. FacilityStyle.LOT_BLENDER picks between the pairs. The TYRE
+    // STACK has no hand row and never will — it is the one prop in the compound that passes its own
+    // propstat gate, and a stack of holed toroids is not a shape a lathe states
+    facilityLotConeHand: 'models/facility/lot-cone-hand.glb', // shell as a wrap, slab as a base
+    facilityLotReelHand: 'models/facility/lot-reel-hand.glb', // ONE lathe: flanges, barrel, rib, hub
     // the lab kit standing INDOORS, against the room walls (render.facility.FacilityKit) — the first
     // two glb props in the compound that are not outdoors. both earn a glb on the same test the
     // corridor's casework fails: a rack of domed bottles and an open wheeled frame are silhouette,

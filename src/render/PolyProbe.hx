@@ -367,14 +367,28 @@ class PolyProbe {
           return t != null && t.image != null ? (t.image.width + 'x' + t.image.height) : none;
         var flip = tex != null ? (tex.flipY == false ? 'flipY=0' : 'flipY=1') : '';
         inline function uvs(i:Int) return round3(g.attributes.uv.getX(i)) + ',' + round3(g.attributes.uv.getY(i));
-        cap.textContent =
+        // the face's centroid in the MESH's own coordinates, which is what the glb and the build
+        // script that made it are written in — a face index alone says which triangle, this says
+        // which PART
+        var p:Dynamic = g.attributes.position;
+        inline function mid(f:Dynamic->Int->Float) return round3((f(p, a) + f(p, b) + f(p, c)) / 3);
+        var local = mid(function(q, i) return q.getX(i)) + ',' +
+          mid(function(q, i) return q.getY(i)) + ',' +
+          mid(function(q, i) return q.getZ(i));
+        var report =
           'mesh: ' + (obj.name != '' ? obj.name : '(unnamed)') + '   face #' + h.faceIndex +
           (instanceId >= 0 ? '   inst#' + instanceId : '') + '\n' +
-          'base: ' + dimOf(tex, 'no map') + ' ' + flip + '\n' +
-          'emis: ' + dimOf(emap, 'none') + '\n' +
+          'local xyz ' + local + '\n' +
+          'base: ' + texName(bmap) + ' ' + dimOf(tex, 'no map') + ' ' + flip + '\n' +
+          'emis: ' + texName(emap) + ' ' + dimOf(emap, 'none') + '\n' +
           'uv a ' + uvs(a) + '\n' +
           'uv b ' + uvs(b) + '\n' +
           'uv c ' + uvs(c);
+        // a click is a user gesture, so the async clipboard API is allowed here — the whole point
+        // of the probe is to be able to hand a face to someone else, and retyping it off the screen
+        // is where that falls down
+        StreetPerf.copyText(report);
+        cap.textContent = report + '\n(copied)';
         box.style.display = 'block';
         return;
       }
