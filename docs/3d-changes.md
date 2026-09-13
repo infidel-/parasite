@@ -42,6 +42,15 @@ tap's gooseneck. `lathe_uv` and `disc_uv` write UVs **by angle** instead of over
 vessel is out to the rim, over it and back DOWN the inside. Run it the other way and the piece comes
 back inside out.
 
+**A PLAIN SWATCH IS A FITTED VALUE, AND BOTH WAYS PAST IT LOOK THE SAME FROM THE INSIDE.** The leaf's
+0.014 edge took the face's own crop and every blade had a **pale rim**; corrected to the darkest
+uniform patch in the cell (the shadow between two leaves, luma 23) and every blade came back with a
+**black outline** drawn round it, reported from the game. The answer is neither end: leaf GREEN at
+**82% of the face's own luma** (39/60/39 against 55/73/41), picked as the most uniform patch near
+that target, and `LEAF_T` **0.014 → 0.005** with it — 0.014 was 3.3% of a blade's own length, which
+is a lot of edge to light however it is coloured. **Fit the swatch to the face it borders, and fix
+the geometry that made it visible at the same time.**
+
 **Three mapping bugs, and every one of them was `unwrap`'s bounding-box guess.**
 
 - **The drum's off-centre lid.** `unwrap` lays a cap into the whole of a rect, so the rim landed
