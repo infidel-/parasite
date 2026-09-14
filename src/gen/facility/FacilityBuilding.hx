@@ -13,6 +13,15 @@ import gen.facility.FacilityTemp.*;
 
 class FacilityBuilding
 {
+  // how many ROOM_SIZEs a room may run to on one axis before subdivideLargeRooms cuts it in two.
+  //
+  // 1.5 while a compound's buildings were hand-placed and LONG — the side building was 0.4 of the
+  // area's width by nearly its whole height — because a long building's corridor throws off plenty
+  // of narrow rooms by itself. The block tree hands out plots capped at splitProfile().maxSide and
+  // bounded in aspect, so the buildings are squarer and their rooms came out 60 cells against the
+  // 45 they used to average. This is the constant that puts them back
+  static inline var SUBDIVIDE_OVER = 1.2;
+
 // generate a single building of a given size at given coordinates
   public static function generateBuilding(state: _FacilityState,
       bx: Int, by: Int, bw: Int, bh: Int)
@@ -83,7 +92,7 @@ class FacilityBuilding
             }
           x += delta.x;
           y += delta.y;
-          if (cells[x][y] < TEMP_BUILDING_WALL)
+          if (at(cells, x, y) < TEMP_BUILDING_WALL)
             {
               x -= delta.x;
               y -= delta.y;
@@ -203,9 +212,9 @@ class FacilityBuilding
             // get room dimensions and wall division direction
             var room = getRoom(cells, x, y);
             var dir = 0;
-            if (room.w > ROOM_SIZE * 1.5)
+            if (room.w > ROOM_SIZE * SUBDIVIDE_OVER)
               dir = DIR_DOWN;
-            if (room.h > ROOM_SIZE * 1.5)
+            if (room.h > ROOM_SIZE * SUBDIVIDE_OVER)
               dir = DIR_RIGHT;
             if (dir == 0)
               {
@@ -283,7 +292,7 @@ class FacilityBuilding
             }
           x += delta.x;
           y += delta.y;
-          if (cells[x][y] < TEMP_BUILDING_WALL)
+          if (at(cells, x, y) < TEMP_BUILDING_WALL)
             {
               x -= delta.x;
               y -= delta.y;
@@ -535,13 +544,31 @@ class FacilityBuilding
         }
     }
 
+// read a cell, or -1 off the grid.
+//
+// THE GRID EDGE IS A REAL BOUNDARY HERE and not a defensive check. Every probe below looks OUTSIDE
+// the building it is working on — a corridor reads the cell past the wall it is about to stop at, a
+// bench block reads the ring around itself — and until Phase 4 nothing ever put a building near the
+// map border, so a raw `cells[x][y]` was safe by accident of the arithmetic. The block tree hands
+// out whatever plot the split produced, so it is safe by rule now. -1 matches nothing, which is the
+// answer every caller wants for a cell that is not there
+  static inline function at(cells: Array<Array<Int>>, x: Int, y: Int): Int
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= cells.length ||
+          y >= cells[0].length)
+        return -1;
+      return cells[x][y];
+    }
+
 // check a w,h block at x,y if it is near a door
   static function isBlockNearDoor(cells: Array<Array<Int>>, x: Int, y: Int,
       w: Int, h: Int): Bool
     {
       for (i in -1...w + 1)
         for (j in -1...h + 1)
-          if (cells[x + i][y + j] == TEMP_BUILDING_INNER_DOOR)
+          if (at(cells, x + i, y + j) == TEMP_BUILDING_INNER_DOOR)
             return true;
       return false;
     }
@@ -553,7 +580,7 @@ class FacilityBuilding
       var tile = 0;
       for (i in 0...Const.dir4x.length)
         {
-          tile = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          tile = at(cells, x + Const.dir4x[i], y + Const.dir4y[i]);
           if (tile >= TEMP_BUILDING_WINDOW &&
               tile <= TEMP_BUILDING_WINDOWV3)
             return true;

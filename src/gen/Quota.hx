@@ -72,11 +72,13 @@ class Quota
       return blocks;
     }
 
-// the blocks this demand could legally take
+// the blocks this demand could legally take: big enough, and accepted by its `must` if it has one
   static function homes(free: Array<_GenNode>, d: _GenDemand): Array<_GenNode>
     {
       return [for (b in free)
-        if (GenTree.width(b) >= d.minW && GenTree.height(b) >= d.minH) b];
+        if (GenTree.width(b) >= d.minW &&
+            GenTree.height(b) >= d.minH &&
+            (d.must == null || d.must(b))) b];
     }
 
 // the block that suits this demand best, or null if none fits. ties on `fit` break on area, so the

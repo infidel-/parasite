@@ -29,6 +29,16 @@ class FacilityBlocks
   public static inline var ROAD_W = 4;
   public static inline var SIDEWALK_W = 2;
 
+  // cells of margin kept between a plot and the GRID EDGE, on every side the road is not on.
+  //
+  // a structure writes and reads outside its own rect: gen.facility.FacilityBuilding throws a 2-cell
+  // pavement apron round the wall ring, drawSideCorridor probes one cell past the wall it is about to
+  // stop at, and makeWindows starts its run one cell to the side of a wall CORNER. Flush with column
+  // 0 every one of those indexes cells[-1], which is an undefined read and not a clipped write. The
+  // gap between two plots is splitProfile().gap and serves the same purpose between neighbours; this
+  // is that gap against the edge of the world
+  public static inline var EDGE_MARGIN = 2;
+
   // how many splits to try before giving up on housing the whole quota. a split is cheap and an
   // unsatisfiable one is thrown away whole rather than patched, the same shape
   // game.UndergroundLabAreaGenerator.buildLabLayout uses (MAX_LAYOUT_ATTEMPTS = 30). Measured over
@@ -51,18 +61,18 @@ class FacilityBlocks
       rng: Void -> Float): Array<_GenNode>
     {
       var p = splitProfile();
-      var ds = demands(roadNorth);
+      var ds = demands(roadNorth, h);
       // the road takes its band off one edge before anything is cut: its side is dictated from
       // outside the tree, so everything else divides what is left rather than the other way round
       var reserved = ROAD_W + SIDEWALK_W;
-      var y1 = (roadNorth ? reserved : 0);
-      var y2 = (roadNorth ? h - 1 : h - 1 - reserved);
+      var y1 = (roadNorth ? reserved : EDGE_MARGIN);
+      var y2 = (roadNorth ? h - 1 - EDGE_MARGIN : h - 1 - reserved);
 
       var blocks = null;
       for (i in 0...MAX_PLAN_TRIES)
         {
           lastPlanTries = i + 1;
-          blocks = Subdivide.split(0, y1, w - 1, y2, p, rng);
+          blocks = Subdivide.split(EDGE_MARGIN, y1, w - 1 - EDGE_MARGIN, y2, p, rng);
           Quota.deal(blocks, ds, YARD, rng);
           if (Quota.satisfied(blocks, ds))
             return blocks;
@@ -109,10 +119,13 @@ class FacilityBlocks
 //
 // `roadNorth` is which edge the road band was reserved against, and two of the four fit functions
 // are measured from it — "furthest from the road" is a different plot depending on which side it is
-  public static function demands(roadNorth: Bool): Array<_GenDemand>
+  public static function demands(roadNorth: Bool, h: Int): Array<_GenDemand>
     {
       // distance from the road edge, so a fit function reads the same whichever side it landed on
       var fromRoad = function(b: _GenNode) return (roadNorth ? b.y1 : -b.y1);
+      // and the row the split starts at on the road side: a plot whose near edge is this one is ON
+      // the frontage, with nothing but the pavement band between it and the street
+      var frontage = (roadNorth ? ROAD_W + SIDEWALK_W : h - 1 - ROAD_W - SIDEWALK_W);
       return [
         // the two lab buildings. exactly two: one is a compound with nothing to cross between, and
         // three leaves no ground for the yard the place is looked at across
@@ -134,16 +147,21 @@ class FacilityBlocks
           minH: 12,
           fit: fromRoad,
         },
-        // and parking wants the plot NEAREST it, because the gate has to reach the pavement: the
-        // entryway child punches its hole through the sidewalk band, and game.AreaGame.gate()
-        // re-derives the checkpoint from that hole on every load
+        // and parking MUST be on the frontage, because the gate has to reach the pavement: the
+        // entryway child punches its hole through the sidewalk band directly into this plot, and
+        // game.AreaGame.gate() re-derives the checkpoint from that hole on every load. A `must` and
+        // not a `fit` — see _GenDemand.must for the 1-in-1000 that taught the difference
         {
           kind: PARKING,
           min: 1,
           max: 1,
           minW: 14,
           minH: 10,
-          fit: function(b: _GenNode) return -fromRoad(b),
+          must: function(b: _GenNode) return (roadNorth ? b.y1 : b.y2) == frontage,
+          // and of the frontage plots it takes the SMALLEST. without this it inherits `best`'s
+          // runner-up rule, which is roomiest-first, and a car park that takes the biggest plot on
+          // the street costs the lab buildings 100 cells of floor and the compound two rooms
+          fit: function(b: _GenNode) return -GenTree.width(b) * GenTree.height(b),
         },
         // the park takes what is left, and would rather be a strip than a square: a path down the
         // long axis with benches off it is what render.facility.FacilityGround kerbs and

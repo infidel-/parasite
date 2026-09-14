@@ -12,6 +12,10 @@ package gen;
 
 class GenCheck
 {
+  // how wide a walkway run the park-path test will still cross. render.facility.FacilityModel
+  // .PATH_MAX, and it has to stay the same number — this asserts the thing that file will find
+  public static inline var PATH_MAX = 4;
+
   public var failures: Array<String>;
   var seed: Int;
 
@@ -73,10 +77,15 @@ class GenCheck
     {
       for (d in demands)
         for (b in blocks)
-          if (b.kind == d.kind)
+          {
+            if (b.kind != d.kind)
+              continue;
             ok(GenTree.width(b) >= d.minW && GenTree.height(b) >= d.minH,
               '"' + d.kind + '" dealt an undersized block: ' + rect(b) +
               ' needs ' + d.minW + 'x' + d.minH);
+            ok(d.must == null || d.must(b),
+              '"' + d.kind + '" dealt a block its own `must` rejects: ' + rect(b));
+          }
     }
 
 // every leaf of a split clears the profile's own floor, and none exceeds its cap
@@ -287,6 +296,108 @@ class GenCheck
               free++;
           }
       ok(free > 0, 'no bare bench cell in the whole area: nothing can spawn a clue');
+    }
+
+// the checkpoint, re-derived exactly the way game.AreaGame.gate() does it on every load.
+//
+// A REIMPLEMENTATION ON PURPOSE, and the one place in this file that is. gate() reads nothing the
+// generator recorded — no block tree, no generatorInfo — only the SHAPE left in the cell grid: the
+// bounding box of every open-lot cell lying within the pavement's depth of the carriageway. That
+// makes it the invariant most easily broken by a layout change and the one least likely to be
+// noticed, because a compound with no checkpoint still loads and still plays
+  public function gate(ctx: GenCtx)
+    {
+      var x0 = ctx.width, x1 = -1, y0 = ctx.height, y1 = -1, dir = 0;
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          {
+            if (ctx.cells[x][y] != Const.TILE_ALLEY)
+              continue;
+            var d = roadSide(ctx, x, y);
+            if (d == 0)
+              continue;
+            dir = d;
+            if (x < x0)
+              x0 = x;
+            if (x > x1)
+              x1 = x;
+            if (y < y0)
+              y0 = y;
+            if (y > y1)
+              y1 = y;
+          }
+      if (dir == 0)
+        {
+          fail('no gate: no open-lot cell lies within the pavement band, so the compound has no ' +
+            'checkpoint at all');
+          return;
+        }
+      // ONE mouth and not several. the box is taken over every qualifying cell in the area, so a
+      // second hole anywhere along the frontage does not add a gate — it stretches this one across
+      // the whole compound and gate() then tests two cells that are nowhere near each other
+      ok(x1 - x0 + 1 == gen.blocks.RoadBlock.ENTRY_W,
+        'the gate mouth is ' + (x1 - x0 + 1) + ' cells wide, not ' +
+        gen.blocks.RoadBlock.ENTRY_W + ': something else broke the pavement band');
+      ok(y1 - y0 + 1 == gen.blocks.FacilityBlocks.SIDEWALK_W,
+        'the gate mouth is ' + (y1 - y0 + 1) + ' cells deep, not the pavement band');
+      // the row of lot just past the mouth: the booth takes the bay before it and the barrier post
+      // the bay after, and gate() draws nothing at all unless both are open lot
+      var y = (dir < 0 ? y1 + 1 : y0 - 1);
+      ok(ctx.getCellType(x0 - 1, y) == Const.TILE_ALLEY &&
+         ctx.getCellType(x1 + 1, y) == Const.TILE_ALLEY,
+        'the gate mouth at ' + x0 + ',' + y0 + ' is not flanked by open lot on the row inside it, ' +
+        'so no booth is drawn and no checkpoint exists');
+    }
+
+// which way the carriageway lies from this cell, or 0 if it is further off than the pavement is
+// deep. game.AreaGame.roadSide, verbatim
+  static function roadSide(ctx: GenCtx, x: Int, y: Int): Int
+    {
+      for (i in 1...gen.blocks.FacilityBlocks.SIDEWALK_W + 1)
+        {
+          if (ctx.getCellType(x, y - i) == Const.TILE_ROAD)
+            return -1;
+          if (ctx.getCellType(x, y + i) == Const.TILE_ROAD)
+            return 1;
+        }
+      return 0;
+    }
+
+// the park's path, re-derived the way render.facility.FacilityModel.isParkPath does it: a pavement
+// cell with lawn on both sides of the run it stands in. The park block writes it as plain WALKWAY
+// and nothing records that it is a path, so a park laid without one loses its kerbs and its lamps
+// with no error anywhere
+  public function parkPath(ctx: GenCtx)
+    {
+      var n = 0;
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          if (ctx.cells[x][y] == Const.TILE_WALKWAY &&
+              ((grassAcross(ctx, x, y, -1, 0) && grassAcross(ctx, x, y, 1, 0)) ||
+               (grassAcross(ctx, x, y, 0, -1) && grassAcross(ctx, x, y, 0, 1))))
+            n++;
+      ok(n > 0, 'no cell in the area reads as a park path: the park has no walkway with lawn ' +
+        'either side of it');
+    }
+
+// step off a cell one way over the walkway run it stands in: is the first cell past that run grass?
+// FacilityModel.grassAcross, with its own PATH_MAX cap
+  static function grassAcross(ctx: GenCtx, x: Int, y: Int, dx: Int, dy: Int): Bool
+    {
+      var cx = x + dx;
+      var cy = y + dy;
+      for (_ in 0...PATH_MAX)
+        {
+          var t = ctx.getCellType(cx, cy);
+          if (t != Const.TILE_WALKWAY)
+            // Surf.GRASS, spelled the way render.facility.FacilityModel.surfOf spells it
+            return t == Const.TILE_GRASS ||
+              t == Const.TILE_GRASS_UNWALKABLE ||
+              (t >= Const.TILE_TREE1 && t <= Const.TILE_BUSH);
+          cx += dx;
+          cy += dy;
+        }
+      return false;
     }
 
   static function rect(b: _GenNode): String

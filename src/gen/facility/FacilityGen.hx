@@ -10,8 +10,11 @@ package gen.facility;
 import Const;
 import game.AreaGenerator.*;
 import gen.GenCtx;
+import gen.GenTree;
+import gen.blocks.FacilityBlocks;
 import gen.blocks.HangarBlock;
 import gen.blocks.ParkBlock;
+import gen.blocks.RoadBlock;
 import gen.facility.FacilityTemp.*;
 
 import haxe.Timer;
@@ -20,10 +23,16 @@ class FacilityGen
 {
 // generate a whole compound into a context.
 //
-// still the hand-written arithmetic it always was — main building at 0.5 x 0.5, side building at
-// 0.4, hangar at 0.2 — with one coin flip mirroring it north/south. gen.blocks.FacilityBlocks.plan
-// already describes the same compound as a quota over a subdivided rect, and Phase 4 is where this
-// function stops doing the arithmetic and starts walking that tree instead
+// SEED -> ROOT -> RESERVE THE ROAD -> SPLIT -> DEAL -> WALK -> FINALIZE -> CONNECT, and the middle
+// four are gen.blocks.FacilityBlocks.plan. This used to be hand-written arithmetic on
+// area.width/height — main building at 0.5 x 0.5, side building at 0.4, hangar at 0.2, park in the
+// strip left over and the car park in whatever the grid was still at — so a compound had exactly one
+// layout with a north/south mirror on it. Now the quota says WHAT a compound must contain and the
+// split says where it fits, so every seed lays out differently and every seed still has everything.
+//
+// the walk is BREADTH-FIRST (see gen.GenTree), which is what the ENTRYWAY child rides on: it hangs
+// off the parking plot rather than off the road, so the mouth is punched a level AFTER every plot
+// has thrown its pavement apron onto the road band and can no longer pave over it
   public static function build(ctx: GenCtx): _FacilityState
     {
       var area = ctx;
@@ -36,67 +45,17 @@ class FacilityGen
         allDoors: [],
         nextRoomID: TEMP_BUILDING_ROOM_ID_START,
       }
-      // fill with blank
+      // the ground everything is cut out of. the yard and the parking lot are this and nothing else:
+      // they have no filler, because "open lot" is what the area already is
       var cells = area.getCells();
       drawBlock(cells, 0, 0, area.width, area.height, TEMP_ALLEY);
 
-      // main road
-      var rw = 4;
-      var ry = (state.mainRoadNorth ? 0 : area.height - rw);
-      drawBlock(cells, 0, ry, area.width, rw, TEMP_ROAD);
-
-      // sidewalk near main road
-      var sidewalkw = 2;
-      var sidewalky = (state.mainRoadNorth ? ry + rw : ry - sidewalkw);
-      drawBlock(cells, 0, sidewalky, area.width, sidewalkw, TEMP_WALKWAY);
-
-      // main building
       var t1 = Timer.stamp();
-      var mainw = Std.int(area.width * 0.5),
-        mainh = Std.int(area.height * 0.5);
-      var mainx = Std.int(mainw / 2),
-        mainy = (state.mainRoadNorth ? rw + 2 : area.height - mainh - 2 - rw);
-      FacilityBuilding.generateBuilding(state, mainx, mainy, mainw, mainh);
-
-      // hole in sidewalk for entry to parking lot. game.AreaGame.gate() re-derives the checkpoint
-      // from exactly this 4x2 hole on every load, so its shape is not cosmetic
-      var hx = mainx + mainw + 10, hy = sidewalky;
-      drawBlock(cells, hx, hy, 4, 2, TEMP_ALLEY);
-      // sewer hatches
-      var cnt = 0;
-      var sewersDist = 10 + area.random(10);
-      for (x in 0...hx)
-        {
-          cnt++;
-          if (cnt < sewersDist)
-            continue;
-          area.add('sewerHatch', x, sidewalky + (state.mainRoadNorth ? 0 : 1));
-          cnt = 0;
-        }
-
-      // grass
-      var gx = 2, gy = mainy, gw = mainx - 4, gh = mainh;
-      drawBlock(cells, gx, gy, gw, gh, TEMP_GRASS);
-      drawBlock(cells, 0, gy, 2, gh, TEMP_WALKWAY);
-      ParkBlock.generatePark(state, gx, gy, gw, gh);
-
-      // side building
-      var sidex = 2,
-        sidey = (state.mainRoadNorth ? mainy + mainh + 2 : 2),
-        sidew = Std.int(area.width * 0.4),
-        sideh = (state.mainRoadNorth ? area.height - sidey - 2 : mainy - 4);
-      FacilityBuilding.generateBuilding(state, sidex, sidey, sidew, sideh);
-
-      // hangar. it is pushed off the main building's apron by HANGAR_GAP and SHORTENED by the same,
-      // so the far end stays where it was — the yard it faces is the compound's own, and moving that
-      // end would take the gap out of the lot on the other side instead
-      var hangarx = sidex + sidew + 16,
-        hangary = (state.mainRoadNorth ? mainy + mainh + 2 + HangarBlock.HANGAR_GAP : 4),
-        hangarw = Std.int(area.width * 0.2),
-        hangarh = (state.mainRoadNorth ?
-          area.height - sidey - 4 - HangarBlock.HANGAR_GAP :
-          mainy - 6 - HangarBlock.HANGAR_GAP);
-      HangarBlock.generateHangar(state, hangarx, hangary, hangarw, hangarh);
+      var root = area.root;
+      root.children.push(RoadBlock.node(state));
+      for (b in FacilityBlocks.plan(area.width, area.height, state.mainRoadNorth, area.rng))
+        root.children.push(b);
+      GenTree.build(root, function(n) fill(state, n));
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
@@ -105,6 +64,50 @@ class FacilityGen
       FacilityConnect.connectRooms(state);
       trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       return state;
+    }
+
+// build one node of the tree.
+//
+// the filler table, and the whole of it. A kind with no case here is a leaf that writes nothing,
+// which is exactly right for the two kinds that ARE the base fill — 'yard' and 'parking' are open
+// lot, and open lot is what the grid was blanked to
+  static function fill(state: _FacilityState, node: _GenNode)
+    {
+      var cells = state.area.getCells();
+      var w = GenTree.width(node);
+      var h = GenTree.height(node);
+      switch (node.kind)
+        {
+          case FacilityBlocks.ROAD:
+            RoadBlock.fill(state, node);
+
+          case FacilityBlocks.BUILDING:
+            // the building fills its plot outright. its own 2-cell pavement apron is written OUTSIDE
+            // that rect, into the gap FacilityBlocks.splitProfile leaves between plots, which is why
+            // that gap is 2 and not 1 — and why FacilityBlocks.EDGE_MARGIN keeps a plot off the grid
+            // edge, where there is no neighbour to borrow the gap from
+            FacilityBuilding.generateBuilding(state, node.x1, node.y1, w, h);
+
+          case FacilityBlocks.HANGAR:
+            // and the hangar sits one cell inside its plot on every side, because it is the one
+            // structure with NO apron: the split's 2-cell gap plus this is HANGAR_GAP, the clearance
+            // its blank storey-and-a-half face needs before the yard in front of it reads as a slot
+            var inset = HangarBlock.HANGAR_GAP - FacilityBlocks.splitProfile().gap;
+            HangarBlock.generateHangar(state, node.x1 + inset, node.y1 + inset,
+              w - inset * 2, h - inset * 2);
+
+          case FacilityBlocks.PARK:
+            drawBlock(cells, node.x1, node.y1, w, h, TEMP_GRASS);
+            ParkBlock.generatePark(state, node.x1, node.y1, w, h);
+
+          case FacilityBlocks.PARKING:
+            node.children.push(RoadBlock.entryRect(state, node));
+
+          case FacilityBlocks.ENTRYWAY:
+            drawBlock(cells, node.x1, node.y1, w, h, TEMP_ALLEY);
+
+          default:
+        }
     }
 
 // replace all temp tiles into final ones

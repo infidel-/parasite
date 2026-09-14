@@ -37,6 +37,26 @@ area
 park existed, so a filler could not ask what is next to it. Same reason the wilderness lays its
 highway before its trees.
 
+It is also what the ENTRYWAY rides on. The mouth is a child of `parking`, one level below the plots,
+so it is punched *after* every plot has thrown its 2-cell pavement apron onto the road band — a
+sibling of `road` would be paved back over by whichever building happened to border it.
+
+**Two kinds have no filler at all.** `parking` and `yard` are open lot, and open lot is what the grid
+was blanked to before the walk started, so `FacilityGen.fill` has no case for them. A kind with no
+case is a leaf that writes nothing; that is the design, not an omission.
+
+`FacilityGen.build()` in full:
+
+```
+ctx.chance(50)                          which edge the road is on
+drawBlock(… TEMP_ALLEY)                 the ground everything is cut out of
+root.children += RoadBlock.node()       the band, reserved before anything is cut
+root.children += FacilityBlocks.plan()  Subdivide.split → Quota.deal
+GenTree.build(root, fill)               the walk
+finalizeTiles()                         TEMP_* → Const.TILE_*
+FacilityConnect.connectRooms()          every room is walk-in-able
+```
+
 ## Files
 
 | file | what it is |
@@ -53,6 +73,7 @@ highway before its trees.
 | `gen/GenRun.hx` | headless entry point of `bin/genrun.js` |
 | `gen/blocks/*Block.hx` | one filler per block kind. Suffix is `Block`, always |
 | `gen/blocks/FacilityBlocks.hx` | the compound's profile, quota and `plan()` |
+| `gen/blocks/RoadBlock.hx` | the carriageway, the pavement, the sewer hatches and the gate mouth |
 
 ### The facility, after the split
 
@@ -70,7 +91,7 @@ used zero times** — so every pass was already effectively static.
 | `gen/facility/FacilityConnect.hx` | every door, and both reachability passes — `fixDoors` on the room graph, `connectRooms` on the tile grid |
 | `gen/facility/FacilityRooms.hx` | the room templates and the shared placement helpers |
 | `gen/facility/FacilityToilet.hx` | the washroom and its T-partition |
-| `gen/blocks/ParkBlock.hx`, `HangarBlock.hx` | already at their Phase 4 home; only the signature changes when the tree starts driving them |
+| `gen/blocks/ParkBlock.hx`, `HangarBlock.hx` | driven by the tree; they still take `(state, x, y, w, h)` because a filler that only needs a rect does not need a node |
 
 **`FacilityConnect` and not `FacilityDoors`**: `render.facility.FacilityDoors` already exists, and two
 modules of one name in different packages is a trap for no gain.
@@ -116,6 +137,21 @@ icons must not turn up two and a half times as often as the shelving carrying tw
 Bench decoration (`Const.CHEM_LABS_DECO_TABLE`) is still an atlas ROW RUN dealt by
 `FacilityRooms.addDecoration`, not a place entry. It has no per-frame identity, and `game
 .CorpAreaGenerator` reads the same runs.
+
+### `fit` is a preference, `must` is a requirement
+
+`_GenDemand.fit` scores the rects a demand could take; `_GenDemand.must` decides which rects it is
+allowed to take at all, and `Quota.homes` counts only the ones that pass. **The difference is not
+stylistic.** A preference loses to whatever was dealt first, and `Quota` deals most-constrained-first:
+the facility's parking lot said "nearest the road" with `fit`, the two lab buildings were dealt ahead
+of it because they had fewer legal homes, they took both frontage plots, and **1 compound in 1000**
+came out with its gate mouth opening onto a building wall. Expressed as a `must`, parking becomes the
+constrained demand, is dealt first, and a split that cannot house it is re-rolled by `plan`'s existing
+retry loop like any other unsatisfiable quota.
+
+A `must` narrows what `best` may choose from, so give the demand a `fit` as well or it falls through
+to `best`'s runner-up rule — roomiest-first. Parking did, and a car park taking the biggest plot on
+the street cost the lab buildings 100 cells of floor and the compound two rooms.
 
 ## Rules
 
@@ -209,6 +245,13 @@ a reload, a save load and a walk across a compound there.
 - no two objects share a cell, and every spawn is in bounds
 - **every room can be walked into** — flood fill from the rim over walkable tiles
 - at least one bare bench cell exists, or the facility stops handing out clues
+- **the checkpoint re-derives**: exactly one `ENTRY_W`-wide mouth of open lot through the pavement
+  band, flanked by open lot on the row inside it — `AreaGame.gate()`'s own derivation, reimplemented
+  on purpose because it reads nothing but the shape of the grid
+- **the park has a path**: at least one walkway cell with lawn on both sides of its run, which is
+  what `FacilityModel.isParkPath` looks for and what the kerbs and the lamps hang off
+- `_DecoPlace` frames are unique across the table and every place the facility asks for deals
+  something (`Deco.selfCheck`, run once before the first seed)
 
 ### What `--stats` is for
 
@@ -224,26 +267,36 @@ binds the block profile.
 Baseline, 4000 seeds across all four sizes — **the numbers a later phase diffs against**:
 
 ```
-rooms          18.81   spawns/TOTAL      198.24   blocks/TOTAL  6.52
-doors          18.02   spawns/decoration 157.49   blocks/yard   1.52
-cells/rooms   841.26   spawns/door        25.57   planTries     1.05
-cells/building 1243    spawns/vent         7.00   planRetried   0.05
-cells/yard      554    spawns/floorDrain   4.23
-                       spawns/sewerHatch   3.95
-unreachableRooms 0        reachedCells 3052 / walkableCells 3060
+rooms          19.38   spawns/TOTAL      171.79   blocks/TOTAL  6.03
+doors          18.63   spawns/decoration 129.10   blocks/yard   1.03
+cells/rooms   823.19   spawns/door        25.91   planTries     1.22
+cells/building 1190    spawns/vent         8.21   planRetried   0.17
+cells/yard      392    spawns/floorDrain   4.05
+cells/parking   359    spawns/sewerHatch   4.52
+unreachableRooms 0        reachedCells 3081 / walkableCells 3093
 ```
 
-**Read those to ±0.15, not ±0.01.** Three disjoint 4000-seed ranges give `rooms` 18.81 / 18.96 /
-18.92, so one range's mean carries about that much sampling error and a 1% move between two runs says
-nothing. What is exact here is the block half — `blocks/*`, `cells/building` and `cells/yard` come off
-`FacilityBlocks.plan`'s own stream and do not move at all unless the split or the quota changed.
-For anything finer than the means, use `--digest`.
+**Read those to ±0.15, not ±0.01.** Three disjoint 4000-seed ranges of the arithmetic-era generator
+gave `rooms` 18.81 / 18.96 / 18.92, so one range's mean carries about that much sampling error and a
+1% move between two runs says nothing. For anything finer than the means, use `--digest`.
 
-`planTries 1.05` is the margin between the split profile and the quota: the first split houses
-everything 95% of the time. A mean creeping up is the warning that comes before the retry cap is hit
+Against the arithmetic era these are close where it matters and deliberately not identical: `rooms`
+19.38 against 18.81, `doors` 18.63 against 18.02. **`spawns/decoration` is the one that genuinely
+moved** — 129 against 157, because bench runs are dealt under ribbon glazing and a site divided into
+six fair plots has about 20% less exterior wall on its buildings than one where two hand-placed
+buildings ate 66% of the ground.
+
+`rooms` only landed there because `FacilityBuilding.SUBDIVIDE_OVER` was cut from 1.5 to 1.2 in the
+same phase. Plots are capped by `splitProfile().maxSide` and bounded in aspect, so the buildings are
+squarer than the old hand-placed ones and their rooms came out at 60 cells against the 45 they used
+to average — 14.2 rooms per compound instead of 18.8, with the same total room AREA. The constant is
+the knob for that and nothing else.
+
+`planTries 1.22` is the margin between the split profile and the quota: the first split houses
+everything ~83% of the time. A mean creeping up is the warning that comes before the retry cap is hit
 and a compound ships without its second building.
 
-Yard at ~17% of the area is not waste — it is the open ground `FacilityDebris`, `FacilityCars` and
+Yard at ~12% of the area is not waste — it is the open ground `FacilityDebris`, `FacilityCars` and
 `FacilityEntry`'s guard booth stand on, and the distance the buildings are seen across.
 
 ### Sealed rooms, and why the repair is a separate pass
@@ -276,9 +329,21 @@ through the outside wall, and preferring a wall that does not duplicate a door t
 (`AlienMissionCommon` locks a room by taking the *first* door it finds and stopping, so a duplicate
 pair would leave the other way in unlocked).
 
-**Now zero across 6000 seeds, and asserted rather than counted.** The `reachedCells` /
-`walkableCells` stats exist to validate the check itself — they sit at 3052/3060, so the flood really
-does cover the grid and a zero is a zero.
+**Now zero across 10000 seeds of block-tree layouts, and asserted rather than counted.** The
+`reachedCells` / `walkableCells` stats exist to validate the check itself — they sit at 3081/3093, so
+the flood really does cover the grid and a zero is a zero.
+
+### The grid edge is a real boundary now
+
+Until the block tree, nothing ever put a structure near the map border — the arithmetic kept every
+building a dozen cells inside — so `FacilityBuilding`'s probes indexed `cells[x][y]` raw and were
+safe by accident. Three of them read OUTSIDE the building they are working on: `drawSideCorridor` and
+the main corridor loop read the cell past the wall they are about to stop at, and `isBlockNearDoor`
+reads the ring around a bench block. The split hands out whatever plot it produced, so they go
+through `FacilityBuilding.at()` now, which returns -1 off the grid. `FacilityBlocks.EDGE_MARGIN`
+keeps a plot two cells off the border on top of that, which is the same clearance
+`splitProfile().gap` gives it against a neighbour — a building's wall flush with the world's edge has
+nowhere to put its pavement apron.
 
 ## Invariants downstream re-derives from the grid
 
@@ -286,8 +351,11 @@ These break **silently, with no compile error**, because the consumer reverse-en
 tiles rather than being handed them:
 
 - `AreaGame.gate()` re-derives the checkpoint from "a plain 4x2 hole of alley through the sidewalk
-  band beside the road" — `ParkingBlock`'s entryway child must keep producing exactly that
-- `FacilityModel.isParkPath` needs the park's 2-cell walkway path (slack `PATH_MAX = 4`)
+  band beside the road" — the `entryway` child of `parking` must keep producing exactly that, the
+  pavement band must run the FULL width so nothing else qualifies, and the parking plot must be ON
+  the frontage so the row inside the mouth is open lot. Asserted by `GenCheck.gate`
+- `FacilityModel.isParkPath` needs the park's 2-cell walkway path (slack `PATH_MAX = 4`). Asserted by
+  `GenCheck.parkPath`
 - `Surf.LOT` is just "the alley fill" — parking must still finalize to `TILE_ALLEY`
 - room ids are unique across the whole area and never restart per structure
 - `FacilityAreaGenerator.repairRooms` guards on a room **count** — it must not start firing on

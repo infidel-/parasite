@@ -69,10 +69,7 @@ class GenRun
           var seed = seed0 + i;
           var check = new GenCheck(seed);
           if (type == 'facility')
-            {
-              checkFacilityBlocks(seed, check, verbose);
-              checkFacilityArea(seed, check, verbose);
-            }
+            checkFacilityArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -100,20 +97,21 @@ class GenRun
       exit(1);
     }
 
-// split and deal one compound's plots, and assert the result is something the fillers could build.
-// this is the whole of the area-level tree — the fillers themselves land in a later phase, and the
-// point of checking it separately is that a bad SPLIT and a bad FILL look identical in the game
-  static function checkFacilityBlocks(seed: Int, check: GenCheck, verbose: Bool)
+// assert the plots a compound was actually built on.
+//
+// THE TREE THE GENERATOR USED, not a second plan off a parallel stream. This used to re-run
+// FacilityBlocks.plan against its own rng because build() ignored the tree entirely and laid the
+// compound by arithmetic — so the two halves of a seed described different compounds and the block
+// stats described one nobody ever walked in. Phase 4 made build() walk the tree, and a check that
+// runs a reimplementation of the thing it is checking is worth nothing
+  static function checkFacilityBlocks(ctx: GenCtx, roadNorth: Bool, check: GenCheck, verbose: Bool)
     {
-      var rng = Rng.mulberry32(seed);
-      var w = dim(AREA_W, rng);
-      var h = dim(AREA_H, rng);
-      var roadNorth = Rng.chance(rng, 50);
-
-      var blocks = FacilityBlocks.plan(w, h, roadNorth, rng);
-      var demands = FacilityBlocks.demands(roadNorth);
+      // the root's own children are the plots: the reserved road band plus whatever the quota dealt.
+      // deeper nodes (the entryway) are not plots and are not part of the split's contract
+      var blocks = [for (b in ctx.root.children) if (b.kind != FacilityBlocks.ROAD) b];
+      var demands = FacilityBlocks.demands(roadNorth, ctx.height);
       check.splitSane(blocks, FacilityBlocks.splitProfile());
-      check.inBounds(blocks, w, h);
+      check.inBounds(blocks, ctx.width, ctx.height);
       check.noOverlap(blocks);
       check.quotaMet(blocks, demands);
       check.blocksFit(blocks, demands);
@@ -130,7 +128,7 @@ class GenRun
 
       if (verbose)
         {
-          log('[gen] seed ' + seed + ' roadNorth=' + roadNorth + ' blocks=' + blocks.length);
+          log('[gen] seed ' + ctx.seed + ' roadNorth=' + roadNorth + ' blocks=' + blocks.length);
           for (b in blocks)
             log('   ' + b.kind + ' ' + b.x1 + ',' + b.y1 + '..' + b.x2 + ',' + b.y2 +
               ' (' + GenTree.width(b) + 'x' + GenTree.height(b) + ')');
@@ -160,11 +158,15 @@ class GenRun
       if (has('--digest'))
         log('seed ' + seed + ' ' + w + 'x' + h + ' ' + digest(ctx, state));
 
+      checkFacilityBlocks(ctx, state.mainRoadNorth, check, verbose);
       check.tilesKnown(ctx);
       check.roomsSane(ctx, state.allRooms);
       check.doorsSane(ctx, state.allRooms, state.allDoors);
       check.spawnsSane(ctx);
       check.clueSpots(ctx, state.allRooms);
+      // the two things the game re-derives from the SHAPE of the grid and from nothing else
+      check.gate(ctx);
+      check.parkPath(ctx);
 
       // ASSERTED, not counted. This was a stat while 8% of compounds carried a room nothing could
       // walk into; game.FacilityAreaGenerator.connectRooms now cuts a door into anything the flood
