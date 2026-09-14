@@ -3,20 +3,12 @@ package render.facility;
 import three.Three;
 import citygen.CityConfig;
 import render.Textures;
+import render.facility.ClutterSlot.ClutterSlotTools;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
-
-// one placed decal, kept only long enough to keep the next one off it
-typedef ClutterSpot = {
-  // where it sits, world
-  x:Float,
-  z:Float,
-  // and the radius nothing else may reach into
-  r:Float,
-};
 
 // the small FLAT things lying about on the laboratory worktops — a clipboard, a petri dish, a coiled
 // cable, a scatter of screws. Scattered at free positions and free yaw over every bench cell, around
@@ -41,13 +33,14 @@ typedef ClutterSpot = {
 // the sprite pool next door already pays one call per quad (docs/3d-render.md: "every pooled quad is
 // a draw call"). A u/v sub-rect is four numbers.
 //
-// THREE THINGS IT DODGES, and they are three different questions on the same cells. A SINK owns its
-// cell outright — FacilityStyle.SINK_BASIN_W is 2.5 of a 4.0 cell, so there is no worktop left beside
-// one and the cell is skipped whole (m.tableSink, which FacilitySink fills as it emits). A standing
-// DECORATION owns a circle, which FacilityModel.tableDeco already holds because the contact pool
-// needed it anyway. And the decals dodge EACH OTHER, which is the only one that needs state — see
-// `cell`. Cross-cell overlap cannot happen: an item's offset is inset by its own half size, so
-// nothing ever crosses a cell boundary.
+// WHAT IT DODGES IS NOT THIS PASS'S LIST ANY MORE. A SINK owns its cell outright —
+// FacilityStyle.SINK_BASIN_W is 2.5 of a 4.0 cell, so there is no worktop left beside one and the cell
+// is skipped whole (m.tableSink, which FacilitySink fills as it emits). Everything else standing on
+// the worktop comes back from render.facility.FacilityWork.claims as a list of BOXES — the
+// generator's decoration, the three machines, the trinkets — and this appends its own to the same
+// list as they go down. One shared claim list in one priority order is the model; see ClutterSlot for
+// what it replaced and why a radius could not do it. Cross-cell overlap cannot happen: an item's
+// offset is inset by its own half size, so nothing ever crosses a cell boundary.
 class FacilityClutter
 {
   // the four cell-edge directions, in FacilityGeom.face's order: 0 = -z, 1 = +z, 2 = -x, 3 = +x
@@ -137,7 +130,7 @@ class FacilityClutter
           want == 0)
         want = 1;
       var cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2;
-      var spots:Array<ClutterSpot> = [];
+      var spots:Array<ClutterSlot> = [];
       var n = 0;
       for (i in 0...want)
         {
@@ -147,41 +140,28 @@ class FacilityClutter
           var lid = Math.min(q.x1 - q.x0, q.z1 - q.z0) * FacilityStyle.CLUTTER_SLOT_FILL;
           if (sz > lid)
             sz = lid;
-          var r = sz * 0.5 + FacilityStyle.CLUTTER_GAP;
           var rx = (q.x1 - q.x0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
           var rz = (q.z1 - q.z0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
           if (rx <= 0 ||
               rz <= 0)
             continue;
+          var yaw = ((h >>> 12) % 1000) / 1000 * 2 * Math.PI;
           var ok = false;
-          var x = cx, z = cz;
+          var box = ClutterSlotTools.turned(cx, cz, sz, sz, yaw);
           for (t in 0...FacilityStyle.CLUTTER_TRIES)
             {
               var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
-              x = cx + (((hh % 1000) / 1000) * 2 - 1) * rx;
-              z = cz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
-              ok = true;
-              for (s in spots)
-                {
-                  var dx = x - s.x, dz = z - s.z;
-                  if (dx * dx + dz * dz < (r + s.r) * (r + s.r))
-                    {
-                      ok = false;
-                      break;
-                    }
-                }
+              box.x = cx + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              box.z = cz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = !ClutterSlotTools.hits(spots, box.x, box.z, box.hw, box.hd);
               if (ok)
                 break;
             }
           if (!ok)
             continue;
-          spots.push({
-            x: x,
-            z: z,
-            r: r,
-          });
-          emit(b, x, z, sz, ((h >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            pick[(h >>> 22) % pick.length], q.h + FacilityStyle.CLUTTER_Y);
+          spots.push(box);
+          emit(b, box.x, box.z, sz, yaw, pick[(h >>> 22) % pick.length],
+            q.h + FacilityStyle.CLUTTER_Y);
           n++;
         }
       return n;
@@ -198,9 +178,10 @@ class FacilityClutter
 // EXCEPT ON A WORKSTATION DESK, which is the one cell where the empty roll is the wrong answer: a
 // researcher's desk is a SET — the desk, the chair, the machine and something of the occupant's lying
 // beside the keyboard — and a screen and a tower with a bare worktop around them reads as stock
-// rather than as somebody's place. So such a cell gets one PLACED item on top of whatever it rolls
-// (see the block below), and the rolled count keeps reaching zero. The lab's own rhythm is untouched
-// either way, because a lab has no workstation on it: FacilityWork.at is Surf.OFFICE only
+// rather than as somebody's place. So such a cell is offered the desk's own front SLOT on top of
+// whatever it rolls (see the block below), and the rolled count keeps reaching zero. The lab's own
+// rhythm is untouched either way, because a lab has no workstation on it: FacilityWork.at is
+// Surf.OFFICE only
   static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>,
       office:Bool):Int
     {
@@ -215,43 +196,12 @@ class FacilityClutter
           pc == null)
         return 0;
       var c = CityConfig.cellToWorld(col, row);
-      // what is already standing here. the pool is the STANDING decoration's own contact circle, which
-      // FacilityModel.tableDeco worked out off the icon's alpha box — so a decal is kept off the art
-      // rather than off the cell centre, and a flask whose opaque box sits to one side keeps its
-      // clearance on that side. A cell that is taken with NO pool is one of the three frames that lie
-      // down (Const.FACILITY_FLAT_DECO): nothing flat casts a shadow so it has no entry, but it is
-      // still art on the worktop and gets a nominal footprint instead of being read as empty
-      var spots:Array<ClutterSpot> = [];
-      var pool = m.tableDeco[row][col];
-      if (pool != null)
-        spots.push({
-          x: c.x + pool.dx,
-          z: c.z + pool.dz,
-          r: pool.r,
-        });
-      else if (m.tableTaken[row][col])
-        spots.push({
-          x: c.x,
-          z: c.z,
-          r: FacilityStyle.CLUTTER_FLAT_R,
-        });
-      // WORK_CLEAR is the keep-clear and nothing else: the set's contact shade is three square quads
-      // laid per object by FacilityWork.pools and is not a radius this pass could use — see its note
-      if (pc != null)
-        spots.push({
-          x: pc.x,
-          z: pc.z,
-          r: FacilityStyle.WORK_CLEAR,
-        });
-      // and one per TRINKET, which is why FacilityWork.trinket is a pure function of the grid: the
-      // mug and its neighbour take the back of the desk's free end, which is exactly where a loose
-      // sheet of paperwork would otherwise land
-      for (t in FacilityWork.trinket(m, col, row))
-        spots.push({
-          x: t.x,
-          z: t.z,
-          r: FacilityStyle.WORK_TRINKET_CLEAR,
-        });
+      // EVERYTHING ALREADY ON THIS WORKTOP, as boxes, in the order it took the surface: the standing
+      // or lying decoration the generator left, the three machines of a workstation, and the trinkets
+      // that landed on it. ASKED FOR rather than re-derived, which is why every one of those is a pure
+      // function of the saved grid — and one list rather than this pass's own guesses at each, which
+      // is what put a decal under the tower and a lamp on the paperwork. See ClutterSlot
+      var spots = FacilityWork.claims(m, col, row);
       // WHERE THE WORKTOP ACTUALLY IS, which on an office desk is not the cell. A desk is a bench cut
       // to FacilityStyle.DESK_D on its OPEN side (FacilityTables.build, `var cut`), so a decal
       // wandering the whole cell lands up to (CELL - DESK_D) / 2 past the front edge and lies at
@@ -270,37 +220,37 @@ class FacilityClutter
           dz = DR[hand] * cut;
         }
       var n = 0;
-      // THE DESK'S OWN ITEM IS PLACED AND NOT ROLLED, and that is what makes the bundle a bundle.
-      // Everything else in this family finds its spot by rejection sampling, which works on a bench
-      // because a bench is 4 x 4 of free worktop; a workstation desk is 4 x 2.6 with a screen, a
-      // stand, a keyboard and a tower already on it, so MEASURED over the compound's ten desks the
-      // sampler placed one on five of them and nothing on the other five — half the offices with a
-      // machine and a bare worktop. There is exactly ONE free area on such a desk and geometry knows
-      // where it is: the END the tower is not on (FacilityWork.at hands over `side`), against the
-      // desk's front edge. So it is put there outright and the rolled items sample around it
-      if (pc != null)
+      // THE DESK'S OWN ITEM IS OFFERED A SLOT, NOT A POSITION, and that is the difference between this
+      // and the version that was reported. Everything else in this family finds its spot by rejection
+      // sampling, which works on a bench because a bench is 4 x 4 of free worktop; a workstation desk
+      // is 4 x 2.6 with a screen, a stand, a keyboard and a tower on it, so MEASURED over ten desks
+      // the sampler placed one on five of them — half the offices with a machine and a bare worktop.
+      // So it is handed the front slot of the desk's free end outright (FacilityWork.spots, the same
+      // two the trinkets are dealt from).
+      //
+      // AND THE SLOT MAY ALREADY BE THE MUG'S, which is the whole of the arbitration: the front one
+      // takes a mug 70% of the time and the paperwork the rest, decided by nothing more than this box
+      // failing the claim test. Placed outright at its own fixed offset instead, it landed 0.05 from
+      // the trinket beside it on every desk in the compound
+      var sp = FacilityWork.spots(m, col, row);
+      if (sp.length > 0)
         {
-          var sz = FacilityStyle.CLUTTER_SZ;
-          var run = (hand < 2 ? CityConfig.CELL : FacilityStyle.DESK_D) / 2 - sz * 0.5;
-          var rx = (hand < 2 ? -pc.side * run : 0.0);
-          var rz = (hand < 2 ? 0.0 : -pc.side * run);
-          var px = c.x + dx + rx, pz = c.z + dz + rz;
-          spots.push({
-            x: px,
-            z: pz,
-            r: sz * 0.5 + FacilityStyle.CLUTTER_GAP,
-          });
-          emit(b, px, pz, sz, ((g >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            pick[(g >>> 22) % pick.length],
-            FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y);
-          n++;
+          var sz = FacilityStyle.CLUTTER_DESK_SZ;
+          var yaw = ((g >>> 12) % 1000) / 1000 * 2 * Math.PI;
+          var box = ClutterSlotTools.turned(sp[1].x, sp[1].z, sz, sz, yaw);
+          if (!ClutterSlotTools.hits(spots, box.x, box.z, box.hw, box.hd))
+            {
+              spots.push(box);
+              emit(b, box.x, box.z, sz, yaw, pick[(g >>> 22) % pick.length],
+                FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y);
+              n++;
+            }
         }
       for (i in 0...want)
         {
           var h = FacilityModel.mix(g ^ ((i + 1) * 40503));
           var sz = FacilityStyle.CLUTTER_SZ +
             ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR;
-          var r = sz * 0.5 + FacilityStyle.CLUTTER_GAP;
           // how far the CENTRE may wander: half the worktop, less the item's own half size, so the
           // quad never crosses into a neighbour and no cross-cell test is needed. PER AXIS, because
           // a desk is only `deep` on the hand its own wall is on
@@ -311,36 +261,22 @@ class FacilityClutter
             continue;
           var rx = (hand >= 2 ? roomD : room);
           var rz = (hand >= 0 && hand < 2 ? roomD : room);
+          var yaw = ((h >>> 12) % 1000) / 1000 * 2 * Math.PI;
           var ok = false;
-          var x = c.x + dx, z = c.z + dz;
+          var box = ClutterSlotTools.turned(c.x + dx, c.z + dz, sz, sz, yaw);
           for (t in 0...FacilityStyle.CLUTTER_TRIES)
             {
               var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
-              x = c.x + dx + (((hh % 1000) / 1000) * 2 - 1) * rx;
-              z = c.z + dz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
-              ok = true;
-              for (s in spots)
-                {
-                  var dx = x - s.x, dz = z - s.z;
-                  if (dx * dx + dz * dz < (r + s.r) * (r + s.r))
-                    {
-                      ok = false;
-                      break;
-                    }
-                }
+              box.x = c.x + dx + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              box.z = c.z + dz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = !ClutterSlotTools.hits(spots, box.x, box.z, box.hw, box.hd);
               if (ok)
                 break;
             }
           if (!ok)
             continue;
-          spots.push({
-            x: x,
-            z: z,
-            r: r,
-          });
-          emit(b, x, z, sz,
-            ((h >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            pick[(h >>> 22) % pick.length],
+          spots.push(box);
+          emit(b, box.x, box.z, sz, yaw, pick[(h >>> 22) % pick.length],
             FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y);
           n++;
         }

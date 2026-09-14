@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Models;
 import render.RenderConfig;
+import render.facility.ClutterSlot.ClutterSlotTools;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.ContactMask;
@@ -88,28 +89,18 @@ class FacilityWork
       };
     }
 
-// the four things that stand on a desk BESIDE the machines, and which of them this cell carries.
+// THE TWO SLOTS ONE DESK HAS, and the whole of the free worktop on a 4.0 x 2.6 one: the END the tower
+// is not on, at the BACK of it and at the FRONT. Empty for a cell carrying no workstation.
 //
-// PURE, LIKE `at` ITSELF, and that is the point of it being here rather than inside `props`: the
-// placement is a function of the saved grid alone, so render.facility.FacilityClutter can ask for it
-// and keep its paperwork off them without either pass having to run first.
+// MEASURED RATHER THAN CHOSEN. The screen takes the centre line, the tower one end of the back row
+// and the keyboard 1.5 of the front row's middle; what is left is a strip 1.13 wide down the far end,
+// and two objects is what fits in it once each keeps its own box clear of the next. Both used to be on
+// the BACK row 0.6 apart, where a mug and a 1.00-wide document tray overlapped by construction.
 //
-// A MUG AND ONE OF THE OTHER THREE, each ROLLED, both at the BACK on the hand the tower is not on —
-// the tower takes one half of the worktop and the keyboard the front of the other, so this is the
-// strip that is left. Returns kind (an index into TRINKETS), where, and which way round.
-//
-// EITHER MAY BE ABSENT and a mug used to be on every desk of the compound. Two objects at two fixed
-// offsets at one fixed yaw on every desk is the rank this family was added to break, and the empty
-// roll is what makes a desk somebody's rather than stock — FacilityClutter's own argument for letting
-// its count reach zero, applied to the placed half.
-//
-// AND NEITHER MAY LAND ON THE DECORATION ALREADY STANDING THERE. An office desk is dealt its bay by
-// gen.blocks.RoomBlock.bench, which puts a table decoration on most cells — so the cell can carry a
-// standing sprite whose own contact circle FacilityModel.tableDeco already measured, and these were
-// placed at their fixed offsets with no test against it. Reported from the game as the plant standing
-// on the decoration every time: the far spot and the icon's own box are both at the back of the desk,
-// so on a decorated cell they overlapped by construction rather than by luck
-  public static function trinket(m:Facility, col:Int, row:Int):Array<TrinketSpot>
+// PUBLIC BECAUSE THE FRONT ONE IS SHARED. render.facility.FacilityClutter's paperwork takes it when no
+// mug rolled in — a slot is one piece's whatever draws it, and two families cannot arbitrate that
+// without agreeing where the slot IS. Index 0 is the back, 1 the front
+  public static function spots(m:Facility, col:Int, row:Int):Array<{ x:Float, z:Float }>
     {
       var p = at(m, col, row);
       if (p == null)
@@ -117,42 +108,137 @@ class FacilityWork
       // along the wall, away from the tower — `at` has already rolled which hand that is
       var ax = (p.dir < 2 ? 1.0 : 0.0), az = (p.dir < 2 ? 0.0 : 1.0);
       var s = -p.side;
-      var g = FacilityModel.mix((col * 668265263) ^ (row * 83492791));
-      var out:Array<TrinketSpot> = [];
-      if (g % 100 < FacilityStyle.WORK_MUG_PCT)
-        place(m, out, col, row, 0, p.x + ax * s * FacilityStyle.WORK_TRINKET_NEAR,
-          p.z + az * s * FacilityStyle.WORK_TRINKET_NEAR, g);
-      if ((g >>> 7) % 100 < FacilityStyle.WORK_TRINKET_PCT)
-        place(m, out, col, row, 1 + (g >>> 14) % 3,
-          p.x + ax * s * FacilityStyle.WORK_TRINKET_FAR,
-          p.z + az * s * FacilityStyle.WORK_TRINKET_FAR, FacilityModel.mix(g ^ 0x5bf03635));
+      var out = p.dir ^ 1;
+      var ex = p.x + ax * s * FacilityStyle.WORK_TRINKET_RUN;
+      var ez = p.z + az * s * FacilityStyle.WORK_TRINKET_RUN;
+      return [
+        {
+          x: ex - DC[out] * FacilityStyle.WORK_TRINKET_BACK,
+          z: ez - DR[out] * FacilityStyle.WORK_TRINKET_BACK,
+        },
+        {
+          x: ex + DC[out] * FacilityStyle.WORK_TRINKET_FWD,
+          z: ez + DR[out] * FacilityStyle.WORK_TRINKET_FWD,
+        },
+      ];
+    }
+
+// every footprint on this worktop cell that nothing rolls: the decoration the generator stood there,
+// and the three machines of a workstation, each on its OWN box.
+//
+// THE ORDER IS THE PRIORITY and the list is the only one there is. What cannot be moved goes in first
+// — a decoration is in the save and the machines are geometry — and everything rolled afterwards
+// reads it. See ClutterSlot for why three keep-clear CIRCLES could not do this job on a 2.6-deep desk
+  static function base(m:Facility, col:Int, row:Int):Array<ClutterSlot>
+    {
+      var out:Array<ClutterSlot> = [];
+      var c = CityConfig.cellToWorld(col, row);
+      // the STANDING sprite's own footprint, off the contact circle FacilityModel.tableDeco measured
+      // from the icon's alpha box — so a flask whose opaque box sits to one side still leaves the
+      // other side usable. A cell that is taken with NO pool is one of the three frames that LIE DOWN
+      // (Const.FACILITY_FLAT_DECO): nothing flat casts a shadow so it has no entry, but it is still
+      // art on the worktop and gets a nominal footprint instead of being read as empty
+      var pool = m.tableDeco[row][col];
+      if (pool != null)
+        out.push({
+          x: c.x + pool.dx,
+          z: c.z + pool.dz,
+          hw: pool.r,
+          hd: pool.r,
+        });
+      else if (m.tableTaken[row][col])
+        out.push({
+          x: c.x,
+          z: c.z,
+          hw: FacilityStyle.CLUTTER_FLAT_R,
+          hd: FacilityStyle.CLUTTER_FLAT_R,
+        });
+      var p = at(m, col, row);
+      if (p == null)
+        return out;
+      // and the three machines. `dir < 2` is the whole of their rotation — a desk hugs a wall and a
+      // wall runs on an axis — so each box is the glb's authored W and D read onto the world axes,
+      // exactly as FacilityWork.pools lays the contact ramp under it
+      var alongX = (p.dir < 2);
+      var fwd = p.dir ^ 1;
+      out.push(ClutterSlotTools.flat(p.x, p.z, FacilityStyle.WORK_FOOT_W,
+        FacilityStyle.WORK_FOOT_D, alongX));
+      out.push(ClutterSlotTools.flat(p.tx, p.tz, FacilityStyle.WORK_TOWER_W,
+        FacilityStyle.WORK_TOWER_D, alongX));
+      out.push(ClutterSlotTools.flat(p.x + DC[fwd] * FacilityStyle.WORK_KEY_FWD,
+        p.z + DR[fwd] * FacilityStyle.WORK_KEY_FWD,
+        FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_D, alongX));
       return out;
     }
 
-// jitter one trinket off its nominal spot, turn it, and drop it if it has landed on the decoration
-// standing on this cell. the pool is the icon's own contact circle and not the cell, so a flask whose
-// opaque box sits to one side still leaves the other side usable — FacilityClutter reads it exactly
-// this way for its paperwork
-  static function place(m:Facility, out:Array<TrinketSpot>, col:Int, row:Int, kind:Int,
+// and the WHOLE list: that, plus every trinket that actually landed. what
+// render.facility.FacilityClutter starts its own rejection from, so no decal of its can be laid where
+// one of these stands — the single shared claim list this family used to do without
+  public static function claims(m:Facility, col:Int, row:Int):Array<ClutterSlot>
+    {
+      var out = base(m, col, row);
+      for (t in trinket(m, col, row))
+        out.push(ClutterSlotTools.turned(t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d,
+          t.yaw));
+      return out;
+    }
+
+// the four things that stand on a desk BESIDE the machines, and which of them this cell carries.
+//
+// PURE, LIKE `at` ITSELF, and that is the point of it being here rather than inside `props`: the
+// placement is a function of the saved grid alone, so render.facility.FacilityClutter can ask for it
+// and keep its paperwork off them without either pass having to run first.
+//
+// THE BIG ONE AT THE BACK AND THE MUG AT THE FRONT, each ROLLED. Which way round matters: the rolled
+// kind reaches 1.00 wide (the tray) and the back row has 1.5 of clear worktop beside the screen,
+// where the front row has the keyboard across its middle — put the tray at the front and it is
+// rejected by the keyboard at half the yaws it rolls. A mug near the person and a lamp at the back of
+// the desk is also simply where they are. Returns kind (an index into TRINKETS), where, and which way
+// round.
+//
+// EITHER MAY BE ABSENT and a mug used to be on every desk of the compound. Two objects at two fixed
+// offsets at one fixed yaw on every desk is the rank this family was added to break, and the empty
+// roll is what makes a desk somebody's rather than stock — FacilityClutter's own argument for letting
+// its count reach zero, applied to the placed half
+  public static function trinket(m:Facility, col:Int, row:Int):Array<TrinketSpot>
+    {
+      var sp = spots(m, col, row);
+      if (sp.length == 0)
+        return [];
+      var taken = base(m, col, row);
+      var g = FacilityModel.mix((col * 668265263) ^ (row * 83492791));
+      var out:Array<TrinketSpot> = [];
+      if ((g >>> 7) % 100 < FacilityStyle.WORK_TRINKET_PCT)
+        place(out, taken, 1 + (g >>> 14) % 3, sp[0].x, sp[0].z,
+          FacilityModel.mix(g ^ 0x5bf03635));
+      if (g % 100 < FacilityStyle.WORK_MUG_PCT)
+        place(out, taken, 0, sp[1].x, sp[1].z, g);
+      return out;
+    }
+
+// jitter one trinket off its nominal spot, turn it, and drop it if the box it lands on is CLAIMED —
+// by the decoration standing on the cell, by one of the three machines, or by the trinket placed
+// before it. `taken` grows as they go down, which is the whole of what makes a slot one piece's.
+//
+// Reported from the game twice before this test existed: the plant standing on the decoration every
+// time (the old far spot and the icon's own box were both at the back of the desk, so they overlapped
+// by construction) and the lamp on the desk's paperwork
+  static function place(out:Array<TrinketSpot>, taken:Array<ClutterSlot>, kind:Int,
       x:Float, z:Float, g:Int):Void
     {
       var j = FacilityStyle.WORK_TRINKET_JIT;
       var px = x + (((g % 1000) / 1000) * 2 - 1) * j;
       var pz = z + ((((g >>> 10) % 1000) / 1000) * 2 - 1) * j;
-      var c = CityConfig.cellToWorld(col, row);
-      var pool = m.tableDeco[row][col];
-      if (pool != null)
-        {
-          var dx = px - (c.x + pool.dx), dz = pz - (c.z + pool.dz);
-          var r = pool.r + FacilityStyle.WORK_TRINKET_CLEAR;
-          if (dx * dx + dz * dz < r * r)
-            return;
-        }
+      var yaw = ((g >>> 20) % 1000) / 1000 * 2 * Math.PI;
+      var b = ClutterSlotTools.turned(px, pz, TRINKETS[kind].w, TRINKETS[kind].d, yaw);
+      if (ClutterSlotTools.hits(taken, px, pz, b.hw, b.hd))
+        return;
+      taken.push(b);
       out.push({
         kind: kind,
         x: px,
         z: pz,
-        yaw: ((g >>> 20) % 1000) / 1000 * 2 * Math.PI,
+        yaw: yaw,
       });
     }
 
@@ -210,9 +296,10 @@ class FacilityWork
       lay(plate, p.x + DC[out] * FacilityStyle.WORK_KEY_FWD,
         p.z + DR[out] * FacilityStyle.WORK_KEY_FWD,
         FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_D, yaw);
-      // and one under each trinket, off the same table the batches are sized by
+      // and one under each trinket, off the same table the batches are sized by — at the trinket's OWN
+      // yaw and not the desk's, because these turn freely where the three machines do not
       for (t in trinket(m, col, row))
-        lay(plate, t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d, yaw);
+        lay(plate, t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d, t.yaw);
     }
 
 // one of those three. `pooled` clamps per side to the plate, so a keyboard near the desk's open edge

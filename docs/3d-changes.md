@@ -1036,3 +1036,60 @@ panes in a real reveal with the damp band running unbroken beneath them, the bas
 laminate at one density, the sofa and its table stand side by side against the wall with a folder on
 the table, and a bookcase carries something on its lid.
 
+## A slot is one piece's, and a circle could never say so (2026-09-15)
+
+> SUPERSEDES the "CLUTTER SLOTS" and "desk trinkets" halves of the entry above.
+
+Reported twice more off the same desk: a lamp still standing on the desk's other decoration, and a
+flat decoration lying under the tower. Both are the same defect and neither is a missing test in the
+usual sense — **there was no occupancy model at all**. Four passes dress a worktop and each carried a
+PRIVATE list of what to keep off: `FacilityClutter.cell` knew about all of them, `FacilityWork.place`
+about the standing sprite alone, `FacilityWork.at` about nothing (fixed offsets, no test), and the
+desk's placed clutter item was emitted outright with no test whatsoever.
+
+So both faults were by construction rather than by luck, and the arithmetic says so:
+
+- the placed item sat at `-side * 1.6` along the desk and the FAR trinket at `-side * 1.55`. **0.05
+  apart on every desk in the game.** Neither tested the other.
+- `WORK_CLEAR` was ONE 1.05 circle around the **monitor**, standing in for a screen, a tower and a
+  keyboard together. The tower stands `WORK_TOWER_OFF` 1.5 away and is 1.5 deep, so 0.85 of its length
+  lay outside the circle and a decal landed there legally.
+
+**A CIRCLE CANNOT BE WIDENED INTO BEING RIGHT ON A 4.0 x 2.6 DESK.** One big enough to cover the
+0.8 x 1.5 tower also swallows the 1.1 units of free worktop in FRONT of it — which is the exact
+failure `WORK_CLEAR`'s own comment records from the other direction, a 1.6 radius that placed ZERO
+items on ten desks. Every object here is an axis-aligned box on an axis-aligned desk.
+
+**`ClutterSlot` is the model: one ORDERED CLAIM LIST per surface, boxes, shared.** What cannot be
+moved goes in first (the decoration in the save, then the three machines, whose offsets are geometry);
+everything rolled afterwards reads the same list and appends to it. `FacilityWork.claims` builds it
+and `FacilityClutter` starts from it instead of guessing at each family. A worktop is still never
+SPLIT into cells — the free positions are what keeps 139 worktops from reading as a grid.
+
+Three numbers came out with it:
+
+- **the gap was counted twice.** `r + s.r` with `CLUTTER_GAP` already inside both radii spends 0.24 of
+  a 2.6-deep desk on nothing. `ClutterSlotTools.hits` adds it once per PAIR.
+- **the yaw was reserved and not resolved.** A decal and a trinket turn freely, and reserving the
+  half-DIAGONAL for every angle is 1.41x the object at a yaw of 0 — the difference between the desk's
+  paperwork fitting and not. `turned` takes the box at the angle it is actually drawn at.
+- **`WORK_CLEAR`, `WORK_TRINKET_CLEAR` and `WORK_R` are all gone.** Three fudge factors retired by one
+  exact test that is two comparisons.
+
+**And the two trinkets moved to two ROWS.** They were 0.95 and 1.55 along the back row, 0.6 apart,
+where a 0.40 mug and a 1.00 document tray overlap however either rolls. A desk has 1.13 of clear
+worktop down its far end and 1.7 of depth, so the room is on the other axis: the rolled kind at the
+BACK (the back row has 1.5 clear beside the screen; the front has the keyboard across its middle, so a
+tray at the front is rejected at half its yaws) and the mug at the FRONT, which is also where a mug is.
+
+**The desk's paperwork is now offered the front SLOT, not a position** — and loses it to the mug 70%
+of the time, decided by nothing but the claim test. That is the whole of the user's rule: a slot is
+taken by one piece whether it is a 2D decal, a billboard or a glb.
+
+**VERDICT: landed.** Render-only, no generator change. Audited on the live model over the measured
+compound: **12 desks, 59 tested pairs, ZERO overlaps** (every trinket clear of the decoration, the
+three machines and each other), 15 trinkets placed against the 15 the rolls ask for — none dropped —
+and the front slot filled on **12 of 12 desks, 6 by a mug and 6 by paperwork**. Bench dressing did not
+regress: 65 decals over 78 bench cells. Screenshots: plant at the back slot, mug at the front, the
+neighbouring desk's paperwork beside its keyboard and nothing under either tower.
+

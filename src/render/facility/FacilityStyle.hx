@@ -656,13 +656,19 @@ class FacilityStyle
   // how many offsets a decal tries before it gives up and simply is not placed. a cell is 4 units and
   // a decal is under one, so a rejection is rare and an exhausted item rarer still
   public static inline var CLUTTER_TRIES = 8;
-  // the radius to keep clear around a decoration that LIES DOWN. those leave no pool in
+  // the half extent to keep clear around a decoration that LIES DOWN. those leave no pool in
   // FacilityModel.tableDeco (nothing flat casts the shadow that grid exists to place) but they are
   // still art on the worktop, so they get a nominal footprint rather than being treated as empty
   public static inline var CLUTTER_FLAT_R = 0.9;
-  // and how much clear worktop to leave around every decal, on top of its own half-size — without it
-  // two items merely touching read as one broken object
+  // and how much clear worktop to leave BETWEEN two of them — without it two items merely touching
+  // read as one broken object. ONCE PER PAIR and not inside each box: carried in both it is counted
+  // twice, which is 0.24 of a 2.6-deep desk spent on nothing. See ClutterSlotTools.hits
   public static inline var CLUTTER_GAP = 0.12;
+  // how big the item an office DESK is given draws, against CLUTTER_SZ on an open bench. Smaller
+  // because the slot is: it takes the front row of the desk's far end, which is 1.13 of worktop
+  // between the keyboard's edge and the cell's, and a 0.8 decal turned 45 degrees does not clear the
+  // keyboard there. See FacilityClutter.cell
+  public static inline var CLUTTER_DESK_SZ = 0.7;
   // ---- the CLUTTER SLOTS: the same decals, on the LID of a piece of standing furniture -----------
   //
   // a worktop is not the only flat surface at hand height in this compound. A bookcase's top and the
@@ -819,16 +825,20 @@ class FacilityStyle
   // outer face lands 1.9 from the screen's centre, still inside the cell's own 2.0 half-width
   public static inline var WORK_TOWER_OFF = 1.5;
   public static inline var WORK_KEY_FWD = 1.05;
-  // and the TRINKETS, which stand at the back of the desk on the hand the TOWER is not on — a mug on
-  // every one and a second piece rolled off the cell. Both distances are measured along the wall from
-  // the screen's centre and both keep inside the cell's own 2.0 half-width with the widest of the
-  // four (the tray) on the far one. render.facility.FacilityClutter takes a keep-clear off each, so
-  // its paperwork and these cannot land on each other
-  public static inline var WORK_TRINKET_NEAR = 0.95;
-  public static inline var WORK_TRINKET_FAR = 1.55;
-  // how much worktop one of them keeps to itself, and the four objects' own extents — measured off
-  // the built meshes (models-src/facility/desk_build.py), which is what the contact pools take
-  public static inline var WORK_TRINKET_CLEAR = 0.65;
+  // and the TRINKETS, which take the END of the desk the TOWER is not on: the RUN is how far along the
+  // wall that end is from the screen's centre, and BACK and FWD are the two rows of it — one behind
+  // the screen's own line and one in front, the two slots render.facility.FacilityWork.spots deals.
+  //
+  // TWO ROWS AND NOT TWO POINTS ON ONE. They used to be 0.95 and 1.55 along the BACK row, 0.6 apart,
+  // where a 0.40 mug and a 1.00 document tray overlap by construction however either is rolled —
+  // reported from the game as a trinket on the other decoration. A 4.0 x 2.6 desk has 1.13 of clear
+  // worktop down its far end and 1.7 of depth to spread over, so the free room is on the OTHER axis.
+  //
+  // RUN 1.40 is the widest of the four clearing the screen's own 0.375 on one side and the cell's 2.0
+  // half-width on the other; FWD 1.10 puts the front row clear of the 1.5-wide keyboard beside it
+  public static inline var WORK_TRINKET_RUN = 1.40;
+  public static inline var WORK_TRINKET_BACK = 0.50;
+  public static inline var WORK_TRINKET_FWD = 1.10;
   // HOW OFTEN EACH OF THE TWO IS THERE AT ALL, and a mug on every desk was the first build's rule.
   // It reads as stock: the whole point of a desk being somebody's is that the next one along is not
   // the same, and two placed objects at two fixed offsets on every desk in the compound is the grid
@@ -836,9 +846,11 @@ class FacilityStyle
   public static inline var WORK_MUG_PCT = 70;
   public static inline var WORK_TRINKET_PCT = 55;
   // and how far one may wander off its nominal spot, world units each way. Small on purpose — the
-  // spot is already the only free strip of a 4 x 2.6 desk (see WORK_TRINKET_NEAR), so this is a hand
-  // putting a mug down rather than a second placement rule
-  public static inline var WORK_TRINKET_JIT = 0.22;
+  // spot is already the only free strip of a 4 x 2.6 desk (see WORK_TRINKET_RUN), so this is a hand
+  // putting a mug down rather than a second placement rule. 0.12 AND NOT THE 0.22 IT SHIPPED AT: the
+  // wander is now tested against the desk's claim list rather than against one circle, so a big jitter
+  // no longer reads as variety, it reads as a trinket that was dropped
+  public static inline var WORK_TRINKET_JIT = 0.12;
   public static inline var WORK_MUG_H = 0.34;
   public static inline var WORK_MUG_W = 0.40;
   public static inline var WORK_PLANT_H = 0.72;
@@ -863,22 +875,14 @@ class FacilityStyle
   // the gate STAYS rather than becoming a constant 1: it is the one knob between here and a computer
   // lab, and the roll is off FacilityModel.mix so it comes back identical on every rebuild
   public static inline var WORK_EVERY = 1;
-  // the footprint the clutter sheet keeps clear around the set.
-  //
-  // THERE WAS A SECOND, LARGER ONE AND IT IS GONE. WORK_R 1.6 was the radius of a single ROUND
-  // contact pool laid under the whole set, and a round ramp under three rectangular machines spread
-  // WORK_TOWER_OFF apart reads as a mat and not as contact — render.facility.FacilityWork.pools now
-  // lays one square quad per object off each one's own W and D, so there is no radius to state.
-  //
-  // WHAT IS LEFT IS THE KEEP-CLEAR, and it is 1.05 because a desk is DESK_D 2.6 deep: once
-  // the decal's wander was confined to the worktop (see FacilityClutter.cell) a 1.6 circle plus the
-  // decal's own 0.67 left nowhere on the desk at all, and MEASURED over the compound's ten office
-  // desks it placed ZERO — a bundle with a screen, a tower and a bare worktop. 1.05 leaves the two
-  // ENDS of the desk open, which is 2.0 units from the set's centre against the 1.72 it now needs,
-  // and the end of the desk is where somebody's paperwork actually is. It is deliberately NOT a
-  // rect: the set is a screen on the centre line with a tower on one hand, so the circle is honest
-  // about the middle and only ever wrong on the tower's own side, where the roll simply re-tries
-  public static inline var WORK_CLEAR = 1.05;
+  // THE KEEP-CLEAR ROUND THE SET IS GONE, and both of the radii that preceded it with it. WORK_R 1.6
+  // was a single ROUND contact pool under the whole set and read as a mat (FacilityWork.pools lays one
+  // square quad per object now); WORK_CLEAR 1.05 was the circle the clutter sheet kept off it, one
+  // number for a screen, a tower and a keyboard together. On a 4.0 x 2.6 desk that circle sat on the
+  // SCREEN and the tower stands 1.5 away and is 1.5 deep, so 0.85 of its length was outside the circle
+  // — reported from the game as a decal lying under the tower. Each machine carries its own box in
+  // render.facility.FacilityWork.base now; see ClutterSlot for why the radius could not be widened
+  // into being right instead
   // the tower's status LEDs: how many, how big, and how far proud of its front face they float. they
   // go into render.facility.FacilityDeco's OWN led buffer through its extra-buffer hook, so they cost
   // no mesh, no material, no program and no per-frame work — the rack's blink branch and the rack's
