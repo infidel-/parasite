@@ -37,6 +37,9 @@ class GenRun
     return base - 10 + 10 * Rng.int(rng, 2);
 
   static var argv: Array<String>;
+  // --size WxH, or -1 to roll the two axes as the game does
+  static var forceW = -1;
+  static var forceH = -1;
 
   static function main()
     {
@@ -45,6 +48,14 @@ class GenRun
       var seed0 = intArg('--seed', 1);
       var type = strArg('--type', 'facility');
       var verbose = has('--print');
+      // the size the live trace prints, so `--seed n --size 65x50` replays one compound from a game
+      var size = strArg('--size', null);
+      if (size != null)
+        {
+          var parts = size.split('x');
+          forceW = Std.parseInt(parts[0]);
+          forceH = Std.parseInt(parts[1]);
+        }
 
       log('[gen] ' + type + ': seeds ' + seed0 + '..' + (seed0 + count - 1));
       var failures = [];
@@ -124,19 +135,26 @@ class GenRun
 
 // generate a whole compound and assert the structure the game reads back out of it.
 //
-// THIS RUNS THE REAL GENERATOR — game.FacilityAreaGenerator.build, the same function the live path
-// calls — against a gen.GenCtx with no Game behind it. Constructing it with two nulls is safe
-// because its constructor only builds the temp->final tile map; anything that reaches `game` from
+// THIS RUNS THE REAL GENERATOR — gen.facility.FacilityGen.build, the same function the live path
+// calls — against a gen.GenCtx with no Game behind it. Anything that reaches a `game.Game` from
 // inside generation is a bug this crashes on, which is exactly the guard wanted
   static function checkFacilityArea(seed: Int, check: GenCheck, verbose: Bool)
     {
       // the same two rolls the block check makes, off a stream seeded the same way, so the two
       // halves of one seed describe one compound
       var sizeRng = Rng.mulberry32(seed);
-      var w = dim(AREA_W, sizeRng);
-      var h = dim(AREA_H, sizeRng);
+      var w = (forceW > 0 ? forceW : dim(AREA_W, sizeRng));
+      var h = (forceH > 0 ? forceH : dim(AREA_H, sizeRng));
       var ctx = new GenCtx(w, h, seed);
-      var state = new game.FacilityAreaGenerator(null, null).build(ctx);
+      var state = gen.facility.FacilityGen.build(ctx);
+
+      // THE REFACTOR GATE, and the reason the rolls were seeded before anything was moved. Capture
+      // it before a change (`make gen seeds=200 args="--digest" > before.txt`), capture it after,
+      // and diff: a pure move of generation code prints the same 200 lines. Run the same command
+      // twice instead and it proves the generator is deterministic at all — an unseeded roll left
+      // behind, or a Map walked in hash order, moves a digest between two runs of one binary
+      if (has('--digest'))
+        log('seed ' + seed + ' ' + w + 'x' + h + ' ' + digest(ctx, state));
 
       check.tilesKnown(ctx);
       check.roomsSane(ctx, state.allRooms);
@@ -229,6 +247,52 @@ class GenRun
       if (verbose)
         log('[gen] seed ' + seed + ' rooms=' + state.allRooms.length +
           ' doors=' + state.allDoors.length + ' spawns=' + ctx.spawns.length);
+    }
+
+// one compound in one line: every cell, then every spawn, room and door in the order they were
+// recorded. FNV-1a, which is not a cryptographic anything and does not need to be — it only has to
+// change when the compound does, and it is fed the ORDER as well as the values so a pass that
+// produces the same furniture in a different sequence still shows up
+  static function digest(ctx: GenCtx, state: gen.facility._FacilityState): String
+    {
+      // FNV offset basis 0x811C9DC5, written signed: it does not fit a positive Int32 and Haxe
+      // would type the literal Float
+      var h = -2128831035;
+      inline function eat(v: Int)
+        {
+          h = h ^ v;
+          h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) | 0;
+        }
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          eat(ctx.cells[x][y]);
+      for (s in ctx.spawns)
+        {
+          for (i in 0...s.type.length)
+            eat(s.type.charCodeAt(i));
+          eat(s.x);
+          eat(s.y);
+          eat(s.row == null ? -1 : s.row);
+          eat(s.col == null ? -1 : s.col);
+          eat(s.col2 == null ? -1 : s.col2);
+        }
+      for (r in state.allRooms)
+        {
+          eat(r.id);
+          eat(r.x1);
+          eat(r.y1);
+          eat(r.x2);
+          eat(r.y2);
+          eat(r.role == null ? -1 : r.role.length);
+        }
+      for (d in state.allDoors)
+        {
+          eat(d.x);
+          eat(d.y);
+          eat(d.roomID1);
+          eat(d.roomID2);
+        }
+      return StringTools.hex(h >>> 0, 8);
     }
 
 // --- aggregate stats. what a phase gate diffs against the phase before it: a layout change that

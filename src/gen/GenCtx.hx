@@ -71,6 +71,19 @@ class GenCtx
         cells[x][y] = t;
     }
 
+// --- rolls ---
+
+// 0...n-1, off the seeded stream. NAMED AFTER Std.random AND NOT rng() ON PURPOSE: every roll in
+// generation used to be a Std.random call, and a drop-in spelling is what let them be swapped
+// without also re-deriving what each expression meant. A pass holds a ctx already, so
+// `area.random(100) < 50` is the same line it always was with a stream behind it
+  public inline function random(n: Int): Int
+    return Std.int(rng() * n);
+
+// a percentage roll, for the `Std.random(100) < pct` this file is full of
+  public inline function chance(pct: Int): Bool
+    return Std.int(rng() * 100) < pct;
+
 // --- spawns ---
 
 // record one plain object: a vent, a sewer hatch, a floor drain. nothing about it varies but where

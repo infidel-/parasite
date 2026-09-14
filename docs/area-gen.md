@@ -42,14 +42,49 @@ highway before its trees.
 | file | what it is |
 |---|---|
 | `gen/Rng.hx` | the seeded stream. `mulberry32`, moved verbatim out of `citygen.CityGen`, which now delegates to it so no city layout moved |
+| `gen/GenCtx.hx` | the area as generation sees it: grid, rng, spawn list. `random(n)`/`chance(pct)` live here |
 | `gen/_GenNode.hx` | a node: rect + kind + children. **Not persisted** — see below |
 | `gen/GenTree.hx` | the walker: `build`, `leaves`, `all`, `find`, `overlaps` |
 | `gen/Subdivide.hx` | recursive rect splitting, `_SplitProfile` for knobs |
 | `gen/Quota.hx` | deals kinds onto split rects, `_GenDemand` for "must have one of these" |
+| `gen/GenSpawner.hx` | the ONLY file under `gen/` that touches a `Game`: drains spawn intents into real objects |
 | `gen/GenCheck.hx` | the structural assertions |
 | `gen/GenRun.hx` | headless entry point of `bin/genrun.js` |
 | `gen/blocks/*Block.hx` | one filler per block kind. Suffix is `Block`, always |
 | `gen/blocks/FacilityBlocks.hx` | the compound's profile, quota and `plan()` |
+
+### The facility, after the split
+
+`game/FacilityAreaGenerator.hx` was 2432 lines in one class. Two measurements made the split a move
+rather than a redesign: **`game` was used once** in the whole file, and **`gen: AreaGenerator` was
+used zero times** — so every pass was already effectively static.
+
+| file | what it is |
+|---|---|
+| `game/FacilityAreaGenerator.hx` | the LIVE adapter, and all that still needs a `Game`: `generate()` wraps the grid in a ctx and drains the spawns, `repairRooms()` re-derives rooms from a SAVED grid and so takes an `AreaGame` |
+| `gen/facility/FacilityGen.hx` | `build()` — the real entry point, the one the oracle calls — and `finalizeTiles` |
+| `gen/facility/FacilityTemp.hx` | the `TEMP_*` alphabet, the temp→final map, and the four constants more than one pass reads |
+| `gen/facility/_FacilityState.hx` | what a compound looks like mid-build. Not persisted |
+| `gen/facility/FacilityBuilding.hx` | one lab building: wall ring, corridors, room subdivision, glazing and bench runs |
+| `gen/facility/FacilityConnect.hx` | every door, and both reachability passes — `fixDoors` on the room graph, `connectRooms` on the tile grid |
+| `gen/facility/FacilityRooms.hx` | the room templates and the shared placement helpers |
+| `gen/facility/FacilityToilet.hx` | the washroom and its T-partition |
+| `gen/blocks/ParkBlock.hx`, `HangarBlock.hx` | already at their Phase 4 home; only the signature changes when the tree starts driving them |
+
+**`FacilityConnect` and not `FacilityDoors`**: `render.facility.FacilityDoors` already exists, and two
+modules of one name in different packages is a trap for no gain.
+
+### The one permitted `gen/` → `game/` edge
+
+`gen/facility/` imports `game.AreaGenerator`'s pure static grid helpers — `drawBlock`, `drawChunk`,
+`drawLine`, `replaceTiles`, `getRoom`, `markRoom`, `getRoomDoorSpots`, `getRoomWallSpots`,
+`getRoomWallCorners`, `nextTo`, `deltaMap`, `DIR_*` — plus its `_Spot` typedef. **Every one is
+`public static` over a plain `Array<Array<Int>>` or `_Room` and none touches a `Game`**, so the rule
+above holds and `make gen` keeps working.
+
+Moving those 13 helpers into a `gen/Grid.hx` is the obvious follow-up and is deliberately not done:
+`AreaGenerator` still serves the wilderness, city, sewers and underground lab, so it is four more
+generators' blast radius for no benefit yet.
 
 ## Rules
 
@@ -66,7 +101,15 @@ missions all re-derive what they need from the saved cell grid (`FacilityModel.f
 save. A persisted tree would be a second source of truth that every existing save lacks, for no
 reader. `generatorInfo` keeps taking `rooms`/`doors` exactly as it always has.
 
-**Quotas, not dice, for anything mandatory.** `assignRoomThemes` rolls `Std.random(100) < 60` for the
+**Every roll comes off `ctx.rng`, spelled `area.random(n)` / `area.chance(pct)`.** Those two names
+are `Std.random(n)` and `Std.random(100) < pct` with a seeded stream behind them, and they are named
+that way on purpose: the swap was 45 call sites and a drop-in spelling is what let them move without
+also re-deriving what each expression meant. `Rng`'s statics are for code holding a bare stream
+(`Subdivide`, `Quota`); a generation pass holds a ctx and should use the ctx. **A `Std.random` left
+anywhere under generation silently breaks `--digest`**, which is the only gate that can check a
+refactor.
+
+**Quotas, not dice, for anything mandatory.** `FacilityRooms.assignRoomThemes` rolls a 60 for the
 washroom, which is why 40% of compounds have no washroom — not a decision, just a roll standing in
 for "usually". `_GenDemand` says the thing that was meant: at least `min`, at most `max`, and a `fit`
 function for which rect suits it.
@@ -87,8 +130,33 @@ save. The duplication is deliberate.
 make gen                              # 3000 seeds, structural checks
 make gen seeds=200 args="--print"     # dump each layout
 make gen seeds=3000 args="--stats"    # aggregate block/cell means
-node tools/genrun.mjs --seed 4210 --count 1 --print   # one specific seed
+make gen seeds=200 args="--digest"    # one hash per compound - see below
+node tools/genrun.mjs --seed 4210 --count 1 --print            # one specific seed
+node tools/genrun.mjs --seed 4210 --count 1 --size 65x50 --print   # at one specific size
 ```
+
+`--size` exists because the live game traces `facility <w>x<h> seed <n>` on every generate, and both
+halves of that are needed to replay it: the seed drives every roll inside generation, but
+`AreaGame.initPost` rolled the dimensions before generation was reached.
+
+### `--digest`, and why a refactor is diffed rather than reviewed
+
+`--digest` prints one FNV-1a line per seed over the whole result — every cell, then every spawn, room
+and door in the order they were recorded.
+
+```
+make gen seeds=200 args="--digest" > before.txt     # then change something
+make gen seeds=200 args="--digest" > after.txt
+diff before.txt after.txt                            # a pure code move prints nothing
+```
+
+Run the *same* command twice and diff instead, and it asserts something else: that the generator is
+deterministic at all. An unseeded roll left behind, or a `Map` walked in hash order, moves a digest
+between two runs of one binary.
+
+This is what the seeding in Phase 2 was for. Moving 2400 lines of generation code between files
+cannot be reviewed by eye and cannot be gated on `--stats` — distribution means agree to within
+sampling noise whether or not a rare branch lost an off-by-one. `--digest` answers it exactly.
 
 `tools/genrun.mjs` stubs the browser globals the bundle's **class-static initializers** touch on
 import — `render_Gizmo.fwd = new THREE.Vector3()` fires on load even under `-dce full`, because
@@ -125,14 +193,20 @@ binds the block profile.
 Baseline, 4000 seeds across all four sizes — **the numbers a later phase diffs against**:
 
 ```
-rooms          19.01   spawns/TOTAL      199.03   blocks/TOTAL  6.52
-doors          18.28   spawns/decoration 158.03   blocks/yard   1.52
-cells/rooms   844.67   spawns/door        25.77   planTries     1.05
-cells/building 1243    spawns/vent         7.01   planRetried   0.05
-cells/yard      554    spawns/floorDrain   4.28
+rooms          18.81   spawns/TOTAL      198.24   blocks/TOTAL  6.52
+doors          18.02   spawns/decoration 157.49   blocks/yard   1.52
+cells/rooms   841.26   spawns/door        25.57   planTries     1.05
+cells/building 1243    spawns/vent         7.00   planRetried   0.05
+cells/yard      554    spawns/floorDrain   4.23
                        spawns/sewerHatch   3.95
 unreachableRooms 0        reachedCells 3052 / walkableCells 3060
 ```
+
+**Read those to ±0.15, not ±0.01.** Three disjoint 4000-seed ranges give `rooms` 18.81 / 18.96 /
+18.92, so one range's mean carries about that much sampling error and a 1% move between two runs says
+nothing. What is exact here is the block half — `blocks/*`, `cells/building` and `cells/yard` come off
+`FacilityBlocks.plan`'s own stream and do not move at all unless the split or the quota changed.
+For anything finer than the means, use `--digest`.
 
 `planTries 1.05` is the margin between the split profile and the quota: the first split houses
 everything 95% of the time. A mean creeping up is the warning that comes before the retry cap is hit
@@ -191,8 +265,9 @@ tiles rather than being handed them:
 - bench tiles are clue spawn points (`AreaGame.initSpawnPoints`), and `TABLE_CLEAR_MIN` of them must
   stay bare or the facility stops handing out clues
 - `_Room.role` is **not** the theme record — the floor tile is, read back by `FacilityModel.surfOf`
-- pass order matters: `assignRoomThemes` before `makeWindows`; `plantClump` last in the park;
-  `generateRoomContents` writes final ids that `finalizeTiles` must skip
+- pass order matters: `FacilityRooms.assignRoomThemes` before `FacilityBuilding.makeWindows`;
+  `ParkBlock`'s clumps last in the park; `generateRoomContents` writes final ids that
+  `FacilityGen.finalizeTiles` must skip
 
 ## Known, not fixed
 

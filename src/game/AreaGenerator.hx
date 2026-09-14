@@ -48,7 +48,9 @@ class AreaGenerator
   public function new(g: Game)
     {
       game = g;
-      facility = new FacilityAreaGenerator(game, this);
+      // no `this`: the facility generator's passes are all static and live in gen.facility now, so
+      // it kept no AreaGenerator reference to shadow the package of the same name
+      facility = new FacilityAreaGenerator(game);
       city = new CityAreaGenerator(game, this);
       corp = new CorpAreaGenerator(game, this);
       sewers = new SewerAreaGenerator(game, this);
