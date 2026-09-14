@@ -57,6 +57,10 @@ class GenRun
           forceH = Std.parseInt(parts[1]);
         }
 
+      // the decoration table's own invariants, checked once before any seed runs: unique frames and
+      // a non-empty list for every place the facility asks for. it throws rather than reports
+      Deco.selfCheck();
+
       log('[gen] ' + type + ': seeds ' + seed0 + '..' + (seed0 + count - 1));
       var failures = [];
       stats = new Map();

@@ -49,6 +49,7 @@ highway before its trees.
 | `gen/Quota.hx` | deals kinds onto split rects, `_GenDemand` for "must have one of these" |
 | `gen/GenSpawner.hx` | the ONLY file under `gen/` that touches a `Game`: drains spawn intents into real objects |
 | `gen/GenCheck.hx` | the structural assertions |
+| `gen/Deco.hx` | deals decorations by PLACE — `pick(ctx, mount, block)` — plus `selfCheck()` |
 | `gen/GenRun.hx` | headless entry point of `bin/genrun.js` |
 | `gen/blocks/*Block.hx` | one filler per block kind. Suffix is `Block`, always |
 | `gen/blocks/FacilityBlocks.hx` | the compound's profile, quota and `plan()` |
@@ -85,6 +86,36 @@ above holds and `make gen` keeps working.
 Moving those 13 helpers into a `gen/Grid.hx` is the obvious follow-up and is deliberately not done:
 `AreaGenerator` still serves the wilderness, city, sewers and underground lab, so it is four more
 generators' blast radius for no benefit yet.
+
+### Decorations are dealt by PLACE, not by a hardcoded list
+
+`Const.FACILITY_DECO` (was `FACILITY_FITTINGS`) is a table of `_DecoPlace`, and every entry says where
+it may appear:
+
+- **`mount`** — the surface. `'floor-high'` is standing furniture with plain masonry behind it;
+  `'floor-low'` is knee-high and may stand under glazing; `'table'` is a bench worktop (reserved).
+- **`blocks`** — the room. `'lab'`, `'cabinet'` (a researcher's office), `'toilet'`. These are
+  `_Room.role` VERBATIM (`FacilityTemp.ROLE_*`) with `'lab'` standing in for the null role, so a room
+  deals its own furniture by handing its own role to `Deco.pick` — no branch at the call site.
+
+This replaced `Const.highFittings()` / `Const.officeFittings()`, which were the `high` and `themed`
+booleans plus a literal `kind == FIT_BOOKCASE || kind == FIT_CABINET || kind == FIT_RACK`. A boolean
+could only say "not low" and "not in the random roll"; a place tag says where a thing belongs, so a
+new room kind is a word in a list rather than a fourth filter function.
+
+**`frames` is still the persisted identity and must stay unique across the table.** An
+`objects.Decoration` saves only `imageRow`/`imageCol`, and `Const.fittingOf(row, col)` reads the kind
+back out of it — that is what lets saves made before any of this existed light up as 3D geometry with
+nothing migrated. `Deco.selfCheck()` asserts the uniqueness and that every place the facility asks
+for deals something; `GenRun` runs it before the first seed, so `make gen` is the check.
+
+`pick` rolls an ENTRY and then one of that entry's frames — two rolls, not one flat roll over every
+matching frame — because a kind is what the player reads: the machine casing carrying five atlas
+icons must not turn up two and a half times as often as the shelving carrying two.
+
+Bench decoration (`Const.CHEM_LABS_DECO_TABLE`) is still an atlas ROW RUN dealt by
+`FacilityRooms.addDecoration`, not a place entry. It has no per-frame identity, and `game
+.CorpAreaGenerator` reads the same runs.
 
 ## Rules
 
@@ -277,3 +308,12 @@ tiles rather than being handed them:
 records its **last building's** rooms only. That is the bug `repairRooms` was written to fix for the
 facility, and corp has no equivalent. Left alone deliberately; it is the obvious second caller for
 these primitives.
+
+**`Const.FACILITY_FITTING_PCT` is now a coin flip between two distributions over the SAME frames.**
+It reads as "how often a high floor decoration comes out as a 3D fitting rather than a plain sprite",
+and that was true when it was written. It is not true now: every frame of
+`CHEM_LABS_DECO_FLOOR_HIGH` (row 8 cols 0-11, row 13 cols 0-6) and of `CHEM_LABS_DECO_FLOOR_LOW`
+(row 12 cols 0-10) is in `FACILITY_DECO`, so both arms of that 60% deal a fitting — the only thing it
+still chooses is UNIFORM-PER-KIND against UNIFORM-PER-ATLAS-ROW. Collapsing it to one `Deco.pick` is
+a one-line deletion, and it moves the furniture mix (five machine icons stop outweighing two shelving
+icons on the row-uniform arm), so it wants a look in the game rather than a digest.

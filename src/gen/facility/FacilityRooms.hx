@@ -11,6 +11,7 @@ package gen.facility;
 import Const;
 import game.AreaGenerator;
 import game.AreaGenerator.*;
+import gen.Deco;
 import gen.facility.FacilityTemp.*;
 
 class FacilityRooms
@@ -358,20 +359,19 @@ class FacilityRooms
         }
     }
 
-// add a decoration that the 3D view draws as real furniture: a KIND off Const.FACILITY_FITTINGS,
-// carrying one of that kind's own atlas frames.
+// add a decoration that the 3D view draws as real furniture: whatever Const.FACILITY_DECO places on
+// a high floor cell of this room kind, carrying one of that entry's own atlas frames.
 //
 // the frame is what the 2D view keeps drawing and what render.facility.FacilityModel reads the kind
 // back out of, so nothing new is written to the object and every save made before this existed
 // still resolves — see Const.fittingOf
   public static function addFitting(state: _FacilityState, x: Int, y: Int, ?role: String)
     {
-      // the HIGH kinds only: the table also holds the low list's drums, bins and short server
-      // stacks, and none of those is a piece of standing furniture. an office takes the narrower
-      // list — a bench lathe against the wall of a researcher's room is the laboratory's furniture
-      var kinds = (role == ROLE_CABINET ? Const.officeFittings() : Const.highFittings());
-      var f = kinds[state.area.random(kinds.length)];
-      var fr = f.frames[state.area.random(f.frames.length)];
+      // the 'floor-high' mount only: the table also holds the low list's drums, bins and short
+      // server stacks, and none of those is a piece of standing furniture. the ROLE is the block
+      // name as-is, so a researcher's office deals the office's own list without a branch here
+      var fr = Deco.pick(state.area, Deco.MOUNT_FLOOR_HIGH,
+        role == null ? Deco.BLOCK_LAB : role);
       state.area.addDecoration(x, y, fr.row, fr.col);
     }
 

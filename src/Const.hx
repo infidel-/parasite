@@ -145,10 +145,12 @@ class Const
   ];
 
   // the floor decorations the 3D view draws as a REAL 3D OBJECT instead of an upright atlas quad
-  // (render.facility.FacilityDeco). the generator picks a `high` KIND off this table and takes its
-  // frame from it; the renderer reads the kind back out of the frame with fittingOf below, which is
-  // what lets every save made before this table existed light up as geometry with nothing migrated —
-  // the frames were already there.
+  // (render.facility.FacilityDeco). the generator asks gen.Deco for a decoration matching a MOUNT and
+  // a BLOCK, and takes one of the matching entry's frames; the renderer reads the kind back out of
+  // the frame with fittingOf below, which is what lets every save made before this table existed
+  // light up as geometry with nothing migrated — the frames were already there.
+  //
+  // the place tags (`mount`, `blocks`) are the table's only selection rule — see _DecoPlace.hx.
   //
   // MOST are merged geometry and two are not: a drum and a bin are round, and FacilityGeom emits
   // axis-aligned quads only, so those two are instanced glbs the compound already ships. Being in
@@ -157,19 +159,24 @@ class Const
   //
   // the 2D area view is not affected at all: a fitting is still an objects.Decoration drawing the
   // same entities64 cell it always drew
-  public static var FACILITY_FITTINGS: Array<_Fitting> = [
+  public static var FACILITY_DECO: Array<_DecoPlace> = [
     // the open metal shelving with boxes on it, the one kind emitted as a composite rather than a box
     {
+      id: 'shelving',
       kind: FIT_SHELVING,
-      high: true,
+      mount: [ 'floor-high' ],
+      // laboratory only: a rack of unboxed kit is not a researcher's office furniture
+      blocks: [ 'lab' ],
       frames: [
         { row: 8, col: 9 },
         { row: 8, col: 10 },
       ],
     },
     {
+      id: 'bookcase',
       kind: FIT_BOOKCASE,
-      high: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
       frames: [
         { row: 13, col: 0 },
         { row: 13, col: 1 },
@@ -180,8 +187,10 @@ class Const
       ],
     },
     {
+      id: 'rack',
       kind: FIT_RACK,
-      high: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
       frames: [
         { row: 13, col: 3 },
         { row: 13, col: 4 },
@@ -194,8 +203,10 @@ class Const
     // front, and what separates them in the atlas is a decal at 64 px. One emitted unit and one
     // authored front serves all four — see art/textures.json's facility/deco-cabinet-front
     {
+      id: 'cabinet',
       kind: FIT_CABINET,
-      high: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
       frames: [
         { row: 8, col: 0 },
         { row: 8, col: 1 },
@@ -208,8 +219,11 @@ class Const
     // this size, and what a lathe actually is — a bed, a headstock and a tailstock — is the composite
     // silhouette a mesh generator returns as mush (see docs/3d-render.md's sewer-pile row)
     {
+      id: 'machine',
       kind: FIT_MACHINE,
-      high: true,
+      mount: [ 'floor-high' ],
+      // laboratory only: a bench lathe against the wall of a researcher's room is the lab's furniture
+      blocks: [ 'lab' ],
       frames: [
         { row: 8, col: 4 },
         { row: 8, col: 5 },
@@ -222,8 +236,10 @@ class Const
     // appliance cabinet. They cost no new art at all — the machine's front TILES, so one image serves
     // both heights where an aspect-locked 0..1 front would have needed a second kind and a second sheet
     {
+      id: 'machine-low',
       kind: FIT_MACHINE_LOW,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 0 },
         { row: 12, col: 6 },
@@ -232,8 +248,10 @@ class Const
     // the LOW list's four stacked-server icons: the same cabinet as the rack above, one tile tall
     // rather than two, so they cost NO new art and NO new draw call — same three surfaces
     {
+      id: 'rack-low',
       kind: FIT_RACK_LOW,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 7 },
         { row: 12, col: 8 },
@@ -250,60 +268,71 @@ class Const
     // radioactive one. Collapsing them onto one prop was the first build and it threw the marking
     // away, which is most of what those three icons ARE
     {
+      id: 'drum-steel',
       kind: FIT_DRUM_STEEL,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 1 },
       ],
     },
     {
+      id: 'drum-bio',
       kind: FIT_DRUM_BIO,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 2 },
       ],
     },
     {
+      id: 'drum-rad',
       kind: FIT_DRUM_RAD,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 5 },
       ],
     },
     {
+      id: 'bin',
       kind: FIT_BIN,
-      high: false,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
       frames: [
         { row: 12, col: 3 },
         { row: 12, col: 4 },
       ],
     },
-    // the washroom pair. `high` so they are standing furniture and not a knee-high drum, `themed` so
-    // highFittings() never deals one on a laboratory floor cell — game.FacilityAreaGenerator.roomToilet
-    // places them itself, by kind and in a run. their frames are free cells of the HIGH row: the
-    // facility has no 2D view at all any more, so a fitting frame is a KEY fittingOf reads back and
-    // nothing draws it
+    // the washroom pair. `floor-high` because they are standing furniture and not a knee-high drum;
+    // their BLOCK is the washroom and nothing else, which is all it takes to keep them off a
+    // laboratory floor — gen.facility.FacilityToilet places them itself, by kind and in a run.
+    // their frames are free cells of the HIGH row: the facility has no 2D view at all any more, so a
+    // fitting frame is a KEY fittingOf reads back and nothing draws it
     {
+      id: 'stall',
       kind: FIT_STALL,
-      high: true,
-      themed: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
       frames: [
         { row: 13, col: 7 },
       ],
     },
     {
+      id: 'basin',
       kind: FIT_BASIN,
-      high: true,
-      themed: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
       frames: [
         { row: 13, col: 8 },
       ],
     },
     // and the washroom's dividing wall, on the same terms
     {
+      id: 'partition',
       kind: FIT_PARTITION,
-      high: true,
-      themed: true,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
       frames: [
         { row: 13, col: 9 },
       ],
@@ -321,7 +350,7 @@ class Const
 // grid holds kind + 1 with 0 for "nothing here"
   public static function fittingOf(row: Int, col: Int): Int
     {
-      for (f in FACILITY_FITTINGS)
+      for (f in FACILITY_DECO)
         for (fr in f.frames)
           if (fr.row == row &&
               fr.col == col)
@@ -329,40 +358,21 @@ class Const
       return -1;
     }
 
-// is this fitting kind dealt on the LOW list? read off FACILITY_FITTINGS itself so the two can never
+// is this fitting kind dealt on the LOW list? read off FACILITY_DECO itself so the two can never
 // drift apart, the same stateless shape fittingOf takes. render.facility.FacilityDeco asks it for one
 // thing: a low fitting may stand against GLAZING where a high one may not
   public static function isLowFitting(kind: Int): Bool
     {
-      for (f in FACILITY_FITTINGS)
+      for (f in FACILITY_DECO)
         if (f.kind == kind)
-          return !f.high;
+          return f.mount.indexOf('floor-low') >= 0;
       return false;
-    }
-
-// the kinds the generator may DEAL on a high floor cell. the low kinds are in the same table because
-// fittingOf has to find them, but a drum or a knee-high server stack is not standing furniture and
-// must not be dealt where a fume cabinet belongs — see game.FacilityAreaGenerator.addFitting
-  public static function highFittings(): Array<_Fitting>
-    {
-      return [for (f in FACILITY_FITTINGS) if (f.high && f.themed != true) f];
-    }
-
-// the same list narrowed to what belongs against the wall of a RESEARCHER'S OFFICE: a bookcase, a
-// document cabinet and a server rack read as office furniture, where a hopper filler, a CNC enclosure
-// and a bench lathe are the laboratory's own and nothing else
-  public static function officeFittings(): Array<_Fitting>
-    {
-      return [for (f in highFittings())
-        if (f.kind == FIT_BOOKCASE ||
-            f.kind == FIT_CABINET ||
-            f.kind == FIT_RACK) f];
     }
 
 // the frames one kind draws with, for a template placing that kind outright rather than rolling one
   public static function framesOf(kind: Int): Array<_FittingFrame>
     {
-      for (f in FACILITY_FITTINGS)
+      for (f in FACILITY_DECO)
         if (f.kind == kind)
           return f.frames;
       return [];
@@ -1237,25 +1247,11 @@ class Const
 
 typedef _TileGroup = Array<_TileRow>;
 typedef _TileRow = { row: Int, ?col: Int, amount: Int }
-// one entities64 cell (Const._Fitting)
+// one entities64 cell (_DecoPlace.frames)
 typedef _FittingFrame = {
   // atlas row
   row: Int,
   // and column
   col: Int,
-}
-// one 3D fitting and the entities64 frames that draw it (Const.FACILITY_FITTINGS)
-typedef _Fitting = {
-  // what render.facility.FacilityDeco draws for it
-  kind: _FittingKind,
-  // may the generator DEAL this kind outright on a high floor cell? false for a kind whose frames
-  // all live in the LOW list — those arrive through addDecoration like any other low decoration, and
-  // dealing a knee-high drum where a 2.8-tall fitting belongs would empty the rooms of furniture
-  high: Bool,
-  // placed by a room TEMPLATE and never by the random high roll: a toilet cubicle is furniture of the
-  // washroom and of nowhere else, so it is high (it stands) and still out of highFittings()
-  ?themed: Bool,
-  // every frame that draws as this kind, across whatever rows they sit on
-  frames: Array<_FittingFrame>,
 }
 typedef _TileBlock = { row: Int, col: Int, width: Int, height: Int }

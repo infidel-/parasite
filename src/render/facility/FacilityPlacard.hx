@@ -71,7 +71,7 @@ class FacilityPlacard
 
   // which sign a piece of room furniture earns, indexed by _FittingKind and IN ITS ORDER — a kind
   // added to that enum without a row here falls off the end of this table and `classOf` reads the
-  // cell as bare. see Const.FACILITY_FITTINGS for what each one actually draws as
+  // cell as bare. see Const.FACILITY_DECO for what each one actually draws as
   static var KIND_SIGN = [
     SIGN_GLOVES,     // FIT_SHELVING: open metal shelving of boxes
     SIGN_GLOVES,     // FIT_BOOKCASE: a case of books and bottles

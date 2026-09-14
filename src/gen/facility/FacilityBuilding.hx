@@ -465,7 +465,7 @@ class FacilityBuilding
                                   // a HIGH decoration has plain masonry behind it, which is what a
                                   // piece of standing furniture needs, so it may come out as real
                                   // 3D geometry instead of an upright sprite — see
-                                  // Const.FACILITY_FITTINGS and render.facility.FacilityDeco
+                                  // Const.FACILITY_DECO and render.facility.FacilityDeco
                                   // an office takes STANDING furniture and nothing else: a crate of
                                   // flasks or a waste drum on the floor is the laboratory's clutter,
                                   // and the low list is all laboratory
