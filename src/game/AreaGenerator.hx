@@ -21,11 +21,23 @@ class AreaGenerator
   public var sewers: SewerAreaGenerator;
   public var undergroundLab: UndergroundLabAreaGenerator;
 
-  public static var deltaMap: Map<Int, { x: Int, y: Int }>;
-  public static var DIR_UP = 8;
-  public static var DIR_LEFT = 4;
-  public static var DIR_RIGHT = 6;
-  public static var DIR_DOWN = 2;
+  public static inline var DIR_UP = 8;
+  public static inline var DIR_LEFT = 4;
+  public static inline var DIR_RIGHT = 6;
+  public static inline var DIR_DOWN = 2;
+
+  // INITIALIZED HERE AND NOT IN THE CONSTRUCTOR, which is where it used to be built. A static
+  // filled in by an instance constructor is only there once somebody has made an instance, so
+  // every static helper on this class that steps a direction — drawLine, drawChunk, and the wall
+  // walks in the facility and corp generators — silently depended on a Game having been built
+  // first. That held while the only caller was a running game and broke the moment
+  // tools/genrun.mjs called one of them directly
+  public static var deltaMap: Map<Int, { x: Int, y: Int }> = [
+    DIR_LEFT => { x: -1, y: 0 },
+    DIR_RIGHT => { x: 1, y: 0 },
+    DIR_UP => { x: 0, y: -1 },
+    DIR_DOWN => { x: 0, y: 1 },
+  ];
 
   // wilderness highway width, in cells. an actor billboard is 3 world units against a 4-unit cell, so
   // a cell is roughly 2.4m and three of them is a two-lane rural highway. two reads as a farm track,
@@ -41,12 +53,6 @@ class AreaGenerator
       corp = new CorpAreaGenerator(game, this);
       sewers = new SewerAreaGenerator(game, this);
       undergroundLab = new UndergroundLabAreaGenerator(game, this);
-      deltaMap = [
-        DIR_LEFT => { x: -1, y: 0 },
-        DIR_RIGHT => { x: 1, y: 0 },
-        DIR_UP => { x: 0, y: -1 },
-        DIR_DOWN => { x: 0, y: 1 },
-      ];
     }
 
 // generate area
@@ -646,6 +652,54 @@ class AreaGenerator
           dir90: 0,
         },
       ];
+    }
+
+// EVERY cell of this room's wall ring a door could be cut into, nearest the middle of its own wall
+// first.
+//
+// getRoomDoorSpots above offers four candidates — one wall midpoint each — and that is four cells
+// out of a perimeter of 2(w+h). A room whose four midpoints all happen to be exterior masonry, or
+// all fail the triangle test, gets NO DOOR AT ALL: game.FacilityAreaGenerator.makeDoors traces
+// "bug, no door spots in room" and moves on, leaving a room that renders perfectly and cannot be
+// entered. The same four-cell limit makes makeDoorToCorridor report failure while some other cell
+// of the same wall faces the corridor it was looking for. Measured at 8% of compounds carrying at
+// least one sealed room.
+//
+// used as a FALLBACK and not as a replacement: the midpoints are tried first, so a door still lands
+// in the middle of its wall wherever one legally can, and this only widens the search for the rooms
+// that would otherwise have had nothing. Ordered centre-outwards so the fallback picks the most
+// central cell that works.
+//
+// `dir` points AWAY from the room, matching getRoomDoorSpots — callers step it with deltaMap to ask
+// what is on the far side of the wall. Corners are never emitted: each wall runs only alongside the
+// room's own floor cells, so the diagonal cells of the ring are not in the list
+  public static function getRoomWallSpots(room: _Room): Array<_Spot>
+    {
+      var out = [];
+      // one entry per wall: where it starts, which way it runs, how long, and which way is out
+      var walls = [
+        { x: room.x1 - 1, y: room.y1, dx: 0, dy: 1, len: room.h, dir: DIR_LEFT },
+        { x: room.x2 + 1, y: room.y1, dx: 0, dy: 1, len: room.h, dir: DIR_RIGHT },
+        { x: room.x1, y: room.y1 - 1, dx: 1, dy: 0, len: room.w, dir: DIR_UP },
+        { x: room.x1, y: room.y2 + 1, dx: 1, dy: 0, len: room.w, dir: DIR_DOWN },
+      ];
+      for (w in walls)
+        {
+          var mid = Std.int(w.len / 2);
+          for (i in 0...w.len)
+            out.push({
+              spot: {
+                x: w.x + w.dx * i,
+                y: w.y + w.dy * i,
+                dir: w.dir,
+                dir90: 0,
+              },
+              // distance from this wall's own midpoint, which is what the sort below orders on
+              d: (i > mid ? i - mid : mid - i),
+            });
+        }
+      out.sort(function(a, b) return a.d - b.d);
+      return [for (e in out) e.spot];
     }
 
 // mark room as sub-divided

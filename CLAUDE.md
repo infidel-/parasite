@@ -13,6 +13,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | doing this | read this first |
 |---|---|
 | any 3D render change | [`docs/3d-render.md`](docs/3d-render.md) — the index; append [`docs/3d-changes.md`](docs/3d-changes.md) after |
+| changing how ANY area is generated or laid out | [`docs/area-gen.md`](docs/area-gen.md) — the block tree; **run `make gen` instead of launching the game** |
 | inspecting or driving the running game over CDP | [`docs/debug-surface.md`](docs/debug-surface.md) — skill `live-debug` |
 | a new prop, texture or decal; "we need new images" | [`docs/3d-models.md`](docs/3d-models.md), [`docs/3d-textures.md`](docs/3d-textures.md) — skill `3d-art` |
 | HAND-MODELLING one in Blender (the brief is a number) over the `blender` MCP | [`docs/3d-models.md`](docs/3d-models.md) § Hand-modelling in Blender over MCP — skill `3d-art` |

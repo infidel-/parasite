@@ -1,9 +1,17 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen
 
 game-debug:
 	cd src && $(MAKE) electron
+
+# headless area generation: build bin/genrun.js and run the structural checks over N seeds, with no
+# Electron, no renderer and no save. The oracle for any generator change -- run it BEFORE reaching
+# for the game. See docs/area-gen.md.
+# usage: make gen [seeds=3000] [args="--print --stats"]
+gen:
+	cd src && haxe project_gen.hxml
+	node tools/genrun.mjs --count $(or $(seeds),3000) $(args)
 
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
 sshot:

@@ -8,6 +8,11 @@ import objects.*;
 import game.AreaGame;
 import game.AreaGenerator;
 import game.AreaGenerator.*;
+// imported by name rather than written as `gen.GenCtx`: this class has an instance field called
+// `gen` (the shared AreaGenerator), which shadows the package of the same name
+import gen.GenCtx;
+import gen.GenSpawner;
+import gen.Rng;
 
 import haxe.Timer;
 
@@ -49,12 +54,31 @@ class FacilityAreaGenerator
       ];
     }
 
-// entry-point for facility generation
+// entry-point for facility generation.
+//
+// the LIVE adapter and nothing more: wrap the area's grid in a gen.GenCtx, run the generator, then
+// hand the results back to the area — the rooms and doors it recorded, and the objects it asked
+// for. Everything between those two lines runs just as happily with no Game at all, which is what
+// tools/genrun.mjs does. `info` is unused and has been since this file was written; it stays in the
+// signature because game.AreaGenerator.generate dispatches every area type through the same one
   public function generate(area: AreaGame, info: AreaInfo)
     {
+      var ctx = new GenCtx(area.width, area.height, Rng.seed(), area.getCells());
+      var state = build(ctx);
+      area.generatorInfo = {
+        rooms: state.allRooms,
+        doors: state.allDoors,
+      };
+      GenSpawner.drain(game, area, ctx);
+    }
+
+// generate a whole compound into a context. the real entry point, and the one the headless oracle
+// calls — it must never reach for `game`
+  public function build(ctx: GenCtx): _FacilityState
+    {
+      var area = ctx;
       var state: _FacilityState = {
-        area: area,
-        info: info,
+        area: ctx,
         mainRoadNorth: (Std.random(100) < 50 ? true : false),
         rooms: null,
         doors: null,
@@ -95,9 +119,7 @@ class FacilityAreaGenerator
           cnt++;
           if (cnt < sewersDist)
             continue;
-          var o = new SewerHatch(game, area.id, x, sidewalky +
-            (state.mainRoadNorth ? 0 : 1));
-          area.addObject(o);
+          area.add('sewerHatch', x, sidewalky + (state.mainRoadNorth ? 0 : 1));
           cnt = 0;
         }
 
@@ -130,11 +152,210 @@ class FacilityAreaGenerator
 
       // convert temp tiles to ingame ones
       finalizeTiles(state);
+      // and last, once every wall, door and piece of furniture is on the grid in its final form,
+      // make sure every room can actually be walked into
+      connectRooms(state);
       trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
-      state.area.generatorInfo = {
-        rooms: state.allRooms,
-        doors: state.allDoors,
-      };
+      return state;
+    }
+
+// cut a door into any room that cannot be reached on foot.
+//
+// WHY THIS IS A SEPARATE PASS AT THE VERY END, rather than more logic inside fixDoors: fixDoors
+// reasons about the ROOM GRAPH — which rooms have doors to which — and reachability is a property of
+// the TILE GRID. The two disagree, and the graph is the optimistic one. A room can hold a door that
+// fixDoors counts as a connection while the cells behind it are furniture, a partition, or another
+// room that is itself sealed; and furniture is not even placed until after fixDoors has run, so at
+// the point the graph is checked half the obstacles do not exist yet.
+//
+// so this asks the only question that matters, on the finished grid, the same way
+// game.AreaGame.isWalkable will: flood the walkable cells from outside, and cut a door into whatever
+// the flood did not reach. Measured before it existed: 8% of compounds carried at least one room
+// that rendered perfectly and could not be entered, with clues, guards and mission anchors all able
+// to spawn inside it.
+  function connectRooms(state: _FacilityState)
+    {
+      // bounded rather than `while (true)`: each round opens at least one room or stops, so the
+      // room count is the ceiling, and a cap means a bug here cannot hang generation
+      for (round in 0...state.allRooms.length + 1)
+        {
+          var seen = floodWalkable(state);
+          var stuck = [for (r in state.allRooms) if (!roomReached(r, seen)) r];
+          if (stuck.length == 0)
+            return;
+          var opened = false;
+          for (r in stuck)
+            {
+              // a wall that does not duplicate an existing door first. The room being sealed means
+              // any door it already has is unusable, so a second one between the same pair would be
+              // correct — but scenario.AlienMissionCommon locks a room by taking the FIRST door it
+              // finds for it and stopping, so a duplicate pair leaves the other way in unlocked
+              if (cutDoorToReached(state, r, seen, false) ||
+                  cutDoorToReached(state, r, seen, true))
+                opened = true;
+            }
+          // nothing could be opened this round, so nothing will be next round either
+          if (!opened)
+            {
+              trace('connectRooms(): ' + stuck.length + ' room(s) still sealed, first is ' +
+                stuck[0].x1 + ',' + stuck[0].y1 + '..' + stuck[0].x2 + ',' + stuck[0].y2);
+              return;
+            }
+        }
+    }
+
+// every walkable cell reachable from outside the area, flooded from the rim. the road and its
+// pavement span the full width, so whichever edge they landed on seeds the fill
+  function floodWalkable(state: _FacilityState): Array<Array<Bool>>
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      var walk = tiles.Default.TILE_WALKABLE;
+      var seen = [for (x in 0...ctx.width) [for (y in 0...ctx.height) false]];
+      var stack = [];
+      inline function open(x: Int, y: Int)
+        {
+          if (x < 0 ||
+              y < 0 ||
+              x >= ctx.width ||
+              y >= ctx.height ||
+              seen[x][y])
+            return;
+          var t = cells[x][y];
+          if (t < 0 ||
+              t >= walk.length ||
+              walk[t] == 0)
+            return;
+          seen[x][y] = true;
+          stack.push({ x: x, y: y });
+        }
+      for (x in 0...ctx.width)
+        {
+          open(x, 0);
+          open(x, ctx.height - 1);
+        }
+      for (y in 0...ctx.height)
+        {
+          open(0, y);
+          open(ctx.width - 1, y);
+        }
+      while (stack.length > 0)
+        {
+          var p = stack.pop();
+          for (i in 0...Const.dir4x.length)
+            open(p.x + Const.dir4x[i], p.y + Const.dir4y[i]);
+        }
+      return seen;
+    }
+
+// did the flood reach any cell of this room? any one will do — a room's floor is a single rect, and
+// the furniture standing in it cannot cut that rect in two without also blocking the door
+  function roomReached(room: _Room, seen: Array<Array<Bool>>): Bool
+    {
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          if (seen[x][y])
+            return true;
+      return false;
+    }
+
+// open one wall cell of this room onto somewhere the flood already got to.
+//
+// candidates come centre-of-wall first, and an INDOOR neighbour is taken over an outdoor one in the
+// same position — a door onto the corridor is what a room wants, and a hole cut straight through the
+// compound's outside wall is a last resort rather than a choice
+  function cutDoorToReached(state: _FacilityState, room: _Room,
+      seen: Array<Array<Bool>>, allowDuplicate: Bool): Bool
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      var walk = tiles.Default.TILE_WALKABLE;
+      var best = null;
+      var bestIndoor = false;
+      for (s in getRoomWallSpots(room))
+        {
+          // the cell being opened has to be masonry: everything else is either already a way in or
+          // something that must not be cut through
+          if (cells[s.x][s.y] != Const.TILE_BUILDING)
+            continue;
+          var d = deltaMap[s.dir];
+          var fx = s.x + d.x;
+          var fy = s.y + d.y;
+          if (fx < 0 ||
+              fy < 0 ||
+              fx >= ctx.width ||
+              fy >= ctx.height)
+            continue;
+          // the far side must be somewhere you can already stand...
+          var ft = cells[fx][fy];
+          if (ft < 0 ||
+              ft >= walk.length ||
+              walk[ft] == 0 ||
+              !seen[fx][fy])
+            continue;
+          // ...and the room side must be floor, or the new door opens into a cabinet
+          var nt = cells[s.x - d.x][s.y - d.y];
+          if (nt < 0 ||
+              nt >= walk.length ||
+              walk[nt] == 0)
+            continue;
+          // would this repeat a door the room already has? see the caller for why that matters
+          if (!allowDuplicate &&
+              hasDoorBetween(state, room.id, roomAtCell(state, fx, fy)))
+            continue;
+          // every indoor floor id sits at or above the chem-lab band; the road, pavement, alley and
+          // grass the compound is built on are all well below it
+          var indoor = (ft >= Const.OFFSET_CHEM_LAB);
+          if (best != null &&
+              (bestIndoor || !indoor))
+            continue;
+          best = s;
+          bestIndoor = indoor;
+          // nothing beats an indoor neighbour at the middle of the first wall that offers one
+          if (indoor)
+            break;
+        }
+      if (best == null)
+        return false;
+
+      cells[best.x][best.y] = Const.TILE_FLOOR_LINO;
+      var priv = opensOnPrivateRoom(cells, best.x, best.y);
+      ctx.addDoor(best.x, best.y,
+        (priv ? Const.FRAME_DOOR_PRIVATE : Const.FRAME_DOOR_CABINET),
+        (priv ? Const.FRAME_DOOR_PRIVATE_OPEN : Const.FRAME_DOOR_CABINET_OPEN));
+      var d = deltaMap[best.dir];
+      state.allDoors.push({
+        x: best.x,
+        y: best.y,
+        dir: best.dir,
+        roomID1: room.id,
+        roomID2: roomAtCell(state, best.x + d.x, best.y + d.y),
+        skip: false,
+      });
+      return true;
+    }
+
+// is there already a door recorded between these two rooms?
+  function hasDoorBetween(state: _FacilityState, a: Int, b: Int): Bool
+    {
+      for (d in state.allDoors)
+        if ((d.roomID1 == a && d.roomID2 == b) ||
+            (d.roomID1 == b && d.roomID2 == a))
+          return true;
+      return false;
+    }
+
+// which recorded room holds this cell, or 0 for a corridor or the outdoors. by rect and not by the
+// grid marks: those are gone by the time this runs, finalizeTiles having written real tiles over them
+  function roomAtCell(state: _FacilityState, x: Int, y: Int): Int
+    {
+      for (r in state.allRooms)
+        if (x >= r.x1 &&
+            x <= r.x2 &&
+            y >= r.y1 &&
+            y <= r.y2)
+          return r.id;
+      return 0;
     }
 
 // lay the park out inside its own rect: a path through it, benches down that path, and greenery in
@@ -589,32 +810,25 @@ class FacilityAreaGenerator
                 continue;
               }*/
 
-            var tmp = getRoomDoorSpots(room);
-            var spots = [];
-            for (s in tmp)
+            // the four wall midpoints first, so a door lands in the middle of its wall wherever one
+            // legally can and the compound looks exactly as it always has
+            var spots = doorSpots(cells, getRoomDoorSpots(room));
+            var spot = null;
+            if (spots.length > 0)
+              spot = spots[Std.random(spots.length)];
+            else
               {
-                if (cells[s.x][s.y] != TEMP_BUILDING_INNER_WALL)
-                  continue;
-                // check for neighbouring tiles
-                var cnt = 0;
-                for (i in 0...Const.dir4x.length)
+                // and every other cell of the wall ring when none of the four works, most central
+                // first. WITHOUT THIS the room simply never gets a door — it used to trace "bug, no
+                // door spots in room" and carry on, leaving a room nothing can walk into
+                spots = doorSpots(cells, getRoomWallSpots(room));
+                if (spots.length == 0)
                   {
-                    var t = cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]];
-                    if (t == TEMP_BUILDING_INNER_WALL ||
-                        t == TEMP_BUILDING_WALL) 
-                      cnt++;
+                    trace('bug, no door spots anywhere on the wall of room ' + room);
+                    continue;
                   }
-                if (cnt > 2) // triangle
-                  continue;
-                
-                spots.push(s);
+                spot = spots[0];
               }
-            if (spots.length == 0)
-              {
-                trace('bug, no door spots in room ' + room);
-                continue;
-              }
-            var spot = spots[Std.random(spots.length)];
 //            trace(spot + ' old: ' + cells[spot.x][spot.y]);
             cells[spot.x][spot.y] = TEMP_BUILDING_INNER_DOOR;
             doors.push({
@@ -630,6 +844,30 @@ class FacilityAreaGenerator
       state.doors = doors;
       state.rooms = rooms;
       state.nextRoomID = roomID + 1;
+    }
+
+// which of these candidate spots a door may actually be cut into: an inner wall, and not a cell with
+// walls on three sides of it (the "triangle", where an opening would face into masonry)
+  function doorSpots(cells: Array<Array<Int>>, cand: Array<_Spot>): Array<_Spot>
+    {
+      var out = [];
+      for (s in cand)
+        {
+          if (cells[s.x][s.y] != TEMP_BUILDING_INNER_WALL)
+            continue;
+          var cnt = 0;
+          for (i in 0...Const.dir4x.length)
+            {
+              var t = cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]];
+              if (t == TEMP_BUILDING_INNER_WALL ||
+                  t == TEMP_BUILDING_WALL)
+                cnt++;
+            }
+          if (cnt > 2)
+            continue;
+          out.push(s);
+        }
+      return out;
     }
 
 // remove double doors into the same rooms
@@ -678,54 +916,204 @@ class FacilityAreaGenerator
         }
 //      trace(doors);
 
-      // generate lists of interconnected rooms
-      var clusters: Array<Array<Int>> = [];
-      for (door in doors)
-        {
-          var ok = false;
-          for (c in clusters)
-            {
-              if (door.roomID1 > 0 && Lambda.has(c, door.roomID1))
-                {
-                  if (!Lambda.has(c, door.roomID2))
-                    c.push(door.roomID2);
-                  ok = true;
-                }
-              if (door.roomID2 > 0 && Lambda.has(c, door.roomID2))
-                {
-                  if (!Lambda.has(c, door.roomID1))
-                    c.push(door.roomID1);
-                  ok = true;
-                }
-            }
-          if (ok)
-            continue;
-          var cluster = [ door.roomID1, door.roomID2 ];
-          clusters.push(cluster);
-        }
-//      trace(clusters);
+      // group the rooms into everything-can-reach-everything sets
+      var clusters = roomClusters(state);
 
-      // find room blocks that do not have a corridor exit and make one
+      // every room that can already be walked to, which is whichever set ended up holding 0
+      var reachable = new Map<Int, Bool>();
+      var pending = [];
       for (c in clusters)
         {
-          // has corridor exit
           if (Lambda.has(c, 0))
-            continue;
-          var cluster = c.slice(0, c.length);
-          while (true)
             {
-              var roomID = cluster[Std.random(cluster.length)];
-              var ret = makeDoorToCorridor(state, roomID);
-              if (ret)
-                break;
-              cluster.remove(roomID);
-              if (cluster.length == 0)
-                {
-                  trace('bug, no corridor-adjacent walls in cluster ' + cluster);
-                  break;
-                }
+              for (id in c)
+                reachable.set(id, true);
+            }
+          else pending.push(c);
+        }
+
+      // and let every other set in.
+      //
+      // REPEATED UNTIL NOTHING MOVES, because connecting one pocket can be what makes the next one
+      // connectable: a pocket buried behind another pocket has no reachable neighbour on the first
+      // pass and a perfectly good one on the second. A pass that changes nothing means the rest
+      // genuinely cannot be reached and the loop stops rather than spinning
+      var progress = true;
+      while (pending.length > 0 &&
+             progress)
+        {
+          progress = false;
+          for (c in pending.copy())
+            {
+              var done = false;
+              // a corridor is the good outcome: it puts the rooms on the building's circulation
+              // rather than making somebody walk through a laboratory to reach them
+              for (roomID in c)
+                if (makeDoorToCorridor(state, roomID))
+                  {
+                    done = true;
+                    break;
+                  }
+              // and failing that, any room that can already be reached. a pocket of rooms in the
+              // middle of a structure has no corridor wall at all — that is what being in the
+              // middle means — so without this it stays sealed however hard the corridor pass looks
+              if (!done)
+                for (roomID in c)
+                  if (makeDoorToRoom(state, roomID, reachable))
+                    {
+                      done = true;
+                      break;
+                    }
+              if (!done)
+                continue;
+              for (id in c)
+                reachable.set(id, true);
+              pending.remove(c);
+              progress = true;
             }
         }
+      for (c in pending)
+        trace('bug, cluster ' + c + ' cannot reach a corridor or any reachable room');
+    }
+
+// group this structure's rooms into sets that can reach each other, with room id 0 standing for
+// "a corridor, or outdoors".
+//
+// REPLACES A SINGLE-PASS GROUPING THAT COULD NOT MERGE. The old loop walked the doors once and, for
+// each, looked for an existing cluster already holding one of its two rooms — so if rooms A-B had
+// formed one cluster and C-D another, a later door joining B to C pushed C into A's cluster and left
+// D sitting in the second one, still recorded as a separate group. Which group a room ended up in,
+// and whether that group appeared to contain a corridor at all, came down to the order the doors
+// happened to be created in.
+//
+// that is what left 8% of compounds with a room nothing could walk into: a set of rooms joined only
+// to each other got merged into a record that DID contain 0, so the "no corridor exit" branch below
+// skipped it and never cut the door that would have let anyone in. The rooms had doors, the doors
+// were walkable, and every one of them led to another room in the same sealed pocket.
+//
+// union-find, so merging is the operation it is built on rather than the case it misses
+  function roomClusters(state: _FacilityState): Array<Array<Int>>
+    {
+      var parent = new Map<Int, Int>();
+      // 0 is a node like any other: whichever set ends up holding it is the reachable one
+      parent.set(0, 0);
+      for (r in state.rooms)
+        parent.set(r.id, r.id);
+      for (d in state.doors)
+        {
+          if (!parent.exists(d.roomID1) ||
+              !parent.exists(d.roomID2))
+            continue;
+          unite(parent, d.roomID1, d.roomID2);
+        }
+
+      var byRoot = new Map<Int, Array<Int>>();
+      // 0 goes in first so the set holding it always carries the marker the caller tests for
+      var zero = root(parent, 0);
+      byRoot.set(zero, [0]);
+      for (r in state.rooms)
+        {
+          var k = root(parent, r.id);
+          if (!byRoot.exists(k))
+            byRoot.set(k, []);
+          byRoot.get(k).push(r.id);
+        }
+      return [for (k in byRoot.keys()) byRoot.get(k)];
+    }
+
+// the representative of a node's set, flattening the path it walked on the way
+  static function root(parent: Map<Int, Int>, a: Int): Int
+    {
+      while (parent.get(a) != a)
+        {
+          parent.set(a, parent.get(parent.get(a)));
+          a = parent.get(a);
+        }
+      return a;
+    }
+
+// put two nodes in the same set
+  static function unite(parent: Map<Int, Int>, a: Int, b: Int)
+    {
+      var ra = root(parent, a);
+      var rb = root(parent, b);
+      if (ra != rb)
+        parent.set(ra, rb);
+    }
+
+// cut a door from this room into whichever neighbouring room can already be walked to.
+//
+// the last resort for a pocket of rooms with no corridor wall between them and the rest of the
+// building. A door into a neighbour is a worse answer than a door onto a corridor — it means
+// reaching these rooms by walking through another one — but it is the difference between a room
+// that is awkward to get to and a room that cannot be entered at all.
+//
+// the far side of a wall cell is read straight off the grid: makeDoors has already stamped every
+// room's id into its own cells, so the neighbour identifies itself
+  function makeDoorToRoom(state: _FacilityState, roomID: Int,
+      reachable: Map<Int, Bool>): Bool
+    {
+      var cells = state.area.getCells();
+      var room = roomByID(state, roomID);
+      if (room == null)
+        return false;
+      // wall midpoints first, then the rest of the ring, exactly as the corridor pass does
+      var hit = pickRoomSpot(cells, doorSpots(cells, getRoomDoorSpots(room)), reachable);
+      if (hit == null)
+        hit = pickRoomSpot(cells, doorSpots(cells, getRoomWallSpots(room)), reachable);
+      if (hit == null)
+        return false;
+      cells[hit.spot.x][hit.spot.y] = TEMP_BUILDING_INNER_DOOR;
+      state.doors.push({
+        x: hit.spot.x,
+        y: hit.spot.y,
+        dir: hit.spot.dir,
+        roomID1: roomID,
+        roomID2: hit.target,
+        skip: false,
+      });
+      return true;
+    }
+
+// the first of these spots whose far side is a room that can already be reached, with that room's id
+  function pickRoomSpot(cells: Array<Array<Int>>, cand: Array<_Spot>,
+      reachable: Map<Int, Bool>): { spot: _Spot, target: Int }
+    {
+      for (s in cand)
+        {
+          var delta = deltaMap[s.dir];
+          var t = cells[s.x + delta.x][s.y + delta.y];
+          if (t < TEMP_BUILDING_ROOM_ID_START ||
+              !reachable.exists(t))
+            continue;
+          return {
+            spot: s,
+            target: t,
+          };
+        }
+      return null;
+    }
+
+// this structure's room with that id, or null
+  function roomByID(state: _FacilityState, roomID: Int): _Room
+    {
+      for (r in state.rooms)
+        if (r.id == roomID)
+          return r;
+      return null;
+    }
+
+// which of these candidate spots open straight onto a corridor
+  function corridorSpots(cells: Array<Array<Int>>, cand: Array<_Spot>): Array<_Spot>
+    {
+      var out = [];
+      for (s in cand)
+        {
+          var delta = deltaMap[s.dir];
+          if (cells[s.x + delta.x][s.y + delta.y] == TEMP_BUILDING_CORRIDOR)
+            out.push(s);
+        }
+      return out;
     }
 
 // find a wall adjacent to a corridor and make a hole in it
@@ -743,19 +1131,16 @@ class FacilityAreaGenerator
           }
 //      trace('adding door to room ' + roomID + ' '+ room);
 
-      // get door spots and check which will go into the corridor
-      var tmp = getRoomDoorSpots(room);
-      var spots = [];
-      for (s in tmp)
-        {
-          var delta = deltaMap[s.dir];
-          if (cells[s.x + delta.x][s.y + delta.y] != TEMP_BUILDING_CORRIDOR)
-            continue;
-          spots.push(s);
-        }
+      // get door spots and check which will go into the corridor. the four wall midpoints first,
+      // then the whole wall ring most-central-first — a room can easily have a corridor along one
+      // wall and a midpoint that is not the cell facing it, which used to come back as "this room
+      // cannot reach a corridor" and strand its whole cluster
+      var spots = corridorSpots(cells, getRoomDoorSpots(room));
+      if (spots.length == 0)
+        spots = corridorSpots(cells, getRoomWallSpots(room));
       if (spots.length == 0)
         return false;
-      var spot = spots[Std.random(spots.length)];
+      var spot = spots[0];
       cells[spot.x][spot.y] = TEMP_BUILDING_INNER_DOOR;
       state.doors.push({
         x: spot.x,
@@ -1272,8 +1657,7 @@ class FacilityAreaGenerator
           Std.random(100) < 50)
         {
           cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
-          var o = new FloorDrain(game, state.area.id, cx, cy);
-          state.area.addObject(o);
+          state.area.add('floorDrain', cx, cy);
         }
     }
 
@@ -1484,8 +1868,7 @@ class FacilityAreaGenerator
       cells[cx][cy] = Const.TILE_FLOOR_TILE + 1 + Std.random(3);
       if (Std.random(100) < 30)
         {
-          var o = new FloorDrain(game, area.id, cx, cy);
-          state.area.addObject(o);
+          state.area.add('floorDrain', cx, cy);
         }
 
       // make a big table near the center
@@ -1621,9 +2004,7 @@ class FacilityAreaGenerator
       var kinds = (role == ROLE_CABINET ? Const.officeFittings() : Const.highFittings());
       var f = kinds[Std.random(kinds.length)];
       var fr = f.frames[Std.random(f.frames.length)];
-      var o = new Decoration(game, state.area.id,
-        x, y, fr.row, fr.col);
-      state.area.addObject(o);
+      state.area.addDecoration(x, y, fr.row, fr.col);
     }
 
 // stand one fitting of a NAMED kind, for a room template placing its own furniture instead of rolling
@@ -1632,9 +2013,7 @@ class FacilityAreaGenerator
     {
       var frames = Const.framesOf(kind);
       var fr = frames[Std.random(frames.length)];
-      var o = new Decoration(game, state.area.id,
-        x, y, fr.row, fr.col);
-      state.area.addObject(o);
+      state.area.addDecoration(x, y, fr.row, fr.col);
       state.area.getCells()[x][y] = Const.TILE_FLOOR_TILE_UNWALKABLE;
     }
 
@@ -1643,9 +2022,7 @@ class FacilityAreaGenerator
     {
       var info = infos[Std.random(infos.length)];
       var col = Std.random(info.amount);
-      var o = new Decoration(game, state.area.id,
-        x, y, info.row, col);
-      state.area.addObject(o);
+      state.area.addDecoration(x, y, info.row, col);
     }
 
 // check a w,h block at x,y if it is near a door
@@ -1897,17 +2274,13 @@ class FacilityAreaGenerator
             // spawn doors
             if (tileID == TEMP_BUILDING_FRONT_DOOR)
               {
-                var o = new Door(game, area.id, x, y,
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_DOUBLE },
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_DOUBLE_OPEN });
-                state.area.addObject(o);
+                area.addDoor(x, y, Const.FRAME_DOOR_DOUBLE,
+                  Const.FRAME_DOOR_DOUBLE_OPEN);
               }
             else if (tileID == TEMP_BUILDING_SIDE_DOOR)
               {
-                var o = new Door(game, area.id, x, y,
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_GLASS },
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_GLASS_OPEN });
-                state.area.addObject(o);
+                area.addDoor(x, y, Const.FRAME_DOOR_GLASS,
+                  Const.FRAME_DOOR_GLASS_OPEN);
               }
             else if (tileID == TEMP_BUILDING_INNER_DOOR)
               {
@@ -1915,25 +2288,19 @@ class FacilityAreaGenerator
                 // floor on the far side of the opening and off nothing else, the same way the whole
                 // theme travels: generateRoomContents has already painted those tiles final by here
                 var priv = opensOnPrivateRoom(cells, x, y);
-                var o = new Door(game, area.id, x, y,
-                  { row: Const.ROW_DOORS, col: (priv ? Const.FRAME_DOOR_PRIVATE :
-                    Const.FRAME_DOOR_CABINET) },
-                  { row: Const.ROW_DOORS, col: (priv ? Const.FRAME_DOOR_PRIVATE_OPEN :
-                    Const.FRAME_DOOR_CABINET_OPEN) });
-                state.area.addObject(o);
+                area.addDoor(x, y,
+                  (priv ? Const.FRAME_DOOR_PRIVATE : Const.FRAME_DOOR_CABINET),
+                  (priv ? Const.FRAME_DOOR_PRIVATE_OPEN : Const.FRAME_DOOR_CABINET_OPEN));
               }
             else if (tileID == TEMP_HANGAR_SIDE_DOOR)
               {
-                var o = new Door(game, area.id, x, y,
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_METAL },
-                  { row: Const.ROW_DOORS, col: Const.FRAME_DOOR_METAL_OPEN });
-                state.area.addObject(o);
+                area.addDoor(x, y, Const.FRAME_DOOR_METAL,
+                  Const.FRAME_DOOR_METAL_OPEN);
               }
             // spawn vent object
             else if (tileID == TEMP_BUILDING_VENT)
               {
-                var o = new Vent(game, area.id, x, y);
-                state.area.addObject(o);
+                area.add('vent', x, y);
               }
             // pick which tree this one is. WHICH cells are planted was decided by generatePark, so
             // all that is left here is the image — the bushes and the benches take one tile each
@@ -2041,8 +2408,10 @@ class FacilityAreaGenerator
 }
 
 typedef _FacilityState = {
-  var area: AreaGame;
-  var info: AreaInfo;
+  // the grid being written, the seeded rng and the spawn list — NOT a game.AreaGame. Generation
+  // reaches nothing else, which is what lets tools/genrun.mjs run this file with no Game behind it;
+  // gen.GenSpawner turns the spawns into real objects afterwards. See docs/area-gen.md.
+  var area: GenCtx;
   var mainRoadNorth: Bool;
 
   // temp state: the CURRENT structure's rooms and doors. every pass inside generateBuilding

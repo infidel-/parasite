@@ -21,17 +21,10 @@ typedef Turn = { sx0:Int, sy0:Int, sx1:Int, sy1:Int, cx0:Int, cy0:Int, cx1:Int, 
 // as walkway (touching a road) or alley; landlocked buildings are dropped.
 // mulberry32(1337) keeps the layout stable across runs
 class CityGen {
-  static inline function imul(a:Int, b:Int):Int return js.Syntax.code("Math.imul({0}, {1})", a, b);
-
-  public static function mulberry32(seed:Int):Void->Float {
-    var a = seed;
-    return function():Float {
-      a = a | 0; a = (a + 0x6D2B79F5) | 0;
-      var t = imul(a ^ (a >>> 15), 1 | a);
-      t = (t + imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  // the city's rng stream, now shared with the rest of area generation. the arithmetic moved to
+  // gen.Rng unchanged and this stays as the name every caller already uses (render debris passes
+  // key off it too), so no city layout moves
+  public static inline function mulberry32(seed:Int):Void->Float return gen.Rng.mulberry32(seed);
 
   static function fillRect(tiles:Array<Array<Tile>>, x0:Int, y0:Int, w:Int, h:Int, val:Tile):Void {
     for (r in y0...y0 + h) for (c in x0...x0 + w)
