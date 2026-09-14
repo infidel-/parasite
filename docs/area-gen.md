@@ -31,6 +31,16 @@ area
   │ └ entryway               the 4x2 hole through the sidewalk
   ├ park
   └ yard                     the filler kind: whatever nothing claimed
+
+building
+└ room-lab | room-office | room-washroom      one per room the corridors cut out
+  │                         → Quota.deal() over its bays, same dealer as the plots
+  ├ bench | workplace        a run of worktop; `workplace` is the office's name for it
+  ├ machinery | server-rack-bay   a run of ONE fitting against masonry
+  ├ lounge                   a two-seater with a low table in front — the only depth-2 zone
+  ├ stall-run | basin-run | lobby  the washroom's three
+  ├ slot                     the filler: a bay no demand's `must` accepted
+  └ vent-cap                 the lone window a run ended on, pushed LAST
 ```
 
 **Breadth-first is load-bearing.** Depth-first would finish a whole building before the neighbouring
@@ -44,6 +54,15 @@ sibling of `road` would be paved back over by whichever building happened to bor
 **Two kinds have no filler at all.** `parking` and `yard` are open lot, and open lot is what the grid
 was blanked to before the walk started, so `FacilityGen.fill` has no case for them. A kind with no
 case is a leaf that writes nothing; that is the design, not an omission.
+
+**The room level is walked by its own `GenTree.build`, not by the area walk** — the one place the
+breadth-first ordering had to be overridden. `generateBuilding`'s last pass is
+`generateRoomContents`, and `roomChemistryLab`'s island only takes a spot that is still bare floor,
+so the benches have to be standing two lines earlier; deferring them a level would put every room's
+furniture after every building's last pass. The room nodes stay attached to the building all the
+same, so the finished tree is still a record of the whole area — the area walk meets them again a
+level later and `FacilityGen.fill` has no case for them, which is what makes the second visit a
+no-op. A room kind added to that switch would silently double-fill.
 
 `FacilityGen.build()` in full:
 
@@ -74,6 +93,8 @@ FacilityConnect.connectRooms()          every room is walk-in-able
 | `gen/blocks/*Block.hx` | one filler per block kind. Suffix is `Block`, always |
 | `gen/blocks/FacilityBlocks.hx` | the compound's profile, quota and `plan()` |
 | `gen/blocks/RoadBlock.hx` | the carriageway, the pavement, the sewer hatches and the gate mouth |
+| `gen/blocks/RoomBlock.hx` | the ROOM level: the glazing pass, and every zone filler under it |
+| `gen/blocks/RoomZones.hx` | what a room of each kind must contain — the room level's `demands()` |
 
 ### The facility, after the split
 
@@ -87,7 +108,7 @@ used zero times** — so every pass was already effectively static.
 | `gen/facility/FacilityGen.hx` | `build()` — the real entry point, the one the oracle calls — and `finalizeTiles` |
 | `gen/facility/FacilityTemp.hx` | the `TEMP_*` alphabet, the temp→final map, and the four constants more than one pass reads |
 | `gen/facility/_FacilityState.hx` | what a compound looks like mid-build. Not persisted |
-| `gen/facility/FacilityBuilding.hx` | one lab building: wall ring, corridors, room subdivision, glazing and bench runs |
+| `gen/facility/FacilityBuilding.hx` | one lab building: wall ring, corridors, room subdivision. What goes INSIDE a room is `gen/blocks/RoomBlock.hx` |
 | `gen/facility/FacilityConnect.hx` | every door, and both reachability passes — `fixDoors` on the room graph, `connectRooms` on the tile grid |
 | `gen/facility/FacilityRooms.hx` | the room templates and the shared placement helpers |
 | `gen/facility/FacilityToilet.hx` | the washroom and its T-partition |
@@ -153,6 +174,89 @@ A `must` narrows what `best` may choose from, so give the demand a `fit` as well
 to `best`'s runner-up rule — roomiest-first. Parking did, and a car park taking the biggest plot on
 the street cost the lab buildings 100 cells of floor and the compound two rooms.
 
+### A room divides into bays
+
+`FacilityBuilding.makeWindows` was 235 lines walking each wall of each room once and deciding the
+glazing, the worktops and the floor clutter off one set of running counters. It is `RoomBlock` now,
+and the walk happens twice on purpose:
+
+- **glaze** paints the ribbon along the wall in bays of 3 (2 in a room under 7 cells on that axis),
+  one blank cell between bays, and stops permanently at the first cell that is not exterior masonry.
+  As it goes it pushes one child per bay over the line of floor immediately inside it — `bench` where
+  a worktop fits, `slot` where the bay runs off the end of the room or stands in a doorway's swing.
+- **bench** lays the worktop tiles and puts glassware on ~70% of them. A room CORNER always gets one,
+  because a clue's activation range is a cross and would reach through the wall.
+- **slot** deals a standing fitting against plain masonry, something on the floor where the wall is
+  glass, or nothing.
+- **vent-cap** is pushed after every bench and slot of the room, so it can ask the finished grid
+  whether the floor inside the run's last window was left bare.
+
+**That last one is what the split bought.** `hasVentSpace` used to be a flag the one big loop carried
+along the run, set in the clutter branch and read by the glazing branch forty lines later — the exact
+coupling that meant a pass could not be moved without moving the other two. It is a question about
+cells now. The same goes for `nextToWindow`, which used to see only the glazing painted *so far* and
+now sees all of it; that is the only measurable difference the split made (`spawns/decoration`
+129.10 → 127.35, more slots correctly reading as beside-glass and so being left bare).
+
+**`FacilityRooms.clearTableSpots` still runs.** The plan said the corrective pass existed because the
+three jobs were interleaved, and half of that is true — but it also takes back cells that
+`render.facility.FacilitySink` and `FacilityWork` consume on the render side, which the generator
+cannot see. It stays until a check proves it is idle.
+
+Sub-block data rides on `_GenNode.tags` (`h3`/`v2`/… for the tile family, `drawer`, `door`, `end`)
+and `_GenNode.roomID`, both of which the node typedef already carried for exactly this.
+
+### A room is DEALT, not typed as it is walked
+
+The glazing pass pushes every bay as kind `bay` and says nothing about what goes in it; `Quota.deal`
+then assigns the kinds, with the same dealer, the same `min`/`max`/`must`/`fit` and the same
+most-constrained-first rule the compound's plots use. `RoomZones.demands` is the table.
+
+**Core zones are `min >= 1`; optional ones roll their `min` before the deal.** That ordering is the
+whole point: a demand with a min is in pass 1, so a machine bank that rolled in picks its wall before
+the core zone takes the room. Rolled inside the filler instead, it would be picking over whatever the
+core had already left — which is how the arithmetic era placed everything.
+
+**`min: 0, max: 1` does not mean "maybe one".** `Quota.deal`'s second pass spends every demand up to
+its max whatever its min was — that is what turns a leftover plot into a second lab building one
+level up — so an optional zone must roll BOTH. Measured before the fix: a machine bank and a server
+bay in every room of every compound, 11.6 of each against the 4.7 the odds ask for.
+
+**A node's rect may only hold cells the node owns.** A washroom wall run arrives from
+`roomWallRuns` with cells already dropped out of the middle of it — one beside a doorway, one under
+an object — and `FacilityToilet.zones` splices out the T's two passages as well, so a node built from
+the list's first and last cell claims the gaps too. Both cost a compound on seed 2993: a cubicle went
+up on the cell dropped next to the *neighbouring* room's only door, and then another went up in the
+passage itself. `FacilityToilet.spans` cuts a holey list into contiguous runs, which is what they
+really are — the old pass ranked a holey run by its total length and stood fittings on non-adjacent
+cells.
+
+**A run of one kind always leaves one cell.** Everything else on a perimeter leaves holes by
+construction (a bench skips a cell a neighbour took, a slot rolls 70%), so a room has always had a
+lane round its own walls by accident. `standing` was the first pass that filled every cell it was
+dealt, and two such runs can ring a small room: 2 seeds in 4000 against 0 in 10000 before the zones.
+
+**And `connectRooms` can now take a fitting away.** Its cut needs three things at once — masonry, a
+reached cell on the far side, and a cell you can stand on on the *room* side — and it is the third
+that runs out when a room is ringed by its own furniture. `clearWayToReached` is the last resort
+before giving up, because a room that renders perfectly and cannot be entered still spawns clues,
+guards and mission anchors inside it. With it, 20000 seeds are clean.
+
+**A zone's fittings need a `blocks` tag nobody rolls.** The lounge's sofa was tagged `cabinet`, which
+is a `_Room.role`, and the office *does* call `addFitting` with its own role — so `Deco.pick` started
+dealing sofas as ordinary wall furniture (measured live: three sofas and one table in one compound,
+two of them standing where a bookcase was asked for). They are tagged `lounge` now. The washroom's
+three never had the problem because nothing ever asks `Deco` for a `toilet` fitting.
+
+**A TEMP tile test after the floor paint tests nothing, and the washroom drain had been dead for as
+long as it existed.** `paintRoomFloor` is what turns `TEMP_BUILDING_ROOM` into a final id, so
+`roomToilet`'s `cells[cx][cy] == TEMP_BUILDING_ROOM && area.chance(50)` was false at the first
+operand every time — the roll never even fired, because `&&` short-circuits, which is also why the
+RNG stream showed nothing. Moving the drain ABOVE the paint fixes it and costs nothing: a drain tile
+is already a final id, so the paint steps over it exactly as it steps over a fitting. `spawns/floorDrain`
+4.02 → 4.28, against the 0.59 that 1.18 washrooms at 50% would suggest — the remainder is the test
+doing its job, since a washroom is dense with cubicles and basins and the drain will not land on one.
+
 ## Rules
 
 **Nothing in `gen/` may touch `game.Game`.** This is the rule the headless oracle rests on.
@@ -201,6 +305,11 @@ make gen seeds=200 args="--digest"    # one hash per compound - see below
 node tools/genrun.mjs --seed 4210 --count 1 --print            # one specific seed
 node tools/genrun.mjs --seed 4210 --count 1 --size 65x50 --print   # at one specific size
 ```
+
+**The live counterpart is the console command `area regen`** (debug build only): it walks the player
+out to the region, throws the area's cells, objects, AI and `generatorInfo` away and walks them back
+in, so a fresh layout costs one line instead of a reload and a teleport. The oracle proves 4000
+layouts; that is how one of them gets looked at. See [`debug-surface.md`](debug-surface.md).
 
 `--size` exists because the live game traces `facility <w>x<h> seed <n>` on every generate, and both
 halves of that are needed to replay it: the seed drives every roll inside generation, but
@@ -267,24 +376,37 @@ binds the block profile.
 Baseline, 4000 seeds across all four sizes — **the numbers a later phase diffs against**:
 
 ```
-rooms          19.38   spawns/TOTAL      171.79   blocks/TOTAL  6.03
-doors          18.63   spawns/decoration 129.10   blocks/yard   1.03
-cells/rooms   823.19   spawns/door        25.91   planTries     1.22
-cells/building 1190    spawns/vent         8.21   planRetried   0.17
-cells/yard      392    spawns/floorDrain   4.05
+rooms          19.36   spawns/TOTAL      170.09   blocks/TOTAL  6.03
+doors          18.71   spawns/decoration 127.13   blocks/yard   1.03
+cells/rooms   823.87   spawns/door        25.98   planTries     1.22
+cells/building 1192    spawns/vent         8.16   planRetried   0.17
+cells/yard      392    spawns/floorDrain   4.28
 cells/parking   359    spawns/sewerHatch   4.52
-unreachableRooms 0        reachedCells 3081 / walkableCells 3093
+unreachableRooms 0        reachedCells 3085 / walkableCells 3098
+
+nodes/bench       33.29   nodes/machinery        4.37   nodes/room-lab      13.40
+nodes/workplace    8.67   nodes/server-rack-bay  3.90   nodes/room-office    3.78
+nodes/slot        50.30   nodes/lounge           1.90   nodes/room-washroom  1.19
+nodes/vent-cap     6.84   nodes/stall-run        2.37   nodes/lobby          1.19
+                          nodes/basin-run        2.37
 ```
+
+**`nodes/*` counts every node of the finished tree at any depth**, which is the furniture gate a
+spawn count could never be: `spawns/decoration` cannot tell a bench that was never laid from one that
+was laid and left bare. `nodes/room-*` summing one short of `rooms` is right — the hangar is a room
+and not a room node. `bench + workplace + slot` plus the zone kinds is the bay total, so a zone
+arriving always costs `bench` and `slot` exactly what it takes.
 
 **Read those to ±0.15, not ±0.01.** Three disjoint 4000-seed ranges of the arithmetic-era generator
 gave `rooms` 18.81 / 18.96 / 18.92, so one range's mean carries about that much sampling error and a
 1% move between two runs says nothing. For anything finer than the means, use `--digest`.
 
 Against the arithmetic era these are close where it matters and deliberately not identical: `rooms`
-19.38 against 18.81, `doors` 18.63 against 18.02. **`spawns/decoration` is the one that genuinely
-moved** — 129 against 157, because bench runs are dealt under ribbon glazing and a site divided into
+19.36 against 18.81, `doors` 18.60 against 18.02. **`spawns/decoration` is the one that genuinely
+moved** — 127 against 157, because bench runs are dealt under ribbon glazing and a site divided into
 six fair plots has about 20% less exterior wall on its buildings than one where two hand-placed
-buildings ate 66% of the ground.
+buildings ate 66% of the ground. (Of that, 1.75 is the room-level split rather than the plot
+division — see "A room divides into bays".)
 
 `rooms` only landed there because `FacilityBuilding.SUBDIVIDE_OVER` was cut from 1.5 to 1.2 in the
 same phase. Plots are capped by `splitProfile().maxSide` and bounded in aspect, so the buildings are

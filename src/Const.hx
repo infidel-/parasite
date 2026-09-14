@@ -337,6 +337,31 @@ class Const
         { row: 13, col: 9 },
       ],
     },
+    // and the lounge's two, on exactly the same terms. THEIR BLOCK IS `lounge` AND NOT `cabinet`,
+    // which is the whole of what keeps them off the office's ordinary wall roll: a block name is
+    // what gen.Deco.pick matches, and the office DOES call FacilityRooms.addFitting with its own
+    // role — so listed under `cabinet` the sofa is dealt as a piece of random wall furniture.
+    // Measured live before the fix: one compound came out with three sofas and one table, two of
+    // them standing where a bookcase was asked for. The washroom's three never had the problem
+    // because nothing ever asks Deco for a `toilet` fitting. Keys, not pictures — see the note above
+    {
+      id: 'sofa',
+      kind: FIT_SOFA,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lounge' ],
+      frames: [
+        { row: 13, col: 10 },
+      ],
+    },
+    {
+      id: 'table-low',
+      kind: FIT_TABLE_LOW,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lounge' ],
+      frames: [
+        { row: 12, col: 11 },
+      ],
+    },
   ];
 
   // how often a high floor decoration comes out as one of the fittings above rather than as one of

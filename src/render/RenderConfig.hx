@@ -815,6 +815,11 @@ class RenderConfig {
     // and the washroom counter, whose bowl is a real RECESS and whose tap is two boxes — which
     // between them retire the family's only alpha-cut mesh (models-src/facility/basin_build.py)
     facilityBasin: 'models/facility/deco-basin.glb',           // counter, sunk bowl, mixer tap
+    // and the lounge's pair, the first two here that never had an emitted version to convert: what
+    // earns a sofa a mesh is the notch its arms and back cut out of a rectangle, and a low table is
+    // one the camera sees THROUGH (models-src/facility/lounge_build.py, one sheet between them)
+    facilitySofa: 'models/facility/deco-sofa.glb',             // two-seater, arms, dark plinth
+    facilityTableLow: 'models/facility/deco-table-low.glb',    // slab on four legs, seen through
     // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
     // were generated props and both are merged geometry now — see the header of
     // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar

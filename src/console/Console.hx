@@ -64,6 +64,10 @@ class Console
       if (Const.isDebug && arr[0] == 'ai')
         aiTraceCommand(arr);
 
+      // XXX area regen
+      else if (Const.isDebug && arr[0] == 'area')
+        areaCommand(arr);
+
       // XXX config commands
       else if (char0 == 'c')
         {
@@ -118,6 +122,7 @@ class Console
               'give trait [name], ' +
               'give evolution [name] [level],<br/>' +
               'ai trace|untrace [id] - toggle AI browser-console trace,<br/>' +
+              'area regen - regenerate the current area,<br/>' +
               'cfg|config, ' +
               'ch|chat - set chat stage,<br/>' +
               // debug
@@ -388,6 +393,35 @@ class Console
           return;
         }
       game.finish(p);
+    }
+
+
+// regenerate the area the player is standing in: out to the region, throw the map away, back in.
+// going out is what makes it clean - AreaGame.leave() despawns, and AreaGame.enter() generates
+// whatever is not generated, so no generation path has to know it is being re-run
+  function areaCommand(arr: Array<String>)
+    {
+      if (arr[1] != 'regen')
+        {
+          log('area regen - regenerate the current area');
+          return;
+        }
+      if (game.location != LOCATION_AREA ||
+          game.area == null)
+        {
+          log('Not in area.');
+          return;
+        }
+      var area = game.area;
+      if (area.isHabitat)
+        {
+          log('Cannot regenerate a habitat.');
+          return;
+        }
+      game.setLocation(LOCATION_REGION);
+      area.regenerate();
+      game.setLocation(LOCATION_AREA, area);
+      log('Area ' + area.id + ' (' + area.name + ') regenerated.');
     }
 
 

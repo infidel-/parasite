@@ -70,6 +70,8 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityMachine,
       RenderConfig.MODELS.facilityBookcase,
       RenderConfig.MODELS.facilityBasin,
+      RenderConfig.MODELS.facilitySofa,
+      RenderConfig.MODELS.facilityTableLow,
     ]);
 
   var game:Game;

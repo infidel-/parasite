@@ -1095,6 +1095,26 @@ class FacilityStyle
   // a flat alpha-cut quad with a second one standing up for the tap
   // (models-src/facility/basin_build.py)
   public static inline var DECO_BASIN_GLB = true;
+  // the lounge's two-seater. A LOW fitting in every sense the code uses the word — it is dealt off
+  // the zone rather than the floor roll, and at 2.0 it passes under a cable run a 3.43 cabinet would
+  // be drawn straight through. The width is the only number here with an argument behind it: 1.5x
+  // the height is what a two-seater measures, and 3.0 in a 4-unit cell leaves the 0.5 either side
+  // that every fitting's wall slide wants
+  public static inline var DECO_SOFA_H = 2.0;
+  public static inline var DECO_SOFA_W = DECO_SOFA_H * 1.5;
+  public static inline var DECO_SOFA_D = 1.6;
+  // and the low table in front of it, at seat height. It is NOT against a wall — the lounge zone
+  // stands it one cell into the room — so its depth is free and its width is what fits beside the
+  // sofa's own 3.0 without the two reading as one block
+  public static inline var DECO_TABLE_LOW_H = 1.0;
+  public static inline var DECO_TABLE_LOW_W = 1.8;
+  public static inline var DECO_TABLE_LOW_D = 1.2;
+  // both ship as glbs ONLY, which is the first time in this family that is true: every flag above
+  // switches between an emitted version and a hand-modelled one because the emitted one came first,
+  // and these two never had one. There is nothing to A/B, so `unit` emits nothing for them and the
+  // flags exist to keep the table below reading the same way as its neighbours
+  public static inline var DECO_SOFA_GLB = true;
+  public static inline var DECO_TABLE_LOW_GLB = true;
   // the basin glb's OWN height, tap included, and the number the batch is sized by: Models.instanced
   // scales a mesh to the height it is given, so passing BASIN_H would squash the counter by the
   // tap's share. BASIN_H stays the counter's height and this is only ever the scale

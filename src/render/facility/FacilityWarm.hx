@@ -238,6 +238,16 @@ class FacilityWarm
                 path: RenderConfig.MODELS.facilityBasin,
                 h: FacilityStyle.BASIN_MESH_H,
               },
+              // and the lounge's two, which share one packed sheet but are two paths and so two
+              // programs — a path is a material is a program key, whatever image is behind it
+              {
+                path: RenderConfig.MODELS.facilitySofa,
+                h: FacilityStyle.DECO_SOFA_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityTableLow,
+                h: FacilityStyle.DECO_TABLE_LOW_H,
+              },
             ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the

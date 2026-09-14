@@ -43,4 +43,11 @@ enum abstract _FittingKind(Int) from Int to Int
   // unwalkable cells the renderer stands a full-height slab on, and the cells left bare are the
   // passages — see FacilityStyle.PART_T
   var FIT_PARTITION = 13;
+  // and the lounge's two, dealt by the `lounge` ZONE and never by the random floor roll. The sofa is
+  // the first fitting in the family whose case is the SILHOUETTE rather than the draw call: every
+  // kind above it that ships as a glb converted an emitted slab to stop spending three texture
+  // labels on it, where these two never had an emitted version to save. A sofa read from above is a
+  // rectangle with a bite out of it, and that notch is the whole of what says sofa rather than crate
+  var FIT_SOFA = 14;
+  var FIT_TABLE_LOW = 15;
 }

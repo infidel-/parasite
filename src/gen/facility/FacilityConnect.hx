@@ -321,7 +321,7 @@ class FacilityConnect
     }
 
 // this structure's room with that id, or null
-  static function roomByID(state: _FacilityState, roomID: Int): _Room
+  public static function roomByID(state: _FacilityState, roomID: Int): _Room
     {
       for (r in state.rooms)
         if (r.id == roomID)
@@ -423,7 +423,8 @@ class FacilityConnect
               // correct — but scenario.AlienMissionCommon locks a room by taking the FIRST door it
               // finds for it and stopping, so a duplicate pair leaves the other way in unlocked
               if (cutDoorToReached(state, r, seen, false) ||
-                  cutDoorToReached(state, r, seen, true))
+                  cutDoorToReached(state, r, seen, true) ||
+                  clearWayToReached(state, r, seen))
                 opened = true;
             }
           // nothing could be opened this round, so nothing will be next round either
@@ -565,6 +566,65 @@ class FacilityConnect
         skip: false,
       });
       return true;
+    }
+
+// LAST RESORT: take a piece of furniture away rather than leave a room sealed.
+//
+// cutDoorToReached needs three things at once — masonry to cut, a reached cell on the far side, and
+// a cell you can STAND ON on the room side — and it is the third that runs out. A room's perimeter
+// is where all of its furniture goes, so a room can be ringed by its own fittings with a perfectly
+// good corridor on the other side of every wall, and there is then nowhere to put a door however
+// many rounds the loop runs.
+//
+// WHY THIS IS ALLOWED TO DELETE SOMETHING, when nothing else in generation does: the alternative is
+// what the pass exists to prevent. A compound with a room that renders perfectly and cannot be
+// entered still spawns clues, guards and mission anchors inside it — so one fitting fewer is not a
+// close call. It is rare enough to stay a last resort: measured at 4 seeds in 20000 with the room
+// zones in, against 0 in 10000 before them, and the zones' own lane rule (gen.blocks.RoomBlock
+// .standing) is what took it down to that.
+  static function clearWayToReached(state: _FacilityState, room: _Room,
+      seen: Array<Array<Bool>>): Bool
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (s in getRoomWallSpots(room))
+        {
+          var d = deltaMap[s.dir];
+          var fx = s.x + d.x;
+          var fy = s.y + d.y;
+          if (fx < 0 ||
+              fy < 0 ||
+              fx >= ctx.width ||
+              fy >= ctx.height ||
+              !seen[fx][fy])
+            continue;
+          // the wall itself has to be something a door can be in or already is
+          if (cells[s.x][s.y] != Const.TILE_BUILDING &&
+              cells[s.x][s.y] != Const.TILE_FLOOR_LINO)
+            continue;
+          // and the room side has to be a cell that is blocked ONLY by something standing on it —
+          // the unwalkable twin of a floor is exactly one tileset row above the walkable one, so
+          // undoing it is the same arithmetic FacilityRooms.paintRoomFloor did
+          var nx = s.x - d.x;
+          var ny = s.y - d.y;
+          var nt = cells[nx][ny];
+          if (nt < 0 ||
+              nt >= walk.length ||
+              walk[nt] == 1 ||
+              !ctx.hasObjectAt(nx, ny))
+            continue;
+          var below = nt - UNWALKABLE_TILE_OFFSET;
+          if (below < Const.OFFSET_CHEM_LAB ||
+              below >= walk.length ||
+              walk[below] == 0)
+            continue;
+          for (o in ctx.getObjectsAt(nx, ny))
+            ctx.removeObject(o);
+          cells[nx][ny] = below;
+          return true;
+        }
+      return false;
     }
 
 // is there already a door recorded between these two rooms?

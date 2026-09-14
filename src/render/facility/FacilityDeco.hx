@@ -287,6 +287,8 @@ class FacilityDeco
           case _FittingKind.FIT_STALL: FacilityStyle.STALL_H;
           case _FittingKind.FIT_BASIN: FacilityStyle.BASIN_H;
           case _FittingKind.FIT_PARTITION: FacilityStyle.PART_H;
+          case _FittingKind.FIT_SOFA: FacilityStyle.DECO_SOFA_H;
+          case _FittingKind.FIT_TABLE_LOW: FacilityStyle.DECO_TABLE_LOW_H;
           default: 0.0;
         };
     }
@@ -453,6 +455,16 @@ class FacilityDeco
           w = FacilityStyle.BASIN_W;
           d = FacilityStyle.BASIN_D;
         }
+      else if (kind == _FittingKind.FIT_SOFA)
+        {
+          w = FacilityStyle.DECO_SOFA_W;
+          d = FacilityStyle.DECO_SOFA_D;
+        }
+      else if (kind == _FittingKind.FIT_TABLE_LOW)
+        {
+          w = FacilityStyle.DECO_TABLE_LOW_W;
+          d = FacilityStyle.DECO_TABLE_LOW_D;
+        }
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
       var dir = wall(m, col, row, Const.isLowFitting(kind));
@@ -584,6 +596,11 @@ class FacilityDeco
             basin(b, m, col, row, x0, x1, z0, z1, y, h, dir, head);
           case _FittingKind.FIT_PARTITION:
             partition(b, m, col, row, x0, x1, z0, z1, y, h, dir);
+          // the lounge's pair, and the only kinds here that emit NOTHING. Every other glb in this
+          // family is a switch over quads that came first; these two were modelled from the start,
+          // so there is no emitted version to fall back to — and a case is still required, because
+          // `default` below is the rack and an unlisted kind would be drawn as one
+          case _FittingKind.FIT_SOFA | _FittingKind.FIT_TABLE_LOW:
           case _FittingKind.FIT_MACHINE | _FittingKind.FIT_MACHINE_LOW:
             // the same four faces again, and the ONLY kind here where EVERY one of them maps 0..1 —
             // the lid included. It was emitted with `face`/`cap` first, tiling off the world the way
@@ -1209,6 +1226,18 @@ class FacilityDeco
           path: RenderConfig.MODELS.facilityBasin,
           h: FacilityStyle.BASIN_MESH_H,
           on: FacilityStyle.DECO_BASIN_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_SOFA,
+          path: RenderConfig.MODELS.facilitySofa,
+          h: FacilityStyle.DECO_SOFA_H,
+          on: FacilityStyle.DECO_SOFA_GLB,
+        },
+        {
+          kind: _FittingKind.FIT_TABLE_LOW,
+          path: RenderConfig.MODELS.facilityTableLow,
+          h: FacilityStyle.DECO_TABLE_LOW_H,
+          on: FacilityStyle.DECO_TABLE_LOW_GLB,
         },
       ];
       var out = [];

@@ -106,6 +106,9 @@ class ConsoleCompletion
       ];
       if (Const.isDebug)
         {
+          rootChildren.push({ lit: 'area', next: [
+            { lit: 'regen' },
+          ] });
           rootChildren.push({ lit: 'give', next: [
             { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },
             { lit: 'item', next: [ { slot: '[item]', values: item } ] },

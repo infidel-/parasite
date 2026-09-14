@@ -656,6 +656,22 @@
       "last_sig": "n1/-1/512/0.01/-/-",
       "last_converted": "2026-09-13T07:06:56Z"
     },
+    "facility/deco-sofa": {
+      "src": "facility/deco-sofa.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the lounge zone's two-seater (models-src/facility/lounge_build.py), and the first fitting in this family whose case is the SILHOUETTE rather than the draw call -- every flag above it converted an emitted slab to stop spending three texture labels on it, where this one never had an emitted version to save. A sofa read from above is a rectangle with a bite out of it: two arms, a back, and the seat sunk between them, and that notch is the whole of what says sofa rather than crate. TRELLIS was not tried -- a couch is a soft object and every bake this family has taken of one of those came back as mush (docs/3d-render.md's sewer-pile row). 540 tris, 3.0 x 1.6 x 2.0, z_min 0, holes 0, coplanar 0 (buildlib.check). THE PLINTH IS NOT DECORATION: upholstery modelled all the way to the floor reads as a block of cloth because there is no line under it for the eye to sit the object on, so the bottom 0.35 is the dark painted skirt the cabinet's own toe kick does the same job with, and the body overhangs it by 0.09 on every side. THE FIRST BUILD BUTTED ITS PIECES and buildlib.check returned 18 co-facing pairs at gap 0 -- a box assembly may not have its hidden faces deleted (that is a hole) and may not leave two of them on one plane (that is a z-fight), so BURY = 0.03 sinks the seat into both arms and the back, and the back sits BETWEEN the arms rather than across them. NO NEW MANIFEST ART BEYOND THE PACK: tools/modelsheet.py packs the four BUILT lounge labels into models-src/facility/lounge-sheet.png at 2x2, shared with facility/deco-table-low, so both objects wear one material and the per-label lift fits are already in the pixels.",
+      "last_converted": "2026-09-14T17:30:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "facility/deco-table-low": {
+      "src": "facility/deco-table-low.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the low table the sofa faces, second object out of models-src/facility/lounge_build.py. 540 tris, 1.8 x 1.2 x 1.0, z_min 0, holes 0, coplanar 0. FOUR LEGS AND NOT A PLINTH, which is the one shape decision in it: at this camera's 51 degree pitch a knee-high table is seen THROUGH, and the gap under it is the only thing that distinguishes it from a crate. The slab overhangs them by a leg's width. Its lid takes the top-down art (facility/table-top, authored at 0.0867 linear against deco-cabinet-top's 0.0860 -- a horizontal face keeps about 0.71 of its albedo here against a vertical one's 0.2, so tops are authored darker to READ alike) and every other face the edge band, cut from below the lipping line so a tiling swatch does not repeat it up the edge. Shares lounge-sheet.png with facility/deco-sofa.",
+      "last_converted": "2026-09-14T17:30:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
     "facility/desk-mug": {
       "src": "facility/desk-mug.glb",
       "tris": -1,

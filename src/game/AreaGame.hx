@@ -662,6 +662,29 @@ class AreaGame extends _SaveObject
           }
     }
 
+// DEBUG ONLY (console: area regen). throw this area's map and everything standing on it away so
+// the next enter() builds it again. the player must already be out of the area - leave() has run -
+// because every object here is removed outright. the player's host goes with them and that is
+// correct - enter() re-creates its entity and adds it back at the new spawn point
+  public function regenerate()
+    {
+      for (ai in [ for (ai in _ai) ai ])
+        removeAI(ai);
+      for (o in [ for (o in _objects) o ])
+        removeObject(o);
+      _cells = [];
+      tiles = [];
+      clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
+      _decalCells = [];
+      generatorInfo = null;
+      _pathEngine = null;
+      _boothX = -1;
+      _boothY = -1;
+      isGenerated = false;
+    }
+
 // generate a new area map
   public function generate()
     {

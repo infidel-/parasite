@@ -126,6 +126,11 @@ class GenRun
         }
       add('blocks/TOTAL', blocks.length);
 
+      // and every node of the finished tree at any depth, which is where the room level shows up:
+      // `nodes/bench` and `nodes/slot` are the furniture gate the decoration spawn count could never
+      // be, because a spawn count cannot tell a bench that was never laid from one that was laid bare
+      GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
+
       if (verbose)
         {
           log('[gen] seed ' + ctx.seed + ' roadNorth=' + roadNorth + ' blocks=' + blocks.length);

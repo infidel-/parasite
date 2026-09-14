@@ -68,9 +68,14 @@ class FacilityGen
 
 // build one node of the tree.
 //
-// the filler table, and the whole of it. A kind with no case here is a leaf that writes nothing,
-// which is exactly right for the two kinds that ARE the base fill — 'yard' and 'parking' are open
-// lot, and open lot is what the grid was blanked to
+// the filler table for the BLOCK level, and the whole of it. A kind with no case here is a leaf that
+// writes nothing, which is exactly right for the two kinds that ARE the base fill — 'yard' and
+// 'parking' are open lot, and open lot is what the grid was blanked to.
+//
+// the room kinds under a building fall through here on purpose. They are built and filled inside
+// generateBuilding, by gen.blocks.RoomBlock through a walk of their own, because a room's contents
+// have to be standing before the building's last pass runs; the area walk meets them again a level
+// later and must do nothing when it does
   static function fill(state: _FacilityState, node: _GenNode)
     {
       var cells = state.area.getCells();
@@ -86,7 +91,7 @@ class FacilityGen
             // that rect, into the gap FacilityBlocks.splitProfile leaves between plots, which is why
             // that gap is 2 and not 1 — and why FacilityBlocks.EDGE_MARGIN keeps a plot off the grid
             // edge, where there is no neighbour to borrow the gap from
-            FacilityBuilding.generateBuilding(state, node.x1, node.y1, w, h);
+            FacilityBuilding.generateBuilding(state, node);
 
           case FacilityBlocks.HANGAR:
             // and the hangar sits one cell inside its plot on every side, because it is the one
