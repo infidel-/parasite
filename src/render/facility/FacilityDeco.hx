@@ -407,7 +407,18 @@ class FacilityDeco
         {
           var cx = (col + 0.5) * CELL - half;
           var cz = (row + 0.5) * CELL - half;
-          var alongX = isKind(m, col - 1, row, kind) || isKind(m, col + 1, row, kind);
+          // THE AXIS IS THE ONE WITH MORE NEIGHBOURS ON IT, and a plain `has an x neighbour` read it
+          // wrong at the one cell that matters. The T's junction is the middle of the BAR with the
+          // stem arriving on one hand: one x neighbour against two in z, so "any x neighbour" called
+          // the bar's own cell a horizontal run, spanned it the full CELL in x — reaching a boundary
+          // the stem is not on — and then took BOTH z hands as crossing arms. Four arms out of three
+          // neighbours, reported from the game as the divider being + shaped instead of T. Counting
+          // leaves every straight run and every stub exactly where it was
+          var ax = (isKind(m, col - 1, row, kind) ? 1 : 0) +
+            (isKind(m, col + 1, row, kind) ? 1 : 0);
+          var az = (isKind(m, col, row - 1, kind) ? 1 : 0) +
+            (isKind(m, col, row + 1, kind) ? 1 : 0);
+          var alongX = (ax > 0 && ax >= az);
           var hw = (alongX ? CELL : FacilityStyle.PART_T) / 2;
           var hd = (alongX ? FacilityStyle.PART_T : CELL) / 2;
           return {

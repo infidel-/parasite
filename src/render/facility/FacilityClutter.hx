@@ -86,8 +86,104 @@ class FacilityClutter
             var office = (m.surf[row][col] == Surf.OFFICE);
             n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK, office);
           }
+      n += slots(m, b, bOffice);
       add(scene, b, FacilityStyle.CLUTTER_TEX);
       add(scene, bOffice, FacilityStyle.CLUTTER_OFFICE_TEX);
+      return n;
+    }
+
+// the CLUTTER SLOTS: every piece of standing furniture with a usable LID, dressed the same way a
+// worktop is and out of the same two sheets.
+//
+// TWO KINDS AND NOT EVERY FITTING, and the test is whether the top is a surface somebody would put
+// something down on. A bookcase's lid is flat and at hand height; the lounge table exists to have
+// things on it and read as a moulded slab without them. A rack is louvred, a machine's lid carries a
+// drawn gland (art/textures.json facility/deco-machine-top) and a cabinet is chest-high with a
+// rounded top — none of the three is a shelf.
+//
+// THE RECT COMES OFF FacilityDeco.rectOf, which is the same pure function of the saved grid the
+// electrical service asks for the same reason: the lid's real footprint is the fitting slid along its
+// own wall and stood STAND_GAP off the slab face, and a second copy of that arithmetic here would be
+// wrong in exactly the places that are hard to see
+  static function slots(m:Facility, lab:MeshBuf, office:MeshBuf):Int
+    {
+      var n = 0;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            var kind = m.deco[row][col] - 1;
+            if (kind != _FittingKind.FIT_BOOKCASE &&
+                kind != _FittingKind.FIT_TABLE_LOW)
+              continue;
+            var isOffice = (m.surf[row][col] == Surf.OFFICE);
+            n += slot(isOffice ? office : lab, m, col, row, kind,
+              isOffice ? PICK_OFFICE : PICK);
+          }
+      return n;
+    }
+
+// one lid's worth: 0..CLUTTER_SLOT_MAX items scattered over it, each inset by its own half size so
+// nothing overhangs, and spaced off the ones already down. the same rejection sampler `cell` runs,
+// against a rect that is the FITTING and not the grid
+  static function slot(b:MeshBuf, m:Facility, col:Int, row:Int, kind:Int, pick:Array<Int>):Int
+    {
+      var q = FacilityDeco.rectOf(m, col, row, kind);
+      var g = FacilityModel.mix((col * 1274126177) ^ (row * 1103515245));
+      var want = g % (FacilityStyle.CLUTTER_SLOT_MAX + 1);
+      // and the LOUNGE TABLE is floored at one, for the workstation desk's reason one function down:
+      // a bookcase lid is a lid and may be bare, where a low table in front of a sofa exists to have
+      // something on it and reads as an unused moulding without
+      if (kind == _FittingKind.FIT_TABLE_LOW &&
+          want == 0)
+        want = 1;
+      var cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2;
+      var spots:Array<ClutterSpot> = [];
+      var n = 0;
+      for (i in 0...want)
+        {
+          var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
+          var sz = FacilityStyle.CLUTTER_SZ +
+            ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR;
+          var lid = Math.min(q.x1 - q.x0, q.z1 - q.z0) * FacilityStyle.CLUTTER_SLOT_FILL;
+          if (sz > lid)
+            sz = lid;
+          var r = sz * 0.5 + FacilityStyle.CLUTTER_GAP;
+          var rx = (q.x1 - q.x0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
+          var rz = (q.z1 - q.z0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
+          if (rx <= 0 ||
+              rz <= 0)
+            continue;
+          var ok = false;
+          var x = cx, z = cz;
+          for (t in 0...FacilityStyle.CLUTTER_TRIES)
+            {
+              var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
+              x = cx + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              z = cz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = true;
+              for (s in spots)
+                {
+                  var dx = x - s.x, dz = z - s.z;
+                  if (dx * dx + dz * dz < (r + s.r) * (r + s.r))
+                    {
+                      ok = false;
+                      break;
+                    }
+                }
+              if (ok)
+                break;
+            }
+          if (!ok)
+            continue;
+          spots.push({
+            x: x,
+            z: z,
+            r: r,
+          });
+          emit(b, x, z, sz, ((h >>> 12) % 1000) / 1000 * 2 * Math.PI,
+            pick[(h >>> 22) % pick.length], q.h + FacilityStyle.CLUTTER_Y);
+          n++;
+        }
       return n;
     }
 
@@ -195,7 +291,8 @@ class FacilityClutter
             r: sz * 0.5 + FacilityStyle.CLUTTER_GAP,
           });
           emit(b, px, pz, sz, ((g >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            pick[(g >>> 22) % pick.length]);
+            pick[(g >>> 22) % pick.length],
+            FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y);
           n++;
         }
       for (i in 0...want)
@@ -243,7 +340,8 @@ class FacilityClutter
           });
           emit(b, x, z, sz,
             ((h >>> 12) % 1000) / 1000 * 2 * Math.PI,
-            pick[(h >>> 22) % pick.length]);
+            pick[(h >>> 22) % pick.length],
+            FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y);
           n++;
         }
       return n;
@@ -259,7 +357,9 @@ class FacilityClutter
 // THE UV IS THE SHEET'S CELL and v is flipped, the trap FacilitySink.emit records: three flips y, so
 // the source's TOP row is the HIGH v. Reading order across the sheet is the same order the prompt
 // listed its 64 subjects in
-  static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int):Void
+// `y` is a parameter for the CLUTTER SLOTS and nothing else: a bench decal lies at BENCH_H and a slot
+// decal at its own fitting's lid, and that is the only difference between the two families
+  static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int, y:Float):Void
     {
       var hs = sz * 0.5;
       var cs = Math.cos(yaw), sn = Math.sin(yaw);
@@ -276,7 +376,6 @@ class FacilityClutter
       var cc = idx % t, cr = Std.int(idx / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
       var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
-      var y = FacilityStyle.BENCH_H + FacilityStyle.CLUTTER_Y;
       MeshBufTools.quad(b,
         [wx[0], y, wz[0]], [wx[1], y, wz[1]], [wx[2], y, wz[2]], [wx[3], y, wz[3]],
         [u0, v0, u1, v0, u1, v1, u0, v1]);

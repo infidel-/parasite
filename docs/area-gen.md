@@ -248,6 +248,24 @@ dealing sofas as ordinary wall furniture (measured live: three sofas and one tab
 two of them standing where a bookcase was asked for). They are tagged `lounge` now. The washroom's
 three never had the problem because nothing ever asks `Deco` for a `toilet` fitting.
 
+**THE SUITE IS A RUN ALONG THE WALL, NOT A DEPTH-2 PAIR.** The lounge's low table went on the cell
+one step into the room — the plan's "depth 2" shape — and that cell is the MIDDLE of an office, which
+is the one strip everything has to walk through and the one a room this size has to spare. Reported
+from the game as a small table dumped in the middle of the floor. The sofa and the table stand on two
+ADJACENT cells of the bay now, so a lounge is a depth-1 run like every other zone here, and
+`loungeRun` counts PAIRS rather than cells — a bay with two usable cells at opposite ends houses no
+lounge. `nodes/lounge` 1.90 → 1.63, which is what a pair costs over a single spot.
+
+**A DOORWAY IS NOT ONLY ITS OWN CELL.** Every wall-hugging pass in this tree made one test about
+openings — `nextTo(..., TEMP_BUILDING_INNER_DOOR)`, which reaches exactly one cell — and that is
+enough for a run one cell deep and not enough for anything standing further in. The rule for the rest
+was already here, hand-written inside `isBigTableSpotValid` as a march of three cells from each door;
+it is `FacilityRooms.inDoorLane` now, asked of a CELL rather than of a rect so every zone can ask it,
+and `RoomBlock.solid` does. The depth is the room's own half-span, which is what "clear to the middle"
+means and is never deeper than the fixed 3 it replaces. It bites where a door sits in the corner of
+its wall, which puts the strip you walk in on along the bay line of the NEXT wall — the one place
+orthogonal adjacency cannot see it. `spawns/decoration` 127.13 → 126.19, `doors` 18.71 → 18.63.
+
 **A TEMP tile test after the floor paint tests nothing, and the washroom drain had been dead for as
 long as it existed.** `paintRoomFloor` is what turns `TEMP_BUILDING_ROOM` into a final id, so
 `roomToilet`'s `cells[cx][cy] == TEMP_BUILDING_ROOM && area.chance(50)` was false at the first
@@ -376,19 +394,19 @@ binds the block profile.
 Baseline, 4000 seeds across all four sizes — **the numbers a later phase diffs against**:
 
 ```
-rooms          19.36   spawns/TOTAL      170.09   blocks/TOTAL  6.03
-doors          18.71   spawns/decoration 127.13   blocks/yard   1.03
-cells/rooms   823.87   spawns/door        25.98   planTries     1.22
+rooms          19.35   spawns/TOTAL      169.03   blocks/TOTAL  6.03
+doors          18.63   spawns/decoration 126.19   blocks/yard   1.03
+cells/rooms   823.50   spawns/door        25.91   planTries     1.22
 cells/building 1192    spawns/vent         8.16   planRetried   0.17
 cells/yard      392    spawns/floorDrain   4.28
 cells/parking   359    spawns/sewerHatch   4.52
 unreachableRooms 0        reachedCells 3085 / walkableCells 3098
 
-nodes/bench       33.29   nodes/machinery        4.37   nodes/room-lab      13.40
-nodes/workplace    8.67   nodes/server-rack-bay  3.90   nodes/room-office    3.78
-nodes/slot        50.30   nodes/lounge           1.90   nodes/room-washroom  1.19
-nodes/vent-cap     6.84   nodes/stall-run        2.37   nodes/lobby          1.19
-                          nodes/basin-run        2.37
+nodes/bench       33.31   nodes/machinery        4.35   nodes/room-lab      13.39
+nodes/workplace    8.62   nodes/server-rack-bay  3.80   nodes/room-office    3.78
+nodes/slot        50.68   nodes/lounge           1.63   nodes/room-washroom  1.19
+nodes/vent-cap     6.83   nodes/stall-run        2.38   nodes/lobby          1.19
+                          nodes/basin-run        2.38
 ```
 
 **`nodes/*` counts every node of the finished tree at any depth**, which is the furniture gate a

@@ -952,3 +952,87 @@ a corridor bin and a cubicle pan: the mouth reads as a black letterbox with no p
 it, and the water reads as a blue-green oval with its sheen inside the white bowl. The pan's sampled
 luma moves 94 → **86** — the water is dark and it is a third of what the camera sees of this prop.
 
+## Seven in-game reports, and the wide one is RENDER-ONLY FURNITURE IS STILL FURNITURE (2026-09-15)
+
+**The washroom divider z-fought the roof.** `PART_H` was `WALL_H`, and `ROOF_Y` **is** `WALL_H`, so
+`FacilityDeco.cope` laid the divider's lid exactly on the roof deck's cap — a coplanar pair running
+the length of the wall at the one height a 51° camera looks straight down on. `WALL_H - 1.0`. It was
+also simply too tall to read as a divider, which is the same fix and was the report's own first half.
+
+**The divider came out + shaped instead of T.** `FacilityDeco.rectOf` picked a partition cell's axis
+as "has a neighbour on x", which is right for every cell of a straight run and wrong for the one cell
+that matters: the T's junction is the middle of the BAR with the stem arriving on one hand, so it has
+ONE x neighbour and TWO in z. Called horizontal, the cell spanned the full CELL in x — reaching a
+boundary the stem is not on — and then took BOTH z hands as crossing arms. Four arms out of three
+neighbours. **Count the neighbours per axis and take the bigger**; every straight run and every stub
+lands exactly where it did.
+
+**A floor unit stood inside a corridor cabinet, and its lead went to a pipe.** `FacilityTables
+.cabinets` stands corridor casework without writing a tile, a `deco` or an object — that is the whole
+point of it, it is the one thing allowed to stand where the player walks — so `FacilityPaint
+.freeFloor` reads those cells as bare lino and `FacilityCable.units` parked a distribution board in
+the middle of one. `FacilityCable.fittings` already dodged the casework by claiming its FACES off the
+same pure function; `casework(m)` now claims its CELLS, and `open` tests it, which fixes standing, the
+lead's path and the loose scatter at once. The other half: `FIT_FEED` listed sheet cell **22, a run of
+steel conduit held by saddle clips**. Conduit is CONTAINMENT — a cable inside it does not come out of
+the middle — so it is off the list. A tray (23) stays: a cable lying loose in a tray can leave it
+anywhere, which is what a tray is.
+
+**The wall under a washroom light well had no grime.** `FacilityGrime` takes `Wall.SOLID` only, for a
+reason that holds for a ribbon and not for a well: a ribbon's sill is **0.93** and a band to `GRIME_H`
+3.0 would run across the glass, where a well's sill is `WINDOW_HIGH_SILL` **3.87** and the wall under
+it is unbroken masonry the whole way. Reported as a clean strip under each opening and a dirty one
+between.
+
+**And the light wells had no jambs at all.** `FacilityGeom.thick` reads `Wall.WINDOW`, so a
+`WINDOW_HIGH` cell is FULL wall thickness — which means both its neighbours take the equal-thickness
+branch of the butt-cap test, emit nothing, and the opening's two sides were open straight through 2
+units of masonry. A ribbon never needs this because glazing sits strictly INSIDE the wall that bounds
+its run and the flanking cells cap it for free. `jamb` took its two heights and its tile as parameters
+and the window loop calls it for `w.high`.
+
+**The basin, four probed faces.** (1) The bowl's skirt started at r 0.94 **below** the counter lid and
+flared to 1.25 × 0.775 by the lid plane, so the flange CROSSED the worktop instead of resting on it
+and the laminate showed through its own edge; it starts at the flange underside 0.006 clear now, and
+the shaft went from 1.07 × 0.62 × **0.78 deep** to 1.12 × 0.72 × **0.07** — at 51° you see
+`depth × 0.81` of horizontal into a hole, which was 0.63 against an overhang of 0.155. (2) The
+worktop ring is four long thin quads and `buildlib.unwrap` laid a whole cell of laminate over each,
+i.e. one art at four densities; `flat_uv` over the counter's own plan reproduces exactly what
+`FacilityGeom.cap` lays on a bench. (3) The end panel's column of apron was cropped by eye at 0.15 of
+the cell and wanted **0.55** — the cell carries 2.222 repeats across, an end is 2.2 × 1.8 and so wants
+1.222 of them. (4) The tap's plain swatch measured mean 91 at **sd 20.0** with texels down at 52, and
+`tap`'s gooseneck is a sweep whose every little quad takes the WHOLE patch through `unwrap` — so those
+dark texels drew as a black outline round each one. Rescanned the sheet for the most uniform steel on
+it: mean 101 at **sd 1.1**. **A plain swatch is a FITTED VALUE and uniformity is the fit.**
+
+**The red drum.** The hand-modelled trio wears a pack4 drop generated against `style_prop`, which
+deliberately keeps its subject saturated, and none of the three carried a `sat` key: measured
+**sampled 175/50/23, chroma 152.3** — seven times what its own TRELLIS-era predecessor
+`facility/drum-rad` shipped at and eleven times `facility/deco-sofa`'s 13.4. `sat: 0.5` as asked:
+**152.3 → 70.8**, red channel 175 → 143, luma held at 74.7 by the Rec.709 mix, which is what carried
+the "too bright" half of the report. Still the most saturated thing in the compound, and the two
+siblings are hotter (bio 196.5, steel 76.5) — recorded, not fixed.
+
+**One thing added rather than fixed: CLUTTER SLOTS.** A worktop is not the only flat surface at hand
+height, and a bookcase lid and the lounge table both read as a moulded block with nothing on them.
+`FacilityClutter.slots` walks `m.deco` for the two kinds with a usable lid, takes the rect off
+`FacilityDeco.rectOf` — the same pure function the electrical service asks — and runs the bench
+sampler over it at the fitting's own height. No art, no new mesh, no draw call: the decals go into the
+two buffers the benches already merge. **Size the item to the surface**: at `CLUTTER_SZ` 0.8 plus its
+variance plus the inset there was no wander left on a 1.2-deep table and the sampler rejected every
+roll, so the table shipped bare — `CLUTTER_SLOT_FILL` 0.62 of the lid's shorter side.
+
+**And the desk trinkets.** A mug on EVERY desk at a fixed offset at the desk's own yaw is the rank
+this family was added to break: both are rolled now (70/55), both jitter ±0.22 and take a free turn.
+The reported bug underneath it — "the plant always stands on the decoration" — is that `trinket` never
+tested `m.tableDeco`, and the far spot and a standing icon's own contact circle are both at the back
+of the desk, so on a decorated cell they overlapped by construction rather than by luck.
+
+**VERDICT: landed.** `make gen` 4000 seeds zero failures and 20000 seeds zero failures across the two
+generator-side changes that rode with this (the lounge's table moved to the wall line, and a named
+door lane). Basin rebuilt at 820 tris, `holes 0, coplanar 0`. Live on a fresh compound with WYSIWYG
+lighting: the divider stops a clear metre under the deck and reads as a T, the light wells show three
+panes in a real reveal with the damp band running unbroken beneath them, the basin's worktop is one
+laminate at one density, the sofa and its table stand side by side against the wall with a folder on
+the table, and a bookcase carries something on its lid.
+

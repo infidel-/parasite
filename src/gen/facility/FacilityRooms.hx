@@ -26,7 +26,6 @@ class FacilityRooms
   // the room for its basin, and the clue's own activation range then wants the remaining two not to
   // be the same corner of the same run
   static inline var TABLE_CLEAR_MIN = 3;
-  static inline var BIG_TABLE_DOOR_CLEARANCE = 3;
 
 // hand each room of this structure a template.
 //
@@ -199,64 +198,62 @@ class FacilityRooms
           }
     }
 
-// check if a big table spot keeps room door ingress clear
+// check if a big table spot is clear floor and out of every door's lane
   static function isBigTableSpotValid(state: _FacilityState, room: _Room,
       doors: Array<_Door>, x: Int, y: Int, w: Int, h: Int): Bool
     {
       var cells = state.area.getCells();
       for (i in 0...h)
         for (j in 0...w)
-          if (cells[x + j][y + i] != TEMP_BUILDING_ROOM)
+          if (cells[x + j][y + i] != TEMP_BUILDING_ROOM ||
+              inDoorLane(room, doors, x + j, y + i))
             return false;
+      return true;
+    }
 
+// is this cell in the LANE a doorway opens onto: the strip straight in from an opening, one cell wide
+// and as deep as the middle of the room.
+//
+// A DOORWAY IS NOT ONLY ITS OWN CELL, and every wall-hugging pass in this tree behaved as though it
+// were — the one test they all make is `nextTo(..., TEMP_BUILDING_INNER_DOOR)`, which reaches exactly
+// one cell. That is enough for a run one cell deep and it is not enough for anything standing further
+// in: the lounge's low table stood in the middle of an office in the line of its own door. The rule
+// was already here, hand-written inside isBigTableSpotValid as a march of BIG_TABLE_DOOR_CLEARANCE
+// cells; this is that rule with a name, asked of a cell instead of a rect so every zone can ask it.
+//
+// THE DEPTH IS THE ROOM'S OWN HALF-SPAN, which is what "clear to the middle" means, and it is never
+// deeper than the fixed 3 it replaces: a themed room is at most ROOM_SIZE on a side. Past the middle
+// you are in the room, and walking round the furniture is what a room is for
+  public static function inDoorLane(room: _Room, doors: Array<_Door>, x: Int, y: Int): Bool
+    {
       for (door in doors)
         {
-          var sx = 0, sy = 0;
-          var dx = 0, dy = 0;
-          var hasIngress = false;
           if (door.x == room.x1 - 1)
             {
-              sx = room.x1;
-              sy = door.y;
-              dx = 1;
-              hasIngress = true;
+              if (y == door.y &&
+                  x - room.x1 < Std.int(room.w / 2))
+                return true;
             }
           else if (door.x == room.x2 + 1)
             {
-              sx = room.x2;
-              sy = door.y;
-              dx = -1;
-              hasIngress = true;
+              if (y == door.y &&
+                  room.x2 - x < Std.int(room.w / 2))
+                return true;
             }
           else if (door.y == room.y1 - 1)
             {
-              sx = door.x;
-              sy = room.y1;
-              dy = 1;
-              hasIngress = true;
+              if (x == door.x &&
+                  y - room.y1 < Std.int(room.h / 2))
+                return true;
             }
           else if (door.y == room.y2 + 1)
             {
-              sx = door.x;
-              sy = room.y2;
-              dy = -1;
-              hasIngress = true;
-            }
-          if (!hasIngress)
-            continue;
-
-          for (i in 0...BIG_TABLE_DOOR_CLEARANCE)
-            {
-              var px = sx + dx * i;
-              var py = sy + dy * i;
-              if (px >= x &&
-                  px < x + w &&
-                  py >= y &&
-                  py < y + h)
-                return false;
+              if (x == door.x &&
+                  room.y2 - y < Std.int(room.h / 2))
+                return true;
             }
         }
-      return true;
+      return false;
     }
 
 // repaint a themed room's floor, walkable cells in `tile` and the cells furniture stands on in its

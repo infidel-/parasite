@@ -12,4 +12,9 @@ typedef TrinketSpot = {
   // ever stand on
   x:Float,
   z:Float,
+  // and which way it is turned. NOT the desk's own yaw, which is what every one of them took for one
+  // build: four desks in a row with four mugs all facing the same way is a shop display. A mug and a
+  // plant have no front worth aiming, a lamp and a tray only read as PUT DOWN if they are not square
+  // to the edge, so this is a free turn rolled off the cell
+  yaw:Float,
 }

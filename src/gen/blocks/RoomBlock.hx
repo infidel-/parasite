@@ -416,12 +416,13 @@ class RoomBlock
       // at 2 seeds in 4000, against 0 in 10000 before these zones existed, and
       // FacilityConnect.connectRooms cannot repair it because a cut needs a walkable cell on the
       // room side as well as the far one
+      var room = FacilityConnect.roomByID(state, node.roomID);
       var left = solidRun(state, node) - 1;
       for (c in cellsOf(node))
         {
           if (left <= 0)
             return;
-          if (!solid(state, c.x, c.y))
+          if (!solid(state, room, c.x, c.y))
             continue;
           FacilityRooms.placeFitting(state, c.x, c.y, kind);
           left--;
@@ -432,52 +433,56 @@ class RoomBlock
 // as a `must`, and `standing` above fills exactly the cells it counted
   public static function solidRun(state: _FacilityState, node: _GenNode): Int
     {
+      var room = FacilityConnect.roomByID(state, node.roomID);
       var n = 0;
       for (c in cellsOf(node))
-        if (solid(state, c.x, c.y))
+        if (solid(state, room, c.x, c.y))
           n++;
       return n;
     }
 
-// stand a two-seater against this bay's masonry with a low table on the floor in front of it.
+// stand a two-seater against this bay's masonry with a low table BESIDE it.
 //
-// THE ONE ZONE THAT REACHES PAST ITS OWN RECT, and it has to: a sofa facing a wall is not a lounge.
-// A bay is the line one cell in from the wall, so "in front" is one cell further into the room —
-// which is the depth-2 shape, stated as a pair of cells rather than as a taller node, because the
-// bay grid is the glazing's and a zone does not get to redraw it
+// THE TABLE IS ON THE WALL LINE AND NOT IN FRONT OF THE SOFA, which is where it went for one build
+// and is what the depth-2 idea cost. A low table on the cell into the room stands in the MIDDLE of an
+// office — the one strip everything has to walk through and the one strip a room this size has to
+// spare — and that is exactly how it read from the game. Beside it, the suite is a depth-1 run like
+// every other zone here: two adjacent cells of the bay, sofa on the first and table on the second,
+// with the floor in front of both left as a lane
   static function lounge(state: _FacilityState, room: _Room, node: _GenNode)
     {
-      var cells = state.area.getCells();
+      var cells = cellsOf(node);
       var d = inward(room, node);
-      for (c in cellsOf(node))
+      for (i in 0...cells.length - 1)
         {
-          if (!loungeSpot(state, room, c.x, c.y, d))
+          var a = cells[i], b = cells[i + 1];
+          if (!loungeSpot(state, room, a.x, a.y, d) ||
+              !loungeSpot(state, room, b.x, b.y, d))
             continue;
-          FacilityRooms.placeFitting(state, c.x, c.y, FIT_SOFA);
-          FacilityRooms.placeFitting(state, c.x + d.x, c.y + d.y, FIT_TABLE_LOW);
+          FacilityRooms.placeFitting(state, a.x, a.y, FIT_SOFA);
+          FacilityRooms.placeFitting(state, b.x, b.y, FIT_TABLE_LOW);
           // ONE suite per zone and then done: a wall of sofas is a waiting room, and this is an
           // office with a corner to sit in
           return;
         }
     }
 
-// can the pair stand here? the wall cell takes everything standing furniture takes, the cell in
-// front of it has to be bare floor inside the room with nothing on it, and THERE HAS TO BE A LANE
-// BEHIND THAT.
+// can one of the pair stand here? the cell takes everything standing furniture takes, and THERE HAS
+// TO BE A LANE IN FRONT OF IT.
 //
 // the lane is the guard this zone could not do without, and it is the only one in the family: every
-// other zone stands against masonry, where the worst it can do is take a cell nobody was walking
-// through. A low table stands in the MIDDLE of the room, and in a room three cells deep the middle
-// is the only way across — measured, 2 seeds in 4000 came out with an office the flood could not
-// reach, both of them 7x3. Requiring the cell past the table to be room floor too says "deep enough
-// to walk round the furniture" without asking anything about the rest of the plan
+// other zone leaves holes in itself by construction — a bench bay skips the cell a neighbour took, a
+// slot rolls 70% — where the suite fills both of its cells outright. Requiring two cells of clear
+// room floor in front says "deep enough to walk past the furniture" without asking anything about the
+// rest of the plan, and it is what keeps a 7x3 office reachable: measured before it existed, 2 seeds
+// in 4000 came out with an office the flood could not reach, both of them 7x3
   static function loungeSpot(state: _FacilityState, room: _Room, x: Int, y: Int,
       d: { x: Int, y: Int }): Bool
     {
       var cells = state.area.getCells();
       var tx = x + d.x, ty = y + d.y;
       var lx = tx + d.x, ly = ty + d.y;
-      return (solid(state, x, y) &&
+      return (solid(state, room, x, y) &&
         inRoom(room, tx, ty) &&
         inRoom(room, lx, ly) &&
         cells[tx][ty] == TEMP_BUILDING_ROOM &&
@@ -495,13 +500,16 @@ class RoomBlock
         y <= room.y2);
     }
 
-// how many spots in this bay could take the pair
+// how many ADJACENT PAIRS in this bay could take the suite. pairs and not cells, because the sofa and
+// the table now stand side by side: a bay with two usable cells at opposite ends houses no lounge
   public static function loungeRun(state: _FacilityState, room: _Room, node: _GenNode): Int
     {
       var n = 0;
       var d = inward(room, node);
-      for (c in cellsOf(node))
-        if (loungeSpot(state, room, c.x, c.y, d))
+      var cells = cellsOf(node);
+      for (i in 0...cells.length - 1)
+        if (loungeSpot(state, room, cells[i].x, cells[i].y, d) &&
+            loungeSpot(state, room, cells[i + 1].x, cells[i + 1].y, d))
           n++;
       return n;
     }
@@ -525,14 +533,17 @@ class RoomBlock
 // fills EVERY cell it is dealt, where a slot rolls and often leaves one — so a bay ending beside an
 // opening walled the room off, FacilityConnect.connectRooms cut an emergency door into it, and the
 // compound came out with two extra doors and, once in 4000 seeds, a room the flood could not reach
-// at all. The same three tests FacilityRooms.roomWallRuns has always made
-  static inline function solid(state: _FacilityState, x: Int, y: Int): Bool
+// at all. The same three tests FacilityRooms.roomWallRuns has always made, plus the DOOR LANE — a
+// doorway in a corner of its wall puts the strip you walk in on along the bay line of the NEXT wall,
+// where orthogonal adjacency cannot see it (FacilityRooms.inDoorLane)
+  static function solid(state: _FacilityState, room: _Room, x: Int, y: Int): Bool
     {
       var cells = state.area.getCells();
       return (cells[x][y] == TEMP_BUILDING_ROOM &&
         !nextToWindow(cells, x, y) &&
         !nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) &&
-        !state.area.hasObjectAt(x, y));
+        !state.area.hasObjectAt(x, y) &&
+        !FacilityRooms.inDoorLane(room, FacilityConnect.getRoomDoors(state, room), x, y));
     }
 
 // which worktop family this bay is drawn from

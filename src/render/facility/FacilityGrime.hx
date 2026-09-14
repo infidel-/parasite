@@ -34,10 +34,16 @@ class FacilityGrime
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            // SOLID cells only. a WINDOW cell's face is cut into a sill run and a head run, a SHUTTER
-            // is the hangar's roll-up door, and a doorway carries no masonry down here at all
+            // SOLID cells, and the washroom's LIGHT WELLS with them. A ribbon WINDOW cell is cut into
+            // a sill run and a head run with the sill at 0.93 — under GRIME_H, so a band there would
+            // run across the glass — a SHUTTER is the hangar's roll-up door, and a doorway carries no
+            // masonry down here at all. A light well is none of those: its sill is WINDOW_HIGH_SILL
+            // 3.87, so the wall under it is unbroken masonry the whole 3.0 the band covers, and
+            // skipping it left every washroom with a clean strip under each opening and a dirty one
+            // between
             if (!FacilityModel.isWall(m, col, row) ||
-                m.wall[row][col] != Wall.SOLID ||
+                (m.wall[row][col] != Wall.SOLID &&
+                 m.wall[row][col] != Wall.WINDOW_HIGH) ||
                 m.structures[m.owner[row][col]].hangar)
               continue;
             var s = FacilityGeom.slab(m, col, row);

@@ -94,9 +94,21 @@ class FacilityWork
 // placement is a function of the saved grid alone, so render.facility.FacilityClutter can ask for it
 // and keep its paperwork off them without either pass having to run first.
 //
-// A MUG ON EVERY DESK and one of the other three rolled, both at the BACK on the hand the tower is
-// not on — the tower takes one half of the worktop and the keyboard the front of the other, so this
-// is the strip that is left. Returns kind (an index into TRINKETS) and where
+// A MUG AND ONE OF THE OTHER THREE, each ROLLED, both at the BACK on the hand the tower is not on —
+// the tower takes one half of the worktop and the keyboard the front of the other, so this is the
+// strip that is left. Returns kind (an index into TRINKETS), where, and which way round.
+//
+// EITHER MAY BE ABSENT and a mug used to be on every desk of the compound. Two objects at two fixed
+// offsets at one fixed yaw on every desk is the rank this family was added to break, and the empty
+// roll is what makes a desk somebody's rather than stock — FacilityClutter's own argument for letting
+// its count reach zero, applied to the placed half.
+//
+// AND NEITHER MAY LAND ON THE DECORATION ALREADY STANDING THERE. An office desk is dealt its bay by
+// gen.blocks.RoomBlock.bench, which puts a table decoration on most cells — so the cell can carry a
+// standing sprite whose own contact circle FacilityModel.tableDeco already measured, and these were
+// placed at their fixed offsets with no test against it. Reported from the game as the plant standing
+// on the decoration every time: the far spot and the icon's own box are both at the back of the desk,
+// so on a decorated cell they overlapped by construction rather than by luck
   public static function trinket(m:Facility, col:Int, row:Int):Array<TrinketSpot>
     {
       var p = at(m, col, row);
@@ -106,18 +118,42 @@ class FacilityWork
       var ax = (p.dir < 2 ? 1.0 : 0.0), az = (p.dir < 2 ? 0.0 : 1.0);
       var s = -p.side;
       var g = FacilityModel.mix((col * 668265263) ^ (row * 83492791));
-      return [
+      var out:Array<TrinketSpot> = [];
+      if (g % 100 < FacilityStyle.WORK_MUG_PCT)
+        place(m, out, col, row, 0, p.x + ax * s * FacilityStyle.WORK_TRINKET_NEAR,
+          p.z + az * s * FacilityStyle.WORK_TRINKET_NEAR, g);
+      if ((g >>> 7) % 100 < FacilityStyle.WORK_TRINKET_PCT)
+        place(m, out, col, row, 1 + (g >>> 14) % 3,
+          p.x + ax * s * FacilityStyle.WORK_TRINKET_FAR,
+          p.z + az * s * FacilityStyle.WORK_TRINKET_FAR, FacilityModel.mix(g ^ 0x5bf03635));
+      return out;
+    }
+
+// jitter one trinket off its nominal spot, turn it, and drop it if it has landed on the decoration
+// standing on this cell. the pool is the icon's own contact circle and not the cell, so a flask whose
+// opaque box sits to one side still leaves the other side usable — FacilityClutter reads it exactly
+// this way for its paperwork
+  static function place(m:Facility, out:Array<TrinketSpot>, col:Int, row:Int, kind:Int,
+      x:Float, z:Float, g:Int):Void
+    {
+      var j = FacilityStyle.WORK_TRINKET_JIT;
+      var px = x + (((g % 1000) / 1000) * 2 - 1) * j;
+      var pz = z + ((((g >>> 10) % 1000) / 1000) * 2 - 1) * j;
+      var c = CityConfig.cellToWorld(col, row);
+      var pool = m.tableDeco[row][col];
+      if (pool != null)
         {
-          kind: 0,
-          x: p.x + ax * s * FacilityStyle.WORK_TRINKET_NEAR,
-          z: p.z + az * s * FacilityStyle.WORK_TRINKET_NEAR,
-        },
-        {
-          kind: 1 + g % 3,
-          x: p.x + ax * s * FacilityStyle.WORK_TRINKET_FAR,
-          z: p.z + az * s * FacilityStyle.WORK_TRINKET_FAR,
-        },
-      ];
+          var dx = px - (c.x + pool.dx), dz = pz - (c.z + pool.dz);
+          var r = pool.r + FacilityStyle.WORK_TRINKET_CLEAR;
+          if (dx * dx + dz * dz < r * r)
+            return;
+        }
+      out.push({
+        kind: kind,
+        x: px,
+        z: pz,
+        yaw: ((g >>> 20) % 1000) / 1000 * 2 * Math.PI,
+      });
     }
 
 // the four of them, index-aligned with `trinket`'s kind — so render.facility.FacilityGround.EXTRA and
@@ -271,15 +307,11 @@ class FacilityWork
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            var p = at(m, col, row);
-            if (p == null)
-              continue;
-            var yaw = Math.atan2(DC[p.dir ^ 1], DR[p.dir ^ 1]);
             for (t in trinket(m, col, row))
               tr[t.kind].push({
                 x: t.x,
                 z: t.z,
-                yaw: yaw,
+                yaw: t.yaw,
                 y: FacilityStyle.BENCH_H,
               });
           }

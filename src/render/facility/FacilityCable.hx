@@ -120,6 +120,9 @@ class FacilityCable
   // every cell the compound strikes a KEEP-CLEAR hatch on, filled once per build. see `hatched`
   static var zones:Map<Int, Bool>;
 
+  // and every cell the corridor CASEWORK stands on, filled beside it. see `casework`
+  static var cased:Map<Int, Bool>;
+
 // the whole service, as two merged meshes
 // `extra` is a ribbon buffer somebody else filled — render.facility.FacilityWork's desk leads — and
 // it is merged with this family's own so the whole compound's cable, wall to worktop, stays ONE draw
@@ -129,6 +132,7 @@ class FacilityCable
       var pack = MeshBufTools.make();
       var cab = extra;
       hatch(m);
+      casework(m);
       var socks = sockets(m);
       var fits = fittings(m);
       var all = socks.concat(fits);
@@ -174,17 +178,41 @@ class FacilityCable
         zones.set(cell(m, p.col, p.row), true);
     }
 
+// every cell the corridor casework stands on, as a set.
+//
+// RENDER-ONLY FURNITURE IS STILL FURNITURE, and this family could not see it. FacilityTables.cabinets
+// stands a run of storage units against the corridor walls without writing a tile, a deco or an
+// object — that is the whole point of it, it is the one thing that may stand where the player walks —
+// so `FacilityPaint.freeFloor` reads those cells as bare lino and this pass stood a floor unit in the
+// middle of one. Reported from the game as a corridor cabinet with an electrical machine inside it.
+//
+// `fittings` already dodges the casework, by claiming its FACES off the same pure function; this is
+// the same claim made per CELL, for the three things that stand on or cross the floor instead
+  static function casework(m:Facility):Void
+    {
+      cased = new Map();
+      for (r in FacilityTables.runs(m))
+        {
+          var sc = (r.dir < 2 ? 1 : 0);
+          var sr = (r.dir < 2 ? 0 : 1);
+          for (i in 0...r.len)
+            cased.set(cell(m, r.col + sc * i, r.row + sr * i), true);
+        }
+    }
+
 // one cell's slot in that set
   static inline function cell(m:Facility, col:Int, row:Int):Int
     {
       return row * m.w + col;
     }
 
-// may this family put anything ON this cell at all: free floor that carries no keep-clear hatch
+// may this family put anything ON this cell at all: free floor that carries no keep-clear hatch and
+// no corridor casework
   static inline function open(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityPaint.freeFloor(m, col, row) &&
-        !zones.exists(cell(m, col, row));
+        !zones.exists(cell(m, col, row)) &&
+        !cased.exists(cell(m, col, row));
     }
 
 // and may a lead merely PASS along it on its way out to a unit — `open` widened by exactly one thing,

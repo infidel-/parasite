@@ -551,7 +551,8 @@ class FacilityGeom
                 // as two open slots you could see straight through. each jamb sits in a cell
                 // boundary plane looking INTO the cell, i.e. wound the opposite way from a wall
                 // face at the same place, which is what makes it `face` with one axis collapsed
-                jamb(soffit, m.doors[di].alongX, s);
+                jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
+                  FacilityStyle.WALL_TILE);
                 // and the threshold under them, for the surface the doorway opens onto being lower
                 // than the floor it leads to — see `threshold`
                 threshold(soffit, m.doors[di].alongX, s);
@@ -625,6 +626,12 @@ class FacilityGeom
           capDown(head, x0, x1, z0, z1, lo + tall, FacilityStyle.HEAD_TILE);
           if (lo >= 0.05)
             cap(head, x0, x1, z0, z1, lo, FacilityStyle.HEAD_TILE);
+          // and the two SIDES of it, for a light well only — see `jamb`. the flanking cells close a
+          // ribbon's ends by being thicker than it; a well is punched in masonry of its own thickness
+          // and had nothing on either hand at all
+          if (w.high)
+            jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
+              FacilityStyle.HEAD_TILE);
         }
 
       // the parapet ring, once the wall ring it stands on is complete — and the hangar's opposite
@@ -961,23 +968,26 @@ class FacilityGeom
       return n;
     }
 
-// the two side reveals of a door opening, from the floor up to the lintel. both lie in the cell
-// boundary planes the wall line runs through, and both look INWARD — the opposite way round from a
-// wall face at the same place — so each is emitted for the direction pointing at the other jamb
-  static function jamb(b:MeshBuf, alongX:Bool, s:Rect):Void
+// the two side reveals of an opening, from `y0` to `y1`. both lie in the cell boundary planes the
+// wall line runs through, and both look INWARD — the opposite way round from a wall face at the same
+// place — so each is emitted for the direction pointing at the other jamb.
+//
+// TWO CALLERS AND THE SECOND ONE IS WHY THE HEIGHTS ARE PARAMETERS: a doorway (floor to lintel) and
+// a washroom LIGHT WELL. A ribbon window needs none of this, because glazing sits strictly inside
+// the solid wall that bounds its run and the flanking cells' butt caps close its ends for free — but
+// a light well is punched in a cell that is FULL WALL THICKNESS (FacilityGeom.thick reads
+// Wall.WINDOW and a well is Wall.WINDOW_HIGH), so both its neighbours take the equal-thickness
+// branch, emit nothing, and the opening's sides were left open straight through the masonry
+  static function jamb(b:MeshBuf, alongX:Bool, s:Rect, y0:Float, y1:Float, t:Float):Void
     {
       if (alongX)
         {
-          face(b, s.x0, s.x0, s.z0, s.z1, 3, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
-            FacilityStyle.WALL_TILE);
-          face(b, s.x1, s.x1, s.z0, s.z1, 2, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
-            FacilityStyle.WALL_TILE);
+          face(b, s.x0, s.x0, s.z0, s.z1, 3, y0, y1, t);
+          face(b, s.x1, s.x1, s.z0, s.z1, 2, y0, y1, t);
           return;
         }
-      face(b, s.x0, s.x1, s.z0, s.z0, 1, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
-        FacilityStyle.WALL_TILE);
-      face(b, s.x0, s.x1, s.z1, s.z1, 0, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
-        FacilityStyle.WALL_TILE);
+      face(b, s.x0, s.x1, s.z0, s.z0, 1, y0, y1, t);
+      face(b, s.x0, s.x1, s.z1, s.z1, 0, y0, y1, t);
     }
 
 // the strip of masonry closing a doorway's own threshold, WALL_BASE up to the floor. every OTHER

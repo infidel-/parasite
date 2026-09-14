@@ -663,6 +663,27 @@ class FacilityStyle
   // and how much clear worktop to leave around every decal, on top of its own half-size — without it
   // two items merely touching read as one broken object
   public static inline var CLUTTER_GAP = 0.12;
+  // ---- the CLUTTER SLOTS: the same decals, on the LID of a piece of standing furniture -----------
+  //
+  // a worktop is not the only flat surface at hand height in this compound. A bookcase's top and the
+  // lounge table are both reachable, both empty, and both read as a moulded block without something
+  // left on them. The slot is the fitting's own rect (render.facility.FacilityDeco.rectOf) at its own
+  // height, so nothing here has to know the shape of either object.
+  //
+  // FEWER THAN A BENCH GETS, and that is the surface and not the taste: a bookcase lid is
+  // DECO_BOOKCASE_W x _D against a bench's whole 4 x 4 cell, so the same count would cover it
+  public static inline var CLUTTER_SLOT_MAX = 2;
+  // how far in from the lid's edge an item's CENTRE may go, on top of its own half size — a decal
+  // half over the edge reads as a broken object where one half over a worktop's edge never could,
+  // because a worktop's edge is the cell and this one is the thing itself
+  public static inline var CLUTTER_SLOT_INSET = 0.10;
+  // and the largest an item may be as a fraction of the lid's SHORTER side. A bench decal is sized
+  // for a 4 x 4 cell and a lounge table is DECO_TABLE_LOW_D 1.2 deep: at CLUTTER_SZ 0.8 plus its
+  // variance plus the inset there was no wander left at all on that axis, so the sampler rejected
+  // every roll and the table shipped bare. Sizing the item to the surface is what a small surface
+  // asks for, and it is the same rule CLUTTER_SZ itself was fitted by — art px over the size a thing
+  // is DRAWN at
+  public static inline var CLUTTER_SLOT_FILL = 0.62;
   // the sheet cells that are never dealt, 0-based, because they read as a HOLE PUNCHED IN THE BENCH
   // rather than as a thing lying on it.
   //
@@ -720,11 +741,17 @@ class FacilityStyle
   public static inline var MIRROR_H = 2.0;
   public static inline var MIRROR_Y = 3.4;
   // the dividing wall between the washroom's two halves (render.facility.FacilityDeco.partition).
-  // FULL HEIGHT, unlike the cubicle partitions beside it, and that is the read: a cubicle is a box
-  // inside a room and this is what makes two rooms of one. 0.6 thick = 30 cm, which is a stud wall
-  // with a skin either side
+  // HEAD-HEIGHT AND OVER, unlike the cubicle partitions beside it, and that is the read: a cubicle is
+  // a box inside a room and this is what makes two rooms of one. 0.6 thick = 30 cm, which is a stud
+  // wall with a skin either side
   public static inline var PART_T = 0.6;
-  public static inline var PART_H = WALL_H;
+  // 2.5 m of it, and it WAS WALL_H for one build, which is two faults in one number. It was too tall
+  // to read as a divider — a washroom came out as two sealed cells rather than one room split — and
+  // its LID landed exactly on ROOF_Y, which IS WALL_H, so the cope and the roof deck z-fought along
+  // the whole run at the one height the camera looks straight down on. A metre under the deck fixes
+  // both: still a head over anything standing in either half (STALL_H is 3.8), still opaque from this
+  // camera, and nowhere near a coplanar pair
+  public static inline var PART_H = WALL_H - 1.0;
   // and its texture period, which is its OWN HEIGHT and was STALL_TILE 3.8 for one build. The art is
   // composed bottom-up — a skirting shadow at the floor and nothing repeating above it — and
   // FacilityGeom.face maps v as y / period, so a 3.8 period on a 6.0 wall wrapped the composition at
@@ -802,6 +829,16 @@ class FacilityStyle
   // how much worktop one of them keeps to itself, and the four objects' own extents — measured off
   // the built meshes (models-src/facility/desk_build.py), which is what the contact pools take
   public static inline var WORK_TRINKET_CLEAR = 0.65;
+  // HOW OFTEN EACH OF THE TWO IS THERE AT ALL, and a mug on every desk was the first build's rule.
+  // It reads as stock: the whole point of a desk being somebody's is that the next one along is not
+  // the same, and two placed objects at two fixed offsets on every desk in the compound is the grid
+  // this family exists to break. Percent, rolled off the cell
+  public static inline var WORK_MUG_PCT = 70;
+  public static inline var WORK_TRINKET_PCT = 55;
+  // and how far one may wander off its nominal spot, world units each way. Small on purpose — the
+  // spot is already the only free strip of a 4 x 2.6 desk (see WORK_TRINKET_NEAR), so this is a hand
+  // putting a mug down rather than a second placement rule
+  public static inline var WORK_TRINKET_JIT = 0.22;
   public static inline var WORK_MUG_H = 0.34;
   public static inline var WORK_MUG_W = 0.40;
   public static inline var WORK_PLANT_H = 0.72;
@@ -1595,15 +1632,19 @@ class FacilityStyle
   // red emergency-stop mushroom button, 26 a bank of light switches — and shipped the other fourteen
   // as sources, so the game went on reporting leads growing out of a sealed breaker board, an
   // electricity meter and a battery box. The question is not "is this one absurd" but "does this one
-  // draw somewhere a cable can come out of", and only six of the sixteen do: 16 a junction box with
-  // four cable glands, 22 a run of steel conduit, 23 a cable tray with cables already lying in it, 27
-  // a bracket holding a coiled reel, 29 a bundle leaving the wall through a grommet plate, 31 a socket
-  // outlet box with an isolator lever. Everything else is a sealed enclosure and stays unattached —
+  // draw somewhere a cable can come out of", and five of the sixteen do: 16 a junction box with four
+  // cable glands, 23 a cable tray with cables already lying in it, 27 a bracket holding a coiled
+  // reel, 29 a bundle leaving the wall through a grommet plate, 31 a socket outlet box with an
+  // isolator lever. Everything else is a sealed enclosure and stays unattached —
   // the compound supplies the emptiness, the same argument `links` runs on.
   //
   // A ROOM SOCKET NEEDS NO SUCH LIST: every cell of its own band is an outlet by construction, less
   // the three SOCK_SKIP deals out for drawing their own cable
-  public static var FIT_FEED:Array<Int> = [ 16, 22, 23, 27, 29, 31 ];
+  // CELL 22 CAME BACK OFF THE LIST. It is a run of steel conduit held by two saddle clips, i.e.
+  // CONTAINMENT and not a termination: a cable inside conduit does not come out of the middle of it,
+  // and reported from the game the lead read as plugged into a pipe. A tray (23) keeps its place —
+  // a cable lying loose in a tray can leave it anywhere along its length, which is what a tray is
+  public static var FIT_FEED:Array<Int> = [ 16, 23, 27, 29, 31 ];
   // and the two STANDING cells that may not be the end of a lead either, for a third reason again:
   // sheet cell 35 is a distribution board up on four long spindly legs and 43 an extension block on a
   // splayed stand. UNIT_FOOT lands a run a tenth of the way up the quad, which on those two is the

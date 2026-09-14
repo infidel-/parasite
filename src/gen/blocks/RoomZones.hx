@@ -120,9 +120,11 @@ class RoomZones
       };
     }
 
-// the sofa and the table in front of it. The ONE demand here whose `must` looks two cells deep,
-// which is why it is its own function rather than another `optional`: a bay is the line one in from
-// the wall, and a lounge also needs the cell beyond it to be bare floor inside the room
+// the sofa and the table BESIDE it. Its own function rather than another `optional` because its
+// `must` asks two things no other zone does: two ADJACENT cells of the bay, since the suite is a pair
+// and a bay with two usable cells at opposite ends houses no lounge, and a LANE — two cells of clear
+// room floor in front of each, which is what keeps a 7x3 office reachable past a run that fills both
+// of its own cells outright
   static function lounge(state: _FacilityState, room: _Room): _GenDemand
     {
       var n = (state.area.chance(OFFICE_LOUNGE_PCT) ? 1 : 0);
