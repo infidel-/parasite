@@ -690,6 +690,15 @@ class FacilityStyle
   // asks for, and it is the same rule CLUTTER_SZ itself was fitted by — art px over the size a thing
   // is DRAWN at
   public static inline var CLUTTER_SLOT_FILL = 0.62;
+  // and the STORAGE lid's own count, against CLUTTER_SLOT_MAX 2 on a bookcase's top. A shelving
+  // plate is 2.32 x 1.38 where a cabinet's lid is 1.2 deep, and it is the surface things are MEANT
+  // to be on rather than the top of something else
+  public static inline var CLUTTER_STORE_MAX = 4;
+  // how many of a storage lid's rolls come up a CARDBOARD BOX rather than a decal off the sheet.
+  // The shelving used to place 1..3 boxes per plate and nothing else, ever, so a unit was the same
+  // object every time; this is what "mixed with room clutter" means as a number. Over half, because
+  // a storage shelf IS boxes and the jars and paperwork are what says somebody uses it
+  public static inline var CLUTTER_BOX_PCT = 55;
   // the sheet cells that are never dealt, 0-based, because they read as a HOLE PUNCHED IN THE BENCH
   // rather than as a thing lying on it.
   //
@@ -872,6 +881,11 @@ class FacilityStyle
   public static inline var WORK_TRAY_H = 0.19;
   public static inline var WORK_TRAY_W = 1.00;
   public static inline var WORK_TRAY_D = 0.75;
+  // the stack of logbooks, measured off its own mesh (0.802 x 0.629 x 0.32) rather than rounded: the
+  // top book is turned 15 degrees, so the claim box is the TURNED stack's footprint and not one book's
+  public static inline var WORK_BOOKS_H = 0.32;
+  public static inline var WORK_BOOKS_W = 0.80;
+  public static inline var WORK_BOOKS_D = 0.63;
   // one desk cell in this many carries a set, and it is ONE — every desk in a researcher's office has
   // a machine on it.
   //
@@ -1015,17 +1029,21 @@ class FacilityStyle
   // overhead camera sees
   public static inline var KIT_GAS_H = 3.0;
   public static inline var KIT_TROLLEY_H = 2.0;
+  // its two trays, as fractions of that height — what render.facility.FacilityClutter stands things
+  // on. The glb's own TR_LV, and the trolley is the one prop in the compound whose lids are dressed
+  // without a grid cell behind them
+  public static final KIT_TROLLEY_SHELF_Y = [ 0.275, 0.650 ];
   // and their DEPTHS across the wall they stand against, off each glb's own measured z extent
-  // (0.317 and 0.451 of its height). the placer works off the wall FACE, so this is what turns a
+  // (0.317 and 0.453 of its height). the placer works off the wall FACE, so this is what turns a
   // face into a centre — half of it, plus the gap
   public static inline var KIT_GAS_D = KIT_GAS_H * 0.317;
-  public static inline var KIT_TROLLEY_D = KIT_TROLLEY_H * 0.451;
-  // and the WIDTHS along that wall, off the same glbs' x extents (0.875 and 0.990). render.Models
+  public static inline var KIT_TROLLEY_D = KIT_TROLLEY_H * 0.453;
+  // and the WIDTHS along that wall, off the same glbs' x extents (0.875 and 0.988). render.Models
   // .instanced scales by height alone, so these are what the props already draw at — nothing here
   // sets a size. they exist because render.world.ContactMask needs a FOOTPRINT to darken the floor
   // under, and the placer only ever had to know the depth
   public static inline var KIT_GAS_W = KIT_GAS_H * 0.875;
-  public static inline var KIT_TROLLEY_W = KIT_TROLLEY_H * 0.990;
+  public static inline var KIT_TROLLEY_W = KIT_TROLLEY_H * 0.988;
   // and how far the prop's back stands off that face. the corridor casework is bolted to the wall
   // and takes none; these two are STOOD there, and a hair of daylight behind them is what says so.
   //
@@ -1045,6 +1063,32 @@ class FacilityStyle
   // against every wall reads as a store room
   public static inline var KIT_STEP = 3;
   public static inline var KIT_MAX = 10;
+
+  // ---- the janitor's two, in corridors and washrooms ------------------------------------------
+  //
+  // WORLD HEIGHTS AGAIN, and both meshes are built AT them (models-src/facility/janitor_build.py), so
+  // render.Models.instanced's height scale is 1 and these are measurements rather than settings: a
+  // 1.35 m broom and a 0.3 m bucket at the half-metre unit, the bucket's number taken over its BAIL
+  // because that is the extent the scale reads
+  public static inline var JAN_BROOM_H = 2.67;
+  public static inline var JAN_BUCKET_H = 0.84;
+  // and their plan extents off the same meshes (0.62 x 0.64 and 0.60 x 0.60), for the contact pool
+  // and the wall halo — the placer itself only needs the depth. the bucket is SQUARE IN PLAN and the
+  // bail does not widen it: the arc's own radius is the rim's 0.300 MINUS the rod's, so the rod's
+  // outer skin lands flush with the widest point of the roll. It went out to 0.322 for one pass —
+  // 0.300 plus the rod — which cleared the wall and made the handle the widest thing in the prop
+  public static inline var JAN_BROOM_W = 0.62;
+  public static inline var JAN_BROOM_D = 0.64;
+  public static inline var JAN_BUCKET_W = 0.60;
+  public static inline var JAN_BUCKET_D = 0.60;
+  // how far the pair stands off the wall face. SMALLER THAN KIT_GAP because neither is jittered and
+  // a broom LEANS — its head has to sit under the shaft's own top, which is against the masonry
+  public static inline var JAN_GAP = 0.12;
+  // one candidate cell in this many, strided down to this many props over the whole compound. a
+  // corridor with a broom every ten metres is a broom cupboard, and the pair reads as somebody's
+  // work left standing — one or two of each is the whole effect
+  public static inline var JAN_STEP = 5;
+  public static inline var JAN_MAX = 6;
 
   // ---- room furniture (render.facility.FacilityDeco) ---------------------------------------------
 
@@ -1142,6 +1186,13 @@ class FacilityStyle
   // wanted: four boards standing PROUD of the spines, which a flat plane can only paint
   // (models-src/facility/bookcase_build.py)
   public static inline var DECO_BOOKCASE_GLB = true;
+  // and the OPEN SHELVING, which is the strongest claim of the lot and was the last to be made: the
+  // emitted version is two alpha-cut PANES standing in for end frames with zero-thickness quads
+  // between them, i.e. a cut-out drawing of a frame rather than a frame. models-src/facility/
+  // store_build.py builds it out of what the art already draws — four uprights, four cross rails
+  // and a brace to each end, three perforated plates — at 204 tris, and the daylight through the
+  // middle of it is real. It also gives the clutter pass three lids where the quads gave it none
+  public static inline var DECO_SHELF_GLB = true;
   // and the washroom basin — everything but its MIRROR, which hangs on the wall and not on the unit.
   // The strongest shape claim in the set: a basin is a HOLE, and the quads laid it on the counter as
   // a flat alpha-cut quad with a second one standing up for the tap
@@ -1308,6 +1359,12 @@ class FacilityStyle
   public static final DECO_SHELF_Y = [ 0.063, 0.381, 0.699 ];
   // and where the frame stops, so the top bay knows how much room it has
   public static inline var DECO_SHELF_TOP_Y = 0.954;
+  // how far a plate's LID stands over its rail's centre line, as a fraction of the unit's height.
+  // The glb's own PLATE_UP (RAIL_T / 2 + PLATE - 0.02) over its 2.6, and it is what the clutter pass
+  // stands things on — DECO_SHELF_Y alone is the RAIL and would sink a box a plate's thickness in.
+  // 0.0398 while the plate was 0.06 thick; it was reported as too thick and halved, and this number
+  // is DERIVED from that one, so a stale copy of it floats every box on the unit
+  public static inline var DECO_SHELF_PLATE_Y = 0.0283;
   // boxes per shelf, and the size band each is rolled in — in WORLD UNITS and not as a fraction of
   // the bay it lands in, which is what the first build did and what produced a single 1.6-wide
   // monster whenever the roll came back with one box on a 2.6 shelf. A packing box is a packing

@@ -1272,3 +1272,590 @@ read as glowing. Left there rather than chased to the 0.698 the measured rate as
 
 **Verdict: landed.** Standing note, now three deep: **a blue accent cannot be stated by hue in this
 compound — state it by VALUE and leave the hue to the lighting.**
+
+## A workstation nobody can sit at, and the corner desks that never met (2026-09-15)
+
+Two faults on one reported pair of cells ("tables on 61,28 and 61,29 are only half done missing
+polygons... if you remove the chair, then there should be not computer, only clutter").
+
+**The seat test lived in the wrong pass.** `FacilityWork.chairs` has always refused a chair on a cell
+that is not clear floor — a desk run facing another run, a desk in a room corner — and it was the
+only pass that knew. `at()` went on returning a workstation, so the monitor, the tower and the
+keyboard stood on a desk nobody could reach. Moved into `at()`, which is the pure function every
+other pass in that family is built on (`spots`/`claims`/`trinket`/`pools`/`build`/`props`), so they
+now agree by construction and the freed worktop falls back to `FacilityClutter`'s paperwork.
+Measured on a fresh compound: **13 office desk cells, 10 workstations, every one of them with a
+seat cell** (it was 10 and 10 before, with one of them seatless).
+
+**The missing polygons are the DESK SHRINK.** `FacilityTables` thins an office cell by
+`CELL - DESK_D` on the hand AWAY from the wall it backs onto, and `wallHand` takes the FIRST wall it
+finds — so two desks meeting at a room corner back onto DIFFERENT walls and are thinned on DIFFERENT
+axes. Their rects then stand `DESK_D` short of the boundary they share, while the face loop skipped
+the panel there on the grounds that the neighbour `isTable`. A hole between two desks, open to the
+casework inside.
+
+`openHand` answers it in three lines: a face is closed by its neighbour only when NEITHER cell was
+cut away from the boundary between them. A bench is never thinned, so the lab side is unchanged.
+
+**Verdict: landed.** The rule generalises to any future per-cell shrink: *a run test may only skip a
+face when both rects actually reach the line.*
+
+## The divider stopped at its own cell boundary, and sight went straight through it (2026-09-15)
+
+Reported twice over: "separator wall does not come all the way to the outer wall leaving a gap" and
+"toilet separator wall SHOULD block los".
+
+**The gap is `FacilityGeom.slab`'s inset, seen from the other side.** A wall cell's masonry is inset
+by `(CELL - thick) / 2` on the hands its line does not carry into — 1.0 unit here — so the wall's
+inner face stands a unit back inside its own cell and the room's floor carries on under the overhang.
+Every wall-hugging family in this compound already measures off that face (the corridor casework, the
+kit props, the litter bins); `rectOf`'s partition branch was the one that did not, and ended its run
+on the cell boundary. Measured after the fix, over every partition end in a fresh compound that meets
+masonry: **gap 0.000**. The test is `isWall && carries` and NOT `isSolidWall` — a washroom's light
+wells are glazing and a divider meeting one meets the same masonry line, while a DOOR cell answers
+`carries` and is not a wall, which is what keeps a divider out of an opening.
+
+**And it blocked no sight at all.** `AreaGame.recalcTile` clears `canSeeThrough` from exactly two
+sources: the tile id table, and an object on the cell that says no. A partition cell finalises to a
+plain unwalkable floor id, `paintRoomFloor` rewrites that to marble+16, and **both are
+`TILE_SEETHROUGH = 1`** — so a full-height opaque slab (`PART_H` = `WALL_H - 1`) divided nothing but
+walking. `objects.Decoration.canSeeThrough` now returns false for `FIT_PARTITION` and nothing else.
+Verified live: the cell reads `canSeeThrough false` and `isVisible` across it is false.
+
+**Answered on the OBJECT and not in the tile table on purpose** — `TILE_FLOOR_TILE_UNWALKABLE` is
+stamped by `placeFitting` for EVERY fitting, so the tile route would have made racks, cabinets and
+machines opaque too. Old saves need no migration: `recalcTile` re-derives on load.
+
+**Verdict: landed.** Standing note: **`canSeeThrough` is per OBJECT here, and the floor id under a
+fitting says nothing about what you can see over.**
+
+## A drain cell kept the laboratory's floor in a marble room (2026-09-15)
+
+"47, 26 — drain is here but it looks like it has a different tile texture around it."
+
+`FacilityGeom.floorBuf` routed `Surf.GRATE` to `default: floors[Surf.TILE]`, which is right in a lab
+and wrong everywhere else. The generator writes a grate tile id under a floor drain BEFORE
+`paintRoomFloor` runs, and that pass only rewrites `TEMP_BUILDING_ROOM` and the unwalkable floor id —
+a final id survives it. So a washroom's drain cell stayed `GRATE` and drew one square of lab tile in
+the middle of the marble.
+
+The art was never the question: the drain's own grate is a separate centred decal
+(`FacilityDeco.drain`, `facility/floor-grate`), which is why `floorBuf` deliberately refuses to paint
+`GRATE` as a cell-wide surface at all — painted that way, a 2 m square of grating reads as a vehicle
+pit. What belongs under the decal is simply the room's floor.
+
+`surfUnder` inherits the surface of the first non-`GRATE` indoor neighbour, four cells, falling back
+to `TILE` — a pure function of the saved grid, five lines, no new buffer and no new call. Verified
+live on a compound whose washroom drain sits at (41, 40) with all four neighbours reading
+`Surf.WASH`.
+
+**Verdict: landed.** The general shape: **a cell whose id is a FITTING rather than a floor has to
+borrow its floor, because the pass that would have painted it has already stepped over it.**
+
+## Three glb faults: a handle above the coffee, a seam with a width, a front on a hidden face (2026-09-15)
+
+**The mug handle was never poking through the GLAZE.** Reported a second time as going too far into
+the cup; the previous pass had widened the arc 192 → 216 degrees so the end CAP stopped emerging, and
+that part was right. Measured on the built mesh: the upper end sat at z 0.2815 and the rod's own
+crown therefore reached **0.3035**, while the BREW cone over that end's radius stands at **0.2966** —
+0.007 of an eight-sided rod lying in the coffee with both ends buried in the wall. The arc is lower
+and slightly further out now (centre 0.126/0.165, radii 0.105/0.100): **crown 0.282 against the
+brew's 0.297**, ends buried 0.046 and 0.031 against the rod's own 0.022, belly 0.081 clear of a 0.150
+wall. *A swept handle has two clearances and the invisible one is vertical.*
+
+**The basin's black seam was a swatch with a WIDTH.** `lathe_uv` runs u once around from the seam, so
+the crop's left edge is laid against its right — and `R_CERAMIC` was a 15 x 20 px crop falling 15
+counts of luma across those 15 px (89/86/83 at sd 4.2, down to 77 at its right edge, with BLACK
+texels 3 px past it). At `tex` 512 with mips those black texels bleed straight into the seam quad.
+Collapsed to **ONE TEXEL** at (309, 692), measured as the crop's own mean exactly — the litter bin's
+finding, applied to the piece that needed it most. Bowl u now spans 0.30189–0.30288.
+
+**And the low rack's carcass front wore the whole rack-front cell.** Reported as wanting the side
+texture. The chassis stand over the full height of that face (`n * CHASSIS`), so what shows is the
+slivers round their bezels — each a squeezed copy of the entire three-chassis image; on the TALL
+cabinet it was wrong twice, since the cell maps 0..1 whatever the height and the art behind six
+chassis ran at half the density of the art on them. It takes `I_PLAIN` now, a swatch of the side
+cell, and a swatch cannot stretch. Verified by classifying every front-facing triangle of both
+cabinets by the rect its UVs land in: the only FRONT-cell faces left are the chassis vent panels.
+
+**Verdict: landed.** All three rebuilt, `buildlib.check` 0 holes / 0 near-coplanar (the basin's 24
+holes are its open bowl, by construction), `propstat` **0 UV smears** on every one.
+
+## The gas rack's amber, fitted where the drums are (2026-09-15)
+
+"Gas rack — reduce saturation." The hand-modelled rack (`facility/gas-rack-hand`) was the only
+coloured prop in the family carrying NEITHER knob: its amber is a cell of an authored sheet, so it
+shipped raw at **chroma 152.1** against a drum family fitted to 72.8–74.9.
+
+Its GENERATED predecessor records the whole argument at length and it does NOT transfer: that bake
+sits on a flat `baseColor 0.95`, so `sat 0.5` was rejected there as "almost white" — a desaturated
+BRIGHT surface is a pale one where a desaturated mid one is grey. This prop's level comes from the
+pixels instead, so the fit is its own.
+
+`sat 0.6`, and the measurement is on the BUILT atlas rather than on the prediction: bottle cell
+**159.4/104.0/82.9, luma 114.2, chroma 76.5**, landing on the drums' own band. Luma is untouched by
+construction — the Rec.709 mix in linear light is why `sat` is a hue knob and `baseColor` is the
+value knob, and the user asked for one of those two.
+
+**Verdict: landed.** `sat` alone; no `baseColor`, because nothing reported the rack as bright.
+
+## The cleaner's kit, and a weighted bag instead of a uniform roll (2026-09-15)
+
+Four reports in one pass: the desk lamp too common, "generate new blender model — uneven stack of
+journals", "create blender broom and bucket and add them to corridors and toilets", and "trash cans
+should spawn in the toilet too".
+
+**THE LAMP WAS NEVER TUNED, it was a third of a uniform roll.** `1 + (g >>> 14) % 3` over
+plant/lamp/tray under `WORK_TRINKET_PCT 55` puts a lamp on ~18% of every workstation desk in the
+compound. Replaced with a weighted BAG of indices — `[1, 1, 3, 3, 6, 6, 2]` — which drops the lamp to
+~8% and is also how the journals got in without moving anything else. *A bag is what a table of
+rarities looks like when there are six of them and no weights field.*
+
+**The journals are a TRINKET and the broom and bucket are NOT FITTINGS.** A fitting costs a
+`_FittingKind`, a unique entities64 frame (three are free), a `_DecoPlace` row, a `Deco.selfCheck`
+tag, `heightOf`/`rectOf`/`fittings` rows and a generator call site — and the generator places nothing
+in a corridor at all, so a fitting could not have reached half of what was asked for. `FacilityJanitor`
+is the compound's sixth render-only unstamped pass, built on `FacilityKit`'s shape and gated on
+`Surf.LINO` + `Surf.WASH` where the lab kit takes `Surf.TILE`, so the interior divides by SURFACE
+with no shared list and no ordering between builders. The washroom's bin came free: `indoorBins` only
+needed `Surf.WASH` added and the fitting/worktop guards a washroom needs and a corridor does not.
+
+**A stride lattice has to be COPRIME with its step** — `(col * 5 + row * 2) % 5` is `(row * 2) % 5`,
+so the first cut selected whole ROWS of corridor and missed every cell between them (7 candidates
+against 20). `(col * 3 + row * 2) % 5` walks it diagonally, which is `FacilityKit.place`'s own shape.
+
+Art: **one 1k pack4** (`janitor-sheet.png`, seams measured at column 511 and row 511), four cells —
+binding cloth, page edges, a split bristle/handle cell, galvanised sheet with a plain corner patch.
+**Values fitted IN THE PIXELS, not with a knob**, because one sheet dresses three props and
+`sat`/`baseColor` are per LABEL: the page edges came off the gen at luma **164** against a family
+running 45.7–93 and went to **92.1**, just under the basin's ceramic; bristle and handle took a
+Rec.709 desaturation (0.62 / 0.55) off chroma 88 and 95. Built: journals **48 tris**, broom **52**,
+bucket **300**, all `holes 0 / coplanar 0 / 0 UV smears`, sampled luma 72 / 71 / 79.
+
+**THE BUCKET'S BAIL IS A HALF TURN FROM RIM TO RIM** and the first cut swept 200 degrees about a
+centre ON THE AXIS, which put both ends near the middle of the bucket and drew a hoop hanging down
+one side. An arc over a vessel is centred on the vessel. **THE BROOM LEANS** — 11 degrees of pitch
+built into the mesh, toward glTF -z, which is the hand `KitProp.yaw0` exists to name — and its shaft
+is 0.10 across where a real handle is 0.048, because an honest member width reads as WIRE at this
+camera for the third time in this repo.
+
+**Verdict: landed.** Live on a fresh compound: 2 brooms, 3 buckets, 2 journal stacks, the washroom's
+bin in its corner.
+
+## A vessel wound the right way and built inside out
+
+Reported as *"bucket got textures inverted for body — even on the outside, horizontal lines on the
+inside"*, which is exactly what it was.
+
+**Diagnosed off the BUILT glb, which is the only place it is visible.** Dumped every face of
+`janitor-bucket.glb` by radius and local y against its uv:
+
+```
+y 0.050-0.545  r 0.245-0.285  u 0.5020-0.9980   <- wearing cell 3's galvanised bands
+y 0.075-0.592  r 0.255-0.290  u 0.9083-0.9092   <- wearing the one-texel plain swatch
+```
+
+The return leg of the lathe profile sat at a **larger radius than the outward leg at every height**,
+so the surface the script called the inside was the one the room sees. The vessel rule was followed
+(out to the rim, over it, back down to a floor), every normal pointed the right way, and `bands=4`
+put the banded cell on rings 0–3 exactly as intended — the fault was two numbers in the profile.
+
+**WINDING SAYS WHICH WAY A FACE LOOKS; RADIUS SAYS WHICH SIDE OF THE SHEET IT IS.** `buildlib.check`
+cannot see this (0 holes, 0 coplanar either way), `propstat` cannot see it (0 smears either way) and
+the Blender viewport cannot either, because an inside-out vessel is still a closed solid that shades
+correctly. The face dump is the check, and it belongs in the loop for any lathed vessel.
+
+Return leg pulled inside the outward one — `(0.285, 0.592), (0.232, 0.070)` against `(0.245, 0.050),
+(0.285, 0.545)`, a ~0.013 wall — and re-dumped: `r 0.245-0.285` carries the bands, `r 0.232-0.285`
+the swatch. 300 tris unchanged, `holes 0 / coplanar 0 / 0 smears`.
+
+**Verdict: landed.**
+
+## A broom's head is a lathe, and `lathe_uv` has two fixed axes
+
+*"make broom lower part more curvy, both hair and above"*. The bristle block and the head were
+`bl.box` slabs — a crate on a stick — and both became `buildlib.roundrect` cross-sections carried up
+a profile, the bristles bellying out toward the floor (1.00 / 1.06 / 1.00 / 0.92 over 0.26) under a
+moulded head. 52 tris → 308, which is the bucket's own count and cheap for a prop that is 2 or 3 to a
+compound.
+
+**The shape was the easy half. `lathe_uv` puts one whole turn in u and the piece's whole height in v,
+and that is not negotiable per face — so a wide short piece gets TWO faults at once.**
+
+**ASPECT.** The bristle block is 1.46 round by 0.26 tall, so the cell's full height landed on a sixth
+of the world height: straw drawn as vertical strands came out as horizontal mush. `vspan` =
+height/perimeter (0.18 here) is the fix, and it is the same measurement the bench's own tiling uses —
+art px over the size a thing is DRAWN at.
+
+**DIRECTION.** The handle cell is grained VERTICALLY because it dresses a shaft; a broom's block is
+grained ALONG its length. There is no argument to `lathe_uv` for that, so the head takes the same
+cell TRANSPOSED (`janitor_build.transpose`, four lines) over a rect 0.30 wide and all of it tall —
+0.30 because perimeter 1.60 against height 0.23 is 7:1 and the cell is square, so that is the ratio
+that makes the quarter turn land isotropic.
+
+bbox unmoved at 0.62 x 0.64 x 2.67, so no `FacilityStyle` dim changed. `holes 0 / coplanar 0 /
+0 smears`.
+
+**Verdict: landed.**
+
+## The shelving stops being a DRAWING of a frame, and the trolley comes off TRELLIS
+
+*"storage shelf with boxes stopped spawning or is too rare — firstly make it a blender model instead
+of quad-based"*, and *"redo trolley as blender"*. Both in one `store_build.py` off one sheet.
+
+**The shelving is the strongest silhouette claim in the fitting family and was the last one taken.**
+What it replaces is two alpha-cut PANES standing in for end frames with zero-thickness quads between
+them — a cut-out drawing of a frame, which is the one thing the silhouette-vs-surface test says a
+texture cannot be. 204 tris buys four uprights, four cross rails and a brace to each end, three
+perforated plates, and daylight through the middle that is real.
+
+**NOT ONE PIXEL OF NEW ART.** `tools/modelsheet.py` packs the BUILT `deco-shelf-side` and
+`deco-shelf-top` into `store-sheet.png`, so the unit standing in a lab is the same steel as the unit
+that stood there before it and every fitted lift is already in the pixels — no `baseColor`, no
+`lift`, no `sat` on either label.
+
+**CELL 0 IS TILED 1.561x IN U, and that trick is the reusable part.** `modelsheet` stretches a
+non-square source into its square cell and `deco-shelf-side` is 328 x 512, so a straight pack puts
+OVAL slots on the uprights. Tiled 1.561 the first copy lands 1:1 at u 0..0.6406 and **one cell texel
+is 0.005078 world units on both axes**, which is what lets every rect be read straight off the
+pixels. Cells 1 and 2 are the same plate at two pre-tiled periods (4.22x2.51 and 3.60x1.64) because
+a hand-modelled face maps 0..1 and cannot wrap — one period cannot serve two shelf sizes.
+
+**THE GEOMETRY IS READ OFF THE ART.** Uprights are columns 4..31 (0.142 wide); the four rails are
+rows 11-35 / 142-166 / 304-328 / 467-492, and their CENTRES land on 0.955, 0.699, 0.383 and 0.0635 of
+the height — `DECO_SHELF_Y` plus `DECO_SHELF_TOP_Y` to three decimals.
+
+**Two `buildlib.check` findings, both about pieces sharing a plane.** The plate flush with its rail's
+top face is eight z-fights (`PLATE_UP` sinks it 0.02 in instead), and the brace at a rail's own 0.09
+put its flanks on the rails' planes — it is 0.05 stock now, which is what a brace is anyway. Then a
+third, from `propstat`: the brace is at 31 degrees by the time `finish` runs `unwrap`, so its END
+faces project to a LINE — 8 zero-area tris. Stating one `flat_uv` window only moved the fault to the
+top and bottom faces (16); **a 1-texel rect is the only rect that is safe on every face of a piece
+that gets turned.** 0 smears.
+
+The trolley is 268 tris against the bake's 5,915, and its own entry records why nothing was lost:
+88.19% of that 2048 atlas sat in ONE 16-count luma band, so "bright tube frames against dark shelf
+slabs" was never in the texture and `baseColor` could only move the level. Here the frame IS tube and
+the trays ARE plate. `KIT_TROLLEY_W/D` re-fitted to the measured 0.988 / 0.453 of its height.
+
+**Verdict: landed.** `holes 0 / coplanar 0 / 0 smears` on both.
+
+## A crate is one of the things on a shelf, not the only thing
+
+*"add clutter slots on all shelves and spawn boxes mixed with room clutter. note that box itself
+should go into the generic storage clutter list"*, and *"add clutter slots to [the trolley]"*.
+
+`FacilityDeco.boxes` stood `1 + g % 3` crates on every plate of every unit and nothing else, ever —
+which is why a shelving unit was the same object every time and why the request is really one
+sentence: a box should be an ITEM, dealt like the rest.
+
+**The refactor is `slot()` → `lid()` + `ClutterLidOpts`.** The old function read its rect out of
+`FacilityDeco.rectOf` and its height out of that rect, so it could only ever dress ONE lid per grid
+cell, square to the world. None of that holds now: a shelving unit has three shelves, a trolley has
+two, the trolley is **render-only and has no grid cell at all**, and it carries `KIT_YAW_JIT` so its
+lid is not axis-aligned. Stating the surface instead of looking it up covers all three; items are
+sampled in the lid's OWN frame and rotated out by `yaw`, so a fitting passes `yaw: 0` and reads
+exactly as it did.
+
+`FacilityKit.trolleys(m)` is a PURE re-run of the same placement with the side effects off (the
+contact pool and the wall halo are laid once, by `props`) rather than a cached array — the placement
+is a function of the saved grid and nothing else, which is the rule this family already keeps.
+
+**`CLUTTER_BOX_PCT 55`** is what "mixed" means as a number: over half, because a storage shelf IS
+boxes and the jars and paperwork are what say somebody uses it. `CLUTTER_STORE_MAX 4` against a
+bookcase lid's 2, because a shelving plate is 2.32 x 1.38 where a cabinet's lid is 1.2 deep and it is
+the surface things are MEANT to be on. The crates keep the AO ramp and the plate pool the old placer
+had, in a third `MeshBuf` flushed through `FacilityDeco.solid` — the two clutter sheets are alpha-cut
+and cardboard is opaque with vertex colour, so it was never the same material.
+
+**`DECO_SHELF_PLATE_Y 0.0398`** exists because `DECO_SHELF_Y` is the RAIL: standing a box on that
+sinks it a plate's thickness.
+
+The bookcase's interior boards were left alone deliberately — at 51 degrees down you see the board
+above, not the shelf under it.
+
+**Verdict: landed.**
+
+## The shelf was not rare, it had all but stopped
+
+Measured end to end rather than estimated, by counting frames 8/9 and 8/10 in `ctx.spawns` over 2000
+seeds: **0.12 shelving units per compound.** One per eight compounds, which is why it read as having
+stopped. The per-cell arithmetic predicts 1.85 and is wrong by 15x — most `slot` cells are refused
+before the roll ever happens (already-taken, beside a doorway, glazed-and-bare).
+
+Two changes, both the user's call: `'cabinet'` joins its `blocks`, and a new optional `weight` on
+`_DecoPlace` (`Deco.places` pushes an entry `weight` times, so `pick` stays one flat roll over a
+five-long list). Shelving takes 3.
+
+**Measured after: 4.08 per compound**, and the split is worth writing down — the office is 3.8 of it
+and the lab only 0.26. The lab's floor-high roll is simply rare; what actually moved the number is
+that `roomCabinet` places 1–3 fittings OUTRIGHT per office room, so an entry's share of that list is
+worth 30x its share of the lab's dice.
+
+`make gen seeds=20000` clean.
+
+**Verdict: landed.**
+
+# Facility pass 6 (2026-09-15)
+
+## The bucket's bail went through its own wall
+
+> SUPERSEDED by "...and then it stood proud of the bucket on both sides" below — the radius stated
+> here is the one that overshot.
+
+Reported: "bucket handle intersects with body and is visible from outside." It did. The arc was an
+ellipse of x-radius **0.268** about the axis with its ends at z 0.500, and the vessel's outer wall at
+that height is ~0.283 against a rod 0.022 thick — so the rod spanned radius 0.246..0.290 and crossed
+the sheet.
+
+**It cannot be fixed by nudging the radius**, which is the part worth recording. A half-ellipse
+starting at 0.268 hugs the taper all the way up: at z 0.545 the rod is at 0.294 against a wall at
+0.285, still through it. The arc has to START AT RIM HEIGHT — above z 0.600 nothing on the vessel
+stands wider than the return leg's 0.285 — and 0.322 is the rim's own 0.300 plus the rod's 0.022, so
+the bail touches the roll and never enters it, which is what a bail hooked over a rim does anyway.
+
+**The rise is 0.217 and not a half circle's 0.322**, and that is not taste: `Models.instanced` scales
+a batch by HEIGHT ALONE. Swept as a half circle the prop measured 0.9491 tall against `JAN_BUCKET_H`
+0.84, so the vessel would have come back 12% smaller to make room for its own handle. At 0.217 the
+apex lands at 0.8361 and only `JAN_BUCKET_W` moves, 0.60 → 0.68 — the bucket is now wider than it is
+deep, by its handle.
+
+Verified by dumping the built glb: the closest bail vertex to the sheet is **+0.0064 outside** it.
+
+**Verdict: superseded — right diagnosis, wrong sign on the fix.**
+
+## ...and then it stood proud of the bucket on both sides
+
+Reported next: "bucket still wrong — now bail goes outside on both sides." It was, and the arithmetic
+is the same line read the other way. **0.322 was the rim's 0.300 PLUS the rod's 0.022**, so the rod's
+OUTER skin reached 0.344 on a vessel 0.300 wide and the bail became the widest thing in the prop —
+`JAN_BUCKET_W` going 0.60 → 0.68 was the measurement saying so, and it was recorded as a feature.
+
+**The rod's radius belongs inside the rim's, not outside it.** `ARC = 0.300 - ROD` puts the rod's
+outer skin flush with the widest point of the roll: exactly as wide as the bucket and no wider. The
+ends then sink to z 0.592, where the roll is 0.298 outside and 0.285 in, so each end cap is buried in
+the SOLID between the vessel's two legs rather than ending in mid air over the bore — the closed-shell
+rule doing a second job. Measured on the built glb: the prop's max |x| is **0.300**, i.e. the bucket's
+own radius to four places, and the lowest bail vertices sit at r 0.2974 between those two legs.
+
+The rod also went **30% thinner**, 0.022 → 0.0154, which is a proportion question and not a fix: at
+0.6 world units the old rod was a 0.044-wide bar on a 0.6-wide bucket.
+
+Rise re-fitted to 0.231 about the new z0 so the apex holds the height the bucket already ships at —
+0.8363 against 0.8361 — because `Models.instanced` still scales by HEIGHT ALONE. `JAN_BUCKET_W` goes
+back to 0.60 and the prop is square in plan again.
+
+**The transferable rule: a clearance that is stated as a SUM is a clearance in the wrong direction.**
+Both failures were the same expression; only the sign of the rod's own radius differed, and each time
+the measurement that would have caught it (the prop's bbox against the vessel's) was taken and then
+explained away.
+
+**Verdict: landed.**
+
+## `lathe_uv` parametrises u by atan2, which is only linear for a circle
+
+Reported as "broom - texture error on the back: gray part". Diagnosed off the BUILT glb by splitting
+it into connected pieces and reading each one's uv range (glTF v is 1 − blender v):
+
+```
+head      156 tris   u 0.2599..0.4159   v_blender 0.0976..0.5937
+bristles  124 tris   u 0.0495..0.2877   v_blender 0.2314..0.4980
+shaft      28 tris   u 0.2599..0.4980   v_blender 0.5020..0.9980   <- exactly R_WOOD, correct
+```
+
+`bl.cell(2)` ends at **v 0.498** and `bl.cell(0)`, the bookbinding cloth, starts at 0.502. The head
+ran to **0.5937**, so its back really was sampling a different cell, and the cloth is that exact
+grey-blue. The bristles show the same fault in u: `R_BRISTLE` ends at 0.240 and they reach 0.2877.
+
+The cause is not the transpose and not the cell layout. **`lathe_uv` takes u from `atan2`**, which
+matches position round the section only for a circle. The broom's cross-sections are
+`roundrect(0.29, 0.075, …)` and `roundrect(0.31, 0.090, …)` — nearly 4:1 — so several faces trip its
+`max(a) - min(a) > 0.5` seam test, and the `t + 1.0` those get pushes u past the rect's edge. On a
+lone cell that is invisible (the sampler wraps); on a PACKED SHEET it is the neighbouring cell. The
+head then transposed that overshoot into v and walked it out of the row entirely. The shaft is clean
+only because 8 uniform sides land t exactly on eighths.
+
+**Fix: `buildlib.shell_uv`**, which takes u from ARC LENGTH round the section and reads the face
+grid out of `tube`'s own construction — `side` is built `for k in bands: for i in n` and each face as
+`(lo[i], lo[j], hi[j], hi[i])`, so a face index IS its (band, segment) and a LOOP index is its
+corner. Nothing is recovered from a position, the seam is a real vertex boundary, u closes at exactly
+1.0, and no vertex can land outside the rect. `swap=True` does the quarter turn INSIDE the rect and
+replaces `janitor_build.transpose`, which is deleted. Corner stretch goes with it for free.
+
+Re-dumped: all three pieces now inside u 0.002..0.498, v 0.002..0.498. 308 tris, unchanged.
+
+> Latent and NOT fixed: `basin_build`, `chair_build` and `toilet_build` lathe roundrects through
+> `lathe_uv` too. Their aspects are ~0.5-0.7 against the broom's 0.26 and all three ship reading
+> correctly, so they stay on the old path.
+
+**Verdict: landed.**
+
+## The storage pair, second pass: thinner, holed underneath, braced, and on wheels
+
+Five reports against the two props pass 5 built, and all five are the same class — a hand-modelled
+prop that answers the silhouette question can still be a box assembly in every detail.
+
+**Shelves too thick.** `PLATE 0.06 → 0.03`. Six texels of a 512 cell, still two rows of pixels over
+the thinnest thing that reads. `DECO_SHELF_PLATE_Y` is DERIVED from it (`RAIL_T/2 + PLATE - 0.02`
+over `SH_H`) and had to follow: **0.0398 → 0.0283**, or every box the clutter pass stands on a shelf
+floats a plate's thickness.
+
+**"use the same texture with holes for shelf bottoms."** A punched plate is punched from below too;
+the underside was the plain swatch for no reason but that nothing asked. `plate()` grew an `under`
+rect, mapped on the same axes and window so the holes line up through the plate.
+
+**"thin side struts between vertical lines" — the long sides carried NOTHING.** Four uprights, two
+end frames, and not one member spanning between them. They now take a tie at each of the four levels
+and one diagonal, in lighter section (`TIE_T = RAIL_T * 0.62`).
+
+> **The ties stop INSIDE the uprights and not at the end rails.** Run to the full width they cross
+> the end rails at the four corners with both lids on ONE plane — sixteen z-fights. Ending on the
+> upright's inner face and buried 0.02 past it leaves no coincident plane anywhere, and it is what a
+> real bay does: welded to the post, not lapped over a rail. Their 0.09 thickness is also not free —
+> it is what keeps the diagonal's flanks the 0.02 clear of theirs that `BRACE_D` was fitted for.
+
+The long-side braces forced `brace()` out as a function, and the reason is a `place` trap:
+**`bl.place` pitches about x BEFORE it translates**, so a bar already standing off-centre in y swings
+instead of tilting. The end frames' version got away with being built in place because its y centre
+was 0. Built at the origin and placed afterwards, both work.
+
+204 → **324 tris**, dims unchanged, holes 0 / coplanar 0 / 0 smears.
+
+**"trolley is garbage - no curves anywhere including the wheels, handle is not really connected,
+shelves are too thick. reused same texture with holes? trolley has no holes."** All four:
+
+- `N = 8 → 16`. At 0.05 radius an eight-sided leg is an octagonal post with four lit facets.
+- **The castors were bollards** — a vertical cylinder r 0.105 x 0.14. A wheel is a lathe about the
+  axis it ROLLS on, so it is turned flat, skinned, then pitched a quarter (`place`'s x-pitch maps the
+  lathe's own z to −y), and hung off a stem NARROWER than the tread. A fork wide enough to straddle
+  the wheel is a box with the wheel inside it, which at this camera is a block again.
+- **The grip's axis sat on the posts' top FACE**, so half of it floated above them and the join was a
+  T of two cylinders. It is now one bent tube swept up each rear post, round a 0.13 bend and across,
+  with its ends buried 0.06 inside the legs at a SMALLER radius — equal radii would put two
+  coincident cylinders in the overlap. The crown sits a radius under `TR_H` for the same
+  height-scale reason the bucket's bail was flattened.
+- **The tray came off the perforated cell.** It was given the shelving's holes because the sheet had
+  them. `store-sheet.png` repacked: cell 2 is now `facility/table-top`, the LAB BENCH'S OWN WORKTOP,
+  ring stains and all — the trolley in the room wears the same surface as the benches beside it.
+
+268 → **740 tris** against the TRELLIS bake's 5,915. Dims 1.98 x 0.902 x 2.0, unchanged, so
+`KIT_TROLLEY_W/D` hold. One `check` finding: at `WHEEL_W 0.07` the wheel's two discs sat 0.0075 off
+the stem's flanks — eight near-coplanar pairs — so the wheel is 0.09 wide, which reads better anyway.
+
+**The sub-rect, and why `--repeat` could not say it.** At `BENCH_TOP_TILE 5.0` a 1.98 x 0.902 tray
+wants **0.396 x 0.18 of ONE repeat** — less than one, which `tools/modelsheet.py` cannot express. So
+cell 2 goes in at 1x1 and `C_TRAY = bl.sub(bl.cell(2), 0, 0.396, 0, 0.18)`. That is 203 x 92 texels
+over the tray, ~102 per world unit against the shelving plate's 121 — the same density, which is the
+point.
+
+**Verdict: landed.**
+
+## The red drum, measured on the pixel that ships rather than on the source
+
+Reported again ("desaturate red barrel, really pops out") after pass 5 already halved it. The place
+to read this is the atlas EMBEDDED IN THE BUILT GLB, not `drum-sheet.png`: `sat` is applied by
+`tools/models.mjs` at build time, per label, over a sheet three drums share.
+
+| prop | its cell | rgb | chroma | luma |
+|---|---|---|---|---|
+| `drum-rad-hand` at sat 0.5 | 2 | 143.9 / 76.1 / 69.9 | **74.0** | 90.0 |
+| `gas-rack-hand` (graded the same day) | 0 | 152.6 / 100.5 / 80.8 | 74.5 | 108.6 |
+| `janitor-bucket` | 3 | 72.8 / 81.4 / 87.9 | 15.2 | 80.0 |
+| `lab-trolley-hand` | 2 | 78.7 / 85.1 / 72.3 | 12.8 | 82.8 |
+
+So it was not merely the loudest thing in the compound, it was **tied with** the loudest and hotter
+in hue. `sat 0.5 → 0.3` lands it at **125.3 / 83.1 / 80.0, chroma 45.3**, luma 91.8 — the Rec.709 mix
+holds luma by construction, so no second knob was needed and none was added.
+
+**Verdict: landed.**
+
+## A rim is a CONTOUR, and it is a different term from the edge wash beside it
+
+> SUPERSEDED by "the contour was rejected on looks, and baked AO did the job instead" below. The
+> diagnosis of WHY the bottles blend still stands and is not repeated there; the term shipped here
+> does not.
+
+Reported: "new gas cylinders really blend together because of the lack of rim effects... i don't want
+MODEL changes, i want balloon edge thin lines done with something."
+
+Why they blend, stated before anything was changed: four identical bottles 0.096 apart, and **nothing
+in the indoor lighting can separate them**. `IndoorMask`'s only directional term is
+`1 + bounce * dot(N, up)`, which leaves a VERTICAL face untouched at any value; the hemisphere light
+keys on `normal.y` alone; there is no camera-side fill anywhere in the rig. Two cylinders side by
+side get identical shading on their facing flanks by construction.
+
+**And raising the existing wash would have made it worse.** `PropEnv` already injects a Schlick edge
+term at pow 5 with a 0.08 floor — a fill over the whole prop, fitted so a flat panel does not go
+black. A broad edge term lifts BOTH flanks of a seam evenly and welds the pair harder. What reads as
+two objects is each bottle carrying its OWN line with the dark gap between them: bright, dark, bright.
+
+So the contour is a second term on the same dot product at a completely different exponent —
+`propEnvRim * pow(1 - dot(N,V), propEnvRimPow)` added beside the wash, three new uniforms, three
+instructions, and the `customProgramCacheKey` string unchanged.
+
+**Fitted live on the gas rack over its own 45,225 pixels** against the same frame with the term off,
+cam pinned by the rig itself. The two knobs turn out to be INDEPENDENT and that is the useful part:
+
+| rimStrength / rimPow | pixels lifted > 25/255 | peak lift |
+|---|---|---|
+| 0.35 / 24 | 1.44% | +165 |
+| 0.70 / 24 | 1.79% | +199 |
+| 1.20 / 32 | 1.57% | +215 |
+| 2.00 / 40 | 1.48% | +224 |
+
+The lifted FRACTION never leaves 1.4-1.8% — the same line — while the peak climbs. `rimPow` sets the
+line's WIDTH and `rimStrength` its BRIGHTNESS. Past pow 24 the line goes SUB-PIXEL at the rig's
+distance and breaks into a dotted crawl, which looks like noise rather than a contour. **Shipped
+0.9 / 18**: the widest setting that is still a line and not a wash, at the strength where four
+bottles read as four objects. +0 draw calls, +0 programs, uniforms only.
+
+`PropEnv.apply` reaches `FacilityKit` and `FacilityJanitor` only, so this lands on the gas rack, the
+trolley, the broom and the bucket. `FacilityDeco`'s prop batch (the drums, the shelving) is one call
+away and deliberately left off — it is a visible change to every deco prop and wants its own look.
+
+**Verdict: rejected on looks — "too bright and too pixelated". Removed.** See below.
+
+## The contour was rejected on looks, and baked AO did the job instead
+
+The fit above is sound and the term still went out. Reported on seeing it: *"rim looks too bright and
+too pixelated, remove it. lets try baked ao instead."* Both halves of that are visible in the sweep
+table itself, read the other way round — a line whose lifted fraction is **1.4-1.8% of the prop** is
+by construction a line one to two pixels wide, so at the rig's distance it is a chain of lit pixels
+rather than a contour, and the only knob that widens it (`rimPow` down) turns it back into the wash it
+was built not to be. **A screen-space contour on a prop this small has no width to spend.** That is
+the finding, and it applies to any future edge term at this camera.
+
+**AO is the other answer to the same question, and it is a better one here.** The wash, the glint and
+the contour are all view-dependent terms standing in for an environment; AO is the only term in the
+pipeline that darkens a place because of the SHAPE around it, which is exactly what the gap between
+two bottles is. `tools/models.mjs` has baked it into `COLOR_0` since the TRELLIS props (`ao` in
+`art/models.json`), so this is a manifest key and not a shader: **zero draw calls, zero uniforms, zero
+texture memory**, one `USE_COLOR` program permutation that the warm chain already covers.
+
+`facility/gas-rack-hand` takes **ao 0.55, aoRes 128**. The resolution is not a default worth taking:
+the voxel cell is `span / res`, so at res 72 over this prop's 3.0-unit span a cell is 0.042 and the
+0.096 gap between two bottles is TWO CELLS — the crevice the term exists for would be inside the
+grid's own error. 128 puts four cells in it. Bake cost 121 ms.
+
+Measured on the built glb, 1822 vertices: COLOR_0 runs **0.45 .. 1.00**, median 0.977, and round one
+bottle's shoulder ring it swings 1.00 on the exposed side to **0.45** in the gap.
+
+Measured live, A/B on the same pinned frame by toggling `material.vertexColors`, over the two racks'
+own **36,150 amber pixels**:
+
+| | mean | sd |
+|---|---|---|
+| AO off | 88.24 | 7.82 |
+| AO on | 82.74 | **10.95** |
+
++40% shading variance over the prop. Read along one scanline across a single bottle, AO off falls
+`95 91 90 91 85 85 84 84 83 82` — a 13-count roll over the whole cylinder — against AO on's
+`95 91 90 91 84 83 80 76 71 63 60`, a 35-count falloff with its darkest point ON the seam. **The
+contour lit 1.8% of the prop; AO modulates all of it**, which is why one reads as four cylinders and
+the other read as four cylinders with wires round them.
+
+`facility/lab-trolley-hand` takes the same 0.55/128, restoring what the TRELLIS `facility/lab-trolley`
+it replaced had shipped with — an open frame is the case the bake was added for, since no light in the
+game reaches the inside of one.
+
+**Verdict: landed. The rim term and its three `PropEnvOpts` fields are reverted out.**

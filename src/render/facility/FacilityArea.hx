@@ -38,6 +38,9 @@ class FacilityArea implements Area3D
     RenderConfig.MODELS.facilityCar,
   ].concat([for (p in FacilityDebris.PROPS) p.path])
     .concat([for (p in FacilityKit.PROPS) p.path])
+    // and the cleaner's pair, which divide the interior with the lab kit by SURFACE rather than by a
+    // shared list: corridors and washrooms against rooms (render.facility.FacilityJanitor)
+    .concat([for (p in FacilityJanitor.PROPS) p.path])
     // and the hazard barrels standing on the LOW decoration cells, one batch per LIVERY, appended
     // off their own table so a fourth needs no edit here (render.facility.FacilityDeco.drums).
     // their sibling the BIN is deliberately absent: it rides the compound's existing bin batch,
@@ -61,6 +64,7 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityDeskTray,
       RenderConfig.MODELS.facilityDeskMugB,
       RenderConfig.MODELS.facilityDeskMugC,
+      RenderConfig.MODELS.facilityDeskJournals,
       // and the FITTINGS that ship as glbs (render.facility.FacilityDeco.fittings): the two server
       // racks, which are two MESHES and not one at two scales, then the storage cabinet. Every row
       // stays even when its family's ..._GLB flag is off — an empty batch is a row with a count of
@@ -72,6 +76,7 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityMachine,
       RenderConfig.MODELS.facilityMachine,
       RenderConfig.MODELS.facilityBookcase,
+      RenderConfig.MODELS.facilityShelving,
       RenderConfig.MODELS.facilityBasin,
       RenderConfig.MODELS.facilitySofa,
       RenderConfig.MODELS.facilityTableLow,
@@ -276,6 +281,10 @@ class FacilityArea implements Area3D
       // the one family in here the vision mask really matters to — everything else on this list
       // stands outdoors, where the mask reads 1
       for (p in FacilityKit.props(scene, model))
+        green.push(p);
+      // and the cleaner's broom and bucket, which take the corridors and the washrooms the lab kit's
+      // Surf.TILE gate leaves to them
+      for (p in FacilityJanitor.props(scene, model))
         green.push(p);
       // and the hazard barrels standing on the room floor's own LOW decoration cells, one batch per
       // livery and last because EXTRA names them last. the other half of that family, the bins,

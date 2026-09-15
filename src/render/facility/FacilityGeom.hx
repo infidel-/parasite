@@ -683,7 +683,7 @@ class FacilityGeom
 // of grating read as a vehicle pit, and tiled down it read as four of them
   static function floorBuf(m:Facility, col:Int, row:Int, floors:Array<MeshBuf>):MeshBuf
     {
-      return switch (m.surf[row][col])
+      return switch (surfUnder(m, col, row))
         {
           case Surf.LINO: floors[Surf.LINO];
           case Surf.CONCRETE: floors[Surf.CONCRETE];
@@ -691,6 +691,28 @@ class FacilityGeom
           case Surf.WASH: floors[Surf.WASH];
           default: floors[Surf.TILE];
         };
+    }
+
+// the surface a cell's floor is drawn in — its own, except that a DRAIN inherits its neighbours'.
+//
+// `Surf.GRATE` is a final tile id the generator writes under a floor drain, and FacilityRooms
+// .paintRoomFloor steps over final ids — so a washroom's drain cell kept the laboratory's own tile
+// and rendered as one square of lab floor in the middle of the marble. The drain's art is a centred
+// decal of its own (FacilityDeco.drain), so what belongs UNDER it is simply the room's floor
+  static function surfUnder(m:Facility, col:Int, row:Int):Int
+    {
+      var s = m.surf[row][col];
+      if (s != Surf.GRATE)
+        return s;
+      for (d in 0...4)
+        {
+          var c = col + DC[d], r = row + DR[d];
+          if (FacilityModel.inside(m, c, r) &&
+              m.surf[r][c] != Surf.GRATE &&
+              FacilityModel.isIndoor(m, c, r))
+            return m.surf[r][c];
+        }
+      return Surf.TILE;
     }
 
 // the top of one wall or door cell's masonry — permanent roof, and over glazing the aluminium

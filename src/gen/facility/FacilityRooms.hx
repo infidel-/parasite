@@ -41,21 +41,31 @@ class FacilityRooms
         if (room.w <= ROOM_SIZE && room.h <= ROOM_SIZE) room];
       if (cand.length == 0)
         return;
-      // THE WASHROOM IS PICKED FIRST AND PICKED FOR ITS WALL. Its light wells need one wall that is
-      // exterior masonry end to end, and a room in the middle of a building has none — so a plain
-      // first-come roll put the compound's only washroom in an interior core about half the time and
-      // it came out with no glazing at all. The lab and the office are indifferent to this, so the
-      // toilet gets first refusal on a perimeter room and they take what is left
+      // THE WASHROOM IS PICKED FIRST AND PICKED FOR ITS WALL AND ITS DOOR. Its light wells need one
+      // wall that is exterior masonry end to end, and a room in the middle of a building has none —
+      // so a plain first-come roll put the compound's only washroom in an interior core about half
+      // the time and it came out with no glazing at all. The lab and the office are indifferent to
+      // this, so the toilet gets first refusal on a perimeter room and they take what is left.
+      //
+      // AND THE DOOR TEST IS THE OTHER HALF, reported as a washroom reached only through a
+      // laboratory and carrying two doors into it. Nothing in FacilityConnect knows what a room is
+      // FOR — roles are dealt here, two passes after the doors are cut, and the inner-wall pass
+      // above has by then turned every corridor-facing room cell into the same tile as a lab-facing
+      // one, so doorSpots rolls uniformly over a room's whole ring and a room's door COUNT is
+      // accretion: one of its own plus one for every neighbour whose roll landed on the shared wall.
+      // The ordering that makes the cut blind is what makes this cheap, though — by here the doors
+      // are real objects and can simply be asked. NO CANDIDATE PASSES MEANS NO WASHROOM, which a
+      // compound already has to survive (the roll below is 60%), rather than relaxing onto the fault
       var wash = -1;
       for (i in 0...cand.length)
-        if (exteriorWall(cells, cand[i]) != null)
+        if (exteriorWall(cells, cand[i]) != null &&
+            washroomDoor(state, cells, cand[i]))
           {
             wash = i;
             break;
           }
-      if (wash < 0)
-        wash = 0;
-      if (state.area.chance(60))
+      if (state.area.chance(60) &&
+          wash >= 0)
         cand[wash].role = ROLE_TOILET;
       var cabinets = 0;
       for (i in 0...cand.length)
@@ -82,6 +92,27 @@ class FacilityRooms
             FacilityToilet.roomToilet(state, room);
           else roomChemistryLab(state, room);
         }
+    }
+
+// may this room be the washroom, as far as its DOORS are concerned: exactly one of them, and onto a
+// corridor.
+//
+// gen.facility.FacilityToilet has assumed both since it was written — toiletPartition takes the
+// FIRST door of the room and lays the T's bar, lobby and stem against that wall, so a second door on
+// another wall opens into a sealed half or straight past the partition. This is what makes the
+// assumption true rather than lucky.
+//
+// A DOOR'S `dir` POINTS OUT OF THE ROOM THAT CUT IT, which is why the roomID1 test is not
+// redundant: a neighbour's door into our shared wall is in this room's door list too, and its delta
+// names US. Such a door can never be onto a corridor, so it fails here and the room is passed over
+  static function washroomDoor(state: _FacilityState, cells: Array<Array<Int>>, room: _Room): Bool
+    {
+      var doors = FacilityConnect.getRoomDoors(state, room);
+      if (doors.length != 1 ||
+          doors[0].roomID1 != room.id)
+        return false;
+      var delta = deltaMap[doors[0].dir];
+      return (cells[doors[0].x + delta.x][doors[0].y + delta.y] == TEMP_BUILDING_CORRIDOR);
     }
 
 // the first wall of this room that is EXTERIOR masonry for its whole length, or null for a room in
@@ -354,6 +385,102 @@ class FacilityRooms
           free++;
           i++;
         }
+    }
+
+// is this cell a worktop? the tile range clearTableSpots reads, and the one
+// render.facility.FacilityModel.tableOf derives m.table from
+  static inline function isTableCell(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      return (cells[x][y] >= Const.TILE_LABS_TABLE_3X3_7 &&
+        cells[x][y] <= Const.TILE_LABS_TABLE2_1X1);
+    }
+
+// drop one worktop of every pair that touches only at a CORNER.
+//
+// reported as two tables intersecting diagonally in a small room, and they really do intersect.
+// render.facility.FacilityTables grows every worktop by BENCH_LIP 0.2 on each side that has no table
+// ORTHOGONALLY next to it — every test in that file is one of the four axis steps, there is no
+// diagonal probe anywhere — so two cells meeting at a corner each grow INTO the other: the caps
+// overlap in a lip-squared square, the edge bands cross, and both cells emit their full casework
+// right up to the shared point.
+//
+// IT IS THE BAY RHYTHM FALLING OUT OF PHASE WITH THE ROOM, not a placement bug. In a room narrower
+// than NARROW_ROOM the runs take two-cell bays, and on a 3x3 the top run's bay ends one cell short of
+// the corner while the right run's first row is the one gen.blocks.RoomBlock.glazeWall skips — which
+// leaves a table at (x1+1,y1) and another at (x2,y1+1) with both cells between them bare.
+//
+// AND IT IS CULLED IN THE GENERATOR AND NOT IN THE RENDERER, which is not a preference: m.table is
+// derived from the persisted tile id, the 2D view reads those ids directly and GenCheck.clueSpots
+// counts bare bench cells, so a render-side drop would desync all three.
+//
+// THE FIRST CUT ASKED THE WRONG QUESTION AND THAT IS THE LESSON HERE. It looked at one CELL — no
+// orthogonal table beside it, at least one diagonally — i.e. it culled LOOSE cells, on the reasoning
+// that a cell with a neighbour is part of a run and should be left alone. But two RUNS whose ends
+// meet corner to corner have an orthogonal neighbour each, so neither was ever a candidate, and
+// 20000 seeds passed over a fault still on screen at 27,14. Measured with the corrected check:
+// 1503 of 2000 seeds carry at least one such pair, where the loose case alone was 1387.
+//
+// The fault is a property of the PAIR: two cells touch corner-only when they are diagonal and BOTH
+// of the two cells they share are bare. What goes is the loose end of the SHORTER run, so a long
+// bench keeps its length and the stub beside it is what disappears
+  public static function cullDiagonalTables(state: _FacilityState, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // until a whole pass finds nothing: dropping a cell can expose a pair that was hidden behind
+      // it. removal only ever shrinks the set, so this terminates
+      var again = true;
+      while (again)
+        {
+          again = false;
+          for (y in room.y1...room.y2 + 1)
+            for (x in room.x1...room.x2 + 1)
+              // the two diagonals with a HIGHER y only: the other two are the same pairs seen from
+              // their far cell, and testing both ends does the same work twice
+              for (dx in [ -1, 1 ])
+                {
+                  if (!isTableCell(cells, x, y) ||
+                      !cornerOnly(cells, x, y, dx, 1))
+                    continue;
+                  // a tie takes the diagonal partner, which is the later cell in the row-major scan
+                  // and so stable for a seed
+                  if (orthTables(cells, x, y) < orthTables(cells, x + dx, y + 1))
+                    clearTable(state, cells, x, y);
+                  else
+                    clearTable(state, cells, x + dx, y + 1);
+                  again = true;
+                }
+        }
+    }
+
+// do (x,y) and its (dx,dy) diagonal touch ONLY at that corner? GenCheck.corner, and the two must
+// stay the same test — this culls what that one counts
+  static inline function cornerOnly(cells: Array<Array<Int>>, x: Int, y: Int,
+      dx: Int, dy: Int): Bool
+    {
+      return (isTableCell(cells, x + dx, y + dy) &&
+        !isTableCell(cells, x + dx, y) &&
+        !isTableCell(cells, x, y + dy));
+    }
+
+// how many of the four orthogonal neighbours are worktops — how long a run this cell is part of, to
+// the only depth the choice needs
+  static function orthTables(cells: Array<Array<Int>>, x: Int, y: Int): Int
+    {
+      var n = 0;
+      for (i in 0...Const.dir4x.length)
+        if (isTableCell(cells, x + Const.dir4x[i], y + Const.dir4y[i]))
+          n++;
+      return n;
+    }
+
+// take one worktop cell back to bare floor, decoration and all
+  static function clearTable(state: _FacilityState, cells: Array<Array<Int>>, x: Int, y: Int)
+    {
+      cells[x][y] = TEMP_BUILDING_ROOM;
+      for (o in state.area.getObjectsAt(x, y))
+        if (o.type == 'decoration')
+          state.area.removeObject(o);
     }
 
 // add a decoration that the 3D view draws as real furniture: whatever Const.FACILITY_DECO places on

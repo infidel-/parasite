@@ -320,7 +320,6 @@ class FacilityDeco
       cut(scene, b[B_SHELF_SIDE], FacilityStyle.DECO_SHELF_SIDE);
       // DoubleSide: a shelf is a bare quad with no thickness, so it has to be seen from under it
       solid(scene, b[B_SHELF_TOP], FacilityStyle.DECO_SHELF_TOP, true);
-      solid(scene, b[B_BOX], FacilityStyle.DECO_BOX, false);
       solid(scene, b[B_BC_FRONT], FacilityStyle.DECO_BOOKCASE_FRONT, false);
       solid(scene, b[B_BC_SIDE], FacilityStyle.DECO_BOOKCASE_SIDE, false);
       solid(scene, b[B_BC_TOP], FacilityStyle.DECO_BOOKCASE_TOP, false);
@@ -356,6 +355,9 @@ class FacilityDeco
   // more surfaces and two more calls, and the call is what the read costs
   static inline var B_SHELF_SIDE = 0;
   static inline var B_SHELF_TOP = 1;
+  // RETIRED AND NOT RENUMBERED: the crates are dealt into a lid by render.facility.FacilityClutter
+  // now and flushed from there, so nothing in this file writes buffer 2. The index stays because
+  // every constant below it is one, and a hole costs an unused MeshBuf
   static inline var B_BOX = 2;
   static inline var B_BC_FRONT = 3;
   static inline var B_BC_SIDE = 4;
@@ -421,11 +423,39 @@ class FacilityDeco
           var alongX = (ax > 0 && ax >= az);
           var hw = (alongX ? CELL : FacilityStyle.PART_T) / 2;
           var hd = (alongX ? FacilityStyle.PART_T : CELL) / 2;
+          var px0 = cx - hw, px1 = cx + hw;
+          var pz0 = cz - hd, pz1 = cz + hd;
+          // AND A RUN THAT ENDS AT MASONRY REACHES THE MASONRY'S OWN FACE, not its own cell
+          // boundary. FacilityGeom.slab insets a wall cell by (CELL - thick) / 2 on the hands its
+          // line does not carry into, so the wall's inner face stands 1.4 units back inside its cell
+          // — and a divider ending on the boundary left exactly that much daylight between the two
+          // halves it divides. Reported from the game as the separator not coming all the way to the
+          // outer wall. The same measurement the corridor casework and the kit props take
+          for (k in 0...2)
+            {
+              var d = (alongX ? 2 : 0) + k;
+              var c = col + FacilityGeom.DC[d], r = row + FacilityGeom.DR[d];
+              // isWall AND NOT isSolidWall: a washroom's light wells are glazing, and a divider
+              // meeting one meets the same masonry line the slab is inset off. A DOOR cell answers
+              // `carries` too and is not a wall, which is what keeps a divider out of an opening
+              if (isKind(m, c, r, kind) ||
+                  !FacilityModel.isWall(m, c, r) ||
+                  !FacilityGeom.carries(m, c, r))
+                continue;
+              var s = FacilityGeom.slab(m, c, r);
+              switch (d)
+                {
+                  case 0: pz0 = s.z1;
+                  case 1: pz1 = s.z0;
+                  case 2: px0 = s.x1;
+                  default: px1 = s.x0;
+                }
+            }
           return {
-            x0: cx - hw,
-            x1: cx + hw,
-            z0: cz - hd,
-            z1: cz + hd,
+            x0: px0,
+            x1: px1,
+            z0: pz0,
+            z1: pz1,
             // the hand its long faces look out of: a wall between two halves faces both of them
             dir: (alongX ? 0 : 2),
             hasWall: false,
@@ -571,7 +601,8 @@ class FacilityDeco
       switch (kind)
         {
           case _FittingKind.FIT_SHELVING:
-            shelf(b, x0, x1, z0, z1, y, h, dir, head, col, row);
+            if (!FacilityStyle.DECO_SHELF_GLB)
+              shelf(b, x0, x1, z0, z1, y, h, head);
           case _FittingKind.FIT_BOOKCASE:
             // front, two ends, a top, and no back and no bottom: the back is buried in the masonry
             // and this camera pitches 51 degrees down, so nothing ever sees under a fitting —
@@ -1231,6 +1262,12 @@ class FacilityDeco
           h: FacilityStyle.DECO_BOOKCASE_H,
           on: FacilityStyle.DECO_BOOKCASE_GLB,
         },
+        {
+          kind: _FittingKind.FIT_SHELVING,
+          path: RenderConfig.MODELS.facilityShelving,
+          h: FacilityStyle.DECO_SHELF_H,
+          on: FacilityStyle.DECO_SHELF_GLB,
+        },
         // sized by the mesh's OWN height and not by BASIN_H — the tap is part of it
         {
           kind: _FittingKind.FIT_BASIN,
@@ -1310,112 +1347,29 @@ class FacilityDeco
       return out;
     }
 
-// the shelving: two alpha-cut end frames, a bare quad per shelf, and the boxes standing on them.
+// the shelving as QUADS: two alpha-cut end frames and a bare quad per shelf.
+//
+// SUPERSEDED BY THE GLB and kept behind FacilityStyle.DECO_SHELF_GLB for the A/B, exactly as the
+// rack, the cabinet, the machine and the bookcase are. What it could never state is the reason the
+// glb exists: an end FRAME drawn on a pane is a cut-out of a frame, and the shelves have no
+// thickness because a slab plus an edge band is four more quads a level.
 //
 // NO BACK AND NO TOP. Both were in the first build and both were wrong for the same reason — this
-// camera pitches 51 degrees DOWN, so a lid is most of what is seen of a unit and it hid every box
-// under it, and a back panel behind an open frame is a flat card you cannot see past. What is left
-// is what an open steel unit actually is: two frames, some shelves, and whatever is on them.
+// camera pitches 51 degrees DOWN, so a lid is most of what is seen of a unit and it hid everything
+// under it, and a back panel behind an open frame is a flat card you cannot see past. The glb keeps
+// both rules.
 //
-// the shelves have NO THICKNESS either. A slab plus an edge band is four more quads a level to
-// state something a 0.12-thick steel shelf does not have at this distance, and the end frame's own
-// cross rails already draw the line a shelf sits on
+// AND THE BOXES ARE NOT HERE ANY MORE. `boxes` stood 1..3 crates on every plate of every unit and
+// nothing else ever, which is why a shelving unit was the same object every time; the crates are
+// one of the things render.facility.FacilityClutter deals into a lid now, mixed with the sheet
   static function shelf(b:Array<MeshBuf>, x0:Float, x1:Float, z0:Float, z1:Float, y:Float,
-      h:Float, dir:Int, head:Int, col:Int, row:Int):Void
+      h:Float, head:Int):Void
     {
       FacilityGeom.pane(b[B_SHELF_SIDE], x0, x1, z0, z1, head, y, y + h);
       FacilityGeom.pane(b[B_SHELF_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
-      var lv = FacilityStyle.DECO_SHELF_Y;
-      for (i in 0...lv.length)
-        {
-          var sy = y + h * lv[i];
-          // the bay is up to the NEXT rail, or to the top rail for the last one — the frame's own
-          // spacing is uneven, so this cannot be one number
-          var bay = h * ((i + 1 < lv.length ? lv[i + 1] : FacilityStyle.DECO_SHELF_TOP_Y) - lv[i]);
-          FacilityGeom.cap(b[B_SHELF_TOP], x0, x1, z0, z1, sy, FacilityStyle.DECO_SHELF_TILE);
-          boxes(b[B_BOX], x0, x1, z0, z1, sy, bay, dir, col, row, i);
-        }
-    }
-
-// the boxes on one shelf. count, size, offset and TURN are all rolled off the cell and the shelf
-// index with render.facility.FacilityModel.mix — the deterministic placement hash every other prop
-// family here turns on, and never Math.random(): a unit has to come back the same on every rebuild
-// of the same area
-  static function boxes(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, room:Float,
-      dir:Int, col:Int, row:Int, lvl:Int):Void
-    {
-      // how much light this bay gets, which the room cannot say — see FacilityStyle.DECO_BOX_AO_LOW.
-      // the TOP shelf is the one bay an open frame leaves no lid over, so it takes the full 1.0 and
-      // the rest ramp down to _LOW at the floor
-      var n1 = FacilityStyle.DECO_SHELF_Y.length - 1;
-      var ao = FacilityStyle.DECO_BOX_AO_LOW + (1 - FacilityStyle.DECO_BOX_AO_LOW) *
-        (n1 > 0 ? lvl / n1 : 1.0);
-      var g = FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ (lvl * 83492791));
-      var n = 1 + g % FacilityStyle.DECO_BOX_MAX;
-      // the run along the wall, shared out into one bay per box, and the shelf's own depth
-      var a0 = (dir < 2 ? x0 : z0);
-      var span = ((dir < 2 ? x1 : z1) - a0) / n;
-      var deep = (dir < 2 ? z1 - z0 : x1 - x0);
-      // the middle of the shelf ACROSS the wall: a box sits centred in the depth, so the turn below
-      // has the same room to swing into on both sides
-      var dc = (dir < 2 ? (z0 + z1) : (x0 + x1)) / 2;
-      for (i in 0...n)
-        {
-          var hh = FacilityModel.mix(g ^ (i * 40503));
-          // a box is a BOX, in world units, and the bay only caps it
-          var bw = Math.min(span * 0.85, FacilityStyle.DECO_BOX_W +
-            ((hh % 1000) / 1000) * FacilityStyle.DECO_BOX_W_VAR);
-          var bh = Math.min(room * 0.8, FacilityStyle.DECO_BOX_H +
-            (((hh >>> 10) % 1000) / 1000) * FacilityStyle.DECO_BOX_H_VAR);
-          var yaw = (((hh >>> 4) % 1000) / 1000 - 0.5) * 2 * FacilityStyle.DECO_BOX_YAW;
-          // and the DEPTH is what the turn is paid for out of. turning a box about its centre swings
-          // its far corner out by hd * cos J + hw * sin J, so the half-depth that still fits inside
-          // the shelf is (deep / 2 - hw * sin J) / cos J — the lab trolley's KIT_GAP arithmetic,
-          // solved for the box instead of for the gap
-          var c = Math.cos(yaw), s = Math.abs(Math.sin(yaw));
-          var hd = Math.min(deep * FacilityStyle.DECO_BOX_D / 2, (deep / 2 - bw / 2 * s) / c);
-          var ac = a0 + i * span + (span - bw) * (((hh >>> 20) % 1000) / 1000) + bw / 2;
-          // and the SAME swing ALONG the wall, which the depth fit above does not cover: a box in
-          // the end bay was turning its corner out past the frame's own upright
-          var ext = bw / 2 * c + hd * s;
-          var lo = a0 + ext, hi = a0 + span * n - ext;
-          ac = (lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, ac)));
-          var cx = (dir < 2 ? ac : dc);
-          var cz = (dir < 2 ? dc : ac);
-          var hw = (dir < 2 ? bw : 2 * hd) / 2;
-          var hdd = (dir < 2 ? 2 * hd : bw) / 2;
-          crate(b, {
-            cx: cx,
-            cz: cz,
-            hw: hw,
-            hd: hdd,
-            y0: y,
-            y1: y + bh,
-            yaw: yaw,
-            ph: ((hh >>> 14) % 1000) / 1000,
-            ao: ao,
-          });
-          // and the shadow it lays on the plate under it, which the box's own vertex shading cannot
-          // be: that darkens the box's SIDES down to the plate, and this is the patch of plate the
-          // box sits in. render.world.ContactMask does the same job on the floor and cannot reach a
-          // shelf two units up — it is one top-down field, so a box up here would darken the tile
-          // below the whole unit. emitted from HERE and not from `crate` because the clamp needs the
-          // plate's own extent, which is this function's argument
-          FacilityDetail.pool({
-            cx: cx,
-            cz: cz,
-            hw: hw,
-            hd: hdd,
-            yaw: yaw,
-            y: y,
-            plate: {
-              x0: x0,
-              x1: x1,
-              z0: z0,
-              z1: z1,
-            },
-          });
-        }
+      for (lv in FacilityStyle.DECO_SHELF_Y)
+        FacilityGeom.cap(b[B_SHELF_TOP], x0, x1, z0, z1, y + h * lv,
+          FacilityStyle.DECO_SHELF_TILE);
     }
 
 // one box, TURNED about its own vertical axis. four sides and a top, no bottom.
@@ -1430,7 +1384,7 @@ class FacilityDeco
 // bay's weight over the whole box and a darkening down each side to the plate it stands on. The
 // buffer this writes into is the ONLY one keyed to a colour — B_BOX is written by this function and
 // nothing else — so no shared surface has to learn to push a channel it does not use
-  static function crate(b:MeshBuf, o:FacilityCrateOpts):Void
+  public static function crate(b:MeshBuf, o:FacilityCrateOpts):Void
     {
       var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
       // the corners in the one cyclic order that winds every face OUTWARD: sides walk i -> i + 1,
@@ -1574,7 +1528,7 @@ class FacilityDeco
 // of step with FacilityGeom.geom's own test: exactly one of these six carries a colour channel
 // (B_BOX, filled by `crate`), and a mismatch either way is silent — an attribute nothing samples, or
 // a shader reading one that is not there
-  static function solid(scene:Scene, b:MeshBuf, tex:String, both:Bool):Void
+  public static function solid(scene:Scene, b:MeshBuf, tex:String, both:Bool):Void
     {
       if (b.idx.length == 0)
         return;

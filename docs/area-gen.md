@@ -310,6 +310,50 @@ is already a final id, so the paint steps over it exactly as it steps over a fit
 4.02 → 4.28, against the 0.59 that 1.18 washrooms at 50% would suggest — the remainder is the test
 doing its job, since a washroom is dense with cubicles and basins and the drain will not land on one.
 
+#### A count of BAYS where a test of CELLS belonged, and both top corners of every room went bare
+
+Reported as empty corners in three separate rooms — "2x2 of nothing" in one, "empty cabinet corner
+again" in two more. `glazeWall` opens each vertical run with
+
+```haxe
+if (spot.dir == DIR_DOWN && cnt == 0)
+  continue;                       // "the horizontal wall has already had that corner"
+```
+
+and `cnt` counts CLOSED BAYS, not cells. So it dropped the whole first bay of both vertical walls —
+`windowSize` cells, 3 or 2 — where the comment justifies dropping the ONE cell the horizontal run
+took. Traced on a 7-tall room walking the left wall: `(x1, y1)` really was claimed by the top run,
+`(x1, y1+1)` and `(x1, y1+2)` belonged to NO bay node at all, `(x1, y1+3)` is the inter-bay blank,
+and the first real bay starts at `y1+4`. Cells no node owns never reach `Quota.deal`, so no filler
+ever sees them and they stay bare floor.
+
+**The overlap is exactly one cell per end and it is nameable**: a horizontal run's table line is the
+room's first and last ROW, so a vertical run meets it at `ty == room.y1` and `ty == room.y2`. Testing
+those two keeps every run contiguous (the walk breaks at `y2`, so the second is always the last cell
+pushed) and hands the rest back to the dealer.
+
+Measured, 4000 seeds: `nodes/bench` **38.34 → 57.16**, `nodes/workplace` **10.26 → 15.44**,
+`spawns/decoration` 129.8 → 152.45, `nodes/slot` 43.66 → **43.62** — the recovered cells extend the
+first bay of each vertical wall, and the core zone is what `max: MANY` gives them to. `rooms` 19.30 →
+19.31, `doors` 18.57 → 18.57, `unreachableRooms` 0, and 20000 seeds clean — which is the number that
+mattered, since every recovered cell is new floor for `standing` to ring a room with.
+
+#### The washroom dealt the LABORATORY's furniture
+
+"48,25 — should be no machinery in the toilet lol!" It is not `RoomZones.demands` — a washroom never
+reaches it (`RoomBlock.kindOf` sends it to the `WASHROOM` arm). `FacilityToilet.zones` deals its bays
+with `RoomBlock.SLOT` as the FILLER, so every bay that is not the one stall run or the one basin run
+becomes a `slot` node; and `slot()` branches on `room.role`, where a washroom is neither
+`ROLE_CABINET` nor anything special. It fell through to `FacilityRooms.addFitting(state, x, y)` with
+no role — which defaults to `Deco.BLOCK_LAB` and deals shelving, bookcases, racks and machines.
+
+A `ROLE_TOILET` arm that places nothing. The room does not go bare: its clutter is the bin, the broom
+and the bucket, all three render-only passes that need no tile (`render.facility.FacilityJanitor`,
+`FacilityGround.indoorBins`).
+
+**The general shape, and the third time this exact thing has bitten:** a filler with a `role` switch
+and no `default` arm is a filler that deals the laboratory's list to whatever room nobody named.
+
 ## Rules
 
 **Nothing in `gen/` may touch `game.Game`.** This is the rule the headless oracle rests on.
@@ -519,6 +563,109 @@ through `FacilityBuilding.at()` now, which returns -1 off the grid. `FacilityBlo
 keeps a plot two cells off the border on top of that, which is the same clearance
 `splitProfile().gap` gives it against a neighbour — a building's wall flush with the world's edge has
 nowhere to put its pavement apron.
+
+## The washroom was picked for its WALL and never asked about its DOOR
+
+Reported as a toilet that is not adjacent to a corridor and has two doors, both into a lab — and
+measured on `HEAD` over 2000 seeds, that was the common case, not a corner: a `washroomSane`
+assertion fired **2420 times against 1.19 washrooms per compound.**
+
+Nothing in `FacilityConnect` knows what a room is FOR, and it cannot: roles are dealt by
+`FacilityRooms.assignRoomThemes` **two passes after the doors are cut**, and the inner-wall pass in
+`generateBuilding` has by then turned every corridor-facing room cell into the same
+`TEMP_BUILDING_INNER_WALL` as a lab-facing one, so `doorSpots` rolls uniformly over a room's whole
+ring. A room's door COUNT is then accretion — one of its own, plus one for every neighbour whose own
+roll landed on the shared wall — and `GenCheck.doorsSane` permits that explicitly (two doors to two
+DIFFERENT rooms are two distinct pairs). The washroom pick then asked for an exterior wall and
+nothing else, which actively selects a PERIMETER room, the one least likely to have a corridor on any
+remaining face.
+
+**The ordering that makes the cut blind is what makes the fix trivial: by `assignRoomThemes` the
+doors are real objects, so ask them.** A candidate now also needs `getRoomDoors` to return exactly
+one door, cut BY this room (`roomID1 == room.id` — a neighbour's door into our shared wall is in our
+list too, and its delta names US), whose far cell is `TEMP_BUILDING_CORRIDOR`. **No candidate passes
+means no washroom**, which a compound already has to survive — the roll is 60% — rather than relaxing
+onto the fault. Measured: 1.19 → **0.89 washrooms per compound**, and that is the whole cost.
+
+`FacilityToilet.toiletPartition` has assumed both since it was written: it takes the FIRST door of
+the room and lays the T's bar, lobby and stem against that wall, so a second door on another wall
+opens into a sealed half. The assumption is true by construction now instead of by luck.
+
+**A LATE DOOR IS A SEPARATE PASS AND NEEDED ITS OWN GUARD.** With the filter in, 20000 seeds still
+failed 4 times: `connectRooms` runs after `finalizeTiles`, floods the grid and cuts into anything
+unreached, and the washroom is the far side of that cut, not the near one. `cutDoorToReached` now
+refuses a far cell in a `ROLE_TOILET` room on its first, non-duplicate-allowing pass — and takes it
+on the last one, where the alternative is a room nothing can walk into. `isRole` walks `allRooms`
+and not `roomByID`, which holds only the building being generated and answers `null` at the end.
+
+New invariant `GenCheck.washroomSane` over the FINAL door list. **Do not filter it on `_Door.skip`**:
+`fixDoors` deletes the door it drops and sets `skip` on the one it KEEPS, so a skipped door is a live
+door — filtering reported every washroom as having none.
+
+## A bay rhythm out of phase with the room corners, and two benches crossing
+
+Reported as tables intersecting diagonally in a small room, and they really do intersect. Every test
+in `render.facility.FacilityTables` is one of the four axis steps — there is no diagonal probe in the
+file — so two cells meeting only at a corner each grow their `BENCH_LIP 0.2` INTO the other: the caps
+overlap in a lip-squared square, the edge bands cross, and both cells emit full casework right up to
+the shared point.
+
+It is the rhythm and not a placement bug. In a room narrower than `NARROW_ROOM` the runs take
+two-cell bays, and on a 3x3 the top run's bay ends one cell short of the corner while the right run's
+first row is the one `glazeWall` skips — leaving a table at `(x1+1, y1)` and another at `(x2, y1+1)`
+with both cells between them bare. **Measured: 1387 of 2000 seeds carried at least one such pair.**
+
+`FacilityRooms.cullDiagonalTables`, called per room right before `clearTableSpots`, drops a table
+cell with **no orthogonal table neighbour and at least one diagonal one**, writing the cell back to
+`TEMP_BUILDING_ROOM` and removing any decoration `bench()` had stood on it. Runs are safe by
+construction — a cell with any orthogonal neighbour is part of one and is never touched — so what
+goes is always the loose one. The row-major scan picks which of a loose PAIR goes and is stable for a
+seed; once it is gone the other has no diagonal neighbour left and stays, which is what the report
+asked for.
+
+**It has to be the generator and not a render pass.** `m.table` is derived from the persisted tile id
+(`FacilityModel.tableOf`), the 2D view reads those ids directly and `GenCheck.clueSpots` counts bare
+bench cells — a render-side drop desyncs all three. New invariant `GenCheck.tablesSane`, 0 failures
+over 20000 seeds; `spawns/decoration` 151.4 → 150.3 is the whole cost.
+
+### …and it asked the wrong question, so 20000 clean seeds meant nothing
+
+> SUPERSEDES the two paragraphs above from `cullDiagonalTables` onward.
+
+Reported again at `27,14`: still two worktops crossing at a corner. The cull above tests a CELL — no
+orthogonal table beside it, at least one diagonally, i.e. **is this cell LOOSE** — on the reasoning
+that a cell with a neighbour is part of a run and should be left alone. Two table RUNS whose ends
+meet corner to corner have an orthogonal neighbour EACH, so neither was ever a candidate. And
+`tablesSane` carried the identical `continue`, so the oracle asked the same wrong question and
+reported 20000 clean seeds over a fault that was on screen.
+
+**The fault is a property of the PAIR, not of either cell.** Two worktops touch corner-only when they
+are diagonal neighbours and BOTH of the two cells they share are bare:
+
+```haxe
+table(x, y) && table(x + dx, y + dy) && !table(x + dx, y) && !table(x, y + dy)
+```
+
+That is exactly what `FacilityTables` cannot see, stated directly. Both the check and the cull now
+run it, over the two diagonals with a HIGHER y only — the other two are the same pairs seen from
+their far cell, and testing both ends does the work twice.
+
+**Measured with the corrected check: 1503 of 2000 seeds**, against 1387 for the loose case alone —
+so the blind spot was real but not the bulk of it. The bulk was there all along and the old cull did
+catch it; what it could not catch was the last ~8% of seeds, which is enough for a player to hit one.
+
+The cull now loops the row-major scan until a whole pass finds no pair (dropping a cell can expose
+one that was hidden behind it; removal only shrinks the set, so it terminates) and drops the cell
+with FEWER orthogonal table neighbours — the loose end of the shorter run, so a long bench keeps its
+length and the stub beside it goes. A tie takes the diagonal partner, which is the later cell in scan
+order and so stable for a seed.
+
+**0 failures over 20000 seeds; `spawns/decoration` 150.3 → 149.0.**
+
+> The lesson is not about tables. An invariant written from the same mental model as the fix it
+> guards will agree with the fix and prove nothing. `washroomSane` was written the other way round —
+> over the FINAL state, asking the outcome rather than restating the filter — and caught a real
+> late-door fault four seeds in 20000. This one restated the filter.
 
 ## Invariants downstream re-derives from the grid
 

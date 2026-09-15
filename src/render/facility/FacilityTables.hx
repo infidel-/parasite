@@ -175,9 +175,20 @@ class FacilityTables
                     plate: plate,
                   });
               }
+            // the hand THIS cell was thinned on, if it was — see the DESK_D cut above
+            var open = (hand >= 0 ? hand ^ 1 : -1);
             for (dir in 0...4)
               {
-                if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]))
+                // TWO DESKS MEETING AT A ROOM CORNER DO NOT ABUT, and the run test alone cannot see
+                // it: `wallHand` takes the FIRST wall it finds, so a corner cell and its neighbour
+                // back onto DIFFERENT walls and are thinned on DIFFERENT axes. Their rects then
+                // stand DESK_D short of the boundary between them while this loop skipped the panel
+                // on the grounds that the cell next door is a bench — reported from the game as two
+                // corner desks missing polygons. A neighbour only closes this face if neither of the
+                // two was cut away from the boundary they share
+                if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]) &&
+                    open != dir &&
+                    openHand(m, col + DC[dir], row + DR[dir]) != (dir ^ 1))
                   continue;
                 // the worktop's edge band, out on the grown rect with it
                 FacilityGeom.face(bTop, ox0, ox1, oz0, oz1, dir,
@@ -220,6 +231,17 @@ class FacilityTables
         if (FacilityModel.isWall(m, col + DC[d], row + DR[d]))
           return d;
       return -1;
+    }
+
+// which hand this cell's worktop was pulled BACK from, or -1 for one that reaches every boundary.
+// only an office desk is thinned, and only on the hand away from the wall it stands against
+  static function openHand(m:Facility, col:Int, row:Int):Int
+    {
+      if (!FacilityModel.isTable(m, col, row) ||
+          m.surf[row][col] != Surf.OFFICE)
+        return -1;
+      var h = wallHand(m, col, row);
+      return (h < 0 ? -1 : h ^ 1);
     }
 
 // does a door opening lie past this cell's `dir` face — straight through it, or diagonally past

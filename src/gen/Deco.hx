@@ -22,12 +22,22 @@ class Deco
   public static inline var BLOCK_LAB = 'lab';
 
 // every decoration that may appear on this mount in this block, IN TABLE ORDER — the order is part
-// of the seeded stream, so do not sort it
+// of the seeded stream, so do not sort it.
+//
+// AN ENTRY APPEARS `weight` TIMES, which is how `pick` below stays one flat roll: the alternative is
+// a running total and a second scan, and this list is five long
   public static function places(mount: String, block: String): Array<_DecoPlace>
     {
-      return [for (p in Const.FACILITY_DECO)
-        if (p.mount.indexOf(mount) >= 0 &&
-            p.blocks.indexOf(block) >= 0) p];
+      var out = [];
+      for (p in Const.FACILITY_DECO)
+        {
+          if (p.mount.indexOf(mount) < 0 ||
+              p.blocks.indexOf(block) < 0)
+            continue;
+          for (i in 0...(p.weight == null ? 1 : p.weight))
+            out.push(p);
+        }
+      return out;
     }
 
 // roll one decoration for this place and return the atlas frame to draw it with: an entry first,

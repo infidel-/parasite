@@ -161,6 +161,7 @@ class FacilityWarm
             },
           ].concat([for (p in FacilityDebris.PROPS) { path: p.path, h: p.h }])
             .concat([for (p in FacilityKit.PROPS) { path: p.path, h: p.h }])
+            .concat([for (p in FacilityJanitor.PROPS) { path: p.path, h: p.h }])
             // and the three hazard-barrel liveries on the LOW decoration cells, off their own table
             // like the two above. all three are the same MESH repainted, but each is its own path
             // and so its own material and its own program key — warming one would leave the other
@@ -222,6 +223,10 @@ class FacilityWarm
               {
                 path: RenderConfig.MODELS.facilityBookcase,
                 h: FacilityStyle.DECO_BOOKCASE_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityShelving,
+                h: FacilityStyle.DECO_SHELF_H,
               },
               {
                 path: RenderConfig.MODELS.facilityBasin,

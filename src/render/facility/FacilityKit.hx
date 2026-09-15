@@ -60,6 +60,9 @@ class FacilityKit
   // both props run long in local x, and `yaw0` is which way round each one's BACK faces — measured
   // off each built mesh by binning triangle area along the axes rather than read off the reference.
   // see the notes in art/models.json
+  // which row of PROPS the trolley is — `trolleys` below hands that one out on its own
+  public static inline var TROLLEY = 1;
+
   public static final PROPS:Array<KitProp> = [
     // the hand-modelled rack's back is at +y by construction, which glTF's y-up export turns into
     // +z, so it needs no turn at all where the generated bake needed half a circle
@@ -86,7 +89,7 @@ class FacilityKit
   public static function props(scene:Scene, m:Facility):Array<Models.InstancedProp>
     {
       var places = [for (_ in PROPS) new Array<Models.PropPlace>()];
-      place(m, places);
+      place(m, places, true);
       var out = [];
       for (i in 0...PROPS.length)
         {
@@ -113,8 +116,23 @@ class FacilityKit
       return out;
     }
 
-// pick the cells and fill them
-  static function place(m:Facility, places:Array<Array<Models.PropPlace>>):Void
+// where every TROLLEY in the compound stands, centre and jittered yaw.
+//
+// render.facility.FacilityClutter asks this so it can dress the two trays: this pass is render-only
+// and unstamped, so there is no m.deco cell for the clutter loop to find and the list has to be
+// handed over directly. It is a PURE re-run of the same placement — `fx` off, so the contact pool
+// and the wall halo are not laid a second time — rather than a cached array, because the placement
+// is a function of the saved grid and nothing else
+  public static function trolleys(m:Facility):Array<Models.PropPlace>
+    {
+      var places = [for (_ in PROPS) new Array<Models.PropPlace>()];
+      place(m, places, false);
+      return places[TROLLEY];
+    }
+
+// pick the cells and fill them. `fx` is what tells the pure query above from the real pass: the
+// floor pool and the wall halo are laid ONCE, by `props`
+  static function place(m:Facility, places:Array<Array<Models.PropPlace>>, fx:Bool):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var cand = [];
@@ -164,6 +182,8 @@ class FacilityKit
           // KIT_YAW_JIT 0.18 rad, which grows a trolley's axis-aligned box by 0.16 units at the
           // worst corner, and the field is blurred over 0.7 — the correction is a quarter of the
           // ramp it would be applied to
+          if (!fx)
+            continue;
           var pw = (c.dir < 2 ? p.w : p.d) / 2;
           var pd = (c.dir < 2 ? p.d : p.w) / 2;
           ContactMask.prop(px - pw, px + pw, pz - pd, pz + pd);

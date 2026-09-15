@@ -188,6 +188,87 @@ class GenCheck
         }
     }
 
+// no two worktops touch ONLY at a corner.
+//
+// render.facility.FacilityTables grows every bench by BENCH_LIP on each side with no table
+// orthogonally beside it, and it has no diagonal probe at all, so a pair like that draws two caps
+// overlapping in a lip-squared square with their edge bands crossing — the reported "tables
+// intersect each other diagonally". gen.facility.FacilityRooms.cullDiagonalTables drops one of each
+// pair; this is what says it dropped every one
+//
+// THE PREDICATE IS ABOUT THE PAIR AND NOT ABOUT THE CELL, which is the whole of the second pass on
+// this. The first cut asked whether a cell had NO orthogonal table beside it and a diagonal one —
+// i.e. whether it was LOOSE — and two table RUNS whose ends meet corner to corner have an orthogonal
+// neighbour each, so neither was ever looked at. 20000 seeds came back clean over a fault that was
+// still on screen at 27,14. Two cells touch corner-only when they are diagonal AND both of the two
+// cells they share are bare; that is the thing FacilityTables cannot see, stated directly
+  public function tablesSane(ctx: GenCtx)
+    {
+      var bad = 0;
+      var first = '';
+      for (y in 1...ctx.height - 1)
+        for (x in 1...ctx.width - 1)
+          {
+            if (!table(ctx, x, y))
+              continue;
+            // the two diagonals with a HIGHER y only: the other two are the same pairs seen from
+            // their far cell, and counting both ends doubles every fault
+            for (dx in [ -1, 1 ])
+              if (corner(ctx, x, y, dx, 1))
+                {
+                  bad++;
+                  if (first == '')
+                    first = x + ',' + y;
+                }
+          }
+      ok(bad == 0, bad + ' worktop pair(s) touch only at a corner, first at ' + first);
+    }
+
+// do (x,y) and its (dx,dy) diagonal touch ONLY at that corner?
+  inline function corner(ctx: GenCtx, x: Int, y: Int, dx: Int, dy: Int): Bool
+    {
+      return (table(ctx, x + dx, y + dy) &&
+        !table(ctx, x + dx, y) &&
+        !table(ctx, x, y + dy));
+    }
+
+// the tile range gen.facility.FacilityRooms and render.facility.FacilityModel.tableOf both read a
+// worktop out of
+  inline function table(ctx: GenCtx, x: Int, y: Int): Bool
+    {
+      return (ctx.cells[x][y] >= Const.TILE_LABS_TABLE_3X3_7 &&
+        ctx.cells[x][y] <= Const.TILE_LABS_TABLE2_1X1);
+    }
+
+// a washroom hangs off a CORRIDOR, through exactly ONE door.
+//
+// asserted over the FINAL door list and not inside gen.facility.FacilityRooms, because the pick
+// there runs three passes before the last door is cut: game.FacilityAreaGenerator.connectRooms walks
+// the finished tile grid and cuts into anything the flood cannot reach, and nothing in it asks a
+// room's role. So the filter states the intent and this states the outcome.
+//
+// gen.facility.FacilityToilet lays its T against the FIRST door of the room and models no second
+// one, so a washroom with two of them comes back with a partition sealing half of itself
+  public function washroomSane(rooms: Array<_Room>, doors: Array<_Door>)
+    {
+      for (r in rooms)
+        {
+          if (r.role != gen.facility.FacilityTemp.ROLE_TOILET)
+            continue;
+          // NOT FILTERED ON `skip`, which is bookkeeping and not a state: fixDoors deletes the
+          // door it drops from the list outright and sets `skip` on the one it KEEPS, so a skipped
+          // door is a live door. Filtering it out reported every washroom as having none
+          var mine = [for (d in doors) if (d.roomID1 == r.id || d.roomID2 == r.id) d];
+          ok(mine.length == 1, 'washroom at ' + r.x1 + ',' + r.y1 + ' has ' + mine.length +
+            ' doors, not 1');
+          // roomID 0 is the sentinel for "a corridor, or outdoors" — doorsSane's own note
+          for (d in mine)
+            ok(d.roomID1 == r.id && d.roomID2 == 0,
+              'washroom at ' + r.x1 + ',' + r.y1 + ' has a door at ' + d.x + ',' + d.y +
+              ' onto room ' + (d.roomID1 == r.id ? d.roomID2 : d.roomID1) + ' and not a corridor');
+        }
+    }
+
 // no two objects on one cell, and every spawn inside the area. two on a cell is the failure mode
 // every placement pass guards against with hasObjectAt, so one getting through means a pass forgot
   public function spawnsSane(ctx: GenCtx)

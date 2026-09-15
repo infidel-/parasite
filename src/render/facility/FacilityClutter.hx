@@ -79,9 +79,14 @@ class FacilityClutter
             var office = (m.surf[row][col] == Surf.OFFICE);
             n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK, office);
           }
-      n += slots(m, b, bOffice);
+      var bBox = MeshBufTools.make();
+      n += slots(m, b, bOffice, bBox);
+      n += trolleys(m, b, bBox);
       add(scene, b, FacilityStyle.CLUTTER_TEX);
       add(scene, bOffice, FacilityStyle.CLUTTER_OFFICE_TEX);
+      // the CRATES, which are neither of those two sheets: opaque cardboard carrying its own
+      // shading on the vertex channel. FacilityDeco's own flush, so the material is stated once
+      FacilityDeco.solid(scene, bBox, FacilityStyle.DECO_BOX, false);
       return n;
     }
 
@@ -104,7 +109,7 @@ class FacilityClutter
 // electrical service asks for the same reason: the lid's real footprint is the fitting slid along its
 // own wall and stood STAND_GAP off the slab face, and a second copy of that arithmetic here would be
 // wrong in exactly the places that are hard to see
-  static function slots(m:Facility, lab:MeshBuf, office:MeshBuf):Int
+  static function slots(m:Facility, lab:MeshBuf, office:MeshBuf, box:MeshBuf):Int
     {
       var n = 0;
       for (row in 0...m.h)
@@ -113,62 +118,188 @@ class FacilityClutter
             var kind = m.deco[row][col] - 1;
             if (kind != _FittingKind.FIT_BOOKCASE &&
                 kind != _FittingKind.FIT_TABLE_LOW &&
-                kind != _FittingKind.FIT_CABINET)
+                kind != _FittingKind.FIT_CABINET &&
+                kind != _FittingKind.FIT_SHELVING)
               continue;
             var isOffice = (m.surf[row][col] == Surf.OFFICE);
-            n += slot(isOffice ? office : lab, m, col, row, kind,
-              isOffice ? PICK_OFFICE : PICK);
+            var q = FacilityDeco.rectOf(m, col, row, kind);
+            var g = FacilityModel.mix((col * 1274126177) ^ (row * 1103515245));
+            var o:ClutterLidOpts = {
+              b: (isOffice ? office : lab),
+              box: null,
+              cx: (q.x0 + q.x1) / 2,
+              cz: (q.z0 + q.z1) / 2,
+              w: q.x1 - q.x0,
+              d: q.z1 - q.z0,
+              y: q.h,
+              yaw: 0.0,
+              bay: 0.0,
+              ao: 1.0,
+              seed: g,
+              pick: (isOffice ? PICK_OFFICE : PICK),
+              max: FacilityStyle.CLUTTER_SLOT_MAX,
+              // the LOUNGE TABLE is floored at one, for the workstation desk's reason one function
+              // down: a bookcase lid is a lid and may be bare, where a low table in front of a sofa
+              // exists to have something on it and reads as an unused moulding without
+              floor: (kind == _FittingKind.FIT_TABLE_LOW ? 1 : 0),
+            };
+            if (kind != _FittingKind.FIT_SHELVING)
+              {
+                n += lid(o);
+                continue;
+              }
+            // AND THE SHELVING IS THE ONE FITTING WITH MORE THAN A LID. Its three plates are what
+            // the unit is for, so each of them is dressed in turn — off the same rail levels the
+            // glb is built on — and each may take a CRATE as well as a decal. The bay a plate has
+            // over it runs up to the next rail, or to the head rail for the top one, and the
+            // frame's spacing is uneven, so that cannot be one number
+            var lv = FacilityStyle.DECO_SHELF_Y;
+            for (i in 0...lv.length)
+              {
+                o.y = q.h * (lv[i] + FacilityStyle.DECO_SHELF_PLATE_Y);
+                o.bay = q.h * ((i + 1 < lv.length ? lv[i + 1] :
+                  FacilityStyle.DECO_SHELF_TOP_Y) - lv[i]);
+                // how much light this bay gets, which the room cannot say — see
+                // FacilityStyle.DECO_BOX_AO_LOW. the TOP shelf is the one bay an open frame leaves
+                // no lid over, so it takes the full 1.0 and the rest ramp down to _LOW at the floor
+                o.ao = FacilityStyle.DECO_BOX_AO_LOW + (1 - FacilityStyle.DECO_BOX_AO_LOW) *
+                  (lv.length > 1 ? i / (lv.length - 1) : 1.0);
+                o.box = box;
+                o.seed = FacilityModel.mix(g ^ ((i + 1) * 83492791));
+                o.max = FacilityStyle.CLUTTER_STORE_MAX;
+                o.floor = 1;
+                n += lid(o);
+              }
           }
       return n;
     }
 
-// one lid's worth: 0..CLUTTER_SLOT_MAX items scattered over it, each inset by its own half size so
-// nothing overhangs, and spaced off the ones already down. the same rejection sampler `cell` runs,
-// against a rect that is the FITTING and not the grid
-  static function slot(b:MeshBuf, m:Facility, col:Int, row:Int, kind:Int, pick:Array<Int>):Int
+// the two trays of every lab trolley in the compound.
+//
+// THE TROLLEY HAS NO GRID CELL and that is deliberate — render.facility.FacilityKit is render-only
+// and unstamped, so nothing about it is written to m.deco and the loop above cannot see it. It is
+// asked directly instead, off the same deterministic placement list the batch itself is built from,
+// which is also how the lid gets the trolley's own jittered yaw
+  static function trolleys(m:Facility, lab:MeshBuf, box:MeshBuf):Int
     {
-      var q = FacilityDeco.rectOf(m, col, row, kind);
-      var g = FacilityModel.mix((col * 1274126177) ^ (row * 1103515245));
-      var want = g % (FacilityStyle.CLUTTER_SLOT_MAX + 1);
-      // and the LOUNGE TABLE is floored at one, for the workstation desk's reason one function down:
-      // a bookcase lid is a lid and may be bare, where a low table in front of a sofa exists to have
-      // something on it and reads as an unused moulding without
-      if (kind == _FittingKind.FIT_TABLE_LOW &&
-          want == 0)
-        want = 1;
-      var cx = (q.x0 + q.x1) / 2, cz = (q.z0 + q.z1) / 2;
+      var n = 0;
+      var lv = FacilityStyle.KIT_TROLLEY_SHELF_Y;
+      for (p in FacilityKit.trolleys(m))
+        for (i in 0...lv.length)
+          n += lid({
+            b: lab,
+            box: box,
+            cx: p.x,
+            cz: p.z,
+            w: FacilityStyle.KIT_TROLLEY_W - 2 * FacilityStyle.CLUTTER_SLOT_INSET,
+            d: FacilityStyle.KIT_TROLLEY_D - 2 * FacilityStyle.CLUTTER_SLOT_INSET,
+            y: p.y + FacilityStyle.KIT_TROLLEY_H * lv[i],
+            yaw: p.yaw,
+            // the top tray has the room the bottom one does not, and neither has a lid over it
+            bay: (i + 1 < lv.length ? FacilityStyle.KIT_TROLLEY_H * (lv[i + 1] - lv[i]) : 0.0),
+            ao: (i + 1 < lv.length ? FacilityStyle.DECO_BOX_AO_LOW : 1.0),
+            seed: FacilityModel.mix(Std.int(p.x * 64) ^ (Std.int(p.z * 64) * 668265263) ^
+              ((i + 1) * 40503)),
+            pick: PICK,
+            max: FacilityStyle.CLUTTER_SLOT_MAX,
+            floor: 0,
+          });
+      return n;
+    }
+
+// one lid's worth: up to `max` items scattered over it, each inset by its own half size so nothing
+// overhangs, and spaced off the ones already down. the same rejection sampler `cell` runs, against a
+// surface that is STATED rather than looked up — see ClutterLidOpts for what that bought.
+//
+// A CRATE IS ONE OF THE ITEMS and not a second pass. That is the whole of what the storage furniture
+// asked for: the boxes on a shelf used to be their own placer, one to three per plate every time and
+// nothing else ever, so a shelving unit was always the same object. Here a box is simply what
+// CLUTTER_BOX_PCT of the rolls come up as, and the rest are the sheet
+  static function lid(o:ClutterLidOpts):Int
+    {
+      var want = o.seed % (o.max + 1);
+      if (want < o.floor)
+        want = o.floor;
       var spots:Array<ClutterSlot> = [];
+      var lc = Math.cos(o.yaw), ls = Math.sin(o.yaw);
       var n = 0;
       for (i in 0...want)
         {
-          var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
-          var sz = FacilityStyle.CLUTTER_SZ +
-            ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR;
-          var lid = Math.min(q.x1 - q.x0, q.z1 - q.z0) * FacilityStyle.CLUTTER_SLOT_FILL;
-          if (sz > lid)
-            sz = lid;
-          var rx = (q.x1 - q.x0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
-          var rz = (q.z1 - q.z0) / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
+          var h = FacilityModel.mix(o.seed ^ ((i + 1) * 668265263));
+          var crate = (o.box != null &&
+            h % 100 < FacilityStyle.CLUTTER_BOX_PCT);
+          // a decal is sized against the lid it lies on; a crate is a BOX in world units and the
+          // lid only caps it
+          var sz = (crate ? FacilityStyle.DECO_BOX_W +
+              ((h % 1000) / 1000) * FacilityStyle.DECO_BOX_W_VAR :
+            FacilityStyle.CLUTTER_SZ + ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR);
+          var cap = Math.min(o.w, o.d) * FacilityStyle.CLUTTER_SLOT_FILL;
+          if (sz > cap)
+            sz = cap;
+          var rx = o.w / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
+          var rz = o.d / 2 - sz * 0.5 - FacilityStyle.CLUTTER_SLOT_INSET;
           if (rx <= 0 ||
               rz <= 0)
             continue;
           var yaw = ((h >>> 12) % 1000) / 1000 * 2 * Math.PI;
           var ok = false;
-          var box = ClutterSlotTools.turned(cx, cz, sz, sz, yaw);
+          var b = ClutterSlotTools.turned(0.0, 0.0, sz, sz, yaw);
           for (t in 0...FacilityStyle.CLUTTER_TRIES)
             {
               var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
-              box.x = cx + (((hh % 1000) / 1000) * 2 - 1) * rx;
-              box.z = cz + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
-              ok = !ClutterSlotTools.hits(spots, box.x, box.z, box.hw, box.hd);
+              b.x = (((hh % 1000) / 1000) * 2 - 1) * rx;
+              b.z = ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = !ClutterSlotTools.hits(spots, b.x, b.z, b.hw, b.hd);
               if (ok)
                 break;
             }
           if (!ok)
             continue;
-          spots.push(box);
-          emit(b, box.x, box.z, sz, yaw, pick[(h >>> 22) % pick.length],
-            q.h + FacilityStyle.CLUTTER_Y);
+          spots.push(b);
+          // out of the lid's frame and into the world, `emit`'s own turn arithmetic
+          var wx = o.cx + b.x * lc - b.z * ls;
+          var wz = o.cz + b.x * ls + b.z * lc;
+          if (!crate)
+            emit(o.b, wx, wz, sz, yaw + o.yaw, o.pick[(h >>> 22) % o.pick.length],
+              o.y + FacilityStyle.CLUTTER_Y);
+          else
+            {
+              var bh = FacilityStyle.DECO_BOX_H +
+                (((h >>> 10) % 1000) / 1000) * FacilityStyle.DECO_BOX_H_VAR;
+              if (o.bay > 0 &&
+                  bh > o.bay * 0.8)
+                bh = o.bay * 0.8;
+              FacilityDeco.crate(o.box, {
+                cx: wx,
+                cz: wz,
+                hw: sz / 2,
+                hd: sz / 2,
+                y0: o.y,
+                y1: o.y + bh,
+                yaw: yaw + o.yaw,
+                ph: ((h >>> 14) % 1000) / 1000,
+                ao: o.ao,
+              });
+              // and the shadow it lays on the plate under it, which the box's own vertex shading
+              // cannot be: that darkens the box's SIDES down to the plate, and this is the patch of
+              // plate the box sits in. render.world.ContactMask does the same job on the floor and
+              // cannot reach a shelf two units up — it is one top-down field, so a box up here
+              // would darken the tile below the whole unit
+              FacilityDetail.pool({
+                cx: wx,
+                cz: wz,
+                hw: sz / 2,
+                hd: sz / 2,
+                yaw: yaw + o.yaw,
+                y: o.y,
+                plate: {
+                  x0: o.cx - o.w / 2,
+                  x1: o.cx + o.w / 2,
+                  z0: o.cz - o.d / 2,
+                  z1: o.cz + o.d / 2,
+                },
+              });
+            }
           n++;
         }
       return n;

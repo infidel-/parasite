@@ -541,10 +541,21 @@ class FacilityConnect
               nt >= walk.length ||
               walk[nt] == 0)
             continue;
-          // would this repeat a door the room already has? see the caller for why that matters
-          if (!allowDuplicate &&
-              hasDoorBetween(state, room.id, roomAtCell(state, fx, fy)))
-            continue;
+          // would this repeat a door the room already has? see the caller for why that matters.
+          //
+          // AND NOT INTO A WASHROOM, which is the same `allowDuplicate` escalation and the same kind
+          // of reason: gen.facility.FacilityRooms picks the washroom for having exactly one door
+          // onto a corridor and FacilityToilet lays the whole T against that one wall, so a door cut
+          // in here at the end of generation seals half the room behind the partition. Measured at 4
+          // seeds in 20000 before this. It is dropped on the last pass, where the alternative is a
+          // room nothing can walk into
+          if (!allowDuplicate)
+            {
+              var far = roomAtCell(state, fx, fy);
+              if (hasDoorBetween(state, room.id, far) ||
+                  isRole(state, far, ROLE_TOILET))
+                continue;
+            }
           // every indoor floor id sits at or above the chem-lab band; the road, pavement, alley and
           // grass the compound is built on are all well below it
           var indoor = (ft >= Const.OFFSET_CHEM_LAB);
@@ -643,6 +654,16 @@ class FacilityConnect
         if ((d.roomID1 == a && d.roomID2 == b) ||
             (d.roomID1 == b && d.roomID2 == a))
           return true;
+      return false;
+    }
+
+// does the room with this id carry this role? over allRooms, like roomAtCell below and unlike
+// roomByID, which holds only the building being generated and answers null at the end of generation
+  static function isRole(state: _FacilityState, roomID: Int, role: String): Bool
+    {
+      for (r in state.allRooms)
+        if (r.id == roomID)
+          return (r.role == role);
       return false;
     }
 

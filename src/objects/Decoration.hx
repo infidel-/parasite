@@ -34,6 +34,17 @@ class Decoration extends AreaObject
   public override function known(): Bool
     { return true; }
 
+// a washroom's DIVIDER is masonry as far as sight is concerned, and nothing else here is.
+//
+// it is a full-height slab (render.facility.FacilityStyle.PART_H is WALL_H - 1.0) standing on the
+// room's own centre line, and the two halves it makes could see straight through each other: a
+// partition cell finalises to a plain unwalkable floor id and every one of those is TILE_SEETHROUGH,
+// so game.AreaGame.recalcTile had nothing to read. Answered HERE and not in the tile table because
+// that id is stamped for EVERY fitting — a rack, a cabinet, a machine — and those are furniture you
+// see over
+  public override function canSeeThrough(): Bool
+    { return (Const.fittingOf(imageRow, imageCol) != _FittingKind.FIT_PARTITION); }
+
   public override function visible(): Bool
     { return false; }
 

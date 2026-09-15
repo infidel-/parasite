@@ -68,6 +68,13 @@ class FacilityWork
       var dir = FacilityTables.wallHand(m, col, row);
       if (dir < 0)
         return null;
+      // AND A WORKSTATION NOBODY CAN SIT AT IS NOT A WORKSTATION. `chairs` below has always refused a
+      // seat on a cell that is not clear floor — a desk run facing another run, or a desk in a room
+      // corner — and it was the only pass that knew, so the monitor, the tower and the keyboard went
+      // up anyway and the desk came back manned by nobody. Asked HERE instead, so every pass built on
+      // `at` agrees by construction and the cell falls back to plain clutter
+      if (!seat(m, col, row, dir))
+        return null;
       var c = CityConfig.cellToWorld(col, row);
       // back of the desk = the wall hand, measured from the CELL's own edge on that side
       var back = CELL / 2 - FacilityStyle.WORK_BACK;
@@ -87,6 +94,17 @@ class FacilityWork
         tz: z + tz * ts * FacilityStyle.WORK_TOWER_OFF,
         side: ts,
       };
+    }
+
+// is there anywhere in FRONT of this desk to put a chair? the cell opposite the wall it backs onto
+// has to be floor somebody can stand on — not another run, not a fitting, not masonry
+  static function seat(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      var c = col + DC[dir ^ 1];
+      var r = row + DR[dir ^ 1];
+      return (FacilityModel.isIndoor(m, c, r) &&
+        !FacilityModel.isTable(m, c, r) &&
+        m.deco[r][c] == 0);
     }
 
 // THE TWO SLOTS ONE DESK HAS, and the whole of the free worktop on a 4.0 x 2.6 one: the END the tower
@@ -209,7 +227,7 @@ class FacilityWork
       var g = FacilityModel.mix((col * 668265263) ^ (row * 83492791));
       var out:Array<TrinketSpot> = [];
       if ((g >>> 7) % 100 < FacilityStyle.WORK_TRINKET_PCT)
-        place(out, taken, 1 + (g >>> 14) % 3, sp[0].x, sp[0].z,
+        place(out, taken, BIG[(g >>> 14) % BIG.length], sp[0].x, sp[0].z,
           FacilityModel.mix(g ^ 0x5bf03635));
       if (g % 100 < FacilityStyle.WORK_MUG_PCT)
         place(out, taken, MUGS[FacilityModel.mix(g ^ 0x1b873593) % MUGS.length],
@@ -288,11 +306,26 @@ class FacilityWork
       w: FacilityStyle.WORK_MUG_W,
       d: FacilityStyle.WORK_MUG_W,
     },
+    // and the stack of logbooks, appended for the same reason the two glazes were: the back slot's
+    // roll is a bag of indices now (see BIG), so a seventh row costs one entry there and nothing here
+    {
+      path: RenderConfig.MODELS.facilityDeskJournals,
+      h: FacilityStyle.WORK_BOOKS_H,
+      w: FacilityStyle.WORK_BOOKS_W,
+      d: FacilityStyle.WORK_BOOKS_D,
+    },
   ];
 
   // which TRINKETS rows are cups. one roll picks among them, so a fourth glaze is one more entry
   // here and in the table above and nothing else
   static var MUGS = [0, 4, 5];
+
+  // and what stands at the BACK of a desk, as a WEIGHTED BAG rather than a uniform roll over the
+  // three big trinkets. A lamp on one desk in eight is somebody's lamp; on nearly one in five it is
+  // office issue, which is what a flat `1 + g % 3` under WORK_TRINKET_PCT 55 made it and what was
+  // reported. Paperwork, books and a plant are the things every desk could have, so they carry the
+  // weight — index 6 is the logbooks, and a bag is why adding them moved nothing else
+  static var BIG = [1, 1, 3, 3, 6, 6, 2];
 
 // the contact shade under one desk's set: three quads, one per object, each on its own footprint.
 //
@@ -602,13 +635,8 @@ class FacilityWork
             var face = FacilityStyle.DESK_D + FacilityStyle.BENCH_LIP - CELL / 2;
             var x = c.x + DC[out] * (face + FacilityStyle.CHAIR_OUT);
             var z = c.z + DR[out] * (face + FacilityStyle.CHAIR_OUT);
-            // the cell it would stand in has to be clear floor — a desk run facing another run, or
-            // one against the far side of a narrow room, has nowhere to put a seat
-            var nc = col + DC[out], nr = row + DR[out];
-            if (!FacilityModel.isIndoor(m, nc, nr) ||
-                FacilityModel.isTable(m, nc, nr) ||
-                m.deco[nr][nc] > 0)
-              continue;
+            // the cell it stands in is clear floor by construction: `at` asks `seat` before it
+            // returns a workstation at all, so a desk with nowhere to sit carries no machines either
             var g = FacilityModel.mix((col * 1266489917) ^ (row * 971658137));
             places.push({
               x: x,

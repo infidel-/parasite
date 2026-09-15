@@ -549,8 +549,15 @@ class FacilityGround
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
+            // A WASHROOM TAKES ONE TOO, and it is the same angle rule. What a washroom has that a
+            // corridor does not is furniture standing on its own floor — cubicles, a basin counter,
+            // a divider — so the fitting and worktop tests come with it, the way FacilityKit.wall
+            // already asks them of a room cell
             if (!FacilityModel.inside(m, col, row) ||
-                m.surf[row][col] != Surf.LINO ||
+                (m.surf[row][col] != Surf.LINO &&
+                 m.surf[row][col] != Surf.WASH) ||
+                FacilityModel.isFitting(m, col, row) ||
+                FacilityModel.isTable(m, col, row) ||
                 FacilityModel.nearDoor(m, col, row))
               continue;
             // which hand each wall is on, in FacilityGeom's own direction numbering. a bin needs one
@@ -576,7 +583,7 @@ class FacilityGround
               // the bin's mouth is its local +z, measured off the built glb by the park pass above.
               // here it is turned to look OUT of the angle it stands in, away from both walls at once
               yaw: Math.atan2(dx == 2 ? 1.0 : -1.0, dz == 0 ? 1.0 : -1.0),
-              y: surfY(Surf.LINO),
+              y: surfY(m.surf[row][col]),
             });
           }
     }

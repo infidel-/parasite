@@ -195,7 +195,9 @@ class FacilityBuilding
         {
           GenTree.build(RoomBlock.node(state, node, room),
             function(n) RoomBlock.fill(state, n));
-          // and with the room's benches dealt, make sure a clue still has somewhere to land on them
+          // and with the room's benches dealt, drop any that meets its only neighbour at a corner,
+          // then make sure a clue still has somewhere to land on what is left
+          FacilityRooms.cullDiagonalTables(state, room);
           if (room.role != ROLE_TOILET)
             FacilityRooms.clearTableSpots(state, room);
         }

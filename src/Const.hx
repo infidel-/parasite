@@ -165,8 +165,15 @@ class Const
       id: 'shelving',
       kind: FIT_SHELVING,
       mount: [ 'floor-high' ],
-      // laboratory only: a rack of unboxed kit is not a researcher's office furniture
-      blocks: [ 'lab' ],
+      // laboratory AND office. It was the lab's alone on the argument that a rack of unboxed kit is
+      // not a researcher's furniture, and it came back reported as having stopped spawning: measured
+      // end to end it was 0.70 (a slot is filled) x 0.50 (that slot is HIGH) x 0.60
+      // (FACILITY_FITTING_PCT) x a uniform 1-in-5 over the entries a lab's floor-high list holds,
+      // which is 4.2% of eligible wall cells and nothing at all next door
+      blocks: [ 'lab', 'cabinet' ],
+      // and WEIGHTED, which is the other half of the same number: three entries against a plain
+      // one's one takes it to 3-in-7 of that roll. Storage is what a storage compound is made of
+      weight: 3,
       frames: [
         { row: 8, col: 9 },
         { row: 8, col: 10 },

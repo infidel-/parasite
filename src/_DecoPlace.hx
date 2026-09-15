@@ -26,4 +26,8 @@ typedef _DecoPlace = {
   // the same strings _Room.role carries (gen.facility.FacilityTemp.ROLE_*), with 'lab' for the null
   // role, so a room deals its own furniture by passing its own role through
   var blocks: Array<String>;
+  // how many times more often than a plain entry this one is dealt. absent = 1, and gen.Deco.pick
+  // rolls over the weighted list — the roll is over ENTRIES and not frames (see its own note), so
+  // this is the only way to say that one KIND is more common than another
+  @:optional var weight: Int;
 }

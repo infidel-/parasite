@@ -273,7 +273,6 @@ class RoomBlock
       var th = (spot.dir == DIR_RIGHT ? 1 : windowSize);
       var x = spot.x, y = spot.y;
       var len = 0;
-      var cnt = 0;
       var noTable = false;
       // does THIS bay stand beside a doorway? taken on the TABLE line and not the window line,
       // because a doorway one row past the worktop is still one a bench stands in the swing of; and
@@ -307,7 +306,6 @@ class RoomBlock
               addBay(node, room, bays, run, tag, drawers, noTable, doorBlock);
               run = [];
               len = 0;
-              cnt++;
               if (spot.dir == DIR_DOWN &&
                   y > room.y2 - windowSize)
                 noTable = true;
@@ -326,10 +324,14 @@ class RoomBlock
           if (!noWindow)
             cells[x][y] = windowTiles[len];
           len++;
-          // the first bay of a vertical run takes no floor: the run along the horizontal wall has
-          // already had that corner
+          // the cell the run along the horizontal wall already took. ITS TABLE LINE IS THE ROOM'S
+          // FIRST AND LAST ROW, so a vertical run meets it at exactly one cell on each end — and
+          // this used to read `cnt == 0`, which is a count of CLOSED BAYS and not of cells, so it
+          // dropped the whole first bay of both vertical walls: 2 or 3 cells that belonged to no bay
+          // node at all, never reached gen.Quota.deal, and stayed bare floor. Reported from the game
+          // as an empty 2x2 in the corner of a lab and an empty corner in an office
           if (spot.dir == DIR_DOWN &&
-              cnt == 0)
+              (ty == room.y1 || ty == room.y2))
             continue;
           run.push({ x: tx, y: ty });
         }
@@ -607,6 +609,13 @@ class RoomBlock
           //
           // an office takes STANDING furniture and nothing else: a crate of flasks or a waste drum
           // on the floor is the laboratory's clutter, and the low list is all laboratory
+          // A WASHROOM'S LEFTOVER BAYS TAKE NOTHING. gen.facility.FacilityToilet deals its own zones
+          // and everything that is neither the stall run nor the basin run falls through to this
+          // filler, which asks gen.Deco with NO role — i.e. the laboratory's own block — so a
+          // washroom came back with a bank of machines and a shelving unit in it. Its clutter is a
+          // bin, a broom and a bucket, and all three are render-only passes
+          if (room.role == ROLE_TOILET)
+            continue;
           if (room.role == ROLE_CABINET)
             {
               if (high)

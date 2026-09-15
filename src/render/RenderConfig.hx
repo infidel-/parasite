@@ -740,7 +740,7 @@ class RenderConfig {
     // corridor's casework fails: a rack of domed bottles and an open wheeled frame are silhouette,
     // where a cabinet run is a box and is merged geometry
     facilityKitGas: 'models/facility/gas-cylinders.glb',  // four-bottle cylinder rack, strap rail, foot rail
-    facilityKitTrolley: 'models/facility/lab-trolley.glb', // two-shelf trolley on castors, push handle
+    facilityKitTrolley: 'models/facility/lab-trolley-hand.glb', // two trays, tube frame, castors
     // the three hazard barrels standing on a LOW decoration cell (render.facility.FacilityDeco).
     // ONE MESH, THREE PAINTS — all three are art/models.json labels over the tunnels' own
     // sewer/drum.glb source, recoloured by tools/livery.py, so they cost three batches and no new
@@ -772,6 +772,13 @@ class RenderConfig {
     // per-instance colour), which is the same price the drums pay for the same thing
     facilityDeskMugB: 'models/facility/desk-mug-b.glb',        // the same cup, grey-blue
     facilityDeskMugC: 'models/facility/desk-mug-c.glb',        // the same cup, warm brown
+    // and the stack of logbooks beside them, off the JANITOR pack rather than the desk one — it
+    // shares its binding cloth and its page edges with nothing on that sheet
+    facilityDeskJournals: 'models/facility/desk-journals.glb', // four hardbacks, 48 tris
+    // the two things a cleaner leaves in a corridor or a washroom (models-src/facility/janitor_build.py).
+    // render-only and unstamped, the litter bin's own contract — see render.facility.FacilityJanitor
+    facilityBroom: 'models/facility/janitor-broom.glb',        // leaning, 52 tris
+    facilityBucket: 'models/facility/janitor-bucket.glb',      // a vessel with a bail, 300
     // the ROOM TEMPLATE props. A WC pan is a curved shell with a cistern behind it and a chair is a
     // shaped back over a five-star base on castors: both are silhouettes no axis-aligned quad states,
     // which is what earns a mesh generator
@@ -820,6 +827,11 @@ class RenderConfig {
     // and the bookcase, whose whole read at this camera is that the BOARDS stand in front of the
     // spines — four proud boxes running between the stiles (models-src/facility/bookcase_build.py)
     facilityBookcase: 'models/facility/deco-bookcase.glb',     // four boards, books behind them
+    // and the open shelving, the strongest shape claim of the lot: the quads it replaces are two
+    // alpha-cut PANES standing in for end frames, i.e. a cut-out drawing of a frame with
+    // zero-thickness shelves between them (models-src/facility/store_build.py, one sheet with the
+    // trolley, and neither of them a pixel of new art)
+    facilityShelving: 'models/facility/deco-shelving.glb',     // four uprights, rails, three plates
     // and the washroom counter, whose bowl is a real RECESS and whose tap is two boxes — which
     // between them retire the family's only alpha-cut mesh (models-src/facility/basin_build.py)
     facilityBasin: 'models/facility/deco-basin.glb',           // counter, sunk bowl, mixer tap
