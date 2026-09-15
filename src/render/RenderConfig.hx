@@ -764,6 +764,14 @@ class RenderConfig {
     facilityDeskPlant: 'models/facility/desk-plant.glb',       // pot and a leaf cone, 56
     facilityDeskLamp: 'models/facility/desk-lamp.glb',         // foot, stem, shade, 52
     facilityDeskTray: 'models/facility/desk-tray.glb',         // a sheaf and a folder, 24
+    // and TWO MORE GLAZES OF THE SAME CUP, which is what a mug on a desk that is somebody's needs:
+    // one model dealt to every desk in the compound reads as issue kit whatever its frequency. Three
+    // LABELS OFF ONE MESH exactly as the three hazard barrels are — art/models.json gives each its own
+    // baseColor tint and sat over the same desk-mug.glb, so the variety costs no art and no
+    // triangles. It does cost a batch each (render.Models.instanced is keyed by path and carries no
+    // per-instance colour), which is the same price the drums pay for the same thing
+    facilityDeskMugB: 'models/facility/desk-mug-b.glb',        // the same cup, grey-blue
+    facilityDeskMugC: 'models/facility/desk-mug-c.glb',        // the same cup, warm brown
     // the ROOM TEMPLATE props. A WC pan is a curved shell with a cistern behind it and a chair is a
     // shaped back over a five-star base on castors: both are silhouettes no axis-aligned quad states,
     // which is what earns a mesh generator

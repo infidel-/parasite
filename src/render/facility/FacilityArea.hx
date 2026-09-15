@@ -53,11 +53,14 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityMonitor,
       RenderConfig.MODELS.facilityTower,
       RenderConfig.MODELS.facilityKeyboard,
-      // and the desk trinkets, in FacilityWork.TRINKETS' own order
+      // and the desk trinkets, in FacilityWork.TRINKETS' own order — the three cup glazes last, so
+      // adding a fourth is an append at both ends rather than an insert
       RenderConfig.MODELS.facilityDeskMug,
       RenderConfig.MODELS.facilityDeskPlant,
       RenderConfig.MODELS.facilityDeskLamp,
       RenderConfig.MODELS.facilityDeskTray,
+      RenderConfig.MODELS.facilityDeskMugB,
+      RenderConfig.MODELS.facilityDeskMugC,
       // and the FITTINGS that ship as glbs (render.facility.FacilityDeco.fittings): the two server
       // racks, which are two MESHES and not one at two scales, then the storage cabinet. Every row
       // stays even when its family's ..._GLB flag is off — an empty batch is a row with a count of

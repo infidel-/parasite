@@ -421,10 +421,19 @@ class FacilityConnect
               // a wall that does not duplicate an existing door first. The room being sealed means
               // any door it already has is unusable, so a second one between the same pair would be
               // correct — but scenario.AlienMissionCommon locks a room by taking the FIRST door it
-              // finds for it and stopping, so a duplicate pair leaves the other way in unlocked
+              // finds for it and stopping, so a duplicate pair leaves the other way in unlocked.
+              //
+              // AND THAT IS WHY THE DUPLICATE IS NOW THE LAST OF THE THREE AND NOT THE SECOND.
+              // Taking one fitting away (clearWayToReached) is invisible — a room comes back with one
+              // less cabinet in it — where a duplicate pair is a mission that silently locks nothing,
+              // and gen.GenCheck.doorsSane has always rejected it. The branch simply never fired in
+              // 4000 seeds until RoomBlock.glazeWall's `noTable` off-by-one was fixed and the extra
+              // bench run moved enough furniture to seal a room the other way; seed 131 then reported
+              // exactly the pair the check was written for. The duplicate stays as the third
+              // fallback: a room nothing can enter at all is worse than either
               if (cutDoorToReached(state, r, seen, false) ||
-                  cutDoorToReached(state, r, seen, true) ||
-                  clearWayToReached(state, r, seen))
+                  clearWayToReached(state, r, seen) ||
+                  cutDoorToReached(state, r, seen, true))
                 opened = true;
             }
           // nothing could be opened this round, so nothing will be next round either

@@ -183,7 +183,7 @@ class FacilityWork
       return out;
     }
 
-// the four things that stand on a desk BESIDE the machines, and which of them this cell carries.
+// the things that stand on a desk BESIDE the machines, and which of them this cell carries.
 //
 // PURE, LIKE `at` ITSELF, and that is the point of it being here rather than inside `props`: the
 // placement is a function of the saved grid alone, so render.facility.FacilityClutter can ask for it
@@ -212,7 +212,8 @@ class FacilityWork
         place(out, taken, 1 + (g >>> 14) % 3, sp[0].x, sp[0].z,
           FacilityModel.mix(g ^ 0x5bf03635));
       if (g % 100 < FacilityStyle.WORK_MUG_PCT)
-        place(out, taken, 0, sp[1].x, sp[1].z, g);
+        place(out, taken, MUGS[FacilityModel.mix(g ^ 0x1b873593) % MUGS.length],
+          sp[1].x, sp[1].z, g);
       return out;
     }
 
@@ -242,8 +243,14 @@ class FacilityWork
       });
     }
 
-// the four of them, index-aligned with `trinket`'s kind — so render.facility.FacilityGround.EXTRA and
-// FacilityWarm both derive their rows off this table and a fifth trinket needs no edit in either
+// the SIX of them, index-aligned with `trinket`'s kind — so render.facility.FacilityWarm derives its
+// rows off this table and a seventh needs no edit there.
+//
+// 0 IS THE MUG AND SO ARE 4 AND 5. Three glazes of one cup, three labels off one desk-mug.glb tinted
+// in art/models.json (the hazard barrels' own arrangement), because render.Models.instanced is keyed
+// by PATH and carries no per-instance colour — so a glaze is a batch whichever way it is done. They
+// sit at the END rather than beside index 0 because `trinket`'s "the big one" roll is `1 + g % 3`
+// over 1..3 and an insert would have moved the plant, the lamp and the tray under it
   public static final TRINKETS:Array<{ path:String, h:Float, w:Float, d:Float }> = [
     {
       path: RenderConfig.MODELS.facilityDeskMug,
@@ -269,7 +276,23 @@ class FacilityWork
       w: FacilityStyle.WORK_TRAY_W,
       d: FacilityStyle.WORK_TRAY_D,
     },
+    {
+      path: RenderConfig.MODELS.facilityDeskMugB,
+      h: FacilityStyle.WORK_MUG_H,
+      w: FacilityStyle.WORK_MUG_W,
+      d: FacilityStyle.WORK_MUG_W,
+    },
+    {
+      path: RenderConfig.MODELS.facilityDeskMugC,
+      h: FacilityStyle.WORK_MUG_H,
+      w: FacilityStyle.WORK_MUG_W,
+      d: FacilityStyle.WORK_MUG_W,
+    },
   ];
+
+  // which TRINKETS rows are cups. one roll picks among them, so a fourth glaze is one more entry
+  // here and in the table above and nothing else
+  static var MUGS = [0, 4, 5];
 
 // the contact shade under one desk's set: three quads, one per object, each on its own footprint.
 //
@@ -516,7 +539,20 @@ class FacilityWork
 // glass has an up axis and an outward normal that are not the world's — both are built here off the
 // one constant the model was authored with, which is why that angle stopped being a number private to
 // computer_build.py. The quad is the art's LIT rect and not the screen's full face: the glass ends
-// where the modelled bezel begins and lighting the frame would read as a glowing slab
+// where the modelled bezel begins and lighting the frame would read as a glowing slab.
+//
+// AND ITS UV IS ONE POINT, WHICH IS WHAT KILLED THE BRIGHT SPOT IN THE MIDDLE OF IT. This quad rides
+// render.facility.FacilityDeco's led mesh, whose alpha ramp is Textures.makeRectGlowGradient(0.30) —
+// a soft ROUND dot, which is what a 0.12 speck wants and what a 1.7 x 1.25 panel gets a hot OVAL out
+// of. Reported from the game as a bloom artefact on the screen, and it is not: it is the speck's own
+// falloff stretched over a panel. Collapsing all four corners onto (0.5, 0.5) samples the ramp's flat
+// centre — 255 across that whole SDF's interior — so the panel lights EVENLY, edge to edge, and the
+// quad's own rectangle is the shape, which is what a screen is. The four verts share one uv, so the
+// derivative is zero and the sample lands on mip 0; nothing else on this mesh is touched.
+//
+// It also lets the quad grow to the glass's real extent: WORK_SCREEN_GLOW_W/H used to be pulled
+// inside the art's content so the ellipse would not touch the bezel, and with no ellipse there is
+// nothing to pull in from
   static function screen(b:MeshBuf, cx:Float, y:Float, cz:Float, nx:Float, nz:Float,
       tx:Float, tz:Float, g:Int):Void
     {
@@ -542,7 +578,7 @@ class FacilityWork
       // a phase of its own per desk, so no two screens in a room wobble together
       var ph = ((FacilityModel.mix(g ^ 971658137) >>> 7) % 1000) / 1000;
       MeshBufTools.quadRGB(b, at(-1, -1), at(1, -1), at(1, 1), at(-1, 1),
-        [0, 0, 1, 0, 1, 1, 0, 1], FacilityStyle.WORK_SCREEN_LEVEL, ph, 4.0);
+        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], FacilityStyle.WORK_SCREEN_LEVEL, ph, 4.0);
     }
 
 // the chairs, one instanced batch for the compound. one per workstation and none anywhere else: a

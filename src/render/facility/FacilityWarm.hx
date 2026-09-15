@@ -167,6 +167,12 @@ class FacilityWarm
             // two to compile on the frame they first appear
             .concat([for (p in FacilityDeco.PROPS)
               { path: p.path, h: FacilityStyle.DECO_ROUND_H }])
+            // and the desk trinkets, off FacilityWork's own table rather than one row each — the mug
+            // alone is three paths now (three liveries off one mesh, art/models.json
+            // facility/desk-mug-b and -c) and the table is where a fifth trinket or a fourth glaze is
+            // added. Every one of them is its own material and so its own program key, the drums'
+            // reason for being listed at all
+            .concat([for (p in FacilityWork.TRINKETS) { path: p.path, h: p.h }])
             // and the two ROOM TEMPLATE props, for the same reason as everything above them: a path
             // is a material is a program key
             .concat([
@@ -192,23 +198,6 @@ class FacilityWarm
               {
                 path: RenderConfig.MODELS.facilityKeyboard,
                 h: FacilityStyle.WORK_KEY_H,
-              },
-              // and the four desk trinkets, off FacilityWork's own table so a fifth needs no edit here
-              {
-                path: FacilityWork.TRINKETS[0].path,
-                h: FacilityWork.TRINKETS[0].h,
-              },
-              {
-                path: FacilityWork.TRINKETS[1].path,
-                h: FacilityWork.TRINKETS[1].h,
-              },
-              {
-                path: FacilityWork.TRINKETS[2].path,
-                h: FacilityWork.TRINKETS[2].h,
-              },
-              {
-                path: FacilityWork.TRINKETS[3].path,
-                h: FacilityWork.TRINKETS[3].h,
               },
               // and the hand-modelled fittings, one path and so one program each — the low rack is
               // its own MESH (three chassis, not six squashed), see FacilityDeco.fittings

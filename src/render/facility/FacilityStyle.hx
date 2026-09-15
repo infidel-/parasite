@@ -842,8 +842,15 @@ class FacilityStyle
   // HOW OFTEN EACH OF THE TWO IS THERE AT ALL, and a mug on every desk was the first build's rule.
   // It reads as stock: the whole point of a desk being somebody's is that the next one along is not
   // the same, and two placed objects at two fixed offsets on every desk in the compound is the grid
-  // this family exists to break. Percent, rolled off the cell
-  public static inline var WORK_MUG_PCT = 70;
+  // this family exists to break. Percent, rolled off the cell.
+  //
+  // 30 AND NOT THE 70 IT SHIPPED AT, reported twice from the game as a cup on nearly every desk. 70
+  // was chosen when the front slot had no other claimant; it has one now — FacilityClutter offers the
+  // same slot to the office sheet's own paperwork the moment no mug takes it, so the slot is FILLED
+  // either way and the only thing the number decides is how often the thing in it is the SAME object.
+  // At 70 the compound deals one mug model 12 times and reads as issue kit; at 30 the rest of the
+  // slots come back off a 64-cell sheet, which is the random clutter that was asked for
+  public static inline var WORK_MUG_PCT = 30;
   public static inline var WORK_TRINKET_PCT = 55;
   // and how far one may wander off its nominal spot, world units each way. Small on purpose — the
   // spot is already the only free strip of a 4 x 2.6 desk (see WORK_TRINKET_RUN), so this is a hand
@@ -854,7 +861,12 @@ class FacilityStyle
   public static inline var WORK_MUG_H = 0.34;
   public static inline var WORK_MUG_W = 0.40;
   public static inline var WORK_PLANT_H = 0.72;
-  public static inline var WORK_PLANT_W = 0.64;
+  // 0.53 AND NOT THE 0.64 IT SHIPPED AT, and it follows the mesh as it always has: the skirt tier's
+  // pitch went 22 -> 44 degrees to stop the lower leaves passing through the pot rim
+  // (models-src/facility/desk_build.py), which stands the whole crown up and takes the plant from
+  // 0.6164 x 0.7159 across to 0.5146 x 0.5265. A claim box wider than the thing it claims for is only
+  // a waste of worktop, and this one is the widest of the four trinkets' boxes on a 1.13 strip
+  public static inline var WORK_PLANT_W = 0.53;
   public static inline var WORK_LAMP_H = 1.12;
   public static inline var WORK_LAMP_W = 0.70;
   public static inline var WORK_TRAY_H = 0.19;
@@ -903,21 +915,20 @@ class FacilityStyle
   // read against this compound's blue lighting is about a DIFFUSE accent; this one is ADDITIVE, so it
   // arrives as brightness and the hue only tints it
   public static inline var WORK_SCREEN_GLOW = 0xb6e4f4;
-  // and its level. FITTED DOWN FROM 0.35 AND THE SHAPE IS WHY, not the brightness alone: this quad
-  // rides the LED mesh, whose alpha ramp is Textures.makeRectGlowGradient(0.30) — a soft ROUND dot,
-  // which is what a 0.12 speck wants and what a 1.7 x 1.25 panel gets an OVAL out of. At 0.35 that
-  // oval read as a white card stuck on the monitor. The answer is the one docs/3d-models.md records
-  // for the booth's glazing: the failure is the uniform FLAT read, so drop the level until the glow
-  // is the screen's own light rather than a second object, and keep it well under the ~0.43 that
-  // crosses BLOOM_THRESHOLD so it never haloes like a light fitting
+  // and its level. FITTED DOWN FROM 0.35, and it stays where it was fitted: the glow is EVEN now
+  // (FacilityWork.screen collapses the quad's uv onto the ramp's flat centre) rather than an oval
+  // with a hot core, so the peak is unchanged and the read is not. Well under the ~0.43 that crosses
+  // BLOOM_THRESHOLD, which is what keeps a lit panel from haloing like a light fitting — the bright
+  // spot reported on it was never the bloom, it was the speck's falloff stretched over a monitor
   public static inline var WORK_SCREEN_LEVEL = 0.10;
-  // the lit part of that face as a fraction of the screen's own W and H. computer_build.py's SUB table
-  // crops the UVs to the art's measured CONTENT — rows/cols 9..247 and 9..233 of the cell's 256, i.e.
-  // 0.93 and 0.875 — and these are inside THAT, for the round ramp's sake: an ellipse drawn on the
-  // full glass touches the bezel at the centre of each edge and leaves the corners black, so the quad
-  // is pulled in until the whole ellipse sits within the glass
-  public static inline var WORK_SCREEN_GLOW_W = 0.78;
-  public static inline var WORK_SCREEN_GLOW_H = 0.72;
+  // the lit part of that face as a fraction of the screen's own W and H, and it is now the art's
+  // MEASURED CONTENT exactly: computer_build.py's SUB table crops the UVs to rows/cols 9..247 and
+  // 9..233 of the cell's 256, i.e. 0.93 and 0.875. They used to be pulled inside that for the round
+  // ramp's sake — an ellipse drawn on the full glass touches the bezel at the centre of each edge and
+  // leaves the corners black — and with the ellipse gone there is nothing to pull in from. A screen
+  // that is on is lit to its own bezel
+  public static inline var WORK_SCREEN_GLOW_W = 0.93;
+  public static inline var WORK_SCREEN_GLOW_H = 0.875;
   // and the leads: keyboard to screen and keyboard to tower, drawn with render.facility.FacilityCable
   // .strip into that family's OWN ribbon buffer, so they ride its texture, its mesh and its draw call.
   // a flatter bow than a wall drop's — a lead lying on a desk sags across the surface, it does not

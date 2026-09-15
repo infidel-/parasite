@@ -276,6 +276,20 @@ class FacilityLamps
             continue;
           var nx = Math.ceil(r.w / FacilityStyle.ROOM_SPACING);
           var ny = Math.ceil(r.h / FacilityStyle.ROOM_SPACING);
+          // and A DIVIDED ROOM IS TWO ROOMS TO A LIGHT FITTING, whatever its rect says. A washroom's
+          // partition runs through the middle of it (game.FacilityToilet.toiletPartition puts the T's
+          // STEM on the room's own centre row, and the small-room fallback puts the single line
+          // there), so a room under ROOM_SPACING on both axes fell to one point and that point landed
+          // on top of the divider — reported from the game as the washroom's lamp sitting on the
+          // separator. Forcing the count to 2 ACROSS the divider is the whole fix: the lattice's own
+          // (j + 0.5) / n spacing then puts one fixture in each half
+          var cut = divider(m, r);
+          if (cut == 2 &&
+              nx < 2)
+            nx = 2;
+          if (cut == 1 &&
+              ny < 2)
+            ny = 2;
           for (i in 0...nx)
             for (j in 0...ny)
               {
@@ -283,12 +297,16 @@ class FacilityLamps
                 var row = r.y1 + Std.int((j + 0.5) * r.h / ny);
                 // `lit` guards the room's CENTRE against a stale generatorInfo, and away from the
                 // centre a lattice point can land on a divider the saved grid has and the rect does
-                // not. the same predicate, asked per point. NOTE if FacilityStyle.CEIL_GLOW is ever
-                // turned back on: render.facility.FacilityGlow walks these same rects for the panel
-                // and the floor pool and must take this lattice with it, or a room gets one fitting
-                // drawn over several bulbs
-                if (!FacilityModel.isIndoor(m, col, row))
+                // not. the same predicate, asked per point — plus a nudge off the divider itself, see
+                // `free`. NOTE if FacilityStyle.CEIL_GLOW is ever turned back on:
+                // render.facility.FacilityGlow walks these same rects for the panel and the floor pool
+                // and must take this lattice with it, or a room gets one fitting drawn over several
+                // bulbs
+                var q = free(m, r, col, row);
+                if (q == null)
                   continue;
+                col = q.col;
+                row = q.row;
                 var c = CityConfig.cellToWorld(col, row);
                 ceilings.push({
                   x: c.x,
@@ -525,6 +543,73 @@ class FacilityLamps
 // it, and nothing else here trusts it to still describe the saved grid
   public static inline function lit(m:Facility, r:_Room):Bool
     return FacilityModel.isIndoor(m, Std.int((r.x1 + r.x2) / 2), Std.int((r.y1 + r.y2) / 2));
+
+// is a DIVIDER standing on this cell? the washroom's partition is the only fitting in the compound
+// that is a wall rather than a thing against one, so it is the only one a ceiling fixture has to
+// route around
+  static inline function isPart(m:Facility, col:Int, row:Int):Bool
+    return FacilityModel.inside(m, col, row) &&
+      m.deco[row][col] - 1 == _FittingKind.FIT_PARTITION;
+
+// which way a divider through the middle of this room runs, as the axis a fixture lattice must be
+// SPLIT ON: 1 for a divider running along x (so the two halves are apart in z), 2 for one running
+// along z, 0 for a room with no divider at all.
+//
+// TAKEN OFF THE CELL NEAREST THE ROOM'S CENTRE, which is where the thing that divides a room is: the
+// T's stem sits on the centre row and the small-room fallback's single line sits on the centre of its
+// own axis, so the bar — which only separates the lobby from the rest — is never the cell found. The
+// run direction is read the way render.facility.FacilityDeco.rectOf reads it, by COUNTING partition
+// neighbours on each axis rather than testing for any: at the T's junction one x neighbour stands
+// against two in z, and "has an x neighbour" calls that a horizontal run
+  static function divider(m:Facility, r:_Room):Int
+    {
+      var cc = Std.int((r.x1 + r.x2) / 2), cr = Std.int((r.y1 + r.y2) / 2);
+      var bx = -1, br = -1, best = 0;
+      for (row in r.y1...r.y2 + 1)
+        for (col in r.x1...r.x2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                !isPart(m, col, row))
+              continue;
+            var d = (col - cc) * (col - cc) + (row - cr) * (row - cr);
+            if (bx < 0 ||
+                d < best)
+              {
+                bx = col;
+                br = row;
+                best = d;
+              }
+          }
+      if (bx < 0)
+        return 0;
+      var ax = (isPart(m, bx - 1, br) ? 1 : 0) + (isPart(m, bx + 1, br) ? 1 : 0);
+      var az = (isPart(m, bx, br - 1) ? 1 : 0) + (isPart(m, bx, br + 1) ? 1 : 0);
+      return (ax > 0 && ax >= az ? 1 : 2);
+    }
+
+// the cell a fixture at this lattice point actually hangs over: itself, or the nearest of its four
+// neighbours still inside the room, when the point landed on the divider. null when none of the five
+// will do — a lattice point that is neither indoor nor next to indoor floor has nothing to light
+  static function free(m:Facility, r:_Room, col:Int, row:Int):{ col:Int, row:Int }
+    {
+      for (d in 0...5)
+        {
+          var c = (d == 0 ? col : col + DC[d - 1]);
+          var w = (d == 0 ? row : row + DR[d - 1]);
+          if (c < r.x1 ||
+              c > r.x2 ||
+              w < r.y1 ||
+              w > r.y2)
+            continue;
+          if (FacilityModel.isIndoor(m, c, w) &&
+              !isPart(m, c, w))
+            return {
+              col: c,
+              row: w,
+            };
+        }
+      return null;
+    }
 
 // does the scan already stand a mast on this cell?
   static function taken(hits:Array<LampHit>, col:Int, row:Int):Bool

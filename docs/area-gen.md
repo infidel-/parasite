@@ -206,6 +206,41 @@ cannot see. It stays until a check proves it is idle.
 Sub-block data rides on `_GenNode.tags` (`h3`/`v2`/… for the tile family, `drawer`, `door`, `end`)
 and `_GenNode.roomID`, both of which the node typedef already carried for exactly this.
 
+#### The `end` tag was one cell early on the vertical walls, and it cost a wall of worktop per room
+
+Reported from the game as "some labs are pretty empty now", with a cell. The room it named was a 4x7
+lab with three doors and **2 bench cells in 28**: both horizontal bays stood in a doorway's swing and
+both vertical bays were marked `TAG_END`, so `RoomZones`' core demand could accept nothing at all and
+every bay in the room fell through to the `slot` filler. A room lined with cabinets and no worktop.
+
+`glazeWall` tests the blank cell between two bays against the far wall, and the two axes disagreed:
+
+```haxe
+if (spot.dir == DIR_DOWN && y >= room.y2 - windowSize)      // one cell early
+else if (spot.dir == DIR_RIGHT && x > room.x2 - windowSize) // correct
+```
+
+`x`/`y` is the BLANK cell, so the next bay spans `it + 1 .. it + windowSize` and fits exactly when the
+last of those is `room.y2`. `>=` called that running off the end. Every room whose height divided
+evenly into the rhythm lost its whole second vertical bay — and the `noTable` latch, which is correct
+(once a run has passed the far wall the rest of it has too), then carried the mistake to the end of
+the run. Both tests are `>` now.
+
+**Measured, 4000 seeds:** `nodes/bench` 33.31 → **38.39**, `nodes/workplace` 8.62 → **10.25**,
+`nodes/slot` 50.68 → **43.68**, `spawns/decoration` 126.19 → 129.51. Rooms, doors and cells/rooms
+unmoved — the bays moved out of the filler and into the zones that wanted them, which is what a
+redistribution looks like. Live: no lab in a fresh compound comes back with zero worktop.
+
+**It also fired a latent door bug, and that is the entry worth keeping.** One seed in 4000 then failed
+`GenCheck.doorsSane` with *two doors between rooms 101 and 102*. `connectRooms` tries three things in
+order, and the middle one was `cutDoorToReached(..., allowDuplicate = true)` — which its own comment
+acknowledges breaks `scenario.AlienMissionCommon` (it locks a room by taking the FIRST door it finds
+and stopping, so a duplicate pair leaves the other way in unlocked). It had simply never fired in
+4000 seeds; the extra bench run moved enough furniture to seal a room the other way. The duplicate is
+now the LAST of the three, after `clearWayToReached`: taking one fitting away is invisible, a
+duplicate pair is a mission that silently locks nothing, and a room nothing can enter at all is worse
+than either. **20000 seeds clean.**
+
 ### A room is DEALT, not typed as it is walked
 
 The glazing pass pushes every bay as kind `bay` and says nothing about what goes in it; `Quota.deal`

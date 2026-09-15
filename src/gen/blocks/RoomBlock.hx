@@ -292,13 +292,24 @@ class RoomBlock
           if (len >= windowSize)
             {
               // the blank cell between two bays. close the bay that just ended, then re-test the
-              // next one against the far wall and against the doorways
+              // next one against the far wall and against the doorways.
+              //
+              // BOTH AXES TEST `>` AND THE VERTICAL ONE USED TO TEST `>=`, which cost a whole wall of
+              // worktop in every room whose height divided evenly into the rhythm. `x`/`y` here is the
+              // BLANK cell, so the next bay spans it + 1 .. it + windowSize and fits exactly when the
+              // last of those is room.y2 — which `>=` called running off the end. Reported from the
+              // game as labs coming back empty, and measured on the seed it was reported from: a 4 x 7
+              // lab with three doors had its two 3-cell vertical bays marked TAG_END and both
+              // horizontal bays taken by doorways, so gen.blocks.RoomZones' core demand could accept
+              // nothing and every bay in the room fell through to the SLOT filler. 2 bench cells in 28
+              // The latch is deliberate and stays: once a run has passed the far wall the rest of it
+              // has too
               addBay(node, room, bays, run, tag, drawers, noTable, doorBlock);
               run = [];
               len = 0;
               cnt++;
               if (spot.dir == DIR_DOWN &&
-                  y >= room.y2 - windowSize)
+                  y > room.y2 - windowSize)
                 noTable = true;
               else if (spot.dir == DIR_RIGHT &&
                   x > room.x2 - windowSize)

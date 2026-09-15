@@ -88,11 +88,17 @@ class FacilityClutter
 // the CLUTTER SLOTS: every piece of standing furniture with a usable LID, dressed the same way a
 // worktop is and out of the same two sheets.
 //
-// TWO KINDS AND NOT EVERY FITTING, and the test is whether the top is a surface somebody would put
+// THREE KINDS AND NOT EVERY FITTING, and the test is whether the top is a surface somebody would put
 // something down on. A bookcase's lid is flat and at hand height; the lounge table exists to have
-// things on it and read as a moulded slab without them. A rack is louvred, a machine's lid carries a
-// drawn gland (art/textures.json facility/deco-machine-top) and a cabinet is chest-high with a
-// rounded top — none of the three is a shelf.
+// things on it and read as a moulded slab without them. A rack is louvred and a machine's lid carries
+// a drawn gland (art/textures.json facility/deco-machine-top), so neither is a shelf.
+//
+// THE CABINET WAS EXCLUDED ON A WRONG PREMISE and is in now. The note here called it "chest-high with
+// a rounded top"; models-src/facility/cabinet_build.py builds it as a plain box with a
+// buildlib.chamfer down its edges, so its lid is as flat as the bookcase's and only taller —
+// DECO_CABINET_H 3.43 against DECO_BOOKCASE_H. CLUTTER_SLOT_INSET 0.10 already keeps a decal off that
+// chamfer, and CLUTTER_SLOT_FILL caps the item against the 1.2 of DECO_CABINET_D, which is the
+// narrower of its two sides
 //
 // THE RECT COMES OFF FacilityDeco.rectOf, which is the same pure function of the saved grid the
 // electrical service asks for the same reason: the lid's real footprint is the fitting slid along its
@@ -106,7 +112,8 @@ class FacilityClutter
           {
             var kind = m.deco[row][col] - 1;
             if (kind != _FittingKind.FIT_BOOKCASE &&
-                kind != _FittingKind.FIT_TABLE_LOW)
+                kind != _FittingKind.FIT_TABLE_LOW &&
+                kind != _FittingKind.FIT_CABINET)
               continue;
             var isOffice = (m.surf[row][col] == Surf.OFFICE);
             n += slot(isOffice ? office : lab, m, col, row, kind,

@@ -1093,3 +1093,182 @@ and the front slot filled on **12 of 12 desks, 6 by a mug and 6 by paperwork**. 
 regress: 65 decals over 78 bench cells. Screenshots: plant at the back slot, mug at the front, the
 neighbouring desk's paperwork beside its keyboard and nothing under either tower.
 
+
+## A round alpha ramp is a speck's, and a monitor is not a speck (2026-09-15)
+
+Reported from the game as "a bright spot on the monitor screen — it was a bad attempt of bloom". It
+was not the bloom. `FacilityWork.screen` puts one additive quad on the glass and that quad rides
+`FacilityDeco`'s LED mesh, whose alpha map is `Textures.makeRectGlowGradient(0.30)` — **a soft ROUND
+dot**, which is exactly what a 0.12 status speck wants and what a 1.7 x 1.25 panel gets a hot OVAL
+out of. The previous pass had already felt this and answered it with the wrong knob: `WORK_SCREEN_LEVEL`
+was fitted DOWN 0.35 -> 0.10 and `WORK_SCREEN_GLOW_W/H` pulled in to 0.78/0.72 so the ellipse would
+not touch the bezel. Both were treating the falloff as brightness.
+
+**The fix is four numbers in the uv and nothing else: all four corners at (0.5, 0.5).** The ramp's
+rounded-box SDF reads 255 across its whole interior, so a degenerate uv samples the flat centre and
+the quad lights EVENLY, edge to edge, with the quad's own rectangle as the shape — which is what a
+screen is. Zero derivative means the sample lands on mip 0; nothing else on the mesh is touched, and
+the mesh stays one draw call for every blinking thing in the compound.
+
+With no ellipse to keep off the bezel, `WORK_SCREEN_GLOW_W/H` went back out to the art's MEASURED
+content, 0.93 / 0.875 (`computer_build.py`'s SUB crops, rows/cols 9..247 and 9..233 of 256). Level
+stays 0.10: the peak is unchanged, only its distribution moved, and 0.10 is still well under the
+~0.43 that crosses `BLOOM_THRESHOLD`.
+
+**Verdict: landed.** Live at three offices — the glass reads as a lit panel to its bezel and the hot
+core is gone. The general finding is the one to keep: **an alpha ramp is part of a quad's SHAPE, and a
+shared additive mesh hands every tenant the same one.** A tenant whose shape is a rectangle opts out
+by collapsing its uv, which costs nothing and needs no second material.
+
+## A divided room is two rooms to a light fitting (2026-09-15)
+
+Reported as "toilet lamp is right on top of the separator — should be two, one on each side", and the
+two halves of that sentence are the diagnosis and the fix.
+
+`FacilityLamps` hangs a `ROOM_SPACING` lattice over each room's rect, and a washroom is under 6 on
+both axes, so `nx` and `ny` both fall to 1 and the single point lands on the rect's centre. That
+centre is exactly where the divider is: `FacilityToilet.toiletPartition` puts the T's **stem** on
+`room.y1 + h/2`, and the small-room fallback `toiletLine` puts its single line on the centre of its
+own axis. So the one fitting in the room was always over the one cell in it that is a wall.
+
+**`divider(m, r)` asks the finished grid, not the generator.** It takes the `FIT_PARTITION` cell
+NEAREST the room centre — which is the stem, never the bar, since the bar sits one cell in from the
+entrance wall — and reads its run direction by **counting** partition neighbours per axis, the rule
+`FacilityDeco.rectOf` already uses and for the same reason (at the T's junction one x neighbour
+stands against two in z, and "has an x neighbour" calls that a horizontal run). The lattice count is
+then forced to 2 ACROSS that axis, and the existing `(j + 0.5) / n` spacing puts one fitting in each
+half with no other change. A point that still lands on the divider is nudged to the nearest of its
+four neighbours inside the room (`free`).
+
+**Verdict: landed.** Two 4x4 washrooms measured, both now 2 bulbs where they had 1, at cells either
+side of the stem; every other room's count unmoved, because `Math.max(n, 2)` is a no-op on a room
+already over `ROOM_SPACING`. Standing note: **this is render-side and asks the grid, so it costs the
+generator nothing and survives a room whose rect and whose furniture disagree** — which is the same
+move `vent-cap` made when it stopped being a flag carried along a wall.
+
+## Third pass on three hand-modelled props, and each fault was a number that was nearly right (2026-09-15)
+
+Three reports in one turn, all against `models-src/facility/`, and none of them was a modelling
+decision — each was an offset within a few hundredths of correct.
+
+- **The basin's shaft cap cut across the bowl.** Reported with the poly probe: `deco-basin.glb`
+  face #10 at local y **1.73**, which is `SHAFT_Z` exactly. The second pass sank a 0.07-deep shaft
+  under the lid and CAPPED it at 1.73 — above the bowl's own floor at 1.200 — so that cap sat inside
+  the sink. **The shaft is gone entirely now and the lid face is simply deleted**: the vessel is one
+  closed lathe from flange to floor, so nothing under it needs closing, and the opening it leaves
+  (1.12 x 0.72) is covered all round by the flange (1.25 x 0.775) with the bowl's widest sub-flange
+  section (1.10 x 0.682) dropping through it. **And there was a SECOND polygon across the basin**,
+  reported straight after off the .blend: the BOWL'S OWN low cap. `buildlib.tube` closes a ring with
+  a full DISC, and this lathe's FIRST ring is the flange's outer edge — the widest point of the whole
+  vessel at 1.25 x 0.775 — so capping it laid a 20-gon of that size at **z 1.806, which is 0.07 BELOW
+  the rim at 1.876**. The largest horizontal face in the model (area 3.842 against the bowl floor's
+  0.346), and the pass that removed the shaft *looked straight at it in a face dump and let it
+  through*, because its normal points DOWN. The material is `doubleSided`, and a face nothing can be
+  behind is not harmless either way. `turned` takes `cap_lo` now. `check` reports **holes 24** — 4
+  from the counter's deleted lid face, 20 from the bowl's open flange edge — and that is the design.
+  860 -> 792 tris. **The read to keep: on a profile that runs OUT and back IN over itself — every
+  vessel in this repo, the mug's coffee and the pot's soil included — the lathe's first ring is NOT a
+  bottom, and capping it by reflex puts a lid on the thing.** A drop-in sink is open at that edge by
+  construction: the edge is where it meets the worktop, it sits 0.006 over a lid that overhangs it
+  0.13 all round, and what a flange underside actually wants there is an ANNULUS, which a one-loop
+  lathe cannot state and which nothing can see.
+- **The plant's skirt grew through the pot.** Tier pitch was 78/50/22 degrees; a blade leaving the
+  axis at 22, drooping by its own quadratic, reaches the rim's outer radius 0.21 at **z 0.358**
+  against a rim top of **0.360**. 80/62/44 puts it at 0.470, 0.11 of daylight, and keeps a 36-degree
+  crown-to-skirt spread. The plant stands up with it: 0.6164 x 0.7159 across -> 0.5146 x 0.5265, so
+  `WORK_PLANT_W` followed 0.64 -> 0.53.
+- **The mug's handle came back out through the glaze.** The arc spanned 192 degrees, putting each end
+  at x 0.1067 against a wall standing at 0.1244 — buried by 0.018 where the **rod's own radius is
+  0.022**, so the far side of the end cap re-emerged and read as a facet welded to the side. 216
+  degrees buries them 0.040 and 0.055. Six sides went to eight at the same time (+28 tris): at this
+  size the rod is the second-largest thing in the silhouette and six read as a hex bar.
+
+**Verdict: all three landed.** The reusable line is the middle one's: **a piece buried in another
+must be buried deeper than its own half-thickness, not merely past the surface** — the end cap is at
+the centreline, and everything around it is not.
+
+## A Rec.709 sat mix HOLDS luma by construction, so a bright prop needs a second knob (2026-09-15)
+
+"Yellow drums is too bright too, desaturate (and check the third drum)" — and the entry above on the
+radiation drum had already written down the wrong lesson for it: *"the brightness comes out with it
+and needs no second knob."* That was true THERE and does not generalise. `tools/models.mjs`'s `sat`
+mixes each texel toward its own Rec.709 luminance, so **luma is invariant under it**. Rad got dimmer
+because its brightness sat in one dominant red channel that the mix pulled down; yellow is TWO
+channels at 210 and 172, and desaturating it moves the luma by 0.1.
+
+Measured on cell 1 of `drum-sheet.png`, through the real pipeline (`sat` on the map in linear light,
+`baseColor` multiplying in linear light at render):
+
+```
+                     chroma   luma          sat 0.61 alone:  chroma 73.6  luma 174.6
+drum-bio  as drawn    190.2   174.6         sat 0.85 + bc 0.33:  chroma 74.9  luma 103.6
+drum-rad  sat 0.5      73.1    92.5
+drum-steel untouched   72.8    60.1
+```
+
+So `sat` fits the HUE and `baseColor` fits the VALUE, and the pair has to be solved together because
+each moves the other's metric. Verified on the **built glb**, not the source: 124.6/104.2/41.4,
+chroma 75.1, luma 104.0. All three barrels now sit at one chroma and are told apart by hue, which is
+what the trio was drawn against `style_prop` to do, and the yellow one is still the lightest, which
+it should be.
+
+Two more fitted the same way in the same turn, both reported as "desaturate plant and cup":
+`facility/desk-mug` (the cream glaze was **linear 0.5548**, 4.4x the `desk-top` laminate it stands on
+and the single brightest interior surface in the game) took `sat 0.5` + `baseColor 0.40` -> chroma
+6.0, luma 125.8; `facility/desk-plant` took `sat 0.5` alone -> pot chroma 89.6 -> 44.3, leaf 53.8 ->
+23.0, and **no** `baseColor`, because both its cells were already inside the value band and only the
+pot's hue was out. That is the test for whether a prop needs one knob or two.
+
+**Verdict: landed.** Standing rule: **`sat` is a hue knob and nothing else. If a prop reads BRIGHT,
+measure its luma before reaching for it** — and measure both on the pipeline's own arithmetic, since
+a chroma read off the sRGB source over-predicts what a linear-light mix will do to a channel already
+near zero (0.38 was the first fit here and it landed at chroma 42, half the family).
+
+## A slot's tenant should not always be the same object (2026-09-15)
+
+Three small reports with one shape: "add clutter spot on top of the cabinet", "cup probability is too
+high", "cup seems to appear way too often on the table — should be random clutter", "can we have
+multiple cup textures for variety".
+
+- **The cabinet joins the lid family.** `FacilityClutter.slots` took `FIT_BOOKCASE` and
+  `FIT_TABLE_LOW` and excluded the cabinet on a premise that was simply wrong — the note called it
+  "chest-high with a rounded top", and `cabinet_build.py` builds a plain box with a `buildlib.chamfer`
+  down its edges. Its lid is as flat as a bookcase's and only taller. `CLUTTER_SLOT_INSET` 0.10
+  already clears the chamfer and `CLUTTER_SLOT_FILL` caps the item against `DECO_CABINET_D` 1.2.
+  Verified by scanning the merged clutter mesh's vertex levels: **y 3.447** appears, which is
+  `DECO_CABINET_H` 3.432 + `CLUTTER_Y`.
+- **`WORK_MUG_PCT` 70 -> 30.** 70 was chosen when the front slot had no other claimant. It has one
+  now (`FacilityClutter` offers the same slot to the office sheet's paperwork the moment no mug takes
+  it), so the slot is filled EITHER WAY and the number only decides how often the thing in it is the
+  same object. At 70 a compound deals one mug model a dozen times and reads as issue kit.
+- **Three glazes off one mesh**, the hazard barrels' own arrangement: `desk-mug-b` and `desk-mug-c`
+  are the same `desk-mug.glb` re-entered in `art/models.json` with their own `baseColor` tint and
+  `sat`. `render.Models.instanced` is keyed by PATH and carries no per-instance colour, so a glaze
+  costs a batch whichever way it is produced — and produced this way it costs no art, no triangles
+  and no Blender pass. All three land at luma ~116-126 and differ only in hue (chroma 6.0 neutral,
+  12.3 cool, 23.0 warm). `FacilityWork.MUGS` is the list one roll picks from.
+
+**Verdict: landed.** `FacilityWarm`'s four hand-written trinket rows became one comprehension over
+`FacilityWork.TRINKETS` so a fourth glaze needs no edit there; `FacilityArea.EXTRA` stays literal and
+index-aligned with `green`, which is the one list that cannot be derived.
+
+## The mirror was blue because the room's own light is blue, third time (2026-09-15)
+
+"Redo mirror — it's bright blue, which is ridiculous." The art was doing exactly what its prompt
+asked: the previous roll's clause read *"a cool light blue-white sheet fogged with condensation"*.
+
+**`FacilityStyle` already carries the warning and this is the third entry to pay for ignoring it:**
+the compound's own installation is `LAMP_COLOR` 0x9db4d4, so a blue-white SURFACE under a blue-white
+LIGHT is not cool, it is saturated. Re-rolled solo (a mirror maps 0..1 with a frame round it, so it
+can never come off a shared sheet) with the fog specified as perfectly neutral grey. Measured on the
+drop: **chroma 2.2**.
+
+Value was refitted from scratch and inverted: the new art is drawn at **0.1141 linear**, which is
+UNDER `facility/wall-wash`'s 0.1593 and would have hung the old black-rectangle fault back on the
+wall — so the lift BRIGHTENS for the first time on this entry (**0.73**, where the old art needed
+2.05 to come DOWN). Landed **0.1969**, 1.24x the wall it hangs on, where the old roll was 1.67x and
+read as glowing. Left there rather than chased to the 0.698 the measured rate asks for
+(d ln L / d lift = -2.02 across the two points): under the target is the safe side of this fit.
+
+**Verdict: landed.** Standing note, now three deep: **a blue accent cannot be stated by hue in this
+compound — state it by VALUE and leave the hue to the lighting.**
