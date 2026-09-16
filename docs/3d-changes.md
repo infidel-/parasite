@@ -2017,3 +2017,195 @@ it replaced had shipped with — an open frame is the case the bake was added fo
 game reaches the inside of one.
 
 **Verdict: landed. The rim term and its three `PropEnvOpts` fields are reverted out.**
+
+## The hangar stops being a shed with nothing in it
+
+The compound's third structure was a wall ring, a run of fake bay doors and a flat field of concrete.
+Four things changed at once: it is the size it used to be, it walks a tree of its own, it has a set
+piece in the middle of it, and the floor round that set piece is dressed.
+
+**IT WAS TAKING ITS WHOLE PLOT.** `gen.Subdivide` hands out 16..34 on each axis and
+`FacilityGen.fill` gave the hangar all of it minus a 1-cell inset, so the shed came out anywhere from
+14x14 to **32x32** — at the top of that range larger than either lab building. The retired arithmetic
+in `game.FacilityAreaGenerator` sized it `Std.int(area.width * 0.2)` = 13..15 wide. New
+`HangarBlock.HANGAR_W/H` = **16 x 14**, centred in the plot, and the slack stays the open lot the
+grid was blanked to — which is the apron the hangar has never had one of its own. Interior floor
+14 x 12.
+
+**THE ZONES SPLIT INTO CARVED AND DEALT, and that split is the washroom's.** `gen.Quota` can say
+"this bay is a server bay"; it cannot say "arrange four machine banks around the thing the cables run
+to", because that is a statement about the floor's CENTRE and no `must` over a bay can express it. So
+`study-pad` and the four `hangar-machine` banks are carved before the deal — exactly as
+`FacilityToilet` puts its divider in before it measures the wall runs, so they remove cells rather
+than fight them — and only the perimeter ring goes to `HangarZones.demands`.
+
+**BOTH RACK BAYS LANDED ON THE SAME WALL, every compound.** All four corner bays are three cells, so
+they tie on area, and `Quota.best` breaks a tie by taking the first — which is whichever wall
+`walls()` emitted first, i.e. always the top. Fixed with a `fit` that is a hash of the bay's own
+corner rather than a roll, so it does not depend on how often `fit` is called.
+
+**THE COMPUTERS ARE THE OFFICE'S OWN WORKSTATION PASS, not a second one.** `hangar-console` writes the
+laboratory's worktop tiles and `FacilityWork.at` — already a pure function of those tiles and the wall
+behind them — was widened by one clause. It is let in BY NAME (`FacilityModel.inHangar`) and not by
+surface: the console reads back as `Surf.TILE`, and widening the gate to TILE would stand a
+workstation on every lab bench in the compound. `FacilitySink` needed the same exclusion for the
+mirror-image reason, and did not get it first time round: a plumbed basin appeared in the middle of a
+shed floor.
+
+**THE PODIUM IS DERIVED, NOT SPAWNED.** Nothing new is stamped on the tiles: the pad is
+`TILE_FLOOR_CONCRETE_UNWALKABLE`, which three separate arms of the generator also write, and
+`FacilityModel.findPads` tells them apart by the one property only the pad has — it is the only
+SQUARE of it. So the podium needs no Const tile, no `entities64` frame and nothing in the save,
+and every compound already generated grows one the moment it is drawn again.
+
+`facility/hangar-podium`, hand-modelled, **540 tris**, 17.2 x 17.2 x 3.07, `z_min` 0,
+`buildlib.check` 0 holes / 0 coplanar. ONE lathe for both steps and the tread between them — a lower
+step with a lid and an upper step with a floor is two discs in one plane, which is what shipped both
+server racks full of holes. Three of the sheet's four cells are on the one piece, per the per-face
+rule: port band on the lower riser where the cables go in, tread plate on the tread and the upper lid,
+bolted panel on the upper riser.
+
+**THE CABLE FAN COSTS NO DRAW CALL.** `FacilityCable` already owns a ribbon emitter and a mesh to put
+ribbons in, so this borrows the buffer the way `FacilityWork`'s desk leads do. What it adds over a
+floor lead to a standing unit is the SPAN — a lab lead crosses a metre and these cross four — which
+is two constants and not a second emitter. The runs stop at the dais RIM rather than its centre, so
+the last span arrives at the port band instead of climbing over the tread.
+
+Measured in a built compound: **60 FPS, 104-127 draw calls, 55-85k triangles**, the podium one batch
+of one. `make gen seeds=3000` clean with a new `GenCheck.hangarSane`.
+
+**Verdict: landed.**
+
+## An emissive band on a hand-modelled prop is PAINTED, not raycast
+
+`tools/emissive.py` selects triangles by a bounding box and rasterises their UVs, and it exists
+because a TRELLIS atlas is a mosaic nobody can read by eye. A hand-modelled prop is the opposite
+case and the tool is the wrong instrument for it.
+
+Three boxes were tried on the podium's eight emitter columns — the band (`y 1.9..2.4`), the caps
+(`2.8..3.1`), the whole column (`1.2..3.1`) — 64, 112 and 240 triangles selected, `bleed 0` every
+time, and all three came back as the SAME **238 lit texels: a 256 x 1 hairline on the cell seam**,
+0.091% of the map in each case. A number that does not move when the input quadruples is not
+measuring the input.
+
+The fix is that it never needed measuring. `buildlib` put the columns on a KNOWN cell of a known
+sheet and `unwrap` maps each column's height up that cell's v, so the band is a rectangle that can
+simply be stated — `models-src/facility/podium_emissive.py`, 20 lines of PIL, `v 0.08..0.26` down
+`cell(2)`, `emissiveStrength` 2.0 against the guard booth's glazing at 1.4.
+
+**TWO TRAPS COST MOST OF THE TIME AND NEITHER WAS THE PROP.** A glb accessor can be INTERLEAVED, and
+an ad-hoc reader that ignores `byteStride` reads POSITION where it asked for TEXCOORD_0 — which
+reported the podium's UVs as raw world coordinates spanning -8.6..8.6 and sent the whole diagnosis
+after a mapping bug that did not exist (`tools/emissive.py`'s own `acc` handles it; the throwaway
+script did not). And glTF's v origin is the image TOP where Blender's is the bottom, so sampling the
+base texture at `(1-v)*H` put every face in the opposite quadrant and made four correct mappings
+look like four swapped ones.
+
+**AND A PROP WITH A WORKING EMISSIVE LOOKS BROKEN OVER CDP.** `playerArea.moveTo` does not rebuild
+the player's FOV, so a teleport leaves the shed unlit and the brightest thing in the scene renders
+black. `Game.turn()` is what lights it. Four screenshots were read as "the glow does not work"
+before that.
+
+Also measured on the way past, and not acted on: **every hand-modelled prop in the repo ships at
+`roughnessFactor` 0.72** — `buildlib.material`'s own default — so `Models.toLambert`'s `rough < 1`
+test keeps all of them on `MeshStandardMaterial`. The 31.4 -> 20.3 ms Lambert win is being left on
+the table by the whole Blender route, not just by this prop.
+
+**Verdict: landed. `tools/emissive.py` is for generated atlases; a packed-sheet prop states its own rect.**
+
+## The register nobody kept: a prop's shipped albedo, and the chair that sat in its own bench
+
+Four reports at once, three of them one bug: a cup and a paper tray reading bright, the barrels
+and the newest fitting "looking like they have albedo issues", chairs standing inside the hangar's
+consoles, and the shed's cables stopping short of its server racks.
+
+**`tools/propstat.py` WAS MEASURING THE WRONG PIXEL, AND THAT IS WHY THE SAME PROPS KEEP COMING
+BACK.** `sat` and `lift` bake into the built map, but `baseColor` is a **linear multiply applied at
+render**, and nine props carry one. The tool printed the bare atlas, so every value note in
+`art/models.json` had to redo the arithmetic by hand — `facility/desk-mug` read **185 in the atlas
+while shipping 122** — and three of them then drifted apart unseen. It folds the factor in now, in
+linear light, and `--audit` prints the whole register sorted by shipped luma. The mug trio measured
+**95.2 / 104.9 / 114.9** on three objects whose entire design is that they differ in HUE and not in
+level; levelled to 99.4 / 99.6 / 100.1, chroma 6.4 / 11.8 / 24.4.
+
+**THE CUP WAS DEFENDED WITH THE WRONG RATIO.** Its second pass fitted luma 125.8 and argued "still
+comfortably the lightest thing on the desk (the laminate reads ~98)". The laminate is srgb 94.7 /
+**linear 0.1168**, so 125.8 was 1.33x in bytes and **2.1x in light**. 100 is one notch over it.
+
+**A SHEET SHARED BETWEEN ONE PROP'S OWN SURFACES NEEDS A RECT, NOT A KNOB** — new `gradeRect` in
+`models.json`, `tools/cellgamma.py`'s job for models. `facility/desk-tray` carries a paper sheaf at
+**165.6** in a tray body at **59.6** off one map, while its own sheetmate `facility/desk-journals`
+had had its page edges graded to 92.1 in the pixels: the gamma that brings the paper to 95 takes the
+body to **10**. `scale` is LINEAR on purpose — the gamma that reached the same level took the
+paper's chroma from **53 to 65** and left an ochre card. Graded 0.30 / sat 0.50 -> 97/91/83.
+
+**THE "STEEL" BARREL WAS A BLUE BARREL, AND ITS OWN NOTE CERTIFIED IT AS THE NEUTRAL** the other two
+were being brought to. Cell 0 of `drum-sheet.png` is rgb 23.7/66.2/108.1, **chroma 84.4** — after
+both siblings were graded it was the loudest surface of the three (84.4 vs bio 74.9, rad 45.3). It
+was the one drum nobody had put a knob on. `sat` 0.25 -> chroma 20.9, luma held at 66.9 by
+construction. Levels: rad 98.7 -> 80.8, bio 89.6 -> 79.9, `deco-shelving` 93 -> 83.7.
+
+**A CELL MEAN IS NOT WHAT A PROP WEARS.** `store-sheet.png`'s three cells measure 54.7 / 73.5 / 77.5
+and the shelving off them sampled **93**: a hand-modelled prop maps narrow WINDOWS (its uprights are
+columns 4..31 of cell 0). Only the UV-sampled number is honest.
+
+**THE CHAIR BACKED OFF A DESK DEPTH THAT ONLY OFFICES HAVE.** `FacilityTables` cuts `CELL - DESK_D`
+off the open side for `office` cells *and nothing else*, so a laboratory worktop — and the hangar
+console, which is laid in those same tiles — fills its cell edge to edge. `FacilityWork.chairs`
+derived its face from `DESK_D` unconditionally: face 0.8 against a real 2.2, putting the chair
+**0.53 inside the worktop**. Derived per surface now; the gap is 0.22 either way, which is the point.
+
+**AND THE CABLE FAN LEFT THE MIDDLE OF A CELL, NOT THE UNIT IN IT.** `FacilityDeco` slides every
+fitting back onto its wall FACE, so a `DECO_RACK_D` 1.2 rack in a 4.0 cell ends **0.8 short of that
+cell's centre** — the run started in open air in front of the rack. It starts at the rect's own
+centre now, which is inside the box, so the first span is hidden by the thing it comes out of. The
+machine banks never showed it: at 2.8 square their rect swallows the cell centre already.
+
+**Verdict: landed. The atlas is not the shipped pixel, and a cell mean is not what a prop wears.**
+
+## The shed's second machine, and a sheet cut to the faces rather than faces cut to the sheet
+
+`HangarBlock` carves four machine banks at the study pad's compass points and `FIT_MACHINE` is a 2.8
+CUBE, so a shed read as one object repeated four times. Reported as "we have only one machine".
+
+**A REPAINT COULD NOT FIX IT, AND THE DRUMS ARE WHY.** Three hazard barrels ship as three labels off
+ONE mesh because a drum's read IS its colour; a machine's read is its silhouette, and a recoloured
+cube is still a cube at forty screen pixels. So `facility/deco-analyser` is a second SHAPE —
+**648 tris, 2.060 x 1.680 x 3.3134**, holes 0, coplanar 0 — breaking at four courses (plinth, body
+with a proud port plate, recessed vent band, cap) under a sloped operator face, which nothing else in
+the compound has.
+
+**NOT THE 4.0 IT WAS DRAWN AS.** `PLACARD_W`'s note fixes `DECO_CABINET_H` 3.43 as the tallest thing
+that can share a room cell — the placard band runs 3.85 to 5.65 and is meant to need no check against
+any other builder's placements. 3.31 keeps that and is still the tallest thing in the shed after the
+podium's 3.07.
+
+**THE FACES ARE CUT TO THE ART'S ASPECT, NOT THE OTHER WAY ROUND**, and that is the finding worth
+keeping from this one. Every face here maps its cell 0..1 and cannot wrap, so an aspect mismatch is a
+stretch with nowhere to go: the console face is **1.75 x 1.15 (1.52)** because that cell's content is
+about square and a 2.06-wide strip turns its dials into ovals, and the port plate is **1.40 x 1.05
+(1.33)** for the same reason. The vent band is the one face allowed to stretch — its art is
+horizontal slats, so a horizontal stretch is invisible. `tools/modelsheet.py --repeat` is the other
+answer to the same problem and it is the wrong one here: it tiles the cell, and three copies of a
+gland row is not a port panel.
+
+**THE PITCH SIGN COST A RENDER.** `buildlib.place` turns about +X, so a front face's `(0,-1,0)` goes
+to `(0, -cos a, -sin a)` — at **a = +45 the instrument art looks at the FLOOR** and the plain back of
+the slab is what the camera gets. Measured off the exported UVs, not guessed: the big face came back
+with normal `(0,-0.71,-0.71)` on the right cell. `-55` gives a plane 35 degrees off horizontal.
+
+**AND `chamfer` REPLACES THE FACES IT IS HANDED**, so a face found before it is dead by the time
+`flat_uv` writes UVs (`ReferenceError: BMesh data of type BMFace has been removed`). The console is
+built FIRST, into the empty bmesh, so the big face can be found again afterwards by normal.
+
+Wiring: `FIT_ANALYSER = 16`, and **row 8 col 5 MOVES onto it** rather than being copied — that frame
+is the analyser console the machine's own five frames already listed, and two kinds claiming one
+frame is a coin toss in `FacilityModel`. New `DecoLedOpts` replaces `machLights`' nine positional
+args, because the two machines' runs differ in exactly four values: this one's lamps are the PAINTED
+LENSES of its port cell, at u 0.0898/0.2324/0.3818/0.5273/0.6670/0.7939/0.9131 and v 0.4766,
+measured off the built sheet's darkest 8% and carried onto the face through the plate's 0.68 of it.
+Dealt **per BANK and not per cell** at 50%: rolled per cell a bank is a cube beside a console, which
+is what a compass point should not read as. Measured over 40 oracle seeds: 148 analyser cells against
+172 machine, 8 per compound.
+
+**Verdict: landed. A machine is told apart by silhouette, so a second one is a second mesh.**

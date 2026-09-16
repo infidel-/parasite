@@ -1,0 +1,205 @@
+// what stands in the hangar: the study podium, the cable fan that feeds it, and the floor round it
+//
+// RENDER-ONLY AND DERIVED, like the roof and the parked cars: nothing new is stamped on the tiles, so
+// every compound already saved grows its podium the moment it is drawn again. The one thing the
+// surface grid cannot answer — walkable concrete and the pad's unwalkable concrete are both
+// Surf.CONCRETE — is answered once in render.facility.FacilityModel.findPads while the raw tiles are
+// still in scope, and arrives here as a list of centre cells.
+//
+// THE CABLE FAN IS NOT NEW GEOMETRY AND COSTS NO DRAW CALL. render.facility.FacilityCable already
+// owns a ribbon emitter and a mesh to put ribbons in; this borrows the buffer the way FacilityWork's
+// desk leads do, so the shed's fan merges into the compound's one cable mesh. What it adds over a
+// floor lead to a standing unit is only the SPAN — a lab lead crosses a metre and these cross four —
+// which is two constants and not a second emitter.
+//
+// AND THE FLOOR CLUTTER IS render.facility.FacilityClutter's arithmetic against a second sheet. The
+// pack64 cell -> quad mapping is the same six lines in three places now (here, FacilityClutter.emit
+// and FacilityCable.flat) and it stays copied rather than shared on purpose: each one differs in the
+// axis it lays the quad on and in nothing else, and the shared version would take the difference as
+// an argument and be longer than all three.
+
+package render.facility;
+
+import three.Three;
+import citygen.CityConfig;
+import render.Models;
+import render.Textures;
+import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
+import render.world.MeshBuf.MeshBuf;
+import render.world.MeshBuf.MeshBufTools;
+import render.world.VisionMask;
+
+typedef Hangar = {
+  // the podium batch, one instance per shed. null when the compound has no hangar with a pad in it
+  podium:Models.InstancedProp,
+  // and how many cable runs and floor decals landed, for __facility()
+  runs:Int,
+  clutter:Int,
+};
+
+class FacilityHangar
+{
+  static inline var CELL = CityConfig.CELL;
+
+// build the hangar's contents.
+//
+// `cable` is FacilityCable's own buffer, BORROWED — it has to be filled before that pass merges it,
+// which is the one ordering constraint in render.facility.FacilityArea's build block
+  public static function build(scene:Scene, m:Facility, cable:MeshBuf):Hangar
+    {
+      var out:Hangar = {
+        podium: null,
+        runs: 0,
+        clutter: 0,
+      };
+      // NO EARLY RETURN ON AN EMPTY COMPOUND. render.Models.instanced hands back a real but empty
+      // InstancedProp for an empty placement list, and render.facility.FacilityArea pushes whatever
+      // this returns onto `green` — which has to stay index-aligned with EXTRA, and which
+      // render.Models.cull walks every frame. A null here is a crash in tick and not a missing prop
+      var places:Array<Models.PropPlace> = [];
+      var b = MeshBufTools.make();
+      for (p in m.pads)
+        {
+          var c = CityConfig.cellToWorld(p.col, p.row);
+          // no yaw roll. the dais is a circle and its ring is eightfold, so a turn on it is
+          // invisible — and the four machine banks the generator carves sit on the compass points,
+          // which is where the gaps between posts have to stay
+          places.push({
+            x: c.x,
+            z: c.z,
+            yaw: 0.0,
+          });
+          out.runs += fan(cable, m, p.col, p.row);
+          out.clutter += floor(b, m, p.col, p.row);
+        }
+      out.podium = Models.instanced(scene, RenderConfig.MODELS.facilityHangarPodium, places,
+        FacilityStyle.PODIUM_H, SOLID);
+      add(scene, b);
+      return out;
+    }
+
+// the cable fan: one run from every machine standing in this shed to the podium's rim.
+//
+// EVERY MACHINE AND NOT THE FOUR THE GENERATOR CARVES, because this cannot see the tree — it reads
+// `deco` off the finished grid the way every pass here does. That is the better question anyway: a
+// rack bay against a wall is machinery too, and a fan that reaches the walls is what makes the shed
+// read as one rig rather than a podium with four boxes near it. The RUN_MAX cap is what keeps a
+// large shed from drawing twenty
+  static function fan(b:MeshBuf, m:Facility, col:Int, row:Int):Int
+    {
+      var mid = CityConfig.cellToWorld(col, row);
+      var r = FacilityStyle.PODIUM_H * 0.5 * 5.60 * FacilityStyle.PODIUM_CABLE_R;
+      var si = m.owner[row][col];
+      var n = 0;
+      for (rr in 0...m.h)
+        for (cc in 0...m.w)
+          {
+            if (m.deco[rr][cc] == 0 ||
+                m.owner[rr][cc] != si)
+              continue;
+            // OUT OF THE UNIT AND NOT OUT OF THE MIDDLE OF ITS CELL. render.facility.FacilityDeco
+            // slides every fitting back onto its wall FACE, so a DECO_RACK_D 1.2 rack in a 4.0 cell
+            // ends 0.8 short of that cell's centre — and a run begun at the centre therefore started
+            // in open air in front of the rack and read as stopping near it rather than leaving it.
+            // The rect's own centre is INSIDE the box, so the ribbon's first span is hidden by the
+            // thing it comes out of, which is what a cable under a cabinet looks like
+            var r0 = FacilityDeco.rectOf(m, cc, rr, m.deco[rr][cc] - 1);
+            var a = { x: (r0.x0 + r0.x1) / 2, z: (r0.z0 + r0.z1) / 2 };
+            var dx = mid.x - a.x, dz = mid.z - a.z;
+            var d = Math.sqrt(dx * dx + dz * dz);
+            if (d < r + CELL * 0.5)
+              continue;
+            // the run STOPS AT THE RIM and not at the centre: the last span has to arrive at the
+            // port band the lower step wears, and a ribbon carried to the middle of the dais would
+            // run up over the tread everything else is keeping clear of
+            var seed = FacilityModel.mix((cc * 70001) ^ (rr * 30011));
+            FacilityCable.strip(b, {
+              a: [ a.x, FacilityStyle.PODIUM_CABLE_Y, a.z ],
+              c: [ mid.x - dx / d * r, FacilityStyle.PODIUM_CABLE_Y, mid.z - dz / d * r ],
+              n: [ 0.0, 1.0, 0.0 ],
+              side: null,
+              bow: FacilityStyle.PODIUM_CABLE_BOW,
+              wave: FacilityStyle.PODIUM_CABLE_WAVE,
+              seed: seed,
+            });
+            n++;
+            if (n >= FacilityStyle.CABLE_RUN_MAX)
+              return n;
+          }
+      return n;
+    }
+
+// the shed's floor decals: one roll per bare concrete cell of this structure.
+//
+// bare and not merely concrete — a cell carrying a fitting, a worktop or the pad itself is spoken
+// for, and CLEAR keeps the rest off the dais's own apron so the podium is not lying in litter
+  static function floor(b:MeshBuf, m:Facility, pcol:Int, prow:Int):Int
+    {
+      var si = m.owner[prow][pcol];
+      var keep = Std.int(FacilityStyle.PODIUM_PAD / 2) + FacilityStyle.HANGAR_CLUTTER_CLEAR;
+      var n = 0;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.owner[row][col] != si ||
+                m.surf[row][col] != Surf.CONCRETE ||
+                m.deco[row][col] != 0 ||
+                m.table[row][col] ||
+                (Std.int(Math.abs(col - pcol)) <= keep &&
+                 Std.int(Math.abs(row - prow)) <= keep))
+              continue;
+            var h = FacilityModel.mix((col * 374761393) ^ (row * 40503));
+            if (h % 100 >= FacilityStyle.HANGAR_CLUTTER_PCT)
+              continue;
+            var c = CityConfig.cellToWorld(col, row);
+            var sz = FacilityStyle.HANGAR_CLUTTER_SZ +
+              ((h >> 7) % 1000 / 1000.0 - 0.5) * 2 * FacilityStyle.HANGAR_CLUTTER_SZ_VAR;
+            emit(b, c.x, c.z, sz, (h >> 17) % 6283 / 1000.0,
+              (h >> 3) % FacilityStyle.HANGAR_CLUTTER_CELLS);
+            n++;
+          }
+      return n;
+    }
+
+// one pack64 cell as a yawed quad lying on the floor. FacilityClutter.emit's arithmetic, against
+// this family's own sheet and at floor height — v is FLIPPED, so the source's TOP row is the HIGH v
+  static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int):Void
+    {
+      var hs = sz * 0.5;
+      var cs = Math.cos(yaw), sn = Math.sin(yaw);
+      var lx = [ -hs, hs, hs, -hs ];
+      var lz = [ hs, hs, -hs, -hs ];
+      var wx = [], wz = [];
+      for (i in 0...4)
+        {
+          wx.push(x + lx[i] * cs - lz[i] * sn);
+          wz.push(z + lx[i] * sn + lz[i] * cs);
+        }
+      var t = FacilityStyle.HANGAR_CLUTTER_COLS;
+      var cc = idx % t, cr = Std.int(idx / t);
+      var u0 = cc / t, u1 = (cc + 1) / t;
+      var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
+      var y = FacilityStyle.HANGAR_CLUTTER_Y;
+      MeshBufTools.quad(b,
+        [wx[0], y, wz[0]], [wx[1], y, wz[1]], [wx[2], y, wz[2]], [wx[3], y, wz[3]],
+        [u0, v0, u1, v0, u1, v1, u0, v1]);
+    }
+
+// the whole family as one mesh, FacilityClutter.add's material exactly and for its three reasons: an
+// opaque alphaTest draws DoubleSide in ONE pass, it still writes depth so nothing sorts against the
+// concrete under it, and leaving `transparent` false keeps VisionMask on its darkening branch
+  static function add(scene:Scene, b:MeshBuf):Void
+    {
+      if (b.idx.length == 0)
+        return;
+      var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
+        map: Textures.loadTexture(FacilityStyle.HANGAR_CLUTTER_TEX, 'wall', 1),
+        alphaTest: FacilityStyle.CLUTTER_CUT,
+        side: THREE.DoubleSide,
+      })));
+      mesh.receiveShadow = true;
+      mesh.castShadow = false;
+      scene.add(mesh);
+    }
+}

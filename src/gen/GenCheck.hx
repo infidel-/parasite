@@ -269,6 +269,55 @@ class GenCheck
         }
     }
 
+// the hangar's floor holds one study pad, centred, clear of its own walls and clear of its door.
+//
+// THE PAD IS CARVED AND NOT DEALT, which is why it gets a check of its own: gen.Quota reports
+// nothing when a demand goes unplaced, and the pad never goes through gen.Quota at all. It is also
+// the one zone whose position is load-bearing on the RENDER side — render.facility.FacilityHangar
+// recovers the podium from this cluster of unwalkable concrete and from nothing else, the way the
+// roof and the parked cars are recovered — so a pad that came out off-centre, clipped by a wall or
+// split in two is a podium standing somewhere nobody put one.
+//
+// asserted over the finished GRID rather than over the tree, for the same reason decoBlocks is:
+// three arms write unwalkable concrete into a hangar (the pad, the standing runs, the slot filler)
+// and only one of them is the pad. The cluster this finds is the pad exactly when the annulus rule
+// holds, and that is the thing worth holding
+  public function hangarSane(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      for (r in rooms)
+        {
+          // the hangar is the room floored in concrete — the same majority test
+          // render.facility.FacilityModel uses to tell the shed from a lab building
+          var concrete = 0;
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              if (ctx.cells[x][y] == Const.TILE_FLOOR_CONCRETE ||
+                  ctx.cells[x][y] == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+                concrete++;
+          if (concrete * 2 <= r.w * r.h)
+            continue;
+          // a floor too small to carry the pad and still have a wall run gets none, which
+          // gen.blocks.HangarBlock.zones decides and this has to allow
+          if (r.w < gen.blocks.HangarBlock.PAD_SZ + 4 ||
+              r.h < gen.blocks.HangarBlock.PAD_SZ + 4)
+            continue;
+          var px1 = r.x1 + Std.int((r.w - gen.blocks.HangarBlock.PAD_SZ) / 2);
+          var py1 = r.y1 + Std.int((r.h - gen.blocks.HangarBlock.PAD_SZ) / 2);
+          var bad = 0;
+          for (x in px1...px1 + gen.blocks.HangarBlock.PAD_SZ)
+            for (y in py1...py1 + gen.blocks.HangarBlock.PAD_SZ)
+              if (ctx.cells[x][y] != Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+                bad++;
+          ok(bad == 0, 'the hangar at ' + r.x1 + ',' + r.y1 + ' has ' + bad +
+            ' cell(s) of its study pad missing');
+          // and the annulus: the pad never touches the wall ring, so the shed can be walked round
+          ok(px1 > r.x1 && py1 > r.y1 &&
+            px1 + gen.blocks.HangarBlock.PAD_SZ - 1 < r.x2 &&
+            py1 + gen.blocks.HangarBlock.PAD_SZ - 1 < r.y2,
+            'the hangar at ' + r.x1 + ',' + r.y1 + ' has its study pad against a wall');
+        }
+    }
+
 // no decoration stands in a room its own table entry never allowed.
 //
 // THERE WAS NO DECORATION INVARIANT HERE AT ALL, which is the whole reason a bank of MACHINES came

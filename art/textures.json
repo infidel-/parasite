@@ -3245,6 +3245,188 @@
       "last_converted": "2026-08-27T00:05:11",
       "built_linear": 0.0274,
       "built_srgb": 45.5
+    },
+    "facility/hangar-podium-deck": {
+      "src": "facility/hangar-podium-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.77,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - DIAMOND TREAD PLATE, seen STRAIGHT TOP-DOWN: dark industrial steel floor plate covered in a regular repeating pattern of small raised diamond grip lugs, evenly spaced. Worn and scuffed with faint traffic polish, a few shallow scratches, no rust.\n\nTOP-RIGHT quarter - BRUSHED STEEL RISER PANEL, seen face on: a flat dark brushed-metal panel with fine horizontal brush grain, crossed by one row of evenly spaced round hex bolt heads running horizontally across the middle.\n\nBOTTOM-LEFT quarter - MATTE GREY COLUMN CASING, seen face on: flat matte dark grey painted metal with a very subtle vertical brushed grain and one narrow recessed vertical groove channel running the full height, slightly off centre.\n\nBOTTOM-RIGHT quarter - CONNECTOR PORT BAND, seen face on: a dark metal panel carrying a horizontal row of heavy round industrial cable sockets and square connector blocks, and below them a single bold diagonal-striped hazard band in dull yellow and near-black. Cables are NOT drawn, only the ports they plug into.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the dais TOP, the tread plate the podium is walked on and looked straight down onto. one pack4 sheet for the whole study podium (models-src/facility/podium_build.py), four faces of ONE machine drawn side by side so they stay one family - the thing a solo roll per face is measured not to reach. THE SHEET CARRIES A DARK 2-3px FRAME AND A ~10px SEAM BAND at 507-516 on both axes, so every crop insets from BOTH: 500 of the nominal 512, 4 in from the frame and 6 clear of the seam. Lifts fitted per quarter to land each mean at sRGB 64 - above facility/deco-rack's 58.9 and below deco-machine-front's 71.1, standing on facility/floor-concrete 52.7.",
+      "crop": [
+        4,
+        4,
+        500,
+        500
+      ],
+      "last_converted": "2026-09-16T13:13:27",
+      "last_lift": 0.77,
+      "built_linear": 0.0515,
+      "built_srgb": 63.2
+    },
+    "facility/hangar-podium-riser": {
+      "src": "facility/hangar-podium-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.733,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - DIAMOND TREAD PLATE, seen STRAIGHT TOP-DOWN: dark industrial steel floor plate covered in a regular repeating pattern of small raised diamond grip lugs, evenly spaced. Worn and scuffed with faint traffic polish, a few shallow scratches, no rust.\n\nTOP-RIGHT quarter - BRUSHED STEEL RISER PANEL, seen face on: a flat dark brushed-metal panel with fine horizontal brush grain, crossed by one row of evenly spaced round hex bolt heads running horizontally across the middle.\n\nBOTTOM-LEFT quarter - MATTE GREY COLUMN CASING, seen face on: flat matte dark grey painted metal with a very subtle vertical brushed grain and one narrow recessed vertical groove channel running the full height, slightly off centre.\n\nBOTTOM-RIGHT quarter - CONNECTOR PORT BAND, seen face on: a dark metal panel carrying a horizontal row of heavy round industrial cable sockets and square connector blocks, and below them a single bold diagonal-striped hazard band in dull yellow and near-black. Cables are NOT drawn, only the ports they plug into.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the two dais STEP SIDES. one pack4 sheet for the whole study podium (models-src/facility/podium_build.py), four faces of ONE machine drawn side by side so they stay one family - the thing a solo roll per face is measured not to reach. THE SHEET CARRIES A DARK 2-3px FRAME AND A ~10px SEAM BAND at 507-516 on both axes, so every crop insets from BOTH: 500 of the nominal 512, 4 in from the frame and 6 clear of the seam. Lifts fitted per quarter to land each mean at sRGB 64 - above facility/deco-rack's 58.9 and below deco-machine-front's 71.1, standing on facility/floor-concrete 52.7.",
+      "crop": [
+        520,
+        4,
+        500,
+        500
+      ],
+      "last_converted": "2026-09-16T13:13:27",
+      "last_lift": 0.733,
+      "built_linear": 0.0501,
+      "built_srgb": 63.3
+    },
+    "facility/hangar-podium-post": {
+      "src": "facility/hangar-podium-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.747,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - DIAMOND TREAD PLATE, seen STRAIGHT TOP-DOWN: dark industrial steel floor plate covered in a regular repeating pattern of small raised diamond grip lugs, evenly spaced. Worn and scuffed with faint traffic polish, a few shallow scratches, no rust.\n\nTOP-RIGHT quarter - BRUSHED STEEL RISER PANEL, seen face on: a flat dark brushed-metal panel with fine horizontal brush grain, crossed by one row of evenly spaced round hex bolt heads running horizontally across the middle.\n\nBOTTOM-LEFT quarter - MATTE GREY COLUMN CASING, seen face on: flat matte dark grey painted metal with a very subtle vertical brushed grain and one narrow recessed vertical groove channel running the full height, slightly off centre.\n\nBOTTOM-RIGHT quarter - CONNECTOR PORT BAND, seen face on: a dark metal panel carrying a horizontal row of heavy round industrial cable sockets and square connector blocks, and below them a single bold diagonal-striped hazard band in dull yellow and near-black. Cables are NOT drawn, only the ports they plug into.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the eight ring emitter columns. deliberately the calmest of the four - it is the face the emissive band is painted over, and detail under a glow reads as dirt. one pack4 sheet for the whole study podium (models-src/facility/podium_build.py), four faces of ONE machine drawn side by side so they stay one family - the thing a solo roll per face is measured not to reach. THE SHEET CARRIES A DARK 2-3px FRAME AND A ~10px SEAM BAND at 507-516 on both axes, so every crop insets from BOTH: 500 of the nominal 512, 4 in from the frame and 6 clear of the seam. Lifts fitted per quarter to land each mean at sRGB 64 - above facility/deco-rack's 58.9 and below deco-machine-front's 71.1, standing on facility/floor-concrete 52.7.",
+      "crop": [
+        4,
+        520,
+        500,
+        500
+      ],
+      "last_converted": "2026-09-16T13:13:27",
+      "last_lift": 0.747,
+      "built_linear": 0.0502,
+      "built_srgb": 63.4
+    },
+    "facility/hangar-podium-port": {
+      "src": "facility/hangar-podium-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.76,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - DIAMOND TREAD PLATE, seen STRAIGHT TOP-DOWN: dark industrial steel floor plate covered in a regular repeating pattern of small raised diamond grip lugs, evenly spaced. Worn and scuffed with faint traffic polish, a few shallow scratches, no rust.\n\nTOP-RIGHT quarter - BRUSHED STEEL RISER PANEL, seen face on: a flat dark brushed-metal panel with fine horizontal brush grain, crossed by one row of evenly spaced round hex bolt heads running horizontally across the middle.\n\nBOTTOM-LEFT quarter - MATTE GREY COLUMN CASING, seen face on: flat matte dark grey painted metal with a very subtle vertical brushed grain and one narrow recessed vertical groove channel running the full height, slightly off centre.\n\nBOTTOM-RIGHT quarter - CONNECTOR PORT BAND, seen face on: a dark metal panel carrying a horizontal row of heavy round industrial cable sockets and square connector blocks, and below them a single bold diagonal-striped hazard band in dull yellow and near-black. Cables are NOT drawn, only the ports they plug into.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the base band the cable fan plugs into, one face of the lower step. one pack4 sheet for the whole study podium (models-src/facility/podium_build.py), four faces of ONE machine drawn side by side so they stay one family - the thing a solo roll per face is measured not to reach. THE SHEET CARRIES A DARK 2-3px FRAME AND A ~10px SEAM BAND at 507-516 on both axes, so every crop insets from BOTH: 500 of the nominal 512, 4 in from the frame and 6 clear of the seam. Lifts fitted per quarter to land each mean at sRGB 64 - above facility/deco-rack's 58.9 and below deco-machine-front's 71.1, standing on facility/floor-concrete 52.7.",
+      "crop": [
+        520,
+        520,
+        500,
+        500
+      ],
+      "last_converted": "2026-09-16T13:13:27",
+      "last_lift": 0.76,
+      "built_linear": 0.0583,
+      "built_srgb": 62.5
+    },
+    "facility/hangar-clutter": {
+      "src": "facility/hangar-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Every object must sit ENTIRELY INSIDE ITS OWN CELL with a WIDE EMPTY GUTTER around it: at least 20% of the cell width must be completely empty on every side of each object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run unbroken from one edge of the image to the other. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness. They are the working litter and survey rigging of an aircraft hangar used as a research bay. Keep all 64 objects at roughly similar scale to each other. Nothing may touch the outer edges of the frame.\n\nRow 1: empty pallet / pallet with broken slats / black wheel chock / yellow wheel chock / coiled orange air hose / coiled black hydraulic hose / coiled yellow extension cable / heap of steel chain.\nRow 2: lifting chain with hook / curled swarf / scattered bolts and nuts / dark oil stain / dark coolant stain / pale dried spill ring / curved tyre skid / straight tyre skid.\nRow 3: cardboard crate lid / crumpled strapping band / oily rag / folded grey rag / tool tray of spanners / tool tray of screwdrivers / roll of duct tape / roll of insulating tape.\nRow 4: square drain grate / rectangular drain grate / scuffed yellow line fragment / worn yellow corner marking / welding spatter with scorching / foam packing offcut / flat sandbag / two stacked sandbags.\nRow 5: chalk survey cross / chalk arc / chalk right-angle mark / stencilled scale bar / coiled data cable / cable junction box with leads / cable ramp protector / earthing strap on a plate.\nRow 6: sample tray of vials / tray of sealed bags / blank marker card / second marker card / third marker card / yellow-and-black hazard tape / red and white tape corner / square sensor pad with lead.\nRow 7: round sensor puck with lead / clean spill mat / stained spill mat / star-shaped scorch / scorch streak / three-footed tripod plate / folded tripod plate / crumpled dust sheet.\nRow 8: dust sheet folded flat / radiation trefoil stencil / biohazard stencil / anchor plate with bolts / anchor plate with eyebolt / laminated clipboard / open instrument case / coiled fibre-optic cable. [append textures.json style]",
+      "prompt_exact": true,
+      "note": "the hangar floor's pack64, consumed by render.facility.FacilityHangar through the same emit/UV arithmetic as facility/worktop-clutter. MIXED half and half on purpose: rows 1-4 are handling and fluids, rows 5-8 survey and containment, so one sheet dresses a working shed AND says the thing in the middle of it is being studied. ALPHA IS REAL AND CAME FROM THE API, not a chroma key - background alpha measured 6-51 against the objects' ~250, which cuts clean at DECO_CUT's 128. THE FIRST ROLL CAME BACK OPAQUE and is in Unused/: naming the floor in the prompt ('lying flat on the concrete floor') makes the model paint one however background:transparent is set - the MCP says so and it is true. cells cap 0.10 against worktop-clutter's 0.08 because the chalk marks and spill mats measure 0.31-0.37 linear and ARE the bright end here; sat 0.5 pulls the orange hose and yellow chocks back.",
+      "last_converted": "2026-09-16T13:16:30",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "built_linear": 0.0605,
+      "built_srgb": 63.0
+    },
+    "facility/analyser-panel": {
+      "src": "facility/analyser-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.84,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - PAINTED CABINET PANEL, seen face on: flat matte dark grey-green painted sheet steel with a very subtle vertical brushed grain, one narrow recessed vertical panel seam running the full height slightly off centre, and a sparse column of small countersunk screw heads beside it. Faint scuffs, no rust.\n\nTOP-RIGHT quarter - LOUVRE VENT BANK, seen face on: a dark metal panel filled with a regular repeating stack of horizontal extract louvre slats, each slat casting a thin hard shadow into a near-black slot behind it, and one narrow band of fine dark wire mesh grille crossing partway down.\n\nBOTTOM-LEFT quarter - INSTRUMENT CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel carrying two round analogue gauges with warm AMBER dial faces and thin needles, one rectangular recessed screen bezel with a dim CYAN-GREEN readout of faint horizontal scan lines, a row of small stubby toggle switches, and a small block of square keypad buttons. The AMBER dials and the CYAN-GREEN screen MUST stay clearly saturated and read as those colours; everything around them stays dark and desaturated. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - PORT AND PLINTH BAND, seen face on: a dark metal plinth panel with a horizontal row of heavy round industrial cable glands and square connector blocks, a horizontal row of small round indicator lamp lenses that are DARK AND UNLIT dull glass, and along the bottom a scuffed brushed kick strip. Cables are NOT drawn, only the ports they plug into. The lamp lenses must NOT glow or emit light.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        4,
+        4,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the second hangar machine wears (facility/deco-analyser, models-src/facility/analyser_build.py) -- the cabinet body: sides, back and the console shell. FOUR LABELS OFF ONE 1k GEN, the podium sheet's own route and for its reason: the four surfaces have to read as one machine, and drawn side by side they do it for free where four solo rolls would each land their own family. LIFT FITTED TO THE PODIUM STANDING NEXT TO IT and not to an absolute -- that prop's cells built to linear 0.0501..0.0583, this drop came back at 0.0302, and a machine reading 0.6x the dais three metres away is the thing the register exists to catch. 0.840 lands 0.0500 / srgb 60.8. The louvre and the port band are fitted a little under the panel on purpose: a vent slot and a socket recess are holes, and a hole that matches its panel stops being one.",
+      "last_converted": "2026-09-16T14:46:21",
+      "last_lift": 0.84,
+      "built_linear": 0.0492,
+      "built_srgb": 60.3
+    },
+    "facility/analyser-louvre": {
+      "src": "facility/analyser-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.718,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - PAINTED CABINET PANEL, seen face on: flat matte dark grey-green painted sheet steel with a very subtle vertical brushed grain, one narrow recessed vertical panel seam running the full height slightly off centre, and a sparse column of small countersunk screw heads beside it. Faint scuffs, no rust.\n\nTOP-RIGHT quarter - LOUVRE VENT BANK, seen face on: a dark metal panel filled with a regular repeating stack of horizontal extract louvre slats, each slat casting a thin hard shadow into a near-black slot behind it, and one narrow band of fine dark wire mesh grille crossing partway down.\n\nBOTTOM-LEFT quarter - INSTRUMENT CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel carrying two round analogue gauges with warm AMBER dial faces and thin needles, one rectangular recessed screen bezel with a dim CYAN-GREEN readout of faint horizontal scan lines, a row of small stubby toggle switches, and a small block of square keypad buttons. The AMBER dials and the CYAN-GREEN screen MUST stay clearly saturated and read as those colours; everything around them stays dark and desaturated. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - PORT AND PLINTH BAND, seen face on: a dark metal plinth panel with a horizontal row of heavy round industrial cable glands and square connector blocks, a horizontal row of small round indicator lamp lenses that are DARK AND UNLIT dull glass, and along the bottom a scuffed brushed kick strip. Cables are NOT drawn, only the ports they plug into. The lamp lenses must NOT glow or emit light.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        520,
+        4,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the second hangar machine wears (facility/deco-analyser, models-src/facility/analyser_build.py) -- the extract stack up one flank. FOUR LABELS OFF ONE 1k GEN, the podium sheet's own route and for its reason: the four surfaces have to read as one machine, and drawn side by side they do it for free where four solo rolls would each land their own family. LIFT FITTED TO THE PODIUM STANDING NEXT TO IT and not to an absolute -- that prop's cells built to linear 0.0501..0.0583, this drop came back at 0.0153, and a machine reading 0.6x the dais three metres away is the thing the register exists to catch. 0.718 lands 0.0400 / srgb 48.6. The louvre and the port band are fitted a little under the panel on purpose: a vent slot and a socket recess are holes, and a hole that matches its panel stops being one.",
+      "last_converted": "2026-09-16T14:46:21",
+      "last_lift": 0.718,
+      "built_linear": 0.0394,
+      "built_srgb": 48.1
+    },
+    "facility/analyser-face": {
+      "src": "facility/analyser-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.762,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - PAINTED CABINET PANEL, seen face on: flat matte dark grey-green painted sheet steel with a very subtle vertical brushed grain, one narrow recessed vertical panel seam running the full height slightly off centre, and a sparse column of small countersunk screw heads beside it. Faint scuffs, no rust.\n\nTOP-RIGHT quarter - LOUVRE VENT BANK, seen face on: a dark metal panel filled with a regular repeating stack of horizontal extract louvre slats, each slat casting a thin hard shadow into a near-black slot behind it, and one narrow band of fine dark wire mesh grille crossing partway down.\n\nBOTTOM-LEFT quarter - INSTRUMENT CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel carrying two round analogue gauges with warm AMBER dial faces and thin needles, one rectangular recessed screen bezel with a dim CYAN-GREEN readout of faint horizontal scan lines, a row of small stubby toggle switches, and a small block of square keypad buttons. The AMBER dials and the CYAN-GREEN screen MUST stay clearly saturated and read as those colours; everything around them stays dark and desaturated. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - PORT AND PLINTH BAND, seen face on: a dark metal plinth panel with a horizontal row of heavy round industrial cable glands and square connector blocks, a horizontal row of small round indicator lamp lenses that are DARK AND UNLIT dull glass, and along the bottom a scuffed brushed kick strip. Cables are NOT drawn, only the ports they plug into. The lamp lenses must NOT glow or emit light.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        4,
+        520,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the second hangar machine wears (facility/deco-analyser, models-src/facility/analyser_build.py) -- the sloped operator face, and the ONLY cell with colour in it. FOUR LABELS OFF ONE 1k GEN, the podium sheet's own route and for its reason: the four surfaces have to read as one machine, and drawn side by side they do it for free where four solo rolls would each land their own family. LIFT FITTED TO THE PODIUM STANDING NEXT TO IT and not to an absolute -- that prop's cells built to linear 0.0501..0.0583, this drop came back at 0.0228, and a machine reading 0.6x the dais three metres away is the thing the register exists to catch. 0.762 lands 0.0460 / srgb 52.4. The louvre and the port band are fitted a little under the panel on purpose: a vent slot and a socket recess are holes, and a hole that matches its panel stops being one.",
+      "last_converted": "2026-09-16T14:46:21",
+      "last_lift": 0.762,
+      "built_linear": 0.045,
+      "built_srgb": 51.8
+    },
+    "facility/analyser-port": {
+      "src": "facility/analyser-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.681,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - PAINTED CABINET PANEL, seen face on: flat matte dark grey-green painted sheet steel with a very subtle vertical brushed grain, one narrow recessed vertical panel seam running the full height slightly off centre, and a sparse column of small countersunk screw heads beside it. Faint scuffs, no rust.\n\nTOP-RIGHT quarter - LOUVRE VENT BANK, seen face on: a dark metal panel filled with a regular repeating stack of horizontal extract louvre slats, each slat casting a thin hard shadow into a near-black slot behind it, and one narrow band of fine dark wire mesh grille crossing partway down.\n\nBOTTOM-LEFT quarter - INSTRUMENT CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel carrying two round analogue gauges with warm AMBER dial faces and thin needles, one rectangular recessed screen bezel with a dim CYAN-GREEN readout of faint horizontal scan lines, a row of small stubby toggle switches, and a small block of square keypad buttons. The AMBER dials and the CYAN-GREEN screen MUST stay clearly saturated and read as those colours; everything around them stays dark and desaturated. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - PORT AND PLINTH BAND, seen face on: a dark metal plinth panel with a horizontal row of heavy round industrial cable glands and square connector blocks, a horizontal row of small round indicator lamp lenses that are DARK AND UNLIT dull glass, and along the bottom a scuffed brushed kick strip. Cables are NOT drawn, only the ports they plug into. The lamp lenses must NOT glow or emit light.\n\nKeep all four quarters in the same dark industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        520,
+        520,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the second hangar machine wears (facility/deco-analyser, models-src/facility/analyser_build.py) -- the plinth band, whose lamp lenses are DARK in the art. FOUR LABELS OFF ONE 1k GEN, the podium sheet's own route and for its reason: the four surfaces have to read as one machine, and drawn side by side they do it for free where four solo rolls would each land their own family. LIFT FITTED TO THE PODIUM STANDING NEXT TO IT and not to an absolute -- that prop's cells built to linear 0.0501..0.0583, this drop came back at 0.0148, and a machine reading 0.6x the dais three metres away is the thing the register exists to catch. 0.681 lands 0.0480 / srgb 59.4. The louvre and the port band are fitted a little under the panel on purpose: a vent slot and a socket recess are holes, and a hole that matches its panel stops being one.",
+      "last_converted": "2026-09-16T14:46:21",
+      "last_lift": 0.681,
+      "built_linear": 0.0473,
+      "built_srgb": 59.0
     }
   }
 }

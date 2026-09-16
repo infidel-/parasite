@@ -389,7 +389,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.sat != null ? '/st' + e.sat : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') + ',' + (e.aoReach ?? '-') : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.sat != null ? '/st' + e.sat : '') + (e.gradeRect ? '/gr' + JSON.stringify(e.gradeRect) : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') + ',' + (e.aoReach ?? '-') : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -497,6 +497,66 @@ async function main()
               t.setImage(new Uint8Array(png)).setMimeType('image/png');
             }
           console.log('     baseColor desaturated x' + e.sat + ' (Rec.709 in linear light)');
+        }
+      // optional PER-RECT grade of the base-colour MAP, and the one thing `lift`, `sat` and
+      // `baseColor` above cannot state between them: all three are per LABEL, and a hand-modelled
+      // prop's sheet is shared both between labels AND between that one prop's own surfaces.
+      // facility/desk-tray hit it from both ends at once — a paper sheaf at srgb 165.6 standing in a
+      // tray body at 59.6, off one map, while its own sheetmate facility/desk-journals had already
+      // had its page edges graded to 92.1 in the PIXELS of a different sheet. No whole-map knob can
+      // serve both: the gamma that brings the paper down takes the body to 10.
+      //
+      // tools/cellgamma.py is this instrument for textures.json and it rewrites the SOURCE drop. This
+      // one rewrites the LABEL'S OWN BAKED COPY, which is the better place for a model sheet: the
+      // number then lives in art/models.json, in the repo, rather than in the unversioned asset store
+      // — and two labels off one sheet can grade the same rect differently.
+      //
+      // `scale` is a LINEAR multiply and holds the rect's internal contrast; a gamma does not, and on
+      // that paper the gamma that reached the level took its chroma from 53 to 65 and left an ochre
+      // card. `sat` is the block above's own Rec.709 mix, restricted to the rect. The rect is
+      // x0,x1,y0,y1 in the EMBEDDED MAP's pixels — the frame the entry's note quotes the sheet's cells
+      // in — and the map's size is logged so a sheet that was re-exported at another resolution shows
+      if (e.gradeRect != null)
+        {
+          const lin = Array.from({ length: 256 }, (_, v) =>
+            {
+              const c = v / 255;
+              return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+          const enc = (c) =>
+            {
+              const v = c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+              return Math.max(0, Math.min(255, Math.round(v * 255)));
+            };
+          for (const m of doc.getRoot().listMaterials())
+            {
+              const t = m.getBaseColorTexture();
+              if (t == null)
+                continue;
+              const { data, info: raw } = await sharp(Buffer.from(t.getImage()))
+                .ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+              for (const r of e.gradeRect)
+                {
+                  const sc = r.scale ?? 1, st = r.sat ?? 1;
+                  const x0 = Math.max(0, r.rect[0]), x1 = Math.min(raw.width, r.rect[1]);
+                  const y0 = Math.max(0, r.rect[2]), y1 = Math.min(raw.height, r.rect[3]);
+                  for (let y = y0; y < y1; y++)
+                    for (let x = x0; x < x1; x++)
+                      {
+                        const i = (y * raw.width + x) * 4;
+                        const cr = lin[data[i]] * sc, cg = lin[data[i + 1]] * sc, cb = lin[data[i + 2]] * sc;
+                        const yy = 0.2126 * cr + 0.7152 * cg + 0.0722 * cb;
+                        data[i] = enc(yy + (cr - yy) * st);
+                        data[i + 1] = enc(yy + (cg - yy) * st);
+                        data[i + 2] = enc(yy + (cb - yy) * st);
+                      }
+                }
+              const png = await sharp(data, { raw: { width: raw.width, height: raw.height, channels: 4 } })
+                .png().toBuffer();
+              t.setImage(new Uint8Array(png)).setMimeType('image/png');
+              console.log('     baseColor graded on ' + e.gradeRect.length + ' rect(s) of the ' +
+                raw.width + 'x' + raw.height + ' map');
+            }
         }
       // FLATTEN a stray alpha channel out of an OPAQUE prop's base map. TRELLIS occasionally bakes one
       // in with the UV gutter at alpha 0, and that is not dead weight, it is a live trap: the resize

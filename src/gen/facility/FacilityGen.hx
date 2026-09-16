@@ -96,10 +96,21 @@ class FacilityGen
           case FacilityBlocks.HANGAR:
             // and the hangar sits one cell inside its plot on every side, because it is the one
             // structure with NO apron: the split's 2-cell gap plus this is HANGAR_GAP, the clearance
-            // its blank storey-and-a-half face needs before the yard in front of it reads as a slot
+            // its blank storey-and-a-half face needs before the yard in front of it reads as a slot.
+            //
+            // then it is CAPPED at HangarBlock.HANGAR_W x HANGAR_H and CENTRED in what is left. A
+            // plot is 16..34 on each axis and the hangar used to take all of it; the cap puts it
+            // back at the size the arithmetic era drew it. The slack is not wasted — it stays the
+            // open lot the grid was blanked to, so the shed gets free asphalt on every side and its
+            // clearance only ever grows past HANGAR_GAP
             var inset = HangarBlock.HANGAR_GAP - FacilityBlocks.splitProfile().gap;
-            HangarBlock.generateHangar(state, node.x1 + inset, node.y1 + inset,
-              w - inset * 2, h - inset * 2);
+            var aw = w - inset * 2;
+            var ah = h - inset * 2;
+            var bw = (aw < HangarBlock.HANGAR_W ? aw : HangarBlock.HANGAR_W);
+            var bh = (ah < HangarBlock.HANGAR_H ? ah : HangarBlock.HANGAR_H);
+            HangarBlock.generateHangar(state, node,
+              node.x1 + inset + Std.int((aw - bw) / 2),
+              node.y1 + inset + Std.int((ah - bh) / 2), bw, bh);
 
           case FacilityBlocks.PARK:
             drawBlock(cells, node.x1, node.y1, w, h, TEMP_GRASS);

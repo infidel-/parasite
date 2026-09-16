@@ -284,6 +284,7 @@ class FacilityDeco
           case _FittingKind.FIT_CABINET: FacilityStyle.DECO_CABINET_H;
           case _FittingKind.FIT_MACHINE: FacilityStyle.DECO_MACHINE_SZ;
           case _FittingKind.FIT_MACHINE_LOW: FacilityStyle.DECO_MACHINE_LOW_SZ;
+          case _FittingKind.FIT_ANALYSER: FacilityStyle.DECO_ANALYSER_H;
           case _FittingKind.FIT_STALL: FacilityStyle.STALL_H;
           case _FittingKind.FIT_BASIN: FacilityStyle.BASIN_H;
           case _FittingKind.FIT_PARTITION: FacilityStyle.PART_H;
@@ -486,6 +487,11 @@ class FacilityDeco
           w = heightOf(kind);
           d = w;
         }
+      else if (kind == _FittingKind.FIT_ANALYSER)
+        {
+          w = FacilityStyle.DECO_ANALYSER_W;
+          d = FacilityStyle.DECO_ANALYSER_D;
+        }
       else if (kind == _FittingKind.FIT_STALL)
         {
           w = FacilityStyle.STALL_W;
@@ -643,6 +649,27 @@ class FacilityDeco
           // so there is no emitted version to fall back to — and a case is still required, because
           // `default` below is the rack and an unlisted kind would be drawn as one
           case _FittingKind.FIT_SOFA | _FittingKind.FIT_TABLE_LOW:
+          // the hangar's second machine: modelled from the start like those two, so it emits nothing
+          // — but it DOES blink, and its lamps are the painted lenses of its port plate rather than
+          // a control strip across the whole front. See FacilityStyle.DECO_ANAL_LED_U, which is
+          // measured off models-src/facility/analyser-sheet.png and then carried onto the UNIT'S
+          // width, because that plate is only DECO_ANALYSER_PLATE of the face wide
+          case _FittingKind.FIT_ANALYSER:
+            machLights(leds, {
+              x0: x0,
+              x1: x1,
+              z0: z0,
+              z1: z1,
+              y: y,
+              h: h,
+              dir: dir,
+              col: col,
+              row: row,
+              us: FacilityStyle.DECO_ANAL_LED_U,
+              v: FacilityStyle.DECO_ANAL_LED_V,
+              size: FacilityStyle.DECO_ANAL_LED_SIZE,
+              greenFrom: FacilityStyle.DECO_ANAL_LED_GREEN_FROM,
+            });
           case _FittingKind.FIT_MACHINE | _FittingKind.FIT_MACHINE_LOW:
             // the same four faces again, and the ONLY kind here where EVERY one of them maps 0..1 —
             // the lid included. It was emitted with `face`/`cap` first, tiling off the world the way
@@ -659,7 +686,21 @@ class FacilityDeco
                 FacilityGeom.pane(b[B_MACH_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
                 localCap(b[B_MACH_TOP], x0, x1, z0, z1, y + h, x1 - x0);
               }
-            machLights(leds, x0, x1, z0, z1, y, h, dir, col, row);
+            machLights(leds, {
+              x0: x0,
+              x1: x1,
+              z0: z0,
+              z1: z1,
+              y: y,
+              h: h,
+              dir: dir,
+              col: col,
+              row: row,
+              us: FacilityStyle.DECO_MACH_LED_U,
+              v: FacilityStyle.DECO_MACH_LED_V,
+              size: FacilityStyle.DECO_MACH_LED_SIZE,
+              greenFrom: FacilityStyle.DECO_MACH_LED_GREEN_FROM,
+            });
           default:
             // the rack: three faces of one cabinet, each on its own surface, and all of them laid
             // from the UNIT'S OWN CORNER rather than off the world — see `localFace`. UNLESS the
@@ -1287,6 +1328,15 @@ class FacilityDeco
           h: FacilityStyle.DECO_TABLE_LOW_H,
           on: FacilityStyle.DECO_TABLE_LOW_GLB,
         },
+        // APPENDED, never inserted — render.facility.FacilityArea.EXTRA has to stay index-aligned
+        // with `green` and this list is what fills it. The hangar's second machine, and the one row
+        // here with no flag to turn off: it never had an emitted version to fall back to
+        {
+          kind: _FittingKind.FIT_ANALYSER,
+          path: RenderConfig.MODELS.facilityAnalyser,
+          h: FacilityStyle.DECO_ANALYSER_H,
+          on: true,
+        },
       ];
       var out = [];
       for (r in rows)
@@ -1481,35 +1531,35 @@ class FacilityDeco
 //
 // the face maps 0..1 here, unlike the rack's, so a slot's u IS the texture's u and one measurement
 // off the art serves both heights at any width
-  static function machLights(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, h:Float,
-      dir:Int, col:Int, row:Int):Void
+  static function machLights(b:MeshBuf, o:DecoLedOpts):Void
     {
       var e = FacilityStyle.DECO_LED_EPS;
       // the plane the strip lies in, a hair proud of the FRONT — the face opposite the wall
-      var f = (dir == 0 ? z1 + e : (dir == 1 ? z0 - e : (dir == 2 ? x1 + e : x0 - e)));
+      var f = (o.dir == 0 ? o.z1 + e :
+              (o.dir == 1 ? o.z0 - e :
+              (o.dir == 2 ? o.x1 + e : o.x0 - e)));
       // ACROSS the face from the TEXTURE'S OWN u origin and not from the lower coordinate, the trap
       // `lights` records: FacilityGeom.ends opens u at x1 or z1 on two of the four hands
-      var w = FacilityGeom.ends(x0, x1, z0, z1, dir ^ 1);
-      var a0 = (dir < 2 ? w[0] : w[1]);
-      var a1 = (dir < 2 ? w[2] : w[3]);
-      var us = FacilityStyle.DECO_MACH_LED_U;
-      var s = Math.abs(a1 - a0) * FacilityStyle.DECO_MACH_LED_SIZE / 2;
-      var yc = y + h * FacilityStyle.DECO_MACH_LED_V;
+      var w = FacilityGeom.ends(o.x0, o.x1, o.z0, o.z1, o.dir ^ 1);
+      var a0 = (o.dir < 2 ? w[0] : w[1]);
+      var a1 = (o.dir < 2 ? w[2] : w[3]);
+      var s = Math.abs(a1 - a0) * o.size / 2;
+      var yc = o.y + o.h * o.v;
       // and one OFFSET per unit, so two machines in a room are not stepping in lockstep — the clock
       // is shared by identity and the slot phases below are fixed, so this is the only thing that
       // can separate them
-      var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
+      var g = FacilityModel.mix((o.col * 1103515245) ^ (o.row * 12345));
       var off = ((g % 1000) / 1000);
-      for (i in 0...us.length)
+      for (i in 0...o.us.length)
         {
-          var ac = a0 + (a1 - a0) * us[i];
+          var ac = a0 + (a1 - a0) * o.us[i];
           // the light's PLACE in the run, which is what the shader's chase reads its phase as
-          var ph = off + i / us.length;
-          var hue = (i >= FacilityStyle.DECO_MACH_LED_GREEN_FROM ? 1.0 : 0.0);
-          var p0 = (dir < 2 ? [ac - s, yc - s, f] : [f, yc - s, ac - s]);
-          var p1 = (dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
-          var p2 = (dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
-          var p3 = (dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
+          var ph = off + i / o.us.length;
+          var hue = (i >= o.greenFrom ? 1.0 : 0.0);
+          var p0 = (o.dir < 2 ? [ac - s, yc - s, f] : [f, yc - s, ac - s]);
+          var p1 = (o.dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
+          var p2 = (o.dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
+          var p3 = (o.dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
           // b carries the hue OFFSET BY 2, which is the mode flag as well — see `blink`
           MeshBufTools.quadRGB(b, p0, p1, p2, p3,
             [0, 0, 1, 0, 1, 1, 0, 1], 1.0, ph, 2.0 + hue);

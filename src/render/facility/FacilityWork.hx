@@ -58,8 +58,13 @@ class FacilityWork
 // same discipline FacilityPoint.places and FacilityDeco.rectOf already keep
   public static function at(m:Facility, col:Int, row:Int):WorkSpot
     {
+      // an office desk, or the hangar's own console run. THE HANGAR IS NOT AN OFFICE and is let in
+      // by name rather than by surface: its console is laid in the laboratory's worktop tiles, so it
+      // reads back as Surf.TILE, and widening this to TILE would stand a workstation on every lab
+      // bench in the compound
       if (!m.table[row][col] ||
-          m.surf[row][col] != Surf.OFFICE ||
+          (m.surf[row][col] != Surf.OFFICE &&
+           !FacilityModel.inHangar(m, col, row)) ||
           m.tableSink[row][col])
         return null;
       var h = FacilityModel.mix((col * 374761393) ^ (row * 40503));
@@ -632,7 +637,14 @@ class FacilityWork
             // the run hugs the wall — plus a BENCH_LIP overhang past that. Placing the chair off the
             // CELL edge therefore left it 1.2 further out than it looked, which is a gap wider than
             // the chair is deep and put it in the walkway rather than at the desk
-            var face = FacilityStyle.DESK_D + FacilityStyle.BENCH_LIP - CELL / 2;
+            // AND ONLY AN OFFICE DESK IS THINNED. render.facility.FacilityTables cuts CELL - DESK_D
+            // off the open side for `office` cells and for nothing else, so a LABORATORY worktop —
+            // and the hangar console, which is laid in those same tiles — fills its cell edge to
+            // edge. Backing off the desk's 0.8 there put the chair 1.4 short, i.e. 0.53 INSIDE the
+            // worktop it was meant to be sitting at, which is what the hangar's consoles showed
+            var deep = (m.surf[row][col] != Surf.OFFICE);
+            var face = (deep ? CELL / 2 : FacilityStyle.DESK_D - CELL / 2) +
+              FacilityStyle.BENCH_LIP;
             var x = c.x + DC[out] * (face + FacilityStyle.CHAIR_OUT);
             var z = c.z + DR[out] * (face + FacilityStyle.CHAIR_OUT);
             // the cell it stands in is clear floor by construction: `at` asks `seat` before it

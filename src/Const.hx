@@ -233,10 +233,23 @@ class Const
       blocks: [ 'lab' ],
       frames: [
         { row: 8, col: 4 },
-        { row: 8, col: 5 },
         { row: 8, col: 6 },
         { row: 8, col: 7 },
         { row: 8, col: 8 },
+      ],
+    },
+    // and the fifth of those frames on its OWN kind, because the hangar needed a machine that is
+    // not a cube. NO NEW ART AND NO RENUMBERED FRAME: row 8 col 5 is the analyser console the
+    // entry above already listed among its five, and it moves here rather than being copied — a
+    // frame is the persisted identity of a decoration and two kinds claiming one is a coin toss in
+    // render.facility.FacilityModel. See render.facility.FacilityDeco's FIT_ANALYSER row
+    {
+      id: 'analyser',
+      kind: FIT_ANALYSER,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 8, col: 5 },
       ],
     },
     // and the two LOW frames that are the same casing knee-high: a radiation placard panel and a grey

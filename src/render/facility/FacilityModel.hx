@@ -217,6 +217,15 @@ typedef Facility = {
   drain:Array<Array<Bool>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
+  // the centre cell of every hangar STUDY PAD — the square of unwalkable concrete
+  // gen.blocks.HangarBlock carves in the middle of a shed for the podium to stand on.
+  //
+  // A LIST AND NOT A GRID, unlike `table` and `deco` beside it: there is at most one per hangar and
+  // exactly one pass asks for it, so the question is "where are they" and never "is this cell one".
+  // Found HERE rather than in that pass because it is the one thing in the shed the surface grid
+  // cannot answer — Surf.CONCRETE covers the walkable floor and the unwalkable pad alike, and the
+  // raw tile is only in scope while fromArea is reading it
+  pads:Array<{ col:Int, row:Int }>,
 };
 
 class FacilityModel
@@ -240,6 +249,9 @@ class FacilityModel
   public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
     {
       var m = blank(area.width, area.height);
+      // the unwalkable-concrete mask, local to this call: findPads is the only reader and a third
+      // per-cell grid on the model for one pass is a grid nobody else would ever ask
+      var solid = [for (_ in 0...area.height) [for (_ in 0...area.width) false]];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -247,14 +259,53 @@ class FacilityModel
             m.surf[row][col] = surfOf(t);
             m.wall[row][col] = wallOf(t);
             m.table[row][col] = tableOf(t);
+            if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+              solid[row][col] = true;
           }
       findStructures(m);
+      findPads(m, solid);
       findWindows(m);
       findDoors(m, area);
       findDeco(m, area, icon);
       m.rooms = (area.generatorInfo != null ? area.generatorInfo.rooms : []);
       themeRooms(m);
       return m;
+    }
+
+// find every hangar study pad, as the centre cell of its square.
+//
+// DERIVED FROM THE SHAPE AND NOT FROM A CONSTANT SHARED WITH THE GENERATOR. Three separate arms of
+// gen.blocks.HangarBlock write unwalkable concrete into a shed — the pad, the standing runs against
+// the walls, and the leftover slot filler — and only one of them is the pad. What tells them apart
+// is that the pad is the only SQUARE of it: a rack bay is one cell wide and so is a machine bank, so
+// the first cell whose whole PAD x PAD neighbourhood is solid is the pad's centre and nothing else
+// can be. Re-deriving the generator's own centring arithmetic here instead would be a second copy of
+// it that drifts the moment either side is retuned.
+//
+// FacilityStyle.PODIUM_PAD is a floor on the square and not an equality, so a shed that one day
+// carves a bigger pad still resolves to one centre: the scan takes the first hit per structure
+  static function findPads(m:Facility, solid:Array<Array<Bool>>):Void
+    {
+      var r = Std.int(FacilityStyle.PODIUM_PAD / 2);
+      var seen = new Map<Int, Bool>();
+      for (row in r...m.h - r)
+        for (col in r...m.w - r)
+          {
+            var si = m.owner[row][col];
+            if (si < 0 ||
+                !m.structures[si].hangar ||
+                seen.exists(si))
+              continue;
+            var full = true;
+            for (dr in -r...r + 1)
+              for (dc in -r...r + 1)
+                if (!solid[row + dr][col + dc])
+                  full = false;
+            if (!full)
+              continue;
+            seen.set(si, true);
+            m.pads.push({ col: col, row: row });
+          }
     }
 
 // spread a themed room's surface over the WHOLE of its rect.
@@ -304,6 +355,7 @@ class FacilityModel
         tableSink: [for (_ in 0...h) [for (_ in 0...w) false]],
         drain: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
+        pads: [],
       };
     }
 
@@ -397,6 +449,19 @@ class FacilityModel
         s == Surf.CONCRETE ||
         s == Surf.OFFICE ||
         s == Surf.WASH;
+    }
+
+// is this cell inside the HANGAR — the one structure floored in concrete?
+//
+// it is the structure's flag and not the cell's surface, because the shed's own console run is laid
+// in the laboratory's worktop tiles and therefore reads back as Surf.TILE. A cell test would call
+// those cells a lab; this calls them what they are, which is a workbench in a hangar
+  public static inline function inHangar(m:Facility, col:Int, row:Int):Bool
+    {
+      if (!inside(m, col, row))
+        return false;
+      var si = m.owner[row][col];
+      return si >= 0 && m.structures[si].hangar;
     }
 
 // is this cell a themed ROOM floor — an office or a washroom? the passes that furnish a LABORATORY

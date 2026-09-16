@@ -168,6 +168,7 @@ class GenRun
       check.roomsSane(ctx, state.allRooms);
       check.doorsSane(ctx, state.allRooms, state.allDoors);
       check.washroomSane(state.allRooms, state.allDoors);
+      check.hangarSane(ctx, state.allRooms);
       check.tablesSane(ctx);
       check.decoBlocks(ctx, state.allRooms);
       check.spawnsSane(ctx);

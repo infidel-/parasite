@@ -60,9 +60,15 @@ class FacilitySink
         for (col in 0...m.w)
           {
             // an OFFICE desk takes none: a laboratory bench terminates in a sink, a writing desk does
-            // not, and the washroom's own basins are its template's furniture
+            // not, and the washroom's own basins are its template's furniture.
+            //
+            // NEITHER DOES THE HANGAR'S CONSOLE. It is laid in the laboratory's worktop tiles, which
+            // is what lets render.facility.FacilityWork stand a workstation on it for free, and the
+            // cost of that reuse is that every pass reading `table` calls it a lab bench. A plumbed
+            // basin in the middle of a shed floor is where that stops being free
             if (!m.table[row][col] ||
                 m.surf[row][col] == Surf.OFFICE ||
+                FacilityModel.inHangar(m, col, row) ||
                 seen.exists(key(m, col, row)))
               continue;
             var c = pick(m, block(m, col, row, seen));

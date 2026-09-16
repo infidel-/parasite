@@ -221,6 +221,10 @@ class FacilityWarm
                 h: FacilityStyle.DECO_MACHINE_SZ,
               },
               {
+                path: RenderConfig.MODELS.facilityAnalyser,
+                h: FacilityStyle.DECO_ANALYSER_H,
+              },
+              {
                 path: RenderConfig.MODELS.facilityBookcase,
                 h: FacilityStyle.DECO_BOOKCASE_H,
               },
@@ -241,6 +245,13 @@ class FacilityWarm
               {
                 path: RenderConfig.MODELS.facilityTableLow,
                 h: FacilityStyle.DECO_TABLE_LOW_H,
+              },
+              // and the hangar's study podium. it belongs with the INDOOR list and not with the roof
+              // one below: it stands on the shed's floor, so it is mask-patched like everything else
+              // a player walks in on
+              {
+                path: RenderConfig.MODELS.facilityHangarPodium,
+                h: FacilityStyle.PODIUM_H,
               },
             ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT

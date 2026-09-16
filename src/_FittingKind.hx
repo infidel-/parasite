@@ -50,4 +50,11 @@ enum abstract _FittingKind(Int) from Int to Int
   // rectangle with a bite out of it, and that notch is the whole of what says sofa rather than crate
   var FIT_SOFA = 14;
   var FIT_TABLE_LOW = 15;
+  // the hangar's SECOND machine, and the only kind so far that exists to break a REPETITION rather
+  // than to draw something new: HangarBlock carves four machine banks at the pad's compass points
+  // and FIT_MACHINE is a 2.8 cube, so four of them read as four crates. A repaint could not fix
+  // that — a machine's read is its silhouette where a drum's is its colour — so this is a second
+  // shape, a tall analyser console with a sloped operator face. It takes row 8 col 5 of the atlas,
+  // which the machine's own five frames already called "an analyser console"
+  var FIT_ANALYSER = 16;
 }

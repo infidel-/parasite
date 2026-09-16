@@ -1147,6 +1147,47 @@ class FacilityStyle
   // SECOND height is still free off one image, which was the point of the kind — a square image
   // fits a square face at any size, so only the tiling mechanism was wrong, not the plan
   public static inline var DECO_MACHINE_LOW_SZ = 2.2;
+
+  // THE HANGAR'S SECOND MACHINE, and all three of these are the MESH'S OWN measured dims rather than
+  // a brief it was built to (models-src/facility/analyser_build.py, 2.060 x 1.680 x 3.3134). The
+  // basin's rule and for its reason: render.Models.instanced scales a glb by HEIGHT alone, so a
+  // DECO_ANALYSER_H that is not the mesh's height rescales the footprint out of step with the rect
+  // render.facility.FacilityDeco.rectOf claims for it — and this one has an overhanging plinth, an
+  // overhanging cap and a proud port plate, so its bbox is not its nominal 2.0 x 1.6 body.
+  //
+  // 3.31 AND NOT THE 4.0 IT WAS DRAWN AS: PLACARD_W's note below fixes DECO_CABINET_H 3.43 as the
+  // tallest thing that can share a room cell, because the placard band runs 3.85 to 5.65 and is
+  // meant to need no check against any other builder's placements. It is still the tallest thing in
+  // the shed after the podium's PODIUM_H 3.07, which is the whole point of the shape
+  public static inline var DECO_ANALYSER_W = 2.06;
+  public static inline var DECO_ANALYSER_D = 1.68;
+  public static inline var DECO_ANALYSER_H = 3.3134;
+  // ITS BLINK LAMPS ARE THE PAINTED LENSES OF ITS PORT PLATE, which is what makes these numbers
+  // measurements and not choices: the lens row of models-src/facility/analyser-sheet.png's port
+  // cell sits at u 0.0898 / 0.2324 / 0.3818 / 0.5273 / 0.6670 / 0.7939 / 0.9131 and v 0.4766 down
+  // from that cell's top, each lens 0.082 of the cell wide (tools/pix.py over the built sheet's
+  // darkest 8%). The plate maps that cell 0..1 and is DECO_ANALYSER_PLATE of the unit's own width,
+  // so every fraction below is the cell's own carried onto the FACE: 0.5 + (u - 0.5) * PLATE.
+  //
+  // render.facility.FacilityDeco.machLights takes them through DecoLedOpts, because the machine's
+  // run and this one differ in exactly these four values and in nothing else
+  static inline var DECO_ANALYSER_PLATE = 1.40 / DECO_ANALYSER_W;
+  public static final DECO_ANAL_LED_U = [
+    0.5 + (0.0898 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.2324 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.3818 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.5273 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.6670 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.7939 - 0.5) * DECO_ANALYSER_PLATE,
+    0.5 + (0.9131 - 0.5) * DECO_ANALYSER_PLATE,
+  ];
+  // the plate stands 0.55 off the floor and is 1.05 tall, so the row is 0.55 + 1.05 * (1 - 0.4766)
+  // up the unit — as a fraction of its height, which is what the emitter wants
+  public static inline var DECO_ANAL_LED_V = (0.55 + 1.05 * 0.5234) / DECO_ANALYSER_H;
+  public static inline var DECO_ANAL_LED_SIZE = 0.082 * DECO_ANALYSER_PLATE;
+  // SEVEN LENSES AND THE LAST THREE GREEN, against the machine's five and two: the run is longer,
+  // so the amber-to-green split is kept at roughly the same fraction rather than the same count
+  public static inline var DECO_ANAL_LED_GREEN_FROM = 4;
   public static inline var DECO_RACK_W = 1.6;
   // DERIVED, and by the same kind of lock as DECO_SHELF_D and DECO_BOOKCASE_W above — only this one
   // is fixed by what the art CONTAINS rather than by its aspect. The front tiles at the unit's own
@@ -2353,6 +2394,50 @@ class FacilityStyle
   public static inline var CAR_EMPTY = 3;
 
   // ---- what stands on the roof (render.facility.FacilityRoof) -------------------------------------
+
+  // === the hangar's study podium and its floor (render.facility.FacilityHangar)
+
+  // the podium's HEIGHT, and the only dimension the game states: render.Models.instanced scales a
+  // glb by height alone, so this plus the mesh's own 17.2 x 17.2 x 3.07 fixes its footprint at
+  // 17.2 / 3.07 = 5.60 times whatever is set here. Measured on the evaluated mesh — do not round it
+  // without re-measuring, the dais has to stay inside the pad
+  public static inline var PODIUM_H = 3.07;
+
+  // how many cells on a side the pad is, which is gen.blocks.HangarBlock.PAD_SZ. read here by
+  // FacilityModel.findPads as the SQUARE that tells a study pad from a rack bay, and the two are
+  // separately stated on purpose: the generator's copy sizes the carve and this one only recognises
+  // the result, so a save made at a different pad size still resolves
+  public static inline var PODIUM_PAD = 5;
+
+  // the cable fan. ONE run per machine bank, from the machine's own cell to the podium's rim, and
+  // these are the floor-run numbers from the electrical service with the bow opened up: a lead to a
+  // standing unit crosses a metre of lab floor and these cross four of open shed
+  public static inline var PODIUM_CABLE_BOW = 0.9;
+  public static inline var PODIUM_CABLE_WAVE = 0.22;
+  // where a run ends, as a fraction of the dais radius — just inside the lower step's rim, so the
+  // last span arrives at the port band rather than stopping short in bare concrete
+  public static inline var PODIUM_CABLE_R = 0.94;
+  // and how high off the floor the ribbon lies. above CABLE_FLOOR_Y's 0.05 because the hangar floor
+  // carries its own decal family and a run crossing one has to read as lying OVER it
+  public static inline var PODIUM_CABLE_Y = 0.08;
+
+  // the hangar floor's pack64. the same 8x8 arithmetic as CLUTTER_TEX and consumed by the same
+  // emit, against its own sheet: a shed floor is pallets and survey chalk, a worktop is glassware
+  public static inline var HANGAR_CLUTTER_TEX = 'textures/facility/hangar-clutter.png';
+  public static inline var HANGAR_CLUTTER_COLS = 8;
+  public static inline var HANGAR_CLUTTER_CELLS = HANGAR_CLUTTER_COLS * HANGAR_CLUTTER_COLS;
+  // a shed floor object is a PALLET, not a pipette: drawn at most of a 4.0 cell rather than the
+  // worktop family's 0.8
+  public static inline var HANGAR_CLUTTER_SZ = 2.6;
+  public static inline var HANGAR_CLUTTER_SZ_VAR = 0.7;
+  // ONE per cell and a low roll, because the brief for this shed is "some empty space" and a floor
+  // dressed like a worktop is a junkyard
+  public static inline var HANGAR_CLUTTER_PCT = 15;
+  // and it floats the same hair over the concrete that the worktop family floats over a bench
+  public static inline var HANGAR_CLUTTER_Y = 0.02;
+  // how far from the pad's edge the clutter keeps off, in cells. the podium is the thing in the
+  // room and a pallet lying half under its rim is the read it costs
+  public static inline var HANGAR_CLUTTER_CLEAR = 1;
 
   // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too:
   // the glb's bbox is 0.586 x 0.691 x 0.994, so this draws it 3.16 long, 1.86 wide and 1.1 m tall at

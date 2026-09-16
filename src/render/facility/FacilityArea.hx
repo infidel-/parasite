@@ -80,6 +80,12 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityBasin,
       RenderConfig.MODELS.facilitySofa,
       RenderConfig.MODELS.facilityTableLow,
+      // and the hangar's second machine, appended with its row in FacilityDeco.fittings
+      RenderConfig.MODELS.facilityAnalyser,
+      // and the hangar's study podium, last because `green` pushes it last. ONE instance per shed
+      // and usually one shed, so it is the smallest batch in the list — and the only one standing
+      // on Surf.CONCRETE (render.facility.FacilityHangar)
+      RenderConfig.MODELS.facilityHangarPodium,
     ]);
 
   var game:Game;
@@ -94,6 +100,7 @@ class FacilityArea implements Area3D
   var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's plants, then EXTRA (railing, bins)
+  var hangar:FacilityHangar.Hangar; // the shed's podium, its cable fan and its floor decals
   // what stands on the roofs. NOT in `green`, and that is the one thing separating it: `green` is
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
@@ -260,6 +267,10 @@ class FacilityArea implements Area3D
       // FacilityPoint.places outright. None of that is an ordering — all three are pure functions of
       // the saved grid, which is why FacilityPoint can be asked for its own placements here without
       // having run, and why this can equally go before FacilityDeco while asking it for machine rects
+      // the hangar's contents, BEFORE the line below and not after: it borrows `workCable` exactly
+      // as FacilityWork's desk leads do, and a borrower has to fill before the owner merges. That is
+      // the one ordering constraint in this block and it is the same one recorded above it
+      hangar = FacilityHangar.build(scene, model, workCable);
       elec = FacilityCable.build(scene, model, workCable);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not
@@ -304,6 +315,10 @@ class FacilityArea implements Area3D
       // each empty when its family's quads are the ones shipping (FacilityDeco.fittings)
       for (p in FacilityDeco.fittings(scene, model))
         green.push(p);
+      // and the hangar's podium, last because EXTRA names it last. an empty batch when the compound
+      // has no shed with a study pad in it, which is a row with a count of 0 and keeps the array
+      // index-aligned with EXTRA either way
+      green.push(hangar.podium);
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
       // the same construction-order fact recorded above and what this quad's larger eps says it

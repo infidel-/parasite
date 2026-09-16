@@ -720,6 +720,11 @@ class RenderConfig {
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled
+    // the hangar's study podium: a two-step dais with a ring of eight emitters, hand-modelled at
+    // 540 tris because the generator had already fixed every number in it — the pad it stands on is
+    // carved PAD_SZ cells square and the machine banks are placed off its edge. It is the one prop
+    // in the compound the cable service runs TO rather than from
+    facilityHangarPodium: 'models/facility/hangar-podium.glb',
     facilityRoofAc: 'models/facility/roof-ac.glb',        // rooftop condenser, fan guard on the lid, coil louvres
     facilityRoofDish: 'models/facility/roof-dish.glb',    // comms dish on a solid pedestal, feed horn on one arm
     // the junk standing about in the parking lot (render.facility.FacilityDebris), which scatters
@@ -824,6 +829,7 @@ class RenderConfig {
     // anything, the unit is a cube at either size and `machLights` reads fractions, so scaling by
     // height (which is all Models.instanced does) is exactly right here and was wrong for the rack
     facilityMachine: 'models/facility/deco-machine.glb',       // three bands, louvre panel set back
+    facilityAnalyser: 'models/facility/deco-analyser.glb',     // the tall one: sloped console on top
     // and the bookcase, whose whole read at this camera is that the BOARDS stand in front of the
     // spines — four proud boxes running between the stiles (models-src/facility/bookcase_build.py)
     facilityBookcase: 'models/facility/deco-bookcase.glb',     // four boards, books behind them

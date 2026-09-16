@@ -30,6 +30,15 @@ area
   ├ parking
   │ └ entryway               the 4x2 hole through the sidewalk
   ├ park
+  ├ hangar
+  │ └ hangar-floor           the shed's interior, walked by HangarBlock itself
+  │   │                      → Quota.deal() over its WALL RUNS, same dealer again
+  │   ├ study-pad            the centre set piece. CARVED first, never dealt
+  │   ├ hangar-machine       a bank on the pad's annulus — the cable fan's far ends, also carved
+  │   │                      50/50 per BANK: the cube (FIT_MACHINE) or the tall analyser console
+  │   ├ hangar-rack-bay      a corner run of server racks
+  │   ├ hangar-console       a run of worktop the workstation pass stands computers on
+  │   └ hangar-slot          the filler: floor clutter, and mostly nothing
   └ yard                     the filler kind: whatever nothing claimed
 
 building
@@ -95,6 +104,8 @@ FacilityConnect.connectRooms()          every room is walk-in-able
 | `gen/blocks/RoadBlock.hx` | the carriageway, the pavement, the sewer hatches and the gate mouth |
 | `gen/blocks/RoomBlock.hx` | the ROOM level: the glazing pass, and every zone filler under it |
 | `gen/blocks/RoomZones.hx` | what a room of each kind must contain — the room level's `demands()` |
+| `gen/blocks/HangarBlock.hx` | the shed, its size cap, and the HANGAR level: the study pad, the machine banks and every zone filler under them |
+| `gen/blocks/HangarZones.hx` | what a hangar's wall runs must carry — the hangar level's `demands()` |
 
 ### The facility, after the split
 

@@ -52,6 +52,19 @@ import sys
 import numpy as np
 from PIL import Image
 
+
+# the sRGB transfer both ways, on 0..255 bytes. here because `baseColor` multiplies in LINEAR light
+# and a factor applied to the bytes is a different picture -- 0.4 on 185 is 74 in bytes and 122 in
+# light, and the second one is what the frame shows
+def lin(v):
+    c = np.asarray(v, dtype=np.float64) / 255.0
+    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+
+
+def srgb(v):
+    c = np.clip(np.asarray(v, dtype=np.float64), 0, 1)
+    return 255 * np.where(c <= 0.0031308, c * 12.92, 1.055 * c ** (1 / 2.4) - 0.055)
+
 # glTF component type -> numpy dtype, and element type -> component count
 CT = {5120: 'i1', 5121: 'u1', 5122: 'i2', 5123: 'u2', 5125: 'u4', 5126: 'f4'}
 NC = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
@@ -129,6 +142,47 @@ def subject(im):
     return m, lum
 
 
+# the SHIPPED albedo of one glb: the base map sampled at every triangle's UV centre, taken through
+# the material's own baseColorFactor in linear light. Returns (sampled rgb, atlas rgb, factor), all
+# sRGB bytes, or None for a prop with no base map
+def albedo(path):
+    g, bin_ = load(path)
+    prim = g['meshes'][0]['primitives'][0]
+    pbr = g['materials'][prim.get('material', 0)].get('pbrMetallicRoughness', {})
+    if 'baseColorTexture' not in pbr:
+        return None
+    im = np.asarray(image(g, bin_, pbr['baseColorTexture']['index']).convert('RGB'))
+    tri = acc(g, bin_, prim['indices']).reshape(-1, 3).astype(np.int64)
+    uv = acc(g, bin_, prim['attributes']['TEXCOORD_0']).astype(np.float64)
+    c = uv[tri].mean(axis=1)
+    px = np.clip((c * [im.shape[1], im.shape[0]]).astype(int), 0,
+                 [im.shape[1] - 1, im.shape[0] - 1])
+    f = np.asarray(pbr.get('baseColorFactor', [1, 1, 1, 1]))[:3]
+    s_ = im[px[:, 1], px[:, 0]].mean(axis=0)
+    rgb = im.reshape(-1, 3).mean(axis=0)
+    return srgb(lin(s_) * f), srgb(lin(rgb) * f), f
+
+
+# THE PROP ALBEDO REGISTER, sorted, one line per glb. The whole point is that a prop's level is only
+# ever judged against its NEIGHBOURS -- the two family bands are 46-52 outdoors and ~78 indoors, and
+# every one of the four reports that produced this tool was a prop that had drifted off the props
+# beside it rather than off an absolute. A doc table would go stale in a session; this cannot.
+def audit(paths):
+    rows = []
+    for f in paths:
+        a = albedo(f)
+        if a is None:
+            continue
+        s_, _, fa = a
+        rows.append((s_.mean(), s_.max() - s_.min(), f, fa))
+    for luma, ch, f, fa in sorted(rows):
+        print('  %6.1f  chroma %5.1f  %-40s%s' % (
+            luma, ch, f.split('models/')[-1],
+            '' if (fa == 1).all() else '  bc %g/%g/%g' % tuple(fa)))
+    print('  -- bands: 46-52 OUTDOORS, ~78 INDOORS (floor 95, wall 111). Judge against the '
+          'NEIGHBOURS, not the number')
+
+
 def stat_glb(path):
     g, bin_ = load(path)
     prim = g['meshes'][0]['primitives'][0]
@@ -166,8 +220,17 @@ def stat_glb(path):
         # spread is printed beside it because that is the number nobody was looking at: 9 of 38 props
         # shipped with a per-channel factor and every one of them came out neutral
         rgb = im.reshape(-1, 3).mean(axis=0)
-        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family luma 46-52 OUTDOORS)' % (
-            '%dpx' % im.shape[0], *rgb.round(), *s.round()))
+        # AND THROUGH THE FACTOR, which this tool ignored for its whole life and which is why every
+        # value fit in art/models.json had to be recomputed by hand off the entry: `baseColor` is a
+        # LINEAR multiply applied at render, so the atlas is not the shipped pixel on any of the 9
+        # props that carry one -- facility/desk-mug read 185 here while shipping 122, and the entry
+        # that fitted it quoted its own arithmetic because the tool would not. `sat` and `lift` need
+        # no such treatment: both are baked into the built map, so they are already in these bytes.
+        f = np.asarray(pbr.get('baseColorFactor', [1, 1, 1, 1]))[:3]
+        s, rgb = srgb(lin(s) * f), srgb(lin(rgb) * f)
+        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family luma 46-52 OUTDOORS%s)' % (
+            '%dpx' % im.shape[0], *rgb.round(), *s.round(),
+            '' if (f == 1).all() else ', THROUGH baseColor %g/%g/%g' % tuple(f)))
         print('  chroma         atlas %.1f   sampled %.1f   (max-min; a coloured prop wants > 25)'
               % (rgb.max() - rgb.min(), s.max() - s.min()))
         # UV SMEARS. A triangle whose three UVs enclose ZERO AREA samples a LINE of the atlas and
@@ -314,6 +377,9 @@ def fit(path, out, margin):
 args = sys.argv[1:]
 if not args:
     sys.exit(__doc__)
+if args[0] == '--audit':
+    audit(sorted(args[1:]))
+    sys.exit(0)
 path = args[0]
 print(path.split('/')[-1])
 if '--fit' in args:
