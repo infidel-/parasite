@@ -669,6 +669,7 @@ class FacilityDeco
               v: FacilityStyle.DECO_ANAL_LED_V,
               size: FacilityStyle.DECO_ANAL_LED_SIZE,
               greenFrom: FacilityStyle.DECO_ANAL_LED_GREEN_FROM,
+              mode: FacilityStyle.DECO_LED_SCAN,
             });
           case _FittingKind.FIT_MACHINE | _FittingKind.FIT_MACHINE_LOW:
             // the same four faces again, and the ONLY kind here where EVERY one of them maps 0..1 —
@@ -700,6 +701,7 @@ class FacilityDeco
               v: FacilityStyle.DECO_MACH_LED_V,
               size: FacilityStyle.DECO_MACH_LED_SIZE,
               greenFrom: FacilityStyle.DECO_MACH_LED_GREEN_FROM,
+              mode: FacilityStyle.DECO_LED_CHASE,
             });
           default:
             // the rack: three faces of one cabinet, each on its own surface, and all of them laid
@@ -1560,9 +1562,10 @@ class FacilityDeco
           var p1 = (o.dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
           var p2 = (o.dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
           var p3 = (o.dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
-          // b carries the hue OFFSET BY 2, which is the mode flag as well — see `blink`
+          // b carries the hue OFFSET BY THE MODE, which is how one mesh runs four patterns — see
+          // `blink` and FacilityStyle.DECO_LED_CHASE
           MeshBufTools.quadRGB(b, p0, p1, p2, p3,
-            [0, 0, 1, 0, 1, 1, 0, 1], 1.0, ph, 2.0 + hue);
+            [0, 0, 1, 0, 1, 1, 0, 1], 1.0, ph, o.mode + hue);
         }
     }
 
@@ -1648,14 +1651,18 @@ class FacilityDeco
 // the light green. Here the three channels are read APART — r is the light's level, g its phase, b
 // which of the two hues it burns — so one mesh carries a whole rack of independent lights.
 //
-// AND THREE PATTERNS OFF ONE PROGRAM, which is what the b channel is doing triple duty for. A rack's
-// ports are independent traffic (a square wave, each light on its own phase); a machine's control
-// strip is a SEQUENCER (one dot running the row with a decaying tail); a workstation's SCREEN is
-// neither, and is two sines with no common period summed shallow, so it wobbles and never loops. All
-// three live in the same mesh and material because a second one is a second draw call, so the mode
+// AND FOUR PATTERNS OFF ONE PROGRAM, which is what the b channel is doing quadruple duty for. A
+// rack's ports are independent traffic (a square wave, each light on its own phase); a machine's
+// control strip is a SEQUENCER (one dot running the row with a decaying tail); a workstation's SCREEN
+// is neither, and is two sines with no common period summed shallow, so it wobbles and never loops;
+// an ANALYSER's lens row is a SCAN, one head bouncing along it slowly, which is the fourth and was
+// added because the analyser and the machine ran the same chase off the same clock and were reported
+// from the game as one object drawn twice. All four live in the same mesh and material because a
+// second one is a second draw call, so the mode
 // has to travel per VERTEX — and there are only three channels. It rides the hue: b in 0..1 is a RACK
 // burning `mix(A, B, b)`, b in 2..3 a MACHINE burning `mix(A, B, b - 2)`, b in 4..5 a SCREEN burning
-// C outright (one colour, off the screen art's own measured hue — see WORK_SCREEN_GLOW). Nothing else
+// C outright (one colour, off the screen art's own measured hue — see WORK_SCREEN_GLOW), b in 6..7 an
+// ANALYSER burning the machine's two hues on the scan (FacilityStyle.DECO_LED_SCAN). Nothing else
 // samples this attribute (the include that would is the one being replaced) and a varying is not
 // clamped, so a 2 or a 4 reaches the fragment stage untouched. Every branch is evaluated and mixed
 // rather than branched on: they are a handful of instructions each and this mesh is a few hundred
@@ -1680,10 +1687,12 @@ class FacilityDeco
       var uScr = { value: FacilityStyle.DECO_SCREEN_RATE };
       var uScr2 = { value: FacilityStyle.DECO_SCREEN_RATE2 };
       var uScrD = { value: FacilityStyle.DECO_SCREEN_DEPTH };
+      var uAnal = { value: FacilityStyle.DECO_ANAL_LED_RATE };
       var inject =
-        '  float decoScr = step( 3.5, vColor.b );\n' +
-        '  float decoMode = step( 1.5, vColor.b ) * ( 1.0 - decoScr );\n' +
-        '  float decoHue = vColor.b - 2.0 * decoMode - 4.0 * decoScr;\n' +
+        '  float decoAnal = step( 5.5, vColor.b );\n' +
+        '  float decoScr = step( 3.5, vColor.b ) * ( 1.0 - decoAnal );\n' +
+        '  float decoMode = step( 1.5, vColor.b ) * ( 1.0 - decoScr ) * ( 1.0 - decoAnal );\n' +
+        '  float decoHue = vColor.b - 2.0 * decoMode - 4.0 * decoScr - 6.0 * decoAnal;\n' +
         '  float decoBlink = 1.0 - decoLedDepth + decoLedDepth *\n' +
         '    step( 0.5, fract( decoLedTime * decoLedRate + vColor.g ) );\n' +
         '  float decoRun = pow( 1.0 -\n' +
@@ -1691,8 +1700,15 @@ class FacilityDeco
         '  float decoFlick = 1.0 - decoScrDepth + decoScrDepth * ( 0.5 + 0.5 * (\n' +
         '    0.6 * sin( decoLedTime * decoScrRate + vColor.g * 6.2831 ) +\n' +
         '    0.4 * sin( decoLedTime * decoScrRate2 + vColor.g * 19.739 ) ) );\n' +
+        // the head BOUNCES: a triangle wave off the same clock, and the distance to it is measured
+        // the SHORT WAY ROUND (the fract/0.5 pair), because a slot's phase is its place in the run
+        // plus its unit's own offset and that sum runs past 1
+        '  float decoHead = abs( 2.0 * fract( decoLedTime * decoAnalRate ) - 1.0 );\n' +
+        '  float decoScan = pow( max( 0.0, 1.0 - 2.0 *\n' +
+        '    abs( fract( decoHead - vColor.g + 0.5 ) - 0.5 ) ), decoLedTail );\n' +
         '  diffuseColor.rgb = mix( mix( decoLedA, decoLedB, decoHue ), decoLedC, decoScr ) *\n' +
-        '    ( vColor.r * mix( mix( decoBlink, decoRun, decoMode ), decoFlick, decoScr ) );\n';
+        '    ( vColor.r * mix( mix( mix( decoBlink, decoRun, decoMode ), decoFlick, decoScr ),\n' +
+        '      decoScan, decoAnal ) );\n';
       var prev:Dynamic = mat.onBeforeCompile;
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
@@ -1711,6 +1727,7 @@ class FacilityDeco
           shader.uniforms.decoScrRate = uScr;
           shader.uniforms.decoScrRate2 = uScr2;
           shader.uniforms.decoScrDepth = uScrD;
+          shader.uniforms.decoAnalRate = uAnal;
           shader.fragmentShader = 'uniform float decoLedTime;\n' +
             'uniform float decoLedRate;\n' +
             'uniform float decoLedDepth;\n' +
@@ -1719,6 +1736,7 @@ class FacilityDeco
             'uniform float decoScrRate;\n' +
             'uniform float decoScrRate2;\n' +
             'uniform float decoScrDepth;\n' +
+            'uniform float decoAnalRate;\n' +
             'uniform vec3 decoLedA;\n' +
             'uniform vec3 decoLedB;\n' +
             'uniform vec3 decoLedC;\n' +

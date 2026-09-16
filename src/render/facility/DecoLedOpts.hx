@@ -33,4 +33,10 @@ typedef DecoLedOpts = {
   size:Float,
   // and the slot the run turns from amber to green at — `blink` reads the hue channel
   greenFrom:Int,
+  // WHICH PATTERN the run burns, as the base of that same hue channel: FacilityStyle.DECO_LED_CHASE
+  // for the machine's one-way sequencer, .DECO_LED_SCAN for the analyser's bouncing head. Two units
+  // standing five units apart in one shed, running the same five-dot chase, read as one object drawn
+  // twice — which is what was reported — and a pattern is the only thing that can separate them: the
+  // clock is shared and the slot phases are fixed
+  mode:Float,
 };

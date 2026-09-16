@@ -325,6 +325,14 @@ class FacilityWork
   // here and in the table above and nothing else
   static var MUGS = [0, 4, 5];
 
+  // and which of them are ROUND, so their contact shade is the round ramp instead of the square one.
+  // A SQUARE POOL UNDER A CUP READS AS A COASTER, reported from the game, and the fix costs nothing:
+  // render.facility.FacilityDetail already keeps a round-ramp mesh for the laboratory's bench
+  // decorations (`deck`), so these ride it and no second draw call is added. The three cups and the
+  // plant pot are round; the lamp is not in this list on purpose — its base is a square plinth, and
+  // the tray and the logbooks are rectangles
+  static var ROUND = [0, 1, 4, 5];
+
   // and what stands at the BACK of a desk, as a WEIGHTED BAG rather than a uniform roll over the
   // three big trinkets. A lamp on one desk in eight is somebody's lamp; on nearly one in five it is
   // office issue, which is what a flat `1 + g % 3` under WORK_TRINKET_PCT 55 made it and what was
@@ -352,23 +360,30 @@ class FacilityWork
       var yaw = Math.atan2(DC[out], DR[out]);
       // the half extents are in each glb's OWN frame, before `yaw` turns it — authored front +z, so
       // width is x and depth is z, exactly as the constants are written
-      lay(plate, p.x, p.z, FacilityStyle.WORK_FOOT_W, FacilityStyle.WORK_FOOT_D, yaw);
-      lay(plate, p.tx, p.tz, FacilityStyle.WORK_TOWER_W, FacilityStyle.WORK_TOWER_D, yaw);
+      lay(plate, p.x, p.z, FacilityStyle.WORK_FOOT_W, FacilityStyle.WORK_FOOT_D, yaw, false);
+      lay(plate, p.tx, p.tz, FacilityStyle.WORK_TOWER_W, FacilityStyle.WORK_TOWER_D, yaw, false);
       lay(plate, p.x + DC[out] * FacilityStyle.WORK_KEY_FWD,
         p.z + DR[out] * FacilityStyle.WORK_KEY_FWD,
-        FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_D, yaw);
+        FacilityStyle.WORK_KEY_W, FacilityStyle.WORK_KEY_D, yaw, false);
       // and one under each trinket, off the same table the batches are sized by — at the trinket's OWN
-      // yaw and not the desk's, because these turn freely where the three machines do not
+      // yaw and not the desk's, because these turn freely where the three machines do not, and ROUND
+      // where the object is
       for (t in trinket(m, col, row))
-        lay(plate, t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d, t.yaw);
+        lay(plate, t.x, t.z, TRINKETS[t.kind].w, TRINKETS[t.kind].d, t.yaw,
+          ROUND.indexOf(t.kind) >= 0);
     }
 
 // one of those three. `pooled` clamps per side to the plate, so a keyboard near the desk's open edge
-// keeps its gradient on the worktop instead of hanging it off the front
+// keeps its gradient on the worktop instead of hanging it off the front.
+//
+// `round` picks the COLLECTOR and nothing else: both take the same opts through the same emitter and
+// differ in the ramp their mesh is given — a rounded box for the machines, a circle for a cup or a
+// pot (FacilityDetail.pool vs .deck). Both meshes already exist in every compound, so neither
+// answer costs a draw call
   static function lay(plate:FacilityGeom.Rect, cx:Float, cz:Float, w:Float, d:Float,
-      yaw:Float):Void
+      yaw:Float, round:Bool):Void
     {
-      FacilityDetail.pool({
+      var o:FacilityPoolOpts = {
         cx: cx,
         cz: cz,
         hw: w / 2,
@@ -376,7 +391,10 @@ class FacilityWork
         yaw: yaw,
         y: FacilityStyle.BENCH_H,
         plate: plate,
-      });
+      };
+      if (round)
+        FacilityDetail.deck(o);
+      else FacilityDetail.pool(o);
     }
 
 // the LEADS and the LIGHTS of every workstation in the compound. `leds` and `cab` belong to other
@@ -616,7 +634,8 @@ class FacilityWork
       // a phase of its own per desk, so no two screens in a room wobble together
       var ph = ((FacilityModel.mix(g ^ 971658137) >>> 7) % 1000) / 1000;
       MeshBufTools.quadRGB(b, at(-1, -1), at(1, -1), at(1, 1), at(-1, 1),
-        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], FacilityStyle.WORK_SCREEN_LEVEL, ph, 4.0);
+        [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], FacilityStyle.WORK_SCREEN_LEVEL, ph,
+        FacilityStyle.DECO_LED_SCREEN);
     }
 
 // the chairs, one instanced batch for the compound. one per workstation and none anywhere else: a

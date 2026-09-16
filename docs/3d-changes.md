@@ -2355,3 +2355,141 @@ desk (was 0.32) and 2.17 past at a full-depth lab or hangar worktop, in both cas
 
 **Verdict: landed. A prop scaled by height is a prop scaled in plan, and every clearance fitted
 against its plan is part of the edit.**
+
+## The podium's risers were drums, and its deck was a tic-tac-toe
+
+Three reports on one prop, all three the same shape: a square cell laid over a surface whose aspect
+it was not drawn for. Fixed in one rebuild — still **540 tris, 17.2 × 17.2 × 3.07, `check` 0 holes /
+0 coplanar**.
+
+**The risers.** `buildlib.lathe_uv` runs u ONCE around, which is right for a 1.2-unit drum and a
+smear on a dais 54.0 units in circumference with a riser 0.55 tall. Measured off the built glb by
+solving the world→texel jacobian per triangle: the lower riser ran **923 texels per world unit up
+the band against 9.4 across it, anisotropy 98**, the upper 64.7, and the whole prop's median was
+26.08 — and on screen the hazard stripes at the foot of the port cell pulled into a flat yellow line
+round the base. Note `propstat` reports **0 uv smears** on this prop and always did: its test is
+ZERO-AREA uv triangles, and an anisotropic stretch has plenty of area.
+
+`lathe_uv` takes a `reps` now — it must DIVIDE the turn count, so a copy boundary lands on a real
+vertex boundary and no face straddles one; the copy a face belongs to is its own rounded minimum.
+Each riser also wears a BAND of its cell rather than the whole square: the lens row (cell 3 rows
+86..196) for the lower, the rivet line (cell 1 rows 200..350) for the upper, **u to 0.504 because
+that is 256 px** and the port band's own period is 128 px while the bolted panel's is 256 — so
+copies join with nothing to line up by hand. Anisotropy **98 → 1.76** and **64.7 → 1.58**, median
+**26.08 → 1.76**. The hazard stripes are no longer worn by a riser, and that is aspect and not
+taste: 280 px over 0.55 units cannot be made square.
+
+**The deck.** "isn't seamless, it's a 3x3 pattern" — and it was not a tiling fault, it was the ART.
+Cell 0 held three identical panels each way (measured: mean |col − col+171| = **0.27** over the
+cell, 171 = 512/3), and `disc_uv` lays a cell ONCE, so the panel joins landed as a tic-tac-toe at
+r = ±2.9 with the lid carrying them at 40 texels/unit against the tread's 29 — two scales of one
+grid meeting at the step. Replaced with one seamless diamond tile generated for it and
+**level-matched to the sheet it sits in at p50 63.7**, the old cell's own, so nothing else on the
+prop moved (atlas 60/64/65 → 58/64/66). Tileability was not fitted and does not matter here: a disc
+maps the cell once and its edges never meet.
+
+**Verdict: landed. `lathe_uv` without `reps` is for a drum; check the aspect of the band before you
+hand a square cell to a shallow one.**
+
+## Four patterns on one mesh: the analyser scans where the machine chases
+
+"analyzer has almost the same blinking lights pattern as the machine". It had exactly the same one:
+both went through `FacilityDeco.machLights`, which hardcoded the hue channel at `2.0 + hue` — the
+SEQUENCER mode — so the two loudest objects in the shed ran one dot along their row off a shared
+clock, differing only in a per-unit phase offset.
+
+The b channel was already doing triple duty (0..1 rack square wave, 2..3 machine chase, 4..5 screen
+wobble), so the fourth pattern is a fourth band rather than a second mesh — which is the whole
+reason the channel is built this way: a second material is a second draw call, and this compound
+draws every rack port, machine button, screen and lens from ONE additive mesh. **6..7 is the
+analyser's SCAN**: a head that bounces along the row instead of running it one way, at
+`DECO_ANAL_LED_RATE` 0.20 against the machine's 0.55 — a full bounce every 5 base durations against
+a pass every 1.8, so the two never beat together. Three added GLSL lines, one added uniform, no new
+program family, no new mesh, no new draw call.
+
+The distance to the head is measured the SHORT WAY ROUND (`abs(fract(d + 0.5) - 0.5)`) and that is
+not decoration: a slot's phase is its place in the run PLUS its unit's own offset, so the sum runs
+past 1 and a plain `|head − g|` would leave half the units' rows dead. The tail exponent is the
+machine's `DECO_MACH_LED_TAIL` 6.0 — one exponent serves both shapes and a second uniform buys
+nothing. `mode` went into `DecoLedOpts` beside the four values that already differed between the two
+families, and the screen's own `4.0` literal in `FacilityWork` became `FacilityStyle
+.DECO_LED_SCREEN` while the band table existed.
+
+**Verdict: landed. Four patterns, one mesh, one clock, one draw call — and a shared emitter has to
+take its pattern as an argument, or two objects standing together read as one drawn twice.**
+
+## A cup's contact shade is round
+
+"is it possible to make round contact shadows for plant and cup? square look dumb". `FacilityWork
+.pools` lays one ramp per object on a desk and sent all of them — monitor foot, tower, keyboard, and
+every trinket — through `FacilityDetail.pool`, the square-cornered field. That field is right for the
+three machines and is what fixed them two changes ago; under a 0.34-wide cup it is a coaster.
+
+The round ramp already exists and is already drawn: `FacilityDetail.deck` is the laboratory bench
+decoration's collector, the same opts through the same emitter into its own mesh, whose alphaMap
+passes `HALO_CORE / 2` as the corner radius AS WELL as the half extent and so collapses the
+rounded-box SDF to a CIRCLE. So this is a routing change and nothing else — `lay` takes a `round`
+and picks the collector — and it costs **zero draw calls**, because both meshes are built in every
+compound already.
+
+`ROUND = [0, 1, 4, 5]`: the three mug glazes and the plant pot. The lamp is NOT in the list on
+purpose (its base is a square plinth) and neither are the tray or the logbooks. The two meshes carry
+different weights — `TABLE_POOL_ALPHA` 0.26 against `HALO_ALPHA` 0.32 — so a cup's shade is also
+slightly lighter than the keyboard's beside it, which is the right way round for the smaller object.
+
+**Verdict: landed. The round ramp was already in the scene; the fault was that one emitter only knew
+about the square one.**
+
+## The bin was too bright and its level was already right
+
+"trash can is too bright. albedo again?" — measured in the frame it stands in, and the answer is no.
+Body **9.6/48.3/21.9, luma 26.6** against the floor beside it at 28.0 and the steel drum next to it
+at 43.5: the level is level. What it was, was **chroma 38.7** — the second loudest thing in frame
+after the yellow biohazard drum's 47.8, in a compound lit blue throughout. The sheet says the same:
+`bin-sheet.png` rows 200..512 are the ribbed body at 50/87/51, chroma 37, and the charcoal hood
+above them is 73/76/77 at chroma 4.
+
+None of the three whole-map knobs can state that. A flat `baseColor` darkens a hood that measures
+correctly; a per-channel one tints it magenta (this repo's own colour-deletion row); a whole-map
+`sat` is the closest of the three and still pulls the only neutral part of the prop. `gradeRect` is
+the instrument for exactly this case — one prop, one sheet, two surfaces — so the grade is the green
+band ALONE, `scale` 0.82 and `sat` 0.42, chosen to land on the park bench's accepted 12.2.
+
+Built map: body 58.5/70.7/58.8 at **chroma 12.2**, hood untouched at 3.6. In the frame: body
+21.3/36.7/29.2, **luma 29.1 against the floor's 28.4 and chroma 15.4 against its 13.0** — a muted
+olive can standing beside a hazard drum that is still allowed to shout.
+
+**Verdict: landed. "Too bright" is a level word for a chroma fault often enough that the frame has to
+be measured before a knob is turned.**
+
+## A contact shade turned the wrong way round, and only a rectangle could show it
+
+"one's contact shadow is correct, the other one's rotated" — two desk trays, and the fault is a
+REFLECTION rather than a rotation, which is why it looked like a one-off.
+
+`FacilityDetail.pooled` built its quad in the object's frame and mapped local → world with the
+textbook 2D pair, `(lx*c − lz*s, lx*s + lz*c)`. Three's rotation about **+Y** is the other handedness:
+local +x → `(cos, −sin)` in (x, z), local +z → `(+sin, cos)`. `render.Models.instanced` turns every
+prop the three way, so the shade was the prop's MIRROR, and a mirror's visible error is **2·yaw**
+with a rectangle its own mirror at every multiple of 90°.
+
+Measured live on the two reported trays before the fix: instance matrices exactly `R(2.293)` and
+`R(5.045)` (read off `getMatrixAt`), quad long axes `(cos, +sin)` both times — **82.8° out on one,
+38.2° on the other**, and the second one is also clamped by the plate to 1.39 × 0.90 from 1.40 ×
+1.05, near enough square to read as right. After: long axis `(−0.661, −0.750)` and `(0.327, 0.945)`
+against the props' `(cos, −sin)` of `(−0.661, −0.750)` and `(0.327, 0.945)`.
+
+Why nothing caught it for so long is the useful part. Every other caller hands in a yaw that hides a
+reflection: the monitor/tower/keyboard trio take `atan2` over the four hands, so every yaw is a
+multiple of 90°; `FacilityClutter`'s boxes pass `hw == hd`, a square; `FacilityTables`' bench
+decoration passes 0.0 into the ROUND ramp. A free yaw on a 1.00 × 0.75 tray is the first thing in
+this file with both a rectangle and an arbitrary angle — the round-cup change a moment earlier is
+what put trays and mugs side by side to be compared.
+
+`FacilityDeco.crate` writes the same mirrored pair and is LEFT ALONE deliberately: it pairs with
+this quad through one caller, that caller passes a square, and a box drawn at −yaw with its shade at
+−yaw is a box nobody can tell from the same box at +yaw. Said so in both places rather than
+"tidied".
+
+**Verdict: landed. The renderer's handedness is three's, not the textbook's — and a reflection hides
+until something rectangular is turned to an arbitrary angle.**

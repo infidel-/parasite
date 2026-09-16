@@ -291,6 +291,23 @@ class FacilityDetail
 // AXIS-ALIGNED extent and then spends it on a LOCAL margin, which is conservative by the corner's
 // own swing and nothing worse, at DECO_BOX_YAW's 0.25 rad.
 //
+// AND IT TURNS THE WAY THREE DOES, WHICH IS NOT THE OBVIOUS WAY. A rotation about +Y takes local +x
+// to (cos, -sin) in (x, z) and local +z to (+sin, cos) — the z component of the FIRST one is
+// negative — so the textbook (c, s) / (-s, c) pair a 2D rotation is usually written as is the
+// MIRROR of it, and render.Models.instanced turns every prop the three way. Written the other way
+// here first, and reported from the game as one desk tray's shade being right and the next one's
+// "rotated": the error is a reflection, so it shows as 2 * yaw and a rectangle is its own mirror at
+// a multiple of 90 degrees. That is why nothing caught it for so long — every OTHER caller hands in
+// either an axis-aligned yaw (the monitor, tower and keyboard trio take atan2 over the four hands)
+// or a square (FacilityClutter's boxes pass hw == hd), and a free yaw on a 1.00 x 0.75 tray is the
+// first thing here with both a rectangle and an arbitrary angle. Measured on the two reported trays:
+// the props sat at R(2.293) and R(5.045) exactly, the quads' long axes at (cos, +sin) both times —
+// 83 degrees out on one and 38 on the other.
+//
+// render.facility.FacilityDeco.crate writes the other convention and is LEFT ALONE deliberately: it
+// pairs with this quad through one caller only, which passes a square, and a box drawn at -yaw with
+// its shade at -yaw is a box nobody can tell from the same box at +yaw.
+//
 // CLAMPED PER SIDE AND CUT, NEVER SQUEEZED, which is the wall halo's own rule and here it is what
 // makes the thing work at all. The plate rarely has the whole reach: a box fitted to the full depth
 // FacilityDeco.boxes allows leaves 0.17 of a 1.67-deep shelf, and one pushed against the end of a
@@ -319,10 +336,10 @@ class FacilityDetail
       // the shared material would cull a back-facing one to nothing
       var y = o.y + FacilityStyle.POOL_EPS;
       MeshBufTools.quad(b,
-        [o.cx + lx[0] * c - lz[1] * s, y, o.cz + lx[0] * s + lz[1] * c],
-        [o.cx + lx[1] * c - lz[1] * s, y, o.cz + lx[1] * s + lz[1] * c],
-        [o.cx + lx[1] * c - lz[0] * s, y, o.cz + lx[1] * s + lz[0] * c],
-        [o.cx + lx[0] * c - lz[0] * s, y, o.cz + lx[0] * s + lz[0] * c],
+        [o.cx + lx[0] * c + lz[1] * s, y, o.cz - lx[0] * s + lz[1] * c],
+        [o.cx + lx[1] * c + lz[1] * s, y, o.cz - lx[1] * s + lz[1] * c],
+        [o.cx + lx[1] * c + lz[0] * s, y, o.cz - lx[1] * s + lz[0] * c],
+        [o.cx + lx[0] * c + lz[0] * s, y, o.cz - lx[0] * s + lz[0] * c],
         [u[0], v[1], u[1], v[1], u[1], v[0], u[0], v[0]]);
     }
 

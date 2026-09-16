@@ -1504,6 +1504,15 @@ class FacilityStyle
   // bank on the right. The 5-9 px runs between them at u 0.43-0.66 are the two DIALS and are
   // deliberately skipped: a dial is not a lamp
   public static final DECO_MACH_LED_U = [ 0.132, 0.218, 0.304, 0.767, 0.853 ];
+  // WHICH PATTERN A LIGHT BURNS, as the base of the hue channel `blink` reads the mode off. FOUR of
+  // them share one mesh, one material and one clock, because a second mesh is a second draw call and
+  // the mode therefore has to travel per VERTEX with only three channels to travel in: 0..1 is a
+  // RACK's independent square wave, 2..3 a MACHINE's one-way chase, 4..5 a SCREEN's wobble, 6..7 an
+  // ANALYSER's bouncing scan. Named here rather than written as literals at the four emitters,
+  // which is how the screen's 4.0 sat in render.facility.FacilityWork while this band was added
+  public static inline var DECO_LED_CHASE = 2.0;
+  public static inline var DECO_LED_SCREEN = 4.0;
+  public static inline var DECO_LED_SCAN = 6.0;
   // and the band's own centre, v from the foot of the face (py 438-474 of 500)
   public static inline var DECO_MACH_LED_V = 0.088;
   // one light's quad edge as a fraction of the face WIDTH, not a world size: this kind comes in two
@@ -1520,6 +1529,13 @@ class FacilityStyle
   // which slot the hue changes at: the left bank runs amber and the right bank green, so the run
   // crosses two banks the way a real panel's does rather than being one undifferentiated row
   public static inline var DECO_MACH_LED_GREEN_FROM = 3;
+  // AND THE FOURTH PATTERN, the analyser's SCAN, which exists because the analyser and the machine
+  // stand a few units apart in the same shed and ran the SAME sequencer off the same clock — reported
+  // from the game as the two objects blinking alike. Here the lit head BOUNCES along the lens row
+  // instead of running it one way, which is what a sample being swept reads as, and 0.20 against the
+  // machine's 0.55 is slow enough that the two never beat together. The tail is the machine's
+  // DECO_MACH_LED_TAIL: one exponent serves both shapes and a second uniform would buy nothing
+  public static inline var DECO_ANAL_LED_RATE = 0.20;
 
   // and the THIRD pattern on that one mesh, material and clock: a lit SCREEN. Told apart the same way
   // the machine is — the vertex channel carrying the hue is 0..1 for a rack, 2..3 for a machine and
