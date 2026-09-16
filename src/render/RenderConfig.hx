@@ -677,6 +677,14 @@ class RenderConfig {
     wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
     wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
     wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
+    // and the HAND-MODELLED park planting behind FacilityStyle.PLANT_BLENDER — the conifer restated
+    // as three lobed skirts over a bole, and the one shrub dome dealt out into three silhouettes.
+    // the FACILITY's park draws these; the wilderness keeps the generated pair above, which is what
+    // the flag is for (render.facility.FacilityGround.GREEN)
+    wildTreeConiferHand: 'models/wild/tree-conifer-hand.glb',     // lobed conifer, 824 tris against 4,880
+    wildTreeBroadleafHand: 'models/wild/tree-broadleaf-hand.glb', // broadleaf, one deep lobed crown, 800 against 4,866
+    wildBushDomeHand: 'models/wild/bush-dome-hand.glb',           // shrub dome, one lathe plus an off-centre crown
+    wildBushUprightHand: 'models/wild/bush-upright-hand.glb',     // upright shrub, three canes each with a crown
     // the two BAND props: what a TILE_ROCK cell means in the forest and in the mountains respectively
     // (render.wild.WildBand), where plains keeps the two rocks above
     wildLogFallen: 'models/wild/log-fallen.glb',                  // fallen trunk, bark all over, broken at both ends

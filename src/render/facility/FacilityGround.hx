@@ -37,6 +37,13 @@ typedef GreenProp = {
   // does this prop have an AUTHORED FRONT? a plant takes a full random turn, a bench is turned to
   // face the path beside it — see `green`, which is where the two yaws part company
   faces:Bool,
+  // WHICH OF THE ROWS SHARING THIS TILE this is, and how many share it. one tile id, several
+  // meshes: the generator writes one Const.TILE_BUSH for every shrub in the park, and the three
+  // hand-modelled silhouettes are dealt off a hash of the CELL, so the variety costs the generator
+  // nothing, the save nothing and a re-entry nothing (the hash is the cell's, not a roll). 1 means
+  // the row is the only one for its tile and the test costs a comparison
+  variant:Int,
+  variants:Int,
   // does it cast a shadow? every other prop in the game does — render.Models.instanced turns both
   // shadow flags on for a real batch — and the park shrub is the one thing that says otherwise. an
   // instanced batch is drawn into the moon's shadow map as many times as it is drawn into the frame,
@@ -76,6 +83,68 @@ class FacilityGround
   public static final BENCH_PATH = FacilityStyle.BENCH_BLENDER ?
     RenderConfig.MODELS.facilityBenchParkHand : RenderConfig.MODELS.facilityBenchPark;
 
+  // and the park's PLANTING (FacilityStyle.PLANT_BLENDER), resolved here for the same reason. the
+  // shrub is the one prop in the compound where the flag changes the number of BATCHES, so the rows
+  // it deals live in their own table and GREEN concatenates it — see BUSHES below
+  public static final CONIFER_PATH = FacilityStyle.PLANT_BLENDER ?
+    RenderConfig.MODELS.wildTreeConiferHand : RenderConfig.MODELS.wildTreeConifer;
+  // and the broadleaf. it is the one plant whose `sink` depends on which branch is live, so the
+  // depth lives here beside the path rather than in the row: the generated glb's canopy runs all
+  // the way down and ends in a ragged fringe that stands proud of the lawn, and BROADLEAF_SINK
+  // buries it. The hand-modelled one ends in a closed cap 3.33 units up — there is nothing to bury,
+  // and burying it would eat a third of the clearance the tree's 9.5 height exists to buy
+  public static final BROADLEAF_PATH = FacilityStyle.PLANT_BLENDER ?
+    RenderConfig.MODELS.wildTreeBroadleafHand : RenderConfig.MODELS.wildTreeBroadleafFull;
+  public static final BROADLEAF_SINK = FacilityStyle.PLANT_BLENDER ?
+    0.0 : render.wild.WildStyle.BROADLEAF_SINK;
+
+  // THE SHRUBS, which are ONE row generated and TWO hand-modelled, and the only place a _BLENDER
+  // flag changes the number of batches the compound draws. Each hand row carries its OWN height
+  // rather than a shared one, because render.Models.instanced scales by HEIGHT alone. A THIRD,
+  // SPRAWLING SHRUB WAS BUILT AND REMOVED: the squash on one axis was the only thing separating it
+  // from the dome IN PLAN, which is the axis this camera mostly sees, and it read either as a
+  // pancake or as the dome. `casts` stays false on all of them for the reason
+  // GreenProp.casts gives: a shrub is drawn into the moon's shadow map as often as into the frame
+  static final BUSHES:Array<GreenProp> = FacilityStyle.PLANT_BLENDER ? [
+    {
+      tile: Const.TILE_BUSH,
+      path: RenderConfig.MODELS.wildBushDomeHand,
+      h: 1.1,
+      jitter: 0.28,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
+      faces: false,
+      casts: false,
+      sink: 0.0,
+      variant: 0,
+      variants: 2,
+    },
+    {
+      tile: Const.TILE_BUSH,
+      path: RenderConfig.MODELS.wildBushUprightHand,
+      h: 1.13,
+      jitter: 0.28,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
+      faces: false,
+      casts: false,
+      sink: 0.0,
+      variant: 1,
+      variants: 2,
+    },
+  ] : [
+    {
+      tile: Const.TILE_BUSH,
+      path: RenderConfig.MODELS.wildBushLow,
+      h: 1.1,
+      jitter: 0.28,
+      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
+      faces: false,
+      casts: false,
+      sink: 0.0,
+      variant: 0,
+      variants: 1,
+    },
+  ];
+
   // the park is dressed with the wilderness's own plants: same night, same style, and TWO of the
   // four trees the tile ids distinguish. the other two are dead wood and have no row here — +3 is
   // the dead snag outright, and +1 is `tree-broadleaf`, a BARE broadleaf with thick limbs and no
@@ -86,38 +155,31 @@ class FacilityGround
   public static final GREEN:Array<GreenProp> = [
     {
       tile: Const.TILE_TREE1,
-      path: RenderConfig.MODELS.wildTreeConifer,
+      path: CONIFER_PATH,
       h: 7.5,
       jitter: 0.20,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: true,
       sink: 0.0,
+      variant: 0,
+      variants: 1,
     },
     {
       tile: Const.TILE_TREE1 + 2,
-      path: RenderConfig.MODELS.wildTreeBroadleafFull,
+      path: BROADLEAF_PATH,
       h: 9.5,
       jitter: 0.22,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: true,
-      // its canopy runs all the way down and ends in a ragged fringe of holes and spikes instead of
-      // a trunk, which stood proud of the lawn and read as torn geometry. sunk, the fringe is under
-      // the ground and the dome above it is all that shows. the SAME constant the wilderness sinks
-      // the same glb by, because it is a property of the mesh and not of either area
-      sink: render.wild.WildStyle.BROADLEAF_SINK,
+      // how far it is buried is a property of the MESH and not of either area, which is why both
+      // the path and this are resolved together above — see BROADLEAF_SINK
+      sink: BROADLEAF_SINK,
+      variant: 0,
+      variants: 1,
     },
-    {
-      tile: Const.TILE_BUSH,
-      path: RenderConfig.MODELS.wildBushLow,
-      h: 1.1,
-      jitter: 0.28,
-      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
-      faces: false,
-      casts: false,
-      sink: 0.0,
-    },
+  ].concat(BUSHES).concat([
     // the park bench, which the generator writes as an unwalkable grass cell beside its path. it is
     // the one entry here that MUST draw: a green cell with nothing on it is a wall the player cannot
     // see, and unlike a plant this tile has no other meaning
@@ -133,8 +195,10 @@ class FacilityGround
       faces: true,
       casts: true,
       sink: 0.0,
+      variant: 0,
+      variants: 1,
     },
-  ];
+  ]);
 
 // the ground surfaces, the kerb along every pavement edge that steps down, and the paint
   public static function build(scene:Scene, m:Facility):Void
@@ -300,6 +364,16 @@ class FacilityGround
                 var hx = FacilityModel.mix((col * 30011) ^ (row * 50021));
                 var hz = FacilityModel.mix((col * 19349663) ^ (row * 83492791));
                 var hy = FacilityModel.mix((col * 24036583) ^ (row * 32582657));
+                // ONE TILE, SEVERAL MESHES: the cell's own hash says which of the rows sharing this
+                // tile draws it, and the loop below it does NOT break on a match — so without this
+                // test every shrub cell would be pushed into all three batches at once. A FOURTH
+                // hash and not one of the three above, because those are spent on where the plant
+                // sits and how big it is, and a shrub's SPECIES correlating with its size is the
+                // kind of pattern the eye finds immediately
+                if (GREEN[i].variants > 1 &&
+                    FacilityModel.mix((col * 374761393) ^ (row * 668265263)) %
+                      GREEN[i].variants != GREEN[i].variant)
+                  continue;
                 var j = GREEN[i].jitter;
                 // the size roll rides the HIGH bits of the yaw hash, which only spends its low ones
                 // (% 6283) — the same pair of ranges render.wild.WildProps takes off one hash
