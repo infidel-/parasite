@@ -77,7 +77,7 @@ class FacilityClutter
                 m.tableSink[row][col])
               continue;
             var office = (m.surf[row][col] == Surf.OFFICE);
-            n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK, office);
+            n += cell(office ? bOffice : b, m, col, row, office ? PICK_OFFICE : PICK);
           }
       var bBox = MeshBufTools.make();
       n += slots(m, b, bOffice, bBox);
@@ -318,10 +318,9 @@ class FacilityClutter
 // beside the keyboard — and a screen and a tower with a bare worktop around them reads as stock
 // rather than as somebody's place. So such a cell is offered the desk's own front SLOT on top of
 // whatever it rolls (see the block below), and the rolled count keeps reaching zero. The lab's own
-// rhythm is untouched either way, because a lab has no workstation on it: FacilityWork.at is
-// Surf.OFFICE only
-  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>,
-      office:Bool):Int
+// rhythm is untouched either way, because a lab bench has no workstation on it: FacilityWork.at
+// takes an office desk and the hangar's console run and nothing else
+  static function cell(b:MeshBuf, m:Facility, col:Int, row:Int, pick:Array<Int>):Int
     {
       var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
       // the office desk's workstation, which stands on the worktop and is not a decoration at all —
@@ -340,14 +339,19 @@ class FacilityClutter
       // function of the saved grid — and one list rather than this pass's own guesses at each, which
       // is what put a decal under the tower and a lamp on the paperwork. See ClutterSlot
       var spots = FacilityWork.claims(m, col, row);
-      // WHERE THE WORKTOP ACTUALLY IS, which on an office desk is not the cell. A desk is a bench cut
-      // to FacilityStyle.DESK_D on its OPEN side (FacilityTables.build, `var cut`), so a decal
+      // WHERE THE WORKTOP ACTUALLY IS, which on a thinned run is not the cell. Such a run is a bench
+      // cut to FacilityStyle.DESK_D on its OPEN side (FacilityTables.build, `var cut`), so a decal
       // wandering the whole cell lands up to (CELL - DESK_D) / 2 past the front edge and lies at
       // BENCH_H over bare floor — reported from the game as a table decoration floating in the air
       // beside the desk. The centre slides back toward the wall by exactly that cut and the span
-      // shrinks by it, so the rect this rolls in IS the worktop; both numbers come off DESK_D and
-      // FacilityTables' own hand search, so the geometry and the dressing cannot drift apart
-      var hand = (office ? FacilityTables.wallHand(m, col, row) : -1);
+      // shrinks by it, so the rect this rolls in IS the worktop.
+      //
+      // AND WHICH RUNS ARE THINNED IS FacilityTables.openHand's ANSWER, not a surface test of our
+      // own. `office` was that test and it drifted the moment the shed's console started being cut
+      // too: the decals went on wandering its whole 4.0 cell and two of them ended up hanging off
+      // the front edge of a 2.6 worktop. One oracle, asked by the geometry and by the dressing
+      var open = FacilityTables.openHand(m, col, row);
+      var hand = (open < 0 ? -1 : open ^ 1);
       var dx = 0.0, dz = 0.0;
       var deep:Float = CityConfig.CELL;
       if (hand >= 0)

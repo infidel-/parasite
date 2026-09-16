@@ -2493,3 +2493,66 @@ this quad through one caller, that caller passes a square, and a box drawn at �
 
 **Verdict: landed. The renderer's handedness is three's, not the textbook's — and a reflection hides
 until something rectangular is turned to an arbitrary angle.**
+
+## An L of desks was two runs that never met, and one oracle now says which are thinned
+
+Three reports off one room: "weird corner between two tables, maybe better merge them into one
+L-shaped" at 16,25, and "chair intersects with player" at 29,10 in the hangar.
+
+`FacilityTables` thins a bench cell to `DESK_D` 2.6 on its OPEN side so a run hugs its wall. The rule
+was asked TWICE and answered per cell, which is the whole fault. `wallHand` takes the FIRST wall it
+finds, so the corner cell of an L backs onto one wall and its neighbour onto the other: cell (15,24)
+was cut 1.4 on +z, (15,25) cut 1.4 on +x, and the two worktops stood **1.4 apart with a slot of floor
+between them**, each with a lipless cut edge facing the other. The same cut opens the same slot down
+the middle of the 2x3 bench block the generator also deals.
+
+So `openHand` is the single oracle now, and it refuses to cut toward another bench: **a run that
+carries on has no front to pull back**. The corner cell fills its cell and the L is one piece —
+measured on this compound, 3 cells of 26 stop being cut (15,24 / 19,24 / 44,36) and 23 stay thinned.
+
+THE CHAIR WAS THE SAME RULE MISSING ITS OTHER HALF. The hangar's console is laid in the laboratory's
+worktop tiles, so it was not `office` and was never thinned — 4.0 deep, edge to edge — and
+`FacilityWork.chairs` measures the seat off the desk's own face: `CELL / 2 + BENCH_LIP + CHAIR_OUT`
+= **3.33 from the cell centre, i.e. 1.33 into the next cell**, which is walkable and had the player
+standing in it. Thinned, the console's seat lands at `DESK_D - CELL / 2 + BENCH_LIP + CHAIR_OUT`
+= **1.93**, inside the desk's own cell, and the chair clears the sprite's ~1.0 half width by 0.5. The
+material does not follow the depth: the shed's run keeps the lab bench finish, because only the depth
+was wrong.
+
+TWO MORE COPIES OF THE RULE FELL OUT, and one of them broke immediately. `FacilityTables`' panel test
+skipped a face whenever the cell next door was a bench; with the corner now FULL, a neighbour thinned
+on the OTHER axis reaches their shared boundary over 2.6 of its 4.0 and leaves a 1.4 strip of open
+carcass. `closes` is that test — a neighbour closes a face only if it is uncut or cut on the
+boundary's own axis. And `FacilityClutter` carried its own `office ? wallHand : -1`, so the moment the
+console was thinned its decals went on wandering the whole 4.0 cell: two of them hung off the front
+edge of a 2.6 worktop in the first frame after the fix. Both ask `openHand` now.
+
+**Verdict: landed. A geometry rule two passes each re-derive is a rule that drifts the first time the
+set of cells it applies to changes — and the dressing is one of those passes.**
+
+## A shed's floor is concrete, whatever tile the furniture was laid in
+
+"floor behind this table is floor-tile for some reason. we're in the hangar."
+
+`gen.blocks.HangarBlock.console` writes `TILE_LABS_TABLE_*` for the shed's console run, deliberately:
+`FacilityWork.at` is already a pure function of those tiles and of the wall behind them, so a hangar
+console needs no second pass and no second model. But `FacilityModel.surfOf` sees one tile id and no
+building, and every table tile falls through its row-8 catch-all to `Surf.TILE` — so the floor pass
+painted **laboratory tile** under and behind every console in a concrete shed. Measured on the live
+model: **4 hangar cells reading Surf.TILE** — the three console cells (28..30, 9) and the shed's side
+door at (24,15), which lands on the same catch-all.
+
+`shedFloor` repaints them, and it is a pass of its own because the thing that knows better is the
+STRUCTURE's `hangar` flag rather than the cell: it runs straight after `findStructures`, and since
+that flag is a majority over a structure's concrete cells, flipping four of them can never change
+which structure is the shed. After: 0 cells. All indoor surfaces sit at y 0 (`FacilityGround.surfY`),
+so nothing moves vertically, and `Surf.CONCRETE` is in `isIndoor`, so no indoor pass loses a cell it
+had.
+
+The by-name `inHangar` test in `FacilityWork.at` STAYS — widening the gate to the surface those cells
+now paint would stand a workstation on the whole shed floor, and widening it to TILE would have stood
+one on every lab bench in the compound. Three comments in two files said "reads back as Surf.TILE" and
+are now wrong; all three rewritten rather than left as a trap.
+
+**Verdict: landed. A tile id is not a surface when a generator borrows another room's furniture to
+build something — the structure knows, and only the structure.**

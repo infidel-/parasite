@@ -263,6 +263,7 @@ class FacilityModel
               solid[row][col] = true;
           }
       findStructures(m);
+      shedFloor(m);
       findPads(m, solid);
       findWindows(m);
       findDoors(m, area);
@@ -306,6 +307,24 @@ class FacilityModel
             seen.set(si, true);
             m.pads.push({ col: col, row: row });
           }
+    }
+
+// AND EVERY FLOOR IN A SHED IS CONCRETE, whatever tile it happens to be laid in.
+//
+// gen.blocks.HangarBlock lays the hangar's console run in the LABORATORY's own worktop tiles —
+// deliberately, so the workstation pass needs no second copy of itself — and its side door in a door
+// tile, so surfOf reads those four cells back as Surf.TILE and the floor pass painted a square of lab
+// tile behind every console in a concrete shed, which is what was reported from the game. surfOf
+// cannot know better: it sees one tile id and no building. The structure's own hangar flag does, so
+// this is a pass of its own and runs straight after findStructures — the flag is a MAJORITY over
+// concrete cells, so flipping four of them can never change which structure is the shed
+  static function shedFloor(m:Facility):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          if (m.surf[row][col] == Surf.TILE &&
+              inHangar(m, col, row))
+            m.surf[row][col] = Surf.CONCRETE;
     }
 
 // spread a themed room's surface over the WHOLE of its rect.
@@ -454,8 +473,9 @@ class FacilityModel
 // is this cell inside the HANGAR — the one structure floored in concrete?
 //
 // it is the structure's flag and not the cell's surface, because the shed's own console run is laid
-// in the laboratory's worktop tiles and therefore reads back as Surf.TILE. A cell test would call
-// those cells a lab; this calls them what they are, which is a workbench in a hangar
+// in the laboratory's worktop tiles. `shedFloor` above repaints the FLOOR those cells carry, so a
+// surface test now calls them concrete rather than lab — but concrete is the whole shed, and what
+// every caller here wants to know is whether a given cell is inside it
   public static inline function inHangar(m:Facility, col:Int, row:Int):Bool
     {
       if (!inside(m, col, row))

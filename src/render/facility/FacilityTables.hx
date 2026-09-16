@@ -95,12 +95,16 @@ class FacilityTables
             // cell is shrunk on its OPEN side — the hand away from the wall the run backs onto — so
             // the carcass still meets the masonry and only the front edge comes forward less. every
             // rect below is taken off this one, so the lip, the edge band, the casework and the
-            // contact pool all follow with no further arithmetic
-            var hand = (office ? wallHand(m, col, row) : -1);
-            if (hand >= 0)
+            // contact pool all follow with no further arithmetic.
+            //
+            // WHICH SIDE THAT IS, IF ANY, IS `openHand`'s AND NOT THIS LOOP's — three passes ask it
+            // now (the panel test below, and FacilityWork.chairs for how far out the seat goes), and
+            // a second copy of the rule is how a desk and the chair at it end up disagreeing
+            var open = openHand(m, col, row);
+            if (open >= 0)
               {
                 var cut = CELL - FacilityStyle.DESK_D;
-                switch (hand ^ 1)
+                switch (open)
                   {
                     case 0: z0 += cut;
                     case 1: z1 -= cut;
@@ -161,7 +165,7 @@ class FacilityTables
             };
             // A HANGAR CONSOLE IS NOT AN OFFICE DESK AND CARRIES THE SAME THREE MACHINES.
             // FacilityWork.at lets the shed's console run in BY NAME — its cells are laid in the
-            // laboratory's worktop tiles and read back as Surf.TILE — so gating the pools on
+            // laboratory's worktop tiles and are not an office by any surface — so gating the pools on
             // `office` left every workstation in the hangar standing on bare resin with no contact
             // shade at all, which is what a monitor floating over a worktop looks like. Asked of
             // `at` instead, i.e. of the same oracle the geometry and the clutter both ask, so the
@@ -183,20 +187,16 @@ class FacilityTables
                     plate: plate,
                   });
               }
-            // the hand THIS cell was thinned on, if it was — see the DESK_D cut above
-            var open = (hand >= 0 ? hand ^ 1 : -1);
             for (dir in 0...4)
               {
-                // TWO DESKS MEETING AT A ROOM CORNER DO NOT ABUT, and the run test alone cannot see
-                // it: `wallHand` takes the FIRST wall it finds, so a corner cell and its neighbour
-                // back onto DIFFERENT walls and are thinned on DIFFERENT axes. Their rects then
-                // stand DESK_D short of the boundary between them while this loop skipped the panel
-                // on the grounds that the cell next door is a bench — reported from the game as two
-                // corner desks missing polygons. A neighbour only closes this face if neither of the
-                // two was cut away from the boundary they share
-                if (FacilityModel.isTable(m, col + DC[dir], row + DR[dir]) &&
-                    open != dir &&
-                    openHand(m, col + DC[dir], row + DR[dir]) != (dir ^ 1))
+                // TWO DESKS MEETING AT A ROOM CORNER used to abut nothing at all, and the run test
+                // alone cannot see it: `wallHand` takes the FIRST wall it finds, so a corner cell and
+                // its neighbour back onto DIFFERENT walls and were thinned on DIFFERENT axes. That is
+                // now `openHand`'s business — a cell with another bench on its open side is no longer
+                // cut at all — and what is left here is the part it cannot fix: a neighbour thinned
+                // on the OTHER axis reaches the boundary we share over DESK_D of it and leaves the
+                // rest of our carcass open to the room. `closes` is that test
+                if (closes(m, col, row, dir))
                   continue;
                 // the worktop's edge band, out on the grown rect with it
                 FacilityGeom.face(bTop, ox0, ox1, oz0, oz1, dir,
@@ -205,7 +205,7 @@ class FacilityTables
                 // and the casework on the plain cell, so u spans exactly CELL and the door rhythm
                 // lands whole. an office desk's two END faces — the ones on the axis the run travels
                 // along — take the drawerless side instead
-                var end = (hand >= 0 && (dir < 2) != (hand < 2));
+                var end = (office && open >= 0 && (dir < 2) != (open < 2));
                 panel(end ? deskSide : bBody, x0, x1, z0, z1, dir);
               }
           }
@@ -242,14 +242,49 @@ class FacilityTables
     }
 
 // which hand this cell's worktop was pulled BACK from, or -1 for one that reaches every boundary.
-// only an office desk is thinned, and only on the hand away from the wall it stands against
-  static function openHand(m:Facility, col:Int, row:Int):Int
+// a thinned run is pulled back on the hand away from the wall it stands against, and on no other.
+//
+// THE HANGAR'S CONSOLE IS THINNED TOO, which it was not: a console is a desk somebody sits at, and a
+// worktop filling its 4.0 cell put the chair FacilityWork.chairs stands in front of it 1.33 units
+// into the next cell — the middle of a walkable one, drawn through the player standing there, which
+// is what was reported. Thinned, the seat lands 1.93 out like every office desk's, i.e. inside the
+// desk's own cell. The material does not follow: the shed's run keeps the laboratory bench finish it
+// is laid in, because only its DEPTH was wrong.
+//
+// AND A RUN THAT CARRIES ON HAS NO FRONT TO PULL BACK. `wallHand` takes the first wall it finds, so
+// the corner cell of an L backs onto one wall and its neighbour onto the other; each was then cut
+// DESK_D on its own axis and the two stood 1.4 apart with a slot of floor between them, reported
+// from the game as a weird corner. The same cut opens the same slot down the middle of the 2x3 block
+// the generator also deals. A cell with another bench on its open side is not cut at all, so the
+// corner fills and the L is one piece
+  public static function openHand(m:Facility, col:Int, row:Int):Int
     {
       if (!FacilityModel.isTable(m, col, row) ||
-          m.surf[row][col] != Surf.OFFICE)
+          (m.surf[row][col] != Surf.OFFICE &&
+           !FacilityModel.inHangar(m, col, row)))
         return -1;
       var h = wallHand(m, col, row);
-      return (h < 0 ? -1 : h ^ 1);
+      if (h < 0)
+        return -1;
+      var o = h ^ 1;
+      return (FacilityModel.isTable(m, col + DC[o], row + DR[o]) ? -1 : o);
+    }
+
+// does the bench past this cell's `dir` face CLOSE it — reach the boundary the two share right
+// across, so this cell needs no panel there?
+//
+// a full cell closes everything. one thinned on the boundary's OWN axis still reaches it across the
+// whole width. one thinned on the other axis reaches DESK_D of it and no more, and the strip left
+// over is a hole straight into this cell's carcass. The fourth case — a neighbour cut away from the
+// boundary entirely — `openHand` has made impossible, since it refuses to cut toward a bench
+  static function closes(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      var c = col + DC[dir];
+      var r = row + DR[dir];
+      if (!FacilityModel.isTable(m, c, r))
+        return false;
+      var o = openHand(m, c, r);
+      return (o < 0 || o == dir);
     }
 
 // does a door opening lie past this cell's `dir` face — straight through it, or diagonally past
