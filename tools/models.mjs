@@ -74,7 +74,7 @@ function countTris(doc)
 //
 // DETERMINISTIC: the ray directions are a golden-angle cosine-weighted spiral, never Math.random,
 // so a rebuild of an unchanged source produces a byte-identical glb
-function bakeAO(doc, strength, rays, res)
+function bakeAO(doc, strength, rays, res, reachFrac)
 {
   let done = 0;
   for (const mesh of doc.getRoot().listMeshes())
@@ -132,8 +132,16 @@ function bakeAO(doc, strength, rays, res)
                 }
           }
         // and march. the ray starts 1.5 cells off the surface along the normal, which is what stops a
-        // vertex occluding itself on the very cell it sits in
-        const reach = span * 0.35;
+        // vertex occluding itself on the very cell it sits in.
+        //
+        // HOW FAR A RAY LOOKS IS A FRACTION OF THE PROP, and 0.35 of it is not always enough — which
+        // is the trap the janitor bucket found. A ray leaving the inside wall of a vessel has to
+        // cross the whole BORE to hit the far side, and the bucket's bore is 0.5 against a span of
+        // 0.84: at 0.35 the reach is 0.294, every cross-bore ray runs out of steps and escapes, and
+        // the inside of a bucket comes back as open as the outside. The default stays 0.35 because
+        // on a normal prop a longer reach only adds distant geometry that a hemisphere average is
+        // going to wash out anyway; a DEEP CONCAVITY is what wants `aoReach` in the manifest
+        const reach = span * reachFrac;
         const steps = Math.ceil(reach / (cell * 0.9));
         const col = new Float32Array(nv * 3);
         for (let i = 0; i < nv; i++)
@@ -381,7 +389,7 @@ async function main()
       );
       // skip if the output exists, no input is newer, AND the bake params are unchanged —
       // so editing tris/tex/error/maps rebuilds without a manual `touch` of the source
-      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.sat != null ? '/st' + e.sat : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') : '');
+      const sig = PIPELINE + '/' + target + '/' + tex + '/' + error + '/' + (hasTex ? texSrc : '-') + '/' + (hasEmi ? emiSrc + '@' + emiStrength : '-') + (e.dropMR ? '/noMR' : '') + (e.baseColor ? '/bc' + e.baseColor.join(',') : '') + (e.lift != null ? '/lf' + e.lift : '') + (e.sat != null ? '/st' + e.sat : '') + (e.roughness != null ? '/rf' + e.roughness : '') + (e.metalness != null ? '/mf' + e.metalness : '') + (e.ao != null ? '/ao' + e.ao + ',' + (e.aoRays ?? '-') + ',' + (e.aoRes ?? '-') + ',' + (e.aoReach ?? '-') : '');
       const last = e.last_converted != null ? Math.floor(Date.parse(e.last_converted) / 1000) : null;
       if (existsSync(out) && last != null && srcMtime <= last && e.last_sig === sig)
         {
@@ -611,8 +619,8 @@ async function main()
       if (e.ao != null && e.ao > 0)
         {
           const t0 = Date.now();
-          const prims = bakeAO(doc, e.ao, e.aoRays ?? info.default_ao_rays ?? 24, e.aoRes ?? info.default_ao_res ?? 72);
-          console.log('     AO baked into COLOR_0 on ' + prims + ' primitive(s), strength ' + e.ao + ' (' + (Date.now() - t0) + 'ms)');
+          const prims = bakeAO(doc, e.ao, e.aoRays ?? info.default_ao_rays ?? 24, e.aoRes ?? info.default_ao_res ?? 72, e.aoReach ?? info.default_ao_reach ?? 0.35);
+          console.log('     AO baked into COLOR_0 on ' + prims + ' primitive(s), strength ' + e.ao + ', res ' + (e.aoRes ?? info.default_ao_res ?? 72) + ', reach ' + (e.aoReach ?? info.default_ao_reach ?? 0.35) + ' (' + (Date.now() - t0) + 'ms)');
         }
       await io.write(out, doc);
       // UTC stamp (keep the Z) so the re-read compares in the same timezone as srcMtime's epoch

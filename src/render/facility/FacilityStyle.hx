@@ -1996,7 +1996,15 @@ class FacilityStyle
   // every one of them in range, which is why these are the generator's own defaults and not a fitted
   // pair. a BIGGER object throwing a WIDER halo is also the right way round, and it is free here.
   // the tallest quad tops out at the bookcase's 3.36 + 1.1 = 4.46, well under WALL_H 6.0
-  public static inline var HALO_CORE = 0.60;
+  //
+  // CORE 0.60 -> 0.75, reported as too wide, and the CAP is not the knob for it: reach is
+  // `extent/2 * (1/HALO_CORE - 1)` capped at HALO_GROW_MAX, and on everything smaller than a
+  // casework run the cap never engages at all — the broom's 0.62 gives 0.207 against a cap of 1.1.
+  // The fraction is the whole reach for a fitting, and 0.75 takes it to 0.333 of the half-extent
+  // from 0.667, so the broom's fade is 0.103 and the numbers in the table above all halve.
+  // Textures.makeRectGlowGradient is handed HALO_CORE and HALO_FADE directly, so the ramp art
+  // re-bakes to match and there is nothing to author
+  public static inline var HALO_CORE = 0.75;
   public static inline var HALO_FADE = 0.16;
   // and the CAP on that, in world units, which is what lets a RUN take the same quad as a fitting.
   // the reach above is a FRACTION of the object, which is right for a bookcase and absurd for a

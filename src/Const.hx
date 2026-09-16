@@ -382,12 +382,25 @@ class Const
 // grid holds kind + 1 with 0 for "nothing here"
   public static function fittingOf(row: Int, col: Int): Int
     {
+      var p = placeOf(row, col);
+      return (p == null ? -1 : p.kind);
+    }
+
+// the whole table entry a frame belongs to, or null. fittingOf above is this one field of it, and
+// gen.GenCheck.decoBlocks needs a SECOND one — `blocks`, i.e. where the entry was ever allowed to
+// stand — which is the only way to ask, of a decoration already on the grid, whether the room it is
+// standing in should have been offered it at all.
+//
+// unique by construction: gen.Deco.selfCheck asserts no frame appears on two entries, or this would
+// stop being a function and a saved decoration would resolve to whichever the table listed first
+  public static function placeOf(row: Int, col: Int): _DecoPlace
+    {
       for (f in FACILITY_DECO)
         for (fr in f.frames)
           if (fr.row == row &&
               fr.col == col)
-            return f.kind;
-      return -1;
+            return f;
+      return null;
     }
 
 // is this fitting kind dealt on the LOW list? read off FACILITY_DECO itself so the two can never

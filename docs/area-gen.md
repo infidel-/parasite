@@ -667,6 +667,52 @@ order and so stable for a seed.
 > over the FINAL state, asking the outcome rather than restating the filter — and caught a real
 > late-door fault four seeds in 20000. This one restated the filter.
 
+## An optional argument whose default is a real answer, and an oracle with no opinion on furniture
+
+A washroom came back with a bank of MACHINES standing next to its cubicles.
+
+The mechanism is one line. `RoomBlock.slot` dresses every room's leftover bays, and a washroom has
+plenty: `FacilityToilet.zones` demands only the stall run and the basin run, so everything else falls
+through to that shared filler. The filler called `FacilityRooms.addFitting(state, x, y)` — and the
+signature was `?role: String`, defaulting to `Deco.BLOCK_LAB`. **A caller that simply did not think
+about the room was handed the laboratory's own furniture list, silently, compiling correctly.** An
+optional argument whose default is one of the real answers cannot be told apart from a deliberate
+choice; the role is required now, so the compiler asks.
+
+**The interesting half is why nothing caught it.** `grep 'deco\|fitting' src/gen/GenCheck.hx`
+returned nothing at all. `washroomSane` is about door topology, `spawnsSane` is about two objects on
+a cell, and no check in the oracle had ever asked what a decoration IS. There was no wrong question
+here, as there had been with the diagonal tables — there was no question.
+
+`GenCheck.decoBlocks` is written **against the finished grid and not against the dealer**, and that
+is the load-bearing choice. Three separate arms put fittings down:
+
+  * rolled through `Deco.pick`, which is the only one that consults `_DecoPlace.blocks`;
+  * outright by kind through `FacilityRooms.placeFitting` (the lounge, the washroom's own T, the
+    machinery zone), which never looks at `blocks`;
+  * raw row lists — `Const.CHEM_LABS_DECO_FLOOR_HIGH` — which consult no table whatsoever, and whose
+    row 8 cols 4-8 **is** the machine.
+
+A check written against the dealer would have passed all three. Reading the grid (frame ->
+`Const.placeOf` -> `blocks` -> the role of the room the cell falls in) holds however the decoration
+arrived, including out of a savegame.
+
+### `blocks` holds two kinds of string, and the table never says which
+
+The first cut of the check reported **6,096 failures over 2000 seeds** and every one of them was
+correct furniture. `'lab'`, `'cabinet'` and `'toilet'` are room ROLES — what a `_Room` actually
+carries. **`'lounge'` is a ZONE**: a corner of an office that `RoomBlock` furnishes outright, and no
+room is ever a lounge, so by the check's reckoning every sofa was standing in a `'cabinet'`.
+
+So the predicate skips any entry that names no room role at all — such an entry is template-placed
+and its `blocks` is not a claim about rooms. Worth knowing before adding a table entry: put a room
+role in `blocks` and the oracle will hold you to it; put a zone name there and it cannot.
+
+Measured after: **0 failures at 2000 and at 20000 seeds.** The fault on screen had been generated
+before the fix — a decoration is persisted game state (`imageRow`/`imageCol` on the object), not
+something the renderer recomputes, so a washroom built by the old code keeps its machine forever and
+only a regenerate clears it.
+
 ## Invariants downstream re-derives from the grid
 
 These break **silently, with no compile error**, because the consumer reverse-engineers them out of

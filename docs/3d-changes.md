@@ -1596,6 +1596,164 @@ worth 30x its share of the lab's dice.
 
 **Verdict: landed.**
 
+# Facility pass 7 (2026-09-16)
+
+## Baked AO everywhere it pays, and the two knobs are not the same knob
+
+Pass 6's rim contour was rejected and baked AO replaced it. That raised the real question: the
+pipeline has had `bakeAO` since the TRELLIS props and **only 4 of 76 models used it**, while the
+engine's own screen-space AO costs what it costs. Measured in the facility on one pinned frame,
+GTAO toggled A/B/A/B x4, median of 20 GPU samples each:
+
+| | draw calls | GPU median |
+|---|---|---|
+| `GTAOPass` off | 126 | **1.87 ms** |
+| `GTAOPass` on | 233 | **13.71 ms** |
+
++107 calls and 7.3x the frame; `Config.hx:85` ships `vidAO = false`, and `SewerStyle.hx:135` recorded
+the same verdict from the tunnel side long ago. **Baked AO is not a cheap alternative to real AO —
+it is the only AO this game can afford.**
+
+Twenty labels took `ao`. Two findings came out of fitting them, and both are about the fact that
+`ao`, `aoRes` and the new `aoReach` do three different jobs that the first pass conflated.
+
+**1. AO NEEDS VERTICES WHERE THE OCCLUSION VARIES.** `bakeAO` samples per vertex and the rasterizer
+interpolates, so a face with no vertex in the middle cannot darken in the middle. The trolley is the
+proof and it is unambiguous: its lower tray sits 0.75 under the upper one and could not be more
+occluded, but the lid is a `bl.box` — four corner vertices — and COLOR_0 came back **0.908 / 0.931,
+identical to the UPPER tray's own corners**. The bake had nowhere to put the answer. One cut
+(`grid_box`, `PLATE_CUTS 1`) puts a vertex at the centre and the lower lid reads **0.829 against the
+upper's 0.959**. `flat_uv` projects per loop, so every sub-face maps correctly with no UV change.
+
+**2. REACH IS THE PHYSICS, STRENGTH IS THE PRICE.** `reach = span * 0.35` was hardcoded, and it is
+wrong in both directions. Too short: the janitor bucket's bore is 0.5 across a span of 0.84, so at
+0.294 every cross-bore ray runs out of steps and the inside of a bucket bakes as open as the outside
+— and the trolley's own tray gap is 0.75 against a reach of 0.70, which is why the tray fix above
+needed `aoReach 0.6` as well as the extra vertex. Too long: a dense open frame sees itself
+everywhere and saturates, and the first cut "fixed" that by CUTTING the reach, which merely blinded
+the shelving to the shelf above it (gap 0.827, reach 0.39).
+
+The separation that works: **set `aoReach` from the gap the prop must see across, then set `ao` so
+the bake costs the prop a fixed share of its LEVEL.** Every one of these props was value-fitted —
+`art/models.json` is full of "a prop at 49 renders as a hole" — so a term that drops the mean albedo
+37% is a regression however good its variance is. Fitting each label to **mean COLOR_0 = 0.80** is
+one step, because `ao` scales the occlusion linearly:
+
+    ao_new = ao_old * (1 - 0.80) / (1 - mean_measured)
+
+That lands 20 labels at mean 0.798-0.802 with sd 0.109-0.196 — the same band as the one prop already
+known to read well (`gas-rack-hand`, mean 0.922, sd 0.107, measured on screen at +40% shading
+variance). Strengths came out 0.26 (car) to 0.55, where a flat 0.55 had put the car at mean 0.667.
+
+**The gate that does NOT work is `min(COLOR_0)`.** Every prop passes it — the floor is reached by
+one crevice on anything. `%` of vertices pinned at the floor is better but still misleads (a pile of
+bricks SHOULD have fully-occluded contact points, and they are the ones you cannot see). The mean is
+the honest gate because it is the thing the viewer reads.
+
+**Verdict: landed.** +0 draw calls, +0 uniforms, +0 texture memory; one `USE_COLOR` permutation per
+prop, warm pass 85 -> 86 programs.
+
+## A clearance stated as a SUM is a clearance in the wrong direction
+
+> Already logged under pass 6's bail entries. Repeated here only because pass 7 found the same shape
+> a second time in `aoReach`: a default that is one of the real answers cannot be told apart from a
+> deliberate choice. `?role` below is the third instance in two passes.
+
+## A machine in a washroom, and no check in the file had ever looked at a decoration
+
+Reported: "we still have machine spawned in toilet". Traced: `RoomBlock.slot` dresses every room's
+leftover bays, `FacilityToilet.zones` demands only the stall run and the basin run so a washroom's
+other bays fall through to that shared filler, and `FacilityRooms.addFitting`'s **`?role` silently
+defaulted to `BLOCK_LAB`** — so a caller that did not think about the room was handed the
+laboratory's own furniture list, compiling correctly and reading correctly.
+
+That hole was closed in the previous commit. **The finding is why nothing caught it for a whole
+pass:** `grep 'deco\|fitting' src/gen/GenCheck.hx` returned nothing. `washroomSane` is about doors,
+`spawnsSane` is about cells, and no check in the oracle had ever asked what a decoration IS.
+
+New `GenCheck.decoBlocks`, and the shape of it is the point: **it reads the finished grid, not the
+dealer** — frame -> `Const.placeOf` -> `blocks` -> the role of the room the cell falls in. There are
+three arms that put fittings down (rolled through `Deco.pick`, outright by kind through
+`placeFitting`, and raw row lists through `CHEM_LABS_DECO_FLOOR_HIGH` that consult no table at all),
+and a check written against the dealer would have passed every one of them. Row 8 cols 4-8 of that
+raw list IS the machine.
+
+**One false-positive class, and it is worth recording because the table does not say it anywhere
+else: `blocks` holds two kinds of string.** 'lab', 'cabinet' and 'toilet' are room ROLES; 'lounge' is
+a ZONE, a corner of an office furnished outright, and no room is ever a lounge. The first cut
+reported **6,096 faults over 2000 seeds**, every one of them a sofa or a low table standing in
+correct furniture. An entry naming no room role at all is template-placed and `blocks` is not a claim
+about rooms.
+
+Measured after: **0 failures at 2000 and at 20000 seeds** — so the previous commit really did close
+it and what was on screen was an area generated before the fix, decorations being persisted state.
+`?role` is now required, so the compiler asks.
+
+**Verdict: landed.**
+
+## A cell is half the sheet, and `tex` halves it again
+
+Reported against the trolley's tray: "this texture is too low-res (u,v problem)", with the probe UVs.
+They resolved to exactly `C_TRAY`, and the arithmetic in pass 6's own note was wrong by 2x on each
+axis: `--cell 512 --cols 2` makes a **1024** sheet, so one cell is 512 of 1024 — and `tex: 512` then
+downsizes that atlas again, so a cell SHIPS at 256 px. 0.396 of it is 101 px over 1.98 world units.
+
+| | texels over the piece | per world unit |
+|---|---|---|
+| tray, before (`bl.sub` of a 1x1 cell) | 101 x 46 | **51** |
+| shelving plate (all of cell 1) | 256 x 256 | 110 |
+| ground tiling | — | 57 |
+
+**And `--repeat` already crops — the pass-6 note claiming it "cannot express a repeat below 1" was
+simply wrong about a tool in this repo.** `modelsheet.tiled` sizes the tile to `round(w * ru)` and
+pastes from the origin, which its own docstring says. Cell 2 goes in at `0.396x0.1804` and the tray
+takes the WHOLE cell: 158 x 72 source pixels land on 251 shipped texels. Measured on the built glb,
+u span 0.4911 x 512 = 251 texels over 1.98 world.
+
+**The ceiling is the SOURCE and not the atlas**: `table-top.png` is 400 px over a 5-unit repeat, so
+80 texels per world unit is all there is. 51 -> 80 is the real gain; the atlas now upsamples rather
+than throwing information away, which is what the 101-from-158 downsample had been doing. `tex` 1024
+was rejected for that reason — it cannot buy detail the source does not have, and costs 4x.
+
+**Verdict: landed.**
+
+## A vertical cylinder cannot be lit in this game, so its highlight is painted
+
+Reported: "the grip is shiny, the poles aren't. make them shiny." Both wear the same one texel of
+flat steel, so the difference was never the art. `FacilityStyle.PROP_ENV.keyDir` is
+**[0.35, 1.0, 0.25]** — very nearly straight up, and its own comment records the trade ("dead-up it
+lands the glint on the shelf tops alone"). The grip's crown is a HORIZONTAL run whose normals sweep
+through +y and cross that key; a vertical pole's normals are all horizontal and never do. With
+`IndoorMask`'s only directional term being `1 + bounce * dot(N, up)`, the hemisphere keying on
+`normal.y` and no camera-side fill anywhere, **a standing cylinder shades identically on all sixteen
+of its facets and renders as a flat bar.** This is the gas bottles' finding in a third place.
+
+So the highlight is albedo. Columns 17..31 of the packed frame cell measured `62 82 84 83 83 77 99
+103 102 100 98 102 77 72 50` — one peak, ends 12 counts apart, so `lathe_uv`'s whole turn in u wraps
+it with no step worth seeing; rows 168..314 are the stretch with no bolt on it. Measured on the
+shipped atlas along the leg's own UV ring: **luma 49..98, spread 48.8, sd 18.29**, against the grip's
+flat 96..98 (spread 1.9, sd 0.79).
+
+Wheels took the same free route in the other direction — cell 3 is the perforated plate and the
+inside of a HOLE is the darkest thing on the sheet. Tread now samples **47.4** against the frame's
+96. Not one pixel of new art.
+
+**Verdict: landed.**
+
+## A bevel strip is a zero-area triangle, so it takes ONE texel
+
+Chamfering the trays regressed `propstat` to **8 smears on the trolley and 24 on the shelving**. The
+cause is already written down one function away, in `brace`'s own docstring: a piece standing at an
+angle projects to a LINE on the two axes `unwrap` measures it by, so a stated window is a zero-area
+triangle spanning the whole rect. `bl.chamfer` was handed `I_PLAIN` (14 x 12 texels) where every
+other build script's `I_PLAIN` happens to be a single texel. `I_STEEL` — 0 smears.
+
+Also worth the line: subdividing a face makes its ARRISES longer to bevel. `PLATE_CUTS 2` plus
+`segments 2` put the shelving at **948 tris against 324**; one cut and one segment land it at 528,
+and the extra vertex the bake actually needs is the centre one either way.
+
+**Verdict: landed.**
+
 # Facility pass 6 (2026-09-15)
 
 ## The bucket's bail went through its own wall

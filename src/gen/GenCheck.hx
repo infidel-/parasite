@@ -269,6 +269,67 @@ class GenCheck
         }
     }
 
+// no decoration stands in a room its own table entry never allowed.
+//
+// THERE WAS NO DECORATION INVARIANT HERE AT ALL, which is the whole reason a bank of MACHINES came
+// back standing next to the cubicles in a washroom and nothing said so. `washroomSane` above is
+// about doors; `spawnsSane` below is about cells; nothing in this file had ever looked at what a
+// decoration IS. `_DecoPlace.blocks` is the statement of where each one may stand, gen.Deco.places
+// filters on it — and then three separate arms put fittings on the grid WITHOUT going through that
+// filter, so the field was load-bearing in one code path and decorative in the others.
+//
+// THE CHECK IS OVER THE RESULT AND NOT OVER THE DEALER, which is the point. It reads the finished
+// grid the way the renderer and a savegame do — frame -> Const.placeOf -> `blocks` -> the role of
+// the room the cell falls in — so it holds however the decoration got there: the rolled arm, the
+// outright placeFitting arm, and the raw CHEM_LABS_DECO_* row lists that consult no table at all.
+// Checking the dealer instead would have passed every one of them.
+//
+// A frame on no entry (the table-top clutter rows) is not a fitting and has nothing to assert.
+// A null role is a laboratory — gen.Deco.BLOCK_LAB, the same default gen.Deco.places is handed.
+//
+// AND `blocks` HOLDS TWO KINDS OF STRING, which the first cut of this check did not know and which
+// is worth stating because the table does not say it anywhere else. 'lab', 'cabinet' and 'toilet'
+// are room ROLES — what a _Room actually carries. 'lounge' is a ZONE, a corner of an office that
+// gen.blocks.RoomBlock furnishes outright by kind; no room is ever a lounge, so a sofa is always
+// standing in a 'cabinet' by this check's reckoning, and asserting on it reported 6,096 faults in
+// 2000 seeds that were all correct furniture. An entry naming no room role at all is placed by a
+// template and not rolled, so `blocks` is not a claim about rooms and there is nothing here to hold
+  public static final ROLES = [ Deco.BLOCK_LAB, gen.facility.FacilityTemp.ROLE_CABINET,
+    gen.facility.FacilityTemp.ROLE_TOILET ];
+
+  public function decoBlocks(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      // role per cell, so this stays one pass over the spawns rather than rooms x spawns. corridors
+      // and outdoors are not rooms and hold no role, and nothing deals a fitting onto them
+      var role = new Map<Int, String>();
+      for (r in rooms)
+        for (x in r.x1...r.x2 + 1)
+          for (y in r.y1...r.y2 + 1)
+            role.set(y * ctx.width + x, r.role == null ? Deco.BLOCK_LAB : r.role);
+      for (s in ctx.spawns)
+        {
+          if (s.type != 'decoration')
+            continue;
+          var p = Const.placeOf(s.row, s.col);
+          var b = role.get(s.y * ctx.width + s.x);
+          if (p == null ||
+              b == null ||
+              !named(p))
+            continue;
+          ok(p.blocks.indexOf(b) >= 0, 'a "' + p.id + '" stands at ' + s.x + ',' + s.y +
+            ' in a "' + b + '", which is not one of its blocks (' + p.blocks.join(', ') + ')');
+        }
+    }
+
+// does this entry name any room ROLE, i.e. is its `blocks` a claim about rooms at all?
+  function named(p: _DecoPlace): Bool
+    {
+      for (b in p.blocks)
+        if (ROLES.indexOf(b) >= 0)
+          return true;
+      return false;
+    }
+
 // no two objects on one cell, and every spawn inside the area. two on a cell is the failure mode
 // every placement pass guards against with hasObjectAt, so one getting through means a pass forgot
   public function spawnsSane(ctx: GenCtx)

@@ -169,6 +169,7 @@ class GenRun
       check.doorsSane(ctx, state.allRooms, state.allDoors);
       check.washroomSane(state.allRooms, state.allDoors);
       check.tablesSane(ctx);
+      check.decoBlocks(ctx, state.allRooms);
       check.spawnsSane(ctx);
       check.clueSpots(ctx, state.allRooms);
       // the two things the game re-derives from the SHAPE of the grid and from nothing else

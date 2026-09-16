@@ -623,7 +623,13 @@ class RoomBlock
             }
           else if (high &&
               area.chance(Const.FACILITY_FITTING_PCT))
-            FacilityRooms.addFitting(state, c.x, c.y);
+            FacilityRooms.addFitting(state, c.x, c.y, Deco.BLOCK_LAB);
+          // the other arm, and it consults NO table: these are raw row lists, and row 8 holds the
+          // machine's own five frames at cols 4-8. Nothing filters them by role, so this line is
+          // only correct because the two branches above have already taken the washroom and the
+          // office out. gen.GenCheck.decoBlocks is what holds it — it reads the finished grid
+          // rather than the dealer, so it catches a fitting that arrives down this arm exactly as
+          // it catches one that was rolled
           else
             FacilityRooms.addDecoration(state, c.x, c.y, high ?
               Const.CHEM_LABS_DECO_FLOOR_HIGH :

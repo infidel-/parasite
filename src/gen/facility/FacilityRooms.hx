@@ -489,13 +489,18 @@ class FacilityRooms
 // the frame is what the 2D view keeps drawing and what render.facility.FacilityModel reads the kind
 // back out of, so nothing new is written to the object and every save made before this existed
 // still resolves — see Const.fittingOf
-  public static function addFitting(state: _FacilityState, x: Int, y: Int, ?role: String)
+// THE ROLE IS REQUIRED AND IT USED TO BE OPTIONAL, which is the whole of how a bank of machines
+// came to stand next to the cubicles in a washroom. `?role` defaulting to BLOCK_LAB meant a caller
+// that simply did not think about the room got handed the LABORATORY'S OWN furniture list, silently
+// and correctly-compiling — and gen.blocks.RoomBlock.slot, which dresses every room's leftover bays
+// including a washroom's, was exactly that caller. An optional argument whose default is one of the
+// real answers cannot be told apart from a deliberate choice; a required one makes the compiler ask
+  public static function addFitting(state: _FacilityState, x: Int, y: Int, role: String)
     {
       // the 'floor-high' mount only: the table also holds the low list's drums, bins and short
       // server stacks, and none of those is a piece of standing furniture. the ROLE is the block
       // name as-is, so a researcher's office deals the office's own list without a branch here
-      var fr = Deco.pick(state.area, Deco.MOUNT_FLOOR_HIGH,
-        role == null ? Deco.BLOCK_LAB : role);
+      var fr = Deco.pick(state.area, Deco.MOUNT_FLOOR_HIGH, role);
       state.area.addDecoration(x, y, fr.row, fr.col);
     }
 
