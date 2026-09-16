@@ -2209,3 +2209,149 @@ is what a compass point should not read as. Measured over 40 oracle seeds: 148 a
 172 machine, 8 per compound.
 
 **Verdict: landed. A machine is told apart by silhouette, so a second one is a second mesh.**
+
+## A pack sheet's 8x8 grid is not what the prompt asked for, and the tool that moves it back
+
+`render.facility.FacilityClutter.emit` and its two copies deal a pack64 cell BY INDEX and map
+`cc/8 .. (cc+1)/8` across the quad, so the sheet's grid is load-bearing arithmetic and not a
+convention. Reported from the game as a hangar floor decal showing a tripod with a strip of
+clipboard above it — "instead of two separate, one partial spawns".
+
+**MEASURED, AND THE ART WAS OFF THE GRID.** `facility/hangar-clutter`'s prompt asks for a 20% empty
+gutter on every side of all 64 objects. Its COLUMN lanes land within a texel of the nominal 128-px
+split (occupancy 0.000-0.197 at alpha > 128); its ROW lanes come in at **0 / 128 / 384 / 512 / 640 /
+736 / 864 / 992**, so the boundary at 256 does not exist at all and the last three sit 32 px high.
+Lane occupancy hit **0.616** at row 2 and 0.534 at row 7. The clipboard in cell 61 straddles into 53
+by 45% of its own height, which is exactly what was reported. The other two sheets of this family are
+clean — `facility/office-clutter` and `facility/worktop-clutter` both measure **0.000 on all fourteen
+lanes** — so this is one bad drop and not a pipeline fault.
+
+**NOTHING IN THE MANIFEST COULD TOUCH IT.** `lift`, `sat` and `cells` are all VALUE instruments and
+this is GEOMETRY; a skip list condemns a cell and cannot move one; and a per-row v offset cannot work
+either, because the measured lanes do not partition the sheet evenly (128/128/256/128/128/96/128/128).
+
+So `tools/textures.py` grew a **`regrid`** pass: label the alpha's 4-connected components, take the
+biggest whose centroid lands in each cell, and re-centre it there, scaled down only if its own bbox
+will not fit `fill` 0.86 of the cell. `cut` IS A FINDING THRESHOLD AND NOT A CUT and it is high on
+purpose — these sheets carry wide soft haze whose alpha crosses the lanes and BRIDGES two solid
+subjects into one component. Swept: **128 finds 44 of 64 objects, 180 finds 53, 200 finds 56, 250
+finds 8**. The patch then comes from the component's bbox grown by 6 px and keeps every faint texel in
+it, so a subject's halo travels with it and only another object's solid core is masked away. A cell
+nothing was found in is **copied through unchanged** rather than left empty — the eight still-bridged
+cells are then exactly as bad as they were, instead of dealing a hole.
+
+After: lane occupancy **0.616 -> 0.062 worst case**, and only four cells still carry opaque texels in
+their own 3-px border ring (7 at 0.421, 23 at 0.510, 57 at 0.031, 58 at 0.033). The first two are a
+chain pile and a taped plate filling their cell corner to corner and go in a new
+`HANGAR_CLUTTER_SKIP`; 57 and 58 are a scuff's soft tail at 3% and are left in, which is the same
+judgement `CLUTTER_SKIP`'s own comment records against condemning a cell by one number.
+
+**Verdict: landed. The grid is arithmetic the render side depends on, so it is measured and repaired
+at build time rather than asked for in a prompt.**
+
+## A shelving bay braced across its own opening, and one texel of steel standing in for art
+
+Three faults reported off one prop with the polygon probe, and all three were the same two pieces.
+The probe's local coords name them exactly: `0.393, 1.286, 0.787` and `0.393, 1.286, -0.737` are the
+two LONG-SIDE diagonals (blender y = -0.787 and +0.737, i.e. the +-0.025 flanks of a `BRACE_D` 0.05
+bar at `y0` 0.7618), and `-1.254, 1.524, -0.241` is the `sx = -1` END-FRAME diagonal.
+
+**THE FRONT DIAGONAL SHOULD NOT EXIST.** `store_build.py` braced both long sides, and a bay is loaded
+through its front — a real one braces the back panel and the two end frames, never the opening. +y is
+the back and that is derivable rather than guessed: `FacilityDeco` stands the batch at
+`atan2(DC[dir ^ 1], DR[dir ^ 1])`, i.e. facing AWAY from the masonry, so at yaw 0 the unit looks down
++z in glTF, which is -y in blender. The front keeps its four horizontal ties, which is what a shelving
+bay actually has. 540 -> **516 tris**, `check` 0 holes / 0 coplanar, dims unchanged at 2.60 x 1.666 x
+2.60 so no `FacilityStyle` constant moves.
+
+**AND "THESE LOOK UNTEXTURED" WAS CORRECT: THEY WERE.** Every brace face wore `R_STEEL`, a deliberate
+1x1-TEXEL rect, on the argument that a stated window projects to a LINE on a turned piece's end faces.
+That is true of `buildlib.tag`, which defers the projection to `unwrap` and so measures the bbox AFTER
+the turn — and it is not true of `flat_uv`, which states the axes per face BEFORE it and marks the
+face -1 so `unwrap` skips it. So the brace goes through `member` like every other bar now: the rail
+strip down its long flanks, the plain swatch on its two ends. Measured on the built glb after:
+**`propstat` uv smears 0** either way, so the flat colour was buying nothing at all.
+
+**Verdict: landed. A one-texel rect is how a flat colour is said, not how a turned piece is made
+safe.**
+
+## A hangar console is not an office desk, and it was the only thing on a worktop with no shade
+
+`render.facility.FacilityTables` lays the three square contact ramps under a workstation's monitor,
+tower and keyboard through `FacilityWork.pools`, and it gated that on `office`, i.e. on
+`m.surf[row][col] == Surf.OFFICE`. The hangar's console run is laid in the LABORATORY's worktop tiles
+and reads back as `Surf.TILE` — `FacilityWork.at` lets it in BY NAME through
+`FacilityModel.inHangar` and says so in its own header — so every workstation in the shed stood on
+bare resin with no contact shade at all, which is what a monitor floating over a worktop looks like.
+Reported from the game as exactly that.
+
+Gated on `FacilityWork.at(m, col, row) != null` instead, i.e. on the same oracle the geometry and the
+clutter both ask, so the three passes cannot disagree about which cells carry a set. `office` stays in
+the test as the other half of the original statement: an office desk never takes the laboratory
+sprite's pool even when it carries no workstation. `pools` already early-returns on a null spot, so
+this adds no branch of its own. Zero new draw calls — `FacilityDetail.pool` is a collector and the
+ramps merge into a mesh that already exists.
+
+**Verdict: landed. When three passes read one oracle, a fourth gate written from the surface grid is
+a fourth answer.**
+
+## A hole cut in a wall is FOUR quads, and every window run shipped two
+
+Reported as a vertical hole at each end of every window, with a screenshot from outside looking
+along a facade: a bright strip of lit interior, sharp-edged, framed by the window's own mullions.
+Then, from the report itself, the whole diagnosis in one line — *"when you make a hole in a
+polygonal rectangle wall, you have to create how many quads for the hole? i'm thinking four, and
+i'm seeing two — top and bottom, but not left and right."*
+
+**MEASURED BEFORE TOUCHING ANYTHING**, by pulling every triangle whose verts lie inside one run's
+reveal volume (col 20, row 3, a 2-cell run: x −118.7…−117.3, y 0.90…5.10, z −188.2…−179.8). It held
+**four triangles of `window-head`** — the soffit at y 5.04 and the sill at 0.96, both spanning the
+run's full 8.0 — plus the two panes at the glazing planes x −118.38 / −117.62. **Nothing whatever in
+either end plane.**
+
+**AND THE NOTE THAT STOOD THERE ARGUED IT WAS FINE**: "the jambs at the run's ends are already
+closed by the flanking wall cells' butt caps, because a glazing slab is thinner than the wall it
+sits in". The arithmetic says otherwise. `butt` caps the cell-boundary plane only where the thick
+cell's cross-section stands PROUD of the thin one — for `WALL_T` 2.0 against `GLASS_T` 1.0 that is
+the two 0.5 SHOULDER strips either side of the glazing band, at z ∈ [zc−1.0, zc−0.5] and
+[zc+0.5, zc+1.0]. The band BETWEEN them is the glazing's own 1.0, and over the opening's height
+there is no masonry in it at all. So the shoulders were being called the jamb, and the jamb — which
+is the band itself — was open, 1.0 × 4.08 at each end of every run.
+
+The fix is one condition. `jamb()` already existed, already wound both faces INWARD, and was already
+called here — **gated to light wells**, on the same wrong belief ("a ribbon window needs none of
+this"). A well reaches the identical hole from the other end: it is punched in a cell of FULL wall
+thickness, so its neighbours take the equal-thickness branch and emit nothing. Ungated, the reveal
+volume re-measures at **eight `window-head` triangles** — soffit, sill and two jambs at z −188.00 and
+−180.00, each x −118.50…−117.50 by y 0.96…5.04 — and the bright strip is gone from the screenshot.
+
+Both ends unconditionally, and what makes that safe is invariants rather than luck: `findWindows`
+runs a run to the END of its contiguous window strip, so **two runs can never abut** and the cell
+past each end is never glazing; and it is solid masonry rather than a doorway, measured over all 42
+runs of a compound, whose **84 end cells all came back `TILE_BUILDING` with no object on any of
+them**. Cost: 2 quads per run into a buffer that already exists, in a mesh that does not cast.
+
+**Verdict: landed. Count the faces of the hole, not the faces of the wall.**
+
+## The chair goes up 30%, and the number that had to go with it
+
+"increase chair scale 30%". `render.Models.instanced` scales a batch by HEIGHT alone, so `CHAIR_H`
+2.1 → **2.73** is the whole of the scale — and it is also the whole of the footprint, which is where
+the second edit comes from. The glb's box is 1.231 × 2.099 × 1.294, so the plan footprint goes
+1.231 × 1.294 → **1.601 × 1.683**.
+
+`CHAIR_OUT` 0.87 was FITTED against the old footprint and is a clearance, not a taste number: at
+`CHAIR_YAW_JIT` 0.35 the reach along the desk axis is `halfD*cos + halfW*sin`, which was
+0.647·0.9394 + 0.616·0.3429 = 0.819 against 0.87 — the front wheels just touching at full jitter and
+0.223 clear when square. At the new footprint that reach is **1.065**, so leaving 0.87 alone puts the
+chair **0.195 INSIDE the casework at full jitter** — which is the exact fault reported two changes
+ago as "chairs went into the tables", re-created by a scale nobody thought was a geometry change.
+
+So `CHAIR_OUT` takes the same multiplier: 0.87 × (2.73 / 2.1) = **1.131**, and both fitted clearances
+scale with the chair rather than being refitted — 0.223 and 0.051 become 0.290 and 0.066. What it
+costs is where the chair now stands: its far edge is **0.77 past its cell's boundary** at an office
+desk (was 0.32) and 2.17 past at a full-depth lab or hangar worktop, in both cases inside the cell
+`FacilityWork.seat` already refuses to place a workstation without.
+
+**Verdict: landed. A prop scaled by height is a prop scaled in plan, and every clearance fitted
+against its plan is part of the edit.**

@@ -54,8 +54,20 @@ class FacilityRooms
       // one, so doorSpots rolls uniformly over a room's whole ring and a room's door COUNT is
       // accretion: one of its own plus one for every neighbour whose roll landed on the shared wall.
       // The ordering that makes the cut blind is what makes this cheap, though — by here the doors
-      // are real objects and can simply be asked. NO CANDIDATE PASSES MEANS NO WASHROOM, which a
-      // compound already has to survive (the roll below is 60%), rather than relaxing onto the fault
+      // are real objects and can simply be asked.
+      //
+      // AND THE TEST IS THE ROOM'S OWN DOORS AND NOT EVERY DOOR IN ITS WALLS, which is where "a lab
+      // building always has a toilet" was actually won. Counting all of them rejected a room that had
+      // exactly one corridor door of its own plus a NEIGHBOUR'S door landed in the wall they share —
+      // the accretion above — and measured over 795 lab structures that is 21.8% of them with no
+      // candidate at all against 1.6% once the neighbour's door is left out of it. A door this room
+      // did not cut is not a way in to the washroom in any sense gen.facility.FacilityToilet cares
+      // about; what that file needs is the one wall to lay its T against, and that is the room's own.
+      // It asks the same question now, so the pick and the partition cannot disagree.
+      //
+      // NO CANDIDATE PASSES STILL MEANS NO WASHROOM in that 1.6%, rather than relaxing onto the
+      // fault: the next tier down is a room whose only door opens into a LABORATORY, which is the
+      // thing this test was added to stop
       var wash = -1;
       for (i in 0...cand.length)
         if (exteriorWall(cells, cand[i]) != null &&
@@ -64,8 +76,11 @@ class FacilityRooms
             wash = i;
             break;
           }
-      if (state.area.chance(60) &&
-          wash >= 0)
+      // NO DICE. This was `chance(60) && wash >= 0`, so two lab buildings in five came out with no
+      // washroom at all — and gen._GenDemand's own header names that very roll as the example of "a
+      // roll was the easy way to express usually". A lab building HAS a toilet; the only thing that
+      // can stop it now is no candidate passing, measured at 1.6% of structures
+      if (wash >= 0)
         cand[wash].role = ROLE_TOILET;
       var cabinets = 0;
       for (i in 0...cand.length)
@@ -107,12 +122,11 @@ class FacilityRooms
 // names US. Such a door can never be onto a corridor, so it fails here and the room is passed over
   static function washroomDoor(state: _FacilityState, cells: Array<Array<Int>>, room: _Room): Bool
     {
-      var doors = FacilityConnect.getRoomDoors(state, room);
-      if (doors.length != 1 ||
-          doors[0].roomID1 != room.id)
+      var mine = [for (d in FacilityConnect.getRoomDoors(state, room)) if (d.roomID1 == room.id) d];
+      if (mine.length != 1)
         return false;
-      var delta = deltaMap[doors[0].dir];
-      return (cells[doors[0].x + delta.x][doors[0].y + delta.y] == TEMP_BUILDING_CORRIDOR);
+      var delta = deltaMap[mine[0].dir];
+      return (cells[mine[0].x + delta.x][mine[0].y + delta.y] == TEMP_BUILDING_CORRIDOR);
     }
 
 // the first wall of this room that is EXTERIOR masonry for its whole length, or null for a room in

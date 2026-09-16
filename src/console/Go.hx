@@ -26,12 +26,14 @@ class Go
         {
           case 'area':
             goArea(arr);
+          case 'block':
+            goBlock(arr);
           case 'event':
             goEvent(arr);
           case 'xy':
             goXY(arr);
           case '':
-            log('Usage: go [area [x] [y]|event [index]|xy [x] [y]]');
+            log('Usage: go [area [x] [y]|block [kind]|event [index]|xy [x] [y]]');
           default:
             log('Unknown go target: ' + sub + '.');
         }
@@ -56,6 +58,41 @@ class Go
         }
       log('Teleporting to area (' + x + ',' + y + ').');
       game.player.teleport(area);
+    }
+
+// go to a random block of a given kind: go block [kind]
+//
+// RANDOM AND NOT THE FIRST, which is the whole point of it: a compound has two buildings, a dozen
+// labs and four offices, and what this is for is looking at ANOTHER one of them. Run it twice and
+// you are somewhere else. See console.GoBlock for where the list comes from and what it cannot
+// offer — the block tree is not persisted, so this is derived from the saved grid
+  function goBlock(arr: Array<String>)
+    {
+      var all = GoBlock.list(game);
+      if (all.length == 0)
+        {
+          log('No blocks here: `go block` reads the facility compound\'s layout off its grid.');
+          return;
+        }
+      if (arr.length < 3)
+        {
+          log('Usage: go block [kind]. On this map: ' + GoBlock.summary(game) + '.');
+          return;
+        }
+      var kind = arr[2];
+      var hits = [for (b in all) if (b.kind == kind) b];
+      if (hits.length == 0)
+        {
+          log('No ' + kind + ' on this map. Try: ' + GoBlock.summary(game) + '.');
+          return;
+        }
+      var b = hits[Std.random(hits.length)];
+      var c = b.cells[Std.random(b.cells.length)];
+      log('Teleporting to ' + kind + ' ' + (hits.length > 1 ?
+        '(1 of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
+      game.playerArea.moveTo(c.x, c.y);
+      game.scene.updateCamera();
+      game.scene.draw();
     }
 
 // go to event location: go event [index]

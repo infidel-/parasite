@@ -112,7 +112,9 @@ class RoomBlock
     }
 
 // which template this room was dealt, as a node kind
-  static function kindOf(room: _Room): String
+// which room kind BUILT this room, off the role it persists. public for console.GoBlock, so
+// `go block room-washroom` names a room the same way this file's own tree does
+  public static function kindOf(room: _Room): String
     {
       if (room.role == ROLE_TOILET)
         return WASHROOM;

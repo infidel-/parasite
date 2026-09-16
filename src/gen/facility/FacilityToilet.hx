@@ -253,8 +253,14 @@ class FacilityToilet
       // which wall the door is in, as the hand pointing INTO the room off it. the door cell itself is
       // in the wall ring, i.e. outside the room's own rect, which is what makes this a comparison
       var side = -1;
+      // ITS OWN DOORS, exactly the set FacilityRooms.washroomDoor picks the room by. A neighbour's
+      // door can land in a wall this room shares with it, and taking the FIRST door in the list laid
+      // the T against that wall instead — a lobby against an opening the washroom does not own, with
+      // its real entrance then opening straight into one closed half
       for (d in FacilityConnect.getRoomDoors(state, room))
         {
+          if (d.roomID1 != room.id)
+            continue;
           if (d.x < room.x1)
             side = 3;
           else if (d.x > room.x2)

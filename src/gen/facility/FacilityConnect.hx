@@ -517,8 +517,15 @@ class FacilityConnect
       for (s in getRoomWallSpots(room))
         {
           // the cell being opened has to be masonry: everything else is either already a way in or
-          // something that must not be cut through
-          if (cells[s.x][s.y] != Const.TILE_BUILDING)
+          // something that must not be cut through.
+          //
+          // AND IT HAS TO BE EMPTY MASONRY, which the tile alone does not say: a VENT is an object
+          // standing ON a Const.TILE_BUILDING cell (see render.facility.FacilityGeom.wallMounts),
+          // so the tile test passed and the repair cut a doorway through the grille — two spawns on
+          // one cell, which gen.GenCheck.spawnsSane catches. Found on seeds 2420 and 2941 of 3000
+          // once a lab building was guaranteed a washroom and this pass started firing on them
+          if (cells[s.x][s.y] != Const.TILE_BUILDING ||
+              ctx.hasObjectAt(s.x, s.y))
             continue;
           var d = deltaMap[s.dir];
           var fx = s.x + d.x;

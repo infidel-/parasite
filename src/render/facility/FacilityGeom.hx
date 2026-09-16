@@ -476,7 +476,12 @@ class FacilityGeom
                         // the line carries on, so the two runs meet in the cell boundary plane and
                         // the only thing that can be exposed there is a difference in THICKNESS:
                         // glazing sits strictly inside the solid wall that bounds its run, and the
-                        // wall's excess either side is the run's JAMB REVEAL.
+                        // wall's excess either side is the SHOULDER on each face of it.
+                        //
+                        // AND THE SHOULDERS ARE NOT THE JAMB, which this note used to call them and
+                        // which cost a hole in every window run: they are the two strips OUTSIDE the
+                        // glazing band, and the jamb is the band itself over the opening's height.
+                        // `jamb`, from the window pass, is what closes that.
                         //
                         // the slabs' own extents used to be compared instead, and that answered a
                         // different question: at a corner the box reaches the boundary on the side
@@ -620,18 +625,30 @@ class FacilityGeom
           var pz1 = w.alongX ? z1 - ge : z1 + gr;
           pane(pb, px0, px1, pz0, pz1, outDir, lo - gy, lo + tall + gy);
           pane(pb, px0, px1, pz0, pz1, inFace, lo - gy, lo + tall + gy);
-          // the reveal, top and bottom. the jambs at the run's ends are already closed by the
-          // flanking wall cells' butt caps, because a glazing slab is thinner than the wall it sits
-          // in — these two are the only sides with nothing on the far end to cap them
+          // THE REVEAL IS FOUR QUADS AND IT USED TO BE TWO. A hole cut in a wall has a soffit, a
+          // sill and two jambs, and the note that used to stand here claimed the flanking wall cells
+          // closed the jambs "by being thicker than it". They do not, and the arithmetic says so:
+          // `butt` caps the boundary plane only where the thick cell's cross-section stands PROUD of
+          // the thin one, i.e. the two 0.5 shoulder strips at (WALL_T - GLASS_T) / 2 either side of
+          // the glazing band. The band BETWEEN them is the glazing's own 1.0, and over the opening's
+          // height there is no masonry in it at all — so it was open, and a grazing view along the
+          // facade looked straight through the wall into the lit room. Reported from the game as a
+          // vertical hole at each end of every window run, and MEASURED on the run at col 20 row 3:
+          // the reveal volume held exactly four triangles of `window-head` (the soffit at y 5.04 and
+          // the sill at 0.96) plus the two panes, and nothing whatever in either end plane.
+          //
+          // `jamb` was already here and already correct — it was gated to LIGHT WELLS, on the same
+          // wrong belief. A ribbon needs it for exactly the same reason a well does.
           capDown(head, x0, x1, z0, z1, lo + tall, FacilityStyle.HEAD_TILE);
           if (lo >= 0.05)
             cap(head, x0, x1, z0, z1, lo, FacilityStyle.HEAD_TILE);
-          // and the two SIDES of it, for a light well only — see `jamb`. the flanking cells close a
-          // ribbon's ends by being thicker than it; a well is punched in masonry of its own thickness
-          // and had nothing on either hand at all
-          if (w.high)
-            jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
-              FacilityStyle.HEAD_TILE);
+          // both ends unconditionally, and the two things that makes safe are invariants and not
+          // luck: FacilityModel.findWindows runs a run to the END of its contiguous window strip, so
+          // two runs can never abut and the cell past each end is never glazing — and it is solid
+          // masonry rather than a doorway, measured over all 42 runs of a compound, whose 84 end
+          // cells came back Const.TILE_BUILDING with no object on any of them
+          jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
+            FacilityStyle.HEAD_TILE);
         }
 
       // the parapet ring, once the wall ring it stands on is complete — and the hangar's opposite
@@ -994,12 +1011,16 @@ class FacilityGeom
 // wall line runs through, and both look INWARD — the opposite way round from a wall face at the same
 // place — so each is emitted for the direction pointing at the other jamb.
 //
-// TWO CALLERS AND THE SECOND ONE IS WHY THE HEIGHTS ARE PARAMETERS: a doorway (floor to lintel) and
-// a washroom LIGHT WELL. A ribbon window needs none of this, because glazing sits strictly inside
-// the solid wall that bounds its run and the flanking cells' butt caps close its ends for free — but
-// a light well is punched in a cell that is FULL WALL THICKNESS (FacilityGeom.thick reads
-// Wall.WINDOW and a well is Wall.WINDOW_HIGH), so both its neighbours take the equal-thickness
-// branch, emit nothing, and the opening's sides were left open straight through the masonry
+// THREE CALLERS AND THEY ARE WHY THE HEIGHTS ARE PARAMETERS: a doorway (floor to lintel), a ribbon
+// window and a washroom LIGHT WELL (each sill to head).
+//
+// THE RIBBON WAS THE ONE LEFT OUT, on the belief that "the flanking cells' butt caps close its ends
+// for free". They do not: `butt` caps the boundary plane only where the thick cell stands PROUD of
+// the thin one, which is the two (WALL_T - GLASS_T) / 2 shoulders either side of the glazing band
+// and never the band itself. See the reveal block in `structure` for the measurement. A light well
+// reaches the same hole from the other end — it is punched in a cell of FULL WALL THICKNESS (`thick`
+// reads Wall.WINDOW and a well is Wall.WINDOW_HIGH), so its neighbours take the equal-thickness
+// branch and emit nothing at all.
   static function jamb(b:MeshBuf, alongX:Bool, s:Rect, y0:Float, y1:Float, t:Float):Void
     {
       if (alongX)

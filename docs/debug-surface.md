@@ -40,6 +40,29 @@ proves it inline. When a lesson invalidates an old bullet, replace it rather tha
   - **A MINIMISED WINDOW COSTS NOTHING FOR INSPECTION.** `evaluate_script` answers normally — an eval that spans its own `minimize()` returns fine — and `take_screenshot` returns a REAL, CURRENT frame: captured minimised vs captured after `restore()`, 230 luminance levels both, mean |d| **0.22** and max **2** over 40,150 sampled pixels, i.e. animation jitter and nothing else. So parking the window through a build is free, and reading it while parked is safe. (The compositor throttle is a separate matter and still bites: it wrecks TIMING, not capture — never trust `perf.lastGpuMs` or an fps read taken while the window is down or unfocused. See the weak-GPU rules below.)
   - **`select_page({bringToFront:true})` DOES NOT UN-MINIMISE IT.** Measured: minimise, `bringToFront`, and `isMinimized()` still reads `true`. `bringToFront` raises and selects a window that is merely buried; a minimised one stays down. **`host.restore()` is the only wake** — and since page calls work while minimised, calling it is not a chicken-and-egg problem. It calls `focus()` too, deliberately: `restore()` alone can leave the window unfocused on some window managers, and an unfocused window throttles to ~1fps, which silently corrupts any timing measured right after the wake.
 
+- **`go block [kind]` teleports to a RANDOM block of that kind** (`console/GoBlock.hx`), and the
+  completion offers only the kinds actually on the current map. Random and not the first is the point
+  of it: a compound has two buildings, fifteen labs and four offices, and running it twice puts you in
+  a different one. Bare `go block` prints the census — e.g. `building 2, hangar 1, lot 1, park 1,
+  road 1, room-lab 15, room-office 4, room-washroom 2`.
+  - **It is DERIVED from the saved grid, because there is no block tree to read.** `gen._GenNode` is
+    in-memory only and deliberately so, so by the time you can type a command it has been thrown away
+    and a loaded save never had one. `render.facility.FacilityModel.fromArea` is already the repo's
+    one reader of the grid plus `generatorInfo.rooms`, and it is a pure function of the area — 1.03 ms
+    for the whole walk on a 65x60 compound (0.85 of that inside `fromArea`), which is why there is no
+    cache: one keyed on `area.id` is a stale-data bug, since `regenerate` rewrites the grid and keeps
+    the id.
+  - **What that costs is granularity, and it is worth knowing before reading the list.** The block
+    level and the room level come back exactly; `study-pad` comes back because `findPads` recovers it
+    from the SHAPE of the unwalkable concrete; the room ZONES (`bay`, `slot`, `lounge`, `stall-run`,
+    `hangar-machine`) leave no mark of their own on the grid and are not offered. `parking` and `yard`
+    both resolve to `Surf.LOT` and are one block called `lot` until a tile tells them apart.
+  - Two traps it cost to find, both measured: a structure's `ox*` box reaches PAST the wall ring on at
+    least one hand (the shed at 3,4..15,28 has `ox1` 2, whose whole column is the pavement), so the
+    INTERIOR box is what to sample; and the hangar floor is recorded as one role-less `_Room`, which
+    `RoomBlock.kindOf` reads as a laboratory, so the shed was offered as `room-lab` too until the
+    `m.owner` test dropped it.
+
 ## In-engine debug keys
 
 - **In-engine debug keys** (street-debug mode, backtick): `1` lighting/bloom, `2`/`3`/`4` ambient/hemi/moon fill, `5` lamp spotlights, `0` all lights, `6` emissive, `7` shadow SAMPLING A/B, `8` reset perf peak, `9` draw-call breakdown dump (traced + copied to clipboard), `M` force every lit material matte. `7`/`8`/`9`/`M` + the perf HUD live in `render/StreetPerf.hx`; the console `perf street` toggle (`render.Actors.DEBUG_PERF`) shows the same HUD **without** locking game input, so it is the one to use while walking (debug mode owns the keyboard for the fly-cam).

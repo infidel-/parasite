@@ -388,10 +388,11 @@ also re-deriving what each expression meant. `Rng`'s statics are for code holdin
 anywhere under generation silently breaks `--digest`**, which is the only gate that can check a
 refactor.
 
-**Quotas, not dice, for anything mandatory.** `FacilityRooms.assignRoomThemes` rolls a 60 for the
-washroom, which is why 40% of compounds have no washroom — not a decision, just a roll standing in
-for "usually". `_GenDemand` says the thing that was meant: at least `min`, at most `max`, and a `fit`
-function for which rect suits it.
+**Quotas, not dice, for anything mandatory.** `FacilityRooms.assignRoomThemes` used to roll a 60 for
+the washroom, which is why 40% of compounds had none — not a decision, just a roll standing in for
+"usually". `_GenDemand` says the thing that was meant: at least `min`, at most `max`, and a `fit`
+function for which rect suits it. That roll is gone (see "A lab building always has a toilet" below);
+`_GenDemand`'s header still names it, because it is the clearest example this repo has of the fault.
 
 **An unsatisfiable split is re-rolled, not repaired.** `FacilityBlocks.plan()` splits, deals, and
 starts over with a fresh split if any `min` went unmet, up to `MAX_PLAN_TRIES`. Same shape as
@@ -598,6 +599,10 @@ list too, and its delta names US), whose far cell is `TEMP_BUILDING_CORRIDOR`. *
 means no washroom**, which a compound already has to survive — the roll is 60% — rather than relaxing
 onto the fault. Measured: 1.19 → **0.89 washrooms per compound**, and that is the whole cost.
 
+> The `length == 1` half of that test is **superseded by "A lab building always has a toilet"** at the
+> end of this file: counting every door in the room's walls rejected 21.8% of lab structures for a
+> door the washroom never cut. It counts the room's OWN doors now, and the 60% roll is gone.
+
 `FacilityToilet.toiletPartition` has assumed both since it was written: it takes the FIRST door of
 the room and lays the T's bar, lobby and stem against that wall, so a second door on another wall
 opens into a sealed half. The assumption is true by construction now instead of by luck.
@@ -764,3 +769,58 @@ and that was true when it was written. It is not true now: every frame of
 still chooses is UNIFORM-PER-KIND against UNIFORM-PER-ATLAS-ROW. Collapsing it to one `Deco.pick` is
 a one-line deletion, and it moves the furniture mix (five machine icons stop outweighing two shelving
 icons on the row-uniform arm), so it wants a look in the game rather than a digest.
+
+## A lab building always has a toilet, and the door test was counting the wrong doors
+
+"lab building has to have at least one toilet". Two things stood between that and the code, and only
+one of them was the dice.
+
+**THE DICE.** `assignRoomThemes` ran `state.area.chance(60) && wash >= 0`, so two lab buildings in
+five came out with no washroom. Gone outright — the roll is exactly the fault `_GenDemand`'s own
+header is written about.
+
+**AND THE DOOR TEST WAS ASKING ABOUT DOORS THE ROOM DID NOT CUT.** `washroomDoor` required
+`getRoomDoors(room).length == 1`, and that list is accretion — a room's own door plus one for every
+neighbour whose roll landed on the shared wall (see the section above). So a room with exactly one
+corridor door of its own was rejected for a door belonging to the lab next to it. **Measured over 795
+lab structures on 400 seeds: 21.8% had no candidate at all, and every single one of those failures
+was the door test** — `exteriorWall` passed somewhere in all 795. Counting only the room's OWN doors
+(`roomID1 == room.id`) takes that to **1.6%**.
+
+A door the room did not cut is not a way in to the washroom in any sense `FacilityToilet` cares
+about; what that file needs is the one wall to lay its T against, and that is the room's own. So
+`toiletPartition` skips a door whose `roomID1` is not this room — it took the FIRST door in the list
+before, which on such a room laid the lobby against an opening the washroom does not own — and
+`GenCheck.washroomSane` asserts the same set: exactly one door cut BY the washroom, onto a corridor,
+with a neighbour's door in a shared wall allowed. **Net: `nodes/room-washroom` 0.93 → 1.93 per
+compound** at 2 lab buildings each, i.e. 96.5% of them, over 3000 seeds with `unreachableRooms` still
+0. The residual is the 1.6% with no candidate, and it is left there rather than relaxed: the next tier
+down is a room whose only door opens into a LABORATORY, which is the thing this test was added to
+stop.
+
+**AND IT UNCOVERED A LATENT FAULT IN THE LATE DOOR CUT.** 3000 seeds failed twice —
+`two spawns on cell 71,29 (door)` — and the collision was a **VENT** and a door. `cutDoorToReached`
+tested only the TILE (`cells[x][y] != Const.TILE_BUILDING`), and a vent is an object standing ON a
+`TILE_BUILDING` cell (see `render.facility.FacilityGeom.wallMounts`), so the repair cut a doorway
+through the grille. It asks `ctx.hasObjectAt` now. Pre-existing; guaranteeing the washroom is only
+what made the pass fire on those two seeds.
+
+## The tree is not persisted, and what `go block` can offer because of it
+
+`gen._GenNode`'s own header is the decision: the tree is in-memory only, because "the renderer, the
+lighting and the missions all re-derive what they need from the saved cell grid" and `_Room` already
+carries the one piece of per-room intent that has to survive a save. That still holds — and it is
+what shapes the `go block [kind]` console command, which came out of wanting to look at a named
+block quickly.
+
+Nothing can read the tree from a loaded save, so `go block` derives its list from
+`render.facility.FacilityModel.fromArea` (the grid) plus `area.generatorInfo.rooms`. What that
+recovers exactly: **`building` / `hangar`** (structures), **`room-lab` / `room-office` /
+`room-washroom`** (rooms, named through `RoomBlock.kindOf` so the command and the tree above agree),
+**`study-pad`** (from the SHAPE of the unwalkable concrete, `FacilityModel.findPads`), and
+**`park` / `road`** (surface classes). What it cannot: every ROOM ZONE and every HANGAR ZONE —
+`bay`, `slot`, `lounge`, `stall-run`, `hangar-machine` and the rest write furniture and floor, not a
+mark that says which zone laid them. And `parking` against `yard` is the alley problem again: both
+are `Surf.LOT`, so they are one block called `lot` until a tile separates them.
+
+Full detail, and the two traps it cost to find, in [`debug-surface.md`](debug-surface.md).

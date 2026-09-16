@@ -3336,6 +3336,10 @@
         "grid": 8,
         "cap": 0.1
       },
+      "regrid": {
+        "grid": 8,
+        "cut": 200
+      },
       "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Every object must sit ENTIRELY INSIDE ITS OWN CELL with a WIDE EMPTY GUTTER around it: at least 20% of the cell width must be completely empty on every side of each object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run unbroken from one edge of the image to the other. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness. They are the working litter and survey rigging of an aircraft hangar used as a research bay. Keep all 64 objects at roughly similar scale to each other. Nothing may touch the outer edges of the frame.\n\nRow 1: empty pallet / pallet with broken slats / black wheel chock / yellow wheel chock / coiled orange air hose / coiled black hydraulic hose / coiled yellow extension cable / heap of steel chain.\nRow 2: lifting chain with hook / curled swarf / scattered bolts and nuts / dark oil stain / dark coolant stain / pale dried spill ring / curved tyre skid / straight tyre skid.\nRow 3: cardboard crate lid / crumpled strapping band / oily rag / folded grey rag / tool tray of spanners / tool tray of screwdrivers / roll of duct tape / roll of insulating tape.\nRow 4: square drain grate / rectangular drain grate / scuffed yellow line fragment / worn yellow corner marking / welding spatter with scorching / foam packing offcut / flat sandbag / two stacked sandbags.\nRow 5: chalk survey cross / chalk arc / chalk right-angle mark / stencilled scale bar / coiled data cable / cable junction box with leads / cable ramp protector / earthing strap on a plate.\nRow 6: sample tray of vials / tray of sealed bags / blank marker card / second marker card / third marker card / yellow-and-black hazard tape / red and white tape corner / square sensor pad with lead.\nRow 7: round sensor puck with lead / clean spill mat / stained spill mat / star-shaped scorch / scorch streak / three-footed tripod plate / folded tripod plate / crumpled dust sheet.\nRow 8: dust sheet folded flat / radiation trefoil stencil / biohazard stencil / anchor plate with bolts / anchor plate with eyebolt / laminated clipboard / open instrument case / coiled fibre-optic cable. [append textures.json style]",
       "prompt_exact": true,
       "note": "the hangar floor's pack64, consumed by render.facility.FacilityHangar through the same emit/UV arithmetic as facility/worktop-clutter. MIXED half and half on purpose: rows 1-4 are handling and fluids, rows 5-8 survey and containment, so one sheet dresses a working shed AND says the thing in the middle of it is being studied. ALPHA IS REAL AND CAME FROM THE API, not a chroma key - background alpha measured 6-51 against the objects' ~250, which cuts clean at DECO_CUT's 128. THE FIRST ROLL CAME BACK OPAQUE and is in Unused/: naming the floor in the prompt ('lying flat on the concrete floor') makes the model paint one however background:transparent is set - the MCP says so and it is true. cells cap 0.10 against worktop-clutter's 0.08 because the chalk marks and spill mats measure 0.31-0.37 linear and ARE the bright end here; sat 0.5 pulls the orange hose and yellow chocks back.",
@@ -3345,8 +3349,12 @@
         "grid": 8,
         "cap": 0.1
       },
-      "built_linear": 0.0605,
-      "built_srgb": 63.0
+      "built_linear": 0.064,
+      "built_srgb": 64.8,
+      "last_regrid": {
+        "grid": 8,
+        "cut": 200
+      }
     },
     "facility/analyser-panel": {
       "src": "facility/analyser-pack4.png",

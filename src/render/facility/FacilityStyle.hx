@@ -955,23 +955,36 @@ class FacilityStyle
 
   // the office chair, the one glb of the researcher's set — a real irregular silhouette (a shaped
   // back, arms, a five-star base on castors) and so the case FOR a mesh generator, where the
-  // workstation above is the case against one. 1.05 m to the top of the back
-  public static inline var CHAIR_H = 2.1;
+  // workstation above is the case against one.
+  //
+  // 1.365 m to the top of the back, up 30% from 1.05 on the report that it was too small. The glb's
+  // own box is 1.231 x 2.099 x 1.294 and render.Models.instanced scales by HEIGHT alone, so this
+  // number sets the FOOTPRINT too: 1.601 x 1.683, up from 1.231 x 1.294. That is what drags
+  // CHAIR_OUT below with it — a scale applied here alone drives the chair straight back into the
+  // casework, which is the fault the DESK_D note beneath it was written about
+  public static inline var CHAIR_H = 2.73;
   // how far its CENTRE stands off the desk's own open FACE — not off the cell edge, which is what
   // it used to mean and is where a 1.35 gap came from: an office desk is DESK_D 2.6 deep in a 4.0
   // cell, thinned on the OPEN side alone so the run hugs the wall, so its face sits
   // DESK_D + BENCH_LIP - CELL/2 = 0.8 from the cell centre and a full 1.2 INSIDE the cell edge.
   // FacilityWork.chairs derives that rather than carrying the number, so it cannot drift from DESK_D.
   //
-  // AND THE FLOOR ON THIS IS THE JITTER, NOT THE CHAIR. The plan footprint is 1.231 by 1.294, so a
-  // yaw of CHAIR_YAW_JIT swings the reach along the desk axis to
-  // 0.647*cos(0.35) + 0.616*sin(0.35) = 0.819 — at 0.87 the front wheels just touch the desk at full
-  // jitter and clear it by 0.22 when square. Anything smaller drives the chair through the casework,
-  // which is solid to BENCH_H 2.0 with no knee-hole to tuck into.
+  // AND THE FLOOR ON THIS IS THE JITTER, NOT THE CHAIR. The plan footprint is 1.601 by 1.683 at
+  // CHAIR_H above, so a yaw of CHAIR_YAW_JIT swings the reach along the desk axis to
+  // 0.841*cos(0.35) + 0.800*sin(0.35) = 1.065 — at 1.131 the front wheels just touch the desk at
+  // full jitter and clear it by 0.29 when square. Anything smaller drives the chair through the
+  // casework, which is solid to BENCH_H 2.0 with no knee-hole to tuck into.
+  //
+  // IT IS CHAIR_H's OWN SCALE AND NOT A SECOND TASTE NUMBER: 0.87 * (2.73 / 2.1) = 1.131, so the
+  // two fitted clearances scale with the chair rather than being refitted — 0.223 square and 0.051
+  // at full jitter become 0.290 and 0.066, the same fractions of a chair 30% larger. The cost is
+  // where the chair now STANDS: its far edge sits 0.77 past its cell's boundary at an office desk
+  // (was 0.32) and 2.17 past at a full-depth worktop, both inside the cell `seat` already demands
+  // be clear floor.
   //
   // A chair pushed dead square under every desk reads as a showroom, which is what the jitter buys
   // and what it costs: every centimetre of yaw play is a centimetre the chair has to stand back
-  public static inline var CHAIR_OUT = 0.87;
+  public static inline var CHAIR_OUT = 1.131;
   public static inline var CHAIR_YAW_JIT = 0.35;
 
   // the WC pan itself, the other glb of the set: 0.75 m to the cistern top and 0.7 m front to back.
@@ -2438,6 +2451,18 @@ class FacilityStyle
   // how far from the pad's edge the clutter keeps off, in cells. the podium is the thing in the
   // room and a pallet lying half under its rim is the read it costs
   public static inline var HANGAR_CLUTTER_CLEAR = 1;
+  // the two cells never dealt, and the test here is GEOMETRY and not value — the other two skip
+  // lists in this file condemn a cell for reading as a hole in its worktop; these two reach their
+  // own cell's EDGE, so the quad next door draws a slice of them.
+  //
+  // tools/textures.py's `regrid` pass moved 56 of this sheet's 64 objects onto the nominal 8x8
+  // split and copied the eight it could not separate through unchanged. Measured on the built sheet
+  // afterwards, four cells still carry opaque texels in their own 3-px border ring — 7 at 0.421, 23
+  // at 0.510, 57 at 0.031 and 58 at 0.033 — and only the first two are a read: the chain pile and
+  // the taped plate both fill their cell corner to corner. 57 and 58 are a scuff's soft tail at 3%
+  // and are left in, the same judgement CLUTTER_SKIP's own comment records against condemning a
+  // cell by one number alone
+  public static var HANGAR_CLUTTER_SKIP:Array<Int> = [ 7, 23 ];
 
   // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too:
   // the glb's bbox is 0.586 x 0.691 x 0.994, so this draws it 3.16 long, 1.86 wide and 1.1 m tall at

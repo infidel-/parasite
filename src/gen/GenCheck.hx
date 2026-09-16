@@ -258,14 +258,19 @@ class GenCheck
           // NOT FILTERED ON `skip`, which is bookkeeping and not a state: fixDoors deletes the
           // door it drops from the list outright and sets `skip` on the one it KEEPS, so a skipped
           // door is a live door. Filtering it out reported every washroom as having none
-          var mine = [for (d in doors) if (d.roomID1 == r.id || d.roomID2 == r.id) d];
-          ok(mine.length == 1, 'washroom at ' + r.x1 + ',' + r.y1 + ' has ' + mine.length +
-            ' doors, not 1');
+          // ITS OWN doors, which is the set gen.facility.FacilityRooms.washroomDoor picks on and
+          // the set FacilityToilet lays its T against. A NEIGHBOUR'S door in a shared wall is that
+          // room's business and is allowed here: asserting on every door in the washroom's walls
+          // rejected 21.8% of lab structures as washroom-less for a door the washroom never cut,
+          // and closing that gap is what makes a toilet guaranteed rather than a 60% roll
+          var mine = [for (d in doors) if (d.roomID1 == r.id) d];
+          ok(mine.length == 1, 'washroom at ' + r.x1 + ',' + r.y1 + ' cut ' + mine.length +
+            ' doors of its own, not 1');
           // roomID 0 is the sentinel for "a corridor, or outdoors" — doorsSane's own note
           for (d in mine)
-            ok(d.roomID1 == r.id && d.roomID2 == 0,
+            ok(d.roomID2 == 0,
               'washroom at ' + r.x1 + ',' + r.y1 + ' has a door at ' + d.x + ',' + d.y +
-              ' onto room ' + (d.roomID1 == r.id ? d.roomID2 : d.roomID1) + ' and not a corridor');
+              ' onto room ' + d.roomID2 + ' and not a corridor');
         }
     }
 

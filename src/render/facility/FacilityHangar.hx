@@ -42,6 +42,14 @@ class FacilityHangar
 {
   static inline var CELL = CityConfig.CELL;
 
+  // the sheet cells actually dealt, derived off FacilityStyle.HANGAR_CLUTTER_SKIP exactly as
+  // render.facility.FacilityClutter derives its own two — the skip list stays the one place the
+  // measurement lives
+  static var PICK:Array<Int> = [
+    for (i in 0...FacilityStyle.HANGAR_CLUTTER_CELLS)
+      if (FacilityStyle.HANGAR_CLUTTER_SKIP.indexOf(i) < 0) i
+  ];
+
 // build the hangar's contents.
 //
 // `cable` is FacilityCable's own buffer, BORROWED — it has to be filled before that pass merges it,
@@ -156,7 +164,7 @@ class FacilityHangar
             var sz = FacilityStyle.HANGAR_CLUTTER_SZ +
               ((h >> 7) % 1000 / 1000.0 - 0.5) * 2 * FacilityStyle.HANGAR_CLUTTER_SZ_VAR;
             emit(b, c.x, c.z, sz, (h >> 17) % 6283 / 1000.0,
-              (h >> 3) % FacilityStyle.HANGAR_CLUTTER_CELLS);
+              PICK[(h >> 3) % PICK.length]);
             n++;
           }
       return n;

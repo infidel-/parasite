@@ -159,7 +159,15 @@ class FacilityTables
               z0: oz0,
               z1: oz1,
             };
-            if (office)
+            // A HANGAR CONSOLE IS NOT AN OFFICE DESK AND CARRIES THE SAME THREE MACHINES.
+            // FacilityWork.at lets the shed's console run in BY NAME — its cells are laid in the
+            // laboratory's worktop tiles and read back as Surf.TILE — so gating the pools on
+            // `office` left every workstation in the hangar standing on bare resin with no contact
+            // shade at all, which is what a monitor floating over a worktop looks like. Asked of
+            // `at` instead, i.e. of the same oracle the geometry and the clutter both ask, so the
+            // three passes cannot disagree about which cells carry a set
+            if (office ||
+                FacilityWork.at(m, col, row) != null)
               FacilityWork.pools(m, col, row, plate);
             else
               {

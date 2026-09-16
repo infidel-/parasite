@@ -128,6 +128,10 @@ class ConsoleCompletion
           ] });
           rootChildren.push({ lit: 'go', next: [
             { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
+            // the kinds actually on the CURRENT map, so the list is never a menu of things that are
+            // not there — see console.GoBlock, which caches per area because this runs per hint
+            { lit: 'block', next: [
+              { slot: '[kind]', values: function() return GoBlock.kinds(console.game) } ] },
             { lit: 'event', next: [ { slot: '[index]' } ] },
             { lit: 'xy', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
           ] });
