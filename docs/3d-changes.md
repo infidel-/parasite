@@ -413,3 +413,89 @@ now places correctly if one ever is.
 
 **Verdict: landed. A decal placed from "where the thing stopped" is placed from the CELL, and only
 the area kind knows where inside that cell it actually drew the surface.**
+
+## A cell that wraps and a cell that fits are two different questions (2026-09-17)
+
+Four more faults off one report, all of them on cells of a packed sheet and none of them on a mesh.
+
+**The mug's icon was stretched, and it is the cell's ASPECT** where the drums' signs were the same
+thing on a barrel. `desk-sheet.png` cell 0 is a square glaze with a cup mark in the middle; the
+surface it wraps is a height-weighted mean radius of 0.1325 (circumference **0.833**) over a height
+of **0.340**, so one turn laid 615 texels per world unit across against 1506 up — measured on the
+built glb as **anisotropy 2.45** over its 268 side triangles. `MUG_WRAPS 2` halves the u span:
+**1.25** measured, and the mark appears on both sides of the cup, which is what a printed mug does.
+`reps` MUST DIVIDE the turn count and 16's divisors step 1, 2, 4 — three copies would land at 0.82,
+so 2 is the only count between the two errors, and 22% is as close as this cup gets.
+
+**The gas bottles carried the drums' black seam** for the drums' reason exactly: `gas-sheet.png`
+cell 0's right column measures rgb **5/3/1** against its left column's **168/88/21**, cell 1's left
+**2/1/0** against **43/46/48**, and `lathe_uv` abuts one against the other at SEAM 0.75 — the +y
+back. Both cells go through `wrapfix.py` into `gas-wrap.png`; the two edge columns now differ by
+**1.1 of 255**. Cells 2 (frame iron) and 3 are not lathed and pass through untouched — the sheet
+lists the cells a lathe actually turns rather than sweeping them all, because blending a `disc_uv`
+lid's edges only smears it.
+
+Both glbs re-measured: mug 424 tris, gas rack 1772, holes 0, coplanar 0, dimensions unmoved, and
+**0 zero-area UV triangles** on either.
+
+**Verdict: landed. The seam question is "does this cell close on itself"; the aspect question is
+"does this cell have the proportions of the surface it is about to wear". One cell can fail both.**
+
+## The checkpoint goes hand-modelled, and the quads lose on DRAW CALLS (2026-09-17)
+
+The third route for the same two objects, and the first one that is cheaper than what it replaces.
+Generated they were 3,098 and 7,431 triangles with the hazard bands baked orange-on-tan; emitted they
+were 22 and 34, and that entry's rule — a box is not a prop — is about GENERATED props. This is the
+fourth route: `models-src/facility/entry_build.py`, every number copied from `FacilityStyle`, behind
+`FacilityStyle.ENTRY_BLENDER` with the quads still shipping.
+
+**Measured in one pinned frame at the gate, same pose, same seed, flag flipped and rebuilt between:**
+emitted **101 dc / 177.8k tri / 1250 geom / 406 tex**, hand-modelled **97 dc / 180.5k tri / 1246 /
+402**. **−4 draw calls for +2.7k triangles**: the quads were five merged meshes (cabinet, arm, walls,
+roof, glazing) and the meshes are two instanced batches plus the same glazing, which is also why the
+texture count fell — four fitted textures became one packed sheet baked into two glbs.
+
+**THE BOOM'S LENGTH IS THE TRAP AND IT ONLY JUST SURVIVES.** `Models.instanced` scales by HEIGHT
+alone, which is why the prop era's barrier spanned 14.7 units whatever the generator cut. It works
+here only because the mouth is `RoadBlock.ENTRY_W` 4 cells on every seed: the mesh is built to
+`4 * CELL − BARRIER_INSET − BARRIER_TIP` and the batch passes `BARRIER_CAB_H` so the scale is 1.
+**The band pitch is the honest regression** — the art's cell holds six bands and two arm pieces each
+wearing it whole gives 12 bands at **1.155 units** against the emitted arm's 1.0, because `reps` here
+is geometry and geometry comes in whole pieces. Three pieces would land at 0.77, further off.
+
+**THE GEN LANDED 7.7x OVER THE COMPOUND'S OWN CLADDING** and the fit is to the four textures this
+replaces, not to the 46-52 prop family — those four were each fitted live at the game camera and
+carry their numbers in `textures.json`. `entrytone.py` moves each cell onto its predecessor's
+`built_linear`: bands ×0.7626 to 0.2331 (`barrier-arm` 0.3108 × `BARRIER_TINT` 0.75, baked in because
+one instanced glb has no material `color` of its own, and a SCALE not a gamma — a gamma blows the
+6.8x band ratio), cladding gamma 2.55 to **0.0327**, decking gamma 1.24 to **0.0849**, and the
+cabinet steel **left alone** at 0.0411 against `barrier-post`'s 0.0439.
+
+708 and 672 tris, holes 0, coplanar 0 — three z-fighting pairs caught by `check` first, all of them a
+piece whose face landed on a neighbour's plane. The glazing stays quads: one glb carries ONE
+material, and the lit band wants its own emissive intensity.
+
+**Verdict: landed behind `ENTRY_BLENDER = true`. "A box is not a prop" is about the GENERATOR, and a
+hand-modelled box that replaces five merged meshes with two batches pays for itself in calls.**
+
+## The boom's own row is unwalkable now (2026-09-17)
+
+A bar across a drive that the player walks through is decoration, so the generator stamps it. The
+ENTRYWAY arm writes `TEMP_BARRIER` -> `Const.TILE_ALLEY_UNWALKABLE` across the mouth row nearest the
+lot — four cells, the line `FacilityEntry` lies the boom and its cabinet on. No new tile id and no
+new atlas cell: `game.CorpAreaGenerator` already writes that id and `tiles.Default` already has 0 in
+`TILE_WALKABLE` for it.
+
+`FacilityModel.surfOf` returns `Surf.LOT` for it like the other two asphalt ids, so `isEntry`, the
+ground pass, the lamps and the cars are all untouched. What had to widen is the MOUTH SCAN: both
+`AreaGame.gate` and `GenCheck` bound their box over alley cells lying within the pavement band, so
+with one row repainted the mouth read 4x1 and failed its own depth assertion. `isMouth` in both files
+takes the two ids, `GenCheck.gate` additionally asserts the boom's row is unwalkable across its whole
+width, and 3,000 seeds pass.
+
+Verified live: the four cells at (52..55, 5) read `isWalkable` **false**, the lot row behind them
+true, and the pavement either side is walkable — a compound is not sealed by this, a car park is.
+
+**Verdict: landed. The checkpoint was retroactive because it touched no tiles; one row of tile is
+what it costs to make the barrier mean something, and an old save simply keeps a boom you can walk
+under.**

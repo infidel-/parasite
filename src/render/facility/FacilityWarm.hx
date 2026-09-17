@@ -159,6 +159,17 @@ class FacilityWarm
               path: RenderConfig.MODELS.facilityCar,
               h: FacilityStyle.CAR_H,
             },
+            // and the checkpoint's pair, which are two paths and so two materials and two program
+            // keys. Warmed even when FacilityStyle.ENTRY_BLENDER is off: a warm costs one compile at
+            // load and the flag is meant to be flipped and looked at
+            {
+              path: FacilityEntry.BARRIER_PATH,
+              h: FacilityStyle.BARRIER_CAB_H,
+            },
+            {
+              path: FacilityEntry.BOOTH_PATH,
+              h: FacilityStyle.BOOTH_H + FacilityStyle.BOOTH_FASCIA + FacilityStyle.BOOTH_MAST,
+            },
           ].concat([for (p in FacilityDebris.PROPS) { path: p.path, h: p.h }])
             .concat([for (p in FacilityKit.PROPS) { path: p.path, h: p.h }])
             .concat([for (p in FacilityJanitor.PROPS) { path: p.path, h: p.h }])

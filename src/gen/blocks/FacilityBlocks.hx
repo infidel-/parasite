@@ -165,11 +165,16 @@ class FacilityBlocks
         },
         // the park takes what is left, and would rather be a strip than a square: a path down the
         // long axis with benches off it is what render.facility.FacilityGround kerbs and
-        // FacilityLamps lights, and a square lawn gives that nothing to run along
+        // FacilityLamps lights, and a square lawn gives that nothing to run along.
+        //
+        // ONE REQUIRED, TWO ALLOWED, and the second one is what the leftover plot becomes. Quota
+        // deals every min before any max, so this cannot cost the compound a building or the
+        // hangar — it only spends what would otherwise have been dealt YARD, which is bare asphalt
+        // with nothing on it and averaged 1.03 plots per compound
         {
           kind: PARK,
           min: 1,
-          max: 1,
+          max: 2,
           minW: 8,
           minH: 10,
           fit: function(b: _GenNode)

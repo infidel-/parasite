@@ -395,8 +395,12 @@ class FacilityModel
         return ROAD;
       if (t == Const.TILE_WALKWAY)
         return WALKWAY;
+      // open asphalt, all three ids. TILE_ALLEY_UNWALKABLE is the gate mouth's barrier row — the
+      // surface is the drive and only the walk was taken off it, so the ground pass, the lamps and
+      // render.facility.FacilityEntry.isEntry all have to keep seeing a lot there
       if (t == Const.TILE_ALLEY ||
-          t == Const.TILE_PARKING)
+          t == Const.TILE_PARKING ||
+          t == Const.TILE_ALLEY_UNWALKABLE)
         return LOT;
       if (t == Const.TILE_GRASS ||
           t == Const.TILE_GRASS_UNWALKABLE ||

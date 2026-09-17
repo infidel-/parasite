@@ -2,6 +2,8 @@ package render.facility;
 
 import three.Three;
 import citygen.CityConfig;
+import render.Models;
+import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -33,11 +35,16 @@ typedef Gate = {
 //     opposite the booth, because the barrier is the thing out here that has to be seen;
 //   game.AreaGame.initSpawnPoints puts a guard post in the mouth, mirroring this in the tile grid.
 //
-// BOTH ARE RENDER-ONLY and stand on walkable asphalt, the way the park railing does. nothing is
-// stamped on the tiles for them, which is what makes the whole feature retroactive — and a gate a
-// car drives through is the wrong place to start blocking cells anyway.
+// THE BOOM'S OWN ROW IS UNWALKABLE AND THE REST OF THIS IS STILL RENDER-ONLY. The generator stamps
+// the mouth row nearest the lot with Const.TILE_ALLEY_UNWALKABLE (gen.facility.FacilityTemp
+// .TEMP_BARRIER) — the same asphalt with the walk taken off it, so `find` below still reads it as
+// Surf.LOT and everything here is unchanged — because a bar across a drive that the player strolls
+// through is decoration. The BOOTH is not stamped: it stands on open lot the way the park railing
+// does, and an old compound gets its checkpoint drawn the moment it is entered either way. Only the
+// boom's row needs the grid, and a compound saved before that tile existed simply has a boom that
+// can be walked under.
 //
-// NEITHER IS A PROP. Both were generated first and both were rebuilt here, and the second rebuild is
+// NEITHER WAS EVER A GOOD PROP. Both were generated first and both were rebuilt here, and the second rebuild is
 // the one worth reading, because the first had a rule drawn round it that turned out to be wrong.
 //
 // The booth went first, and the argument was that it is a BOX — four clad faces, a glazing band and
@@ -63,7 +70,9 @@ typedef Gate = {
 // density at any length, and costs $0.01 to repaint. Built here the barrier is 22 triangles against
 // 3,098, its arm is banded by textures/facility/barrier-arm.png at 85 texels per world unit, and its
 // LENGTH is derived from the gate hole rather than fixed by a glb's aspect ratio — so a mouth of any
-// width is spanned exactly. The booth is exact in the same way, wears the compound's OWN cladding and
+// width is spanned exactly. (THE THIRD ROUTE, behind FacilityStyle.ENTRY_BLENDER, is a mesh
+// hand-modelled to these same constants: it cannot derive the span either, and survives only because
+// gen.blocks.RoadBlock.ENTRY_W is 4 on every seed. See models-src/facility/entry_build.py.) The booth is exact in the same way, wears the compound's OWN cladding and
 // roofing world-aligned at full density rather than a 2048 atlas smeared over a 4-unit box, and takes
 // the same lit-ribbon art every window run in the area already does — so the whole tools/emissive.py
 // step, and the hand-authored emissive map with it, simply stopped existing
@@ -119,17 +128,101 @@ class FacilityEntry
       return gate;
     }
 
-// the checkpoint, merged straight into the scene — nothing here is instanced any more, so this
-// hands nothing back and the caller has no batch row to keep index-aligned
-  public static function build(scene:Scene, m:Facility):Void
+  // which checkpoint the compound draws (FacilityStyle.ENTRY_BLENDER), resolved ONCE and read from
+  // here by the three places that have to agree: this file's own batches, FacilityWarm's rows and
+  // FacilityArea's EXTRA list. A batch is keyed by PATH, so a site left on the other branch would
+  // cost a draw call for the same object — the same reason FacilityGround.BIN_PATH exists
+  public static final BARRIER_PATH = RenderConfig.MODELS.facilityBarrier;
+  public static final BOOTH_PATH = RenderConfig.MODELS.facilityBooth;
+
+// the checkpoint. TWO BATCHES AND ONE MERGED MESH when ENTRY_BLENDER is on — the boom assembly, the
+// kiosk shell, and the glazing band that is still quads either way — and three merged meshes when it
+// is off.
+//
+// it hands back one InstancedProp per batch, ALWAYS and in this order, because FacilityArea's
+// `green` has to stay index-aligned with its EXTRA list: an empty batch is a row with a count of 0,
+// which is what an emitted checkpoint and a compound with no readable gate both return
+  public static function build(scene:Scene, m:Facility):Array<Models.InstancedProp>
     {
       var gate = find(m);
       if (gate == null)
-        return;
+        return [empty(), empty()];
       // both stand on asphalt, which lies a kerb below the pavement (FacilityStyle.KERB_DROP)
       var y = FacilityGround.surfY(Surf.LOT);
-      booth(scene, gate, y);
-      barrier(scene, gate, y);
+      // the glazing is drawn either way and by the same pass: one glb carries ONE material
+      // (render.Models.instanced keeps the first mesh and drops the rest), and a lit band wants its
+      // own emissive intensity, so the panes stay quads and the mesh is built around their gap
+      glazing(scene, gate, y);
+      if (!FacilityStyle.ENTRY_BLENDER)
+        {
+          booth(scene, gate, y);
+          barrier(scene, gate, y);
+          return [empty(), empty()];
+        }
+      return [barrierProp(scene, gate, y), boothProp(scene, gate, y)];
+    }
+
+// a batch that drew nothing: the row FacilityArea's `green` still has to carry, because that list is
+// index-aligned with its EXTRA one and an absent row shifts every batch after it
+  static inline function empty():Models.InstancedProp
+    {
+      return {
+        mesh: null,
+        matrices: [],
+        centres: [],
+      };
+    }
+
+// the boom assembly as one instance. its own local x runs from the cabinet's low face to the tip, so
+// the mouth's own axis is world X and the yaw is 0 — the same assumption `barrier` below makes and
+// the prop era's fixed `Math.PI` did not.
+//
+// THE MESH IS BUILT TO THE MOUTH and cannot stretch: Models.instanced scales by HEIGHT alone, so
+// BARRIER_CAB_H is passed as the target and the scale comes out 1. That is only sound because the
+// hole is gen.blocks.RoadBlock.ENTRY_W cells on every seed — see models-src/facility/entry_build.py
+  static function barrierProp(scene:Scene, gate:Gate, y:Float):Models.InstancedProp
+    {
+      var row = gate.row + (gate.lotDR < 0 ? 0 : gate.h - 1);
+      var a = CityConfig.cellToWorld(gate.col, row);
+      var x0 = a.x - CELL / 2 + FacilityStyle.BARRIER_INSET;
+      var x1 = a.x - CELL / 2 + gate.w * CELL - FacilityStyle.BARRIER_TIP;
+      var prop = Models.instanced(scene, BARRIER_PATH, [{
+        x: (x0 + x1) / 2,
+        z: a.z,
+        yaw: 0.0,
+        y: y,
+      }], FacilityStyle.BARRIER_CAB_H, SOLID);
+      Models.get(BARRIER_PATH, function(_) VisionMask.patchMesh(prop.mesh));
+      return prop;
+    }
+
+// the kiosk shell as one instance, centred on the bay FacilityPaint leaves unstriped for it. UNTURNED
+// like the emitted one, and for the same reason: what a yaw would aim is a door, and this mesh has
+// none — what reads from 18-55 units up is the roof, the aerial over it and the lit band under it
+  static function boothProp(scene:Scene, gate:Gate, y:Float):Models.InstancedProp
+    {
+      var c = CityConfig.cellToWorld(gate.boothCol, gate.mouthRow);
+      var prop = Models.instanced(scene, BOOTH_PATH, [{
+        x: c.x,
+        z: c.z,
+        yaw: 0.0,
+        y: y,
+      }], FacilityStyle.BOOTH_H + FacilityStyle.BOOTH_FASCIA + FacilityStyle.BOOTH_MAST, SOLID);
+      Models.get(BOOTH_PATH, function(_) VisionMask.patchMesh(prop.mesh));
+      return prop;
+    }
+
+// the lit band itself, on the four faces of the booth's own footprint. split out of `booth` because
+// BOTH checkpoints want it and neither wants the other's walls
+  static function glazing(scene:Scene, gate:Gate, y:Float):Void
+    {
+      var c = CityConfig.cellToWorld(gate.boothCol, gate.mouthRow);
+      var half = FacilityStyle.BOOTH_W / 2;
+      var glass = MeshBufTools.make();
+      for (dir in 0...4)
+        FacilityGeom.pane(glass, c.x - half, c.x + half, c.z - half, c.z + half, dir,
+          y + FacilityStyle.BOOTH_SILL, y + FacilityStyle.BOOTH_HEAD);
+      addGlass(scene, glass);
     }
 
 // the boom barrier: a cabinet standing on the booth's own flank, and an arm reaching from it across
@@ -235,7 +328,6 @@ class FacilityEntry
       var eave = y + FacilityStyle.BOOTH_H;
       var walls = MeshBufTools.make();
       var roof = MeshBufTools.make();
-      var glass = MeshBufTools.make();
       // the spandrel under the glazing and the one over it, exactly as the wall pass leaves a window
       // run's opening — same cladding, same world-aligned period, so the booth courses with the
       // buildings behind it instead of reading as a differently-scaled object
@@ -243,7 +335,6 @@ class FacilityEntry
         {
           FacilityGeom.face(walls, x0, x1, z0, z1, dir, y, sill, FacilityStyle.WALL_TILE);
           FacilityGeom.face(walls, x0, x1, z0, z1, dir, head, eave, FacilityStyle.WALL_TILE);
-          FacilityGeom.pane(glass, x0, x1, z0, z1, dir, sill, head);
         }
       // the roof slab: a cap on the grown rect, a fascia band down its edge and a SOFFIT closing it
       // underneath, all in the booth's own decking rather than the buildings' ballasted bitumen
@@ -272,7 +363,6 @@ class FacilityEntry
       // feature of the silhouette — threw none, so the booth read a size smaller than it is
       FacilityGeom.add(scene, walls, FacilityStyle.WALL_EXTERIOR, true, true);
       FacilityGeom.add(scene, roof, FacilityStyle.BOOTH_ROOF, true, true);
-      addGlass(scene, glass);
     }
 
 // the booth's lit band: the same window art every run in the area takes, and OPAQUE.

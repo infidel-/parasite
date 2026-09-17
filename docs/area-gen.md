@@ -28,8 +28,9 @@ area
   ├ building ×2
   ├ hangar
   ├ parking                  one tile (TILE_PARKING) over ground that is already open lot
-  │ └ entryway               the 4x2 hole through the sidewalk — stays TILE_ALLEY, gate() reads it
-  ├ park
+  │ └ entryway               the 4x2 hole through the sidewalk — stays TILE_ALLEY, gate() reads it,
+  │                          except its lot-side row, which is the BOOM's and is unwalkable
+  ├ park ×1..2               one required; a second takes the plot that would have been yard
   ├ hangar
   │ └ hangar-floor           the shed's interior, walked by HangarBlock itself
   │   │                      → Quota.deal() over its WALL RUNS, same dealer again
@@ -63,6 +64,23 @@ sibling of `road` would be paved back over by whichever building happened to bor
 **`yard` has no filler at all.** Open lot is what the grid was blanked to before the walk started, so
 `FacilityGen.fill` has no case for it. A kind with no case is a leaf that writes nothing; that is the
 design, not an omission.
+
+**The ENTRYWAY writes a SECOND tile, and it is the boom's.** The row of the mouth nearest the lot
+finalises to `Const.TILE_ALLEY_UNWALKABLE` (`TEMP_BARRIER`) — the same asphalt with the walk taken
+off it, because `render.facility.FacilityEntry` lies a boom barrier and its cabinet across exactly
+that line and a bar the player strolls through is decoration. `FacilityModel.surfOf` answers
+`Surf.LOT` for it like the other two asphalt ids, so the renderer is untouched; what had to widen is
+the MOUTH SCAN, which bounds its box over alley cells inside the pavement band — `AreaGame.isMouth`
+and `GenCheck.isMouth` now take both ids, and without that the mouth reads one row short and fails
+its own depth test. The pavement either side is still walkable, so nothing is sealed: a compound is
+entered over the kerb, a car park is not driven into.
+
+**`park` is `min: 1, max: 2` and the second one eats the yard.** `Quota.deal` satisfies every min
+before any max, so a second park can never cost a building or the hangar — it can only spend a plot
+that would have been dealt the filler kind. Measured over 1500 seeds: **nodes/park 1.99,
+nodes/yard 0.05** (was 1.0 and 1.03), `cells/park` 818 against `cells/yard` 16. It doubles the park's
+planting, which is the cost: a park-filling view measured 54 fps against the compound's usual 60, and
+286k triangles.
 
 **`parking` was the same leaf and is not any more, for ONE tile.** Its plot is the same open lot, but
 a compound holds three pieces of asphalt — the car park, the yard and every gap between plots — and
@@ -757,6 +775,9 @@ tiles rather than being handed them:
   cars silently. Asserted by `GenCheck.parkingSane`
 - `AreaGame.isLot` and `GenCheck.gate`'s flank test must keep accepting BOTH ids: the mouth is alley
   and the two rows inside it are car park, so a test on one id alone draws no booth at all
+- the mouth's lot-side row is `TILE_ALLEY_UNWALKABLE` across its whole width — the boom's own line.
+  Both mouth scans (`AreaGame.isMouth`, `GenCheck.isMouth`) must count it as mouth or the hole reads
+  one row short. Asserted by `GenCheck.gate`
 - room ids are unique across the whole area and never restart per structure
 - `FacilityAreaGenerator.repairRooms` guards on a room **count** — it must not start firing on
   freshly generated areas

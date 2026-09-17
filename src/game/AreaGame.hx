@@ -499,7 +499,7 @@ class AreaGame extends _SaveObject
       for (y in 0...height)
         for (x in 0...width)
           {
-            if (_cells[x][y] != Const.TILE_ALLEY)
+            if (!isMouth(x, y))
               continue;
             var d = roadSide(x, y);
             if (d == 0)
@@ -534,6 +534,15 @@ class AreaGame extends _SaveObject
         postX: x0,
         postY: y,
       };
+    }
+
+// is this cell part of the gate MOUTH — the hole through the pavement band? two ids, because the row
+// of it the boom lies across is Const.TILE_ALLEY_UNWALKABLE (gen.facility.FacilityTemp.TEMP_BARRIER)
+// and the bounding box below has to span the whole hole or the checkpoint reads a row short
+  inline function isMouth(x: Int, y: Int): Bool
+    {
+      return _cells[x][y] == Const.TILE_ALLEY ||
+        _cells[x][y] == Const.TILE_ALLEY_UNWALKABLE;
     }
 
 // is this cell open lot? false off the grid. BOTH asphalt ids: Const.TILE_ALLEY is the yard and the

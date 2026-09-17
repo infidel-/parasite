@@ -507,7 +507,7 @@ class GenCheck
       for (y in 0...ctx.height)
         for (x in 0...ctx.width)
           {
-            if (ctx.cells[x][y] != Const.TILE_ALLEY)
+            if (!isMouth(ctx, x, y))
               continue;
             var d = roadSide(ctx, x, y);
             if (d == 0)
@@ -543,6 +543,27 @@ class GenCheck
          isLot(ctx, x1 + 1, y),
         'the gate mouth at ' + x0 + ',' + y0 + ' is not flanked by open lot on the row inside it, ' +
         'so no booth is drawn and no checkpoint exists');
+      // and the boom lies across the mouth's own lot-side row, the whole width of it. it is the one
+      // row of the hole the player cannot walk through, and render.facility.FacilityEntry stands the
+      // arm and its cabinet on exactly this line — a row that came back walkable means the barrier
+      // is decoration again
+      var by = (dir < 0 ? y1 : y0);
+      var n = 0;
+      for (x in x0...x1 + 1)
+        if (ctx.cells[x][by] == Const.TILE_ALLEY_UNWALKABLE)
+          n++;
+      ok(n == x1 - x0 + 1,
+        'the barrier row at y ' + by + ' is ' + n + ' unwalkable cells of ' + (x1 - x0 + 1) +
+        ': the boom across the gate mouth is walked through');
+    }
+
+// a cell of the gate MOUTH: the hole through the pavement band, either id. game.AreaGame.isMouth,
+// verbatim — the row of the hole the boom lies across is Const.TILE_ALLEY_UNWALKABLE, and a box
+// taken over the alley alone reads the mouth one row short and then fails its own depth test
+  static function isMouth(ctx: GenCtx, x: Int, y: Int): Bool
+    {
+      var t = ctx.getCellType(x, y);
+      return t == Const.TILE_ALLEY || t == Const.TILE_ALLEY_UNWALKABLE;
     }
 
 // open asphalt, either id. game.AreaGame.isLot, verbatim — the mouth itself is Const.TILE_ALLEY and
@@ -598,7 +619,7 @@ class GenCheck
       for (y in 0...ctx.height)
         for (x in 0...ctx.width)
           {
-            if (ctx.cells[x][y] != Const.TILE_ALLEY)
+            if (!isMouth(ctx, x, y))
               continue;
             var d = roadSide(ctx, x, y);
             if (d == 0)

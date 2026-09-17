@@ -133,6 +133,12 @@ class FacilityGen
 
           case FacilityBlocks.ENTRYWAY:
             drawBlock(cells, node.x1, node.y1, w, h, TEMP_ALLEY);
+            // and the BOOM comes down across the row of it nearest the lot — the row
+            // render.facility.FacilityEntry stands the arm and its cabinet on. TEMP_BARRIER is the
+            // same asphalt with the walk taken off it, so the mouth keeps its size and its surface
+            // and a car park stops being a thing the player strolls through the bar of
+            drawBlock(cells, node.x1,
+              (state.mainRoadNorth ? node.y2 : node.y1), w, 1, TEMP_BARRIER);
 
           default:
         }

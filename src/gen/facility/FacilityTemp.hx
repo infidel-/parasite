@@ -58,6 +58,15 @@ class FacilityTemp
   // pavement is what game.AreaGame.gate() finds the checkpoint by, and it looks for alley
   public static inline var TEMP_PARKING = 29;
 
+  // the boom barrier's own row, across the gate mouth: the same asphalt with the walkable bit taken
+  // off it (Const.TILE_ALLEY_UNWALKABLE, which game.CorpAreaGenerator already writes and tiles.Default
+  // already has an icon and a 0 for). render.facility.FacilityEntry stands the arm and its cabinet on
+  // the mouth row nearest the lot and both used to be pure decoration — a bar the player walked
+  // through. It is one row of the ENTRYWAY rect and nothing else, so the mouth is still exactly
+  // RoadBlock.ENTRY_W by SIDEWALK_W and the pavement either side of it is still walkable: a compound
+  // is not sealed by this, a car park is
+  public static inline var TEMP_BARRIER = 30;
+
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var TEMP_BUILDING_ROOM_ID_START = 100;
 
@@ -106,6 +115,7 @@ class FacilityTemp
     TEMP_WALKWAY => Const.TILE_WALKWAY,
     TEMP_ALLEY => Const.TILE_ALLEY,
     TEMP_PARKING => Const.TILE_PARKING,
+    TEMP_BARRIER => Const.TILE_ALLEY_UNWALKABLE,
     TEMP_GRASS => Const.TILE_GRASS,
     TEMP_GRASS_BUSH => Const.TILE_BUSH,
     TEMP_GRASS_BENCH => Const.TILE_GRASS_UNWALKABLE,
@@ -138,6 +148,6 @@ class FacilityTemp
     '0', '1', '2', '%', '%', 't', 'b', 'B', '%', '%',
     '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w',
     '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z', '=',
-    'P',
+    'P', '!',
   ];
 }

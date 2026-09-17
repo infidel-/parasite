@@ -858,9 +858,14 @@ class RenderConfig {
     // one the camera sees THROUGH (models-src/facility/lounge_build.py, one sheet between them)
     facilitySofa: 'models/facility/deco-sofa.glb',             // two-seater, arms, dark plinth
     facilityTableLow: 'models/facility/deco-table-low.glb',    // slab on four legs, seen through
-    // NOTHING from the parking entry's checkpoint is here. Both the guard booth and the boom barrier
-    // were generated props and both are merged geometry now — see the header of
-    // render.facility.FacilityEntry for what a mesh generator did to a box and to a striped bar
+    // and the parking entry's checkpoint, which is here for the THIRD time and by a different route
+    // each time. Generated it was a 40-component bake with the hazard bands merged to orange on tan;
+    // emitted it was 56 triangles of quad with no arris on it anywhere; these are hand-modelled to
+    // FacilityStyle's own numbers (models-src/facility/entry_build.py) and switched by
+    // FacilityStyle.ENTRY_BLENDER, with the emitted pair still shipping behind that flag. The BOOM
+    // is the one mesh in the compound whose LENGTH is load-bearing — see that script's header
+    facilityBarrier: 'models/facility/barrier-hand.glb',       // cabinet, boom, splice collar, tip lamp
+    facilityBooth: 'models/facility/booth-hand.glb',           // kiosk shell, sill and head reveals, aerial
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
     wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long

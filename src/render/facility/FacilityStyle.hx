@@ -2513,6 +2513,16 @@ class FacilityStyle
 
   // ---- the parking entry's checkpoint ------------------------------------------------------------
 
+  // which checkpoint the compound draws: the hand-modelled pair (models-src/facility/entry_build.py)
+  // or the merged quads that replaced the generated props. Same switch as FENCE_BLENDER and
+  // BENCH_BLENDER above and for the same reason — both paths ship, and one boolean puts the
+  // 56-triangle version back if 1,380 turns out to buy nothing on screen.
+  //
+  // READ THE HEADER OF render.facility.FacilityEntry BEFORE MOVING THIS. That file argues at length
+  // that a box is not a prop and it is right about GENERATED props; what is on trial here is a mesh
+  // authored to the constants below, which is the one route it never tested
+  public static inline var ENTRY_BLENDER = true;
+
   // the boom barrier, in world units, and MERGED GEOMETRY like the booth below it — so like the
   // booth's these are read straight rather than through render.Models.instanced's uniform height
   // scale. that scale is the whole reason the prop needed a reference regenerated three times: a
@@ -2578,6 +2588,11 @@ class FacilityStyle
   public static inline var BOOTH_HEAD = 3.8;
   public static inline var BOOTH_EAVE = 0.45;    // how far the roof slab overhangs the walls, each side
   public static inline var BOOTH_FASCIA = 0.3;   // and how thick it is, i.e. the band that reads as its edge
+  // and how far the aerial stands over that slab. IT IS ONLY IN THE GLB — the emitted booth has no
+  // mast — and it is a constant here because the batch's target height is BOOTH_H + BOOTH_FASCIA +
+  // BOOTH_MAST: render.Models.instanced scales by HEIGHT alone, so the mesh's own total height is
+  // what has to be passed or every other dimension of it moves
+  public static inline var BOOTH_MAST = 1.0;
   // and how hard that band glows. it is NOT WINDOW_EMISSIVE, and the gap is not a taste difference:
   // a window run's panes are half-transparent, sunk in a reveal and read from one side, while these
   // are opaque and wrap a free-standing box, so four of them face the camera at once with no masonry

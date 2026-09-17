@@ -29,9 +29,9 @@ class FacilityArea implements Area3D
   // litter bins, the parked cars, the lot's standing junk and the indoor lab kit. they are batches
   // with no GreenProp row,
   // because none of them is planted on a tile of its own, and this is the only place that can name
-  // them. NOTHING from the gate is here and nothing from it appears in __facility()'s batches: the
-  // booth and the barrier are both merged geometry rather than props (see the header of
-  // render.facility.FacilityEntry)
+  // them. THE GATE'S TWO ARE LAST, and they are rows whatever FacilityStyle.ENTRY_BLENDER says: the
+  // emitted checkpoint hands back two EMPTY batches rather than none, because this list and `green`
+  // are index-aligned and an absent row shifts every batch after it
   static final EXTRA = [
     FacilityGround.FENCE_PATH,
     FacilityGround.BIN_PATH,
@@ -86,6 +86,10 @@ class FacilityArea implements Area3D
       // and usually one shed, so it is the smallest batch in the list — and the only one standing
       // on Surf.CONCRETE (render.facility.FacilityHangar)
       RenderConfig.MODELS.facilityHangarPodium,
+      // and the checkpoint at the gate: the boom assembly then the kiosk, in the order
+      // render.facility.FacilityEntry.build returns them
+      FacilityEntry.BARRIER_PATH,
+      FacilityEntry.BOOTH_PATH,
     ]);
 
   var game:Game;
@@ -333,10 +337,11 @@ class FacilityArea implements Area3D
       // ContactMask.patch reads `on` when a floor material is created. one canvas, one upload, no
       // material touched — the whole reason to reach for the field rather than lay a quad per prop
       ContactMask.repaint();
-      // the checkpoint at the gate, which rides nothing: the booth and the barrier are both merged
-      // straight into the scene, so this appends no batch and `green` stays index-aligned with
-      // GREEN plus EXTRA
-      FacilityEntry.build(scene, model);
+      // the checkpoint at the gate. TWO BATCHES when FacilityStyle.ENTRY_BLENDER is on and two EMPTY
+      // ones when it is off — either way the pair is pushed, because `green` is index-aligned with
+      // GREEN plus EXTRA and the glazing band is merged geometry in both branches
+      for (p in FacilityEntry.build(scene, model))
+        green.push(p);
       doors = FacilityDoors.build(scene, model, game.area);
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
