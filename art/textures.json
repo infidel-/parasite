@@ -3390,6 +3390,36 @@
       "built_linear": 0.0492,
       "built_srgb": 60.3
     },
+    "facility/roof-clutter": {
+      "src": "facility/roof-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.03
+      },
+      "regrid": {
+        "grid": 8,
+        "cut": 200
+      },
+      "prompt_exact": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Every object must sit ENTIRELY INSIDE ITS OWN CELL with a WIDE EMPTY GUTTER around it: at least 20% of the cell width must be completely empty on every side of each object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run unbroken from one edge of the image to the other. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects.\n\nTHERE IS NOTHING BEHIND THE OBJECTS. Do not paint any surface, ground, deck, floor, sheet, haze, mist, fog, vignette, glow or tone anywhere - every pixel that is not one of the 64 objects is completely empty. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, and no shadow under or beside it.\n\nThey are flat weathering marks, repair patches and service litter of the kind found on an industrial roof. Every one of them is genuinely FLAT - nothing standing, nothing tall, nothing with a visible side. Keep all 64 objects at roughly similar scale to each other. Nothing may touch the outer edges of the frame.\n\nRow 1: black tar repair patch / second tar patch, ragged edge / small square tar patch / dark pool of standing water / long shallow puddle / dried puddle with a pale rim / pale efflorescence bloom / grey dust bloom.\nRow 2: drift of grey gravel ballast / smaller gravel drift / scatter of loose gravel / drift of dead leaves / small leaf pile / two dead leaves / windblown grit streak / pale sand drift.\nRow 3: coiled black cable / coiled grey cable / short straight cable offcut / cable tail with a bare end / rectangular offcut of roofing felt / torn offcut of felt / rolled felt offcut lying flat / three felt scraps.\nRow 4: steel anchor plate with four bolts / anchor plate with a single eyebolt / rusty anchor plate / small round drain grate / square drain grate / drain grate with leaf litter on it / drain outlet with a dark stain / flat steel cover plate.\nRow 5: welded felt seam strip, straight / second seam strip / seam strip with a lapped end / patched seam crossing / pale chalk cross / pale chalk arc / stencilled chalk arrow / faint chalk right-angle mark.\nRow 6: white bird droppings splash / second bird dropping splash / small scatter of droppings / pale feather / two feathers / flattened rust stain / dark rust run / pale mineral run.\nRow 7: crushed drink can lying flat / flattened cardboard scrap / torn plastic sheet / strip of packing strapping / cable tie / short length of pipe insulation lying flat / pair of flat rubber washers / small pool of dark bitumen.\nRow 8: pale paint scuff / dark paint scuff / scorched patch / burned bitumen blister / shallow dent with grit in it / worn patch showing paler substrate / cluster of small tar dabs / hairline crack. [append textures.json style]",
+      "note": "the LAB ROOFS' pack64, consumed by render.facility.FacilityRoof through the same emit/UV arithmetic as facility/hangar-clutter and facility/worktop-clutter. EVERY CELL IS GENUINELY FLAT, which is the line render.facility.FacilityRoof's header draws: a decal is flat and the facility's roofs are the one surface the camera looks down ONTO, so a condenser lying flat reads as a stain -- but a tar patch, a puddle, a chalk mark and an anchor plate ARE flat and cost no silhouette. NAMING THE DECK IS WHAT MAKES THE ALPHA OPAQUE, the hangar sheet's own trap re-run: the first roll said 'of a FLAT BITUMEN ROOF DECK' and came back with a painted haze behind the objects -- lane alpha mean 56.7 with 11.1% of the lane over DECO_CUT's 128, i.e. a grey sheet between the cells. The shipped roll names no surface at all and adds 'THERE IS NOTHING BEHIND THE OBJECTS': lane mean 0.8, 0.22% over the cut, one cell (58) touching its own border at 1.7%. The hazed roll is parked in textures-src/facility/Unused/roof-clutter-haze.png. cap 0.03 AND NOT 0.1, and the first number is the whole of two reports from the game -- the sheet's albedo, and a puddle reading as a white ring on a black deck. The cap is right and the LEVEL was picked against the raw drop (chalk, bird splash and efflorescence came back 0.15..0.36) rather than against the surface these lie ON: facility/roof is 0.0275 linear, so 0.1 is 3.6x it, and measured on the BUILT sheet 19 cells sit at 0.0976..0.0978 -- all of them the cap's own ceiling -- against a tar patch at 0.0194. 0.03 is the deck's own value: 50 of 64 capped, sheet mean 2.56x -> 1.21x the deck, cell-to-cell spread 7.6x -> 2.3x, brightest cell p95 9.5x -> 3.6x. It can only darken, so the tar and bitumen cells are untouched; sat 0.5 for the leaves, the rust and the drink can.",
+      "last_converted": "2026-09-17T20:29:08",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.03
+      },
+      "last_regrid": {
+        "grid": 8,
+        "cut": 200
+      },
+      "built_linear": 0.0287,
+      "built_srgb": 45.7
+    },
     "facility/analyser-louvre": {
       "src": "facility/analyser-pack4.png",
       "class": "tile",

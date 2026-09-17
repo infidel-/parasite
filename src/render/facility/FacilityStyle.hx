@@ -2494,20 +2494,50 @@ class FacilityStyle
   // cell by one number alone
   public static var HANGAR_CLUTTER_SKIP:Array<Int> = [ 7, 23 ];
 
-  // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too:
-  // the glb's bbox is 0.586 x 0.691 x 0.994, so this draws it 3.16 long, 1.86 wide and 1.1 m tall at
-  // the half-metre unit WALL_H 6.0 fixes. it has to fit INSIDE one cell with room to spare — a
-  // candidate is a whole cell and the prop stands at its centre — and 3.16 in a 4.0 cell does
+  // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too.
+  // the hand-modelled glb ROOF_BLENDER draws is built AT this height (bbox 2.778 x 2.200 x 1.770),
+  // so it draws 2.78 long, 1.77 wide and 1.1 m tall at the half-metre unit WALL_H 6.0 fixes. it has
+  // to fit INSIDE one cell with room to spare — a candidate is a whole cell and the prop stands at
+  // its centre — and 2.78 in a 4.0 cell does. the TRELLIS bake behind the flag is 0.586 x 0.691 x
+  // 0.994 and was scaled to 3.16 long by the same rule
   public static inline var ROOF_AC_H = 2.2;
   // and a comms dish's, drawing it 2.66 across on a 1.8 m pedestal. it is the tallest thing on the
   // roof deliberately: one per building, so it is the silhouette that says which building this is
   public static inline var ROOF_DISH_H = 3.6;
-  // the access hatch housing, in world units. MERGED GEOMETRY and not a prop, because it is a box —
-  // the guard booth's own finding (see the header of render.facility.FacilityEntry), and here it is
-  // free: it wears the coping's painted steel at full tiling density and costs ten quads
+  // the access hatch housing, in world units — the size the generator's cells are measured against,
+  // and the size models-src/facility/roofhatch_build.py is built to.
+  //
+  // IT WAS MERGED GEOMETRY AND IT IS A PROP NOW, which reverses the box-vs-silhouette call twice
+  // over, so here is why. A hatch IS a box and as ten quads it cost no draw call at all — but a
+  // merged mesh takes a TILING texture on a world-aligned UV, and this one wore BOOTH_ROOF at
+  // ROOF_TILE 9.0: a ninth of a kiosk roof's standing seam on each face. The game reported that
+  // twice, as a box of coping and then as a reused texture, and both reports were about the ART.
+  // A 1.2 x 1.0 m lid's whole read is the tread plate ON it, seen by a camera pitching 51 to 86
+  // degrees down, and a plate pattern is a PICTURE of a lid: it maps 0..1 onto that one face, which
+  // is what a glb's own unwrap does and what a tiling emitter cannot. The draw call comes back out
+  // of the mesh it left — the hatch and the isolator boxes were the only two things in
+  // FacilityRoof's kit buffer, so both leaving deletes one merged mesh per deck
   public static inline var HATCH_W = 2.4;
   public static inline var HATCH_D = 2.0;
-  public static inline var HATCH_H = 1.2;
+  // A CURB AND A LID, and it used to be a 1.2-tall box of COPING. Both halves of that were wrong
+  // and the game reported the pair of them at once ("what is that box out of coping supposed to
+  // be"): 2.4 x 2.0 is 1.2 x 1.0 m at the half-metre unit WALL_H 6.0 fixes, which is a real roof
+  // access hatch and not a stair bulkhead — so 1.2 units of height is 60 cm of it, four times what
+  // a hatch curb measures and half what a doorway needs. And precast concrete coping tiled at
+  // ROOF_TILE 9.0 put a ninth of one coping stone on each face, i.e. a fragment of a texture whose
+  // whole read is the LINE it makes along a parapet.
+  //
+  // a curb with a lipped lid instead, in BOOTH_ROOF's painted steel decking — the one art in the
+  // compound that already IS a lid (see its own header), tiling at 0.69 units a pan, so a 2.4 lid
+  // shows three and a half of them. Zero new art, one texture for the whole housing, and the lip
+  // is what makes it read as something that opens rather than as a stub
+  public static inline var HATCH_CURB = 0.3;
+  public static inline var HATCH_LID = 0.1;
+  public static inline var HATCH_LIP = 0.09;
+  // and what the batch scales the glb by. render.Models.instanced scales by HEIGHT alone and the
+  // mesh is built at exactly this, so the scale is 1 and the 2.4 x 2.0 plan above is the plan that
+  // draws — the same discipline the condenser and the dish are built to
+  public static inline var ROOF_HATCH_H = HATCH_CURB + HATCH_LID;
   // one candidate cell in this rhythm carries something. the same device
   // render.facility.FacilityLamps uses on its lit lines: a phase over (col, row) spreads the picks
   // without a list and without a per-cell roll, so re-entering an area lays them out identically
@@ -2516,6 +2546,126 @@ class FacilityStyle
   // candidate list is STRIDED down to this plus the dish and the hatch, so what a big roof loses is
   // density and not its far half (see render.facility.FacilityRoof.fill)
   public static inline var ROOF_PROP_MAX = 8;
+  // how many cells in from the parapet anything may stand. a deck deeper than this is BARE, so a
+  // big roof reads as a serviced perimeter around an empty middle rather than as an evenly
+  // scattered field of condensers.
+  //
+  // CHOSEN AGAINST THE MEASUREMENT AND THAT IS ON PURPOSE: the compound camera runs 51 to 86
+  // degrees of pitch and the parapet hides only ~1.1 units inside the near edge, so the bare centre
+  // IS visible from a high orbit. If it reads as a donut this is the single knob. 2 is the floor —
+  // render.facility.FacilityRoof.candidates already refuses the cell against the wall, so anything
+  // under 2 empties the roof
+  public static inline var ROOF_RING_INSET = 3;
+  // and how many of that band's bays carry plant. the rest stay bare deck: condensers GROUPED in
+  // two or three bays is the whole reason the deck is cut up at all, a bay per bay being what the
+  // strided scatter already did
+  public static inline var ROOF_PLANT_BAYS = 3;
+  // the roof's service run, and it is the ONE cable family in the compound that is not a cable
+  // hanging off something. Every other run in here is render.facility.FacilityCable.strip — a
+  // bowed, wandering, sagging ribbon, which is what a flex leaving a fitting looks like and is
+  // what this used to be. A roof is building service: the trunking between a condenser and its
+  // isolator is a BUNDLE, it is CLIPPED DOWN, and it turns square corners. Reported from the game
+  // as wanting serious cables at 90 degrees in straight lines, and the shape was the whole of it —
+  // a bowed run across a deck reads as something the wind dropped there.
+  //
+  // so the emitter is FacilityRoof.leg and not `strip`: one flat quad per straight leg, the cable
+  // art's u across it exactly as `strip` lays it, and an L of two legs per run. A ribbon that
+  // never bends needs no steps, so the whole run is two quads per way instead of `strip`'s ten.
+  //
+  // how high the bundle lies over the deck. there is no PAINT_Y up here and nothing else on the
+  // roof is flat, so this is only clear of the deck itself
+  public static inline var ROOF_CABLE_Y = 0.05;
+  // how many ways the bundle carries, and how far apart they are clipped. THREE AND NOT ONE is the
+  // "more serious" half of the report: a single 6 cm ribbon at this camera is a hairline, and
+  // three of them side by side read as trunking at no extra draw call — they share the buffer.
+  // the pitch is 1.5x CABLE_W, so there is a gap of half a cable between each and the deck shows
+  // through it; laid edge to edge they merge into one wide grey band
+  public static inline var ROOF_CABLE_WAYS = 3;
+  public static inline var ROOF_CABLE_PITCH = CABLE_W * 1.5;
+  // and how far apart they are in HEIGHT, which is not decoration. TWO FLAT QUADS AT ONE Y THAT
+  // OVERLAP AT ALL ARE THE SAME PLANE, and a bundle turning a corner overlaps by a cable's width
+  // every single time. Measured on this compound before the clip: 88 roof cable quads made 84
+  // exactly-coplanar overlapping pairs over 1.67 square units, and the game reported the z-fight on
+  // all three ways. One lay apart puts every crossing one clip's thickness over the one it crosses,
+  // which is also what a real bundle does where two runs meet
+  public static inline var ROOF_CABLE_LAY = 0.02;
+  // the isolator box a group of condensers is wired back to, world units. it stands on the deck at
+  // its group's centroid and it is what stops the runs being long: before it, every condenser was
+  // chained to the nearest already-fed one and the tree walked the whole ring band — reported as
+  // the cables going all the way around. A box per few units turns that into two legs each
+  public static inline var ROOF_JBOX_W = 0.75;
+  public static inline var ROOF_JBOX_D = 0.55;
+  public static inline var ROOF_JBOX_H = 0.9;
+  // and how far, in CELLS of manhattan distance, a condenser may be from its own box. IT IS PACED
+  // OFF ROOF_PROP_STEP AND NOT OFF A BAY: the candidates are taken on a 5-cell phase and then
+  // strided again, so two units in one bay measure 3 to 5 apart and never less. Measured on the
+  // 15 condensers of this compound — reach 3 grouped them into 11 boxes, i.e. a box each, which is
+  // what __facility().roof's cables-over-boxes ratio exists to catch; reach 5 gives 7 boxes at 2.1
+  // units apiece and no group spanning more than a bay and its lane
+  public static inline var ROOF_JBOX_REACH = 5;
+
+  // the CONTACT SHADOW under everything that stands on a deck, and the footprints it is laid to.
+  //
+  // IT IS NOT A SUBSTITUTE FOR A CAST SHADOW AND THE PROPS DO CAST ONE. Reported from the game as
+  // the condenser throwing none, and measured rather than assumed: the deck's light is 66% moon
+  // (turning the directional off took a pinned deck window from rgb 2.2/6.9/17.8 to 0.1/3.0/6.0),
+  // so a shadow up here reads — but the moon stands 48 degrees up and a condenser is 2.78 x 1.77 on
+  // the plan under 2.2 of height, so its whole shadow falls UNDER ITSELF. Turning the batch's own
+  // castShadow off changed 7,632 pixels of that frame by a mean of 1.1 of 255. A 3.6-tall dish on a
+  // 1.5 pedestal clears itself and does throw one; nothing else on a roof has that aspect.
+  //
+  // so this is the planted read and not the light: FacilityDetail.pooled's rounded-box field, the
+  // one it lays under a box standing on a shelf plate, laid on the deck instead. It rides the
+  // FADING buffer, so the weight is baked into the ramp (see Textures.makeRectGlowGradient's `peak`)
+  // rather than left on the material, which FacilityArea.apply overwrites every frame
+  public static inline var ROOF_POOL_ALPHA = 0.5;
+  // and how high it floats. UNDER ROOF_CLUTTER_Y 0.02, so where a tar patch and a condenser share a
+  // cell the patch draws over the shadow and not into it
+  public static inline var ROOF_POOL_Y = 0.012;
+  // the two props' PLAN size, read off the built glbs (tools/propstat.py: 2.778 x 2.200 x 1.770 and
+  // 2.660 x 3.600 x 2.011) — render.Models.instanced scales by height alone, and both are built AT
+  // their stated height, so the bbox's other two axes are the world footprint with no arithmetic.
+  //
+  // THE DISH'S IS ITS PEDESTAL AND NOT ITS BBOX. 2.66 of that is the reflector, three metres up in
+  // the air and tilted 40 degrees; what stands on the deck is a 0.46 base plate on three feet
+  public static inline var ROOF_AC_PLAN_W = 2.778;
+  public static inline var ROOF_AC_PLAN_D = 1.77;
+  public static inline var ROOF_DISH_PLAN = 1.5;
+
+  // which roof props the compound draws: the hand-modelled pair (models-src/facility/roofac_build.py
+  // and roofdish_build.py) or the TRELLIS bakes they replace. Same switch as FENCE_BLENDER,
+  // BENCH_BLENDER and ENTRY_BLENDER above and for the same reason — both paths ship, and one boolean
+  // puts the bakes back if the authored meshes turn out to buy nothing on screen.
+  //
+  // THE TRADE HERE IS NOT THE ONE THE CHECKPOINT MADE. There the argument was silhouette against
+  // merged quads and the hand-modelled pair cost 1,380 triangles to win it; here both objects are
+  // already props and the authored versions are simply CHEAPER — 660 and 948 against 5,619 and 5,800
+  // — because every number in them is stated (the condenser is built at ROOF_AC_H, the dish's horn
+  // stands at a focus derived from a stated f/D) where a bake approximates all of them
+  public static inline var ROOF_BLENDER = true;
+
+  // the roof deck's own pack64 (art/textures.json facility/roof-clutter), consumed by the same
+  // emit/UV arithmetic as HANGAR_CLUTTER one storey down. IT IS THE ONE FAMILY THE BARE MIDDLE CAN
+  // TAKE: every cell of that sheet is genuinely flat — tar patches, ponded water, chalk, anchor
+  // plates — which is the line this file's roof header draws when it refuses a decal for a
+  // condenser. So it dresses the WHOLE deck and not just the ring band
+  public static inline var ROOF_CLUTTER_TEX = 'textures/facility/roof-clutter.png';
+  public static inline var ROOF_CLUTTER_COLS = 8;
+  public static inline var ROOF_CLUTTER_CELLS = ROOF_CLUTTER_COLS * ROOF_CLUTTER_COLS;
+  // bigger than the shed floor's 2.6 because the camera is a storey further off it and a roof has no
+  // furniture to read scale against, and a lower roll than the hangar's 15 for the reason the bare
+  // middle exists at all: this is weathering, not litter
+  public static inline var ROOF_CLUTTER_SZ = 2.8;
+  public static inline var ROOF_CLUTTER_SZ_VAR = 0.8;
+  public static inline var ROOF_CLUTTER_PCT = 12;
+  // and how far it floats over the deck. UNDER ROOF_CABLE_Y 0.05, so a service run crossing a tar
+  // patch is drawn over it — the same stack the floor families keep (see CABLE_FLOOR_Y)
+  public static inline var ROOF_CLUTTER_Y = 0.02;
+
+  // the smallest bay a comms dish will stand in, on a side. it is the roof's silhouette and needs
+  // clear deck around it, so a small building simply has none — which is also what keeps the dish
+  // from being on every roof in the compound
+  public static inline var ROOF_DISH_BAY = 4;
 
   // ---- the parking entry's checkpoint ------------------------------------------------------------
 

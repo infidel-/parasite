@@ -202,8 +202,13 @@ class Textures {
   // render.facility.FacilityDetail.halo scales an object by 1 / (2 * halfFrac) so the opaque core
   // lands exactly on the object, and mirroring 0.30 over there would be a silent coupling across two
   // files that a retune here would break without a compile error
+  //
+  // `peak` scales the whole field down, and it is here because an alphaMap is the ONLY place some
+  // callers can put their weight: render.facility.FacilityRoof's contact shadows ride the fading
+  // deck, and FacilityArea.apply SETS material.opacity off the deck's own ease every frame, so a
+  // weight left on the material is overwritten the first time the player walks toward the building
   public static function makeRectGlowGradient(radFrac:Float = 0.16, halfFrac:Float = 0.30,
-      softFrac:Float = 0.16):Texture {
+      softFrac:Float = 0.16, peak:Float = 1.0):Texture {
     var N = 64;
     var rad = N * radFrac; // corner radius, canvas px
     var half = N * halfFrac;  // half-extent of the box's straight section from the centre
@@ -223,7 +228,7 @@ class Textures {
           var out = Math.sqrt(mx * mx + my * my) + Math.min(Math.max(qx, qy), 0.0) - rad;
           // smoothstep the band [0, soft] outward, so the falloff has no visible shoulder
           var t = out <= 0 ? 0.0 : (out >= soft ? 1.0 : out / soft);
-          var v = Std.int(255 * (1 - t * t * (3 - 2 * t)));
+          var v = Std.int(255 * peak * (1 - t * t * (3 - 2 * t)));
           var i = (y * N + x) * 4;
           img.data[i] = v;
           img.data[i + 1] = v;

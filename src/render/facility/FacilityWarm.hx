@@ -50,7 +50,16 @@ class FacilityWarm
       // WildGrass' own wind hook and 'wildGrass' key on top of that. no area behind the demo model,
       // so every marked cell counts as plain lawn and the tufts all land
       FacilityLawn.build(sc, model);
-      FacilityGeom.build(sc, model);
+      var shells = FacilityGeom.build(sc, model);
+      // and what stands on the decks that just went up, for the ONE material of the three it emits
+      // that nothing else here covers: the deck's pack64 is alpha-cut DoubleSide like the sink's and
+      // the clutter's, but it is NOT vision-mask patched and it IS transparent (it rides Shell.roof
+      // and fades with the deck), and both of those are program keys. The hatch's coping and the
+      // service run's cable art are the shell's own materials and were already cached above.
+      //
+      // the two roof PROPS are warmed with the other glbs further down and not here — a batch needs
+      // its mesh loaded, which happens long after this
+      FacilityRoof.build(sc, model, shells);
       FacilityTables.build(sc, model);
       // and the bench sinks, which are a program permutation NEITHER bench material covers: the sheet
       // is alpha-cut, and three defines USE_ALPHATEST off `alphaTest > 0`, so a mapped lambert with a
@@ -272,12 +281,25 @@ class FacilityWarm
           // does ask for to compile on the frame it appears
           var roofProps = [
             {
-              path: RenderConfig.MODELS.facilityRoofAc,
+              // through FacilityRoof's own accessors, so the flag cannot warm one mesh and draw the
+              // other — which warms nothing and costs a compile on the frame the prop appears
+              path: FacilityRoof.acPath(),
               h: FacilityStyle.ROOF_AC_H,
             },
             {
-              path: RenderConfig.MODELS.facilityRoofDish,
+              path: FacilityRoof.dishPath(),
               h: FacilityStyle.ROOF_DISH_H,
+            },
+            // and the two service boxes, which are NOT behind an accessor: ROOF_BLENDER switches
+            // between two glbs of ONE object and these two replace merged geometry, so there is a
+            // single path each and nothing for a flag to choose between
+            {
+              path: RenderConfig.MODELS.facilityRoofHatchHand,
+              h: FacilityStyle.ROOF_HATCH_H,
+            },
+            {
+              path: RenderConfig.MODELS.facilityRoofJboxHand,
+              h: FacilityStyle.ROOF_JBOX_H,
             },
           ];
           var left = green.length + facProps.length + roofProps.length;

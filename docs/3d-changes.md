@@ -747,3 +747,381 @@ The rect table is nine entries instead of ten.
 
 **Verdict: landed, 768 / 708 tris, holes 0, coplanar 0, aniso median 1.08 p95 1.35, 0 degenerate.
 Four reports on one model and the last one was the cheapest fix in the set — a constant.**
+
+## A roof is a serviced perimeter, not a field of condensers (2026-09-17)
+
+Phase 5b/5d of the compound plan: the lab roofs were a STRIDED SCATTER — every fifth interior cell a
+candidate, the list thinned to `ROOF_PROP_MAX + 2`, the hatch nearest the middle and the dish on a
+hash. Evenly spread props say nothing about the building, and the plan asked for zones plus a bare
+middle.
+
+**THE DECK IS CUT AND DEALT, RENDER-SIDE, BY THE GENERATOR'S OWN ARITHMETIC.** `gen.Subdivide.split`
++ `gen.Quota.deal` over the structure's footprint rect, seeded off `FacilityModel.mix` of the
+structure's own CORNER — `si` is 0 and 1 in every compound ever generated and would lay the same two
+roofs everywhere. **First render pass to reach into `gen/`**, and it is safe in the one direction
+that matters: both are pure arithmetic over an injected rng, no `GenCtx`, no grid, no side effects,
+and nothing goes the other way. The alternative was a second copy of the splitter every city block
+in the game is already laid with. Profile `minSide 3, gap 1, depth 2`; demands `service` (min 1),
+`dish` (min 0 max 1, `minW/minH` 4 so a small building simply has none) and `plant` (max
+`ROOF_PLANT_BAYS 3`); filler `bare`. Measured on a live compound: **24 bays, 21 holding band cells,
+6 plant, 5 with `band 0`** — the middle.
+
+**THE RING BAND'S FIRST TEST WAS MEASURING THE WRONG WALL.** `ROOF_RING_INSET 3` keeps everything
+2..3 cells in from the parapet, and `depth` counts steps to the first cell the structure does not
+own. With the old indoor-floor predicate that meant the first PARTITION: a lab's rooms are 4-6 cells
+across, so every cell came out 1 or 2 from a wall and the band was the whole roof. **49 candidate
+cells with the band lifted against 47 inside it — the test excluded two.** On the footprint
+predicate (floor, partitions and wall ring alike, which is the one continuous slab the deck
+actually is) it is **57 band cells, 5 bays of bare middle**, and every placed prop measures 1-3 from
+the footprint edge, i.e. inside the parapet and never on it.
+
+**AND THE SERVICE RUN IS A TREE, NOT A FAN.** `FacilityCable.strip` in the deck plane from the hatch
+outward, one ribbon per condenser, each from the NEAREST thing already fed. Fanned from the hatch
+it struck **17 cells** across the empty middle on the 21x30 roof — seven hairlines over the deck the
+band exists to empty. It rides a second per-structure `addDeck` mesh so it FADES with the deck: a
+ribbon left behind would hang over the room the player just walked into. One pinned free-cam roof
+pose: **calls 164 -> 165, tris 362,194 -> 362,334** (+140 = 7 runs x `CABLE_STEPS` 10 x 2).
+
+**Verdict: landed. 7+8 condensers, 2 dishes, 2 hatches, 15 runs on a two-building compound, +1 draw
+call per roof in view. The bare middle is deliberate and against the measurement — the camera runs
+51-86 degrees and the parapet hides ~1.1 units, so `ROOF_RING_INSET` is the one knob if it reads as
+a donut.**
+
+## Naming the deck is what makes the alpha opaque (2026-09-17)
+
+Phase 5c: `facility/roof-clutter`, the lab decks' pack64, consumed by `FacilityRoof.clut`/`flat` —
+`FacilityHangar`'s arithmetic against a third sheet, the fourth copy of those six lines.
+
+**IT IS THE ONE FAMILY THAT IGNORES THE RING BAND.** The band keeps OBJECTS out of the middle; every
+cell of this sheet is flat by construction — tar patches, ponded water, chalk, anchor plates, drain
+grates, felt seams — so it dresses the whole deck at `ROOF_CLUTTER_PCT 12`, which is also the answer
+if the bare centre reads as a donut. Live: **122 decals over two roofs**, excluded only from the
+cells the hatch and the condensers stand on and from the wall ring (a 2.8 decal centred on a ring
+cell runs out over the coping).
+
+**THE FIRST ROLL CAME BACK WITH A PAINTED HAZE BEHIND THE OBJECTS** — `facility/hangar-clutter`'s own
+trap, re-run and re-paid. That prompt said the litter lay "of a FLAT BITUMEN ROOF DECK", and naming
+the surface got one: lane alpha mean **56.7 with 11.1% of the lane over `DECO_CUT` 128**, i.e. a grey
+sheet between the cells. The shipped roll names no surface at all and adds "THERE IS NOTHING BEHIND
+THE OBJECTS": lane mean **0.8, 0.22% over the cut**. Parked at
+`textures-src/facility/Unused/roof-clutter-haze.png`.
+
+**AND THE GRID WAS 19 px COMPRESSED VERTICALLY**, caught by the same per-cell centroid test the
+hangar sheet's `regrid` was written for: row 0 sat 19 px low and row 7 19 px high. `regrid
+{grid 8, cut 200}` moved **58 of 64**, and the built sheet measures **lane occupancy 0.0000, every
+cell centred within 14 px, no cell over the cap**. `cap 0.1` because the deck is `facility/roof` at
+0.0275 linear and the chalk, bird splashes and efflorescence came back **0.15..0.36 — 5 to 13x the
+surface they lie on**; 19 of 64 cells were scaled down. `sat 0.5` for the leaves, the rust and the
+drink can: loudest cell chroma after it is **30.7** against the gas rack's 74.5 and the desaturated
+drum's 45.3.
+
+**IT POPS RATHER THAN FADING, DELIBERATELY.** The mesh rides `Shell.roof` so it goes with the deck,
+and three tests `alphaTest` against `map.a * opacity` — the trap `FacilityArea.ease` records against
+the window panes — so it leaves whole at about half the ease. That is exactly where `FacilityRoof
+.mask` already drops the condensers, so everything standing on a roof goes together. It is the one
+material of the three the roof emits that nothing else warmed (unpatched AND transparent, both
+program keys): `FacilityWarm` now runs `FacilityRoof.build` over the demo model, **87 -> 88 programs
+cached at boot**.
+
+**Verdict: landed. calls 164 -> 167 with two decks in frame (service runs +1 per roof, clutter +1
+per roof), tris +448. One gen re-rolled for the alpha, $0.11 for the pair.**
+
+## The dish and the condenser, authored: 11,419 triangles become 1,608 (2026-09-17)
+
+Phase 5a's two REPLACEMENTS, behind `FacilityStyle.ROOF_BLENDER`. Both were TRELLIS bakes and both
+are now `models-src/facility/roofac_build.py` / `roofdish_build.py`.
+
+**THIS IS NOT THE TRADE THE CHECKPOINT MADE.** There the hand-modelled pair cost 1,380 triangles to
+buy silhouette against merged quads. Here both objects were already props and the authored versions
+are simply cheaper, because every number in them is stated where a bake approximates all of them:
+**660 against 5,619** (condenser) and **948 against 5,800** (dish). One pinned free-cam roof pose,
+flag off then on, everything else identical: **calls 167 → 167, tris 362,642 → 293,430 — −69,212,
+i.e. −19% of the frame.** Both `check` clean, 0 holes / 0 coplanar, `z_min` 0.
+
+**THE DISH IS THE TEXTBOOK CASE and its bake's own note says why.** That reference came back **20
+components at 74.4%** — every strut an island, every gap real air — and the fix was to repaint it as
+ONE SOLID LUMP, i.e. to ask for less of what makes a dish a dish. Authored: `z = r^2/(4f)` with
+**f/D = 0.40** (the middle of the real prime-focus band), so at D 2.66 the focus is 1.064, the depth
+follows as 0.4156 and the feed horn stands AT the focus. `MAST_H` is solved against the tilted rim so
+the mesh measures 3.6 exactly — a glb under its stated height is scaled UP by the batch and its plan
+grows with it. The shell is ONE lathe and one closed solid (up the back from a 0.06 vertex annulus,
+across the rim, down the concave front), which is `tube`'s vessel rule: ascending legs take outward
+normals, descending ones inward. **Both faces are mapped RADIALLY** — their art IS a disc, so
+`disc_uv` puts the art's circle on the mesh's circle and a lathe wrap would have run the panel joints
+round the rim. **STEPS PAYS FOR SIDES**: 5 rings up a smooth-shaded parabola read the same as 6 while
+16 sides read as a polygon at this aperture, so 5 x 20 costs the same 220 bands as 6 x 16.
+
+**A RAISED COWL IS HOW YOU RECESS SOMETHING WITHOUT A BOOLEAN.** The condenser's fan well is a ring
+wall standing ON the lid with the guard set 0.06 down inside it; cutting a hole in a box lid leaves
+`check` a hole at every cut edge, and the guard is a PLATE and not a disc because a single flat
+polygon is a boundary edge all the way round. First build put the cowl 0.72 deep — half the casing —
+and it read as a duct on a box; 0.34 is a lip. The louvre is ART and the frame is GEOMETRY: two proud
+rails for 24 quads, where a bank of real slats is 6 quads each on the one face that already has a
+fitted texture. **AND THE LOUVRE CELL TAKES A WINDOW OF ITSELF** — 114 slats measured across the 512
+cell, so laid whole over a 1.2-unit flank it is 95 slats per world unit, a slat every 5 mm; a 0.12
+v-window is 13 slats, i.e. every 9 cm.
+
+**THE VALUE FIT GOES ON THE DOMINANT FACE, NOT THE SHEET MEAN.** `rooftone.py` first put all eight
+cells on a 0.030 linear mean and `propstat --audit` read the built glbs at **54.7 / 55.1** against
+the bakes' 45.3 / 47.6 — because the cell carrying the most surface was the brightest of the four,
+and a prop reads as its biggest face. Re-fitted with casing 0.029 and dish face 0.031: **50.2 /
+50.5**, inside the 46-52 outdoor band. The dish's painted face came off the gen at **0.3225 linear,
+11.7x the deck it stands on**. Both take `ao 0.5 / aoRes 128` — the fan well and the dish's
+concavity are exactly what baked AO is for, at +0 draw calls.
+
+**Verdict: landed, `ROOF_BLENDER = true`. Two fresh 1k sheets ($0.11), two meshes, −69.2k triangles
+in one frame for no draw call. Warm asks `FacilityRoof.acPath()`/`dishPath()` so the flag cannot warm
+one mesh and draw the other.**
+
+## One texel density per prop: `unwrap`'s `scale`, and the 170x spread it replaces (2026-09-18)
+
+Both authored roof props came back from the game with UV faults on named faces — the condenser's
+louvred flank at the "wrong u,v scale", the dish's rim "different on each segment", a foot whose art
+was not "aligned to center". One audit answered all of them. Per-triangle texels per world unit:
+
+| prop | p10 | median | p90 | max | zero-area tris |
+|---|---|---|---|---|---|
+| roof-ac-hand before | 0 | 161 | 1,380 | 3,134 | 80 of 660 |
+| roof-dish-hand before | 34 | 95 | 2,058 | 4,841 | 38 of 948 |
+| both after | 80 | 95 | 97 | 181 | **0** |
+
+Three causes, all in `buildlib`:
+
+- **The aspect fit is isotropic but not consistent.** `tag`'s `+3` crops a rect until a face's two
+  densities meet, and the window is all the art there is — so the density it lands on is
+  `rectW / faceW` and every face gets its own. `unwrap` now takes `scale`: the caller names the
+  model's largest extent once and every face asks for the slice that lands on `rect / scale`. It is
+  `uvfit`'s contract, which the lathes already had, done for a flat face.
+- **`reps` picked the wrong copy.** `floor(min(a) + 1e-9)` with `reps` equal to the turn count: each
+  face spans exactly 1.0, its minimum is an integer, and `atan2` of an exact multiple comes back a
+  few 1e-9 short — which `reps` multiplies to 1e-7. The floor went a copy low and every u clamped to
+  1.0. All 20 facets of the fan cowl were a line. The midpoint of `[k, k+1]` is `k + 0.5`, which no
+  float error reaches.
+- **The fit's axis choice read extents, not the normal.** "UP goes on v wherever the face has any
+  height" was implemented as `ext[2] > ext[oth]`. The two agree on every axis-aligned face and part
+  company the moment a piece is yawed: a 0.30 x 0.05 side of a foot at 120° measures (0.15, 0.26,
+  0.05), so 0.05 lost to 0.15 and a vertical face mapped over (x, y) — in plan a line, 16 zero-area
+  triangles. `|n.z| < 0.5` is the question that was being asked.
+
+Two script-side finds on top. The condenser's louvre took a hand-cut window fitted to a **mismeasured
+sheet**: the note claimed 114 slats across the 512 cell, and the cell's row profile has a dominant
+period of 34 px, i.e. **15**. The window put 47 px of art on 2.6 units (18 texels/unit); the cell
+whole at `SCALE` shows 9.8 slats over 1.70 units, an 87 mm pitch. And `mirror` folds at t 0 and
+t 0.5, so a seam that is not a multiple of `1 / n` puts both folds mid-face and those two facets get
+the same u at both ends — `ring` snaps the seam to a vertex boundary.
+
+Geometry, same round: the dish's yoke plates **came up through the reflector and out of its painted
+face** (reported as the centre strut going into the dish). The plates were 0.34 deep and reached 0.10
+above the axle, and the shell's back sat ON the axle. `HUB` stands the assembly 0.26 off it along the
+boresight, `YOKE_T` drops to 0.18, and a hub boss bridges the gap — the plate corner that reaches
+furthest forward now clears the back by 0.058. `MAST_H` is re-solved for the standoff and the old
+`+0.0321` fudge is gone: it was exactly `SHELL * sin(ELEV)`, the rim's forward edge being at `DEPTH`
+and not `DEPTH + SHELL`.
+
+Cost: dish 948 → 888 tris (the feet's 6 mm arrises, deleted) + 36 for the boss; condenser 660
+unchanged. Values re-audited at **49.6 / 50.2 srgb**, inside the 46-52 outdoor band, no retone.
+
+**Verdict: landed. `unwrap(scale=)` and the two `lathe_uv`/fit fixes are in `buildlib`, so every
+future hand-modelled prop gets one density for free. Zero smears on both props, spread 2.4x.**
+
+## A roof cable is trunking, not a flex: 90° runs to an isolator box (2026-09-18)
+
+Reported from the game: the roof wanted serious cables, at 90 degrees, in straight lines, running
+from each unit to a small box shared by a few nearby ones — and not all the way around. Every word
+of that was a fault.
+
+`FacilityCable.strip` is the compound's one cable emitter and it is a **bowed, wandering, sagging**
+ribbon, which is what a flex leaving a fitting looks like. On a deck it reads as something the wind
+dropped there. And the tree that fed it chained each condenser to the nearest already-fed unit
+starting at the hatch, so on the 21 x 30 building it walked the ring band end to end.
+
+Replaced with `FacilityRoof.leg` / `run` / `jbox`:
+
+- one flat quad per straight leg, the cable art's u across it exactly as `strip` lays it, and an L of
+  two legs per run. A ribbon that never bends needs no steps, so a run is 2 quads a way against
+  `strip`'s 10.
+- `ROOF_CABLE_WAYS = 3` at `CABLE_W * 1.5` pitch. A single 6 cm ribbon at this camera is a hairline;
+  three with half a cable of deck showing between them read as trunking, in the same buffer.
+- condensers grouped greedily by manhattan distance **from the seed and not from the growing group**,
+  so a group cannot creep across the deck one member at a time. One isolator box per group at its
+  centroid, in the hatch's own buffer — a box costs no draw call.
+- `ROOF_JBOX_REACH` is paced off `ROOF_PROP_STEP 5`, not off a bay: candidates are taken on a 5-cell
+  phase, so two units in one bay measure 3 to 5 apart and never less. Measured on this compound's 15
+  condensers — reach 3 gave **11 boxes**, i.e. a box each; reach 5 gives **7 at 2.1 units apiece**.
+  `__facility().roof` now reports `boxes` beside `cables` precisely so that ratio is visible.
+
+The access hatch went in the same pass, and it was two mistakes: 2.4 x 2.0 is 1.2 x 1.0 m, a real
+roof hatch, so 1.2 units of height was 60 cm — four times a curb and half a doorway; and precast
+`COPING` at `ROOF_TILE 9.0` put a ninth of one coping stone on each face, of art whose whole read is
+the line it makes along a parapet. Now a 0.3 curb with a 0.1 lid on a 9 cm lip, in `BOOTH_ROOF`'s
+painted steel decking — the one art in the compound that already **is** a lid. Zero new art.
+
+Measured at the pinned roof pose, before/after: **calls 167 → 167, tris 293,430 → 293,298.**
+15 runs, 7 boxes, 2 hatches.
+
+**Verdict: landed. The whole family is two buffers it already had, so the shape got better for −132
+triangles and no draw call. `cables / boxes` is the knob's own gauge.**
+
+## A face's own frame, not a pair of world axes — and a strut that reaches its horn (2026-09-18)
+
+Two reports off the dish, one in `buildlib` and one in the model.
+
+**THE FRAME.** The game reported the dish's three feet again: two of the three were not "aligned to
+center" like the one that looked right. `unwrap`'s aspect fit picks a pair of WORLD axes and maps the
+rect over the face's bounding box in them, which is exactly right while a piece stands square to the
+grid and is nonsense the moment one is yawed. A 0.30 x 0.13 foot turned 120° measures **(0.26, 0.32)**
+in x and y, so the fit put u on y and v on x and the art ran DIAGONALLY across the piece; the foot at
+0° got u on x and looked correct. Measured after: all three feet now take the identical rect,
+**du 0.05595 / dv 0.02425** — the one the axis-aligned foot had.
+
+The fix is `buildlib.frame(f)`: the face's own two in-plane directions, `v` = world up projected into
+the plane wherever the face has any (so a vertical strip still wears the cladding the way the wall
+beside it does), and on a flat face the face's own LONGEST EDGE on u — which for a rectangle is the
+long axis the extent test was reaching for. Signs are pinned on the flat branch so two tops of one
+piece cannot come out 180° apart. `unwrap` now projects onto vectors rather than indexing `p[ia]`,
+so the axis pairs and the frame are one line of arithmetic. Per-triangle texels per world unit,
+before → after: dish **2.4x → 1.7x** spread (76.3 / 95.4 / 96.0 / 128.6 at min/med/p90/max),
+condenser 1.9x, zero degenerate triangles on both.
+
+**AXES 7, the frame WHOLE**, fell out of the same work and is what `roofhatch_build.py` needed: a
+pre-cut band mapped as it is, no density crop, because the caller has already sized the rect to the
+face. The axis PAIRS cannot do that job — axes 1 is (x, y) and a vertical face has no extent in one
+of them, so every loop lands on one v and the face comes out a line.
+
+**THE STRUT.** Reported as a hole between the strut and the horn "for all four lines". It was
+exactly that: the far end stopped at 0.12 of R off the axis — 0.1373 out, where the horn's cone
+measures **0.064** — so the strut's own surface ended **0.045 short** of the piece it carries, four
+times over. The comment above it claimed both ends were buried. The near end was no better: 0.02
+into a 0.05 shell leaves **0.0005** once the end cap's own tilt is counted (a 53° cap on a 0.028 ring
+spans 0.045 in z, and the mesh's front surface is a CHORD between two rings and so sits above the
+paraboloid it came from). Now `STRUT_IN 0.03` at `FOCUS + HORN_L * 0.25`, inside a cone measuring
+0.0843, and `STRUT_THRU 0.04` through the back where a real strut foot bolts. `run()` returns both
+clearances — **horn 0.0262, thru 0.0182** — so neither can drift back.
+
+**Verdict: landed. 888 tris, holes 0, coplanar 0, 49.6 / 50.2 srgb unchanged. The frame change is in
+`buildlib`, so every future hand-modelled prop gets it; it is a strict improvement and only moves
+faces that are not axis-aligned.**
+
+## The roof clutter's cap was set against the drop, not against the deck (2026-09-18)
+
+Reported as the roof clutter having albedo/brightness issues "again", with a puddle photographed
+reading almost right from one angle and dark from another, and the question: what are we reflecting?
+
+**Nothing. There is no reflection anywhere near it** — `FacilityRoof.pack` is a `MeshLambertMaterial`
+with no envMap, and `PropEnv`'s injected environment is indoor-only. It is albedo, and the number was
+already in the manifest: `facility/roof-clutter` carries `cells: {grid: 8, cap: 0.1}`, a per-cell
+LINEAR cap that can only darken (`tools/textures.py` `cell_cap`), and **0.1 is 3.6x the deck these
+lie on** (`facility/roof`, 0.0275 linear). The cap was fitted against the raw drop — chalk, bird
+splash and efflorescence came back 0.15..0.36 — and not against the surface.
+
+Measured on the built sheet before: **19 cells sitting at 0.0976..0.0978**, all of them the cap's own
+ceiling, against a tar patch at 0.0194. Sheet mean over opaque pixels **0.0567 = 2.43x the deck**,
+cell-to-cell spread **7.6x**, brightest cell's p95 **0.133 = 5.7x**. The puddle the game
+photographed is cell 3, whose art is a dark pool with a bright rim — p05 0.032, p95 0.133 — so the
+rim read as a white ring at any distance where it survived the mip, and the fill read as a hole where
+it did not. Both halves of "good from some angles, dark from others", from one cause.
+
+`cap: 0.03`, the deck's own value: **52 of 64 cells capped**, sheet mean **0.0245 = 1.05x the deck**,
+spread **2.0x**, brightest p95 **3.4x**. Rendered, the same patch is now a dark pool with a faint wet
+edge. One number and no new art; the cap can only darken, so the tar and bitumen cells are untouched
+by construction.
+
+**Verdict: landed, one manifest field. The lesson is the cap's own: it is fitted against the SURFACE
+the cells lie on and never against what came out of the generator.**
+
+## Nothing drawn twice: a shared trunk, and a lay per way (2026-09-18)
+
+> Extends **A roof cable is trunking, not a flex** — the shape was right and the emitter overlapped
+> itself.
+
+Reported as a z-fight on all three ways of the new trunking. It was, and it was not close: an L per
+unit means two units in one group lay **the same quad** along `x = bx + o`, and each L also covered
+its own corner square twice. Measured on the compound's roof cable quads by intersecting every
+coplanar pair: **88 quads, 84 overlapping pairs over 1.67 square units**. Two flat quads at one y
+that overlap at all are not a near miss, they are the same plane.
+
+Three changes, and the overlap is now exactly zero:
+
+- `FacilityRoof.runs` builds the group's whole network as `Seg` records and emits at the end, because
+  the fault is two quads covering one patch of deck and that cannot be seen one quad at a time.
+- a **shared trunk** per way, spanning the box and every unit's row in one run, plus a spur per unit.
+  The spur stops **half a cable short** of the trunk's centre line, so the joint closes on the
+  trunk's own width instead of overlapping it.
+- `seg()` merges a new segment with **everything** already on its line, not the first match: two
+  units can share a row, and three can arrive as two disjoint runs and a bridge. Merged, the nearer
+  unit taps the run passing it, which is what it would really be wired to.
+- what no clipping can remove is a spur crossing ANOTHER way's trunk — the ways are parallel — so
+  each way lies one `ROOF_CABLE_LAY = 0.02` higher than the last. A crossing is then a crossing,
+  which is also what a real bundle does where two runs meet.
+
+**64 quads, 0 overlapping pairs, 0 area** — fewer quads than before as well, since the trunk is one
+run instead of one per unit.
+
+**Verdict: landed. The same two buffers, 24 fewer quads, and the measurement is a one-line probe over
+the live geometry rather than a screenshot.**
+
+## Planted, not lit: the condenser does cast, and its own plan hides it (2026-09-18)
+
+Reported as not all roof structures throwing shadows, the condenser in particular. It casts. The
+measurement is what the entry is for:
+
+- the deck's light is **66% moon** — turning the directional off took a pinned deck window from
+  rgb 2.2/6.9/17.8 to 0.1/3.0/6.0 — so a shadow up here has plenty to remove;
+- `Models.instanced` sets `castShadow = real`, which is true for `SOLID`, and the batch is inside the
+  moon's 180-unit box at this pose;
+- but the moon stands **48° up** and a condenser is **2.78 x 1.77 on the plan under 2.2 of height**,
+  so the whole of its shadow falls under itself. Turning that batch's `castShadow` off changed
+  **7,632 pixels of the frame by a mean of 1.1 of 255**. A 3.6-tall dish on a 1.5 pedestal clears
+  itself and does throw one; nothing else on a roof has that aspect.
+
+So the fix is the planted read and not the light: `FacilityRoof.pool` lays `FacilityDetail.pooled`'s
+rounded-box field under every condenser, dish, hatch and isolator box, in a fourth per-deck mesh
+pushed into `Shell.roof` so a shadow leaves with the deck it lies on. Simpler than the indoor one by
+exactly its clamp — a pool on a shelf plate has to be cut where the plate ends, and a roof deck is
+one continuous slab whose candidate cells are all two cells inside the parapet.
+
+**THE WEIGHT IS IN THE RAMP AND NOT ON THE MATERIAL**, which is the one thing it cannot share with
+that file: `FacilityArea.apply` SETS `material.opacity` from the deck's ease every frame, so a 0.5
+left on the material is overwritten with 1.0 the first frame the player is outside.
+`Textures.makeRectGlowGradient` took a fourth argument, `peak`, for it. `__facility().roof.pools`
+must equal ac + dish + hatches + boxes exactly — live **26 = 15 + 2 + 2 + 7**.
+
+**Verdict: landed at 1 draw call per deck. Outdoor props elsewhere have no contact shadow and do not
+need one: they stand on lit asphalt and are taller than they are wide. A roof is the one surface this
+camera looks down ONTO, and everything standing on it is squat.**
+
+## A hatch is a box, and it went to Blender anyway (2026-09-18)
+
+> SUPERSEDES the hatch half of **A roof cable is trunking, not a flex** — the curb and the lid are
+> right, `BOOTH_ROOF` was not.
+
+Reported twice on the same two objects: "make a new blender box with unique tex, not this shit" on
+the access hatch, and "ffs, DON'T REUSE TEXTURES" on the isolator box. Both wore
+`facility/booth-roof` at `ROOF_TILE 9.0`.
+
+**THE BOX-VS-SILHOUETTE TEST CANNOT SETTLE THIS ONE, and that is the entry.** A hatch IS a box and
+as ten quads it cost no draw call at all — the guard booth's own finding, 7,431 tris → 34. But a
+merged mesh takes a **TILING texture on a world-aligned UV**, and that is what was wrong here: at
+`ROOF_TILE 9.0` each face got a ninth of a kiosk roof's standing seam. A 1.2 x 1.0 m lid's whole read
+is the tread plate ON it, seen by a camera pitching 51° to 86° down, and a plate pattern is a
+**picture** of a lid: it has to map 0..1 onto that one face, which a glb's own unwrap does and a
+tiling emitter cannot. So the route was never decided by the silhouette — it was decided by whether
+the art can be world-aligned.
+
+`roofhatch_build.py` **56 tris** (2.58 x 2.18 x 0.4) and `roofjbox_build.py` **88** (0.81 x 0.61 x
+0.9), both `check` clean, both built AT the height their batch scales by so the plan the generator's
+cells are measured against is the plan that draws. A fresh 1k sheet each, four cells for four
+surfaces, toned by `rooftone.py` to **47.9 / 47.3 srgb** off drops that came back at 0.078..0.150
+linear — 3x to 5x the outdoor band. Built glbs audit **49 / 49 srgb, 0 smears**. The hatch's curb and
+the lid's drip band take PRE-CUT bands mapped whole (axes 7): a 0.3 face over a 2.58 `SCALE` is 11.6%
+of the cell and a centred crop lands on plain field, where this art's fixing row is at row 465 of
+512, and cell 2's rib slots are on an 82 px pitch so a 20 px centred crop lands inside one rib.
+
+Cost, measured at the pinned pose against the same build with the new families hidden: **172 → 177
+calls**. The two batches are 4 of that (two colour draws and two moon-shadow draws) and the contact
+shadows 1. The merged `kit` mesh they vacate is deleted — they were the only two things in it — but
+it was being frustum-culled at that pose, so nothing came back there. tris 293,298 → 293,964.
+
+**Verdict: landed, and NOT behind `ROOF_BLENDER`: that flag switches between two glbs of one object,
+and these replace merged geometry the game asked to be rid of, so there is nothing to switch to.
+Two fresh 1k sheets, $0.11.**

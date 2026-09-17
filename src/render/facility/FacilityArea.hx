@@ -593,6 +593,24 @@ class FacilityArea implements Area3D
               // the ridge took the long axis (which is what puts the arch over the shutter row) is
               // `ridgeAlongX`. `quads` is read off the emitter, so it cannot drift from the geometry
               hangar: roof.vaults,
+              // and the bays the deck was cut into. THE BARE MIDDLE IS THE ONLY WAY TO CHECK THIS:
+              // a zone writes no geometry, so what says the ring band worked is `band` being 0 on
+              // every bay in the middle of a big roof and non-zero on the ones against the parapet
+              zones: roof.zones,
+              // and the service runs struck between the condensers and their isolator boxes.
+              // merged-mesh blindness again: the runs are one fading mesh per structure with no
+              // instance count, so a 0 here in a compound reporting condensers means every group
+              // came out empty. `cables` over `boxes` is the shape: near 1 and every unit got its
+              // own box, over about 4 and one box is serving the whole deck as the old tree did
+              cables: roof.cables,
+              boxes: roof.boxes,
+              // and the deck's flat dressing. it is the ONE family that ignores the ring band, so a
+              // count near 12% of the decks' cells is right and a 0 means the depth test broke
+              clutter: roof.clutter,
+              // and the contact shadows. it must equal ac + dish + hatches + boxes exactly — a
+              // family that placed without planting reads as floating, and that is the only way to
+              // see it without a screenshot
+              pools: roof.pools,
             },
             // the park's overgrown patches. `strong` is the number the layer is TUNED on and the one
             // no screenshot gives: what shows through a near-uniform coverage field is just the
@@ -644,12 +662,16 @@ class FacilityArea implements Area3D
       render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R);
       for (p in green)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R);
-      // and the roof's two batches, which take the frustum test with a MASK on top of it: a
+      // and the roof's four batches, which take the frustum test with a MASK on top of it: a
       // condenser standing on a deck that has faded off would be left hanging over an open room
       render.Models.cull(roof.ac, opts.camera, FacilityStyle.PROP_CULL_R,
         FacilityRoof.mask(roof.acOf, reveal));
       render.Models.cull(roof.dish, opts.camera, FacilityStyle.PROP_CULL_R,
         FacilityRoof.mask(roof.dishOf, reveal));
+      render.Models.cull(roof.hatchB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.hatchOf, reveal));
+      render.Models.cull(roof.jboxB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.jboxOf, reveal));
     }
 
 // which structures should be open. INSIDE is the obvious half; the other is looking in through a

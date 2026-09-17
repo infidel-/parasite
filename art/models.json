@@ -1027,6 +1027,42 @@
       "last_converted": "2026-09-06T13:24:33Z",
       "last_sig": "n1/1200/512/0.005/facility/drum-rad-base.png/-/noMR/st0.5"
     },
+    "facility/roof-ac-hand": {
+      "src": "facility/roof-ac-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "ao": 0.5,
+      "aoRes": 128,
+      "note": "THE ROOFTOP CONDENSER, HAND-MODELLED (models-src/facility/roofac_build.py) behind render.facility.FacilityStyle.ROOF_BLENDER, 660 tris against the TRELLIS bake's 5,619. The bake's own note argues correctly that a condenser is carried by the FAN GUARD in its top face and not by its outline -- the camera pitches 51 degrees down -- but that is an argument against a BOX EMITTER, which has no art for that face. It is not an argument for 5,619 triangles: the guard is a disc of art and the well round it is a lathe, and both are numbers. Measured on the EVALUATED mesh at 2.7775 x 1.77 x 2.2, z_min 0, buildlib.check 0 holes / 0 coplanar. THE HEIGHT IS THE ONLY DIMENSION THE GAME STATES (Models.instanced scales by height alone), so the prop is built AT 2.2 and draws at exactly its built plan size -- 2.78 in a 4.0 cell, squarer than the bake's 3.16 x 1.86, which was the generator's aspect and not the object's. THE FAN WELL IS A RAISED COWL AND NOT A HOLE: a box has no hole in its lid and cutting one leaves check() a hole at every cut edge, so the ring wall stands ON the lid with the guard PLATE (not a disc -- a single flat polygon is a boundary edge all the way round) set 0.06 down inside it. The cowl was 0.72 deep on the first build and read as a duct standing on a box; 0.34 is a lip. THE LOUVRE IS ART AND THE FRAME IS GEOMETRY: a bank of real slats is 6 quads each and would spend the whole budget on the one face that already has a fitted texture, so two proud rails give the flank its lit top and bottom edge for 24 quads. AND THE LOUVRE CELL TAKES A WINDOW OF ITSELF: 114 slats measured across the 512 cell (4.5 px pitch), which laid whole over a 1.2-unit flank is 95 slats per world unit -- a slat every 5 mm at the half-metre unit WALL_H 6.0 fixes, i.e. mush. A 0.12 v-window is 13 slats, a slat every 9 cm. Sheet fitted by models-src/facility/rooftone.py to the props it replaces: propstat --audit reads the bakes at srgb 45.3 (dish) and 47.6 (condenser), so the four cells take gammas 1.11 / 1.46 / 1.23 / 1.53 onto 0.020 / 0.036 / 0.028 / 0.036 linear and the sheet lands at 0.0300 / 48.0. No baseColor -- the fit is in the pixels.",
+      "last_converted": "2026-09-17T19:44:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-/ao0.5,-,128,-"
+    },
+    "facility/roof-dish-hand": {
+      "src": "facility/roof-dish-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "ao": 0.5,
+      "aoRes": 128,
+      "note": "THE ROOFTOP COMMS DISH, HAND-MODELLED (models-src/facility/roofdish_build.py) behind ROOF_BLENDER, 948 tris against the TRELLIS bake's 5,800. This is the textbook case for the fourth route: that bake took two references, the first coming back 20 components at 74.4% (every strut its own island, every gap real air) and the fix was to repaint the object as ONE SOLID LUMP -- i.e. to ask the generator for less of the thing that makes a dish a dish. THE SECTION IS A REAL PARABOLOID, z = r^2 / (4f), and the focal ratio is the one number a dish has: f / D = 0.40, the middle of the real prime-focus band, so at D 2.66 the focus is 1.064, the depth follows as R^2/(4f) = 0.4156 and the feed horn stands AT the focus rather than at a styled height. Measured 2.66 x 1.809 x 3.6 exactly (MAST_H is solved against the tilted rim, ELEV 40 degrees), z_min 0, 0 holes / 0 coplanar. ONE LATHE AND ONE CLOSED SOLID: up the back from a 0.06 vertex annulus to the rim, across the rim, down the concave front and home -- buildlib.tube's vessel rule, where ascending legs take outward normals and descending ones inward, which is exactly right for a shell. BOTH FACES ARE MAPPED RADIALLY and not wrapped: their art IS a disc (radial panel joints on the front cell, radial stiffening ribs on the back), so disc_uv puts the art's circle on the mesh's circle -- the drum-lid finding. A lathe wrap would run those joints round the rim. STEPS PAYS FOR SIDES: 5 rings up a smooth-shaded parabola read the same as 6 while 16 sides read as a polygon at this aperture, so 5 x 20 costs the same 220 bands as 6 x 16 did. FIRST BUILD REPORTED 2 COPLANAR PAIRS: the pivot's end caps landed 0.010 outside the yoke plates' own outer faces, exactly on check()'s `near` -- the overhang is 1.6 x YOKE_W now. Sheet fitted by rooftone.py: gammas 2.85 / 1.98 / 2.28 / 1.14 onto 0.040 / 0.032 / 0.033 / 0.026 linear, sheet 0.0328 / srgb 53.6 against the bake's 45.3. The painted face came back at 0.3225 -- 11.7x the deck it stands on -- which is what a fresh gen does and why none of these ship raw.",
+      "last_converted": "2026-09-17T19:46:01Z",
+      "last_sig": "n1/-1/512/0.01/-/-/ao0.5,-,128,-"
+    },
+    "facility/roof-hatch-hand": {
+      "src": "facility/roof-hatch-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "THE ROOF ACCESS HATCH, HAND-MODELLED (models-src/facility/roofhatch_build.py) 56 tris. NOT behind ROOF_BLENDER, unlike the condenser and the dish: that flag switches between two glbs of one object, and this replaces merged geometry the game asked to be rid of, so there is nothing to switch to. IT LEFT A QUAD EMITTER THAT COST NO DRAW CALL, which the box-vs-silhouette test alone cannot justify -- a hatch IS a box. The fault was the ART: as merged geometry it wore facility/booth-roof at ROOF_TILE 9.0, i.e. a ninth of a kiosk roof's standing seam on each face, and the game reported that twice (a box of coping, then a reused texture). A 1.2 x 1.0 m lid's whole read is the tread plate ON it seen from a camera that pitches 51 to 86 degrees down, and a plate pattern is a PICTURE of a lid: it maps 0..1 onto that one face, which a world-aligned tiling emitter cannot do. Built at HATCH_CURB + HATCH_LID = 0.4 exactly, so render.Models.instanced's height scale is 1 and the 2.4 x 2.0 plan the generator's cells are sized against is the built plan. Its own 1k sheet, four cells for four surfaces (tread lid / curb elevation / drip band / galvanised), toned by rooftone.py to 47.9 srgb. No ao: there is no concavity on a lipped lid, and 56 tris of box is exactly what a baked occlusion map has nothing to say about.",
+      "last_converted": "2026-09-17T20:17:03Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "facility/roof-jbox-hand": {
+      "src": "facility/roof-jbox-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "THE ROOFTOP ISOLATOR CABINET, HAND-MODELLED (models-src/facility/roofjbox_build.py) 88 tris -- the box every group of condensers is wired back to (FacilityRoof.runs). Same trade as facility/roof-hatch-hand and the same cause: it wore booth-roof too, and the report on it was two words long -- don't reuse textures. A cabinet's read is its LOUVRE BANK and its latch, which is a picture of a door and has to map 0..1 onto it. Built at ROOF_JBOX_H 0.9 with the 0.75 x 0.55 plan the emitter used, so the height scale is 1. SCALE is the HEIGHT and not a plan axis: the door is the tallest face, so at 0.9 it takes 83% of its cell across and 94% up and the louvre bank lands intact. Its own 1k sheet, four cells (louvred door / side panel / lid with gland plate / galvanised), toned to 47.3 srgb.",
+      "last_converted": "2026-09-17T20:17:04Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
     "facility/hangar-podium": {
       "src": "facility/hangar-podium.glb",
       "tris": -1,

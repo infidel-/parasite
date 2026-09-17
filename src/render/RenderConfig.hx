@@ -739,6 +739,18 @@ class RenderConfig {
     facilityHangarPodium: 'models/facility/hangar-podium.glb',
     facilityRoofAc: 'models/facility/roof-ac.glb',        // rooftop condenser, fan guard on the lid, coil louvres
     facilityRoofDish: 'models/facility/roof-dish.glb',    // comms dish on a solid pedestal, feed horn on one arm
+    // and the hand-modelled pair that replaces those two behind FacilityStyle.ROOF_BLENDER, at 660
+    // and 948 tris against 5,619 and 5,800. Both are built AT the world size the batch draws them
+    // at: the condenser's fan well is a real cowl with the guard set down inside it, and the dish is
+    // a paraboloid at a stated focal ratio with its horn standing at the focus
+    facilityRoofAcHand: 'models/facility/roof-ac-hand.glb',
+    facilityRoofDishHand: 'models/facility/roof-dish-hand.glb',
+    // and the two SERVICE boxes, which used to be merged quads and are behind the same flag. They
+    // are a box each and they went to Blender anyway, because the thing they were reported for was
+    // the ART: merged geometry takes a TILING texture on a world-aligned UV, and a tread-plate lid
+    // and a louvred door are both a picture that has to map 0..1 onto one face
+    facilityRoofHatchHand: 'models/facility/roof-hatch-hand.glb',
+    facilityRoofJboxHand: 'models/facility/roof-jbox-hand.glb',
     // the junk standing about in the parking lot (render.facility.FacilityDebris), which scatters
     // flat litter decals over the same asphalt. all three are DROPPED objects and take a free turn,
     // unlike the parked cars and the roof condensers above; all three are carried by their outline
