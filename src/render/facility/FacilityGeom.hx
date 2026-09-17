@@ -164,6 +164,35 @@ class FacilityGeom
         FacilityStyle.GLASS_T : FacilityStyle.WALL_T;
     }
 
+// how far from a wall cell's CENTRE this compound draws that cell's face, or -1 where the cell is
+// not masonry at all. render.world.WorldCtx.wallFace's own contract, and the whole of what a decal
+// standing on a wall needs from the facility: a splat or a bullet hole is placed from the cell the
+// drop or the shot DIED in, and a cell turns solid at its BOUNDARY — two units out — while `thick`
+// says the slab reaches half that. Reported from the game as blood hanging in the air off an inner
+// wall, and it was 1.12 units of it
+  public static function wallFace(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      if (FacilityModel.isWall(m, col, row))
+        return thick(m, col, row) / 2;
+      // AND THE WASHROOM DIVIDER, which is the one FITTING in the compound that is a wall rather
+      // than a thing standing against one — and the one that is not square in its cell: it spans the
+      // whole of it along its own run and stands PART_T 0.6 across, so a splat on its flank hung
+      // 1.82 units off it, worse than the masonry. Its box is the one FacilityDeco already derives
+      // for the emitter, so the two cannot disagree
+      var kind = (FacilityModel.inside(m, col, row) ? m.deco[row][col] - 1 : -1);
+      if (kind != _FittingKind.FIT_PARTITION)
+        return -1.0;
+      var r = FacilityDeco.rectOf(m, col, row, kind);
+      var c = CityConfig.cellToWorld(col, row);
+      return switch (dir)
+        {
+          case 0: r.z1 - c.z;
+          case 1: c.z - r.z0;
+          case 2: r.x1 - c.x;
+          default: c.x - r.x0;
+        }
+    }
+
 // where an object standing on a wall cell hangs: one pose per face the wall line does NOT carry
 // into, which for a straight run is its two sides. null for every other cell, so the actor layer
 // pays one grid lookup per object and allocates nothing in the common case.

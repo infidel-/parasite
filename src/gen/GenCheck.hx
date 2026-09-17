@@ -539,10 +539,86 @@ class GenCheck
       // the row of lot just past the mouth: the booth takes the bay before it and the barrier post
       // the bay after, and gate() draws nothing at all unless both are open lot
       var y = (dir < 0 ? y1 + 1 : y0 - 1);
-      ok(ctx.getCellType(x0 - 1, y) == Const.TILE_ALLEY &&
-         ctx.getCellType(x1 + 1, y) == Const.TILE_ALLEY,
+      ok(isLot(ctx, x0 - 1, y) &&
+         isLot(ctx, x1 + 1, y),
         'the gate mouth at ' + x0 + ',' + y0 + ' is not flanked by open lot on the row inside it, ' +
         'so no booth is drawn and no checkpoint exists');
+    }
+
+// open asphalt, either id. game.AreaGame.isLot, verbatim — the mouth itself is Const.TILE_ALLEY and
+// the rows inside it are Const.TILE_PARKING, so the flank test above spans both
+  static function isLot(ctx: GenCtx, x: Int, y: Int): Bool
+    {
+      var t = ctx.getCellType(x, y);
+      return t == Const.TILE_ALLEY || t == Const.TILE_PARKING;
+    }
+
+// the car park is ONE solid rect, it reaches the pavement, and the gate opens into it.
+//
+// gen.facility.FacilityGen marks the parking plot with Const.TILE_PARKING and nothing else does, so
+// this is cheap to state and the thing it protects is not: render.facility.FacilityPaint stripes its
+// bays and FacilityCars parks its cars on this mark ALONE. A compound whose mark went missing loses
+// both silently — an empty car park still loads and still plays — and a compound whose mark leaked
+// onto a second region gets bays in the back yard, which is the bug it was added to fix.
+//
+// asserted over the finished GRID and not over the tree, like gate() beside it: the tree is not
+// persisted and the renderer never sees it
+  public function parkingSane(ctx: GenCtx)
+    {
+      var x0 = ctx.width, x1 = -1, y0 = ctx.height, y1 = -1, n = 0;
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          {
+            if (ctx.cells[x][y] != Const.TILE_PARKING)
+              continue;
+            n++;
+            if (x < x0)
+              x0 = x;
+            if (x > x1)
+              x1 = x;
+            if (y < y0)
+              y0 = y;
+            if (y > y1)
+              y1 = y;
+          }
+      if (n == 0)
+        {
+          fail('no car park: not one cell carries Const.TILE_PARKING, so the compound draws no ' +
+            'bays and parks no cars');
+          return;
+        }
+      // ONE REGION, stated as "the bounding box is solid". A second patch of the mark anywhere else
+      // widens this box over the ground between them and the arithmetic catches it
+      ok(n == (x1 - x0 + 1) * (y1 - y0 + 1),
+        'the car park is ' + n + ' cells inside a ' + (x1 - x0 + 1) + 'x' + (y1 - y0 + 1) +
+        ' box, so it is not one solid rect');
+      // and it is the plot the gate opens onto: the mouth's own row, one step further into the
+      // compound, has to be inside that box or the booth stands on a yard
+      var mx0 = ctx.width, mx1 = -1, my0 = ctx.height, my1 = -1, dir = 0;
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          {
+            if (ctx.cells[x][y] != Const.TILE_ALLEY)
+              continue;
+            var d = roadSide(ctx, x, y);
+            if (d == 0)
+              continue;
+            dir = d;
+            if (x < mx0)
+              mx0 = x;
+            if (x > mx1)
+              mx1 = x;
+            if (y < my0)
+              my0 = y;
+            if (y > my1)
+              my1 = y;
+          }
+      if (dir == 0)
+        return;
+      var my = (dir < 0 ? my1 + 1 : my0 - 1);
+      ok(mx0 >= x0 && mx1 <= x1 && my >= y0 && my <= y1,
+        'the gate mouth at ' + mx0 + ',' + my + ' does not open into the car park at ' + x0 + ',' +
+        y0 + '..' + x1 + ',' + y1);
     }
 
 // which way the carriageway lies from this cell, or 0 if it is further off than the pavement is

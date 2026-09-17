@@ -45,8 +45,9 @@ class FacilityGen
         allDoors: [],
         nextRoomID: TEMP_BUILDING_ROOM_ID_START,
       }
-      // the ground everything is cut out of. the yard and the parking lot are this and nothing else:
-      // they have no filler, because "open lot" is what the area already is
+      // the ground everything is cut out of. the YARD is this and nothing else — it has no filler,
+      // because "open lot" is what the area already is. The parking plot is the same ground with one
+      // mark laid over it, see the PARKING arm of `fill`
       var cells = area.getCells();
       drawBlock(cells, 0, 0, area.width, area.height, TEMP_ALLEY);
 
@@ -69,8 +70,9 @@ class FacilityGen
 // build one node of the tree.
 //
 // the filler table for the BLOCK level, and the whole of it. A kind with no case here is a leaf that
-// writes nothing, which is exactly right for the two kinds that ARE the base fill — 'yard' and
-// 'parking' are open lot, and open lot is what the grid was blanked to.
+// writes nothing, which is exactly right for 'yard' — open lot is what the grid was blanked to, so
+// the yard is already finished before the walk reaches it. 'parking' is the same ground and gets a
+// case all the same, for the one tile that tells it apart from the yard.
 //
 // the room kinds under a building fall through here on purpose. They are built and filled inside
 // generateBuilding, by gen.blocks.RoomBlock through a walk of their own, because a room's contents
@@ -117,6 +119,16 @@ class FacilityGen
             ParkBlock.generatePark(state, node.x1, node.y1, w, h);
 
           case FacilityBlocks.PARKING:
+            // the car park writes ONE TILE and nothing else. Its plot is already the open lot the
+            // grid was blanked to, so this changes no geometry — it only NAMES it, and the name is
+            // what tells the renderer this lot is the one with a gate on it. Without it
+            // render.facility.FacilityPaint stripes bays onto every yard that happens to touch
+            // pavement and FacilityCars parks in one, because "open lot" was one tile id for the
+            // car park, the yard and every 2-cell gap between plots alike.
+            //
+            // the ENTRYWAY child is pushed after and paints its mouth back to TEMP_ALLEY: the mouth
+            // is what game.AreaGame.gate() re-derives the checkpoint from and it looks for alley
+            drawBlock(cells, node.x1, node.y1, w, h, TEMP_PARKING);
             node.children.push(RoadBlock.entryRect(state, node));
 
           case FacilityBlocks.ENTRYWAY:

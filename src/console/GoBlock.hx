@@ -13,9 +13,9 @@
 // and the room level come back exactly, `study-pad` comes back because FacilityModel.findPads
 // recovers it from the SHAPE of the unwalkable concrete, and the room ZONES (bay, slot, lounge,
 // stall-run, hangar-machine) leave no mark of their own on the grid and are not offered. The other
-// gap is `parking` against `yard`: both are the alley fill and both resolve to Surf.LOT, which is
-// FacilityModel's own note and the whole diagnosis behind the parking-lot phase of the plan — until
-// a tile tells them apart they are one block here, called `lot`.
+// `parking` against `yard` used to be one block here called `lot`, because both are the alley fill
+// and both resolve to Surf.LOT. Const.TILE_PARKING is the tile that tells them apart, so they are
+// two blocks now and the yard is everything else the surface still calls a lot.
 package console;
 
 import game.Game;
@@ -87,7 +87,11 @@ class GoBlock
       // the three outdoor fills, one block each and read off the surface grid. no rect: a fill is
       // whatever shape the split left it, so the cells ARE the block
       surface(out, game, m, FacilityBlocks.PARK, Surf.GRASS);
-      surface(out, game, m, 'lot', Surf.LOT);
+      // and the two lot fills, which used to be ONE block called `lot`. Const.TILE_PARKING marks the
+      // car park now, so the yard is whatever else answers Surf.LOT — the gaps between plots
+      // included, which is what the filler kind always was
+      surface(out, game, m, FacilityBlocks.PARKING, Surf.LOT, true);
+      surface(out, game, m, FacilityBlocks.YARD, Surf.LOT, false);
       surface(out, game, m, FacilityBlocks.ROAD, Surf.ROAD);
       return out;
     }
@@ -151,12 +155,13 @@ class GoBlock
 
 // and one block per outdoor SURFACE class, over the whole map
   static function surface(out: Array<_GoBlock>, game: Game, m: Facility,
-      kind: String, surf: Surf)
+      kind: String, surf: Surf, ?parking: Null<Bool>)
     {
       var cells = [];
       for (y in 0...m.h)
         for (x in 0...m.w)
           if (m.surf[y][x] == surf &&
+              (parking == null || FacilityModel.isParking(m, x, y) == parking) &&
               game.area.isWalkable(x, y))
             cells.push({ x: x, y: y });
       if (cells.length == 0)

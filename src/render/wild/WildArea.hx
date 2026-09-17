@@ -76,6 +76,7 @@ class WildArea implements Area3D
       // nothing out here is a wall, so nothing hangs on one — nor stands pushed off one — and a stale
       // hook from a facility would mount an object on masonry the wilderness never built
       WorldCtx.wallMounts = null;
+      WorldCtx.wallFace = null;
       WorldCtx.standOff = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;

@@ -347,6 +347,10 @@ class RenderConfig {
   // (it draws from the source image, not these crops). blood stays a touch more vivid than debris
   public static final DECAL = {
     bloodMul: 0.6,       // blood-splat crop darken factor
+    // how far proud of a wall's own face a splat standing on it sits. it was 0.12 written inline and
+    // measured from the CELL CENTRE, which is only the same thing where the masonry fills its cell;
+    // it is measured from the face the area kind actually draws now (WorldCtx.faceOff)
+    wallProud: 0.12,
     // street-debris + thrown-money crop darken factor (matte trash, no bright glow).
     //
     // 0.40 and MEASURED, after the wilderness roadside litter put this art on turf for the first

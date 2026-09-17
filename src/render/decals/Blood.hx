@@ -55,10 +55,16 @@ class Blood {
           var fdir:Int = dec.face;
           var dv = render.world.Geom.DIRV[fdir];
           var wy = (dec.height != null ? dec.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
+          // the NORMAL axis comes off the cell's centre and the area kind's own wall face, not off
+          // the sub-cell offset the drop died at: a drop dies where the CELL turns solid, which is
+          // the cell boundary, and a compound draws its masonry a whole unit inside that
+          // (WorldCtx.faceOff). Only the tangential coord keeps the dx/dy the drop landed with
+          var cc = CityConfig.cellToWorld(x, y);
+          var off = WorldCtx.faceOff(x, y, fdir, RenderConfig.DECAL.wallProud);
           d.sprites.paintWall({
-            x: w.x + dv[0] * 0.12,
+            x: (fdir >= 2 ? cc.x + dv[0] * off : w.x),
             y: wy,
-            z: w.z + dv[1] * 0.12,
+            z: (fdir >= 2 ? w.z : cc.z + dv[1] * off),
             tex: tex,
             op: op,
             scale: sc,

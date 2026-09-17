@@ -175,6 +175,7 @@ class GenRun
       check.clueSpots(ctx, state.allRooms);
       // the two things the game re-derives from the SHAPE of the grid and from nothing else
       check.gate(ctx);
+      check.parkingSane(ctx);
       check.parkPath(ctx);
 
       // ASSERTED, not counted. This was a stat while 8% of compounds carried a room nothing could

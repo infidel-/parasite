@@ -267,7 +267,13 @@ class FacilityPaint
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (m.surf[row][col] != Surf.LOT ||
+            // THE CAR PARK and not every open lot in the compound. `surf` cannot tell them apart
+            // — the yard, the gaps between plots and the lot the gate opens onto are one asphalt —
+            // so a run struck on Surf.LOT painted bays down the side of any yard that happened to
+            // touch a pavement, which is a car park with no way to drive into it. The neighbour
+            // tests below stay on Surf.LOT: what has to be inside the lot is the KERB the run is
+            // counted from
+            if (!FacilityModel.isParking(m, col, row) ||
                 isEntry(m, col, row) ||
                 (gate != null &&
                  col == gate.boothCol &&

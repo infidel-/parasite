@@ -39,11 +39,15 @@ class WallHole {
       var sc = (dec.scale != null ? dec.scale : RenderConfig.WALLHOLE.scale);
       var wy = (dec.height != null ? dec.height : WorldCtx.floorY(x, y) + Sprites.SIZE * 0.4);
       // nudge proud of the wall face along the outward normal (clears the opaque face so the hole
-      // isn't depth-culled; no z-fight since depthWrite is off)
+      // isn't depth-culled; no z-fight since depthWrite is off). the NORMAL axis is measured from
+      // the cell's centre out to the face the area kind actually draws, not from the stored sub-cell
+      // offset — see WorldCtx.faceOff and the note beside WorldCtx.wallFace
+      var cc = CityConfig.cellToWorld(x, y);
+      var off = WorldCtx.faceOff(x, y, fdir, RenderConfig.DECAL.wallProud);
       d.sprites.paintWall({
-        x: w.x + dv[0] * 0.12,
+        x: (fdir >= 2 ? cc.x + dv[0] * off : w.x),
         y: wy,
-        z: w.z + dv[1] * 0.12,
+        z: (fdir >= 2 ? w.z : cc.z + dv[1] * off),
         tex: hts[variant],
         op: op,
         scale: sc,

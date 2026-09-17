@@ -941,6 +941,16 @@ class Const
   public static var TILE_HANGAR_DOOR = OFFSET_CHEM_LAB + 7;
   public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_CHEM_LAB + 8;
   public static var TILE_FLOOR_CONCRETE_UNWALKABLE = OFFSET_CHEM_LAB + 9;
+  // the car park, and the one piece of open asphalt in a compound you can drive into. the yard and
+  // the gaps between plots are Const.TILE_ALLEY and stay that way — the generator blanks the whole
+  // grid to alley before it cuts anything, so "open lot" cannot tell a car park from a back yard and
+  // render.facility.FacilityPaint was striping bays onto both. It resolves to Surf.LOT exactly like
+  // the alley does, so debris, lamps and every other lot-gated pass keep working untouched; only the
+  // two passes that mean THE CAR PARK gate on the raw mark.
+  //
+  // NO NEW ATLAS CELL: tiles.Default aliases its icon to TILE_ALLEY's. The asphalt is the same
+  // asphalt and the bay lines are emitted geometry rather than tile art
+  public static var TILE_PARKING = OFFSET_CHEM_LAB + 10;
 
   // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;

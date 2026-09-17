@@ -88,6 +88,16 @@ class Default extends Tileset
       splatLayerID = floorDecorationLayers.length - 1;
     }
 
+// map tile id to icon coordinates.
+//
+// ONE ALIAS, and the reason Const.TILE_PARKING needed no art: the car park is asphalt drawn from the
+// alley's own cell, and the mark exists only so the renderer can tell the lot you drive into from
+// the yard you do not (see Const.TILE_PARKING)
+  public override function getIcon(tileID: Int): _Icon
+    {
+      return super.getIcon(tileID == Const.TILE_PARKING ? Const.TILE_ALLEY : tileID);
+    }
+
 // check if default tile is walkable
   public override function isWalkable(tileID: Int): Bool
     {

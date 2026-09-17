@@ -10,7 +10,7 @@ enum abstract Surf(Int) from Int to Int
   var NONE = 0;
   var ROAD = 1;      // the 4-wide band at the north or south edge
   var WALKWAY = 2;   // pavement, ringing every building and running beside the road
-  var LOT = 3;       // the alley fill, i.e. the parking lot and the yard
+  var LOT = 3;       // open asphalt: the car park, the yard and the gaps between plots alike
   var GRASS = 4;     // the park strip, including its trees and bushes
   var TILE = 5;      // room floor
   var LINO = 6;      // corridor floor, and every door cell
@@ -179,6 +179,13 @@ typedef Facility = {
   // asks it of the wall line — so a run, an island and an L all fall out of one predicate and no
   // rect finding is needed
   table:Array<Array<Bool>>,
+  // which cells are THE CAR PARK, as opposed to the yard and the alley gaps between plots. Both
+  // resolve to Surf.LOT — the asphalt is the same asphalt, and debris, lamps and every other
+  // lot-gated pass wants all of it — so the surface grid cannot answer this and the raw tile is the
+  // only thing that can (Const.TILE_PARKING). Two passes ask it per cell, render.facility
+  // .FacilityPaint's bay striping and FacilityCars' spot search, which is why it is a grid and not
+  // the rect it happens to be
+  parking:Array<Array<Bool>>,
   // which cells stand a piece of 3D FURNITURE, as the fitting kind PLUS ONE — 0 is "nothing here",
   // so the grid needs no second channel to say whether a cell is empty. a grid for the same reason
   // `table` is one: two passes ask it per cell (the emitter, and FacilityKit's own placement gate),
@@ -259,6 +266,7 @@ class FacilityModel
             m.surf[row][col] = surfOf(t);
             m.wall[row][col] = wallOf(t);
             m.table[row][col] = tableOf(t);
+            m.parking[row][col] = (t == Const.TILE_PARKING);
             if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
               solid[row][col] = true;
           }
@@ -368,6 +376,7 @@ class FacilityModel
         doors: [],
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
+        parking: [for (_ in 0...h) [for (_ in 0...w) false]],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],
         tableTaken: [for (_ in 0...h) [for (_ in 0...w) false]],
@@ -386,7 +395,8 @@ class FacilityModel
         return ROAD;
       if (t == Const.TILE_WALKWAY)
         return WALKWAY;
-      if (t == Const.TILE_ALLEY)
+      if (t == Const.TILE_ALLEY ||
+          t == Const.TILE_PARKING)
         return LOT;
       if (t == Const.TILE_GRASS ||
           t == Const.TILE_GRASS_UNWALKABLE ||
@@ -445,6 +455,14 @@ class FacilityModel
       if (t == Const.TILE_WINDOW_HIGH)
         return WINDOW_HIGH;
       return OPEN;
+    }
+
+// is this cell the car park — the one lot in the compound the gate opens onto? false off the grid.
+// the yard and the gaps between plots are open asphalt too and answer Surf.LOT exactly the same, so
+// every pass that means THE CAR PARK rather than OPEN LOT has to ask this instead
+  public static inline function isParking(m:Facility, col:Int, row:Int):Bool
+    {
+      return inside(m, col, row) && m.parking[row][col];
     }
 
 // is (col,row) inside the grid?

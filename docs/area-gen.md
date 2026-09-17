@@ -27,8 +27,8 @@ area
 └ <what is left> → Subdivide.split() → Quota.deal()
   ├ building ×2
   ├ hangar
-  ├ parking
-  │ └ entryway               the 4x2 hole through the sidewalk
+  ├ parking                  one tile (TILE_PARKING) over ground that is already open lot
+  │ └ entryway               the 4x2 hole through the sidewalk — stays TILE_ALLEY, gate() reads it
   ├ park
   ├ hangar
   │ └ hangar-floor           the shed's interior, walked by HangarBlock itself
@@ -60,9 +60,18 @@ It is also what the ENTRYWAY rides on. The mouth is a child of `parking`, one le
 so it is punched *after* every plot has thrown its 2-cell pavement apron onto the road band — a
 sibling of `road` would be paved back over by whichever building happened to border it.
 
-**Two kinds have no filler at all.** `parking` and `yard` are open lot, and open lot is what the grid
-was blanked to before the walk started, so `FacilityGen.fill` has no case for them. A kind with no
-case is a leaf that writes nothing; that is the design, not an omission.
+**`yard` has no filler at all.** Open lot is what the grid was blanked to before the walk started, so
+`FacilityGen.fill` has no case for it. A kind with no case is a leaf that writes nothing; that is the
+design, not an omission.
+
+**`parking` was the same leaf and is not any more, for ONE tile.** Its plot is the same open lot, but
+a compound holds three pieces of asphalt — the car park, the yard and every gap between plots — and
+they finalised to one id, so `render.facility.FacilityPaint` struck bay dividers on any of them that
+touched a pavement and `FacilityCars` parked in one (measured: **68% of kerbside lot cells were
+outside the car park**). The arm writes `TEMP_PARKING` -> `Const.TILE_PARKING` and nothing else.
+`FacilityModel.surfOf` still answers `Surf.LOT` for it, so debris, lamps and the gate are untouched;
+only the two passes that mean THE CAR PARK ask `FacilityModel.isParking`. The ENTRYWAY child paints
+its mouth back to `TEMP_ALLEY`, because that hole is what `AreaGame.gate()` finds the checkpoint by.
 
 **The room level is walked by its own `GenTree.build`, not by the area walk** — the one place the
 breadth-first ordering had to be overridden. `generateBuilding`'s last pass is
@@ -737,10 +746,17 @@ tiles rather than being handed them:
 - `AreaGame.gate()` re-derives the checkpoint from "a plain 4x2 hole of alley through the sidewalk
   band beside the road" — the `entryway` child of `parking` must keep producing exactly that, the
   pavement band must run the FULL width so nothing else qualifies, and the parking plot must be ON
-  the frontage so the row inside the mouth is open lot. Asserted by `GenCheck.gate`
+  the frontage so the row inside the mouth is open lot. The mouth stays `TILE_ALLEY` while the plot
+  behind it is `TILE_PARKING`, which narrows that scan to the mouth alone. Asserted by
+  `GenCheck.gate`
 - `FacilityModel.isParkPath` needs the park's 2-cell walkway path (slack `PATH_MAX = 4`). Asserted by
   `GenCheck.parkPath`
-- `Surf.LOT` is just "the alley fill" — parking must still finalize to `TILE_ALLEY`
+- `Surf.LOT` is "any open asphalt" and covers `TILE_ALLEY` and `TILE_PARKING` alike. The CAR PARK is
+  the second of those and nothing else — `FacilityPaint.bays` and `FacilityCars` gate on
+  `FacilityModel.isParking`, so a parking plot that stopped carrying the mark loses its bays and its
+  cars silently. Asserted by `GenCheck.parkingSane`
+- `AreaGame.isLot` and `GenCheck.gate`'s flank test must keep accepting BOTH ids: the mouth is alley
+  and the two rows inside it are car park, so a test on one id alone draws no booth at all
 - room ids are unique across the whole area and never restart per structure
 - `FacilityAreaGenerator.repairRooms` guards on a room **count** — it must not start firing on
   freshly generated areas
@@ -820,7 +836,7 @@ recovers exactly: **`building` / `hangar`** (structures), **`room-lab` / `room-o
 **`study-pad`** (from the SHAPE of the unwalkable concrete, `FacilityModel.findPads`), and
 **`park` / `road`** (surface classes). What it cannot: every ROOM ZONE and every HANGAR ZONE —
 `bay`, `slot`, `lounge`, `stall-run`, `hangar-machine` and the rest write furniture and floor, not a
-mark that says which zone laid them. And `parking` against `yard` is the alley problem again: both
-are `Surf.LOT`, so they are one block called `lot` until a tile separates them.
+mark that says which zone laid them. **`parking` and `yard` DO come back separately now** — they were
+one block called `lot` until `Const.TILE_PARKING` gave the car park a mark of its own.
 
 Full detail, and the two traps it cost to find, in [`debug-surface.md`](debug-surface.md).

@@ -100,7 +100,10 @@ class FacilityCars
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (m.surf[row][col] != Surf.LOT)
+            // THE CAR PARK, the same mark FacilityPaint stripes on. A yard is open asphalt too and
+            // answers Surf.LOT identically, so this used to park cars in whatever back lot touched a
+            // pavement — with no gate on it and nothing to have driven in through
+            if (!FacilityModel.isParking(m, col, row))
               continue;
             // the FIRST pavement this cell finds, so a cell in a corner belongs to one run only —
             // the same claim FacilityPaint makes when it stripes it

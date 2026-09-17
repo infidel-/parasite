@@ -61,6 +61,7 @@ class SewerArea implements Area3D
       WorldCtx.ground = null;
       WorldCtx.climbArc = null;
       WorldCtx.wallMounts = null;
+      WorldCtx.wallFace = null;
       WorldCtx.standOff = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;

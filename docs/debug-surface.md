@@ -55,8 +55,9 @@ proves it inline. When a lesson invalidates an old bullet, replace it rather tha
   - **What that costs is granularity, and it is worth knowing before reading the list.** The block
     level and the room level come back exactly; `study-pad` comes back because `findPads` recovers it
     from the SHAPE of the unwalkable concrete; the room ZONES (`bay`, `slot`, `lounge`, `stall-run`,
-    `hangar-machine`) leave no mark of their own on the grid and are not offered. `parking` and `yard`
-    both resolve to `Surf.LOT` and are one block called `lot` until a tile tells them apart.
+    `hangar-machine`) leave no mark of their own on the grid and are not offered. `parking` and `yard` come back
+    SEPARATELY as of `Const.TILE_PARKING` — both are `Surf.LOT`, and the car park's own tile is what
+    tells them apart; before it they were one block called `lot`.
   - Two traps it cost to find, both measured: a structure's `ox*` box reaches PAST the wall ring on at
     least one hand (the shed at 3,4..15,28 has `ox1` 2, whose whole column is the pavement), so the
     INTERIOR box is what to sample; and the hangar floor is recorded as one role-less `_Room`, which

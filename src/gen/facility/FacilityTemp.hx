@@ -51,6 +51,13 @@ class FacilityTemp
   // part of a RUN: each cell is a separate opening and the renderer maps one image across each
   public static inline var TEMP_BUILDING_WINDOW_HIGH = 28;
 
+  // the car park's own mark. it is written over a plot that is already TEMP_ALLEY and differs from it
+  // in nothing but name — the compound is blanked to open lot before anything is cut, so the yard,
+  // the gaps between plots and the lot you drive into were one tile and the renderer painted bays on
+  // all three. See Const.TILE_PARKING. The ENTRYWAY child stays TEMP_ALLEY: the mouth through the
+  // pavement is what game.AreaGame.gate() finds the checkpoint by, and it looks for alley
+  public static inline var TEMP_PARKING = 29;
+
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var TEMP_BUILDING_ROOM_ID_START = 100;
 
@@ -98,6 +105,7 @@ class FacilityTemp
     TEMP_ROAD => Const.TILE_ROAD,
     TEMP_WALKWAY => Const.TILE_WALKWAY,
     TEMP_ALLEY => Const.TILE_ALLEY,
+    TEMP_PARKING => Const.TILE_PARKING,
     TEMP_GRASS => Const.TILE_GRASS,
     TEMP_GRASS_BUSH => Const.TILE_BUSH,
     TEMP_GRASS_BENCH => Const.TILE_GRASS_UNWALKABLE,
@@ -130,5 +138,6 @@ class FacilityTemp
     '0', '1', '2', '%', '%', 't', 'b', 'B', '%', '%',
     '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w',
     '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z', '=',
+    'P',
   ];
 }

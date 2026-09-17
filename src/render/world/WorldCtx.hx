@@ -54,6 +54,15 @@ class WorldCtx {
   // the middle of the tile while the drum stands against the wall — reported from the game as exactly
   // that. same contract as `ground` above — the area kind that sets it owns clearing it
   public static var standOff:(Int, Int)->{ x:Float, z:Float } = null;
+  // how far from a wall cell's CENTRE the area kind actually DRAWS that cell's face, or -1 on a cell
+  // that is not a wall of its own making. null in every area kind whose masonry fills its cell,
+  // which is the city and the tunnels; render.facility.FacilityArea points it at its own slabs.
+  // a decal that stands on a wall is placed from the cell the drop or the shot DIED in, and the cell
+  // boundary is where it dies — true in the city, where a wall cell is solid to its edges, and half
+  // a cell wrong in a compound, where FacilityGeom centres a slab of WALL_T 2.0 in a 4.0 cell. Blood
+  // sprayed onto an office wall stood 1.12 units clear of it, reported as decals hanging in the air.
+  // same contract as `ground` above — the area kind that sets it owns clearing it
+  public static var wallFace:(Int, Int, Int)->Float = null;
   // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
   public static var style:AreaStyle;
 
@@ -66,6 +75,17 @@ class WorldCtx {
   // placed door along-face spans (offset-from-face-center interval), so WallDecals skips graffiti
   // overlapping a door. same center + axis convention as buildingFaces `off` (see Entrances.place)
   public static var doorSpans:Array<{ b:Building, dir:Int, lo:Float, hi:Float }>;
+
+// how far out from a wall cell's centre a decal standing on face `dir` has to sit, INCLUDING the
+// proud nudge that keeps it off the surface. `dir` is render.world.Geom's numbering (0 +z, 1 -z,
+// 2 +x, 3 -x) — it matters because a washroom divider spans its cell along its OWN run and is only
+// PART_T across. Half a cell wherever the area kind draws its masonry to the cell boundary, which is
+// the default and every area but the compound
+  public static function faceOff(col:Int, row:Int, dir:Int, proud:Float):Float
+    {
+      var d = (wallFace != null ? wallFace(col, row, dir) : -1.0);
+      return (d > 0 ? d : citygen.CityConfig.CELL / 2) + proud;
+    }
 
 // ground surface height at grid cell (col,row): walkway tops sit a curb above road/alley, so
 // actors/decals/the ring rest on this instead of sinking through the raised pavement.

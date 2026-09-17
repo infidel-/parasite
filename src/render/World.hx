@@ -37,6 +37,7 @@ class World {
     WorldCtx.ground = null;
     WorldCtx.climbArc = null;
     WorldCtx.wallMounts = null;
+    WorldCtx.wallFace = null;
     WorldCtx.standOff = null;
     WorldCtx.seed = seed;
     WorldCtx.style = style != null ? style : render.world.CityStyle.get();

@@ -536,15 +536,18 @@ class AreaGame extends _SaveObject
       };
     }
 
-// is this cell open lot? false off the grid. Const.TILE_ALLEY is what the generator fills the
-// parking lot and the yard with, and what render.facility.FacilityModel reads back as Surf.LOT
+// is this cell open lot? false off the grid. BOTH asphalt ids: Const.TILE_ALLEY is the yard and the
+// gaps between plots, Const.TILE_PARKING is the car park, and render.facility.FacilityModel reads
+// both back as Surf.LOT. The two rows inside the gate's mouth are car park, so a test on the alley
+// alone drew no booth at all
   inline function isLot(x: Int, y: Int): Bool
     {
       return x >= 0 &&
         y >= 0 &&
         x < width &&
         y < height &&
-        _cells[x][y] == Const.TILE_ALLEY;
+        (_cells[x][y] == Const.TILE_ALLEY ||
+         _cells[x][y] == Const.TILE_PARKING);
     }
 
 // which way the main road lies from this cell, or 0 if it is further off than the sidewalk band is

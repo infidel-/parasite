@@ -291,3 +291,125 @@ rather than retuned a third time. `TILE_BUSH` now deals TWO variants, the 169 sh
 
 Live: 58 conifers / 45 broadleaves / 85 + 84 shrubs. Conifer samples 53/56/51, broadleaf 45/48/43,
 dome 47/50/45, upright 47/49/44 — all inside the 46-52 outdoor family. 0 UV smears on all four.
+
+## The car park is one tile now, and 68% of the bays were being painted on yards (2026-09-17)
+
+The compound is blanked to `TEMP_ALLEY` before anything is cut, so the car park, the yard block and
+every 2-cell gap between plots finalised to one id and `FacilityModel.surfOf` read all of them back
+as `Surf.LOT`. `FacilityPaint.bays` and `FacilityCars.spots` both struck on that surface, so any
+asphalt that happened to touch a pavement got bay dividers and could get cars — a car park with no
+gate on it and nothing to have driven in through.
+
+MEASURED BEFORE FIXING, over 20 live layouts: **1,850 kerbside lot cells** (open lot four-adjacent to
+walkway), **600 in the car park and 1,250 outside it — 68%**. That is the size of the bug, and it is
+not visible in every compound: the seed looked at first has its yard columns against the grid edge
+and a phase that strikes no divider there, so `marks` came back **201 either way**. A regression this
+shape hides behind whichever seed you happen to load.
+
+THE FIX IS ONE TILE. `TEMP_PARKING 29` → `Const.TILE_PARKING` (`OFFSET_CHEM_LAB + 10`, 122), written
+over the parking plot by `FacilityGen.fill`'s `PARKING` arm — a plot that was already open lot, so
+the mark changes no geometry and only NAMES it. `surfOf` maps it to `Surf.LOT` exactly like the
+alley, so debris, lamps, the gate and every other lot-gated pass are untouched; a `parking` grid on
+the model carries the raw mark and `FacilityModel.isParking` is what the two passes that mean THE CAR
+PARK ask instead.
+
+NO NEW ATLAS CELL, and that is the half worth remembering: `tiles.Default.getIcon` aliases
+`TILE_PARKING` to `TILE_ALLEY`'s cell. The asphalt IS the alley's asphalt and the bay lines are
+emitted geometry, so the mark needed a walkability row (row 7 slot 10 was already `1`/`1`) and
+nothing else. Editing the tileset PNG for a tile that must look identical would have been the whole
+cost of the change.
+
+TWO ID TESTS HAD TO WIDEN, both of them the checkpoint's: `AreaGame.isLot` and `GenCheck.gate`'s
+flank test read `TILE_ALLEY` literally, and the two rows inside the gate's mouth are now car park —
+left alone, the compound draws no booth at all. The MOUTH itself stays `TEMP_ALLEY` on purpose:
+`gate()` re-derives the checkpoint from open-lot cells inside the pavement band, and narrowing that
+scan to the mouth alone is a tightening it gets for free.
+
+3,000 seeds clean with the new `GenCheck.parkingSane` (one solid rect, and the gate opens into it);
+after: **cars 5, gate booth and barrier unchanged, `marks` 201**.
+
+**Verdict: landed. When one tile id means two different places, the renderer cannot tell them apart —
+and "open lot is what the grid was blanked to" is exactly how that happens by accident.**
+
+## Five prop faults, and three of them were one square cell (2026-09-17)
+
+Reported together: every mug and every drum wearing a vertical black seam down its back, the drums'
+hazard signs stretched, the bookcase's upper three boards not lining up with their own art, the cable
+reel flat and green, and the traffic cone too convex.
+
+THE SEAM WAS THE CELL'S OWN EDGES. `lathe_uv` abuts a cell's left column against its right, and a gen
+draws its object on a plate — measured, drum-sheet.png cell 3's outer columns are rgb 1/1/1 against
+an interior of 56/67/78, desk-sheet.png cell 0's are 102 and 44 against 196. Wrapped at SEAM 0.75,
+which puts u = 0 at +y, that is a dark column meeting a darker one down the BACK of the prop, exactly
+as reported. **models-src/facility/wrapfix.py** rebuilds the wrap cells: fade the cell's last 44
+columns over its first 44, drop them, resample to full width. The output's first and last columns now
+differ by 2.6 of 255, grain level, and the resample it costs is 1.09x. NOT the plants' half-roll
+`tileable`, which is right for a mottle and would have ghosted a drum's sign through its own seam.
+Cells are named, not swept: a lid (disc_uv) and a leaf (flat_uv) have no seam to close.
+
+THE SIGN'S ASPECT IS THE CELL'S ASPECT. A cell is square and an unrolled drum is 2 pi R / H = 2.09:1,
+so one wrap spent 136 texels per world unit across the barrel against 284 up it. `WRAPS 2` lands 291
+against 282 — isotropic to 3% — and puts a round sign on each side, which is where a real drum
+carries one. It only became free once the cell closed. `lathe_uv`'s `reps` had to be fixed first: its
+copy index was a ROUNDED minimum, exact only at reps == turn count, and at reps 2 over 20 sides face
+5 (spanning 0.5..0.6 of its copy) came out at u 0.0..0.2. `floor` is the copy.
+
+THE BOOKCASE WAS THE CHAMFER, NOT THE NUMBERS. `unwrap` lays a face's FINAL bounding box over its
+whole rect and `chamfer` insets that box by EDGE 0.018 on every side — 0.5% of the 3.36-tall carcass
+and 45% of a head rail 0.077 tall. So the three thin boards wore a band up to 1.8x taller than the
+stripe they stand on and the 0.329-tall plinth looked right, which is "the upper three are
+unaligned". Cutting each board's rect by the same inset puts all four fronts at 194.9 texels/unit
+against the carcass's 197.8. The BOARDS fractions were re-read off the image at the same time (a
+board is the flat band, sd < 6, between two bands of spines at sd 13-19) and were up to 8 px out.
+
+THE REEL WAS TWO FAULTS. Flat because every flat annulus on the lathe — the whole of what this camera
+sees — wore a 16 x 16 crop stretched over 2.66 units, and the turned bands wore R_FULL, the whole
+sheet including its rail highlight. Both take the sheet's clean field now. Green because
+fence-sheet.png is PAINTED steel at 41/52/47; `sat` 0.2, the railing's own knob, lands it at 48/50/49
+with chroma 10.8 -> 2.0 and luma held.
+
+THE CONE'S first five rings now sit exactly on r = 0.300 - 0.1807 * (z - CONE_SLAB) and only the last
+three leave it, slope 0.21 -> 0.40 -> 0.70 into a 0.014 apex. 392 tris against 360.
+
+All five: 0 uv smears, holes 0, coplanar 0, dimensions unmoved.
+
+**Verdict: landed. A square cell wrapped once round a cylinder states TWO things that are usually
+both wrong — that the art tiles across the cell, and that the barrel is as tall as it is round.**
+
+## A wall decal stood on the cell boundary, and a compound's wall is not there (2026-09-17)
+
+Reported as blood on the inner facility walls hanging in the air, and the same on the washroom
+dividers. It was arithmetic and it was in the decal layer, not the facility.
+
+A splat or a bullet hole is placed from the cell the drop or the shot DIED in, and a cell turns solid
+at its BOUNDARY. `Blood.draw` and `WallHole.draw` both took the stored sub-cell offset on BOTH axes
+and nudged 0.12 along the face normal — correct in the city, where a wall cell is masonry to its
+edges, and **1.12 units wrong in a compound**, where `FacilityGeom` centres a slab of WALL_T 2.0 in a
+4.0 cell. On a washroom divider it is worse: PART_T is 0.6, so the splat stood **1.82** clear of it.
+
+THE FIX IS THE `standOff` PATTERN AGAIN — the hook that already exists because a facility fitting is
+pushed off the wall face and its fake shadow was landing in the middle of the tile. New sibling
+`WorldCtx.wallFace(col, row, dir)`: how far from a wall cell's centre the area kind actually draws
+that face, -1 where the cell is not its wall, null in every area whose masonry fills its cell (the
+city and the tunnels, which is why nothing out there moved). `WorldCtx.faceOff` adds the proud nudge,
+now `RenderConfig.DECAL.wallProud` rather than a 0.12 written inline twice. Only the NORMAL axis is
+taken from it; the tangential coord keeps the dx/dy the drop landed with.
+
+`FacilityGeom.wallFace` answers `thick(col, row) / 2` for masonry — the same function `wallMounts`
+uses, so a vent grille and a splat cannot disagree — and for a divider it asks
+`FacilityDeco.rectOf`, which is the box the emitter itself draws: a partition spans its cell along
+its own run and is PART_T across, so the answer depends on `dir` and a constant would have been
+wrong on two of its four faces.
+
+VERIFIED BY A/B IN FRAME rather than by arithmetic alone: splats placed on a washroom's two side
+walls sit flat on the masonry, and clearing `WorldCtx.wallFace` live puts the same splats a unit out
+over the floor. The partition test needed finding first — a divider cell reads see-through in the
+static tileset table and opaque in the live grid, which is why blood reaches one at all.
+
+BULLET HOLES DO NOT REACH A COMPOUND AT ALL, asked in the same report. `Shot.spawnBulletHole` returns
+early unless a `WorldCtx.buildings` entry owns the struck cell, and `FacilityArea` sets that list
+empty — so no WALLHOLE decoration is ever written indoors or out. The decal pass itself is fine and
+now places correctly if one ever is.
+
+**Verdict: landed. A decal placed from "where the thing stopped" is placed from the CELL, and only
+the area kind knows where inside that cell it actually drew the surface.**
