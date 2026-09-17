@@ -230,9 +230,9 @@ class FacilityEntry
       var off = FacilityStyle.BOOTH_W / 2 - FacilityStyle.BOOTH_MAST_IN;
       var post = FacilityLamps.gateMast(m, gate);
       var a = [
-        post.x,
+        post.ax,
         post.y + FacilityStyle.LAMP_H * FacilityStyle.ENTRY_CABLE_Y,
-        post.z,
+        post.az,
       ];
       var t = [
         c.x + off,
@@ -246,15 +246,17 @@ class FacilityEntry
         n: level(a, t),
         side: null,
         bow: FacilityStyle.ENTRY_CABLE_BOW,
+        sag: FacilityStyle.ENTRY_CABLE_SAG,
         wave: FacilityStyle.ENTRY_CABLE_WAVE,
         seed: FacilityModel.mix((gate.col * 90001) ^ (gate.row * 10007)),
       });
     }
 
 // the most nearly UPRIGHT unit normal a plane through both ends of a run can take: world up with the
-// chord's own component taken out of it. strip's contract is that both ends lie in the plane `n`
-// describes, and a run whose ends differ in height has no horizontal one. it cannot degenerate here
-// — the chord is six cells of mouth across against a metre of height
+// chord's own component taken out of it. it is the plane the ribbon is WIDENED in — level, so the
+// band faces the camera rather than showing it an edge — and a run whose ends differ in height has
+// no exactly horizontal one. it cannot degenerate here: the chord is cells of mouth across against a
+// metre of height. the fall out of that plane is StripOpts.sag and is not this
   static function level(a:Array<Float>, c:Array<Float>):Array<Float>
     {
       var dx = c[0] - a[0], dy = c[1] - a[1], dz = c[2] - a[2];

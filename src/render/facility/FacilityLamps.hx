@@ -25,8 +25,10 @@ typedef LampSet = {
 
 // where one mast stands, world: its footing on the grid vertex and the surface height under it
 typedef Mast = {
-  x:Float,   // the footing, world
+  x:Float,   // the footing, world — where the BATCH places the glb, i.e. its plan centre
   z:Float,   // ^
+  ax:Float,  // and where the POLE itself stands, which is not the same point: the head overhangs,
+  az:Float,  // so Models.instanced's plan centre lands between the two (FacilityStyle.LAMP_POLE_Z)
   y:Float,   // and the height of the surface it stands on
   col:Int,   // the grid VERTEX it stands on, which is what the actor slide bends past
   row:Int,   // ^
@@ -149,9 +151,17 @@ class FacilityLamps
           b -= (h.dir < 2 ? 0 : 1);
         }
       var v = CityConfig.cellToWorld(a, b);
+      // the pole's own axis, one step back along the aim from the placed point. `Models.instanced`
+      // centres a glb on its bounding box in plan and the head overhangs toward what it lights, so
+      // the placed point is out in the air between pole and housing — a cable ended there hangs
+      // clear of the post by LAMP_POLE_Z's own 0.37, which is more than the pole's 0.30 radius and
+      // was reported from the game as a gap
+      var off = FacilityStyle.LAMP_H * FacilityStyle.LAMP_POLE_Z;
       return {
         x: v.x + CELL / 2,
         z: v.z + CELL / 2,
+        ax: v.x + CELL / 2 + DC[h.dir] * off,
+        az: v.z + CELL / 2 + DR[h.dir] * off,
         col: a,
         row: b,
         // the MODEL follows the surface it stands on — a park mast would otherwise float the

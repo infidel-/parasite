@@ -15,8 +15,14 @@ typedef StripOpts = {
   // one along a skirting. null — or a chord too nearly parallel to it to answer — leaves the side to
   // the seed, which is what a cable dropped across a floor actually does
   ?side:Array<Float>,
-  // how far the middle of the run leaves the straight chord, world units
+  // how far the middle of the run leaves the straight chord, world units, ALONG n cross t
   bow:Float,
+  // and how far it FALLS on the way across, as a FRACTION of the chord's own length. this is not the
+  // bow under another name: the ribbon is widened along the bow's axis, so a bow can only ever swing
+  // a run sideways, and a span hung between two poles has to carry its own weight instead. the drop
+  // is perpendicular to the chord and taken out of world DOWN, so both ends stay bolted where they
+  // are and a vertical run has no sag to take. omitted for every run bolted to a surface
+  ?sag:Float,
   // plus a slow sine on top of it, same units, so two runs are not parallel curves
   wave:Float,
   // the wander's phase, rolled ONCE off FacilityModel.mix and baked. nothing here ticks

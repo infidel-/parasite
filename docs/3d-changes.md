@@ -502,6 +502,10 @@ under.**
 
 ## Five reports on the checkpoint, two faults, and one repainted cell (2026-09-17)
 
+> PARTLY SUPERSEDED by *A flat colour is not a UV, and a span has to fall* — the chamfer's flat
+> centre colour and the cable's sideways bow were both wrong and are both replaced. Everything
+> else in this entry stands.
+
 The five: the booth's top and its top SIDES "have angles"; its mast should be round and carry a
 cable; "all edges are weirdly green (that's ALL edges)"; and on the barrier, smeared faces, faces
 whose "u,v resolution is too small", and "all sides are stretched". They are two faults and a bad
@@ -625,3 +629,121 @@ read the RENDERED ratio when fitting one of these, never the built one alone.
 
 **Verdict: landed. `tools/atlaspaste.py` rewrites the 64 px frame from the same source, so the 2D view
 and the 3D sprite stay one object.**
+
+## A flat colour is not a UV, and a span has to fall (2026-09-17)
+
+> PARTLY SUPERSEDED by *An arris wears the piece it breaks, and a drop ends on the pole* — the
+> plain swatch was still the wrong RECT for a strip. The sag stands.
+
+Two reports on the last landing. Both of its shortcuts were read off the screen as the shortcut they
+were.
+
+**"WHY ARE THESE SO LARGE WHILE BEING MAPPED INTO A TINY TEXTURE SPOT?"** — six faces quoted, every
+one with `uv a`, `uv b` and `uv c` identical, which is `buildlib.tag`'s axes 6: the rect's centre
+colour and nothing else. It cannot smear, which is why it went in; what it does instead is paint a
+4.34-unit corner arris of the booth in ONE texel, and a metres-long face in one texel is a drawn line
+rather than a lit edge. `chamfer(flat)` and `entry_build`'s `PLAIN` both mean the ASPECT FIT now
+(`tag` axes 5, `PLAIN = FIT`), so a strip gets the art at its neighbours' own density on both axes.
+Axes 6 stays in `buildlib` as an escape hatch with its own warning; nothing uses it.
+
+**THE LAST MEASUREMENT WAS A FALSE PASS AND THAT IS THE TRAP.** This entry's predecessor reported
+"booth aniso median 1.00, max 1.00 over its 36 mapped triangles" — 36 of 768, because the per-triangle
+jacobian SKIPS a triangle with zero UV area and a constant-UV strip is exactly that. Count the
+degenerates or the ratio lies. Rebuilt: booth **768 tris, 0 degenerate, aniso median 1.08 p95 1.35
+max 1.41**; barrier **708 tris, 0 degenerate, median 1.08 p95 1.13**, max still the boom's deliberate
+23.67. The fit's price is scale, not shear: the roof-slab arris spends its 20 px swatch over 4.34
+units (**4.3 px/unit**) and a corner nub wears the whole swatch at 3533 — isotropic at both ends.
+
+**"MAKE THE CABLE MORE PHYSICAL — IT SHOULD BEND DOWN UNDER ITS WEIGHT."** The service drop bowed
+SIDEWAYS, because `FacilityCable.strip` widened and bowed the ribbon along one vector and the
+previous entry accepted that rather than reordering it. The two are separated now: `StripOpts.sag` is
+a FRACTION of the chord, dropped along world down with the chord's component taken out, so both ends
+stay bolted and a vertical run has no sag to take. The width axis is untouched, so the band still
+lies level and faces a camera pitched 51 degrees down. The parabola is shared with the bow — a
+catenary and `4t(1-t)` differ by less than a texel over this span. `ENTRY_CABLE_BOW` 0.9 -> **0.0**,
+`SAG` **0.06**, `WAVE` 0.3 -> 0.25 so two compounds do not draw one curve. Measured live off the
+`facility/cable` mesh: span **17.29 units**, worst drop below the chord **1.037** at t **0.5006**,
+which is 0.060 of the span, both ends within a ribbon half-width of the pole and the collar.
+
+**Verdict: landed, both meshes rebuilt unchanged in triangles (708 / 768, holes 0, coplanar 0). A
+sag is one more axis and a plain swatch never needed the flat colour — the two shortcuts cost one
+report each.**
+
+## An arris wears the piece it breaks, and a drop ends on the pole (2026-09-17)
+
+> PARTLY SUPERSEDED by *The roof was the problem all along* — the fit's DENSEST orientation was the
+> wrong rule and is now the art's. The rest of the entry stands.
+
+Both halves of the previous landing came back. "You didn't fix much on the edges, make the polys take
+the full tex length like the nearby ones" and "cable is a little away from the lamp post itself,
+there's a gap".
+
+**THE STRIP WAS ISOTROPIC AND STILL WRONG, BECAUSE THE RECT WAS 20 PX.** An aspect fit can only
+shrink, so a 4.34-unit arris wearing a plain 20 px swatch got 4.3 px per world unit against the
+slab's own 58 — flat by arithmetic. A chamfer strip takes THE PIECE'S OWN RECT now (`part`'s
+`edge_idx` defaults to `idx`), so its density is the density of the face it breaks; the reveals, the
+drip edge and the aerial's mast came off their swatches for the same reason. What stays on a 20 px
+patch is every solid under 0.6 units on its longest axis — the cabinet lid, the hinge collar, the
+skirt hangers, the tip housing, the aerial's collar.
+
+**AND THE FIT HAD TO LEARN TO TURN THE RECT.** Half the arrises were still at 13 px/unit after that,
+because whichever of the face's axes lands on the rect's SHORT side sets the density for both: the
+upper spandrel's 3.36 x 0.014 arris took `R_CLAD_UP`'s 46 px HEIGHT over 3.36 units. `buildlib.unwrap`
+now measures both orientations in the fit and takes the denser, which on a strip is free and on a
+large face does not trigger — a face whose art has a direction wears a rect cut to its own aspect, so
+the swap loses there. Measured on the built booth, split by shape: **312 chamfer strips median 67.1
+px/unit against 48 real surfaces at median 59.6** (before: 4.3 and 58). Aniso unchanged at median
+1.08 p95 1.35, 0 degenerate, 768 / 708 tris, holes 0, coplanar 0.
+
+**THE CABLE'S GAP IS `Models.instanced` CENTRING A GLB IT DID NOT MODEL.** `normalize()` recentres a
+prop on its bounding box in plan, and the lamp's head overhangs toward what it lights, so the point
+the batch is handed is out in the air BETWEEN pole and housing. Measured off `lamp-post.glb` over the
+bottom 90% of a model normalised to height 1.002: the mast's verts centre on z **-0.0634** and span
+0.102 across, i.e. the pole stands **0.37 units behind the placed point** and is 0.30 wide — so the
+drop ended a third of a unit clear of a post it was supposed to be bolted to. `FacilityLamps.Mast`
+carries `ax`/`az` now, the pole's own axis, and `FacilityStyle.LAMP_POLE_Z` is that measurement.
+Verified live: the drop's post end lands at **-55.626, -180** and the bulb at -56.354, -180 — 0.728
+apart, which is pole offset plus head reach exactly.
+
+**Verdict: landed. Two rules worth keeping — an edge break belongs to the piece it breaks, not to a
+swatch table; and a prop's PLACED point is its bounding box's centre, so anything that has to meet
+its geometry needs the geometry measured.**
+
+## The roof was the problem all along (2026-09-17)
+
+Three reports, and the third one names the cause: "make the roof much thinner, we have problems
+mostly because of that".
+
+**THE SLAB WAS 0.3 AND IS NOW 0.12.** `BOOTH_FASCIA` is one dimension and nearly every face reported
+on this mesh since the UV pass was a face of it — the fascia flanks, their arrises, the drip lip
+under them. At 0.3 with a 0.45 eave the roof read as a parapet on a 3.4-wide kiosk; at 0.12 it is a
+roofline. The mesh is 5.52 tall now instead of 5.7 and nothing else moved: the batch passes
+`BOOTH_H + BOOTH_FASCIA + BOOTH_MAST`, and the cable's collar is the same expression, so the drop
+followed it down — verified live at **0.063 horizontal** from the computed collar, which is half
+`CABLE_W`.
+
+**ORIENTATION IS THE ART'S, NOT THE DENSITY'S.** The previous entry's fit picked whichever of the two
+rect orientations was denser, and on a 1.66-unit corner arris that turned the cladding a quarter turn
+— reported as "not HORIZONTAL, VERTICAL", with a `uv` triple spanning the cell's full WIDTH across a
+vertical strip. The rule is geometric now: UP takes v wherever the face has any height, and a face
+with no height at all puts its longer axis on u. Measured on the rebuilt booth: the vertical arris
+takes the cladding cell's 127 px of height over 1.66 units, **70.7 px per world unit** against the
+wall's own 75.6, upright; the fascia flank 59.6 against the slab's 55.1; **312 strips median 46.4
+against 40 surfaces at median 48.7**.
+
+**AND A POLE IS NOT STRIPED.** Moving the aerial and the drip lip onto the roof CELL to buy density
+put the decking's standing seams on them ("should not be striped"). That is the line between the two
+rect families and it is not density: a piece whose read is a COLOUR takes a plain patch (the mast,
+the lip, both reveals, the cabinet lid, the hinge collar, the skirt hangers, the tip housing, the
+aerial's collar), and only the ARRISES OF A FACE take that face's own cell. The mast is back on a
+20 px patch at 17.8 px/unit, which resolves nothing and is meant to.
+
+**THE SLAB'S OWN FLANKS WENT THE SAME WAY, ONE REPORT LATER** ("make this face gray without stripes,
+you can't have them there"). `R_FASCIA` — a 14:1 band cut from the decking cell for exactly those
+faces, and the fix for the stretch two entries ago — is DELETED: any slice of a standing-seam cell
+laid along a 4.26 x 0.08 edge is a row of stripes, whatever its aspect. The flanks and their arrises
+take the roof's patch now, uniform at 4.7 px/unit, and the LID keeps the decking cell it should have.
+The rect table is nine entries instead of ten.
+
+**Verdict: landed, 768 / 708 tris, holes 0, coplanar 0, aniso median 1.08 p95 1.35, 0 degenerate.
+Four reports on one model and the last one was the cheapest fix in the set — a constant.**

@@ -1047,7 +1047,11 @@ class FacilityCable
         [u0, v0, u1, v0, u1, v1, u0, v1]);
     }
 
-// one run: a quad strip from `a` to `c`, both in the plane `o.n` describes, bowing between them.
+// one run: a quad strip from `a` to `c`, widened in the plane `o.n` describes, bowing between them.
+//
+// A SPAN BETWEEN TWO POLES TAKES `o.sag` AND NOT `o.bow`, and that is the one thing to get right
+// here: the bow rides the width axis, so it can only swing a run sideways, while the sag is
+// perpendicular to the chord out of world down and is what makes a hung cable read as hung.
 //
 // THE WIDTH AXIS AND THE BOW AXIS ARE THE SAME VECTOR AND MUST NOT BE THE SAME VARIABLE. `w` is the
 // in-plane perpendicular of the chord (n cross t), and it is what the ribbon is widened along and
@@ -1083,6 +1087,20 @@ class FacilityCable
       // the bow is world units, so a run SHORTER than a cell has to have it taken back off or the
       // 2-unit drop off a machine lid swings like a skipping rope
       var amp = Math.min(1.0, len / CityConfig.CELL);
+      // GRAVITY'S OWN AXIS, which is the one thing the bow cannot be: world down with the chord's
+      // component taken out of it, so the run leaves both ends along itself and only falls away in
+      // between. a chord that IS vertical has no such axis and simply does not sag
+      var sag = (o.sag != null ? o.sag * len : 0.0);
+      var gx = ty * tx, gy = ty * ty - 1, gz = ty * tz;
+      var gl = Math.sqrt(gx * gx + gy * gy + gz * gz);
+      if (gl < 0.001)
+        sag = 0.0;
+      else
+        {
+          gx /= gl;
+          gy /= gl;
+          gz /= gl;
+        }
       var hw = FacilityStyle.CABLE_W / 2;
       var n = FacilityStyle.CABLE_STEPS;
       var px = 0.0, py = 0.0, pz = 0.0;
@@ -1092,9 +1110,12 @@ class FacilityCable
           // zero at both ends, so the run stays glued to what it is bolted to
           var taper = 4 * t * (1 - t);
           var off = sg * amp * taper * (o.bow + o.wave * Math.sin(t * 3 * Math.PI + ph));
-          var mx = o.a[0] + dx * t + wx * off;
-          var my = o.a[1] + dy * t + wy * off;
-          var mz = o.a[2] + dz * t + wz * off;
+          // the drop rides the SAME parabola, which is the shape a span under its own weight takes
+          // anyway — a catenary and 4t(1-t) differ by less than a texel over six cells
+          var dn = sag * taper;
+          var mx = o.a[0] + dx * t + wx * off + gx * dn;
+          var my = o.a[1] + dy * t + wy * off + gy * dn;
+          var mz = o.a[2] + dz * t + wz * off + gz * dn;
           if (i > 0)
             {
               var v0 = (i - 1) / n * len / FacilityStyle.CABLE_TILE;

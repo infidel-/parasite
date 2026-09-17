@@ -2593,7 +2593,11 @@ class FacilityStyle
   public static inline var BOOTH_SILL = 1.7;     // the glazing band's bottom and top, off the asphalt
   public static inline var BOOTH_HEAD = 3.8;
   public static inline var BOOTH_EAVE = 0.45;    // how far the roof slab overhangs the walls, each side
-  public static inline var BOOTH_FASCIA = 0.3;   // and how thick it is, i.e. the band that reads as its edge
+  // and how thick the slab is, i.e. the band that reads as its edge. 0.12 AND NOT 0.3: at 0.3 the
+  // eave was a parapet, and the reports that followed the checkpoint's UV pass were mostly about
+  // faces of it -- the fascia flanks, their arrises and the drip lip under them are all this one
+  // dimension, and a slab a third as thick is a roofline rather than a lid
+  public static inline var BOOTH_FASCIA = 0.12;
   // and how far the aerial stands over that slab. IT IS ONLY IN THE GLB — the emitted booth has no
   // mast — and it is a constant here because the batch's target height is BOOTH_H + BOOTH_FASCIA +
   // BOOTH_MAST: render.Models.instanced scales by HEIGHT alone, so the mesh's own total height is
@@ -2605,17 +2609,19 @@ class FacilityStyle
   // the collar is BOOTH_MAST_FRAC up the mast. models-src/facility/entry_build.py, verbatim
   public static inline var BOOTH_MAST_IN = 0.35;
   public static inline var BOOTH_MAST_FRAC = 0.62;
-  // and the drop itself: where up the pole it is clamped as a fraction of LAMP_H, and how far the
-  // span wanders off its own chord.
+  // and the drop itself: where up the pole it is clamped as a fraction of LAMP_H, how far it FALLS
+  // between the two as a fraction of the span, and how much it wanders sideways on the way.
   //
-  // THE RIBBON LIES IN THE HORIZONTAL PLANE AND THE BOW IS SIDEWAYS RATHER THAN A SAG, which is
-  // FacilityCable.strip's own geometry and not a compromise worth fighting: a ribbon is widened
-  // along the same vector it is bowed along, so a run that sagged would be CABLE_W of ribbon seen
-  // EDGE-ON from a camera pitched 51 degrees down. The podium's floor runs are this shape for the
-  // same reason. The bow is large because the span is: mouth plus both flanking bays is six cells
+  // IT SAGS AND THE RIBBON STAYS LEVEL, which needed the two axes separated in
+  // render.facility.FacilityCable.strip — a ribbon is widened along the same vector it is BOWED
+  // along, so this span shipped swinging sideways instead of hanging. The fall is StripOpts.sag,
+  // perpendicular to the chord out of world down, and the ribbon's width stays in the horizontal
+  // plane where a camera pitched 51 degrees down can see it. 0.06 of the span is a real service
+  // drop's own slack; the sideways wave is kept, small, so two compounds do not draw one curve
   public static inline var ENTRY_CABLE_Y = 0.9;
-  public static inline var ENTRY_CABLE_BOW = 0.9;
-  public static inline var ENTRY_CABLE_WAVE = 0.3;
+  public static inline var ENTRY_CABLE_BOW = 0.0;
+  public static inline var ENTRY_CABLE_SAG = 0.06;
+  public static inline var ENTRY_CABLE_WAVE = 0.25;
   // and how hard that band glows. it is NOT WINDOW_EMISSIVE, and the gap is not a taste difference:
   // a window run's panes are half-transparent, sunk in a reveal and read from one side, while these
   // are opaque and wrap a free-standing box, so four of them face the camera at once with no masonry
@@ -2665,6 +2671,13 @@ class FacilityStyle
   // refY / post.y, so a facility mast lands on the street lamp's own 1.0 and needs no tuning of its own
   public static inline var LAMP_HEAD_Y = 0.95;
   public static inline var LAMP_HEAD_Z = 0.06;
+  // and where the POLE stands in that same model, as the same fraction — NEGATIVE, because it stands
+  // behind the plan centre by as much as the housing hangs in front of it. Measured off the built
+  // glb the same way: over the bottom 90% of a model normalised to height 1.002 the mast's own verts
+  // centre on z -0.0634 and span 0.102 across, so the pole is 0.37 world units behind the point the
+  // batch places and 0.30 wide. Anything that has to MEET the post rather than the fixture — the
+  // checkpoint's service drop is the first — takes FacilityLamps.Mast's `ax`/`az`, not its `x`/`z`
+  public static inline var LAMP_POLE_Z = -0.0634;
   // one mast every this many cells along a lit line, gated on (col + row), which spaces a run without
   // needing to detect where the run starts or ends
   public static inline var LAMP_SPACING = 6;
