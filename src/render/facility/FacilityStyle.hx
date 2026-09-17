@@ -352,9 +352,14 @@ class FacilityStyle
   public static inline var PAINT_Y = render.RenderConfig.PAINT_Y;
   // a parking bay is this deep, in cells, and one is struck every this many cells along the apron
   // edge it is drawn against. AISLE_CELLS is the driving lane left between one row of bays and the
-  // next as the rows march on inward to fill the middle of the lot
-  public static inline var BAY_CELLS = 2;
-  public static inline var BAY_SPACING = 2;
+  // next as the rows march on inward to fill the middle of the lot.
+  //
+  // BOTH ARE READ FROM THE GENERATOR and are not numbers here any more: gen.facility.FacilityBays
+  // deals which bays hold a car and stamps their footprint on the grid, so the bay rect is now a fact
+  // about the SAVE and the paint has to agree with it rather than the other way round. The dependency
+  // runs render -> gen, which is the direction everything else here runs in
+  public static inline var BAY_CELLS = gen.facility.FacilityBays.DEPTH;
+  public static inline var BAY_SPACING = gen.facility.FacilityBays.SPACING;
   public static inline var AISLE_CELLS = 2;
   // and this many cells of bare asphalt are left round every structure. a lab building already has
   // its 2-wide pavement apron and so clears this on its own; the hangar is the one that opens
@@ -2424,11 +2429,12 @@ class FacilityStyle
   // units square, so this leaves 0.26 units at each end and 2.3 each side. a full 4.3 m car would
   // overhang the spot at both ends and read as badly parked in every bay at once
   public static inline var CAR_H = 2.8;
-  // how many are parked, and one bay in this many is left EMPTY. both are about the same thing:
-  // there is one car model, so a lot parked solid is one car repeated the length of the kerb. the
-  // gaps are what make a run of them read as a car park (see render.facility.FacilityCars.fill)
-  public static inline var CAR_COUNT = 5;
-  public static inline var CAR_EMPTY = 3;
+  // HOW MANY ARE PARKED IS NOT DECIDED HERE ANY MORE. It is gen.facility.FacilityBays.CARS and
+  // EMPTY, because a parked car is impassable now and so its footprint is stamped on the grid; this
+  // pass stands a model on each mark it finds. The reasoning did not change with the move — there is
+  // one car model, so a lot parked solid is one car repeated the length of the kerb
+  // and the half-turn render.facility.FacilityCars gives half of them is the only variety one glb
+  // has left
 
   // ---- what stands on the roof (render.facility.FacilityRoof) -------------------------------------
 
@@ -2593,6 +2599,23 @@ class FacilityStyle
   // BOOTH_MAST: render.Models.instanced scales by HEIGHT alone, so the mesh's own total height is
   // what has to be passed or every other dimension of it moves
   public static inline var BOOTH_MAST = 1.0;
+  // and WHERE ON THAT AERIAL the cable collar sits, which the checkpoint's service drop has to land
+  // on. the mast stands BOOTH_MAST_IN in from the roof slab's own corner — so BOOTH_W / 2 minus
+  // this off the booth's centre, on +x and -z, because the glb's local +y exports as world -z — and
+  // the collar is BOOTH_MAST_FRAC up the mast. models-src/facility/entry_build.py, verbatim
+  public static inline var BOOTH_MAST_IN = 0.35;
+  public static inline var BOOTH_MAST_FRAC = 0.62;
+  // and the drop itself: where up the pole it is clamped as a fraction of LAMP_H, and how far the
+  // span wanders off its own chord.
+  //
+  // THE RIBBON LIES IN THE HORIZONTAL PLANE AND THE BOW IS SIDEWAYS RATHER THAN A SAG, which is
+  // FacilityCable.strip's own geometry and not a compromise worth fighting: a ribbon is widened
+  // along the same vector it is bowed along, so a run that sagged would be CABLE_W of ribbon seen
+  // EDGE-ON from a camera pitched 51 degrees down. The podium's floor runs are this shape for the
+  // same reason. The bow is large because the span is: mouth plus both flanking bays is six cells
+  public static inline var ENTRY_CABLE_Y = 0.9;
+  public static inline var ENTRY_CABLE_BOW = 0.9;
+  public static inline var ENTRY_CABLE_WAVE = 0.3;
   // and how hard that band glows. it is NOT WINDOW_EMISSIVE, and the gap is not a taste difference:
   // a window run's panes are half-transparent, sunk in a reveal and read from one side, while these
   // are opaque and wrap a free-standing box, so four of them face the camera at once with no masonry

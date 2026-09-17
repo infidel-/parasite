@@ -119,6 +119,8 @@ class AreaGenerator
         Const.TILE_ALLEY => cols1[TEMP_ALLEY],
         Const.TILE_PARKING => cols1[TEMP_ALLEY],
         Const.TILE_ALLEY_UNWALKABLE => cols1[TEMP_ALLEY],
+        Const.TILE_PARKING_CAR => cols1[TEMP_ALLEY],
+        Const.TILE_PARKING_CAR_ORIGIN => cols1[TEMP_ALLEY],
         Const.TILE_WALKWAY => cols1[TEMP_BLOCK],
         Const.TILE_BUILDING => cols1[TEMP_ACTUAL_BUILDING],
       ];

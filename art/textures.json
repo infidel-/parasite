@@ -916,6 +916,20 @@
       "built_linear": 0.0106,
       "built_srgb": 17.8
     },
+    "city/sewer-hatch": {
+      "src": "city/sewer-hatch.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "lift": 0.75,
+      "prompt_exact": true,
+      "prompt": "A single round cast-iron SEWER MANHOLE COVER seen from DIRECTLY OVERHEAD, dead centre in the frame, filling almost the whole square, painted like a 2D game sprite. ABSOLUTELY NO PERSPECTIVE: a perfect circle, no side walls visible, no vanishing point. STRUCTURE: an outer circular rim ring with a narrow dark seating gap around it, then a raised concentric collar, then the main field filled with a regular GRID OF RAISED DIAMOND TREAD KNOBS; two small rectangular pry slots on opposite sides near the rim; a faint radial hinge bar across one third of the cover. WEAR: soot in the recesses between the knobs, a few pale scuffs on the knob tops where feet have polished them, thin rust bleed at the rim, a little grit caught in the seating gap. PALETTE (match closely): iron field #4a4742 with knob tops lifted to #5e5a53, recesses #2e2c29, rim ring #55514a, rust bleed #6b4c3a used sparingly, grit #6a665e. Clearly readable as a metal lid, MID-DARK and not near-black, flat even lighting, no cast shadow, no glow, no highlight blob, no text, no lettering, no logo, no numbers, nothing else in the frame. [append textures.json style]",
+      "note": "the cast-iron lid on the pavement that leads down to the tunnels (objects.SewerHatch, entities64 row 2 col 0). IT IS A TEXTURE AND NOT A PROP, which is the silhouette-vs-surface test drawn through the flattest object in the game: AreaObject.isGroundDecal is true for a hatch, so the 3D street lays its sprite FLAT on the cell and there is no outline to buy - what carries it is the tread pattern, which is a surface. THE 1024 DROP IS CUT TO A HARD CIRCLE before it is adopted: gpt returned the cover out to the frame edges with a soft brown haze in the corners (alpha mean 192 over the whole square), so the source is masked to a disc and then inset to 94% of the cell, which is what makes it read as a lid lying on asphalt rather than one clipped by its own tile. The cell it replaces was near-black at 64 px; this measures rgb 68/61/53 over its own opaque 67% of the frame. DRAWN AT 256 AND NOT 64, through the third arm of render.particles.Sprites.atlasFor beside the bench and clue packs: a hatch spans Sprites.SIZE 3.0 world units, so a 64 px cell is 21 texels per world unit against city/ground-asphalt's own 57 - the blurriness art/textures.json's facility/floor-grate note records at 21.3, on the same number. At 256 it is 85. LIFT 0.75, and it is the one number here that was fitted LIVE rather than off the drop: a ground decal's crop is darkened by RenderConfig.DECAL.actorMul 0.7 before it is drawn, which is 0.45 in light, so the mid-dark lid the gen returned rendered at luma 8 against the pavement's 30 - 0.27x, i.e. the hole-in-the-ground failure this file's own `lift` header describes. The gamma takes built_linear 0.0505 to ~0.09 so the drawn lid lands about 0.6x the walkway it lies in: darker than the pavement, which a cast-iron lid is, and not a void. It is ONE CELL and not a pack, so there is no index table and no arithmetic: the image IS the cell, which is the whole difference between this and Const.FACILITY_DECO_HD. The 2D area view keeps drawing the entities64 frame, which tools/atlaspaste.py rewrites from the same source, so the two views stay the same object",
+      "last_converted": "2026-09-17T14:56:33",
+      "built_linear": 0.0975,
+      "built_srgb": 84.8,
+      "last_lift": 0.75
+    },
     "decals/bullet-hole-1": {
       "src": "decals/bullet-hole-1.png",
       "class": "sprite",

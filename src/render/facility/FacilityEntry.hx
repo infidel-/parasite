@@ -212,6 +212,59 @@ class FacilityEntry
       return prop;
     }
 
+// the checkpoint's SERVICE DROP: one cable from the gate's own mast to the collar on the booth's
+// aerial. It is what the aerial was reshaped for — the square crossbar that stood up there was
+// reported as reading like a cable connection point with nothing connected to it, so it is a round
+// collar now and this is the cable.
+//
+// IT BORROWS FacilityCable's RIBBON, exactly as FacilityWork's desk leads and the hangar's machine
+// runs do, so the run costs no draw call of its own — and like them it has to be filled BEFORE
+// FacilityCable.build merges that buffer (render.facility.FacilityArea)
+  public static function cable(m:Facility, b:MeshBuf):Void
+    {
+      var gate = find(m);
+      if (gate == null)
+        return;
+      var y = FacilityGround.surfY(Surf.LOT);
+      var c = CityConfig.cellToWorld(gate.boothCol, gate.mouthRow);
+      var off = FacilityStyle.BOOTH_W / 2 - FacilityStyle.BOOTH_MAST_IN;
+      var post = FacilityLamps.gateMast(m, gate);
+      var a = [
+        post.x,
+        post.y + FacilityStyle.LAMP_H * FacilityStyle.ENTRY_CABLE_Y,
+        post.z,
+      ];
+      var t = [
+        c.x + off,
+        y + FacilityStyle.BOOTH_H + FacilityStyle.BOOTH_FASCIA +
+          FacilityStyle.BOOTH_MAST * FacilityStyle.BOOTH_MAST_FRAC,
+        c.z - off,
+      ];
+      FacilityCable.strip(b, {
+        a: a,
+        c: t,
+        n: level(a, t),
+        side: null,
+        bow: FacilityStyle.ENTRY_CABLE_BOW,
+        wave: FacilityStyle.ENTRY_CABLE_WAVE,
+        seed: FacilityModel.mix((gate.col * 90001) ^ (gate.row * 10007)),
+      });
+    }
+
+// the most nearly UPRIGHT unit normal a plane through both ends of a run can take: world up with the
+// chord's own component taken out of it. strip's contract is that both ends lie in the plane `n`
+// describes, and a run whose ends differ in height has no horizontal one. it cannot degenerate here
+// — the chord is six cells of mouth across against a metre of height
+  static function level(a:Array<Float>, c:Array<Float>):Array<Float>
+    {
+      var dx = c[0] - a[0], dy = c[1] - a[1], dz = c[2] - a[2];
+      var l = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      var ty = dy / l;
+      var nx = -ty * dx / l, ny = 1 - ty * ty, nz = -ty * dz / l;
+      var nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+      return [nx / nl, ny / nl, nz / nl];
+    }
+
 // the lit band itself, on the four faces of the booth's own footprint. split out of `booth` because
 // BOTH checkpoints want it and neither wants the other's walls
   static function glazing(scene:Scene, gate:Gate, y:Float):Void

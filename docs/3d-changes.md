@@ -499,3 +499,129 @@ true, and the pavement either side is walkable — a compound is not sealed by t
 **Verdict: landed. The checkpoint was retroactive because it touched no tiles; one row of tile is
 what it costs to make the barrier mean something, and an old save simply keeps a boom you can walk
 under.**
+
+## Five reports on the checkpoint, two faults, and one repainted cell (2026-09-17)
+
+The five: the booth's top and its top SIDES "have angles"; its mast should be round and carry a
+cable; "all edges are weirdly green (that's ALL edges)"; and on the barrier, smeared faces, faces
+whose "u,v resolution is too small", and "all sides are stretched". They are two faults and a bad
+cell.
+
+**STRETCHED IS THE UNWRAP'S OWN CONTRACT.** `buildlib.unwrap` lays a rect over a face's own bounding
+box, which is isotropic only where the two aspects already agree. The cabinet's 1.2 x 1.92 flanks
+wore a SQUARE cell — 1.6x denser up the box than across it, reported as a squashed louvre bank — and
+the roof slab's 4.36 x 0.30 flanks wore the same square cell at **14x**, with `R_FASCIA` cut for
+exactly those faces and never applied. `tag` takes an ASPECT FIT now (add 3 to the axis code and the
+rect is cropped about its centre until the two texel densities meet), and the slab's flanks take the
+fascia band. Measured on the built glbs with a per-triangle UV jacobian: booth **aniso median 1.00,
+max 1.00** over its 36 mapped triangles; barrier median 1.17, and its only outliers are the BOOM's
+own faces at 23.7 — deliberate, and what tiles the hazard bands, so that piece keeps `axes 2`.
+
+**SMEARED, GREEN AND UNDER-RESOLVED ARE ALL THE CHAMFER STRIPS.** A strip is 0.014 wide against a 40
+px plain swatch, so a bbox map spends the swatch's whole width on 0.014 units and its whole height on
+a face metres long. `chamfer` takes `flat` and puts the strip on the swatch's CENTRE COLOUR (`tag`'s
+axes 6) — one flat colour, unsmearable at any rect size. And every strip, lid, soffit and reveal on
+both meshes took the CABINET's swatch, which is olive: a blue-grey kiosk under a blue-grey roof was
+outlined in green on every arris it has. Three swatches now, one per painted metal, each the flattest
+40 px patch of its own cell — cell 1 sd 1.73 at 61/67/56, cell 2 sd 3.13 at 50/67/75, cell 3 sd 1.62
+at 72/85/95.
+
+**THE ANGLES WERE IN THE ART.** The pack4 gen drew the roof decking in PERSPECTIVE, its standing
+seams fanning to a vanishing point, so on a flat square slab they read as diagonals. One solo
+orthographic gen replaces that cell through `entrytone.py`'s new `PATCH` table and goes through the
+same tone fit as if it had come in the pack: it landed at 0.0717 linear against `booth-roof`'s fitted
+0.0849, a gamma of 0.93.
+
+**The aerial is round and now carries a cable.** The square crossbar read as a cable termination with
+nothing attached, so the mast is an 8-sided lathe and the crossbar a 12-sided bulged collar (672 ->
+768 tris). `FacilityEntry.cable` runs a service drop to it from the gate's own mast
+(`FacilityLamps.gateMast`, extracted from that file's own placement loop so the two cannot disagree)
+and BORROWS FacilityCable's ribbon the way the desk leads do, so it costs no draw call. The ribbon
+lies in the most nearly horizontal plane through both ends and the bow is sideways rather than a sag:
+a ribbon is widened along the vector it is bowed along, so a sagging run would be `CABLE_W` of ribbon
+seen edge-on from a camera pitched 51 degrees down. Verified live — the nearest vertex of the
+`facility/cable` mesh to the computed collar is **0.063 units** away, which is half `CABLE_W`.
+
+**Verdict: landed, both meshes rebuilt (708 / 768 tris, holes 0, coplanar 0). The two fixes are
+`buildlib`'s and not this model's — an aspect fit and a flat strip are what every hand-modelled prop
+in this repo wants, and the rest of them still take the old default.**
+
+## The car park's cars are impassable, and cost two tile ids (2026-09-17)
+
+The boom's row went unwalkable last landing; the cars standing ten units from it were still walked
+through. `FacilityCars` dealt the bays, ranked them by distance from the mouth and rolled one in
+three empty, all render-side with nothing persisted — so the deal MOVED to `gen.facility.FacilityBays`
+and the renderer reads the marks back.
+
+**TWO IDS AND NOT ONE.** `TILE_PARKING_CAR` covers the bay and `TILE_PARKING_CAR_ORIGIN` its low
+corner against the kerb. Two bays side by side along one kerb are a single 2x4 block of marks with no
+seam in it, so one id alone cannot say where a car BEGINS — the renderer would have to walk the run
+and agree with the generator's bay phase to find out. The origin says it outright and the yaw comes
+off whichever neighbour is pavement, which deleted `spots`/`spot`/`fill` (90 lines) for a 25-line
+`pose`. No new art either: both alias to the alley's asphalt in `tiles.Default.getIcon`, like
+`TILE_PARKING`, and row 7 of `TILE_WALKABLE` had the two free slots.
+
+**The bay rhythm is copied, not shared** — `FacilityBays.runStart` is `FacilityPaint.runStart` against
+the TEMP alphabet, because the paint is render-side and the generator cannot reach it. A divergence
+is now only cosmetic (a car across a painted divider rather than a car that vanishes), and
+`GenCheck.parkingSane` asserts what can be checked without a renderer: cars <= the cap, marked cells
+== cars x SPACING x DEPTH, and every origin has a kerb. That total is what caught the real bug —
+**18 marked cells where five whole bays are 20**, two bays overlapping because a cell claims the
+FIRST kerb it finds and a two-deep lot with pavement on both sides deals the same rect twice. Asking
+`whole` a second time at stamp time makes the first bay dealt keep the ground.
+
+3,000 seeds pass. Verified live: 5 origins, 20 marks, **0 of them walkable**, and the batch still
+reports `car.glb = 5`.
+
+**Verdict: landed. `FacilityStyle.BAY_SPACING`/`BAY_CELLS` now READ the generator's constants, which
+is the dependency running the right way for the first time here: where a car may stand is a fact
+about the save.**
+
+## The parked car's lamps are out, on the baked atlas (2026-09-17)
+
+Reported as the front white and rear red lights wanting to be dark and switched off. `facility/car`
+is a TRELLIS bake, so a new reference costs a fresh `image_to_3d`, a fresh unwrap and a re-fit of
+`baseColor`/`ao`/`tex` for four patches of paint — the call `tools/livery.py` already made on the
+drums. `models-src/facility/carlights.py` is a per-pixel pass over the dumped 2048 atlas, wired
+through `models.json`'s existing `texSrc`.
+
+**THE KEYS ARE MEASURED AND THE BODY CANNOT REACH EITHER.** The lamps are the top two per cent of the
+value range — v 240-255 is 0.58% of texels at rgb 251/112/113 sat 0.56, v 192-207 is 1.01% at
+195/191/191 sat 0.03 — while the body tops out at 120 and stays between 0.12 and 0.20 saturation. So
+"over 200 and saturation over 0.30" is a red lens and "over 185 and saturation under 0.12" is a white
+one, and neither can touch the paint.
+
+**NEITHER TARGET IS BLACK.** An unlit tail lens is dark red glass and an unlit headlamp a grey
+reflector, both still lighter than the paint; a hard black reads as a HOLE in the car at this camera,
+which is the failure `textures.json`'s `lift` exists for. Measured: red **18,635 texels 245/23/23 ->
+54/28/28** with 45% of its chroma kept (mixed in linear light), white **58,837 texels 204/206/206 ->
+88/88/88**.
+
+**Verdict: landed. A per-pixel key beats a re-roll whenever the thing to change is a colour and the
+atlas is a fragmented chart layout — second entry on that rule after the drum liveries.**
+
+## The sewer hatch gets its own hi-res cell (2026-09-17)
+
+The lid is the flattest object in the game — `AreaObject.isGroundDecal` is true, so the 3D street
+lays its sprite FLAT on the cell — and there is no silhouette to buy, which is the triage rule saying
+TEXTURE outright. It drew from a 64 px `entities64` cell at near-black with a checker on it.
+
+**ONE IMAGE, ONE CELL, NO PACK.** A third arm in `Sprites.atlasFor` beside the bench and clue packs,
+except that this one needs no index table and no coordinate arithmetic: the image IS the cell. A
+hatch spans `Sprites.SIZE` 3.0 world units, so 64 px is **21 texels per world unit** against
+`city/ground-asphalt`'s own 57 — the same number `facility/floor-grate`'s note records as blurry. At
+256 it is 85.
+
+**The drop needed cutting before it was adopted.** gpt returned the cover out to the frame edges with
+a soft brown haze in the corners (alpha mean 192 over the whole square), so the source is masked to a
+hard disc and inset to 94% of the cell — a lid lying on asphalt rather than one clipped by its tile.
+
+**LIFT 0.75 WAS FITTED LIVE AND IS THE ENTRY.** A ground decal's crop is darkened by
+`RenderConfig.DECAL.actorMul` 0.7 before it is drawn, which is 0.45 in LIGHT, so the mid-dark lid the
+gen returned rendered at luma **8 against the pavement's 30** — 0.27x, the hole-in-the-ground
+failure. The gamma takes `built_linear` 0.0505 -> **0.0975** and the drawn lid to luma 19 against 58.
+Still 0.33x rather than the 0.65x the texture numbers predict, and the gap is the decal path's own:
+read the RENDERED ratio when fitting one of these, never the built one alone.
+
+**Verdict: landed. `tools/atlaspaste.py` rewrites the 64 px frame from the same source, so the 2D view
+and the 3D sprite stay one object.**

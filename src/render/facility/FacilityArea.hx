@@ -278,6 +278,10 @@ class FacilityArea implements Area3D
       // as FacilityWork's desk leads do, and a borrower has to fill before the owner merges. That is
       // the one ordering constraint in this block and it is the same one recorded above it
       hangar = FacilityHangar.build(scene, model, workCable);
+      // and the checkpoint's service drop, the third borrower of that same buffer and the last
+      // thing into it — the pole it runs from is FacilityLamps.gateMast, which is pure arithmetic
+      // over the grid and needs no mast to have been built yet
+      FacilityEntry.cable(model, workCable);
       elec = FacilityCable.build(scene, model, workCable);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not

@@ -29,6 +29,7 @@ class Images
   public var female128: Array<Image>;
   public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
   public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
+  public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var tileset: Image;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -62,6 +63,8 @@ class Images
       // and the clue sheet, the same built-art route for one sheet instead of four
       cluePack = new Image();
       cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
+      // and the sewer hatch lid, the same route again for a single cell
+      hatchHD = loadHatchHD();
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();
@@ -87,6 +90,16 @@ class Images
 // art/textures.json carries their prompts and `make tex` writes them — and the img/ sheets are
 // hand-maintained. They are still plain <img> and not render.Textures loads, because the sprite pool
 // crops cells out of a canvas rather than binding a whole texture
+// the hi-res sewer hatch lid (3D only, like the packs above). ONE IMAGE AND ONE CELL, so there is no
+// index table and no arithmetic behind it — the image IS the cell, which is the whole difference
+// between this and the bench and clue packs
+  function loadHatchHD(): Image
+    {
+      var img = new Image();
+      img.src = AssetPath.resolve('textures/city/sewer-hatch.png');
+      return img;
+    }
+
   function loadDecoPacks(): Array<Image>
     {
       var out = [];

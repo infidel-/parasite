@@ -186,6 +186,10 @@ typedef Facility = {
   // .FacilityPaint's bay striping and FacilityCars' spot search, which is why it is a grid and not
   // the rect it happens to be
   parking:Array<Array<Bool>>,
+  // and where each PARKED CAR stands: the cell carrying Const.TILE_PARKING_CAR_ORIGIN, which is its
+  // bay's low corner against the kerb. gen.facility.FacilityBays deals the bays and stamps the
+  // footprint; render.facility.FacilityCars stands one model on each of these and needs no phase
+  cars:Array<{ col:Int, row:Int }>,
   // which cells stand a piece of 3D FURNITURE, as the fitting kind PLUS ONE — 0 is "nothing here",
   // so the grid needs no second channel to say whether a cell is empty. a grid for the same reason
   // `table` is one: two passes ask it per cell (the emitter, and FacilityKit's own placement gate),
@@ -266,7 +270,16 @@ class FacilityModel
             m.surf[row][col] = surfOf(t);
             m.wall[row][col] = wallOf(t);
             m.table[row][col] = tableOf(t);
-            m.parking[row][col] = (t == Const.TILE_PARKING);
+            m.parking[row][col] = (t == Const.TILE_PARKING ||
+              t == Const.TILE_PARKING_CAR ||
+              t == Const.TILE_PARKING_CAR_ORIGIN);
+            // and where a car stands: a LIST and not a grid, because there are at most
+            // gen.facility.FacilityBays.CARS of them and the one pass that wants them wants them all
+            if (t == Const.TILE_PARKING_CAR_ORIGIN)
+              m.cars.push({
+                col: col,
+                row: row,
+              });
             if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
               solid[row][col] = true;
           }
@@ -377,6 +390,7 @@ class FacilityModel
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
         parking: [for (_ in 0...h) [for (_ in 0...w) false]],
+        cars: [],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],
         tableTaken: [for (_ in 0...h) [for (_ in 0...w) false]],
@@ -395,12 +409,15 @@ class FacilityModel
         return ROAD;
       if (t == Const.TILE_WALKWAY)
         return WALKWAY;
-      // open asphalt, all three ids. TILE_ALLEY_UNWALKABLE is the gate mouth's barrier row — the
+      // open asphalt, all five ids. TILE_ALLEY_UNWALKABLE is the gate mouth's barrier row and the two
+      // TILE_PARKING_CAR ids are a parked car's footprint — the
       // surface is the drive and only the walk was taken off it, so the ground pass, the lamps and
       // render.facility.FacilityEntry.isEntry all have to keep seeing a lot there
       if (t == Const.TILE_ALLEY ||
           t == Const.TILE_PARKING ||
-          t == Const.TILE_ALLEY_UNWALKABLE)
+          t == Const.TILE_ALLEY_UNWALKABLE ||
+          t == Const.TILE_PARKING_CAR ||
+          t == Const.TILE_PARKING_CAR_ORIGIN)
         return LOT;
       if (t == Const.TILE_GRASS ||
           t == Const.TILE_GRASS_UNWALKABLE ||

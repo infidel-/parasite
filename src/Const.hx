@@ -577,6 +577,11 @@ class Const
   // 3D-ONLY, like the bench packs: the 2D area view, the inventory and every window still draw the
   // entities64 frame, which tools/atlaspaste.py bakes from these same cells, so the two are one
   // object drawn twice. Nothing is persisted and nothing is migrated
+  // and the sewer hatch's own hi-res cell, which is a whole IMAGE rather than a pack: one object, one
+  // cell, so it needs no index table and no coordinate arithmetic (render.particles.Sprites.atlasFor
+  // and art/textures.json city/sewer-hatch)
+  public static inline var HATCH_HD_CELL = 256;
+
   public static inline var CLUE_PACK_CELL = 170;
   public static inline var CLUE_PACK_COLS = 6;
   // index = the pack cell in reading order; value = the entities64 frame it redraws. The DOCUMENTS
@@ -951,6 +956,21 @@ class Const
   // NO NEW ATLAS CELL: tiles.Default aliases its icon to TILE_ALLEY's. The asphalt is the same
   // asphalt and the bay lines are emitted geometry rather than tile art
   public static var TILE_PARKING = OFFSET_CHEM_LAB + 10;
+  // A PARKED CAR'S OWN FOOTPRINT, and the second piece of the compound's render furniture to get a
+  // tile of its own after the boom barrier's row (TILE_ALLEY_UNWALKABLE). render.facility.FacilityCars
+  // stands one glb in a bay BAY_SPACING by BAY_CELLS cells, and it was pure decoration — a car the
+  // player walked straight through. Both ids are the car park's own asphalt with the walk taken off
+  // it, and both alias to TILE_ALLEY's icon like TILE_PARKING does; they resolve to Surf.LOT so every
+  // lot-gated render pass is untouched.
+  //
+  // TWO IDS AND NOT ONE, and the second is the whole reason this works without the renderer
+  // re-deriving anything: a bay's cells are stamped TILE_PARKING_CAR and its LOW CORNER ON THE KERB
+  // is stamped TILE_PARKING_CAR_ORIGIN. Two bays standing side by side along one kerb are a single
+  // 2x4 block of marks with no seam in it, so one id alone cannot say where a car begins — the
+  // renderer would have to walk the run and agree with the generator's phase to find out. The origin
+  // says it outright, and the car's yaw comes off which of the four neighbours is pavement
+  public static var TILE_PARKING_CAR = OFFSET_CHEM_LAB + 11;
+  public static var TILE_PARKING_CAR_ORIGIN = OFFSET_CHEM_LAB + 12;
 
   // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;

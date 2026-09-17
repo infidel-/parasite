@@ -7,6 +7,7 @@ import render.LightCone;
 import render.Models;
 import render.RenderConfig;
 import render.particles.LampPost;
+import render.facility.FacilityEntry.Gate;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.VisionMask;
@@ -20,6 +21,15 @@ typedef LampSet = {
   corridors:Array<LampPost>, // the corridor fixtures, which no room rect can reach — see `corridors`
   doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
+};
+
+// where one mast stands, world: its footing on the grid vertex and the surface height under it
+typedef Mast = {
+  x:Float,   // the footing, world
+  z:Float,   // ^
+  y:Float,   // and the height of the surface it stands on
+  col:Int,   // the grid VERTEX it stands on, which is what the actor slide bends past
+  row:Int,   // ^
 };
 
 // one cell the scan accepted, before anything is built from it
@@ -91,6 +101,83 @@ class FacilityLamps
     { on: Surf.WALKWAY, by: Surf.LOT },
     { on: Surf.WALKWAY, by: Surf.GRASS },
   ];
+
+// where the mast for one accepted cell actually STANDS, world. PUBLIC and pure, because the
+// checkpoint's service drop has to arrive at the gate's own pole and a second copy of this
+// arithmetic is a cable that misses it (render.facility.FacilityEntry.cable)
+  public static function mastAt(m:Facility, h:LampHit):Mast
+    {
+      // the post stands on the grid VERTEX between this cell and the surface it lights, not in
+      // the middle of a walkable cell. the free axis takes the +x/+z side, the
+      // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
+      var a = (h.dir == 2 ? h.col - 1 : h.col);
+      var b = (h.dir == 0 ? h.row - 1 : h.row);
+      // that vertex is a cell BOUNDARY on the free axis, and TWO things pull it one cell back
+      // along that axis. Either is one step, and back is always a boundary the run either
+      // divides on the other phase or does not reach at all.
+      //
+      // a BAY DIVIDER: along a lot kerb every other boundary carries one, so the rule above
+      // stands a mast in the paint. step onto the boundary that falls mid-bay instead.
+      //
+      // or a DIFFERENT SURFACE on that side, which in a generated compound is the parking ENTRY
+      // and only the entry. A post stands on a VERTEX — a corner shared by FOUR cells — while
+      // its `y` below comes from ONE of them, and everywhere else that is harmless because the
+      // free axis runs ALONG the kerb, so the two cells it straddles are the same surface and the
+      // step is only ever across the aim axis, where the kerb edging covers it. The hole punched
+      // through the sidewalk band breaks exactly that: at its corners the four cells are not one
+      // surface, and both masts at the gate were reported from the game — the one beside the
+      // booth stood on walkway with three quadrants hanging over the 0.2 kerb into the hole ("on
+      // the kerb and on empty space"), and the gate's own mast stood on lot with the fourth
+      // quadrant buried in the band ("too low, goes into the walkway AND on top of the walkway")
+      var fc = (h.dir < 2 ? h.col + 1 : h.col);
+      var fr = (h.dir < 2 ? h.row : h.row + 1);
+      // the bay run belongs to the cell being LIT now that the mast stands on the pavement, so
+      // both the surface test and FacilityPaint.runStart read the neighbour, walking it back the
+      // other way (`dir ^ 1` is the opposite of any of the four). the FREE-axis coordinate is
+      // untouched by the swap — the two cells differ only along the aim axis — so the phase
+      // arithmetic below is the same as it ever was
+      var bc = h.col + DC[h.dir];
+      var br = h.row + DR[h.dir];
+      if ((m.surf[br][bc] == Surf.LOT &&
+            ((h.dir < 2 ? h.col + 1 : h.row + 1)
+              - FacilityPaint.runStart(m, bc, br, h.dir ^ 1))
+              % FacilityStyle.BAY_SPACING == 0) ||
+          !FacilityModel.inside(m, fc, fr) ||
+          m.surf[fr][fc] != m.surf[h.row][h.col])
+        {
+          a -= (h.dir < 2 ? 1 : 0);
+          b -= (h.dir < 2 ? 0 : 1);
+        }
+      var v = CityConfig.cellToWorld(a, b);
+      return {
+        x: v.x + CELL / 2,
+        z: v.z + CELL / 2,
+        col: a,
+        row: b,
+        // the MODEL follows the surface it stands on — a park mast would otherwise float the
+        // kerb step over its own lawn
+        y: FacilityGround.surfY(m.surf[h.row][h.col]),
+      };
+    }
+
+// the gate's own mast, the one the lit-line rules can never deal and the only pole the checkpoint
+// can be sure of. THE `dir` IS 2 AND NOT DERIVED, which is `build`'s own choice below for the same
+// hit — so the two agree by construction.
+//
+// ONE CASE IS APPROXIMATE and it is worth naming: where (col + row) % LAMP_SPACING lands on this
+// cell and a lit line already claimed it, `build` keeps the scan's hit rather than pushing this one,
+// and that hit may aim at a different edge — so in about one compound in LAMP_SPACING the pole
+// stands on the adjacent vertex and the drop ends up to one cell short of it. The alternative is
+// building the masts before FacilityCable merges its ribbon, which is a documented draw-order move
+// for a cable nobody has reported
+  public static function gateMast(m:Facility, gate:Gate):Mast
+    {
+      return mastAt(m, {
+        col: gate.lampCol,
+        row: gate.row + (gate.lotDR < 0 ? 0 : gate.h - 1),
+        dir: 2,
+      });
+    }
 
 // place every mast and every ceiling fixture, build the mast batch and its cones, and fill `corners`
 // so the actor and camera slides bend past a post
@@ -186,62 +273,21 @@ class FacilityLamps
 
       for (h in hits)
         {
-          // the post stands on the grid VERTEX between this cell and the surface it lights, not in
-          // the middle of a walkable cell. the free axis takes the +x/+z side, the
-          // arbitrary-but-consistent choice render.SceneSetup makes for a city lamp
-          var a = (h.dir == 2 ? h.col - 1 : h.col);
-          var b = (h.dir == 0 ? h.row - 1 : h.row);
-          // that vertex is a cell BOUNDARY on the free axis, and TWO things pull it one cell back
-          // along that axis. Either is one step, and back is always a boundary the run either
-          // divides on the other phase or does not reach at all.
-          //
-          // a BAY DIVIDER: along a lot kerb every other boundary carries one, so the rule above
-          // stands a mast in the paint. step onto the boundary that falls mid-bay instead.
-          //
-          // or a DIFFERENT SURFACE on that side, which in a generated compound is the parking ENTRY
-          // and only the entry. A post stands on a VERTEX — a corner shared by FOUR cells — while
-          // its `y` below comes from ONE of them, and everywhere else that is harmless because the
-          // free axis runs ALONG the kerb, so the two cells it straddles are the same surface and the
-          // step is only ever across the aim axis, where the kerb edging covers it. The hole punched
-          // through the sidewalk band breaks exactly that: at its corners the four cells are not one
-          // surface, and both masts at the gate were reported from the game — the one beside the
-          // booth stood on walkway with three quadrants hanging over the 0.2 kerb into the hole ("on
-          // the kerb and on empty space"), and the gate's own mast stood on lot with the fourth
-          // quadrant buried in the band ("too low, goes into the walkway AND on top of the walkway")
-          var fc = (h.dir < 2 ? h.col + 1 : h.col);
-          var fr = (h.dir < 2 ? h.row : h.row + 1);
-          // the bay run belongs to the cell being LIT now that the mast stands on the pavement, so
-          // both the surface test and FacilityPaint.runStart read the neighbour, walking it back the
-          // other way (`dir ^ 1` is the opposite of any of the four). the FREE-axis coordinate is
-          // untouched by the swap — the two cells differ only along the aim axis — so the phase
-          // arithmetic below is the same as it ever was
-          var bc = h.col + DC[h.dir];
-          var br = h.row + DR[h.dir];
-          if ((m.surf[br][bc] == Surf.LOT &&
-                ((h.dir < 2 ? h.col + 1 : h.row + 1)
-                  - FacilityPaint.runStart(m, bc, br, h.dir ^ 1))
-                  % FacilityStyle.BAY_SPACING == 0) ||
-              !FacilityModel.inside(m, fc, fr) ||
-              m.surf[fr][fc] != m.surf[h.row][h.col])
-            {
-              a -= (h.dir < 2 ? 1 : 0);
-              b -= (h.dir < 2 ? 0 : 1);
-            }
-          var v = CityConfig.cellToWorld(a, b);
-          var px = v.x + CELL / 2;
-          var pz = v.z + CELL / 2;
+          var p = mastAt(m, h);
+          var px = p.x;
+          var pz = p.z;
           places.push({
             x: px,
             z: pz,
             // the head hangs off the mast toward the surface being lit, so the yaw is the aim
             // vector's own angle — the glb's head points at local +z (FacilityStyle.LAMP_HEAD_Z)
             yaw: Math.atan2(DC[h.dir], DR[h.dir]),
-            // the MODEL follows the surface it stands on — a park mast would otherwise float
+            // `mastAt` follows the surface the post stands on — a park mast would otherwise float
             // the kerb step over its own lawn. the LampPost below deliberately does not: its
             // `y` is the bulb height render.actors.LampShadows scales an actor's fake shadow
             // by (refY / post.y), and moving it 0.2 for a mast on grass would rescale every
             // shadow it throws for nothing anyone can see
-            y: FacilityGround.surfY(m.surf[h.row][h.col]),
+            y: p.y,
           });
           masts.push({
             x: px + DC[h.dir] * reach,
@@ -258,7 +304,7 @@ class FacilityLamps
             flick: 1.0,
             mul: 1.0,
           });
-          corners.set(ActorAnim.lampVertexKey(a, b), BEND_DIR[h.dir]);
+          corners.set(ActorAnim.lampVertexKey(p.col, p.row), BEND_DIR[h.dir]);
         }
 
       // the room fixtures, as a LATTICE over each room rather than one bulb at its centre. a

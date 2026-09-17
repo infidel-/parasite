@@ -27,7 +27,8 @@ area
 └ <what is left> → Subdivide.split() → Quota.deal()
   ├ building ×2
   ├ hangar
-  ├ parking                  one tile (TILE_PARKING) over ground that is already open lot
+  ├ parking                  one tile (TILE_PARKING) over ground that is already open lot, plus
+  │                          two more on each bay a car is parked in (TILE_PARKING_CAR)
   │ └ entryway               the 4x2 hole through the sidewalk — stays TILE_ALLEY, gate() reads it,
   │                          except its lot-side row, which is the BOOM's and is unwalkable
   ├ park ×1..2               one required; a second takes the plot that would have been yard
@@ -91,6 +92,27 @@ outside the car park**). The arm writes `TEMP_PARKING` -> `Const.TILE_PARKING` a
 only the two passes that mean THE CAR PARK ask `FacilityModel.isParking`. The ENTRYWAY child paints
 its mouth back to `TEMP_ALLEY`, because that hole is what `AreaGame.gate()` finds the checkpoint by.
 
+**A PARKED CAR IS TWO MORE TILES, and the second of them is what keeps the renderer dumb.** The cars
+used to be dealt render-side and stamped nothing, so the boom got a tile and the cars beside it were
+still walked through. `gen.facility.FacilityBays` runs after the whole tree is down — it needs the
+pavement the ROAD block laid, the plot the PARKING block named and the boom's row to rank the bays
+from — and marks each chosen bay `TEMP_CAR` -> `Const.TILE_PARKING_CAR` with its low corner against
+the kerb `TEMP_CAR_ORIGIN` -> `TILE_PARKING_CAR_ORIGIN`. Two ids because two bays side by side along
+one kerb are a single 2x4 block of marks with no seam in it: one id alone cannot say where a car
+BEGINS, and the renderer would have to re-derive the bay phase to find out. The origin says it, and
+the car's axis comes off whichever neighbour is pavement.
+
+Both alias to the alley's icon (`tiles.Default.getIcon`) so there is no new art, both are 0 in
+`TILE_WALKABLE` and 1 in `TILE_SEETHROUGH` — a car park you cannot see across is a change to line of
+sight nobody asked for. `FacilityModel.isParking` answers true for them, so the paint still strikes
+the bay the car stands in. The bay rhythm is `FacilityPaint.runStart` COPIED against the temp alphabet
+(the paint is render-side and the generator cannot reach it); a divergence would only stand a car
+across a painted divider, and `GenCheck.parkingSane` asserts what is checkable instead — cars under
+the cap, marked cells exactly `cars x SPACING x DEPTH`, every origin with a kerb beside it. That
+total caught the one real bug: a cell claims the FIRST kerb it finds, so a two-deep lot with pavement
+on both sides dealt the same rect twice (**18 marked cells where five whole bays are 20**), fixed by
+re-asking `whole` at stamp time so the first bay dealt keeps the ground.
+
 **The room level is walked by its own `GenTree.build`, not by the area walk** — the one place the
 breadth-first ordering had to be overridden. `generateBuilding`'s last pass is
 `generateRoomContents`, and `roomChemistryLab`'s island only takes a spot that is still bare floor,
@@ -144,6 +166,7 @@ used zero times** — so every pass was already effectively static.
 |---|---|
 | `game/FacilityAreaGenerator.hx` | the LIVE adapter, and all that still needs a `Game`: `generate()` wraps the grid in a ctx and drains the spawns, `repairRooms()` re-derives rooms from a SAVED grid and so takes an `AreaGame` |
 | `gen/facility/FacilityGen.hx` | `build()` — the real entry point, the one the oracle calls — and `finalizeTiles` |
+| `gen/facility/FacilityBays.hx` | which bays of the car park hold a car, and the two marks that say so |
 | `gen/facility/FacilityTemp.hx` | the `TEMP_*` alphabet, the temp→final map, and the four constants more than one pass reads |
 | `gen/facility/_FacilityState.hx` | what a compound looks like mid-build. Not persisted |
 | `gen/facility/FacilityBuilding.hx` | one lab building: wall ring, corridors, room subdivision. What goes INSIDE a room is `gen/blocks/RoomBlock.hx` |

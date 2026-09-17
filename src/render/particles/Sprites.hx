@@ -476,6 +476,19 @@ class Sprites {
               ix: Const.clueHDCol(clue),
               iy: Const.clueHDRow(clue),
             };
+          // and the sewer hatch lid, which needs NEITHER a table nor pack arithmetic: it is one 256
+          // image holding one cell, so the redirection is the frame's own coordinates and nothing
+          // else. A hatch lies FLAT on its cell (objects.AreaObject.isGroundDecal) and spans
+          // Sprites.SIZE world units, where 64 px is 21 texels per world unit against the asphalt's
+          // own 57 — see art/textures.json city/sewer-hatch
+          if (iy == Const.ROW_OBJECT &&
+              ix == Const.FRAME_SEWER_HATCH)
+            return {
+              img: game.scene.images.hatchHD,
+              t: Const.HATCH_HD_CELL,
+              ix: 0,
+              iy: 0,
+            };
         }
       return {
         img: game.scene.images.getImage(imageName, male),

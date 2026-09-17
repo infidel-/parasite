@@ -30,8 +30,10 @@ class Default extends Tileset
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 
-    // row 7 - floor
-    1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1,
+    // row 7 - floor. 11 and 12 are Const.TILE_PARKING_CAR and TILE_PARKING_CAR_ORIGIN: a parked car
+    // is a solid object and the two ids exist to say so. they stay SEE-THROUGH below — a car park
+    // the player cannot see across is a change to line of sight nobody asked for
+    1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1,
 
     // row 8-11 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -90,12 +92,15 @@ class Default extends Tileset
 
 // map tile id to icon coordinates.
 //
-// ONE ALIAS, and the reason Const.TILE_PARKING needed no art: the car park is asphalt drawn from the
-// alley's own cell, and the mark exists only so the renderer can tell the lot you drive into from
-// the yard you do not (see Const.TILE_PARKING)
+// THREE ALIASES, and the reason none of the car park's marks needed art: the lot is asphalt drawn
+// from the alley's own cell, and the marks exist only so the renderer can tell the lot you drive into
+// from the yard you do not, and the game can tell where a car is standing (see Const.TILE_PARKING
+// and Const.TILE_PARKING_CAR)
   public override function getIcon(tileID: Int): _Icon
     {
-      return super.getIcon(tileID == Const.TILE_PARKING ? Const.TILE_ALLEY : tileID);
+      return super.getIcon(tileID == Const.TILE_PARKING ||
+        tileID == Const.TILE_PARKING_CAR ||
+        tileID == Const.TILE_PARKING_CAR_ORIGIN ? Const.TILE_ALLEY : tileID);
     }
 
 // check if default tile is walkable

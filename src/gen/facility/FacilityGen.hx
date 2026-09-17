@@ -58,6 +58,10 @@ class FacilityGen
         root.children.push(b);
       GenTree.build(root, function(n) fill(state, n));
 
+      // and the cars parked in the lot's bays, which needs the whole grid standing: the bay rhythm
+      // reads the pavement the ROAD block laid and the plot the PARKING block named, and the mouth
+      // it ranks the bays from is the boom's own row
+      FacilityBays.cars(state);
       // convert temp tiles to ingame ones
       finalizeTiles(state);
       // and last, once every wall, door and piece of furniture is on the grid in its final form,

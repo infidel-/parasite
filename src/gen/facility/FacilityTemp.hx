@@ -67,6 +67,12 @@ class FacilityTemp
   // is not sealed by this, a car park is
   public static inline var TEMP_BARRIER = 30;
 
+  // and a PARKED CAR's footprint: TEMP_CAR over the whole bay, TEMP_CAR_ORIGIN on the one cell of it
+  // that is the bay's low corner against the kerb. See Const.TILE_PARKING_CAR for why the origin is
+  // a mark of its own rather than something the renderer walks out of the run
+  public static inline var TEMP_CAR = 31;
+  public static inline var TEMP_CAR_ORIGIN = 32;
+
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var TEMP_BUILDING_ROOM_ID_START = 100;
 
@@ -116,6 +122,8 @@ class FacilityTemp
     TEMP_ALLEY => Const.TILE_ALLEY,
     TEMP_PARKING => Const.TILE_PARKING,
     TEMP_BARRIER => Const.TILE_ALLEY_UNWALKABLE,
+    TEMP_CAR => Const.TILE_PARKING_CAR,
+    TEMP_CAR_ORIGIN => Const.TILE_PARKING_CAR_ORIGIN,
     TEMP_GRASS => Const.TILE_GRASS,
     TEMP_GRASS_BUSH => Const.TILE_BUSH,
     TEMP_GRASS_BENCH => Const.TILE_GRASS_UNWALKABLE,
@@ -148,6 +156,6 @@ class FacilityTemp
     '0', '1', '2', '%', '%', 't', 'b', 'B', '%', '%',
     '#', 'r', '.', 'x', '+', '*', '8', 'X', 'w',
     '<', '-', '>', '^', '|', 'v', '_', 'Y', 'Z', '=',
-    'P', '!',
+    'P', '!', 'c', 'C',
   ];
 }

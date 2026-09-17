@@ -571,10 +571,24 @@ class GenCheck
   static function isLot(ctx: GenCtx, x: Int, y: Int): Bool
     {
       var t = ctx.getCellType(x, y);
-      return t == Const.TILE_ALLEY || t == Const.TILE_PARKING;
+      return t == Const.TILE_ALLEY || isParking(ctx, x, y);
+    }
+
+// is this cell the car park? all three of its marks — the plain asphalt and the two a parked car's
+// footprint carries (Const.TILE_PARKING_CAR), which are the same lot with the walk taken off it
+  static function isParking(ctx: GenCtx, x: Int, y: Int): Bool
+    {
+      var t = ctx.getCellType(x, y);
+      return t == Const.TILE_PARKING ||
+        t == Const.TILE_PARKING_CAR ||
+        t == Const.TILE_PARKING_CAR_ORIGIN;
     }
 
 // the car park is ONE solid rect, it reaches the pavement, and the gate opens into it.
+//
+// counted over all three of the plot's marks: gen.facility.FacilityBays stamps a parked car's
+// footprint over cells that were TILE_PARKING a moment earlier, and a car does not punch a hole in
+// the car park (see `isParking`).
 //
 // gen.facility.FacilityGen marks the parking plot with Const.TILE_PARKING and nothing else does, so
 // this is cheap to state and the thing it protects is not: render.facility.FacilityPaint stripes its
@@ -590,7 +604,7 @@ class GenCheck
       for (y in 0...ctx.height)
         for (x in 0...ctx.width)
           {
-            if (ctx.cells[x][y] != Const.TILE_PARKING)
+            if (!isParking(ctx, x, y))
               continue;
             n++;
             if (x < x0)
@@ -613,6 +627,40 @@ class GenCheck
       ok(n == (x1 - x0 + 1) * (y1 - y0 + 1),
         'the car park is ' + n + ' cells inside a ' + (x1 - x0 + 1) + 'x' + (y1 - y0 + 1) +
         ' box, so it is not one solid rect');
+      // AND EVERY PARKED CAR IS A WHOLE BAY WITH PAVEMENT BESIDE IT. gen.facility.FacilityBays
+      // stamps the footprint and render.facility.FacilityCars stands one model on each ORIGIN mark,
+      // taking the bay's own axis off whichever neighbour is pavement — so an origin with no kerb is
+      // a car that is silently not drawn, and a footprint that is not SPACING x DEPTH cells is a car
+      // standing off its bay. Stated as a TOTAL rather than per footprint, which catches two bays
+      // overlapping as well: that would leave fewer marked cells than the origins account for
+      var cars = 0, marks = 0, kerbless = 0;
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          {
+            var t = ctx.cells[x][y];
+            if (t != Const.TILE_PARKING_CAR &&
+                t != Const.TILE_PARKING_CAR_ORIGIN)
+              continue;
+            marks++;
+            if (t != Const.TILE_PARKING_CAR_ORIGIN)
+              continue;
+            cars++;
+            var kerb = false;
+            for (i in 0...Const.dir4x.length)
+              if (ctx.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]) == Const.TILE_WALKWAY)
+                kerb = true;
+            if (!kerb)
+              kerbless++;
+          }
+      ok(cars <= gen.facility.FacilityBays.CARS,
+        'the lot holds ' + cars + ' parked cars against a cap of ' +
+        gen.facility.FacilityBays.CARS);
+      ok(marks == cars * gen.facility.FacilityBays.SPACING * gen.facility.FacilityBays.DEPTH,
+        'the ' + cars + ' parked cars cover ' + marks + ' cells and a whole bay each is ' +
+        (cars * gen.facility.FacilityBays.SPACING * gen.facility.FacilityBays.DEPTH));
+      ok(kerbless == 0,
+        kerbless + ' of ' + cars + ' parked cars have no pavement beside them, so nothing tells ' +
+        'the renderer which way their bay runs');
       // and it is the plot the gate opens onto: the mouth's own row, one step further into the
       // compound, has to be inside that box or the booth stands on a yard
       var mx0 = ctx.width, mx1 = -1, my0 = ctx.height, my1 = -1, dir = 0;
