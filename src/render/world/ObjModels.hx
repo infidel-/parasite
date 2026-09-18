@@ -521,6 +521,29 @@ class ObjModels
   // invisible. Set true by build() and explicitly false by the kinds that do not call it
   public static var active = false;
 
+// one receptacle's lamp table. the empty slot and the filled one differ in THREE NUMBERS and in
+// nothing else, so the table is written once here rather than twice in the rows below — two copies
+// of a marker hue is exactly the pair that drifts apart and leaves one of them matching nothing
+  static function slotLamps(glow:Float, pulse:Float, rate:Float):PropLamps
+    return {
+      list: [
+        {
+          // the console's own violet, off the same map (models-src/scenario-a/console_emissive.py):
+          // this prop wears the console sheet and it is the PORT cell that lights, so an empty
+          // socket and the patch panel four cells away are one family by construction
+          hue: 0xb060f0,
+          color: 0xc07bff,
+          glow: glow,
+          base: 0.90,
+          pulse: pulse,
+          pulseRate: rate,
+          // off the console's own 0.0 so a shed holding both never has the two beating together
+          phase: 0.21,
+        },
+      ],
+      tol: 0.45,
+    };
+
   // every object-backed prop there is. ONE table: build() places from it, render.View warms every
   // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
   // so a new prop is a row here plus its path in RenderConfig.MODELS, nothing to keep in sync by hand.
@@ -538,13 +561,16 @@ class ObjModels
         'event_spaceshipSuccess', 'event_spaceshipFailure' ],
       path: RenderConfig.MODELS.scenarioSpaceship,
       // 12.8 world units across at this height (the bake's widest/height is 2.32), so the saucer
-      // covers 3.2 cells of the study pad's 5 and stops well short of its rim. the ceiling is the
-      // shed's own: FacilityStyle.WALL_H 6.0 plus ~3.4 of arc rise, against 3.07 of podium under it
+      // covers 3.2 cells of the study pad's 5 and stops well short of its rim — and just overhangs
+      // the podium's own 12.4-wide deck, which is a saucer standing on a dais rather than a lid
+      // sitting on a jar. the ceiling is the shed's own: FacilityStyle.WALL_H 6.0 plus ~3.4 of arc
+      // rise, against the 1.15 of deck under it
       h: 5.5,
-      // NEGATIVE, which is the whole of how a prop stands on something: `sink` buries a prop by a
-      // fraction of its height, so the same number turned round lifts it, and this one lifts the
-      // ship by exactly render.facility.FacilityStyle.PODIUM_H onto the dais it is being studied on
-      sink: -3.07 / 5.5,
+      // FLAT ON WHATEVER IT STANDS ON, and the podium is not it: a row's `sink` follows the model
+      // everywhere it is placed, so the negative lift that put this ship on the dais put the
+      // wilderness one 3.07 units into the air as well. The dais is a property of the CELL and is
+      // handed to build() as `lift` by the compound (render.facility.FacilityArea.objLift)
+      sink: 0.0,
       yaw: FRONTAL,
       light: null,
       anim: null,
@@ -561,54 +587,58 @@ class ObjModels
       lamps: {
         list: [
           // THE ENTRANCE. `warm`-keyed over the equator band, which landed on the ramp doorway and
-          // on nothing else — 128 of 1787 boxed triangles, bleed 0. Amber rather than the marker's
-          // own yellow: a doorway is a lit interior seen through a hole, and 2.2 puts its peak well
-          // over BLOOM_THRESHOLD so the opening halos rather than merely being pale
+          // on nothing else — 1,228 of 31,824 boxed triangles, bleed 0. Amber rather than the
+          // marker's own yellow: a doorway is a lit interior seen through a hole, and 2.2 x 0.90
+          // puts its peak well over BLOOM_THRESHOLD 0.9 so the opening halos rather than merely
+          // being pale.
+          //
+          // THE `base` COLUMN IS 0.90 ON ALL THREE AND THAT IS THE FIX FOR "no glow on the ship":
+          // the first cut ran 0.25-0.35, which put every family's PEAK under the bloom threshold,
+          // and a marker map at emissiveStrength 0.35 is all that was left. Nothing was broken —
+          // the whole table was simply tuned below the one number that makes a lamp a lamp here
           {
             hue: 0xe0c23c,
             color: 0xffb432,
             glow: 2.2,
-            base: 0.35,
+            base: 0.90,
             pulse: 0.30,
             pulseRate: 0.17,
             phase: 0.0,
           },
-          // the hull lamp discs, `pale`-keyed over the same band — 276 triangles spread right round
-          // the azimuth, which is what makes the ship read as running rather than as lit from one
-          // side. the FASTEST of the three and the one that crosses the bloom threshold both ways:
-          // 0.55 of depth on a 1.9 peak means the discs halo at the top of the breath and do not at
-          // the bottom, which is the difference between a pulse and a shade (the preservator's own
+          // the hull lamp discs, `pale`-keyed over the same band — 4,983 triangles spread right
+          // round the azimuth, which is what makes the ship read as running rather than as lit from
+          // one side. the FASTEST of the three and the one that crosses the bloom threshold both
+          // ways: 0.55 of depth on a 1.71 peak halos at the top of the breath and does not at the
+          // bottom, which is the difference between a pulse and a shade (the preservator's own
           // lesson, PropShine.pulse)
           {
             hue: 0x56c8e0,
             color: 0x63d6ff,
             glow: 1.9,
-            base: 0.30,
+            base: 0.90,
             pulse: 0.55,
             pulseRate: 0.41,
             phase: 0.37,
           },
-          // and the top dome, which is the only one of the three the game camera looks straight down
-          // at. SLOWEST and shallowest: it is a big area, and a big area pulsing hard reads as the
-          // whole ship flashing. modulated by the base map at author time, so its own structure
-          // survives instead of coming back as a lit card
+          // and the lens in the crown, which is the one thing on this ship the game's camera looks
+          // straight down at. The SLOWEST of the three: what the player sees from above should be a
+          // slow breath, not a beacon
           {
             hue: 0xdfeaf2,
             color: 0xeaf4ff,
-            // THE QUIETEST OF THE THREE, and the numbers are about AREA rather than about taste:
-            // BOXED TO THE CROWN AND NOT TO THE DOME, which is the second thing this family got
-            // wrong: y 0.24..0.45 of the mesh frame took 7.5% of its surface, 63.8% of the whole
-            // map's lit texels, and shipped the white card docs/3d-render.md already has a verdict
-            // on -- a flat mask is right for a LENS and wrong for a big region whose read is its
-            // structure. 0.31..0.45 is 2.2% and 94 triangles: the cap alone, which is small enough
-            // that flat is the right answer for it. Authored FLAT rather than --modulate'd for the
-            // reason the match needs it:
-            // modulation multiplies the marker by the hull's own purple base map, which moves the
-            // HUE this column identifies a family by — measured, it left only a third of the dome's
-            // own texels inside the tolerance
-            glow: 0.55,
-            base: 0.25,
-            pulse: 0.22,
+            // IT IS A LENS AND NOT THE DOME, which this family got wrong twice before it got it
+            // right. A box over the whole cap is 2.2% of the ship's surface and looks correct on
+            // the preview, but the cap's albedo is BIMODAL — 88% of it dark navy shell at luma
+            // 66..89 and the rest the white glass set into its top at 185..250 — so a flat mask
+            // over the box lights the shell too and ships the white CARD docs/3d-render.md already
+            // has a verdict on. models-src/scenario-a/spaceship_emissive.py gates the box on the
+            // base map's LUMINANCE at 140, which keeps 2,171 of 17,494 texels: the glass alone,
+            // small enough that a flat marker is right for it. A luminance THRESHOLD and never
+            // emissive.py's --modulate — modulation multiplies the marker by a base map that is not
+            // grey and moves the HUE this column identifies a family by
+            glow: 1.6,
+            base: 0.90,
+            pulse: 0.35,
             pulseRate: 0.09,
             phase: 0.68,
           },
@@ -642,11 +672,39 @@ class ObjModels
       fly: null,
       shine: null,
       eyes: null,
-      lamps: null,
+      // THE SCREEN, and one family is all this prop has: the art draws a violet readout on an
+      // otherwise dark panel (art/textures.json scenario-a/console-face), and the marker map is that
+      // rectangle and nothing else (models-src/scenario-a/console_emissive.py). It breathes faster
+      // than the leads that leave it and slower than the ship's lamp discs, so a shed with all three
+      // in it never has two things beating together
+      lamps: {
+        list: [
+          {
+            hue: 0xb060f0,
+            color: 0xc07bff,
+            glow: 1.2,
+            base: 0.90,
+            pulse: 0.45,
+            pulseRate: 0.13,
+            phase: 0.0,
+          },
+        ],
+        // WIDE, where the ship's is 0.25, and the two numbers are about the same thing from opposite
+        // ends: a tolerance only has to be tight enough that no family claims another's texels, and
+        // there is one family here. The slack is spent on the shrink to the entry's `tex`, which
+        // walks the marker's hue at the bezel's edge
+        tol: 0.45,
+      },
       arc: null,
       tether: null,
     },
     {
+      // AN EMPTY SLOT, and the filled one is the row below. TWO ROWS ON ONE MODEL is what the
+      // per-row bucketing in build() bought: the scenario rewrites a slot's infoID the moment its
+      // part goes in (src/scenario/GoalsAlienCrashLanding.hx), which stops the action tables
+      // offering another install and moves this prop onto the brighter row. A key with no row at
+      // all would be a prop that vanishes — the trap the ship's own four ids are one row for — so
+      // the two ids must BOTH be spelled here
       keys: [ 'event_spaceshipStudySlot' ],
       path: RenderConfig.MODELS.scenarioSlot,
       h: 1.16,
@@ -660,7 +718,30 @@ class ObjModels
       fly: null,
       shine: null,
       eyes: null,
-      lamps: null,
+      // the socket bores of the plate looking up at the camera, waiting: DIM, and slow enough to
+      // read as idle rather than as working
+      lamps: slotLamps(0.7, 0.55, 0.07),
+      arc: null,
+      tether: null,
+    },
+    {
+      // and the same receptacle with a part in it. the ONLY differences are in the lamp table, and
+      // they are the whole signal: two and a half times the level, a shallower breath and a faster
+      // one, which is a socket that is carrying something rather than asking for it
+      keys: [ 'event_spaceshipStudySlotFull' ],
+      path: RenderConfig.MODELS.scenarioSlot,
+      h: 1.16,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: slotLamps(1.5, 0.25, 0.19),
       arc: null,
       tether: null,
     },
@@ -1218,7 +1299,8 @@ class ObjModels
 // wants its back to a wall, a grown organ the fixed frontal one, clutter a hashed turn); the area kind
 // owns that rule, because only it knows what is solid. the returned batches MUST be handed to cull()
 // every frame — Models.instanced turns three's own frustum cull off, so nothing else trims their counts
-  public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float):Array<PropBatch>
+  public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float,
+      ?lift:Int->Int->Float):Array<PropBatch>
     {
       active = true;
       // ONE BUCKET PER ROW, and not per model PATH as this used to key them. A path said the same
@@ -1243,8 +1325,13 @@ class ObjModels
             // flat, so this was a constant for as long as those were the only two kinds building
             // props — the wilderness is a height field (render.world.WorldCtx.ground = WildHeight.at)
             // and a prop placed at 0 out there floats or buries itself by the local relief.
-            // floorYAt answers 0 with no ground hook attached, so the flat kinds are untouched
-            y: WorldCtx.floorYAt(w.x, w.z) - m.sink * m.h,
+            // floorYAt answers 0 with no ground hook attached, so the flat kinds are untouched.
+            // `lift` is the SECOND floor a cell can have — a compound's study podium is 1.15 of
+            // deck standing on a flat hangar slab, and only the area kind knows a dais is there.
+            // it is the placement and not the row's `sink` because the same ship stands on the
+            // podium in the shed and on bare dirt in the wilderness
+            y: WorldCtx.floorYAt(w.x, w.z) + (lift != null ? lift(o.x, o.y) : 0.0) -
+              m.sink * m.h,
           });
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade

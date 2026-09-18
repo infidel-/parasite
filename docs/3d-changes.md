@@ -1484,3 +1484,65 @@ Then the level correction works.
 **Verdict: landed.** The set piece is in the hangar, the ship stands on the podium the generator
 carves for it, one case always lands in a store room when the compound has one, and the whole rig is
 geometry.
+
+
+## The alien ship: 100k triangles, a deck to stand on, and lamps that are actually lit
+
+Six reports on the set piece that landed in the previous entry, five of them numbers rather than
+opinions. Taken in the order they cost.
+
+**"I see no glow on the ship, something broken."** Nothing was broken. The `lamps` column compiled,
+the uniforms carried sane values and the clock ticked — probed from CDP, `propLamp*` all present in
+the drawing program. The whole table was simply tuned under the one number that makes a lamp read:
+`base` ran 0.25-0.35 against glows of 0.55-2.2, so **every family's PEAK was below `BLOOM_THRESHOLD`
+0.9** and what was left was the marker map's own 0.35 floor. `base` is 0.90 on all three now:
+amber peaks at 1.98, the discs cross 0.9 in both directions (0.77 → 1.71), the crown at 1.44. The
+lesson is the preservator's, one level up — a pulse that never crosses the threshold is a shade, and
+a peak that never crosses it is nothing at all.
+
+**The crown was a white card twice.** A box over the whole cap is 2.2% of the ship's surface and
+looks right on `--preview`, and it still shipped a flat lit dome, because the cap's albedo is
+**bimodal**: 88% of it is dark navy shell at luma 66-89 and the rest is the white glass set into its
+top at 185-250. The fix is a **luminance GATE** on the mask (`models-src/scenario-a/spaceship_emissive
+.py`, threshold 140) keeping 2,171 of 17,494 texels — the lens alone. A threshold and never
+`emissive.py --modulate`: modulation multiplies the marker by a base map that is not grey and moves
+the hue the shader identifies a family by. Same trap, same page as last time.
+
+**The ship floated in the wilderness and over the podium, and it was ONE bug.** `sink` is a property
+of the ROW, so the negative sink that lifted the ship onto the dais lifted the wilderness one 3.07
+units into the air as well — and it was the wrong number anyway: `PODIUM_H` 3.07 is the eight emitter
+POSTS, while the deck a thing stands on is the lathe's upper step at **1.15** (`podium_build.py` H1,
+6.2 of radius). So the row's `sink` is 0 and `ObjModels.build` takes an optional `lift(col,row)` the
+area kind supplies — the compound answers `PODIUM_DECK_H` for the 3x3 core of a pad, since a cell
+centre one out on the diagonal is 5.66 from the middle and so still on a 6.2 deck. Measured after:
+instance y 1.15 in the shed, and exactly `floorYAt` on a hillside (0.182 against terrain 0.182).
+
+**100k triangles and the 2048 atlas kept**, both asked for by name: 584,186 → 99,998, the compound
+98k → 276k triangles, 60fps held. At that size the saucer's ribs and legs are geometry rather than a
+normal map's suggestion.
+
+**The console's screen, and why a rectangle over it is wrong.** `PropGlow`'s lamp term is FLAT over
+every texel it matches — the match is on hue alone, so a marker painted dark still lights fully — and
+a marker over the whole bezel therefore paints the readout out and ships a magenta card (it did,
+first try). The map is thresholded on the art's own value instead: glyph strokes and scan lines run
+over 96 against a field in the fifties. The same map carries the port cell's socket bores, which is
+what lets a slot glow at all.
+
+**The rig's leads** (`render/facility/FacilityRig.hx`) are `FacilityCable.strip` at the machine fan's
+own height in violet, from the console and each slot to the dais rim. Brightness is a MATERIAL
+property, so "brighter once the part is in" is two meshes and a rebuild rather than per-vertex data:
+the scenario rewrites a filled slot's `infoID` (which also stops the action table offering a second
+install), calls `updateObjects3D`, and the run moves into the lit half. The slot prop follows the
+same id onto a second `ObjModels` row — two rows on one model, which the per-row bucketing from the
+last entry is what made legal.
+
+**One silent trap, and it cost a frame to see.** `render.Chunks.build` REPARENTS what it finds into
+per-chunk groups, so a mesh built before that pass is no longer the scene's child and `scene.remove`
+is a no-op — the first build's cables stayed in the frame beside the rebuilt ones. Rig meshes are
+pushed onto `pre` (chunks skip them, which is right anyway: their geometry is world-coordinate on a
+mesh standing at the origin, so bucketing by position says nothing) and `dispose` unparents off
+`o.parent`.
+
+**Verdict: landed.** Ship on the deck, three families lit and out of phase, a lens on top, violet
+leads that brighten as the rig fills, and an orange case with a moulded X you can pick out across a
+shed.

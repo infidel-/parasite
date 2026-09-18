@@ -107,6 +107,13 @@ class GoalsAlienCrashLanding
           ' into the slot.');
         player.host.inventory.removeItem(action.item);
         game.scene.sounds.play('action-spaceship-install');
+        // a filled slot is a different thing to look at and offers nothing more: the id carries
+        // both, since the action tables and render.world.ObjModels are keyed on it alike. the view
+        // is told by hand because the batches are only rebuilt when an object is added or removed
+        // and nothing here is
+        var obj: objects.EventObject = cast action.obj;
+        obj.infoID = 'spaceshipStudySlotFull';
+        game.scene.updateObjects3D();
         return true;
       }
   ];

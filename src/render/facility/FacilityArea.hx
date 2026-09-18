@@ -117,6 +117,7 @@ class FacilityArea implements Area3D
   // `green`: that array is index-aligned with GREEN plus EXTRA and culled on one radius, while a
   // PropBatch is a solid/ghost/hull triple with its own masks and its own ghost ease
   var props:Array<render.world.ObjModels.PropBatch>;
+  var rig:FacilityRig.Rig;                      // the study rig's glowing leads, or null
   var tactical = false;                         // tactical view up: the props draw their outline shells
   var cabinets = 0;                             // corridor casework cells merged into the bench meshes
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
@@ -364,7 +365,21 @@ class FacilityArea implements Area3D
       // ship on the hangar's study podium, its console and its slots. AFTER the doors and before the
       // lights, which is where it belongs rather than being load-bearing — the batches read nothing
       // any other builder writes
-      props = render.world.ObjModels.build(scene, game, objYaw);
+      props = render.world.ObjModels.build(scene, game, objYaw, objLift);
+      // and the leads that tie that set piece together. after the props, which is where its own
+      // ends come from — it is laid off the same object list
+      rig = FacilityRig.build(scene, game.area);
+      // KEPT OUT OF THE CHUNK TREE. its ribbons are world-coordinate geometry on a mesh standing at
+      // the origin, so render.Chunks would bucket it by a position that says nothing about where the
+      // cords actually are — and the same run rebuilt after an install is added straight to the
+      // scene, so this is also what keeps the two paths drawing the same way
+      if (rig != null)
+        {
+          if (rig.dim != null)
+            pre.push(rig.dim);
+          if (rig.lit != null)
+            pre.push(rig.lit);
+        }
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
       // same treatment the city's own lamp batch gets
@@ -391,6 +406,20 @@ class FacilityArea implements Area3D
           model.wall[row][col] != FacilityModel.Wall.WINDOW,
         function(col, row) return FacilityGeom.carries(model, col, row));
       attachDbg();
+    }
+
+// how high the FLOOR is under an object prop's cell, which in a compound is never the slab it is
+// standing on but once: the hangar's study podium. The deck is 6.2 units of radius (its lathe's
+// upper step, FacilityStyle.PODIUM_DECK_H up) and a cell centre one cell out on the diagonal is
+// 5.66 from the middle, so the 3x3 core IS the deck and the ring beyond it is bare pad — which is
+// where the console and the slots stand
+  function objLift(col:Int, row:Int):Float
+    {
+      for (p in model.pads)
+        if (Std.int(Math.abs(p.col - col)) <= 1 &&
+            Std.int(Math.abs(p.row - row)) <= 1)
+          return FacilityStyle.PODIUM_DECK_H;
+      return 0.0;
     }
 
 // which way an object prop faces from its cell, one branch per render.world.ObjModels.PropYaw
@@ -720,6 +749,7 @@ class FacilityArea implements Area3D
       // the contract and not a preference
       for (b in props)
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
+      FacilityRig.tick(rig, opts.dtMs);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);
@@ -923,7 +953,11 @@ class FacilityArea implements Area3D
       // NOTHING until re-entry — render.Actors drops an object's sprite the moment it has a model.
       // cheap: the glb templates are cached, so only the instance buffers are remade
       render.world.ObjModels.dispose(built, props);
-      props = render.world.ObjModels.build(built, game, objYaw);
+      props = render.world.ObjModels.build(built, game, objYaw, objLift);
+      // the leads with them: a slot that has just been filled changes its infoID, and this is what
+      // moves its run into the bright half
+      FacilityRig.dispose(built, rig);
+      rig = FacilityRig.build(built, game.area);
     }
 
 // the lit windows and glazed doors, as fake actor-shadow casters. they own no spotlight slot — what

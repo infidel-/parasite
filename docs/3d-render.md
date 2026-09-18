@@ -1454,6 +1454,14 @@ back) — grep the change text.
 | Store islands: rows of racking down the middle of a store | the zone tree only reaches a room's WALLS, and a 5x6 store's middle is half of it | racks 5 → 17, calls unchanged at 3 | **landed** |
 | `openPockets` freeing on the first pocket cell in scan order | works only for a ONE-cell pocket; a 3x2 pocket's corner has no fitting on any hand and the repair gave up | 6 unreachable cells, seed 2235 | **bug, fixed** |
 | Crates on the racking's three decks and the pallet stack's lid | the shelving unit's multi-plate case; every item a crate at pallet-load size, no lab glassware | 0 new draw calls | **landed** |
+| Lamp families tuned with `base` 0.25-0.35 | every family's PEAK then sits under `BLOOM_THRESHOLD` 0.9, so a correct shader reads as no glow at all | 3 families, 0 halos | **bug, fixed** |
+| A flat emissive box over the ship's whole crown | the cap's albedo is bimodal (shell 66-89, glass 185-250); the box lights the shell and ships a white card | gated on luma 140: 2,171 of 17,494 texels | **bug, fixed** |
+| A negative `sink` to stand a prop on the podium | `sink` follows the ROW everywhere, so the wilderness copy floats by the same 3.07 — and 3.07 is the POSTS, not the 1.15 deck | wild y = floorYAt exactly | **bug, fixed** |
+| `ObjModels.build` taking a per-cell `lift` from the area kind | a second floor is a fact about the CELL, which only the compound knows | ship y 1.15 on the dais | **landed** |
+| An emissive rectangle over a console's whole screen | the lamp term is flat over every matched texel, so it paints the readout out | thresholded at value 96 | **bug, fixed** |
+| Violet leads from console and slots to the dais, bright once filled | brightness is a material property: two meshes and a rebuild beat per-vertex data | +1 draw call | **landed** |
+| `scene.remove()` on a mesh built before `Chunks.build` | chunks REPARENT into per-chunk groups, so the removal is a silent no-op and the old mesh stays | duplicate cable runs | **bug, fixed** |
+| The ship at 100k tris and its 2048 atlas kept | owner's call over the texels-per-triangle floor; one instance, drawn once | 98k → 276k tris, 60fps | **landed** |
 
 ## Standing notes
 

@@ -2503,6 +2503,12 @@ class FacilityStyle
   // without re-measuring, the dais has to stay inside the pad
   public static inline var PODIUM_H = 3.07;
 
+  // and the height of the DECK, which is what anything standing on the podium stands on: the upper
+  // step's tread (models-src/facility/podium_build.py H1), 6.2 units of radius at 1.15 up. PODIUM_H
+  // is the POSTS — the eight emitters round the rim — and a ship lifted by that number floats
+  // nearly two units over the dais it is supposed to be resting on
+  public static inline var PODIUM_DECK_H = 1.15;
+
   // how many cells on a side the pad is, which is gen.blocks.HangarBlock.PAD_SZ. read here by
   // FacilityModel.findPads as the SQUARE that tells a study pad from a rack bay, and the two are
   // separately stated on purpose: the generator's copy sizes the carve and this one only recognises
@@ -2520,6 +2526,25 @@ class FacilityStyle
   // and how high off the floor the ribbon lies. above CABLE_FLOOR_Y's 0.05 because the hangar floor
   // carries its own decal family and a run crossing one has to read as lying OVER it
   public static inline var PODIUM_CABLE_Y = 0.08;
+
+  // === the study rig's own leads (render.facility.FacilityRig)
+  //
+  // the scenario's console and its three slots are patched INTO the ship, and a lead from each to
+  // the dais is what says so — the same ribbon the machine fan lays, run at the same height, in the
+  // alien violet nothing else in a compound wears. They pulse, slowly and together: these are one
+  // circuit, unlike the ship's own three lamp families, whose whole point is disagreeing
+  public static inline var RIG_CABLE_COL = 0xa855ff;
+  // HDR, so the composer's bloom catches the peak. the dim run sits under BLOOM_THRESHOLD 0.9 at
+  // the bottom of its breath and over it at the top, which is the difference between a pulse and a
+  // shade; a lead whose slot is FILLED runs at more than twice that and never drops under it
+  public static inline var RIG_CABLE_GLOW = 1.05;
+  public static inline var RIG_CABLE_GLOW_LIT = 2.6;
+  public static inline var RIG_CABLE_PULSE = 0.40;
+  // in render.RenderConfig.BASE_MS units, so it scales with the global animation speed like every
+  // other timed thing. SLOW: 0.11 is a breath every nine turns
+  public static inline var RIG_CABLE_RATE = 0.11;
+  public static inline var RIG_CABLE_BOW = 0.55;
+  public static inline var RIG_CABLE_WAVE = 0.14;
 
   // the hangar floor's pack64. the same 8x8 arithmetic as CLUTTER_TEX and consumed by the same
   // emit, against its own sheet: a shed floor is pallets and survey chalk, a worktop is glassware

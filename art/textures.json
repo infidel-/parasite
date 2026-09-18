@@ -3528,6 +3528,24 @@
       "built_linear": 0.3155,
       "built_srgb": 120.3
     },
+    "scenario-a/case-lid": {
+      "src": "scenario-a/case-lid.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "prompt_exact": true,
+      "prompt": "NOT GENERATED. Composited by models-src/scenario-a/case_lid.py off the pack4's own shell cell: the same moulded orange with a raised X brace laid across it, its face flat (the ribs do not run through a separate moulded piece) and one lit arris above each bar. Composited rather than generated so the cell cannot re-roll the family's fitted orange -- see scenario-a/case-shell.",
+      "note": "the case's LID, which is the one face of this prop the camera actually looks at. The X is what the player recognises the quest item by across a shed, and it is a MOULDING and not a decal: the strap's face is flat and carries a lit edge, so it reads at the forty-odd screen pixels a case is spotted at. Unlifted with the rest of the pack -- the level correction is the prop's baseColor.",
+      "crop": [
+        0,
+        0,
+        500,
+        500
+      ],
+      "last_converted": "2026-09-19T02:15:32",
+      "built_linear": 0.2495,
+      "built_srgb": 104.5
+    },
     "scenario-a/case-front": {
       "src": "scenario-a/case-pack4.png",
       "class": "tile",
