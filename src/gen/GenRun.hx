@@ -185,6 +185,9 @@ class GenRun
       var cut = check.reachable(ctx, state.allRooms);
       check.ok(cut.length == 0, cut.length + ' room(s) cannot be walked into, first is ' +
         (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
+      // AFTER the flood and not with the other room checks: it reads GenCheck.lastSeen, which is
+      // what `reachable` just filled in
+      check.storageSane(ctx, state.allRooms, state.allDoors);
       add('unreachableRooms', cut.length);
       if (cut.length > 0)
         {

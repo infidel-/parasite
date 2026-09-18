@@ -84,6 +84,12 @@ class FacilityTemp
   // the two room templates besides the laboratory, written into _Room.role. a null role is a lab
   public static inline var ROLE_CABINET = 'cabinet';
   public static inline var ROLE_TOILET = 'toilet';
+  // and the store, the fourth. IT IS THE ONLY ONE FLOORED IN CONCRETE, which is a statement about
+  // render.facility.FacilityModel as much as about the room: that file tells the shed from a lab
+  // building by a MAJORITY of concrete over a structure's interior cells, so one 7x7 store inside a
+  // 31x24 building cannot flip it — but a store in a SMALL structure could, and that is the number
+  // to look at if a lab building ever comes back drawn as a hangar
+  public static inline var ROLE_STORAGE = 'storage';
   // a floor tile's unwalkable twin sits exactly one tileset row below it (Const.OFFSET_ROW12 ->
   // OFFSET_ROW13), which is how game.CorpAreaGenerator addresses the pair too
   public static inline var UNWALKABLE_TILE_OFFSET = 16;

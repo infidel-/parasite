@@ -34,6 +34,7 @@ class RoomBlock
   public static inline var LAB = 'room-lab';
   public static inline var OFFICE = 'room-office';
   public static inline var WASHROOM = 'room-washroom';
+  public static inline var STORAGE = 'room-storage';
   // and what a room divides into. BAY is what the glazing pass pushes — an undealt bay of floor
   // under one bay of window — and gen.Quota then turns every one of them into one of the rest
   public static inline var BAY = 'bay';
@@ -54,6 +55,13 @@ class RoomBlock
   // the one zone that is TWO CELLS DEEP: a two-seater against the masonry with a low table on the
   // cell in front of it. Everything else here is a run along a wall
   public static inline var LOUNGE = 'lounge';
+  // and the store's three: a run of pallet racking, a bay of pallets standing on the floor, and the
+  // strip kept bare. AISLE writes nothing and that IS the zone, exactly as LOBBY is in a washroom —
+  // racking is 4.2 tall and blocks sight as well as movement, so the one thing a store needs stated
+  // is where it does NOT stand
+  public static inline var SHELF_RUN = 'shelf-run';
+  public static inline var PALLET_BAY = 'pallet-bay';
+  public static inline var AISLE = 'aisle';
 
   // marks a sub-block carries for its own filler and for gen.blocks.RoomZones' `must`: which tile
   // family its run is drawn from, whether the worktops under that run have drawers, whether it
@@ -68,6 +76,13 @@ class RoomBlock
 
   // a room narrower than this on the run's axis gets two-cell bays instead of three
   static inline var NARROW_ROOM = 7;
+
+  // how many pallets one bay of a store may take, and how often one of them is a pallet of drums
+  // rather than a wrapped stack. TWO and not the bay's length: a pallet is 1.5 tall and what stands
+  // on a store's floor is a couple of them with room to walk past, where `standing`'s rack run is a
+  // wall of racking that fills its bay bar one cell
+  static inline var STORE_PALLET_MAX = 2;
+  static inline var STORE_DRUM_PCT = 40;
   // how often a slot is dressed at all, how often it is dressed with something standing rather than
   // something on the floor, and how often a slot beside glazing is left bare on purpose
   static inline var SLOT_FILL_PCT = 70;
@@ -120,6 +135,8 @@ class RoomBlock
         return WASHROOM;
       if (room.role == ROLE_CABINET)
         return OFFICE;
+      if (room.role == ROLE_STORAGE)
+        return STORAGE;
       return LAB;
     }
 
@@ -153,7 +170,29 @@ class RoomBlock
 
           case LAB, OFFICE:
             clear(state, room);
-            glaze(state, room, node);
+            glaze(state, room, node, true);
+
+          // A STORE DEALS LIKE THE OTHER TWO AND GLAZES LIKE THE WASHROOM, and that pairing is the
+          // whole of what makes its racking possible. `solid` refuses a cell next to a ribbon window
+          // — a 4.2-tall rack in front of the glass is a rack instead of a window — so a store
+          // glazed like a laboratory has almost no wall to stand anything against: measured on the
+          // first build, ONE pallet rack in a whole compound. Light wells are the washroom's own
+          // answer to the same problem (their TEMP id is outside the range `nextToWindow` tests, so
+          // the cell under one is solid), and a store with high windows is what a store has anyway
+          case STORAGE:
+            clear(state, room);
+            FacilityToilet.toiletWindows(state.area.getCells(), room);
+            glaze(state, room, node, false);
+
+          case SHELF_RUN:
+            standing(state, node, FIT_PALLET_RACK);
+
+          case PALLET_BAY:
+            pallets(state, node);
+
+          // and the aisle writes nothing, the washroom lobby's own trick one room along: naming the
+          // strip is how every other zone knows to keep off it
+          case AISLE:
 
           case BENCH:
             bench(state, room, node);
@@ -200,13 +239,13 @@ class RoomBlock
 // ENTIRE — which is what lets a demand say "one of these, somewhere in here" instead of each bay
 // answering for itself. gen.Quota mutates `kind` in place and never reorders, so the children stay
 // in wall order and the fills still claim contested corner cells in the order the walls were walked
-  static function glaze(state: _FacilityState, room: _Room, node: _GenNode)
+  static function glaze(state: _FacilityState, room: _Room, node: _GenNode, glass: Bool)
     {
       var caps = [];
       var bays = [];
       for (spot in getRoomWallCorners(room))
         {
-          var cap = glazeWall(state, room, node, spot, bays);
+          var cap = glazeWall(state, room, node, spot, bays, glass);
           if (cap != null)
             caps.push(cap);
         }
@@ -225,13 +264,15 @@ class RoomBlock
 // it. returns the run's last cell when that cell came out a LONE window rather than a ribbon end,
 // which is the only cell that may become a vent
   static function glazeWall(state: _FacilityState, room: _Room, node: _GenNode,
-      spot: _Spot, bays: Array<_GenNode>): _Spot
+      spot: _Spot, bays: Array<_GenNode>, glass: Bool): _Spot
     {
       var area = state.area;
       var cells = area.getCells();
       // the ribbon stops at the first cell of the run that is not exterior masonry and never starts
       // again: a wall that turns into a corridor or a doorway partway along has no elevation left
-      var noWindow = (cells[spot.x][spot.y] != TEMP_BUILDING_WALL);
+      // `glass` false is the STORE: it takes the bay rhythm and none of the ribbon, so every wall
+      // cell stays masonry and `solid` accepts it
+      var noWindow = (!glass || cells[spot.x][spot.y] != TEMP_BUILDING_WALL);
 
       // only the run along the TOP wall may get the worktops with drawers under them — the other
       // three are seen from the side or from behind, where there is nothing of them to see
@@ -444,6 +485,29 @@ class RoomBlock
         }
     }
 
+// fill a bay with pallets on the floor: shrink-wrapped cartons, or a pallet of drums.
+//
+// NOT `standing`, and the difference is the LANE. A rack run is 4.2 tall and fills its bay to one
+// cell short; a pallet is 1.5 and what a store actually has on the floor is a couple of them side by
+// side with room to walk past, so this deals at most STORE_PALLET_MAX and rolls each cell
+  static function pallets(state: _FacilityState, node: _GenNode)
+    {
+      var room = FacilityConnect.roomByID(state, node.roomID);
+      var left = STORE_PALLET_MAX;
+      for (c in cellsOf(node))
+        {
+          if (left <= 0)
+            return;
+          if (!solid(state, room, c.x, c.y))
+            continue;
+          // a pallet of drums or a wrapped stack. the drums are the same three liveries the
+          // laboratory's own low list draws, standing on a pallet instead of on the floor
+          FacilityRooms.placeFitting(state, c.x, c.y,
+            state.area.chance(STORE_DRUM_PCT) ? FIT_DRUM_PALLET : FIT_PALLET_STACK);
+          left--;
+        }
+    }
+
 // how many cells of this bay could hold a piece of standing furniture. gen.blocks.RoomZones asks it
 // as a `must`, and `standing` above fills exactly the cells it counted
   public static function solidRun(state: _FacilityState, node: _GenNode): Int
@@ -618,7 +682,12 @@ class RoomBlock
           // bin, a broom and a bucket, and all three are render-only passes
           if (room.role == ROLE_TOILET)
             continue;
-          if (room.role == ROLE_CABINET)
+          // A STORE'S LEFTOVER BAYS TAKE THE STORE'S OWN LIST and never the laboratory's, which is
+          // the omission gen/area-gen's own notes say has bitten three times: without this arm a
+          // bay no demand wanted comes back holding lab glassware and a bench lathe. gen.Deco deals
+          // on the role, so the block name is the whole of the fix
+          if (room.role == ROLE_STORAGE ||
+              room.role == ROLE_CABINET)
             {
               if (high)
                 FacilityRooms.addFitting(state, c.x, c.y, room.role);

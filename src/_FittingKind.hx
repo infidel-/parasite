@@ -57,4 +57,12 @@ enum abstract _FittingKind(Int) from Int to Int
   // shape, a tall analyser console with a sloped operator face. It takes row 8 col 5 of the atlas,
   // which the machine's own five frames already called "an analyser console"
   var FIT_ANALYSER = 16;
+  // the STORE's three, and the first family here dealt by a room template that is not the washroom's.
+  // the racking is the room — 4.0 x 1.8 of two-bay pallet rack standing 4.2 tall, so it blocks sight
+  // as well as movement, which is what the aisle zone beside it exists to keep open. The other two
+  // are what stands ON a store's floor: a wrapped stack of cartons on a pallet, and a pallet of the
+  // same three drums the laboratory's low list already draws
+  var FIT_PALLET_RACK = 17;
+  var FIT_PALLET_STACK = 18;
+  var FIT_DRUM_PALLET = 19;
 }

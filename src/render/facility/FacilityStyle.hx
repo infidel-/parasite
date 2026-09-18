@@ -1277,6 +1277,47 @@ class FacilityStyle
   // flags exist to keep the table below reading the same way as its neighbours
   public static inline var DECO_SOFA_GLB = true;
   public static inline var DECO_TABLE_LOW_GLB = true;
+
+  // the STORE ROOM's three, in world units and built AT these heights
+  // (models-src/facility/storerack_build.py), so render.Models.instanced's height scale is 1 and the
+  // plans below are the plans that draw. Glbs only, like the lounge pair above and for the same
+  // reason: none of the three ever had an emitted version, so `unit` emits nothing for them.
+  //
+  // THE RACKING IS THE TALLEST FITTING IN THE COMPOUND, over the cabinet's 3.43, and that is what
+  // gen.blocks.RoomZones' AISLE zone exists for: at 4.2 it blocks sight as well as movement, so a
+  // store with racking on every wall and no bay held back is a room you cannot see across.
+  //
+  // AND IT IS 3.9 WIDE AND NOT 4.0: a run is one instance per CELL and a cell is CityConfig.CELL
+  // 4.0, so a cell-wide rack would abut the next one EXACTLY — two coincident faces, i.e. a z-fight
+  // between instances rather than a continuous bay. The 0.1 left over reads as the joint
+  public static inline var DECO_PALLET_RACK_W = 3.9;
+  public static inline var DECO_PALLET_RACK_D = 1.8;
+  public static inline var DECO_PALLET_RACK_H = 4.2;
+  // and what stands on the floor in front of it: a wrapped stack of cartons, and a pallet of drums.
+  // Both are `floor-low` mounts (Const.FACILITY_DECO), so they may stand under glazing where the
+  // racking may not
+  public static inline var DECO_PALLET_STACK_W = 1.8;
+  public static inline var DECO_PALLET_STACK_D = 1.8;
+  public static inline var DECO_PALLET_STACK_H = 1.5;
+  public static inline var DECO_DRUM_PALLET_W = 1.8;
+  public static inline var DECO_DRUM_PALLET_D = 1.8;
+  public static inline var DECO_DRUM_PALLET_H = 1.4;
+
+  // the STORE's floor pack64 (art/textures.json facility/store-clutter), consumed by
+  // render.facility.FacilityStore through the same 8x8 emit/UV arithmetic as the hangar floor one
+  // storey down. The store is the one INDOOR room floored in concrete, which is also how the
+  // renderer finds it: Surf.CONCRETE inside a structure that is not the shed
+  public static inline var STORE_CLUTTER_TEX = 'textures/facility/store-clutter.png';
+  public static inline var STORE_CLUTTER_COLS = 8;
+  public static inline var STORE_CLUTTER_CELLS = STORE_CLUTTER_COLS * STORE_CLUTTER_COLS;
+  // smaller than the shed floor's 2.6: a store is a ROOM, the camera is closer to it, and a 2.6
+  // carton lid in a 4.0 cell would run under the racking standing on the next cell
+  public static inline var STORE_CLUTTER_SZ = 2.0;
+  public static inline var STORE_CLUTTER_SZ_VAR = 0.6;
+  // and a higher roll than the roof's 12: this is a working room and the litter is the point of it
+  public static inline var STORE_CLUTTER_PCT = 22;
+  // how far it floats over the floor. the same clearance every flat family in the compound takes
+  public static inline var STORE_CLUTTER_Y = 0.02;
   // the basin glb's OWN height, tap included, and the number the batch is sized by: Models.instanced
   // scales a mesh to the height it is given, so passing BASIN_H would squash the counter by the
   // tap's share. BASIN_H stays the counter's height and this is only ever the scale
@@ -2603,6 +2644,31 @@ class FacilityStyle
   // what __facility().roof's cables-over-boxes ratio exists to catch; reach 5 gives 7 boxes at 2.1
   // units apiece and no group spanning more than a bay and its lane
   public static inline var ROOF_JBOX_REACH = 5;
+
+  // the SERVICE KIT: the three families that stand on a deck beside the condensers, in world units
+  // and built AT these heights (models-src/facility/roofsvc_build.py), so render.Models.instanced's
+  // height scale is 1 and the plans below are the plans that draw.
+  //
+  // an extract vent: a mushroom cowl 40 cm across on its own curb, the smallest thing up here. It
+  // goes in the SERVICE bay with the hatch, because that is where the shafts it caps come up
+  public static inline var ROOF_VENT_H = 1.1;
+  public static inline var ROOF_VENT_PLAN = 0.8;
+  // and an expansion tank, which is a share of the PLANT bay's own cells rather than a family of
+  // its own: a plant bay with one vessel among its condensers is a plant bay, and a bay of tanks is
+  // a tank farm. ROOF_TANK_PCT of the units dealt a plant cell come out as one
+  public static inline var ROOF_TANK_H = 1.6;
+  public static inline var ROOF_TANK_PLAN = 0.92;
+  public static inline var ROOF_TANK_PCT = 22;
+  // and the duct run. IT IS BUILT ONE CELL LONG, which is the whole reason it can be a prop: a
+  // segment built at its stated height draws its stated length, so segments dropped on neighbouring
+  // cell centres abut with no seam, no per-instance scale and no swept mesh — a run is N placements
+  // in one batch. ROOF_DUCT_H is measured to the FLANGE rings, the widest thing on the segment
+  public static inline var ROOF_DUCT_H = 1.0;
+  public static inline var ROOF_DUCT_PLAN_D = 0.72;
+  // and how many segments one run may take. it walks out of the service bay along the ring band, so
+  // the cap is what stops a duct following the band the whole way round the building — the fault
+  // the cable trunking was reported for (see ROOF_JBOX_REACH)
+  public static inline var ROOF_DUCT_MAX = 3;
 
   // the CONTACT SHADOW under everything that stands on a deck, and the footprints it is laid to.
   //

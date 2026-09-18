@@ -82,6 +82,10 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityTableLow,
       // and the hangar's second machine, appended with its row in FacilityDeco.fittings
       RenderConfig.MODELS.facilityAnalyser,
+      // and the store room's three, in that same table's order
+      RenderConfig.MODELS.facilityPalletRack,
+      RenderConfig.MODELS.facilityPalletStack,
+      RenderConfig.MODELS.facilityDrumPallet,
       // and the hangar's study podium, last because `green` pushes it last. ONE instance per shed
       // and usually one shed, so it is the smallest batch in the list — and the only one standing
       // on Surf.CONCRETE (render.facility.FacilityHangar)
@@ -126,6 +130,7 @@ class FacilityArea implements Area3D
     };                                          // the whole electrical service, four ways
   var sinks = 0;                                // bench sinks: one per block with a free edge cell
   var clutter = 0;                              // flat decals scattered over the worktops
+  var store = 0;                                // and over a store room's concrete floor
   var clues = 0;                                // clue spots dropped for carrying a basin or a screen
   var built:Scene;                              // held for refreshObjects, which rebuilds the doors
   var reveal:Array<Float>;                      // per structure, 0 solid .. 1 fully revealed
@@ -278,6 +283,9 @@ class FacilityArea implements Area3D
       // as FacilityWork's desk leads do, and a borrower has to fill before the owner merges. That is
       // the one ordering constraint in this block and it is the same one recorded above it
       hangar = FacilityHangar.build(scene, model, workCable);
+      // and the store room's floor, which is the same family one floor up and needs nothing from
+      // the generator: a store is the only INDOOR room floored in concrete
+      store = FacilityStore.build(scene, model);
       // and the checkpoint's service drop, the third borrower of that same buffer and the last
       // thing into it — the pole it runs from is FacilityLamps.gateMast, which is pure arithmetic
       // over the grid and needs no mast to have been built yet
@@ -537,6 +545,10 @@ class FacilityArea implements Area3D
             // FacilityClutter.cell stopped rejecting — the count is rolled 0..3 per cell, so it
             // should land near 1.5x the cells that are neither sink nor fully blocked
             clutter: clutter,
+            // and the STORE's own floor decals, on the same terms and with the same blindness: one
+            // merged mesh, no instance count. A compound reporting a `room-storage` node and 0 here
+            // is the Surf.CONCRETE test broken, not an empty room
+            store: store,
             // and how many clue spots came OUT of game.AreaGame.clueSpawnPoints because a basin or a
             // workstation is standing on them. it is the only handle on FacilityClues, and the number
             // to read it against is `sinks` plus `work`: a prune far under that sum means the
@@ -607,9 +619,15 @@ class FacilityArea implements Area3D
               // and the deck's flat dressing. it is the ONE family that ignores the ring band, so a
               // count near 12% of the decks' cells is right and a 0 means the depth test broke
               clutter: roof.clutter,
-              // and the contact shadows. it must equal ac + dish + hatches + boxes exactly — a
-              // family that placed without planting reads as floating, and that is the only way to
-              // see it without a screenshot
+              // the service kit. `ducts` counts SEGMENTS: a run is 1 to ROOF_DUCT_MAX of them laid
+              // on neighbouring cells, so a deck with a hatch on it reporting 0 is the walk out of
+              // the service bay failing and not a small bay
+              vents: roof.vents,
+              ducts: roof.ducts,
+              tanks: roof.tanks,
+              // and the contact shadows. it must equal the sum of everything standing on a deck —
+              // ac + dish + hatches + boxes + vents + ducts + tanks — a family that placed without
+              // planting reads as floating, and that is the only way to see it without a screenshot
               pools: roof.pools,
             },
             // the park's overgrown patches. `strong` is the number the layer is TUNED on and the one
@@ -672,6 +690,12 @@ class FacilityArea implements Area3D
         FacilityRoof.mask(roof.hatchOf, reveal));
       render.Models.cull(roof.jboxB, opts.camera, FacilityStyle.PROP_CULL_R,
         FacilityRoof.mask(roof.jboxOf, reveal));
+      render.Models.cull(roof.ventB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.ventOf, reveal));
+      render.Models.cull(roof.ductB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.ductOf, reveal));
+      render.Models.cull(roof.tankB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.tankOf, reveal));
     }
 
 // which structures should be open. INSIDE is the obvious half; the other is looking in through a

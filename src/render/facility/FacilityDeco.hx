@@ -290,6 +290,9 @@ class FacilityDeco
           case _FittingKind.FIT_PARTITION: FacilityStyle.PART_H;
           case _FittingKind.FIT_SOFA: FacilityStyle.DECO_SOFA_H;
           case _FittingKind.FIT_TABLE_LOW: FacilityStyle.DECO_TABLE_LOW_H;
+          case _FittingKind.FIT_PALLET_RACK: FacilityStyle.DECO_PALLET_RACK_H;
+          case _FittingKind.FIT_PALLET_STACK: FacilityStyle.DECO_PALLET_STACK_H;
+          case _FittingKind.FIT_DRUM_PALLET: FacilityStyle.DECO_DRUM_PALLET_H;
           default: 0.0;
         };
     }
@@ -512,6 +515,21 @@ class FacilityDeco
           w = FacilityStyle.DECO_TABLE_LOW_W;
           d = FacilityStyle.DECO_TABLE_LOW_D;
         }
+      else if (kind == _FittingKind.FIT_PALLET_RACK)
+        {
+          w = FacilityStyle.DECO_PALLET_RACK_W;
+          d = FacilityStyle.DECO_PALLET_RACK_D;
+        }
+      else if (kind == _FittingKind.FIT_PALLET_STACK)
+        {
+          w = FacilityStyle.DECO_PALLET_STACK_W;
+          d = FacilityStyle.DECO_PALLET_STACK_D;
+        }
+      else if (kind == _FittingKind.FIT_DRUM_PALLET)
+        {
+          w = FacilityStyle.DECO_DRUM_PALLET_W;
+          d = FacilityStyle.DECO_DRUM_PALLET_D;
+        }
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
       var dir = wall(m, col, row, Const.isLowFitting(kind));
@@ -648,6 +666,11 @@ class FacilityDeco
           // family is a switch over quads that came first; these two were modelled from the start,
           // so there is no emitted version to fall back to — and a case is still required, because
           // `default` below is the rack and an unlisted kind would be drawn as one
+          // and the STORE's three, on the same terms: modelled from the start, so nothing is
+          // emitted for them either — and a case is still required, because `default` below is the
+          // rack and an unlisted kind is drawn as one
+          case _FittingKind.FIT_PALLET_RACK | _FittingKind.FIT_PALLET_STACK |
+               _FittingKind.FIT_DRUM_PALLET:
           case _FittingKind.FIT_SOFA | _FittingKind.FIT_TABLE_LOW:
           // the hangar's second machine: modelled from the start like those two, so it emits nothing
           // — but it DOES blink, and its lamps are the painted lenses of its port plate rather than
@@ -1337,6 +1360,26 @@ class FacilityDeco
           kind: _FittingKind.FIT_ANALYSER,
           path: RenderConfig.MODELS.facilityAnalyser,
           h: FacilityStyle.DECO_ANALYSER_H,
+          on: true,
+        },
+        // and the STORE's three, appended for the same reason and with no flag each: they replace
+        // nothing, so there is nothing to A/B them against
+        {
+          kind: _FittingKind.FIT_PALLET_RACK,
+          path: RenderConfig.MODELS.facilityPalletRack,
+          h: FacilityStyle.DECO_PALLET_RACK_H,
+          on: true,
+        },
+        {
+          kind: _FittingKind.FIT_PALLET_STACK,
+          path: RenderConfig.MODELS.facilityPalletStack,
+          h: FacilityStyle.DECO_PALLET_STACK_H,
+          on: true,
+        },
+        {
+          kind: _FittingKind.FIT_DRUM_PALLET,
+          path: RenderConfig.MODELS.facilityDrumPallet,
+          h: FacilityStyle.DECO_DRUM_PALLET_H,
           on: true,
         },
       ];

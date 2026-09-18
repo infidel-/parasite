@@ -20,7 +20,7 @@ import render.world.MeshBuf.MeshBufTools;
 typedef RoofProp = {
   col:Int,
   row:Int,
-  kind:String,      // 'ac' | 'dish'
+  kind:String,      // 'ac' | 'dish' | 'tank' | 'vent' | 'duct'
   structure:Int,
 };
 
@@ -97,6 +97,13 @@ typedef RoofDeck = {
   // nothing: they were the ONLY two things in it
   hatch:Array<Models.PropPlace>,
   jbox:Array<Models.PropPlace>,
+  // and the SERVICE KIT: an extract vent, a lagged duct segment and an expansion tank. Three more
+  // placement lists and not three more meshes, for the reason the hatch became one — each is a
+  // picture on its own faces, and the duct is only a prop at all because a segment built one cell
+  // long abuts the next one (see FacilityStyle.ROOF_DUCT_H)
+  vent:Array<Models.PropPlace>,
+  duct:Array<Models.PropPlace>,
+  tank:Array<Models.PropPlace>,
   // the cable runs, in the cable art. they ride the structure's own Shell.roof so they fade with
   // the deck they stand on: a ribbon that stayed when the deck went would be a cable hanging over
   // the room the player walked into
@@ -117,11 +124,18 @@ typedef Roof = {
   // and the two service boxes, which are batches for the art's sake and not the silhouette's
   hatchB:Models.InstancedProp,
   jboxB:Models.InstancedProp,
+  // and the service kit's three
+  ventB:Models.InstancedProp,
+  ductB:Models.InstancedProp,
+  tankB:Models.InstancedProp,
   // index-aligned with each batch's own placements: which structure that instance stands on
   acOf:Array<Int>,
   dishOf:Array<Int>,
   hatchOf:Array<Int>,
   jboxOf:Array<Int>,
+  ventOf:Array<Int>,
+  ductOf:Array<Int>,
+  tankOf:Array<Int>,
   props:Array<RoofProp>,
   hatches:Int,
   vaults:Array<Vault>,
@@ -132,8 +146,16 @@ typedef Roof = {
   // is serving the whole deck again, which is the long runs this replaced
   boxes:Int,
   clutter:Int,
-  // and how many contact shadows were laid. one per condenser, per dish, per hatch and per box, so
-  // it is the sum of the four and a mismatch means a family was placed without being planted
+  // the service kit's three counts. `ducts` is SEGMENTS and not runs, which is the number that says
+  // whether the walk out of the service bay found band to lay on: a run is 1 to ROOF_DUCT_MAX of
+  // them and a deck reporting 0 ducts with a hatch on it means the walk broke, not that the bay
+  // was small
+  vents:Int,
+  ducts:Int,
+  tanks:Int,
+  // and how many contact shadows were laid. one per thing standing on a deck — condenser, dish,
+  // hatch, box, vent, duct segment and tank — so it is the sum of the seven and a mismatch means a
+  // family was placed without being planted
   pools:Int,
 };
 
@@ -171,6 +193,9 @@ class FacilityRoof
         dish: [],
         hatch: [],
         jbox: [],
+        vent: [],
+        duct: [],
+        tank: [],
         cab: null,
         pack: null,
         shade: null,
@@ -180,10 +205,16 @@ class FacilityRoof
         dish: null,
         hatchB: null,
         jboxB: null,
+        ventB: null,
+        ductB: null,
+        tankB: null,
         acOf: [],
         dishOf: [],
         hatchOf: [],
         jboxOf: [],
+        ventOf: [],
+        ductOf: [],
+        tankOf: [],
         props: [],
         hatches: 0,
         vaults: [],
@@ -191,6 +222,9 @@ class FacilityRoof
         cables: 0,
         boxes: 0,
         clutter: 0,
+        vents: 0,
+        ducts: 0,
+        tanks: 0,
         pools: 0,
       };
       for (si in 0...m.structures.length)
@@ -217,6 +251,12 @@ class FacilityRoof
         FacilityStyle.ROOF_HATCH_H, SOLID);
       out.jboxB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofJboxHand, deck.jbox,
         FacilityStyle.ROOF_JBOX_H, SOLID);
+      out.ventB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofVentHand, deck.vent,
+        FacilityStyle.ROOF_VENT_H, SOLID);
+      out.ductB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofDuctHand, deck.duct,
+        FacilityStyle.ROOF_DUCT_H, SOLID);
+      out.tankB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofTankHand, deck.tank,
+        FacilityStyle.ROOF_TANK_H, SOLID);
       return out;
     }
 
@@ -314,6 +354,81 @@ class FacilityRoof
           out.hatches++;
           out.pools++;
         }
+      // and the duct run leaving it. THE SERVICE BAY IS WHERE THE SHAFTS COME UP, so a lagged run
+      // starts at the stair core and walks the ring band — which is also the one direction on a
+      // roof that always has deck in it. Whichever of the four has the most band wins, capped at
+      // ROOF_DUCT_MAX so a run cannot follow the band the whole way round the building, the fault
+      // the cable trunking was reported for
+      var duct:Array<{ col:Int, row:Int }> = [];
+      var ddir = 0;
+      if (core != null)
+        {
+          for (dir in 0...4)
+            {
+              var w = walk(m, si, core.col, core.row, dir, FacilityStyle.ROOF_DUCT_MAX);
+              if (w.length > duct.length)
+                {
+                  duct = w;
+                  ddir = dir;
+                }
+            }
+          // DC is the COLUMN delta, so dirs 2 and 3 run along x — which is the axis the segment is
+          // built along — and dirs 0 and 1 run along z and take the quarter turn
+          var yaw = (DC[ddir] != 0 ? 0.0 : Math.PI / 2);
+          for (cell in duct)
+            {
+              var c = CityConfig.cellToWorld(cell.col, cell.row);
+              deck.duct.push({
+                x: c.x,
+                z: c.z,
+                yaw: yaw,
+                y: FacilityStyle.ROOF_Y,
+              });
+              out.ductOf.push(si);
+              out.props.push({ col: cell.col, row: cell.row, kind: 'duct', structure: si });
+              // a segment IS a cell long, so its shadow is too — the one pool up here that is not
+              // square, and the only one that has to be turned with its prop
+              pool(deck.shade, c.x, c.z, CELL / 2, FacilityStyle.ROOF_DUCT_PLAN_D / 2, yaw);
+              out.ducts++;
+              out.pools++;
+            }
+        }
+      // the extract vents: every other cell the service bay holds. A vent caps a shaft and a shaft
+      // comes up where the stair core does, so they cluster round the hatch rather than being dealt
+      // over the deck — which is the difference between a service bay and a scatter
+      for (cell in svc)
+        {
+          if (core != null &&
+              cell.col == core.col &&
+              cell.row == core.row)
+            continue;
+          var used = false;
+          for (d in duct)
+            if (d.col == cell.col &&
+                d.row == cell.row)
+              {
+                used = true;
+                break;
+              }
+          if (used)
+            continue;
+          var c = CityConfig.cellToWorld(cell.col, cell.row);
+          var h = FacilityModel.mix((cell.col * 70001) ^ (cell.row * 30011));
+          deck.vent.push({
+            x: c.x,
+            z: c.z,
+            // a cowl IS round, so this is the one thing on a deck that takes a free turn: there is
+            // no face on it a quarter turn could square up to
+            yaw: (h >> 8) % 6283 / 1000.0,
+            y: FacilityStyle.ROOF_Y,
+          });
+          out.ventOf.push(si);
+          out.props.push({ col: cell.col, row: cell.row, kind: 'vent', structure: si });
+          pool(deck.shade, c.x, c.z, FacilityStyle.ROOF_VENT_PLAN / 2,
+            FacilityStyle.ROOF_VENT_PLAN / 2, 0.0);
+          out.vents++;
+          out.pools++;
+        }
       // ONE dish per building, in the middle of its own bay. it is the roof's silhouette, and two of
       // them read as a repeated prop rather than as the thing this building has on it — which is
       // what `max: 1` on the demand says and what this loop no longer has to
@@ -338,6 +453,27 @@ class FacilityRoof
         {
           var c = CityConfig.cellToWorld(cell.col, cell.row);
           var h = FacilityModel.mix((cell.col * 70001) ^ (cell.row * 30011));
+          // ONE IN ROOF_TANK_PCT OF THE PLANT CELLS IS A VESSEL, and it is dealt here rather than
+          // given a bay of its own on purpose: a plant bay with one expansion tank standing among
+          // its condensers is a plant bay, and a bay full of tanks is a tank farm. It stays in
+          // `plant` afterwards, so the trunking runs back to the same isolator box — which is what
+          // a vessel with a trace-heating circuit on it actually has
+          if (h % 100 < FacilityStyle.ROOF_TANK_PCT)
+            {
+              deck.tank.push({
+                x: c.x,
+                z: c.z,
+                yaw: ((h >> 8) % 4) * (Math.PI / 2),
+                y: FacilityStyle.ROOF_Y,
+              });
+              out.tankOf.push(si);
+              out.props.push({ col: cell.col, row: cell.row, kind: 'tank', structure: si });
+              pool(deck.shade, c.x, c.z, FacilityStyle.ROOF_TANK_PLAN / 2,
+                FacilityStyle.ROOF_TANK_PLAN / 2, 0.0);
+              out.tanks++;
+              out.pools++;
+              continue;
+            }
           deck.ac.push({
             x: c.x,
             z: c.z,
@@ -422,6 +558,12 @@ class FacilityRoof
         taken.push(core);
       if (dish != null)
         taken.push(dish);
+      // the service kit stands on cells too: the duct's own, and the vents', which are every other
+      // cell of the service bay
+      for (c in duct)
+        taken.push(c);
+      for (c in svc)
+        taken.push(c);
       out.clutter += clut(deck.pack, m, si, taken);
     }
 
@@ -680,6 +822,31 @@ class FacilityRoof
                 d <= FacilityStyle.ROOF_RING_INSET)
               out.push({ col: col, row: row });
           }
+      return out;
+    }
+
+// a straight run of deck out of one cell: up to `n` further cells that are still this structure's
+// own deck and still inside the ring band, stopping at the first that is not.
+//
+// it is what a DUCT is laid on and nothing else uses it, because nothing else up here is longer
+// than a cell. The band test is the same one `candidates` makes and deliberately so — a segment
+// hanging over the coping is the fault the floor of 2 exists to prevent
+  static function walk(m:Facility, si:Int, col:Int, row:Int, dir:Int,
+      n:Int):Array<{ col:Int, row:Int }>
+    {
+      var out = [];
+      for (k in 1...n + 1)
+        {
+          var c = col + DC[dir] * k;
+          var r = row + DR[dir] * k;
+          if (!owns(m, si, c, r))
+            break;
+          var d = depth(m, si, c, r);
+          if (d < 2 ||
+              d > FacilityStyle.ROOF_RING_INSET)
+            break;
+          out.push({ col: c, row: r });
+        }
       return out;
     }
 

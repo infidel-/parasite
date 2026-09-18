@@ -170,7 +170,9 @@ class Const
       // end to end it was 0.70 (a slot is filled) x 0.50 (that slot is HIGH) x 0.60
       // (FACILITY_FITTING_PCT) x a uniform 1-in-5 over the entries a lab's floor-high list holds,
       // which is 4.2% of eligible wall cells and nothing at all next door
-      blocks: [ 'lab', 'cabinet' ],
+      // and the STORE, which is the one room in the compound this thing is literally named after:
+      // the racking is dealt by its zones and a shelving unit is what fills the bays left over
+      blocks: [ 'lab', 'cabinet', 'storage' ],
       // and WEIGHTED, which is the other half of the same number: three entries against a plain
       // one's one takes it to 3-in-7 of that roll. Storage is what a storage compound is made of
       weight: 3,
@@ -380,6 +382,46 @@ class Const
       blocks: [ 'lounge' ],
       frames: [
         { row: 12, col: 11 },
+      ],
+    },
+    // and the STORE's three, on the washroom trio's exact terms: their block is 'storage' and
+    // nothing else, so no other room's roll can reach them, and gen.blocks.RoomBlock deals the rack
+    // and the pallets by KIND in a run. They are keys rather than pictures — a compound never takes
+    // the 2D branch, so a fitting frame is what Const.fittingOf reads a kind back out of a save with
+    // and nothing draws it.
+    //
+    // ROW 18, AND NOT THE FREE TAIL OF ROW 49, which is the trap this cost a build to find:
+    // render.facility.FacilityModel.findDeco asks Const.isTableDeco(row) FIRST and sends the whole
+    // row to the bench branch, and row 49 is in CHEM_LABS_DECO_TABLE (amount 4, so 49/4-11 look
+    // free and are not). A frame dealt there never reaches `fittingOf` at all: the three batches
+    // were built, placed by the generator, and drew 0 instances each. Row 18 is one of the two
+    // stale 2D-era document rows CHEM_LABS_DOCUMENTS stopped dealing when the clue pack repainted
+    // rows 17 and 19 — nothing in the tree references it, and it is not a table row
+    {
+      id: 'pallet-rack',
+      kind: FIT_PALLET_RACK,
+      mount: [ 'floor-high' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 0 },
+      ],
+    },
+    {
+      id: 'pallet-stack',
+      kind: FIT_PALLET_STACK,
+      mount: [ 'floor-low' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 1 },
+      ],
+    },
+    {
+      id: 'drum-pallet',
+      kind: FIT_DRUM_PALLET,
+      mount: [ 'floor-low' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 2 },
       ],
     },
   ];

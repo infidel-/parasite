@@ -26,6 +26,11 @@ class FacilityRooms
   // the room for its basin, and the clue's own activation range then wants the remaining two not to
   // be the same corner of the same run
   static inline var TABLE_CLEAR_MIN = 3;
+  // the shortest wall run a store will take, in cells. RACKING IS THE ROOM: two bays of pallet rack
+  // is 4 cells of unbroken masonry, and a room that cannot offer that is a room with shelves in it
+  // and not a store. A candidate failing this is simply not made one — the washroom's own precedent,
+  // where relaxing onto the fault was rejected
+  static inline var STORE_RUN_MIN = 4;
 
 // hand each room of this structure a template.
 //
@@ -82,6 +87,17 @@ class FacilityRooms
       // can stop it now is no candidate passing, measured at 1.6% of structures
       if (wash >= 0)
         cand[wash].role = ROLE_TOILET;
+      // and the store, dealt on the same shape and for the same reason the washroom is: it wants
+      // something no other template needs — one wall run long enough to stand racking against — and
+      // a room that has none is passed over rather than furnished badly. ONE PER BUILDING: a lab
+      // building has a store the way it has a toilet, and two of them reads as a warehouse
+      for (room in cand)
+        if (room.role == null &&
+            storeWall(state, room))
+          {
+            room.role = ROLE_STORAGE;
+            break;
+          }
       var cabinets = 0;
       for (i in 0...cand.length)
         {
@@ -105,6 +121,8 @@ class FacilityRooms
             roomCabinet(state, room);
           else if (room.role == ROLE_TOILET)
             FacilityToilet.roomToilet(state, room);
+          else if (room.role == ROLE_STORAGE)
+            roomStorage(state, room);
           else roomChemistryLab(state, room);
         }
     }
@@ -177,6 +195,61 @@ class FacilityRooms
             state.area.getCells()[run[k].x][run[k].y] = Const.TILE_FLOOR_TILE_UNWALKABLE;
         }
       paintRoomFloor(state, room, Const.TILE_FLOOR_WOOD1);
+    }
+
+// has this room a wall long enough to stand racking against?
+//
+// IT CANNOT ASK roomWallRuns, which is the trap here and cost a build: that function tests the floor
+// cell against TEMP_BUILDING_ROOM, and at THEME TIME a room's floor still carries its own id mark
+// (TEMP_BUILDING_ROOM_ID_START + id, measured at 102 and 112 on the first two rooms of seed 1) —
+// so it returns four empty runs for every room in the compound and every seed came out storeless.
+// roomCabinet gets away with it because it runs two passes later, after RoomBlock.clear.
+//
+// what it asks instead is the WALL and not the floor: a CONSECUTIVE run of cells backed by masonry
+// and clear of an inner doorway, which is the shape racking actually needs and is a stronger test
+// than the one it replaces — roomWallRuns counts cells and never asks whether they adjoin
+  static function storeWall(state: _FacilityState, room: _Room): Bool
+    {
+      var cells = state.area.getCells();
+      var walls = [
+        { x: room.x1, y: room.y1, dx: 1, dy: 0, len: room.w, nx: 0, ny: -1 }, // top
+        { x: room.x1, y: room.y2, dx: 1, dy: 0, len: room.w, nx: 0, ny: 1 },  // bottom
+        { x: room.x1, y: room.y1, dx: 0, dy: 1, len: room.h, nx: -1, ny: 0 }, // left
+        { x: room.x2, y: room.y1, dx: 0, dy: 1, len: room.h, nx: 1, ny: 0 },  // right
+      ];
+      for (w in walls)
+        {
+          var run = 0;
+          for (i in 0...w.len)
+            {
+              var x = w.x + w.dx * i;
+              var y = w.y + w.dy * i;
+              var back = cells[x + w.nx][y + w.ny];
+              if ((back != TEMP_BUILDING_WALL &&
+                   back != TEMP_BUILDING_INNER_WALL) ||
+                  nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR))
+                {
+                  run = 0;
+                  continue;
+                }
+              run++;
+              if (run >= STORE_RUN_MIN)
+                return true;
+            }
+        }
+      return false;
+    }
+
+// make this room a store: bare concrete under the racking, and nothing else the template has to do.
+//
+// EVERYTHING IN IT COMES FROM THE ZONES, which is the difference between this and roomCabinet next
+// door. The office places its fittings outright because its own quota (desks) fills the room and
+// leaves no bay for them; a store's quota IS its furniture — gen.blocks.RoomZones deals a core run
+// of racking, a rolled bay of pallets and one bare aisle — so the template's whole job is the floor
+  static function roomStorage(state: _FacilityState, room: _Room)
+    {
+      paintRoomFloor(state, room, Const.TILE_FLOOR_CONCRETE,
+        Const.TILE_FLOOR_CONCRETE_UNWALKABLE);
     }
 
 // make this room a chem lab
@@ -301,19 +374,30 @@ class FacilityRooms
       return false;
     }
 
-// repaint a themed room's floor, walkable cells in `tile` and the cells furniture stands on in its
-// unwalkable twin one tileset row below. the bench tiles are left alone: a desk is a prop standing ON
-// the floor, and the renderer takes a table cell's surface off the ROOM it sits in
-  public static function paintRoomFloor(state: _FacilityState, room: _Room, tile: Int)
+// repaint a themed room's floor, walkable cells in `tile` and the cells furniture stands on in
+// `unwalk`. the bench tiles are left alone: a desk is a prop standing ON the floor, and the renderer
+// takes a table cell's surface off the ROOM it sits in.
+//
+// `unwalk` DEFAULTS TO THE TWIN ONE TILESET ROW BELOW and the store is why it is an argument at all.
+// The +16 rule holds for the themed floors of row 12, and CONCRETE is not one of them: it lives in
+// the chem-lab block at OFFSET_CHEM_LAB + 6, so +16 lands on 134 — OFFSET_ROW8 + 6, i.e. a LAB
+// WORKTOP. Measured before this argument existed: 5 seeds in 3000 came back with a store whose
+// racking cells were worktop tiles, reported by gen.GenCheck.tablesSane as a corner-touching pair
+// and by storageSane as floor nothing could walk to, both from the one cause. Concrete's real
+// unwalkable twin is Const.TILE_FLOOR_CONCRETE_UNWALKABLE, nine along rather than sixteen
+  public static function paintRoomFloor(state: _FacilityState, room: _Room, tile: Int,
+      unwalk: Int = -1)
     {
       var cells = state.area.getCells();
+      if (unwalk < 0)
+        unwalk = tile + UNWALKABLE_TILE_OFFSET;
       for (y in room.y1...room.y2 + 1)
         for (x in room.x1...room.x2 + 1)
           {
             if (cells[x][y] == TEMP_BUILDING_ROOM)
               cells[x][y] = tile;
             else if (cells[x][y] == Const.TILE_FLOOR_TILE_UNWALKABLE)
-              cells[x][y] = tile + UNWALKABLE_TILE_OFFSET;
+              cells[x][y] = unwalk;
           }
     }
 
@@ -349,6 +433,95 @@ class FacilityRooms
           out.push(run);
         }
       return out;
+    }
+
+// make sure every cell of this room's floor can be walked to from its own doorway, by taking
+// fittings back off until it can.
+//
+// THE STORE IS THE FIRST ROOM THAT NEEDS THIS and the reason is its own furniture: racking stands on
+// every wall a store has, and two perpendicular runs that each fill to their end seal the corner cell
+// between them. Measured before this pass, over 3000 seeds: 5 stores with a corner nothing could
+// walk to, and a rule that simply kept the corners clear made it 144 — because a bare corner with a
+// rack on each of its two neighbours is the same pocket, drawn the other way round.
+//
+// So it is stated as the thing it actually is — a REACHABILITY repair, the same shape
+// game.FacilityAreaGenerator.connectRooms applies to rooms and cullDiagonalTables to worktops: flood
+// what the door can reach, and drop the one fitting standing between the flood and what it could not.
+//
+// it runs BEFORE the floor is painted, so the room's bare cells are still TEMP_BUILDING_ROOM and its
+// furniture cells are the unwalkable tile placeFitting stamps — which is the only walkability test
+// that means anything this early
+  public static function openPockets(state: _FacilityState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      var doors = FacilityConnect.getRoomDoors(state, room);
+      // dropping one fitting can expose the next pocket behind it, so this repeats until a whole
+      // pass finds nothing. Every pass either returns or frees a cell, and there are finitely many
+      while (true)
+        {
+          var seen = new Map<Int, Bool>();
+          var stack = [];
+          for (d in doors)
+            for (i in 0...Const.dir4x.length)
+              reach(cells, room, seen, stack, d.x + Const.dir4x[i], d.y + Const.dir4y[i]);
+          // a room whose only way in is a neighbour's door has no seed here and is gen.GenCheck
+          // .reachable's business, not this pass's: freeing every fitting in it would not open it
+          if (stack.length == 0)
+            return;
+          while (stack.length > 0)
+            {
+              var p = stack.pop();
+              for (i in 0...Const.dir4x.length)
+                reach(cells, room, seen, stack, p.x + Const.dir4x[i], p.y + Const.dir4y[i]);
+            }
+          var pocket = null;
+          for (y in room.y1...room.y2 + 1)
+            for (x in room.x1...room.x2 + 1)
+              if (cells[x][y] == TEMP_BUILDING_ROOM &&
+                  !seen.exists(y * cells.length + x) &&
+                  pocket == null)
+                pocket = { x: x, y: y };
+          if (pocket == null ||
+              !freeOne(state, room, pocket.x, pocket.y))
+            return;
+        }
+    }
+
+// one cell of the flood openPockets runs inside a room: bare floor only, and inside the rect
+  static function reach(cells: Array<Array<Int>>, room: _Room, seen: Map<Int, Bool>,
+      stack: Array<{ x: Int, y: Int }>, x: Int, y: Int)
+    {
+      if (x < room.x1 ||
+          x > room.x2 ||
+          y < room.y1 ||
+          y > room.y2 ||
+          cells[x][y] != TEMP_BUILDING_ROOM ||
+          seen.exists(y * cells.length + x))
+        return;
+      seen.set(y * cells.length + x, true);
+      stack.push({ x: x, y: y });
+    }
+
+// take the fitting standing next to this pocket back off, and report whether there was one
+  static function freeOne(state: _FacilityState, room: _Room, x: Int, y: Int): Bool
+    {
+      var cells = state.area.getCells();
+      for (i in 0...Const.dir4x.length)
+        {
+          var nx = x + Const.dir4x[i];
+          var ny = y + Const.dir4y[i];
+          if (nx < room.x1 ||
+              nx > room.x2 ||
+              ny < room.y1 ||
+              ny > room.y2 ||
+              !state.area.hasObjectAt(nx, ny))
+            continue;
+          for (s in state.area.getObjectsAt(nx, ny))
+            state.area.removeObject(s);
+          cells[nx][ny] = TEMP_BUILDING_ROOM;
+          return true;
+        }
+      return false;
     }
 
 // leave at least TABLE_CLEAR_MIN of this room's bench cells bare, by taking decorations back off.

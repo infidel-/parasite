@@ -1125,3 +1125,95 @@ it was being frustum-culled at that pose, so nothing came back there. tris 293,2
 **Verdict: landed, and NOT behind `ROOF_BLENDER`: that flag switches between two glbs of one object,
 and these replace merged geometry the game asked to be rid of, so there is nothing to switch to.
 Two fresh 1k sheets, $0.11.**
+
+## A duct segment is one cell long, so a run is placements and not a mesh (2026-09-18)
+
+Phase 5a's three remaining roof families — an extract vent, a lagged duct run and an expansion tank —
+`models-src/facility/roofsvc_build.py`, **172 / 220 / 236 tris**, all `check` clean at 0 holes and 0
+coplanar pairs.
+
+**THE DUCT IS THE ENTRY.** A run of ductwork is the first thing on this roof that is longer than the
+thing it stands on, and the obvious build is a swept mesh in the deck's own buffer. It is a prop
+instead, and it works because `render.Models.instanced` **scales a glb by HEIGHT alone**: a segment
+built at exactly its stated height draws its stated length, so a segment built **4.0 long — one
+`CityConfig.CELL`** — dropped on neighbouring cell centres abuts the next one with no seam, no
+per-instance scale and no swept geometry. A run is then N placements in one batch, and `walk` picks
+the direction out of the service bay with the most ring band in it, capped at `ROOF_DUCT_MAX 3` so a
+duct cannot follow the band the whole way round the building — the fault the cable trunking was
+reported for. The trap: `ROOF_DUCT_H` has to be solved against the **flange rings** and not the
+jacket, because they are the widest thing on the segment; built against the jacket the measured
+height came back 1.06 against a stated 1.0, which would have scaled every segment to 3.77 long and
+opened a 0.23 gap at every joint.
+
+**ONE SHEET FOR THREE PROPS**, which is new here — the dish, the condenser, the hatch and the jbox
+each took their own. They are one material family and each of the four cells is the DOMINANT face of
+a different one of them (cowl / lagging / structure / tank shell), so a single 1k gen at $0.055
+carried all three where three solo sheets would have been $0.16. `rooftone.py` gammas 1.45 / 1.71 /
+1.61 / 1.13 onto 0.028 / 0.030 / 0.025 / 0.029 linear off a drop at 0.084 / 0.123 / 0.100 / 0.043 —
+sheet **0.0280 linear / 49.5 srgb**, built glbs audit **48.5 / 50.4 srgb, 0 UV smears**.
+
+The cowl is mapped **radially and not wrapped**: cell 0's art IS a disc, so every sloping band of the
+cap goes through `disc_uv` and only the rim — the one band at constant radius, where a radial
+projection collapses to a line — is lathe-wrapped.
+
+Placement reuses what was already there rather than adding a zone kind: the vents take the SERVICE
+bay's other cells (a vent caps a shaft and a shaft comes up where the stair core does), and the tank
+is `ROOF_TANK_PCT 22` of the PLANT bay's own cells — a plant bay with one vessel among its condensers
+is a plant bay, a bay of vessels is a tank farm. The tank stays in `plant`, so the trunking runs back
+to the same isolator box. Measured on this compound: **6 vents, 6 duct segments, 2 tanks, 13
+condensers**, pools 38 = the sum of everything standing on a deck.
+
+Cost at the pinned pose against the same build with the three families hidden: **177 → 183 calls**
+(three colour draws and three moon-shadow draws), tris 292,652 → 295,476.
+
+**Verdict: landed. One shared sheet, $0.055.**
+
+## Phase 5d's two roof decals were dropped, not built (2026-09-18)
+
+The plan carried two more flat labels for the deck — a drip/rust stain and a duct shadow scuff —
+through `FacilityGrime`'s merged-mesh path. Put to the user with what already covers that ground, and
+dropped: the `facility/roof-clutter` pack64 ships **64 cells of weathering** (tar patches, ponded
+water, stains, chalk, anchor plates) laid over the whole deck at `ROOF_CLUTTER_PCT 12`, and every
+family that stands on a deck already gets a `pool` contact shadow — which is exactly what a "duct
+shadow scuff" would have drawn, at 2 triangles in a mesh that already exists.
+
+**Verdict: dropped. A third flat family on one deck is overdraw, and the second of the two was
+already built as a shadow.**
+
+## A store room's furniture: three glbs, one pack64, and a frame row that was not free (2026-09-18)
+
+Phase 6's render half. Three new fittings — `deco-pallet-rack` **356 tris** (3.9 x 1.8 x 4.2),
+`deco-pallet-stack` **116** (1.8 square x 1.5) and `deco-drum-pallet` **376** (1.8 square x 1.4) —
+`models-src/facility/storerack_build.py`, all `check` clean, plus `facility/store-clutter`, a fourth
+pack64 consumed by the new `render/facility/FacilityStore.hx`.
+
+**THE FRAME ROW IS THE ENTRY.** A fitting's identity is an `entities64` frame, and the free-looking
+tail of row 49 is not free: `FacilityModel.findDeco` asks `Const.isTableDeco(row)` FIRST and sends the
+whole row to the bench branch, and row 49 is in `CHEM_LABS_DECO_TABLE` (`amount: 4`, so 49/4-11 look
+unused). A frame dealt there never reaches `fittingOf` — the three batches were built, the generator
+placed them, and all three drew **0 instances**. They sit on row 18 now, one of the two stale 2D-era
+document rows the clue pack retired, which nothing in the tree references and which is not a table row.
+
+**The drum pallet does NOT reuse the shipped `drum-*-hand` glbs**, which the plan assumed:
+`Models.instanced` keeps the FIRST mesh of a glb and drops the rest silently, so a pallet carrying
+separate drum meshes is a pallet carrying one drum. The four drums are lathed into the same mesh.
+
+**Values are fitted to the INDOOR band and not the outdoor one** — `storetone.py`, which is
+`rooftone.py`'s bisection against a different number: `propstat --audit` reads the shipped fittings at
+68.5 / 75.6 / 83.4 / 83.6 srgb, so ~78 is the target, and the drum sheet came off the gen at **0.0156
+linear — 5x too DARK**, so its gammas are below 1 where every roof gamma is above it. Built glbs audit
+**69.3 / 69.3 / 75.8 srgb, 0 UV smears**. The first pass aimed the dominant cell at 0.075 and shipped
+65.1 / 64.7: the audit reads the whole atlas, so a sheet whose other three cells fall away under the
+headline ships darker than it — the rack and the stack are fitted 15% over.
+
+Two geometry traps, both caught by `buildlib.check` and `measure` rather than by eye: a foot plate
+centred on its upright put the rack's measured width at **4.06 against a stated 3.9** (a 4% scale
+error in every instance, since the batch sizes by height), and flush with the post it was 8 coplanar
+pairs; and a 45° brace built standing on z 0 swings into y 0..-1.66 under `place`, so the prop
+measured **2.59 deep against 1.8** until the translation put it back over the frame.
+
+Cost, measured in a store room with the three batches hidden: **126 → 128 calls** (the rack and the
+stacks; the drum pallet had no instance in that frame), tris 90,284 → 91,584. The clutter is one
+merged mesh for the compound.
+
+**Verdict: landed. Three fresh 1k sheets + one pack64, $0.22.**

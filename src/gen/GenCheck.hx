@@ -274,6 +274,68 @@ class GenCheck
         }
     }
 
+// a store can be walked all the way through, and its door opens onto floor.
+//
+// THE FAULT IT IS FOR IS THE ROOM'S OWN FURNITURE. A pallet rack is 4.2 tall and `standing` fills
+// its bay bar one cell, so a store is the first room in the compound that can seal a pocket of its
+// own floor off — gen.blocks.RoomZones reserves an AISLE bay against exactly that, and this is what
+// says the reservation worked. `reachable` above cannot: it counts a room as reached if ANY of its
+// cells was, which is the right question for a door that was never cut and the wrong one for a
+// corner walled in by racking.
+//
+// IT READS `lastSeen`, i.e. the flood `reachable` has already run, so it must be called after it —
+// re-flooding here would be a second implementation of the one thing this file exists not to have
+  public function storageSane(ctx: GenCtx, rooms: Array<_Room>, doors: Array<_Door>)
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (r in rooms)
+        {
+          if (r.role != gen.facility.FacilityTemp.ROLE_STORAGE)
+            continue;
+          var at = r.x1 + ',' + r.y1;
+          var free = 0;
+          for (y in r.y1...r.y2 + 1)
+            for (x in r.x1...r.x2 + 1)
+              {
+                var t = ctx.cells[x][y];
+                if (t < 0 ||
+                    t >= walk.length ||
+                    walk[t] == 0)
+                  continue;
+                free++;
+                ok(lastSeen[x][y], 'store at ' + at + ' has floor at ' + x + ',' + y +
+                  ' that nothing can walk to');
+              }
+          ok(free > 0, 'store at ' + at + ' has no walkable floor left in it');
+          // and every door of it — its own and a neighbour's in a shared wall — has floor on this
+          // side. A rack dealt into the cell behind a doorway is a door that opens onto steel
+          for (d in doors)
+            {
+              if (d.roomID1 != r.id &&
+                  d.roomID2 != r.id)
+                continue;
+              var lane = 0;
+              for (i in 0...Const.dir4x.length)
+                {
+                  var x = d.x + Const.dir4x[i];
+                  var y = d.y + Const.dir4y[i];
+                  if (x < r.x1 ||
+                      x > r.x2 ||
+                      y < r.y1 ||
+                      y > r.y2)
+                    continue;
+                  var t = ctx.cells[x][y];
+                  if (t >= 0 &&
+                      t < walk.length &&
+                      walk[t] == 1)
+                    lane++;
+                }
+              ok(lane > 0, 'store at ' + at + ' has a door at ' + d.x + ',' + d.y +
+                ' with nothing walkable inside the room beside it');
+            }
+        }
+    }
+
 // the hangar's floor holds one study pad, centred, clear of its own walls and clear of its door.
 //
 // THE PAD IS CARVED AND NOT DEALT, which is why it gets a check of its own: gen.Quota reports
@@ -349,7 +411,7 @@ class GenCheck
 // 2000 seeds that were all correct furniture. An entry naming no room role at all is placed by a
 // template and not rolled, so `blocks` is not a claim about rooms and there is nothing here to hold
   public static final ROLES = [ Deco.BLOCK_LAB, gen.facility.FacilityTemp.ROLE_CABINET,
-    gen.facility.FacilityTemp.ROLE_TOILET ];
+    gen.facility.FacilityTemp.ROLE_TOILET, gen.facility.FacilityTemp.ROLE_STORAGE ];
 
   public function decoBlocks(ctx: GenCtx, rooms: Array<_Room>)
     {

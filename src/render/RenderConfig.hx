@@ -751,6 +751,13 @@ class RenderConfig {
     // and a louvred door are both a picture that has to map 0..1 onto one face
     facilityRoofHatchHand: 'models/facility/roof-hatch-hand.glb',
     facilityRoofJboxHand: 'models/facility/roof-jbox-hand.glb',
+    // and the SERVICE KIT, three families off one sheet (models-src/facility/roofsvc_build.py) at
+    // 172 / 220 / 236 tris. The duct is the odd one: it is built exactly ONE CELL long, so a run is
+    // N placements on neighbouring cell centres rather than a swept mesh, and it abuts seamlessly
+    // because render.Models.instanced scales by height alone and the segment is built at its own
+    facilityRoofVentHand: 'models/facility/roof-vent-hand.glb',
+    facilityRoofDuctHand: 'models/facility/roof-duct-hand.glb',
+    facilityRoofTankHand: 'models/facility/roof-tank-hand.glb',
     // the junk standing about in the parking lot (render.facility.FacilityDebris), which scatters
     // flat litter decals over the same asphalt. all three are DROPPED objects and take a free turn,
     // unlike the parked cars and the roof condensers above; all three are carried by their outline
@@ -870,6 +877,13 @@ class RenderConfig {
     // one the camera sees THROUGH (models-src/facility/lounge_build.py, one sheet between them)
     facilitySofa: 'models/facility/deco-sofa.glb',             // two-seater, arms, dark plinth
     facilityTableLow: 'models/facility/deco-table-low.glb',    // slab on four legs, seen through
+    // and the STORE ROOM's three (models-src/facility/storerack_build.py), glbs only like the
+    // lounge pair above: none of them had an emitted version, because none of them is a box —
+    // racking is mostly the air between its members, and a pallet is read by the slot of shadow
+    // under it
+    facilityPalletRack: 'models/facility/deco-pallet-rack.glb',   // two bays, three beam levels
+    facilityPalletStack: 'models/facility/deco-pallet-stack.glb', // wrapped cartons on a pallet
+    facilityDrumPallet: 'models/facility/deco-drum-pallet.glb',   // four drums on a pallet
     // and the parking entry's checkpoint, which is here for the THIRD time and by a different route
     // each time. Generated it was a 40-component bake with the hazard bands merged to orange on tan;
     // emitted it was 56 triangles of quad with no arris on it anywhere; these are hand-modelled to

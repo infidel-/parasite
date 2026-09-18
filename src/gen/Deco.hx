@@ -70,7 +70,8 @@ class Deco
                 seen.get(key) + '" and "' + p.id + '"';
             seen.set(key, p.id);
           }
-      for (block in [ BLOCK_LAB, 'cabinet', 'toilet' ])
+      for (block in [ BLOCK_LAB, 'cabinet', 'toilet',
+          gen.facility.FacilityTemp.ROLE_STORAGE ])
         for (mount in [ MOUNT_FLOOR_HIGH ])
           if (places(mount, block).length == 0)
             throw 'Deco: nothing is placed on "' + mount + '" in a "' + block + '"';

@@ -273,6 +273,20 @@ class FacilityWarm
                 path: RenderConfig.MODELS.facilityHangarPodium,
                 h: FacilityStyle.PODIUM_H,
               },
+              // and the store room's three, which are indoor fittings like everything else in this
+              // list — one path each, so one material and one program key each
+              {
+                path: RenderConfig.MODELS.facilityPalletRack,
+                h: FacilityStyle.DECO_PALLET_RACK_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityPalletStack,
+                h: FacilityStyle.DECO_PALLET_STACK_H,
+              },
+              {
+                path: RenderConfig.MODELS.facilityDrumPallet,
+                h: FacilityStyle.DECO_DRUM_PALLET_H,
+              },
             ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the
@@ -300,6 +314,19 @@ class FacilityWarm
             {
               path: RenderConfig.MODELS.facilityRoofJboxHand,
               h: FacilityStyle.ROOF_JBOX_H,
+            },
+            // and the service kit's three, which have no flag either
+            {
+              path: RenderConfig.MODELS.facilityRoofVentHand,
+              h: FacilityStyle.ROOF_VENT_H,
+            },
+            {
+              path: RenderConfig.MODELS.facilityRoofDuctHand,
+              h: FacilityStyle.ROOF_DUCT_H,
+            },
+            {
+              path: RenderConfig.MODELS.facilityRoofTankHand,
+              h: FacilityStyle.ROOF_TANK_H,
             },
           ];
           var left = green.length + facProps.length + roofProps.length;

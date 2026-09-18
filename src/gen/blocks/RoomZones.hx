@@ -45,6 +45,9 @@ class RoomZones
   static inline var OFFICE_SERVER_PCT = 30;
   // and how often an office has a corner to sit in
   static inline var OFFICE_LOUNGE_PCT = 50;
+  // and how often a store gets a bay of pallets standing on its floor. The racking is the core zone
+  // and is always there; this is the bay that says the place is in USE
+  static inline var STORE_PALLET_PCT = 60;
 
 // the quota for one room, by the kind gen.blocks.RoomBlock dealt it.
 //
@@ -62,6 +65,17 @@ class RoomZones
               optional(state, RoomBlock.SERVER_RACK_BAY, OFFICE_SERVER_PCT),
             ];
 
+          // a store is racking, pallets and ONE BAY KEPT BARE. The aisle is a `min: 1` and so is
+          // dealt in gen.Quota's first, most-constrained-first pass — i.e. it takes its bay BEFORE
+          // the core zone claims the room, which is the only ordering that can reserve anything
+          // from a `max: MANY` core (see the header)
+          case RoomBlock.STORAGE:
+            return [
+              core(RoomBlock.SHELF_RUN),
+              aisle(),
+              optional(state, RoomBlock.PALLET_BAY, STORE_PALLET_PCT),
+            ];
+
           default:
             return [
               core(RoomBlock.BENCH),
@@ -69,6 +83,23 @@ class RoomZones
               optional(state, RoomBlock.SERVER_RACK_BAY, LAB_SERVER_PCT),
             ];
         }
+    }
+
+// the store's bare bay. NOT an `optional` with a 100% roll: this one must land on a bay that can
+// actually be walked, which is the same pair of flags the core zone asks about — a bay standing in a
+// doorway's swing is already clear, so reserving it reserves nothing
+  static function aisle(): _GenDemand
+    {
+      return {
+        kind: RoomBlock.AISLE,
+        min: 1,
+        max: 1,
+        minW: 1,
+        minH: 1,
+        must: function(b: _GenNode)
+          return (!RoomBlock.tagged(b, RoomBlock.TAG_END) &&
+            !RoomBlock.tagged(b, RoomBlock.TAG_DOOR)),
+      };
     }
 
 // a zone that rolls whether it is in this room at all.

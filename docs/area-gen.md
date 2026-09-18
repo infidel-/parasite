@@ -44,12 +44,13 @@ area
   └ yard                     the filler kind: whatever nothing claimed
 
 building
-└ room-lab | room-office | room-washroom      one per room the corridors cut out
+└ room-lab | room-office | room-washroom | room-storage   one per room the corridors cut out
   │                         → Quota.deal() over its bays, same dealer as the plots
   ├ bench | workplace        a run of worktop; `workplace` is the office's name for it
   ├ machinery | server-rack-bay   a run of ONE fitting against masonry
   ├ lounge                   a two-seater with a low table in front — the only depth-2 zone
   ├ stall-run | basin-run | lobby  the washroom's three
+  ├ shelf-run | pallet-bay | aisle  the store's three — racking, pallets, and a bay kept BARE
   ├ slot                     the filler: a bay no demand's `must` accepted
   └ vent-cap                 the lone window a run ended on, pushed LAST
 ```
@@ -520,6 +521,10 @@ a reload, a save load and a walk across a compound there.
   what `FacilityModel.isParkPath` looks for and what the kerbs and the lamps hang off
 - `_DecoPlace` frames are unique across the table and every place the facility asks for deals
   something (`Deco.selfCheck`, run once before the first seed)
+- **a store can be walked all the way through**: every walkable cell of a `room-storage` is inside
+  the rim flood, and every door of it has floor on the room side. `reachable` above cannot say this —
+  it counts a room as reached if ANY of its cells was, which is right for a door that was never cut
+  and wrong for a corner walled in by its own racking
 
 ### What `--stats` is for
 
@@ -864,6 +869,40 @@ tested only the TILE (`cells[x][y] != Const.TILE_BUILDING`), and a vent is an ob
 `TILE_BUILDING` cell (see `render.facility.FacilityGeom.wallMounts`), so the repair cut a doorway
 through the grille. It asks `ctx.hasObjectAt` now. Pre-existing; guaranteeing the washroom is only
 what made the pass fire on those two seeds.
+
+## A store room, and the three ways its own furniture fought it
+
+The fourth room template (`ROLE_STORAGE`, `RoomBlock.STORAGE`), dealt one per lab building on the
+washroom's shape: a pre-condition on the pick, no dice, and a room that fails it is simply not made
+one. Its quota is `core(SHELF_RUN)` + an `aisle()` held at `min: 1` + `optional(PALLET_BAY, 60)`, and
+`nodes/room-storage` comes out at **1.97 per compound** with 6.62 shelf runs, 1.17 pallet bays and
+1.95 aisles. Three faults, all found by the oracle and none by eye:
+
+**The pick ran two passes too early to ask `roomWallRuns`.** `storeWall` wanted "a wall run long
+enough for racking" and the obvious call returns four EMPTY runs at theme time, because that helper
+tests the floor cell against `TEMP_BUILDING_ROOM` and a room's floor still carries its own id mark
+there (measured 102 and 112 on the first two rooms of seed 1). Every seed came out storeless. It asks
+the WALL instead now — a consecutive run of cells backed by masonry and clear of an inner doorway —
+which is both earlier-safe and a stronger test.
+
+**`paintRoomFloor`'s +16 rule is not a rule.** A store is floored in concrete, and the twin-one-row-
+below convention holds for the themed floors of row 12 and not for `TILE_FLOOR_CONCRETE`, which lives
+at `OFFSET_CHEM_LAB + 6`: +16 lands on **134 = a lab worktop tile**. 5 seeds in 3000 came back with a
+store whose racking cells were worktops, reported twice over by `tablesSane` (a corner-touching pair)
+and `storageSane` (floor nothing could walk to). The unwalkable twin is an argument now.
+
+**A rack is 4.2 tall and fills its bay, so a store can wall a corner of itself off.** 5 seeds in 3000.
+The obvious fix — keep the room's corners clear of racking — made it **144**, because a bare corner
+with a rack on each of its two neighbours is the same pocket drawn the other way round. It is a
+REACHABILITY REPAIR instead (`FacilityRooms.openPockets`, the shape `connectRooms` and
+`cullDiagonalTables` already use): flood what the door reaches, drop the one fitting standing between
+the flood and what it could not, repeat.
+
+**And the room glazes like the WASHROOM, not like a laboratory.** `solid` refuses a cell next to a
+ribbon window, so a store glazed like a lab has almost no wall to stand anything against: measured on
+the first build, **one pallet rack in a whole compound**. High light wells (`FacilityToilet
+.toiletWindows`) are outside the range `nextToWindow` tests, so the cell under one is solid — 5 racks
+in the same compound afterwards.
 
 ## The tree is not persisted, and what `go block` can offer because of it
 
