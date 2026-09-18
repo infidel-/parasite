@@ -1302,6 +1302,22 @@ class FacilityStyle
   public static inline var DECO_DRUM_PALLET_W = 1.8;
   public static inline var DECO_DRUM_PALLET_D = 1.8;
   public static inline var DECO_DRUM_PALLET_H = 1.4;
+  // the racking's three DECK levels as a fraction of its height, which is models-src/facility/
+  // storerack_build.py's own BEAM_Z + DECK_T over RACK_H and must stay it: this is what
+  // render.facility.FacilityClutter stands a crate on, and a stale copy floats every one of them.
+  // ALL THREE ARE REAL DECKS — the glb used to plank only the bottom pair
+  public static final DECO_PALLET_RACK_Y = [ 0.2976, 0.6310, 0.9643 ];
+  // and the headroom over each: the gap to the next deck. The TOP level takes 0 — nothing is over
+  // it, and a crate standing proud of the frame is what the top beam of a working bay looks like
+  public static inline var DECO_PALLET_RACK_BAY = 0.3333;
+  // A CRATE ON STORE FURNITURE IS A PALLET LOAD AND NOT A SHELF CARTON. DECO_BOX_W 0.55 is a 27 cm
+  // box at the half-metre unit WALL_H fixes, and three of those on a 3.9 x 1.8 rack bay read as a
+  // bookcase someone moved into a warehouse. Same emitter, one size band up; the lid's own
+  // CLUTTER_SLOT_FILL still caps it, which on a 1.8-deep bay lands at 1.12
+  public static inline var DECO_CRATE_BIG_W = 1.3;
+  public static inline var DECO_CRATE_BIG_W_VAR = 0.5;
+  public static inline var DECO_CRATE_BIG_H = 0.95;
+  public static inline var DECO_CRATE_BIG_H_VAR = 0.35;
 
   // the STORE's floor pack64 (art/textures.json facility/store-clutter), consumed by
   // render.facility.FacilityStore through the same 8x8 emit/UV arithmetic as the hangar floor one

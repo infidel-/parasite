@@ -47,7 +47,7 @@ class RoomZones
   static inline var OFFICE_LOUNGE_PCT = 50;
   // and how often a store gets a bay of pallets standing on its floor. The racking is the core zone
   // and is always there; this is the bay that says the place is in USE
-  static inline var STORE_PALLET_PCT = 60;
+  static inline var STORE_PALLET_PCT = 85;
 
 // the quota for one room, by the kind gen.blocks.RoomBlock dealt it.
 //
@@ -69,9 +69,14 @@ class RoomZones
           // dealt in gen.Quota's first, most-constrained-first pass — i.e. it takes its bay BEFORE
           // the core zone claims the room, which is the only ordering that can reserve anything
           // from a `max: MANY` core (see the header)
+          // a store is ONE BLOCK OF RACKING, one bay kept bare and a rolled bay of pallets. The
+          // racking is not a `core` with `max: MANY` the way every other room's primary zone is —
+          // it is pinned to the floor block gen.blocks.RoomBlock.glaze pushes for this room and
+          // there is exactly one of those, so what reclaims the leftover WALL bays is gen.Quota's
+          // own filler, which for a store deals the store's list and not the laboratory's
           case RoomBlock.STORAGE:
             return [
-              core(RoomBlock.SHELF_RUN),
+              shelfBlock(),
               aisle(),
               optional(state, RoomBlock.PALLET_BAY, STORE_PALLET_PCT),
             ];
@@ -83,6 +88,21 @@ class RoomZones
               optional(state, RoomBlock.SERVER_RACK_BAY, LAB_SERVER_PCT),
             ];
         }
+    }
+
+// the store's racking, pinned to the ONE node in the room that is not a wall run. `min: 1` puts it
+// in gen.Quota's first pass, and `homes` finds exactly one block for it whatever else is pending
+  static function shelfBlock(): _GenDemand
+    {
+      return {
+        kind: RoomBlock.SHELF_RUN,
+        min: 1,
+        max: 1,
+        minW: 1,
+        minH: 1,
+        must: function(b: _GenNode)
+          return RoomBlock.tagged(b, RoomBlock.TAG_FLOOR),
+      };
     }
 
 // the store's bare bay. NOT an `optional` with a 100% roll: this one must land on a bay that can
@@ -97,7 +117,8 @@ class RoomZones
         minW: 1,
         minH: 1,
         must: function(b: _GenNode)
-          return (!RoomBlock.tagged(b, RoomBlock.TAG_END) &&
+          return (!RoomBlock.tagged(b, RoomBlock.TAG_FLOOR) &&
+            !RoomBlock.tagged(b, RoomBlock.TAG_END) &&
             !RoomBlock.tagged(b, RoomBlock.TAG_DOOR)),
       };
     }
@@ -124,8 +145,10 @@ class RoomZones
         minH: 1,
         // plain masonry the whole way along, and long enough to read as a run. the same test
         // `standing` then fills by, so a bay this accepts is never half empty
+        // ...and never the store's floor block, which is not a wall run and is spoken for
         must: function(b: _GenNode)
-          return (RoomBlock.solidRun(state, b) >= RUN_MIN),
+          return (!RoomBlock.tagged(b, RoomBlock.TAG_FLOOR) &&
+            RoomBlock.solidRun(state, b) >= RUN_MIN),
       };
     }
 
@@ -146,7 +169,8 @@ class RoomZones
         minW: 1,
         minH: 1,
         must: function(b: _GenNode)
-          return (!RoomBlock.tagged(b, RoomBlock.TAG_END) &&
+          return (!RoomBlock.tagged(b, RoomBlock.TAG_FLOOR) &&
+            !RoomBlock.tagged(b, RoomBlock.TAG_END) &&
             !RoomBlock.tagged(b, RoomBlock.TAG_DOOR)),
       };
     }

@@ -542,10 +542,23 @@ class FacilityDeco
       var z0 = cz - d / 2, z1 = cz + d / 2;
       if (dir < 0)
         {
-          // no masonry on any hand, which the generator's own placement rule should make impossible.
-          // stood square in the cell facing the resting camera rather than dropped: a cell must never
-          // lose its sprite AND its geometry, and render.Actors has already stopped drawing the one
-          dir = 0;
+          // no masonry on any hand, which is a ROW OF RACKING down the middle of a store's floor
+          // (gen.facility.FacilityRooms.storeIslands) and, failing that, one thing standing where
+          // the generator's own placement rule should have made impossible. Either way it keeps its
+          // geometry: a cell must never lose its sprite AND its geometry, and render.Actors has
+          // already stopped drawing the one.
+          //
+          // IT FACES ALONG ITS OWN RUN, which a flat 0 cannot. Laid along the grid's z axis, four
+          // 3.9-wide bays at dir 0 come out as four slabs facing ACROSS the run with a 2.2 gap
+          // between them instead of one continuous line of racking
+          dir = runDir(m, col, row, kind);
+          if (dir >= 2)
+            {
+              x0 = cx - d / 2;
+              x1 = cx + d / 2;
+              z0 = cz - w / 2;
+              z1 = cz + w / 2;
+            }
         }
       else
         {
@@ -593,6 +606,17 @@ class FacilityDeco
         hasWall: hasWall,
         h: heightOf(kind),
       };
+    }
+
+// which way a fitting with NO masonry behind it faces: along its own run, named by a neighbouring
+// cell carrying the same kind. 0 for a run along x (and for one standing alone), 2 for one along z —
+// the same two hands `wall` would have returned, so the yaw and the rect follow with no second rule
+  static function runDir(m:Facility, col:Int, row:Int, kind:Int):Int
+    {
+      if (isKind(m, col, row - 1, kind) ||
+          isKind(m, col, row + 1, kind))
+        return 2;
+      return 0;
     }
 
 // one fitting: work out the rect it stands on, then hand each of its faces to the surface it is

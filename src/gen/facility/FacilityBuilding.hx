@@ -198,8 +198,9 @@ class FacilityBuilding
           // and with the room's benches dealt, drop any that meets its only neighbour at a corner,
           // then make sure a clue still has somewhere to land on what is left
           FacilityRooms.cullDiagonalTables(state, room);
-          // and a STORE gets its floor walked: racking stands on every wall it has, so it is the
-          // one room here that can wall a corner of itself off (FacilityRooms.openPockets)
+          // and a STORE gets its floor walked: its whole floor is an array of racking (the
+          // TAG_FLOOR block RoomBlock.glaze pushes), so it is the one room here that can wall a
+          // corner of itself off — FacilityRooms.openPockets
           if (room.role == ROLE_STORAGE)
             FacilityRooms.openPockets(state, room);
           // a washroom has no worktop and neither has a STORE: both are furnished entirely by

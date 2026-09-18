@@ -119,14 +119,21 @@ class FacilityClutter
             if (kind != _FittingKind.FIT_BOOKCASE &&
                 kind != _FittingKind.FIT_TABLE_LOW &&
                 kind != _FittingKind.FIT_CABINET &&
-                kind != _FittingKind.FIT_SHELVING)
+                kind != _FittingKind.FIT_SHELVING &&
+                kind != _FittingKind.FIT_PALLET_RACK &&
+                kind != _FittingKind.FIT_PALLET_STACK)
               continue;
+            // THE STORE'S TWO, which take crates at a pallet load's size and no flat decals at all
+            // — see ClutterLidOpts.store. The drum pallet is left out on purpose: its lid is four
+            // round drum tops and a box would stand in the gap between them
+            var store = (kind == _FittingKind.FIT_PALLET_RACK ||
+              kind == _FittingKind.FIT_PALLET_STACK);
             var isOffice = (m.surf[row][col] == Surf.OFFICE);
             var q = FacilityDeco.rectOf(m, col, row, kind);
             var g = FacilityModel.mix((col * 1274126177) ^ (row * 1103515245));
             var o:ClutterLidOpts = {
               b: (isOffice ? office : lab),
-              box: null,
+              box: (store ? box : null),
               cx: (q.x0 + q.x1) / 2,
               cz: (q.z0 + q.z1) / 2,
               w: q.x1 - q.x0,
@@ -137,12 +144,33 @@ class FacilityClutter
               ao: 1.0,
               seed: g,
               pick: (isOffice ? PICK_OFFICE : PICK),
-              max: FacilityStyle.CLUTTER_SLOT_MAX,
+              max: (store ? FacilityStyle.CLUTTER_STORE_MAX : FacilityStyle.CLUTTER_SLOT_MAX),
               // the LOUNGE TABLE is floored at one, for the workstation desk's reason one function
               // down: a bookcase lid is a lid and may be bare, where a low table in front of a sofa
               // exists to have something on it and reads as an unused moulding without
               floor: (kind == _FittingKind.FIT_TABLE_LOW ? 1 : 0),
+              store: store,
             };
+            // AND THE RACKING IS THE SECOND FITTING WITH MORE THAN A LID, the shelving unit's case
+            // one building over: three decks are what a bay of racking IS, so each is dressed in
+            // turn off the levels models-src/facility/storerack_build.py plants them at. The bay
+            // over each is the gap to the next, and the top deck has nothing over it — a crate
+            // standing proud of the frame is what a working top beam looks like
+            if (kind == _FittingKind.FIT_PALLET_RACK)
+              {
+                var rl = FacilityStyle.DECO_PALLET_RACK_Y;
+                for (i in 0...rl.length)
+                  {
+                    o.y = q.h * rl[i];
+                    o.bay = (i + 1 < rl.length ?
+                      q.h * FacilityStyle.DECO_PALLET_RACK_BAY : 0.0);
+                    o.ao = FacilityStyle.DECO_BOX_AO_LOW + (1 - FacilityStyle.DECO_BOX_AO_LOW) *
+                      i / (rl.length - 1);
+                    o.seed = FacilityModel.mix(g ^ ((i + 1) * 83492791));
+                    n += lid(o);
+                  }
+                continue;
+              }
             if (kind != _FittingKind.FIT_SHELVING)
               {
                 n += lid(o);
@@ -226,13 +254,17 @@ class FacilityClutter
       for (i in 0...want)
         {
           var h = FacilityModel.mix(o.seed ^ ((i + 1) * 668265263));
+          var big = (o.store == true);
           var crate = (o.box != null &&
-            h % 100 < FacilityStyle.CLUTTER_BOX_PCT);
+            (big ||
+             h % 100 < FacilityStyle.CLUTTER_BOX_PCT));
           // a decal is sized against the lid it lies on; a crate is a BOX in world units and the
-          // lid only caps it
-          var sz = (crate ? FacilityStyle.DECO_BOX_W +
-              ((h % 1000) / 1000) * FacilityStyle.DECO_BOX_W_VAR :
-            FacilityStyle.CLUTTER_SZ + ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR);
+          // lid only caps it. a STORE lid's crate is a pallet load and takes its own band
+          var sz = FacilityStyle.CLUTTER_SZ + ((h % 1000) / 1000) * FacilityStyle.CLUTTER_SZ_VAR;
+          if (crate)
+            sz = (big ? FacilityStyle.DECO_CRATE_BIG_W +
+                ((h % 1000) / 1000) * FacilityStyle.DECO_CRATE_BIG_W_VAR :
+              FacilityStyle.DECO_BOX_W + ((h % 1000) / 1000) * FacilityStyle.DECO_BOX_W_VAR);
           var cap = Math.min(o.w, o.d) * FacilityStyle.CLUTTER_SLOT_FILL;
           if (sz > cap)
             sz = cap;
@@ -264,8 +296,10 @@ class FacilityClutter
               o.y + FacilityStyle.CLUTTER_Y);
           else
             {
-              var bh = FacilityStyle.DECO_BOX_H +
-                (((h >>> 10) % 1000) / 1000) * FacilityStyle.DECO_BOX_H_VAR;
+              var bh = (big ? FacilityStyle.DECO_CRATE_BIG_H +
+                  (((h >>> 10) % 1000) / 1000) * FacilityStyle.DECO_CRATE_BIG_H_VAR :
+                FacilityStyle.DECO_BOX_H +
+                  (((h >>> 10) % 1000) / 1000) * FacilityStyle.DECO_BOX_H_VAR);
               if (o.bay > 0 &&
                   bh > o.bay * 0.8)
                 bh = o.bay * 0.8;

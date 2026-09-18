@@ -874,9 +874,10 @@ what made the pass fire on those two seeds.
 
 The fourth room template (`ROLE_STORAGE`, `RoomBlock.STORAGE`), dealt one per lab building on the
 washroom's shape: a pre-condition on the pick, no dice, and a room that fails it is simply not made
-one. Its quota is `core(SHELF_RUN)` + an `aisle()` held at `min: 1` + `optional(PALLET_BAY, 60)`, and
-`nodes/room-storage` comes out at **1.97 per compound** with 6.62 shelf runs, 1.17 pallet bays and
-1.95 aisles. Three faults, all found by the oracle and none by eye:
+one. Its quota is `core(SHELF_RUN)` + an `aisle()` held at `min: 1` + `optional(PALLET_BAY, 85)`, and
+`nodes/room-storage` comes out at **1.97 per compound** with 6.34 shelf runs, 1.63 pallet bays and
+1.95 aisles. Three faults, all found by the oracle and none by eye — and a fourth found by walking
+into one, below:
 
 **The pick ran two passes too early to ask `roomWallRuns`.** `storeWall` wanted "a wall run long
 enough for racking" and the obvious call returns four EMPTY runs at theme time, because that helper
@@ -903,6 +904,43 @@ ribbon window, so a store glazed like a lab has almost no wall to stand anything
 the first build, **one pallet rack in a whole compound**. High light wells (`FacilityToilet
 .toiletWindows`) are outside the range `nextToWindow` tests, so the cell under one is solid — 5 racks
 in the same compound afterwards.
+
+**AND THE ZONE TREE ONLY EVER REACHES A ROOM'S WALLS, which left half of every store bare.** A bay
+IS a wall run (`RoomBlock.node` cuts the room's perimeter into them), so all four faults above are
+about racking against masonry and none of them is about the middle of the room — which on a 5x6 store
+is a 3x4 floor with nothing on it. Reported off the game as the room being wrong and wanting much
+more in it, and it was: **5 pallet racks in a whole compound**.
+
+**So a store gets ONE MORE BLOCK THAN ANY OTHER ROOM, and it is its whole floor.** `RoomBlock.glaze`
+pushes it tagged `TAG_FLOOR` and `RoomZones.shelfBlock()` pins `SHELF_RUN` to it with a `must`;
+`aisle()` and `optional()` carry the matching `!TAG_FLOOR` guard so nothing else can claim it, and
+`Quota`'s own filler reclaims the leftover wall bays with the store's list (which is why the store
+has no `core(… max: MANY)` where every other room does). It is pushed FIRST, so the breadth-first
+walk fills it BEFORE the wall bays it overlaps — the vent caps are pushed LAST for the mirror image
+of the same reason, and overlapping nodes are not new here.
+
+`RoomBlock.rows` then lays it: rows **across the room's SHORT axis, stepped along its long one** —
+bays across the width with the gangway down the length, a warehouse's own layout. Taken the other way
+round the stepping axis is the one with no room in it, and measured over 60 seeds that placed nothing
+at all in every store 4 cells deep, which is 30% of them. **Lines 1, 3, 5 … and never the room's own
+perimeter line**: `FacilityConnect.connectRooms` repairs a room nothing can walk into by CUTTING A
+DOOR, and a cut needs a walkable cell on the room side as well as the far one, so a store racked to
+its wall can never be repaired — **20 unreachable stores in 3000 seeds with line 0 in, 0 with it
+out**. Every other line is a clear aisle and the GANGWAY is the one line across them all, taken from
+the door and clamped off the row's two end cells; unclamped it lands on the perimeter, where it is a
+lane with the far wall on one side — seed 2235, which sealed a 3x2 pocket that way. Measured after:
+racks **5 → 32** in one compound, `nodes/shelf-run` 1.96 (one block, not six wall runs),
+`spawns/decoration` 171.1 → 181.8 per area over 600 seeds.
+
+**`openPockets` could only ever open a ONE-CELL pocket, and this is the density that showed it.** It
+took the pocket in scan order and called `freeOne` on that cell, which walks the four neighbours for
+a fitting to remove — and a 3x2 pocket's top-left corner has two bare-floor neighbours and no fitting
+on any hand, so the repair gave up and returned with the pocket intact (seed 2235, six cells reported
+by `storageSane`). It now walks the pocket's cells until one has a fitting beside it. The same pass
+learned a second case it used to return on: a fitting standing in a DOORWAY's own lane leaves the
+flood nowhere to start, every cell in the room then reads as a pocket, and the answer is to open the
+doorway first rather than to give up — distinguished from the genuinely doorless room (reached only
+through a neighbour's door, which is `GenCheck.reachable`'s business) by `doors.length`.
 
 ## The tree is not persisted, and what `go block` can offer because of it
 

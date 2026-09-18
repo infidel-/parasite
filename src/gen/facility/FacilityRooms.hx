@@ -467,22 +467,52 @@ class FacilityRooms
           // a room whose only way in is a neighbour's door has no seed here and is gen.GenCheck
           // .reachable's business, not this pass's: freeing every fitting in it would not open it
           if (stack.length == 0)
-            return;
+            {
+              // a room whose only way in is a NEIGHBOUR'S door has no seed here and is
+              // gen.GenCheck.reachable's business, not this pass's: freeing every fitting in it
+              // would not open it
+              if (doors.length == 0)
+                return;
+              // but a door with a fitting in its own lane leaves the flood nowhere to start, and
+              // every cell in the room then reads as a pocket. open the doorway and try again
+              var doorway = false;
+              for (d in doors)
+                if (freeOne(state, room, d.x, d.y))
+                  {
+                    doorway = true;
+                    break;
+                  }
+              if (!doorway)
+                return;
+              continue;
+            }
           while (stack.length > 0)
             {
               var p = stack.pop();
               for (i in 0...Const.dir4x.length)
                 reach(cells, room, seen, stack, p.x + Const.dir4x[i], p.y + Const.dir4y[i]);
             }
-          var pocket = null;
+          // THE CELL FREED IS THE FIRST POCKET CELL WITH A FITTING BESIDE IT, and not simply the
+          // first pocket cell. That is the whole of the repair and the first version got it wrong:
+          // it took the pocket in scan order and gave up when that one cell had no fitting on any
+          // hand, which is every pocket bigger than one cell. Measured on seed 2235 as a 3x2 corner
+          // of a 3x7 store whose top-left cell has two bare floor neighbours — reported by
+          // storageSane as six cells nothing could walk to
+          var opened = false;
           for (y in room.y1...room.y2 + 1)
-            for (x in room.x1...room.x2 + 1)
-              if (cells[x][y] == TEMP_BUILDING_ROOM &&
-                  !seen.exists(y * cells.length + x) &&
-                  pocket == null)
-                pocket = { x: x, y: y };
-          if (pocket == null ||
-              !freeOne(state, room, pocket.x, pocket.y))
+            {
+              for (x in room.x1...room.x2 + 1)
+                if (cells[x][y] == TEMP_BUILDING_ROOM &&
+                    !seen.exists(y * cells.length + x) &&
+                    freeOne(state, room, x, y))
+                  {
+                    opened = true;
+                    break;
+                  }
+              if (opened)
+                break;
+            }
+          if (!opened)
             return;
         }
     }

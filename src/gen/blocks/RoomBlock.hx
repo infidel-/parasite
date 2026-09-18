@@ -72,6 +72,9 @@ class RoomBlock
   static inline var TAG_V3 = 'v3';
   static inline var TAG_DRAWER = 'drawer';
   public static inline var TAG_DOOR = 'door';
+  // and the mark on the one node here that is NOT a wall run: a store's whole floor, pushed as a
+  // block so its racking can be dealt as an array. see `glaze`
+  public static inline var TAG_FLOOR = 'floor';
   public static inline var TAG_END = 'end';
 
   // a room narrower than this on the run's axis gets two-cell bays instead of three
@@ -81,7 +84,7 @@ class RoomBlock
   // rather than a wrapped stack. TWO and not the bay's length: a pallet is 1.5 tall and what stands
   // on a store's floor is a couple of them with room to walk past, where `standing`'s rack run is a
   // wall of racking that fills its bay bar one cell
-  static inline var STORE_PALLET_MAX = 2;
+  static inline var STORE_PALLET_MAX = 3;
   static inline var STORE_DRUM_PCT = 40;
   // how often a slot is dressed at all, how often it is dressed with something standing rather than
   // something on the floor, and how often a slot beside glazing is left bare on purpose
@@ -185,7 +188,7 @@ class RoomBlock
             glaze(state, room, node, false);
 
           case SHELF_RUN:
-            standing(state, node, FIT_PALLET_RACK);
+            rows(state, node);
 
           case PALLET_BAY:
             pallets(state, node);
@@ -243,6 +246,26 @@ class RoomBlock
     {
       var caps = [];
       var bays = [];
+      // A STORE GETS ONE MORE BLOCK THAN ANY OTHER ROOM, and it is the whole of its floor.
+      //
+      // Every other zone in this file is a BAY: one cell deep, against masonry, because a worktop,
+      // a bank of machines and a two-seater are all things that stand against a wall. RACKING IS
+      // NOT ONE OF THOSE. A store is an ARRAY of it, and dealt as bays it came out as a ring of
+      // shelves round an empty floor — which on the 5x6 a room here averages is HALF THE ROOM, and
+      // was reported from the game as exactly that. So the store pushes a block covering its floor
+      // and gen.blocks.RoomZones pins SHELF_RUN to it with a `must` on the tag.
+      //
+      // PUSHED FIRST, so the breadth-first walk fills it BEFORE the wall bays it overlaps: the rows
+      // are what the room IS, and the bays' own leftover filler then dresses whatever line of the
+      // perimeter the rows did not take. Overlapping nodes are not new here — the vent caps below
+      // are pushed LAST for the mirror image of the same reason
+      if (node.kind == STORAGE)
+        {
+          var b = GenTree.add(node, BAY, room.x1, room.y1, room.x2, room.y2);
+          b.roomID = room.id;
+          b.tags = [ TAG_FLOOR ];
+          bays.push(b);
+        }
       for (spot in getRoomWallCorners(room))
         {
           var cap = glazeWall(state, room, node, spot, bays, glass);
@@ -482,6 +505,66 @@ class RoomBlock
             continue;
           FacilityRooms.placeFitting(state, c.x, c.y, kind);
           left--;
+        }
+    }
+
+// fill a store's floor with EVENLY SPACED ROWS OF RACKING, an aisle between every two and one
+// gangway in from the door.
+//
+// THE ROWS RUN ACROSS THE ROOM'S SHORT AXIS and are STEPPED along its long one — bays across the
+// width, the gangway down the length, which is a warehouse's own layout. Taken the other way round
+// the stepping axis is the one with no room in it: measured over 60 seeds, that placed nothing at
+// all in every store 4 cells deep, which is the commonest size there is.
+//
+// LINES 1, 3, 5 ... AND NEVER THE ROOM'S OWN PERIMETER LINE, which is the one constraint here that
+// is not about looks. A row on line 0 fills the wall line outright, and `standing`'s note one
+// function up says what that costs: gen.facility.FacilityConnect.connectRooms repairs a room nothing
+// can walk into by CUTTING A DOOR, and a cut needs a walkable cell on the room side as well as the
+// far one. Racked to the wall, a store whose own doorway happens to open onto a dead end cannot be
+// repaired and simply stays sealed — measured at 20 unreachable stores in 3000 seeds with line 0 in,
+// and 0 with it out. It costs nothing to look at either: the perimeter line is what the WALL BAYS
+// are, and gen.Quota's filler dresses them with the store's own list.
+//
+// WHAT KEEPS THE REST WALKABLE is the pair: every other line is a clear aisle, and the GANGWAY is
+// the one line across them all, taken from the door and clamped off the row's two end cells.
+// Unclamped it can land on the room's own perimeter, where it is a lane with the far wall on one
+// side and the racking of the crossing wall run in it — measured on seed 2235, which sealed a 3x2
+// pocket. gen.facility.FacilityRooms.openPockets still runs afterwards and catches the rest
+  static function rows(state: _FacilityState, node: _GenNode)
+    {
+      var room = FacilityConnect.roomByID(state, node.roomID);
+      var doors = FacilityConnect.getRoomDoors(state, room);
+      var alongX = (room.w <= room.h);
+      var s0 = (alongX ? room.x1 : room.y1);
+      var span = (alongX ? room.w : room.h);
+      var lo = (alongX ? room.y1 : room.x1);
+      var hi = (alongX ? room.y2 : room.x2);
+      var gate = s0 + Std.int(span / 2);
+      for (d in doors)
+        {
+          var v = (alongX ? d.x : d.y);
+          if (v >= s0 &&
+              v < s0 + span)
+            gate = v;
+        }
+      if (gate > s0 + span - 2)
+        gate = s0 + span - 2;
+      if (gate < s0 + 1)
+        gate = s0 + 1;
+      var k = 1;
+      while (lo + k <= hi - 1)
+        {
+          for (i in 0...span)
+            {
+              var x = (alongX ? s0 + i : lo + k);
+              var y = (alongX ? lo + k : s0 + i);
+              if ((alongX ? x : y) == gate ||
+                  !solid(state, room, x, y) ||
+                  FacilityRooms.inDoorLane(room, doors, x, y))
+                continue;
+              FacilityRooms.placeFitting(state, x, y, FIT_PALLET_RACK);
+            }
+          k += 2;
         }
     }
 

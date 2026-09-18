@@ -1217,3 +1217,148 @@ stacks; the drum pallet had no instance in that frame), tris 90,284 → 91,584. 
 merged mesh for the compound.
 
 **Verdict: landed. Three fresh 1k sheets + one pack64, $0.22.**
+
+## An arris wears its own piece, a picture is not a material, and a plank has a direction (2026-09-18)
+
+Three faults reported off ONE prop — the store's pallet rack — with the game's own face dumps. Each
+is general and each is now a rule somewhere that fires before the next build.
+
+**1. An arris took the galvanised cell while the post it broke is painted orange.** Reported as "you
+have that weird idea of making edges a different texture from the body, not the first time i see
+that". `buildlib.chamfer`'s docstring already said the strip takes the piece's own rect; the caller
+passed `strip=i_galv` anyway and every upright shipped outlined in grey. `part` no longer accepts a
+strip index at all, and `docs/3d-models.md`'s chamfer bullet said "tag them with a plain swatch" —
+which is what invited it — and now says the opposite in capitals. Other scripts still carry the
+pattern (`roofsvc`, `roofhatch`, `roofjbox`, `roofac`, `roofdish`, `entry`, the four `I_PLAIN`
+users); not rebuilt here, flagged.
+
+**2. A 7 cm member can carry a COLOUR and nothing else.** Cell 0 of the rack sheet is a portrait of
+an upright — a punched keyhole column between two flanges — and `unwrap`'s aspect fit crops about the
+rect's CENTRE, which on a 0.14 x 4.2 post is a 1/30 slice straight through the keyholes. Reported as
+"why do the struts all go through same part with holes, and u,v scale is weird". **Framing the whole
+cell onto the face (`tag` axes 7) was tried, rendered and rejected**: 512 px across 0.14 units
+against 512 up 4.2 is 30:1 and the holes come out as one black slit. THE ARITHMETIC SETTLES IT — at
+`tex: 512` a cell is 256 px, so the post's face is **8 texels** wide. Both narrow members (post,
+beam) now take the flattest 48-px band of their cell, measured by luma std (2.6 against the cell's
+9.6 for the post; 2.04 for the beam, whose fold line was smearing along it). The punched art stays
+in the sheet unused: the brief asked for detail the density cannot hold.
+
+**3. A cell drawn with its planks running UP the image puts the grain ACROSS every board.**
+`buildlib.frame` puts u on a flat face's longest edge, so a 3.6-long deck board wore its timber
+sideways — reported as "looks like shelf texture should be rotate 90 degrees" and, on the pallet, as
+the same fault on its sides. Turning the ART is one line in the tone pass (`rooftone.build` now takes
+a fourth per-job field, the cells to `np.rot90`); turning the MAP would have been a fifth axes code
+in `buildlib` and a per-face decision at every call site. All three store sheets' timber cells turn.
+
+Two more off the same review: the rack decked only its bottom beam pair ("why no second shelf") and
+now decks all three, and its foot plates were INSET 0.02 to hold the stated 3.9 width ("you sure this
+should not be centered around the strut instead") — the post centre is now solved back from the
+plate, so the plate is what measures RACK_W and sits centred under its own post.
+
+Cost: rack **356 → 428 tris**, dims exact, `check` 0 holes / 0 coplanar, 0 UV smears. Albedo moved
+with the re-tone: 69.3 / 69.3 / 75.8 → **77.4 / 75.9 / 77.4 srgb** against the shipped indoor
+neighbours' 68.5 (drum) / 75.6 (sofa) / 83.4 (cabinet) / 83.6 (shelving).
+
+**Verdict: landed. No new art, no new gen — one tone pass and one build script.**
+
+## A store room's middle, and the pocket repair that could only open a one-cell pocket (2026-09-18)
+
+"The storage room generator itself is incorrect, there should be much more 3d stuff." It was: a zone
+is a WALL RUN (`RoomBlock.node` cuts the room's perimeter into bays), so every store was racking
+round its four walls and a bare floor in the middle — and stores average 5x6, which makes that middle
+**half the room**. Measured in game: **5 pallet racks in a whole compound**.
+
+`FacilityRooms.storeIslands` lays rows across the room's SHORT axis, stepped along its long one —
+a warehouse's own layout, bays across the width and the gangway down the length. Taken the other way
+round it places nothing at all in every store 4 cells deep, which is 30% of them. Lines 2, 4, 6 …
+off the edge: never line 1 (the perimeter line already carries the wall runs, so a row there stands
+in front of its own racking) and never past n-2 (the far perimeter line keeps an aisle). Every row
+leaves the door's own line bare as a gangway, **clamped off the row's two end cells** — on seed 2235
+a store's door sat in its corner column, the gangway it named was the column a shelf run had already
+filled, and a 3x2 pocket sealed behind it. A store too small for any row gets one pallet instead.
+
+**AND THE POCKET REPAIR HAD A BUG THAT NEEDED THIS DENSITY TO SHOW.** `openPockets` took the pocket
+in scan order and called `freeOne` on that one cell, which works only when the pocket IS one cell:
+a 3x2 pocket's top-left corner has two bare-floor neighbours and no fitting on any hand, so the
+repair gave up and returned. It now walks the pocket cells until one has a fitting beside it. Same
+pass also learned the case where a fitting stands in the DOORWAY's own lane: the flood then has
+nowhere to start, every cell reads as a pocket, and the old code returned instead of opening the door.
+
+Render side, `FacilityDeco.rectOf`'s "no masonry on any hand" fallback was a flat `dir = 0`, which is
+right for one thing standing alone and wrong for a row: laid along z, four 3.9-wide bays came out
+facing ACROSS the run with a 2.2 gap between them. `runDir` asks a neighbouring cell of the same kind
+which way the run goes, and the rect turns with it. And `FacilityClutter.slots` now dresses the
+racking's three decks and the pallet stack's lid, the shelving unit's own multi-plate case — every
+item a CRATE at `DECO_CRATE_BIG_*` (a pallet load, not the shelf's 27 cm carton) and no flat decals,
+because the sheets this pass deals from are lab glassware and office paperwork.
+
+Measured, one compound, two stores: pallet racks **5 → 17**, stacks 2 → 8, drum pallets 0 → 3,
+`spawns/decoration` 171.1 → 179.0 per area over 600 seeds, `make gen seeds=3000` clean with
+`storageSane`. **Draw calls unchanged at 3 for the three families** (151 → 154 with them hidden and
+shown, one frame apart) — the islands are extra INSTANCES in batches that already existed and the
+crates ride the cardboard mesh the lab's shelving already merged into.
+
+**Verdict: landed. Two gen passes, one render fallback, one pre-existing repair bug fixed.**
+
+## The fit's window: its size is the density, its position is the art (2026-09-18)
+
+> SUPERSEDES the "flattest 48-px band" half of *An arris wears its own piece, a picture is not a
+> material, and a plank has a direction* — the bands are right, `buildlib.sub` was the wrong way to
+> reach them.
+
+Reported off the rebuilt rack: "you have this nasty tendency to u,v map to a tiny spot or a tiny
+sliver of a big texture. why do you do that and how can you stop doing that?" With the face dump —
+a beam wearing **u 0.537..0.963 by v 0.086..0.088**, i.e. 440 px wide and **2 px tall**.
+
+**Why.** `unwrap`'s one-density rule crops a rect to `faceExtent / scale` on each axis. That is
+correct and is the whole reason every face of a model matches: a 3.6 x 0.16 beam against `scale` 4.2
+asks for 86% of the cell's width by 3.8% of its height — 440 x 19 px. Nineteen is fine; the beam IS
+19 texels tall. **The crop is taken about the rect's CENTRE, and the centre is where the cell's
+feature is drawn** — the upright's punched column, the beam's fold line. The previous entry's fix was
+to hand those two faces a PRE-CUT rect (`sub`, a flat 56 px band). The fit then cropped the BAND:
+56 x 3.8% = **2 px**. One fault fixed with another of the same family.
+
+**How to stop.** The window's SIZE is not a choice. Its POSITION is. `buildlib.at(rect, u, v)`
+returns the same rect with the fit's anchor moved, `unwrap` clamps the window inside, and a plain
+4-tuple still means "about the centre" — so nothing already built moves (checked: for `t = 0.5` the
+new `window()` is the old arithmetic exactly). The rack's post takes `at(cell(0), u=314/512)` and its
+beam `at(cell(1), v=88/512)`, the flattest 48-px bands by luma std, at **17 px and 19 px** — the
+density's own numbers, only aimed somewhere useful.
+
+**Same rule on a lathe, reported in the same message.** The drum's three profile bands each asked
+`uvfit` for a slice as tall as themselves, which centres — so both 6-10 cm rolling hoops wore a
+sliver of the hazard diamond the 1.0-tall body between them was already wearing whole. "These should
+not map to tex center because of the symbol, better map to top and bottom." The profile's z now runs
+straight onto the cell's v through `lathe_uv`'s own `v0`/`v1`, so a drum wears the picture of a drum
+once, base to lid.
+
+Rebuilt: rack 428 tris, drum pallet 376, dims exact, `check` 0/0, **0 UV smears**, audit
+**76.8 / 75.9 / 76.4 srgb**.
+
+**Verdict: landed. One helper in `buildlib`, no behaviour change for any prop that does not ask.**
+
+## Racking is an ARRAY, so its zone is a block and not a wall run (2026-09-18)
+
+"I thought about evenly spaced rows of racks. shelf-run sub-block should be a large block of shelf
+racks." The previous landing bolted the rows on as a pass in `FacilityRooms` beside the zone tree;
+this puts them IN it. `RoomBlock.glaze` pushes one extra node for a store — its whole floor, tagged
+`TAG_FLOOR` — and `RoomZones.shelfBlock()` pins `SHELF_RUN` to it with a `must`. Every other zone in
+that file is a BAY, one cell deep against masonry, because a worktop and a bank of machines are
+things that stand against a wall; racking is not one of those. The block is pushed FIRST so the
+breadth-first walk fills it before the wall bays it overlaps (the vent caps are pushed LAST for the
+mirror image of the same reason), and `aisle()` / `optional()` gained a `!TAG_FLOOR` guard so nothing
+else can claim it. `Quota`'s own filler then dresses the leftover wall bays with the store's list.
+`FacilityRooms.storeIslands` is deleted; net -30 lines.
+
+`rows()` lays every other line of the block, **1, 3, 5 … and never the room's own perimeter line**.
+That last clause is not cosmetic: `FacilityConnect.connectRooms` repairs a room nothing can walk into
+by CUTTING A DOOR, and a cut needs a walkable cell on the room side as well as the far one — racked
+to the wall, a store whose doorway happens to open onto a dead end can never be repaired. Measured:
+**20 unreachable stores in 3000 seeds with line 0 in, 0 with it out.** It costs nothing to look at
+either, because the perimeter line is exactly what the wall bays are.
+
+Measured, one compound: pallet racks **17 → 32** (5 before any of this), `nodes/shelf-run` 6.34 → 1.96
+(one block, not six runs), `spawns/decoration` 179.0 → 181.8 per area over 600 seeds,
+`make gen seeds=3000` clean.
+
+**Verdict: landed. The rows are a zone now, not a pass beside one.**

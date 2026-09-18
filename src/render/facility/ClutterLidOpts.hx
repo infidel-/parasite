@@ -42,4 +42,10 @@ typedef ClutterLidOpts = {
   // the most items rolled for, and the fewest that must land
   max:Int,
   floor:Int,
+  // THE STORE'S OWN LIDS, and it changes two things at once: every item is a CRATE rather than a
+  // roll against FacilityStyle.CLUTTER_BOX_PCT, and the size band is DECO_CRATE_BIG_* instead of
+  // DECO_BOX_*. A rack bay is 3.9 x 1.8 and a pallet stack's lid 1.8 square, so the shelf carton's
+  // 27 cm reads as a bookcase on both — and the flat sheets this pass deals from are the
+  // laboratory's glassware and the office's paperwork, neither of which belongs on racking
+  ?store:Bool,
 }
