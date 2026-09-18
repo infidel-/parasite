@@ -113,6 +113,11 @@ class FacilityArea implements Area3D
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
+  // objects that draw as a real glb instead of their sprite (the alien ship set piece). NOT in
+  // `green`: that array is index-aligned with GREEN plus EXTRA and culled on one radius, while a
+  // PropBatch is a solid/ghost/hull triple with its own masks and its own ghost ease
+  var props:Array<render.world.ObjModels.PropBatch>;
+  var tactical = false;                         // tactical view up: the props draw their outline shells
   var cabinets = 0;                             // corridor casework cells merged into the bench meshes
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
   var grime = 0;                                // interior wall faces carrying a damp band
@@ -355,6 +360,11 @@ class FacilityArea implements Area3D
       for (p in FacilityEntry.build(scene, model))
         green.push(p);
       doors = FacilityDoors.build(scene, model, game.area);
+      // and the objects that draw as real geometry rather than as their atlas sprite: the alien
+      // ship on the hangar's study podium, its console and its slots. AFTER the doors and before the
+      // lights, which is where it belongs rather than being load-bearing — the batches read nothing
+      // any other builder writes
+      props = render.world.ObjModels.build(scene, game, objYaw);
       // the light SOURCES, then everything additive they and the windows put on a surface. both are
       // area-spanning, so render.Chunks.build's size guard leaves them parented to the scene — the
       // same treatment the city's own lamp batch gets
@@ -381,6 +391,35 @@ class FacilityArea implements Area3D
           model.wall[row][col] != FacilityModel.Wall.WINDOW,
         function(col, row) return FacilityGeom.carries(model, col, row));
       attachDbg();
+    }
+
+// which way an object prop faces from its cell, one branch per render.world.ObjModels.PropYaw
+//
+// FRONTAL is a plain 0: this camera rests with no yaw of its own, so unturned IS facing it — and a
+// glb whose authored front points elsewhere is corrected once in render.Models.yawFix, which is a
+// fact about the model rather than about how a prop is posed. WALL turns its back on the adjacent
+// masonry, asked of the same isWall the vision mask is attached on. HASHED takes a full-circle turn
+// off the CELL, so several of a prop in one compound are not clones and a re-entry gives the same
+// compound rather than re-rolling
+  function objYaw(col:Int, row:Int, mode:render.world.ObjModels.PropYaw):Float
+    {
+      switch (mode)
+        {
+          case FRONTAL:
+            return 0;
+          case HASHED:
+            return (FacilityModel.mix((col * 40503151) ^ (row * 57885161)) % 3600) / 3600.0 * 2 * Math.PI;
+          case WALL:
+            if (FacilityModel.isWall(model, col, row - 1))
+              return 0;
+            if (FacilityModel.isWall(model, col, row + 1))
+              return Math.PI;
+            if (FacilityModel.isWall(model, col - 1, row))
+              return Math.PI / 2;
+            if (FacilityModel.isWall(model, col + 1, row))
+              return -Math.PI / 2;
+            return 0;
+        }
     }
 
 // console debug helper (persistent) — what this facility actually built.
@@ -452,6 +491,18 @@ class FacilityArea implements Area3D
               y: p.y,
               mul: p.mul,
             });
+          // the object props, as their own list rather than a row in `batches` above: that array is
+          // index-aligned with GREEN plus EXTRA, so an entry here would shift every batch label
+          // after it. one row per model path, with the cells it placed on — which is the only way
+          // to tell "the ship has no batch" from "the batch is there and placed nothing"
+          var objProps = [];
+          for (b in props)
+            objProps.push({
+              path: b.model.path,
+              keys: b.model.keys.join(','),
+              count: b.solid.matrices.length,
+              cells: b.cells,
+            });
           var parapets = [];
           for (i in 0...shells.length)
             parapets.push({
@@ -466,6 +517,7 @@ class FacilityArea implements Area3D
             windows: model.windows,
             doors: leaves,
             batches: batches,
+            objProps: objProps,
             masts: lamps.masts.length,
             ceilings: lamps.ceilings.length,
             corridors: lamps.corridors.length,
@@ -654,6 +706,20 @@ class FacilityArea implements Area3D
       // and the server racks' lights, which are the same one shared uniform advanced once — and
       // through the outro for the third time, because the camera is still on the compound
       FacilityDeco.tick(opts.dtMs);
+      // the object props, and the whole block is ABOVE the outro gate for the reason everything
+      // else above it is: the camera is still looking at the compound through the pull-out. a
+      // player who left standing ON one would otherwise stay behind a see-through hull for the
+      // length of the shot, and a shared idle clock freezing mid-shot is exactly when it shows.
+      // cull() reads opts.outro itself; the outline shells are a tactical READOUT, so a hidden HUD
+      // takes them with it
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
+      render.world.PropShader.tick(opts.dtMs);
+      render.world.PropGlow.tick(opts.dtMs);
+      // their glbs arrive over a loader callback, so there is no build-time moment to catch them.
+      // the chain is shared with this kind's warm scene — see ObjModels.patchRow on why the order is
+      // the contract and not a preference
+      for (b in props)
+        render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);
@@ -799,10 +865,12 @@ class FacilityArea implements Area3D
         }
     }
 
-// nothing outlines here yet: no facility object draws as a glb prop, and the walls and tables the
-// tactical view marks are already handled by render.TacticalGrid's blocked-cell pass
+// the walls and tables the tactical view marks are handled by render.TacticalGrid's blocked-cell
+// pass, so the only thing this changes here is the OBJECT PROPS: a modelled object drops its sprite
+// icon, and the backface shell is what replaces the green ring it would have carried
   public function setTactical(v:Bool):Void
     {
+      tactical = v;
     }
 
 // only the lit window panes glow, so this is the street's own level
@@ -850,6 +918,12 @@ class FacilityArea implements Area3D
       FacilityDoors.dispose(built, doors);
       model.doors = FacilityModel.fromArea(game.area).doors;
       doors = FacilityDoors.build(built, model, game.area);
+      // and the object props on the same trigger and for the same reason: they are placed once at
+      // build, so a ship spawned into the compound the player is already standing in would draw
+      // NOTHING until re-entry — render.Actors drops an object's sprite the moment it has a model.
+      // cheap: the glb templates are cached, so only the instance buffers are remade
+      render.world.ObjModels.dispose(built, props);
+      props = render.world.ObjModels.build(built, game, objYaw);
     }
 
 // the lit windows and glazed doors, as fake actor-shadow casters. they own no spotlight slot — what

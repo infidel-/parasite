@@ -5,6 +5,7 @@ import render.RenderConfig;
 import render.world.ObjModels.PropShine;
 import render.world.ObjModels.PropKey;
 import render.world.ObjModels.PropEyes;
+import render.world.ObjModels.PropLamps;
 import render.world.PropShader.ShaderPatch;
 
 // the grown props' SURFACE GLOW, folded into the material they already draw with. two terms, both
@@ -68,15 +69,15 @@ class PropGlow
 // patch a mesh's material, tolerating a mesh that is not there yet and a prop that does not glow.
 // every glb-backed prop arrives through a loader callback, so its InstancedMesh is null for the first
 // frames — the same reason render.world.PropShader.patchMesh is called per frame rather than at build
-  public static function patchMesh(o:Object3D, s:PropShine, e:PropEyes):Void
+  public static function patchMesh(o:Object3D, s:PropShine, e:PropEyes, ?l:PropLamps):Void
     {
-      if ((s == null && e == null) ||
+      if ((s == null && e == null && l == null) ||
           !RenderConfig.PROP_GLOW.enabled)
         return;
       if (o != null &&
           o.material != null &&
           o.geometry != null)
-        patch(o.material, o.geometry, s, e);
+        patch(o.material, o.geometry, s, e, l);
     }
 
 // fold the glow into one material. `geo` is needed as well as the material because every offset and
@@ -89,7 +90,8 @@ class PropGlow
 // here (Standard, Basic and Lambert are three unrelated classes in three.Three) and none of them
 // declares onBeforeCompile / customProgramCacheKey / needsUpdate. render.world.PropShader carries the
 // same note for the same reason
-  public static function patch(mat:Dynamic, geo:BufferGeometry, s:PropShine, e:PropEyes):Void
+  public static function patch(mat:Dynamic, geo:BufferGeometry, s:PropShine, e:PropEyes,
+      ?l:PropLamps):Void
     {
       // the mark lives on the HOOK and not in userData: Material.clone() copies userData but NOT
       // onBeforeCompile, so a userData flag would ride onto the GHOST clones render.Models makes from
@@ -110,6 +112,37 @@ class PropGlow
       var centre = new Vector3((bb.min.x + bb.max.x) * 0.5, bb.min.y, (bb.min.z + bb.max.z) * 0.5);
       var hasS = (s != null);
       var hasE = (e != null);
+      var hasL = (l != null && l.list.length > 0);
+      // the lamp tables, resolved once here. a MARKER hue is normalised by its own max channel and
+      // converted to LINEAR first, because that is the space three hands the sampled map back in
+      // (an emissive map is declared sRGB and the sampler decodes it) — compare an sRGB constant
+      // against a linear sample and every family matches the wrong texels. normalising by the max
+      // is what lets the map be MODULATED by the base map at author time: that scales value and
+      // leaves hue alone, which is exactly the axis this throws away
+      var lampHue = [];
+      var lampHueL = [];
+      var lampCol = [];
+      var lampBeat = [];
+      if (hasL)
+        for (row in l.list)
+          {
+            var sr = ((row.hue >> 16) & 255) / 255.0;
+            var sg = ((row.hue >> 8) & 255) / 255.0;
+            var sb = (row.hue & 255) / 255.0;
+            var sm = Math.max(sr, Math.max(sg, sb));
+            if (sm < 1e-5)
+              sm = 1.0;
+            lampHue.push(new Vector3(sr / sm, sg / sm, sb / sm));
+            var lr = Math.pow(sr, 2.2);
+            var lg = Math.pow(sg, 2.2);
+            var lb = Math.pow(sb, 2.2);
+            var lm = Math.max(lr, Math.max(lg, lb));
+            if (lm < 1e-5)
+              lm = 1.0;
+            lampHueL.push(new Vector3(lr / lm, lg / lm, lb / lm));
+            lampCol.push(new Color(row.color).multiplyScalar(row.glow));
+            lampBeat.push(new Vector4(row.base, row.pulse, row.pulseRate, row.phase));
+          }
       // the eye tables, resolved to LOCAL units once here rather than per fragment. `eyeC` is centre +
       // radius, `eyeF` the unit direction the eye faces (which is what the near-hemisphere clip and
       // the gaze's tangent projection both need) and `eyeG` the highlight's offset from the centre.
@@ -199,6 +232,12 @@ class PropGlow
         eyeBlinkDuty: { value: hasE ? Math.max(e.blinkDuty, 1e-3) : 1.0 },
         eyeGlint: { value: hasE ? e.glint : 0.0 },
         eyeGlintR: { value: hasE ? e.glintR : 1.0 },
+        lampHue: { value: lampHue },
+        lampHueL: { value: lampHueL },
+        lampCol: { value: lampCol },
+        lampBeat: { value: lampBeat },
+        // clamped away from 0 because it is a smoothstep WIDTH, like the two eye terms above
+        lampTol: { value: hasL ? Math.max(l.tol, 1e-3) : 1.0 },
       };
       var decl =
         'uniform float propGlowTime;\n' +
@@ -238,6 +277,12 @@ class PropGlow
           'uniform float propEyeBlinkDuty;\n' +
           'uniform float propEyeGlint;\n' +
           'uniform float propEyeGlintR;\n' : '') +
+        (hasL ?
+          'uniform vec3 propLampHue[ ' + l.list.length + ' ];\n' +
+          'uniform vec3 propLampHueL[ ' + l.list.length + ' ];\n' +
+          'uniform vec3 propLampCol[ ' + l.list.length + ' ];\n' +
+          'uniform vec4 propLampBeat[ ' + l.list.length + ' ];\n' +
+          'uniform float propLampTol;\n' : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame
@@ -470,7 +515,54 @@ class PropGlow
         // halo bigger than itself — which at this camera is most of what makes an eye read at all
         '  totalEmissiveRadiance += propEyeSclera * ( propEyeGlint * min( eyeGl, 1.0 ) );\n' +
         '  }';
-      var frag = '#include <emissivemap_fragment>\n' + shine + eyes;
+      // THE LAMP FAMILIES. It reads the value <emissivemap_fragment> has just left in scope rather
+      // than sampling anything of its own — three declares `emissiveColor` in that chunk and does not
+      // brace it, so the texel is still there, and this whole block costs no extra texture fetch.
+      // GUARDED ON USE_EMISSIVEMAP for the same reason: without a map on the material that name does
+      // not exist and the shader will not compile.
+      //
+      // BRACED, and the loop bound is a LITERAL, for the reasons the mote and eye loops carry: GLSL
+      // wants a constant bound, and a row that changes the COUNT has to compile its own program.
+      // everything else here is a uniform, so retuning a colour, a depth or a rate compiles nothing
+      var lamps = !hasL ? '' :
+        '  #ifdef USE_EMISSIVEMAP\n' +
+        '  {\n' +
+        // normalised by the max channel, which is what makes the match survive `--modulate`: that
+        // multiplies the marker by the prop's own base map, scaling VALUE and leaving hue alone
+        '  float lmx = max( max( emissiveColor.r, emissiveColor.g ), emissiveColor.b );\n' +
+        // an unlit texel is pure black, and normalising that is a divide by zero — one NaN texel
+        // goes through the bloom downsample and blacks out the WHOLE frame (the mote bell's own
+        // lesson). the gate is the same test that says "this texel belongs to no family"
+        '  if ( lmx > 0.004 )\n' +
+        '  {\n' +
+        '  vec3 lhue = emissiveColor.rgb / lmx;\n' +
+        '  for ( int i = 0; i < ' + l.list.length + '; i ++ )\n' +
+        '  {\n' +
+        // THE MARKER IS CARRIED IN BOTH COLOUR SPACES AND THE NEARER ONE WINS, which is not
+        // hedging: whether `emissiveColor` arrives decoded depends on three's own handling of an
+        // emissive map's colorSpace, it is not visible from here, and getting it wrong is SILENT —
+        // the prop keeps its flat baked glow and simply never pulses. Measured on this ship: the
+        // sample is RAW sRGB, so the linear markers sat 0.25 (amber) and 0.42 (cyan) away and every
+        // family missed at any sane tolerance, which took a widen-it-to-3.0 probe to find at all.
+        // The two spellings of one hue are far apart from every OTHER family's (nearest cross pair
+        // measured 0.54 against a 0.25 tolerance), so taking the min cannot make one family claim
+        // another's texels — and a three upgrade that starts decoding cannot silently kill this
+        '    float ld = min( distance( lhue, propLampHue[ i ] ),\n' +
+        '      distance( lhue, propLampHueL[ i ] ) );\n' +
+        '    float lw = 1.0 - smoothstep( propLampTol * 0.6, propLampTol, ld );\n' +
+        '    vec4 lb = propLampBeat[ i ];\n' +
+        // the beat, per family: its own rate, its own phase offset, and the per-INSTANCE phase on
+        // top so two ships in one area never breathe together. `lb.x` is the steady floor the
+        // breath rides on, so a family at pulse 0 is simply a lamp that is on
+        '    float lt = 0.5 + 0.5 * sin( propGlowTime * lb.z +\n' +
+        '      ( lb.w + vGlowPh ) * 6.2832 );\n' +
+        '    totalEmissiveRadiance += propLampCol[ i ] * lw * lb.x *\n' +
+        '      ( 1.0 - lb.y + lb.y * lt );\n' +
+        '  }\n' +
+        '  }\n' +
+        '  }\n' +
+        '  #endif';
+      var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps;
       // Dynamic, and it cannot be a typed function: `prev` is CALLED like one below and also carries
       // the previous patch's marker FIELDS, which the loop further down copies with Reflect. Haxe has
       // no type for "function with arbitrary own properties", which is exactly what a JS hook is here
@@ -506,6 +598,14 @@ class PropGlow
               shader.uniforms.propGlowFront = u.front;
               shader.uniforms.propGlowPulse = u.pulse;
               shader.uniforms.propGlowPulseRate = u.pulseRate;
+            }
+          if (hasL)
+            {
+              shader.uniforms.propLampHue = u.lampHue;
+              shader.uniforms.propLampHueL = u.lampHueL;
+              shader.uniforms.propLampCol = u.lampCol;
+              shader.uniforms.propLampBeat = u.lampBeat;
+              shader.uniforms.propLampTol = u.lampTol;
             }
           if (hasE)
             {
@@ -560,7 +660,12 @@ class PropGlow
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
           'propGlow' + (hasS ? Std.string(s.motes) + s.key : '') +
-          (hasE ? 'E' + e.list.length : '');
+          (hasE ? 'E' + e.list.length : '') +
+          // the lamp COUNT and nothing else, for the reason the eye count is here: it is a literal
+          // loop bound in the source above while every colour, depth, rate and phase is a uniform.
+          // a row with no lamps appends nothing, so every key already warmed is byte-identical to
+          // what it was before this column existed and nothing recompiles
+          (hasL ? 'L' + l.list.length : '');
       mat.needsUpdate = true;
     }
 }

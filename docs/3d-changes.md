@@ -1362,3 +1362,125 @@ Measured, one compound: pallet racks **17 → 32** (5 before any of this), `node
 `make gen seeds=3000` clean.
 
 **Verdict: landed. The rows are a zone now, not a pass beside one.**
+
+## The alien-ship set piece: object props in a compound, and a map that carries three beats
+
+The crash-landing scenario's ship, its console, its three install slots and its three "orange case"
+ship parts all drew as 2D atlas sprites in a 3D compound — the ship as **six billboards of a drawn
+saucer standing upright inside each other**, the console and the slots as the generic `?`
+scenario-object sign. Three things had to be true before any of that could be art.
+
+**The set piece was in the wrong room, and the reason is one tile id.**
+`GoalsAlienCrashLanding.addSpaceshipStudyObject` found "the hangar" by scanning row-major for the
+first `TILE_FLOOR_CONCRETE` cell. That was sound while hangar floor was the only concrete in a
+compound; `FacilityRooms.roomStorage` now paints the same id, so the ship landed in a store room.
+Measured live on area 4503: ship decoration at (45,3)-(47,4) inside room 102 role `storage`, **slot3
+at (46,2) standing inside a `TILE_BUILDING` wall**, slots 1 and 2 on racking — while the shed at
+(7,4)-(21,15), carrying a 5x5 study pad with a podium on it, stood empty. `AreaGame.getRect`
+compounded it: a same-tile run-length over a hangar floor that is no longer uniform returned a ~3x1
+stub, which turned the part-spawn arithmetic into `Std.random(-2)`.
+
+Replaced with a derivation off `FacilityModel.fromArea` — `structures[].hangar` and `pads[]` — which
+is the call `console.GoBlock` already makes for the same reason (the block tree is in-memory only, so
+the saved grid is all there is). **The rewrite writes no tiles at all**, and that is what retires the
+podium-destruction trap rather than fixing it: the pad is already unwalkable concrete, so the ship
+needs no footprint, and `moveSpaceship` has nothing to repaint over the square `findPads` recovers
+the podium from.
+
+**The console and the slots go on the apron ring's CORNERS, and the cells are tested rather than
+computed.** `HangarBlock` stands its machine banks on the four compass spokes and `FacilityHangar`
+runs a cable from each to the dais rim, so a console on a spoke stands in a cable lane. And an
+`EventObject` does not override `canActivateNear`, so one on an unwalkable cell is *unusable*, not
+merely ugly — the ring is walked in a fixed order and the first four cells passing
+`isWalkable && !hasObjectAt` are taken.
+
+**`ObjModels` reached only the sewer.** The object-backed glb layer — solid/ghost/hull batches, the
+yaw rule, the idle-motion and glow patches — was built by `SewerArea` alone; `FacilityArea` and
+`WildArea` had empty `refreshObjects` and no props. Wiring it into both found three things worth
+recording:
+
+- **`build` bucketed placements by model PATH.** Harmless for as long as no two rows named one path;
+  the moment two did, each instanced a batch over the other's cells as well and every one of those
+  props drew twice (seen immediately, two canary rows sharing `deco-analyser`). Buckets are per ROW
+  now — the row is what carries `h`, `sink` and the whole motion column anyway.
+- **`build` placed at y = 0 with no ground sample.** Flat is right for the sewer and the compound and
+  wrong for the wilderness, which is a height field; one `WorldCtx.floorYAt` call is a no-op in the
+  two flat kinds and the difference between a ship on the ground and a ship buried to its rim.
+- **`Actors`' `iconOff` is area-kind-blind.** It drops an object's sprite as soon as `modelFor`
+  answers, and a model key belongs to the OBJECT, not to where it is standing. Every prop-backed
+  object used to be immovable; a ship PART can be carried and dropped in a city, which never builds
+  these batches — no sprite and no prop, i.e. invisible. `ObjModels.active` gates the three callers.
+
+The four patch sites (two area kinds and their two warm scenes) went through one shared
+`ObjModels.patchRow`: the chain extends the material's `customProgramCacheKey`, so a warm that orders
+it differently warms a program the game never asks for. **Measured: facility program count rises once
+at the first entry and is stable across a second full area build (113 → 113).**
+
+**Three independently pulsing lamp families off ONE emissive map.** The ask was yellow, blue and
+white, the entrance included. `PropShine` cannot express it and the reasons are measurable: it masks
+a channel RATIO, and a ratio is ~1.0 for white and ~1.0 for a pale hull, so the white family is not
+expressible as a key at any threshold — and a row carries one ratio and one colour, where this needs
+three. `propstat` reads the ship's atlas at **chroma 5.3 against the >25 a colour-keyable prop
+wants**, so the keys were never going to separate it anyway.
+
+`PropGlow` gains a `lamps` column instead. The map is a **marker, not a light**: three
+`tools/emissive.py` passes paint each family in a flat tint of its own, and the shader matches those
+tints back by normalised hue, giving each its own colour, rate and phase. It costs no draw call, no
+pass and no extra texture tap — `<emissivemap_fragment>` has already sampled the map and the block
+reads the value it left in scope. `PropGlow`'s own header argues a painted map is the wrong answer
+for these props and is right about the case it was written for (hand-painting into a shattered
+TRELLIS atlas, and a map dying when the mesh is regenerated); neither binds to a supplied master that
+is never regenerated and a selection that is geometric.
+
+`--key` is new on `tools/emissive.py` and exists for this prop: **a box cannot separate interleaved
+lamps.** The ship's yellow panels and pale discs share one equatorial band, so every box holding
+either holds both. Keyed `warm`, that band resolves to 128 of 1787 boxed triangles and lands on the
+**ramp doorway** — the entrance, found rather than guessed. Keyed `pale`, 276 triangles spread right
+round the azimuth. Both report bleed 0.
+
+**Two traps in that column, both silent, both cost a probe to find.**
+
+- **Whether `emissiveColor` arrives decoded is not visible from the Haxe side.** Markers authored in
+  linear sat 0.25 (amber) and 0.42 (cyan) from the sampled hue, so every family missed at any sane
+  tolerance — and the failure mode is that the prop keeps its flat baked glow and simply never
+  pulses. It took widening the tolerance to 3.0 (whole ship blows out: the block runs) and then to
+  0.05 (nothing lights: the distances are large) to place it. The marker is carried in **both**
+  spaces now and the nearer wins; the two spellings of one hue are 0.54 from the nearest other
+  family against a 0.25 tolerance, so the min cannot cross-match, and a three upgrade that starts
+  decoding cannot silently kill it.
+- **`--modulate` moves the hue this column identifies a family by.** It multiplies the marker by the
+  prop's own base map, which is not grey — measured, it left only ~a third of the dome's texels
+  inside tolerance. Authored flat, all three families match 100% of the lit texels between them.
+
+And the dome then shipped the white card `3d-render.md` already has a verdict on: boxed y 0.24..0.45
+it was 7.5% of the ship's surface and 63.8% of the map's lit texels, which at a lamp's level is not a
+lamp, it is the roof switched on. 0.31..0.45 is **94 triangles and 2.2%** — the cap alone, small
+enough that flat is right for it.
+
+**The art.** The ship is the supplied 584,186-tri master decimated to 5,999 (1 component, source
+split 1.05x) at `tex: 1024` — the texels-per-TRIANGLE floor asks for 512 and is the wrong question
+for a prop this size: measured at `h` 5.5 the saucer is 12.8 world units across and carries **338.8
+u² of skin, which 1024 covers at 46.1 texels per world unit** against the ground's own 57. It carries
+no `baseColor`: propstat's 0.52 suggestion is keyed on the 46-52 OUTDOOR family and this prop lives
+on a hangar floor, where the repainted interior wants ~78 — which the raw bake (75/72/79) already is.
+
+The case, the console and the slot are hand-modelled (`models-src/scenario-a/scenario_build.py`,
+372/432/432 tris, `buildlib.check` 0 holes and 0 near-coplanar on each). The console and the slot wear
+the **analyser's own** painted panel and port band — the same material at the same scale, which is
+the only case the reuse rule allows — so neither carries a `baseColor` or a `lift`. Their SHAPES are
+new, and that is the half that matters: `deco-analyser` is dealt into this very hangar's machine
+banks two to four cells away, so a re-skin would stand one silhouette twice in one shed. A lectern, a
+receptacle with its socket plate facing UP at the camera, and a cabinet: three reads.
+
+**The case's colour took three passes and only one of them was the right knob.** The first drop baked
+a burnt red-orange (rgb 189/64/13, g:r 0.34) and reading it as "too bright" led to a `lift` — a
+GAMMA, so per-channel, which took it to 158/27/2 (g:r 0.17) and shipped a **red** case. `baseColor`
+is linear and cannot shift hue, but at 0.50 it measured the rendered lid at rgb 71/4/6 in the shed:
+an orange only stays orange while its green channel is clear of the quantisation floor, and a dim
+interior is already spending most of the range. Neither knob could fix it **because the art was the
+fault** — one `edit_image` pass moved the cells to 232/122/6, g:r 0.53, with headroom under them.
+Then the level correction works.
+
+**Verdict: landed.** The set piece is in the hangar, the ship stands on the podium the generator
+carves for it, one case always lands in a store room when the compound has one, and the whole rig is
+geometry.

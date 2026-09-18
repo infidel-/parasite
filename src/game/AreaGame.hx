@@ -860,7 +860,7 @@ class AreaGame extends _SaveObject
       if (game != null &&
           game.scene != null &&
           game.area == this &&
-          render.world.ObjModels.modelFor(o.getModelKey()) != null)
+          render.world.ObjModels.propFor(o.getModelKey()) != null)
         game.scene.updateObjects3D();
     }
 

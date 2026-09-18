@@ -902,6 +902,18 @@ class RenderConfig {
     habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
     habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
     habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
+    // the alien ship of the crash-landing scenario, which goes through render.world.ObjModels for
+    // the same reason the four organs above do: it has an objects.EventObject behind it, so it
+    // carries the full solid / ghost / outline-hull set. supplied as a 584k-tri master and decimated
+    // by the pipeline — see its art/models.json note for why tex is 1024 and why it carries no
+    // baseColor
+    scenarioSpaceship: 'models/scenario-a/spaceship.glb',   // saucer, lit panels and lamp discs
+    // and the rig round it, hand-modelled to three silhouettes that cannot be confused with each
+    // other or with the machine banks already standing in the same shed
+    // (models-src/scenario-a/scenario_build.py)
+    scenarioCase: 'models/scenario-a/case.glb',             // orange transport case, overhanging lid
+    scenarioConsole: 'models/scenario-a/console.glb',       // lectern: column and a canted head
+    scenarioSlot: 'models/scenario-a/slot.glb',             // receptacle, socket plate facing up
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements

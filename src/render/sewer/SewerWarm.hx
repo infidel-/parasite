@@ -61,21 +61,14 @@ class SewerWarm
               var m = objModels[i];
               render.Models.get(m.path, function(_)
                 {
-                  // the idle-motion patch goes on in the SAME ORDER as render.sewer.SewerArea's
-                  // per-frame pass applies it — both chain onto the mask's hook and extend its
-                  // program cache key, so a swapped order here would warm a key the game never asks
-                  // for. a row with no `anim` is a no-op and keeps the plain program
-                  var so = render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh;
-                  var gh = render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh;
-                  var hu = render.Models.instanced(sc, m.path, place, m.h,
-                    HULL(C.color, C.hullW)).mesh;
-                  VisionMask.patchMesh(so);
-                  VisionMask.patchMesh(gh);
-                  render.world.PropShader.patchMesh(so, m.anim, m.pulse, m.curl);
-                  render.world.PropShader.patchMesh(gh, m.anim, m.pulse, m.curl);
-                  render.world.PropShader.patchMesh(hu, m.anim, m.pulse, m.curl);
-                  render.world.PropGlow.patchMesh(so, m.shine, m.eyes);
-                  render.world.PropGlow.patchMesh(gh, m.shine, m.eyes);
+                  // patched through render.world.ObjModels.patchRow, the same call
+                  // render.sewer.SewerArea's per-frame pass makes — the chain extends the material's
+                  // program cache key, so a warm that ordered it differently would warm a key the
+                  // game never asks for. a row with no `anim` is a no-op and keeps the plain program
+                  render.world.ObjModels.patchRow(m,
+                    render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
                   done();
                 });
             }

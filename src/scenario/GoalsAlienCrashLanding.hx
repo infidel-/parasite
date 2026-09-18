@@ -3,7 +3,10 @@
 package scenario;
 
 import const.ItemsConst;
+import gen.facility.FacilityTemp;
 import objects.EventObject;
+import render.facility.FacilityModel;
+import render.facility.FacilityStyle;
 import scenario.Scenario;
 import game.*;
 import objects.*;
@@ -499,7 +502,13 @@ class GoalsAlienCrashLanding
       },
 */
 
-// spaceship in lab - spawn in hangar with console and parts around
+// spaceship in lab - spawn in the hangar, on the study podium, with console and slots round it
+//
+// WRITES NO TILES AT ALL, which is the point rather than an economy. The hangar's study pad is
+// already a 5x5 square of unwalkable concrete (gen.blocks.HangarBlock carves it, and it carves it
+// FOR this set piece), so the ship needs no footprint of its own — and because nothing is stamped,
+// nothing has to be un-stamped when the ship leaves. That is what retires the whole
+// paint-it-then-repaint-it dance moveSpaceship used to do on the study side.
   static function addSpaceshipStudyObject(game: Game)
     {
       var ev = game.timeline.getEvent('alienShipStudy');
@@ -511,37 +520,20 @@ class GoalsAlienCrashLanding
           area.initSpawnPoints();
         }
 
-      // find hangar corner
-      var sx = -1, sy = -1;
-      var cells = area.getCells();
-      for (y in 0...area.height)
-        {
-          for (x in 0...area.width)
-            if (cells[x][y] == Const.TILE_FLOOR_CONCRETE)
-              {
-                sx = x;
-                sy = y;
-                break;
-              }
-          if (sx != -1)
-            break;
-        }
-      var hangar = area.getRect(sx, sy);
-      // ship tile block corner
-      var loc = {
-        x: hangar.x1 + Std.int(hangar.w / 2),
-        y: hangar.y1 + Std.int(hangar.h / 2),
-      };
-
-      // create decoration
-      var shipDeco = createShipDecoration(game, area, loc,
-        Const.TILE_FLOOR_CONCRETE_UNWALKABLE);
-      // console
-      var console = area.addEventObject(loc.x + 1, loc.y + 2, 'console', 'spaceshipStudyStart');
-      // slots
-      var slot1 = area.addEventObject(loc.x - 1, loc.y + 1, 'slot', 'spaceshipStudySlot');
-      var slot2 = area.addEventObject(loc.x + 3, loc.y + 1, 'slot', 'spaceshipStudySlot');
-      var slot3 = area.addEventObject(loc.x + 1, loc.y - 1, 'slot', 'spaceshipStudySlot');
+      var shed = findStudyPad(area);
+      // the ship stands ON the pad: unwalkable concrete, and an infoID with no row in
+      // eventObjectActions, so it offers nothing and never needs a cell the player can reach.
+      // the console owns the startup action
+      var ship = area.addEventObject(shed.x, shed.y, 'spaceship', 'spaceshipStudyShip');
+      // console and slots on the apron round it. THE CELLS ARE TESTED, not computed: an event
+      // object is only usable from its OWN cell (objects.EventObject does not override
+      // canActivateNear, and game.PlayerArea skips anything off the player's tile), so one that
+      // lands on a fitting or in a wall is dead rather than merely ugly
+      var apron = apronCells(area, shed);
+      var console = area.addEventObject(apron[0].x, apron[0].y, 'console', 'spaceshipStudyStart');
+      var slot1 = area.addEventObject(apron[1].x, apron[1].y, 'slot', 'spaceshipStudySlot');
+      var slot2 = area.addEventObject(apron[2].x, apron[2].y, 'slot', 'spaceshipStudySlot');
+      var slot3 = area.addEventObject(apron[3].x, apron[3].y, 'slot', 'spaceshipStudySlot');
       // parts
       var parts = [];
       var languageID = getLanguageID(game);
@@ -557,33 +549,23 @@ class GoalsAlienCrashLanding
               break;
             }
 
-          // first part always spawns in hangar
-          // second always on random table, third random
-          var x = hangar.x1 + Std.random(Std.int(hangar.w / 2) - 3);
-          var y = hangar.y1 + Std.random(Std.int(hangar.h / 2) - 3);
-          var randomLocation = false;
+          // the first case always spawns in the hangar, the second in a store room when the
+          // compound has one, and the third on a random table half the time
+          var pt = null;
           if (i == 1)
-            randomLocation = true;
-          else if (i == 2 && Std.random(100) < 50)
-            randomLocation = true;
-          var cnt = 0;
-          if (randomLocation)
-            while (true)
-              {
-                var pt = area.clueSpawnPoints[Std.random(area.clueSpawnPoints.length)];
-                x = pt.x;
-                y = pt.y;
-                if (!area.hasObjectAt(x, y))
-                  break;
-                cnt++;
-                if (cnt > 100)
-                  {
-                    trace('cannot find free place for spawn');
-                    break;
-                  }
-              }
+            pt = storeCell(area);
+          if (pt == null &&
+              (i == 1 || (i == 2 && Std.random(100) < 50)))
+            pt = clueCell(area);
+          if (pt == null)
+            pt = freeCell(area, shed.x1, shed.y1, shed.x2, shed.y2);
+          if (pt == null)
+            {
+              trace('cannot find free place for spawn');
+              continue;
+            }
 
-          var o = area.addItem(x, y, item, Const.FRAME_SHIP_PART, true);
+          var o = area.addItem(pt.x, pt.y, item, Const.FRAME_SHIP_PART, true);
           o.name = '<span class=alien' + languageID + '>' + item.name + '</span>';
           o.item.name = '<span class=alien' + languageID + '>' + o.item.name + '</span>';
           parts.push(item.name);
@@ -595,7 +577,8 @@ class GoalsAlienCrashLanding
         location: 'study',
         studyAreaID: area.id,
         studyObjectID: console.id,
-        studyDecoration: shipDeco,
+        studyShipObjectID: ship.id,
+        studyDecoration: [],
         slot1ObjectID: slot1.id,
         slot2ObjectID: slot2.id,
         slot3ObjectID: slot3.id,
@@ -612,6 +595,142 @@ class GoalsAlienCrashLanding
       game.timeline.setVar('spaceshipState', spaceshipState);
     }
 
+// helper: the hangar's study pad centre, plus the shed's interior box
+//
+// DERIVED FROM THE SAVED GRID, because there is nothing else to read: the generator's block tree is
+// in-memory only (gen._GenNode) and a loaded save never had one. render.facility.FacilityModel is
+// this repo's one reader of that grid and recovers both the sheds and their pads from it, which is
+// the same call console.GoBlock makes for `go block study-pad`. The old scan — first cell of
+// Const.TILE_FLOOR_CONCRETE in the area — broke the day gen.facility.FacilityRooms gave a lab
+// building a STORE ROOM, which floors in exactly that tile: the ship spawned in the store
+  static function findStudyPad(area: AreaGame): { x: Int, y: Int, x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      var m = FacilityModel.fromArea(area);
+      var shed = null;
+      for (st in m.structures)
+        if (st.hangar)
+          {
+            shed = st;
+            break;
+          }
+      // a shed too small for gen.blocks.HangarBlock to carve a pad in falls back to its middle
+      var x1 = (shed != null ? shed.x1 : 1);
+      var y1 = (shed != null ? shed.y1 : 1);
+      var x2 = (shed != null ? shed.x2 : area.width - 2);
+      var y2 = (shed != null ? shed.y2 : area.height - 2);
+      return {
+        x: (m.pads.length > 0 ? m.pads[0].col : x1 + Std.int((x2 - x1) / 2)),
+        y: (m.pads.length > 0 ? m.pads[0].row : y1 + Std.int((y2 - y1) / 2)),
+        x1: x1,
+        y1: y1,
+        x2: x2,
+        y2: y2,
+      };
+    }
+
+// helper: standable cells round the study pad, the apron's CORNERS first
+//
+// the corners and not the compass points, and that is the one piece of arithmetic here that is not
+// arbitrary: gen.blocks.HangarBlock stands its machine banks on the four spokes and
+// render.facility.FacilityHangar runs a cable from each of them to the dais rim, so a console on a
+// spoke stands in a cable lane. The ring itself is already kept clear of floor clutter
+// (FacilityHangar.floor's own CLEAR margin), which is why it is bare enough to use
+  static function apronCells(area: AreaGame,
+      shed: { x: Int, y: Int, x1: Int, y1: Int, x2: Int, y2: Int }): Array<{ x: Int, y: Int }>
+    {
+      var out = [];
+      var r = Std.int(FacilityStyle.PODIUM_PAD / 2) + 1;
+      // west corners first, so the console lands on the side the shed's one real door is on
+      for (d in r...r + 3)
+        {
+          var ring = [
+            { x: shed.x - d, y: shed.y - d },
+            { x: shed.x - d, y: shed.y + d },
+            { x: shed.x + d, y: shed.y - d },
+            { x: shed.x + d, y: shed.y + d },
+          ];
+          for (i in -d + 1...d)
+            {
+              ring.push({ x: shed.x - d, y: shed.y + i });
+              ring.push({ x: shed.x + d, y: shed.y + i });
+              ring.push({ x: shed.x + i, y: shed.y - d });
+              ring.push({ x: shed.x + i, y: shed.y + d });
+            }
+          for (pt in ring)
+            if (pt.x > 0 &&
+                pt.y > 0 &&
+                pt.x < area.width - 1 &&
+                pt.y < area.height - 1 &&
+                area.isWalkable(pt.x, pt.y) &&
+                !area.hasObjectAt(pt.x, pt.y))
+              out.push(pt);
+          if (out.length >= 4)
+            break;
+        }
+      // a shed whose apron is somehow full takes anything standable it has: four DISTINCT usable
+      // cells is the contract this returns on, and the caller indexes it
+      if (out.length < 4)
+        for (y in shed.y1...shed.y2 + 1)
+          for (x in shed.x1...shed.x2 + 1)
+            if (area.isWalkable(x, y) &&
+                !area.hasObjectAt(x, y) &&
+                !Lambda.exists(out, function (p) return p.x == x && p.y == y))
+              out.push({
+                x: x,
+                y: y,
+              });
+      return out;
+    }
+
+// helper: a random free standable cell in a rect, or null when it has none
+  static function freeCell(area: AreaGame, x1: Int, y1: Int, x2: Int, y2: Int): { x: Int, y: Int }
+    {
+      var list = [];
+      for (y in y1...y2 + 1)
+        for (x in x1...x2 + 1)
+          if (area.isWalkable(x, y) &&
+              !area.hasObjectAt(x, y))
+            list.push({
+              x: x,
+              y: y,
+            });
+      if (list.length == 0)
+        return null;
+      return list[Std.random(list.length)];
+    }
+
+// helper: a free cell in a store room, or null when the compound has no store
+//
+// isWalkable IS the whole test. A store's racking and pallets all went through
+// gen.facility.FacilityRooms.placeFitting, which stamps the unwalkable floor id, so what is left
+// walkable in that room IS its aisles — no zone knowledge needed, and none available anyway
+  static function storeCell(area: AreaGame): { x: Int, y: Int }
+    {
+      if (area.generatorInfo == null)
+        return null;
+      for (room in area.generatorInfo.rooms)
+        {
+          if (room.role != FacilityTemp.ROLE_STORAGE)
+            continue;
+          var pt = freeCell(area, room.x1, room.y1, room.x2, room.y2);
+          if (pt != null)
+            return pt;
+        }
+      return null;
+    }
+
+// helper: a free lab table to leave a case on, or null when every one of them is taken
+  static function clueCell(area: AreaGame): { x: Int, y: Int }
+    {
+      var list = [];
+      for (pt in area.clueSpawnPoints)
+        if (!area.hasObjectAt(pt.x, pt.y))
+          list.push(pt);
+      if (list.length == 0)
+        return null;
+      return list[Std.random(list.length)];
+    }
+
 // move spaceship and player from lab to random wilderness spot
   static function moveSpaceship(game: Game)
     {
@@ -620,16 +739,27 @@ class GoalsAlienCrashLanding
       // remove old objects
       var area = game.region.get(state.studyAreaID);
       var cells = area.getCells();
-      for (id in state.studyDecoration)
+      // A SAVE FROM BEFORE THE SHIP STOOD ON THE PODIUM still holds six decoration objects on six
+      // painted cells, and those really do have to be given their floor back. A save made since
+      // carries an empty list and paints nothing — which is also what keeps the study pad intact:
+      // repainting it walkable would break the 5x5 square of unwalkable concrete
+      // render.facility.FacilityModel.findPads recovers the podium from, and the podium would be
+      // gone for the rest of the game
+      if (state.studyDecoration != null)
+        for (id in state.studyDecoration)
+          {
+            var o = area.getObject(id);
+            area.removeObject(o);
+            cells[o.x][o.y] = Const.TILE_FLOOR_CONCRETE;
+          }
+      var ids = [ state.slot1ObjectID, state.slot2ObjectID, state.slot3ObjectID, state.studyObjectID ];
+      if (state.studyShipObjectID != null)
+        ids.push(state.studyShipObjectID);
+      for (id in ids)
         {
           var o = area.getObject(id);
-          area.removeObject(o);
-          cells[o.x][o.y] = Const.TILE_FLOOR_CONCRETE;
-        }
-      for (id in [ state.slot1ObjectID, state.slot2ObjectID, state.slot3ObjectID, state.studyObjectID ])
-        {
-          var o = area.getObject(id);
-          area.removeObject(o);
+          if (o != null)
+            area.removeObject(o);
         }
 
       // pick a random wilderness area and respawn ship there
@@ -643,15 +773,18 @@ class GoalsAlienCrashLanding
         x: Std.int(newArea.width / 2),
         y: Std.int(newArea.height / 2),
       }
-      // create decoration
-      createShipDecoration(game, newArea, loc,
-        Const.TILE_GRASS_UNWALKABLE);
+      // the hull's footprint, painted AROUND the cell the event object stands on. out here there is
+      // no study pad to stand on, so these tiles are the only thing that makes the ship solid —
+      // and the middle cell stays walkable on purpose: it is the way in, and the player boards by
+      // stepping into it (the prop's own GHOST batch fades the hull off them, see
+      // render.world.ObjModels)
+      paintShipFootprint(newArea, loc.x, loc.y, Const.TILE_GRASS_UNWALKABLE);
       // event object
-      var obj = newArea.addEventObject(loc.x + 1, loc.y + 2, 'spaceship', 'spaceshipStart');
+      var obj = newArea.addEventObject(loc.x, loc.y, 'spaceship', 'spaceshipStart');
       // clear tile just in case there is a tree or a rock
-      newCells[loc.x + 1][loc.y + 2] = Const.TILE_GRASS;
+      newCells[loc.x][loc.y] = Const.TILE_GRASS;
       // teleport
-      game.player.teleport(newArea, loc.x + 1, loc.y + 2);
+      game.player.teleport(newArea, loc.x, loc.y);
       // make known and mark on region map
       newArea.isKnown = true;
       newArea.tileID = Const.TILE_SPACESHIP;
@@ -660,22 +793,28 @@ class GoalsAlienCrashLanding
       state.hiddenObjectID = obj.id;
     }
 
-// helper function for creating ship decoration
-  static function createShipDecoration(game: Game, area: AreaGame, loc, tile: Int): Array<Int>
+// helper: paint the ship's footprint round a centre cell, leaving that cell alone
+//
+// TILES AND NOTHING ELSE. It used to also stand six objects.Decoration on those cells, one per
+// frame of the 3x2 spaceship block of entities64 — which is a drawn ship seen from above, right on
+// a 2D map and six upright billboards of it standing INSIDE the glb in 3D
+  static function paintShipFootprint(area: AreaGame, cx: Int, cy: Int, tile: Int)
     {
       var block = Const.SPACESHIP_BLOCK;
-      var shipDeco = [];
       var cells = area.getCells();
       for (y in 0...block.height)
         for (x in 0...block.width)
           {
-            var o = new Decoration(game, area.id,
-              x + loc.x, y + loc.y, y + block.row, x + block.col);
-            cells[x + loc.x][y + loc.y] = tile;
-            area.addObject(o);
-            shipDeco.push(o.id);
+            var px = cx + x - Std.int(block.width / 2);
+            var py = cy + y - Std.int(block.height / 2);
+            if (px < 0 ||
+                py < 0 ||
+                px >= area.width ||
+                py >= area.height ||
+                (px == cx && py == cy))
+              continue;
+            cells[px][py] = tile;
           }
-      return shipDeco;
     }
 }
 
@@ -684,7 +823,12 @@ typedef _SpaceshipState = {
   // lab related stuff
   var studyAreaID: Int;
   var studyObjectID: Int;
-  var studyDecoration: Array<Int>;
+  // the ship in the lab. OPTIONAL because a save made before the ship became one object standing on
+  // the hangar podium has no such object at all — it has the six decorations below instead
+  @:optional var studyShipObjectID: Int;
+  // the six objects.Decoration a PRE-PODIUM save painted the ship with, and the cells they owe their
+  // floor back to. Written empty by everything since; kept because those saves still load
+  @:optional var studyDecoration: Array<Int>;
   var slot1ObjectID: Int;
   var slot2ObjectID: Int;
   var slot3ObjectID: Int;

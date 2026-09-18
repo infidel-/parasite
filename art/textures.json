@@ -3509,6 +3509,80 @@
       "last_lift": 0.681,
       "built_linear": 0.0473,
       "built_srgb": 59.0
+    },
+    "scenario-a/case-shell": {
+      "src": "scenario-a/case-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - TRANSPORT CASE SHELL, seen face on: the moulded outer wall of a heavy-duty impact-resistant plastic equipment case in SAFETY ORANGE. A regular repeating pattern of shallow moulded horizontal stiffening ribs with soft rounded edges, a slightly darker orange in each rib valley, fine matte plastic grain over the whole surface, light scuffing. The ORANGE MUST STAY CLEARLY SATURATED and read as safety orange at a medium-dark value - do not grey it out, do not wash it toward the background, do not make it brown or tan.\n\nTOP-RIGHT quarter - TRANSPORT CASE FRONT, seen face on: the same SAFETY ORANGE moulded plastic, carrying two heavy dark gunmetal draw latches with squat rectangular catch plates set into shallow orange recesses, and between them a wide recessed moulded grip channel in shadow. A thin dark rubber weather seam runs horizontally across the full width where lid meets body. Same saturated safety orange as the other orange quarters.\n\nBOTTOM-LEFT quarter - TRANSPORT CASE END, seen face on: the same SAFETY ORANGE moulded plastic with thick darker charcoal rubber corner bumpers at top and bottom, a sunken moulded hand grip pocket in the middle picked out by a hard shadow, and two small dark moulded feet ribs. Same saturated safety orange.\n\nBOTTOM-RIGHT quarter - ALIEN-RIG CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel improvised onto alien equipment - one wide rectangular recessed screen bezel carrying a dim VIOLET readout of faint horizontal scan lines and a few angular unfamiliar glyph blocks, a small cluster of round indicator lamp lenses in dull UNLIT dark glass, a row of stubby toggle switches, and one narrow strip of pale bare metal where a panel has been cut away and patched. The VIOLET screen MUST stay clearly saturated and read as violet; everything around it stays dark and desaturated. No text, no numerals.\n\nThe three orange quarters must read as one moulded plastic case; the console quarter stays in the dark industrial family. [append textures.json style]",
+      "crop": [
+        4,
+        4,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the alien-ship set piece wears (models-src/scenario-a/, render.world.ObjModels) -- the ship-part case's top, bottom and back: moulded orange plastic with stiffening ribs. FOUR LABELS OFF ONE 1k GEN, the analyser sheet's own route and for its reason: three of these four are one moulded case and have to read as one object, and drawn side by side they do it for free where three solo rolls would each land their own orange. NO LIFT, AND THAT IS THE SECOND ANSWER TO THE SAME QUESTION. The drop bakes at srgb 89 against the analyser panel's 60 four cells away, so it wants taking down -- but `lift` is a GAMMA and a gamma is per-channel, so on a saturated colour it moves the HUE: 1.62 took rgb 189/64/13 to 158/27/2, i.e. r:g from 2.95 to 5.85, and the case came back from the game reading dark RED. The level correction belongs on the PROP instead -- art/models.json's baseColor is a LINEAR factor, which scales every sRGB channel by the same f^(1/2.2) and so cannot shift hue at all. See scenario-a/case's own note for the number.",
+      "last_converted": "2026-09-19T01:08:41",
+      "built_linear": 0.3155,
+      "built_srgb": 120.3
+    },
+    "scenario-a/case-front": {
+      "src": "scenario-a/case-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - TRANSPORT CASE SHELL, seen face on: the moulded outer wall of a heavy-duty impact-resistant plastic equipment case in SAFETY ORANGE. A regular repeating pattern of shallow moulded horizontal stiffening ribs with soft rounded edges, a slightly darker orange in each rib valley, fine matte plastic grain over the whole surface, light scuffing. The ORANGE MUST STAY CLEARLY SATURATED and read as safety orange at a medium-dark value - do not grey it out, do not wash it toward the background, do not make it brown or tan.\n\nTOP-RIGHT quarter - TRANSPORT CASE FRONT, seen face on: the same SAFETY ORANGE moulded plastic, carrying two heavy dark gunmetal draw latches with squat rectangular catch plates set into shallow orange recesses, and between them a wide recessed moulded grip channel in shadow. A thin dark rubber weather seam runs horizontally across the full width where lid meets body. Same saturated safety orange as the other orange quarters.\n\nBOTTOM-LEFT quarter - TRANSPORT CASE END, seen face on: the same SAFETY ORANGE moulded plastic with thick darker charcoal rubber corner bumpers at top and bottom, a sunken moulded hand grip pocket in the middle picked out by a hard shadow, and two small dark moulded feet ribs. Same saturated safety orange.\n\nBOTTOM-RIGHT quarter - ALIEN-RIG CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel improvised onto alien equipment - one wide rectangular recessed screen bezel carrying a dim VIOLET readout of faint horizontal scan lines and a few angular unfamiliar glyph blocks, a small cluster of round indicator lamp lenses in dull UNLIT dark glass, a row of stubby toggle switches, and one narrow strip of pale bare metal where a panel has been cut away and patched. The VIOLET screen MUST stay clearly saturated and read as violet; everything around it stays dark and desaturated. No text, no numerals.\n\nThe three orange quarters must read as one moulded plastic case; the console quarter stays in the dark industrial family. [append textures.json style]",
+      "crop": [
+        520,
+        4,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the alien-ship set piece wears (models-src/scenario-a/, render.world.ObjModels) -- its front: two draw latches and the recessed grip. Unlifted with the shell it belongs to -- the level correction is the prop's baseColor, see scenario-a/case-shell's note for why a gamma cannot do this job on a saturated colour.",
+      "last_converted": "2026-09-19T01:08:41",
+      "built_linear": 0.2624,
+      "built_srgb": 106.2
+    },
+    "scenario-a/case-end": {
+      "src": "scenario-a/case-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - TRANSPORT CASE SHELL, seen face on: the moulded outer wall of a heavy-duty impact-resistant plastic equipment case in SAFETY ORANGE. A regular repeating pattern of shallow moulded horizontal stiffening ribs with soft rounded edges, a slightly darker orange in each rib valley, fine matte plastic grain over the whole surface, light scuffing. The ORANGE MUST STAY CLEARLY SATURATED and read as safety orange at a medium-dark value - do not grey it out, do not wash it toward the background, do not make it brown or tan.\n\nTOP-RIGHT quarter - TRANSPORT CASE FRONT, seen face on: the same SAFETY ORANGE moulded plastic, carrying two heavy dark gunmetal draw latches with squat rectangular catch plates set into shallow orange recesses, and between them a wide recessed moulded grip channel in shadow. A thin dark rubber weather seam runs horizontally across the full width where lid meets body. Same saturated safety orange as the other orange quarters.\n\nBOTTOM-LEFT quarter - TRANSPORT CASE END, seen face on: the same SAFETY ORANGE moulded plastic with thick darker charcoal rubber corner bumpers at top and bottom, a sunken moulded hand grip pocket in the middle picked out by a hard shadow, and two small dark moulded feet ribs. Same saturated safety orange.\n\nBOTTOM-RIGHT quarter - ALIEN-RIG CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel improvised onto alien equipment - one wide rectangular recessed screen bezel carrying a dim VIOLET readout of faint horizontal scan lines and a few angular unfamiliar glyph blocks, a small cluster of round indicator lamp lenses in dull UNLIT dark glass, a row of stubby toggle switches, and one narrow strip of pale bare metal where a panel has been cut away and patched. The VIOLET screen MUST stay clearly saturated and read as violet; everything around it stays dark and desaturated. No text, no numerals.\n\nThe three orange quarters must read as one moulded plastic case; the console quarter stays in the dark industrial family. [append textures.json style]",
+      "crop": [
+        4,
+        520,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the alien-ship set piece wears (models-src/scenario-a/, render.world.ObjModels) -- its two ends: corner bumpers and a sunken hand grip. Unlifted with the shell it belongs to -- the level correction is the prop's baseColor, see scenario-a/case-shell's note for why a gamma cannot do this job on a saturated colour.",
+      "last_converted": "2026-09-19T01:08:41",
+      "built_linear": 0.214,
+      "built_srgb": 94.5
+    },
+    "scenario-a/console-face": {
+      "src": "scenario-a/case-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.897,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nTOP-LEFT quarter - TRANSPORT CASE SHELL, seen face on: the moulded outer wall of a heavy-duty impact-resistant plastic equipment case in SAFETY ORANGE. A regular repeating pattern of shallow moulded horizontal stiffening ribs with soft rounded edges, a slightly darker orange in each rib valley, fine matte plastic grain over the whole surface, light scuffing. The ORANGE MUST STAY CLEARLY SATURATED and read as safety orange at a medium-dark value - do not grey it out, do not wash it toward the background, do not make it brown or tan.\n\nTOP-RIGHT quarter - TRANSPORT CASE FRONT, seen face on: the same SAFETY ORANGE moulded plastic, carrying two heavy dark gunmetal draw latches with squat rectangular catch plates set into shallow orange recesses, and between them a wide recessed moulded grip channel in shadow. A thin dark rubber weather seam runs horizontally across the full width where lid meets body. Same saturated safety orange as the other orange quarters.\n\nBOTTOM-LEFT quarter - TRANSPORT CASE END, seen face on: the same SAFETY ORANGE moulded plastic with thick darker charcoal rubber corner bumpers at top and bottom, a sunken moulded hand grip pocket in the middle picked out by a hard shadow, and two small dark moulded feet ribs. Same saturated safety orange.\n\nBOTTOM-RIGHT quarter - ALIEN-RIG CONSOLE FACE, seen STRAIGHT ON: a dark charcoal instrument panel improvised onto alien equipment - one wide rectangular recessed screen bezel carrying a dim VIOLET readout of faint horizontal scan lines and a few angular unfamiliar glyph blocks, a small cluster of round indicator lamp lenses in dull UNLIT dark glass, a row of stubby toggle switches, and one narrow strip of pale bare metal where a panel has been cut away and patched. The VIOLET screen MUST stay clearly saturated and read as violet; everything around it stays dark and desaturated. No text, no numerals.\n\nThe three orange quarters must read as one moulded plastic case; the console quarter stays in the dark industrial family. [append textures.json style]",
+      "crop": [
+        520,
+        520,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the alien-ship set piece wears (models-src/scenario-a/, render.world.ObjModels) -- the study rig's instrument face: a violet alien readout patched into a human panel. FOUR LABELS OFF ONE 1k GEN, the analyser sheet's own route and for its reason: three of these four are one moulded case and have to read as one object, and drawn side by side they do it for free where three solo rolls would each land their own orange. LIFT BRIGHTENS this one, against the analyser FACE it stands beside: the drop baked at srgb 44.4 against that cell's 51.8, and an instrument panel darker than the machine next to it reads as switched off. 0.897 lands it at 52.3.",
+      "last_converted": "2026-09-19T01:08:41",
+      "built_linear": 0.0372,
+      "built_srgb": 55.7,
+      "last_lift": 0.897
     }
   }
 }

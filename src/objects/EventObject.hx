@@ -34,6 +34,19 @@ class EventObject extends AreaObject
     }
 
 
+// key the 3D view looks a glb prop up by: the scenario role and not the bare type, because every
+// event object in the game shares the one type and they are not one object — a spaceship, its
+// startup console and its parts slots are three different things.
+//
+// infoID IS MUTATED AT RUNTIME (spaceshipStart -> spaceshipSuccess -> spaceshipFailure as the
+// mission resolves) and the prop batches are only rebuilt when an object is ADDED or REMOVED, so
+// the key can change under a batch nobody is going to rebuild. That is harmless only while all
+// three of those ids sit on ONE row of render.world.ObjModels.MODELS, which groups by model path —
+// splitting them into separate rows would give a ship that vanishes the moment the mission ends,
+// with nothing in the diff pointing at it
+  public override function getModelKey(): String
+    { return 'event_' + infoID; }
+
 // update actions
   override function updateActionList()
     {

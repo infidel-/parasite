@@ -329,7 +329,14 @@ class FacilityWarm
               h: FacilityStyle.ROOF_TANK_H,
             },
           ];
-          var left = green.length + facProps.length + roofProps.length;
+          // and the OBJECT props, in all three variants — `transparent` and BackSide are both in
+          // three's own program cache key, so the ghost and the outline hull each compile a program
+          // of their own and without this they land on the first step onto a prop and the first
+          // tactical toggle. the whole table and not a facility subset: a row is cheap to warm and a
+          // filter here is a second place to keep in step with render.world.ObjModels.MODELS
+          var objModels = render.world.ObjModels.MODELS;
+          var C = RenderConfig.OBJMARK;
+          var left = green.length + facProps.length + roofProps.length + objModels.length;
           var done = function()
             {
               left--;
@@ -371,6 +378,25 @@ class FacilityWarm
               render.Models.get(p.path, function(_)
                 {
                   render.Models.instanced(sc, p.path, place, p.h, SOLID);
+                  done();
+                });
+            }
+          // the object props, inside mask() like the two indoor lists above and for the same
+          // reason: the ship and its console stand on a shed floor, and VisionMask.patch chains the
+          // indoor swap onto every material it takes while IndoorMask is attached — so one warmed
+          // outside it is a key the first compound entry never asks for
+          for (i in 0...objModels.length)
+            {
+              var m = objModels[i];
+              render.Models.get(m.path, function(_)
+                {
+                  mask();
+                  render.world.ObjModels.patchRow(m,
+                    render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
+                  IndoorMask.detach();
+                  ContactMask.detach();
                   done();
                 });
             }

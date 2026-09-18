@@ -144,28 +144,13 @@ class SewerArea implements Area3D
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
-      // the exit ladders take the vision mask here rather than in ObjModels, which the city shares:
-      // their glb arrives over a loader callback, so there is no build-time moment to catch. patch()
-      // marks its own hook and early-outs on the next pass, so this is a couple of reads once landed
-      // the idle motion rides the same pass and for the same reason. patched in the SAME ORDER as the
-      // mask here and in render.View's boot warm: both chain onto whatever hook a material already
-      // carries and both extend its program cache key, so a different order underground than at warm
-      // would spell a different key and recompile the lot on the first habitat entry.
-      // the HULL is here where the mask skips it (it early-outs on fog:false, a marker not world
-      // geometry) — an outline that does not move with the body it traces detaches from it
+      // the exit ladders take their patches here rather than in ObjModels, which the city shares:
+      // their glb arrives over a loader callback, so there is no build-time moment to catch. each
+      // patch marks its own hook and early-outs on the next pass, so this is a couple of reads once
+      // landed. the chain itself is render.world.ObjModels.patchRow, shared with this kind's warm
+      // scene and with the compound's pair — see its header for why the ORDER is the whole point
       for (b in props)
-        {
-          VisionMask.patchMesh(b.solid.mesh);
-          VisionMask.patchMesh(b.ghost.mesh);
-          render.world.PropShader.patchMesh(b.solid.mesh, b.model.anim, b.model.pulse, b.model.curl);
-          render.world.PropShader.patchMesh(b.ghost.mesh, b.model.anim, b.model.pulse, b.model.curl);
-          render.world.PropShader.patchMesh(b.hull.mesh, b.model.anim, b.model.pulse, b.model.curl);
-          // the surface glow and the repainted eyes LAST, and neither takes a hull: totalEmissiveRadiance
-          // only exists in a lit shader, an outline marker must not luminesce, and an outline that
-          // carried eyes would draw them over the body it is meant to trace
-          render.world.PropGlow.patchMesh(b.solid.mesh, b.model.shine, b.model.eyes);
-          render.world.PropGlow.patchMesh(b.ghost.mesh, b.model.shine, b.model.eyes);
-        }
+        render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
         return;

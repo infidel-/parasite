@@ -107,6 +107,7 @@ def cover(uvs, res, ss=4):
 # scale up. the base map already separates the panes from the mullions by a factor of ~3 in value, so
 # multiplying by it puts the glow ON THE GLASS and leaves the frames dark for free.
 def basemap(g, bin_, res):
+    """`res` None returns the map at its authored size — what --key samples per triangle."""
     mat = g['materials'][0]
     tex = mat.get('pbrMetallicRoughness', {}).get('baseColorTexture')
     if tex is None:
@@ -114,7 +115,9 @@ def basemap(g, bin_, res):
     bv = g['bufferViews'][g['images'][g['textures'][tex['index']]['source']]['bufferView']]
     off = bv.get('byteOffset', 0)
     im = Image.open(io.BytesIO(bin_[off:off + bv['byteLength']])).convert('RGB')
-    return np.asarray(im.resize((res, res), Image.LANCZOS)).astype(np.float64) / 255.0
+    if res is not None:
+        im = im.resize((res, res), Image.LANCZOS)
+    return np.asarray(im).astype(np.float64) / 255.0
 
 
 # grow a bool mask by r texels (chebyshev)
@@ -158,6 +161,19 @@ def main():
     ap.add_argument('--res', type=int, default=512)
     ap.add_argument('--dilate', type=int, default=2, help='px pushed into the chart gutter')
     ap.add_argument('--tint', default='ffffff', help='RRGGBB; models.mjs pins emissiveFactor to 1,1,1')
+    ap.add_argument('--key', choices=('warm', 'pale'),
+                    help="narrow the box by each triangle's OWN baked albedo, sampled at its uv "
+                         "centroid. A BOX CANNOT SEPARATE INTERLEAVED LAMPS: the alien ship carries "
+                         'a yellow panel and a pale lamp disc alternating round one equatorial ring, '
+                         'so every box that holds either holds both, and two tints cannot come out '
+                         "of one selection. 'warm' keeps the texels whose blue is well under their "
+                         "red (a yellow panel), 'pale' keeps the bright near-neutral ones (a white "
+                         'lamp). The gates below are unchanged and still apply: a keyed selection is '
+                         'a smaller selection, so its bleed check is if anything stricter')
+    ap.add_argument('--keylo', type=float, default=None,
+                    help="the key's one threshold: for 'warm' the blue/red ratio under which a texel "
+                         "counts (default 0.62), for 'pale' the mean value over which it does "
+                         '(default 115). Fit it by eye on --preview, which paints the kept triangles')
     ap.add_argument('--modulate', action='store_true',
                     help="multiply the mask by the glb's own base map, so a window run keeps its "
                          'mullions dark instead of reading as one glowing card')
@@ -183,12 +199,32 @@ def main():
     sel = ((cen[:, 0] >= b[0]) & (cen[:, 0] <= b[1]) &
            (cen[:, 1] >= b[2]) & (cen[:, 1] <= b[3]) &
            (cen[:, 2] >= b[4]) & (cen[:, 2] <= b[5]))
+    if a.key:
+        # the base map at FULL resolution, sampled at each triangle's uv centroid. full and not the
+        # res-scaled copy `--modulate` uses: this is a per-triangle question and a lamp disc is a few
+        # texels across, so a downscale would average it into the hull around it
+        full = basemap(g, bin_, None)
+        h, w = full.shape[:2]
+        c = uv[tri].mean(axis=1)
+        px = np.clip((c[:, 0] * w).astype(int), 0, w - 1)
+        py = np.clip((c[:, 1] * h).astype(int), 0, h - 1)
+        rgb = full[py, px] * 255.0
+        if a.key == 'warm':
+            lo = 0.62 if a.keylo is None else a.keylo
+            hit = (rgb[:, 2] < rgb[:, 0] * lo) & (rgb[:, 0] > 90)
+        else:
+            lo = 115.0 if a.keylo is None else a.keylo
+            hit = (rgb.mean(axis=1) > lo) & (np.abs(rgb[:, 0] - rgb[:, 2]) < 45)
+        print('key %s at %g: %d of %d boxed tris kept' % (a.key, lo, (sel & hit).sum(), sel.sum()))
+        sel = sel & hit
+
     e = pos[tri]
     area = 0.5 * np.linalg.norm(np.cross(e[:, 1] - e[:, 0], e[:, 2] - e[:, 0]), axis=1)
     print('selected %d of %d tris, %.1f%% of surface area'
           % (sel.sum(), len(tri), 100 * area[sel].sum() / area.sum()))
     if sel.sum() == 0:
-        sys.exit('empty selection')
+        sys.exit('empty selection' + (' — the box holds tris but the key kept none of them'
+                                      if a.key else ''))
 
     # the two conservative coverages, and then the subtraction that is the whole point: a texel is
     # lit only if the selection touches it AND nothing else does. `other` is grown by one texel

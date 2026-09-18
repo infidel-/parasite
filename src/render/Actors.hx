@@ -257,7 +257,7 @@ class Actors {
               // cheerful in a dark lab. asked the same way, 1.0 for everything else
               texSat: render.facility.FacilityDeco.spriteSat(game.area, o),
               mark: o.visible() && uiOn,
-              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null ||
+              iconOff: render.world.ObjModels.propFor(o.getModelKey()) != null ||
                 render.facility.FacilityDoors.draws(game.area, o) ||
                 render.facility.FacilityDeco.draws(game.area, o),
             });
@@ -560,7 +560,7 @@ class Actors {
           // the top of the cell. the top is the object's own height — a prop's model height (it has
           // NO icon quad, see drawActor's iconOff), a sprite's full quad, and 0 for a ground decal,
           // which is drawn flat on the floor and so collapses the segment back to a point
-          var m = render.world.ObjModels.modelFor(o.getModelKey());
+          var m = render.world.ObjModels.propFor(o.getModelKey());
           var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
           var fy = WorldCtx.floorY(a.col, a.row);
           var d = projSeg(a.x, a.z, fy, fy + top, rect, clientX, clientY);

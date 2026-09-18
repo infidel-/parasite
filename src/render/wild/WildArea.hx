@@ -24,6 +24,12 @@ class WildArea implements Area3D
   var moon:DirectionalLight;                 // shadow-casting moon, repositioned each frame
   var lampLights:LampLights;                 // the pool exists for program-key parity, with no bulbs
   var props:Array<render.Models.InstancedProp>; // one instanced batch per WildStyle.PROPS entry
+  // objects that draw as a real glb instead of their sprite — out here that is the relocated alien
+  // ship. a SECOND field and not merged into `props` above: that one is index-aligned with
+  // WildStyle.PROPS for __wild(), and a PropBatch is a solid/ghost/hull triple anyway
+  var objProps:Array<render.world.ObjModels.PropBatch>;
+  var sceneRef:Scene;                        // held for refreshObjects, which rebuilds those batches
+  var tactical = false;                      // tactical view up: the props draw their outline shells
 
   public function new(game:Game, model:Wild)
     {
@@ -83,11 +89,17 @@ class WildArea implements Area3D
       // snapshot what the scene rig parented (lights, the empty cone group) so the chunk pass only
       // ever touches the static geometry the builders below add
       var pre = scene.children.copy();
+      sceneRef = scene;
       WildGround.build(scene, model);
       WildPatches.build(scene, model);
       WildRoad.build(scene, model, game.area.id);
       WildGrass.build(scene, model);
       props = WildProps.build(scene, model);
+      // and the objects that draw as real geometry: the alien ship, once the scenario has moved it
+      // out of the compound. their y comes off the HEIGHT FIELD — see the floorYAt call in
+      // render.world.ObjModels.build, which is a no-op in the two flat area kinds and the whole of
+      // what stops a ship out here floating or burying itself in the relief
+      objProps = render.world.ObjModels.build(scene, game, objYaw);
       // the ground and grass blocks bucket; the prop batches span the whole area and so are left at
       // the scene root by Chunks' own size guard, which is right — they are frustum-culled per
       // INSTANCE in tick() instead
@@ -103,6 +115,20 @@ class WildArea implements Area3D
       VisionMask.attach(WildStyle.MASK, model.w, model.h,
         function(col, row) return !game.area.canSeeThrough(col, row));
       attachDbg();
+    }
+
+// which way an object prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
+// nothing out here is masonry, so WALL has nothing to turn its back on and answers the same 0
+// FRONTAL does — the camera rests with no yaw of its own, so unturned IS facing it
+  function objYaw(col:Int, row:Int, mode:render.world.ObjModels.PropYaw):Float
+    {
+      switch (mode)
+        {
+          case FRONTAL, WALL:
+            return 0;
+          case HASHED:
+            return (WildModel.mix((col * 40503151) ^ (row * 57885161)) % 3600) / 3600.0 * 2 * Math.PI;
+        }
     }
 
 // console debug helper (persistent) — what this wilderness area actually built.
@@ -146,6 +172,16 @@ class WildArea implements Area3D
       // the wind runs through the outro as well: the camera is still looking at the area during the
       // pull-out, and a field that freezes mid-lean is exactly when it would show
       WildGrass.tick(opts.dtMs);
+      // the object props, ABOVE the outro gate for the reason the wind is: the camera is still on
+      // the area through the pull-out, and a player who left standing IN the ship would otherwise
+      // stay behind a see-through hull for the whole shot. cull() reads opts.outro itself
+      render.world.ObjModels.cull(objProps, opts, tactical && opts.ui);
+      render.world.PropShader.tick(opts.dtMs);
+      render.world.PropGlow.tick(opts.dtMs);
+      // their glbs land over a loader callback, so there is no build-time moment to catch them. the
+      // chain is render.world.ObjModels.patchRow, shared with every other kind that draws these
+      for (b in objProps)
+        render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)
         return;
       SceneSetup.fitMoon(moon, opts.player);
@@ -159,9 +195,12 @@ class WildArea implements Area3D
         render.Models.cull(p, opts.camera, WildStyle.PROP_CULL_R);
     }
 
-// nothing fades or outlines out here: there is no building to occlude and no object drawn as a prop
+// nothing FADES out here — there is no building to occlude — so the only thing the tactical view
+// changes is the object props: a modelled object drops its sprite icon, and this backface shell is
+// what replaces the green ring it would have carried
   public function setTactical(v:Bool):Void
     {
+      tactical = v;
     }
 
 // nothing out here glows, so this is the street's own level
@@ -196,10 +235,16 @@ class WildArea implements Area3D
       return null;
     }
 
-// no object is drawn as a glb prop in the wilderness, so nothing is placed once at build that an
-// added or removed object would leave stale — every object out here is an actor-layer sprite
+// the object props are placed once at build, so the ship the scenario relocates INTO the area the
+// player is standing in would draw nothing at all until re-entry — render.Actors drops an object's
+// sprite the moment it has a model. cheap: the glb templates are cached, so only the instance
+// buffers are remade
   public function refreshObjects():Void
     {
+      if (objProps == null)
+        return;
+      render.world.ObjModels.dispose(sceneRef, objProps);
+      objProps = render.world.ObjModels.build(sceneRef, game, objYaw);
     }
 
 // the wilderness has no light but the moon, and the moon is not a fake-shadow caster

@@ -58,6 +58,11 @@ class CityArea implements Area3D
       // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the
       // chunk pass only ever touches static geometry the world builder adds below
       var pre = scene.children.copy();
+      // and the one kind that builds NO object props, said out loud rather than left to a stale
+      // flag from the last area: render.Actors drops an object's sprite as soon as that object has a
+      // model key, so a ship part dropped on the street would be invisible — no sprite and no prop.
+      // see render.world.ObjModels.active
+      render.world.ObjModels.active = false;
       World.build(scene, cityModel, seed, style);
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
