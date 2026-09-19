@@ -27,9 +27,18 @@ NEXT chart, which on a mosaic atlas is a completely unrelated part of the surfac
 is masked against the rasterized coverage of every UNSELECTED triangle, and the run reports how many
 unselected triangles still sample a lit texel. That number must be 0.
 
+A BOX IS NOT ALWAYS ENOUGH, and the alien ship is the case that proves it: its lamp discs and its
+ramp doorway share one equatorial band, so the box holds both and only an albedo key can tell them
+apart -- and a luminance threshold has no idea what a lamp is. It kept 4,983 scattered triangles.
+`--tris` is the answer to that: the selection is painted ON the prop in the running game
+(render.PolyPaint, debug key T) and exported as the triangle indices themselves, and this script
+does only what it is actually good at -- the conservative rasterisation, the gutter dilation and the
+bleed gate.
+
 usage:
   python3 tools/emissive.py <glb> --bbox                      # print the frame, pick a box in it
   python3 tools/emissive.py <glb> -o out.png --box x0,x1,y0,y1,z0,z1 [--tint 9db4d4] [--preview p.png]
+  python3 tools/emissive.py <glb> -o out.png --tris paint.json --family e0c23c
 
 Run it on the BUILT glb (app/models/...), never the 100k master: the mask has to match the UVs the
 game samples, and decimation moves charts.
@@ -177,6 +186,26 @@ def main():
     ap.add_argument('--modulate', action='store_true',
                     help="multiply the mask by the glb's own base map, so a window run keeps its "
                          'mullions dark instead of reading as one glowing card')
+    ap.add_argument('--tris', help='select by an EXPLICIT triangle index list instead of a box: the '
+                                   'JSON render.PolyPaint exports from the running game '
+                                   '(localStorage `emispaint`). A box plus an albedo key cannot see '
+                                   'what a lamp IS -- it kept 4,983 scattered triangles of the alien '
+                                   "ship's hull -- so the selection is made on the prop with the "
+                                   'mouse and only the RASTERISATION happens here. Needs --family')
+    ap.add_argument('--family', help='which family of the --tris export to bake, by its marker hue '
+                                     '(RRGGBB). --tint defaults to that hue')
+    ap.add_argument('--near', action='store_true',
+                    help='let the mask bleed onto triangles that TOUCH the selection, and keep the '
+                         'zero gate only for foreign ones. The subtraction below protects every '
+                         'unselected triangle equally, which is right for a mosaic atlas (a '
+                         'dilation can land on an unrelated part of the model) and much too strict '
+                         'for a dense mesh: at ~8 texels per triangle almost every texel of a '
+                         'selected triangle is within one of the hull triangle it shares an edge '
+                         'with, so the mask erodes to slivers the mip chain then washes out. '
+                         'Measured on the alien ship at 1024: 1.098%% kept against 1.637%% eaten, '
+                         'and the prop read as unlit. One texel of glow on the neighbour a lamp is '
+                         'set into is invisible; a speck on the far side of the model is not, and '
+                         'that is still gated at 0')
     ap.add_argument('--preview', help='write a 3-view selection check here')
     a = ap.parse_args()
 
@@ -187,18 +216,41 @@ def main():
     tri = acc(g, bin_, prim['indices']).reshape(-1, 3).astype(np.int64)
     cen = pos[tri].mean(axis=1)
 
-    if a.bbox or not a.box:
+    if a.bbox or not (a.box or a.tris):
         print('tris %d  verts %d' % (len(tri), len(pos)))
         print('bbox min %s' % np.round(pos.min(axis=0), 4))
         print('bbox max %s' % np.round(pos.max(axis=0), 4))
         if not a.bbox:
-            sys.exit('--box is required to write a map')
+            sys.exit('--box or --tris is required to write a map')
         return
 
-    b = [float(v) for v in a.box.split(',')]
-    sel = ((cen[:, 0] >= b[0]) & (cen[:, 0] <= b[1]) &
-           (cen[:, 1] >= b[2]) & (cen[:, 1] <= b[3]) &
-           (cen[:, 2] >= b[4]) & (cen[:, 2] <= b[5]))
+    if a.tris:
+        # an index list is only meaningful against the bake it was painted on: decimation moves both
+        # the indices and the charts, so a count mismatch would light an unrelated surface
+        if not a.family:
+            sys.exit('--tris needs --family <RRGGBB>')
+        with open(a.tris) as f:
+            doc = json.load(f)
+        if doc.get('tris') != len(tri):
+            sys.exit('--tris was painted on a %s-triangle bake, this glb has %d -- repaint it'
+                     % (doc.get('tris'), len(tri)))
+        picked = None
+        for fam in doc['families']:
+            if fam['hue'].lower() == a.family.lower():
+                picked = fam['tris']
+        if picked is None:
+            sys.exit('no family %s in %s (have %s)'
+                     % (a.family, a.tris, ', '.join(f['hue'] for f in doc['families'])))
+        sel = np.zeros(len(tri), dtype=bool)
+        sel[np.array(picked, dtype=np.int64)] = True
+        if a.tint == 'ffffff':
+            a.tint = a.family.lower()
+        print('family %s: %d painted tris' % (a.family, len(picked)))
+    else:
+        b = [float(v) for v in a.box.split(',')]
+        sel = ((cen[:, 0] >= b[0]) & (cen[:, 0] <= b[1]) &
+               (cen[:, 1] >= b[2]) & (cen[:, 1] <= b[3]) &
+               (cen[:, 2] >= b[4]) & (cen[:, 2] <= b[5]))
     if a.key:
         # the base map at FULL resolution, sampled at each triangle's uv centroid. full and not the
         # res-scaled copy `--modulate` uses: this is a per-triangle question and a lamp disc is a few
@@ -226,12 +278,20 @@ def main():
         sys.exit('empty selection' + (' — the box holds tris but the key kept none of them'
                                       if a.key else ''))
 
+    # which unselected triangles TOUCH the selection (share a vertex with it). --near exempts these
+    # from the subtraction below: they are the surface the lamp is set into, not a foreign chart
+    near = np.zeros(len(tri), dtype=bool)
+    if a.near:
+        near = np.isin(tri, np.unique(tri[sel])).any(axis=1) & ~sel
+        print('touching the selection: %d unselected tris exempted from the bleed subtraction'
+              % near.sum())
+
     # the two conservative coverages, and then the subtraction that is the whole point: a texel is
     # lit only if the selection touches it AND nothing else does. `other` is grown by one texel
     # first, because a fragment does not sample one texel — bilinear reads a 2x2 neighbourhood, so a
     # texel merely ADJACENT to a foreign chart leaks into it
     lit = grow(cover(uv[tri[sel]], a.res), a.dilate)
-    oth = grow(cover(uv[tri[~sel]], a.res), 1)
+    oth = grow(cover(uv[tri[~sel & ~near]], a.res), 1)
     kept = lit & ~oth
     print('lit texels %.3f%%  (the dilation lost %.3f%% to neighbouring charts)'
           % (100 * kept.mean(), 100 * (lit & oth).mean()))
@@ -240,7 +300,8 @@ def main():
     # this is a check on the construction, and it is per-TRIANGLE rather than per-centroid — a
     # triangle with one lit corner still draws a speck, which a centroid test never sees
     bad = 0
-    for t in uv[tri[~sel]]:
+    touched = 0
+    for k, t in zip(np.nonzero(~sel)[0], uv[tri[~sel]]):
         x0 = max(0, int(np.floor(t[:, 0].min() * a.res)))
         x1 = min(a.res - 1, int(np.ceil(t[:, 0].max() * a.res)))
         y0 = max(0, int(np.floor(t[:, 1].min() * a.res)))
@@ -249,9 +310,15 @@ def main():
         # clean for nearly every triangle, which is what keeps this loop cheap
         if not kept[y0:y1 + 1, x0:x1 + 1].any():
             continue
-        if (cover([t], a.res) & kept).any():
+        if not (cover([t], a.res) & kept).any():
+            continue
+        if near[k]:
+            touched += 1
+        else:
             bad += 1
-    print('bleed onto unselected tris: %d  (must be 0)' % bad)
+    if a.near:
+        print('bleed onto tris touching the selection: %d  (allowed)' % touched)
+    print('bleed onto FOREIGN tris: %d  (must be 0)' % bad)
 
     col = np.array([int(a.tint[i:i + 2], 16) for i in (0, 2, 4)], dtype=np.float64)
     px = kept[..., None] * col

@@ -580,17 +580,20 @@ class ObjModels
       fly: null,
       shine: null,
       eyes: null,
-      // THE THREE LIT FAMILIES, each matched back off the emissive map by the tint
-      // tools/emissive.py painted it in. They differ in rate by design and not by taste: a ship
-      // whose lamps all breathed together would read as one light behind a lampshade, and what says
-      // "this thing is running" is the parts of it disagreeing
+      // THE TWO LIT FAMILIES, each matched back off the emissive map by the tint its triangles
+      // were painted in. They differ in rate by design and not by taste: a ship whose lamps all
+      // breathed together would read as one light behind a lampshade, and what says "this thing is
+      // running" is the parts of it disagreeing.
+      //
+      // WHICH TRIANGLES CARRY WHICH TINT IS PAINTED IN THE GAME (render.PolyPaint, street-debug
+      // key T) and baked by `tools/emissive.py --tris`. It used to be a bounding box on the
+      // centroid narrowed by the triangles' own albedo, and the cyan family came out as 4,983
+      // scattered patches: a luminance threshold cannot see what a lamp disc is
       lamps: {
         list: [
-          // THE ENTRANCE. `warm`-keyed over the equator band, which landed on the ramp doorway and
-          // on nothing else — 1,228 of 31,824 boxed triangles, bleed 0. Amber rather than the
-          // marker's own yellow: a doorway is a lit interior seen through a hole, and 2.2 x 0.90
-          // puts its peak well over BLOOM_THRESHOLD 0.9 so the opening halos rather than merely
-          // being pale.
+          // THE ENTRANCE: the lit ramp doorway. Amber rather than the marker's own yellow — a
+          // doorway is a lit interior seen through a hole, and 2.2 x 0.90 puts its peak well over
+          // BLOOM_THRESHOLD 0.9 so the opening halos rather than merely being pale.
           //
           // THE `base` COLUMN IS 0.90 ON ALL THREE AND THAT IS THE FIX FOR "no glow on the ship":
           // the first cut ran 0.25-0.35, which put every family's PEAK under the bloom threshold,
@@ -605,12 +608,11 @@ class ObjModels
             pulseRate: 0.17,
             phase: 0.0,
           },
-          // the hull lamp discs, `pale`-keyed over the same band — 4,983 triangles spread right
-          // round the azimuth, which is what makes the ship read as running rather than as lit from
-          // one side. the FASTEST of the three and the one that crosses the bloom threshold both
-          // ways: 0.55 of depth on a 1.71 peak halos at the top of the breath and does not at the
-          // bottom, which is the difference between a pulse and a shade (the preservator's own
-          // lesson, PropShine.pulse)
+          // the hull lamp discs, spread right round the azimuth, which is what makes the ship read
+          // as running rather than as lit from one side. the FASTER of the two and the one that
+          // crosses the bloom threshold both ways: 0.55 of depth on a 1.71 peak halos at the top of
+          // the breath and does not at the bottom, which is the difference between a pulse and a
+          // shade (the preservator's own lesson, PropShine.pulse)
           {
             hue: 0x56c8e0,
             color: 0x63d6ff,
@@ -620,33 +622,16 @@ class ObjModels
             pulseRate: 0.41,
             phase: 0.37,
           },
-          // and the lens in the crown, which is the one thing on this ship the game's camera looks
-          // straight down at. The SLOWEST of the three: what the player sees from above should be a
-          // slow breath, not a beacon
-          {
-            hue: 0xdfeaf2,
-            color: 0xeaf4ff,
-            // IT IS A LENS AND NOT THE DOME, which this family got wrong twice before it got it
-            // right. A box over the whole cap is 2.2% of the ship's surface and looks correct on
-            // the preview, but the cap's albedo is BIMODAL — 88% of it dark navy shell at luma
-            // 66..89 and the rest the white glass set into its top at 185..250 — so a flat mask
-            // over the box lights the shell too and ships the white CARD docs/3d-render.md already
-            // has a verdict on. models-src/scenario-a/spaceship_emissive.py gates the box on the
-            // base map's LUMINANCE at 140, which keeps 2,171 of 17,494 texels: the glass alone,
-            // small enough that a flat marker is right for it. A luminance THRESHOLD and never
-            // emissive.py's --modulate — modulation multiplies the marker by a base map that is not
-            // grey and moves the HUE this column identifies a family by
-            glow: 1.6,
-            base: 0.90,
-            pulse: 0.35,
-            pulseRate: 0.09,
-            phase: 0.68,
-          },
+          // THERE WAS A THIRD FAMILY AND IT IS GONE ON PURPOSE: a near-white lens in the crown,
+          // which is the one part of this ship the game's camera looks straight down at. It never
+          // read as a lens. White is the hardest marker on this prop — the cap's albedo is bimodal
+          // (dark navy shell at luma 66..89, the glass at 185..250) so every geometric selection of
+          // it needed a luminance gate on top, and two lamps plus a white one is a light show
+          // rather than a machine. Two families, and the crown is lit by the room
         ],
-        // the smallest gap between two markers in that table, halved. measured as normalised hue:
-        // amber to cyan is 1.06 apart and cyan to white 0.50, so 0.25 cannot let one family claim
-        // another's texels and is still wide enough for the top dome's modulated values, whose hue
-        // wanders a little with the base map under them
+        // the gap between the two markers, well inside it. measured as normalised hue: amber to
+        // cyan is 1.06 apart, so 0.25 cannot let one family claim the other's texels and is still
+        // wide enough for a marker whose value the resize has moved
         tol: 0.25,
       },
       arc: null,

@@ -86,6 +86,8 @@ package three;
   public function new();
   public function compose(pos:Vector3, quat:Quaternion, scl:Vector3):Matrix4;
   public function multiplyMatrices(a:Matrix4, b:Matrix4):Matrix4;
+  public function copy(m:Matrix4):Matrix4;
+  public function invert():Matrix4; // in place; world -> object frame for a picked hit
 }
 
 @:native("THREE.Sphere") extern class Sphere {
@@ -120,6 +122,7 @@ package three;
   public var castShadow:Bool;    // this object's geometry is rendered into shadow maps
   public var receiveShadow:Bool; // shadow maps are sampled onto this object's material
   public var renderOrder:Float;
+  public var frustumCulled:Bool; // off for anything rebuilt per frame, whose bounds three cannot trust
   public var matrixWorld:Matrix4;
   public var userData:Dynamic;
   public var name:String;
@@ -159,6 +162,7 @@ package three;
 
 @:native("THREE.PerspectiveCamera") extern class PerspectiveCamera extends Object3D {
   public function new(fov:Float, aspect:Float, near:Float, far:Float);
+  public var fov:Float; // vertical field of view in DEGREES — world size to screen px, for brush cursors
   public var aspect:Float;
   public var projectionMatrix:Matrix4;
   public var matrixWorldInverse:Matrix4;
@@ -271,11 +275,18 @@ typedef RendererInfo = {
   public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
   public function computeBoundingBox():Void;      // fills boundingBox; local space, so it is unaffected by any instance transform
   public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
+  public function setDrawRange(start:Int, count:Int):Void; // draw a PREFIX of a preallocated buffer,
+                                                           // so a live selection overlay never reallocates
   public function dispose():Void;
 }
 
 @:native("THREE.Float32BufferAttribute") extern class Float32BufferAttribute {
+  // three allocates the buffer itself when the first arg is a LENGTH rather than the values
+  @:overload(function(len:Int, itemSize:Int):Void {})
   public function new(arr:Array<Float>, itemSize:Int);
+  public var array:js.lib.Float32Array; // the backing buffer: write into it, then needsUpdate to re-upload
+  public var count:Int;
+  public var needsUpdate:Bool;
 }
 
 @:native("THREE.MeshStandardMaterial") extern class MeshStandardMaterial {
@@ -339,6 +350,7 @@ typedef RendererInfo = {
   public var instanceMatrix:InstancedBufferAttribute; // per-instance transforms, 16 floats each
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
+  public function getMatrixAt(i:Int, m:Matrix4):Void; // reads one instance's transform back out
   public function dispose():Void; // release GPU buffers when the mesh is thrown away
 }
 @:native("THREE.InstancedBufferAttribute") extern class InstancedBufferAttribute {
@@ -399,11 +411,23 @@ typedef RendererInfo = {
   public function load(path:String, ?onLoad:Dynamic, ?onProgress:Dynamic, ?onError:Dynamic):Texture;
 }
 
+// one hit face. a/b/c are indices into the geometry's position/uv attributes, which is what
+// makes a face referenceable back to the glb (render.PolyProbe, render.PolyPaint)
+typedef IntersectFace = {
+  var a:Int;
+  var b:Int;
+  var c:Int;
+  var materialIndex:Int;
+  @:optional var normal:Vector3; // the face's own normal, in the object's local frame
+};
+
 typedef Intersection = {
   var object:Object3D;
-  @:optional var face:{ var materialIndex:Int; };
+  @:optional var face:IntersectFace;
   @:optional var faceIndex:Int;
   @:optional var instanceId:Int;
+  @:optional var point:Vector3; // the hit, in WORLD space
+  @:optional var uv:Vector2;    // interpolated uv at the hit
   var distance:Float;
 };
 

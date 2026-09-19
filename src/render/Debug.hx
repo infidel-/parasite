@@ -73,6 +73,29 @@ class Debug {
       if (hudWasVisible) game.ui.hud.show();
     }
     if (el != null) el.style.display = o ? 'block' : 'none';
+    refreshHelp();
+  }
+
+// the mode-less legend: the tools themselves and the global lighting keys, which stay
+// live in every mode. Each tool registers its own on render.Tools at attach time
+  static inline var BASE_LEGEND =
+    '`  toggle debug off     F  fly on/off\n' +
+    'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
+    'B  inspect building   P  probe polygon   E  UV editor   T  paint emissive';
+
+// the lighting keys are owned by render.View and fire in every mode, so they ride under
+// whichever legend is showing rather than being listed once in one of them
+  static inline var LIGHT_LEGEND =
+    '1  WYSIWYG lighting (bloom)   2 ambient  3 hemisphere  4 moon  5 lamp lights\n' +
+    '0  all lights on/off     6  kill emissive (self-glow)     V  render scale';
+
+// swap the #help block to the focused tool's own keys (falling back to the tool list)
+  function refreshHelp():Void {
+    if (el == null) return;
+    var h = Browser.document.getElementById('help');
+    if (h == null) return;
+    var own = Tools.legends.get(Tools.mode);
+    h.textContent = (own != null ? own : BASE_LEGEND) + '\n' + LIGHT_LEGEND;
   }
 
 // inject the debug HUD elements the ported tools reference (hidden until debug on)
@@ -105,16 +128,9 @@ class Debug {
       '<div id="polybar" style="position:absolute;bottom:6px;right:8px;font-size:12px">' +
       '<span id="poly-dirty" style="display:none;color:#fc6">CLASSES UPDATED — Ctrl+C to copy</span> ' +
       '<span id="poly-check" style="display:none;color:#6f6">✓ copied</span></div>' +
-      // controls legend (bottom-left), shown whenever street-debug mode is on
-      '<div id="help" style="position:absolute;bottom:6px;left:8px;font-size:11px;line-height:1.6;color:#cde;background:#000a;padding:6px 8px;white-space:pre;pointer-events:none">' +
-      '`  toggle debug off     F  fly on/off\n' +
-      'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
-      'B  inspect building / ground spot (report → clipboard)\n' +
-      'P  probe polygon: click a face → highlight + texture/UV view (upper-right, report → clipboard)   G  emissive-face map\n' +
-      'E  UV editor   ·   in E-mode: wheel = offset, Ctrl+C copy, R reset\n' +
-      '1  WYSIWYG lighting (bloom) toggle\n' +
-      '2  ambient   3  hemisphere   4  moon   (fill)   5  lamp point lights\n' +
-      '0  all lights on/off     6  kill emissive (self-glow)</div>' +
+      // controls legend (bottom-left): filled by refreshHelp() from the per-mode legends
+      // registered on render.Tools, so it shows the keys of whatever tool is focused
+      '<div id="help" style="position:absolute;bottom:6px;left:8px;font-size:11px;line-height:1.6;color:#cde;background:#000a;padding:6px 8px;white-space:pre;pointer-events:none"></div>' +
       '</div>';
     Browser.document.body.appendChild(d);
     el = d;
@@ -128,6 +144,8 @@ class Debug {
     Editor.attach(getScene, getCamera(), canvas);
     Inspector.attach(getScene, getCamera(), canvas, getCity, getSeed);
     PolyProbe.attach(getScene, getCamera(), canvas);
+    PolyPaint.attach(getScene, getCamera(), canvas);
+    Tools.listen(refreshHelp);
     wireCyclers();
     attachDbg();
     toolsAttached = true;

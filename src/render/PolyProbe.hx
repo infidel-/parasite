@@ -68,6 +68,10 @@ class PolyProbe {
     Browser.document.body.appendChild(box);
 
     inline function active() return Tools.mode == 'poly';
+    Tools.legend('poly',
+      'P  leave the polygon probe        T  paint this prop\'s emissive map\n' +
+      'LMB  pick a face -> 3D highlight + base/emissive UV panes, report -> clipboard\n' +
+      'G  classify EVERY face of the picked mesh by emissive footprint (red emits)');
 
 // drop the current 3D highlight + hide the texture view
     function clear():Void {

@@ -1546,3 +1546,87 @@ mesh standing at the origin, so bucketing by position says nothing) and `dispose
 **Verdict: landed.** Ship on the deck, three families lit and out of phase, a lens on top, violet
 leads that brighten as the rig fills, and an orange case with a moulded X you can pick out across a
 shed.
+
+## The emissive selection is PAINTED IN THE GAME, and what it exports is triangles (`render/PolyPaint.hx`)
+
+Reported as "random glowing blue patches I have zero clue where you got from", and that is exactly
+what they were. The alien ship's map is not art — measured, it is 97.05% pure black plus three flat
+tints — so all it encodes is which triangles belong to which `PropGlow` lamp family. It was picked
+offline by a bounding box on the triangle centroid narrowed by the triangles' own baked albedo
+(`emissive.py --box --key`), because a supplied master's atlas is a shattered mosaic and cannot be
+hand-painted. **A luminance threshold has no idea what a lamp disc is**: the `pale` pass kept 4,983
+of 31,824 boxed triangles on a number fitted by eye on a 3-view preview.
+
+There was also no way to fix it. Paint a PNG → `make models` → launch → see the fault in 3D → work
+backwards through a mosaic atlas to the texels that caused it, which has no answer.
+
+**So the selection is made on the prop with the mouse, and only the RASTERISATION stays offline.**
+Debug key `T` inside street-debug mode: hover a prop, its `lamps` families become the palette, LMB
+paints, RMB erases, wheel resizes, `C` cycles the family, `Z`/`R` undo. The emissive `Texture` is
+ONE shared object (`Models.cache` is keyed on path, SOLID uses the template material directly and
+GHOST is a `clone()` that copies maps by reference), so `tex.image = canvas; needsUpdate` reaches
+the solid batch, the ghost batch, the warm scene and every area from one write.
+
+**THE UNIT IS A TRIANGLE AND NOT A TEXEL, which is the whole design.** `emissive.py` already defines
+a map as a triangle set rasterised conservatively into UV space with its gutter dilation masked
+against every unselected triangle — the `bleed 0` gate. An index list feeds that bake exactly where
+an exported PNG would bypass its one check. It is also resolution-independent, ~15 KB, and makes
+erase, undo and re-seed free, because the canvas is a pure function of the triangle → family map.
+At ~10 texels per triangle here, a triangle already IS a fine brush.
+
+**Index parity was proven, not assumed** — the one load-bearing assumption. Re-baking the OLD box+key
+selection as explicit indices through the new `--tris` reproduces the shipped map **texel for texel**
+(amber 13,937 identical, cyan 14,768 identical), and every triangle the in-game readback classified
+is a member of the python selection (646 ⊂ 1,228, 2,559 ⊂ 4,983, **zero strays**). So three's
+`faceIndex` and `emissive.py`'s `i → indices[3i..3i+2]` are one numbering.
+
+**Reading a shipped map back recovers only half of it, and that is the map's fault.** Seeding a
+session by classifying each triangle against the PNG got 52%: the bake's `kept = lit & ~grow(other,1)`
+leaves ~3 lit texels on a 10-texel triangle, so half of them light nothing. Four probe points got
+44%; a strict per-texel inside test got **fewer** (503/1,903), because the bake dilates 2 texels
+OUTWARD and half of what a triangle lit sits outside it. Growing the triangle 1.5 texels first got
+646/2,559, which is the ceiling. When the exact prior selection matters, generate it offline and
+write it into `localStorage['emispaint']`.
+
+**Two families, not three.** The near-white crown lens is deleted: white is the hardest marker on
+this prop (bimodal cap albedo, navy shell 66-89 against glass 185-250, so every selection of it
+needed a luminance gate on top) and two lamps plus a white one read as a light show. `lamps.list`
+3 → 2 is the one thing that recompiles — `PropGlow`'s cache key carries `'L' + count`.
+
+**THE BLEED GUARD WAS EATING THE MAP, and that is the second half of this entry.** The first bake
+off a painted selection rendered as an unlit ship. Not the selection and not the shader — measured
+live: uniforms correct, map embedded and correct, a texel-level diff of the baked map against the
+tool's own canvas agreeing on 38,390 of ~48,000 texels. The cause is `kept = lit & ~grow(other, 1)`:
+it protects EVERY unselected triangle equally, which is right for a mosaic atlas where a dilation
+can land on an unrelated part of the model, and much too strict for a 100k-triangle mesh at a 1024
+map. At ~8 texels per triangle almost every texel of a selected triangle is within one of the hull
+triangle it shares an edge with, so **it ate more than it kept: 1.098% against 1.637% lost**.
+
+Doubling the map to 2048 was tried FIRST and is the negative result worth keeping — 1.098% → 1.213%
+kept, and on screen it moved nothing. The fix is `emissive.py --near`: exempt the unselected
+triangles that SHARE A VERTEX with the selection, keep the zero gate for foreign ones. One texel of
+glow on the hull a lamp is set into is invisible; a speck on the far side of the model is not.
+Measured: amber **1.333% → 2.601%**, cyan **1.098% → 2.067%**, foreign bleed still 0, 764 and 1,293
+touching triangles now allowed to catch a texel. After it, a clean-reload A/B of the baked map
+against the tool's canvas at one pose renders the same, which is the property that makes the preview
+worth painting against.
+
+**The canvas is still a PREVIEW** — whole triangles plus a hairline stroke, no conservative raster —
+so judge WHICH triangles there, and the bake for how much.
+
+**Knock-on: the `#help` block follows the focused tool.** It was one hardcoded string listing every
+key of every mode; each tool now registers its legend on `Tools.legend(mode, text)` and `Debug`
+swaps it on `setMode`, appending the lighting keys that fire in every mode.
+
+**Verdict: landed.** Bind 97-222ms on a 100k-tri prop (centroids + normals + the seed pass), 10-18ms
+per mousemove (dominated by three's own raycast into 100k triangles), 1 extra draw call for the
+selection overlay, debug mode only. The wheel and the family key re-cast at the cursor rather than
+waiting for the next move — a brush whose ring and selection only caught up on the next mousemove
+made sizing it a guess.
+
+**Open, and recorded because it was chased and not found:** mid-session, frames were captured in
+which this selection lit the whole rim in bright cyan, far past anything the baked map or the canvas
+produces after a clean reload. It did not reproduce — same pose, same map, same uniforms — through
+mipmaps off, tolerance widened to 3.0, a colour-space check, the texel diff above and a 3D overlay
+of every painted triangle. The `--near` numbers stand on their own; that observation does not, and
+the ship as it now ships reads as two small amber vents and a few rim specks.
