@@ -532,10 +532,11 @@ class GoalsAlienCrashLanding
       // eventObjectActions, so it offers nothing and never needs a cell the player can reach.
       // the console owns the startup action
       var ship = area.addEventObject(shed.x, shed.y, 'spaceship', 'spaceshipStudyShip');
-      // console and slots on the apron round it. THE CELLS ARE TESTED, not computed: an event
-      // object is only usable from its OWN cell (objects.EventObject does not override
-      // canActivateNear, and game.PlayerArea skips anything off the player's tile), so one that
-      // lands on a fitting or in a wall is dead rather than merely ugly
+      // console and slots on the pad's own four corners, standing on the same unwalkable concrete
+      // the ship does. THE CELLS ARE STILL TESTED, not computed — one that lands on a fitting or
+      // against a wall would be unreachable rather than merely ugly — but the test is now "empty,
+      // with something walkable beside it" rather than "standable": objects.EventObject answers
+      // canActivateNear, so these are worked from the ring cell facing them
       var apron = apronCells(area, shed);
       var console = area.addEventObject(apron[0].x, apron[0].y, 'console', 'spaceshipStudyStart');
       var slot1 = area.addEventObject(apron[1].x, apron[1].y, 'slot', 'spaceshipStudySlot');
@@ -635,21 +636,39 @@ class GoalsAlienCrashLanding
       };
     }
 
-// helper: standable cells round the study pad, the apron's CORNERS first
+// helper: the four cells the console and its slots stand on, the study PAD's own corners first
+//
+// ON THE PAD, which gen.blocks.HangarBlock carves as unwalkable concrete, and that is the point
+// rather than an accident: a tile closer in, the four props read as the ship's rig instead of as
+// furniture parked near it, and they stop eating four of the walkable cells the player works from.
+// It costs them their own tile — nobody can stand on one — which is paid for by
+// objects.EventObject.canActivateNear and game.PlayerArea's eight-neighbour scan.
 //
 // the corners and not the compass points, and that is the one piece of arithmetic here that is not
 // arbitrary: gen.blocks.HangarBlock stands its machine banks on the four spokes and
 // render.facility.FacilityHangar runs a cable from each of them to the dais rim, so a console on a
-// spoke stands in a cable lane. The ring itself is already kept clear of floor clutter
-// (FacilityHangar.floor's own CLEAR margin), which is why it is bare enough to use
+// spoke stands in a cable lane. Neither ring carries floor clutter (FacilityHangar.floor's own
+// CLEAR margin reaches past both), which is why they are bare enough to use
   static function apronCells(area: AreaGame,
       shed: { x: Int, y: Int, x1: Int, y1: Int, x2: Int, y2: Int }): Array<{ x: Int, y: Int }>
     {
       var out = [];
-      var r = Std.int(FacilityStyle.PODIUM_PAD / 2) + 1;
-      // west corners first, so the console lands on the side the shed's one real door is on
-      for (d in r...r + 3)
+      var r = Std.int(FacilityStyle.PODIUM_PAD / 2);
+      // west first, so the console lands on the side the shed's one real door is on
+      for (pt in [
+        { x: shed.x - r, y: shed.y - r },
+        { x: shed.x - r, y: shed.y + r },
+        { x: shed.x + r, y: shed.y - r },
+        { x: shed.x + r, y: shed.y + r },
+      ])
+        if (reachable(area, pt.x, pt.y))
+          out.push(pt);
+      // a pad with a blocked corner falls back to the walkable ring outside it, which is where
+      // these four stood before the move inward
+      for (d in r + 1...r + 4)
         {
+          if (out.length >= 4)
+            break;
           var ring = [
             { x: shed.x - d, y: shed.y - d },
             { x: shed.x - d, y: shed.y + d },
@@ -671,8 +690,6 @@ class GoalsAlienCrashLanding
                 area.isWalkable(pt.x, pt.y) &&
                 !area.hasObjectAt(pt.x, pt.y))
               out.push(pt);
-          if (out.length >= 4)
-            break;
         }
       // a shed whose apron is somehow full takes anything standable it has: four DISTINCT usable
       // cells is the contract this returns on, and the caller indexes it
@@ -687,6 +704,24 @@ class GoalsAlienCrashLanding
                 y: y,
               });
       return out;
+    }
+
+// helper: can a rig prop stand here? empty, in bounds, and with at least one walkable cell beside
+// it. THE CELL'S OWN WALKABILITY IS NOT ASKED — the pad corners this is called on are unwalkable by
+// design — so the reach test is what keeps a prop off a cell nobody can get next to
+  static function reachable(area: AreaGame, x: Int, y: Int): Bool
+    {
+      if (x <= 0 ||
+          y <= 0 ||
+          x >= area.width - 1 ||
+          y >= area.height - 1 ||
+          area.hasObjectAt(x, y))
+        return false;
+      for (dy in -1...2)
+        for (dx in -1...2)
+          if (area.isWalkable(x + dx, y + dy))
+            return true;
+      return false;
     }
 
 // helper: a random free standable cell in a rect, or null when it has none

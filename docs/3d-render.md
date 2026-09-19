@@ -1465,6 +1465,7 @@ back) — grep the change text.
 | `scene.remove()` on a mesh built before `Chunks.build` | chunks REPARENT into per-chunk groups, so the removal is a silent no-op and the old mesh stays | duplicate cable runs | **bug, fixed** |
 | The ship at 100k tris and its 2048 atlas kept | owner's call over the texels-per-triangle floor; one instance, drawn once | 98k → 276k tris, 60fps | **landed** |
 | in-game emissive paint: TEXELS not triangles, brush is a world capsule through the geometry, gutter-only dilation, game writes the png | **KEEP** | triangle was ~3 texels across at 1024 (41 texels/tri at 2048); old bleed guard ate 1.637% to keep 1.098%; 893 stray `e0c8e0` texels matched no family |
+| a violet lamp needs ~2x a cyan one's `glow` to halo: the study console and its slots retuned, and moved onto the pad's unwalkable corners | **KEEP** | linear `0xc07bff` luminance 0.3245 vs cyan's 0.5794; peaks were 0.29-0.52 against BLOOM_THRESHOLD 0.9, now 1.31-1.83; breaths were 7.3s/13.5s, now 3.2s/6.3s/1.7s |
 
 ## Standing notes
 

@@ -659,18 +659,32 @@ class ObjModels
       eyes: null,
       // THE SCREEN, and one family is all this prop has: the art draws a violet readout on an
       // otherwise dark panel (art/textures.json scenario-a/console-face), and the marker map is that
-      // rectangle and nothing else (models-src/scenario-a/console_emissive.py). It breathes faster
-      // than the leads that leave it and slower than the ship's lamp discs, so a shed with all three
-      // in it never has two things beating together
+      // rectangle and nothing else (models-src/scenario-a/console_emissive.py).
+      //
+      // THE GLOW IS SIZED IN BLOOM'S OWN METRIC AND NOT BY EYE, which is the whole of why the first
+      // cut neither haloed nor read as moving. UnrealBloomPass thresholds on LUMINANCE
+      // (0.2126/0.7152/0.0722) against linear values — three forces NoToneMapping into the
+      // composer's targets, so ACES runs once in OutputPass and bloom sees the raw number — and
+      // 0xc07bff is linear (0.521, 0.198, 1.0), luminance 0.3245. That is barely over half of the
+      // ship's cyan 0x63d6ff at 0.5794, so the same `glow` buys this prop little more than half the
+      // halo. Peak = 0.082 (the marker's own emissiveStrength 0.35) + 0.3245 * glow * base:
+      // 4.2 x 0.90 puts it at 1.31, over BLOOM_THRESHOLD 0.9, and the 0.60 depth drops the bottom of
+      // the breath to 0.57, under it. Crossing BOTH WAYS is what reads as a pulse rather than a
+      // shade, and 1.2 x 0.90 peaked at 0.43 — half way there, so it never crossed at all.
+      //
+      // 0.29 is a breath every 3.2s at BASE_MS 150 (the rate is radians per BASE_MS unit, so a
+      // period is 2*pi / (rate * 6.667) seconds). The old 0.13 was 7.3s, which is slower than a
+      // player looks at one thing. It sits between the ship's amber (5.5s) and its lamp discs
+      // (2.3s), and the leads that leave this console are faster than all three
       lamps: {
         list: [
           {
             hue: 0xb060f0,
             color: 0xc07bff,
-            glow: 1.2,
+            glow: 4.2,
             base: 0.90,
-            pulse: 0.45,
-            pulseRate: 0.13,
+            pulse: 0.60,
+            pulseRate: 0.29,
             phase: 0.0,
           },
         ],
@@ -703,16 +717,20 @@ class ObjModels
       fly: null,
       shine: null,
       eyes: null,
-      // the socket bores of the plate looking up at the camera, waiting: DIM, and slow enough to
-      // read as idle rather than as working
-      lamps: slotLamps(0.7, 0.55, 0.07),
+      // the socket bores of the plate looking up at the camera, waiting: the DIMMEST of the three
+      // and the slowest, which is what reads as idle rather than as working. it still crosses the
+      // bloom threshold at the top of its breath (0.082 + 0.3245 * 4.5 * 0.90 = 1.40 luminance) and
+      // sits well under it at the bottom (0.67), because an empty socket that never haloes is a socket nobody notices
+      lamps: slotLamps(4.5, 0.55, 0.15),
       arc: null,
       tether: null,
     },
     {
       // and the same receptacle with a part in it. the ONLY differences are in the lamp table, and
-      // they are the whole signal: two and a half times the level, a shallower breath and a faster
-      // one, which is a socket that is carrying something rather than asking for it
+      // they are the whole signal: half again the level, a shallower breath and a much faster one,
+      // which is a socket that is carrying something rather than asking for it. it is the one lamp
+      // in this shed that NEVER drops under the bloom threshold — 6.0 x 0.90 peaks at 1.83 and the
+      // 0.35 depth floors it at 1.22 — so a filled slot haloes steadily while an empty one blinks
       keys: [ 'event_spaceshipStudySlotFull' ],
       path: RenderConfig.MODELS.scenarioSlot,
       h: 1.16,
@@ -726,7 +744,7 @@ class ObjModels
       fly: null,
       shine: null,
       eyes: null,
-      lamps: slotLamps(1.5, 0.25, 0.19),
+      lamps: slotLamps(6.0, 0.35, 0.55),
       arc: null,
       tether: null,
     },

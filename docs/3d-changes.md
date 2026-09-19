@@ -1690,3 +1690,52 @@ The hover overlay was dropped on the owner's call: with edits landing on the tex
 paint IS the feedback, and a chunky triangle highlight over the texels being judged was in the way.
 
 Verdict: **KEEP.**
+
+
+## A violet lamp needs twice a cyan one's `glow` to halo (`render/world/ObjModels.hx`)
+
+"I asked for purple glow on the consoles, I wanted bloom and animated — pulsating; I don't see
+either." Both halves were true, and neither was a broken path: the whole lamp table was simply
+tuned under the one number that makes a lamp a lamp here, the same failure the ship's own first cut
+had.
+
+**Bloom thresholds on LUMINANCE, and violet is the worst colour for it.** The composer renders into
+targets where three forces `NoToneMapping` (ACES runs once, in `OutputPass`), so `UnrealBloomPass`
+sees raw linear values and highpasses `dot(c, 0.2126/0.7152/0.0722)`. The lamp colour `0xc07bff` is
+linear `(0.521, 0.198, 1.0)` — luminance **0.3245**, against the ship's cyan `0x63d6ff` at
+**0.5794**. Green carries 72% of the metric and this hue has almost none, so the same `glow` buys
+this prop a little over half the halo. Peak = `0.082` (the marker's own `emissiveStrength 0.35`) +
+`0.3245 * glow * base`:
+
+| | glow before | peak lum | glow after | peak lum | trough lum |
+|---|---|---|---|---|---|
+| console screen | 1.2 | 0.43 | **4.2** | 1.31 | 0.57 |
+| empty slot | 0.7 | 0.29 | **4.5** | 1.40 | 0.67 |
+| filled slot | 1.5 | 0.52 | **6.0** | 1.83 | 1.22 |
+
+`BLOOM_THRESHOLD` is 0.9. Every one of the three peaked between a third and a half of it, so nothing
+crossed and nothing haloed — measured in the frame as a 163..207 sRGB core with no halo at all.
+After: a violet halo an eighth of the prop wide, and the lit-pixel count over the console swings
+**319 ↔ 545** across its breath. Console and empty slot cross the threshold BOTH WAYS, which is the
+difference between a pulse and a shade; the filled slot floors at 1.22 and haloes steadily, which
+is the whole of how "a socket carrying something" is said.
+
+**A small feature needs more headroom than the arithmetic suggests.** The console's screen crossed
+convincingly at peak 1.31; the slot's socket plate is a third the pixels and read as a bright dot
+with no glow at the same level — `UnrealBloomPass` downsamples, and a 6x3-pixel source is averaged
+out of its own mip chain. The slots were taken to 4.5/6.0 for that reason alone, not for the
+metric. Same trap as `TacticalGrid.GLOW`'s 5.0.
+
+**The rates were also below the reading threshold.** `pulseRate` is radians per `BASE_MS` unit, so a
+period is `2*pi / (rate * 6.667)` seconds: the console's 0.13 was a **7.3s** breath and the empty
+slot's 0.07 was **13.5s** — slower than a player looks at one thing. Now 0.29 (3.2s), 0.15 (6.3s)
+and 0.55 (1.7s), which sit either side of the ship's amber (5.5s) and lamp discs (2.3s) and under
+the leads that leave the console (`RIG_CABLE_RATE` is CYCLES per unit, not radians — 1.4s).
+
+In the same pass the four props moved a tile inward onto the study pad's own unwalkable corners
+(`scenario/GoalsAlienCrashLanding.hx`), so they read as the ship's rig rather than as furniture
+parked near it. That costs them their own cell, which `objects.EventObject.canActivateNear` and an
+eight-neighbour scan in `game.PlayerArea` pay for — `getObjectsInRadius` is euclidean, so its
+radius 1 was the four compass cells and a diagonal (distance squared 2) fell outside it.
+
+Verdict: **KEEP.**

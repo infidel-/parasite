@@ -217,10 +217,18 @@ class PlayerArea extends _SaveObject
 
       // area object actions - need to learn about objects
 //      var olist = game.area.getObjectsAt(x, y);
-      var olist = game.area.getObjectsInRadius(x, y, 1, false);
+      // THE EIGHT NEIGHBOURS AND NOT THE FOUR. getObjectsInRadius is euclidean, so a radius of 1
+      // was the compass cells alone and a diagonal (distance squared 2) fell outside it — which
+      // left the crash-landing scenario's console and slots, standing on the study pad's four
+      // unwalkable CORNERS, activatable from nowhere at all. No integer radius is sqrt(2), so it is
+      // asked at 2 and narrowed to chebyshev below
+      var olist = game.area.getObjectsInRadius(x, y, 2, false);
       if (olist != null && game.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
+            // the radius-2 overshoot: a knight's move and a two-cell step are not "next to"
+            if (Std.int(Math.max(Math.abs(o.x - x), Math.abs(o.y - y))) > 1)
+              continue;
             // check if object is near and can be activated when near
             if ((o.x != x || o.y != y) && !o.canActivateNear())
               continue;

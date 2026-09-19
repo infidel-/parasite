@@ -96,4 +96,15 @@ class EventObject extends AreaObject
 
   public override function known(): Bool
     { return true; }
+
+// can be activated when player is next to it?
+//
+// TRUE FOR EVERY EVENT OBJECT, because none of them is a thing you stand on. The crash-landing
+// scenario's console and its three slots stand on the study pad's own unwalkable concrete
+// (src/scenario/GoalsAlienCrashLanding.hx), one tile closer to the ship than the walkable ring, and
+// the ship itself has always been unreachable — an object only usable from its own cell would be
+// dead there rather than merely awkward. game.PlayerArea reaches the EIGHT neighbours, so a prop on
+// a pad CORNER is worked from the ring cell facing it
+  public override function canActivateNear(): Bool
+    { return true; }
 }
