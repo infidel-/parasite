@@ -1464,6 +1464,7 @@ back) — grep the change text.
 | Violet leads from console and slots to the dais, bright once filled | brightness is a material property: two meshes and a rebuild beat per-vertex data | +1 draw call | **landed** |
 | `scene.remove()` on a mesh built before `Chunks.build` | chunks REPARENT into per-chunk groups, so the removal is a silent no-op and the old mesh stays | duplicate cable runs | **bug, fixed** |
 | The ship at 100k tris and its 2048 atlas kept | owner's call over the texels-per-triangle floor; one instance, drawn once | 98k → 276k tris, 60fps | **landed** |
+| in-game emissive paint: TEXELS not triangles, brush is a world capsule through the geometry, gutter-only dilation, game writes the png | **KEEP** | triangle was ~3 texels across at 1024 (41 texels/tri at 2048); old bleed guard ate 1.637% to keep 1.098%; 893 stray `e0c8e0` texels matched no family |
 
 ## Standing notes
 

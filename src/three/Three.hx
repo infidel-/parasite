@@ -263,11 +263,24 @@ typedef RendererInfo = {
   public function new(geo:Dynamic, ?thresholdAngle:Float);
 }
 
+// every attribute three builds off a glb is one of these. typed because reading uv per TEXEL
+// (render.PolyPaint) leans on it far harder than reading a vertex per triangle ever did
+@:native("THREE.BufferAttribute") extern class BufferAttribute {
+  public var array:Dynamic;      // the backing typed array, whichever width the loader chose
+  public var count:Int;          // ELEMENTS, not floats: vertices for position/uv, corners for index
+  public var itemSize:Int;
+  public var needsUpdate:Bool;
+  public function getX(i:Int):Float;
+  public function getY(i:Int):Float;
+  public function getZ(i:Int):Float;
+}
+
 @:native("THREE.BufferGeometry") extern class BufferGeometry {
   public function new();
   public var groups:Array<{ var start:Int; var count:Int; var materialIndex:Int; }>;
   public var index:Dynamic;       // .getX(i)
   public var attributes:Dynamic;  // .position.getX/getY/getZ
+  public function getAttribute(name:String):BufferAttribute; // null when the glb carries no such set
   public function setAttribute(name:String, attr:Dynamic):Void;
   public function setIndex(idx:Array<Int>):Void;
   public var boundingBox:Box3;    // null until computeBoundingBox() runs; the geometry's LOCAL extent
@@ -431,8 +444,16 @@ typedef Intersection = {
   var distance:Float;
 };
 
+// the world-space ray a Raycaster is currently set to. read it to run a CHEAPER intersection than
+// intersectObjects, which is brute force: it costs 9.4ms against a 100k-triangle prop
+typedef Ray = {
+  var origin:Vector3;
+  var direction:Vector3;  // unit length
+};
+
 @:native("THREE.Raycaster") extern class Raycaster {
   public function new();
+  public var ray:Ray;
   public function setFromCamera(ndc:Vector2, cam:Object3D):Void;
   public function intersectObjects(objs:Array<Object3D>, recursive:Bool):Array<Intersection>;
 }

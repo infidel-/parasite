@@ -339,4 +339,6 @@ def main():
         print('wrote ' + a.preview + '  (views: front +z, side +x, plan -y)')
 
 
-main()
+# guarded so load()/acc() can be imported by a one-shot build script without running a bake
+if __name__ == '__main__':
+    main()

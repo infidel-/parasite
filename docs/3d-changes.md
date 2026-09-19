@@ -1549,6 +1549,8 @@ shed.
 
 ## The emissive selection is PAINTED IN THE GAME, and what it exports is triangles (`render/PolyPaint.hx`)
 
+> SUPERSEDED by *The emissive brush paints TEXELS, and the game writes the png*
+
 Reported as "random glowing blue patches I have zero clue where you got from", and that is exactly
 what they were. The alien ship's map is not art — measured, it is 97.05% pure black plus three flat
 tints — so all it encodes is which triangles belong to which `PropGlow` lamp family. It was picked
@@ -1630,3 +1632,61 @@ produces after a clean reload. It did not reproduce — same pose, same map, sam
 mipmaps off, tolerance widened to 3.0, a colour-space check, the texel diff above and a 3D overlay
 of every painted triangle. The `--near` numbers stand on their own; that observation does not, and
 the ship as it now ships reads as two small amber vents and a few rim specks.
+
+
+## The emissive brush paints TEXELS, and the game writes the png (`render/PolyPaint.hx`)
+
+The triangle brush shipped and read wrong — faceted blobs, every lamp bleeding over the panel it
+sits in. Three numbers say why, and all three are properties of the UNIT:
+
+- `propstat`: **41 texels/tri at 2048**, so at the emissive map's 1024 a triangle was about **3
+  texels across**. A triangle-sized brush IS that chunkiness.
+- `emissive.py`'s bleed guard `kept = lit & ~grow(other,1)` ate **1.637%** of this 100k mesh to keep
+  **1.098%**, which is what forced `--near`, which then lit every triangle merely TOUCHING the
+  selection.
+- The shipped map carried **893 texels of `e0c8e0`** — `ImageChops.lighter` compositing amber over
+  cyan where their dilations met. Normalised-hue distance **0.73** from amber and **0.62** from cyan
+  against `tol 0.25`: it matched *no* family and glowed as nothing but faint baked emissive.
+
+**The brush is now a world-space CAPSULE resolved through the geometry.** For every triangle the
+sweep reaches, its UV triangle is rasterised and each covered texel is back-projected by barycentric
+interpolation and tested against the capsule. Not a disc around `intersection.uv`: a TRELLIS atlas
+is a shattered mosaic, so a UV disc spills into unrelated charts — the original bug in a new hat.
+A capsule and not a sphere because one mousemove can jump further than the brush is wide, and the
+alternative (re-raycasting the gap) is a 100k-triangle intersect per step.
+
+**Hard-edged, and that is a shader fact.** `PropGlow.hx:559` adds `propLampCol[i] * lw * base * beat`
+with no `lmx` and no `emissiveColor` factor, and `lhue = emissiveColor/lmx` is invariant under a
+scale toward black — a half-opacity texel lights at FULL until it drops under `lmx > 0.004`, one
+8-bit step. Feathering buys nothing; blending BETWEEN families lands in the dead band where both
+`tol` shoulders miss, and both families accumulate, so nothing picks a winner. Exact hue or exact
+black, written with `putImageData` (which does not composite) and never `fillRect`.
+
+**The bleed guard is deleted, not tuned.** SAVE grows each family 2 texels into the GUTTER ONLY —
+texels no triangle covers, from a one-off conservative cover of all 99,998 — so foreign bleed is
+zero *by construction*, and unlike `kept = lit & ~oth` nothing painted is ever removed. Map went
+1024 → **2048** to match the albedo. The seed is the old triangle selection rasterised at ss=1 with
+no outline and no dilation (amber 1.831%, cyan 1.479%, **zero stray hues**); `emissive.py --tris`
+would have produced it too but spends ~25 min per family rasterising 96k unselected triangles at 4x
+supersample for a subtraction `--dilate 0` reduces to a one-texel trim.
+
+**WYSIWYG at last.** `models.mjs` embeds `emissiveSrc` verbatim, so the game now writes the shipped
+png itself through `host.debug.writeImage` — the channel `map/Image.hx` already used, so no IPC was
+added — and puts the dilated result on the prop, meaning the frame after a save *is* the ship. The
+seed classification that recovered only 646 of 1,228 and 2,559 of 4,983 is gone: the state is one
+`ImageData` copied texel for texel off the shipped map.
+
+**The cursor lagged, and it was `intersectObjects`.** Measured **9.41ms per raycast** against this
+99,998-triangle prop — three has no BVH, so a hover was a whole frame, and an unthrottled mousemove
+fires more than once per frame. Two fixes: the bound mesh is now intersected by hand (reject on the
+per-triangle bounding sphere already built for the brush, Möller-Trumbore on the survivors, nearest
+positive t) and every mousemove is coalesced into one `requestAnimationFrame` update. The
+whole-scene search that finds a prop to bind is left on `intersectObjects` and throttled to 10Hz,
+because it happens once. After: median frame time **16.6ms idle / 16.7ms hovering / 16.7ms
+painting** — vsync-locked, the tool costs nothing measurable. The 2048 upload per painted frame is
+not a problem either, which is why the dirty-rect `putImageData` was worth having.
+
+The hover overlay was dropped on the owner's call: with edits landing on the texture instantly the
+paint IS the feedback, and a chunky triangle highlight over the texels being judged was in the way.
+
+Verdict: **KEEP.**

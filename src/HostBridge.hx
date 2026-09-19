@@ -64,6 +64,8 @@ class HostBridge
 // debug-only writes — main refuses with false when sentinel (.debug) is absent
   public static function debugWriteRegionRoads(text: String): Void h().debug.writeRegionRoads(text);
   public static function debugWriteRegionBuildings(text: String): Void h().debug.writeRegionBuildings(text);
-  public static function debugWriteImage(name: String, base64: String): Void h().debug.writeImage(name, base64);
+// false when the .debug sentinel is missing, the basename is rejected, or the write threw.
+// render.PolyPaint exports a painted emissive map through this and has to be able to say so
+  public static function debugWriteImage(name: String, base64: String): Bool return h().debug.writeImage(name, base64);
 }
 #end
