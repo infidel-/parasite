@@ -23,7 +23,6 @@ class AreaView
   var _effects: List<EffectEntity>; // visual effects list
   var _cache: Array<Array<Int>>; // tiles drawn on screen
   var path: Array<aPath.Node>; // currently visible path
-  var fakeHosts: Array<_FakeHost>; // background hosts
   var _tileset: Tileset;
   var tileset(get, null): Tileset;
 
@@ -40,7 +39,6 @@ class AreaView
     {
       scene = s;
       game = scene.game;
-      fakeHosts = [];
       width = maxSize; // should be larger than any area
       height = maxSize;
       emptyScreenCells = 0;
@@ -300,16 +298,6 @@ class AreaView
               var sy = (y - scene.cameraTileY1) * Const.TILE_SIZE;
               tileset.drawWallDecoration(ctx, icon,
                 tileID, tiles[x][y], sx, sy);
-            }
-
-      // corp has fake people in the background
-      if (game.area.info.id == AREA_CORP)
-        for (y in rect.y1...rect.y2)
-          for (x in rect.x1...rect.x2)
-            {
-              tileID = (drawRealTiles ? cells[x][y] : _cache[x][y]);
-              icon = tileset.getIcon(tileID);
-              paintFakeHost(ctx, icon, x, y);
             }
     }
 
@@ -890,44 +878,6 @@ class AreaView
       scene.areaLighting.invalidateCurrentView();
     }
 
-// corp has fake people in the background
-  function paintFakeHost(ctx, icon: _Icon, x: Int, y: Int)
-    {
-      // TILE_ROAD_UNWALKABLE
-      if (icon.row != 2 || icon.col < 11)
-        return;
-
-      // find host
-      var host = null;
-      for (h in fakeHosts)
-        if (h.x == x && h.y == y)
-          {
-            host = h;
-            break;
-          }
-      if (host == null)
-        return;
-
-      var img = 
-        (host.isMale ?
-         game.scene.images.male :
-         game.scene.images.female);
-      ctx.globalAlpha = 0.5;
-      ctx.drawImage(img,
-        host.ix * Const.TILE_SIZE_CLEAN,
-        host.iy * Const.TILE_SIZE_CLEAN + 1,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN - 1,
-
-        (x - scene.cameraTileX1) * Const.TILE_SIZE +
-        Const.TILE_SIZE / 4,
-        (y - scene.cameraTileY1) * Const.TILE_SIZE +
-        Const.TILE_SIZE / 4,
-        Const.TILE_SIZE / 2,
-        Const.TILE_SIZE / 2);
-      ctx.globalAlpha = 1.0;
-    }
-
 // update tilemap, etc from current area
   public function update()
     {
@@ -1207,19 +1157,13 @@ class AreaView
           if (e.turns <= 0)
             _effects.remove(e);
         }
-
-      // fake hosts logic
-      if (game.area.info.id == AREA_CORP)
-        turnCorp(false);
     }
 
 // area entered
   public function onEnter()
     {
       _tileset = scene.images.getTileset(game.area.getTilesetTypeID());
-      fakeHosts = [];
       scene.areaLighting.onAreaEntered();
-      turnCorp(true);
     }
 
 // generate minimap from tiles
@@ -1258,40 +1202,6 @@ class AreaView
       ctx.strokeRect(0, 0, minimap.width, minimap.height);
     }
 
-// corp area turn - fake hosts
-  function turnCorp(force: Bool)
-    {
-      if (game.turns % 3 != 0 && !force)
-        return;
-      var rect = game.area.getVisibleRect();
-      var icon: _Icon = null;
-      var tileID = 0;
-      // spawn new ones
-      for (y in rect.y1...rect.y2)
-        for (x in rect.x1...rect.x2)
-          {
-            tileID = _cache[x][y];
-            icon = tileset.getIcon(tileID);
-            // TILE_ROAD_UNWALKABLE
-            if (icon.row != 2 || icon.col < 11)
-              continue;
-            if (Std.random(100) < 95)
-              continue;
-            var h: _FakeHost = {
-              x: x,
-              y: y,
-              isMale: (Std.random(100) < 50),
-              ix: Std.random(10),
-              iy: 0,
-            }
-            h.iy = Std.random(h.isMale ? 8 : 6);
-            fakeHosts.push(h);
-            // limit amount
-            if (fakeHosts.length > 10)
-              fakeHosts.shift();
-          }
-    }
-
 // get active area tileset with lazy cache
   function get_tileset(): Tileset
     {
@@ -1300,14 +1210,6 @@ class AreaView
         _tileset = scene.images.getTileset(game.area.getTilesetTypeID());
       return _tileset;
     }
-}
-
-typedef _FakeHost = {
-  var x: Int;
-  var y: Int;
-  var isMale: Bool;
-  var ix: Int;
-  var iy: Int;
 }
 
 typedef _LOSPoint = {

@@ -316,6 +316,41 @@ class CorpStyle
   // anything over 114 would come up THROUGH the floor the player is standing on
   public static inline var STREET_MAX_H = 90.0;
 
+  // ---- the fake crowd (render.corp.CorpCrowd) --------------------------------------------------
+  //
+  // PURELY VISUAL: no entity, no state, no spawn or despawn, nothing persisted — the contract
+  // render.particles.PropFX's gnat swarms run on, and the direct 3D successor to the 2D
+  // _FakeHost / turnCorp / paintFakeHost code the corp AreaView used to carry.
+  //
+  // AND ON A WALL CLOCK. Every other timed animation in the game derives from
+  // RenderConfig.BASE_MS and is scaled by the global ANIM_SPEED; this one takes RAW dtMs, which is
+  // the documented exception for ambient city life (the window-light switches and the failing-lamp
+  // flicker are the others). Traffic that speeds up when the player's animation speed does would
+  // be wrong, and the whole point of the thing is that it keeps moving while the player stands
+  // still thinking.
+  public static inline var WALKERS = 64;
+  public static inline var CARS = 28;
+  // world units per second. a unit is half a metre, so 2.8 is 1.4 m/s (a walk) and 20 is 10 m/s
+  // (36 km/h, a city street)
+  public static inline var WALK_SPEED = 2.8;
+  public static inline var CAR_SPEED = 20.0;
+  // and how much either varies per agent, as a fraction
+  public static inline var CROWD_SPEED_VAR = 0.45;
+  // the quads. FLAT ON THE GROUND and not upright, which is the whole design: at 114 units down
+  // through fog, a person is not a silhouette, it is the light they are standing in — and a car is
+  // its headlights. A lit patch on the road seen from above IS what traffic looks like from the
+  // twentieth floor, and it needs no billboarding, no atlas and no new art
+  public static inline var WALK_SZ = 1.8;
+  public static inline var CAR_LEN = 8.0;
+  public static inline var CAR_WIDE = 3.6;
+  public static inline var CROWD_Y = 0.06;
+  public static inline var WALK_COLOR = 0xbcd0e8;
+  public static inline var CAR_COLOR = 0xffc070;
+  public static inline var WALK_GLOW = 0.55;
+  public static inline var CAR_GLOW = 1.5;
+  // the shortest straight run of cells that is worth walking or driving down
+  public static inline var LANE_MIN = 6;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts

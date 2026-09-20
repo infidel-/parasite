@@ -56,6 +56,7 @@ class CorpArea implements Area3D
   var signs = 0;                                // wall signage, one mesh
   var facade:{ clad:Int, soffit:Int };          // the nineteen storeys under the plate
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
+  var crowd:CorpCrowd;                          // and the fake traffic and people on it
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -137,6 +138,8 @@ class CorpArea implements Area3D
       // what render.Chunks' own size guard would leave parented to the scene anyway
       var pc = plateCentre();
       street = CorpStreet.build(scene, game.area.id, pc.x, pc.z);
+      // into the street's OWN group, so the crowd rides the same transform down to STREET_Y
+      crowd = new CorpCrowd(street.group, street.city, pc.x, pc.z);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -264,6 +267,10 @@ class CorpArea implements Area3D
               walls: street.walls,
               generated: street.city.buildings.length,
             },
+            // and what is moving on it. `walkLanes`/`roadLanes` is what the agents are dealt over,
+            // so a zero there means the radius filter cut every straight run and the street is
+            // dead rather than merely empty
+            crowd: crowd.n,
             lamps: {
               posts: lamps.posts.length,
               rooms: lamps.rooms,
@@ -324,6 +331,10 @@ class CorpArea implements Area3D
       // the logical cell is the wrong origin
       VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lamps.posts, opts.playerCol, opts.playerRow, opts.dtMs);
+      // THE ONE THING IN THIS KIND ON A WALL CLOCK: raw dtMs, no ANIM_SPEED and no BASE_MS. see
+      // CorpCrowd's header — ambient city life is RenderConfig's own documented exception, and a
+      // street that stops when the player stops thinking is the whole feature missing
+      crowd.tick(opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);

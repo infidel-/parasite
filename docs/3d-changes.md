@@ -2313,3 +2313,78 @@ available by BARE NAME and `Module.Type` is not a path from another package —
 Both oracles green at 200 seeds.
 
 Verdict: **KEEP.**
+
+## The twentieth floor: the tower under the plate, a real citygen street, and a crowd on a wall clock (phase 8)
+
+Three pieces, **+8 draw calls and +9,792 triangles over the phase-7 baseline** (49 → 57 calls,
+159,918 → 169,710 tris at the same pinned pose). The plan's budget was ≤ 90.
+
+**8a — `CorpFacade`: nineteen storeys and a soffit.** 194 cladding quads off every outward face of
+the perimeter and 2,180 soffit quads under the plate. `STREET_Y` is **−114**, which is nineteen
+`WALL_H` storeys and not the plan's −72 (that was twelve, and the plan's own note calling it
+nineteen was wrong arithmetic). The drop takes the PARAPET's plane and not the cell's masonry slab
+— a glazed cell's slab is `GLASS_T` where its neighbours' are `WALL_T`, so a facade following the
+slab jogs half a unit in and out at every window run's ends, and taking the ring plane puts the
+drop dead flush with the parapet band six units over it.
+
+**IT IS UNLIT, AND THAT IS THE ONE DECISION IN THE FILE.** A `MeshBasicMaterial`, not the lambert
+every other shell surface uses: the plate's lighting rig has nothing to do with a wall 114 units
+below it, and under the scene ambient a lambert takes the art's lit window bays to nothing — the
+whole read gone. Unlit means the authored value IS the rendered value. Fog still applies, which is
+what makes the drop fade out rather than stop at a line. Neither the facade nor the street takes a
+`VisionMask` patch: the mask's rim channel sinks a surface to the fog colour at the AREA BORDER,
+and the border is the tower's own edge, so patched they would be cut to nothing exactly where the
+player leans over the parapet.
+
+**The facade art took two corrections and both were only visible in the frame.** Built at the
+authored value the whole tower came back **a solid wall of gold** — unlit, the dark glass sat at
+~40 srgb where it needed to be black, so every bay read as lit. `lift` **2.4** (darkening) fixed
+the census — built sheet p50 **1.1**, **4.6%** over 120 — and the tower then came back **a wall of
+orange instead**, because the amber is the corp accent hue and is correct for ONE window and not
+for a hundred at once. `sat` **0.55** beside a final `lift` **2.8** is what settled it. Two knobs
+answering two different questions: the gamma says how many bays are lit, the saturation says what
+a hundred of them look like together. And `FACADE_TILE` went 12 → **20**: at 2 × `WALL_H` the six
+bays across the image landed 2 units wide and the tower read as a gold mesh screen.
+
+**8b — `CorpStreet`: a real citygen city, rendered by four merged meshes.** The MODEL is the real
+thing (`CityGen.generate` with the downtown profile, seeded off the area id, nothing persisted);
+what is LOW is the rendering. `render.World` runs eleven passes and lands a city area in the
+hundreds of calls, and nothing down there is closer than 114 units — so this emits asphalt,
+pavement, roofs and walls itself and skips lawns, entrances, wall decals, roof shadows, roof props,
+the kerb, the street lamps and the `Check` audit. Live: **1,557 road + 633 walkway cells, 48 of 112
+generated buildings**, 192 wall quads.
+
+**THE PLATE IS NOT ON THE WORLD ORIGIN, AND THAT COST A BUILD.** A corp area is 65-75 by 50-60
+cells while `CityConfig.cellToWorld` is written against a `GRID` of 100, so the plate sits off in
+the −x/−z quadrant — its centre measured **(−80, −94)**. A disc of city centred on the origin is a
+disc that is not under the tower, and from the plate's west edge there was simply nothing below.
+The radius is measured from the plate's own centre now.
+
+**8c — `CorpCrowd`: 64 walkers and 28 cars, ONE draw call each** (+2 calls, +184 tris, A/B/A/B
+identical three times). Dealt over **39 walkway lanes and 18 road lanes**, where a lane is a
+straight run of ≥ 6 cells found on both axes. Nobody turns a corner and from 114 units up nobody
+can tell — that is the "fake to simplify logic" the brief asked for.
+
+**ON A WALL CLOCK: raw `dtMs`, no `ANIM_SPEED` and no `BASE_MS`** — `RenderConfig`'s documented
+exception for ambient city life, and the point of the feature. Measured live with the game idle at
+a turn boundary: a walker moved 4.85 units in 1.5 s (3.2 u/s ≈ 1.6 m/s) and a car 22.6 (15 u/s ≈
+7.5 m/s). Position is CLOSED FORM in the clock — lane, direction, speed and phase all off a stable
+hash of the index — so nothing is stored per agent and nothing can drift.
+
+**FLAT QUADS OF LIGHT, NOT BILLBOARDS OF PEOPLE**, and this is the shape decision. At 114 units
+down, through fog, at 51°, a pedestrian is not a silhouette — they are the patch of light they are
+standing in, and a car is its headlights. One additive quad lying on the road wearing the shared
+radial gradient buys no billboarding, no atlas, **no new art at all**, one call per family, and a
+read that is more correct than an upright sprite three pixels tall. `ponytail:` marked in the file
+with its upgrade path (per-instance UV rects off the people atlas, the way `DecalBatch` does it).
+
+Art: two generations (~$0.11) — the curtain-wall facade and a 2x2 street pack cut into four crops
+(asphalt, pavement, roof, podium) at **res 256**, because at that distance a road cell is a few
+pixels and the texel budget belongs to the plate the player is standing on.
+
+Nothing under `render/facility/` was touched in phases 5-8 — `git diff --stat` over the four
+commits is `RenderConfig.hx` (12 lines of MODELS paths) and `render/corp/` — so the compound cannot
+have regressed by construction. Walked one anyway: renders, no console errors. Both oracles green
+at 300 seeds.
+
+Verdict: **KEEP.**

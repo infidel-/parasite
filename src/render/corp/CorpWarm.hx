@@ -50,6 +50,10 @@ class CorpWarm
       // and the facade, which is the one UNLIT material in the kind: MeshBasicMaterial is its own
       // program key and no lambert above it covers one
       CorpFacade.build(sc, model);
+      // and the street's two crowd programs, which are an INSTANCED additive basic — three's key
+      // carries USE_INSTANCING, the blend and the map, so the facade above covers none of it. no
+      // city is generated for the warm: a one-instance batch compiles the same program
+      CorpCrowd.warm(sc);
       FacilityDetail.corners(sc, model);
       // and the collector those corners feed, which is NOT optional: FacilityDetail.halos is what
       // CLEARS it, so skipping it here carries these demo quads into the first real tower
