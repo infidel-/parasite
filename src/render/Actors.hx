@@ -135,6 +135,11 @@ class Actors {
     }
 
 // receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
+  public function setFlyLamps(lamps:Array<LampPost>):Void
+    {
+      propFX.setFlyLamps(lamps);
+    }
+
   public function setLamps(lamps:Array<LampPost>):Void
     {
       lampShadows.setLamps(lamps);

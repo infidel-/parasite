@@ -33,6 +33,10 @@ interface Area3D
   // caster comes from. static: read once per frame, never rebuilt. empty for every kind but the
   // facility, whose lit windows and glazed doors throw light on the pavement no bulb is behind
   function shadowLamps():Array<render.particles.LampPost>;
+  // the lamps a swarm of flies gathers over — the park's own masts, and nothing else. empty for
+  // every kind but the facility: a bug cloud belongs over a lawn, and the city's street lamps stand
+  // over asphalt. read once per frame like shadowLamps, never rebuilt
+  function flyLamps():Array<render.particles.LampPost>;
   // an area object was added or removed while this area is the one on screen. only matters to a kind
   // that draws objects as glb props, since those are placed once at build() and would otherwise not
   // appear until the area was re-entered

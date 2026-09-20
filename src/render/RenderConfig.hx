@@ -1142,4 +1142,45 @@ class RenderConfig {
     fxInnards: 'textures/fx/innards.png',
     fxFirefly: 'textures/fx/firefly.png',
   };
+  // the gnats over the compound's PARK lamps, drawn by the very same pass: a `fly` row is a fraction
+  // of its prop's height, so handing it a lamp's FacilityStyle.LAMP_H makes the mast the prop. Only
+  // the park's masts get them (render.facility.FacilityLamps.LampSet.park) — a bug cloud belongs
+  // over a lawn, not over a parking bay.
+  //
+  // EVERY POOLED QUAD IS A DRAW CALL and that is the whole budget (measured: 21 dots took calls
+  // 88-90 to 109-111, exactly +21). So `trail` is 0 — a trail multiplies a swarm by trail + 1 — and
+  // `posts` x `count` is what the feature costs, in full, every frame it draws
+  public static final LAMP_FLY = {
+    enabled: true,
+    posts: 2,   // the nearest park masts to the player that carry a swarm at all
+    count: 4,   // flies per mast. 2 x 4 = 8 quads = 8 draw calls
+    // and how near a mast has to be before it is one of them, in cells. past this the swarm is a
+    // few pixels of noise and not worth a call — the same distance gate LampLights keys its pool on
+    rangeCells: 14.0,
+    fly: {
+      tex: RenderConfig.TEXTURES.fxFirefly,
+      perLevel: 1,  // unused here: `count` is passed straight to drawFlies
+      // a fraction of LAMP_H 5.9, so the ring centre sits at 5.02 — just under the head, which is at
+      // LAMP_HEAD_Y 0.95. flies gather at the bulb and not halfway down the pole
+      y: 0.88,
+      yVar: 0.06,   // 4.9..5.6 world, a tight band around the lamp head
+      r: 0.14,      // 0.83 world — clear of the hood without leaving the light
+      rVar: 0.35,
+      // steeper than the arch's: a gnat cloud has no plane, and the lean is what says so. it is also
+      // what sets the vertical reach — r * sin(tilt) = 0.34 either side, so a dot laps from just
+      // under the hood to level with it rather than falling away down the pole
+      tilt: 0.45,
+      size: 0.05,   // 0.30 world, a third of the arch's dot — these are insects, not spirits
+      color: 0xffe3a8, // the sodium head's own warm, so they read as lit BY the lamp
+      glow: 2.2,
+      alpha: 0.75,
+      rate: 0.9,    // five times the arch's: an insect's orbit is frantic where an organ's is slow
+      rateVar: 0.55,
+      bob: 0.05,
+      twinkle: 0.7, // deep, so a fly keeps blinking out of the light and back into it
+      trail: 0,
+      trailGap: 0.0,
+      trailSize: 0.0,
+    },
+  };
 }

@@ -13,6 +13,8 @@ import render.actors.TetherOpts;
 import render.world.ObjModels.PropArc;
 import render.world.ObjModels.PropCore;
 import render.world.ObjModels.PropFly;
+import render.facility.FacilityStyle;
+import render.particles.LampPost;
 import render.world.ObjModels.PropTether;
 import render.world.PropShader.ShaderPatch;
 import render.world.WorldCtx;
@@ -79,6 +81,7 @@ class PropFX {
   var ci:Int = 0;                         // next free core slot this frame
   var fi:Int = 0;                         // next free firefly slot this frame
   var t:Float = 0.0;                      // shared clock, in BASE_MS units
+  var posts:Array<LampPost> = null;       // park masts carrying a fly swarm this frame (see lampFlies)
 
   public function new(game:Game, actorGroup:Group)
     {
@@ -95,10 +98,12 @@ class PropFX {
       ci = 0;
       fi = 0;
       ribbon.begin();
+      // the clock runs whatever PROP_FX says, because the park lamps' flies ride it too and they
+      // have a switch of their own (RenderConfig.LAMP_FLY)
+      t += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      uTime.value = t;
       if (RenderConfig.PROP_FX.enabled)
         {
-          t += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
-          uTime.value = t;
           var los = game.player.vars.losEnabled;
           // walked from the area every frame rather than cached at area build, for the reason
           // render.particles.PropLights states: the list is a handful of objects, render.Actors
@@ -136,11 +141,67 @@ class PropFX {
                 drawTethers(m.tether, m.h, o, w.x, floor, w.z, ph);
             }
         }
+      lampFlies();
       ribbon.upload();
       for (i in ci...cores.length)
         cores[i].visible = false;
       for (i in fi...flies.length)
         flies[i].visible = false;
+    }
+
+// the park lamps' gnats, drawn with the grown props' own swarm because a `PropFly` row is written in
+// fractions of its prop's height and a mast is just a very tall prop: pass FacilityStyle.LAMP_H and
+// the ring lands under the head. costs one pooled quad per fly and nothing else — same material,
+// same program, already warmed.
+//
+// NEAREST FEW ONLY, the gate LampLights keys its own pool on. every quad here is a draw call, so the
+// whole feature is LAMP_FLY.posts * LAMP_FLY.count and the rest of the park's masts draw nothing
+  function lampFlies():Void
+    {
+      var F = RenderConfig.LAMP_FLY;
+      if (!F.enabled ||
+          posts == null ||
+          posts.length == 0)
+        return;
+      var pe = game.playerArea.entity;
+      var pw = CityConfig.cellToWorld(pe.mx, pe.my);
+      var reach = CityConfig.CELL * F.rangeCells;
+      // nearest-first, capped — a plain insertion into a list of at most `posts`, since the park
+      // carries FacilityStyle.PARK_LAMPS of them and a sort would allocate for four items
+      var near:Array<LampPost> = [];
+      var dist:Array<Float> = [];
+      for (o in posts)
+        {
+          var dx = o.x - pw.x;
+          var dz = o.z - pw.z;
+          var d = Math.sqrt(dx * dx + dz * dz);
+          if (d > reach)
+            continue;
+          var at = near.length;
+          while (at > 0 && dist[at - 1] > d)
+            at--;
+          near.insert(at, o);
+          dist.insert(at, d);
+          if (near.length > F.posts)
+            {
+              near.pop();
+              dist.pop();
+            }
+        }
+      for (o in near)
+        {
+          // the same per-cell hash the prop swarm takes, so two masts never fly the same cloud and
+          // nothing is stored per lamp
+          var ph = o.col * 12.9898 + o.row * 78.233;
+          drawFlies(F.fly, FacilityStyle.LAMP_H, o.x, 0.0, o.z, ph, F.count);
+        }
+    }
+
+// the park masts this frame's flies orbit, handed down by render.View each frame (empty everywhere
+// but the facility)
+  public function setFlyLamps(p:Array<LampPost>):Void
+    {
+      posts = p;
     }
 
 // how many fireflies orbit this object: its habitat level. anything that is not a habitat organ

@@ -132,6 +132,10 @@ class SewerArea implements Area3D
   public function shadowLamps():Array<render.particles.LampPost>
     return [];
 
+// no park out here, so no swarm — see render.Area3D.flyLamps
+  public function flyLamps():Array<render.particles.LampPost>
+    return [];
+
 // per-frame world tick — down here that is only the live lamp pool: nothing fades, no windows
 // switch, and there are no chunks to cull (the whole level is a handful of merged meshes)
   public function tick(opts:Area3DTickOpts):Void

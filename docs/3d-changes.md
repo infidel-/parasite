@@ -1870,3 +1870,35 @@ facility/city/wilderness `false`, sewers `true`.
 only that layout places, and the wilderness has no warm scene at all.
 
 Verdict: **KEEP.**
+
+## Gnats over the park lamps, for four draw calls and no new code path (`render/actors/PropFX.hx`)
+
+A `PropFly` row is written entirely in FRACTIONS OF ITS PROP'S HEIGHT, so a lamp mast is just a very
+tall prop: `PropFX.drawFlies` takes `FacilityStyle.LAMP_H` and puts the ring under the head. That is
+the whole feature — same stateless swarm (every dot's radius, height, speed and plane tilt rolled
+off a hash of the cell and its index, so nothing is spawned, stored or despawned), same pooled
+additive quad, same material as `Sprites.glowQuad`, already in the boot warm. `progs` did not move.
+
+**Only the PARK's masts get them.** `FacilityLamps` already separates them — the lit-line scan
+collects `parkHits` through `FacilityModel.isParkPath` before merging into `hits` — so the set is
+carried out on `LampSet.park` as the same `LampPost` objects. **No field was added to `LampPost`**:
+it is shared with the city and the tunnels, and one area kind's atmosphere is not worth a field
+every construction site has to set. `Area3D.flyLamps()` returns `[]` for the other three kinds.
+
+**Every pooled quad is a draw call and that is the entire design constraint** (measured previously:
+21 dots took `calls` 88-90 to 109-111, exactly +21). So `trail: 0` — a trail multiplies a swarm by
+`trail + 1` — and the feature is capped at `posts` 2 x `count` 4, gated on player distance the way
+`LampLights` gates its pool. A/B/A/B on one pose, one mast in range: **`calls` 98 / 102 / 98 / 102,
+`tris` +8**, perfectly repeatable.
+
+Tuned once off the frame: at `tilt 0.55` / `yVar 0.07` the dots fell away down the pole and read as
+separate sparks; `0.45` / `0.06` at `y 0.88` gives `r * sin(tilt)` = 0.34 either side of a centre at
+5.2 of the 5.9 mast, so a dot laps from just under the hood to level with it. `rate 0.9` is five
+times the arch's — an insect's orbit is frantic where an organ's is slow — and `twinkle 0.7` keeps
+each one blinking out of the light and back into it.
+
+One coupling fixed on the way: `PropFX`'s clock was advanced INSIDE the `PROP_FX.enabled` gate, so
+turning the props' FX off would have frozen the flies mid-air. It runs unconditionally now; the
+flies have their own switch.
+
+Verdict: **KEEP.**

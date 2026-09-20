@@ -17,6 +17,11 @@ import render.world.VisionMask;
 // draw, and __facility() reports them as two counts
 typedef LampSet = {
   masts:Array<LampPost>,     // the outdoor lamp posts, one bulb each at the head
+  // the PARK's own masts, a sub-list of `masts` and the same objects — the ones the lit-line scan
+  // took off the park path (FacilityModel.isParkPath). kept apart because a swarm of flies belongs
+  // over a lawn and not over a parking bay, and a `park` field on LampPost would be a field every
+  // city and sewer construction site had to set for one area kind's atmosphere
+  park:Array<LampPost>,
   ceilings:Array<LampPost>,  // the room fixtures, a ROOM_SPACING lattice over each lit room
   corridors:Array<LampPost>, // the corridor fixtures, which no room rect can reach — see `corridors`
   doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
@@ -195,6 +200,7 @@ class FacilityLamps
       corners:Map<Int,Int>):LampSet
     {
       var masts = [];
+      var park = [];
       var places:Array<Models.PropPlace> = [];
       var bulbY = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Y;
       var reach = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Z;
@@ -256,8 +262,15 @@ class FacilityLamps
       // rows of a path that may be twenty-five long
       var take = (parkHits.length < FacilityStyle.PARK_LAMPS
         ? parkHits.length : FacilityStyle.PARK_LAMPS);
+      // remembered by CELL, because the LampPost the loop below builds is what the flies want and
+      // it does not exist yet
+      var parkCells:Map<Int,Bool> = new Map();
       for (i in 0...take)
-        hits.push(parkHits[Std.int((i + 0.5) * parkHits.length / take)]);
+        {
+          var h = parkHits[Std.int((i + 0.5) * parkHits.length / take)];
+          parkCells.set(h.col * 4096 + h.row, true);
+          hits.push(h);
+        }
       // and the GATE's own mast, which the lit-line scan above cannot ever deal: every entry cell is
       // excluded from the lot line (a post in the gateway stands in the way of the cars), and the
       // boom barrier across that gateway is the one thing out on the asphalt that has to be seen.
@@ -299,7 +312,7 @@ class FacilityLamps
             // shadow it throws for nothing anyone can see
             y: p.y,
           });
-          masts.push({
+          var post:LampPost = {
             x: px + DC[h.dir] * reach,
             z: pz + DR[h.dir] * reach,
             y: bulbY,
@@ -313,7 +326,10 @@ class FacilityLamps
             phase: 0.0,
             flick: 1.0,
             mul: 1.0,
-          });
+          };
+          masts.push(post);
+          if (parkCells.exists(h.col * 4096 + h.row))
+            park.push(post);
           corners.set(ActorAnim.lampVertexKey(p.col, p.row), BEND_DIR[h.dir]);
         }
 
@@ -480,6 +496,7 @@ class FacilityLamps
         });
       return {
         masts: masts,
+        park: park,
         ceilings: ceilings,
         corridors: corridors(m),
         doors: doors,

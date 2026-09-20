@@ -1194,6 +1194,10 @@ class View {
     // everywhere else, so the concat only ever costs the one kind that has any
     var extra = area3d.shadowLamps();
     actors.setLamps(extra.length == 0 ? lampLights.active() : lampLights.active().concat(extra));
+    // and the park's own masts, which carry a swarm of gnats rather than a shadow (RenderConfig
+    // .LAMP_FLY). a separate list because it is a different question: these are the lamps standing
+    // over a LAWN, not the lamps lit this frame
+    actors.setFlyLamps(area3d.flyLamps());
     actors.update(dtMs);
     // the batched ground decals — street debris and plain blood — belong to the ACTOR layer, not to
     // the area, and their instanced groups are built lazily by the paint pass just above, so there is

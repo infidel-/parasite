@@ -965,4 +965,9 @@ class FacilityArea implements Area3D
 // the only way they reach render.actors.LampShadows. built once, never repacked
   public function shadowLamps():Array<LampPost>
     return spillPosts;
+
+// the compound's PARK masts, the ones the lit-line scan took off the park path. the only lamps in
+// the game a swarm of gnats gathers over — see render.Area3D.flyLamps
+  public function flyLamps():Array<LampPost>
+    return (lamps == null ? [] : lamps.park);
 }

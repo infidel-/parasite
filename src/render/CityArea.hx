@@ -147,6 +147,10 @@ class CityArea implements Area3D
   public function shadowLamps():Array<render.particles.LampPost>
     return [];
 
+// no park out here, so no swarm — see render.Area3D.flyLamps
+  public function flyLamps():Array<render.particles.LampPost>
+    return [];
+
 // the city this area was built from (the debug tools report against it)
   public function city():City
     {
