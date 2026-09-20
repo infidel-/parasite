@@ -1284,6 +1284,22 @@
       "note": "the WC pan, hand-modelled (models-src/corp/toilet_build.py) 652 tris, 0.76 x 1.400 x 1.500, holes 0, coplanar 0 -- built to its DEPTH as well as its height, so the cistern back lands on the divider rather than floating off it. ITS SHEET IS A PASTE AND NOT A GENERATION: a pan is three flat materials and a 64-pixel water patch, so corp's toilet-sheet.png is composited out of art the tower already owns -- textures/corp/wall-washroom flattened and gamma'd to a 115-luma glaze, and the chair sheet's anodised and stainless bands for the seat and the flush plate -- into the band geometry (edges at v 0.4965 / 0.7456) the cloned script's rects are measured to.",
       "last_converted": "2026-09-20T12:29:48Z",
       "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/desk-bench": {
+      "src": "corp/corp-desk-bench.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the open-plan / cubicle desk, hand-modelled, 96 tris, 3.76 x 3.30 x 1.50 built at WORLD SIZE so Models.instanced scales it by 1. It replaces the emitted worktop on Surf.OPEN and Surf.CUBICLE, which was reported as \"just a cuboid\" and was one: a desk is a thin top on a frame with a VOID under it, and the void is the read. A 0.10 top oversailing 0.22 at the front, an O-leg frame in anodised section, a three-drawer pedestal on a 0.13 plinth reveal and a cable tray. Wears desk-wrap.png, which is the three shipped corp desk labels plus the chair sheet's anodised band -- fitted art, so NO baseColor and NO lift.",
+      "last_converted": "2026-09-20T17:54:53Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/table-leg": {
+      "src": "corp/corp-table-leg.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the blade leg under a boardroom or executive slab, hand-modelled, 36 tris. It is a LEG and not a table because a glb cannot span a block: gen.corp writes those tables as 3x2 and 3x3 of table tiles and Models.instanced scales by HEIGHT ALONE, so a module per cell would cut a 6 m table into six 2 m desks. The top stays emitted -- CorpFurniture keeps its cap and a 0.26 fascia -- and this is the silhouette under it. Same sheet, same rule: no baseColor, no lift.",
+      "last_converted": "2026-09-20T17:54:53Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
     }
   }
 }

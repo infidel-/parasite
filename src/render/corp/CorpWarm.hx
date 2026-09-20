@@ -81,6 +81,8 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpPlant, h: CorpStyle.PLANT_H },
         { path: RenderConfig.MODELS.corpCooler, h: CorpStyle.COOLER_H },
         { path: RenderConfig.MODELS.corpPrinter, h: CorpStyle.PRINTER_H },
+        { path: RenderConfig.MODELS.corpDesk, h: CorpStyle.DESK_GLB_H },
+        { path: RenderConfig.MODELS.corpTableLeg, h: CorpStyle.LEG_H },
       ];
       return new js.lib.Promise(function(res, _)
         {

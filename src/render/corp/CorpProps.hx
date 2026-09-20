@@ -21,6 +21,8 @@ typedef CorpPropSet = {
   var coolers:Int;
   var printers:Int;
   var pans:Int;        // WC pans, one per stall
+  var desks:Int;       // bench desk modules, one per open-plan / cubicle worktop cell
+  var legs:Int;        // blade legs, one per boardroom / executive slab cell
 };
 
 // one floor-standing family and where it is allowed to stand
@@ -94,13 +96,18 @@ class CorpProps
         coolers: 0,
         printers: 0,
         pans: 0,
+        desks: 0,
+        legs: 0,
       };
       var chairs = [];
       var mons = [];
       var keys = [];
       var pans = [];
+      var benches = [];
+      var legs = [];
       var floors = [for (_ in FLOOR) new Array<Models.PropPlace>()];
       desks(m, chairs, mons, keys);
+      tables(m, benches, legs);
       stalls(m, pans);
       standing(m, floors);
       n.chairs = chairs.length;
@@ -109,12 +116,16 @@ class CorpProps
       n.plants = floors[0].length;
       n.coolers = floors[1].length;
       n.printers = floors[2].length;
+      n.desks = benches.length;
+      n.legs = legs.length;
 
       var out = [];
       out.push(batch(scene, RenderConfig.MODELS.corpChair, chairs, CorpStyle.CHAIR_H));
       out.push(batch(scene, RenderConfig.MODELS.corpMonitor, mons, CorpStyle.MON_H));
       out.push(batch(scene, RenderConfig.MODELS.corpKeyboard, keys, CorpStyle.KEY_H));
       out.push(batch(scene, RenderConfig.MODELS.corpWc, pans, CorpStyle.WC_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpDesk, benches, CorpStyle.DESK_GLB_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h));
       return {
@@ -368,6 +379,55 @@ class CorpProps
           hd: kd,
         },
       ];
+    }
+
+// the two hand-modelled tables: a bench desk on every open-plan and cubicle worktop cell, and a
+// blade leg under every boardroom and executive one.
+//
+// THE YAW IS THE DESK'S BACK HAND, which is the same question CorpProps.desks already asks of the
+// seat: the module is built with its pedestal and its frame across x and its front on +y, so it
+// has to be turned to face the way the desk faces. A cell with no usable back (an island of
+// worktop with nothing behind it) takes yaw 0 rather than being skipped — the top is gone either
+// way and a desk facing an arbitrary direction beats a hole in the run.
+//
+// A LEG IS TURNED ACROSS THE SLAB'S LONG AXIS, so a row of them reads as trestles under one top
+// rather than as a line of fins pointing down it
+  static function tables(m:Facility, benches:Array<Models.PropPlace>,
+      legs:Array<Models.PropPlace>):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (!m.table[row][col])
+              continue;
+            var s = m.surf[row][col];
+            var c = CityConfig.cellToWorld(col, row);
+            if (CorpFurniture.glbDesk(s) &&
+                !CorpFurniture.slabTop(m, col, row))
+              {
+                var dir = backHand(m, col, row);
+                benches.push({
+                  x: c.x,
+                  z: c.z,
+                  yaw: (dir < 0 ? 0.0 : Math.atan2(DC[dir], DR[dir])),
+                });
+                continue;
+              }
+            if (!CorpFurniture.slabTop(m, col, row))
+              continue;
+            // EVERY OTHER CELL, on a checkerboard. A leg under all nine cells of a 3x3 table is
+            // a forest under a top nobody can see past; on the diagonal they land ~2.8 units
+            // apart, which is a trestle spacing and half the instances
+            if ((col + row) % 2 != 0)
+              continue;
+            // the slab's long axis is whichever hand carries on being table
+            var alongX = m.table[row][col - 1] || m.table[row][col + 1];
+            legs.push({
+              x: c.x,
+              z: c.z,
+              yaw: (alongX ? Math.PI / 2 : 0.0),
+            });
+          }
     }
 
 // which hand a worktop cell has its back on — masonry, a cubicle spine, or the next worktop

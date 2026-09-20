@@ -184,18 +184,33 @@ class CorpFurniture
         }
       var h = topH(s);
       var r = rect(m, col, row, CorpStyle.FIT_INSET, tableAt);
+      // AN OPEN-PLAN OR CUBICLE DESK IS A GLB NOW and emits nothing here — render.corp.CorpProps
+      // stands `corp/desk-bench` on this cell instead. Reported from the game as "just a cuboid",
+      // which a slab of quads is: a desk is a thin top on a frame with a void under it, and no
+      // amount of per-face art puts a void in a box. The cell is still counted and still stamps
+      // the contact field, because both are about the FOOTPRINT and not about who draws it
+      if (glbDesk(s))
+        {
+          ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+          return;
+        }
       FacilityGeom.cap(buf(top), r.x0, r.x1, r.z0, r.z1, h, tile);
       // a run's LONG faces take the drawer front and its two ENDS the blank carcass side, because a
       // desk run's short face is not its drawer bank — the same split FacilityTables records for the
       // compound's own desks. which faces those are is read off the run's neighbours
+      //
+      // and a BOARDROOM or EXECUTIVE slab shows only a FASCIA. Those tables are 3x2 and 3x3 blocks
+      // of table tile, i.e. one big top, and a box under a 6 m top is a plinth the size of a car.
+      // The slab keeps its cap and TABLE_FASCIA of edge; `corp/table-leg` stands under it
       var alongX = m.table[row][col - 1] || m.table[row][col + 1];
+      var y0 = (slabTop(m, col, row) ? h - CorpStyle.TABLE_FASCIA : 0.0);
       for (dir in 0...4)
         {
           if (m.table[row + dz(dir)][col + dx(dir)])
             continue;
           var isEnd = alongX ? (dir >= 2) : (dir < 2);
           FacilityGeom.face(buf(isEnd ? end : side),
-            r.x0, r.x1, r.z0, r.z1, dir, 0, h, isEnd ? CorpStyle.DESK_TILE : sideTile);
+            r.x0, r.x1, r.z0, r.z1, dir, y0, h, isEnd ? CorpStyle.DESK_TILE : sideTile);
         }
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
@@ -346,6 +361,29 @@ class CorpFurniture
         }
       n.stalls++;
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// is this worktop surface drawn as a glb desk rather than emitted? OPEN, CUBICLE and EXEC are the
+// three the generator lays as DESKS; a kitchen counter, a boardroom slab and a washroom vanity are
+// runs with a continuous top and a module per cell would put a seam between every pair
+  public static inline function glbDesk(s:Surf):Bool
+    {
+      return s == Surf.OPEN || s == Surf.CUBICLE;
+    }
+
+// and is this cell part of a big SLAB — a table two cells deep in BOTH axes — which keeps only a
+// fascia with a blade leg under it?
+//
+// THE TEST IS THE SHAPE AND NOT THE SURFACE, which cost a build to find: a boardroom table is laid
+// as DARK_TABLE_CARPET_3X3, a table tile whose FLOOR is carpet, so its cells come back
+// Surf.CARPET and a `s == MEETING` test matched NOTHING — measured, 0 of 245 worktop cells on this
+// plate are Surf.MEETING while 109 are CARPET. Two-dimensional IS the distinction anyway: a desk
+// run, a kitchen counter and a vanity are all one cell deep, and a 1x1 credenza against a wall has
+// no neighbour at all, so only a real table block answers true
+  public static function slabTop(m:Facility, col:Int, row:Int):Bool
+    {
+      return (tableAt(m, col - 1, row) || tableAt(m, col + 1, row)) &&
+        (tableAt(m, col, row - 1) || tableAt(m, col, row + 1));
     }
 
   public static inline function fixture(m:Facility, col:Int, row:Int):Bool

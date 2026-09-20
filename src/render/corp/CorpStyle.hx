@@ -119,6 +119,16 @@ class CorpStyle
   // how far a fitting is pulled back inside its cell, so two units in a run still read as two and
   // a unit against masonry does not z-fight the wall slab
   public static inline var FIT_INSET = 0.12;
+  // how much EDGE a boardroom or executive slab shows. it keeps a cap and this much fascia and
+  // nothing else, with `corp/table-leg` standing under it: a 3x3 block of table tile is one 6 m
+  // top, and a box of quads under a 6 m top is a plinth the size of a car
+  public static inline var TABLE_FASCIA = 0.26;
+  // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
+  // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
+  public static inline var DESK_GLB_H = 1.5;
+  public static inline var DESK_GLB_W = 3.76;
+  public static inline var LEG_H = 1.24;
+  public static inline var LEG_W = 0.46;
   // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
   public static inline var RACK_H = 4.0;
   public static inline var RACK_D = 2.0;
@@ -149,7 +159,14 @@ class CorpStyle
   public static inline var CHAIR_W = 1.3;
   public static inline var CHAIR_YAW_JIT = 0.30;
   // how far the chair's centre stands back from the desk cell's own edge, into the seat cell
-  public static inline var CHAIR_OUT = 1.35;
+  // WRITTEN AS THE SUM THAT PRODUCED IT so the coupling cannot be edited away. It was 1.35, which
+  // is INSIDE the desk: the offset is measured from the desk CELL's centre and the carcass reaches
+  // CELL / 2 - FIT_INSET = 1.88, so a 1.3-wide seat sat 0.70 .. 2.00 and 1.18 of its width was
+  // buried in the desk it was supposed to be pulled up to. CELL / 2 puts its centre on the desk's
+  // own edge; + CHAIR_W / 2 clears it entirely; - CHAIR_TUCK slides it back under the worktop's
+  // overhang, which is where a pushed-in chair sits
+  public static inline var CHAIR_TUCK = 0.42;
+  public static inline var CHAIR_OUT = 4.0 / 2 + 1.3 / 2 - CHAIR_TUCK;
   public static inline var MON_H = 1.66;       // the built mesh exactly, so the batch's scale is 1
   public static inline var MON_W = 1.95;
   public static inline var MON_D = 0.45;
