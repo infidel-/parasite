@@ -1471,6 +1471,7 @@ back) — grep the change text.
 | the bookcase's lid repacked at ONE repeat both ways (`modelsheet` 1.4436x0.9 -> 1x0.6234) | the sheet cell wrapped inside itself: column `|diff|` **5.83 at x=354** (= 512/1.4436) against 2.35, now peak **2.81** against 1.98. glb base colour swapped via `texSrc`, UVs untouched; grain 1.4 -> 2.02 units | **landed** |
 | the per-kind warm raises the boot `#warmup` screen instead of sitting behind plain black | `#warmup` hidden not removed; `View.needsWarm` is `warmKind`'s guard lifted out so a warmed kind never flashes. traced: `"ready off"` -> **`"ready"` +103ms** -> `"ready off"` +2699ms on a facility entry | **landed** |
 | gnats over the PARK lamps, drawn by `PropFX.drawFlies` with `LAMP_H` as the prop height | a `PropFly` row is fractions of its prop's height, so a mast is a tall prop — no new pool, material or program. capped 2 masts x 4 flies, `trail: 0`; A/B/A/B **`calls` 98/102/98/102**, `tris` +8 | **landed** |
+| tactical mode paints a glowing arrow into every doorway in the window | 3 `addSeg`s = **6 tris and 0 extra calls** — same mesh, same material. axis read off the two opposed WALKABLE neighbours (a shut leaf blocks the door's own cell), side taken from the grid's own centre so it flips on the next rebuild | **landed** |
 
 ## Standing notes
 

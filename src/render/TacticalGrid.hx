@@ -34,6 +34,12 @@ class TacticalGrid
   // weighs only 0.11) after the alpha mix, with headroom — subpixel segments get diluted by
   // the AA/downsample average and cut out of the glow otherwise
   static inline var GLOW = 5.0;
+  // the door arrows: how long the shaft is and how far the barbs reach back off the tip, both in
+  // cells. much bigger than the lattice's own ARM, because this is a MARK and not a texture — it
+  // has to read as one shape at the tactical camera rather than as two more crosses
+  static inline var ARROW_LEN = 0.52;
+  static inline var ARROW_BARB = 0.24;
+  static inline var ARROW_W = 0.022; // thicker than the lattice, for the same reason
 
   var scene:Scene;
   var area:AreaGame;
@@ -111,6 +117,7 @@ class TacticalGrid
                     marks.set(key, y);
                 }
           }
+      arrows(pos, idx);
       // one small cross per marked corner
       var arm = CityConfig.CELL * ARM;
       for (key in marks.keys())
@@ -145,6 +152,68 @@ class TacticalGrid
         }
       untyped mesh.geometry.dispose();
       untyped mesh.geometry = geometry;
+    }
+
+// an arrow on the floor in front of every door within the window, pointing INTO the doorway.
+//
+// ASKED OF THE DOOR OBJECT AND OF WALKABILITY, never of a model: `objects.Door` is laid by
+// gen.GenSpawner for every generator that deals one, so this works in a compound, an underground lab
+// and anywhere else alike, where render.facility.FacilityModel.DoorCell (which carries a real
+// `alongX`/`inDir`) exists only in a facility. The door object itself carries no orientation either —
+// only its icon frames — so the passage axis is read off the two opposed neighbours that are open.
+//
+// THE SIDE IS THE PLAYER'S, which costs nothing: the grid is rebuilt when the player's cell moves
+// and never otherwise, so "which side am I on" is already answered by the centre this was built
+// around. Step through a door and its arrow turns over on the next rebuild.
+//
+// no open/shut state on it, so no new `invalidate` hook: an arrow marks a door you can go through,
+// which is true whether the leaf is standing open or not
+  function arrows(pos:Array<Float>, idx:Array<Int>):Void
+    {
+      var half = CityConfig.CELL / 2;
+      var it = area.getObjects();
+      while (it.hasNext())
+        {
+          var o = it.next();
+          if (o.type != 'door' ||
+              o.x < ccol - RADIUS ||
+              o.x > ccol + RADIUS ||
+              o.y < crow - RADIUS ||
+              o.y > crow + RADIUS)
+            continue;
+          // the axis the doorway passes along: the one whose two opposed neighbours are BOTH open.
+          // asked of the neighbours and not of the door's own cell, which a shut leaf blocks
+          var dc = 0, dr = 0;
+          if (area.isWalkable(o.x, o.y - 1) &&
+              area.isWalkable(o.x, o.y + 1))
+            dr = 1;
+          else if (area.isWalkable(o.x - 1, o.y) &&
+                   area.isWalkable(o.x + 1, o.y))
+            dc = 1;
+          else continue;
+          // the approach cell on the player's side, and the arrow points back at the door from it
+          var s = (dc != 0
+            ? (ccol < o.x ? -1 : 1)
+            : (crow < o.y ? -1 : 1));
+          var ac = o.x + dc * s;
+          var ar = o.y + dr * s;
+          var c = cellToWorld(ac, ar);
+          var y = WorldCtx.floorY(ac, ar) + Y;
+          // unit vector from the approach cell toward the door
+          var ux = -dc * s, uz = -dr * s;
+          var len = CityConfig.CELL * ARROW_LEN;
+          var barb = CityConfig.CELL * ARROW_BARB;
+          var tipX = c.x + ux * len * 0.5;
+          var tipZ = c.z + uz * len * 0.5;
+          addSeg(pos, idx, c.x - ux * len * 0.5, c.z - uz * len * 0.5, y, tipX, tipZ, y, ARROW_W);
+          // the two barbs, swept back off the tip at 45 degrees either side of the shaft. the
+          // perpendicular is (-uz, ux), so each barb is one step back along the shaft plus one
+          // across it
+          addSeg(pos, idx, tipX, tipZ, y,
+            tipX - ux * barb - uz * barb, tipZ - uz * barb + ux * barb, y, ARROW_W);
+          addSeg(pos, idx, tipX, tipZ, y,
+            tipX - ux * barb + uz * barb, tipZ - uz * barb - ux * barb, y, ARROW_W);
+        }
     }
 
 // one non-passable cell: a dashed line along each edge it shares with a walkable neighbour, plus the

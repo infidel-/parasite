@@ -1902,3 +1902,30 @@ turning the props' FX off would have frozen the flies mid-air. It runs unconditi
 flies have their own switch.
 
 Verdict: **KEEP.**
+
+## Tactical mode paints an arrow at every door in the window (`render/TacticalGrid.hx`)
+
+`TacticalGrid` already owns exactly the right mesh — one `BufferGeometry` of thin ground quads, one
+HDR-tinted `MeshBasicMaterial` at `GLOW 5.0` over the bloom threshold, rebuilt only when the
+player's cell moves, hidden with the HUD — and an `addSeg` that lays a widened ground quad carrying
+per-endpoint height. So an arrow is **three `addSeg` calls, 6 triangles, and NO new draw call and no
+new material**: shaft plus two barbs swept back 45 degrees off the tip.
+
+**Asked of the door OBJECT and of walkability, never of a model.** `objects.Door` is laid by
+`gen.GenSpawner` for every generator that deals one, so this works in a compound, an underground lab
+and anywhere else alike; `render.facility.FacilityModel.DoorCell` carries a real `alongX`/`inDir`
+but exists only in a facility. The door object itself has no orientation either — only its icon
+frames — so the passage axis is read as "which pair of opposed neighbours is BOTH walkable", asked
+of the NEIGHBOURS and not of the door's own cell, which a shut leaf blocks.
+
+**The side is the player's, and it costs nothing**: the grid is rebuilt when the player's cell moves
+and never otherwise, so "which side am I on" is already answered by the centre it was built around.
+Verified in game on one doorway — standing north of it the arrow points south into it, standing
+south of it, north. No open/shut state on the arrow and therefore no new `invalidate` hook: it marks
+a door you can go through, which is true whether the leaf is standing open or not.
+
+`ARROW_LEN 0.52` / `ARROW_BARB 0.24` / `ARROW_W 0.022` are all several times the lattice's own `ARM`
+and `WIDTH`, deliberately: this is a MARK and not a texture, and at the lattice's weight it read as
+two more crosses.
+
+Verdict: **KEEP.**
