@@ -1,6 +1,7 @@
 package render.corp;
 
 import three.Three;
+import citygen.CityConfig;
 import game.Game;
 import render.Area3D;
 import render.Area3DTickOpts;
@@ -54,6 +55,7 @@ class CorpArea implements Area3D
   var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
   var signs = 0;                                // wall signage, one mesh
   var facade:{ clad:Int, soffit:Int };          // the nineteen storeys under the plate
+  var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -129,6 +131,12 @@ class CorpArea implements Area3D
       // and the tower the plate is the twentieth floor OF. it is outside every mask on purpose —
       // see CorpFacade's header — so it goes in after them and takes none of their patches
       facade = CorpFacade.build(scene, model);
+      // and the city at the bottom of it. LAST of the builders and OUTSIDE the chunk set below,
+      // which is deliberate both ways: it is the one thing here that must take no mask (see
+      // CorpStreet's header), and it is one Group of four area-spanning meshes, which is exactly
+      // what render.Chunks' own size guard would leave parented to the scene anyway
+      var pc = plateCentre();
+      street = CorpStreet.build(scene, game.area.id, pc.x, pc.z);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -150,6 +158,17 @@ class CorpArea implements Area3D
           model.wall[row][col] != Wall.WINDOW,
         function(col, row) return FacilityGeom.carries(model, col, row));
       attachDbg();
+    }
+
+// the floor plate's own centre in world, which is NOT the world origin: a corp area is 65-75 by
+// 50-60 cells and CityConfig.cellToWorld is written against a GRID of 100, so the plate sits off in
+// the -x/-z quadrant. everything below it has to be centred on THIS and not on (0, 0)
+  function plateCentre():{ x:Float, z:Float }
+    {
+      if (model.structures.length == 0)
+        return CityConfig.cellToWorld(model.w / 2, model.h / 2);
+      var st = model.structures[0];
+      return CityConfig.cellToWorld((st.x1 + st.x2) / 2, (st.y1 + st.y2) / 2);
     }
 
 // console debug helper (permanent) — what this corp tower actually built.
@@ -236,6 +255,15 @@ class CorpArea implements Area3D
             // never how many are lit — LampLights hands the bulbs to the nearest twelve every
             // frame, so a plate with 40 posts is correct and a plate with 0 is the phase-2 bug
             facade: facade,
+            // the street. `blocks` is buildings BUILT and not generated — the radius filter is
+            // most of the LOD, so the gap between this and city.buildings.length is the saving
+            street: {
+              road: street.road,
+              walk: street.walk,
+              blocks: street.blocks,
+              walls: street.walls,
+              generated: street.city.buildings.length,
+            },
             lamps: {
               posts: lamps.posts.length,
               rooms: lamps.rooms,
@@ -329,10 +357,12 @@ class CorpArea implements Area3D
       lampLights = l;
     }
 
-// no citygen City here yet — the street below arrives in the last phase of the port
+// the city 114 units DOWN, which is a real citygen model and not a stand-in — see CorpStreet.
+// handed over so anything that reads an area's city (the crowd's lane picking, the debug
+// inspector) gets the same one that was drawn, rather than re-generating it off the seed
   public function city():citygen.CityModel.City
     {
-      return null;
+      return street == null ? null : street.city;
     }
 
   public function shadowLamps():Array<LampPost>

@@ -292,6 +292,30 @@ class CorpStyle
   // the soffit under the plate, a hair below the floor so nothing is coplanar with it
   public static inline var SOFFIT_Y = -0.03;
 
+  // ---- the street, 114 units down (render.corp.CorpStreet) -------------------------------------
+  //
+  // A REAL citygen CITY AT LOW LOD, which is the brief's own answer and not the cheap one. The
+  // MODEL is the real thing — CityGen.generate with the downtown profile, so the block structure,
+  // the road hierarchy and the building footprints are a city and not a pattern. What is low is
+  // the RENDERING: render.World's own pass list is eleven passes and lands a city area at
+  // hundreds of draw calls, and nothing down there is closer than 114 units. So this kind emits
+  // its own five merged meshes off that model instead — the LOD is the point of the exercise.
+  public static inline var STREET_ASPHALT = 'textures/corp/street-asphalt.png';
+  public static inline var STREET_PAVEMENT = 'textures/corp/street-pavement.png';
+  public static inline var STREET_ROOF = 'textures/corp/street-roof.png';
+  public static inline var STREET_PODIUM = 'textures/corp/street-podium.png';
+  // how far out from the tower's centre a street cell is still built, world units. beyond this the
+  // fog (FOG_FAR 240) has taken it to the background colour anyway, so the geometry is spent on
+  // nothing
+  public static inline var STREET_RADIUS = 160.0;
+  // the ground tiles' material period, and the buildings'. a road cell is 4 units, so 16 is one
+  // repeat every four cells — coarse on purpose at this distance
+  public static inline var STREET_TILE = 16.0;
+  public static inline var PODIUM_TILE = 10.0;
+  // no street building rises past this, world units. the plate is at 0 and the street at -114, so
+  // anything over 114 would come up THROUGH the floor the player is standing on
+  public static inline var STREET_MAX_H = 90.0;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts
