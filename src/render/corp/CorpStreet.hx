@@ -96,10 +96,13 @@ class CorpStreet
       var lit = new Map<Int, MeshBuf>();
       var nRoad = 0;
       var nWalk = 0;
-      for (row in 0...CityConfig.GRID)
-        for (col in 0...CityConfig.GRID)
+      // THE MODEL IS MIRROR-TILED and the loop runs over WORLD cell indices — see `fold`. Three
+      // tiles each way is more than the reach can ask for, and folding is what stops the street
+      // ending in a straight edge inside the fog
+      for (row in -CityConfig.GRID...2 * CityConfig.GRID)
+        for (col in -CityConfig.GRID...2 * CityConfig.GRID)
           {
-            var t = city.tiles[row][col];
+            var t = city.tiles[fold(row)][fold(col)];
             if (t == Tile.Building)
               continue;
             var x0 = cellX(p, col);
@@ -119,44 +122,48 @@ class CorpStreet
       var nWall = 0;
       var nLit = 0;
       var list:Array<citygen.CityModel.Building> = city.buildings;
-      for (b in list)
-        {
-          var x0 = cellX(p, b.col);
-          var z0 = cellZ(p, b.row);
-          var x1 = x0 + b.w * CELL;
-          var z1 = z0 + b.d * CELL;
-          if (!ring(p, x0, x1, z0, z1))
-            continue;
-          // CAPPED, and it is not cosmetic: the plate is at 0 and the street at -114, so a
-          // downtown tower taller than that would come up THROUGH the floor the player is
-          // standing on. The profile's own maximum is well under it, but the cap is what makes
-          // that a guarantee rather than an observation about today's numbers
-          var h = (b.h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : b.h);
-          var f = b.facade % st.walls.length;
-          var glass = (st.winPerCell != null && st.winPerCell[f] > 0);
-          // a glass tower's curtain art is CELL-LOCKED — one window per cell each way, which is
-          // how the real city draws it (render.world.Buildings' winPerCell path) and the only
-          // period at which the lit panes below land on their own bays. masonry keeps WALL_TILE
-          var per = (glass ? CELL * 1.0 : RenderConfig.WALL_TILE * 1.0);
-          // and the street-level plinth: the bottom two window rows of a glass tower are solid
-          // granite, not glass, which is what stops a downtown reading as a stack of aquariums
-          var pod = (glass && st.glassPodium != null && st.glassPodium[f] != null ?
-            CELL * CityConfig.GLASS_PODIUM_ROWS : 0.0);
-          if (pod > h)
-            pod = h;
-          for (dir in 0...4)
+      // and every building once per TILE, its own footprint reflected on an odd one. a
+      // mirrored rect is still a rect, so nothing downstream learns this happened
+      for (tz in -1...2)
+        for (tx in -1...2)
+          for (b in list)
             {
-              if (pod > 0)
-                FacilityGeom.face(buf(bufs, st.glassPodium[f]), x0, x1, z0, z1, dir, 0.0, pod,
-                  per);
-              FacilityGeom.face(buf(bufs, st.walls[f]), x0, x1, z0, z1, dir, pod, h, per);
-              nWall++;
+              var x0 = cellX(p, span(tx, b.col, b.w));
+              var z0 = cellZ(p, span(tz, b.row, b.d));
+              var x1 = x0 + b.w * CELL;
+              var z1 = z0 + b.d * CELL;
+              if (!ring(p, x0, x1, z0, z1))
+                continue;
+              // CAPPED, and it is not cosmetic: the plate is at 0 and the street at -114, so a
+              // downtown tower taller than that would come up THROUGH the floor the player is
+              // standing on. The profile's own maximum is well under it, but the cap is what makes
+              // that a guarantee rather than an observation about today's numbers
+              var h = (b.h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : b.h);
+              var f = b.facade % st.walls.length;
+              var glass = (st.winPerCell != null && st.winPerCell[f] > 0);
+              // a glass tower's curtain art is CELL-LOCKED — one window per cell each way, which is
+              // how the real city draws it (render.world.Buildings' winPerCell path) and the only
+              // period at which the lit panes below land on their own bays. masonry keeps WALL_TILE
+              var per = (glass ? CELL * 1.0 : RenderConfig.WALL_TILE * 1.0);
+              // and the street-level plinth: the bottom two window rows of a glass tower are solid
+              // granite, not glass, which is what stops a downtown reading as a stack of aquariums
+              var pod = (glass && st.glassPodium != null && st.glassPodium[f] != null ?
+                CELL * CityConfig.GLASS_PODIUM_ROWS : 0.0);
+              if (pod > h)
+                pod = h;
+              for (dir in 0...4)
+                {
+                  if (pod > 0)
+                    FacilityGeom.face(buf(bufs, st.glassPodium[f]), x0, x1, z0, z1, dir, 0.0, pod,
+                      per);
+                  FacilityGeom.face(buf(bufs, st.walls[f]), x0, x1, z0, z1, dir, pod, h, per);
+                  nWall++;
+                }
+              FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]), x0, x1, z0, z1, h,
+                RenderConfig.ROOF_TILE);
+              nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
+              blocks++;
             }
-          FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]), x0, x1, z0, z1, h,
-            RenderConfig.ROOF_TILE);
-          nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
-          blocks++;
-        }
       for (tex in bufs.keys())
         add(group, bufs.get(tex), tex);
       for (f in lit.keys())
@@ -184,6 +191,31 @@ class CorpStreet
 
   public static inline function oz(p:PlateBox):Float
     return (p.z0 + p.z1) / 2;
+
+// a WORLD cell index folded back into the model, by MIRRORING at each of its edges.
+//
+// THE STREET'S OUTER EDGE WAS THE CITY'S EDGE AND NOT THE REACH, which is what this exists for: the
+// model is GRID 100 x CELL 4 = 400 units square and the ring around a 224 x 180 plate already
+// overran it by 20 units in x before the reach was touched at all, so a player leaning over the
+// west parapet saw the city STOP. Growing the reach alone would have bought nothing.
+//
+// MIRRORING AND NOT A MODULO. A plain wrap butts the model's west edge against its east one, and
+// every road, block and kerb line that does not happen to line up is cut in half at the seam; a
+// reflection matches its neighbour by construction, whatever the pattern. The cost is that the far
+// city is symmetrical about each seam, which at 114 units down through fog nothing can read.
+  public static inline function fold(i:Int):Int
+    {
+      var n = CityConfig.GRID;
+      var m = ((i % (2 * n)) + 2 * n) % (2 * n);
+      return m < n ? m : 2 * n - 1 - m;
+    }
+
+// and the inverse for a RUN: the world index the low corner of `n` cells starting at `i0` lands on
+// in tile `t`. a building's footprint is a run on each axis, and a reflected rect is still a rect —
+// which is the whole reason the buildings can be tiled without touching anything downstream
+  public static inline function span(t:Int, i0:Int, n:Int):Int
+    return (t & 1) == 0 ? t * CityConfig.GRID + i0 :
+      t * CityConfig.GRID + CityConfig.GRID - i0 - n;
 
 // the world corner of a city cell, with that offset folded in. render.corp.CorpCrowd lays its
 // lanes off the same pair, so an agent cannot walk beside the road instead of on it

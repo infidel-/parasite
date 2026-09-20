@@ -208,11 +208,10 @@ class CorpCrowd
       // that was never built — under the plate above all, where an agent walks in the dark
       var ok = function(col:Int, row:Int)
         {
-          if (col < 0 ||
-              row < 0 ||
-              col >= CityConfig.GRID ||
-              row >= CityConfig.GRID ||
-              city.tiles[row][col] != kind)
+          // FOLDED, exactly as CorpStreet's own ground loop folds: the model is mirror-tiled out
+          // to the reach, so there are no out-of-range indices any more and a lane must be able
+          // to run in a tile the model was reflected into
+          if (city.tiles[CorpStreet.fold(row)][CorpStreet.fold(col)] != kind)
             return false;
           var x0 = CorpStreet.cellX(p, col);
           var z0 = CorpStreet.cellZ(p, row);
@@ -222,8 +221,8 @@ class CorpCrowd
         {
           var dc = (axis == 0 ? 1 : 0);
           var dr = (axis == 0 ? 0 : 1);
-          for (row in 0...CityConfig.GRID)
-            for (col in 0...CityConfig.GRID)
+          for (row in -CityConfig.GRID...2 * CityConfig.GRID)
+            for (col in -CityConfig.GRID...2 * CityConfig.GRID)
               {
                 // only the FIRST cell of a run starts one, or every cell of a 20-long road would
                 // start a lane and the crowd would pile into its head

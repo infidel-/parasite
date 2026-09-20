@@ -383,8 +383,17 @@ class CorpStyle
   // THE PLATE IS A HOLE IN IT — see render.corp.CorpStreet.PlateBox. The street is built over the
   // eight half-areas AROUND the building and never under it, where it is invisible anyway.
   // `STREET_REACH_FRAC` is how far past the plate's own footprint it goes, as a fraction of the
-  // area's size: 0.5 each hand IS "eight half-areas"
-  public static inline var STREET_REACH_FRAC = 0.5;
+  // area's size: 0.5 each hand IS "eight half-areas".
+  //
+  // 0.65 IS THE FOG WALL AND NOT A TASTE. The camera sits ~26 over a plate at y 0 and the street
+  // is 114 below it, so a cell at horizontal distance d is at range sqrt(d^2 + 140^2) and FOG_FAR
+  // 240 puts it fully in haze at d = sqrt(240^2 - 140^2) = 195. On a 75 x 60 area 0.65 gives
+  // 195 / 156 — exactly as far as anything can be seen, and no further. Growing it past this
+  // builds geometry into the fog colour.
+  //
+  // It only means anything because render.corp.CorpStreet.fold mirror-tiles the model: the city
+  // is 400 units square and the ring at 0.5 already overran it, so the reach was not the limit
+  public static inline var STREET_REACH_FRAC = 0.65;
   // no street building rises past this, world units. the plate is at 0 and the street at -114, so
   // anything over 114 would come up THROUGH the floor the player is standing on
   public static inline var STREET_MAX_H = 90.0;
