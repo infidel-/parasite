@@ -33,6 +33,9 @@ typedef FloorProp = {
   var d:Float;         // depth ACROSS the wall it backs onto
   var w:Float;         // and width ALONG it — the other half of the footprint the field darkens
   var on:Surf;         // the floor surface it belongs to
+  // does the fake indoor reflection go on it? see `batch` — TRUE for anything that is supposed to
+  // be metal or lacquer, FALSE for anything organic
+  var env:Bool;
 };
 
 // the seven glb props of the corp tower: the workstation on a desk, the chair at it, the WC pan in
@@ -69,6 +72,14 @@ class CorpProps
       d: CorpStyle.PLANT_W,
       w: CorpStyle.PLANT_W,
       on: Surf.CARPET,
+      // NO REFLECTION ON A PLANT. render.world.PropEnv is a fake environment plus a specular
+      // GLINT LOBE and its own header says it is for "the handful of materials that are supposed
+      // to be METAL" — applied to a ficus it put a moving highlight across the leaves as the
+      // camera turned, reported as the plant glistening. Measured first, because the obvious
+      // suspect was the bake: the built albedo is p50 108 / p99 139 / max 162 with 0.0000 of it
+      // over 184, the MR map is a rough dielectric (mean 0/253/0, metal max 0) and
+      // render.Models.toLambert drops it anyway — there is no specular speck in the ART at all
+      env: false,
     },
     {
       path: RenderConfig.MODELS.corpCooler,
@@ -76,6 +87,7 @@ class CorpProps
       d: CorpStyle.COOLER_W,
       w: CorpStyle.COOLER_W,
       on: Surf.KITCHEN,
+      env: true,
     },
     {
       path: RenderConfig.MODELS.corpPrinter,
@@ -83,6 +95,7 @@ class CorpProps
       d: CorpStyle.PRINTER_D,
       w: CorpStyle.PRINTER_W,
       on: Surf.OPEN,
+      env: true,
     },
   ];
 
@@ -140,7 +153,7 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
       out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
       for (i in 0...FLOOR.length)
-        out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h));
+        out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h, FLOOR[i].env));
       return {
         batches: out,
         n: n,
@@ -150,15 +163,18 @@ class CorpProps
 // one instanced batch, and the three things every indoor batch in this game does behind the loader
 // callback — the mesh does not exist until the glb resolves
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>,
-      h:Float):Models.InstancedProp
+      h:Float, env:Bool = true):Models.InstancedProp
     {
       var p = Models.instanced(scene, path, places, h, SOLID);
       if (places.length > 0)
         Models.get(path, function(_)
           {
             VisionMask.patchMesh(p.mesh);
-            // the room, for anything on the prop that stayed MeshStandard to reflect
-            render.world.PropEnv.apply(p.mesh.material);
+            // the room reflected in it — and NOT on everything, which is what `env` is for. the
+            // inject works on Lambert (PropEnv's own header says so, twice), so "only the ones
+            // that stayed MeshStandard" was never true of it
+            if (env)
+              render.world.PropEnv.apply(p.mesh.material);
             // AND NOTHING ON THE PLATE CASTS. an instanced batch is drawn into the moon's shadow
             // map as many times as into the frame, so a second draw is a second call the moment the
             // batch is on screen at all — and a tower floor has no moon over it in the first place

@@ -207,12 +207,15 @@ class FacilityDoors
 // the actor layer's `iconOff` is otherwise only ever true for a glb prop out of
 // render.world.ObjModels, and a leaf pair is not one — so every facility doorway had the old tile
 // image painted across its threshold, a pale square lying under geometry that had replaced it.
-// scoped to the facility on purpose: the corporate and underground-lab generators deal
-// objects.Door too and nothing draws leaves for those, so there the icon is still all there is
+// BOTH 3D KINDS, and the corp tower was left out of it for a whole pass: this used to be scoped to
+// AREA_FACILITY on the grounds that "the corporate and underground-lab generators deal objects.Door
+// too and nothing draws leaves for those". render.corp.CorpArea has called build() since the tower
+// got its own four pairs, so every corp doorway had real leaves standing in it AND the old tile
+// image lying across its threshold. The underground lab still draws none and is still excluded
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
-        area.typeID == AREA_FACILITY &&
+        (area.typeID == AREA_FACILITY || area.typeID == AREA_CORP) &&
         o.type == 'door';
     }
 
