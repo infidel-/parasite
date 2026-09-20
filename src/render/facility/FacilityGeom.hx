@@ -816,8 +816,19 @@ class FacilityGeom
     {
       return carries(m, col, row) &&
         !carries(m, col + DC[dir], row + DR[dir]) &&
-        !FacilityModel.isIndoor(m, col + DC[dir], row + DR[dir]);
+        !roofed(m, col + DC[dir], row + DR[dir]);
     }
+
+// is this cell UNDER THIS ROOF — indoor, and not a lift car.
+//
+// A LIFT CAR IS INDOOR AND IS NOT INSIDE THE BUILDING, which is the whole of it. gen.corp's
+// ElevatorBlock stands a 3 x 3 car OUTSIDE the tower's wall ring on four wall posts of its own, and
+// Surf.LIFT sits inside FacilityModel.isIndoor's TILE..OPEN range — so `outward` refused to band
+// the car-facing hand of the ring, and the notch loop skipped all four of the car's reentrant
+// corners, leaving a T x T hole in the coping at each. No kind but the tower deals LIFT, so the
+// compound's own parapet cannot move
+  static inline function roofed(m:Facility, col:Int, row:Int):Bool
+    return FacilityModel.isIndoor(m, col, row) && m.surf[row][col] != Surf.LIFT;
 
 // slab() with the SOLID wall's inset FORCED, whatever this cell's own masonry is.
 //
@@ -1000,7 +1011,7 @@ class FacilityGeom
             // band while the other end carries on into the neighbouring cell's
             for (n in notches(m, col, row))
               {
-                if (FacilityModel.isIndoor(m, n.col, n.row))
+                if (roofed(m, n.col, n.row))
                   continue;
                 var zc = (n.dz == 1);
                 var xc = (n.dx == 3);

@@ -191,9 +191,7 @@ class CorpModel
   public static function surfOf(t:Int):Surf
     {
       if (t == Const.TILE_FLOOR_CARPET ||
-          t == Const.TILE_FLOOR_CARPET + 16 ||
-          // the lift DOOR cell, which is circulation like the corridor it opens onto
-          t == Const.TILE_FLOOR_TILE_CANNOTSEE)
+          t == Const.TILE_FLOOR_CARPET + 16)
         return CARPET;
       if (t == Const.TILE_FLOOR_WOOD2 ||
           t == Const.TILE_FLOOR_WOOD2 + 16)
@@ -217,7 +215,14 @@ class CorpModel
           t == Const.TILE_FLOOR_SERVER + 16)
         return SERVER;
       if (t == Const.TILE_FLOOR_CONCRETE ||
-          t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+          t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE ||
+          // AND THE LIFT DOOR CELL, which used to answer CARPET on the grounds that it is
+          // circulation like the corridor it opens onto. It is, but ShellTex.wallInto is indexed
+          // by the surface a face LOOKS INTO — so every wall face looking at the lift door took
+          // CorpStyle's catch-all office board, and the car side of a wall whose other side is the
+          // lobby was painted in the corridor's own finish. The doorway's REVEAL is still
+          // circulation: FacilityGeom paints that from m.tex.circ and never from this
+          t == Const.TILE_FLOOR_TILE_CANNOTSEE)
         return LIFT;
       // every TABLE tile — the desks, the boardroom slab, the kitchen units — resolves to the
       // generic indoor floor, and FacilityModel.themeRooms then spreads its room's own surface

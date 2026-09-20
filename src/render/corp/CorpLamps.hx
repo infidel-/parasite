@@ -50,6 +50,14 @@ class CorpLamps
   public static function build(scene:Scene, m:Facility):CorpLampSet
     {
       var b = MeshBufTools.make();
+      // THE CEILING IS ITS OWN MESH, and the reason is the render order `add` documents. Nothing
+      // in the sprite pool writes depth, so a surface fixture drawn AFTER the actors paints
+      // through anyone standing in front of it — which is why the floor pools and the call plates
+      // are below them. A recessed CEILING PANEL is the opposite case: it hangs at 5.75 over
+      // everyone's head and nearer the camera than they are, so an actor walking under one was
+      // being painted over the light. render.LightCone's additive volume already sits above the
+      // actors for exactly this, and Sprites' own header names it
+      var bc = MeshBufTools.make();
       var out:CorpLampSet = {
         posts: [],
         rooms: 0,
@@ -57,10 +65,11 @@ class CorpLamps
         pools: 0,
         calls: 0,
       };
-      lattice(m, b, out);
-      corridors(m, b, out);
+      lattice(m, b, bc, out);
+      corridors(m, b, bc, out);
       calls(m, b, out);
-      add(scene, b);
+      add(scene, b, Sprites.ORD_FIXTURE);
+      add(scene, bc, Sprites.ORD_ACTOR + 1);
       return out;
     }
 
@@ -70,7 +79,7 @@ class CorpLamps
 // not its centre. the (i + 0.5) / n spacing is the compound's: it spreads a fixed count along the
 // run instead of taking them off its head, so a room under ROOM_SPACING falls to one point on its
 // own centre rather than one point against its wall
-  static function lattice(m:Facility, b:MeshBuf, out:CorpLampSet):Void
+  static function lattice(m:Facility, b:MeshBuf, bc:MeshBuf, out:CorpLampSet):Void
     {
       for (r in m.rooms)
         {
@@ -93,7 +102,7 @@ class CorpLamps
                 // the fitting itself, its long axis along the room's
                 var pw = (r.w >= r.h ? CorpStyle.PANEL_W : CorpStyle.PANEL_H) / 2;
                 var pd = (r.w >= r.h ? CorpStyle.PANEL_H : CorpStyle.PANEL_W) / 2;
-                flat(b, c.x - pw, c.x + pw, c.z - pd, c.z + pd,
+                flat(bc, c.x - pw, c.x + pw, c.z - pd, c.z + pd,
                   CorpStyle.CEIL_Y - CorpStyle.PANEL_DROP, CorpStyle.C_PANEL);
                 out.panels++;
               }
@@ -117,9 +126,10 @@ class CorpLamps
 // plate is an L, a T and a ring as often as it is a straight length, so the thing a run-finder
 // would deal in does not exist. Taking the first cell far enough from everything already placed
 // covers any of those shapes and reads only the saved grid
-  static function corridors(m:Facility, b:MeshBuf, out:CorpLampSet):Void
+  static function corridors(m:Facility, b:MeshBuf, bc:MeshBuf, out:CorpLampSet):Void
     {
       var seen = [];
+      carLamp(m, b, bc, out, seen);
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -144,7 +154,7 @@ class CorpLamps
             // the panel lies along the passage, which is whichever of its two runs is LONGER —
             // the shorter one is the cross-section
             var alongX = run(m, col, row, true) >= run(m, col, row, false);
-            flat(b, c.x - (alongX ? pw : pd), c.x + (alongX ? pw : pd),
+            flat(bc, c.x - (alongX ? pw : pd), c.x + (alongX ? pw : pd),
               c.z - (alongX ? pd : pw), c.z + (alongX ? pd : pw),
               CorpStyle.CEIL_Y - CorpStyle.PANEL_DROP, CorpStyle.C_PANEL);
             out.panels++;
@@ -152,6 +162,56 @@ class CorpLamps
               CorpStyle.GLOW_Y, CorpStyle.C_POOL);
             out.pools++;
           }
+    }
+
+// the lift car's own fixture, ON ITS CENTRE, dealt before the greedy walk and pushed into `seen`
+// so that walk cannot deal a second one beside it.
+//
+// `corridors` is row-major greedy against a spacing test, which is right for an L-shaped corridor
+// and wrong for a 3 x 3 room: it took the car's LOWEST-ROW, LOWEST-COL cell and `near` then
+// blocked the other eight, so the one light in the lift hung a whole cell — 4 world units —
+// diagonally off the middle of a car the player stands in the middle of. The car is the one piece
+// of circulation whose shape is known, so it is the one piece worth naming
+  static function carLamp(m:Facility, b:MeshBuf, bc:MeshBuf, out:CorpLampSet,
+      seen:Array<{ col:Int, row:Int }>):Void
+    {
+      var c0 = m.w;
+      var c1 = -1;
+      var r0 = m.h;
+      var r1 = -1;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.surf[row][col] != Surf.LIFT ||
+                !FacilityModel.inside(m, col, row))
+              continue;
+            if (col < c0) c0 = col;
+            if (col > c1) c1 = col;
+            if (row < r0) r0 = row;
+            if (row > r1) r1 = row;
+          }
+      if (c1 < 0)
+        return;
+      var col = Std.int((c0 + c1) / 2);
+      var row = Std.int((r0 + r1) / 2);
+      seen.push({
+        col: col,
+        row: row,
+      });
+      var c = CityConfig.cellToWorld(col, row);
+      out.posts.push(post(c.x, c.z, col, row, CorpStyle.CORR_MUL));
+      var pw = CorpStyle.PANEL_W / 2;
+      var pd = CorpStyle.PANEL_H / 2;
+      flat(bc, c.x - pw, c.x + pw, c.z - pd, c.z + pd,
+        CorpStyle.CEIL_Y - CorpStyle.PANEL_DROP, CorpStyle.C_PANEL);
+      out.panels++;
+      // and the pool over the WHOLE car rather than one cell of it, the same rule the room
+      // lattice follows: one pool per space, never one per fixture
+      var lo = CityConfig.cellToWorld(c0, r0);
+      var hi = CityConfig.cellToWorld(c1, r1);
+      flat(b, lo.x - CELL / 2, hi.x + CELL / 2, lo.z - CELL / 2, hi.z + CELL / 2,
+        CorpStyle.GLOW_Y, CorpStyle.C_POOL);
+      out.pools++;
     }
 
 // the lit call plate beside every lift door.
@@ -333,7 +393,7 @@ class CorpLamps
 // cannot see is cut to a true zero rather than dimmed — without it every lit room shines through
 // its own walls), and the render order is below the actors because nothing in the sprite pool
 // writes depth, so a glow drawn at their order paints its core through anyone in front of it
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, order:Float):Void
     {
       if (b.idx.length == 0)
         return;
@@ -351,7 +411,7 @@ class CorpLamps
         side: THREE.DoubleSide,
         blending: untyped THREE.AdditiveBlending,
       })));
-      mesh.renderOrder = Sprites.ORD_FIXTURE;
+      mesh.renderOrder = order;
       scene.add(mesh);
     }
 }
