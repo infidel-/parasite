@@ -15,6 +15,14 @@ typedef Lane = {
   var dx:Float;      // and its unit direction
   var dz:Float;
   var len:Float;     // world length
+  // WHICH WAY TRAFFIC RUNS ON IT, +1 along `dx/dz` or -1 against. Off the lane's OWN lateral cell
+  // index, so the two cells of a CityConfig.ROAD_W road carry opposite streams and a car can
+  // never meet one coming the other way down the same line
+  var dir:Int;
+  // and ONE speed for the whole lane, hashed off its own corner. Per-CAR speed is what let two of
+  // them on one line converge and drive through each other; with the lane holding it, nothing
+  // ever overtakes and the only thing that varies along a lane is where each car started
+  var v:Float;
 };
 
 // what the crowd placed, for __corp()
@@ -62,6 +70,9 @@ class CorpCrowd
   var road:Array<Lane>;
   var walkMesh:InstancedMesh;
   var carMesh:InstancedMesh;
+  // the cars' own atlas window, one vec4 per instance — see `cars`
+  var carUV:js.lib.Float32Array;
+  var carAttr:InstancedBufferAttribute;
   // seconds since the area was built, off RAW dtMs — see the class header
   var clock = 0.0;
   var tmp = new Matrix4();
@@ -70,6 +81,11 @@ class CorpCrowd
   var flat = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0));
   var pos = new Vector3();
   var scl = new Vector3();
+  // the four headings a car can take, in FacilityGeom.face's numbering: 0 = -z, 1 = +z, 2 = -x,
+  // 3 = +x. Built once, because a car only ever points down its lane
+  static var HX = [0.0, 0.0, -1.0, 1.0];
+  static var HZ = [-1.0, 1.0, 0.0, 0.0];
+  var head:Array<Quaternion>;
 
   public var n(default, null):CorpCrowdSet;
 
@@ -77,6 +93,11 @@ class CorpCrowd
 // down to CorpStyle.STREET_Y with everything else
   public function new(group:Group, ?city:City, ?p:PlateBox)
     {
+      // the art points at -z, so heading 0 takes no yaw at all and the other three fall out of
+      // atan2. `flat` lays the plane down FIRST and the yaw turns it in world, which is the order
+      // the multiply reads in
+      head = [for (d in 0...4) new Quaternion()
+        .setFromAxisAngle(new Vector3(0, 1, 0), Math.atan2(-HX[d], -HZ[d])).multiply(flat)];
       // the warm path takes no city and builds no agents — see `warm`
       if (city == null)
         {
@@ -106,9 +127,8 @@ class CorpCrowd
         }
       if (n.cars > 0)
         {
-          carMesh = batch(group, n.cars, CorpStyle.CAR_COLOR, CorpStyle.CAR_GLOW);
-          place(carMesh, road, n.cars, CorpStyle.CAR_LEN, CorpStyle.CAR_WIDE,
-            CorpStyle.CAR_SPEED, 977);
+          carMesh = cars(group, n.cars);
+          drive();
         }
     }
 
@@ -121,8 +141,7 @@ class CorpCrowd
         place(walkMesh, walk, n.walkers, CorpStyle.WALK_SZ, CorpStyle.WALK_SZ,
           CorpStyle.WALK_SPEED, 0);
       if (carMesh != null)
-        place(carMesh, road, n.cars, CorpStyle.CAR_LEN, CorpStyle.CAR_WIDE,
-          CorpStyle.CAR_SPEED, 977);
+        drive();
     }
 
 // write every agent's transform for the current clock. `salt` keeps the two families' hashes apart
@@ -158,6 +177,87 @@ class CorpCrowd
       mesh.instanceMatrix.needsUpdate = true;
     }
 
+// write every car's transform and its picture for the current clock.
+//
+// SEPARATE FROM `place` and not a flag on it, because almost nothing is shared: a car takes a lane
+// that has already decided which way it runs and how fast, it is yawed rather than scale-swapped,
+// and it carries a crop of the sheet. What the two do share is that NOTHING IS STORED — the lane,
+// the cell, the slot and the speed are all a pure function of the index and the clock
+  function drive():Void
+    {
+      for (i in 0...n.cars)
+        {
+          var h = FacilityModel.mix((i + 978) * 374761393);
+          var ln = road[h % road.length];
+          var cell = CorpStyle.CAR_CELLS[(h >>> 5) % CorpStyle.CAR_CELLS.length];
+          // ONE SLOT PER CAR on its lane rather than a continuous phase: with the lane holding
+          // the speed, two cars that start together stay together forever, and a slot is what
+          // stops them starting together in the first place
+          var slots = Std.int(ln.len / (2 * CorpStyle.CAR_LEN));
+          if (slots < 2)
+            slots = 2;
+          var v = CorpStyle.CAR_SPEED * ln.v;
+          var s = (ln.len * ((h >>> 19) % slots) / slots + clock * v) % ln.len;
+          if (ln.dir < 0)
+            s = ln.len - s;
+          var hx = ln.dx * ln.dir;
+          var hz = ln.dz * ln.dir;
+          pos.set(ln.x0 + ln.dx * s, CorpStyle.CROWD_Y, ln.z0 + ln.dz * s);
+          // the quad's local y is the car's LENGTH — the art points nose-up — and the heading
+          // quaternion turns it down its lane
+          scl.set(cell.wide, cell.len, 1);
+          tmp.compose(pos, head[hx != 0 ? (hx > 0 ? 3 : 2) : (hz > 0 ? 1 : 0)], scl);
+          carMesh.setMatrixAt(i, tmp);
+          carUV[i * 4] = cell.u0;
+          carUV[i * 4 + 1] = cell.v0;
+          carUV[i * 4 + 2] = cell.du;
+          carUV[i * 4 + 3] = cell.dv;
+        }
+      carMesh.instanceMatrix.needsUpdate = true;
+      carAttr.needsUpdate = true;
+    }
+
+// the traffic batch: one instanced quad per car, each showing a different crop of the one sheet.
+//
+// THE PER-INSTANCE UV RECT IS render.decals.DecalBatch's, cloned rather than shared — that class
+// is a POOL with its own capacity, atlas and alpha channel and owns none of this. What is borrowed
+// is the two lines that matter: an `instanceUV` vec4 attribute, and the `vMapUv` rewrite that has
+// to land AFTER <uv_vertex> because that is what assigns it. Without them four cars would be four
+// materials and four draw calls.
+//
+// AND IT IS NOT ADDITIVE, unlike the walkers beside it: a picture blended additively over the road
+// is a stain rather than a car. Plain unlit basic with an alphaTest, like every other street
+// surface — and the headlights still bloom, because they are painted past the threshold
+  function cars(group:Group, count:Int):InstancedMesh
+    {
+      carUV = new js.lib.Float32Array(count * 4);
+      carAttr = new InstancedBufferAttribute(carUV, 4);
+      untyped carAttr.setUsage(THREE.DynamicDrawUsage);
+      var geo:Dynamic = new PlaneGeometry(1, 1);
+      geo.setAttribute('instanceUV', carAttr);
+      var mat:Dynamic = new MeshBasicMaterial({
+        map: Textures.loadTexture(CorpStyle.TRAFFIC, 'sprite'),
+        color: new Color(0xffffff).multiplyScalar(CorpStyle.CAR_DIM),
+        alphaTest: 0.5,
+        side: untyped THREE.DoubleSide,
+      });
+      mat.onBeforeCompile = function(shader:Dynamic)
+        {
+          shader.vertexShader = 'attribute vec4 instanceUV;\n' +
+            StringTools.replace(shader.vertexShader, '#include <uv_vertex>',
+              '#include <uv_vertex>\n  vMapUv = uv * instanceUV.zw + instanceUV.xy;');
+        };
+      // three keys its program cache on the base params and NOT on onBeforeCompile, so without an
+      // own key this patched program could be handed to any other plain mapped basic
+      untyped mat.customProgramCacheKey = function() return 'corpCarUV';
+      var mesh = new InstancedMesh(geo, mat, count);
+      mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
+      untyped mesh.frustumCulled = false;
+      mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
+      group.add(mesh);
+      return mesh;
+    }
+
 // compile the two crowd programs into a warm scene without generating a city for them. an
 // InstancedMesh's USE_INSTANCING is a program define and additive + a map + transparent are all in
 // three's key, so nothing else in this kind covers it — and a one-instance batch compiles exactly
@@ -168,7 +268,7 @@ class CorpCrowd
       scene.add(g);
       var c = new CorpCrowd(g);
       c.batch(g, 1, CorpStyle.WALK_COLOR, CorpStyle.WALK_GLOW);
-      c.batch(g, 1, CorpStyle.CAR_COLOR, CorpStyle.CAR_GLOW);
+      c.cars(g, 1);
     }
 
 // one additive batch of glow quads. NO vision mask and NO indoor mask, the street's own rule —
@@ -234,12 +334,18 @@ class CorpCrowd
                   len++;
                 if (len < CorpStyle.LANE_MIN)
                   continue;
+                // the LATERAL cell index decides the sense — the row for a lane along x, the
+                // column for one along z — so the two cells of a two-wide road come out opposed
+                var lat = (axis == 0 ? row : col);
+                var lh = FacilityModel.mix((col * 92837111) ^ (row * 689287499) ^ axis);
                 out.push({
                   x0: CorpStreet.cellX(p, col) + CELL / 2,
                   z0: CorpStreet.cellZ(p, row) + CELL / 2,
                   dx: dc * 1.0,
                   dz: dr * 1.0,
                   len: (len - 1) * CELL * 1.0,
+                  dir: (lat & 1) == 0 ? 1 : -1,
+                  v: 1 + ((lh % 1000) / 1000 - 0.5) * 2 * CorpStyle.CROWD_SPEED_VAR,
                 });
               }
         }

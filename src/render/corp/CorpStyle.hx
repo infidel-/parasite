@@ -5,6 +5,19 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Surf;
 import render.facility.ShellOpts;
 
+// ONE CAR on the traffic sheet: where its picture is, and how big it is drawn.
+//
+// the uv rect is in 0..1 of the BUILT texture and is what render.corp.CorpCrowd hands the shader
+// per instance; `len`/`wide` are world units and are DERIVED from the same crop, never chosen
+typedef CarCell = {
+  var u0:Float;    // the crop's left edge
+  var v0:Float;    // and its bottom edge, with flipY already folded in
+  var du:Float;    // its width
+  var dv:Float;    // and its height
+  var len:Float;   // the car's world length, nose to tail
+  var wide:Float;  // and its width, which is `len` times the crop's own aspect
+};
+
 // every art path and tuning constant for the CORP TOWER, and the ShellOpts that says how its saved
 // grid is read.
 //
@@ -433,13 +446,39 @@ class CorpStyle
   // its headlights. A lit patch on the road seen from above IS what traffic looks like from the
   // twentieth floor, and it needs no billboarding, no atlas and no new art
   public static inline var WALK_SZ = 1.8;
-  public static inline var CAR_LEN = 8.0;
-  public static inline var CAR_WIDE = 3.6;
   public static inline var CROWD_Y = 0.06;
   public static inline var WALK_COLOR = 0xbcd0e8;
-  public static inline var CAR_COLOR = 0xffc070;
   public static inline var WALK_GLOW = 0.55;
-  public static inline var CAR_GLOW = 1.5;
+
+  // A CAR IS NOT A PATCH OF LIGHT AND THE PEDESTRIANS STILL ARE, which is the one place the
+  // paragraph above has been overruled: an 8 x 3.6 quad wearing a circular gradient is an ELLIPSE,
+  // and at this range that read as a yellow lozenge rather than as traffic. A person at 1.8 units
+  // is genuinely too small to be anything but the light they stand in and keeps the old treatment.
+  //
+  // FOUR CARS ON ONE SHEET, cropped per cell at draw time (render.corp.CorpCrowd injects the UV
+  // rect per instance the way render.decals.DecalBatch does), so the whole street's traffic is
+  // still ONE draw call whatever the family grows to
+  public static inline var TRAFFIC = 'textures/corp/traffic.png';
+  // the nominal length a car is drawn at. each cell below scales off its OWN pixel height against
+  // the sheet's median, so the van really is longer than the hatchback
+  public static inline var CAR_LEN = 8.0;
+  // what the unlit car quad's albedo is multiplied by. a touch over STREET_DIM because a car is
+  // small, moving and the thing the eye is meant to follow — fitted live, like STREET_DIM itself
+  public static inline var CAR_DIM = 0.78;
+  // and the cells, MEASURED off the drop at alpha > 220 and padded 3 px — an authored cell is an
+  // object in a quadrant and not the quadrant, and cropping to the quadrant would draw a third of
+  // each car as empty road. `len`/`wide` come out of each crop's own aspect, so nothing is
+  // stretched. See the note on `corp/traffic` in art/textures.json for the pixel rects
+  public static final CAR_CELLS:Array<CarCell> = [
+    // saloon    174x372 px, aspect 0.468
+    { u0: 0.1719, v0: 0.5850, du: 0.1699, dv: 0.3633, len: 8.08, wide: 3.78 },
+    // hatchback 171x303 px, aspect 0.564
+    { u0: 0.6621, v0: 0.6084, du: 0.1670, dv: 0.2959, len: 6.58, wide: 3.71 },
+    // van       180x421 px, aspect 0.428
+    { u0: 0.1699, v0: 0.0771, du: 0.1758, dv: 0.4111, len: 9.14, wide: 3.91 },
+    // estate    170x365 px, aspect 0.466
+    { u0: 0.6621, v0: 0.0996, du: 0.1660, dv: 0.3564, len: 7.92, wide: 3.69 },
+  ];
   // the shortest straight run of cells that is worth walking or driving down
   public static inline var LANE_MIN = 6;
 

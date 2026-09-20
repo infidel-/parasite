@@ -4270,6 +4270,17 @@
       "last_converted": "2026-09-20T23:18:06",
       "built_linear": 0.114,
       "built_srgb": 93.7
+    },
+    "corp/traffic": {
+      "src": "corp/traffic.png",
+      "class": "sprite",
+      "res": 512,
+      "needs_alpha": true,
+      "prompt": "A 2x2 grid of four separate city cars, each an isolated cut-out seen from DIRECTLY OVERHEAD (pure plan view, roof and bonnet only, no sides, no perspective). SEPARATION IS THE MOST IMPORTANT REQUIREMENT: each car sits entirely inside its own quarter of the image with a clear empty gutter of at least 15% on every side; nothing touches, overlaps or crosses the horizontal or vertical centre line. All four cars point STRAIGHT UP (nose toward the top edge of the image, tail toward the bottom), long axis vertical, perfectly symmetrical left to right. Each car has TWO SMALL BRIGHT YELLOW HEADLIGHT DOTS at its NOSE -- one at each front corner, pale warm yellow, clearly the brightest thing on the whole image -- and two small dim dark-red tail lamps at its tail. Body panels are matte and unlit: a roof panel, a windscreen and rear screen as dark flat trapezoids, thin panel seams, four small dark wheel patches just visible at the sides. Top left: a dark charcoal-grey saloon car. Top right: a deep muted navy-blue hatchback, slightly shorter. Bottom left: a dull dark-olive van, longer and more rectangular with a plain roof. Bottom right: a very dark maroon estate car. Each body keeps its own colour clearly -- they must not all read as the same grey.",
+      "note": "ONE LABEL, FOUR CELLS, and the runtime crops them -- the PACK-N shape, not four pack4 labels: render.corp.CorpCrowd deals a cell per car by hash and injects its UV rect per instance the way render.decals.DecalBatch does, so the whole street's traffic is still ONE draw call and a fifth car would be a fifth rect and no new material. The cells are MEASURED off the drop at alpha > 220 and padded 3 px, because an authored cell is an object in a quadrant and not a quadrant: saloon 174x372, hatchback 171x303, van 180x421, estate 170x365, aspects 0.468 / 0.564 / 0.428 / 0.466. Each car's WORLD length is its own pixel height against the family median 368.5 and its width falls out of its own aspect, so nothing is stretched and the van really is longer than the hatchback. The headlights are the art and not a light: they are painted the brightest thing on the sheet and clear CorpStyle.BLOOM_THRESHOLD 0.72 on their own, which is what lets the quad be a plain unlit basic like the rest of the street. background:'transparent' cut it cleanly first time -- 78.6% of pixels transparent and ZERO opaque pixels in either centre lane -- which is the reward for saying the VIEW ('seen from directly overhead') and never the surface it rests on.",
+      "last_converted": "2026-09-21T01:14:12",
+      "built_linear": 0.0255,
+      "built_srgb": 39.8
     }
   }
 }
