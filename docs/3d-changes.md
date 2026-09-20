@@ -296,3 +296,269 @@ masonry face measured above is at −121.00. Same arithmetic as the stall's, one
 away; it is out of this pass's scope and is written here so the next one has the number.
 
 Verdict: **KEEP.**
+
+## The street's edge is the CITY's edge, not the reach (second defect pass, phase 1)
+
+Reported: "grow half-tile outside 30%".
+
+**Raising the reach alone does nothing, and measuring that first is what saved the phase.** The
+citygen model is `GRID` 100 x `CELL` 4 = **400 units square**; the ring round a 224 x 180 plate at
+`STREET_REACH_FRAC` 0.5 already reaches 262 x 210 from the plate centre, i.e. it **overran the model
+by 62 units in x and 10 in z** before anything was touched. The loops only visit cells the model
+has, so what the player saw stopping was the CITY.
+
+So the model is mirror-tiled. `CorpStreet.fold(i)` folds a world cell index back into the 100 x 100
+by REFLECTING at each edge, and the ground loop runs `-GRID … 2*GRID` through it; a building is
+emitted once per tile `(tx, tz) ∈ {-1,0,1}²` with its footprint reflected on an odd tile
+(`CorpStreet.span`), which is still a rect, so nothing downstream learns it happened.
+`CorpCrowd.lanes` folds with the same function.
+
+**MIRRORING AND NOT A MODULO.** A plain wrap butts the model's west edge against its east one and
+cuts every road, block and kerb line that does not happen to line up; a reflection matches its
+neighbour by construction whatever the pattern. The cost is a far city symmetrical about each seam,
+which at 114 units down through fog nothing can read.
+
+**AND 0.65 IS THE FOG WALL, not a taste.** The camera sits ~26 over a plate at y 0 with the street
+114 below, so a cell at horizontal distance d is at range `sqrt(d² + 140²)` and `FOG_FAR` 240 puts
+it fully in haze at **d = sqrt(240² − 140²) = 195**. On a 75 x 60 area 0.65 gives 195 / 156 —
+exactly as far as anything can be seen. Past that the geometry is built into the fog colour.
+
+Census: road **2,815 → 7,979** cells, walkway 1,137 → 2,382, buildings 74 → **215** of 123
+generated, lit panes 829 → 2,409; crowd lanes 76/39 → 126/48. Pinned pose `lookFrom(-152, 26, -150,
+-172, 0, -172)`: **74 → 76 calls** (two more facade families survive into the frame), 147,164 tris,
+seven identical samples.
+
+Verdict: **KEEP.**
+
+## A lane with no lateral term is a head-on collision (second defect pass, phase 2)
+
+Reported: "car yellow ovals need to be replaced. generate car top view + add two yellow dots for
+lights in front", and "all cars use left lane and go into one another".
+
+Three separate faults in one 250-line file.
+
+**There was no car art at all.** `CorpCrowd.batch` was a unit plane wearing
+`Textures.makeGlowGradient()` — a procedural 64 px radial gradient — tinted `0xffc070 x 1.5`,
+additive, and scaled 8 x 3.6. A circle stretched 8:3.6 is an ellipse; that is the whole of the
+"yellow oval". Now `corp/traffic.png`, ONE 1k gen holding four top-down cars, cropped per cell at
+draw time with a per-instance `instanceUV` vec4 cloned from `render.decals.DecalBatch` — **still one
+draw call**, and a fifth car would be a fifth rect and no new material. The material stops being
+additive (a picture blended additively over asphalt is a stain) and the headlights are painted the
+brightest thing on the sheet so they clear `BLOOM_THRESHOLD` 0.72 on their own.
+
+**Cells are MEASURED, not quadrants**: at alpha > 220, padded 3 px, saloon 174x372, hatchback
+171x303, van 180x421, estate 170x365 — aspects 0.468 / 0.564 / 0.428 / 0.466. Each car's world
+length is its own pixel height against the family median 368.5 and its width falls out of its own
+aspect, so nothing is stretched and the van really is longer. `background:"transparent"` cut it
+first time — **78.6% transparent, ZERO opaque pixels in either centre lane** — the reward for saying
+the VIEW and never the surface.
+
+**And the collisions were arithmetic.** `back` mirrored only the parameter ALONG the run; `px/pz`
+came off the lane centreline unchanged, so both directions were written onto the same line of the
+same cell. A road is `ROAD_W` 2 cells and yields two parallel lanes, but a car picked one by an
+unbiased hash over the GLOBAL lane list, so the pair was never opposed. Now `Lane` carries `dir` off
+its own lateral cell index parity and ONE speed hashed per lane, and a car's phase is quantised to
+`max(2, len / 2·CAR_LEN)` slots. Nothing overtakes, nothing starts on top of anything, and the two
+cells of a road run opposite ways. Measured over three samples 2 s apart: closest pair **4.72
+units**, and it is two cars abreast on the two lanes of one road, 4 units apart across and 2.5 along.
+
+Verdict: **KEEP.**
+
+## A bare box with a lid is not a building seen from above (second defect pass, phase 3)
+
+Reported: "add some decoration on flat roofs" and "can we have simplified parapets?".
+
+The street emitted 4 wall faces (+4 podium) and one roof cap per building and nothing else — its own
+header said so. Three pieces now, and the order they are worth anything in is the order of the cost.
+
+**The rim's skins wear the BUILDING'S OWN WALL and only its cap takes the coping label**, which is
+what keeps 215 roofs of parapet to ONE new draw call: a face in a buffer that already exists costs
+nothing. Four thin rects, each contributing its outer hand, its inner hand and a top cap — taking
+the inner skin off the SAME thin rect rather than off an inset one is what gets the winding right
+without a second rect and without a flipped face, and the caps are cut so no two are coplanar at a
+corner. `render.world.roofs.Parapets` is the other way of doing it: **eight `BoxGeometry` blocks and
+up to six texture clones per roof**, affordable 40 times and not 215.
+
+Massing is `FlatRoofs.penthouseRect` verbatim — a pure function of the `Building`, already
+deterministic — emitted into the wall and roof-base buffers, so **zero new draw calls**. The plant is
+the city's own `RenderConfig.DETAIL_TYPES`, one merged mesh per type; `RoofDetails.addRoofDetails`
+itself cannot be called because it walks `WorldCtx.buildings`, which corp leaves empty.
+
+**The coping period had to be re-fitted and the first number was wrong**: tiled at the rim's own
+1.0 the art repeated every world unit and the roofline read as a dashed hazard stripe from the
+plate. 4.0 — one repeat per city cell, the pitch everything else down there uses.
+
+Census: **43 penthouses, 945 rooftop units** over 215 buildings. Pinned pose 76 → **83 calls**.
+
+**AND THE BUDGET IS WHAT CUT IT TO THREE TYPES.** Six decal types plus the coping took the pose to
+85 against a ceiling of 85 once the lift door's own batch landed, so `ROOF_DECO_TYPES` deals 0 / 2 /
+5 — the boxy unit, the round vent and the tank, the three that read as a SHAPE at this range. 85 →
+**82**. The fallback was named in the plan before the first one was emitted.
+
+Verdict: **KEEP, at half the type list.**
+
+## `isIndoor` is true for a lift car, so the parapet skipped four corners (second defect pass, phase 4)
+
+Reported: four probed faces and three complaints round the lift core — "light lamp mesh is painted
+under ai", "center elevator lamp", "coping near the elevator has a hole in them", and a
+`wall-office` face that "should be wall-lift".
+
+**The coping hole.** `FacilityGeom.parapet`'s notch loop skips a notch whose diagonal cell
+`isIndoor`, and `outward()` refuses to band a hand whose neighbour `isIndoor` — and `Surf.LIFT` 18
+sits inside `isIndoor`'s TILE(5)..OPEN(19) range while `ElevatorBlock` stands its 3 x 3 car OUTSIDE
+the wall ring on four wall posts of its own. So the ring was never banded on the car-facing hands
+and all four of the car's reentrant corners were skipped. One predicate, `roofed()` = indoor and not
+LIFT. A/B on the same plate: **204 cells / 1,451 quads → 207 / 1,580**, zero new draw calls. No kind
+but the tower deals LIFT, so the compound cannot move.
+
+**The lamp under the actors.** The probed face (no map, uv 0,0/1,0/1,1, y **5.75** = `CEIL_Y` 5.8 −
+`PANEL_DROP` 0.05) is `CorpLamps`' recessed ceiling panel, and the whole glow layer was ONE additive
+mesh at `Sprites.ORD_FIXTURE` 4.5 — below the actors. That order is right for a FLOOR POOL and
+`add()`'s own comment says why: nothing in the sprite pool writes depth, so a pool drawn after the
+actors paints through anyone standing in it. **A ceiling panel is the opposite case**, which
+`Sprites.hx`'s own header already names (`render.LightCone` sits at `ORD_ACTOR + 1`). The panels get
+their own buffer and their own mesh above the actors; the pools stay. **+1 draw call**, and measured
+by flipping the order live at a near-top-down pose: **18,019 pixels changed, max delta 213**.
+
+**The lift lamp off-centre.** `corridors()` is row-major greedy and LIFT opts into it, so the panel
+landed on the car's lowest-row, lowest-col cell and `near()` (spacing 5) blocked the other eight —
+one cell, 4 world units, off the middle of a 3 x 3 car. A named `carLamp` pass deals it on the
+centre cell first and pushes it into `seen`; the pool goes over the whole car, one per space.
+
+**The lift-side wall.** `surfOf` mapped the lift DOOR cell to `Surf.CARPET` on the grounds that it is
+circulation — but `ShellTex.wallInto` is indexed by the surface a face LOOKS INTO, so every face
+looking at it took CorpStyle's catch-all office board. Returns LIFT now: **9 → 10 LIFT cells**, 501 →
+500 CARPET, derived at load and so retroactive to every save. The doorway's reveal is still
+circulation, which comes from `m.tex.circ` and not from this.
+
+Verdict: **KEEP.**
+
+## A door that slides is a LOOK, not a flag (second defect pass, phase 5)
+
+Reported: "elevator doors are incorrect. need another texture and they should slide into the walls
+on open and back on close".
+
+`FacilityDoors.pose` was a pure Y rotation about a constant hinge — `setFromAxisAngle(_up, shut +
+swing · open)`, translation never moved — and the lift's leaves came out of `lookOf` as the same
+`Look.METAL` steel the server room gets.
+
+`Look` gains **LIFT = 4**, a fifth entry in both shells' `door` arrays (`FacilityStyle` reuses its
+existing metal leaf, so the compound cannot move), and `DoorBatch` gains a per-leaf `slide` vector.
+**The data decides and `pose` has no branch**: a leaf either turns or slides, so which of `swing` and
+`slide` is non-zero is what says which kind of door it is. The travel is `-s · u · LEAF_W` because
+leaf 0's jamb is already at `-u · LEAF_W` and it has to go the same way again.
+
+Measured on the live batch: shut jamb origins at x **−64 / −60** about a 4-unit opening centred at
+−62, open at **−66 / −58** — 2.0 = `LEAF_W` each, z unchanged, no rotation in either.
+
+Art: `corp/door-lift.png`, solo because the 2x2 door pack was already spent and a sliding pair is a
+different drawing anyway — two blank panels on one seam, where a hinged pair shows its stiles and a
+lever. **LIFT 0.642, solved against `corp/door-steel`'s own built 0.114 linear** rather than chosen;
+the drop came back at 0.0381 / 57.7 srgb, far under the family. `CorpModel.demo` pushes five doors
+now so the warm decodes all five sheets. Live distribution 5 glass / 8 office / 2 steel / 1 private /
+**1 lift**. **+1 draw call** — a fifth look is a fifth batch.
+
+Verdict: **KEEP.**
+
+## The 2D door icons, and a glint on a plant (second defect pass, phase 6)
+
+Reported: "2d doors need to be hidden" and "remove glisten from corp plant".
+
+`FacilityDoors.draws` was `typeID == AREA_FACILITY && o.type == 'door'`, and its own header explained
+the scoping: *"the corporate and underground-lab generators deal objects.Door too and nothing draws
+leaves for those"*. That went stale the moment the tower got its four pairs — every corp doorway had
+real leaves standing in it AND the old tile image lying across its threshold. One condition:
+**17 of 17 corp doors** now answer true. The underground lab still draws none and is still excluded.
+
+**The plant's glisten is not in its art, and measuring first is what found that.** Built albedo p50
+**108**, p99 **139**, max **162**, `frac > 184 = 0.0000` — no specular speck anywhere; the MR map is
+a rough dielectric (mean 0/253/0, metal max 0) and `Models.toLambert` drops it regardless. The glint
+is `render.world.PropEnv`, applied to every corp prop batch — a fake environment plus a `sheen`
+specular lobe, and its own header says twice that **it works on Lambert** and is for "the handful of
+materials that are supposed to be METAL". A ficus is not one. `FloorProp` gains `env`, declared
+false where the prop is declared rather than tested by path, so the next organic prop says so in the
+same place. Verified live: the plant's material carries no `propEnv` mark, the printer's still does.
+
+Verdict: **KEEP.**
+
+## The rooms were never a regression, and four things had to move to shrink them (second defect pass, phase 7)
+
+Reported: "something broke in our room generator: 37,12 room is empty, toilets and server rooms are
+giant. and all rooms are too large in general".
+
+**Nothing broke.** `CorpBuilding`'s `ROOM_SIZE * 1.5` is copied verbatim from
+`game.CorpAreaGenerator:434-436` and has not changed since before the 3D port; the `blocked`/`must`
+pair the previous pass added moves the toilet's pick in **1 seed in 300, by 3 cells**. What changed
+is that a 110-cell washroom became legible.
+
+Measured at HEAD over 300 seeds / 3,629 rooms: area p10 63, **median 105**, p90 165, **max 384**;
+toilet mean 70.3 (a 7 x 10 washroom), servers 82.3, cubicle 165.1; 12.10 rooms a floor. Width
+histogram carried a bimodal tail at **20-26 cells, 235 rooms** — that is the LEAK: `subdivideLargeRooms`
+stamped the FIRST product of a split `BLDG_ROOM_MARKED` without re-testing it, and only the far half
+stayed `BLDG_ROOM` for the scan to find again. Cut once, done, at whatever size one cut left it.
+
+Four changes: `CorpTemp.SUBDIVIDE_OVER = 1.2` (the compound's own constant, same name, same reason);
+the split becomes a **cut-until-it-fits loop** re-measuring at (x, y), which stays the room's
+top-left because the scan is row-major and `getRoom` never walks back; `SPLIT_MIN` 4 → 6; and the
+fixture runs get caps — **3 basins, 3 stalls, 4 rack rows**, centred on their wall instead of
+filling it, because `toilet()` ran a counter across the whole top wall and `servers()` a rack row
+every 2 cells for the full height, so both scaled linearly with a room nothing said should be big.
+
+After: area p10 42, **median 64**, p90 99, **max 144**, widths 5..12 with the tail **gone (0 over
+12)**; toilet 41.4, servers 45.3, cubicle 103.6; **18.53 rooms a floor**. Live on a regenerated
+plate: basins 10 → **4**, stalls 5 → 4, racks 33 → 6.
+
+**FOUR ORACLE ROUNDS, and three of them were the deal and not the carve.** (a) 11/3000 "quota short:
+room-toilet got 0" — more rooms means longer chains off the corridor, so `deadEnds`' blunt "block
+every WC on the floor" could empty the board by the fourth attempt; the loop now adds only what
+still leaves two legal homes, and relaxes entirely if it cannot. (b) Narrowing `deadEnds` to the
+rooms that individually fail `blocksRoute` went **1 → 30+ failures**: the case it exists for is TWO
+dead ends in parallel, where neither alone disconnects anything. (c) `blocksRoute` asked whether
+every room in `state.rooms` was still seen, so ONE room the corridor cannot reach over the DOOR
+graph — `CorpConnect` guarantees the LIFT reaches every room over TILES, a different graph — made it
+true for every roomID: **all 18 rooms of seed 777 blocked**, and the protection turned itself off.
+It compares against the baseline reach now. (d) `blocked` was being grown AFTER the deal that
+stands, which `GenCheck.blocksFit` then rejects; the additions moved to the top of the next round.
+Plus `ROOM_CUBICLE` minW/minH 9x7 → **8x6**, refitted because the carve moved under it — 2/3000 had
+no room left that cleared 9x7.
+
+**And the honest consequence, not asked for and not hidden: open plan went 21% → 46% of rooms**
+(771/3,629 → 2,560/5,560). The quota's maxes were fitted to a 12-room floor and the filler takes
+everything they do not claim. Left alone deliberately — "open plan is the filler" is the design.
+
+3000/3000 corp and 3000/3000 facility green; 200 corp digests identical twice; the facility digest
+byte-identical to before the change.
+
+Verdict: **KEEP.**
+
+## No room too narrow or too doored to furnish (second defect pass, phase 8)
+
+Reported: "37,12 room is empty".
+
+Two independent paths, both reproduced before either was touched.
+
+**A narrow open-plan room laid no desks.** `open()` centres a single column at `sx = x1 + w/2 - 1`
+and then tests `sx + tableW >= room.x2`, which for `cols == 1` is true at **every width under 7** —
+so the loop spun to its `cnt > 100` guard and the room came out bare. 64 of 771 open rooms before
+phase 7; far worse after it, because a capped carve mints many more 6-wide rooms (1,250 of 5,560 at
+width 6 alone). A centred column is already clear of both edges and does not want the walkway margin
+a multi-column run needs, so the test is `sx + tableW - 1 > room.x2` there — and a BREAK, not a
+continue, because the width does not change between rows.
+
+**An exec office with a door in both end walls got marble and nothing else.** `hasTable` was set
+true whenever the room cleared 6 x 6, whether or not `execDesk` had actually placed anything — and
+`execDesk` returns silently when both end walls carry a door, because it only ever put the desk
+against one of them. With `hasTable` lying, the `!hasTable` escape to `decorateCorners` was closed,
+and at exactly `w == 6` the `w >= 7` arm was closed too.
+
+`execDesk` returns a Bool now; the guard drops to 5 x 5, which is what the demand itself asks for (a
+3-wide desk centred in a 5-wide room lands x1+1..x1+3 with a clear column each side); and when both
+ends have a door the desk goes **free-standing in the middle of the room**, which is what an
+executive's desk is anyway. Nothing about it requires a wall behind it.
+
+Measured with a throwaway trace counting rooms whose tree node ends with no zone: **382 in 600 seeds
+before, every one of them an exec office — 0 after.** `nodes/table` 4.34 → **5.00**, i.e. 3 exec +
+2 meeting, every exec room laying its desk. 3000/3000 corp and facility green; 200 corp digests
+identical twice; facility digest unchanged.
+
+Verdict: **KEEP.**

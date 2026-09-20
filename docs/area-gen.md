@@ -1151,3 +1151,84 @@ mark that says which zone laid them. **`parking` and `yard` DO come back separat
 one block called `lot` until `Const.TILE_PARKING` gave the car park a mark of its own.
 
 Full detail, and the two traps it cost to find, in [`debug-surface.md`](debug-surface.md).
+
+## A corp room is 12 cells, and four things had to move to make it so
+
+"toilets and server rooms are giant. and all rooms are too large in general", and the first thing
+worth writing down is that **nothing had broken**. `CorpBuilding`'s `ROOM_SIZE * 1.5` is copied
+verbatim from `game.CorpAreaGenerator:434-436` and predates the 3D port; the previous pass's
+`blocked`/`must` pair moves the toilet's pick in **one seed in three hundred, by three cells**. The
+carve had always been this coarse — the port is what made a 110-cell washroom legible.
+
+Measured over 300 seeds / 3,629 rooms: area p10 63, **median 105**, p90 165, **max 384**; toilet
+mean 70.3 (a 7 x 10 washroom), servers 82.3, cubicle 165.1; 12.10 rooms a floor. And the width
+histogram was **bimodal**, with 235 rooms out at 20-26 cells.
+
+**THAT TAIL IS A LEAK AND NOT A SETTING.** `subdivideLargeRooms` cut a room and then stamped
+`markRoom(getRoom(cells, x, y), BLDG_ROOM_MARKED)` — but a cut makes TWO rooms and only the far one
+stays `BLDG_ROOM` for the row-major scan to find again. The near one was marked finished at whatever
+size a single cut left it. It is a `while` loop now, re-measuring at `(x, y)`, which stays the near
+product's top-left because the scan is row-major and `getRoom` measures right and down from where it
+is given and never walks back.
+
+The other three: `CorpTemp.SUBDIVIDE_OVER = 1.2` (the compound answered the same complaint with the
+same constant under the same name, `FacilityBuilding.SUBDIVIDE_OVER`); `SPLIT_MIN` 4 → 6, because a
+4-wide slot is one nothing can be put in; and **caps on the fixture RUNS** — 3 basins, 3 stalls, 4
+rack rows, centred on their wall. `toilet()` ran a counter the whole width of the top wall and
+`servers()` a rack row every 2 cells for the full height, so a big room read as a swimming pool
+rather than as a big room with a washroom in it. A real washroom has three basins whatever the
+building.
+
+After: area p10 42, **median 64**, p90 99, **max 144**, widths 5..12, tail **gone**; toilet 41.4,
+servers 45.3; **18.53 rooms a floor**.
+
+### Retuning the carve moves the DEAL, and that is where the work was
+
+Four oracle rounds, three of them nothing to do with room size:
+
+- **11 towers in 3000: "quota short: room-toilet got 0".** More rooms means longer chains off the
+  corridor, so more rooms are the only way through to another — and `deadEnds` is blunt on purpose
+  (one stranded room names EVERY toilet and server room on the floor). Four rounds of that can rule
+  out every 5 x 5 room there is. `CorpBlocks.assign` now adds only what still leaves two legal
+  homes, and where even that fails it drops the pre-deal test entirely and takes the deal: **a tower
+  with its washroom behind another room is a defect, a tower with no washroom is a broken area.**
+- **Narrowing `deadEnds` to the rooms that individually fail `blocksRoute` went 1 → 30+ failures.**
+  The case it exists for is TWO dead ends in parallel, where neither on its own disconnects
+  anything. The bluntness is the point; what has to be bounded is how much of it one round may act on.
+- **`blocksRoute` was asking the wrong question.** It walked from room 0 with one room shut off and
+  then required every room in `state.rooms` to have been seen — so ONE room the corridor cannot
+  reach over the DOOR graph made it true for every roomID. `CorpConnect` guarantees the LIFT reaches
+  every room over TILES, which is a different graph. On seed 777 that blocked **all 18 rooms**,
+  `assign` had nowhere legal for either 5 x 5 demand, and the whole protection turned itself off —
+  producing exactly the server-room-behind-the-toilet it exists to prevent. It compares against the
+  baseline reach now.
+- **`blocked` must not grow after the deal that stands.** `GenCheck.blocksFit` re-reads the static
+  once the area is built and asserts the deal honours it, so a ruling-out added at the end of the
+  last round is a self-inflicted "room-servers dealt a block its own `must` rejects". The additions
+  happen at the top of the next round instead.
+
+And `ROOM_CUBICLE`'s minW/minH went 9x7 → **8x6**: the mins were fitted when a floor carried 12 rooms
+averaging 110 cells, and 2 towers in 3000 had nothing left that cleared 9x7 at all.
+
+**The stated consequence: open plan went from 21% of rooms to 46%** (771/3,629 → 2,560/5,560). The
+quota's maxes were fitted to a 12-room floor and the filler takes whatever they do not claim. Left
+alone — open plan being the filler is the design, and changing the maxes is a separate decision.
+
+## Two ways a corp room came out with no furniture in it
+
+"37,12 room is empty" was two independent paths, and a throwaway trace counting tree nodes that end
+with no zone is what separated them: **382 in 600 seeds, every single one an exec office.**
+
+- **`hasTable` lied.** `exec` set it true whenever the room cleared 6 x 6, whether or not `execDesk`
+  had placed anything — and `execDesk` returns silently when both end walls carry a door, because it
+  only ever put the desk against one of them. With the flag lying, the `!hasTable` escape to
+  `decorateCorners` was closed, and at exactly `w == 6` the `w >= 7` arm was closed too: marble and
+  nothing else. It returns a Bool now, its guard drops to the 5 x 5 the demand itself asks for, and
+  a desk with a door in both ends goes **free-standing in the middle of the room** — nothing about an
+  executive's desk requires a wall behind it. 382 → **0**, `nodes/table` 4.34 → 5.00.
+- **A centred desk column was refused at every width under 7.** `open()` tests
+  `sx + tableW >= room.x2`, which is the walkway margin a MULTI-column run needs; a centred single
+  column is already clear of both edges, so the test was true for every row and the loop spun to its
+  `cnt > 100` guard laying nothing. 64 of 771 open rooms before the carve was retuned, and far more
+  after — a capped carve mints 1,250 six-wide rooms out of 5,560. It is also a `break` and not a
+  `continue`: the width does not change between rows.
