@@ -179,6 +179,10 @@ class Saves extends UIWindow
         text: 'Overwrite slot ' + slot + '?',
         sub: 'The save currently in this slot will be replaced.',
         danger: true,
+        // `danger` is the RED DESTRUCTIVE STYLING and nothing else here — ui.YesNo derives its
+        // default kicker from that same flag ('Confirm exit'), which is right for the two real
+        // exit dialogs and wrong for a slot overwrite. this is what _YesNoParams.kicker is for
+        kicker: 'Confirm overwrite',
         back: _UIState.UISTATE_SAVES,
         func: function(yes: Bool) {
           if (yes)
