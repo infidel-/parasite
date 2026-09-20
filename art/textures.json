@@ -3604,130 +3604,95 @@
       "last_lift": 0.897
     },
     "corp/floor-carpet": {
-      "src": "corp/floor-pack-a.png",
+      "src": "corp/floor-carpet.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        6,
-        6,
-        500,
-        500
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Circulation carpet tile: dark charcoal low-pile loop carpet laid as square modular carpet tiles, EXACTLY FOUR courses across and FOUR courses down, thin tight joints, faint alternating pile direction between neighbouring tiles, fine even fibre grain. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the tile courses must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:48:47",
-      "built_linear": 0.1226,
-      "built_srgb": 97.1,
-      "lift": 0.625,
-      "last_lift": 0.625
+      "lift": 0.564,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:38:01",
+      "last_lift": 0.564,
+      "built_linear": 0.1178,
+      "built_srgb": 96.1
     },
     "corp/floor-cubicle": {
-      "src": "corp/floor-pack-a.png",
+      "src": "corp/floor-cubicle.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        518,
-        6,
-        500,
-        500
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Cubicle-farm carpet tile: the same square modular low-pile loop carpet system as a circulation carpet but a little LIGHTER and cooler, with a fine two-tone fleck through the pile, EXACTLY FOUR courses across and FOUR courses down, thin tight joints. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the tile courses must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:48:47",
-      "built_linear": 0.1091,
-      "built_srgb": 91.2,
-      "lift": 0.91,
-      "last_lift": 0.91
+      "lift": 0.939,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:39:22",
+      "last_lift": 0.939,
+      "built_linear": 0.1051,
+      "built_srgb": 90.3
     },
     "corp/floor-meeting": {
-      "src": "corp/floor-pack-a.png",
+      "src": "corp/floor-meeting.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        6,
-        518,
-        500,
-        500
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Boardroom carpet: dense plain CUT-PILE broadloom in a deep warm grey-taupe, NO tile joints at all, one unbroken field, very fine even pile grain with the faintest directional sheen. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:48:47",
-      "built_linear": 0.0992,
-      "built_srgb": 87.3,
-      "lift": 0.76,
-      "last_lift": 0.76
+      "lift": 0.861,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:40:07",
+      "last_lift": 0.861,
+      "built_linear": 0.0972,
+      "built_srgb": 86.6
     },
     "corp/floor-exec": {
-      "src": "corp/floor-pack-a.png",
+      "src": "corp/floor-exec.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        518,
-        518,
-        500,
-        500
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Executive stone floor: large-format pale warm grey HONED stone slabs, EXACTLY TWO slabs across and TWO down, very thin tight joints, fine even matte mineral grain with the faintest veining. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the slab joints must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:48:47",
-      "built_linear": 0.1236,
-      "built_srgb": 96.7,
-      "lift": 1.36,
-      "last_lift": 1.36
+      "lift": 1.67,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:40:49",
+      "last_lift": 1.67,
+      "built_linear": 0.1216,
+      "built_srgb": 96.4
     },
     "corp/floor-open": {
-      "src": "corp/floor-pack-b.png",
+      "src": "corp/floor-open.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        6,
-        6,
-        498,
-        498
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Open-plan office floor: wide pale grey-oak vinyl PLANK laid in an offset brick bond, EXACTLY SIX courses of plank from top to bottom, thin darker joints between courses and staggered butt joints, faint straight wood grain running along each plank. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the plank courses must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:49:48",
-      "built_linear": 0.1196,
-      "built_srgb": 94.7,
-      "lift": 1.073,
-      "last_lift": 1.073
+      "lift": 1.359,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:41:17",
+      "last_lift": 1.359,
+      "built_linear": 0.1163,
+      "built_srgb": 94.2
     },
     "corp/floor-kitchen": {
-      "src": "corp/floor-pack-b.png",
+      "src": "corp/floor-kitchen.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        518,
-        6,
-        498,
-        498
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Staff kitchen floor: warmer mid-brown oak PLANK, narrower than a wide board, laid in an offset brick bond, EXACTLY EIGHT courses of plank from top to bottom, thin dark joints, staggered butt joints, straight grain with the occasional small knot. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the plank courses must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:49:48",
-      "built_linear": 0.1161,
-      "built_srgb": 92.4,
-      "lift": 0.962,
-      "last_lift": 0.962
+      "lift": 0.791,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:41:39",
+      "last_lift": 0.791,
+      "built_linear": 0.117,
+      "built_srgb": 91.2
     },
     "corp/floor-washroom": {
-      "src": "corp/floor-pack-b.png",
+      "src": "corp/floor-washroom.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        6,
-        518,
-        498,
-        498
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Washroom floor: large-format dark charcoal stone tiles, EXACTLY THREE across and THREE down, thin tight grout lines, fine even matte grain. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the grout lines must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no drain, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:49:48",
-      "built_linear": 0.1136,
-      "built_srgb": 94.4,
-      "lift": 0.676,
-      "last_lift": 0.676
+      "lift": 0.569,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:41:59",
+      "last_lift": 0.569,
+      "built_linear": 0.1115,
+      "built_srgb": 93.8
     },
     "corp/floor-lift": {
       "src": "corp/floor-pack-b.png",
@@ -3928,58 +3893,43 @@
       "last_lift": 0.874
     },
     "corp/desk-top": {
-      "src": "corp/desk-pack.png",
+      "src": "corp/desk-top.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        0,
-        0,
-        512,
-        512
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable MATERIAL texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. An office desk WORKTOP: pale warm grey laminate with a very fine even straight grain running left to right, completely matte and completely plain, no edge, no join, no fitting. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no scratch, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T16:21:48",
-      "built_linear": 0.1204,
-      "built_srgb": 95.0,
-      "lift": 2.478,
-      "last_lift": 2.478
+      "lift": 2.418,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across every desk run in the building, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:43:12",
+      "last_lift": 2.418,
+      "built_linear": 0.1184,
+      "built_srgb": 94.7
     },
     "corp/desk-front": {
-      "src": "corp/desk-pack.png",
+      "src": "corp/desk-front.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        513,
-        0,
-        511,
-        511
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable MATERIAL texture filling the whole square image edge to edge, seen straight on in FLAT ELEVATION, no perspective. The DRAWER FRONT of an office desk pedestal: matte white lacquer in EXACTLY THREE equal horizontal drawer fronts from top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the three-drawer rhythm must CLOSE across the top and bottom edges so a stack of these reads as a continuous run of drawers. Nothing else in the image \u2014 no carcass edge, no handle knob, no floor, no wall, no shadow cast on anything. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T16:21:48",
-      "built_linear": 0.127,
-      "built_srgb": 95.0,
-      "lift": 4.443,
-      "last_lift": 4.443
+      "lift": 5.223,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across every desk run in the building, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:43:32",
+      "last_lift": 5.223,
+      "built_linear": 0.1249,
+      "built_srgb": 95.4
     },
     "corp/desk-side": {
-      "src": "corp/desk-pack.png",
+      "src": "corp/desk-side.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        0,
-        513,
-        511,
-        511
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable MATERIAL texture filling the whole square image edge to edge, seen straight on in FLAT ELEVATION, no perspective. The plain END PANEL of an office desk carcass: matte white lacquer as one unbroken plane, with a single fine VERTICAL shadow-gap reveal running the full height at the exact horizontal centre, and nothing else. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the reveal must run straight top to bottom so a run of these reads as a row of evenly spaced reveals. No carcass edge, no handle, no floor, no wall, no cast shadow. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T16:21:48",
-      "built_linear": 0.0964,
-      "built_srgb": 85.9,
-      "lift": 5.152,
-      "last_lift": 5.152
+      "lift": 4.802,
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across every desk run in the building, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-20T22:43:56",
+      "last_lift": 4.802,
+      "built_linear": 0.095,
+      "built_srgb": 86.1
     },
     "corp/partition": {
       "src": "corp/desk-pack.png",
@@ -4106,6 +4056,16 @@
       "built_srgb": 65.6,
       "lift": 0.902,
       "last_lift": 0.902
+    },
+    "corp/rack-top": {
+      "src": "corp/rack-top.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "ONE seamless tileable MATERIAL texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. The TOP LID of a server cabinet: dark grey powder-coated steel, a large recessed rectangular PERFORATED VENT panel of fine round holes in a regular grid occupying most of the field, a narrow flat steel margin around it with a fine recessed shadow-gap reveal, and two small round cable-entry knockout caps. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the perforation grid must close across the wrap. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No cables, no wall, no floor, no text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "note": "the LID of a server cabinet, tiled at CorpStyle.RACK_TILE. It exists because the rack was capped in corp/rack-side, which is the one-texture-per-face mistake docs/3d-geometry.md opens with: a perforated flank seen from above is not a lid, and the side's vertical rhythm ran across the top of every cabinet in the room.",
+      "last_converted": "2026-09-20T22:44:21",
+      "built_linear": 0.0426,
+      "built_srgb": 57.3
     },
     "corp/mirror": {
       "src": "corp/board-pack.png",

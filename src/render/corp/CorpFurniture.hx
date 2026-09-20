@@ -262,7 +262,8 @@ class CorpFurniture
           default: r.x0 += d;
         }
       var side = buf(CorpStyle.RACK_SIDE);
-      FacilityGeom.cap(side, r.x0, r.x1, r.z0, r.z1, CorpStyle.RACK_H, CorpStyle.RACK_TILE);
+      FacilityGeom.cap(buf(CorpStyle.RACK_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.RACK_H,
+        CorpStyle.RACK_TILE);
       for (dir in 0...4)
         {
           if (dir == front)

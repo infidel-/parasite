@@ -90,6 +90,10 @@ class CorpStyle
   public static inline var TABLE_SIDE = 'textures/corp/table-side.png';
   public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
   public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
+  // and the LID, which is its OWN surface and not the flank seen from above — the rule
+  // docs/3d-geometry.md opens with. Capped in RACK_SIDE, every cabinet in the room wore its
+  // perforated flank across its top
+  public static inline var RACK_TOP = 'textures/corp/rack-top.png';
   public static inline var MIRROR = 'textures/corp/mirror.png';
 
   // ---- the fittings ------------------------------------------------------------------------
