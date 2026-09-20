@@ -290,6 +290,7 @@ class GenRun
       check.tilesKnown(ctx);
       check.roomsSane(ctx, state.rooms);
       check.doorsSane(ctx, state.rooms, state.doors);
+      check.corpRoutesSane(state.rooms, state.doors);
       check.spawnsSane(ctx);
 
       // the quota, asked of the tree the generator actually walked

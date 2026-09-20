@@ -195,6 +195,99 @@ class CorpBuilding
       CorpBlocks.assign(state, node);
     }
 
+// THE ROOMS A WC OR A SERVER ROOM MUST NOT BE DEALT TO: something else's only route runs through
+// them.
+//
+// fixDoors gives every room a door onto a corridor wherever its own walls allow one, and a few
+// per cent of towers hold a room whose walls do not — it sits behind the rooms on the plate's edge
+// with no corridor of its own to open onto, so its one door goes to the room in front of it. If
+// THAT room is then dealt the WC, the only way in is through the WC: the server room reached
+// through the toilet, exactly as reported from the game.
+//
+// REPAIRED BY NOT DEALING IT rather than by cutting another door, because there is no other door
+// to cut — the walls that would take one face the plate's edge, which is why the room is in this
+// position at all. gen.blocks.CorpBlocks.demands hands this to its `must`, which Quota.deal and
+// gen.GenCheck.blocksFit both honour, so the toilet simply lands somewhere a corridor reaches
+  public static function passThrough(state: _CorpState): Map<Int, Bool>
+    {
+      var out = new Map<Int, Bool>();
+      for (r in state.rooms)
+        if (blocksRoute(state, r.id))
+          out.set(r.id, true);
+      return out;
+    }
+
+// the rooms a finished deal has put in the way: every WC and server room on the floor, named only
+// when SOMETHING IS BEHIND THEM.
+//
+// The single-room test above cannot see this case and asking it of PAIRS instead is far too
+// strong — it rules out a room in any two-room cut whatever the other room turns out to be, and
+// measured, that left 997 of 3000 towers with nowhere to put a server room at all. So the pair is
+// not predicted: the deal is made, the routes are walked, and CorpBlocks.assign re-deals with
+// whatever was in the way added to `blocked`. 3 towers in 3000 need the second attempt
+  public static function deadEnds(state: _CorpState): Array<Int>
+    {
+      var seen = new Map<Int, Bool>();
+      seen.set(0, true);
+      var open = [0];
+      while (open.length > 0)
+        {
+          var id = open.pop();
+          if (id != 0 && isDeadEnd(state, id))
+            continue;
+          for (d in state.doors)
+            {
+              var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
+              if (far < 0 ||
+                  seen.exists(far))
+                continue;
+              seen.set(far, true);
+              open.push(far);
+            }
+        }
+      for (r in state.rooms)
+        if (!seen.exists(r.id))
+          return [for (d in state.rooms) if (isDeadEnd(state, d.id)) d.id];
+      return [];
+    }
+
+// is this room one nobody should have to walk THROUGH?
+  static function isDeadEnd(state: _CorpState, roomID: Int): Bool
+    {
+      for (r in state.rooms)
+        if (r.id == roomID)
+          return r.role == ROLE_TOILET || r.role == ROLE_SERVERS;
+      return false;
+    }
+
+// would shutting this room off leave another room with no way to the corridor? walked over the
+// DOOR GRAPH and not the tiles, from room 0 — the corridor, doorsSane's own sentinel
+  static function blocksRoute(state: _CorpState, roomID: Int): Bool
+    {
+      var seen = new Map<Int, Bool>();
+      seen.set(0, true);
+      var open = [0];
+      while (open.length > 0)
+        {
+          var id = open.pop();
+          for (d in state.doors)
+            {
+              var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
+              if (far < 0 ||
+                  far == roomID ||
+                  seen.exists(far))
+                continue;
+              seen.set(far, true);
+              open.push(far);
+            }
+        }
+      for (r in state.rooms)
+        if (r.id != roomID &&
+            !seen.exists(r.id))
+          return true;
+      return false;
+    }
+
 // halve every room still over ROOM_SIZE * 1.5 on either axis
   static function subdivideLargeRooms(state: _CorpState,
       bx: Int, by: Int, bw: Int, bh: Int)
@@ -304,8 +397,8 @@ class CorpBuilding
       state.rooms = rooms;
     }
 
-// drop doors that join the same pair of rooms twice, and give every cluster of rooms that has no
-// corridor exit one
+// drop doors that join the same pair of rooms twice, and give every ROOM that has no corridor exit
+// one of its own
   static function fixDoors(state: _CorpState)
     {
       var doors = state.doors;
@@ -341,58 +434,30 @@ class CorpBuilding
           doors.remove(door);
         }
 
-      // group the rooms the surviving doors join, so a cluster that reaches no corridor can be
-      // found and opened
-      var clusters: Array<Array<Int>> = [];
-      for (door in doors)
-        {
-          var ok = false;
-          for (c in clusters)
-            {
-              if (door.roomID1 > 0 && Lambda.has(c, door.roomID1))
-                {
-                  if (!Lambda.has(c, door.roomID2))
-                    c.push(door.roomID2);
-                  ok = true;
-                }
-              if (door.roomID2 > 0 && Lambda.has(c, door.roomID2))
-                {
-                  if (!Lambda.has(c, door.roomID1))
-                    c.push(door.roomID1);
-                  ok = true;
-                }
-            }
-          if (ok)
-            continue;
-          clusters.push([ door.roomID1, door.roomID2 ]);
-        }
-
-      for (c in clusters)
-        {
-          if (Lambda.has(c, 0))
-            continue;
-          var cluster = c.slice(0, c.length);
-          while (cluster.length > 0)
-            {
-              var roomID = cluster[state.area.random(cluster.length)];
-              if (makeDoorToCorridor(state, roomID))
-                break;
-              cluster.remove(roomID);
-            }
-        }
-
-      // and a room nothing cut a door into at all — makeDoors skips one whose every wall spot is
-      // an inside corner. it is rare and it is a sealed room, so it gets the same treatment
+      // EVERY ROOM OWNS A DOOR ONTO A CORRIDOR, AND A CLUSTER DOES NOT COUNT.
+      //
+      // This used to group the rooms the surviving doors join and open ONE door per group that
+      // reached no corridor — a test satisfied the moment ANY room in the group touched one. So
+      // `servers -> toilet -> corridor` passed it, and the server room was reported from the game
+      // as reachable only by walking through the WC. A route through somebody else's room is not
+      // a route: the question is asked per ROOM, and the room that cannot answer cuts its own
+      // door. This also subsumes the pass that followed it, for a room makeDoors cut no door into
+      // at all (every one of its wall spots an inside corner) — that room owns nothing either
       for (room in state.rooms)
         {
-          var has = false;
+          var own = false;
           for (d in doors)
-            if (d.roomID1 == room.id || d.roomID2 == room.id)
-              {
-                has = true;
-                break;
-              }
-          if (!has)
+            {
+              if (d.roomID1 != room.id)
+                continue;
+              var delta = deltaMap[d.dir];
+              if (cells[d.x + delta.x][d.y + delta.y] == BLDG_CORRIDOR)
+                {
+                  own = true;
+                  break;
+                }
+            }
+          if (!own)
             makeDoorToCorridor(state, room.id);
         }
     }

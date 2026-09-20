@@ -76,6 +76,13 @@ class CorpBlocks
         }
     }
 
+  // the rooms a WC or a server room must not be dealt to: something else's only route runs through
+  // them. Filled by `assign` off the door graph and read by the two demands' own `must`, which
+  // Quota.deal and gen.GenCheck.blocksFit both honour. A static because a _GenDemand carries no
+  // state of its own and both readers are the same area's own pass — see
+  // gen.corp.CorpBuilding.passThrough, which is where the fault it is for is written up
+  public static var blocked: Map<Int, Bool> = new Map();
+
 // what a tower floor must end up with.
 //
 // the minW/minH are what each template needs to produce the thing rather than a token of it: a
@@ -100,6 +107,7 @@ class CorpBlocks
           minW: 5,
           minH: 5,
           fit: smallest,
+          must: function(b) return !blocked.exists(b.roomID),
         },
         {
           kind: ROOM_SERVERS,
@@ -108,6 +116,7 @@ class CorpBlocks
           minW: 5,
           minH: 5,
           fit: smallest,
+          must: function(b) return !blocked.exists(b.roomID),
         },
         {
           kind: ROOM_KITCHEN,
@@ -162,12 +171,28 @@ class CorpBlocks
           n.roomID = room.id;
           nodes.push(n);
         }
-      Quota.deal(nodes, demands(), ROOM_OPEN, state.area.rng);
-      for (i in 0...nodes.length)
+      // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
+      blocked = gen.corp.CorpBuilding.passThrough(state);
+      // and DEAL UNTIL NOTHING IS WALLED IN BEHIND A TOILET. The pre-deal test names the rooms a
+      // dead end cannot go in one at a time; two of them in parallel defeat it, and predicting
+      // THAT rules out so much of the plate that a third of towers end up with nowhere to put a
+      // server room (CorpBuilding.deadEnds carries the measurement). So the deal is checked and
+      // re-made instead: 3 towers in 3000 take the second attempt and none has ever taken a third
+      for (attempt in 0...4)
         {
-          state.rooms[i].role = roleOf(nodes[i].kind);
-          plate.children.push(nodes[i]);
+          for (n in nodes)
+            n.kind = '';
+          Quota.deal(nodes, demands(), ROOM_OPEN, state.area.rng);
+          for (i in 0...nodes.length)
+            state.rooms[i].role = roleOf(nodes[i].kind);
+          var bad = gen.corp.CorpBuilding.deadEnds(state);
+          if (bad.length == 0)
+            break;
+          for (id in bad)
+            blocked.set(id, true);
         }
+      for (n in nodes)
+        plate.children.push(n);
       return nodes;
     }
 }

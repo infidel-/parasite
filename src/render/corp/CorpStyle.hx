@@ -94,6 +94,37 @@ class CorpStyle
   // docs/3d-geometry.md opens with. Capped in RACK_SIDE, every cabinet in the room wore its
   // perforated flank across its top
   public static inline var RACK_TOP = 'textures/corp/rack-top.png';
+
+  // THE BLINKING STATUS FIELD ON A RACK'S FRONT, read off corp/rack-front.png rather than laid on
+  // an even grid — the trap render.facility.FacilityDeco.lights' own header records, where a
+  // regular lattice put specks across the vent mesh. The corp image holds THREE cabinets across
+  // with EIGHT units each, and every unit's dots are a short row at 0.242 / 0.566 / 0.891 of the
+  // image width; LED_U0/U1 are the lerp those three centres fall out of, so U1 past 1.0 is
+  // arithmetic and not a band the art has
+  public static inline var LED_U0 = 0.080;
+  public static inline var LED_U1 = 1.053;
+  public static inline var LED_COLS = 3;
+  public static inline var LED_ROWS = 8;
+  public static inline var LED_SIZE = 0.20;
+  // and the BAND up the face those eight rows sit in. The art's own frame leaves a margin top and
+  // bottom, so a field spread over the whole RACK_H would put its first and last row on steel:
+  // the units run 0.104 .. 0.935 of the face, which is 0.42 .. 3.74 of a 4.0 cabinet
+  public static inline var LED_Y0 = 0.42;
+  public static inline var LED_H = 3.32;
+
+  // the cable drape between two cabinets of one rank, ON their lids. bow swings a run sideways off
+  // the straight chord and wave keeps two of them from being parallel curves —
+  // render.facility.StripOpts spells both out.
+  //
+  // AND NO SAG, which is the one thing to get right here: the ribbon lies FLAT so that the camera,
+  // which looks down at 51 degrees, sees its width — and `sag` is taken out of world DOWN, so on a
+  // flat ribbon it does not hang the run, it sinks its middle into the lid it is lying on
+  public static inline var CABLE_BOW = 0.55;
+  public static inline var CABLE_WAVE = 0.14;
+  public static inline var CABLE_Y = 0.10;
+  // three strands per gap, each with its own bow sign and phase: one ribbon reads as a scratch on
+  // the lid and a patch bundle is what a rank of cabinets actually carries
+  public static inline var CABLE_N = 3;
   public static inline var MIRROR = 'textures/corp/mirror.png';
 
   // THE FOUR DOOR PAIRS, indexed by render.facility.FacilityModel.Look — the last facility texture

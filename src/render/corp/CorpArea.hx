@@ -365,6 +365,9 @@ class CorpArea implements Area3D
       // ticked them drew every leaf at the world origin and had a hole at every doorway — which
       // is what "what's up with doors" was looking at
       FacilityDoors.tick(doors, opts);
+      // the server room's blink clock, which is the compound's own shared uniform — see
+      // render.facility.FacilityDeco.lights, emitted from CorpFurniture.rack
+      render.facility.FacilityDeco.tick(opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);

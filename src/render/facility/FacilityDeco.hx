@@ -765,7 +765,23 @@ class FacilityDeco
                 localFace(b[B_RACK_SIDE], x0, x1, z0, z1, head + 1, y, y + h);
                 localCap(b[B_RACK_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_RACK_TILE);
               }
-            lights(leds, x0, x1, z0, z1, y, h, dir, col, row);
+            lights(leds, {
+              x0: x0,
+              x1: x1,
+              z0: z0,
+              z1: z1,
+              y: y,
+              h: h,
+              dir: dir,
+              col: col,
+              row: row,
+              u0: FacilityStyle.DECO_LED_U0,
+              u1: FacilityStyle.DECO_LED_U1,
+              // one row per CHASSIS, over however many repeats of the art the face is tall
+              rows: Math.round(h / FacilityStyle.DECO_RACK_TILE * FacilityStyle.DECO_LED_PER_TILE),
+              cols: FacilityStyle.DECO_LED_COLS,
+              size: FacilityStyle.DECO_LED_SIZE,
+            });
         }
     }
 
@@ -1551,40 +1567,36 @@ class FacilityDeco
 // beside their vent panels. It shipped as an even 6 x 3 grid over a band of the face, which put
 // specks across the vent mesh and across the recessed gaps between chassis — a lattice on a rack
 // rather than a rack's own ports
-  static function lights(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, h:Float,
-      dir:Int, col:Int, row:Int):Void
+  public static function lights(b:MeshBuf, o:LedOpts):Void
     {
       var e = FacilityStyle.DECO_LED_EPS;
       // the plane the field lies in, a hair proud of the face so the additive quad is never coplanar
-      var f = (dir == 0 ? z1 + e : (dir == 1 ? z0 - e : (dir == 2 ? x1 + e : x0 - e)));
+      var f = (o.dir == 0 ? o.z1 + e : (o.dir == 1 ? o.z0 - e : (o.dir == 2 ? o.x1 + e : o.x0 - e)));
       // ACROSS the face from the TEXTURE'S OWN u ORIGIN and not from the lower coordinate: `localFace`
       // opens u at FacilityGeom.ends' first vertex, which is x1 or z1 on two of the four hands. The
       // old even grid was symmetric about the face and could not tell the difference; a band pinned
       // to a strip of the art can, and pinned the wrong way round it lands on the vent panel
-      var w = FacilityGeom.ends(x0, x1, z0, z1, dir ^ 1);
-      var a0 = (dir < 2 ? w[0] : w[1]);
-      var a1 = (dir < 2 ? w[2] : w[3]);
-      // one row per CHASSIS, over however many repeats of the art the face is tall
-      var rows = Math.round(h / FacilityStyle.DECO_RACK_TILE * FacilityStyle.DECO_LED_PER_TILE);
-      var s = FacilityStyle.DECO_LED_SIZE / 2;
-      var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
-      for (r in 0...rows)
-        for (c in 0...FacilityStyle.DECO_LED_COLS)
+      var w = FacilityGeom.ends(o.x0, o.x1, o.z0, o.z1, o.dir ^ 1);
+      var a0 = (o.dir < 2 ? w[0] : w[1]);
+      var a1 = (o.dir < 2 ? w[2] : w[3]);
+      var s = o.size / 2;
+      var g = FacilityModel.mix((o.col * 971658137) ^ (o.row * 1266489917));
+      for (r in 0...o.rows)
+        for (c in 0...o.cols)
           {
-            var hh = FacilityModel.mix(g ^ ((r * FacilityStyle.DECO_LED_COLS + c) * 40503));
-            var uf = FacilityStyle.DECO_LED_U0 + (FacilityStyle.DECO_LED_U1 -
-              FacilityStyle.DECO_LED_U0) * (c + 0.5) / FacilityStyle.DECO_LED_COLS;
+            var hh = FacilityModel.mix(g ^ ((r * o.cols + c) * 40503));
+            var uf = o.u0 + (o.u1 - o.u0) * (c + 0.5) / o.cols;
             var ac = a0 + (a1 - a0) * uf;
-            var yc = y + h * (r + 0.5) / rows;
+            var yc = o.y + o.h * (r + 0.5) / o.rows;
             // r = level, g = blink phase, b = which of the two hues. see MeshBufTools.quadRGB and
             // the shader patch in `blink` — the three are read apart there rather than multiplied in
             var lvl = 0.7 + ((hh % 1000) / 1000) * 0.3;
             var ph = ((hh >>> 11) % 1000) / 1000;
             var hue = ((hh >>> 21) % 3 == 0 ? 0.0 : 1.0);
-            var p0 = (dir < 2 ? [ac - s, yc - s, f] : [f, yc - s, ac - s]);
-            var p1 = (dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
-            var p2 = (dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
-            var p3 = (dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
+            var p0 = (o.dir < 2 ? [ac - s, yc - s, f] : [f, yc - s, ac - s]);
+            var p1 = (o.dir < 2 ? [ac + s, yc - s, f] : [f, yc - s, ac + s]);
+            var p2 = (o.dir < 2 ? [ac + s, yc + s, f] : [f, yc + s, ac + s]);
+            var p3 = (o.dir < 2 ? [ac - s, yc + s, f] : [f, yc + s, ac - s]);
             MeshBufTools.quadRGB(b, p0, p1, p2, p3,
               [0, 0, 1, 0, 1, 1, 0, 1], lvl, ph, hue);
           }
@@ -1687,7 +1699,7 @@ class FacilityDeco
 // merges the ceiling panels and window spill with, and for the same reason. it is a SECOND mesh and
 // not a few more quads in that one because these MOVE: the glow layer is built once and never
 // touched again, and its brightness arithmetic is load-bearing for what blooms
-  static function lamps(scene:Scene, b:MeshBuf):Void
+  public static function lamps(scene:Scene, b:MeshBuf):Void
     {
       if (b.idx.length == 0)
         return;

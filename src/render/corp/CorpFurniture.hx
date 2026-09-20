@@ -3,8 +3,11 @@ package render.corp;
 import Const;
 import citygen.CityConfig;
 import three.Three;
+import render.facility.FacilityCable;
+import render.facility.FacilityDeco;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
+import render.facility.FacilityStyle;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -22,6 +25,8 @@ typedef CorpFit = {
   var basins: Int;      // washroom vanity cells
   var stalls: Int;      // WC cubicle cells
   var mirrors: Int;     // mirror panels over the vanity
+  var leds: Int;        // blinking status specks on the rack fronts
+  var cables: Int;      // cable drapes between the cabinets of a rank
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -59,6 +64,11 @@ class CorpFurniture
 
   // the buffers, keyed by the texture they will be merged under
   static var bufs:Map<String, MeshBuf>;
+  // and the two the server room adds, which are NOT keyed by texture because neither is a mapped
+  // lambert: the lights are one additive vertex-coloured mesh with a blink folded into it, and the
+  // cable is the compound's own ribbon art (the one reuse the port's brief allows outright)
+  static var leds:MeshBuf;
+  static var cables:MeshBuf;
   // and what the decoration pass emitted into them, read back by CorpArea for __corp()
   public static var deco(default, null):CorpDeco.CorpDecoSet;
 
@@ -66,6 +76,8 @@ class CorpFurniture
   public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):CorpFit
     {
       bufs = new Map();
+      leds = MeshBufTools.make();
+      cables = MeshBufTools.make();
       var n:CorpFit = {
         desks: 0,
         counters: 0,
@@ -75,6 +87,8 @@ class CorpFurniture
         basins: 0,
         stalls: 0,
         mirrors: 0,
+        leds: 0,
+        cables: 0,
       };
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -115,7 +129,17 @@ class CorpFurniture
       CorpDeco.casework(m, area, deco);
       for (tex in bufs.keys())
         FacilityGeom.add(scene, bufs.get(tex), tex, true, false);
+      // ONE additive mesh for every blinking speck in the room and ONE for every cable in it, both
+      // shared with the compound: render.facility.FacilityDeco.lamps folds in the blink shader and
+      // the clock it references BY IDENTITY, so the whole server room's lights cost one draw call
+      // and no per-frame work beyond FacilityDeco.tick
+      n.leds = Std.int(leds.idx.length / 6);
+      n.cables = Std.int(cables.idx.length / 6);
+      FacilityDeco.lamps(scene, leds);
+      FacilityGeom.add(scene, cables, FacilityStyle.CABLE_TEX, true, false);
       bufs = null;
+      leds = null;
+      cables = null;
       return n;
     }
 
@@ -303,7 +327,60 @@ class CorpFurniture
         }
       FacilityGeom.pane(buf(CorpStyle.RACK_FRONT), r.x0, r.x1, r.z0, r.z1, front, 0,
         CorpStyle.RACK_H);
+      // the status lights, on the SAME face the equipment art is on and over its own painted dots
+      FacilityDeco.lights(leds, {
+        x0: r.x0,
+        x1: r.x1,
+        z0: r.z0,
+        z1: r.z1,
+        y: CorpStyle.LED_Y0,
+        h: CorpStyle.LED_H,
+        dir: front,
+        col: col,
+        row: row,
+        u0: CorpStyle.LED_U0,
+        u1: CorpStyle.LED_U1,
+        rows: CorpStyle.LED_ROWS,
+        cols: CorpStyle.LED_COLS,
+        size: CorpStyle.LED_SIZE,
+      });
+      drape(m, r, col, row);
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// the cable drape from this cabinet's lid to the next one's along the rank.
+//
+// ON THE TOPS AND NOT ON THE FLOOR, which is the one decision here: a raised-access computer room
+// runs its cable UNDER the floor by definition, so the only cable a server room actually shows is
+// what is patched between cabinet and cabinet over the top — and the floor is where the player
+// walks. Emitted from the LOWER cell of each pair only (+x and +z), so a rank of five draws four
+// runs and not eight.
+//
+// ponytail: no drop to a tray and no run to the wall. Those want a tray to hang off, which is a
+// fitting the room does not have yet; add both with it
+  static function drape(m:Facility, r:Rect, col:Int, row:Int):Void
+    {
+      var y = CorpStyle.RACK_H + CorpStyle.CABLE_Y;
+      var cx = (r.x0 + r.x1) / 2;
+      var cz = (r.z0 + r.z1) / 2;
+      for (i in 0...2)
+        {
+          var nc = col + (i == 0 ? 1 : 0);
+          var nr = row + (i == 0 ? 0 : 1);
+          if (!rackAt(m, nc, nr))
+            continue;
+          for (k in 0...CorpStyle.CABLE_N)
+            FacilityCable.strip(cables, {
+              a: [cx, y + k * 0.02, cz],
+              c: [cx + (i == 0 ? CELL : 0.0), y + k * 0.02, cz + (i == 0 ? 0.0 : CELL)],
+              // the ribbon lies FLAT, because this camera looks down at it: widened across the run
+              // in the horizontal plane and bowed sideways within it. no sag — see CABLE_BOW
+              n: [0.0, 1.0, 0.0],
+              bow: CorpStyle.CABLE_BOW * (1.0 - k * 0.3),
+              wave: CorpStyle.CABLE_WAVE,
+              seed: FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ (i * 7 + k)),
+            });
+        }
     }
 
   // the order a rack looks for its aisle in: toward the camera, then the two sides, then away

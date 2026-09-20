@@ -273,6 +273,51 @@ class GenCheck
         }
     }
 
+// NO CORP ROOM IS REACHED ONLY BY WALKING THROUGH A TOILET OR THE SERVER ROOM.
+//
+// THE FAULT IT IS FOR: gen.corp.CorpBuilding.makeDoors cuts each room exactly one door at a random
+// valid wall spot and nothing in the pick asks what is on the far side, so a door can open into
+// the room next door. fixDoors then used to repair CLUSTERS, accepting a group the moment any one
+// of its rooms touched a corridor — which passed `servers -> toilet -> corridor`, reported from
+// the game as a server room you could only enter through the WC.
+//
+// `reachable` cannot say this. It floods the walkable grid from the lift, and a room behind
+// another room IS reached — the right question for a room that was sealed shut and the wrong one
+// for a room whose only route runs through somebody's toilet.
+//
+// SO THE WALK IS OVER THE DOOR GRAPH AND NOT THE TILES, from the corridor (room 0 — doorsSane's
+// own sentinel note), and a toilet or a server room is entered but never passed THROUGH. A suite
+// whose inner office opens off an outer one is left alone: that is a building, not a bug. Not
+// filtered on `skip`, for the reason washroomSane records — a skipped door is a live door
+  public function corpRoutesSane(rooms: Array<_Room>, doors: Array<_Door>)
+    {
+      var dead = [gen.corp.CorpTemp.ROLE_TOILET, gen.corp.CorpTemp.ROLE_SERVERS];
+      var roleOf = new Map<Int, String>();
+      for (r in rooms)
+        roleOf.set(r.id, r.role);
+      var seen = new Map<Int, Bool>();
+      var open = [0];
+      seen.set(0, true);
+      while (open.length > 0)
+        {
+          var id = open.pop();
+          // a dead-end room is a destination and not a corridor: nothing is expanded through it
+          if (id != 0 && Lambda.has(dead, roleOf.get(id)))
+            continue;
+          for (d in doors)
+            {
+              var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
+              if (far < 0 || seen.exists(far))
+                continue;
+              seen.set(far, true);
+              open.push(far);
+            }
+        }
+      for (r in rooms)
+        ok(seen.exists(r.id), 'corp room ' + r.id + ' at ' + r.x1 + ',' + r.y1 + ' (' + r.role +
+          ') is reached only through a toilet or the server room');
+    }
+
 // a store can be walked all the way through, and its door opens onto floor.
 //
 // THE FAULT IT IS FOR IS THE ROOM'S OWN FURNITURE. A pallet rack is 4.2 tall and `standing` fills

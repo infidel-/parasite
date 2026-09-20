@@ -35,7 +35,40 @@ class CorpModel
       m.windows = [];
       FacilityModel.findWindows(m);
       doorLooks(m);
+      wallFits(m);
       return m;
+    }
+
+// A RACK ROW NEVER TOUCHES THE ROOM'S EDGE COLUMN, so a rack that does is not one.
+//
+// gen.corp.CorpRooms.decorateWalls dresses a room's two long walls by writing the ROOM'S OWN
+// unwalkable floor twin and standing a decoration on it — and in the server room and the cubicle
+// farm that twin is the very id fitOf reads as a rack and as a partition spine (one tile is the
+// floor, the surface AND the fitting, which is the whole trick and also this trap). So a corner
+// of the server room came out as an isolated cabinet with a 2D machinery sprite inside it and a
+// lid over nothing, reported from the game as "this server in the corner is unnecessary".
+//
+// THE SHAPE SAYS WHICH IS WHICH: `servers` runs its rack rows over x1+1...x2-1 and `cubicle` its
+// spines inside the room likewise, where decorateWalls writes at x1 and x2 exactly. So a fitting
+// standing in an edge COLUMN was put there by the wall dressing, and what it really is, is the
+// decoration on the same cell — which render.corp.CorpDeco already draws.
+//
+// Here and not in the generator so it reaches every corp save that exists. The washroom is left
+// alone: `toilet` lays its basin run along the y1 ROW and its stalls along y2, both of which run
+// through the corners decorateCorners dresses, so there the two are not separable by shape — and
+// a basin in the corner of a washroom is what a washroom looks like
+  static function wallFits(m:Facility):Void
+    {
+      for (r in m.rooms)
+        for (row in r.y1...r.y2 + 1)
+          for (col in [r.x1, r.x2])
+            {
+              if (!FacilityModel.inside(m, col, row))
+                continue;
+              if (m.fit[row][col] == CorpFurniture.FIT_RACK ||
+                  m.fit[row][col] == CorpFurniture.FIT_SPINE)
+                m.fit[row][col] = 0;
+            }
     }
 
 // WHICH PAINTED PAIR EACH DOOR WEARS, off the rooms it joins.
