@@ -177,6 +177,44 @@ class CorpStyle
   // on the northernmost rooms (render.facility.FacilityDebris records it)
   public static inline var FLOOR_MAX = 10;
 
+  // ---- the dressing --------------------------------------------------------------------------
+  //
+  // two PACK64 sheets and one 2x2 of signs. an 8x8 sheet is the wrong grid for a billboard and the
+  // right one here, which is the measurement docs/3d-textures.md carries: a 1024 cut into 64 cells
+  // hands each object ~89 px, and over the ~0.8 units one of these is DRAWN at that is 111 texels
+  // per unit — half again past the carpet's own. density is art px over the size a thing is drawn
+  // at, never over the cell it was cut from
+  public static inline var CLUTTER_DESK_TEX = 'textures/corp/desk-clutter.png';
+  public static inline var CLUTTER_UTIL_TEX = 'textures/corp/util-clutter.png';
+  public static inline var CLUTTER_COLS = 8;
+  public static inline var CLUTTER_CELLS = 64;
+  // how many items a worktop cell may roll, and the roll REACHES ZERO on purpose: the empty cells
+  // are what stop a desk run reading as a grid, which is the whole complaint this family answers
+  public static inline var CLUTTER_MAX = 3;
+  public static inline var CLUTTER_TRIES = 6;
+  public static inline var CLUTTER_SZ = 0.55;
+  public static inline var CLUTTER_SZ_VAR = 0.40;
+  // how far proud of the worktop a decal lies. over the slab and under nothing
+  public static inline var CLUTTER_Y = 0.03;
+  public static inline var CLUTTER_CUT = 0.5;
+  // and how far inside the worktop's own edge an item must keep its whole box
+  public static inline var CLUTTER_INSET = 0.18;
+  // the clearance between two items, counted ONCE per pair
+  public static inline var CLUTTER_GAP = 0.10;
+
+  // the wall signs. ONE sheet, four quadrants, four DIFFERENT aspects — see CorpSigns.ASPECT
+  public static inline var SIGN_TEX = 'textures/corp/signs.png';
+  // the longest edge of a sign quad; the other edge comes off the art's own aspect
+  public static inline var SIGN_MAX = 2.1;
+  // the height of a sign's CENTRE. clear of the tallest thing that can stand under it (a server
+  // rack at RACK_H 4.0) and under the head of a WALL_H 6.0 storey
+  public static inline var SIGN_Y = 4.6;
+  // how far proud of the wall slab a sign hangs
+  public static inline var SIGN_PROUD = 0.05;
+  // and the shortest run of unbroken masonry that earns one. a sign every cell turns a wall into
+  // a strip of stickers
+  public static inline var SIGN_RUN_MIN = 3;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts

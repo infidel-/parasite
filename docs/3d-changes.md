@@ -2195,3 +2195,66 @@ plant's 4,206 is what a shattered TRELLIS atlas costs (it would not decimate pas
 numbers to spend first if the plate ever needs them.
 
 Verdict: **KEEP.**
+
+## The corp tower's dressing: two PACK64 worktop sheets and four wall signs (phase 6)
+
+**+2 draw calls measured** at a pinned pose over an open-plan bay (A/B/A/B, `calls` **59 on / 57
+off** three times identical, `tris` 159,174 / 158,782 — +392). Three merged meshes exist (desk
+sheet, util sheet, sign atlas) and one is off-frame at that pose. Live: **328 decals, 45 signs**.
+
+**THE COMPOUND'S CLUTTER FILE COULD NOT BE CLONED AND THAT IS A FACT ABOUT THE MODEL, NOT THE ART.**
+`FacilityClutter` is 517 lines and most of them are the CLUTTER SLOTS — the lid of every standing
+fitting in `m.deco`, the store's crates, the shelving's three plates, the pallet racking's levels.
+A tower plate has no `m.deco` at all: its furniture is emitted quads off `m.table` and `m.fit`
+(phase 4). What is left once that goes is the worktop scatter, ~130 lines, and it needs none of the
+compound's open-hand arithmetic either — a corp worktop fills its cell (`CorpFurniture.worktop`)
+where a compound bench is cut to `DESK_D` on its open side, which is what made a decal wander off
+the front edge there.
+
+**TWO SHEETS AND NOT FOUR.** The kitchenette, the boardroom and the washroom would each have filled
+about twenty cells; a PACK64 is 64 cells and ONE draw call whatever is on it, so all three share
+`corp/util-clutter` and the desks get `corp/desk-clutter` to themselves. Picked off the cell's
+`Surf`, so the split costs a branch.
+
+**THE FIRST DESK SHEET WOULD NOT PACK, AND THE FIX WAS ARITHMETIC IN THE PROMPT.** `pack16.py`
+refused it: *no empty corridor near 640 — thinnest line there still carries 41 opaque px*, i.e.
+row 5's books and folded newspaper touching row 6, ten times the `--tol 4` the tool will clip
+through. The re-roll spells the grid out in PIXELS — 128 px cells, nothing wider than 75 px, and
+the seven seam lines named by coordinate — and packed at **tol 0, scale 0.9106, largest group
+123x114**. The util sheet took the same prompt shape and packed first time at **tol 0, scale
+1.0566**. Both drops came back **66% transparent** from `gpt-image-2.5-sunburst` with
+`background: "transparent"`, which is the setting that failed outright on phase 3's window: it
+works for an isolated CUT-OUT and not for a surface. Built values 81.6 and 82.9 srgb against the
+compound's office sheet at 71.4 — right, because they lie on a 94.7 desk-top rather than a 60.4 one.
+
+**FOUR ASPECTS ON ONE SIGN SHEET, WHICH IS WHY `CorpSigns` HAS AN `ASPECT` TABLE AND
+`FacilityPlacard` DOES NOT.** The compound's eight plates are all square, so `PLACARD_W ==
+PLACARD_H` and a quad needs no arithmetic. A landscape exit sign (**1.655**), a portrait directory
+(**0.704**), a square room plate (**1.040**) and a landscape print (**1.503**) are not, and any of
+them on a square quad is the stretch the aspect lock forbids. So `SIGN_MAX` 2.1 is the LONGEST edge
+and the other comes off the art.
+
+And the sheet is a **crop-and-repack, not a chroma key**: the drop draws each panel floating in a
+charcoal wall margin, and a quad mapped over the whole quadrant carries that margin as a dark
+border over a wall that is lighter than it. Keying it was the other route and was refused — the
+framed print's own charcoal bands sit inside any tolerance that would catch the background. Each
+panel was cropped to its measured bbox and pasted back filling its quadrant.
+
+Signs hang **one per RUN of unbroken masonry**, at the run's MIDDLE — where the compound picks the
+cell by what stands under the plate, because a hazard triangle is placed AT its hazard. None of
+these four names a thing, so none has anywhere it would rather be. `SIGN_Y` 4.6 clears the tallest
+thing that can share the cell (a server rack at 4.0), so the family needs no claimed-cell list.
+
+**THE ELECTRICS ARE DELIBERATELY NOT PORTED**, although the brief explicitly allows reusing
+`facility/electrical-pack` and `facility/cable` and that was the plan. Two reasons, and the second
+is the real one. `FacilityCable` is 1,155 lines gated throughout on `Surf.LINO`/`TILE` and reads
+`m.deco`, `FacilityPoint.places` and `FacilityTables.runs` — none of which a tower has, so "reuse"
+would have been a second clone the size of the file. And a premium tower does not WANT it: exposed
+skirting runs, wall sockets with leads dropping out of them and a cable drum on the floor are the
+compound's language, and `style_corp` is "fine consistent reveals, no ornament, everything new and
+maintained". The one thing worth having from that family is the lit lift-call panel, which is
+phase 7's.
+
+Art: three generations (~$0.17) plus one re-roll. Both oracles green at 200 seeds.
+
+Verdict: **KEEP.**

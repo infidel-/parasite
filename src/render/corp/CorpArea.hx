@@ -50,6 +50,8 @@ class CorpArea implements Area3D
   var fit:CorpFurniture.CorpFit;                // what the furniture pass emitted, for __corp()
   var glb:Array<render.Models.InstancedProp>;   // the seven prop batches, culled on one radius
   var glbN:CorpProps.CorpPropSet;               // and what went into them, for __corp()
+  var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
+  var signs = 0;                                // wall signage, one mesh
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -114,6 +116,11 @@ class CorpArea implements Area3D
       var gp = CorpProps.build(scene, model);
       glb = gp.batches;
       glbN = gp.n;
+      // the flat dressing: what lies ON the worktops, and what hangs on the walls. both AFTER the
+      // props, because the clutter scatters around the workstation's own footprint and asks
+      // CorpProps for it
+      clutter = CorpClutter.build(scene, model);
+      signs = CorpSigns.build(scene, model);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -213,6 +220,10 @@ class CorpArea implements Area3D
             // should match it exactly; `chairs` is every manned desk cell and is therefore always
             // the larger of the two (CorpStyle.WORK_EVERY thins the workstation, never the seat)
             glb: glbN,
+            // the two flat families, which are merged meshes and so have no instance count
+            // anywhere — these two numbers are the only handle on either
+            clutter: clutter,
+            signs: signs,
             glbBatches: [for (b in glb) (b.mesh == null ? 0 : b.matrices.length)],
             surfs: bySurf,
             // and the FURNITURE, which is eight families over nine merged meshes and therefore has

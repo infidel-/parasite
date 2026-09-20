@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Models;
 import render.RenderConfig;
+import render.facility.ClutterSlot;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
@@ -320,6 +321,53 @@ class CorpProps
             return dir;
         }
       return -1;
+    }
+
+// what the WORKSTATION on this worktop cell claims, as boxes, or empty for a cell carrying none.
+//
+// A PURE RE-RUN OF `desks` AND NOT A CACHED LIST, the discipline every other pure-function-of-the-
+// grid pass in this layer keeps: render.corp.CorpClutter has to scatter AROUND the monitor and the
+// keyboard, and neither pass may depend on having run first. The alternative is a shared claim
+// list, which is a second thing to keep in step
+  public static function claims(m:Facility, col:Int, row:Int):Array<ClutterSlot>
+    {
+      if (!m.table[row][col])
+        return [];
+      var s = m.surf[row][col];
+      if (s != Surf.OPEN &&
+          s != Surf.CUBICLE &&
+          s != Surf.EXEC)
+        return [];
+      var dir = backHand(m, col, row);
+      if (dir < 0 ||
+          !clear(m, col + DC[dir ^ 1], row + DR[dir ^ 1]))
+        return [];
+      var hash = FacilityModel.mix((col * 374761393) ^ (row * 40503));
+      if (hash % CorpStyle.WORK_EVERY != 0)
+        return [];
+      var c = CityConfig.cellToWorld(col, row);
+      var back = CELL / 2 - CorpStyle.MON_BACK;
+      // the two boxes, each at the yaw it is really drawn at: a monitor runs WIDE across the desk
+      // and a keyboard likewise, so which of the two world axes each spans is what `dir` says
+      var alongX = (dir < 2);
+      var mw = (alongX ? CorpStyle.MON_W : CorpStyle.MON_D) / 2;
+      var md = (alongX ? CorpStyle.MON_D : CorpStyle.MON_W) / 2;
+      var kw = (alongX ? CorpStyle.KEY_W : CorpStyle.KEY_D) / 2;
+      var kd = (alongX ? CorpStyle.KEY_D : CorpStyle.KEY_W) / 2;
+      return [
+        {
+          x: c.x + DC[dir] * back,
+          z: c.z + DR[dir] * back,
+          hw: mw,
+          hd: md,
+        },
+        {
+          x: c.x + DC[dir] * (back - CorpStyle.KEY_FWD),
+          z: c.z + DR[dir] * (back - CorpStyle.KEY_FWD),
+          hw: kw,
+          hd: kd,
+        },
+      ];
     }
 
 // which hand a worktop cell has its back on — masonry, a cubicle spine, or the next worktop

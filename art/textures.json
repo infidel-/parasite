@@ -4165,6 +4165,67 @@
       "last_lift": 0.77,
       "built_linear": 0.0522,
       "built_srgb": 61.2
+    },
+    "corp/desk-clutter": {
+      "src": "corp/desk-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "prompt_exact": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. That leaves a wide empty margin on all four sides of every object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep all 64 objects at roughly similar scale to each other. These belong on the desk of a contemporary premium corporate tower - everything new, maintained and expensive, no rust, no chipping, no grime, no wear. Matte flat colours, simple clean shapes, minimal detail, hand-painted and flat like a 2D game tile, no photorealism, no gloss. Where an accent colour appears keep it WARM - amber, brass, tan - never blue. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed pages carry only abstract grey smudge bars standing in for text. Row 1: laptop closed, tablet face down, smartphone, ceramic mug, steel flask, glass tumbler, stack of sheets, chart sheet. Row 2: presentation folder, tan leather notebook, open notebook, fountain pen, marker, amber sticky notes, mouse, coiled charging cable. Row 3: charging pad, desk phone, speakerphone puck, coiled earphones, headphones, hard drive, USB hub, access badge on a lanyard. Row 4: amber pen pot, potted succulent, reading glasses, wristwatch, brass letter opener, stapler, business cards, paper clips. Row 5: document tray, rolled drawing, spiral report, hardback book, folded newspaper, bar-chart sheet, ruled sheet, signed sheet. Row 6: blotter with pen, framed photo, scissors, tape dispenser, hole punch, desk clock, calculator, bulldog clip. Row 7: takeaway cup, water bottle, snack bar, apple, bowl of nuts, napkin, teaspoon, saucer with a biscuit. Row 8: whiteboard marker, presentation clicker, tripod webcam, cable tidy, power adapter, power strip, microfibre cloth, spray bottle.",
+      "note": "PACK64, the corp desks' own clutter sheet - the compound's facility/office-clutter read again with a premium tower's things on it, and cut the same 8x8 way by render.corp.CorpClutter. gpt-image-2.5-sunburst, background transparent: 66.0% of the drop came back transparent. THE FIRST ROLL WOULD NOT PACK - tools/pack16.py found 41 opaque px still crossing the line at y=640, i.e. row 5's books and newspaper touching row 6, ten times the --tol 4 the tool will clip through. Re-rolled with the cell arithmetic SPELLED OUT (128 px cells, nothing wider than 75 px, the seven seam lines named by pixel) and it packed at tol 0, scale 0.9106, largest group 123x114. The pristine raw drops are in the gpt output tree; the src here is the PACKED sheet.",
+      "last_converted": "2026-09-20T17:49:26",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "built_linear": 0.0916,
+      "built_srgb": 81.6
+    },
+    "corp/util-clutter": {
+      "src": "corp/util-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "prompt_exact": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. These belong on the kitchenette counter, the boardroom table and the washroom vanity of a contemporary premium corporate tower - everything new, maintained and expensive, no rust, no chipping, no grime, no wear. Matte flat colours, simple clean shapes, minimal detail, hand-painted and flat like a 2D game tile, no photorealism, no gloss. Where an accent colour appears keep it WARM - amber, brass, tan - never blue. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE. Row 1: espresso cup and saucer, mug, tumbler, wine glass, water carafe, vacuum jug, cafetiere, kettle. Row 2: stack of saucers, stack of paper cups, sugar bowl, milk jug, teaspoon, fork, knife, tea strainer. Row 3: box of teabags, bowl of sugar sachets, capsule tray, fruit bowl, plate with a pastry, linen napkin, paper napkins, serving board. Row 4: soap dispenser, amber lotion bottle, folded hand towel, stack of hand towels, tissue box, soap dish, rolled towel, waste basket. Row 5: tumbler of toothbrushes, jar of cotton buds, tap handle, spray cleaner, microfibre cloth, sanitiser bottle, towel dispenser panel, bin lid. Row 6: speakerphone puck, clicker, remote control, four whiteboard markers, eraser block, notepad, pencil, coiled cable. Row 7: carafe with a stopper, stacked glasses, potted succulent, dish of mints, desk mat corner, name-card holder, brass bell, agenda sheet. Row 8: handout sheets, spiral report, document wallet, bulldog clip, power adapter, power strip, table microphone, tripod webcam.",
+      "note": "PACK64, the kitchenette, the boardroom and the washroom vanity on ONE sheet - corp/desk-clutter's opposite number, picked by the cell's Surf in render.corp.CorpClutter. THREE ROOMS ON ONE SHEET and not three sheets: each of the three would have filled about twenty cells, and a sheet is 64 cells and one draw call whatever is on it. Packed by tools/pack16.py --cols 8 --rows 8 --cell 128 --valign center at tol 0 first time, scale 1.0566, largest group 106x105 - it did not need the re-roll the desk sheet did.",
+      "last_converted": "2026-09-20T17:50:44",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.1
+      },
+      "built_linear": 0.0938,
+      "built_srgb": 82.9
+    },
+    "corp/signs": {
+      "src": "corp/signs.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "res": 512,
+      "prompt": "A 2x2 GRID of four separate flat wall-sign panels in one square image, each seen STRAIGHT ON in flat elevation. TOP-LEFT: a FIRE EXIT sign, a landscape panel in signal GREEN with a plain white running-man pictogram and a white directional arrow, no text. TOP-RIGHT: a WAYFINDING DIRECTORY panel, portrait, dark smoked glass in a thin brushed-stainless frame, five short rows of small pale AMBER abstract smudge bars standing in for a floor listing and a fine amber rule under the top row - the smudges must NOT be letters, words, numbers or any script. BOTTOM-LEFT: a ROOM NUMBER PLATE, a small square plate of brushed stainless with rounded corners, two tiny fixing points and two short etched abstract marks, no readable characters. BOTTOM-RIGHT: a FRAMED ARTWORK, landscape, a very thin dark anodised frame round an abstract composition of muted tan, warm grey and charcoal bands, no signature.",
+      "note": "the tower's four wall signs, one quadrant each, in render.corp.CorpSigns' own order: 0 exit, 1 directory, 2 room plate, 3 artwork. EACH QUADRANT IS THE PANEL AND NOT THE WALL AROUND IT: the drop draws every panel floating in a charcoal margin, and a quad mapped over the whole quadrant would carry that margin as a dark border over a wall that is lighter than it. A chroma key was the other route and was refused - the artwork's own charcoal bands sit inside the key's tolerance. So each panel was cropped to its measured bbox and pasted back filling its quadrant, and its own ASPECT travels with it: 1.655 / 0.704 / 1.040 / 1.503, which CorpSigns.ASPECT holds so a quad is sized from the art rather than the art stretched to the quad. Four aspects on one sheet is the whole reason this is not a square-cell pack.",
+      "last_converted": "2026-09-20T17:53:06",
+      "built_linear": 0.0996,
+      "built_srgb": 76.2
     }
   }
 }
