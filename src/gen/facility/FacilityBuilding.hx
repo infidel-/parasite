@@ -195,9 +195,9 @@ class FacilityBuilding
         {
           GenTree.build(RoomBlock.node(state, node, room),
             function(n) RoomBlock.fill(state, n));
-          // and with the room's benches dealt, drop any that meets its only neighbour at a corner,
-          // then make sure a clue still has somewhere to land on what is left
-          FacilityRooms.cullDiagonalTables(state, room);
+          // and with the room's benches dealt, close up any pair that meets only at a corner, then
+          // make sure a clue still has somewhere to land on what is left
+          FacilityRooms.fixDiagonalTables(state, room);
           // and a STORE gets its floor walked: its whole floor is an array of racking (the
           // TAG_FLOOR block RoomBlock.glaze pushes), so it is the one room here that can wall a
           // corner of itself off — FacilityRooms.openPockets

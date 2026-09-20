@@ -445,7 +445,7 @@ class FacilityRooms
 // rack on each of its two neighbours is the same pocket, drawn the other way round.
 //
 // So it is stated as the thing it actually is — a REACHABILITY repair, the same shape
-// game.FacilityAreaGenerator.connectRooms applies to rooms and cullDiagonalTables to worktops: flood
+// game.FacilityAreaGenerator.connectRooms applies to rooms and fixDiagonalTables to worktops: flood
 // what the door can reach, and drop the one fitting standing between the flood and what it could not.
 //
 // it runs BEFORE the floor is painted, so the room's bare cells are still TEMP_BUILDING_ROOM and its
@@ -610,7 +610,8 @@ class FacilityRooms
       return Const.isTableTile(cells[x][y]);
     }
 
-// drop one worktop of every pair that touches only at a CORNER.
+// close every pair of worktops that touches only at a CORNER — into an L where the room allows one,
+// and by dropping one of the two where it does not.
 //
 // reported as two tables intersecting diagonally in a small room, and they really do intersect.
 // render.facility.FacilityTables grows every worktop by BENCH_LIP 0.2 on each side that has no table
@@ -624,9 +625,9 @@ class FacilityRooms
 // the corner while the right run's first row is the one gen.blocks.RoomBlock.glazeWall skips — which
 // leaves a table at (x1+1,y1) and another at (x2,y1+1) with both cells between them bare.
 //
-// AND IT IS CULLED IN THE GENERATOR AND NOT IN THE RENDERER, which is not a preference: m.table is
+// AND IT IS REPAIRED IN THE GENERATOR AND NOT IN THE RENDERER, which is not a preference: m.table is
 // derived from the persisted tile id, the 2D view reads those ids directly and GenCheck.clueSpots
-// counts bare bench cells, so a render-side drop would desync all three.
+// counts bare bench cells, so a render-side edit would desync all three.
 //
 // THE FIRST CUT ASKED THE WRONG QUESTION AND THAT IS THE LESSON HERE. It looked at one CELL — no
 // orthogonal table beside it, at least one diagonally — i.e. it culled LOOSE cells, on the reasoning
@@ -636,36 +637,101 @@ class FacilityRooms
 // 1503 of 2000 seeds carry at least one such pair, where the loose case alone was 1387.
 //
 // The fault is a property of the PAIR: two cells touch corner-only when they are diagonal and BOTH
-// of the two cells they share are bare. What goes is the loose end of the SHORTER run, so a long
-// bench keeps its length and the stub beside it is what disappears
-  public static function cullDiagonalTables(state: _FacilityState, room: _Room)
+// of the two cells they share are bare.
+//
+// AND THE FIRST ANSWER TO IT — drop one of the two — WAS THE POORER HALF OF THE REPAIR, because the
+// two runs are almost always the two arms of an L that stopped one cell short of its own corner. So
+// the corner is FILLED first and only what cannot be filled is dropped. `promote` states what
+// "cannot" means; what goes when it comes to that is still the loose end of the SHORTER run, so a
+// long bench keeps its length and the stub beside it is what disappears
+  public static function fixDiagonalTables(state: _FacilityState, room: _Room)
     {
       var area = state.area;
       var cells = area.getCells();
-      // until a whole pass finds nothing: dropping a cell can expose a pair that was hidden behind
-      // it. removal only ever shrinks the set, so this terminates
-      var again = true;
-      while (again)
+      // TWO PASSES AND NOT ONE INTERLEAVED LOOP, which is what makes this terminate: promotion only
+      // ever turns a floor cell into a worktop and the cull only ever the reverse, so a single loop
+      // could fill a nook, drop it again and come round for ever. Each pass repeats on its own until
+      // a whole scan finds nothing, since either edit can expose a pair that was hidden behind it —
+      // and each strictly grows or strictly shrinks the set of worktop cells, so each terminates
+      for (fill in [ true, false ])
         {
-          again = false;
-          for (y in room.y1...room.y2 + 1)
-            for (x in room.x1...room.x2 + 1)
-              // the two diagonals with a HIGHER y only: the other two are the same pairs seen from
-              // their far cell, and testing both ends does the same work twice
-              for (dx in [ -1, 1 ])
-                {
-                  if (!isTableCell(cells, x, y) ||
-                      !cornerOnly(cells, x, y, dx, 1))
-                    continue;
-                  // a tie takes the diagonal partner, which is the later cell in the row-major scan
-                  // and so stable for a seed
-                  if (orthTables(cells, x, y) < orthTables(cells, x + dx, y + 1))
-                    clearTable(state, cells, x, y);
-                  else
-                    clearTable(state, cells, x + dx, y + 1);
-                  again = true;
-                }
+          var again = true;
+          while (again)
+            {
+              again = false;
+              for (y in room.y1...room.y2 + 1)
+                for (x in room.x1...room.x2 + 1)
+                  // the two diagonals with a HIGHER y only: the other two are the same pairs seen
+                  // from their far cell, and testing both ends does the same work twice
+                  for (dx in [ -1, 1 ])
+                    {
+                      if (!isTableCell(cells, x, y) ||
+                          !cornerOnly(cells, x, y, dx, 1))
+                        continue;
+                      if (fill)
+                        {
+                          // the two cells the pair shares, each with the two hands that are NOT the
+                          // pair: for (x+dx, y) they are +dx and -y, for (x, y+1) they are -dx and
+                          // +y. either one closes the L, and the nook test picks which
+                          if (promote(state, cells, x + dx, y, dx, -1) ||
+                              promote(state, cells, x, y + 1, -dx, 1))
+                            again = true;
+                          continue;
+                        }
+                      // a tie takes the diagonal partner, which is the later cell in the row-major
+                      // scan and so stable for a seed
+                      if (orthTables(cells, x, y) < orthTables(cells, x + dx, y + 1))
+                        clearTable(state, cells, x, y);
+                      else
+                        clearTable(state, cells, x + dx, y + 1);
+                      again = true;
+                    }
+            }
         }
+    }
+
+// close a corner-touching pair into an L by filling one of the two cells it shares, and say whether
+// it did.
+//
+// ONLY A DEAD-END NOOK IS FILLED, and that guard is the whole reason this needs no reachability pass
+// behind it. The cell has to be bare floor with MASONRY on both of the hands that are not the pair,
+// so all four of its orthogonal neighbours are solid: two walls and the two worktops. It is an
+// alcove and never a link — movement is 8-way (Const.dirx) and nothing stops a player cutting the
+// corner into it, but a route THROUGH it would have to cut a blocked corner at both ends while the
+// open room lies alongside. So filling it can disconnect nothing, which is the repair
+// gen.facility.FacilityRooms.openPockets exists to make, done in reverse and for free.
+//
+// It is also the cell the L actually wants. The bay rhythm this fault comes out of leaves the arms
+// one short of the room's OWN corner (see above), so the nook is that corner: walled on two sides,
+// with an arm coming at it along each of the other two.
+//
+// THE TILE IS THE PLAIN 1X1 AND NOT THE FAMILY'S, deliberately. Nothing downstream reads a worktop's
+// family — render.facility.FacilityModel keeps only the boolean, and the bench-or-desk finish comes
+// off the room's surface — so the one thing the choice decides is the 2D sprite, and a 1x1 is the
+// only art in either family that is a whole worktop on its own cell
+  static function promote(state: _FacilityState, cells: Array<Array<Int>>, x: Int, y: Int,
+      ax: Int, by: Int): Bool
+    {
+      if (cells[x][y] != TEMP_BUILDING_ROOM ||
+          !isMasonry(cells, x + ax, y) ||
+          !isMasonry(cells, x, y + by) ||
+          state.area.hasObjectAt(x, y))
+        return false;
+      cells[x][y] = Const.TILE_LABS_TABLE_1X1;
+      return true;
+    }
+
+// is this cell wall or glazing, as the building pass left it — the two things a worktop may back
+// onto. A DOORWAY IS DELIBERATELY NOT ONE: it is not TEMP_BUILDING_ROOM either, so a plain
+// "not walkable" test would read one as solid and let `promote` brick up the cell beside it
+  static inline function isMasonry(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      var t = cells[x][y];
+      return (t == TEMP_BUILDING_WALL ||
+        t == TEMP_BUILDING_INNER_WALL ||
+        t == TEMP_BUILDING_WINDOW_HIGH ||
+        (t >= TEMP_BUILDING_WINDOW &&
+         t <= TEMP_BUILDING_WINDOWV3));
     }
 
 // do (x,y) and its (dx,dy) diagonal touch ONLY at that corner? GenCheck.corner, and the two must

@@ -193,8 +193,8 @@ class GenCheck
 // render.facility.FacilityTables grows every bench by BENCH_LIP on each side with no table
 // orthogonally beside it, and it has no diagonal probe at all, so a pair like that draws two caps
 // overlapping in a lip-squared square with their edge bands crossing — the reported "tables
-// intersect each other diagonally". gen.facility.FacilityRooms.cullDiagonalTables drops one of each
-// pair; this is what says it dropped every one
+// intersect each other diagonally". gen.facility.FacilityRooms.fixDiagonalTables closes each
+// pair up; this is what says it closed every one
 //
 // THE PREDICATE IS ABOUT THE PAIR AND NOT ABOUT THE CELL, which is the whole of the second pass on
 // this. The first cut asked whether a cell had NO orthogonal table beside it and a diagonal one —

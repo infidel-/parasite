@@ -1111,7 +1111,7 @@ class Const
 // range is wrong at BOTH ends. It takes in the corp furniture above; worse, it STOPPED AT ROW 11
 // COLUMN 3 and so missed TILE_LABS_TABLE2_3X1_1..3, the drawer run gen.blocks.RoomBlock lays along
 // every top wall. render.facility.FacilityModel.tableOf had the stride rule and the generator had
-// the range, so a drawer run was a full bench on screen and NOTHING AT ALL to cullDiagonalTables,
+// the range, so a drawer run was a full bench on screen and NOTHING AT ALL to fixDiagonalTables,
 // GenCheck.tablesSane, clearTableSpots and the clue spawn — which is how two worktops crossing at a
 // corner got reported a third time, at 26,3 / 27,4, over an oracle reporting 20000 clean seeds
   public static inline function isTableTile(t:Int):Bool
