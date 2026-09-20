@@ -426,31 +426,99 @@ class CorpFurniture
           ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
           return;
         }
-      // a WC cubicle: two dividers and a back, and NO LID over it — at this camera's 51 degrees the
-      // top is most of what is read, so a cap would hide the pan inside and the whole thing would
-      // come out a closed slab (docs/3d-geometry.md)
+      // A WC CUBICLE: two dividers, the back panel against the masonry and a door leaf on the
+      // aisle. NO LID over it — at this camera's 51 degrees the top is most of what is read, so a
+      // cap would hide the pan inside and the whole thing would come out a closed slab
+      // (docs/3d-geometry.md).
+      //
+      // The header used to say "two dividers and a back" and emit neither the back nor the leaf,
+      // which is what was reported: 1.12 world units of daylight behind every stall (the fixture
+      // cell's own FIT_INSET 0.12 plus the unit of the WALL CELL that belongs to the room — see
+      // `wallFaceAt`), and no door on the cubicle at all
       var alongX = FacilityModel.isWall(m, col, row - 1) || FacilityModel.isWall(m, col, row + 1);
       var b = buf(CorpStyle.STALL_PANEL);
       var t = CorpStyle.STALL_T / 2;
+      // which hand the masonry is on, and so which one the player walks up to
+      var back = (alongX
+        ? (FacilityModel.isWall(m, col, row - 1) ? 0 : 1)
+        : (FacilityModel.isWall(m, col - 1, row) ? 2 : 3));
+      var w = wallFaceAt(m, col, row, back);
+      switch (back)
+        {
+          case 0: r.z0 = w;
+          case 1: r.z1 = w;
+          case 2: r.x0 = w;
+          default: r.x1 = w;
+        }
       for (dir in 0...4)
         {
-          // the two dividers stand on the cell's own sides, across the run
+          // the two dividers stand on the cell's own sides, across the run — and now run all the
+          // way back to the masonry, because `r` was widened onto it above
           if (alongX != (dir >= 2))
             continue;
-          var p = dir == 2
-            ? { x0: r.x0, x1: r.x0 + 2 * t, z0: r.z0, z1: r.z1 }
-            : (dir == 3
-              ? { x0: r.x1 - 2 * t, x1: r.x1, z0: r.z0, z1: r.z1 }
-              : (dir == 0
-                ? { x0: r.x0, x1: r.x1, z0: r.z0, z1: r.z0 + 2 * t }
-                : { x0: r.x0, x1: r.x1, z0: r.z1 - 2 * t, z1: r.z1 }));
-          for (d2 in 0...4)
-            FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, d2, 0, CorpStyle.STALL_H,
-              CorpStyle.PARTITION_TILE);
-          FacilityGeom.cap(b, p.x0, p.x1, p.z0, p.z1, CorpStyle.STALL_H, CorpStyle.PARTITION_TILE);
+          panel(b, side(r, dir, 2 * t), 0, CorpStyle.STALL_H);
         }
+      // the back, on the masonry hand
+      panel(b, side(r, back, 2 * t), 0, CorpStyle.STALL_H);
+      // and the LEAF, inset a reveal at each jamb and stopped short of the floor.
+      //
+      // ponytail: every leaf is shut. One standing ajar wants a box turned off the axes, which is
+      // the one thing FacilityGeom.face cannot emit — it would take the door leaves' own instanced
+      // batch, and a row of cubicles reads perfectly well closed
+      var leaf = side(r, back ^ 1, 2 * t);
+      var e = CorpStyle.STALL_DOOR_REVEAL;
+      if (alongX)
+        {
+          leaf.x0 += e;
+          leaf.x1 -= e;
+        }
+      else
+        {
+          leaf.z0 += e;
+          leaf.z1 -= e;
+        }
+      panel(b, leaf, CorpStyle.STALL_DOOR_GAP, CorpStyle.STALL_H);
       n.stalls++;
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// one upright box of panelling: four faces and a lid, in the one buffer
+  static function panel(b:MeshBuf, p:Rect, y0:Float, y1:Float):Void
+    {
+      for (dir in 0...4)
+        FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, y0, y1, CorpStyle.PARTITION_TILE);
+      FacilityGeom.cap(b, p.x0, p.x1, p.z0, p.z1, y1, CorpStyle.PARTITION_TILE);
+    }
+
+// the slice of a rect `d` thick along one of its hands — the panel that closes that side
+  static function side(r:Rect, dir:Int, d:Float):Rect
+    {
+      return switch (dir)
+        {
+          case 0: { x0: r.x0, x1: r.x1, z0: r.z0, z1: r.z0 + d };
+          case 1: { x0: r.x0, x1: r.x1, z0: r.z1 - d, z1: r.z1 };
+          case 2: { x0: r.x0, x1: r.x0 + d, z0: r.z0, z1: r.z1 };
+          default: { x0: r.x1 - d, x1: r.x1, z0: r.z0, z1: r.z1 };
+        };
+    }
+
+// WHERE THE MASONRY ACTUALLY IS on one hand of a cell, in world.
+//
+// NOT the cell boundary, which is the trap this whole file's fittings share: a corp wall is
+// WALL_T 2.0 thick in a CELL 4.0 cell, so FacilityGeom.slab leaves a unit of the WALL cell to
+// each room beside it and the painted face stands a unit past the boundary. A panel run to the
+// boundary stops 1.0 short of it, and with the fitting's own FIT_INSET on top that is the 1.12
+// of daylight the stalls were reported to have
+  static function wallFaceAt(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      var s = FacilityGeom.slab(m, col + dx(dir), row + dz(dir));
+      return switch (dir)
+        {
+          case 0: s.z1;
+          case 1: s.z0;
+          case 2: s.x1;
+          default: s.x0;
+        };
     }
 
 // is this worktop surface drawn as a glb desk rather than emitted? OPEN, CUBICLE and EXEC are the

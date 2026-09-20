@@ -154,6 +154,11 @@ class CorpStyle
   // a WC cubicle's own divider, 1.9 m, and a 15 cm panel
   public static inline var STALL_H = 3.8;
   public static inline var STALL_T = 0.3;
+  // the leaf that closes a cubicle, and the two gaps that say it is a door and not a wall: it
+  // stops STALL_DOOR_GAP short of the floor, the way every public cubicle in the world does, and
+  // leaves a reveal at each jamb so the divider reads THROUGH the opening
+  public static inline var STALL_DOOR_GAP = 0.6;
+  public static inline var STALL_DOOR_REVEAL = 0.14;
   // the mirror band over the basin run, sill to head
   public static inline var MIRROR_Y0 = 2.2;
   public static inline var MIRROR_Y1 = 4.4;
