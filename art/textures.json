@@ -4200,6 +4200,76 @@
       "built_srgb": 26.2,
       "sat": 0.55,
       "last_sat": 0.55
+    },
+    "corp/door-office": {
+      "src": "corp/door-pack.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "A 2x2 GRID SHEET of four DIFFERENT modern office door elevations, the image divided into four equal square quadrants by a razor-thin dark seam, each quadrant completely filled edge to edge by ONE closed PAIR of doors and nothing else. Seen straight on, flat elevation, no perspective, no wall, no floor, no doorframe, no threshold. Inside each quadrant the left leaf occupies exactly the left half of that quadrant and the right leaf exactly the right half, meeting at a slim vertical seam down the exact middle. TOP-LEFT: pale oak veneer office pair, dark anodised edge rail, tall narrow dark-glass vision panel high in each leaf, slim vertical brushed stainless pull. TOP-RIGHT: boardroom GLASS pair, dark smoked glass in a very slim dark anodised frame, one fine etched privacy band at chest height, long vertical stainless pulls. BOTTOM-LEFT: private solid pair, dark walnut veneer, blank with NO vision panel, recessed shadow-gap reveal, short stainless lever. BOTTOM-RIGHT: steel service and riser pair, brushed stainless grey, shallow recessed rectangular panel, small amber warning plate, flush lever. VALUE: all four medium-dark, none black. No text, no logos, no people, no room behind. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "crop": [
+        2,
+        2,
+        508,
+        508
+      ],
+      "note": "one quadrant of corp/door-pack.png, the tower's four door pairs. PACKED BY NECESSITY AND NOT BY ECONOMY, which is the one case docs/3d-textures.md's wrap-error trade does not apply to: a leaf is LEAF_W 2.0 x DOOR_H 4.0 and render.facility.FacilityDoors.leafGeom maps the LEFT HALF of the image onto it and the mirror of that half onto the other leaf, so the image is aspect 1.0 carrying two 0.5-aspect leaves. Nothing tiles, so the doubled wrap error costs nothing here. The look slots are render.facility.FacilityModel.Look and CorpModel.doorLooks deals them off the surface either side of the opening, because gen.corp deals only two door FRAMES and both fall through lookOf to CABINET. This one is the CABINET slot, i.e. the plain corridor door: measured 95.8 sRGB against corp/wall-office's 121.5, a ratio of 0.51 linear against the compound's own fitted 0.49 (facility/door-cabinet), so no lift.",
+      "last_converted": "2026-09-20T23:18:06",
+      "built_linear": 0.1384,
+      "built_srgb": 95.8
+    },
+    "corp/door-glass": {
+      "src": "corp/door-pack.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "A 2x2 GRID SHEET of four DIFFERENT modern office door elevations, the image divided into four equal square quadrants by a razor-thin dark seam, each quadrant completely filled edge to edge by ONE closed PAIR of doors and nothing else. Seen straight on, flat elevation, no perspective, no wall, no floor, no doorframe, no threshold. Inside each quadrant the left leaf occupies exactly the left half of that quadrant and the right leaf exactly the right half, meeting at a slim vertical seam down the exact middle. TOP-LEFT: pale oak veneer office pair, dark anodised edge rail, tall narrow dark-glass vision panel high in each leaf, slim vertical brushed stainless pull. TOP-RIGHT: boardroom GLASS pair, dark smoked glass in a very slim dark anodised frame, one fine etched privacy band at chest height, long vertical stainless pulls. BOTTOM-LEFT: private solid pair, dark walnut veneer, blank with NO vision panel, recessed shadow-gap reveal, short stainless lever. BOTTOM-RIGHT: steel service and riser pair, brushed stainless grey, shallow recessed rectangular panel, small amber warning plate, flush lever. VALUE: all four medium-dark, none black. No text, no logos, no people, no room behind. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "crop": [
+        514,
+        2,
+        508,
+        508
+      ],
+      "note": "one quadrant of corp/door-pack.png, the tower's four door pairs. PACKED BY NECESSITY AND NOT BY ECONOMY, which is the one case docs/3d-textures.md's wrap-error trade does not apply to: a leaf is LEAF_W 2.0 x DOOR_H 4.0 and render.facility.FacilityDoors.leafGeom maps the LEFT HALF of the image onto it and the mirror of that half onto the other leaf, so the image is aspect 1.0 carrying two 0.5-aspect leaves. Nothing tiles, so the doubled wrap error costs nothing here. The look slots are render.facility.FacilityModel.Look and CorpModel.doorLooks deals them off the surface either side of the opening, because gen.corp deals only two door FRAMES and both fall through lookOf to CABINET. The GLASS slot, for a boardroom and an exec office: 48.7 sRGB, ratio 0.13 linear against the wall - exactly facility/door-glass's own 0.13, and a glazed leaf is SUPPOSED to sit that far under a painted one. No lift.",
+      "last_converted": "2026-09-20T23:18:06",
+      "built_linear": 0.0336,
+      "built_srgb": 48.7
+    },
+    "corp/door-private": {
+      "src": "corp/door-pack.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "A 2x2 GRID SHEET of four DIFFERENT modern office door elevations, the image divided into four equal square quadrants by a razor-thin dark seam, each quadrant completely filled edge to edge by ONE closed PAIR of doors and nothing else. Seen straight on, flat elevation, no perspective, no wall, no floor, no doorframe, no threshold. Inside each quadrant the left leaf occupies exactly the left half of that quadrant and the right leaf exactly the right half, meeting at a slim vertical seam down the exact middle. TOP-LEFT: pale oak veneer office pair, dark anodised edge rail, tall narrow dark-glass vision panel high in each leaf, slim vertical brushed stainless pull. TOP-RIGHT: boardroom GLASS pair, dark smoked glass in a very slim dark anodised frame, one fine etched privacy band at chest height, long vertical stainless pulls. BOTTOM-LEFT: private solid pair, dark walnut veneer, blank with NO vision panel, recessed shadow-gap reveal, short stainless lever. BOTTOM-RIGHT: steel service and riser pair, brushed stainless grey, shallow recessed rectangular panel, small amber warning plate, flush lever. VALUE: all four medium-dark, none black. No text, no logos, no people, no room behind. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "crop": [
+        2,
+        514,
+        508,
+        508
+      ],
+      "lift": 0.614,
+      "note": "one quadrant of corp/door-pack.png, the tower's four door pairs. PACKED BY NECESSITY AND NOT BY ECONOMY, which is the one case docs/3d-textures.md's wrap-error trade does not apply to: a leaf is LEAF_W 2.0 x DOOR_H 4.0 and render.facility.FacilityDoors.leafGeom maps the LEFT HALF of the image onto it and the mirror of that half onto the other leaf, so the image is aspect 1.0 carrying two 0.5-aspect leaves. Nothing tiles, so the doubled wrap error costs nothing here. The look slots are render.facility.FacilityModel.Look and CorpModel.doorLooks deals them off the surface either side of the opening, because gen.corp deals only two door FRAMES and both fall through lookOf to CABINET. The PRIVATE slot, for a washroom: a blank leaf with no vision panel, which objects.Door.canSeeThrough already models. It dropped at 49.8 sRGB = 0.145 of the wall linear, a third of the 0.53 facility/door-private was fitted to and the same 'door too dark against a repainted wall' this file records there. lift 0.614 solves the crop back onto 93.0 sRGB through the same crop-lift-LANCZOS path make tex takes.",
+      "last_converted": "2026-09-20T23:18:06",
+      "last_lift": 0.614,
+      "built_linear": 0.1126,
+      "built_srgb": 92.6
+    },
+    "corp/door-steel": {
+      "src": "corp/door-pack.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "A 2x2 GRID SHEET of four DIFFERENT modern office door elevations, the image divided into four equal square quadrants by a razor-thin dark seam, each quadrant completely filled edge to edge by ONE closed PAIR of doors and nothing else. Seen straight on, flat elevation, no perspective, no wall, no floor, no doorframe, no threshold. Inside each quadrant the left leaf occupies exactly the left half of that quadrant and the right leaf exactly the right half, meeting at a slim vertical seam down the exact middle. TOP-LEFT: pale oak veneer office pair, dark anodised edge rail, tall narrow dark-glass vision panel high in each leaf, slim vertical brushed stainless pull. TOP-RIGHT: boardroom GLASS pair, dark smoked glass in a very slim dark anodised frame, one fine etched privacy band at chest height, long vertical stainless pulls. BOTTOM-LEFT: private solid pair, dark walnut veneer, blank with NO vision panel, recessed shadow-gap reveal, short stainless lever. BOTTOM-RIGHT: steel service and riser pair, brushed stainless grey, shallow recessed rectangular panel, small amber warning plate, flush lever. VALUE: all four medium-dark, none black. No text, no logos, no people, no room behind. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "crop": [
+        514,
+        514,
+        508,
+        508
+      ],
+      "note": "one quadrant of corp/door-pack.png, the tower's four door pairs. PACKED BY NECESSITY AND NOT BY ECONOMY, which is the one case docs/3d-textures.md's wrap-error trade does not apply to: a leaf is LEAF_W 2.0 x DOOR_H 4.0 and render.facility.FacilityDoors.leafGeom maps the LEFT HALF of the image onto it and the mirror of that half onto the other leaf, so the image is aspect 1.0 carrying two 0.5-aspect leaves. Nothing tiles, so the doubled wrap error costs nothing here. The look slots are render.facility.FacilityModel.Look and CorpModel.doorLooks deals them off the surface either side of the opening, because gen.corp deals only two door FRAMES and both fall through lookOf to CABINET. The METAL slot, for the server room and the lift lobby: 93.7 sRGB, near-perfectly neutral (93.8/94.0/93.1, spread 0.9), ratio 0.50 linear. No lift.",
+      "last_converted": "2026-09-20T23:18:06",
+      "built_linear": 0.114,
+      "built_srgb": 93.7
     }
   }
 }

@@ -5,6 +5,7 @@ import game.AreaGame;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityModel.Wall;
 import render.particles.AtlasBox;
@@ -33,7 +34,50 @@ class CorpModel
       // ran — so the runs are re-derived off the corrected grid rather than patched
       m.windows = [];
       FacilityModel.findWindows(m);
+      doorLooks(m);
       return m;
+    }
+
+// WHICH PAINTED PAIR EACH DOOR WEARS, off the rooms it joins.
+//
+// FacilityModel.lookOf reads the door OBJECT's own shut frame, and gen.corp deals exactly two of
+// them — Const.FRAME_DOOR_CORP everywhere and FRAME_DOOR_ELEVATOR at the lift — both of which fall
+// through its `return CABINET`. So the whole tower, boardrooms and washrooms and server room
+// alike, hung one door.
+//
+// Derived from the SURFACE either side rather than fixed in the generator, for the reason
+// washroomWindows above gives: a frame is a persisted field on a saved object, so a new one would
+// only ever reach areas generated after it, where every save already carries the floor grid. A
+// door joins two spaces and the ROOM's own surface is the one with an opinion — a corridor is
+// CARPET, which asks for nothing, so the scan simply keeps whatever spoke
+  static function doorLooks(m:Facility):Void
+    {
+      for (d in m.doors)
+        {
+          d.look = Look.CABINET;
+          for (dir in 0...4)
+            {
+              var c = d.col + FacilityGeom.DC[dir];
+              var r = d.row + FacilityGeom.DR[dir];
+              if (!FacilityModel.isIndoor(m, c, r))
+                continue;
+              var l = lookOf(m.surf[r][c]);
+              if (l != Look.CABINET)
+                d.look = l;
+            }
+        }
+    }
+
+// what one surface asks its door to be. CABINET is "no opinion", i.e. the plain office leaf
+  static function lookOf(s:Surf):Look
+    {
+      return switch (s)
+        {
+          case Surf.WASHROOM: Look.PRIVATE;
+          case Surf.SERVER, Surf.LIFT: Look.METAL;
+          case Surf.MEETING, Surf.EXEC: Look.GLASS;
+          default: Look.CABINET;
+        };
     }
 
 // A WASHROOM IS NOT GLAZED, whatever the saved grid says.
@@ -229,16 +273,22 @@ class CorpModel
       m.fit[8][3] = CorpFurniture.FIT_FIXTURE;
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
-      m.doors.push({
-        col: 15,
-        row: 0,
-        look: render.facility.FacilityModel.Look.GLASS,
-        alongX: true,
-        inDir: 1,
-        front: true,
-        structure: 0,
-      });
-      m.door[0][15] = true;
+      // ONE DOOR OF EVERY LOOK, because a look is an image: render.facility.FacilityDoors builds a
+      // batch per look and they all compile the same program, so what the extra three buy is the
+      // 512 sheet DECODED here rather than on the frame the first washroom door comes into view
+      for (li in 0...4)
+        {
+          m.doors.push({
+            col: 15 + li,
+            row: 0,
+            look: li,
+            alongX: true,
+            inDir: 1,
+            front: li == 0,
+            structure: 0,
+          });
+          m.door[0][15 + li] = true;
+        }
       return m;
     }
 }

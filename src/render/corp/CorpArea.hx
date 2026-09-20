@@ -360,6 +360,11 @@ class CorpArea implements Area3D
       // CorpCrowd's header — ambient city life is RenderConfig's own documented exception, and a
       // street that stops when the player stops thinking is the whole feature missing
       crowd.tick(opts.dtMs);
+      // AND THE DOOR LEAVES, which is not only their swing: FacilityDoors.pose writes into the
+      // prop's own matrix array and render.Models.cull is what uploads it, so a tower that never
+      // ticked them drew every leaf at the world origin and had a hole at every doorway — which
+      // is what "what's up with doors" was looking at
+      FacilityDoors.tick(doors, opts);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);

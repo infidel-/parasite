@@ -3340,6 +3340,7 @@ class FacilityStyle
           roof: ROOF,
           coping: COPING,
           shutter: DOOR_SHUTTER,
+          door: [DOOR_GLASS, DOOR_CABINET, DOOR_METAL, DOOR_PRIVATE],
           circ: FacilityModel.Surf.LINO,
         },
         surfOf: FacilityModel.surfOf,

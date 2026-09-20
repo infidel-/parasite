@@ -41,6 +41,11 @@ typedef ShellTex = {
   var coping: String;
   // the roll-up shutter strip. null where the area has none
   var shutter: String;
+  // the painted door pairs, indexed by render.facility.FacilityModel.Look. ONE image holds BOTH
+  // leaves of an opening — FacilityDoors.leafGeom maps its left half onto each leaf and takes the
+  // mirror for the other — so this is four images and not eight. It is here and not a constant in
+  // the emitter because a door was the LAST facility texture the corp tower still wore
+  var door: Array<String>;
   // which surface is CIRCULATION — the corridor and every door cell. a doorway's reveal is painted
   // in it whichever way the opening faces, because a doorway belongs to the circulation and not to
   // either space it joins, and it is the fallback finish for a cell whose own surface has no art

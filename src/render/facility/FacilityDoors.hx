@@ -44,13 +44,9 @@ class FacilityDoors
   // opening, so what the generator calls a single door is a double in any real building
   static inline var LEAF_W = CELL * 0.5;
 
-  // the three painted pairs, indexed by FacilityModel.Look
-  public static final TEX:Array<String> = [
-    FacilityStyle.DOOR_GLASS,
-    FacilityStyle.DOOR_CABINET,
-    FacilityStyle.DOOR_METAL,
-    FacilityStyle.DOOR_PRIVATE,
-  ];
+  // the painted pairs live on the MODEL (ShellTex.door), indexed by FacilityModel.Look — they were
+  // four constants here until the corp tower needed its own set, and a door was the last facility
+  // texture it still wore
 
   // one leaf's geometry, shared by every batch: the looks differ only in their map
   static var geo:BufferGeometry = null;
@@ -63,13 +59,13 @@ class FacilityDoors
 // the geometry and the programs are built the same way and nothing ever opens
   public static function build(scene:Scene, m:Facility, area:game.AreaGame):Array<DoorBatch>
     {
-      var byLook = [for (_ in TEX) new Array<DoorCell>()];
+      var byLook = [for (_ in m.tex.door) new Array<DoorCell>()];
       for (d in m.doors)
         byLook[d.look].push(d);
       var out = [];
-      for (li in 0...TEX.length)
+      for (li in 0...m.tex.door.length)
         if (byLook[li].length > 0)
-          out.push(batch(scene, TEX[li], byLook[li], area));
+          out.push(batch(scene, m.tex.door[li], byLook[li], area));
       return out;
     }
 

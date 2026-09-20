@@ -96,6 +96,16 @@ class CorpStyle
   public static inline var RACK_TOP = 'textures/corp/rack-top.png';
   public static inline var MIRROR = 'textures/corp/mirror.png';
 
+  // THE FOUR DOOR PAIRS, indexed by render.facility.FacilityModel.Look — the last facility texture
+  // the tower still wore. Off ONE 2x2 sheet and not four solo rolls, which is the one place packing
+  // is not a trade but the only route: a leaf is LEAF_W 2.0 x DOOR_H 4.0, so the pair maps a 0..1
+  // face of aspect 1.0 and each LEAF reads at 0.5 — under the ~0.64 aspect floor a 1k generation
+  // can produce at all. Nothing here tiles, so packing's own cost (a doubled wrap error) is nil
+  public static inline var DOOR_GLASS = 'textures/corp/door-glass.png';
+  public static inline var DOOR_OFFICE = 'textures/corp/door-office.png';
+  public static inline var DOOR_STEEL = 'textures/corp/door-steel.png';
+  public static inline var DOOR_PRIVATE = 'textures/corp/door-private.png';
+
   // ---- the fittings ------------------------------------------------------------------------
   //
   // every one of these is written at the compound's own scale, where FacilityStyle.WALL_H 6.0 is
@@ -428,6 +438,7 @@ class CorpStyle
           coping: COPING,
           // a tower floor has no roll-up shutter
           shutter: null,
+          door: [DOOR_GLASS, DOOR_OFFICE, DOOR_STEEL, DOOR_PRIVATE],
           circ: Surf.CARPET,
         },
         surfOf: CorpModel.surfOf,
