@@ -113,6 +113,87 @@ class CorpArea implements Area3D
         function(col, row) return FacilityModel.isWall(model, col, row) &&
           model.wall[row][col] != Wall.WINDOW,
         function(col, row) return FacilityGeom.carries(model, col, row));
+      attachDbg();
+    }
+
+// console debug helper (permanent) — what this corp tower actually built.
+//   __corp() -> { plate, rooms, windows, doors, objProps, parapet, shadows }
+//
+// the same reasoning render.facility.FacilityArea's __facility carries, and it applies harder here
+// because a tower owns FEWER instanced batches and more merged geometry: an instanced batch has no
+// userData.cls so render.Debug.find cannot reach a door leaf, parasiteHx is statics-only so the
+// Facility record is unreachable from JS, and every question this kind raises — did the plate come
+// back as ONE structure, did the lift core resolve, did every window run come back whole, is a
+// room's role the one its floor tile says — has a numeric answer a screenshot cannot give
+  function attachDbg():Void
+    {
+      untyped js.Browser.window.__corp = function()
+        {
+          // the plate, which should always be exactly one. TWO means the flood fill found the lift
+          // core as a structure of its own, i.e. the wall ring round it closed
+          var plate = [];
+          for (i in 0...model.structures.length)
+            {
+              var st = model.structures[i];
+              plate.push({
+                x1: st.x1,
+                y1: st.y1,
+                x2: st.x2,
+                y2: st.y2,
+                cells: st.cells,
+                // a tower plate is never a hangar (CorpStyle.shell passes hangars false), so a true
+                // here is that gate having come undone rather than a shed on the 20th floor
+                hangar: st.hangar,
+                paraCells: shells[i].paraCells,
+                paraQuads: shells[i].paraQuads,
+              });
+            }
+          // every opening with its LIVE state beside its geometry, exactly as the compound's: a
+          // screenshot cannot tell a leaf hinged on the wrong jamb from one swinging the wrong way
+          var leaves = [];
+          for (b in doors)
+            for (c in 0...b.open.length)
+              leaves.push({
+                col: b.cells[c].col,
+                row: b.cells[c].row,
+                look: b.cells[c].look,
+                alongX: b.cells[c].alongX,
+                inDir: b.cells[c].inDir,
+                live: (b.doors[c] != null),
+                isOpen: (b.doors[c] != null && b.doors[c].isOpen),
+                t: b.open[c],
+              });
+          var objProps = [];
+          for (b in props)
+            objProps.push({
+              path: b.model.path,
+              count: b.solid.matrices.length,
+              cells: b.cells,
+            });
+          // and how many cells of each interior SURFACE the model read out of the grid. it is the
+          // one readout that checks CorpModel.surfOf against the generator rather than against the
+          // art: a role dealt by gen.blocks.CorpBlocks that never reaches a Surf here is a floor id
+          // the map does not know, and it renders as bare carpet with nothing to say it went wrong
+          var surfs = new Map<Int,Int>();
+          for (row in 0...model.h)
+            for (col in 0...model.w)
+              {
+                var s = (model.surf[row][col] : Int);
+                surfs.set(s, (surfs.exists(s) ? surfs.get(s) : 0) + 1);
+              }
+          var bySurf = [for (k in surfs.keys()) { surf: k, cells: surfs.get(k) }];
+          return {
+            plate: plate,
+            rooms: model.rooms,
+            windows: model.windows,
+            doors: leaves,
+            objProps: objProps,
+            surfs: bySurf,
+            // how many masonry rects the contact field was painted from. it is a FIELD and draws
+            // nothing, so there is no instance count to read it off and this is its only handle
+            shadows: render.world.ContactMask.count,
+          };
+        }
     }
 
 // nothing in a tower stands on anything but the floor
