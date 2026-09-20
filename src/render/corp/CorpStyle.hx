@@ -149,6 +149,10 @@ class CorpStyle
   public static inline var DOOR_OFFICE = 'textures/corp/door-office.png';
   public static inline var DOOR_STEEL = 'textures/corp/door-steel.png';
   public static inline var DOOR_PRIVATE = 'textures/corp/door-private.png';
+  // and the lift pair, which is SOLO where the other four are quadrants of one sheet: the 2x2 was
+  // already spent, and a sliding pair is a different drawing anyway — two blank panels on one
+  // seam, where a hinged pair shows its stiles and a lever
+  public static inline var DOOR_LIFT = 'textures/corp/door-lift.png';
 
   // ---- the fittings ------------------------------------------------------------------------
   //
@@ -439,6 +443,13 @@ class CorpStyle
   // (RenderConfig.ROOF_SECTOR / DETAIL_MAX), so a street roof and a real one read alike
   public static inline var ROOF_SECTOR = 6.0;
   public static inline var ROOF_DECO_MAX = 6;
+  // WHICH of RenderConfig.DETAIL_TYPES a street roof deals, and it is THREE of the six on a
+  // measured budget and not on taste: each type is its own chroma-cut image and so its own merged
+  // mesh, six of them took the pinned pose to 85 against a ceiling of 85, and the plan named this
+  // as the fallback before the first one was emitted. The three kept are the ones that read as a
+  // SHAPE from 114 units up — a boxy unit, a round vent and a tank; the long AC, the duct run and
+  // the skylight are all flat rectangles at this range and are what the other three already say
+  public static final ROOF_DECO_TYPES = [0, 2, 5];
   // and how far a decal keeps off the rim, which has to clear ROOF_PARA_T or it climbs it
   public static inline var ROOF_DECO_EDGE = 2.2;
 
@@ -548,7 +559,7 @@ class CorpStyle
           coping: COPING,
           // a tower floor has no roll-up shutter
           shutter: null,
-          door: [DOOR_GLASS, DOOR_OFFICE, DOOR_STEEL, DOOR_PRIVATE],
+          door: [DOOR_GLASS, DOOR_OFFICE, DOOR_STEEL, DOOR_PRIVATE, DOOR_LIFT],
           circ: Surf.CARPET,
         },
         surfOf: CorpModel.surfOf,

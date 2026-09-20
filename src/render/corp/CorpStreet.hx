@@ -347,7 +347,8 @@ class CorpStreet
       for (ci in 0...cols)
         for (cj in 0...rows)
           {
-            var ty = (hash(b, ci * 7 + cj * 13) % RenderConfig.DETAIL_TYPES.length);
+            var ty = CorpStyle.ROOF_DECO_TYPES[hash(b, ci * 7 + cj * 13) %
+              CorpStyle.ROOF_DECO_TYPES.length];
             var d = RenderConfig.DETAIL_TYPES[ty];
             var x = ax0 + (ci + 0.5) * (ax1 - ax0) / cols;
             var z = az0 + (cj + 0.5) * (az1 - az0) / rows;

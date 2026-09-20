@@ -107,7 +107,10 @@ class CorpModel
       return switch (s)
         {
           case Surf.WASHROOM: Look.PRIVATE;
-          case Surf.SERVER, Surf.LIFT: Look.METAL;
+          // the lift is its OWN look and not the server room's steel, because the look is what
+          // FacilityDoors reads to decide the leaf SLIDES rather than swings
+          case Surf.LIFT: Look.LIFT;
+          case Surf.SERVER: Look.METAL;
           case Surf.MEETING, Surf.EXEC: Look.GLASS;
           default: Look.CABINET;
         };
@@ -312,9 +315,9 @@ class CorpModel
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
       // ONE DOOR OF EVERY LOOK, because a look is an image: render.facility.FacilityDoors builds a
-      // batch per look and they all compile the same program, so what the extra three buy is the
+      // batch per look and they all compile the same program, so what the extra four buy is the
       // 512 sheet DECODED here rather than on the frame the first washroom door comes into view
-      for (li in 0...4)
+      for (li in 0...5)
         {
           m.doors.push({
             col: 15 + li,

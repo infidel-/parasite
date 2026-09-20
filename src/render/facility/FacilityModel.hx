@@ -65,6 +65,11 @@ enum abstract Look(Int) from Int to Int
   // a repaint of CABINET because it is a different door: no vision panel in the art, and
   // objects.Door.canSeeThrough returns false while it is shut
   var PRIVATE = 3;
+  // AND THE ONE THAT DOES NOT SWING. A lift pair slides into the jambs, which
+  // render.facility.FacilityDoors reads off this look and off nothing else — so it is a look and
+  // not a flag on DoorCell, and the art follows for free. Only render.corp deals it; the compound
+  // has no lift and keeps its existing metal leaf in the slot so nothing there can move
+  var LIFT = 4;
 }
 
 // one door OPENING: a single cell holding a pair of leaves that swing apart.

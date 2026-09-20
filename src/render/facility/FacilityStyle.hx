@@ -3340,7 +3340,9 @@ class FacilityStyle
           roof: ROOF,
           coping: COPING,
           shutter: DOOR_SHUTTER,
-          door: [DOOR_GLASS, DOOR_CABINET, DOOR_METAL, DOOR_PRIVATE],
+          // the fifth slot is Look.LIFT, which no compound door is ever dealt — it takes the
+          // metal leaf so the array is the length the emitter indexes and nothing here changes
+          door: [DOOR_GLASS, DOOR_CABINET, DOOR_METAL, DOOR_PRIVATE, DOOR_METAL],
           circ: FacilityModel.Surf.LINO,
         },
         surfOf: FacilityModel.surfOf,

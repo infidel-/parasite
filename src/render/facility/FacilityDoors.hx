@@ -7,6 +7,7 @@ import render.Models;
 import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.DoorCell;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Facility;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -24,6 +25,10 @@ typedef DoorBatch = {
   hinge:Array<Vector3>,  // per leaf: the jamb it turns about, which is also its local origin
   shut:Array<Float>,     // per leaf: its yaw when closed
   swing:Array<Float>,    // per leaf: the signed quarter turn it travels, +-PI/2
+  // per leaf: how far it TRAVELS when open, which is zero for every look but the lift. a leaf
+  // either turns or slides and never both, so which of these two is non-zero is what says which
+  // kind of door this is — the data decides and `pose` has no branch
+  slide:Array<Vector3>,
   open:Array<Float>,     // per opening: 0 shut .. 1 open, eased toward objects.Door.isOpen
 };
 
@@ -54,6 +59,7 @@ class FacilityDoors
   static var _q = new Quaternion();
   static var _up = new Vector3(0, 1, 0);
   static var _one = new Vector3(1, 1, 1);
+  static var _p = new Vector3();
 
 // every door in the area, one instanced batch per look. `area` may be null, which is the boot warm:
 // the geometry and the programs are built the same way and nothing ever opens
@@ -98,6 +104,7 @@ class FacilityDoors
         hinge: [],
         shut: [],
         swing: [],
+        slide: [],
         open: [],
       };
       for (c in cells)
@@ -119,12 +126,21 @@ class FacilityDoors
           // opposite jambs, which is what a real pair does — and it falls out of taking the second
           // leaf's turn as the negative of the first
           var d0 = wrap(Math.atan2(-nz, nx) - yaw);
+          // A LIFT PAIR SLIDES AND DOES NOT TURN. Each leaf runs one LEAF_W further along the
+          // wall line, away from the centre, and disappears into the masonry beside the opening —
+          // which is the one thing a hinged leaf cannot be made to look like however it is eased.
+          // The travel is `-s * u * LEAF_W` because leaf 0's jamb is already at `-u * LEAF_W` and
+          // it has to go the same way again
+          var slides = (c.look == Look.LIFT);
           for (k in 0...2)
             {
               var s = (k == 0 ? 1.0 : -1.0);
               b.hinge.push(new Vector3(cx - ux * s * LEAF_W, 0.0, cz - uz * s * LEAF_W));
               b.shut.push(k == 0 ? yaw : yaw + Math.PI);
-              b.swing.push(k == 0 ? d0 : -d0);
+              b.swing.push(slides ? 0.0 : (k == 0 ? d0 : -d0));
+              b.slide.push(slides
+                ? new Vector3(-s * ux * LEAF_W, 0.0, -s * uz * LEAF_W)
+                : new Vector3(0.0, 0.0, 0.0));
               b.prop.matrices.push(new Matrix4());
               // the frustum centre is the SHUT centre and is never moved by the swing — see
               // FacilityStyle.DOOR_CULL_R, which is sized off how far a leaf gets from it
@@ -167,8 +183,10 @@ class FacilityDoors
       for (k in 0...2)
         {
           var i = c * 2 + k;
-          _q.setFromAxisAngle(_up, b.shut[i] + b.swing[i] * b.open[c]);
-          b.prop.matrices[i].compose(b.hinge[i], _q, _one);
+          var t = b.open[c];
+          _q.setFromAxisAngle(_up, b.shut[i] + b.swing[i] * t);
+          _p.set(b.hinge[i].x + b.slide[i].x * t, b.hinge[i].y, b.hinge[i].z + b.slide[i].z * t);
+          b.prop.matrices[i].compose(_p, _q, _one);
         }
     }
 

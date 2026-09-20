@@ -4271,6 +4271,24 @@
       "built_linear": 0.114,
       "built_srgb": 93.7
     },
+    "corp/door-lift": {
+      "src": "corp/door-lift.png",
+      "class": "window",
+      "needs_alpha": false,
+      "crop": [
+        6,
+        6,
+        1012,
+        1012
+      ],
+      "lift": 0.642,
+      "prompt": "A single closed PAIR of ELEVATOR LANDING DOORS, seen straight on, flat elevation, filling the whole square image edge to edge. No wall around it, no floor, no doorframe, no threshold, no perspective, no people. The left leaf occupies exactly the left half of the image and the right leaf exactly the right half, meeting at one slim vertical seam down the exact middle. Both leaves are identical mirror images of each other. Material: brushed stainless steel, the grain running VERTICALLY, matte and unpolished. Each leaf is one plain flat panel with a fine recessed shadow-gap reveal down its outer edge and a narrow darker band across the very bottom as a kick plate. Nothing else on the leaves: NO handle, NO pull, NO lever, NO vision panel, NO window, NO buttons, NO call panel, NO floor indicator, NO numbers, NO lettering. Very dark and muted steel, low contrast, almost charcoal, only slightly lighter than a dark wall.",
+      "note": "THE FIFTH LOOK, and the one door in the game that does not swing. render.facility.FacilityModel's Look gained LIFT so that render.facility.FacilityDoors.pose can SLIDE its leaves into the jambs instead of hinging them, and a sliding leaf has to be a different image for a reason the other four do not have: a hinged pair shows its stiles and a lever, a lift pair is two blank panels meeting on one seam, and painting a handle on one that slides is the thing that would give it away. Solo and not packed, because the 2x2 door-pack was already spent. LIFT 0.642, solved against corp/door-steel's own built 0.114 linear rather than chosen, so the lift reads as the same steel as the riser doors it shares a floor with -- the drop came back at 0.0381 / 57.7 srgb, far under the family. The compound has no lift and keeps its existing metal leaf in the new slot, so nothing there moves.",
+      "last_converted": "2026-09-21T01:39:57",
+      "last_lift": 0.642,
+      "built_linear": 0.1128,
+      "built_srgb": 94.2
+    },
     "corp/traffic": {
       "src": "corp/traffic.png",
       "class": "sprite",
