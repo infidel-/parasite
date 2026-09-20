@@ -2,6 +2,7 @@ package render.corp;
 
 import Const;
 import game.AreaGame;
+import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -26,8 +27,45 @@ class CorpModel
   public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
     {
       var m = FacilityModel.fromArea(area, icon, CorpStyle.shell());
+      washroomWindows(m);
       loneWindows(m);
+      // both passes above rewrite m.wall, and FacilityModel.fromArea grouped the runs BEFORE they
+      // ran — so the runs are re-derived off the corrected grid rather than patched
+      m.windows = [];
+      FacilityModel.findWindows(m);
       return m;
+    }
+
+// A WASHROOM IS NOT GLAZED, whatever the saved grid says.
+//
+// gen.corp.CorpBuilding.makeWindows runs BEFORE CorpBlocks.assign deals the room kinds, so it
+// cannot know what a room is and glazes every exterior wall run unconditionally — which puts a
+// full-height window behind every WC cubicle on an outside wall. Reported from the game, and
+// exactly right as a complaint.
+//
+// FIXED HERE AND NOT IN THE GENERATOR, deliberately: the renderer derives the whole shell from the
+// saved grid every load, so demoting it here fixes every corp save that already exists as well as
+// every one still to be made. The tile stays what it was written as; a window nobody can see
+// through is a wall
+  static function washroomWindows(m:Facility):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.wall[row][col] != Wall.WINDOW)
+              continue;
+            for (d in 0...4)
+              {
+                var c = col + FacilityGeom.DC[d];
+                var r = row + FacilityGeom.DR[d];
+                if (FacilityModel.isIndoor(m, c, r) &&
+                    m.surf[r][c] == Surf.WASHROOM)
+                  {
+                    m.wall[row][col] = Wall.SOLID;
+                    break;
+                  }
+              }
+          }
     }
 
 // a window cell with no window beside it becomes SOLID.

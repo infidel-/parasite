@@ -758,15 +758,34 @@ class FacilityModel
             var ir = row + dr * inDir;
             if (!isIndoor(m, ic, ir))
               continue;
-            m.windows.push({
-              col: col,
-              row: row,
-              len: len,
-              alongX: alongX,
-              inDir: inDir,
-              structure: m.owner[ir][ic],
-              high: false,
-            });
+            // A RUN LONGER THAN THE ART IS SPLIT INTO UNITS THE ART EXISTS FOR, and that is a
+            // CORP rule because only a tower has them: the compound's generator writes 2- and
+            // 3-cell openings, while gen.corp glazes a whole room wall corner to corner and the
+            // loop above will happily hand back a thirteen. A pane maps 0..1 over its run and
+            // nothing is ever stretched, so FacilityGeom.paneTall takes its HEIGHT off its width
+            // — measured, a len 6 stands 8.58 tall against a WALL_H of 6.0, and the wall emitter
+            // (which clamps the opening to the storey) then leaves the whole cell open and drops
+            // the sill cap. Reported from the game as windows twice the height of the wall with
+            // holes under them, and both halves of that are this one number.
+            //
+            // greedy 3s with 2s to finish, and the 4 case is the one that needs saying: taking a
+            // 3 out of a 4 leaves a 1, and a one-cell opening has no art at all
+            var at = 0;
+            while (at < len)
+              {
+                var take = (m.kind != 'corp' ? len :
+                  (len - at == 4 || len - at == 2 ? 2 : (len - at >= 3 ? 3 : len - at)));
+                m.windows.push({
+                  col: col + (alongX ? at : 0),
+                  row: row + (alongX ? 0 : at),
+                  len: take,
+                  alongX: alongX,
+                  inDir: inDir,
+                  structure: m.owner[ir][ic],
+                  high: false,
+                });
+                at += take;
+              }
           }
       findHighWindows(m);
     }
