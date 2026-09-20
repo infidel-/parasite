@@ -215,6 +215,69 @@ class CorpStyle
   // a strip of stickers
   public static inline var SIGN_RUN_MIN = 3;
 
+  // ---- the lighting rig ----------------------------------------------------------------------
+  //
+  // THE PLATE HAD NO LIGHT SOURCE AT ALL until this: CorpArea handed render.particles.LampLights an
+  // EMPTY post list from phase 2, so twenty storeys of office were lit by render.world.IndoorMask's
+  // flat ambient and nothing else — which is what every screenshot of phases 2-6 shows.
+  //
+  // the fixtures go into the SHARED 12-slot spotlight pool, which every area kind already builds at
+  // full size so NUM_SPOT_LIGHTS matches: the lights are already in each lit material's program key
+  // and already run their per-fragment loop, so claiming them costs nothing that was not already
+  // being paid. Two things come free with them and both are keyed off LampLights.active(): the fake
+  // actor ground shadows and the real spotlight shadow maps on the low 8 slots.
+  //
+  // NOTHING FLICKERS. A tower is powered and maintained; every post takes phase 0, which is also
+  // the STEADY marker LampLights and LightCone.pulse key on, so no cone is repacked and the whole
+  // per-frame cost of the rig is one LampLights.update call.
+  public static inline var LAMP_COLOR = 0xa8bcd8;
+  // how far under the slab above a recessed panel sits. a tower plate draws NO ceiling deck (see
+  // CorpArea's header), so this is where the fitting hangs and not where it is let into anything
+  public static inline var CEIL_DROP = 0.2;
+  public static inline var CEIL_Y = 6.0 - CEIL_DROP;   // FacilityStyle.WALL_H, one 3 m storey
+  // the lattice: one fitting per this many cells of a room, each way
+  public static inline var ROOM_SPACING = 5;
+  // and how far apart two corridor fittings must be, in cells
+  public static inline var CORR_SPACING = 5;
+  // the compensation for IndoorMask's own direct term, the compound's number and not a taste knob
+  public static inline var CEIL_MUL = 3.3;
+  // a corridor is lit but not worked in
+  public static inline var CORR_MUL = CEIL_MUL * 0.7;
+
+  // ---- the additive glow (one merged mesh, one material, per-vertex brightness) ----------------
+  //
+  // the compound keeps its room pair (FacilityStyle.CEIL_GLOW) switched OFF, and a tower cannot:
+  // a compound room is seen through a roof deck that FADES, so the pooled spotlight lands on a
+  // floor the player is looking straight down at. Here there is no deck at all and the camera sits
+  // at 51 degrees over an open plate — past the 12 nearest fixtures the floor falls to the flat
+  // ambient, and a plate is wider than twelve spotlights reach. The pool is what covers that, and
+  // it costs no per-frame work: nothing here moves, fades or is repacked.
+  //
+  // the C_* are FITTED against the built frame and never derived. the compound's own note is the
+  // warning: predicting them off the lamp colour's luminance gave a pool THIRTY-ONE TIMES the
+  // surface it lies on. A quad renders at roughly 2.1 * C, so C 0.43 is where a BLOOM_THRESHOLD of
+  // 0.9 is crossed — and the corp threshold is 0.72, i.e. LOWER, so C_PANEL is pulled down to
+  // match rather than left at the compound's 1.0
+  public static inline var GLOW = 2.6;
+  public static inline var C_PANEL = 0.8;
+  public static inline var C_POOL = 0.014;
+  // the call panel beside a lift door, the one WARM light on the plate
+  public static inline var C_CALL = 0.55;
+  public static inline var CALL_COLOR = 0xffb347;
+  // a recessed panel is a LONG rectangle and follows the long axis of the room it lights
+  public static inline var PANEL_W = 2.6;
+  public static inline var PANEL_H = 0.9;
+  public static inline var PANEL_DROP = 0.05;
+  // how far a ground-lying glow floats over the floor. under the tactical grid's own 0.06
+  public static inline var GLOW_Y = 0.04;
+  // and how far inside a room's own rect its pool stops
+  public static inline var POOL_INSET = 1.6;
+  // the lift call panel: a small upright plate beside the car door
+  public static inline var CALL_W = 0.5;
+  public static inline var CALL_H = 0.8;
+  public static inline var CALL_Y = 3.0;
+  public static inline var CALL_OFF = 1.3;    // along the wall, from the door cell's centre
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts

@@ -2258,3 +2258,58 @@ phase 7's.
 Art: three generations (~$0.17) plus one re-roll. Both oracles green at 200 seeds.
 
 Verdict: **KEEP.**
+
+## The corp tower's lighting rig, and the bug it was hiding (phase 7)
+
+**THE PLATE HAD NO LIGHT SOURCE AT ALL FOR FIVE PHASES.** `CorpArea.tick` has called
+`lampLights.update([], ...)` — an EMPTY post list — since phase 2, so a whole floor of offices was
+lit by `IndoorMask`'s flat ambient and nothing else. Every screenshot in the phase 2-6 entries
+above is of an unlit building, and reading them as "the art is dark" was wrong. The fix is one
+argument, and everything else here is what had to exist for it to have something to pass.
+
+`render/corp/CorpLamps.hx`: the fixtures AND the additive mesh in one file, because the fitting and
+the panel drawn where it hangs are the same decision. Live on a real tower: **125 posts (74 room
+lattice + 51 circulation), 125 panels, 65 pools, 2 call plates.** Posts is how many fixtures COMPETE
+for the shared 12 spotlight slots and never how many are lit — `LampLights` hands the bulbs to the
+nearest twelve every frame.
+
+**THE COMPOUND KEEPS ITS CEILING GLOW OFF (`FacilityStyle.CEIL_GLOW = false`) AND A TOWER CANNOT.**
+A compound room is seen through a roof deck that FADES, so the pooled spotlight lands on a floor
+the player is looking straight down at. Here there is no deck at all (phase 2 gated it off) and the
+camera sits at 51° over an open plate — past the twelve nearest fixtures the floor falls to flat
+ambient, and a plate is wider than twelve spotlights reach. So the panel and the pool are both ON
+for corp, with `C_PANEL` pulled to **0.8** against the compound's 1.0 because the corp bloom
+threshold is **0.72** against its 0.9, i.e. lower.
+
+One pool per ROOM RECT and not one per lattice point: two pools overlapping in an additive mesh is
+twice the brightness down the strip they share, and a ceiling grid lights a room evenly whatever
+its count.
+
+The lift-call plate is **a second colour in one mesh**, which the per-vertex brightness channel
+cannot do on its own: the plate's quads carry `C_CALL` scaled by the LUMINANCE RATIO between
+`CALL_COLOR` and `LAMP_COLOR`, so one additive material draws both and it is right whatever colour
+space `new Color` works in, both terms being in the same one. The compound does exactly this for
+its warm bulkhead lamp.
+
+**PERF: THE 8 FPS IN THE FIRST SCREENSHOT WAS A BUILD FRAME AND NOT A REGRESSION.** Sampled over
+six reads at the game camera afterwards: **57-61 FPS**. An A/B on the eight shadow-casting
+spotlights came back **cast 5.10 / nocast 9.66** and then **cast 4.82 / nocast 27.60** — i.e. noise
+with no sign, which is the integrated-GPU power-state problem `3d-render.md`'s measurement rules
+already record (the identical pinned frame has measured 11.61 and 4.06). `calls` is the number that
+held still; GPU on this machine did not, and no conclusion was drawn from it.
+
+**PHASE 7 BASELINE, which phase 8's street is measured against** — pinned free cam at
+`lookFrom(-152, 26, -150, -172, 0, -172)` over a real tower:
+**`calls` 49 · `tris` 159,918 · `programs` 127 · geometries 1,373 · textures 439.**
+`corp warm` is now **76 programs / 2,663 ms** (up from 72 / 418 ms at phase 2 — the glb props are
+what the warm now waits on).
+
+One Haxe trap, the third time this port has hit it: `d:FacilityModel.DoorCell` in a signature is
+`Type not found : FacilityModel`, and that ONE error at line 205 cascaded into eight bogus "Unknown
+identifier" lines for every static declared after it. Importing a module makes its sub-types
+available by BARE NAME and `Module.Type` is not a path from another package —
+`import render.facility.FacilityModel.DoorCell;` and use `DoorCell`.
+
+Both oracles green at 200 seeds.
+
+Verdict: **KEEP.**

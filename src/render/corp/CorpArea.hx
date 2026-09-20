@@ -50,6 +50,7 @@ class CorpArea implements Area3D
   var fit:CorpFurniture.CorpFit;                // what the furniture pass emitted, for __corp()
   var glb:Array<render.Models.InstancedProp>;   // the seven prop batches, culled on one radius
   var glbN:CorpProps.CorpPropSet;               // and what went into them, for __corp()
+  var lamps:CorpLamps.CorpLampSet;              // the fixtures and everything additive they throw
   var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
   var signs = 0;                                // wall signage, one mesh
   var props:Array<render.world.ObjModels.PropBatch>;
@@ -121,6 +122,9 @@ class CorpArea implements Area3D
       // CorpProps for it
       clutter = CorpClutter.build(scene, model);
       signs = CorpSigns.build(scene, model);
+      // the rig, after every family that could stand under a lattice point — the nudge in
+      // CorpLamps.free reads m.fit, so it has to know what is standing there
+      lamps = CorpLamps.build(scene, model);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -224,6 +228,16 @@ class CorpArea implements Area3D
             // anywhere — these two numbers are the only handle on either
             clutter: clutter,
             signs: signs,
+            // the rig. `posts` is how many fixtures COMPETE for the shared 12 spotlight slots and
+            // never how many are lit — LampLights hands the bulbs to the nearest twelve every
+            // frame, so a plate with 40 posts is correct and a plate with 0 is the phase-2 bug
+            lamps: {
+              posts: lamps.posts.length,
+              rooms: lamps.rooms,
+              panels: lamps.panels,
+              pools: lamps.pools,
+              calls: lamps.calls,
+            },
             glbBatches: [for (b in glb) (b.mesh == null ? 0 : b.matrices.length)],
             surfs: bySurf,
             // and the FURNITURE, which is eight families over nine merged meshes and therefore has
@@ -276,7 +290,7 @@ class CorpArea implements Area3D
       // off the SMOOTHED position and not opts.playerCol/Row — see VisionMask's own note on why
       // the logical cell is the wrong origin
       VisionMask.update(game, opts.player.x, opts.player.z);
-      lampLights.update([], opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(lamps.posts, opts.playerCol, opts.playerRow, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);

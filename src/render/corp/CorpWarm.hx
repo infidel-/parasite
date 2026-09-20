@@ -44,6 +44,9 @@ class CorpWarm
       // or 512 decoded on first entry
       CorpClutter.build(sc, model);
       CorpSigns.build(sc, model);
+      // and the additive glow, which is its own material: AdditiveBlending, vertexColors and an
+      // alphaMap are all in three's program key, so none of the mapped lamberts above cover it
+      CorpLamps.build(sc, model);
       FacilityDetail.corners(sc, model);
       // and the collector those corners feed, which is NOT optional: FacilityDetail.halos is what
       // CLEARS it, so skipping it here carries these demo quads into the first real tower
