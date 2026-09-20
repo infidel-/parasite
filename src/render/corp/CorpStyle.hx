@@ -1,5 +1,6 @@
 package render.corp;
 
+import Const;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Surf;
 import render.facility.ShellOpts;
@@ -75,6 +76,60 @@ class CorpStyle
   public static inline var WINDOW_ASPECT = 512 / 183.0;
   public static inline var WINDOW_ASPECT_2 = 512 / 280.0;
 
+  // the FITTING art. one texture per FACE — a top is a different surface from a front, and one
+  // sheet over both is the mistake docs/3d-geometry.md opens with
+  public static inline var DESK_TOP = 'textures/corp/desk-top.png';
+  public static inline var DESK_FRONT = 'textures/corp/desk-front.png';
+  public static inline var DESK_SIDE = 'textures/corp/desk-side.png';
+  public static inline var PARTITION = 'textures/corp/partition.png';
+  public static inline var COUNTER_TOP = 'textures/corp/counter-top.png';
+  public static inline var COUNTER_FRONT = 'textures/corp/counter-front.png';
+  public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
+  public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
+  public static inline var TABLE_TOP = 'textures/corp/table-top.png';
+  public static inline var TABLE_SIDE = 'textures/corp/table-side.png';
+  public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
+  public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
+  public static inline var MIRROR = 'textures/corp/mirror.png';
+
+  // ---- the fittings ------------------------------------------------------------------------
+  //
+  // every one of these is written at the compound's own scale, where FacilityStyle.WALL_H 6.0 is
+  // one 3 m storey and a unit is therefore HALF A METRE. So a desk at 1.5 is 75 cm, a kitchen
+  // counter at 1.8 is 90 cm, a cubicle spine at 2.8 is 1.4 m and a server rack at 4.0 is 2 m —
+  // real heights, not chosen proportions.
+  public static inline var DESK_H = 1.5;
+  public static inline var COUNTER_H = 1.8;
+  public static inline var TABLE_H = 1.5;
+  public static inline var VANITY_H = 1.7;
+  // the cubicle spine. 1.4 m is a real low-wall partition: over a seated head and under a standing
+  // one, which is the whole point of the thing
+  public static inline var PARTITION_H = 2.8;
+  public static inline var PARTITION_T = 0.4;
+  // a WC cubicle's own divider, 1.9 m, and a 15 cm panel
+  public static inline var STALL_H = 3.8;
+  public static inline var STALL_T = 0.3;
+  // the mirror band over the basin run, sill to head
+  public static inline var MIRROR_Y0 = 2.2;
+  public static inline var MIRROR_Y1 = 4.4;
+  // how far a fitting is pulled back inside its cell, so two units in a run still read as two and
+  // a unit against masonry does not z-fight the wall slab
+  public static inline var FIT_INSET = 0.12;
+  // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
+  public static inline var RACK_H = 4.0;
+  public static inline var RACK_D = 2.0;
+
+  // the material scales. a MATERIAL scale and never the object's own size: the laminate grain, the
+  // drawer course, the felt weave and the perforation pitch are each chosen against the thing they
+  // draw. the drawer front's art carries THREE courses over its square, so at 3.0 a 1.5-high
+  // carcass shows half of them, which is the two drawers a 75 cm pedestal really has
+  public static inline var DESK_TILE = 4.0;
+  public static inline var DESK_FRONT_TILE = 3.0;
+  public static inline var COUNTER_TILE = 4.0;
+  public static inline var PARTITION_TILE = 2.8;
+  public static inline var RACK_TILE = 2.0;
+  public static inline var MIRROR_TILE = 4.4;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts
@@ -118,6 +173,8 @@ class CorpStyle
           circ: Surf.CARPET,
         },
         surfOf: CorpModel.surfOf,
+        fitOf: CorpModel.fitOf,
+        tableOf: Const.isCorpTableTile,
         wallOf: CorpModel.wallOf,
         // and NO hangars: the lift car is nine cells of concrete in a ring of its own, which the
         // concrete-majority test would call a shed and arch a barrel vault over

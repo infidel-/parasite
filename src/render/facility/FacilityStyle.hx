@@ -3343,6 +3343,10 @@ class FacilityStyle
           circ: FacilityModel.Surf.LINO,
         },
         surfOf: FacilityModel.surfOf,
+        // a compound's furniture is all either a worktop (`table`) or a decoration with a fitting
+        // kind (`deco`), and both are already grids — nothing here needs a third
+        fitOf: function(t) return 0,
+        tableOf: Const.isTableTile,
         wallOf: FacilityModel.wallOf,
         hangars: true,
       };

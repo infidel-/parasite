@@ -47,6 +47,7 @@ class CorpArea implements Area3D
   var lampCorners:Map<Int,Int>;
   var shells:Array<Shell>;
   var doors:Array<DoorBatch>;
+  var fit:CorpFurniture.CorpFit;                // what the furniture pass emitted, for __corp()
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -71,12 +72,16 @@ class CorpArea implements Area3D
 // the floor plate's shell, its doors and its object props
   public function build(scene:Scene):Void
     {
-      // a plate is flat and has nothing to climb, so both of those are CLEARED rather than left:
+      // a plate is flat, so the relief hook answers the FURNITURE and nothing else, and climbArc is
+      // CLEARED rather than left:
       // the kind that sets one owns clearing it, or the next area inherits the wilderness's height
       // field and its guard rails (WorldCtx). the two that are set are the two a tower shares with
       // a compound — masonry that carries objects, and masonry that does not fill its cell
       WorldCtx.tiles = null;
-      WorldCtx.ground = null;
+      // and the ONE hook a tower does need: a decoration is written onto the same cell as the
+      // worktop tile it belongs to, so without this every monitor and mug on the plate sits at
+      // y = 0 with three quarters of a metre of carcass in front of it
+      WorldCtx.ground = function(x, z) return CorpFurniture.groundY(model, x, z);
       WorldCtx.climbArc = null;
       WorldCtx.wallMounts = function(col, row) return FacilityGeom.wallMounts(model, col, row);
       // masonry is a slab CENTRED in its cell and not the cell itself, so a decal laid on the cell
@@ -96,6 +101,10 @@ class CorpArea implements Area3D
       var pre = scene.children.copy();
       built = scene;
       shells = FacilityGeom.build(scene, model);
+      // the fittings, after the shell they stand in and BEFORE the contact repaint below — a
+      // prop's footprint is not known until its builder has run, and the attach above had to come
+      // first because ContactMask.patch reads `on` when a floor material is created
+      fit = CorpFurniture.build(scene, model);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -103,6 +112,9 @@ class CorpArea implements Area3D
       // player is standing in it from the first frame
       for (s in shells)
         s.glaze.value = 1.0;
+      // one canvas, one upload, no material touched — the whole reason the contact field is a
+      // field and not a quad per fitting
+      ContactMask.repaint();
       doors = FacilityDoors.build(scene, model, game.area);
       props = render.world.ObjModels.build(scene, game, objYaw, objLift);
       chunks.build(scene, pre);
@@ -189,6 +201,12 @@ class CorpArea implements Area3D
             doors: leaves,
             objProps: objProps,
             surfs: bySurf,
+            // and the FURNITURE, which is eight families over nine merged meshes and therefore has
+            // no instance count anywhere — the same blindness __facility() records for every one of
+            // its emitted families. `desks` is worktop CELLS and not desks; `partitions` should
+            // track three per pod row; `basins` + `stalls` is the washroom's whole fixture run, and
+            // a washroom reporting 0 stalls means the contiguity test that separates the two broke
+            fit: fit,
             // how many masonry rects the contact field was painted from. it is a FIELD and draws
             // nothing, so there is no instance count to read it off and this is its only handle
             shadows: render.world.ContactMask.count,

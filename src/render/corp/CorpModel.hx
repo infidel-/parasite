@@ -112,6 +112,26 @@ class CorpModel
       return NONE;
     }
 
+// which piece of furniture a corp tile id stands, as one of CorpFurniture's codes.
+//
+// THREE IDS AND NOTHING ELSE, and every one of them is a floor tile's UNWALKABLE TWIN (one tileset
+// row down, gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
+// uses to say "something stands here" without a tile of its own, and it is why the surface grid
+// cannot answer: a spine cell, a rack cell and a basin cell all paint their room's own floor.
+//
+// the WORKTOPS are not here — those are ordinary table tiles and `Facility.table` already holds
+// them; what separates a desk from a kitchen counter is the room's Surf and not the tile
+  public static function fitOf(t:Int):Int
+    {
+      if (t == Const.TILE_FLOOR_CUBICLE + 16)
+        return CorpFurniture.FIT_SPINE;
+      if (t == Const.TILE_FLOOR_SERVER + 16)
+        return CorpFurniture.FIT_RACK;
+      if (t == Const.TILE_FLOOR_MARBLE2 + 16)
+        return CorpFurniture.FIT_FIXTURE;
+      return 0;
+    }
+
 // what a corp tile id blocks. no shutter and no light well: a tower floor has neither
   public static function wallOf(t:Int):Wall
     {
@@ -155,6 +175,20 @@ class CorpModel
       m.wall[0][6] = WINDOW;
       m.wall[0][10] = WINDOW;
       m.wall[0][11] = WINDOW;
+      // one of EVERY fitting, because a material with nothing to emit in the warm scene compiles
+      // its program on the first real area entry instead. a worktop cell per finish (the finish is
+      // the room's Surf, so one on each band is one of each), a three-cell cubicle spine, two rack
+      // cells and a washroom pair — one fixture with a neighbour (a basin) and one standing alone
+      // (a WC cubicle), which is the contiguity test CorpFurniture runs
+      for (i in 0...bands.length)
+        m.table[5][2 + i * 2] = true;
+      for (col in 6...9)
+        m.fit[7][col] = CorpFurniture.FIT_SPINE;
+      m.fit[3][12] = CorpFurniture.FIT_RACK;
+      m.fit[3][13] = CorpFurniture.FIT_RACK;
+      m.fit[8][15] = CorpFurniture.FIT_FIXTURE;
+      m.fit[8][16] = CorpFurniture.FIT_FIXTURE;
+      m.fit[8][3] = CorpFurniture.FIT_FIXTURE;
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
       m.doors.push({

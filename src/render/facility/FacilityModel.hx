@@ -208,6 +208,12 @@ typedef Facility = {
   // .FacilityPaint's bay striping and FacilityCars' spot search, which is why it is a grid and not
   // the rect it happens to be
   parking:Array<Array<Bool>>,
+  // which cells stand a piece of furniture the SURFACE grid cannot name — a corp cubicle spine, a
+  // server cabinet, a washroom fixture. 0 is nothing. Same argument as `parking` above: all three
+  // paint their room's own floor, so the raw tile id is the only thing that separates them, and
+  // render.corp.CorpFurniture asks it once per cell while it emits. The codes are the area kind's
+  // own and come out of ShellOpts.fitOf; a compound returns 0 everywhere
+  fit:Array<Array<Int>>,
   // and where each PARKED CAR stands: the cell carrying Const.TILE_PARKING_CAR_ORIGIN, which is its
   // bay's low corner against the kerb. gen.facility.FacilityBays deals the bays and stamps the
   // footprint; render.facility.FacilityCars stands one model on each of these and needs no phase
@@ -298,7 +304,8 @@ class FacilityModel
             // and a 2x3 or 3x2 island, and FacilityTables recovers every one of them from
             // neighbours. this used to carry its own copy of the tile test; see Const.isTableTile
             // for what the generator having a DIFFERENT copy of it cost
-            m.table[row][col] = Const.isTableTile(t);
+            m.table[row][col] = opts.tableOf(t);
+            m.fit[row][col] = opts.fitOf(t);
             m.parking[row][col] = (t == Const.TILE_PARKING ||
               t == Const.TILE_PARKING_CAR ||
               t == Const.TILE_PARKING_CAR_ORIGIN);
@@ -427,6 +434,7 @@ class FacilityModel
         door: [for (_ in 0...h) [for (_ in 0...w) false]],
         table: [for (_ in 0...h) [for (_ in 0...w) false]],
         parking: [for (_ in 0...h) [for (_ in 0...w) false]],
+        fit: [for (_ in 0...h) [for (_ in 0...w) 0]],
         cars: [],
         deco: [for (_ in 0...h) [for (_ in 0...w) 0]],
         tableDeco: [for (_ in 0...h) [for (_ in 0...w) (null : TableDeco)]],

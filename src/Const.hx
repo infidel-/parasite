@@ -1123,6 +1123,19 @@ class Const
         i % stride < 8;
     }
 
+// and the OTHER HALF of those same four rows: the corp office's wood, carpet and marble furniture,
+// which gen.corp's templates lay and no facility ever does. It is the exact complement of the test
+// above — same rows, columns 8-15 instead of 0-7 — and it exists for the same reason that one
+// does: render.corp.CorpFurniture raises a slab on these and needs to ask once per cell
+  public static inline function isCorpTableTile(t:Int):Bool
+    {
+      var stride = OFFSET_ROW9 - OFFSET_ROW8;
+      var i = t - OFFSET_ROW8;
+      return i >= 0 &&
+        i < 4 * stride &&
+        i % stride >= 8;
+    }
+
   // === row 12 - corpo
   public static var OFFSET_ROW12 = 192;
   public static var TILE_CORP_WINDOW1 = OFFSET_ROW12 + 0;

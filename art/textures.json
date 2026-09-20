@@ -3926,6 +3926,234 @@
       "built_srgb": 71.3,
       "lift": 0.874,
       "last_lift": 0.874
+    },
+    "corp/desk-top": {
+      "src": "corp/desk-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:21:48",
+      "built_linear": 0.1204,
+      "built_srgb": 95.0,
+      "lift": 2.478,
+      "last_lift": 2.478
+    },
+    "corp/desk-front": {
+      "src": "corp/desk-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        513,
+        0,
+        511,
+        511
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:21:48",
+      "built_linear": 0.127,
+      "built_srgb": 95.0,
+      "lift": 4.443,
+      "last_lift": 4.443
+    },
+    "corp/desk-side": {
+      "src": "corp/desk-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        513,
+        511,
+        511
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:21:48",
+      "built_linear": 0.0964,
+      "built_srgb": 85.9,
+      "lift": 5.152,
+      "last_lift": 5.152
+    },
+    "corp/partition": {
+      "src": "corp/desk-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        513,
+        513,
+        511,
+        511
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: an office desk worktop, pale warm grey laminate with a very fine even straight grain running left to right, matte, completely plain. TOP-RIGHT, flat elevation: the DRAWER FRONT of a desk pedestal, matte white lacquer in EXACTLY THREE equal horizontal drawer fronts top to bottom, narrow crisp recessed shadow gaps between them, one slim full-width recessed finger pull along each drawer's top edge, the rhythm closing across the quadrant's top and bottom edges. BOTTOM-LEFT, flat elevation: the plain END PANEL of the same carcass, matte white lacquer, one unbroken plane with a single fine vertical shadow-gap reveal down its centre. BOTTOM-RIGHT, flat elevation: a cubicle partition panel, dark charcoal acoustic fabric with a visible woven nap and a faint mottling, a slim darker aluminium trim strip along the very TOP edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the three desk materials LIGHT and the fabric clearly DARKER, all four in one narrow band. HUE: laminate a faint warm grey, lacquer NEUTRAL white-grey, fabric NEUTRAL charcoal, none drifting blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:21:48",
+      "built_linear": 0.0597,
+      "built_srgb": 67.3,
+      "lift": 0.959,
+      "last_lift": 0.959
+    },
+    "corp/counter-top": {
+      "src": "corp/wet-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        510,
+        510
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a kitchen worktop, dark charcoal engineered stone, honed, a very fine even pale aggregate fleck, no veining, completely plain. TOP-RIGHT, flat elevation: the CABINET FRONTS of a kitchen base run, pale oak veneer in EXACTLY THREE equal vertical door fronts side by side separated by narrow crisp recessed shadow gaps so the rhythm closes across the left and right edges, one slim full-height recessed finger pull per door, a fine straight vertical grain. BOTTOM-LEFT, from DIRECTLY ABOVE: a washroom vanity top, pale warm grey honed stone, a very fine even grain and a faint soft drift of figure, completely plain. BOTTOM-RIGHT, flat elevation: a WC cubicle partition panel, matte mid-grey compact laminate, one unbroken plane, a slim satin stainless trim rail along the very TOP edge only and a single fine vertical shadow-gap reveal at the centre. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the two stone tops the DARKER pair, the oak and the laminate the LIGHTER pair, all in one narrow band. HUE: the oak a restrained warm tan; the two stones and the laminate close to NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:22:42",
+      "built_linear": 0.0492,
+      "built_srgb": 61.4,
+      "lift": 1.005,
+      "last_lift": 1.005
+    },
+    "corp/counter-front": {
+      "src": "corp/wet-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        512,
+        0,
+        510,
+        510
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a kitchen worktop, dark charcoal engineered stone, honed, a very fine even pale aggregate fleck, no veining, completely plain. TOP-RIGHT, flat elevation: the CABINET FRONTS of a kitchen base run, pale oak veneer in EXACTLY THREE equal vertical door fronts side by side separated by narrow crisp recessed shadow gaps so the rhythm closes across the left and right edges, one slim full-height recessed finger pull per door, a fine straight vertical grain. BOTTOM-LEFT, from DIRECTLY ABOVE: a washroom vanity top, pale warm grey honed stone, a very fine even grain and a faint soft drift of figure, completely plain. BOTTOM-RIGHT, flat elevation: a WC cubicle partition panel, matte mid-grey compact laminate, one unbroken plane, a slim satin stainless trim rail along the very TOP edge only and a single fine vertical shadow-gap reveal at the centre. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the two stone tops the DARKER pair, the oak and the laminate the LIGHTER pair, all in one narrow band. HUE: the oak a restrained warm tan; the two stones and the laminate close to NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:22:42",
+      "built_linear": 0.0805,
+      "built_srgb": 73.7,
+      "lift": 1.804,
+      "last_lift": 1.804
+    },
+    "corp/vanity-top": {
+      "src": "corp/wet-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        511,
+        510,
+        510
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a kitchen worktop, dark charcoal engineered stone, honed, a very fine even pale aggregate fleck, no veining, completely plain. TOP-RIGHT, flat elevation: the CABINET FRONTS of a kitchen base run, pale oak veneer in EXACTLY THREE equal vertical door fronts side by side separated by narrow crisp recessed shadow gaps so the rhythm closes across the left and right edges, one slim full-height recessed finger pull per door, a fine straight vertical grain. BOTTOM-LEFT, from DIRECTLY ABOVE: a washroom vanity top, pale warm grey honed stone, a very fine even grain and a faint soft drift of figure, completely plain. BOTTOM-RIGHT, flat elevation: a WC cubicle partition panel, matte mid-grey compact laminate, one unbroken plane, a slim satin stainless trim rail along the very TOP edge only and a single fine vertical shadow-gap reveal at the centre. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the two stone tops the DARKER pair, the oak and the laminate the LIGHTER pair, all in one narrow band. HUE: the oak a restrained warm tan; the two stones and the laminate close to NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:22:42",
+      "built_linear": 0.0935,
+      "built_srgb": 84.7,
+      "lift": 1.811,
+      "last_lift": 1.811
+    },
+    "corp/stall-panel": {
+      "src": "corp/wet-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        512,
+        511,
+        510,
+        510
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a kitchen worktop, dark charcoal engineered stone, honed, a very fine even pale aggregate fleck, no veining, completely plain. TOP-RIGHT, flat elevation: the CABINET FRONTS of a kitchen base run, pale oak veneer in EXACTLY THREE equal vertical door fronts side by side separated by narrow crisp recessed shadow gaps so the rhythm closes across the left and right edges, one slim full-height recessed finger pull per door, a fine straight vertical grain. BOTTOM-LEFT, from DIRECTLY ABOVE: a washroom vanity top, pale warm grey honed stone, a very fine even grain and a faint soft drift of figure, completely plain. BOTTOM-RIGHT, flat elevation: a WC cubicle partition panel, matte mid-grey compact laminate, one unbroken plane, a slim satin stainless trim rail along the very TOP edge only and a single fine vertical shadow-gap reveal at the centre. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the two stone tops the DARKER pair, the oak and the laminate the LIGHTER pair, all in one narrow band. HUE: the oak a restrained warm tan; the two stones and the laminate close to NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:22:42",
+      "built_linear": 0.0707,
+      "built_srgb": 74.4,
+      "lift": 1.324,
+      "last_lift": 1.324
+    },
+    "corp/table-top": {
+      "src": "corp/board-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        509,
+        509
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:23:33",
+      "built_linear": 0.0817,
+      "built_srgb": 79.1,
+      "lift": 0.738,
+      "last_lift": 0.738
+    },
+    "corp/rack-side": {
+      "src": "corp/board-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        511,
+        0,
+        509,
+        509
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:23:33",
+      "built_linear": 0.0549,
+      "built_srgb": 65.6,
+      "lift": 0.902,
+      "last_lift": 0.902
+    },
+    "corp/mirror": {
+      "src": "corp/board-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        510,
+        509,
+        509
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:23:33",
+      "built_linear": 0.0423,
+      "built_srgb": 54.8,
+      "lift": 1.187,
+      "last_lift": 1.187
+    },
+    "corp/table-side": {
+      "src": "corp/board-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        511,
+        510,
+        509,
+        509
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:23:33",
+      "built_linear": 0.0471,
+      "built_srgb": 59.3,
+      "lift": 0.898,
+      "last_lift": 0.898
+    },
+    "corp/rack-front": {
+      "src": "corp/rack-front.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "The FRONT of a bank of server cabinets, seen straight on in flat elevation, no perspective, filling the whole square image edge to edge. ONE authored composition and not a repeating swatch. Divided by narrow dark gaps into EXACTLY THREE equal vertical cabinets side by side; each a tall dark grey powder-coated steel frame with a perforated mesh door, filled top to bottom with EXACTLY EIGHT equal horizontal equipment units separated by thin dark gaps. Every unit is a flat dark faceplate carrying a short row of small status lights along one side - tiny flat dots of warm amber, muted green and a few dark unlit ones - and some also carry small dark ports or a slim ventilation slot. The lights are SMALL and FLAT, never glowing, no halo, no spill. A slim dark plinth along the very BOTTOM and a slim dark cabinet head along the very TOP. No cables, no floor, no wall, no signage, no text, no labels, no numbers. VALUE: MEDIUM-DARK, a dark machine-room rank; only the status lights are brighter and they cover a tiny fraction of the image. HUE: the steel PERFECTLY NEUTRAL grey, the only colour anywhere being the small amber and green dots. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:24:28",
+      "built_linear": 0.0491,
+      "built_srgb": 61.0,
+      "lift": 0.792,
+      "last_lift": 0.792
     }
   }
 }

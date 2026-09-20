@@ -2055,3 +2055,64 @@ which ARE the same extrusion seen from the same angle. Four interior surfaces sh
 wall, and a room reads by its FLOOR and its furniture.
 
 Verdict: **KEEP.**
+
+## The corp fittings: eight families, nine merged meshes, one file
+
+Phase 4 of the port. A desk, a kitchen counter, a boardroom slab, a cubicle spine, a server
+cabinet, a vanity and a WC divider are every one of them an axis-aligned slab whose read is a
+MATERIAL or a RHYTHM, so the triage comes out the same way for the whole set: **emitted quads, no
+glbs**, one texture per FACE.
+
+**It is ONE file and not the five the plan named**, because the buffers are keyed by TEXTURE rather
+than by object kind. An exec desk and a cubicle desk are the same laminate and share a draw call
+for free; splitting them across files could only have taken that back. Nine textures, nine merged
+meshes, measured in game at **84-138 `dc`** across the rooms against phase 3's 89-99.
+
+Three things the saved grid could not answer, and what was added for each:
+
+- **`Const.isTableTile` deliberately EXCLUDES the corp furniture.** It is a stride test over the
+  first 8 columns of tile rows 8-11, and the back half of those same rows is exactly the corp
+  office's wood, carpet and marble tables. So `m.table` came back empty for a tower and the first
+  build emitted **0 desks, 0 counters, 0 tables** against 35 partitions and 18 racks. Added
+  `Const.isCorpTableTile` (the exact complement, columns 8-15) and a `tableOf` on `ShellOpts`, so
+  neither kind can use the other's: **136 / 6 / 34**.
+- **A cubicle spine, a server cabinet and a washroom fixture all paint their ROOM's own floor**, so
+  the surface grid cannot separate them and the raw tile id is the only thing that can. Same
+  argument `Facility.parking` already carries, so the same answer: a `fit` grid on the model, filled
+  from a `fitOf` on `ShellOpts`. All three ids are a floor tile's unwalkable twin, which is how
+  gen.corp says "something stands here" without spending a tile.
+- **A BASIN and a WC CUBICLE are the same tile id.** Nothing had to be persisted to tell them
+  apart: `CorpRooms.toilet` lays the basins as a continuous run along the room's top wall and the
+  stalls every OTHER cell along its bottom one, so CONTIGUITY is the distinction and a neighbour
+  test recovers it.
+
+Two faults found by looking, both fixed:
+
+- **A CONSTANT INSET DREW THE BOARDROOM AS A GRID OF SEPARATE SLABS.** Every cell pulled in 0.12 on
+  all four hands, so a five-by-five table's top caps stopped touching and a dark groove ran between
+  every pair. The rect is now cut per HAND against the family's own run predicate — inset only
+  where the run really ends — and a run is one unbroken top again. Same fix carries the desk runs
+  and the rack ranks.
+- **A RACK'S EQUIPMENT FACE HAS TO BE AIMED AT THE CAMERA.** The aisle search took the first open
+  neighbour, which for rows running along x is -z, i.e. away; the whole server room showed its
+  backs. The order is now +z, +x, -x, -z — this camera rests with no yaw of its own, so unturned IS
+  facing it, the same reasoning `ObjModels.PropYaw.FRONTAL` runs on.
+
+And the hook that mattered most for how the floor READS: **`WorldCtx.ground` now answers the
+FURNITURE**. gen.corp writes a decoration onto the same cell as the worktop tile it belongs to, so
+before this every monitor, phone and mug on the plate hung at y = 0 with three quarters of a metre
+of carcass in front of it — which is what the first 3D corp screenshots show. One hook, and the
+actors, decals, path line, tactical grid and cursor pick all followed.
+
+Art: 13 labels off FOUR generations (~$0.22) — three packed 2x2 family sheets whose seams landed at
+512/512, 511/510 and 510/509 (peaks 34-72 against a 2.3-5.5 background), plus the rack front solo
+because it is the one 0..1 AUTHORED composition in the set and its placed status lights want the
+resolution. Two lacquer gammas came out at 4.4 and 5.2 in the DARKENING direction, the same prompt
+fault phase 3 recorded: a "premium corporate interior" brief gets answered with daylight exposure,
+and the white pieces landed at srgb 200-206 against an 85-95 target.
+
+Facility re-walked after the `tableOf` / `fit` split and byte-identical on every counter:
+3 structures, 24 rooms, 42 windows, grime 687, exits 14, points 6, placards 50, cabinets 8,
+sinks 24, clutter 220, work 12. Both oracles green at 300 seeds.
+
+Verdict: **KEEP.**
