@@ -42,8 +42,10 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 12 - corpo
     0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    // row 13 - corpo
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+    // row 13 - corpo. 13 and 14 are the unwalkable twins of Const.TILE_FLOOR_CUBICLE and
+    // TILE_FLOOR_SERVER one row up (a corp floor's twin is +16, gen.corp.CorpTemp
+    // .UNWALKABLE_TILE_OFFSET), so they carry the furniture standing on those two floors
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
     // row 14-16 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -92,15 +94,28 @@ class Default extends Tileset
 
 // map tile id to icon coordinates.
 //
-// THREE ALIASES, and the reason none of the car park's marks needed art: the lot is asphalt drawn
-// from the alley's own cell, and the marks exist only so the renderer can tell the lot you drive into
-// from the yard you do not, and the game can tell where a car is standing (see Const.TILE_PARKING
-// and Const.TILE_PARKING_CAR)
+// SEVEN ALIASES, and the reason none of them needed art: a mark that exists so CODE can tell two
+// surfaces apart still has to LOOK like the surface it marks. The car park's three are asphalt drawn
+// from the alley's own cell — the lot you drive into against the yard you do not, and where a car is
+// standing (Const.TILE_PARKING, TILE_PARKING_CAR). The corp office's four are the same idea indoors:
+// a cubicle farm is carpet and a server room is concrete to look at, and the id is what tells them
+// from the corridor and the lift lobby they share those floors with
   public override function getIcon(tileID: Int): _Icon
     {
-      return super.getIcon(tileID == Const.TILE_PARKING ||
-        tileID == Const.TILE_PARKING_CAR ||
-        tileID == Const.TILE_PARKING_CAR_ORIGIN ? Const.TILE_ALLEY : tileID);
+      if (tileID == Const.TILE_PARKING ||
+          tileID == Const.TILE_PARKING_CAR ||
+          tileID == Const.TILE_PARKING_CAR_ORIGIN)
+        return super.getIcon(Const.TILE_ALLEY);
+      // and the corp office's two role-only floors, which are carpet and concrete to look at
+      if (tileID == Const.TILE_FLOOR_CUBICLE)
+        return super.getIcon(Const.TILE_FLOOR_CARPET);
+      if (tileID == Const.TILE_FLOOR_SERVER)
+        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
+      if (tileID == Const.TILE_FLOOR_CUBICLE + 16)
+        return super.getIcon(Const.TILE_FLOOR_CARPET + 16);
+      if (tileID == Const.TILE_FLOOR_SERVER + 16)
+        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
+      return super.getIcon(tileID);
     }
 
 // check if default tile is walkable

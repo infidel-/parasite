@@ -55,6 +55,39 @@ building
   └ vent-cap                 the lone window a run ended on, pushed LAST
 ```
 
+The CORP OFFICE is the same machine at a different shape, and the difference is worth stating up
+front: **a compound is open ground that gets CUT into plots, a tower floor is one plate whose rooms
+are already carved by its corridors.** So there is no `Subdivide` at the corp area level at all —
+the root has exactly one child — and what `Quota.deal` is handed is the ROOMS.
+
+```
+area
+└ plate                     the tower floor: wall ring, pavement apron, lift, corridors, rooms
+  ├ elevator                the lift car. A BLOCK, not a room: 3x3 car, 9 objects.Elevator cells,
+  │                         concrete floor, four posts, glazing on three sides, one door in the
+  │                         fourth. Nothing in it is dealt, so nothing is dealt under it. It stands
+  │                         OUTSIDE the wall ring, in the pavement band
+  └ room-open | room-cubicle | room-meeting | room-kitchen | room-exec | room-toilet | room-servers
+    ├ desk-run              open plan: one 3x1 desk, a computer and a chair
+    ├ pod-row               the cubicle farm: two desks back to back across one partition spine
+    ├ rack-row              the server room: a rank of cabinets with an aisle beside it
+    ├ table                 the boardroom table, or the executive's own desk
+    ├ counter-run           the kitchen's 2x2 tables
+    └ stall-run | basin-run the washroom's two
+```
+
+**The STAIRS are not a block and the lift is.** The test is whether anything about the thing is
+laid out: a lift is a fixed 3x3 assembly with a determined door, floor and glazing, and stairs are
+one cell with a model on it. A spawn intent is the right size for the second.
+
+**A zone writes no cells of its own.** The template that pushed it has already laid them; the node
+is there so the finished tree records WHERE the furniture went, which is what `--stats` counts.
+
+**Corp is entered by LIFT, so both flood fills start there.** `GenCheck.reachable` takes an optional
+seed list and `CorpConnect.floodWalkable` uses the lift cells — a rim flood reaches exactly zero
+cells on a tower floor, because the plate is ringed by unwalkable void, and reports every room as
+sealed.
+
 **Breadth-first is load-bearing.** Depth-first would finish a whole building before the neighbouring
 park existed, so a filler could not ask what is next to it. Same reason the wilderness lays its
 highway before its trees.
@@ -156,6 +189,9 @@ FacilityConnect.connectRooms()          every room is walk-in-able
 | `gen/blocks/RoomZones.hx` | what a room of each kind must contain — the room level's `demands()` |
 | `gen/blocks/HangarBlock.hx` | the shed, its size cap, and the HANGAR level: the study pad, the machine banks and every zone filler under them |
 | `gen/blocks/HangarZones.hx` | what a hangar's wall runs must carry — the hangar level's `demands()` |
+| `gen/blocks/CorpBlocks.hx` | the corp floor's node kinds, its room quota, and `assign()` |
+| `gen/blocks/ElevatorBlock.hx` | the lift core — car, posts, glazing, door |
+| `gen/blocks/OfficeBlock.hx` | the corp ROOM level: which template fills a dealt room |
 
 ### The facility, after the split
 
@@ -178,6 +214,62 @@ used zero times** — so every pass was already effectively static.
 
 **`FacilityConnect` and not `FacilityDoors`**: `render.facility.FacilityDoors` already exists, and two
 modules of one name in different packages is a trap for no gain.
+
+### The corp office, after its own port
+
+`game/CorpAreaGenerator.hx` was 1626 lines in one class and a near line-for-line fork of the
+facility's pre-block-tree pipeline. Same two measurements, same move.
+
+| file | what it is |
+|---|---|
+| `game/CorpAreaGenerator.hx` | the LIVE adapter and nothing else: wrap the grid in a ctx, trace `corp WxH seed N`, drain the spawns |
+| `gen/corp/CorpGen.hx` | `build()` — the real entry, the one the oracle calls — and `finalizeTiles` |
+| `gen/corp/CorpTemp.hx` | the `TEMP_*` alphabet, the temp→final map, the `ROLE_*` strings |
+| `gen/corp/_CorpState.hx` | what a floor looks like mid-build. Not persisted |
+| `gen/corp/CorpBuilding.hx` | the plate: wall ring, lift wall, corridors, subdivision, doors, glazing |
+| `gen/corp/CorpConnect.hx` | the grid-half repair — cut a door into any room the LIFT cannot reach |
+| `gen/corp/CorpRooms.hx` | the seven room templates and the two wall-dressing passes |
+
+**The dice ladder is gone.** `if small { kitchen 85% else meeting 85% else solo 85% else a flat
+33/33/33 } else work` is the fault `_GenDemand`'s header is written about, and it meant a floor
+could come out with three kitchens and no meeting room, or with no small room and therefore nothing
+but open plan. Expressed as a quota, measured over 1000 seeds: **cubicle 1.99, exec 2.59, meeting
+1.95, open 2.73, kitchen 1, servers 1, toilet 1** over 12.26 rooms — every floor has one of
+everything, and open plan is the FILLER rather than a demand, so a floor carved into exactly the six
+rooms the mins want correctly has no open-plan space at all.
+
+**Two new floor tile ids, and they are ALIASES.** `Const.TILE_FLOOR_CUBICLE` and
+`TILE_FLOOR_SERVER` are `OFFSET_ROW12 + 13/14`, appended and never inserted because the grid
+persists raw ints, and `tiles.Default.getIcon` draws them as carpet and concrete — the same trick
+`TILE_PARKING` uses. They exist so a reader of the SAVED GRID can tell a cubicle farm from the
+corridor it opens off and a server room from the lift lobby it shares its concrete with. The
+washroom needed no new id: `TILE_FLOOR_MARBLE2` was already in the alphabet and no room had ever
+laid it.
+
+#### A blocked door the repair could never replace, and eight fittings deleted trying
+
+`CorpConnect` is `FacilityConnect.connectRooms` with the flood moved to the lift, and it went from
+**190 sealed rooms in 1000 floors to 0 in 3000** in four steps, three of which were real bugs:
+
+- **the flood must start at the LIFT.** From the rim it reaches nothing: 190/1000 → all of them.
+- **glass is cuttable.** `cutDoorToReached` tested `== TILE_BUILDING`, and a corp room is walled in
+  curtain wall and office glazing as often as in blockwork, so most of the ring was skipped and a
+  room with a corridor down one whole side reported "nothing to cut". 190 → 33. Including the OUTER
+  glazing took it to 7 and cannot put a door into the void, because the far side of a cut has to be
+  a cell the flood already reached and nothing outside the tower is walkable.
+- **room id 0 is not a room, and the duplicate test must exempt it.** `doorsSane` says in as many
+  words that several doors onto corridors are intended. Without the exemption a room already
+  holding one BLOCKED corridor door could never be given a working one: `cut(false)` refused it as
+  a duplicate forever, `clearWayToReached` succeeded every round on the room's own furniture, and
+  the `||` chain therefore never reached the `allowDuplicate` pass at all. Seed 219 deleted **eight
+  fittings** over eight rounds and stayed sealed. 7 → 1.
+- **and the loop's other exit was silent.** `for (round in 0...rooms.length + 1)` reports when
+  nothing could be opened; it said nothing at all when every round DID open something and the room
+  was still sealed, which is exactly the shape the bug above had. It reports both now.
+- the last resort, **1 floor in 3000**, is a second door between two rooms — and it RETIRES the
+  first one (`skip: true`). Reaching there means the pair is joined by a door the player cannot
+  use, so the old record is not a live connection, and two live doors is what `doorsSane` rejects
+  and what a mission's "lock the first door of this room" silently misses.
 
 ### The one permitted `gen/` → `game/` edge
 
@@ -458,7 +550,8 @@ save. The duplication is deliberate.
 ## The oracle
 
 ```
-make gen                              # 3000 seeds, structural checks
+make gen                              # 3000 seeds, structural checks (facility)
+make gen args="--type corp"           # the corp tower floor
 make gen seeds=200 args="--print"     # dump each layout
 make gen seeds=3000 args="--stats"    # aggregate block/cell means
 make gen seeds=200 args="--digest"    # one hash per compound - see below
@@ -885,12 +978,10 @@ tiles rather than being handed them:
 
 ## Known, not fixed
 
-`CorpAreaGenerator` is a near line-for-line fork of the facility's building pipeline
-(`subdivideLargeRooms`, `makeDoors`, `fixDoors`, `makeDoorToCorridor`, `drawSideCorridor`,
-`makeWindows`), and it writes `state.rooms` where the facility writes `allRooms` — so a corp area
-records its **last building's** rooms only. That is the bug `repairRooms` was written to fix for the
-facility, and corp has no equivalent. Left alone deliberately; it is the obvious second caller for
-these primitives.
+~~`CorpAreaGenerator` is a near line-for-line fork of the facility's building pipeline~~ — **fixed**
+by the port above. The fork is gone and the `allRooms` half of it never applied: a corp area is one
+plate with one set of rooms, where a compound is two lab buildings plus a shed and had to fold three
+structures' records together. `_CorpState` therefore has no `all*` pair and needs no `repairRooms`.
 
 **`Const.FACILITY_FITTING_PCT` is now a coin flip between two distributions over the SAME frames.**
 It reads as "how often a high floor decoration comes out as a 3D fitting rather than a plain sprite",

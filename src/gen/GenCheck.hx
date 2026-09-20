@@ -474,23 +474,33 @@ class GenCheck
 // is reachability for a player who opens what is in the way, which is the right question
   public var lastSeen: Array<Array<Bool>>;
 
-  public function reachable(ctx: GenCtx, rooms: Array<_Room>): Array<_Room>
+  public function reachable(ctx: GenCtx, rooms: Array<_Room>,
+      ?from: Array<{ x: Int, y: Int }>): Array<_Room>
     {
       var walk = tiles.Default.TILE_WALKABLE;
       var seen = [for (x in 0...ctx.width) [for (y in 0...ctx.height) false]];
       lastSeen = seen;
       var stack = [];
-      // start from every walkable cell on the area's rim: the road and its pavement run the full
-      // width, so whichever edge they landed on is in there
-      for (x in 0...ctx.width)
+      // `from` is where the player ARRIVES, and an area that is not entered over its own edge has
+      // to say so: a corp floor is the 20th storey of a tower with unwalkable void all round it,
+      // so a rim flood reaches nothing at all and every room reads as sealed. The compound passes
+      // nothing and gets the rim, where the road and its pavement run the full width so whichever
+      // edge they landed on is in there
+      if (from != null)
+        for (p in from)
+          push(ctx, walk, seen, stack, p.x, p.y);
+      else
         {
-          push(ctx, walk, seen, stack, x, 0);
-          push(ctx, walk, seen, stack, x, ctx.height - 1);
-        }
-      for (y in 0...ctx.height)
-        {
-          push(ctx, walk, seen, stack, 0, y);
-          push(ctx, walk, seen, stack, ctx.width - 1, y);
+          for (x in 0...ctx.width)
+            {
+              push(ctx, walk, seen, stack, x, 0);
+              push(ctx, walk, seen, stack, x, ctx.height - 1);
+            }
+          for (y in 0...ctx.height)
+            {
+              push(ctx, walk, seen, stack, 0, y);
+              push(ctx, walk, seen, stack, ctx.width - 1, y);
+            }
         }
       while (stack.length > 0)
         {

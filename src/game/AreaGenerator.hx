@@ -52,7 +52,7 @@ class AreaGenerator
       // it kept no AreaGenerator reference to shadow the package of the same name
       facility = new FacilityAreaGenerator(game);
       city = new CityAreaGenerator(game, this);
-      corp = new CorpAreaGenerator(game, this);
+      corp = new CorpAreaGenerator(game);
       sewers = new SewerAreaGenerator(game, this);
       undergroundLab = new UndergroundLabAreaGenerator(game, this);
     }

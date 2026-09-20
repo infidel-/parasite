@@ -1139,6 +1139,14 @@ class Const
   public static var TILE_FLOOR_MARBLE2 = OFFSET_ROW12 + 11;
   public static var TILE_FLOOR_CARPET_MEETING = OFFSET_ROW12 + 12;
 
+  // the two floors gen.corp added, and they are ALIASES rather than art: tiles.Default.getIcon
+  // draws the cubicle farm as plain carpet and the server room as concrete, the same trick the car
+  // park's marks use one row up. They exist so a reader of the SAVED GRID can tell a cubicle farm
+  // from the corridor it opens off and a server room from the lift lobby it shares its concrete
+  // with — one shared floor id cannot say that, and the floor is where a corp room's role lives
+  public static var TILE_FLOOR_CUBICLE = OFFSET_ROW12 + 13;
+  public static var TILE_FLOOR_SERVER = OFFSET_ROW12 + 14;
+
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;
   public static var TILE_CORP_INNER_WINDOW1 = OFFSET_ROW13 + 0;

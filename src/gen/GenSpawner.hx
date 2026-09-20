@@ -45,6 +45,12 @@ class GenSpawner
                 new SewerHatch(game, area.id, s.x, s.y);
               case 'floorDrain':
                 new FloorDrain(game, area.id, s.x, s.y);
+              // the corp tower's two vertical exits. the lift is NINE of these, one per cell of the
+              // car, which is how it has always been built — gen.blocks.ElevatorBlock records them
+              case 'elevator':
+                new Elevator(game, area.id, s.x, s.y);
+              case 'stairs':
+                new Stairs(game, area.id, s.x, s.y);
               default:
                 trace('GenSpawner.drain(): unknown spawn type "' + s.type + '" at ' +
                   s.x + ',' + s.y);

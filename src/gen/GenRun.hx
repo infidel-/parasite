@@ -70,6 +70,8 @@ class GenRun
           var check = new GenCheck(seed);
           if (type == 'facility')
             checkFacilityArea(seed, check, verbose);
+          else if (type == 'corp')
+            checkCorpArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -266,6 +268,151 @@ class GenRun
       if (verbose)
         log('[gen] seed ' + seed + ' rooms=' + state.allRooms.length +
           ' doors=' + state.allDoors.length + ' spawns=' + ctx.spawns.length);
+    }
+
+// generate a whole corp tower floor and assert the structure the game reads back out of it.
+//
+// THE SAME REAL GENERATOR the live path calls, against a gen.GenCtx with no Game behind it. Most of
+// the invariants are the facility's verbatim, because they are about the GRID and not about the
+// compound: a tile the tileset does not have, two objects in one cell, a room nothing can walk into
+// and a door joining rooms that do not exist are all the same bug whichever area wrote them
+  static function checkCorpArea(seed: Int, check: GenCheck, verbose: Bool)
+    {
+      var sizeRng = Rng.mulberry32(seed);
+      var w = (forceW > 0 ? forceW : dim(AREA_W, sizeRng));
+      var h = (forceH > 0 ? forceH : dim(AREA_H, sizeRng));
+      var ctx = new GenCtx(w, h, seed);
+      var state = gen.corp.CorpGen.build(ctx);
+
+      if (has('--digest'))
+        log('seed ' + seed + ' ' + w + 'x' + h + ' ' + corpDigest(ctx, state));
+
+      check.tilesKnown(ctx);
+      check.roomsSane(ctx, state.rooms);
+      check.doorsSane(ctx, state.rooms, state.doors);
+      check.spawnsSane(ctx);
+
+      // the quota, asked of the tree the generator actually walked
+      var rooms = [];
+      GenTree.walk(ctx.root, function(n)
+        {
+          if (gen.blocks.OfficeBlock.isRoom(n.kind))
+            rooms.push(n);
+        });
+      check.quotaMet(rooms, gen.blocks.CorpBlocks.demands());
+      check.blocksFit(rooms, gen.blocks.CorpBlocks.demands());
+      check.inBounds(rooms, ctx.width, ctx.height);
+      check.noOverlap(rooms);
+      // exactly one lift, and it is the area's only way out
+      var lifts = GenTree.all(ctx.root, gen.blocks.CorpBlocks.ELEVATOR);
+      check.ok(lifts.length == 1, 'corp floor has ' + lifts.length + ' lifts, want 1');
+      check.ok(ctx.countSpawns('elevator') == 9,
+        'lift has ' + ctx.countSpawns('elevator') + ' cells, want 9');
+      check.ok(ctx.countSpawns('stairs') == 1,
+        'corp floor has ' + ctx.countSpawns('stairs') + ' stairs, want 1');
+      // and every room carries the role its dealt kind says it does
+      for (n in rooms)
+        {
+          var room = null;
+          for (r in state.rooms)
+            if (r.id == n.roomID)
+              room = r;
+          check.ok(room != null && room.role == gen.blocks.CorpBlocks.roleOf(n.kind),
+            'room ' + n.roomID + ' dealt ' + n.kind + ' carries role ' +
+              (room == null ? 'NO ROOM' : room.role));
+        }
+
+      // the floor is entered by LIFT and by nothing else, so that is where the flood starts
+      var lift = [for (s in ctx.spawns) if (s.type == 'elevator') { x: s.x, y: s.y }];
+      var cut = check.reachable(ctx, state.rooms, lift);
+      check.ok(cut.length == 0, cut.length + ' corp room(s) cannot be walked into, first is ' +
+        (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
+      add('unreachableRooms', cut.length);
+
+      // how much of the walkable grid the lift flood actually covered, and WHERE it stopped. a
+      // tower floor is entered at one cell, so a carve that leaves half the plate behind a wall is
+      // a real bug and not a rare one — the map is how you see which half
+      var walkAll = tiles.Default.TILE_WALKABLE;
+      var nWalk = 0, nSeen = 0;
+      for (yy in 0...h)
+        for (xx in 0...w)
+          {
+            if (walkAll[ctx.cells[xx][yy]] != 1)
+              continue;
+            nWalk++;
+            if (check.lastSeen[xx][yy])
+              nSeen++;
+          }
+      add('walkableCells', nWalk);
+      add('reachedCells', nSeen);
+      if (verbose && nSeen < nWalk)
+        for (yy in 0...h)
+          {
+            var line = '';
+            for (xx in 0...w)
+              line += (walkAll[ctx.cells[xx][yy]] != 1 ? '#'
+                : (check.lastSeen[xx][yy] ? 'R' : '.'));
+            log('[gen] ' + line);
+          }
+
+      GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
+      add('rooms', state.rooms.length);
+      add('doors', state.doors.length);
+      add('spawns/TOTAL', ctx.spawns.length);
+      for (s in ctx.spawns)
+        add('spawns/' + s.type, 1);
+
+      if (verbose)
+        {
+          log('[gen] seed ' + seed + ' ' + w + 'x' + h + ' rooms=' + state.rooms.length +
+            ' doors=' + state.doors.length + ' spawns=' + ctx.spawns.length);
+          for (n in rooms)
+            log('   ' + n.kind + ' ' + n.x1 + ',' + n.y1 + '..' + n.x2 + ',' + n.y2 +
+              ' (' + GenTree.width(n) + 'x' + GenTree.height(n) + ')');
+        }
+    }
+
+// one corp floor in one line, the same FNV-1a over the same things as the compound's digest. a
+// separate function because the two states are different types and neither carries the other's
+// fields; the hashing is identical on purpose so the two are read the same way
+  static function corpDigest(ctx: GenCtx, state: gen.corp._CorpState): String
+    {
+      var h = -2128831035;
+      inline function eat(v: Int)
+        {
+          h = h ^ v;
+          h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) | 0;
+        }
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          eat(ctx.cells[x][y]);
+      for (s in ctx.spawns)
+        {
+          for (i in 0...s.type.length)
+            eat(s.type.charCodeAt(i));
+          eat(s.x);
+          eat(s.y);
+          eat(s.row == null ? -1 : s.row);
+          eat(s.col == null ? -1 : s.col);
+          eat(s.col2 == null ? -1 : s.col2);
+        }
+      for (r in state.rooms)
+        {
+          eat(r.id);
+          eat(r.x1);
+          eat(r.y1);
+          eat(r.x2);
+          eat(r.y2);
+          eat(r.role == null ? -1 : r.role.length);
+        }
+      for (d in state.doors)
+        {
+          eat(d.x);
+          eat(d.y);
+          eat(d.roomID1);
+          eat(d.roomID2);
+        }
+      return StringTools.hex(h >>> 0, 8);
     }
 
 // one compound in one line: every cell, then every spawn, room and door in the order they were
