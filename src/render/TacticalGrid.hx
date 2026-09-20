@@ -34,11 +34,23 @@ class TacticalGrid
   // weighs only 0.11) after the alpha mix, with headroom — subpixel segments get diluted by
   // the AA/downsample average and cut out of the glow otherwise
   static inline var GLOW = 5.0;
-  // the door arrows: how long the shaft is and how far the barbs reach back off the tip, both in
-  // cells. much bigger than the lattice's own ARM, because this is a MARK and not a texture — it
-  // has to read as one shape at the tactical camera rather than as two more crosses
-  static inline var ARROW_LEN = 0.52;
-  static inline var ARROW_BARB = 0.24;
+  // the door arrows: tip to tip, and how far the barbs reach back off each tip, both in cells. much
+  // bigger than the lattice's own ARM, because this is a MARK and not a texture — it has to read as
+  // one shape at the tactical camera rather than as two more crosses.
+  //
+  // AND THE LENGTH IS SET BY THE WALL, not by the cell — so ARROW_LEN is over 1.0 and the glyph
+  // deliberately leaves its own tile. It lies on the DOORWAY tile, where FacilityStyle.WALL_T 2.0 of
+  // masonry stands centred in a 4.0 cell and rises WALL_H 6.0 — and at the facility camera's 51
+  // degrees a wall hides `6 / tan(pitch)` = 4.9 units of floor behind it (RenderConfig's own
+  // figure). So an arrow that FITS the cell shows ONE HEAD: measured at 0.78 and again at 1.20, the
+  // far tip was inside that band on every door. 2.00 reaches HALF A TILE past the cell on each
+  // side, which clears it; 2.60 and 3.00 were tried and are further than the read needs, 3.00
+  // landing its heads on the NEXT cell's crosses.
+  //
+  // the two have to be read together: a head eats `LEN/2 - BARB` of shaft at each end, so at 0.52
+  // over a 0.24 barb the two heads met in the middle and the glyph came out a diamond
+  static inline var ARROW_LEN = 2.00;
+  static inline var ARROW_BARB = 0.28;
   static inline var ARROW_W = 0.022; // thicker than the lattice, for the same reason
 
   var scene:Scene;
@@ -154,7 +166,9 @@ class TacticalGrid
       untyped mesh.geometry = geometry;
     }
 
-// an arrow on the floor in front of every door within the window, pointing INTO the doorway.
+// a double-headed arrow on the floor OF every door cell in the window, lying along the passage it
+// opens. ON THE DOORWAY TILE ITSELF and not on the approach to it: the mark is then a label on the
+// door rather than an instruction to the player, and it reads the same from either side.
 //
 // ASKED OF THE DOOR OBJECT AND OF WALKABILITY, never of a model: `objects.Door` is laid by
 // gen.GenSpawner for every generator that deals one, so this works in a compound, an underground lab
@@ -162,15 +176,14 @@ class TacticalGrid
 // `alongX`/`inDir`) exists only in a facility. The door object itself carries no orientation either —
 // only its icon frames — so the passage axis is read off the two opposed neighbours that are open.
 //
-// THE SIDE IS THE PLAYER'S, which costs nothing: the grid is rebuilt when the player's cell moves
-// and never otherwise, so "which side am I on" is already answered by the centre this was built
-// around. Step through a door and its arrow turns over on the next rebuild.
+// TWO HEADS, so no side and no player. The single arrow this replaced had to pick the approach cell
+// nearer the player and turn over when he stepped through; a doorway is passable both ways and the
+// glyph now says so, which also takes the last thing the arrows asked of the rebuild centre.
 //
 // no open/shut state on it, so no new `invalidate` hook: an arrow marks a door you can go through,
 // which is true whether the leaf is standing open or not
   function arrows(pos:Array<Float>, idx:Array<Int>):Void
     {
-      var half = CityConfig.CELL / 2;
       var it = area.getObjects();
       while (it.hasNext())
         {
@@ -183,36 +196,32 @@ class TacticalGrid
             continue;
           // the axis the doorway passes along: the one whose two opposed neighbours are BOTH open.
           // asked of the neighbours and not of the door's own cell, which a shut leaf blocks
-          var dc = 0, dr = 0;
+          var ux = 0.0, uz = 0.0;
           if (area.isWalkable(o.x, o.y - 1) &&
               area.isWalkable(o.x, o.y + 1))
-            dr = 1;
+            uz = 1;
           else if (area.isWalkable(o.x - 1, o.y) &&
                    area.isWalkable(o.x + 1, o.y))
-            dc = 1;
+            ux = 1;
           else continue;
-          // the approach cell on the player's side, and the arrow points back at the door from it
-          var s = (dc != 0
-            ? (ccol < o.x ? -1 : 1)
-            : (crow < o.y ? -1 : 1));
-          var ac = o.x + dc * s;
-          var ar = o.y + dr * s;
-          var c = cellToWorld(ac, ar);
-          var y = WorldCtx.floorY(ac, ar) + Y;
-          // unit vector from the approach cell toward the door
-          var ux = -dc * s, uz = -dr * s;
-          var len = CityConfig.CELL * ARROW_LEN;
+          var c = cellToWorld(o.x, o.y);
+          var y = WorldCtx.floorY(o.x, o.y) + Y;
           var barb = CityConfig.CELL * ARROW_BARB;
-          var tipX = c.x + ux * len * 0.5;
-          var tipZ = c.z + uz * len * 0.5;
-          addSeg(pos, idx, c.x - ux * len * 0.5, c.z - uz * len * 0.5, y, tipX, tipZ, y, ARROW_W);
-          // the two barbs, swept back off the tip at 45 degrees either side of the shaft. the
-          // perpendicular is (-uz, ux), so each barb is one step back along the shaft plus one
-          // across it
-          addSeg(pos, idx, tipX, tipZ, y,
-            tipX - ux * barb - uz * barb, tipZ - uz * barb + ux * barb, y, ARROW_W);
-          addSeg(pos, idx, tipX, tipZ, y,
-            tipX - ux * barb + uz * barb, tipZ - uz * barb - ux * barb, y, ARROW_W);
+          var hx = ux * CityConfig.CELL * ARROW_LEN * 0.5;
+          var hz = uz * CityConfig.CELL * ARROW_LEN * 0.5;
+          addSeg(pos, idx, c.x - hx, c.z - hz, y, c.x + hx, c.z + hz, y, ARROW_W);
+          // a head on each end: two barbs swept back off the tip at 45 degrees either side of the
+          // shaft. the perpendicular is (-uz, ux), so each barb is one step back along the shaft
+          // plus one across it
+          for (s in [ -1.0, 1.0 ])
+            {
+              var tipX = c.x + hx * s, tipZ = c.z + hz * s;
+              var bx = ux * barb * s, bz = uz * barb * s;
+              addSeg(pos, idx, tipX, tipZ, y,
+                tipX - bx - uz * barb, tipZ - bz + ux * barb, y, ARROW_W);
+              addSeg(pos, idx, tipX, tipZ, y,
+                tipX - bx + uz * barb, tipZ - bz - ux * barb, y, ARROW_W);
+            }
         }
     }
 

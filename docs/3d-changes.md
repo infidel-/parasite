@@ -1905,6 +1905,9 @@ Verdict: **KEEP.**
 
 ## Tactical mode paints an arrow at every door in the window (`render/TacticalGrid.hx`)
 
+> SUPERSEDED (the SIDE half only) by *The door arrow moves onto the doorway tile and grows a second
+> head*. The mesh, the material and the axis reasoning below all still hold.
+
 `TacticalGrid` already owns exactly the right mesh — one `BufferGeometry` of thin ground quads, one
 HDR-tinted `MeshBasicMaterial` at `GLOW 5.0` over the bloom threshold, rebuilt only when the
 player's cell moves, hidden with the HUD — and an `addSeg` that lays a widened ground quad carrying
@@ -1929,3 +1932,43 @@ and `WIDTH`, deliberately: this is a MARK and not a texture, and at the lattice'
 two more crosses.
 
 Verdict: **KEEP.**
+
+## The door arrow moves onto the doorway tile and grows a second head (`render/TacticalGrid.hx`)
+
+Reported as "make a two-sided arrow for doors and put it on a tile underneath the door itself". Both
+halves fall out of the same edit and together they DELETE code: the side, the approach cell and the
+unit vector all go, because a double-headed arrow centred on the door cell has no side to pick.
+
+`ARROW_BARB 0.24` → **0.28**, and it has to be read with `ARROW_LEN`: a head eats `LEN/2 - BARB` of
+shaft at each end, so at the single-headed arrow's own 0.52/0.24 the two heads met in the middle
+(0.02 of shaft between them) and the glyph came out a **diamond**.
+
+Cost: 5 `addSeg` calls where the single arrow took 3 — **10 triangles per door instead of 6, still
+0 extra draw calls**, same mesh and same material.
+
+**THE LENGTH IS SET BY THE WALL AND NOT BY THE CELL, which took four measured tries.** The glyph
+lies on the DOORWAY tile, where `WALL_T` 2.0 of masonry stands centred in a 4.0 cell and rises
+`WALL_H` 6.0 — and at the facility camera's 51° a wall hides `6 / tan(pitch)` = **4.9 units** of
+floor behind it, which is `RenderConfig`'s own figure for why a corridor reads the way it does. So
+an arrow sized to the CELL cannot show its far tip:
+
+| `ARROW_LEN` | tips, from the cell centre | on screen |
+|---|---|---|
+| 0.78 | ±1.56 (0.56 past the masonry) | **one head**, reported |
+| 1.20 | ±2.40 | **one head** |
+| **2.00** | ±4.00 — half a tile past the cell | **both heads**, tips inside the neighbouring cells |
+| 2.60 | ±5.20 | both heads, further out than the read needs |
+| 3.00 | ±6.00 | both heads, but they land on the NEXT cell's crosses |
+
+Landed at **2.00 / 0.28**, i.e. the glyph deliberately leaves its own tile by half a tile each way.
+Verified in game at 18,12 on one frame carrying eight doors: every door in a wall seen ALONG ITS
+LENGTH draws `←▌→`, the wall band swallowing the shaft's middle.
+
+**A door in a wall seen ACROSS it still shows one head**, and no sane length fixes that one: its far
+side is the full 4.9 units of hidden floor, so the tip would have to sit ~5.9 units out (`LEN` ≈ 2.95)
+and the glyph would then be longer than the room. Recorded, not chased. Not a height fault either —
+`WorldCtx.floorY` returns 0.00 for the door cell and all four of its neighbours on every door
+measured.
+
+Verdict: **KEEP.**
+
