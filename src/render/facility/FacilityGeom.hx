@@ -92,9 +92,9 @@ class FacilityGeom
 // answer and not a coincidence: a pane is a pane, so a shorter opening is fewer of them and not
 // smaller ones. read by BOTH passes over m.windows — the one that records the hole for the wall
 // emitter to leave, and the one that fills it — which is why it is a function and not a line in either
-  public static inline function paneTall(len:Int):Float
+  public static inline function paneTall(m:Facility, len:Int):Float
     return len * CELL /
-      (len == 2 ? FacilityStyle.WINDOW_ASPECT_2 : FacilityStyle.WINDOW_ASPECT);
+      (len == 2 ? m.tex.aspect2 : m.tex.aspect);
 
 // build every structure's shell, and hand back what fades
   public static function build(scene:Scene, m:Facility):Array<Shell>
@@ -111,7 +111,7 @@ class FacilityGeom
         {
           // a LIGHT WELL is not sized off its art the way a ribbon is: it is one cell, one image maps
           // 0..1 across it, and where it sits in the wall is the whole design (see WINDOW_HIGH_SILL)
-          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(w.len));
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(m, w.len));
           var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
             (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)
@@ -610,7 +610,7 @@ class FacilityGeom
           if (w.structure != si)
             continue;
           var wide = w.len * CELL;
-          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(w.len));
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(m, w.len));
           var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
             (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)

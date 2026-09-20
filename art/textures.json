@@ -70,7 +70,8 @@
   },
   "style": "STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
   "style_prop": "STYLE \u2014 match style-flat.png: a flat-shaded stylized object for a top-down moody-night roguelike. Matte flat colors, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. The object's own manufactured colour must READ AS THAT COLOUR \u2014 keep it clearly saturated at a medium-dark value, do not grey it out, do not wash it toward the background. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
-  "_style_doc": "TWO strings, and which one you append depends on what the image IS. `style` is for a SURFACE \u2014 a tiling texture, a decal, a sprite sheet: a wall really is grey, so its 'very dark and muted desaturated palette, low contrast' clause is correct there and every one of the 203 shipped textures wears it. `style_prop` is for an OBJECT \u2014 a TRELLIS reference image, i.e. anything that becomes a glb: it is the same string with that one clause replaced by the opposite instruction, because an object's colour is a fact about the object and a manufactured thing that comes back grey is simply wrong. Measured before the split: 9 of 38 props carried a per-channel `baseColor` and every one of them shipped neutral, `wild/tree-broadleaf-full` losing a 41.5-chroma green canopy to 3.8 and `facility/trash-bin` a bottle-green body to 0.1. Append ONE of them verbatim to EVERY gpt-image-2 gen/edit prompt; keep both in sync with the texture-art-style memory, and keep every clause but the palette one identical between them.",
+  "style_corp": "CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue.",
+  "_style_doc": "TWO strings, and which one you append depends on what the image IS. `style` is for a SURFACE \u2014 a tiling texture, a decal, a sprite sheet: a wall really is grey, so its 'very dark and muted desaturated palette, low contrast' clause is correct there and every one of the 203 shipped textures wears it. `style_prop` is for an OBJECT \u2014 a TRELLIS reference image, i.e. anything that becomes a glb: it is the same string with that one clause replaced by the opposite instruction, because an object's colour is a fact about the object and a manufactured thing that comes back grey is simply wrong. Measured before the split: 9 of 38 props carried a per-channel `baseColor` and every one of them shipped neutral, `wild/tree-broadleaf-full` losing a 41.5-chroma green canopy to 3.8 and `facility/trash-bin` a bottle-green body to 0.1. Append ONE of them verbatim to EVERY gpt-image-2 gen/edit prompt; keep both in sync with the texture-art-style memory, and keep every clause but the palette one identical between them. style_corp is a SUBJECT clause and NOT a third style: it is appended IN FRONT OF style (a corp surface) or style_prop (a corp object), never instead of one. It exists so a corp batch cannot drift between phases.",
   "_doc": "Source-of-truth for textures. src lives in textures-src/ (1024), output goes to textures/<label>.png. class: tile|window|chroma|sprite. needs_alpha -> tool warns if output is opaque. chroma -> key color baked to alpha before downscale. prompt_exact:false means the prompt was reconstructed, not the original. Run `make tex` after editing a source or this file.",
   "textures": {
     "fx/innards": {
@@ -3601,6 +3602,330 @@
       "built_linear": 0.0372,
       "built_srgb": 55.7,
       "last_lift": 0.897
+    },
+    "corp/floor-carpet": {
+      "src": "corp/floor-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        6,
+        6,
+        500,
+        500
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:48:47",
+      "built_linear": 0.1226,
+      "built_srgb": 97.1,
+      "lift": 0.625,
+      "last_lift": 0.625
+    },
+    "corp/floor-cubicle": {
+      "src": "corp/floor-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        6,
+        500,
+        500
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:48:47",
+      "built_linear": 0.1091,
+      "built_srgb": 91.2,
+      "lift": 0.91,
+      "last_lift": 0.91
+    },
+    "corp/floor-meeting": {
+      "src": "corp/floor-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        6,
+        518,
+        500,
+        500
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:48:47",
+      "built_linear": 0.0992,
+      "built_srgb": 87.3,
+      "lift": 0.76,
+      "last_lift": 0.76
+    },
+    "corp/floor-exec": {
+      "src": "corp/floor-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        518,
+        500,
+        500
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: circulation carpet tile, dark charcoal low-pile loop carpet as square modular tiles, EXACTLY FOUR courses across and four down, faint alternating pile direction. TOP-RIGHT: cubicle-farm carpet tile, the same modular system a little lighter and cooler with a fine two-tone fleck, EXACTLY FOUR courses across and four down. BOTTOM-LEFT: boardroom carpet, dense plain cut-pile broadloom in a deep warm grey-taupe, no tile joints at all. BOTTOM-RIGHT: executive stone floor, large-format pale warm grey honed slabs, EXACTLY TWO across and two down, thin tight joints, soft warm veining. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four medium-dark and at roughly the same brightness so they read as one family. HUE: close to NEUTRAL, no blue drift; any warmth a faint tan or taupe. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:48:47",
+      "built_linear": 0.1236,
+      "built_srgb": 96.7,
+      "lift": 1.36,
+      "last_lift": 1.36
+    },
+    "corp/floor-open": {
+      "src": "corp/floor-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        6,
+        6,
+        498,
+        498
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:49:48",
+      "built_linear": 0.1196,
+      "built_srgb": 94.7,
+      "lift": 1.073,
+      "last_lift": 1.073
+    },
+    "corp/floor-kitchen": {
+      "src": "corp/floor-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        6,
+        498,
+        498
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:49:48",
+      "built_linear": 0.1161,
+      "built_srgb": 92.4,
+      "lift": 0.962,
+      "last_lift": 0.962
+    },
+    "corp/floor-washroom": {
+      "src": "corp/floor-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        6,
+        518,
+        498,
+        498
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:49:48",
+      "built_linear": 0.1136,
+      "built_srgb": 94.4,
+      "lift": 0.676,
+      "last_lift": 0.676
+    },
+    "corp/floor-lift": {
+      "src": "corp/floor-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        518,
+        498,
+        498
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable floor textures, arranged as a 2x2 grid of four equal square quadrants, divided by a straight vertical line at the exact horizontal centre and a straight horizontal line at the exact vertical centre. Every quadrant is seen from DIRECTLY ABOVE, straight top-down orthographic view, and fills its own quadrant edge to edge. TOP-LEFT: open-plan floor, wide pale grey-oak vinyl plank in an offset brick bond, EXACTLY SIX courses top to bottom, thin darker joints, faint straight grain. TOP-RIGHT: staff kitchen floor, warmer mid-brown oak plank, narrower, offset bond, EXACTLY EIGHT courses top to bottom, the occasional small knot. BOTTOM-LEFT: washroom floor, large-format dark charcoal stone tiles, EXACTLY THREE across and three down, thin tight grout, fine even matte grain. BOTTOM-RIGHT: lift car floor, near-black honed stone as ONE unbroken field with no joints, only a faint soft figuring. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: medium-dark throughout, the two planks the lighter pair. HUE: the woods a faint warm tan and clearly different from one another; the stones NEUTRAL, never blue or green. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:49:48",
+      "built_linear": 0.0899,
+      "built_srgb": 84.4,
+      "lift": 0.65,
+      "last_lift": 0.65
+    },
+    "corp/floor-server": {
+      "src": "corp/floor-server.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of a raised access computer-room floor seen from DIRECTLY ABOVE, straight top-down orthographic view, filling the whole image edge to edge. Square steel-capped access floor panels in a plain square grid, EXACTLY FOUR across and FOUR down, so the joints fall at a quarter, a half and three quarters on both axes and the grid closes across the image edges. Each panel a flat matte dark grey-charcoal laminate face with a fine speckled aggregate fleck, separated by a thin crisp darker joint. A small round countersunk lifting socket dead centre in each panel and a tiny flush screw head at every four-panel corner. Tiles seamlessly on both axes. VALUE: medium-dark, a little darker and cooler than a carpet. HUE: PERFECTLY NEUTRAL grey - red, green and blue equal. No cables, no equipment, no perforated tiles, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:50:31",
+      "built_linear": 0.0959,
+      "built_srgb": 87.3,
+      "lift": 0.679,
+      "last_lift": 0.679
+    },
+    "corp/wall-curtain": {
+      "src": "corp/wall-curtain.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the OUTSIDE SKIN of a modern glass office tower, seen straight on in flat elevation, no perspective, filling the whole image edge to edge. A unitised curtain wall: EXACTLY TWO full storey bands stacked top to bottom, each the same height, so the pattern closes across the top and bottom edges. Within each band the upper three quarters is tall dark glazing divided by EXACTLY FOUR slim vertical mullions into equal bays, and the lower quarter an opaque spandrel of flat dark anodised aluminium; a slim transom separates them and a deeper horizontal joint marks the floor line between bands. The glass is DARK and unlit, deep cold blue-black, flat matte, no reflections, no sky, no interior behind it. Mullions, transoms and spandrels matte dark anodised aluminium a touch lighter than the glass, one fine reveal shadow down one side of each mullion. Tiles seamlessly on both axes. VALUE: VERY DARK, the darkest surface in the set. HUE: cold, near neutral deep blue-grey. No lit windows, no signage, no logo, no roof, no ground, no people. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:51:12",
+      "built_linear": 0.0314,
+      "built_srgb": 49.3,
+      "lift": 0.785,
+      "last_lift": 0.785
+    },
+    "corp/wall-office": {
+      "src": "corp/wall-office.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the interior wall of a modern corporate office, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Plain painted plasterboard: a large unbroken plane of matte off-white with a faint even roller texture. Across the LOWER part one crisp horizontal shadow-gap reveal with a slim flush skirting of matte dark anodised aluminium below it, and nothing else. Tiles seamlessly LEFT-RIGHT. VALUE: LIGHT, the brightest surface in this set. HUE: PERFECTLY NEUTRAL off-white - red, green and blue equal. No dado, no tiles, no pictures, no sockets, no signage, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:52:02",
+      "built_linear": 0.219,
+      "built_srgb": 121.5,
+      "lift": 4.042,
+      "last_lift": 4.042
+    },
+    "corp/wall-meeting": {
+      "src": "corp/wall-meeting.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the interior wall of a modern corporate BOARDROOM, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Acoustic felt slat panelling: EXACTLY TWELVE slim vertical battens of matte dark charcoal felt side by side across the width, each separated by a narrow recessed groove, so the rhythm closes across the left and right edges; a fine even fibrous nap. At the very BOTTOM a thin recessed reveal and a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM, clearly darker than painted plasterboard but lighter than any floor. HUE: PERFECTLY NEUTRAL charcoal. No pictures, no screen, no whiteboard, no sockets, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:53:07",
+      "built_linear": 0.1259,
+      "built_srgb": 98.9,
+      "lift": 0.545,
+      "last_lift": 0.545
+    },
+    "corp/wall-kitchen": {
+      "src": "corp/wall-kitchen.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern corporate STAFF KITCHEN, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. The LOWER 55 percent is a splashback of large rectangular matte ceramic wall tiles in a stack bond, EXACTLY SIX across and TWO courses high, thin crisp darker grout. The UPPER 45 percent is plain matte white lacquer panelling, divided from the tiles by one thin crisp horizontal shadow-gap reveal. At the very BOTTOM a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: LIGHT, close to the plain office wall but a touch cooler. HUE: PERFECTLY NEUTRAL white-grey. No cupboards, no worktop, no taps, no appliances, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:53:41",
+      "built_linear": 0.2074,
+      "built_srgb": 115.7,
+      "lift": 2.666,
+      "last_lift": 2.666
+    },
+    "corp/wall-washroom": {
+      "src": "corp/wall-washroom.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern corporate WASHROOM, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Large-format stone wall tiles over the whole surface: EXACTLY FOUR across and THREE courses high in a stack bond, every tile the same size so the grid closes across the left and right edges, very thin tight darker joints. Mid grey-taupe stone, fine even matte grain, only a faint soft drift of figure. At the very BOTTOM a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM-LIGHT, a little darker than the plain office wall. HUE: PERFECTLY NEUTRAL with at most the faintest warm taupe. No mirror, no basin, no taps, no cubicle, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:54:17",
+      "built_linear": 0.1452,
+      "built_srgb": 104.6,
+      "lift": 1.097,
+      "last_lift": 1.097
+    },
+    "corp/wall-exec": {
+      "src": "corp/wall-exec.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern EXECUTIVE OFFICE, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Full-height pale oak veneer panelling: EXACTLY FIVE tall panels side by side across the width, each separated by a narrow recessed dark shadow-gap reveal, so the rhythm closes across the left and right edges; each panel a fine straight vertical grain with a soft cathedral figure, slightly different from its neighbours. At the very BOTTOM a thin recessed reveal and a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM-LIGHT, a little darker than plain plasterboard. HUE: a restrained WARM pale oak, a faint tan, muted, never orange or yellow. No pictures, no shelves, no sockets, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:54:53",
+      "built_linear": 0.1603,
+      "built_srgb": 105.3,
+      "lift": 1.298,
+      "last_lift": 1.298
+    },
+    "corp/wall-lift": {
+      "src": "corp/wall-lift.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern LIFT LOBBY inside an office tower, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Full-height dark stone cladding: EXACTLY THREE tall panels side by side across the width, each separated by a narrow recessed reveal of brushed stainless steel, so the rhythm closes across the left and right edges; dark charcoal stone, very fine even matte grain. Across the UPPER part one slim horizontal band of brushed stainless with a fine directional grain. At the very BOTTOM a slim flush skirting of the same stainless. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM-DARK, the darkest wall in the set but clearly lighter than the night exterior. HUE: PERFECTLY NEUTRAL charcoal and steel. No lift doors, no call buttons, no floor indicator, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:55:38",
+      "built_linear": 0.115,
+      "built_srgb": 93.6,
+      "lift": 0.604,
+      "last_lift": 0.604
+    },
+    "corp/cap-alu": {
+      "src": "corp/cap-alu.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of dark anodised aluminium capping sheet seen from DIRECTLY ABOVE, straight top-down orthographic view, filling the whole image edge to edge - the flat top of a curtain-wall head capping. An even fine-grained metal surface with NO directional ribs and no strong pattern, a faint grain speckle and a very few hairline scratches; dark, cool, matte, never shiny. Tiles seamlessly on both axes. VALUE: DARK, the top of an exterior member at night, clearly darker than any interior floor. HUE: PERFECTLY NEUTRAL dark grey. No glass, no wall, no gravel, no screws, no rivets, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:02:56",
+      "built_linear": 0.0349,
+      "built_srgb": 52.3,
+      "lift": 0.956,
+      "last_lift": 0.956
+    },
+    "corp/coping": {
+      "src": "corp/coping.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of a parapet coping cap seen from DIRECTLY ABOVE, straight top-down orthographic view, filling the whole image edge to edge - the flat top of a precast stone coping along the top of a parapet wall. An even fine-grained pale stone surface with a very faint sandy speckle, and ONE thin straight recessed joint line crossing from the left edge to the right edge at its exact vertical centre where two coping stones butt. Nothing else. Tiles seamlessly on both axes. VALUE: PALE, the LIGHTEST surface in this set, so the line it draws along the roofline reads against the dark facade below. HUE: PERFECTLY NEUTRAL pale grey. No gravel, no roof, no railing, no fixings, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:03:36",
+      "built_linear": 0.0505,
+      "built_srgb": 62.4,
+      "lift": 4.591,
+      "last_lift": 4.591
+    },
+    "corp/window-3bay": {
+      "src": "corp/window-3bay.png",
+      "class": "tile",
+      "needs_alpha": true,
+      "crop": [
+        48,
+        345,
+        929,
+        332
+      ],
+      "res": [
+        512,
+        183
+      ],
+      "glass_alpha": [
+        110,
+        128
+      ],
+      "prompt": "An isolated cut-out of ONE modern curtain-wall glazing unit from an office tower, seen straight on in flat elevation, no perspective. THE PROPORTION IS THE MOST IMPORTANT REQUIREMENT: a WIDE LOW rectangle EXACTLY 2.9 TIMES AS WIDE AS IT IS TALL, 870 by 300 pixels; not square, not a tall window. Divided by two slim vertical mullions into THREE equal bays, each bay very slightly wider than tall. A slim horizontal transom crosses about one fifth of the way up from the bottom, giving each bay a large upper light and a short lower panel. Frame, mullions and transom slim matte DARK anodised aluminium, the darkest thing drawn, all the same thickness. The GLASS in every bay an even flat PALE cool grey, uniformly BRIGHTER than the frame, clean sharp boundary at the join, no gradient across it, no reflections, no mullion shadows, no blinds, no furniture. The unit alone, centred, whole, a clear margin on all four sides. Nothing else at all, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T15:58:54",
+      "last_glass_alpha": [
+        110,
+        128
+      ],
+      "built_linear": 0.09,
+      "built_srgb": 73.1,
+      "lift": 0.972,
+      "last_lift": 0.972
+    },
+    "corp/window-2bay": {
+      "src": "corp/window-2bay.png",
+      "class": "tile",
+      "needs_alpha": true,
+      "crop": [
+        78,
+        275,
+        869,
+        475
+      ],
+      "res": [
+        512,
+        280
+      ],
+      "glass_alpha": [
+        110,
+        128
+      ],
+      "prompt": "An isolated cut-out of ONE modern curtain-wall glazing unit from an office tower, seen straight on in flat elevation, no perspective. THE PROPORTION IS THE MOST IMPORTANT REQUIREMENT: a wide rectangle EXACTLY 1.87 TIMES AS WIDE AS IT IS TALL, 620 by 332 pixels. Divided by ONE slim vertical mullion into TWO equal bays, each bay very slightly wider than tall. A slim horizontal transom crosses about one fifth of the way up from the bottom. Frame, mullion and transom slim matte DARK anodised aluminium, the darkest thing drawn, all the same thickness. The GLASS in every bay an even flat PALE cool grey, uniformly BRIGHTER than the frame, clean sharp boundary at the join, no reflections, no mullion shadows, no blinds, no furniture. This is the TWO-BAY member of a family whose three-bay version is already drawn: same bays, same frame thickness, same glass tone - the same pane, one fewer of them. The unit alone, centred, whole, a clear margin on all four sides. Nothing else at all, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-09-20T16:02:15",
+      "last_glass_alpha": [
+        110,
+        128
+      ],
+      "built_linear": 0.0852,
+      "built_srgb": 71.3,
+      "lift": 0.874,
+      "last_lift": 0.874
     }
   }
 }

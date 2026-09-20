@@ -166,6 +166,10 @@ back) — grep the change text.
 | Glass-tower cell-locked window grid (`winPerCell`) | whole windows + zero pitch drift; pitch = `CELL` | **landed** |
 | Glass-tower sparse accents (tint/lit panes) | ~5 draws per glass tower | **landed** |
 | Setback tiers start at their deck (`buriedH`) | kills nested fade outlines; drops ~29% of buried wall area | **landed** |
+| **the corp office becomes a 3D kind, reusing `FacilityGeom` through a new `ShellTex`** | art moved off `FacilityStyle` onto `Facility.tex`; `Surf` 11 → 20 slots, interior wall buffers indexed by the Surf a face looks INTO; no flat deck and no reveal ease for kind `corp`; pane ASPECT is per-art (corp **2.798 / 1.829** measured off its own crops, not the compound's 2.90/1.963). **99 dc / 12.9k tri**, `corp warm` **72 programs / 418ms**; facility re-walked and unchanged | **landed** |
+| ^ `floorBuf`'s fallback cannot be `Surf.TILE` | a corp floor has no TILE art, so a cell with no entry emitted NOTHING — a hole in the plate. falls back to `Surf.CARPET` for kind `corp`; `__corp().surfs` shows **238** TILE cells on a live floor, the corridor furniture `themeRooms` never reached | **landed** |
+| the corp shell's art: 20 labels off 14 gens, 8 of 9 floors on TWO packed 2x2 sheets | seams landed at **512/512** and **511/511** (peaks 32-40 vs 2.5-6.6 background), crops inset 6 px and square. the raised-access floor stayed SOLO because its panel grid has to close | **landed** |
+| ^ the glazing units ship as `tile` with a bbox CROP, not as `sprite` | `background:"transparent"` came back opaque on all three servers (alpha min 40, **0.0%** cut). the unit is a rectangle and the pane quad IS the opening, so crop to its bbox and no alpha is needed; `glass_alpha` threshold 110 sits in an empty histogram band (frame 54/47, glass 164/173) | **landed** |
 | Sleek facade 4; brick capped to mid-rise | 13.1 sleek/city, brick high-rises 14.9 → 0 | **landed** |
 | Per-style facade names (`AreaStyle.facadeNames`) | removes a Poly-class debugging trap; no visual change | **landed** |
 | Rooftop helipad decal on tall towers | ~1 quad per pad, replaces the detail grid; ≈ neutral | **landed** |

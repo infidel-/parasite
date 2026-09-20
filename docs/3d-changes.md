@@ -1972,3 +1972,86 @@ measured.
 
 Verdict: **KEEP.**
 
+
+## The corp office becomes a 3D area kind, off the facility's emitters and a `ShellTex`
+
+`AREA_CORP` was one of the last two kinds still drawn by the 2D `AreaView` — not in
+`GameScene.is3DArea()`, topbar reading `0 dc | 0k tri`. Rather than a second quad emitter, the
+compound's `FacilityGeom` was made ART-AGNOSTIC and the tower drives it.
+
+What moved: the sixteen `FacilityStyle.FLOOR_TILE` / `WALL_ROOM` / … constants at `FacilityGeom`'s
+flush became `ShellTex`, a record hanging off `Facility.tex`, and `Facility` grew `kind`. `Surf` went
+from 11 values to 20 (`CARPET`/`CUBICLE`/`MEETING`/`KITCHEN`/`EXEC`/`WASHROOM`/`SERVER`/`LIFT`/`OPEN`),
+`isIndoor`/`isThemed` became range tests, and the four named interior wall buffers became
+`[for (_ in 0...SURF_SLOTS) MeshBufTools.make()]` indexed by the Surf a face LOOKS INTO. An empty
+buffer emits no mesh, so the nine unused facility slots cost nothing. `ShellOpts` carries the rest of
+what differs — `surfOf`, `wallOf`, and a `hangars` flag that gates the concrete-majority shed test and
+the study pads off for a tower.
+
+Two behavioural gates and one derived number, all forced by the geometry rather than chosen:
+- **no flat ceiling for kind `corp`** (`flatDeck = !st.hangar && m.kind != 'corp'`). The player is
+  always inside a plate, so a deck would be permanently faded — dead geometry in the sorted pass.
+- **no reveal ease.** One structure and the player is in it, so `inside` is pinned at 1 at build and
+  `glaze.value` never moves. `CorpArea.tick` is the vision sweep and the chunk cull, nothing else.
+- **the pane ASPECT moved onto `ShellTex` too** (`aspect`/`aspect2`). `paneTall` derives a run's
+  height from the art's own width:height and never stretches, so the compound's 2.90/1.963 are a
+  property of ITS images: the corp units measure **2.798** (512x183) and **1.829** (512x280) off their
+  built crops, and drawing them at the facility's numbers would have been a stretch.
+
+`CorpModel.fromArea` delegates to `FacilityModel.fromArea` with `CorpStyle.shell()` and then runs
+`loneWindows`: `gen.corp` writes single-cell openings and `findWindows` assumes a run is never 1 cell,
+so it dropped them and left a hole in the masonry with no pane. A 1-cell opening has no art of its
+own, so it becomes `SOLID`.
+
+Measured on a generated 65x50 tower floor, first entry: **`corp warm` 72 programs** cached in 418ms
+(the facility's is 109/8.1s — a tower has no outdoors, no lamps yet and no glb props). In game,
+**99 dc / 12.9k tri / 1347 geom** standing in the lift lobby and **89 dc / 12.7k tri** in the open
+plan. The facility was re-walked after the refactor and is unchanged: 3 structures, 24 rooms, 42
+windows, grime 687, exits 14, placards 50, cabinets 8, sinks 24, parapets 92/616 and 108/719 with the
+hangar skipped.
+
+Trap worth keeping: `FacilityGeom.floorBuf`'s fallback could not stay `Surf.TILE`. A corp floor has
+no TILE art, so a cell whose surface has no entry emitted nothing at all — a hole in the plate. It
+falls back to `Surf.CARPET` for kind `corp`, which is what `__corp().surfs` reporting **238 cells of
+Surf.TILE** on a live floor is showing: the table cells `themeRooms` could not spread a room theme
+over, i.e. the furniture standing in the corridors.
+
+Verdict: **KEEP.**
+
+## The corp shell's own art: two packed floor sheets, seven solo walls, two glazing units
+
+Phase 3 of the same port. 20 labels under `corp/` off 14 generations, all at the 1,756-token tier
+(~$0.77). None of it is the facility's; the one thing shared is the emitter.
+
+**Eight of the nine floors came off TWO 2x2 packed sheets** — the trade `3d-textures.md` describes,
+taken deliberately because a family of carpets and stones is exactly what wants harmonising. The
+model honoured the split this time to within a pixel: per-column/per-row mean `|diff|` put pack-a's
+seams at **512/512** and pack-b's at **511/511**, peaks **32.3-39.8** against a background of
+**2.5-6.6**. Crops are inset 6 px and kept square (500 and 498). The server room's raised-access panel
+is the one SOLO floor and the reason is the rule itself: its panel grid has to close, and a packed
+cell's doubled wrap error is a visible step in a joint.
+
+**The two glazing units are `tile` and not `sprite`, which is the useful finding here.**
+`background: "transparent"` was asked for THREE times — gpt-image-2.5-flare, 2.5-sunburst and
+gpt-image-2 — and came back opaque every time (alpha min 40, **0.0%** transparent), the model painting
+a dark vignette field instead. Rather than chase it: the unit is a RECTANGLE, and the pane quad is
+exactly the opening, so nothing outside it is ever drawn. Crop to the unit's own bbox (measured with a
+luma+gradient mask: `[48,345,929,332]` and `[78,275,869,475]`), set `res` to carry the aspect, and no
+alpha is needed at all. The see-through glass comes from `glass_alpha` as usual, and the threshold was
+free: frame median **54/47**, glass median **164/173**, nothing in the histogram between 100 and 120.
+
+Values were fitted against the compound's own built ladder and not predicted — interior floors land
+**0.090-0.124** linear against its 0.094-0.135, interior walls **0.115-0.219** against its
+0.137-0.159, the exterior **0.0314** against its 0.0327, the capping **0.0349** against its 0.0352.
+Two gammas came out extreme in the DARKENING direction (`wall-office` 4.042 from srgb 205.7,
+`coping` 4.591 from 187.4) because the drops were painted far brighter than a night interior wants;
+they crush the skirting to near black, which reads correctly as a shadow line. Noted as a prompt
+fault rather than a pipeline one: a corp interior brief asks for "premium" and gpt answers with
+daylight exposure.
+
+One label is deliberately reused across two slots — `corp/cap-alu` serves `tex.head` and `tex.roof`,
+which ARE the same extrusion seen from the same angle. Four interior surfaces share `wall-office`
+(corridor, open plan, cubicle farm, server room) for the same reason: in a real tower they are one
+wall, and a room reads by its FLOOR and its furniture.
+
+Verdict: **KEEP.**

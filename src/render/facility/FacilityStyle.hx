@@ -3333,6 +3333,8 @@ class FacilityStyle
           wallInto: into,
           pane: WINDOW_LIT,
           pane2: WINDOW_LIT_2,
+          aspect: WINDOW_ASPECT,
+          aspect2: WINDOW_ASPECT_2,
           paneHigh: WINDOW_HIGH_TEX,
           head: WINDOW_HEAD,
           roof: ROOF,

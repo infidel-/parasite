@@ -27,6 +27,11 @@ typedef ShellTex = {
   // and a 3-cell one are two different images and not one image at two scales)
   var pane: String;
   var pane2: String;
+  // and those two images' OWN width:height, measured off the built crop. the quad's height is
+  // DERIVED from it (FacilityGeom.paneTall) and never chosen, so these are a property of the art
+  // and have to travel with it — a corp unit drawn at the compound's 2.90 would be a stretch
+  var aspect: Float;
+  var aspect2: Float;
   // the high light well, which is glazed and not see-through
   var paneHigh: String;
   // the aluminium capping that closes a window run's reveal
