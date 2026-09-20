@@ -992,6 +992,39 @@ still chooses is UNIFORM-PER-KIND against UNIFORM-PER-ATLAS-ROW. Collapsing it t
 a one-line deletion, and it moves the furniture mix (five machine icons stop outweighing two shelving
 icons on the row-uniform arm), so it wants a look in the game rather than a digest.
 
+## A CLUSTER IS NOT A CORRIDOR: nothing may be reached only through a toilet
+
+"server room is only accessible through toilet. add sanity check" — and it was not one bug but a
+missing invariant.
+
+`CorpBuilding.makeDoors` cuts each room exactly ONE door, at a random wall spot that passes two
+geometric tests ("is it an inner wall", "fewer than 3 wall neighbours"). **Nothing in the pick asks
+what is on the far side**, so a room's one door can open into the room next door. `fixDoors` then
+repaired CLUSTERS — `if (Lambda.has(c, 0)) continue` is satisfied the moment ANY room in a
+door-joined group touches a corridor — so `servers -> toilet -> corridor` passed it.
+
+**The invariant is NOT "every room owns a corridor door".** A suite whose inner office opens off an
+outer one is a building, not a bug, and the plate's edge rooms often have no corridor to open onto
+at all: replacing the cluster pass with a per-room corridor door still left **129 rooms over 300
+seeds** owning none, because `makeDoorToCorridor` has nothing to cut into for them. What is actually
+wrong is walking THROUGH a lavatory to get somewhere, so the invariant is:
+
+> nothing is reached only by passing THROUGH a toilet or the server room.
+
+`GenCheck.corpRoutesSane` walks the DOOR GRAPH from room 0 (the corridor sentinel) and enters a
+dead-end room without expanding through it. `reachable` cannot answer this — it floods the walkable
+tiles from the lift, and a room behind another room IS reached.
+
+**And the repair is not to cut another door, it is not to DEAL one.** `CorpBuilding.passThrough`
+marks every room whose removal strands another, and `CorpBlocks.demands` hands that set to the
+toilet's and the server room's `must`, which `Quota.deal` and `GenCheck.blocksFit` both honour.
+That leaves **3 seeds in 3000**: two dead ends in PARALLEL, where neither is an articulation point
+on its own. Asking the question of PAIRS instead is far too strong — it rules out a room in any
+two-room cut whatever the other turns out to be, and left **997 of 3000 towers with nowhere to put a
+server room at all**. So the pair is not predicted: `assign` deals, walks the routes, and re-deals
+with whatever was in the way added to `blocked`. Three towers in 3000 take the second attempt and
+none has taken a third. 3000/3000 corp green, 3000/3000 facility green, 200 digests identical twice.
+
 ## A lab building always has a toilet, and the door test was counting the wrong doors
 
 "lab building has to have at least one toilet". Two things stood between that and the code, and only
