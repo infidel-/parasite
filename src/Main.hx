@@ -65,9 +65,11 @@ class Main
             if (revealed)
               return;
             revealed = true;
+            // HIDDEN and not removed: the per-kind warms still to come raise this same screen
+            // (GameScene.draw3D -> render.View.needsWarm)
             var w = Browser.document.getElementById('warmup');
             if (w != null)
-              w.remove();
+              w.classList.add('off');
             game.ui.state = UISTATE_MAINMENU;
           };
         Browser.window.setTimeout(reveal, 30000);

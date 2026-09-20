@@ -1843,3 +1843,30 @@ both routes lay the lid the same way.
 rather than across the one horizontal surface the camera reads.
 
 Verdict: **KEEP.**
+
+## The per-kind warm gets the boot screen too (`GameScene.hx`, `render/View.hx`, `Main.hx`, `app.css`)
+
+The boot warm was split by area kind so a session pays only for the art it reaches: the city warms
+at boot and the tunnels and the facility each warm on the FIRST entry to that kind
+(`View.warmKind`). The screen did not come with it. A first facility entry is **~1.7s of blocked
+main thread** (measured here at 2.6s and 8.1s on a cold driver cache) and it runs inside
+`GameScene.draw3D`'s `fader.cover` callback — i.e. behind plain black with no readout, which is the
+exact complaint the boot screen was added for ("The boot warm gets a SCREEN, because it was never
+invisible").
+
+So `#warmup` is **hidden and no longer removed**: `Main`'s reveal puts an `off` class on instead of
+calling `w.remove()`, and `draw3D` takes it off again around the warm, putting it back on the same
+beat the fader lifts. The screen sits at `z-index: 100000`, above `#fader`, so hiding it uncovers
+black that is already fading out — no second cut.
+
+**It is asked BEFORE it commits, and that is the whole of the new API.** `View.needsWarm(kind)` is
+`warmKind`'s own guard lifted out (`warmKind` now calls it, so the screen and the work cannot
+disagree), because a kind already warmed is a straight call-through and a screen for it would be a
+flash. Traced live off the element's `className` through one facility entry: `"ready off"` ->
+**`"ready"` at +103ms** -> `"ready off"` at +2699ms, and `needsWarm` afterwards reads
+facility/city/wilderness `false`, sewers `true`.
+
+**Still not covered, deliberately:** a second area of an already-warmed kind still pays for any glb
+only that layout places, and the wilderness has no warm scene at all.
+
+Verdict: **KEEP.**

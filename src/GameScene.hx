@@ -283,6 +283,16 @@ class GameScene
           // so a kind pays for its own warm here, on the first entry to it, under the black this
           // fader has already brought up — and warmKind is a straight call-through for a city, a
           // wilderness, or a kind already warmed (see render.View.warmKind)
+          // and the WARMUP SCREEN goes back up over it when there is a warm to wait for. the
+          // per-kind warm is ~1.7s of blocked main thread for the facility, and behind the fader's
+          // plain black that is a second and a half of nothing — the same complaint the boot screen
+          // was added for (docs/3d-changes.md, "the boot warm gets a SCREEN"). asked of `needsWarm`
+          // rather than shown unconditionally, because a kind already warmed is a straight
+          // call-through and a screen for it would be a flash
+          var warmEl = (view3d.needsWarm(game.area.info.type)
+            ? Browser.document.getElementById('warmup') : null);
+          if (warmEl != null)
+            warmEl.classList.remove('off');
           view3d.warmKind(game.area.info.type, function()
             {
               if (game.area.info.type == 'wilderness')
@@ -305,6 +315,10 @@ class GameScene
                   if (revealed)
                     return;
                   revealed = true;
+                  // the screen comes down on the same beat the fader lifts — it sits above the
+                  // fader (z 100000), so hiding it uncovers black that is already fading out
+                  if (warmEl != null)
+                    warmEl.classList.add('off');
                   fader.reveal(FADE_MS);
                 };
               view3d.onFirstFrame(reveal);

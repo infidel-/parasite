@@ -346,6 +346,26 @@ class View {
 // path that never calls it is a black screen the player cannot get past. that is what the catch and
 // the timer are for; the timer is deliberately long, because cutting a warm short only moves the
 // stall into the frame the player is about to see
+// which per-kind warm this area kind belongs to. the city is the boot warm's own scene and the
+// wilderness has never had one, so everything that is not a city, a wilderness or a facility renders
+// through the tunnel view and warms as one
+  static inline function warmKey(kind:String):String
+    return (kind == 'facility' ? 'facility' : 'sewer');
+
+// would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
+// commits to putting the warmup screen back up — a kind already warmed is a call-through and a
+// screen for it would be a flash.
+//
+// `!_warmed` means the boot warm never ran, in which case buildFrom's own inline warm is still live
+// and warmKind must not get in front of it
+  public function needsWarm(kind:String):Bool
+    {
+      return kind != 'city' &&
+        kind != 'wilderness' &&
+        _warmed &&
+        !warmedKinds.exists(warmKey(kind));
+    }
+
   public function warmKind(kind:String, done:Void->Void):Void
     {
       var fired = false;
@@ -356,14 +376,10 @@ class View {
           fired = true;
           done();
         };
-      // the city is the boot warm's own scene; the wilderness has never had a warm scene at all, and
-      // giving it one is its own job. `!_warmed` means the boot warm never ran, in which case
-      // buildFrom's own inline warm is still live and this must not get in front of it
-      var key = (kind == 'facility' ? 'facility' : 'sewer');
-      if (kind == 'city'
-        || kind == 'wilderness'
-        || !_warmed
-        || warmedKinds.exists(key))
+      // the guard is `needsWarm`'s, so the screen GameScene raises and the work done here cannot
+      // disagree about whether there is any
+      var key = warmKey(kind);
+      if (!needsWarm(kind))
         {
           fire();
           return;

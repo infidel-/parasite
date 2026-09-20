@@ -1469,6 +1469,7 @@ back) — grep the change text.
 | fake cast shadows glued to the sprite's DRAWN base, and following the anim offset | roots sat on the cell centre, now `+SIZE*(0.5-gs.by)*sin(TILT)` = **0.847** for a full-bleed silhouette (0.582 for the host sprite at `by` 0.156); `a.fx.offx/offz` added, `offy`/`scale` deliberately not | **landed — no quad, material or draw-call change** |
 | an L-shaped office desk corner emitted as an L, not a square; `closes` replaced by an interval subtraction | the corner cell was a full 4.0 while both arms came forward `DESK_D` 2.6 — **1.4 x 1.4** past both fronts. one cell in the compound matches; A/B **2,306 px** changed >25, `tris` 251.9k → 251.8k, `calls` 245 both | **landed** |
 | the bookcase's lid repacked at ONE repeat both ways (`modelsheet` 1.4436x0.9 -> 1x0.6234) | the sheet cell wrapped inside itself: column `|diff|` **5.83 at x=354** (= 512/1.4436) against 2.35, now peak **2.81** against 1.98. glb base colour swapped via `texSrc`, UVs untouched; grain 1.4 -> 2.02 units | **landed** |
+| the per-kind warm raises the boot `#warmup` screen instead of sitting behind plain black | `#warmup` hidden not removed; `View.needsWarm` is `warmKind`'s guard lifted out so a warmed kind never flashes. traced: `"ready off"` -> **`"ready"` +103ms** -> `"ready off"` +2699ms on a facility entry | **landed** |
 
 ## Standing notes
 
