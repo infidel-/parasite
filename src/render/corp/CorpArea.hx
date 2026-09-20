@@ -289,6 +289,11 @@ class CorpArea implements Area3D
               blocks: street.blocks,
               walls: street.walls,
               lit: street.lit,
+              // and what stands on the roofs: `pent` is buildings the city's own rule gave a
+              // mechanical penthouse, `deco` is rooftop units. A zero in either with `blocks` up
+              // in the hundreds is the sector grid or the penthouse rule having stopped firing
+              deco: street.deco,
+              pent: street.pent,
               generated: street.city.buildings.length,
             },
             // and what is moving on it. `walkLanes`/`roadLanes` is what the agents are dealt over,

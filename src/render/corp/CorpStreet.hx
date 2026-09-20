@@ -11,6 +11,7 @@ import render.Textures;
 import render.facility.FacilityGeom;
 import render.world.AreaStyle;
 import render.world.DowntownStyle;
+import render.world.roofs.FlatRoofs;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 
@@ -37,6 +38,8 @@ typedef CorpStreetSet = {
   var blocks:Int;       // street buildings actually built
   var walls:Int;        // and their wall quads
   var lit:Int;          // lit window panes
+  var deco:Int;         // rooftop plant decals
+  var pent:Int;         // and mechanical penthouses
 };
 
 // the city street 114 units under the floor plate — AROUND the tower and never under it.
@@ -94,6 +97,9 @@ class CorpStreet
       // whatever the city rolled
       var bufs = new Map<String, MeshBuf>();
       var lit = new Map<Int, MeshBuf>();
+      // the rooftop plant, keyed by RenderConfig.DETAIL_TYPES index — its own map because each
+      // type is its own chroma-cut image and so its own material
+      var deco = new Map<Int, MeshBuf>();
       var nRoad = 0;
       var nWalk = 0;
       // THE MODEL IS MIRROR-TILED and the loop runs over WORLD cell indices — see `fold`. Three
@@ -121,6 +127,8 @@ class CorpStreet
       var blocks = 0;
       var nWall = 0;
       var nLit = 0;
+      var nDeco = 0;
+      var nPent = 0;
       var list:Array<citygen.CityModel.Building> = city.buildings;
       // and every building once per TILE, its own footprint reflected on an odd one. a
       // mirrored rect is still a rect, so nothing downstream learns this happened
@@ -162,12 +170,17 @@ class CorpStreet
               FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]), x0, x1, z0, z1, h,
                 RenderConfig.ROOF_TILE);
               nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
+              var r = roof(bufs, deco, st, b, f, x0, x1, z0, z1, h, per);
+              nDeco += r.deco;
+              nPent += r.pent;
               blocks++;
             }
       for (tex in bufs.keys())
         add(group, bufs.get(tex), tex);
       for (f in lit.keys())
         addLit(group, lit.get(f), st, f);
+      for (t in deco.keys())
+        addDeco(group, deco.get(t), t);
       scene.add(group);
       return {
         group: group,
@@ -177,6 +190,8 @@ class CorpStreet
         blocks: blocks,
         walls: nWall,
         lit: nLit,
+        deco: nDeco,
+        pent: nPent,
       };
     }
 
@@ -242,6 +257,142 @@ class CorpStreet
         x0 < p.x1 + p.reachX &&
         z1 > p.z0 - p.reachZ &&
         z0 < p.z1 + p.reachZ;
+    }
+
+// what stands on one street roof: a coping rim, a mechanical penthouse, and the rooftop plant.
+//
+// THE RIM IS FOUR THIN RECTS AND NOT A RING OF BOXES. Each side is a `ROOF_PARA_T`-deep rect and
+// the band is its OUTER hand, its INNER hand and a top cap — taking the inner skin off the same
+// thin rect rather than off an inset one is what gets the winding right without a second rect and
+// without a flipped face. The caps are cut so no two are coplanar at a corner.
+//
+// AND THE SKINS GO IN THE BUILDING'S OWN WALL BUFFER, which is the whole economy of this: 200-odd
+// roofs of rim cost exactly ONE new draw call, the coping cap's.
+//
+// The penthouse is render.world.roofs.FlatRoofs.penthouseRect verbatim — a pure function of the
+// Building and already deterministic, so the street agrees with the real city about which roofs
+// carry one without sharing any state with it.
+  static function roof(bufs:Map<String, MeshBuf>, deco:Map<Int, MeshBuf>, st:AreaStyle,
+      b:citygen.CityModel.Building, f:Int, x0:Float, x1:Float, z0:Float, z1:Float, h:Float,
+      per:Float):{ deco:Int, pent:Int }
+    {
+      var t = CorpStyle.ROOF_PARA_T;
+      var hi = h + CorpStyle.ROOF_PARA_H;
+      var w = buf(bufs, st.walls[f]);
+      var cope = buf(bufs, CorpStyle.COPING_STREET);
+      if (x1 - x0 < 3 * t ||
+          z1 - z0 < 3 * t)
+        return { deco: 0, pent: 0 };
+      // the four sides. `sides` is {rect, the hand that looks out}, and the inner skin is the
+      // opposite hand of the SAME rect
+      var sides = [
+        { a: x0, b: x1, c: z0, d: z0 + t, out: 0 },
+        { a: x0, b: x1, c: z1 - t, d: z1, out: 1 },
+        { a: x0, b: x0 + t, c: z0, d: z1, out: 2 },
+        { a: x1 - t, b: x1, c: z0, d: z1, out: 3 },
+      ];
+      for (i in 0...sides.length)
+        {
+          var s = sides[i];
+          FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out, h, hi, per);
+          FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out ^ 1, h, hi, per);
+          // the cap ring, mitred by shortening the two rects that run the long way
+          var ca = (i < 2 ? s.a : s.a);
+          var cc = (i < 2 ? s.c : s.c + t);
+          var cd = (i < 2 ? s.d : s.d - t);
+          FacilityGeom.cap(cope, ca, s.b, cc, cd, hi, CorpStyle.COPING_TILE);
+        }
+      // the mechanical penthouse, in the building's own wall and its own roof base
+      var cx = (x0 + x1) / 2;
+      var cz = (z0 + z1) / 2;
+      var pen = FlatRoofs.penthouseRect(b, { x: cx, z: cz }, x1 - x0, z1 - z0);
+      var pent = 0;
+      if (pen != null)
+        {
+          var ph = citygen.CityConfig.FLOOR_H * (1.4 + (hash(b, 3) % 2) * 0.6);
+          var px0 = pen.x - pen.w / 2;
+          var px1 = pen.x + pen.w / 2;
+          var pz0 = pen.z - pen.d / 2;
+          var pz1 = pen.z + pen.d / 2;
+          for (dir in 0...4)
+            FacilityGeom.face(w, px0, px1, pz0, pz1, dir, h, h + ph, per);
+          FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]),
+            px0, px1, pz0, pz1, h + ph, RenderConfig.ROOF_TILE);
+          pent = 1;
+        }
+      // and the plant, one item per sector, dealt round the type list off the building's own hash
+      // so a roof is not six of the same unit
+      var e = CorpStyle.ROOF_DECO_EDGE;
+      var ax0 = x0 + e;
+      var ax1 = x1 - e;
+      var az0 = z0 + e;
+      var az1 = z1 - e;
+      if (ax1 - ax0 < 2 ||
+          az1 - az0 < 2)
+        return { deco: 0, pent: pent };
+      var cols = Std.int(Math.round((ax1 - ax0) / CorpStyle.ROOF_SECTOR));
+      var rows = Std.int(Math.round((az1 - az0) / CorpStyle.ROOF_SECTOR));
+      if (cols < 1)
+        cols = 1;
+      if (rows < 1)
+        rows = 1;
+      while (cols * rows > CorpStyle.ROOF_DECO_MAX)
+        {
+          if (cols >= rows)
+            cols--;
+          else
+            rows--;
+        }
+      var n = 0;
+      for (ci in 0...cols)
+        for (cj in 0...rows)
+          {
+            var ty = (hash(b, ci * 7 + cj * 13) % RenderConfig.DETAIL_TYPES.length);
+            var d = RenderConfig.DETAIL_TYPES[ty];
+            var x = ax0 + (ci + 0.5) * (ax1 - ax0) / cols;
+            var z = az0 + (cj + 0.5) * (az1 - az0) / rows;
+            // never on the penthouse, which is real massing and would swallow it
+            if (pen != null &&
+                Math.abs(x - pen.x) < pen.w / 2 + d.w / 2 &&
+                Math.abs(z - pen.z) < pen.d / 2 + d.d / 2)
+              continue;
+            // ponytail: no yaw. RoofDetails turns each unit by a multiple of 90 degrees, which on
+            // a MERGED quad means permuting its corners rather than setting a matrix — and at 114
+            // units down through fog nothing can read which way a vent faces. Upgrade path is the
+            // corner permutation, four cases, if a closer camera ever looks at this
+            quadFlat(litBuf(deco, ty), x - d.w / 2, x + d.w / 2, z - d.d / 2, z + d.d / 2, h + 0.05);
+            n++;
+          }
+      return { deco: n, pent: pent };
+    }
+
+// a horizontal quad with its OWN 0..1 uv, which is what a decal wants and FacilityGeom.cap cannot
+// give — `cap` writes world-aligned uv so a surface tiles, and a rooftop unit is a picture
+  static inline function quadFlat(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
+    MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+      [0, 0, 1, 0, 1, 1, 0, 1]);
+
+// one stable number per building, salted. the street is rebuilt from the model on every entry and
+// nothing about a roof may move between two of them
+  static inline function hash(b:citygen.CityModel.Building, salt:Int):Int
+    return render.facility.FacilityModel.mix((b.col * 374761393) ^ (b.row * 40503) ^ (salt * 668265263));
+
+// one merged mesh of rooftop units of ONE type. the city's own art, chroma-keyed at load exactly
+// as render.world.roofs.RoofDetails keys it, and unlit like everything else down here
+  static function addDeco(group:Group, b:MeshBuf, ty:Int):Void
+    {
+      if (b.idx.length == 0)
+        return;
+      var d = RenderConfig.DETAIL_TYPES[ty];
+      var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
+        map: Textures.loadKeyedTexture(d.tex, d.crop, RenderConfig.DETAIL_BOX_COLOR),
+        color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
+        alphaTest: 0.5,
+        side: THREE.DoubleSide,
+      }));
+      mesh.receiveShadow = false;
+      mesh.castShadow = false;
+      group.add(mesh);
     }
 
 // the lit windows of one street tower, on the CELL-locked grid its curtain art is drawn at.
@@ -324,6 +475,7 @@ class CorpStreet
 // else here: a lit pane carries a glow COLOUR as well as a map (DowntownStyle gives the light,
 // dark and sleek towers each their own), and two slots that shared a texture but not a colour
 // would have to be two meshes anyway
+// the same, keyed by an Int — the lit panes by facade slot, the rooftop plant by detail type
   static function litBuf(m:Map<Int, MeshBuf>, f:Int):MeshBuf
     {
       var b = m.get(f);

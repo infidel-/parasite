@@ -416,6 +416,32 @@ class CorpStyle
   // slabs at midnight beside its glass towers at 0.017. Fitted live against the lit panes rather
   // than derived: this is the one number that says how dark the street is
   public static inline var STREET_DIM = 0.62;
+  // ---- what stands on a street roof (render.corp.CorpStreet.roof) -------------------------------
+  //
+  // A BARE BOX WITH A LID IS NOT A BUILDING SEEN FROM ABOVE, and from the twentieth floor a roof is
+  // most of what there is to see. Three pieces, and the order they are worth anything in is the
+  // order of the cost: a coping rim round every edge (the roofline is what reads at range), a
+  // mechanical penthouse where the city's own rule says there is one, and the city's own rooftop
+  // plant decals on the sectors that are left.
+  //
+  // THE RIM'S SKINS WEAR THE BUILDING'S OWN WALL and only its top cap takes the coping label, which
+  // is what keeps this to ONE new draw call for 200-odd buildings: a face in a buffer that already
+  // exists costs nothing at all. render.world.roofs.Parapets is the other way of doing it — eight
+  // BoxGeometry blocks and up to six texture clones per roof — and is affordable 40 times, not 200
+  public static inline var COPING_STREET = 'textures/city/coping.png';
+  public static inline var ROOF_PARA_H = 1.0;
+  public static inline var ROOF_PARA_T = 0.6;
+  // the cap's repeat ALONG the rim. Tiled at the rim's own 1.0 the coping art repeated every world
+  // unit and the roofline read as a dashed hazard stripe from the plate; 4.0 is one repeat per
+  // city cell, which is the pitch every other surface down there already uses
+  public static inline var COPING_TILE = 4.0;
+  // the sector grid the plant is dealt on, and the cap on it — the city's own numbers
+  // (RenderConfig.ROOF_SECTOR / DETAIL_MAX), so a street roof and a real one read alike
+  public static inline var ROOF_SECTOR = 6.0;
+  public static inline var ROOF_DECO_MAX = 6;
+  // and how far a decal keeps off the rim, which has to clear ROOF_PARA_T or it climbs it
+  public static inline var ROOF_DECO_EDGE = 2.2;
+
   // how far a lit pane stands proud of the curtain wall it is set into. render.world.Windows uses
   // 0.07 for the same job on a real tower, and it is the same trade: enough to clear the depth
   // buffer at this range, small enough that the pane does not read as a box on the facade
