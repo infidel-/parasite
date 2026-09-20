@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import citygen.CityModel.City;
 import citygen.CityModel.Tile;
 import render.Textures;
+import render.corp.CorpStreet.PlateBox;
 import render.facility.FacilityModel;
 
 // one straight run of walkable cells, in world. an agent walks it end to end and wraps
@@ -74,7 +75,7 @@ class CorpCrowd
 
 // find the lanes and build the two batches into the street's own group, so they ride its transform
 // down to CorpStyle.STREET_Y with everything else
-  public function new(group:Group, ?city:City, cx:Float = 0, cz:Float = 0)
+  public function new(group:Group, ?city:City, ?p:PlateBox)
     {
       // the warm path takes no city and builds no agents — see `warm`
       if (city == null)
@@ -89,8 +90,8 @@ class CorpCrowd
           };
           return;
         }
-      walk = lanes(city, cx, cz, Tile.Walkway);
-      road = lanes(city, cx, cz, Tile.Road);
+      walk = lanes(city, p, Tile.Walkway);
+      road = lanes(city, p, Tile.Road);
       n = {
         walkers: (walk.length == 0 ? 0 : CorpStyle.WALKERS),
         cars: (road.length == 0 ? 0 : CorpStyle.CARS),
@@ -194,31 +195,28 @@ class CorpCrowd
       return mesh;
     }
 
-// every straight run of `kind` at least LANE_MIN cells long, inside the street radius.
+// every straight run of `kind` at least LANE_MIN cells long, ON THE STREET THAT WAS BUILT.
 //
 // RUNS AND NOT A PATHFINDER, which is the whole of the "fake to simplify logic" the brief asks
 // for: a lane is a straight length of road or footpath and an agent walks it end to end and wraps.
 // Nobody turns a corner, and from 114 units up nobody can tell — what reads is that the street is
 // moving. Both axes are scanned, so a crossroads really does carry traffic both ways
-  static function lanes(city:City, cx:Float, cz:Float, kind:Tile):Array<Lane>
+  static function lanes(city:City, p:PlateBox, kind:Tile):Array<Lane>
     {
       var out = [];
-      var half = (CityConfig.GRID * CELL) / 2;
-      var r2 = CorpStyle.STREET_RADIUS * CorpStyle.STREET_RADIUS;
-      var inR = function(col:Int, row:Int)
-        {
-          var x = col * CELL - half + CELL / 2 - cx;
-          var z = row * CELL - half + CELL / 2 - cz;
-          return x * x + z * z <= r2;
-        };
+      // the SAME predicate CorpStreet emitted the ground with, so a lane can never run over a cell
+      // that was never built — under the plate above all, where an agent walks in the dark
       var ok = function(col:Int, row:Int)
         {
-          return col >= 0 &&
-            row >= 0 &&
-            col < CityConfig.GRID &&
-            row < CityConfig.GRID &&
-            city.tiles[row][col] == kind &&
-            inR(col, row);
+          if (col < 0 ||
+              row < 0 ||
+              col >= CityConfig.GRID ||
+              row >= CityConfig.GRID ||
+              city.tiles[row][col] != kind)
+            return false;
+          var x0 = CorpStreet.cellX(p, col);
+          var z0 = CorpStreet.cellZ(p, row);
+          return CorpStreet.ring(p, x0, x0 + CELL, z0, z0 + CELL);
         };
       for (axis in 0...2)
         {
@@ -237,10 +235,9 @@ class CorpCrowd
                   len++;
                 if (len < CorpStyle.LANE_MIN)
                   continue;
-                var a = CityConfig.cellToWorld(col, row);
                 out.push({
-                  x0: a.x,
-                  z0: a.z,
+                  x0: CorpStreet.cellX(p, col) + CELL / 2,
+                  z0: CorpStreet.cellZ(p, row) + CELL / 2,
                   dx: dc * 1.0,
                   dz: dr * 1.0,
                   len: (len - 1) * CELL * 1.0,

@@ -299,22 +299,31 @@ class CorpStyle
   // the road hierarchy and the building footprints are a city and not a pattern. What is low is
   // the RENDERING: render.World's own pass list is eleven passes and lands a city area at
   // hundreds of draw calls, and nothing down there is closer than 114 units. So this kind emits
-  // its own five merged meshes off that model instead — the LOD is the point of the exercise.
-  public static inline var STREET_ASPHALT = 'textures/corp/street-asphalt.png';
-  public static inline var STREET_PAVEMENT = 'textures/corp/street-pavement.png';
-  public static inline var STREET_ROOF = 'textures/corp/street-roof.png';
-  public static inline var STREET_PODIUM = 'textures/corp/street-podium.png';
-  // how far out from the tower's centre a street cell is still built, world units. beyond this the
-  // fog (FOG_FAR 240) has taken it to the background colour anyway, so the geometry is spent on
-  // nothing
-  public static inline var STREET_RADIUS = 160.0;
-  // the ground tiles' material period, and the buildings'. a road cell is 4 units, so 16 is one
-  // repeat every four cells — coarse on purpose at this distance
-  public static inline var STREET_TILE = 16.0;
-  public static inline var PODIUM_TILE = 10.0;
+  // its own merged meshes off that model instead — the LOD is the point of the exercise.
+  //
+  // AND IT HAS NO ART OF ITS OWN. Every label comes off render.world.DowntownStyle, the very
+  // style the city model is generated with: the tower stands in a downtown, and a second set of
+  // asphalt, paving and curtain wall for the same materials one storey-count away is what made
+  // the drop read as a different zone. The four corp/street-* labels it used to carry are retired.
+  //
+  // THE PLATE IS A HOLE IN IT — see render.corp.CorpStreet.PlateBox. The street is built over the
+  // eight half-areas AROUND the building and never under it, where it is invisible anyway.
+  // `STREET_REACH_FRAC` is how far past the plate's own footprint it goes, as a fraction of the
+  // area's size: 0.5 each hand IS "eight half-areas"
+  public static inline var STREET_REACH_FRAC = 0.5;
   // no street building rises past this, world units. the plate is at 0 and the street at -114, so
   // anything over 114 would come up THROUGH the floor the player is standing on
   public static inline var STREET_MAX_H = 90.0;
+  // what the UNLIT street surfaces are multiplied by. an unlit material renders its albedo
+  // exactly, while the same texture in a real city area is a lambert taking ambient and a moon —
+  // so downtown's pale masonry mid-rises (city/wall-3 at 0.1666 linear) came out as chalk-white
+  // slabs at midnight beside its glass towers at 0.017. Fitted live against the lit panes rather
+  // than derived: this is the one number that says how dark the street is
+  public static inline var STREET_DIM = 0.62;
+  // how far a lit pane stands proud of the curtain wall it is set into. render.world.Windows uses
+  // 0.07 for the same job on a real tower, and it is the same trade: enough to clear the depth
+  // buffer at this range, small enough that the pane does not read as a box on the facade
+  public static inline var LIT_PROUD = 0.07;
 
   // ---- the fake crowd (render.corp.CorpCrowd) --------------------------------------------------
   //

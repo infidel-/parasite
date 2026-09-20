@@ -54,6 +54,10 @@ class CorpWarm
       // carries USE_INSTANCING, the blend and the map, so the facade above covers none of it. no
       // city is generated for the warm: a one-instance batch compiles the same program
       CorpCrowd.warm(sc);
+      // and the street's LIT panes, the one lit material down there: an emissive map plus
+      // alphaTest on a lambert, which neither the facade's basic nor the shell's plain lamberts
+      // cover. no city for this either — one quad per facade family is the same program
+      CorpStreet.warm(sc);
       FacilityDetail.corners(sc, model);
       // and the collector those corners feed, which is NOT optional: FacilityDetail.halos is what
       // CLEARS it, so skipping it here carries these demo quads into the first real tower

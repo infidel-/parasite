@@ -136,10 +136,10 @@ class CorpArea implements Area3D
       // which is deliberate both ways: it is the one thing here that must take no mask (see
       // CorpStreet's header), and it is one Group of four area-spanning meshes, which is exactly
       // what render.Chunks' own size guard would leave parented to the scene anyway
-      var pc = plateCentre();
-      street = CorpStreet.build(scene, game.area.id, pc.x, pc.z);
+      var pb = plateBox();
+      street = CorpStreet.build(scene, game.area.id, pb);
       // into the street's OWN group, so the crowd rides the same transform down to STREET_Y
-      crowd = new CorpCrowd(street.group, street.city, pc.x, pc.z);
+      crowd = new CorpCrowd(street.group, street.city, pb);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -163,15 +163,38 @@ class CorpArea implements Area3D
       attachDbg();
     }
 
-// the floor plate's own centre in world, which is NOT the world origin: a corp area is 65-75 by
-// 50-60 cells and CityConfig.cellToWorld is written against a GRID of 100, so the plate sits off in
-// the -x/-z quadrant. everything below it has to be centred on THIS and not on (0, 0)
-  function plateCentre():{ x:Float, z:Float }
+// the floor plate's own footprint in world, and how far past it the street reaches.
+//
+// NOT THE WORLD ORIGIN, which is the one thing about this that is not obvious: a corp area is
+// 65-75 by 50-60 cells and CityConfig.cellToWorld is written against a GRID of 100, so the plate
+// sits off in the -x/-z quadrant. Everything below it has to be placed against THIS.
+//
+// the box is the structure's OUTER rect (ox1..oy2, the interior grown by the wall ring), because
+// what the street has to keep clear of is the masonry and not the carpet. The reach is half the
+// AREA on each hand — the eight half-areas the street is built over
+  function plateBox():render.corp.CorpStreet.PlateBox
     {
-      if (model.structures.length == 0)
-        return CityConfig.cellToWorld(model.w / 2, model.h / 2);
-      var st = model.structures[0];
-      return CityConfig.cellToWorld((st.x1 + st.x2) / 2, (st.y1 + st.y2) / 2);
+      var c0 = CityConfig.cellToWorld(0, 0);
+      var x1 = model.w - 1;
+      var z1 = model.h - 1;
+      if (model.structures.length > 0)
+        {
+          var st = model.structures[0];
+          c0 = CityConfig.cellToWorld(st.ox1, st.oy1);
+          x1 = st.ox2;
+          z1 = st.oy2;
+        }
+      var c1 = CityConfig.cellToWorld(x1, z1);
+      var cell = CityConfig.CELL;
+      return {
+        // cellToWorld hands back a cell CENTRE, and the footprint is its two outer boundaries
+        x0: c0.x - cell / 2,
+        x1: c1.x + cell / 2,
+        z0: c0.z - cell / 2,
+        z1: c1.z + cell / 2,
+        reachX: model.w * cell * CorpStyle.STREET_REACH_FRAC,
+        reachZ: model.h * cell * CorpStyle.STREET_REACH_FRAC,
+      };
     }
 
 // console debug helper (permanent) — what this corp tower actually built.
@@ -265,6 +288,7 @@ class CorpArea implements Area3D
               walk: street.walk,
               blocks: street.blocks,
               walls: street.walls,
+              lit: street.lit,
               generated: street.city.buildings.length,
             },
             // and what is moving on it. `walkLanes`/`roadLanes` is what the agents are dealt over,
