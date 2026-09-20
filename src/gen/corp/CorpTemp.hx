@@ -66,6 +66,15 @@ class CorpTemp
 
   // how far apart the corridor branches, and the size a room is subdivided above. 9 + 1 wall
   public static inline var ROOM_SIZE = 10;
+  // ...and by how much it may exceed that before the carve cuts it, which is the whole of "the
+  // rooms are too large". The compound asked this question first and answered it with a named
+  // constant for the same reason — gen.facility.FacilityBuilding.SUBDIVIDE_OVER, 1.2.
+  //
+  // MEASURED over 300 seeds / 3,629 rooms at the old 1.5: area median 105, p90 165, max 384, and
+  // a washroom averaging 7 x 10. It is not a regression — `CorpBuilding.hx`'s 1.5 is copied
+  // verbatim from game.CorpAreaGenerator and has never changed — it is the 3D port having made a
+  // 110-cell room legible for the first time
+  public static inline var SUBDIVIDE_OVER = 1.2;
   // the main corridor's width in cells, and a side corridor's
   public static inline var CORRIDOR_W = 3;
   public static inline var SIDE_CORRIDOR_W = 2;

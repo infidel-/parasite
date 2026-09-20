@@ -131,10 +131,16 @@ class CorpBlocks
         // required and a second is allowed where the plate is big enough to carve two
         {
           kind: ROOM_CUBICLE,
+          // 8 x 6 AND NOT 9 x 7, and the number moved because the CARVE moved under it. The mins
+          // were fitted when a floor carried 12 rooms averaging 110 cells; with the cap at
+          // ROOM_SIZE * SUBDIVIDE_OVER it carries 19 averaging 67, and 2 towers in 3,000 had no
+          // room left that cleared 9 x 7 at all — "quota short: room-cubicle got 0", which is a
+          // floor with no cubicle farm on it. A pod row needs 6 clear cells across and the
+          // template's own guard is h >= 5, so 8 x 6 is what the thing actually costs
           min: 1,
           max: 2,
-          minW: 9,
-          minH: 7,
+          minW: 8,
+          minH: 6,
           fit: biggest,
         },
         {
@@ -162,6 +168,19 @@ class CorpBlocks
 // claimed it, which is the same relationship the compound's `yard` has to its plots. The
 // consequence is worth stating — a floor carved into exactly the six rooms the mins want has NO
 // open-plan space at all, and that is correct rather than a miss
+// how many rooms the two 5x5 demands could still legally take. `blocked` is what shrinks it, and a
+// count under two means one of them has nowhere to go — see the loop in `assign`
+  static function homes(nodes: Array<_GenNode>): Int
+    {
+      var n = 0;
+      for (b in nodes)
+        if (!blocked.exists(b.roomID) &&
+            GenTree.width(b) >= 5 &&
+            GenTree.height(b) >= 5)
+          n++;
+      return n;
+    }
+
   public static function assign(state: _CorpState, plate: _GenNode): Array<_GenNode>
     {
       var nodes = [];
@@ -173,23 +192,57 @@ class CorpBlocks
         }
       // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
       blocked = gen.corp.CorpBuilding.passThrough(state);
+
       // and DEAL UNTIL NOTHING IS WALLED IN BEHIND A TOILET. The pre-deal test names the rooms a
       // dead end cannot go in one at a time; two of them in parallel defeat it, and predicting
       // THAT rules out so much of the plate that a third of towers end up with nowhere to put a
       // server room (CorpBuilding.deadEnds carries the measurement). So the deal is checked and
       // re-made instead: 3 towers in 3000 take the second attempt and none has ever taken a third
-      for (attempt in 0...4)
+      //
+      // AND THE RULING-OUT IS NOT ALLOWED TO STARVE THE DEAL, which is what `relaxed` is for.
+      // `deadEnds` is blunt on purpose — one stranded room blocks EVERY toilet and server room on
+      // the floor — so over four attempts `blocked` only ever grows, and once the carve's own cap
+      // came down from ROOM_SIZE * 1.5 to * 1.2 a floor carries 19 rooms instead of 12, the
+      // chains off the corridor are longer, and the fourth attempt could find nothing legal left
+      // at all: 11 towers in 3,000 reported "quota short: room-toilet got 0". A tower with its
+      // washroom behind another room is a defect; a tower with NO washroom is a broken area, so
+      // where the two cannot both be had the deal wins and the walk gives way
+      // WHAT THE LAST ROUND FOUND IN THE WAY is applied at the TOP of the next one and never
+      // after the deal that stands — gen.GenCheck.blocksFit re-reads `blocked` once the area is
+      // built and asserts the deal honours it, so a ruling-out added after the final deal is a
+      // self-inflicted failure ("room-servers dealt a block its own must rejects")
+      var relaxed = false;
+      var bad:Array<Int> = [];
+      for (attempt in 0...8)
         {
+          // ADD ONLY WHAT STILL LEAVES A BOARD TO DEAL ON. `deadEnds` names every WC and server
+          // room on the floor, and unchecked rounds of that rule out every 5 x 5 room there is —
+          // which is the "quota short: room-toilet got 0" this loop exists to avoid, not cause
+          for (id in bad)
+            {
+              blocked.set(id, true);
+              if (homes(nodes) < 2)
+                {
+                  blocked.remove(id);
+                  break;
+                }
+            }
+          if (!relaxed &&
+              homes(nodes) < 2)
+            {
+              blocked = new Map();
+              relaxed = true;
+            }
           for (n in nodes)
             n.kind = '';
           Quota.deal(nodes, demands(), ROOM_OPEN, state.area.rng);
           for (i in 0...nodes.length)
             state.rooms[i].role = roleOf(nodes[i].kind);
-          var bad = gen.corp.CorpBuilding.deadEnds(state);
+          if (relaxed)
+            break;
+          bad = gen.corp.CorpBuilding.deadEnds(state);
           if (bad.length == 0)
             break;
-          for (id in bad)
-            blocked.set(id, true);
         }
       for (n in nodes)
         plate.children.push(n);

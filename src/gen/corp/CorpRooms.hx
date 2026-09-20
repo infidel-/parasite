@@ -25,6 +25,15 @@ class CorpRooms
   public static inline var POD_BAND_H = 6;
   // and how far apart a server room's rack rows stand: a row of racks and an aisle to reach them
   public static inline var RACK_PITCH = 2;
+  // HOW MANY FIXTURES A ROOM GETS, WHICH IS NOT HOW WIDE IT IS. Every one of these runs used to
+  // span the whole wall, so a washroom read as a row of nine basins facing a row of five stalls
+  // and a server room as a warehouse — the fittings scaled linearly with the room and nothing
+  // said they should. A real washroom has three basins whether it is in a small office or a big
+  // one. Centred on their wall rather than started at one end, so the run reads as an
+  // installation and not as a leftover
+  public static inline var BASIN_MAX = 3;
+  public static inline var STALL_MAX = 3;
+  public static inline var RACK_ROWS_MAX = 4;
 
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
 // interchangeable: that one drops _TileRow.col, which is right for the facility's tables (none of
@@ -525,7 +534,7 @@ class CorpRooms
       while (true)
         {
           row++;
-          if (row > 20)
+          if (row > RACK_ROWS_MAX)
             break;
           var ry = room.y1 + 1 + (row - 1) * RACK_PITCH;
           if (ry > room.y2 - 1)
@@ -562,9 +571,11 @@ class CorpRooms
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE2);
       var fixture = Const.TILE_FLOOR_MARBLE2 + UNWALKABLE_TILE_OFFSET;
 
-      // the basins are a continuous counter along the top wall
-      GenTree.add(node, CorpBlocks.ZONE_BASIN_RUN, room.x1, room.y1, room.x2, room.y1);
-      for (x in room.x1...room.x2 + 1)
+      // the basins are a continuous counter along the top wall, BASIN_MAX of them, centred
+      var bn = (room.w < BASIN_MAX ? room.w : BASIN_MAX);
+      var bx = room.x1 + Std.int((room.w - bn) / 2);
+      GenTree.add(node, CorpBlocks.ZONE_BASIN_RUN, bx, room.y1, bx + bn - 1, room.y1);
+      for (x in bx...bx + bn)
         {
           if (cells[x][room.y1 - 1] == BLDG_INNER_DOOR)
             continue;
@@ -574,9 +585,14 @@ class CorpRooms
 
       // and the stalls are separate cells along the bottom one, every other cell so each has its
       // own doorway
-      GenTree.add(node, CorpBlocks.ZONE_STALL_RUN, room.x1, room.y2, room.x2, room.y2);
-      var x = room.x1;
-      while (x <= room.x2)
+      // STALL_MAX of them, and the span they need is every other cell — so 3 stalls want 5 cells
+      var sn = STALL_MAX;
+      while (sn > 1 && 2 * sn - 1 > room.w)
+        sn--;
+      var sx = room.x1 + Std.int((room.w - (2 * sn - 1)) / 2);
+      GenTree.add(node, CorpBlocks.ZONE_STALL_RUN, sx, room.y2, sx + 2 * sn - 2, room.y2);
+      var x = sx;
+      while (x <= sx + 2 * sn - 2)
         {
           if (cells[x][room.y2 + 1] != BLDG_INNER_DOOR)
             {

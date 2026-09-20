@@ -25,6 +25,18 @@ import gen.corp.CorpTemp.*;
 
 class CorpBuilding
 {
+  // the narrowest half a subdivision cut may leave. it is a floor on the jitter and not on the
+  // room: a cut takes the half width, rolls a third 30% of the time and then moves +-2, and this
+  // is what stops that arithmetic producing a slot nothing can be put in.
+  //
+  // 6 AND NOT 4, and the oracle is what says so rather than taste. At 4, with the cap brought
+  // down to ROOM_SIZE * SUBDIVIDE_OVER, the carve minted enough 4-wide slots that 11 towers in
+  // 3,000 had no room left that clears the washroom's and the server room's own 5 x 5 minimum and
+  // came out "quota short: room-toilet got 0". A 4-wide room is also the one an open-plan floor
+  // cannot furnish at all (gen.corp.CorpRooms.open lays no desk under 7), so the same number
+  // fixes both
+  static inline var SPLIT_MIN = 6;
+
 // build the whole plate and push the lift and every room as children of its node
   public static function generate(state: _CorpState, node: _GenNode)
     {
@@ -211,8 +223,9 @@ class CorpBuilding
   public static function passThrough(state: _CorpState): Map<Int, Bool>
     {
       var out = new Map<Int, Bool>();
+      var base = reached(state, -1);
       for (r in state.rooms)
-        if (blocksRoute(state, r.id))
+        if (blocksRoute(state, r.id, base))
           out.set(r.id, true);
       return out;
     }
@@ -245,6 +258,11 @@ class CorpBuilding
               open.push(far);
             }
         }
+      // and it names EVERY WC and server room on the floor, not just the one in the way. Narrowed
+      // to those that individually fail blocksRoute it went from 1 failing seed in 3,000 to more
+      // than 30: the case this exists for is TWO dead ends in parallel, where neither of them on
+      // its own disconnects anything and the pair does. What keeps the bluntness affordable is
+      // the cap on how much of it CorpBlocks.assign is allowed to act on per round
       for (r in state.rooms)
         if (!seen.exists(r.id))
           return [for (d in state.rooms) if (isDeadEnd(state, d.id)) d.id];
@@ -260,9 +278,9 @@ class CorpBuilding
       return false;
     }
 
-// would shutting this room off leave another room with no way to the corridor? walked over the
-// DOOR GRAPH and not the tiles, from room 0 — the corridor, doorsSane's own sentinel
-  static function blocksRoute(state: _CorpState, roomID: Int): Bool
+// every room the corridor reaches over the DOOR GRAPH — not the tiles — with `skip` shut off.
+// `skip` of -1 shuts nothing and gives the baseline. From room 0, doorsSane's own sentinel
+  static function reached(state: _CorpState, skip: Int): Map<Int, Bool>
     {
       var seen = new Map<Int, Bool>();
       seen.set(0, true);
@@ -274,15 +292,30 @@ class CorpBuilding
             {
               var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
               if (far < 0 ||
-                  far == roomID ||
+                  far == skip ||
                   seen.exists(far))
                 continue;
               seen.set(far, true);
               open.push(far);
             }
         }
+      return seen;
+    }
+
+// would shutting this room off cut the corridor off from a room it OTHERWISE reaches?
+//
+// AGAINST THE BASELINE, which is the whole of the fix and was the bug: this used to ask whether
+// every room in state.rooms was still seen, so ONE room the corridor cannot reach at all made it
+// true for every roomID — and CorpConnect's guarantee is that the LIFT reaches every room over
+// TILES, which is a different graph from the doors'. Measured on seed 777: all 18 rooms came back
+// blocked, CorpBlocks.assign had nowhere legal left for either 5 x 5 demand, and the protection
+// turned itself off entirely — the server room behind the toilet that started all this
+  static function blocksRoute(state: _CorpState, roomID: Int, base: Map<Int, Bool>): Bool
+    {
+      var seen = reached(state, roomID);
       for (r in state.rooms)
         if (r.id != roomID &&
+            base.exists(r.id) &&
             !seen.exists(r.id))
           return true;
       return false;
@@ -299,43 +332,53 @@ class CorpBuilding
           {
             if (cells[x][y] != BLDG_ROOM)
               continue;
+            // CUT UNTIL IT FITS, and the loop is the fix. This used to cut ONCE and then mark
+            // whatever was left at (x, y) done — but a cut makes TWO rooms, and only the far one
+            // stays BLDG_ROOM for the scan to find again. The near one was stamped finished at
+            // whatever size one cut left it, which is where the 20-to-26-cell tail came from:
+            // 235 rooms of 3,629, exactly one cut short of the cap.
+            //
+            // (x, y) is the room's TOP-LEFT — the scan is row-major and getRoom measures right
+            // and down from where it is given, never walking back — and it stays the top-left of
+            // the near product, so re-measuring there is what lets the same cell be cut twice
             var room = getRoom(cells, x, y);
-            var dir = 0;
-            if (room.w > ROOM_SIZE * 1.5)
-              dir = DIR_DOWN;
-            if (room.h > ROOM_SIZE * 1.5)
-              dir = DIR_RIGHT;
-            if (dir == 0)
+            var cap = ROOM_SIZE * SUBDIVIDE_OVER;
+            while (true)
               {
-                markRoom(cells, room, BLDG_ROOM_MARKED);
-                continue;
+                var dir = 0;
+                if (room.w > cap)
+                  dir = DIR_DOWN;
+                if (room.h > cap)
+                  dir = DIR_RIGHT;
+                if (dir == 0)
+                  break;
+                var sx = 0, sy = 0;
+                if (dir == DIR_DOWN)
+                  {
+                    var neww = Std.int(room.w / 2);
+                    if (area.chance(30))
+                      neww = Std.int(room.w / 3);
+                    neww += area.random(4) - 2;
+                    if (neww < SPLIT_MIN)
+                      neww = SPLIT_MIN;
+                    sx = room.x1 + neww;
+                    sy = room.y1;
+                  }
+                else
+                  {
+                    var newh = Std.int(room.h / 2);
+                    if (area.chance(30))
+                      newh = Std.int(room.h / 3);
+                    newh += area.random(4) - 2;
+                    if (newh < SPLIT_MIN)
+                      newh = SPLIT_MIN;
+                    sx = room.x1;
+                    sy = room.y1 + newh;
+                  }
+                drawLine(cells, sx, sy, dir, BLDG_INNER_WALL);
+                room = getRoom(cells, x, y);
               }
-
-            var sx = 0, sy = 0;
-            if (dir == DIR_DOWN)
-              {
-                var neww = Std.int(room.w / 2);
-                if (area.chance(30))
-                  neww = Std.int(room.w / 3);
-                neww += area.random(4) - 2;
-                if (neww < 4)
-                  neww = 4;
-                sx = room.x1 + neww;
-                sy = room.y1;
-              }
-            else
-              {
-                var newh = Std.int(room.h / 2);
-                if (area.chance(30))
-                  newh = Std.int(room.h / 3);
-                newh += area.random(4) - 2;
-                if (newh < 4)
-                  newh = 4;
-                sx = room.x1;
-                sy = room.y1 + newh;
-              }
-            drawLine(cells, sx, sy, dir, BLDG_INNER_WALL);
-            markRoom(cells, getRoom(cells, x, y), BLDG_ROOM_MARKED);
+            markRoom(cells, room, BLDG_ROOM_MARKED);
           }
     }
 
