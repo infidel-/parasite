@@ -577,8 +577,7 @@ class FacilityRooms
       for (y in room.y1...room.y2 + 1)
         for (x in room.x1...room.x2 + 1)
           {
-            if (cells[x][y] < Const.TILE_LABS_TABLE_3X3_7 ||
-                cells[x][y] > Const.TILE_LABS_TABLE2_1X1)
+            if (!Const.isTableTile(cells[x][y]))
               continue;
             if (!area.hasObjectAt(x, y))
               {
@@ -608,8 +607,7 @@ class FacilityRooms
 // render.facility.FacilityModel.tableOf derives m.table from
   static inline function isTableCell(cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
-      return (cells[x][y] >= Const.TILE_LABS_TABLE_3X3_7 &&
-        cells[x][y] <= Const.TILE_LABS_TABLE2_1X1);
+      return Const.isTableTile(cells[x][y]);
     }
 
 // drop one worktop of every pair that touches only at a CORNER.

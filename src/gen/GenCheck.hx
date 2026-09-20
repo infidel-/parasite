@@ -236,8 +236,7 @@ class GenCheck
 // worktop out of
   inline function table(ctx: GenCtx, x: Int, y: Int): Bool
     {
-      return (ctx.cells[x][y] >= Const.TILE_LABS_TABLE_3X3_7 &&
-        ctx.cells[x][y] <= Const.TILE_LABS_TABLE2_1X1);
+      return Const.isTableTile(ctx.cells[x][y]);
     }
 
 // a washroom hangs off a CORRIDOR, through exactly ONE door.
@@ -546,9 +545,7 @@ class GenCheck
       for (y in 0...ctx.height)
         for (x in 0...ctx.width)
           {
-            var t = ctx.cells[x][y];
-            if (t < Const.TILE_LABS_TABLE_3X3_7 ||
-                t > Const.TILE_LABS_TABLE2_1X1)
+            if (!Const.isTableTile(ctx.cells[x][y]))
               continue;
             if (!ctx.hasObjectAt(x, y))
               free++;

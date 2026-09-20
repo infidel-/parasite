@@ -269,7 +269,11 @@ class FacilityModel
             var t = area.getCellType(col, row);
             m.surf[row][col] = surfOf(t);
             m.wall[row][col] = wallOf(t);
-            m.table[row][col] = tableOf(t);
+            // a worktop's SHAPE is not read at all — the generator deals 3x1 and 1x3 runs, a 1x1
+            // and a 2x3 or 3x2 island, and FacilityTables recovers every one of them from
+            // neighbours. this used to carry its own copy of the tile test; see Const.isTableTile
+            // for what the generator having a DIFFERENT copy of it cost
+            m.table[row][col] = Const.isTableTile(t);
             m.parking[row][col] = (t == Const.TILE_PARKING ||
               t == Const.TILE_PARKING_CAR ||
               t == Const.TILE_PARKING_CAR_ORIGIN);
@@ -446,22 +450,6 @@ class FacilityModel
       if (t >= Const.OFFSET_ROW8)
         return TILE;
       return NONE;
-    }
-
-// does this tile id paint a laboratory bench?
-//
-// the two table families (Const.TILE_LABS_TABLE_* and TILE_LABS_TABLE2_*) occupy columns 0..7 of
-// tileset rows 8..11 and nothing else lives in that block — the corp tables and the wood/marble ones
-// start at column 8 — so this is the block test rather than a list of the twenty-two Const names
-// that spell out its cells. their SHAPE is not read at all: the generator deals 3x1 and 1x3 runs, a
-// 1x1 and a 2x3 or 3x2 island, and the emitter recovers every one of them from neighbours
-  static inline function tableOf(t:Int):Bool
-    {
-      var stride = Const.OFFSET_ROW9 - Const.OFFSET_ROW8;
-      var i = t - Const.OFFSET_ROW8;
-      return i >= 0 &&
-        i < 4 * stride &&
-        i % stride < 8;
     }
 
 // what a tile id blocks

@@ -1018,7 +1018,7 @@ class Const
   public static var OFFSET_ROW8 = 128;
   public static var OFFSET_ROW9 = 144;
   public static var OFFSET_ROW10 = 160;
-  // NOTE: first table tile! important for clue spawn!
+  // NOTE: a worktop tile is anything isTableTile() says it is — do NOT read the ids below as a range
   public static var TILE_LABS_TABLE_3X3_7 = OFFSET_ROW8 + 0;
   public static var TILE_LABS_TABLE_3X3_8 = OFFSET_ROW8 + 1;
   public static var TILE_LABS_TABLE_3X3_9 = OFFSET_ROW8 + 2;
@@ -1095,9 +1095,33 @@ class Const
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
   public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
   public static var TILE_LABS_TABLE2_3X1_3 = OFFSET_ROW11 + 6;
-  // NOTE: last table tile! important for clue spawn!
-  // change check in AreaGame.initSpawnPoints() if you add more tables
-  public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
+  // this used to be OFFSET_ROW11 + 3 — the SAME id as TILE_LABS_TABLE_1X1 above it — under a note
+  // calling it the last table tile. It was never laid, only read as the top of a range, and that
+  // range is what isTableTile() replaces; see there for what the lie cost
+  public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 7;
+
+// is this tile id a LABORATORY worktop — the thing render.facility.FacilityTables raises a slab on
+// and gen.facility.FacilityRooms deals out in runs.
+//
+// A STRIDE TEST AND NOT A RANGE, because only the first 8 COLUMNS of tile rows 8-11 carry one: the
+// back half of those same rows is the corp office's wood, carpet and marble furniture, which
+// game.CorpAreaGenerator lays and no facility ever does.
+//
+// FIVE PLACES ASKED IT AS THE FLAT RANGE TILE_LABS_TABLE_3X3_7 .. TILE_LABS_TABLE2_1X1 and that
+// range is wrong at BOTH ends. It takes in the corp furniture above; worse, it STOPPED AT ROW 11
+// COLUMN 3 and so missed TILE_LABS_TABLE2_3X1_1..3, the drawer run gen.blocks.RoomBlock lays along
+// every top wall. render.facility.FacilityModel.tableOf had the stride rule and the generator had
+// the range, so a drawer run was a full bench on screen and NOTHING AT ALL to cullDiagonalTables,
+// GenCheck.tablesSane, clearTableSpots and the clue spawn — which is how two worktops crossing at a
+// corner got reported a third time, at 26,3 / 27,4, over an oracle reporting 20000 clean seeds
+  public static inline function isTableTile(t:Int):Bool
+    {
+      var stride = OFFSET_ROW9 - OFFSET_ROW8;
+      var i = t - OFFSET_ROW8;
+      return i >= 0 &&
+        i < 4 * stride &&
+        i % stride < 8;
+    }
 
   // === row 12 - corpo
   public static var OFFSET_ROW12 = 192;

@@ -396,8 +396,7 @@ class AreaGame extends _SaveObject
         for (x in 0...width)
           {
             // tables only
-            if (_cells[x][y] < Const.TILE_LABS_TABLE_3X3_7 || 
-                _cells[x][y] > Const.TILE_LABS_TABLE2_1X1)
+            if (!Const.isTableTile(_cells[x][y]))
               continue;
             // check if there's an object there
             if (hasObjectAt(x, y))
