@@ -1739,3 +1739,36 @@ eight-neighbour scan in `game.PlayerArea` pay for — `getObjectsInRadius` is eu
 radius 1 was the four compass cells and a diagonal (distance squared 2) fell outside it.
 
 Verdict: **KEEP.**
+
+## The fake cast shadow was rooted on the cell, and never saw the animation channel (`render/actors/LampShadows.hx`)
+
+Two reports off one function, `LampShadows.actorShadow`.
+
+**It was rooted on the CELL, and the sprite is not drawn there.** `Sprites.paint` leans every
+upright quad back by `TILT` 0.6 rad **about the quad's own centre**, so the content bottom — the
+part that reads as standing on the floor — swings toward the camera by its drop below that centre
+times `sin(TILT)`. Measured live off the built scene by recovering each shadow's root from its
+quad (`feet = position - localY * scale.y * SIZE * 0.5`): every root sat **exactly on its cell
+centre** before, and sits **+0.847 in z** after, which is `SIZE * 0.5 * sin(TILT)` for a
+silhouette whose content reaches the cell's bottom edge. That is 21% of a cell of visible gap.
+
+The expression is not new — `FacilityDeco.poolOf` computes it for a bench decoration's contact
+pool and `FacilityStyle.TABLE_POOL_DZ`'s note records the same fault being reported once already
+("the pool was at the cell centre and the object was drawn ahead of it"). It is taken off the
+silhouette's OWN alpha box and not off a constant: `Sprites.shadowContent` was building its
+`GroundSprite` with `by: 0.0` and throwing the real content bottom away, so that had to be carried
+through first. The blur pad is symmetric, so it moves the content against the CANVAS and not
+against the atlas cell — `base.by` still holds. Measured: the player's host sprite is 0.156 (glue
+0.582); the lab's wall fittings are 0 (glue 0.847), which is why every caster in one frame read
+the same number.
+
+**And `render.anim.Effect` was read in exactly one place.** `a.fx`'s world offset is laid over the
+billboard in `Actors.drawActor` and nowhere else, so through a `Lunge`, a `MeleeLunge`, a `Shake`
+or a `Leap` the sprite slid across the tile while its shadow stood still on the cell it started
+from. `offx`/`offz` are added now. `offy` deliberately is not — a leaping actor's shadow belongs
+on the ground it left — and `fx.scale` goes with it, because `CastShadows.project` has no scale
+channel and a `Pop` lasts 200ms.
+
+Costs nothing: same quad count, same material, two adds and a cached multiply per caster.
+
+Verdict: **KEEP.**

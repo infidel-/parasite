@@ -329,6 +329,27 @@ class LampShadows {
       // the wall. a fallen corpse carries the same offset for its own reason. see ActorAnim.Actor
       var ax = a.x + a.offx;
       var az = a.z + a.offz;
+      // AND THE ANIMATION OFFSET IS PART OF THE POSE TOO. render.anim.Effect writes a world offset
+      // that render.Actors.drawActor lays over the billboard, and it was read there and nowhere
+      // else — so through a lunge, a melee swing, a shake or a leap the sprite slid across the tile
+      // while its shadow stood still on the cell it started from. offy is DELIBERATELY not taken:
+      // a leaping actor's shadow belongs on the ground it left, not in the air with it.
+      // ponytail: fx.scale is skipped with it — CastShadows.project has no scale channel and a Pop
+      // lasts 200ms; give it one if a sustained swell ever needs it
+      if (a.fx != null)
+        {
+          ax += a.fx.offx;
+          az += a.fx.offz;
+        }
+      // GLUE THE ROOT TO THE DRAWN FEET. Sprites.paint leans every upright quad back by Sprites.TILT
+      // about its own CENTRE, so the content's bottom — the part that reads as standing on the floor
+      // — swings toward the camera by its drop below that centre times sin(TILT), up to 0.85 units
+      // for a full-size actor. the shadow was rooted on the cell and the actor was drawn in front of
+      // it. render.facility.FacilityDeco.poolOf is this same expression for a bench decoration's
+      // contact pool, and FacilityStyle.TABLE_POOL_DZ's note records it being reported once already.
+      // off the silhouette's OWN alpha box (gs.by) and not a constant: a sprite whose art stops
+      // short of the cell's bottom edge hangs less far forward than one that fills it
+      az += Sprites.SIZE * (0.5 - gs.by) * Math.sin(Sprites.TILT);
       CastShadows.project(sprites, gs, ax, az, floor, a.op, barrelLights, RenderConfig.FLAME.shadowMax);
       CastShadows.project(sprites, gs, ax, az, floor, a.op,
         render.world.IndoorMask.indoorAt(a.col, a.row) ? lampIn : lampOut,

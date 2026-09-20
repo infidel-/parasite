@@ -875,7 +875,12 @@ class Sprites {
       var tex = mkTex(bc);
       // 256 for a bench decoration pack cell, 128 for an actor sheet, 64 otherwise
       var t = atlasFor(imageName, ix, iy, male, skin).t;
-      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: 0.0 };
+      // `by` IS THE CONTENT BOTTOM AND NOT THE PAD'S, and it is carried through rather than zeroed
+      // because render.actors.LampShadows needs it: Sprites.paint leans the upright quad back about
+      // its own CENTRE, so the drawn base lands well in front of the cell and a shadow rooted on the
+      // cell is a shadow the actor stands clear of. the blur pad is symmetric, so it moves the
+      // content's bottom against the CANVAS and not against the atlas cell — `base.by` still holds
+      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: base.by };
       shadowCache.set(key, gs);
       return gs;
     }
