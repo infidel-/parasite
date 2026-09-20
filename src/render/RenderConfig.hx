@@ -827,6 +827,18 @@ class RenderConfig {
     // call of the eleven — CHAIR_H's own note argues it is the case FOR a generator — but five arms
     // at 72 degrees is a loop index, and the bake was a REJECT at 9 components / 61.8% anyway
     facilityToiletHand: 'models/facility/toilet-hand.glb',  // open bowl, seat ring, 692 tris
+    // THE CORP TOWER'S SEVEN (render.corp.CorpProps). Five of them are hand-modelled, which is the
+    // opposite balance to the compound's and is not a change of policy: every brief on this floor
+    // plate is a NUMBER off CorpStyle — a chair that has to sit at DESK_H, a monitor that has to
+    // stand on it, a pan built to WC_D so its cistern meets the divider. The plant is the one shape
+    // no lathe states, and the cooler and the printer are stepped bodies, i.e. silhouette
+    corpChair: 'models/corp/chair.glb',        // task chair, split back, five-star base, 1,344 tris
+    corpMonitor: 'models/corp/monitor.glb',    // 16:9 panel on a stainless stem, 268
+    corpKeyboard: 'models/corp/keyboard.glb',  // a wedge, 44
+    corpWc: 'models/corp/wc.glb',              // open bowl, water at the profile's own cap, 652
+    corpPlant: 'models/corp/plant.glb',        // potted ficus, TRELLIS, the one generated silhouette
+    corpCooler: 'models/corp/cooler.glb',      // water cooler, bottle on a lacquer cabinet
+    corpPrinter: 'models/corp/printer.glb',    // multifunction copier, drawer pedestal, amber panel
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

@@ -48,6 +48,8 @@ class CorpArea implements Area3D
   var shells:Array<Shell>;
   var doors:Array<DoorBatch>;
   var fit:CorpFurniture.CorpFit;                // what the furniture pass emitted, for __corp()
+  var glb:Array<render.Models.InstancedProp>;   // the seven prop batches, culled on one radius
+  var glbN:CorpProps.CorpPropSet;               // and what went into them, for __corp()
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -105,6 +107,13 @@ class CorpArea implements Area3D
       // prop's footprint is not known until its builder has run, and the attach above had to come
       // first because ContactMask.patch reads `on` when a floor material is created
       fit = CorpFurniture.build(scene, model);
+      // and the glb props ON that furniture and against the walls round it. AFTER the fittings
+      // because a chair's seat cell and a printer's wall are both read off the same grid the
+      // fittings were emitted from, and BEFORE the contact repaint below because every one of
+      // them lays its own footprint into the field
+      var gp = CorpProps.build(scene, model);
+      glb = gp.batches;
+      glbN = gp.n;
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -200,6 +209,11 @@ class CorpArea implements Area3D
             windows: model.windows,
             doors: leaves,
             objProps: objProps,
+            // the glb families. `monitors` counts WORKSTATIONS and not screens, so keyboards
+            // should match it exactly; `chairs` is every manned desk cell and is therefore always
+            // the larger of the two (CorpStyle.WORK_EVERY thins the workstation, never the seat)
+            glb: glbN,
+            glbBatches: [for (b in glb) (b.mesh == null ? 0 : b.matrices.length)],
             surfs: bySurf,
             // and the FURNITURE, which is eight families over nine merged meshes and therefore has
             // no instance count anywhere — the same blindness __facility() records for every one of
@@ -253,6 +267,8 @@ class CorpArea implements Area3D
       VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update([], opts.playerCol, opts.playerRow, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
+      for (p in glb)
+        render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);
     }
 
   public function setTactical(v:Bool):Void

@@ -130,6 +130,53 @@ class CorpStyle
   public static inline var RACK_TILE = 2.0;
   public static inline var MIRROR_TILE = 4.4;
 
+  // ---- the glb props -------------------------------------------------------------------------
+  //
+  // seven models, and the split between them is docs/3d-models.md's own triage rather than a
+  // preference: the PLANT is generated (a head of forty leaves has no parametric description), and
+  // the chair, the monitor, the keyboard and the WC pan are HAND-MODELLED because each of their
+  // briefs is a number on this list. The cooler and the printer are generated because a stepped
+  // body with a recessed tray IS a silhouette.
+  //
+  // every height is the number render.Models.instanced scales the mesh to, and it scales by HEIGHT
+  // ALONE — so a width here is a claim about the footprint the contact field darkens and never a
+  // second scale.
+  public static inline var CHAIR_H = 2.2;      // 1.1 m to the top of the back
+  public static inline var CHAIR_W = 1.3;
+  public static inline var CHAIR_YAW_JIT = 0.30;
+  // how far the chair's centre stands back from the desk cell's own edge, into the seat cell
+  public static inline var CHAIR_OUT = 1.35;
+  public static inline var MON_H = 1.66;       // the built mesh exactly, so the batch's scale is 1
+  public static inline var MON_W = 1.95;
+  public static inline var MON_D = 0.45;
+  public static inline var KEY_H = 0.09;
+  public static inline var KEY_W = 1.60;
+  public static inline var KEY_D = 0.58;
+  // where the two sit on the worktop, measured from the desk cell's BACK edge forward
+  public static inline var MON_BACK = 0.85;
+  public static inline var KEY_FWD = 2.55;
+  // one desk cell in this many carries a workstation. A DESK RUN IS NOT A CALL CENTRE: every cell
+  // manned puts a monitor every 2 m down a wall, which reads as a bank of screens rather than as
+  // an office
+  public static inline var WORK_EVERY = 2;
+  public static inline var PLANT_H = 2.8;      // 1.4 m
+  public static inline var PLANT_W = 1.35;
+  public static inline var COOLER_H = 2.2;     // 1.1 m
+  public static inline var COOLER_W = 0.55;
+  public static inline var PRINTER_H = 2.2;
+  public static inline var PRINTER_W = 1.05;
+  public static inline var PRINTER_D = 1.30;
+  public static inline var WC_H = 1.5;
+  public static inline var WC_W = 0.80;
+  public static inline var WC_D = 1.40;        // built to this exactly, so the cistern meets masonry
+  // how far a wall-hugging prop's back stands off the masonry FACE (and not off the cell boundary,
+  // which is a whole unit away — FacilityGeom.slab is what a corp wall really is)
+  public static inline var PROP_GAP = 0.10;
+  // one candidate cell in this many carries a floor prop, per family. a stride over the whole
+  // candidate list and never a counter cap: the scan is row-major, so a cap spends the allowance
+  // on the northernmost rooms (render.facility.FacilityDebris records it)
+  public static inline var FLOOR_MAX = 10;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts

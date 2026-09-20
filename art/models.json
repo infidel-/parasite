@@ -1220,6 +1220,70 @@
       "note": "the receptacle a ship part is installed into (render.world.ObjModels). HAND-MODELLED, models-src/scenario-a/scenario_build.py: 432 tris, check clean. The third silhouette in the shed: no head and no courses, a squat collar with a socket plate looking STRAIGHT UP -- which is the only face that can say 'a thing goes in here' to a camera that looks down. Same console sheet, so no new art beyond the face already generated for it It shares the console's emissive map, which is what makes an empty socket and a filled one two rows of render.world.ObjModels on ONE model: the scenario rewrites the object's infoID on install and the second row is the same prop with 2.5x the lamp level and a faster, shallower breath.",
       "last_converted": "2026-09-18T21:40:02Z",
       "last_sig": "n1/-1/512/0.005/-/scenario-a/console-emissive.png@0.35"
+    },
+    "corp/plant": {
+      "src": "corp/corp-plant.glb",
+      "tris": 1200,
+      "tex": 512,
+      "note": "the tower's potted ficus, TRELLIS off a lifted reference (p50 76). ORGANIC IS THE ONE SHAPE A LATHE DOES NOT STATE, which is why this one prop of the corp set is generated where the chair, the monitor and the pan are hand-modelled: a head of forty leaves has no parametric description and its silhouette IS the prop. propstat calls it a REJECT at 5 components / 84.4% largest and that is the gate misreading a plant -- the four extra components are leaf clusters off the trunk, which is what a tree is. NO baseColor: the bake sampled 67/91/16, luma 75, already inside the INDOOR ~78 band (the 46-52 the tool quotes is the outdoor family), and chroma 75 is the highest in the corp set -- a green that survives a blue lamp is exactly what the accent rule asks for. LIFT 0.83, fitted on the BUILT glb: the bake's own self-occlusion between forty leaves took it to 58.7 srgb, which against a 84-101 carpet is a dark blob rather than a plant. A gamma and not a baseColor, which only multiplies down.",
+      "last_converted": "2026-09-20T12:16:18Z",
+      "last_sig": "n1/1200/512/0.01/-/-/lf0.83",
+      "lift": 0.83
+    },
+    "corp/cooler": {
+      "src": "corp/corp-cooler.glb",
+      "tris": 1200,
+      "tex": 512,
+      "baseColor": [
+        0.17,
+        0.17,
+        0.17,
+        1
+      ],
+      "note": "the water cooler, TRELLIS. BASECOLOR 0.17 AND THAT NUMBER IS THE WHOLE ENTRY: the bake came back at sampled 212 srgb because the corp subject clause names MATTE WHITE LACQUER and a white object photographs white -- the reference measured p50 213 against the 69-77 band, and propstat's --lift crushed it to p50 64 with p05 5 rather than darkening it, because lift is a gamma that lifts DARKS. So the reference shipped bright and the value is taken on the built glb instead, where a flat linear multiply preserves the ratios: 0.17 lands it near 95 srgb, the brightest prop on the floor plate, which is what a white cabinet under a blue lamp should be. FINDING: a 'premium corporate' brief cannot reach the reference band at all, and the fix is downstream, not another roll.",
+      "last_converted": "2026-09-20T12:16:47Z",
+      "last_sig": "n1/1200/512/0.01/-/-/bc0.17,0.17,0.17,1"
+    },
+    "corp/printer": {
+      "src": "corp/corp-printer.glb",
+      "tris": 1200,
+      "tex": 512,
+      "note": "the multifunction printer, TRELLIS, and the best-conditioned bake of the three: the stepped body -- drawer pedestal, recessed output slot, set-back scanner lid, angled amber control panel -- is silhouette all the way down, which is what the emit-it test asks for. 12 components / 61.2% largest is a REJECT by the gate and is wrong here for the plant's reason: the components are the four feet, the panel and the lid, all of them real. NO baseColor -- sampled 81/86/89, luma 86, already in the indoor band because the white half of the body is answered by the anodised half.",
+      "last_converted": "2026-09-20T12:18:00Z",
+      "last_sig": "n1/1200/512/0.01/-/-"
+    },
+    "corp/chair": {
+      "src": "corp/corp-chair.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the task chair, hand-modelled (models-src/corp/chair_build.py) 1,344 tris, 1.285 x 1.352 x 2.199, holes 0, coplanar 0. A CLONE OF THE COMPOUND'S SCRIPT AND NOT OF ITS ART, which is the split the whole corp port runs on: five arms at 72 degrees, a wheel resting at R*cos(pi/n) and a raked back whose length comes off CHAIR_H are arithmetic that belongs to neither area, and the sheet, the tan acoustic felt over anodised aluminium and stainless, is new. The compound's own note stands: the TRELLIS chair was a REJECT at 9 components / 61.8%, so a generated corp chair was never on the table. LIFT 0.84 on the built glb: 56.5 srgb out of the box, and a chair is seen against the desk it is pulled up to (desk-top 94.7) rather than against the corridor.",
+      "last_converted": "2026-09-20T12:22:51Z",
+      "last_sig": "n1/-1/512/0.01/-/-/lf0.84",
+      "lift": 0.84
+    },
+    "corp/monitor": {
+      "src": "corp/corp-monitor.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the desk monitor, hand-modelled (models-src/corp/computer_build.py) 268 tris, 1.95 x 0.451 x 1.661. 16:9 against the compound's 4:3, a 0.045 bezel inset against its 0.075 -- a premium panel is nearly all glass and that inset is the entire visible difference at the game camera -- and a STAINLESS foot and neck, which is why cell 2 of the corp sheet is a brushed swatch where the compound spends it on a tower front. THE TOWER IS NOT PORTED: it stood under a desk, and the corp desk carcass (render.corp.CorpFurniture) is closed to the floor.",
+      "last_converted": "2026-09-20T12:27:54Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/keyboard": {
+      "src": "corp/corp-keyboard.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the keyboard, hand-modelled, 44 tris, a WEDGE 0.05 at the front lip to 0.089 at the back -- the one thing a flat box never reads as. Its cell is cropped to the KEY FIELD (rows 9..228 of 256, measured on the built sheet): the bare chassis below the keys, mapped over the whole cell, lands as the front third of the keyboard and reads as a keyboard inside a block, which is the compound's own finding one prop over.",
+      "last_converted": "2026-09-20T12:27:54Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/wc": {
+      "src": "corp/corp-wc.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the WC pan, hand-modelled (models-src/corp/toilet_build.py) 652 tris, 0.76 x 1.400 x 1.500, holes 0, coplanar 0 -- built to its DEPTH as well as its height, so the cistern back lands on the divider rather than floating off it. ITS SHEET IS A PASTE AND NOT A GENERATION: a pan is three flat materials and a 64-pixel water patch, so corp's toilet-sheet.png is composited out of art the tower already owns -- textures/corp/wall-washroom flattened and gamma'd to a 115-luma glaze, and the chair sheet's anodised and stainless bands for the seat and the flush plate -- into the band geometry (edges at v 0.4965 / 0.7456) the cloned script's rects are measured to.",
+      "last_converted": "2026-09-20T12:29:48Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
     }
   }
 }

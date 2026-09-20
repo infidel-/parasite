@@ -2116,3 +2116,82 @@ Facility re-walked after the `tableOf` / `fit` split and byte-identical on every
 sinks 24, clutter 220, work 12. Both oracles green at 300 seeds.
 
 Verdict: **KEEP.**
+
+## The corp tower's glb props: seven models, five of them hand-modelled (phase 5 of the 2D → 3D port)
+
+A task chair at every manned desk, a monitor and a keyboard on half of them, a WC pan in every
+stall, and a potted plant, a water cooler and a printer standing against the walls. One pass
+(`render/corp/CorpProps.hx`, ~300 lines), seven `Models.instanced` batches, **+7 draw calls exactly
+— one per batch** (A/B/A/B at a pinned free-cam pose over an open-plan bay, `calls` **45 on / 38
+off** three times running, identical each time; `tris` 158,758 / 14,450).
+
+**FIVE OF SEVEN ARE HAND-MODELLED, WHICH IS THE OPPOSITE BALANCE TO THE COMPOUND'S AND NOT A CHANGE
+OF POLICY.** `docs/3d-models.md`'s fourth route says to hand-model when the brief is a NUMBER, and
+on a floor plate nearly every brief is: a chair that has to sit at `DESK_H`, a monitor that has to
+stand on it, a pan built to `WC_D` so its cistern meets the divider rather than floating off it.
+Three of the four are CLONES of the compound's own build scripts with the paths and the numbers
+changed — which is the same split the whole port runs on. The arithmetic in `chair_build.py` (five
+arms at 72°, a wheel resting at `R·cos(π/n)`, a raked back whose length comes off `CHAIR_H`)
+belongs to neither area; only the sheet does.
+
+**BLENDER IS NOT OPEN HERE AND DID NOT NEED TO BE.** The `blender` MCP drives a live session and
+refused (`Cannot connect to Blender at localhost:19876`), and its CLI fallback wants `BLENDER_PATH`.
+`blender.exe --background --python <script>` across the WSL boundary runs the same scripts
+unchanged — `models-src` is a symlink to a Windows path, so every absolute path in them already
+resolves. One throwaway `_preview.py` (import glb → ortho camera at 35°/28° → EEVEE 420px) is what
+made the loop a loop; `BLENDER_EEVEE_NEXT` is gone in 5.1 and the enum is plain `BLENDER_EEVEE`.
+
+**A "PREMIUM CORPORATE" BRIEF CANNOT REACH THE REFERENCE VALUE BAND AT ALL, AND THE FIX IS
+DOWNSTREAM.** `style_corp` names MATTE WHITE LACQUER, so the cooler's reference measured **p50 213**
+and the printer's **208** against the 69-77 that bakes correctly. `propstat --lift 74` does not
+correct that: lift is a gamma and lifts DARKS hardest, so it took the cooler to **p50 64 with p05
+5** and the printer to **p50 0** — both destroyed. So the references shipped bright and the value
+was taken on the BUILT glb, where a flat linear `baseColor` preserves the ratios: cooler **0.17**,
+landing it at 92 srgb. Same conclusion as phase 3's absurd darkening gammas, from the other end.
+
+The built ladder, against the plate's own (carpet 84-101, desk-top 94.7, desk-body 58.2):
+
+| prop | route | tris | built srgb | why |
+|---|---|---|---|---|
+| `corp/keyboard` | Blender | 44 | 50.9 | a wedge, 0.05 front lip to 0.089 back |
+| `corp/monitor` | Blender | 268 | 70.5 | 16:9, 0.045 bezel inset (compound 0.075), stainless stem |
+| `corp/chair` | Blender | 1,344 | 71.5 | `lift` 0.84 on the built glb, from 56.5 |
+| `corp/plant` | TRELLIS | 4,206 | 72.9 | `lift` 0.83, from 58.7 — self-occlusion between forty leaves |
+| `corp/printer` | TRELLIS | 1,200 | 87.6 | white half answered by the anodised half, no correction |
+| `corp/wc` | Blender | 652 | 91.0 | built to `WC_D` 1.400 exactly |
+| `corp/cooler` | TRELLIS | 1,198 | 92.0 | `baseColor` 0.17, the brightest thing on the plate |
+
+**`propstat`'s COMPONENTS GATE IS WRONG ON A MULTI-PART OBJECT** and all three bakes tripped it:
+plant 5 components / 84.4% largest, printer 12 / 61.2%, cooler 4 / 48.4%, every one a REJECT by the
+rule. Looked at, the components are leaf clusters off a trunk, four feet and a scanner lid, and a
+bottle sitting on a cabinet — real parts of real objects. The gate reads a blob cloud and a genuine
+assembly the same way; the preview render is what tells them apart, and it cost one Blender call.
+
+Live census off `__corp().glb` on a real tower: **105 chairs, 56 workstations, 10 plants, 8 coolers,
+9 printers, 4 pans**, `glbBatches` `[105,56,56,4,10,8,9]` — keyboards match monitors exactly, which
+is the invariant `WORK_EVERY` thinning the workstation and never the seat.
+
+Two shapes that only this pass could state: **a desk's back is not always a wall** —
+`FacilityTables.wallHand` knows only masonry and an open-plan run backs onto a CUBICLE SPINE or the
+next desk, so `backHand` takes the first hand that is not clear floor and a spine serves exactly as
+a wall does. And **a desk nobody can sit at carries nothing at all** rather than a monitor with no
+chair, which is the compound's own `seat` finding asked one level up.
+
+Art: **two generations** (~$0.11) for seven props — a three-band chair material sheet and the 2x2
+workstation sheet (`corp/workstation`, `lift` 0.77 → built srgb 61.2 against the compound's 60.4) —
+plus three TRELLIS references (~$0.17) and three bakes (~$0.03). The WC pan's sheet is **a paste and
+not a generation**: a pan is three flat materials and a 64-pixel water patch, so it is composited
+out of art the tower already owns (`textures/corp/wall-washroom` flattened and gamma'd to a
+115-luma glaze, the chair sheet's anodised and stainless bands for the seat and the flush plate)
+into the band geometry (edges at v 0.4965 / 0.7456) the cloned script's rects are measured to.
+
+Both oracles green at 200 seeds. Skipped: the visitor chair, a second plant, the vending machine,
+the fridge, the exec sofa and the basin bowl — all additions to a table, none of them a new shape
+problem.
+
+Open lead: **105 chairs is 141k triangles**, i.e. 89% of the pose's whole triangle count, and the
+plant's 4,206 is what a shattered TRELLIS atlas costs (it would not decimate past that; 19,794 →
+4,206 against a 1,200 target). Neither shows at 60 FPS / GPU 2.49 ms here, but they are the two
+numbers to spend first if the plate ever needs them.
+
+Verdict: **KEEP.**

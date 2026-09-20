@@ -1,6 +1,7 @@
 package render.corp;
 
 import three.Three;
+import render.RenderConfig;
 import render.Warmup;
 import render.facility.FacilityDetail;
 import render.facility.FacilityDoors;
@@ -48,6 +49,43 @@ class CorpWarm
       FacilityDoors.build(sc, model, null);
       IndoorMask.detach();
       ContactMask.detach();
-      return Warmup.compile(renderer, camera, sc);
+      // and the SEVEN glb props, one entry per path, each patched exactly as CorpProps.batch
+      // patches it. the mask goes back on around each instance: a glb resolves long after the
+      // block above put it away, and VisionMask.patch chains the indoor swap onto every material
+      // it takes while IndoorMask is attached — so a prop warmed OUTSIDE the mask compiles a
+      // program key the first real tower never asks for, and leaves the one it does ask for to
+      // compile on the frame the prop appears
+      var paths = [
+        { path: RenderConfig.MODELS.corpChair, h: CorpStyle.CHAIR_H },
+        { path: RenderConfig.MODELS.corpMonitor, h: CorpStyle.MON_H },
+        { path: RenderConfig.MODELS.corpKeyboard, h: CorpStyle.KEY_H },
+        { path: RenderConfig.MODELS.corpWc, h: CorpStyle.WC_H },
+        { path: RenderConfig.MODELS.corpPlant, h: CorpStyle.PLANT_H },
+        { path: RenderConfig.MODELS.corpCooler, h: CorpStyle.COOLER_H },
+        { path: RenderConfig.MODELS.corpPrinter, h: CorpStyle.PRINTER_H },
+      ];
+      return new js.lib.Promise(function(res, _)
+        {
+          var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
+          var left = paths.length;
+          for (i in 0...paths.length)
+            {
+              var pr = paths[i];
+              render.Models.get(pr.path, function(_)
+                {
+                  IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+                    function(col, row) return render.facility.FacilityModel.isInterior(model, col, row));
+                  ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h,
+                    masonry.solid, masonry.holes);
+                  render.world.VisionMask.patchMesh(
+                    render.Models.instanced(sc, pr.path, place, pr.h, SOLID).mesh);
+                  IndoorMask.detach();
+                  ContactMask.detach();
+                  left--;
+                  if (left == 0)
+                    res(null);
+                });
+            }
+        }).then(function(_) return Warmup.compile(renderer, camera, sc));
     }
 }

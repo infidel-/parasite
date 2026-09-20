@@ -129,7 +129,7 @@ class CorpFurniture
     }
 
 // the height of the worktop a room's Surf calls for
-  static inline function topH(s:Surf):Float
+  public static inline function topH(s:Surf):Float
     {
       return switch (s)
         {
@@ -225,7 +225,7 @@ class CorpFurniture
       ContactMask.prop(p.x0, p.x1, p.z0, p.z1);
     }
 
-  static inline function spine(m:Facility, col:Int, row:Int):Bool
+  public static inline function spine(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_SPINE;
     }
@@ -347,7 +347,7 @@ class CorpFurniture
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
 
-  static inline function fixture(m:Facility, col:Int, row:Int):Bool
+  public static inline function fixture(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_FIXTURE;
     }
@@ -355,7 +355,7 @@ class CorpFurniture
 // is this fixture part of a RUN, i.e. a basin counter rather than a WC cubicle? gen.corp.CorpRooms
 // .toilet lays the basins as a continuous run along the room's top wall and the stalls every OTHER
 // cell along its bottom one, so contiguity IS the distinction and nothing has to be persisted
-  static inline function run(m:Facility, col:Int, row:Int):Bool
+  public static inline function run(m:Facility, col:Int, row:Int):Bool
     {
       return fixture(m, col - 1, row) ||
         fixture(m, col + 1, row) ||

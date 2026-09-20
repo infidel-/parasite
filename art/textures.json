@@ -4154,6 +4154,17 @@
       "built_srgb": 61.0,
       "lift": 0.792,
       "last_lift": 0.792
+    },
+    "corp/workstation": {
+      "src": "corp/workstation.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 0.77,
+      "prompt": "A 2x2 GRID of four separate flat game-texture swatches in one square image. SEPARATION IS THE MOST IMPORTANT REQUIREMENT: the image is divided by one vertical line at exactly 50 percent and one horizontal line at exactly 50 percent, and each of the four quadrants is filled edge to edge by its own swatch with NO gap, NO gutter and NO frame between them. Nothing crosses a quadrant boundary. TOP-LEFT quadrant - THE FRONT OF A FLAT DESKTOP MONITOR, seen straight on, flat elevation, filling its quadrant edge to edge: a very thin dark anodised aluminium bezel right around the outside, and inside it the screen. The screen is a dark near-black display faintly glowing, carrying a few rows of small pale AMBER-WHITE ABSTRACT SMUDGE BARS of varying length standing in for unreadable spreadsheet rows, one slightly brighter horizontal band near the top, and a faint amber sidebar block at the left. The smudges must NOT be letters, NOT words, NOT numbers, NOT any script. NO text, NO lettering anywhere. TOP-RIGHT quadrant - A BLANK PANEL OF DARK ANODISED ALUMINIUM, a seamless tileable swatch, near-black warm charcoal with a very fine even satin grain, matte, no features, no seams, no logo. BOTTOM-LEFT quadrant - A BLANK PANEL OF BRUSHED STAINLESS, a seamless tileable swatch, dark neutral grey with faint fine horizontal brush lines, matte, no features, no logo. BOTTOM-RIGHT quadrant - THE TOP OF A LOW-PROFILE OFFICE KEYBOARD, seen from directly overhead, flat plan, filling its quadrant edge to edge: a dark charcoal chassis with a dense regular field of small flat square keys in even rows with fine dark gaps between them, a longer bar along the bottom row. The keycaps are BLANK - NO letters, NO numbers, NO symbols, NO markings of any kind. NOTE: this sheet is not drawn by the game at all - it is worn by models-src/corp/computer_build.py's two hand-modelled glbs (monitor, keyboard), which is the reuse-the-game's-own-art half of the Blender route. Cell order is the compound's: 0 screen, 1 carcass, 2 stand, 3 keyboard, image row 0 at the HIGH v.",
+      "last_converted": "2026-09-20T17:24:38",
+      "last_lift": 0.77,
+      "built_linear": 0.0522,
+      "built_srgb": 61.2
     }
   }
 }
