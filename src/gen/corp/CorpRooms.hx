@@ -171,13 +171,17 @@ class CorpRooms
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
 
-      var hasTable = false;
-      if (room.w >= 6 &&
-          room.h >= 6)
-        {
-          execDesk(state, node, room);
-          hasTable = true;
-        }
+      // `hasTable` has to come OUT of execDesk and not be assumed from its guard: it gives up
+      // silently when the room has a door in both end walls (there is then no wall to face the
+      // desk at), and setting the flag true anyway closed the `!hasTable` escape below. At
+      // exactly w == 6 the `w >= 7` arm is closed too, so the room got marble and NOTHING ELSE —
+      // 23 of 600 seeds, and the "37,12 room is empty" this pass started from
+      // 5 x 5 AND NOT 6 x 6, which is the size the demand itself asks for (gen.blocks.CorpBlocks
+      // gives ROOM_EXEC minW/minH 5): a 3-wide desk centred in a 5-wide room lands x1+1..x1+3
+      // with a clear column each side, so the extra cell the old guard wanted was never spent
+      var hasTable = (room.w >= 5 &&
+        room.h >= 5 &&
+        execDesk(state, node, room));
       if (room.w >= 7 ||
           !hasTable)
         decorateCorners(state, room, [
@@ -192,8 +196,9 @@ class CorpRooms
           20);
     }
 
-// the executive's own 3x2 desk, against whichever end wall has no door in it
-  static function execDesk(state: _CorpState, node: _GenNode, room: _Room)
+// the executive's own 3x2 desk, against whichever end wall has no door in it. returns whether it
+// actually laid one — see `exec`, which has no other way to find out
+  static function execDesk(state: _CorpState, node: _GenNode, room: _Room): Bool
     {
       var cells = state.area.getCells();
       var full = [
@@ -214,9 +219,6 @@ class CorpRooms
             if (door.y == room.y2 + 1)
               hasSouthDoor = true;
           }
-      if (hasNorthDoor && hasSouthDoor)
-        return;
-
       var tx = room.x1 + Std.int(room.w / 2) - 1;
       var ty = room.y1 + 1;
       var cx = tx + 1, cy = ty - 1;
@@ -226,6 +228,17 @@ class CorpRooms
           ty = room.y2 - 2;
           cy = ty + 2;
           compy = ty + 1;
+        }
+      // A DOOR IN BOTH END WALLS USED TO MEAN NO DESK AT ALL, and 382 exec offices in 600 seeds
+      // came out as bare marble because of it — every zone-less room on a corp floor was one of
+      // these. There is a third place to put a desk and it is the obvious one: the middle of the
+      // room, free-standing, facing the way the occupant would sit. Nothing about an executive's
+      // desk requires a wall behind it
+      if (hasNorthDoor && hasSouthDoor)
+        {
+          ty = room.y1 + Std.int((room.h - 2) / 2);
+          cy = ty - 1;
+          compy = ty;
         }
       GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + 1);
       state.area.addDecoration(cx, cy, Const.CORP_CHAIR[0].row, 1);
@@ -245,6 +258,7 @@ class CorpRooms
                 left--;
               }
           }
+      return true;
     }
 
 // a meeting room: one long table in the middle, boards and a projector round the walls
@@ -404,8 +418,18 @@ class CorpRooms
           if (cols == 1)
             sx = room.x1 + Std.int(room.w / 2) - 1;
           var sy = room.y1 + 1 + (tableH + 1) * ry;
-          if (sx + tableW >= room.x2)
+          // A CENTRED SINGLE COLUMN IS ALREADY CLEAR OF BOTH EDGES, so it does not want the
+          // walkway margin a multi-column run needs — and with it, `sx + tableW >= room.x2` was
+          // true for EVERY row at any width under 7, so the loop spun to its cnt guard and the
+          // room came out with no desk at all. 64 of 771 open rooms before the carve was retuned
+          // and far more after it, since a capped carve mints many more 6-wide rooms. It is also
+          // a BREAK and not a continue: the width does not change between rows
+          if (cols == 1
+              ? sx + tableW - 1 > room.x2
+              : sx + tableW >= room.x2)
             {
+              if (cols == 1)
+                break;
               ry++;
               col = 0;
               continue;
