@@ -283,12 +283,15 @@ class CorpStyle
   // where the STREET is, in world units under the floor plate. FacilityStyle.WALL_H 6.0 is one 3 m
   // storey, so -114 is nineteen of them: the plate is the twentieth floor, which is the brief.
   public static inline var STREET_Y = -114.0;
-  public static inline var FACADE_TEX = 'textures/corp/facade.png';
-  // the art carries exactly TWO storeys, so one repeat is two 5 m floors and the six bays across it
-  // land at 3.33 units each. it does NOT have to match WALL_H: the storeys below the plate are
-  // scenery, and at 12 (= 2 * WALL_H) the bays came out 2 units wide and the tower read as a
-  // gold mesh screen. FacilityGeom.face takes ONE period for both axes, so this is a square
-  public static inline var FACADE_TILE = 20.0;
+  // the tower is a DOWNTOWN GLASS TOWER SEEN FROM THE INSIDE, so its own drop wears downtown's
+  // full-glass curtain wall and not a label of its own. The first port generated `corp/facade` for
+  // this and it read as a different building from the ones around it — which it was
+  public static inline var FACADE_SLOT = 3;
+  // one CELL per bay, both axes (FacilityGeom.face takes one period for both). This is downtown's
+  // own pitch — render.world.Buildings locks a curtain wall to CELL / winPerCell — so the drop's
+  // bays line up with the street towers' beside it and with the plate's own window grid above it.
+  // It replaces a FACADE_TILE of 20, which was fitted to art that carried two storeys per repeat
+  public static inline var FACADE_TILE = 4.0;
   // the soffit under the plate, a hair below the floor so nothing is coplanar with it
   public static inline var SOFFIT_Y = -0.03;
 

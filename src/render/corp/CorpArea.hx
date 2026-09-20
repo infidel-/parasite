@@ -54,7 +54,7 @@ class CorpArea implements Area3D
   var lamps:CorpLamps.CorpLampSet;              // the fixtures and everything additive they throw
   var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
   var signs = 0;                                // wall signage, one mesh
-  var facade:{ clad:Int, soffit:Int };          // the nineteen storeys under the plate
+  var facade:{ clad:Int, soffit:Int, lit:Int }; // the nineteen storeys under the plate
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
   var crowd:CorpCrowd;                          // and the fake traffic and people on it
   var props:Array<render.world.ObjModels.PropBatch>;

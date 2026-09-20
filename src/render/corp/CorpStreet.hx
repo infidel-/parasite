@@ -330,12 +330,16 @@ class CorpStreet
       group.add(mesh);
     }
 
-// and one merged LIT one. a lambert and not a basic, which is the only lit material down here:
+// and one merged LIT one. PUBLIC because render.corp.CorpFacade hangs the tower's OWN lit bays off
+// it: the tower is a downtown glass tower seen from the inside, so its lit panes are the street's
+// lit panes and one recipe serves both.
+//
+// a lambert and not a basic, which is the only lit material down here:
 // bloom is driven off the emissive term, so a pane that has to glow has to have one. the recipe is
 // render.world.Windows' exactly — the lit texture is its own emissive map, tinted by the facade's
 // own glow colour at an intensity over 1, with alphaTest so the mullion around the glass does not
 // emit and the bloom is confined to the pane
-  static function addLit(group:Group, b:MeshBuf, st:AreaStyle, f:Int):Void
+  public static function addLit(group:Object3D, b:MeshBuf, st:AreaStyle, f:Int):Void
     {
       if (b.idx.length == 0)
         return;
