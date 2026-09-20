@@ -662,8 +662,10 @@ class FacilityDeco
                   FacilityStyle.DECO_BOOKCASE_TILE);
                 FacilityGeom.face(b[B_BC_SIDE], x0, x1, z0, z1, head + 1, y, y + h,
                   FacilityStyle.DECO_BOOKCASE_TILE);
-                FacilityGeom.cap(b[B_BC_TOP], x0, x1, z0, z1, y + h,
-                  FacilityStyle.DECO_BOOKCASE_TILE);
+                // the LID takes the unit's OWN width as its period and not DECO_BOOKCASE_TILE, so
+                // it draws under one repeat both ways and no wrap line is ever laid across it —
+                // the rack's `localCap` answer, and what the glb's own sheet is packed at
+                localCap(b[B_BC_TOP], x0, x1, z0, z1, y + h, FacilityStyle.DECO_BOOKCASE_W);
               }
           case _FittingKind.FIT_CABINET:
             // the bookcase's own shape, one surface family over: an authored front mapped 0..1 by

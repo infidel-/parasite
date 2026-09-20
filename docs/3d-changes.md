@@ -1807,3 +1807,39 @@ A/B on one pinned pose: **2,306 pixels changed by more than 25**, all of them th
 chair; `tris` 251.9k → 251.8k, `calls` 245 either side, `progs` 125.
 
 Verdict: **KEEP.**
+
+## The bookcase's lid wrapped inside its own sheet cell (`tools/modelsheet.py`, `models-src/facility/bookcase_build.py`)
+
+The bookcase is a glb (`DECO_BOOKCASE_GLB`), so the seam reported on its top was not a UV bug in the
+emitter — it was **baked into the model's texture sheet**.
+
+`tools/modelsheet.py` pre-tiles each built game texture into its sheet cell at the period the
+emitter used to lay. The lid's was `BC_W / DECO_BOOKCASE_TILE` = `2.0213 / 1.4` = **1.4436**, so the
+cell holds one and a half copies of the swatch and the tile **wraps once inside the cell**. Measured
+on `models-src/facility/bookcase-sheet.png` cell 2: per-column mean `|diff|` peaks **5.83 at column
+354** against a cell background of 2.35, and `512 / 1.4436 = 354.7`. The swatch is itself a crop off
+`facility/deco-bookcase-pack.png`, and a packed quadrant's wrap error is roughly double a solo
+roll's (`wrapH 6.07` against an interior column gradient of 2.64), so that line ran the full depth of
+the lid — which at this camera's 51 degrees is half of what a bookcase shows.
+
+Repacked at **1 x BC_D / BC_W = 1 x 0.6234**: one repeat both ways, so no wrap is ever drawn. The
+server rack's lid already records this answer (`facility/deco-rack-top`, `u 0..0.75, v 0..1`). After:
+the lid cell's peak column is **2.81 against a median of 1.98**, i.e. texture and not a seam. It
+costs density — one period is 2.02 world units instead of 1.4, a **1.44x coarser grain** — which is
+the rack's own trade.
+
+**The glb did not need re-exporting, and that is worth recording.** Its embedded base colour was
+verified **byte-identical** to the packed sheet, and the lid maps its cell 0..1 whatever the cell
+holds, so the UVs are untouched: `art/models.json` grew `texSrc: facility/bookcase-sheet.png` and
+`tools/models.mjs` swapped the map at bake time (540 -> 540 tris). That also fixes a foot-gun —
+without `texSrc` the manifest's `srcMtime` never sees the sheet, so repacking it rebuilds nothing.
+
+The emitted fallback behind `DECO_BOOKCASE_GLB = false` carried the same fault from the other end
+(`FacilityGeom.cap` phases its UVs off the WORLD) and now takes `localCap` at `DECO_BOOKCASE_W`, so
+both routes lay the lid the same way.
+
+**Not fixed:** the flank is packed at `0.9 x 2.4` and wraps twice in v, with comparable error
+(`deco-bookcase-side wrapH 4.92 / wrapV 6.09`). Not reported, and its repeats are up a vertical face
+rather than across the one horizontal surface the camera reads.
+
+Verdict: **KEEP.**
