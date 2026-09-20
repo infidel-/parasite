@@ -113,12 +113,12 @@ class CorpArea implements Area3D
       // the fittings, after the shell they stand in and BEFORE the contact repaint below — a
       // prop's footprint is not known until its builder has run, and the attach above had to come
       // first because ContactMask.patch reads `on` when a floor material is created
-      fit = CorpFurniture.build(scene, model);
+      fit = CorpFurniture.build(scene, model, game.area);
       // and the glb props ON that furniture and against the walls round it. AFTER the fittings
       // because a chair's seat cell and a printer's wall are both read off the same grid the
       // fittings were emitted from, and BEFORE the contact repaint below because every one of
       // them lays its own footprint into the field
-      var gp = CorpProps.build(scene, model);
+      var gp = CorpProps.build(scene, model, game.area);
       glb = gp.batches;
       glbN = gp.n;
       // the flat dressing: what lies ON the worktops, and what hangs on the walls. both AFTER the
@@ -310,6 +310,7 @@ class CorpArea implements Area3D
             // track three per pod row; `basins` + `stalls` is the washroom's whole fixture run, and
             // a washroom reporting 0 stalls means the contiguity test that separates the two broke
             fit: fit,
+            deco: CorpFurniture.deco,
             // how many masonry rects the contact field was painted from. it is a FIELD and draws
             // nothing, so there is no instance count to read it off and this is its only handle
             shadows: render.world.ContactMask.count,

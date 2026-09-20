@@ -264,7 +264,8 @@ class Actors {
               mark: o.visible() && uiOn,
               iconOff: render.world.ObjModels.propFor(o.getModelKey()) != null ||
                 render.facility.FacilityDoors.draws(game.area, o) ||
-                render.facility.FacilityDeco.draws(game.area, o),
+                render.facility.FacilityDeco.draws(game.area, o) ||
+                render.corp.CorpDeco.draws(game.area, o),
             });
             if (vis && uiOn)
               badges.drawObjTarget(o);

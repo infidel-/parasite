@@ -841,6 +841,7 @@ class RenderConfig {
     corpPrinter: 'models/corp/printer.glb',    // multifunction copier, drawer pedestal, amber panel
     corpDesk: 'models/corp/desk-bench.glb',    // bench desk: thin top, O-leg frame, pedestal, 96 tris
     corpTableLeg: 'models/corp/table-leg.glb', // the blade leg under a boardroom slab, 36 tris
+    corpBin: 'models/corp/bin.glb',            // the waste bin, a 12-sided lathe, the one round piece
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

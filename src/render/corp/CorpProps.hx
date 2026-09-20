@@ -23,6 +23,7 @@ typedef CorpPropSet = {
   var pans:Int;        // WC pans, one per stall
   var desks:Int;       // bench desk modules, one per open-plan / cubicle worktop cell
   var legs:Int;        // blade legs, one per boardroom / executive slab cell
+  var bins:Int;        // waste bins, one per CORP_TRASH decoration
 };
 
 // one floor-standing family and where it is allowed to stand
@@ -86,8 +87,8 @@ class CorpProps
   ];
 
 // every glb batch on the floor plate, and the census of what went into them
-  public static function build(scene:Scene, m:Facility):{ batches:Array<Models.InstancedProp>,
-      n:CorpPropSet }
+  public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):{
+      batches:Array<Models.InstancedProp>, n:CorpPropSet }
     {
       var n:CorpPropSet = {
         chairs: 0,
@@ -98,6 +99,7 @@ class CorpProps
         pans: 0,
         desks: 0,
         legs: 0,
+        bins: 0,
       };
       var chairs = [];
       var mons = [];
@@ -106,7 +108,16 @@ class CorpProps
       var benches = [];
       var legs = [];
       var floors = [for (_ in FLOOR) new Array<Models.PropPlace>()];
-      desks(m, chairs, mons, keys);
+      var binp = CorpDeco.bins(m, area);
+      // WHERE THE OLD COMPUTER ICONS STOOD, which is what "put the new ones in their places"
+      // asks for literally: gen.corp deals a CORP_COMPUTERS decoration onto the middle cell of
+      // every manned desk, and a hash of its own would have put the workstation somewhere else on
+      // the same run. A tower with no such objects (an old save, the warm's demo model) falls back
+      // to the stride, so the pass is never empty
+      var work = new Map<Int, Bool>();
+      for (c in CorpDeco.cells(area, CorpDeco.K_WORK))
+        work.set(c.row * m.w + c.col, true);
+      desks(m, chairs, mons, keys, work);
       tables(m, benches, legs);
       stalls(m, pans);
       standing(m, floors);
@@ -118,6 +129,7 @@ class CorpProps
       n.printers = floors[2].length;
       n.desks = benches.length;
       n.legs = legs.length;
+      n.bins = binp.length;
 
       var out = [];
       out.push(batch(scene, RenderConfig.MODELS.corpChair, chairs, CorpStyle.CHAIR_H));
@@ -126,6 +138,7 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpWc, pans, CorpStyle.WC_H));
       out.push(batch(scene, RenderConfig.MODELS.corpDesk, benches, CorpStyle.DESK_GLB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h));
       return {
@@ -162,7 +175,7 @@ class CorpProps
 // serves exactly as a wall does, and the seat is the opposite hand — a desk nobody can sit at is
 // not a desk, so it carries nothing at all rather than a monitor with no chair
   static function desks(m:Facility, chairs:Array<Models.PropPlace>, mons:Array<Models.PropPlace>,
-      keys:Array<Models.PropPlace>):Void
+      keys:Array<Models.PropPlace>, work:Map<Int, Bool>):Void
     {
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -192,7 +205,9 @@ class CorpProps
             });
             ContactMask.prop(cx - CorpStyle.CHAIR_W / 2, cx + CorpStyle.CHAIR_W / 2,
               cz - CorpStyle.CHAIR_W / 2, cz + CorpStyle.CHAIR_W / 2);
-            if (hash % CorpStyle.WORK_EVERY != 0)
+            var manned = (work.keys().hasNext() ? work.exists(row * m.w + col) :
+              hash % CorpStyle.WORK_EVERY == 0);
+            if (!manned)
               continue;
             // and the workstation ON the top, which is the room's worktop height and not a
             // constant — a kitchen counter and a boardroom slab are the same table grid

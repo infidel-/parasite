@@ -59,9 +59,11 @@ class CorpFurniture
 
   // the buffers, keyed by the texture they will be merged under
   static var bufs:Map<String, MeshBuf>;
+  // and what the decoration pass emitted into them, read back by CorpArea for __corp()
+  public static var deco(default, null):CorpDeco.CorpDecoSet;
 
 // emit every fitting on the floor plate
-  public static function build(scene:Scene, m:Facility):CorpFit
+  public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):CorpFit
     {
       bufs = new Map();
       var n:CorpFit = {
@@ -100,6 +102,17 @@ class CorpFurniture
                 default:
               }
           }
+      // the casework the tower's own decoration objects stand for, into these SAME buffers so a
+      // cabinet, a fridge and a vending machine cost no draw call of their own — see CorpDeco
+      deco = {
+        silenced: CorpDeco.silenced(area),
+        cabinets: 0,
+        fridges: 0,
+        vendings: 0,
+        boards: 0,
+        bins: 0,
+      };
+      CorpDeco.casework(m, area, deco);
       for (tex in bufs.keys())
         FacilityGeom.add(scene, bufs.get(tex), tex, true, false);
       bufs = null;
@@ -451,7 +464,7 @@ class CorpFurniture
 
 // the buffer for one texture, made on first use. keyed by TEXTURE and not by family, so two
 // fittings in the same material share a draw call
-  static function buf(tex:String):MeshBuf
+  public static function buf(tex:String):MeshBuf
     {
       var b = bufs.get(tex);
       if (b == null)

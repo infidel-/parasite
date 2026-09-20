@@ -1290,7 +1290,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the open-plan / cubicle desk, hand-modelled, 96 tris, 3.76 x 3.30 x 1.50 built at WORLD SIZE so Models.instanced scales it by 1. It replaces the emitted worktop on Surf.OPEN and Surf.CUBICLE, which was reported as \"just a cuboid\" and was one: a desk is a thin top on a frame with a VOID under it, and the void is the read. A 0.10 top oversailing 0.22 at the front, an O-leg frame in anodised section, a three-drawer pedestal on a 0.13 plinth reveal and a cable tray. Wears desk-wrap.png, which is the three shipped corp desk labels plus the chair sheet's anodised band -- fitted art, so NO baseColor and NO lift.",
-      "last_converted": "2026-09-20T17:54:53Z",
+      "last_converted": "2026-09-20T18:07:39Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/table-leg": {
@@ -1298,7 +1298,15 @@
       "tris": -1,
       "tex": 512,
       "note": "the blade leg under a boardroom or executive slab, hand-modelled, 36 tris. It is a LEG and not a table because a glb cannot span a block: gen.corp writes those tables as 3x2 and 3x3 of table tiles and Models.instanced scales by HEIGHT ALONE, so a module per cell would cut a 6 m table into six 2 m desks. The top stays emitted -- CorpFurniture keeps its cap and a 0.26 fascia -- and this is the silhouette under it. Same sheet, same rule: no baseColor, no lift.",
-      "last_converted": "2026-09-20T17:54:53Z",
+      "last_converted": "2026-09-20T18:07:39Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/bin": {
+      "src": "corp/corp-bin.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the waste bin, hand-modelled, 140 tris, a 12-sided two-stage lathe: a tucked foot, a flared body and a rolled lip. It is the ONE glb of the decoration families and the reason is the triage and not the budget -- everything else gen.corp stands against a wall (a cabinet, a fridge, a vending machine, a whiteboard) is an axis-aligned slab and goes out as quads into CorpFurniture's own buffers for no draw call at all, and a bin is round. Wears desk-wrap.png's anodised cell; no baseColor, no lift.",
+      "last_converted": "2026-09-20T18:07:39Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     }
   }

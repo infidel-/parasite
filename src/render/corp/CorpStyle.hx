@@ -129,6 +129,10 @@ class CorpStyle
   public static inline var DESK_GLB_W = 3.76;
   public static inline var LEG_H = 1.24;
   public static inline var LEG_W = 0.46;
+  // the waste bin, the one ROUND piece of the tower's furniture and so the only one of the
+  // decoration families that is a glb rather than emitted quads. 0.9 is 45 cm tall
+  public static inline var BIN_H = 0.9;
+  public static inline var BIN_W = 0.62;
   // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
   public static inline var RACK_H = 4.0;
   public static inline var RACK_D = 2.0;
