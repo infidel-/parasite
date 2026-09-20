@@ -20,9 +20,11 @@
 </head>
 <body>
 
-<!-- boot warmup screen: on screen from the document's first paint, removed by Main once
+<!-- warmup screen: on screen from the document's first paint, hidden by Main once
      render.View.warmup() settles. static markup on purpose — it is up before parasite.js
-     has even parsed, so none of the game is ever seen mid-warm -->
+     has even parsed, so none of the game is ever seen mid-warm. HIDDEN and not removed,
+     because GameScene.draw3D raises it again on the first entry to an area kind that still
+     has to warm (render.View.warmKind) -->
 <div id="warmup">warmup phase<span class="d">.</span><span class="d">.</span><span class="d">.</span></div>
 
 <!-- SVG filter bank for message/dialog imagery (referenced via CSS filter:url(#...)) -->

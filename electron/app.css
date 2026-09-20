@@ -140,6 +140,13 @@ html, body {
 #warmup.ready {
   color: var(--blue-gray);
 }
+/* HIDDEN, NOT REMOVED. the boot warm is not the only one: a kind that has never been entered warms
+   on its first entry (render.View.warmKind, ~1.7s for the facility), and GameScene.draw3D raises
+   this same screen over it rather than leaving the player on the fader's plain black. so Main puts
+   the class on instead of dropping the node, and the dots keep their clock for the next time */
+#warmup.off {
+  display: none;
+}
 /* three dots on ONE clock, each holding lit until the cycle ends, so the run reads
    . -> .. -> ... and clears together. separate keyframes rather than animation-delay: a delay
    shifts the whole cycle including the clear, which gives a rolling shimmer, not a build-up */
