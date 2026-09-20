@@ -25,6 +25,17 @@ typedef CaseRun = {
   len:Int,
 };
 
+// one rect of worktop a table cell actually occupies, plus the hand it was pulled back from (-1 for
+// a cell that reaches every boundary). ONE of these for a plain or a thinned cell and TWO at an L
+// corner, which is the whole reason this is a list — see `slabs`
+typedef TableSlab = {
+  x0:Float,
+  x1:Float,
+  z0:Float,
+  z1:Float,
+  hand:Int,
+};
+
 // the laboratory benches: the casework runs the generator lays beside every window wall, the island
 // it puts in the middle of a room big enough to hold one, and — added here rather than by the
 // generator — the shallow storage runs standing against the corridor walls (see `cabinets`).
@@ -59,6 +70,9 @@ typedef CaseRun = {
 class FacilityTables
 {
   static inline var CELL = CityConfig.CELL;
+  // how close two worktop edges have to be to count as meeting. the slabs are built off CELL and
+  // DESK_D alone, so a real coincidence is exact and this only guards the float compare
+  static inline var EPS = 0.001;
 
   // the four cell-edge directions, in the order render.facility.FacilityGeom.face reads them:
   // 0 = -z, 1 = +z, 2 = -x, 3 = +x
@@ -89,124 +103,148 @@ class FacilityTables
             var office = (m.surf[row][col] == Surf.OFFICE);
             var bTop = (office ? deskTop : top);
             var bBody = (office ? deskBody : body);
-            var x0 = col * CELL - half, x1 = x0 + CELL;
-            var z0 = row * CELL - half, z1 = z0 + CELL;
             // A DESK IS A THINNER BENCH, and it is the only geometry difference between the two. the
             // cell is shrunk on its OPEN side — the hand away from the wall the run backs onto — so
             // the carcass still meets the masonry and only the front edge comes forward less. every
-            // rect below is taken off this one, so the lip, the edge band, the casework and the
+            // rect below is taken off the slab, so the lip, the edge band, the casework and the
             // contact pool all follow with no further arithmetic.
             //
-            // WHICH SIDE THAT IS, IF ANY, IS `openHand`'s AND NOT THIS LOOP's — three passes ask it
-            // now (the panel test below, and FacilityWork.chairs for how far out the seat goes), and
-            // a second copy of the rule is how a desk and the chair at it end up disagreeing
-            var open = openHand(m, col, row);
-            if (open >= 0)
-              {
-                var cut = CELL - FacilityStyle.DESK_D;
-                switch (open)
-                  {
-                    case 0: z0 += cut;
-                    case 1: z1 -= cut;
-                    case 2: x0 += cut;
-                    default: x1 -= cut;
-                  }
-              }
-            // the contact pool takes the PLAIN cell and not the grown worktop: the field darkens the
-            // floor the casework stands on, and the lip is an overhang a metre above it
-            ContactMask.prop(x0, x1, z0, z1);
-            // the worktop, GROWN outward by BENCH_LIP on every side that does not carry on into
-            // another bench cell — that overhang is the bench's silhouette, and taking it out of the
-            // top rather than out of the casework is what keeps the cabinet fronts whole (see
-            // FacilityStyle.BENCH_LIP). a side that continues reaches the plain boundary, so
-            // abutting cells of one run still share a world-aligned grid and a 3-cell bench is one
-            // unbroken sheet of resin.
+            // WHICH SIDE THAT IS, IF ANY, IS `slabs`'s AND NOT THIS LOOP's — three passes ask the
+            // same oracle (FacilityClutter for how deep to roll its decals, FacilityWork.chairs for
+            // how far out the seat goes), and a second copy of the rule is how a desk and the chair
+            // at it end up disagreeing.
             //
-            // ONE SIDE GETS NO LIP: the one a door leaf swings past, because the leaf meets the
-            // overhang edge-on (see `facesDoor`). The generator no longer lays a bench block beside a
-            // doorway at all, so this only fires on areas that were already in a save when that
-            // changed — the tiles are persisted and nothing migrates them
-            var ox0 = facesDoor(m, col, row, 2) ||
-              FacilityModel.isTable(m, col - 1, row) ? x0 : x0 - FacilityStyle.BENCH_LIP;
-            var ox1 = facesDoor(m, col, row, 3) ||
-              FacilityModel.isTable(m, col + 1, row) ? x1 : x1 + FacilityStyle.BENCH_LIP;
-            var oz0 = facesDoor(m, col, row, 0) ||
-              FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
-            var oz1 = facesDoor(m, col, row, 1) ||
-              FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
-            FacilityGeom.cap(bTop, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
-              FacilityStyle.BENCH_TOP_TILE);
-            // and the round pool of shade under whatever the generator stood on this worktop —
-            // FacilityDetail's own flat quad, the one it already lays under a box on a shelf plate,
-            // because the compound's floor field cannot reach a surface two units up.
-            //
-            // `dz` IS NOT A NUDGE. The thing standing here is a BILLBOARD, and Sprites leans every
-            // upright quad back by TILT about its own centre, so the icon's drawn base lands well in
-            // FRONT of the cell it belongs to — up to half a unit. A pool on the cell centre is a
-            // pool the object is standing clear of, and that is how the first build was reported.
-            // `dx` is the other half of the same story and is NOT the tilt: the art inside the cell
-            // is not centred on it, so the icon is drawn up to half a unit off its own anchor.
-            // All three come off the icon's own alpha box, per frame, which is why none of them is
-            // a number this file owns — see FacilityModel.TableDeco.
-            //
-            // the PLATE is the GROWN rect and not the plain cell: the lip is real worktop, so a
-            // decoration near the edge is allowed to cast onto it, and `pooled`'s per-side clamp is
-            // what stops the gradient hanging off the front
-            // an office desk never takes the laboratory sprite's pool: that decoration's icon is
-            // suppressed (the glassware is the lab's) and the clutter standing in for it carries its
-            // own shadow in the art. What it carries instead is the WORKSTATION's, and that is three
-            // square quads rather than one round one — FacilityWork.pools owns the footprints,
-            // because they are its objects' and not this file's
-            var plate = {
-              x0: ox0,
-              x1: ox1,
-              z0: oz0,
-              z1: oz1,
-            };
-            // A HANGAR CONSOLE IS NOT AN OFFICE DESK AND CARRIES THE SAME THREE MACHINES.
-            // FacilityWork.at lets the shed's console run in BY NAME — its cells are laid in the
-            // laboratory's worktop tiles and are not an office by any surface — so gating the pools on
-            // `office` left every workstation in the hangar standing on bare resin with no contact
-            // shade at all, which is what a monitor floating over a worktop looks like. Asked of
-            // `at` instead, i.e. of the same oracle the geometry and the clutter both ask, so the
-            // three passes cannot disagree about which cells carry a set
-            if (office ||
-                FacilityWork.at(m, col, row) != null)
-              FacilityWork.pools(m, col, row, plate);
-            else
+            // AND IT IS A LIST, because an L CORNER IS AN L: the cell where two thinned runs meet
+            // carries the front of both of them and neither one alone, so it is two rects and not one
+            var cell = slabs(m, col, row);
+            var plate = null;
+            for (si in 0...cell.length)
               {
-                var td = m.tableDeco[row][col];
-                if (td != null)
-                  FacilityDetail.deck({
-                    cx: (col + 0.5) * CELL - half + td.dx,
-                    cz: (row + 0.5) * CELL - half + td.dz,
-                    hw: td.r,
-                    hd: td.r,
-                    yaw: 0.0,
-                    y: FacilityStyle.BENCH_H,
-                    plate: plate,
-                  });
-              }
-            for (dir in 0...4)
-              {
-                // TWO DESKS MEETING AT A ROOM CORNER used to abut nothing at all, and the run test
-                // alone cannot see it: `wallHand` takes the FIRST wall it finds, so a corner cell and
-                // its neighbour back onto DIFFERENT walls and were thinned on DIFFERENT axes. That is
-                // now `openHand`'s business — a cell with another bench on its open side is no longer
-                // cut at all — and what is left here is the part it cannot fix: a neighbour thinned
-                // on the OTHER axis reaches the boundary we share over DESK_D of it and leaves the
-                // rest of our carcass open to the room. `closes` is that test
-                if (closes(m, col, row, dir))
-                  continue;
-                // the worktop's edge band, out on the grown rect with it
-                FacilityGeom.face(bTop, ox0, ox1, oz0, oz1, dir,
-                  FacilityStyle.BENCH_H - FacilityStyle.BENCH_EDGE, FacilityStyle.BENCH_H,
+                var sl = cell[si];
+                var open = sl.hand;
+                var x0 = sl.x0, x1 = sl.x1;
+                var z0 = sl.z0, z1 = sl.z1;
+                // the contact pool takes the PLAIN cell and not the grown worktop: the field
+                // darkens the floor the casework stands on, and the lip is an overhang a metre
+                // above it
+                ContactMask.prop(x0, x1, z0, z1);
+                // the worktop, GROWN outward by BENCH_LIP on every side that does not carry on into
+                // another bench cell — that overhang is the bench's silhouette, and taking it out
+                // of the top rather than out of the casework is what keeps the cabinet fronts whole
+                // (see FacilityStyle.BENCH_LIP). a side that continues reaches the plain boundary,
+                // so abutting cells of one run still share a world-aligned grid and a 3-cell bench
+                // is one unbroken sheet of resin.
+                //
+                // ONE SIDE GETS NO LIP: the one a door leaf swings past, because the leaf meets the
+                // overhang edge-on (see `facesDoor`). The generator no longer lays a bench block
+                // beside a doorway at all, so this only fires on areas that were already in a save
+                // when that changed — the tiles are persisted and nothing migrates them
+                var ox0 = facesDoor(m, col, row, 2) ||
+                  FacilityModel.isTable(m, col - 1, row) ? x0 : x0 - FacilityStyle.BENCH_LIP;
+                var ox1 = facesDoor(m, col, row, 3) ||
+                  FacilityModel.isTable(m, col + 1, row) ? x1 : x1 + FacilityStyle.BENCH_LIP;
+                var oz0 = facesDoor(m, col, row, 0) ||
+                  FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
+                var oz1 = facesDoor(m, col, row, 1) ||
+                  FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
+                FacilityGeom.cap(bTop, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
                   FacilityStyle.BENCH_TOP_TILE);
-                // and the casework on the plain cell, so u spans exactly CELL and the door rhythm
-                // lands whole. an office desk's two END faces — the ones on the axis the run travels
-                // along — take the drawerless side instead
-                var end = (office && open >= 0 && (dir < 2) != (open < 2));
-                panel(end ? deskSide : bBody, x0, x1, z0, z1, dir);
+                // and the round pool of shade under whatever the generator stood on this worktop —
+                // FacilityDetail's own flat quad, the one it already lays under a box on a shelf
+                // plate, because the compound's floor field cannot reach a surface two units up.
+                //
+                // `dz` IS NOT A NUDGE. The thing standing here is a BILLBOARD, and Sprites leans
+                // every upright quad back by TILT about its own centre, so the icon's drawn base
+                // lands well in FRONT of the cell it belongs to — up to half a unit. A pool on the
+                // cell centre is a pool the object is standing clear of, and that is how the first
+                // build was reported. `dx` is the other half of the same story and is NOT the tilt:
+                // the art inside the cell is not centred on it, so the icon is drawn up to half a
+                // unit off its own anchor. All three come off the icon's own alpha box, per frame,
+                // which is why none of them is a number this file owns — see
+                // FacilityModel.TableDeco.
+                //
+                // the PLATE is the GROWN rect and not the plain cell: the lip is real worktop, so a
+                // decoration near the edge is allowed to cast onto it, and `pooled`'s per-side
+                // clamp is what stops the gradient hanging off the front.
+                //
+                // an office desk never takes the laboratory sprite's pool: that decoration's icon
+                // is suppressed (the glassware is the lab's) and the clutter standing in for it
+                // carries its own shadow in the art. What it carries instead is the WORKSTATION's,
+                // and that is three square quads rather than one round one — FacilityWork.pools
+                // owns the footprints, because they are its objects' and not this file's
+                //
+                // ONE PLATE PER CELL and not per slab: what stands on a worktop is dealt to the
+                // CELL, so an L corner's two rects share the first one's plate rather than laying a
+                // second set
+                if (plate == null)
+                  plate = {
+                    x0: ox0,
+                    x1: ox1,
+                    z0: oz0,
+                    z1: oz1,
+                  };
+                // A HANGAR CONSOLE IS NOT AN OFFICE DESK AND CARRIES THE SAME THREE MACHINES.
+                // FacilityWork.at lets the shed's console run in BY NAME — its cells are laid in
+                // the laboratory's worktop tiles and are not an office by any surface — so gating
+                // the pools on `office` left every workstation in the hangar standing on bare resin
+                // with no contact shade at all, which is what a monitor floating over a worktop
+                // looks like. Asked of `at` instead, i.e. of the same oracle the geometry and the
+                // clutter both ask, so the three passes cannot disagree about which cells carry a
+                // set
+                if (si == 0)
+                  {
+                    if (office ||
+                        FacilityWork.at(m, col, row) != null)
+                      FacilityWork.pools(m, col, row, plate);
+                    else
+                      {
+                        var td = m.tableDeco[row][col];
+                        if (td != null)
+                          FacilityDetail.deck({
+                            cx: (col + 0.5) * CELL - half + td.dx,
+                            cz: (row + 0.5) * CELL - half + td.dz,
+                            hw: td.r,
+                            hd: td.r,
+                            yaw: 0.0,
+                            y: FacilityStyle.BENCH_H,
+                            plate: plate,
+                          });
+                      }
+                  }
+                for (dir in 0...4)
+                  {
+                    // TWO DESKS MEETING AT A ROOM CORNER abut over PART of the boundary they share,
+                    // and a boolean `closes` could never say which part: `wallHand` takes the FIRST
+                    // wall it finds, so a corner cell and its neighbour are thinned on DIFFERENT
+                    // axes and the neighbour reaches DESK_D of the shared boundary and no more.
+                    // `exposed` subtracts whatever really meets this face — the neighbour cell's
+                    // rects and, at an L corner, this cell's own other rect — and emits the strips
+                    // left over. A face fully met emits nothing, which is the whole of what
+                    // `closes` used to answer
+                    for (e in exposed(m, cell, si, col, row, dir))
+                      {
+                        // back out to the GROWN rect at an end that is still the slab's own end:
+                        // the lip is the bench's silhouette and only an outer edge has one
+                        var alongX = (dir < 2);
+                        var p0 = (alongX ? x0 : z0);
+                        var p1 = (alongX ? x1 : z1);
+                        var g0 = (e.a <= p0 + EPS ? (alongX ? ox0 : oz0) : e.a);
+                        var g1 = (e.b >= p1 - EPS ? (alongX ? ox1 : oz1) : e.b);
+                        // the worktop's edge band, out on the grown rect with it
+                        FacilityGeom.face(bTop,
+                          (alongX ? g0 : ox0), (alongX ? g1 : ox1),
+                          (alongX ? oz0 : g0), (alongX ? oz1 : g1), dir,
+                          FacilityStyle.BENCH_H - FacilityStyle.BENCH_EDGE, FacilityStyle.BENCH_H,
+                          FacilityStyle.BENCH_TOP_TILE);
+                        // and the casework on the plain rect, so u keeps the world phase and the
+                        // door rhythm lands whole. an office desk's two END faces — the ones on the
+                        // axis the run travels along — take the drawerless side instead
+                        var end = (office && open >= 0 && (dir < 2) != (open < 2));
+                        panel(end ? deskSide : bBody,
+                          (alongX ? e.a : x0), (alongX ? e.b : x1),
+                          (alongX ? z0 : e.a), (alongX ? z1 : e.b), dir);
+                      }
+                  }
               }
           }
       // no soffit under the overhang and no floor under the casework. the ring left open at the top
@@ -259,32 +297,146 @@ class FacilityTables
 // corner fills and the L is one piece
   public static function openHand(m:Facility, col:Int, row:Int):Int
     {
+      var h = openHands(m, col, row);
+      return (h.length == 0 ? -1 : h[0]);
+    }
+
+// EVERY hand this cell is pulled back from — none, one, or the TWO of an L corner.
+//
+// an L CORNER IS AN L AND WAS A SQUARE. The cell where two thinned runs meet backs onto two
+// perpendicular walls and carries a bench on both open sides, so the single-hand rule above refused
+// to cut it at all and it stood as a full 4.0 square while both arms came forward only DESK_D —
+// measured 1.4 x 1.4 of worktop past the front of both of them, reported from the game. Cutting it
+// on ONE hand is the fault the rule was written against (a 1.4 slot of bare floor between the two
+// runs), so the answer is neither: it is cut on BOTH, and `slabs` puts the piece that joins the two
+// arms back as a second rect.
+//
+// A RUN THAT CARRIES ON STILL HAS NO FRONT TO PULL BACK. One wall and a bench on its open side is
+// the 2x3 block the generator also deals, and cutting that opens the same slot down its middle — so
+// the pair is taken only where a SECOND, perpendicular wall says this really is a corner
+  public static function openHands(m:Facility, col:Int, row:Int):Array<Int>
+    {
       if (!FacilityModel.isTable(m, col, row) ||
           (m.surf[row][col] != Surf.OFFICE &&
            !FacilityModel.inHangar(m, col, row)))
-        return -1;
+        return [];
       var h = wallHand(m, col, row);
       if (h < 0)
-        return -1;
+        return [];
       var o = h ^ 1;
-      return (FacilityModel.isTable(m, col + DC[o], row + DR[o]) ? -1 : o);
+      if (!FacilityModel.isTable(m, col + DC[o], row + DR[o]))
+        return [o];
+      // the open side carries another bench. the only cut still on the table is the L's
+      for (d in 0...4)
+        {
+          if ((d < 2) == (h < 2) ||
+              !FacilityModel.isWall(m, col + DC[d], row + DR[d]))
+            continue;
+          var o2 = d ^ 1;
+          if (FacilityModel.isTable(m, col + DC[o2], row + DR[o2]))
+            return [o, o2];
+        }
+      return [];
     }
 
-// does the bench past this cell's `dir` face CLOSE it — reach the boundary the two share right
-// across, so this cell needs no panel there?
-//
-// a full cell closes everything. one thinned on the boundary's OWN axis still reaches it across the
-// whole width. one thinned on the other axis reaches DESK_D of it and no more, and the strip left
-// over is a hole straight into this cell's carcass. The fourth case — a neighbour cut away from the
-// boundary entirely — `openHand` has made impossible, since it refuses to cut toward a bench
-  static function closes(m:Facility, col:Int, row:Int, dir:Int):Bool
+// the rects of worktop this cell actually occupies. one for a plain or a thinned cell; at an L
+// corner TWO, whose union is the L: the leg pulled back from the first hand, plus the stub that
+// fills the strip it gave up as far as the second hand's own cut
+  public static function slabs(m:Facility, col:Int, row:Int):Array<TableSlab>
     {
-      var c = col + DC[dir];
-      var r = row + DR[dir];
-      if (!FacilityModel.isTable(m, c, r))
-        return false;
-      var o = openHand(m, c, r);
-      return (o < 0 || o == dir);
+      var half = (CityConfig.GRID * CELL) / 2;
+      var x0 = col * CELL - half;
+      var z0 = row * CELL - half;
+      var hands = openHands(m, col, row);
+      var base:TableSlab = {
+        x0: x0,
+        x1: x0 + CELL,
+        z0: z0,
+        z1: z0 + CELL,
+        hand: (hands.length == 0 ? -1 : hands[0]),
+      };
+      if (hands.length == 0)
+        return [base];
+      var cut = CELL - FacilityStyle.DESK_D;
+      if (hands.length == 1)
+        return [pull(base, hands[0], cut)];
+      // the strip the first cut gives up, itself cut on the second hand: what joins the two arms
+      var stub = pull(base, hands[0] ^ 1, CELL - cut);
+      stub.hand = hands[1];
+      return [pull(base, hands[0], cut), pull(stub, hands[1], cut)];
+    }
+
+// one rect pulled back `d` on the given hand
+  static function pull(s:TableSlab, hand:Int, d:Float):TableSlab
+    {
+      return {
+        x0: (hand == 2 ? s.x0 + d : s.x0),
+        x1: (hand == 3 ? s.x1 - d : s.x1),
+        z0: (hand == 0 ? s.z0 + d : s.z0),
+        z1: (hand == 1 ? s.z1 - d : s.z1),
+        hand: s.hand,
+      };
+    }
+
+// the spans of slab `si`'s `dir` face that nothing meets, along that face's own free axis.
+//
+// a full cell's neighbour covers the whole of it and nothing is emitted; a neighbour thinned on the
+// other axis covers DESK_D of it and the rest is a hole straight into this cell's carcass; and at an
+// L corner this cell's OWN other rect covers part of one face. All three are the same subtraction,
+// which is why the boolean `closes` this replaced could not answer the middle one
+  static function exposed(m:Facility, cell:Array<TableSlab>, si:Int, col:Int, row:Int,
+      dir:Int):Array<{ a:Float, b:Float }>
+    {
+      var s = cell[si];
+      var alongX = (dir < 2);
+      var a0 = (alongX ? s.x0 : s.z0);
+      var a1 = (alongX ? s.x1 : s.z1);
+      var plane = switch (dir)
+        {
+          case 0: s.z0;
+          case 1: s.z1;
+          case 2: s.x0;
+          default: s.x1;
+        };
+      // whatever can reach this face: the neighbour cell's rects, and our own sibling at a corner
+      var near = FacilityModel.isTable(m, col + DC[dir], row + DR[dir])
+        ? slabs(m, col + DC[dir], row + DR[dir]) : [];
+      var blocks = [];
+      for (i in 0...(near.length + cell.length))
+        {
+          var t = (i < near.length ? near[i] : cell[i - near.length]);
+          if (i >= near.length &&
+              i - near.length == si)
+            continue;
+          // its OWN face on this plane is the opposite one, so the test is mirrored
+          var tp = switch (dir)
+            {
+              case 0: t.z1;
+              case 1: t.z0;
+              case 2: t.x1;
+              default: t.x0;
+            };
+          if (Math.abs(tp - plane) > EPS)
+            continue;
+          var b0 = (alongX ? t.x0 : t.z0);
+          var b1 = (alongX ? t.x1 : t.z1);
+          if (b1 > a0 + EPS &&
+              b0 < a1 - EPS)
+            blocks.push({ a: b0, b: b1 });
+        }
+      blocks.sort(function(p, q) return p.a < q.a ? -1 : (p.a > q.a ? 1 : 0));
+      var out = [];
+      var cur = a0;
+      for (bl in blocks)
+        {
+          if (bl.a > cur + EPS)
+            out.push({ a: cur, b: (bl.a < a1 ? bl.a : a1) });
+          if (bl.b > cur)
+            cur = bl.b;
+        }
+      if (cur < a1 - EPS)
+        out.push({ a: cur, b: a1 });
+      return out;
     }
 
 // does a door opening lie past this cell's `dir` face — straight through it, or diagonally past

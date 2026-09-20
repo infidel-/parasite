@@ -1772,3 +1772,38 @@ channel and a `Pop` lasts 200ms.
 Costs nothing: same quad count, same material, two adds and a cached multiply per caster.
 
 Verdict: **KEEP.**
+
+## An L-shaped desk corner was a SQUARE, and `closes` was a boolean where an interval belonged (`render/facility/FacilityTables.hx`)
+
+An office desk is a thinner bench: `FacilityTables` cuts `CELL - DESK_D` = **1.4** off the hand away
+from the wall its run backs onto. At an L corner that rule refused to cut at all — `openHand`
+returned -1 because the open side carries the other arm — so the corner cell stood as a full **4.0
+square** while both arms came forward only 2.6. The excess is the far quadrant, **1.4 x 1.4**,
+poking past the front of both runs, and it was reported from the game.
+
+Cutting it on ONE hand is the fault the -1 was written against (a 1.4 slot of bare floor between the
+two runs, `docs/3d-render.md` "the corner fills and the L is one piece"), so the answer is neither.
+**It is cut on BOTH, and the piece that joins the arms goes back as a second rect.** A cell is a
+LIST of rects now (`slabs`): one for a plain or a thinned cell, two at a corner — the leg pulled
+back from the first hand, plus the stub filling the strip it gave up as far as the second hand's own
+cut. Their union is the L and they do not overlap.
+
+**The pair is taken only where a SECOND, PERPENDICULAR wall says this really is a corner.** One wall
+with a bench on its open side is the 2x3 block the generator also deals, and cutting that opens the
+same slot down its middle — so `openHands` returns two hands only when both walls are there and both
+open sides carry a bench. Measured on one compound: **1 cell in the whole map** matches.
+
+**And `closes` had to go, because it answers a boolean where the question is an interval.** It asked
+the neighbour's `openHand` and skipped the whole face when the neighbour "reached" the boundary —
+which over-emitted a buried panel wherever a neighbour thinned on the OTHER axis reached only
+`DESK_D` of it, and could say nothing at all about a face half-covered by this cell's own other
+rect. `exposed` subtracts what really meets a face — the neighbour cell's rects plus the sibling —
+and emits the strips left over; a face fully met emits nothing, which is all `closes` ever said.
+Downstream reads the same oracle unchanged (`FacilityClutter`'s roll depth and `FacilityWork.chairs`
+both call `openHand`, which is now `openHands()[0]`), so at a corner the clutter and the seat move
+onto the 2.6 rect with the geometry instead of staying on the 4.0 cell.
+
+A/B on one pinned pose: **2,306 pixels changed by more than 25**, all of them the corner and its
+chair; `tris` 251.9k → 251.8k, `calls` 245 either side, `progs` 125.
+
+Verdict: **KEEP.**

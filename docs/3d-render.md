@@ -1467,6 +1467,7 @@ back) — grep the change text.
 | in-game emissive paint: TEXELS not triangles, brush is a world capsule through the geometry, gutter-only dilation, game writes the png | **KEEP** | triangle was ~3 texels across at 1024 (41 texels/tri at 2048); old bleed guard ate 1.637% to keep 1.098%; 893 stray `e0c8e0` texels matched no family |
 | a violet lamp needs ~2x a cyan one's `glow` to halo: the study console and its slots retuned, and moved onto the pad's unwalkable corners | **KEEP** | linear `0xc07bff` luminance 0.3245 vs cyan's 0.5794; peaks were 0.29-0.52 against BLOOM_THRESHOLD 0.9, now 1.31-1.83; breaths were 7.3s/13.5s, now 3.2s/6.3s/1.7s |
 | fake cast shadows glued to the sprite's DRAWN base, and following the anim offset | roots sat on the cell centre, now `+SIZE*(0.5-gs.by)*sin(TILT)` = **0.847** for a full-bleed silhouette (0.582 for the host sprite at `by` 0.156); `a.fx.offx/offz` added, `offy`/`scale` deliberately not | **landed — no quad, material or draw-call change** |
+| an L-shaped office desk corner emitted as an L, not a square; `closes` replaced by an interval subtraction | the corner cell was a full 4.0 while both arms came forward `DESK_D` 2.6 — **1.4 x 1.4** past both fronts. one cell in the compound matches; A/B **2,306 px** changed >25, `tris` 251.9k → 251.8k, `calls` 245 both | **landed** |
 
 ## Standing notes
 
