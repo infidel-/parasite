@@ -47,6 +47,9 @@ class CorpWarm
       // and the additive glow, which is its own material: AdditiveBlending, vertexColors and an
       // alphaMap are all in three's program key, so none of the mapped lamberts above cover it
       CorpLamps.build(sc, model);
+      // and the facade, which is the one UNLIT material in the kind: MeshBasicMaterial is its own
+      // program key and no lambert above it covers one
+      CorpFacade.build(sc, model);
       FacilityDetail.corners(sc, model);
       // and the collector those corners feed, which is NOT optional: FacilityDetail.halos is what
       // CLEARS it, so skipping it here carries these demo quads into the first real tower

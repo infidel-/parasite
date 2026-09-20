@@ -4226,6 +4226,20 @@
       "last_converted": "2026-09-20T17:53:06",
       "built_linear": 0.0996,
       "built_srgb": 76.2
+    },
+    "corp/facade": {
+      "src": "corp/facade.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 2.8,
+      "prompt": "A SEAMLESS TILEABLE TEXTURE, square, of a CURTAIN-WALL OFFICE TOWER FACADE seen straight on in flat elevation from a long way off at night. It must TILE PERFECTLY in both directions. THE PATTERN: exactly TWO storeys stacked vertically, each a horizontal band of SIX equal vertical window bays side by side, thin dark ANODISED ALUMINIUM mullions between the bays and a horizontal SPANDREL band of dark anodised panel between the storeys about a fifth of a storey's height. THE LIT WINDOWS ARE THE WHOLE POINT: about a third of the twelve bays glow a soft warm AMBER, a few a paler warm white, the rest dark near-black glass with a faint cool reflection; scattered irregularly, never a neat pattern, each lit bay evenly filled with its glow - no figures, no furniture, no detail inside. No text, no letters, no numbers, no logos. Nothing protrudes. Overall VERY DARK: the dark glass and dark aluminium dominate and the lit bays are the only bright thing in it.",
+      "note": "the nineteen storeys UNDER the floor plate (render.corp.CorpFacade), and the one texture in the corp set that is drawn UNLIT. A MeshBasicMaterial and not a lambert, which is the whole reason the lit bays work: the plate's own lighting has nothing to do with a facade 72 units below it, and under the scene's ambient a lambert would have taken the amber to nothing. Unlit also means the authored value IS the rendered value, so the bays clear BLOOM_THRESHOLD 0.72 on their own and the tower reads as occupied from the parapet. TILED AT 12 WORLD UNITS, which is 2 * FacilityStyle.WALL_H: the image carries exactly two storeys, so one repeat is two 3 m floors and the 6 bays across land at 2 units each. It still takes the scene fog (a basic material is fogged like any other), which is what makes the drop fade out rather than stop. LIFT 2.4, in the DARKENING direction and fitted from the game rather than predicted: the first build put the whole tower at the art's authored value, and unlit that is what renders - a solid wall of gold, every bay reading as lit because the dark glass sat at ~40 srgb where it needed to be black. A gamma is right and a baseColor is not, because what has to move is the RATIO between the bays and the glass and not the level. SAT 0.55 beside it, and the two are answering different things: the gamma sets how MANY bays read as lit (at 2.4 the built sheet was p50 1.1 with 4.6% over 120, which is the right census) and the saturation sets what a hundred of them look like AT ONCE. Authored, the amber is the corp accent hue and correct for one window; tiled over a nineteen-storey tower filling the frame it came out a wall of orange, which is a thing no per-window value can fix.",
+      "last_converted": "2026-09-20T18:11:09",
+      "last_lift": 2.8,
+      "built_linear": 0.0315,
+      "built_srgb": 26.2,
+      "sat": 0.55,
+      "last_sat": 0.55
     }
   }
 }

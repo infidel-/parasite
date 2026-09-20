@@ -278,6 +278,20 @@ class CorpStyle
   public static inline var CALL_Y = 3.0;
   public static inline var CALL_OFF = 1.3;    // along the wall, from the door cell's centre
 
+  // ---- the twentieth floor -------------------------------------------------------------------
+  //
+  // where the STREET is, in world units under the floor plate. FacilityStyle.WALL_H 6.0 is one 3 m
+  // storey, so -114 is nineteen of them: the plate is the twentieth floor, which is the brief.
+  public static inline var STREET_Y = -114.0;
+  public static inline var FACADE_TEX = 'textures/corp/facade.png';
+  // the art carries exactly TWO storeys, so one repeat is two 5 m floors and the six bays across it
+  // land at 3.33 units each. it does NOT have to match WALL_H: the storeys below the plate are
+  // scenery, and at 12 (= 2 * WALL_H) the bays came out 2 units wide and the tower read as a
+  // gold mesh screen. FacilityGeom.face takes ONE period for both axes, so this is a square
+  public static inline var FACADE_TILE = 20.0;
+  // the soffit under the plate, a hair below the floor so nothing is coplanar with it
+  public static inline var SOFFIT_Y = -0.03;
+
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts

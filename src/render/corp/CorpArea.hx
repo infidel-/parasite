@@ -53,6 +53,7 @@ class CorpArea implements Area3D
   var lamps:CorpLamps.CorpLampSet;              // the fixtures and everything additive they throw
   var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
   var signs = 0;                                // wall signage, one mesh
+  var facade:{ clad:Int, soffit:Int };          // the nineteen storeys under the plate
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -125,6 +126,9 @@ class CorpArea implements Area3D
       // the rig, after every family that could stand under a lattice point — the nudge in
       // CorpLamps.free reads m.fit, so it has to know what is standing there
       lamps = CorpLamps.build(scene, model);
+      // and the tower the plate is the twentieth floor OF. it is outside every mask on purpose —
+      // see CorpFacade's header — so it goes in after them and takes none of their patches
+      facade = CorpFacade.build(scene, model);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
@@ -231,6 +235,7 @@ class CorpArea implements Area3D
             // the rig. `posts` is how many fixtures COMPETE for the shared 12 spotlight slots and
             // never how many are lit — LampLights hands the bulbs to the nearest twelve every
             // frame, so a plate with 40 posts is correct and a plate with 0 is the phase-2 bug
+            facade: facade,
             lamps: {
               posts: lamps.posts.length,
               rooms: lamps.rooms,
