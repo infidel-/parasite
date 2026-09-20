@@ -232,8 +232,8 @@ class GameScene
     }
 
 // is the current area rendered in 3D? city streets, the underground tunnels (sewers share their
-// generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid) and the open
-// wilderness
+// generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid), the open
+// wilderness, the facility compound and the corp tower floor
   public inline function is3DArea(): Bool
     {
       return game.area != null &&
@@ -241,7 +241,8 @@ class GameScene
          game.area.info.type == 'sewers' ||
          game.area.info.type == 'habitat' ||
          game.area.info.type == 'wilderness' ||
-         game.area.info.type == 'facility');
+         game.area.info.type == 'facility' ||
+         game.area.info.type == 'corp');
     }
 
 // an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
@@ -299,6 +300,8 @@ class GameScene
                 view3d.showWild(game.area);
               else if (game.area.info.type == 'facility')
                 view3d.showFacility(game.area);
+              else if (game.area.info.type == 'corp')
+                view3d.showCorp(game.area);
               else if (!isCityArea())
                 view3d.showSewer(game.area);
               else if (game.area.cityGenSeed >= 0)

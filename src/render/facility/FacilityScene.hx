@@ -18,15 +18,18 @@ import render.particles.LampLights;
 // every program key and already running their per-fragment loop with no bulbs to show for it
 class FacilityScene
 {
-// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city)
-  public static function build(renderer:WebGLRenderer, lampPool:Int):SceneSetup.SceneBundle
+// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city).
+// `sky`/`near`/`far` default to the compound's own — the CORP TOWER passes its three and takes the
+// whole rig unchanged, which is the only thing that differs between the two kinds up here
+  public static function build(renderer:WebGLRenderer, lampPool:Int,
+      sky = FacilityStyle.SKY, near = FacilityStyle.FOG_NEAR, far = FacilityStyle.FOG_FAR):SceneSetup.SceneBundle
     {
       var scene = new Scene();
-      scene.background = new Color(FacilityStyle.SKY);
+      scene.background = new Color(sky);
       // background and fog are the SAME colour, which render.world.VisionMask depends on: its blue
       // rim channel takes visibility to a true zero at the area border, and zero only stops being a
       // silhouette if the surface it fades toward is what is behind it
-      scene.fog = new Fog(FacilityStyle.SKY, FacilityStyle.FOG_NEAR, FacilityStyle.FOG_FAR);
+      scene.fog = new Fog(sky, near, far);
 
       var lights:Array<Object3D> = [];
       function add(l:Object3D):Object3D

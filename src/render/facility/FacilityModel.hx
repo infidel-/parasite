@@ -21,7 +21,22 @@ enum abstract Surf(Int) from Int to Int
   // two values are what every pass downstream reads a themed room off
   var OFFICE = 9;    // a researcher's office: desks, bookcases, office clutter
   var WASH = 10;     // a washroom: cubicles, basins, a mirror
+  // and the CORP TOWER's eight, read off gen.corp's own floor ids the same way. They are separate
+  // values rather than a reuse of the two above even where the tile id is shared: `floor` and
+  // `wallInto` in ShellTex are indexed by Surf, so sharing a slot would share the sheet, and the
+  // whole point of the corp office is that none of its art is the facility's
+  var CARPET = 11;   // the corridor, every door cell, and a room no template claimed
+  var OPEN = 19;     // open plan: rows of desks, no partitions
+  var CUBICLE = 12;  // the cubicle farm, partition spines included
+  var MEETING = 13;  // a boardroom
+  var KITCHEN = 14;  // the staff kitchen
+  var EXEC = 15;     // an executive office
+  var WASHROOM = 16; // the corp washroom, which is NOT the facility's Surf.WASH
+  var SERVER = 17;   // the server room
+  var LIFT = 18;     // the lift car's own floor
 }
+
+
 
 // what a cell blocks. windows are their own value because they are the one wall that is
 // see-through, both to the game (tiles.Default.TILE_SEETHROUGH) and to the camera
@@ -158,6 +173,13 @@ typedef TableDeco = {
 //
 // grids are [row][col] — the render convention, transposed from the game's [x][y]
 typedef Facility = {
+  // which AREA KIND built this — 'facility' or 'corp'. the record is no longer one compound's: it
+  // is ONE INDOOR BUILDING SHELL, and the corp tower reuses every emitter that takes it. a pass
+  // that genuinely has to tell the two apart asks this; most do not
+  kind:String,
+  // and the art this shell is dressed in, indexed by Surf. see ShellTex for why it is on the model
+  // rather than in FacilityStyle
+  tex:ShellTex,
   w:Int,
   h:Int,
   surf:Array<Array<Surf>>,
@@ -257,9 +279,12 @@ class FacilityModel
 // inside `buildFrom`, which runs on the model this call returns. An earlier cut asked `actors` here
 // and every facility entry died on a null. render.View supplies it off the decoded atlas instead.
 // omitted, or before that atlas decodes, every pool falls back to FacilityStyle's own averages
-  public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
+  public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox,
+      ?opts:ShellOpts):Facility
     {
-      var m = blank(area.width, area.height);
+      if (opts == null)
+        opts = FacilityStyle.shell();
+      var m = blank(area.width, area.height, opts);
       // the unwalkable-concrete mask, local to this call: findPads is the only reader and a third
       // per-cell grid on the model for one pass is a grid nobody else would ever ask
       var solid = [for (_ in 0...area.height) [for (_ in 0...area.width) false]];
@@ -267,8 +292,8 @@ class FacilityModel
         for (col in 0...m.w)
           {
             var t = area.getCellType(col, row);
-            m.surf[row][col] = surfOf(t);
-            m.wall[row][col] = wallOf(t);
+            m.surf[row][col] = opts.surfOf(t);
+            m.wall[row][col] = opts.wallOf(t);
             // a worktop's SHAPE is not read at all — the generator deals 3x1 and 1x3 runs, a 1x1
             // and a 2x3 or 3x2 island, and FacilityTables recovers every one of them from
             // neighbours. this used to carry its own copy of the tile test; see Const.isTableTile
@@ -287,9 +312,15 @@ class FacilityModel
             if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
               solid[row][col] = true;
           }
-      findStructures(m);
-      shedFloor(m);
-      findPads(m, solid);
+      findStructures(m, opts.hangars);
+      // both of these are about the SHED and nothing else, so a kind with no hangars skips them.
+      // it is not only wasted work: `shedFloor` repaints every lab tile inside a hangar-flagged
+      // structure as concrete, and a corp lift car is nine concrete cells in a ring of its own
+      if (opts.hangars)
+        {
+          shedFloor(m);
+          findPads(m, solid);
+        }
       findWindows(m);
       findDoors(m, area);
       findDeco(m, area, icon);
@@ -359,7 +390,7 @@ class FacilityModel
 // FacilityGeom.look takes off the cell it looks INTO — stays laboratory. the rect comes from
 // generatorInfo, so a save made before room templates existed holds no themed cell in any rect and
 // this is a no-op on it
-  static function themeRooms(m:Facility):Void
+  public static function themeRooms(m:Facility):Void
     {
       for (room in m.rooms)
         {
@@ -380,9 +411,11 @@ class FacilityModel
     }
 
 // an empty model of the given size (also the base for demo())
-  static function blank(w:Int, h:Int):Facility
+  public static function blank(w:Int, h:Int, opts:ShellOpts):Facility
     {
       return {
+        kind: opts.kind,
+        tex: opts.tex,
         w: w,
         h: h,
         surf: [for (_ in 0...h) [for (_ in 0...w) Surf.NONE]],
@@ -407,7 +440,7 @@ class FacilityModel
 
 // the horizontal surface a tile id paints. the table tiles resolve to plain room floor: a table is
 // a prop standing ON the floor, so the cell still needs a floor under it
-  static function surfOf(t:Int):Surf
+  public static function surfOf(t:Int):Surf
     {
       if (t == Const.TILE_ROAD)
         return ROAD;
@@ -453,7 +486,7 @@ class FacilityModel
     }
 
 // what a tile id blocks
-  static function wallOf(t:Int):Wall
+  public static function wallOf(t:Int):Wall
     {
       if (t == Const.TILE_BUILDING)
         return SOLID;
@@ -488,13 +521,13 @@ class FacilityModel
     {
       if (!inside(m, col, row))
         return false;
-      var s = m.surf[row][col];
-      return s == Surf.TILE ||
-        s == Surf.LINO ||
-        s == Surf.GRATE ||
-        s == Surf.CONCRETE ||
-        s == Surf.OFFICE ||
-        s == Surf.WASH;
+      // a RANGE and not a list, which the Surf enum is ordered to allow: everything from TILE up
+      // is an indoor floor and everything below it is ground the weather falls on. Listing them
+      // was fine at six and is a maintenance trap at fourteen — a corp surface left out of the
+      // list is a room with no floor mesh and no structure to belong to
+      var s:Int = m.surf[row][col];
+      return s >= (Surf.TILE : Int) &&
+        s <= (Surf.OPEN : Int);
     }
 
 // is this cell inside the HANGAR — the one structure floored in concrete?
@@ -516,8 +549,9 @@ class FacilityModel
 // themes apart rather than tell them from the lab
   public static inline function isThemed(s:Surf):Bool
     {
-      return s == Surf.OFFICE ||
-        s == Surf.WASH;
+      // OFFICE is the first themed value and every one added since sits above it, so this is the
+      // same range test isIndoor uses and for the same reason
+      return (s : Int) >= (Surf.OFFICE : Int);
     }
 
 // is this walkway cell the PARK PATH rather than perimeter pavement — the run of walkway it lies
@@ -615,7 +649,7 @@ class FacilityModel
 // 4-connected, and a door cell is ordinary LINO floor, so one lab building comes back as ONE
 // component however many rooms and corridors it holds — which is exactly the granularity the roof
 // fade wants, since a roof is per building and not per room
-  static function findStructures(m:Facility):Void
+  public static function findStructures(m:Facility, hangars:Bool):Void
     {
       var stack = [];
       for (row in 0...m.h)
@@ -667,7 +701,7 @@ class FacilityModel
               }
             // the hangar is the component the generator floored in concrete. a majority rather than
             // a single cell, because the side door's own cell is lab tile (TILE_FLOOR_TILE_CANNOTSEE)
-            st.hangar = (concrete * 2 > st.cells);
+            st.hangar = hangars && (concrete * 2 > st.cells);
             st.ox1 = st.x1 - 1;
             st.oy1 = st.y1 - 1;
             st.ox2 = st.x2 + 1;
@@ -691,7 +725,7 @@ class FacilityModel
 // group window cells into runs. a run starts where the previous cell along its own axis is not
 // also a window, which recovers the generator's 2- and 3-cell openings without reading the H1/H2/H3
 // ordering back out of the tile ids
-  static function findWindows(m:Facility):Void
+  public static function findWindows(m:Facility):Void
     {
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -919,7 +953,7 @@ class FacilityModel
 // builders over fake data, so the compiled programs match what a real facility entry needs
   public static function demo():Facility
     {
-      var m = blank(24, 16);
+      var m = blank(24, 16, FacilityStyle.shell());
       for (row in 0...m.h)
         for (col in 0...m.w)
           m.surf[row][col] = LOT;
@@ -1002,7 +1036,7 @@ class FacilityModel
       m.deco[4][15] = _FittingKind.FIT_PARTITION + 1;
       m.wall[2][14] = WINDOW_HIGH;
       m.wall[2][16] = WINDOW_HIGH;
-      findStructures(m);
+      findStructures(m, true);
       findWindows(m);
       m.doors.push({
         col: 10,

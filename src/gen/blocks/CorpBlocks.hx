@@ -60,6 +60,22 @@ class CorpBlocks
         }
     }
 
+// and the inverse: which block BUILT a room, off the role it persists. public for console.GoBlock,
+// so `go block room-cubicle` names a room the same way this file's own tree does
+  public static function kindOf(room: _Room): String
+    {
+      return switch (room.role)
+        {
+          case ROLE_CUBICLE: ROOM_CUBICLE;
+          case ROLE_MEETING: ROOM_MEETING;
+          case ROLE_KITCHEN: ROOM_KITCHEN;
+          case ROLE_EXEC: ROOM_EXEC;
+          case ROLE_TOILET: ROOM_TOILET;
+          case ROLE_SERVERS: ROOM_SERVERS;
+          default: ROOM_OPEN;
+        }
+    }
+
 // what a tower floor must end up with.
 //
 // the minW/minH are what each template needs to produce the thing rather than a token of it: a

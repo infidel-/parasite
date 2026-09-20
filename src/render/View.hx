@@ -347,10 +347,10 @@ class View {
 // the timer are for; the timer is deliberately long, because cutting a warm short only moves the
 // stall into the frame the player is about to see
 // which per-kind warm this area kind belongs to. the city is the boot warm's own scene and the
-// wilderness has never had one, so everything that is not a city, a wilderness or a facility renders
-// through the tunnel view and warms as one
+// wilderness has never had one, so everything that is not a city, a wilderness, a facility or a
+// corp tower renders through the tunnel view and warms as one
   static inline function warmKey(kind:String):String
-    return (kind == 'facility' ? 'facility' : 'sewer');
+    return (kind == 'facility' || kind == 'corp' ? kind : 'sewer');
 
 // would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
 // commits to putting the warmup screen back up — a kind already warmed is a call-through and a
@@ -386,9 +386,12 @@ class View {
         }
       warmedKinds.set(key, true);
       var t0 = haxe.Timer.stamp();
-      var chain:js.lib.Promise<Dynamic> = (key == 'facility'
-        ? render.facility.FacilityWarm.build(renderer, camera, game.config.vidLampLights)
-        : render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights));
+      var chain:js.lib.Promise<Dynamic> = switch (key)
+        {
+          case 'facility': render.facility.FacilityWarm.build(renderer, camera, game.config.vidLampLights);
+          case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
+          default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
+        };
       chain.then(function(_)
         {
           js.Browser.console.log('[street-warmup] ' + key + ' warm: ' +
@@ -423,7 +426,8 @@ class View {
 // the build key for one of the grid-built area kinds. an id is one area and one area is one kind,
 // but a key that COLLIDED would let a rebuild of another kind read as a warm re-show of this one —
 // so each kind takes its own residue class rather than a parity. it was 2 residues while there were
-// two such kinds and both were spent; a third needed the stride, not another offset
+// two such kinds and both were spent; a third needed the stride, not another offset. the corp tower
+// took the fourth, so a FIFTH grid kind needs the stride widening again
   static inline function gridKey(id:Int, kind:Int):Int
     {
       return -(id * 4 + kind + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
@@ -449,6 +453,17 @@ class View {
         return;
       buildFrom(new render.facility.FacilityArea(game,
         render.facility.FacilityModel.fromArea(area, iconBox)), key);
+    }
+
+// show the 3D corp tower floor for an area, on the same terms as the two above: the grid is the
+// persisted layout, so this works on every corp save already written
+  public function showCorp(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 3);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.corp.CorpArea(game,
+        render.corp.CorpModel.fromArea(area, iconBox)), key);
     }
 
 // the opaque box of one bench decoration's art, which the facility model places its contact pool

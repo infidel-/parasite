@@ -1,4 +1,5 @@
-// console `go block` — the compound's blocks, and where you can stand inside one
+// console `go block` — the blocks of the two area kinds the block tree builds (the facility
+// compound and the corp tower), and where you can stand inside one
 //
 // DERIVED FROM THE SAVED GRID AND NOT FROM THE BLOCK TREE, because there is no tree to read.
 // gen._GenNode says it outright: the tree is in-memory only, deliberately, on the grounds that
@@ -19,6 +20,7 @@
 package console;
 
 import game.Game;
+import gen.blocks.CorpBlocks;
 import gen.blocks.FacilityBlocks;
 import gen.blocks.HangarBlock;
 import gen.blocks.RoomBlock;
@@ -39,8 +41,8 @@ typedef _GoBlock = {
 
 class GoBlock
 {
-// every block of the current map. empty off a facility compound, which is the only area type whose
-// layout is a block tree.
+// every block of the current map. empty off a facility compound or a corp tower, which are the
+// only area types whose layout is a block tree.
 //
 // DERIVED EVERY CALL AND NOT CACHED, which was measured rather than assumed: the whole of this
 // walk is 1.03 ms on a 65x60 compound (fromArea itself 0.85), and ConsoleCompletion asks for the
@@ -50,8 +52,11 @@ class GoBlock
   public static function list(game: Game): Array<_GoBlock>
     {
       if (game.location != LOCATION_AREA ||
-          game.area == null ||
-          game.area.typeID != AREA_FACILITY)
+          game.area == null)
+        return [];
+      if (game.area.typeID == AREA_CORP)
+        return corp(game);
+      if (game.area.typeID != AREA_FACILITY)
         return [];
       var m = FacilityModel.fromArea(game.area);
       var out = [];
@@ -93,6 +98,23 @@ class GoBlock
       surface(out, game, m, FacilityBlocks.PARKING, Surf.LOT, true);
       surface(out, game, m, FacilityBlocks.YARD, Surf.LOT, false);
       surface(out, game, m, FacilityBlocks.ROAD, Surf.ROAD);
+      return out;
+    }
+
+// the same walk over a CORP TOWER, which is the other area kind the block tree builds. it is much
+// shorter for the reason the whole render port is: a floor plate has no outdoors, so there are no
+// surface fills, no pads and no second structure — the plate, the lift core and the rooms is all
+// there is. the lift is recovered from Surf.LIFT the way the compound's fills are recovered from
+// theirs, the block tree being long gone by the time anyone can type a command
+  static function corp(game: Game): Array<_GoBlock>
+    {
+      var m = render.corp.CorpModel.fromArea(game.area);
+      var out = [];
+      for (st in m.structures)
+        add(out, game, CorpBlocks.PLATE, st.x1, st.y1, st.x2, st.y2);
+      surface(out, game, m, CorpBlocks.ELEVATOR, Surf.LIFT);
+      for (room in m.rooms)
+        add(out, game, CorpBlocks.kindOf(room), room.x1, room.y1, room.x2, room.y2);
       return out;
     }
 

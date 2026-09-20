@@ -3304,4 +3304,48 @@ class FacilityStyle
     // / 6277 — a different set of facets at every yaw, which is the deliverable
     sheen: 1.0,
   };
+
+// the compound's own ShellOpts: how render.facility.FacilityModel reads a saved facility grid, and
+// the art render.facility.FacilityGeom dresses the result in.
+//
+// EVERY PATH IN HERE WAS A CONSTANT AT THE FLUSH until the corp tower needed the same emitter with
+// a different art set. Moving them onto the model is the whole of that change — see ShellTex
+  public static function shell(): ShellOpts
+    {
+      var floor = [for (_ in 0...SURF_SLOTS) (null : String)];
+      floor[FacilityModel.Surf.TILE] = FLOOR_TILE;
+      floor[FacilityModel.Surf.LINO] = FLOOR_LINO;
+      floor[FacilityModel.Surf.CONCRETE] = FLOOR_CONCRETE;
+      floor[FacilityModel.Surf.OFFICE] = FLOOR_OFFICE;
+      floor[FacilityModel.Surf.WASH] = FLOOR_WASH;
+      // the interior face is picked off the surface it LOOKS INTO, so a corridor is painted board
+      // and the room the other side of the same slab is tiled. A surface with no entry falls back
+      // to WALL_ROOM, which is what the emitter's old `case _` did
+      var into = [for (_ in 0...SURF_SLOTS) WALL_ROOM];
+      into[FacilityModel.Surf.LINO] = WALL_CORRIDOR;
+      into[FacilityModel.Surf.OFFICE] = WALL_OFFICE;
+      into[FacilityModel.Surf.WASH] = WALL_WASH;
+      return {
+        kind: 'facility',
+        tex: {
+          floor: floor,
+          wallOut: WALL_EXTERIOR,
+          wallInto: into,
+          pane: WINDOW_LIT,
+          pane2: WINDOW_LIT_2,
+          paneHigh: WINDOW_HIGH_TEX,
+          head: WINDOW_HEAD,
+          roof: ROOF,
+          coping: COPING,
+          shutter: DOOR_SHUTTER,
+          circ: FacilityModel.Surf.LINO,
+        },
+        surfOf: FacilityModel.surfOf,
+        wallOf: FacilityModel.wallOf,
+        hangars: true,
+      };
+    }
+
+  // how many slots a per-Surf array holds. one more than the highest Surf value
+  public static inline var SURF_SLOTS = 20;
 }

@@ -69,9 +69,11 @@ class FacilityGeom
 {
   static inline var CELL = CityConfig.CELL;
 
-  // how many floor buffers `structure` allocates: one slot per Surf value, so a surface indexes its
-  // own buffer and most of them come back empty and emit no mesh at all
-  static inline var FLOOR_SURFS = 11;
+  // how many per-surface buffers `structure` allocates: one slot per Surf value, so a surface
+  // indexes its own buffer and most of them come back empty and emit no mesh at all. the number
+  // itself lives with the enum's art table (FacilityStyle.SURF_SLOTS), because a Surf added
+  // without growing BOTH is an index out of range at the flush
+  static inline var FLOOR_SURFS = FacilityStyle.SURF_SLOTS;
 
   // cell offsets of the neighbour each wall face looks at. 0 = north (-z), 1 = south (+z),
   // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds, and the order
@@ -387,7 +389,10 @@ class FacilityGeom
       // under one would be dead geometry in a transparent buffer — hidden from outside by the vault
       // and faded off with it from inside, paying overdraw in the sorted pass for neither. the RIM
       // is unaffected: it caps the wall head, and the vault springs from the outer plane above it
-      var flatDeck = !st.hangar;
+      // a CORP floor gets none either, and for the opposite reason: the player is always inside
+      // it, so a deck would be permanently faded out — dead geometry in the sorted pass. the read
+      // of "a storey" comes from the parapet band instead
+      var flatDeck = !st.hangar && m.kind != 'corp';
       // floors, one buffer per surface. a hangar rolls no lab tile and a lab building no concrete,
       // so most of these come back empty and emit no mesh at all
       //
@@ -399,12 +404,11 @@ class FacilityGeom
       // tiled, and they are 218 faces against 538 in a generated area, so the corridor is a real
       // third of what the player sees indoors rather than a detail
       var wOut = MeshBufTools.make();
-      var wRoom = MeshBufTools.make();
-      var wCorr = MeshBufTools.make();
-      // and one more pair for the two ROOM TEMPLATES: an office is painted and a washroom is glazed
-      // tile floor to ceiling, and neither is the laboratory's finish
-      var wOffice = MeshBufTools.make();
-      var wWash = MeshBufTools.make();
+      // the INTERIOR faces, one buffer per surface they look INTO, exactly as the floors are one
+      // per surface they paint. It was four named locals while there were four finishes; a corp
+      // tower has eight and they are all different art, so the set is indexed like the floors and
+      // the art comes off m.tex.wallInto
+      var wIn = [for (_ in 0...FLOOR_SURFS) MeshBufTools.make()];
       // the hangar's roll-up shutter strips. their own buffer because they take their own texture:
       // painted in plain cladding they were a door you could not see
       var shut = MeshBufTools.make();
@@ -430,13 +434,7 @@ class FacilityGeom
         {
           if (st.hangar || !FacilityModel.isIndoor(m, c, r))
             return wOut;
-          return switch (m.surf[r][c])
-            {
-              case Surf.LINO: wCorr;
-              case Surf.OFFICE: wOffice;
-              case Surf.WASH: wWash;
-              case _: wRoom;
-            }
+          return wIn[m.surf[r][c]];
         }
 
       for (row in st.oy1...st.oy2 + 1)
@@ -564,7 +562,7 @@ class FacilityGeom
                 // the time and an exterior one in the outside cladding. a doorway is a piece of the
                 // circulation and not of either space it joins, which is the same reason the
                 // generator floors every door cell in corridor lino
-                var soffit = (st.hangar ? wOut : wCorr);
+                var soffit = (st.hangar ? wOut : wIn[m.tex.circ]);
                 for (k in 0...2)
                   {
                     var dir = (m.doors[di].alongX ? k : 2 + k);
@@ -685,7 +683,7 @@ class FacilityGeom
       // gable are the same object here: the exterior cladding carrying on ABOVE the wall head, in
       // this same buffer, in this same course, staying put when the lid over the player's head
       // fades. only the shape differs, a band round a box against a segment under an arch
-      var wallTex = st.hangar ? FacilityStyle.WALL_HANGAR : FacilityStyle.WALL_EXTERIOR;
+      var wallTex = st.hangar ? FacilityStyle.WALL_HANGAR : m.tex.wallOut;
       if (st.hangar)
         FacilityRoof.crescents(m, si, wOut);
       var shell:Shell = {
@@ -694,31 +692,33 @@ class FacilityGeom
         paraCells: st.hangar ? 0 : ringCells(m, si),
         paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
       };
-      addFloor(scene, floors[Surf.TILE], FacilityStyle.FLOOR_TILE);
-      addFloor(scene, floors[Surf.LINO], FacilityStyle.FLOOR_LINO);
-      addFloor(scene, floors[Surf.CONCRETE], FacilityStyle.FLOOR_CONCRETE);
-      addFloor(scene, floors[Surf.OFFICE], FacilityStyle.FLOOR_OFFICE);
-      addFloor(scene, floors[Surf.WASH], FacilityStyle.FLOOR_WASH);
+      // one flush per SURFACE, off the model's own art table. a slot with no texture is a surface
+      // this kind does not have, and a slot with one whose buffer is empty emits no mesh — so the
+      // loop is the whole of what used to be nine hand-written lines and two kinds' worth of them
+      for (i in 0...FLOOR_SURFS)
+        {
+          if (m.tex.floor[i] != null)
+            addFloor(scene, floors[i], m.tex.floor[i]);
+          if (m.tex.wallInto[i] != null)
+            add(scene, wIn[i], m.tex.wallInto[i], true, false);
+        }
       add(scene, wOut, wallTex, true, true);
-      add(scene, wRoom, FacilityStyle.WALL_ROOM, true, false);
-      add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
-      add(scene, wOffice, FacilityStyle.WALL_OFFICE, true, false);
-      add(scene, wWash, FacilityStyle.WALL_WASH, true, false);
-      add(scene, shut, FacilityStyle.DOOR_SHUTTER, true, true);
-      add(scene, head, FacilityStyle.WINDOW_HEAD, true, false);
+      if (m.tex.shutter != null)
+        add(scene, shut, m.tex.shutter, true, true);
+      add(scene, head, m.tex.head, true, false);
       // the coping does not cast: the cladding under it is in wOut, which does, and at the moon
       // box's 0.088 units per shadow texel a 0.25-tall band overhanging 0.12 adds at most three
       // texels to a silhouette that is already thrown
-      add(scene, cope, FacilityStyle.COPING, true, false);
-      addPane(scene, panes, FacilityStyle.WINDOW_LIT, shell);
-      addPane(scene, panes2, FacilityStyle.WINDOW_LIT_2, shell);
-      addPane(scene, panesHigh, FacilityStyle.WINDOW_HIGH_TEX, shell);
+      add(scene, cope, m.tex.coping, true, false);
+      addPane(scene, panes, m.tex.pane, shell);
+      addPane(scene, panes2, m.tex.pane2, shell);
+      addPane(scene, panesHigh, m.tex.paneHigh, shell);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
       // from every angle outside it
-      addDeck(scene, rim, FacilityStyle.ROOF, false, shell);
-      addDeck(scene, roof, FacilityStyle.ROOF, true, shell);
+      addDeck(scene, rim, m.tex.roof, false, shell);
+      addDeck(scene, roof, m.tex.roof, true, shell);
       return shell;
     }
 
@@ -729,14 +729,13 @@ class FacilityGeom
 // of grating read as a vehicle pit, and tiled down it read as four of them
   static function floorBuf(m:Facility, col:Int, row:Int, floors:Array<MeshBuf>):MeshBuf
     {
-      return switch (surfUnder(m, col, row))
-        {
-          case Surf.LINO: floors[Surf.LINO];
-          case Surf.CONCRETE: floors[Surf.CONCRETE];
-          case Surf.OFFICE: floors[Surf.OFFICE];
-          case Surf.WASH: floors[Surf.WASH];
-          default: floors[Surf.TILE];
-        };
+      // INDEXED and no longer a switch: a surface with no art of its own has a null in
+      // `m.tex.floor` and its buffer is never flushed, so the fallback has to be a surface this
+      // kind really paints rather than Surf.TILE, which a corp floor has none of
+      var s = surfUnder(m, col, row);
+      if (m.tex.floor[s] == null)
+        s = (m.kind == 'corp' ? Surf.CARPET : Surf.TILE);
+      return floors[s];
     }
 
 // the surface a cell's floor is drawn in — its own, except that a DRAIN inherits its neighbours'.

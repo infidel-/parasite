@@ -63,7 +63,8 @@ class Go
 // go to a random block of a given kind: go block [kind]
 //
 // RANDOM AND NOT THE FIRST, which is the whole point of it: a compound has two buildings, a dozen
-// labs and four offices, and what this is for is looking at ANOTHER one of them. Run it twice and
+// labs and four offices — and a tower floor two cubicle farms and three exec rooms — and what this
+// is for is looking at ANOTHER one of them. Run it twice and
 // you are somewhere else. See console.GoBlock for where the list comes from and what it cannot
 // offer — the block tree is not persisted, so this is derived from the saved grid
   function goBlock(arr: Array<String>)
@@ -71,7 +72,7 @@ class Go
       var all = GoBlock.list(game);
       if (all.length == 0)
         {
-          log('No blocks here: `go block` reads the facility compound\'s layout off its grid.');
+          log('No blocks here: `go block` reads a compound\'s or a tower\'s layout off its grid.');
           return;
         }
       if (arr.length < 3)
