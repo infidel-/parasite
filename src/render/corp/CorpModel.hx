@@ -29,6 +29,8 @@ class CorpModel
     {
       var m = FacilityModel.fromArea(area, icon, CorpStyle.shell());
       washroomWindows(m);
+      doorWindows(m);
+      runsOfThree(m);
       loneWindows(m);
       // both passes above rewrite m.wall, and FacilityModel.fromArea grouped the runs BEFORE they
       // ran — so the runs are re-derived off the corrected grid rather than patched
@@ -146,6 +148,85 @@ class CorpModel
                   }
               }
           }
+    }
+
+// A PANE NEVER TOUCHES A DOORWAY.
+//
+// gen.corp.CorpBuilding.makeWindows breaks its run at a door and then deliberately glazes the cell
+// right before it — `cells[x - delta.x][y - delta.y] = windowTiles[2]`, the closing frame — so
+// every opening on a glazed wall has curtain wall butted straight onto its jamb. Reported from the
+// game with the two faces beside each other: a window-2bay at x 1.367 and the door cell's own
+// floor at 5.333, one cell apart.
+//
+// ALONG THE WALL LINE AND NOT ALL FOUR HANDS: a door in the perpendicular wall of the room behind
+// is not adjacent to this pane in any sense a player can see, and demoting on it would strip
+// glazing for a door round the corner.
+//
+// HERE AND NOT IN THE GENERATOR, washroomWindows' reason exactly: the shell is derived from the
+// saved grid on every load, so a correction here reaches every corp save that already exists
+// where a generator change reaches none of them
+  static function doorWindows(m: Facility):Void
+    {
+      var hit = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.wall[row][col] != Wall.WINDOW)
+              continue;
+            // the run's axis is the hand its own glazing carries on down, the same test
+            // FacilityModel.findWindows picks it with
+            var alongX = (isWindow(m, col - 1, row) || isWindow(m, col + 1, row));
+            var dc = (alongX ? 1 : 0);
+            var dr = (alongX ? 0 : 1);
+            if (FacilityModel.isDoor(m, col - dc, row - dr) ||
+                FacilityModel.isDoor(m, col + dc, row + dr))
+              hit.push({ col: col, row: row });
+          }
+      for (c in hit)
+        m.wall[c.row][c.col] = Wall.SOLID;
+    }
+
+// A RUN IS A WHOLE NUMBER OF THREE-BAY PANES, and what is left over is masonry.
+//
+// there is one image per run length and nothing is ever stretched, so FacilityModel.findWindows
+// chops a corp run greedily into 3s with 2s to finish — and a 2-cell opening in a wall that is
+// four or five cells long reads as half a wall rather than as a window. Asked for as exactly that.
+// So the run is trimmed to floor(len / 3) * 3 first and the splitter then only ever sees a
+// multiple of three: the two-bay art goes unused on a tower and stays for the compound.
+//
+// CENTRED, so the leftover is shared between the two ends and a run keeps a pier at each. And
+// COLLECTED BEFORE IT IS APPLIED, because demoting a cell mid-scan makes the next cell of the same
+// run look like the head of a new one and it would be trimmed twice
+  static function runsOfThree(m: Facility):Void
+    {
+      var runs = [];
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.wall[row][col] != Wall.WINDOW)
+              continue;
+            var alongX = (isWindow(m, col - 1, row) || isWindow(m, col + 1, row));
+            if (alongX && isWindow(m, col - 1, row))
+              continue;
+            if (!alongX && isWindow(m, col, row - 1))
+              continue;
+            var len = 1;
+            while (isWindow(m, col + (alongX ? len : 0), row + (alongX ? 0 : len)))
+              len++;
+            runs.push({ col: col, row: row, alongX: alongX, len: len });
+          }
+      for (r in runs)
+        {
+          var keep = Std.int(r.len / 3) * 3;
+          var lead = Std.int((r.len - keep) / 2);
+          for (i in 0...r.len)
+            {
+              if (i >= lead &&
+                  i < lead + keep)
+                continue;
+              m.wall[r.row + (r.alongX ? 0 : i)][r.col + (r.alongX ? i : 0)] = Wall.SOLID;
+            }
+        }
     }
 
 // a window cell with no window beside it becomes SOLID.

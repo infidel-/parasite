@@ -667,14 +667,33 @@ class FacilityGeom
           // BOTH faces off the plane at once, each toward the slab's centre, so each ends up inside
           // its own side and the head and sill caps below — which keep the opening's TRUE size —
           // stand proud of the glass as the reveal
+          // WHICH ENDS OF THIS RUN HAVE MASONRY PAST THEM. Read once and used twice — by the
+          // overlap below and by the jamb further down — because it is the same question both
+          // times: is this end the outside of an opening, or the seam where a CORP run was
+          // chopped into sub-runs the art exists for?
+          var eCol = w.alongX ? -1 : 0;
+          var eRow = w.alongX ? 0 : -1;
+          var glazedAt = function(c:Int, r:Int)
+            return FacilityModel.inside(m, c, r) && m.wall[r][c] == Wall.WINDOW;
+          var loEnd = !glazedAt(w.col + eCol, w.row + eRow);
+          var hiEnd = !glazedAt(w.col - eCol * w.len, w.row - eRow * w.len);
           var pb = (w.high ? panesHigh : (w.len == 2 ? panes2 : panes));
           var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
           var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
           var ge = FacilityStyle.WINDOW_INSET;
-          var px0 = w.alongX ? x0 - gr : x0 + ge;
-          var px1 = w.alongX ? x1 + gr : x1 - ge;
-          var pz0 = w.alongX ? z0 + ge : z0 - gr;
-          var pz1 = w.alongX ? z1 - ge : z1 + gr;
+          // AND AN END THAT ABUTS GLAZING DOES NOT GROW. WINDOW_OVERLAP exists so alphaTest
+          // eating the art's outermost texel row cannot open a slit against the masonry, and at a
+          // SPLIT boundary there is no masonry — both sub-runs grow into each other instead.
+          // MEASURED off the two faces reported from the game: a 3-bay on x -160.0..-148.0 draws
+          // -160.15..-147.85 and the 2-bay abutting it on -148.0..-140.0 draws -148.10..-139.90,
+          // so 0.25 units of coplanar glass in TWO DIFFERENT MESHES (`panes` and `panes2` are one
+          // material each). Held to zero the two meet edge to edge, where the art's own mullion is
+          var gr0 = (loEnd ? gr : 0.0);
+          var gr1 = (hiEnd ? gr : 0.0);
+          var px0 = w.alongX ? x0 - gr0 : x0 + ge;
+          var px1 = w.alongX ? x1 + gr1 : x1 - ge;
+          var pz0 = w.alongX ? z0 + ge : z0 - gr0;
+          var pz1 = w.alongX ? z1 - ge : z1 + gr1;
           pane(pb, px0, px1, pz0, pz1, outDir, lo - gy, lo + tall + gy);
           pane(pb, px0, px1, pz0, pz1, inFace, lo - gy, lo + tall + gy);
           // THE REVEAL IS FOUR QUADS AND IT USED TO BE TWO. A hole cut in a wall has a soffit, a
@@ -700,14 +719,8 @@ class FacilityGeom
           // two runs can never abut — but for kind 'corp' it CHOPS a strip into abutting 2- and
           // 3-cell sub-runs, so every internal boundary got two coplanar inward-facing cap-alu
           // quads standing inside the glazing band, where there is no masonry at all
-          var eCol = w.alongX ? -1 : 0;
-          var eRow = w.alongX ? 0 : -1;
-          var glazedAt = function(c:Int, r:Int)
-            return FacilityModel.inside(m, c, r) && m.wall[r][c] == Wall.WINDOW;
           jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
-            FacilityStyle.HEAD_TILE,
-            !glazedAt(w.col + eCol, w.row + eRow),
-            !glazedAt(w.col - eCol * w.len, w.row - eRow * w.len));
+            FacilityStyle.HEAD_TILE, loEnd, hiEnd);
         }
 
       // the parapet ring, once the wall ring it stands on is complete — and the hangar's opposite
