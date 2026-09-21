@@ -456,6 +456,10 @@ class CorpStyle
     fill: [0.72, 0.80, 1.00],        // and the sky term a face in shade keeps
     amb: 0.55,
     gain: 0.606,                     // 0.55 + 0.606 * 0.7428 = 1.0 on a roof
+    // and what fraction of the key a GROUND CELL IN A BUILDING'S SHADOW keeps. Not zero: a street
+    // between towers is lit by every wall around it as well as by the sky, and a hard black
+    // parallelogram reads as a hole in the road rather than as a shadow. See CorpStreet.shadows
+    shadow: 0.18,
   };
 
   // ---- THE INDOOR SWAP ------------------------------------------------------------------------

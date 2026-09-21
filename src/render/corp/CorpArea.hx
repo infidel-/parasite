@@ -294,6 +294,9 @@ class CorpArea implements Area3D
               // in the hundreds is the sector grid or the penthouse rule having stopped firing
               deco: street.deco,
               pent: street.pent,
+              // ground cells a building's projected shadow darkened. Zero with `blocks` in the
+              // hundreds is the projection having stopped firing, not a moonless night
+              shadow: street.shadow,
               generated: street.city.buildings.length,
             },
             // and what is moving on it. `walkLanes`/`roadLanes` is what the agents are dealt over,

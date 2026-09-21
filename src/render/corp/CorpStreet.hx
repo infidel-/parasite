@@ -40,6 +40,7 @@ typedef CorpStreetSet = {
   var lit:Int;          // lit window panes
   var deco:Int;         // rooftop plant decals
   var pent:Int;         // and mechanical penthouses
+  var shadow:Int;       // ground cells darkened by a building's own projected shadow
 };
 
 // the city street 114 units under the floor plate — AROUND the tower and never under it.
@@ -70,6 +71,8 @@ typedef CorpStreetSet = {
 // the effort: no lawns, no entrances, no wall decals, no roof shadows, no roof props, no kerb (the
 // pavement's own paving is what separates road from footpath at this range), no street lamps (the
 // 12-slot spotlight pool belongs to the office) and no `Check` audit — nobody walks this city.
+// `no roof shadows` still means render.world.roofs.RoofShadows, the contact band under a parapet;
+// a building's shadow on its OWN STREET is a different thing and is projected, see `shadows`.
 //
 // AND NO MASK OF ANY KIND. render.world.VisionMask's rim channel sinks a surface to the fog colour
 // at the AREA BORDER, and the border is the tower's own edge — patched, the street would be cut to
@@ -102,6 +105,9 @@ class CorpStreet
       var deco = new Map<Int, MeshBuf>();
       var nRoad = 0;
       var nWalk = 0;
+      // every building's shadow, before the ground it falls on is emitted
+      var hgt = heights(city.buildings);
+      var nShadow = 0;
       // THE MODEL IS MIRROR-TILED and the loop runs over WORLD cell indices — see `fold`. Three
       // tiles each way is more than the reach can ask for, and folding is what stops the street
       // ending in a straight edge inside the fog
@@ -120,7 +126,10 @@ class CorpStreet
               (t == Tile.Alley ? RenderConfig.ALLEY_TILE : RenderConfig.ROAD_TILE));
             var g = buf(bufs, tex);
             FacilityGeom.cap(g, x0, x0 + CELL, z0, z0 + CELL, 0.0, per);
-            shade(g, ndl(0, 1, 0));
+            var dark = shadowAt(hgt, col, row, 0.0);
+            if (dark > 0)
+              nShadow++;
+            shade(g, ndl(0, 1, 0) * shadowMul(dark));
             if (t == Tile.Walkway)
               nWalk++;
             else
@@ -175,9 +184,24 @@ class CorpStreet
                   shade(wb, nd);
                   nWall++;
                 }
+              // PER CELL and not one rect over the footprint: a roof is most of what is seen from
+              // up here, so it is the surface a neighbour's shadow has to be able to cross. The
+              // cap writes world-aligned uv, so splitting it changes no texel — 158 rects become
+              // ~1,900 and land in the same buffer for the same one draw call
               var rb = buf(bufs, st.roofBases[f % st.roofBases.length]);
-              FacilityGeom.cap(rb, x0, x1, z0, z1, h, RenderConfig.ROOF_TILE);
-              shade(rb, ndl(0, 1, 0));
+              var bc = span(tx, b.col, b.w);
+              var br = span(tz, b.row, b.d);
+              for (cc in 0...b.w)
+                for (rr in 0...b.d)
+                  {
+                    var rx = x0 + cc * CELL;
+                    var rz = z0 + rr * CELL;
+                    FacilityGeom.cap(rb, rx, rx + CELL, rz, rz + CELL, h, RenderConfig.ROOF_TILE);
+                    var rd = shadowAt(hgt, bc + cc, br + rr, h);
+                    if (rd > 0)
+                      nShadow++;
+                    shade(rb, ndl(0, 1, 0) * shadowMul(rd));
+                  }
               nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
               var r = roof(bufs, deco, st, b, f, x0, x1, z0, z1, h, per);
               nDeco += r.deco;
@@ -201,6 +225,7 @@ class CorpStreet
         lit: nLit,
         deco: nDeco,
         pent: nPent,
+        shadow: nShadow,
       };
     }
 
@@ -384,6 +409,81 @@ class CorpStreet
           }
       return { deco: n, pent: pent };
     }
+
+// WHERE EVERY STREET BUILDING'S SHADOW FALLS — a heightfield horizon test, not a projection.
+//
+// nothing outside is lit, so nothing outside could cast: the moon is a real DirectionalLight with a
+// real shadow map, but its ortho box is 90 units half-wide and parked on the player, while the
+// street is up to 195 units out and 114 units DOWN. Widening the box to reach it coarsens the
+// office's own shadow texel by 2.2x and makes the plate cast a 224 x 180 hole over its own street.
+//
+// TWO THINGS HAD TO BE LEARNED HERE AND BOTH CAME FROM LOOKING.
+//   THE GROUND IS NOT WHAT YOU SEE. From the twentieth floor at this camera the roofs occlude
+//     almost all of the road — every vantage tried came back a field of roof. A shadow feature that
+//     only darkens the ground is invisible, so the receiver has to be the ROOF as much as the road.
+//   A FLAT PROJECTION MAKES A NIGHT, NOT A SHADOW. The first version swept each footprint along the
+//     light and marked every cell: a downtown of 90-unit towers throws a 20-cell shadow each and
+//     6,021 of 7,115 ground cells came back covered — 85% of the street uniformly dark.
+//
+// So: one height per city cell, and a receiver at (col, row, y) marches toward the light asking
+// whether anything stands over the ray. Moving one cell horizontally raises the ray by
+// `CELL * dir.y / |dir.xz|`, so the march is bounded by STREET_MAX_H and is at most 21 steps. The
+// NEAREST blocker wins and its strength falls off with how far away it is, which is what keeps a
+// tower dark at its own foot and fades it out rather than blanketing the block.
+//
+// one Array<Float> at build, ~9k queries, and nothing at all at runtime
+  static function heights(list:Array<citygen.CityModel.Building>):Array<Float>
+    {
+      var n = CityConfig.GRID;
+      var span3 = 3 * n;
+      var h = [for (_ in 0...span3 * span3) 0.0];
+      for (tz in -1...2)
+        for (tx in -1...2)
+          for (b in list)
+            {
+              var bh = (b.h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : b.h);
+              var c0 = span(tx, b.col, b.w);
+              var r0 = span(tz, b.row, b.d);
+              for (cc in 0...b.w)
+                for (rr in 0...b.d)
+                  {
+                    var col = c0 + cc;
+                    var row = r0 + rr;
+                    if (col < -n || col >= 2 * n || row < -n || row >= 2 * n)
+                      continue;
+                    h[(row + n) * span3 + (col + n)] = bh;
+                  }
+            }
+      return h;
+    }
+
+// how deep in shadow a surface at (col, row) standing `y` above the street is, 0 (full key) to 1
+  static function shadowAt(hgt:Array<Float>, col:Int, row:Int, y:Float):Float
+    {
+      var n = CityConfig.GRID;
+      var span3 = 3 * n;
+      var d = CorpStyle.SUN.dir;
+      var flat = Math.sqrt(d[0] * d[0] + d[2] * d[2]);
+      // one cell TOWARD the light, and what that cell costs the ray in height
+      var sx = d[0] / flat;
+      var sz = d[2] / flat;
+      var rise = CELL * d[1] / flat;
+      var steps = Std.int(CorpStyle.STREET_MAX_H / rise) + 1;
+      for (k in 1...steps + 1)
+        {
+          var c = col + Std.int(Math.round(sx * k));
+          var r = row + Std.int(Math.round(sz * k));
+          if (c < -n || c >= 2 * n || r < -n || r >= 2 * n)
+            return 0.0;
+          if (hgt[(r + n) * span3 + (c + n)] > y + rise * k)
+            return 1.0 - (k - 1) / steps;
+        }
+      return 0.0;
+    }
+
+// and the key multiplier that falls out of it
+  static inline function shadowMul(v:Float):Float
+    return 1.0 - v * (1.0 - CorpStyle.SUN.shadow);
 
 // THE OUTDOOR KEY, baked per face. See CorpStyle.SUN for why it is baked and not lit: everything
 // down here is a MeshBasicMaterial, so no light in the scene reaches it and making it lambert would
