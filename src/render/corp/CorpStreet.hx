@@ -337,7 +337,10 @@ class CorpStreet
           var ca = (i < 2 ? s.a : s.a);
           var cc = (i < 2 ? s.c : s.c + t);
           var cd = (i < 2 ? s.d : s.d - t);
-          FacilityGeom.cap(cope, ca, s.b, cc, cd, hi, CorpStyle.COPING_TILE);
+          // the two rims that RUN ALONG Z take the uv turned 90 degrees: city/coping is authored
+          // as a straight-on strip with a horizontal tile, so unturned they run the strip across
+          // the rim's 0.6-unit width instead of along its length
+          FacilityGeom.cap(cope, ca, s.b, cc, cd, hi, CorpStyle.COPING_TILE, i >= 2);
         }
       // the mechanical penthouse, in the building's own wall and its own roof base
       var cx = (x0 + x1) / 2;

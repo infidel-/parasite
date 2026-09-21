@@ -669,13 +669,20 @@ class FacilityGeom
           capDown(head, x0, x1, z0, z1, lo + tall, FacilityStyle.HEAD_TILE);
           if (lo >= 0.05)
             cap(head, x0, x1, z0, z1, lo, FacilityStyle.HEAD_TILE);
-          // both ends unconditionally, and the two things that makes safe are invariants and not
-          // luck: FacilityModel.findWindows runs a run to the END of its contiguous window strip, so
-          // two runs can never abut and the cell past each end is never glazing — and it is solid
-          // masonry rather than a doorway, measured over all 42 runs of a compound, whose 84 end
-          // cells came back Const.TILE_BUILDING with no object on any of them
+          // AN END ONLY GETS A JAMB WHERE THERE IS MASONRY PAST IT, and this used to be
+          // unconditional on an invariant that a compound honours and a TOWER does not:
+          // FacilityModel.findWindows runs a compound run to the end of its contiguous strip, so
+          // two runs can never abut — but for kind 'corp' it CHOPS a strip into abutting 2- and
+          // 3-cell sub-runs, so every internal boundary got two coplanar inward-facing cap-alu
+          // quads standing inside the glazing band, where there is no masonry at all
+          var eCol = w.alongX ? -1 : 0;
+          var eRow = w.alongX ? 0 : -1;
+          var glazedAt = function(c:Int, r:Int)
+            return FacilityModel.inside(m, c, r) && m.wall[r][c] == Wall.WINDOW;
           jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
-            FacilityStyle.HEAD_TILE);
+            FacilityStyle.HEAD_TILE,
+            !glazedAt(w.col + eCol, w.row + eRow),
+            !glazedAt(w.col - eCol * w.len, w.row - eRow * w.len));
         }
 
       // the parapet ring, once the wall ring it stands on is complete — and the hangar's opposite
@@ -1060,16 +1067,21 @@ class FacilityGeom
 // reaches the same hole from the other end — it is punched in a cell of FULL WALL THICKNESS (`thick`
 // reads Wall.WINDOW and a well is Wall.WINDOW_HIGH), so its neighbours take the equal-thickness
 // branch and emit nothing at all.
-  static function jamb(b:MeshBuf, alongX:Bool, s:Rect, y0:Float, y1:Float, t:Float):Void
+  static function jamb(b:MeshBuf, alongX:Bool, s:Rect, y0:Float, y1:Float, t:Float,
+      loEnd:Bool = true, hiEnd:Bool = true):Void
     {
       if (alongX)
         {
-          face(b, s.x0, s.x0, s.z0, s.z1, 3, y0, y1, t);
-          face(b, s.x1, s.x1, s.z0, s.z1, 2, y0, y1, t);
+          if (loEnd)
+            face(b, s.x0, s.x0, s.z0, s.z1, 3, y0, y1, t);
+          if (hiEnd)
+            face(b, s.x1, s.x1, s.z0, s.z1, 2, y0, y1, t);
           return;
         }
-      face(b, s.x0, s.x1, s.z0, s.z0, 1, y0, y1, t);
-      face(b, s.x0, s.x1, s.z1, s.z1, 0, y0, y1, t);
+      if (loEnd)
+        face(b, s.x0, s.x1, s.z0, s.z0, 1, y0, y1, t);
+      if (hiEnd)
+        face(b, s.x0, s.x1, s.z1, s.z1, 0, y0, y1, t);
     }
 
 // the strip of masonry closing a doorway's own threshold, WALL_BASE up to the floor. every OTHER
@@ -1141,14 +1153,23 @@ class FacilityGeom
 
 // one horizontal cell quad at height y, world-aligned UVs (never stretched). public because
 // render.facility.FacilityTables emits its worktops with it — a bench is the same kind of surface as
-// a floor or a roof, and duplicating the winding is how one of them ends up facing the wrong way
-  public static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
+// a floor or a roof, and duplicating the winding is how one of them ends up facing the wrong way.
+//
+// `swap` TURNS THE UV 90 DEGREES (u off z, v off x) and exists because not every top-down texture
+// is isotropic: a PARAPET COPING is authored as a straight-on strip that tiles left to right, so
+// the two rims of a ring that run along z sample its 0.6-unit width across the strip and its length
+// along it — measured on render.corp.CorpStreet.roof as du 0.15 against dv 8.7. Default false, and
+// world-aligned either way, so nothing is stretched in either setting
+  public static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float,
+      swap:Bool = false):Void
     {
       if (x1 - x0 < 0.01 ||
           z1 - z0 < 0.01)
         return;
-      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+      var uv = (swap ?
+        [z1 / t, x0 / t, z1 / t, x1 / t, z0 / t, x1 / t, z0 / t, x0 / t] :
         [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], uv);
     }
 
 // the same quad wound the other way, so it is seen from BELOW — a door head's soffit. public for

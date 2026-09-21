@@ -85,6 +85,7 @@ class CorpFacade
             // cell's slab is GLASS_T where its neighbours' are WALL_T, so a facade following the
             // slab would jog half a unit in and out at every window run's two ends. Taking the
             // ring plane puts the drop dead flush with the parapet band 6 units over it
+            var sl = FacilityGeom.slab(m, col, row);
             for (dir in 0...4)
               {
                 if (!outward(m, col, row, dir))
@@ -95,6 +96,21 @@ class CorpFacade
                   drop(clad, lit, st, col, row, dir, s.x0, s.x1, p, p);
                 else
                   drop(clad, lit, st, col, row, dir, p, p, s.z0, s.z1);
+                // AND THE LEDGE BETWEEN THE TWO PLANES, which is the hole reported at the window
+                // line. A GLAZED cell's slab insets by GLASS_T's half (1.5) where the ring plane
+                // this drop stands on insets by PARAPET_INSET (1.0), so the glass wall above sits
+                // half a unit further in than the cladding below it and nothing closes the step —
+                // an open 0.5-wide slot at y = WALL_BASE running the whole length of every window
+                // run, with the void under the plate visible through it. render.facility
+                // .FacilityGeom.band caps the identical step at the parapet with its `soffit`
+                // quad; this is that quad, the other way up. A SOLID cell's two insets are equal,
+                // so the rect comes out zero-wide and `cap` drops it
+                FacilityGeom.cap(clad,
+                  dir == 2 ? s.x0 : (dir == 3 ? sl.x1 : s.x0),
+                  dir == 2 ? sl.x0 : (dir == 3 ? s.x1 : s.x1),
+                  dir == 0 ? s.z0 : (dir == 1 ? sl.z1 : s.z0),
+                  dir == 0 ? sl.z0 : (dir == 1 ? s.z1 : s.z1),
+                  FacilityStyle.WALL_BASE, CorpStyle.FACADE_TILE);
               }
             // AND THE REENTRANT CORNERS, which are a 1 x 1 SLOT 114 UNITS TALL without this.
             //
