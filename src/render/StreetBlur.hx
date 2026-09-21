@@ -89,8 +89,13 @@ void main() {
     {
       vec2 uv = vUv + K[i] * radius * m * texel;
       vec4 s = texture2D(tDiffuse, uv);
-      // weight by the TAP\'s own mask, so nothing sharp in front bleeds into what is behind it
-      float w = 1.0 - s.a;
+      // weight by the TAP\'s own mask, so nothing sharp in front bleeds into what is behind it.
+      // CLAMPED, and the clamp is load-bearing: alpha is dead data only for the draws that leave
+      // it at 1, and an ADDITIVE one accumulates it (src ONE + dst ONE), so a stack of glow quads
+      // reads back 2 or 3. Unclamped that is a NEGATIVE weight, wsum can pass through zero, and
+      // the single NaN texel it divides out is smeared over half the frame by the bloom that
+      // follows -- one black frame. max() makes wsum >= 1 by construction
+      float w = max(0.0, 1.0 - s.a);
       sum += s.rgb * w;
       wsum += w;
     }

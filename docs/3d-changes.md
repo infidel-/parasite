@@ -1119,3 +1119,49 @@ art's aspect stands 3.55..5.65 and clears `CEIL_Y`), charts on whatever is left.
 `wall-office` 121.5 and `wall-meeting` 98.9 — a panel darker than its wall is a panel you can see.
 
 Verdict: **KEEP.**
+
+## A negative blur weight, one NaN texel, and half the frame goes black
+
+Reported live after the fifth defect pass: "giant black quads appear for a tiny amount on the
+screen", inside the corp tower, at least half the screen, most often while holding RMB with the
+camera near vertical.
+
+It is not a quad. **The whole frame goes black for exactly one frame**, and the frame is a
+COMPLETE, NORMAL frame: 121 draws, 146 calls, 16 passes, exposure 1.5, viewport, scissor, pass
+enables `110011`, swap parity, target sizes — every one of them identical to its neighbours. The
+scene drew. The picture is black anyway.
+
+Found by reading the framebuffer after EVERY pass, then classifying each target's texels as
+NaN / Inf / brightest-finite:
+
+| target | census on the black frame |
+|---|---|
+| raw scene render | `r=0 g=0 b=0 A=0` — clean on all four channels, max value < 4 |
+| `renderTargetBright` (bloom high-pass) | **nan=3, box 1x1** — one texel |
+| bloom mips `v0..v4` | 363 → 1728 → 4446 → 6837 → 3744, boxes 11x11 → 24x24 → 38x39 → 53x43 → full |
+| bloom composite → read buffer | **entirely NaN** → OutputPass tone-maps NaN to 0 |
+
+So ONE NaN texel, born in `StreetBlur`, and bloom's blur is what spreads it over half the screen.
+`Inf` would have gone white; NaN is what goes black.
+
+**The cause is that alpha is not a 0..1 mask.** `CorpStreet.blur` writes `1 - smoothstep(...)`,
+which is in range, and the pass's header reasons that an opaque material's alpha is dead data. It
+is — for draws that leave it at 1. An **ADDITIVE** draw accumulates it (`src ONE + dst ONE`), so a
+stack of glow quads reads back 2 or 3. Measured on the bad frame: **alpha max 3.0, 114k–140k
+pixels above 1**. `float w = 1.0 - s.a` is then **−2**, `wsum = 1.0 + Σw` can pass through zero,
+and `sum / wsum` is the NaN. The fifth pass put a new additive batch over the street — the car
+headlights, two overlapping quads per car — which is why it started now.
+
+Fix: `float w = max(0.0, 1.0 - s.a)`, making `wsum >= 1` by construction. Not a tolerance, an
+invariant. Verified with the out-of-range alpha still present (max 3.0, 114,148 pixels over 1) so
+the trigger survives and only the divide is guarded: **6,481 frames over eight repro runs, zero
+NaN**, where before it fired in every run within 78–1,410 frames. `calls` 84, unchanged.
+
+Two traps worth keeping. A synthetic DOM `MouseEvent` does NOT reproduce it — only a real CDP
+`Input.dispatchMouseEvent` right-drag does. And each detector generation that wraps
+`renderer.render` STAYS wrapped: nine of them stacked took the game from 59 fps to 0.6, at which
+point the bug stops happening at all. Reload between detectors.
+
+Verdict: **FIXED.** And the general one: **a screen-space pass that reads a channel nobody owns
+must sanitise it.** Alpha in an HDR target is shared scratch — any additive draw, present or
+future, can put anything in it.
