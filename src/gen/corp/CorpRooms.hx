@@ -34,6 +34,13 @@ class CorpRooms
   public static inline var BASIN_MAX = 3;
   public static inline var STALL_MAX = 3;
   public static inline var RACK_ROWS_MAX = 4;
+  // and the boardroom table, which was the last run in this file still written the old way:
+  // `tw = room.w - 4` with no cap at all. Measured over 800 meeting rooms — min 12 cells, median
+  // 32, max 64, and 783 of the 800 had an axis of five cells or more. At CityConfig.CELL 4 and
+  // FacilityStyle.WALL_H 6 for a 3 m storey a cell is 2 m, so the MEDIAN boardroom table was
+  // 16 m x 8 m and the largest 16 m square, a third of the room's floor by construction
+  public static inline var TABLE_W_MAX = 4;
+  public static inline var TABLE_H_MAX = 3;
 
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
 // interchangeable: that one drops _TileRow.col, which is right for the facility's tables (none of
@@ -313,8 +320,28 @@ class CorpRooms
         Const.CORP_TABLE_PROJECTOR,
       ];
       var deco = full.copy();
-      var tx = room.x1 + 2, ty = room.y1 + 2;
-      var tw = room.w - 4, th = room.h - 4;
+      // CAPPED AND CENTRED, `toilet`'s own shape two functions down: a boardroom seats twelve
+      // whether the room it is in is 6 x 6 or 12 x 12, and the slack belongs round the table as
+      // circulation rather than in it
+      var tw = room.w - 4;
+      var th = room.h - 4;
+      if (tw > TABLE_W_MAX)
+        tw = TABLE_W_MAX;
+      if (th > TABLE_H_MAX)
+        th = TABLE_H_MAX;
+      // the LONG axis follows the room's, so a long thin boardroom gets a long thin table
+      if ((room.w >= room.h) != (tw >= th))
+        {
+          var t = tw;
+          tw = th;
+          th = t;
+          if (tw > room.w - 4)
+            tw = room.w - 4;
+          if (th > room.h - 4)
+            th = room.h - 4;
+        }
+      var tx = room.x1 + Std.int((room.w - tw) / 2);
+      var ty = room.y1 + Std.int((room.h - th) / 2);
       GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + tw - 1, ty + th - 1);
       var left = full.length;
       for (dy in 0...th)
