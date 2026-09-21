@@ -99,6 +99,9 @@ class CorpArea implements Area3D
       WorldCtx.standOff = null;
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
+      // the outside's shadow casters, which are dropped again one tick after the street's frozen
+      // shadow map has been written — see CorpStreet.casts
+      CorpStreet.begin();
       // both masks go BEFORE the builders and not after: each reads `on` at MATERIAL-CREATION time
       // to decide whether to compile its swap into a surface at all, and every material this kind
       // owns is created by FacilityGeom.build three lines down
@@ -321,9 +324,6 @@ class CorpArea implements Area3D
               // in the hundreds is the sector grid or the penthouse rule having stopped firing
               deco: street.deco,
               pent: street.pent,
-              // ground cells a building's projected shadow darkened. Zero with `blocks` in the
-              // hundreds is the projection having stopped firing, not a moonless night
-              shadow: street.shadow,
               generated: street.city.buildings.length,
             },
             // and what is moving on it. `walkLanes`/`roadLanes` is what the agents are dealt over,
@@ -395,6 +395,7 @@ class CorpArea implements Area3D
       // CorpCrowd's header — ambient city life is RenderConfig's own documented exception, and a
       // street that stops when the player stops thinking is the whole feature missing
       crowd.tick(opts.dtMs);
+      CorpStreet.settle();
       // AND THE DOOR LEAVES, which is not only their swing: FacilityDoors.pose writes into the
       // prop's own matrix array and render.Models.cull is what uploads it, so a tower that never
       // ticked them drew every leaf at the world origin and had a hole at every doorway — which

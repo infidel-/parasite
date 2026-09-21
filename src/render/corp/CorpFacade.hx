@@ -77,11 +77,6 @@ class CorpFacade
               z0 + (outward(m, col, row, 0) ? e : 0.0),
               z0 + CELL - (outward(m, col, row, 1) ? e : 0.0),
               CorpStyle.SOFFIT_Y, FacilityStyle.WALL_TILE);
-            // and it takes the outdoor key like everything else out here. A soffit faces DOWN, so
-            // its lambert term against a moon overhead is zero and it keeps the sky fill alone —
-            // which is correct and is the darkest thing in the frame, as the underside of a
-            // twenty-storey plate should be
-            CorpStreet.shade(soff, CorpStreet.ndl(0, -1, 0));
             var s = ring(m, col, row, half);
             if (!FacilityGeom.carries(m, col, row))
               continue;
@@ -143,7 +138,6 @@ class CorpFacade
     {
       FacilityGeom.face(clad, x0, x1, z0, z1, dir, CorpStyle.STREET_Y, FacilityStyle.WALL_BASE,
         CorpStyle.FACADE_TILE);
-      CorpStreet.shade(clad, CorpStreet.ndlDir(dir));
       if (st.glassAccentLit == null ||
           st.glassAccentLit[CorpStyle.FACADE_SLOT] == null)
         return;
@@ -231,31 +225,29 @@ class CorpFacade
       return out;
     }
 
-// one merged UNLIT mesh. nothing down here casts or receives: there is no moon over a tower's own
-// flank and nothing below the plate to catch a shadow.
+// one merged LIT mesh, on render.corp.CorpStreet's own street moon rather than on the office's:
+// the flank runs 114 units DOWN, so it is the street's surface as much as the tower's, and it both
+// casts onto the road at its foot and catches the shadow of anything standing beside it.
 //
 // IT SHIPPED WITH NO `color:` FIELD AT ALL, i.e. at 1.0, while the street beside it wears
-// STREET_DIM 0.62 and the cars CAR_DIM 0.78. The facade is the largest exterior surface in the
-// frame and the nearest — nineteen storeys straight down outside the window — so it was rendering
-// at full authored albedo and coming out BRIGHTER than the office the player is standing in. That
-// one missing field is most of "outside lighting is the same as indoor"; CorpStreet.shade above
-// is the rest of it
+// STREET_DIM and the cars CAR_DIM. The facade is the largest exterior surface in the frame and the
+// nearest — nineteen storeys straight down outside the window — so it was rendering at full
+// authored albedo and coming out BRIGHTER than the office the player is standing in
   static function add(scene:Scene, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var mat = new MeshBasicMaterial({
+      var mat = new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.FACADE_DIM),
-        vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
       });
       // the tower's own flank runs 114 units DOWN, so its far end is exactly as distant as the
       // street is and takes the same distance blur — CorpStyle.BLUR.near is set past its top
       CorpStreet.blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
-      mesh.receiveShadow = false;
-      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+      CorpStreet.casts(mesh);
       scene.add(mesh);
     }
 }

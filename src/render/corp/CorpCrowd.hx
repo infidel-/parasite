@@ -268,9 +268,14 @@ class CorpCrowd
 // to land AFTER <uv_vertex> because that is what assigns it. Without them four cars would be four
 // materials and four draw calls.
 //
-// AND IT IS NOT ADDITIVE, unlike the walkers beside it: a picture blended additively over the road
-// is a stain rather than a car. Plain unlit basic with an alphaTest, like every other street
-// surface — and the headlights still bloom, because they are painted past the threshold
+// AND IT IS NOT ADDITIVE: a picture blended additively over the road is a stain rather than a car.
+// A LAMBERT with an alphaTest, like every other street surface since the outside was given real
+// light — and the headlights still bloom, because they are painted past the threshold.
+//
+// lambert and not basic for the reason the walkers below are: an UNLIT sprite cannot be made to
+// sit in a lit street's value range by a multiplier, because the multiplier scales a value the
+// street's own light is meanwhile scaling too. Under the same moon it simply lands where the road
+// lands
   function cars(group:Group, count:Int):InstancedMesh
     {
       carUV = new js.lib.Float32Array(count * 4);
@@ -278,7 +283,7 @@ class CorpCrowd
       untyped carAttr.setUsage(THREE.DynamicDrawUsage);
       var geo:Dynamic = new PlaneGeometry(1, 1);
       geo.setAttribute('instanceUV', carAttr);
-      var mat:Dynamic = new MeshBasicMaterial({
+      var mat:Dynamic = new MeshLambertMaterial({
         map: Textures.loadTexture(CorpStyle.TRAFFIC, 'sprite'),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.CAR_DIM),
         alphaTest: 0.5,
@@ -324,7 +329,13 @@ class CorpCrowd
 // sexes at ONE draw call. Mipmaps are off for render.particles.Sprites.atlasTex's reason: the
 // cells sit edge to edge, so a coarse mip averages a neighbouring civilian into this one.
 //
-// NO vision mask and NO indoor mask, the street's own rule
+// NO vision mask and NO indoor mask, the street's own rule.
+//
+// AND LAMBERT, WHICH IS THE WHOLE OF "the fake street ai looks too bright". A civilian icon is
+// painted for a lit 2D map at full size — flat, saturated, high value — so an UNLIT quad wearing
+// one is the brightest thing on a night street whatever it is multiplied by, and at WALK_DIM 0.42
+// against a road at 0.0032 linear it still read as a sticker. Under the street's own moon it takes
+// the same key the pavement takes and cannot out-shine it
   function people(group:Group, count:Int):InstancedMesh
     {
       walkUV = new js.lib.Float32Array(count * 4);
@@ -332,7 +343,7 @@ class CorpCrowd
       untyped walkAttr.setUsage(THREE.DynamicDrawUsage);
       var geo:Dynamic = new PlaneGeometry(1, 1);
       geo.setAttribute('instanceUV', walkAttr);
-      var mat:Dynamic = new MeshBasicMaterial({
+      var mat:Dynamic = new MeshLambertMaterial({
         map: atlas(),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.WALK_DIM),
         alphaTest: 0.5,

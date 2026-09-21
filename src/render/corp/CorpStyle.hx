@@ -414,52 +414,60 @@ class CorpStyle
   // no street building rises past this, world units. the plate is at 0 and the street at -114, so
   // anything over 114 would come up THROUGH the floor the player is standing on
   public static inline var STREET_MAX_H = 90.0;
-  // what the UNLIT street surfaces are multiplied by. an unlit material renders its albedo
-  // exactly, while the same texture in a real city area is a lambert taking ambient and a moon —
-  // so downtown's pale masonry mid-rises (city/wall-3 at 0.1666 linear) came out as chalk-white
-  // slabs at midnight beside its glass towers at 0.017. Fitted live against the lit panes rather
-  // than derived: this is the one number that says how dark the street is
-  public static inline var STREET_DIM = 0.62;
+  // what the street surfaces' ALBEDO is multiplied by before the moon gets to it. Downtown's art
+  // is authored for a lit city area and its pale masonry mid-rises (city/wall-3 at 0.1666 linear)
+  // come out as chalk-white slabs at midnight beside its glass towers at 0.017, so the whole set
+  // is pulled down as one. Fitted live against the lit panes rather than derived: this is the one
+  // number that says how dark the street is.
+  //
+  // 0.62 -> 0.45 in the fourth pass, with STREET_SUN: the surfaces became lambert, so the moon's
+  // key is now MULTIPLYING this rather than replacing it, and "reduce overall fake street
+  // lighting" wanted the product lower than the old flat value and not the same
+  public static inline var STREET_DIM = 0.45;
   // and what the TOWER'S OWN FLANK is multiplied by. It shipped with no `color:` field at all,
   // i.e. 1.0 — the nineteen storeys immediately outside the window rendered at full authored albedo
   // and were BRIGHTER than the office behind the player. Above STREET_DIM because the facade is
   // nearer than the street and a value ladder has to survive perspective, fitted live against it
-  public static inline var FACADE_DIM = 0.74;
+  public static inline var FACADE_DIM = 0.62;
+  // and the one thing the flank gained with the real shadow map: a neighbouring tower's shadow now
+  // crosses it, measured at 0.0194 linear lit against 0.0013 in shade from the office window
 
   // ---- THE OUTDOOR KEY ------------------------------------------------------------------------
   //
-  // WHY THE OUTSIDE LOOKED LIKE THE INSIDE. Everything past the glass is MeshBasicMaterial, so the
-  // authored albedo IS the rendered pixel: no lit side, no shade side, nothing saying where light
-  // comes from. The interior is a lambert flooded by render.world.IndoorMask at 2.4, which is also
-  // near-flat. Two flat surfaces at similar values read as one place.
+  // WHY THE OUTSIDE LOOKED LIKE THE INSIDE. Everything past the glass used to be MeshBasicMaterial,
+  // so the authored albedo WAS the rendered pixel: no lit side, no shade side, nothing saying where
+  // light comes from. The third pass answered that with a key baked per face into the vertex colour
+  // channel and a hand-marched heightfield for shadow; both were reported back as reading fake, and
+  // they were — a per-cell horizon test gives 4-unit hard squares that are not the shape of any
+  // building, and a flat per-face term gives no contact anywhere.
   //
-  // A LIGHT CANNOT FIX IT — a basic material ignores every light in the scene, and making the street
-  // lambert would put ~16k ground cells and 215 buildings into the shading and the shadow pass. So
-  // the key is BAKED, per face, into render.world.MeshBuf's opt-in `col` channel: `vertexColors`
-  // multiplies it in, render.facility.FacilityGeom.geom uploads the attribute when it is filled, and
-  // the cost is zero draw calls and zero new meshes.
+  // SO THE STREET IS LAMBERT NOW AND TAKES A REAL SHADOW MAP. The one number that made it
+  // affordable is `distance`: see render.corp.CorpStreet.light. Nothing outside moves, so the depth
+  // pass runs ONCE on area entry and is frozen, and the near plane clips the office out of the map
+  // rather than a layer doing it (three has no per-object light filtering — render.world.IndoorMask
+  // carries that obituary).
   //
-  // `dir` is normalised (-1, 2, 1.5) — render.facility.FacilityScene's OWN moon, so the city below
-  // and the plate above are lit from the same place even though only one of them has a light. It
-  // never moves in this area, which is what makes a baked term exact rather than an approximation.
+  // `dir` is the SAME (-1, 2, 1.5) render.facility.FacilityScene's moon stands at, normalised, so
+  // the city below and the plate above are lit from one place by two lights. `color` is that moon's
+  // 0x8294c0 for the same reason.
   //
-  // `gain` is set so an UP-facing surface lands at exactly 1.0 (amb + gain * dir.y = 1), because a
-  // roof is most of what is seen from the twentieth floor and STREET_DIM has to keep meaning "how
-  // dark the street is". Everything else then falls BELOW it: +z 0.89, -x 0.78, -z and +x 0.55.
-  //
-  // the two tints are what make it moonlight rather than a grey ramp — `key` barely cool, `fill` the
-  // blue of a night sky bouncing off nothing. Both peak at 1.0 in blue so the ladder is unchanged
-  // there and only red is pulled down
-  public static final SUN = {
+  // `halfExtent` 250 against `mapSize` 2048 is 0.244 world units per shadow texel. That is 2.8x
+  // coarser than the office's own box (90 half-wide at 2048 = 0.088) and it does not matter: the
+  // nearest thing it shadows is 114 units below the camera and the furthest is in fog.
+  public static final STREET_SUN = {
+    color: 0x8294c0,
+    intensity: 1.6,
     dir: [-0.3714, 0.7428, 0.5571],  // normalised (-1, 2, 1.5)
-    key: [0.88, 0.94, 1.00],         // direct moonlight
-    fill: [0.72, 0.80, 1.00],        // and the sky term a face in shade keeps
-    amb: 0.55,
-    gain: 0.606,                     // 0.55 + 0.606 * 0.7428 = 1.0 on a roof
-    // and what fraction of the key a GROUND CELL IN A BUILDING'S SHADOW keeps. Not zero: a street
-    // between towers is lit by every wall around it as well as by the sky, and a hard black
-    // parallelogram reads as a hole in the road rather than as a shadow. See CorpStreet.shadows
-    shadow: 0.18,
+    distance: 400.0,   // how far up-light the shadow camera sits from the street plane
+    halfExtent: 250.0, // ortho box half-width, world units — the whole 3x3 mirrored city
+    mapSize: 2048,
+    // how much past the plate the near plane sits, world units along the light. the plate is
+    // `-STREET_Y / dir.y` = 153.5 units of travel nearer the light than the street, and the tallest
+    // street building's roof is 121 — so anything from 0 to 32 clips the office out and keeps the
+    // city in. 8 leaves the tower's own flank casting from its foot up to y = -5.9
+    clear: 8.0,
+    bias: -0.0004,
+    normalBias: 0.04,
   };
 
   // ---- THE FAR CITY GOES SOFT ------------------------------------------------------------------
@@ -604,10 +612,14 @@ class CorpStyle
   // a head and two shoulders
   public static inline var WALK_H = 3.2;
   public static inline var CROWD_Y = 0.06;
-  // what the unlit people quad's albedo is multiplied by. ABOVE STREET_DIM and above CAR_DIM: the
-  // icons are painted for a lit 2D map at full size, they are the smallest thing down here, and
-  // they are the thing the eye is meant to find
-  public static inline var WALK_DIM = 0.92;
+  // what the people quad's albedo is multiplied by, before the street's own moon. ABOVE STREET_DIM
+  // because the icons are the smallest thing down here and the thing the eye is meant to find.
+  //
+  // THE QUAD IS LAMBERT AND THAT IS THE FIX, not this number — see render.corp.CorpCrowd.people. A
+  // civilian icon is flat, saturated and high-value by construction, so an UNLIT one is the
+  // brightest thing on a night street at any multiplier: at 0.42 against a road measuring 0.0032
+  // linear it still read as a sticker stuck on the pavement
+  public static inline var WALK_DIM = 0.55;
   // the people sheets, stacked into one canvas so both sexes ride one draw call
   public static inline var WALK_ATLAS_W = 640;
   public static inline var WALK_ATLAS_H = 1024;
@@ -624,9 +636,10 @@ class CorpStyle
   // the nominal length a car is drawn at. each cell below scales off its OWN pixel height against
   // the sheet's median, so the van really is longer than the hatchback
   public static inline var CAR_LEN = 8.0;
-  // what the unlit car quad's albedo is multiplied by. a touch over STREET_DIM because a car is
-  // small, moving and the thing the eye is meant to follow — fitted live, like STREET_DIM itself
-  public static inline var CAR_DIM = 0.78;
+  // what the car quad's albedo is multiplied by, before the street's own moon. a touch over
+  // STREET_DIM because a car is small, moving and the thing the eye is meant to follow — fitted
+  // live, like STREET_DIM itself. Lambert for the walkers' reason
+  public static inline var CAR_DIM = 0.60;
   // and the cells, MEASURED off the drop at alpha > 220 and padded 3 px — an authored cell is an
   // object in a quadrant and not the quadrant, and cropping to the quadrant would draw a third of
   // each car as empty road. `len`/`wide` come out of each crop's own aspect, so nothing is

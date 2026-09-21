@@ -52,7 +52,6 @@ typedef CorpStreetSet = {
   var lit:Int;          // lit window panes
   var deco:Int;         // rooftop plant decals
   var pent:Int;         // and mechanical penthouses
-  var shadow:Int;       // ground cells darkened by a building's own projected shadow
 };
 
 // the city street 114 units under the floor plate — AROUND the tower and never under it.
@@ -89,11 +88,15 @@ typedef CorpStreetSet = {
 // AND NO MASK OF ANY KIND. render.world.VisionMask's rim channel sinks a surface to the fog colour
 // at the AREA BORDER, and the border is the tower's own edge — patched, the street would be cut to
 // nothing exactly where the player leans over the parapet to look at it. IndoorMask likewise: it is
-// keyed on the plate's cells and a street cell is not one of them. The ground, the walls and the
-// roofs are UNLIT (MeshBasicMaterial), for CorpFacade's reason: the plate's lighting rig has
-// nothing to do with a road 114 units below it. The LIT PANES are the one exception and have to be
-// — a bloom needs an emissive term, so those take a lambert. Fog still applies to all of it, which
-// is what makes the far city dissolve into the background colour instead of stopping at a line.
+// keyed on the plate's cells and a street cell is not one of them, and NOT patching these materials
+// is what lets the street keep the scene's real night rig while the office keeps its indoor swap.
+// Fog still applies to all of it, which is what makes the far city dissolve into the background
+// colour instead of stopping at a line.
+//
+// EVERYTHING DOWN HERE IS LAMBERT AND LIT, which it was not until the fourth defect pass. It was
+// MeshBasicMaterial with a hand-baked per-face key in the vertex colour channel and a hand-marched
+// heightfield for shadow, and both read as what they were. See `light` below for the one piece
+// that made a real shadow map affordable.
 class CorpStreet
 {
   static inline var CELL = CityConfig.CELL;
@@ -117,9 +120,6 @@ class CorpStreet
       var deco = new Map<Int, MeshBuf>();
       var nRoad = 0;
       var nWalk = 0;
-      // every building's shadow, before the ground it falls on is emitted
-      var hgt = heights(city.buildings);
-      var nShadow = 0;
       // THE MODEL IS MIRROR-TILED and the loop runs over WORLD cell indices — see `fold`. Three
       // tiles each way is more than the reach can ask for, and folding is what stops the street
       // ending in a straight edge inside the fog
@@ -138,10 +138,6 @@ class CorpStreet
               (t == Tile.Alley ? RenderConfig.ALLEY_TILE : RenderConfig.ROAD_TILE));
             var g = buf(bufs, tex);
             FacilityGeom.cap(g, x0, x0 + CELL, z0, z0 + CELL, 0.0, per);
-            var dark = shadowAt(hgt, col, row, 0.0);
-            if (dark > 0)
-              nShadow++;
-            shade(g, ndl(0, 1, 0) * shadowMul(dark));
             if (t == Tile.Walkway)
               nWalk++;
             else
@@ -185,16 +181,13 @@ class CorpStreet
                 pod = h;
               for (dir in 0...4)
                 {
-                  var nd = ndlDir(dir);
                   if (pod > 0)
                     {
                       var pb = buf(bufs, st.glassPodium[f]);
                       FacilityGeom.face(pb, x0, x1, z0, z1, dir, 0.0, pod, per);
-                      shade(pb, nd);
                     }
                   var wb = buf(bufs, st.walls[f]);
                   FacilityGeom.face(wb, x0, x1, z0, z1, dir, pod, h, per);
-                  shade(wb, nd);
                   nWall++;
                 }
               // PER CELL and not one rect over the footprint: a roof is most of what is seen from
@@ -210,10 +203,6 @@ class CorpStreet
                     var rx = x0 + cc * CELL;
                     var rz = z0 + rr * CELL;
                     FacilityGeom.cap(rb, rx, rx + CELL, rz, rz + CELL, h, RenderConfig.ROOF_TILE);
-                    var rd = shadowAt(hgt, bc + cc, br + rr, h);
-                    if (rd > 0)
-                      nShadow++;
-                    shade(rb, ndl(0, 1, 0) * shadowMul(rd));
                   }
               nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
               var r = roof(bufs, deco, st, b, f, x0, x1, z0, z1, h, per);
@@ -228,6 +217,7 @@ class CorpStreet
       for (t in deco.keys())
         addDeco(group, deco.get(t), t);
       scene.add(group);
+      light(scene, p);
       return {
         group: group,
         city: city,
@@ -238,7 +228,6 @@ class CorpStreet
         lit: nLit,
         deco: nDeco,
         pent: nPent,
-        shadow: nShadow,
       };
     }
 
@@ -343,15 +332,12 @@ class CorpStreet
         {
           var s = sides[i];
           FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out, h, hi, per);
-          shade(w, ndlDir(s.out));
           FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out ^ 1, h, hi, per);
-          shade(w, ndlDir(s.out ^ 1));
           // the cap ring, mitred by shortening the two rects that run the long way
           var ca = (i < 2 ? s.a : s.a);
           var cc = (i < 2 ? s.c : s.c + t);
           var cd = (i < 2 ? s.d : s.d - t);
           FacilityGeom.cap(cope, ca, s.b, cc, cd, hi, CorpStyle.COPING_TILE);
-          shade(cope, ndl(0, 1, 0));
         }
       // the mechanical penthouse, in the building's own wall and its own roof base
       var cx = (x0 + x1) / 2;
@@ -368,11 +354,9 @@ class CorpStreet
           for (dir in 0...4)
             {
               FacilityGeom.face(w, px0, px1, pz0, pz1, dir, h, h + ph, per);
-              shade(w, ndlDir(dir));
             }
           var pc = buf(bufs, st.roofBases[f % st.roofBases.length]);
           FacilityGeom.cap(pc, px0, px1, pz0, pz1, h + ph, RenderConfig.ROOF_TILE);
-          shade(pc, ndl(0, 1, 0));
           pent = 1;
         }
       // and the plant, one item per sector, dealt round the type list off the building's own hash
@@ -418,112 +402,9 @@ class CorpStreet
             // corner permutation, four cases, if a closer camera ever looks at this
             var db = litBuf(deco, ty);
             quadFlat(db, x - d.w / 2, x + d.w / 2, z - d.d / 2, z + d.d / 2, h + 0.05);
-            shade(db, ndl(0, 1, 0));
             n++;
           }
       return { deco: n, pent: pent };
-    }
-
-// WHERE EVERY STREET BUILDING'S SHADOW FALLS — a heightfield horizon test, not a projection.
-//
-// nothing outside is lit, so nothing outside could cast: the moon is a real DirectionalLight with a
-// real shadow map, but its ortho box is 90 units half-wide and parked on the player, while the
-// street is up to 195 units out and 114 units DOWN. Widening the box to reach it coarsens the
-// office's own shadow texel by 2.2x and makes the plate cast a 224 x 180 hole over its own street.
-//
-// TWO THINGS HAD TO BE LEARNED HERE AND BOTH CAME FROM LOOKING.
-//   THE GROUND IS NOT WHAT YOU SEE. From the twentieth floor at this camera the roofs occlude
-//     almost all of the road — every vantage tried came back a field of roof. A shadow feature that
-//     only darkens the ground is invisible, so the receiver has to be the ROOF as much as the road.
-//   A FLAT PROJECTION MAKES A NIGHT, NOT A SHADOW. The first version swept each footprint along the
-//     light and marked every cell: a downtown of 90-unit towers throws a 20-cell shadow each and
-//     6,021 of 7,115 ground cells came back covered — 85% of the street uniformly dark.
-//
-// So: one height per city cell, and a receiver at (col, row, y) marches toward the light asking
-// whether anything stands over the ray. Moving one cell horizontally raises the ray by
-// `CELL * dir.y / |dir.xz|`, so the march is bounded by STREET_MAX_H and is at most 21 steps. The
-// NEAREST blocker wins and its strength falls off with how far away it is, which is what keeps a
-// tower dark at its own foot and fades it out rather than blanketing the block.
-//
-// one Array<Float> at build, ~9k queries, and nothing at all at runtime
-  static function heights(list:Array<citygen.CityModel.Building>):Array<Float>
-    {
-      var n = CityConfig.GRID;
-      var span3 = 3 * n;
-      var h = [for (_ in 0...span3 * span3) 0.0];
-      for (tz in -1...2)
-        for (tx in -1...2)
-          for (b in list)
-            {
-              var bh = tileH(b, tx, tz);
-              var c0 = span(tx, b.col, b.w);
-              var r0 = span(tz, b.row, b.d);
-              for (cc in 0...b.w)
-                for (rr in 0...b.d)
-                  {
-                    var col = c0 + cc;
-                    var row = r0 + rr;
-                    if (col < -n || col >= 2 * n || row < -n || row >= 2 * n)
-                      continue;
-                    h[(row + n) * span3 + (col + n)] = bh;
-                  }
-            }
-      return h;
-    }
-
-// how deep in shadow a surface at (col, row) standing `y` above the street is, 0 (full key) to 1
-  static function shadowAt(hgt:Array<Float>, col:Int, row:Int, y:Float):Float
-    {
-      var n = CityConfig.GRID;
-      var span3 = 3 * n;
-      var d = CorpStyle.SUN.dir;
-      var flat = Math.sqrt(d[0] * d[0] + d[2] * d[2]);
-      // one cell TOWARD the light, and what that cell costs the ray in height
-      var sx = d[0] / flat;
-      var sz = d[2] / flat;
-      var rise = CELL * d[1] / flat;
-      var steps = Std.int(CorpStyle.STREET_MAX_H / rise) + 1;
-      for (k in 1...steps + 1)
-        {
-          var c = col + Std.int(Math.round(sx * k));
-          var r = row + Std.int(Math.round(sz * k));
-          if (c < -n || c >= 2 * n || r < -n || r >= 2 * n)
-            return 0.0;
-          if (hgt[(r + n) * span3 + (c + n)] > y + rise * k)
-            return 1.0 - (k - 1) / steps;
-        }
-      return 0.0;
-    }
-
-// and the key multiplier that falls out of it
-  static inline function shadowMul(v:Float):Float
-    return 1.0 - v * (1.0 - CorpStyle.SUN.shadow);
-
-// THE OUTDOOR KEY, baked per face. See CorpStyle.SUN for why it is baked and not lit: everything
-// down here is a MeshBasicMaterial, so no light in the scene reaches it and making it lambert would
-// put ~16k ground cells and 215 buildings into the shading and the shadow pass.
-//
-// it pads the buffer's `col` channel up to whatever its `pos` channel already holds, so it is
-// called AFTER an emit and never has to know how many vertices that emit produced. Doing it this
-// way rather than growing FacilityGeom.face/cap with a colour argument keeps two signatures that
-// are already at the length the style guide says to convert at, and it works for every emitter in
-// this file — face, cap and quadFlat alike.
-//
-// MISSING A CALL IS SAFE AND SILENT: `add` derives `vertexColors` from the same length test
-// FacilityGeom.geom uploads the attribute on, so a buffer with one unshaded emit in it renders
-// exactly as it did before this existed
-  public static function shade(b:MeshBuf, ndl:Float, mul:Float = 1.0):Void
-    {
-      var s = CorpStyle.SUN;
-      var r = (s.fill[0] * s.amb + s.key[0] * s.gain * ndl) * mul;
-      var g = (s.fill[1] * s.amb + s.key[1] * s.gain * ndl) * mul;
-      var bl = (s.fill[2] * s.amb + s.key[2] * s.gain * ndl) * mul;
-      while (b.col.length < b.pos.length)
-        {
-          b.col.push(r);
-          b.col.push(g);
-          b.col.push(bl);
-        }
     }
 
 // THE DISTANCE BLUR, patched into one of the street's own materials — see CorpStyle.BLUR for why
@@ -562,21 +443,6 @@ class CorpStreet
       untyped mat.customProgramCacheKey = function() return 'corpStreetBlur';
     }
 
-// the four hands FacilityGeom.face emits on, as outward normals
-  static var FN = [[0.0, 0.0, -1.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
-
-// how much of the key a surface with this normal takes, clamped at 0 like any lambert term
-  public static inline function ndl(nx:Float, ny:Float, nz:Float):Float
-    {
-      var d = CorpStyle.SUN.dir;
-      var v = nx * d[0] + ny * d[1] + nz * d[2];
-      return (v < 0 ? 0.0 : v);
-    }
-
-// and the same for one of the four hands
-  public static inline function ndlDir(dir:Int):Float
-    return ndl(FN[dir][0], 0.0, FN[dir][2]);
-
 // a horizontal quad with its OWN 0..1 uv, which is what a decal wants and FacilityGeom.cap cannot
 // give — `cap` writes world-aligned uv so a surface tiles, and a rooftop unit is a picture
   static inline function quadFlat(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
@@ -611,14 +477,15 @@ class CorpStreet
       if (b.idx.length == 0)
         return;
       var d = RenderConfig.DETAIL_TYPES[ty];
-      var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
+      var mesh = new Mesh(FacilityGeom.geom(b), new MeshLambertMaterial({
         map: Textures.loadKeyedTexture(d.tex, d.crop, RenderConfig.DETAIL_BOX_COLOR),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
-        vertexColors: b.col.length == b.pos.length,
         alphaTest: 0.5,
         side: THREE.DoubleSide,
       }));
-      mesh.receiveShadow = false;
+      // a rooftop unit RECEIVES but does not cast: it is a flat decal quad lying on the roof, so
+      // its own shadow would be a stripe of nothing
+      mesh.receiveShadow = true;
       mesh.castShadow = false;
       group.add(mesh);
     }
@@ -727,25 +594,22 @@ class CorpStreet
       return b;
     }
 
-// one merged UNLIT mesh into the street group
+// one merged LIT mesh into the street group. FacilityGeom.geom already runs computeVertexNormals
+// and every quad carries its own four vertices, so the normals come out FLAT per face — which is
+// what a box of masonry wants and is why a lambert needed no new geometry work
   static function add(group:Group, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var mat = new MeshBasicMaterial({
+      var mat = new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
-        // DERIVED and never passed, the way render.facility.FacilityDeco's own merged meshes do it:
-        // the attribute FacilityGeom.geom uploads and the flag that reads it come off ONE test, so
-        // they cannot disagree and a buffer that missed a `shade` call falls back instead of going
-        // black
-        vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
       });
       blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
-      mesh.receiveShadow = false;
-      mesh.castShadow = false;
+      mesh.receiveShadow = true;
+      casts(mesh);
       group.add(mesh);
     }
 
@@ -773,8 +637,108 @@ class CorpStreet
       mat.emissiveMap = t;
       mat.emissiveIntensity = st.glassLitIntensity;
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
-      mesh.receiveShadow = false;
+      mesh.receiveShadow = true;
       mesh.castShadow = false;
       group.add(mesh);
+    }
+
+// THE STREET'S OWN MOON, and why there has to be a second one.
+//
+// The scene already has a real DirectionalLight with a real shadow map (render.facility
+// .FacilityScene) — but RenderConfig.MOON_SHADOW's ortho box is 90 units half-wide and is parked on
+// the PLAYER every frame, while the street is up to 195 units out and 114 units DOWN. Widening that
+// box to reach it coarsens the office's own shadow texel by 2.2x, which is the trade the third pass
+// backed away from into a hand-marched heightfield.
+//
+// A SECOND LIGHT IS NOT A SECOND PASS'S WORTH OF WORK HERE, because nothing outside ever moves:
+// the city is rebuilt from its seed on entry and then stands still. So `shadow.autoUpdate = false`
+// renders the map ONCE and freezes it — the depth pass costs a handful of draws on the frame the
+// area is entered and exactly nothing on every frame after.
+//
+// AND THE NEAR PLANE IS WHAT KEEPS THE OFFICE OUT OF IT. three has no per-object light filtering
+// (render.world.IndoorMask's header carries the obituary: Light.layers is tested against the
+// CAMERA's layers, not the object's), so this light lights the plate too. What it must not do is
+// CAST the plate's interior into the street's map — a desk 114 units up would throw a shadow across
+// a block. The shadow camera sits up-light of the street, so distance along the light direction
+// sorts the two apart: the street plane is at `dist`, the plate is `PLATE_Y / dir.y` nearer, and a
+// near plane just short of that clips the whole interior out while leaving the tallest street
+// building (STREET_MAX_H, still 121 units of travel away) inside. The tower's own flank keeps
+// casting, which is right — a 114-unit tower standing on a street has a shadow.
+// THE CASTER REGISTER, and the one trick that keeps a second shadow map free.
+//
+// `light` below freezes its map after one render, so an outside mesh only has to CAST on the frame
+// the area is entered. After that its `castShadow` is dead weight — and not free dead weight: the
+// OFFICE moon's own box reaches 353 units of light-travel and the street sits at 353, so every
+// merged street mesh was being redrawn into the office's depth pass every frame for a shadow the
+// office cannot see. Measured at the pinned pose: 96 calls with them casting, 81 without.
+//
+// So they cast, the map is written, and `settle` drops them on the next tick. Register here, reset
+// per area in `begin` (render.corp.CorpArea.build calls it beside the WorldCtx resets), drop in
+// `settle` (render.corp.CorpArea.tick).
+  static var casters:Array<Mesh> = [];
+  static var sun:DirectionalLight = null;
+
+  public static inline function casts(m:Mesh):Void
+    {
+      m.castShadow = true;
+      casters.push(m);
+    }
+
+  public static function begin():Void
+    {
+      casters = [];
+      sun = null;
+    }
+
+// drop the register once the frozen map has been written.
+//
+// THE CONDITION IS `shadow.map != null` AND NOT A TICK COUNT, which cost a build to find. three
+// allocates a DirectionalLightShadow's render target inside the shadow pass and AFTER its own
+// `autoUpdate == false && needsUpdate == false` early-out (WebGLShadowMap.render), so a non-null
+// map is proof that the pass ran at least once — and proof is what is needed here, because a
+// counter is a guess about how many ticks precede the first frame. Settling one tick early wrote
+// an EMPTY map and the street came back with no shadows at all and nothing to say so
+  public static function settle():Void
+    {
+      if (casters.length == 0 ||
+          sun == null ||
+          sun.shadow.map == null)
+        return;
+      for (m in casters)
+        m.castShadow = false;
+      casters = [];
+    }
+
+  static function light(scene:Scene, p:PlateBox):DirectionalLight
+    {
+      var S = CorpStyle.STREET_SUN;
+      var l = new DirectionalLight(S.color, S.intensity);
+      var d = S.dir;
+      var cx = ox(p);
+      var cz = oz(p);
+      l.position.set(cx + d[0] * S.distance, CorpStyle.STREET_Y + d[1] * S.distance,
+        cz + d[2] * S.distance);
+      l.target.position.set(cx, CorpStyle.STREET_Y, cz);
+      scene.add(l.target);
+      l.castShadow = true;
+      var sh:Dynamic = l.shadow;
+      sh.mapSize.set(S.mapSize, S.mapSize);
+      sh.bias = S.bias;
+      sh.normalBias = S.normalBias;
+      var sc:Dynamic = sh.camera;
+      // the plate is `-STREET_Y` above the street, i.e. this much nearer the light along it
+      sc.near = S.distance + CorpStyle.STREET_Y / d[1] + S.clear;
+      sc.far = S.distance + S.halfExtent;
+      sc.left = -S.halfExtent;
+      sc.right = S.halfExtent;
+      sc.top = S.halfExtent;
+      sc.bottom = -S.halfExtent;
+      sc.updateProjectionMatrix();
+      // one depth pass on entry and none after — nothing down there moves
+      sh.autoUpdate = false;
+      sh.needsUpdate = true;
+      scene.add(l);
+      sun = l;
+      return l;
     }
 }
