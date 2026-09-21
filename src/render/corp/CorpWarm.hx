@@ -29,7 +29,7 @@ class CorpWarm
       // both masks go on BEFORE the builders, exactly as in CorpArea.build: each reads `on` at
       // material-creation time, so a surface warmed without one warms a key the game never asks for
       var masonry = FacilityDetail.masonry(model);
-      IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+      IndoorMask.attach(CorpStyle.INDOOR, model.w, model.h,
         function(col, row) return render.facility.FacilityModel.isInterior(model, col, row));
       ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
       var bundle = FacilityScene.build(renderer, lampPool,
@@ -94,7 +94,7 @@ class CorpWarm
               var pr = paths[i];
               render.Models.get(pr.path, function(_)
                 {
-                  IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+                  IndoorMask.attach(CorpStyle.INDOOR, model.w, model.h,
                     function(col, row) return render.facility.FacilityModel.isInterior(model, col, row));
                   ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h,
                     masonry.solid, masonry.holes);

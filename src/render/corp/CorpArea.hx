@@ -102,7 +102,7 @@ class CorpArea implements Area3D
       // both masks go BEFORE the builders and not after: each reads `on` at MATERIAL-CREATION time
       // to decide whether to compile its swap into a surface at all, and every material this kind
       // owns is created by FacilityGeom.build three lines down
-      IndoorMask.attach(FacilityStyle.INDOOR, model.w, model.h,
+      IndoorMask.attach(CorpStyle.INDOOR, model.w, model.h,
         function(col, row) return FacilityModel.isInterior(model, col, row));
       var masonry = FacilityDetail.masonry(model);
       ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);

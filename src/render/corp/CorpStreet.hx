@@ -118,7 +118,9 @@ class CorpStreet
             var tex = (t == Tile.Walkway ? st.walkway : (t == Tile.Alley ? st.alley : st.asphalt));
             var per = (t == Tile.Walkway ? RenderConfig.WALKWAY_TILE :
               (t == Tile.Alley ? RenderConfig.ALLEY_TILE : RenderConfig.ROAD_TILE));
-            FacilityGeom.cap(buf(bufs, tex), x0, x0 + CELL, z0, z0 + CELL, 0.0, per);
+            var g = buf(bufs, tex);
+            FacilityGeom.cap(g, x0, x0 + CELL, z0, z0 + CELL, 0.0, per);
+            shade(g, ndl(0, 1, 0));
             if (t == Tile.Walkway)
               nWalk++;
             else
@@ -161,14 +163,21 @@ class CorpStreet
                 pod = h;
               for (dir in 0...4)
                 {
+                  var nd = ndlDir(dir);
                   if (pod > 0)
-                    FacilityGeom.face(buf(bufs, st.glassPodium[f]), x0, x1, z0, z1, dir, 0.0, pod,
-                      per);
-                  FacilityGeom.face(buf(bufs, st.walls[f]), x0, x1, z0, z1, dir, pod, h, per);
+                    {
+                      var pb = buf(bufs, st.glassPodium[f]);
+                      FacilityGeom.face(pb, x0, x1, z0, z1, dir, 0.0, pod, per);
+                      shade(pb, nd);
+                    }
+                  var wb = buf(bufs, st.walls[f]);
+                  FacilityGeom.face(wb, x0, x1, z0, z1, dir, pod, h, per);
+                  shade(wb, nd);
                   nWall++;
                 }
-              FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]), x0, x1, z0, z1, h,
-                RenderConfig.ROOF_TILE);
+              var rb = buf(bufs, st.roofBases[f % st.roofBases.length]);
+              FacilityGeom.cap(rb, x0, x1, z0, z1, h, RenderConfig.ROOF_TILE);
+              shade(rb, ndl(0, 1, 0));
               nLit += panes(lit, st, b, x0, x1, z0, z1, pod, h);
               var r = roof(bufs, deco, st, b, f, x0, x1, z0, z1, h, per);
               nDeco += r.deco;
@@ -295,12 +304,15 @@ class CorpStreet
         {
           var s = sides[i];
           FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out, h, hi, per);
+          shade(w, ndlDir(s.out));
           FacilityGeom.face(w, s.a, s.b, s.c, s.d, s.out ^ 1, h, hi, per);
+          shade(w, ndlDir(s.out ^ 1));
           // the cap ring, mitred by shortening the two rects that run the long way
           var ca = (i < 2 ? s.a : s.a);
           var cc = (i < 2 ? s.c : s.c + t);
           var cd = (i < 2 ? s.d : s.d - t);
           FacilityGeom.cap(cope, ca, s.b, cc, cd, hi, CorpStyle.COPING_TILE);
+          shade(cope, ndl(0, 1, 0));
         }
       // the mechanical penthouse, in the building's own wall and its own roof base
       var cx = (x0 + x1) / 2;
@@ -315,9 +327,13 @@ class CorpStreet
           var pz0 = pen.z - pen.d / 2;
           var pz1 = pen.z + pen.d / 2;
           for (dir in 0...4)
-            FacilityGeom.face(w, px0, px1, pz0, pz1, dir, h, h + ph, per);
-          FacilityGeom.cap(buf(bufs, st.roofBases[f % st.roofBases.length]),
-            px0, px1, pz0, pz1, h + ph, RenderConfig.ROOF_TILE);
+            {
+              FacilityGeom.face(w, px0, px1, pz0, pz1, dir, h, h + ph, per);
+              shade(w, ndlDir(dir));
+            }
+          var pc = buf(bufs, st.roofBases[f % st.roofBases.length]);
+          FacilityGeom.cap(pc, px0, px1, pz0, pz1, h + ph, RenderConfig.ROOF_TILE);
+          shade(pc, ndl(0, 1, 0));
           pent = 1;
         }
       // and the plant, one item per sector, dealt round the type list off the building's own hash
@@ -361,11 +377,55 @@ class CorpStreet
             // a MERGED quad means permuting its corners rather than setting a matrix — and at 114
             // units down through fog nothing can read which way a vent faces. Upgrade path is the
             // corner permutation, four cases, if a closer camera ever looks at this
-            quadFlat(litBuf(deco, ty), x - d.w / 2, x + d.w / 2, z - d.d / 2, z + d.d / 2, h + 0.05);
+            var db = litBuf(deco, ty);
+            quadFlat(db, x - d.w / 2, x + d.w / 2, z - d.d / 2, z + d.d / 2, h + 0.05);
+            shade(db, ndl(0, 1, 0));
             n++;
           }
       return { deco: n, pent: pent };
     }
+
+// THE OUTDOOR KEY, baked per face. See CorpStyle.SUN for why it is baked and not lit: everything
+// down here is a MeshBasicMaterial, so no light in the scene reaches it and making it lambert would
+// put ~16k ground cells and 215 buildings into the shading and the shadow pass.
+//
+// it pads the buffer's `col` channel up to whatever its `pos` channel already holds, so it is
+// called AFTER an emit and never has to know how many vertices that emit produced. Doing it this
+// way rather than growing FacilityGeom.face/cap with a colour argument keeps two signatures that
+// are already at the length the style guide says to convert at, and it works for every emitter in
+// this file — face, cap and quadFlat alike.
+//
+// MISSING A CALL IS SAFE AND SILENT: `add` derives `vertexColors` from the same length test
+// FacilityGeom.geom uploads the attribute on, so a buffer with one unshaded emit in it renders
+// exactly as it did before this existed
+  public static function shade(b:MeshBuf, ndl:Float, mul:Float = 1.0):Void
+    {
+      var s = CorpStyle.SUN;
+      var r = (s.fill[0] * s.amb + s.key[0] * s.gain * ndl) * mul;
+      var g = (s.fill[1] * s.amb + s.key[1] * s.gain * ndl) * mul;
+      var bl = (s.fill[2] * s.amb + s.key[2] * s.gain * ndl) * mul;
+      while (b.col.length < b.pos.length)
+        {
+          b.col.push(r);
+          b.col.push(g);
+          b.col.push(bl);
+        }
+    }
+
+// the four hands FacilityGeom.face emits on, as outward normals
+  static var FN = [[0.0, 0.0, -1.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
+
+// how much of the key a surface with this normal takes, clamped at 0 like any lambert term
+  public static inline function ndl(nx:Float, ny:Float, nz:Float):Float
+    {
+      var d = CorpStyle.SUN.dir;
+      var v = nx * d[0] + ny * d[1] + nz * d[2];
+      return (v < 0 ? 0.0 : v);
+    }
+
+// and the same for one of the four hands
+  public static inline function ndlDir(dir:Int):Float
+    return ndl(FN[dir][0], 0.0, FN[dir][2]);
 
 // a horizontal quad with its OWN 0..1 uv, which is what a decal wants and FacilityGeom.cap cannot
 // give — `cap` writes world-aligned uv so a surface tiles, and a rooftop unit is a picture
@@ -388,6 +448,7 @@ class CorpStreet
       var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
         map: Textures.loadKeyedTexture(d.tex, d.crop, RenderConfig.DETAIL_BOX_COLOR),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
+        vertexColors: b.col.length == b.pos.length,
         alphaTest: 0.5,
         side: THREE.DoubleSide,
       }));
@@ -508,6 +569,11 @@ class CorpStreet
       var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
+        // DERIVED and never passed, the way render.facility.FacilityDeco's own merged meshes do it:
+        // the attribute FacilityGeom.geom uploads and the flag that reads it come off ONE test, so
+        // they cannot disagree and a buffer that missed a `shade` call falls back instead of going
+        // black
+        vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
       }));
       mesh.receiveShadow = false;

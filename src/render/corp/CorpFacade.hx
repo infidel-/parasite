@@ -77,6 +77,11 @@ class CorpFacade
               z0 + (outward(m, col, row, 0) ? e : 0.0),
               z0 + CELL - (outward(m, col, row, 1) ? e : 0.0),
               CorpStyle.SOFFIT_Y, FacilityStyle.WALL_TILE);
+            // and it takes the outdoor key like everything else out here. A soffit faces DOWN, so
+            // its lambert term against a moon overhead is zero and it keeps the sky fill alone —
+            // which is correct and is the darkest thing in the frame, as the underside of a
+            // twenty-storey plate should be
+            CorpStreet.shade(soff, CorpStreet.ndl(0, -1, 0));
             var s = ring(m, col, row, half);
             if (!FacilityGeom.carries(m, col, row))
               continue;
@@ -138,6 +143,7 @@ class CorpFacade
     {
       FacilityGeom.face(clad, x0, x1, z0, z1, dir, CorpStyle.STREET_Y, FacilityStyle.WALL_BASE,
         CorpStyle.FACADE_TILE);
+      CorpStreet.shade(clad, CorpStreet.ndlDir(dir));
       if (st.glassAccentLit == null ||
           st.glassAccentLit[CorpStyle.FACADE_SLOT] == null)
         return;
@@ -226,13 +232,22 @@ class CorpFacade
     }
 
 // one merged UNLIT mesh. nothing down here casts or receives: there is no moon over a tower's own
-// flank and nothing below the plate to catch a shadow
+// flank and nothing below the plate to catch a shadow.
+//
+// IT SHIPPED WITH NO `color:` FIELD AT ALL, i.e. at 1.0, while the street beside it wears
+// STREET_DIM 0.62 and the cars CAR_DIM 0.78. The facade is the largest exterior surface in the
+// frame and the nearest — nineteen storeys straight down outside the window — so it was rendering
+// at full authored albedo and coming out BRIGHTER than the office the player is standing in. That
+// one missing field is most of "outside lighting is the same as indoor"; CorpStreet.shade above
+// is the rest of it
   static function add(scene:Scene, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
       var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
+        color: new Color(0xffffff).multiplyScalar(CorpStyle.FACADE_DIM),
+        vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
       }));
       mesh.receiveShadow = false;

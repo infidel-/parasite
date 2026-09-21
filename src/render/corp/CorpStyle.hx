@@ -420,6 +420,70 @@ class CorpStyle
   // slabs at midnight beside its glass towers at 0.017. Fitted live against the lit panes rather
   // than derived: this is the one number that says how dark the street is
   public static inline var STREET_DIM = 0.62;
+  // and what the TOWER'S OWN FLANK is multiplied by. It shipped with no `color:` field at all,
+  // i.e. 1.0 — the nineteen storeys immediately outside the window rendered at full authored albedo
+  // and were BRIGHTER than the office behind the player. Above STREET_DIM because the facade is
+  // nearer than the street and a value ladder has to survive perspective, fitted live against it
+  public static inline var FACADE_DIM = 0.74;
+
+  // ---- THE OUTDOOR KEY ------------------------------------------------------------------------
+  //
+  // WHY THE OUTSIDE LOOKED LIKE THE INSIDE. Everything past the glass is MeshBasicMaterial, so the
+  // authored albedo IS the rendered pixel: no lit side, no shade side, nothing saying where light
+  // comes from. The interior is a lambert flooded by render.world.IndoorMask at 2.4, which is also
+  // near-flat. Two flat surfaces at similar values read as one place.
+  //
+  // A LIGHT CANNOT FIX IT — a basic material ignores every light in the scene, and making the street
+  // lambert would put ~16k ground cells and 215 buildings into the shading and the shadow pass. So
+  // the key is BAKED, per face, into render.world.MeshBuf's opt-in `col` channel: `vertexColors`
+  // multiplies it in, render.facility.FacilityGeom.geom uploads the attribute when it is filled, and
+  // the cost is zero draw calls and zero new meshes.
+  //
+  // `dir` is normalised (-1, 2, 1.5) — render.facility.FacilityScene's OWN moon, so the city below
+  // and the plate above are lit from the same place even though only one of them has a light. It
+  // never moves in this area, which is what makes a baked term exact rather than an approximation.
+  //
+  // `gain` is set so an UP-facing surface lands at exactly 1.0 (amb + gain * dir.y = 1), because a
+  // roof is most of what is seen from the twentieth floor and STREET_DIM has to keep meaning "how
+  // dark the street is". Everything else then falls BELOW it: +z 0.89, -x 0.78, -z and +x 0.55.
+  //
+  // the two tints are what make it moonlight rather than a grey ramp — `key` barely cool, `fill` the
+  // blue of a night sky bouncing off nothing. Both peak at 1.0 in blue so the ladder is unchanged
+  // there and only red is pulled down
+  public static final SUN = {
+    dir: [-0.3714, 0.7428, 0.5571],  // normalised (-1, 2, 1.5)
+    key: [0.88, 0.94, 1.00],         // direct moonlight
+    fill: [0.72, 0.80, 1.00],        // and the sky term a face in shade keeps
+    amb: 0.55,
+    gain: 0.606,                     // 0.55 + 0.606 * 0.7428 = 1.0 on a roof
+  };
+
+  // ---- THE INDOOR SWAP ------------------------------------------------------------------------
+  //
+  // render.world.IndoorMask's per-kind preset, and the tower's own rather than the compound's. The
+  // corp area attached `FacilityStyle.INDOOR` verbatim from the day it was written, which is why
+  // "outside lighting is the same as indoor" had a second half to it: the inside was wearing a
+  // LABORATORY's light. render.world.IndoorMaskOpts says a per-kind preset is the intended shape.
+  //
+  // What differs from the compound's, and only what differs:
+  //   `ambient` is warmer and less green — an office runs 4000K tubes over carpet and timber, a lab
+  //     runs 5000K over lino. Against the street's moonlit key above (blue-peaked) this is the whole
+  //     of the indoor/outdoor read: warm inside, cool outside, and the window between them.
+  //   `intensity` is a touch lower because the corp art is brighter than the compound's — an
+  //     interior floor lands 0.090-0.124 linear against its 0.094-0.135 and a wall 0.115-0.219
+  //     against its 0.137-0.159, which is the ladder this whole file is fitted on.
+  //   `direct` is lower because a tower has 125 of its own fixtures (render.corp.CorpLamps) where a
+  //     compound room has a handful, and this scales EVERY direct light and not just the moon.
+  // `px`, `blur` and `grow` are geometry, not taste — the wall slab is the same WALL_T here
+  public static final INDOOR:render.world.IndoorMaskOpts = {
+    px: 8,
+    blur: 0.5,
+    grow: render.facility.FacilityStyle.WALL_T * 0.75,
+    ambient: 0xb4aca0,
+    intensity: 2.2,
+    direct: 0.22,
+    bounce: 0.5,
+  };
   // ---- what stands on a street roof (render.corp.CorpStreet.roof) -------------------------------
   //
   // A BARE BOX WITH A LID IS NOT A BUILDING SEEN FROM ABOVE, and from the twentieth floor a roof is
