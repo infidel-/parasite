@@ -185,6 +185,8 @@ typedef Facility = {
   // and the art this shell is dressed in, indexed by Surf. see ShellTex for why it is on the model
   // rather than in FacilityStyle
   tex:ShellTex,
+  // how thick this kind draws an INTERIOR wall — see ShellOpts.wallIn. read by FacilityGeom.thick
+  wallIn:Float,
   w:Int,
   h:Int,
   surf:Array<Array<Surf>>,
@@ -427,6 +429,7 @@ class FacilityModel
     {
       return {
         kind: opts.kind,
+        wallIn: opts.wallIn,
         tex: opts.tex,
         w: w,
         h: h,

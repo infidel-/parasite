@@ -159,11 +159,36 @@ class FacilityGeom
       return FacilityModel.isWall(m, col, row) || FacilityModel.isDoor(m, col, row);
     }
 
-// how thick a cell's masonry is: HALF a cell for solid wall and a QUARTER for glazing
-  public static inline function thick(m:Facility, col:Int, row:Int):Float
+// how thick a cell's masonry is: HALF a cell for solid wall, a QUARTER for glazing, and the kind's
+// own `wallIn` for a wall with the building on all four hands.
+//
+// THE INTERIOR SPLIT IS WHAT MAKES A CORP DOORWAY AN OPENING RATHER THAN A TUNNEL. A reveal is
+// exactly this deep (see `slab`), so at WALL_T the tower's partitions stood a full real metre of
+// masonry either side of every door — right for a compound built out of blockwork and wrong for
+// an office floor. Only the INTERIOR is thinned: the perimeter keeps WALL_T so that
+// FacilityStyle.PARAPET_INSET, the window shoulders `butt` caps and render.corp.CorpFacade's ring
+// plane all keep arguing about the same number they always did
+  public static function thick(m:Facility, col:Int, row:Int):Float
     {
-      return FacilityModel.inside(m, col, row) && m.wall[row][col] == Wall.WINDOW ?
-        FacilityStyle.GLASS_T : FacilityStyle.WALL_T;
+      if (FacilityModel.inside(m, col, row) && m.wall[row][col] == Wall.WINDOW)
+        return FacilityStyle.GLASS_T;
+      return (m.wallIn < FacilityStyle.WALL_T && inner(m, col, row) ?
+        m.wallIn : FacilityStyle.WALL_T);
+    }
+
+// is this cell's masonry surrounded by the building on all four hands — i.e. a partition and not a
+// piece of the perimeter
+  static function inner(m:Facility, col:Int, row:Int):Bool
+    {
+      for (d in 0...4)
+        {
+          var c = col + DC[d];
+          var r = row + DR[d];
+          if (!FacilityModel.isIndoor(m, c, r) &&
+              !carries(m, c, r))
+            return false;
+        }
+      return true;
     }
 
 // how far from a wall cell's CENTRE this compound draws that cell's face, or -1 where the cell is

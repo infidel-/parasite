@@ -499,6 +499,19 @@ class CorpStyle
   // one near enough to resolve, and the crowd's lanes are dealt over it
   public static inline var TILE_VARY = 0.3;
 
+  // how thick the tower draws an INTERIOR wall, against the compound's FacilityStyle.WALL_T 2.0
+  // (half a cell, one real metre). A doorway's REVEAL is exactly this deep — render.facility
+  // .FacilityGeom.slab insets a wall cell by (CELL - thick) / 2 on every hand the wall line stops,
+  // and a door cell's two wall-line neighbours carry, so the opening comes out full width and the
+  // two jambs come out `thick` deep and DOOR_H + KERB_DROP tall. At 2.0 that is a 4.2-high, 2.0-deep
+  // masonry tunnel at every office door, which is what "door frame walls are too large" was
+  // pointing at: the OPENING is already the whole 4-unit cell and the two leaves already fill it,
+  // so nothing was narrowing the door — the reveal was simply a compound's wall.
+  //
+  // the PERIMETER is untouched at WALL_T, by FacilityGeom.thick's own four-hand test: the parapet,
+  // the window shoulders and CorpFacade's ring plane are all arithmetic on that number
+  public static inline var WALL_INNER = 1.2;
+
   // ---- THE INDOOR SWAP ------------------------------------------------------------------------
   //
   // render.world.IndoorMask's per-kind preset, and the tower's own rather than the compound's. The
@@ -690,6 +703,8 @@ class CorpStyle
         fitOf: CorpModel.fitOf,
         tableOf: Const.isCorpTableTile,
         wallOf: CorpModel.wallOf,
+        // an office partition is a stud wall and not blockwork — see WALL_INNER
+        wallIn: WALL_INNER,
         // and NO hangars: the lift car is nine cells of concrete in a ring of its own, which the
         // concrete-majority test would call a shed and arch a barrel vault over
         hangars: false,

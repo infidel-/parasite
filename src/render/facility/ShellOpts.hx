@@ -29,6 +29,12 @@ typedef ShellOpts = {
   // four tileset rows — Const.isTableTile is the laboratory's columns 0-7 and isCorpTableTile the
   // corp office's 8-15 — so neither kind may use the other's
   var tableOf: Int -> Bool;
+  // how thick an INTERIOR wall's masonry is, in world units. FacilityStyle.WALL_T (2.0, half a
+  // cell) for a compound, whose walls really are masonry; a corp tower passes less, because a
+  // doorway's reveal is this deep and an office partition read as a one-metre tunnel. It applies
+  // ONLY to a wall with the building on all four hands — the perimeter keeps WALL_T, so the
+  // parapet's PARAPET_INSET, the window shoulders and the facade plane are all untouched
+  var wallIn: Float;
   // may a structure come back flagged as a HANGAR — the concrete-majority test? A compound has one
   // shed and needs it. A corp floor must not: its LIFT CAR is nine cells of concrete inside its own
   // ring of posts and glazing, so the same test calls a lift a hangar and arches a barrel vault

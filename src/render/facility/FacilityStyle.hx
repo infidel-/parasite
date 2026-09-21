@@ -3351,6 +3351,8 @@ class FacilityStyle
         fitOf: function(t) return 0,
         tableOf: Const.isTableTile,
         wallOf: FacilityModel.wallOf,
+        // a compound's partitions ARE blockwork, so the interior is the same WALL_T as the shell
+        wallIn: WALL_T,
         hangars: true,
       };
     }
