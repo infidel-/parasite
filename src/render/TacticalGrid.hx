@@ -245,6 +245,18 @@ class TacticalGrid
       if (area.isCity() &&
           area.getCellType(col, row) == Const.TILE_BUILDING)
         return;
+      // AND THE OUTDOOR VOID, which is not an obstacle and is the second half of the same rule. A
+      // corp tower's plate is a floor twenty storeys up and everything off it is drawn as the
+      // alley the 2D view has always put there (gen.corp.CorpGen fills the whole area with ALLEY
+      // before it carves), so out to RADIUS 16 in every direction the lattice was hatching the
+      // empty air around the building — at y = 0.06, floating 114 units above the street it looks
+      // painted on. These three ids are the outdoor surfaces that are unwalkable BY BEING SCENERY
+      // rather than by something standing on them, so the rule is general and not corp's alone
+      var t = area.getCellType(col, row);
+      if (t == Const.TILE_ALLEY_UNWALKABLE ||
+          t == Const.TILE_ROAD_UNWALKABLE ||
+          t == Const.TILE_WALKWAY_UNWALKABLE)
+        return;
       var half = CityConfig.CELL / 2;
       var c = cellToWorld(col, row);
       var x0 = c.x - half, x1 = c.x + half;

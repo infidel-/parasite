@@ -185,10 +185,17 @@ class CorpDeco
         CorpStyle.DESK_TILE);
       for (f in 0...4)
         {
-          // the hand that looks INTO the wall is buried, and the two across the piece are its ends
-          if (f == (dir ^ 1))
+          // THE BURIED HAND IS `dir` AND NOT `dir ^ 1`, which is the whole of "desk missing
+          // polygons". `dir` points TOWARD the masonry and the box grows AWAY from it — x0/z0
+          // above are taken off the wall slab's near face — so the plane at `dir` is the one
+          // against the wall and the plane at `dir ^ 1` is the one the player looks at. Skipping
+          // `dir ^ 1` left every cabinet, fridge and vending machine in the tower open-fronted
+          // (the material is FrontSide, so you see straight through into nothing) and painted the
+          // drawer-course art, corp/desk-front.png, on the face nobody can see. `board` five lines
+          // down and render.facility.FacilityDetail.halo both already had it the right way round
+          if (f == dir)
             continue;
-          var isEnd = (f != dir);
+          var isEnd = (f != (dir ^ 1));
           FacilityGeom.face(CorpFurniture.buf(isEnd ? CorpStyle.DESK_SIDE : CorpStyle.DESK_FRONT),
             x0, x1, z0, z1, f, 0, d[2],
             isEnd ? CorpStyle.DESK_TILE : CorpStyle.DESK_FRONT_TILE);
