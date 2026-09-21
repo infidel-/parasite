@@ -331,6 +331,7 @@ class GenRun
       add('unreachableRooms', cut.length);
       // and the per-CELL question, which is a different one — see GenCheck.floorReachable
       check.floorReachable(ctx, state.rooms);
+      check.receptionSane(ctx, state.rooms);
 
       // how much of the walkable grid the lift flood actually covered, and WHERE it stopped. a
       // tower floor is entered at one cell, so a carve that leaves half the plate behind a wall is
@@ -358,6 +359,26 @@ class GenRun
                 : (check.lastSeen[xx][yy] ? 'R' : '.'));
             log('[gen] ' + line);
           }
+
+      // HOW FULL EACH KIND OF ROOM IS, which nothing counted until the fourth defect pass and is
+      // why "many rooms are pretty empty now" was invisible: `nodes/*` counts the ZONE NODES a
+      // template pushed, and a node is a record of where furniture WENT and not of how much of
+      // the floor it took. Unwalkable cells inside a room's rect ARE its furniture — every cell
+      // of the rect is floor by construction — so this is the honest number, in percent of the
+      // rect so a big sparse room cannot hide behind a small full one
+      for (r in state.rooms)
+        {
+          var area = r.w * r.h;
+          if (area <= 0)
+            continue;
+          var used = 0;
+          for (yy in r.y1...r.y2 + 1)
+            for (xx in r.x1...r.x2 + 1)
+              if (walkAll[ctx.cells[xx][yy]] != 1)
+                used++;
+          add('furn/' + r.role, Std.int(100.0 * used / area));
+          add('furnN/' + r.role, 1);
+        }
 
       GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
       add('rooms', state.rooms.length);

@@ -39,8 +39,13 @@ class CorpRooms
   // 32, max 64, and 783 of the 800 had an axis of five cells or more. At CityConfig.CELL 4 and
   // FacilityStyle.WALL_H 6 for a 3 m storey a cell is 2 m, so the MEDIAN boardroom table was
   // 16 m x 8 m and the largest 16 m square, a third of the room's floor by construction
-  public static inline var TABLE_W_MAX = 4;
-  public static inline var TABLE_H_MAX = 3;
+  // the biggest a boardroom table may be, in cells. 4 x 3 was fitted when the cap first went on,
+  // against the uncapped `w - 4` that gave a 16 m x 8 m median table; measured after, a 5-wide
+  // room takes `min(1, 4)` on one axis and a 10 x 5 boardroom came out with a 1 x 3 table in it
+  // — 9.8% of the rect furnished, the emptiest room on the floor. 6 x 4 is a twelve-seater at
+  // this scale and still leaves the two clear cells a side that `w - 4` guarantees
+  public static inline var TABLE_W_MAX = 6;
+  public static inline var TABLE_H_MAX = 4;
 
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
 // interchangeable: that one drops _TileRow.col, which is right for the facility's tables (none of
@@ -215,8 +220,14 @@ class CorpRooms
       var hasTable = (room.w >= 4 &&
         room.h >= 4 &&
         execDesk(state, node, room));
-      if (room.w >= 7 ||
-          !hasTable)
+      // THE CORNERS STAY AT `w >= 7`, and the plan to open them to every room is WITHDRAWN on
+      // the measurement. `execDesk` always returns true now, so this reads as the width test
+      // alone and it looks like a room under 7 wide gets a desk and nothing else. Dressing the
+      // corners anyway was tried and MEASURED: exec fill 26.9% -> 20.7%, because a 3x2 slab and
+      // four dressed corners in a 4x4 office seal the floor, and what `CorpConnect.openPockets`
+      // then undoes to reach it is the desk. More furniture, less furniture standing
+      if (!hasTable ||
+          room.w >= 7)
         decorateCorners(state, room, [
             Const.CORP_TABLE_COFFEE,
             Const.CORP_TABLE_ROUTER,
@@ -619,41 +630,50 @@ class CorpRooms
     }
 
 // a server room: rows of racks with an aisle between them, and nothing soft in it
-  public static function servers(state: _CorpState, node: _GenNode, room: _Room)
+// RANKS OF CABINETS across a room, one row every `pitch`, never touching the boundary ring and
+// always with one DEALT gap in each row — see the gap note inside. shared by the server room, the
+// archive and the security room, which are the same rank with three different cabinet frames
+  static function rackRows(state: _CorpState, node: _GenNode, room: _Room, tile: Int,
+      deco: _TileGroup, chance: Int, maxRows: Int, pitch: Int)
     {
       var area = state.area;
       var cells = area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
-      var rack = Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET;
-
-      // rack rows run across the room's SHORT axis and are reached from the aisle beside them, so
-      // a row is never more than one step from walkable floor
       var row = 0;
       while (true)
         {
           row++;
-          if (row > RACK_ROWS_MAX)
+          if (row > maxRows)
             break;
-          var ry = room.y1 + 1 + (row - 1) * RACK_PITCH;
+          var ry = room.y1 + 1 + (row - 1) * pitch;
           if (ry > room.y2 - 1)
             break;
           GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
-          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width
-          // and the roll was the only thing that ever broke it — at 5 wide that is three cells,
-          // so 1 row in 2 came out solid and sealed the floor behind it off. The dealt gap is
-          // placed off the row index so consecutive ranks stagger rather than line up into a
-          // corridor
+          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width and
+          // the roll was the only thing that ever broke it — at 5 wide that is three cells, so
+          // one row in two came out solid and sealed the floor behind it off. The dealt gap is
+          // placed off the row index so consecutive ranks stagger rather than line up
           var span = room.x2 - room.x1 - 1;
           var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
           for (x in room.x1 + 1...room.x2)
             {
               if (x == gap ||
-                  area.chance(20))
+                  area.chance(chance))
                 continue;
-              cells[x][ry] = rack;
-              addDecoration(state, x, ry, Const.CORP_MACHINERY);
+              cells[x][ry] = tile;
+              addDecoration(state, x, ry, deco);
             }
         }
+    }
+
+  public static function servers(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
+      // rack rows run across the room's SHORT axis and are reached from the aisle beside them,
+      // so a row is never more than one step from walkable floor
+      rackRows(state, node, room, Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
+        Const.CORP_MACHINERY, 20, RACK_ROWS_MAX, RACK_PITCH);
 
       // one router bench and a bin by the door
       decorateWalls(state, room, [
@@ -757,6 +777,20 @@ class CorpRooms
 // the fault `atDoor` was written for one template over
   static function soloDesk(state: _CorpState, node: _GenNode, room: _Room)
     {
+      deskRun(state, node, room, [
+          Const.CORP_TABLE_MISC,
+          Const.CORP_TABLE_LAMP,
+          Const.CORP_TABLE_PHONE,
+          Const.CORP_TABLE_FILES,
+        ]);
+    }
+
+// one desk run across the middle of a room, with a chair in front of it and `full`'s decorations
+// on it. the solo office's own desk, generalised: a copy room's copier bank and a security room's
+// monitor bench are the same object with a different list of things standing on it
+  static function deskRun(state: _CorpState, node: _GenNode, room: _Room,
+      full: Array<_TileGroup>)
+    {
       var area = state.area;
       var cells = area.getCells();
       var block = Const.CORP_TABLE_3X1;
@@ -781,12 +815,6 @@ class CorpRooms
         if (atDoor(cells, tx + dx, ty))
           return;
       GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + n - 1, ty);
-      var full = [
-        Const.CORP_TABLE_MISC,
-        Const.CORP_TABLE_LAMP,
-        Const.CORP_TABLE_PHONE,
-        Const.CORP_TABLE_FILES,
-      ];
       var deco = full.copy();
       for (dx in 0...n)
         {
@@ -807,9 +835,20 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
+      // A 4-WIDE BREAK ROOM IS STILL A BREAK ROOM. It is dealt at minW/minH 4 on purpose (see
+      // CorpBlocks) and `kitchenTables` wants 5 on both axes for its island, so every 4 x 9 one
+      // came out as wall fixtures alone at 21.2% fill. Below the island it takes a counter run
+      // instead, which is what a galley kitchenette is
       if (room.w >= 5 &&
           room.h >= 5)
         kitchenTables(state, node, room);
+      else
+        deskRun(state, node, room, [
+            Const.CORP_TABLE_KETTLE,
+            Const.CORP_TABLE_MICROWAVE,
+            Const.CORP_TABLE_MUG,
+            Const.CORP_TABLE_FRUIT,
+          ]);
       decorateWalls(state, room, [
           Const.CORP_TABLE_COFFEE,
           Const.CORP_TABLE_MUG,
@@ -834,6 +873,12 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD2);
+      // THE COPIER BANK DOWN THE MIDDLE WAS TRIED AND TAKEN BACK OUT, and the reason is the
+      // `chance` two calls below: at 70 / 50 this room is the most heavily dressed in the tower
+      // and it is dealt narrow, so the only cells joining its two halves are the ones most likely
+      // to carry a cabinet. A centred run took its fill DOWN 29.4% -> 23.4% and a flush one to
+      // 27.6% — both of them the repair pass eroding furniture to reach what the run had sealed.
+      // A copy room is a corridor lined with copiers, which is what it already was
       decorateWalls(state, room, [
           Const.CORP_TABLE_PRINTER,
           Const.CORP_TABLE_STATIONERY,
@@ -851,39 +896,10 @@ class CorpRooms
 // an archive: the server room's rank-and-aisle with paper in it instead of machines
   public static function archive(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var area = state.area;
-      var cells = area.getCells();
+      var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
       var shelf = Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET;
-
-      // a rank never touches the room's own boundary ring, so the floor round it is always walkable
-      // and no door can be sealed — the same invariant `servers` relies on
-      var row = 0;
-      while (true)
-        {
-          row++;
-          if (row > RACK_ROWS_MAX)
-            break;
-          var ry = room.y1 + 1 + (row - 1) * RACK_PITCH;
-          if (ry > room.y2 - 1)
-            break;
-          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
-          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width
-          // and the roll was the only thing that ever broke it — at 5 wide that is three cells,
-          // so 1 row in 2 came out solid and sealed the floor behind it off. The dealt gap is
-          // placed off the row index so consecutive ranks stagger rather than line up into a
-          // corridor
-          var span = room.x2 - room.x1 - 1;
-          var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
-          for (x in room.x1 + 1...room.x2)
-            {
-              if (x == gap ||
-                  area.chance(25))
-                continue;
-              cells[x][ry] = shelf;
-              addDecoration(state, x, ry, Const.CORP_CABINET);
-            }
-        }
+      rackRows(state, node, room, shelf, Const.CORP_CABINET, 25, RACK_ROWS_MAX, RACK_PITCH);
 
       decorateWalls(state, room, [
           Const.CORP_TABLE_FILES,
@@ -899,13 +915,59 @@ class CorpRooms
 
 // a reception: the executive's marble and the same 3x2 slab, standing as a counter, with seating
 // and greenery round the walls
+// THE RECEPTION'S COUNTER IS ITS FRONT WALL, and it runs along the hand nearer the lift.
+//
+// It used to borrow `execDesk`, which stands a 3 x 2 slab in the MIDDLE of the room — a reception
+// with an island in it, and the highest furniture-pocket rate on the floor (75.4% of its rooms held
+// floor the lift flood could not reach, because the slab and the wall dressings between them cut
+// the rect in half). A counter is one cell deep, it stands against the wall the visitor walks
+// toward, and the floor in front of it stays one piece.
+//
+// IT IS LAID ON THE EDGE ROW ITSELF, not one cell in. One cell in leaves a back strip whose only
+// ways out are the two corners, and `decorateWalls` dresses a corner unconditionally — that strip
+// is a sealed pocket in every seed where it fits. On the row itself there is no strip.
+//
+// AND IT IS ALWAYS HORIZONTAL. `decorateWalls` dresses columns x1 and x2 and nothing else, so a
+// run held to x1+1 .. x2-1 can never be overwritten by the dressing that follows it; a vertical
+// counter would be. ponytail: the lift is then only followed on one axis, which for a room capped
+// at 6 x 6 is a cell or two of difference
+  static function counter(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var line = (gen.blocks.CorpBlocks.liftY < (room.y1 + room.y2) / 2 ? room.y1 : room.y2);
+      var lo = room.x1 + 1;
+      var hi = room.x2 - 1;
+      if (hi < lo)
+        return;
+      GenTree.add(node, CorpBlocks.ZONE_COUNTER_RUN, lo, line, hi, line);
+      var full = [
+        Const.CORP_COMPUTERS,
+        Const.CORP_TABLE_PHONE,
+        Const.CORP_TABLE_FILES,
+      ];
+      var deco = full.copy();
+      var n = 0;
+      for (x in lo...hi + 1)
+        {
+          if (atDoor(cells, x, line))
+            continue;
+          cells[x][line] = Const.TILE_DARK_TABLE_MARBLE1_1X1;
+          deco = addDecorationExt(state, x, line, deco, full);
+          n++;
+        }
+      // and the receptionist's chair, in front of the middle of whatever run was actually laid
+      if (n > 0)
+        area.addDecoration(Std.int((lo + hi) / 2), line + (line == room.y1 ? 1 : -1),
+          Const.CORP_CHAIR[0].row, area.random(Const.CORP_CHAIR[0].amount));
+    }
+
   public static function reception(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
-      if (room.w >= 4 &&
-          room.h >= 4)
-        execDesk(state, node, room);
+      counter(state, node, room);
+
       decorateWalls(state, room, [
           Const.CORP_TABLE_PHONE,
           Const.CORP_TABLE_MISC,
@@ -926,6 +988,16 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
+      // THE MONITOR BENCH AND A RANK OF GEAR, because a control room with nothing in the middle
+      // of it is a cupboard. Measured before this: 19.9% of the rect furnished, and every one of
+      // those cells was a wall dressing — `decorateWalls` was the entire body of this template
+      deskRun(state, node, room, [
+          Const.CORP_COMPUTERS,
+          Const.CORP_TABLE_ROUTER,
+          Const.CORP_TABLE_MISC_LARGE,
+        ]);
+      rackRows(state, node, room, Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
+        Const.CORP_MACHINERY, 25, 2, 3);
       decorateWalls(state, room, [
           Const.CORP_COMPUTERS,
           Const.CORP_TABLE_ROUTER,

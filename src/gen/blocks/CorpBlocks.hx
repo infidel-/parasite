@@ -16,6 +16,9 @@ package gen.blocks;
 
 import gen.corp.CorpTemp.*;
 import gen.corp._CorpState;
+import game.AreaGenerator.DIR_UP;
+import game.AreaGenerator.DIR_DOWN;
+import game.AreaGenerator.DIR_LEFT;
 
 class CorpBlocks
 {
@@ -39,6 +42,9 @@ class CorpBlocks
   public static inline var ROOM_ARCHIVE = 'room-archive';
   public static inline var ROOM_RECEPTION = 'room-reception';
   public static inline var ROOM_SECURITY = 'room-security';
+  // the widest a reception may be dealt, on either axis. a front desk and a couple of chairs is
+  // what it is; the floor's big rooms belong to the open plan and the cubicle farm
+  public static inline var RECEPTION_MAX = 6;
 
   // the zone kinds a room pushes under itself. they write no cells of their own — the template
   // that pushed one has already laid it — and exist so the tree is a record of WHERE the furniture
@@ -104,6 +110,13 @@ class CorpBlocks
   // gen.corp.CorpBuilding.passThrough, which is where the fault it is for is written up
   public static var blocked: Map<Int, Bool> = new Map();
 
+  // and WHERE THE LIFT IS, in cells, for the same reason and by the same route: `assign` fills it
+  // before it deals and the reception demand's `fit` reads it. A _GenDemand carries no state, and
+  // "the reception is by the lift" is a placement rule that cannot be said any other way — it is
+  // not about the rect's shape, which is all `fit` can otherwise see
+  public static var liftX = 0;
+  public static var liftY = 0;
+
 // what a tower floor must end up with.
 //
 // the minW/minH are what each template needs to produce the thing rather than a token of it: a
@@ -121,6 +134,46 @@ class CorpBlocks
       var biggest = function(b: _GenNode)
         return GenTree.width(b) * GenTree.height(b);
       return [
+        // AND IT IS DECLARED FIRST, which is the third rule. `gen.Quota.deal` fills the
+        // MINIMA most-constrained-first and then walks the maxima in DECLARATION ORDER,
+        // and this demand's min is 0 — so wherever it sat in the list, every room with a
+        // min had already chosen and the near-lift rects were gone. Measured with the
+        // assert forced, over 3,000 seeds: 82 towers put their reception more than 36
+        // cells from the car, worst 65
+        // THE RECEPTION IS BY THE LIFT AND IT IS SMALL, which are two rules `fit: smallest` could
+        // not state. It used to take whatever small rect was going, which put the floor's front
+        // desk behind three other rooms as often as not; and "smallest" is a preference that
+        // loses to the tie-break on area, so a 9 x 4 reception with an 8-cell desk in the middle
+        // of it was the common case. `must` caps the rect, `fit` is the negative of the taxicab
+        // distance from the rect's centre to the lift car, and the two together deal it the
+        // nearest small room to the doors it is the reception FOR
+        {
+          kind: ROOM_RECEPTION,
+          min: 0,
+          max: 1,
+          minW: 4,
+          minH: 4,
+          // SMALL IS A PREFERENCE, BY THE LIFT IS A RULE, and it took two measurements to get
+          // that round the right way. The SIZE cap was a `must` first and it cost a third of the
+          // towers their reception outright — 0.99 dealt per floor down to 0.66 — because `min`
+          // is 0, so a floor whose free rects are all 7 wide simply does not get one. As a
+          // penalty in `fit` it loses to any rect that is both nearer and within the cap, and
+          // wins when there is nothing else.
+          //
+          // DISTANCE IS THE OTHER WAY ROUND: a reception 64 cells from the car is not a
+          // reception, so that one is a `must` and a floor with nothing near the lift gets no
+          // reception at all. Declaring first took the outliers from 82 towers in 3,000 to 6, and
+          // those 6 have no small rect near the car at any price — a carve outcome, not a
+          // ranking one
+          must: function(b: _GenNode)
+            return Std.int(Math.abs((b.x1 + b.x2) / 2 - liftX)) +
+              Std.int(Math.abs((b.y1 + b.y2) / 2 - liftY)) <= GenCheck.RECEPTION_NEAR,
+          fit: function(b: _GenNode)
+            return -(Std.int(Math.abs((b.x1 + b.x2) / 2 - liftX)) +
+              Std.int(Math.abs((b.y1 + b.y2) / 2 - liftY)) +
+              2 * Std.int(Math.max(0, GenTree.width(b) - RECEPTION_MAX)) +
+              2 * Std.int(Math.max(0, GenTree.height(b) - RECEPTION_MAX))),
+        },
         {
           kind: ROOM_TOILET,
           min: 1,
@@ -189,14 +242,6 @@ class CorpBlocks
         // six would be the "quota short: room-toilet got 0" this file's `assign` already carries
         // a retry loop for. A min is for the thing a floor MUST have, and a floor does not have
         // to have an archive on it. What puts one there is the max, and the supply is ample
-        {
-          kind: ROOM_RECEPTION,
-          min: 0,
-          max: 1,
-          minW: 4,
-          minH: 4,
-          fit: smallest,
-        },
         {
           kind: ROOM_SECURITY,
           min: 0,
@@ -291,6 +336,18 @@ class CorpBlocks
         }
       // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
       blocked = gen.corp.CorpBuilding.passThrough(state);
+      // and WHERE THE LIFT IS, for the reception demand's `fit`. The car is not on the grid yet —
+      // ElevatorBlock fills after this — but `frontDir` is, and the car stands at the middle of
+      // the plate's wall on that hand, which is all the demand needs
+      liftX = Std.int((state.px1 + state.px2) / 2);
+      liftY = Std.int((state.py1 + state.py2) / 2);
+      switch (state.frontDir)
+        {
+          case DIR_UP: liftY = state.py1;
+          case DIR_DOWN: liftY = state.py2;
+          case DIR_LEFT: liftX = state.px1;
+          default: liftX = state.px2;
+        }
 
       // and DEAL UNTIL NOTHING IS WALLED IN BEHIND A TOILET. The pre-deal test names the rooms a
       // dead end cannot go in one at a time; two of them in parallel defeat it, and predicting
