@@ -42,6 +42,7 @@ class View {
   var scaleIdx = 0;
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var area3d:Area3D; // the area KIND: scene/lights, static geometry and the per-frame world tick
+  var streetBlur:StreetBlur; // the corp street's distance blur (render.StreetBlur), off elsewhere
 
   var actorGroup:Group;
   var ring:Mesh;
@@ -564,6 +565,13 @@ class View {
     composer = new EffectComposer(renderer);
     setAA(game.config.vidAntialias); // MSAA sample count onto the fresh composer targets
     composer.addPass(new RenderPass(scene, camera));
+    // the far city softens: a full-screen blur masked by the alpha the corp street writes. BEFORE
+    // GTAO, which composites its own quad and would overwrite that alpha. Zero cost anywhere else
+    // — a disabled pass is skipped whole by the composer
+    streetBlur = new StreetBlur();
+    streetBlur.pass.enabled = Std.isOfType(a, render.corp.CorpArea);
+    streetBlur.resize(Std.int(Browser.window.innerWidth), Std.int(Browser.window.innerHeight));
+    composer.addPass(streetBlur.pass);
     // ambient occlusion: darkens where geometry meets (wall/ground, lamp bases, corners). before
     // bloom so the darkened crevices don't feed the glow. it renders its own depth + normal prepass
     // of the whole scene, so it stays enabled-gated — a disabled pass is skipped by the composer
@@ -1088,6 +1096,7 @@ class View {
     camera.updateProjectionMatrix();
     renderer.setSize(w, h);
     if (composer != null) composer.setSize(w, h);
+    if (streetBlur != null) streetBlur.resize(Std.int(w), Std.int(h));
     sizeGtao();
   }
 

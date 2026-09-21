@@ -477,32 +477,18 @@ class CorpStyle
   // same paving and the same curtain grid four times over. Fog already takes the far city toward
   // the sky colour; what it cannot do is stop the pattern being legible on the way there.
   //
-  // A LARGE QUAD WITH A FRAGMENT SHADER ON IT CANNOT DO THIS EITHER, which was the first idea: a
-  // fragment shader can only read what is bound to it, and the frame is not a texture until
-  // something copies it — which is a pass, a depth attachment and a full-screen quad every frame.
-  // A quad hung over the city can only ADD haze, and `scene.fog` already does that per-fragment
-  // and for free.
+  // THE THIRD PASS ANSWERED THIS WITH A TEXTURE LOD BIAS AND IT WAS THE WRONG ANSWER. Measured:
+  // bias 2.5 moved far-roof high-frequency energy 6.109 -> 6.060, −1%. A minified texture has
+  // almost nothing left to lose at 200 units, and most of what still reads as structure out there
+  // is GEOMETRY — roof edges, parapets, the lit-pane grid — which no map bias can touch.
   //
-  // So the blur is a MIP BIAS, folded into the street's own materials by onBeforeCompile the way
-  // render.world.IndoorMask folds its lighting swap in: the sample takes a LOD offset that ramps
-  // with view distance, so distant texels average their own neighbours away. Zero passes, zero
-  // draw calls, zero render targets, and it costs one varying and one smoothstep.
-  //
-  // `near` sits past the top of the facade (the drop starts at the parapet and runs 114 down) so
-  // what the player leans over is sharp, and `far` inside FOG_FAR 240 so the ramp finishes before
-  // the fog has finished swallowing it.
-  //
-  // `max` IS IN MIP LEVELS AND IT HAD TO BE FITTED HIGH, which is the measurement worth keeping:
-  // at 2.5 the A/B against a bias-0 build was NOTHING — high-frequency energy in a far roof moved
-  // 6.109 -> 6.060, i.e. −1%. Forced to 8 EVERYWHERE it moved the interior of a near roof deck
-  // 3.401 -> 2.332, −31%. The street's textures are already minified to near-flat by the time they
-  // are 200 units away, so extra bias has little left to remove, and most of what still reads as
-  // structure out there is GEOMETRY — roof edges, parapets, the lit-pane grid — which no map bias
-  // can touch. THE MIRROR BREAK BELOW IS WHAT ACTUALLY ANSWERS "samey"; this only softens
+  // SO IT IS A REAL SCREEN-SPACE BLUR NOW, render.StreetBlur, one full-screen quad in the composer
+  // masked by the alpha channel every street material writes (CorpStreet.blur). These two numbers
+  // are where that mask ramps, in view units, and they sit inside the fog's own 90 .. 240 so the
+  // softening arrives before the fog has finished swallowing the city rather than after.
   public static final BLUR = {
     near: 110.0,
     far: 230.0,
-    max: 6.0,
   };
 
   // how far a MIRROR TILE of the city may move a building off the one it reflects. The tiling is

@@ -407,20 +407,27 @@ class CorpStreet
       return { deco: n, pent: pent };
     }
 
-// THE DISTANCE BLUR, patched into one of the street's own materials — see CorpStyle.BLUR for why
-// it is a mip bias and not a pass.
+// THE FAR MASK, patched into every one of the street's own materials — the input to
+// render.StreetBlur, which is the composer pass that actually does the softening.
+//
+// AN OPAQUE MATERIAL'S ALPHA OUTPUT IS DEAD DATA. Nothing downstream reads it: blending is off for
+// an opaque draw, the bloom pass reads rgb and the output pass passes alpha through to a canvas
+// that ignores it. So the street writes `1 - farness` there and the blur pass reads it back as its
+// mask, which is a whole depth prepass and a DepthTexture on a multisampled target not spent.
 //
 // the include is REPLACED and not edited, because onBeforeCompile runs BEFORE three resolves
 // `#include`: what arrives here is the literal directive, so there is nothing to string-match
-// inside the chunk. What goes in its place is three's own `map_fragment` with one argument added
-// and the DECODE_VIDEO_TEXTURE branch dropped, which nothing down here is.
+// inside the chunk. `<dithering_fragment>` is the LAST chunk of every lit fragment shader, which
+// is the one place `gl_FragColor` is already assigned and can still be overwritten.
 //
 // the varying is our own rather than three's `vFogDepth`, which carries the same number: that one
-// only exists under USE_FOG, and a material here losing its fog would silently lose its blur with
+// only exists under USE_FOG, and a material here losing its fog would silently lose its mask with
 // it. And the cache key is mandatory — without one three hands this patched program to the next
-// material with the same signature, which is the trap render.corp.CorpCrowd's car UV already hit
-// a Float as a GLSL float LITERAL. Haxe prints 110.0 as "110", and `smoothstep(110, 230, x)` is
-// `smoothstep(int, int, float)` — no overload, and the whole street compiles to black
+// material with the same signature, which is the trap render.corp.CorpCrowd's car UV already hit.
+//
+// a Float has to be written as a GLSL float LITERAL. Haxe prints 110.0 as "110", and
+// `smoothstep(110, 230, x)` is `smoothstep(int, int, float)` — no overload, and the whole street
+// compiles to black
   static inline function glsl(v:Float):String
     return (v == Std.int(v) ? Std.string(v) + '.0' : Std.string(v));
 
@@ -429,18 +436,15 @@ class CorpStreet
       var b = CorpStyle.BLUR;
       mat.onBeforeCompile = function(sh:Dynamic)
         {
-          sh.vertexShader = 'varying float vStreetDist;\n' +
+          sh.vertexShader = 'varying float vStreetFar;\n' +
             StringTools.replace(sh.vertexShader, '#include <project_vertex>',
-              '#include <project_vertex>\n  vStreetDist = -mvPosition.z;');
-          sh.fragmentShader = 'varying float vStreetDist;\n' +
-            StringTools.replace(sh.fragmentShader, '#include <map_fragment>',
-              '#ifdef USE_MAP\n' +
-              '  float streetBias = smoothstep(' + glsl(b.near) + ', ' + glsl(b.far) +
-              ', vStreetDist) * ' + glsl(b.max) + ';\n' +
-              '  diffuseColor *= texture2D( map, vMapUv, streetBias );\n' +
-              '#endif');
+              '#include <project_vertex>\n  vStreetFar = smoothstep(' + glsl(b.near) + ', ' +
+              glsl(b.far) + ', -mvPosition.z);');
+          sh.fragmentShader = 'varying float vStreetFar;\n' +
+            StringTools.replace(sh.fragmentShader, '#include <dithering_fragment>',
+              '#include <dithering_fragment>\n  gl_FragColor.a = 1.0 - vStreetFar;');
         };
-      untyped mat.customProgramCacheKey = function() return 'corpStreetBlur';
+      untyped mat.customProgramCacheKey = function() return 'corpStreetFar';
     }
 
 // a horizontal quad with its OWN 0..1 uv, which is what a decal wants and FacilityGeom.cap cannot
@@ -483,6 +487,7 @@ class CorpStreet
         alphaTest: 0.5,
         side: THREE.DoubleSide,
       }));
+      blur(untyped mesh.material);
       // a rooftop unit RECEIVES but does not cast: it is a flat decal quad lying on the roof, so
       // its own shadow would be a stripe of nothing
       mesh.receiveShadow = true;
@@ -636,6 +641,7 @@ class CorpStreet
       mat.emissive = new Color(cc != 0 ? cc : 0xffffff);
       mat.emissiveMap = t;
       mat.emissiveIntensity = st.glassLitIntensity;
+      blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.receiveShadow = true;
       mesh.castShadow = false;
