@@ -78,6 +78,8 @@ class CorpCrowd
   var road:Array<Lane>;
   var walkMesh:InstancedMesh;
   var carMesh:InstancedMesh;
+  // and the cars' headlights, two instances per car — see `lights`
+  var lightMesh:InstancedMesh;
   // the cars' own atlas window, one vec4 per instance — see `cars`
   var carUV:js.lib.Float32Array;
   var carAttr:InstancedBufferAttribute;
@@ -144,6 +146,7 @@ class CorpCrowd
       if (n.cars > 0)
         {
           carMesh = cars(group, n.cars);
+          lightMesh = lights(group, n.cars * 2);
           drive();
         }
     }
@@ -255,9 +258,57 @@ class CorpCrowd
           carUV[i * 4 + 1] = cell.v0;
           carUV[i * 4 + 2] = cell.du;
           carUV[i * 4 + 3] = cell.dv;
+          // and its two headlights, off the SAME heading and the same cell crop, so a longer car
+          // really does carry its lamps further forward and further apart
+          var nose = cell.len * (0.5 - CorpStyle.CAR_LIGHT_IN);
+          var side = cell.wide * CorpStyle.CAR_LIGHT_SPREAD;
+          for (k in 0...2)
+            {
+              var sg = (k == 0 ? 1.0 : -1.0);
+              pos.set(ln.x0 + ln.dx * s + hx * nose - hz * sg * side,
+                CorpStyle.CAR_LIGHT_Y,
+                ln.z0 + ln.dz * s + hz * nose + hx * sg * side);
+              scl.set(CorpStyle.CAR_LIGHT_SZ, CorpStyle.CAR_LIGHT_SZ, 1);
+              tmp.compose(pos, flat, scl);
+              lightMesh.setMatrixAt(i * 2 + k, tmp);
+            }
         }
       carMesh.instanceMatrix.needsUpdate = true;
       carAttr.needsUpdate = true;
+      lightMesh.instanceMatrix.needsUpdate = true;
+    }
+
+// the headlight batch: one additive glow quad per lamp, lying on the road.
+//
+// THE MAP IS render.Textures.makeGlowGradient AND IT WAS ALREADY IN THE TREE — the centred radial
+// falloff the first 3D pass drew the whole crowd with, referenced by nothing since. See
+// CorpStyle.CAR_LIGHT_COLOR.
+//
+// no per-instance anything: every lamp is the same picture at the same size, so this is a plain
+// InstancedMesh with no attribute injection and no cache key of its own. NOT lambert and not
+// alpha-tested, which is the one place it departs from the two batches above: a glow is light
+// ADDED to whatever is under it and has no albedo for a moon to fall on
+  function lights(group:Group, count:Int):InstancedMesh
+    {
+      var mat = new MeshBasicMaterial({
+        map: Textures.makeGlowGradient(),
+        color: new Color(CorpStyle.CAR_LIGHT_COLOR)
+          .multiplyScalar(CorpStyle.CAR_LIGHT_MUL),
+        transparent: true,
+        depthWrite: false,
+        blending: untyped THREE.AdditiveBlending,
+        // FRONT SIDE ONLY, AND IT IS WORTH A DRAW CALL: three renders a TRANSPARENT DoubleSide
+        // material in two passes (back faces, then front) unless forceSinglePass is set, and
+        // MEASURED here that is 84 -> 86 calls against 84 -> 85. `flat` turns the quad face up
+        // and this camera never goes under the street, so the back face is never seen
+        side: THREE.FrontSide,
+      });
+      var mesh = new InstancedMesh(new PlaneGeometry(1, 1), mat, count);
+      mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
+      untyped mesh.frustumCulled = false;
+      mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
+      group.add(mesh);
+      return mesh;
     }
 
 // the traffic batch: one instanced quad per car, each showing a different crop of the one sheet.
@@ -317,6 +368,7 @@ class CorpCrowd
       var c = new CorpCrowd(g);
       c.people(g, 1);
       c.cars(g, 1);
+      c.lights(g, 1);
     }
 
 // the people batch: one upright quad per pedestrian, each showing a different civilian icon.

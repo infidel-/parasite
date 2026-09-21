@@ -641,8 +641,14 @@ class CorpStyle
   public static inline var CAR_LEN = 8.0;
   // what the car quad's albedo is multiplied by, before the street's own moon. a touch over
   // STREET_DIM because a car is small, moving and the thing the eye is meant to follow — fitted
-  // live, like STREET_DIM itself. Lambert for the walkers' reason
-  public static inline var CAR_DIM = 0.60;
+  // live, like STREET_DIM itself. Lambert for the walkers' reason.
+  //
+  // 0.60 -> 0.85 on "cars became way too dark", and THE MULTIPLIER IS NOT WHAT FIXED THAT. Measured
+  // on the drop under the street's own moon: body 0.0027 linear against a road at 0.0010 and a
+  // walker at 0.1109. The art is a matte unlit car panel at night and there is nothing in it to
+  // reveal — 40x the multiplier would be needed to reach the icons, and it would reach it as grey
+  // mush. What makes a car read as traffic is CAR_LIGHT_* below
+  public static inline var CAR_DIM = 0.85;
   // and the cells, MEASURED off the drop at alpha > 220 and padded 3 px — an authored cell is an
   // object in a quadrant and not the quadrant, and cropping to the quadrant would draw a third of
   // each car as empty road. `len`/`wide` come out of each crop's own aspect, so nothing is
@@ -657,6 +663,27 @@ class CorpStyle
     // estate    170x365 px, aspect 0.466
     { u0: 0.6621, v0: 0.0996, du: 0.1660, dv: 0.3564, len: 7.92, wide: 3.69 },
   ];
+  // THE HEADLIGHTS, AND THEY ARE THE GRADIENT THAT WAS ALREADY HERE. render.Textures
+  // .makeGlowGradient is the 64px centred radial falloff the first 3D pass drew the whole crowd
+  // with, and it has been referenced by nothing at all since the civilian sheets replaced it. The
+  // paragraph above says why a car is not a patch of light — but the two dots at its nose are
+  // exactly that, and the traffic sheet was generated with them as "clearly the brightest thing on
+  // the whole image". Two per car in ONE additive batch, so the street's lights are one draw call.
+  public static inline var CAR_LIGHT_COLOR = 0xfff0c0;
+  // one lamp's quad, world units. far wider than a lens because what is drawn is the GLOW
+  public static inline var CAR_LIGHT_SZ = 2.2;
+  // where the pair sits on its own car, as fractions of that CELL's measured crop — so a van's
+  // lights are as far apart as a van is wide. `IN` is back from the nose, `SPREAD` is either side
+  // of the centre line
+  public static inline var CAR_LIGHT_IN = 0.1;
+  public static inline var CAR_LIGHT_SPREAD = 0.3;
+  // and clear of the car quad's own plane: the traffic batch is opaque and writes depth, so a glow
+  // at CROWD_Y exactly would lose the depth test to the car it belongs to
+  public static inline var CAR_LIGHT_Y = 0.12;
+  // how bright, before the additive blend. NOT a dim — nothing multiplies a glow down here and the
+  // gradient's own falloff is the whole of the shape
+  public static inline var CAR_LIGHT_MUL = 0.8;
+
   // the shortest straight run of cells that is worth walking or driving down
   public static inline var LANE_MIN = 6;
 
