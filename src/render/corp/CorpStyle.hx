@@ -462,6 +462,49 @@ class CorpStyle
     shadow: 0.18,
   };
 
+  // ---- THE FAR CITY GOES SOFT ------------------------------------------------------------------
+  //
+  // "SAMEY" IS DETAIL, AND WHAT REPEATS IS DETAIL. The city below is one 100 x 100 model mirror-
+  // tiled 3 x 3 (render.corp.CorpStreet.fold), so at range the eye is reading the same kerb, the
+  // same paving and the same curtain grid four times over. Fog already takes the far city toward
+  // the sky colour; what it cannot do is stop the pattern being legible on the way there.
+  //
+  // A LARGE QUAD WITH A FRAGMENT SHADER ON IT CANNOT DO THIS EITHER, which was the first idea: a
+  // fragment shader can only read what is bound to it, and the frame is not a texture until
+  // something copies it — which is a pass, a depth attachment and a full-screen quad every frame.
+  // A quad hung over the city can only ADD haze, and `scene.fog` already does that per-fragment
+  // and for free.
+  //
+  // So the blur is a MIP BIAS, folded into the street's own materials by onBeforeCompile the way
+  // render.world.IndoorMask folds its lighting swap in: the sample takes a LOD offset that ramps
+  // with view distance, so distant texels average their own neighbours away. Zero passes, zero
+  // draw calls, zero render targets, and it costs one varying and one smoothstep.
+  //
+  // `near` sits past the top of the facade (the drop starts at the parapet and runs 114 down) so
+  // what the player leans over is sharp, and `far` inside FOG_FAR 240 so the ramp finishes before
+  // the fog has finished swallowing it.
+  //
+  // `max` IS IN MIP LEVELS AND IT HAD TO BE FITTED HIGH, which is the measurement worth keeping:
+  // at 2.5 the A/B against a bias-0 build was NOTHING — high-frequency energy in a far roof moved
+  // 6.109 -> 6.060, i.e. −1%. Forced to 8 EVERYWHERE it moved the interior of a near roof deck
+  // 3.401 -> 2.332, −31%. The street's textures are already minified to near-flat by the time they
+  // are 200 units away, so extra bias has little left to remove, and most of what still reads as
+  // structure out there is GEOMETRY — roof edges, parapets, the lit-pane grid — which no map bias
+  // can touch. THE MIRROR BREAK BELOW IS WHAT ACTUALLY ANSWERS "samey"; this only softens
+  public static final BLUR = {
+    near: 110.0,
+    far: 230.0,
+    max: 6.0,
+  };
+
+  // how far a MIRROR TILE of the city may move a building off the one it reflects. The tiling is
+  // exact by construction (render.corp.CorpStreet.fold), and exact is what makes four copies of a
+  // skyline read as one skyline repeated. A height jitter and a facade re-deal per tile cost
+  // nothing — they are a hash at build — and they break the symmetry the eye is actually picking
+  // up. The CENTRE tile is left alone: it is the city the tower really stands in, it is the only
+  // one near enough to resolve, and the crowd's lanes are dealt over it
+  public static inline var TILE_VARY = 0.3;
+
   // ---- THE INDOOR SWAP ------------------------------------------------------------------------
   //
   // render.world.IndoorMask's per-kind preset, and the tower's own rather than the compound's. The

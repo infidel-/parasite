@@ -244,12 +244,16 @@ class CorpFacade
     {
       if (b.idx.length == 0)
         return;
-      var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
+      var mat = new MeshBasicMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.FACADE_DIM),
         vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
-      }));
+      });
+      // the tower's own flank runs 114 units DOWN, so its far end is exactly as distant as the
+      // street is and takes the same distance blur — CorpStyle.BLUR.near is set past its top
+      CorpStreet.blur(mat);
+      var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.receiveShadow = false;
       mesh.castShadow = false;
       scene.add(mesh);

@@ -153,12 +153,13 @@ class CorpStreet
               var z1 = z0 + b.d * CELL;
               if (!ring(p, x0, x1, z0, z1))
                 continue;
-              // CAPPED, and it is not cosmetic: the plate is at 0 and the street at -114, so a
-              // downtown tower taller than that would come up THROUGH the floor the player is
-              // standing on. The profile's own maximum is well under it, but the cap is what makes
-              // that a guarantee rather than an observation about today's numbers
-              var h = (b.h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : b.h);
-              var f = b.facade % st.walls.length;
+              // `tileH` carries the cap, and the cap is not cosmetic: the plate is at 0 and the
+              // street at -114, so a downtown tower taller than that would come up THROUGH the
+              // floor the player is standing on. The profile's own maximum is well under it, but
+              // the cap is what makes that a guarantee rather than an observation about today's
+              // numbers — and the mirror jitter could otherwise push one past it
+              var h = tileH(b, tx, tz);
+              var f = tileF(b, tx, tz, st.walls.length);
               var glass = (st.winPerCell != null && st.winPerCell[f] > 0);
               // a glass tower's curtain art is CELL-LOCKED — one window per cell each way, which is
               // how the real city draws it (render.world.Buildings' winPerCell path) and the only
@@ -441,7 +442,7 @@ class CorpStreet
         for (tx in -1...2)
           for (b in list)
             {
-              var bh = (b.h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : b.h);
+              var bh = tileH(b, tx, tz);
               var c0 = span(tx, b.col, b.w);
               var r0 = span(tz, b.row, b.d);
               for (cc in 0...b.w)
@@ -512,6 +513,42 @@ class CorpStreet
         }
     }
 
+// THE DISTANCE BLUR, patched into one of the street's own materials — see CorpStyle.BLUR for why
+// it is a mip bias and not a pass.
+//
+// the include is REPLACED and not edited, because onBeforeCompile runs BEFORE three resolves
+// `#include`: what arrives here is the literal directive, so there is nothing to string-match
+// inside the chunk. What goes in its place is three's own `map_fragment` with one argument added
+// and the DECODE_VIDEO_TEXTURE branch dropped, which nothing down here is.
+//
+// the varying is our own rather than three's `vFogDepth`, which carries the same number: that one
+// only exists under USE_FOG, and a material here losing its fog would silently lose its blur with
+// it. And the cache key is mandatory — without one three hands this patched program to the next
+// material with the same signature, which is the trap render.corp.CorpCrowd's car UV already hit
+// a Float as a GLSL float LITERAL. Haxe prints 110.0 as "110", and `smoothstep(110, 230, x)` is
+// `smoothstep(int, int, float)` — no overload, and the whole street compiles to black
+  static inline function glsl(v:Float):String
+    return (v == Std.int(v) ? Std.string(v) + '.0' : Std.string(v));
+
+  public static function blur(mat:Dynamic):Void
+    {
+      var b = CorpStyle.BLUR;
+      mat.onBeforeCompile = function(sh:Dynamic)
+        {
+          sh.vertexShader = 'varying float vStreetDist;\n' +
+            StringTools.replace(sh.vertexShader, '#include <project_vertex>',
+              '#include <project_vertex>\n  vStreetDist = -mvPosition.z;');
+          sh.fragmentShader = 'varying float vStreetDist;\n' +
+            StringTools.replace(sh.fragmentShader, '#include <map_fragment>',
+              '#ifdef USE_MAP\n' +
+              '  float streetBias = smoothstep(' + glsl(b.near) + ', ' + glsl(b.far) +
+              ', vStreetDist) * ' + glsl(b.max) + ';\n' +
+              '  diffuseColor *= texture2D( map, vMapUv, streetBias );\n' +
+              '#endif');
+        };
+      untyped mat.customProgramCacheKey = function() return 'corpStreetBlur';
+    }
+
 // the four hands FacilityGeom.face emits on, as outward normals
   static var FN = [[0.0, 0.0, -1.0], [0.0, 0.0, 1.0], [-1.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
 
@@ -532,6 +569,22 @@ class CorpStreet
   static inline function quadFlat(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float):Void
     MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
       [0, 0, 1, 0, 1, 1, 0, 1]);
+
+// HOW TALL THIS BUILDING IS ON THIS MIRROR TILE. `fold` reflects the model exactly, so the nine
+// tiles are nine congruent skylines and the eye reads the repeat long before the fog hides it.
+// One hashed multiplier per (building, tile) is all it takes to break — the centre tile keeps its
+// generated height, because it is the city the tower really stands in and the only one close
+// enough to resolve
+  static inline function tileH(b:citygen.CityModel.Building, tx:Int, tz:Int):Float
+    {
+      var h = (tx == 0 && tz == 0 ? b.h :
+        b.h * (1.0 + CorpStyle.TILE_VARY * ((hash(b, tx * 31 + tz * 97 + 7) % 1000) / 1000.0 - 0.5)));
+      return (h > CorpStyle.STREET_MAX_H ? CorpStyle.STREET_MAX_H : h);
+    }
+
+// and which facade it wears there, re-dealt for the same reason
+  static inline function tileF(b:citygen.CityModel.Building, tx:Int, tz:Int, n:Int):Int
+    return (tx == 0 && tz == 0 ? b.facade % n : (b.facade + hash(b, tx * 13 + tz * 29)) % n);
 
 // one stable number per building, salted. the street is rebuilt from the model on every entry and
 // nothing about a roof may move between two of them
@@ -666,7 +719,7 @@ class CorpStreet
     {
       if (b.idx.length == 0)
         return;
-      var mesh = new Mesh(FacilityGeom.geom(b), new MeshBasicMaterial({
+      var mat = new MeshBasicMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.STREET_DIM),
         // DERIVED and never passed, the way render.facility.FacilityDeco's own merged meshes do it:
@@ -675,7 +728,9 @@ class CorpStreet
         // black
         vertexColors: b.col.length == b.pos.length,
         side: THREE.FrontSide,
-      }));
+      });
+      blur(mat);
+      var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.receiveShadow = false;
       mesh.castShadow = false;
       group.add(mesh);
