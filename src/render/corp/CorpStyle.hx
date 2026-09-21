@@ -306,6 +306,20 @@ class CorpStyle
   // and the shortest run of unbroken masonry that earns one. a sign every cell turns a wall into
   // a strip of stickers
   public static inline var SIGN_RUN_MIN = 3;
+  // ONE PANEL PER THIS MANY CELLS of the run, spread the way CorpLamps.lattice spreads a fixture:
+  // (i + 0.5) / n, so a run under the spacing still falls to one panel on its own centre and a
+  // long corridor wall carries several instead of one lost in the middle of it
+  public static inline var SIGN_SPACING = 6;
+
+  // the SECOND sheet: four more quadrants, propaganda and the boardroom's own two — see
+  // CorpSigns.ASPECT, which holds all eight. A second atlas is a second material and so a second
+  // draw call, and it is that rather than a re-roll of `signs` because those four are fitted
+  public static inline var POSTER_TEX = 'textures/corp/posters.png';
+  // a projector screen is not a plate. its longest edge, against SIGN_MAX 2.1 — sized so the quad
+  // still clears CEIL_Y: at the art's 1.4263 it stands 2.10 tall about SIGN_Y, i.e. 3.55 to 5.65
+  public static inline var SCREEN_MAX = 3.0;
+  // and the shortest boardroom wall that earns one. under this the room takes a chart instead
+  public static inline var SCREEN_RUN_MIN = 4;
 
   // ---- the lighting rig ----------------------------------------------------------------------
   //

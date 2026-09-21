@@ -4187,6 +4187,23 @@
       "built_linear": 0.0996,
       "built_srgb": 76.2
     },
+    "corp/posters": {
+      "src": "corp/posters.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "res": 512,
+      "prompt": "A 2x2 GRID of four separate flat wall panels in one square image, each seen STRAIGHT ON in flat elevation, each floating alone in its own quarter with a clear empty margin around it. Nothing touches or crosses the horizontal or vertical centre line. TOP-LEFT: a PORTRAIT corporate propaganda poster, tall and narrow, in a very thin dark anodised frame. A large stylized single EYE inside a ring, rendered as flat geometric shapes in warm amber and tan on a near-black ground, with one short abstract amber bar under it standing in for a caption. It must read as watchful and faintly menacing - surveillance, not cheer. The smudge bar must NOT be letters, words, numbers or any script. TOP-RIGHT: a LANDSCAPE corporate propaganda poster, wide and short, in a very thin dark anodised frame. A row of small identical flat charcoal human silhouettes marching in step to the right, with one single AMBER silhouette lagging behind them at the left end, on a dark warm-grey ground, and a thin amber rule along the bottom. Cold, orderly and faintly threatening. No text of any kind. BOTTOM-LEFT: a LANDSCAPE framed WALL CHART in a thin brushed stainless frame - a flat performance panel on a dark smoked-glass ground showing a descending bar series in muted tan and warm grey with a single thin amber trend line falling across it, plus faint horizontal gridlines. Abstract plotting only, absolutely no numbers, labels, letters or axis text. BOTTOM-RIGHT: a LANDSCAPE PROJECTOR SCREEN, wide, pulled down out of a slim dark anodised roller housing along its top edge: a plain matte off-white screen surface, very slightly cooler and lighter than everything else in the image, with faint soft vignetting toward its corners, a thin dark weighted bar along its bottom edge, and nothing projected on it.",
+      "note": "the tower's four SECOND wall panels, one quadrant each, in render.corp.CorpSigns' slots 4-7: 4 propaganda portrait (an eye in a ring), 5 propaganda landscape (the one out of step), 6 the boardroom's falling chart, 7 the projector screen. A SECOND SHEET AND NOT A RE-ROLL OF corp/signs: those four are already fitted and cropped, and a second atlas costs exactly one draw call (measured: 85 -> 86 at the pinned pose). Same shape as corp/signs and the same trap - EACH QUADRANT IS THE PANEL AND NOT THE WALL AROUND IT, so each panel was cropped to its measured bbox and pasted back filling its quadrant, and its own ASPECT travels with it in CorpSigns.ASPECT: 0.5952 / 1.7437 / 1.3905 / 1.4263. TWO THINGS THE CROP TAUGHT, both measured off this drop: the model does not honour the stated 2x2 split - the landscape poster's frame starts at x 501 where the centre line is 512 - so the seams were found as the widest EMPTY column run in each band (row seam at 537, top band's column seam at 434, bottom band's at 496) rather than assumed at half; and the wall's own film grain puts a plain threshold over the whole quadrant, so a column counts as content only at 12+ marked pixels.",
+      "last_converted": "2026-09-21T23:47:42",
+      "built_linear": 0.0893,
+      "built_srgb": 60.8
+    },
     "corp/facade": {
       "src": "corp/facade.png",
       "class": "tile",

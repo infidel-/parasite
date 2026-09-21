@@ -33,22 +33,31 @@ class CorpSigns
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
-  // the atlas, in reading order: 0 top-left, 1 top-right, 2 bottom-left, 3 bottom-right
+  // TWO ATLASES, four quadrants each, in reading order: 0 top-left, 1 top-right, 2 bottom-left,
+  // 3 bottom-right. Slots 0-3 are `corp/signs` and slots 4-7 are `corp/posters`, so a slot alone
+  // says which sheet it is on — see `quad`
   static inline var SIGN_EXIT = 0;       // green running man, circulation only
   static inline var SIGN_DIRECTORY = 1;  // smoked-glass floor listing, circulation only
   static inline var SIGN_PLATE = 2;      // brushed room plate, every other room
   static inline var SIGN_ART = 3;        // framed print, the rooms that would have one
+  static inline var POSTER_EYE = 4;      // propaganda, portrait: an eye in a ring
+  static inline var POSTER_MARCH = 5;    // propaganda, landscape: the one out of step
+  static inline var POSTER_CHART = 6;    // a falling performance chart, the boardroom's
+  static inline var POSTER_SCREEN = 7;   // a pulled-down projector screen, one per boardroom
 
-  // each panel's own width:height, MEASURED off the built sheet's crops and not chosen — see the
-  // class header and art/textures.json's note on corp/signs
-  static var ASPECT = [1.6553, 0.7038, 1.0400, 1.5034];
+  // each panel's own width:height, MEASURED off the built sheets' crops and not chosen — see the
+  // class header and art/textures.json's notes on corp/signs and corp/posters
+  static var ASPECT = [1.6553, 0.7038, 1.0400, 1.5034, 0.5952, 1.7437, 1.3905, 1.4263];
 
 // every sign on the plate, merged into one mesh. returns how many hang, for __corp()
   public static function build(scene:Scene, m:Facility):Int
     {
       var b = MeshBufTools.make();
+      var bp = MeshBufTools.make();
       var n = 0;
       var seen = new Map<Int, Bool>();
+      // one projector screen per boardroom and no more, keyed on the room it hangs in
+      var screened = new Map<Int, Bool>();
       for (dir in 0...4)
         {
           // a run follows the WALL, so it advances along x for a wall in z and along z for one in x
@@ -68,36 +77,78 @@ class CorpSigns
                   }
                 if (len < CorpStyle.SIGN_RUN_MIN)
                   continue;
-                // the MIDDLE of the run, which is where a sign centred on a wall belongs — the
-                // compound picks its cell by what stands under the plate instead, and that is a
-                // hazard-signage rule: a triangle is placed AT its hazard. None of these four names
-                // a thing, so none of them has anywhere it would rather be
-                var at = Std.int(len / 2);
-                quad(b, m, col + sc * at, row + sr * at, dir,
-                  pick(m, col + sc * at, row + sr * at));
-                n++;
+                // ONE PANEL PER CorpStyle.SIGN_SPACING CELLS, spread (i + 0.5) / k the way
+                // CorpLamps.lattice spreads a ceiling fixture — a short run still falls to one
+                // panel on its own centre, which is where a sign centred on a wall belongs, and a
+                // long corridor wall stops carrying exactly one lost in the middle of it.
+                //
+                // the compound picks its cell by what stands under the plate instead, and that is
+                // a hazard-signage rule: a triangle is placed AT its hazard. Nothing in these two
+                // sheets names a thing, so none of them has anywhere it would rather be
+                var k = Math.ceil(len / CorpStyle.SIGN_SPACING);
+                for (i in 0...k)
+                  {
+                    var at = Std.int((i + 0.5) * len / k);
+                    var cc = col + sc * at;
+                    var rr = row + sr * at;
+                    var slot = pick(m, cc, rr, len, screened);
+                    quad(slot < 4 ? b : bp, m, cc, rr, dir, slot);
+                    n++;
+                  }
               }
         }
       FacilityGeom.add(scene, b, CorpStyle.SIGN_TEX, true, false);
+      FacilityGeom.add(scene, bp, CorpStyle.POSTER_TEX, true, false);
       return n;
     }
 
-// which sign this run earns, off the surface it hangs in
-  static function pick(m:Facility, col:Int, row:Int):Int
+// which panel this spot earns, off the surface it hangs in
+  static function pick(m:Facility, col:Int, row:Int, len:Int, screened:Map<Int, Bool>):Int
     {
       var s = m.surf[row][col];
-      // the two rooms a premium tower hangs ART in, and the only two: a print over a desk farm is
-      // an office-supplies catalogue, over a boardroom table it is what the room is for
-      if (s == Surf.EXEC ||
-          s == Surf.MEETING)
+      var h = FacilityModel.mix((col * 668265263) ^ (row * 1103515245));
+      // THE BOARDROOM IS THE ONE ROOM WITH A JOB, and the job is a wall to project onto: one
+      // screen per room on a wall long enough to hang it, and charts on whatever is left. A
+      // framed print over a boardroom table said the room was for looking at
+      if (s == Surf.MEETING)
+        {
+          var r = roomAt(m, col, row);
+          if (len >= CorpStyle.SCREEN_RUN_MIN &&
+              !screened.exists(r))
+            {
+              screened.set(r, true);
+              return POSTER_SCREEN;
+            }
+          return POSTER_CHART;
+        }
+      // an EXEC office keeps the print: it is the one room in the tower whose occupant chose what
+      // hangs in it
+      if (s == Surf.EXEC)
         return SIGN_ART;
       // and CIRCULATION takes the wayfinding, alternating so a corridor does not read as a row of
       // one thing. The lift lobby counts as circulation here — it is where somebody arriving looks
       if (s == Surf.CARPET ||
           s == Surf.LIFT)
-        return (FacilityModel.mix((col * 668265263) ^ (row * 1103515245)) % 2 == 0 ?
-          SIGN_EXIT : SIGN_DIRECTORY);
-      return SIGN_PLATE;
+        return [SIGN_EXIT, SIGN_DIRECTORY, POSTER_EYE, POSTER_MARCH][h % 4];
+      // every other room: the plate that says which room it is, or the company reminding whoever
+      // works in it what is expected
+      return [SIGN_PLATE, SIGN_PLATE, POSTER_EYE, POSTER_MARCH][h % 4];
+    }
+
+// which room rect holds this cell, as its index in m.rooms, or -1. `screened` is keyed on it, so a
+// boardroom that spans two wall runs still hangs exactly one screen
+  static function roomAt(m:Facility, col:Int, row:Int):Int
+    {
+      for (i in 0...m.rooms.length)
+        {
+          var r = m.rooms[i];
+          if (col >= r.x1 &&
+              col <= r.x2 &&
+              row >= r.y1 &&
+              row <= r.y2)
+            return i;
+        }
+      return -1;
     }
 
 // can a sign hang on the `dir` wall of this cell: INDOOR floor looking at plain masonry whose wall
@@ -143,8 +194,10 @@ class CorpSigns
     {
       var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
       var a = ASPECT[sign];
-      var w = (a >= 1 ? CorpStyle.SIGN_MAX : CorpStyle.SIGN_MAX * a) / 2;
-      var hh = (a >= 1 ? CorpStyle.SIGN_MAX / a : CorpStyle.SIGN_MAX) / 2;
+      // a projector screen is not a plate and takes its own longest edge
+      var mx = (sign == POSTER_SCREEN ? CorpStyle.SCREEN_MAX : CorpStyle.SIGN_MAX);
+      var w = (a >= 1 ? mx : mx * a) / 2;
+      var hh = (a >= 1 ? mx / a : mx) / 2;
       var c = CityConfig.cellToWorld(col, row);
       var y0 = CorpStyle.SIGN_Y - hh;
       var y1 = CorpStyle.SIGN_Y + hh;
@@ -167,8 +220,10 @@ class CorpSigns
       y1:Float, i:Int):Void
     {
       var e = FacilityGeom.ends(x0, x1, z0, z1, dir);
-      var u0 = (i & 1) * 0.5;
-      var v0 = (i < 2 ? 0.5 : 0.0);
+      // the quadrant within THIS slot's own sheet — the high bit picked the sheet in `build`
+      var q = i & 3;
+      var u0 = (q & 1) * 0.5;
+      var v0 = (q < 2 ? 0.5 : 0.0);
       var u1 = u0 + 0.5;
       var v1 = v0 + 0.5;
       MeshBufTools.quad(b,
