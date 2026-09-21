@@ -174,6 +174,7 @@ class CorpClutter
         alphaTest: CorpStyle.CLUTTER_CUT,
         side: THREE.DoubleSide,
       })));
+      mesh.name = 'corp clutter ' + tex;
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       scene.add(mesh);

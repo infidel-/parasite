@@ -21,7 +21,6 @@ typedef CorpLampSet = {
   var rooms:Int;               // how many of them are a room lattice point
   var panels:Int;              // recessed panel quads in the glow mesh
   var pools:Int;               // and floor pools under them
-  var calls:Int;               // lit lift-call plates
 };
 
 // the corp tower's light SOURCES and everything additive they put on a surface — one file, because
@@ -52,8 +51,7 @@ class CorpLamps
       var b = MeshBufTools.make();
       // THE CEILING IS ITS OWN MESH, and the reason is the render order `add` documents. Nothing
       // in the sprite pool writes depth, so a surface fixture drawn AFTER the actors paints
-      // through anyone standing in front of it — which is why the floor pools and the call plates
-      // are below them. A recessed CEILING PANEL is the opposite case: it hangs at 5.75 over
+      // through anyone standing in front of it — which is why the floor pools are below them. A recessed CEILING PANEL is the opposite case: it hangs at 5.75 over
       // everyone's head and nearer the camera than they are, so an actor walking under one was
       // being painted over the light. render.LightCone's additive volume already sits above the
       // actors for exactly this, and Sprites' own header names it
@@ -63,11 +61,9 @@ class CorpLamps
         rooms: 0,
         panels: 0,
         pools: 0,
-        calls: 0,
       };
       lattice(m, b, bc, out);
       corridors(m, b, bc, out);
-      calls(m, b, out);
       add(scene, b, Sprites.ORD_FIXTURE);
       add(scene, bc, Sprites.ORD_ACTOR + 1);
       return out;
@@ -214,85 +210,6 @@ class CorpLamps
       out.pools++;
     }
 
-// the lit call plate beside every lift door.
-//
-// A SECOND COLOUR IN ONE MESH, which is what the per-vertex brightness channel cannot do on its
-// own — so the plate's quads carry a brightness scaled by the RATIO between the two colours, and
-// one additive material draws both. It is right whatever colour space `new Color` works in, both
-// terms being in the same one. The compound does exactly this for its warm bulkhead lamp
-  static function calls(m:Facility, b:MeshBuf, out:CorpLampSet):Void
-    {
-      var warm = ratio();
-      for (d in m.doors)
-        {
-          // a LIFT door and no other: the plate is the thing that says which of the openings off
-          // the lobby is the car, which is the one question a lift lobby asks
-          if (!lift(m, d))
-            continue;
-          var c = CityConfig.cellToWorld(d.col, d.row);
-          var s = FacilityGeom.slab(m, d.col, d.row);
-          var w = CorpStyle.CALL_W / 2;
-          var y0 = CorpStyle.CALL_Y - CorpStyle.CALL_H / 2;
-          var y1 = CorpStyle.CALL_Y + CorpStyle.CALL_H / 2;
-          var e = CorpStyle.SIGN_PROUD;
-          // beside the opening, on the LOBBY side of it — `inDir` points at the side the leaves
-          // swing into, and the side a call button is pressed from is the one that is not the car
-          for (side in [-1, 1])
-            {
-              if (d.alongX)
-                {
-                  var z = (d.inDir > 0 ? s.z0 - e : s.z1 + e);
-                  quad(b, [c.x + side * CorpStyle.CALL_OFF - w, y0, z],
-                    [c.x + side * CorpStyle.CALL_OFF + w, y0, z],
-                    [c.x + side * CorpStyle.CALL_OFF + w, y1, z],
-                    [c.x + side * CorpStyle.CALL_OFF - w, y1, z],
-                    CorpStyle.C_CALL * warm);
-                }
-              else
-                {
-                  var x = (d.inDir > 0 ? s.x0 - e : s.x1 + e);
-                  quad(b, [x, y0, c.z + side * CorpStyle.CALL_OFF - w],
-                    [x, y0, c.z + side * CorpStyle.CALL_OFF + w],
-                    [x, y1, c.z + side * CorpStyle.CALL_OFF + w],
-                    [x, y1, c.z + side * CorpStyle.CALL_OFF - w],
-                    CorpStyle.C_CALL * warm);
-                }
-              out.calls++;
-            }
-        }
-    }
-
-// is this opening a lift car door — an opening with the lift core on one side of it?
-  static function lift(m:Facility, d:DoorCell):Bool
-    {
-      for (s in [-1, 1])
-        {
-          var c = d.col + (d.alongX ? 0 : s);
-          var r = d.row + (d.alongX ? s : 0);
-          if (FacilityModel.inside(m, c, r) &&
-              m.surf[r][c] == Surf.LIFT)
-            return true;
-        }
-      return false;
-    }
-
-// the warm plate's colour as a MULTIPLIER on the mesh's own, so one additive material draws two
-// lights. cached because it is three divisions and is asked once per opening
-  static var _warm:Float = -1.0;
-
-  static function ratio():Float
-    {
-      if (_warm >= 0)
-        return _warm;
-      var a = new Color(CorpStyle.LAMP_COLOR);
-      var w = new Color(CorpStyle.CALL_COLOR);
-      // on the LUMINANCE, which is the one scalar a per-vertex grey can carry — a hue really does
-      // need its own material and the plate is 0.5 world units across
-      _warm = (0.2126 * w.r + 0.7152 * w.g + 0.0722 * w.b) /
-        (0.2126 * a.r + 0.7152 * a.g + 0.0722 * a.b);
-      return _warm;
-    }
-
 // one fixture, aimed straight down. `col`/`row` and not the shifted point: that pair is what
 // LampLights sorts the pool on and what IndoorMask.indoorAt reads to keep an indoor lamp out of the
 // outdoor fake-shadow list
@@ -411,6 +328,8 @@ class CorpLamps
         side: THREE.DoubleSide,
         blending: untyped THREE.AdditiveBlending,
       })));
+      mesh.name = 'corp lamps ' + (order > render.particles.Sprites.ORD_FIXTURE ?
+        'ceiling' : 'floor');
       mesh.renderOrder = order;
       scene.add(mesh);
     }

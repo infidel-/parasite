@@ -396,6 +396,7 @@ class FacilityDetail
       }));
       mat.transparent = true;
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.name = 'contact shadows';
       mesh.castShadow = false;
       scene.add(mesh);
     }

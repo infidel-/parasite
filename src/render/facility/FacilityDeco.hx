@@ -1721,6 +1721,7 @@ class FacilityDeco
       }))));
       // BELOW the actors, the call FacilityGlow's own header records: nothing in the sprite pool
       // writes depth, so a glow at the actors' order paints straight through anyone in front of it
+      mesh.name = 'deco led glow';
       mesh.renderOrder = Sprites.ORD_FIXTURE;
       scene.add(mesh);
     }

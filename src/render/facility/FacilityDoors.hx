@@ -88,6 +88,7 @@ class FacilityDoors
         map: map,
         side: THREE.FrontSide,
       })), cells.length * 2);
+      inst.name = 'door ' + tex;
       inst.castShadow = true;
       inst.receiveShadow = true;
       // tick() culls per instance, so three's own whole-mesh cull must not also have an opinion —
@@ -130,7 +131,11 @@ class FacilityDoors
           // wall line, away from the centre, and disappears into the masonry beside the opening —
           // which is the one thing a hinged leaf cannot be made to look like however it is eased.
           // The travel is `-s * u * LEAF_W` because leaf 0's jamb is already at `-u * LEAF_W` and
-          // it has to go the same way again
+          // it has to go the same way again.
+          //
+          // PLUS FacilityStyle.DOOR_SLIDE_CLEAR, and that number's header is the whole reason: at
+          // exactly LEAF_W the leaf's hinge edge stops in the cell boundary plane and z-fights the
+          // doorway reveal standing in it
           var slides = (c.look == Look.LIFT);
           for (k in 0...2)
             {
@@ -138,8 +143,9 @@ class FacilityDoors
               b.hinge.push(new Vector3(cx - ux * s * LEAF_W, 0.0, cz - uz * s * LEAF_W));
               b.shut.push(k == 0 ? yaw : yaw + Math.PI);
               b.swing.push(slides ? 0.0 : (k == 0 ? d0 : -d0));
+              var run = LEAF_W + FacilityStyle.DOOR_SLIDE_CLEAR;
               b.slide.push(slides
-                ? new Vector3(-s * ux * LEAF_W, 0.0, -s * uz * LEAF_W)
+                ? new Vector3(-s * ux * run, 0.0, -s * uz * run)
                 : new Vector3(0.0, 0.0, 0.0));
               b.prop.matrices.push(new Matrix4());
               // the frustum centre is the SHUT centre and is never moved by the swing — see

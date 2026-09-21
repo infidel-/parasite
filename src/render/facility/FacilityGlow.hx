@@ -328,6 +328,7 @@ class FacilityGlow
         side: THREE.DoubleSide,
         blending: untyped THREE.AdditiveBlending,
       })));
+      mesh.name = 'facility glow';
       // BELOW the actors, for the reason render.sewer.SewerLamps records for its wall fixtures:
       // nothing in the sprite pool writes depth, so a glow drawn at the actors' own order paints its
       // bright core straight through anyone standing in front of it

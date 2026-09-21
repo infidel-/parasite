@@ -490,6 +490,7 @@ class CorpStreet
         alphaTest: 0.5,
         side: THREE.DoubleSide,
       }));
+      mesh.name = 'corp street roofdeco ' + d.tex;
       blur(untyped mesh.material);
       // a rooftop unit RECEIVES but does not cast: it is a flat decal quad lying on the roof, so
       // its own shadow would be a stripe of nothing
@@ -616,6 +617,7 @@ class CorpStreet
       });
       blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.name = 'corp street ' + tex;
       mesh.receiveShadow = true;
       casts(mesh);
       group.add(mesh);
@@ -646,6 +648,7 @@ class CorpStreet
       mat.emissiveIntensity = st.glassLitIntensity;
       blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.name = 'corp lit bays ' + st.glassAccentLit[f];
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       group.add(mesh);

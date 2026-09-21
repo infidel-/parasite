@@ -366,6 +366,7 @@ class Models {
                 });
             }
           var inst = new InstancedMesh(geo, mat, placements.length);
+          inst.name = 'prop ' + path;
           // bulk props (lamp posts, ladders) cast AND receive real shadows — the post throws an angled
           // moon shadow, shows up in nearby lamp-spotlight casters, and self-shadows (crossarm/head
           // shadow the pole under the angled moon). own-light self-shadow is negligible (bulb straight

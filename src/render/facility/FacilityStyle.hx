@@ -1632,6 +1632,19 @@ class FacilityStyle
   // leaf thickness. it exists only so the top and outer edges have something to draw at this
   // camera's 51 degrees — a bare quad would vanish edge-on the moment a door swung
   public static inline var DOOR_T = 0.16;
+  // HOW FAR PAST ITS OWN WIDTH A SLIDING LEAF TRAVELS, world units.
+  //
+  // a lift pair runs one LEAF_W along the wall line and vanishes into the masonry beside the
+  // opening — and at exactly LEAF_W its HINGE EDGE lands in the cell boundary plane, which is the
+  // plane the doorway's own reveal is emitted in. Both run WALL_BASE to DOOR_H, so the open leaf
+  // put a 0.16 x 4.2 coplanar strip against the reveal at each jamb: reported from the game as
+  // z-fighting whenever the lift is open, and the probe came back holding the REVEAL (uv v
+  // -0.033..0.667 against WALL_TILE 6.0 is y -0.2..4.0 exactly, du 0.2 is the corp `wallIn` 1.2).
+  //
+  // Sending the leaf a little FURTHER into the pocket is what separates the two planes, and it
+  // costs nothing to see: the leaf is 0.16 thick inside masonry at least 1.0 thick, so the extra
+  // travel is buried either way and the opening was already fully clear at LEAF_W
+  public static inline var DOOR_SLIDE_CLEAR = 0.2;
   // how long a leaf takes to swing its 90 degrees, in BASE_MS multiples. well under one turn:
   // objects.Door.turn auto-closes after 2 of them, so a swing that outlasted a turn would still be
   // opening when the model had already shut it

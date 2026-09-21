@@ -1293,6 +1293,7 @@ class FacilityGeom
         side: THREE.FrontSide,
       }));
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'shell ' + tex;
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
       scene.add(mesh);
@@ -1317,6 +1318,7 @@ class FacilityGeom
         side: THREE.FrontSide,
       })));
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'floor ' + tex;
       mesh.receiveShadow = true;
       scene.add(mesh);
     }
@@ -1366,6 +1368,7 @@ class FacilityGeom
       VisionMask.patch(mat);
       mat.transparent = true;
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'pane ' + path;
       mesh.receiveShadow = false;
       // the pane CASTS, and it is the only thing that can: the run's opening is cut OUT of the wall
       // (see the sill/head pair in `structure`) and the exterior wall is the shell's one caster, so a
@@ -1465,6 +1468,7 @@ class FacilityGeom
           mat.opacity = 1.0;
         }
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'deck ' + tex;
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       scene.add(mesh);

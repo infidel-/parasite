@@ -353,9 +353,6 @@ class CorpStyle
   public static inline var GLOW = 2.6;
   public static inline var C_PANEL = 0.8;
   public static inline var C_POOL = 0.014;
-  // the call panel beside a lift door, the one WARM light on the plate
-  public static inline var C_CALL = 0.55;
-  public static inline var CALL_COLOR = 0xffb347;
   // a recessed panel is a LONG rectangle and follows the long axis of the room it lights
   public static inline var PANEL_W = 2.6;
   public static inline var PANEL_H = 0.9;
@@ -364,11 +361,6 @@ class CorpStyle
   public static inline var GLOW_Y = 0.04;
   // and how far inside a room's own rect its pool stops
   public static inline var POOL_INSET = 1.6;
-  // the lift call panel: a small upright plate beside the car door
-  public static inline var CALL_W = 0.5;
-  public static inline var CALL_H = 0.8;
-  public static inline var CALL_Y = 3.0;
-  public static inline var CALL_OFF = 1.3;    // along the wall, from the door cell's centre
 
   // ---- the twentieth floor -------------------------------------------------------------------
   //

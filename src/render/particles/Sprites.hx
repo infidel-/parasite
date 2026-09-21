@@ -402,6 +402,7 @@ class Sprites {
               map: tex,
               emissiveMap: tex,
             }))));
+          m.name = 'sprite pool ' + idx;
           pool[idx] = m;
           actorGroup.add(m);
         }

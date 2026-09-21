@@ -368,6 +368,7 @@ class CorpCrowd
         side: THREE.FrontSide,
       });
       var mesh = new InstancedMesh(new PlaneGeometry(1, 1), mat, count);
+      mesh.name = 'corp headlights';
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       // the per-instance colour is the LAMP'S OWN DIMMER and it is allocated HERE rather than on
       // the first setColorAt in `drive`: `instanceColor` existing is what compiles
@@ -424,6 +425,7 @@ class CorpCrowd
       });
       patch(mat, 'corpCarUV');
       var mesh = new InstancedMesh(geo, mat, count);
+      mesh.name = 'corp cars';
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       untyped mesh.frustumCulled = false;
       mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
@@ -488,6 +490,7 @@ class CorpCrowd
       });
       patch(mat, 'corpWalkUV');
       var mesh = new InstancedMesh(geo, mat, count);
+      mesh.name = 'corp walkers';
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       // three frustum-culls an InstancedMesh against the geometry's own bounding sphere, which for
       // a unit plane is half a unit — so the whole street's crowd would vanish the moment the

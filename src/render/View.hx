@@ -547,6 +547,7 @@ class View {
         side: THREE.DoubleSide,
         depthWrite: false,
       }));
+    ring.name = 'ui player ring';
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.06;
     scene.add(ring);

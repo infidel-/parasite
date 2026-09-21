@@ -335,7 +335,6 @@ class CorpArea implements Area3D
               rooms: lamps.rooms,
               panels: lamps.panels,
               pools: lamps.pools,
-              calls: lamps.calls,
             },
             glbBatches: [for (b in glb) (b.mesh == null ? 0 : b.matrices.length)],
             surfs: bySurf,

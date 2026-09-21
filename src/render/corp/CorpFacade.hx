@@ -262,6 +262,7 @@ class CorpFacade
       // street is and takes the same distance blur — CorpStyle.BLUR.near is set past its top
       CorpStreet.blur(mat);
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.name = 'corp facade ' + tex;
       mesh.receiveShadow = true;
       CorpStreet.casts(mesh);
       scene.add(mesh);

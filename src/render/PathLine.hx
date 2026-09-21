@@ -76,6 +76,7 @@ class PathLine
       matStart.color = mat.color; // ONE shared Color instance, so the control-loss lerp tints both
       geo = new BufferGeometry();
       mesh = new Mesh(geo, mat);
+      mesh.name = 'ui pathline';
       mesh.renderOrder = 2;
       untyped mesh.frustumCulled = false; // rebuilt every change + always near the player; skip bounds
       mesh.visible = false;
@@ -84,12 +85,14 @@ class PathLine
       // end that shares the geometry and is scaled down by dotStartScale
       var dgeo = new RingGeometry(0, CityConfig.CELL * P.dotScaleCells, 16);
       dot = new Mesh(dgeo, mat);
+      dot.name = 'ui pathline dot';
       dot.rotation.x = -Math.PI / 2;
       dot.renderOrder = 2;
       untyped dot.frustumCulled = false;
       dot.visible = false;
       scene.add(dot);
       dotStart = new Mesh(dgeo, matStart);
+      dotStart.name = 'ui pathline dot start';
       dotStart.rotation.x = -Math.PI / 2;
       dotStart.renderOrder = 2;
       untyped dotStart.frustumCulled = false;
