@@ -926,3 +926,196 @@ takes `h` and `y0` with it.
 
 Verdict: **KEEP — and the glb pair is REJECTED on `Models.instanced`'s height-only scale, which is
 the same reason the bench went to a glb in the first place.**
+
+## The glow was already in the tree and nothing referenced it (fifth defect pass, phase 1)
+
+Reported: "cars became way too dark - we want glow from car lights", and then, asked how: *"before
+we had car/citizen art, there were white/yellow glows, idk what they were... we can probably use
+these, put two on top of the car front"*. They are still there. `render.Textures.makeGlowGradient`
+is a 64 px centred radial white→grey→black falloff, written for the first 3D pass's crowd and
+**referenced by nothing at all** since the civilian sheets replaced it.
+
+**The multiplier was not what fixed "too dark", and the measurement says so.** Under the street's
+own moon the car body reads **0.0027 linear** against a road at 0.0010 and a walker at 0.1109.
+`CAR_DIM` went 0.60 → 0.85 (+42%), and that is as far as it is worth going: the art is a matte
+unlit car panel at night, so reaching the icons would need ~40x and would arrive as grey mush.
+What makes a car read as traffic is the pair of lamps at its nose — and `art/textures.json`'s own
+prompt for `corp/traffic` painted them *"clearly the brightest thing on the whole image"* two
+passes ago.
+
+One extra instanced batch, `CorpStyle.CARS * 2` glow quads laid flat on the road, additive, driven
+from the same closed form the cars are. **+1 draw call exactly, A/B/A/B at the pinned pose: 84 off
+/ 85 on, three times identical.**
+
+And a trap worth the entry on its own: the first build measured **+2**. A `transparent` material
+with `side: DoubleSide` is rendered by three in TWO passes — back faces, then front — unless
+`forceSinglePass` is set. `render.decals.DecalBatch` already carries that flag and records 513 →
+458 calls citywide for it. Here the quad lies face-up under a camera that never goes below the
+street, so `FrontSide` is the answer and the flag is not needed.
+
+Verdict: **KEEP. Before generating art for a defect, grep the tree for what the last pass deleted
+the CALLER of and not the code.**
+
+## A ficus lit like a lamp (fifth defect pass, phase 2)
+
+Reported: "plant needs to be darker".
+
+`corp/plant` carried `lift: 0.83` and no `baseColor`, fitted when the bake's own self-occlusion
+between forty leaves took it to 58.7 srgb. Measured on the BUILT glb now: sampled albedo
+**82/111/26, luma 99 srgb** — above `corp/cooler`'s 92 and well above the indoor ~78 band. The
+gamma had overshot.
+
+The lift STAYS — it is what keeps the leaf occlusion off the floor — and a flat linear
+`baseColor` 0.64 takes the whole thing down with it: **99 → 79.8 srgb**, chroma 70.8 held (a flat
+scalar cannot move hue, which is the entire reason it is not per-channel). `propstat`'s own
+suggestion of 0.42 is fitted to the OUTDOOR 46-52 family and is a different room.
+
+Verdict: **KEEP — a gamma says how the darks sit, a flat scalar says how bright the thing is, and
+a prop that is wrong on both wants both.**
+
+## A closed-form crowd blinks at the modulo (fifth defect pass, phase 3)
+
+Reported: "citizens outside should not blink in/out of existence. do a gradual fall in/fall out,
+plus when a citizen appears, it should have random art."
+
+`CorpCrowd` stores nothing: an agent's position is `(phase * len + clock * v) % len`. **The modulo
+IS the blink** — the wrap teleports a walker from one end of its lane to the other in one frame —
+and because the icon was hashed off the index alone it teleported wearing the same face.
+
+Both halves cost one extra term. Take `raw` once, and `lap = Std.int(raw / len)` is which time
+round this is while `raw % len` is where: still closed form in `t`, still nothing stored, still
+exact after any pause. The icon re-rolls on `h ^ lap * 374761393`, so the lane, the direction and
+the speed stay the walker's for ever and only the civilian changes — measured live, 3+ of the 64
+walkers change icon in any 1.1 s.
+
+The fade is `render.decals.DecalBatch`'s `instanceAlpha`, cloned the way `instanceUV` already was,
+and the anchor matters: `gl_FragColor.a *= vCrowdFade` after `<opaque_fragment>` is AFTER
+alphaTest, so the cut-out silhouette stays exactly as crisp at 5% opacity as at 100%. Live buffer:
+18 of 64 walkers and 4 of 28 cars mid-fade, min 0.01. The cars take the same two lines because
+they wrap on the same modulo, and the headlights dim with their car through `instanceColor` —
+allocated at build time on purpose, since `instanceColor` existing is what compiles
+`USE_INSTANCING_COLOR` and a warm scene that never dimmed anything would cache a different program.
+
+**Zero draw calls**, once `forceSinglePass` went on both batches with the transparency: without it
+the two-pass DoubleSide split measured 85 → 87.
+
+Verdict: **KEEP. A closed-form agent can be given a lifecycle without being given state — the lap
+index is free and it is the hook everything else hangs off.**
+
+## Every mesh has a name, and a sliding leaf clears the reveal (fifth defect pass, phase 4)
+
+Reported: "front of the elevator door has some unnamed meshes... firstly there should be zero
+unnamed meshes, secondly remove them", and "z-fighting when elevator door is open. let the door
+stick out a little".
+
+**Both were identified from the probe text alone, before any code was read.** The unnamed thing is
+`CorpLamps.calls`: two additive quads at `CALL_Y 3.0` ± `CALL_H/2 0.4` standing `SIGN_PROUD` in
+front of the lift door, in a mesh whose material has an `alphaMap` and no `map` — which is exactly
+`base: (no map)` — and the triangle centroid of a 2.6..3.4 quad is **2.867**, the probe's y to
+three places. Deleted with its constants and its `ratio()` helper.
+
+The z-fight's partner is the doorway REVEAL: `uv v -0.033..0.667` against `WALL_TILE 6.0` is
+y **-0.2..4.0**, i.e. `WALL_BASE` to `DOOR_H`, and `du 0.2` is **1.2** wide — the corp `wallIn`.
+A lift leaf slides exactly one `LEAF_W`, which parks its hinge-edge quad (0.16 x 4.2) in the cell
+boundary plane the reveal is emitted in. `DOOR_SLIDE_CLEAR` 0.2 sends it that much further into
+the pocket, where it is buried in masonry at least 1.0 thick: verified live, the two open leaves
+sit at z **-110.20 / -101.80** against boundaries at -108 / -104.
+
+The naming sweep is ~15 edits, most of them one line inside a shared helper (`FacilityGeom.add` /
+`addFloor` / `addPane` / `addDeck` take the texture path, `Models.instanced` the model path,
+`FacilityDoors.batch` its look), so other area kinds get names wherever they share one. Counted off
+the live scene: **115 meshes, 0 unnamed.** The last three took finding — a `FacilityDetail` contact
+shadow (black, opacity 0.5, a 4x64 alpha ramp), a `FacilityDeco` LED glow and an empty `Ribbon`.
+
+Verdict: **KEEP. A probe that cannot name what it hit costs more than the one line per mesh that
+fixes it.**
+
+## One predicate in two files, and the copy did not follow (fifth defect pass, phase 5)
+
+Reported: "elevator walls dont merge with static ones", with three probed faces — all of them
+coping tops, `ROOF_Y 6.0 + PARAPET_H 1.10 + COPING_H 0.25 = 7.35`.
+
+`CorpFacade` hangs the tower's 114-unit cladding drop off the same perimeter `FacilityGeom.parapet`
+bands, and its own comment said it re-derived `outward`'s three lines *"cheaper than widening that
+file's surface"*. Then a `roofed` was grown in `FacilityGeom` — indoor AND not a `Surf.LIFT` car —
+and the copy did not follow. Round the lift core the two then disagreed in both directions at once:
+a parapet and a coping ran across the tower's car-facing hand with no cladding under them, and the
+facade skipped exactly the reentrant corners the parapet emitted.
+
+**The exception itself is what the complaint is.** Banding the tower's wall behind the car is the
+tower drawing a roofline between itself and the lift, which is precisely "the elevator's walls do
+not merge with the static ones". A lift car is part of the building: `roofed` goes back to plain
+`isIndoor`, the two files share one public `outward`, and the ring turns round the car's flanks
+instead of cutting behind it — the corner squares that turn leaves are the `notches()` loop's,
+which has handled a reentrant corner since it was written.
+
+Measured on one plate: `paraCells` **175 → 172** (the three car-facing wall cells stop banding),
+`paraQuads` **1341 → 1212**. The facade is byte-identical by construction — it was already using
+`isIndoor`, so what moved is the shell, not the drop. Calls unchanged at the pinned pose. The
+compound cannot be touched: no kind but the tower deals `Surf.LIFT`.
+
+Verdict: **KEEP. This is the third time a re-derived `outward` has cost this port something. A
+predicate with two callers is public or it is a bug waiting for the next edit.**
+
+## A pane grows at both ends, so a split run grows into itself (fifth defect pass, phase 6)
+
+Reported: two overlapping window faces, and separately "window and door cannot be directly
+adjacent. and we cannot have a half-wall sized window too".
+
+**The z-fight is arithmetic and the two probes are enough to close it.** `WINDOW_OVERLAP` 0.025
+grows every pane by `wide * 0.025 / 2` at BOTH ends so alphaTest eating the art's outermost texel
+row cannot open a slit against the masonry. On corp there IS no masonry at an internal split: the
+3-bay on x **-160.0..-148.0** draws **-160.15..-147.85** and the 2-bay abutting it on
+**-148.0..-140.0** draws **-148.10..-139.90** — **0.25 units of coplanar glass**, in two different
+meshes, since `panes` and `panes2` are one material each. The end test the jambs already computed
+says which ends are seams; hoisted, it holds the growth to zero there and the two meet edge to
+edge where the art's own mullion is. The compound is unaffected by construction — it never splits
+a run, so no end of one ever abuts another.
+
+The other two are one pass each in `CorpModel`, beside `washroomWindows` and for its stated reason
+— the shell is derived from the saved grid every load, so a correction here reaches every corp save
+that exists where a generator change reaches none of them. `CorpBuilding.makeWindows` deliberately
+glazes the cell before a doorway (`windowTiles[2]`, the closing frame), so `doorWindows` demotes
+any pane with a door next to it ALONG THE WALL LINE; and `runsOfThree` trims a maximal run to
+`floor(len / 3) * 3`, centred, so the splitter only ever sees a multiple of three.
+
+Measured on one plate: **204 glazed cells → 165**, **78 runs → 55**, and **len-2 runs 30 → 0** —
+so `pane2` and the `panes2` buffer go unused on a tower (they stay for the compound and the warm),
+which is also worth **-1 draw call**: an empty buffer emits no mesh. Panes adjacent to a doorway:
+**0**. 21 abutting run pairs on the plate, every one of them now a clean joint.
+
+Verdict: **KEEP. An epsilon that exists to hide a seam against masonry has to ask whether there is
+masonry.**
+
+## Propaganda on the walls, and a boardroom with something to point at (fifth defect pass, phase 7)
+
+Reported: "let's add more wall decals - corpo style propaganda" and "add more decoration to meeting
+room - charts, projector screen on the wall". Asked which art route, the answer was ONE PACKED
+SHEET, and "vaguely threatening propaganda btw".
+
+One 1k gen, **$0.055**: `corp/posters`, four panels in a 2x2 — an eye in a ring, a rank of
+silhouettes marching in step with one amber straggler, a falling performance chart, and a
+pulled-down projector screen. A SECOND sheet rather than a re-roll of `corp/signs`, because those
+four are already fitted and cropped and a second atlas costs exactly one draw call — **A/B/A/B at
+the pinned pose, 83 off / 84 on**.
+
+Same shape as `corp/signs` and the same trap — each quadrant is the PANEL and not the wall around
+it — so each panel was cropped to its measured bbox and pasted back filling its quadrant, its own
+aspect travelling with it into `CorpSigns.ASPECT` (**0.5952 / 1.7437 / 1.3905 / 1.4263**, eight
+entries now). Two things that crop taught, both measured off this drop and both general:
+
+- **the model does not honour the stated 2x2 split.** The landscape poster's frame starts at
+  x **501** where the centre line is 512, so a quadrant crop cut its neighbour in half. The seams
+  were found as the widest EMPTY column run in each band — row seam at **537**, top band's column
+  seam at **434**, bottom band's at **496** — and not assumed at half.
+- **the wall's own film grain defeats a plain threshold.** A column counts as content only at 12+
+  marked pixels; without that, cell 0's bbox ran to the quadrant edge on grain alone.
+
+`CorpSigns` then grows from four slots to eight, one panel per `SIGN_SPACING` 6 cells of a run
+rather than exactly one at its middle, and the boardroom gets the one room-level rule in the file:
+**one projector screen per room** on a wall long enough to hang it (`SCREEN_MAX` 3.0, which at the
+art's aspect stands 3.55..5.65 and clears `CEIL_Y`), charts on whatever is left. Live on one plate:
+26 eyes, 20 marches, 4 charts, 1 screen, 112 panels in all. Built value **60.8 srgb** against
+`wall-office` 121.5 and `wall-meeting` 98.9 — a panel darker than its wall is a panel you can see.
+
+Verdict: **KEEP.**

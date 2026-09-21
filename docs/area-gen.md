@@ -1432,3 +1432,39 @@ why reception measured the highest pocket rate in the tower at 75.4%.
 
 Corp oracle green at 3,000 seeds with both new asserts on, `orphanCells 0.00`, facility green at
 3,000, corp digest stable across two runs.
+
+## THE WINDOW RULE LIVES IN THE RENDERER, AND `makeWindows` WAS LEFT ALONE
+
+Two complaints about corp glazing — a pane butted straight onto a doorway, and a 2-cell opening in
+a 4- or 5-cell wall reading as "half a wall" — and neither was fixed here, in
+`CorpBuilding.makeWindows`, although it is what writes them.
+
+`makeWindows` genuinely causes the first: it breaks its run at a `BLDG_INNER_DOOR` and then
+deliberately glazes the cell immediately before it (`cells[x - delta.x][y - delta.y] =
+windowTiles[2]`, the closing frame), so every opening on a glazed wall has curtain wall bolted to
+its jamb.
+
+**It was still the wrong place to fix it**, and the reason is the one `render.corp.CorpModel`'s
+header has carried since the port: the renderer derives the whole shell — `m.wall`, the runs, the
+surfaces — from the SAVED CELL GRID on every load. A correction there reaches every corp save that
+already exists; a correction in the generator reaches none of them, and a tower is not a thing a
+player regenerates. `washroomWindows` and `loneWindows` were already there for exactly this. So
+the pass added two more beside them:
+
+- **`doorWindows`** — a `Wall.WINDOW` cell with a door next to it ALONG THE WALL LINE becomes
+  `SOLID`. Along the line and not on all four hands: a door in the perpendicular wall of the room
+  behind is not adjacent to this pane in any sense a player can see.
+- **`runsOfThree`** — a maximal run keeps `floor(len / 3) * 3` cells, CENTRED, and the remainder
+  goes solid. `FacilityModel.findWindows`' corp splitter (greedy 3s with 2s to finish) then only
+  ever sees a multiple of three, so the two-bay art goes unused on a tower. The runs are collected
+  before any is applied: demoting a cell mid-scan makes the next cell of the same run look like the
+  head of a new one, and it would be trimmed twice.
+
+Measured on one plate: **204 glazed cells → 165, 78 runs → 55, len-2 runs 30 → 0**, and zero panes
+adjacent to a doorway. The tile ids the generator writes are untouched, so no oracle run and no
+digest moved — there is no generator change in this pass at all.
+
+**The general rule this is the fourth instance of: if a defect can be derived from the saved grid,
+derive it.** Four passes have now put a corp shell correction in `CorpModel` rather than in
+`gen.corp` — the washroom's glazing, the lone one-cell opening, the wall-dressing fittings
+(`wallFits`), and these two.
