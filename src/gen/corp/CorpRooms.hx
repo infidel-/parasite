@@ -101,6 +101,9 @@ class CorpRooms
 // A CORNER ALWAYS TAKES ONE, whatever the roll says — that is the original's `hasLeft || isCorner`
 // and it is load-bearing for the same reason the facility's is: a clue spawns on a bare cell and
 // the corner is where its activation cross reaches two walls at once
+// `smallFloorID`/`bigFloorID` ARE THE CALLER'S OWN FLOOR, unwalkable twin — this writes them into
+// the grid, so a room that hands over somebody else's floor finalises as somebody else's ROOM. See
+// `meeting`, which did exactly that and produced four unrelated-looking faults from one id
   public static function decorateWalls(state: _CorpState, room: _Room,
       small: Array<_TileGroup>, big: Array<_TileGroup>,
       smallFloorID: Int, bigFloorID: Int, chance: Int, smallChance: Int)
@@ -261,7 +264,24 @@ class CorpRooms
       return true;
     }
 
-// a meeting room: one long table in the middle, boards and a projector round the walls
+// a meeting room: one long table in the middle, boards and a projector round the walls.
+//
+// **THE `bigFloorID` ARGUMENT IS THE ROOM'S OWN FLOOR, UNWALKABLE TWIN**, and this one line used
+// to read `TILE_FLOOR_CARPET` where every sibling template passes its own (exec MARBLE1, kitchen
+// WOOD1, cubicle CUBICLE, servers SERVER, toilet MARBLE2, open WOOD2). `decorateWalls` stamps it
+// straight into the grid on the room's x1/x2 columns, so one wrong id produced four separate
+// faults at once and they looked unrelated:
+//   the WALL RUN ALTERNATED. CorpModel.surfOf read the stray cells back as Surf.CARPET, and
+//     CorpStyle's wallInto leaves CARPET on the WALL_OFFICE catch-all — so every other cell of one
+//     boardroom wall wore office board and the rest wore wall-meeting.
+//   THE TABLE WAS REPAINTED. FacilityModel.themeRooms takes the LAST themed cell in row-major
+//     order, which is the (x2,y2) corner, and decorateWalls always dresses a corner — so at
+//     smallChance 20 that corner carried the bad id 80% of the time and the whole boardroom slab
+//     finalised as CARPET.
+//   AND IT BECAME A CORRIDOR. CorpLamps.corridors() is gated on Surf.CARPET, so it hung ceiling
+//     panels inside the room and stamped FULL-CELL light pools on those cells — which overlap the
+//     room's own POOL_INSET pool additively and spill into the margin it deliberately leaves bare.
+//     That is the "two floor textures": both are the one additive glow mesh at GLOW_Y, not floors.
   public static function meeting(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
@@ -281,7 +301,7 @@ class CorpRooms
           Const.CORP_WHITEBOARD,
         ],
         Const.TILE_DARK_TABLE_CARPET_1X1,
-        Const.TILE_FLOOR_CARPET + UNWALKABLE_TILE_OFFSET,
+        Const.TILE_FLOOR_CARPET_MEETING + UNWALKABLE_TILE_OFFSET,
         50, 20);
     }
 
