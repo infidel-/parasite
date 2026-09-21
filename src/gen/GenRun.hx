@@ -329,6 +329,8 @@ class GenRun
       check.ok(cut.length == 0, cut.length + ' corp room(s) cannot be walked into, first is ' +
         (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
       add('unreachableRooms', cut.length);
+      // and the per-CELL question, which is a different one — see GenCheck.floorReachable
+      check.floorReachable(ctx, state.rooms);
 
       // how much of the walkable grid the lift flood actually covered, and WHERE it stopped. a
       // tower floor is entered at one cell, so a carve that leaves half the plate behind a wall is
@@ -346,6 +348,7 @@ class GenRun
           }
       add('walkableCells', nWalk);
       add('reachedCells', nSeen);
+      add('orphanCells', nWalk - nSeen);
       if (verbose && nSeen < nWalk)
         for (yy in 0...h)
           {

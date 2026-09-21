@@ -120,8 +120,85 @@ class CorpConnect
       return seen;
     }
 
-// did the flood reach any cell of this room? any one will do — a room's floor is a single rect and
-// its furniture cannot cut that rect in two without also blocking the door
+// TAKE A PIECE OF FURNITURE AWAY WHEREVER ONE SEALS FLOOR OFF, until every walkable cell of the
+// plate can be walked to.
+//
+// `connectRooms` above asks whether each ROOM was reached and stops as soon as every one has a
+// single reached cell, on a premise stated twice in this file and in gen.GenCheck.reachable and
+// false in both places: a room's own furniture CAN cut its floor in two. Measured over 120 seeds
+// and 3,500 rooms before this pass existed — 873 rooms, 24.9%, held floor the lift flood never
+// got to, 4,482 cells, 37.4 per floor; worst an 8x6 archive with 33 walkable cells and ONE
+// reachable. The two oracles were green on all of it.
+//
+// A POCKET WALL IS A CELL WITH BOTH SIDES OF THE PROBLEM ON IT: it is clearable furniture, it
+// touches a cell the flood reached, and it touches a walkable cell the flood did not. Clearing
+// every such cell each round opens the THINNEST path into each pocket and nothing else — a
+// two-cell-thick blockage needs a second round, which is what the rounds are for. A pocket walled
+// in by masonry alone finds no candidate, the round opens nothing, and the loop returns rather
+// than spinning; gen.GenCheck.floorReachable is what then says so out loud.
+  public static function openPockets(state: _CorpState)
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      var walk = tiles.Default.TILE_WALKABLE;
+      var erode = false;
+      for (round in 0...POCKET_ROUNDS)
+        {
+          var seen = floodWalkable(state);
+          var lost = false;
+          for (y in 0...ctx.height)
+            for (x in 0...ctx.width)
+              if (!seen[x][y] &&
+                  walk[cells[x][y]] == 1)
+                lost = true;
+          if (!lost)
+            return;
+          var opened = false;
+          for (y in 1...ctx.height - 1)
+            for (x in 1...ctx.width - 1)
+              {
+                var below = clearedTo(cells[x][y]);
+                if (below < 0)
+                  continue;
+                var hitSeen = false;
+                var hitLost = false;
+                for (i in 0...Const.dir4x.length)
+                  {
+                    var nx = x + Const.dir4x[i];
+                    var ny = y + Const.dir4y[i];
+                    if (seen[nx][ny])
+                      hitSeen = true;
+                    else if (walk[cells[nx][ny]] == 1)
+                      hitLost = true;
+                  }
+                if (!hitLost ||
+                    (!hitSeen && !erode))
+                  continue;
+                cells[x][y] = below;
+                opened = true;
+              }
+          if (!opened)
+            {
+              // A TWO-CELL-THICK BLOCKAGE HAS NO CELL TOUCHING BOTH SIDES, so the thin-wall rule
+              // above finds no candidate at all and the loop would stop with the pocket still
+              // sealed. Measured: 34 pockets in 300 seeds, every one of them a reception whose
+              // 3x2 desk stands two cells deep against a wall dressing. So the next round ERODES
+              // instead — any clearable cell touching the pocket comes away, which walks the
+              // boundary outward one cell a round until it meets the reached floor
+              if (erode)
+                return;
+              erode = true;
+            }
+          else erode = false;
+        }
+    }
+
+// how many times openPockets may walk the grid. each round opens the thinnest wall of every
+// pocket at once, so the bound is the THICKNESS of a blockage and not the size of one
+  static inline var POCKET_ROUNDS = 12;
+
+// did the flood reach any cell of this room? any one will do for THIS question, which is whether a
+// door was ever cut — `openPockets` above is what asks the per-cell one
   static function roomReached(room: _Room, seen: Array<Array<Bool>>): Bool
     {
       for (y in room.y1...room.y2 + 1)
@@ -240,6 +317,13 @@ class CorpConnect
         return below;
       if (Const.isCorpTableTile(t))
         return Const.TILE_FLOOR_CARPET;
+      // and the EXEC/RECEPTION desk block, which is neither: DARK_TABLE_MARBLE1_3X2 is on tileset
+      // rows 14 and 16, outside both bands above, so a 3x2 desk was the one piece of furniture in
+      // the tower no repair pass could take away. It is only ever laid on marble, so that is what
+      // it comes back to. Measured: with the two bands alone, 26 pockets in 200 seeds survived
+      // `openPockets` and every one of them was a reception
+      if (Const.isCorpDeskBlock(t))
+        return Const.TILE_FLOOR_MARBLE1;
       return -1;
     }
 

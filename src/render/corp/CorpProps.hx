@@ -32,7 +32,10 @@ typedef FloorProp = {
   var h:Float;         // world height; render.Models.instanced scales by HEIGHT alone
   var d:Float;         // depth ACROSS the wall it backs onto
   var w:Float;         // and width ALONG it — the other half of the footprint the field darkens
-  var on:Surf;         // the floor surface it belongs to
+  var on:Surf;         // the floor surface its own scatter fills
+  // and the render.corp.CorpDeco kind whose DRESSED cells it also stands on, K_NONE for none.
+  // those cells come off the generator's own decoration and are not gated on `on`
+  var deco:Int;
   // does the fake indoor reflection go on it? see `batch` — TRUE for anything that is supposed to
   // be metal or lacquer, FALSE for anything organic
   var env:Bool;
@@ -72,6 +75,8 @@ class CorpProps
       d: CorpStyle.PLANT_W,
       w: CorpStyle.PLANT_W,
       on: Surf.CARPET,
+      // AND THE CELLS THE GENERATOR ITSELF DRESSED with a plant — see `standing`
+      deco: CorpDeco.K_PLANT,
       // NO REFLECTION ON A PLANT. render.world.PropEnv is a fake environment plus a specular
       // GLINT LOBE and its own header says it is for "the handful of materials that are supposed
       // to be METAL" — applied to a ficus it put a moving highlight across the leaves as the
@@ -87,6 +92,7 @@ class CorpProps
       d: CorpStyle.COOLER_W,
       w: CorpStyle.COOLER_W,
       on: Surf.KITCHEN,
+      deco: CorpDeco.K_COOLER,
       env: true,
     },
     {
@@ -95,6 +101,7 @@ class CorpProps
       d: CorpStyle.PRINTER_D,
       w: CorpStyle.PRINTER_W,
       on: Surf.OPEN,
+      deco: CorpDeco.K_NONE,
       env: true,
     },
   ];
@@ -133,7 +140,7 @@ class CorpProps
       desks(m, chairs, mons, keys, work);
       tables(m, benches, legs);
       stalls(m, pans);
-      standing(m, floors);
+      standing(m, floors, area);
       n.chairs = chairs.length;
       n.monitors = mons.length;
       n.pans = pans.length;
@@ -286,7 +293,8 @@ class CorpProps
     }
 
 // the three wall-hugging families, thinned by a stride over the whole candidate list
-  static function standing(m:Facility, places:Array<Array<Models.PropPlace>>):Void
+  static function standing(m:Facility, places:Array<Array<Models.PropPlace>>,
+      ?area:game.AreaGame):Void
     {
       for (i in 0...FLOOR.length)
         {
@@ -307,6 +315,23 @@ class CorpProps
           var step = Std.int(Math.ceil(cand.length / CorpStyle.FLOOR_MAX));
           if (step > 1)
             cand = [for (k in 0...cand.length) if (k % step == 0) cand[k]];
+          // AND THE CELLS THE GENERATOR ASKED FOR, which are NOT thinned and are not gated on the
+          // floor surface. The scatter above is a dressing of its own — it fills free floor by
+          // surface — and it is why a plant dealt into an exec office's corner drew nothing: the
+          // generator wrote an unwalkable twin on a MARBLE1 cell and this family only ever looks
+          // at CARPET. These are the cells that already carry a decoration saying so
+          if (p.deco != CorpDeco.K_NONE)
+            for (c in CorpDeco.cells(area, p.deco))
+              {
+                var dir = CorpDeco.backHandOf(m, c.col, c.row);
+                if (dir < 0)
+                  continue;
+                cand.push({
+                  col: c.col,
+                  row: c.row,
+                  dir: dir,
+                });
+              }
           for (c in cand)
             {
               var sl = FacilityGeom.slab(m, c.col + DC[c.dir], c.row + DR[c.dir]);

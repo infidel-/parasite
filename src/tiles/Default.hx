@@ -42,10 +42,17 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 12 - corpo
     0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    // row 13 - corpo. 13 and 14 are the unwalkable twins of Const.TILE_FLOOR_CUBICLE and
-    // TILE_FLOOR_SERVER one row up (a corp floor's twin is +16, gen.corp.CorpTemp
-    // .UNWALKABLE_TILE_OFFSET), so they carry the furniture standing on those two floors
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+    // row 13 - corpo: the UNWALKABLE TWINS of row 12's floors (a corp floor's twin is +16,
+    // gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET), which is how every dressing gen.corp.CorpRooms
+    // lays blocks its cell.
+    //
+    // INDEX 12 WAS A 1 AND IT IS THE BOARDROOM'S. It is TILE_FLOOR_CARPET_MEETING + 16, and it was
+    // left at the value the row inherited when 13 and 14 were patched in for the cubicle and
+    // server floors — so 80% of a meeting room's wall furniture (gen.corp.CorpRooms.meeting rolls
+    // `bigFloorID` at smallChance 20) stood on floor you walk straight through, and rendered as
+    // nothing besides. It is why room-meeting measured BOTH the emptiest kind at 16.1% fill and
+    // the only one with a 0.0% furniture-pocket rate
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     // row 14-16 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

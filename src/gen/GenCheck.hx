@@ -380,6 +380,37 @@ class GenCheck
         }
     }
 
+// EVERY WALKABLE CELL OF EVERY ROOM CAN BE WALKED TO — the general form of `storageSane` above,
+// and the check `reachable` is structurally incapable of being.
+//
+// `reachable` counts a room as reached when ANY of its cells was, and the comment defending that
+// ("its furniture cannot cut that rect in two") is simply false — gen.corp.CorpConnect.roomReached
+// carries the same sentence and the same fault. MEASURED before this existed, over 120 corp seeds
+// and 3,500 rooms: 873 rooms (24.9%) held floor the lift flood never reached, 4,482 cells in all,
+// 37.4 per floor, with a worst case of an 8x6 archive whose 33 walkable cells had ONE reachable —
+// the cell behind its door, boxed in by a rack row and two wall dressings. The oracle was green on
+// every one of them, and the evidence was in the stats block the whole time: walkableCells 1236.28
+// against reachedCells 1197.98.
+//
+// IT READS `lastSeen` and so must be called after `reachable`, for that function's own reason
+  public function floorReachable(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (r in rooms)
+        for (y in r.y1...r.y2 + 1)
+          for (x in r.x1...r.x2 + 1)
+            {
+              var t = ctx.cells[x][y];
+              if (t < 0 ||
+                  t >= walk.length ||
+                  walk[t] == 0)
+                continue;
+              ok(lastSeen[x][y], 'room ' + r.id + ' (' + r.role + ') at ' + r.x1 + ',' + r.y1 +
+                '..' + r.x2 + ',' + r.y2 + ' has floor at ' + x + ',' + y +
+                ' that nothing can walk to');
+            }
+    }
+
 // the hangar's floor holds one study pad, centred, clear of its own walls and clear of its door.
 //
 // THE PAD IS CARVED AND NOT DEALT, which is why it gets a check of its own: gen.Quota reports

@@ -638,10 +638,17 @@ class CorpRooms
           if (ry > room.y2 - 1)
             break;
           GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
+          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width
+          // and the roll was the only thing that ever broke it — at 5 wide that is three cells,
+          // so 1 row in 2 came out solid and sealed the floor behind it off. The dealt gap is
+          // placed off the row index so consecutive ranks stagger rather than line up into a
+          // corridor
+          var span = room.x2 - room.x1 - 1;
+          var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
           for (x in room.x1 + 1...room.x2)
             {
-              // a gap every few racks, so a row reads as a rank of cabinets and not as a wall
-              if (area.chance(20))
+              if (x == gap ||
+                  area.chance(20))
                 continue;
               cells[x][ry] = rack;
               addDecoration(state, x, ry, Const.CORP_MACHINERY);
@@ -753,12 +760,27 @@ class CorpRooms
       var area = state.area;
       var cells = area.getCells();
       var block = Const.CORP_TABLE_3X1;
-      var tx = room.x1 + Std.int((room.w - block.length) / 2);
+      // A DESK THAT SPANS THE ROOM IS A WALL. The run was always three cells, and a solo office is
+      // dealt at minW 3 — so in a 3-wide room `tx` came out at x1 and the desk crossed the room's
+      // whole midline, cutting the floor into two strips with no way between them. Reported from
+      // 50,31: a 5x3 office whose interior came back
+      //     # . . . #
+      //     . # # # .
+      //     # . . . #
+      // three disconnected pieces, the door opening onto one of them. Two cells of clearance is
+      // the rule and one of them is a lane: at w 5 the run is 3 and both ends stay open, at w 3 it
+      // is a single pedestal
+      var n = block.length;
+      if (n > room.w - 2)
+        n = room.w - 2;
+      if (n < 1)
+        return;
+      var tx = room.x1 + Std.int((room.w - n) / 2);
       var ty = room.y1 + Std.int((room.h - 1) / 2);
-      for (dx in 0...block.length)
+      for (dx in 0...n)
         if (atDoor(cells, tx + dx, ty))
           return;
-      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + block.length - 1, ty);
+      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + n - 1, ty);
       var full = [
         Const.CORP_TABLE_MISC,
         Const.CORP_TABLE_LAMP,
@@ -766,15 +788,15 @@ class CorpRooms
         Const.CORP_TABLE_FILES,
       ];
       var deco = full.copy();
-      for (dx in 0...block.length)
+      for (dx in 0...n)
         {
-          cells[tx + dx][ty] = block[dx];
-          if (dx == 1)
+          cells[tx + dx][ty] = block[n == 1 ? 1 : dx];
+          if (dx == n - 1)
             addDecoration(state, tx + dx, ty, Const.CORP_COMPUTERS);
           else if (area.chance(50))
             deco = addDecorationExt(state, tx + dx, ty, deco, full);
         }
-      area.addDecoration(tx + 1, ty + 1, Const.CORP_CHAIR[0].row,
+      area.addDecoration(tx + Std.int(n / 2), ty + 1, Const.CORP_CHAIR[0].row,
         area.random(Const.CORP_CHAIR[0].amount));
     }
 
@@ -846,9 +868,17 @@ class CorpRooms
           if (ry > room.y2 - 1)
             break;
           GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
+          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width
+          // and the roll was the only thing that ever broke it — at 5 wide that is three cells,
+          // so 1 row in 2 came out solid and sealed the floor behind it off. The dealt gap is
+          // placed off the row index so consecutive ranks stagger rather than line up into a
+          // corridor
+          var span = room.x2 - room.x1 - 1;
+          var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
           for (x in room.x1 + 1...room.x2)
             {
-              if (area.chance(25))
+              if (x == gap ||
+                  area.chance(25))
                 continue;
               cells[x][ry] = shelf;
               addDecoration(state, x, ry, Const.CORP_CABINET);

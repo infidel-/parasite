@@ -65,6 +65,9 @@ class CorpGen
       // and last, once every wall, door and piece of furniture is on the grid in its final form,
       // make sure every room can be walked into from the lift
       CorpConnect.connectRooms(state);
+      // and the per-CELL pass, after every room has a door: a room can be reached and still have
+      // a corner of its own floor walled off by its own furniture
+      CorpConnect.openPockets(state);
       trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       return state;
     }

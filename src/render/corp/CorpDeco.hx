@@ -71,6 +71,14 @@ class CorpDeco
   public static inline var K_VENDING = 4;
   public static inline var K_BOARD = 5;
   public static inline var K_BIN = 6;
+  // and the three the wall dressings used to draw NOTHING for. gen.corp.CorpRooms.decorateWalls
+  // writes an unwalkable floor twin under every one of these, so a cell that draws nothing is a
+  // cell the player cannot step on with nothing on it to say why — which is exactly what "corners
+  // are impassable even if empty" was looking at. The plant and the cooler have glbs and go to
+  // render.corp.CorpProps; the plant room's machinery is a box like the cabinet beside it
+  public static inline var K_PLANT = 7;
+  public static inline var K_COOLER = 8;
+  public static inline var K_MACHINE = 9;
 
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
@@ -79,6 +87,7 @@ class CorpDeco
     K_CABINET => [3.00, 1.20, 1.30],
     K_FRIDGE => [1.80, 1.50, 3.40],
     K_VENDING => [2.20, 1.40, 4.20],
+    K_MACHINE => [1.70, 1.15, 1.90],
   ];
   // and the whiteboard, which is a PANEL on the wall and not a box: sill to head, proud of the slab
   static inline var BOARD_W = 3.20;
@@ -109,11 +118,13 @@ class CorpDeco
           // CORP_COMPUTERS, the first five of row 23
           case 23: (col < 5 ? K_WORK : K_NONE);
           // CORP_WHITEBOARD, then the cooler and the plant, which have glbs of their own
-          case 31: (col < 8 ? K_BOARD : K_NONE);
+          case 31: (col < 8 ? K_BOARD : (col < 10 ? K_COOLER : K_PLANT));
           // CORP_CABINET, then CORP_TRASH, then the washroom tap
           case 32: (col < 6 ? K_CABINET : (col < 11 ? K_BIN : K_NONE));
-          // CORP_MACHINERY (the rack already draws), then CORP_FRIDGE
-          case 33: (col < 7 ? K_NONE : K_FRIDGE);
+          // CORP_MACHINERY, then CORP_FRIDGE. the machinery in a SERVER room already has a rack
+          // standing on its cell (CorpModel.fitOf), and `casework` skips a cell that is already
+          // a fitting — everywhere else it is a plant-room unit and needs a box of its own
+          case 33: (col < 7 ? K_MACHINE : K_FRIDGE);
           case 34: K_VENDING;
           default: K_NONE;
         };
@@ -149,7 +160,13 @@ class CorpDeco
           if (k != K_CABINET &&
               k != K_FRIDGE &&
               k != K_VENDING &&
-              k != K_BOARD)
+              k != K_BOARD &&
+              k != K_MACHINE)
+            continue;
+          // a cell that already carries a fitting draws it and not a second box on top — a server
+          // room's machinery stands on the rack CorpModel.fitOf raised there
+          if (FacilityModel.inside(m, o.x, o.y) &&
+              (m.fit[o.y][o.x] != 0 || m.table[o.y][o.x]))
             continue;
           var dir = back(m, o.x, o.y);
           if (dir < 0)
@@ -231,6 +248,11 @@ class CorpDeco
 // which hand this cell has masonry on, or -1. the same run test CorpProps.wall makes, and for the
 // same reason: FacilityGeom.slab insets a face by a unit where the wall line stops, so a piece
 // backed onto the END of a wall hangs off it
+// which hand a dressed cell's masonry is on — `back` below, public for render.corp.CorpProps,
+// which stands the plant and the cooler on exactly these cells
+  public static inline function backHandOf(m:Facility, col:Int, row:Int):Int
+    return back(m, col, row);
+
   static function back(m:Facility, col:Int, row:Int):Int
     {
       if (!FacilityModel.inside(m, col, row))
