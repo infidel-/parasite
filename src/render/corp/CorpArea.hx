@@ -186,6 +186,7 @@ class CorpArea implements Area3D
         }
       var c1 = CityConfig.cellToWorld(x1, z1);
       var cell = CityConfig.CELL;
+      var m = model;
       return {
         // cellToWorld hands back a cell CENTRE, and the footprint is its two outer boundaries
         x0: c0.x - cell / 2,
@@ -194,6 +195,32 @@ class CorpArea implements Area3D
         z1: c1.z + cell / 2,
         reachX: model.w * cell * CorpStyle.STREET_REACH_FRAC,
         reachZ: model.h * cell * CorpStyle.STREET_REACH_FRAC,
+        // and the hole in the street, per CELL — see PlateBox.covers for why the rect above is not
+        // it. The predicate is render.corp.CorpFacade's own (`CorpFacade.build`): every cell the
+        // tower is built on, which includes the lift core standing outside the wall ring and
+        // excludes the four reentrant corners beside it
+        covers: function(x0, x1, z0, z1)
+          {
+            var lo = worldToCell(x0, z0);
+            var hi = worldToCell(x1, z1);
+            for (row in lo.row...hi.row + 1)
+              for (col in lo.col...hi.col + 1)
+                if (FacilityModel.isIndoor(m, col, row) ||
+                    FacilityGeom.carries(m, col, row))
+                  return true;
+            return false;
+          },
+      };
+    }
+
+// the inverse of CityConfig.cellToWorld, clamped to the grid. cellToWorld puts cell `c` at
+// `(c - GRID/2 + 0.5) * CELL`, so a world coordinate lands on `floor(x / CELL + GRID/2)`
+  inline function worldToCell(x:Float, z:Float):{ col:Int, row:Int }
+    {
+      var h = CityConfig.GRID / 2;
+      return {
+        col: Std.int(Math.floor(x / CityConfig.CELL + h)),
+        row: Std.int(Math.floor(z / CityConfig.CELL + h)),
       };
     }
 

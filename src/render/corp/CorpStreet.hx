@@ -27,6 +27,18 @@ typedef PlateBox = {
   var z1:Float;
   var reachX:Float;
   var reachZ:Float;
+  // DOES THE TOWER ITSELF STAND OVER THIS WORLD RECT — not "is it inside the bounding box".
+  //
+  // the rect above is `structures[0]`'s, which comes off a FLOOD FILL, and the flood fill swallows
+  // the lift car: `Surf.LIFT` is inside FacilityModel.isIndoor's range and the car is 4-connected
+  // to the plate through its own door. gen.blocks.ElevatorBlock stands that car OUTSIDE the wall
+  // ring, so the box grows four cells across the whole of whichever wall the lift landed on and
+  // the street was cut back by 22 units along a 224-unit face — the black band under the south
+  // wall. render.corp.CorpFacade has always built the tower per CELL and known better.
+  //
+  // a closure rather than the model itself, so CorpStreet still knows nothing about the plate
+  // beyond its own box
+  var covers:(Float, Float, Float, Float) -> Bool;
 };
 
 // what went down there, for __corp()
@@ -282,11 +294,12 @@ class CorpStreet
 // spend most of its length there
   public static function ring(p:PlateBox, x0:Float, x1:Float, z0:Float, z1:Float):Bool
     {
-      // clear of the plate, by a cell, so nothing abuts the facade it would z-fight
-      if (x1 > p.x0 - CELL &&
-          x0 < p.x1 + CELL &&
-          z1 > p.z0 - CELL &&
-          z0 < p.z1 + CELL)
+      // the tower's own silhouette is the hole, and it is asked per cell — see PlateBox.covers.
+      // the margin is a QUARTER of a cell and was a whole one: it exists so a ground quad does not
+      // z-fight the facade's drop, the drop is a vertical plane, and a whole cell of it was 4 to 6
+      // units of missing street on every hand even where the lift was not
+      var e = CELL * 0.25;
+      if (p.covers(x0 - e, x1 + e, z0 - e, z1 + e))
         return false;
       return x1 > p.x0 - p.reachX &&
         x0 < p.x1 + p.reachX &&
