@@ -139,7 +139,7 @@ class CorpArea implements Area3D
       var pb = plateBox();
       street = CorpStreet.build(scene, game.area.id, pb);
       // into the street's OWN group, so the crowd rides the same transform down to STREET_Y
-      crowd = new CorpCrowd(street.group, street.city, pb);
+      crowd = new CorpCrowd(street.group, street.city, pb, game.scene.images);
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);

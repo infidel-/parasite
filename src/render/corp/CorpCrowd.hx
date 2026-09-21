@@ -7,6 +7,7 @@ import citygen.CityModel.Tile;
 import render.Textures;
 import render.corp.CorpStreet.PlateBox;
 import render.facility.FacilityModel;
+import Images;
 
 // one straight run of walkable cells, in world. an agent walks it end to end and wraps
 typedef Lane = {
@@ -46,22 +47,29 @@ typedef CorpCrowdSet = {
 // the feature: the street keeps moving while the player stands still thinking, and traffic that
 // sped up when somebody turned their animation speed up would be wrong.
 //
-// **FLAT QUADS OF LIGHT, NOT BILLBOARDS OF PEOPLE**, and this is the one shape decision in the
-// file. At 114 units down, through fog, at a 51-degree camera pitch, a pedestrian is not a
-// silhouette — they are the patch of light they are standing in, and a car is its headlights. So
-// each agent is ONE quad lying on the road wearing the shared radial glow gradient, additive. That
-// buys: no billboarding maths, no atlas, no new art at all, two draw calls for the whole street,
-// and a read that is actually MORE correct than an upright sprite three pixels tall would be.
+// **THE PEOPLE ARE THE GAME'S OWN AI ICONS**, and this is the one shape decision in the file.
+// `AI` is the NPC class here (see src/ai/AI.hx, `createIcon`), and `Images.getRandomCivilianAI`
+// deals every civilian in the game a cell off `images.male` / `images.female`. The 2D corp view
+// drew this same fake crowd from those same sheets — `AreaView.paintFakeHost`, commit ab37666,
+// `ix: Std.random(10), iy: Std.random(isMale ? 8 : 6)` at half alpha. The first 3D pass replaced
+// them with additive radial gradients on the argument that at 114 units down a pedestrian is the
+// patch of light they stand in rather than a silhouette. That argument was wrong twice over: it
+// is not what was asked for, and the sheets cost nothing — the two 640x1024 atlases stack into
+// ONE canvas, so both sexes and all 134 civilian icons ride one instanced batch and one draw
+// call, exactly as the four cars do off `corp/traffic`.
+//
+// They stand UP and lean back by render.particles.Sprites.TILT, which is what every actor
+// billboard in this game does and is "slanted so we can see it better": a quad flat on the
+// pavement shows a person from directly overhead.
 //
 // **POSITION IS CLOSED FORM IN t**, so nothing is stored per agent and nothing can drift: each
 // one's lane, direction, speed and phase come from a stable hash of its index, and where it is is
 // a modulo of the clock. Pause the game for an hour and the street is exactly where the arithmetic
 // says it should be.
 //
-// ponytail: the pedestrians are points of light rather than little people. Upgrade path if they
-// ever need to be figures — one InstancedMesh of upright quads leaned back by Sprites.TILT with a
-// per-instance UV rect injected the way render.decals.DecalBatch does it, off the people atlas;
-// still one draw call, but it needs the atlas plumbed through and it buys nothing at this range.
+// ponytail: one fixed yaw for every walker, not a facing off the lane. A figure this far away
+// subtends a few pixels and the actor billboards it is borrowing from are frontal by rule
+// (render.particles.Sprites' own header). Upgrade path is `head[]`, which the cars already carry.
 class CorpCrowd
 {
   static inline var CELL = CityConfig.CELL;
@@ -73,12 +81,20 @@ class CorpCrowd
   // the cars' own atlas window, one vec4 per instance — see `cars`
   var carUV:js.lib.Float32Array;
   var carAttr:InstancedBufferAttribute;
+  // and the people's, off the two civilian sheets — see `people`
+  var walkUV:js.lib.Float32Array;
+  var walkAttr:InstancedBufferAttribute;
+  var images:Images;
   // seconds since the area was built, off RAW dtMs — see the class header
   var clock = 0.0;
   var tmp = new Matrix4();
   // the ONE rotation every quad takes: a PlaneGeometry stands in XY facing +z, and -PI/2 about x
   // lays it flat facing up. built once — compose() applies scale, then this, then the position
   var flat = new Quaternion().setFromEuler(new Euler(-Math.PI / 2, 0, 0));
+  // and the one an UPRIGHT quad takes: a PlaneGeometry already stands in XY facing +z, so all it
+  // wants is the lean back toward the overhead camera that every actor sprite takes
+  var lean = new Quaternion().setFromEuler(
+    new Euler(-render.particles.Sprites.TILT, 0, 0));
   var pos = new Vector3();
   var scl = new Vector3();
   // the four headings a car can take, in FacilityGeom.face's numbering: 0 = -z, 1 = +z, 2 = -x,
@@ -91,8 +107,9 @@ class CorpCrowd
 
 // find the lanes and build the two batches into the street's own group, so they ride its transform
 // down to CorpStyle.STREET_Y with everything else
-  public function new(group:Group, ?city:City, ?p:PlateBox)
+  public function new(group:Group, ?city:City, ?p:PlateBox, ?images:Images)
     {
+      this.images = images;
       // the art points at -z, so heading 0 takes no yaw at all and the other three fall out of
       // atan2. `flat` lays the plane down FIRST and the yaw turns it in world, which is the order
       // the multiply reads in
@@ -121,9 +138,8 @@ class CorpCrowd
       };
       if (n.walkers > 0)
         {
-          walkMesh = batch(group, n.walkers, CorpStyle.WALK_COLOR, CorpStyle.WALK_GLOW);
-          place(walkMesh, walk, n.walkers, CorpStyle.WALK_SZ, CorpStyle.WALK_SZ,
-            CorpStyle.WALK_SPEED, 0);
+          walkMesh = people(group, n.walkers);
+          stroll();
         }
       if (n.cars > 0)
         {
@@ -138,43 +154,70 @@ class CorpCrowd
     {
       clock += dtMs / 1000.0;
       if (walkMesh != null)
-        place(walkMesh, walk, n.walkers, CorpStyle.WALK_SZ, CorpStyle.WALK_SZ,
-          CorpStyle.WALK_SPEED, 0);
+        stroll();
       if (carMesh != null)
         drive();
     }
 
-// write every agent's transform for the current clock. `salt` keeps the two families' hashes apart
-// so a car and a walker with the same index do not take the same lane fraction
-  function place(mesh:InstancedMesh, ls:Array<Lane>, count:Int, along:Float, across:Float,
-      speed:Float, salt:Int):Void
+// walk every pedestrian for the current clock, and pick the civilian each of them is.
+//
+// the same contract `drive` runs on and for the same reason: NOTHING IS STORED. Lane, direction,
+// speed, phase and which of the 134 civilian icons this walker wears are all a pure function of
+// the index, so the street is wherever the arithmetic says after any pause.
+//
+// THE FEET GO ON THE PAVEMENT, NOT THE CENTRE. A quad leaned back by TILT about its own middle
+// swings its base toward the camera and lifts it, so the centre is pushed up by
+// `H/2 * cos(TILT)` and back by `H/2 * sin(TILT)` to put the drawn feet on the lane — the same
+// correction render.facility.FacilityModel makes for every tilted sprite in the compound
+  function stroll():Void
     {
-      for (i in 0...count)
+      var h2 = CorpStyle.WALK_H / 2;
+      var up = h2 * Math.cos(render.particles.Sprites.TILT);
+      var back = h2 * Math.sin(render.particles.Sprites.TILT);
+      for (i in 0...n.walkers)
         {
-          var h = FacilityModel.mix((i + salt + 1) * 374761393);
-          var ln = ls[h % ls.length];
-          // WHICH WAY down the lane, how fast, and where it started — all three off the same hash,
-          // so an agent is a pure function of its index and the clock
-          var back = ((h >>> 7) & 1) == 1;
-          var v = speed * (1 + (((h >>> 9) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CROWD_SPEED_VAR);
-          var phase = ((h >>> 19) % 1000) / 1000 * ln.len;
-          var s = (phase + clock * v) % ln.len;
-          if (back)
+          var h = FacilityModel.mix((i + 1) * 374761393);
+          var ln = walk[h % walk.length];
+          var rev = ((h >>> 7) & 1) == 1;
+          var v = CorpStyle.WALK_SPEED *
+            (1 + (((h >>> 9) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CROWD_SPEED_VAR);
+          var s = (((h >>> 19) % 1000) / 1000 * ln.len + clock * v) % ln.len;
+          if (rev)
             s = ln.len - s;
-          // the lane's own axis carries the quad's LENGTH: a car is 8 long and 3.6 wide and has to
-          // point down the road it is on, and a walker's quad is square so the same code is a no-op
-          // for it
-          var px = ln.x0 + ln.dx * s;
-          var pz = ln.z0 + ln.dz * s;
-          var sx = (ln.dx != 0 ? along : across);
-          var sz = (ln.dx != 0 ? across : along);
-          pos.set(px, CorpStyle.CROWD_Y, pz);
-          // the LOCAL y of a laid-flat plane is world z, so the second scale is the run across
-          scl.set(sx, sz, 1);
-          tmp.compose(pos, flat, scl);
-          mesh.setMatrixAt(i, tmp);
+          pos.set(ln.x0 + ln.dx * s, CorpStyle.CROWD_Y + up, ln.z0 + ln.dz * s - back);
+          scl.set(CorpStyle.WALK_H, CorpStyle.WALK_H, 1);
+          tmp.compose(pos, lean, scl);
+          walkMesh.setMatrixAt(i, tmp);
+          cellUV(walkUV, i, h);
         }
-      mesh.instanceMatrix.needsUpdate = true;
+      walkMesh.instanceMatrix.needsUpdate = true;
+      walkAttr.needsUpdate = true;
+    }
+
+// which civilian icon walker `i` wears, as a uv rect into the stacked atlas.
+//
+// the cell comes from Images' OWN civilian tables — the same `civiliansMale` / `civiliansFemale`
+// rows `AI.createIcon` deals a real NPC's portrait from — so a face on the street below is a face
+// that could walk past the player upstairs, and no cell that is empty on the sheet is ever picked
+  function cellUV(dst:js.lib.Float32Array, i:Int, h:Int):Void
+    {
+      var male = ((h >>> 3) & 1) == 1;
+      var list = (male ? Images.civiliansMale : Images.civiliansFemale);
+      var c = list[(h >>> 11) % list.length];
+      var t = Const.TILE_SIZE_CLEAN;
+      var aw = CorpStyle.WALK_ATLAS_W;
+      var ah = CorpStyle.WALK_ATLAS_H;
+      // the male sheet is drawn on top of the female one, so the whole canvas is 2 * ah tall
+      var px = c.x * t;
+      var py = c.y * t + (male ? 0 : ah);
+      // half a texel in on every edge: the cells sit edge to edge and a linear tap exactly on the
+      // boundary pulls in the neighbour's pixels. `v` is flipped because a CanvasTexture uploads
+      // flipY while atlas rows grow downward
+      var e = 0.5;
+      dst[i * 4] = (px + e) / aw;
+      dst[i * 4 + 1] = 1.0 - (py + t - e) / (2 * ah);
+      dst[i * 4 + 2] = (t - 2 * e) / aw;
+      dst[i * 4 + 3] = (t - 2 * e) / (2 * ah);
     }
 
 // write every car's transform and its picture for the current clock.
@@ -267,32 +310,76 @@ class CorpCrowd
       var g = new Group();
       scene.add(g);
       var c = new CorpCrowd(g);
-      c.batch(g, 1, CorpStyle.WALK_COLOR, CorpStyle.WALK_GLOW);
+      c.people(g, 1);
       c.cars(g, 1);
     }
 
-// one additive batch of glow quads. NO vision mask and NO indoor mask, the street's own rule —
-// and no depth write, because a hundred overlapping glows sorting against each other is a hundred
-// chances to get it wrong for no gain
-  function batch(group:Group, count:Int, color:Int, mul:Float):InstancedMesh
+// the people batch: one upright quad per pedestrian, each showing a different civilian icon.
+//
+// SAME MACHINERY AS THE CARS, and deliberately — an `instanceUV` vec4 plus the `vMapUv` rewrite
+// after <uv_vertex>, with a cache key of its own. What differs is only the atlas and the lean.
+//
+// BOTH SHEETS GO IN ONE CANVAS. `images.male` and `images.female` are 640x1024 each; drawn one
+// above the other they are a single CanvasTexture, which is what keeps 134 possible icons and two
+// sexes at ONE draw call. Mipmaps are off for render.particles.Sprites.atlasTex's reason: the
+// cells sit edge to edge, so a coarse mip averages a neighbouring civilian into this one.
+//
+// NO vision mask and NO indoor mask, the street's own rule
+  function people(group:Group, count:Int):InstancedMesh
     {
-      var geo = new PlaneGeometry(1, 1);
-      var mat = new MeshBasicMaterial({
-        color: new Color(color).multiplyScalar(mul),
-        map: Textures.makeGlowGradient(),
-        transparent: true,
-        depthWrite: false,
-        blending: untyped THREE.AdditiveBlending,
+      walkUV = new js.lib.Float32Array(count * 4);
+      walkAttr = new InstancedBufferAttribute(walkUV, 4);
+      untyped walkAttr.setUsage(THREE.DynamicDrawUsage);
+      var geo:Dynamic = new PlaneGeometry(1, 1);
+      geo.setAttribute('instanceUV', walkAttr);
+      var mat:Dynamic = new MeshBasicMaterial({
+        map: atlas(),
+        color: new Color(0xffffff).multiplyScalar(CorpStyle.WALK_DIM),
+        alphaTest: 0.5,
+        side: untyped THREE.DoubleSide,
       });
+      mat.onBeforeCompile = function(shader:Dynamic)
+        {
+          shader.vertexShader = 'attribute vec4 instanceUV;\n' +
+            StringTools.replace(shader.vertexShader, '#include <uv_vertex>',
+              '#include <uv_vertex>\n  vMapUv = uv * instanceUV.zw + instanceUV.xy;');
+        };
+      untyped mat.customProgramCacheKey = function() return 'corpWalkUV';
       var mesh = new InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       // three frustum-culls an InstancedMesh against the geometry's own bounding sphere, which for
-      // a unit plane is half a unit — so the whole street's traffic would vanish the moment the
+      // a unit plane is half a unit — so the whole street's crowd would vanish the moment the
       // origin instance left the frame. the batch spans the city; it is never worth culling
       untyped mesh.frustumCulled = false;
       mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
       group.add(mesh);
       return mesh;
+    }
+
+// the two civilian sheets stacked into one texture. `warm` has no Images, and an empty canvas
+// compiles exactly the same program a filled one does
+  function atlas():CanvasTexture
+    {
+      var aw = CorpStyle.WALK_ATLAS_W;
+      var ah = CorpStyle.WALK_ATLAS_H;
+      var cv = js.Browser.document.createCanvasElement();
+      cv.width = aw;
+      cv.height = 2 * ah;
+      if (images != null)
+        {
+          var cx = cv.getContext2d();
+          var m:Dynamic = images.getImage('male');
+          var f:Dynamic = images.getImage('female');
+          if (m != null && m.complete)
+            cx.drawImage(m, 0, 0);
+          if (f != null && f.complete)
+            cx.drawImage(f, 0, ah);
+        }
+      var tex = new CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      untyped tex.generateMipmaps = false;
+      untyped tex.minFilter = THREE.LinearFilter;
+      return tex;
     }
 
 // every straight run of `kind` at least LANE_MIN cells long, ON THE STREET THAT WAS BUILT.

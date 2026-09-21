@@ -589,14 +589,28 @@ class CorpStyle
   public static inline var CAR_SPEED = 20.0;
   // and how much either varies per agent, as a fraction
   public static inline var CROWD_SPEED_VAR = 0.45;
-  // the quads. FLAT ON THE GROUND and not upright, which is the whole design: at 114 units down
-  // through fog, a person is not a silhouette, it is the light they are standing in — and a car is
-  // its headlights. A lit patch on the road seen from above IS what traffic looks like from the
-  // twentieth floor, and it needs no billboarding, no atlas and no new art
-  public static inline var WALK_SZ = 1.8;
+  // the quads.
+  //
+  // THE PEDESTRIANS ARE THE GAME'S OWN AI ICONS, which is what "random ai art" meant and what the
+  // 2D corp view already did: `AreaView.paintFakeHost` (commit ab37666) drew each fake host from
+  // `images.male` / `images.female` at a random `ix`/`iy`, off the very sheets `AI.createIcon`
+  // deals a civilian's own portrait from. The first 3D pass replaced them with additive glow
+  // gradients on the argument that at this range a person is the light they stand in; asked for
+  // twice, and the answer is the sheets. See render.corp.CorpCrowd.people.
+  //
+  // UPRIGHT AND LEANED BACK by render.particles.Sprites.TILT, "slanted so we can see it better" —
+  // the same lean every actor billboard in the game takes toward the overhead camera, and for the
+  // same reason. A quad lying flat on the pavement shows a person from directly overhead, which is
+  // a head and two shoulders
+  public static inline var WALK_H = 3.2;
   public static inline var CROWD_Y = 0.06;
-  public static inline var WALK_COLOR = 0xbcd0e8;
-  public static inline var WALK_GLOW = 0.55;
+  // what the unlit people quad's albedo is multiplied by. ABOVE STREET_DIM and above CAR_DIM: the
+  // icons are painted for a lit 2D map at full size, they are the smallest thing down here, and
+  // they are the thing the eye is meant to find
+  public static inline var WALK_DIM = 0.92;
+  // the people sheets, stacked into one canvas so both sexes ride one draw call
+  public static inline var WALK_ATLAS_W = 640;
+  public static inline var WALK_ATLAS_H = 1024;
 
   // A CAR IS NOT A PATCH OF LIGHT AND THE PEDESTRIANS STILL ARE, which is the one place the
   // paragraph above has been overruled: an 8 x 3.6 quad wearing a circular gradient is an ELLIPSE,
