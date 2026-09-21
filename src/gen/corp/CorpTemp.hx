@@ -65,7 +65,7 @@ class CorpTemp
   // --- the constants more than one pass reads
 
   // how far apart the corridor branches, and the size a room is subdivided above. 9 + 1 wall
-  public static inline var ROOM_SIZE = 10;
+  public static inline var ROOM_SIZE = 6;
   // ...and by how much it may exceed that before the carve cuts it, which is the whole of "the
   // rooms are too large". The compound asked this question first and answered it with a named
   // constant for the same reason — gen.facility.FacilityBuilding.SUBDIVIDE_OVER, 1.2.

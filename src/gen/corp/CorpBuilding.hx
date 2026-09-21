@@ -18,6 +18,7 @@ package gen.corp;
 
 import Const;
 import game.AreaGenerator.*;
+import game.AreaGenerator._Spot;
 import gen.GenTree;
 import gen.blocks.CorpBlocks;
 import gen.blocks.ElevatorBlock;
@@ -35,7 +36,7 @@ class CorpBuilding
   // came out "quota short: room-toilet got 0". A 4-wide room is also the one an open-plan floor
   // cannot furnish at all (gen.corp.CorpRooms.open lays no desk under 7), so the same number
   // fixes both
-  static inline var SPLIT_MIN = 6;
+  static inline var SPLIT_MIN = 5;
 
 // build the whole plate and push the lift and every room as children of its node
   public static function generate(state: _CorpState, node: _GenNode)
@@ -128,10 +129,17 @@ class CorpBuilding
 
           // a branch off each hand, never closer than ROOM_SIZE to the last one on that hand and
           // never within ROOM_SIZE of the far wall — a stub that short is not a corridor, it is a
-          // notch in one room
+          // notch in one room.
+          //
+          // THE ROLL IS 50% AND WAS 30%, because the ROOM behind the branch got smaller. At 30%
+          // the gap between two branches on one hand is ROOM_SIZE plus a geometric tail, ~9 cells
+          // on a 10-cell room; against a 5-cell room that is two rooms deep and the inner one has
+          // no corridor wall at all. Whole corner blocks came out with no frontage: 8 towers in
+          // 3,000 held a cluster gen.corp.CorpConnect could not open, because there was nothing
+          // reached anywhere on its boundary to open onto
           sideCount1++;
           if (sideCount1 > ROOM_SIZE &&
-              area.random(100) > 70)
+              area.random(100) > 50)
             {
               var dir = (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN
                 ? DIR_LEFT : DIR_UP);
@@ -141,7 +149,7 @@ class CorpBuilding
             }
           sideCount2++;
           if (sideCount2 > ROOM_SIZE &&
-              area.random(100) > 70)
+              area.random(100) > 50)
             {
               var dir = (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN
                 ? DIR_RIGHT : DIR_DOWN);
@@ -345,13 +353,24 @@ class CorpBuilding
             var cap = ROOM_SIZE * SUBDIVIDE_OVER;
             while (true)
               {
-                var dir = 0;
-                if (room.w > cap)
-                  dir = DIR_DOWN;
-                if (room.h > cap)
-                  dir = DIR_RIGHT;
-                if (dir == 0)
+                // **SPLIT_MIN FLOORS BOTH PRODUCTS, NOT JUST THE NEAR ONE.** It used to clamp the
+                // near side alone, and the far side is `span - near - 1` — which was safe only by
+                // luck at the old 12-cell cap, where the smallest room that could be cut was 13
+                // and left 6 behind. Dropping the cap to 8 made rooms of 9..12 cuttable and the
+                // far side came out 2 to 5 cells: measured, **1,456 of 3,000 towers** had a room
+                // that could not be walked into, the first of them a 2 x 2.
+                //
+                // so an axis is cuttable only when BOTH halves can clear SPLIT_MIN, i.e. when it
+                // is at least `2 * SPLIT_MIN + 1`, and a room that is over the cap on an axis it
+                // cannot cut simply stays over the cap. That is the real floor on room size and
+                // it is why the cap alone does not set the room count
+                var room2 = SPLIT_MIN * 2 + 1;
+                var cutW = (room.w > cap && room.w >= room2);
+                var cutH = (room.h > cap && room.h >= room2);
+                if (!cutW && !cutH)
                   break;
+                // h wins a tie, which is the order the old pair of ifs resolved in
+                var dir = (cutH ? DIR_RIGHT : DIR_DOWN);
                 var sx = 0, sy = 0;
                 if (dir == DIR_DOWN)
                   {
@@ -359,6 +378,8 @@ class CorpBuilding
                     if (area.chance(30))
                       neww = Std.int(room.w / 3);
                     neww += area.random(4) - 2;
+                    if (neww > room.w - 1 - SPLIT_MIN)
+                      neww = room.w - 1 - SPLIT_MIN;
                     if (neww < SPLIT_MIN)
                       neww = SPLIT_MIN;
                     sx = room.x1 + neww;
@@ -370,6 +391,8 @@ class CorpBuilding
                     if (area.chance(30))
                       newh = Std.int(room.h / 3);
                     newh += area.random(4) - 2;
+                    if (newh > room.h - 1 - SPLIT_MIN)
+                      newh = room.h - 1 - SPLIT_MIN;
                     if (newh < SPLIT_MIN)
                       newh = SPLIT_MIN;
                     sx = room.x1;
@@ -380,6 +403,31 @@ class CorpBuilding
               }
             markRoom(cells, room, BLDG_ROOM_MARKED);
           }
+    }
+
+// which of these candidate cells a door could actually be cut into
+  static function doorSpots(cells: Array<Array<Int>>, list: Array<_Spot>): Array<_Spot>
+    {
+      var out = [];
+      for (s in list)
+        {
+          if (cells[s.x][s.y] != BLDG_INNER_WALL)
+            continue;
+          // a cell with three or more walls round it is an inside corner, and a door cut into one
+          // opens into masonry
+          var cnt = 0;
+          for (i in 0...Const.dir4x.length)
+            {
+              var t = cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]];
+              if (t == BLDG_INNER_WALL ||
+                  t == BLDG_WALL)
+                cnt++;
+            }
+          if (cnt > 2)
+            continue;
+          out.push(s);
+        }
+      return out;
     }
 
 // flood every room out of the carve, number it, and cut it one door
@@ -400,25 +448,18 @@ class CorpBuilding
             room.id = state.nextRoomID++;
             rooms.push(room);
 
-            var spots = [];
-            for (s in getRoomDoorSpots(room))
-              {
-                if (cells[s.x][s.y] != BLDG_INNER_WALL)
-                  continue;
-                // a cell with three or more walls round it is an inside corner, and a door cut
-                // into one opens into masonry
-                var cnt = 0;
-                for (i in 0...Const.dir4x.length)
-                  {
-                    var t = cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]];
-                    if (t == BLDG_INNER_WALL ||
-                        t == BLDG_WALL)
-                      cnt++;
-                  }
-                if (cnt > 2)
-                  continue;
-                spots.push(s);
-              }
+            // the four wall MIDPOINTS first, so a door lands in the middle of its wall wherever
+            // one legally can and the floor plan reads as it always has
+            var spots = doorSpots(cells, getRoomDoorSpots(room));
+            if (spots.length == 0)
+              // AND EVERY OTHER CELL OF THE WALL RING when none of the four works, most central
+              // first. game.AreaGenerator.getRoomWallSpots exists for exactly this and its own
+              // header measured the cost of not using it — four candidates out of a perimeter of
+              // 2(w+h), and a room whose four midpoints all happen to be exterior masonry gets no
+              // door at all. The compound has used the fallback since FacilityConnect was written;
+              // this generator never did, and it did not show while rooms were 8 x 8. Halving them
+              // made it show: 5 towers in 150 carried a room nothing could walk into
+              spots = doorSpots(cells, getRoomWallSpots(room));
             if (spots.length == 0)
               {
                 markRoom(cells, room, room.id);
@@ -503,6 +544,118 @@ class CorpBuilding
           if (!own)
             makeDoorToCorridor(state, room.id);
         }
+
+      // AND A ROOM THAT STILL CANNOT BE WALKED INTO CUTS A DOOR INTO SOMEWHERE THAT CAN.
+      //
+      // The pass above gives a room a corridor door WHERE ITS OWN WALLS ALLOW ONE, and a room in
+      // the middle of a block has none — the corridor lattice branches every ROOM_SIZE cells and
+      // two rooms now fit between two branches. Measured at the halved room size: **1,038 rooms
+      // over 200 towers own no corridor door**, five per floor. Most are fine, because the one
+      // door makeDoors cut leads somewhere that is; the ones that are not are a chain of cut-off
+      // rooms that dead-ends, and the oracle sees that as a room nothing can walk into.
+      //
+      // **IT IS FLOODED OVER TILES AND NOT OVER THE DOOR GRAPH**, which is the trap here and cost
+      // an attempt. `reached` treats every non-room cell as ONE node, id 0, so two corridor
+      // fragments with no path between them are the same node to it — the door graph came back
+      // fully connected on every one of 200 towers while 37 of them still had a room the tile
+      // flood could not enter. gen.GenCheck.reachable walks tiles, so this walks tiles.
+      //
+      // gen.facility.FacilityConnect has had the shape of the answer since it was written —
+      // `pickRoomSpot` takes a `reachable` set and opens into it. Iterated, because opening one
+      // room makes its neighbour reachable in turn, and bounded by the room count
+      var guard = 0;
+      while (guard++ <= state.rooms.length)
+        {
+          var open = floodWalkable(state);
+          var cut = false;
+          for (room in state.rooms)
+            {
+              if (open[room.x1][room.y1])
+                continue;
+              if (joinOpen(state, room, open))
+                cut = true;
+            }
+          if (!cut)
+            break;
+        }
+    }
+
+// every walkable cell the corridors reach, over TILES. The carve's own ids: a room is stamped with
+// its own id by makeDoors, a corridor is BLDG_CORRIDOR and a cut door BLDG_INNER_DOOR
+  static function floodWalkable(state: _CorpState): Array<Array<Bool>>
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var w = area.width;
+      var h = area.height;
+      var seen = [for (x in 0...w) [for (y in 0...h) false]];
+      inline function walkable(t: Int)
+        return (t == BLDG_CORRIDOR || t == BLDG_INNER_DOOR || t == BLDG_ROOM ||
+          t >= BLDG_ROOM_ID_START);
+      var open = [];
+      for (y in 0...h)
+        for (x in 0...w)
+          if (cells[x][y] == BLDG_CORRIDOR)
+            {
+              seen[x][y] = true;
+              open.push({ x: x, y: y });
+            }
+      while (open.length > 0)
+        {
+          var p = open.pop();
+          for (i in 0...Const.dir4x.length)
+            {
+              var nx = p.x + Const.dir4x[i];
+              var ny = p.y + Const.dir4y[i];
+              if (nx < 0 || ny < 0 || nx >= w || ny >= h || seen[nx][ny])
+                continue;
+              if (!walkable(cells[nx][ny]))
+                continue;
+              seen[nx][ny] = true;
+              open.push({ x: nx, y: ny });
+            }
+        }
+      return seen;
+    }
+
+// cut this room a door into a cell the corridors already reach, most central of its wall first
+  static function joinOpen(state: _CorpState, room: _Room, open: Array<Array<Bool>>): Bool
+    {
+      var cells = state.area.getCells();
+      for (s in doorSpots(cells, getRoomWallSpots(room)))
+        {
+          var delta = deltaMap[s.dir];
+          var fx = s.x + delta.x;
+          var fy = s.y + delta.y;
+          if (!open[fx][fy])
+            continue;
+          var far = cells[fx][fy];
+          cells[s.x][s.y] = BLDG_INNER_DOOR;
+          state.doors.push({
+            x: s.x,
+            y: s.y,
+            dir: s.dir,
+            roomID1: room.id,
+            roomID2: (far >= BLDG_ROOM_ID_START ? far : 0),
+            skip: false,
+          });
+          return true;
+        }
+      return false;
+    }
+
+// which of these candidate cells have a CORRIDOR on their far side
+  static function corridorSpots(cells: Array<Array<Int>>, list: Array<_Spot>): Array<_Spot>
+    {
+      var out = [];
+      for (s in list)
+        {
+          var delta = deltaMap[s.dir];
+          if (cells[s.x + delta.x][s.y + delta.y] != BLDG_CORRIDOR)
+            continue;
+          out.push(s);
+        }
+      return out;
     }
 
 // find a wall of this room that is adjacent to a corridor and cut a door through it
@@ -519,14 +672,13 @@ class CorpBuilding
       if (room == null)
         return false;
 
-      var spots = [];
-      for (s in getRoomDoorSpots(room))
-        {
-          var delta = deltaMap[s.dir];
-          if (cells[s.x + delta.x][s.y + delta.y] != BLDG_CORRIDOR)
-            continue;
-          spots.push(s);
-        }
+      // the four wall midpoints first, then EVERY cell of the ring, most central first — the
+      // second half of what game.AreaGenerator.getRoomWallSpots' header says the four-cell limit
+      // costs: "makeDoorToCorridor report[s] failure while some other cell of the same wall faces
+      // the corridor it was looking for". Invisible at 8 x 8 rooms and 20% of towers at 5 x 5
+      var spots = corridorSpots(cells, getRoomDoorSpots(room));
+      if (spots.length == 0)
+        spots = corridorSpots(cells, getRoomWallSpots(room));
       if (spots.length == 0)
         return false;
       var spot = spots[state.area.random(spots.length)];

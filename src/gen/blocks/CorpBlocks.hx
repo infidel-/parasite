@@ -122,8 +122,8 @@ class CorpBlocks
           kind: ROOM_KITCHEN,
           min: 1,
           max: 1,
-          minW: 6,
-          minH: 6,
+          minW: 5,
+          minH: 5,
           fit: smallest,
         },
         // the cubicle farm wants the ROOMIEST room on the floor, which is the one the old generator
@@ -131,31 +131,31 @@ class CorpBlocks
         // required and a second is allowed where the plate is big enough to carve two
         {
           kind: ROOM_CUBICLE,
-          // 8 x 6 AND NOT 9 x 7, and the number moved because the CARVE moved under it. The mins
-          // were fitted when a floor carried 12 rooms averaging 110 cells; with the cap at
-          // ROOM_SIZE * SUBDIVIDE_OVER it carries 19 averaging 67, and 2 towers in 3,000 had no
-          // room left that cleared 9 x 7 at all — "quota short: room-cubicle got 0", which is a
-          // floor with no cubicle farm on it. A pod row needs 6 clear cells across and the
-          // template's own guard is h >= 5, so 8 x 6 is what the thing actually costs
+          // 6 x 5, AND THE NUMBER HAS MOVED TWICE BECAUSE THE CARVE MOVED UNDER IT BOTH TIMES.
+          // It was 9 x 7 when a floor carried 12 rooms averaging 110 cells; 8 x 6 when the cap
+          // took that to 19 averaging 67; and with ROOM_SIZE 6 and SPLIT_MIN 5 a floor carries 28
+          // and no room is guaranteed wider than 5. At 8 x 6 that was 124 towers in 400 with no
+          // cubicle farm at all. A pod row is a 3-cell desk plus its aisle, and the template's own
+          // guard is `w >= 4 && h >= 5`, so 6 x 5 is what the thing actually costs
           min: 1,
           max: 2,
-          minW: 8,
-          minH: 6,
+          minW: 5,
+          minH: 5,
           fit: biggest,
         },
         {
           kind: ROOM_MEETING,
           min: 1,
           max: 2,
-          minW: 6,
-          minH: 6,
+          minW: 5,
+          minH: 5,
         },
         {
           kind: ROOM_EXEC,
           min: 1,
           max: 3,
-          minW: 5,
-          minH: 5,
+          minW: 4,
+          minH: 4,
           fit: smallest,
         },
       ];

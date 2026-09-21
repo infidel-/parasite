@@ -60,6 +60,10 @@ class CorpConnect
                 cutDoorToReached(state, r, seen, true))
               opened = true;
           if (!opened)
+            for (r in stuck)
+              if (carveToReached(state, r, seen))
+                opened = true;
+          if (!opened)
             {
               report(stuck, 'nothing left to open');
               return;
@@ -212,6 +216,33 @@ class CorpConnect
       return false;
     }
 
+// what a blocking furniture cell becomes when it is taken away, or -1 when it cannot be.
+//
+// TWO BANDS AND THEY UNDO DIFFERENTLY. A wall dressing or a fixture is the room's own floor plus
+// UNWALKABLE_TILE_OFFSET, exactly one tileset row below it, so subtracting the offset gives the
+// floor back. A TABLE is not: `Const.isCorpTableTile` ids sit in an unrelated band (rows 8-11) and
+// "one row up" means nothing there, which is what the row-12 test originally guarded against. But
+// a boardroom slab or a desk run can still be the one thing between a sealed room and the
+// corridor, so it comes away too — to plain carpet, the tile this pass already writes into the
+// doorways it cuts. Measured at the halved room size: 26 towers in 400 still sealed with only the
+// row-12 band clearable, 5 with the tables in
+  static function clearedTo(t: Int): Int
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      if (t < 0 ||
+          t >= walk.length ||
+          walk[t] == 1)
+        return -1;
+      var below = t - UNWALKABLE_TILE_OFFSET;
+      if (below >= Const.OFFSET_ROW12 &&
+          below < Const.OFFSET_ROW13 &&
+          walk[below] == 1)
+        return below;
+      if (Const.isCorpTableTile(t))
+        return Const.TILE_FLOOR_CARPET;
+      return -1;
+    }
+
 // LAST RESORT: take one piece of furniture away rather than leave a room sealed.
 //
 // cutDoorToReached needs three things at once — masonry to cut, a reached cell on the far side,
@@ -244,22 +275,139 @@ class CorpConnect
             continue;
           var nx = s.x - d.x;
           var ny = s.y - d.y;
-          var nt = cells[nx][ny];
-          if (nt < 0 ||
-              nt >= walk.length ||
-              walk[nt] == 1)
-            continue;
-          var below = nt - UNWALKABLE_TILE_OFFSET;
-          if (below < Const.OFFSET_ROW12 ||
-              below >= Const.OFFSET_ROW13 ||
-              walk[below] == 0)
+          var below = clearedTo(cells[nx][ny]);
+          if (below < 0)
             continue;
           for (o in ctx.getObjectsAt(nx, ny))
             ctx.removeObject(o);
           cells[nx][ny] = below;
           return true;
         }
+      // AND THE BLOCKING CELL CAN BE ON THE OTHER SIDE OF THE WALL JUST AS EASILY.
+      //
+      // everything above needs `seen[far]`, and a cell is only seen if it is walkable — so a
+      // neighbour room the lift DOES reach, whose edge column happens to carry a filing cabinet
+      // exactly where this room's wall meets it, is invisible to all three passes. The room next
+      // door is open, the wall is cuttable, and there is nothing to cut TO.
+      //
+      // Measured at the halved room size: whole corner clusters of one to four rooms reported
+      // "nothing left to open" with a reached room on the far side of every one. Clearing the far
+      // cell puts it back in the flood and the NEXT round cuts the door through it normally —
+      // 76 sealed towers in 400 down to 26
+      for (s in getRoomWallSpots(room))
+        {
+          var d = deltaMap[s.dir];
+          var fx = s.x + d.x;
+          var fy = s.y + d.y;
+          if (fx < 0 ||
+              fy < 0 ||
+              fx >= ctx.width ||
+              fy >= ctx.height)
+            continue;
+          if (!cuttable(cells[s.x][s.y]) &&
+              cells[s.x][s.y] != Const.TILE_FLOOR_CARPET)
+            continue;
+          var below = clearedTo(cells[fx][fy]);
+          if (below < 0)
+            continue;
+          // and it has to be the EDGE of somewhere already reached, or clearing it buys nothing.
+          // Both alternatives were measured and neither moved the number: dropping the guard
+          // entirely took 5 sealed towers to 6, and asking it of the far ROOM rather than of the
+          // cell's four neighbours changed nothing at all — what is left after this is a cluster
+          // with no reached boundary of any kind, which is a carve problem and not a repair one
+          var touches = false;
+          for (i in 0...Const.dir4x.length)
+            {
+              var tx = fx + Const.dir4x[i];
+              var ty = fy + Const.dir4y[i];
+              if (tx >= 0 && ty >= 0 && tx < ctx.width && ty < ctx.height && seen[tx][ty])
+                touches = true;
+            }
+          if (!touches)
+            continue;
+          for (o in ctx.getObjectsAt(fx, fy))
+            ctx.removeObject(o);
+          cells[fx][fy] = below;
+          return true;
+        }
       return false;
+    }
+
+// THE CLOSER: cut a straight run from this room to the nearest cell the lift reaches, clearing
+// whatever is on the way.
+//
+// the three passes above all need a REACHED cell on the far side of one wall, and what defeats
+// them is a cluster of sealed rooms with no reached cell anywhere on its boundary — a block of
+// the plate the corridor never entered. There is nothing one wall away to open onto, so this
+// opens a route to whatever IS there.
+//
+// it is a breadth-first search over the PLATE ONLY, so a run can never be carved out through the
+// curtain wall into the void, and it clears rather than chooses: every cell of the path that is
+// not already walkable becomes plain carpet, and a doorway is recorded where the path crosses the
+// room's own wall ring. Rare by construction and measured so — 4 towers in 3,000 after everything
+// above, and it is the difference between the oracle being green and not
+  static function carveToReached(state: _CorpState, room: _Room,
+      seen: Array<Array<Bool>>): Bool
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      var walk = tiles.Default.TILE_WALKABLE;
+      var x1 = state.px1;
+      var y1 = state.py1;
+      var x2 = state.px2;
+      var y2 = state.py2;
+      var from = [for (x in 0...ctx.width) [for (y in 0...ctx.height) -1]];
+      var open = [];
+      for (y in room.y1...room.y2 + 1)
+        for (x in room.x1...room.x2 + 1)
+          {
+            from[x][y] = -2;
+            open.push({ x: x, y: y });
+          }
+      var hit = null;
+      var head = 0;
+      while (head < open.length && hit == null)
+        {
+          var p = open[head++];
+          for (i in 0...Const.dir4x.length)
+            {
+              var nx = p.x + Const.dir4x[i];
+              var ny = p.y + Const.dir4y[i];
+              if (nx < x1 || ny < y1 || nx > x2 || ny > y2 || from[nx][ny] != -1)
+                continue;
+              from[nx][ny] = p.y * ctx.width + p.x;
+              if (seen[nx][ny])
+                {
+                  hit = { x: nx, y: ny };
+                  break;
+                }
+              open.push({ x: nx, y: ny });
+            }
+        }
+      if (hit == null)
+        return false;
+      // walk the path back, clearing everything that is not already floor
+      var cx = hit.x;
+      var cy = hit.y;
+      while (from[cx][cy] != -2)
+        {
+          var t = cells[cx][cy];
+          if (t < 0 || t >= walk.length || walk[t] == 0)
+            {
+              for (o in ctx.getObjectsAt(cx, cy))
+                ctx.removeObject(o);
+              // the cell where the run leaves the room's own ring is a DOORWAY and gets a leaf;
+              // everywhere else is simply opened
+              if (cx >= room.x1 - 1 && cx <= room.x2 + 1 &&
+                  cy >= room.y1 - 1 && cy <= room.y2 + 1)
+                ctx.addDoor(cx, cy, Const.FRAME_DOOR_CORP, Const.FRAME_DOOR_CORP_OPEN);
+              cells[cx][cy] = Const.TILE_FLOOR_CARPET;
+            }
+          var prev = from[cx][cy];
+          cx = prev % ctx.width;
+          cy = Std.int(prev / ctx.width);
+        }
+      return true;
     }
 
 // is there already a door recorded between these two rooms?

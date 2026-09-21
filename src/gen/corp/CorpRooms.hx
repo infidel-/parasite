@@ -90,6 +90,9 @@ class CorpRooms
       ];
       for (c in corners)
         {
+          // and never the cell a doorway opens onto — see `atDoor`
+          if (atDoor(cells, c.x, c.y))
+            continue;
           if (state.area.chance(smallChance))
             {
               cells[c.x][c.y] = smallFloorID;
@@ -101,6 +104,25 @@ class CorpRooms
               decoBig = addDecorationExt(state, c.x, c.y, decoBig, big);
             }
         }
+    }
+
+// IS THIS CELL THE ONE A DOORWAY OPENS ONTO, on any of its four hands?
+//
+// every dressing this file lays is an UNWALKABLE floor twin, so a cell inside a threshold is a
+// sealed room. The test used to look only STRAIGHT THROUGH the wall a run was walking — the left
+// run checked (x1-1, y) and the right run (x2+1, y) — which cannot see a door in the TOP or BOTTOM
+// wall, and a corner cell has one of each. And the corner took its dressing unconditionally:
+// `hasLeft || isCorner`, with the door test folded into `hasLeft` alone.
+//
+// Invisible while rooms were 8 x 8, because a room that size has other ways in and the flood found
+// one. At the halved size it is 61 rooms over 200 towers — 52 of them open plan, which owns the
+// longest dressing list in the file
+  static function atDoor(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == BLDG_INNER_DOOR)
+          return true;
+      return false;
     }
 
 // dress the two long walls of a room, never twice in a row and never beside a doorway.
@@ -125,14 +147,13 @@ class CorpRooms
 
           // left side
           var hasLeft = state.area.chance(chance);
-          if (cells[room.x1 - 1][y] == BLDG_INNER_DOOR)
-            hasLeft = false;
           if (prevLeft)
             {
               hasLeft = false;
               prevLeft = false;
             }
-          if (hasLeft || isCorner)
+          if ((hasLeft || isCorner) &&
+              !atDoor(cells, room.x1, y))
             {
               prevLeft = true;
               if (state.area.chance(smallChance))
@@ -149,14 +170,13 @@ class CorpRooms
 
           // right side
           var hasRight = state.area.chance(chance);
-          if (cells[room.x2 + 1][y] == BLDG_INNER_DOOR)
-            hasRight = false;
           if (prevRight)
             {
               hasRight = false;
               prevRight = false;
             }
-          if (hasRight || isCorner)
+          if ((hasRight || isCorner) &&
+              !atDoor(cells, room.x2, y))
             {
               prevRight = true;
               if (state.area.chance(smallChance))
@@ -186,11 +206,14 @@ class CorpRooms
       // desk at), and setting the flag true anyway closed the `!hasTable` escape below. At
       // exactly w == 6 the `w >= 7` arm is closed too, so the room got marble and NOTHING ELSE —
       // 23 of 600 seeds, and the "37,12 room is empty" this pass started from
-      // 5 x 5 AND NOT 6 x 6, which is the size the demand itself asks for (gen.blocks.CorpBlocks
-      // gives ROOM_EXEC minW/minH 5): a 3-wide desk centred in a 5-wide room lands x1+1..x1+3
-      // with a clear column each side, so the extra cell the old guard wanted was never spent
-      var hasTable = (room.w >= 5 &&
-        room.h >= 5 &&
+      // 4 x 4, AND THE GUARD HAS COME DOWN TWICE WITH THE CARVE. It was 6 x 6, then 5 x 5 when
+      // the demand asked for 5; with ROOM_SIZE 6 and SPLIT_MIN 5 a floor carries 29 rooms and only
+      // a handful clear 5 on both axes, so six 5x5 demands dealt ahead of this one left it with
+      // nothing — "quota short: room-exec got 0" on 14 towers in 3,000. A 3-wide desk centred in a
+      // 4-wide room lands x1+1..x1+3, i.e. against the far wall with a clear column on the near
+      // side, which is what an office that size looks like anyway
+      var hasTable = (room.w >= 4 &&
+        room.h >= 4 &&
         execDesk(state, node, room));
       if (room.w >= 7 ||
           !hasTable)
@@ -293,8 +316,10 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, CARPET_MEETING);
-      if (room.w >= 6 &&
-          room.h >= 6)
+      // 5 AND NOT 6, because the carve moved under it: a room is now floored at SPLIT_MIN on
+      // either axis and `meetingTable` only needs `w - 4` and `h - 4` to be at least 1
+      if (room.w >= 5 &&
+          room.h >= 5)
         meetingTable(state, node, room);
       decorateWalls(state, room, [
           Const.CORP_TABLE_COFFEE,
@@ -364,8 +389,10 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
-      if (room.w >= 6 &&
-          room.h >= 6)
+      // and the same 5 the boardroom takes — `kitchenTables` lays 2x2 units at pitch 3 inside the
+      // room's own inset, which a 5-cell run still holds one of
+      if (room.w >= 5 &&
+          room.h >= 5)
         kitchenTables(state, node, room);
       decorateWalls(state, room, [
           Const.CORP_TABLE_COFFEE,
