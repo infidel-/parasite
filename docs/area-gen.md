@@ -1232,3 +1232,89 @@ with no zone is what separated them: **382 in 600 seeds, every single one an exe
   `cnt > 100` guard laying nothing. 64 of 771 open rooms before the carve was retuned, and far more
   after — a capped carve mints 1,250 six-wide rooms out of 5,560. It is also a `break` and not a
   `continue`: the width does not change between rows.
+
+## The lever on room count is `2 * SPLIT_MIN + 1`, not the cap
+
+"12 rooms is nothing, double that amount."
+
+`SUBDIVIDE_OVER` looks like the knob and is not. `subdivideLargeRooms` refuses to cut a room that
+cannot leave `SPLIT_MIN` on BOTH sides, so the real floor on a room's short axis is
+`2 * SPLIT_MIN + 1` whatever the cap says — bring the cap down alone and the count saturates.
+`ROOM_SIZE` 10 → **6** with `SPLIT_MIN` 6 → **5**, and a floor goes **18.53 → 29.12 rooms** (doors
+25.16 → 40.81). Room widths: **29.12 of 29.12 rooms clear 3 x 3, 20.51 clear 4 x 4, only 14.39
+clear 5 x 5** — which is the number every demand's minW/minH has to be read against from here on.
+
+The corridor branch roll went 30% → **50%** in the same change: more rooms means more of them sit
+off the trunk, and the branch spacing has to densify with the carve or the far corners have no
+reached boundary to open onto.
+
+**Five oracle rounds, and four of them were the door graph, not the carve:**
+
+- **1,456 towers in 3,000 "cannot be walked into".** The split computed the far product's size from
+  an unfloored subtraction, so a cut could leave a 4-cell slot that then failed its own guard and
+  was sealed. Both products are floored now (`room2 = SPLIT_MIN * 2 + 1`, and `neww` clamped
+  against `room.w - 1 - SPLIT_MIN`).
+- **`getRoomDoorSpots` is four wall MIDPOINTS.** At 8 x 8 that is plenty; at 5 x 5 with a corridor
+  on one hand and neighbours on three, the four midpoints can all be illegal. `makeDoors` and
+  `makeDoorToCorridor` fall back to `getRoomWallSpots` — the whole ring, centre-outwards — which
+  `game.AreaGenerator` documents as the fallback and which the facility has always used.
+- **`decorateWalls`' corner rule dressed the cell INSIDE a threshold.** The old test looked only
+  straight through the wall the run was walking, which cannot see a door in the top or bottom wall,
+  and a corner cell has one of each — and the corner took its dressing unconditionally. Invisible
+  at 8 x 8 because the flood found another way in; **61 rooms over 200 towers** at the halved size,
+  52 of them open plan. `atDoor` is a four-neighbour test now.
+- **Far-side dressing hid reached space from the repair.** `clearWayToReached` only cleared the near
+  side; `clearedTo` (the row-12 twin, or `TILE_FLOOR_CARPET` for a table tile) plus a far-side clear
+  guarded by a four-neighbour `touches` test took 76 → 26 → **5** once tables were included.
+- **The last 5 were corner clusters with no reached boundary at all.** `carveToReached` is the
+  last resort before `report(stuck)`: a BFS over the plate from the room to the nearest seen cell,
+  clearing the path and adding a door where it crosses the ring.
+
+The fixture caps grew one more in the same pass. `meetingTable` was the last run in `CorpRooms`
+still written `tw = room.w - 4` with no cap: measured over 800 meeting rooms, **min 12 cells,
+median 32, max 64, and 783 of 800 had an axis of five or more.** At `CityConfig.CELL 4` and a 3 m
+storey a cell is 2 m, so the MEDIAN boardroom table was **16 m x 8 m**. `TABLE_W_MAX 4` /
+`TABLE_H_MAX 3`, centred, long axis matched to the room's.
+
+## Every room is dealt a kind, and the filler bucket is empty
+
+"NO EMPTY ROOMS" — and, on being asked: "all rooms should get a kind, wtf?"
+
+Nothing was literally bare (`exec` and `open` had been fixed the pass before, 382 → 0). The
+complaint is the FILLER: a floor carved 29 rooms, the quota named ten of them, and the other 19
+were `room-open` — one template, one floor, a median 16% of its cells furnished. Half the tower was
+a sparse duplicate of one room.
+
+**Six new kinds, and each borrows an EXISTING floor surface.** `CorpModel.surfOf` knows eight and
+there are no more, so a kind that reuses one costs no tile id, no texture, no material and no draw
+call — what makes it a different room is its furniture list and its fixture, which is what a reader
+in the room actually sees. Solo office → `CUBICLE`, break room → `KITCHEN`, copy room → `OPEN`,
+archive and security → `SERVER`, reception → `EXEC`. The canteen is the break room where the carve
+gave it space for a second run of tables, not a kind of its own.
+
+**Never plain `CARPET`.** That surface is what `CorpLamps.corridors()` reads as circulation, and a
+room wearing it gets ceiling panels hung inside it — which is the boardroom's whole bug, one
+section up.
+
+A kind is four edits and the shape `OfficeBlock` already dictates: a `ROOM_*`/`ROLE_*` pair, a
+`case` in `fill`'s dispatch, an entry in `isRoom` (miss it and `--stats` and `quotaMet` cannot see
+the kind), and a `CorpRooms` template.
+
+**Then the order, because `Quota.deal`'s second pass spends what the mins left over in
+DECLARATION order, each demand to its max.** That order is the mix. The six new demands are
+**min 0 on purpose** except the break room the user asked for by name: seven demands above already
+hold mins against a supply of 14.4 rooms a floor at 5 x 5, and the eighth cost two towers in 2,000
+a "quota short" (the break room dropped to 4 x 4 instead). A min is for the thing a floor MUST
+have, and a floor does not have to have an archive on it. What puts one there is the max.
+
+`ROOM_OPEN` stops being the leftover bucket and becomes a dealt kind with `max: 3` and `fit:
+biggest` — an open-plan floor is a real corporate thing and three of them is one; 19 is what
+happens when a quota runs out of names. `ROOM_SOLO` is declared LAST with `max: MANY` at 3 x 3, so
+it takes everything else, and since every room the carve produces clears 3 x 3 the filler branch is
+**unreachable**.
+
+Measured over 300 seeds: solo 8.74, copy 3, exec 2.99, cubicle 2, meeting 1.99, break 1.88, open
+1.79, archive 1.77, kitchen/toilet/servers 1, reception 0.99, security 0.96 — **13 kinds summing to
+the 29.12 rooms a floor**. Proved by dealing under a distinct filler name: **0 filler rooms in
+2,000 seeds.** And replayed for the bare-room check that found the 382 exec offices last pass:
+**0 rooms with no furniture in them, in any of the 13 kinds, over 400 seeds.**

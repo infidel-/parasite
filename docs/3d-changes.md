@@ -562,3 +562,182 @@ before, every one of them an exec office — 0 after.** `nodes/table` 4.34 → *
 identical twice; facility digest unchanged.
 
 Verdict: **KEEP.**
+
+## The outside and the inside were lit by the same nothing (third defect pass, phase 1)
+
+Reported: "outside lighting is the same as indoor".
+
+`CorpStreet` and `CorpFacade` are `MeshBasicMaterial` — the authored albedo IS the rendered pixel,
+so the world outside the glass had no directional term, no lit side and no shade side. The interior
+is a lambert flooded by `IndoorMask`. Both landed near full value and read the same.
+
+And the largest surface in the frame **was not even dimmed**: `STREET_DIM 0.62` is applied to the
+road and `CAR_DIM 0.78` to the cars, but `CorpFacade`'s material was built with no `color:` field
+at all, so the nineteen storeys immediately outside the window rendered at **1.0 albedo, brighter
+than the office**.
+
+Three pieces. `CorpStyle.FACADE_DIM 0.74`, fitted between the street's 0.62 and 1.0 because the
+facade is nearer. A `CorpStyle.SUN` record and `CorpStreet.shade(b, ndl, mul)`, which pads
+`MeshBuf.col` up to `b.pos.length` after each emit: `FacilityGeom.geom` uploads that channel when
+the lengths match and `add()` derives `vertexColors` from the same test, so a Lambert term against
+the scene's own moon `(-1, 2, 1.5)` costs **no draw call, no material and no signature churn** on
+`face`/`cap`, which are already at the arg count the style guide says to convert at. `gain 0.606`
+is fitted so a roof lands at exactly 1.0. And `CorpStyle.INDOOR`, a corp preset of
+`IndoorMaskOpts` — `CorpArea` and `CorpWarm` were passing `FacilityStyle.INDOOR` verbatim and the
+office now reads fluorescent against the street's moonlight instead of sharing the compound's
+numbers.
+
+**The first A/B was worthless and is the lesson.** The "before" shot carried the user's probe
+overlay and the "after" was the main menu; mean luma "rose" 17.33 → 29.43 and meant nothing. Redone
+in place, flipping `vertexColors` and the facade colour on the 23 meshes that carry a `color`
+attribute with the camera pinned.
+
+`calls` **81 → 81** at the pinned pose, triangle counts identical.
+
+Verdict: **KEEP.**
+
+## A flat shadow projection is not a shadow, it is a stain (third defect pass, phase 2)
+
+Reported: "no shadows from buildings outside".
+
+The intended build was the obvious one: project each street building's footprint along the moon by
+its own height, `offset = h * dir.xz / dir.y`, and mark the ground cells it lands on. Built, and
+**it marked 6,021 of 7,115 cells — 85% of the street**. A tower at `STREET_MAX_H 90` throws a
+45-cell smear, every building overlaps every neighbour, and the result is a uniformly darker city.
+
+Two screenshots then killed the feature as specified: **from the 20th floor the ground is barely
+visible at all.** What the window actually shows is ROOFS. So the shadow is a HORIZON test on a
+heightfield, not a projection onto the floor: `heights()` builds the folded height grid once,
+`shadowAt(hgt, col, row, y)` walks back along the moon direction and asks whether anything upwind
+stands high enough to occlude that point at that height, and `shadowMul` turns the answer into
+`1 - v * (1 - SUN.shadow)` with `shadow 0.18`. Roof caps are emitted per cell instead of one cap
+per building so a roof can be half in shade.
+
+Same `col` channel phase 1 opened, so **zero draw calls and zero per-frame work** — the sun does
+not move in this area and the buildings are boxes on a grid, so the whole thing is static. Cost is
+one array at build.
+
+`CorpStreet`'s "what is deliberately not down there" paragraph still says *no roof shadows*: that
+is the parapet contact shadow and a different thing.
+
+`__corp().street` gained a `shadow` count. `calls` unchanged.
+
+Verdict: **KEEP — but as a horizon test. The projection it was specified as is a stain.**
+
+## A fragment shader cannot blur what is behind it, and a mip bias barely can (third defect pass, phase 3)
+
+Reported: "plus some kind of blur layer so that it does not look too samey", and asked directly:
+*"can we put a large quad with a fragment shader on it?"*
+
+**No — not for a blur, and the reason is worth keeping.** A fragment shader can only read what is
+bound to it, and the frame is not a texture until something copies it, which is a pass by
+definition. A world-space quad hung outside the parapet can only ADD haze, and `scene.fog` (linear,
+`90 … 240`, `SKY 0x0a0e16`) already does that per-fragment for free.
+
+So: a distance-driven texture LOD bias folded into the street and facade materials by
+`onBeforeCompile`, `<map_fragment>` replaced (not edited — the chunk is not resolved yet at that
+point) with `texture2D(map, vMapUv, smoothstep(BLUR.near, BLUR.far, vStreetDist) * BLUR.max)`. Own
+`customProgramCacheKey` per material or three materials share one patched program.
+
+**THE WHOLE STREET WENT BLACK, and the diagnosis route is the entry.**
+`renderer.info.programs.filter(p => p.diagnostics)[0].diagnostics.fragmentShader.log` said
+`ERROR: 0:345: 'smoothstep' : no matching overloaded function found`. Haxe prints `110.0` as
+`"110"`, GLSL read `smoothstep(int, int, float)`, and the material compiled to black. A `glsl()`
+literal formatter fixes it and anything else that interpolates a Float into a shader needs one.
+
+**And then the honest measurement: the bias does almost nothing at this range.** Bias 2.5 moved
+far-roof high-frequency energy **6.109 → 6.060, −1%**. Forced to 8 everywhere it moved a NEAR roof
+deck's interior 3.401 → 2.332, −31% — i.e. it works, on things close enough to have texels left.
+At 110-230 units the mips are already exhausted.
+
+What actually answered "samey" is `CorpStyle.TILE_VARY 0.3`: the city is mirror-tiled 3 x 3, so
+what repeats is the same skyline four times, and breaking the mirror breaks the read. The bias
+stays because it is free.
+
+Verdict: **KEEP both; the bias is nearly worthless alone and the mirror break is the fix.**
+
+## "ai art" NEVER MEANT GENERATED ART (third defect pass, phase 4)
+
+Reported, for the third time and angrily: "i fucking told you twice already to use ai icon art for
+fake ai, again you defy me."
+
+**The misreading is the entry.** In this project `AI` is the NPC class — `src/ai/AI.hx`,
+`AI.hx:219` *"select AI icon data before entity creation"*, `Images.getRandomCivilianAI`. The 2D
+corp view drew its background crowd from those very sheets: `AreaView.paintFakeHost`, commit
+`ab37666`, `ix: Std.random(10), iy: Std.random(isMale ? 8 : 6)` off `images.male`/`images.female` at
+`globalAlpha 0.5`. `CorpCrowd.hx:36-40` still described itself as *"the direct 3D successor to the
+2D `_FakeHost` / `paintFakeHost` code"*, and `CorpCrowd.hx:61-64` carried a `ponytail:` note naming
+the exact fix before this pass began. So "replace white dots with random ai art" meant **draw the
+fake crowd from the civilian icon atlas**, and "Cars only" on the earlier generate-or-not question
+was correct and complete. Reading it as withdrawing the pedestrians was the error, and no image was
+generated in this pass.
+
+The walkers stop being `Textures.makeGlowGradient()` quads laid flat and become upright civilian
+icons leaned back by `Sprites.TILT` (0.6 rad), which is both "random ai art" and "slanted so we can
+see it better". `Images.male` and `female` are both 640 x 1024 (10 x 16 cells of
+`Const.TILE_SIZE_CLEAN` 64), drawn into ONE canvas at build, so both sexes ride **one instanced
+batch**. The cell is dealt from `Images.civiliansMale` (74) / `civiliansFemale` (60) — the same
+tables `AI.createIcon` uses, so a walker is literally a random civilian. The per-instance
+`instanceUV` vec4 and the `<uv_vertex>` rewrite were already there for the cars. `WALK_H 3.2`, and
+the quad centre lifts by `h2*cos(TILT)` and back by `h2*sin(TILT)` so the drawn feet land on
+`CROWD_Y`. The material stops being additive: `alphaTest`, `WALK_DIM 0.92`.
+
+`calls` unchanged — one batch in, one batch out.
+
+Verdict: **KEEP.**
+
+## A BOUNDING BOX IS NOT A SILHOUETTE (third defect pass, phase 5)
+
+Reported: "28,43 — when the elevator is on the south side we can clearly see blackness instead of
+the city streets adjacent to our building".
+
+`plateBox()` keyed the street's hole to `model.structures[0]`'s **rect**, and that rect comes from
+`FacilityModel.findStructures`, a flood fill — which swallows the lift car, because `Surf.LIFT` is
+inside `isIndoor`'s range and the car is 4-connected to the plate through its door. `ElevatorBlock`
+stands that car OUTSIDE the wall ring, so the bbox grows 4 cells across the WHOLE of whichever wall
+the lift landed on. Measured on a 75 x 60 area: the empty band is **4 units west, 4 east, 6 north
+and 22 on the lift side**, running the full 224-unit width. What shows through is `CorpStyle.SKY` —
+there is no backdrop under the city.
+
+`PlateBox` gained a `covers(x0, x1, z0, z1)` closure, set in `plateBox()` over the model, mapping a
+street cell's world rect to plate cells and asking the same pair `CorpFacade` asks —
+`FacilityModel.isIndoor(m, c, r) || FacilityGeom.carries(m, c, r)`. That is the tower's REAL
+silhouette, so the lift core keeps its own hole wherever the generator put it and the reentrant
+corners resolve. A closure on the typedef rather than handing `CorpStreet` the whole `Facility`:
+the street builder deliberately knows nothing about the plate beyond its box.
+
+The uniform `- CELL` margin drops to `CELL * 0.25` — it exists so a ground quad does not z-fight
+the facade's drop, the drop is a vertical plane, and a quarter cell clears it.
+
+`CorpCrowd.lanes` reads the same `ring()`, so walkers and cars fill the recovered band for free.
+
+Verdict: **KEEP.**
+
+## One wrong tile id gave a boardroom two walls, two floors and a repainted table (third defect pass, phase 6)
+
+Reported as two separate defects: "meeting rooms have two wall textures" with two probes 4 world
+units apart (`wall-office.png` / `wall-meeting.png`), and "two floor textures" with two probes at
+`y 0.04`.
+
+`CorpRooms.hx:284` handed `decorateWalls` a `bigFloorID` of `TILE_FLOOR_CARPET + 16` where every
+sibling template hands **its own floor's unwalkable twin** (exec MARBLE1, kitchen WOOD1, cubicle
+CUBICLE, servers SERVER, toilet MARBLE2, open WOOD2). `meeting` was the only one wrong, and that one
+id produced four faults that looked unrelated:
+
+- `decorateWalls` stamps it on alternating cells of the room's `x1`/`x2` columns, `CorpModel.surfOf`
+  reads them back as `Surf.CARPET`, and `wallInto[CARPET]` is the catch-all `WALL_OFFICE` — so the
+  wall run alternated. **The two probed faces are one `CityConfig.CELL` apart: adjacent cells of
+  one run**, which is the mechanism exactly.
+- `FacilityModel.themeRooms` takes the LAST themed cell in row-major order — the `(x2,y2)` corner —
+  and `decorateWalls` always dresses a corner, so at `smallChance 20` that corner carried the bad id
+  **80% of the time** and the whole boardroom table slab finalised as CARPET.
+- `CorpLamps.corridors()` is gated on `Surf.CARPET`, so it believed those cells were circulation,
+  hung a ceiling panel over them and stamped a FULL-CELL light pool on them, overlapping the room's
+  own `POOL_INSET 1.6` pool additively. **That is the "two floor textures":** both probes sit at
+  `GLOW_Y 0.04` with uv `0,0/1,0/1,1` = `CorpLamps.quad`'s literal, one material, no map. Nothing at
+  y 0.04 is a floor at all.
+
+The fix is one id. Verified with 0 stray carpet cells inside boardrooms across the oracle, and the
+other five templates audited against their own twins in the same pass.
+
+Verdict: **KEEP — and the lesson is that four unrelated-looking symptoms can be one argument.**
