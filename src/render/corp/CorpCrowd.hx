@@ -86,6 +86,11 @@ class CorpCrowd
   // and the people's, off the two civilian sheets — see `people`
   var walkUV:js.lib.Float32Array;
   var walkAttr:InstancedBufferAttribute;
+  // and one opacity per instance for each batch, which is how nobody blinks — see `patch`
+  var carFade:js.lib.Float32Array;
+  var carFadeAttr:InstancedBufferAttribute;
+  var walkFade:js.lib.Float32Array;
+  var walkFadeAttr:InstancedBufferAttribute;
   var images:Images;
   // seconds since the area was built, off RAW dtMs — see the class header
   var clock = 0.0;
@@ -99,6 +104,8 @@ class CorpCrowd
     new Euler(-render.particles.Sprites.TILT, 0, 0));
   var pos = new Vector3();
   var scl = new Vector3();
+  // the headlights' own per-instance dimmer, so a fading car takes its lamps with it — see `lights`
+  var lightCol = new Color();
   // the four headings a car can take, in FacilityGeom.face's numbering: 0 = -z, 1 = +z, 2 = -x,
   // 3 = +x. Built once, because a car only ever points down its lane
   static var HX = [0.0, 0.0, -1.0, 1.0];
@@ -184,17 +191,35 @@ class CorpCrowd
           var rev = ((h >>> 7) & 1) == 1;
           var v = CorpStyle.WALK_SPEED *
             (1 + (((h >>> 9) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CROWD_SPEED_VAR);
-          var s = (((h >>> 19) % 1000) / 1000 * ln.len + clock * v) % ln.len;
+          // THE LAP IS THE EXTRA TERM AND IT COSTS NOTHING. `raw` is the distance walked since
+          // the area was built; its quotient by the lane length is which time round this is and
+          // its remainder is where. Still closed form in `t`, so a pause changes nothing
+          var raw = ((h >>> 19) % 1000) / 1000 * ln.len + clock * v;
+          var lap = Std.int(raw / ln.len);
+          var s = raw % ln.len;
           if (rev)
             s = ln.len - s;
           pos.set(ln.x0 + ln.dx * s, CorpStyle.CROWD_Y + up, ln.z0 + ln.dz * s - back);
           scl.set(CorpStyle.WALK_H, CorpStyle.WALK_H, 1);
           tmp.compose(pos, lean, scl);
           walkMesh.setMatrixAt(i, tmp);
-          cellUV(walkUV, i, h);
+          // A NEW LAP IS A NEW PERSON, which is the other half of "it should have random art": the
+          // lane, the direction and the speed stay hashed off `h` and so stay this walker's for
+          // ever, and only the icon re-rolls. 134 civilians, so a lane end turns the street over
+          cellUV(walkUV, i, FacilityModel.mix(h ^ (lap * 374761393)));
+          walkFade[i] = fade(s, ln.len, CorpStyle.WALK_FADE);
         }
       walkMesh.instanceMatrix.needsUpdate = true;
       walkAttr.needsUpdate = true;
+      walkFadeAttr.needsUpdate = true;
+    }
+
+// how visible an agent is at `s` along a lane of `len`: full in the middle of the run, out at both
+// of its ends. See CorpStyle.WALK_FADE for why this exists at all
+  static inline function fade(s:Float, len:Float, over:Float):Float
+    {
+      var d = (s < len - s ? s : len - s);
+      return (d >= over ? 1.0 : d / over);
     }
 
 // which civilian icon walker `i` wears, as a uv rect into the stacked atlas.
@@ -246,6 +271,9 @@ class CorpCrowd
           var s = (ln.len * ((h >>> 19) % slots) / slots + clock * v) % ln.len;
           if (ln.dir < 0)
             s = ln.len - s;
+          // and the same fade the walkers take, for the same modulo — a car that pops into being
+          // at the end of a road is the same defect and this is the same two lines
+          carFade[i] = fade(s, ln.len, CorpStyle.CAR_FADE);
           var hx = ln.dx * ln.dir;
           var hz = ln.dz * ln.dir;
           pos.set(ln.x0 + ln.dx * s, CorpStyle.CROWD_Y, ln.z0 + ln.dz * s);
@@ -271,11 +299,47 @@ class CorpCrowd
               scl.set(CorpStyle.CAR_LIGHT_SZ, CorpStyle.CAR_LIGHT_SZ, 1);
               tmp.compose(pos, flat, scl);
               lightMesh.setMatrixAt(i * 2 + k, tmp);
+              lightMesh.setColorAt(i * 2 + k, lightCol.setScalar(carFade[i]));
             }
         }
       carMesh.instanceMatrix.needsUpdate = true;
       carAttr.needsUpdate = true;
+      carFadeAttr.needsUpdate = true;
       lightMesh.instanceMatrix.needsUpdate = true;
+      lightMesh.instanceColor.needsUpdate = true;
+    }
+
+// the two shader patches every crowd batch takes: the per-instance ATLAS WINDOW and the
+// per-instance FADE.
+//
+// BOTH LINES ARE render.decals.DecalBatch's, cloned rather than shared — that class is a POOL with
+// its own capacity, atlas and alpha channel and owns none of this. What is borrowed is an
+// `instanceUV` vec4 plus the `vMapUv` rewrite, which has to land AFTER <uv_vertex> because that is
+// what assigns it, and an `instanceFade` float multiplied into the final alpha. Without the first
+// four cars would be four materials and four draw calls; without the second nobody could fade.
+//
+// THE FADE LANDS AFTER <opaque_fragment>, i.e. after alphaTest, and that is the point: alphaTest
+// reads the ART's own alpha, so the cut-out silhouette stays exactly as crisp at 5% opacity as at
+// 100% and only the whole sprite dims. A fade folded into diffuseColor.a instead would eat the
+// figure edge first.
+//
+// three keys its program cache on the base params and NOT on onBeforeCompile, so without a key of
+// its own a patched program could be handed to any other plain mapped lambert
+  static function patch(mat:Dynamic, key:String):Void
+    {
+      mat.onBeforeCompile = function(shader:Dynamic)
+        {
+          shader.vertexShader = 'attribute vec4 instanceUV;\nattribute float instanceFade;\n' +
+            'varying float vCrowdFade;\n' +
+            StringTools.replace(shader.vertexShader, 'void main() {',
+              'void main() {\n  vCrowdFade = instanceFade;');
+          shader.vertexShader = StringTools.replace(shader.vertexShader, '#include <uv_vertex>',
+            '#include <uv_vertex>\n  vMapUv = uv * instanceUV.zw + instanceUV.xy;');
+          shader.fragmentShader = 'varying float vCrowdFade;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <opaque_fragment>',
+              '#include <opaque_fragment>\n  gl_FragColor.a *= vCrowdFade;');
+        };
+      untyped mat.customProgramCacheKey = function() return key;
     }
 
 // the headlight batch: one additive glow quad per lamp, lying on the road.
@@ -305,6 +369,13 @@ class CorpCrowd
       });
       var mesh = new InstancedMesh(new PlaneGeometry(1, 1), mat, count);
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
+      // the per-instance colour is the LAMP'S OWN DIMMER and it is allocated HERE rather than on
+      // the first setColorAt in `drive`: `instanceColor` existing is what compiles
+      // USE_INSTANCING_COLOR into the program, so a warm scene that never dimmed anything would
+      // cache a different program from the one the real street then asks for
+      for (i in 0...count)
+        mesh.setColorAt(i, lightCol.setScalar(1.0));
+      mesh.instanceColor.setUsage(untyped THREE.DynamicDrawUsage);
       untyped mesh.frustumCulled = false;
       mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
       group.add(mesh);
@@ -332,23 +403,26 @@ class CorpCrowd
       carUV = new js.lib.Float32Array(count * 4);
       carAttr = new InstancedBufferAttribute(carUV, 4);
       untyped carAttr.setUsage(THREE.DynamicDrawUsage);
+      carFade = new js.lib.Float32Array(count);
+      carFadeAttr = new InstancedBufferAttribute(carFade, 1);
+      untyped carFadeAttr.setUsage(THREE.DynamicDrawUsage);
       var geo:Dynamic = new PlaneGeometry(1, 1);
       geo.setAttribute('instanceUV', carAttr);
+      geo.setAttribute('instanceFade', carFadeAttr);
       var mat:Dynamic = new MeshLambertMaterial({
         map: Textures.loadTexture(CorpStyle.TRAFFIC, 'sprite'),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.CAR_DIM),
         alphaTest: 0.5,
+        transparent: true,
+        // and ONE PASS, which is worth a draw call per batch: three renders a TRANSPARENT
+        // DoubleSide material as two passes (back faces, then front) unless this is set, and both
+        // crowd batches went transparent the day they learned to fade. MEASURED: 85 -> 87 calls
+        // without it, 85 -> 85 with. render.decals.DecalBatch carries the same flag for the same
+        // reason (513 -> 458 citywide)
+        forceSinglePass: true,
         side: untyped THREE.DoubleSide,
       });
-      mat.onBeforeCompile = function(shader:Dynamic)
-        {
-          shader.vertexShader = 'attribute vec4 instanceUV;\n' +
-            StringTools.replace(shader.vertexShader, '#include <uv_vertex>',
-              '#include <uv_vertex>\n  vMapUv = uv * instanceUV.zw + instanceUV.xy;');
-        };
-      // three keys its program cache on the base params and NOT on onBeforeCompile, so without an
-      // own key this patched program could be handed to any other plain mapped basic
-      untyped mat.customProgramCacheKey = function() return 'corpCarUV';
+      patch(mat, 'corpCarUV');
       var mesh = new InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       untyped mesh.frustumCulled = false;
@@ -393,21 +467,26 @@ class CorpCrowd
       walkUV = new js.lib.Float32Array(count * 4);
       walkAttr = new InstancedBufferAttribute(walkUV, 4);
       untyped walkAttr.setUsage(THREE.DynamicDrawUsage);
+      walkFade = new js.lib.Float32Array(count);
+      walkFadeAttr = new InstancedBufferAttribute(walkFade, 1);
+      untyped walkFadeAttr.setUsage(THREE.DynamicDrawUsage);
       var geo:Dynamic = new PlaneGeometry(1, 1);
       geo.setAttribute('instanceUV', walkAttr);
+      geo.setAttribute('instanceFade', walkFadeAttr);
       var mat:Dynamic = new MeshLambertMaterial({
         map: atlas(),
         color: new Color(0xffffff).multiplyScalar(CorpStyle.WALK_DIM),
         alphaTest: 0.5,
+        transparent: true,
+        // and ONE PASS, which is worth a draw call per batch: three renders a TRANSPARENT
+        // DoubleSide material as two passes (back faces, then front) unless this is set, and both
+        // crowd batches went transparent the day they learned to fade. MEASURED: 85 -> 87 calls
+        // without it, 85 -> 85 with. render.decals.DecalBatch carries the same flag for the same
+        // reason (513 -> 458 citywide)
+        forceSinglePass: true,
         side: untyped THREE.DoubleSide,
       });
-      mat.onBeforeCompile = function(shader:Dynamic)
-        {
-          shader.vertexShader = 'attribute vec4 instanceUV;\n' +
-            StringTools.replace(shader.vertexShader, '#include <uv_vertex>',
-              '#include <uv_vertex>\n  vMapUv = uv * instanceUV.zw + instanceUV.xy;');
-        };
-      untyped mat.customProgramCacheKey = function() return 'corpWalkUV';
+      patch(mat, 'corpWalkUV');
       var mesh = new InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(untyped THREE.DynamicDrawUsage);
       // three frustum-culls an InstancedMesh against the geometry's own bounding sphere, which for

@@ -684,6 +684,19 @@ class CorpStyle
   // gradient's own falloff is the whole of the shape
   public static inline var CAR_LIGHT_MUL = 0.8;
 
+  // HOW FAR FROM ITS LANE'S END AN AGENT IS STILL FADING, world units.
+  //
+  // A CLOSED-FORM CROWD BLINKS AT THE MODULO and there is nowhere else it can blink: position is
+  // `(phase * len + clock * v) % len`, so the wrap teleports the agent from one end of its lane to
+  // the other in one frame. Reported from the game as people popping in and out of existence.
+  // Fading both ends of the run is the whole fix, and it costs one float per instance.
+  //
+  // Two numbers because the two families differ 7x in speed: 8 units is ~3s of walking and 10 is
+  // ~0.5s of driving, which is what a car wants — any longer and a lane shorter than 2 * FADE
+  // never reaches full opacity at all (LANE_MIN 6 cells = 24 units, so the ceiling here is 12)
+  public static inline var WALK_FADE = 8.0;
+  public static inline var CAR_FADE = 10.0;
+
   // the shortest straight run of cells that is worth walking or driving down
   public static inline var LANE_MIN = 6;
 

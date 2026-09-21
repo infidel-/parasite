@@ -108,6 +108,7 @@ package three;
   public function copy(c:Color):Color;                   // copy another color's channels in place
   public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
   public function setHex(hex:Int):Color;                 // set channels from 0xRRGGBB (sRGB-decoded)
+  public function setScalar(v:Float):Color;              // set all three channels to one LINEAR value
   public var r:Float;                                    // LINEAR red 0..1 (setHex decodes sRGB)
   public var g:Float;                                    // linear green
   public var b:Float;                                    // linear blue
@@ -364,6 +365,10 @@ typedef RendererInfo = {
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
   public function getMatrixAt(i:Int, m:Matrix4):Void; // reads one instance's transform back out
+  // per-instance colour, multiplied into the material's own. NULL until the first setColorAt, and
+  // its existence is what compiles USE_INSTANCING_COLOR into the program
+  public var instanceColor:InstancedBufferAttribute;
+  public function setColorAt(i:Int, c:Color):Void;
   public function dispose():Void; // release GPU buffers when the mesh is thrown away
 }
 @:native("THREE.InstancedBufferAttribute") extern class InstancedBufferAttribute {
