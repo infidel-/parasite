@@ -598,6 +598,9 @@ Verdict: **KEEP.**
 
 ## A flat shadow projection is not a shadow, it is a stain (third defect pass, phase 2)
 
+> SUPERSEDED by The outside had a real moon in the scene all along and opted out of it (fourth
+> defect pass, phase 1) — the heightfield march and its `col` channel are deleted.
+
 Reported: "no shadows from buildings outside".
 
 The intended build was the obvious one: project each street building's footprint along the moon by
@@ -625,6 +628,9 @@ is the parapet contact shadow and a different thing.
 Verdict: **KEEP — but as a horizon test. The projection it was specified as is a stain.**
 
 ## A fragment shader cannot blur what is behind it, and a mip bias barely can (third defect pass, phase 3)
+
+> SUPERSEDED by A blur needs a pass, and the composer was already there (fourth defect pass,
+> phase 2) — the bias is deleted. `TILE_VARY 0.3` and the `glsl()` formatter stand.
 
 Reported: "plus some kind of blur layer so that it does not look too samey", and asked directly:
 *"can we put a large quad with a fragment shader on it?"*
@@ -741,3 +747,182 @@ The fix is one id. Verified with 0 stray carpet cells inside boardrooms across t
 other five templates audited against their own twins in the same pass.
 
 Verdict: **KEEP — and the lesson is that four unrelated-looking symptoms can be one argument.**
+
+## The outside had a real moon in the scene all along and opted out of it (fourth defect pass, phase 1)
+
+Reported: "omg, building shadows are shit, do a normal shadowing thing", "fake street ai looks too
+bright", "can you reduce overall fake street lighting?".
+
+`renderer.shadowMap.enabled` has been true since `SceneSetup.hx:66` and the corp rig has carried a
+casting `DirectionalLight(0x8294c0, 1.6)` the whole time. Every street and facade mesh set
+`castShadow = false; receiveShadow = false` and was `MeshBasicMaterial`, which ignores lights
+outright — so the previous pass wrote a 300 x 300 heightfield horizon march to fake what the scene
+already had. All of it comes out: `heights`, `shadowAt`, `shadowMul`, `shade`, `ndl`, `ndlDir`,
+`CorpStyle.SUN`, fifteen call sites and the `col` channel they fed.
+
+**The plan's layer split was impossible and the reason is worth keeping.** three tests a light's
+layers against the CAMERA's in `WebGLRenderer.projectObject`, at the point it COLLECTS lights — so
+a light is in the whole render or out of it, and `render/world/IndoorMask.hx`'s header already
+carries that obituary. What removes the conflict with the office moon's player-following 90-unit
+box instead is the shadow camera's NEAR PLANE: `near = distance + STREET_Y / dir.y + clear` clips
+the tower out of the street light's depth pass geometrically. `STREET_SUN` is its own
+`DirectionalLight`, `halfExtent 250`, `mapSize 2048` = **0.24 world units per texel**, centred on
+the plate and frozen — `autoUpdate = false` after one render, so zero per-frame shadow cost.
+
+**Freezing it cost two failed attempts and one control test.** `settle()` drops every caster once
+the map is rendered; keyed on a tick counter it ran too early at 2 and still too early at 90, which
+proved it was not timing at all. three allocates the render target INSIDE the shadow pass and
+AFTER its own `autoUpdate === false && needsUpdate === false` early-out, so **`sun.shadow.map != null`
+is the proof the pass ran** and is the condition. A 4% pixel diff against a re-render then looked
+like an incomplete map and was not — the re-render re-enabled the 15 street meshes and not the
+FACADE casters, so the diff was the tower's own shadow; an 80 x 80 slab dropped in with
+`castShadow` on changed 0.95% of the frame.
+
+Draw calls went **82 → 96** the moment the street cast: the office moon's box reaches 353 units of
+light travel and the street sits at 353, so every merged street mesh entered the office depth pass
+every frame. Tightening `MOON_SHADOW.far` culls nothing (a city-wide merged mesh has a huge
+bounding sphere). The caster register plus `settle()` is what fixes it — **79 calls** at the pinned
+pose against an 82 baseline.
+
+Dims refitted under real light, by sampling and not by eye: `STREET_DIM` 0.62 → **0.45**,
+`FACADE_DIM` 0.74 → **0.62**, `CAR_DIM` 0.78 → **0.60**, `WALK_DIM` 0.92 → **0.55**. The walkers
+were the brightest thing outside and are what "too bright" named.
+
+Verdict: **KEEP. Check what the scene already has before building a substitute for it.**
+
+## A blur needs a pass, and the composer was already there (fourth defect pass, phase 2)
+
+Reported: "screw the mip thing, want a simple quad with blur shader or something".
+
+The previous pass argued that a fragment shader cannot blur what is behind it — true, and it then
+settled for a distance-driven mip bias that measured **−1%**. Both halves were wrong about the
+cost: `EffectComposer` is already in the frame (`RenderPass → GTAOPass → Shockwave →
+UnrealBloomPass → OutputPass`, one `composer.render()` per frame) and `Shockwave` is a hand-written
+`ShaderPass` in this repo to copy from. A blur was one pass away the whole time.
+
+`render/StreetBlur.hx` is that pass, inserted after the render and before bloom so the softened
+city does not get sharp bloom re-added on top of it. `RADIUS_PX 5.0`, a 12-tap two-ring kernel, and
+**the mask rides the alpha channel**: `CorpStreet.blur` keeps its name and its `onBeforeCompile`
+but now writes `gl_FragColor.a = 1.0 - smoothstep(BLUR.near, BLUR.far, -mvPosition.z)` after
+`<dithering_fragment>`, so far street fragments arrive with low alpha and the pass reads
+`m = 1.0 - c.a`. No depth texture, no camera near/far linearisation, no second binding — and each
+tap is weighted by its OWN alpha, so the near city does not bleed into the far one. Early-out at
+`m <= 0.002` leaves the office and the near street untouched by construction.
+
+`BLUR` loses its `max` field and keeps `{ near: 110.0, far: 230.0 }`.
+
+Measured on far-region high-frequency energy, the same statistic that convicted the bias:
+**−15.8%** against the bias's −1%. `calls` +1 (the fullscreen quad), and the pinned pose lands at
+79-81 against an 85 budget.
+
+Verdict: **KEEP — and the mip bias is deleted, not kept alongside.**
+
+## A strip texture has an axis, and a glazed slab opens a ledge under every window run (fourth defect pass, phase 3)
+
+Reported: "coping u,v should be turned 90", with probes; and "still a hole for polygon (no quad at
+all) 90 deg to these ones near window", with two more.
+
+**The coping.** `FacilityGeom.cap` hard-wires `u = x/t, v = z/t`, and `art/textures.json` calls
+`city/coping` a "straight-on strip … seamless horizontal tile" — a directional texture. On the two
+z-running parapet hands the probes read **Δu 0.15 against Δv 8.7**: the strip ran across the 0.6
+width instead of along the rim. `cap` gains an optional `swap` flag emitting `u = z/t, v = x/t`,
+and `CorpStreet.roof` passes `i >= 2`. One new argument with a false default, so every other caller
+is untouched.
+
+**The hole.** Both probed faces are correct and present. A glazed cell's slab insets 1.5 where a
+solid one insets 1.0, so the wall above steps **0.5** in from the `PARAPET_INSET` ring plane — and
+nothing capped the horizontal slot that step opens at `y = WALL_BASE`, running the whole length of
+every window run. Corp runs no `FacilityGround` pass, so there was no surface out there at all.
+`FacilityGeom.band` already solves the identical step at the parapet with a soffit capDown;
+`CorpFacade.drop` takes the same cap, per direction, inside the loop that already knows both rects.
+
+**And the same four lines fixed a second thing visible from the same spot.** `FacilityGeom`'s
+window pass asserts that "two runs can never abut and the cell past each end is never glazing",
+which `FacilityModel` makes false on corp — it splits a corp run into abutting 2/3-cell sub-runs.
+So `jamb` fired mid-glazing and stood two coplanar inward-facing `cap-alu` quads where there is no
+masonry. `jamb` gains `loEnd`/`hiEnd`, and the caller asks the real question: is the cell past this
+end actually a WINDOW.
+
+`calls` unchanged — one extra quad per glazed run, merged into a buffer that already exists.
+
+Verdict: **KEEP. A tiling strip has an axis and `cap` had no way to say so.**
+
+## `dir ^ 1` skipped the face you look at, and the tactical lattice hatched the void (fourth defect pass, phase 4)
+
+Reported: "desk missing polygons" with a probe, and "do not paint giant 'unwalkable' hashing over
+outside street".
+
+**The box.** `CorpDeco.box` skipped face `dir ^ 1`. `dir` points TOWARD the masonry and the box
+grows away from it, so `dir ^ 1` is the EXPOSED front and `dir` is the buried back — every casework
+piece in the tower (cabinet, fridge, vending machine) was missing the one face the player looks at,
+and `isEnd = (f != dir)` then painted the drawer-course `desk-front.png` on the buried one.
+`CorpDeco.board` five lines below and `FacilityDetail.halo` both already had it the right way
+round. The fix is two characters plus the `isEnd` term, and the value of the entry is that a
+bounding box cannot tell you which way it is facing — only the code that chose `dir` can.
+
+**The hatch.** `TacticalGrid` is shipped-on and its only exclusion was `isCity() && TILE_BUILDING`.
+A corp area is not a city and its void is `TILE_ALLEY_UNWALKABLE`, so every cell outside the plate
+out to the 16-cell radius took the dashed perimeter and seven diagonal stripes, at `y = 0.06` and
+114 units above the street — painted on the sky. The exclusion now covers the three outdoor void
+ids (alley / road / walkway unwalkable), which is general rather than corp-special: an interior
+wall, a desk and a rack are all still hatched.
+
+Verdict: **KEEP both.**
+
+## A corp partition is a stud wall, and its doorway is an opening and not a tunnel (fourth defect pass, phase 5)
+
+Reported: "door frame walls are too large", with a probe reading a jamb 2.0 deep and 4.2 tall.
+
+The depth is `FacilityStyle.WALL_T = CityConfig.CELL * 0.5` — the compound's masonry thickness,
+reused verbatim by the tower. Nothing narrows the door: the opening is already the full 4.0 cell
+and the leaves already fill it. What reads as "too large" is a **1-real-metre reveal on each
+side**, which is right for a bunker and wrong for an office partition.
+
+Corp takes its own interior thickness. The value rides the shell descriptor `CorpStyle.shell()`
+already passes — `wallIn` on `ShellOpts` and on `Facility`, defaulting to `FacilityStyle.WALL_T`,
+so the compound is untouched BY CONSTRUCTION and not by a matched pair of numbers. `CorpStyle`
+passes **1.2**.
+
+**And it is the INTERIOR only, which is the whole of the work.** `FacilityGeom.thick` stops being
+`inline` and splits: a glazed cell keeps `GLASS_T`, an exterior wall keeps `WALL_T`, and only a
+cell whose four neighbours are all indoor-or-carrying takes `wallIn`. That test (`inner`) is what
+keeps the curtain wall, the window runs and the parapet on their own numbers — they key off
+`GLASS_T` and the outer ring, neither of which moved.
+
+This is the one phase of the pass that edits shared geometry, so the facility digest was the gate
+and not a nicety: `git show HEAD:src/tiles/Default.hx` swapped in, gen rebuilt, digest taken,
+file restored — **`3854efd064d2cf018536c8a884dfdaf8` both sides**, identical. Facility oracle green
+at 3,000 seeds.
+
+Verdict: **KEEP. A shared constant with two callers wanting different values is a field on the
+descriptor, not a second constant.**
+
+## Every exec and reception desk in the tower drew nothing at all (fourth defect pass, phase 6)
+
+Reported: "remaining quad based desks still look like shit", with two probes.
+
+**The biggest single defect of the pass was found while implementing it and is not what was
+reported.** `Const.isCorpTableTile` covers tileset rows 8-11 only. `DARK_TABLE_MARBLE1_3X2` — the
+executive's and the reception's desk — is on rows **14 and 16**, so it failed the test that decides
+whether a cell is a worktop: `isCorpTableTile(224) = false`, `surfOf(224) = Surf.TILE`. Every exec
+and reception desk in the tower emitted **no geometry at all** while still writing six unwalkable
+cells. `Const.isCorpDeskBlock` is the missing predicate and `CorpStyle.shell`'s `tableOf` is now
+the OR of the two.
+
+**The modular END + MIDDLE glb pair asked for was deliberately not built, and the reason is in the
+repo.** `models-src/corp/desk_build.py`'s own header records it: `render.Models.instanced` scales
+by HEIGHT ALONE, so a per-cell module would cut a 6 m boardroom table into six 2 m desks. No new
+art was generated in this phase and no new glb shipped.
+
+What the complaint actually was, once measured, is four things in the branch being rewritten:
+the **`MEETING` branch is dead** (a boardroom table is laid as `DARK_TABLE_CARPET_3X3`, whose floor
+is carpet — 0 of 245 worktop cells on a plate come back `Surf.MEETING` and 109 come back `CARPET`,
+so every boardroom table fell to `default:` and wore the desk laminate); **`slabTop` required both
+axes**, so a 1-deep table run was a solid cuboid to the floor instead of a top on a fascia; the
+lone 1 x 1 worktop was a closed box; and the **interior-face cull tested `m.table`** rather than
+"does the neighbour emit anything at the same height and base", so a worktop abutting a glb-desk
+cell dropped the face toward an empty cell and opened the box. `meets()` asks the real question and
+takes `h` and `y0` with it.
+
+Verdict: **KEEP — and the glb pair is REJECTED on `Models.instanced`'s height-only scale, which is
+the same reason the bench went to a glb in the first place.**

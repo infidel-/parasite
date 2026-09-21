@@ -1318,3 +1318,117 @@ Measured over 300 seeds: solo 8.74, copy 3, exec 2.99, cubicle 2, meeting 1.99, 
 the 29.12 rooms a floor**. Proved by dealing under a distinct filler name: **0 filler rooms in
 2,000 seeds.** And replayed for the bare-room check that found the 382 exec offices last pass:
 **0 rooms with no furniture in them, in any of the 13 kinds, over 400 seeds.**
+
+## ANY ONE REACHED CELL IS THE WRONG QUESTION
+
+Reported from the game as "this room's tables in the center breaking the movement, plus corners are
+impassable even if empty". It is one sentence, written twice, in two files.
+
+`GenCheck.reachable` and `CorpConnect.roomReached` both said *"any one cell will do … a room's
+floor is a single rect and its furniture cannot cut that rect in two"*. It can, and it does.
+**Measured over 120 corp seeds / 3,500 rooms: 873 rooms (24.9%) held walkable floor the lift flood
+never reached — 4,482 cells, 37.4 per floor.** Worst case, seed 7's `archive 19,16..26,21`: 33
+walkable cells, **one** reachable, and `check.reachable` returned `[]`. The evidence had been in
+the committed `--stats` block the whole time (`walkableCells 1236.28` against `reachedCells
+1197.98`) and nothing asserted on it. The reported room, a 5 x 3 solo office, came back
+
+```
+# . . . #
+. # # # .
+# . . . #
+```
+
+three disconnected strips with the door on one of them.
+
+**`GenCheck.floorReachable` is the assert** — every walkable cell of every room must be in
+`lastSeen`, generalised from `storageSane`, which describes this exact defect in its own header and
+was filtered to `ROLE_STORAGE` and never called on the corp path. `--stats` gained `orphanCells`
+so the number stays visible now that it is zero.
+
+What it then named:
+
+- **`tiles/Default.hx` row 13 index 12 was a `1`.** `CARPET_MEETING + 16` is the only unwalkable
+  twin in the table marked walkable — indices 13 and 14 were patched in when the cubicle and server
+  floors were added and 12 kept its inherited value. So 80% of a boardroom's wall furniture was
+  walk-through AND invisible, which is why the meeting room was simultaneously the emptiest kind
+  and the only one with a 0.0% pocket rate.
+- **A desk that spans the room is a wall.** `soloDesk`'s three-cell run had no width guard and a
+  solo office is dealt at `minW 3`, so it crossed the midline. Clamped to `w - 2`.
+- **A rack row with a per-cell `chance` skip is solid half the time.** At 5 wide that is three
+  rolls; 51% of `servers` rows and 42% of `archive` rows came out with no gap at all. The gap is
+  dealt now, one per row, positioned.
+- **`CorpConnect.openPockets`** is the repair: flood, find lost walkable cells, and open the
+  thinnest blockage of every pocket at once, up to `POCKET_ROUNDS 12`. Two traps. A **two-cell-thick
+  blockage has no cell touching both sides**, so the thin-wall rule finds no candidate and the loop
+  stops with the pocket sealed — 34 in 300 seeds, every one a reception whose 3 x 2 desk stood two
+  deep; the fallback round ERODES instead, taking any clearable cell that touches the pocket. And
+  `clearedTo` knew two id bands and the exec/reception desk is in neither — `DARK_TABLE_MARBLE1_3X2`
+  is on tileset rows 14 and 16, so it was the one piece of furniture in the tower no repair could
+  remove. `Const.isCorpDeskBlock` → `TILE_FLOOR_MARBLE1`.
+
+Cost of the whole repair, measured: decorations per floor **232.87 → 229.53**.
+
+## A ROOM KIND IS A PROMISE OF CONTENT, AND THE FILL NUMBER IS NOT THE ZONE COUNT
+
+Reported as "many rooms are pretty empty now: 8,38" and, mid-pass, "either something broken or
+reception and security are mostly empty".
+
+**There was no measurement of it at all.** `--stats` counts zone NODES, which is why "mostly empty"
+was invisible: a template that lays four dressed corners and a template that furnishes half the
+rect both report one node. `furn/<role>` (unwalkable cells inside the rect / rect area, summed per
+area and divided by `furnN/<role>`) is the acceptance number and lands with the fixes.
+
+Baseline, and after. `security` gained a monitor bench plus a short rack rank, `breakRoom` a
+counter run for the 4-wide case `kitchenTables` cannot serve (it needs 5 x 5 and the demand deals
+at 4 x 4), `meeting` a table sized off the room — `TABLE_W_MAX` 4 → **6**, `TABLE_H_MAX` 3 → **4**,
+which was putting a 1 x 3 table in a 5 x 10 boardroom.
+
+| role | before | after |
+|---|---|---|
+| meeting | 25.6% | **29.8%** |
+| reception | 22.9% | **25.4%** |
+| security | 19.9% | **22.2%** |
+| archive | 23.6% | 24.6% |
+| servers | 26.8% | 27.8% |
+| break | 21.2% | 21.6% |
+| everything else | — | within 0.5 points |
+
+**Two of the planned fixes were built, measured and WITHDRAWN, and that is the entry.** A copier
+bank down the middle of the copy room took its fill **29.4% → 23.4%** centred and **27.6%** flush;
+dressing the exec office's corners at every size took exec **26.9% → 20.7%**. Neither is a
+placement accident: both rooms are dealt narrow and dressed heavily (`copy` runs the highest
+`chance` in the file at 70/50), so a centre run leaves the two cells joining the room's halves
+exactly where a cabinet is most likely to stand, `openPockets` finds the seal, and what it erodes
+to reach it is more than the run added. **More furniture placed can mean less furniture standing,
+and only the fill number says which.**
+
+## THE RECEPTION IS SMALL, IT IS BY THE LIFT, AND ITS COUNTER IS THE FRONT WALL
+
+Spec given mid-pass. The room was dealt on `fit: smallest` with no reference to the elevator, and
+its "counter" was a borrowed `execDesk` — a 3 x 2 slab in the MIDDLE of the floor, which is also
+why reception measured the highest pocket rate in the tower at 75.4%.
+
+- **By the lift is a `must`**, distance only: taxicab from the rect's centre to `CorpBlocks.liftX/liftY`
+  (the car's own cell, taken off `state.px1..py2` and `frontDir`) within `GenCheck.RECEPTION_NEAR`
+  **36**, against a plate diagonal of 88. A floor with nothing near the car gets no reception, which
+  is correct — a reception 64 cells from the lift is not a reception.
+- **Small is a `fit` penalty, not a `must`.** The size cap was a `must` first and cost a third of
+  the towers their reception outright (0.99 dealt per floor → **0.66**), because `min` is 0: a floor
+  whose free rects are all 7 wide simply does not get one. As a penalty it loses to any rect both
+  nearer and within the cap, and wins when there is nothing else.
+- **And the demand is DECLARED FIRST.** `Quota.deal` fills minima most-constrained-first and then
+  walks the maxima in DECLARATION ORDER — with `min: 0`, wherever this sat in the list every room
+  with a min had already chosen and the near-lift rects were gone. Measured with the assert forced
+  over 3,000 seeds: **82 towers over 36 cells, worst 64 → 6 towers**, and the `must` closes those.
+  Dealt rate 1.00 per floor.
+- **The counter is laid on the room's y1 or y2 EDGE ROW**, whichever faces the lift, x1+1 .. x2-1,
+  skipping any cell beside a doorway. One cell in from the edge was tried first and is a pocket
+  factory: the strip behind it exits only through the two corners, and `decorateWalls` dresses a
+  corner unconditionally. It is always horizontal for the same kind of reason — `decorateWalls`
+  dresses columns x1 and x2 and nothing else, so a run held inside those columns can never be
+  overwritten by the dressing that follows it.
+- **`GenCheck.receptionSane`** asserts both halves: the distance, and that the room actually
+  carries `TILE_DARK_TABLE_MARBLE1_1X1` on one of its two edge rows.
+
+Corp oracle green at 3,000 seeds with both new asserts on, `orphanCells 0.00`, facility green at
+3,000, corp digest stable across two runs.
