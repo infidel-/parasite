@@ -72,10 +72,10 @@ class CorpFacade
             // this soffit and the room's next door
             var e = FacilityStyle.PARAPET_INSET;
             FacilityGeom.capDown(soff,
-              x0 + (outward(m, col, row, 2) ? e : 0.0),
-              x0 + CELL - (outward(m, col, row, 3) ? e : 0.0),
-              z0 + (outward(m, col, row, 0) ? e : 0.0),
-              z0 + CELL - (outward(m, col, row, 1) ? e : 0.0),
+              x0 + (FacilityGeom.outward(m, col, row, 2) ? e : 0.0),
+              x0 + CELL - (FacilityGeom.outward(m, col, row, 3) ? e : 0.0),
+              z0 + (FacilityGeom.outward(m, col, row, 0) ? e : 0.0),
+              z0 + CELL - (FacilityGeom.outward(m, col, row, 1) ? e : 0.0),
               CorpStyle.SOFFIT_Y, FacilityStyle.WALL_TILE);
             var s = ring(m, col, row, half);
             if (!FacilityGeom.carries(m, col, row))
@@ -88,7 +88,7 @@ class CorpFacade
             var sl = FacilityGeom.slab(m, col, row);
             for (dir in 0...4)
               {
-                if (!outward(m, col, row, dir))
+                if (!FacilityGeom.outward(m, col, row, dir))
                   continue;
                 var alongX = (dir < 2);
                 var p = alongX ? (dir == 0 ? s.z0 : s.z1) : (dir == 2 ? s.x0 : s.x1);
@@ -181,15 +181,6 @@ class CorpFacade
               alongX ? pz0 : a, alongX ? pz0 : a + CELL,
               dir, CorpStyle.STREET_Y + j * CELL, CorpStyle.STREET_Y + (j + 1) * CELL);
           }
-    }
-
-// does this cell's `dir` face look OUT of the building? FacilityGeom's own `outward`, which is
-// private there — three lines, and re-deriving them is cheaper than widening that file's surface
-  static inline function outward(m:Facility, col:Int, row:Int, dir:Int):Bool
-    {
-      return FacilityGeom.carries(m, col, row) &&
-        !FacilityGeom.carries(m, col + DC[dir], row + DR[dir]) &&
-        !FacilityModel.isIndoor(m, col + DC[dir], row + DR[dir]);
     }
 
 // the parapet's plane on this cell: the cell rect pulled in by PARAPET_INSET on every hand where

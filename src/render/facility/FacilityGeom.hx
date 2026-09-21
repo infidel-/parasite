@@ -838,29 +838,29 @@ class FacilityGeom
 // does this cell stand a length of OUTWARD parapet in `dir`? the wall LINE has to carry through the
 // cell and the neighbour it looks at has to be outdoors.
 //
+// PUBLIC, AND THAT IS THE POINT OF IT. render.corp.CorpFacade hangs the tower's 114-unit cladding
+// drop off the same perimeter this bands, and it used to re-derive these three lines locally
+// "cheaper than widening that file's surface". Then a `roofed` was grown here — indoor AND not a
+// LIFT car — and the copy did not follow, so round the lift core the two disagreed in both
+// directions at once: a parapet and a coping across the tower's car-facing hand with no cladding
+// under them, and a facade skipping exactly the reentrant corners the parapet emitted. Reported
+// from the game as the lift's walls not merging with the static ones. The exception is gone with
+// it — A LIFT CAR IS PART OF THE BUILDING, its ring is the envelope turning round the car rather
+// than cutting across behind it, and the corner squares the turn leaves are the notch loop's,
+// which has handled a reentrant corner since it was written.
+//
 // `carries` and not `isWall`, which is the whole difference between a roofline and a roofline with
 // holes in it: a DOOR cell is a hole in the wall line, not the end of it, and it never enters the
 // `for (dir in 0...4)` loop in structure() at all — its outward face comes from the `di >= 0` branch
 // instead. keyed on isWall the parapet opens a 4-unit gap over every one of the area's 7 exterior
 // doors. slab() on a door cell returns the lintel planes, already inset by exactly PARAPET_INSET,
 // so the band runs dead straight over the opening with no case of its own
-  static inline function outward(m:Facility, col:Int, row:Int, dir:Int):Bool
+  public static inline function outward(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
       return carries(m, col, row) &&
         !carries(m, col + DC[dir], row + DR[dir]) &&
-        !roofed(m, col + DC[dir], row + DR[dir]);
+        !FacilityModel.isIndoor(m, col + DC[dir], row + DR[dir]);
     }
-
-// is this cell UNDER THIS ROOF — indoor, and not a lift car.
-//
-// A LIFT CAR IS INDOOR AND IS NOT INSIDE THE BUILDING, which is the whole of it. gen.corp's
-// ElevatorBlock stands a 3 x 3 car OUTSIDE the tower's wall ring on four wall posts of its own, and
-// Surf.LIFT sits inside FacilityModel.isIndoor's TILE..OPEN range — so `outward` refused to band
-// the car-facing hand of the ring, and the notch loop skipped all four of the car's reentrant
-// corners, leaving a T x T hole in the coping at each. No kind but the tower deals LIFT, so the
-// compound's own parapet cannot move
-  static inline function roofed(m:Facility, col:Int, row:Int):Bool
-    return FacilityModel.isIndoor(m, col, row) && m.surf[row][col] != Surf.LIFT;
 
 // slab() with the SOLID wall's inset FORCED, whatever this cell's own masonry is.
 //
@@ -1043,7 +1043,7 @@ class FacilityGeom
             // band while the other end carries on into the neighbouring cell's
             for (n in notches(m, col, row))
               {
-                if (roofed(m, n.col, n.row))
+                if (FacilityModel.isIndoor(m, n.col, n.row))
                   continue;
                 var zc = (n.dz == 1);
                 var xc = (n.dx == 3);
