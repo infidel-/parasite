@@ -93,6 +93,13 @@ class CorpTemp
   public static inline var ROLE_EXEC = 'exec';
   public static inline var ROLE_TOILET = 'toilet';
   public static inline var ROLE_SERVERS = 'servers';
+  // and the six the quota grew by, so that a floor has no leftover rooms in it at all
+  public static inline var ROLE_SOLO = 'solo';
+  public static inline var ROLE_BREAK = 'break';
+  public static inline var ROLE_COPY = 'copy';
+  public static inline var ROLE_ARCHIVE = 'archive';
+  public static inline var ROLE_RECEPTION = 'reception';
+  public static inline var ROLE_SECURITY = 'security';
 
   // a corp floor tile's unwalkable twin sits exactly one tileset row below it (OFFSET_ROW12 ->
   // OFFSET_ROW13), which is how the furniture cells are addressed

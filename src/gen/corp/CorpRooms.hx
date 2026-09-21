@@ -713,6 +713,203 @@ class CorpRooms
         40);
     }
 
+// --- the six kinds the floor was missing.
+//
+// THE FLOOR CARVES 29 ROOMS AND THE QUOTA ONLY EVER NAMED TEN OF THEM, so 19 rooms a floor came
+// out as the open-plan FILLER: one template, one floor, and a median 16% of its cells furnished.
+// Each of these borrows an EXISTING floor surface (render.corp.CorpModel.surfOf knows eight and
+// there are no more), so a new kind costs no tile id, no texture, no material and no draw call —
+// what makes it a different room is its furniture list and its fixture, which is what a reader in
+// the room actually sees. NOT plain CARPET, ever: that surface is what CorpLamps.corridors() reads
+// as circulation, and a room wearing it gets ceiling panels hung inside it (see `meeting`)
+
+// a solo office: one desk across the middle, a cabinet and a plant in the corners. The small room
+// the carve mints most of — 14.7 rooms a floor are under 5 on an axis and nothing else fits them
+  public static function solo(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, CUBICLE);
+      soloDesk(state, node, room);
+      decorateCorners(state, room, [
+          Const.CORP_TABLE_LAMP,
+          Const.CORP_TABLE_FILES,
+          Const.CORP_TABLE_STATIONERY,
+        ], [
+          Const.CORP_CABINET,
+          Const.CORP_PLANT,
+        ],
+        Const.TILE_DARK_TABLE_WOOD2_1X1,
+        Const.TILE_FLOOR_CUBICLE + UNWALKABLE_TILE_OFFSET,
+        40);
+    }
+
+// the solo office's one desk: the open-plan floor's own 3x1 run, centred, with a chair behind it.
+//
+// SKIPPED WHERE IT WOULD SEAL A DOORWAY. A 3-wide room is exactly as wide as the desk, so the run
+// reaches both side walls and an unwalkable table in front of a door walls the room off — which is
+// the fault `atDoor` was written for one template over
+  static function soloDesk(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var block = Const.CORP_TABLE_3X1;
+      var tx = room.x1 + Std.int((room.w - block.length) / 2);
+      var ty = room.y1 + Std.int((room.h - 1) / 2);
+      for (dx in 0...block.length)
+        if (atDoor(cells, tx + dx, ty))
+          return;
+      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + block.length - 1, ty);
+      var full = [
+        Const.CORP_TABLE_MISC,
+        Const.CORP_TABLE_LAMP,
+        Const.CORP_TABLE_PHONE,
+        Const.CORP_TABLE_FILES,
+      ];
+      var deco = full.copy();
+      for (dx in 0...block.length)
+        {
+          cells[tx + dx][ty] = block[dx];
+          if (dx == 1)
+            addDecoration(state, tx + dx, ty, Const.CORP_COMPUTERS);
+          else if (area.chance(50))
+            deco = addDecorationExt(state, tx + dx, ty, deco, full);
+        }
+      area.addDecoration(tx + 1, ty + 1, Const.CORP_CHAIR[0].row,
+        area.random(Const.CORP_CHAIR[0].amount));
+    }
+
+// a break room: the kitchen's own floor and counters, with the machines people stand at instead of
+// the ones they cook with. The canteen is this room where the carve gave it the space for a second
+// run of tables, and not a kind of its own — see gen.blocks.CorpBlocks.demands
+  public static function breakRoom(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
+      if (room.w >= 5 &&
+          room.h >= 5)
+        kitchenTables(state, node, room);
+      decorateWalls(state, room, [
+          Const.CORP_TABLE_COFFEE,
+          Const.CORP_TABLE_MUG,
+          Const.CORP_TABLE_FRUIT,
+          Const.CORP_TABLE_TISSUE,
+        ], [
+          Const.CORP_VENDING,
+          Const.CORP_FRIDGE,
+          Const.CORP_COOLER,
+          Const.CORP_PLANT,
+          Const.CORP_TRASH,
+        ],
+        Const.TILE_LIGHT_TABLE_WOOD1_1X1,
+        Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET,
+        60, 30);
+    }
+
+// a copy room: both walls lined with copiers and stationery, and a clear floor to stand on. The
+// one room in the tower that is ALL wall and no middle, which is what the highest `chance` in the
+// file is for
+  public static function copyRoom(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD2);
+      decorateWalls(state, room, [
+          Const.CORP_TABLE_PRINTER,
+          Const.CORP_TABLE_STATIONERY,
+          Const.CORP_TABLE_MISC_LARGE,
+        ], [
+          Const.CORP_CABINET,
+          Const.CORP_MACHINERY,
+          Const.CORP_TRASH,
+        ],
+        Const.TILE_DARK_TABLE_WOOD2_1X1,
+        Const.TILE_FLOOR_WOOD2 + UNWALKABLE_TILE_OFFSET,
+        70, 50);
+    }
+
+// an archive: the server room's rank-and-aisle with paper in it instead of machines
+  public static function archive(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
+      var shelf = Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET;
+
+      // a rank never touches the room's own boundary ring, so the floor round it is always walkable
+      // and no door can be sealed — the same invariant `servers` relies on
+      var row = 0;
+      while (true)
+        {
+          row++;
+          if (row > RACK_ROWS_MAX)
+            break;
+          var ry = room.y1 + 1 + (row - 1) * RACK_PITCH;
+          if (ry > room.y2 - 1)
+            break;
+          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
+          for (x in room.x1 + 1...room.x2)
+            {
+              if (area.chance(25))
+                continue;
+              cells[x][ry] = shelf;
+              addDecoration(state, x, ry, Const.CORP_CABINET);
+            }
+        }
+
+      decorateWalls(state, room, [
+          Const.CORP_TABLE_FILES,
+          Const.CORP_TABLE_CONTAINER,
+        ], [
+          Const.CORP_CABINET,
+          Const.CORP_TRASH,
+        ],
+        Const.TILE_DARK_TABLE_WOOD2_1X1,
+        shelf,
+        40, 40);
+    }
+
+// a reception: the executive's marble and the same 3x2 slab, standing as a counter, with seating
+// and greenery round the walls
+  public static function reception(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
+      if (room.w >= 4 &&
+          room.h >= 4)
+        execDesk(state, node, room);
+      decorateWalls(state, room, [
+          Const.CORP_TABLE_PHONE,
+          Const.CORP_TABLE_MISC,
+          Const.CORP_TABLE_PLANTS,
+        ], [
+          Const.CORP_PLANT,
+          Const.CORP_COOLER,
+          Const.CORP_WHITEBOARD,
+        ],
+        Const.TILE_DARK_TABLE_MARBLE1_1X1,
+        Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET,
+        40, 40);
+    }
+
+// a security post: the server room's floor, a bank of monitors on one wall and the machines that
+// feed them on the other
+  public static function security(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
+      decorateWalls(state, room, [
+          Const.CORP_COMPUTERS,
+          Const.CORP_TABLE_ROUTER,
+          Const.CORP_TABLE_MISC_LARGE,
+        ], [
+          Const.CORP_MACHINERY,
+          Const.CORP_CABINET,
+          Const.CORP_TRASH,
+        ],
+        Const.TILE_DARK_TABLE_WOOD2_1X1,
+        Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
+        60, 50);
+    }
+
 // open plan's own wall furniture, which is a longer list than any other room's
   static function decorateWorkWalls(state: _CorpState, room: _Room)
     {

@@ -40,6 +40,18 @@ class OfficeBlock
             CorpRooms.toilet(state, node, room);
           case CorpBlocks.ROOM_SERVERS:
             CorpRooms.servers(state, node, room);
+          case CorpBlocks.ROOM_SOLO:
+            CorpRooms.solo(state, node, room);
+          case CorpBlocks.ROOM_BREAK:
+            CorpRooms.breakRoom(state, node, room);
+          case CorpBlocks.ROOM_COPY:
+            CorpRooms.copyRoom(state, node, room);
+          case CorpBlocks.ROOM_ARCHIVE:
+            CorpRooms.archive(state, node, room);
+          case CorpBlocks.ROOM_RECEPTION:
+            CorpRooms.reception(state, node, room);
+          case CorpBlocks.ROOM_SECURITY:
+            CorpRooms.security(state, node, room);
           default:
             CorpRooms.open(state, node, room);
         }
@@ -54,6 +66,12 @@ class OfficeBlock
         kind == CorpBlocks.ROOM_KITCHEN ||
         kind == CorpBlocks.ROOM_EXEC ||
         kind == CorpBlocks.ROOM_TOILET ||
-        kind == CorpBlocks.ROOM_SERVERS;
+        kind == CorpBlocks.ROOM_SERVERS ||
+        kind == CorpBlocks.ROOM_SOLO ||
+        kind == CorpBlocks.ROOM_BREAK ||
+        kind == CorpBlocks.ROOM_COPY ||
+        kind == CorpBlocks.ROOM_ARCHIVE ||
+        kind == CorpBlocks.ROOM_RECEPTION ||
+        kind == CorpBlocks.ROOM_SECURITY;
     }
 }

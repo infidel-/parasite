@@ -30,6 +30,15 @@ class CorpBlocks
   public static inline var ROOM_EXEC = 'room-exec';
   public static inline var ROOM_TOILET = 'room-toilet';
   public static inline var ROOM_SERVERS = 'room-servers';
+  // AND THE SIX THE FLOOR WAS MISSING. Each borrows a floor surface one of the seven above
+  // already owns (gen.corp.CorpRooms' own header says which), so the whole of a new kind is a
+  // demand, a dispatch case and a furniture list
+  public static inline var ROOM_SOLO = 'room-solo';
+  public static inline var ROOM_BREAK = 'room-break';
+  public static inline var ROOM_COPY = 'room-copy';
+  public static inline var ROOM_ARCHIVE = 'room-archive';
+  public static inline var ROOM_RECEPTION = 'room-reception';
+  public static inline var ROOM_SECURITY = 'room-security';
 
   // the zone kinds a room pushes under itself. they write no cells of their own — the template
   // that pushed one has already laid it — and exist so the tree is a record of WHERE the furniture
@@ -56,6 +65,12 @@ class CorpBlocks
           case ROOM_EXEC: ROLE_EXEC;
           case ROOM_TOILET: ROLE_TOILET;
           case ROOM_SERVERS: ROLE_SERVERS;
+          case ROOM_SOLO: ROLE_SOLO;
+          case ROOM_BREAK: ROLE_BREAK;
+          case ROOM_COPY: ROLE_COPY;
+          case ROOM_ARCHIVE: ROLE_ARCHIVE;
+          case ROOM_RECEPTION: ROLE_RECEPTION;
+          case ROOM_SECURITY: ROLE_SECURITY;
           default: ROLE_OPEN;
         }
     }
@@ -72,6 +87,12 @@ class CorpBlocks
           case ROLE_EXEC: ROOM_EXEC;
           case ROLE_TOILET: ROOM_TOILET;
           case ROLE_SERVERS: ROOM_SERVERS;
+          case ROLE_SOLO: ROOM_SOLO;
+          case ROLE_BREAK: ROOM_BREAK;
+          case ROLE_COPY: ROOM_COPY;
+          case ROLE_ARCHIVE: ROOM_ARCHIVE;
+          case ROLE_RECEPTION: ROOM_RECEPTION;
+          case ROLE_SECURITY: ROOM_SECURITY;
           default: ROOM_OPEN;
         }
     }
@@ -156,6 +177,84 @@ class CorpBlocks
           max: 3,
           minW: 4,
           minH: 4,
+          fit: smallest,
+        },
+        // AND FROM HERE DOWN THE ORDER IS THE MIX, because Quota.deal's second pass spends what
+        // the mins left over in DECLARATION ORDER, each demand to its max. The floor carves 29
+        // rooms and the six kinds above only ever named ten of them, so 19 a floor came out as
+        // the open-plan filler — a sparse duplicate of one template over half the tower.
+        //
+        // the six below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
+        // 20.5 clear 4, and seven demands above already hold mins against that supply; another
+        // six would be the "quota short: room-toilet got 0" this file's `assign` already carries
+        // a retry loop for. A min is for the thing a floor MUST have, and a floor does not have
+        // to have an archive on it. What puts one there is the max, and the supply is ample
+        {
+          kind: ROOM_RECEPTION,
+          min: 0,
+          max: 1,
+          minW: 4,
+          minH: 4,
+          fit: smallest,
+        },
+        {
+          kind: ROOM_SECURITY,
+          min: 0,
+          max: 1,
+          minW: 4,
+          minH: 4,
+          fit: smallest,
+        },
+        // the recreation room the user asked for by name, and the only one of the six with a min.
+        // 4 x 4 AND NOT 5 x 5: at 5 it was an eighth min against the 14.4 rooms a floor that clear
+        // 5 on both axes, and two towers in 2,000 came out with nothing left to put it in. Below 5
+        // the room loses its island of tables and is its wall fixtures alone — a vending machine,
+        // a fridge and a cooler, which is what a small firm's break room is
+        {
+          kind: ROOM_BREAK,
+          min: 1,
+          max: 2,
+          minW: 4,
+          minH: 4,
+        },
+        {
+          kind: ROOM_COPY,
+          min: 0,
+          max: 3,
+          minW: 3,
+          minH: 3,
+          fit: smallest,
+        },
+        {
+          kind: ROOM_ARCHIVE,
+          min: 0,
+          max: 2,
+          minW: 4,
+          minH: 4,
+          fit: smallest,
+        },
+        // OPEN PLAN IS NOW A DEALT KIND WITH A CAP, not the leftover bucket. An open-plan floor is
+        // a real corporate thing and three of them is one; 19 is what happens when a quota runs
+        // out of names. It takes the ROOMIEST rooms left, which is where a bank of desks belongs
+        {
+          kind: ROOM_OPEN,
+          min: 0,
+          max: 3,
+          minW: 5,
+          minH: 5,
+          fit: biggest,
+        },
+        // and the solo office takes EVERYTHING ELSE, which is what makes the filler branch
+        // unreachable: it is declared last, its max is a number nothing reaches, and at 3 x 3 it
+        // fits every rect the carve can produce (measured: 29.12 rooms a floor and 29.12 of them
+        // are 3 x 3 or bigger). A small private office is also what a tower floor is mostly made
+        // of, so the kind that soaks up the remainder is the right one to soak it
+        {
+          kind: ROOM_SOLO,
+          min: 0,
+          max: MANY,
+          minW: 3,
+          minH: 3,
           fit: smallest,
         },
       ];
