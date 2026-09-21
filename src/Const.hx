@@ -1184,6 +1184,18 @@ class Const
     [ OFFSET_ROW16 + 0, OFFSET_ROW16 + 1, OFFSET_ROW16 + 2 ],
   ];
 
+// and the EXEC/RECEPTION DESK BLOCK, which is the one piece of corp furniture that lives OUTSIDE
+// the four rows above: DARK_TABLE_MARBLE1_3X2 is laid on tileset rows 14 and 16, columns 0-2, and
+// isCorpTableTile answers false for every one of its six ids. That is why an executive office and
+// a reception desk emitted NO GEOMETRY AT ALL for their whole lives — render.corp.CorpFurniture
+// raises a worktop off `m.table` and nothing set it here — while still writing six unwalkable
+// cells into the middle of the room
+  public static inline function isCorpDeskBlock(t:Int):Bool
+    {
+      return (t >= OFFSET_ROW14 && t < OFFSET_ROW14 + 3) ||
+        (t >= OFFSET_ROW16 && t < OFFSET_ROW16 + 3);
+    }
+
 // is this tile a window tile?
   public static inline function isWindowTile(tile: Int) {
     return 

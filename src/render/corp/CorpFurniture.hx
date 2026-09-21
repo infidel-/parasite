@@ -191,6 +191,7 @@ class CorpFurniture
       var end = CorpStyle.DESK_SIDE;
       var tile = CorpStyle.DESK_TILE;
       var sideTile = CorpStyle.DESK_FRONT_TILE;
+      var endTile = CorpStyle.DESK_TILE;
       switch (s)
         {
           case KITCHEN:
@@ -199,12 +200,22 @@ class CorpFurniture
             end = CorpStyle.COUNTER_FRONT;
             tile = CorpStyle.COUNTER_TILE;
             sideTile = CorpStyle.COUNTER_TILE;
+            endTile = CorpStyle.COUNTER_TILE;
             n.counters++;
 
-          case MEETING:
+          // A BOARDROOM TABLE COMES BACK Surf.CARPET AND NOT Surf.MEETING, which is why this
+          // branch was dead for its whole life: the table is laid as DARK_TABLE_CARPET_3X3, a
+          // table tile whose FLOOR is carpet, so FacilityModel.themeRooms spreads CARPET over its
+          // cells — measured, 0 of 245 worktop cells on a plate are MEETING while 109 are CARPET.
+          // Every boardroom table in the tower was wearing the DESK laminate, at the desk's own
+          // tile period, with its two end faces at DESK_FRONT_TILE — a drawer pitch on a table edge
+          case MEETING | CARPET:
             top = CorpStyle.TABLE_TOP;
             side = CorpStyle.TABLE_SIDE;
             end = CorpStyle.TABLE_SIDE;
+            tile = CorpStyle.TABLE_TILE;
+            sideTile = CorpStyle.TABLE_TILE;
+            endTile = CorpStyle.TABLE_TILE;
             n.tables++;
 
           case WASHROOM:
@@ -226,7 +237,7 @@ class CorpFurniture
       // which a slab of quads is: a desk is a thin top on a frame with a void under it, and no
       // amount of per-face art puts a void in a box. The cell is still counted and still stamps
       // the contact field, because both are about the FOOTPRINT and not about who draws it
-      if (glbDesk(s))
+      if (deskCell(m, col, row))
         {
           ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
           return;
@@ -243,11 +254,16 @@ class CorpFurniture
       var y0 = (slabTop(m, col, row) ? h - CorpStyle.TABLE_FASCIA : 0.0);
       for (dir in 0...4)
         {
-          if (m.table[row + dz(dir)][col + dx(dir)])
+          // CULL AGAINST A NEIGHBOUR THAT ACTUALLY DRAWS THE SAME BOX, not merely against
+          // `m.table`. A cell whose worktop is a glb emits nothing at all, and a counter at
+          // COUNTER_H 1.8 beside a desk at 1.5 does not close one either — in both cases the face
+          // was skipped and the carcass came out open-ended, with `rect`'s own inset dropped on
+          // that hand too, so the top cap runs to the cell boundary with nothing under its edge
+          if (meets(m, col + dx(dir), row + dz(dir), h, y0))
             continue;
           var isEnd = alongX ? (dir >= 2) : (dir < 2);
           FacilityGeom.face(buf(isEnd ? end : side),
-            r.x0, r.x1, r.z0, r.z1, dir, y0, h, isEnd ? CorpStyle.DESK_TILE : sideTile);
+            r.x0, r.x1, r.z0, r.z1, dir, y0, h, isEnd ? endTile : sideTile);
         }
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
@@ -521,12 +537,44 @@ class CorpFurniture
         };
     }
 
-// is this worktop surface drawn as a glb desk rather than emitted? OPEN, CUBICLE and EXEC are the
-// three the generator lays as DESKS; a kitchen counter, a boardroom slab and a washroom vanity are
-// runs with a continuous top and a module per cell would put a seam between every pair
-  public static inline function glbDesk(s:Surf):Bool
+// is this worktop cell drawn as a glb desk rather than emitted?
+//
+// OPEN and CUBICLE are the two the generator lays as desk RUNS and they were always glb — a
+// kitchen counter, a boardroom slab and a washroom vanity are runs with a continuous top, where a
+// module per cell would put a seam between every pair.
+//
+// THE THIRD CASE IS A LONE WORKTOP, and it is the one reported back as a quad desk that still
+// looks like one: a single table cell with no neighbour on any hand emitted a CLOSED CUBOID of
+// 3.76 x 3.76 x 1.5 — two metres square and three quarters of a metre high, solid. A desk is a
+// thin top on a frame with a void under it and no per-face art puts a void in a box, which is the
+// verdict that moved the open-plan desks to a glb in the first place. A counter and a vanity are
+// excluded: a plinthed carcass IS a box and is right as one
+  public static function deskCell(m:Facility, col:Int, row:Int):Bool
     {
-      return s == Surf.OPEN || s == Surf.CUBICLE;
+      var s = m.surf[row][col];
+      if (s == Surf.OPEN ||
+          s == Surf.CUBICLE)
+        return true;
+      if (s == Surf.KITCHEN ||
+          s == Surf.WASHROOM)
+        return false;
+      return !tableAt(m, col - 1, row) &&
+        !tableAt(m, col + 1, row) &&
+        !tableAt(m, col, row - 1) &&
+        !tableAt(m, col, row + 1);
+    }
+
+// does the neighbour on this hand CLOSE the carcass — an emitted worktop at the same height with
+// the same fascia line? see the call site for the three ways `m.table` alone got this wrong
+  static function meets(m:Facility, col:Int, row:Int, h:Float, y0:Float):Bool
+    {
+      if (!tableAt(m, col, row) ||
+          deskCell(m, col, row))
+        return false;
+      var hh = topH(m.surf[row][col]);
+      var yy = (slabTop(m, col, row) ? hh - CorpStyle.TABLE_FASCIA : 0.0);
+      return Math.abs(hh - h) < 0.001 &&
+        Math.abs(yy - y0) < 0.001;
     }
 
 // and is this cell part of a big SLAB — a table two cells deep in BOTH axes — which keeps only a
@@ -540,8 +588,22 @@ class CorpFurniture
 // no neighbour at all, so only a real table block answers true
   public static function slabTop(m:Facility, col:Int, row:Int):Bool
     {
-      return (tableAt(m, col - 1, row) || tableAt(m, col + 1, row)) &&
-        (tableAt(m, col, row - 1) || tableAt(m, col, row + 1));
+      var x = tableAt(m, col - 1, row) || tableAt(m, col + 1, row);
+      var z = tableAt(m, col, row - 1) || tableAt(m, col, row + 1);
+      if (x && z)
+        return true;
+      // ...OR A ONE-CELL-DEEP TABLE RUN, which the two-dimensional test misses and which is a real
+      // shape: gen.corp.CorpRooms.meetingTable takes `min(room.w - 4, TABLE_W_MAX)` on each axis,
+      // so a 5-wide boardroom gets a table ONE cell deep and every cell of it failed this test —
+      // full-height sides, no leg, and a 2 m x 0.75 m solid block of table-side art where a
+      // boardroom table should be. A DESK run (OPEN/CUBICLE, which stand their own glb per cell)
+      // and a COUNTER or VANITY run (a plinthed carcass, correctly a box) are not tables
+      var s = m.surf[row][col];
+      if (s != Surf.MEETING &&
+          s != Surf.CARPET &&
+          s != Surf.EXEC)
+        return false;
+      return x || z;
     }
 
   public static inline function fixture(m:Facility, col:Int, row:Int):Bool

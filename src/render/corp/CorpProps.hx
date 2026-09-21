@@ -433,7 +433,7 @@ class CorpProps
               continue;
             var s = m.surf[row][col];
             var c = CityConfig.cellToWorld(col, row);
-            if (CorpFurniture.glbDesk(s) &&
+            if (CorpFurniture.deskCell(m, col, row) &&
                 !CorpFurniture.slabTop(m, col, row))
               {
                 var dir = backHand(m, col, row);

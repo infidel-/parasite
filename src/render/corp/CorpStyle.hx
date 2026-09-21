@@ -207,6 +207,10 @@ class CorpStyle
   public static inline var DESK_TILE = 4.0;
   public static inline var DESK_FRONT_TILE = 3.0;
   public static inline var COUNTER_TILE = 4.0;
+  // and the boardroom table's own, on its top and BOTH kinds of edge. it used to have none: the
+  // MEETING branch never set `tile`, so a table's top tiled at the desk laminate's 4.0 and its two
+  // end faces at DESK_FRONT_TILE 3.0 — a drawer pitch, on a boardroom table's edge
+  public static inline var TABLE_TILE = 4.0;
   public static inline var PARTITION_TILE = 2.8;
   public static inline var RACK_TILE = 2.0;
   public static inline var MIRROR_TILE = 4.4;
@@ -701,7 +705,10 @@ class CorpStyle
         },
         surfOf: CorpModel.surfOf,
         fitOf: CorpModel.fitOf,
-        tableOf: Const.isCorpTableTile,
+        // BOTH families, and the second one is why an executive office and a reception counter
+        // used to draw nothing: gen.corp.CorpRooms.execDesk lays DARK_TABLE_MARBLE1_3X2, which is
+        // on tileset rows 14 and 16 and so falls outside isCorpTableTile's four rows entirely
+        tableOf: function(t:Int) return Const.isCorpTableTile(t) || Const.isCorpDeskBlock(t),
         wallOf: CorpModel.wallOf,
         // an office partition is a stud wall and not blockwork — see WALL_INNER
         wallIn: WALL_INNER,
