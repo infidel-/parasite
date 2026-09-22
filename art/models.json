@@ -1242,7 +1242,7 @@
       "tex": 512,
       "note": "the water cooler, HAND-MODELLED (models-src/corp/appliance_build.py) 184 tris, 0.58 x 0.545 x 2.2, holes 0, coplanar 0. IT WAS TRELLIS AND THE ENTRY IT REPLACES WAS ONE NUMBER, baseColor 0.17, fighting a bake that came back at sampled 212 srgb because the reference clause names MATTE WHITE LACQUER and a white object photographs white. A flat multiply is per PROP, so crushing the cabinet to 95 crushed the bottle with it and the water shipped grey -- reported as \"wtf is water bin gray??? should be the color of water - blue/cyan\". No factor can fix that, because the two tones have to move apart and a scalar moves them together. Hand-modelled, each part takes its own cell of corp/appliance-pack: a lacquer cabinet, a dark anodised plinth, collar and dispense recess, and an INVERTED CARBOY lathed in the blue water cell. NO baseColor and NO lift -- the sheet is fitted art. Its brief was a number all the way down (CorpStyle.COOLER_H 2.2, COOLER_W 0.58) and its one round part is a radius that changes up the piece, which is docs/3d-models.md's own test for this route. BASECOLOR 0.59, and this one IS a flat scalar for the reason the other direction was not: measured on the built glb the sampled albedo is 48/121/159, luma 108 -- over the indoor ~78 band and over the carpet's 95, i.e. the brightest thing on the floor plate, which is what a white cabinet under a big blue bottle comes to when both cells are near their own ceilings. A flat linear multiply holds the hue everywhere, so the water stays the one blue object in the tower and only the level moves: 108 -> ~85 srgb by the transfer, k = (85/108)^2.2. propstat's own 0.17 is fitted to the OUTDOOR 46-52 family and is a different room.",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.59,0.59,0.59,1",
-      "last_converted": "2026-09-22T08:29:26Z",
+      "last_converted": "2026-09-22T14:24:15Z",
       "baseColor": [
         0.59,
         0.59,
@@ -1256,7 +1256,7 @@
       "tex": 512,
       "note": "the multifunction printer, HAND-MODELLED (models-src/corp/appliance_build.py) 132 tris, 1.05 x 1.33 x 2.2, holes 0, coplanar 0, against the TRELLIS one's 1,200. The old entry called the generated bake \"the best-conditioned of the three\" and it was -- and it was still 1,200 triangles rounding the corners off a stack of slabs, which is the workstation's own history one prop over. Every part of a printer is an axis-aligned number and the read is the STEPS between them: a drawer pedestal with two fronts, a body inset off it, an output slot let into that body's face, a scanner lid set BACK off the front deck, and the control fascia lying flat on the deck the setback leaves -- flat and not raked, because this camera pitches 51 degrees down and the top is the face it reads. Wears corp/appliance-pack; no baseColor, no lift.",
       "last_sig": "n1/-1/512/0.01/-/-",
-      "last_converted": "2026-09-22T08:29:26Z"
+      "last_converted": "2026-09-22T14:24:15Z"
     },
     "corp/chair": {
       "src": "corp/corp-chair.glb",
@@ -1296,7 +1296,7 @@
       "tris": -1,
       "tex": 768,
       "note": "the open-plan / cubicle desk, hand-modelled, 96 tris, 3.76 x 3.30 x 1.50 built at WORLD SIZE so Models.instanced scales it by 1. It replaces the emitted worktop on Surf.OPEN and Surf.CUBICLE, which was reported as \"just a cuboid\" and was one: a desk is a thin top on a frame with a VOID under it, and the void is the read. A 0.10 top oversailing 0.22 at the front, an O-leg frame in anodised section, a three-drawer pedestal on a 0.13 plinth reveal and a cable tray. Wears desk-wrap.png, which is the three shipped corp desk labels plus the chair sheet's anodised band -- fitted art, so NO baseColor and NO lift. TWO FIXES in the sixth defect pass, both reported off face dumps. (1) ITS FRONT WAS -y WHILE BOTH FILES SAID +y: the top's overhang, the modesty setback and the whole drawer pedestal were measured off `yb = -TOP_D/2`, and render.corp.CorpProps.tables turns the module by the desk's BACK hand on the stated premise that its front is +y -- so the drawers faced the wall and the seat was pulled up to the back of the pedestal. Fixed in the MODEL, because the yaw is the line both files already describe correctly, and the convention is settled by the chair: every yaw in CorpProps is atan2(DC[d], DR[d]) and what it turns to face d is the model's -y. (2) THE CABLE TRAY WORE A PLAIN ANODISED BAND and was reported as \"what is that slab in the desk?\" -- which is what a featureless plate slung under a worktop is. It takes corp/cable-tray now, cell 4 of a desk-wrap rebuilt 2 x 3 at 1024 x 1536 so the desk TOP keeps its full 512. Also MOD_Z1 dropped 0.02 so the modesty panel's top clears the pedestal's: both are buried under the worktop and they sat 0.01 apart, which is buildlib.check's near-coplanar complaint exactly. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T08:23:10Z",
+      "last_converted": "2026-09-22T14:24:18Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/table-leg": {
@@ -1304,7 +1304,7 @@
       "tris": -1,
       "tex": 768,
       "note": "the blade leg under a boardroom or executive slab, hand-modelled, 36 tris. It is a LEG and not a table because a glb cannot span a block: gen.corp writes those tables as 3x2 and 3x3 of table tiles and Models.instanced scales by HEIGHT ALONE, so a module per cell would cut a 6 m table into six 2 m desks. The top stays emitted -- CorpFurniture keeps its cap and a 0.26 fascia -- and this is the silhouette under it. Same sheet, same rule: no baseColor, no lift. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T08:23:10Z",
+      "last_converted": "2026-09-22T14:24:18Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/bin": {
@@ -1312,7 +1312,7 @@
       "tris": -1,
       "tex": 768,
       "note": "the waste bin, hand-modelled, 140 tris, a 12-sided two-stage lathe: a tucked foot, a flared body and a rolled lip. It is the ONE glb of the decoration families and the reason is the triage and not the budget -- everything else gen.corp stands against a wall (a cabinet, a fridge, a vending machine, a whiteboard) is an axis-aligned slab and goes out as quads into CorpFurniture's own buffers for no draw call at all, and a bin is round. Wears desk-wrap.png's anodised cell; no baseColor, no lift. INSIDES, in the sixth defect pass: the profile used to stop at the rim and take a flat disc over the opening, i.e. a bin with a lid cast into it -- reported as \"should have insides, it's just flat top\". It runs buildlib's VESSEL cycle now (out to the rim, over it, back DOWN the inside to the floor, which is `tube`'s own end cap at BIN_FLOOR), 140 -> 188 tris. At a 51-degree pitch the top is most of what a bin shows, which is the one face it cannot afford to fake. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T08:23:10Z",
+      "last_converted": "2026-09-22T14:24:18Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/desk-mug": {
@@ -1321,7 +1321,7 @@
       "tex": 256,
       "note": "the desk mug, 220 tris, 0.207 x 0.15 x 0.19, holes 0, coplanar 0. IT REPLACES TWO PACK CELLS of corp/desk-clutter -- 3 the ceramic mug and 5 the glass tumbler -- which were reported from the game as clutter better served by Blender, and correctly: a mug is carried by its HANDLE and its opening, and neither exists in a top-down cut-out. A vessel lathe (out to the rim, over it, back down the inside) with the handle swept, because `tube` turns about the vertical and cannot state a loop. Hand-modelled (models-src/corp/clutter_build.py), wearing corp/clutter-pack. TEX 256 AND NOT 512: these are the smallest props in the game and texels-per-WORLD-UNIT is the number that decides an atlas (docs/3d-models.md), not texels per triangle -- a 256 map over a 0.19 mug is far above the floor tile's 57/unit and 512 would be spending four times the memory under the resolution limit of a thing 10 cm across. NO baseColor and NO lift: the sheet is fitted art.",
       "last_sig": "n1/-1/256/0.01/-/-",
-      "last_converted": "2026-09-22T08:33:56Z"
+      "last_converted": "2026-09-22T14:24:44Z"
     },
     "corp/desk-bottle": {
       "src": "corp/corp-desk-bottle.glb",
@@ -1329,7 +1329,7 @@
       "tex": 256,
       "note": "the desk bottle, 184 tris, 0.11 x 0.11 x 0.52. Replaces pack cells 4 (the steel flask) and 49 (the water bottle) -- one shouldered cylinder serves both, and the shoulder is what says bottle rather than tin. A charcoal cap off the polymer cell, so the two materials are two rects and not one grey. Hand-modelled (models-src/corp/clutter_build.py), wearing corp/clutter-pack. TEX 256 AND NOT 512: these are the smallest props in the game and texels-per-WORLD-UNIT is the number that decides an atlas (docs/3d-models.md), not texels per triangle -- a 256 map over a 0.19 mug is far above the floor tile's 57/unit and 512 would be spending four times the memory under the resolution limit of a thing 10 cm across. NO baseColor and NO lift: the sheet is fitted art.",
       "last_sig": "n1/-1/256/0.01/-/-",
-      "last_converted": "2026-09-22T08:33:56Z"
+      "last_converted": "2026-09-22T14:24:44Z"
     },
     "corp/desk-plant": {
       "src": "corp/corp-desk-plant.glb",
@@ -1337,7 +1337,7 @@
       "tex": 256,
       "note": "the potted succulent, 280 tris, 0.182 x 0.180 x 0.253. Replaces pack cell 25. The pot is a lathe whose own top cap is the SOIL (it takes the leaf cell, so what shows inside the rim is planting and not plastic), and the rosette is six leaves cut flat, skinned, then pitched and turned. They start 0.050 out from the centre and a crown fills the disc that leaves: six leaves at 60 degrees springing from one point came back as six coplanar pairs at gap 0.0, which is chair_build's ARM_IN arithmetic one prop over. Hand-modelled (models-src/corp/clutter_build.py), wearing corp/clutter-pack. TEX 256 AND NOT 512: these are the smallest props in the game and texels-per-WORLD-UNIT is the number that decides an atlas (docs/3d-models.md), not texels per triangle -- a 256 map over a 0.19 mug is far above the floor tile's 57/unit and 512 would be spending four times the memory under the resolution limit of a thing 10 cm across. NO baseColor and NO lift: the sheet is fitted art.",
       "last_sig": "n1/-1/256/0.01/-/-",
-      "last_converted": "2026-09-22T08:33:56Z"
+      "last_converted": "2026-09-22T14:24:44Z"
     },
     "corp/desk-cam": {
       "src": "corp/corp-desk-cam.glb",
@@ -1345,7 +1345,7 @@
       "tex": 256,
       "note": "the desk webcam, 120 tris, 0.104 x 0.104 x 0.17. Replaces pack cell 58. A puck, a stalk and a lens head -- three numbers and a silhouette no decal can hold, which is the whole test. The lens ring takes the polymer cell's AMBER band, cropped as its own rect rather than about the cell centre (buildlib.at's note). Hand-modelled (models-src/corp/clutter_build.py), wearing corp/clutter-pack. TEX 256 AND NOT 512: these are the smallest props in the game and texels-per-WORLD-UNIT is the number that decides an atlas (docs/3d-models.md), not texels per triangle -- a 256 map over a 0.19 mug is far above the floor tile's 57/unit and 512 would be spending four times the memory under the resolution limit of a thing 10 cm across. NO baseColor and NO lift: the sheet is fitted art.",
       "last_sig": "n1/-1/256/0.01/-/-",
-      "last_converted": "2026-09-22T08:33:56Z"
+      "last_converted": "2026-09-22T14:24:44Z"
     }
   }
 }
