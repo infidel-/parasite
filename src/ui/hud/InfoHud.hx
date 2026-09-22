@@ -59,8 +59,8 @@ class InfoHud
 
       // compact-mode toggle: persistent, survives in-place updates
       compactBtn = document.createDivElement();
-      compactBtn.className = 'hud-compact-btn';
-      compactBtn.title = 'Compact info';
+      compactBtn.className = 'hud-compact-btn evolution-tip';
+      compactBtn.setAttribute('data-tip', 'Compact info');
       compactBtn.innerHTML = UISvg.hudCompact();
       compactBtn.onclick = function (e)
         {

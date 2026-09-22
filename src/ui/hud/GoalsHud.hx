@@ -10,6 +10,7 @@ class GoalsHud
 {
   var game: Game;
   var goals: DivElement;
+  var compactBtn: DivElement; // compact-mode toggle, survives rebuild()
   var rows: Map<_Goal, DivElement>; // goalId -> row element; displayed set, lags the model
   var pending: Array<{ action: String, id: _Goal }>; // goal anims deferred until UI is idle
 
@@ -22,6 +23,28 @@ class GoalsHud
       goals.className = 'hud-panel hud-text';
       goals.id = 'hud-goals';
       h.container.appendChild(goals);
+
+      // compact-mode toggle: hides the goal notes, leaving the titles
+      compactBtn = document.createDivElement();
+      compactBtn.className = 'hud-compact-btn evolution-tip';
+      compactBtn.setAttribute('data-tip', 'Compact goals');
+      compactBtn.innerHTML = UISvg.hudCompact();
+      compactBtn.onclick = function (e)
+        {
+          var v = !game.config.compactGoals;
+          game.config.set('compactGoals', v ? '1' : '0', true);
+          game.scene.sounds.play('click-hud');
+          setCompact(v);
+        }
+      goals.appendChild(compactBtn);
+      setCompact(game.config.compactGoals);
+    }
+
+// toggle compact mode: notes collapse away (CSS), button lights up
+  function setCompact(v: Bool)
+    {
+      goals.classList.toggle('hud-compact', v);
+      compactBtn.classList.toggle('active', v);
     }
 
 // build a row's inner HTML (diamond + name + note) for a goal
@@ -46,6 +69,7 @@ class GoalsHud
     {
       while (goals.firstChild != null)
         goals.removeChild(goals.lastChild);
+      goals.appendChild(compactBtn); // cleared with the rows, put back
       rows = new Map();
       var primaryAssigned = false;
       for (g in game.goals.iteratorCurrent())
