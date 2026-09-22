@@ -47,7 +47,7 @@ class CorpSigns
 
   // each panel's own width:height, MEASURED off the built sheets' crops and not chosen — see the
   // class header and art/textures.json's notes on corp/signs and corp/posters
-  static var ASPECT = [1.6553, 0.7038, 1.0400, 1.5034, 0.5952, 1.7437, 1.3905, 1.4263];
+  static var ASPECT = [1.6553, 0.7038, 1.0400, 1.5034, 0.6987, 1.8139, 1.4000, 1.2632];
 
 // every sign on the plate, merged into one mesh. returns how many hang, for __corp()
   public static function build(scene:Scene, m:Facility):Int

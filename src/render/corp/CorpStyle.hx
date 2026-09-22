@@ -1,6 +1,7 @@
 package render.corp;
 
 import Const;
+import render.RenderConfig;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Surf;
 import render.facility.ShellOpts;
@@ -82,6 +83,11 @@ class CorpStyle
   // from the same angle, which is the one case docs/3d-textures.md allows a label to be reused
   public static inline var CAP = 'textures/corp/cap-alu.png';
   public static inline var COPING = 'textures/corp/coping.png';
+  // the lift doorway's two details — see ShellTex.pocket/sill. The reveal is painted in the
+  // CIRCULATION finish whichever way an opening faces, which left the car's own opening reading as
+  // a hole in the corridor board: no track, no threshold, nothing to say a door slides there
+  public static inline var LIFT_POCKET = 'textures/corp/lift-pocket.png';
+  public static inline var LIFT_SILL = 'textures/corp/lift-sill.png';
   // the glazing, one image per RUN LENGTH. their aspects are MEASURED off the built crops
   // (512x183 and 512x280) and not chosen — see ShellTex.aspect
   public static inline var WINDOW_3 = 'textures/corp/window-3bay.png';
@@ -167,7 +173,9 @@ class CorpStyle
   // the cubicle spine. 1.4 m is a real low-wall partition: over a seated head and under a standing
   // one, which is the whole point of the thing
   public static inline var PARTITION_H = 2.8;
-  public static inline var PARTITION_T = 0.4;
+  // 10 cm of panel. HALVED from 0.4, which was 20 cm of fabric-faced board and read as a stud
+  // wall; the panel is emitted +-T/2 about the cell centreline, so nothing else moves with it
+  public static inline var PARTITION_T = 0.2;
   // a WC cubicle's own divider, 1.9 m, and a 15 cm panel
   public static inline var STALL_H = 3.8;
   public static inline var STALL_T = 0.3;
@@ -190,6 +198,12 @@ class CorpStyle
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;
   public static inline var DESK_GLB_W = 3.76;
+  // and its worktop DEPTH, which is NOT the cell. models-src/corp/desk_build.py lays a 3.30 top
+  // centred in a 4.0 cell, so the top edge is 1.65 from the centre where the cell boundary is
+  // 2.00 — and everything standing on the desk used to be offset from CELL / 2, which put the
+  // keyboard's front lip 0.04 PAST the front of the desk it sits on and the monitor's back within
+  // 0.275 of the far edge. Keep this equal to desk_build.py's TOP_D
+  public static inline var DESK_TOP_D = 3.30;
   public static inline var LEG_H = 1.24;
   public static inline var LEG_W = 0.46;
   // the waste bin, the one ROUND piece of the tower's furniture and so the only one of the
@@ -244,9 +258,12 @@ class CorpStyle
   public static inline var KEY_H = 0.09;
   public static inline var KEY_W = 1.60;
   public static inline var KEY_D = 0.58;
-  // where the two sit on the worktop, measured from the desk cell's BACK edge forward
-  public static inline var MON_BACK = 0.85;
-  public static inline var KEY_FWD = 2.55;
+  // where the two sit on the worktop, measured from the DESK TOP's back edge forward — see
+  // DESK_TOP_D, which is what these were wrongly taken off the cell for. Fitted so both clear the
+  // top: the monitor's back lands 0.45 inside it (centre 0.975, half-depth 0.225) and the
+  // keyboard's front lip 0.435 inside (centre -0.925, half-depth 0.29)
+  public static inline var MON_BACK = 0.675;
+  public static inline var KEY_FWD = 1.90;
   // one desk cell in this many carries a workstation. A DESK RUN IS NOT A CALL CENTRE: every cell
   // manned puts a monitor every 2 m down a wall, which reads as a bank of screens rather than as
   // an office
@@ -254,10 +271,13 @@ class CorpStyle
   public static inline var PLANT_H = 2.8;      // 1.4 m
   public static inline var PLANT_W = 1.35;
   public static inline var COOLER_H = 2.2;     // 1.1 m
-  public static inline var COOLER_W = 0.55;
+  // and the two footprints, MEASURED on the built glbs rather than chosen: both props are
+  // hand-modelled at world size now (models-src/corp/appliance_build.py), so the collar's 0.03
+  // oversail and the output slot's 0.03 proud are part of what they really occupy
+  public static inline var COOLER_W = 0.58;
   public static inline var PRINTER_H = 2.2;
   public static inline var PRINTER_W = 1.05;
-  public static inline var PRINTER_D = 1.30;
+  public static inline var PRINTER_D = 1.33;
   public static inline var WC_H = 1.5;
   public static inline var WC_W = 0.80;
   public static inline var WC_D = 1.40;        // built to this exactly, so the cistern meets masonry
@@ -293,6 +313,41 @@ class CorpStyle
   public static inline var CLUTTER_INSET = 0.18;
   // the clearance between two items, counted ONCE per pair
   public static inline var CLUTTER_GAP = 0.10;
+
+  // SIX OF THE SIXTY-FOUR CELLS ARE PROPS AND NOT DECALS, and the rule behind the list is worth
+  // stating because it decides the next one too: a PACK64 cell is a flat cut-out seen from
+  // overhead, which is not a compromise for a sheet of paper, a folder or a mouse mat — those
+  // really are flat — and is a lie for anything carried by a ROUND or UPRIGHT silhouette, because
+  // no top-down art can give an object a side. Reported from the game cell by cell.
+  //
+  // FOUR GLBS FOR SIX CELLS, which is what the pairs buy: a mug and a glass tumbler are one lathe,
+  // a vacuum flask and a water bottle are one shouldered cylinder. Cells 24 (the amber pen pot)
+  // and 48 (the takeaway cup) STAY DECALS on purpose — at 51 degrees a pen pot is a disc of pen
+  // ends and a paper cup is a disc with a lid, and neither is worth the draw call an instanced
+  // batch costs, which is the number this route really spends
+  public static inline var CLUTTER_MUG = 0;
+  public static inline var CLUTTER_BOTTLE = 1;
+  public static inline var CLUTTER_PLANT = 2;
+  public static inline var CLUTTER_CAM = 3;
+  public static inline var CLUTTER_PROPS = 4;
+  // which prop an atlas index becomes, or -1 for a cell that stays a decal. indexed by cell
+  public static var CLUTTER_PROP_OF: Map<Int, Int> = [
+    3 => CLUTTER_MUG,        // the ceramic mug
+    5 => CLUTTER_MUG,        // the glass tumbler
+    4 => CLUTTER_BOTTLE,     // the steel flask
+    49 => CLUTTER_BOTTLE,    // the water bottle
+    25 => CLUTTER_PLANT,     // the potted succulent
+    58 => CLUTTER_CAM,       // the tripod webcam
+  ];
+  // their built heights, in the order above, and their glb paths. built at world size, so
+  // render.Models.instanced scales each by 1
+  public static var CLUTTER_PROP_H = [0.19, 0.52, 0.2534, 0.17];
+  public static var CLUTTER_PROP_PATH = [
+    RenderConfig.MODELS.corpDeskMug,
+    RenderConfig.MODELS.corpDeskBottle,
+    RenderConfig.MODELS.corpDeskPlant,
+    RenderConfig.MODELS.corpDeskCam,
+  ];
 
   // the wall signs. ONE sheet, four quadrants, four DIFFERENT aspects — see CorpSigns.ASPECT
   public static inline var SIGN_TEX = 'textures/corp/signs.png';
@@ -746,6 +801,8 @@ class CorpStyle
           coping: COPING,
           // a tower floor has no roll-up shutter
           shutter: null,
+          pocket: LIFT_POCKET,
+          sill: LIFT_SILL,
           door: [DOOR_GLASS, DOOR_OFFICE, DOOR_STEEL, DOOR_PRIVATE, DOOR_LIFT],
           circ: Surf.CARPET,
         },

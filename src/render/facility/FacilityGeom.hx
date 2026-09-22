@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityModel.Wall;
 import render.world.ContactMask;
@@ -176,18 +177,26 @@ class FacilityGeom
         m.wallIn : FacilityStyle.WALL_T);
     }
 
-// is this cell's masonry surrounded by the building on all four hands — i.e. a partition and not a
-// piece of the perimeter
+// is this cell's masonry surrounded by the building on all EIGHT hands — i.e. a partition and not a
+// piece of the perimeter.
+//
+// THE DIAGONALS COUNT, and leaving them out is what made the lift core's corner fit nothing. A cell
+// whose four hands are all indoors or all masonry can still have an OUTDOOR CORNER — it is the cell
+// on the inside of an L, the one parapet() emits a notch for and the one whose notch face is the
+// exterior cladding turning the corner. Counted as interior it was thinned to `wallIn` 1.2, so that
+// face stood at 0.4 off the run it had to merge into: reported from the game as two `wall-curtain`
+// faces, one at z -179.0 and one at z -178.6, that "should merge into one another"
   static function inner(m:Facility, col:Int, row:Int):Bool
     {
-      for (d in 0...4)
-        {
-          var c = col + DC[d];
-          var r = row + DR[d];
-          if (!FacilityModel.isIndoor(m, c, r) &&
-              !carries(m, c, r))
-            return false;
-        }
+      for (dc in -1...2)
+        for (dr in -1...2)
+          {
+            var c = col + dc;
+            var r = row + dr;
+            if (!FacilityModel.isIndoor(m, c, r) &&
+                !carries(m, c, r))
+              return false;
+          }
       return true;
     }
 
@@ -288,10 +297,18 @@ class FacilityGeom
 // the square belongs to the DIAGONAL cell: it is the last unit of that room's corner, and it takes
 // that room's floor, its fading ceiling and its paint, exactly as strips() hands a run's leftover to
 // the neighbour beside it
-  public static function notches(m:Facility, col:Int, row:Int):Array<Notch>
+//
+// `inset` OVERRIDES the cell's own masonry inset, and only the parapet ring passes it. Every other
+// caller wants the square the MASONRY leaves, which is what `thick` measures; the ring is drawn on
+// FacilityStyle.PARAPET_INSET whatever the cell is made of (see ringRect), so a notch taken at the
+// masonry inset lands beside it and not on it. Reported from the game as the lift core's roof
+// corner meeting neither the core's own parapet nor the block's: the corner cell was `inner`, so
+// thick gave it the 1.2 stud wall, e came out 1.4 against the ring's 1.0 and both of the notch's
+// two bands stood 0.4 proud of the band they were there to join
+  public static function notches(m:Facility, col:Int, row:Int, inset:Float = -1):Array<Notch>
     {
       var half = (CityConfig.GRID * CELL) / 2;
-      var e = (CELL - thick(m, col, row)) / 2;
+      var e = (inset >= 0 ? inset : (CELL - thick(m, col, row)) / 2);
       var x0 = col * CELL - half;
       var z0 = row * CELL - half;
       var out = [];
@@ -451,6 +468,10 @@ class FacilityGeom
       var panes2 = MeshBufTools.make();
       var panesHigh = MeshBufTools.make();
       var head = MeshBufTools.make();
+      // and the LIFT DOORWAY'S two details, which need buffers of their own for the shutter's own
+      // reason: painted in the reveal's circulation board they are not details, they are wall
+      var pocket = MeshBufTools.make();
+      var sill = MeshBufTools.make();
       // which wall buffer a face looking into (c,r) belongs in. the hangar wears its cladding on
       // both sides, so it never reaches the interior pair; a corridor is Surf.LINO, the surface the
       // generator floors every corridor and every door cell with, so the split needs no
@@ -610,9 +631,18 @@ class FacilityGeom
                 // face at the same place, which is what makes it `face` with one axis collapsed
                 jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
                   FacilityStyle.WALL_TILE);
+                // A LIFT OPENING TAKES TWO DETAILS ON TOP OF THAT, and it is the one Look that
+                // does. Everything above paints the reveal in the CIRCULATION finish, which is
+                // right for an office door and left the car's own opening reading as a hole in the
+                // corridor board — no track, no threshold, nothing saying a door slides there. So
+                // a near-black POCKET strip runs down each jamb where the leaves go, and the
+                // threshold below takes the metal SILL instead of the board
+                var lift = (m.doors[di].look == Look.LIFT);
+                if (lift && m.tex.pocket != null)
+                  liftPocket(pocket, m.doors[di].alongX, s);
                 // and the threshold under them, for the surface the doorway opens onto being lower
                 // than the floor it leads to — see `threshold`
-                threshold(soffit, m.doors[di].alongX, s);
+                threshold(lift && m.tex.sill != null ? sill : soffit, m.doors[di].alongX, s);
                 // and the bulkhead lamp's hood, over an EXTERIOR doorway only. it rode wOut for a
                 // build — the exterior cladding's own buffer, for no draw call at all, the way the
                 // parapet ring and the gable crescents do — and a fitting painted in the wall's own
@@ -750,6 +780,10 @@ class FacilityGeom
       add(scene, wOut, wallTex, true, true);
       if (m.tex.shutter != null)
         add(scene, shut, m.tex.shutter, true, true);
+      if (m.tex.pocket != null)
+        add(scene, pocket, m.tex.pocket, true, false);
+      if (m.tex.sill != null)
+        add(scene, sill, m.tex.sill, true, false);
       add(scene, head, m.tex.head, true, false);
       // the coping does not cast: the cladding under it is in wOut, which does, and at the moon
       // box's 0.088 units per shadow texel a 0.25-tall band overhanging 0.12 adds at most three
@@ -832,7 +866,15 @@ class FacilityGeom
       var xa = col * CELL - half + e, xb = xa + CELL - 2 * e;
       var za = row * CELL - half + e, zb = za + CELL - 2 * e;
       var b = glazed ? capping : deck;
-      var t = glazed ? FacilityStyle.HEAD_TILE : FacilityStyle.ROOF_TILE;
+      // ONE LABEL, ONE PERIOD. HEAD_TILE is 3.0 against ROOF_TILE's 9.0, which is right where the
+      // capping is its OWN art — the compound's head is a different label from its roof. The corp
+      // tower gives both slots `textures/corp/cap-alu` (render.corp.CorpStyle.shell), and the lift
+      // core alternates the two cell by cell: three-cell glazed runs on three sides between four
+      // solid corner posts (gen.blocks.ElevatorBlock), so the same brushed aluminium jumped 3x in
+      // course all the way round the core. Reported twice as the elevator edge not lining up with
+      // the roof. Same label => same period, and the facility is untouched because its two differ
+      var t = (glazed && m.tex.head != m.tex.roof ?
+        FacilityStyle.HEAD_TILE : FacilityStyle.ROOF_TILE);
       var y = FacilityStyle.ROOF_Y - (glazed ? FacilityStyle.HEAD_DROP : 0.0);
       // with no run along x there is nothing to split around, and the run along z is one rect. worth
       // the branch: without it every cell of every vertical wall in the area emitted its band as
@@ -908,8 +950,20 @@ class FacilityGeom
 // outdoors then this cell's own face in `q` looks at it, so `outward` there is true by construction
   static function endCase(m:Facility, col:Int, row:Int, dir:Int, q:Int):Int
     {
-      if (carries(m, col + DC[q], row + DR[q]))
-        return outward(m, col + DC[q], row + DR[q], dir) ? 0 : 2;
+      var c = col + DC[q];
+      var r = row + DR[q];
+      if (carries(m, c, r))
+        {
+          if (outward(m, c, r, dir))
+            return 0;
+          // THE THIRD COMBINATION IS A NOTCH AND NOT A STEP. The neighbour carries but does not
+          // face `dir`, and there are two ways that happens: its own `dir` hand is INDOORS, which
+          // is the perimeter stepping in, or its `dir` hand CARRIES — and then what stands between
+          // the two of us is that cell's reentrant corner, a band on this very line (see the notch
+          // loop in parapet()). Retracting for it left the coping 0.12 short of a run that simply
+          // carried on, and overlapped the two inner fascias by 0.72
+          return carries(m, c + DC[dir], r + DR[dir]) ? 0 : 2;
+        }
       return outward(m, col, row, q) ? 1 : 0;
     }
 
@@ -1054,7 +1108,7 @@ class FacilityGeom
             // two touching footprints would leave a T x T hole in the ring at every turn. the corner
             // is the notch's own inner corner, which is the CONCAVE case at exactly one end of each
             // band while the other end carries on into the neighbouring cell's
-            for (n in notches(m, col, row))
+            for (n in notches(m, col, row, FacilityStyle.PARAPET_INSET))
               {
                 if (FacilityModel.isIndoor(m, n.col, n.row))
                   continue;
@@ -1163,6 +1217,32 @@ class FacilityGeom
         if (dir != (l.dir ^ 1))
           face(b, x0, x1, z0, z1, dir, y0, y1, FacilityStyle.DOOR_LAMP_TILE);
       cap(b, x0, x1, z0, z1, y1, FacilityStyle.DOOR_LAMP_TILE);
+    }
+
+// the lift doorway's door pocket: a narrow near-black strip down each jamb, standing a hair proud
+// of the reveal so it draws over it rather than z-fighting with it — FacilityGeom.plane's own
+// trick, and the same MIRROR_EPS-shaped offset render.corp.CorpFurniture hangs a mirror on.
+//
+// it maps 0..1 up its height, because the art is one authored slot and not a tiling weave: a
+// world-tiled strip would slide its highlight up and down with the doorway's world position
+  static function liftPocket(b:MeshBuf, alongX:Bool, s:Rect):Void
+    {
+      var w = FacilityStyle.LIFT_POCKET_W;
+      var e = FacilityStyle.LIFT_POCKET_EPS;
+      var y0 = FacilityStyle.WALL_BASE;
+      var y1 = FacilityStyle.DOOR_H;
+      if (alongX)
+        {
+          face(b, s.x0 + e, s.x0 + e, s.z0, s.z0 + w, 3, y0, y1, FacilityStyle.WALL_TILE);
+          face(b, s.x1 - e, s.x1 - e, s.z0, s.z0 + w, 2, y0, y1, FacilityStyle.WALL_TILE);
+          face(b, s.x0 + e, s.x0 + e, s.z1 - w, s.z1, 3, y0, y1, FacilityStyle.WALL_TILE);
+          face(b, s.x1 - e, s.x1 - e, s.z1 - w, s.z1, 2, y0, y1, FacilityStyle.WALL_TILE);
+          return;
+        }
+      face(b, s.x0, s.x0 + w, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
+      face(b, s.x0, s.x0 + w, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
+      face(b, s.x1 - w, s.x1, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
+      face(b, s.x1 - w, s.x1, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
     }
 
   static function threshold(b:MeshBuf, alongX:Bool, s:Rect):Void

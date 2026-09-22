@@ -19,10 +19,15 @@ import gen.corp.CorpTemp.*;
 
 class CorpRooms
 {
-  // how far apart cubicle pods sit: 3 cells of desk plus one of gap along the run, and five rows
-  // per back-to-back band (aisle, desk, spine, desk, aisle) plus one of gap between bands
-  public static inline var POD_W = 4;
-  public static inline var POD_BAND_H = 6;
+  // A CUBICLE BLOCK IS `W` PODS WIDE AND TWO DEEP, with a passage column between blocks and an
+  // aisle row between bands. One pod is ONE cell: a desk, its own chair in the aisle it faces, and
+  // a partition behind it on the spine the two rows share. 3 where the room can hold two blocks of
+  // three plus their passages, 2 otherwise
+  public static inline var POD_BLOCK_W = 3;
+  public static inline var POD_BLOCK_MIN = 2;
+  // one band is desk, spine, desk, aisle — and the band above it supplied the aisle its first desk
+  // row faces, which is why the pitch is four rows and not five
+  public static inline var POD_BAND_H = 4;
   // and how far apart a server room's rack rows stand: a row of racks and an aisle to reach them
   public static inline var RACK_PITCH = 2;
   // HOW MANY FIXTURES A ROOM GETS, WHICH IS NOT HOW WIDE IT IS. Every one of these runs used to
@@ -549,13 +554,19 @@ class CorpRooms
       decorateWorkWalls(state, room);
     }
 
-// a cubicle farm: bands of pods laid back to back against a shared spine.
+// a cubicle farm: blocks of pods, with a passage between every block.
 //
-// A BAND IS FIVE ROWS — aisle, desk, spine, desk, aisle — so two rows of people sit facing away
-// from each other with one run of partition between them, which is what a cubicle farm IS. The
-// spine cells are the room's floor made UNWALKABLE and carry no decoration: they are a mark, and
-// render.corp.CorpCubicle is what stands a panel on them. Everything else here is the same 3x1
-// desk and chair the open-plan template lays, because a cubicle is a desk with a wall round it
+// A BLOCK IS `bw` PODS WIDE AND TWO DEEP — two rows of desks back to back with one run of
+// partition between them, a passage column each side of the block and an aisle row each side of
+// the band — so every worker gets a bay of his own. The side panels between neighbours inside a
+// block cost NO CELL: render.corp.CorpFurniture stands one on the boundary between two adjacent
+// cubicle desk cells, which is what "each has his private space" asks for without spending a grid
+// column on every divider.
+//
+// IT USED TO BE A FIVE-ROW BAND WITH A 3-CELL DESK RUN per pod — three people sharing one
+// unbroken worktop with no divider anywhere along it, and the run started at x1+1 and marched
+// until it ran out, so the whole remainder landed on the x2 side and the last pod could sit flush
+// against the dressed wall column. The run is CENTRED now and the remainder split
   public static function cubicle(state: _CorpState, node: _GenNode, room: _Room)
     {
       var area = state.area;
@@ -565,68 +576,94 @@ class CorpRooms
       var chairID = area.random(Const.CORP_CHAIR[0].amount);
       var computerID = area.random(Const.CORP_COMPUTERS_BLOCK.width);
 
+      // the interior, between the two wall columns `decorateWalls` dresses
+      var inner = room.w - 2;
+      var bw = (inner >= POD_BLOCK_W * 2 + 3 ? POD_BLOCK_W : POD_BLOCK_MIN);
+      var blocks = Std.int((inner + 1) / (bw + 1));
+      if (blocks < 1 ||
+          room.h < POD_BAND_H + 1)
+        {
+          decorateCubicleWalls(state, room);
+          return;
+        }
+      var runW = blocks * (bw + 1) - 1;
+      var x0 = room.x1 + 1 + Std.int((inner - runW) / 2);
+
       var band = 0;
       while (true)
         {
           band++;
           if (band > 20)
             break;
-          // the band's spine row, with a desk row either side of it and an aisle beyond each
-          var sy = room.y1 + 2 + (band - 1) * POD_BAND_H;
-          if (sy + 2 > room.y2)
+          // the band's three rows, with the aisle its first desk row faces one row above
+          var dy0 = room.y1 + 1 + (band - 1) * POD_BAND_H;
+          var sy = dy0 + 1;
+          var dy1 = dy0 + 2;
+          if (dy1 + 1 > room.y2)
             break;
 
-          var x = room.x1 + 1;
-          while (x + 2 <= room.x2)
+          for (b in 0...blocks)
             {
-              GenTree.add(node, CorpBlocks.ZONE_POD_ROW, x, sy - 1, x + 2, sy + 1);
-              for (i in 0...3)
-                cells[x + i][sy] = spine;
-              // the two desks, one each side of the spine, and their chairs in the aisles
-              for (s in 0...2)
+              var bx = x0 + b * (bw + 1);
+              GenTree.add(node, CorpBlocks.ZONE_POD_ROW, bx, dy0, bx + bw - 1, dy1);
+              for (i in 0...bw)
                 {
-                  var dy = (s == 0 ? sy - 1 : sy + 1);
-                  var cy = (s == 0 ? sy - 2 : sy + 2);
-                  if (dy <= room.y1 - 1 || dy > room.y2)
-                    continue;
-                  var full = [
-                    Const.CORP_TABLE_MISC,
-                    Const.CORP_TABLE_LAMP,
-                    Const.CORP_TABLE_PLANTS,
-                    Const.CORP_TABLE_FILES,
-                    Const.CORP_TABLE_STATIONERY,
-                  ];
-                  var deco = full.copy();
-                  for (i in 0...3)
-                    {
-                      cells[x + i][dy] = Const.CORP_TABLE_3X1[i];
-                      if (i == 1)
-                        area.addDecoration(x + i, dy, Const.CORP_COMPUTERS_BLOCK.row,
-                          Const.CORP_COMPUTERS_BLOCK.col + computerID);
-                      else if (area.chance(45))
-                        deco = addDecorationExt(state, x + i, dy, deco, full);
-                    }
-                  if (cy >= room.y1 && cy <= room.y2)
-                    area.addDecoration(x + 1, cy, Const.CORP_CHAIR[0].row, chairID);
+                  cells[bx + i][sy] = spine;
+                  pod(state, bx + i, dy0, dy0 - 1, computerID, chairID);
+                  pod(state, bx + i, dy1, dy1 + 1, computerID, chairID);
                 }
-              x += POD_W;
+              // and a bin where the passage meets the aisle past this block, on its own unwalkable
+              // cell so it is a real obstacle rather than something the player walks through
+              var binX = bx + bw;
+              if (binX < room.x2 &&
+                  area.chance(50))
+                {
+                  cells[binX][dy1 + 1] = spine;
+                  addDecoration(state, binX, dy1 + 1, Const.CORP_TRASH);
+                }
             }
         }
 
-      // and the farm's own wall furniture: printers, boards, a cooler
+      decorateCubicleWalls(state, room);
+    }
+
+// one pod: a desk cell, the workstation on it, and its chair in the aisle it faces
+  static function pod(state: _CorpState, x: Int, dy: Int, cy: Int, computerID: Int, chairID: Int)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // THE MIDDLE ID OF THE 3x1 RUN, because a pod is one cell and the run's two ends are its
+      // carcass sides. render.corp.CorpFurniture stands a `corp/desk-bench` module per cell and
+      // asks the SURFACE, not the column, so any table id of the family draws the same desk
+      cells[x][dy] = Const.CORP_TABLE_3X1[1];
+      area.addDecoration(x, dy, Const.CORP_COMPUTERS_BLOCK.row,
+        Const.CORP_COMPUTERS_BLOCK.col + computerID);
+      area.addDecoration(x, cy, Const.CORP_CHAIR[0].row, chairID);
+    }
+
+// the farm's own wall furniture: cabinets, a cooler, a plant, bins.
+//
+// NO `small` LIST AND SO NO TABLE TILE ON THE PERIMETER, which is the other half of the reported
+// "this desk should not exist". `decorateWalls`' small branch writes TILE_DARK_TABLE_WOOD2_1X1,
+// a corp TABLE id — so render.corp.CorpModel gave that cell m.table, FacilityModel.themeRooms
+// gave it Surf.CUBICLE, CorpFurniture.deskCell answered true and a whole desk-bench module stood
+// in the aisle against the wall. The three small items it dealt (a printer, a coffee machine, a
+// router) draw NOTHING anyway — CorpDeco.kindOf answers K_NONE for all of row 28 and 29 while
+// CorpDeco.draws suppresses their sprites — so the branch was laying an invisible object on an
+// unwalkable table cell. Everything in the list below has geometry or a glb behind it
+  static function decorateCubicleWalls(state: _CorpState, room: _Room)
+    {
+      var floor = Const.TILE_FLOOR_CUBICLE + UNWALKABLE_TILE_OFFSET;
       decorateWalls(state, room, [
-          Const.CORP_TABLE_PRINTER,
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_ROUTER,
+          Const.CORP_CABINET,
         ], [
           Const.CORP_CABINET,
           Const.CORP_COOLER,
           Const.CORP_PLANT,
           Const.CORP_TRASH,
+          Const.CORP_WHITEBOARD,
         ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_CUBICLE + UNWALKABLE_TILE_OFFSET,
-        35, 40);
+        floor, floor, 35, 0);
     }
 
 // a server room: rows of racks with an aisle between them, and nothing soft in it

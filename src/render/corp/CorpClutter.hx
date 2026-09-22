@@ -11,6 +11,7 @@ import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
+import render.Models;
 import render.world.VisionMask;
 
 // the small FLAT things lying about on the tower's worktops — a laptop, a mug, a folder, a spread
@@ -37,21 +38,33 @@ class CorpClutter
 {
 // every decal on the plate as TWO merged meshes, one per sheet. returns how many landed — a merged
 // mesh has no instance count and this is the only handle on the family
-  public static function build(scene:Scene, m:Facility):Int
+  public static function build(scene:Scene, m:Facility):{ n:Int, props:Array<Models.InstancedProp> }
     {
       var desk = MeshBufTools.make();
       var util = MeshBufTools.make();
+      // and the handful of cells that are PROPS rather than decals — see CorpStyle.CLUTTER_PROP_OF
+      var props = [for (_ in 0...CorpStyle.CLUTTER_PROPS) new Array<Models.PropPlace>()];
       var n = 0;
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
             if (!m.table[row][col])
               continue;
-            n += cell(m, col, row, deskish(m.surf[row][col]) ? desk : util);
+            n += cell(m, col, row, deskish(m.surf[row][col]) ? desk : util, props);
           }
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
-      return n;
+      // ONE BATCH PER PATH, which is what four props cost and the whole of what the promotion is
+      // argued against: the two sheets above are two calls for sixty-odd kinds, and every glb here
+      // is a call of its own however few land
+      var out = [];
+      for (i in 0...CorpStyle.CLUTTER_PROPS)
+        out.push(CorpProps.clutterBatch(scene, CorpStyle.CLUTTER_PROP_PATH[i], props[i],
+          CorpStyle.CLUTTER_PROP_H[i]));
+      return {
+        n: n,
+        props: out,
+      };
     }
 
 // which of the two sheets a worktop takes. a desk, a cubicle return and an exec desk carry the
@@ -70,7 +83,8 @@ class CorpClutter
 // THE ROLLED COUNT REACHES ZERO ON PURPOSE. `h % (CLUTTER_MAX + 1)` gives 0..3 evenly and the empty
 // cells are what stop two hundred worktops reading as a grid again — which is the whole complaint
 // this family answers. Flooring it at one would put something on every cell and rebuild the rhythm
-  static function cell(m:Facility, col:Int, row:Int, b:MeshBuf):Int
+  static function cell(m:Facility, col:Int, row:Int, b:MeshBuf,
+      props:Array<Array<Models.PropPlace>>):Int
     {
       var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
       var want = g % (CorpStyle.CLUTTER_MAX + 1);
@@ -112,7 +126,21 @@ class CorpClutter
           if (!ok)
             continue;
           spots.push(box);
-          emit(b, box.x, box.z, sz, yaw, (h >>> 22) % CorpStyle.CLUTTER_CELLS, y);
+          // A PROMOTED CELL STANDS A GLB INSTEAD, on the same roll, at the same place and the same
+          // free yaw — so the scatter is untouched and a floor plate comes back identical either
+          // way. `y` is the worktop's own top, which is where a decal lay and where a prop stands
+          var idx = (h >>> 22) % CorpStyle.CLUTTER_CELLS;
+          var prop = CorpStyle.CLUTTER_PROP_OF.exists(idx) ?
+            CorpStyle.CLUTTER_PROP_OF.get(idx) : -1;
+          if (prop >= 0)
+            props[prop].push({
+              x: box.x,
+              z: box.z,
+              yaw: yaw,
+              y: y,
+            });
+          else
+            emit(b, box.x, box.z, sz, yaw, idx, y);
           n++;
         }
       return n;

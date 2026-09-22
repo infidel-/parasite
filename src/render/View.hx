@@ -463,8 +463,11 @@ class View {
       var key = gridKey(area.id, 3);
       if ((running || warming) && shownKey == key)
         return;
-      buildFrom(new render.corp.CorpArea(game,
-        render.corp.CorpModel.fromArea(area, iconBox)), key);
+      var model = render.corp.CorpModel.fromArea(area, iconBox);
+      // and the one thing the model cannot do on its own: a pane it demoted to masonry has to stop
+      // being see-through in the TILE grid too — see CorpModel.sealWindows
+      render.corp.CorpModel.sealWindows(area, model);
+      buildFrom(new render.corp.CorpArea(game, model), key);
     }
 
 // the opaque box of one bench decoration's art, which the facility model places its contact pool

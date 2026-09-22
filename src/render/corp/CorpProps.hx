@@ -167,6 +167,15 @@ class CorpProps
       };
     }
 
+// the same batch, for render.corp.CorpClutter's four promoted cells. public only because that pass
+// runs AFTER this one (it asks `claims`, which must not depend on having run first) and so cannot
+// hand its places back here to be batched with the rest
+  public static function clutterBatch(scene:Scene, path:String,
+      places:Array<Models.PropPlace>, h:Float):Models.InstancedProp
+    {
+      return batch(scene, path, places, h);
+    }
+
 // one instanced batch, and the three things every indoor batch in this game does behind the loader
 // callback — the mesh does not exist until the glb resolves
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>,
@@ -228,14 +237,12 @@ class CorpProps
             });
             ContactMask.prop(cx - CorpStyle.CHAIR_W / 2, cx + CorpStyle.CHAIR_W / 2,
               cz - CorpStyle.CHAIR_W / 2, cz + CorpStyle.CHAIR_W / 2);
-            var manned = (work.keys().hasNext() ? work.exists(row * m.w + col) :
-              hash % CorpStyle.WORK_EVERY == 0);
-            if (!manned)
+            if (!manned(m, work, col, row, hash))
               continue;
             // and the workstation ON the top, which is the room's worktop height and not a
             // constant — a kitchen counter and a boardroom slab are the same table grid
             var y = CorpFurniture.topH(s);
-            var back = CELL / 2 - CorpStyle.MON_BACK;
+            var back = CorpStyle.DESK_TOP_D / 2 - CorpStyle.MON_BACK;
             mons.push({
               x: c.x + DC[dir] * back,
               z: c.z + DR[dir] * back,
@@ -390,6 +397,28 @@ class CorpProps
       return -1;
     }
 
+// is this desk cell MANNED — does a monitor and a keyboard stand on it?
+//
+// SHARED, because the two callers used to answer it differently and that was a bug in the open:
+// `desks` preferred the generator's own K_WORK cells whenever any existed while `claims` always
+// rolled the hash, so on a freshly generated tower (where the map is never empty) CorpClutter was
+// scattering around a workstation that was not there, and vice versa. `work` is null from the
+// pure-function side, which takes the roll.
+//
+// AND A CUBICLE IS ALWAYS MANNED. WORK_EVERY exists so an open-plan run does not read as a bank of
+// screens down a wall; a cubicle is one worker's own cell with a panel round it, and an empty one
+// reads as a farm nobody works in
+  public static function manned(m:Facility, work:Map<Int, Bool>, col:Int, row:Int,
+      hash:Int):Bool
+    {
+      if (m.surf[row][col] == Surf.CUBICLE)
+        return true;
+      if (work != null &&
+          work.keys().hasNext())
+        return work.exists(row * m.w + col);
+      return hash % CorpStyle.WORK_EVERY == 0;
+    }
+
 // what the WORKSTATION on this worktop cell claims, as boxes, or empty for a cell carrying none.
 //
 // A PURE RE-RUN OF `desks` AND NOT A CACHED LIST, the discipline every other pure-function-of-the-
@@ -410,10 +439,10 @@ class CorpProps
           !clear(m, col + DC[dir ^ 1], row + DR[dir ^ 1]))
         return [];
       var hash = FacilityModel.mix((col * 374761393) ^ (row * 40503));
-      if (hash % CorpStyle.WORK_EVERY != 0)
+      if (!manned(m, null, col, row, hash))
         return [];
       var c = CityConfig.cellToWorld(col, row);
-      var back = CELL / 2 - CorpStyle.MON_BACK;
+      var back = CorpStyle.DESK_TOP_D / 2 - CorpStyle.MON_BACK;
       // the two boxes, each at the yaw it is really drawn at: a monitor runs WIDE across the desk
       // and a keyboard likewise, so which of the two world axes each spans is what `dir` says
       var alongX = (dir < 2);

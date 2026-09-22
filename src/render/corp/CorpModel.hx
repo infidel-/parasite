@@ -41,6 +41,39 @@ class CorpModel
       return m;
     }
 
+// PUT THE DEMOTIONS BACK INTO THE GRID, because a window nobody can see through must not be one
+// the player can see through either.
+//
+// the four passes above rewrite `m.wall` and deliberately leave the TILE alone, so an existing
+// save gets the corrected shell for free. What that missed is that tiles/Default marks EVERY id in
+// tileset rows 12 and 13 see-through — every corp window id is in them — so a cell drawn as solid
+// curtain wall blocked no sightline at all: game.AreaGame.isVisible walks the tile grid, and
+// render.world.VisionMask.polygon casts against area.canSeeThrough rather than against the `solid`
+// predicate it is handed. Reported from the game as a room fully visible through its own wall.
+//
+// so this is a REPAIR of the saved grid, the same shape as AreaGame.repairGeneratorInfo: run once
+// where the model is built for a LIVE area, idempotent (a repaired cell is TILE_BUILDING and no
+// longer a window), and it reaches every save rather than only newly generated ones.
+// setCellType re-derives the tile's walkable/see-through flags for us
+  public static function sealWindows(area:AreaGame, m:Facility):Int
+    {
+      var n = 0;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (m.wall[row][col] != Wall.SOLID)
+              continue;
+            var t = area.getCellType(col, row);
+            if (wallOf(t) != Wall.WINDOW)
+              continue;
+            area.setCellType(col, row, Const.TILE_BUILDING);
+            n++;
+          }
+      if (n > 0)
+        area.visRev++;
+      return n;
+    }
+
 // A RACK ROW NEVER TOUCHES THE ROOM'S EDGE COLUMN, so a rack that does is not one.
 //
 // gen.corp.CorpRooms.decorateWalls dresses a room's two long walls by writing the ROOM'S OWN

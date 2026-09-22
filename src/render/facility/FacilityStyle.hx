@@ -32,6 +32,11 @@ class FacilityStyle
   // neighbour is a rim band it may sit 0.02 under unseen. a physical gap and not polygonOffset —
   // docs/3d-render.md records that failing three times on coplanar overlays
   public static inline var HEAD_DROP = 0.02;
+  // the lift doorway's door pocket — how wide the near-black track strip down each jamb is, and how
+  // far proud of the reveal it stands so it draws over it instead of z-fighting with it. 0.3 is
+  // 15 cm of slot, which is what a real two-leaf lift entrance shows
+  public static inline var LIFT_POCKET_W = 0.3;
+  public static inline var LIFT_POCKET_EPS = 0.02;
   // where the masonry STARTS, world units — below zero, and below every surface in the compound.
   //
   // an indoor floor is y = 0 and so is the pavement, but KERB_DROP puts the road, the park and the
@@ -3353,6 +3358,9 @@ class FacilityStyle
           roof: ROOF,
           coping: COPING,
           shutter: DOOR_SHUTTER,
+          // the compound has no lift car, so its doorways keep the plain circulation reveal
+          pocket: null,
+          sill: null,
           // the fifth slot is Look.LIFT, which no compound door is ever dealt — it takes the
           // metal leaf so the array is the length the emitter indexes and nothing here changes
           door: [DOOR_GLASS, DOOR_CABINET, DOOR_METAL, DOOR_PRIVATE, DOOR_METAL],

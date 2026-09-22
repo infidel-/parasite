@@ -41,6 +41,13 @@ typedef ShellTex = {
   var coping: String;
   // the roll-up shutter strip. null where the area has none
   var shutter: String;
+  // THE LIFT DOORWAY'S OWN TWO DETAILS, null where the area has none. A doorway's reveal is painted
+  // in `circ` whichever way it faces (see below), which is right for an office door and left a lift
+  // car's opening with no read at all: the jambs and the -0.2..0 threshold strip both came out in
+  // the corridor's own board. `pocket` is the near-black slot the leaves slide into, run as a strip
+  // down each jamb, and `sill` is the metal plate under the opening where the two floors meet
+  var pocket: String;
+  var sill: String;
   // the painted door pairs, indexed by render.facility.FacilityModel.Look. ONE image holds BOTH
   // leaves of an opening — FacilityDoors.leafGeom maps its left half onto each leaf and takes the
   // mirror for the other — so this is four images and not eight. It is here and not a constant in

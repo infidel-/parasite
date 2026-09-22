@@ -4,6 +4,7 @@ package game;
 
 import ai.*;
 import objects.*;
+import gen._GenNode;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
@@ -17,6 +18,7 @@ class AreaGame extends _SaveObject
     'region', 'events', 'npc', 'parent',
     'info', 'clueSpawnPoints', '_decalCells',
     'spawnCells', '_boothX', '_boothY',
+    'genTree', 'genSeed',
   ];
   var game: Game;
   var region: RegionGame;
@@ -76,6 +78,12 @@ class AreaGame extends _SaveObject
   var _boothX: Int = -1;
   var _boothY: Int = -1;
   public var generatorInfo: _GeneratorInfo;
+  // the generation tree this area was built from, and the seed that dealt it. TRANSIENT BY
+  // DESIGN, both of them: gen._GenNode is in-memory only on the grounds that nothing downstream
+  // reads blocks, and this keeps the root alive only for the console (`area room`) instead of
+  // reviving it as a second source of truth. a loaded save has neither and says so
+  public var genTree: _GenNode;
+  public var genSeed: Int = -1;
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
@@ -690,6 +698,8 @@ class AreaGame extends _SaveObject
       importantGuardSpawnPoints = [];
       _decalCells = [];
       generatorInfo = null;
+      genTree = null;
+      genSeed = -1;
       _pathEngine = null;
       _boothX = -1;
       _boothY = -1;

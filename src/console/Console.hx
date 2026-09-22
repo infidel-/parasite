@@ -122,7 +122,8 @@ class Console
               'give trait [name], ' +
               'give evolution [name] [level],<br/>' +
               'ai trace|untrace [id] - toggle AI browser-console trace,<br/>' +
-              'area regen - regenerate the current area,<br/>' +
+              'area regen - regenerate the current area, '  +
+              'area room - what the generator built where you stand,<br/>' +
               'cfg|config, ' +
               'ch|chat - set chat stage,<br/>' +
               // debug
@@ -396,14 +397,30 @@ class Console
     }
 
 
-// regenerate the area the player is standing in: out to the region, throw the map away, back in.
-// going out is what makes it clean - AreaGame.leave() despawns, and AreaGame.enter() generates
-// whatever is not generated, so no generation path has to know it is being re-run
+// the `area` group: `regen` and `room`.
+//
+// regen regenerates the area the player is standing in: out to the region, throw the map away,
+// back in. going out is what makes it clean - AreaGame.leave() despawns, and AreaGame.enter()
+// generates whatever is not generated, so no generation path has to know it is being re-run.
+// room reports what the generator built under the player - see console.AreaRoom
   function areaCommand(arr: Array<String>)
     {
+      if (arr[1] == 'room')
+        {
+          var s = AreaRoom.report(game);
+          if (s == null)
+            {
+              log('Not in area.');
+              return;
+            }
+          log(StringTools.replace(s, '\n', '<br/>'));
+          render.StreetPerf.copyText(s);
+          return;
+        }
       if (arr[1] != 'regen')
         {
-          log('area regen - regenerate the current area');
+          log('area regen - regenerate the current area,<br/>' +
+            'area room - what the generator built where you stand (copied to clipboard)');
           return;
         }
       if (game.location != LOCATION_AREA ||

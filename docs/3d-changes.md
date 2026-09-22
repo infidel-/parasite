@@ -1165,3 +1165,230 @@ point the bug stops happening at all. Reload between detectors.
 Verdict: **FIXED.** And the general one: **a screen-space pass that reads a channel nobody owns
 must sanitise it.** Alpha in an HDR target is shared scratch — any additive draw, present or
 future, can put anything in it.
+
+---
+
+## The sixth corp defect pass: the cubicle farm relaid, the LOS bug, and four decals promoted
+
+Twenty reports off face dumps, in three groups. Four of them turned out to be ONE bug and it is the
+entry worth reading: **`gen.corp.CorpConnect.openPockets` orphans what it removes.** That pass runs
+last and deletes furniture cells until every walkable cell of a room can be reached; it rewrote a
+desk cell to `Const.TILE_FLOOR_CARPET` and left every decoration that had been placed on it. So the
+same removal produced, from the game, four separate-looking complaints: a chair pulled up to empty
+floor, clutter floating at the desk's own top height, **square patches of carpet cut into a cubicle
+floor** (`FacilityModel.themeRooms` only re-themes `Surf.TILE`, so a `CARPET` cell is never healed
+back), and a desk run with a hole in it. It clears to the ROOM'S own floor now — read off the grid
+rather than tabled, since every corp floor id is in tileset row 12 and a room is mostly its own
+floor — and drops the cell's decorations with it. A chair whose four neighbours hold no table tile
+comes away in a pass of its own afterwards, because a template stands the chair in the AISLE and
+clearing the desk cell cannot reach it.
+
+**The second shared cause, and it is a predicate that drifted.** `CorpFurniture.worktop` bailed on
+`deskCell` alone while `CorpProps.tables` stands its bench on `deskCell && !slabTop` — so a cell
+that was both emitted no quads AND took no glb, while `CorpClutter` (which asks `m.table` alone)
+went on laying decals at `topH + CLUTTER_Y` = 1.53 over nothing. Same predicate on both sides now.
+
+**THE LOS BUG IS THE BIGGEST THING HERE AND IT WAS INVISIBLE TO EVERY EXISTING NUMBER.**
+`CorpModel` runs four passes that promote `Wall.WINDOW -> Wall.SOLID` in the render model, each
+with a header explaining that the TILE is deliberately left alone so the correction reaches saves
+that already exist. It does — and `tiles/Default` marks **every id in tileset rows 12 and 13**
+see-through, which is every corp window id. So a cell drawn as solid curtain wall blocked no
+sightline at all: `AreaGame.isVisible` walks the tile grid, and `VisionMask.polygon` casts against
+`area.canSeeThrough` rather than against the `solid` predicate it is handed. Reported as a room
+visible in full through its own wall. Measured on one freshly generated plate: **104 cells** render
+solid while the tile lets sight through; after `CorpModel.sealWindows` (a repair, run once where
+the model is built for a live area, the same shape as `AreaGame.repairGeneratorInfo`) it is **0**,
+with all 195 genuinely glazed cells still see-through.
+
+**The farm itself was a five-row band and is now blocks of pods.** `aisle/desk/spine/desk/aisle`
+with a 3-cell desk RUN per pod is three people sharing one unbroken worktop with no divider
+anywhere along it. A block is `bw` pods wide and two deep now (3 where the interior holds two
+blocks of three plus their passages, 2 otherwise), centred with the remainder split — the old run
+started at `x1+1` and marched until it ran out, so the whole leftover landed on the `x2` side and
+the last pod could sit flush against the dressed wall column. **The side divider between two
+neighbours in one block costs NO CELL**: `CorpFurniture.divider` emits a panel on the boundary
+between two adjacent `Surf.CUBICLE` desk cells, on the + hands only so each boundary is drawn once.
+A grid column per divider would have doubled the farm's footprint.
+
+**And the farm's wall dressing was standing DESKS in its own aisle.** `decorateWalls`' small branch
+writes `Const.TILE_DARK_TABLE_WOOD2_1X1`, a corp TABLE id — so `CorpModel` gave the cell `m.table`,
+`themeRooms` gave it `Surf.CUBICLE`, `deskCell` answered true and a whole `desk-bench` module stood
+against the wall. Worse, the three small items it dealt there (a printer, a coffee machine, a
+router) draw **nothing at all**: `CorpDeco.kindOf` answers `K_NONE` for rows 28 and 29 while
+`CorpDeco.draws` suppresses their sprites. So the branch was laying an invisible object on an
+unwalkable table cell. The farm dresses its walls from things that have geometry or a glb now.
+
+`make gen seeds=3000 --type corp`: green, `orphanCells 0`, `walkableCells == reachedCells 1256.29`.
+
+Verdict: **LANDED.** The general one: **a repair that deliberately leaves the tile alone has to
+check what else reads the tile.** Four passes said so in their headers, for four years of saves,
+and none of them noticed that see-through is a property of the id.
+
+## corp: the lift core's edge, one label at two periods
+
+`CorpStyle.shell()` gives `head` and `roof` the same label (`textures/corp/cap-alu`), and
+`FacilityGeom.capTop` picks `HEAD_TILE 3.0` on a glazed cell against `ROOF_TILE 9.0` on a solid
+one. That is right where the capping is its OWN art — the compound's head is a different label —
+and the lift core alternates exactly those two: `ElevatorBlock` puts three-cell glazed runs on
+three sides between four solid corner posts, so the same brushed aluminium jumped **3x in course,
+cell to cell, all the way round the core.** Reported twice as the elevator edge not lining up with
+the roof; the probes decode straight to it (coping uv x9 -> x 14.4-19.8 z -97.2, deck uv x9 ->
+x 13.5 z -99.0, curtain uv x6 -> y 6.00-7.10, exactly `ROOF_Y`..`+PARAPET_H`).
+
+One line: take `HEAD_TILE` only when the two labels differ. Measured after, by sampling du/dx over
+every cap-alu mesh in the scene: `shell` **3 -> 9**, both `deck` meshes 9, all three now one
+period. The facility is untouched, because its two labels are two images.
+
+**And the lift DOORWAY had no read of its own.** The jambs and the -0.2..0 threshold strip both
+already existed and were both painted from `wIn[m.tex.circ]` — a doorway's reveal is painted
+circulation whichever way it faces, which is right for an office door and left the car's opening
+as a hole in the corridor board. `ShellTex` takes `pocket` and `sill` now (null for the compound):
+a near-black door-pocket strip down each jamb, 0.3 wide and standing 0.02 proud so it draws over
+the reveal rather than z-fighting it, and the threshold drawn in a brushed sill plate. 8 tris and
+4 tris, two meshes, off `corp/fit-pack`.
+
+Verdict: **LANDED.**
+
+## corp: six desk-clutter cells that were never decals
+
+`corp/desk-clutter` is a PACK64 and passed every number on `docs/3d-textures.md` — grid lanes,
+solidity, value, density. It was still wrong on four cells, reported one at a time from the game:
+3 the ceramic mug, 4 the steel flask, 25 the potted succulent, 58 the tripod webcam. **The rule
+the sheet was missing is per-CELL and is now in the doc:** a pack cell is a flat cut-out seen from
+overhead, which is not a compromise for a sheet of paper or a folder — those really are flat — and
+is a lie for anything carried by a ROUND or UPRIGHT silhouette, because no top-down art can give an
+object a side.
+
+**Four glbs for six cells**, paired so one shape serves two: a mug and a glass tumbler are one
+lathe (the handle swept, since `tube` turns about the vertical), a flask and a water bottle are one
+shouldered cylinder. 220/184/280/120 tris off `corp/clutter-pack`, `tex: 256` because
+texels-per-WORLD-UNIT is what decides an atlas and these are 10-25 cm objects. Cells 24 (the amber
+pen pot) and 48 (the takeaway cup) stay decals deliberately — at 51 degrees a pen pot is a disc of
+pen ends.
+
+**The cost is the argument and it was measured, not assumed:** visible-toggle A/B at a pinned pose,
+median over 7 interleaved frames, **126 calls on / 122 off — +4, one per path**, dead stable across
+all 7 pairs. A PACK64 is 64 kinds for one call; every promotion buys a shape and spends a call.
+
+Verdict: **LANDED**, with the rule written into `3d-textures.md`'s PACK-N head and
+`3d-models.md`'s four-route triage, which said nothing about 2D clutter atlases at all.
+
+## corp: the cooler, the printer and the WC pan
+
+The last two TRELLIS props in the corp set went hand-modelled, and the WC's sheet was repainted.
+
+**The cooler's entry was one number fighting the art.** `baseColor 0.17` existed because the
+reference clause names MATTE WHITE LACQUER and a white object photographs white — the bake came
+back at sampled 212 srgb. A flat multiply is per PROP, so crushing the cabinet to 95 crushed the
+bottle with it and the water shipped grey: *"wtf is water bin gray??? should be the color of water
+- blue/cyan"*. No factor can fix that, because the two tones have to move APART and a scalar moves
+them together. Hand-modelled, each part takes its own cell: **184 tris** against 1,200, a lacquer
+cabinet, an anodised plinth/collar/dispense recess, and an inverted carboy lathed in a blue water
+cell. Its value is fitted once on the built glb (sampled 48/121/159, luma 108 over the indoor ~78
+band) with a flat 0.59, which holds the hue: **luma 84, chroma 88.5.**
+
+**The printer** was called "the best-conditioned bake of the three" and was still 1,200 triangles
+rounding the corners off a stack of slabs — the workstation's own history one prop over. **132
+tris**: a drawer pedestal with two fronts, a body inset off it, an output slot let into that face,
+a scanner lid set BACK, and the control fascia lying FLAT on the deck the setback leaves (flat and
+not raked, because this camera reads the top face).
+
+**The WC pan wore a tiled wall.** `toilet-sheet.png`'s porcelain band was pasted from
+`textures/corp/wall-washroom`, **grout lines and all**, so a lathed pan came back covered in tile
+joints — *"a ton of seams everywhere, why, looks like a wall/floor tile"*. It takes a plain glaze
+now, and two things about the paste are worth keeping: it is cropped **2 px off the quadrant edge**
+(columns 508..511 of cell 0 are the antialiased boundary into the stainless cell, and taken whole
+they landed an **11.2 step** down the pan), and it is scaled **LINEARLY** onto the band's own 114.6
+luma rather than gamma'd. Gamma took **7.12** to reach the same level and turned a near-white glaze
+into a noise field: **std 2.13 -> 6.62** against the old band's 2.79. Linear: std **1.09**, worst
+column step 1.27 against a median of 0.85.
+
+**The bin had no inside** — the profile stopped at the rim and took a flat disc over the opening,
+i.e. a lid cast into it. It runs `buildlib`'s vessel cycle now (out to the rim, over it, back DOWN
+the inside, `tube`'s own end cap being the floor), 140 -> 188 tris.
+
+**And the desk's front was -y while both files said +y.** The top's overhang, the modesty setback
+and the whole drawer pedestal were measured off `yb = -TOP_D/2`, and `CorpProps.tables` turns the
+module by the desk's BACK hand on the stated premise that its front is +y — so the drawers faced
+the wall and the seat was pulled up to the back of the pedestal. **The convention is settled by the
+chair**, whose backrest sits at +y and which is turned by the desk's own back hand so that it faces
+the desk: every yaw in `CorpProps` is `atan2(DC[d], DR[d])` and what it turns to face `d` is the
+model's **-y**. So a floor prop (turned by `dir ^ 1`) has its front at -y and the bench desk
+(turned by `dir`) has its front at +y. Fixed in the model.
+
+Verdict: **LANDED.**
+
+## corp: the posters, which said "no text of any kind" three times
+
+`corp/posters` shipped at built_linear 0.0893 / srgb 60.8 with a prompt that forbade letters, words,
+numbers and script in three separate clauses — so the panels were abstract smudges in the dark.
+Reported as *"when i said threatening i didnt mean dark as fuck. they should still read. plus add
+motivational readable words"*.
+
+Re-rolled with the three slogans named verbatim and asked for LARGE and legible, keeping the eye,
+the marching silhouettes and the falling chart as the ground the words sit on. **NO LIFT, and that
+is a decision:** a lift is a gamma, so it raises the poster's charcoal GROUND harder than its pale
+text and would cut the very contrast the complaint was about. The PACKING is what fixed the level —
+panels cropped to their measured bbox and pasted filling their quadrants took the sheet from
+**0.0893 to 0.1876 linear (srgb 90.5)**, just under the `corp/wall-office` it hangs on at 0.219,
+with the lettering at p95 srgb 191.
+
+**The split moved again and that is why it is measured and not assumed**: the row seam landed at
+510 and the TOP band's column seam at **428** against a nominal 512 (the previous drop put it at
+501). `tools/posterpack.py` is that pass and prints the four aspects `CorpSigns.ASPECT` takes:
+**0.6987 / 1.8139 / 1.4000 / 1.2632**, against the previous 0.5952 / 1.7437 / 1.3905 / 1.4263.
+
+Verdict: **LANDED.**
+
+## corp: the lift core's roof corner met neither parapet
+
+Reported twice, and the second time with two `corp/coping.png` faces at y 7.35 — the coping's top —
+a cell apart and 0.4 out of line: *"elevator edge corner wall still doesnt fit with elevator wall
+and building wall"*.
+
+**The parapet ring is drawn on a CONSTANT inset and its reentrant corners were not.** Every band
+the main loop emits takes its plane from `ringRect`, which forces `FacilityStyle.PARAPET_INSET`
+1.0 whatever the cell's masonry is — that is the whole of why a glazed run and a solid one leave a
+dead straight roofline, and `ringRect`'s own header says so. The corner case at the inside of an L
+is emitted from `notches()` instead, and `notches` is the MASONRY helper: its square is
+`(CELL - thick(m, col, row)) / 2` on a side.
+
+At the lift core the corner cell is `inner` — all four of its orthogonal neighbours are indoor or
+carry, only the DIAGONAL is outdoors — so `thick` handed it `CorpStyle.WALL_INNER` **1.2**, the
+office stud wall, and `e` came out **1.4** against the ring's **1.0**. Measured off the built
+buffer at the tower's north-west re-entrant (col 36, row 5, diagonal 37,4 outdoors):
+
+| band | before | after | the band it had to join |
+|---|---|---|---|
+| the notch's z-run | cap x **-54.12..-53.28** | x **-53.72..-52.88** | the core's east ring, p = x -53.0 |
+| the notch's x-run | cap z **-178.72..-177.88** | z **-179.12..-178.28** | the block's north ring, p = z -179.0 |
+
+Both stood **0.4 proud** of the band they existed to carry the perimeter into, in x and in z at
+once, which is why it read as fitting neither wall. `notches` takes an optional `inset` and the
+parapet loop is the ONE caller that passes it; every other caller (floor strips, grime, corner
+detail, the facade ring) wants the square the masonry really leaves and is untouched. The compound
+never showed it — its `wallIn` IS `WALL_T`, so `e` was already 1.0 on every solid cell; a glazed
+corner there was off by 0.5 and is now right too.
+
+**Two more causes behind the same corner, both found by re-probing after that fix.**
+
+*The coping was 0.12 short of a run that carried straight on.* `endCase` had three states and only
+two questions: a neighbour that carries but does not face `dir` was always CONCAVE. It is concave
+when that neighbour's own `dir` hand is INDOORS — the perimeter really steps in — but when that
+hand CARRIES, what sits between the two bands is that cell's notch, a band on this very line. Taken
+as a step, cell (37,5)'s cap retracted 0.12 for a corner that was not there (gap at x -52.00..-51.88)
+while its inner fascia grew 0.72 the other way and lay over the notch's. Both gone: the caps now run
+**-53.72 → -52.88 → -52.00 → -48.00** with no break.
+
+*And the corner cell was classed as INTERIOR.* `inner()` asked about four hands, so a cell whose
+four neighbours are all indoors or all masonry counted as a partition even with an outdoor DIAGONAL
+— which is exactly the cell on the inside of an L. `thick` then gave it `CorpStyle.WALL_INNER` 1.2
+and its notch face, which IS the exterior cladding turning the corner, stood at z **-178.6** against
+the run it had to merge into at **-179.0**. Reported as two `wall-curtain` faces that "should merge
+into one another". Counting the diagonals promotes it to `WALL_T`: the cladding now runs
+**x -53 → -52 → -48 → -44 all at z -179**, one plane, with the 0.5 shoulder against the recessed
+curtain wall capped at z -180 as it always was. **2 cells on a 689-wall-cell plate change**, and
+the compound cannot see it at all — its `wallIn` IS `WALL_T`, so `thick`'s guard never reaches
+`inner`.
+
+Verdict: **LANDED.** An optional argument, a third branch in `endCase`, and four hands to eight.

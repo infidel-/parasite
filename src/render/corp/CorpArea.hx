@@ -53,6 +53,7 @@ class CorpArea implements Area3D
   var glbN:CorpProps.CorpPropSet;               // and what went into them, for __corp()
   var lamps:CorpLamps.CorpLampSet;              // the fixtures and everything additive they throw
   var clutter = 0;                              // flat decals on the worktops, one mesh per sheet
+  var clutterProps:Array<render.Models.InstancedProp>;  // and the six cells that are glbs
   var signs = 0;                                // wall signage, one mesh
   var facade:{ clad:Int, soffit:Int, lit:Int }; // the nineteen storeys under the plate
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
@@ -127,7 +128,9 @@ class CorpArea implements Area3D
       // the flat dressing: what lies ON the worktops, and what hangs on the walls. both AFTER the
       // props, because the clutter scatters around the workstation's own footprint and asks
       // CorpProps for it
-      clutter = CorpClutter.build(scene, model);
+      var cl = CorpClutter.build(scene, model);
+      clutter = cl.n;
+      clutterProps = cl.props;
       signs = CorpSigns.build(scene, model);
       // the rig, after every family that could stand under a lattice point — the nudge in
       // CorpLamps.free reads m.fit, so it has to know what is standing there

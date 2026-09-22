@@ -68,6 +68,9 @@ class CorpGen
       // and the per-CELL pass, after every room has a door: a room can be reached and still have
       // a corner of its own floor walled off by its own furniture
       CorpConnect.openPockets(state);
+      // and the decorations those two passes orphaned — a chair left pulled up to a desk that came
+      // away is the reported shape, and nothing before this point can see it
+      CorpConnect.dropOrphanChairs(state);
       trace(Std.int((Timer.stamp() - t1) * 1000) + 'ms');
       return state;
     }

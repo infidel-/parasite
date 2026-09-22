@@ -236,10 +236,20 @@ class CorpFurniture
       // stands `corp/desk-bench` on this cell instead. Reported from the game as "just a cuboid",
       // which a slab of quads is: a desk is a thin top on a frame with a void under it, and no
       // amount of per-face art puts a void in a box. The cell is still counted and still stamps
-      // the contact field, because both are about the FOOTPRINT and not about who draws it
-      if (deskCell(m, col, row))
+      // the contact field, because both are about the FOOTPRINT and not about who draws it.
+      //
+      // `!slabTop` IS LOAD-BEARING and its absence was a reported bug: render.corp.CorpProps.tables
+      // stands the bench on `deskCell && !slabTop` and falls through to the blade leg otherwise,
+      // so a cell that is BOTH bailed out here and took no bench there — nothing drawn at all,
+      // while CorpClutter (which asks m.table alone) went on laying decals at the desk's own top
+      // height. Seen from the game as clutter floating over empty floor. The two predicates have
+      // to be the same one
+      if (deskCell(m, col, row) &&
+          !slabTop(m, col, row))
         {
           ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+          if (s == Surf.CUBICLE)
+            divider(m, col, row);
           return;
         }
       FacilityGeom.cap(buf(top), r.x0, r.x1, r.z0, r.z1, h, tile);
@@ -283,14 +293,45 @@ class CorpFurniture
       var p = alongX
         ? { x0: r.x0, x1: r.x1, z0: cz - t, z1: cz + t }
         : { x0: cx - t, x1: cx + t, z0: r.z0, z1: r.z1 };
-      var b = buf(CorpStyle.PARTITION);
-      for (dir in 0...4)
-        FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, 0, CorpStyle.PARTITION_H,
-          CorpStyle.PARTITION_TILE);
       // the trim rail on top is the panel art's own top edge seen end-on, so it takes the same
-      // sheet rather than a second one — 0.4 of a unit of it, which is what a cap this thin shows
-      FacilityGeom.cap(b, p.x0, p.x1, p.z0, p.z1, CorpStyle.PARTITION_H, CorpStyle.PARTITION_TILE);
+      // sheet rather than a second one — 0.2 of a unit of it, which is what a cap this thin shows
+      panel(buf(CorpStyle.PARTITION), p, 0, CorpStyle.PARTITION_H);
       ContactMask.prop(p.x0, p.x1, p.z0, p.z1);
+    }
+
+// AND THE DIVIDER BETWEEN TWO NEIGHBOURS IN ONE POD BLOCK, which has no cell of its own.
+//
+// the spine above is a run of cells the generator writes, and it separates the two rows of a block
+// from each other — it does nothing for the two people sitting SIDE BY SIDE in one row, who shared
+// an unbroken worktop with no panel anywhere along it. A grid column per divider would double the
+// farm's footprint, so this is emitted on the BOUNDARY between two adjacent cubicle desk cells
+// instead: only on the + hands, so each boundary is drawn exactly once, and only inside a block,
+// because a passage column has no table cell on its far side
+  static function divider(m:Facility, col:Int, row:Int):Void
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var t = CorpStyle.PARTITION_T / 2;
+      var b = buf(CorpStyle.PARTITION);
+      if (podCell(m, col + 1, row))
+        {
+          var xb = (col + 1) * CELL - half;
+          panel(b, { x0: xb - t, x1: xb + t, z0: row * CELL - half,
+            z1: (row + 1) * CELL - half }, 0, CorpStyle.PARTITION_H);
+        }
+      if (podCell(m, col, row + 1))
+        {
+          var zb = (row + 1) * CELL - half;
+          panel(b, { x0: col * CELL - half, x1: (col + 1) * CELL - half,
+            z0: zb - t, z1: zb + t }, 0, CorpStyle.PARTITION_H);
+        }
+    }
+
+// is this cell one worker's desk in a cubicle farm?
+  static inline function podCell(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        m.table[row][col] &&
+        m.surf[row][col] == Surf.CUBICLE;
     }
 
   public static inline function spine(m:Facility, col:Int, row:Int):Bool

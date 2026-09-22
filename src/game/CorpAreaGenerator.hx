@@ -44,6 +44,10 @@ class CorpAreaGenerator
         rooms: state.rooms,
         doors: state.doors,
       };
+      // and the tree + the seed, for the console's `area room`. transient on both sides — see
+      // game.AreaGame.genTree — so this is the only place they ever exist
+      area.genTree = ctx.root;
+      area.genSeed = ctx.seed;
       GenSpawner.drain(game, area, ctx);
     }
 }

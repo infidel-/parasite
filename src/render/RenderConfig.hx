@@ -842,6 +842,14 @@ class RenderConfig {
     corpDesk: 'models/corp/desk-bench.glb',    // bench desk: thin top, O-leg frame, pedestal, 96 tris
     corpTableLeg: 'models/corp/table-leg.glb', // the blade leg under a boardroom slab, 36 tris
     corpBin: 'models/corp/bin.glb',            // the waste bin, a 12-sided lathe, the one round piece
+    // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
+    // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;
+    // it fails on a cell whose read is a ROUND or UPRIGHT silhouette, which no top-down art can
+    // give a side to. These four were reported cell by cell from the game
+    corpDeskMug: 'models/corp/desk-mug.glb',        // a vessel lathe with a swept handle, 220 tris
+    corpDeskBottle: 'models/corp/desk-bottle.glb',  // shouldered steel, charcoal cap, 184
+    corpDeskPlant: 'models/corp/desk-plant.glb',    // pot, soil cap, six pitched leaves, 280
+    corpDeskCam: 'models/corp/desk-cam.glb',        // puck, stalk, lens head with an amber ring, 120
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

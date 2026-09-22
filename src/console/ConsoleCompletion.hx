@@ -108,6 +108,7 @@ class ConsoleCompletion
         {
           rootChildren.push({ lit: 'area', next: [
             { lit: 'regen' },
+            { lit: 'room' },
           ] });
           rootChildren.push({ lit: 'give', next: [
             { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },

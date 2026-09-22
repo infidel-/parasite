@@ -157,7 +157,7 @@ class CorpConnect
           for (y in 1...ctx.height - 1)
             for (x in 1...ctx.width - 1)
               {
-                var below = clearedTo(cells[x][y]);
+                var below = clearedTo(state, x, y, cells[x][y]);
                 if (below < 0)
                   continue;
                 var hitSeen = false;
@@ -175,6 +175,15 @@ class CorpConnect
                     (!hitSeen && !erode))
                   continue;
                 cells[x][y] = below;
+                // AND WHATEVER WAS STANDING ON IT. the templates decorate a cell as they write it
+                // (gen.corp.CorpRooms.cubicle deals a computer and a clutter item onto every desk
+                // cell it lays) and this pass runs last, so a desk taken away to un-seal a room
+                // used to leave its monitor and its paperwork hanging over bare floor — reported
+                // from the game as clutter in mid-air, because render.corp.CorpClutter draws at
+                // the desk's own top height and the desk is no longer there
+                for (o in ctx.getObjectsAt(x, y))
+                  if (o.type == 'decoration')
+                    ctx.removeObject(o);
                 opened = true;
               }
           if (!opened)
@@ -303,7 +312,7 @@ class CorpConnect
 // corridor, so it comes away too — to plain carpet, the tile this pass already writes into the
 // doorways it cuts. Measured at the halved room size: 26 towers in 400 still sealed with only the
 // row-12 band clearable, 5 with the tables in
-  static function clearedTo(t: Int): Int
+  static function clearedTo(state: _CorpState, x: Int, y: Int, t: Int): Int
     {
       var walk = tiles.Default.TILE_WALKABLE;
       if (t < 0 ||
@@ -316,15 +325,77 @@ class CorpConnect
           walk[below] == 1)
         return below;
       if (Const.isCorpTableTile(t))
-        return Const.TILE_FLOOR_CARPET;
+        return roomFloor(state, x, y);
       // and the EXEC/RECEPTION desk block, which is neither: DARK_TABLE_MARBLE1_3X2 is on tileset
       // rows 14 and 16, outside both bands above, so a 3x2 desk was the one piece of furniture in
       // the tower no repair pass could take away. It is only ever laid on marble, so that is what
       // it comes back to. Measured: with the two bands alone, 26 pockets in 200 seeds survived
       // `openPockets` and every one of them was a reception
       if (Const.isCorpDeskBlock(t))
-        return Const.TILE_FLOOR_MARBLE1;
+        return roomFloor(state, x, y);
       return -1;
+    }
+
+// the floor a cleared cell should come back to: THE ROOM'S OWN, read off the room rather than
+// named.
+//
+// it used to be plain carpet for every table tile and marble for every desk block, which is the
+// corridor's finish and the executive's, and in a cubicle farm that shipped as SQUARES OF CARPET
+// cut into the cubicle floor — reported from the game exactly that way. render.facility
+// .FacilityModel.themeRooms cannot heal them either: it only re-themes Surf.TILE, and carpet is a
+// surface of its own. Read rather than tabled so a new room template needs no entry here: every
+// corp floor id lives in tileset row 12 and a room is mostly its own floor, so the first walkable
+// row-12 id inside the rect IS the answer
+  static function roomFloor(state: _CorpState, x: Int, y: Int): Int
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      var cells = state.area.getCells();
+      for (r in state.rooms)
+        {
+          if (x < r.x1 ||
+              x > r.x2 ||
+              y < r.y1 ||
+              y > r.y2)
+            continue;
+          for (yy in r.y1...r.y2 + 1)
+            for (xx in r.x1...r.x2 + 1)
+              {
+                var t = cells[xx][yy];
+                if (t >= Const.OFFSET_ROW12 &&
+                    t < Const.OFFSET_ROW13 &&
+                    walk[t] == 1)
+                  return t;
+              }
+          break;
+        }
+      return Const.TILE_FLOOR_CARPET;
+    }
+
+// A CHAIR WITH NO DESK LEFT BESIDE IT COMES AWAY TOO, once openPockets has finished taking desks
+// out. A template stands the chair in the AISLE and the desk in the cell beside it, so clearing
+// the desk cell cannot reach the chair — reported from the game as a chair pulled up to empty
+// floor. The rule is stateless and needs no template to declare anything: a corp chair whose four
+// neighbours hold no table tile is standing at nothing
+  public static function dropOrphanChairs(state: _CorpState)
+    {
+      var ctx = state.area;
+      var cells = ctx.getCells();
+      for (s in ctx.spawns.copy())
+        {
+          if (s.type != 'decoration' ||
+              s.row != Const.CORP_CHAIR[0].row)
+            continue;
+          var keep = false;
+          for (i in 0...Const.dir4x.length)
+            {
+              var t = ctx.getCellType(s.x + Const.dir4x[i], s.y + Const.dir4y[i]);
+              if (t >= 0 &&
+                  (Const.isCorpTableTile(t) || Const.isCorpDeskBlock(t)))
+                keep = true;
+            }
+          if (!keep)
+            ctx.removeObject(s);
+        }
     }
 
 // LAST RESORT: take one piece of furniture away rather than leave a room sealed.
@@ -359,7 +430,7 @@ class CorpConnect
             continue;
           var nx = s.x - d.x;
           var ny = s.y - d.y;
-          var below = clearedTo(cells[nx][ny]);
+          var below = clearedTo(state, nx, ny, cells[nx][ny]);
           if (below < 0)
             continue;
           for (o in ctx.getObjectsAt(nx, ny))
@@ -391,7 +462,7 @@ class CorpConnect
           if (!cuttable(cells[s.x][s.y]) &&
               cells[s.x][s.y] != Const.TILE_FLOOR_CARPET)
             continue;
-          var below = clearedTo(cells[fx][fy]);
+          var below = clearedTo(state, fx, fy, cells[fx][fy]);
           if (below < 0)
             continue;
           // and it has to be the EDGE of somewhere already reached, or clearing it buys nothing.
