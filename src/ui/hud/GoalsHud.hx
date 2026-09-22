@@ -10,7 +10,9 @@ class GoalsHud
 {
   var game: Game;
   var goals: DivElement;
-  var compactBtn: DivElement; // compact-mode toggle, survives rebuild()
+  var eyebrow: DivElement; // "GOALS" word, only shown when fully collapsed
+  var compactBtn: DivElement; // notes on/off
+  var collapseBtn: DivElement; // whole list on/off
   var rows: Map<_Goal, DivElement>; // goalId -> row element; displayed set, lags the model
   var pending: Array<{ action: String, id: _Goal }>; // goal anims deferred until UI is idle
   var onSlideEnd: js.html.Event -> Void = null; // clears the FLIP height animation once done
@@ -25,6 +27,12 @@ class GoalsHud
       goals.id = 'hud-goals';
       h.container.appendChild(goals);
 
+      // header bits are persistent: rebuild() clears the panel, these go back in
+      eyebrow = document.createDivElement();
+      eyebrow.className = 'hud-eyebrow';
+      eyebrow.textContent = 'Goals';
+      goals.appendChild(eyebrow);
+
       // compact-mode toggle: hides the goal notes, leaving the titles
       compactBtn = document.createDivElement();
       compactBtn.className = 'hud-compact-btn evolution-tip';
@@ -32,12 +40,22 @@ class GoalsHud
       compactBtn.innerHTML = UISvg.hudCompact();
       compactBtn.onclick = function (e)
         {
-          var v = !game.config.compactGoals;
-          game.config.set('compactGoals', v ? '1' : '0', true);
+          game.config.set('compactGoals', game.config.compactGoals ? '0' : '1', true);
           game.scene.sounds.play('click-hud');
-          setCompact(v, true);
+          applyState(true);
         }
       goals.appendChild(compactBtn);
+
+      // collapse toggle: folds the whole list away to the eyebrow word and a +
+      collapseBtn = document.createDivElement();
+      collapseBtn.className = 'hud-compact-btn evolution-tip goals-collapse';
+      collapseBtn.onclick = function (e)
+        {
+          game.config.set('collapsedGoals', game.config.collapsedGoals ? '0' : '1', true);
+          game.scene.sounds.play('click-hud');
+          applyState(true);
+        }
+      goals.appendChild(collapseBtn);
 
       // slide done: drop the inline overrides so the panel sizes to content again
       onSlideEnd = function (e)
@@ -46,38 +64,52 @@ class GoalsHud
               (cast e : js.html.TransitionEvent).propertyName != 'height')
             return; // a row's own collapse transition, not ours
           goals.style.height = '';
+          goals.style.width = '';
           goals.style.overflow = '';
           goals.style.transition = '';
           goals.removeEventListener('transitionend', onSlideEnd);
         };
-      setCompact(game.config.compactGoals, false);
+      applyState(false);
     }
 
-// toggle compact mode: notes collapse away (CSS), button lights up.
-// the panel is bottom-anchored and auto-height, so the swap would pop - FLIP
-// it instead: measure both layouts, then ease the height between them
-  function setCompact(v: Bool, anim: Bool)
+// apply the panel's three states from config: full, notes hidden, fully collapsed.
+// the panel is bottom-right anchored and sizes to its content, so a bare class
+// swap pops - FLIP it instead: measure both layouts, then ease the box between
+  function applyState(anim: Bool)
     {
-      if (!anim)
+      var fromH = 0;
+      var fromW = 0;
+      if (anim)
         {
-          goals.classList.toggle('hud-compact', v);
-          compactBtn.classList.toggle('active', v);
-          return;
+          // cancel a slide still running and measure the layout we are leaving
+          goals.removeEventListener('transitionend', onSlideEnd);
+          goals.style.transition = 'none';
+          goals.style.height = '';
+          goals.style.width = '';
+          fromH = goals.offsetHeight;
+          fromW = goals.offsetWidth;
         }
-      // cancel a slide still running and measure the layout we are leaving
-      goals.removeEventListener('transitionend', onSlideEnd);
-      goals.style.transition = 'none';
-      goals.style.height = '';
-      var from = goals.offsetHeight;
-      goals.classList.toggle('hud-compact', v);
-      compactBtn.classList.toggle('active', v);
-      var to = goals.offsetHeight;
-      // start at the old height with the content clipped, ease to the new one
+      var collapsed = game.config.collapsedGoals;
+      goals.classList.toggle('hud-compact', game.config.compactGoals);
+      goals.classList.toggle('hud-collapsed', collapsed);
+      compactBtn.classList.toggle('active', game.config.compactGoals);
+      collapseBtn.textContent = (collapsed ? '+' : '−');
+      collapseBtn.setAttribute('data-tip', collapsed ? 'Expand goals' : 'Collapse goals');
+      collapseBtn.classList.toggle('active', collapsed);
+      if (!anim)
+        return;
+      var toH = goals.offsetHeight;
+      var toW = goals.offsetWidth;
+      if (toH == fromH && toW == fromW) // nothing to ease, and no transitionend to clean up after
+        return;
+      // start at the old box with the content clipped, ease to the new one
       goals.style.overflow = 'hidden';
-      goals.style.height = from + 'px';
-      goals.getBoundingClientRect(); // force reflow so the start height sticks
-      goals.style.transition = 'height 0.3s ease';
-      goals.style.height = to + 'px';
+      goals.style.height = fromH + 'px';
+      goals.style.width = fromW + 'px';
+      goals.getBoundingClientRect(); // force reflow so the start size sticks
+      goals.style.transition = 'height 0.3s ease, width 0.3s ease';
+      goals.style.height = toH + 'px';
+      goals.style.width = toW + 'px';
       goals.addEventListener('transitionend', onSlideEnd);
     }
 
@@ -103,7 +135,9 @@ class GoalsHud
     {
       while (goals.firstChild != null)
         goals.removeChild(goals.lastChild);
-      goals.appendChild(compactBtn); // cleared with the rows, put back
+      goals.appendChild(eyebrow); // cleared with the rows, put back
+      goals.appendChild(compactBtn);
+      goals.appendChild(collapseBtn);
       rows = new Map();
       var primaryAssigned = false;
       for (g in game.goals.iteratorCurrent())
