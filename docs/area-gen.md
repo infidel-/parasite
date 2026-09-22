@@ -69,7 +69,9 @@ area
   │                         OUTSIDE the wall ring, in the pavement band
   └ room-open | room-cubicle | room-meeting | room-kitchen | room-exec | room-toilet | room-servers
     ├ desk-run              open plan: one 3x1 desk, a computer and a chair
-    ├ pod-row               the cubicle farm: two desks back to back across one partition spine
+    ├ pod-row               the cubicle farm: two rows of desks BACK TO BACK, three rows to a
+    │                         band (desk, desk, aisle) and no cell spent on the partition -
+    │                         render.corp.CorpFurniture panels every boundary a pod owns
     ├ rack-row              the server room: a rank of cabinets with an aisle beside it
     ├ table                 the boardroom table, or the executive's own desk
     ├ counter-run           the kitchen's 2x2 tables
@@ -237,6 +239,13 @@ but open plan. Expressed as a quota, measured over 1000 seeds: **cubicle 1.99, e
 1.95, open 2.73, kitchen 1, servers 1, toilet 1** over 12.26 rooms — every floor has one of
 everything, and open plan is the FILLER rather than a demand, so a floor carved into exactly the six
 rooms the mins want correctly has no open-plan space at all.
+
+**THE CUBICLE FARM DRESSES NO WALL, and that is deliberate.** Every other template hands
+`decorateWalls` its two long walls; `cubicle` hands it nothing, because `decorateWalls` forces a
+dressing at every CORNER whatever the roll says and each one is an unwalkable cell — reported from
+the game as *"all corners are unwalkable, but they're empty"*. Reserving x1/x2 for it also held the
+pod run at `w - 2`, which is one desk column per side. The farm's furniture is its desks, and what
+dresses it is what `render.corp.CorpClutter` pins to the panels.
 
 **Two new floor tile ids, and they are ALIASES.** `Const.TILE_FLOOR_CUBICLE` and
 `TILE_FLOOR_SERVER` are `OFFSET_ROW12 + 13/14`, appended and never inserted because the grid

@@ -1526,3 +1526,77 @@ brightest thing on the street, which is what the value ladder wanted — it was 
 a hundred times the road instead of four.
 
 Verdict: **LANDED.**
+
+## corp: the cubicle spine owned a grid cell, and five of the room's faults came off that
+
+Reported room by room off `area room` on a live tower: the separator between two rows of desks does
+not touch either of them and eats a whole tile; the panel tops have wildly wrong UVs; only the
+INNER sides of a desk are walled; monitors have no shadow of any kind; all four corners of the room
+are unwalkable and empty; there is one bin per block, to the side.
+
+`CorpRooms.cubicle` laid a four-row band — aisle, desk, **spine**, desk — and the spine was `bw`
+cells of `TILE_FLOOR_CUBICLE + 16`. `CorpFurniture.partition` then stood a 0.2 panel in the middle
+of that 4-unit cell: **a tile of floor for 5% of a tile of geometry**, touching neither desk. Taking
+the cell away is five of the six fixes. The band is three rows (`POD_BAND_H` 4 -> 3), the two desk
+rows are back to back, and the panel is emitted on the boundary they share by the same `divider`
+that already drew the side panels. `FIT_SPINE`, `CorpModel.fitOf`'s cubicle line and `wallFits`'
+spine clause are gone with it — that trap only ever existed because one id was the floor, the
+surface and the fitting at once.
+
+**`decorateCubicleWalls` went too, and that is where the +1 desk per side comes from.**
+`decorateWalls` forces a dressing at every corner whatever the roll says (`hasLeft || isCorner`),
+so four cells a room were unwalkable by construction, and reserving x1/x2 for it held `inner` at
+`w - 2`. At full width a 9-wide farm takes `bw` 2 -> **3**. Measured over 300 seeds:
+`furn/cubicle` **55.45 -> 63.1**, `nodes/pod-row` **5.73 -> 8.54**, `orphanCells` 0.
+
+**A DESK IS NEVER A SLAB, AND THE SHAPE TEST DID NOT KNOW THAT.** First build came back as four bare
+tables with monitors on them and no partitions at all: `slabTop` answers "table neighbours in BOTH
+axes", which back-to-back pods now satisfy, so every pod took the boardroom branch — and that branch
+is also the one that does not call `divider`. Gated on `Surf.OPEN`/`CUBICLE` before the shape test.
+
+**The lid was an elevation lying down.** `FacilityGeom.cap` is world-aligned on both axes, so a
+0.1-thick rail wore a 0.036-wide slice of the panel's own front taken at whatever world z it sat at
+— probed at u 8.571..10.0, **v -44.964..-45.036**. `corp/partition` is drawn with an aluminium trim
+strip along its very top edge, so `capTrim` pins v to that band and tiles u along the run: probed
+after, **v 0.9643..1.0000** over 236 cap triangles, no second texture and no second buffer.
+
+`FacilityDetail.halos` **was never called for a live corp plate** — `CorpArea.build` stopped at
+`corners`, so every `stand()` the tower had pushed since the port was collected and never drawn, and
+the static list leaked into whichever area drained next. Wiring it in is what lets a monitor take a
+`pool`; `ContactMask` is one top-down field over the floor and cannot reach a screen 1.5 units up.
+Bins moved off their own unwalkable cell and under every desk on its -x hand, riding the batch
+`CorpDeco.bins` already fills — **13 -> 84 bins for no new draw call**, A/B 965 px changed.
+
+Cost, A/B/A/B at the pinned pose `lookFrom(-152, 26, -150, -172, 0, -172)`, median of 7:
+**97 -> 100 calls, identical both times.** +1 the PACK36 panel sheet, +2 the contact-shadow meshes
+`halos` draws. Live on one floor: 118 panels, 212 pinned decals, 84 bins, 66 monitor pools.
+
+Verdict: **LANDED.**
+
+## corp: the first PACK36 in the repo, and it is what a worker pins to his own panel
+
+`docs/3d-textures.md` measured 6x6 a pass ago and recorded it as "viable but wired to nothing". A
+cubicle panel is what it was waiting for: 36 flat things pinned face-on to a wall, where the
+pack-cell rule (a round or upright silhouette is a prop, not a cell) costs nothing because paper,
+cards and tape really are flat and not one subject has a side to it.
+
+One `gpt-image-2.5-sunburst` gen at the 1,756-token tier, $0.057. **64.9% transparent** and
+`pack16.py --cols 6 --rows 6 --cell 170 --valign center` packed it at **tol 0 first time**, scale
+1.0405, largest group 148x143, `borders_nonzero 0`, all 36 subjects in their named cells. The 20%
+gutter clause absorbed the drift the doc predicts for 6x6 — the last row lane at y=854 was the only
+one still carrying anything (11.9%).
+
+**`cap 0.1` IS THE WORKTOP'S NUMBER AND IT IS WRONG ON A WALL.** `corp/desk-clutter` caps at 0.1
+against a desk top at 0.1184, i.e. the clutter sits ON the value of the surface under it — which
+reads fine on a horizontal face seen square-on from above. Over a VERTICAL panel at 0.105 the same
+cap makes a memo the same value as the fabric behind it, and at 0.1 it governed **30 of the 36
+cells**, flattening most of the sheet onto one number. **0.18** (1.7x the panel) governs 23 and
+leaves the paper reading as paper.
+
+The two dressing passes share no list and coordinate through a predicate:
+`CorpFurniture.panelPoster` is a pure function of the panel's own seed, `CorpSigns` hangs
+`POSTER_EYE`/`POSTER_MARCH` on the faces it answers true for **into the buffer it already owns
+(+0 calls)**, and `CorpClutter` leaves exactly those faces bare. Same discipline as
+`CorpProps.claims`, and for the same reason: neither pass may depend on having run first.
+
+Verdict: **LANDED.**
