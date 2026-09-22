@@ -1655,3 +1655,54 @@ only — `docs/3d-render.md`'s row 451 stands for the tunnels, where that guard'
 prop-backed objects their only shadow. **Live: 32 fake shadow quads before, 0 after.**
 
 Verdict: **LANDED.**
+
+## corp: the eighth defect pass — the farm's floor, its bins and the other end of the panel band
+
+Six reports off the live tower plate. Four of them are one sentence apart: **a panel band, a bin,
+a mug and a room's columns each had one end of themselves nobody had measured.**
+
+**The band had a ceiling and no floor.** `PANEL_HI` was clamped against the trim rail last pass;
+`PANEL_LO` 0.55 × 2.8 = 1.54 was never clamped against anything, and a pod face has `DESK_H` 1.5 of
+bench standing 0.12 in front of it. A 0.76-tall decal centred at 1.54 has its bottom at 1.16 —
+behind the desk. `PANEL_BOT_GAP` 0.05 and a clamp that fires ONLY on a face that looks at a desk:
+the aisle face has nothing in front of it and keeps the whole band. **Live: lowest pod-face bottom
+1.550 = `DESK_H + PANEL_BOT_GAP` exactly, highest top 2.650 = the other bound, 315 decals.**
+
+**Every eligible face taking a poster was overboard in the other direction.** Last pass replaced an
+8% roll on ANY face with the grid; the grid says 50 of 62 faces look at the passage and the farm
+came out a gallery. The predicate is now `CorpFurniture.panelPoster` — the grid AND a
+`PANEL_POSTER_PCT` 12 roll — and `CorpClutter` dresses the aisle faces the roll leaves, which it
+never did before. `CorpPanel` gained `aisle0`/`aisle1` off `divider`'s own `walkCell`, so
+`CorpSigns.aisle()` (which re-derived the cell from the rect) is deleted. **Live: 8 posters on 50
+aisle faces, 42 aisle faces carrying clutter, 0 decals on a poster face, 0 on a back panel.**
+
+**A promoted clutter cell had no contact of any kind.** `ContactMask` is one top-down field over the
+FLOOR and cannot reach a mug 1.5 units up — the gap `CorpProps.desks` already fills for the monitor.
+One `FacilityDetail.pool` per promoted cell, same plate, same mesh, **+0 draw calls. Live: 14/14
+props sitting on a pool, max miss 0.027 (the glb's own recentre offset).**
+
+**The bin was inside the pedestal.** `corp/desk-bench` is not a top on legs — `desk_build.py` hangs a
+1.06 pedestal off one end of a 3.76 carcass — and the offset `CELL / 2 - BIN_W / 2 - FIT_INSET` =
+1.57 put a 0.62 bin exactly in it. It stands in the AISLE cell now, `CELL / 2 + BIN_W / 2` past the
+boundary and `off` across it so it misses the chair. **Live: 73 of 81 pods, 0 inside a desk cell;
+the 8 are pods with no clear aisle hand, which is the same test `desks` skips them on.**
+
+**A fixed block width left dead floor.** `bw` was 3 or 2 by a threshold and `blocks` a floor
+division, so a 10-column farm took 3 + 1 + 3 and stood a bare strip down one side — the report.
+`podBlocks` tries both widths, keeps the one that COVERS more, then spends the remainder widening
+blocks from the left. **Zero waste for every width 2..24; live, a 10-wide farm came out `3 3 2` with
+both passage columns and nothing else empty.**
+
+**And the farm had no wall objects at all**, because `decorateCubicleWalls` went when the wall
+columns became pods. `cubicleFittings` deals a cooler and a printer at the heads of the passage
+columns. Two traps, both measured: the unwalkable twin every other wall dressing writes **SEALS A
+POCKET** here — the top aisle row is the only thing joining the two halves of band 1, so one blocked
+cell in it had `CorpConnect.openPockets` eat a column of desks (band 2 came out `[2,2]` exactly,
+band 1 lost its inner pods) — so the cell stays WALKABLE; and half of all farms face the perimeter
+GLAZING, which `isSolidWall` rejects on purpose, so the search falls back from `room.y1` to `room.y2`
+and from the passage heads to the rest of those two rows. The printer needed a kind of its own
+(`CorpDeco.K_PRINTER`, row 28 cols 6-10) and `CorpProps.standing` a guard, because the SAME frame is
+dealt onto a table tile in the copy room where the bench is what draws it. **Live: 16 coolers,
+11 printers, every farm fitting with a valid back hand.**
+
+Verdict: **LANDED.**
