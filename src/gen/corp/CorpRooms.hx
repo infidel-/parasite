@@ -572,7 +572,14 @@ class CorpRooms
 // AND THE TWO WALL COLUMNS ARE PODS. `decorateCubicleWalls` reserved x1 and x2 for a cabinet run,
 // and `decorateWalls` forces a dressing at every CORNER whatever the roll says — four unwalkable
 // cells a room, which is what "all corners are unwalkable, but they're empty" was looking at. The
-// farm's furniture is its desks; what dresses it now is what is pinned to the panels
+// farm's furniture is its desks; what dresses it now is what is pinned to the panels.
+//
+// WHICH WAY THE BANDS RUN IS NOT THE ROOM'S OWN AXES. A band is three lines deep and only whole
+// bands are laid, so a room whose short axis leaves two lines over stands a large empty slab in
+// it — an 8 x 9 farm took two bands, 28 desks, and wasted rows 13 and 14 entirely. Turned a
+// quarter turn the same room takes two bands of four blocks: 32 desks, one spare COLUMN. Both ways
+// are costed by seats and the better one is laid, which is what `vert` threads through `cx`/`cy`.
+// Nothing downstream is told — render.corp.CorpFurniture.podBack reads the back hand off the PAIR
   public static function cubicle(state: _CorpState, node: _GenNode, room: _Room)
     {
       var area = state.area;
@@ -581,57 +588,75 @@ class CorpRooms
       var chairID = area.random(Const.CORP_CHAIR[0].amount);
       var computerID = area.random(Const.CORP_COMPUTERS_BLOCK.width);
 
-      // the WHOLE interior, wall columns included — nothing dresses them any more
-      var inner = room.w;
-      var widths = podBlocks(inner);
+      // the WHOLE interior, wall columns included — nothing dresses them any more. `along` runs
+      // down the blocks and their passages, `across` down the bands
+      var vert = (seats(room.h, room.w) > seats(room.w, room.h));
+      var along = (vert ? room.h : room.w);
+      var across = (vert ? room.w : room.h);
+      var widths = podBlocks(along);
+      var bands = Std.int((across - 1) / POD_BAND_H);
       if (widths.length < 1 ||
-          room.h < POD_BAND_H + 1)
+          bands < 1)
         return;
-      var runW = -1;
-      for (w in widths)
-        runW += w + 1;
-      var x0 = room.x1 + Std.int((inner - runW) / 2);
-      // the spare column after every block but the last — the passages, and the only cells in a
-      // farm that are neither desk nor aisle. `cubicleFittings` stands the room's two machines at
-      // their heads
+      var off = Std.int((along - span(widths)) / 2);
+      // the spare line after every block but the last — the passages, and the only cells in a farm
+      // that are neither desk nor aisle. `cubicleFittings` stands the room's two machines at their
+      // two ends
       var gaps = [];
-      var gx = x0;
+      var at = off;
       for (b in 0...widths.length - 1)
         {
-          gx += widths[b];
-          gaps.push(gx);
-          gx++;
+          at += widths[b];
+          gaps.push(at);
+          at++;
         }
 
-      var band = 0;
-      while (true)
+      for (band in 0...bands)
         {
-          band++;
-          if (band > 20)
-            break;
-          // the band's two desk rows, with the aisle its first row faces one row above
-          var dy0 = room.y1 + 1 + (band - 1) * POD_BAND_H;
-          var dy1 = dy0 + 1;
-          if (dy1 + 1 > room.y2)
-            break;
-
-          var bx = x0;
+          // the band's two desk lines, with the aisle its first line faces one line back
+          var a0 = 1 + band * POD_BAND_H;
+          at = off;
           for (b in 0...widths.length)
             {
               var bw = widths[b];
-              GenTree.add(node, CorpBlocks.ZONE_POD_ROW, bx, dy0, bx + bw - 1, dy1);
+              GenTree.add(node, CorpBlocks.ZONE_POD_ROW,
+                cx(room, vert, at, a0), cy(room, vert, at, a0),
+                cx(room, vert, at + bw - 1, a0 + 1), cy(room, vert, at + bw - 1, a0 + 1));
               for (i in 0...bw)
-                {
-                  pod(state, bx + i, dy0, dy0 - 1, computerID, chairID);
-                  pod(state, bx + i, dy1, dy1 + 1, computerID, chairID);
-                }
-              bx += bw + 1;
+                pods(state, room, vert, at + i, a0, computerID, chairID);
+              at += bw + 1;
             }
         }
-      cubicleFittings(state, room, gaps);
+      cubicleFittings(state, room,
+        [for (g in gaps) for (e in [0, across - 1])
+          {
+            x: cx(room, vert, g, e),
+            y: cy(room, vert, g, e),
+          }]);
     }
 
-// HOW THE ROOM'S COLUMNS SPLIT INTO POD BLOCKS, one spare column between each two.
+// how many desks a farm seats with its blocks running one way: two lines per band, and a band is
+// desk, desk, aisle with the band before it supplying the first line's aisle
+  static function seats(along: Int, across: Int): Int
+    {
+      var n = 0;
+      for (w in podBlocks(along))
+        n += w;
+      return 2 * Std.int((across - 1) / POD_BAND_H) * n;
+    }
+
+// the world cell of a point on the farm's OWN two axes
+  static inline function cx(room: _Room, vert: Bool, along: Int, across: Int): Int
+    {
+      return room.x1 + (vert ? across : along);
+    }
+
+  static inline function cy(room: _Room, vert: Bool, along: Int, across: Int): Int
+    {
+      return room.y1 + (vert ? along : across);
+    }
+
+// HOW THE ROOM'S LINES SPLIT INTO POD BLOCKS, one spare line between each two.
 //
 // a fixed width and a floor division left whatever did not divide as DEAD FLOOR — a 10-column farm
 // took two blocks of three and a passage, covered nine columns of ten and stood a bare strip down
@@ -656,7 +681,7 @@ class CorpRooms
       return best;
     }
 
-// how many columns a list of block widths covers, passages included
+// how many lines a list of block widths covers, passages included
   static inline function span(widths: Array<Int>): Int
     {
       var n = -1;
@@ -678,42 +703,56 @@ class CorpRooms
 // came out [2,2] exactly and band 1 lost its inner pods. render.corp.CorpProps.standing needs the
 // decoration, masonry on a hand and a cell that is neither worktop nor fitting; it does not need
 // the twin, so the glb stands and nothing is sealed
-  static function cubicleFittings(state: _CorpState, room: _Room, cols: Array<Int>)
+  static function cubicleFittings(state: _CorpState, room: _Room, heads: Array<{ x:Int, y:Int }>)
     {
-      var area = state.area;
-      var cells = area.getCells();
-      // THE PASSAGE HEADS FIRST and then anywhere else on the same two rows. A farm's top row is
-      // not always the tower's own masonry — half of them face the perimeter GLAZING, which
-      // FacilityModel.isSolidWall rejects on purpose (a window's sill is where a worktop would
-      // be) — and a room whose foot is a doorway has none there either, so a single candidate
-      // cell put the machines in about one farm in four
+      var cells = state.area.getCells();
+      // THE PASSAGE ENDS FIRST and then anywhere else on the room's own perimeter ring. A farm's
+      // first line is not always the tower's own masonry — half of them face the perimeter
+      // GLAZING, which FacilityModel.isSolidWall rejects on purpose (a window's sill is where a
+      // worktop would be) — and a room whose far end is a doorway has none there either, so a
+      // single candidate cell put the machines in about one farm in four
       var spots = [];
-      for (y in [room.y1, room.y2])
-        for (x in cols)
-          if (bare(state, cells, x, y))
-            spots.push({ x: x, y: y });
-      for (y in [room.y1, room.y2])
-        for (x in room.x1...room.x2 + 1)
-          if (cols.indexOf(x) < 0 &&
-              bare(state, cells, x, y))
-            spots.push({ x: x, y: y });
+      for (p in heads)
+        spot(spots, state, cells, p.x, p.y);
+      for (x in room.x1...room.x2 + 1)
+        for (y in [room.y1, room.y2])
+          spot(spots, state, cells, x, y);
+      for (y in room.y1 + 1...room.y2)
+        for (x in [room.x1, room.x2])
+          spot(spots, state, cells, x, y);
       if (spots.length == 0)
         return;
       var deco = [Const.CORP_COOLER, Const.CORP_TABLE_PRINTER];
-      var first = area.random(deco.length);
+      var first = state.area.random(deco.length);
       var n = (spots.length < deco.length ? spots.length : deco.length);
       for (i in 0...n)
         {
           // the two ENDS of what the room offered, so the machines are not stood side by side:
-          // the list runs passage heads first, so the pair comes out one at a passage and one in
+          // the list runs passage ends first, so the pair comes out one at a passage and one in
           // the far corner
           var s = spots[n < 2 ? 0 : Std.int(i * (spots.length - 1) / (n - 1))];
           addDecoration(state, s.x, s.y, deco[(first + i) % deco.length]);
         }
     }
 
+// one candidate cell onto the list, if it is free and not already on it
+  static function spot(spots: Array<{ x:Int, y:Int }>, state: _CorpState,
+      cells: Array<Array<Int>>, x: Int, y: Int): Void
+    {
+      if (!bare(state, cells, x, y))
+        return;
+      for (p in spots)
+        if (p.x == x &&
+            p.y == y)
+          return;
+      spots.push({
+        x: x,
+        y: y,
+      });
+    }
+
 // may a standing fitting go on this cell? bare farm floor, masonry on a hand, clear of a doorway
-// and of whatever is already there — a pod's chair sits in the aisle row the pod faces
+// and of whatever is already there — a pod's chair sits in the aisle line the pod faces
   static function bare(state: _CorpState, cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
       return cells[x][y] == CUBICLE &&
@@ -737,24 +776,40 @@ class CorpRooms
       return false;
     }
 
-// one pod: a desk cell, the workstation on it, and its chair in the aisle it faces.
+// ONE PAIR OF PODS, back to back: two desk cells, their workstations, and a chair each in the
+// aisle it faces.
 //
 // SKIPPED BESIDE A DOORWAY, which it never had to be while the wall columns were reserved: a pod
 // run reaches x1 and x2 now, so a door in a side wall can open straight onto a desk and seal the
-// room. `CorpConnect.openPockets` would carve it back out, but a repair is not a placement rule
-  static function pod(state: _CorpState, x: Int, dy: Int, cy: Int, computerID: Int, chairID: Int)
+// room. `CorpConnect.openPockets` would carve it back out, but a repair is not a placement rule.
+//
+// AND THE PAIR IS THE UNIT — BOTH OR NEITHER. Skipping one of the two left its partner standing
+// with its back open to the aisle instead of against another worker: three panels and a monitor
+// facing a gap, reported from the game as a half-done cubicle beside a door. The panel emitter
+// says the same thing, since render.corp.CorpFurniture raises a back only where two pods meet
+  static function pods(state: _CorpState, room: _Room, vert: Bool, at: Int, a0: Int,
+      computerID: Int, chairID: Int)
     {
       var area = state.area;
       var cells = area.getCells();
-      if (atDoor(cells, x, dy))
+      var px = [cx(room, vert, at, a0), cx(room, vert, at, a0 + 1)];
+      var py = [cy(room, vert, at, a0), cy(room, vert, at, a0 + 1)];
+      if (atDoor(cells, px[0], py[0]) ||
+          atDoor(cells, px[1], py[1]))
         return;
-      // THE MIDDLE ID OF THE 3x1 RUN, because a pod is one cell and the run's two ends are its
-      // carcass sides. render.corp.CorpFurniture stands a `corp/desk-bench` module per cell and
-      // asks the SURFACE, not the column, so any table id of the family draws the same desk
-      cells[x][dy] = Const.CORP_TABLE_3X1[1];
-      area.addDecoration(x, dy, Const.CORP_COMPUTERS_BLOCK.row,
-        Const.CORP_COMPUTERS_BLOCK.col + computerID);
-      area.addDecoration(x, cy, Const.CORP_CHAIR[0].row, chairID);
+      // each one's chair, one line back for the first of the pair and one line on for the second
+      var sx = [cx(room, vert, at, a0 - 1), cx(room, vert, at, a0 + 2)];
+      var sy = [cy(room, vert, at, a0 - 1), cy(room, vert, at, a0 + 2)];
+      for (i in 0...2)
+        {
+          // THE MIDDLE ID OF THE 3x1 RUN, because a pod is one cell and the run's two ends are its
+          // carcass sides. render.corp.CorpFurniture stands a `corp/desk-bench` module per cell and
+          // asks the SURFACE, not the column, so any table id of the family draws the same desk
+          cells[px[i]][py[i]] = Const.CORP_TABLE_3X1[1];
+          area.addDecoration(px[i], py[i], Const.CORP_COMPUTERS_BLOCK.row,
+            Const.CORP_COMPUTERS_BLOCK.col + computerID);
+          area.addDecoration(sx[i], sy[i], Const.CORP_CHAIR[0].row, chairID);
+        }
     }
 
 // a server room: rows of racks with an aisle between them, and nothing soft in it
