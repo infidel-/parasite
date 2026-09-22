@@ -681,14 +681,21 @@ class CorpStyle
   // a head and two shoulders
   public static inline var WALK_H = 3.2;
   public static inline var CROWD_Y = 0.06;
-  // what the people quad's albedo is multiplied by, before the street's own moon. ABOVE STREET_DIM
-  // because the icons are the smallest thing down here and the thing the eye is meant to find.
+  // what the people quad's albedo is multiplied by, before the street's own moon.
   //
-  // THE QUAD IS LAMBERT AND THAT IS THE FIX, not this number — see render.corp.CorpCrowd.people. A
-  // civilian icon is flat, saturated and high-value by construction, so an UNLIT one is the
-  // brightest thing on a night street at any multiplier: at 0.42 against a road measuring 0.0032
-  // linear it still read as a sticker stuck on the pavement
-  public static inline var WALK_DIM = 0.55;
+  // 0.55 -> 0.13 on "street citizens look too bright", and THE LAMBERT WAS NOT THE FIX this note
+  // used to say it was: the quad and the road are lit by the same three lights, so going Lambert
+  // scales both and leaves the RATIO exactly where it was. Measured off the built sheets, mean
+  // linear luminance over opaque pixels times each material's own colour: road 0.0329 x 0.45 =
+  // 0.0148, car body 0.0255 x 0.85 = 0.0217, and a walker **0.4326** x 0.55 = **0.2379** — 16x the
+  // road and 11x a car, which is a person rendered as a light source.
+  //
+  // THE SOURCE IS THE WHOLE OF IT AND THIS NUMBER IS THE ONLY LEVER ON IT. A civilian icon is a
+  // HUD portrait, authored flat and high-value (0.43 linear, srgb 175) to read on the game's dark
+  // interface; a street texture is night asphalt at 0.033. 0.13 is fitted to cancel that 13x and
+  // leave the icon where a person's clothing actually sits against tarmac — effective 0.056, about
+  // 3.8x the road and 2.6x a car body, still the brightest thing on the street
+  public static inline var WALK_DIM = 0.13;
   // the people sheets, stacked into one canvas so both sexes ride one draw call
   public static inline var WALK_ATLAS_W = 640;
   public static inline var WALK_ATLAS_H = 1024;

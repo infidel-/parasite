@@ -1479,3 +1479,32 @@ lane count. Mean drawn over 1200 samples: **29.3** (min 18, max 38) against the 
 every single frame before. Same batch, same draw call: 156 either way.
 
 Verdict: **LANDED.**
+
+## corp: the street's citizens were rendered as light sources
+
+Reported as *"how are street citizens lit? they look too bright, albedo again?"* — and yes, albedo,
+measured off the built sheets as mean linear luminance over opaque pixels times each material's own
+colour multiplier, all three under the same three lights and all three Lambert:
+
+| | sheet | x colour | effective |
+|---|---|---|---|
+| road, `city/ground-asphalt` | 0.0329 | 0.45 | **0.0148** |
+| car body, `corp/traffic` | 0.0255 | 0.85 | **0.0217** |
+| walker, the civilian icons | **0.4326** | 0.55 | **0.2379** |
+
+**16x the road and 11x a car.** `WALK_DIM`'s own note claimed the Lambert was the fix and the
+multiplier was not the lever — that is exactly backwards. The quad and the road take the SAME
+lights, so going Lambert scales both and leaves the ratio where it was; the multiplier is the only
+thing that touches it.
+
+The cause is the source and nothing else. A civilian icon is a HUD portrait, authored flat and
+high-value (**0.43 linear, srgb 175**) so it reads on the game's dark interface; a street texture is
+night asphalt at 0.033. Thirteen times the albedo, and the crowd had a multiplier ABOVE
+`STREET_DIM` on top of it.
+
+`WALK_DIM` **0.55 -> 0.13**, fitted to cancel that 13x and leave the icon where a person's clothing
+actually sits against tarmac: effective **0.0562**, **3.8x the road and 2.6x a car body**. Still the
+brightest thing on the street, which is what the value ladder wanted — it was reaching it by being
+a hundred times the road instead of four.
+
+Verdict: **LANDED.**
