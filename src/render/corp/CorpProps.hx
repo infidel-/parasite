@@ -601,9 +601,17 @@ class CorpProps
           }
     }
 
-// which hand a worktop cell has its back on — masonry, a cubicle spine, or the next worktop
+// which hand a worktop cell has its back on — masonry, a cubicle spine, or the next worktop.
+//
+// A POD ANSWERS OFF THE PAIR AND NOT OFF THIS ORDER. "The first hand that is not clear floor" reads
+// the back of a cubicle correctly only while the farm's bands run across the room: turn the layout
+// a quarter turn (gen.corp.CorpRooms.cubicle does, when that seats more people) and the first
+// non-clear hand of a pod at the end of a block is the neighbour BESIDE him. CorpFurniture.podBack
+// is the shared oracle, and it is the same one the panel emitter splits its faces on
   static function backHand(m:Facility, col:Int, row:Int):Int
     {
+      if (m.surf[row][col] == Surf.CUBICLE)
+        return CorpFurniture.podBack(m, col, row);
       for (d in 0...4)
         if (!clear(m, col + DC[d], row + DR[d]))
           return d;

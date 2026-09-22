@@ -45,6 +45,7 @@ typedef CorpPanel = {
   var pod1: Bool;     // and the cell on the + hand
   var aisle0: Bool;   // is the cell on the - hand floor somebody walks on? masonry says no
   var aisle1: Bool;   // and the cell on the + hand
+  var back: Bool;     // is this the pod's BACK, with a monitor standing against it on either hand?
 }
 
 // what a cubicle panel is, apart from its rect: the run's axis and which of its two hands looks at
@@ -56,6 +57,7 @@ typedef PodHands = {
   var hi: Bool;       // and the + hand
   var loOpen: Bool;   // and if it is not a desk, is it the PASSAGE rather than masonry or a fitting?
   var hiOpen: Bool;
+  var back: Bool;     // the pod's back, as opposed to one of its two sides
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -318,18 +320,52 @@ class CorpFurniture
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
 
+// WHICH HAND THIS POD'S DESK HAS ITS BACK ON — the hand the monitor stands against, and so the one
+// the chair is NOT on.
+//
+// THE BACK IS NOT AN AXIS OF THE WORLD, which is what both passes used to assume: the panel emitter
+// took + z outright and render.corp.CorpProps.backHand took "the first hand that is not clear
+// floor", and the two agree only while the generator lays its bands ACROSS the room.
+// gen.corp.CorpRooms.cubicle turns the whole layout a quarter turn when that seats more people, and
+// then a fixed + z back raises a BACK panel between two neighbours in the same row and dresses the
+// real back with clutter on both hands, behind both monitors.
+//
+// THE TEST IS THE PAIR: the back hand is the one whose neighbour is another pod standing back to
+// back, so the cell the OTHER way is this worker's aisle and the cell BEYOND the partner is his.
+// A side neighbour fails the second test (past him is the next desk along) and the aisle fails the
+// first. Ties go to the lowest hand and are only reachable on a block two pods long — a 2 x 2
+// square of desks, where either reading is a pair of cubicles and nothing downstream can tell.
+//
+// SELF-CONSISTENCY IS THE WHOLE REQUIREMENT, not agreement with the generator: the chair
+// CorpRooms deals is a decoration render.corp.CorpDeco draws nothing for, and CorpProps.desks
+// stands its own off this
+  public static function podBack(m:Facility, col:Int, row:Int):Int
+    {
+      for (d in 0...4)
+        if (podCell(m, col + dx(d), row + dz(d)) &&
+            walkCell(m, col - dx(d), row - dz(d)) &&
+            !podCell(m, col + dx(d) * 2, row + dz(d) * 2))
+          return d;
+      // a pod with no partner at all — one left standing beside a doorway, or the warm model's
+      // single cubicle cell. The first hand that is not open floor is the rule the tower's other
+      // worktops keep, and a desk with nothing behind it at all faces - z
+      for (d in 0...4)
+        if (!walkCell(m, col + dx(d), row + dz(d)))
+          return d;
+      return 1;
+    }
+
 // THE PANELS ROUND ONE POD, and none of them costs a cell.
 //
 // a cubicle desk is walled on THREE hands — its back, shared with the worker sitting the other way
 // in the same block, and both sides, shared with the neighbours beside him. The fourth is the one
-// his chair is on, which render.corp.CorpProps.backHand derives from the same grid by taking the
-// first hand that is not clear floor: the two agree by construction and neither has to be told.
+// his chair is on, which `podBack` answers for this pass and for CorpProps alike.
 //
 // THE BACK USED TO BE A SPINE ON A CELL OF ITS OWN and the sides were emitted only BETWEEN two
 // pods, so the outermost desk of every block had open flanks and the two rows were four units
 // apart with a tenth of a unit of panel floating in the middle of the gap. Every boundary a pod
-// owns is panelled now, drawn exactly once: the + hands always, the - x hand only where the
-// neighbour is not itself a pod (an interior boundary is its neighbour's + hand)
+// owns is panelled now, drawn exactly once: the + hands always, a - hand only where the neighbour
+// is not itself a pod (an interior boundary is that neighbour's + hand)
   static function divider(m:Facility, col:Int, row:Int, n:CorpFit):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
@@ -339,40 +375,52 @@ class CorpFurniture
       var x1 = (col + 1) * CELL - half;
       var z0 = row * CELL - half;
       var z1 = (row + 1) * CELL - half;
-      // the two side panels, and the back, which is the + z hand for the row facing - z and the
-      // neighbour's own + z hand for the row facing + z.
-      //
-      // THE BACK STOPS AT THE SIDE PANELS' OUTER FACES (x0 + t .. x1 - t) and does not span the
-      // whole cell. Its lid and theirs both sit at PARTITION_H, so a full-cell back put a
-      // 0.1 x 0.1 coplanar square at every crossing and the two trim rails z-fought there. The
-      // corner it gives up is already covered: a side panel spans the FULL z cell, and the next
-      // row's own side panel picks the run up on the other side of the boundary
-      if (!podCell(m, col - 1, row))
-        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 },
-          seed(col, row, 2), {
-            alongX: false,
-            lo: false,
-            hi: true,
-            loOpen: walkCell(m, col - 1, row),
-            hiOpen: false,
+      var back = podBack(m, col, row);
+      for (dir in 0...4)
+        {
+          // the hand the chair is on stays open, and a - hand whose neighbour is a pod was already
+          // drawn as that neighbour's + hand
+          if (dir == (back ^ 1))
+            continue;
+          var nc = col + dx(dir);
+          var nr = row + dz(dir);
+          if ((dir == 0 || dir == 2) &&
+              podCell(m, nc, nr))
+            continue;
+          // THE BACK STOPS AT THE SIDE PANELS' OUTER FACES and does not span the whole cell. Its
+          // lid and theirs both sit at PARTITION_H, so a full-cell back put a 0.1 x 0.1 coplanar
+          // square at every crossing and the two trim rails z-fought there. The corner it gives up
+          // is covered: a side panel spans its own boundary full, and the next pod along picks the
+          // run up past it
+          var e = (dir == back ? t : 0.0);
+          var alongX = (dir < 2);
+          var p:Rect = (alongX ?
+            {
+              x0: x0 + e,
+              x1: x1 - e,
+              z0: (dir == 0 ? z0 : z1) - t,
+              z1: (dir == 0 ? z0 : z1) + t,
+            } :
+            {
+              x0: (dir == 2 ? x0 : x1) - t,
+              x1: (dir == 2 ? x0 : x1) + t,
+              z0: z0 + e,
+              z1: z1 - e,
+            });
+          // side 0 is the hand at x0/z0, so THIS cell is the lo one across a + hand and the hi one
+          // across a - hand
+          var plus = (dir == 1 || dir == 3);
+          var lc = (plus ? col : nc), lr = (plus ? row : nr);
+          var hc = (plus ? nc : col), hr = (plus ? nr : row);
+          n.partitions += podPanel(b, p, seed(col, row, dir), {
+            alongX: alongX,
+            lo: podCell(m, lc, lr),
+            hi: podCell(m, hc, hr),
+            loOpen: walkCell(m, lc, lr),
+            hiOpen: walkCell(m, hc, hr),
+            back: dir == back,
           });
-      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 },
-        seed(col, row, 3), {
-          alongX: false,
-          lo: true,
-          hi: podCell(m, col + 1, row),
-          loOpen: false,
-          hiOpen: walkCell(m, col + 1, row),
-        });
-      if (podCell(m, col, row + 1))
-        n.partitions += podPanel(b, { x0: x0 + t, x1: x1 - t, z0: z1 - t, z1: z1 + t },
-          seed(col, row, 1), {
-            alongX: true,
-            lo: true,
-            hi: true,
-            loOpen: false,
-            hiOpen: false,
-          });
+        }
     }
 
 // one panel's own roll, off the cell it hangs on and which hand of it. the dressing passes are
@@ -666,6 +714,7 @@ class CorpFurniture
         pod1: h.hi,
         aisle0: h.loOpen,
         aisle1: h.hiOpen,
+        back: h.back,
       });
       return 1;
     }
