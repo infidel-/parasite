@@ -34,9 +34,14 @@ class FacilityStyle
   public static inline var HEAD_DROP = 0.02;
   // the lift doorway's door pocket — how wide the near-black track strip down each jamb is, and how
   // far proud of the reveal it stands so it draws over it instead of z-fighting with it. 0.3 is
-  // 15 cm of slot, which is what a real two-leaf lift entrance shows
+  // 15 cm of slot, which is what a real two-leaf lift entrance shows, and it is CENTRED on the leaf
+  // plane so the 0.16 of DOOR_T sits inside it. ONE strip per jamb: a strip at each edge of a
+  // 1.2-deep corp reveal showed the corridor's own board between them
   public static inline var LIFT_POCKET_W = 0.3;
   public static inline var LIFT_POCKET_EPS = 0.02;
+  // and how deep the SADDLE PLATE lying in the opening is, across the walking direction. 0.6 is
+  // 30 cm, half of the corp reveal's own 1.2, centred on the leaf plane — see FacilityGeom.liftSill
+  public static inline var LIFT_SILL_D = 0.6;
   // where the masonry STARTS, world units — below zero, and below every surface in the compound.
   //
   // an indoor floor is y = 0 and so is the pavement, but KERB_DROP puts the road, the park and the

@@ -1247,7 +1247,44 @@ a near-black door-pocket strip down each jamb, 0.3 wide and standing 0.02 proud 
 the reveal rather than z-fighting it, and the threshold drawn in a brushed sill plate. 8 tris and
 4 tris, two meshes, off `corp/fit-pack`.
 
-Verdict: **LANDED.**
+**Both of those were then wrong in the same way, and it is a mapping rule.** Reported as *"lift
+pocket is all wrong u,v. it's three black parts and normal wall seen in the center"*.
+
+`face` and `threshold` tile off the WORLD, at `WALL_TILE` 6.0, which is right for a wall course and
+a lie for a strip whose art is its own CROSS-SECTION. The pocket cell is a metal highlight, a band
+of shadow, a highlight, running the full height; a 0.3 x 4.2 strip world-tiled sampled **0.05 x
+0.70** of the sheet at whatever phase the doorway's world position landed on. The sill was worse —
+**0.20 x 0.033**, a flat smear with the brush lines and both grooves off the edge. New `slot`
+(u 0..1 across the strip, v still on `WALL_TILE`, which the art is uniform along) and `plate`
+(0..1 both ways, `cap`'s own `swap` for the z axis).
+
+**And the count was wrong twice over.** The pocket put a strip at BOTH edges of the reveal on BOTH
+jambs — four of them — and a corp reveal is `WALL_INNER` 1.2 deep, wide enough to show the
+corridor's own board between: three black bands and wall in the middle, exactly as reported. One
+slot per jamb now, CENTRED on the leaf plane (`FacilityDoors` puts every leaf on the cell's centre
+line), so `DOOR_T` 0.16 sits inside `LIFT_POCKET_W` 0.3 and the slot is the gap the leaf slides
+into. **4 quads -> 2.**
+
+The sill was not a mapping problem at all. `threshold` stands its riser in the two JAMB planes, so
+on a wall that carries on either side it is inside the neighbouring masonry and under that cell's
+own floor cap — it reads at the compound's dropped kerb and at nothing else. The ask was *"a thin
+gray sliver to the bottom of the elevator door where the floor textures meet"*, which is a plate in
+the FLOOR: `liftSill` lays one saddle across the opening, `LIFT_SILL_D` 0.6 deep (30 cm, half the
+reveal) centred on the leaf plane at y 0.02. `threshold` keeps its riser and is untouched, so no
+compound doorway changes. **1 quad.**
+
+**And half of the reveal is not the lobby's.** A doorway is painted in `wIn[m.tex.circ]` whichever
+way it faces, on the rule that it belongs to neither space it joins — right for an office door, and
+for a lift it carried the corridor's board straight through the opening and into the car, which has
+a panel of its own in `wallInto[Surf.LIFT]`. Reported as *"inner part of this and opposite walls
+should be wall-lift texture"*. Each jamb is emitted in two halves now, split on the LEAF PLANE,
+which the pocket slot stands 0.02 proud of and hides; `liftSide` finds the car by `m.surf`, so a
+doorway with no car either side falls back to the single whole-depth jamb and no compound door
+changes. Measured at the tower's lift: both jambs read **wall-office z -178.0..-177.4, wall-lift
+z -178.6..-178.0**, the car being the low-z neighbour.
+
+Verdict: **LANDED.** The rule worth keeping: a strip whose art states a CROSS-SECTION maps 0..1
+across itself. World tiling is for a surface that repeats, and a slot does not repeat sideways.
 
 ## corp: six desk-clutter cells that were never decals
 

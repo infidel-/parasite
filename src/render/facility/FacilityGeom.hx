@@ -629,20 +629,36 @@ class FacilityGeom
                 // as two open slots you could see straight through. each jamb sits in a cell
                 // boundary plane looking INTO the cell, i.e. wound the opposite way from a wall
                 // face at the same place, which is what makes it `face` with one axis collapsed
-                jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE, FacilityStyle.DOOR_H,
-                  FacilityStyle.WALL_TILE);
-                // A LIFT OPENING TAKES TWO DETAILS ON TOP OF THAT, and it is the one Look that
-                // does. Everything above paints the reveal in the CIRCULATION finish, which is
-                // right for an office door and left the car's own opening reading as a hole in the
-                // corridor board — no track, no threshold, nothing saying a door slides there. So
-                // a near-black POCKET strip runs down each jamb where the leaves go, and the
-                // threshold below takes the metal SILL instead of the board
+                //
+                // AND A LIFT REVEAL IS TWO FINISHES. The rule above is right for an office door and
+                // wrong for a lift: half of the opening is INSIDE THE CAR, which has a panel of its
+                // own in `wallInto[Surf.LIFT]` — painted through in the corridor's board it read as
+                // the lobby wrapping round into the car. So each jamb is emitted in two halves,
+                // split on the LEAF PLANE, which the pocket slot stands LIFT_POCKET_EPS proud of
+                // and hides
                 var lift = (m.doors[di].look == Look.LIFT);
+                var car = (lift &&
+                  m.tex.wallInto[Surf.LIFT] != null ?
+                  liftSide(m, col, row, m.doors[di].alongX) : -1);
+                if (car < 0)
+                  jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE,
+                    FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+                else
+                  for (k in 0...2)
+                    jamb(k == 0 ? soffit : wIn[Surf.LIFT], m.doors[di].alongX,
+                      leafHalf(s, m.doors[di].alongX, car, k == 1), FacilityStyle.WALL_BASE,
+                      FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+                // A LIFT OPENING TAKES TWO DETAILS ON TOP OF THAT, and it is the one Look that
+                // does: the reveal had no track, no threshold, nothing saying a door slides there.
+                // So a near-black POCKET strip runs down each jamb where the leaves go, and a metal
+                // SILL plate lies in the opening
                 if (lift && m.tex.pocket != null)
                   liftPocket(pocket, m.doors[di].alongX, s);
                 // and the threshold under them, for the surface the doorway opens onto being lower
                 // than the floor it leads to — see `threshold`
-                threshold(lift && m.tex.sill != null ? sill : soffit, m.doors[di].alongX, s);
+                threshold(soffit, m.doors[di].alongX, s);
+                if (lift && m.tex.sill != null)
+                  liftSill(sill, m.doors[di].alongX, s);
                 // and the bulkhead lamp's hood, over an EXTERIOR doorway only. it rode wOut for a
                 // build — the exterior cladding's own buffer, for no draw call at all, the way the
                 // parapet ring and the gable crescents do — and a fitting painted in the wall's own
@@ -1219,42 +1235,129 @@ class FacilityGeom
       cap(b, x0, x1, z0, z1, y1, FacilityStyle.DOOR_LAMP_TILE);
     }
 
-// the lift doorway's door pocket: a narrow near-black strip down each jamb, standing a hair proud
-// of the reveal so it draws over it rather than z-fighting with it — FacilityGeom.plane's own
-// trick, and the same MIRROR_EPS-shaped offset render.corp.CorpFurniture hangs a mirror on.
+// which hand of a door cell the LIFT CAR is on, as a dir across the opening, or -1 where neither
+// side is a car — every door but one Look, and a lift shaft the model happens not to have floored
+  static function liftSide(m:Facility, col:Int, row:Int, alongX:Bool):Int
+    {
+      for (k in 0...2)
+        {
+          var dir = (alongX ? k : 2 + k);
+          var c = col + DC[dir];
+          var r = row + DR[dir];
+          if (FacilityModel.inside(m, c, r) &&
+              m.surf[r][c] == Surf.LIFT)
+            return dir;
+        }
+      return -1;
+    }
+
+// one half of a doorway's reveal, cut on the leaf plane. `far` is the half the `car` dir points at
+  static function leafHalf(s:Rect, alongX:Bool, car:Int, far:Bool):Rect
+    {
+      var lo = ((car == (alongX ? 0 : 2)) == far);
+      if (alongX)
+        {
+          var c = (s.z0 + s.z1) / 2;
+          return { x0: s.x0, x1: s.x1, z0: lo ? s.z0 : c, z1: lo ? c : s.z1 };
+        }
+      var c = (s.x0 + s.x1) / 2;
+      return { x0: lo ? s.x0 : c, x1: lo ? c : s.x1, z0: s.z0, z1: s.z1 };
+    }
+
+// the lift doorway's door pocket: ONE near-black slot down each jamb, standing a hair proud of the
+// reveal so it draws over it rather than z-fighting with it — FacilityGeom.plane's own trick, and
+// the same MIRROR_EPS-shaped offset render.corp.CorpFurniture hangs a mirror on.
 //
-// it maps 0..1 up its height, because the art is one authored slot and not a tiling weave: a
-// world-tiled strip would slide its highlight up and down with the doorway's world position
+// IT IS CENTRED ON THE LEAF PLANE, which is the cell's own centre line (render.facility
+// .FacilityDoors places every leaf there), so the slot is the gap the leaf slides into and the
+// 0.16 of DOOR_T sits inside the 0.3 of it. The first build put a strip at BOTH edges of the
+// reveal instead, all four of them, and a 1.2-deep corp reveal is wide enough to show the
+// corridor's own board between: reported from the game as "three black parts and normal wall seen
+// in the center".
+//
+// AND ITS u IS THE STRIP, NOT THE WORLD. The art is a CROSS-SECTION — a metal highlight, a band of
+// shadow, a highlight, all running the full height (see art/textures.json on corp/lift-pocket) —
+// so u maps 0..1 across the 0.3 of width, the whole slot exactly once, and only v tiles, at the
+// wall's own period, which the art is uniform along. Tiled on both axes by `face` it sampled a
+// 0.05 x 0.7 window of the sheet at whatever offset the doorway's world position landed on, which
+// is the "all wrong u,v" report
   static function liftPocket(b:MeshBuf, alongX:Bool, s:Rect):Void
     {
-      var w = FacilityStyle.LIFT_POCKET_W;
+      var w = FacilityStyle.LIFT_POCKET_W / 2;
       var e = FacilityStyle.LIFT_POCKET_EPS;
       var y0 = FacilityStyle.WALL_BASE;
       var y1 = FacilityStyle.DOOR_H;
       if (alongX)
         {
-          face(b, s.x0 + e, s.x0 + e, s.z0, s.z0 + w, 3, y0, y1, FacilityStyle.WALL_TILE);
-          face(b, s.x1 - e, s.x1 - e, s.z0, s.z0 + w, 2, y0, y1, FacilityStyle.WALL_TILE);
-          face(b, s.x0 + e, s.x0 + e, s.z1 - w, s.z1, 3, y0, y1, FacilityStyle.WALL_TILE);
-          face(b, s.x1 - e, s.x1 - e, s.z1 - w, s.z1, 2, y0, y1, FacilityStyle.WALL_TILE);
+          var c = (s.z0 + s.z1) / 2;
+          slot(b, s.x0 + e, s.x0 + e, c - w, c + w, 3, y0, y1, FacilityStyle.WALL_TILE);
+          slot(b, s.x1 - e, s.x1 - e, c - w, c + w, 2, y0, y1, FacilityStyle.WALL_TILE);
           return;
         }
-      face(b, s.x0, s.x0 + w, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
-      face(b, s.x0, s.x0 + w, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
-      face(b, s.x1 - w, s.x1, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
-      face(b, s.x1 - w, s.x1, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
+      var c = (s.x0 + s.x1) / 2;
+      slot(b, c - w, c + w, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
+      slot(b, c - w, c + w, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
+    }
+
+// one upright quad wound like `face`, but with u taken ACROSS it 0..1 instead of off the world —
+// the mapping a strip whose art is its own cross-section needs. `vt` is the v period: WALL_TILE for
+// a jamb slot, whose art is uniform up its height, so a run of these carries the masonry's own
+// vertical course beside it
+  static function slot(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int, y0:Float,
+      y1:Float, vt:Float):Void
+    {
+      var e = ends(x0, x1, z0, z1, dir);
+      MeshBufTools.quad(b, [e[0], y0, e[1]], [e[2], y0, e[3]], [e[2], y1, e[3]], [e[0], y1, e[1]],
+        [0, y0 / vt, 1, y0 / vt, 1, y1 / vt, 0, y1 / vt]);
     }
 
   static function threshold(b:MeshBuf, alongX:Bool, s:Rect):Void
     {
+      var y0 = FacilityStyle.WALL_BASE;
+      var t = FacilityStyle.WALL_TILE;
       if (alongX)
         {
-          face(b, s.x0, s.x0, s.z0, s.z1, 2, FacilityStyle.WALL_BASE, 0.0, FacilityStyle.WALL_TILE);
-          face(b, s.x1, s.x1, s.z0, s.z1, 3, FacilityStyle.WALL_BASE, 0.0, FacilityStyle.WALL_TILE);
+          face(b, s.x0, s.x0, s.z0, s.z1, 2, y0, 0.0, t);
+          face(b, s.x1, s.x1, s.z0, s.z1, 3, y0, 0.0, t);
           return;
         }
-      face(b, s.x0, s.x1, s.z0, s.z0, 0, FacilityStyle.WALL_BASE, 0.0, FacilityStyle.WALL_TILE);
-      face(b, s.x0, s.x1, s.z1, s.z1, 1, FacilityStyle.WALL_BASE, 0.0, FacilityStyle.WALL_TILE);
+      face(b, s.x0, s.x1, s.z0, s.z0, 0, y0, 0.0, t);
+      face(b, s.x0, s.x1, s.z1, s.z1, 1, y0, 0.0, t);
+    }
+
+// the lift doorway's SILL: the saddle plate lying IN the opening, where the corridor's floor meets
+// the car's.
+//
+// it is what `threshold` cannot be, and that is why it is a second emitter and not a flag on it.
+// The riser stands in the two JAMB planes, so on a wall that carries on either side it is inside
+// the neighbouring masonry and under that cell's own floor cap: it reads at the compound's dropped
+// kerb and at nothing else. The ask was "a thin gray sliver to the bottom of the elevator door
+// where the floor textures meet", and that is a plate in the FLOOR.
+//
+// 0..1 BOTH WAYS, one plate per doorway: the art's brush lines and its two grooves run across the
+// image, so with u along the opening they run parallel to the leaves, which is where a real saddle
+// puts them. Nothing is stretched that can be seen — a brushed plate is uniform along its grain
+  static function liftSill(b:MeshBuf, alongX:Bool, s:Rect):Void
+    {
+      var d = FacilityStyle.LIFT_SILL_D / 2;
+      var y = FacilityStyle.LIFT_POCKET_EPS;
+      if (alongX)
+        {
+          var c = (s.z0 + s.z1) / 2;
+          plate(b, s.x0, s.x1, c - d, c + d, y, false);
+          return;
+        }
+      var c = (s.x0 + s.x1) / 2;
+      plate(b, c - d, c + d, s.z0, s.z1, y, true);
+    }
+
+// one horizontal quad wearing its art 0..1 rather than tiling it, `swap` turning the uv 90 degrees
+// the way cap() does — u off z instead of off x
+  static function plate(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float,
+      swap:Bool):Void
+    {
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        swap ? [1, 0, 1, 1, 0, 1, 0, 0] : [0, 1, 1, 1, 1, 0, 0, 0]);
     }
 
 // one exposed end of a slab where its neighbour's cross-section falls short of it. the quad lives
