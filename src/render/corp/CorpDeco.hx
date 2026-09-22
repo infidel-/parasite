@@ -79,6 +79,10 @@ class CorpDeco
   public static inline var K_PLANT = 7;
   public static inline var K_COOLER = 8;
   public static inline var K_MACHINE = 9;
+  // and the printer, which has a glb of its own in render.corp.CorpProps. Dealt onto a TABLE tile
+  // in the copy room, where the bench under it draws it and this kind is ignored, and onto bare
+  // floor in the cubicle farm, where the glb stands
+  public static inline var K_PRINTER = 10;
 
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
@@ -119,6 +123,8 @@ class CorpDeco
           case 23: (col < 5 ? K_WORK : K_NONE);
           // CORP_WHITEBOARD, then the cooler and the plant, which have glbs of their own
           case 31: (col < 8 ? K_BOARD : (col < 10 ? K_COOLER : K_PLANT));
+          // CORP_TABLE_COFFEE, then CORP_TABLE_PRINTER, then CORP_TABLE_MISC_LARGE
+          case 28: (col >= 6 && col < 11 ? K_PRINTER : K_NONE);
           // CORP_CABINET, then CORP_TRASH, then the washroom tap
           case 32: (col < 6 ? K_CABINET : (col < 11 ? K_BIN : K_NONE));
           // CORP_MACHINERY, then CORP_FRIDGE. the machinery in a SERVER room already has a rack

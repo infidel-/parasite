@@ -583,13 +583,25 @@ class CorpRooms
 
       // the WHOLE interior, wall columns included — nothing dresses them any more
       var inner = room.w;
-      var bw = (inner >= POD_BLOCK_W * 2 + 3 ? POD_BLOCK_W : POD_BLOCK_MIN);
-      var blocks = Std.int((inner + 1) / (bw + 1));
-      if (blocks < 1 ||
+      var widths = podBlocks(inner);
+      if (widths.length < 1 ||
           room.h < POD_BAND_H + 1)
         return;
-      var runW = blocks * (bw + 1) - 1;
+      var runW = -1;
+      for (w in widths)
+        runW += w + 1;
       var x0 = room.x1 + Std.int((inner - runW) / 2);
+      // the spare column after every block but the last — the passages, and the only cells in a
+      // farm that are neither desk nor aisle. `cubicleFittings` stands the room's two machines at
+      // their heads
+      var gaps = [];
+      var gx = x0;
+      for (b in 0...widths.length - 1)
+        {
+          gx += widths[b];
+          gaps.push(gx);
+          gx++;
+        }
 
       var band = 0;
       while (true)
@@ -603,17 +615,126 @@ class CorpRooms
           if (dy1 + 1 > room.y2)
             break;
 
-          for (b in 0...blocks)
+          var bx = x0;
+          for (b in 0...widths.length)
             {
-              var bx = x0 + b * (bw + 1);
+              var bw = widths[b];
               GenTree.add(node, CorpBlocks.ZONE_POD_ROW, bx, dy0, bx + bw - 1, dy1);
               for (i in 0...bw)
                 {
                   pod(state, bx + i, dy0, dy0 - 1, computerID, chairID);
                   pod(state, bx + i, dy1, dy1 + 1, computerID, chairID);
                 }
+              bx += bw + 1;
             }
         }
+      cubicleFittings(state, room, gaps);
+    }
+
+// HOW THE ROOM'S COLUMNS SPLIT INTO POD BLOCKS, one spare column between each two.
+//
+// a fixed width and a floor division left whatever did not divide as DEAD FLOOR — a 10-column farm
+// took two blocks of three and a passage, covered nine columns of ten and stood a bare strip down
+// one side of the room, reported as "one empty column, why?". Both widths are tried and the one
+// that COVERS MORE wins, then whatever is still spare is spent widening blocks from the left. A
+// narrower block is not a worse farm; an empty column is
+  static function podBlocks(inner: Int): Array<Int>
+    {
+      var best = [];
+      for (w in [POD_BLOCK_W, POD_BLOCK_MIN])
+        {
+          var n = Std.int((inner + 1) / (w + 1));
+          if (n < 1)
+            continue;
+          // one column of the remainder goes to each of the first `spare` blocks; past that there
+          // is no room for another passage and the rest genuinely cannot be filled
+          var spare = inner + 1 - n * (w + 1);
+          var out = [for (i in 0...n) w + (i < spare ? 1 : 0)];
+          if (span(out) > span(best))
+            best = out;
+        }
+      return best;
+    }
+
+// how many columns a list of block widths covers, passages included
+  static inline function span(widths: Array<Int>): Int
+    {
+      var n = -1;
+      for (w in widths)
+        n += w + 1;
+      return n;
+    }
+
+// THE FARM'S TWO MACHINES. a cubicle farm is pods and aisles wall to wall — `decorateCubicleWalls`
+// was taken out when the wall columns became pods — so the only cell a standing fitting can have
+// masonry behind it is the HEAD of a passage column, against the room's top wall. Which is where
+// an office really puts them: off the walkway and out of every bay.
+//
+// AND THE CELL STAYS WALKABLE, which every other wall dressing in this file does not. The
+// unwalkable twin `decorateWalls` writes is what usually says "something stands here", and on this
+// cell it SEALS A POCKET: the top aisle row is the only thing joining the two halves of the farm's
+// first band, so one blocked cell in the middle of it left the cells either side unreachable and
+// CorpConnect.openPockets ate a column of desks to get back in. Measured on two farms — band 2
+// came out [2,2] exactly and band 1 lost its inner pods. render.corp.CorpProps.standing needs the
+// decoration, masonry on a hand and a cell that is neither worktop nor fitting; it does not need
+// the twin, so the glb stands and nothing is sealed
+  static function cubicleFittings(state: _CorpState, room: _Room, cols: Array<Int>)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // THE PASSAGE HEADS FIRST and then anywhere else on the same two rows. A farm's top row is
+      // not always the tower's own masonry — half of them face the perimeter GLAZING, which
+      // FacilityModel.isSolidWall rejects on purpose (a window's sill is where a worktop would
+      // be) — and a room whose foot is a doorway has none there either, so a single candidate
+      // cell put the machines in about one farm in four
+      var spots = [];
+      for (y in [room.y1, room.y2])
+        for (x in cols)
+          if (bare(state, cells, x, y))
+            spots.push({ x: x, y: y });
+      for (y in [room.y1, room.y2])
+        for (x in room.x1...room.x2 + 1)
+          if (cols.indexOf(x) < 0 &&
+              bare(state, cells, x, y))
+            spots.push({ x: x, y: y });
+      if (spots.length == 0)
+        return;
+      var deco = [Const.CORP_COOLER, Const.CORP_TABLE_PRINTER];
+      var first = area.random(deco.length);
+      var n = (spots.length < deco.length ? spots.length : deco.length);
+      for (i in 0...n)
+        {
+          // the two ENDS of what the room offered, so the machines are not stood side by side:
+          // the list runs passage heads first, so the pair comes out one at a passage and one in
+          // the far corner
+          var s = spots[n < 2 ? 0 : Std.int(i * (spots.length - 1) / (n - 1))];
+          addDecoration(state, s.x, s.y, deco[(first + i) % deco.length]);
+        }
+    }
+
+// may a standing fitting go on this cell? bare farm floor, masonry on a hand, clear of a doorway
+// and of whatever is already there — a pod's chair sits in the aisle row the pod faces
+  static function bare(state: _CorpState, cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      return cells[x][y] == CUBICLE &&
+        atWall(cells, x, y) &&
+        !atDoor(cells, x, y) &&
+        !state.area.hasObjectAt(x, y);
+    }
+
+// is there MASONRY on one of this cell's four hands? not a window and not a corridor: the render
+// side stands a fitting off a solid wall slab (render.corp.CorpDeco.backHandOf), so a cell with a
+// glazed flank or an open one would take the decoration and then draw nothing at all
+  static function atWall(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        {
+          var t = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (t == BLDG_WALL ||
+              t == BLDG_INNER_WALL)
+            return true;
+        }
+      return false;
     }
 
 // one pod: a desk cell, the workstation on it, and its chair in the aisle it faces.
