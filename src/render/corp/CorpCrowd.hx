@@ -138,18 +138,16 @@ class CorpCrowd
           };
           return;
         }
-      walk = lanes(city, p, Tile.Walkway, CorpStyle.LANE_MIN);
+      walk = lanes(city, p, Tile.Walkway, CorpStyle.LANE_MIN, false);
       // TRAFFIC TAKES THE LONGER MINIMUM — see CorpStyle.CAR_LANE_MIN — and falls back to the
       // walker's only where a plate has no long road at all, because an empty street reads worse
       // than a short run
-      road = lanes(city, p, Tile.Road, CorpStyle.CAR_LANE_MIN);
+      road = lanes(city, p, Tile.Road, CorpStyle.CAR_LANE_MIN, true);
       if (road.length == 0)
-        road = lanes(city, p, Tile.Road, CorpStyle.LANE_MIN);
+        road = lanes(city, p, Tile.Road, CorpStyle.LANE_MIN, true);
       n = {
         walkers: (walk.length == 0 ? 0 : CorpStyle.WALKERS),
-        // ONE CAR PER LANE — see `drive`. A plate with fewer road lanes than CARS carries fewer
-        // cars rather than doubling any line up
-        cars: (CorpStyle.CARS < road.length ? CorpStyle.CARS : road.length),
+        cars: (road.length == 0 ? 0 : CorpStyle.CARS),
         walkLanes: walk.length,
         roadLanes: road.length,
       };
@@ -264,36 +262,46 @@ class CorpCrowd
 // cell, the speed and the pass are all a pure function of the index and the clock
   function drive():Void
     {
+      // HOW MANY CARS SHARE A LANE. Rejecting every lane that ends at the tower halved the list
+      // (44 -> 22 on this plate) and left only long ones, so one car each is a car every 700 units
+      // of road — see `lanes`. They ride it as a CONVOY instead: same pass, one `gap` apart
+      var lanes = road.length;
+      var k = Std.int(Math.ceil(n.cars / lanes));
       for (i in 0...n.cars)
         {
           var h = FacilityModel.mix((i + 978) * 374761393);
-          // ONE CAR PER LANE, spread over the list so both axes carry traffic, and it is what pays
-          // for everything below. The file's founding invariant is that nothing on a line ever
-          // overtakes, and the old answer was to hang the speed on the LANE so that two cars
-          // sharing a line could only move in lockstep — which is exactly what forbids a speed
-          // that varies. Give a car its own line and the invariant costs nothing: there is no
-          // second car on it to converge with. It also spreads the traffic, where 30 of this
-          // plate's 44 road lanes used to draw no car at all
-          var ln = road[Std.int(i * road.length / n.cars)];
+          var li = i % lanes;
+          var ln = road[li];
           var cell = CorpStyle.CAR_CELLS[(h >>> 5) % CorpStyle.CAR_CELLS.length];
-          // THE LAP IS THE UNIT OF VARIATION, and it is a FIXED WINDOW of wall clock: one length
-          // of this lane at the lane's own base speed. Position used to be one modulo of the clock,
-          // which is exact, so a car passed any given point every ln.len / v seconds for ever and
-          // the street read as a loop. The lap index comes out of the same arithmetic — still
-          // closed form in `t`, still storing nothing, which is the contract the whole file runs
-          // on — and hashing it deals each pass its OWN three: whether the car runs at all
-          // (CorpStyle.CAR_SKIP), how fast (CAR_SPEED_JIT, always at or above the lane's base, so
-          // a pass always fits inside its window), and where in the slack left over it starts
-          var T = ln.len / (CorpStyle.CAR_SPEED * ln.v);
-          var u = clock / T + ((h >>> 19) % 1000) / 1000.0;
+          // THE PASS IS THE UNIT OF VARIATION AND IT BELONGS TO THE LANE, not to the car. Position
+          // used to be one modulo of the clock, which is exact — a car passed any given point every
+          // ln.len / v seconds for ever and the street read as a loop. A lane's pass is a FIXED
+          // WINDOW of wall clock now, long enough for the last car of its convoy to clear the far
+          // end at the lane's base speed, and the lap index hashes the pass its own speed
+          // (CorpStyle.CAR_SPEED_JIT, at or ABOVE the base so the pass always fits its window) and
+          // its own start inside the slack that leaves. Still closed form in `t`, still storing
+          // nothing, which is the contract the whole file runs on.
+          //
+          // EVERY CAR ON THE LANE TAKES THAT SAME PASS, and that is what makes a varying speed safe
+          // at all: they run one `gap` apart at one speed, so the distance between two of them
+          // never changes and nothing can overtake — the invariant `Lane.v` was introduced to keep.
+          // A per-CAR speed is the exact defect it cured, and this keeps the cure while letting the
+          // number move
+          var base = CorpStyle.CAR_SPEED * ln.v;
+          var gap = ln.len / k;
+          var run = ln.len + gap * (k - 1);
+          var T = run / base;
+          var u = clock / T + (FacilityModel.mix(li * 668265263) % 1000) / 1000.0;
           var lap = Std.int(u);
-          var lh = FacilityModel.mix((i * 374761393) ^ (lap * 668265263));
-          var v = CorpStyle.CAR_SPEED * ln.v *
-            (1 + CorpStyle.CAR_SPEED_JIT * (lh % 1000) / 1000.0);
-          var s = ((u - lap) * T - (T - ln.len / v) * ((lh >>> 11) % 1000) / 1000.0) * v;
+          var ph = FacilityModel.mix((li * 374761393) ^ (lap * 668265263));
+          var v = base * (1 + CorpStyle.CAR_SPEED_JIT * (ph % 1000) / 1000.0);
+          var s = ((u - lap) * T - (T - run / v) * ((ph >>> 11) % 1000) / 1000.0) * v -
+            gap * Std.int(i / lanes);
+          // and the ONE thing that is still the car's own: sitting a pass out. It takes a car OUT
+          // of the convoy rather than moving it, so it cannot close a gap on anybody
           var out = (s < 0 ||
             s > ln.len ||
-            (lh >>> 22) % 100 < CorpStyle.CAR_SKIP);
+            FacilityModel.mix(((i + 7) * 374761393) ^ (lap * 40503)) % 100 < CorpStyle.CAR_SKIP);
           if (ln.dir < 0)
             s = ln.len - s;
           // and the same fade the walkers take, for the same modulo — a car that pops into being
@@ -559,11 +567,29 @@ class CorpCrowd
 // for: a lane is a straight length of road or footpath and an agent walks it end to end and wraps.
 // Nobody turns a corner, and from 114 units up nobody can tell — what reads is that the street is
 // moving. Both axes are scanned, so a crossroads really does carry traffic both ways
-  static function lanes(city:City, p:PlateBox, kind:Tile, min:Int):Array<Lane>
+  static function lanes(city:City, p:PlateBox, kind:Tile, min:Int, open:Bool):Array<Lane>
     {
       var out = [];
       // the SAME predicate CorpStreet emitted the ground with, so a lane can never run over a cell
       // that was never built — under the plate above all, where an agent walks in the dark
+      // IS THIS CELL OFF THE MODELLED STREET ALTOGETHER — past the reach, where there is no ground
+      // and nothing to see. `ok` below folds that into the same `false` as "the tower stands here"
+      // and "this is pavement, not road", and those are three different things to a LANE END: run
+      // off the reach and the car has left down a dark street; stop against the tower or a kerb and
+      // it has faded out in the middle of the scene, pointed at a wall. Reported from the game as
+      // cars spawning "going into/out of the main building wall".
+      //
+      // it is the second half of CorpStreet.ring, deliberately without the first: `covers` is a
+      // reason to STOP and this asks whether there was anywhere further to go
+      var offPlate = function(col:Int, row:Int)
+        {
+          var x0 = CorpStreet.cellX(p, col);
+          var z0 = CorpStreet.cellZ(p, row);
+          return !(x0 + CELL > p.x0 - p.reachX &&
+            x0 < p.x1 + p.reachX &&
+            z0 + CELL > p.z0 - p.reachZ &&
+            z0 < p.z1 + p.reachZ);
+        };
       var ok = function(col:Int, row:Int)
         {
           // FOLDED, exactly as CorpStreet's own ground loop folds: the model is mirror-tiled out
@@ -591,6 +617,13 @@ class CorpCrowd
                 while (ok(col + dc * len, row + dr * len))
                   len++;
                 if (len < min)
+                  continue;
+                // and, for traffic, BOTH ENDS MUST LEAVE THE PLATE. Anything else is a car that
+                // appears or vanishes inside the scene, and there is no fade short enough to make
+                // that read as traffic
+                if (open &&
+                    (!offPlate(col - dc, row - dr) ||
+                     !offPlate(col + dc * len, row + dr * len)))
                   continue;
                 // the LATERAL cell index decides the sense — the row for a lane along x, the
                 // column for one along z — so the two cells of a two-wide road come out opposed

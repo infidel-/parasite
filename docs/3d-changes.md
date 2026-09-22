@@ -1474,9 +1474,27 @@ slack it starts. Still closed form in `t`, still storing nothing. Car 0's measur
 **12.23, 11.84, 17.62, 15.25, 16.88, 16.12** against a lane base of 11.8; its entry gaps
 **52.7, 65.5, 42.3, 56.5, 51.1** s.
 
-`CARS` 28 -> 44, and it is a CEILING rather than a count — `n.cars` takes the smaller of it and the
-lane count. Mean drawn over 1200 samples: **29.3** (min 18, max 38) against the 28 that were drawn
-every single frame before. Same batch, same draw call: 156 either way.
+**And then a lane may not END anywhere you can see.** Reported as cars spawning *"going straight
+into/out of the main building wall"*. `lanes` walked a run until `ok` went false, and `ok` folds
+three different things into one `false`: past the reach, the tower stands here, and this cell is
+pavement rather than road. To a lane END they are not the same — run off the reach and the car has
+left down a dark street, stop against the tower or a kerb and it has faded out in the middle of the
+scene, pointed at a wall. **Both ends of a traffic lane must now leave the plate**, which is the
+second half of `CorpStreet.ring` deliberately without the first. Measured as the distance from every
+lane endpoint to the tower's own XZ box: **0 -> 17.3** rejecting only the ends the plate covered,
+and **-> 134.2** once a kerb counted too. Road lanes 46 -> 16, and every survivor is 108 or 156
+cells.
+
+**Which is why the cars ride in a CONVOY.** Sixteen long lanes at one car each is a car every 700
+units of road, so `k = ceil(CARS / lanes)` of them share a lane — same pass, same speed, one
+`gap = len / k` apart, so the distance between two of them never changes and nothing overtakes.
+That is the invariant `Lane.v` was introduced to keep, and hanging the speed on the PASS instead of
+the LANE is what keeps it while letting the number move. Measured over 1200 samples: minimum
+same-lane separation **85.6** units, which is the convoy gap exactly. The one thing still the car's
+own is sitting a pass out, which takes it OUT of the convoy rather than moving it.
+
+`CARS` 28 -> 80 to pay for all of it: mean drawn **29.8** (min 15, max 46) against the 28 drawn
+every single frame before. Same batch, 147 calls.
 
 Verdict: **LANDED.**
 

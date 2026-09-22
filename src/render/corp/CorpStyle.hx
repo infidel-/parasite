@@ -654,12 +654,12 @@ class CorpStyle
   // be wrong, and the whole point of the thing is that it keeps moving while the player stands
   // still thinking.
   public static inline var WALKERS = 64;
-  // 28 -> 44, and it is a CEILING now rather than a count: CorpCrowd gives every car its own lane
-  // and takes the smaller of the two. What pays for the rise is that a pass no longer fills its
-  // lap — it runs at or above the lane's base speed and waits out the slack, and it may skip the
-  // lap entirely — so the mean on the tower's own plate is 29 of 44 drawn, against the 28 that
-  // were drawn every frame before
-  public static inline var CARS = 44;
+  // 28 -> 80, and what it buys is a CONVOY of `ceil(CARS / lanes)` per lane rather than more
+  // traffic. Requiring BOTH ends of a lane to leave the plate — so that no car ever fades in
+  // pointed at the tower — took this plate's road lanes from 46 to 16, and a pass no longer fills
+  // its window either: it runs at or above the lane's base speed, waits out the slack, and may be
+  // skipped. The mean actually drawn is 29, against the 28 drawn every single frame before
+  public static inline var CARS = 80;
   // world units per second. a unit is half a metre, so 2.8 is 1.4 m/s (a walk) and 20 is 10 m/s
   // (36 km/h, a city street)
   public static inline var WALK_SPEED = 2.8;
