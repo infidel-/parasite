@@ -1600,3 +1600,58 @@ The two dressing passes share no list and coordinate through a predicate:
 `CorpProps.claims`, and for the same reason: neither pass may depend on having run first.
 
 Verdict: **LANDED.**
+
+## corp: the seventh defect pass — a panel face is dressed by which way it LOOKS
+
+Ten reports off the live plate, picked by face. Four of them were one bug: `CorpClutter.face` walks
+`for (side in 0...2)` but rolled the physical hand separately off bit 22, so both passes could emit
+onto the SAME face at the SAME slot — the spread is `(i + 0.5) / want` and deterministic — differing
+only in `y`. Seen twice as two decals on top of each other. `side` is the hand now and nothing else.
+
+`emitFace` also hand-wound its two quads and got one hand backwards on each axis: for `alongX` the
+winding's normal is `+z`, for `!alongX` it is `-x`. `DoubleSide` meant nothing vanished, the art came
+back **MIRRORED** on the far face. It goes through `FacilityGeom.ends` now, which is why
+`CorpSigns.pane` has never had it. **93/93 windings correct, 0 mirrored** on the rebuilt plate.
+
+**PANEL_HI IS THE CENTRE'S BAND AND THE ITEM HAS A HALF HEIGHT.** 2.8 x 0.90 = 2.52 plus up to 0.45
+is **2.97**, a fifth of a unit above the panel, over the trim `capTrim` pins to v 0.9643..1.0. New
+`PANEL_TOP_GAP` 0.05 and a clamp in both dressing passes: measured max top **2.65** = the bound.
+
+**WHICH FACE GETS WHAT IS NOW THE GRID, NOT A HASH.** `panelPoster`'s 8% roll hung the company's
+poster half a metre from one worker's nose as often as on the passage. `CorpPanel` carries `pod0` /
+`pod1` — is the cell on that hand a desk — and the split falls out: the desk side is his wall and
+carries his clutter, the aisle side is the company's and `CorpSigns` hangs the propaganda there
+(`aisle()` re-derives the cell off the panel's own rect, since "not a desk" is also true of masonry —
+**50 posters on 62 aisle faces**, the other 12 look at a wall or a fitting). `PANEL_MAX` 2 -> 3.
+
+**THE BACK PANEL IS `alongX`, NOT "A DESK ON BOTH HANDS"** — the first cut of that guard took **56 of
+118** panels where **18** are backs, because a side panel between two neighbours in the same row also
+has a desk either side and is two workers' walls with nothing in front of either. After: **219
+decals, 219 on side panels, 0 on backs, 0 overlapping pairs.**
+
+`divider`'s back panel spans `x0 + t .. x1 - t` instead of the whole cell: its lid and the side
+panels' both sit at `PARTITION_H`, so a full-cell back put a **0.1 x 0.1 coplanar square at every
+crossing** and the two trim rails z-fought. The corner it gives up is already covered — a side panel
+spans the full z cell and the next row's picks the run up past the boundary.
+
+**THE TOWER'S FURNITURE NOW CASTS, AND THE FAKE BLOBS GO.** `CorpProps.batch` opted every glb batch
+out of casting on the moon's reasoning ("a tower floor has no moon over it"), which is true of the
+moon and skipped the eight casting `SpotLight`s the ceiling fixtures already own. Furniture buffers
+and prop batches both cast: **28 caster meshes, 8 spot maps, live A/B at a held pose 133 on / 107
+off, zero variance over 8 pairs — +26 calls and +330k tris.** Not a per-frame shadow *pass* cost —
+every map is `autoUpdate = false` — but `LampLights` refreshes one caster slot per frame and the
+merged level-wide meshes have level-sized bounding spheres (`frustumCulled = false` on the batches),
+so all 28 draw into whichever map is refreshing. **0 new programs**: `depth` stays at 8 and the corp
+warm caches 84 either way, because doors and props were already casting — the `fitMoon` added to
+`CorpWarm` is what keeps it that way if the mix ever changes.
+
+And `LampShadows` stopped painting blurred 2D icons for corp objects. Reported as "dark round shadows
+of nothing on the floor" and it was literal: `CorpDeco.draws` suppresses the sprite for every frame
+in rows 23-39, and `kindOf` answers `K_NONE` for half of them — **row 30 is `CORP_CHAIR`**, whose glb
+is stood off the grid by `CorpProps.desks` and never off the object, so the blob sat at the object's
+cell with nothing drawn there. The monitor (row 23) had **three** shadows: a fake one up on the desk
+at y 1.56, a `FacilityDetail` contact pool, and now a real one. One clause on the object loop, corp
+only — `docs/3d-render.md`'s row 451 stands for the tunnels, where that guard's removal is what gave
+prop-backed objects their only shadow. **Live: 32 fake shadow quads before, 0 after.**
+
+Verdict: **LANDED.**
