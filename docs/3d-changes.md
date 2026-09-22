@@ -1706,3 +1706,48 @@ dealt onto a table tile in the copy room where the bench is what draws it. **Liv
 11 printers, every farm fitting with a valid back hand.**
 
 Verdict: **LANDED.**
+
+## corp: the farm turns a quarter turn, and the back hand stops being an axis of the world
+
+Two reports on one cubicle farm — `room 100 rect 8,6..15,14 (8x9)` — and the second one cost four
+files, because the fix made a hidden assumption false everywhere.
+
+**A band is three lines deep and only whole bands are laid**, so a room whose band axis leaves two
+lines over stands a slab of bare floor in it. 8 x 9 took two bands across y: 28 desks and rows 13
+and 14 empty, 16 cells. The same room turned a quarter turn takes two bands across x and four
+blocks down y — **30 desks and one spare COLUMN**. `seats(along, across)` costs both ways
+(`2 * (across - 1) / POD_BAND_H * sum(podBlocks(along))`) and the layout is laid on the better,
+ties to the old orientation. Both are reached in practice: over widths and heights 4..16 it comes
+out **100 horizontal / 69 vertical**.
+
+**And then the back hand is an X boundary.** Everything downstream had + z baked in:
+`CorpFurniture.divider` emitted two side panels on the x hands and a back on + z; `CorpProps
+.backHand` took "the first hand that is not clear floor", which reads a pod at the END of a block
+as backing onto the neighbour BESIDE him; and `CorpClutter.face` skipped `q.alongX` as "the back".
+Turned, all three are wrong in different directions — the back dressed on both hands behind two
+monitors, the sides left bare, the monitor and chair a quarter turn out.
+
+`CorpFurniture.podBack` is the one oracle now, and **the test is the pair**: the back hand is the
+one whose neighbour is another pod, whose opposite is walkable floor (this worker's aisle), and
+whose cell BEYOND the partner is not a pod (the partner's aisle). A side neighbour fails the third
+test, the aisle fails the first. Ties go to the lowest hand and are only reachable on a block two
+pods long — a 2 x 2 square, where either reading is a pair of cubicles. **Self-consistency is the
+whole requirement, not agreement with the generator**: the chair `CorpRooms` deals is a decoration
+`CorpDeco` draws nothing for, and `CorpProps.desks` stands its own off this. `divider` now walks all
+four hands, skips `back ^ 1`, keeps the old once-only dedup (+ hands always, a - hand only where the
+neighbour is not a pod), shrinks whichever panel is the back, and MARKS it — `CorpPanel.back`, which
+is what `CorpClutter` asks instead of `alongX`.
+
+**And the pod pair is the unit at a doorway.** `atDoor` skipped one desk of a back-to-back pair and
+left the other standing with its back open to the aisle: three panels and a monitor facing a gap,
+reported as a half-done cubicle beside a door at 15,11. Both or neither.
+
+**Live, over two regenerated plates:** 183 panels, **52 backs of which only 24 run along x** — the
+28 that run along z are exactly what the old guard had backwards — against **75 panels with a desk
+on both hands**, which is why "both pods" was never the test. 311 decals, 0 on a back, 0 on a poster
+face, 0 overlapping, lowest pod-face bottom 1.550 and highest top 2.650 still exactly the two
+bounds. **0 lone pods in any farm** (the 20 elsewhere are `room-solo` desks on cubicle floor, which
+never had a partner), **0 pods whose aisle hand is not clear floor**, and both orientations drawn:
+a 6 x 10 farm as bands across y, a 10 x 7 as bands across x with every row and every column used.
+
+Verdict: **LANDED.**
