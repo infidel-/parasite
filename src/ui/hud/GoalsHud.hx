@@ -13,6 +13,7 @@ class GoalsHud
   var compactBtn: DivElement; // compact-mode toggle, survives rebuild()
   var rows: Map<_Goal, DivElement>; // goalId -> row element; displayed set, lags the model
   var pending: Array<{ action: String, id: _Goal }>; // goal anims deferred until UI is idle
+  var onSlideEnd: js.html.Event -> Void = null; // clears the FLIP height animation once done
 
   public function new(g: Game, h: HUD)
     {
@@ -34,17 +35,50 @@ class GoalsHud
           var v = !game.config.compactGoals;
           game.config.set('compactGoals', v ? '1' : '0', true);
           game.scene.sounds.play('click-hud');
-          setCompact(v);
+          setCompact(v, true);
         }
       goals.appendChild(compactBtn);
-      setCompact(game.config.compactGoals);
+
+      // slide done: drop the inline overrides so the panel sizes to content again
+      onSlideEnd = function (e)
+        {
+          if (e.target != goals ||
+              (cast e : js.html.TransitionEvent).propertyName != 'height')
+            return; // a row's own collapse transition, not ours
+          goals.style.height = '';
+          goals.style.overflow = '';
+          goals.style.transition = '';
+          goals.removeEventListener('transitionend', onSlideEnd);
+        };
+      setCompact(game.config.compactGoals, false);
     }
 
-// toggle compact mode: notes collapse away (CSS), button lights up
-  function setCompact(v: Bool)
+// toggle compact mode: notes collapse away (CSS), button lights up.
+// the panel is bottom-anchored and auto-height, so the swap would pop - FLIP
+// it instead: measure both layouts, then ease the height between them
+  function setCompact(v: Bool, anim: Bool)
     {
+      if (!anim)
+        {
+          goals.classList.toggle('hud-compact', v);
+          compactBtn.classList.toggle('active', v);
+          return;
+        }
+      // cancel a slide still running and measure the layout we are leaving
+      goals.removeEventListener('transitionend', onSlideEnd);
+      goals.style.transition = 'none';
+      goals.style.height = '';
+      var from = goals.offsetHeight;
       goals.classList.toggle('hud-compact', v);
       compactBtn.classList.toggle('active', v);
+      var to = goals.offsetHeight;
+      // start at the old height with the content clipped, ease to the new one
+      goals.style.overflow = 'hidden';
+      goals.style.height = from + 'px';
+      goals.getBoundingClientRect(); // force reflow so the start height sticks
+      goals.style.transition = 'height 0.3s ease';
+      goals.style.height = to + 'px';
+      goals.addEventListener('transitionend', onSlideEnd);
     }
 
 // build a row's inner HTML (diamond + name + note) for a goal
