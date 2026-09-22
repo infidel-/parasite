@@ -654,7 +654,9 @@ class CorpStyle
   // be wrong, and the whole point of the thing is that it keeps moving while the player stands
   // still thinking.
   public static inline var WALKERS = 64;
-  public static inline var CARS = 28;
+  // 28 -> 40 when a car learned to SIT A LAP OUT (CAR_SKIP): the skip is what breaks the perfect
+  // beat, and holding the street at the density it already read at is what pays for it
+  public static inline var CARS = 40;
   // world units per second. a unit is half a metre, so 2.8 is 1.4 m/s (a walk) and 20 is 10 m/s
   // (36 km/h, a city street)
   public static inline var WALK_SPEED = 2.8;
@@ -754,12 +756,25 @@ class CorpStyle
   //
   // Two numbers because the two families differ 7x in speed: 8 units is ~3s of walking and 10 is
   // ~0.5s of driving, which is what a car wants — any longer and a lane shorter than 2 * FADE
-  // never reaches full opacity at all (LANE_MIN 6 cells = 24 units, so the ceiling here is 12)
+  // never reaches full opacity at all, which is what CAR_LANE_MIN below now guarantees it is not
   public static inline var WALK_FADE = 8.0;
   public static inline var CAR_FADE = 10.0;
 
-  // the shortest straight run of cells that is worth walking or driving down
+  // the shortest straight run of cells that is worth walking down
   public static inline var LANE_MIN = 6;
+  // AND A LONGER ONE FOR TRAFFIC, because a car covers seven times the ground a walker does: at
+  // CAR_SPEED 20 a LANE_MIN lane is 24 units and 1.2 SECONDS end to end, and with CAR_FADE 10 on
+  // each end it never even reaches full opacity — reported from the game as a "very short car run".
+  // 16 cells is 64 units: 3.2s, with 44 of them at full. Measured on the tower's own plate, the
+  // lengths are 6, 33, 37, 49, 77, 84, 108 and 156 cells, so this drops exactly the two stubs and
+  // keeps all 44 real runs. CorpCrowd falls back to LANE_MIN if a plate has nothing longer
+  public static inline var CAR_LANE_MIN = 16;
+  // HOW A LAP VARIES, which is what stops the traffic reading as a loop — see CorpCrowd.drive.
+  // `SKIP` is the percent of laps a car sits out entirely and `WAIT` how late it may enter, as a
+  // fraction of one SLOT. Both are bounded by the slot on purpose: the lane holds the speed, so two
+  // cars keep their gap the whole way down it, and half a slot of delay cannot close a whole one
+  public static inline var CAR_SKIP = 30;
+  public static inline var CAR_WAIT = 0.5;
 
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist

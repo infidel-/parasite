@@ -1429,3 +1429,38 @@ the compound cannot see it at all — its `wallIn` IS `WALL_T`, so `thick`'s gua
 `inner`.
 
 Verdict: **LANDED.** An optional argument, a third branch in `endCase`, and four hands to eight.
+
+## corp: the street's traffic ran on a stopwatch, and two of its lanes were stubs
+
+Two reports off one `corp cars` face dump: *"very short car run, don't do such short ones"* and
+*"it repeats without any jitter in timing, too. needs to have random jitter"*.
+
+**The runs.** `CorpCrowd.lanes` took one `LANE_MIN` 6 for both families, and a car covers seven
+times the ground a walker does: at `CAR_SPEED` 20 a 6-cell lane is 24 units and **1.2 seconds** end
+to end, and with `CAR_FADE` 10 at each end it never reaches full opacity at all — the constant's own
+header said so and drew the wrong conclusion from it. Traffic takes `CAR_LANE_MIN` **16** now.
+Measured on the tower's plate the road-run lengths are **6, 33, 37, 49, 77, 84, 108 and 156 cells**,
+so the split is not a judgement call: it drops exactly the two stubs and keeps all 44 real runs
+(46 -> 44, shortest now 33 cells = **6.4 s**). A plate with nothing longer falls back to `LANE_MIN`,
+because an empty street reads worse than a short run.
+
+**The beat.** Position was `(phase * len + clock * v) % len` — exact, so a car passed any given
+point every `len / v` seconds for ever. **The lap is the unit of variation now**, and it costs
+nothing: the lap index falls out of the same arithmetic, so the crowd is still closed form in `t`
+and still stores nothing. Each lap hashes its own two: the car sits it out entirely (`CAR_SKIP` 30%)
+or enters late by up to `CAR_WAIT` 0.5 of one slot. Car 0's re-entry gaps over 400 s went from a
+flat 14.0 to **14.3, 14.0, 27.6, 14.3, 27.7, 14.3, 13.6, 28.0, 14.25, 27.9, 13.85**.
+
+**BOTH BOUNDS ARE THE SLOT, and that is what protects the invariant the file was built on** — the
+LANE holds the speed so nothing ever overtakes. Half a slot of delay cannot close a gap of a whole
+one, and a skipped lap removes a car from the stream rather than moving it. Measured over 300 s,
+1200 samples: minimum SAME-LANE separation **0.66** units, and that is an improvement — two cars
+that draw the same slot (`(h >>> 19) % slots` has always been able to collide) used to sit exactly
+on top of each other for ever, and the wait jitter is now the only thing holding them apart. The
+0.27 minimum across DIFFERENT lanes is a crossroads, which the design has carried since both axes
+were scanned.
+
+`CARS` 28 -> 40 to pay for the skip: 27 visible against the 28 that used to be, same batch, same
+draw call.
+
+Verdict: **LANDED.**

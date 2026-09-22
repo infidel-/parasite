@@ -137,8 +137,13 @@ class CorpCrowd
           };
           return;
         }
-      walk = lanes(city, p, Tile.Walkway);
-      road = lanes(city, p, Tile.Road);
+      walk = lanes(city, p, Tile.Walkway, CorpStyle.LANE_MIN);
+      // TRAFFIC TAKES THE LONGER MINIMUM — see CorpStyle.CAR_LANE_MIN — and falls back to the
+      // walker's only where a plate has no long road at all, because an empty street reads worse
+      // than a short run
+      road = lanes(city, p, Tile.Road, CorpStyle.CAR_LANE_MIN);
+      if (road.length == 0)
+        road = lanes(city, p, Tile.Road, CorpStyle.LANE_MIN);
       n = {
         walkers: (walk.length == 0 ? 0 : CorpStyle.WALKERS),
         cars: (road.length == 0 ? 0 : CorpStyle.CARS),
@@ -268,12 +273,29 @@ class CorpCrowd
           if (slots < 2)
             slots = 2;
           var v = CorpStyle.CAR_SPEED * ln.v;
-          var s = (ln.len * ((h >>> 19) % slots) / slots + clock * v) % ln.len;
+          // THE LAP IS THE UNIT OF VARIATION. The modulo below is exact, so a car passed any given
+          // point every ln.len / v seconds for ever and the street read as a loop — reported from
+          // the game as traffic that "repeats without any jitter in timing". The lap index falls
+          // out of the same arithmetic, costs nothing and stores nothing, and hashing it deals each
+          // lap its own two: the car SITS THIS ONE OUT (CorpStyle.CAR_SKIP percent of laps) or it
+          // enters late, by up to CAR_WAIT of one slot.
+          //
+          // BOTH ARE BOUNDED BY THE SLOT and that is the whole of why nothing converges: the LANE
+          // holds the speed, so two cars on it keep their gap the whole way down, half a slot of
+          // delay cannot close a gap of a whole one, and a skipped lap takes a car OUT of the
+          // stream rather than moving it, which cannot close a gap at all
+          var d = ln.len * ((h >>> 19) % slots) / slots + clock * v;
+          var lap = Std.int(d / ln.len);
+          var s = d - lap * ln.len;
+          var lh = FacilityModel.mix((i * 374761393) ^ (lap * 668265263));
+          s -= ln.len / slots * CorpStyle.CAR_WAIT * ((lh >>> 9) % 1000) / 1000;
+          var out = (s < 0 || lh % 100 < CorpStyle.CAR_SKIP);
           if (ln.dir < 0)
             s = ln.len - s;
           // and the same fade the walkers take, for the same modulo — a car that pops into being
-          // at the end of a road is the same defect and this is the same two lines
-          carFade[i] = fade(s, ln.len, CorpStyle.CAR_FADE);
+          // at the end of a road is the same defect and this is the same two lines. A car waiting
+          // out a lap takes the same zero, so it goes with its headlights and nothing is moved
+          carFade[i] = (out ? 0.0 : fade(s, ln.len, CorpStyle.CAR_FADE));
           var hx = ln.dx * ln.dir;
           var hz = ln.dz * ln.dir;
           pos.set(ln.x0 + ln.dx * s, CorpStyle.CROWD_Y, ln.z0 + ln.dz * s);
@@ -527,13 +549,13 @@ class CorpCrowd
       return tex;
     }
 
-// every straight run of `kind` at least LANE_MIN cells long, ON THE STREET THAT WAS BUILT.
+// every straight run of `kind` at least `min` cells long, ON THE STREET THAT WAS BUILT.
 //
 // RUNS AND NOT A PATHFINDER, which is the whole of the "fake to simplify logic" the brief asks
 // for: a lane is a straight length of road or footpath and an agent walks it end to end and wraps.
 // Nobody turns a corner, and from 114 units up nobody can tell — what reads is that the street is
 // moving. Both axes are scanned, so a crossroads really does carry traffic both ways
-  static function lanes(city:City, p:PlateBox, kind:Tile):Array<Lane>
+  static function lanes(city:City, p:PlateBox, kind:Tile, min:Int):Array<Lane>
     {
       var out = [];
       // the SAME predicate CorpStreet emitted the ground with, so a lane can never run over a cell
@@ -564,7 +586,7 @@ class CorpCrowd
                 var len = 0;
                 while (ok(col + dc * len, row + dr * len))
                   len++;
-                if (len < CorpStyle.LANE_MIN)
+                if (len < min)
                   continue;
                 // the LATERAL cell index decides the sense — the row for a lane along x, the
                 // column for one along z — so the two cells of a two-wide road come out opposed
