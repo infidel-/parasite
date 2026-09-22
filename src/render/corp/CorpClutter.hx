@@ -172,7 +172,13 @@ class CorpClutter
   static function face(q:CorpFurniture.CorpPanel, b:MeshBuf):Int
     {
       var n = 0;
-      if (q.pod0 && q.pod1)
+      // and the BACK panel carries nothing on either hand. It is the alongX one by construction —
+      // CorpFurniture.divider raises a z-hand panel only between two pods standing back to back —
+      // and a monitor stands against it on both sides. NOT "a desk on both hands", which is also
+      // true of the side panel between two neighbours in the same row: that one is two workers'
+      // walls with nothing in front of either, and the first cut of this guard took 56 panels
+      // where 18 are backs
+      if (q.alongX)
         return 0;
       for (side in 0...2)
         {
