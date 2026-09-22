@@ -149,6 +149,12 @@ class CorpArea implements Area3D
       // the inside-corner strips, which are the one piece of FacilityDetail a bare shell wants:
       // without them every reentrant corner of the plate shows the seam between two wall slabs
       FacilityDetail.corners(scene, model);
+      // and the COLLECTOR every family that stands something against a wall or on a worktop has
+      // been filling since the port. `halos` is what drains and CLEARS it, and the tower never
+      // called it: CorpDeco's casework, CorpProps' plants and coolers and now the workstation
+      // pools were all collected and never drawn, and the static list carried into whichever area
+      // drained next. The compound calls it from FacilityArea.build for the same reason
+      FacilityDetail.halos(scene, model);
       // the glazing is pinned OPEN rather than eased. see the class header: one structure, and the
       // player is standing in it from the first frame
       for (s in shells)

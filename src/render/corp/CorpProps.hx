@@ -7,6 +7,7 @@ import render.RenderConfig;
 import render.facility.ClutterSlot;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
+import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
@@ -129,6 +130,7 @@ class CorpProps
       var legs = [];
       var floors = [for (_ in FLOOR) new Array<Models.PropPlace>()];
       var binp = CorpDeco.bins(m, area);
+      podBins(m, binp);
       // WHERE THE OLD COMPUTER ICONS STOOD, which is what "put the new ones in their places"
       // asks for literally: gen.corp deals a CORP_COMPUTERS decoration onto the middle cell of
       // every manned desk, and a hash of its own would have put the workstation somewhere else on
@@ -256,6 +258,59 @@ class CorpProps
               yaw: Math.atan2(DC[dir ^ 1], DR[dir ^ 1]),
               y: y,
             });
+            // AND THE SHADOW EACH OF THEM SITS IN. Nothing on this plate casts (see `batch`), and
+            // render.world.ContactMask is one top-down field over the FLOOR, so it cannot reach a
+            // screen standing 1.5 units up on a desk — the monitor was the one thing in the room
+            // with no contact of any kind under it. render.facility.FacilityDetail.pool is the
+            // square-cornered ramp the compound's own workstation uses, and square is the point:
+            // FacilityWork's header records a round one on a 16:9 panel reading as no shadow at
+            // all. `claims` is the oracle for the two footprints, so neither pass may drift
+            var plate:Rect = {
+              x0: c.x - CELL / 2 + CorpStyle.FIT_INSET,
+              x1: c.x + CELL / 2 - CorpStyle.FIT_INSET,
+              z0: c.z - CELL / 2 + CorpStyle.FIT_INSET,
+              z1: c.z + CELL / 2 - CorpStyle.FIT_INSET,
+            };
+            for (b in claims(m, col, row))
+              FacilityDetail.pool({
+                cx: b.x,
+                cz: b.z,
+                hw: b.hw,
+                hd: b.hd,
+                // the extents come off `claims` already turned into world axes, so the quad must
+                // not be turned a second time
+                yaw: 0.0,
+                y: y,
+                plate: plate,
+              });
+          }
+    }
+
+// A BIN UNDER EVERY CUBICLE DESK, on its left hand.
+//
+// the farm used to get ONE bin per block, on an unwalkable cell of its own where the passage met
+// the aisle, at a 50% roll — a piece of floor spent on a piece of dressing. This is render-only:
+// no cell, no decoration, no save, and it rides the batch CorpDeco.bins already fills, so it costs
+// no draw call either. LEFT is world -x and not the desk's own hand, because a farm whose bins
+// alternate sides with the row's facing reads as clutter rather than as an office
+  static function podBins(m:Facility, out:Array<Models.PropPlace>):Void
+    {
+      var off = CELL / 2 - CorpStyle.BIN_W / 2 - CorpStyle.FIT_INSET;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                !m.table[row][col] ||
+                m.surf[row][col] != Surf.CUBICLE)
+              continue;
+            var c = CityConfig.cellToWorld(col, row);
+            out.push({
+              x: c.x - off,
+              z: c.z,
+              yaw: 0.0,
+            });
+            ContactMask.prop(c.x - off - CorpStyle.BIN_W / 2, c.x - off + CorpStyle.BIN_W / 2,
+              c.z - CorpStyle.BIN_W / 2, c.z + CorpStyle.BIN_W / 2);
           }
     }
 
