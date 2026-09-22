@@ -156,8 +156,15 @@ class CorpFurniture
         bins: 0,
       };
       CorpDeco.casework(m, area, deco);
+      // AND ALL OF IT CASTS. The tower has no moon over it, which is why every glb batch on the
+      // plate opted out — but the ceiling fixtures are real SpotLights out of the shared pool and
+      // eight of its twelve slots carry a shadow map. A cubicle farm is a maze of 2.8-unit walls
+      // under a lattice of downlights and it was throwing nothing at all.
+      //
+      // it is not a per-frame cost: render.particles.LampLights holds the caster slots at
+      // shadow.autoUpdate = false, so a map re-renders only when its slot changes owner
       for (tex in bufs.keys())
-        FacilityGeom.add(scene, bufs.get(tex), tex, true, false);
+        FacilityGeom.add(scene, bufs.get(tex), tex, true, true);
       // ONE additive mesh for every blinking speck in the room and ONE for every cable in it, both
       // shared with the compound: render.facility.FacilityDeco.lamps folds in the blink shader and
       // the clock it references BY IDENTITY, so the whole server room's lights cost one draw call

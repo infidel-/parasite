@@ -1,7 +1,9 @@
 package render.corp;
 
 import three.Three;
+import citygen.CityConfig;
 import render.RenderConfig;
+import render.SceneSetup;
 import render.Warmup;
 import render.facility.FacilityDetail;
 import render.facility.FacilityDoors;
@@ -67,6 +69,15 @@ class CorpWarm
       FacilityDoors.build(sc, model, null);
       IndoorMask.detach();
       ContactMask.detach();
+      // park the moon's shadow box over the demo plate, so Warmup.compile's render actually runs
+      // the shadow depth pass. Nothing on this plate CAST until the furniture and the glb batches
+      // started casting off the ceiling fixtures, and a casting mesh whose depth program compiles
+      // on the first real frame is the hitch this whole file exists to avoid — the box sits at
+      // world origin otherwise and every caster falls outside it. FacilityWarm's own line, for its
+      // own reason: the pool's spotlights hold shadow.autoUpdate = false and render nothing here
+      var half = CityConfig.GRID * CityConfig.CELL / 2;
+      SceneSetup.fitMoon(bundle.moon, new Vector3(
+        model.w * CityConfig.CELL / 2 - half, 0, model.h * CityConfig.CELL / 2 - half));
       // and the SEVEN glb props, one entry per path, each patched exactly as CorpProps.batch
       // patches it. the mask goes back on around each instance: a glb resolves long after the
       // block above put it away, and VisionMask.patch chains the indoor swap onto every material

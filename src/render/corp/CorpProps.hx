@@ -193,10 +193,14 @@ class CorpProps
             // that stayed MeshStandard" was never true of it
             if (env)
               render.world.PropEnv.apply(p.mesh.material);
-            // AND NOTHING ON THE PLATE CASTS. an instanced batch is drawn into the moon's shadow
-            // map as many times as into the frame, so a second draw is a second call the moment the
-            // batch is on screen at all — and a tower floor has no moon over it in the first place
-            p.mesh.castShadow = false;
+            // AND IT CASTS, off the CEILING FIXTURES. the original reasoning here was the moon's
+            // — an instanced batch drawn into a shadow map is a second call the moment the batch is
+            // on screen — and a tower floor has no moon over it. True, and it skipped the lights it
+            // does have: render.corp.CorpLamps hands render.particles.LampLights a real SpotLight
+            // per fitting and eight of the pool's twelve slots cast. Those maps are static
+            // (shadow.autoUpdate = false), so the second draw happens when a slot changes owner and
+            // not every frame, and a chair with no shadow under it stood in mid air
+            p.mesh.castShadow = true;
           });
       return p;
     }
