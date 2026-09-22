@@ -20,9 +20,10 @@ typedef Lane = {
   // index, so the two cells of a CityConfig.ROAD_W road carry opposite streams and a car can
   // never meet one coming the other way down the same line
   var dir:Int;
-  // and ONE speed for the whole lane, hashed off its own corner. Per-CAR speed is what let two of
-  // them on one line converge and drive through each other; with the lane holding it, nothing
-  // ever overtakes and the only thing that varies along a lane is where each car started
+  // and a BASE speed for the lane, hashed off its own corner. It used to be the whole speed, and
+  // for a good reason: per-CAR speed is what let two of them on one line converge and drive through
+  // each other. `drive` gives a car its own lane now, so that cannot happen and the base is what a
+  // pass is jittered ABOVE (CorpStyle.CAR_SPEED_JIT) rather than the last word on it
   var v:Float;
 };
 
@@ -146,7 +147,9 @@ class CorpCrowd
         road = lanes(city, p, Tile.Road, CorpStyle.LANE_MIN);
       n = {
         walkers: (walk.length == 0 ? 0 : CorpStyle.WALKERS),
-        cars: (road.length == 0 ? 0 : CorpStyle.CARS),
+        // ONE CAR PER LANE — see `drive`. A plate with fewer road lanes than CARS carries fewer
+        // cars rather than doubling any line up
+        cars: (CorpStyle.CARS < road.length ? CorpStyle.CARS : road.length),
         walkLanes: walk.length,
         roadLanes: road.length,
       };
@@ -256,40 +259,41 @@ class CorpCrowd
 // write every car's transform and its picture for the current clock.
 //
 // SEPARATE FROM `place` and not a flag on it, because almost nothing is shared: a car takes a lane
-// that has already decided which way it runs and how fast, it is yawed rather than scale-swapped,
-// and it carries a crop of the sheet. What the two do share is that NOTHING IS STORED — the lane,
-// the cell, the slot and the speed are all a pure function of the index and the clock
+// that has already decided which way it runs, it is yawed rather than scale-swapped, and it
+// carries a crop of the sheet. What the two do share is that NOTHING IS STORED — the lane, the
+// cell, the speed and the pass are all a pure function of the index and the clock
   function drive():Void
     {
       for (i in 0...n.cars)
         {
           var h = FacilityModel.mix((i + 978) * 374761393);
-          var ln = road[h % road.length];
+          // ONE CAR PER LANE, spread over the list so both axes carry traffic, and it is what pays
+          // for everything below. The file's founding invariant is that nothing on a line ever
+          // overtakes, and the old answer was to hang the speed on the LANE so that two cars
+          // sharing a line could only move in lockstep — which is exactly what forbids a speed
+          // that varies. Give a car its own line and the invariant costs nothing: there is no
+          // second car on it to converge with. It also spreads the traffic, where 30 of this
+          // plate's 44 road lanes used to draw no car at all
+          var ln = road[Std.int(i * road.length / n.cars)];
           var cell = CorpStyle.CAR_CELLS[(h >>> 5) % CorpStyle.CAR_CELLS.length];
-          // ONE SLOT PER CAR on its lane rather than a continuous phase: with the lane holding
-          // the speed, two cars that start together stay together forever, and a slot is what
-          // stops them starting together in the first place
-          var slots = Std.int(ln.len / (2 * CorpStyle.CAR_LEN));
-          if (slots < 2)
-            slots = 2;
-          var v = CorpStyle.CAR_SPEED * ln.v;
-          // THE LAP IS THE UNIT OF VARIATION. The modulo below is exact, so a car passed any given
-          // point every ln.len / v seconds for ever and the street read as a loop — reported from
-          // the game as traffic that "repeats without any jitter in timing". The lap index falls
-          // out of the same arithmetic, costs nothing and stores nothing, and hashing it deals each
-          // lap its own two: the car SITS THIS ONE OUT (CorpStyle.CAR_SKIP percent of laps) or it
-          // enters late, by up to CAR_WAIT of one slot.
-          //
-          // BOTH ARE BOUNDED BY THE SLOT and that is the whole of why nothing converges: the LANE
-          // holds the speed, so two cars on it keep their gap the whole way down, half a slot of
-          // delay cannot close a gap of a whole one, and a skipped lap takes a car OUT of the
-          // stream rather than moving it, which cannot close a gap at all
-          var d = ln.len * ((h >>> 19) % slots) / slots + clock * v;
-          var lap = Std.int(d / ln.len);
-          var s = d - lap * ln.len;
+          // THE LAP IS THE UNIT OF VARIATION, and it is a FIXED WINDOW of wall clock: one length
+          // of this lane at the lane's own base speed. Position used to be one modulo of the clock,
+          // which is exact, so a car passed any given point every ln.len / v seconds for ever and
+          // the street read as a loop. The lap index comes out of the same arithmetic — still
+          // closed form in `t`, still storing nothing, which is the contract the whole file runs
+          // on — and hashing it deals each pass its OWN three: whether the car runs at all
+          // (CorpStyle.CAR_SKIP), how fast (CAR_SPEED_JIT, always at or above the lane's base, so
+          // a pass always fits inside its window), and where in the slack left over it starts
+          var T = ln.len / (CorpStyle.CAR_SPEED * ln.v);
+          var u = clock / T + ((h >>> 19) % 1000) / 1000.0;
+          var lap = Std.int(u);
           var lh = FacilityModel.mix((i * 374761393) ^ (lap * 668265263));
-          s -= ln.len / slots * CorpStyle.CAR_WAIT * ((lh >>> 9) % 1000) / 1000;
-          var out = (s < 0 || lh % 100 < CorpStyle.CAR_SKIP);
+          var v = CorpStyle.CAR_SPEED * ln.v *
+            (1 + CorpStyle.CAR_SPEED_JIT * (lh % 1000) / 1000.0);
+          var s = ((u - lap) * T - (T - ln.len / v) * ((lh >>> 11) % 1000) / 1000.0) * v;
+          var out = (s < 0 ||
+            s > ln.len ||
+            (lh >>> 22) % 100 < CorpStyle.CAR_SKIP);
           if (ln.dir < 0)
             s = ln.len - s;
           // and the same fade the walkers take, for the same modulo — a car that pops into being

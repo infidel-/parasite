@@ -1460,7 +1460,22 @@ on top of each other for ever, and the wait jitter is now the only thing holding
 0.27 minimum across DIFFERENT lanes is a crossroads, which the design has carried since both axes
 were scanned.
 
-`CARS` 28 -> 40 to pay for the skip: 27 visible against the 28 that used to be, same batch, same
-draw call.
+**Then the speed itself, which the same report asked for next.** A car ran at its LANE's speed for
+ever, so a pass never varied — and that number was on the lane for a good reason: per-CAR speed is
+what once let two of them on one line converge and drive through each other. **Giving a car its own
+lane is what pays for it.** With 44 road lanes and at most 44 cars there is no second car on the
+line to converge with, the invariant costs nothing, and the traffic spreads — 30 of the 44 lanes
+used to draw no car at all.
+
+The lap became a FIXED WINDOW of wall clock, one lane at the lane's base speed, and each pass hashes
+three things off the lap index: whether it runs (`CAR_SKIP` 15), how fast (`CAR_SPEED_JIT` 0.6,
+always at or ABOVE the base so the pass always fits inside its window), and where in the leftover
+slack it starts. Still closed form in `t`, still storing nothing. Car 0's measured pass speeds:
+**12.23, 11.84, 17.62, 15.25, 16.88, 16.12** against a lane base of 11.8; its entry gaps
+**52.7, 65.5, 42.3, 56.5, 51.1** s.
+
+`CARS` 28 -> 44, and it is a CEILING rather than a count — `n.cars` takes the smaller of it and the
+lane count. Mean drawn over 1200 samples: **29.3** (min 18, max 38) against the 28 that were drawn
+every single frame before. Same batch, same draw call: 156 either way.
 
 Verdict: **LANDED.**

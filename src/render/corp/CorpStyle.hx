@@ -654,9 +654,12 @@ class CorpStyle
   // be wrong, and the whole point of the thing is that it keeps moving while the player stands
   // still thinking.
   public static inline var WALKERS = 64;
-  // 28 -> 40 when a car learned to SIT A LAP OUT (CAR_SKIP): the skip is what breaks the perfect
-  // beat, and holding the street at the density it already read at is what pays for it
-  public static inline var CARS = 40;
+  // 28 -> 44, and it is a CEILING now rather than a count: CorpCrowd gives every car its own lane
+  // and takes the smaller of the two. What pays for the rise is that a pass no longer fills its
+  // lap — it runs at or above the lane's base speed and waits out the slack, and it may skip the
+  // lap entirely — so the mean on the tower's own plate is 29 of 44 drawn, against the 28 that
+  // were drawn every frame before
+  public static inline var CARS = 44;
   // world units per second. a unit is half a metre, so 2.8 is 1.4 m/s (a walk) and 20 is 10 m/s
   // (36 km/h, a city street)
   public static inline var WALK_SPEED = 2.8;
@@ -769,12 +772,16 @@ class CorpStyle
   // lengths are 6, 33, 37, 49, 77, 84, 108 and 156 cells, so this drops exactly the two stubs and
   // keeps all 44 real runs. CorpCrowd falls back to LANE_MIN if a plate has nothing longer
   public static inline var CAR_LANE_MIN = 16;
-  // HOW A LAP VARIES, which is what stops the traffic reading as a loop — see CorpCrowd.drive.
-  // `SKIP` is the percent of laps a car sits out entirely and `WAIT` how late it may enter, as a
-  // fraction of one SLOT. Both are bounded by the slot on purpose: the lane holds the speed, so two
-  // cars keep their gap the whole way down it, and half a slot of delay cannot close a whole one
-  public static inline var CAR_SKIP = 30;
-  public static inline var CAR_WAIT = 0.5;
+  // HOW ONE PASS DOWN A LANE VARIES, which is what stops the traffic reading as a loop — see
+  // CorpCrowd.drive. `SKIP` is the percent of passes a car sits out entirely and `SPEED_JIT` how
+  // much faster than the lane's own base speed it may run, as a fraction; the leftover time is
+  // slack it may start anywhere inside. A pass is never SLOWER than the base, because the lap is a
+  // fixed window and a slower one would not finish inside it.
+  //
+  // THEY ARE ONLY SAFE BECAUSE A CAR OWNS ITS LANE. With two cars on one line a varying speed is
+  // the exact defect `Lane.v` was introduced to cure — see the typedef
+  public static inline var CAR_SKIP = 15;
+  public static inline var CAR_SPEED_JIT = 0.6;
 
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
 // in. the shape FacilityStyle.shell() has, and the reason both exist
