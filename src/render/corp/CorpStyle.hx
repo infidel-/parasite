@@ -313,6 +313,33 @@ class CorpStyle
   public static inline var CLUTTER_CUT = 0.5;
   // and how far inside the worktop's own edge an item must keep its whole box
   public static inline var CLUTTER_INSET = 0.18;
+
+  // THE CUBICLE PANEL'S OWN SHEET, and the first PACK36 in the repo. 6x6 rather than the worktops'
+  // 8x8 for one reason and it is not the density: a partition is what a worker pins his own things
+  // to, and 36 subjects is already more than a floor's panels can show without repeating - the
+  // measurement in docs/3d-textures.md puts a 170 px cell at ~138 art px, i.e. 197 texels per unit
+  // over the 0.7 a pinned sheet is drawn at, which is nearly triple the carpet's
+  public static inline var PANEL_TEX = 'textures/corp/panel-clutter.png';
+  public static inline var PANEL_COLS = 6;
+  public static inline var PANEL_CELLS = 36;
+  // how many things one FACE of a panel may carry, and zero is reachable for the reason
+  // CLUTTER_MAX is: a farm where every bay is dressed reads as a display and not as an office
+  public static inline var PANEL_MAX = 2;
+  public static inline var PANEL_SZ = 0.55;
+  public static inline var PANEL_SZ_VAR = 0.35;
+  // the band of the panel's height things are pinned in, as a fraction of PARTITION_H. Nothing
+  // sits on the trim rail and nothing hangs below the worktop the panel stands on
+  public static inline var PANEL_LO = 0.55;
+  public static inline var PANEL_HI = 0.90;
+  // how far proud of the panel face a decal hangs, and how far in from the run's ends it keeps
+  public static inline var PANEL_PROUD = 0.03;
+  public static inline var PANEL_END = 0.35;
+  // and how often a face carries a PROPAGANDA POSTER instead of the worker's own things. It is one
+  // per cent of a floor's panels and that is the point: the company's poster in somebody's bay is
+  // a note, and a poster in every bay is wallpaper. Drawn by render.corp.CorpSigns into the sheet
+  // it already owns, so it costs no draw call
+  public static inline var PANEL_POSTER_PCT = 8;
+  public static inline var PANEL_POSTER_MAX = 1.5;
   // the clearance between two items, counted ONCE per pair
   public static inline var CLUTTER_GAP = 0.10;
 

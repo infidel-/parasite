@@ -97,9 +97,48 @@ class CorpSigns
                   }
               }
         }
+      // AND THE ONE IN SOMEBODY'S BAY. A cubicle panel is a wall too, and the two sheets this
+      // pass already owns are the only propaganda in the building — so a face of a panel that
+      // rolls one takes it here, into the SAME buffer, for no draw call at all. Which faces those
+      // are is CorpFurniture.panelPoster and not a list, so render.corp.CorpClutter can leave
+      // exactly those faces bare without either pass telling the other anything
+      for (q in CorpFurniture.panels)
+        for (side in 0...2)
+          {
+            if (!CorpFurniture.panelPoster(q, side))
+              continue;
+            panelPane(bp, q, side);
+            n++;
+          }
       FacilityGeom.add(scene, b, CorpStyle.SIGN_TEX, true, false);
       FacilityGeom.add(scene, bp, CorpStyle.POSTER_TEX, true, false);
       return n;
+    }
+
+// one propaganda poster on one face of a cubicle panel, centred on the run.
+//
+// the two portrait/landscape slots are dealt off the panel's own seed so the same bay comes back
+// with the same poster on every rebuild, and the size comes off the MEASURED aspect table the wall
+// panes use — a poster is the same image whichever wall it is on
+  static function panelPane(b:MeshBuf, q:CorpFurniture.CorpPanel, side:Int):Void
+    {
+      var slot = (FacilityModel.mix(q.seed ^ ((side + 1) * 1103515245)) & 1 == 0 ?
+        POSTER_EYE : POSTER_MARCH);
+      var a = ASPECT[slot];
+      var mx = CorpStyle.PANEL_POSTER_MAX;
+      var w = (a >= 1 ? mx : mx * a) / 2;
+      var hh = (a >= 1 ? mx / a : mx) / 2;
+      var at = (q.alongX ? (q.x0 + q.x1) / 2 : (q.z0 + q.z1) / 2);
+      var y = CorpStyle.PARTITION_H * (CorpStyle.PANEL_LO + CorpStyle.PANEL_HI) / 2;
+      var e = CorpStyle.PANEL_PROUD;
+      if (q.alongX)
+        {
+          var z = (side == 0 ? q.z0 - e : q.z1 + e);
+          pane(b, at - w, at + w, z, z, (side == 0 ? 0 : 1), y - hh, y + hh, slot);
+          return;
+        }
+      var x = (side == 0 ? q.x0 - e : q.x1 + e);
+      pane(b, x, x, at - w, at + w, (side == 0 ? 2 : 3), y - hh, y + hh, slot);
     }
 
 // which panel this spot earns, off the surface it hangs in

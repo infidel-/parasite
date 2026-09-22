@@ -54,6 +54,12 @@ class CorpClutter
           }
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
+      // and the third sheet, which is not a worktop at all: what the people in the cubicle farm
+      // have pinned to their own panels
+      var panel = MeshBufTools.make();
+      for (q in CorpFurniture.panels)
+        n += face(q, panel);
+      add(scene, panel, CorpStyle.PANEL_TEX);
       // ONE BATCH PER PATH, which is what four props cost and the whole of what the promotion is
       // argued against: the two sheets above are two calls for sixty-odd kinds, and every glb here
       // is a call of its own however few land
@@ -144,6 +150,75 @@ class CorpClutter
           n++;
         }
       return n;
+    }
+
+// ONE PANEL'S TWO FACES' WORTH, and the arithmetic is the worktop's turned on its side.
+//
+// a panel is a 0.1-thick slab standing on a cell boundary, so its two faces look into two
+// DIFFERENT bays and each is one worker's own wall — which is why the roll is per face and not per
+// panel. Nothing has to be claimed against: the only things on a panel are the ones this pass puts
+// there, so the rejection sampling the worktop needs (a monitor and a keyboard are already
+// standing on it) has no work to do here and the slots are simply spread along the run.
+//
+// A FACE CARRYING THE COMPANY'S POSTER IS LEFT BARE. CorpFurniture.panelPoster is the shared
+// predicate and render.corp.CorpSigns hangs the poster itself, into the sheet it already owns
+  static function face(q:CorpFurniture.CorpPanel, b:MeshBuf):Int
+    {
+      var n = 0;
+      for (side in 0...2)
+        {
+          if (CorpFurniture.panelPoster(q, side))
+            continue;
+          var g = FacilityModel.mix(q.seed ^ ((side + 1) * 1103515245));
+          var want = g % (CorpStyle.PANEL_MAX + 1);
+          for (i in 0...want)
+            {
+              var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
+              var sz = CorpStyle.PANEL_SZ + ((h % 1000) / 1000) * CorpStyle.PANEL_SZ_VAR;
+              // along the run, spread the way CorpLamps and CorpSigns spread theirs: slot i sits
+              // (i + 0.5) / want of the way down, so one item lands on the panel's own centre
+              var lo = (q.alongX ? q.x0 : q.z0) + CorpStyle.PANEL_END;
+              var hi = (q.alongX ? q.x1 : q.z1) - CorpStyle.PANEL_END;
+              if (hi - lo < sz)
+                continue;
+              var at = lo + (hi - lo) * (i + 0.5) / want;
+              var y = CorpStyle.PARTITION_H *
+                (CorpStyle.PANEL_LO + (CorpStyle.PANEL_HI - CorpStyle.PANEL_LO) *
+                  (((h >>> 12) % 1000) / 1000));
+              var out = (((h >>> 22) & 1) == 0 ? -1.0 : 1.0);
+              emitFace(b, q, at, y, sz, out, (h >>> 4) % CorpStyle.PANEL_CELLS);
+              n++;
+            }
+        }
+      return n;
+    }
+
+// one pinned decal: a square quad standing PANEL_PROUD off one face of the panel, square on to it.
+//
+// no turn and no yaw roll, which is the opposite call to the worktop's: a thing lying on a desk was
+// PUT DOWN and a thing pinned to a wall was HUNG, and a wall of jaunty angles reads as a collage
+  static function emitFace(b:MeshBuf, q:CorpFurniture.CorpPanel, at:Float, y:Float, sz:Float,
+      out:Float, idx:Int):Void
+    {
+      var hs = sz * 0.5;
+      var y0 = y - hs, y1 = y + hs;
+      var a0 = at - hs, a1 = at + hs;
+      // the face's own plane: the panel's near or far hand, pushed out by PANEL_PROUD
+      var p = (q.alongX
+        ? (out < 0 ? q.z0 - CorpStyle.PANEL_PROUD : q.z1 + CorpStyle.PANEL_PROUD)
+        : (out < 0 ? q.x0 - CorpStyle.PANEL_PROUD : q.x1 + CorpStyle.PANEL_PROUD));
+      var t = CorpStyle.PANEL_COLS;
+      var cc = idx % t, cr = Std.int(idx / t);
+      var u0 = cc / t, u1 = (cc + 1) / t;
+      var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
+      // the material draws DoubleSide in one opaque pass, so the winding is free and one order
+      // serves both hands — FacilityClutter.add's own three reasons, restated in `add` below
+      if (q.alongX)
+        MeshBufTools.quad(b, [a0, y0, p], [a1, y0, p], [a1, y1, p], [a0, y1, p],
+          [u0, v0, u1, v0, u1, v1, u0, v1]);
+      else
+        MeshBufTools.quad(b, [p, y0, a0], [p, y0, a1], [p, y1, a1], [p, y1, a0],
+          [u0, v0, u1, v0, u1, v1, u0, v1]);
     }
 
 // would this box land on something already claimed? the separating-axis test for two axis-aligned

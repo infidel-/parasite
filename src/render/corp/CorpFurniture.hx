@@ -40,6 +40,7 @@ typedef CorpPanel = {
   var z0: Float;
   var z1: Float;
   var alongX: Bool;   // does the run follow x? false means it follows z
+  var seed: Int;      // the panel's own roll, off its cell and the hand it stands on
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -319,10 +320,32 @@ class CorpFurniture
       // the two side panels, and the back, which is the + z hand for the row facing - z and the
       // neighbour's own + z hand for the row facing + z
       if (!podCell(m, col - 1, row))
-        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 }, false);
-      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 }, false);
+        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 }, false,
+          seed(col, row, 2));
+      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 }, false,
+        seed(col, row, 3));
       if (podCell(m, col, row + 1))
-        n.partitions += podPanel(b, { x0: x0, x1: x1, z0: z1 - t, z1: z1 + t }, true);
+        n.partitions += podPanel(b, { x0: x0, x1: x1, z0: z1 - t, z1: z1 + t }, true,
+          seed(col, row, 1));
+    }
+
+// one panel's own roll, off the cell it hangs on and which hand of it. the dressing passes are
+// pure functions of this list, so nothing they choose may come off Math.random or off the order
+// they happened to run in
+  static inline function seed(col:Int, row:Int, hand:Int):Int
+    {
+      return FacilityModel.mix((col * 668265263) ^ (row * 1103515245) ^ (hand * 40503));
+    }
+
+// DOES THIS FACE OF A PANEL CARRY THE COMPANY'S POSTER instead of whatever the worker pinned up?
+//
+// asked by BOTH dressing passes and cached by neither, the discipline CorpProps.claims' own header
+// sets out: render.corp.CorpSigns draws the poster and render.corp.CorpClutter has to leave that
+// face alone, and a shared list is a second thing to keep in step
+  public static inline function panelPoster(p:CorpPanel, side:Int):Bool
+    {
+      return FacilityModel.mix(p.seed ^ ((side + 1) * 374761393)) % 100 <
+        CorpStyle.PANEL_POSTER_PCT;
     }
 
 // is this cell one worker's desk in a cubicle farm?
@@ -544,7 +567,7 @@ class CorpFurniture
 // one cubicle panel, standing on a boundary between two cells: four faces, the trim rail on top,
 // its footprint in the contact field and its rect in the list the dressing passes read. returns 1,
 // so a caller can count panels by summing
-  static function podPanel(b:MeshBuf, p:Rect, alongX:Bool):Int
+  static function podPanel(b:MeshBuf, p:Rect, alongX:Bool, key:Int):Int
     {
       for (dir in 0...4)
         FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, 0, CorpStyle.PARTITION_H,
@@ -557,6 +580,7 @@ class CorpFurniture
         z0: p.z0,
         z1: p.z1,
         alongX: alongX,
+        seed: key,
       });
       return 1;
     }

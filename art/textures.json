@@ -4171,6 +4171,28 @@
       "built_linear": 0.0938,
       "built_srgb": 82.9
     },
+    "corp/panel-clutter": {
+      "src": "corp/panel-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 6,
+        "cap": 0.18
+      },
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 36 small flat objects arranged as a strict 6 x 6 grid, 6 rows of 6 objects. Imagine the square image cut into 36 equal cells of 170 by 170 pixels, with the five vertical seam lines at x = 170, 341, 512, 683, 854 and the five horizontal seam lines at y = 170, 341, 512, 683, 854. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell, leaving at least 20% of the cell width completely empty on every side of it, so a clean empty corridor runs the full height and the full width of the image along every one of those ten seam lines. No object may touch, cross or overlap a seam. No object may touch the outer frame edges. Nothing larger than 100 pixels across.\n\nEvery object is an ISOLATED CUT-OUT SEEN STRAIGHT ON, FACE ON, as a flat elevation. Do not draw what any of them is resting on, attached to, or hanging from.\n\nThe 36 objects, in reading order, left to right then top to bottom:\n1. a small square instant photo of two people, pale border\n2. a rectangular holiday snapshot with one corner curling\n3. a child's crayon drawing on lined paper\n4. a vertical photo-booth strip of three frames\n5. a landscape postcard with a faded coastline printed on it\n6. a pressed flower held flat under a square of clear tape\n7. a square sticky note with three lines of scribbled handwriting\n8. two square sticky notes overlapping at a slight angle\n9. a folded note with a pinhole through its top edge\n10. an index card with a hand-drawn arrow on it\n11. a torn scrap of notepaper with a phone number written on it\n12. a small pad sheet with a brown ring-shaped stain printed on the paper\n13. a portrait printed memo with dense grey body text\n14. a payslip with a table of figures\n15. a portrait monthly calendar grid with one date ringed\n16. a landscape shift rota, a grid of names\n17. a landscape bar-chart printout\n18. a portrait safety notice with a bold header bar\n19. a portrait ID badge card with a grey portrait square on it\n20. a lanyard cord laid flat in a loose S with a card clipped to it\n21. a business card\n22. a vertical strip of four perforated raffle tickets\n23. a landscape laminated fire-drill card\n24. a loyalty card the size of a bank card\n25. a portrait takeaway menu with a fold crease down it\n26. a tall narrow bus timetable strip\n27. a landscape paper wall pocket, seen from the front\n28. a small triangular pennant flag\n29. two cinema tickets side by side\n30. a torn paper wristband laid out flat\n31. a small dry-wipe note card with marker scribble on it\n32. a magnetic clip holding three sheets of paper\n33. a bulldog clip holding a wad of paper\n34. a cluster of four coloured push pins seen head on\n35. a curling sheet of graph paper with a hand-drawn plan on it\n36. a strip of adhesive tape over a torn paper corner\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "PACK36, and the FIRST 6x6 in the repo - docs/3d-textures.md measured the grid and said in as many words that it was wired to nothing. What it dresses is a CUBICLE PANEL, so every cell is a flat thing pinned to one and the pack-cell rule costs nothing here: paper, cards and tape really are flat, and not one subject on the sheet has a side to it. gpt-image-2.5-sunburst, background transparent: 64.9% of the drop came back transparent and tools/pack16.py --cols 6 --rows 6 --cell 170 --valign center packed it at tol 0 first time, scale 1.0405, largest group 148x143 - the 20% gutter clause absorbed the drift, which on 6x6 is worst in the last rows (the y=854 lane was the one still carrying 11.9%). THE VIEW IS NAMED AND THE SURFACE IS NOT: a cell says 'an isolated cut-out seen straight on', never what it is pinned to, which is the clause the same doc records defeating background:transparent outright when it is got wrong. cap 0.18 and NOT corp/desk-clutter's 0.1: that number puts a sheet of paper on the same value as the surface under it, which is right over a desk top at 0.1184 seen square-on from above and wrong over a VERTICAL panel at 0.105 - a memo the same value as the fabric behind it is not dressing, it is a stain. 0.18 is roughly 1.7x the panel and catches only the brightest; at 0.1 the cap governed 30 of the 36 cells, i.e. it was flattening most of the sheet onto one value. The pristine raw drop is in the gpt output tree; the src here is the PACKED sheet.",
+      "last_converted": "2026-09-22T20:50:12",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 6,
+        "cap": 0.18
+      },
+      "built_linear": 0.1592,
+      "built_srgb": 106.5
+    },
     "corp/signs": {
       "src": "corp/signs.png",
       "class": "tile",
