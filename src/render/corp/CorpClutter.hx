@@ -160,14 +160,23 @@ class CorpClutter
 // there, so the rejection sampling the worktop needs (a monitor and a keyboard are already
 // standing on it) has no work to do here and the slots are simply spread along the run.
 //
-// A FACE CARRYING THE COMPANY'S POSTER IS LEFT BARE. CorpFurniture.panelPoster is the shared
-// predicate and render.corp.CorpSigns hangs the poster itself, into the sheet it already owns
+// `side` IS THE HAND AND NOTHING ELSE NOW. It used to gate the poster test while a separate roll
+// off bit 22 picked which hand the quad actually landed on — so both passes of the loop could emit
+// onto the SAME face, at the same slot (the spread is deterministic), differing only in y. Seen in
+// the game as two decals sitting on top of each other, twice.
+//
+// A FACE ONLY CARRIES THINGS IF IT LOOKS AT A DESK. CorpFurniture.podFace is the shared predicate:
+// the passage side is the company's and render.corp.CorpSigns hangs the propaganda there, and a
+// pod's BACK panel looks at a desk on both hands but has a monitor standing in front of each, so
+// it carries nothing at all
   static function face(q:CorpFurniture.CorpPanel, b:MeshBuf):Int
     {
       var n = 0;
+      if (q.pod0 && q.pod1)
+        return 0;
       for (side in 0...2)
         {
-          if (CorpFurniture.panelPoster(q, side))
+          if (!CorpFurniture.podFace(q, side))
             continue;
           var g = FacilityModel.mix(q.seed ^ ((side + 1) * 1103515245));
           var want = g % (CorpStyle.PANEL_MAX + 1);
@@ -185,8 +194,11 @@ class CorpClutter
               var y = CorpStyle.PARTITION_H *
                 (CorpStyle.PANEL_LO + (CorpStyle.PANEL_HI - CorpStyle.PANEL_LO) *
                   (((h >>> 12) % 1000) / 1000));
-              var out = (((h >>> 22) & 1) == 0 ? -1.0 : 1.0);
-              emitFace(b, q, at, y, sz, out, (h >>> 4) % CorpStyle.PANEL_CELLS);
+              // and the band is the CENTRE's, so the item's own half height has to clear the trim
+              // rail on top of the panel — see CorpStyle.PANEL_TOP_GAP
+              var top = CorpStyle.PARTITION_H - CorpStyle.PARTITION_T - CorpStyle.PANEL_TOP_GAP -
+                sz * 0.5;
+              emitFace(b, q, at, (y < top ? y : top), sz, side, (h >>> 4) % CorpStyle.PANEL_CELLS);
               n++;
             }
         }
@@ -196,29 +208,35 @@ class CorpClutter
 // one pinned decal: a square quad standing PANEL_PROUD off one face of the panel, square on to it.
 //
 // no turn and no yaw roll, which is the opposite call to the worktop's: a thing lying on a desk was
-// PUT DOWN and a thing pinned to a wall was HUNG, and a wall of jaunty angles reads as a collage
+// PUT DOWN and a thing pinned to a wall was HUNG, and a wall of jaunty angles reads as a collage.
+//
+// THE WINDING IS FacilityGeom.ends' AND NOT THIS FILE'S. A hand-rolled pair of quads got one hand
+// right and one backwards on each axis — the material is DoubleSide so nothing vanished, the art
+// simply came back MIRRORED on the far face, reported as decals "inverted for some reason".
+// render.corp.CorpSigns.pane hangs a poster on the same two planes and has never had it, because
+// it asks the one emitter that knows the order
   static function emitFace(b:MeshBuf, q:CorpFurniture.CorpPanel, at:Float, y:Float, sz:Float,
-      out:Float, idx:Int):Void
+      side:Int, idx:Int):Void
     {
       var hs = sz * 0.5;
       var y0 = y - hs, y1 = y + hs;
       var a0 = at - hs, a1 = at + hs;
-      // the face's own plane: the panel's near or far hand, pushed out by PANEL_PROUD
+      var e = CorpStyle.PANEL_PROUD;
+      // FacilityGeom's own direction order: 0 = -z, 1 = +z, 2 = -x, 3 = +x, so side 0 is the hand
+      // at x0/z0 and side 1 the hand at x1/z1
+      var dir = (q.alongX ? (side == 0 ? 0 : 1) : (side == 0 ? 2 : 3));
       var p = (q.alongX
-        ? (out < 0 ? q.z0 - CorpStyle.PANEL_PROUD : q.z1 + CorpStyle.PANEL_PROUD)
-        : (out < 0 ? q.x0 - CorpStyle.PANEL_PROUD : q.x1 + CorpStyle.PANEL_PROUD));
+        ? (side == 0 ? q.z0 - e : q.z1 + e)
+        : (side == 0 ? q.x0 - e : q.x1 + e));
       var t = CorpStyle.PANEL_COLS;
       var cc = idx % t, cr = Std.int(idx / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
       var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
-      // the material draws DoubleSide in one opaque pass, so the winding is free and one order
-      // serves both hands — FacilityClutter.add's own three reasons, restated in `add` below
-      if (q.alongX)
-        MeshBufTools.quad(b, [a0, y0, p], [a1, y0, p], [a1, y1, p], [a0, y1, p],
-          [u0, v0, u1, v0, u1, v1, u0, v1]);
-      else
-        MeshBufTools.quad(b, [p, y0, a0], [p, y0, a1], [p, y1, a1], [p, y1, a0],
-          [u0, v0, u1, v0, u1, v1, u0, v1]);
+      var c = (q.alongX
+        ? FacilityGeom.ends(a0, a1, p, p, dir)
+        : FacilityGeom.ends(p, p, a0, a1, dir));
+      MeshBufTools.quad(b, [c[0], y0, c[1]], [c[2], y0, c[3]], [c[2], y1, c[3]], [c[0], y1, c[1]],
+        [u0, v0, u1, v0, u1, v1, u0, v1]);
     }
 
 // would this box land on something already claimed? the separating-axis test for two axis-aligned

@@ -41,6 +41,17 @@ typedef CorpPanel = {
   var z1: Float;
   var alongX: Bool;   // does the run follow x? false means it follows z
   var seed: Int;      // the panel's own roll, off its cell and the hand it stands on
+  var pod0: Bool;     // is the cell on the - hand a worker's desk? false means open floor
+  var pod1: Bool;     // and the cell on the + hand
+}
+
+// what a cubicle panel is, apart from its rect: the run's axis and which of its two hands looks at
+// a worker's desk rather than at the passage. ONE ARG AND NOT THREE — it is the whole of what
+// `podPanel` copies into the CorpPanel it pushes, and the dressing passes read nothing else
+typedef PodHands = {
+  var alongX: Bool;   // does the run follow x? false means it follows z
+  var lo: Bool;       // the - hand (z0 for an x run, x0 for a z run): a desk, or open floor?
+  var hi: Bool;       // and the + hand
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -318,15 +329,33 @@ class CorpFurniture
       var z0 = row * CELL - half;
       var z1 = (row + 1) * CELL - half;
       // the two side panels, and the back, which is the + z hand for the row facing - z and the
-      // neighbour's own + z hand for the row facing + z
+      // neighbour's own + z hand for the row facing + z.
+      //
+      // THE BACK STOPS AT THE SIDE PANELS' OUTER FACES (x0 + t .. x1 - t) and does not span the
+      // whole cell. Its lid and theirs both sit at PARTITION_H, so a full-cell back put a
+      // 0.1 x 0.1 coplanar square at every crossing and the two trim rails z-fought there. The
+      // corner it gives up is already covered: a side panel spans the FULL z cell, and the next
+      // row's own side panel picks the run up on the other side of the boundary
       if (!podCell(m, col - 1, row))
-        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 }, false,
-          seed(col, row, 2));
-      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 }, false,
-        seed(col, row, 3));
+        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 },
+          seed(col, row, 2), {
+            alongX: false,
+            lo: false,
+            hi: true,
+          });
+      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 },
+        seed(col, row, 3), {
+          alongX: false,
+          lo: true,
+          hi: podCell(m, col + 1, row),
+        });
       if (podCell(m, col, row + 1))
-        n.partitions += podPanel(b, { x0: x0, x1: x1, z0: z1 - t, z1: z1 + t }, true,
-          seed(col, row, 1));
+        n.partitions += podPanel(b, { x0: x0 + t, x1: x1 - t, z0: z1 - t, z1: z1 + t },
+          seed(col, row, 1), {
+            alongX: true,
+            lo: true,
+            hi: true,
+          });
     }
 
 // one panel's own roll, off the cell it hangs on and which hand of it. the dressing passes are
@@ -337,15 +366,19 @@ class CorpFurniture
       return FacilityModel.mix((col * 668265263) ^ (row * 1103515245) ^ (hand * 40503));
     }
 
-// DOES THIS FACE OF A PANEL CARRY THE COMPANY'S POSTER instead of whatever the worker pinned up?
+// WHICH WAY DOES THIS FACE LOOK — at a worker's desk, or at the passage?
 //
-// asked by BOTH dressing passes and cached by neither, the discipline CorpProps.claims' own header
-// sets out: render.corp.CorpSigns draws the poster and render.corp.CorpClutter has to leave that
-// face alone, and a shared list is a second thing to keep in step
-  public static inline function panelPoster(p:CorpPanel, side:Int):Bool
+// the two dressing passes split on this and on nothing else: the desk side is that worker's own
+// wall and carries what he pinned to it, the passage side is the company's and carries the
+// propaganda. It used to be an 8% roll off the panel's seed, which hung posters facing a monitor
+// half a metre away and left aisle faces blank.
+//
+// still asked by BOTH passes and cached by neither, the discipline CorpProps.claims' own header
+// sets out — but now the shared thing is the GRID, which cannot drift from itself the way a
+// shared hash could
+  public static inline function podFace(p:CorpPanel, side:Int):Bool
     {
-      return FacilityModel.mix(p.seed ^ ((side + 1) * 374761393)) % 100 <
-        CorpStyle.PANEL_POSTER_PCT;
+      return (side == 0 ? p.pod0 : p.pod1);
     }
 
 // is this cell one worker's desk in a cubicle farm?
@@ -567,20 +600,22 @@ class CorpFurniture
 // one cubicle panel, standing on a boundary between two cells: four faces, the trim rail on top,
 // its footprint in the contact field and its rect in the list the dressing passes read. returns 1,
 // so a caller can count panels by summing
-  static function podPanel(b:MeshBuf, p:Rect, alongX:Bool, key:Int):Int
+  static function podPanel(b:MeshBuf, p:Rect, key:Int, h:PodHands):Int
     {
       for (dir in 0...4)
         FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, 0, CorpStyle.PARTITION_H,
           CorpStyle.PARTITION_TILE);
-      capTrim(b, p, CorpStyle.PARTITION_H, alongX);
+      capTrim(b, p, CorpStyle.PARTITION_H, h.alongX);
       ContactMask.prop(p.x0, p.x1, p.z0, p.z1);
       panels.push({
         x0: p.x0,
         x1: p.x1,
         z0: p.z0,
         z1: p.z1,
-        alongX: alongX,
+        alongX: h.alongX,
         seed: key,
+        pod0: h.lo,
+        pod1: h.hi,
       });
       return 1;
     }

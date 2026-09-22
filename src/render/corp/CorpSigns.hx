@@ -97,15 +97,20 @@ class CorpSigns
                   }
               }
         }
-      // AND THE ONE IN SOMEBODY'S BAY. A cubicle panel is a wall too, and the two sheets this
-      // pass already owns are the only propaganda in the building — so a face of a panel that
-      // rolls one takes it here, into the SAME buffer, for no draw call at all. Which faces those
-      // are is CorpFurniture.panelPoster and not a list, so render.corp.CorpClutter can leave
-      // exactly those faces bare without either pass telling the other anything
+      // AND THE ONE ON THE AISLE. A cubicle panel is a wall too, and the two sheets this pass
+      // already owns are the only propaganda in the building — so an outward-looking panel face
+      // takes one here, into the SAME buffer, for no draw call at all.
+      //
+      // IT USED TO BE AN 8% ROLL ON ANY FACE, which hung the company's poster half a metre from
+      // one worker's nose as often as on the passage everybody walks down. A face looks either at
+      // a desk or at the aisle (CorpFurniture.podFace) and that is the whole split: the desk side
+      // is his and render.corp.CorpClutter dresses it, the aisle side is the company's and is
+      // this. Neither pass tells the other anything — they both ask the grid
       for (q in CorpFurniture.panels)
         for (side in 0...2)
           {
-            if (!CorpFurniture.panelPoster(q, side))
+            if (CorpFurniture.podFace(q, side) ||
+                !aisle(m, q, side))
               continue;
             panelPane(bp, q, side);
             n++;
@@ -113,6 +118,24 @@ class CorpSigns
       FacilityGeom.add(scene, b, CorpStyle.SIGN_TEX, true, false);
       FacilityGeom.add(scene, bp, CorpStyle.POSTER_TEX, true, false);
       return n;
+    }
+
+// does this face of a panel look at floor somebody can actually walk on?
+//
+// NOT THE SAME QUESTION AS `podFace`, and the difference is the block that backs onto masonry: a
+// face is "not a desk" whether the cell beyond it is the aisle, a room wall or a fitting, and only
+// the first is worth a poster. The cell is derived rather than carried — a panel stands on a cell
+// BOUNDARY, so the neighbour on either hand is half a cell off its centre along the short axis
+  static function aisle(m:Facility, q:CorpFurniture.CorpPanel, side:Int):Bool
+    {
+      var d = (side == 0 ? -CityConfig.CELL / 2 : CityConfig.CELL / 2);
+      var cx = (q.x0 + q.x1) / 2;
+      var cz = (q.z0 + q.z1) / 2;
+      var c = CityConfig.worldToCell(q.alongX ? cx : cx + d, q.alongX ? cz + d : cz);
+      return FacilityModel.inside(m, c.col, c.row) &&
+        !FacilityModel.isWall(m, c.col, c.row) &&
+        !m.table[c.row][c.col] &&
+        m.fit[c.row][c.col] == 0;
     }
 
 // one propaganda poster on one face of a cubicle panel, centred on the run.
@@ -129,7 +152,12 @@ class CorpSigns
       var w = (a >= 1 ? mx : mx * a) / 2;
       var hh = (a >= 1 ? mx / a : mx) / 2;
       var at = (q.alongX ? (q.x0 + q.x1) / 2 : (q.z0 + q.z1) / 2);
+      // the band's own centre, dropped if the sheet's half height would ride the trim rail on top
+      // of the panel — CorpClutter.face clamps its decals against the same three constants
       var y = CorpStyle.PARTITION_H * (CorpStyle.PANEL_LO + CorpStyle.PANEL_HI) / 2;
+      var top = CorpStyle.PARTITION_H - CorpStyle.PARTITION_T - CorpStyle.PANEL_TOP_GAP - hh;
+      if (y > top)
+        y = top;
       var e = CorpStyle.PANEL_PROUD;
       if (q.alongX)
         {

@@ -323,22 +323,30 @@ class CorpStyle
   public static inline var PANEL_COLS = 6;
   public static inline var PANEL_CELLS = 36;
   // how many things one FACE of a panel may carry, and zero is reachable for the reason
-  // CLUTTER_MAX is: a farm where every bay is dressed reads as a display and not as an office
-  public static inline var PANEL_MAX = 2;
+  // CLUTTER_MAX is: a farm where every bay is dressed reads as a display and not as an office.
+  //
+  // 2 -> 3 when the pod's BACK panel went bare: the monitor stands against it, so everything
+  // pinned there was behind a screen. The two sides carry the bay's whole dressing now
+  public static inline var PANEL_MAX = 3;
   public static inline var PANEL_SZ = 0.55;
   public static inline var PANEL_SZ_VAR = 0.35;
   // the band of the panel's height things are pinned in, as a fraction of PARTITION_H. Nothing
-  // sits on the trim rail and nothing hangs below the worktop the panel stands on
+  // sits on the trim rail and nothing hangs below the worktop the panel stands on.
+  //
+  // THE BAND IS THE CENTRE'S AND THE ITEM HAS A HALF HEIGHT, which is what PANEL_HI 0.90 forgot:
+  // 2.8 * 0.90 = 2.52 plus a half size of up to 0.45 is 2.97, a fifth of a unit ABOVE the panel,
+  // straight over the aluminium trim capTrim pins to v 0.9643..1.0. PANEL_TOP_GAP is the clear air
+  // left under that rail and the clamp in CorpClutter.face is what enforces it
   public static inline var PANEL_LO = 0.55;
   public static inline var PANEL_HI = 0.90;
+  public static inline var PANEL_TOP_GAP = 0.05;
   // how far proud of the panel face a decal hangs, and how far in from the run's ends it keeps
   public static inline var PANEL_PROUD = 0.03;
   public static inline var PANEL_END = 0.35;
-  // and how often a face carries a PROPAGANDA POSTER instead of the worker's own things. It is one
-  // per cent of a floor's panels and that is the point: the company's poster in somebody's bay is
-  // a note, and a poster in every bay is wallpaper. Drawn by render.corp.CorpSigns into the sheet
-  // it already owns, so it costs no draw call
-  public static inline var PANEL_POSTER_PCT = 8;
+  // and how big the PROPAGANDA POSTER on a panel is. WHICH faces carry one is not a roll any more
+  // and is not in this file: it is every face that looks at the passage rather than at a desk, i.e.
+  // render.corp.CorpFurniture.podFace. Drawn by render.corp.CorpSigns into the sheet it already
+  // owns, so it costs no draw call
   public static inline var PANEL_POSTER_MAX = 1.5;
   // the clearance between two items, counted ONCE per pair
   public static inline var CLUTTER_GAP = 0.10;
