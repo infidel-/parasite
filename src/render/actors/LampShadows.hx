@@ -296,10 +296,21 @@ class LampShadows {
         // it draws at render.facility.FacilityDeco.spriteScale of a billboard while CastShadows
         // .project sizes its silhouette off the full Sprites.SIZE, so a 20 cm flask would lay a
         // blob three times its own width on the worktop. Skipped rather than plumbing a scale
-        // through project's call sites — at that size there is no silhouette to read
+        // through project's call sites — at that size there is no silhouette to read.
+        //
+        // AND A CORP ONE IS THE SECOND, which is the opposite case to the tunnels' above and not a
+        // walking back of it. Reported as "dark round shadows of nothing on the floor" and it was
+        // literal: render.corp.CorpDeco.draws suppresses the sprite for every frame in rows 23-39,
+        // and CorpDeco.kindOf answers K_NONE — "something else already draws this" — for a good
+        // half of them, CORP_CHAIR (row 30) among them. So the blob was a blurred copy of an icon
+        // nothing on the plate draws, laid at the OBJECT's cell while the chair glb stands at
+        // CHAIR_OUT off it. What is left is doubly covered now: every corp fitting and glb batch
+        // casts a real shadow off the ceiling spotlights, and a workstation carries a
+        // FacilityDetail contact pool as well — which is why the monitor had three
         if (o.entity != null &&
             !o.isGroundDecal() &&
             o.type != 'burning_barrel' &&
+            !render.corp.CorpDeco.draws(game.area, o) &&
             render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0)
           actorShadow(o.entity, barrelLights, lampOut, lampIn);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
