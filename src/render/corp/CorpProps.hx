@@ -102,7 +102,11 @@ class CorpProps
       d: CorpStyle.PRINTER_D,
       w: CorpStyle.PRINTER_W,
       on: Surf.OPEN,
-      deco: CorpDeco.K_NONE,
+      // AND THE CELLS THE GENERATOR DEALT A PRINTER ONTO. Const.CORP_TABLE_PRINTER is dealt two
+      // ways: onto a TABLE tile in the copy room, where the worktop under it is what draws, and
+      // onto bare floor in the cubicle farm, where this is. The `standing` loop tells them apart
+      // by asking whether the cell is a worktop at all
+      deco: CorpDeco.K_PRINTER,
       env: true,
     },
   ];
@@ -290,15 +294,23 @@ class CorpProps
           }
     }
 
-// A BIN UNDER EVERY CUBICLE DESK, on its left hand.
+// A BIN BESIDE EVERY CUBICLE DESK, in the corner of the aisle it faces.
 //
 // the farm used to get ONE bin per block, on an unwalkable cell of its own where the passage met
 // the aisle, at a 50% roll — a piece of floor spent on a piece of dressing. This is render-only:
 // no cell, no decoration, no save, and it rides the batch CorpDeco.bins already fills, so it costs
-// no draw call either. LEFT is world -x and not the desk's own hand, because a farm whose bins
-// alternate sides with the row's facing reads as clutter rather than as an office
+// no draw call either.
+//
+// IT USED TO STAND UNDER THE DESK, WHERE NOTHING COULD SEE IT. `corp/desk-bench` is not a top on
+// legs: models-src/corp/desk_build.py hangs a PED_W 1.06 pedestal off one end of a 3.76 carcass,
+// and an offset of CELL / 2 - BIN_W / 2 - FIT_INSET = 1.57 stands a 0.62 bin inside it. It goes in
+// the AISLE cell now, past the desk's own boundary and off to one hand so it misses the chair —
+// which is where an office really keeps it. The hand is the WORLD's and not the desk's, because a
+// farm whose bins mirror with each row's facing reads as clutter rather than as an office
   static function podBins(m:Facility, out:Array<Models.PropPlace>):Void
     {
+      // just past the desk cell's boundary, and off to one hand by the inset the seat keeps
+      var fwd = CELL / 2 + CorpStyle.BIN_W / 2;
       var off = CELL / 2 - CorpStyle.BIN_W / 2 - CorpStyle.FIT_INSET;
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -307,14 +319,23 @@ class CorpProps
                 !m.table[row][col] ||
                 m.surf[row][col] != Surf.CUBICLE)
               continue;
+            var dir = backHand(m, col, row);
+            if (dir < 0 ||
+                !clear(m, col + DC[dir ^ 1], row + DR[dir ^ 1]))
+              continue;
             var c = CityConfig.cellToWorld(col, row);
+            // dir ^ 1 is the hand the chair is on; the bin's own offset is ACROSS it
+            var px = (dir < 2 ? -1.0 : 0.0);
+            var pz = (dir < 2 ? 0.0 : -1.0);
+            var x = c.x + DC[dir ^ 1] * fwd + px * off;
+            var z = c.z + DR[dir ^ 1] * fwd + pz * off;
             out.push({
-              x: c.x - off,
-              z: c.z,
+              x: x,
+              z: z,
               yaw: 0.0,
             });
-            ContactMask.prop(c.x - off - CorpStyle.BIN_W / 2, c.x - off + CorpStyle.BIN_W / 2,
-              c.z - CorpStyle.BIN_W / 2, c.z + CorpStyle.BIN_W / 2);
+            ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
+              z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);
           }
     }
 
@@ -389,6 +410,12 @@ class CorpProps
           if (p.deco != CorpDeco.K_NONE)
             for (c in CorpDeco.cells(area, p.deco))
               {
+                // NOT ONTO A WORKTOP. the same frame is dealt onto a table tile elsewhere in the
+                // tower (a copy room's printers stand on a bench), and there the bench is what
+                // draws it — a glb on the floor of that cell would stand inside the carcass
+                if (m.table[c.row][c.col] ||
+                    m.fit[c.row][c.col] != 0)
+                  continue;
                 var dir = CorpDeco.backHandOf(m, c.col, c.row);
                 if (dir < 0)
                   continue;
