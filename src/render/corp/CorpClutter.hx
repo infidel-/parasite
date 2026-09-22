@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import render.Textures;
 import render.facility.ClutterSlot;
 import render.facility.ClutterSlot.ClutterSlotTools;
+import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
@@ -139,12 +140,33 @@ class CorpClutter
           var prop = CorpStyle.CLUTTER_PROP_OF.exists(idx) ?
             CorpStyle.CLUTTER_PROP_OF.get(idx) : -1;
           if (prop >= 0)
-            props[prop].push({
-              x: box.x,
-              z: box.z,
-              yaw: yaw,
-              y: y,
-            });
+            {
+              props[prop].push({
+                x: box.x,
+                z: box.z,
+                yaw: yaw,
+                y: y,
+              });
+              // AND THE SHADOW IT STANDS IN. a decal IS its own contact — it lies on the worktop —
+              // but a promoted cell stands a round or upright glb up there, and
+              // render.world.ContactMask is one top-down field over the FLOOR and cannot reach a
+              // mug 1.5 units up. Same emitter, same plate and the same mesh CorpProps.desks
+              // already fills for the monitor, so it costs no draw call
+              FacilityDetail.pool({
+                cx: box.x,
+                cz: box.z,
+                hw: sz / 2,
+                hd: sz / 2,
+                yaw: yaw,
+                y: y,
+                plate: {
+                  x0: c.x - span,
+                  x1: c.x + span,
+                  z0: c.z - span,
+                  z1: c.z + span,
+                },
+              });
+            }
           else
             emit(b, box.x, box.z, sz, yaw, idx, y);
           n++;
@@ -165,10 +187,11 @@ class CorpClutter
 // onto the SAME face, at the same slot (the spread is deterministic), differing only in y. Seen in
 // the game as two decals sitting on top of each other, twice.
 //
-// A FACE ONLY CARRIES THINGS IF IT LOOKS AT A DESK. CorpFurniture.podFace is the shared predicate:
-// the passage side is the company's and render.corp.CorpSigns hangs the propaganda there, and a
-// pod's BACK panel looks at a desk on both hands but has a monitor standing in front of each, so
-// it carries nothing at all
+// A FACE CARRIES THINGS IF IT LOOKS AT ANYTHING AT ALL — at a desk, which is the worker's own
+// wall, or at the passage, which is mostly his too. CorpFurniture.panelPoster is the shared
+// predicate for the handful of passage faces the company takes for a poster instead; a face
+// looking at masonry or a fitting carries nothing, and neither does a pod's BACK panel, which
+// looks at a desk on both hands but has a monitor standing in front of each
   static function face(q:CorpFurniture.CorpPanel, b:MeshBuf):Int
     {
       var n = 0;
@@ -182,7 +205,11 @@ class CorpClutter
         return 0;
       for (side in 0...2)
         {
-          if (!CorpFurniture.podFace(q, side))
+          var pod = CorpFurniture.podFace(q, side);
+          if (!pod &&
+              !CorpFurniture.aisleFace(q, side))
+            continue;
+          if (CorpFurniture.panelPoster(q, side))
             continue;
           var g = FacilityModel.mix(q.seed ^ ((side + 1) * 1103515245));
           var want = g % (CorpStyle.PANEL_MAX + 1);
@@ -204,7 +231,16 @@ class CorpClutter
               // rail on top of the panel — see CorpStyle.PANEL_TOP_GAP
               var top = CorpStyle.PARTITION_H - CorpStyle.PARTITION_T - CorpStyle.PANEL_TOP_GAP -
                 sz * 0.5;
-              emitFace(b, q, at, (y < top ? y : top), sz, side, (h >>> 4) % CorpStyle.PANEL_CELLS);
+              if (y > top)
+                y = top;
+              // and the DESK is the bottom of it, on the face that has one: a 1.5 bench stands
+              // against the panel with 0.12 of air between them, so anything pinned lower than
+              // its top went behind it — reported as clutter going under the table
+              var bot = CorpStyle.DESK_H + CorpStyle.PANEL_BOT_GAP + sz * 0.5;
+              if (pod &&
+                  y < bot)
+                y = bot;
+              emitFace(b, q, at, y, sz, side, (h >>> 4) % CorpStyle.PANEL_CELLS);
               n++;
             }
         }

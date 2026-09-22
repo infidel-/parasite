@@ -43,6 +43,8 @@ typedef CorpPanel = {
   var seed: Int;      // the panel's own roll, off its cell and the hand it stands on
   var pod0: Bool;     // is the cell on the - hand a worker's desk? false means open floor
   var pod1: Bool;     // and the cell on the + hand
+  var aisle0: Bool;   // is the cell on the - hand floor somebody walks on? masonry says no
+  var aisle1: Bool;   // and the cell on the + hand
 }
 
 // what a cubicle panel is, apart from its rect: the run's axis and which of its two hands looks at
@@ -52,6 +54,8 @@ typedef PodHands = {
   var alongX: Bool;   // does the run follow x? false means it follows z
   var lo: Bool;       // the - hand (z0 for an x run, x0 for a z run): a desk, or open floor?
   var hi: Bool;       // and the + hand
+  var loOpen: Bool;   // and if it is not a desk, is it the PASSAGE rather than masonry or a fitting?
+  var hiOpen: Bool;
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -349,12 +353,16 @@ class CorpFurniture
             alongX: false,
             lo: false,
             hi: true,
+            loOpen: walkCell(m, col - 1, row),
+            hiOpen: false,
           });
       n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 },
         seed(col, row, 3), {
           alongX: false,
           lo: true,
           hi: podCell(m, col + 1, row),
+          loOpen: false,
+          hiOpen: walkCell(m, col + 1, row),
         });
       if (podCell(m, col, row + 1))
         n.partitions += podPanel(b, { x0: x0 + t, x1: x1 - t, z0: z1 - t, z1: z1 + t },
@@ -362,6 +370,8 @@ class CorpFurniture
             alongX: true,
             lo: true,
             hi: true,
+            loOpen: false,
+            hiOpen: false,
           });
     }
 
@@ -388,12 +398,43 @@ class CorpFurniture
       return (side == 0 ? p.pod0 : p.pod1);
     }
 
+// and the other half of the same question: does this face look at the PASSAGE?
+//
+// not the complement of `podFace` — the third answer is masonry or a fitting, which the block on
+// the edge of a farm has on its outer flank and which carries nothing at all
+  public static inline function aisleFace(p:CorpPanel, side:Int):Bool
+    {
+      return (side == 0 ? p.aisle0 : p.aisle1);
+    }
+
+// does this face carry the COMPANY'S poster rather than the worker's own pinned clutter?
+//
+// the one predicate both dressing passes split the passage side on, so neither can put its own
+// thing where the other already has: render.corp.CorpSigns hangs a poster where this is true and
+// render.corp.CorpClutter scatters where it is false. Every eligible face used to take one, which
+// is 50 posters in a farm and reads as a gallery — see CorpStyle.PANEL_POSTER_PCT
+  public static inline function panelPoster(p:CorpPanel, side:Int):Bool
+    {
+      return aisleFace(p, side) &&
+        FacilityModel.mix(p.seed ^ ((side + 1) * 374761393)) % 100 <
+          CorpStyle.PANEL_POSTER_PCT;
+    }
+
 // is this cell one worker's desk in a cubicle farm?
   static inline function podCell(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityModel.inside(m, col, row) &&
         m.table[row][col] &&
         m.surf[row][col] == Surf.CUBICLE;
+    }
+
+// is this cell floor somebody can walk on — the passage, rather than masonry or a fitting?
+  static inline function walkCell(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        !FacilityModel.isWall(m, col, row) &&
+        !m.table[row][col] &&
+        m.fit[row][col] == 0;
     }
 
 // one server cabinet: the equipment face toward the aisle, plain perforated steel everywhere else.
@@ -623,6 +664,8 @@ class CorpFurniture
         seed: key,
         pod0: h.lo,
         pod1: h.hi,
+        aisle0: h.loOpen,
+        aisle1: h.hiOpen,
       });
       return 1;
     }

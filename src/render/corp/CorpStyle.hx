@@ -337,17 +337,26 @@ class CorpStyle
   // 2.8 * 0.90 = 2.52 plus a half size of up to 0.45 is 2.97, a fifth of a unit ABOVE the panel,
   // straight over the aluminium trim capTrim pins to v 0.9643..1.0. PANEL_TOP_GAP is the clear air
   // left under that rail and the clamp in CorpClutter.face is what enforces it
+  //
+  // AND THE WORKTOP IS THE OTHER END OF IT. A face that looks at a desk has DESK_H 1.5 of bench
+  // across its bottom, so PANEL_LO 0.55 * 2.8 = 1.54 less a half size put the lower row BEHIND the
+  // desk — reported as clutter that "goes under the table". PANEL_BOT_GAP is the clear air left
+  // over the worktop, and the clamp only fires on a face that has a desk in front of it
   public static inline var PANEL_LO = 0.55;
   public static inline var PANEL_HI = 0.90;
   public static inline var PANEL_TOP_GAP = 0.05;
+  public static inline var PANEL_BOT_GAP = 0.05;
   // how far proud of the panel face a decal hangs, and how far in from the run's ends it keeps
   public static inline var PANEL_PROUD = 0.03;
   public static inline var PANEL_END = 0.35;
-  // and how big the PROPAGANDA POSTER on a panel is. WHICH faces carry one is not a roll any more
-  // and is not in this file: it is every face that looks at the passage rather than at a desk, i.e.
-  // render.corp.CorpFurniture.podFace. Drawn by render.corp.CorpSigns into the sheet it already
-  // owns, so it costs no draw call
+  // and how big the PROPAGANDA POSTER on a panel is, and how many of the faces that CAN carry one
+  // do. Only a face looking at the passage is eligible (render.corp.CorpFurniture.aisleFace) — the
+  // desk side is the worker's own wall — but "every eligible face" was overboard: 50 posters on 62
+  // faces turned the farm into a gallery. A passage wall is mostly the usual pinned clutter with
+  // the occasional poster on it, which is this roll. Drawn by render.corp.CorpSigns into the sheet
+  // it already owns, so it costs no draw call
   public static inline var PANEL_POSTER_MAX = 1.5;
+  public static inline var PANEL_POSTER_PCT = 12;
   // the clearance between two items, counted ONCE per pair
   public static inline var CLUTTER_GAP = 0.10;
 
