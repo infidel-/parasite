@@ -20,13 +20,26 @@ typedef CorpFit = {
   var desks: Int;       // worktop cells: open-plan and cubicle desks, exec desks, wall benches
   var counters: Int;    // kitchen counter cells
   var tables: Int;      // boardroom table cells
-  var partitions: Int;  // cubicle spine panels
+  var partitions: Int;  // cubicle panels, one per boundary between two pods
   var racks: Int;       // server cabinets
   var basins: Int;      // washroom vanity cells
   var stalls: Int;      // WC cubicle cells
   var mirrors: Int;     // mirror panels over the vanity
   var leds: Int;        // blinking status specks on the rack fronts
   var cables: Int;      // cable drapes between the cabinets of a rank
+}
+
+// ONE EMITTED CUBICLE PANEL, for the two passes that dress it.
+//
+// collected as it is drawn rather than re-derived, because the boundary arithmetic belongs in the
+// one file that owns it — render.corp.CorpClutter pins things to these and render.corp.CorpSigns
+// hangs the occasional poster
+typedef CorpPanel = {
+  var x0: Float;      // the panel's world rect, PARTITION_T thick across its short axis
+  var x1: Float;
+  var z0: Float;
+  var z1: Float;
+  var alongX: Bool;   // does the run follow x? false means it follows z
 }
 
 // every piece of corp furniture that is EMITTED GEOMETRY rather than a glb.
@@ -57,8 +70,12 @@ typedef CorpFit = {
 // distinction and nothing had to be persisted to carry it.
 class CorpFurniture
 {
-  // the furniture codes ShellOpts.fitOf deals into Facility.fit. 0 is nothing
-  public static inline var FIT_SPINE = 1;    // a cubicle partition spine
+  // the furniture codes ShellOpts.fitOf deals into Facility.fit. 0 is nothing.
+  //
+  // 1 WAS `FIT_SPINE`, a cubicle partition standing on a cell of its own, and both it and the cell
+  // are gone: gen.corp.CorpRooms.cubicle puts the two desk rows back to back and `divider` emits
+  // the panel on the boundary they share. The code is left unused rather than renumbered, because
+  // 2 and 3 are read out of grids that already exist
   public static inline var FIT_RACK = 2;     // a server cabinet
   public static inline var FIT_FIXTURE = 3;  // a washroom basin or WC cubicle
 
@@ -71,6 +88,9 @@ class CorpFurniture
   static var cables:MeshBuf;
   // and what the decoration pass emitted into them, read back by CorpArea for __corp()
   public static var deco(default, null):CorpDeco.CorpDecoSet;
+  // every cubicle panel this build emitted, for the two passes that dress it. REBUILT here rather
+  // than drained by its readers, because both of them want the whole list
+  public static var panels(default, null):Array<CorpPanel> = [];
 
 // emit every fitting on the floor plate
   public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):CorpFit
@@ -78,6 +98,7 @@ class CorpFurniture
       bufs = new Map();
       leds = MeshBufTools.make();
       cables = MeshBufTools.make();
+      panels = [];
       var n:CorpFit = {
         desks: 0,
         counters: 0,
@@ -102,10 +123,6 @@ class CorpFurniture
               }
             switch (m.fit[row][col])
               {
-                case FIT_SPINE:
-                  partition(m, col, row);
-                  n.partitions++;
-
                 case FIT_RACK:
                   rack(m, col, row);
                   n.racks++;
@@ -249,7 +266,7 @@ class CorpFurniture
         {
           ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
           if (s == Surf.CUBICLE)
-            divider(m, col, row);
+            divider(m, col, row, n);
           return;
         }
       FacilityGeom.cap(buf(top), r.x0, r.x1, r.z0, r.z1, h, tile);
@@ -278,52 +295,34 @@ class CorpFurniture
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
 
-// one cubicle spine: a thin fabric panel standing along the pod row's own axis.
+// THE PANELS ROUND ONE POD, and none of them costs a cell.
 //
-// the axis is read off the neighbours rather than off the room, because a spine is a three-cell run
-// laid by gen.corp.CorpRooms.cubicle and its two desks sit ACROSS it — so the panel has to stand
-// along the run, or every pod is divided the wrong way
-  static function partition(m:Facility, col:Int, row:Int):Void
-    {
-      var alongX = spine(m, col - 1, row) || spine(m, col + 1, row);
-      var r = rect(m, col, row, 0.0, never);
-      var t = CorpStyle.PARTITION_T / 2;
-      var cx = (r.x0 + r.x1) / 2;
-      var cz = (r.z0 + r.z1) / 2;
-      var p = alongX
-        ? { x0: r.x0, x1: r.x1, z0: cz - t, z1: cz + t }
-        : { x0: cx - t, x1: cx + t, z0: r.z0, z1: r.z1 };
-      // the trim rail on top is the panel art's own top edge seen end-on, so it takes the same
-      // sheet rather than a second one — 0.2 of a unit of it, which is what a cap this thin shows
-      panel(buf(CorpStyle.PARTITION), p, 0, CorpStyle.PARTITION_H);
-      ContactMask.prop(p.x0, p.x1, p.z0, p.z1);
-    }
-
-// AND THE DIVIDER BETWEEN TWO NEIGHBOURS IN ONE POD BLOCK, which has no cell of its own.
+// a cubicle desk is walled on THREE hands — its back, shared with the worker sitting the other way
+// in the same block, and both sides, shared with the neighbours beside him. The fourth is the one
+// his chair is on, which render.corp.CorpProps.backHand derives from the same grid by taking the
+// first hand that is not clear floor: the two agree by construction and neither has to be told.
 //
-// the spine above is a run of cells the generator writes, and it separates the two rows of a block
-// from each other — it does nothing for the two people sitting SIDE BY SIDE in one row, who shared
-// an unbroken worktop with no panel anywhere along it. A grid column per divider would double the
-// farm's footprint, so this is emitted on the BOUNDARY between two adjacent cubicle desk cells
-// instead: only on the + hands, so each boundary is drawn exactly once, and only inside a block,
-// because a passage column has no table cell on its far side
-  static function divider(m:Facility, col:Int, row:Int):Void
+// THE BACK USED TO BE A SPINE ON A CELL OF ITS OWN and the sides were emitted only BETWEEN two
+// pods, so the outermost desk of every block had open flanks and the two rows were four units
+// apart with a tenth of a unit of panel floating in the middle of the gap. Every boundary a pod
+// owns is panelled now, drawn exactly once: the + hands always, the - x hand only where the
+// neighbour is not itself a pod (an interior boundary is its neighbour's + hand)
+  static function divider(m:Facility, col:Int, row:Int, n:CorpFit):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var t = CorpStyle.PARTITION_T / 2;
       var b = buf(CorpStyle.PARTITION);
-      if (podCell(m, col + 1, row))
-        {
-          var xb = (col + 1) * CELL - half;
-          panel(b, { x0: xb - t, x1: xb + t, z0: row * CELL - half,
-            z1: (row + 1) * CELL - half }, 0, CorpStyle.PARTITION_H);
-        }
+      var x0 = col * CELL - half;
+      var x1 = (col + 1) * CELL - half;
+      var z0 = row * CELL - half;
+      var z1 = (row + 1) * CELL - half;
+      // the two side panels, and the back, which is the + z hand for the row facing - z and the
+      // neighbour's own + z hand for the row facing + z
+      if (!podCell(m, col - 1, row))
+        n.partitions += podPanel(b, { x0: x0 - t, x1: x0 + t, z0: z0, z1: z1 }, false);
+      n.partitions += podPanel(b, { x0: x1 - t, x1: x1 + t, z0: z0, z1: z1 }, false);
       if (podCell(m, col, row + 1))
-        {
-          var zb = (row + 1) * CELL - half;
-          panel(b, { x0: col * CELL - half, x1: (col + 1) * CELL - half,
-            z0: zb - t, z1: zb + t }, 0, CorpStyle.PARTITION_H);
-        }
+        n.partitions += podPanel(b, { x0: x0, x1: x1, z0: z1 - t, z1: z1 + t }, true);
     }
 
 // is this cell one worker's desk in a cubicle farm?
@@ -332,11 +331,6 @@ class CorpFurniture
       return FacilityModel.inside(m, col, row) &&
         m.table[row][col] &&
         m.surf[row][col] == Surf.CUBICLE;
-    }
-
-  public static inline function spine(m:Facility, col:Int, row:Int):Bool
-    {
-      return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_SPINE;
     }
 
 // one server cabinet: the equipment face toward the aisle, plain perforated steel everywhere else.
@@ -547,6 +541,52 @@ class CorpFurniture
       FacilityGeom.cap(b, p.x0, p.x1, p.z0, p.z1, y1, CorpStyle.PARTITION_TILE);
     }
 
+// one cubicle panel, standing on a boundary between two cells: four faces, the trim rail on top,
+// its footprint in the contact field and its rect in the list the dressing passes read. returns 1,
+// so a caller can count panels by summing
+  static function podPanel(b:MeshBuf, p:Rect, alongX:Bool):Int
+    {
+      for (dir in 0...4)
+        FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, 0, CorpStyle.PARTITION_H,
+          CorpStyle.PARTITION_TILE);
+      capTrim(b, p, CorpStyle.PARTITION_H, alongX);
+      ContactMask.prop(p.x0, p.x1, p.z0, p.z1);
+      panels.push({
+        x0: p.x0,
+        x1: p.x1,
+        z0: p.z0,
+        z1: p.z1,
+        alongX: alongX,
+      });
+      return 1;
+    }
+
+// THE PANEL'S LID, which FacilityGeom.cap cannot draw and was drawing anyway.
+//
+// `cap` is world-aligned on BOTH axes (u = x / t, v = z / t), which is right for a floor and wrong
+// for a 0.1-thick rail: the top came out wearing a 0.036-wide slice of the panel's own ELEVATION,
+// taken at whatever world z the run happened to sit at. Probed in the game at u 8.571..10.0,
+// v -44.964..-45.036 — an elevation lying down, the fault art/textures.json records the washroom
+// counter's lid hitting from the other end.
+//
+// corp/partition is drawn with "a slim darker aluminium trim strip along the very TOP edge only",
+// so the strip the lid wants is already on the sheet. u follows the RUN and world-tiles as the
+// faces do; v is pinned to that top band, as deep in texels as the panel is thick in world. No
+// second texture and no second buffer, which is what the counter's lid had to buy
+  static function capTrim(b:MeshBuf, p:Rect, y:Float, alongX:Bool):Void
+    {
+      var t = CorpStyle.PARTITION_TILE;
+      // flipY puts the image's own TOP edge at v = 1
+      var v0 = 1 - CorpStyle.PARTITION_T / t;
+      var u0 = (alongX ? p.x0 : p.z0) / t;
+      var u1 = (alongX ? p.x1 : p.z1) / t;
+      // cap's winding, so the face looks UP; the uv of vertex i is the pair at 2i
+      MeshBufTools.quad(b, [p.x0, y, p.z1], [p.x1, y, p.z1], [p.x1, y, p.z0], [p.x0, y, p.z0],
+        alongX ?
+          [u0, v0, u1, v0, u1, 1.0, u0, 1.0] :
+          [u1, v0, u1, 1.0, u0, 1.0, u0, v0]);
+    }
+
 // the slice of a rect `d` thick along one of its hands — the panel that closes that side
   static function side(r:Rect, dir:Int, d:Float):Rect
     {
@@ -629,6 +669,15 @@ class CorpFurniture
 // no neighbour at all, so only a real table block answers true
   public static function slabTop(m:Facility, col:Int, row:Int):Bool
     {
+      // A DESK IS NEVER A SLAB, WHATEVER ITS SHAPE, and the two-dimensional test below used to
+      // take the shape as proof on its own. The cubicle farm's two rows are BACK TO BACK now, so
+      // every pod has a table neighbour in both axes and a whole block came out as one boardroom
+      // slab — fascia, blade legs, and no partitions on it at all, because `worktop`'s desk branch
+      // is also what calls `divider`. Seen in the game as four bare tables with monitors on them
+      var s = m.surf[row][col];
+      if (s == Surf.OPEN ||
+          s == Surf.CUBICLE)
+        return false;
       var x = tableAt(m, col - 1, row) || tableAt(m, col + 1, row);
       var z = tableAt(m, col, row - 1) || tableAt(m, col, row + 1);
       if (x && z)
@@ -639,7 +688,6 @@ class CorpFurniture
       // full-height sides, no leg, and a 2 m x 0.75 m solid block of table-side art where a
       // boardroom table should be. A DESK run (OPEN/CUBICLE, which stand their own glb per cell)
       // and a COUNTER or VANITY run (a plinthed carcass, correctly a box) are not tables
-      var s = m.surf[row][col];
       if (s != Surf.MEETING &&
           s != Surf.CARPET &&
           s != Surf.EXEC)

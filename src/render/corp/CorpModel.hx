@@ -77,16 +77,19 @@ class CorpModel
 // A RACK ROW NEVER TOUCHES THE ROOM'S EDGE COLUMN, so a rack that does is not one.
 //
 // gen.corp.CorpRooms.decorateWalls dresses a room's two long walls by writing the ROOM'S OWN
-// unwalkable floor twin and standing a decoration on it — and in the server room and the cubicle
-// farm that twin is the very id fitOf reads as a rack and as a partition spine (one tile is the
-// floor, the surface AND the fitting, which is the whole trick and also this trap). So a corner
-// of the server room came out as an isolated cabinet with a 2D machinery sprite inside it and a
-// lid over nothing, reported from the game as "this server in the corner is unnecessary".
+// unwalkable floor twin and standing a decoration on it — and in the server room that twin is the
+// very id fitOf reads as a rack (one tile is the floor, the surface AND the fitting, which is the
+// whole trick and also this trap). So a corner of the server room came out as an isolated cabinet
+// with a 2D machinery sprite inside it and a lid over nothing, reported from the game as "this
+// server in the corner is unnecessary".
 //
-// THE SHAPE SAYS WHICH IS WHICH: `servers` runs its rack rows over x1+1...x2-1 and `cubicle` its
-// spines inside the room likewise, where decorateWalls writes at x1 and x2 exactly. So a fitting
-// standing in an edge COLUMN was put there by the wall dressing, and what it really is, is the
-// decoration on the same cell — which render.corp.CorpDeco already draws.
+// THE SHAPE SAYS WHICH IS WHICH: `servers` runs its rack rows over x1+1...x2-1, where
+// decorateWalls writes at x1 and x2 exactly. So a fitting standing in an edge COLUMN was put there
+// by the wall dressing, and what it really is, is the decoration on the same cell — which
+// render.corp.CorpDeco already draws.
+//
+// THE CUBICLE FARM USED TO BE THE OTHER HALF OF THIS and no longer has a dog in it: its partitions
+// take no cell and it dresses no wall.
 //
 // Here and not in the generator so it reaches every corp save that exists. The washroom is left
 // alone: `toilet` lays its basin run along the y1 ROW and its stalls along y2, both of which run
@@ -100,8 +103,7 @@ class CorpModel
             {
               if (!FacilityModel.inside(m, col, row))
                 continue;
-              if (m.fit[row][col] == CorpFurniture.FIT_RACK ||
-                  m.fit[row][col] == CorpFurniture.FIT_SPINE)
+              if (m.fit[row][col] == CorpFurniture.FIT_RACK)
                 m.fit[row][col] = 0;
             }
     }
@@ -360,8 +362,10 @@ class CorpModel
 // them; what separates a desk from a kitchen counter is the room's Surf and not the tile
   public static function fitOf(t:Int):Int
     {
-      if (t == Const.TILE_FLOOR_CUBICLE + 16)
-        return CorpFurniture.FIT_SPINE;
+      // TILE_FLOOR_CUBICLE's own twin answers NOTHING. It used to answer a partition spine, and a
+      // cubicle farm has none: the panels stand on cell BOUNDARIES now. The id is still written —
+      // `solo` dresses its corners with it — and a corner is a cell with a decoration on it, which
+      // is exactly what a fitting of 0 leaves CorpDeco to draw
       if (t == Const.TILE_FLOOR_SERVER + 16)
         return CorpFurniture.FIT_RACK;
       if (t == Const.TILE_FLOOR_MARBLE2 + 16)
@@ -419,8 +423,10 @@ class CorpModel
       // (a WC cubicle), which is the contiguity test CorpFurniture runs
       for (i in 0...bands.length)
         m.table[5][2 + i * 2] = true;
-      for (col in 6...9)
-        m.fit[7][col] = CorpFurniture.FIT_SPINE;
+      // and a SECOND cubicle worktop under the first, so the pair is back to back: `divider`
+      // emits a panel on every boundary a pod owns, and only an adjacent twin exercises the BACK
+      // one. The cubicle band is column 4 — bands[1] at 2 + 1 * 2
+      m.table[6][4] = true;
       m.fit[3][12] = CorpFurniture.FIT_RACK;
       m.fit[3][13] = CorpFurniture.FIT_RACK;
       m.fit[8][15] = CorpFurniture.FIT_FIXTURE;

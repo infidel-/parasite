@@ -170,12 +170,14 @@ class CorpStyle
   public static inline var COUNTER_H = 1.8;
   public static inline var TABLE_H = 1.5;
   public static inline var VANITY_H = 1.7;
-  // the cubicle spine. 1.4 m is a real low-wall partition: over a seated head and under a standing
+  // the cubicle panel. 1.4 m is a real low-wall partition: over a seated head and under a standing
   // one, which is the whole point of the thing
   public static inline var PARTITION_H = 2.8;
-  // 10 cm of panel. HALVED from 0.4, which was 20 cm of fabric-faced board and read as a stud
-  // wall; the panel is emitted +-T/2 about the cell centreline, so nothing else moves with it
-  public static inline var PARTITION_T = 0.2;
+  // 5 cm of panel, HALVED TWICE: 0.4 was 20 cm of fabric-faced board and read as a stud wall, and
+  // 0.2 still read as one now that the panel sits ON a desk boundary with a worktop either side
+  // of it instead of floating in a cell of its own. emitted +-T/2 about the boundary, so nothing
+  // else moves with it
+  public static inline var PARTITION_T = 0.1;
   // a WC cubicle's own divider, 1.9 m, and a 15 cm panel
   public static inline var STALL_H = 3.8;
   public static inline var STALL_T = 0.3;
