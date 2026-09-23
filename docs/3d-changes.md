@@ -2117,3 +2117,20 @@ sides (corp/archive-board 0.1062) and the paper top on 0.3579 against the ream's
 gpt-image-2.5-sunburst, parity tier, $0.0563, one roll.
 
 Verdict: **LANDED. +1 call for the whole room's lids.**
+
+## corp: util-clutter redone FLAT — the counter sheet had cups, jugs and bottles drawn from above
+
+Reported off a pick in the archive: "util-clutter has way too much stuff that looks bad because it's
+3d". It was the PACK64 cut-out failure docs/3d-textures.md already records against corp/desk-clutter,
+at sheet scale: a kettle, a cafetiere, carafes, glasses, jugs, bottles, dispensers, jars and a potted
+plant, every one a round or upright silhouette drawn as a top-down cut-out, which cannot give a thing
+a side. Re-rolled whole with only things that lie flat (cloths, sheets, cutlery, boards, thin devices)
+and the forbidden kinds NAMED in the prompt; old source at `unused/corp-util-clutter-3d.png`.
+
+**The first roll would not pack**: row 8's keyboard ran past x=512 and `pack16.py` found no empty
+column anywhere in its ±51 px window (thinnest 59 opaque px). A "small square numeric keypad", and
+the long things told to shrink, packed at tol 0 — seams x 121/253/387/513/636/766/898, y 131/246/389/
+509/638/761/887, scale 0.9412. `cells` cap 0.1 took 52 of 64 cells down, as it did the old sheet.
+The six PROMOTED indices (`CLUTTER_PROP_OF`) stand their glbs whatever is drawn there, unchanged.
+
+Two rolls, $0.1157. Verdict: **LANDED** — on a boardroom slab every item reads as lying on it.
