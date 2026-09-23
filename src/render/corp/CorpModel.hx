@@ -330,8 +330,15 @@ class CorpModel
       if (t == Const.TILE_FLOOR_MARBLE2 ||
           t == Const.TILE_FLOOR_MARBLE2 + 16)
         return WASHROOM;
+      // AND THE ARCHIVE ANSWERS THE SERVER ROOM'S OWN SURFACE, which is the whole economy of its
+      // floor id: no new Surf means no row in ShellTex's `floor` or `wallInto`, no new label, no
+      // new material and no new draw call. The two rooms are told apart by their FITTINGS -- see
+      // `fitOf` -- and not by their finish, because a records room and a computer room really do
+      // both stand on sealed concrete
       if (t == Const.TILE_FLOOR_SERVER ||
-          t == Const.TILE_FLOOR_SERVER + 16)
+          t == Const.TILE_FLOOR_SERVER + 16 ||
+          t == Const.TILE_FLOOR_ARCHIVE ||
+          t == Const.TILE_FLOOR_ARCHIVE + 16)
         return SERVER;
       if (t == Const.TILE_FLOOR_CONCRETE ||
           t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE ||

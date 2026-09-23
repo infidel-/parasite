@@ -332,6 +332,7 @@ class GenRun
       // and the per-CELL question, which is a different one — see GenCheck.floorReachable
       check.floorReachable(ctx, state.rooms);
       check.receptionSane(ctx, state.rooms);
+      check.archiveSane(ctx, state.rooms);
 
       // how much of the walkable grid the lift flood actually covered, and WHERE it stopped. a
       // tower floor is entered at one cell, so a carve that leaves half the plate behind a wall is

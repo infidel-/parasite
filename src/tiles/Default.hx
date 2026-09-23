@@ -52,7 +52,13 @@ class Default extends Tileset
     // `bigFloorID` at smallChance 20) stood on floor you walk straight through, and rendered as
     // nothing besides. It is why room-meeting measured BOTH the emptiest kind at 16.1% fill and
     // the only one with a 0.0% furniture-pocket rate
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    //
+    // AND INDEX 15 WAS A 1 FOR THE SAME REASON, found before it could do the same damage: it is
+    // Const.TILE_FLOOR_ARCHIVE + 16, the records room's fitting cell, and left at the inherited
+    // value every file cabinet and bookcase in an archive would have been floor you walk straight
+    // through — with gen.GenCheck's reachability and pocket oracles both passing, because to them
+    // a walkable cell is not a fault
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 14-16 - table
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -101,26 +107,30 @@ class Default extends Tileset
 
 // map tile id to icon coordinates.
 //
-// SEVEN ALIASES, and the reason none of them needed art: a mark that exists so CODE can tell two
+// NINE ALIASES, and the reason none of them needed art: a mark that exists so CODE can tell two
 // surfaces apart still has to LOOK like the surface it marks. The car park's three are asphalt drawn
 // from the alley's own cell — the lot you drive into against the yard you do not, and where a car is
 // standing (Const.TILE_PARKING, TILE_PARKING_CAR). The corp office's four are the same idea indoors:
 // a cubicle farm is carpet and a server room is concrete to look at, and the id is what tells them
-// from the corridor and the lift lobby they share those floors with
+// from the corridor and the lift lobby they share those floors with. The ARCHIVE is a THIRD of them
+// and is concrete like the server room it was split off, because what its own id buys is not a look
+// but an unwalkable TWIN of its own -- see Const.TILE_FLOOR_ARCHIVE
   public override function getIcon(tileID: Int): _Icon
     {
       if (tileID == Const.TILE_PARKING ||
           tileID == Const.TILE_PARKING_CAR ||
           tileID == Const.TILE_PARKING_CAR_ORIGIN)
         return super.getIcon(Const.TILE_ALLEY);
-      // and the corp office's two role-only floors, which are carpet and concrete to look at
+      // and the corp office's three role-only floors, which are carpet and concrete to look at
       if (tileID == Const.TILE_FLOOR_CUBICLE)
         return super.getIcon(Const.TILE_FLOOR_CARPET);
-      if (tileID == Const.TILE_FLOOR_SERVER)
+      if (tileID == Const.TILE_FLOOR_SERVER ||
+          tileID == Const.TILE_FLOOR_ARCHIVE)
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       if (tileID == Const.TILE_FLOOR_CUBICLE + 16)
         return super.getIcon(Const.TILE_FLOOR_CARPET + 16);
-      if (tileID == Const.TILE_FLOOR_SERVER + 16)
+      if (tileID == Const.TILE_FLOOR_SERVER + 16 ||
+          tileID == Const.TILE_FLOOR_ARCHIVE + 16)
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       return super.getIcon(tileID);
     }

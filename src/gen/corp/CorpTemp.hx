@@ -54,10 +54,16 @@ class CorpTemp
   public static inline var MARBLE1 = 37;
   public static inline var MARBLE2 = 38;
   public static inline var CARPET_MEETING = 39;
-  // the two floors the block tree added. MARBLE2 was already in the alphabet and in the map below
-  // and no room had ever laid it, so the washroom took it and only these two are new
+  // the three floors the block tree added. MARBLE2 was already in the alphabet and in the map below
+  // and no room had ever laid it, so the washroom took it and only these three are new.
+  //
+  // ARCHIVE IS CONCRETE TO LOOK AT AND ANSWERS SERVER'S OWN Surf, so it costs no texture, no
+  // material and no draw call. What it is FOR is its unwalkable twin: render.corp.CorpModel.fitOf
+  // reads the twin to decide which fitting stands on a cell, so an archive dressed off SERVER's
+  // twin built SERVER RACKS -- blinking LEDs, cable drapes and all -- in a room full of paper
   public static inline var CUBICLE = 40;
   public static inline var SERVER = 41;
+  public static inline var ARCHIVE = 42;
 
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var BLDG_ROOM_ID_START = 100;
@@ -120,6 +126,7 @@ class CorpTemp
     MARBLE2 => Const.TILE_FLOOR_MARBLE2,
     CUBICLE => Const.TILE_FLOOR_CUBICLE,
     SERVER => Const.TILE_FLOOR_SERVER,
+    ARCHIVE => Const.TILE_FLOOR_ARCHIVE,
     BLDG_WALL => Const.TILE_BUILDING,
     BLDG_ROOM => Const.TILE_FLOOR_CARPET,
     BLDG_CORRIDOR => Const.TILE_FLOOR_CARPET,

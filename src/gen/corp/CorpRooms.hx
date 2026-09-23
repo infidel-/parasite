@@ -817,7 +817,7 @@ class CorpRooms
 // always with one DEALT gap in each row — see the gap note inside. shared by the server room, the
 // archive and the security room, which are the same rank with three different cabinet frames
   static function rackRows(state: _CorpState, node: _GenNode, room: _Room, tile: Int,
-      deco: _TileGroup, chance: Int, maxRows: Int, pitch: Int)
+      deco: _TileGroup, chance: Int, maxRows: Int, pitch: Int, clearDoors: Bool = false)
     {
       var area = state.area;
       var cells = area.getCells();
@@ -837,13 +837,42 @@ class CorpRooms
           // placed off the row index so consecutive ranks stagger rather than line up
           var span = room.x2 - room.x1 - 1;
           var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
+          // AND A ROW THAT ROLLS ITSELF EMPTY IS NOT A ROW. The gap is dealt so a rank can never
+          // seal the floor; this is the same rule from the other end, because nothing stops the
+          // `chance` roll taking every survivor. At the dealt minimum of 4 on both axes there is
+          // exactly ONE rank and it has two or three eligible cells, so at `chance` 25 a 6x4 room
+          // comes out bare 1.6% of the time and a 7x4 one 0.4% — measured as 3 archives in 600
+          // seeds holding nothing at all (gen.GenCheck.archiveSane, which is what found it).
+          //
+          // `first` is the fallback and it is DETERMINISTIC: the row's leftmost eligible cell, so
+          // the same seed still builds the same floor
+          var first = -1;
+          var laid = 0;
           for (x in room.x1 + 1...room.x2)
             {
-              if (x == gap ||
-                  area.chance(chance))
+              if (x == gap)
+                continue;
+              // A DOORWAY MAY NOT OPEN FLAT INTO A RANK, for `clearDoors`. The row spans the
+              // INTERIOR (x1+1 .. x2-1) so it can never overwrite a door cell itself — but a door
+              // in a side wall opens onto (x1, ry), and the cell beyond that is this rank's end.
+              // `CorpConnect.openPockets` would carve it back out and a repair is not a placement
+              // rule, which is the note `pods` carries one template over
+              if (clearDoors &&
+                  atDoor(cells, x, ry))
+                continue;
+              if (first < 0)
+                first = x;
+              if (area.chance(chance))
                 continue;
               cells[x][ry] = tile;
               addDecoration(state, x, ry, deco);
+              laid++;
+            }
+          if (laid == 0 &&
+              first >= 0)
+            {
+              cells[first][ry] = tile;
+              addDecoration(state, first, ry, deco);
             }
         }
     }
@@ -1076,13 +1105,24 @@ class CorpRooms
         70, 50);
     }
 
-// an archive: the server room's rank-and-aisle with paper in it instead of machines
+// an archive: the server room's rank-and-aisle with PAPER in it instead of machines, which is what
+// it always said it was and, until this floor id existed, never once drew.
+//
+// IT USED TO BE A SERVER ROOM AND NOT BY RESEMBLANCE -- IDENTICALLY. It laid TILE_FLOOR_SERVER's own
+// unwalkable twin, and render.corp.CorpModel.fitOf reads that twin as FIT_RACK, so every rank in
+// here built a steel server cabinet with a blinking LED field and a cable drape over its lid. Its
+// own CORP_CABINET decorations drew NOTHING, because render.corp.CorpDeco.casework skips any cell
+// that already carries a fitting. Two rooms, one id, one look. So the archive has a floor id of its
+// own now (Const.TILE_FLOOR_ARCHIVE) -- concrete to look at and Surf.SERVER to the shell, so it
+// costs no texture and no draw call, and the whole of what it buys is a twin that means SHELVING.
   public static function archive(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
-      var shelf = Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET;
-      rackRows(state, node, room, shelf, Const.CORP_CABINET, 25, RACK_ROWS_MAX, RACK_PITCH);
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, ARCHIVE);
+      var shelf = Const.TILE_FLOOR_ARCHIVE + UNWALKABLE_TILE_OFFSET;
+      // `clearDoors` AND THE SERVER ROOM DOES NOT PASS IT: a rank of file cabinets across a 4-wide
+      // room is two cells, and a doorway opening flat onto one of them is the whole room's way in
+      rackRows(state, node, room, shelf, Const.CORP_CABINET, 25, RACK_ROWS_MAX, RACK_PITCH, true);
 
       decorateWalls(state, room, [
           Const.CORP_TABLE_FILES,

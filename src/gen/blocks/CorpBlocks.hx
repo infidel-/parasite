@@ -271,11 +271,21 @@ class CorpBlocks
           fit: smallest,
         },
         {
+          // 5 AND NOT 4 ON EITHER AXIS, which is a number the oracle set. A rank spans the interior
+          // x1+1 .. x2-1 with one DEALT gap in it, so at w 4 a rank is ONE cell and at w 5 it is
+          // two; and the rows sit at RACK_PITCH 2 from y1+1 and stop at y2-1, so h 4 buys one rank
+          // and h 5 buys two. At 4 on either axis the whole room is therefore one or two fittings
+          // -- and gen.corp.CorpConnect.openPockets may legitimately erode every one of them to
+          // un-seal the strip a full-width rank leaves against the wall, which shipped archives
+          // holding NOTHING: 4 seeds in 600, every one of them 4 on an axis (gen.GenCheck
+          // .archiveSane). At 5x5 a room has two ranks of two and the repair has something to
+          // spend. The cost is that the filler takes the rooms this no longer fits, which is what
+          // the filler is for
           kind: ROOM_ARCHIVE,
           min: 0,
           max: 2,
-          minW: 4,
-          minH: 4,
+          minW: 5,
+          minH: 5,
           fit: smallest,
         },
         // OPEN PLAN IS NOW A DEALT KIND WITH A CAP, not the leftover bucket. An open-plan floor is

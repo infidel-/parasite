@@ -1159,6 +1159,12 @@ class Const
   // with — one shared floor id cannot say that, and the floor is where a corp room's role lives
   public static var TILE_FLOOR_CUBICLE = OFFSET_ROW12 + 13;
   public static var TILE_FLOOR_SERVER = OFFSET_ROW12 + 14;
+  // and the THIRD, which is the archive's. It is concrete to look at exactly like the server room
+  // and even answers the same Surf — what it buys is its UNWALKABLE TWIN, because the twin is what
+  // render.corp.CorpModel.fitOf reads to decide which fitting stands on a cell, and a records room
+  // dressed off TILE_FLOOR_SERVER + 16 built SERVER RACKS: steel cabinets with blinking LEDs and
+  // cable drapes over their lids. This is the LAST free slot in row 12
+  public static var TILE_FLOOR_ARCHIVE = OFFSET_ROW12 + 15;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

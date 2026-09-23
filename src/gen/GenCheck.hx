@@ -409,6 +409,46 @@ class GenCheck
         }
     }
 
+// AN ARCHIVE IS NOT A BARE FLOOR.
+//
+// The room whose whole point is its RANKS, and the one most able to roll itself empty: a rank is the
+// interior cells x1+1 .. x2-1 minus one DEALT gap, `gen.corp.CorpRooms.rackRows` then skips each
+// survivor at `chance` 25, and none of that is a fault the other oracles can see -- an empty room is
+// perfectly reachable and seals no pocket, so `floorReachable` passes it. Reported from area 2067,
+// whose archive held ONE cabinet.
+//
+// IT COUNTS ANY DRESSING AND NOT THE RANK, AND THAT IS NOT A WEAKER TEST BY CHOICE -- THE RANK IS
+// NOT ASSERTABLE. gen.corp.CorpConnect.openPockets erodes an unwalkable cell (and the decoration
+// standing on it) to reach a walkable cell the lift flood lost, and it is RIGHT to outrank a
+// dressing: an unreachable room is worse than an undressed one. So a rank can be taken away after
+// it is laid, and no placement rule in the template can promise otherwise -- the repo's own note is
+// that a repair is not a placement rule, and this is that sentence from the other side. Two things
+// were done about it rather than asserted: `rackRows` now guarantees ONE occupant per rank (a row
+// that rolls itself empty is not a row) and the demand went to 5x5, which took the measured
+// residual from 4 bare archives in 600 seeds to 2 in 3000 -- and both survivors are the repair
+// working, not the template failing.
+//
+// What IS invariant is that the room was dressed at all: `decorateWalls` takes a CORNER
+// unconditionally (`hasLeft || isCorner`), so every archive carries at least one cell of casework
+// whatever every roll in it says, on the rank twin or on the small-table id it deals beside it
+  public function archiveSane(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      var shelf = Const.TILE_FLOOR_ARCHIVE + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET;
+      for (r in rooms)
+        {
+          if (r.role != gen.corp.CorpTemp.ROLE_ARCHIVE)
+            continue;
+          var n = 0;
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              if (ctx.cells[x][y] == shelf ||
+                  ctx.cells[x][y] == Const.TILE_DARK_TABLE_WOOD2_1X1)
+                n++;
+          ok(n > 0, 'corp archive at ' + r.x1 + ',' + r.y1 + ' (' + r.w + 'x' + r.h +
+            ') is a bare floor: no casework on any cell');
+        }
+    }
+
 // how far the reception's centre may be from the lift car, in cells. MEASURED over 200 seeds with
 // the assert forced: worst 28, and the plate's own diagonal is 88 — so this is a real bound and
 // not a formality, and it is the `fit` preference in CorpBlocks that holds it
