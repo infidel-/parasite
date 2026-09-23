@@ -466,6 +466,13 @@ class CorpStyle
   // and the shortest boardroom wall that earns one. under this the room takes a chart instead
   public static inline var SCREEN_RUN_MIN = 4;
 
+  // the THIRD sheet, and the first 4x4 one: sixteen cells of the paperwork, fire plates,
+  // evacuation diagrams and department markers a real floor is signed with — CorpSigns.SHEETS
+  // holds it beside the other two and CorpSigns.ASPECT all twenty-four aspects. A third atlas is
+  // a third material and a third draw call, but NOT a third program: the three share one
+  // MeshLambertMaterial shape, so CorpWarm needs nothing for it
+  public static inline var SIGN2_TEX = 'textures/corp/signs2.png';
+
   // ---- the lighting rig ----------------------------------------------------------------------
   //
   // THE PLATE HAD NO LIGHT SOURCE AT ALL until this: CorpArea handed render.particles.LampLights an

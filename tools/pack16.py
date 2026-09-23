@@ -141,6 +141,9 @@ def main():
                     help="bottom for a sprite on a ground line, center for a top-down object")
     ap.add_argument("--shadow", type=float, default=0.0,
                     help="peak alpha of a baked contact ellipse under each group (0 = none)")
+    ap.add_argument("--fill", action="store_true",
+                    help="stretch each group to fill its whole cell and print its aspect, for a "
+                         "family whose quad is sized from the art (see --fill in main())")
     a = ap.parse_args()
     out = a.out or os.path.splitext(a.src)[0] + "-grid.png"
 
@@ -164,6 +167,31 @@ def main():
             if b is None:
                 sys.exit(f"pack16: cell ({c},{r}) is empty — the sheet is short a group")
             boxes.append((b[0] + xs[c], b[1] + ys[r], b[2] + xs[c], b[3] + ys[r]))
+
+    # --fill: EACH GROUP FILLS ITS OWN CELL and its measured aspect goes to the runtime instead.
+    # the one-scale-for-the-sheet rule above is for a family drawn at a common ground line, where a
+    # bigger object has to stay bigger; a WALL PANEL is sized by its own longest edge against a
+    # single constant (render.corp.CorpSigns.quad off CorpStyle.SIGN_MAX), so the sheet wants every
+    # texel spent on art and the aspect carried in code -- which is also what keeps the uv a plain
+    # grid division. Same pass tools/posterpack.py runs for the 2x2 sheets
+    if a.fill:
+        sheet = Image.new("RGB", (a.cols * a.cell, a.rows * a.cell))
+        for i, b in enumerate(boxes):
+            g = np.asarray(im.crop(b).resize((a.cell, a.cell), Image.LANCZOS)).astype(float)
+            # AND THE CELL IS FLATTENED OVER ITS OWN MEDIAN, not saved with its alpha: the sheet
+            # goes on a wall through a plain opaque material, so a transparent pixel draws as the
+            # BLACK under it. Only a panel the model drew a degree or two off square has any --
+            # 5% of a cell on this drop, all of it in the corners -- and the panel's own median is
+            # the colour that corner would have been if it had been drawn straight
+            al = (g[:, :, 3:4] / 255.0)
+            med = np.median(g[:, :, :3][al[:, :, 0] > 0.9], axis=0)
+            rgb = g[:, :, :3] * al + med * (1.0 - al)
+            sheet.paste(Image.fromarray(rgb.astype(np.uint8), "RGB"),
+                        ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
+        sheet.save(out)
+        print("  aspects " + ", ".join("%.4f" % ((b[2] - b[0]) / (b[3] - b[1])) for b in boxes))
+        print(f"  wrote  {out}  {sheet.width}x{sheet.height}  (filled)")
+        return
 
     # ONE scale for the sheet: the tallest/widest group just clears the margin
     fit = a.cell - 2 * a.margin

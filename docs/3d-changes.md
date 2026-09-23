@@ -1952,3 +1952,49 @@ and the load grew with the bays — 232 board tris + 106 paper = **4 sealed cart
 9 bare reams over 11 levels of 5 units**, against 6 + 4 when only the two lid families existed.
 
 Verdict: **LANDED.**
+
+## corp: a third sign sheet, and the slot space was two literals pretending to be a table
+
+`CorpSigns` carried its two atlases as hand-written 2x2 arithmetic: `slot < 4` chose the buffer and
+`q = i & 3` with four `0.5`s chose the quadrant, against an 8-long `ASPECT` table. A 4x4 sheet does
+not fit that at all, so the generalisation came first: a `SHEETS` table of `{tex, cols, cells}`, one
+buffer per sheet, cumulative bases WALKED in `sheetOf` rather than stored (three entries, and a base
+table kept in step by hand is a second place to get it wrong), and the uv shape the repo already uses
+at `FacilityClutter.emit`:
+
+    u0 = (q % cols) / cols          v0 = 1 - (int(q / cols) + 1) * cols / cells
+
+Checked against the old eight by hand (slot 1 -> u0 0.5 / v0 0.5, slot 2 -> 0 / 0, slot 7 -> 0.5 / 0,
+all identical) and on screen at both corners of the new grid: slot 9 draws the ARCHIVE name plate,
+slot 23 the LEVEL 4 amber band. A fourth sheet is now one row.
+
+**The sheet.** `corp/signs2`, one 1024 gen at the parity tier, 16 cells at 256 px = **122 texels per
+world unit** at `SIGN_MAX` 2.1, against `corp/floor-tile`'s 73. `background:"transparent"` cut it
+cleanly — 47.3% of the drop transparent, all six corridors empty at `tol 0`, seams at x 251/502/743
+and y 255/500/733 against a nominal 256/512/768 — which is again the reward for naming the VIEW
+("straight on in flat elevation") and never a surface. **Text was named verbatim and asked for LARGE
+up front**, which is `corp/posters`' sixth-defect lesson applied before the money rather than after:
+the old signs sheet said "no readable characters" three times and shipped abstract smudges.
+
+**`tools/pack16.py --fill`, added here.** The stock pass keeps ONE scale for the whole sheet, which is
+right for sprites standing on a common ground line and wrong for a wall panel sized off its own
+longest edge against one constant. `--fill` stretches each measured group to its whole cell and prints
+the aspects, which is `tools/posterpack.py`'s rule at sixteen cells instead of four. It also FLATTENS
+each cell over its own median: the sheet hangs through a plain opaque material, so a transparent pixel
+draws as the black under it, and 5% of every cell was transparent because the model drew several
+panels a degree or two off square. Aspects 1.0062 / 1.6183 / 0.7113 / 1.4259 / 0.7826 / 0.9799 /
+0.8164 / 1.3837 / 0.9840 / 1.0323 / 0.8187 / 1.3041 / 0.9738 / 1.0000 / 1.4706 / 1.5235.
+
+**The pool is split by where the thing would hang**, against the plan's "deal the 16 from the every
+other room pool": a fire plate, an evacuation diagram and a department marker are read ON THE WAY
+PAST, so they go to the circulation arm (12 entries) and the paperwork to the room arm (11). What was
+there was `[SIGN_PLATE, SIGN_PLATE, POSTER_EYE, POSTER_MARCH]` — half the plates in the building were
+the same plate. Live on the demo plate: 112 panels, **71 of them off the new sheet, all 16 cells used,
+the busiest cell 10 of 71**.
+
+**+1 call**, A/B/A/B on the merged mesh's `visible`, median of 7: **137 / 136**. That is the plan's
+number and not the +2 every earlier phase measured — those were all CASTING glb batches, and a merged
+non-casting mesh is one call. `CorpWarm` needed nothing either: the three sheets share one
+`MeshLambertMaterial` program, so a third atlas is a third material and not a third program.
+
+Verdict: **LANDED.**
