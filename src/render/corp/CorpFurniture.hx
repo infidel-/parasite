@@ -29,6 +29,8 @@ typedef CorpFit = {
   var leds: Int;        // blinking status specks on the rack fronts
   var cables: Int;      // cable drapes between the cabinets of a rank
   var units: Int;       // archive file cabinets and shelving units, one per rank cell
+  var boxes: Int;       // cartons and open boxes of folders stacked on those units
+  var sheaves: Int;     // bare stacks of paper left on them
 }
 
 // ONE ARCHIVE FAMILY: a piece of records-room furniture and the glb that draws it.
@@ -36,12 +38,22 @@ typedef CorpFit = {
 // width ALONG the rank, depth OFF the aisle, height -- and every number is built into the model by
 // models-src/corp/arch_build.py, which copies this table verbatim. render.Models.instanced scales
 // an instance by HEIGHT ALONE, so `w` and `d` are read here only for the contact footprint and the
-// push up against the aisle; the glb's own proportions are what the player sees
+// push up against the aisle; the glb's own proportions are what the player sees.
+//
+// AND `levels` IS THE LID AND NOTHING ELSE ON BOTH OF THEM, which is the one thing here that was
+// decided against the plan rather than by it. The shelving unit's five BOARDS are 0.03 proud of a
+// carcass whose binders are PAINTED (models-src/corp/arch_build.py's `proud`, measured board bands
+// at v 0.156 / 0.322 / 0.490 / 0.656 / 0.822 of the front art) — so a board is a 0.03 ledge in
+// front of a full bay, and a carton standing on one would hang in the air with box files drawn
+// through it. A bay whose contents are art carries no geometry. The lid is the surface that is
+// really clear, and at 51 degrees down it is the surface this camera mostly sees
 typedef ArchUnit = {
   var path: String;
   var w: Float;
   var d: Float;
   var h: Float;
+  // and the planes on it that can carry a load, world y off the floor -- see render.corp.CorpArchive
+  var levels: Array<Float>;
 }
 
 // ONE ARCHIVE UNIT STANDING IN A RANK, for the two passes that draw and dress it.
@@ -137,12 +149,14 @@ class CorpFurniture
       w: 2.70,
       d: 1.20,
       h: 3.60,
+      levels: [ 3.60 ],
     },
     {
       path: RenderConfig.MODELS.corpArchShelf,
       w: 3.20,
       d: 1.20,
       h: 4.80,
+      levels: [ 4.80 ],
     },
   ];
 
@@ -182,6 +196,8 @@ class CorpFurniture
         leds: 0,
         cables: 0,
         units: 0,
+        boxes: 0,
+        sheaves: 0,
       };
       for (row in 0...m.h)
         for (col in 0...m.w)

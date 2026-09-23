@@ -1559,6 +1559,79 @@ class FacilityDeco
         [o.ao, o.ao, o.ao, o.ao]);
     }
 
+// one OPEN box: the same carton `crate` emits with its lid off, its board thickness showing round
+// the rim and its contents standing in it. Two buffers, because two materials — `b` takes the
+// board (outer walls, rim, interior) and `p` the fill.
+//
+// NO BOTTOM AND NO LID. The bottom is never seen and the lid is the whole point: docs/3d-geometry
+// .md's rule is that a cap over an open unit hides its contents and reads as a closed slab, which
+// is the same finding the shelving's own missing top carries.
+//
+// 13 quads / 26 tris: 4 outer walls, 4 rim caps, 4 interior walls and one cap on the fill. The rim
+// is what makes it a box of board rather than a hole cut in a solid, and the interior takes
+// FacilityStyle.DECO_OPEN_AO — the indoor fill is normal-blind, so without that multiplier an
+// inward-facing wall renders at the same value as the outward one beside it and the whole thing
+// reads as a painted square.
+//
+// it takes FacilityCrateOpts unchanged rather than an opts of its own: an open box is placed by
+// exactly the nine numbers a sealed one is, and the three that differ are constants above
+  public static function openBox(b:MeshBuf, p:MeshBuf, o:FacilityCrateOpts):Void
+    {
+      var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
+      var t = FacilityStyle.DECO_OPEN_WALL;
+      var tile = FacilityStyle.DECO_BOX_TILE;
+      var inner = o.ao * FacilityStyle.DECO_OPEN_AO;
+      var foot = o.ao * FacilityStyle.DECO_BOX_AO_FOOT;
+      // the two corner rings — the outer one and the same inset by one board thickness — in
+      // `crate`'s own cyclic order, which is the one that winds every side outward
+      var lx = [ -o.hw, -o.hw, o.hw, o.hw ];
+      var lz = [ -o.hd, o.hd, o.hd, -o.hd ];
+      var ox = [], oz = [], ix = [], iz = [];
+      for (i in 0...4)
+        {
+          ox.push(o.cx + lx[i] * c - lz[i] * s);
+          oz.push(o.cz + lx[i] * s + lz[i] * c);
+          var jx = lx[i] - (lx[i] > 0 ? t : -t);
+          var jz = lz[i] - (lz[i] > 0 ? t : -t);
+          ix.push(o.cx + jx * c - jz * s);
+          iz.push(o.cz + jx * s + jz * c);
+        }
+      // where the contents stand, and the three quads each hand of the box takes
+      var yp = o.y0 + (o.y1 - o.y0) * FacilityStyle.DECO_OPEN_FILL;
+      var u = o.ph;
+      for (i in 0...4)
+        {
+          var j = (i + 1) % 4;
+          var dx = ox[j] - ox[i], dz = oz[j] - oz[i];
+          var un = u + Math.sqrt(dx * dx + dz * dz) / tile;
+          // the outer wall, `crate`'s side verbatim: the contact runs UP the face and never across
+          // it, whichever way the box was turned
+          MeshBufTools.quadC(b,
+            [ox[i], o.y0, oz[i]], [ox[j], o.y0, oz[j]], [ox[j], o.y1, oz[j]], [ox[i], o.y1, oz[i]],
+            [u, o.y0 / tile, un, o.y0 / tile, un, o.y1 / tile, u, o.y1 / tile],
+            [foot, foot, o.ao, o.ao]);
+          // the rim, the board seen from above. it lies in the HORIZONTAL plane, so it takes
+          // FacilityGeom.cap's winding and not the wall's — outer edge first, then inward
+          MeshBufTools.quadC(b,
+            [ox[i], o.y1, oz[i]], [ox[j], o.y1, oz[j]], [ix[j], o.y1, iz[j]], [ix[i], o.y1, iz[i]],
+            [u, 0, un, 0, un, t / tile, u, t / tile],
+            [o.ao, o.ao, o.ao, o.ao]);
+          // and the inside of that wall, down to the fill. i and j SWAPPED, which is what turns it
+          // to face into the box — the same quad wound the other way is invisible from above
+          MeshBufTools.quadC(b,
+            [ix[j], yp, iz[j]], [ix[i], yp, iz[i]], [ix[i], o.y1, iz[i]], [ix[j], o.y1, iz[j]],
+            [u, yp / tile, un, yp / tile, un, o.y1 / tile, u, o.y1 / tile],
+            [inner, inner, inner, inner]);
+          u = un;
+        }
+      // the contents, one cap along the box's OWN axes so the striations turn with it
+      var u0 = o.ph, u1 = o.ph + 2 * o.hw / tile, v0 = o.ph, v1 = o.ph + 2 * o.hd / tile;
+      MeshBufTools.quadC(p,
+        [ix[1], yp, iz[1]], [ix[2], yp, iz[2]], [ix[3], yp, iz[3]], [ix[0], yp, iz[0]],
+        [u0, v1, u1, v1, u1, v0, u0, v0],
+        [inner, inner, inner, inner]);
+    }
+
 // one rack's lights: a pair of specks on each CHASSIS of its front face, each with its own blink
 // phase and its own hue. all of them in ONE additive mesh with the compound's other racks (see
 // `lamps`), so a wall of them costs one draw call and no per-frame work beyond the shared clock.

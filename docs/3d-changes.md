@@ -1860,3 +1860,51 @@ row 13, all at scale 1 and upright, each pushed against its own aisle with the d
 Both oracles green at 3000 seeds each.
 
 Verdict: **LANDED.**
+
+## corp: the archive's load, and the plan's shelf levels were geometrically impossible
+
+`render/corp/CorpArchive.hx`, `FacilityDeco.openBox`, `FacilityStyle.DECO_OPEN_*`,
+`CorpStyle.ARCH_*`, `ArchUnit.levels`, two `CorpFit` counters.
+
+**What changed.** Every archive unit now carries a load: sealed kraft cartons, bare stacks of paper
+and open boxes with paper showing in them. Two merged meshes for the whole room — `corp/archive-board`
+and `corp/archive-paper` — dealt per LEVEL of every unit off `mix(col, row)`, `ARCH_LOAD_CHANCE` 72
+per level, one to three pieces across it, each capped by its slot so three are three small boxes and
+never three overlapping ones.
+
+**The plan's shelf levels could not be built, and finding out why is the entry.** It wanted boxes on
+the shelving unit's board fractions. The built glb makes that impossible: the five boards are 0.03
+proud of a carcass whose binders are PAINTED, so a board is a 0.03 ledge standing in front of a full
+bay — a carton on one hangs in the air with box files drawn through it. **A bay whose contents are art
+carries no geometry.** `ArchUnit.levels` is therefore the lid alone on both families, `[3.60]` and
+`[4.80]`, and at 51 degrees down that is the surface this camera mostly sees. Phase 7's racking is the
+family that brings real bays.
+
+**`FacilityDeco.openBox`**, beside `crate` and taking `FacilityCrateOpts` unchanged: 4 outer walls,
+4 rim caps, 4 interior walls, 1 fill cap. 13 quads / 26 tris, no bottom and **no lid** (a cap over an
+open unit hides its contents and reads as a closed slab). Two numbers are not cosmetic. `DECO_OPEN_WALL`
+is **0.04, four times life** — a 5 mm board at the half-metre unit is 0.01, under a pixel at this
+pitch, and the rim is the whole of what separates a carton from a bottomless well. `DECO_OPEN_AO` is
+**0.55**, because the indoor fill is normal-blind: without it an inward-facing wall renders at the
+same value as the outward one beside it and the box reads as a painted square. Same finding as
+`DECO_BOX_AO_LOW` and the same fix.
+
+**No free turn**, where the compound's shelf crates have `DECO_BOX_YAW` ~14 degrees. Filing is the act
+of squaring things up; what separates two boxes here is size, height and sheet phase. That is also why
+`FacilityClutter.lid` was not made public — its `pick` drags the lab glassware sheet in as a fifth
+material, its `o.store` band is fitted to a 3.9 x 1.8 pallet bay, and it is a free-yaw rejection
+sampler.
+
+**Measured.** Merged through `FacilityDeco.solid`, not `FacilityGeom.add`: `solid` derives
+`vertexColors` from the buffer and `add` does not, so the other route silently drops the only shading
+a box can get. A/B/A/B at one pose, median of 7: **134 / 132**, +1 per buffer — they do not cast,
+unlike a glb batch. Live on one plate: 116 board tris + 48 paper = 2 sealed cartons, 4 open boxes,
+4 bare reams over 5 units.
+
+**And `corp/archive-paper`'s lift, documented as provisional and expected wrong, HELD.** Fitted on
+screen by visible-diff against the frame rather than off the atlas: the paper caps render
+**150/131/109** against the file cabinet glb's **80/73/64**, i.e. **1.8x the drawer front** where the
+texture note predicted 1.6x. Frame p99 is 128 and the paper is 133 — the brightest surface in the
+room, but with no halo, so it reads as paper and not as a lamp. No re-roll, and the 1.30 gamma stays.
+
+Verdict: **LANDED.**

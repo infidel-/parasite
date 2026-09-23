@@ -113,6 +113,11 @@ class CorpStyle
   // docs/3d-geometry.md opens with. Capped in RACK_SIDE, every cabinet in the room wore its
   // perforated flank across its top
   public static inline var RACK_TOP = 'textures/corp/rack-top.png';
+  // and the records room's two LOOSE surfaces — what is stacked on the casework rather than what
+  // the casework is made of. The drawer course and the binder spines are baked into the two glbs
+  // (models-src/corp/arch_build.py) and are never named here; these two are
+  public static inline var ARCH_BOARD = 'textures/corp/archive-board.png';
+  public static inline var ARCH_PAPER = 'textures/corp/archive-paper.png';
 
   // THE BLINKING STATUS FIELD ON A RACK'S FRONT, read off corp/rack-front.png rather than laid on
   // an even grid — the trap render.facility.FacilityDeco.lights' own header records, where a
@@ -215,6 +220,33 @@ class CorpStyle
   // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
   public static inline var RACK_H = 4.0;
   public static inline var RACK_D = 2.0;
+
+  // WHAT IS STACKED ON THE ARCHIVE'S CASEWORK, dealt per LEVEL of every unit — see
+  // render.corp.CorpArchive. In world units, like the compound's DECO_BOX_* band and for its
+  // reason: a carton is a carton whatever it is standing on, and a band written as a fraction of
+  // the level it lands on produces one 1.6-wide monster whenever the roll comes back with a
+  // single box.
+  //
+  // 0.60 .. 1.05 across and 0.50 .. 0.85 tall is a 30-52 cm carton at the half-metre unit WALL_H
+  // fixes, which is a records box. _D is a CEILING as a fraction of the unit's depth, not the
+  // value: the box is squared up to the unit (there is no free turn here — see CorpArchive.load),
+  // so the only thing it has to clear is the carcass front.
+  //
+  // _GAP is the margin left at each end of a level, so a box never overhangs the flank it stands
+  // over, and _MAX is how many are dealt across one. _CHANCE is per LEVEL and not per unit: a rank
+  // where every lid carries something reads as a delivery and not as a room people work in
+  public static inline var ARCH_LOAD_CHANCE = 72;
+  public static inline var ARCH_LOAD_MAX = 3;
+  public static inline var ARCH_GAP = 0.18;
+  public static inline var ARCH_BOX_W = 0.60;
+  public static inline var ARCH_BOX_W_VAR = 0.45;
+  public static inline var ARCH_BOX_H = 0.50;
+  public static inline var ARCH_BOX_H_VAR = 0.35;
+  public static inline var ARCH_BOX_D = 0.72;
+  // and a BARE STACK OF PAPER, which is the same emitter with the paper sheet on all five faces —
+  // four edges and a top IS a ream. Flatter than a carton by this fraction, because a stack nobody
+  // boxed is what has been left out on top of a cabinet and it is 10-25 cm, not half a metre
+  public static inline var ARCH_REAM_H = 0.42;
 
   // the material scales. a MATERIAL scale and never the object's own size: the laminate grain, the
   // drawer course, the felt weave and the perforation pitch are each chosen against the thing they

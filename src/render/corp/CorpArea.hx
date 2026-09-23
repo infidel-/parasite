@@ -125,6 +125,11 @@ class CorpArea implements Area3D
       var gp = CorpProps.build(scene, model, game.area);
       glb = gp.batches;
       glbN = gp.n;
+      // and what is STACKED on the records room's casework, which reads CorpFurniture's own unit
+      // list and reports back into its CorpFit. After the props for no ordering reason of its own
+      // -- the units are placed by the fitting pass above and the glb batches do not touch them --
+      // but before the contact repaint, which every pass that lays a footprint has to be
+      CorpArchive.build(scene, fit);
       // the flat dressing: what lies ON the worktops, and what hangs on the walls. both AFTER the
       // props, because the clutter scatters around the workstation's own footprint and asks
       // CorpProps for it

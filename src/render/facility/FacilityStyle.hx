@@ -1535,6 +1535,27 @@ class FacilityStyle
   public static inline var DECO_BOX_AO_LOW = 0.78;
   public static inline var DECO_BOX_AO_FOOT = 0.70;
 
+  // AN OPEN BOX, which is a closed one with its lid off and its contents showing — see
+  // render.facility.FacilityDeco.openBox. Three numbers and each is about being READ as a hole.
+  //
+  // _WALL is the board's own thickness, in world units, and it is the rim quads' whole width: at
+  // this camera the rim is most of what separates an open carton from a bottomless one, and a
+  // 5 mm board at the half-metre unit is 0.01. It is drawn at 0.04 instead — four times life — for
+  // the reason every deliberate over-thickness in this file carries: one quad 0.01 across is under
+  // a pixel at the pitch this camera looks down from and disappears into its own neighbours.
+  //
+  // _FILL is how far up the box the contents stand, as a fraction of its height. Full to the rim
+  // and the interior walls have no height to be seen against, so it reads as a closed lid in a
+  // different material; empty and the box is a well with nothing in it.
+  //
+  // _AO is what the interior is multiplied by against the outside. THE DARKENING IS THE HOLE: the
+  // indoor fill is normal-blind (IndoorMask), so four inward-facing walls and a horizontal cap
+  // render at the same value as the outward faces beside them and the box reads as a painted
+  // square on a slab. Same finding as DECO_BOX_AO_LOW above and the same fix
+  public static inline var DECO_OPEN_WALL = 0.04;
+  public static inline var DECO_OPEN_FILL = 0.62;
+  public static inline var DECO_OPEN_AO = 0.55;
+
   // the server rack's LIGHTS. one additive mesh for every rack in the compound, blinking off a
   // shared clock with a per-light phase — see render.facility.FacilityDeco.lamps
   // THE FIELD IS READ OFF THE ART AND NOT CHOSEN. It shipped as an even 6 x 3 grid over a band of
