@@ -82,6 +82,16 @@ class CorpRooms
       var info = group[state.area.random(group.length)];
       var col = state.area.random(info.amount) + (info.col != null ? info.col : 0);
       state.area.addDecoration(x, y, info.row, col);
+      // A BIN DOES NOT TAKE THE TILE. The callers write the room's unwalkable twin before the group
+      // is picked, and a waste bin standing on a sealed cell was a whole tile of floor lost to a
+      // thing you can step round — reported for every room that deals one. Every caller hands in a
+      // twin, so taking the offset back off is the room's own floor; render.corp.CorpDeco.bins
+      // stands the bin against the masonry so the actor on the cell never meets it
+      if (group == Const.CORP_TRASH)
+        {
+          var cells = state.area.getCells();
+          cells[x][y] -= UNWALKABLE_TILE_OFFSET;
+        }
       return groups;
     }
 

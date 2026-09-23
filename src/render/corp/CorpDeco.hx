@@ -301,7 +301,13 @@ class CorpDeco
     }
 
 // the bins, as places for one instanced batch. a bin is ROUND, which is the one shape in this file
-// that quads cannot state, so it is the only glb the pass owns
+// that quads cannot state, so it is the only glb the pass owns.
+//
+// PUSHED ONTO EVERY MASONRY HAND, so a corner bin stands in its corner. The cell is WALKABLE now
+// (gen.corp.CorpRooms.addDecorationExt hands it back), so the actor stands at its centre and the bin
+// has to be out of the way — and the face is FacilityGeom.wallFace off the WALL cell's own centre,
+// a unit past the cell edge at WALL_T 2. The old offset assumed the edge and stood every bin two
+// units out in the room, which is what "put them near the walls" was
   public static function bins(m:Facility, area:game.AreaGame):Array<Models.PropPlace>
     {
       var out = [];
@@ -310,10 +316,19 @@ class CorpDeco
           if (!FacilityModel.inside(m, c.col, c.row))
             continue;
           var w = CityConfig.cellToWorld(c.col, c.row);
-          var dir = back(m, c.col, c.row);
-          var off = (dir < 0 ? 0.0 : CELL / 2 - CorpStyle.BIN_W / 2 - 1.0 - CorpStyle.PROP_GAP);
-          var x = w.x + (dir < 0 ? 0.0 : DC[dir] * off);
-          var z = w.z + (dir < 0 ? 0.0 : DR[dir] * off);
+          var x = w.x;
+          var z = w.z;
+          for (dir in 0...4)
+            {
+              var wc = c.col + DC[dir];
+              var wr = c.row + DR[dir];
+              if (!FacilityModel.isSolidWall(m, wc, wr))
+                continue;
+              var off = CELL - FacilityGeom.wallFace(m, wc, wr, dir ^ 1) - CorpStyle.BIN_W / 2 -
+                CorpStyle.PROP_GAP;
+              x += DC[dir] * off;
+              z += DR[dir] * off;
+            }
           out.push({ x: x, z: z, yaw: 0.0 });
           ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
             z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);

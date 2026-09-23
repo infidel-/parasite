@@ -1477,3 +1477,21 @@ digest moved — there is no generator change in this pass at all.
 derive it.** Four passes have now put a corp shell correction in `CorpModel` rather than in
 `gen.corp` — the washroom's glazing, the lone one-cell opening, the wall-dressing fittings
 (`wallFits`), and these two.
+
+## A BIN DOES NOT TAKE A TILE
+
+Reported as "bins should NOT make the full tile impassable, that's dumb (happens in all rooms)".
+`decorateWalls` / `decorateCorners` write the room's unwalkable twin into the cell BEFORE
+`addDecorationExt` picks which group stands on it, so a waste bin sealed a whole cell exactly as a
+vending machine does. In the archive it was worse: the twin there IS `FIT_ARCHIVE`, so the bin also
+stood inside a shelving unit.
+
+`addDecorationExt` now takes `UNWALKABLE_TILE_OFFSET` back off the cell when the picked group is
+`Const.CORP_TRASH`. Every one of the eleven callers hands in a twin (checked), so that is the room's
+own floor. The renderer side is `render.corp.CorpDeco.bins`, which now pushes the bin onto every
+masonry hand at the real face (`FacilityGeom.wallFace`, a unit past the cell edge) — so the actor
+on the cell centre never meets it and a corner bin stands in its corner.
+
+Measured over 300 corp seeds: OK, **orphanCells 0** (no bin opened a pocket), and the fill numbers
+drop by exactly the bins they no longer count — archive 39.04 → 35.10, copy 89.24 → 74.18, meeting
+58.51 → 53.28, toilet 27.59 → 23.07, servers 27.30 → 23.34.

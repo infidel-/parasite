@@ -2056,3 +2056,15 @@ against `C:\Program Files\Blender Foundation\Blender 5.1\` does the same build h
 **Measured:** 516 / 1044 tris unchanged, holes 0 / coplanar 0 / uv smears 0 on both.
 
 Verdict: **LANDED.**
+
+## corp: a bin stands against the masonry, in the corner where there are two walls
+
+`CorpDeco.bins` offset a bin `CELL/2 - BIN_W/2 - 1.0 - PROP_GAP` = 0.59 off the cell centre toward
+ONE hand (`back`, which needs the wall line to carry on both sides). The masonry face is not at the
+cell edge: `FacilityGeom.wallFace` puts it `thick/2` off the WALL cell's centre, a unit past the
+edge at WALL_T 2 — so every bin stood ~2 units out in the room. With the bin cell walkable now
+(area-gen.md, A BIN DOES NOT TAKE A TILE) the actor stands on that cell, so the bin has to be out of
+the way: offset `CELL - wallFace - BIN_W/2 - PROP_GAP` toward EVERY solid-wall hand, which puts a
+corner bin in its corner. On screen the archive's bin stands flush on its wall.
+
+Verdict: **LANDED.**
