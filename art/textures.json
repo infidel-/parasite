@@ -4412,6 +4412,82 @@
       "last_converted": "2026-09-22T13:11:50",
       "built_linear": 0.0512,
       "built_srgb": 60.5
+    },
+    "corp/archive-drawers": {
+      "src": "corp/archive-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "lift": 1.051,
+      "prompt": "[quadrant of corp/archive-pack.png] TOP-LEFT quadrant: a course of FILING CABINET DRAWER FRONTS seen straight on in flat elevation. THREE identical full drawer courses stacked one above the other, filling the quadrant top to bottom, with a narrow dark reveal gap between courses. Each drawer front is matte warm-grey lacquered steel with a long recessed finger pull running most of its width and a small brushed brass label holder holding a pale card slip. Every course identical so the swatch repeats vertically at one drawer. Must be a REPEATING RHYTHM and not a picture with placed one-off features. [append textures.json style_corp + style_prop]",
+      "prompt_exact": false,
+      "note": "PACK4 on corp/archive-pack.png, the records room's whole family in one 1024 generation ($0.0571, gpt-image-2.5-sunburst at the 1,756-token parity tier). PACKED ON PURPOSE AND NOT ROLLED SOLO: the measured finding is that cardboard drawn BESIDE grey steel came back at channel spread 48 after three solo rolls landed 67 / 8.5 / 58.6 and shipped grey (docs/3d-textures.md). That is exactly what this sheet had to avoid and the binders came back at spread 53.8 untouched. SEAMS MEASURED OFF THE DROP, not assumed: per-column mean |diff| peaks at x 509-511 (25.5 against a background of 2.83) and per-row at y 511 (83.8 against 8.39), i.e. near-nominal 512 for once \u2014 every crop is 506 square inset 2 px inside them. It takes style_PROP and not style: three of the four cells are manufactured objects and style's 'very dark and muted desaturated palette' clause is what shipped 9 of 38 props grey, which was the reported complaint. Quadrant 1: the drawer course worn by the archive's file cabinets AND by the corridor casework cabinet, which is a 3.00 x 1.20 x 1.30 credenza (render.corp.CorpDeco.CASE) and so is genuinely the same object at the same scale \u2014 the one condition docs/3d-textures.md allows reuse under. 0.1366 linear as drawn; lift 1.051 lands it on corp/desk-front's 0.1249, which is the tower's own vertical furniture front. WRAP IS 17.0 / 17.0 AND DOES NOT MATTER HERE, which is the whole argument for the Blender route on this family: the glb's explicit per-face UV table maps u 0..1 ACROSS the unit (one drawer wide, as a real cabinet is) and only repeats v, so the horizontal wrap is never sampled and the vertical seam lands in the dark reveal between courses.",
+      "last_converted": "2026-09-23T08:08:33",
+      "last_lift": 1.051,
+      "built_linear": 0.1239,
+      "built_srgb": 91.9
+    },
+    "corp/archive-spines": {
+      "src": "corp/archive-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        514,
+        2,
+        506,
+        506
+      ],
+      "lift": 1.036,
+      "prompt": "[quadrant of corp/archive-pack.png] TOP-RIGHT quadrant: a course of ARCHIVE BOX FILES AND LEVER-ARCH BINDERS standing upright side by side on a shelf, seen straight on in flat elevation, packed shoulder to shoulder with no gaps and no bookends. TWO identical full shelf courses stacked one above the other, separated by a narrow dark reveal. THE COLOUR IS THE POINT OF THIS SWATCH: the spines are a mix of OXIDE RED, warm OCHRE YELLOW, deep OLIVE GREEN and TAN KRAFT, each spine clearly and unmistakably its own saturated colour at a medium-dark value - do NOT grey them out. Each spine carries a small brass label frame with a pale card in it and a thin dark finger ring hole. No blue, no purple. [append textures.json style_corp + style_prop]",
+      "prompt_exact": false,
+      "note": "PACK4 on corp/archive-pack.png, the records room's whole family in one 1024 generation ($0.0571, gpt-image-2.5-sunburst at the 1,756-token parity tier). PACKED ON PURPOSE AND NOT ROLLED SOLO: the measured finding is that cardboard drawn BESIDE grey steel came back at channel spread 48 after three solo rolls landed 67 / 8.5 / 58.6 and shipped grey (docs/3d-textures.md). That is exactly what this sheet had to avoid and the binders came back at spread 53.8 untouched. SEAMS MEASURED OFF THE DROP, not assumed: per-column mean |diff| peaks at x 509-511 (25.5 against a background of 2.83) and per-row at y 511 (83.8 against 8.39), i.e. near-nominal 512 for once \u2014 every crop is 506 square inset 2 px inside them. It takes style_PROP and not style: three of the four cells are manufactured objects and style's 'very dark and muted desaturated palette' clause is what shipped 9 of 38 props grey, which was the reported complaint. Quadrant 2: the archive bookcase's front, and THE ONE CELL ON THIS SHEET THAT EXISTS FOR COLOUR \u2014 'everything is gray again' is what asked for it. Channel spread 53.8 as drawn and 53.5 after the lift, because a lift is a gamma and scales a cast rather than flattening it. NO BLUE by style_corp's own measured clause: the scene light is blue, so a blue albedo indoors wears the lamp's hue. 0.1317 linear as drawn; lift 1.036 onto corp/desk-front's 0.1249. wrap 25.2 / 4.2, and the 25.2 is never sampled for the same reason as the drawers - u maps 0..1 across the bay.",
+      "last_converted": "2026-09-23T08:08:33",
+      "last_lift": 1.036,
+      "built_linear": 0.1236,
+      "built_srgb": 79.5
+    },
+    "corp/archive-board": {
+      "src": "corp/archive-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        2,
+        514,
+        506,
+        506
+      ],
+      "lift": 1.659,
+      "prompt": "[quadrant of corp/archive-pack.png] BOTTOM-LEFT quadrant: plain CORRUGATED KRAFT CARDBOARD, the flat outer face of a shipping carton. Warm mid-brown kraft paper, clearly BROWN and not grey, with faint regularly spaced vertical flute shadow lines reading through the liner and a subtle fibrous paper grain. Uniform all over, no printing, no tape, no folds, no edges. [append textures.json style_corp + style_prop]",
+      "prompt_exact": false,
+      "note": "PACK4 on corp/archive-pack.png, the records room's whole family in one 1024 generation ($0.0571, gpt-image-2.5-sunburst at the 1,756-token parity tier). PACKED ON PURPOSE AND NOT ROLLED SOLO: the measured finding is that cardboard drawn BESIDE grey steel came back at channel spread 48 after three solo rolls landed 67 / 8.5 / 58.6 and shipped grey (docs/3d-textures.md). That is exactly what this sheet had to avoid and the binders came back at spread 53.8 untouched. SEAMS MEASURED OFF THE DROP, not assumed: per-column mean |diff| peaks at x 509-511 (25.5 against a background of 2.83) and per-row at y 511 (83.8 against 8.39), i.e. near-nominal 512 for once \u2014 every crop is 506 square inset 2 px inside them. It takes style_PROP and not style: three of the four cells are manufactured objects and style's 'very dark and muted desaturated palette' clause is what shipped 9 of 38 props grey, which was the reported complaint. Quadrant 3: the carton. Every sealed crate, every open box's outer wall, rim and interior in the archive. 0.2450 linear as drawn - far the brightest cell - and lift 1.659 lands it on facility/deco-box's 0.1072, which is the repo's one already-measured warm cardboard, so the two families match across areas without either being re-fitted. The gamma WIDENED the warmth rather than flattening it (spread 79.2 -> 82.4), which is the lift-is-a-gamma rule working for once. wrap 7.3 / 6.2 - inside the packed norm's upper end, and a carton is 0.3 to 1.3 wide at DECO_BOX_TILE 0.5, i.e. one to three repeats.",
+      "last_converted": "2026-09-23T08:08:33",
+      "last_lift": 1.659,
+      "built_linear": 0.1062,
+      "built_srgb": 82.8
+    },
+    "corp/archive-paper": {
+      "src": "corp/archive-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        514,
+        514,
+        506,
+        506
+      ],
+      "lift": 1.3,
+      "prompt": "[quadrant of corp/archive-pack.png] BOTTOM-RIGHT quadrant: a STACK OF LOOSE PAPER seen as a solid mass of sheet edges - dense fine horizontal striations of stacked paper edges running all the way across, in off-white and pale warm grey, with a handful of thicker MANILA and warm TAN card divider edges standing out among them at irregular intervals. Reads as many hundreds of stacked sheets. Slightly darker than pure white, no printing, no text. [append textures.json style_corp + style_prop]",
+      "prompt_exact": false,
+      "note": "PACK4 on corp/archive-pack.png, the records room's whole family in one 1024 generation ($0.0571, gpt-image-2.5-sunburst at the 1,756-token parity tier). PACKED ON PURPOSE AND NOT ROLLED SOLO: the measured finding is that cardboard drawn BESIDE grey steel came back at channel spread 48 after three solo rolls landed 67 / 8.5 / 58.6 and shipped grey (docs/3d-textures.md). That is exactly what this sheet had to avoid and the binders came back at spread 53.8 untouched. SEAMS MEASURED OFF THE DROP, not assumed: per-column mean |diff| peaks at x 509-511 (25.5 against a background of 2.83) and per-row at y 511 (83.8 against 8.39), i.e. near-nominal 512 for once \u2014 every crop is 506 square inset 2 px inside them. It takes style_PROP and not style: three of the four cells are manufactured objects and style's 'very dark and muted desaturated palette' clause is what shipped 9 of 38 props grey, which was the reported complaint. Quadrant 4: the paper - a bare ream's four edges and its top, and the fill inside an open box. ITS LIFT IS PROVISIONAL AND IS EXPECTED TO BE WRONG, stated here so the next pass does not rediscover it: 0.4295 linear as drawn, and this cell is consumed as a HORIZONTAL cap, which renders at ~0.71 of albedo against a vertical face's ~0.2 (docs/3d-geometry.md). To read 1.6x the drawer front beside it the albedo would have to be 0.0563, a gamma near 3.5 - and the sweep says that turns it to brown mud (g 2.51 already gives RGB 118/98/74, the manila dividers taking over), because a gamma cannot darken and stay neutral. So lift 1.30 -> 0.3453 holds it as pale paper for now and IT MUST BE FITTED ON SCREEN with a control in the same frame, per the a-texture-number-is-not-a-screen-number rule. If it reads as a lamp, re-roll THIS CELL with a named brightness rather than reaching for a bigger gamma. wrap 31.2 / 21.3, not sampled: a paper cap is under one repeat of its own tile.",
+      "last_converted": "2026-09-23T08:08:33",
+      "last_lift": 1.3,
+      "built_linear": 0.3424,
+      "built_srgb": 148.5
     }
   }
 }
