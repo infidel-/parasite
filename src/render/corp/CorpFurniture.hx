@@ -54,6 +54,9 @@ typedef ArchUnit = {
   var h: Float;
   // and the planes on it that can carry a load, world y off the floor -- see render.corp.CorpArchive
   var levels: Array<Float>;
+  // plus the plane that CLOSES the top one, or 0 where nothing does. An open steel bay has a rail
+  // over its last shelf and a box that grows through it is the whole reason this is a field
+  var head: Float;
 }
 
 // ONE ARCHIVE UNIT STANDING IN A RANK, for the two passes that draw and dress it.
@@ -150,6 +153,7 @@ class CorpFurniture
       d: 1.20,
       h: 3.60,
       levels: [ 3.60 ],
+      head: 0.0,
     },
     {
       path: RenderConfig.MODELS.corpArchShelf,
@@ -157,6 +161,27 @@ class CorpFurniture
       d: 1.20,
       h: 4.80,
       levels: [ 4.80 ],
+      head: 0.0,
+    },
+    // and the STORE RACKING, which is the compound's own open steel unit and the tower's first
+    // cross-area glb. It is here rather than hand-modelled because it is already exactly the
+    // object asked for -- four uprights, four cross rails, three perforated plates and real
+    // daylight through the middle (models-src/facility/store_build.py). Grey steel is correct on
+    // it: it is the neutral the kraft and the binders read against.
+    //
+    // AND IT IS THE ONLY FAMILY WITH REAL BAYS. The other two carry a load on their LID because
+    // their shelves are painted art behind proud boards; this one's three plates are members, so
+    // its levels are FacilityStyle.DECO_SHELF_Y -- measured off the built alpha channel by binning
+    // opaque coverage per row, i.e. the frame's own rails -- plus the plate's lid over the rail
+    // centre line, which is what DECO_SHELF_PLATE_Y is for
+    {
+      path: RenderConfig.MODELS.facilityShelving,
+      w: FacilityStyle.DECO_SHELF_H,   // the glb is square in elevation: 2.600 x 1.666 x 2.600
+      d: FacilityStyle.DECO_SHELF_D,
+      h: FacilityStyle.DECO_SHELF_H,
+      levels: [for (lv in FacilityStyle.DECO_SHELF_Y)
+        FacilityStyle.DECO_SHELF_H * (lv + FacilityStyle.DECO_SHELF_PLATE_Y)],
+      head: FacilityStyle.DECO_SHELF_H * FacilityStyle.DECO_SHELF_TOP_Y,
     },
   ];
 

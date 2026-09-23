@@ -452,17 +452,22 @@ class CorpModel
       m.fit[8][15] = CorpFurniture.FIT_FIXTURE;
       m.fit[8][16] = CorpFurniture.FIT_FIXTURE;
       m.fit[8][3] = CorpFurniture.FIT_FIXTURE;
-      // AND TWO ADJACENT ARCHIVE CELLS ON EACH OF TWO ROWS, because the family is dealt off the ROW
-      // (CorpFurniture.archive) and each one is its own glb with its own material — a family with
-      // nothing here compiles its program on the frame the first archive comes into view. The rows
-      // are not arbitrary: FacilityModel.mix(row * 668265263) % 2 is 1 at row 4 and 0 at row 9, so
-      // between them the two cover both entries of CorpFurniture.ARCH. ADJACENT because `rect`
-      // insets a hand only where the rank really stops, so a lone cell never exercises the
-      // uninset case
+      // AND TWO ADJACENT ARCHIVE CELLS ON EACH OF THREE ROWS, because the family is dealt off the
+      // ROW (CorpFurniture.archive) and each one is its own glb with its own material — a family
+      // with nothing here compiles its program on the frame the first archive comes into view. The
+      // rows are not arbitrary and they MOVED when the racking became a third entry: with
+      // CorpFurniture.ARCH.length 3, FacilityModel.mix(row * 668265263) % 3 is 0 at row 1, 2 at
+      // row 4 and 1 at row 6, so between them the three cover every entry. Rows 4 and 9 both
+      // answer 2 under the new modulus, which is why the old pair is not simply extended.
+      // ADJACENT because `rect` insets a hand only where the rank really stops, so a lone cell
+      // never exercises the uninset case, and NON-ADJACENT ROWS because a real rank sits
+      // RACK_PITCH 2 apart and the aisle search wants a clear hand
+      m.fit[1][12] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[1][13] = CorpFurniture.FIT_ARCHIVE;
       m.fit[4][12] = CorpFurniture.FIT_ARCHIVE;
       m.fit[4][13] = CorpFurniture.FIT_ARCHIVE;
-      m.fit[9][12] = CorpFurniture.FIT_ARCHIVE;
-      m.fit[9][13] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[6][12] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[6][13] = CorpFurniture.FIT_ARCHIVE;
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
       // ONE DOOR OF EVERY LOOK, because a look is an image: render.facility.FacilityDoors builds a

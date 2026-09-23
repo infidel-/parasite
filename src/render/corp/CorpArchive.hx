@@ -5,6 +5,7 @@ import render.corp.CorpFurniture.CorpArch;
 import render.corp.CorpFurniture.CorpFit;
 import render.facility.FacilityDeco;
 import render.facility.FacilityModel;
+import render.facility.FacilityStyle;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 
@@ -79,6 +80,13 @@ class CorpArchive
               var kind = (hh >>> 21) % 3;
               if (kind == 1)
                 bh *= CorpStyle.ARCH_REAM_H;
+              // AND THE BAY IS A CEILING. The racking's shelves are 0.827 apart against a band
+              // that rolls up to 0.85, so uncapped a carton grows through the plate over it; the
+              // last bay is closed by the frame's top rail and not by a shelf, which is what
+              // ArchUnit.head carries. A lid has neither and takes no cap
+              var ceil = (lv + 1 < f.levels.length ? f.levels[lv + 1] : f.head);
+              if (ceil > 0)
+                bh = Math.min(bh, ceil - f.levels[lv] - CorpStyle.ARCH_HEAD_GAP);
               var off = -span / 2 + (k + 0.5) * slot;
               var o = {
                 cx: u.x + wx * off,
@@ -89,10 +97,16 @@ class CorpArchive
                 y1: f.levels[lv] + bh,
                 yaw: u.yaw,
                 ph: ((hh >>> 3) % 1000) / 1000 * 4.0,
-                // 1.0: a LID has nothing over it. the ramp DECO_BOX_AO_LOW describes is for a bay
-                // closed by the shelf above it, and neither of these two units has one -- what a
-                // box here still gets is `crate`'s own foot darkening onto the lid it stands on
-                ao: 1.0,
+                // and how much light the level gets, ramped up the unit from
+                // FacilityStyle.DECO_BOX_AO_LOW at the bottom bay to 1.0 at the top -- the
+                // compound's own arithmetic, for its own reason: an open frame is closed above
+                // every shelf but its last, so the bay's lid is the occluder and the top takes
+                // none of it. A unit whose only level is its LID has nothing over it at all and
+                // takes the flat 1.0; what a box there still gets is `crate`'s foot darkening
+                ao: (f.levels.length > 1
+                  ? FacilityStyle.DECO_BOX_AO_LOW + (1.0 - FacilityStyle.DECO_BOX_AO_LOW) *
+                    lv / (f.levels.length - 1)
+                  : 1.0),
               };
               switch (kind)
                 {

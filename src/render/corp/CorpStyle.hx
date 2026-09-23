@@ -247,6 +247,9 @@ class CorpStyle
   // four edges and a top IS a ream. Flatter than a carton by this fraction, because a stack nobody
   // boxed is what has been left out on top of a cabinet and it is 10-25 cm, not half a metre
   public static inline var ARCH_REAM_H = 0.42;
+  // and the clearance left under the plane that closes a bay, so a capped box does not meet the
+  // shelf over it exactly and z-fight along its whole lid
+  public static inline var ARCH_HEAD_GAP = 0.06;
 
   // the material scales. a MATERIAL scale and never the object's own size: the laminate grain, the
   // drawer course, the felt weave and the perforation pitch are each chosen against the thing they

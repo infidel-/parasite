@@ -1908,3 +1908,47 @@ texture note predicted 1.6x. Frame p99 is 128 and the paper is 133 — the brigh
 room, but with no halo, so it reads as paper and not as a lamp. No re-roll, and the 1.30 gamma stays.
 
 Verdict: **LANDED.**
+
+## corp: the archive's third family is the compound's own racking, and it is the only one with real bays
+
+`CorpFurniture.ARCH` third row, `ArchUnit.head`, `CorpStyle.ARCH_HEAD_GAP`, `CorpArchive.load`'s
+bay cap and AO ramp, `CorpModel.demo`'s three ranks.
+
+**What changed.** `facility/deco-shelving` (516 tris, 2.600 x 1.666 x 2.600) instanced through
+`CorpProps.batch` as the archive's third family, at its NATURAL size. It is the tower's first
+cross-area glb. Not hand-modelled, because it is already exactly the object asked for — four
+uprights, four cross rails, three perforated plates, a brace to each end, and real daylight through
+the middle of it. Grey steel is correct here: it is the neutral the kraft and the binders read
+against.
+
+**It cost no `CorpWarm` edit and that is the design working.** The warm loop walks
+`CorpFurniture.ARCH` rather than a typed-out list, so a third family is one row in one place. What
+DID move is `CorpModel.demo`: with `ARCH.length` 3 the deal is `mix(row * 668265263) % 3`, and rows
+4 and 9 both answer **2** under the new modulus — so the two ranks that covered both old families
+cover one of three now. Rows **1 / 4 / 6** answer 0 / 2 / 1 and are what the warm carries. Getting
+this wrong is silent: the missing family's program compiles on the frame the first archive comes
+into view, which is the whole reason the file exists.
+
+**And it is the only archive family whose bays are geometry.** The file cabinet and the shelving
+unit carry their load on their LID, because their shelves are painted art behind 0.03-proud boards
+(see the previous entry). This one's three plates are members, so its levels are
+`FacilityStyle.DECO_SHELF_Y` plus `DECO_SHELF_PLATE_Y` — the frame's own rails, measured off the
+built alpha channel by binning opaque coverage per row, plus the plate's lid over the rail centre
+line.
+
+**A real bay is a CEILING and a lid is not**, which is the one thing this phase had to add to the
+load pass. The shelves are 0.827 apart against an `ARCH_BOX_H` band that rolls up to 0.85, so
+uncapped a carton grows straight through the plate over it. The top bay is closed by the frame's TOP
+RAIL and not by a shelf, so the ceiling cannot be derived as `levels[last] + pitch`: `ArchUnit.head`
+carries it, and `head: 0` says nothing closes the level at all. `ARCH_HEAD_GAP` 0.06 of clearance,
+or a capped box meets its shelf exactly and z-fights along its whole lid. `ao` now also ramps
+`DECO_BOX_AO_LOW` -> 1.0 up a unit that has bays — the compound's own arithmetic, because an open
+frame is closed above every shelf but its last — and stays a flat 1.0 on a lid.
+
+**Measured.** A/B/A/B at one pinned pose, median of 7: **134 / 132**, i.e. **+2** where the plan
+budgeted +1. Third independent confirmation that a casting glb batch is two calls. Final at the
+pose: `calls` 134, 622k triangles, 114 programs. Live: 3 racking instances beside 2 shelving units,
+and the load grew with the bays — 232 board tris + 106 paper = **4 sealed cartons, 8 open boxes and
+9 bare reams over 11 levels of 5 units**, against 6 + 4 when only the two lid families existed.
+
+Verdict: **LANDED.**
