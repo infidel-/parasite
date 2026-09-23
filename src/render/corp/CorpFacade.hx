@@ -160,10 +160,18 @@ class CorpFacade
       // the bays, on the same CELL grid the art tiles at and off the same hash render.world
       // .Windows picks a lit pane with — so the tower's own lit windows and the street towers'
       // are one population and cannot drift apart
+      //
+      // ON THE CLADDING'S OWN WINDOW GRID, i.e. at world multiples of CELL, since `face` maps it at
+      // world coord / FACADE_TILE: only the whole windows inside this run and between the street and
+      // the wall base. Counted off the run's corner and the street instead, every bay sat half a
+      // window low (STREET_Y is -28.5 windows) and a corner cell's ran past the corner
       var alongX = (dir < 2);
       var lo = (alongX ? x0 : z0);
-      var n = Std.int(Math.round((alongX ? x1 - x0 : z1 - z0) / CELL));
-      var rows = Std.int(-CorpStyle.STREET_Y / CELL);
+      var hi = (alongX ? x1 : z1);
+      var i0 = Math.ceil(lo / CELL - 0.001);
+      var n = Math.floor(hi / CELL + 0.001) - i0;
+      var j0 = Math.ceil(CorpStyle.STREET_Y / CELL - 0.001);
+      var rows = Math.floor(FacilityStyle.WALL_BASE / CELL + 0.001) - j0;
       for (i in 0...n)
         for (j in 0...rows)
           {
@@ -172,14 +180,14 @@ class CorpFacade
             hv = hv ^ (hv >>> 15);
             if ((hv & 0xffff) / 65536 >= st.glassLitRatio)
               continue;
-            var a = lo + i * CELL;
+            var a = (i0 + i) * CELL;
             var e = CorpStyle.LIT_PROUD;
             var px0 = alongX ? a : (dir == 2 ? x0 - e : x0 + e);
             var pz0 = alongX ? (dir == 0 ? z0 - e : z0 + e) : a;
             FacilityGeom.pane(lit,
               alongX ? a : px0, alongX ? a + CELL : px0,
               alongX ? pz0 : a, alongX ? pz0 : a + CELL,
-              dir, CorpStyle.STREET_Y + j * CELL, CorpStyle.STREET_Y + (j + 1) * CELL);
+              dir, (j0 + j) * CELL, (j0 + j + 1) * CELL);
           }
     }
 

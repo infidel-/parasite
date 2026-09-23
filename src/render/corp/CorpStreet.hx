@@ -169,6 +169,10 @@ class CorpStreet
               var h = tileH(b, tx, tz);
               var f = tileF(b, tx, tz, st.walls.length);
               var glass = (st.winPerCell != null && st.winPerCell[f] > 0);
+              // a glass tower is a WHOLE number of window rows, as the real city's are: the jitter
+              // and the cap otherwise stop it mid-window and the lit rows drift off the art's
+              if (glass)
+                h = Math.max(CELL, Math.floor(h / CELL) * CELL);
               // a glass tower's curtain art is CELL-LOCKED — one window per cell each way, which is
               // how the real city draws it (render.world.Buildings' winPerCell path) and the only
               // period at which the lit panes below land on their own bays. masonry keeps WALL_TILE
@@ -237,11 +241,15 @@ class CorpStreet
 // is at x -180 against a grid edge at -200 — twenty units of city, on the side the player is
 // most likely to be looking out of. The city is scenery and nothing indexes it in world space, so
 // the cheap fix is the right one: slide the whole model so its centre is the plate's
+//
+// AND IT IS ROUNDED TO A WHOLE CELL, which is what puts a glass tower's corners on its own window
+// grid: FacilityGeom.face maps the curtain wall at world coord / CELL, so an unrounded centre slid
+// every tower half a window off the art and every lit pane half a window off its bay
   public static inline function ox(p:PlateBox):Float
-    return (p.x0 + p.x1) / 2;
+    return Math.round((p.x0 + p.x1) / 2 / CELL) * CELL;
 
   public static inline function oz(p:PlateBox):Float
-    return (p.z0 + p.z1) / 2;
+    return Math.round((p.z0 + p.z1) / 2 / CELL) * CELL;
 
 // a WORLD cell index folded back into the model, by MIRRORING at each of its edges.
 //
@@ -516,8 +524,9 @@ class CorpStreet
           st.winPerCell[f] <= 0)
         return 0;
       var buf = litBuf(lit, f);
-      var rows = Std.int(Math.max(1, Math.round(h / CELL)));
-      var rowH = h / rows;
+      // ON THE ART'S OWN PERIOD: the wall maps v = y / CELL, so a row is exactly CELL tall
+      var rows = Std.int(h / CELL);
+      var rowH = CELL * 1.0;
       var row0 = Std.int(Math.round(pod / rowH));
       var n = 0;
       for (dir in 0...4)

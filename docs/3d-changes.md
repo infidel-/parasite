@@ -1998,3 +1998,29 @@ non-casting mesh is one call. `CorpWarm` needed nothing either: the three sheets
 `MeshLambertMaterial` program, so a third atlas is a third material and not a third program.
 
 Verdict: **LANDED.**
+
+## corp: the street's lit windows sat half a window off the curtain wall they glow in
+
+Reported with two face picks: a lit bay at uv 0..1 and the wall behind it at u -43.5 .. -31.5,
+v 2 .. 22.5 — i.e. the wall's window edges on world multiples of CELL and the pane's not. Both
+glass families (the warm dark tower and the emerald light one) and the tower's own flank did it.
+
+**Two phases, both measured off the pick.** `FacilityGeom.face` maps the curtain wall at
+`world coord / CELL`, so its mullions stand on world multiples of 4. The street's panes were laid off
+the building's own corner, and `cellX/cellZ` add `ox(p)/oz(p)` = the PLATE CENTRE, which is not a
+CELL multiple (z0 = -174: half a window). Vertically the pane row was `h / round(h / CELL)`, and a
+street tower's `h` is jittered by `TILE_VARY` and capped at `STREET_MAX_H` 90 — 22.5 rows, a 4.09
+pitch that slides a whole half window by the top. The tower's own flank (`CorpFacade.drop`) counted
+its rows up from `STREET_Y` -114 = v -28.5, half a window low on every bay, and started a corner
+cell's run on the ring plane, `PARAPET_INSET` in, so that pane also overhung the corner.
+
+**Fix.** `ox/oz` round to a CELL multiple (CorpCrowd reads the same pair, so the lanes follow);
+a glass tower's `h` floors to a CELL multiple, which the real city's glass heights already are;
+`panes` rows are exactly CELL; `drop` lays a bay only on world CELL multiples wholly inside the run
+and between `STREET_Y` and `WALL_BASE`, its hash index counted from the first whole row.
+
+**Measured:** every vertex of all four lit meshes on the 4-unit grid on its two in-plane axes —
+**0 of 10,616 off**. The art itself was never the fault: the lit tiles' alpha cut lands on the wall
+tiles' own mullion frame composited 1:1 (both families checked).
+
+Verdict: **LANDED.**

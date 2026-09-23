@@ -1752,3 +1752,4 @@ is what makes it a real target rather than a measurement artefact. Suspects: sta
 overlays (grime, wall decals, storefront bands and doors all draw *over* the wall via `polygonOffset`,
 each a full lit fragment pass), and the FP16 composer target format. **No existing debug key isolates
 overlay overdraw** — that instrumentation is the first step.
+| the street's and the tower's LIT WINDOWS on the curtain wall's own window grid | wall uv is `world / CELL`; panes were laid off the building corner (`ox/oz` = unrounded plate centre, half a window) at `h / round(h/CELL)` rows (22.5 rows at the 90 cap), and the flank from `STREET_Y` -114 = v -28.5. `ox/oz` round to CELL, glass `h` floors to CELL, rows are CELL, the flank lays bays only on whole world-grid windows | **landed. 0 of 10,616 lit vertices off the 4-unit grid; the lit tiles' alpha cut matches the wall mullions 1:1** |
