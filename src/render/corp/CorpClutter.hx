@@ -150,13 +150,24 @@ class CorpClutter
               // AND THE SHADOW IT STANDS IN. a decal IS its own contact — it lies on the worktop —
               // but a promoted cell stands a round or upright glb up there, and
               // render.world.ContactMask is one top-down field over the FLOOR and cannot reach a
-              // mug 1.5 units up. Same emitter, same plate and the same mesh CorpProps.desks
-              // already fills for the monitor, so it costs no draw call
-              FacilityDetail.pool({
+              // mug 1.5 units up.
+              //
+              // SIZED OFF THE PROP AND NOT OFF `sz`, which is the fault this used to have: `sz` is
+              // the DECAL's rolled edge, 0.55 to 0.95, and the plant it replaced is 0.182 across.
+              // After POOL_GROW the quad came out 0.77-1.33 wide under a 0.18 pot — 4.2x to 7.3x —
+              // and reported from the game as a huge square shadow.
+              //
+              // AND `deck` AND NOT `pool`, which is the other half of that report: `pool`'s ramp is
+              // a rounded box at corner radius ZERO, i.e. a square, and all four of these props are
+              // a lathe or a puck. `deck` passes the half-extent as the radius too, which collapses
+              // the same generator to a circle. It is the tower's FIRST user of that mesh and so
+              // costs one draw call — the compound has both in every scene and pays nothing
+              var pr = CorpStyle.CLUTTER_PROP_R[prop] * CorpStyle.CLUTTER_PROP_H[prop];
+              FacilityDetail.deck({
                 cx: box.x,
                 cz: box.z,
-                hw: sz / 2,
-                hd: sz / 2,
+                hw: pr,
+                hd: pr,
                 yaw: yaw,
                 y: y,
                 plate: {

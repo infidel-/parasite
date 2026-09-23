@@ -385,9 +385,18 @@ class CorpStyle
     25 => CLUTTER_PLANT,     // the potted succulent
     58 => CLUTTER_CAM,       // the tripod webcam
   ];
-  // their built heights, in the order above, and their glb paths. built at world size, so
-  // render.Models.instanced scales each by 1
-  public static var CLUTTER_PROP_H = [0.19, 0.52, 0.2534, 0.17];
+  // their DRAWN heights, in the order above, and their glb paths. every one of them is built at
+  // world size, so render.Models.instanced scales by 1 wherever the number here is the glb's own —
+  // and the PLANT is deliberately not: at its built 0.2534 it was reported as too small on a desk,
+  // and 2x is the number asked for
+  public static var CLUTTER_PROP_H = [0.19, 0.52, 0.5068, 0.17];
+  // and their FOOTPRINT RADIUS PER UNIT OF HEIGHT, which is the form that survives an edit to the
+  // line above. render.Models.instanced scales an instance by HEIGHT ALONE, so a hand-typed width
+  // goes stale the moment a height moves — the trap docs/3d-render.md records against
+  // render.sewer.SewerProp.margin, where three of five props ended up standing inside a wall. Half
+  // the glb's own widest horizontal extent over its own height: mug 0.207/0.19, bottle 0.11/0.52,
+  // plant 0.182/0.253, cam 0.104/0.17 (art/models.json's notes carry all eight numbers)
+  public static var CLUTTER_PROP_R = [0.5447, 0.1058, 0.3597, 0.3059];
   public static var CLUTTER_PROP_PATH = [
     RenderConfig.MODELS.corpDeskMug,
     RenderConfig.MODELS.corpDeskBottle,

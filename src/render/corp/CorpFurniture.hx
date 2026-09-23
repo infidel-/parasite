@@ -506,8 +506,13 @@ class CorpFurniture
             break;
           }
       var r = rect(m, col, row, CorpStyle.FIT_INSET, rackAt);
-      // pulled back off the aisle so the rank stands against the wall it backs onto and the front
-      // face is the one the player walks up to
+      // RACK_D IS SHALLOWER THAN A CELL, so the slab is pushed UP AGAINST THE AISLE and the dead
+      // depth is left behind it. A cabinet is 1 m deep and a cell is 2, and the half you walk up to
+      // is the half that has to carry the equipment face — the ranks run at RACK_PITCH 2, so the
+      // gap this leaves on the other hand is between two ranks and nobody stands in it.
+      //
+      // (this comment used to say the opposite — "pulled back off the aisle" — and the code has
+      // always done this. Worth keeping straight, because `drape` reads these rects)
       var d = CELL - CorpStyle.RACK_D - 2 * CorpStyle.FIT_INSET;
       switch (front)
         {
@@ -530,7 +535,15 @@ class CorpFurniture
         }
       FacilityGeom.pane(buf(CorpStyle.RACK_FRONT), r.x0, r.x1, r.z0, r.z1, front, 0,
         CorpStyle.RACK_H);
-      // the status lights, on the SAME face the equipment art is on and over its own painted dots
+      // the status lights, on the SAME face the equipment art is on and over its own painted dots.
+      //
+      // `front ^ 1` AND NOT `front`, which is the whole of "the lights are on the wrong side".
+      // FacilityDeco.lights takes `dir` as the hand the fitting's BACK is on and flips it itself —
+      // its plane table and its u origin are both `dir ^ 1` — because every compound caller emits
+      // its face with `localFace(..., dir ^ 1, ...)` and then hands it the same `dir`. This one
+      // emits with `pane(..., front, ...)`, so it owes the flip. Passed raw, the specks landed
+      // RACK_D + 2 * DECO_LED_EPS behind the equipment face, wound the other way and mirrored in u:
+      // depth-tested behind the cabinet's own two panels, so invisible from the aisle
       FacilityDeco.lights(leds, {
         x0: r.x0,
         x1: r.x1,
@@ -538,7 +551,7 @@ class CorpFurniture
         z1: r.z1,
         y: CorpStyle.LED_Y0,
         h: CorpStyle.LED_H,
-        dir: front,
+        dir: front ^ 1,
         col: col,
         row: row,
         u0: CorpStyle.LED_U0,
@@ -558,6 +571,17 @@ class CorpFurniture
 // what is patched between cabinet and cabinet over the top — and the floor is where the player
 // walks. Emitted from the LOWER cell of each pair only (+x and +z), so a rank of five draws four
 // runs and not eight.
+//
+// SO A LONE CABINET CARRIES NO CABLE AT ALL, and that is the answer to "the cables are gone": there
+// is nothing to patch it to. A 5-wide room's rank is three cells with one DEALT gap in it
+// (gen.corp.CorpRooms.rackRows), and the row whose gap falls in the middle leaves two cabinets that
+// are not neighbours. Reported off a room holding one rack.
+//
+// THE FAR END IS TAKEN AS ONE CELL ALONG rather than off the neighbour's own rect, and that is a
+// 0.12 approximation left deliberately: `rect` insets a hand only where the run really stops, so
+// two cells of one rank sit 3.88 apart and not 4.0. It is 0.06 past each lid, on a ribbon CABLE_W
+// 0.126 wide lying on a 4.0 lid. The pull-back in `rack` is on the CROSS axis and identical for
+// both cells of a rank, so it contributes nothing.
 //
 // ponytail: no drop to a tray and no run to the wall. Those want a tray to hang off, which is a
 // fitting the room does not have yet; add both with it

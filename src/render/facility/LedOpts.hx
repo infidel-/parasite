@@ -15,7 +15,12 @@ typedef LedOpts = {
   // the face's foot and its height
   var y:Float;
   var h:Float;
-  // which hand the face looks down — FacilityGeom.ends' numbering (0 -z, 1 +z, 2 -x, 3 +x)
+  // which hand the fitting's BACK is on — NOT the face the specks sit on. FacilityGeom.ends'
+  // numbering (0 -z, 1 +z, 2 -x, 3 +x), and `lights` takes `dir ^ 1` of it for both the plane and
+  // the u origin, because every caller here emits its lit face the same way: `localFace(...,
+  // dir ^ 1, ...)` against the masonry hand it already has. A caller that emits with the FACE's own
+  // dir (render.corp.CorpFurniture.rack does, via FacilityGeom.pane) owes the flip itself — this
+  // line used to say the opposite and that is exactly the bug it caused there
   var dir:Int;
   // the cell, which seeds every speck's level, phase and hue
   var col:Int;
