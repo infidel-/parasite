@@ -96,7 +96,8 @@ class CorpArchive
                 y0: f.levels[lv],
                 y1: f.levels[lv] + bh,
                 yaw: u.yaw,
-                ph: ((hh >>> 3) % 1000) / 1000 * 4.0,
+                ph: (kind == 1 ? 0.0 : ((hh >>> 3) % 1000) / 1000 * 4.0),
+                tileU: (kind == 1 ? CorpStyle.ARCH_REAM_TILE : null),
                 // and how much light the level gets, ramped up the unit from
                 // FacilityStyle.DECO_BOX_AO_LOW at the bottom bay to 1.0 at the top -- the
                 // compound's own arithmetic, for its own reason: an open frame is closed above

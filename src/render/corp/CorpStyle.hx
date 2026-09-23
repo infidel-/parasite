@@ -247,6 +247,11 @@ class CorpStyle
   // four edges and a top IS a ream. Flatter than a carton by this fraction, because a stack nobody
   // boxed is what has been left out on top of a cabinet and it is 10-25 cm, not half a metre
   public static inline var ARCH_REAM_H = 0.42;
+  // and the ream's SIDE period: longer than the largest ream's whole perimeter (2 x (1.05 + 1.05)),
+  // read from phase 0, so u never wraps round a stack. archive-paper is a quadrant crop whose u wrap
+  // measures 31.2 and at DECO_BOX_TILE 0.5 a 0.8 side crossed two seams. The striations run along
+  // u, so the stretch this costs is along the lines and invisible
+  public static inline var ARCH_REAM_TILE = 4.5;
   // and the clearance left under the plane that closes a bay, so a capped box does not meet the
   // shelf over it exactly and z-fight along its whole lid
   public static inline var ARCH_HEAD_GAP = 0.06;

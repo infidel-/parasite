@@ -2024,3 +2024,16 @@ and between `STREET_Y` and `WALL_BASE`, its hash index counted from the first wh
 tiles' own mullion frame composited 1:1 (both families checked).
 
 Verdict: **LANDED.**
+
+## corp: the archive ream's side seam, and a thinner open-box rim
+
+Two face picks. **The seam** was a ream side at u 3.867 .. 5.498: `crate` maps its sides at
+`DECO_BOX_TILE` 0.5 from a per-box phase, so a 0.8-wide side crossed two u seams — and archive-paper
+is a pack4 QUADRANT whose u wrap measures 31.2, which its own note waved off as "not sampled". It is
+sampled on every side. `FacilityCrateOpts.tileU` (optional; null keeps DECO_BOX_TILE) now sets the
+side period, and a ream passes `CorpStyle.ARCH_REAM_TILE` 4.5 from phase 0 — longer than the largest
+ream's whole perimeter (2 x (1.05 + 1.05)), so u never wraps round a stack. The striations run along
+u, so the 9x stretch is along the lines and cannot be seen. **The rim** was v 0 .. 0.08 at
+`DECO_OPEN_WALL` 0.04, reported too thick; 0.02 now. `openBox` has one caller, the archive.
+
+Verdict: **LANDED** — on screen no ream side shows a break in its lines.

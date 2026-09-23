@@ -1552,7 +1552,9 @@ class FacilityStyle
   // indoor fill is normal-blind (IndoorMask), so four inward-facing walls and a horizontal cap
   // render at the same value as the outward faces beside them and the box reads as a painted
   // square on a slab. Same finding as DECO_BOX_AO_LOW above and the same fix
-  public static inline var DECO_OPEN_WALL = 0.04;
+  // THE BOARD IS 0.02 and was 0.04, reported as too thick: at 0.04 the rim read as a picture frame
+  // round the fill rather than as the cut edge of a carton
+  public static inline var DECO_OPEN_WALL = 0.02;
   public static inline var DECO_OPEN_FILL = 0.62;
   public static inline var DECO_OPEN_AO = 0.55;
 

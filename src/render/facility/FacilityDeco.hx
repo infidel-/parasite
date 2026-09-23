@@ -1535,13 +1535,14 @@ class FacilityDeco
           wz.push(o.cz + lx[i] * s + lz[i] * c);
         }
       var t = FacilityStyle.DECO_BOX_TILE;
+      var tu = (o.tileU != null ? o.tileU : t);
       var foot = o.ao * FacilityStyle.DECO_BOX_AO_FOOT;
       var u = o.ph;
       for (i in 0...4)
         {
           var j = (i + 1) % 4;
           var dx = wx[j] - wx[i], dz = wz[j] - wz[i];
-          var un = u + Math.sqrt(dx * dx + dz * dz) / t;
+          var un = u + Math.sqrt(dx * dx + dz * dz) / tu;
           // p0 and p1 are the two on the shelf, p2 and p3 the two at the lid — so the contact runs
           // up the face and never across it, whichever way the box was turned
           MeshBufTools.quadC(b,

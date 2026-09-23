@@ -23,4 +23,8 @@ typedef FacilityCrateOpts = {
   // and how much light the bay it stands in gets, 0 = black .. 1 = the top shelf. carried on the
   // vertex colour channel because nothing in the room can supply it — see FacilityStyle.DECO_BOX_AO_LOW
   ao:Float,
+  // the SIDES' u period, world units per repeat, where DECO_BOX_TILE is not it. null = DECO_BOX_TILE.
+  // a ream's striations are a crop that does not wrap, so it passes one longer than its whole
+  // perimeter and the four sides read a single run of the sheet with no seam on any of them
+  ?tileU:Float,
 }
