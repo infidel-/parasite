@@ -4499,6 +4499,19 @@
       "last_lift": 1.3,
       "built_linear": 0.3424,
       "built_srgb": 148.5
+    },
+    "corp/archive-tops": {
+      "src": "corp/archive-tops.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "lift": 1.5,
+      "prompt_exact": true,
+      "prompt": "A 2x2 sheet of FOUR square texture swatches, each exactly one quadrant of the image, separated by a thin straight dark line along the exact centre lines. Every swatch is seen STRAIGHT DOWN from directly overhead in flat orthographic view, no perspective, no tilt, no visible sides, no cast shadows, and FILLS ITS WHOLE QUADRANT EDGE TO EDGE - it is the top face of the object and nothing else, no background showing anywhere. TOP-LEFT quadrant: the TOP SHEET OF A STACK OF COPY PAPER seen from above - a plain flat sheet of off-white paper at about 70 percent brightness (a soft light warm grey, clearly darker than pure white), with a very faint fibrous paper grain and three or four very faint pale grey horizontal smudge bars standing in for faded print. No text, no letters. TOP-RIGHT quadrant: the SEALED LID OF A CORRUGATED KRAFT CARDBOARD SHIPPING CARTON seen from above - warm mid-brown kraft board, clearly BROWN and not grey, with the two lid flaps meeting in a straight seam across the exact middle from left to right, and one strip of glossless tan packing tape running along that seam the full width. Faint flute lines under the liner. No printing, no labels, no text. BOTTOM-LEFT quadrant: the tops of MANILA FILE FOLDERS standing packed upright side by side in a box, seen from directly above - a dense repeating rhythm of thin parallel folder edges running left to right across the whole quadrant, warm manila tan and ochre, each folder a slightly different shade, with a few small raised index tabs in muted oxide red, olive green and ochre sticking up between them. No text. BOTTOM-RIGHT quadrant: the TOP OF A WRAPPED REAM OF PAPER seen from above - off-white paper at about 70 percent brightness like the top-left swatch, with a band of plain brown kraft wrapper paper about a third of the swatch wide running top to bottom through the middle of it. No text, no logos. Keep all four at a medium value; nothing glowing, nothing pure white. [append textures.json style_prop + style_corp]",
+      "note": "ONE LABEL THE RUNTIME CROPS and not four pack4 labels, corp/traffic's shape: all four cells are 0..1 CAPS (the top of a ream, a carton lid, the fill of an open box), so nothing here tiles and the whole sheet is ONE material and ONE draw call where four crops would be four. render.corp.CorpArchive holds the rects, MEASURED OFF THE DROP: the separator is cols 511-514 / rows 510-513 (per-column mean |diff| 101.7 at 514 against a background of 2.3) and the frame 0-1 / 1021-1023, so every rect is inset inside both. Asked for as 'the paper top should be a different texture' - the reams wore the edge striations of corp/archive-paper on their tops too. gpt-image-2.5-sunburst at the 1,756-token parity tier, $0.0563, style_prop + style_corp. TL paper top, TR sealed carton lid with a tape seam, BL manila folder tops (an open box's fill), BR a wrapped ream (a second paper top, dealt by hash, so a shelf of reams is not one sheet). ONE LIFT FITS THE FAMILY: linear 0.5016 / 0.2099 / 0.2900 / 0.4132 as drawn, and lift 1.5 lands the carton lid on 0.1037 against corp/archive-board's 0.1062 (the carton's own sides) and the paper top on 0.3579 against corp/archive-paper's 0.3424 (the ream's own sides), folders 0.1734, wrapped ream 0.2821.",
+      "last_converted": "2026-09-24T01:55:27",
+      "last_lift": 1.5,
+      "built_linear": 0.2238,
+      "built_srgb": 117.0
     }
   }
 }

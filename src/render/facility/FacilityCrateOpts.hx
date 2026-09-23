@@ -1,5 +1,7 @@
 package render.facility;
 
+import render.world.MeshBuf.MeshBuf;
+
 // one box standing on a shelf, the shape render.facility.FacilityDeco.crate emits.
 //
 // replaces crate(b, cx, cz, hw, hd, y0, y1, yaw, ph, ao) — ten positional arguments, of which four
@@ -27,4 +29,9 @@ typedef FacilityCrateOpts = {
   // a ream's striations are a crop that does not wrap, so it passes one longer than its whole
   // perimeter and the four sides read a single run of the sheet with no seam on any of them
   ?tileU:Float,
+  // where the TOP goes instead of the sides' buffer, mapped 0..1 across the box onto `lidUV` —
+  // a lid is a picture of a lid and not more of the same board. null = the top tiles with the sides
+  ?lid:MeshBuf,
+  // that top's rect in the lid sheet, [u0, v0, u1, v1]. openBox reads it for its FILL as well
+  ?lidUV:Array<Float>,
 }

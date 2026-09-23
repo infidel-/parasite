@@ -1552,9 +1552,14 @@ class FacilityDeco
           u = un;
         }
       // the top, mapped along the box's OWN axes so the flute lines turn with it. flat at the bay's
-      // own weight: it is the face furthest from the shelf and the one this camera mostly sees
-      var u0 = o.ph, u1 = o.ph + 2 * o.hw / t, v0 = o.ph, v1 = o.ph + 2 * o.hd / t;
-      MeshBufTools.quadC(b,
+      // own weight: it is the face furthest from the shelf and the one this camera mostly sees.
+      // Or, given a lid sheet, that sheet's rect 0..1 across the box
+      var r = o.lidUV;
+      var u0 = (r != null ? r[0] : o.ph);
+      var u1 = (r != null ? r[2] : o.ph + 2 * o.hw / t);
+      var v0 = (r != null ? r[1] : o.ph);
+      var v1 = (r != null ? r[3] : o.ph + 2 * o.hd / t);
+      MeshBufTools.quadC((o.lid != null ? o.lid : b),
         [wx[1], o.y1, wz[1]], [wx[2], o.y1, wz[2]], [wx[3], o.y1, wz[3]], [wx[0], o.y1, wz[0]],
         [u0, v1, u1, v1, u1, v0, u0, v0],
         [o.ao, o.ao, o.ao, o.ao]);
@@ -1625,8 +1630,13 @@ class FacilityDeco
             [inner, inner, inner, inner]);
           u = un;
         }
-      // the contents, one cap along the box's OWN axes so the striations turn with it
-      var u0 = o.ph, u1 = o.ph + 2 * o.hw / tile, v0 = o.ph, v1 = o.ph + 2 * o.hd / tile;
+      // the contents, one cap along the box's OWN axes so the striations turn with it — or the lid
+      // sheet's rect 0..1 across the box, for a fill that is a picture (folder tops) and not a tile
+      var r = o.lidUV;
+      var u0 = (r != null ? r[0] : o.ph);
+      var u1 = (r != null ? r[2] : o.ph + 2 * o.hw / tile);
+      var v0 = (r != null ? r[1] : o.ph);
+      var v1 = (r != null ? r[3] : o.ph + 2 * o.hd / tile);
       MeshBufTools.quadC(p,
         [ix[1], yp, iz[1]], [ix[2], yp, iz[2]], [ix[3], yp, iz[3]], [ix[0], yp, iz[0]],
         [u0, v1, u1, v1, u1, v0, u0, v0],

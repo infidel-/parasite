@@ -44,14 +44,17 @@ class CorpArchive
     {
       var board = MeshBufTools.make();
       var paper = MeshBufTools.make();
+      var tops = MeshBufTools.make();
       for (u in CorpFurniture.units)
-        load(u, board, paper, n);
+        load(u, board, paper, tops, n);
       FacilityDeco.solid(scene, board, CorpStyle.ARCH_BOARD, false);
       FacilityDeco.solid(scene, paper, CorpStyle.ARCH_PAPER, false);
+      // every lid, ream top and box fill in the room, off one sheet: see CorpStyle.ARCH_TOPS
+      FacilityDeco.solid(scene, tops, CorpStyle.ARCH_TOPS, false);
     }
 
 // one unit's load: up to CorpStyle.ARCH_LOAD_MAX pieces across each of its levels
-  static function load(u:CorpArch, board:MeshBuf, paper:MeshBuf, n:CorpFit):Void
+  static function load(u:CorpArch, board:MeshBuf, paper:MeshBuf, tops:MeshBuf, n:CorpFit):Void
     {
       var f = CorpFurniture.ARCH[u.fam];
       // the unit's own two axes off its yaw, which render.corp.CorpFurniture.archive built as
@@ -98,6 +101,12 @@ class CorpArchive
                 yaw: u.yaw,
                 ph: (kind == 1 ? 0.0 : ((hh >>> 3) % 1000) / 1000 * 4.0),
                 tileU: (kind == 1 ? CorpStyle.ARCH_REAM_TILE : null),
+                // a picture of the top rather than more of the sides: a carton's taped lid, a
+                // ream's top sheet (bare or in its wrapper, by the roll), a box's folder tops
+                lid: tops,
+                lidUV: (kind == 0 ? CorpStyle.ARCH_TOP_CARTON :
+                  (kind == 2 ? CorpStyle.ARCH_TOP_FOLDERS :
+                  (((hh >>> 13) & 1) == 0 ? CorpStyle.ARCH_TOP_PAPER : CorpStyle.ARCH_TOP_REAM))),
                 // and how much light the level gets, ramped up the unit from
                 // FacilityStyle.DECO_BOX_AO_LOW at the bottom bay to 1.0 at the top -- the
                 // compound's own arithmetic, for its own reason: an open frame is closed above
@@ -118,7 +127,7 @@ class CorpArchive
                     n.sheaves++;
 
                   case 2:
-                    FacilityDeco.openBox(board, paper, o);
+                    FacilityDeco.openBox(board, tops, o);
                     n.boxes++;
 
                   default:

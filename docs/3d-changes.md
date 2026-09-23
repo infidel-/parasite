@@ -2094,3 +2094,26 @@ the two ranks, the bin flush on its wall. **`area regen` did not rebuild the 3D 
 view stayed on fog until `make reload-load`; nothing was logged.
 
 Verdict: **LANDED.**
+
+## corp: the archive's tops are a picture of a top — one sheet, four 0..1 caps, one call
+
+Reported off a probe pick on a ream's top (archive-paper, uv 2.236..3.867): "top should be a
+different texture". Every crate top wore its sides' own tile — paper-edge striations on a ream, flute
+lines on a carton lid, striations again as an open box's fill.
+
+**`corp/archive-tops`, ONE label the runtime crops** (`corp/traffic`'s shape, not pack4's four labels):
+all four cells are caps mapped 0..1 across the box, so nothing tiles and the sheet is ONE material —
+four crops would have been four calls. TL paper top, TR taped carton lid, BL manila folder tops (an open
+box's fill), BR a wrapped ream (dealt against TL by hash so a shelf of reams is not one sheet). Rects
+measured off the drop — separator cols 511-514 / rows 510-513, frame 0-1 / 1021-1023 — and live in
+`CorpStyle.ARCH_TOP_*` as `[u0, v0, u1, v1]`. `FacilityCrateOpts` grew `lid` + `lidUV` (optional;
+the compound's shelves pass neither and keep their tiled tops); `openBox` maps its fill onto `lidUV`.
+
+**One lift fits the family**, which a sheet of four different materials usually cannot: linear
+0.5016 / 0.2099 / 0.2900 / 0.4132 as drawn, and 1.5 lands the lid on 0.1037 against the carton's own
+sides (corp/archive-board 0.1062) and the paper top on 0.3579 against the ream's own sides
+(archive-paper 0.3424). On screen beside the drawer fronts nothing reads as a lamp.
+
+gpt-image-2.5-sunburst, parity tier, $0.0563, one roll.
+
+Verdict: **LANDED. +1 call for the whole room's lids.**

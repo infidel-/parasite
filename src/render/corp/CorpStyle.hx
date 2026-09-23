@@ -118,6 +118,14 @@ class CorpStyle
   // (models-src/corp/arch_build.py) and are never named here; these two are
   public static inline var ARCH_BOARD = 'textures/corp/archive-board.png';
   public static inline var ARCH_PAPER = 'textures/corp/archive-paper.png';
+  // and the TOPS: one sheet, four 0..1 caps, one draw call (art/textures.json corp/archive-tops).
+  // The rects are [u0, v0, u1, v1] measured off the drop, inset inside its separator (cols 511-514,
+  // rows 510-513) and its frame
+  public static inline var ARCH_TOPS = 'textures/corp/archive-tops.png';
+  public static final ARCH_TOP_PAPER = [ 0.0039, 0.5059, 0.4951, 0.9961 ];
+  public static final ARCH_TOP_CARTON = [ 0.5049, 0.5059, 0.9951, 0.9961 ];
+  public static final ARCH_TOP_FOLDERS = [ 0.0039, 0.0049, 0.4951, 0.4961 ];
+  public static final ARCH_TOP_REAM = [ 0.5049, 0.0049, 0.9951, 0.4961 ];
 
   // THE BLINKING STATUS FIELD ON A RACK'S FRONT, read off corp/rack-front.png rather than laid on
   // an even grid — the trap render.facility.FacilityDeco.lights' own header records, where a
