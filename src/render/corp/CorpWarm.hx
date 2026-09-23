@@ -97,6 +97,14 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpBin, h: CorpStyle.BIN_H },
         { path: RenderConfig.MODELS.corpCase, h: render.corp.CorpDeco.CASE_CABINET[2] },
       ];
+      // AND THE ARCHIVE'S TWO, appended off CorpFurniture's own table rather than typed out again
+      // so a third family is one line in one place. CorpModel.demo carries two rank cells on each
+      // of two rows for this, because the family is dealt off the ROW
+      for (u in CorpFurniture.ARCH)
+        paths.push({
+          path: u.path,
+          h: u.h,
+        });
       // AND THE FOUR CLUTTER PROPS, one entry per path for the reason the ten above have one: a
       // path warmed nowhere compiles its program on the first area entry instead. Appended off
       // CorpStyle's own tables rather than typed out again, so promoting a seventh pack cell is

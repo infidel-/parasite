@@ -1751,3 +1751,112 @@ never had a partner), **0 pods whose aisle hand is not clear floor**, and both o
 a 6 x 10 farm as bands across y, a 10 x 7 as bands across x with every row and every column used.
 
 Verdict: **LANDED.**
+
+## corp: the four reported faults, and two of them were not defects
+
+**The desk plant's contact pool was 4.2x to 7.3x its own footprint, and square.** `CorpClutter`
+sized it off the PACK64 decal's rolled edge `sz` (`CLUTTER_SZ` 0.55 + 0.40 var) instead of the
+prop's own 0.182 — so a 0.18 pot stood in a quad 0.77 to 1.33 across — and all four promoted cells
+went through `FacilityDetail.pool`, the SQUARE ramp, rather than `.deck`. Measured after: pool 0.51
+against a 0.365 footprint, i.e. exactly `POOL_GROW` 1.4. **The footprint is stored as a radius PER
+UNIT OF HEIGHT (`CLUTTER_PROP_R`) and not as a width**, because `Models.instanced` scales by height
+alone — which is what makes the table survive the plant's own x2 on the line directly above it.
+
+**The rack's LEDs were one `^ 1` short, and the COMMENT is what caused it.** `FacilityDeco.lights`
+takes `dir` as the hand the fitting's BACK is on and flips it internally (its plane table and its u
+origin are both `dir ^ 1`), because every compound caller emits its face with `pane(..., dir ^ 1,
+...)` and then hands it the same `dir`. `CorpFurniture.rack` emitted with `pane(..., front, ...)`
+and passed `dir: front`, so the specks landed `RACK_D + 2 * DECO_LED_EPS` behind the equipment face,
+wound the other way and mirrored in u — depth-tested behind the cabinet's own two panels, invisible
+from the aisle. `LedOpts.hx:19` stated the opposite of what the function does and is rewritten.
+
+**The probed face at `local y 1.3` was a cabinet LID and not a desk.** No worktop in the tower is
+1.3 tall (`DESK_H` 1.5, `COUNTER_H` 1.8, `TABLE_H` 1.5, `VANITY_H` 1.7) and 1.30 was exactly
+`CorpDeco.CASE[K_CABINET][2]` — `box` caps every cabinet, fridge, vending machine and plant-room
+unit with `CorpStyle.DESK_TOP` at `DESK_TILE`, i.e. office desk laminate. `corp/case-cabinet`
+(324 tris, 3.00 x 1.23 x 2.00, hand-modelled) replaces it for `K_CABINET`, and the height moved
+**1.30 → 2.00** to land on the drawer art: at 1.30 the front is aspect 2.31 and two clean courses
+wanted a partial drawer, a 1.5x stretch or a re-rolled sheet, where 2.00 puts the modelsheet repeat
+at exactly 1 x 0.667. 2.00 is a real 1 m filing unit. The vending machine, the fridge and the
+plant-room unit stay boxes — `CorpDeco`'s own header already prescribes an authored 0..1 glass front
+for the first, which is a texture and not a silhouette.
+
+**And the cables were never gone.** `drape` is alive, emitted and uploaded, `facility/cable`
+resolves, and exactly one commit ever touched it — the one that added it. It runs from the LOWER
+cell of each pair only and needs a rack at +x or +z, so a lone cabinet has nothing to patch to;
+verified live at 60 tris of cable, i.e. one run in the whole area, off a room holding one rack. What
+was actually wrong there was a comment: the `d` pull-back pushes the slab TOWARD the aisle and the
+comment said the opposite, which matters because `drape` reads those rects. Its 0.12 endpoint
+approximation is left alone, measured on a 4.0 lid.
+
+Verdict: **LANDED.**
+
+## corp: the records room stopped being a server room, and a casting glb batch is +2 and not +1
+
+`room-archive` was empty, and the reason is that `archive` and `servers` called the same `rackRows`
+and wrote the same `TILE_FLOOR_SERVER + 16`. `fitOf` reads that as `FIT_RACK`, so a paper records
+room built steel cabinets with blinking LEDs and cable drapes over them — and its own
+`CORP_CABINET` dressings drew nothing, because `CorpDeco.casework` skips any cell where
+`m.fit != 0`.
+
+**`Const.TILE_FLOOR_ARCHIVE` (207, twin 223) splits it and buys nothing else.** `surfOf` still
+answers `Surf.SERVER`: no new label, no new material, no new draw call, and a records room and a
+computer room really do both stand on sealed concrete. The two are told apart by their FITTINGS
+alone. **`tiles/Default.hx:52` row 13 index 15 was a `1`** and that is the whole risk in the change:
+left there, every archive fitting is floor you walk straight through, renders as nothing, and both
+`GenCheck` oracles still pass — the exact fault index 12 (the boardroom) shipped with.
+
+**The two units are glbs where the rack is quads, and the test is the PROUD EDGE.** A server
+cabinet's read IS its authored front, which a box of quads states exactly. A file cabinet's is four
+DRAWERS proud of a carcass and a shelving unit's is five BOARDS proud of the binders behind them,
+and on a flat face either one is a painted stripe that catches no light and casts nothing —
+`bookcase_build.py`'s own finding. `corp/arch-cabinet` **156 tris, 2.70 x 1.20 x 3.60**;
+`corp/arch-shelf` **168, 3.20 x 1.20 x 4.80**; both `buildlib.check` clean first run (holes 0,
+coplanar 0, islands 1, one primitive). **Only the carcass is chamfered on each**: a chamfered box on
+this route is 108 tris against 12, so breaking every arris would be 540 + 648, and a piece standing
+0.03 proud already has the lit line a chamfer buys.
+
+**Both sizes came off the art and neither was chosen.** `corp/archive-drawers` draws one full-width
+drawer across the tile and three courses up, so a course is aspect 3.0 — four courses of a real
+0.45 m drawer is 3.60 tall and 3 x 0.90 is 2.70 wide, a real 1.35 x 1.80 m lateral file.
+`corp/archive-spines` draws eight binders across and two shelves up, which read at a 0.1 m spine and
+a 0.4 m shelf pitch is a 1.60-unit bay: 3.20 is two across, 4.80 is three up. Every
+`modelsheet --repeat` then lands whole (1 x 1.3333 and 2 x 3), so no binder is cut at a cell edge
+and nothing is stretched. The shelf's flank is the one exception at 0.25 x 1.0 rather than
+0.3 x 1.2, which is the compound bookcase's lid finding: past one repeat the tile wraps INSIDE the
+packed cell and a packed quadrant's wrap error is roughly double a solo roll's.
+
+**The shelf's five board rows are a LOCK and not a choice** — a board anywhere else than where the
+art draws one shows a DOUBLE SHELF. Measured off the PACKED cell by row statistics: a flat band at
+sd < 20 between two bands of spines at sd 33-37, one every 512/6 rows exactly as the 2 x 3 repeat
+requires. The sixth is the plinth and is not built: its band straddles the cell wrap, so a box on it
+would stand 0.036 through the floor, and the painted band is all of a plinth this camera sees.
+
+**The family is dealt per RANK and not per cell.** `rackRows` lays a rank along x at one row with a
+dealt gap in it and the brief is rows *of* each thing — dealt per cell, that gap would be the only
+thing telling two families apart. `mix(row * 668265263) % ARCH.length`, which lands different on 11
+of the first 13 row pairs two apart (`RACK_PITCH` is 2), which is as much as a hash can promise.
+`CorpModel.demo` carries two adjacent cells on rows 4 and 9, whose hashes are 1 and 0, so both
+materials compile in the warm rather than on the frame the first archive appears.
+
+**A CASTING GLB BATCH IS +2 CALLS AND NOT +1.** Measured twice, A/B/A/B at one pose, median of 7
+frames: the credenza 141/139, and the archive's two batches together **143/139**. Toggling
+`castShadow` alone accounts for the second (141 → 140). The verdict table's older *"+7 calls
+exactly, one per batch"* row predates `CorpProps.batch` switching those props' `castShadow` on and
+is stale; this work's real budget is +9-12 and not the plan's +6.
+
+**The new oracle found a real defect and then found its own limit.** `GenCheck.archiveSane`: **4
+archives in 600 seeds generated empty** — at the dealt 4x4 minimum a rank is two or three cells and
+nothing stopped the `chance` roll taking all of them. A deterministic per-rank guarantee plus a
+demand of **5x5** left 2 in 3000, and those are `CorpConnect.openPockets` legitimately eroding a
+rank to reach floor the lift flood lost. A repair is not a placement rule and correctly outranks a
+dressing, so the assert is re-aimed at the invariant that does hold — `decorateWalls` takes a corner
+unconditionally — and the rank itself is documented as not assertable. The 5x5 minimum has a stated
+cost over 600 seeds: `furnN/archive` 1.77 → 1.53, open-plan 1.81 → 1.47, solo 8.78 → 9.37, since the
+4x4 rooms now fall to the filler. `walkableCells` 1232.7 → 1232.1, orphans 0, unreachable rooms 0.
+
+**Live:** `fit.units` 4 over two archives — 3 file cabinets on rows 9 and 15, one shelving unit on
+row 13, all at scale 1 and upright, each pushed against its own aisle with the dead depth behind.
+Both oracles green at 3000 seeds each.
+
+Verdict: **LANDED.**

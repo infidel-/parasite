@@ -151,6 +151,17 @@ class CorpProps
       var benches = [];
       var legs = [];
       var floors = [for (_ in FLOOR) new Array<Models.PropPlace>()];
+      // AND THE ARCHIVE'S RANKS, whose placements render.corp.CorpFurniture.archive already
+      // collected — the aisle search and the push-back belong in the file that owns `m.fit`, and
+      // that pass runs before this one. Not in FLOOR above: every entry there is a family that
+      // hugs a WALL and is found by scanning for masonry, which a unit standing in a rank is not
+      var arch = [for (_ in CorpFurniture.ARCH) new Array<Models.PropPlace>()];
+      for (u in CorpFurniture.units)
+        arch[u.fam].push({
+          x: u.x,
+          z: u.z,
+          yaw: u.yaw,
+        });
       var binp = CorpDeco.bins(m, area);
       podBins(m, binp);
       // WHERE THE OLD COMPUTER ICONS STOOD, which is what "put the new ones in their places"
@@ -185,6 +196,9 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h, FLOOR[i].env));
+      // lacquered steel with a brass label frame on it, so `env` is left at its default TRUE
+      for (i in 0...CorpFurniture.ARCH.length)
+        out.push(batch(scene, CorpFurniture.ARCH[i].path, arch[i], CorpFurniture.ARCH[i].h));
       return {
         batches: out,
         n: n,

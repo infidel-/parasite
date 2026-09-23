@@ -3,6 +3,7 @@ package render.corp;
 import Const;
 import citygen.CityConfig;
 import three.Three;
+import render.RenderConfig;
 import render.facility.FacilityCable;
 import render.facility.FacilityDeco;
 import render.facility.FacilityGeom;
@@ -27,6 +28,34 @@ typedef CorpFit = {
   var mirrors: Int;     // mirror panels over the vanity
   var leds: Int;        // blinking status specks on the rack fronts
   var cables: Int;      // cable drapes between the cabinets of a rank
+  var units: Int;       // archive file cabinets and shelving units, one per rank cell
+}
+
+// ONE ARCHIVE FAMILY: a piece of records-room furniture and the glb that draws it.
+//
+// width ALONG the rank, depth OFF the aisle, height -- and every number is built into the model by
+// models-src/corp/arch_build.py, which copies this table verbatim. render.Models.instanced scales
+// an instance by HEIGHT ALONE, so `w` and `d` are read here only for the contact footprint and the
+// push up against the aisle; the glb's own proportions are what the player sees
+typedef ArchUnit = {
+  var path: String;
+  var w: Float;
+  var d: Float;
+  var h: Float;
+}
+
+// ONE ARCHIVE UNIT STANDING IN A RANK, for the two passes that draw and dress it.
+//
+// collected here rather than re-derived, the discipline CorpPanel above is collected under: the
+// aisle search and the push-back belong in the one file that owns `m.fit`, and render.corp.CorpProps
+// batches these into one draw call per family
+typedef CorpArch = {
+  var x: Float;      // world centre of the carcass
+  var z: Float;
+  var yaw: Float;    // its front looks down the aisle
+  var fam: Int;      // which of CorpFurniture.ARCH -- dealt per RANK, off the row index
+  var col: Int;
+  var row: Int;
 }
 
 // ONE EMITTED CUBICLE PANEL, for the two passes that dress it.
@@ -78,9 +107,10 @@ typedef PodHands = {
 //   - `m.table` — the worktop tiles gen.corp's templates lay. the FINISH comes off the room's own
 //     Surf, so the same tile is a desk in the open plan, a counter in the kitchen and a slab in the
 //     boardroom;
-//   - `m.fit` — the three ids the surface grid cannot name, dealt by CorpModel.fitOf: a cubicle
-//     SPINE, a server CABINET and a washroom FIXTURE. Each is a floor tile's unwalkable twin, so
-//     all three paint their room's own floor and only the raw tile told them apart.
+//   - `m.fit` — the ids the surface grid cannot name, dealt by CorpModel.fitOf: a cubicle SPINE, a
+//     server CABINET, a washroom FIXTURE and a records-room UNIT. Each is a floor tile's unwalkable
+//     twin, so all of them paint their room's own floor and only the raw tile told them apart. The
+//     UNIT is the one that is not emitted here — see `archive`, which places a glb instead.
 //
 // a FIXTURE is a BASIN where it has a fixture neighbour and a STALL where it stands alone, and that
 // test is not a guess: gen.corp.CorpRooms.toilet lays the basins as a continuous run along the
@@ -96,6 +126,25 @@ class CorpFurniture
   // 2 and 3 are read out of grids that already exist
   public static inline var FIT_RACK = 2;     // a server cabinet
   public static inline var FIT_FIXTURE = 3;  // a washroom basin or WC cubicle
+  // and the records room's, which is the one of the four that is NOT emitted here -- see `archive`
+  public static inline var FIT_ARCHIVE = 4;
+
+  // the archive's two families, dealt one per rank. THE TABLE IS THE MODELS' OWN NUMBERS: see
+  // ArchUnit, and art/models.json for why each one is the size it is (both came off the art)
+  public static final ARCH:Array<ArchUnit> = [
+    {
+      path: RenderConfig.MODELS.corpArchCase,
+      w: 2.70,
+      d: 1.20,
+      h: 3.60,
+    },
+    {
+      path: RenderConfig.MODELS.corpArchShelf,
+      w: 3.20,
+      d: 1.20,
+      h: 4.80,
+    },
+  ];
 
   // the buffers, keyed by the texture they will be merged under
   static var bufs:Map<String, MeshBuf>;
@@ -109,6 +158,9 @@ class CorpFurniture
   // every cubicle panel this build emitted, for the two passes that dress it. REBUILT here rather
   // than drained by its readers, because both of them want the whole list
   public static var panels(default, null):Array<CorpPanel> = [];
+  // and every archive unit this build placed, for render.corp.CorpProps' batches. REBUILT here for
+  // `panels`' own reason: its reader wants the whole list, and CorpProps.build runs after this
+  public static var units(default, null):Array<CorpArch> = [];
 
 // emit every fitting on the floor plate
   public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):CorpFit
@@ -117,6 +169,7 @@ class CorpFurniture
       leds = MeshBufTools.make();
       cables = MeshBufTools.make();
       panels = [];
+      units = [];
       var n:CorpFit = {
         desks: 0,
         counters: 0,
@@ -128,6 +181,7 @@ class CorpFurniture
         mirrors: 0,
         leds: 0,
         cables: 0,
+        units: 0,
       };
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -147,6 +201,9 @@ class CorpFurniture
 
                 case FIT_FIXTURE:
                   washroom(m, col, row, n);
+
+                case FIT_ARCHIVE:
+                  archive(m, col, row, n);
 
                 default:
               }
@@ -610,12 +667,77 @@ class CorpFurniture
         }
     }
 
+// one archive unit: a file cabinet or a shelving unit, standing with its front on the aisle.
+//
+// A PLACEMENT AND NOT GEOMETRY, which is the one thing that separates this from `rack` above. A
+// server cabinet's read IS its authored front, and a box of quads states that exactly. A file
+// cabinet's read is four DRAWERS standing proud of a carcass and a shelving unit's is five BOARDS
+// standing proud of the binders behind them — and a proud edge is the one thing a flat face cannot
+// have, so on a quad a drawer is a painted stripe that catches no light and casts nothing. That is
+// docs/3d-models.md's fourth route and models-src/facility/bookcase_build.py's own finding, so both
+// families are hand-modelled glbs. This collects where they stand; render.corp.CorpProps batches
+// them, one draw call per family.
+//
+// THE FAMILY IS DEALT PER RANK AND NOT PER CELL. gen.corp.CorpRooms.rackRows lays a rank along x at
+// one row with a dealt gap in it, and the brief is rows OF each thing — dealt per cell the only
+// thing telling two families apart would be that gap. So the hash takes the ROW alone and every
+// unit on it is the same piece. Ranks sit RACK_PITCH 2 apart and this hash lands different on 11 of
+// the first 13 row pairs two apart, which is as much as a hash can promise
+  static function archive(m:Facility, col:Int, row:Int, n:CorpFit):Void
+    {
+      // the aisle, exactly `rack`'s search and for exactly its reason: +z FIRST, because this
+      // camera rests with no yaw of its own and a rank whose front looks any other way shows the
+      // player its back
+      var front = 1;
+      for (dir in FRONTS)
+        if (!archiveAt(m, col + dx(dir), row + dz(dir)) &&
+            FacilityModel.inside(m, col + dx(dir), row + dz(dir)))
+          {
+            front = dir;
+            break;
+          }
+      var fam = FacilityModel.mix(row * 668265263) % ARCH.length;
+      var u = ARCH[fam];
+      var r = rect(m, col, row, CorpStyle.FIT_INSET, archiveAt);
+      // AND PUSHED UP AGAINST THE AISLE, `rack`'s own arrangement and its own note: a unit is
+      // shallower than a cell, and the half the player walks up to is the half that has to carry
+      // the front, so the dead depth is left behind it between two ranks where nobody stands
+      var cx = (r.x0 + r.x1) / 2;
+      var cz = (r.z0 + r.z1) / 2;
+      switch (front)
+        {
+          case 0: cz = r.z0 + u.d / 2;
+          case 1: cz = r.z1 - u.d / 2;
+          case 2: cx = r.x0 + u.d / 2;
+          default: cx = r.x1 - u.d / 2;
+        }
+      units.push({
+        x: cx,
+        z: cz,
+        // the hand the front looks at, which for a rank IS `front` — where a wall-hugging prop
+        // takes `dir ^ 1` of the hand its back is on (render.corp.CorpProps.standing)
+        yaw: Math.atan2(dx(front), dz(front)),
+        fam: fam,
+        col: col,
+        row: row,
+      });
+      var hw = (front < 2 ? u.w : u.d) / 2;
+      var hd = (front < 2 ? u.d : u.w) / 2;
+      ContactMask.prop(cx - hw, cx + hw, cz - hd, cz + hd);
+      n.units++;
+    }
+
   // the order a rack looks for its aisle in: toward the camera, then the two sides, then away
   static final FRONTS = [ 1, 3, 2, 0 ];
 
   static inline function rackAt(m:Facility, col:Int, row:Int):Bool
     {
       return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_RACK;
+    }
+
+  static inline function archiveAt(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_ARCHIVE;
     }
 
 // one washroom fixture: a vanity where the run carries on beside it, a WC cubicle where it does not

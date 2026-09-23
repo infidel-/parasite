@@ -88,6 +88,11 @@ class CorpModel
 // by the wall dressing, and what it really is, is the decoration on the same cell — which
 // render.corp.CorpDeco already draws.
 //
+// THE ARCHIVE IS CLEARED THE SAME WAY and it is what makes its WALL casework draw at all: `archive`
+// runs the identical `rackRows` over the interior and dresses x1 and x2 with CORP_CABINET, and
+// CorpDeco.casework skips any cell where `m.fit != 0`. So every credenza an archive was dealt used
+// to be a rank cell that drew nothing.
+//
 // THE CUBICLE FARM USED TO BE THE OTHER HALF OF THIS and no longer has a dog in it: its partitions
 // take no cell and it dresses no wall.
 //
@@ -103,7 +108,8 @@ class CorpModel
             {
               if (!FacilityModel.inside(m, col, row))
                 continue;
-              if (m.fit[row][col] == CorpFurniture.FIT_RACK)
+              if (m.fit[row][col] == CorpFurniture.FIT_RACK ||
+                  m.fit[row][col] == CorpFurniture.FIT_ARCHIVE)
                 m.fit[row][col] = 0;
             }
     }
@@ -360,10 +366,11 @@ class CorpModel
 
 // which piece of furniture a corp tile id stands, as one of CorpFurniture's codes.
 //
-// THREE IDS AND NOTHING ELSE, and every one of them is a floor tile's UNWALKABLE TWIN (one tileset
+// FOUR IDS AND NOTHING ELSE, and every one of them is a floor tile's UNWALKABLE TWIN (one tileset
 // row down, gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
 // uses to say "something stands here" without a tile of its own, and it is why the surface grid
-// cannot answer: a spine cell, a rack cell and a basin cell all paint their room's own floor.
+// cannot answer: a spine cell, a rack cell, a basin cell and an archive rank cell all paint their
+// room's own floor.
 //
 // the WORKTOPS are not here — those are ordinary table tiles and `Facility.table` already holds
 // them; what separates a desk from a kitchen counter is the room's Surf and not the tile
@@ -377,6 +384,12 @@ class CorpModel
         return CorpFurniture.FIT_RACK;
       if (t == Const.TILE_FLOOR_MARBLE2 + 16)
         return CorpFurniture.FIT_FIXTURE;
+      // AND THE ARCHIVE'S OWN TWIN, which is the whole reason Const.TILE_FLOOR_ARCHIVE exists: its
+      // floor and its walls answer the server room's Surf (see `surfOf`) and only this tells the two
+      // rooms apart. Before the id was split the archive wrote TILE_FLOOR_SERVER + 16 and a paper
+      // records room built steel server cabinets with blinking LEDs and cable drapes over them
+      if (t == Const.TILE_FLOOR_ARCHIVE + 16)
+        return CorpFurniture.FIT_ARCHIVE;
       return 0;
     }
 
@@ -439,6 +452,17 @@ class CorpModel
       m.fit[8][15] = CorpFurniture.FIT_FIXTURE;
       m.fit[8][16] = CorpFurniture.FIT_FIXTURE;
       m.fit[8][3] = CorpFurniture.FIT_FIXTURE;
+      // AND TWO ADJACENT ARCHIVE CELLS ON EACH OF TWO ROWS, because the family is dealt off the ROW
+      // (CorpFurniture.archive) and each one is its own glb with its own material — a family with
+      // nothing here compiles its program on the frame the first archive comes into view. The rows
+      // are not arbitrary: FacilityModel.mix(row * 668265263) % 2 is 1 at row 4 and 0 at row 9, so
+      // between them the two cover both entries of CorpFurniture.ARCH. ADJACENT because `rect`
+      // insets a hand only where the rank really stops, so a lone cell never exercises the
+      // uninset case
+      m.fit[4][12] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[4][13] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[9][12] = CorpFurniture.FIT_ARCHIVE;
+      m.fit[9][13] = CorpFurniture.FIT_ARCHIVE;
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
       // ONE DOOR OF EVERY LOOK, because a look is an image: render.facility.FacilityDoors builds a

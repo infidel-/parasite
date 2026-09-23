@@ -847,6 +847,14 @@ class RenderConfig {
     // CorpDeco.CASE[K_CABINET][2]). Its height was then fixed TO the drawer art, 1.30 -> 2.00, so
     // two full-width courses land with no stretch; see art/models.json's note
     corpCase: 'models/corp/case-cabinet.glb',  // carcass, two proud drawers, brass label holders, 324
+    // AND THE RECORDS ROOM'S TWO, which stand in the ranks gen.corp.CorpRooms.archive lays and are
+    // dealt one per rank (render.corp.CorpFurniture.archive). Both are glbs for the reason the
+    // credenza is: a drawer standing proud of a carcass and a board standing proud of the binders
+    // behind it are the one thing a flat face cannot have. Both sizes came off the ART -- the
+    // drawer course's aspect and the spine sheet's bay -- so neither number was chosen; see
+    // art/models.json
+    corpArchCase: 'models/corp/arch-cabinet.glb',   // four-drawer lateral file, 2.70 x 3.60, 156 tris
+    corpArchShelf: 'models/corp/arch-shelf.glb',    // six shelves of box files, 3.20 x 4.80, 168
     // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
     // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;
     // it fails on a cell whose read is a ROUND or UPRIGHT silhouette, which no top-down art can
