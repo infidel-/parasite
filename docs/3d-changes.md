@@ -2037,3 +2037,22 @@ u, so the 9x stretch is along the lines and cannot be seen. **The rim** was v 0 
 `DECO_OPEN_WALL` 0.04, reported too thick; 0.02 now. `openBox` has one caller, the archive.
 
 Verdict: **LANDED** — on screen no ream side shows a break in its lines.
+
+## facility: the store shelving's plate edges were a 37x smear of one swatch
+
+A probe pick on the racking in the archive: the top plate's front edge at uv 0.129..0.142 x
+0.145..0.157 — which is `R_PLAIN`'s window in the store sheet exactly, 14 x 12 texels. Every plate
+edge in `models-src/facility/store_build.py` `plate()` wore it, so a 2.6 x 0.03 face read one
+flat smear along the front of every shelf. `R_EDGE` replaces it: a 6-row slice down the middle of
+rail 2 (rows 151..157, cols 40..290), and 6 rows IS 0.03 at the sheet's 0.005078 units per texel,
+so the edge carries the rail's own brushed grain at the right density across, stretched 2x only
+ALONG the grain. The trolley's tray shares `plate` and had the same 1.98-long smear; it takes the
+same slice. Member ends keep R_PLAIN — a 0.09-0.14 face over 14 texels is at density.
+
+**Trap:** the `blender` MCP needs Blender open (GUI) and its CLI variant needs `BLENDER_PATH`; with
+neither, `blender.exe --background --factory-startup --python-expr 'exec(...)'` run from WSL
+against `C:\Program Files\Blender Foundation\Blender 5.1\` does the same build headless.
+
+**Measured:** 516 / 1044 tris unchanged, holes 0 / coplanar 0 / uv smears 0 on both.
+
+Verdict: **LANDED.**
