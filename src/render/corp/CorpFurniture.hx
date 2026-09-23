@@ -68,9 +68,8 @@ typedef CorpArch = {
   var x: Float;      // world centre of the carcass
   var z: Float;
   var yaw: Float;    // its front looks down the aisle
-  var fam: Int;      // which of CorpFurniture.ARCH -- dealt per RANK, off the row index
-  var col: Int;
-  var row: Int;
+  var fam: Int;      // which of CorpFurniture.ARCH -- dealt per RUN, see CorpFurniture.archives
+  var seed: Int;     // the unit's own roll, for what CorpArchive stacks on it
 }
 
 // ONE EMITTED CUBICLE PANEL, for the two passes that dress it.
@@ -143,6 +142,10 @@ class CorpFurniture
   public static inline var FIT_FIXTURE = 3;  // a washroom basin or WC cubicle
   // and the records room's, which is the one of the four that is NOT emitted here -- see `archive`
   public static inline var FIT_ARCHIVE = 4;
+  // and the three rows of ARCH below, by name
+  public static inline var ARCH_CASE = 0;
+  public static inline var ARCH_SHELF = 1;
+  public static inline var ARCH_RACK = 2;
 
   // the archive's two families, dealt one per rank. THE TABLE IS THE MODELS' OWN NUMBERS: see
   // ArchUnit, and art/models.json for why each one is the size it is (both came off the art)
@@ -243,12 +246,10 @@ class CorpFurniture
                 case FIT_FIXTURE:
                   washroom(m, col, row, n);
 
-                case FIT_ARCHIVE:
-                  archive(m, col, row, n);
-
                 default:
               }
           }
+      archives(m, n);
       // the casework the tower's own decoration objects stand for, into these SAME buffers so a
       // cabinet, a fridge and a vending machine cost no draw call of their own — see CorpDeco
       deco = {
@@ -708,64 +709,148 @@ class CorpFurniture
         }
     }
 
-// one archive unit: a file cabinet or a shelving unit, standing with its front on the aisle.
+// every archive unit on the plate, laid per RUN of cells and not per cell.
 //
 // A PLACEMENT AND NOT GEOMETRY, which is the one thing that separates this from `rack` above. A
 // server cabinet's read IS its authored front, and a box of quads states that exactly. A file
 // cabinet's read is four DRAWERS standing proud of a carcass and a shelving unit's is five BOARDS
 // standing proud of the binders behind them — and a proud edge is the one thing a flat face cannot
-// have, so on a quad a drawer is a painted stripe that catches no light and casts nothing. That is
-// docs/3d-models.md's fourth route and models-src/facility/bookcase_build.py's own finding, so both
-// families are hand-modelled glbs. This collects where they stand; render.corp.CorpProps batches
-// them, one draw call per family.
+// have. That is docs/3d-models.md's fourth route, so all three families are glbs. This collects
+// where they stand; render.corp.CorpProps batches them, one draw call per family.
 //
-// THE FAMILY IS DEALT PER RANK AND NOT PER CELL. gen.corp.CorpRooms.rackRows lays a rank along x at
-// one row with a dealt gap in it, and the brief is rows OF each thing — dealt per cell the only
-// thing telling two families apart would be that gap. So the hash takes the ROW alone and every
-// unit on it is the same piece. Ranks sit RACK_PITCH 2 apart and this hash lands different on 11 of
-// the first 13 row pairs two apart, which is as much as a hash can promise
-  static function archive(m:Facility, col:Int, row:Int, n:CorpFit):Void
+// PER RUN, because one unit per 4-unit cell was the sparse room the report was about: a 2.6-wide
+// rack in a 4.0 cell left 1.4 of daylight to the next one on every hand. A run of cells is laid as
+// many units as its length holds, END TO END (ARCH_BUTT apart) and centred, so a rank reads as a
+// section of racking and a wall as a wall of cabinets. Two kinds of run, both read off the grid:
+//   - a WALL run: cells with masonry on the same hand, along that wall. File cabinets, and one run
+//     in ARCH_WALL_SHELF an arch-shelf, backs on the masonry face and fronts into the room;
+//   - a RANK run: cells with no masonry at all, along x (gen.corp.CorpRooms.archive lays its ranks
+//     inside an aisle that never touches a wall). The room's ranks are SPLIT IN TWO SECTIONS by row
+//     — the first half one family, the rest the other, which half gets which hashed off the room —
+//     and an arch-shelf rank stands BACK TO BACK, a pair per cell fronting both aisles
+  static function archives(m:Facility, n:CorpFit):Void
     {
-      // the aisle, exactly `rack`'s search and for exactly its reason: +z FIRST, because this
-      // camera rests with no yaw of its own and a rank whose front looks any other way shows the
-      // player its back
-      var front = 1;
-      for (dir in FRONTS)
-        if (!archiveAt(m, col + dx(dir), row + dz(dir)) &&
-            FacilityModel.inside(m, col + dx(dir), row + dz(dir)))
+      var seen = new Map<Int, Bool>();
+      for (row in 0...m.h)
+        for (col in 0...m.w)
           {
-            front = dir;
-            break;
+            if (!archiveAt(m, col, row) ||
+                seen.exists(row * m.w + col))
+              continue;
+            // row-major, so this is a run's first cell whichever way it runs
+            var hand = wallHand(m, col, row);
+            var alongX = (hand < 2);
+            var len = 0;
+            while (true)
+              {
+                var c = col + (alongX ? len : 0);
+                var r = row + (alongX ? 0 : len);
+                if (!archiveAt(m, c, r) ||
+                    seen.exists(r * m.w + c) ||
+                    wallHand(m, c, r) != hand)
+                  break;
+                seen.set(r * m.w + c, true);
+                len++;
+              }
+            if (hand >= 0)
+              {
+                var fam = (FacilityModel.mix((col * 374761393) ^ (row * 668265263) ^ hand) %
+                  CorpStyle.ARCH_WALL_SHELF == 0 ? ARCH_SHELF : ARCH_CASE);
+                lay(m, col, row, len, alongX, fam, [ hand ^ 1 ], hand, n);
+              }
+            else
+              {
+                var fam = rankFamily(m, col, row);
+                lay(m, col, row, len, true, fam, (fam == ARCH_SHELF ? [ 0, 1 ] : [ 1 ]), -1, n);
+              }
           }
-      var fam = FacilityModel.mix(row * 668265263) % ARCH.length;
+    }
+
+// one run's units: `fronts` is the hand each row of them looks at — one entry, or [0, 1] for a
+// back-to-back pair. `wall` is the masonry hand a wall run backs onto, -1 for a rank
+  static function lay(m:Facility, col:Int, row:Int, len:Int, alongX:Bool, fam:Int,
+      fronts:Array<Int>, wall:Int, n:CorpFit):Void
+    {
       var u = ARCH[fam];
-      var r = rect(m, col, row, CorpStyle.FIT_INSET, archiveAt);
-      // AND PUSHED UP AGAINST THE AISLE, `rack`'s own arrangement and its own note: a unit is
-      // shallower than a cell, and the half the player walks up to is the half that has to carry
-      // the front, so the dead depth is left behind it between two ranks where nobody stands
-      var cx = (r.x0 + r.x1) / 2;
-      var cz = (r.z0 + r.z1) / 2;
-      switch (front)
+      var half = (CityConfig.GRID * CELL) / 2;
+      var gap = CorpStyle.ARCH_BUTT;
+      // the run's extent along its axis, and the centre line across it
+      var a0 = (alongX ? col : row) * CELL - half + CorpStyle.FIT_INSET;
+      var span = len * CELL - 2 * CorpStyle.FIT_INSET;
+      var k = Std.int(Math.max(1, Math.floor((span + gap) / (u.w + gap))));
+      var s0 = a0 + (span - (k * u.w + (k - 1) * gap)) / 2 + u.w / 2;
+      var c = CityConfig.cellToWorld(col, row);
+      var across = (alongX ? c.z : c.x);
+      for (front in fronts)
         {
-          case 0: cz = r.z0 + u.d / 2;
-          case 1: cz = r.z1 - u.d / 2;
-          case 2: cx = r.x0 + u.d / 2;
-          default: cx = r.x1 - u.d / 2;
+          // how far off the centre line this row stands: onto the masonry face for a wall run,
+          // half a unit plus half the butt gap either side of it for a back-to-back pair, on it
+          // for a lone rank
+          var off = 0.0;
+          if (wall >= 0)
+            {
+              off = (dx(wall) + dz(wall)) * (CELL - u.d / 2 - CorpStyle.PROP_GAP -
+                FacilityGeom.wallFace(m, col + dx(wall), row + dz(wall), wall ^ 1));
+            }
+          else if (fronts.length > 1)
+            off = (front == 0 ? -1 : 1) * (u.d + gap) / 2;
+          for (i in 0...k)
+            {
+              var at = s0 + i * (u.w + gap);
+              var x = (alongX ? at : across + off);
+              var z = (alongX ? across + off : at);
+              units.push({
+                x: x,
+                z: z,
+                yaw: Math.atan2(dx(front), dz(front)),
+                fam: fam,
+                seed: FacilityModel.mix((col * 374761393) ^ (row * 1274126177) ^
+                  ((i + 1) * 40503) ^ (front * 668265263)),
+              });
+              var hw = (alongX ? u.w : u.d) / 2;
+              var hd = (alongX ? u.d : u.w) / 2;
+              ContactMask.prop(x - hw, x + hw, z - hd, z + hd);
+              n.units++;
+            }
         }
-      units.push({
-        x: cx,
-        z: cz,
-        // the hand the front looks at, which for a rank IS `front` — where a wall-hugging prop
-        // takes `dir ^ 1` of the hand its back is on (render.corp.CorpProps.standing)
-        yaw: Math.atan2(dx(front), dz(front)),
-        fam: fam,
-        col: col,
-        row: row,
-      });
-      var hw = (front < 2 ? u.w : u.d) / 2;
-      var hd = (front < 2 ? u.d : u.w) / 2;
-      ContactMask.prop(cx - hw, cx + hw, cz - hd, cz + hd);
-      n.units++;
+    }
+
+// which family a rank stands in: its room's ranks split in two by row, the first half one family
+// and the rest the other, and which way round is hashed off the room so two archives differ
+  static function rankFamily(m:Facility, col:Int, row:Int):Int
+    {
+      for (r in m.rooms)
+        {
+          if (col < r.x1 ||
+              col > r.x2 ||
+              row < r.y1 ||
+              row > r.y2)
+            continue;
+          var rows = [];
+          for (y in r.y1...r.y2 + 1)
+            for (x in r.x1...r.x2 + 1)
+              if (archiveAt(m, x, y) &&
+                  wallHand(m, x, y) < 0)
+                {
+                  rows.push(y);
+                  break;
+                }
+          var first = (rows.indexOf(row) < Math.ceil(rows.length / 2));
+          var flip = (FacilityModel.mix((r.x1 * 374761393) ^ (r.y1 * 668265263)) & 1) == 1;
+          return (first != flip ? ARCH_RACK : ARCH_SHELF);
+        }
+      return (FacilityModel.mix(row * 668265263) & 1) == 1 ? ARCH_RACK : ARCH_SHELF;
+    }
+
+// the hand this cell has masonry on, or -1: in `back`'s order, so a corner belongs to the wall
+// across the top or bottom of its room and not to the one down its side. `isWall` and not
+// `isSolidWall`, because a cabinet stands with its back to a window as readily as to a wall
+  static function wallHand(m:Facility, col:Int, row:Int):Int
+    {
+      for (dir in 0...4)
+        if (FacilityModel.isWall(m, col + dx(dir), row + dz(dir)))
+          return dir;
+      return -1;
     }
 
   // the order a rack looks for its aisle in: toward the camera, then the two sides, then away

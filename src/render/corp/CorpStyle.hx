@@ -252,6 +252,11 @@ class CorpStyle
   // measures 31.2 and at DECO_BOX_TILE 0.5 a 0.8 side crossed two seams. The striations run along
   // u, so the stretch this costs is along the lines and invisible
   public static inline var ARCH_REAM_TILE = 4.5;
+  // the gap between two archive units standing END TO END in a run, and between the two backs of a
+  // back-to-back pair: enough that no two glb faces are coplanar, too little to see daylight through
+  public static inline var ARCH_BUTT = 0.04;
+  // one wall run in this many is arch-shelves rather than file cabinets
+  public static inline var ARCH_WALL_SHELF = 3;
   // and the clearance left under the plane that closes a bay, so a capped box does not meet the
   // shelf over it exactly and z-fight along its whole lid
   public static inline var ARCH_HEAD_GAP = 0.06;

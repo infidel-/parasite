@@ -59,7 +59,7 @@ class CorpArchive
       // -- the one a load is dealt over -- is that turned a quarter, (cos, -sin)
       var wx = Math.cos(u.yaw), wz = -Math.sin(u.yaw);
       var span = f.w - 2 * CorpStyle.ARCH_GAP;
-      var g = FacilityModel.mix((u.col * 374761393) ^ (u.row * 1274126177));
+      var g = u.seed;
       for (lv in 0...f.levels.length)
         {
           var h = FacilityModel.mix(g ^ ((lv + 1) * 40503));

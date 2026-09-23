@@ -2068,3 +2068,29 @@ the way: offset `CELL - wallFace - BIN_W/2 - PROP_GAP` toward EVERY solid-wall h
 corner bin in its corner. On screen the archive's bin stands flush on its wall.
 
 Verdict: **LANDED.**
+
+## corp: the archive is laid per RUN — butted cabinet walls, racking sections, back-to-back arch-shelves
+
+One unit per 4-unit cell was the sparse room: a 2.6-wide rack left 1.4 of daylight to its neighbour
+on every hand, and `CorpModel.wallFits` cleared the wall dressing's archive cells so they drew as
+1.3-high credenzas. `CorpFurniture.archive` (per cell) is `archives` (per run) now, reading the
+grid gen.corp.CorpRooms.archive lays (area-gen.md, THE ARCHIVE IS A RING AND ITS RANKS):
+
+- a run is a maximal line of FIT_ARCHIVE cells with the same masonry hand (`wallHand`, `isWall` so
+  a window counts; corners belong to the top/bottom wall, `back`'s order). It is laid as
+  `floor((span + ARCH_BUTT) / (w + ARCH_BUTT))` units end to end, centred, `ARCH_BUTT` 0.04 apart;
+- a WALL run backs onto the real masonry face (`FacilityGeom.wallFace`, a unit past the cell edge),
+  file cabinets, one run in `ARCH_WALL_SHELF` 3 arch-shelves;
+- a RANK run (no masonry) takes its family off its room: the room's rank rows split in two halves,
+  racking one half and arch-shelves the other, order hashed per room. An arch-shelf rank is a
+  BACK-TO-BACK pair per cell, fronts ±z, backs `ARCH_BUTT` apart on the centre line (2.44 deep in
+  a 3.76 cell); racking is one row, centred;
+- `CorpArch` carries a per-unit `seed` instead of col/row, because a cell now holds several units
+  and CorpArchive's load hashed the cell.
+
+`wallFits` keeps clearing FIT_RACK only. On a regenerated floor (5 x 7 archive): three wall runs of
+butted cabinets, a wall run of arch-shelves beside a door, an arch-shelf pair and a racking unit on
+the two ranks, the bin flush on its wall. **`area regen` did not rebuild the 3D scene here** — the
+view stayed on fog until `make reload-load`; nothing was logged.
+
+Verdict: **LANDED.**

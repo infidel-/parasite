@@ -88,10 +88,11 @@ class CorpModel
 // by the wall dressing, and what it really is, is the decoration on the same cell — which
 // render.corp.CorpDeco already draws.
 //
-// THE ARCHIVE IS CLEARED THE SAME WAY and it is what makes its WALL casework draw at all: `archive`
-// runs the identical `rackRows` over the interior and dresses x1 and x2 with CORP_CABINET, and
-// CorpDeco.casework skips any cell where `m.fit != 0`. So every credenza an archive was dealt used
-// to be a rank cell that drew nothing.
+// THE ARCHIVE IS NOT CLEARED ANY MORE, and it used to be for the same reason: its wall dressing
+// wrote the archive twin, and clearing it here was what let CorpDeco.casework draw a low credenza
+// there instead of nothing. gen.corp.CorpRooms.archive lays a RING of casework on every wall now and
+// render.corp.CorpFurniture.archives stands full-height file cabinets on it, so an edge-column
+// archive cell is exactly the fitting it says it is.
 //
 // THE CUBICLE FARM USED TO BE THE OTHER HALF OF THIS and no longer has a dog in it: its partitions
 // take no cell and it dresses no wall.
@@ -108,8 +109,7 @@ class CorpModel
             {
               if (!FacilityModel.inside(m, col, row))
                 continue;
-              if (m.fit[row][col] == CorpFurniture.FIT_RACK ||
-                  m.fit[row][col] == CorpFurniture.FIT_ARCHIVE)
+              if (m.fit[row][col] == CorpFurniture.FIT_RACK)
                 m.fit[row][col] = 0;
             }
     }

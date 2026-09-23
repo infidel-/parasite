@@ -1495,3 +1495,31 @@ on the cell centre never meets it and a corner bin stands in its corner.
 Measured over 300 corp seeds: OK, **orphanCells 0** (no bin opened a pocket), and the fill numbers
 drop by exactly the bins they no longer count — archive 39.04 → 35.10, copy 89.24 → 74.18, meeting
 58.51 → 53.28, toilet 27.59 → 23.07, servers 27.30 → 23.34.
+
+## THE ARCHIVE IS A RING AND ITS RANKS, AND THE AISLE BETWEEN THEM IS WHAT KEEPS IT WALKABLE
+
+Reported as "should be WAY more packed. lots of cabinets near most walls, and the center split
+between sections of shelving units and arch-shelfs". `archive` was the server room's `rackRows` at a
+25% skip plus `decorateWalls` on its two side walls at 40% — ranks with holes in them and a wall
+dressed one cell in three.
+
+It is its own template now, and `rackRows` is left to the server room and security:
+
+- **the ring** — every cell of all four edges, bar `ARCHIVE_RING_BARE` 15%, takes the archive twin +
+  a CORP_CABINET decoration. A cell a doorway opens onto is never dressed, and nor are the two ring
+  cells either side of a CORNER approach cell: a corner touches nothing but the ring, so dressing
+  them would make the door open into a closet. ONE bin per room, on a non-corner ring cell (a bin's
+  cell is walkable, and a walkable corner between two cabinets is a pocket).
+- **the ranks** — rows `y1+2 .. y2-2` at `RACK_PITCH`, columns `x1+2 .. x2-2`, SOLID, with one cross
+  aisle mid-rank once the span reaches `ARCHIVE_GAP_SPAN` 5.
+
+**The aisle is the invariant, not a repair.** Columns x1+1 / x2-1 and rows y1+1 / y2-1 are never
+dressed, so every ring cell and every rank cell touches one loop of floor, and every door opens onto
+it. No dealt gap is needed to keep a rank from sealing the floor any more — the rank never touches
+the ring.
+
+What each run of cells BECOMES is the renderer's (`render.corp.CorpFurniture.archives`): a wall run
+is file cabinets (one in three arch-shelves), a rank is racking or a back-to-back pair of arch-shelves
+by which half of the room's ranks it is in.
+
+Measured over 300 corp seeds: OK, orphanCells 0, **furn/archive 35.10 → 65.06**; 3000 seeds OK.
