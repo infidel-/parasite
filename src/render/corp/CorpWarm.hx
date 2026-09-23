@@ -95,6 +95,7 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpDesk, h: CorpStyle.DESK_GLB_H },
         { path: RenderConfig.MODELS.corpTableLeg, h: CorpStyle.LEG_H },
         { path: RenderConfig.MODELS.corpBin, h: CorpStyle.BIN_H },
+        { path: RenderConfig.MODELS.corpCase, h: render.corp.CorpDeco.CASE_CABINET[2] },
       ];
       // AND THE FOUR CLUTTER PROPS, one entry per path for the reason the ten above have one: a
       // path warmed nowhere compiles its program on the first area entry instead. Appended off

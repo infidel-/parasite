@@ -842,6 +842,11 @@ class RenderConfig {
     corpDesk: 'models/corp/desk-bench.glb',    // bench desk: thin top, O-leg frame, pedestal, 96 tris
     corpTableLeg: 'models/corp/table-leg.glb', // the blade leg under a boardroom slab, 36 tris
     corpBin: 'models/corp/bin.glb',            // the waste bin, a 12-sided lathe, the one round piece
+    // the casework credenza, which used to be render.corp.CorpDeco.box — a plain slab with the
+    // OFFICE DESK LAMINATE on its lid, reported by probing a face at local y 1.3 (exactly
+    // CorpDeco.CASE[K_CABINET][2]). Its height was then fixed TO the drawer art, 1.30 -> 2.00, so
+    // two full-width courses land with no stretch; see art/models.json's note
+    corpCase: 'models/corp/case-cabinet.glb',  // carcass, two proud drawers, brass label holders, 324
     // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
     // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;
     // it fails on a cell whose read is a ROUND or UPRIGHT silhouette, which no top-down art can

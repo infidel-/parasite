@@ -33,7 +33,10 @@ typedef FloorProp = {
   var h:Float;         // world height; render.Models.instanced scales by HEIGHT alone
   var d:Float;         // depth ACROSS the wall it backs onto
   var w:Float;         // and width ALONG it — the other half of the footprint the field darkens
-  var on:Surf;         // the floor surface its own scatter fills
+  // the floor surface its own scatter fills, or Surf.NONE for a family that has NO scatter and
+  // stands only where the generator dressed a cell — the same "none" sentinel `deco` uses below,
+  // and the two are independent: a prop may have either, both or (uselessly) neither
+  var on:Surf;
   // and the render.corp.CorpDeco kind whose DRESSED cells it also stands on, K_NONE for none.
   // those cells come off the generator's own decoration and are not gated on `on`
   var deco:Int;
@@ -107,6 +110,21 @@ class CorpProps
       // onto bare floor in the cubicle farm, where this is. The `standing` loop tells them apart
       // by asking whether the cell is a worktop at all
       deco: CorpDeco.K_PRINTER,
+      env: true,
+    },
+    // AND THE CASEWORK CREDENZA, the one family here with NO SCATTER OF ITS OWN. The three above
+    // fill free floor by surface because a plant or a cooler is something a floor plate may have
+    // anywhere; a filing cabinet is not scenery, it is what the generator PUT in a room, so it
+    // stands on Const.CORP_CABINET's own cells and nowhere else. Sizes come off CorpDeco's CASE row
+    // rather than a second copy of them, so its footprint and its geometry cannot drift
+    {
+      path: RenderConfig.MODELS.corpCase,
+      h: CorpDeco.CASE_CABINET[2],
+      d: CorpDeco.CASE_CABINET[1],
+      w: CorpDeco.CASE_CABINET[0],
+      on: Surf.NONE,
+      deco: CorpDeco.K_CABINET,
+      // lacquered steel with a brass label frame on it, which is what `env` is for
       env: true,
     },
   ];
@@ -387,21 +405,26 @@ class CorpProps
         {
           var p = FLOOR[i];
           var cand = [];
-          for (row in 0...m.h)
-            for (col in 0...m.w)
-              {
-                var dir = wall(m, col, row, p.on);
-                if (dir < 0)
-                  continue;
-                cand.push({
-                  col: col,
-                  row: row,
-                  dir: dir,
-                });
-              }
-          var step = Std.int(Math.ceil(cand.length / CorpStyle.FLOOR_MAX));
-          if (step > 1)
-            cand = [for (k in 0...cand.length) if (k % step == 0) cand[k]];
+          // the scatter, and only for a family that HAS one — Surf.NONE means this prop stands on
+          // the generator's dressed cells alone. Thinned by a stride over the whole candidate list
+          if (p.on != Surf.NONE)
+            {
+              for (row in 0...m.h)
+                for (col in 0...m.w)
+                  {
+                    var dir = wall(m, col, row, p.on);
+                    if (dir < 0)
+                      continue;
+                    cand.push({
+                      col: col,
+                      row: row,
+                      dir: dir,
+                    });
+                  }
+              var step = Std.int(Math.ceil(cand.length / CorpStyle.FLOOR_MAX));
+              if (step > 1)
+                cand = [for (k in 0...cand.length) if (k % step == 0) cand[k]];
+            }
           // AND THE CELLS THE GENERATOR ASKED FOR, which are NOT thinned and are not gated on the
           // floor surface. The scatter above is a dressing of its own — it fills free floor by
           // surface — and it is why a plant dealt into an exec office's corner drew nothing: the

@@ -87,8 +87,19 @@ class CorpDeco
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
   // a 1.7 m fridge, a 2.1 m vending machine
+  // THE CABINET'S ROW IS PUBLIC AND THE OTHERS ARE NOT, because it is the only one that stopped
+  // being geometry: render.corp.CorpProps stands a glb on its cells and sizes the contact footprint
+  // off THIS, so a second copy of the three numbers could drift from the model's own.
+  //
+  // its height was raised 1.30 -> 2.00 to land on the drawer art. corp/archive-drawers draws one
+  // full-width drawer across the quadrant and three courses up, so a course is aspect 3.0, and a
+  // glb face maps its cell 0..1. At 1.30 the front was aspect 2.31 and two clean courses wanted a
+  // partial drawer, a 1.5x stretch or a re-rolled sheet; at 2.00 the modelsheet repeat is exactly
+  // 1 x 0.667. 2.00 is a real 1 m filing unit. models-src/corp/case_build.py copies it verbatim
+  public static final CASE_CABINET = [3.00, 1.20, 2.00];
+
   static final CASE:Map<Int, Array<Float>> = [
-    K_CABINET => [3.00, 1.20, 1.30],
+    K_CABINET => CASE_CABINET,
     K_FRIDGE => [1.80, 1.50, 3.40],
     K_VENDING => [2.20, 1.40, 4.20],
     K_MACHINE => [1.70, 1.15, 1.90],
@@ -181,6 +192,17 @@ class CorpDeco
             {
               board(m, o.x, o.y, dir);
               n.boards++;
+              continue;
+            }
+          // THE CABINET IS NO LONGER A BOX. render.corp.CorpProps stands `corp/case-cabinet` on
+          // this cell instead — a carcass with two proud drawers in it — because a credenza drawn
+          // as `box` is a slab wearing desk laminate, which is what got reported. It is still
+          // COUNTED here so __corp()'s readout means what it always did: CorpProps' own candidate
+          // test is this loop's (`m.fit`/`m.table` clear, a masonry hand to back onto), so the two
+          // passes see the same cells
+          if (k == K_CABINET)
+            {
+              n.cabinets++;
               continue;
             }
           box(m, o.x, o.y, dir, CASE.get(k));
