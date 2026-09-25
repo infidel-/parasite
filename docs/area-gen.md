@@ -1584,3 +1584,9 @@ The archive takes both halves:
 
 Measured over 500 corp seeds: OK, orphanCells 0, unreachableRooms 0, furn/archive 35.5 -> 52.6 (the
 tables are the sealed cells it counts).
+
+Then: "always spawn a bin near copier" — every copier takes a bin on a ring cell beside it with a wall
+to stand against; and "let's not spawn quad tables there" — a table is never dealt beside another
+(`besideTable`), because two touching table cells are a RUN that `CorpFurniture.worktop` emits as a
+slab of quads, where a lone one draws the `corp/desk-bench` glb. 500 seeds OK, orphanCells 0,
+furn/archive 45.67.

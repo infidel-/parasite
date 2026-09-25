@@ -836,6 +836,15 @@ class CorpRooms
       return n == total;
     }
 
+// is a table tile on one of this cell's four hands?
+  static function besideTable(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == Const.TILE_DARK_TABLE_WOOD2_1X1)
+          return true;
+      return false;
+    }
+
 // is this cell one of the room's four corners?
   static inline function corner(room: _Room, x: Int, y: Int): Bool
     {
@@ -1263,9 +1272,22 @@ class CorpRooms
           masonry.remove(c);
           copiers.push(c);
         }
+      // AND A BIN BESIDE EVERY COPIER, always: on a ring cell next to it with a wall to stand
+      // against, which is where the waste paper off a copier goes
+      var paper = [];
+      for (p in copiers)
+        {
+          var near = [for (c in ring)
+            if (Math.abs(c.x - p.x) + Math.abs(c.y - p.y) == 1 &&
+                copiers.indexOf(c) < 0 &&
+                walled(cells, c.x, c.y)) c];
+          if (near.length > 0)
+            paper.push(near[state.area.random(near.length)]);
+        }
       for (c in ring)
         {
           if (c == bin ||
+              paper.indexOf(c) >= 0 ||
               (corner(room, c.x, c.y) &&
               walled(cells, c.x, c.y) &&
               state.area.chance(ARCHIVE_CORNER_BIN)))
@@ -1279,8 +1301,13 @@ class CorpRooms
             }
           // AND A TABLE UNDER THE GLAZING, where a cabinet may not stand: a sorting bench with
           // the stationery on it. A table tile BLOCKS, unlike everything else on this ring, so it
-          // is only kept if the room's floor still reaches every doorway without that cell
+          // is only kept if the room's floor still reaches every doorway without that cell.
+          //
+          // AND NEVER BESIDE ANOTHER ONE. A lone table cell draws the `corp/desk-bench` glb; two
+          // that touch are a RUN, which render.corp.CorpFurniture.worktop emits as a slab of
+          // quads — asked for as "let's not spawn quad tables there"
           else if (walled(cells, c.x, c.y) &&
+              !besideTable(cells, c.x, c.y) &&
               state.area.chance(ARCHIVE_TABLE))
             {
               cells[c.x][c.y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
