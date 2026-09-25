@@ -185,6 +185,16 @@ class CorpSigns
             panelPane(bufs, q, side);
             n++;
           }
+      // AND THE ARCHIVE'S RUN ENDS, the side panel a run of cabinets or shelves shows its aisle —
+      // the same two propaganda slots, into the same buffer. CorpFurniture.archEndPoster is the
+      // split with CorpClutter's pinned paper, so the two never land on one side
+      for (e in CorpFurniture.archEnds)
+        {
+          if (!CorpFurniture.archEndPoster(e))
+            continue;
+          endPane(bufs, e);
+          n++;
+        }
       // one mesh per sheet, and `add` drops an empty buffer, so a sheet no room on the plate
       // asked for costs nothing
       for (i in 0...SHEETS.length)
@@ -222,6 +232,24 @@ class CorpSigns
         }
       var x = (side == 0 ? q.x0 - e : q.x1 + e);
       pane(b, x, x, at - w, at + w, (side == 0 ? 2 : 3), y - hh, y + hh, slot);
+    }
+
+// one propaganda poster on the side of an archive run's end unit: as big as the panel's poster and
+// no wider than the side, centred across it, its top ARCH_END_TOP under the unit's
+  static function endPane(bufs:Array<MeshBuf>, e:CorpFurniture.CorpArchEnd):Void
+    {
+      var slot = (e.seed & 1 == 0 ? POSTER_EYE : POSTER_MARCH);
+      var a = ASPECT[slot];
+      var mx = CorpStyle.PANEL_POSTER_MAX;
+      var w = Math.min((a >= 1 ? mx : mx * a), e.a1 - e.a0 - 2 * CorpStyle.ARCH_END_EDGE);
+      var hh = w / a / 2;
+      var at = (e.a0 + e.a1) / 2;
+      var y1 = Math.min(e.h - CorpStyle.ARCH_END_TOP, CorpStyle.ARCH_END_LO + 2 * hh);
+      var p = e.p + (e.dir == 0 || e.dir == 2 ? -1 : 1) * CorpStyle.PANEL_PROUD;
+      if (e.alongX)
+        pane(bufs[sheetOf(slot)], p, p, at - w / 2, at + w / 2, e.dir, y1 - 2 * hh, y1, slot);
+      else
+        pane(bufs[sheetOf(slot)], at - w / 2, at + w / 2, p, p, e.dir, y1 - 2 * hh, y1, slot);
     }
 
 // which panel this spot earns, off the surface it hangs in

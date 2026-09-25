@@ -2161,3 +2161,28 @@ wall's excess IS the jamb reveal. Only `isSolidWall` neighbours widen a notch.
 Verdict: **LANDED.** Top-down at 34,40 the partition face runs straight into the corner and the bin
 stands clear; the wall-top cap is a clean L. Compound corners with the same thickness mismatch get the
 same fix (not separately shot).
+
+## corp: archive units dressed — posters and pinned paper on run ends, flat paper on free levels
+
+Asked for off three picks: "shelf sides are excellent clutter spots for wall clutter and propaganda"
+(an arch-shelf and an arch-cabinet end panel) and "allow 2d clutter on shelves and cabinet tops". The
+archive had none: tower clutter lands only on `m.table` worktops, and the rebuilt room has no table.
+
+- **Run ends.** `CorpFurniture.lay` collects `archEnds` — the side of the unit that ENDS a run, on
+  cabinets and arch-shelves (racking is an open frame, no panel) — when `endClear` finds floor in
+  front of it: not masonry, and not another archive unit unless that one backs onto the far wall of
+  its cell. `archEndPoster` (35%) splits them: `CorpSigns` hangs the eye/march poster, clamped to the
+  side's width less `ARCH_END_EDGE`, top at `ARCH_END_LO` + its height; `CorpClutter.pins` pins 0..2
+  panel-sheet squares on the rest, stacked in the band `ARCH_END_LO .. h - ARCH_END_TOP`.
+  `emitFace`'s quad became `upright`, shared by both.
+- **Levels.** `CorpClutter.level` lays 0..`ARCH_DECAL_MAX` desk-sheet decals on every level that took
+  no load — `CorpArchive.loaded` is now the one roll both passes ask, so paper never lands under a box.
+  Free yaw, so each square is capped by its diagonal in slot x depth; promoted cells (mug, flask,
+  plant, webcam) are skipped rather than stood on a filing cabinet.
+
+All into buffers that already exist (the desk sheet, the panel sheet, the poster sheet): **no new
+draw call, nothing new to warm.** First floor: 30 ends, 49 units, 7 free lids.
+
+Verdict: **LANDED.** A march poster on a rank's camera-facing end, a pinned memo on a cabinet end, a
+decal on a free arch-shelf lid. Density is thin by construction (72% of lids carry boxes); the knobs
+are `ARCH_DECAL_MAX` and `ARCH_END_PIN_MAX`.

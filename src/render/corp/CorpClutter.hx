@@ -53,13 +53,21 @@ class CorpClutter
               continue;
             n += cell(m, col, row, deskish(m.surf[row][col]) ? desk : util, props);
           }
+      // AND THE ARCHIVE'S UNITS: paper and folders lying on every level that took no load — a lid
+      // or, on the racking, a shelf — off the desk sheet and into its buffer, so no draw call
+      for (u in CorpFurniture.units)
+        n += level(u, desk);
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
       // and the third sheet, which is not a worktop at all: what the people in the cubicle farm
-      // have pinned to their own panels
+      // have pinned to their own panels — and to the side of an archive run's end unit, where the
+      // company has not hung its poster (CorpFurniture.archEndPoster, CorpSigns' side of the split)
       var panel = MeshBufTools.make();
       for (q in CorpFurniture.panels)
         n += face(q, panel);
+      for (e in CorpFurniture.archEnds)
+        if (!CorpFurniture.archEndPoster(e))
+          n += pins(e, panel);
       add(scene, panel, CorpStyle.PANEL_TEX);
       // ONE BATCH PER PATH, which is what four props cost and the whole of what the promotion is
       // argued against: the two sheets above are two calls for sixty-odd kinds, and every glb here
@@ -273,9 +281,6 @@ class CorpClutter
   static function emitFace(b:MeshBuf, q:CorpFurniture.CorpPanel, at:Float, y:Float, sz:Float,
       side:Int, idx:Int):Void
     {
-      var hs = sz * 0.5;
-      var y0 = y - hs, y1 = y + hs;
-      var a0 = at - hs, a1 = at + hs;
       var e = CorpStyle.PANEL_PROUD;
       // FacilityGeom's own direction order: 0 = -z, 1 = +z, 2 = -x, 3 = +x, so side 0 is the hand
       // at x0/z0 and side 1 the hand at x1/z1
@@ -283,15 +288,89 @@ class CorpClutter
       var p = (q.alongX
         ? (side == 0 ? q.z0 - e : q.z1 + e)
         : (side == 0 ? q.x0 - e : q.x1 + e));
+      upright(b, !q.alongX, p, at, y, sz, dir, idx);
+    }
+
+// one square panel-sheet quad standing on the plane `p` — world x when `xPlane`, world z otherwise —
+// centred `at` along that plane and `y` up it, looking `dir`
+  static function upright(b:MeshBuf, xPlane:Bool, p:Float, at:Float, y:Float, sz:Float, dir:Int,
+      idx:Int):Void
+    {
+      var hs = sz * 0.5;
+      var y0 = y - hs, y1 = y + hs;
       var t = CorpStyle.PANEL_COLS;
       var cc = idx % t, cr = Std.int(idx / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
       var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
-      var c = (q.alongX
-        ? FacilityGeom.ends(a0, a1, p, p, dir)
-        : FacilityGeom.ends(p, p, a0, a1, dir));
+      var c = (xPlane
+        ? FacilityGeom.ends(p, p, at - hs, at + hs, dir)
+        : FacilityGeom.ends(at - hs, at + hs, p, p, dir));
       MeshBufTools.quad(b, [c[0], y0, c[1]], [c[2], y0, c[3]], [c[2], y1, c[3]], [c[0], y1, c[1]],
         [u0, v0, u1, v0, u1, v1, u0, v1]);
+    }
+
+// the paper pinned to one archive run end: up to ARCH_END_PIN_MAX squares, stacked up the side in
+// the band between ARCH_END_LO and ARCH_END_TOP under the unit's top, each slid across it by its
+// own roll. Hung square on, for emitFace's reason
+  static function pins(e:CorpFurniture.CorpArchEnd, b:MeshBuf):Int
+    {
+      var want = (e.seed >>> 11) % (CorpStyle.ARCH_END_PIN_MAX + 1);
+      var span = e.a1 - e.a0 - 2 * CorpStyle.ARCH_END_EDGE;
+      var p = e.p + (e.dir == 0 || e.dir == 2 ? -1 : 1) * CorpStyle.PANEL_PROUD;
+      for (i in 0...want)
+        {
+          var h = FacilityModel.mix(e.seed ^ ((i + 1) * 668265263));
+          var sz = Math.min(CorpStyle.PANEL_SZ + ((h % 1000) / 1000) * CorpStyle.PANEL_SZ_VAR, span);
+          var lo = CorpStyle.ARCH_END_LO + sz / 2;
+          var hi = e.h - CorpStyle.ARCH_END_TOP - sz / 2;
+          var y = lo + (hi - lo) * (i + 0.5) / want;
+          var at = (e.a0 + e.a1) / 2 + (((h >>> 12) % 1000) / 1000 - 0.5) * (span - sz);
+          upright(b, e.alongX, p, at, y, sz, e.dir, (h >>> 4) % CorpStyle.PANEL_CELLS);
+        }
+      return want;
+    }
+
+// the flat things lying on an archive unit's free levels: up to ARCH_DECAL_MAX per level that took
+// no load (CorpArchive.loaded, the same roll its boxes are dealt off), one to a slot along the
+// width, each at a free yaw and slid inside its slot. The promoted cells are skipped rather than
+// stood up — a mug on a filing cabinet is somebody's desk, not the archive
+  static function level(u:CorpFurniture.CorpArch, b:MeshBuf):Int
+    {
+      var f = CorpFurniture.ARCH[u.fam];
+      // the width the unit stands along and the depth it looks down, off its yaw the way
+      // CorpArchive.load reads them
+      var wx = Math.cos(u.yaw), wz = -Math.sin(u.yaw);
+      var nx = Math.sin(u.yaw), nz = Math.cos(u.yaw);
+      var span = f.w - 2 * CorpStyle.ARCH_GAP;
+      var n = 0;
+      for (lv in 0...f.levels.length)
+        {
+          if (CorpArchive.loaded(u, lv))
+            continue;
+          var g = FacilityModel.mix(u.seed ^ ((lv + 1) * 1103515245));
+          var want = g % (CorpStyle.ARCH_DECAL_MAX + 1);
+          for (i in 0...want)
+            {
+              var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
+              var idx = (h >>> 22) % CorpStyle.CLUTTER_CELLS;
+              if (CorpStyle.CLUTTER_PROP_OF.exists(idx))
+                continue;
+              // a free yaw, so the square is capped by what its DIAGONAL fits in: the slot along
+              // the width and the depth less the worktop's own edge inset across it
+              var slot = span / want;
+              var room = Math.min(slot, f.d - 2 * CorpStyle.CLUTTER_INSET);
+              var sz = Math.min(CorpStyle.CLUTTER_SZ + ((h % 1000) / 1000) * CorpStyle.CLUTTER_SZ_VAR,
+                room / 1.4142);
+              var along = -span / 2 + (i + 0.5) * slot +
+                (((h >>> 12) % 1000) / 1000 - 0.5) * (slot - sz * 1.4142);
+              var deep = (((h >>> 2) % 1000) / 1000 - 0.5) * (f.d - 2 * CorpStyle.CLUTTER_INSET -
+                sz * 1.4142);
+              emit(b, u.x + wx * along + nx * deep, u.z + wz * along + nz * deep, sz,
+                ((h >>> 5) % 1000) / 1000 * 2 * Math.PI, idx, f.levels[lv] + CorpStyle.CLUTTER_Y);
+              n++;
+            }
+        }
+      return n;
     }
 
 // would this box land on something already claimed? the separating-axis test for two axis-aligned

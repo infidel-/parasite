@@ -72,6 +72,20 @@ typedef CorpArch = {
   var seed: Int;     // the unit's own roll, for what CorpArchive stacks on it
 }
 
+// ONE EXPOSED END of an archive run: the side panel of the unit at either end of it, where a wall
+// run stops short of a doorway or a rank meets its aisle. Collected for the two passes that dress
+// it, the way a cubicle panel is — render.corp.CorpSigns hangs the company's poster on some and
+// render.corp.CorpClutter pins the usual paper on the rest (`archEndPoster` is the split)
+typedef CorpArchEnd = {
+  var p: Float;       // the carcass side's plane, world x when `alongX` and world z otherwise
+  var a0: Float;      // and its extent across the run, the unit's depth
+  var a1: Float;
+  var alongX: Bool;   // does the run follow x? then the side is a plane of constant x
+  var dir: Int;       // the way the side looks, FacilityGeom's order: 0 -z, 1 +z, 2 -x, 3 +x
+  var h: Float;       // the unit's height
+  var seed: Int;      // the side's own roll
+}
+
 // ONE EMITTED CUBICLE PANEL, for the two passes that dress it.
 //
 // collected as it is drawn rather than re-derived, because the boundary arithmetic belongs in the
@@ -203,6 +217,8 @@ class CorpFurniture
   // and every archive unit this build placed, for render.corp.CorpProps' batches. REBUILT here for
   // `panels`' own reason: its reader wants the whole list, and CorpProps.build runs after this
   public static var units(default, null):Array<CorpArch> = [];
+  // and every run end of them that faces open floor, for the two passes that dress it
+  public static var archEnds(default, null):Array<CorpArchEnd> = [];
 
 // emit every fitting on the floor plate
   public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):CorpFit
@@ -212,6 +228,7 @@ class CorpFurniture
       cables = MeshBufTools.make();
       panels = [];
       units = [];
+      archEnds = [];
       var n:CorpFit = {
         desks: 0,
         counters: 0,
@@ -810,8 +827,51 @@ class CorpFurniture
               var hd = (alongX ? u.d : u.w) / 2;
               ContactMask.prop(x - hw, x + hw, z - hd, z + hd);
               n.units++;
+              // AND ITS SIDE, if it ends the run and looks at floor. Not the racking's: an open
+              // steel frame has no side panel to carry anything
+              if (fam == ARCH_RACK)
+                continue;
+              for (hi in 0...2)
+                {
+                  if (i != (hi == 0 ? 0 : k - 1) ||
+                      !endClear(m, col, row, len, alongX, hi))
+                    continue;
+                  var a = across + off;
+                  archEnds.push({
+                    p: at + (hi == 0 ? -u.w : u.w) / 2,
+                    a0: a - u.d / 2,
+                    a1: a + u.d / 2,
+                    alongX: alongX,
+                    dir: (alongX ? 2 : 0) + hi,
+                    h: u.h,
+                    seed: FacilityModel.mix((col * 1103515245) ^ (row * 374761393) ^
+                      ((hi + 1) * 40503) ^ (front * 668265263)),
+                  });
+                }
             }
         }
+    }
+
+// is there floor in front of a run's end — `hi` 0 the low end, 1 the high one? not masonry, and
+// not another archive unit unless that one stands against the wall on the far side of its cell,
+// which leaves the cell's near half clear
+  static function endClear(m:Facility, col:Int, row:Int, len:Int, alongX:Bool, hi:Int):Bool
+    {
+      var step = (hi == 0 ? -1 : len);
+      var c = col + (alongX ? step : 0);
+      var r = row + (alongX ? 0 : step);
+      var dir = (alongX ? 2 : 0) + hi;
+      if (!FacilityModel.inside(m, c, r) ||
+          FacilityModel.isWall(m, c, r) ||
+          !FacilityModel.isIndoor(m, c, r))
+        return false;
+      return m.fit[r][c] != FIT_ARCHIVE || wallHand(m, c, r) == dir;
+    }
+
+// does this run end carry the company's poster rather than the pinned paper?
+  public static inline function archEndPoster(e:CorpArchEnd):Bool
+    {
+      return (e.seed >>> 3) % 100 < CorpStyle.ARCH_END_POSTER_PCT;
     }
 
 // which family a rank stands in: its room's ranks split in two by column, the first half one

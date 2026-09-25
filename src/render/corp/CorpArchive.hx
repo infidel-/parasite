@@ -54,6 +54,13 @@ class CorpArchive
     }
 
 // one unit's load: up to CorpStyle.ARCH_LOAD_MAX pieces across each of its levels
+// does this level of this unit carry a load? the one roll render.corp.CorpClutter asks too, so the
+// paper it lays on a level never lands under a box
+  public static inline function loaded(u:CorpArch, lv:Int):Bool
+    {
+      return FacilityModel.mix(u.seed ^ ((lv + 1) * 40503)) % 100 < CorpStyle.ARCH_LOAD_CHANCE;
+    }
+
   static function load(u:CorpArch, board:MeshBuf, paper:MeshBuf, tops:MeshBuf, n:CorpFit):Void
     {
       var f = CorpFurniture.ARCH[u.fam];
@@ -65,9 +72,9 @@ class CorpArchive
       var g = u.seed;
       for (lv in 0...f.levels.length)
         {
-          var h = FacilityModel.mix(g ^ ((lv + 1) * 40503));
-          if (h % 100 >= CorpStyle.ARCH_LOAD_CHANCE)
+          if (!loaded(u, lv))
             continue;
+          var h = FacilityModel.mix(g ^ ((lv + 1) * 40503));
           var cnt = 1 + (h >>> 7) % CorpStyle.ARCH_LOAD_MAX;
           var slot = span / cnt;
           for (k in 0...cnt)

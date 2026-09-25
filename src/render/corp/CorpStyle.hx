@@ -244,6 +244,18 @@ class CorpStyle
   // over, and _MAX is how many are dealt across one. _CHANCE is per LEVEL and not per unit: a rank
   // where every lid carries something reads as a delivery and not as a room people work in
   public static inline var ARCH_LOAD_CHANCE = 72;
+  // THE SIDE OF A RUN'S END UNIT IS A WALL TOO, asked for as "excellent clutter spots for wall
+  // clutter and propaganda": the percent of them that take the poster (render.corp.CorpSigns), and
+  // how many pinned things the rest may carry (render.corp.CorpClutter, zero reachable)
+  public static inline var ARCH_END_POSTER_PCT = 35;
+  public static inline var ARCH_END_PIN_MAX = 2;
+  // how far in from a side's edges a poster or a pinned sheet keeps, and the band of the unit's
+  // height they hang in: nothing lower than a hand reaches, nothing over the top edge
+  public static inline var ARCH_END_EDGE = 0.1;
+  public static inline var ARCH_END_LO = 1.3;
+  public static inline var ARCH_END_TOP = 0.35;
+  // and how many flat things a level of a unit that took no load may carry, off the desk sheet
+  public static inline var ARCH_DECAL_MAX = 2;
   public static inline var ARCH_LOAD_MAX = 3;
   public static inline var ARCH_GAP = 0.18;
   public static inline var ARCH_BOX_W = 0.60;
