@@ -1498,6 +1498,8 @@ drop by exactly the bins they no longer count — archive 39.04 → 35.10, copy 
 
 ## THE ARCHIVE IS A RING AND ITS RANKS, AND THE AISLE BETWEEN THEM IS WHAT KEEPS IT WALKABLE
 
+> SUPERSEDED by THE ARCHIVE'S WALL RING IS WALKABLE FLOOR
+
 Reported as "should be WAY more packed. lots of cabinets near most walls, and the center split
 between sections of shelving units and arch-shelfs". `archive` was the server room's `rackRows` at a
 25% skip plus `decorateWalls` on its two side walls at 40% — ranks with holes in them and a wall
@@ -1523,3 +1525,26 @@ is file cabinets (one in three arch-shelves), a rank is racking or a back-to-bac
 by which half of the room's ranks it is in.
 
 Measured over 300 corp seeds: OK, orphanCells 0, **furn/archive 35.10 → 65.06**; 3000 seeds OK.
+
+## THE ARCHIVE'S WALL RING IS WALKABLE FLOOR
+
+Reported as "you blocked movement on almost all wall-adjacent tiles for zero reasons. and probably
+because of that you could not grow the center shelving units", with "shelves should never block the
+windows" and a bin standing mid-tile. All three were one design mistake and one rule missing.
+
+- **The ring cabinet is a decoration on walkable floor, not the twin.** A 1.2-deep cabinet sealing a
+  4.0 cell cost the whole ring, and the ring being solid then forced a second ring of aisle inside it,
+  so a 5x7 room held ONE column of shelving. Now the ring is the room's walkway and the ranks fill
+  everything inside it: rows `y1+1 .. y2-1` at `RACK_PITCH`, columns `x1+1 .. x2-1`. That same 5x7
+  room holds three ranks of three. `render.corp.CorpModel.archiveWalls` turns a cabinet decoration
+  on walkable `TILE_FLOOR_ARCHIVE` with a masonry hand into `FIT_ARCHIVE`.
+- **Masonry only, and the RENDER decides it.** `CorpModel.runsOfThree` / `loneWindows` demote short
+  glass runs to masonry after generation, so the generator's masonry test left bare whole walls that
+  draw as masonry. The generator deals a cabinet onto every ring cell with ANY wall on a hand
+  (`walled`); the renderer keeps the ones backed by `isSolidWall` (`CorpFurniture.wallHand` too). A
+  corp decoration never draws its sprite, so the rest are nothing.
+- **The archive deals its bin only onto a `walled` cell, and `CorpDeco.bins` stands it against glazing as well
+  as masonry** (`isWall`). The mid-tile bin was on a ring cell whose only wall was a window.
+
+Measured over 500 corp seeds: OK, orphanCells 0, unreachableRooms 0. `furn/archive` reads 35.91; it
+counts sealed cells, and the ring is not sealed any more, so it is not comparable with 65.06.

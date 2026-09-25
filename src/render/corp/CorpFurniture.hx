@@ -725,7 +725,7 @@ class CorpFurniture
 //   - a WALL run: cells with masonry on the same hand, along that wall. File cabinets, and one run
 //     in ARCH_WALL_SHELF an arch-shelf, backs on the masonry face and fronts into the room;
 //   - a RANK run: cells with no masonry at all, along x (gen.corp.CorpRooms.archive lays its ranks
-//     inside an aisle that never touches a wall). The room's ranks are SPLIT IN TWO SECTIONS by row
+//     inside the walkable wall ring, so they never touch a wall). The room's ranks are SPLIT IN TWO SECTIONS by row
 //     — the first half one family, the rest the other, which half gets which hashed off the room —
 //     and an arch-shelf rank stands BACK TO BACK, a pair per cell fronting both aisles
   static function archives(m:Facility, n:CorpFit):Void
@@ -843,12 +843,12 @@ class CorpFurniture
     }
 
 // the hand this cell has masonry on, or -1: in `back`'s order, so a corner belongs to the wall
-// across the top or bottom of its room and not to the one down its side. `isWall` and not
-// `isSolidWall`, because a cabinet stands with its back to a window as readily as to a wall
+// across the top or bottom of its room and not to the one down its side. `isSolidWall`, because a
+// 4.8-tall arch-shelf stood against the glazing blocks the window — reported from the game
   static function wallHand(m:Facility, col:Int, row:Int):Int
     {
       for (dir in 0...4)
-        if (FacilityModel.isWall(m, col + dx(dir), row + dz(dir)))
+        if (FacilityModel.isSolidWall(m, col + dx(dir), row + dz(dir)))
           return dir;
       return -1;
     }

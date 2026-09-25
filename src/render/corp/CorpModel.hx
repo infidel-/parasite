@@ -38,7 +38,27 @@ class CorpModel
       FacilityModel.findWindows(m);
       doorLooks(m);
       wallFits(m);
+      archiveWalls(area, m);
       return m;
+    }
+
+// THE ARCHIVE'S WALL CABINETS ARE A DECORATION ON WALKABLE FLOOR, not a twin: a 1.2-deep cabinet
+// sealing a 4.0 cell cost the room its whole wall ring (gen.corp.CorpRooms.archive). So the
+// fitting is read off the decoration here — a cabinet on the archive's own walkable floor with
+// masonry on a hand, which is what render.corp.CorpFurniture.archives backs a wall run onto
+  static function archiveWalls(area:AreaGame, m:Facility):Void
+    {
+      for (o in area.getObjects())
+        {
+          if (o.type != 'decoration' ||
+              !FacilityModel.inside(m, o.x, o.y) ||
+              area.getCellType(o.x, o.y) != Const.TILE_FLOOR_ARCHIVE ||
+              CorpDeco.kindOf(o.imageRow, o.imageCol) != CorpDeco.K_CABINET)
+            continue;
+          for (dir in 0...4)
+            if (FacilityModel.isSolidWall(m, o.x + FacilityGeom.DC[dir], o.y + FacilityGeom.DR[dir]))
+              m.fit[o.y][o.x] = CorpFurniture.FIT_ARCHIVE;
+        }
     }
 
 // PUT THE DEMOTIONS BACK INTO THE GRID, because a window nobody can see through must not be one

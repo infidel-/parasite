@@ -790,6 +790,23 @@ class CorpRooms
       return false;
     }
 
+// is there a WALL of any kind on one of this cell's four hands -- masonry or glazing? what a bin
+// needs (render.corp.CorpDeco.bins stands it against either, and a cell with neither leaves it in
+// the middle of the tile), and what an archive's wall cabinet is dealt on — see `archive`
+  static function walled(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        {
+          var t = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (t == BLDG_WALL ||
+              t == BLDG_INNER_WALL ||
+              (t >= BLDG_WINDOW && t <= BLDG_WINDOWV3) ||
+              (t >= INNER_WINDOW && t <= INNER_WINDOWV3))
+            return true;
+        }
+      return false;
+    }
+
 // ONE PAIR OF PODS, back to back: two desk cells, their workstations, and a chair each in the
 // aisle it faces.
 //
@@ -1134,65 +1151,54 @@ class CorpRooms
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, ARCHIVE);
       var shelf = Const.TILE_FLOOR_ARCHIVE + UNWALKABLE_TILE_OFFSET;
-      // PACKED, reported as "should be WAY more packed": the old room was the server room's
-      // rank-and-aisle at a 25% skip plus a 40% wall dressing, 39% furnished. It is a RING of
-      // casework on every wall and SOLID ranks inside it now, and the one thing that keeps it
-      // walkable is the aisle between the two -- columns x1+1 / x2-1 and rows y1+1 / y2-1 are never
-      // dressed, so every rank and every ring cell touches one loop of floor that reaches the doors.
-      // render.corp.CorpFurniture.archives decides what each run of it IS
+      // PACKED, reported as "should be WAY more packed": a RING of casework on every wall and SOLID
+      // ranks inside it.
+      //
+      // THE RING STAYS WALKABLE. A wall cabinet is 1.2 deep in a 4.0 cell, and writing the twin
+      // under it sealed almost every wall-adjacent tile for nothing -- and then cost the ranks the
+      // aisle they needed to keep the ring reachable, so a 5x7 room held one column of shelving.
+      // The cabinet is the decoration alone: render.corp.CorpModel.archiveWalls reads it as
+      // FIT_ARCHIVE and render.corp.CorpFurniture.archives backs it onto the masonry. The ring is
+      // the room's one loop of floor, so the ranks fill everything inside it.
+      //
+      // AGAINST MASONRY ONLY, since a cabinet stood against the glazing blocks the window -- which
+      // got reported -- and that test is the RENDER's, not this one: CorpModel.runsOfThree and
+      // loneWindows demote short runs of glass to masonry after generation, so a masonry test here
+      // left bare a wall that draws as masonry. So every ring cell with a wall of any kind on a
+      // hand is dealt one, and archiveWalls keeps the ones that end up backed by masonry (a corp
+      // decoration never draws its sprite, so the rest are nothing). A doorway's cell stays bare
       var ring = [];
       for (x in room.x1...room.x2 + 1)
-        {
-          ring.push({ x: x, y: room.y1 });
-          ring.push({ x: x, y: room.y2 });
-        }
-      for (y in room.y1 + 1...room.y2)
-        {
-          ring.push({ x: room.x1, y: y });
-          ring.push({ x: room.x2, y: y });
-        }
-      // a doorway's own cell stays clear, and so do the two either side of a CORNER one: a corner
-      // cell touches nothing but the ring, so a door opening onto it would open into a closet
-      var clear = new Map<Int, Bool>();
-      for (c in ring)
-        if (atDoor(cells, c.x, c.y))
-          {
-            clear.set(c.x * 1000 + c.y, true);
-            if (corner(room, c.x, c.y))
-              for (i in 0...Const.dir4x.length)
-                clear.set((c.x + Const.dir4x[i]) * 1000 + c.y + Const.dir4y[i], true);
-          }
-      // ONE BIN, on a ring cell that is not a corner -- it leaves its cell walkable (see
-      // `addDecorationExt`), and a walkable corner between two cabinets is a pocket
-      var sides = [for (c in ring)
-        if (!corner(room, c.x, c.y) &&
-            !clear.exists(c.x * 1000 + c.y)) c];
-      var bin = (sides.length > 0 ? sides[state.area.random(sides.length)] : null);
+        for (y in room.y1...room.y2 + 1)
+          if ((x == room.x1 ||
+              x == room.x2 ||
+              y == room.y1 ||
+              y == room.y2) &&
+              !atDoor(cells, x, y))
+            ring.push({ x: x, y: y });
+      // ONE BIN, on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
+      // stand it against
+      var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
+      var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
       for (c in ring)
         {
-          if (clear.exists(c.x * 1000 + c.y))
-            continue;
           if (c == bin)
-            {
-              addDecoration(state, c.x, c.y, Const.CORP_TRASH);
-              continue;
-            }
-          if (state.area.chance(ARCHIVE_RING_BARE))
-            continue;
-          cells[c.x][c.y] = shelf;
-          addDecoration(state, c.x, c.y, Const.CORP_CABINET);
+            addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+          else if (walled(cells, c.x, c.y) &&
+              !state.area.chance(ARCHIVE_RING_BARE))
+            addDecoration(state, c.x, c.y, Const.CORP_CABINET);
         }
-      // and the ranks, inside the aisle: solid, one cross aisle once a rank is long enough to want
-      // one, placed mid-rank so the two sections either side of it come out even
+      // and the ranks, every row RACK_PITCH apart from the ring inward: solid, one cross aisle once
+      // a rank is long enough to want one, placed mid-rank so the two sections come out even
       var ranks = 0;
-      var ry = room.y1 + 2;
-      while (ry <= room.y2 - 2 &&
+      var ry = room.y1 + 1;
+      var span = room.x2 - room.x1 - 1;
+      var gap = (span >= ARCHIVE_GAP_SPAN ? room.x1 + 1 + Std.int(span / 2) : -1);
+      while (ry <= room.y2 - 1 &&
           ranks < RACK_ROWS_MAX)
         {
-          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 2, ry, room.x2 - 2, ry);
-          var span = room.x2 - room.x1 - 3;
-          var gap = (span >= ARCHIVE_GAP_SPAN ? room.x1 + 2 + Std.int(span / 2) : -1);
-          for (x in room.x1 + 2...room.x2 - 1)
+          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
+          for (x in room.x1 + 1...room.x2)
             {
               if (x == gap)
                 continue;
@@ -1202,13 +1208,6 @@ class CorpRooms
           ranks++;
           ry += RACK_PITCH;
         }
-    }
-
-// is this cell one of the room's four corners?
-  static inline function corner(room: _Room, x: Int, y: Int): Bool
-    {
-      return (x == room.x1 || x == room.x2) &&
-        (y == room.y1 || y == room.y2);
     }
 
 // a reception: the executive's marble and the same 3x2 slab, standing as a counter, with seating

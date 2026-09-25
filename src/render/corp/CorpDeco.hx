@@ -322,7 +322,7 @@ class CorpDeco
             {
               var wc = c.col + DC[dir];
               var wr = c.row + DR[dir];
-              if (!FacilityModel.isSolidWall(m, wc, wr))
+              if (!FacilityModel.isWall(m, wc, wr))
                 continue;
               var off = CELL - FacilityGeom.wallFace(m, wc, wr, dir ^ 1) - CorpStyle.BIN_W / 2 -
                 CorpStyle.PROP_GAP;
