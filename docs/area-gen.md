@@ -1563,3 +1563,24 @@ The ranks are laid BEFORE the ring for that. `CorpDeco.bins` stands a bin with a
 against the rank's south end (`CorpFurniture.rankSouth`, `lay`'s own centring walked back from the
 cell) whatever walls the cell has.
 500 corp seeds OK, orphanCells 0 (a bin never seals its cell).
+
+## THE COPY ROOM IS GONE; ITS COPIERS AND TABLES ARE THE ARCHIVE'S
+
+Asked for off a look at what `room-copy` drew, which was nothing of its own: its copiers were dealt
+onto TABLE tiles, and `render.corp.CorpProps` stands the printer glb on bare floor only (a glb on a
+worktop cell would stand inside the bench), so a copy room was a row of empty wooden benches.
+`ROOM_COPY` / `ROLE_COPY` / `copyRoom` are removed; its 0..3 `smallest` slots go to solo offices
+(nodes/room-solo 9.28 -> 12.42 per floor, 500 seeds).
+
+The archive takes both halves:
+- **one or two COPIERS** (`Const.CORP_TABLE_PRINTER`) on ring cells with MASONRY behind them, on bare
+  walkable floor — where `CorpProps` does stand the glb, off `backHandOf`;
+- **a TABLE under the GLAZING** (`ARCHIVE_TABLE` 70%), where a cabinet may not stand:
+  `TILE_DARK_TABLE_WOOD2_1X1` with a stationery or misc decoration. The only thing on the ring that
+  BLOCKS, so each one is kept only if `reachable` — a flood over the room's floor id from its door
+  cells — still reaches every floor cell. It takes the room's `Surf.SERVER`, so a lone one draws the
+  desk bench and a run a worktop, and `CorpClutter.deskish` now counts SERVER so it carries the
+  office sheet rather than the kitchen one.
+
+Measured over 500 corp seeds: OK, orphanCells 0, unreachableRooms 0, furn/archive 35.5 -> 52.6 (the
+tables are the sealed cells it counts).

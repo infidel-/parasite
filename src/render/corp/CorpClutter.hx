@@ -82,13 +82,15 @@ class CorpClutter
       };
     }
 
-// which of the two sheets a worktop takes. a desk, a cubicle return and an exec desk carry the
-// office things; a kitchen counter, a boardroom slab and a washroom vanity carry the other
+// which of the two sheets a worktop takes. a desk, a cubicle return, an exec desk and an archive's
+// sorting table carry the office things; a kitchen counter, a boardroom slab and a washroom vanity
+// carry the other
   static inline function deskish(s:Surf):Bool
     {
       return s == Surf.OPEN ||
         s == Surf.CUBICLE ||
-        s == Surf.EXEC;
+        s == Surf.EXEC ||
+        s == Surf.SERVER;
     }
 
 // one worktop cell's worth. returns how many actually landed, which is not the rolled count: an

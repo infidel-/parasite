@@ -44,8 +44,6 @@ class OfficeBlock
             CorpRooms.solo(state, node, room);
           case CorpBlocks.ROOM_BREAK:
             CorpRooms.breakRoom(state, node, room);
-          case CorpBlocks.ROOM_COPY:
-            CorpRooms.copyRoom(state, node, room);
           case CorpBlocks.ROOM_ARCHIVE:
             CorpRooms.archive(state, node, room);
           case CorpBlocks.ROOM_RECEPTION:
@@ -69,7 +67,6 @@ class OfficeBlock
         kind == CorpBlocks.ROOM_SERVERS ||
         kind == CorpBlocks.ROOM_SOLO ||
         kind == CorpBlocks.ROOM_BREAK ||
-        kind == CorpBlocks.ROOM_COPY ||
         kind == CorpBlocks.ROOM_ARCHIVE ||
         kind == CorpBlocks.ROOM_RECEPTION ||
         kind == CorpBlocks.ROOM_SECURITY;

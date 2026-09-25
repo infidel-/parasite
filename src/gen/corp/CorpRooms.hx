@@ -46,6 +46,8 @@ class CorpRooms
   public static inline var ARCHIVE_GAP_SPAN = 5;
   // and the percent chance each walled corner of it takes a bin
   public static inline var ARCHIVE_CORNER_BIN = 40;
+  // and the percent chance a ring cell with only glazing behind it takes a table
+  public static inline var ARCHIVE_TABLE = 70;
   // and the boardroom table, which was the last run in this file still written the old way:
   // `tw = room.w - 4` with no cap at all. Measured over 800 meeting rooms — min 12 cells, median
   // 32, max 64, and 783 of the 800 had an axis of five cells or more. At CityConfig.CELL 4 and
@@ -792,6 +794,48 @@ class CorpRooms
       return false;
     }
 
+// does every bare archive floor cell of this room still join a doorway? a flood over the room's own
+// floor id from the cells a door opens onto, which is all a ring table can cut
+  static function reachable(cells: Array<Array<Int>>, room: _Room): Bool
+    {
+      var total = 0;
+      var stack = [];
+      var seen = new Map<Int, Bool>();
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          {
+            if (cells[x][y] != ARCHIVE)
+              continue;
+            total++;
+            if (atDoor(cells, x, y))
+              {
+                stack.push({ x: x, y: y });
+                seen.set(x * 1000 + y, true);
+              }
+          }
+      var n = 0;
+      while (stack.length > 0)
+        {
+          var c = stack.pop();
+          n++;
+          for (i in 0...Const.dir4x.length)
+            {
+              var nx = c.x + Const.dir4x[i];
+              var ny = c.y + Const.dir4y[i];
+              if (nx < room.x1 ||
+                  nx > room.x2 ||
+                  ny < room.y1 ||
+                  ny > room.y2 ||
+                  cells[nx][ny] != ARCHIVE ||
+                  seen.exists(nx * 1000 + ny))
+                continue;
+              seen.set(nx * 1000 + ny, true);
+              stack.push({ x: nx, y: ny });
+            }
+        }
+      return n == total;
+    }
+
 // is this cell one of the room's four corners?
   static inline function corner(room: _Room, x: Int, y: Int): Bool
     {
@@ -1038,8 +1082,8 @@ class CorpRooms
     }
 
 // one desk run across the middle of a room, with a chair in front of it and `full`'s decorations
-// on it. the solo office's own desk, generalised: a copy room's copier bank and a security room's
-// monitor bench are the same object with a different list of things standing on it
+// on it. the solo office's own desk, generalised: a security room's monitor bench is the same object
+// with a different list of things standing on it
   static function deskRun(state: _CorpState, node: _GenNode, room: _Room,
       full: Array<_TileGroup>)
     {
@@ -1116,33 +1160,6 @@ class CorpRooms
         Const.TILE_LIGHT_TABLE_WOOD1_1X1,
         Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET,
         60, 30);
-    }
-
-// a copy room: both walls lined with copiers and stationery, and a clear floor to stand on. The
-// one room in the tower that is ALL wall and no middle, which is what the highest `chance` in the
-// file is for
-  public static function copyRoom(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      var cells = state.area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD2);
-      // THE COPIER BANK DOWN THE MIDDLE WAS TRIED AND TAKEN BACK OUT, and the reason is the
-      // `chance` two calls below: at 70 / 50 this room is the most heavily dressed in the tower
-      // and it is dealt narrow, so the only cells joining its two halves are the ones most likely
-      // to carry a cabinet. A centred run took its fill DOWN 29.4% -> 23.4% and a flush one to
-      // 27.6% — both of them the repair pass eroding furniture to reach what the run had sealed.
-      // A copy room is a corridor lined with copiers, which is what it already was
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_PRINTER,
-          Const.CORP_TABLE_STATIONERY,
-          Const.CORP_TABLE_MISC_LARGE,
-        ], [
-          Const.CORP_CABINET,
-          Const.CORP_MACHINERY,
-          Const.CORP_TRASH,
-        ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_WOOD2 + UNWALKABLE_TILE_OFFSET,
-        70, 50);
     }
 
 // an archive: the server room's rank-and-aisle with PAPER in it instead of machines, which is what
@@ -1232,6 +1249,20 @@ class CorpRooms
       // stand it against, and more in the CORNERS on a roll
       var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
       var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
+      // ONE OR TWO COPIERS, which is all the copy room it replaced ever had to say: on a ring cell
+      // with masonry behind it, since render.corp.CorpProps stands the printer glb off a solid wall
+      // and on bare floor only (a copier dealt onto a worktop drew nothing, which is how the copy
+      // room came to hold none at all)
+      var masonry = [for (c in ring) if (c != bin && atWall(cells, c.x, c.y)) c];
+      var copiers = [];
+      for (i in 0...1 + state.area.random(2))
+        {
+          if (masonry.length == 0)
+            break;
+          var c = masonry[state.area.random(masonry.length)];
+          masonry.remove(c);
+          copiers.push(c);
+        }
       for (c in ring)
         {
           if (c == bin ||
@@ -1239,9 +1270,28 @@ class CorpRooms
               walled(cells, c.x, c.y) &&
               state.area.chance(ARCHIVE_CORNER_BIN)))
             addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+          else if (copiers.indexOf(c) >= 0)
+            addDecoration(state, c.x, c.y, Const.CORP_TABLE_PRINTER);
+          else if (atWall(cells, c.x, c.y))
+            {
+              if (!state.area.chance(ARCHIVE_RING_BARE))
+                addDecoration(state, c.x, c.y, Const.CORP_CABINET);
+            }
+          // AND A TABLE UNDER THE GLAZING, where a cabinet may not stand: a sorting bench with
+          // the stationery on it. A table tile BLOCKS, unlike everything else on this ring, so it
+          // is only kept if the room's floor still reaches every doorway without that cell
           else if (walled(cells, c.x, c.y) &&
-              !state.area.chance(ARCHIVE_RING_BARE))
-            addDecoration(state, c.x, c.y, Const.CORP_CABINET);
+              state.area.chance(ARCHIVE_TABLE))
+            {
+              cells[c.x][c.y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
+              if (!reachable(cells, room))
+                {
+                  cells[c.x][c.y] = ARCHIVE;
+                  continue;
+                }
+              addDecoration(state, c.x, c.y, (state.area.random(2) == 0 ?
+                Const.CORP_TABLE_STATIONERY : Const.CORP_TABLE_MISC_LARGE));
+            }
         }
     }
 

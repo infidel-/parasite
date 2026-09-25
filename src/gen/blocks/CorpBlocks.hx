@@ -38,7 +38,6 @@ class CorpBlocks
   // demand, a dispatch case and a furniture list
   public static inline var ROOM_SOLO = 'room-solo';
   public static inline var ROOM_BREAK = 'room-break';
-  public static inline var ROOM_COPY = 'room-copy';
   public static inline var ROOM_ARCHIVE = 'room-archive';
   public static inline var ROOM_RECEPTION = 'room-reception';
   public static inline var ROOM_SECURITY = 'room-security';
@@ -73,7 +72,6 @@ class CorpBlocks
           case ROOM_SERVERS: ROLE_SERVERS;
           case ROOM_SOLO: ROLE_SOLO;
           case ROOM_BREAK: ROLE_BREAK;
-          case ROOM_COPY: ROLE_COPY;
           case ROOM_ARCHIVE: ROLE_ARCHIVE;
           case ROOM_RECEPTION: ROLE_RECEPTION;
           case ROOM_SECURITY: ROLE_SECURITY;
@@ -95,7 +93,6 @@ class CorpBlocks
           case ROLE_SERVERS: ROOM_SERVERS;
           case ROLE_SOLO: ROOM_SOLO;
           case ROLE_BREAK: ROOM_BREAK;
-          case ROLE_COPY: ROOM_COPY;
           case ROLE_ARCHIVE: ROOM_ARCHIVE;
           case ROLE_RECEPTION: ROOM_RECEPTION;
           case ROLE_SECURITY: ROOM_SECURITY;
@@ -261,14 +258,6 @@ class CorpBlocks
           max: 2,
           minW: 4,
           minH: 4,
-        },
-        {
-          kind: ROOM_COPY,
-          min: 0,
-          max: 3,
-          minW: 3,
-          minH: 3,
-          fit: smallest,
         },
         {
           // 5 AND NOT 4 ON EITHER AXIS, which is a number the oracle set. A rank spans the interior
