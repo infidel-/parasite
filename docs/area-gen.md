@@ -1603,3 +1603,25 @@ Then, asked "you think this room is correct?" of a 7x6 archive, and it was not �
   cabinet again; `archiveWalls` keeps it only if it ends up backed by masonry.
 
 500 corp seeds OK, orphanCells 0, furn/archive 46.4.
+
+## FULL-HEIGHT ARCHIVE SHELVING BLOCKS LINE OF SIGHT
+
+Asked for as "high archive shelves should break los". Line of sight is `AreaGame.isVisible` over the
+per-id `tiles.Default.TILE_SEETHROUGH` table, and every archive rank was one id — the archive twin,
+see-through like every corp furniture cell — while WHICH family stood on it (racking 2.6 of open
+steel, arch-shelf 4.8 = 2.4 m) was a hash in the renderer. So the choice moved to the generator:
+
+- `archive` splits its rank COLUMNS in two, which half is which on a roll, and lays the arch-shelf
+  half on `Const.TILE_ARCHIVE_HIGH` = 14 — row 0's spare slot, ALREADY unwalkable and not
+  see-through, so the gameplay half was naming it. The racking keeps the see-through twin.
+- **TRAP: a final id under the chem-lab band cannot be written straight into the grid.**
+  `CorpGen.finalizeTiles` remaps every id below `OFFSET_CHEM_LAB` through `CorpTemp.finalTiles`, and
+  14 is inside the temp alphabet — it came out -1 ("6 cells hold a tile id outside the tileset").
+  It goes in as temp `CorpTemp.ARCHIVE_HIGH` 43 and finalizes to 14.
+- The renderer reads it back: `CorpModel.fitOf` -> `FIT_ARCHIVE_HIGH` 5, `surfOf` -> SERVER,
+  `tiles.Default.getIcon` -> concrete; `CorpFurniture.rankFamily(m, col, row)` is the tile's answer
+  now (SHELF on HIGH, RACK on the twin), and `archiveAt` accepts both codes.
+
+Measured in game on a 5x10 archive: arch-shelf ranks carry only fam 1 units and racking only fam 2,
+`canSeeThrough` false/true on the two, `isVisible` across the ranks false and down the aisle true,
+and the 3D vision mask shades everything behind the shelving. 500 corp seeds OK, orphanCells 0.

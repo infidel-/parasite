@@ -846,12 +846,19 @@ class CorpRooms
     }
 
 // is a rank cell on one of this cell's four hands?
-  static function besideShelf(cells: Array<Array<Int>>, shelf: Int, x: Int, y: Int): Bool
+  static function besideRank(cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
       for (i in 0...Const.dir4x.length)
-        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == shelf)
+        if (rank(cells[x + Const.dir4x[i]][y + Const.dir4y[i]]))
           return true;
       return false;
+    }
+
+// is this an archive rank cell, racking or full-height shelving?
+  static inline function rank(t: Int): Bool
+    {
+      return t == Const.TILE_FLOOR_ARCHIVE + UNWALKABLE_TILE_OFFSET ||
+        t == ARCHIVE_HIGH;
     }
 
 // is this cell one of the list's?
@@ -1236,23 +1243,36 @@ class CorpRooms
       // the ranks FIRST, every COLUMN RACK_PITCH apart from the ring inward -- they run down the
       // room's y axis, asked for as reading better that way. Solid, one cross aisle once a rank is
       // long enough to want one, placed mid-rank so the two sections come out even
-      var ranks = 0;
-      var rx = room.x1 + 1;
+      //
+      // SPLIT IN TWO SECTIONS by column, the first half one family and the rest the other, which
+      // way round on a roll. The ARCH-SHELF half goes on ARCHIVE_HIGH (Const.TILE_ARCHIVE_HIGH),
+      // which BLOCKS LINE OF SIGHT — asked for as "high archive shelves should break los": 4.8
+      // (2.4 m) of shelving is a wall to anyone standing beside it, where the racking is 2.6 of
+      // open steel and stays on the see-through twin. render.corp.CorpFurniture.rankFamily reads
+      // it back
+      var cols = [];
+      var cx = room.x1 + 1;
+      while (cx <= room.x2 - 1 &&
+          cols.length < RACK_ROWS_MAX)
+        {
+          cols.push(cx);
+          cx += RACK_PITCH;
+        }
+      var flip = (state.area.random(2) == 0);
       var span = room.y2 - room.y1 - 1;
       var gap = (span >= ARCHIVE_GAP_SPAN ? room.y1 + 1 + Std.int(span / 2) : -1);
-      while (rx <= room.x2 - 1 &&
-          ranks < RACK_ROWS_MAX)
+      for (i in 0...cols.length)
         {
+          var rx = cols[i];
+          var id = ((i < Math.ceil(cols.length / 2)) != flip ? shelf : ARCHIVE_HIGH);
           GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, rx, room.y1 + 1, rx, room.y2 - 1);
           for (y in room.y1 + 1...room.y2)
             {
               if (y == gap)
                 continue;
-              cells[rx][y] = shelf;
+              cells[rx][y] = id;
               addDecoration(state, rx, y, Const.CORP_CABINET);
             }
-          ranks++;
-          rx += RACK_PITCH;
         }
       var ring = [];
       for (x in room.x1...room.x2 + 1)
@@ -1270,7 +1290,7 @@ class CorpRooms
       // copier jammed behind the racking
       var masonry = [for (c in ring)
         if (atWall(cells, c.x, c.y) &&
-            !besideShelf(cells, shelf, c.x, c.y)) c];
+            !besideRank(cells, c.x, c.y)) c];
       var copiers = [];
       for (i in 0...1 + state.area.random(2))
         {
@@ -1301,8 +1321,8 @@ class CorpRooms
       var slots = [];
       for (x in room.x1 + 1...room.x2)
         for (y in room.y1 + 2...room.y2 + 1)
-          if (cells[x][y - 1] == shelf &&
-              cells[x][y] != shelf &&
+          if (rank(cells[x][y - 1]) &&
+              !rank(cells[x][y]) &&
               !atDoor(cells, x, y) &&
               !crowded(bins, copiers, x, y))
             slots.push({ x: x, y: y });

@@ -939,6 +939,12 @@ class Const
   // is the whole gameplay half. no 2D art needed: a wilderness area always renders in 3D
   public static var TILE_ROCK_LARGE = 12;
   public static var TILE_TREE_CLUSTER = 13;
+  // a rank of FULL-HEIGHT archive shelving, which is the one fitting in the tower that BLOCKS SIGHT:
+  // an arch-shelf stands 4.8 (2.4 m) and a person does not see over it, where the racking beside it
+  // is 2.6 of open steel and stays on the archive's see-through twin. Row 0's spare slot, already
+  // unwalkable and not see-through in tiles.Default, so naming it is the whole gameplay half; it
+  // looks like the archive's concrete and render.corp.CorpModel reads it as FIT_ARCHIVE_HIGH
+  public static var TILE_ARCHIVE_HIGH = 14;
 
   // row 1
   public static var OFFSET_REGION = 16;

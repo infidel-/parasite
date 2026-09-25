@@ -442,6 +442,7 @@ class GenCheck
           for (x in r.x1...r.x2 + 1)
             for (y in r.y1...r.y2 + 1)
               if (ctx.cells[x][y] == shelf ||
+                  ctx.cells[x][y] == Const.TILE_ARCHIVE_HIGH ||
                   ctx.cells[x][y] == Const.TILE_DARK_TABLE_WOOD2_1X1)
                 n++;
           ok(n > 0, 'corp archive at ' + r.x1 + ',' + r.y1 + ' (' + r.w + 'x' + r.h +

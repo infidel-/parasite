@@ -64,6 +64,10 @@ class CorpTemp
   public static inline var CUBICLE = 40;
   public static inline var SERVER = 41;
   public static inline var ARCHIVE = 42;
+  // and the archive's FULL-HEIGHT shelving rank, which blocks sight. A temp id and not
+  // Const.TILE_ARCHIVE_HIGH written straight in: that is 14, inside this alphabet's range, and
+  // CorpGen.finalizeTiles remaps everything under the chem-lab band — it came out -1
+  public static inline var ARCHIVE_HIGH = 43;
 
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var BLDG_ROOM_ID_START = 100;
@@ -126,6 +130,7 @@ class CorpTemp
     CUBICLE => Const.TILE_FLOOR_CUBICLE,
     SERVER => Const.TILE_FLOOR_SERVER,
     ARCHIVE => Const.TILE_FLOOR_ARCHIVE,
+    ARCHIVE_HIGH => Const.TILE_ARCHIVE_HIGH,
     BLDG_WALL => Const.TILE_BUILDING,
     BLDG_ROOM => Const.TILE_FLOOR_CARPET,
     BLDG_CORRIDOR => Const.TILE_FLOOR_CARPET,

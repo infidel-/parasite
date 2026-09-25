@@ -321,8 +321,7 @@ class CorpDeco
           // AN ARCHIVE BIN SOUTH OF A RANK stands against the rank's end, whatever walls the cell
           // has: gen.corp.CorpRooms.archive deals those slots, and the rank end is where they were
           // asked for
-          if (FacilityModel.inside(m, c.col, c.row - 1) &&
-              m.fit[c.row - 1][c.col] == CorpFurniture.FIT_ARCHIVE &&
+          if (CorpFurniture.archiveAt(m, c.col, c.row - 1) &&
               !area.isWalkable(c.col, c.row - 1))
             z = CorpFurniture.rankSouth(m, c.col, c.row - 1) + CorpStyle.PROP_GAP +
               CorpStyle.BIN_W / 2;

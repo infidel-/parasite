@@ -156,6 +156,9 @@ class CorpFurniture
   public static inline var FIT_FIXTURE = 3;  // a washroom basin or WC cubicle
   // and the records room's, which is the one of the four that is NOT emitted here -- see `archive`
   public static inline var FIT_ARCHIVE = 4;
+  // and a rank of it the generator laid FULL HEIGHT, on the tile that blocks sight: the arch-shelf
+  // family, where FIT_ARCHIVE in a rank is the racking
+  public static inline var FIT_ARCHIVE_HIGH = 5;
   // and the three rows of ARCH below, by name
   public static inline var ARCH_CASE = 0;
   public static inline var ARCH_SHELF = 1;
@@ -743,9 +746,9 @@ class CorpFurniture
 //     in ARCH_WALL_SHELF an arch-shelf, backs on the masonry face and fronts into the room;
 //   - a RANK run: cells with no masonry at all, down the room's y axis (gen.corp.CorpRooms.archive
 //     lays its ranks as columns inside the walkable wall ring, so they never touch a wall). The
-//     room's ranks are SPLIT IN TWO SECTIONS by column — the first half one family, the rest the
-//     other, which half gets which hashed off the room — and EVERY rank stands BACK TO BACK, a
-//     pair per cell fronting the aisles either side, racking as well as arch-shelves
+//     room's ranks are SPLIT IN TWO SECTIONS by column, which family where being the generator's
+//     call (`rankFamily` reads it off the tile) — and EVERY rank stands BACK TO BACK, a pair per
+//     cell fronting the aisles either side, racking as well as arch-shelves
   static function archives(m:Facility, n:CorpFit):Void
     {
       var seen = new Map<Int, Bool>();
@@ -778,7 +781,7 @@ class CorpFurniture
                 lay(m, col, row, len, alongX, fam, [ hand ^ 1 ], hand, n);
               }
             else
-              lay(m, col, row, len, false, rankFamily(m, col), [ 2, 3 ], -1, n);
+              lay(m, col, row, len, false, rankFamily(m, col, row), [ 2, 3 ], -1, n);
           }
     }
 
@@ -869,7 +872,7 @@ class CorpFurniture
           wallHand(m, col, r0 - 1) < 0)
         r0--;
       var len = row - r0 + 1;
-      var w = ARCH[rankFamily(m, col)].w;
+      var w = ARCH[rankFamily(m, col, row)].w;
       var k = fits(len, w);
       var mid = CityConfig.cellToWorld(col, r0).z - CELL / 2 + len * CELL / 2;
       return mid + (k * w + (k - 1) * CorpStyle.ARCH_BUTT) / 2;
@@ -888,7 +891,7 @@ class CorpFurniture
           FacilityModel.isWall(m, c, r) ||
           !FacilityModel.isIndoor(m, c, r))
         return false;
-      return m.fit[r][c] != FIT_ARCHIVE || wallHand(m, c, r) == dir;
+      return !archiveAt(m, c, r) || wallHand(m, c, r) == dir;
     }
 
 // does this run end carry the company's poster rather than the pinned paper?
@@ -897,31 +900,13 @@ class CorpFurniture
       return (e.seed >>> 3) % 100 < CorpStyle.ARCH_END_POSTER_PCT;
     }
 
-// which family a rank stands in: its room's ranks split in two by column, the first half one
-// family and the rest the other, and which way round is hashed off the room so two archives differ
-  public static function rankFamily(m:Facility, col:Int):Int
+// which family a rank stands in: the GENERATOR's call now, read off the tile. gen.corp.CorpRooms
+// .archive splits the room's ranks by column and lays the arch-shelf half on Const.TILE_ARCHIVE_HIGH,
+// because a full-height shelf blocks line of sight and that is a gameplay fact the renderer cannot
+// decide for it
+  public static inline function rankFamily(m:Facility, col:Int, row:Int):Int
     {
-      for (r in m.rooms)
-        {
-          if (col < r.x1 ||
-              col > r.x2)
-            continue;
-          var cols = [];
-          for (x in r.x1...r.x2 + 1)
-            for (y in r.y1...r.y2 + 1)
-              if (archiveAt(m, x, y) &&
-                  wallHand(m, x, y) < 0)
-                {
-                  cols.push(x);
-                  break;
-                }
-          if (cols.indexOf(col) < 0)
-            continue;
-          var first = (cols.indexOf(col) < Math.ceil(cols.length / 2));
-          var flip = (FacilityModel.mix((r.x1 * 374761393) ^ (r.y1 * 668265263)) & 1) == 1;
-          return (first != flip ? ARCH_RACK : ARCH_SHELF);
-        }
-      return (FacilityModel.mix(col * 668265263) & 1) == 1 ? ARCH_RACK : ARCH_SHELF;
+      return (m.fit[row][col] == FIT_ARCHIVE_HIGH ? ARCH_SHELF : ARCH_RACK);
     }
 
 // the hand this cell has masonry on, or -1: in `back`'s order, so a corner belongs to the wall
@@ -943,9 +928,10 @@ class CorpFurniture
       return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_RACK;
     }
 
-  static inline function archiveAt(m:Facility, col:Int, row:Int):Bool
+  public static inline function archiveAt(m:Facility, col:Int, row:Int):Bool
     {
-      return FacilityModel.inside(m, col, row) && m.fit[row][col] == FIT_ARCHIVE;
+      return FacilityModel.inside(m, col, row) &&
+        (m.fit[row][col] == FIT_ARCHIVE || m.fit[row][col] == FIT_ARCHIVE_HIGH);
     }
 
 // one washroom fixture: a vanity where the run carries on beside it, a WC cubicle where it does not

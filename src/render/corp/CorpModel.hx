@@ -364,7 +364,8 @@ class CorpModel
       if (t == Const.TILE_FLOOR_SERVER ||
           t == Const.TILE_FLOOR_SERVER + 16 ||
           t == Const.TILE_FLOOR_ARCHIVE ||
-          t == Const.TILE_FLOOR_ARCHIVE + 16)
+          t == Const.TILE_FLOOR_ARCHIVE + 16 ||
+          t == Const.TILE_ARCHIVE_HIGH)
         return SERVER;
       if (t == Const.TILE_FLOOR_CONCRETE ||
           t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE ||
@@ -410,6 +411,10 @@ class CorpModel
       // records room built steel server cabinets with blinking LEDs and cable drapes over them
       if (t == Const.TILE_FLOOR_ARCHIVE + 16)
         return CorpFurniture.FIT_ARCHIVE;
+      // and its full-height rank, which blocks sight (Const.TILE_ARCHIVE_HIGH) and so is the
+      // generator's word on which family stands there: the arch-shelf
+      if (t == Const.TILE_ARCHIVE_HIGH)
+        return CorpFurniture.FIT_ARCHIVE_HIGH;
       return 0;
     }
 
