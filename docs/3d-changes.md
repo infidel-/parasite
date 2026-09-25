@@ -2134,3 +2134,30 @@ the long things told to shrink, packed at tol 0 — seams x 121/253/387/513/636/
 The six PROMOTED indices (`CLUTTER_PROP_OF`) stand their glbs whatever is drawn there, unchanged.
 
 Two rolls, $0.1157. Verdict: **LANDED** — on a boardroom slab every item reads as lying on it.
+
+## shell: a corner NOTCH is sized off the run it meets — a partition no longer thickens into the outer wall
+
+Reported off a bin pick: a corner bin "went right into the wall because of the corner issue". The
+issue: at every L or T the wall cell is its slab box less the corner squares `FacilityGeom.notches`
+cuts, and each square was `(CELL - thick(cell)) / 2` on BOTH sides — the corner cell's OWN inset. Where
+a 1.2 partition (inset 1.4) meets the 2.0 tower wall (inset 1.0) the partition therefore carried on at
+2.0 thick for the corner cell's last unit: a 0.4 x 1.0 step standing into the room at every such
+corner. Measured on the archive corner at 34,40: slab (35,41) x 2.0..6.0 z 2.0..5.0, notch x 2.0..3.0,
+partition face 3.4 — so `CorpDeco.bins`, which pushes to the partition's real face (`wallFace`), put
+the bin's 0.62 body 0.3 into the step.
+
+`runInset(m, col, row, dir)`: the run leaving in `dir` has its faces at the NEIGHBOUR's inset when
+that is SOLID masonry and thinner, else the cell's own. A notch's x side takes the vertical run's
+inset and its z side the horizontal run's. Three consumers had to follow, everything else reads the
+notch list generically (strips / floor, butt faces, FacilityDetail corners, FacilityGrime):
+- `structure`'s SHOULDER caps skip a side a widened notch now owns (they would stand across floor);
+- `capTop` on a corner cell cuts the box on every notch edge and caps the pieces outside a notch
+  (the old three-rect split assumed four equal squares);
+- the parapet (`inset` override) is untouched.
+
+WINDOWS KEEP THE OLD RULE on purpose: a glazing slab sits inside the wall that bounds its run and that
+wall's excess IS the jamb reveal. Only `isSolidWall` neighbours widen a notch.
+
+Verdict: **LANDED.** Top-down at 34,40 the partition face runs straight into the corner and the bin
+stands clear; the wall-top cap is a clean L. Compound corners with the same thickness mismatch get the
+same fix (not separately shot).

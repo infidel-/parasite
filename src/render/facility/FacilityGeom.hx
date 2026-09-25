@@ -286,6 +286,24 @@ class FacilityGeom
       };
     }
 
+// how far in from the cell boundary the run leaving this wall cell in `dir` has its faces: the cell's
+// own inset, or the NEIGHBOUR's when that is masonry and thinner.
+//
+// A PARTITION BUTTS INTO THE OUTER WALL, it does not thicken to meet it. With the cell's own inset a
+// 1.2 partition meeting the 2.0 tower wall carried on at 2.0 for the corner cell's last unit, a
+// 0.4 step standing into the room at every such corner — reported from the game as a bin pushed into
+// the corner going straight into the wall. MASONRY only: a window slab sits strictly INSIDE the
+// wall that bounds its run, and that wall's excess is the jamb reveal (see `structure`'s shoulders)
+  static function runInset(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      var e = (CELL - thick(m, col, row)) / 2;
+      var nc = col + DC[dir];
+      var nr = row + DR[dir];
+      if (!FacilityModel.isSolidWall(m, nc, nr))
+        return e;
+      return Math.max(e, (CELL - thick(m, nc, nr)) / 2);
+    }
+
 // the corner squares a cell's slab box holds that its masonry does not: one per PAIR of adjacent
 // directions the wall line carries into.
 //
@@ -308,7 +326,6 @@ class FacilityGeom
   public static function notches(m:Facility, col:Int, row:Int, inset:Float = -1):Array<Notch>
     {
       var half = (CityConfig.GRID * CELL) / 2;
-      var e = (inset >= 0 ? inset : (CELL - thick(m, col, row)) / 2);
       var x0 = col * CELL - half;
       var z0 = row * CELL - half;
       var out = [];
@@ -319,13 +336,17 @@ class FacilityGeom
             if (!carries(m, col + DC[dz], row + DR[dz]) ||
                 !carries(m, col + DC[dx], row + DR[dx]))
               continue;
-            var nx = (dx == 2 ? x0 : x0 + CELL - e);
-            var nz = (dz == 0 ? z0 : z0 + CELL - e);
+            // each side of the square is the face of the run it stands against, so it is sized by
+            // THAT run's inset and not the cell's own — see runInset
+            var ex = (inset >= 0 ? inset : runInset(m, col, row, dz));
+            var ez = (inset >= 0 ? inset : runInset(m, col, row, dx));
+            var nx = (dx == 2 ? x0 : x0 + CELL - ex);
+            var nz = (dz == 0 ? z0 : z0 + CELL - ez);
             out.push({
               x0: nx,
-              x1: nx + e,
+              x1: nx + ex,
               z0: nz,
-              z1: nz + e,
+              z1: nz + ez,
               dx: dx,
               dz: dz,
               col: col + DC[dx],
@@ -566,10 +587,19 @@ class FacilityGeom
                         var flat = (dir < 2);
                         var pl = flat ? (dir == 0 ? s.z0 : s.z1) : (dir == 2 ? s.x0 : s.x1);
                         var p0 = (flat ? col : row) * CELL - half;
-                        butt(look(diagCol(col, dir, -1), diagRow(row, dir, -1)),
-                          flat, pl, p0 + e, p0 + en, dir);
-                        butt(look(diagCol(col, dir, 1), diagRow(row, dir, 1)),
-                          flat, pl, p0 + CELL - en, p0 + CELL - e, dir);
+                        // AND NONE ON A SIDE A NOTCH HAS TAKEN: against a thinner MASONRY run the
+                        // notch there is cut to that run's face (runInset), so the shoulder would
+                        // stand across empty floor
+                        var solid = FacilityModel.isSolidWall(m, nc, nr);
+                        var lo = (flat ? 2 : 0);
+                        if (!solid ||
+                            !carries(m, col + DC[lo], row + DR[lo]))
+                          butt(look(diagCol(col, dir, -1), diagRow(row, dir, -1)),
+                            flat, pl, p0 + e, p0 + en, dir);
+                        if (!solid ||
+                            !carries(m, col + DC[lo + 1], row + DR[lo + 1]))
+                          butt(look(diagCol(col, dir, 1), diagRow(row, dir, 1)),
+                            flat, pl, p0 + CELL - en, p0 + CELL - e, dir);
                         continue;
                       }
                     // the shutter is chosen off THIS cell rather than off the neighbour, unlike
@@ -899,6 +929,43 @@ class FacilityGeom
           !carries(m, col + 1, row))
         {
           cap(b, xa, xb, s.z0, s.z1, y, t);
+          return;
+        }
+      // A TURN OR A BRANCH IS THE BOX LESS ITS NOTCHES, which stopped being four equal squares when
+      // runInset sized each one off the run it meets. So the box is cut on every notch edge and
+      // each piece outside a notch is capped — a handful of quads, on corner cells only
+      var ns = notches(m, col, row);
+      if (ns.length > 0)
+        {
+          var xs = [s.x0, s.x1];
+          var zs = [s.z0, s.z1];
+          for (n in ns)
+            {
+              xs.push(n.x0);
+              xs.push(n.x1);
+              zs.push(n.z0);
+              zs.push(n.z1);
+            }
+          xs.sort(Reflect.compare);
+          zs.sort(Reflect.compare);
+          for (i in 0...xs.length - 1)
+            for (j in 0...zs.length - 1)
+              {
+                if (xs[i + 1] - xs[i] < 0.01 ||
+                    zs[j + 1] - zs[j] < 0.01)
+                  continue;
+                var mx = (xs[i] + xs[i + 1]) / 2;
+                var mz = (zs[j] + zs[j + 1]) / 2;
+                var hole = false;
+                for (n in ns)
+                  if (mx > n.x0 &&
+                      mx < n.x1 &&
+                      mz > n.z0 &&
+                      mz < n.z1)
+                    hole = true;
+                if (!hole)
+                  cap(b, xs[i], xs[i + 1], zs[j], zs[j + 1], y, t);
+              }
           return;
         }
       cap(b, s.x0, s.x1, za, zb, y, t);
