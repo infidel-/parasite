@@ -1188,25 +1188,26 @@ class CorpRooms
               !state.area.chance(ARCHIVE_RING_BARE))
             addDecoration(state, c.x, c.y, Const.CORP_CABINET);
         }
-      // and the ranks, every row RACK_PITCH apart from the ring inward: solid, one cross aisle once
-      // a rank is long enough to want one, placed mid-rank so the two sections come out even
+      // and the ranks, every COLUMN RACK_PITCH apart from the ring inward -- they run down the
+      // room's y axis, asked for as reading better that way. Solid, one cross aisle once a rank is
+      // long enough to want one, placed mid-rank so the two sections come out even
       var ranks = 0;
-      var ry = room.y1 + 1;
-      var span = room.x2 - room.x1 - 1;
-      var gap = (span >= ARCHIVE_GAP_SPAN ? room.x1 + 1 + Std.int(span / 2) : -1);
-      while (ry <= room.y2 - 1 &&
+      var rx = room.x1 + 1;
+      var span = room.y2 - room.y1 - 1;
+      var gap = (span >= ARCHIVE_GAP_SPAN ? room.y1 + 1 + Std.int(span / 2) : -1);
+      while (rx <= room.x2 - 1 &&
           ranks < RACK_ROWS_MAX)
         {
-          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
-          for (x in room.x1 + 1...room.x2)
+          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, rx, room.y1 + 1, rx, room.y2 - 1);
+          for (y in room.y1 + 1...room.y2)
             {
-              if (x == gap)
+              if (y == gap)
                 continue;
-              cells[x][ry] = shelf;
-              addDecoration(state, x, ry, Const.CORP_CABINET);
+              cells[rx][y] = shelf;
+              addDecoration(state, rx, y, Const.CORP_CABINET);
             }
           ranks++;
-          ry += RACK_PITCH;
+          rx += RACK_PITCH;
         }
     }
 

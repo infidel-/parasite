@@ -724,10 +724,11 @@ class CorpFurniture
 // section of racking and a wall as a wall of cabinets. Two kinds of run, both read off the grid:
 //   - a WALL run: cells with masonry on the same hand, along that wall. File cabinets, and one run
 //     in ARCH_WALL_SHELF an arch-shelf, backs on the masonry face and fronts into the room;
-//   - a RANK run: cells with no masonry at all, along x (gen.corp.CorpRooms.archive lays its ranks
-//     inside the walkable wall ring, so they never touch a wall). The room's ranks are SPLIT IN TWO SECTIONS by row
-//     — the first half one family, the rest the other, which half gets which hashed off the room —
-//     and an arch-shelf rank stands BACK TO BACK, a pair per cell fronting both aisles
+//   - a RANK run: cells with no masonry at all, down the room's y axis (gen.corp.CorpRooms.archive
+//     lays its ranks as columns inside the walkable wall ring, so they never touch a wall). The
+//     room's ranks are SPLIT IN TWO SECTIONS by column — the first half one family, the rest the
+//     other, which half gets which hashed off the room — and EVERY rank stands BACK TO BACK, a
+//     pair per cell fronting the aisles either side, racking as well as arch-shelves
   static function archives(m:Facility, n:CorpFit):Void
     {
       var seen = new Map<Int, Bool>();
@@ -739,7 +740,8 @@ class CorpFurniture
               continue;
             // row-major, so this is a run's first cell whichever way it runs
             var hand = wallHand(m, col, row);
-            var alongX = (hand < 2);
+            var alongX = (hand == 0 ||
+              hand == 1);
             var len = 0;
             while (true)
               {
@@ -759,10 +761,7 @@ class CorpFurniture
                 lay(m, col, row, len, alongX, fam, [ hand ^ 1 ], hand, n);
               }
             else
-              {
-                var fam = rankFamily(m, col, row);
-                lay(m, col, row, len, true, fam, (fam == ARCH_SHELF ? [ 0, 1 ] : [ 1 ]), -1, n);
-              }
+              lay(m, col, row, len, false, rankFamily(m, col), [ 2, 3 ], -1, n);
           }
     }
 
@@ -793,7 +792,7 @@ class CorpFurniture
                 FacilityGeom.wallFace(m, col + dx(wall), row + dz(wall), wall ^ 1));
             }
           else if (fronts.length > 1)
-            off = (front == 0 ? -1 : 1) * (u.d + gap) / 2;
+            off = (dx(front) + dz(front)) * (u.d + gap) / 2;
           for (i in 0...k)
             {
               var at = s0 + i * (u.w + gap);
@@ -815,31 +814,31 @@ class CorpFurniture
         }
     }
 
-// which family a rank stands in: its room's ranks split in two by row, the first half one family
-// and the rest the other, and which way round is hashed off the room so two archives differ
-  static function rankFamily(m:Facility, col:Int, row:Int):Int
+// which family a rank stands in: its room's ranks split in two by column, the first half one
+// family and the rest the other, and which way round is hashed off the room so two archives differ
+  static function rankFamily(m:Facility, col:Int):Int
     {
       for (r in m.rooms)
         {
           if (col < r.x1 ||
-              col > r.x2 ||
-              row < r.y1 ||
-              row > r.y2)
+              col > r.x2)
             continue;
-          var rows = [];
-          for (y in r.y1...r.y2 + 1)
-            for (x in r.x1...r.x2 + 1)
+          var cols = [];
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
               if (archiveAt(m, x, y) &&
                   wallHand(m, x, y) < 0)
                 {
-                  rows.push(y);
+                  cols.push(x);
                   break;
                 }
-          var first = (rows.indexOf(row) < Math.ceil(rows.length / 2));
+          if (cols.indexOf(col) < 0)
+            continue;
+          var first = (cols.indexOf(col) < Math.ceil(cols.length / 2));
           var flip = (FacilityModel.mix((r.x1 * 374761393) ^ (r.y1 * 668265263)) & 1) == 1;
           return (first != flip ? ARCH_RACK : ARCH_SHELF);
         }
-      return (FacilityModel.mix(row * 668265263) & 1) == 1 ? ARCH_RACK : ARCH_SHELF;
+      return (FacilityModel.mix(col * 668265263) & 1) == 1 ? ARCH_RACK : ARCH_SHELF;
     }
 
 // the hand this cell has masonry on, or -1: in `back`'s order, so a corner belongs to the wall

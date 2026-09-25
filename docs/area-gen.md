@@ -1548,3 +1548,9 @@ windows" and a bin standing mid-tile. All three were one design mistake and one 
 
 Measured over 500 corp seeds: OK, orphanCells 0, unreachableRooms 0. `furn/archive` reads 35.91; it
 counts sealed cells, and the ring is not sealed any more, so it is not comparable with 65.06.
+
+Then asked for as "back to back shelving units as well" and "do them vertically along area y-axis
+(they look better this way)": the ranks are COLUMNS now, `x1+1 .. x2-1` at `RACK_PITCH` running
+`y1+1 .. y2-1`, the cross aisle mid-column, and `CorpFurniture.archives` lays EVERY rank as a
+back-to-back pair fronting ±x — racking too, which used to stand single facing the camera. The two
+families split the room by column (`rankFamily`). 500 corp seeds OK, orphanCells 0.
