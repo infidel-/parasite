@@ -1554,3 +1554,9 @@ Then asked for as "back to back shelving units as well" and "do them vertically 
 `y1+1 .. y2-1`, the cross aisle mid-column, and `CorpFurniture.archives` lays EVERY rank as a
 back-to-back pair fronting ±x — racking too, which used to stand single facing the camera. The two
 families split the room by column (`rankFamily`). 500 corp seeds OK, orphanCells 0.
+
+More bins, asked for "in other corners + near the shelves in the center": each walled corner of the
+ring takes one at `ARCHIVE_CORNER_BIN` 40%, and one or two go on AISLE cells beside a rank.
+`CorpDeco.bins` stands a bin with no wall on a hand against the rank beside it instead — the face is
+`ARCH[rankFamily].d + ARCH_BUTT/2` off the rank's centre line, since every rank is a back-to-back pair.
+500 corp seeds OK, orphanCells 0 (a bin never seals its cell).

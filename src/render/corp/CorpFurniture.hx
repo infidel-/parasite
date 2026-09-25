@@ -816,7 +816,7 @@ class CorpFurniture
 
 // which family a rank stands in: its room's ranks split in two by column, the first half one
 // family and the rest the other, and which way round is hashed off the room so two archives differ
-  static function rankFamily(m:Facility, col:Int):Int
+  public static function rankFamily(m:Facility, col:Int):Int
     {
       for (r in m.rooms)
         {

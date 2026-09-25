@@ -318,6 +318,7 @@ class CorpDeco
           var w = CityConfig.cellToWorld(c.col, c.row);
           var x = w.x;
           var z = w.z;
+          var walled = false;
           for (dir in 0...4)
             {
               var wc = c.col + DC[dir];
@@ -328,7 +329,25 @@ class CorpDeco
                 CorpStyle.PROP_GAP;
               x += DC[dir] * off;
               z += DR[dir] * off;
+              walled = true;
             }
+          // AND AN ARCHIVE AISLE BIN AGAINST THE RANK BESIDE IT (gen.corp.CorpRooms.archive deals
+          // those): a rank is a back-to-back pair across x, so its face is one unit depth and half
+          // the butt gap off the rank's centre line
+          if (!walled)
+            for (dir in 2...4)
+              {
+                var rc = c.col + DC[dir];
+                var rr = c.row + DR[dir];
+                if (!FacilityModel.inside(m, rc, rr) ||
+                    m.fit[rr][rc] != CorpFurniture.FIT_ARCHIVE ||
+                    area.isWalkable(rc, rr))
+                  continue;
+                var u = CorpFurniture.ARCH[CorpFurniture.rankFamily(m, rc)];
+                x += DC[dir] * (CELL - u.d - CorpStyle.ARCH_BUTT / 2 - CorpStyle.BIN_W / 2 -
+                  CorpStyle.PROP_GAP);
+                break;
+              }
           out.push({ x: x, z: z, yaw: 0.0 });
           ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
             z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);

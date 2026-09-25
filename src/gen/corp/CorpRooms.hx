@@ -44,6 +44,8 @@ class CorpRooms
   // before it is cut in two by a cross aisle
   public static inline var ARCHIVE_RING_BARE = 15;
   public static inline var ARCHIVE_GAP_SPAN = 5;
+  // and the percent chance each walled corner of it takes a bin
+  public static inline var ARCHIVE_CORNER_BIN = 40;
   // and the boardroom table, which was the last run in this file still written the old way:
   // `tw = room.w - 4` with no cap at all. Measured over 800 meeting rooms — min 12 cells, median
   // 32, max 64, and 783 of the 800 had an axis of five cells or more. At CityConfig.CELL 4 and
@@ -790,6 +792,13 @@ class CorpRooms
       return false;
     }
 
+// is this cell one of the room's four corners?
+  static inline function corner(room: _Room, x: Int, y: Int): Bool
+    {
+      return (x == room.x1 || x == room.x2) &&
+        (y == room.y1 || y == room.y2);
+    }
+
 // is there a WALL of any kind on one of this cell's four hands -- masonry or glazing? what a bin
 // needs (render.corp.CorpDeco.bins stands it against either, and a cell with neither leaves it in
 // the middle of the tile), and what an archive's wall cabinet is dealt on — see `archive`
@@ -1176,13 +1185,16 @@ class CorpRooms
               y == room.y2) &&
               !atDoor(cells, x, y))
             ring.push({ x: x, y: y });
-      // ONE BIN, on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
-      // stand it against
+      // ONE BIN on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
+      // stand it against, and more in the CORNERS on a roll
       var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
       var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
       for (c in ring)
         {
-          if (c == bin)
+          if (c == bin ||
+              (corner(room, c.x, c.y) &&
+              walled(cells, c.x, c.y) &&
+              state.area.chance(ARCHIVE_CORNER_BIN)))
             addDecoration(state, c.x, c.y, Const.CORP_TRASH);
           else if (walled(cells, c.x, c.y) &&
               !state.area.chance(ARCHIVE_RING_BARE))
@@ -1208,6 +1220,23 @@ class CorpRooms
             }
           ranks++;
           rx += RACK_PITCH;
+        }
+      // and one or two in the AISLES, beside a rank: CorpDeco.bins stands a bin with no wall on a
+      // hand against the rank's face instead
+      var aisle = [];
+      for (x in room.x1 + 1...room.x2)
+        for (y in room.y1 + 1...room.y2)
+          if (cells[x][y] != shelf &&
+              (cells[x - 1][y] == shelf ||
+              cells[x + 1][y] == shelf))
+            aisle.push({ x: x, y: y });
+      for (i in 0...1 + state.area.random(2))
+        {
+          if (aisle.length == 0)
+            break;
+          var c = aisle[state.area.random(aisle.length)];
+          aisle.remove(c);
+          addDecoration(state, c.x, c.y, Const.CORP_TRASH);
         }
     }
 
