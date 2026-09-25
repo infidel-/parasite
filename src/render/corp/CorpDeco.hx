@@ -318,35 +318,25 @@ class CorpDeco
           var w = CityConfig.cellToWorld(c.col, c.row);
           var x = w.x;
           var z = w.z;
-          var walled = false;
-          for (dir in 0...4)
-            {
-              var wc = c.col + DC[dir];
-              var wr = c.row + DR[dir];
-              if (!FacilityModel.isWall(m, wc, wr))
-                continue;
-              var off = CELL - FacilityGeom.wallFace(m, wc, wr, dir ^ 1) - CorpStyle.BIN_W / 2 -
-                CorpStyle.PROP_GAP;
-              x += DC[dir] * off;
-              z += DR[dir] * off;
-              walled = true;
-            }
-          // AND AN ARCHIVE AISLE BIN AGAINST THE RANK BESIDE IT (gen.corp.CorpRooms.archive deals
-          // those): a rank is a back-to-back pair across x, so its face is one unit depth and half
-          // the butt gap off the rank's centre line
-          if (!walled)
-            for (dir in 2...4)
+          // AN ARCHIVE BIN SOUTH OF A RANK stands against the rank's end, whatever walls the cell
+          // has: gen.corp.CorpRooms.archive deals those slots, and the rank end is where they were
+          // asked for
+          if (FacilityModel.inside(m, c.col, c.row - 1) &&
+              m.fit[c.row - 1][c.col] == CorpFurniture.FIT_ARCHIVE &&
+              !area.isWalkable(c.col, c.row - 1))
+            z = CorpFurniture.rankSouth(m, c.col, c.row - 1) + CorpStyle.PROP_GAP +
+              CorpStyle.BIN_W / 2;
+          else
+            for (dir in 0...4)
               {
-                var rc = c.col + DC[dir];
-                var rr = c.row + DR[dir];
-                if (!FacilityModel.inside(m, rc, rr) ||
-                    m.fit[rr][rc] != CorpFurniture.FIT_ARCHIVE ||
-                    area.isWalkable(rc, rr))
+                var wc = c.col + DC[dir];
+                var wr = c.row + DR[dir];
+                if (!FacilityModel.isWall(m, wc, wr))
                   continue;
-                var u = CorpFurniture.ARCH[CorpFurniture.rankFamily(m, rc)];
-                x += DC[dir] * (CELL - u.d - CorpStyle.ARCH_BUTT / 2 - CorpStyle.BIN_W / 2 -
-                  CorpStyle.PROP_GAP);
-                break;
+                var off = CELL - FacilityGeom.wallFace(m, wc, wr, dir ^ 1) - CorpStyle.BIN_W / 2 -
+                  CorpStyle.PROP_GAP;
+                x += DC[dir] * off;
+                z += DR[dir] * off;
               }
           out.push({ x: x, z: z, yaw: 0.0 });
           ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,

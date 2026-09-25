@@ -1556,7 +1556,10 @@ back-to-back pair fronting ±x — racking too, which used to stand single facin
 families split the room by column (`rankFamily`). 500 corp seeds OK, orphanCells 0.
 
 More bins, asked for "in other corners + near the shelves in the center": each walled corner of the
-ring takes one at `ARCHIVE_CORNER_BIN` 40%, and one or two go on AISLE cells beside a rank.
-`CorpDeco.bins` stands a bin with no wall on a hand against the rank beside it instead — the face is
-`ARCH[rankFamily].d + ARCH_BUTT/2` off the rank's centre line, since every rank is a back-to-back pair.
+ring takes one at `ARCHIVE_CORNER_BIN` 40%, and one or two go in the BIN SLOTS: the cell just
+SOUTH of a rank section (the cross aisle, or the ring cell under the rank's last cell, which the ring
+dressing then leaves to the bin), asked for as "put the bin slots on the south side of the shelves".
+The ranks are laid BEFORE the ring for that. `CorpDeco.bins` stands a bin with a rank to its north
+against the rank's south end (`CorpFurniture.rankSouth`, `lay`'s own centring walked back from the
+cell) whatever walls the cell has.
 500 corp seeds OK, orphanCells 0 (a bin never seals its cell).

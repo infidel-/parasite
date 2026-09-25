@@ -793,7 +793,7 @@ class CorpFurniture
       // the run's extent along its axis, and the centre line across it
       var a0 = (alongX ? col : row) * CELL - half + CorpStyle.FIT_INSET;
       var span = len * CELL - 2 * CorpStyle.FIT_INSET;
-      var k = Std.int(Math.max(1, Math.floor((span + gap) / (u.w + gap))));
+      var k = fits(len, u.w);
       var s0 = a0 + (span - (k * u.w + (k - 1) * gap)) / 2 + u.w / 2;
       var c = CityConfig.cellToWorld(col, row);
       var across = (alongX ? c.z : c.x);
@@ -850,6 +850,29 @@ class CorpFurniture
                 }
             }
         }
+    }
+
+// how many units of width `w` a run of `len` cells lays, end to end ARCH_BUTT apart
+  static inline function fits(len:Int, w:Float):Int
+    {
+      var span = len * CELL - 2 * CorpStyle.FIT_INSET;
+      return Std.int(Math.max(1, Math.floor((span + CorpStyle.ARCH_BUTT) / (w + CorpStyle.ARCH_BUTT))));
+    }
+
+// the world z of the SOUTH end of the rank whose last cell is (col, row): `lay`'s own centring,
+// walked back from that cell to the rank's first. For render.corp.CorpDeco.bins, which stands a
+// bin against it
+  public static function rankSouth(m:Facility, col:Int, row:Int):Float
+    {
+      var r0 = row;
+      while (archiveAt(m, col, r0 - 1) &&
+          wallHand(m, col, r0 - 1) < 0)
+        r0--;
+      var len = row - r0 + 1;
+      var w = ARCH[rankFamily(m, col)].w;
+      var k = fits(len, w);
+      var mid = CityConfig.cellToWorld(col, r0).z - CELL / 2 + len * CELL / 2;
+      return mid + (k * w + (k - 1) * CorpStyle.ARCH_BUTT) / 2;
     }
 
 // is there floor in front of a run's end — `hi` 0 the low end, 1 the high one? not masonry, and

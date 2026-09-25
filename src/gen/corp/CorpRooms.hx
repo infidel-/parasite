@@ -1176,31 +1176,7 @@ class CorpRooms
       // left bare a wall that draws as masonry. So every ring cell with a wall of any kind on a
       // hand is dealt one, and archiveWalls keeps the ones that end up backed by masonry (a corp
       // decoration never draws its sprite, so the rest are nothing). A doorway's cell stays bare
-      var ring = [];
-      for (x in room.x1...room.x2 + 1)
-        for (y in room.y1...room.y2 + 1)
-          if ((x == room.x1 ||
-              x == room.x2 ||
-              y == room.y1 ||
-              y == room.y2) &&
-              !atDoor(cells, x, y))
-            ring.push({ x: x, y: y });
-      // ONE BIN on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
-      // stand it against, and more in the CORNERS on a roll
-      var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
-      var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
-      for (c in ring)
-        {
-          if (c == bin ||
-              (corner(room, c.x, c.y) &&
-              walled(cells, c.x, c.y) &&
-              state.area.chance(ARCHIVE_CORNER_BIN)))
-            addDecoration(state, c.x, c.y, Const.CORP_TRASH);
-          else if (walled(cells, c.x, c.y) &&
-              !state.area.chance(ARCHIVE_RING_BARE))
-            addDecoration(state, c.x, c.y, Const.CORP_CABINET);
-        }
-      // and the ranks, every COLUMN RACK_PITCH apart from the ring inward -- they run down the
+      // the ranks FIRST, every COLUMN RACK_PITCH apart from the ring inward -- they run down the
       // room's y axis, asked for as reading better that way. Solid, one cross aisle once a rank is
       // long enough to want one, placed mid-rank so the two sections come out even
       var ranks = 0;
@@ -1221,22 +1197,51 @@ class CorpRooms
           ranks++;
           rx += RACK_PITCH;
         }
-      // and one or two in the AISLES, beside a rank: CorpDeco.bins stands a bin with no wall on a
-      // hand against the rank's face instead
-      var aisle = [];
+      // because the BIN SLOTS hang off them: one or two bins on the cell just SOUTH of a rank
+      // section, asked for there -- the cross aisle, or the ring cell under the rank's last one,
+      // which the ring dressing below then leaves to the bin. CorpDeco.bins stands a bin with a
+      // rank to its north against that rank's end
+      var slots = [];
       for (x in room.x1 + 1...room.x2)
-        for (y in room.y1 + 1...room.y2)
-          if (cells[x][y] != shelf &&
-              (cells[x - 1][y] == shelf ||
-              cells[x + 1][y] == shelf))
-            aisle.push({ x: x, y: y });
+        for (y in room.y1 + 2...room.y2 + 1)
+          if (cells[x][y - 1] == shelf &&
+              cells[x][y] != shelf &&
+              !atDoor(cells, x, y))
+            slots.push({ x: x, y: y });
+      var taken = new Map<Int, Bool>();
       for (i in 0...1 + state.area.random(2))
         {
-          if (aisle.length == 0)
+          if (slots.length == 0)
             break;
-          var c = aisle[state.area.random(aisle.length)];
-          aisle.remove(c);
+          var c = slots[state.area.random(slots.length)];
+          slots.remove(c);
+          taken.set(c.x * 1000 + c.y, true);
           addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+        }
+      var ring = [];
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if ((x == room.x1 ||
+              x == room.x2 ||
+              y == room.y1 ||
+              y == room.y2) &&
+              !atDoor(cells, x, y) &&
+              !taken.exists(x * 1000 + y))
+            ring.push({ x: x, y: y });
+      // ONE BIN on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
+      // stand it against, and more in the CORNERS on a roll
+      var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
+      var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
+      for (c in ring)
+        {
+          if (c == bin ||
+              (corner(room, c.x, c.y) &&
+              walled(cells, c.x, c.y) &&
+              state.area.chance(ARCHIVE_CORNER_BIN)))
+            addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+          else if (walled(cells, c.x, c.y) &&
+              !state.area.chance(ARCHIVE_RING_BARE))
+            addDecoration(state, c.x, c.y, Const.CORP_CABINET);
         }
     }
 
