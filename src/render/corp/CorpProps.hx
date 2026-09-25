@@ -645,10 +645,25 @@ class CorpProps
 // a quarter turn (gen.corp.CorpRooms.cubicle does, when that seats more people) and the first
 // non-clear hand of a pod at the end of a block is the neighbour BESIDE him. CorpFurniture.podBack
 // is the shared oracle, and it is the same one the panel emitter splits its faces on
+//
+// AND A LONE TABLE PUTS ITS BACK TO THE WALL. With nothing but "the first hand that is not clear
+// floor" an archive's sorting table on the EAST wall found the shelving rank on its west hand
+// before the wall on its east, turned its back to the racks and put its modesty panel where the
+// sitter's legs go, with the chair side jammed against the glass — reported off a face pick. A run
+// keeps the order above: its end cell touching a side wall must face the way the run does
   static function backHand(m:Facility, col:Int, row:Int):Int
     {
       if (m.surf[row][col] == Surf.CUBICLE)
         return CorpFurniture.podBack(m, col, row);
+      var lone = true;
+      for (d in 0...4)
+        if (FacilityModel.inside(m, col + DC[d], row + DR[d]) &&
+            m.table[row + DR[d]][col + DC[d]])
+          lone = false;
+      if (lone)
+        for (d in 0...4)
+          if (FacilityModel.isWall(m, col + DC[d], row + DR[d]))
+            return d;
       for (d in 0...4)
         if (!clear(m, col + DC[d], row + DR[d]))
           return d;

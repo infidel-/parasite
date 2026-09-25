@@ -87,13 +87,34 @@ class Go
           log('No ' + kind + ' on this map. Try: ' + GoBlock.summary(game) + '.');
           return;
         }
-      var b = hits[Std.random(hits.length)];
+      // NOT THE ONE YOU ARE STANDING IN: run it from inside a room and the roll used to put you
+      // back in the same room one time in N, which read as the command doing nothing
+      var here = [for (i in 0...hits.length) if (holds(hits[i], game.playerArea.x,
+        game.playerArea.y)) i];
+      var pick = [for (i in 0...hits.length) if (here.indexOf(i) < 0) i];
+      if (pick.length == 0)
+        {
+          log('You are already in the only ' + kind + ' on this map.');
+          return;
+        }
+      var i = pick[Std.random(pick.length)];
+      var b = hits[i];
       var c = b.cells[Std.random(b.cells.length)];
       log('Teleporting to ' + kind + ' ' + (hits.length > 1 ?
-        '(1 of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
+        '(' + (i + 1) + ' of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
       game.playerArea.moveTo(c.x, c.y);
       game.scene.updateCamera();
       game.scene.draw();
+    }
+
+// does this block hold the cell? its own cells, or one a step off them — a doorway or a furniture
+// cell is not in the walkable list but is still standing in the room
+  static function holds(b: GoBlock._GoBlock, x: Int, y: Int): Bool
+    {
+      for (c in b.cells)
+        if (Math.abs(c.x - x) + Math.abs(c.y - y) <= 1)
+          return true;
+      return false;
     }
 
 // go to event location: go event [index]

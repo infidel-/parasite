@@ -326,22 +326,75 @@ class CorpDeco
             z = CorpFurniture.rankSouth(m, c.col, c.row - 1) + CorpStyle.PROP_GAP +
               CorpStyle.BIN_W / 2;
           else
-            for (dir in 0...4)
+            for (d in 0...4)
               {
-                var wc = c.col + DC[dir];
-                var wr = c.row + DR[dir];
+                var wc = c.col + DC[d];
+                var wr = c.row + DR[d];
                 if (!FacilityModel.isWall(m, wc, wr))
                   continue;
-                var off = CELL - FacilityGeom.wallFace(m, wc, wr, dir ^ 1) - CorpStyle.BIN_W / 2 -
+                var off = CELL - FacilityGeom.wallFace(m, wc, wr, d ^ 1) - CorpStyle.BIN_W / 2 -
                   CorpStyle.PROP_GAP;
-                x += DC[dir] * off;
-                z += DR[dir] * off;
+                x += DC[d] * off;
+                z += DR[d] * off;
               }
           out.push({ x: x, z: z, yaw: 0.0 });
           ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
             z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);
         }
+      // AND A BIN BESIDE EVERY STANDING COPIER, in its own cell, asked for as "right in the same
+      // tile directly adjacent". DRESSING and not a decoration, because a cell holds one object
+      // (gen.GenCtx.addDecoration refuses a second) and a bin has no gameplay to lose. Always
+      // while the copier's room holds no dealt bin; on COPIER_BIN_PCT once it does, rolled off the
+      // cell so a floor comes back the same on every rebuild. Against the copier's own wall and
+      // half a copier, the gap and half a bin along it — to whichever side does not meet a wall
+      for (c in cells(area, K_PRINTER))
+        {
+          if (!FacilityModel.inside(m, c.col, c.row) ||
+              m.table[c.row][c.col] ||
+              m.fit[c.row][c.col] != 0)
+            continue;
+          var dir = back(m, c.col, c.row);
+          if (dir < 0)
+            continue;
+          if (binned(m, area, c.col, c.row) &&
+              FacilityModel.mix((c.col * 374761393) ^ (c.row * 668265263)) % 100 >=
+                CorpStyle.COPIER_BIN_PCT)
+            continue;
+          var w = CityConfig.cellToWorld(c.col, c.row);
+          var sc = (dir < 2 ? 1 : 0);
+          var sr = (dir < 2 ? 0 : 1);
+          var side = (FacilityModel.isWall(m, c.col + sc, c.row + sr) ? -1 : 1);
+          var along = side * (CorpStyle.PRINTER_W / 2 + CorpStyle.PROP_GAP + CorpStyle.BIN_W / 2);
+          var off = CELL - FacilityGeom.wallFace(m, c.col + DC[dir], c.row + DR[dir], dir ^ 1) -
+            CorpStyle.BIN_W / 2 - CorpStyle.PROP_GAP;
+          var x = w.x + DC[dir] * off + sc * along;
+          var z = w.z + DR[dir] * off + sr * along;
+          out.push({ x: x, z: z, yaw: 0.0 });
+          ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
+            z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);
+        }
       return out;
+    }
+
+// does the room this cell is in hold a dealt bin already? off the model's room rects
+  static function binned(m:Facility, area:game.AreaGame, col:Int, row:Int):Bool
+    {
+      for (r in m.rooms)
+        {
+          if (col < r.x1 ||
+              col > r.x2 ||
+              row < r.y1 ||
+              row > r.y2)
+            continue;
+          for (b in cells(area, K_BIN))
+            if (b.col >= r.x1 &&
+                b.col <= r.x2 &&
+                b.row >= r.y1 &&
+                b.row <= r.y2)
+              return true;
+          return false;
+        }
+      return false;
     }
 
 // how many sprites the suppression above is actually turning off, for the dump

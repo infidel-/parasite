@@ -345,6 +345,9 @@ class CorpStyle
   public static inline var PRINTER_H = 2.2;
   public static inline var PRINTER_W = 1.05;
   public static inline var PRINTER_D = 1.33;
+  // the percent chance a standing copier gets a bin beside it when its room already holds one —
+  // render.corp.CorpDeco.bins; with none in the room it always does
+  public static inline var COPIER_BIN_PCT = 50;
   public static inline var WC_H = 1.5;
   public static inline var WC_W = 0.80;
   public static inline var WC_D = 1.40;        // built to this exactly, so the cistern meets masonry

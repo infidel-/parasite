@@ -2207,3 +2207,24 @@ Measured in the archive, player inside, same free-cam pose, mean luma of a floor
 real contact shade (rank feet, wall base) is untouched.
 
 Verdict: **LANDED.** Cost is one scene walk per AO frame; not separately timed.
+
+## corp: a lone desk puts its back to the wall; a standing copier gets a bin beside it as dressing
+
+Two picks off the archive. **"this panel is right where person's legs would go"** — the desk-bench's
+modesty panel, on a sorting table on the EAST wall. `CorpProps.backHand` takes the first hand that is
+not clear floor in N, S, W, E order, and an archive rank is a fitting, so the table found the shelving
+on its west hand before the wall on its east: back to the racks, chair side jammed against the glass.
+A LONE table (no table on any hand) now takes a WALL hand first; a run keeps the old order, since its
+end cell touching a side wall has to face the way the run does. Measured on the reported floor: 26,32
+and 26,37 had hands `2:fit5 3:wall` and took 2; both take 3 now.
+
+**"when spawning bin near copier i meant right in the same tile directly adjacent"** — and a cell
+holds ONE object: `gen.GenCtx.addDecoration` refuses a second (measured: 12 floors, zero copier
+cells carrying the bin the generator tried to add). A bin has no gameplay, so it is DRESSING:
+`CorpDeco.bins` stands one beside every standing copier (not on a worktop, no fitting, a masonry back)
+against the copier's own wall, `PRINTER_W/2 + PROP_GAP + BIN_W/2` along it toward the side without a
+wall. Always while the copier's room holds no dealt bin, on `COPIER_BIN_PCT` 50 (rolled off the cell)
+once it does. The cubicle farm's floor-standing printers get the same rule.
+
+Verdict: **LANDED.** Two copiers side by side on an east wall each stand a bin tucked beside them; two
+others in binned rooms rolled 61 and 82 and stand none. No new draw call — the bin batch exists.

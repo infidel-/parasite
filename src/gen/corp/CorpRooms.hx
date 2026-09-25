@@ -1300,24 +1300,17 @@ class CorpRooms
           masonry.remove(c);
           copiers.push(c);
         }
-      // THE BINS, in the order they matter, and SPACED: every one after the copiers' own is
-      // skipped if it would stand within two cells of a bin or a copier already dealt. Four rules
-      // dealing independently put four bins in a seven-cell row — reported. So:
-      //   - one beside every copier, always, on a ring cell with a wall to stand against;
+      // THE BINS, SPACED: each is skipped if it would stand within two cells of a bin or a copier
+      // already dealt. Four rules dealing independently put four bins in a seven-cell row —
+      // reported. So:
       //   - one or two in the BIN SLOTS, the cell just SOUTH of a rank section (the cross aisle,
       //     or the ring cell under the rank's last one) — CorpDeco.bins stands a bin with a rank
       //     to its north against that rank's end;
-      //   - one in a walled corner on a roll
+      //   - one in a walled corner on a roll.
+      // The copier's own bin is NOT dealt here: it stands in the copier's cell, and a cell holds
+      // one object (gen.GenCtx.addDecoration refuses a second), so render.corp.CorpDeco.bins
+      // stands it as dressing — see there
       var bins = [];
-      for (p in copiers)
-        {
-          var near = [for (c in ring)
-            if (Math.abs(c.x - p.x) + Math.abs(c.y - p.y) == 1 &&
-                copiers.indexOf(c) < 0 &&
-                walled(cells, c.x, c.y)) c];
-          if (near.length > 0)
-            bins.push(near[state.area.random(near.length)]);
-        }
       var slots = [];
       for (x in room.x1 + 1...room.x2)
         for (y in room.y1 + 2...room.y2 + 1)
@@ -1346,11 +1339,14 @@ class CorpRooms
         addDecoration(state, c.x, c.y, Const.CORP_TRASH);
       for (c in ring)
         {
+          if (copiers.indexOf(c) >= 0)
+            {
+              addDecoration(state, c.x, c.y, Const.CORP_TABLE_PRINTER);
+              continue;
+            }
           if (dealt(bins, c.x, c.y))
             continue;
-          if (copiers.indexOf(c) >= 0)
-            addDecoration(state, c.x, c.y, Const.CORP_TABLE_PRINTER);
-          else if (atWall(cells, c.x, c.y))
+          if (atWall(cells, c.x, c.y))
             {
               if (!state.area.chance(ARCHIVE_RING_BARE))
                 addDecoration(state, c.x, c.y, Const.CORP_CABINET);
