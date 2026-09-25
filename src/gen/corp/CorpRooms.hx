@@ -845,6 +845,36 @@ class CorpRooms
       return false;
     }
 
+// is a rank cell on one of this cell's four hands?
+  static function besideShelf(cells: Array<Array<Int>>, shelf: Int, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == shelf)
+          return true;
+      return false;
+    }
+
+// is this cell one of the list's?
+  static function dealt(list: Array<{ x:Int, y:Int }>, x: Int, y: Int): Bool
+    {
+      for (c in list)
+        if (c.x == x &&
+            c.y == y)
+          return true;
+      return false;
+    }
+
+// would a bin here stand within two cells of a bin or a copier already dealt? one cell apart still
+// read as a row of bins along the wall
+  static function crowded(bins: Array<{ x:Int, y:Int }>, copiers: Array<{ x:Int, y:Int }>,
+      x: Int, y: Int): Bool
+    {
+      for (c in bins.concat(copiers))
+        if (Math.abs(c.x - x) + Math.abs(c.y - y) <= 2)
+          return true;
+      return false;
+    }
+
 // is this cell one of the room's four corners?
   static inline function corner(room: _Room, x: Int, y: Int): Bool
     {
@@ -1201,7 +1231,8 @@ class CorpRooms
       // loneWindows demote short runs of glass to masonry after generation, so a masonry test here
       // left bare a wall that draws as masonry. So every ring cell with a wall of any kind on a
       // hand is dealt one, and archiveWalls keeps the ones that end up backed by masonry (a corp
-      // decoration never draws its sprite, so the rest are nothing). A doorway's cell stays bare
+      // decoration never draws its sprite, so the rest are nothing). A doorway's cell stays bare.
+      //
       // the ranks FIRST, every COLUMN RACK_PITCH apart from the ring inward -- they run down the
       // room's y axis, asked for as reading better that way. Solid, one cross aisle once a rank is
       // long enough to want one, placed mid-rank so the two sections come out even
@@ -1223,27 +1254,6 @@ class CorpRooms
           ranks++;
           rx += RACK_PITCH;
         }
-      // because the BIN SLOTS hang off them: one or two bins on the cell just SOUTH of a rank
-      // section, asked for there -- the cross aisle, or the ring cell under the rank's last one,
-      // which the ring dressing below then leaves to the bin. CorpDeco.bins stands a bin with a
-      // rank to its north against that rank's end
-      var slots = [];
-      for (x in room.x1 + 1...room.x2)
-        for (y in room.y1 + 2...room.y2 + 1)
-          if (cells[x][y - 1] == shelf &&
-              cells[x][y] != shelf &&
-              !atDoor(cells, x, y))
-            slots.push({ x: x, y: y });
-      var taken = new Map<Int, Bool>();
-      for (i in 0...1 + state.area.random(2))
-        {
-          if (slots.length == 0)
-            break;
-          var c = slots[state.area.random(slots.length)];
-          slots.remove(c);
-          taken.set(c.x * 1000 + c.y, true);
-          addDecoration(state, c.x, c.y, Const.CORP_TRASH);
-        }
       var ring = [];
       for (x in room.x1...room.x2 + 1)
         for (y in room.y1...room.y2 + 1)
@@ -1251,18 +1261,16 @@ class CorpRooms
               x == room.x2 ||
               y == room.y1 ||
               y == room.y2) &&
-              !atDoor(cells, x, y) &&
-              !taken.exists(x * 1000 + y))
+              !atDoor(cells, x, y))
             ring.push({ x: x, y: y });
-      // ONE BIN on a ring cell with a wall or a window on a hand for render.corp.CorpDeco.bins to
-      // stand it against, and more in the CORNERS on a roll
-      var bins = [for (c in ring) if (walled(cells, c.x, c.y)) c];
-      var bin = (bins.length > 0 ? bins[state.area.random(bins.length)] : null);
       // ONE OR TWO COPIERS, which is all the copy room it replaced ever had to say: on a ring cell
       // with masonry behind it, since render.corp.CorpProps stands the printer glb off a solid wall
       // and on bare floor only (a copier dealt onto a worktop drew nothing, which is how the copy
-      // room came to hold none at all)
-      var masonry = [for (c in ring) if (c != bin && atWall(cells, c.x, c.y)) c];
+      // room came to hold none at all). NOT against a rank's end, which is a bin slot and leaves the
+      // copier jammed behind the racking
+      var masonry = [for (c in ring)
+        if (atWall(cells, c.x, c.y) &&
+            !besideShelf(cells, shelf, c.x, c.y)) c];
       var copiers = [];
       for (i in 0...1 + state.area.random(2))
         {
@@ -1272,9 +1280,15 @@ class CorpRooms
           masonry.remove(c);
           copiers.push(c);
         }
-      // AND A BIN BESIDE EVERY COPIER, always: on a ring cell next to it with a wall to stand
-      // against, which is where the waste paper off a copier goes
-      var paper = [];
+      // THE BINS, in the order they matter, and SPACED: every one after the copiers' own is
+      // skipped if it would stand within two cells of a bin or a copier already dealt. Four rules
+      // dealing independently put four bins in a seven-cell row — reported. So:
+      //   - one beside every copier, always, on a ring cell with a wall to stand against;
+      //   - one or two in the BIN SLOTS, the cell just SOUTH of a rank section (the cross aisle,
+      //     or the ring cell under the rank's last one) — CorpDeco.bins stands a bin with a rank
+      //     to its north against that rank's end;
+      //   - one in a walled corner on a roll
+      var bins = [];
       for (p in copiers)
         {
           var near = [for (c in ring)
@@ -1282,17 +1296,39 @@ class CorpRooms
                 copiers.indexOf(c) < 0 &&
                 walled(cells, c.x, c.y)) c];
           if (near.length > 0)
-            paper.push(near[state.area.random(near.length)]);
+            bins.push(near[state.area.random(near.length)]);
+        }
+      var slots = [];
+      for (x in room.x1 + 1...room.x2)
+        for (y in room.y1 + 2...room.y2 + 1)
+          if (cells[x][y - 1] == shelf &&
+              cells[x][y] != shelf &&
+              !atDoor(cells, x, y) &&
+              !crowded(bins, copiers, x, y))
+            slots.push({ x: x, y: y });
+      for (i in 0...1 + state.area.random(2))
+        {
+          if (slots.length == 0)
+            break;
+          var c = slots[state.area.random(slots.length)];
+          slots.remove(c);
+          if (!crowded(bins, copiers, c.x, c.y))
+            bins.push(c);
         }
       for (c in ring)
+        if (corner(room, c.x, c.y) &&
+            walled(cells, c.x, c.y) &&
+            copiers.indexOf(c) < 0 &&
+            !crowded(bins, copiers, c.x, c.y) &&
+            state.area.chance(ARCHIVE_CORNER_BIN))
+          bins.push(c);
+      for (c in bins)
+        addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+      for (c in ring)
         {
-          if (c == bin ||
-              paper.indexOf(c) >= 0 ||
-              (corner(room, c.x, c.y) &&
-              walled(cells, c.x, c.y) &&
-              state.area.chance(ARCHIVE_CORNER_BIN)))
-            addDecoration(state, c.x, c.y, Const.CORP_TRASH);
-          else if (copiers.indexOf(c) >= 0)
+          if (dealt(bins, c.x, c.y))
+            continue;
+          if (copiers.indexOf(c) >= 0)
             addDecoration(state, c.x, c.y, Const.CORP_TABLE_PRINTER);
           else if (atWall(cells, c.x, c.y))
             {
@@ -1306,18 +1342,26 @@ class CorpRooms
           // AND NEVER BESIDE ANOTHER ONE. A lone table cell draws the `corp/desk-bench` glb; two
           // that touch are a RUN, which render.corp.CorpFurniture.worktop emits as a slab of
           // quads — asked for as "let's not spawn quad tables there"
-          else if (walled(cells, c.x, c.y) &&
-              !besideTable(cells, c.x, c.y) &&
-              state.area.chance(ARCHIVE_TABLE))
+          else if (walled(cells, c.x, c.y))
             {
-              cells[c.x][c.y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
-              if (!reachable(cells, room))
+              if (!besideTable(cells, c.x, c.y) &&
+                  state.area.chance(ARCHIVE_TABLE))
                 {
+                  cells[c.x][c.y] = Const.TILE_DARK_TABLE_WOOD2_1X1;
+                  if (reachable(cells, room))
+                    {
+                      addDecoration(state, c.x, c.y, (state.area.random(2) == 0 ?
+                        Const.CORP_TABLE_STATIONERY : Const.CORP_TABLE_MISC_LARGE));
+                      continue;
+                    }
                   cells[c.x][c.y] = ARCHIVE;
-                  continue;
                 }
-              addDecoration(state, c.x, c.y, (state.area.random(2) == 0 ?
-                Const.CORP_TABLE_STATIONERY : Const.CORP_TABLE_MISC_LARGE));
+              // and a cabinet where no table went: glass HERE is often masonry by the time the
+              // model is built (CorpModel.runsOfThree / loneWindows demote short runs), and
+              // CorpModel.archiveWalls keeps a cabinet only where it ends up backed by masonry —
+              // a cell left bare was a stretch of solid wall with nothing on it
+              if (!state.area.chance(ARCHIVE_RING_BARE))
+                addDecoration(state, c.x, c.y, Const.CORP_CABINET);
             }
         }
     }

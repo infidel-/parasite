@@ -1590,3 +1590,16 @@ to stand against; and "let's not spawn quad tables there" — a table is never d
 (`besideTable`), because two touching table cells are a RUN that `CorpFurniture.worktop` emits as a
 slab of quads, where a lone one draws the `corp/desk-bench` glb. 500 seeds OK, orphanCells 0,
 furn/archive 45.67.
+
+Then, asked "you think this room is correct?" of a 7x6 archive, and it was not — three faults:
+- **four bins in a seven-cell row** (`c b c P b b b`): the ring bin, a corner roll, the rank slots and
+  the copier's bin all dealt independently. Now in order, SPACED: the copiers' bins always, then the
+  rank slots, then a corner roll, each skipped if `crowded` (within 2 cells, Manhattan, of a bin or a
+  copier). The lone ring bin is gone — the other three cover it.
+- **a copier dealt into a rank slot**, jammed behind the racking's south end. Copiers now skip ring
+  cells beside a rank (`besideShelf`), and are dealt BEFORE the bins.
+- **a bare masonry wall**: it was GLASS when generated and `CorpModel.runsOfThree` demoted it, so it
+  took tables or nothing, and tables may not touch. A glazed ring cell that takes no table is dealt a
+  cabinet again; `archiveWalls` keeps it only if it ends up backed by masonry.
+
+500 corp seeds OK, orphanCells 0, furn/archive 46.4.
