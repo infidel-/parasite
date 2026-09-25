@@ -135,6 +135,7 @@ package three;
   public function add(o:Object3D):Void;
   public function remove(o:Object3D):Void;
   public function traverse(cb:Object3D->Void):Void;
+  public function traverseVisible(cb:Object3D->Void):Void; // traverse, skipping every hidden subtree
   public function applyMatrix4(m:Matrix4):Void;
   public function lookAt(v:Vector3):Void;
   public function clone(?recursive:Bool):Object3D; // deep-copy (recursive default true)

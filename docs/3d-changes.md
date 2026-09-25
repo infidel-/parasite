@@ -2186,3 +2186,24 @@ draw call, nothing new to warm.** First floor: 30 ends, 49 units, 7 free lids.
 Verdict: **LANDED.** A march poster on a rank's camera-facing end, a pinned memo on a cabinet end, a
 decal on a free arch-shelf lid. Density is thin by construction (72% of lids carry boxes); the knobs
 are `ARCH_DECAL_MAX` and `ARCH_END_PIN_MAX`.
+
+## GTAO: a mesh that writes no depth stays out of the AO prepass — the lamp pools were shading every room
+
+Reported as "ambient occlusion produces artifacts in archive and other rooms - large dark rectangle
+covering almost all room", then "small squares in the corridor directly under lamps". Both were
+`CorpLamps`' additive FLOOR POOL: one quad at `GLOW_Y` over each lit room's whole rect (less
+`POOL_INSET`) and one 4x4 under each corridor lamp. `GTAOPass`'s depth+normal prepass draws the scene
+through one opaque override material, so a transparent, `depthWrite: false` glow went in as a solid
+slab hovering just over the floor, and the floor under all of it took the occlusion.
+
+The same class as the sprite bracket `View` already fixed by hiding the actor layer around the pass.
+Generalised rather than listed: the wrapper now also hides every visible mesh whose material has
+`depthWrite == false` for the prepass (`traverseVisible`, added to the extern), then restores them.
+That is the beauty pass's own rule — a mesh that writes no depth there occludes nothing — and it
+takes every additive glow, light cone and faded roof in the game at once with no list to keep.
+
+Measured in the archive, player inside, same free-cam pose, mean luma of a floor strip: AO off
+**67.8**, AO on **67.7**, AO on with the stock prepass restored **34.5**. The rectangle is gone and
+real contact shade (rank feet, wall base) is untouched.
+
+Verdict: **LANDED.** Cost is one scene walk per AO frame; not separately timed.

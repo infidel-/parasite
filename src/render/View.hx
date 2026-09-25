@@ -597,13 +597,34 @@ class View {
     // quad), so hiding the sprite layer around the whole call is the whole fix. Sprites still
     // RECEIVE the world's AO; they stop casting it. Restores whatever it found, since the group's
     // visibility is not this pass's to own
+    //
+    // AND SO IS EVERY MESH THAT WRITES NO DEPTH, for the same reason: the override material
+    // draws it opaque whatever its own says. The corp lamps' additive floor POOL lies at GLOW_Y
+    // over each lit room's whole rect and under each corridor lamp, so the prepass saw a slab
+    // hovering over the floor and shaded the floor under it — reported as a large dark rectangle
+    // over almost every room and a small square under every corridor lamp. The rule is the beauty
+    // pass's own: a mesh that does not write depth there does not occlude anything, so it is left
+    // out here too — every additive glow, light cone and faded roof in the game at once, with no
+    // list to keep. Collected per frame off traverseVisible, so what is already hidden stays so
     var fx = actorGroup;
+    var glows:Array<Object3D> = [];
     var gtaoRender = gtaoPass.render;
     gtaoPass.render = function(renderer, writeBuffer, readBuffer, deltaTime, maskActive)
       {
         var was = fx.visible;
         fx.visible = false;
+        scene.traverseVisible(function(o)
+          {
+            if (o.material != null &&
+                o.material.depthWrite == false)
+              glows.push(o);
+          });
+        for (o in glows)
+          o.visible = false;
         gtaoRender.call(gtaoPass, renderer, writeBuffer, readBuffer, deltaTime, maskActive);
+        for (o in glows)
+          o.visible = true;
+        glows.resize(0);
         fx.visible = was;
       };
     composer.addPass(gtaoPass);
