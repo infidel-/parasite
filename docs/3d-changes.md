@@ -2283,3 +2283,21 @@ Measured on the reported bin, pinned pose, contact meshes hidden vs shown: wall 
 pool round the foot, nothing off the masonry.
 
 Verdict: **LANDED.** No new draw call (halo and deck meshes exist).
+
+## HALO_FADE derived from HALO_CORE: every contact ramp ended on a hard line
+
+Picked on an archive shelf's wall halo: "a very straight vertical edge, no gradient". The UVs were
+right (quad z -168.13..-163.87 unclamped, u 0..1). The ART was cut: `makeRectGlowGradient` draws an
+opaque box of half `halfFrac` and fades over `softFrac` beyond it, on a canvas of half 0.5, and every
+caller passes `HALO_CORE / 2` + `HALO_FADE`. 0.16 of fade fitted the 0.30 core it was tuned with; the
+core went to 0.375 (CORE 0.60 -> 0.75) and the fade was never retuned, so the ramp ran to 0.535 and
+was clipped at the texture edge with smoothstep still at 12% — a line on all four edges of every
+wall halo, every round worktop/floor pool and every roof pool (FacilityRoof shares the constant).
+
+`HALO_FADE = (1 - HALO_CORE) / 2` (0.125): the ramp now ends at the canvas edge by construction and
+the next core retune cannot re-open it. Measured on the shelf's right edge, halo-on minus halo-off
+luma per 3 px: before `... 7 6 5 5 2 1 0`, after `... 3 2 2 1 0 0`; peak at the shelf edge unchanged
+(24). The fade is 0.125 of the quad against a clipped 0.16, so the ring is slightly tighter.
+
+Verdict: **LANDED.** No geometry or call change; compound halos and roof pools take it too (not
+re-shot in a compound).

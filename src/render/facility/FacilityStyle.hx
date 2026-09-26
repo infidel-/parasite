@@ -2191,7 +2191,12 @@ class FacilityStyle
   // Textures.makeRectGlowGradient is handed HALO_CORE and HALO_FADE directly, so the ramp art
   // re-bakes to match and there is nothing to author
   public static inline var HALO_CORE = 0.75;
-  public static inline var HALO_FADE = 0.16;
+  // THE FADE HAS TO FIT THE CANVAS: core half HALO_CORE / 2 plus the fade must stay within the 0.5
+  // half-extent, or the ramp is CUT at the texture edge and every halo ends on a hard line. 0.16 fit
+  // the old 0.30 core and was never retuned when the core went to 0.375: 0.535 of 0.5, so each edge
+  // stopped at 12% of full weight — reported as "a very straight vertical edge, no gradient" on an
+  // archive shelf's halo. It is DERIVED now, so the next core retune cannot re-open it
+  public static inline var HALO_FADE = (1 - HALO_CORE) / 2;
   // and the CAP on that, in world units, which is what lets a RUN take the same quad as a fitting.
   // the reach above is a FRACTION of the object, which is right for a bookcase and absurd for a
   // 16-unit casework run — 4.3 units of wash up a 6-unit wall. Capping the grown margin holds a long
