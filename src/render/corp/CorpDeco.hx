@@ -83,6 +83,12 @@ class CorpDeco
   // in the copy room, where the bench under it draws it and this kind is ignored, and onto bare
   // floor in the cubicle farm, where the glb stands
   public static inline var K_PRINTER = 10;
+  // and the exec office's furniture, on the four atlas cells rows 23-39 had left empty
+  // (Const.CORP_EXEC_CHAIR, _ARMCHAIR, _SOFA, _TABLE_LOW). render.corp.CorpExec stands every one
+  public static inline var K_EXEC_CHAIR = 11;
+  public static inline var K_ARMCHAIR = 12;
+  public static inline var K_SOFA = 13;
+  public static inline var K_TABLE_LOW = 14;
 
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
@@ -143,6 +149,9 @@ class CorpDeco
           // a fitting — everywhere else it is a plant-room unit and needs a box of its own
           case 33: (col < 7 ? K_MACHINE : K_FRIDGE);
           case 34: K_VENDING;
+          case 30: (col == 11 ? K_EXEC_CHAIR : K_NONE);
+          case 25: (col == 10 ? K_ARMCHAIR : (col == 11 ? K_SOFA : K_NONE));
+          case 26: (col == 11 ? K_TABLE_LOW : K_NONE);
           default: K_NONE;
         };
     }

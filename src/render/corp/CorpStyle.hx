@@ -310,6 +310,29 @@ class CorpStyle
   // ALONE — so a width here is a claim about the footprint the contact field darkens and never a
   // second scale.
   public static inline var CHAIR_H = 2.2;      // 1.1 m to the top of the back
+  // THE EXEC OFFICE'S GLBS (models-src/corp/exec_build.py, render.corp.CorpExec), every height the
+  // built mesh's own so render.Models.instanced scales each by 1, and every footprint the mesh's
+  // own for the contact under it. A seat is pulled IN toward what it faces off its cell's centre:
+  // the owner's chair tucks under the desk's edge, an armchair keeps a knee's gap off the desk or
+  // the low table. The sofa is pushed BACK off its cell toward the end wall it stands against
+  public static inline var EXEC_DESK_H = 1.52;
+  public static inline var EXEC_CHAIR_H = 2.698;
+  public static inline var EXEC_CHAIR_W = 1.54;
+  public static inline var EXEC_CHAIR_IN = 1.40;
+  public static inline var ARMCHAIR_H = 1.8;
+  public static inline var ARMCHAIR_W = 2.5;
+  public static inline var ARMCHAIR_IN = 0.40;
+  public static inline var SOFA_H = 1.9;
+  public static inline var SOFA_W = 7.2;
+  public static inline var SOFA_D = 2.5;
+  public static inline var SOFA_BACK = 0.60;
+  public static inline var TABLE_LOW_H = 0.9;
+  public static inline var TABLE_LOW_W = 6.4;
+  public static inline var TABLE_LOW_D = 2.6;
+  // how far an exec monitor stands back from its cell's centre, away from its owner
+  public static inline var EXEC_MON_BACK = 0.60;
+  // and how many exec clutter decals a low table's top takes, at most
+  public static inline var TABLE_LOW_CLUTTER = 2;
   public static inline var CHAIR_W = 1.3;
   public static inline var CHAIR_YAW_JIT = 0.30;
   // how far the chair's centre stands back from the desk cell's own edge, into the seat cell
@@ -370,6 +393,16 @@ class CorpStyle
   // at, never over the cell it was cut from
   public static inline var CLUTTER_DESK_TEX = 'textures/corp/desk-clutter.png';
   public static inline var CLUTTER_UTIL_TEX = 'textures/corp/util-clutter.png';
+  // AND THE EXEC OFFICE'S OWN SHEET, a PACK16: an executive's desk carries fewer, bigger things
+  // than a clerk's, so the 4x4 of 256 px cells is dealt fewer to a cell and drawn larger. Its last
+  // two cells (the photo print and the brass nameplate face) are not decals at all but the faces of
+  // the desk trinkets, so only the first CLUTTER_EXEC_CELLS are dealt
+  public static inline var CLUTTER_EXEC_TEX = 'textures/corp/exec-clutter.png';
+  public static inline var CLUTTER_EXEC_COLS = 4;
+  public static inline var CLUTTER_EXEC_CELLS = 14;
+  public static inline var CLUTTER_EXEC_MAX = 2;
+  public static inline var CLUTTER_EXEC_SZ = 0.80;
+  public static inline var CLUTTER_EXEC_SZ_VAR = 0.45;
   public static inline var CLUTTER_COLS = 8;
   public static inline var CLUTTER_CELLS = 64;
   // how many items a worktop cell may roll, and the roll REACHES ZERO on purpose: the empty cells

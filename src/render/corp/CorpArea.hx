@@ -133,7 +133,7 @@ class CorpArea implements Area3D
       // the flat dressing: what lies ON the worktops, and what hangs on the walls. both AFTER the
       // props, because the clutter scatters around the workstation's own footprint and asks
       // CorpProps for it
-      var cl = CorpClutter.build(scene, model);
+      var cl = CorpClutter.build(scene, model, game.area);
       clutter = cl.n;
       clutterProps = cl.props;
       signs = CorpSigns.build(scene, model);

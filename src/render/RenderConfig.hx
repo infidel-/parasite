@@ -863,6 +863,16 @@ class RenderConfig {
     corpDeskBottle: 'models/corp/desk-bottle.glb',  // shouldered steel, charcoal cap, 184
     corpDeskPlant: 'models/corp/desk-plant.glb',    // pot, soil cap, six pitched leaves, 280
     corpDeskCam: 'models/corp/desk-cam.glb',        // puck, stalk, lens head with an amber ring, 120
+    // AND THE EXEC OFFICE'S SEVEN (render.corp.CorpExec, models-src/corp/exec_build.py), all one
+    // sheet packed off the exec pack4's built labels. The desk comes in three footprints because a
+    // footprint is the generator's cells and a glb cannot be stretched to one
+    corpExecDesk: 'models/corp/exec-desk.glb',          // 3x2 pedestal desk, leather inlay, 516
+    corpExecDesk3: 'models/corp/exec-desk-3.glb',       // the 3-cell run, 516
+    corpExecDesk2: 'models/corp/exec-desk-2.glb',       // the 2-cell run, 516
+    corpExecChair: 'models/corp/exec-chair.glb',        // high-backed leather swivel, 1,380
+    corpExecArmchair: 'models/corp/exec-armchair.glb',  // club chair, lounge and visitor, 552
+    corpExecSofa: 'models/corp/exec-sofa.glb',          // two-cell chesterfield, 768
+    corpExecTableLow: 'models/corp/exec-table-low.glb', // walnut on brass legs, 168
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

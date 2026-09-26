@@ -443,11 +443,19 @@ class CorpRooms
                     visitors = [ at(du + 2, dv), at(du + 2, dv + 2) ];
                 }
               var ok = true;
+              var blocked = new Map<Int, Bool>();
               for (c in solid.concat(deskCells).concat([ owner ]))
                 if (cells[c.x][c.y] != MARBLE1 ||
                     atDoor(cells, c.x, c.y))
                   ok = false;
-              if (!ok)
+              for (c in solid.concat(deskCells))
+                blocked.set(c.x * 1000 + c.y, true);
+              // AND IT MAY NOT SEAL ANY OF THE ROOM OFF. A placement that does is not caught by the
+              // oracle — gen.corp.CorpConnect.openPockets erodes whatever walls the pocket in, and
+              // what it erodes is the furniture: measured on the first build, a 9 x 4 suite came
+              // back with the desk's first column and both door-end plants eaten
+              if (!ok ||
+                  !roomOpen(state, room, blocked))
                 continue;
 
               // the desk, off its top-left cell whichever way round the room is
@@ -532,13 +540,68 @@ class CorpRooms
           { x: room.x2, y: room.y2 },
         ])
         {
+          var blocked = new Map<Int, Bool>();
+          blocked.set(c.x * 1000 + c.y, true);
           if (cells[c.x][c.y] != MARBLE1 ||
               atDoor(cells, c.x, c.y) ||
-              state.area.hasObjectAt(c.x, c.y))
+              state.area.hasObjectAt(c.x, c.y) ||
+              !roomOpen(state, room, blocked))
             continue;
           cells[c.x][c.y] = Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET;
           addDecoration(state, c.x, c.y, Const.CORP_PLANT);
         }
+    }
+
+// can every walkable cell of the exec office still be reached from its doorways, with the cells in
+// `blocked` (keyed x * 1000 + y) taken as furniture? True for a room with no doorway to start from.
+//
+// THE EXEC OFFICE ASKS THIS OF ITSELF because the repair downstream cannot tell a pocket it should
+// open from furniture it should keep: gen.corp.CorpConnect.openPockets reaches a sealed cell by
+// eroding whatever stands in the way, so a placement that walls a lane in is not rejected, it is
+// half-deleted after the fact
+  static function roomOpen(state: _CorpState, room: _Room, blocked: Map<Int, Bool>): Bool
+    {
+      var cells = state.area.getCells();
+      var walk = function(x: Int, y: Int)
+        return x >= room.x1 &&
+          x <= room.x2 &&
+          y >= room.y1 &&
+          y <= room.y2 &&
+          !blocked.exists(x * 1000 + y) &&
+          (cells[x][y] == MARBLE1 ||
+          cells[x][y] == Const.TILE_FLOOR_EXEC_RUG);
+      var seen = new Map<Int, Bool>();
+      var stack = [];
+      var total = 0;
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if (walk(x, y))
+            {
+              total++;
+              if (atDoor(cells, x, y))
+                {
+                  seen.set(x * 1000 + y, true);
+                  stack.push({ x: x, y: y });
+                }
+            }
+      if (stack.length == 0)
+        return true;
+      var n = stack.length;
+      while (stack.length > 0)
+        {
+          var c = stack.pop();
+          for (d in [ [ 1, 0 ], [ -1, 0 ], [ 0, 1 ], [ 0, -1 ] ])
+            {
+              var x = c.x + d[0], y = c.y + d[1];
+              if (!walk(x, y) ||
+                  seen.exists(x * 1000 + y))
+                continue;
+              seen.set(x * 1000 + y, true);
+              stack.push({ x: x, y: y });
+              n++;
+            }
+        }
+      return n == total;
     }
 
 // the rug in an office that has no lounge: the biggest rect of bare floor at least 2x2, capped at

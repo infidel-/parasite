@@ -39,10 +39,14 @@ class CorpClutter
 {
 // every decal on the plate as TWO merged meshes, one per sheet. returns how many landed — a merged
 // mesh has no instance count and this is the only handle on the family
-  public static function build(scene:Scene, m:Facility):{ n:Int, props:Array<Models.InstancedProp> }
+  public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):{ n:Int,
+      props:Array<Models.InstancedProp> }
     {
       var desk = MeshBufTools.make();
       var util = MeshBufTools.make();
+      // the exec office's own PACK16, and what its desks already carry — see CorpExec.claims
+      var exec = MeshBufTools.make();
+      var execClaims = CorpExec.claims(m, area);
       // and the handful of cells that are PROPS rather than decals — see CorpStyle.CLUTTER_PROP_OF
       var props = [for (_ in 0...CorpStyle.CLUTTER_PROPS) new Array<Models.PropPlace>()];
       var n = 0;
@@ -51,14 +55,28 @@ class CorpClutter
           {
             if (!m.table[row][col])
               continue;
+            if (m.surf[row][col] == Surf.EXEC)
+              {
+                n += execCell(m, col, row, exec, execClaims);
+                continue;
+              }
             n += cell(m, col, row, deskish(m.surf[row][col]) ? desk : util, props);
           }
+      // and a thing or two on every exec lounge's low table
+      for (t in CorpExec.lowTops(m, area))
+        {
+          var g = FacilityModel.mix((t.col * 1103515245) ^ (t.row * 12345) ^ 0x5bd1e995);
+          n += scatter(exec, t.x, t.z, t.hw - CorpStyle.CLUTTER_INSET,
+            t.hd - CorpStyle.CLUTTER_INSET, CorpStyle.TABLE_LOW_H + CorpStyle.CLUTTER_Y,
+            1 + g % CorpStyle.TABLE_LOW_CLUTTER, g, []);
+        }
       // AND THE ARCHIVE'S UNITS: paper and folders lying on every level that took no load — a lid
       // or, on the racking, a shelf — off the desk sheet and into its buffer, so no draw call
       for (u in CorpFurniture.units)
         n += level(u, desk);
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
+      add(scene, exec, CorpStyle.CLUTTER_EXEC_TEX);
       // and the third sheet, which is not a worktop at all: what the people in the cubicle farm
       // have pinned to their own panels — and to the side of an archive run's end unit, where the
       // company has not hung its poster (CorpFurniture.archEndPoster, CorpSigns' side of the split)
@@ -191,6 +209,59 @@ class CorpClutter
             }
           else
             emit(b, box.x, box.z, sz, yaw, idx, y);
+          n++;
+        }
+      return n;
+    }
+
+// one exec desk cell's worth off the exec office's own sheet: fewer and bigger than a clerk's desk
+// takes, and round the workstation render.corp.CorpExec stands on it
+  static function execCell(m:Facility, col:Int, row:Int, b:MeshBuf,
+      claims:Map<Int, Array<ClutterSlot>>):Int
+    {
+      var g = FacilityModel.mix((col * 1103515245) ^ (row * 12345));
+      var want = g % (CorpStyle.CLUTTER_EXEC_MAX + 1);
+      if (want == 0)
+        return 0;
+      var k = CorpExec.key(m, col, row);
+      var spots = (claims.exists(k) ? claims.get(k).copy() : []);
+      var c = CityConfig.cellToWorld(col, row);
+      var r = CityConfig.CELL / 2 - CorpStyle.FIT_INSET - CorpStyle.CLUTTER_INSET;
+      return scatter(b, c.x, c.z, r, r, CorpStyle.EXEC_DESK_H + CorpStyle.CLUTTER_Y, want, g,
+        spots);
+    }
+
+// `want` exec decals over a flat rect of half extents (hw, hd) at height y, each at a free yaw
+// and clear of `spots` — `cell`'s own roll and placement, off the exec sheet. returns how many landed
+  static function scatter(b:MeshBuf, x:Float, z:Float, hw:Float, hd:Float, y:Float, want:Int,
+      g:Int, spots:Array<ClutterSlot>):Int
+    {
+      var n = 0;
+      for (i in 0...want)
+        {
+          var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
+          var sz = CorpStyle.CLUTTER_EXEC_SZ + ((h % 1000) / 1000) * CorpStyle.CLUTTER_EXEC_SZ_VAR;
+          var rx = hw - sz * 0.5, rz = hd - sz * 0.5;
+          if (rx <= 0 ||
+              rz <= 0)
+            continue;
+          var yaw = ((h >>> 12) % 1000) / 1000 * 2 * Math.PI;
+          var box = ClutterSlotTools.turned(x, z, sz, sz, yaw);
+          var ok = false;
+          for (t in 0...CorpStyle.CLUTTER_TRIES)
+            {
+              var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
+              box.x = x + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              box.z = z + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = !hits(spots, box);
+              if (ok)
+                break;
+            }
+          if (!ok)
+            continue;
+          spots.push(box);
+          emit(b, box.x, box.z, sz, yaw, (h >>> 22) % CorpStyle.CLUTTER_EXEC_CELLS, y,
+            CorpStyle.CLUTTER_EXEC_COLS);
           n++;
         }
       return n;
@@ -395,7 +466,8 @@ class CorpClutter
 // looks UP, and the UV is the sheet's cell with v FLIPPED, the trap FacilitySink.emit records:
 // three flips y, so the source's TOP row is the HIGH v and reading order across the sheet is the
 // order the prompt listed its 64 subjects in
-  static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int, y:Float):Void
+  static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int, y:Float,
+      cols:Int = CorpStyle.CLUTTER_COLS):Void
     {
       var hs = sz * 0.5;
       var cs = Math.cos(yaw), sn = Math.sin(yaw);
@@ -407,7 +479,7 @@ class CorpClutter
           wx.push(x + lx[i] * cs - lz[i] * sn);
           wz.push(z + lx[i] * sn + lz[i] * cs);
         }
-      var t = CorpStyle.CLUTTER_COLS;
+      var t = cols;
       var cc = idx % t, cr = Std.int(idx / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
       var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;

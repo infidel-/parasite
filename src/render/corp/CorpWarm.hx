@@ -96,6 +96,15 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpTableLeg, h: CorpStyle.LEG_H },
         { path: RenderConfig.MODELS.corpBin, h: CorpStyle.BIN_H },
         { path: RenderConfig.MODELS.corpCase, h: render.corp.CorpDeco.CASE_CABINET[2] },
+        // the exec office's seven, which the demo model cannot place (render.corp.CorpExec reads
+        // the generator's decorations and the demo has none), so a path each here is their warm
+        { path: RenderConfig.MODELS.corpExecDesk, h: CorpStyle.EXEC_DESK_H },
+        { path: RenderConfig.MODELS.corpExecDesk3, h: CorpStyle.EXEC_DESK_H },
+        { path: RenderConfig.MODELS.corpExecDesk2, h: CorpStyle.EXEC_DESK_H },
+        { path: RenderConfig.MODELS.corpExecChair, h: CorpStyle.EXEC_CHAIR_H },
+        { path: RenderConfig.MODELS.corpExecArmchair, h: CorpStyle.ARMCHAIR_H },
+        { path: RenderConfig.MODELS.corpExecSofa, h: CorpStyle.SOFA_H },
+        { path: RenderConfig.MODELS.corpExecTableLow, h: CorpStyle.TABLE_LOW_H },
       ];
       // AND THE ARCHIVE'S TWO, appended off CorpFurniture's own table rather than typed out again
       // so a third family is one line in one place. CorpModel.demo carries two rank cells on each

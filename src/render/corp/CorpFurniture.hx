@@ -348,6 +348,14 @@ class CorpFurniture
   static function worktop(m:Facility, col:Int, row:Int, n:CorpFit):Void
     {
       var s = m.surf[row][col];
+      // AN EXEC DESK IS A GLB OVER ITS WHOLE RUN (render.corp.CorpExec), a pedestal desk with a
+      // leather inlay where this emitted a slab of office laminate on blade legs. Counted, and the
+      // contact under it is CorpExec's, off the model's own footprint
+      if (CorpExec.deskCell(m, col, row))
+        {
+          n.desks++;
+          return;
+        }
       var top = CorpStyle.DESK_TOP;
       var side = CorpStyle.DESK_FRONT;
       var end = CorpStyle.DESK_SIDE;

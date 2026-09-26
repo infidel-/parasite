@@ -174,6 +174,19 @@ class CorpProps
         work.set(c.row * m.w + c.col, true);
       desks(m, chairs, mons, keys, work);
       tables(m, benches, legs);
+      // and the exec office's, whose workstation rides the two batches above
+      var ex:CorpExec.ExecPlaces = {
+        desk: [],
+        desk3: [],
+        desk2: [],
+        chairs: [],
+        armchairs: [],
+        sofas: [],
+        tables: [],
+        mons: mons,
+        keys: keys,
+      };
+      CorpExec.place(m, area, ex);
       stalls(m, pans);
       standing(m, floors, area);
       n.chairs = chairs.length;
@@ -194,6 +207,19 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpDesk, benches, CorpStyle.DESK_GLB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
       out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
+      // walnut, leather and brass: the brass is the only metal and it is trim, so no reflection
+      out.push(batch(scene, RenderConfig.MODELS.corpExecDesk, ex.desk, CorpStyle.EXEC_DESK_H, false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecDesk3, ex.desk3, CorpStyle.EXEC_DESK_H,
+        false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecDesk2, ex.desk2, CorpStyle.EXEC_DESK_H,
+        false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecChair, ex.chairs, CorpStyle.EXEC_CHAIR_H,
+        false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecArmchair, ex.armchairs,
+        CorpStyle.ARMCHAIR_H, false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecSofa, ex.sofas, CorpStyle.SOFA_H, false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecTableLow, ex.tables, CorpStyle.TABLE_LOW_H,
+        false));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h, FLOOR[i].env));
       // lacquered steel with a brass label frame on it, so `env` is left at its default TRUE
@@ -257,9 +283,10 @@ class CorpProps
             if (!m.table[row][col])
               continue;
             var s = m.surf[row][col];
+            // NOT THE EXEC DESK, which render.corp.CorpExec seats off the generator's own chair: a
+            // task chair on every clear hand of a 3x2 slab was four of them round one executive
             if (s != Surf.OPEN &&
                 s != Surf.CUBICLE &&
-                s != Surf.EXEC &&
                 s != Surf.RECEPTION)
               continue;
             var dir = backHand(m, col, row);
@@ -565,9 +592,9 @@ class CorpProps
       if (!m.table[row][col])
         return [];
       var s = m.surf[row][col];
+      // an exec desk's workstation is render.corp.CorpExec's, and so is the claim on it
       if (s != Surf.OPEN &&
           s != Surf.CUBICLE &&
-          s != Surf.EXEC &&
           s != Surf.RECEPTION)
         return [];
       var dir = backHand(m, col, row);
@@ -619,7 +646,9 @@ class CorpProps
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            if (!m.table[row][col])
+            // an exec desk is one glb over its whole run, stood by render.corp.CorpExec
+            if (!m.table[row][col] ||
+                CorpExec.deskCell(m, col, row))
               continue;
             var s = m.surf[row][col];
             var c = CityConfig.cellToWorld(col, row);
