@@ -1349,9 +1349,9 @@ wall could change without touching it. `CorpRooms.exec` now lays, in order:
 - **the rug** (`execRug`): the biggest free all-marble rect 2x2..`RUG_MAX` 4 nearest the centre, as
   `TILE_FLOOR_EXEC_RUG` (walkable), and its +16 twin under the lounge furniture. Laid BEFORE the
   plants — plants first took the corners and rugs landed in 3 of 9 rooms; now 9 of 12;
-- **plants in every free corner** (`cornerPlants`), marble or rug, not at a door, each kept only if
-  `roomOpen` survives it. The `openPockets` repair ate a desk column and the door-end plants before
-  that guard existed.
+- **plants in every free corner** (`cornerPlants`), marble or rug, not at a door, and WALKABLE: the
+  cell keeps its floor id and only takes the decoration, like the exec chair's. A blocking plant made
+  every corner a dead cell under a glb that stands pushed into the corner and reads as free floor.
 The four new seat and lounge decorations sit on the four atlas cells rows 23-39 had left empty,
 hidden in 3D and read back by `render.corp.CorpDeco.kindOf` as `K_EXEC_CHAIR / K_ARMCHAIR / K_SOFA /
 K_TABLE_LOW`. Measured over 3,000 seeds: 0 failures, 0 unreachable, `furn/exec` 451.

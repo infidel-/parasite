@@ -528,11 +528,9 @@ class CorpRooms
 // a plant in every corner of the room that is still its bare floor (or its rug) and is not a
 // doorway.
 //
-// THIS OPENS WHAT `exec` HELD SHUT AT w >= 7, and on purpose: the dressed corners it measured were
-// a cooler, a coffee table and a router as well as a plant, which sealed a 4x4 office round a 3x2
-// slab (fill 26.9% -> 20.7% once CorpConnect.openPockets had eaten the desk to reach the floor). A
-// corner is the one cell of a room no lane runs through, so a plant there seals nothing a lane
-// needs; the oracle is what says so, not this comment
+// THE PLANT IS WALKABLE: its cell keeps its own floor id and only the decoration goes on it, the
+// way the exec chair's does. A blocking plant made every corner a dead cell, and in 3D the glb
+// stands pushed into the corner, so it read as free floor you could not step on
   static function cornerPlants(state: _CorpState, room: _Room)
     {
       var cells = state.area.getCells();
@@ -543,17 +541,11 @@ class CorpRooms
           { x: room.x2, y: room.y2 },
         ])
         {
-          var blocked = new Map<Int, Bool>();
-          blocked.set(c.x * 1000 + c.y, true);
-          var onRug = (cells[c.x][c.y] == Const.TILE_FLOOR_EXEC_RUG);
           if ((cells[c.x][c.y] != MARBLE1 &&
-              !onRug) ||
+              cells[c.x][c.y] != Const.TILE_FLOOR_EXEC_RUG) ||
               atDoor(cells, c.x, c.y) ||
-              state.area.hasObjectAt(c.x, c.y) ||
-              !roomOpen(state, room, blocked))
+              state.area.hasObjectAt(c.x, c.y))
             continue;
-          cells[c.x][c.y] = (onRug ? Const.TILE_FLOOR_EXEC_RUG : Const.TILE_FLOOR_MARBLE1) +
-            UNWALKABLE_TILE_OFFSET;
           addDecoration(state, c.x, c.y, Const.CORP_PLANT);
         }
     }
