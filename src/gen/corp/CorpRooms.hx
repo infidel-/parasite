@@ -419,16 +419,27 @@ class CorpRooms
           }
     }
 
-// a staff kitchen: a column of 2x2 tables, appliances round the walls
+// a staff kitchen and the floor's break room in one: a column of 2x2 tables, or a galley counter
+// where the room is too small for them, with the machines people cook with and the ones they stand
+// at round the walls
   public static function kitchen(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
       // and the same 5 the boardroom takes — `kitchenTables` lays 2x2 units at pitch 3 inside the
-      // room's own inset, which a 5-cell run still holds one of
+      // room's own inset, which a 5-cell run still holds one of. A 4-WIDE KITCHEN IS STILL A
+      // KITCHEN: it is dealt at minW/minH 4 on purpose (see CorpBlocks), and every 4 x 9 one came
+      // out as wall fixtures alone at 21.2% fill, so below the island it takes a counter run
       if (room.w >= 5 &&
           room.h >= 5)
         kitchenTables(state, node, room);
+      else
+        deskRun(state, node, room, [
+            Const.CORP_TABLE_KETTLE,
+            Const.CORP_TABLE_MICROWAVE,
+            Const.CORP_TABLE_MUG,
+            Const.CORP_TABLE_FRUIT,
+          ]);
       decorateWalls(state, room, [
           Const.CORP_TABLE_COFFEE,
           Const.CORP_TABLE_CLEANING,
@@ -436,6 +447,9 @@ class CorpRooms
           Const.CORP_TABLE_KETTLE,
           Const.CORP_TABLE_MICROWAVE,
           Const.CORP_TABLE_CONTAINER,
+          Const.CORP_TABLE_MUG,
+          Const.CORP_TABLE_FRUIT,
+          Const.CORP_TABLE_TISSUE,
         ], [
           Const.CORP_COOLER,
           Const.CORP_PLANT,
@@ -446,7 +460,7 @@ class CorpRooms
         ],
         Const.TILE_LIGHT_TABLE_WOOD1_1X1,
         Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET,
-        50, 20);
+        60, 30);
     }
 
   static function kitchenTables(state: _CorpState, node: _GenNode, room: _Room)
@@ -1092,7 +1106,7 @@ class CorpRooms
         40);
     }
 
-// --- the six kinds the floor was missing.
+// --- the kinds the floor was missing.
 //
 // THE FLOOR CARVES 29 ROOMS AND THE QUOTA ONLY EVER NAMED TEN OF THEM, so 19 rooms a floor came
 // out as the open-plan FILLER: one template, one floor, and a median 16% of its cells furnished.
@@ -1178,44 +1192,6 @@ class CorpRooms
         }
       area.addDecoration(tx + Std.int(n / 2), ty + 1, Const.CORP_CHAIR[0].row,
         area.random(Const.CORP_CHAIR[0].amount));
-    }
-
-// a break room: the kitchen's own floor and counters, with the machines people stand at instead of
-// the ones they cook with. The canteen is this room where the carve gave it the space for a second
-// run of tables, and not a kind of its own — see gen.blocks.CorpBlocks.demands
-  public static function breakRoom(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      var cells = state.area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
-      // A 4-WIDE BREAK ROOM IS STILL A BREAK ROOM. It is dealt at minW/minH 4 on purpose (see
-      // CorpBlocks) and `kitchenTables` wants 5 on both axes for its island, so every 4 x 9 one
-      // came out as wall fixtures alone at 21.2% fill. Below the island it takes a counter run
-      // instead, which is what a galley kitchenette is
-      if (room.w >= 5 &&
-          room.h >= 5)
-        kitchenTables(state, node, room);
-      else
-        deskRun(state, node, room, [
-            Const.CORP_TABLE_KETTLE,
-            Const.CORP_TABLE_MICROWAVE,
-            Const.CORP_TABLE_MUG,
-            Const.CORP_TABLE_FRUIT,
-          ]);
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_MUG,
-          Const.CORP_TABLE_FRUIT,
-          Const.CORP_TABLE_TISSUE,
-        ], [
-          Const.CORP_VENDING,
-          Const.CORP_FRIDGE,
-          Const.CORP_COOLER,
-          Const.CORP_PLANT,
-          Const.CORP_TRASH,
-        ],
-        Const.TILE_LIGHT_TABLE_WOOD1_1X1,
-        Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET,
-        60, 30);
     }
 
 // an archive: the server room's rank-and-aisle with PAPER in it instead of machines, which is what

@@ -33,11 +33,10 @@ class CorpBlocks
   public static inline var ROOM_EXEC = 'room-exec';
   public static inline var ROOM_TOILET = 'room-toilet';
   public static inline var ROOM_SERVERS = 'room-servers';
-  // AND THE SIX THE FLOOR WAS MISSING. Each borrows a floor surface one of the seven above
+  // AND THE KINDS THE FLOOR WAS MISSING. Each borrows a floor surface one of the seven above
   // already owns (gen.corp.CorpRooms' own header says which), so the whole of a new kind is a
   // demand, a dispatch case and a furniture list
   public static inline var ROOM_SOLO = 'room-solo';
-  public static inline var ROOM_BREAK = 'room-break';
   public static inline var ROOM_ARCHIVE = 'room-archive';
   public static inline var ROOM_RECEPTION = 'room-reception';
   public static inline var ROOM_SECURITY = 'room-security';
@@ -71,7 +70,6 @@ class CorpBlocks
           case ROOM_TOILET: ROLE_TOILET;
           case ROOM_SERVERS: ROLE_SERVERS;
           case ROOM_SOLO: ROLE_SOLO;
-          case ROOM_BREAK: ROLE_BREAK;
           case ROOM_ARCHIVE: ROLE_ARCHIVE;
           case ROOM_RECEPTION: ROLE_RECEPTION;
           case ROOM_SECURITY: ROLE_SECURITY;
@@ -92,7 +90,6 @@ class CorpBlocks
           case ROLE_TOILET: ROOM_TOILET;
           case ROLE_SERVERS: ROOM_SERVERS;
           case ROLE_SOLO: ROOM_SOLO;
-          case ROLE_BREAK: ROOM_BREAK;
           case ROLE_ARCHIVE: ROOM_ARCHIVE;
           case ROLE_RECEPTION: ROOM_RECEPTION;
           case ROLE_SECURITY: ROOM_SECURITY;
@@ -189,12 +186,15 @@ class CorpBlocks
           fit: smallest,
           must: function(b) return !blocked.exists(b.roomID),
         },
+        // the kitchen is also the floor's break room, and 4 x 4 AND NOT 5 x 5 for the reason the
+        // break room had: at 5 it was an eighth min against the 14.4 rooms a floor that clear 5 on
+        // both axes. Below 5 the room loses its island of tables and takes a galley counter instead
         {
           kind: ROOM_KITCHEN,
           min: 1,
-          max: 1,
-          minW: 5,
-          minH: 5,
+          max: 2,
+          minW: 4,
+          minH: 4,
           fit: smallest,
         },
         // the cubicle farm wants the ROOMIEST room on the floor, which is the one the old generator
@@ -234,9 +234,9 @@ class CorpBlocks
         // rooms and the six kinds above only ever named ten of them, so 19 a floor came out as
         // the open-plan filler — a sparse duplicate of one template over half the tower.
         //
-        // the six below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
+        // the four below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
         // 20.5 clear 4, and seven demands above already hold mins against that supply; another
-        // six would be the "quota short: room-toilet got 0" this file's `assign` already carries
+        // four would be the "quota short: room-toilet got 0" this file's `assign` already carries
         // a retry loop for. A min is for the thing a floor MUST have, and a floor does not have
         // to have an archive on it. What puts one there is the max, and the supply is ample
         {
@@ -246,18 +246,6 @@ class CorpBlocks
           minW: 4,
           minH: 4,
           fit: smallest,
-        },
-        // the recreation room the user asked for by name, and the only one of the six with a min.
-        // 4 x 4 AND NOT 5 x 5: at 5 it was an eighth min against the 14.4 rooms a floor that clear
-        // 5 on both axes, and two towers in 2,000 came out with nothing left to put it in. Below 5
-        // the room loses its island of tables and is its wall fixtures alone — a vending machine,
-        // a fridge and a cooler, which is what a small firm's break room is
-        {
-          kind: ROOM_BREAK,
-          min: 1,
-          max: 2,
-          minW: 4,
-          minH: 4,
         },
         {
           // 5 AND NOT 4 ON EITHER AXIS, which is a number the oracle set. A rank spans the interior
