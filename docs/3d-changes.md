@@ -2301,3 +2301,36 @@ luma per 3 px: before `... 7 6 5 5 2 1 0`, after `... 3 2 2 1 0 0`; peak at the 
 
 Verdict: **LANDED.** No geometry or call change; compound halos and roof pools take it too (not
 re-shot in a compound).
+
+## Corp exec office made lavish: marble, walnut, glb suite, oval rug, desk trinkets
+
+The exec office is the tower's filler room (~15 of ~29 a floor) and wore open-plan parts. Reception
+split off first (`Surf.RECEPTION`, own floor id), so it kept the old pale look pixel for pixel.
+
+- **Shell:** `corp/floor-exec` re-rolled as the dark charcoal marble the 2D MARBLE1 tile always was
+  (the 3D floor had been pale since `948bd1d`); wrap edge patched to carry a joint; lift 0.77, built
+  69.5 sRGB. `corp/wall-exec` walnut boiserie with brass reveals, lift 0.64, built 81.9.
+- **Furniture:** seven hand-modelled glbs (`models-src/corp/exec_build.py`) on one 2x2 material pack
+  (`corp/exec-pack`: leather / walnut / inlay / brass): 3x2 desk 516, runs 3 and 2, exec chair 1,380,
+  club armchair 552, chesterfield 768, low table 168. `render.corp.CorpExec` stands them off the
+  generator's cells and decorations, every yaw taken from a NEIGHBOUR (desk away from its owner,
+  visitors at the desk, sofa and armchairs at the low table). Desk glbs by EXACT footprint only, so
+  a desk the pocket repair ate into is dropped rather than stretched.
+- **Clutter:** own PACK16 `corp/exec-clutter`, 14 dealt cells, on the desk and 1-2 on each low table.
+- **Rug:** `render.corp.CorpRugs`, one alpha-cut 1.6:1 oval quad per room at `RUG_Y` 0.02, eye-in-ring
+  medallion, one mesh per plate. Rug value 0.0307 linear on a 0.0609 floor: reads, left as is.
+- **Trinkets:** brass nameplate (24 tris) at every desk's front edge facing the visitors, standing
+  photo (80 tris) on 70% at an owner-side corner away from the screen; their faces are the clutter
+  sheet's last two cells. Claimed in `CorpExec.claims`, so decals keep off them. Built at 0.74 wide
+  they read as crumbs on an 11.76 desk; batched at 2x.
+
+**Trap:** a buried frame joint with flush faces is 18 shared planes; the stiles go 0.012 proud of the
+rails on every axis (`3d-models.md`). And `area regen` leaves the view null: `make reload-load` after.
+
+Measured, follow cam, `calls=` median of 6 frames, the new meshes shown vs hidden, interleaved x3:
+floor without a suite **150 vs 140 (+10**, 6 meshes); floor with three suites **152 vs 134 (+18**,
+10 meshes). Tactical not measured. The old exec desks were in the shared worktop buffer and their task
+chairs in the shared chair batch, so nothing was removed to offset it.
+
+Verdict: **LANDED.** +10..+18 calls on a tower floor, all instanced batches of real furniture.
+

@@ -1336,6 +1336,26 @@ a `deskRun` where the 3x2 slab does not fit. Measured over 1,000 seeds: exec 15.
 kitchen/cubicle 2, meeting 1.99, archive 1.91, reception/security/toilet/servers 1; furniture per
 office unchanged (22.3 vs 22 for solo + exec). `room-break` / `room-solo` and their roles are gone.
 
+**Then made lavish, and reception split off it.** Reception lays its own `TILE_FLOOR_RECEPTION`
+(row 17, 2D art aliased to MARBLE1) and renders as `Surf.RECEPTION`, so the exec office's floor and
+wall could change without touching it. `CorpRooms.exec` now lays, in order:
+- **the suite** (`execSuite`), in a room at least `SUITE_SPAN` 4 across and `SUITE_LEN_X/Y` 7 long:
+  the 3x2 desk at one end, and at the other a lounge — armchairs, `CORP_TABLE_LOW`, `CORP_SOFA` against
+  the end wall, each two cells across — over a rug. Every flip / lounge offset / desk offset is
+  tried nearest the centre first and rejected unless `roomOpen` still floods every walkable cell from
+  the doors with the candidate's cells blocked. Pushes `ZONE_LOUNGE`. ~3.25 per floor;
+- **otherwise the desk**: `execDesk` (3x2, owner chair `CORP_EXEC_CHAIR`, two `CORP_ARMCHAIR`
+  visitors in front) at w, h >= 4, else `execRun` (1 x 2..3 along the long axis, owner beside it);
+- **the rug** (`execRug`): the biggest free all-marble rect 2x2..`RUG_MAX` 4 nearest the centre, as
+  `TILE_FLOOR_EXEC_RUG` (walkable), and its +16 twin under the lounge furniture. Laid BEFORE the
+  plants — plants first took the corners and rugs landed in 3 of 9 rooms; now 9 of 12;
+- **plants in every free corner** (`cornerPlants`), marble or rug, not at a door, each kept only if
+  `roomOpen` survives it. The `openPockets` repair ate a desk column and the door-end plants before
+  that guard existed.
+The four new seat and lounge decorations sit on the four atlas cells rows 23-39 had left empty,
+hidden in 3D and read back by `render.corp.CorpDeco.kindOf` as `K_EXEC_CHAIR / K_ARMCHAIR / K_SOFA /
+K_TABLE_LOW`. Measured over 3,000 seeds: 0 failures, 0 unreachable, `furn/exec` 451.
+
 ## ANY ONE REACHED CELL IS THE WRONG QUESTION
 
 Reported from the game as "this room's tables in the center breaking the movement, plus corners are
