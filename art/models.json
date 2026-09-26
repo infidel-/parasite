@@ -1442,6 +1442,96 @@
       "note": "the exec desk's standing photo, hand-modelled (models-src/corp/exec_trinket_build.py): a brass frame leaned 14 deg on a walnut easel strut round exec-clutter cell 14 at its own 1.30 aspect. The stiles stand 0.012 proud of the rails every way, or the buried corners are shared planes. 80 tris, 0.65 x 0.315 x 0.543. On 70% of desks at an owner-side corner, looking at the owner.",
       "last_converted": "2026-09-26T14:25:24Z",
       "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/kitchen-table": {
+      "src": "corp/corp-kitchen-table.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the staff kitchen's dining table, 376 tris, 5.2 x 3.6 x 1.5: a beech top on four square steel legs and a steel apron, long along x. Stands on a generator 2x2 LIGHT_TABLE_WOOD1 block and is turned so its long sides face the chairs. Wears kitchen-furn-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-chair": {
+      "src": "corp/corp-kitchen-chair.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the kitchen's four-legged canteen chair, 412 tris, 0.92 x 0.99 x 1.71: a terracotta moulded shell (seat and raked back) on four round steel legs. Faces -y, back at +y. Wears kitchen-furn-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-counter": {
+      "src": "corp/corp-kitchen-counter.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "one cell of the prep counter, 452 tris, 4.0 x 1.32 x 1.8 (COUNTER_H): a charcoal stone top the full cell wide over a 3.96 lacquer carcass with two doors, steel bar pulls and a recessed dark kick, 65 cm deep and standing against its wall. Butted cell to cell into one worktop. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-sink": {
+      "src": "corp/corp-kitchen-sink.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the counter cell with the sink, 884 tris, 4.0 x 1.32 x 2.53: the counter unit with a lathed steel bowl dropped into a four-slab top and a gooseneck tap; its carcass stops under the bowl. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-wall-cab": {
+      "src": "corp/corp-kitchen-wall-cab.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the wall cabinet over a counter cell, 336 tris, 3.94 x 0.74 x 1.4, BUILT AT ITS MOUNTED HEIGHT (z 3.0..4.4) so it stands on the floor like the rest. Two lacquer doors with steel pulls. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-fridge": {
+      "src": "corp/corp-kitchen-fridge.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the fridge-freezer, 552 tris, 1.6 x 1.41 x 3.6: white lacquer, freezer below, vertical steel pulls, a dark kick, and the kitchen's two notes (kitchen-clutter cells 14 and 15, a cleaning rota and a child's drawing) held on the fridge door at their own measured aspects. Wears kitchen-fridge-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/kitchen-vending": {
+      "src": "corp/corp-kitchen-vending.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the snack vending machine, 216 tris, 2.2 x 1.43 x 4.2: dark casing, the glass front recessed 0.06 in a frame at the drop's 0.666 aspect and the control panel proud at its 0.591 (corp/vending-pack as built, its three regions measured off the drop). texel_off 2 = the glass and the panel, whole labels at their own density on purpose. EMISSIVE: kitchen-vending-emissive.png is the sheet itself masked to the glass (modulated by its own art, so the packets glow and the coil racks stay dark) plus the amber display's own pixels -- the layout is authored, so it is cut straight off the sheet rather than by tools/emissive.py, and there is nothing next to either region to bleed into. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "emissiveSrc": "corp/kitchen-vending-emissive.png",
+      "emissiveStrength": 2,
+      "last_converted": "2026-09-26T21:17:05Z",
+      "last_sig": "n1/-1/512/0.01/-/corp/kitchen-vending-emissive.png@2"
+    },
+    "corp/kitchen-microwave": {
+      "src": "corp/corp-kitchen-microwave.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the microwave, 192 tris, 1.0 x 0.72 x 0.6: a lacquer box, a dark glass door and the fascia's display panel (texel_off 1 = that panel, a whole label). Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/kitchen-coffee": {
+      "src": "corp/corp-kitchen-coffee.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the bean-to-cup coffee machine, 256 tris, 0.6 x 1.1 x 0.95: a dark body, the fascia's display band across its upper front (texel_off 1 = that band), a steel spout and drip tray, a white cup on it. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/kitchen-kettle": {
+      "src": "corp/corp-kitchen-kettle.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the jug kettle, 344 tris, 0.44 x 0.65 x 0.47: a lathed steel body on a dark base, a dark swept handle at +y and a steel spout. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/kitchen-toaster": {
+      "src": "corp/corp-kitchen-toaster.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the two-slot toaster, 220 tris, 0.64 x 0.36 x 0.4: a steel box, two dark slot plates proud on top, a dark lever. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
+      "last_converted": "2026-09-26T21:16:37Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
     }
   }
 }
