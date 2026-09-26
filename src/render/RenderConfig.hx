@@ -873,6 +873,8 @@ class RenderConfig {
     corpExecArmchair: 'models/corp/exec-armchair.glb',  // club chair, lounge and visitor, 552
     corpExecSofa: 'models/corp/exec-sofa.glb',          // two-cell chesterfield, 768
     corpExecTableLow: 'models/corp/exec-table-low.glb', // walnut on brass legs, 168
+    corpExecPlaque: 'models/corp/exec-plaque.glb',      // brass nameplate on walnut, 24
+    corpExecPhoto: 'models/corp/exec-photo.glb',        // brass frame on an easel, 80
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

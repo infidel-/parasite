@@ -1426,6 +1426,22 @@
       "note": "the low table in front of the exec sofa, two cells long: a walnut top on four brass legs with a walnut shelf between them -- legs and not a plinth, because at this pitch a low table is seen THROUGH. 168 tris, 6.4 x 2.6 x 0.9. Its top takes one or two exec-clutter decals (render.corp.CorpClutter).",
       "last_converted": "2026-09-26T14:09:36Z",
       "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-plaque": {
+      "src": "corp/corp-exec-plaque.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the exec desk's nameplate, hand-modelled (models-src/corp/exec_trinket_build.py): a brass plate leaned 30 deg back on a walnut block, its face the exec-clutter pack16's cell 15 at its own 2.13 aspect. 24 tris, 0.74 x 0.205 x 0.325. Stood at the desk's front edge looking at the visitors (render.corp.CorpExec.trinkets).",
+      "last_converted": "2026-09-26T14:25:24Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/exec-photo": {
+      "src": "corp/corp-exec-photo.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "the exec desk's standing photo, hand-modelled (models-src/corp/exec_trinket_build.py): a brass frame leaned 14 deg on a walnut easel strut round exec-clutter cell 14 at its own 1.30 aspect. The stiles stand 0.012 proud of the rails every way, or the buried corners are shared planes. 80 tris, 0.65 x 0.315 x 0.543. On 70% of desks at an owner-side corner, looking at the owner.",
+      "last_converted": "2026-09-26T14:25:24Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
     }
   }
 }

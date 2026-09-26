@@ -185,6 +185,8 @@ class CorpProps
         tables: [],
         mons: mons,
         keys: keys,
+        plaques: [],
+        photos: [],
       };
       CorpExec.place(m, area, ex);
       stalls(m, pans);
@@ -220,6 +222,9 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpExecSofa, ex.sofas, CorpStyle.SOFA_H, false));
       out.push(batch(scene, RenderConfig.MODELS.corpExecTableLow, ex.tables, CorpStyle.TABLE_LOW_H,
         false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecPlaque, ex.plaques, CorpStyle.PLAQUE_H,
+        false));
+      out.push(batch(scene, RenderConfig.MODELS.corpExecPhoto, ex.photos, CorpStyle.PHOTO_H, false));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h, FLOOR[i].env));
       // lacquered steel with a brass label frame on it, so `env` is left at its default TRUE

@@ -33,6 +33,20 @@ typedef ExecPlaces = {
   var tables:Array<Models.PropPlace>;
   var mons:Array<Models.PropPlace>;
   var keys:Array<Models.PropPlace>;
+  var plaques:Array<Models.PropPlace>;
+  var photos:Array<Models.PropPlace>;
+};
+
+// one desk-top trinket: where it stands, which way it looks and the box it takes off the top
+typedef ExecTrinket = {
+  // the photo frame, else the nameplate
+  var photo:Bool;
+  var x:Float;
+  var z:Float;
+  var yaw:Float;
+  // its half extents in world axes, for render.corp.CorpClutter to scatter round
+  var hw:Float;
+  var hd:Float;
 };
 
 // THE EXEC OFFICE'S FURNITURE, off the generator's own cells.
@@ -168,25 +182,84 @@ class CorpExec
       var out = new Map<Int, Array<ClutterSlot>>();
       for (d in desks(m, area))
         {
+          // the trinkets, on whichever cell their centre falls in
+          for (t in trinkets(m, d))
+            {
+              var c = CityConfig.worldToCell(t.x, t.z);
+              claim(out, key(m, c.col, c.row), {
+                x: t.x,
+                z: t.z,
+                hw: t.hw,
+                hd: t.hd,
+              });
+            }
           if (d.work == null)
             continue;
           var ws = workAt(d);
           var alongX = (d.dir < 2);
-          out.set(key(m, d.work.col, d.work.row), [
-            {
-              x: ws.mx,
-              z: ws.mz,
-              hw: (alongX ? CorpStyle.MON_W : CorpStyle.MON_D) / 2,
-              hd: (alongX ? CorpStyle.MON_D : CorpStyle.MON_W) / 2,
-            },
-            {
-              x: ws.kx,
-              z: ws.kz,
-              hw: (alongX ? CorpStyle.KEY_W : CorpStyle.KEY_D) / 2,
-              hd: (alongX ? CorpStyle.KEY_D : CorpStyle.KEY_W) / 2,
-            },
-          ]);
+          var k = key(m, d.work.col, d.work.row);
+          claim(out, k, {
+            x: ws.mx,
+            z: ws.mz,
+            hw: (alongX ? CorpStyle.MON_W : CorpStyle.MON_D) / 2,
+            hd: (alongX ? CorpStyle.MON_D : CorpStyle.MON_W) / 2,
+          });
+          claim(out, k, {
+            x: ws.kx,
+            z: ws.kz,
+            hw: (alongX ? CorpStyle.KEY_W : CorpStyle.KEY_D) / 2,
+            hd: (alongX ? CorpStyle.KEY_D : CorpStyle.KEY_W) / 2,
+          });
         }
+      return out;
+    }
+
+// one box onto a cell's list of claims
+  static function claim(out:Map<Int, Array<ClutterSlot>>, k:Int, slot:ClutterSlot):Void
+    {
+      if (!out.exists(k))
+        out.set(k, []);
+      out.get(k).push(slot);
+    }
+
+// a desk's trinkets: the nameplate at the middle of its FRONT edge looking at the visitors, and
+// on CorpStyle.PHOTO_EVERY of them the photo frame at an owner-side corner looking at its owner —
+// the end away from the workstation, or on the 3x2 (whose screen is in the middle) either by hash
+  static function trinkets(m:Facility, d:ExecDesk):Array<ExecTrinket>
+    {
+      var c = CityConfig.cellToWorld((d.col0 + d.col1) / 2, (d.row0 + d.row1) / 2);
+      var ox = DC[d.dir], oz = DR[d.dir];
+      // the desk's axis across its owner and along it, as world units and half extents
+      var ax = (ox == 0 ? 1 : 0), az = (ox == 0 ? 0 : 1);
+      var halfD = (ox == 0 ? d.row1 - d.row0 + 1 : d.col1 - d.col0 + 1) * CELL / 2;
+      var halfL = (ox == 0 ? d.col1 - d.col0 + 1 : d.row1 - d.row0 + 1) * CELL / 2;
+      var out:Array<ExecTrinket> = [{
+        photo: false,
+        x: c.x - ox * (halfD - CorpStyle.PLAQUE_IN),
+        z: c.z - oz * (halfD - CorpStyle.PLAQUE_IN),
+        yaw: Math.atan2(-ox, -oz),
+        hw: (ax == 1 ? CorpStyle.PLAQUE_W : CorpStyle.PLAQUE_D) / 2,
+        hd: (ax == 1 ? CorpStyle.PLAQUE_D : CorpStyle.PLAQUE_W) / 2,
+      }];
+      var hash = FacilityModel.mix((d.col0 * 374761393) ^ (d.row0 * 40503));
+      if (hash % 100 >= CorpStyle.PHOTO_EVERY)
+        return out;
+      var s = ((hash >>> 8) & 1) * 2 - 1;
+      if (d.work != null)
+        {
+          var w = CityConfig.cellToWorld(d.work.col, d.work.row);
+          var along = (w.x - c.x) * ax + (w.z - c.z) * az;
+          if (along != 0)
+            s = (along > 0 ? -1 : 1);
+        }
+      out.push({
+        photo: true,
+        x: c.x + ox * (halfD - CorpStyle.PHOTO_IN) + ax * s * (halfL - CorpStyle.PHOTO_IN),
+        z: c.z + oz * (halfD - CorpStyle.PHOTO_IN) + az * s * (halfL - CorpStyle.PHOTO_IN),
+        yaw: Math.atan2(ox, oz),
+        hw: (ax == 1 ? CorpStyle.PHOTO_W : CorpStyle.PHOTO_D) / 2,
+        hd: (ax == 1 ? CorpStyle.PHOTO_D : CorpStyle.PHOTO_W) / 2,
+      });
       return out;
     }
 
@@ -248,6 +321,13 @@ class CorpExec
         },
         h: CorpStyle.EXEC_DESK_H,
       });
+      for (t in trinkets(m, d))
+        (t.photo ? out.photos : out.plaques).push({
+          x: t.x,
+          z: t.z,
+          yaw: t.yaw,
+          y: CorpStyle.EXEC_DESK_H,
+        });
       if (d.work == null)
         return;
       // the screen faces its owner, standing back across the desk from the chair

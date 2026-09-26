@@ -107,6 +107,8 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpExecArmchair, h: CorpStyle.ARMCHAIR_H },
         { path: RenderConfig.MODELS.corpExecSofa, h: CorpStyle.SOFA_H },
         { path: RenderConfig.MODELS.corpExecTableLow, h: CorpStyle.TABLE_LOW_H },
+        { path: RenderConfig.MODELS.corpExecPlaque, h: CorpStyle.PLAQUE_H },
+        { path: RenderConfig.MODELS.corpExecPhoto, h: CorpStyle.PHOTO_H },
       ];
       // AND THE ARCHIVE'S TWO, appended off CorpFurniture's own table rather than typed out again
       // so a third family is one line in one place. CorpModel.demo carries two rank cells on each

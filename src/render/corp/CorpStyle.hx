@@ -340,6 +340,20 @@ class CorpStyle
   public static inline var EXEC_MON_BACK = 0.60;
   // and how many exec clutter decals a low table's top takes, at most
   public static inline var TABLE_LOW_CLUTTER = 2;
+  // THE EXEC DESK TRINKETS (render.corp.CorpExec.trinkets), both hand-modelled: the nameplate stands
+  // PLAQUE_IN in from the desk's front edge, the photo PHOTO_IN in from an owner-side corner on
+  // PHOTO_EVERY desks in 100. Sizes are the built glbs' at TWICE their modelled scale: the desk is
+  // 11.76 long, and at 0.74 a nameplate read as a crumb on it, a sixteenth of the desk where a real
+  // one is an eighth
+  public static inline var PLAQUE_H = 0.6508;
+  public static inline var PLAQUE_W = 1.48;
+  public static inline var PLAQUE_D = 0.41;
+  public static inline var PLAQUE_IN = 0.55;
+  public static inline var PHOTO_H = 1.0858;
+  public static inline var PHOTO_W = 1.30;
+  public static inline var PHOTO_D = 0.63;
+  public static inline var PHOTO_IN = 0.95;
+  public static inline var PHOTO_EVERY = 70;
   public static inline var CHAIR_W = 1.3;
   public static inline var CHAIR_YAW_JIT = 0.30;
   // how far the chair's centre stands back from the desk cell's own edge, into the seat cell
