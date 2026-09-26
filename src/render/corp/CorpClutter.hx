@@ -47,6 +47,8 @@ class CorpClutter
       // the exec office's own PACK16, and what its desks already carry — see CorpExec.claims
       var exec = MeshBufTools.make();
       var execClaims = CorpExec.claims(m, area);
+      // and the staff kitchen's, off its counters and its dining tables — see CorpKitchen.tops
+      var kitchen = MeshBufTools.make();
       // and the handful of cells that are PROPS rather than decals — see CorpStyle.CLUTTER_PROP_OF
       var props = [for (_ in 0...CorpStyle.CLUTTER_PROPS) new Array<Models.PropPlace>()];
       var n = 0;
@@ -60,15 +62,47 @@ class CorpClutter
                 n += execCell(m, col, row, exec, execClaims);
                 continue;
               }
+            if (CorpKitchen.cell(m, col, row))
+              continue;
             n += cell(m, col, row, deskish(m.surf[row][col]) ? desk : util, props);
           }
       // and a thing or two on every exec lounge's low table
       for (t in CorpExec.lowTops(m, area))
         {
           var g = FacilityModel.mix((t.col * 1103515245) ^ (t.row * 12345) ^ 0x5bd1e995);
-          n += scatter(exec, t.x, t.z, t.hw - CorpStyle.CLUTTER_INSET,
-            t.hd - CorpStyle.CLUTTER_INSET, CorpStyle.TABLE_LOW_H + CorpStyle.CLUTTER_Y,
-            1 + g % CorpStyle.TABLE_LOW_CLUTTER, g, []);
+          n += scatter({
+            b: exec,
+            x: t.x,
+            z: t.z,
+            hw: t.hw - CorpStyle.CLUTTER_INSET,
+            hd: t.hd - CorpStyle.CLUTTER_INSET,
+            y: CorpStyle.TABLE_LOW_H + CorpStyle.CLUTTER_Y,
+            want: 1 + g % CorpStyle.TABLE_LOW_CLUTTER,
+            seed: g,
+            spots: [],
+            sz: CorpStyle.CLUTTER_EXEC_SZ,
+            szVar: CorpStyle.CLUTTER_EXEC_SZ_VAR,
+          });
+        }
+      // and the kitchen's: up to CLUTTER_KITCHEN_MAX on a counter cell, where the roll reaches
+      // zero the way a desk's does, and at least one on every dining table
+      for (t in CorpKitchen.tops(m, area))
+        {
+          var g = FacilityModel.mix((t.col * 1103515245) ^ (t.row * 12345));
+          n += scatter({
+            b: kitchen,
+            x: t.x,
+            z: t.z,
+            hw: t.hw - CorpStyle.CLUTTER_INSET,
+            hd: t.hd - CorpStyle.CLUTTER_INSET,
+            y: t.y + CorpStyle.CLUTTER_Y,
+            want: (t.table ? 1 + g % CorpStyle.CLUTTER_KITCHEN_TABLE :
+              g % (CorpStyle.CLUTTER_KITCHEN_MAX + 1)),
+            seed: g,
+            spots: t.spots,
+            sz: CorpStyle.CLUTTER_KITCHEN_SZ,
+            szVar: CorpStyle.CLUTTER_KITCHEN_SZ_VAR,
+          });
         }
       // AND THE ARCHIVE'S UNITS: paper and folders lying on every level that took no load — a lid
       // or, on the racking, a shelf — off the desk sheet and into its buffer, so no draw call
@@ -77,6 +111,7 @@ class CorpClutter
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
       add(scene, exec, CorpStyle.CLUTTER_EXEC_TEX);
+      add(scene, kitchen, CorpStyle.CLUTTER_KITCHEN_TEX);
       // and the third sheet, which is not a worktop at all: what the people in the cubicle farm
       // have pinned to their own panels — and to the side of an archive run's end unit, where the
       // company has not hung its poster (CorpFurniture.archEndPoster, CorpSigns' side of the split)
@@ -227,40 +262,51 @@ class CorpClutter
       var spots = (claims.exists(k) ? claims.get(k).copy() : []);
       var c = CityConfig.cellToWorld(col, row);
       var r = CityConfig.CELL / 2 - CorpStyle.FIT_INSET - CorpStyle.CLUTTER_INSET;
-      return scatter(b, c.x, c.z, r, r, CorpStyle.EXEC_DESK_H + CorpStyle.CLUTTER_Y, want, g,
-        spots);
+      return scatter({
+        b: b,
+        x: c.x,
+        z: c.z,
+        hw: r,
+        hd: r,
+        y: CorpStyle.EXEC_DESK_H + CorpStyle.CLUTTER_Y,
+        want: want,
+        seed: g,
+        spots: spots,
+        sz: CorpStyle.CLUTTER_EXEC_SZ,
+        szVar: CorpStyle.CLUTTER_EXEC_SZ_VAR,
+      });
     }
 
-// `want` exec decals over a flat rect of half extents (hw, hd) at height y, each at a free yaw
-// and clear of `spots` — `cell`'s own roll and placement, off the exec sheet. returns how many landed
-  static function scatter(b:MeshBuf, x:Float, z:Float, hw:Float, hd:Float, y:Float, want:Int,
-      g:Int, spots:Array<ClutterSlot>):Int
+// `o.want` decals off a PACK16 over a flat rect, each at a free yaw and clear of `o.spots` —
+// `cell`'s own roll and placement. The exec sheet and the kitchen's are the same 4x4 with the same
+// two reserved cells, so CLUTTER_EXEC_COLS / _CELLS read either. returns how many landed
+  static function scatter(o:CorpScatterOpts):Int
     {
       var n = 0;
-      for (i in 0...want)
+      for (i in 0...o.want)
         {
-          var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
-          var sz = CorpStyle.CLUTTER_EXEC_SZ + ((h % 1000) / 1000) * CorpStyle.CLUTTER_EXEC_SZ_VAR;
-          var rx = hw - sz * 0.5, rz = hd - sz * 0.5;
+          var h = FacilityModel.mix(o.seed ^ ((i + 1) * 668265263));
+          var sz = o.sz + ((h % 1000) / 1000) * o.szVar;
+          var rx = o.hw - sz * 0.5, rz = o.hd - sz * 0.5;
           if (rx <= 0 ||
               rz <= 0)
             continue;
           var yaw = ((h >>> 12) % 1000) / 1000 * 2 * Math.PI;
-          var box = ClutterSlotTools.turned(x, z, sz, sz, yaw);
+          var box = ClutterSlotTools.turned(o.x, o.z, sz, sz, yaw);
           var ok = false;
           for (t in 0...CorpStyle.CLUTTER_TRIES)
             {
               var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
-              box.x = x + (((hh % 1000) / 1000) * 2 - 1) * rx;
-              box.z = z + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
-              ok = !hits(spots, box);
+              box.x = o.x + (((hh % 1000) / 1000) * 2 - 1) * rx;
+              box.z = o.z + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+              ok = !hits(o.spots, box);
               if (ok)
                 break;
             }
           if (!ok)
             continue;
-          spots.push(box);
-          emit(b, box.x, box.z, sz, yaw, (h >>> 22) % CorpStyle.CLUTTER_EXEC_CELLS, y,
+          o.spots.push(box);
+          emit(o.b, box.x, box.z, sz, yaw, (h >>> 22) % CorpStyle.CLUTTER_EXEC_CELLS, o.y,
             CorpStyle.CLUTTER_EXEC_COLS);
           n++;
         }

@@ -44,18 +44,16 @@ typedef CorpDecoSet = {
 //   * A CHAIR, A COMPUTER, A PLANT, A COOLER, A PRINTER already has a glb (render.corp.CorpProps).
 //     The computer cells are handed over so a workstation stands exactly where the old icon did,
 //     which is what "put the new ones in their places" asks for literally.
-//   * A CABINET, A FRIDGE, A VENDING MACHINE, A WHITEBOARD is CASEWORK — an axis-aligned slab whose
+//   * A CABINET and A WHITEBOARD are CASEWORK — an axis-aligned slab whose
 //     read is a material, which docs/3d-models.md's triage sends to emitted quads and not to a glb.
 //     They are emitted here, into CorpFurniture's OWN buffers, so the whole family costs ZERO extra
 //     draw calls: they wear the desk carcass's three faces, which in a premium office is the truth
 //     rather than a saving.
 //
-// ponytail: a vending machine is casework with a LIT GLASS FRONT and here it is casework. The front
-// wants its own 0..1 authored face (a glass door, racked product, a warm interior) and that is one
-// texture and one aspect lock away; nothing else about the piece changes. Same for the washroom TAP
-// and the server room's MACHINERY, which are both suppressed with nothing put back: the vanity and
-// the rack they stood on already draw, and an icon standing inside a cabinet is worse than a
-// cabinet with nothing on it.
+// THE FRIDGE AND THE VENDING MACHINE LEFT THIS FAMILY for render.corp.CorpKitchen's glbs: a vending
+// machine's read is a LIT GLASS FRONT, which a box in desk laminate never had. The server room's
+// MACHINERY is still suppressed with nothing put back: the rack it stood on already draws, and an
+// icon standing inside a cabinet is worse than a cabinet with nothing on it.
 class CorpDeco
 {
   static inline var CELL = CityConfig.CELL;
@@ -89,6 +87,14 @@ class CorpDeco
   public static inline var K_ARMCHAIR = 12;
   public static inline var K_SOFA = 13;
   public static inline var K_TABLE_LOW = 14;
+  // and the staff kitchen's, which render.corp.CorpKitchen reads on Surf.KITCHEN alone: a dining
+  // chair (the task chair's own frames), the sink's tap, and the three appliances gen.corp
+  // .CorpKitchen deals onto a counter. The same frames dealt in other rooms stay drawn by nothing
+  public static inline var K_CHAIR = 15;
+  public static inline var K_TAP = 16;
+  public static inline var K_MICROWAVE = 17;
+  public static inline var K_KETTLE = 18;
+  public static inline var K_COFFEE = 19;
 
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
@@ -106,8 +112,6 @@ class CorpDeco
 
   static final CASE:Map<Int, Array<Float>> = [
     K_CABINET => CASE_CABINET,
-    K_FRIDGE => [1.80, 1.50, 3.40],
-    K_VENDING => [2.20, 1.40, 4.20],
     K_MACHINE => [1.70, 1.15, 1.90],
   ];
   // and the whiteboard, which is a PANEL on the wall and not a box: sill to head, proud of the slab
@@ -141,15 +145,18 @@ class CorpDeco
           // CORP_WHITEBOARD, then the cooler and the plant, which have glbs of their own
           case 31: (col < 8 ? K_BOARD : (col < 10 ? K_COOLER : K_PLANT));
           // CORP_TABLE_COFFEE, then CORP_TABLE_PRINTER, then CORP_TABLE_MISC_LARGE
-          case 28: (col >= 6 && col < 11 ? K_PRINTER : K_NONE);
-          // CORP_CABINET, then CORP_TRASH, then the washroom tap
-          case 32: (col < 6 ? K_CABINET : (col < 11 ? K_BIN : K_NONE));
+          case 28: (col < 6 ? K_COFFEE : (col < 11 ? K_PRINTER : K_NONE));
+          // CORP_CABINET, then CORP_TRASH, then a tap
+          case 32: (col < 6 ? K_CABINET : (col < 11 ? K_BIN : K_TAP));
           // CORP_MACHINERY, then CORP_FRIDGE. the machinery in a SERVER room already has a rack
           // standing on its cell (CorpModel.fitOf), and `casework` skips a cell that is already
           // a fitting — everywhere else it is a plant-room unit and needs a box of its own
           case 33: (col < 7 ? K_MACHINE : K_FRIDGE);
           case 34: K_VENDING;
-          case 30: (col == 11 ? K_EXEC_CHAIR : K_NONE);
+          // CORP_CHAIR, then two taps, then the exec chair
+          case 30: (col < 9 ? K_CHAIR : (col < 11 ? K_TAP : K_EXEC_CHAIR));
+          // CORP_TABLE_KETTLE, then CORP_TABLE_MICROWAVE
+          case 37: (col < 8 ? K_KETTLE : K_MICROWAVE);
           case 25: (col == 10 ? K_ARMCHAIR : (col == 11 ? K_SOFA : K_NONE));
           case 26: (col == 11 ? K_TABLE_LOW : K_NONE);
           default: K_NONE;
@@ -214,13 +221,21 @@ class CorpDeco
               n.cabinets++;
               continue;
             }
-          box(m, o.x, o.y, dir, CASE.get(k));
-          switch (k)
+          // AND NEITHER ARE THE FRIDGE AND THE VENDING MACHINE: render.corp.CorpKitchen stands a glb
+          // on each, where this emitted a box in the office desk's laminate — reported off a face
+          // pick as textures/corp/desk-front.png on a vending machine. Counted here all the same
+          if (k == K_FRIDGE)
             {
-              case K_FRIDGE: n.fridges++;
-              case K_VENDING: n.vendings++;
-              default: n.cabinets++;
+              n.fridges++;
+              continue;
             }
+          if (k == K_VENDING)
+            {
+              n.vendings++;
+              continue;
+            }
+          box(m, o.x, o.y, dir, CASE.get(k));
+          n.cabinets++;
         }
     }
 

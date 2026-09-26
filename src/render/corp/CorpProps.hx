@@ -90,12 +90,14 @@ class CorpProps
       // render.Models.toLambert drops it anyway — there is no specular speck in the ART at all
       env: false,
     },
+    // NO SCATTER OF ITS OWN ANY MORE: gen.corp.CorpKitchen deals the kitchen's cooler into its snack
+    // corner, and a stride over every wall-backed kitchen cell stood a second one beside the fridge
     {
       path: RenderConfig.MODELS.corpCooler,
       h: CorpStyle.COOLER_H,
       d: CorpStyle.COOLER_W,
       w: CorpStyle.COOLER_W,
-      on: Surf.KITCHEN,
+      on: Surf.NONE,
       deco: CorpDeco.K_COOLER,
       env: true,
     },
@@ -189,6 +191,21 @@ class CorpProps
         photos: [],
       };
       CorpExec.place(m, area, ex);
+      // and the staff kitchen's
+      var kt:CorpKitchen.KitchenPlaces = {
+        tables: [],
+        chairs: [],
+        counters: [],
+        sinks: [],
+        cabs: [],
+        fridges: [],
+        vendings: [],
+        microwaves: [],
+        coffees: [],
+        kettles: [],
+        toasters: [],
+      };
+      CorpKitchen.place(m, area, kt);
       stalls(m, pans);
       standing(m, floors, area);
       n.chairs = chairs.length;
@@ -225,6 +242,25 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpExecPlaque, ex.plaques, CorpStyle.PLAQUE_H,
         false));
       out.push(batch(scene, RenderConfig.MODELS.corpExecPhoto, ex.photos, CorpStyle.PHOTO_H, false));
+      // beech and terracotta plastic take no reflection; the steel, the lacquer and the stone do
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenTable, kt.tables,
+        CorpStyle.KITCHEN_TABLE_H, false));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenChair, kt.chairs,
+        CorpStyle.KITCHEN_CHAIR_H, false));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenCounter, kt.counters, CorpStyle.COUNTER_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenSink, kt.sinks, CorpStyle.SINK_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenCab, kt.cabs, CorpStyle.CAB_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenFridge, kt.fridges, CorpStyle.FRIDGE_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenVending, kt.vendings,
+        CorpStyle.VENDING_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenMicrowave, kt.microwaves,
+        CorpStyle.MICROWAVE[0] * CorpStyle.APPLIANCE_SCALE));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenCoffee, kt.coffees,
+        CorpStyle.COFFEE[0] * CorpStyle.APPLIANCE_SCALE));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenKettle, kt.kettles,
+        CorpStyle.KETTLE[0] * CorpStyle.APPLIANCE_SCALE));
+      out.push(batch(scene, RenderConfig.MODELS.corpKitchenToaster, kt.toasters,
+        CorpStyle.TOASTER[0] * CorpStyle.APPLIANCE_SCALE));
       for (i in 0...FLOOR.length)
         out.push(batch(scene, FLOOR[i].path, floors[i], FLOOR[i].h, FLOOR[i].env));
       // lacquered steel with a brass label frame on it, so `env` is left at its default TRUE
@@ -651,9 +687,12 @@ class CorpProps
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            // an exec desk is one glb over its whole run, stood by render.corp.CorpExec
+            // an exec desk is one glb over its whole run, stood by render.corp.CorpExec, and a
+            // kitchen worktop is render.corp.CorpKitchen's: its 2x2 dining table is a slab by
+            // shape, and stood a checkerboard of boardroom blade legs under its own four
             if (!m.table[row][col] ||
-                CorpExec.deskCell(m, col, row))
+                CorpExec.deskCell(m, col, row) ||
+                CorpKitchen.cell(m, col, row))
               continue;
             var s = m.surf[row][col];
             var c = CityConfig.cellToWorld(col, row);

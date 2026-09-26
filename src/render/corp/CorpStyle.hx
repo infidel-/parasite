@@ -103,7 +103,6 @@ class CorpStyle
   public static inline var DESK_FRONT = 'textures/corp/desk-front.png';
   public static inline var DESK_SIDE = 'textures/corp/desk-side.png';
   public static inline var PARTITION = 'textures/corp/partition.png';
-  public static inline var COUNTER_TOP = 'textures/corp/counter-top.png';
   public static inline var COUNTER_FRONT = 'textures/corp/counter-front.png';
   public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
   public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
@@ -329,6 +328,46 @@ class CorpStyle
   public static inline var TABLE_LOW_H = 0.9;
   public static inline var TABLE_LOW_W = 6.4;
   public static inline var TABLE_LOW_D = 2.6;
+  // THE STAFF KITCHEN'S GLBS (models-src/corp/kitchen_build.py, render.corp.CorpKitchen), every
+  // height and footprint the built mesh's own. A counter module is the full cell along its wall and
+  // COUNTER_D deep against it; the wall cabinet over it hangs at CAB_Y, which normalize() cannot
+  // keep, because it grounds every glb. A dining chair is pulled KITCHEN_CHAIR_IN toward its
+  // table: its cell's centre is 6 units from the table's and the table's edge 1.8, so un-pulled it
+  // stands a metre and a half clear of the table it belongs to
+  public static inline var KITCHEN_TABLE_H = 1.5;
+  public static inline var KITCHEN_TABLE_W = 5.2;
+  public static inline var KITCHEN_TABLE_D = 3.6;
+  public static inline var KITCHEN_CHAIR_H = 1.706;
+  public static inline var KITCHEN_CHAIR_W = 0.99;
+  public static inline var KITCHEN_CHAIR_IN = 3.4;
+  public static inline var COUNTER_D = 1.32;
+  public static inline var SINK_H = 2.5308;
+  public static inline var CAB_H = 1.4;
+  public static inline var CAB_D = 0.74;
+  public static inline var CAB_Y = 3.0;
+  public static inline var FRIDGE_H = 3.6;
+  public static inline var FRIDGE_W = 1.6;
+  public static inline var FRIDGE_D = 1.41;
+  public static inline var VENDING_H = 4.2;
+  public static inline var VENDING_W = 2.2;
+  public static inline var VENDING_D = 1.43;
+  // the four things on a counter, as (height, width, depth) at the size they were built, and the
+  // one scale all four are drawn at: the exec trinkets' lesson, sized off the counter they stand
+  // on rather than off their own centimetres. They keep APPLIANCE_BACK off the counter's back edge
+  public static final MICROWAVE = [0.6, 1.0, 0.72];
+  public static final COFFEE = [0.95, 0.6, 1.1];
+  public static final KETTLE = [0.47, 0.44, 0.65];
+  public static final TOASTER = [0.4, 0.64, 0.36];
+  public static inline var APPLIANCE_SCALE = 1.3;
+  public static inline var APPLIANCE_BACK = 0.10;
+  // THE KITCHEN'S OWN PACK16 (corp/kitchen-clutter), exec-clutter's 4x4 with its last two cells
+  // the fridge's notes, so the exec office's COLS and CELLS read it as they stand. Its things are
+  // smaller than an executive's: a plate on a 65 cm counter, not a leather portfolio on a desk
+  public static inline var CLUTTER_KITCHEN_TEX = 'textures/corp/kitchen-clutter.png';
+  public static inline var CLUTTER_KITCHEN_SZ = 0.45;
+  public static inline var CLUTTER_KITCHEN_SZ_VAR = 0.30;
+  public static inline var CLUTTER_KITCHEN_MAX = 2;
+  public static inline var CLUTTER_KITCHEN_TABLE = 3;
   // THE EXEC RUG (render.corp.CorpRugs): corp/exec-rug is 1024 x 640, so the quad is laid at that
   // aspect and never stretched to its rect; it keeps RUG_INSET off the rect's edge, and lies at
   // RUG_Y — over the floor, under CorpLamps' pools at GLOW_Y 0.04

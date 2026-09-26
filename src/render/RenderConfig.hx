@@ -875,6 +875,20 @@ class RenderConfig {
     corpExecTableLow: 'models/corp/exec-table-low.glb', // walnut on brass legs, 168
     corpExecPlaque: 'models/corp/exec-plaque.glb',      // brass nameplate on walnut, 24
     corpExecPhoto: 'models/corp/exec-photo.glb',        // brass frame on an easel, 80
+    // AND THE STAFF KITCHEN'S ELEVEN (render.corp.CorpKitchen, models-src/corp/kitchen_build.py),
+    // on five sheets packed off built labels. The fridge and the vending machine were
+    // render.corp.CorpDeco.box, casework wearing the office desk's laminate
+    corpKitchenTable: 'models/corp/kitchen-table.glb',       // beech on four steel legs, 376
+    corpKitchenChair: 'models/corp/kitchen-chair.glb',       // terracotta shell, four legs, 412
+    corpKitchenCounter: 'models/corp/kitchen-counter.glb',   // one cell of base unit, 452
+    corpKitchenSink: 'models/corp/kitchen-sink.glb',         // the unit with bowl and tap, 884
+    corpKitchenCab: 'models/corp/kitchen-wall-cab.glb',      // the wall cabinet over it, 336
+    corpKitchenFridge: 'models/corp/kitchen-fridge.glb',     // fridge-freezer with notes, 552
+    corpKitchenVending: 'models/corp/kitchen-vending.glb',   // lit snack machine, emissive, 216
+    corpKitchenMicrowave: 'models/corp/kitchen-microwave.glb', // 192
+    corpKitchenCoffee: 'models/corp/kitchen-coffee.glb',     // bean-to-cup, 256
+    corpKitchenKettle: 'models/corp/kitchen-kettle.glb',     // 344
+    corpKitchenToaster: 'models/corp/kitchen-toaster.glb',   // 220
     facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
     // and the workstation on the desk in front of that chair, which is the one family here to have
     // been a glb, then emitted quads, and now a glb again — for a different reason each time. The

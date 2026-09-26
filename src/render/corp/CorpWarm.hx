@@ -109,6 +109,20 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpExecTableLow, h: CorpStyle.TABLE_LOW_H },
         { path: RenderConfig.MODELS.corpExecPlaque, h: CorpStyle.PLAQUE_H },
         { path: RenderConfig.MODELS.corpExecPhoto, h: CorpStyle.PHOTO_H },
+        // and the kitchen's eleven, for the same reason: render.corp.CorpKitchen reads the
+        // generator's tiles and decorations, and the demo model carries neither. The vending
+        // machine is the tower's one EMISSIVE glb, a program of its own
+        { path: RenderConfig.MODELS.corpKitchenTable, h: CorpStyle.KITCHEN_TABLE_H },
+        { path: RenderConfig.MODELS.corpKitchenChair, h: CorpStyle.KITCHEN_CHAIR_H },
+        { path: RenderConfig.MODELS.corpKitchenCounter, h: CorpStyle.COUNTER_H },
+        { path: RenderConfig.MODELS.corpKitchenSink, h: CorpStyle.SINK_H },
+        { path: RenderConfig.MODELS.corpKitchenCab, h: CorpStyle.CAB_H },
+        { path: RenderConfig.MODELS.corpKitchenFridge, h: CorpStyle.FRIDGE_H },
+        { path: RenderConfig.MODELS.corpKitchenVending, h: CorpStyle.VENDING_H },
+        { path: RenderConfig.MODELS.corpKitchenMicrowave, h: CorpStyle.MICROWAVE[0] },
+        { path: RenderConfig.MODELS.corpKitchenCoffee, h: CorpStyle.COFFEE[0] },
+        { path: RenderConfig.MODELS.corpKitchenKettle, h: CorpStyle.KETTLE[0] },
+        { path: RenderConfig.MODELS.corpKitchenToaster, h: CorpStyle.TOASTER[0] },
       ];
       // AND THE ARCHIVE'S TWO, appended off CorpFurniture's own table rather than typed out again
       // so a third family is one line in one place. CorpModel.demo carries two rank cells on each

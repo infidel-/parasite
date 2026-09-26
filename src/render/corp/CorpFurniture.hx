@@ -317,6 +317,15 @@ class CorpFurniture
       var c = CityConfig.worldToCell(x, z);
       if (!FacilityModel.inside(m, c.col, c.row))
         return 0.0;
+      // A KITCHEN DINING TABLE IS NOT THE COUNTER: render.corp.CorpKitchen stands it at desk
+      // height. Told apart by shape, the only thing this has without the area: a table is a 2x2
+      // block and a counter a run one cell deep.
+      // ponytail: a 4x4 kitchen's counter cell touching its table reads as table (0.3 low), add the
+      // tile id to Facility if something is ever reported standing in that one cell
+      if (CorpKitchen.cell(m, c.col, c.row) &&
+          (tableAt(m, c.col - 1, c.row) || tableAt(m, c.col + 1, c.row)) &&
+          (tableAt(m, c.col, c.row - 1) || tableAt(m, c.col, c.row + 1)))
+        return CorpStyle.KITCHEN_TABLE_H;
       if (m.table[c.row][c.col])
         return topH(m.surf[c.row][c.col]);
       // a basin's tap stands ON the vanity for the same reason; a WC pan stands on the floor, and
@@ -356,6 +365,13 @@ class CorpFurniture
           n.desks++;
           return;
         }
+      // AND SO IS EVERY KITCHEN WORKTOP (render.corp.CorpKitchen): a counter module against its
+      // wall or a dining table on legs, where this emitted a 3.76-wide closed box of counter art
+      if (CorpKitchen.cell(m, col, row))
+        {
+          n.counters++;
+          return;
+        }
       var top = CorpStyle.DESK_TOP;
       var side = CorpStyle.DESK_FRONT;
       var end = CorpStyle.DESK_SIDE;
@@ -364,15 +380,6 @@ class CorpFurniture
       var endTile = CorpStyle.DESK_TILE;
       switch (s)
         {
-          case KITCHEN:
-            top = CorpStyle.COUNTER_TOP;
-            side = CorpStyle.COUNTER_FRONT;
-            end = CorpStyle.COUNTER_FRONT;
-            tile = CorpStyle.COUNTER_TILE;
-            sideTile = CorpStyle.COUNTER_TILE;
-            endTile = CorpStyle.COUNTER_TILE;
-            n.counters++;
-
           // A BOARDROOM TABLE COMES BACK Surf.CARPET AND NOT Surf.MEETING, which is why this
           // branch was dead for its whole life: the table is laid as DARK_TABLE_CARPET_3X3, a
           // table tile whose FLOOR is carpet, so FacilityModel.themeRooms spreads CARPET over its

@@ -310,22 +310,27 @@ class CorpKitchen
         }
     }
 
-// every stretch of the room's wall ring that no doorway opens onto, one side at a time, in order
-// along the wall
+// every stretch of the room's wall ring that no doorway opens onto and no glazing backs, one side
+// at a time, in order along the wall.
+//
+// NOT AGAINST GLASS: a counter, a fridge and a vending machine stand against MASONRY, and
+// render.corp.CorpKitchen hangs a wall cabinet over every counter cell whose wall is solid — a
+// curtain wall has no face to stand them on
   static function wallRuns(cells: Array<Array<Int>>, room: _Room): Array<{ side: String, cells: Array<{ x: Int, y: Int }> }>
     {
       var out = [];
       var sides = [
-        { side: SIDE_N, line: [for (x in room.x1...room.x2 + 1) { x: x, y: room.y1 }] },
-        { side: SIDE_S, line: [for (x in room.x1...room.x2 + 1) { x: x, y: room.y2 }] },
-        { side: SIDE_W, line: [for (y in room.y1...room.y2 + 1) { x: room.x1, y: y }] },
-        { side: SIDE_E, line: [for (y in room.y1...room.y2 + 1) { x: room.x2, y: y }] },
+        { side: SIDE_N, dx: 0, dy: -1, line: [for (x in room.x1...room.x2 + 1) { x: x, y: room.y1 }] },
+        { side: SIDE_S, dx: 0, dy: 1, line: [for (x in room.x1...room.x2 + 1) { x: x, y: room.y2 }] },
+        { side: SIDE_W, dx: -1, dy: 0, line: [for (y in room.y1...room.y2 + 1) { x: room.x1, y: y }] },
+        { side: SIDE_E, dx: 1, dy: 0, line: [for (y in room.y1...room.y2 + 1) { x: room.x2, y: y }] },
       ];
       for (s in sides)
         {
           var cur = [];
           for (c in s.line)
-            if (CorpRooms.atDoor(cells, c.x, c.y))
+            if (CorpRooms.atDoor(cells, c.x, c.y) ||
+                glazed(cells[c.x + s.dx][c.y + s.dy]))
               {
                 if (cur.length > 0)
                   out.push({ side: s.side, cells: cur });
@@ -337,6 +342,13 @@ class CorpKitchen
             out.push({ side: s.side, cells: cur });
         }
       return out;
+    }
+
+// is this wall tile a window, outer or inner?
+  static inline function glazed(t: Int): Bool
+    {
+      return (t >= BLDG_WINDOW && t <= BLDG_WINDOWV3) ||
+        (t >= INNER_WINDOW && t <= INNER_WINDOWV3);
     }
 
 // push one wall-run zone over `run`

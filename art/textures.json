@@ -4696,12 +4696,14 @@
         464,
         464
       ],
-      "lift": 2.06,
-      "note": "beech veneer, HORIZONTAL grain: the dining table's top. Drop mean 175.0, lifted to a built ~125 -- paler than the exec walnut on purpose, a canteen and not a boardroom. Cut from corp/kitchen-pack.png, one gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier; seams measured at exactly 511/511, so the crops are exec-pack's own 24 px insets. NOT A GAME SURFACE: nothing draws this label, it is packed by tools/modelsheet.py into models-src/corp/kitchen-*-sheet.png and worn by the kitchen glbs (models-src/corp/kitchen_build.py). STYLE_PROP and not style, because an object's colour is a fact about it -- the terracotta shell is the point of cell 3.",
+      "lift": 1.6,
+      "note": "beech veneer, HORIZONTAL grain: the dining table's top. Drop mean 175.0. FIRST FIT lift 2.06 alone (built 199/118/57) and it shipped ORANGE: a gamma pulls the darks down faster than the lights, so it SATURATES as it darkens. lift 1.6 + sat 0.6 lands ~188/146/110, a pale warm beech -- paler than the exec walnut on purpose, a canteen and not a boardroom. Cut from corp/kitchen-pack.png, one gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier; seams measured at exactly 511/511, so the crops are exec-pack's own 24 px insets. NOT A GAME SURFACE: nothing draws this label, it is packed by tools/modelsheet.py into models-src/corp/kitchen-*-sheet.png and worn by the kitchen glbs (models-src/corp/kitchen_build.py). STYLE_PROP and not style, because an object's colour is a fact about it -- the terracotta shell is the point of cell 3.",
       "last_converted": "2026-09-27T01:54:45",
-      "last_lift": 2.06,
-      "built_linear": 0.2555,
-      "built_srgb": 124.6
+      "last_lift": 1.6,
+      "built_linear": 0.3296,
+      "built_srgb": 151.1,
+      "sat": 0.6,
+      "last_sat": 0.6
     },
     "corp/kitchen-lacquer": {
       "src": "corp/kitchen-pack.png",
