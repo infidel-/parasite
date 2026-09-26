@@ -40,8 +40,6 @@ class OfficeBlock
             CorpRooms.toilet(state, node, room);
           case CorpBlocks.ROOM_SERVERS:
             CorpRooms.servers(state, node, room);
-          case CorpBlocks.ROOM_SOLO:
-            CorpRooms.solo(state, node, room);
           case CorpBlocks.ROOM_ARCHIVE:
             CorpRooms.archive(state, node, room);
           case CorpBlocks.ROOM_RECEPTION:
@@ -63,7 +61,6 @@ class OfficeBlock
         kind == CorpBlocks.ROOM_EXEC ||
         kind == CorpBlocks.ROOM_TOILET ||
         kind == CorpBlocks.ROOM_SERVERS ||
-        kind == CorpBlocks.ROOM_SOLO ||
         kind == CorpBlocks.ROOM_ARCHIVE ||
         kind == CorpBlocks.ROOM_RECEPTION ||
         kind == CorpBlocks.ROOM_SECURITY;

@@ -398,9 +398,9 @@ class CorpModel
   public static function fitOf(t:Int):Int
     {
       // TILE_FLOOR_CUBICLE's own twin answers NOTHING. It used to answer a partition spine, and a
-      // cubicle farm has none: the panels stand on cell BOUNDARIES now. The id is still written —
-      // `solo` dresses its corners with it — and a corner is a cell with a decoration on it, which
-      // is exactly what a fitting of 0 leaves CorpDeco to draw
+      // cubicle farm has none: the panels stand on cell BOUNDARIES now. Saves still carry the id —
+      // the old solo office dressed its corners with it — and a corner is a cell with a decoration
+      // on it, which is exactly what a fitting of 0 leaves CorpDeco to draw
       if (t == Const.TILE_FLOOR_SERVER + 16)
         return CorpFurniture.FIT_RACK;
       if (t == Const.TILE_FLOOR_MARBLE2 + 16)

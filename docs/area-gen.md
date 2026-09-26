@@ -68,6 +68,7 @@ area
   │                         fourth. Nothing in it is dealt, so nothing is dealt under it. It stands
   │                         OUTSIDE the wall ring, in the pavement band
   └ room-open | room-cubicle | room-meeting | room-kitchen | room-exec | room-toilet | room-servers
+    | room-archive | room-reception | room-security
     ├ desk-run              open plan: one 3x1 desk, a computer and a chair
     ├ pod-row               the cubicle farm: two rows of desks BACK TO BACK, three rows to a
     │                         band (desk, desk, aisle) and no cell spent on the partition -
@@ -1327,6 +1328,13 @@ Measured over 300 seeds: solo 8.74, copy 3, exec 2.99, cubicle 2, meeting 1.99, 
 the 29.12 rooms a floor**. Proved by dealing under a distinct filler name: **0 filler rooms in
 2,000 seeds.** And replayed for the bare-room check that found the 382 exec offices last pass:
 **0 rooms with no furniture in them, in any of the 13 kinds, over 400 seeds.**
+
+**Later compacted to 10 kinds.** The break room folded into the KITCHEN (`min 1, max 2`, 4 x 4, the
+island at 5 x 5 and a galley `deskRun` below it), and the solo office folded into EXEC, which is now
+the LAST demand with `max: MANY` at 3 x 3 and no min: every leftover room is a marble exec office, with
+a `deskRun` where the 3x2 slab does not fit. Measured over 1,000 seeds: exec 15.11, open 2.36,
+kitchen/cubicle 2, meeting 1.99, archive 1.91, reception/security/toilet/servers 1; furniture per
+office unchanged (22.3 vs 22 for solo + exec). `room-break` / `room-solo` and their roles are gone.
 
 ## ANY ONE REACHED CELL IS THE WRONG QUESTION
 

@@ -36,7 +36,6 @@ class CorpBlocks
   // AND THE KINDS THE FLOOR WAS MISSING. Each borrows a floor surface one of the seven above
   // already owns (gen.corp.CorpRooms' own header says which), so the whole of a new kind is a
   // demand, a dispatch case and a furniture list
-  public static inline var ROOM_SOLO = 'room-solo';
   public static inline var ROOM_ARCHIVE = 'room-archive';
   public static inline var ROOM_RECEPTION = 'room-reception';
   public static inline var ROOM_SECURITY = 'room-security';
@@ -69,7 +68,6 @@ class CorpBlocks
           case ROOM_EXEC: ROLE_EXEC;
           case ROOM_TOILET: ROLE_TOILET;
           case ROOM_SERVERS: ROLE_SERVERS;
-          case ROOM_SOLO: ROLE_SOLO;
           case ROOM_ARCHIVE: ROLE_ARCHIVE;
           case ROOM_RECEPTION: ROLE_RECEPTION;
           case ROOM_SECURITY: ROLE_SECURITY;
@@ -89,7 +87,6 @@ class CorpBlocks
           case ROLE_EXEC: ROOM_EXEC;
           case ROLE_TOILET: ROOM_TOILET;
           case ROLE_SERVERS: ROOM_SERVERS;
-          case ROLE_SOLO: ROOM_SOLO;
           case ROLE_ARCHIVE: ROOM_ARCHIVE;
           case ROLE_RECEPTION: ROOM_RECEPTION;
           case ROLE_SECURITY: ROOM_SECURITY;
@@ -221,21 +218,13 @@ class CorpBlocks
           minW: 5,
           minH: 5,
         },
-        {
-          kind: ROOM_EXEC,
-          min: 1,
-          max: 3,
-          minW: 4,
-          minH: 4,
-          fit: smallest,
-        },
         // AND FROM HERE DOWN THE ORDER IS THE MIX, because Quota.deal's second pass spends what
         // the mins left over in DECLARATION ORDER, each demand to its max. The floor carves 29
         // rooms and the six kinds above only ever named ten of them, so 19 a floor came out as
         // the open-plan filler — a sparse duplicate of one template over half the tower.
         //
         // the four below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
-        // 20.5 clear 4, and seven demands above already hold mins against that supply; another
+        // 20.5 clear 4, and five demands above already hold mins against that supply; another
         // four would be the "quota short: room-toilet got 0" this file's `assign` already carries
         // a retry loop for. A min is for the thing a floor MUST have, and a floor does not have
         // to have an archive on it. What puts one there is the max, and the supply is ample
@@ -276,13 +265,14 @@ class CorpBlocks
           minH: 5,
           fit: biggest,
         },
-        // and the solo office takes EVERYTHING ELSE, which is what makes the filler branch
+        // and the private office takes EVERYTHING ELSE, which is what makes the filler branch
         // unreachable: it is declared last, its max is a number nothing reaches, and at 3 x 3 it
         // fits every rect the carve can produce (measured: 29.12 rooms a floor and 29.12 of them
-        // are 3 x 3 or bigger). A small private office is also what a tower floor is mostly made
-        // of, so the kind that soaks up the remainder is the right one to soak it
+        // are 3 x 3 or bigger). A private office is also what a tower floor is mostly made of, so
+        // the kind that soaks up the remainder is the right one to soak it. It is the exec office
+        // and there is no min on it, because the remainder is never short of one
         {
-          kind: ROOM_SOLO,
+          kind: ROOM_EXEC,
           min: 0,
           max: MANY,
           minW: 3,

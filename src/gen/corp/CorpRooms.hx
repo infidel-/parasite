@@ -244,6 +244,17 @@ class CorpRooms
       var hasTable = (room.w >= 4 &&
         room.h >= 4 &&
         execDesk(state, node, room));
+      // AND UNDER 4 THE DESK IS A RUN. The exec office is also the floor's filler now, dealt down to
+      // 3 x 3, and the 3x2 slab does not fit that; the open plan's own 3x1 run does, centred and
+      // skipped where it would seal a doorway. The corners are dressed round it, which is what the
+      // solo office this replaced always did at that size
+      if (!hasTable)
+        deskRun(state, node, room, [
+            Const.CORP_TABLE_PHONE,
+            Const.CORP_TABLE_LAMP,
+            Const.CORP_TABLE_FILES,
+            Const.CORP_TABLE_STATIONERY,
+          ]);
       // THE CORNERS STAY AT `w >= 7`, and the plan to open them to every room is WITHDRAWN on
       // the measurement. `execDesk` always returns true now, so this reads as the width test
       // alone and it looks like a room under 7 wide gets a desk and nothing else. Dressing the
@@ -1116,51 +1127,16 @@ class CorpRooms
 // the room actually sees. NOT plain CARPET, ever: that surface is what CorpLamps.corridors() reads
 // as circulation, and a room wearing it gets ceiling panels hung inside it (see `meeting`)
 
-// a solo office: one desk across the middle, a cabinet and a plant in the corners. The small room
-// the carve mints most of — 14.7 rooms a floor are under 5 on an axis and nothing else fits them
-  public static function solo(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      var cells = state.area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, CUBICLE);
-      soloDesk(state, node, room);
-      decorateCorners(state, room, [
-          Const.CORP_TABLE_LAMP,
-          Const.CORP_TABLE_FILES,
-          Const.CORP_TABLE_STATIONERY,
-        ], [
-          Const.CORP_CABINET,
-          Const.CORP_PLANT,
-        ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_CUBICLE + UNWALKABLE_TILE_OFFSET,
-        40);
-    }
-
-// the solo office's one desk: the open-plan floor's own 3x1 run, centred, with a chair behind it.
-//
-// SKIPPED WHERE IT WOULD SEAL A DOORWAY. A 3-wide room is exactly as wide as the desk, so the run
-// reaches both side walls and an unwalkable table in front of a door walls the room off — which is
-// the fault `atDoor` was written for one template over
-  static function soloDesk(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      deskRun(state, node, room, [
-          Const.CORP_TABLE_MISC,
-          Const.CORP_TABLE_LAMP,
-          Const.CORP_TABLE_PHONE,
-          Const.CORP_TABLE_FILES,
-        ]);
-    }
-
 // one desk run across the middle of a room, with a chair in front of it and `full`'s decorations
-// on it. the solo office's own desk, generalised: a security room's monitor bench is the same object
-// with a different list of things standing on it
+// on it. the small office's own desk, generalised: a security room's monitor bench and a galley
+// kitchen's counter are the same object with a different list of things standing on it
   static function deskRun(state: _CorpState, node: _GenNode, room: _Room,
       full: Array<_TileGroup>)
     {
       var area = state.area;
       var cells = area.getCells();
       var block = Const.CORP_TABLE_3X1;
-      // A DESK THAT SPANS THE ROOM IS A WALL. The run was always three cells, and a solo office is
+      // A DESK THAT SPANS THE ROOM IS A WALL. The run was always three cells, and an office is
       // dealt at minW 3 — so in a 3-wide room `tx` came out at x1 and the desk crossed the room's
       // whole midline, cutting the floor into two strips with no way between them. Reported from
       // 50,31: a 5x3 office whose interior came back
