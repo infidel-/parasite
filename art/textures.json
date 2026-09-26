@@ -4182,6 +4182,123 @@
       "built_linear": 0.0916,
       "built_srgb": 81.6
     },
+    "corp/exec-leather": {
+      "src": "corp/exec-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "A TEXTURE SHEET for one set of lavish executive-office furniture (a leather chesterfield sofa, leather club armchairs, a high-backed leather desk chair, a walnut pedestal desk and a walnut low table with brass fittings), split into FOUR EQUAL QUADRANTS by one perfectly straight VERTICAL line at exactly half the image width and one perfectly straight HORIZONTAL line at exactly half the image height. Hard butt joins on those two lines. NO gutters, NO margins, NO borders, NO frames, NO drop shadows, NO separator lines, NO labels, NO text, NO letters, NO numbers.\n\nEvery quadrant is a SEAMLESS TILEABLE swatch of ONE flat material, drawn straight on with NO perspective, filling its own quadrant edge to edge, the pattern running OFF all four edges of its quadrant and cut flat by them. The four must read as parts of ONE matched suite of expensive furniture in a corporate penthouse.\n\nTOP-LEFT - the UPHOLSTERY LEATHER, seen straight on in flat elevation. A deep oxblood-to-cognac red-brown full-grain leather, a fine even pebbled grain in two very close tones, soft and supple, a faint natural variation. NO buttons, NO tufting, NO stitching, NO seams, NO piping, NO folds, NO creases, NO highlights.\n\nTOP-RIGHT - the furniture's WALNUT VENEER, seen straight on in flat elevation. A rich dark walnut with a fine straight VERTICAL grain running top to bottom, subtle darker grain lines, a soft satin finish. NO panels, NO frames, NO joints, NO knots, NO bands across it.\n\nBOTTOM-LEFT - the desk and table TOP, seen from DIRECTLY ABOVE, flat top-down, no perspective. The same dark walnut but a little deeper, with a long straight HORIZONTAL grain running left to right and a faint figured flame in it. NO objects on it, NO edges, NO inlay, NO border, NO rings, NO marks.\n\nBOTTOM-RIGHT - the BRASS used for the trim, the handles, the table frame and the plaque, seen straight on in flat elevation. A warm brushed brass / soft gold, fine straight horizontal brushing lines, even and uniform, a gentle warm gold tone. NO engraving, NO shapes, NO screws, NO reflections of anything.\n\nVALUES: the leather MEDIUM, the walnut MEDIUM-DARK, the top a little darker than the walnut, the brass the lightest of the four. Warm hues throughout, muted, never orange, never saturated red, never blue.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "crop": [
+        24,
+        24,
+        464,
+        464
+      ],
+      "lift": 0.69,
+      "note": "PACK4 of the exec office's furniture materials (models-src/corp/exec_build.py): the leather here, then corp/exec-walnut, corp/exec-top and corp/exec-brass, drawn together because they are one suite and their tones have to agree. Sunburst, split honoured: the per-line mean |diff| peaks at column 511 (38.8 against a 2.6 median) and row 511 (45.3). Every crop takes the family's 24 px inset off the butt join. The leather: an oxblood full grain, drop mean 72.6/35.5/28.1 -- red by intent, it is leather.",
+      "last_converted": "2026-09-26T19:00:26",
+      "last_lift": 0.69,
+      "built_linear": 0.0722,
+      "built_srgb": 75.4
+    },
+    "corp/exec-walnut": {
+      "src": "corp/exec-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "one region of the corp/exec-pack.png sheet - the whole prompt is on corp/exec-leather.",
+      "prompt_exact": true,
+      "crop": [
+        536,
+        24,
+        464,
+        464
+      ],
+      "lift": 0.71,
+      "note": "the exec furniture's walnut veneer, VERTICAL grain: the desk's pedestals and modesty panel, the low table's legs and frame. Cut from the sheet's top-right quadrant. Drop mean 60.4/37.2/21.7.",
+      "last_converted": "2026-09-26T19:00:26",
+      "last_lift": 0.71,
+      "built_linear": 0.0616,
+      "built_srgb": 66.4
+    },
+    "corp/exec-top": {
+      "src": "corp/exec-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "one region of the corp/exec-pack.png sheet - the whole prompt is on corp/exec-leather.",
+      "prompt_exact": true,
+      "crop": [
+        24,
+        536,
+        464,
+        464
+      ],
+      "lift": 0.74,
+      "note": "the exec desk's and low table's TOP, horizontal grain, authored top-down and a little darker than the veneer -- a horizontal face keeps ~0.71 of its albedo here against a vertical one's ~0.2. Cut from the sheet's bottom-left quadrant. Drop mean 53.1/34.1/23.4.",
+      "last_converted": "2026-09-26T19:00:26",
+      "last_lift": 0.74,
+      "built_linear": 0.048,
+      "built_srgb": 59.7
+    },
+    "corp/exec-brass": {
+      "src": "corp/exec-pack.png",
+      "class": "tile",
+      "res": 400,
+      "needs_alpha": false,
+      "prompt": "one region of the corp/exec-pack.png sheet - the whole prompt is on corp/exec-leather.",
+      "prompt_exact": true,
+      "crop": [
+        536,
+        536,
+        464,
+        464
+      ],
+      "lift": 1.08,
+      "note": "brushed brass: the desk's trim and pulls, the low table's frame, the chairs' feet, the plaque and the photo frame. Cut from the sheet's bottom-right quadrant. Drop mean 161.3/128.8/72.7, the one bright thing in the suite, darkened a touch by the lift.",
+      "last_converted": "2026-09-26T19:00:26",
+      "last_lift": 1.08,
+      "built_linear": 0.2134,
+      "built_srgb": 114.0
+    },
+    "corp/exec-rug": {
+      "src": "corp/exec-rug.png",
+      "class": "sprite",
+      "res": [
+        1024,
+        640
+      ],
+      "needs_alpha": true,
+      "prompt": "ONE luxurious OVAL RUG seen from DIRECTLY OVERHEAD in straight top-down orthographic view, no perspective, no tilt. The oval is wide, centred in the frame, its long axis running left to right, and it fills the frame almost to its edges while NEVER touching any edge: leave a small clear margin all the way round. Only the rug, nothing else in the image.\n\nThe rug: a deep oxblood-maroon woven field. A broad ornamental BORDER BAND follows the oval's edge all the way round: a thin brass-gold outer line, then a band of repeating small geometric corporate motifs (interlocking chevrons and small squares) in muted amber and tan on a darker charcoal-brown, then a thin brass-gold inner line. In the exact CENTRE a large round MEDALLION: a stylised all-seeing EYE inside a double ring, the eye's iris a warm amber, rays of thin tan lines radiating out from the ring into the field like a sunburst, a corporate propaganda emblem. Four small matching amber diamond motifs sit on the long and short axes between the medallion and the border. Symmetrical left-right and top-bottom. A fine short-pile weave texture over everything, flat and even. The oval's outer edge is a clean smooth curve with a very short neat fringe-free binding.\n\nNO text, NO letters, NO numbers, NO logos other than the eye emblem, NO cast shadow under the rug, NO furniture, NO objects on it.\n\nColours: oxblood field, charcoal-brown border band, amber, tan and brass-gold accents \u2014 warm and muted, never blue, never bright red.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the exec office's oval rug, drawn by render.corp.CorpRugs as ONE alpha-cut quad per rug rect (Const.TILE_FLOOR_EXEC_RUG), sized at this image's own 1.6 aspect and never stretched to the rect. Sunburst at 1024x640 with background transparent: 24.3% alpha 0 and 73.9% over 220, so the cut is the ellipse and its thin antialiased rim. The centre medallion is the tower's eye-in-ring, the emblem of corp/posters' POSTER_EYE.",
+      "last_converted": "2026-09-26T19:00:54",
+      "built_linear": 0.0307,
+      "built_srgb": 41.7
+    },
+    "corp/exec-clutter": {
+      "src": "corp/exec-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong on the desk of a CEO in a contemporary corporate penthouse - everything expensive, polished and new, leather, brass, gold, crystal, fine paper. Where an accent colour appears keep it WARM - amber, brass, gold, tan, oxblood - never blue. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A dark oxblood leather desk blotter pad with brass corner caps.\n2. An open leather portfolio with a few cream papers inside.\n3. A thick bound annual report with a red wax seal on its cover.\n4. A signed contract, two cream sheets with a gold fountain pen lying across them.\n5. A share certificate with an ornate guilloche border in amber and green-grey.\n6. A cigar resting in a round cut-crystal ashtray.\n7. A gold letter opener with an ornate handle.\n8. A black-and-gold fountain pen with its cap beside it.\n9. A gold pocket watch with its chain coiled beside it.\n10. A small brass tray holding a fanned stack of cream business cards.\n11. A pair of gold cufflinks in a small open leather box.\n12. A printed stock chart sheet with a rising amber line.\n13. A closed tan leather notebook held by an elastic band.\n14. A neat stack of banknotes held by a paper band.\n15. A small rectangular PHOTOGRAPH PRINT: a muted portrait of a smiling family of three in front of a mansion, soft warm tones, a thin white border.\n16. A small rectangular BRASS NAMEPLATE FACE: a flat polished brass plate with a thin engraved double border and three short engraved horizontal lines standing in for a name, no letters.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the exec office's desk clutter, the corp decal route (render.corp.CorpClutter) on a 4x4 of 256 px cells rather than corp/desk-clutter's 8x8: an exec desk is dressed with fewer, bigger things. The drop's rows landed at 264 / 496 / 735 against 256 / 512 / 768, so tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it (scale 1.0667, largest group 225x211); the raw drop is parked in textures-src/corp/Unused/exec-clutter-raw-drop.png. CELLS 14 AND 15 (the photo print and the brass nameplate face, 0-based) ARE NOT DECALS: they are the faces models-src/corp/exec_build.py maps onto the standing photo frame and the desk plaque, and CorpStyle skips them when dealing clutter. sat 0.5 and the cap are corp/desk-clutter's, so the two sheets read as one family.",
+      "last_converted": "2026-09-26T19:02:25",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0843,
+      "built_srgb": 73.2
+    },
     "corp/util-clutter": {
       "src": "corp/util-clutter.png",
       "class": "sprite",
