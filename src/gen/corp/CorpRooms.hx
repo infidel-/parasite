@@ -845,6 +845,16 @@ class CorpRooms
       return false;
     }
 
+// is the cell a doorway opens onto (see `atDoor`) on one of this cell's four hands? a table there
+// stands in the way of whoever walks in, and its bench glb crowds the door leaf
+  static function besideDoor(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        if (atDoor(cells, x + Const.dir4x[i], y + Const.dir4y[i]))
+          return true;
+      return false;
+    }
+
 // is a rank cell on one of this cell's four hands?
   static function besideRank(cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
@@ -1355,12 +1365,15 @@ class CorpRooms
           // the stationery on it. A table tile BLOCKS, unlike everything else on this ring, so it
           // is only kept if the room's floor still reaches every doorway without that cell.
           //
+          // NEVER BESIDE A DOORWAY'S CELL, where it blocks the way in -- reported at 22,14.
+          //
           // AND NEVER BESIDE ANOTHER ONE. A lone table cell draws the `corp/desk-bench` glb; two
           // that touch are a RUN, which render.corp.CorpFurniture.worktop emits as a slab of
           // quads — asked for as "let's not spawn quad tables there"
           else if (walled(cells, c.x, c.y))
             {
               if (!besideTable(cells, c.x, c.y) &&
+                  !besideDoor(cells, c.x, c.y) &&
                   state.area.chance(ARCHIVE_TABLE))
                 {
                   cells[c.x][c.y] = Const.TILE_DARK_TABLE_WOOD2_1X1;

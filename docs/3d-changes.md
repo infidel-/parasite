@@ -2228,3 +2228,30 @@ once it does. The cubicle farm's floor-standing printers get the same rule.
 
 Verdict: **LANDED.** Two copiers side by side on an east wall each stand a bin tucked beside them; two
 others in binned rooms rolled 61 and 82 and stand none. No new draw call — the bin batch exists.
+
+## FacilityDetail.ground: one call for floor AND wall contact; archive units and bins take it
+
+Reported, again, as "add floor/wall contact shadow to bin, shelf, cabinet — why do I have to tell
+you every time?". The answer was structural: contact is TWO calls, `ContactMask.prop` (the floor
+field) and `FacilityDetail.stand` (the halo quad up the masonry), written out by hand in each
+builder, and every new family shipped with the floor half only. The corp archive units and all
+three bin placers had `prop` and no `stand`.
+
+`FacilityDetail.ground(m, rect, h)` does both. It stamps the rect into the field, then for each
+hand whose wall is SOLID (not glazing, not a doorway) and whose slab face is within
+`FacilityStyle.GROUND_TOUCH` 0.3 of the rect's edge, stands a halo of height `h` along the rect.
+A RUN is one call with the whole run's rect: halos that overlap along a wall compound (the
+CORNER_EPS bug), so `CorpFurniture.lay` now grounds each row of units once instead of per unit.
+
+TRAP, hit twice: the room cell cannot be read off the footprint. A wall slab is thinner than a
+cell, so a thing backed onto masonry stands in the WALL cell's room-side margin: an archive
+cabinet (1.2 deep) centres at x -72.70 with its cell edge at -72.0, so its corners AND its
+centre both resolve to the wall cell, and the "wall" beyond is open floor. It is probed half a cell
+off the wall instead (`centre - dir * CELL/2`); the slab gap check rejects any wrong guess.
+
+Measured by hiding the halo mesh on a pinned pose in archive 102: halo vertices 804 -> 1016, and
+the diff shows a halo round both west-wall file cabinets and every wall bin, where before only the
+room's corner bin had one (its centre happened to sit in the room cell).
+
+Verdict: **LANDED.** No new draw call (the halo mesh exists). New builders call `ground`, not
+`ContactMask.prop`.

@@ -12,6 +12,7 @@ import render.facility.FacilityStyle;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.facility.FacilityDetail;
 import render.world.ContactMask;
 import render.world.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
@@ -826,9 +827,6 @@ class CorpFurniture
                 seed: FacilityModel.mix((col * 374761393) ^ (row * 1274126177) ^
                   ((i + 1) * 40503) ^ (front * 668265263)),
               });
-              var hw = (alongX ? u.w : u.d) / 2;
-              var hd = (alongX ? u.d : u.w) / 2;
-              ContactMask.prop(x - hw, x + hw, z - hd, z + hd);
               n.units++;
               // AND ITS SIDE, if it ends the run and looks at floor. Not the racking's: an open
               // steel frame has no side panel to carry anything
@@ -852,6 +850,17 @@ class CorpFurniture
                   });
                 }
             }
+          // the row's floor and wall contact as ONE footprint — see FacilityDetail.ground
+          var r0 = s0 - u.w / 2;
+          var r1 = s0 + (k - 1) * (u.w + gap) + u.w / 2;
+          var q0 = across + off - u.d / 2;
+          var q1 = across + off + u.d / 2;
+          FacilityDetail.ground(m, {
+            x0: (alongX ? r0 : q0),
+            x1: (alongX ? r1 : q1),
+            z0: (alongX ? q0 : r0),
+            z1: (alongX ? q1 : r1),
+          }, u.h);
         }
     }
 

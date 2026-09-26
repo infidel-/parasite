@@ -2215,6 +2215,10 @@ class FacilityStyle
   // stand in a corner and the damp band runs behind every one of them: this quad is the outermost of
   // the three and draws last. a PHYSICAL gap and never polygonOffset, the same reasoning as above
   public static inline var HALO_EPS = 0.09;
+  // how close a footprint's edge has to come to a wall face for FacilityDetail.ground to stand a
+  // halo on it. the builders stand things PROP_GAP 0.1 off the masonry; a unit and more is a thing
+  // standing in the room near a wall, and a halo there reads as a stain
+  public static inline var GROUND_TOUCH = 0.3;
   // and how far ANYTHING STANDING AGAINST A WALL keeps its own back off that face.
   //
   // IT MUST CLEAR HALO_EPS, and that is the whole of the number. The halo lies on a plane HALO_EPS

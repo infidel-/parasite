@@ -173,6 +173,59 @@ class FacilityDetail
   public static function stand(o:FacilityHaloOpts):Void
     standing.push(o);
 
+// THE ONE CALL for a thing standing on the floor: its footprint into render.world.ContactMask, and
+// a halo up every masonry face it stands against. The two used to be written out by hand in each
+// builder, so every new family shipped with the floor half, or neither, and never the wall half
+// until someone reported it. This finds the walls itself off the footprint: a hand counts when its
+// wall is SOLID (no halo on glazing or in a doorway) and the footprint's edge is within GROUND_TOUCH
+// of that wall's room face. A RUN is one call with the whole run's rect, never one per unit: halos
+// that overlap along a wall compound (see CORNER_EPS)
+  public static function ground(m:Facility, r:ContactRect, h:Float):Void
+    {
+      render.world.ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+      var e = FacilityStyle.GROUND_TOUCH;
+      var cx = (r.x0 + r.x1) / 2;
+      var cz = (r.z0 + r.z1) / 2;
+      var a = citygen.CityConfig.worldToCell(r.x0 + e, r.z0 + e);
+      var b = citygen.CityConfig.worldToCell(r.x1 - e, r.z1 - e);
+      for (d in 0...4)
+        {
+          // the ROOM cell across this hand is probed half a cell off the wall: a thing backed onto
+          // masonry stands in the wall cell's room-side margin (a slab is thinner than CELL) — an
+          // archive cabinet's CENTRE lands in the wall cell. ALONG the wall the corners give the
+          // run's first cell and its length
+          var p = citygen.CityConfig.worldToCell(cx - DC[d] * citygen.CityConfig.CELL / 2,
+            cz - DR[d] * citygen.CityConfig.CELL / 2);
+          var col = (d < 2 ? a.col : p.col);
+          var row = (d < 2 ? p.row : a.row);
+          var wc = col + DC[d];
+          var wr = row + DR[d];
+          if (!FacilityModel.isSolidWall(m, wc, wr) ||
+              FacilityModel.isDoor(m, wc, wr))
+            continue;
+          var s = FacilityGeom.slab(m, wc, wr);
+          var gap = switch (d)
+            {
+              case 0: r.z0 - s.z1;
+              case 1: s.z0 - r.z1;
+              case 2: r.x0 - s.x1;
+              default: s.x0 - r.x1;
+            };
+          if (gap > e)
+            continue;
+          stand({
+            col: col,
+            row: row,
+            dir: d,
+            a0: (d < 2 ? r.x0 : r.z0),
+            a1: (d < 2 ? r.x1 : r.z1),
+            len: (d < 2 ? b.col - a.col : b.row - a.row) + 1,
+            y: 0.0,
+            h: h,
+          });
+        }
+    }
+
 // collect one thing standing on a surface that is NOT the floor — a box on a shelf plate. same
 // collector, same drain, same mesh; the quad is laid flat instead of stood up
   public static function pool(o:FacilityPoolOpts):Void

@@ -1625,3 +1625,11 @@ steel, arch-shelf 4.8 = 2.4 m) was a hash in the renderer. So the choice moved t
 Measured in game on a 5x10 archive: arch-shelf ranks carry only fam 1 units and racking only fam 2,
 `canSeeThrough` false/true on the two, `isVisible` across the ranks false and down the aisle true,
 and the 3D vision mask shades everything behind the shelving. 500 corp seeds OK, orphanCells 0.
+
+### corp archive: no table beside a doorway's cell
+
+Reported at 22,14: a sorting table on the ring cell next to the one a door opens onto. `atDoor` only
+guards the threshold cell itself (and the ring skips it), so the cell beside it was fair game, and a
+table is the one BLOCKING thing on the archive ring. `CorpRooms.besideDoor` (any 4-hand is `atDoor`)
+now keeps tables off it; cabinets there are walkable dressing and stay. Archive-only so far.
+300 corp seeds OK, orphanCells 0.

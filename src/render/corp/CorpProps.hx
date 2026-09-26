@@ -366,8 +366,12 @@ class CorpProps
               z: z,
               yaw: 0.0,
             });
-            ContactMask.prop(x - CorpStyle.BIN_W / 2, x + CorpStyle.BIN_W / 2,
-              z - CorpStyle.BIN_W / 2, z + CorpStyle.BIN_W / 2);
+            FacilityDetail.ground(m, {
+              x0: x - CorpStyle.BIN_W / 2,
+              x1: x + CorpStyle.BIN_W / 2,
+              z0: z - CorpStyle.BIN_W / 2,
+              z1: z + CorpStyle.BIN_W / 2,
+            }, CorpStyle.BIN_H);
           }
     }
 
