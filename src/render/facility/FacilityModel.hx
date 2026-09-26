@@ -34,6 +34,7 @@ enum abstract Surf(Int) from Int to Int
   var WASHROOM = 16; // the corp washroom, which is NOT the facility's Surf.WASH
   var SERVER = 17;   // the server room
   var LIFT = 18;     // the lift car's own floor
+  var RECEPTION = 20; // the front desk by the lift, split off EXEC so each keeps its own finish
 }
 
 
@@ -540,10 +541,11 @@ class FacilityModel
       // a RANGE and not a list, which the Surf enum is ordered to allow: everything from TILE up
       // is an indoor floor and everything below it is ground the weather falls on. Listing them
       // was fine at six and is a maintenance trap at fourteen — a corp surface left out of the
-      // list is a room with no floor mesh and no structure to belong to
+      // list is a room with no floor mesh and no structure to belong to. The top of the range is
+      // the HIGHEST value, which stopped being OPEN when RECEPTION was added
       var s:Int = m.surf[row][col];
       return s >= (Surf.TILE : Int) &&
-        s <= (Surf.OPEN : Int);
+        s <= (Surf.RECEPTION : Int);
     }
 
 // is this cell inside the HANGAR — the one structure floored in concrete?

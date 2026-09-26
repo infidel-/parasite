@@ -1171,6 +1171,12 @@ class Const
   // dressed off TILE_FLOOR_SERVER + 16 built SERVER RACKS: steel cabinets with blinking LEDs and
   // cable drapes over their lids. This is the LAST free slot in row 12
   public static var TILE_FLOOR_ARCHIVE = OFFSET_ROW12 + 15;
+  // === row 17 - corpo, again: row 12 is full. The RECEPTION's own floor, split off
+  // TILE_FLOOR_MARBLE1 so the exec office can wear its own finish and the front desk keep the pale
+  // stone. It is marble to look at in 2D (tiles.Default.getIcon) and its unwalkable twin is one row
+  // below, +16, the same as every corp floor
+  public static var OFFSET_ROW17 = 272;
+  public static var TILE_FLOOR_RECEPTION = OFFSET_ROW17 + 0;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

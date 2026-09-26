@@ -273,7 +273,8 @@ class CorpSigns
         }
       // an EXEC office keeps the print: it is the one room in the tower whose occupant chose what
       // hangs in it
-      if (s == Surf.EXEC)
+      if (s == Surf.EXEC ||
+          s == Surf.RECEPTION)
         return SIGN_ART;
       // and CIRCULATION takes the wayfinding, alternating so a corridor does not read as a row of
       // one thing. The lift lobby counts as circulation here — it is where somebody arriving looks

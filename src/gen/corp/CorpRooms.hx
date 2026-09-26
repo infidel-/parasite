@@ -1399,7 +1399,7 @@ class CorpRooms
   public static function reception(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
+      drawBlock(cells, room.x1, room.y1, room.w, room.h, RECEPTION);
       counter(state, node, room);
 
       decorateWalls(state, room, [
@@ -1412,7 +1412,7 @@ class CorpRooms
           Const.CORP_WHITEBOARD,
         ],
         Const.TILE_DARK_TABLE_MARBLE1_1X1,
-        Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET,
+        Const.TILE_FLOOR_RECEPTION + UNWALKABLE_TILE_OFFSET,
         40, 40);
     }
 

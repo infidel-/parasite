@@ -1204,7 +1204,8 @@ class CorpFurniture
       // and a COUNTER or VANITY run (a plinthed carcass, correctly a box) are not tables
       if (s != Surf.MEETING &&
           s != Surf.CARPET &&
-          s != Surf.EXEC)
+          s != Surf.EXEC &&
+          s != Surf.RECEPTION)
         return false;
       return x || z;
     }

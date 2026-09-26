@@ -259,7 +259,8 @@ class CorpProps
             var s = m.surf[row][col];
             if (s != Surf.OPEN &&
                 s != Surf.CUBICLE &&
-                s != Surf.EXEC)
+                s != Surf.EXEC &&
+                s != Surf.RECEPTION)
               continue;
             var dir = backHand(m, col, row);
             if (dir < 0 ||
@@ -566,7 +567,8 @@ class CorpProps
       var s = m.surf[row][col];
       if (s != Surf.OPEN &&
           s != Surf.CUBICLE &&
-          s != Surf.EXEC)
+          s != Surf.EXEC &&
+          s != Surf.RECEPTION)
         return [];
       var dir = backHand(m, col, row);
       if (dir < 0 ||

@@ -174,7 +174,7 @@ class CorpModel
           // FacilityDoors reads to decide the leaf SLIDES rather than swings
           case Surf.LIFT: Look.LIFT;
           case Surf.SERVER: Look.METAL;
-          case Surf.MEETING, Surf.EXEC: Look.GLASS;
+          case Surf.MEETING, Surf.EXEC, Surf.RECEPTION: Look.GLASS;
           default: Look.CABINET;
         };
     }
@@ -353,6 +353,9 @@ class CorpModel
       if (t == Const.TILE_FLOOR_MARBLE1 ||
           t == Const.TILE_FLOOR_MARBLE1 + 16)
         return EXEC;
+      if (t == Const.TILE_FLOOR_RECEPTION ||
+          t == Const.TILE_FLOOR_RECEPTION + 16)
+        return RECEPTION;
       if (t == Const.TILE_FLOOR_MARBLE2 ||
           t == Const.TILE_FLOOR_MARBLE2 + 16)
         return WASHROOM;
@@ -441,7 +444,7 @@ class CorpModel
       // one band of each themed surface, wide enough that the wall faces either side of it look
       // into two different finishes
       var bands = [ Surf.OPEN, Surf.CUBICLE, Surf.MEETING, Surf.KITCHEN,
-        Surf.EXEC, Surf.WASHROOM, Surf.SERVER, Surf.LIFT ];
+        Surf.EXEC, Surf.WASHROOM, Surf.SERVER, Surf.LIFT, Surf.RECEPTION ];
       for (i in 0...bands.length)
         for (row in 2...10)
           m.surf[row][2 + i * 2] = bands[i];

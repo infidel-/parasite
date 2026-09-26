@@ -3423,5 +3423,5 @@ class FacilityStyle
     }
 
   // how many slots a per-Surf array holds. one more than the highest Surf value
-  public static inline var SURF_SLOTS = 20;
+  public static inline var SURF_SLOTS = 21;
 }

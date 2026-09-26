@@ -90,6 +90,7 @@ class CorpClutter
       return s == Surf.OPEN ||
         s == Surf.CUBICLE ||
         s == Surf.EXEC ||
+        s == Surf.RECEPTION ||
         s == Surf.SERVER;
     }
 

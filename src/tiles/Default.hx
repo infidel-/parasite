@@ -64,6 +64,9 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION), and row 18 their twins
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -94,6 +97,9 @@ class Default extends Tileset
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 14-16 - table
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 17-18 - corpo floors and their twins
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
@@ -130,6 +136,11 @@ class Default extends Tileset
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       if (tileID == Const.TILE_FLOOR_CUBICLE + 16)
         return super.getIcon(Const.TILE_FLOOR_CARPET + 16);
+      // the reception is the marble it was laid in before it had an id of its own
+      if (tileID == Const.TILE_FLOOR_RECEPTION)
+        return super.getIcon(Const.TILE_FLOOR_MARBLE1);
+      if (tileID == Const.TILE_FLOOR_RECEPTION + 16)
+        return super.getIcon(Const.TILE_FLOOR_MARBLE1 + 16);
       if (tileID == Const.TILE_FLOOR_SERVER + 16 ||
           tileID == Const.TILE_FLOOR_ARCHIVE + 16 ||
           tileID == Const.TILE_ARCHIVE_HIGH)

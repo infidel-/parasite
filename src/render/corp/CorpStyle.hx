@@ -67,6 +67,7 @@ class CorpStyle
   public static inline var WALL_KITCHEN = 'textures/corp/wall-kitchen.png';
   public static inline var WALL_WASHROOM = 'textures/corp/wall-washroom.png';
   public static inline var WALL_EXEC = 'textures/corp/wall-exec.png';
+  public static inline var WALL_RECEPTION = 'textures/corp/wall-reception.png';
   public static inline var WALL_LIFT = 'textures/corp/wall-lift.png';
 
   public static inline var FLOOR_CARPET = 'textures/corp/floor-carpet.png';
@@ -75,6 +76,7 @@ class CorpStyle
   public static inline var FLOOR_MEETING = 'textures/corp/floor-meeting.png';
   public static inline var FLOOR_KITCHEN = 'textures/corp/floor-kitchen.png';
   public static inline var FLOOR_EXEC = 'textures/corp/floor-exec.png';
+  public static inline var FLOOR_RECEPTION = 'textures/corp/floor-reception.png';
   public static inline var FLOOR_WASHROOM = 'textures/corp/floor-washroom.png';
   public static inline var FLOOR_SERVER = 'textures/corp/floor-server.png';
   public static inline var FLOOR_LIFT = 'textures/corp/floor-lift.png';
@@ -931,6 +933,7 @@ class CorpStyle
       floor[Surf.MEETING] = FLOOR_MEETING;
       floor[Surf.KITCHEN] = FLOOR_KITCHEN;
       floor[Surf.EXEC] = FLOOR_EXEC;
+      floor[Surf.RECEPTION] = FLOOR_RECEPTION;
       floor[Surf.WASHROOM] = FLOOR_WASHROOM;
       floor[Surf.SERVER] = FLOOR_SERVER;
       floor[Surf.LIFT] = FLOOR_LIFT;
@@ -940,6 +943,7 @@ class CorpStyle
       into[Surf.MEETING] = WALL_MEETING;
       into[Surf.KITCHEN] = WALL_KITCHEN;
       into[Surf.EXEC] = WALL_EXEC;
+      into[Surf.RECEPTION] = WALL_RECEPTION;
       into[Surf.WASHROOM] = WALL_WASHROOM;
       into[Surf.LIFT] = WALL_LIFT;
       return {

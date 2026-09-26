@@ -3655,6 +3655,19 @@
       "built_linear": 0.1216,
       "built_srgb": 96.4
     },
+    "corp/floor-reception": {
+      "src": "corp/floor-reception.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Executive stone floor: large-format pale warm grey HONED stone slabs, EXACTLY TWO slabs across and TWO down, very thin tight joints, fine even matte mineral grain with the faintest veining. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the slab joints must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "lift": 1.67,
+      "note": "the RECEPTION's copy of the exec finish it wore until the exec office went dark marble and walnut: the same source, split off with Const.TILE_FLOOR_RECEPTION / Surf.RECEPTION so the front desk keeps this look. re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
+      "last_converted": "2026-09-26T18:48:11",
+      "last_lift": 1.67,
+      "built_linear": 0.1216,
+      "built_srgb": 96.4
+    },
     "corp/floor-open": {
       "src": "corp/floor-open.png",
       "class": "tile",
@@ -3795,6 +3808,19 @@
       "built_srgb": 105.3,
       "lift": 1.298,
       "last_lift": 1.298
+    },
+    "corp/wall-reception": {
+      "src": "corp/wall-reception.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern EXECUTIVE OFFICE, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Full-height pale oak veneer panelling: EXACTLY FIVE tall panels side by side across the width, each separated by a narrow recessed dark shadow-gap reveal, so the rhythm closes across the left and right edges; each panel a fine straight vertical grain with a soft cathedral figure, slightly different from its neighbours. At the very BOTTOM a thin recessed reveal and a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM-LIGHT, a little darker than plain plasterboard. HUE: a restrained WARM pale oak, a faint tan, muted, never orange or yellow. No pictures, no shelves, no sockets, no text. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "lift": 1.298,
+      "note": "the RECEPTION's copy of the exec finish it wore until the exec office went dark marble and walnut: the same source, split off with Const.TILE_FLOOR_RECEPTION / Surf.RECEPTION so the front desk keeps this look. ",
+      "last_converted": "2026-09-26T18:48:11",
+      "last_lift": 1.298,
+      "built_linear": 0.1603,
+      "built_srgb": 105.3
     },
     "corp/wall-lift": {
       "src": "corp/wall-lift.png",
