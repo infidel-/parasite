@@ -2334,3 +2334,40 @@ chairs in the shared chair batch, so nothing was removed to offset it.
 
 Verdict: **LANDED.** +10..+18 calls on a tower floor, all instanced batches of real furniture.
 
+
+## Corp kitchen brought to the exec standard: sub-blocks, eleven glbs, own PACK16
+
+The kitchen was the last corp room on the old recipe. The fridge and the vending machine were
+`CorpDeco.box` casework in the office desk's laminate (a face pick read `desk-front.png` on a vending
+front). Every kitchen worktop, the 2x2 dining tables included, was a closed 3.76 plinth of counter
+art, and there were no chairs. The kettle, microwave, coffee machine and tap drew nothing.
+
+- **Gen:** `gen.corp.CorpKitchen` holds real sub-blocks, each filled a level down: `prep` takes the
+  longest masonry run (fridge at the corner end, then the sink, then appliances), `vending` takes the
+  wall strip nearest a door, and `dining` holds 2x2 tables with chairs on two sides. `area-gen.md`
+  has the layout.
+- **Glbs:** eleven, hand-modelled in `models-src/corp/kitchen_build.py` on five packed sheets:
+  table 376, chair 412, counter 452, sink 884, wall cabinet 336, fridge 552 (the notes are pack16
+  cells 14 and 15), vending 216 (the glass and the amber display are an emissive map cut straight
+  off its own sheet, strength 2), plus microwave 192, coffee 256, kettle 344 and toaster 220 at
+  `APPLIANCE_SCALE` 1.3. `render.corp.CorpKitchen` stands them off the tiles and decorations, and
+  every yaw comes from a neighbour.
+- **Counter:** a 4.0 x 1.32 unit against its wall, not the whole cell. A wall cabinet hangs at
+  `CAB_Y` 3.0 over every masonry-backed counter except the sink.
+
+**Traps:**
+1. `grid_cut` splits any axes-7 label face that crosses a TILE line, and `unwrap` then lays the
+   whole label on each piece. The vending glass came out as four machines (texel_worst 13.87).
+   Labels are now laid after the cut.
+2. A 2x2 dining table is a `slabTop` by shape, so `CorpProps.tables` stood boardroom blade legs
+   under it.
+3. In a corner both hands are masonry, and the first-hand rule backed the fridge onto the wrong
+   wall. `runHand` now backs a run piece across its run's own axis.
+4. The beech's `lift` 2.06 alone shipped it orange: a gamma saturates as it darkens. lift 1.6 with
+   `sat` 0.6 fixed it.
+
+Measured, follow cam, `renderer.info.render.calls` median of 6 frames, the kitchen's 9 visible
+batches shown vs hidden, interleaved x3: **199 vs 182 (+17)**, identical each round. Nothing was
+removed to offset it: the old casework and counters were in shared worktop buffers.
+
+Verdict: **LANDED.** +17 calls with a kitchen on screen, in the exec office's +10..+18 band.

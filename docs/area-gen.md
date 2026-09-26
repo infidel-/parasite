@@ -1356,6 +1356,29 @@ The four new seat and lounge decorations sit on the four atlas cells rows 23-39 
 hidden in 3D and read back by `render.corp.CorpDeco.kindOf` as `K_EXEC_CHAIR / K_ARMCHAIR / K_SOFA /
 K_TABLE_LOW`. Measured over 3,000 seeds: 0 failures, 0 unreachable, `furn/exec` 451.
 
+## The kitchen is three real sub-blocks
+
+`CorpRooms.kitchen` lays the WOOD1 floor and nothing else; `gen.corp.CorpKitchen.zones` pushes three
+child nodes (with `roomID` set) that `CorpGen.fill` dispatches a level down, so each filler sees the
+ones pushed before it on the grid. The only corp zones that are fillers rather than records.
+
+- **`prep`**: the longest stretch of the wall ring no door opens onto and **no window backs** (temp
+  ids 18-24 / 27-33), 2..`PREP_MAX` 5 cells, anchored in a corner where it has one. Fridge (floor
+  twin) at the corner end, sink (`CORP_TAP` on a 1x1 counter tile) next, then microwave / kettle /
+  coffee on the rest.
+- **`vending`**: the 2..3-cell window of wall nearest a door that the counter did not take: vending
+  machine, cooler, walkable bin.
+- **`dining`**: the rect inside the wall ring, one more lane off the counter's side where it can
+  spare it; `LIGHT_TABLE_WOOD1_2X2` at pitch 3, each table kept only if `roomOpen` still floods the
+  room, chairs (`CORP_CHAIR`, walkable) on the two sides the table row does not run along.
+- The demand **aims at 6 x 6** (`fit` = `-(|w-6| + |h-6|)`, min still 4 x 4), since `smallest` dealt
+  it 4 x 4 nearly every time.
+
+Measured over 3,000 seeds: 0 failures, 0 unreachable, `orphanCells` 0. **`furn/kitchen` 21.7% ->
+29.8%**, prep in 92% of kitchens and vending in 85% (glazed walls take the rest), dining in 96%.
+Sizes now centre on 6x6 / 6x5 / 5x6. The deal moved a little with it: open plan 2.41 -> 2.04 a
+floor and archive 1.93 -> 1.79, with the exec filler taking the difference.
+
 ## ANY ONE REACHED CELL IS THE WRONG QUESTION
 
 Reported from the game as "this room's tables in the center breaking the movement, plus corners are
