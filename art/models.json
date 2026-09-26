@@ -1370,6 +1370,62 @@
       "note": "and the records room's SHELVING UNIT, the other family in the rank: 168 tris, 3.20 x 1.20 x 4.80, six shelves of box files behind five proud boards. THE SIZE CAME OFF THE ART like its sheetmate's: corp/archive-spines draws eight binders across and two shelves up, which read at a 0.1 m spine and a 0.4 m shelf pitch is 1.60 world units square -- so 3.20 is two tiles across and 4.80 is three up, a 1.6 x 2.4 m unit, and every repeat is a whole number so no binder is cut at a cell edge. THE BOARDS ARE WHERE THE ART DRAWS THEM and that is a LOCK, not a choice: a board anywhere else shows a double shelf. Measured by row statistics off the packed cell (a flat dark band at sd < 20 between two bands of spines at sd 33-37), one every 512/6 rows. The sixth is the plinth and is not built -- its band straddles the cell wrap, so a box on it would stand 0.036 through the floor, and the painted band is all of a plinth this camera sees. Wears arch-shelf-sheet.png: corp/archive-spines, corp/desk-side and corp/desk-top. ITS FLANK REPEAT IS 0.25 x 1.0 AND NOT 0.3 x 1.2, the compound bookcase's lid finding: over one repeat the tile wraps INSIDE the packed cell and a packed quadrant's wrap error is roughly double a solo roll's, so it is held under one repeat both ways at the cost of a 1.2x coarser grain. Fitted art, so no baseColor and no lift. Only the carcass is chamfered; see corp/arch-cabinet. buildlib.check: holes 0, coplanar 0, islands 1, loose []. models-src/corp/arch_build.py.",
       "last_converted": "2026-09-23T14:07:56Z",
       "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-desk": {
+      "src": "corp/corp-exec-desk.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the exec office's 3x2 pedestal desk (models-src/corp/exec_build.py): a walnut top with a leather writing inlay proud of it by 0.02, two pedestals on brass kick strips at the owner's side (+y) and a modesty panel across the front. 516 tris, 11.76 x 7.76 x 1.52 -- the 3x2 block less CorpStyle.FIT_INSET, because render.corp.CorpClutter dresses the worktop over exactly that rect at DESK_H 1.5. holes 0, coplanar 0, islands 1 (buildlib.check). Wears models-src/corp/exec-sheet.png, which tools/modelsheet.py packs from the four BUILT exec pack4 labels, so it carries no baseColor/lift of its own.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-desk-3": {
+      "src": "corp/corp-exec-desk-3.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the small exec office's desk run, THREE cells: the same script as corp/exec-desk at 11.76 x 3.76, stood over a run of TILE_DARK_TABLE_MARBLE1_1X1 cells laid along the room's long axis. 516 tris.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-desk-2": {
+      "src": "corp/corp-exec-desk-2.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the small exec office's desk run, TWO cells: 7.76 x 3.76, for a room whose long side leaves only two cells of run between its clearance cells. 516 tris.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-chair": {
+      "src": "corp/corp-exec-chair.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the exec office owner's high-backed chair: corp/chair's five-star base and gas lift in brass under a deeper rounded leather seat and ONE tall raked leather back (an executive chair is not split into lumbar and headrest), padded arms on brass posts. 1380 tris, 1.37 x 1.54 x 2.70 (1.35 m to the top of the back against the task chair's 1.1). holes 0, coplanar 0, islands 1.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-armchair": {
+      "src": "corp/corp-exec-armchair.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the club chair: the exec lounge's pair and the visitors' pair across the desk, one mesh. A walnut plinth, leather arms stopping below the back (lounge_build.py's step), one seat cushion. 552 tris, 2.5 x 2.4 x 1.8.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-sofa": {
+      "src": "corp/corp-exec-sofa.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the exec lounge's chesterfield, two cells long against the room's end wall: walnut plinth, leather arms and back with soft 0.10 arrises, three seat cushions with a gap between each. 768 tris, 7.2 x 2.5 x 1.9.",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/exec-table-low": {
+      "src": "corp/corp-exec-table-low.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the low table in front of the exec sofa, two cells long: a walnut top on four brass legs with a walnut shelf between them -- legs and not a plinth, because at this pitch a low table is seen THROUGH. 168 tris, 6.4 x 2.6 x 0.9. Its top takes one or two exec-clutter decals (render.corp.CorpClutter).",
+      "last_converted": "2026-09-26T14:09:36Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
     }
   }
 }
