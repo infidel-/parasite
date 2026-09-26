@@ -339,11 +339,18 @@ class CorpDeco
               }
           out.push({ x: x, z: z, yaw: 0.0 });
           FacilityDetail.ground(m, {
-            x0: x - CorpStyle.BIN_W / 2,
-            x1: x + CorpStyle.BIN_W / 2,
-            z0: z - CorpStyle.BIN_W / 2,
-            z1: z + CorpStyle.BIN_W / 2,
-          }, CorpStyle.BIN_H);
+            col: c.col,
+            row: c.row,
+            len: 1,
+            alongX: false,
+            rect: {
+              x0: x - CorpStyle.BIN_W / 2,
+              x1: x + CorpStyle.BIN_W / 2,
+              z0: z - CorpStyle.BIN_W / 2,
+              z1: z + CorpStyle.BIN_W / 2,
+            },
+            h: CorpStyle.BIN_H,
+          });
         }
       // AND A BIN BESIDE EVERY STANDING COPIER, in its own cell, asked for as "right in the same
       // tile directly adjacent". DRESSING and not a decoration, because a cell holds one object
@@ -375,11 +382,18 @@ class CorpDeco
           var z = w.z + DR[dir] * off + sr * along;
           out.push({ x: x, z: z, yaw: 0.0 });
           FacilityDetail.ground(m, {
-            x0: x - CorpStyle.BIN_W / 2,
-            x1: x + CorpStyle.BIN_W / 2,
-            z0: z - CorpStyle.BIN_W / 2,
-            z1: z + CorpStyle.BIN_W / 2,
-          }, CorpStyle.BIN_H);
+            col: c.col,
+            row: c.row,
+            len: 1,
+            alongX: false,
+            rect: {
+              x0: x - CorpStyle.BIN_W / 2,
+              x1: x + CorpStyle.BIN_W / 2,
+              z0: z - CorpStyle.BIN_W / 2,
+              z1: z + CorpStyle.BIN_W / 2,
+            },
+            h: CorpStyle.BIN_H,
+          });
         }
       return out;
     }

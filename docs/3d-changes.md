@@ -2231,6 +2231,8 @@ others in binned rooms rolled 61 and 82 and stand none. No new draw call — the
 
 ## FacilityDetail.ground: one call for floor AND wall contact; archive units and bins take it
 
+> SUPERSEDED by "FacilityDetail.ground takes the caller's cell; halos run into the next masonry cell; small things get a floor pool"
+
 Reported, again, as "add floor/wall contact shadow to bin, shelf, cabinet — why do I have to tell
 you every time?". The answer was structural: contact is TWO calls, `ContactMask.prop` (the floor
 field) and `FacilityDetail.stand` (the halo quad up the masonry), written out by hand in each
@@ -2255,3 +2257,29 @@ room's corner bin had one (its centre happened to sit in the room cell).
 
 Verdict: **LANDED.** No new draw call (the halo mesh exists). New builders call `ground`, not
 `ContactMask.prop`.
+
+## FacilityDetail.ground takes the caller's cell; halos run into the next masonry cell; small things get a floor pool
+
+Reported off the first version: "bin shadows hang in the air instead of being on a wall, and nothing
+under" (pick: corp/bin.glb inst#3, the NE corner bin of an archive). Three faults:
+
+- **Cell guessed from world coords.** A corner bin is pushed into BOTH wall cells' room-side margins
+  (a slab is thinner than CELL), so the half-cell probe still resolved one axis to a wall cell. The
+  halo then took a CORNER slab's plane — a corner slab is the L's bounding box, so its "room face"
+  stands out in the room: the floating shadow. `ground` now takes `FacilityGroundOpts`
+  (col/row/len/alongX/rect/h); every caller knows its cell and hands it over.
+- **Clamp cut the halo to nothing.** `halo` clamps along the wall to its own wall cells' slabs, and
+  a corner bin's whole footprint lies in the NEXT wall cell along (x -39.32..-38.70 against a clamp
+  ending at -40.0). The clamp now extends into the adjacent cell at either end when that is solid
+  masonry (not a door); the PLANE stays the own cell's. This is the shared emitter — the compound's
+  halos get the same widening, which only ever reaches masonry that is there.
+- **No visible floor contact.** A 0.62 bin under the field's 0.7 blur spreads to nothing. `ground`
+  lays a round `deck` pool under anything narrower than `GROUND_POOL_MAX` 1.0, footprint widened by
+  `GROUND_POOL_SCALE` 1.6 (POOL_GROW's ring is 0.09 round a bin, all of it under the bin), plate
+  clamped to the room's wall faces.
+
+Measured on the reported bin, pinned pose, contact meshes hidden vs shown: wall above the bin luma
+57.6 -> 49.2, floor in front 42.3 -> 32.1; the diff shows the halo on both walls of the corner and the
+pool round the foot, nothing off the masonry.
+
+Verdict: **LANDED.** No new draw call (halo and deck meshes exist).

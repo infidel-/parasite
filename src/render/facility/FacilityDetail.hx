@@ -173,31 +173,30 @@ class FacilityDetail
   public static function stand(o:FacilityHaloOpts):Void
     standing.push(o);
 
-// THE ONE CALL for a thing standing on the floor: its footprint into render.world.ContactMask, and
-// a halo up every masonry face it stands against. The two used to be written out by hand in each
-// builder, so every new family shipped with the floor half, or neither, and never the wall half
-// until someone reported it. This finds the walls itself off the footprint: a hand counts when its
-// wall is SOLID (no halo on glazing or in a doorway) and the footprint's edge is within GROUND_TOUCH
-// of that wall's room face. A RUN is one call with the whole run's rect, never one per unit: halos
-// that overlap along a wall compound (see CORNER_EPS)
-  public static function ground(m:Facility, r:ContactRect, h:Float):Void
+// THE ONE CALL for a thing standing on the floor: its footprint into render.world.ContactMask, a
+// halo up every masonry face it stands against, and — when it is SMALL — a round pool under it. The
+// first two used to be written out by hand in each builder, so every new family shipped with the
+// floor half, or neither, and never the wall half until someone reported it.
+//
+// A hand counts when its wall is SOLID (no halo on glazing or in a doorway) and the footprint's edge
+// is within GROUND_TOUCH of that wall's room face. A RUN is one call with the whole run's rect,
+// never one per unit: halos that overlap along a wall compound (see CORNER_EPS). Its two long sides
+// take one halo over `len` cells, its two ends a halo each off the end cell.
+//
+// THE POOL is for what the field cannot show: a 0.62 bin under a 0.7 blur spreads to nothing
+// visible — reported as "nothing under". Past GROUND_POOL_MAX the field carries it on its own
+  public static function ground(m:Facility, o:FacilityGroundOpts):Void
     {
+      var r = o.rect;
       render.world.ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
-      var e = FacilityStyle.GROUND_TOUCH;
-      var cx = (r.x0 + r.x1) / 2;
-      var cz = (r.z0 + r.z1) / 2;
-      var a = citygen.CityConfig.worldToCell(r.x0 + e, r.z0 + e);
-      var b = citygen.CityConfig.worldToCell(r.x1 - e, r.z1 - e);
+      var n = (o.len > 1 ? o.len : 1);
       for (d in 0...4)
         {
-          // the ROOM cell across this hand is probed half a cell off the wall: a thing backed onto
-          // masonry stands in the wall cell's room-side margin (a slab is thinner than CELL) — an
-          // archive cabinet's CENTRE lands in the wall cell. ALONG the wall the corners give the
-          // run's first cell and its length
-          var p = citygen.CityConfig.worldToCell(cx - DC[d] * citygen.CityConfig.CELL / 2,
-            cz - DR[d] * citygen.CityConfig.CELL / 2);
-          var col = (d < 2 ? a.col : p.col);
-          var row = (d < 2 ? p.row : a.row);
+          // along the run for its two long sides, the end cell for the end that faces this hand
+          var side = (o.alongX ? d < 2 : d >= 2);
+          var far = (d == 1 || d == 3);
+          var col = o.col + (!side && far && o.alongX ? n - 1 : 0);
+          var row = o.row + (!side && far && !o.alongX ? n - 1 : 0);
           var wc = col + DC[d];
           var wr = row + DR[d];
           if (!FacilityModel.isSolidWall(m, wc, wr) ||
@@ -211,7 +210,7 @@ class FacilityDetail
               case 2: r.x0 - s.x1;
               default: s.x0 - r.x1;
             };
-          if (gap > e)
+          if (gap > FacilityStyle.GROUND_TOUCH)
             continue;
           stand({
             col: col,
@@ -219,11 +218,50 @@ class FacilityDetail
             dir: d,
             a0: (d < 2 ? r.x0 : r.z0),
             a1: (d < 2 ? r.x1 : r.z1),
-            len: (d < 2 ? b.col - a.col : b.row - a.row) + 1,
+            len: (side ? n : 1),
             y: 0.0,
-            h: h,
+            h: o.h,
           });
         }
+      var hw = (r.x1 - r.x0) / 2;
+      var hd = (r.z1 - r.z0) / 2;
+      if (Math.max(hw, hd) * 2 > FacilityStyle.GROUND_POOL_MAX)
+        return;
+      var cx = (r.x0 + r.x1) / 2;
+      var cz = (r.z0 + r.z1) / 2;
+      // the room's own floor is the plate: a pool shrunk to stay off the wall slabs, which would
+      // otherwise draw it up their room faces
+      var c = citygen.CityConfig.cellToWorld(o.col, o.row);
+      var half = citygen.CityConfig.CELL / 2;
+      inline function inner(d:Int):Float
+        {
+          var wc = o.col + DC[d];
+          var wr = o.row + DR[d];
+          if (!FacilityModel.isWall(m, wc, wr))
+            return (d < 2 ? c.z : c.x) + (d == 0 || d == 2 ? -half : half);
+          var t = FacilityGeom.slab(m, wc, wr);
+          return switch (d)
+            {
+              case 0: t.z1;
+              case 1: t.z0;
+              case 2: t.x1;
+              default: t.x0;
+            };
+        }
+      deck({
+        cx: cx,
+        cz: cz,
+        hw: hw * FacilityStyle.GROUND_POOL_SCALE,
+        hd: hd * FacilityStyle.GROUND_POOL_SCALE,
+        yaw: 0.0,
+        y: 0.0,
+        plate: {
+          x0: inner(2),
+          x1: inner(3),
+          z0: inner(0),
+          z1: inner(1),
+        },
+      });
     }
 
 // collect one thing standing on a surface that is NOT the floor — a box on a shelf plate. same
@@ -287,6 +325,13 @@ class FacilityDetail
       return Math.min(extent / 2 * (1 / FacilityStyle.HALO_CORE - 1), FacilityStyle.HALO_GROW_MAX);
     }
 
+// is this cell masonry a halo may run on? solid wall, not a doorway
+  static inline function masonryAt(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.isSolidWall(m, col, row) &&
+        !FacilityModel.isDoor(m, col, row);
+    }
+
 // one silhouette, on the room-facing plane of the masonry behind it.
 //
 // CLAMPED ALONG THE WALL and not up it. FacilityGeom.slab insets a face by a unit wherever the wall
@@ -311,8 +356,30 @@ class FacilityDetail
       var qa1 = o.a1 + ga;
       var qy0 = o.y - gy;
       var qy1 = o.y + o.h + gy;
-      var ca0 = Math.max(qa0, Math.min(o.dir < 2 ? s.x0 : s.z0, o.dir < 2 ? t.x0 : t.z0));
-      var ca1 = Math.min(qa1, Math.max(o.dir < 2 ? s.x1 : s.z1, o.dir < 2 ? t.x1 : t.z1));
+      // AND ON INTO THE NEXT MASONRY CELL ALONG, either end: a thing in a room corner reaches past
+      // its own cell into the corner's wall cell, and a clamp to its own slab alone cut the halo to
+      // nothing (a corner bin had none). Only the CLAMP widens — the plane stays `s`'s, since a
+      // corner cell's slab is its bounding box and its room face stands out in the room
+      var ax = (o.dir < 2 ? 1 : 0);
+      var az = 1 - ax;
+      var lo = Math.min(o.dir < 2 ? s.x0 : s.z0, o.dir < 2 ? t.x0 : t.z0);
+      var hi = Math.max(o.dir < 2 ? s.x1 : s.z1, o.dir < 2 ? t.x1 : t.z1);
+      var bc = o.col - ax + DC[o.dir];
+      var br = o.row - az + DR[o.dir];
+      if (masonryAt(m, bc, br))
+        {
+          var u = FacilityGeom.slab(m, bc, br);
+          lo = Math.min(lo, o.dir < 2 ? u.x0 : u.z0);
+        }
+      var ec = o.col + sc + ax + DC[o.dir];
+      var er = o.row + sr + az + DR[o.dir];
+      if (masonryAt(m, ec, er))
+        {
+          var u = FacilityGeom.slab(m, ec, er);
+          hi = Math.max(hi, o.dir < 2 ? u.x1 : u.z1);
+        }
+      var ca0 = Math.max(qa0, lo);
+      var ca1 = Math.min(qa1, hi);
       if (ca1 - ca0 < 0.01)
         return;
       // the collapsed axis comes from the plane and the running one from the clamp, which of the two

@@ -367,11 +367,18 @@ class CorpProps
               yaw: 0.0,
             });
             FacilityDetail.ground(m, {
-              x0: x - CorpStyle.BIN_W / 2,
-              x1: x + CorpStyle.BIN_W / 2,
-              z0: z - CorpStyle.BIN_W / 2,
-              z1: z + CorpStyle.BIN_W / 2,
-            }, CorpStyle.BIN_H);
+              col: col,
+              row: row,
+              len: 1,
+              alongX: false,
+              rect: {
+                x0: x - CorpStyle.BIN_W / 2,
+                x1: x + CorpStyle.BIN_W / 2,
+                z0: z - CorpStyle.BIN_W / 2,
+                z1: z + CorpStyle.BIN_W / 2,
+              },
+              h: CorpStyle.BIN_H,
+            });
           }
     }
 

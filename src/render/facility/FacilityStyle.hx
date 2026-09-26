@@ -2219,6 +2219,12 @@ class FacilityStyle
   // halo on it. the builders stand things PROP_GAP 0.1 off the masonry; a unit and more is a thing
   // standing in the room near a wall, and a halo there reads as a stain
   public static inline var GROUND_TOUCH = 0.3;
+  // the widest footprint FacilityDetail.ground lays a round floor pool under. the contact field's
+  // 0.7 blur spreads anything this small to nothing visible — a 0.62 bin read as "nothing under"
+  public static inline var GROUND_POOL_MAX = 1.0;
+  // and how much wider than the footprint that pool is taken. POOL_GROW's visible ring is 0.29 of the
+  // half-extent — right for a box on a shelf plate, 0.09 round a bin, all of it under the bin
+  public static inline var GROUND_POOL_SCALE = 1.6;
   // and how far ANYTHING STANDING AGAINST A WALL keeps its own back off that face.
   //
   // IT MUST CLEAR HALO_EPS, and that is the whole of the number. The halo lies on a plane HALO_EPS

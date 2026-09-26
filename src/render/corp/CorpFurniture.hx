@@ -856,11 +856,18 @@ class CorpFurniture
           var q0 = across + off - u.d / 2;
           var q1 = across + off + u.d / 2;
           FacilityDetail.ground(m, {
-            x0: (alongX ? r0 : q0),
-            x1: (alongX ? r1 : q1),
-            z0: (alongX ? q0 : r0),
-            z1: (alongX ? q1 : r1),
-          }, u.h);
+            col: col,
+            row: row,
+            len: len,
+            alongX: alongX,
+            rect: {
+              x0: (alongX ? r0 : q0),
+              x1: (alongX ? r1 : q1),
+              z0: (alongX ? q0 : r0),
+              z1: (alongX ? q1 : r1),
+            },
+            h: u.h,
+          });
         }
     }
 
