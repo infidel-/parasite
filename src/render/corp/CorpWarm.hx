@@ -45,6 +45,8 @@ class CorpWarm
       // the two flat dressing materials, each its own alphaTest / mapped lambert and each a 1024
       // or 512 decoded on first entry
       CorpClutter.build(sc, model);
+      // and the exec rug's contact-patched alphaTest lambert, which no material above shares
+      CorpRugs.build(sc, model);
       CorpSigns.build(sc, model);
       // and the additive glow, which is its own material: AdditiveBlending, vertexColors and an
       // alphaMap are all in three's program key, so none of the mapped lamberts above cover it

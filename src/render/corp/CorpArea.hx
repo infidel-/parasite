@@ -137,6 +137,9 @@ class CorpArea implements Area3D
       clutter = cl.n;
       clutterProps = cl.props;
       signs = CorpSigns.build(scene, model);
+      // and the exec office's rugs, which lay their own contact-patched floor material and so go
+      // in before the contact repaint below like every other pass on the floor
+      CorpRugs.build(scene, model, game.area);
       // the rig, after every family that could stand under a lattice point — the nudge in
       // CorpLamps.free reads m.fit, so it has to know what is standing there
       lamps = CorpLamps.build(scene, model);

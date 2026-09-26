@@ -329,6 +329,13 @@ class CorpStyle
   public static inline var TABLE_LOW_H = 0.9;
   public static inline var TABLE_LOW_W = 6.4;
   public static inline var TABLE_LOW_D = 2.6;
+  // THE EXEC RUG (render.corp.CorpRugs): corp/exec-rug is 1024 x 640, so the quad is laid at that
+  // aspect and never stretched to its rect; it keeps RUG_INSET off the rect's edge, and lies at
+  // RUG_Y — over the floor, under CorpLamps' pools at GLOW_Y 0.04
+  public static inline var RUG_TEX = 'textures/corp/exec-rug.png';
+  public static inline var RUG_ASPECT = 1.6;
+  public static inline var RUG_INSET = 0.30;
+  public static inline var RUG_Y = 0.02;
   // how far an exec monitor stands back from its cell's centre, away from its owner
   public static inline var EXEC_MON_BACK = 0.60;
   // and how many exec clutter decals a low table's top takes, at most

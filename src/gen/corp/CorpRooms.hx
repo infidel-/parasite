@@ -251,8 +251,10 @@ class CorpRooms
           else
             execRun(state, node, room);
         }
-      cornerPlants(state, room);
+      // the rug BEFORE the plants: in a 3-wide office the only clear 2x2 left by a desk run takes
+      // the end corners, and a plant in a rect's corner stands off the oval rug anyway
       execRug(state, room);
+      cornerPlants(state, room);
     }
 
 // the executive's own 3x2 desk, against whichever end wall has no door in it, with the visitors'
@@ -523,7 +525,8 @@ class CorpRooms
       addDecoration(state, x, y, group);
     }
 
-// a plant in every corner of the room that is still its bare floor and is not a doorway.
+// a plant in every corner of the room that is still its bare floor (or its rug) and is not a
+// doorway.
 //
 // THIS OPENS WHAT `exec` HELD SHUT AT w >= 7, and on purpose: the dressed corners it measured were
 // a cooler, a coffee table and a router as well as a plant, which sealed a 4x4 office round a 3x2
@@ -542,12 +545,15 @@ class CorpRooms
         {
           var blocked = new Map<Int, Bool>();
           blocked.set(c.x * 1000 + c.y, true);
-          if (cells[c.x][c.y] != MARBLE1 ||
+          var onRug = (cells[c.x][c.y] == Const.TILE_FLOOR_EXEC_RUG);
+          if ((cells[c.x][c.y] != MARBLE1 &&
+              !onRug) ||
               atDoor(cells, c.x, c.y) ||
               state.area.hasObjectAt(c.x, c.y) ||
               !roomOpen(state, room, blocked))
             continue;
-          cells[c.x][c.y] = Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET;
+          cells[c.x][c.y] = (onRug ? Const.TILE_FLOOR_EXEC_RUG : Const.TILE_FLOOR_MARBLE1) +
+            UNWALKABLE_TILE_OFFSET;
           addDecoration(state, c.x, c.y, Const.CORP_PLANT);
         }
     }
