@@ -351,7 +351,9 @@ class CorpModel
           t == Const.TILE_FLOOR_WOOD1 + 16)
         return KITCHEN;
       if (t == Const.TILE_FLOOR_MARBLE1 ||
-          t == Const.TILE_FLOOR_MARBLE1 + 16)
+          t == Const.TILE_FLOOR_MARBLE1 + 16 ||
+          t == Const.TILE_FLOOR_EXEC_RUG ||
+          t == Const.TILE_FLOOR_EXEC_RUG + 16)
         return EXEC;
       if (t == Const.TILE_FLOOR_RECEPTION ||
           t == Const.TILE_FLOOR_RECEPTION + 16)

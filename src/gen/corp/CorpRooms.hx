@@ -60,6 +60,12 @@ class CorpRooms
   // this scale and still leaves the two clear cells a side that `w - 4` guarantees
   public static inline var TABLE_W_MAX = 6;
   public static inline var TABLE_H_MAX = 4;
+  // THE EXEC SUITE'S SIZE GATE: 4 across and 7 long, on either axis. See `execSuite`
+  public static inline var SUITE_SPAN = 4;
+  public static inline var SUITE_LEN_X = 7;
+  public static inline var SUITE_LEN_Y = 7;
+  // and the biggest a plain exec office's rug may be, in cells on either axis
+  public static inline var RUG_MAX = 4;
 
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
 // interchangeable: that one drops _TileRow.col, which is right for the facility's tables (none of
@@ -224,70 +230,35 @@ class CorpRooms
 
 // --- the templates
 
-// an executive office: marble, one big desk facing the door, a cooler and a plant in the corners
+// an executive office: dark marble, the executive's desk and chair with two visitor chairs in front
+// of it, a lounge at the far end where the room is long enough for one, a plant in every free corner
+// and a rug on the floor in front of whatever it has
   public static function exec(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE1);
-
-      // `hasTable` has to come OUT of execDesk and not be assumed from its guard: it gives up
-      // silently when the room has a door in both end walls (there is then no wall to face the
-      // desk at), and setting the flag true anyway closed the `!hasTable` escape below. At
-      // exactly w == 6 the `w >= 7` arm is closed too, so the room got marble and NOTHING ELSE —
-      // 23 of 600 seeds, and the "37,12 room is empty" this pass started from
-      // 4 x 4, AND THE GUARD HAS COME DOWN TWICE WITH THE CARVE. It was 6 x 6, then 5 x 5 when
-      // the demand asked for 5; with ROOM_SIZE 6 and SPLIT_MIN 5 a floor carries 29 rooms and only
-      // a handful clear 5 on both axes, so six 5x5 demands dealt ahead of this one left it with
-      // nothing — "quota short: room-exec got 0" on 14 towers in 3,000. A 3-wide desk centred in a
-      // 4-wide room lands x1+1..x1+3, i.e. against the far wall with a clear column on the near
-      // side, which is what an office that size looks like anyway
-      var hasTable = (room.w >= 4 &&
-        room.h >= 4 &&
-        execDesk(state, node, room));
-      // AND UNDER 4 THE DESK IS A RUN. The exec office is also the floor's filler now, dealt down to
-      // 3 x 3, and the 3x2 slab does not fit that; the open plan's own 3x1 run does, centred and
-      // skipped where it would seal a doorway. The corners are dressed round it, which is what the
-      // solo office this replaced always did at that size
-      if (!hasTable)
-        deskRun(state, node, room, [
-            Const.CORP_TABLE_PHONE,
-            Const.CORP_TABLE_LAMP,
-            Const.CORP_TABLE_FILES,
-            Const.CORP_TABLE_STATIONERY,
-          ]);
-      // THE CORNERS STAY AT `w >= 7`, and the plan to open them to every room is WITHDRAWN on
-      // the measurement. `execDesk` always returns true now, so this reads as the width test
-      // alone and it looks like a room under 7 wide gets a desk and nothing else. Dressing the
-      // corners anyway was tried and MEASURED: exec fill 26.9% -> 20.7%, because a 3x2 slab and
-      // four dressed corners in a 4x4 office seal the floor, and what `CorpConnect.openPockets`
-      // then undoes to reach it is the desk. More furniture, less furniture standing
-      if (!hasTable ||
-          room.w >= 7)
-        decorateCorners(state, room, [
-            Const.CORP_TABLE_COFFEE,
-            Const.CORP_TABLE_ROUTER,
-          ], [
-            Const.CORP_COOLER,
-            Const.CORP_PLANT,
-          ],
-          Const.TILE_DARK_TABLE_MARBLE1_1X1,
-          Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET,
-          20);
+      // the SUITE first, desk and lounge at the two ends of the long axis, and the plain office
+      // where the room will not take one: a 3x2 desk from 4 x 4, and under that a run
+      if (!execSuite(state, node, room))
+        {
+          // 4 x 4, AND THE GUARD HAS COME DOWN TWICE WITH THE CARVE. It was 6 x 6, then 5 x 5 when
+          // the demand asked for 5; with ROOM_SIZE 6 and SPLIT_MIN 5 a floor carries 29 rooms and
+          // only a handful clear 5 on both axes, so six 5x5 demands dealt ahead of this one left it
+          // with nothing — "quota short: room-exec got 0" on 14 towers in 3,000
+          if (room.w >= 4 &&
+              room.h >= 4)
+            execDesk(state, node, room);
+          else
+            execRun(state, node, room);
+        }
+      cornerPlants(state, room);
+      execRug(state, room);
     }
 
-// the executive's own 3x2 desk, against whichever end wall has no door in it. returns whether it
-// actually laid one — see `exec`, which has no other way to find out
-  static function execDesk(state: _CorpState, node: _GenNode, room: _Room): Bool
+// the executive's own 3x2 desk, against whichever end wall has no door in it, with the visitors'
+// chairs on its far side
+  static function execDesk(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var cells = state.area.getCells();
-      var full = [
-        Const.CORP_TABLE_PHONE,
-        Const.CORP_TABLE_LAMP,
-        Const.CORP_TABLE_FILES,
-        Const.CORP_TABLE_STATIONERY,
-      ];
-      var deco = full.copy();
-
       var hasNorthDoor = false, hasSouthDoor = false;
       for (door in state.doors)
         if (door.roomID1 == room.id ||
@@ -300,13 +271,11 @@ class CorpRooms
           }
       var tx = room.x1 + Std.int(room.w / 2) - 1;
       var ty = room.y1 + 1;
-      var cx = tx + 1, cy = ty - 1;
-      var compx = cx, compy = ty;
+      var cy = ty - 1;
       if (hasNorthDoor)
         {
           ty = room.y2 - 2;
           cy = ty + 2;
-          compy = ty + 1;
         }
       // A DOOR IN BOTH END WALLS USED TO MEAN NO DESK AT ALL, and 382 exec offices in 600 seeds
       // came out as bare marble because of it — every zone-less room on a corp floor was one of
@@ -317,18 +286,41 @@ class CorpRooms
         {
           ty = room.y1 + Std.int((room.h - 2) / 2);
           cy = ty - 1;
-          compy = ty;
         }
-      GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + 1);
-      state.area.addDecoration(cx, cy, Const.CORP_CHAIR[0].row, 1);
-      addDecoration(state, compx, compy, Const.CORP_COMPUTERS);
+      execDeskAt(state, node, tx, ty, tx + 1, cy);
+      // THE VISITORS SIT ACROSS THE DESK FROM ITS OWNER, one at each end of the slab. A chair is a
+      // walkable decoration like every seat in the tower, so it costs the room no lane; it only
+      // needs a free cell of the room's own floor that is not a doorway
+      var vy = (cy < ty ? ty + 2 : ty - 1);
+      for (vx in [ tx, tx + 2 ])
+        seat(state, room, vx, vy, Const.CORP_ARMCHAIR);
+    }
 
+// lay the 3x2 desk block with its top-left at (tx,ty) and its owner's chair at (cx,cy), which is
+// one of the two cells over the middle of a long side. the monitor stands on the desk cell next to
+// the chair and the rest of the top takes a roll of desk things
+  static function execDeskAt(state: _CorpState, node: _GenNode, tx: Int, ty: Int, cx: Int, cy: Int)
+    {
+      var cells = state.area.getCells();
+      var full = [
+        Const.CORP_TABLE_PHONE,
+        Const.CORP_TABLE_LAMP,
+        Const.CORP_TABLE_FILES,
+        Const.CORP_TABLE_STATIONERY,
+      ];
+      var deco = full.copy();
+      var compx = cx;
+      var compy = (cy < ty ? ty : ty + 1);
+      GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + 1);
+      addDecoration(state, cx, cy, Const.CORP_EXEC_CHAIR);
+      addDecoration(state, compx, compy, Const.CORP_COMPUTERS);
       var left = full.length;
       for (dy in 0...2)
         for (dx in 0...3)
           {
             cells[tx + dx][ty + dy] = Const.DARK_TABLE_MARBLE1_3X2[dy][dx];
-            if (tx + dx == compx && ty + dy == compy)
+            if (tx + dx == compx &&
+                ty + dy == compy)
               continue;
             if (state.area.chance(40) &&
                 left > 0)
@@ -337,7 +329,260 @@ class CorpRooms
                 left--;
               }
           }
-      return true;
+    }
+
+// a small exec office's desk: a run of two or three worktop cells down the middle of the room's
+// LONG axis, with the owner's chair beside its middle cell.
+//
+// ALONG THE LONG AXIS, because 58% of exec offices are 3 cells on their short side and the old
+// across-the-room run was ONE pedestal there. Two cells of clearance at the ends keep both lanes
+// joined, and it is skipped outright where it would seal a doorway, the fault `atDoor` exists for
+  static function execRun(state: _CorpState, node: _GenNode, room: _Room)
+    {
+      var cells = state.area.getCells();
+      var alongX = (room.w >= room.h);
+      var len = (alongX ? room.w : room.h) - 2;
+      if (len > 3)
+        len = 3;
+      if (len < 2)
+        return;
+      var sx = (alongX ? room.x1 + Std.int((room.w - len) / 2) : room.x1 + Std.int((room.w - 1) / 2));
+      var sy = (alongX ? room.y1 + Std.int((room.h - 1) / 2) : room.y1 + Std.int((room.h - len) / 2));
+      var ex = (alongX ? sx + len - 1 : sx);
+      var ey = (alongX ? sy : sy + len - 1);
+      for (x in sx...ex + 1)
+        for (y in sy...ey + 1)
+          if (atDoor(cells, x, y))
+            return;
+      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, sx, sy, ex, ey);
+      var full = [
+        Const.CORP_TABLE_PHONE,
+        Const.CORP_TABLE_LAMP,
+        Const.CORP_TABLE_FILES,
+        Const.CORP_TABLE_STATIONERY,
+      ];
+      var deco = full.copy();
+      for (i in 0...len)
+        {
+          var x = (alongX ? sx + i : sx);
+          var y = (alongX ? sy : sy + i);
+          cells[x][y] = Const.TILE_DARK_TABLE_MARBLE1_1X1;
+          if (i == len - 1)
+            addDecoration(state, x, y, Const.CORP_COMPUTERS);
+          else if (state.area.chance(50))
+            deco = addDecorationExt(state, x, y, deco, full);
+        }
+      // the chair on the far side of the middle cell from the room's first wall
+      var mx = (alongX ? sx + Std.int(len / 2) : sx + 1);
+      var my = (alongX ? sy + 1 : sy + Std.int(len / 2));
+      addDecoration(state, mx, my, Const.CORP_EXEC_CHAIR);
+    }
+
+// THE EXEC SUITE: the desk at one end of the room's long axis and a lounge at the other — a sofa
+// against the end wall, a low table in front of it and two armchairs facing it across the table.
+//
+// Measured over 300 seeds, 58% of exec offices are 3 cells on their short side, and a room at least
+// 4 across and 7 long comes up 4.07 times a floor (1.97 of them long across X). Across Y the desk
+// block is 2 deep and its chairs take the rows either side, so at exactly 7 the visitors' row is
+// the lane and the visitors are left out. The lounge is a
+// solid 3x2 block and keeps a lane down each side of it — the rule gen.blocks.RoomBlock.lounge paid
+// for with two unreachable 7x3 offices in 4000 seeds — and the desk and the lounge keep a lane
+// between them. Tried at both ends and at every lane-keeping offset across the room, centre first;
+// false when nothing fits clear of the doorways, and `exec` falls back to the plain office
+  static function execSuite(state: _CorpState, node: _GenNode, room: _Room): Bool
+    {
+      var cells = state.area.getCells();
+      var alongX = (room.w >= room.h);
+      var len = (alongX ? room.w : room.h);
+      var span = (alongX ? room.h : room.w);
+      if (span < SUITE_SPAN ||
+          len < (alongX ? SUITE_LEN_X : SUITE_LEN_Y))
+        return false;
+      // the offsets across the room, centre first: the lounge's first row, and the desk's
+      var lounge = byCentre(1, span - 3);
+      var desk = (alongX ? byCentre(1, span - 3) : byCentre(0, span - 3));
+      // the desk's first cell along the axis. across X the chairs are beside the slab, so a room
+      // with a spare cell buys the desk a lane behind it; across Y the owner's chair takes u 0
+      var du = (alongX ? (len >= SUITE_LEN_X + 1 ? 1 : 0) : 1);
+      for (flip in [ false, true ])
+        for (v0 in lounge)
+          for (dv in desk)
+            {
+              var at = function(u: Int, v: Int)
+                {
+                  var x = (alongX ? (flip ? room.x2 - u : room.x1 + u) : room.x1 + v);
+                  var y = (alongX ? room.y1 + v : (flip ? room.y2 - u : room.y1 + u));
+                  return { x: x, y: y };
+                };
+              // every cell the suite stands on, solid or seat, has to be the room's bare floor and
+              // not a doorway
+              var solid = [];
+              for (u in len - 3...len)
+                for (v in v0...v0 + 2)
+                  solid.push(at(u, v));
+              var deskCells = [];
+              var owner = null;
+              var visitors = [];
+              if (alongX)
+                {
+                  for (u in du...du + 3)
+                    for (v in dv...dv + 2)
+                      deskCells.push(at(u, v));
+                  owner = at(du + 1, dv - 1);
+                  visitors = [ at(du, dv + 2), at(du + 2, dv + 2) ];
+                }
+              else
+                {
+                  for (u in du...du + 2)
+                    for (v in dv...dv + 3)
+                      deskCells.push(at(u, v));
+                  owner = at(du - 1, dv + 1);
+                  // and at 7 long the visitors' row would stand back to back with the lounge's
+                  // armchairs, so a room that short keeps the row as its lane instead
+                  if (len > SUITE_LEN_Y)
+                    visitors = [ at(du + 2, dv), at(du + 2, dv + 2) ];
+                }
+              var ok = true;
+              for (c in solid.concat(deskCells).concat([ owner ]))
+                if (cells[c.x][c.y] != MARBLE1 ||
+                    atDoor(cells, c.x, c.y))
+                  ok = false;
+              if (!ok)
+                continue;
+
+              // the desk, off its top-left cell whichever way round the room is
+              var tx = room.x2, ty = room.y2;
+              for (c in deskCells)
+                {
+                  if (c.x < tx)
+                    tx = c.x;
+                  if (c.y < ty)
+                    ty = c.y;
+                }
+              execDeskAt(state, node, tx, ty, owner.x, owner.y);
+              for (c in visitors)
+                seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
+
+              // the lounge, and the rug under it: the rug runs one lane wider than the furniture
+              // on each side, so the whole group stands ON it rather than beside its edge
+              var twin = Const.TILE_FLOOR_EXEC_RUG + UNWALKABLE_TILE_OFFSET;
+              for (u in len - 3...len)
+                for (v in v0 - 1...v0 + 3)
+                  {
+                    var c = at(u, v);
+                    if (cells[c.x][c.y] == MARBLE1)
+                      cells[c.x][c.y] = Const.TILE_FLOOR_EXEC_RUG;
+                  }
+              var l0 = at(len - 3, v0), l1 = at(len - 1, v0 + 1);
+              GenTree.add(node, CorpBlocks.ZONE_LOUNGE,
+                Std.int(Math.min(l0.x, l1.x)), Std.int(Math.min(l0.y, l1.y)),
+                Std.int(Math.max(l0.x, l1.x)), Std.int(Math.max(l0.y, l1.y)));
+              for (v in v0...v0 + 2)
+                {
+                  var groups = [ Const.CORP_ARMCHAIR, Const.CORP_TABLE_LOW, Const.CORP_SOFA ];
+                  for (i in 0...3)
+                    {
+                      var c = at(len - 3 + i, v);
+                      cells[c.x][c.y] = twin;
+                      addDecoration(state, c.x, c.y, groups[i]);
+                    }
+                }
+              return true;
+            }
+      return false;
+    }
+
+// the offsets lo..hi ordered by their distance from the middle of that range
+  static function byCentre(lo: Int, hi: Int): Array<Int>
+    {
+      var mid = (lo + hi) / 2;
+      var out = [for (i in lo...hi + 1) i];
+      out.sort(function(a, b) return Reflect.compare(Math.abs(a - mid), Math.abs(b - mid)));
+      return out;
+    }
+
+// seat one chair on a free cell of the room's own floor, if there is one there
+  static function seat(state: _CorpState, room: _Room, x: Int, y: Int, group: _TileGroup)
+    {
+      var cells = state.area.getCells();
+      if (x < room.x1 ||
+          x > room.x2 ||
+          y < room.y1 ||
+          y > room.y2 ||
+          cells[x][y] != MARBLE1 ||
+          atDoor(cells, x, y))
+        return;
+      addDecoration(state, x, y, group);
+    }
+
+// a plant in every corner of the room that is still its bare floor and is not a doorway.
+//
+// THIS OPENS WHAT `exec` HELD SHUT AT w >= 7, and on purpose: the dressed corners it measured were
+// a cooler, a coffee table and a router as well as a plant, which sealed a 4x4 office round a 3x2
+// slab (fill 26.9% -> 20.7% once CorpConnect.openPockets had eaten the desk to reach the floor). A
+// corner is the one cell of a room no lane runs through, so a plant there seals nothing a lane
+// needs; the oracle is what says so, not this comment
+  static function cornerPlants(state: _CorpState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      for (c in [
+          { x: room.x1, y: room.y1 },
+          { x: room.x2, y: room.y1 },
+          { x: room.x1, y: room.y2 },
+          { x: room.x2, y: room.y2 },
+        ])
+        {
+          if (cells[c.x][c.y] != MARBLE1 ||
+              atDoor(cells, c.x, c.y) ||
+              state.area.hasObjectAt(c.x, c.y))
+            continue;
+          cells[c.x][c.y] = Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET;
+          addDecoration(state, c.x, c.y, Const.CORP_PLANT);
+        }
+    }
+
+// the rug in an office that has no lounge: the biggest rect of bare floor at least 2x2, capped at
+// RUG_MAX on either axis, nearest the room's middle. Written as Const.TILE_FLOOR_EXEC_RUG, which
+// is still the room's marble to walk on and is what render.corp.CorpRugs lays the oval over.
+// A room that already has a rug (the suite's) is left alone
+  static function execRug(state: _CorpState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if (cells[x][y] == Const.TILE_FLOOR_EXEC_RUG ||
+              cells[x][y] == Const.TILE_FLOOR_EXEC_RUG + UNWALKABLE_TILE_OFFSET)
+            return;
+      var best = null;
+      var bestArea = 0;
+      var bestD = 0.0;
+      var mx = (room.x1 + room.x2) / 2, my = (room.y1 + room.y2) / 2;
+      for (w in 2...RUG_MAX + 1)
+        for (h in 2...RUG_MAX + 1)
+          for (x0 in room.x1...room.x2 - w + 2)
+            for (y0 in room.y1...room.y2 - h + 2)
+              {
+                var free = true;
+                for (x in x0...x0 + w)
+                  for (y in y0...y0 + h)
+                    if (cells[x][y] != MARBLE1)
+                      free = false;
+                if (!free)
+                  continue;
+                var d = Math.abs(x0 + (w - 1) / 2 - mx) + Math.abs(y0 + (h - 1) / 2 - my);
+                if (w * h > bestArea ||
+                    (w * h == bestArea && d < bestD))
+                  {
+                    best = { x: x0, y: y0, w: w, h: h };
+                    bestArea = w * h;
+                    bestD = d;
+                  }
+              }
+      if (best == null)
+        return;
+      for (x in best.x...best.x + best.w)
+        for (y in best.y...best.y + best.h)
+          cells[x][y] = Const.TILE_FLOOR_EXEC_RUG;
     }
 
 // a meeting room: one long table in the middle, boards and a projector round the walls.

@@ -53,6 +53,7 @@ class CorpBlocks
   public static inline var ZONE_COUNTER_RUN = 'counter-run';
   public static inline var ZONE_STALL_RUN = 'stall-run';
   public static inline var ZONE_BASIN_RUN = 'basin-run';
+  public static inline var ZONE_LOUNGE = 'lounge';
 
   // a max nothing is expected to reach, for the kind that takes whatever is left
   static inline var MANY = 99;

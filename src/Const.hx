@@ -899,6 +899,23 @@ class Const
   public static var CORP_TABLE_MUG = [
     { row: 39, col: 9, amount: 3 },
   ];
+  // THE EXEC OFFICE'S FURNITURE, on the four atlas cells rows 23-39 had left EMPTY. None of them
+  // has a sprite: render.corp.CorpDeco.draws hides every corp decoration in those rows and
+  // render.corp.CorpProps stands a glb on the cell instead, so the cell is only a name the saved
+  // grid can carry. The armchair is both the lounge's club chair and the visitor's chair in front
+  // of the desk; which way it faces is read off its neighbours
+  public static var CORP_EXEC_CHAIR = [
+    { row: 30, col: 11, amount: 1 },
+  ];
+  public static var CORP_ARMCHAIR = [
+    { row: 25, col: 10, amount: 1 },
+  ];
+  public static var CORP_SOFA = [
+    { row: 25, col: 11, amount: 1 },
+  ];
+  public static var CORP_TABLE_LOW = [
+    { row: 26, col: 11, amount: 1 },
+  ];
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
   public static var BLACK_BLOOD_LARGE = 5;
@@ -1177,6 +1194,11 @@ class Const
   // below, +16, the same as every corp floor
   public static var OFFSET_ROW17 = 272;
   public static var TILE_FLOOR_RECEPTION = OFFSET_ROW17 + 0;
+  // and the EXEC RUG, which is not a finish either: the exec office's own marble, but it marks the
+  // cells a rug lies over. gen.corp.CorpRooms decides where the rug goes and writes this id there;
+  // render.corp.CorpRugs lays one oval over each room's rect of it. Its twin is the furniture that
+  // stands on the rug
+  public static var TILE_FLOOR_EXEC_RUG = OFFSET_ROW17 + 1;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

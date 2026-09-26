@@ -64,8 +64,9 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION), and row 18 their twins
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION, TILE_FLOOR_EXEC_RUG), and
+    // row 18 their twins
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
@@ -141,6 +142,11 @@ class Default extends Tileset
         return super.getIcon(Const.TILE_FLOOR_MARBLE1);
       if (tileID == Const.TILE_FLOOR_RECEPTION + 16)
         return super.getIcon(Const.TILE_FLOOR_MARBLE1 + 16);
+      // and the exec rug is the boardroom's carpet, the one rug-like floor the tileset has
+      if (tileID == Const.TILE_FLOOR_EXEC_RUG)
+        return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING);
+      if (tileID == Const.TILE_FLOOR_EXEC_RUG + 16)
+        return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING + 16);
       if (tileID == Const.TILE_FLOOR_SERVER + 16 ||
           tileID == Const.TILE_FLOOR_ARCHIVE + 16 ||
           tileID == Const.TILE_ARCHIVE_HIGH)
