@@ -76,7 +76,7 @@ class CorpGen
     }
 
 // build one node of the tree. a kind with no case here is a leaf that writes nothing, which is
-// what every zone kind is
+// what every zone kind is but the kitchen's
   static function fill(state: _CorpState, node: _GenNode)
     {
       if (OfficeBlock.isRoom(node.kind))
@@ -91,6 +91,11 @@ class CorpGen
 
           case CorpBlocks.ELEVATOR:
             ElevatorBlock.fill(state, node);
+
+          case CorpBlocks.ZONE_PREP,
+            CorpBlocks.ZONE_VENDING,
+            CorpBlocks.ZONE_DINING:
+            CorpKitchen.fill(state, node);
 
           default:
         }

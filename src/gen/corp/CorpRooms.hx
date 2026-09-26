@@ -152,7 +152,7 @@ class CorpRooms
 // Invisible while rooms were 8 x 8, because a room that size has other ways in and the flood found
 // one. At the halved size it is 61 rooms over 200 towers — 52 of them open plan, which owns the
 // longest dressing list in the file
-  static function atDoor(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+  public static function atDoor(cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
       for (i in 0...Const.dir4x.length)
         if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == BLDG_INNER_DOOR)
@@ -457,7 +457,7 @@ class CorpRooms
               // what it erodes is the furniture: measured on the first build, a 9 x 4 suite came
               // back with the desk's first column and both door-end plants eaten
               if (!ok ||
-                  !roomOpen(state, room, blocked))
+                  !roomOpen(state, room, blocked, MARBLE1))
                 continue;
 
               // the desk, off its top-left cell whichever way round the room is
@@ -550,14 +550,16 @@ class CorpRooms
         }
     }
 
-// can every walkable cell of the exec office still be reached from its doorways, with the cells in
-// `blocked` (keyed x * 1000 + y) taken as furniture? True for a room with no doorway to start from.
+// can every walkable cell of the room still be reached from its doorways, with the cells in
+// `blocked` (keyed x * 1000 + y) taken as furniture? `floor` is the room's own walkable floor id.
+// True for a room with no doorway to start from.
 //
 // THE EXEC OFFICE ASKS THIS OF ITSELF because the repair downstream cannot tell a pocket it should
 // open from furniture it should keep: gen.corp.CorpConnect.openPockets reaches a sealed cell by
 // eroding whatever stands in the way, so a placement that walls a lane in is not rejected, it is
 // half-deleted after the fact
-  static function roomOpen(state: _CorpState, room: _Room, blocked: Map<Int, Bool>): Bool
+  public static function roomOpen(state: _CorpState, room: _Room, blocked: Map<Int, Bool>,
+      floor: Int): Bool
     {
       var cells = state.area.getCells();
       var walk = function(x: Int, y: Int)
@@ -566,7 +568,7 @@ class CorpRooms
           y >= room.y1 &&
           y <= room.y2 &&
           !blocked.exists(x * 1000 + y) &&
-          (cells[x][y] == MARBLE1 ||
+          (cells[x][y] == floor ||
           cells[x][y] == Const.TILE_FLOOR_EXEC_RUG);
       var seen = new Map<Int, Bool>();
       var stack = [];
@@ -736,80 +738,14 @@ class CorpRooms
           }
     }
 
-// a staff kitchen and the floor's break room in one: a column of 2x2 tables, or a galley counter
-// where the room is too small for them, with the machines people cook with and the ones they stand
-// at round the walls
+// a staff kitchen and the floor's break room in one. The template only lays the floor; what stands
+// on it is three sub-blocks gen.corp.CorpKitchen divides the room into and fills a level down — a
+// prep counter along one wall, a snack corner by a door and the dining tables in the middle
   public static function kitchen(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD1);
-      // and the same 5 the boardroom takes — `kitchenTables` lays 2x2 units at pitch 3 inside the
-      // room's own inset, which a 5-cell run still holds one of. A 4-WIDE KITCHEN IS STILL A
-      // KITCHEN: it is dealt at minW/minH 4 on purpose (see CorpBlocks), and every 4 x 9 one came
-      // out as wall fixtures alone at 21.2% fill, so below the island it takes a counter run
-      if (room.w >= 5 &&
-          room.h >= 5)
-        kitchenTables(state, node, room);
-      else
-        deskRun(state, node, room, [
-            Const.CORP_TABLE_KETTLE,
-            Const.CORP_TABLE_MICROWAVE,
-            Const.CORP_TABLE_MUG,
-            Const.CORP_TABLE_FRUIT,
-          ]);
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_CLEANING,
-          Const.CORP_TABLE_BLENDER,
-          Const.CORP_TABLE_KETTLE,
-          Const.CORP_TABLE_MICROWAVE,
-          Const.CORP_TABLE_CONTAINER,
-          Const.CORP_TABLE_MUG,
-          Const.CORP_TABLE_FRUIT,
-          Const.CORP_TABLE_TISSUE,
-        ], [
-          Const.CORP_COOLER,
-          Const.CORP_PLANT,
-          Const.CORP_TRASH,
-          Const.CORP_VENDING,
-          Const.CORP_FRIDGE,
-          Const.CORP_TAP,
-        ],
-        Const.TILE_LIGHT_TABLE_WOOD1_1X1,
-        Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET,
-        60, 30);
-    }
-
-  static function kitchenTables(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      var cells = state.area.getCells();
-      var tx = room.x1 + Std.int(room.w / 2) - 1;
-      var full = [
-        Const.CORP_TABLE_TISSUE,
-        Const.CORP_TABLE_SAUCES,
-        Const.CORP_TABLE_SALT,
-        Const.CORP_TABLE_MUG,
-        Const.CORP_TABLE_FRUIT,
-      ];
-      var deco = full.copy();
-      var cnt = -1;
-      while (true)
-        {
-          cnt++;
-          if (cnt > 100)
-            break;
-          var ty = cnt * 3 + room.y1 + 2;
-          if (ty + 2 >= room.y2)
-            break;
-          GenTree.add(node, CorpBlocks.ZONE_COUNTER_RUN, tx, ty, tx + 1, ty + 1);
-          for (dy in 0...2)
-            for (dx in 0...2)
-              {
-                cells[tx + dx][ty + dy] = Const.LIGHT_TABLE_WOOD1_2X2[dy][dx];
-                if (state.area.chance(30))
-                  deco = addDecorationExt(state, tx + dx, ty + dy, deco, full);
-              }
-        }
+      CorpKitchen.zones(state, node, room);
     }
 
 // open plan: rows of 3x1 desks with a chair under each, printers and boards round the walls

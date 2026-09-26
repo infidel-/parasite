@@ -54,6 +54,13 @@ class CorpBlocks
   public static inline var ZONE_STALL_RUN = 'stall-run';
   public static inline var ZONE_BASIN_RUN = 'basin-run';
   public static inline var ZONE_LOUNGE = 'lounge';
+  // and the kitchen's three, which unlike the rest are REAL sub-blocks: the kitchen template only
+  // lays the floor and pushes them, and gen.corp.CorpKitchen fills each one a level down
+  public static inline var ZONE_PREP = 'prep';
+  public static inline var ZONE_VENDING = 'vending';
+  public static inline var ZONE_DINING = 'dining';
+  // the kitchen size the deal aims at: prep, snack corner and a dining table all fit from here
+  static inline var KITCHEN_AIM = 6;
 
   // a max nothing is expected to reach, for the kind that takes whatever is left
   static inline var MANY = 99;
@@ -186,14 +193,17 @@ class CorpBlocks
         },
         // the kitchen is also the floor's break room, and 4 x 4 AND NOT 5 x 5 for the reason the
         // break room had: at 5 it was an eighth min against the 14.4 rooms a floor that clear 5 on
-        // both axes. Below 5 the room loses its island of tables and takes a galley counter instead
+        // both axes. It AIMS at 6 x 6 though, where the prep counter, the snack corner and the
+        // dining tables all fit; `smallest` dealt it 4 x 4 nearly every time, which is a galley
         {
           kind: ROOM_KITCHEN,
           min: 1,
           max: 2,
           minW: 4,
           minH: 4,
-          fit: smallest,
+          fit: function(b: _GenNode)
+            return -(Std.int(Math.abs(GenTree.width(b) - KITCHEN_AIM)) +
+              Std.int(Math.abs(GenTree.height(b) - KITCHEN_AIM))),
         },
         // the cubicle farm wants the ROOMIEST room on the floor, which is the one the old generator
         // would have made open plan. It is what the floor reads as from the lift, so one is
