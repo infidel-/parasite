@@ -45,12 +45,18 @@ class CorpKitchen
       var cells = state.area.getCells();
       var runs = wallRuns(cells, room);
 
-      // the prep counter takes the longest clear stretch of wall, anchored in a corner where it has one
+      // the prep counter takes the longest clear stretch of wall, anchored in a corner where it has one.
+      //
+      // NEVER THE SOUTH WALL: the tactical camera looks north, so a counter backed onto the south
+      // wall shows the player its back with the masonry in front of it, and its cabinets and fridge
+      // are only ever seen under a heavy camera turn. A kitchen with no other clear wall goes without
       var prep = null;
       var best = 0;
       for (r in runs)
         {
           var len = r.cells.length;
+          if (r.side == SIDE_S)
+            continue;
           if (len > best ||
               (len == best && state.area.chance(50)))
             {

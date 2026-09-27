@@ -552,6 +552,13 @@ starts over with a fresh split if any `min` went unmet, up to `MAX_PLAN_TRIES`. 
 `UndergroundLabAreaGenerator.buildLabLayout`'s 30 attempts. `Quota.deal` is silent on failure for
 this reason — ask `Quota.satisfied` instead.
 
+**The south wall rarely carries wall decoration.** The tactical camera looks NORTH, so anything
+backed onto a room's south wall faces away from the player, with the masonry between them. The
+player only sees it under a heavy camera turn. A template choosing a wall for a run that is read by
+its front (a counter, cabinets, a fridge, a bookcase, a notice) picks another side first, and takes
+the south only when the piece would be wasted anywhere else. The kitchen's prep counter never takes
+it (`CorpKitchen.zones`).
+
 **`Subdivide` is not shared with `citygen.CityGen`, on purpose.** CityGen's `leaf()` draws floors,
 roof and facade from the same rng as the split, so cutting and dressing are interleaved in one
 stream. Pulling the split out would reorder those draws and move every city layout in every existing
@@ -1363,7 +1370,8 @@ child nodes (with `roomID` set) that `CorpGen.fill` dispatches a level down, so 
 ones pushed before it on the grid. The only corp zones that are fillers rather than records.
 
 - **`prep`**: the longest stretch of the wall ring no door opens onto and **no window backs** (temp
-  ids 18-24 / 27-33), 2..`PREP_MAX` 5 cells, anchored in a corner where it has one. Fridge at the
+  ids 18-24 / 27-33) and **not on the south wall** (see Rules: the camera would see its back), 2..`PREP_MAX` 5
+  cells, anchored in a corner where it has one. Fridge at the
   corner end, sink (`CORP_TAP`) next, then microwave / kettle / coffee, or `CORP_COUNTER` on a bare
   cell. **Every run cell stays walkable WOOD1**, named by its decoration: the render stands a
   counter (1.32 deep), a fridge or a vending machine almost wholly on the WALL cell's strip of floor
@@ -1380,6 +1388,10 @@ ones pushed before it on the grid. The only corp zones that are fillers rather t
   along. A table left with fewer than two chairs also takes its other two sides.
 - The demand **aims at 6 x 6** (`fit` = `-(|w-6| + |h-6|)`, min still 4 x 4), since `smallest` dealt
   it 4 x 4 nearly every time.
+
+Round 6 (no prep on the south wall): 0 failures, 0 unreachable, `orphanCells` 0 over 3,000 seeds.
+`nodes/prep` 1.84 -> 1.66 a floor (about 92% -> 83% of kitchens), `nodes/table` 15.13 -> 15.31.
+A kitchen whose only clear wall is the south one goes without a counter.
 
 Round 3 (walkable run cells, the lane dropped): 0 failures, 0 unreachable, `orphanCells` 0 over
 3,000 seeds; `nodes/table` 13.21 -> 15.13 a floor, about one more table per kitchen. `furn/kitchen`
