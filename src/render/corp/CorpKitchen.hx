@@ -119,6 +119,7 @@ class CorpKitchen
       if (area == null)
         return;
       var cs = counters(m, area);
+      var cabbed = [];
       for (c in cs)
         {
           var yaw = (c.dir < 0 ? 0.0 : Math.atan2(DC[c.dir ^ 1], DR[c.dir ^ 1]));
@@ -140,8 +141,45 @@ class CorpKitchen
             yaw: yaw,
             y: CorpStyle.CAB_Y,
           });
+          cabbed.push(c);
         }
-      runs(m, cs);
+      // the contact under the counters and up the wall behind the cabinets, each ONCE PER RUN
+      runs(m, cs, function(c, len)
+        {
+          var alongX = (c.dir < 2);
+          var sc = (alongX ? 1 : 0), sr = (alongX ? 0 : 1);
+          var ha = CELL / 2, hc = CorpStyle.COUNTER_D / 2;
+          var ex = c.x + sc * (len - 1) * CELL, ez = c.z + sr * (len - 1) * CELL;
+          FacilityDetail.ground(m, {
+            col: c.col,
+            row: c.row,
+            len: len,
+            alongX: alongX,
+            rect: {
+              x0: c.x - (alongX ? ha : hc),
+              x1: ex + (alongX ? ha : hc),
+              z0: c.z - (alongX ? hc : ha),
+              z1: ez + (alongX ? hc : ha),
+            },
+            h: CorpStyle.COUNTER_H,
+          });
+        });
+      // A HUNG CABINET HAS NO FLOOR, so its whole contact is the halo on the masonry it hangs off,
+      // raised to CAB_Y — reported as the cabinet having no contact shadow at all
+      runs(m, cabbed, function(c, len)
+        {
+          var a = (c.dir < 2 ? c.x : c.z);
+          FacilityDetail.stand({
+            col: c.col,
+            row: c.row,
+            dir: c.dir,
+            a0: a - CorpStyle.CAB_W / 2,
+            a1: a + (len - 1) * CELL + CorpStyle.CAB_W / 2,
+            len: len,
+            y: CorpStyle.CAB_Y,
+            h: CorpStyle.CAB_H,
+          });
+        });
       // the fridge and the vending machine, backed onto their wall like the counter
       tall(m, area, CorpDeco.K_FRIDGE, CorpStyle.FRIDGE_W, CorpStyle.FRIDGE_D, CorpStyle.FRIDGE_H,
         out.fridges);
@@ -348,9 +386,9 @@ class CorpKitchen
       return out;
     }
 
-// the contact under the counters, ONCE PER RUN: cells side by side along the same wall make one
-// footprint, so their halos do not compound down the wall
-  static function runs(m:Facility, cs:Array<KitchenCounter>):Void
+// every run of `cs`: cells side by side along the same wall, handed to `each` as the run's first cell
+// and its length, so a contact laid per run does not compound its halos down the wall
+  static function runs(m:Facility, cs:Array<KitchenCounter>, each:KitchenCounter->Int->Void):Void
     {
       var at = new Map<Int, KitchenCounter>();
       for (c in cs)
@@ -373,21 +411,7 @@ class CorpKitchen
                 break;
               len++;
             }
-          var ha = CELL / 2, hc = CorpStyle.COUNTER_D / 2;
-          var ex = c.x + sc * (len - 1) * CELL, ez = c.z + sr * (len - 1) * CELL;
-          FacilityDetail.ground(m, {
-            col: c.col,
-            row: c.row,
-            len: len,
-            alongX: alongX,
-            rect: {
-              x0: c.x - (alongX ? ha : hc),
-              x1: ex + (alongX ? ha : hc),
-              z0: c.z - (alongX ? hc : ha),
-              z1: ez + (alongX ? hc : ha),
-            },
-            h: CorpStyle.COUNTER_H,
-          });
+          each(c, len);
         }
     }
 

@@ -4790,17 +4790,17 @@
       "sat": 0.5,
       "cells": {
         "grid": 4,
-        "cap": 0.1
+        "cap": 0.25
       },
-      "note": "PACK16 of the fridge's MAGNET CLUTTER, dealt by render.corp.CorpKitchen as upright decals on the fridge door and sides (the fridge top takes corp/kitchen-clutter's top-down cells). It REPLACES the two notes that were modelled into the fridge glb as label boxes -- two static ones on every fridge, reported as 'make these clutter slots'. Generated gpt-image-2.5-sunburst background transparent; the drop came back with its background at alpha 1-5 (56% under 128, only 0.1% at 0) under a coloured haze, so alpha < 64 was zeroed and tools/pack16.py --valign center packed it at tol 0 (seams x 255/514/764, y 257/506/759, scale 1.1009). The raw drop is parked at Unused/fridge-magnets-raw.png. sat and cap are corp/kitchen-clutter's.",
+      "note": "PACK16 of the fridge's MAGNET CLUTTER, dealt by render.corp.CorpKitchen as upright decals on the fridge door and sides (the fridge top takes corp/kitchen-clutter's top-down cells). It REPLACES the two notes that were modelled into the fridge glb as label boxes -- two static ones on every fridge, reported as 'make these clutter slots'. Generated gpt-image-2.5-sunburst background transparent; the drop came back with its background at alpha 1-5 (56% under 128, only 0.1% at 0) under a coloured haze, so alpha < 64 was zeroed and tools/pack16.py --valign center packed it at tol 0 (seams x 255/514/764, y 257/506/759, scale 1.1009). The raw drop is parked at Unused/fridge-magnets-raw.png. sat is corp/kitchen-clutter's. THE CAP IS NOT: kitchen-clutter's 0.1 is a desk's, and on the fridge's white lacquer (~0.37 linear) it held every magnet at half the door's value, reported as all of them dark; 0.25 lets the paper read as paper on a white door.",
       "last_converted": "2026-09-27T14:48:06",
       "last_sat": 0.5,
       "last_cells": {
         "grid": 4,
-        "cap": 0.1
+        "cap": 0.25
       },
-      "built_linear": 0.0989,
-      "built_srgb": 83.7
+      "built_linear": 0.2447,
+      "built_srgb": 128.5
     }
   }
 }

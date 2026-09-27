@@ -346,6 +346,7 @@ class CorpStyle
   public static inline var COUNTER_D = 1.32;
   public static inline var SINK_H = 2.5308;
   public static inline var CAB_H = 1.4;
+  public static inline var CAB_W = 3.94;
   public static inline var CAB_D = 0.74;
   // over the tallest thing on the counter: the coffee machine's top is COUNTER_H + 0.95 x
   // APPLIANCE_SCALE = 3.04, so at 3.0 it stood up into the cabinet's carcass
