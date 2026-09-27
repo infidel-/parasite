@@ -61,6 +61,10 @@ import render.world.PropEnvOpts;
 // assigns, so seeding it before <lights_fragment_end> is safe.
 class PropEnv
 {
+  // the view-anchored face glint's lobe: broad, so a face turned part way off its key still takes
+  // some of it (a float literal, it is pasted into the GLSL)
+  static inline var FACE_GLOSS = '8.0';
+
   static var opt:PropEnvOpts = null;
   public static var on(default, null):Bool = false;
 
@@ -104,10 +108,17 @@ class PropEnv
 
 // fold the reflection into one material, and hand it back the way IndoorMask.patch does.
 //
+// `face` is a second glint for THIS material alone, for brushed steel that has to flash on its flat
+// faces: the room's key is a WORLD direction, and from the tactical pitch a top reflects it away
+// from the camera and a side reflects the floor, so only a chamfer strip ever catches it. This one
+// is anchored to the VIEW, two keys over and under the camera's line of sight, so a top and a side
+// each flash as the camera turns onto them. Its strength is a uniform of the material's own, so the
+// program stays the shared `propenv` one and every other prop carries it at 0.
+//
 // GATED ON `on`, because this is only ever called from a prop builder that may run before or after
 // the scene rig depending on when its glb resolves — and a material patched with the strength at 0
 // would carry the instructions forever for nothing
-  public static function apply(mat:Dynamic):Dynamic
+  public static function apply(mat:Dynamic, face:Float = 0.0):Dynamic
     {
       if (mat == null ||
           !on ||
@@ -136,12 +147,16 @@ class PropEnv
         '  float peF = 0.08 + 0.92 * pow( 1.0 - clamp( dot( geometryNormal, geometryViewDir ), 0.0, 1.0 ), 5.0 );\n' +
         '  vec3 peKey = normalize( ( viewMatrix * vec4( propEnvKeyDir, 0.0 ) ).xyz );\n' +
         '  float peS = pow( max( dot( peRef, peKey ), 0.0 ), propEnvGloss );\n' +
-        '  reflectedLight.indirectDiffuse += peCol * propEnvStrength * peF + propEnvKey * ( propEnvSheen * peS );\n';
+        '  reflectedLight.indirectDiffuse += peCol * propEnvStrength * peF + propEnvKey * ( propEnvSheen * peS );\n' +
+        '  float peT = pow( max( dot( peRef, normalize( vec3( 0.0, 0.77, 0.63 ) ) ), 0.0 ), ' + FACE_GLOSS + ' );\n' +
+        '  float peD = pow( max( dot( peRef, normalize( vec3( 0.0, -0.76, -0.65 ) ) ), 0.0 ), ' + FACE_GLOSS + ' );\n' +
+        '  reflectedLight.indirectDiffuse += propEnvKey * ( propEnvFace * ( peT + peD ) );\n';
       var prev:Dynamic = mat.onBeforeCompile;
       // an OWN key only — three's Material carries a DEFAULT customProgramCacheKey on the PROTOTYPE
       // that returns onBeforeCompile.toString(), so taking it blindly calls it unbound every draw
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
+      var uFace:Dynamic = { value: face };
       var hook:Dynamic = function(shader:Dynamic, renderer:Dynamic)
         {
           if (prev != null)
@@ -154,6 +169,7 @@ class PropEnv
           shader.uniforms.propEnvKeyDir = uKeyDir;
           shader.uniforms.propEnvGloss = uGloss;
           shader.uniforms.propEnvSheen = uSheen;
+          shader.uniforms.propEnvFace = uFace;
           shader.fragmentShader = 'uniform vec3 propEnvSky;\n' +
             'uniform vec3 propEnvHorizon;\n' +
             'uniform vec3 propEnvGround;\n' +
@@ -162,6 +178,7 @@ class PropEnv
             'uniform vec3 propEnvKeyDir;\n' +
             'uniform float propEnvGloss;\n' +
             'uniform float propEnvSheen;\n' +
+            'uniform float propEnvFace;\n' +
             StringTools.replace(shader.fragmentShader, '#include <lights_fragment_begin>',
               '#include <lights_fragment_begin>\n' + inject);
         };

@@ -356,6 +356,11 @@ class CorpStyle
   public static inline var VENDING_H = 4.2;
   public static inline var VENDING_W = 2.2;
   public static inline var VENDING_D = 1.43;
+  // how bright its brushed steel's FACES glint, render.world.PropEnv's view-anchored lobe: the room's
+  // own glint only ever lands on the chamfer strips from the tactical camera. Swept live, a face
+  // turned onto a key: p90 128 at 0, 170 at 0.35, 197 at 0.8 — which washes the brushing out to a
+  // white box; at the default yaw the side moved 131 -> 147 at 0.35
+  public static inline var VENDING_GLINT = 0.3;
   // the four things on a counter, as (height, width, depth) at the size they were built, and the
   // one scale all four are drawn at: the exec trinkets' lesson, sized off the counter they stand
   // on rather than off their own centimetres. They keep APPLIANCE_BACK off the counter's back edge

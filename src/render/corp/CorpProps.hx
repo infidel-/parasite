@@ -252,7 +252,7 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpKitchenCab, kt.cabs, CorpStyle.CAB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpKitchenFridge, kt.fridges, CorpStyle.FRIDGE_H));
       out.push(batch(scene, RenderConfig.MODELS.corpKitchenVending, kt.vendings,
-        CorpStyle.VENDING_H));
+        CorpStyle.VENDING_H, true, CorpStyle.VENDING_GLINT));
       out.push(batch(scene, RenderConfig.MODELS.corpKitchenMicrowave, kt.microwaves,
         CorpStyle.MICROWAVE[0] * CorpStyle.APPLIANCE_SCALE));
       out.push(batch(scene, RenderConfig.MODELS.corpKitchenCoffee, kt.coffees,
@@ -284,7 +284,7 @@ class CorpProps
 // one instanced batch, and the three things every indoor batch in this game does behind the loader
 // callback — the mesh does not exist until the glb resolves
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>,
-      h:Float, env:Bool = true):Models.InstancedProp
+      h:Float, env:Bool = true, face:Float = 0.0):Models.InstancedProp
     {
       var p = Models.instanced(scene, path, places, h, SOLID);
       if (places.length > 0)
@@ -295,7 +295,7 @@ class CorpProps
             // inject works on Lambert (PropEnv's own header says so, twice), so "only the ones
             // that stayed MeshStandard" was never true of it
             if (env)
-              render.world.PropEnv.apply(p.mesh.material);
+              render.world.PropEnv.apply(p.mesh.material, face);
             // AND IT CASTS, off the CEILING FIXTURES. the original reasoning here was the moon's
             // — an instanced batch drawn into a shadow map is a second call the moment the batch is
             // on screen — and a tower floor has no moon over it. True, and it skipped the lights it
