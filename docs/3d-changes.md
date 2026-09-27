@@ -2514,3 +2514,24 @@ white lacquer.
 
 Verdict: **LANDED at 0.3.** 0 calls (a uniform on an existing program).
 
+## Corp kitchen round 5: vending panel inside its frame line, magnets lifted off the desk cap, wall cabinet halo
+
+- **Black line down the vending panel's right edge:** the panel label's rect ran to the sheet's last
+  column, and the drop draws a dark frame there (x 1020..1023 at luma 53..106 against the panel's
+  ~150; x 698 and y 546..548 are dark too). The rect is now x 702..1016 by y 4..538, which keeps the
+  face's 0.588 aspect rather than stretching the art. Rebuilt; the gates are unchanged.
+- **Magnets all dark against the fridge:** `corp/fridge-magnets` had copied `cells.cap` 0.1 from
+  kitchen-clutter. That cap is a desk's: it scales any cell whose mean linear value is over 0.1
+  down onto it. On white lacquer (~0.37 linear, sheet luma 164) it held every magnet at about half
+  the door's value. Now 0.25: built sRGB 83.7 -> 128.5.
+- **Wall cabinet with no contact shadow:** a hung cabinet has no floor, so `ground()` never applied
+  and nothing else laid a halo. `FacilityDetail.stand` now lays one at `CAB_Y` with height `CAB_H`,
+  once per RUN of cabinets. `CorpKitchen.runs` takes a callback, so the counters' floor contact and
+  the cabinets' wall halo share the run walk. Verified in the `contact shadows` mesh: a quad at
+  y 3.17..5.03 behind the cabinet, clamped where the wall stops at the doorway.
+
+**Trap:** a PACK16's `cells.cap` carries the value ladder of the surface it was fitted to. A sheet
+copying another's knobs onto a much brighter surface inherits a ceiling it has no reason to have.
+
+Verdict: **LANDED.** 0 calls.
+
