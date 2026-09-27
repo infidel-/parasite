@@ -2490,3 +2490,27 @@ the vending's top and front arrises lit. 0 calls.
 
 Verdict: **signs and pools LANDED; the PropEnv gain FAILED and is not in the tree.**
 
+## Vending machine: a view-anchored face glint, so its flat steel faces flash and not only its chamfers
+
+Asked for: every part of the vending machine to glint, sides and top included, not just the edges
+round 4 chamfered. PropEnv's glint key is a WORLD direction, and from the tactical pitch a top
+reflects it away from the camera and a side reflects the floor, so no flat face ever catches it.
+
+`PropEnv.apply(mat, face)` adds a second lobe of the material's OWN (`propEnvFace`, a per-material
+uniform, so the program stays the shared `propenv` one and every other prop carries it at 0). It
+takes the reflection vector against two keys fixed in VIEW space, one over the camera's line of
+sight for tops and one under it for sides, at a broad `FACE_GLOSS` 8, times the room's `key`
+colour. Each face flashes as the camera turns onto it. It is set by `CorpStyle.VENDING_GLINT` 0.3
+on the vending batch only.
+
+Swept live by writing the uniform through `renderer.properties.get(mat).uniforms`:
+- A face turned onto a key: crop p90 128 at 0, 170 at 0.35, 197 at 0.8. At 0.8 the brushed texture
+  is gone and the machine reads as a white box.
+- At the default yaw, the side face's mean goes 131.5 at 0, 138.7 at 0.15, 146.7 at 0.35.
+
+**Trap:** a view-anchored lobe on a FLAT face is uniform across it. It reads as a glint only because
+it changes with the camera's yaw. Past ~0.4 it turns into a brighter albedo and the steel reads as
+white lacquer.
+
+Verdict: **LANDED at 0.3.** 0 calls (a uniform on an existing program).
+
