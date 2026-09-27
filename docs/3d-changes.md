@@ -2371,3 +2371,49 @@ batches shown vs hidden, interleaved x3: **199 vs 182 (+17)**, identical each ro
 removed to offset it: the old casework and counters were in shared worktop buffers.
 
 Verdict: **LANDED.** +17 calls with a kitchen on screen, in the exec office's +10..+18 band.
+
+
+## Corp kitchen round 2: magnet slots, steel vending, closed plinths, seamless floor and wall, four-table dining
+
+A face-pick round on the kitchen above, thirteen reports. What changed:
+
+- **Fridge magnets:** the two notes modelled onto the fridge door were the same rota and the same
+  drawing on every fridge. They are gone from the glb (552 -> 540 tris), and `CorpClutter.fridge`
+  hangs a new PACK16, `corp/fridge-magnets`, on the door (1..5 items, clear of the pull, above the
+  freezer split) and on both sides (0..2 each). The top takes 0..2 kitchen-clutter decals. It uses
+  the panel pins' `upright` quad with a `cols` argument, hung square on.
+- **Vending machine:** it read as a black slab because the prompt asked for dark powder-coated
+  casing and the build maps that casing over the frame, sides and top. One `edit_image` pass
+  repainted the casing brushed steel. The glass, display and keypad came back in place and the
+  measured seams did not move. The emissive mask is re-cut from the new sheet and clipped to the
+  glass interior, or the steel frame inside the glass rect would glow.
+- **Plinths:** the fridge's and the counters' kick was a plate across the front, so both ends of the
+  recess were open. It is now a block set back under the doors and running to the wall. The sink's
+  carcass stopped under the bowl, between end panels set 0.03 in from its ends, which read as a
+  ledge down each end. The panels are now the unit's ends, full height and flush.
+- **Counters:** no clutter any more; the appliances dress them.
+- **Chairs:** turned off square by up to `KITCHEN_CHAIR_JITTER` 0.14. A chair between two tables
+  faces one by the parity of its cell, so a shared row seats both tables.
+- **Cooler:** it now backs onto its snack-corner run via `CorpKitchen.hand`. In a corner it could
+  face the other wall.
+- **Floor and wall sources:** see the traps below.
+
+**Traps:**
+1. A structural seam is not a tonal one, so a blend would ghost the joints. The fix is
+   `tools/seamfix.py`:
+   - Floor: the courses came out 126 px apart, not 128, leaving a 145 px course across the
+     vertical wrap. Every course had one butt joint, so the wrap cut through a board. `planks`
+     re-stacks the whole courses, turns each wrap cut into a joint and rolls each course to stagger
+     it. The wrap step went from 3.0-6.4 to 1.2-1.6 (the interior is ~1.6).
+   - Wall: the grout sat at the right pitch but none was drawn at the wrap, so `grout` copies one
+     onto the edge.
+2. A `transparent` drop can still come back uncut. The magnets' background came back at alpha 1-5
+   under a coloured haze; zeroing alpha under 64 fixed it before `pack16.py`.
+3. `check()` flags parallel faces 0.005 apart as coplanar. The new sink panel and kick each needed a
+   second move.
+
+Measured, follow cam, `renderer.info.render.calls` median of 6 frames, the magnet mesh shown vs
+hidden, interleaved x3: **184 vs 183 (+1)**, 16 tris for two fridges. The removed notes were part
+of the fridge instance and cost nothing.
+
+Verdict: **LANDED.** +1 call per floor with a fridge on it.

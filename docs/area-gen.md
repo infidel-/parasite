@@ -1368,13 +1368,21 @@ ones pushed before it on the grid. The only corp zones that are fillers rather t
   coffee on the rest.
 - **`vending`**: the 2..3-cell window of wall nearest a door that the counter did not take: vending
   machine, cooler, walkable bin.
-- **`dining`**: the rect inside the wall ring, one more lane off the counter's side where it can
-  spare it; `LIGHT_TABLE_WOOD1_2X2` at pitch 3, each table kept only if `roomOpen` still floods the
-  room, chairs (`CORP_CHAIR`, walkable) on the two sides the table row does not run along.
+- **`dining`**: the whole room, less the LANE: every cell next to the counter or the snack corner
+  (anything not bare WOOD1), which no table or chair takes. `LIGHT_TABLE_WOOD1_2X2` at pitch 3,
+  each table kept only if `roomOpen` still floods the room. **Every offset the spare cells allow is
+  tried**, scored as `tables * 10 + seats`: when tables were centred inside an inset rect, an 8x6
+  kitchen left a spare row on each side where a second row of two tables fits. A chair
+  (`CORP_CHAIR`, walkable) goes on every free cell of the two sides the table row does not run
+  along. A table left with fewer than two chairs also takes its other two sides.
 - The demand **aims at 6 x 6** (`fit` = `-(|w-6| + |h-6|)`, min still 4 x 4), since `smallest` dealt
   it 4 x 4 nearly every time.
 
-Measured over 3,000 seeds: 0 failures, 0 unreachable, `orphanCells` 0. **`furn/kitchen` 21.7% ->
+Round 2 (offset search, every seat): 0 failures, 0 unreachable, `orphanCells` 0 over 3,000 seeds;
+the `--stats` `furn/kitchen` figure rose 59.68 -> 79.22, with +1.83 tables and +7.3 decorations a
+floor. A 5x5 kitchen now fits a corner table where the inset rect fitted none.
+
+First pass, over 3,000 seeds: 0 failures, 0 unreachable, `orphanCells` 0. **`furn/kitchen` 21.7% ->
 29.8%**, prep in 92% of kitchens and vending in 85% (glazed walls take the rest), dining in 96%.
 Sizes now centre on 6x6 / 6x5 / 5x6. The deal moved a little with it: open plan 2.41 -> 2.04 a
 floor and archive 1.93 -> 1.79, with the exec filler taking the difference.
