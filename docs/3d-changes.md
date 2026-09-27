@@ -2448,3 +2448,33 @@ Verified in game on a regenerated 6x6 kitchen: four tables, the player standing 
 the sink's cells, a flush microwave under the raised cabinet. No call change: no new mesh.
 
 Verdict: **LANDED.**
+
+## Corp kitchen round 4: no signs over the tall pieces, chair pools over two cells, and a per-material PropEnv gain that did nothing
+
+- **A sign half behind the vending machine:** a `CorpSigns` quad at `SIGN_Y` 4.6 is up to 2.1 tall,
+  so it reaches down to 3.55. `hangs()` knew racks (4.0), tables and fittings, but not the
+  kitchen's walkable run cells, which carry the vending machine (4.2), the fridge (3.6) and the
+  wall cabinet (3.4..4.8). `CorpKitchen.high` returns those cells (every counter cell but the
+  sink's, the fridge and the vending machine), and `hangs` skips them. The roster over the sink
+  stays.
+- **Chair contact pools cut straight in front:** `FacilityDetail.ground` laid a pool's plate over
+  its one room cell. A kitchen chair is pulled 0.6..1.4 into its table's cell, so the pool stopped
+  dead at the boundary. The plate now spans every cell of a `len` run, with its far edge taken off
+  the end cell. The chair passes itself and the table's cell as a run of two. Only footprints of
+  1.0 or less get a pool at all, so no other caller changes.
+- **"Some metallicness on the vending casing": FAILED, reverted.** `PropEnv.apply(mat, gain)` put a
+  per-material `propEnvGain` on the reflection and glint, set to 3 on the vending batch. Measured
+  live by swapping the uniform through `renderer.properties.get(mat).uniforms`, on the casing crop:
+  - pinned side cam, casing mean 93.3 / 94.0 / 94.8 at gain 1 / 3 / 5;
+  - game pitch, whole crop 98.2 / 98.8 / 100.0 at (gain 1, gloss 48) / (3, 8) / (6, 4).
+
+  Nothing visible. From the tactical pitch a vertical face reflects the FLOOR (the dark stop), and
+  the whole fake reflection is a few percent of an indoor prop's pixel (PropEnv's header: 3.3% for
+  every analytic light). Steel has to come from the ALBEDO (darker, with brushed highlight bands in
+  the art) or a real env pipeline this build does not have (PMREM mips come out black).
+
+Verified in game: no sign on the vending machine's wall, chair pools unbroken past the cell edge.
+0 calls.
+
+Verdict: **signs and pools LANDED; the PropEnv gain FAILED and is not in the tree.**
+
