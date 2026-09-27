@@ -331,15 +331,15 @@ class CorpStyle
   // THE STAFF KITCHEN'S GLBS (models-src/corp/kitchen_build.py, render.corp.CorpKitchen), every
   // height and footprint the built mesh's own. A counter module is the full cell along its wall and
   // COUNTER_D deep against it; the wall cabinet over it hangs at CAB_Y, which normalize() cannot
-  // keep, because it grounds every glb. A dining chair is pulled KITCHEN_CHAIR_IN toward its
-  // table: its cell's centre is 6 units from the table's and the table's edge 1.8, so un-pulled it
-  // stands a metre and a half clear of the table it belongs to
+  // keep, because it grounds every glb. A dining chair stands KITCHEN_CHAIR_GAP off the edge of the
+  // table it faces: its cell's centre is 6 units from the table's and the edge 1.8 or 2.6 off it,
+  // so un-pulled it stands a metre and a half or more clear of the table it belongs to
   public static inline var KITCHEN_TABLE_H = 1.5;
   public static inline var KITCHEN_TABLE_W = 5.2;
   public static inline var KITCHEN_TABLE_D = 3.6;
   public static inline var KITCHEN_CHAIR_H = 1.706;
   public static inline var KITCHEN_CHAIR_W = 0.99;
-  public static inline var KITCHEN_CHAIR_IN = 3.4;
+  public static inline var KITCHEN_CHAIR_GAP = 0.8;
   // and each chair's turn off square, rolled per cell up to this either way: a row of chairs
   // squared to the table reads as a layout, and a chair somebody sat on is never square
   public static inline var KITCHEN_CHAIR_JITTER = 0.14;
@@ -347,7 +347,9 @@ class CorpStyle
   public static inline var SINK_H = 2.5308;
   public static inline var CAB_H = 1.4;
   public static inline var CAB_D = 0.74;
-  public static inline var CAB_Y = 3.0;
+  // over the tallest thing on the counter: the coffee machine's top is COUNTER_H + 0.95 x
+  // APPLIANCE_SCALE = 3.04, so at 3.0 it stood up into the cabinet's carcass
+  public static inline var CAB_Y = 3.4;
   public static inline var FRIDGE_H = 3.6;
   public static inline var FRIDGE_W = 1.6;
   public static inline var FRIDGE_D = 1.41;

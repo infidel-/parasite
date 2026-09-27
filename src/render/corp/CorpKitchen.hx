@@ -76,8 +76,8 @@ typedef KitchenAppliance = {
 
 // THE STAFF KITCHEN'S FURNITURE, off the generator's own cells — render.corp.CorpExec's shape.
 //
-// gen.corp.CorpKitchen lays the prep counter as 1x1 worktop tiles along a wall with the tap and the
-// appliances dealt onto them and the fridge on the floor at the run's corner end, the dining tables
+// gen.corp.CorpKitchen lays the prep counter as a run of named floor cells along a wall (the tap,
+// an appliance or Const.CORP_COUNTER on each) and the fridge at the run's corner end, the dining tables
 // as 2x2 blocks with chairs on two of their sides, and the snack corner's vending machine on the
 // floor by a door. This stands a glb on every one of them, each turned off a NEIGHBOUR rather than
 // stored: a counter, a fridge and a vending machine face away from their wall, a chair faces its
@@ -85,8 +85,8 @@ typedef KitchenAppliance = {
 //
 // A COUNTER IS A 4 x 1.32 UNIT AGAINST ITS WALL, not the 3.76 plinth the whole cell used to be:
 // render.corp.CorpFurniture.worktop emitted every kitchen worktop as a closed box of counter art,
-// the 2x2 dining tables included. The rest of the cell is floor you can see and cannot walk on,
-// which is what a cooler or a cabinet already is on this plate.
+// the 2x2 dining tables included. Against a wall it stands almost wholly on the WALL cell's strip of
+// floor in front of the masonry, and so does every piece of the run, so its own cell is walkable.
 //
 // A PURE FUNCTION OF THE GRID AND THE AREA'S OBJECTS, so render.corp.CorpClutter can ask where the
 // tables and the fridges stand without having run after render.corp.CorpProps. With no area it
@@ -149,8 +149,12 @@ class CorpKitchen
         CorpStyle.VENDING_H, out.vendings);
       // the dining tables, each turned so its long sides face the sides its chairs are on
       var chairs = cellSet(m, kitchenCells(m, area, CorpDeco.K_CHAIR));
+      var tableAt = new Map<Int, { x:Float, z:Float, hw:Float, hd:Float }>();
       for (t in tables(m, area, chairs))
         {
+          for (dr in 0...2)
+            for (dc in 0...2)
+              tableAt.set(key(m, t.col + dc, t.row + dr), t);
           out.tables.push({
             x: t.x,
             z: t.z,
@@ -170,8 +174,13 @@ class CorpKitchen
             h: CorpStyle.KITCHEN_TABLE_H,
           });
         }
-      // the chairs, pulled in to the table they face and turned a little off square. A chair in the
-      // row BETWEEN two tables faces one by the parity of its cell, so the shared row seats both
+      // the chairs, pulled in to KITCHEN_CHAIR_GAP off the edge of the table they face and turned a
+      // little off square. A chair in the row BETWEEN two tables faces one by the parity of its
+      // cell, so the shared row seats both.
+      //
+      // THE PULL IS OFF THAT SIDE'S OWN EDGE: a fixed pull fitted to the long side (edge 1.8 off the
+      // centre) put a chair on the SHORT side (2.6) half into the table and into the chair round
+      // the corner from it
       for (c in kitchenCells(m, area, CorpDeco.K_CHAIR))
         {
           var ks = [for (d in 0...4)
@@ -183,8 +192,11 @@ class CorpKitchen
           var k = ks[(c.col + c.row) % ks.length];
           var hash = FacilityModel.mix((c.col * 374761393) ^ (c.row * 668265263));
           var w = CityConfig.cellToWorld(c.col, c.row);
-          var x = w.x + DC[k] * CorpStyle.KITCHEN_CHAIR_IN;
-          var z = w.z + DR[k] * CorpStyle.KITCHEN_CHAIR_IN;
+          var t = tableAt.get(key(m, c.col + DC[k], c.row + DR[k]));
+          var pull = (k < 2 ? Math.abs(t.z - w.z) - t.hd : Math.abs(t.x - w.x) - t.hw) -
+            CorpStyle.KITCHEN_CHAIR_GAP;
+          var x = w.x + DC[k] * pull;
+          var z = w.z + DR[k] * pull;
           out.chairs.push({
             x: x,
             z: z,
@@ -301,24 +313,20 @@ class CorpKitchen
       var taps = cellSet(m, kitchenCells(m, area, CorpDeco.K_TAP));
       var run = runSet(m, area);
       var out = [];
-      for (row in 0...m.h)
-        for (col in 0...m.w)
-          {
-            if (!cell(m, col, row) ||
-                dining(area, col, row))
-              continue;
-            var dir = runHand(m, col, row, run);
-            var p = (dir < 0 ? CityConfig.cellToWorld(col, row) :
-              against(m, col, row, dir, CorpStyle.COUNTER_D));
-            out.push({
-              col: col,
-              row: row,
-              dir: dir,
-              x: p.x,
-              z: p.z,
-              sink: taps.exists(key(m, col, row)),
-            });
-          }
+      for (c in counterCells(m, area))
+        {
+          var dir = runHand(m, c.col, c.row, run);
+          var p = (dir < 0 ? CityConfig.cellToWorld(c.col, c.row) :
+            against(m, c.col, c.row, dir, CorpStyle.COUNTER_D));
+          out.push({
+            col: c.col,
+            row: c.row,
+            dir: dir,
+            x: p.x,
+            z: p.z,
+            sink: taps.exists(key(m, c.col, c.row)),
+          });
+        }
       return out;
     }
 
@@ -510,16 +518,29 @@ class CorpKitchen
       };
     }
 
-// every cell of the kitchen's two wall runs — the counter, the fridge, and the snack corner's
-// vending machine, cooler and bin — keyed by `key`
-  static function runSet(m:Facility, area:game.AreaGame):Map<Int, Bool>
+// every counter cell: a walkable kitchen cell carrying the counter's own name, the tap or an
+// appliance (gen.corp.CorpKitchen.prep), or an old save's 1x1 worktop tile
+  static function counterCells(m:Facility, area:game.AreaGame):Array<{ col:Int, row:Int }>
     {
-      var out = new Map<Int, Bool>();
+      var out = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
           if (cell(m, col, row) &&
               !dining(area, col, row))
-            out.set(key(m, col, row), true);
+            out.push({ col: col, row: row });
+      for (kind in [ CorpDeco.K_COUNTER, CorpDeco.K_TAP, CorpDeco.K_MICROWAVE, CorpDeco.K_KETTLE,
+          CorpDeco.K_COFFEE ])
+        for (c in kitchenCells(m, area, kind))
+          if (!m.table[c.row][c.col])
+            out.push(c);
+      return out;
+    }
+
+// every cell of the kitchen's two wall runs — the counter, the fridge, and the snack corner's
+// vending machine, cooler and bin — keyed by `key`
+  static function runSet(m:Facility, area:game.AreaGame):Map<Int, Bool>
+    {
+      var out = cellSet(m, counterCells(m, area));
       for (kind in [ CorpDeco.K_FRIDGE, CorpDeco.K_VENDING, CorpDeco.K_COOLER, CorpDeco.K_BIN ])
         for (c in kitchenCells(m, area, kind))
           out.set(key(m, c.col, c.row), true);

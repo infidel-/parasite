@@ -117,7 +117,7 @@ class CorpKitchen
         push(node, room, CorpBlocks.ZONE_VENDING, snack);
 
       // the dining area: the whole room, which the filler lays its tables over clear of the counter
-      // and the snack corner already on the grid and of the lane in front of them
+      // and the snack corner already on the grid
       var z = GenTree.add(node, CorpBlocks.ZONE_DINING, room.x1, room.y1, room.x2, room.y2);
       z.roomID = room.id;
     }
@@ -146,24 +146,23 @@ class CorpKitchen
     }
 
 // the prep counter: the fridge at the run's corner end, the sink next along, and the microwave,
-// kettle and coffee machine dealt over the counter cells past it
+// kettle and coffee machine dealt over the counter cells past it.
+//
+// EVERY CELL OF IT STAYS WALKABLE FLOOR, the piece named by its decoration alone. A counter is
+// COUNTER_D 1.32 deep against a wall whose own cell keeps a 1.4 strip of floor in front of the
+// masonry, so render.corp.CorpKitchen stands the whole unit on the WALL cell and its own tile was
+// bare floor marked impassable — reported as the tiles beside the counter "not walkable" with
+// plenty of space. A bare counter cell carries Const.CORP_COUNTER so the render still finds it
   static function prep(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var cells = state.area.getCells();
       var run = runCells(node);
       // the corner end first, so the tall fridge closes the run off against the return wall
       var last = run[run.length - 1];
       if (isCorner(room, last.x, last.y))
         run.reverse();
-      var blocked = new Map<Int, Bool>();
-      for (c in run)
-        blocked.set(c.x * 1000 + c.y, true);
-      if (!CorpRooms.roomOpen(state, room, blocked, WOOD1))
-        return;
       var i = 0;
       if (run.length >= 3)
         {
-          cells[run[0].x][run[0].y] = Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET;
           CorpRooms.addDecoration(state, run[0].x, run[0].y, Const.CORP_FRIDGE);
           i = 1;
         }
@@ -177,32 +176,23 @@ class CorpKitchen
       for (j in i...run.length)
         {
           var c = run[j];
-          cells[c.x][c.y] = Const.TILE_LIGHT_TABLE_WOOD1_1X1;
           if (j == sink)
             CorpRooms.addDecoration(state, c.x, c.y, Const.CORP_TAP);
           else if (state.area.chance(APPLIANCE_CHANCE))
             deco = CorpRooms.addDecorationExt(state, c.x, c.y, deco, full);
+          else
+            CorpRooms.addDecoration(state, c.x, c.y, Const.CORP_COUNTER);
         }
     }
 
-// the snack corner: a vending machine, then the cooler, then a bin you can step round
+// the snack corner: a vending machine, then the cooler, then a bin, each against the wall on a cell
+// that stays walkable, the counter's reason
   static function snack(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var cells = state.area.getCells();
       var run = runCells(node);
-      var blocked = new Map<Int, Bool>();
-      for (i in 0...Std.int(Math.min(2, run.length)))
-        blocked.set(run[i].x * 1000 + run[i].y, true);
-      if (!CorpRooms.roomOpen(state, room, blocked, WOOD1))
-        return;
       var groups = [ Const.CORP_VENDING, Const.CORP_COOLER, Const.CORP_TRASH ];
       for (i in 0...run.length)
-        {
-          var c = run[i];
-          if (groups[i] != Const.CORP_TRASH)
-            cells[c.x][c.y] = Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET;
-          CorpRooms.addDecoration(state, c.x, c.y, groups[i]);
-        }
+        CorpRooms.addDecoration(state, run[i].x, run[i].y, groups[i]);
     }
 
 // the dining area: 2x2 tables on a pitch of three, each kept only if the room stays walkable round
@@ -210,18 +200,11 @@ class CorpKitchen
 //
 // EVERY OFFSET THE SPARE CELLS ALLOW IS TRIED, scored on tables and then on seats, and the best is
 // laid. Centring alone left a spare row on each side of an 8x6 kitchen's two tables where a second
-// row of two fits; a door, the counter's lane or the glazing decides where the spare row goes, and
+// row of two fits; a door, the counter or the glazing decides where the spare row goes, and
 // only a trial sees all three
   static function dining(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
-      // the lane in front of the counter and the snack corner, which no table or chair takes
-      var lane = new Map<Int, Bool>();
-      for (x in room.x1...room.x2 + 1)
-        for (y in room.y1...room.y2 + 1)
-          if (cells[x][y] != WOOD1)
-            for (i in 0...Const.dir4x.length)
-              lane.set((x + Const.dir4x[i]) * 1000 + y + Const.dir4y[i], true);
       var w = GenTree.width(node), h = GenTree.height(node);
       var cols = Std.int((w + 1) / TABLE_PITCH);
       var rows = Std.int((h + 1) / TABLE_PITCH);
@@ -238,8 +221,8 @@ class CorpKitchen
       for (oy in 0...h - (rows * TABLE_PITCH - 1) + 1)
         for (ox in 0...w - (cols * TABLE_PITCH - 1) + 1)
           {
-            var t = fit(state, room, lane, node.x1 + ox, node.y1 + oy, cols, rows);
-            var c = seats(state, room, lane, t, seatsNS);
+            var t = fit(state, room, node.x1 + ox, node.y1 + oy, cols, rows);
+            var c = seats(state, room, t, seatsNS);
             if (t.length * 10 + c.length > best)
               {
                 best = t.length * 10 + c.length;
@@ -271,8 +254,8 @@ class CorpKitchen
     }
 
 // the tables one offset lays: a 2x2 at every pitch point whose cells are bare floor clear of a
-// doorway and the lane, kept only while the room stays walkable
-  static function fit(state: _CorpState, room: _Room, lane: Map<Int, Bool>, sx: Int, sy: Int,
+// doorway, kept only while the room stays walkable
+  static function fit(state: _CorpState, room: _Room, sx: Int, sy: Int,
       cols: Int, rows: Int): Array<{ x: Int, y: Int }>
     {
       var cells = state.area.getCells();
@@ -286,7 +269,6 @@ class CorpKitchen
             for (dy in 0...2)
               for (dx in 0...2)
                 if (cells[tx + dx][ty + dy] != WOOD1 ||
-                    lane.exists((tx + dx) * 1000 + ty + dy) ||
                     state.area.hasObjectAt(tx + dx, ty + dy) ||
                     CorpRooms.atDoor(cells, tx + dx, ty + dy))
                   ok = false;
@@ -310,7 +292,7 @@ class CorpKitchen
 // the chairs round a set of tables: every free cell of each table's two seated sides, then, for a
 // table that got fewer than two, its other two sides. A chair is walkable, so none of this can
 // shut the room
-  static function seats(state: _CorpState, room: _Room, lane: Map<Int, Bool>,
+  static function seats(state: _CorpState, room: _Room,
       tables: Array<{ x: Int, y: Int }>, ns: Bool): Array<{ x: Int, y: Int }>
     {
       var cells = state.area.getCells();
@@ -333,7 +315,6 @@ class CorpKitchen
                   y < room.y1 ||
                   y > room.y2 ||
                   used.exists(x * 1000 + y) ||
-                  lane.exists(x * 1000 + y) ||
                   cells[x][y] != WOOD1 ||
                   CorpRooms.atDoor(cells, x, y) ||
                   state.area.hasObjectAt(x, y))

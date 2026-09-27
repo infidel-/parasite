@@ -380,10 +380,16 @@ class CorpConnect
     {
       var ctx = state.area;
       var cells = ctx.getCells();
+      var tap = Const.CORP_TAP[0];
       for (s in ctx.spawns.copy())
         {
+          // NOT THE TAPS ON THE CHAIRS' ROW: a kitchen counter cell is walkable floor now, so a
+          // tap dealt off row 30 has no table beside it and read as a chair at nothing
           if (s.type != 'decoration' ||
-              s.row != Const.CORP_CHAIR[0].row)
+              s.row != Const.CORP_CHAIR[0].row ||
+              (s.row == tap.row &&
+              s.col >= tap.col &&
+              s.col < tap.col + tap.amount))
             continue;
           var keep = false;
           for (i in 0...Const.dir4x.length)

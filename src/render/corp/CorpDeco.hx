@@ -95,6 +95,8 @@ class CorpDeco
   public static inline var K_MICROWAVE = 17;
   public static inline var K_KETTLE = 18;
   public static inline var K_COFFEE = 19;
+  // and a bare counter cell, which is walkable floor with this name on it (Const.CORP_COUNTER)
+  public static inline var K_COUNTER = 20;
 
   // the casework, as (width along the wall, depth off it, height). every one is a real piece of
   // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
@@ -152,7 +154,8 @@ class CorpDeco
           // standing on its cell (CorpModel.fitOf), and `casework` skips a cell that is already
           // a fitting — everywhere else it is a plant-room unit and needs a box of its own
           case 33: (col < 7 ? K_MACHINE : K_FRIDGE);
-          case 34: K_VENDING;
+          // CORP_VENDING, then the kitchen's bare counter
+          case 34: (col < 11 ? K_VENDING : K_COUNTER);
           // CORP_CHAIR, then two taps, then the exec chair
           case 30: (col < 9 ? K_CHAIR : (col < 11 ? K_TAP : K_EXEC_CHAIR));
           // CORP_TABLE_KETTLE, then CORP_TABLE_MICROWAVE

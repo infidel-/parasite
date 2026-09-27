@@ -865,6 +865,13 @@ class Const
   public static var CORP_VENDING = [
     { row: 34, amount: 11 },
   ];
+  // a staff kitchen's BARE counter cell, on row 34's twelfth frame, which CORP_VENDING never deals.
+  // The counter is walkable floor now (gen.corp.CorpKitchen.prep), so a cell with no tap and no
+  // appliance on it needs a name the saved grid can carry; render.corp.CorpDeco.draws hides its
+  // sprite and render.corp.CorpKitchen stands the counter glb off it
+  public static var CORP_COUNTER = [
+    { row: 34, col: 11, amount: 1 },
+  ];
   public static var CORP_TABLE_CLEANING = [
     { row: 35, amount: 12 },
     { row: 36, amount: 4 },
