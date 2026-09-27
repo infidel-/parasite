@@ -556,8 +556,8 @@ this reason — ask `Quota.satisfied` instead.
 backed onto a room's south wall faces away from the player, with the masonry between them. The
 player only sees it under a heavy camera turn. A template choosing a wall for a run that is read by
 its front (a counter, cabinets, a fridge, a bookcase, a notice) picks another side first, and takes
-the south only when the piece would be wasted anywhere else. The kitchen's prep counter never takes
-it (`CorpKitchen.zones`).
+the south only when the piece would be wasted anywhere else. The kitchen's prep counter and its
+snack corner never take it (`CorpKitchen.zones`).
 
 **`Subdivide` is not shared with `citygen.CityGen`, on purpose.** CityGen's `leaf()` draws floors,
 roof and facade from the same rng as the split, so cutting and dressing are interleaved in one
@@ -1377,8 +1377,8 @@ ones pushed before it on the grid. The only corp zones that are fillers rather t
   counter (1.32 deep), a fridge or a vending machine almost wholly on the WALL cell's strip of floor
   in front of the masonry, so a counter tile or an unwalkable twin under it left a whole cell of
   visible floor impassable.
-- **`vending`**: the 2..3-cell window of wall nearest a door that the counter did not take: vending
-  machine, cooler, bin, all walkable.
+- **`vending`**: the 2..3-cell window of wall nearest a door that the counter did not take, not on
+  the south wall: vending machine, cooler, bin, all walkable.
 - **`dining`**: the whole room; a table or chair takes any bare WOOD1 cell with no object on it, so
   it may stand right in front of the counter. `LIGHT_TABLE_WOOD1_2X2` at pitch 3,
   each table kept only if `roomOpen` still floods the room. **Every offset the spare cells allow is
@@ -1389,9 +1389,10 @@ ones pushed before it on the grid. The only corp zones that are fillers rather t
 - The demand **aims at 6 x 6** (`fit` = `-(|w-6| + |h-6|)`, min still 4 x 4), since `smallest` dealt
   it 4 x 4 nearly every time.
 
-Round 6 (no prep on the south wall): 0 failures, 0 unreachable, `orphanCells` 0 over 3,000 seeds.
-`nodes/prep` 1.84 -> 1.66 a floor (about 92% -> 83% of kitchens), `nodes/table` 15.13 -> 15.31.
-A kitchen whose only clear wall is the south one goes without a counter.
+Round 6 (no prep and no snack corner on the south wall): 0 failures, 0 unreachable, `orphanCells` 0
+over 3,000 seeds. `nodes/prep` 1.84 -> 1.66 a floor (about 92% -> 83% of kitchens), `nodes/vending`
+1.74 -> 1.44 (about 87% -> 72%), `nodes/table` 15.13 -> 15.48. A kitchen whose only clear wall is
+the south one goes without the piece.
 
 Round 3 (walkable run cells, the lane dropped): 0 failures, 0 unreachable, `orphanCells` 0 over
 3,000 seeds; `nodes/table` 13.21 -> 15.13 a floor, about one more table per kitchen. `furn/kitchen`

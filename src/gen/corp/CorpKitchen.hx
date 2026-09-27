@@ -82,7 +82,8 @@ class CorpKitchen
       else
         prep = null;
 
-      // the snack corner: the window of wall nearest a doorway that the counter did not take
+      // the snack corner: the window of wall nearest a doorway that the counter did not take, and
+      // never on the south wall, for the counter's reason
       var doors = [];
       for (d in state.doors)
         if (d.roomID1 == room.id ||
@@ -92,6 +93,8 @@ class CorpKitchen
       var bestD = 1000000;
       for (r in runs)
         {
+          if (r.side == SIDE_S)
+            continue;
           // the free pieces of this run, split wherever the counter stands
           var pieces = [[]];
           for (c in r.cells)
