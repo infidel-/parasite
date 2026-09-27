@@ -340,6 +340,9 @@ class CorpStyle
   public static inline var KITCHEN_CHAIR_H = 1.706;
   public static inline var KITCHEN_CHAIR_W = 0.99;
   public static inline var KITCHEN_CHAIR_IN = 3.4;
+  // and each chair's turn off square, rolled per cell up to this either way: a row of chairs
+  // squared to the table reads as a layout, and a chair somebody sat on is never square
+  public static inline var KITCHEN_CHAIR_JITTER = 0.14;
   public static inline var COUNTER_D = 1.32;
   public static inline var SINK_H = 2.5308;
   public static inline var CAB_H = 1.4;
@@ -361,13 +364,35 @@ class CorpStyle
   public static inline var APPLIANCE_SCALE = 1.3;
   public static inline var APPLIANCE_BACK = 0.10;
   // THE KITCHEN'S OWN PACK16 (corp/kitchen-clutter), exec-clutter's 4x4 with its last two cells
-  // the fridge's notes, so the exec office's COLS and CELLS read it as they stand. Its things are
-  // smaller than an executive's: a plate on a 65 cm counter, not a leather portfolio on a desk
+  // (a cleaning rota and a crayon drawing) never dealt, so the exec office's COLS and CELLS read it
+  // as they stand. Its things are smaller than an executive's: a plate on a dining table, not a
+  // leather portfolio on a desk. It lies on the dining tables and the fridge's top, and NOT on the
+  // counters, which the appliances dress: a plate beside the microwave was reported as clutter
   public static inline var CLUTTER_KITCHEN_TEX = 'textures/corp/kitchen-clutter.png';
   public static inline var CLUTTER_KITCHEN_SZ = 0.45;
   public static inline var CLUTTER_KITCHEN_SZ_VAR = 0.30;
-  public static inline var CLUTTER_KITCHEN_MAX = 2;
   public static inline var CLUTTER_KITCHEN_TABLE = 3;
+  public static inline var FRIDGE_TOP_MAX = 2;
+  // THE FRIDGE'S MAGNET CLUTTER (corp/fridge-magnets, render.corp.CorpClutter.fridge): 1 to
+  // MAGNET_FRONT things held on the fridge door and up to MAGNET_SIDE on each side, hung square on.
+  // FRIDGE_FACE is the door's face off the model's centre and FRIDGE_SIDE its side's; the door's
+  // items keep between MAGNET_ACROSS_LO and _HI across it, clear of the pull on its hinge-free
+  // hand, and between FRIDGE_DOOR_LO and _HI up it, above the freezer's split. A side's run from
+  // MAGNET_SIDE_LO up
+  public static inline var MAGNET_TEX = 'textures/corp/fridge-magnets.png';
+  public static inline var MAGNET_COLS = 4;
+  public static inline var MAGNET_CELLS = 16;
+  public static inline var MAGNET_SZ = 0.36;
+  public static inline var MAGNET_SZ_VAR = 0.22;
+  public static inline var MAGNET_FRONT = 5;
+  public static inline var MAGNET_SIDE = 2;
+  public static inline var FRIDGE_FACE = 0.66;
+  public static inline var FRIDGE_SIDE = 0.8;
+  public static inline var MAGNET_ACROSS_LO = -0.72;
+  public static inline var MAGNET_ACROSS_HI = 0.48;
+  public static inline var FRIDGE_DOOR_LO = 1.42;
+  public static inline var FRIDGE_DOOR_HI = 3.48;
+  public static inline var MAGNET_SIDE_LO = 1.2;
   // THE EXEC RUG (render.corp.CorpRugs): corp/exec-rug is 1024 x 640, so the quad is laid at that
   // aspect and never stretched to its rect; it keeps RUG_INSET off the rect's edge, and lies at
   // RUG_Y — over the floor, under CorpLamps' pools at GLOW_Y 0.04

@@ -24,8 +24,8 @@ typedef KitchenPlaces = {
   var toasters:Array<Models.PropPlace>;
 };
 
-// one worktop the kitchen's clutter lies on — a counter cell's top or a dining table's — in world
-// units, with the boxes already standing on it
+// one top the kitchen's clutter lies on — a dining table's or a fridge's — in world units, with the
+// boxes already standing on it
 typedef KitchenTop = {
   var x:Float;
   var z:Float;
@@ -37,7 +37,7 @@ typedef KitchenTop = {
   // the cell the scatter's roll is seeded off
   var col:Int;
   var row:Int;
-  // true for a dining table, false for a counter cell
+  // true for a dining table, false for a fridge's top
   var table:Bool;
   var spots:Array<ClutterSlot>;
 };
@@ -51,6 +51,16 @@ typedef KitchenCounter = {
   var z:Float;
   // the cell carries the tap, so the module is the sink
   var sink:Bool;
+};
+
+// one tall piece standing on the kitchen floor against its wall: its cell, the hand its wall is on
+// and its centre
+typedef KitchenStand = {
+  var col:Int;
+  var row:Int;
+  var dir:Int;
+  var x:Float;
+  var z:Float;
 };
 
 // one appliance standing on a counter
@@ -79,7 +89,8 @@ typedef KitchenAppliance = {
 // which is what a cooler or a cabinet already is on this plate.
 //
 // A PURE FUNCTION OF THE GRID AND THE AREA'S OBJECTS, so render.corp.CorpClutter can ask where the
-// appliances stand without having run after render.corp.CorpProps. With no area it places nothing.
+// tables and the fridges stand without having run after render.corp.CorpProps. With no area it
+// places nothing.
 class CorpKitchen
 {
   static inline var CELL = CityConfig.CELL;
@@ -159,24 +170,26 @@ class CorpKitchen
             h: CorpStyle.KITCHEN_TABLE_H,
           });
         }
-      // the chairs, pulled in to the table they face
+      // the chairs, pulled in to the table they face and turned a little off square. A chair in the
+      // row BETWEEN two tables faces one by the parity of its cell, so the shared row seats both
       for (c in kitchenCells(m, area, CorpDeco.K_CHAIR))
         {
-          var k = -1;
-          for (d in 0...4)
-            if (k < 0 &&
-                cell(m, c.col + DC[d], c.row + DR[d]) &&
+          var ks = [for (d in 0...4)
+            if (cell(m, c.col + DC[d], c.row + DR[d]) &&
                 dining(area, c.col + DC[d], c.row + DR[d]))
-              k = d;
-          if (k < 0)
+              d];
+          if (ks.length == 0)
             continue;
+          var k = ks[(c.col + c.row) % ks.length];
+          var hash = FacilityModel.mix((c.col * 374761393) ^ (c.row * 668265263));
           var w = CityConfig.cellToWorld(c.col, c.row);
           var x = w.x + DC[k] * CorpStyle.KITCHEN_CHAIR_IN;
           var z = w.z + DR[k] * CorpStyle.KITCHEN_CHAIR_IN;
           out.chairs.push({
             x: x,
             z: z,
-            yaw: Math.atan2(DC[k], DR[k]),
+            yaw: Math.atan2(DC[k], DR[k]) +
+              ((hash % 1000) / 1000 * 2 - 1) * CorpStyle.KITCHEN_CHAIR_JITTER,
           });
           var hw = CorpStyle.KITCHEN_CHAIR_W / 2;
           FacilityDetail.ground(m, {
@@ -222,42 +235,12 @@ class CorpKitchen
         }
     }
 
-// every worktop the kitchen's clutter may lie on: each counter cell but the sink's, clear of its
-// appliances, and each dining table's top
+// every top the kitchen's clutter may lie on: each dining table's, and each fridge's
   public static function tops(m:Facility, area:game.AreaGame):Array<KitchenTop>
     {
       var out:Array<KitchenTop> = [];
       if (area == null)
         return out;
-      var cs = counters(m, area);
-      var apps = appliances(m, area, cs);
-      for (c in cs)
-        {
-          if (c.sink)
-            continue;
-          var alongX = (c.dir < 0 || c.dir < 2);
-          var spots:Array<ClutterSlot> = [];
-          for (a in apps)
-            if (Math.abs(a.x - c.x) < CELL / 2 &&
-                Math.abs(a.z - c.z) < CELL / 2)
-              spots.push({
-                x: a.x,
-                z: a.z,
-                hw: a.hw,
-                hd: a.hd,
-              });
-          out.push({
-            x: c.x,
-            z: c.z,
-            hw: (alongX ? CELL : CorpStyle.COUNTER_D) / 2,
-            hd: (alongX ? CorpStyle.COUNTER_D : CELL) / 2,
-            y: CorpStyle.COUNTER_H,
-            col: c.col,
-            row: c.row,
-            table: false,
-            spots: spots,
-          });
-        }
       for (t in tables(m, area, cellSet(m, kitchenCells(m, area, CorpDeco.K_CHAIR))))
         out.push({
           x: t.x,
@@ -270,7 +253,32 @@ class CorpKitchen
           table: true,
           spots: [],
         });
+      for (f in fridges(m, area))
+        out.push({
+          x: f.x,
+          z: f.z,
+          hw: (f.dir < 2 ? CorpStyle.FRIDGE_W : CorpStyle.FRIDGE_D) / 2,
+          hd: (f.dir < 2 ? CorpStyle.FRIDGE_D : CorpStyle.FRIDGE_W) / 2,
+          y: CorpStyle.FRIDGE_H,
+          col: f.col,
+          row: f.row,
+          table: false,
+          spots: [],
+        });
       return out;
+    }
+
+// every fridge, backed onto its wall
+  public static function fridges(m:Facility, area:game.AreaGame):Array<KitchenStand>
+    {
+      return (area == null ? [] : standing(m, area, CorpDeco.K_FRIDGE, CorpStyle.FRIDGE_D));
+    }
+
+// the hand a floor piece on a kitchen cell backs onto — the cooler's, which render.corp.CorpProps
+// stands: in the snack corner's CORNER both hands are masonry and only the run says which is its
+  public static function hand(m:Facility, area:game.AreaGame, col:Int, row:Int):Int
+    {
+      return runHand(m, col, row, runSet(m, area));
     }
 
 // is this kitchen worktop cell part of a DINING TABLE rather than the counter? the tile says: the
@@ -361,23 +369,18 @@ class CorpKitchen
   static function tall(m:Facility, area:game.AreaGame, kind:Int, w:Float, d:Float, h:Float,
       list:Array<Models.PropPlace>):Void
     {
-      var run = runSet(m, area);
-      for (c in CorpDeco.cells(area, kind))
+      for (p in standing(m, area, kind, d))
         {
-          var dir = runHand(m, c.col, c.row, run);
-          if (dir < 0)
-            continue;
-          var p = against(m, c.col, c.row, dir, d);
           list.push({
             x: p.x,
             z: p.z,
-            yaw: Math.atan2(DC[dir ^ 1], DR[dir ^ 1]),
+            yaw: Math.atan2(DC[p.dir ^ 1], DR[p.dir ^ 1]),
           });
-          var hw = (dir < 2 ? w : d) / 2;
-          var hd = (dir < 2 ? d : w) / 2;
+          var hw = (p.dir < 2 ? w : d) / 2;
+          var hd = (p.dir < 2 ? d : w) / 2;
           FacilityDetail.ground(m, {
-            col: c.col,
-            row: c.row,
+            col: p.col,
+            row: p.row,
             len: 1,
             alongX: true,
             rect: {
@@ -389,6 +392,28 @@ class CorpKitchen
             h: h,
           });
         }
+    }
+
+// where each of one kind's dealt cells stands a piece `d` deep, and the wall it backs onto
+  static function standing(m:Facility, area:game.AreaGame, kind:Int, d:Float):Array<KitchenStand>
+    {
+      var run = runSet(m, area);
+      var out = [];
+      for (c in CorpDeco.cells(area, kind))
+        {
+          var dir = runHand(m, c.col, c.row, run);
+          if (dir < 0)
+            continue;
+          var p = against(m, c.col, c.row, dir, d);
+          out.push({
+            col: c.col,
+            row: c.row,
+            dir: dir,
+            x: p.x,
+            z: p.z,
+          });
+        }
+      return out;
     }
 
 // every dining table: the top-left cell of each 2x2 block, its centre, and its turn — the model's

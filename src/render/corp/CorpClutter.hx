@@ -84,8 +84,8 @@ class CorpClutter
             szVar: CorpStyle.CLUTTER_EXEC_SZ_VAR,
           });
         }
-      // and the kitchen's: up to CLUTTER_KITCHEN_MAX on a counter cell, where the roll reaches
-      // zero the way a desk's does, and at least one on every dining table
+      // and the kitchen's: at least one on every dining table, and up to FRIDGE_TOP_MAX on a
+      // fridge's top, where the roll reaches zero the way a desk's does
       for (t in CorpKitchen.tops(m, area))
         {
           var g = FacilityModel.mix((t.col * 1103515245) ^ (t.row * 12345));
@@ -97,7 +97,7 @@ class CorpClutter
             hd: t.hd - CorpStyle.CLUTTER_INSET,
             y: t.y + CorpStyle.CLUTTER_Y,
             want: (t.table ? 1 + g % CorpStyle.CLUTTER_KITCHEN_TABLE :
-              g % (CorpStyle.CLUTTER_KITCHEN_MAX + 1)),
+              g % (CorpStyle.FRIDGE_TOP_MAX + 1)),
             seed: g,
             spots: t.spots,
             sz: CorpStyle.CLUTTER_KITCHEN_SZ,
@@ -112,6 +112,11 @@ class CorpClutter
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
       add(scene, exec, CorpStyle.CLUTTER_EXEC_TEX);
       add(scene, kitchen, CorpStyle.CLUTTER_KITCHEN_TEX);
+      // and what the kitchen holds on its fridges, off their own sheet
+      var magnets = MeshBufTools.make();
+      for (f in CorpKitchen.fridges(m, area))
+        n += fridge(f, magnets);
+      add(scene, magnets, CorpStyle.MAGNET_TEX);
       // and the third sheet, which is not a worktop at all: what the people in the cubicle farm
       // have pinned to their own panels — and to the side of an archive run's end unit, where the
       // company has not hung its poster (CorpFurniture.archEndPoster, CorpSigns' side of the split)
@@ -411,14 +416,14 @@ class CorpClutter
       upright(b, !q.alongX, p, at, y, sz, dir, idx);
     }
 
-// one square panel-sheet quad standing on the plane `p` — world x when `xPlane`, world z otherwise —
+// one square sheet quad standing on the plane `p` — world x when `xPlane`, world z otherwise —
 // centred `at` along that plane and `y` up it, looking `dir`
   static function upright(b:MeshBuf, xPlane:Bool, p:Float, at:Float, y:Float, sz:Float, dir:Int,
-      idx:Int):Void
+      idx:Int, cols:Int = CorpStyle.PANEL_COLS):Void
     {
       var hs = sz * 0.5;
       var y0 = y - hs, y1 = y + hs;
-      var t = CorpStyle.PANEL_COLS;
+      var t = cols;
       var cc = idx % t, cr = Std.int(idx / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
       var v0 = 1 - (cr + 1) / t, v1 = 1 - cr / t;
@@ -427,6 +432,71 @@ class CorpClutter
         : FacilityGeom.ends(at - hs, at + hs, p, p, dir));
       MeshBufTools.quad(b, [c[0], y0, c[1]], [c[2], y0, c[3]], [c[2], y1, c[3]], [c[0], y1, c[1]],
         [u0, v0, u1, v0, u1, v1, u0, v1]);
+    }
+
+// the things held on one fridge: 1 to MAGNET_FRONT on its door and up to MAGNET_SIDE on each of its
+// sides, off corp/fridge-magnets, each clear of the others on its face. Hung square on, for
+// emitFace's reason — a magnet holds a sheet the way a pin does.
+//
+// THEY USED TO BE MODELLED: two notes built into the fridge glb as label boxes, the same rota and
+// the same drawing on every fridge in the tower, and reported as such
+  static function fridge(f:CorpKitchen.KitchenStand, b:MeshBuf):Int
+    {
+      var n = 0;
+      var face = f.dir ^ 1;
+      // the door's across axis runs the model's +x the way its pull does, which is world +x facing
+      // +z and world +z facing -x
+      var sgn = (face == 1 || face == 2 ? 1 : -1);
+      for (s in 0...3)
+        {
+          // the door, then the two sides across it
+          var d = (s == 0 ? face : (face < 2 ? 2 : 0) + s - 1);
+          var xPlane = (d >= 2);
+          var off = (s == 0 ? CorpStyle.FRIDGE_FACE : CorpStyle.FRIDGE_SIDE) + CorpStyle.PANEL_PROUD;
+          var p = (xPlane ? f.x : f.z) + (d % 2 == 0 ? -off : off);
+          var mid = (xPlane ? f.z : f.x);
+          var a0 = (s == 0 ? CorpStyle.MAGNET_ACROSS_LO : -CorpStyle.FRIDGE_FACE);
+          var a1 = (s == 0 ? CorpStyle.MAGNET_ACROSS_HI : CorpStyle.FRIDGE_FACE);
+          var lo = (s == 0 ? CorpStyle.FRIDGE_DOOR_LO : CorpStyle.MAGNET_SIDE_LO);
+          var hi = CorpStyle.FRIDGE_DOOR_HI;
+          var g = FacilityModel.mix((f.col * 1103515245) ^ (f.row * 12345) ^ ((s + 1) * 374761393));
+          var want = (s == 0 ? 1 + g % CorpStyle.MAGNET_FRONT : g % (CorpStyle.MAGNET_SIDE + 1));
+          var spots:Array<ClutterSlot> = [];
+          for (i in 0...want)
+            {
+              var h = FacilityModel.mix(g ^ ((i + 1) * 668265263));
+              var sz = CorpStyle.MAGNET_SZ + ((h % 1000) / 1000) * CorpStyle.MAGNET_SZ_VAR;
+              var r0 = a0 + sz / 2, r1 = a1 - sz / 2;
+              var y0 = lo + sz / 2, y1 = hi - sz / 2;
+              if (r1 < r0 ||
+                  y1 < y0)
+                continue;
+              // the slot, as a box in (across, up) on the face
+              var box:ClutterSlot = {
+                x: 0.0,
+                z: 0.0,
+                hw: sz / 2,
+                hd: sz / 2,
+              };
+              var ok = false;
+              for (t in 0...CorpStyle.CLUTTER_TRIES)
+                {
+                  var hh = FacilityModel.mix(h ^ ((t + 1) * 83492791));
+                  box.x = r0 + ((hh % 1000) / 1000) * (r1 - r0);
+                  box.z = y0 + (((hh >>> 10) % 1000) / 1000) * (y1 - y0);
+                  ok = !hits(spots, box);
+                  if (ok)
+                    break;
+                }
+              if (!ok)
+                continue;
+              spots.push(box);
+              upright(b, xPlane, p, mid + sgn * box.x, box.z, sz, d,
+                (h >>> 22) % CorpStyle.MAGNET_CELLS, CorpStyle.MAGNET_COLS);
+              n++;
+            }
+        }
+      return n;
     }
 
 // the paper pinned to one archive run end: up to ARCH_END_PIN_MAX squares, stacked up the side in

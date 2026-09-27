@@ -533,7 +533,10 @@ class CorpProps
                 if (m.table[c.row][c.col] ||
                     m.fit[c.row][c.col] != 0)
                   continue;
-                var dir = CorpDeco.backHandOf(m, c.col, c.row);
+                // a KITCHEN'S cooler stands in the snack corner's run, and in its corner only the
+                // run says which of the two walls is its back
+                var dir = (m.surf[c.row][c.col] == Surf.KITCHEN ?
+                  CorpKitchen.hand(m, area, c.col, c.row) : CorpDeco.backHandOf(m, c.col, c.row));
                 if (dir < 0)
                   continue;
                 cand.push({
