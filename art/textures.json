@@ -3688,11 +3688,11 @@
       "prompt": "ONE seamless tileable FLOOR texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. Staff kitchen floor: warmer mid-brown oak PLANK, narrower than a wide board, laid in an offset brick bond, EXACTLY EIGHT courses of plank from top to bottom, thin dark joints, staggered butt joints, straight grain with the occasional small knot. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam, and the plank courses must close across the wrap. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no single feature, no object, no stain, no vignette, no border, no corner detail, nothing that would betray the repeat. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
       "lift": 0.791,
-      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
-      "last_converted": "2026-09-20T22:41:39",
+      "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure. THE WRAP WAS THEN CLOSED BY SCRIPT, reported from the game as not seamless: the eight courses came back 126 px apart, not 128, leaving a 145 px course across the vertical wrap with its butt joints jogged, and every course had ONE joint so the wrap column cut through the middle of a board with a tone step (|diff| 3.0-6.4 against 1.7 interior). tools/seamfix.py planks re-stacks the seven whole courses plus a mirrored copy of one, turns each wrap cut into a butt joint and rolls each course to stagger its joints (wrap step 1.2-1.6 after). Raw drop parked at Unused/floor-kitchen-raw.png; rebuild with: python3 tools/seamfix.py planks textures-src/corp/Unused/floor-kitchen-raw.png textures-src/corp/floor-kitchen.png",
+      "last_converted": "2026-09-27T05:00:55",
       "last_lift": 0.791,
-      "built_linear": 0.117,
-      "built_srgb": 91.2
+      "built_linear": 0.1164,
+      "built_srgb": 90.9
     },
     "corp/floor-washroom": {
       "src": "corp/floor-washroom.png",
@@ -3779,11 +3779,12 @@
       "needs_alpha": false,
       "prompt": "A SEAMLESS TILEABLE texture of the wall of a modern corporate STAFF KITCHEN, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. The LOWER 55 percent is a splashback of large rectangular matte ceramic wall tiles in a stack bond, EXACTLY SIX across and TWO courses high, thin crisp darker grout. The UPPER 45 percent is plain matte white lacquer panelling, divided from the tiles by one thin crisp horizontal shadow-gap reveal. At the very BOTTOM a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: LIGHT, close to the plain office wall but a touch cooler. HUE: PERFECTLY NEUTRAL white-grey. No cupboards, no worktop, no taps, no appliances, no text. [append textures.json style_corp then style]",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:53:41",
-      "built_linear": 0.2074,
+      "last_converted": "2026-09-27T05:00:56",
+      "built_linear": 0.2073,
       "built_srgb": 115.7,
       "lift": 2.666,
-      "last_lift": 2.666
+      "last_lift": 2.666,
+      "note": "THE WRAP WAS CLOSED BY SCRIPT, reported from the game as not seamless: the six splashback tiles sit at the right 170.7 px pitch but no grout line was drawn AT the wrap, so two tiles merged into one double-width tile at every repeat. tools/seamfix.py grout copies the nearest grout line onto the edge columns over the tile band. Raw drop parked at Unused/wall-kitchen-raw.png; rebuild with: python3 tools/seamfix.py grout textures-src/corp/Unused/wall-kitchen-raw.png textures-src/corp/wall-kitchen.png"
     },
     "corp/wall-washroom": {
       "src": "corp/wall-washroom.png",
@@ -4752,10 +4753,10 @@
       "needs_alpha": false,
       "prompt": "A PACKED TEXTURE SHEET for ONE snack vending machine: LEFT TWO THIRDS the lit glass front (six shelves of spiral-coil racks, warm snack packets and cans, no lettering), RIGHT THIRD TOP HALF the control panel (amber display, 3x4 steel keypad, coin and card slots on charcoal fascia), RIGHT THIRD BOTTOM HALF a blank tileable swatch of dark powder-coated casing. [append textures.json style_corp then style_prop]",
       "prompt_exact": false,
-      "note": "THE VENDING MACHINE'S OWN MODEL SHEET, not a game surface -- the corp/appliance-pack shape: nothing draws this label, models-src/corp/kitchen_build.py maps its three regions onto corp/kitchen-vending, and its emissive map is cut from the same pixels. Seams MEASURED off the drop, not assumed: the glass front ends at x 680 (asked for 683) and the panel/casing join is at y ~548 on the right column, not 512 -- the build script reads its rects off those measured numbers.",
-      "last_converted": "2026-09-27T01:55:20",
-      "built_linear": 0.0999,
-      "built_srgb": 61.8
+      "note": "THE VENDING MACHINE'S OWN MODEL SHEET, not a game surface -- the corp/appliance-pack shape: nothing draws this label, models-src/corp/kitchen_build.py maps its three regions onto corp/kitchen-vending, and its emissive map is cut from the same pixels. Seams MEASURED off the drop, not assumed: the glass front ends at x 680 (asked for 683) and the panel/casing join is at y ~548 on the right column, not 512 -- the build script reads its rects off those measured numbers. THE CASING WAS REPAINTED BRUSHED STEEL, reported from the game as 'a BLACK vending machine?': the prompt asked for dark powder-coated casing and got charcoal, and the build maps that casing over the frame, sides and top, so the machine read as a black slab. Re-emitted through edit_image (sunburst) asking to repaint only the casing; the glass front, the display and the keypad came back in place and the measured seams (glass to x 682, panel join y 548) did not move. The charcoal original is parked at Unused/vending-pack-charcoal.png.",
+      "last_converted": "2026-09-27T14:47:45",
+      "built_linear": 0.2101,
+      "built_srgb": 104.2
     },
     "corp/kitchen-clutter": {
       "src": "corp/kitchen-clutter.png",
@@ -4769,7 +4770,7 @@
         "grid": 4,
         "cap": 0.1
       },
-      "note": "PACK16 on the corp decal route (render.corp.CorpClutter), the kitchen's worktops and dining tables. THE FIRST TRANSPARENT DROP CAME BACK WITH NO CUT: alpha min 16 and 0% of pixels at 0, a dark painted backdrop with a halo round every object. Re-emitted through edit_image with background transparent (57% at alpha 0), then tools/pack16.py --valign center --tol 8 (seams x 257/507/762, y 244/491/717, scale 1.0959); the raw drop is parked in textures-src/corp/Unused/ (make adopt walks that shelf too and renamed the edit drop over the first one). CELLS 14 AND 15 (the rota and the crayon drawing, 0-based) ARE NOT DECALS: they are the notes on the fridge door that models-src/corp/kitchen_build.py maps, and CorpClutter skips them when dealing. sat 0.5 and the cap are corp/desk-clutter's.",
+      "note": "PACK16 on the corp decal route (render.corp.CorpClutter), the kitchen's worktops and dining tables. THE FIRST TRANSPARENT DROP CAME BACK WITH NO CUT: alpha min 16 and 0% of pixels at 0, a dark painted backdrop with a halo round every object. Re-emitted through edit_image with background transparent (57% at alpha 0), then tools/pack16.py --valign center --tol 8 (seams x 257/507/762, y 244/491/717, scale 1.0959); the raw drop is parked in textures-src/corp/Unused/ (make adopt walks that shelf too and renamed the edit drop over the first one). CELLS 14 AND 15 (the rota and the crayon drawing, 0-based) are skipped when dealing: they were the fridge door's two modelled notes until corp/fridge-magnets replaced them, and a cleaning rota lying on a dining table reads wrong. sat 0.5 and the cap are corp/desk-clutter's.",
       "last_converted": "2026-09-27T01:57:32",
       "last_sat": 0.5,
       "last_cells": {
@@ -4778,6 +4779,28 @@
       },
       "built_linear": 0.0989,
       "built_srgb": 80.7
+    },
+    "corp/fridge-magnets": {
+      "src": "corp/fridge-magnets.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT (4x4, 20 percent gutter). PACK16 of things STUCK ON AN OFFICE KITCHEN FRIDGE DOOR, each seen perfectly FLAT and straight-on: cleaning rota with two magnets, child's crayon drawing, folded takeaway menu, beach postcard, instant party photo, torn shopping list, calendar page, three sticky notes, red-bordered notice, birthday card, lemon magnet, magnetic letters, business card under a magnet, gym timetable, bottle-opener magnet, pizza coupon. Paper warm off-white and cream, magnets bright saturated. Illegible scribble, no words, no logos. [append textures.json style]",
+      "prompt_exact": false,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the fridge's MAGNET CLUTTER, dealt by render.corp.CorpKitchen as upright decals on the fridge door and sides (the fridge top takes corp/kitchen-clutter's top-down cells). It REPLACES the two notes that were modelled into the fridge glb as label boxes -- two static ones on every fridge, reported as 'make these clutter slots'. Generated gpt-image-2.5-sunburst background transparent; the drop came back with its background at alpha 1-5 (56% under 128, only 0.1% at 0) under a coloured haze, so alpha < 64 was zeroed and tools/pack16.py --valign center packed it at tol 0 (seams x 255/514/764, y 257/506/759, scale 1.1009). The raw drop is parked at Unused/fridge-magnets-raw.png. sat and cap are corp/kitchen-clutter's.",
+      "last_converted": "2026-09-27T14:48:06",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0989,
+      "built_srgb": 83.7
     }
   }
 }
