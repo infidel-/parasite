@@ -2473,8 +2473,20 @@ Verdict: **LANDED.**
   every analytic light). Steel has to come from the ALBEDO (darker, with brushed highlight bands in
   the art) or a real env pipeline this build does not have (PMREM mips come out black).
 
-Verified in game: no sign on the vending machine's wall, chair pools unbroken past the cell edge.
-0 calls.
+What was actually asked for was the fridge's "white glint" on the vending machine. Two findings:
+- The fridge's materials are identical to the vending's (Standard, roughness 0.72, PropEnv on). The
+  fridge is built with `EDGE` 0.03 flat chamfers, though, and the vending was built with every
+  piece at edge 0. Those 45-degree strips are what catch PropEnv's glint. The vending now takes the
+  same: the core box chamfered whole, and the four frame blocks broken along the machine's outer
+  shell only by a new `shell()` in `kitchen_build.py`, since chamfering each block grooves the joins.
+  216 -> 512 tris; holes 0, coplanar 0, islands 1.
+- The bright WHITE BAR seen beside and over the fridge is a ceiling lamp (`corp lamps ceiling`,
+  additive). The ceiling is cut away, so from the tactical camera it lands on screen over whatever
+  stands under it. Hiding the additive meshes removes it, and the fridge has nothing of its own
+  there.
+
+Verified in game: no sign on the vending machine's wall, chair pools unbroken past the cell edge,
+the vending's top and front arrises lit. 0 calls.
 
 Verdict: **signs and pools LANDED; the PropEnv gain FAILED and is not in the tree.**
 
