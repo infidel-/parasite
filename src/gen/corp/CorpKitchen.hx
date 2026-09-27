@@ -29,8 +29,6 @@ class CorpKitchen
   static inline var SNACK_MIN = 2;
   // a 2x2 table and the shared row of chairs beside it
   static inline var TABLE_PITCH = 3;
-  // percent chance each free cell along a table's seated sides takes a chair
-  static inline var CHAIR_CHANCE = 75;
   // and percent chance each counter cell past the sink takes one of the appliances
   static inline var APPLIANCE_CHANCE = 80;
 
@@ -118,31 +116,10 @@ class CorpKitchen
       if (snack != null)
         push(node, room, CorpBlocks.ZONE_VENDING, snack);
 
-      // the dining area: the room inside its wall ring, one lane clear of the counter where the
-      // room is deep enough to spare it
-      var x1 = room.x1 + 1, y1 = room.y1 + 1, x2 = room.x2 - 1, y2 = room.y2 - 1;
-      if (prep != null)
-        switch (prep.side)
-          {
-            case SIDE_N:
-              if (y2 - y1 >= 2)
-                y1++;
-            case SIDE_S:
-              if (y2 - y1 >= 2)
-                y2--;
-            case SIDE_W:
-              if (x2 - x1 >= 2)
-                x1++;
-            default:
-              if (x2 - x1 >= 2)
-                x2--;
-          }
-      if (x2 > x1 &&
-          y2 > y1)
-        {
-          var z = GenTree.add(node, CorpBlocks.ZONE_DINING, x1, y1, x2, y2);
-          z.roomID = room.id;
-        }
+      // the dining area: the whole room, which the filler lays its tables over clear of the counter
+      // and the snack corner already on the grid and of the lane in front of them
+      var z = GenTree.add(node, CorpBlocks.ZONE_DINING, room.x1, room.y1, room.x2, room.y2);
+      z.roomID = room.id;
     }
 
 // fill one kitchen zone
@@ -228,23 +205,48 @@ class CorpKitchen
         }
     }
 
-// the dining area: 2x2 tables on a pitch of three, centred, each kept only if the room stays
-// walkable round it, and chairs on the two sides that face along the row of tables
+// the dining area: 2x2 tables on a pitch of three, each kept only if the room stays walkable round
+// it, and a chair on every free cell of the two sides that face along the row of tables.
+//
+// EVERY OFFSET THE SPARE CELLS ALLOW IS TRIED, scored on tables and then on seats, and the best is
+// laid. Centring alone left a spare row on each side of an 8x6 kitchen's two tables where a second
+// row of two fits; a door, the counter's lane or the glazing decides where the spare row goes, and
+// only a trial sees all three
   static function dining(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
+      // the lane in front of the counter and the snack corner, which no table or chair takes
+      var lane = new Map<Int, Bool>();
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if (cells[x][y] != WOOD1)
+            for (i in 0...Const.dir4x.length)
+              lane.set((x + Const.dir4x[i]) * 1000 + y + Const.dir4y[i], true);
       var w = GenTree.width(node), h = GenTree.height(node);
       var cols = Std.int((w + 1) / TABLE_PITCH);
       var rows = Std.int((h + 1) / TABLE_PITCH);
       if (cols < 1 ||
           rows < 1)
         return;
-      var sx = node.x1 + Std.int((w - (cols * TABLE_PITCH - 1)) / 2);
-      var sy = node.y1 + Std.int((h - (rows * TABLE_PITCH - 1)) / 2);
       // CHAIRS ON THE SIDES THE ROW DOES NOT RUN ALONG: two tables side by side share the one cell
       // between them, and a chair there would belong to both
       var seatsNS = (cols > rows ||
         (cols == rows && room.w >= room.h));
+      var tables = [];
+      var chairs = [];
+      var best = -1;
+      for (oy in 0...h - (rows * TABLE_PITCH - 1) + 1)
+        for (ox in 0...w - (cols * TABLE_PITCH - 1) + 1)
+          {
+            var t = fit(state, room, lane, node.x1 + ox, node.y1 + oy, cols, rows);
+            var c = seats(state, room, lane, t, seatsNS);
+            if (t.length * 10 + c.length > best)
+              {
+                best = t.length * 10 + c.length;
+                tables = t;
+                chairs = c;
+              }
+          }
       var full = [
         Const.CORP_TABLE_TISSUE,
         Const.CORP_TABLE_SAUCES,
@@ -253,8 +255,29 @@ class CorpKitchen
         Const.CORP_TABLE_FRUIT,
       ];
       var deco = full.copy();
+      for (t in tables)
+        {
+          GenTree.add(node, CorpBlocks.ZONE_TABLE, t.x, t.y, t.x + 1, t.y + 1);
+          for (dy in 0...2)
+            for (dx in 0...2)
+              {
+                cells[t.x + dx][t.y + dy] = Const.LIGHT_TABLE_WOOD1_2X2[dy][dx];
+                if (state.area.chance(30))
+                  deco = CorpRooms.addDecorationExt(state, t.x + dx, t.y + dy, deco, full);
+              }
+        }
+      for (c in chairs)
+        CorpRooms.addDecoration(state, c.x, c.y, Const.CORP_CHAIR);
+    }
+
+// the tables one offset lays: a 2x2 at every pitch point whose cells are bare floor clear of a
+// doorway and the lane, kept only while the room stays walkable
+  static function fit(state: _CorpState, room: _Room, lane: Map<Int, Bool>, sx: Int, sy: Int,
+      cols: Int, rows: Int): Array<{ x: Int, y: Int }>
+    {
+      var cells = state.area.getCells();
       var blocked = new Map<Int, Bool>();
-      var tables = [];
+      var out = [];
       for (r in 0...rows)
         for (c in 0...cols)
           {
@@ -263,6 +286,8 @@ class CorpKitchen
             for (dy in 0...2)
               for (dx in 0...2)
                 if (cells[tx + dx][ty + dy] != WOOD1 ||
+                    lane.exists((tx + dx) * 1000 + ty + dy) ||
+                    state.area.hasObjectAt(tx + dx, ty + dy) ||
                     CorpRooms.atDoor(cells, tx + dx, ty + dy))
                   ok = false;
             if (!ok)
@@ -277,37 +302,53 @@ class CorpKitchen
                     blocked.remove((tx + dx) * 1000 + ty + dy);
                 continue;
               }
-            GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 1, ty + 1);
-            tables.push({ x: tx, y: ty });
-            for (dy in 0...2)
-              for (dx in 0...2)
-                {
-                  cells[tx + dx][ty + dy] = Const.LIGHT_TABLE_WOOD1_2X2[dy][dx];
-                  if (state.area.chance(30))
-                    deco = CorpRooms.addDecorationExt(state, tx + dx, ty + dy, deco, full);
-                }
+            out.push({ x: tx, y: ty });
           }
-      // the chairs last, once every table is down, so no chair takes a cell a table wanted
+      return out;
+    }
+
+// the chairs round a set of tables: every free cell of each table's two seated sides, then, for a
+// table that got fewer than two, its other two sides. A chair is walkable, so none of this can
+// shut the room
+  static function seats(state: _CorpState, room: _Room, lane: Map<Int, Bool>,
+      tables: Array<{ x: Int, y: Int }>, ns: Bool): Array<{ x: Int, y: Int }>
+    {
+      var cells = state.area.getCells();
+      var used = new Map<Int, Bool>();
       for (t in tables)
+        for (dy in 0...2)
+          for (dx in 0...2)
+            used.set((t.x + dx) * 1000 + t.y + dy, true);
+      var sideNS = [ [ 0, -1 ], [ 1, -1 ], [ 0, 2 ], [ 1, 2 ] ];
+      var sideWE = [ [ -1, 0 ], [ -1, 1 ], [ 2, 0 ], [ 2, 1 ] ];
+      var out = [];
+      var take = function(t: { x: Int, y: Int }, side: Array<Array<Int>>): Int
         {
-          var seats = (seatsNS ?
-            [ [ 0, -1 ], [ 1, -1 ], [ 0, 2 ], [ 1, 2 ] ] :
-            [ [ -1, 0 ], [ -1, 1 ], [ 2, 0 ], [ 2, 1 ] ]);
-          for (s in seats)
+          var n = 0;
+          for (s in side)
             {
               var x = t.x + s[0], y = t.y + s[1];
               if (x < room.x1 ||
                   x > room.x2 ||
                   y < room.y1 ||
                   y > room.y2 ||
+                  used.exists(x * 1000 + y) ||
+                  lane.exists(x * 1000 + y) ||
                   cells[x][y] != WOOD1 ||
                   CorpRooms.atDoor(cells, x, y) ||
-                  state.area.hasObjectAt(x, y) ||
-                  !state.area.chance(CHAIR_CHANCE))
+                  state.area.hasObjectAt(x, y))
                 continue;
-              CorpRooms.addDecoration(state, x, y, Const.CORP_CHAIR);
+              used.set(x * 1000 + y, true);
+              out.push({ x: x, y: y });
+              n++;
             }
+          return n;
         }
+      var got = [for (t in tables) take(t, ns ? sideNS : sideWE)];
+      for (i in 0...tables.length)
+        if (got[i] < 2)
+          take(tables[i], ns ? sideWE : sideNS);
+      return out;
     }
 
 // every stretch of the room's wall ring that no doorway opens onto and no glazing backs, one side
