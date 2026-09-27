@@ -120,8 +120,9 @@ class CorpSigns
     CERT_FRAMED, CERT_PLAQUE];
 
 // every sign on the plate, merged into one mesh. returns how many hang, for __corp()
-  public static function build(scene:Scene, m:Facility):Int
+  public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):Int
     {
+      var high = CorpKitchen.high(m, area);
       var bufs = [for (sh in SHEETS) MeshBufTools.make()];
       var n = 0;
       var seen = new Map<Int, Bool>();
@@ -136,10 +137,10 @@ class CorpSigns
             for (col in 0...m.w)
               {
                 if (seen.exists(key(m, col, row, dir)) ||
-                    !hangs(m, col, row, dir))
+                    !hangs(m, col, row, dir, high))
                   continue;
                 var len = 0;
-                while (hangs(m, col + sc * len, row + sr * len, dir))
+                while (hangs(m, col + sc * len, row + sr * len, dir, high))
                   {
                     seen.set(key(m, col + sc * len, row + sr * len, dir), true);
                     len++;
@@ -309,14 +310,15 @@ class CorpSigns
 // run the masonry shows three units of a four-unit cell and a quad centred on the cell would hang
 // past the end of the wall it is bolted to.
 //
-// AND NO CLAIMED-CELL LIST, the one thing separating this from every family that STANDS against a
-// wall: CorpStyle.SIGN_Y 4.6 hangs it clear of the tallest thing that can share the cell (a server
-// rack at RACK_H 4.0), so the collision question simply does not arise up here
-  static function hangs(m:Facility, col:Int, row:Int, dir:Int):Bool
+// CorpStyle.SIGN_Y 4.6 hangs it clear of a server rack (RACK_H 4.0), but a sign 2.1 tall reaches
+// down to 3.55, and the staff kitchen stands taller things on walkable floor: `high` is
+// render.corp.CorpKitchen.high's cells, the vending machine, the fridge and the wall cabinets
+  static function hangs(m:Facility, col:Int, row:Int, dir:Int, high:Map<Int, Bool>):Bool
     {
       if (!FacilityModel.inside(m, col, row) ||
           !FacilityModel.isInterior(m, col, row) ||
           FacilityModel.isWall(m, col, row) ||
+          high.exists(CorpKitchen.key(m, col, row)) ||
           m.table[row][col] ||
           m.fit[row][col] != 0)
         return false;

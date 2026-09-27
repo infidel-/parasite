@@ -203,12 +203,13 @@ class CorpKitchen
             yaw: Math.atan2(DC[k], DR[k]) +
               ((hash % 1000) / 1000 * 2 - 1) * CorpStyle.KITCHEN_CHAIR_JITTER,
           });
+          // ITS CELL AND THE TABLE'S, as a run of two: the pull stands it across the boundary
           var hw = CorpStyle.KITCHEN_CHAIR_W / 2;
           FacilityDetail.ground(m, {
-            col: c.col,
-            row: c.row,
-            len: 1,
-            alongX: true,
+            col: c.col + (DC[k] < 0 || DR[k] < 0 ? DC[k] : 0),
+            row: c.row + (DC[k] < 0 || DR[k] < 0 ? DR[k] : 0),
+            len: 2,
+            alongX: k >= 2,
             rect: {
               x0: x - hw,
               x1: x + hw,
@@ -245,6 +246,23 @@ class CorpKitchen
             },
           });
         }
+    }
+
+// every kitchen cell whose piece reaches up into render.corp.CorpSigns' band — the fridge, the
+// vending machine and every counter cell but the sink's, which carry the wall cabinet — keyed by
+// `key`. A sign hung there stood half behind the vending machine
+  public static function high(m:Facility, area:game.AreaGame):Map<Int, Bool>
+    {
+      var out = new Map<Int, Bool>();
+      if (area == null)
+        return out;
+      for (c in counters(m, area))
+        if (!c.sink)
+          out.set(key(m, c.col, c.row), true);
+      for (kind in [ CorpDeco.K_FRIDGE, CorpDeco.K_VENDING ])
+        for (c in kitchenCells(m, area, kind))
+          out.set(key(m, c.col, c.row), true);
+      return out;
     }
 
 // every top the kitchen's clutter may lie on: each dining table's, and each fridge's
@@ -593,7 +611,7 @@ class CorpKitchen
     }
 
 // one cell as a map key
-  static inline function key(m:Facility, col:Int, row:Int):Int
+  public static inline function key(m:Facility, col:Int, row:Int):Int
     {
       return row * m.w + col;
     }

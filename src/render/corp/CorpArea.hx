@@ -136,7 +136,7 @@ class CorpArea implements Area3D
       var cl = CorpClutter.build(scene, model, game.area);
       clutter = cl.n;
       clutterProps = cl.props;
-      signs = CorpSigns.build(scene, model);
+      signs = CorpSigns.build(scene, model, game.area);
       // and the exec office's rugs, which lay their own contact-patched floor material and so go
       // in before the contact repaint below like every other pass on the floor
       CorpRugs.build(scene, model, game.area);

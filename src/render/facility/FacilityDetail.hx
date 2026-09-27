@@ -230,13 +230,18 @@ class FacilityDetail
       var cx = (r.x0 + r.x1) / 2;
       var cz = (r.z0 + r.z1) / 2;
       // the room's own floor is the plate: a pool shrunk to stay off the wall slabs, which would
-      // otherwise draw it up their room faces
-      var c = citygen.CityConfig.cellToWorld(o.col, o.row);
+      // otherwise draw it up their room faces. OVER EVERY CELL OF THE RUN, its far edge off the end
+      // cell: a kitchen chair pulled into its table's cell stands across the boundary, and a plate
+      // of its own cell alone cut the pool off in a straight line in front of it
       var half = citygen.CityConfig.CELL / 2;
       inline function inner(d:Int):Float
         {
-          var wc = o.col + DC[d];
-          var wr = o.row + DR[d];
+          var end = ((d == 3 && o.alongX) || (d == 1 && !o.alongX) ? n - 1 : 0);
+          var col = o.col + (o.alongX ? end : 0);
+          var row = o.row + (o.alongX ? 0 : end);
+          var c = citygen.CityConfig.cellToWorld(col, row);
+          var wc = col + DC[d];
+          var wr = row + DR[d];
           if (!FacilityModel.isWall(m, wc, wr))
             return (d < 2 ? c.z : c.x) + (d == 0 || d == 2 ? -half : half);
           var t = FacilityGeom.slab(m, wc, wr);
