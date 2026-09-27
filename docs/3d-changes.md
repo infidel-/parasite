@@ -2417,3 +2417,34 @@ hidden, interleaved x3: **184 vs 183 (+1)**, 16 tris for two fridges. The remove
 of the fridge instance and cost nothing.
 
 Verdict: **LANDED.** +1 call per floor with a fridge on it.
+
+## Corp kitchen round 3: walkable run cells, chairs off the table edge, raised cabinet, flush microwave
+
+Four reports on the round-2 kitchen:
+
+- **"Tiles next to the counter, fridge and cooler aren't walkable":** those tiles were the pieces'
+  OWN cells. `CorpKitchen.against` backs a piece onto the wall face, and an inner wall (`WALL_INNER`
+  1.2) leaves a 1.4 strip of floor in its own cell. So a 1.32 counter stands 2.03..3.35 off its
+  cell's centre, wholly on the wall cell, and its tile was bare floor that `TacticalGrid` hatched.
+  The gen now leaves every run cell walkable WOOD1 and names it by decoration. A bare counter cell
+  takes `Const.CORP_COUNTER` (entities64 34/11, a vending frame never dealt), read as
+  `CorpDeco.K_COUNTER`. `CorpKitchen.counterCells` takes those, the tap and appliance cells, and an
+  old save's 1x1 worktop tiles. The dining lane is gone, so tables may stand right in front of the
+  counter: `nodes/table` 13.21 -> 15.13 a floor.
+- **Chairs meeting at a table corner:** the pull was `KITCHEN_CHAIR_IN` 3.4, fitted to the long
+  side (edge 1.8 off the centre). A chair on the short side (edge 2.6) stood half in the table and
+  in the chair round the corner. The pull is now off that side's own edge, `KITCHEN_CHAIR_GAP` 0.8.
+- **Coffee machine in the wall cabinet:** its top is 1.8 + 0.95 x 1.3 = 3.04, over `CAB_Y` 3.0.
+  `CAB_Y` is now 3.4.
+- **Microwave:** the door and display were 0.02-proud pieces whose edges drew as strips. A new
+  `inlay()` in `kitchen_build.py` bisects the front face and tags the pieces, so both are flush.
+  192 -> 204 tris; holes 0, coplanar 0, islands 1.
+
+**Trap:** `CorpConnect.dropOrphanChairs` keys on row 30, which `CORP_TAP` shares (cols 9-10). A
+tap on a floor cell has no table beside it, so it was dropped as a stray chair. Seen in game as a
+sink with no tap decoration.
+
+Verified in game on a regenerated 6x6 kitchen: four tables, the player standing on the fridge's and
+the sink's cells, a flush microwave under the raised cabinet. No call change: no new mesh.
+
+Verdict: **LANDED.**

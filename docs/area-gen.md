@@ -1363,13 +1363,16 @@ child nodes (with `roomID` set) that `CorpGen.fill` dispatches a level down, so 
 ones pushed before it on the grid. The only corp zones that are fillers rather than records.
 
 - **`prep`**: the longest stretch of the wall ring no door opens onto and **no window backs** (temp
-  ids 18-24 / 27-33), 2..`PREP_MAX` 5 cells, anchored in a corner where it has one. Fridge (floor
-  twin) at the corner end, sink (`CORP_TAP` on a 1x1 counter tile) next, then microwave / kettle /
-  coffee on the rest.
+  ids 18-24 / 27-33), 2..`PREP_MAX` 5 cells, anchored in a corner where it has one. Fridge at the
+  corner end, sink (`CORP_TAP`) next, then microwave / kettle / coffee, or `CORP_COUNTER` on a bare
+  cell. **Every run cell stays walkable WOOD1**, named by its decoration: the render stands a
+  counter (1.32 deep), a fridge or a vending machine almost wholly on the WALL cell's strip of floor
+  in front of the masonry, so a counter tile or an unwalkable twin under it left a whole cell of
+  visible floor impassable.
 - **`vending`**: the 2..3-cell window of wall nearest a door that the counter did not take: vending
-  machine, cooler, walkable bin.
-- **`dining`**: the whole room, less the LANE: every cell next to the counter or the snack corner
-  (anything not bare WOOD1), which no table or chair takes. `LIGHT_TABLE_WOOD1_2X2` at pitch 3,
+  machine, cooler, bin, all walkable.
+- **`dining`**: the whole room; a table or chair takes any bare WOOD1 cell with no object on it, so
+  it may stand right in front of the counter. `LIGHT_TABLE_WOOD1_2X2` at pitch 3,
   each table kept only if `roomOpen` still floods the room. **Every offset the spare cells allow is
   tried**, scored as `tables * 10 + seats`: when tables were centred inside an inset rect, an 8x6
   kitchen left a spare row on each side where a second row of two tables fits. A chair
@@ -1377,6 +1380,13 @@ ones pushed before it on the grid. The only corp zones that are fillers rather t
   along. A table left with fewer than two chairs also takes its other two sides.
 - The demand **aims at 6 x 6** (`fit` = `-(|w-6| + |h-6|)`, min still 4 x 4), since `smallest` dealt
   it 4 x 4 nearly every time.
+
+Round 3 (walkable run cells, the lane dropped): 0 failures, 0 unreachable, `orphanCells` 0 over
+3,000 seeds; `nodes/table` 13.21 -> 15.13 a floor, about one more table per kitchen. `furn/kitchen`
+fell 79.22 -> 68.92 because the run cells no longer count as furniture. **Trap:**
+`CorpConnect.dropOrphanChairs` drops any row-30 decoration with no table tile beside it, and
+`CORP_TAP` deals from row 30 cols 9-10. Once the counter was floor, those taps went as stray
+chairs; the pass now skips the tap frames.
 
 Round 2 (offset search, every seat): 0 failures, 0 unreachable, `orphanCells` 0 over 3,000 seeds;
 the `--stats` `furn/kitchen` figure rose 59.68 -> 79.22, with +1.83 tables and +7.3 decorations a
