@@ -388,8 +388,8 @@ class CorpFurniture
           // tile period, with its two end faces at DESK_FRONT_TILE — a drawer pitch on a table edge
           case MEETING | CARPET:
             top = CorpStyle.TABLE_TOP;
-            side = CorpStyle.TABLE_SIDE;
-            end = CorpStyle.TABLE_SIDE;
+            side = CorpStyle.TABLE_TOP;
+            end = CorpStyle.TABLE_TOP;
             tile = CorpStyle.TABLE_TILE;
             sideTile = CorpStyle.TABLE_TILE;
             endTile = CorpStyle.TABLE_TILE;
@@ -439,6 +439,10 @@ class CorpFurniture
       // The slab keeps its cap and TABLE_FASCIA of edge; `corp/table-leg` stands under it
       var alongX = m.table[row][col - 1] || m.table[row][col + 1];
       var y0 = (slabTop(m, col, row) ? h - CorpStyle.TABLE_FASCIA : 0.0);
+      // and a slab's UNDERSIDE, which a box standing on the floor never needs: seen past the thin
+      // fascia at a low pitch, the top was a single sheet with nothing under it
+      if (y0 > 0)
+        FacilityGeom.capDown(buf(top), r.x0, r.x1, r.z0, r.z1, y0, tile);
       for (dir in 0...4)
         {
           // CULL AGAINST A NEIGHBOUR THAT ACTUALLY DRAWS THE SAME BOX, not merely against

@@ -107,7 +107,6 @@ class CorpStyle
   public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
   public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
   public static inline var TABLE_TOP = 'textures/corp/table-top.png';
-  public static inline var TABLE_SIDE = 'textures/corp/table-side.png';
   public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
   public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
   // and the LID, which is its OWN surface and not the flank seen from above — the rule
@@ -208,8 +207,10 @@ class CorpStyle
   public static inline var FIT_INSET = 0.12;
   // how much EDGE a boardroom or executive slab shows. it keeps a cap and this much fascia and
   // nothing else, with `corp/table-leg` standing under it: a 3x3 block of table tile is one 6 m
-  // top, and a box of quads under a 6 m top is a plinth the size of a car
-  public static inline var TABLE_FASCIA = 0.26;
+  // top, and a box of quads under a 6 m top is a plinth the size of a car. 0.12 AND NOT 0.26: 13 cm
+  // of edge read as a slab of worktop a hand deep, reported as "make the table top thinner". The
+  // fascia wears TABLE_TOP, since it is the same board seen edge-on, and the underside is capped
+  public static inline var TABLE_FASCIA = 0.12;
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;
@@ -220,7 +221,9 @@ class CorpStyle
   // keyboard's front lip 0.04 PAST the front of the desk it sits on and the monitor's back within
   // 0.275 of the far edge. Keep this equal to desk_build.py's TOP_D
   public static inline var DESK_TOP_D = 3.30;
-  public static inline var LEG_H = 1.24;
+  // the blade leg runs up to the fascia's underside. Keep models-src/corp/desk_build.py's LEG_H
+  // equal to this
+  public static inline var LEG_H = TABLE_H - TABLE_FASCIA;
   public static inline var LEG_W = 0.46;
   // the waste bin, the one ROUND piece of the tower's furniture and so the only one of the
   // decoration families that is a glb rather than emitted quads. 0.9 is 45 cm tall
@@ -437,6 +440,10 @@ class CorpStyle
   // overhang, which is where a pushed-in chair sits
   public static inline var CHAIR_TUCK = 0.42;
   public static inline var CHAIR_OUT = 4.0 / 2 + 1.3 / 2 - CHAIR_TUCK;
+  // and a boardroom chair's, off the slab CELL's centre: the slab's edge is FIT_INSET in from the
+  // cell boundary, and the seat's front slides BOARD_CHAIR_TUCK under it
+  public static inline var BOARD_CHAIR_TUCK = 0.10;
+  public static inline var BOARD_CHAIR_OUT = 4.0 / 2 - FIT_INSET + CHAIR_W / 2 - BOARD_CHAIR_TUCK;
   public static inline var MON_H = 1.66;       // the built mesh exactly, so the batch's scale is 1
   public static inline var MON_W = 1.95;
   public static inline var MON_D = 0.45;

@@ -176,6 +176,7 @@ class CorpProps
         work.set(c.row * m.w + c.col, true);
       desks(m, chairs, mons, keys, work);
       tables(m, benches, legs);
+      boardChairs(m, chairs);
       // and the exec office's, whose workstation rides the two batches above
       var ex:CorpExec.ExecPlaces = {
         desk: [],
@@ -537,6 +538,11 @@ class CorpProps
                 // run says which of the two walls is its back
                 var dir = (m.surf[c.row][c.col] == Surf.KITCHEN ?
                   CorpKitchen.hand(m, area, c.col, c.row) : CorpDeco.backHandOf(m, c.col, c.row));
+                // AND GLAZING WHEN THERE IS NO MASONRY. A plant or a cooler is not a fitting and
+                // needs no wall to bolt to — dealt into a boardroom corner with a window on both
+                // hands, it drew nothing at all, and the room read as bare carpet
+                if (dir < 0)
+                  dir = anyWall(m, c.col, c.row);
                 if (dir < 0)
                   continue;
                 cand.push({
@@ -712,19 +718,114 @@ class CorpProps
               }
             if (!CorpFurniture.slabTop(m, col, row))
               continue;
-            // EVERY OTHER CELL, on a checkerboard. A leg under all nine cells of a 3x3 table is
-            // a forest under a top nobody can see past; on the diagonal they land ~2.8 units
-            // apart, which is a trestle spacing and half the instances
-            if ((col + row) % 2 != 0)
+            // TRESTLES AT THE ENDS, and one in the middle of a long run. This was every other cell
+            // on a checkerboard — six to twelve legs under a top nobody sees under, reported as
+            // "are these even necessary?". A leg now stands only in the cells at either end of the
+            // slab's long axis, plus the middle one from 5 long, one per cell across its depth
+            var alongX = slabAlongX(m, col, row);
+            var len = (alongX ? runLen(m, col, row, 1, 0) : runLen(m, col, row, 0, 1));
+            var at = (alongX ? runAt(m, col, row, 1, 0) : runAt(m, col, row, 0, 1));
+            if (at != 0 &&
+                at != len - 1 &&
+                (len < 5 || at != Std.int(len / 2)))
               continue;
-            // the slab's long axis is whichever hand carries on being table
-            var alongX = m.table[row][col - 1] || m.table[row][col + 1];
             legs.push({
               x: c.x,
               z: c.z,
               yaw: (alongX ? Math.PI / 2 : 0.0),
             });
           }
+    }
+
+// the boardroom's seats: one per slab cell on each LONG side whose neighbour is clear floor, pulled
+// in to BOARD_CHAIR_OUT off the cell's centre and facing the table, turned a little off square.
+// The generator deals no chairs here — the cell in front of the table stays carpet to walk on, as
+// an open-plan desk's does — so this is the only thing that says the table is sat at. An exec desk
+// and a kitchen table seat themselves (render.corp.CorpExec, render.corp.CorpKitchen)
+  static function boardChairs(m:Facility, chairs:Array<Models.PropPlace>):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            var s = m.surf[row][col];
+            if (!m.table[row][col] ||
+                (s != Surf.MEETING &&
+                s != Surf.CARPET) ||
+                !CorpFurniture.slabTop(m, col, row) ||
+                CorpExec.deskCell(m, col, row) ||
+                CorpKitchen.cell(m, col, row))
+              continue;
+            // the long sides are the hands ACROSS the long axis: z for a table running along x
+            var alongX = slabAlongX(m, col, row);
+            for (d in (alongX ? [0, 1] : [2, 3]))
+              {
+                if (!clear(m, col + DC[d], row + DR[d]))
+                  continue;
+                var hash = FacilityModel.mix((col * 374761393) ^ (row * 40503) ^ (d * 668265263));
+                var c = CityConfig.cellToWorld(col, row);
+                var x = c.x + DC[d] * CorpStyle.BOARD_CHAIR_OUT;
+                var z = c.z + DR[d] * CorpStyle.BOARD_CHAIR_OUT;
+                chairs.push({
+                  x: x,
+                  z: z,
+                  yaw: Math.atan2(DC[d ^ 1], DR[d ^ 1]) +
+                    (((hash >>> 8) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CHAIR_YAW_JIT,
+                });
+                // ITS CELL AND THE TABLE'S, as a run of two: the tuck stands it across the boundary
+                var hw = CorpStyle.CHAIR_W / 2;
+                FacilityDetail.ground(m, {
+                  col: col + (DC[d] < 0 || DR[d] < 0 ? DC[d] : 0),
+                  row: row + (DC[d] < 0 || DR[d] < 0 ? DR[d] : 0),
+                  len: 2,
+                  alongX: d >= 2,
+                  rect: {
+                    x0: x - hw,
+                    x1: x + hw,
+                    z0: z - hw,
+                    z1: z + hw,
+                  },
+                  h: CorpStyle.CHAIR_H,
+                });
+              }
+          }
+    }
+
+// the first hand this cell has any wall on, glazing included, or -1
+  static function anyWall(m:Facility, col:Int, row:Int):Int
+    {
+      for (dir in 0...4)
+        if (FacilityModel.isWall(m, col + DC[dir], row + DR[dir]))
+          return dir;
+      return -1;
+    }
+
+// does the slab through this cell run along x? the longer of its two runs, x on a tie
+  static function slabAlongX(m:Facility, col:Int, row:Int):Bool
+    {
+      return runLen(m, col, row, 1, 0) >= runLen(m, col, row, 0, 1);
+    }
+
+// how many table cells the run through this cell covers along (dc, dr)
+  static function runLen(m:Facility, col:Int, row:Int, dc:Int, dr:Int):Int
+    {
+      var n = 1;
+      while (tableAt(m, col + dc * n, row + dr * n))
+        n++;
+      return n + runAt(m, col, row, dc, dr);
+    }
+
+// and this cell's index in that run, counted from its low end
+  static function runAt(m:Facility, col:Int, row:Int, dc:Int, dr:Int):Int
+    {
+      var n = 0;
+      while (tableAt(m, col - dc * (n + 1), row - dr * (n + 1)))
+        n++;
+      return n;
+    }
+
+  static inline function tableAt(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) && m.table[row][col];
     }
 
 // which hand a worktop cell has its back on — masonry, a cubicle spine, or the next worktop.

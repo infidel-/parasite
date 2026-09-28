@@ -1296,15 +1296,15 @@
       "tris": -1,
       "tex": 768,
       "note": "the open-plan / cubicle desk, hand-modelled, 96 tris, 3.76 x 3.30 x 1.50 built at WORLD SIZE so Models.instanced scales it by 1. It replaces the emitted worktop on Surf.OPEN and Surf.CUBICLE, which was reported as \"just a cuboid\" and was one: a desk is a thin top on a frame with a VOID under it, and the void is the read. A 0.10 top oversailing 0.22 at the front, an O-leg frame in anodised section, a three-drawer pedestal on a 0.13 plinth reveal and a cable tray. Wears desk-wrap.png, which is the three shipped corp desk labels plus the chair sheet's anodised band -- fitted art, so NO baseColor and NO lift. TWO FIXES in the sixth defect pass, both reported off face dumps. (1) ITS FRONT WAS -y WHILE BOTH FILES SAID +y: the top's overhang, the modesty setback and the whole drawer pedestal were measured off `yb = -TOP_D/2`, and render.corp.CorpProps.tables turns the module by the desk's BACK hand on the stated premise that its front is +y -- so the drawers faced the wall and the seat was pulled up to the back of the pedestal. Fixed in the MODEL, because the yaw is the line both files already describe correctly, and the convention is settled by the chair: every yaw in CorpProps is atan2(DC[d], DR[d]) and what it turns to face d is the model's -y. (2) THE CABLE TRAY WORE A PLAIN ANODISED BAND and was reported as \"what is that slab in the desk?\" -- which is what a featureless plate slung under a worktop is. It takes corp/cable-tray now, cell 4 of a desk-wrap rebuilt 2 x 3 at 1024 x 1536 so the desk TOP keeps its full 512. Also MOD_Z1 dropped 0.02 so the modesty panel's top clears the pedestal's: both are buried under the worktop and they sat 0.01 apart, which is buildlib.check's near-coplanar complaint exactly. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T14:24:18Z",
+      "last_converted": "2026-09-28T00:25:24Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/table-leg": {
       "src": "corp/corp-table-leg.glb",
       "tris": -1,
       "tex": 768,
-      "note": "the blade leg under a boardroom or executive slab, hand-modelled, 36 tris. It is a LEG and not a table because a glb cannot span a block: gen.corp writes those tables as 3x2 and 3x3 of table tiles and Models.instanced scales by HEIGHT ALONE, so a module per cell would cut a 6 m table into six 2 m desks. The top stays emitted -- CorpFurniture keeps its cap and a 0.26 fascia -- and this is the silhouette under it. Same sheet, same rule: no baseColor, no lift. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T14:24:18Z",
+      "note": "the blade leg under a boardroom or executive slab, hand-modelled, 26 tris (was 36 with broken arrises). SIMPLIFIED in the meeting room pass after a face pick on its underside came back as \"are these even necessary?\": no chamfers, and every down-facing face plus the blade's and the shoe's tops (buried in the shoe and the slab) deleted, so buildlib.check reads holes 20 on purpose. LEG_H 1.38 to meet the 0.12 fascia, and render.corp.CorpProps.tables stands it only at the slab's two ends and the middle of a 5+ run, one per cell across. It is a LEG and not a table because a glb cannot span a block: gen.corp writes those tables as 3x2 and 3x3 of table tiles and Models.instanced scales by HEIGHT ALONE, so a module per cell would cut a 6 m table into six 2 m desks. The top stays emitted -- CorpFurniture keeps its cap, a 0.12 fascia and an underside -- and this is the silhouette under it. Same sheet, same rule: no baseColor, no lift. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
+      "last_converted": "2026-09-28T00:25:24Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/bin": {
@@ -1312,7 +1312,7 @@
       "tris": -1,
       "tex": 768,
       "note": "the waste bin, hand-modelled, 140 tris, a 12-sided two-stage lathe: a tucked foot, a flared body and a rolled lip. It is the ONE glb of the decoration families and the reason is the triage and not the budget -- everything else gen.corp stands against a wall (a cabinet, a fridge, a vending machine, a whiteboard) is an axis-aligned slab and goes out as quads into CorpFurniture's own buffers for no draw call at all, and a bin is round. Wears desk-wrap.png's anodised cell; no baseColor, no lift. INSIDES, in the sixth defect pass: the profile used to stop at the rim and take a flat disc over the opening, i.e. a bin with a lid cast into it -- reported as \"should have insides, it's just flat top\". It runs buildlib's VESSEL cycle now (out to the rim, over it, back DOWN the inside to the floor, which is `tube`'s own end cap at BIN_FLOOR), 140 -> 188 tris. At a 51-degree pitch the top is most of what a bin shows, which is the one face it cannot afford to fake. TEX 768 AND NOT 512, WHICH IS THE SHEET'S SHAPE AND NOT A BUDGET CHANGE: models.mjs resizes by the LONG edge, so a 1024 x 1536 desk-wrap at 512 came out 341 x 512 with 170-px cells -- a third of what the square sheet gave. 768 puts it back at 512 x 768, i.e. the same 256-px cells every other corp model sheet ships.",
-      "last_converted": "2026-09-22T14:24:18Z",
+      "last_converted": "2026-09-28T00:25:24Z",
       "last_sig": "n1/-1/768/0.01/-/-"
     },
     "corp/desk-mug": {
@@ -1448,7 +1448,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the staff kitchen's dining table, 376 tris, 5.2 x 3.6 x 1.5: a beech top on four square steel legs and a steel apron, long along x. Stands on a generator 2x2 LIGHT_TABLE_WOOD1 block and is turned so its long sides face the chairs. Wears kitchen-furn-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-chair": {
@@ -1456,7 +1456,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the kitchen's four-legged canteen chair, 412 tris, 0.92 x 0.99 x 1.71: a terracotta moulded shell (seat and raked back) on four round steel legs. Faces -y, back at +y. Wears kitchen-furn-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-counter": {
@@ -1464,7 +1464,7 @@
       "tris": -1,
       "tex": 512,
       "note": "one cell of the prep counter, 464 tris, 4.0 x 1.32 x 1.8 (COUNTER_H): a charcoal stone top the full cell wide over a 3.96 lacquer carcass with two doors, steel bar pulls and a recessed dark kick block (closed at the ends too, not a front plate), 65 cm deep and standing against its wall. Butted cell to cell into one worktop. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-sink": {
@@ -1472,7 +1472,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the counter cell with the sink, 896 tris, 4.0 x 1.32 x 2.53: the counter unit with a lathed steel bowl dropped into a four-slab top and a gooseneck tap; its carcass stops under the bowl between two full-height end panels flush with a counter's ends. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-wall-cab": {
@@ -1480,7 +1480,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the wall cabinet over a counter cell, 336 tris, 3.94 x 0.74 x 1.4, BUILT AT ITS MOUNTED HEIGHT (z 3.0..4.4) so it stands on the floor like the rest. Two lacquer doors with steel pulls. Wears kitchen-counter-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-fridge": {
@@ -1488,7 +1488,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the fridge-freezer, 540 tris, 1.6 x 1.41 x 3.6: white lacquer, freezer below, vertical steel pulls and a dark kick block set back on three sides. Nothing on its door: render.corp.CorpClutter hangs corp/fridge-magnets on the door and sides and kitchen-clutter on the top. Sheet cell 3 (the two notes it used to model) is unused. Wears kitchen-fridge-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:26Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/kitchen-vending": {
@@ -1498,7 +1498,7 @@
       "note": "the snack vending machine, 512 tris, 2.2 x 1.43 x 4.2: brushed steel casing, its arrises broken like the fridge's (the core whole, the frame blocks along the outer shell only) so PropEnv's glint lands on it (corp/vending-pack's charcoal repainted), the glass front recessed 0.06 in a frame at the drop's 0.666 aspect and the control panel proud at its 0.591 (corp/vending-pack as built, its three regions measured off the drop). texel_off 2 = the glass and the panel, whole labels at their own density on purpose. EMISSIVE: kitchen-vending-emissive.png is the sheet itself masked to the glass (modulated by its own art, so the packets glow and the coil racks stay dark) plus the amber display's own pixels -- the layout is authored, so it is cut straight off the sheet rather than by tools/emissive.py, and there is nothing next to either region to bleed into. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
       "emissiveSrc": "corp/kitchen-vending-emissive.png",
       "emissiveStrength": 2,
-      "last_converted": "2026-09-27T16:37:27Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/corp/kitchen-vending-emissive.png@2"
     },
     "corp/kitchen-microwave": {
@@ -1506,7 +1506,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the microwave, 204 tris, 1.0 x 0.7 x 0.6: a lacquer box whose front is cut FLUSH into a dark glass door and the fascia's display panel (proud 0.02, their edges were reported as extrusions) (texel_off 1 = that panel, a whole label). Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:27Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/kitchen-coffee": {
@@ -1514,7 +1514,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the bean-to-cup coffee machine, 256 tris, 0.6 x 1.1 x 0.95: a dark body, the fascia's display band across its upper front (texel_off 1 = that band), a steel spout and drip tray, a white cup on it. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:27Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/kitchen-kettle": {
@@ -1522,7 +1522,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the jug kettle, 344 tris, 0.44 x 0.65 x 0.47: a lathed steel body on a dark base, a dark swept handle at +y and a steel spout. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:27Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/kitchen-toaster": {
@@ -1530,7 +1530,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the two-slot toaster, 220 tris, 0.64 x 0.36 x 0.4: a steel box, two dark slot plates proud on top, a dark lever. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
-      "last_converted": "2026-09-27T16:37:27Z",
+      "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     }
   }

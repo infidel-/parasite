@@ -65,7 +65,7 @@ class CorpRooms
   public static inline var TABLE_D_MAX = 2;
   // the meeting room's wall dressing: one cell in this many along each wall line, and the percent
   // chance a dressed cell takes a bin rather than a plant
-  public static inline var MEETING_WALL_PITCH = 3;
+  public static inline var MEETING_WALL_PITCH = 2;
   public static inline var MEETING_WALL_BIN = 20;
   // THE EXEC SUITE'S SIZE GATE: 4 across and 7 long, on either axis. See `execSuite`
   public static inline var SUITE_SPAN = 4;
