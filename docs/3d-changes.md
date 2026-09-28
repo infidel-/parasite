@@ -2535,3 +2535,31 @@ copying another's knobs onto a much brighter surface inherits a ceiling it has n
 
 Verdict: **LANDED.** 0 calls.
 
+
+## Corp meeting room: two-deep table on end trestles with chairs, walkable wall dressing, whiteboard face, closed wraps
+
+- **Table:** `TABLE_H_MAX` 4 -> `TABLE_D_MAX` 2 (length stays `TABLE_W_MAX` 6). A 4-deep slab is 8 m
+  across and read as a giant empty top. `TABLE_FASCIA` 0.26 -> 0.12, and a slab now caps its
+  underside at the fascia line (`capDown`). The fascia wears `table-top`; `table-side` is retired.
+- **Legs:** `corp/table-leg` 36 -> 26 tris. No chamfers, and every down-facing face plus the two
+  buried tops are deleted (buildlib reads holes 20 on purpose). `LEG_H` = `TABLE_H - TABLE_FASCIA`
+  = 1.38. `CorpProps.tables` stands one per cell across the depth at the two long-axis ends, plus the
+  middle from 5 long. It used to stand one on every other cell.
+- **Chairs:** `CorpProps.boardChairs` puts a `corp/chair` on every clear long-side hand of a
+  MEETING/CARPET slab cell, at `BOARD_CHAIR_OUT` 2.43, into the existing chair batch. Contact comes
+  from `FacilityDetail.ground` as a run of two.
+- **Plants against glazing:** the generator-dealt plant and cooler cells fell back to nothing when
+  `backHandOf` found no masonry. Glass-backed corners were bare. `anyWall` is the fallback now.
+- **Whiteboard:** it was a `DESK_SIDE` face tiled at head height ("wtf is that on the wall?"). Now a
+  1024x768 solo gen mapped 0..1 by `pane`, at `BOARD_Y1 = BOARD_Y0 + BOARD_W * 0.75`, res [512,384].
+  Measured +2 calls with it in frame (167 vs 165, 7-frame median, visible toggle).
+- **Wraps:** `table-top` re-rolled solo. At the 512 build its wrap measured 4.8/9.4 against an
+  interior of 1.8/3.3; the new source measures 2.7/3.5 against 1.4/2.8, and its lift of 0.70 lands
+  it at 78.2 against the old 79.1. `wall-meeting` got `seamfix grout`: column-mean step at the wrap
+  0.20 against an interior p95 of 4.57. `floor-meeting` got the new `seamfix tone`: 4.67 -> 2.85
+  against an interior p95 of 3.05.
+
+**Trap:** a plant needs no wall to bolt to. Gating the generator's own dressed cells on masonry,
+which is right for casework, silently dropped every plant that had been dealt against glass.
+
+Verdict: **LANDED.** +2 calls for the whiteboard. The retired `table-side` buffer was not measured.

@@ -1484,6 +1484,19 @@ which was putting a 1 x 3 table in a 5 x 10 boardroom.
 | break | 21.2% | 21.6% |
 | everything else | — | within 0.5 points |
 
+**The meeting room later went the other way on DEPTH, and dropped `decorateWalls`.** Reported from
+the game as a giant empty top: `TABLE_H_MAX` 4 is an 8 m slab, and nobody seated on one side reaches
+its middle. It is `TABLE_D_MAX` **2** now (length keeps 6), and chairs down both long sides come
+from `render.corp.CorpProps.boardChairs` on walkable carpet — the generator deals none. The wall
+dressing is `cornerPlants(state, room, CARPET_MEETING)` plus `meetingWalls`: every
+`MEETING_WALL_PITCH` 2nd cell of each wall line that is bare and not beside a door takes a plant (or
+a bin at `MEETING_WALL_BIN` 20%), one masonry cell takes the whiteboard and one more the cooler if
+`roomOpen` still holds. **Only the cooler writes the unwalkable twin**, so the ring of dead cells
+`decorateWalls` left (forced corners, half of x1/x2, 80% of it twin, half of that drawing nothing
+on the floor) is gone, and so are its 1x1 wall tables — a lone table tile renders as a desk and
+nothing in this room seats one. Oracle: 200 seeds, `unreachableRooms 0`, `orphanCells 0`,
+`room-meeting` 1.97 per floor.
+
 **Two of the planned fixes were built, measured and WITHDRAWN, and that is the entry.** A copier
 bank down the middle of the copy room took its fill **29.4% → 23.4%** centred and **27.6%** flush;
 dressing the exec office's corners at every size took exec **26.9% → 20.7%**. Neither is a
