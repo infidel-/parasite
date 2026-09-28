@@ -50,7 +50,6 @@ class CorpTemp
   public static inline var INNER_WINDOWV3 = 33;
   public static inline var CARPET = 34;
   public static inline var WOOD1 = 35;
-  public static inline var WOOD2 = 36;
   public static inline var MARBLE1 = 37;
   public static inline var MARBLE2 = 38;
   public static inline var CARPET_MEETING = 39;
@@ -98,7 +97,6 @@ class CorpTemp
   // _Room.role, written per room by gen.blocks.CorpBlocks.assign and persisted through
   // generatorInfo. THE FLOOR TILE CARRIES THE SAME FACT and is what a reader of an old save gets —
   // these strings are the refinement, not the record
-  public static inline var ROLE_OPEN = 'open';
   public static inline var ROLE_CUBICLE = 'cubicle';
   public static inline var ROLE_MEETING = 'meeting';
   public static inline var ROLE_KITCHEN = 'kitchen';
@@ -124,7 +122,6 @@ class CorpTemp
     CARPET => Const.TILE_FLOOR_CARPET,
     CARPET_MEETING => Const.TILE_FLOOR_CARPET_MEETING,
     WOOD1 => Const.TILE_FLOOR_WOOD1,
-    WOOD2 => Const.TILE_FLOOR_WOOD2,
     MARBLE1 => Const.TILE_FLOOR_MARBLE1,
     MARBLE2 => Const.TILE_FLOOR_MARBLE2,
     CUBICLE => Const.TILE_FLOOR_CUBICLE,

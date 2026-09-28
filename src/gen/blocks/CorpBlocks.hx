@@ -26,7 +26,6 @@ class CorpBlocks
   // with every other area type and a filler table keyed on one area's enum would not be
   public static inline var PLATE = 'plate';
   public static inline var ELEVATOR = 'elevator';
-  public static inline var ROOM_OPEN = 'room-open';
   public static inline var ROOM_CUBICLE = 'room-cubicle';
   public static inline var ROOM_MEETING = 'room-meeting';
   public static inline var ROOM_KITCHEN = 'room-kitchen';
@@ -40,7 +39,7 @@ class CorpBlocks
   public static inline var ROOM_RECEPTION = 'room-reception';
   public static inline var ROOM_SECURITY = 'room-security';
   // the widest a reception may be dealt, on either axis. a front desk and a couple of chairs is
-  // what it is; the floor's big rooms belong to the open plan and the cubicle farm
+  // what it is; the floor's big rooms belong to the cubicle farm
   public static inline var RECEPTION_MAX = 6;
 
   // the zone kinds a room pushes under itself. they write no cells of their own — the template
@@ -73,13 +72,12 @@ class CorpBlocks
           case ROOM_CUBICLE: ROLE_CUBICLE;
           case ROOM_MEETING: ROLE_MEETING;
           case ROOM_KITCHEN: ROLE_KITCHEN;
-          case ROOM_EXEC: ROLE_EXEC;
           case ROOM_TOILET: ROLE_TOILET;
           case ROOM_SERVERS: ROLE_SERVERS;
           case ROOM_ARCHIVE: ROLE_ARCHIVE;
           case ROOM_RECEPTION: ROLE_RECEPTION;
           case ROOM_SECURITY: ROLE_SECURITY;
-          default: ROLE_OPEN;
+          default: ROLE_EXEC;
         }
     }
 
@@ -92,13 +90,12 @@ class CorpBlocks
           case ROLE_CUBICLE: ROOM_CUBICLE;
           case ROLE_MEETING: ROOM_MEETING;
           case ROLE_KITCHEN: ROOM_KITCHEN;
-          case ROLE_EXEC: ROOM_EXEC;
           case ROLE_TOILET: ROOM_TOILET;
           case ROLE_SERVERS: ROOM_SERVERS;
           case ROLE_ARCHIVE: ROOM_ARCHIVE;
           case ROLE_RECEPTION: ROOM_RECEPTION;
           case ROLE_SECURITY: ROOM_SECURITY;
-          default: ROOM_OPEN;
+          default: ROOM_EXEC;
         }
     }
 
@@ -234,9 +231,9 @@ class CorpBlocks
         // rooms and the six kinds above only ever named ten of them, so 19 a floor came out as
         // the open-plan filler — a sparse duplicate of one template over half the tower.
         //
-        // the four below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
+        // the three below are MIN 0 ON PURPOSE. Only 14.4 rooms a floor clear 5 on both axes and
         // 20.5 clear 4, and five demands above already hold mins against that supply; another
-        // four would be the "quota short: room-toilet got 0" this file's `assign` already carries
+        // three would be the "quota short: room-toilet got 0" this file's `assign` already carries
         // a retry loop for. A min is for the thing a floor MUST have, and a floor does not have
         // to have an archive on it. What puts one there is the max, and the supply is ample
         {
@@ -265,17 +262,6 @@ class CorpBlocks
           minH: 5,
           fit: smallest,
         },
-        // OPEN PLAN IS NOW A DEALT KIND WITH A CAP, not the leftover bucket. An open-plan floor is
-        // a real corporate thing and three of them is one; 19 is what happens when a quota runs
-        // out of names. It takes the ROOMIEST rooms left, which is where a bank of desks belongs
-        {
-          kind: ROOM_OPEN,
-          min: 0,
-          max: 3,
-          minW: 5,
-          minH: 5,
-          fit: biggest,
-        },
         // and the private office takes EVERYTHING ELSE, which is what makes the filler branch
         // unreachable: it is declared last, its max is a number nothing reaches, and at 3 x 3 it
         // fits every rect the carve can produce (measured: 29.12 rooms a floor and 29.12 of them
@@ -296,10 +282,8 @@ class CorpBlocks
 // deal a kind to every room the carve produced, write the role onto the _Room, and hang one node
 // per room off the plate so the finished tree is a record of the whole floor.
 //
-// OPEN PLAN IS THE FILLER and has no demand of its own: it is what a room is when nothing else
-// claimed it, which is the same relationship the compound's `yard` has to its plots. The
-// consequence is worth stating — a floor carved into exactly the six rooms the mins want has NO
-// open-plan space at all, and that is correct rather than a miss
+// THE EXEC OFFICE IS THE FILLER as well as the last demand: it takes every room nothing else
+// claimed, and since every room the carve produces clears its 3 x 3 the filler branch never fires
 // how many rooms the two 5x5 demands could still legally take. `blocked` is what shrinks it, and a
 // count under two means one of them has nowhere to go — see the loop in `assign`
   static function homes(nodes: Array<_GenNode>): Int
@@ -379,7 +363,7 @@ class CorpBlocks
             }
           for (n in nodes)
             n.kind = '';
-          Quota.deal(nodes, demands(), ROOM_OPEN, state.area.rng);
+          Quota.deal(nodes, demands(), ROOM_EXEC, state.area.rng);
           for (i in 0...nodes.length)
             state.rooms[i].role = roleOf(nodes[i].kind);
           if (relaxed)

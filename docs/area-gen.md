@@ -67,7 +67,7 @@ area
   │                         concrete floor, four posts, glazing on three sides, one door in the
   │                         fourth. Nothing in it is dealt, so nothing is dealt under it. It stands
   │                         OUTSIDE the wall ring, in the pavement band
-  └ room-open | room-cubicle | room-meeting | room-kitchen | room-exec | room-toilet | room-servers
+  └ room-cubicle | room-meeting | room-kitchen | room-exec | room-toilet | room-servers
     | room-archive | room-reception | room-security
     ├ desk-run              open plan: one 3x1 desk, a computer and a chair
     ├ pod-row               the cubicle farm: two rows of desks BACK TO BACK, three rows to a
@@ -1364,6 +1364,13 @@ the LAST demand with `max: MANY` at 3 x 3 and no min: every leftover room is a m
 a `deskRun` where the 3x2 slab does not fit. Measured over 1,000 seeds: exec 15.11, open 2.36,
 kitchen/cubicle 2, meeting 1.99, archive 1.91, reception/security/toilet/servers 1; furniture per
 office unchanged (22.3 vs 22 for solo + exec). `room-break` / `room-solo` and their roles are gone.
+
+**Then `room-open` removed, 9 kinds.** It had nothing another room lacked but its WOOD2 floor: the
+wall list was all items other rooms already stand, and the desk bank is what the cubicle farm does
+better. Its ~2.36 rooms a floor go to EXEC, which is now also `Quota.deal`'s filler and the
+`roleOf`/`kindOf`/`OfficeBlock.fill` default. The render side (`WOOD2` -> `Surf.OPEN`) STAYS: tiles
+are persisted, so an old save's open-plan floor still has to draw. The corp mission target falls
+back marble -> meeting -> CUBICLE.
 
 **Then made lavish, and reception split off it.** Reception lays its own `TILE_FLOOR_RECEPTION`
 (row 17, 2D art aliased to MARBLE1) and renders as `Surf.RECEPTION`, so the exec office's floor and

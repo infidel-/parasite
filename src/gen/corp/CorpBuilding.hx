@@ -33,9 +33,8 @@ class CorpBuilding
   // 6 AND NOT 4, and the oracle is what says so rather than taste. At 4, with the cap brought
   // down to ROOM_SIZE * SUBDIVIDE_OVER, the carve minted enough 4-wide slots that 11 towers in
   // 3,000 had no room left that clears the washroom's and the server room's own 5 x 5 minimum and
-  // came out "quota short: room-toilet got 0". A 4-wide room is also the one an open-plan floor
-  // cannot furnish at all (gen.corp.CorpRooms.open lays no desk under 7), so the same number
-  // fixes both
+  // came out "quota short: room-toilet got 0". A 4-wide room was also the one the old open-plan
+  // template could not furnish at all (it laid no desk under 7), so the same number fixed both
   static inline var SPLIT_MIN = 5;
 
 // build the whole plate and push the lift and every room as children of its node

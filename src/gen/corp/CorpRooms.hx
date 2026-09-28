@@ -820,98 +820,6 @@ class CorpRooms
       CorpKitchen.zones(state, node, room);
     }
 
-// open plan: rows of 3x1 desks with a chair under each, printers and boards round the walls
-  public static function open(state: _CorpState, node: _GenNode, room: _Room)
-    {
-      var area = state.area;
-      var cells = area.getCells();
-      drawBlock(cells, room.x1, room.y1, room.w, room.h, WOOD2);
-      var block = Const.CORP_TABLE_3X1;
-      var tableW = 3, tableH = 1;
-      var effectiveWidth = room.w - 4;
-      var cols = Std.int(effectiveWidth / 4);
-      if (effectiveWidth == 7)
-        cols = 2;
-      else if (effectiveWidth == 3)
-        cols = 1;
-      if (cols < 1)
-        cols = 1;
-      var xstep = Std.int(effectiveWidth / cols);
-      if (effectiveWidth == 7)
-        xstep = 4;
-
-      var hasSouthDoor = false;
-      for (door in state.doors)
-        if (door.roomID1 == room.id ||
-            door.roomID2 == room.id)
-          {
-            if (door.y == room.y2 + 1)
-              {
-                hasSouthDoor = true;
-                break;
-              }
-          }
-      // one chair model and one computer model for the whole floor of desks: a bank of identical
-      // workstations is what an office looks like, and rolling each one turns it into a jumble
-      var chairID = area.random(Const.CORP_CHAIR[0].amount);
-      var computerID = area.random(Const.CORP_COMPUTERS_BLOCK.width);
-
-      var col = 0, ry = 0, cnt = 0;
-      while (true)
-        {
-          cnt++;
-          if (cnt > 100)
-            break;
-          var sx = room.x1 + 2 + (col * xstep);
-          if (cols == 1)
-            sx = room.x1 + Std.int(room.w / 2) - 1;
-          var sy = room.y1 + 1 + (tableH + 1) * ry;
-          // A CENTRED SINGLE COLUMN IS ALREADY CLEAR OF BOTH EDGES, so it does not want the
-          // walkway margin a multi-column run needs — and with it, `sx + tableW >= room.x2` was
-          // true for EVERY row at any width under 7, so the loop spun to its cnt guard and the
-          // room came out with no desk at all. 64 of 771 open rooms before the carve was retuned
-          // and far more after it, since a capped carve mints many more 6-wide rooms. It is also
-          // a BREAK and not a continue: the width does not change between rows
-          if (cols == 1
-              ? sx + tableW - 1 > room.x2
-              : sx + tableW >= room.x2)
-            {
-              if (cols == 1)
-                break;
-              ry++;
-              col = 0;
-              continue;
-            }
-          col++;
-          if (cols == 1)
-            ry++;
-          if (sy + tableH > room.y2 - (hasSouthDoor ? 1 : 0))
-            break;
-
-          GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, sx, sy, sx + tableW - 1, sy);
-          var full = [
-            Const.CORP_TABLE_MISC,
-            Const.CORP_TABLE_LAMP,
-            Const.CORP_TABLE_PLANTS,
-            Const.CORP_TABLE_PHONE,
-            Const.CORP_TABLE_FILES,
-            Const.CORP_TABLE_STATIONERY,
-          ];
-          var deco = full.copy();
-          for (i in 0...block.length)
-            {
-              cells[sx + i][sy] = block[i];
-              if (i == 1)
-                area.addDecoration(sx + i, sy, Const.CORP_COMPUTERS_BLOCK.row,
-                  Const.CORP_COMPUTERS_BLOCK.col + computerID);
-              else if (area.chance(50))
-                deco = addDecorationExt(state, sx + i, sy, deco, full);
-            }
-          area.addDecoration(sx + 1, sy + 1, Const.CORP_CHAIR[0].row, chairID);
-        }
-      decorateWorkWalls(state, room);
-    }
-
 // a cubicle farm: blocks of pods, with a passage between every block.
 //
 // A BLOCK IS `bw` PODS WIDE AND TWO DEEP — two rows of desks BACK TO BACK, a passage column each
@@ -1758,27 +1666,5 @@ class CorpRooms
         Const.TILE_DARK_TABLE_WOOD2_1X1,
         Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
         60, 50);
-    }
-
-// open plan's own wall furniture, which is a longer list than any other room's
-  static function decorateWorkWalls(state: _CorpState, room: _Room)
-    {
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_PRINTER,
-          Const.CORP_TABLE_PROJECTOR,
-          Const.CORP_TABLE_ROUTER,
-          Const.CORP_TABLE_MISC_LARGE,
-        ], [
-          Const.CORP_WHITEBOARD,
-          Const.CORP_COOLER,
-          Const.CORP_PLANT,
-          Const.CORP_CABINET,
-          Const.CORP_TRASH,
-          Const.CORP_MACHINERY,
-        ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_WOOD2 + UNWALKABLE_TILE_OFFSET,
-        40, 50);
     }
 }

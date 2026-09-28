@@ -34,8 +34,6 @@ class OfficeBlock
             CorpRooms.meeting(state, node, room);
           case CorpBlocks.ROOM_KITCHEN:
             CorpRooms.kitchen(state, node, room);
-          case CorpBlocks.ROOM_EXEC:
-            CorpRooms.exec(state, node, room);
           case CorpBlocks.ROOM_TOILET:
             CorpRooms.toilet(state, node, room);
           case CorpBlocks.ROOM_SERVERS:
@@ -47,15 +45,14 @@ class OfficeBlock
           case CorpBlocks.ROOM_SECURITY:
             CorpRooms.security(state, node, room);
           default:
-            CorpRooms.open(state, node, room);
+            CorpRooms.exec(state, node, room);
         }
     }
 
 // is this node kind a room? the filler table asks before it dispatches, and so does the oracle
   public static function isRoom(kind: String): Bool
     {
-      return kind == CorpBlocks.ROOM_OPEN ||
-        kind == CorpBlocks.ROOM_CUBICLE ||
+      return kind == CorpBlocks.ROOM_CUBICLE ||
         kind == CorpBlocks.ROOM_MEETING ||
         kind == CorpBlocks.ROOM_KITCHEN ||
         kind == CorpBlocks.ROOM_EXEC ||
