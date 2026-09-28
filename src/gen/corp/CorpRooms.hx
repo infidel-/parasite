@@ -56,10 +56,17 @@ class CorpRooms
   // the biggest a boardroom table may be, in cells. 4 x 3 was fitted when the cap first went on,
   // against the uncapped `w - 4` that gave a 16 m x 8 m median table; measured after, a 5-wide
   // room takes `min(1, 4)` on one axis and a 10 x 5 boardroom came out with a 1 x 3 table in it
-  // — 9.8% of the rect furnished, the emptiest room on the floor. 6 x 4 is a twelve-seater at
-  // this scale and still leaves the two clear cells a side that `w - 4` guarantees
+  // — 9.8% of the rect furnished, the emptiest room on the floor. 6 x 4 then came back from the
+  // game as a giant EMPTY top: at 2 m a cell a 4-deep slab is 8 m across, nobody seated on one side
+  // reaches the middle, and nothing on it fills it. So the DEPTH is capped at 2 — a 4 m boardroom
+  // table, one row of chairs down each long side (render.corp.CorpProps.boardChairs) — and the
+  // length keeps its 6
   public static inline var TABLE_W_MAX = 6;
-  public static inline var TABLE_H_MAX = 4;
+  public static inline var TABLE_D_MAX = 2;
+  // the meeting room's wall dressing: one cell in this many along each wall line, and the percent
+  // chance a dressed cell takes a bin rather than a plant
+  public static inline var MEETING_WALL_PITCH = 3;
+  public static inline var MEETING_WALL_BIN = 20;
   // THE EXEC SUITE'S SIZE GATE: 4 across and 7 long, on either axis. See `execSuite`
   public static inline var SUITE_SPAN = 4;
   public static inline var SUITE_LEN_X = 7;
@@ -254,7 +261,7 @@ class CorpRooms
       // the rug BEFORE the plants: in a 3-wide office the only clear 2x2 left by a desk run takes
       // the end corners, and a plant in a rect's corner stands off the oval rug anyway
       execRug(state, room);
-      cornerPlants(state, room);
+      cornerPlants(state, room, MARBLE1);
     }
 
 // the executive's own 3x2 desk, against whichever end wall has no door in it, with the visitors'
@@ -531,7 +538,7 @@ class CorpRooms
 // THE PLANT IS WALKABLE: its cell keeps its own floor id and only the decoration goes on it, the
 // way the exec chair's does. A blocking plant made every corner a dead cell, and in 3D the glb
 // stands pushed into the corner, so it read as free floor you could not step on
-  static function cornerPlants(state: _CorpState, room: _Room)
+  static function cornerPlants(state: _CorpState, room: _Room, floor: Int)
     {
       var cells = state.area.getCells();
       for (c in [
@@ -541,7 +548,7 @@ class CorpRooms
           { x: room.x2, y: room.y2 },
         ])
         {
-          if ((cells[c.x][c.y] != MARBLE1 &&
+          if ((cells[c.x][c.y] != floor &&
               cells[c.x][c.y] != Const.TILE_FLOOR_EXEC_RUG) ||
               atDoor(cells, c.x, c.y) ||
               state.area.hasObjectAt(c.x, c.y))
@@ -648,24 +655,19 @@ class CorpRooms
           cells[x][y] = Const.TILE_FLOOR_EXEC_RUG;
     }
 
-// a meeting room: one long table in the middle, boards and a projector round the walls.
+// a meeting room: one long table in the middle, a plant in every free corner, and plants, a
+// whiteboard, a cooler and a bin spaced along the walls.
 //
-// **THE `bigFloorID` ARGUMENT IS THE ROOM'S OWN FLOOR, UNWALKABLE TWIN**, and this one line used
-// to read `TILE_FLOOR_CARPET` where every sibling template passes its own (exec MARBLE1, kitchen
-// WOOD1, cubicle CUBICLE, servers SERVER, toilet MARBLE2, open WOOD2). `decorateWalls` stamps it
-// straight into the grid on the room's x1/x2 columns, so one wrong id produced four separate
-// faults at once and they looked unrelated:
-//   the WALL RUN ALTERNATED. CorpModel.surfOf read the stray cells back as Surf.CARPET, and
-//     CorpStyle's wallInto leaves CARPET on the WALL_OFFICE catch-all — so every other cell of one
-//     boardroom wall wore office board and the rest wore wall-meeting.
-//   THE TABLE WAS REPAINTED. FacilityModel.themeRooms takes the LAST themed cell in row-major
-//     order, which is the (x2,y2) corner, and decorateWalls always dresses a corner — so at
-//     smallChance 20 that corner carried the bad id 80% of the time and the whole boardroom slab
-//     finalised as CARPET.
-//   AND IT BECAME A CORRIDOR. CorpLamps.corridors() is gated on Surf.CARPET, so it hung ceiling
-//     panels inside the room and stamped FULL-CELL light pools on those cells — which overlap the
-//     room's own POOL_INSET pool additively and spill into the margin it deliberately leaves bare.
-//     That is the "two floor textures": both are the one additive glow mesh at GLOW_Y, not floors.
+// IT USED `decorateWalls` AND THAT WAS THE EMPTY EDGES. That pass forces a dressing into all four
+// corners and onto about half of the x1/x2 columns, 80% of them on the room's UNWALKABLE twin — and
+// half of what it dealt draws nothing on the floor (a whiteboard hangs on the wall, a plant stands
+// pushed into its corner), so the room came back ringed with dead cells that looked like carpet.
+// Its 1x1 wall tables were the other half: a lone table tile renders as a desk, and nothing seats a
+// desk in here. The kitchen and the exec office dropped it for the same reasons.
+//
+// THE ONE TWIN WRITTEN HERE IS THE ROOM'S OWN (the cooler's): a borrowed floor id finalises the
+// cell as another room's surface, and the wall run, the table and the ceiling lamps all read it
+// back — see docs/area-gen.md on `CARPET_MEETING + 16`
   public static function meeting(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
@@ -675,20 +677,70 @@ class CorpRooms
       if (room.w >= 5 &&
           room.h >= 5)
         meetingTable(state, node, room);
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_COFFEE,
-          Const.CORP_TABLE_PHONE,
-          Const.CORP_TABLE_PROJECTOR,
-          Const.CORP_TABLE_ROUTER,
-        ], [
-          Const.CORP_COOLER,
-          Const.CORP_PLANT,
-          Const.CORP_TRASH,
-          Const.CORP_WHITEBOARD,
-        ],
-        Const.TILE_DARK_TABLE_CARPET_1X1,
-        Const.TILE_FLOOR_CARPET_MEETING + UNWALKABLE_TILE_OFFSET,
-        50, 20);
+      cornerPlants(state, room, CARPET_MEETING);
+      meetingWalls(state, room);
+    }
+
+// the meeting room's wall dressing: every MEETING_WALL_PITCH-th cell along each wall line, corners
+// excepted (cornerPlants has those), that is still bare carpet and not beside a doorway. One
+// whiteboard on a masonry cell, one cooler on another where it leaves the room open, and plants
+// and the odd bin on the rest. Everything but the cooler keeps its floor: a plant and a bin stand
+// against the wall in 3D and a whiteboard hangs on it, so the cell is still floor to walk on
+  static function meetingWalls(state: _CorpState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      var cand = [];
+      var masonry = [];
+      // the four wall lines, each cell with the hand its wall is on
+      var add = function(x: Int, y: Int, i: Int, dx: Int, dy: Int)
+        {
+          if (i % MEETING_WALL_PITCH != 0 ||
+              cells[x][y] != CARPET_MEETING ||
+              atDoor(cells, x, y) ||
+              state.area.hasObjectAt(x, y))
+            return;
+          cand.push({ x: x, y: y });
+          var t = cells[x + dx][y + dy];
+          if (t == BLDG_WALL ||
+              t == BLDG_INNER_WALL)
+            masonry.push(cand.length - 1);
+        };
+      for (x in room.x1 + 1...room.x2)
+        {
+          add(x, room.y1, x - room.x1, 0, -1);
+          add(x, room.y2, x - room.x1, 0, 1);
+        }
+      for (y in room.y1 + 1...room.y2)
+        {
+          add(room.x1, y, y - room.y1, -1, 0);
+          add(room.x2, y, y - room.y1, 1, 0);
+        }
+      var board = (masonry.length > 0 ? masonry[state.area.random(masonry.length)] : -1);
+      var cooler = -1;
+      if (masonry.length > 1)
+        {
+          cooler = masonry[state.area.random(masonry.length)];
+          var c = cand[cooler];
+          var blocked = [ c.x * 1000 + c.y => true ];
+          if (cooler == board ||
+              !roomOpen(state, room, blocked, CARPET_MEETING))
+            cooler = -1;
+        }
+      for (i in 0...cand.length)
+        {
+          var c = cand[i];
+          if (i == board)
+            addDecoration(state, c.x, c.y, Const.CORP_WHITEBOARD);
+          else if (i == cooler)
+            {
+              cells[c.x][c.y] = Const.TILE_FLOOR_CARPET_MEETING + UNWALKABLE_TILE_OFFSET;
+              addDecoration(state, c.x, c.y, Const.CORP_COOLER);
+            }
+          else if (state.area.chance(MEETING_WALL_BIN))
+            addDecoration(state, c.x, c.y, Const.CORP_TRASH);
+          else
+            addDecoration(state, c.x, c.y, Const.CORP_PLANT);
+        }
     }
 
   static function meetingTable(state: _CorpState, node: _GenNode, room: _Room)
@@ -701,24 +753,17 @@ class CorpRooms
       var deco = full.copy();
       // CAPPED AND CENTRED, `toilet`'s own shape two functions down: a boardroom seats twelve
       // whether the room it is in is 6 x 6 or 12 x 12, and the slack belongs round the table as
-      // circulation rather than in it
-      var tw = room.w - 4;
-      var th = room.h - 4;
-      if (tw > TABLE_W_MAX)
-        tw = TABLE_W_MAX;
-      if (th > TABLE_H_MAX)
-        th = TABLE_H_MAX;
-      // the LONG axis follows the room's, so a long thin boardroom gets a long thin table
-      if ((room.w >= room.h) != (tw >= th))
-        {
-          var t = tw;
-          tw = th;
-          th = t;
-          if (tw > room.w - 4)
-            tw = room.w - 4;
-          if (th > room.h - 4)
-            th = room.h - 4;
-        }
+      // circulation rather than in it. The LONG axis follows the room's, so a long thin boardroom
+      // gets a long thin table, and the depth is capped separately (see TABLE_D_MAX)
+      var alongX = (room.w >= room.h);
+      var len = (alongX ? room.w : room.h) - 4;
+      var deep = (alongX ? room.h : room.w) - 4;
+      if (len > TABLE_W_MAX)
+        len = TABLE_W_MAX;
+      if (deep > TABLE_D_MAX)
+        deep = TABLE_D_MAX;
+      var tw = (alongX ? len : deep);
+      var th = (alongX ? deep : len);
       var tx = room.x1 + Std.int((room.w - tw) / 2);
       var ty = room.y1 + Std.int((room.h - th) / 2);
       GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + tw - 1, ty + th - 1);
