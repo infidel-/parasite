@@ -3637,10 +3637,10 @@
       "prompt_exact": true,
       "lift": 0.861,
       "note": "re-rolled SOLO in the corp defect pass. It was a quadrant of a packed 2x2 sheet, and that was the seam: a packed cell is composed to butt against its NEIGHBOURS rather than against itself, so its wrap error roughly doubles (measured 3.4-4.5 / 3.8-9.9 against a solo source's 1.2-2.5 / 2.0-4.3) \u2014 and this surface tiles world-aligned across a whole floor, which is the one case docs/3d-textures.md says never to pack. The `lift` is solved to land on the same built mean the packed cell had, so an A/B tests the TILING and not the exposure.",
-      "last_converted": "2026-09-20T22:40:07",
+      "last_converted": "2026-09-28T05:31:25",
       "last_lift": 0.861,
-      "built_linear": 0.0972,
-      "built_srgb": 86.6
+      "built_linear": 0.0969,
+      "built_srgb": 86.5
     },
     "corp/floor-exec": {
       "src": "corp/floor-exec.png",
@@ -3767,9 +3767,9 @@
       "needs_alpha": false,
       "prompt": "A SEAMLESS TILEABLE texture of the interior wall of a modern corporate BOARDROOM, seen straight on, flat elevation, no perspective, filling the whole image edge to edge. Acoustic felt slat panelling: EXACTLY TWELVE slim vertical battens of matte dark charcoal felt side by side across the width, each separated by a narrow recessed groove, so the rhythm closes across the left and right edges; a fine even fibrous nap. At the very BOTTOM a thin recessed reveal and a slim flush skirting of matte dark anodised aluminium. Tiles seamlessly LEFT-RIGHT. VALUE: MEDIUM, clearly darker than painted plasterboard but lighter than any floor. HUE: PERFECTLY NEUTRAL charcoal. No pictures, no screen, no whiteboard, no sockets, no text. [append textures.json style_corp then style]",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T15:53:07",
-      "built_linear": 0.1259,
-      "built_srgb": 98.9,
+      "last_converted": "2026-09-28T05:31:25",
+      "built_linear": 0.1252,
+      "built_srgb": 98.6,
       "lift": 0.545,
       "last_lift": 0.545
     },
@@ -4057,22 +4057,17 @@
       "last_lift": 1.324
     },
     "corp/table-top": {
-      "src": "corp/board-pack.png",
+      "src": "corp/table-top.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        0,
-        0,
-        509,
-        509
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
+      "prompt": "ONE seamless tileable texture filling the whole square image edge to edge, seen from DIRECTLY ABOVE in straight top-down orthographic view. A boardroom table top: dark walnut veneer with a fine straight grain running LEFT TO RIGHT across the whole image and a soft, even figure, matte, completely plain. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam \u2014 the grain lines continue straight off the right edge onto the left and the tone is the same at every edge. It is a REPEATING FIELD with NOTHING PLACED IN IT \u2014 no knot, no single feature, no border, no vignette, no board joint, no edge banding. VALUE: MEDIUM-DARK. HUE: a restrained warm brown, low saturation. No text, no logos. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T16:23:33",
-      "built_linear": 0.0817,
-      "built_srgb": 79.1,
-      "lift": 0.738,
-      "last_lift": 0.738
+      "last_converted": "2026-09-28T05:30:09",
+      "built_linear": 0.0801,
+      "built_srgb": 78.2,
+      "lift": 0.7,
+      "last_lift": 0.7,
+      "note": "re-rolled SOLO (gpt-image-2.5-flare, high) in the meeting room pass. It was the top-left quadrant of the packed corp/board-pack.png, and that was the seam reported off a face pick: a packed cell butts against its neighbours rather than itself, and this surface tiles world-aligned across a whole 4x2 slab. Measured on the 512 build, wrapH/wrapV 4.8/9.4 against interior 1.8/3.3; the solo source 2.7/3.5 against 1.4/2.8. It also wears the FASCIA now (CorpFurniture.worktop), so corp/table-side is retired: the edge is the same board seen edge-on, its grain runs along the run on both. `lift` solved to land on the packed cell's built mean (79.1 srgb) so the A/B tests the tiling and not the exposure."
     },
     "corp/rack-side": {
       "src": "corp/board-pack.png",
@@ -4119,24 +4114,6 @@
       "built_srgb": 54.8,
       "lift": 1.187,
       "last_lift": 1.187
-    },
-    "corp/table-side": {
-      "src": "corp/board-pack.png",
-      "class": "tile",
-      "needs_alpha": false,
-      "crop": [
-        511,
-        510,
-        509,
-        509
-      ],
-      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a boardroom table top, dark walnut veneer with a fine straight grain running left to right and a soft figure, matte, completely plain. TOP-RIGHT, flat elevation: the SIDE PANEL of a server cabinet, dark grey powder-coated steel with a regular grid of small round ventilation perforations, EXACTLY TWELVE across and twelve down so the grid closes across all four edges. BOTTOM-LEFT, flat elevation: a washroom mirror band, dark neutral grey mirror glass, one unbroken plane with nothing reflected in it, a slim satin stainless edge along the very TOP and the very BOTTOM only. BOTTOM-RIGHT, flat elevation: the PLINTH of the boardroom table, the same dark walnut but with the grain running VERTICALLY, one unbroken plane, a narrow recessed dark shadow gap along the very BOTTOM edge only. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the walnut a touch lighter. HUE: the walnut a restrained warm brown; the steel and the mirror PERFECTLY NEUTRAL. [append textures.json style_corp then style]",
-      "prompt_exact": true,
-      "last_converted": "2026-09-20T16:23:33",
-      "built_linear": 0.0471,
-      "built_srgb": 59.3,
-      "lift": 0.898,
-      "last_lift": 0.898
     },
     "corp/rack-front": {
       "src": "corp/rack-front.png",
@@ -4801,6 +4778,21 @@
       },
       "built_linear": 0.2447,
       "built_srgb": 128.5
+    },
+    "corp/whiteboard": {
+      "src": "corp/whiteboard.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "res": [
+        512,
+        384
+      ],
+      "prompt_exact": true,
+      "prompt": "A wall-mounted office WHITEBOARD seen dead straight on, flat front elevation, no perspective, the board FILLING THE WHOLE IMAGE edge to edge: its slim frame runs exactly along all four edges of the image with nothing outside it. A narrow satin anodised aluminium frame with small rounded corner caps; along the BOTTOM edge, just inside the frame, a shallow aluminium marker tray holding two marker pens and a small felt eraser. The writing surface is matte off-white, slightly greyed, with the faint ghosting of old erased writing. On it, a half-finished meeting sketch in dark marker: a few boxes joined by arrows like a simple flowchart, a small bar chart, and loose ILLEGIBLE scribbled notes \u2014 squiggles that suggest handwriting but contain NO readable letters or words. Mostly black and dark blue-grey marker with one short WARM amber-red accent line. Plenty of empty board left. VALUE: the board surface a light grey, not paper white. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "note": "the meeting room's whiteboard face, ONE authored composition mapped 0..1 over render.corp.CorpDeco.board (it wore desk-side tiled until that was reported as \"wtf is that on the wall?\"). 1024x768 solo gen (gpt-image-2.5-flare, high, $0.038), so the board's height is locked to BOARD_W * 0.75 in CorpDeco. res [512, 384] keeps that aspect -- a square res would stretch it.",
+      "last_converted": "2026-09-28T05:30:31",
+      "built_linear": 0.2956,
+      "built_srgb": 146.8
     }
   }
 }

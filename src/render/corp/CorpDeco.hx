@@ -119,7 +119,9 @@ class CorpDeco
   // and the whiteboard, which is a PANEL on the wall and not a box: sill to head, proud of the slab
   static inline var BOARD_W = 3.20;
   static inline var BOARD_Y0 = 2.20;
-  static inline var BOARD_Y1 = 4.60;
+  // THE ASPECT IS THE ART'S: corp/whiteboard is a 1024x768 source mapped 0..1, so the board is
+  // 0.75 as tall as it is wide or the sketch on it is stretched
+  static inline var BOARD_Y1 = BOARD_Y0 + BOARD_W * 0.75;
   static inline var BOARD_PROUD = 0.08;
 
 // is this corp area's object drawn as geometry (or as nothing) instead of as its atlas sprite?
@@ -285,7 +287,9 @@ class CorpDeco
       });
     }
 
-// and the whiteboard, hung on the slab's own face the way CorpFurniture hangs a mirror
+// and the whiteboard, hung on the slab's own face the way CorpFurniture hangs a mirror. Its own art
+// mapped 0..1: it wore DESK_SIDE tiled across it until that was reported as "wtf is that on the wall?"
+// — a laminate panel hung at head height is what it was
   static function board(m:Facility, col:Int, row:Int, dir:Int):Void
     {
       var f = FacilityGeom.plane(FacilityGeom.slab(m, col + DC[dir], row + DR[dir]), dir ^ 1,
@@ -296,8 +300,8 @@ class CorpDeco
       var x1 = (dir < 2 ? w.x + half : f.x1);
       var z0 = (dir < 2 ? f.z0 : w.z - half);
       var z1 = (dir < 2 ? f.z1 : w.z + half);
-      FacilityGeom.face(CorpFurniture.buf(CorpStyle.DESK_SIDE), x0, x1, z0, z1, dir ^ 1,
-        BOARD_Y0, BOARD_Y1, CorpStyle.DESK_TILE);
+      FacilityGeom.pane(CorpFurniture.buf(CorpStyle.WHITEBOARD), x0, x1, z0, z1, dir ^ 1,
+        BOARD_Y0, BOARD_Y1);
     }
 
 // which hand this cell has masonry on, or -1. the same run test CorpProps.wall makes, and for the

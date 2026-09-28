@@ -13,9 +13,18 @@ that a blend cannot fix, because a blend ghosts the joints:
           and the course is rolled so its joints stagger against its neighbours'.
   grout   a stack-bond tile band whose grout lines sit at the right pitch but with none drawn AT
           the wrap, so two tiles merge into one double-width tile. The nearest grout line is
-          copied onto the edge columns.
+          copied onto the edge columns. Also the slat wall (corp/wall-meeting): same fault, a
+          batten groove missing at the wrap.
 
-Usage: python3 tools/seamfix.py planks|grout <src.png> <out.png>
+And one seam that IS tonal, where a blend is the right tool because there is nothing to ghost:
+
+  tone    a plain field (cut-pile carpet) whose wrap shows a low-frequency tone step. The image is
+          rolled half a period on both axes, so the rolled copy's edges are the original's
+          interior, and the two are cross-faded: the original in the middle, the rolled copy at
+          the edges, a linear ramp over FEATHER of the size between. Joints or grain would double
+          in the ramp; a pile field does not.
+
+Usage: python3 tools/seamfix.py planks|grout|tone <src.png> <out.png>
 """
 import sys
 import numpy as np
@@ -81,10 +90,13 @@ def grout(a):
   # the tile band is where the column profile has its grout dips
   lo, hi = int(h * 0.45), int(h * 0.95)
   cp = g[lo:hi].mean(0)
-  runs = dark_runs(cp, cp.mean() - 8)
+  # a run touching either edge is the half-drawn line AT the wrap, i.e. the fault itself
+  runs = [r for r in dark_runs(cp, cp.mean() - 8) if r[0] > 0 and r[1] < w]
   s, e = runs[0]
   src = a[:, s:e]
-  band = g[:, (s + e) // 2] < g[:, 0] - 6
+  # the rows the line spans, against the MEDIAN column: column 0 is the fault and can be the
+  # darkest column in the image (wall-meeting's is)
+  band = g[:, (s + e) // 2] < np.median(g, 1) - 6
   ys = np.where(band)[0]
   y0, y1 = ys.min(), ys.max() + 1
   out = a.copy()
@@ -95,10 +107,21 @@ def grout(a):
   return out
 
 
+FEATHER = 0.25
+
+
+def tone(a):
+  h, w = a.shape[:2]
+  b = np.roll(a, (h // 2, w // 2), (0, 1)).astype(float)
+  ramp = lambda n: np.clip(np.minimum(np.arange(n) + 0.5, n - np.arange(n) - 0.5) / (n * FEATHER), 0, 1)
+  m = (ramp(h)[:, None] * ramp(w)[None, :])[:, :, None]
+  return np.clip(a * m + b * (1 - m) + 0.5, 0, 255).astype(np.uint8)
+
+
 if __name__ == '__main__':
   mode, src, dst = sys.argv[1:4]
   a = np.asarray(Image.open(src).convert('RGB'))
-  out = planks(a) if mode == 'planks' else grout(a)
+  out = {'planks': planks, 'grout': grout, 'tone': tone}[mode](a)
   Image.fromarray(out).save(dst)
   o = out.astype(float)
   print('%s wrapH %.1f wrapV %.1f' % (dst, np.abs(o[:, 0] - o[:, -1]).mean(), np.abs(o[0] - o[-1]).mean()))

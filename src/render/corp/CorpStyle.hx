@@ -107,6 +107,9 @@ class CorpStyle
   public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
   public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
   public static inline var TABLE_TOP = 'textures/corp/table-top.png';
+  // and the whiteboard's face, ONE authored composition mapped 0..1 over the board (a frame, a
+  // marker tray, a sketch), so render.corp.CorpDeco locks the board's aspect to this 1024x768 source
+  public static inline var WHITEBOARD = 'textures/corp/whiteboard.png';
   public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
   public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
   // and the LID, which is its OWN surface and not the flank seen from above — the rule

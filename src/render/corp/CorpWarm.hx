@@ -10,6 +10,7 @@ import render.facility.FacilityDoors;
 import render.facility.FacilityGeom;
 import render.facility.FacilityScene;
 import render.facility.FacilityStyle;
+import render.world.MeshBuf.MeshBufTools;
 import render.world.ContactMask;
 import render.world.IndoorMask;
 
@@ -42,6 +43,11 @@ class CorpWarm
       // lambert with its own texture, and a 512 decoded on first area entry is a hitch whether or
       // not anything had to compile. CorpModel.demo carries one cell of every kind for this
       CorpFurniture.build(sc, model);
+      // and the whiteboard's own face, which CorpDeco only emits off an area's decoration objects
+      // and so the demo plate never carries: one pane, for its map
+      var board = MeshBufTools.make();
+      FacilityGeom.pane(board, 0, 1, 0, 0, 0, 0, 1);
+      FacilityGeom.add(sc, board, CorpStyle.WHITEBOARD, true, true);
       // the two flat dressing materials, each its own alphaTest / mapped lambert and each a 1024
       // or 512 decoded on first entry
       CorpClutter.build(sc, model);
