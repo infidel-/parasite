@@ -2541,8 +2541,8 @@ Verdict: **LANDED.** 0 calls.
 - **Table:** `TABLE_H_MAX` 4 -> `TABLE_D_MAX` 2 (length stays `TABLE_W_MAX` 6). A 4-deep slab is 8 m
   across and read as a giant empty top. `TABLE_FASCIA` 0.26 -> 0.12, and a slab now caps its
   underside at the fascia line (`capDown`). The fascia wears `table-top`; `table-side` is retired.
-- **Legs:** `corp/table-leg` 36 -> 26 tris. No chamfers, and every down-facing face plus the two
-  buried tops are deleted (buildlib reads holes 20 on purpose). `LEG_H` = `TABLE_H - TABLE_FASCIA`
+- **Legs:** `corp/table-leg` 36 -> 18 tris. No chamfers, no stainless shoe (a second face pick
+  named it), and every down-facing face plus the blade's buried top deleted (holes 12 on purpose). `LEG_H` = `TABLE_H - TABLE_FASCIA`
   = 1.38. `CorpProps.tables` stands one per cell across the depth at the two long-axis ends, plus the
   middle from 5 long. It used to stand one on every other cell.
 - **Chairs:** `CorpProps.boardChairs` puts a `corp/chair` on every clear long-side hand of a
