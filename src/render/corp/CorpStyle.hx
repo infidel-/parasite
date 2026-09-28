@@ -214,6 +214,10 @@ class CorpStyle
   // of edge read as a slab of worktop a hand deep, reported as "make the table top thinner". The
   // fascia wears TABLE_TOP, since it is the same board seen edge-on, and the underside is capped
   public static inline var TABLE_FASCIA = 0.12;
+  // and the radius its top arris is rounded to, in this many flat bands. under half the fascia, so
+  // a straight strip of edge still shows below the round
+  public static inline var TABLE_ROUND = 0.05;
+  public static inline var TABLE_ROUND_SEG = 3;
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;

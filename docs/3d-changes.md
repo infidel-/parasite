@@ -2563,3 +2563,25 @@ Verdict: **LANDED.** 0 calls.
 which is right for casework, silently dropped every plant that had been dealt against glass.
 
 Verdict: **LANDED.** +2 calls for the whiteboard. The retired `table-side` buffer was not measured.
+
+## Boardroom slab and blade leg: rounded arrises
+
+- **Slab:** `CorpFurniture.roundEdge` rounds the top arris of every slab cell at `TABLE_ROUND` 0.05
+  in `TABLE_ROUND_SEG` 3 bands. Each band is the cell rect inset along a quarter circle on its OPEN
+  hands only, so corners mitre and a closed hand runs on into the next cell's band. The cap stops
+  0.05 short and the fascia 0.05 below the top. At the game camera it reads as a soft band.
+- **Leg:** `corp/table-leg` 18 -> 142 tris. The blade's uprights are rounded at r 0.05 and the
+  foot's rim at r 0.035, three segments each. The bottom and buried faces are deleted BEFORE the
+  bevel so they are boundary edges, which `chamfer` skips.
+- **The dashed white line along the foot** moved with the leg when it was hidden. Two causes were
+  tried and neither was it:
+  - UV: retagging the rounds and the foot to the patch centre (axes 6) took texel_off 55 -> 2 and
+    left the line.
+  - Shadow side: restoring the sole went to 220 tris and left the line; reverted.
+  It is the lit rim, under a pixel wide at a close low free-cam, aliasing. At the game camera the
+  legs are wholly under the slab.
+
+**Trap:** check your hypothesis against a hide A/B before you spend a rebuild on it. "It moves with
+the mesh" says which MESH, not which of its properties.
+
+Verdict: **LANDED.** 0 calls (existing buffers and batch).

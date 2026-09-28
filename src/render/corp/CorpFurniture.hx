@@ -429,7 +429,6 @@ class CorpFurniture
             divider(m, col, row, n);
           return;
         }
-      FacilityGeom.cap(buf(top), r.x0, r.x1, r.z0, r.z1, h, tile);
       // a run's LONG faces take the drawer front and its two ENDS the blank carcass side, because a
       // desk run's short face is not its drawer bank — the same split FacilityTables records for the
       // compound's own desks. which faces those are is read off the run's neighbours
@@ -439,24 +438,75 @@ class CorpFurniture
       // The slab keeps its cap and TABLE_FASCIA of edge; `corp/table-leg` stands under it
       var alongX = m.table[row][col - 1] || m.table[row][col + 1];
       var y0 = (slabTop(m, col, row) ? h - CorpStyle.TABLE_FASCIA : 0.0);
+      // CULL AGAINST A NEIGHBOUR THAT ACTUALLY DRAWS THE SAME BOX, not merely against `m.table`. A
+      // cell whose worktop is a glb emits nothing at all, and a counter at COUNTER_H 1.8 beside a
+      // desk at 1.5 does not close one either — in both cases the face was skipped and the carcass
+      // came out open-ended, with `rect`'s own inset dropped on that hand too, so the top cap runs
+      // to the cell boundary with nothing under its edge
+      var open = [for (dir in 0...4) !meets(m, col + dx(dir), row + dz(dir), h, y0)];
+      // a slab's top ARRIS is rounded (see roundEdge), so its cap stops TABLE_ROUND short of every
+      // open hand and the fascia stops that far below the top
+      var round = (y0 > 0 ? CorpStyle.TABLE_ROUND : 0.0);
+      var ri = inset(r, open, round);
+      FacilityGeom.cap(buf(top), ri.x0, ri.x1, ri.z0, ri.z1, h, tile);
       // and a slab's UNDERSIDE, which a box standing on the floor never needs: seen past the thin
       // fascia at a low pitch, the top was a single sheet with nothing under it
       if (y0 > 0)
-        FacilityGeom.capDown(buf(top), r.x0, r.x1, r.z0, r.z1, y0, tile);
+        {
+          FacilityGeom.capDown(buf(top), r.x0, r.x1, r.z0, r.z1, y0, tile);
+          roundEdge(buf(side), r, open, h, sideTile);
+        }
       for (dir in 0...4)
         {
-          // CULL AGAINST A NEIGHBOUR THAT ACTUALLY DRAWS THE SAME BOX, not merely against
-          // `m.table`. A cell whose worktop is a glb emits nothing at all, and a counter at
-          // COUNTER_H 1.8 beside a desk at 1.5 does not close one either — in both cases the face
-          // was skipped and the carcass came out open-ended, with `rect`'s own inset dropped on
-          // that hand too, so the top cap runs to the cell boundary with nothing under its edge
-          if (meets(m, col + dx(dir), row + dz(dir), h, y0))
+          if (!open[dir])
             continue;
           var isEnd = alongX ? (dir >= 2) : (dir < 2);
           FacilityGeom.face(buf(isEnd ? end : side),
-            r.x0, r.x1, r.z0, r.z1, dir, y0, h, isEnd ? endTile : sideTile);
+            r.x0, r.x1, r.z0, r.z1, dir, y0, h - round, isEnd ? endTile : sideTile);
         }
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// a slab's rounded top arris: TABLE_ROUND_SEG bands on every open hand, each band the rect inset
+// along a quarter circle of radius TABLE_ROUND. Every band insets both open hands of a corner by the
+// same amount, so two hands meet in a mitre there, and a CLOSED hand is never inset, so the band runs
+// on into the next cell's. Reported off a face pick on the fascia as a hard 90 degree edge
+  static function roundEdge(b:MeshBuf, r:Rect, open:Array<Bool>, h:Float, t:Float):Void
+    {
+      var n = CorpStyle.TABLE_ROUND_SEG;
+      var rad = CorpStyle.TABLE_ROUND;
+      for (k in 0...n)
+        {
+          var a0 = Math.PI / 2 * k / n;
+          var a1 = Math.PI / 2 * (k + 1) / n;
+          var lo = inset(r, open, rad * (1 - Math.cos(a0)));
+          var hi = inset(r, open, rad * (1 - Math.cos(a1)));
+          var y0 = h - rad + rad * Math.sin(a0);
+          var y1 = h - rad + rad * Math.sin(a1);
+          for (dir in 0...4)
+            {
+              if (!open[dir])
+                continue;
+              // FacilityGeom.face's own winding and u, one band at a time
+              var e = FacilityGeom.ends(lo.x0, lo.x1, lo.z0, lo.z1, dir);
+              var f = FacilityGeom.ends(hi.x0, hi.x1, hi.z0, hi.z1, dir);
+              var u = (dir < 2 ? 0 : 1);
+              MeshBufTools.quad(b, [e[0], y0, e[1]], [e[2], y0, e[3]], [f[2], y1, f[3]],
+                [f[0], y1, f[1]],
+                [e[u] / t, y0 / t, e[2 + u] / t, y0 / t, f[2 + u] / t, y1 / t, f[u] / t, y1 / t]);
+            }
+        }
+    }
+
+// a rect pulled in by `d` on each open hand (FacilityGeom.ends' numbering: 0 -z, 1 +z, 2 -x, 3 +x)
+  static function inset(r:Rect, open:Array<Bool>, d:Float):Rect
+    {
+      return {
+        x0: r.x0 + (open[2] ? d : 0),
+        x1: r.x1 - (open[3] ? d : 0),
+        z0: r.z0 + (open[0] ? d : 0),
+        z1: r.z1 - (open[1] ? d : 0),
+      };
     }
 
 // WHICH HAND THIS POD'S DESK HAS ITS BACK ON — the hand the monitor stands against, and so the one
