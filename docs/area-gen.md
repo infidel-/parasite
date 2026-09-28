@@ -559,6 +559,28 @@ its front (a counter, cabinets, a fridge, a bookcase, a notice) picks another si
 the south only when the piece would be wasted anywhere else. The kitchen's prep counter and its
 snack corner never take it (`CorpKitchen.zones`).
 
+**The unwalkable twin is for things that FILL their cell, not things standing against a wall.** A
+corp cell is 2 m, and a waste bin (0.66), a plant (1.35), a water cooler (0.58) or a whiteboard (no
+footprint, it hangs) stands flat against the wall in 3D. Put one on `<floor> + UNWALKABLE_TILE_OFFSET`
+and the player sees a whole tile of bare carpet they cannot step on. **Reported four times, each
+fixed in its own room, and so the next one was always missed**: the bin (`addDecorationExt`'s
+old special case), the exec corner plants (`cornerPlants`), the meeting room's `decorateWalls`
+edges, then the boardroom cooler that the fix for those edges wrote itself. The reason it keeps coming back: every dressing
+helper writes the twin BEFORE it picks the group, so a new group is sealed by default and nothing
+downstream complains — the oracle only checks reachability, and a walled cell is not a pocket.
+**The rule now lives in ONE list, `CorpRooms.WALL_HUGGERS`**: `addDecorationExt` gives any of them
+its floor back, in every template at once. A new wall-standing decoration goes in that list. A
+template that deals one directly (`addDecoration`) must not write the twin at all.
+- **The one exception is a boxed-in CORNER.** `decorateWalls` forces a corner even straight after
+  a dressed cell, and on a wall with a counter or a rack along the corner's row, that corner has
+  walls on two hands, the counter on the third and the dressed cell on the fourth. Walkable, it is
+  a pocket, and `CorpConnect.openPockets` opens pockets by CLEARING FURNITURE — it took a
+  reception's one-cell counter on seeds 8, 52, 96, 110, 282, 312, 318, 366 and 494 of 500. Skipping
+  the corner does not help (bare floor is a pocket too). So a corner after a SEALED cell keeps the
+  twin, whatever it was dealt: nobody could reach it anyway. Traced with a one-off print in
+  `openPockets` of every counter cell it clears and the 5x5 around it. Trace a pocket like that
+  before guessing at one: the first guess here (skip the corner) was wrong and cost a run.
+
 **`Subdivide` is not shared with `citygen.CityGen`, on purpose.** CityGen's `leaf()` draws floors,
 roof and facade from the same rng as the split, so cutting and dressing are interleaved in one
 stream. Pulling the split out would reorder those draws and move every city layout in every existing
@@ -1490,8 +1512,9 @@ its middle. It is `TABLE_D_MAX` **2** now (length keeps 6), and chairs down both
 from `render.corp.CorpProps.boardChairs` on walkable carpet — the generator deals none. The wall
 dressing is `cornerPlants(state, room, CARPET_MEETING)` plus `meetingWalls`: every
 `MEETING_WALL_PITCH` 2nd cell of each wall line that is bare and not beside a door takes a plant (or
-a bin at `MEETING_WALL_BIN` 20%), one masonry cell takes the whiteboard and one more the cooler if
-`roomOpen` still holds. **Only the cooler writes the unwalkable twin**, so the ring of dead cells
+a bin at `MEETING_WALL_BIN` 20%), one masonry cell takes the whiteboard and one more the cooler.
+**Nothing writes the unwalkable twin** (see the WALL_HUGGERS rule above; the cooler did at first
+and was reported), so the ring of dead cells
 `decorateWalls` left (forced corners, half of x1/x2, 80% of it twin, half of that drawing nothing
 on the floor) is gone, and so are its 1x1 wall tables — a lone table tile renders as a desk and
 nothing in this room seats one. Oracle: 200 seeds, `unreachableRooms 0`, `orphanCells 0`,

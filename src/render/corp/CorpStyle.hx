@@ -218,6 +218,11 @@ class CorpStyle
   // a straight strip of edge still shows below the round
   public static inline var TABLE_ROUND = 0.05;
   public static inline var TABLE_ROUND_SEG = 3;
+  // and its polish: the Blinn-Phong highlight the ceiling spots leave on it (CorpFurniture.glossy).
+  // Swept live at the rig camera: 0x666666 / 40 was a blown white disc, 0x2a2a2a / 30 a smear;
+  // 0x444444 / 120 is a tight glint and leaves the rest of the top wood
+  public static inline var TABLE_SPECULAR = 0x444444;
+  public static inline var TABLE_SHININESS = 120.0;
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;

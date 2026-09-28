@@ -2585,3 +2585,28 @@ Verdict: **LANDED.** +2 calls for the whiteboard. The retired `table-side` buffe
 the mesh" says which MESH, not which of its properties.
 
 Verdict: **LANDED.** 0 calls (existing buffers and batch).
+
+## Boardroom table polish: Phong, not the PropEnv face lobe
+
+- **Tried first:** `PropEnv.apply(mat, face)` on the table-top material. This is the vending
+  steel's view-anchored lobe (`FACE_GLOSS` 8). On a flat horizontal top it gives one value over the
+  whole plane, and at 0.3 the table turned WHITE (sampled in a live uniform sweep 0 / 0.3 / 0.6 /
+  1.0). It brightens the top and never glints.
+- **Shipped:** the `table-top` buffer is built as `MeshPhongMaterial` (`CorpFurniture.glossy`),
+  VisionMask-patched like every other shell. A ceiling spot reflects in it as a SPOT that travels
+  across the top as the camera follows the player, and the rest of the top stays wood. The sweep at
+  the rig camera:
+  - `specular` 0x666666 / `shininess` 40: a blown white disc.
+  - 0x2a2a2a / 30: a smear.
+  - **0x444444 / 120**: a tight glint. This is what shipped (`TABLE_SPECULAR` / `TABLE_SHININESS`).
+- **Warm:** the demo's meeting band had ONE table cell, which is a lone desk glb and emits nothing,
+  so the table-top never warmed. That did not matter while it was a lambert that shared a program
+  with the other shells; as Phong it is a program of its own. `CorpModel.demo` now carries a second
+  meeting cell. Corp warm went 87 -> 88 programs cached, and entering a boardroom adds 0 programs
+  (123 -> 123).
+- `MeshPhongMaterial` got a typed extern in `three/Three.hx`.
+
+**Trap:** a view-anchored lobe is a glint only on a surface whose normal varies — a chamfer, a
+lathe, or the vending machine's several faces. On one big plane it is an exposure knob.
+
+Verdict: **LANDED.** +1 program, 0 calls (it replaces the lambert table-top mesh).

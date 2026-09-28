@@ -477,6 +477,11 @@ class CorpModel
       // emits a panel on every boundary a pod owns, and only an adjacent twin exercises the BACK
       // one. The cubicle band is column 4 — bands[1] at 2 + 1 * 2
       m.table[6][4] = true;
+      // and a second MEETING cell, so the boardroom band is a SLAB and not a lone desk: a lone
+      // table is a desk glb and emits nothing, and the slab's top is its own PHONG program
+      // (CorpFurniture.glossy), which would otherwise compile on first sight of a boardroom. The
+      // meeting band is column 6 — bands[2] at 2 + 2 * 2
+      m.table[6][6] = true;
       m.fit[3][12] = CorpFurniture.FIT_RACK;
       m.fit[3][13] = CorpFurniture.FIT_RACK;
       m.fit[8][15] = CorpFurniture.FIT_FIXTURE;

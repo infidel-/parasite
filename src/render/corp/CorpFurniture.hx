@@ -4,6 +4,7 @@ import Const;
 import citygen.CityConfig;
 import three.Three;
 import render.RenderConfig;
+import render.Textures;
 import render.facility.FacilityCable;
 import render.facility.FacilityDeco;
 import render.facility.FacilityGeom;
@@ -15,6 +16,7 @@ import render.facility.FacilityModel.Surf;
 import render.facility.FacilityDetail;
 import render.world.ContactMask;
 import render.world.MeshBuf;
+import render.world.VisionMask;
 import render.world.MeshBuf.MeshBufTools;
 
 // what a tower floor reports having emitted, for __corp()
@@ -290,7 +292,12 @@ class CorpFurniture
       // it is not a per-frame cost: render.particles.LampLights holds the caster slots at
       // shadow.autoUpdate = false, so a map re-renders only when its slot changes owner
       for (tex in bufs.keys())
-        FacilityGeom.add(scene, bufs.get(tex), tex, true, true);
+        {
+          if (tex == CorpStyle.TABLE_TOP)
+            glossy(scene, bufs.get(tex), tex);
+          else
+            FacilityGeom.add(scene, bufs.get(tex), tex, true, true);
+        }
       // ONE additive mesh for every blinking speck in the room and ONE for every cable in it, both
       // shared with the compound: render.facility.FacilityDeco.lamps folds in the blink shader and
       // the clock it references BY IDENTITY, so the whole server room's lights cost one draw call
@@ -465,6 +472,28 @@ class CorpFurniture
             r.x0, r.x1, r.z0, r.z1, dir, y0, h - round, isEnd ? endTile : sideTile);
         }
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// FacilityGeom.add's merge, on PHONG: the boardroom table is polished, and a matte lambert walnut
+// read as a flat brown sheet. Tried first and dropped: render.world.PropEnv's view-anchored face lobe
+// (the vending steel's glint). On a flat top it is one value over the whole plane, so at 0.3 the
+// table went WHITE rather than glinting. A Blinn-Phong highlight off the ceiling spots is a SPOT,
+// sits where a lamp reflects, and travels across the top as the camera follows the player
+  static function glossy(scene:Scene, b:MeshBuf, tex:String):Void
+    {
+      if (b.idx.length == 0)
+        return;
+      var mat = VisionMask.patch(new MeshPhongMaterial({
+        map: Textures.loadTexture(tex, 'wall', 1),
+        side: THREE.FrontSide,
+        specular: new Color(CorpStyle.TABLE_SPECULAR),
+        shininess: CorpStyle.TABLE_SHININESS,
+      }));
+      var mesh = new Mesh(FacilityGeom.geom(b), mat);
+      mesh.name = 'shell ' + tex;
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
     }
 
 // a slab's rounded top arris: TABLE_ROUND_SEG bands on every open hand, each band the rect inset

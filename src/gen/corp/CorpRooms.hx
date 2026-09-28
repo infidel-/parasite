@@ -74,6 +74,17 @@ class CorpRooms
   // and the biggest a plain exec office's rug may be, in cells on either axis
   public static inline var RUG_MAX = 4;
 
+// the decoration groups that stand FLAT AGAINST A WALL in 3D and so never seal their cell: a bin
+// (0.66 across), a plant (1.35), a water cooler (0.58) and a whiteboard, which hangs on the wall and
+// has no footprint at all — against a 4.0 cell. See addDecorationExt, and docs/area-gen.md on
+// the unwalkable twin. Anything added here is dealt walkable by every template at once
+  public static var WALL_HUGGERS = [
+    Const.CORP_TRASH,
+    Const.CORP_PLANT,
+    Const.CORP_COOLER,
+    Const.CORP_WHITEBOARD,
+  ];
+
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
 // interchangeable: that one drops _TileRow.col, which is right for the facility's tables (none of
 // them set it) and wrong for half the corp ones, where the col is what picks the sub-run out of a
@@ -103,12 +114,14 @@ class CorpRooms
       var info = group[state.area.random(group.length)];
       var col = state.area.random(info.amount) + (info.col != null ? info.col : 0);
       state.area.addDecoration(x, y, info.row, col);
-      // A BIN DOES NOT TAKE THE TILE. The callers write the room's unwalkable twin before the group
-      // is picked, and a waste bin standing on a sealed cell was a whole tile of floor lost to a
-      // thing you can step round — reported for every room that deals one. Every caller hands in a
-      // twin, so taking the offset back off is the room's own floor; render.corp.CorpDeco.bins
-      // stands the bin against the masonry so the actor on the cell never meets it
-      if (group == Const.CORP_TRASH)
+      // A WALL-HUGGER DOES NOT TAKE THE TILE. The callers write the room's unwalkable twin before
+      // the group is picked, and a thing standing flat against the wall on a sealed cell is a whole
+      // 2 m tile of floor lost to something 30 cm deep — reported first for the bin, then for the
+      // exec corner plants, then for a boardroom cooler, each fixed on its own and the next one
+      // missed. So it is one list (WALL_HUGGERS): every caller hands in a twin, so taking the offset
+      // back off is the room's own floor, and render.corp.CorpProps / CorpDeco stand each of these
+      // against the wall so the actor on the cell never meets it
+      if (WALL_HUGGERS.indexOf(group) >= 0)
         {
           var cells = state.area.getCells();
           cells[x][y] -= UNWALKABLE_TILE_OFFSET;
@@ -183,6 +196,14 @@ class CorpRooms
       var deco = small.copy();
       var decoBig = big.copy();
       var prevLeft = false, prevRight = false;
+      // and whether that previous cell is SEALED. The corner is forced straight after one, and it
+      // used to be sealed then too, so nothing noticed; a WALL_HUGGERS corner is walkable now, and
+      // with a sealed cell above it and a counter along its row it is a boxed-in pocket that
+      // CorpConnect.openPockets opens by CLEARING THE COUNTER — reception lost its one-cell run on
+      // seeds 52 and 110. Skipping the corner leaves the same pocket as bare floor. So a corner
+      // after a sealed cell keeps the twin, whatever it was dealt: it could not be reached anyway
+      var sealedLeft = false, sealedRight = false;
+      var open = bigFloorID - UNWALKABLE_TILE_OFFSET;
       for (y in room.y1...room.y2 + 1)
         {
           var isCorner = (y == room.y1 || y == room.y2);
@@ -208,7 +229,14 @@ class CorpRooms
                   cells[room.x1][y] = bigFloorID;
                   decoBig = addDecorationExt(state, room.x1, y, decoBig, big);
                 }
+              if (isCorner &&
+                  sealedLeft &&
+                  cells[room.x1][y] == open)
+                cells[room.x1][y] = bigFloorID;
+              sealedLeft = (cells[room.x1][y] != open);
             }
+          else
+            sealedLeft = false;
 
           // right side
           var hasRight = state.area.chance(chance);
@@ -231,7 +259,14 @@ class CorpRooms
                   cells[room.x2][y] = bigFloorID;
                   decoBig = addDecorationExt(state, room.x2, y, decoBig, big);
                 }
+              if (isCorner &&
+                  sealedRight &&
+                  cells[room.x2][y] == open)
+                cells[room.x2][y] = bigFloorID;
+              sealedRight = (cells[room.x2][y] != open);
             }
+          else
+            sealedRight = false;
         }
     }
 
@@ -665,9 +700,10 @@ class CorpRooms
 // Its 1x1 wall tables were the other half: a lone table tile renders as a desk, and nothing seats a
 // desk in here. The kitchen and the exec office dropped it for the same reasons.
 //
-// THE ONE TWIN WRITTEN HERE IS THE ROOM'S OWN (the cooler's): a borrowed floor id finalises the
-// cell as another room's surface, and the wall run, the table and the ceiling lamps all read it
-// back — see docs/area-gen.md on `CARPET_MEETING + 16`
+// NOTHING HERE WRITES THE UNWALKABLE TWIN: everything on the walls is a WALL_HUGGERS group. If a
+// sealing piece is ever added, it takes the room's OWN twin — a borrowed floor id finalises the cell
+// as another room's surface, and the wall run, the table and the ceiling lamps all read it back
+// (docs/area-gen.md on `CARPET_MEETING + 16`)
   public static function meeting(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
@@ -683,9 +719,10 @@ class CorpRooms
 
 // the meeting room's wall dressing: every MEETING_WALL_PITCH-th cell along each wall line, corners
 // excepted (cornerPlants has those), that is still bare carpet and not beside a doorway. One
-// whiteboard on a masonry cell, one cooler on another where it leaves the room open, and plants
-// and the odd bin on the rest. Everything but the cooler keeps its floor: a plant and a bin stand
-// against the wall in 3D and a whiteboard hangs on it, so the cell is still floor to walk on
+// whiteboard on a masonry cell, one cooler on another, and plants and the odd bin on the rest. ALL
+// OF THEM keep their floor (WALL_HUGGERS): they stand flat against the wall in 3D, or hang on it, so
+// the cell is still floor to walk on. The cooler used to take the twin and was reported as an
+// unwalkable tile in front of a water cooler
   static function meetingWalls(state: _CorpState, room: _Room)
     {
       var cells = state.area.getCells();
@@ -716,26 +753,16 @@ class CorpRooms
           add(room.x2, y, y - room.y1, 1, 0);
         }
       var board = (masonry.length > 0 ? masonry[state.area.random(masonry.length)] : -1);
-      var cooler = -1;
-      if (masonry.length > 1)
-        {
-          cooler = masonry[state.area.random(masonry.length)];
-          var c = cand[cooler];
-          var blocked = [ c.x * 1000 + c.y => true ];
-          if (cooler == board ||
-              !roomOpen(state, room, blocked, CARPET_MEETING))
-            cooler = -1;
-        }
+      var cooler = (masonry.length > 1 ? masonry[state.area.random(masonry.length)] : -1);
+      if (cooler == board)
+        cooler = -1;
       for (i in 0...cand.length)
         {
           var c = cand[i];
           if (i == board)
             addDecoration(state, c.x, c.y, Const.CORP_WHITEBOARD);
           else if (i == cooler)
-            {
-              cells[c.x][c.y] = Const.TILE_FLOOR_CARPET_MEETING + UNWALKABLE_TILE_OFFSET;
-              addDecoration(state, c.x, c.y, Const.CORP_COOLER);
-            }
+            addDecoration(state, c.x, c.y, Const.CORP_COOLER);
           else if (state.area.chance(MEETING_WALL_BIN))
             addDecoration(state, c.x, c.y, Const.CORP_TRASH);
           else

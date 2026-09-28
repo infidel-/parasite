@@ -346,6 +346,17 @@ typedef RendererInfo = {
   public var depthWrite:Bool;
   public var userData:Dynamic;
 }
+// a lambert with a Blinn-Phong highlight: the ceiling spots reflect in it as a glint that moves with
+// the camera. render.corp.CorpFurniture's polished boardroom top
+@:native("THREE.MeshPhongMaterial") extern class MeshPhongMaterial {
+  public function new(params:Dynamic);
+  public var map:Texture;
+  // the highlight's colour, i.e. its strength
+  public var specular:Color;
+  // the highlight's tightness: higher is a smaller, harder spot
+  public var shininess:Float;
+  public var userData:Dynamic;
+}
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
   public function new(params:Dynamic);
   public var uniforms:Dynamic;
