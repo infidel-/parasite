@@ -51,6 +51,9 @@ class GenSpawner
                 new Elevator(game, area.id, s.x, s.y);
               case 'stairs':
                 new Stairs(game, area.id, s.x, s.y);
+              // a security room's gun cabinet, gen.corp.CorpRooms.security
+              case 'gunCabinet':
+                new GunCabinet(game, area.id, s.x, s.y);
               default:
                 trace('GenSpawner.drain(): unknown spawn type "' + s.type + '" at ' +
                   s.x + ',' + s.y);

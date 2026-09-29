@@ -12,9 +12,9 @@ package gen;
 // the live path only. The headless oracle simply counts them. Nothing here is persisted — the
 // spawned objects are, exactly as they always were.
 typedef _GenSpawn = {
-  // what to build: 'decoration', 'door', 'vent', 'sewerHatch', 'floorDrain'. the same strings
-  // AreaObject.type carries, so a filter written against one reads correctly against the other —
-  // game.FacilityAreaGenerator.clearTableSpots asks `o.type == 'decoration'` either way
+  // what to build: 'decoration', 'door', 'vent', 'sewerHatch', 'floorDrain', 'gunCabinet'. the
+  // same strings AreaObject.type carries, so a filter written against one reads correctly against
+  // the other — game.FacilityAreaGenerator.clearTableSpots asks `o.type == 'decoration'` either way
   var type: String;
   var x: Int;
   var y: Int;
