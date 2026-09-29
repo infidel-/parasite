@@ -1447,8 +1447,8 @@
       "src": "corp/corp-rec-phone.glb",
       "tris": -1,
       "tex": 256,
-      "note": "the reception counter's desk phone: a body rounded in plan, its top sloping to the front with the arris chamfered, the handset (a waisted lathe on a flattened section) lying front to back down its left on two cradles along the slope, the key pad let into the slope (its top the workstation key field at its own 1.12 aspect), and the cord round to the body's flank. Was four boxes at 48 tris, reported as really blocky. 362 tris, 0.458 x 0.437 x 0.161; check 0 holes / 0 coplanar / 1 island, texel_off 1 (the key face, a label, denser on purpose). One per receptionist station (render.corp.CorpReception.dress). Hand-modelled (models-src/corp/reception_build.py), wearing reception-trinket-sheet.png: a 2x2 packed by hand from BUILT labels (exec-brass, reception-board at its measured 2.75 aspect, the workstation's anodised carcass and its key field). No baseColor/lift/sat: every cell is an already-fitted label.",
-      "last_converted": "2026-09-29T18:26:35Z",
+      "note": "the reception counter's desk phone: a body rounded in plan, its top sloping to the front with the arris chamfered, the handset (a waisted lathe on a flattened section) lying front to back down its left on two cradles along the slope, the key pad let into the slope (its top the workstation key field at its own 1.12 aspect), and the cord round to the body's flank. Was four boxes at 48 tris, reported as really blocky. Body light grey and handset + cord muted blue (R_BODY / R_HAND, painted into the WELCOME cell's free bands off cell 2's grain): on the anodised carcass it was a black lump on black marble. 362 tris, 0.458 x 0.437 x 0.161; check 0 holes / 0 coplanar / 1 island, texel_off 1 (the key face, a label, denser on purpose). One per receptionist station (render.corp.CorpReception.dress). Hand-modelled (models-src/corp/reception_build.py), wearing reception-trinket-sheet.png: a 2x2 packed by hand from BUILT labels (exec-brass, reception-board at its measured 2.75 aspect, the workstation's anodised carcass and its key field). No baseColor/lift/sat: every cell is an already-fitted label.",
+      "last_converted": "2026-09-29T18:59:08Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/rec-board": {
@@ -1456,7 +1456,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the reception counter's WELCOME board: the reception-pack sign face at its measured 2.75 aspect, leaned 20 deg back on a brass foot with a strut behind. 44 tris, 0.68 x 0.116 x 0.235. At the lift end of the ledge, reading to the corridor. Hand-modelled (models-src/corp/reception_build.py), wearing reception-trinket-sheet.png: a 2x2 packed by hand from BUILT labels (exec-brass, reception-board at its measured 2.75 aspect, the workstation's anodised carcass and its key field). No baseColor/lift/sat: every cell is an already-fitted label.",
-      "last_converted": "2026-09-29T18:26:35Z",
+      "last_converted": "2026-09-29T18:59:08Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/rec-bell": {
@@ -1464,7 +1464,7 @@
       "tris": -1,
       "tex": 256,
       "note": "the reception counter's service bell: three lathes (anodised base, brass dome, plunger and knob), 12 sides smooth-shaded, every band and cap at one density off the base's circumference (bl.uvfit). 248 tris, 0.20 x 0.20 x 0.123. On the visitor's ledge. Hand-modelled (models-src/corp/reception_build.py), wearing reception-trinket-sheet.png: a 2x2 packed by hand from BUILT labels (exec-brass, reception-board at its measured 2.75 aspect, the workstation's anodised carcass and its key field). No baseColor/lift/sat: every cell is an already-fitted label.",
-      "last_converted": "2026-09-29T18:26:35Z",
+      "last_converted": "2026-09-29T18:59:08Z",
       "last_sig": "n1/-1/256/0.01/-/-"
     },
     "corp/kitchen-table": {
