@@ -7,6 +7,7 @@ import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf;
 
 // one reception counter: a straight run of counter cells in the wall line, and the hand the
@@ -20,6 +21,27 @@ typedef ReceptionRun = {
   var alongX:Bool;
   // the hand the CORRIDOR is on, in FacilityGeom.DC / DR's numbering; the room is `out ^ 1`
   var out:Int;
+};
+
+// one desk-clutter decal on a counter, for render.corp.CorpClutter to emit into its desk sheet
+typedef ReceptionDecal = {
+  // its centre in world, and the top it lies on
+  var x:Float;
+  var z:Float;
+  var y:Float;
+  // its turn, and its cell of corp/desk-clutter
+  var yaw:Float;
+  var idx:Int;
+};
+
+// what every counter on the plate carries, one list per glb and one of decals
+typedef ReceptionDress = {
+  var phones:Array<Models.PropPlace>;
+  var boards:Array<Models.PropPlace>;
+  var bells:Array<Models.PropPlace>;
+  // corp/desk-plant, which render.corp.CorpClutter already batches for the desks
+  var plants:Array<Models.PropPlace>;
+  var decals:Array<ReceptionDecal>;
 };
 
 // THE RECEPTION COUNTER, off the generator's own cells.
@@ -223,6 +245,146 @@ class CorpReception
         z0: (r.alongX ? lo : v.v0),
         z1: (r.alongX ? hi : v.v1),
       };
+    }
+
+// WHAT EACH COUNTER CARRIES, laid out and not rolled: a front desk is arranged. On the visitor's
+// LEDGE, the WELCOME board a cell in from the end nearer the lift (the side a visitor walks up
+// from), a desk plant at the other end, the bell beside the middle, and the visitor book with its pen, the
+// business cards and a lanyard badge lying on it. On the receptionist's WORKTOP, the phone beside
+// the workstation, the sticky notes on the other side of it, and a second plant at the lift end on a
+// counter long enough to have room for one. Every glb stands in a round contact on the top it stands on
+  public static function dress(m:Facility):ReceptionDress
+    {
+      var out:ReceptionDress = {
+        phones: [],
+        boards: [],
+        bells: [],
+        plants: [],
+        decals: [],
+      };
+      var lift = liftCell(m);
+      for (r in runs(m))
+        {
+          var mid = Std.int(r.len / 2);
+          // which end is the lift's, and the step along the run toward it
+          var e0 = at(r, 0, 0.0);
+          var e1 = at(r, r.len - 1, 0.0);
+          var toward = (lift == null ||
+            dist(e0, lift) <= dist(e1, lift) ? -1 : 1);
+          var endA = (toward < 0 ? 0 : r.len - 1);
+          var endB = r.len - 1 - endA;
+          var ux = FacilityGeom.DC[r.out];
+          var uz = FacilityGeom.DR[r.out];
+          var toCorridor = Math.atan2(ux, uz);
+          var toRoom = Math.atan2(-ux, -uz);
+          var hash = FacilityModel.mix((r.col * 374761393) ^ (r.row * 40503));
+          var ledge = CorpStyle.REC_LEDGE_H;
+          var lu = CorpStyle.REC_LEDGE_MID_U;
+          var wu = CorpStyle.REC_WORK_BACK_U;
+          var ledgeRect = rect(r, span(m, r), CorpStyle.REC_BACK_U,
+            CorpStyle.REC_FRONT_U + CorpStyle.REC_LEDGE_OVER);
+          var workRect = rect(r, span(m, r), CorpStyle.REC_WORK_U, CorpStyle.REC_BACK_U);
+
+          // the ledge. The board stands a cell IN from the lift end: the counter's end cell is
+          // often against the tower's outer wall, whose rim hid it from the camera
+          var boardAt = (r.len > 2 ? endA - toward : endA);
+          stand(out.boards, at(r, boardAt, lu), ledge, toCorridor,
+            CorpStyle.REC_BOARD_R * CorpStyle.REC_BOARD_H, ledgeRect);
+          if (r.len > 1)
+            stand(out.plants, at(r, endB, lu), ledge, hash * 0.001,
+              plantR(), ledgeRect);
+          stand(out.bells, at(r, mid + toward * 0.4, lu + 0.1), ledge, toCorridor,
+            CorpStyle.REC_BELL_R * CorpStyle.REC_BELL_H, ledgeRect);
+          var book = at(r, mid - toward * 0.45, lu);
+          decal(out, book, ledge, toCorridor, CorpStyle.REC_DECALS[0]);
+          decal(out, at(r, mid - toward * 0.1, lu + 0.2), ledge, toCorridor + 0.5,
+            CorpStyle.REC_DECALS[1]);
+          decal(out, at(r, endA, lu), ledge, toCorridor + 0.2, CorpStyle.REC_DECALS[2]);
+          if (r.len > 3)
+            decal(out, at(r, endB + toward * 1.0, lu), ledge, (hash >>> 8) % 628 * 0.01,
+              CorpStyle.REC_DECALS[3]);
+
+          // the worktop
+          var side = (mid + toward >= 0 && mid + toward < r.len ? toward : -toward);
+          stand(out.phones, at(r, mid + side * 0.85, wu), CorpStyle.DESK_H, toRoom,
+            CorpStyle.REC_PHONE_R * CorpStyle.REC_PHONE_H, workRect);
+          decal(out, at(r, mid - side * 0.8, wu - 0.35), CorpStyle.DESK_H, toRoom + 0.3,
+            CorpStyle.REC_DECALS[4]);
+          // and the second plant at the OTHER end from the first, where it does not stack with it
+          if (r.len > 4)
+            stand(out.plants, at(r, endA, wu), CorpStyle.DESK_H, hash * 0.002, plantR(),
+              workRect);
+        }
+      return out;
+    }
+
+// the desk plant's footprint radius at the height CorpClutter draws it
+  static inline function plantR():Float
+    {
+      return CorpStyle.CLUTTER_PROP_R[CorpStyle.CLUTTER_PLANT] *
+        CorpStyle.CLUTTER_PROP_H[CorpStyle.CLUTTER_PLANT];
+    }
+
+// one glb onto its list, standing on a top `y` up, with a round contact under it clipped to `top`
+  static function stand(list:Array<Models.PropPlace>, p:{ x:Float, z:Float }, y:Float,
+      yaw:Float, rad:Float, top:Rect):Void
+    {
+      list.push({
+        x: p.x,
+        z: p.z,
+        yaw: yaw,
+        y: y,
+      });
+      FacilityDetail.deck({
+        cx: p.x,
+        cz: p.z,
+        hw: rad,
+        hd: rad,
+        yaw: yaw,
+        y: y,
+        plate: top,
+      });
+    }
+
+// one decal onto the list, lying on a top `y` up
+  static function decal(out:ReceptionDress, p:{ x:Float, z:Float }, y:Float, yaw:Float,
+      idx:Int):Void
+    {
+      out.decals.push({
+        x: p.x,
+        z: p.z,
+        y: y + CorpStyle.CLUTTER_Y,
+        yaw: yaw,
+        idx: idx,
+      });
+    }
+
+// a point on a counter: `k` cells along the run from its first (fractions allowed) and `u` across it
+  static function at(r:ReceptionRun, k:Float, u:Float):{ x:Float, z:Float }
+    {
+      var a = CityConfig.cellToWorld(r.col, r.row);
+      var ux = FacilityGeom.DC[r.out];
+      var uz = FacilityGeom.DR[r.out];
+      return {
+        x: a.x + (r.alongX ? k * CELL : 0.0) + ux * u,
+        z: a.z + (r.alongX ? 0.0 : k * CELL) + uz * u,
+      };
+    }
+
+// the lift's own floor, as its first cell in world, or null on a plate with none
+  static function liftCell(m:Facility):{ x:Float, z:Float }
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          if (m.surf[row][col] == Surf.LIFT)
+            return CityConfig.cellToWorld(col, row);
+      return null;
+    }
+
+// taxicab distance between two world points
+  static inline function dist(a:{ x:Float, z:Float }, b:{ x:Float, z:Float }):Float
+    {
+      return Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
     }
 
 // the receptionist: a task chair in the room behind the middle of each counter, facing it, and the

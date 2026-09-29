@@ -108,6 +108,16 @@ class CorpClutter
       // or, on the racking, a shelf — off the desk sheet and into its buffer, so no draw call
       for (u in CorpFurniture.units)
         n += level(u, desk);
+      // and the reception counters', laid out rather than rolled — see CorpReception.dress. Its
+      // decals are desk-sheet cells into the desk buffer, its plants join the desks' own batch
+      var rec = CorpReception.dress(m);
+      for (d in rec.decals)
+        {
+          emit(desk, d.x, d.z, CorpStyle.CLUTTER_SZ, d.yaw, d.idx, d.y);
+          n++;
+        }
+      for (p in rec.plants)
+        props[CorpStyle.CLUTTER_PLANT].push(p);
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
       add(scene, exec, CorpStyle.CLUTTER_EXEC_TEX);
@@ -131,6 +141,12 @@ class CorpClutter
       // argued against: the two sheets above are two calls for sixty-odd kinds, and every glb here
       // is a call of its own however few land
       var out = [];
+      out.push(CorpProps.clutterBatch(scene, RenderConfig.MODELS.corpRecPhone, rec.phones,
+        CorpStyle.REC_PHONE_H));
+      out.push(CorpProps.clutterBatch(scene, RenderConfig.MODELS.corpRecBoard, rec.boards,
+        CorpStyle.REC_BOARD_H));
+      out.push(CorpProps.clutterBatch(scene, RenderConfig.MODELS.corpRecBell, rec.bells,
+        CorpStyle.REC_BELL_H));
       for (i in 0...CorpStyle.CLUTTER_PROPS)
         out.push(CorpProps.clutterBatch(scene, CorpStyle.CLUTTER_PROP_PATH[i], props[i],
           CorpStyle.CLUTTER_PROP_H[i]));
