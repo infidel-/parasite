@@ -254,6 +254,25 @@ class CorpStyle
   // not MON_BACK / KEY_FWD, which were fitted to the deeper top and put the keys off its edge
   public static inline var REC_MON_IN = 0.5;
   public static inline var REC_KEY_IN = 1.3;
+  // THE COUNTER'S TRINKETS (render.corp.CorpReception.dress), hand-modelled and drawn at TWICE their
+  // built height for the exec trinkets' reason: sized off the counter and not off the real object.
+  // _R is half the glb's widest extent over its own height, the form CLUTTER_PROP_R keeps
+  public static inline var REC_PHONE_H = 0.31;
+  public static inline var REC_PHONE_R = 1.548;
+  // the board at THREE times: at two its WELCOME was 44 x 16 px from the rig camera on a counter
+  // that is 28 units long, and a sign nobody can read is not a sign
+  public static inline var REC_BOARD_H = 0.7053;
+  public static inline var REC_BOARD_R = 1.446;
+  public static inline var REC_BELL_H = 0.246;
+  public static inline var REC_BELL_R = 0.813;
+  // where across the ledge its things stand (its middle), and across the worktop the phone and the
+  // second plant do (toward the back, clear of the keyboard's line)
+  public static inline var REC_LEDGE_MID_U = 0.43;
+  public static inline var REC_WORK_BACK_U = -0.75;
+  // the desk-clutter cells it deals by NAME, off corp/desk-clutter's own prompt order: the open
+  // notebook is the visitor book, with the fountain pen beside it, the business cards and a
+  // lanyard badge for the visitor's pass on the ledge, the sticky notes on the worktop
+  public static var REC_DECALS = [10, 11, 30, 23, 13];
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;

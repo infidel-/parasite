@@ -875,6 +875,10 @@ class RenderConfig {
     corpExecTableLow: 'models/corp/exec-table-low.glb', // walnut on brass legs, 168
     corpExecPlaque: 'models/corp/exec-plaque.glb',      // brass nameplate on walnut, 24
     corpExecPhoto: 'models/corp/exec-photo.glb',        // brass frame on an easel, 80
+    // the reception counter's three trinkets (models-src/corp/reception_build.py)
+    corpRecPhone: 'models/corp/rec-phone.glb',          // base, cradle, handset, key pad, 48
+    corpRecBoard: 'models/corp/rec-board.glb',          // WELCOME on a brass foot, 44
+    corpRecBell: 'models/corp/rec-bell.glb',            // base, brass dome, plunger, 248
     // AND THE STAFF KITCHEN'S ELEVEN (render.corp.CorpKitchen, models-src/corp/kitchen_build.py),
     // on five sheets packed off built labels. The fridge and the vending machine were
     // render.corp.CorpDeco.box, casework wearing the office desk's laminate

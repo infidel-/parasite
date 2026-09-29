@@ -115,6 +115,10 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpExecTableLow, h: CorpStyle.TABLE_LOW_H },
         { path: RenderConfig.MODELS.corpExecPlaque, h: CorpStyle.PLAQUE_H },
         { path: RenderConfig.MODELS.corpExecPhoto, h: CorpStyle.PHOTO_H },
+        // and the reception counter's three trinkets
+        { path: RenderConfig.MODELS.corpRecPhone, h: CorpStyle.REC_PHONE_H },
+        { path: RenderConfig.MODELS.corpRecBoard, h: CorpStyle.REC_BOARD_H },
+        { path: RenderConfig.MODELS.corpRecBell, h: CorpStyle.REC_BELL_H },
         // and the kitchen's eleven, for the same reason: render.corp.CorpKitchen reads the
         // generator's tiles and decorations, and the demo model carries neither. The vending
         // machine is the tower's one EMISSIVE glb, a program of its own
