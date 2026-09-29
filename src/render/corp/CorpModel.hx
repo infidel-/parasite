@@ -37,7 +37,7 @@ class CorpModel
       m.windows = [];
       FacilityModel.findWindows(m);
       doorLooks(m);
-      wallFits(m);
+      wallFits(area, m);
       archiveWalls(area, m);
       return m;
     }
@@ -121,7 +121,11 @@ class CorpModel
 // alone: `toilet` lays its basin run along the y1 ROW and its stalls along y2, both of which run
 // through the corners decorateCorners dresses, so there the two are not separable by shape — and
 // a basin in the corner of a washroom is what a washroom looks like
-  static function wallFits(m:Facility):Void
+//
+// A RACK ON Const.TILE_RACK_HIGH IS NEVER DRESSING: that id is laid only by the server room's ranks
+// and the security room's rack column, which runs down its east wall ON PURPOSE, so only the
+// see-through twin is demoted
+  static function wallFits(area:AreaGame, m:Facility):Void
     {
       for (r in m.rooms)
         for (row in r.y1...r.y2 + 1)
@@ -129,7 +133,8 @@ class CorpModel
             {
               if (!FacilityModel.inside(m, col, row))
                 continue;
-              if (m.fit[row][col] == CorpFurniture.FIT_RACK)
+              if (m.fit[row][col] == CorpFurniture.FIT_RACK &&
+                  area.getCellType(col, row) != Const.TILE_RACK_HIGH)
                 m.fit[row][col] = 0;
             }
     }
@@ -373,7 +378,9 @@ class CorpModel
           t == Const.TILE_FLOOR_SERVER + 16 ||
           t == Const.TILE_FLOOR_ARCHIVE ||
           t == Const.TILE_FLOOR_ARCHIVE + 16 ||
-          t == Const.TILE_ARCHIVE_HIGH)
+          t == Const.TILE_ARCHIVE_HIGH ||
+          t == Const.TILE_RACK_HIGH ||
+          t == Const.TILE_CORP_LOCKER)
         return SERVER;
       if (t == Const.TILE_FLOOR_CONCRETE ||
           t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE ||
@@ -395,7 +402,7 @@ class CorpModel
 
 // which piece of furniture a corp tile id stands, as one of CorpFurniture's codes.
 //
-// FIVE IDS AND NOTHING ELSE, and all but the reception counter are a floor tile's UNWALKABLE TWIN (one tileset
+// SIX IDS AND NOTHING ELSE, and all but the reception counter and the sight-blocking ranks are a floor tile's UNWALKABLE TWIN (one tileset
 // row down, gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
 // uses to say "something stands here" without a tile of its own, and it is why the surface grid
 // cannot answer: a spine cell, a rack cell, a basin cell and an archive rank cell all paint their
@@ -409,7 +416,8 @@ class CorpModel
       // cubicle farm has none: the panels stand on cell BOUNDARIES now. Saves still carry the id —
       // the old solo office dressed its corners with it — and a corner is a cell with a decoration
       // on it, which is exactly what a fitting of 0 leaves CorpDeco to draw
-      if (t == Const.TILE_FLOOR_SERVER + 16)
+      if (t == Const.TILE_FLOOR_SERVER + 16 ||
+          t == Const.TILE_RACK_HIGH)
         return CorpFurniture.FIT_RACK;
       if (t == Const.TILE_FLOOR_MARBLE2 + 16)
         return CorpFurniture.FIT_FIXTURE;

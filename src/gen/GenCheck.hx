@@ -416,6 +416,34 @@ class GenCheck
         }
     }
 
+// a security room has its desk run, a walkable floor cell in front of it for the guard to stand
+// on (game.AreaGame.initSpawnPoints posts him there), and at most one gun cabinet
+  public function securitySane(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (r in rooms)
+        {
+          if (r.role != gen.corp.CorpTemp.ROLE_SECURITY)
+            continue;
+          var at = 'corp security at ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2;
+          var post = gen.corp.CorpRooms.securityPost(ctx.cells, r);
+          ok(post != null, at + ' has no desk run');
+          if (post != null)
+            ok(post.y <= r.y2 &&
+              walk[ctx.cells[post.x][post.y]] == 1, at + ' has no floor for its guard at ' +
+              post.x + ',' + post.y);
+          var cabs = 0;
+          for (s in ctx.spawns)
+            if (s.type == 'gunCabinet' &&
+                s.x >= r.x1 &&
+                s.x <= r.x2 &&
+                s.y >= r.y1 &&
+                s.y <= r.y2)
+              cabs++;
+          ok(cabs <= 1, at + ' holds ' + cabs + ' gun cabinets');
+        }
+    }
+
 // AN ARCHIVE IS NOT A BARE FLOOR.
 //
 // The room whose whole point is its RANKS, and the one most able to roll itself empty: a rank is the

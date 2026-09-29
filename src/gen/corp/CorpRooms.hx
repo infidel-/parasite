@@ -41,6 +41,10 @@ class CorpRooms
   public static inline var BASIN_MAX = 3;
   public static inline var STALL_MAX = 3;
   public static inline var RACK_ROWS_MAX = 4;
+  // a security room's console under its north wall, and the lockers down its west wall (the gun
+  // cabinet among them), in cells
+  public static inline var SECURITY_CONSOLE_MAX = 4;
+  public static inline var SECURITY_LOCKERS_MAX = 4;
   // the archive's wall ring: the percent of its cells left bare, and the span a rank has to reach
   // before it is cut in two by a cross aisle
   public static inline var ARCHIVE_RING_BARE = 15;
@@ -601,14 +605,16 @@ class CorpRooms
 
 // can every walkable cell of the room still be reached from its doorways, with the cells in
 // `blocked` (keyed x * 1000 + y) taken as furniture? `floor` is the room's own walkable floor id.
-// True for a room with no doorway to start from.
+// True for a room with no doorway to start from. `joined` floods from ONE doorway, so the floor must
+// also be a single piece: a rank that splits a room between two doors passes the plain test, and
+// the half whose door leads nowhere is a pocket CorpConnect.openPockets tears furniture out to reach.
 //
 // THE EXEC OFFICE ASKS THIS OF ITSELF because the repair downstream cannot tell a pocket it should
 // open from furniture it should keep: gen.corp.CorpConnect.openPockets reaches a sealed cell by
 // eroding whatever stands in the way, so a placement that walls a lane in is not rejected, it is
 // half-deleted after the fact
   public static function roomOpen(state: _CorpState, room: _Room, blocked: Map<Int, Bool>,
-      floor: Int): Bool
+      floor: Int, joined: Bool = false): Bool
     {
       var cells = state.area.getCells();
       var walk = function(x: Int, y: Int)
@@ -627,7 +633,9 @@ class CorpRooms
           if (walk(x, y))
             {
               total++;
-              if (atDoor(cells, x, y))
+              if (atDoor(cells, x, y) &&
+                  !(joined &&
+                  stack.length > 0))
                 {
                   seen.set(x * 1000 + y, true);
                   stack.push({ x: x, y: y });
@@ -1278,8 +1286,7 @@ class CorpRooms
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
       // rack rows run across the room's SHORT axis and are reached from the aisle beside them,
       // so a row is never more than one step from walkable floor
-      rackRows(state, node, room, Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
-        Const.CORP_MACHINERY, 20, RACK_ROWS_MAX, RACK_PITCH);
+      rackRows(state, node, room, RACK_HIGH, Const.CORP_MACHINERY, 20, RACK_ROWS_MAX, RACK_PITCH);
 
       // one router bench and a bin by the door
       decorateWalls(state, room, [
@@ -1722,33 +1729,141 @@ class CorpRooms
       backOffice(state, node, room, deltaMap[CorpBlocks.fronts.get(room.id)[0].dir]);
     }
 
-// a security post: the server room's floor, a bank of monitors on one wall and the machines that
-// feed them on the other
+// a security post, one wall to a job. THE CONSOLE UNDER THE NORTH WALL faces the video wall
+// render.corp hangs over it, which is the wall the camera looks at; the RACKS that feed it run down
+// the east wall and the LOCKERS down the west, one of them the gun cabinet. The south wall is left
+// bare, being the one the camera looks over.
+//
+// THE RACK USED TO STAND IN THE MIDDLE. `rackRows` lays its first rank at y1+1, clear of every
+// wall by construction, and in a 4x4 room that is the desk run's own row, so the fallback wrote a
+// rack over a desk cell every time. Nothing stands mid-room now, so the two cannot meet
   public static function security(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
-      // THE MONITOR BENCH AND A RANK OF GEAR, because a control room with nothing in the middle
-      // of it is a cupboard. Measured before this: 19.9% of the rect furnished, and every one of
-      // those cells was a wall dressing — `decorateWalls` was the entire body of this template
-      deskRun(state, node, room, [
-          Const.CORP_COMPUTERS,
-          Const.CORP_TABLE_ROUTER,
-          Const.CORP_TABLE_MISC_LARGE,
-        ]);
-      rackRows(state, node, room, Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
-        Const.CORP_MACHINERY, 25, 2, 3);
-      decorateWalls(state, room, [
-          Const.CORP_COMPUTERS,
-          Const.CORP_TABLE_ROUTER,
-          Const.CORP_TABLE_MISC_LARGE,
-        ], [
-          Const.CORP_MACHINERY,
-          Const.CORP_CABINET,
-          Const.CORP_TRASH,
-        ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
-        60, 50);
+      if (!consoleRun(state, node, room))
+        deskRun(state, node, room, [
+            Const.CORP_COMPUTERS,
+            Const.CORP_TABLE_ROUTER,
+          ]);
+      // the racks first: a lane beside a door is kept on both columns, and the lockers are the
+      // ones dropped when the two together would seal the floor
+      var racks = wallColumn(state, room, room.x2);
+      var lockers = wallColumn(state, room, room.x1);
+      if (lockers.length > SECURITY_LOCKERS_MAX)
+        lockers = lockers.slice(0, SECURITY_LOCKERS_MAX);
+      while (racks.length + lockers.length > 0 &&
+          !columnsOpen(state, room, racks.concat(lockers)))
+        {
+          if (lockers.length > 0)
+            lockers.pop();
+          else
+            racks.pop();
+        }
+      if (racks.length > 0)
+        GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x2, racks[0].y, room.x2,
+          racks[racks.length - 1].y);
+      for (c in racks)
+        {
+          cells[c.x][c.y] = RACK_HIGH;
+          addDecoration(state, c.x, c.y, Const.CORP_MACHINERY);
+        }
+      // the gun cabinet stands on the floor: it is an object, objects.GunCabinet, and what makes its
+      // cell solid is the object and not the tile. So it needs FLOOR IN FRONT OF IT, and not only to
+      // be opened from: a cabinet cell walled in by lockers and the desk run is a walkable tile
+      // nothing reaches, and CorpConnect.openPockets tore the DESK out to get to it — measured as 199
+      // security rooms in 3000 with no desk. The locker nearest the run's middle that has it
+      var cab = -1;
+      for (i in 0...lockers.length)
+        if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
+            (cab < 0 ||
+            Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)))
+          cab = i;
+      for (i in 0...lockers.length)
+        {
+          var c = lockers[i];
+          if (i == cab)
+            state.area.add('gunCabinet', c.x, c.y);
+          else
+            cells[c.x][c.y] = Const.TILE_CORP_LOCKER;
+        }
+    }
+
+// a security room's console: a desk run along the north wall with a workstation on every cell,
+// and a chair in front of all but the middle one, which is where the guard stands
+// (game.AreaGame.initSpawnPoints finds the post off this run). False if a doorway in that wall
+// opens onto it, and the caller falls back to the free-standing `deskRun`
+  static function consoleRun(state: _CorpState, node: _GenNode, room: _Room): Bool
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // the corners belong to the two wall columns
+      var n = room.w - 2;
+      if (n > SECURITY_CONSOLE_MAX)
+        n = SECURITY_CONSOLE_MAX;
+      if (n < 1)
+        return false;
+      var tx = room.x1 + Std.int((room.w - n) / 2);
+      var ty = room.y1;
+      for (dx in 0...n)
+        if (atDoor(cells, tx + dx, ty) ||
+            atDoor(cells, tx + dx, ty + 1))
+          return false;
+      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + n - 1, ty);
+      var block = Const.CORP_TABLE_3X1;
+      for (dx in 0...n)
+        {
+          cells[tx + dx][ty] = (n == 1 ? block[1] : dx == 0 ? block[0] :
+            dx == n - 1 ? block[2] : block[1]);
+          addDecoration(state, tx + dx, ty, Const.CORP_COMPUTERS);
+          if (dx != Std.int(n / 2))
+            area.addDecoration(tx + dx, ty + 1, Const.CORP_CHAIR[0].row,
+              area.random(Const.CORP_CHAIR[0].amount));
+        }
+      return true;
+    }
+
+// where a security room's guard stands: in front of the middle cell of its desk run, which on the
+// console is the one cell with no chair. Null for a room whose run was never laid. Read off the
+// FINISHED grid, so game.AreaGame.initSpawnPoints can ask it of any saved tower
+  public static function securityPost(cells: Array<Array<Int>>, room: _Room): { x:Int, y:Int }
+    {
+      for (y in room.y1...room.y2 + 1)
+        {
+          var run = [];
+          for (x in room.x1...room.x2 + 1)
+            if (Const.CORP_TABLE_3X1.indexOf(cells[x][y]) >= 0)
+              run.push(x);
+          if (run.length > 0)
+            return {
+              x: run[Std.int(run.length / 2)],
+              y: y + 1,
+            };
+        }
+      return null;
+    }
+
+// the free cells of a room's wall column, north to south: not the ones a doorway opens onto or
+// the ones beside them, and not a cell something already stands on
+  static function wallColumn(state: _CorpState, room: _Room, x: Int): Array<{ x:Int, y:Int }>
+    {
+      var cells = state.area.getCells();
+      var out = [];
+      for (y in room.y1...room.y2 + 1)
+        if (cells[x][y] == SERVER &&
+            !atDoor(cells, x, y) &&
+            !besideDoor(cells, x, y) &&
+            !state.area.hasObjectAt(x, y))
+          out.push({ x: x, y: y });
+      return out;
+    }
+
+// does the room's floor still join its doorways with these cells taken?
+  static function columnsOpen(state: _CorpState, room: _Room, taken: Array<{ x:Int, y:Int }>): Bool
+    {
+      var blocked = new Map<Int, Bool>();
+      for (c in taken)
+        blocked.set(c.x * 1000 + c.y, true);
+      return roomOpen(state, room, blocked, SERVER, true);
     }
 }

@@ -18,7 +18,8 @@ class Default extends Tileset
     // obstacles, and neither needed an edit here or in TILE_SEETHROUGH below: row 0's spare slots were
     // already 0/0, the TILE_BUILDING / TILE_WALL profile, so naming them was the whole gameplay half.
     // they are the only cells an open area writes that are not see-through. 14 is
-    // Const.TILE_ARCHIVE_HIGH, the corp archive's full-height shelving, on the same profile
+    // Const.TILE_ARCHIVE_HIGH, the corp archive's full-height shelving, on the same profile, and 15
+    // is Const.TILE_RACK_HIGH, a corp server rack
     0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
     // row 1 - region
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -145,6 +146,9 @@ class Default extends Tileset
       // the counter in the reception's wall is the marble desk it replaced
       if (tileID == Const.TILE_CORP_RECEPTION_COUNTER)
         return super.getIcon(Const.TILE_DARK_TABLE_MARBLE1_1X1);
+      // a locker is the server floor's twin it stands on
+      if (tileID == Const.TILE_CORP_LOCKER)
+        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       // and the exec rug is the boardroom's carpet, the one rug-like floor the tileset has
       if (tileID == Const.TILE_FLOOR_EXEC_RUG)
         return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING);
@@ -152,7 +156,8 @@ class Default extends Tileset
         return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING + 16);
       if (tileID == Const.TILE_FLOOR_SERVER + 16 ||
           tileID == Const.TILE_FLOOR_ARCHIVE + 16 ||
-          tileID == Const.TILE_ARCHIVE_HIGH)
+          tileID == Const.TILE_ARCHIVE_HIGH ||
+          tileID == Const.TILE_RACK_HIGH)
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       return super.getIcon(tileID);
     }

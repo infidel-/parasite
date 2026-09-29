@@ -978,6 +978,11 @@ class Const
   // unwalkable and not see-through in tiles.Default, so naming it is the whole gameplay half; it
   // looks like the archive's concrete and render.corp.CorpModel reads it as FIT_ARCHIVE_HIGH
   public static var TILE_ARCHIVE_HIGH = 14;
+  // and a SERVER RACK, which blocks sight for the same reason: a rack stands RACK_H 4.0 (2 m) of
+  // closed steel. Row 0's last spare slot, on the same unwalkable-and-opaque profile. The server
+  // room's ranks and the security room's rack column are laid on it; the machinery a wall
+  // dressing stands on the server twin (TILE_FLOOR_SERVER + 16) stays low and see-through
+  public static var TILE_RACK_HIGH = 15;
 
   // row 1
   public static var OFFSET_REGION = 16;
@@ -1221,6 +1226,9 @@ class Const
   // new table entry. render.corp.CorpModel reads it as floor with a fitting on it, so each corner
   // post ends in a face of its own
   public static var TILE_CORP_RECEPTION_COUNTER = OFFSET_ROW17 + 2;
+  // and a security room's STEEL LOCKER, one per cell down its west wall. Unwalkable and
+  // see-through, which row 17 already is past its two floors, so tiles.Default needs no entry
+  public static var TILE_CORP_LOCKER = OFFSET_ROW17 + 3;
   // and one receptionist per this many cells of it
   public static inline var RECEPTION_STATION_PITCH = 3;
 
