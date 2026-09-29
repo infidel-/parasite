@@ -327,8 +327,8 @@ class CorpReception
 // WHAT EACH COUNTER CARRIES, laid out and not rolled: a front desk is arranged. On the visitor's
 // LEDGE, the WELCOME board a cell in from the end nearer the lift (the side a visitor walks up
 // from), a desk plant at the other end, the bell beside the middle, and the visitor book with its pen, the
-// business cards and a lanyard badge lying on it. On the receptionist's WORKTOP, the phone beside
-// the workstation, the sticky notes on the other side of it, and a second plant at the lift end on a
+// business cards and a lanyard badge lying on it. On the receptionists' WORKTOP, a phone beside
+// each workstation, sticky notes on the other side of it, and a second plant at the lift end on a
 // counter long enough to have room for one. Every glb stands in a round contact on the top it stands on
   public static function dress(m:Facility):ReceptionDress
     {
@@ -381,14 +381,22 @@ class CorpReception
             decal(out, at(r, endB + toward * 1.0, lu), ledge, (hash >>> 8) % 628 * 0.01,
               CorpStyle.REC_DECALS[3]);
 
-          // the worktop
-          var side = (mid + toward >= 0 && mid + toward < r.len ? toward : -toward);
-          stand(out.phones, at(r, mid + side * 0.85, wu), CorpStyle.DESK_H, toRoom,
-            CorpStyle.REC_PHONE_R * CorpStyle.REC_PHONE_H, workRect);
-          decal(out, at(r, mid - side * 0.8, wu - 0.35), CorpStyle.DESK_H, toRoom + 0.3,
-            CorpStyle.REC_DECALS[4]);
+          // the worktop: a phone either side of every station, away from the lift end where the
+          // second plant stands, and the sticky notes on the other side unless that is the plant's
+          var plant = (r.len > 4);
+          for (k in Const.receptionStations(r.len))
+            {
+              var side = (k - toward >= 0 && k - toward < r.len ? -toward : toward);
+              stand(out.phones, at(r, k + side * 0.85, wu), CorpStyle.DESK_H, toRoom,
+                CorpStyle.REC_PHONE_R * CorpStyle.REC_PHONE_H, workRect);
+              var notes = k - side * 0.8;
+              if (!plant ||
+                  Math.abs(notes - endA) >= 1.0)
+                decal(out, at(r, notes, wu - 0.35), CorpStyle.DESK_H, toRoom + 0.3,
+                  CorpStyle.REC_DECALS[4]);
+            }
           // and the second plant at the OTHER end from the first, where it does not stack with it
-          if (r.len > 4)
+          if (plant)
             stand(out.plants, at(r, endA, wu), CorpStyle.DESK_H, hash * 0.002, plantR(),
               workRect);
         }
@@ -464,37 +472,38 @@ class CorpReception
       return Math.abs(a.x - b.x) + Math.abs(a.z - b.z);
     }
 
-// the receptionist: a task chair in the room behind the middle of each counter, facing it, and the
-// workstation on the worktop in front of it — into render.corp.CorpProps' own batches
+// the receptionists: a task chair in the room behind each station along a counter
+// (Const.receptionStations), facing it, and the workstation on the worktop in front of it — into
+// render.corp.CorpProps' own batches
   public static function place(m:Facility, chairs:Array<Models.PropPlace>,
       mons:Array<Models.PropPlace>, keys:Array<Models.PropPlace>):Void
     {
       for (r in runs(m))
-        {
-          var k = Std.int(r.len / 2);
-          var c = CityConfig.cellToWorld(r.col + (r.alongX ? k : 0), r.row + (r.alongX ? 0 : k));
-          var ux = FacilityGeom.DC[r.out];
-          var uz = FacilityGeom.DR[r.out];
-          // the chair faces the corridor, i.e. the counter; the screen looks back at the chair
-          chairs.push({
-            x: c.x - ux * CorpStyle.CHAIR_OUT,
-            z: c.z - uz * CorpStyle.CHAIR_OUT,
-            yaw: Math.atan2(ux, uz),
-          });
-          var mu = CorpStyle.REC_BACK_U - CorpStyle.REC_MON_IN;
-          var ku = CorpStyle.REC_BACK_U - CorpStyle.REC_KEY_IN;
-          mons.push({
-            x: c.x + ux * mu,
-            z: c.z + uz * mu,
-            yaw: Math.atan2(-ux, -uz),
-            y: CorpStyle.DESK_H,
-          });
-          keys.push({
-            x: c.x + ux * ku,
-            z: c.z + uz * ku,
-            yaw: Math.atan2(-ux, -uz),
-            y: CorpStyle.DESK_H,
-          });
-        }
+        for (k in Const.receptionStations(r.len))
+          {
+            var c = CityConfig.cellToWorld(r.col + (r.alongX ? k : 0), r.row + (r.alongX ? 0 : k));
+            var ux = FacilityGeom.DC[r.out];
+            var uz = FacilityGeom.DR[r.out];
+            // the chair faces the corridor, i.e. the counter; the screen looks back at the chair
+            chairs.push({
+              x: c.x - ux * CorpStyle.CHAIR_OUT,
+              z: c.z - uz * CorpStyle.CHAIR_OUT,
+              yaw: Math.atan2(ux, uz),
+            });
+            var mu = CorpStyle.REC_BACK_U - CorpStyle.REC_MON_IN;
+            var ku = CorpStyle.REC_BACK_U - CorpStyle.REC_KEY_IN;
+            mons.push({
+              x: c.x + ux * mu,
+              z: c.z + uz * mu,
+              yaw: Math.atan2(-ux, -uz),
+              y: CorpStyle.DESK_H,
+            });
+            keys.push({
+              x: c.x + ux * ku,
+              z: c.z + uz * ku,
+              yaw: Math.atan2(-ux, -uz),
+              y: CorpStyle.DESK_H,
+            });
+          }
     }
 }

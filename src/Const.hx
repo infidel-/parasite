@@ -432,6 +432,15 @@ class Const
   // machines, which exist on floor cells and nowhere else
   public static inline var FACILITY_FITTING_PCT = 60;
 
+// the cells along a reception counter `len` long that seat a receptionist, spread evenly: one per
+// RECEPTION_STATION_PITCH cells. gen.corp.CorpRooms deals the chairs off it and
+// render.corp.CorpReception the workstations, so the two cannot drift apart
+  public static function receptionStations(len: Int): Array<Int>
+    {
+      var n = 1 + Std.int((len - 1) / RECEPTION_STATION_PITCH);
+      return [for (i in 0...n) Std.int((i + 0.5) * len / n)];
+    }
+
 // which fitting an atlas frame draws as, or -1 for a decoration that keeps its sprite. an Int and
 // not a Null<_FittingKind> because every consumer stores it in an Int channel anyway — the render
 // grid holds kind + 1 with 0 for "nothing here"
@@ -1209,8 +1218,11 @@ class Const
   // and the RECEPTION COUNTER, which is not a floor at all: it stands IN THE WALL LINE, where the
   // reception's wall onto the corridor was, from one corner post to the other. Unwalkable and
   // see-through, which is what row 17 already is past its two floors, so tiles.Default needs no
-  // new table entry. render.corp.CorpModel reads it as a wall the line carries through
+  // new table entry. render.corp.CorpModel reads it as floor with a fitting on it, so each corner
+  // post ends in a face of its own
   public static var TILE_CORP_RECEPTION_COUNTER = OFFSET_ROW17 + 2;
+  // and one receptionist per this many cells of it
+  public static inline var RECEPTION_STATION_PITCH = 3;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

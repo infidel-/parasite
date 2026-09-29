@@ -35,3 +35,24 @@ emits it; `CorpModel` reads the id as `Surf.RECEPTION` floor with `CorpFurniture
   counter, so both marbles, the Phong top and the logo compile at boot.
 
 Verdict: **landed.**
+
+## Corp reception desks draw as desk glbs, not boardroom slabs
+
+The reception's back office (`gen.corp.CorpRooms.backOffice`, `docs/area-gen.md`) lays back-to-back
+desk banks on `Surf.RECEPTION`. `CorpFurniture.slabTop` listed RECEPTION among the table surfaces,
+for the OLD edge-row counter, so a bank came out as one boardroom slab with fascia and blade legs
+and monitors on it — the "four bare tables" bug the cubicle farm already had once.
+
+- **RECEPTION joins OPEN/CUBICLE in `deskCell` and leaves `slabTop`**: every reception table is a
+  `corp/desk-bench` glb. The only other reception tables are `decorateWalls`' lone wall tables, which
+  were desk glbs already by the lone rule. An old save's edge-row counter now draws as a row of desks.
+- **Seating needs nothing new.** `CorpProps.backHand` tries the two z hands first, so a bank running
+  along x finds its partner row as the back and seats the chair on the open side; the generator lays
+  banks along x only, because a bank along z would take its own run neighbour as the back.
+- **A receptionist per station** (`Const.receptionStations`, one per 3 cells): chair, monitor and
+  keyboard per station, a phone each on the side away from the lift-end plant, the sticky notes
+  dropped where they would land under that plant.
+- Live: a 5 x 7 room took one 2-desk bank, a wide one a 12-desk bank and two stations. Everything
+  rides existing batches (chair, workstation, desk-bench, phone), so no new batch; draw calls not A/B measured.
+
+Verdict: **landed.**

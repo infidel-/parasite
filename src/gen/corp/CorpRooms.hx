@@ -13,6 +13,7 @@ package gen.corp;
 
 import Const;
 import game.AreaGenerator.*;
+import game.AreaGenerator._Spot;
 import gen.GenTree;
 import gen.blocks.CorpBlocks;
 import gen.corp.CorpTemp.*;
@@ -73,6 +74,10 @@ class CorpRooms
   public static inline var SUITE_LEN_Y = 7;
   // and the biggest a plain exec office's rug may be, in cells on either axis
   public static inline var RUG_MAX = 4;
+  // the reception's back office: at most this many desk banks, one every this many rows (chair,
+  // desk, desk, chair)
+  public static inline var BACK_OFFICE_BANKS = 2;
+  public static inline var BACK_OFFICE_PITCH = 4;
 
 // the decoration groups that stand FLAT AGAINST A WALL in 3D and so never seal their cell: a bin
 // (0.66 across), a plant (1.35), a water cooler (0.58) and a whiteboard, which hangs on the wall and
@@ -83,6 +88,8 @@ class CorpRooms
     Const.CORP_PLANT,
     Const.CORP_COOLER,
     Const.CORP_WHITEBOARD,
+    // 1.20 deep: reported as an unwalkable tile in front of a reception's filing cabinet
+    Const.CORP_CABINET,
   ];
 
 // --- the shared spawn helpers. gen.facility.FacilityRooms has its own pair and they are NOT
@@ -1609,18 +1616,96 @@ class CorpRooms
         }
       var last = front[front.length - 1];
       GenTree.add(node, CorpBlocks.ZONE_COUNTER_RUN, front[0].x, front[0].y, last.x, last.y);
-      // and the receptionist's chair, behind the middle of it
-      var mid = front[Std.int(front.length / 2)];
-      area.addDecoration(mid.x - d.x, mid.y - d.y,
-        Const.CORP_CHAIR[0].row, area.random(Const.CORP_CHAIR[0].amount));
+      // and a receptionist's chair behind every station along it
+      var chairID = area.random(Const.CORP_CHAIR[0].amount);
+      for (k in Const.receptionStations(front.length))
+        area.addDecoration(front[k].x - d.x, front[k].y - d.y, Const.CORP_CHAIR[0].row, chairID);
+      lobbyPlants(state, front, d);
     }
 
-// NO WHITEBOARD: the back wall is where the company's name hangs, facing the counter
+// a tall plant in the corridor against each corner post, flanking the counter. A wall-hugger, so
+// the corridor cell stays floor
+  static function lobbyPlants(state: _CorpState, front: Array<_Spot>, d: { x:Int, y:Int })
+    {
+      var cells = state.area.getCells();
+      var along = deltaMap[front[0].dir90];
+      var last = front[front.length - 1];
+      for (p in [
+          { x: front[0].x - along.x, y: front[0].y - along.y },
+          { x: last.x + along.x, y: last.y + along.y },
+        ])
+        {
+          var x = p.x + d.x;
+          var y = p.y + d.y;
+          if (cells[x][y] == BLDG_CORRIDOR &&
+              !atDoor(cells, x, y) &&
+              !state.area.hasObjectAt(x, y))
+            addDecoration(state, x, y, Const.CORP_PLANT);
+        }
+    }
+
+// THE BACK OFFICE: banks of desks behind the receptionist, two rows back to back with a chair on
+// each outer side, running along x. A reception is dealt big (the counter wants the whole corridor
+// wall) and was reported as feeling empty: wall dressing and a lane was all it had. The banks stay
+// clear of the dressed side columns, the aisle beside each and the receptionist's lane, and a bank
+// that would cut the room off from a doorway is not laid (`roomOpen`)
+  static function backOffice(state: _CorpState, node: _GenNode, room: _Room, d: { x:Int, y:Int })
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var x0 = room.x1 + 2;
+      var x1 = room.x2 - 2;
+      // the first and last row a CHAIR may take: never the lane, nor the row in front of it
+      var lo = room.y1 + (d.y < 0 ? 2 : 0);
+      var hi = room.y2 - (d.y > 0 ? 2 : 0);
+      if (x1 < x0)
+        return;
+      var chairID = area.random(Const.CORP_CHAIR[0].amount);
+      var a = lo + 1;
+      var banks = 0;
+      while (a + 2 <= hi &&
+          banks < BACK_OFFICE_BANKS)
+        {
+          var blocked = new Map<Int, Bool>();
+          var ok = true;
+          for (x in x0...x1 + 1)
+            for (y in a...a + 2)
+              {
+                if (cells[x][y] != RECEPTION ||
+                    area.hasObjectAt(x, y) ||
+                    atDoor(cells, x, y))
+                  ok = false;
+                blocked.set(x * 1000 + y, true);
+              }
+          if (ok &&
+              roomOpen(state, room, blocked, RECEPTION))
+            {
+              GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, x0, a, x1, a + 1);
+              for (x in x0...x1 + 1)
+                for (i in 0...2)
+                  {
+                    cells[x][a + i] = Const.CORP_TABLE_3X1[1];
+                    addDecoration(state, x, a + i, Const.CORP_COMPUTERS);
+                    area.addDecoration(x, a + (i == 0 ? -1 : 2), Const.CORP_CHAIR[0].row,
+                      chairID);
+                  }
+              banks++;
+              a += BACK_OFFICE_PITCH;
+            }
+          else
+            a++;
+        }
+    }
+
+// NO WHITEBOARD: the back wall is where the company's name hangs, facing the counter. Dressed at
+// 80% and not 40, a workstation among the wall tables, and the back office's desk banks in the
+// middle: reported as feeling empty with a lane and the odd plant in a 5 x 7 room
   public static function reception(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, RECEPTION);
       decorateWalls(state, room, [
+          Const.CORP_COMPUTERS,
           Const.CORP_TABLE_PHONE,
           Const.CORP_TABLE_MISC,
           Const.CORP_TABLE_PLANTS,
@@ -1631,9 +1716,10 @@ class CorpRooms
         ],
         Const.TILE_DARK_TABLE_MARBLE1_1X1,
         Const.TILE_FLOOR_RECEPTION + UNWALKABLE_TILE_OFFSET,
-        40, 40);
+        80, 50);
       // AFTER the dressing, so the lane behind the counter is cleared of it
       counter(state, node, room);
+      backOffice(state, node, room, deltaMap[CorpBlocks.fronts.get(room.id)[0].dir]);
     }
 
 // a security post: the server room's floor, a bank of monitors on one wall and the machines that

@@ -1251,8 +1251,11 @@ class CorpFurniture
   public static function deskCell(m:Facility, col:Int, row:Int):Bool
     {
       var s = m.surf[row][col];
+      // a reception's tables are its back office's desk banks (gen.corp.CorpRooms.backOffice) and
+      // its lone wall tables; the counter itself is a fitting in the wall line, not a table
       if (s == Surf.OPEN ||
-          s == Surf.CUBICLE)
+          s == Surf.CUBICLE ||
+          s == Surf.RECEPTION)
         return true;
       if (s == Surf.KITCHEN ||
           s == Surf.WASHROOM)
@@ -1294,7 +1297,8 @@ class CorpFurniture
       // is also what calls `divider`. Seen in the game as four bare tables with monitors on them
       var s = m.surf[row][col];
       if (s == Surf.OPEN ||
-          s == Surf.CUBICLE)
+          s == Surf.CUBICLE ||
+          s == Surf.RECEPTION)
         return false;
       var x = tableAt(m, col - 1, row) || tableAt(m, col + 1, row);
       var z = tableAt(m, col, row - 1) || tableAt(m, col, row + 1);
@@ -1308,8 +1312,7 @@ class CorpFurniture
       // and a COUNTER or VANITY run (a plinthed carcass, correctly a box) are not tables
       if (s != Surf.MEETING &&
           s != Surf.CARPET &&
-          s != Surf.EXEC &&
-          s != Surf.RECEPTION)
+          s != Surf.EXEC)
         return false;
       return x || z;
     }

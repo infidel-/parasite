@@ -394,6 +394,13 @@ class GenRun
             add('reception/lift', Std.int(Math.abs((r.x1 + r.x2) / 2 - gen.blocks.CorpBlocks.liftX)) +
               Std.int(Math.abs((r.y1 + r.y2) / 2 - gen.blocks.CorpBlocks.liftY)));
             add('reception/counter', gen.blocks.CorpBlocks.fronts.get(r.id).length);
+            add('reception/area', r.w * r.h);
+            var desks = 0;
+            for (x in r.x1...r.x2 + 1)
+              for (y in r.y1...r.y2 + 1)
+                if (state.area.getCells()[x][y] == Const.CORP_TABLE_3X1[1])
+                  desks++;
+            add('reception/desks', desks);
           }
 
       GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));

@@ -1601,6 +1601,16 @@ the wall corners like a window.
   **7-12, worst 12** (`RECEPTION_NEAR` 36 → 14); counter 4-7 cells, mean 5.1.
 - **The renderer reads the counter as FLOOR with a fitting on it**, not as a wall — see the
   `3d-changes.md` entry "corp reception counter in the wall line".
+- **Reported as feeling empty, and a long counter as short of computers.** A receptionist per
+  `RECEPTION_STATION_PITCH` 3 cells (`Const.receptionStations`, read by the generator's chairs and
+  `CorpReception`'s workstations alike, so they cannot drift): 1 up to 3 cells, 2 up to 6, 3 at 7.
+  `backOffice` lays up to `BACK_OFFICE_BANKS` 2 back-to-back desk banks along x, a chair each side,
+  clear of the dressed columns, their aisles and the lane, each kept only if `roomOpen` still floods
+  the room from its doors: **3.6 desks a reception** at a mean 32-cell room. Wall dressing 40% → 80%
+  with `CORP_COMPUTERS` among the wall tables, and a `CORP_PLANT` in the corridor against each corner
+  post (a wall-hugger, the cell stays corridor). 3,000 seeds: 0 failures, 0 unreachable, 0 orphans.
+- **`CORP_CABINET` is a WALL_HUGGER** (1.20 deep in a 4.0 cell): the reception's dressing wrote the
+  twin under it and it was reported as an unwalkable tile in front of the cabinet.
 
 ## THE WINDOW RULE LIVES IN THE RENDERER, AND `makeWindows` WAS LEFT ALONE
 
