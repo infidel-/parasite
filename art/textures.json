@@ -4869,6 +4869,70 @@
       "last_converted": "2026-09-28T05:30:31",
       "built_linear": 0.2956,
       "built_srgb": 146.8
+    },
+    "corp/cctv-wall": {
+      "src": "corp/cctv-wall.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "res": [
+        512,
+        336
+      ],
+      "prompt": "A wall-mounted SECURITY VIDEO WALL seen dead straight on, flat front elevation, no perspective, filling the WHOLE image edge to edge: SIX flat-screen CCTV monitors in a 3 x 2 grid (three across, two rows), each with a thin dark anodised aluminium bezel, separated by narrow dark gaps, the outer bezels running exactly along the four edges of the image with nothing outside them. Every screen shows a DIFFERENT live security-camera feed rendered as a flat, slightly grainy MONOCHROME image in warm grey with a faint olive-green tint, clearly BRIGHTER than the dark bezels: TOP-LEFT a long office corridor seen from a high ceiling corner; TOP-MIDDLE an elevator lobby with two lift doors; TOP-RIGHT an underground parking garage with a parked car; BOTTOM-LEFT an open-plan office floor of desks seen from above; BOTTOM-MIDDLE a concrete stairwell; BOTTOM-RIGHT a reception desk with a figure standing at it. On each screen a tiny white timestamp in the top-left corner and a tiny white camera label \"CAM 01\" to \"CAM 06\" in the bottom-left corner, and a small red recording dot in the top-right corner. No reflections or glare on the glass, no wall, no cables, no mounting brackets visible. VALUE: the screens MEDIUM, the bezels very dark. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the security room's VIDEO WALL, one panel per console cell hung on the north wall over it (render.corp.CorpSecurity). ONE authored composition mapped 0..1, so the panel is locked to this 1024x672 source's aspect 1.524 -- res [512, 336] keeps it. Also the panel's EMISSIVE map: the bezels are near-black and do not glow, the feeds do. 1024x672 solo gen (gpt-image-2.5-flare, high, $0.034). No lift: srgb 56/57/53, spread 4.0, linear 0.0439 -- the emissive carries it.",
+      "last_converted": "2026-09-30T04:12:08",
+      "built_linear": 0.0468,
+      "built_srgb": 55.5
+    },
+    "corp/locker-front": {
+      "src": "corp/locker-front.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "The FRONT of a bank of TWO tall steel staff LOCKERS standing side by side, seen dead straight on in flat front elevation, no perspective, filling the WHOLE square image edge to edge: two equal full-height single locker doors, each exactly half the image wide, separated by one narrow dark vertical gap down the exact centre. Each door is charcoal powder-coated steel with a fine folded edge, a block of short horizontal ventilation louvres near its top and another near its bottom, a small brushed stainless lever handle with a round key lock at mid-height on its right side, and a small blank BRASS name-card holder at eye height. A slim dark recessed plinth runs along the very bottom edge of the image and a slim top rail along the very top edge. No text, no labels, no numbers, no stickers, no wall, no floor, nothing outside the lockers. VALUE: MEDIUM-DARK steel; the brass holders and the stainless handles are the only brighter accents. HUE: the steel PERFECTLY NEUTRAL charcoal grey \u2014 the red, green and blue values are equal, no blue or green cast. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "lift": 0.838,
+      "note": "a security room locker cell's FRONT: two full-height doors, mapped 0..1 over one cell-wide emitted locker bank (render.corp.CorpSecurity), so the bank is exactly as tall as it is wide. Solo 1024 gen (gpt-image-2.5-flare, high, $0.055), spread 3.7. lift 0.838 solved against corp/rack-front's built 0.0491 so the lockers and the racks across the room are one steel value.",
+      "last_converted": "2026-09-30T04:12:27",
+      "last_lift": 0.838,
+      "built_linear": 0.0525,
+      "built_srgb": 64.3
+    },
+    "corp/gun-cabinet-door": {
+      "src": "corp/gun-cabinet-door.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "res": [
+        512,
+        768
+      ],
+      "prompt": "The closed FRONT DOOR of a tall secure steel WEAPON CABINET, seen dead straight on in flat front elevation, no perspective, the single door FILLING THE WHOLE image edge to edge with nothing outside it. Heavy gunmetal-grey powder-coated steel with a raised pressed border panel inset a little from all four edges. Three heavy barrel hinges down the LEFT edge. On the RIGHT side at mid-height a stout vertical chrome lever handle beside a small black electronic keypad lock with one small AMBER status light. Across the upper part of the door the word \"ARMORY\" stencilled in large flat amber-yellow capital letters, and below it a small plain warning plate. A row of short ventilation slots near the bottom. No hazard stripes, no rust, no scratches, no wall, no floor. VALUE: MEDIUM-DARK steel; the amber stencil and the amber light are the only bright accents. HUE: the steel neutral gunmetal grey \u2014 no blue or green cast. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "lift": 0.956,
+      "note": "the gun cabinet's closed door (objects.GunCabinet), packed into models-src/corp/gun-cabinet-sheet.png by tools/modelsheet.py and never drawn as a label of its own. 672x1008 solo gen (gpt-image-2.5-flare, high, $0.033) = the door's own aspect 0.667, and res [512, 768] keeps it: the modelsheet cell is square, and mapping that cell 0..1 over the 0.667 door face undoes the squeeze. lift 0.956 onto corp/rack-front's 0.0491.",
+      "last_converted": "2026-09-30T04:12:45",
+      "last_lift": 0.956,
+      "built_linear": 0.0523,
+      "built_srgb": 62.0
+    },
+    "corp/gun-cabinet-inside": {
+      "src": "corp/gun-cabinet-inside.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "res": [
+        512,
+        768
+      ],
+      "prompt": "The INSIDE of an OPEN tall steel WEAPON CABINET, seen dead straight on in flat front elevation, no perspective, looking at its back panel, which FILLS THE WHOLE image edge to edge with nothing outside it. The back panel is dark gunmetal steel pegboard with a regular grid of small holes. Standing upright in grey foam cradles across the upper two thirds: THREE long guns side by side, stocks down and barrels up \u2014 a black pump-action shotgun, a black compact assault rifle and a second black shotgun, each clearly separated. Across the lower third a steel shelf holding two black pistols laid in grey foam cut-outs, a black stun baton lying horizontally, and two small olive ammunition boxes. Each weapon a flat, clean, readable silhouette in matte black with a thin lighter edge so it separates from the dark back panel. No door, no people, no text, no wall, no floor. VALUE: MEDIUM-DARK overall; the grey foam is the lightest thing. HUE: neutral greys, the ammunition boxes a muted olive. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "lift": 0.834,
+      "sat": 0.5,
+      "note": "the gun cabinet's back panel, seen through the open door (the gunCabinetOpen model). Same aspect and route as corp/gun-cabinet-door. Drop measured srgb 36/40/43, a 7.3 blue spread and linear 0.0183: lift 0.834 to 0.034 (a recess reads a step darker than the door face) and sat 0.5 against the cast, which a lift alone would have published.",
+      "last_converted": "2026-09-30T04:13:07",
+      "last_lift": 0.834,
+      "last_sat": 0.5,
+      "built_linear": 0.0368,
+      "built_srgb": 52.5
     }
   }
 }

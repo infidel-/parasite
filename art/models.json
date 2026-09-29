@@ -1556,6 +1556,30 @@
       "note": "the two-slot toaster, 220 tris, 0.64 x 0.36 x 0.4: a steel box, two dark slot plates proud on top, a dark lever. Wears kitchen-app-sheet. Hand-modelled (models-src/corp/kitchen_build.py), holes 0, coplanar 0, islands 1, texel_off 0 unless stated. Carries NO baseColor/lift: its sheet is packed by tools/modelsheet.py from BUILT labels.",
       "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/gun-cabinet": {
+      "src": "corp/corp-gun-cabinet.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the security room's gun cabinet SHUT (objects.GunCabinet, key gunCabinet), hand-modelled: 108 tris, 2.40 x 1.30 x 3.60 built at WORLD SIZE. One chamfered carcass whose front wears corp/gun-cabinet-door 0..1 -- the width is locked to that art's 0.667 aspect. Wears gun-cabinet-sheet.png (tools/modelsheet.py over the BUILT door, back-panel, rack-side and rack-top labels, the last two pre-tiled to 0.65x1.8 and 1.2x0.65), so NO baseColor and NO lift. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/gun_cabinet_build.py.",
+      "last_converted": "2026-09-29T23:18:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/gun-cabinet-open": {
+      "src": "corp/corp-gun-cabinet-open.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the same cabinet OPEN (key gunCabinetOpen): 264 tris, two flanks, a lid, a floor and a back panel wearing corp/gun-cabinet-inside, and the leaf swung 100 degrees about the hinge the door art draws on its left edge. Its footprint centre is (-0.231, -1.172) against the shut one's (0, 0), which render.world.ObjModels' `off` puts back after Models.normalize recentres it, or the carcass would jump when opened. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/gun_cabinet_build.py.",
+      "last_converted": "2026-09-29T23:18:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "corp/wall-cam": {
+      "src": "corp/corp-wall-cam.glb",
+      "tris": -1,
+      "tex": 256,
+      "note": "a wall-mounted CCTV camera for the tower's corridor corners (render.corp.CorpProps), hand-modelled: 124 tris, 0.26 x 0.88 x 0.42 -- a plate, an arm and a bullet head pitched 24 degrees down under a sun hood. Built ~1.6x a real one, the trinket rule. Wears corp/clutter-pack like the desk webcam (the same polymer, steel and amber at the same scale), so NO baseColor and NO lift; tex 256 as the other clutter-pack props. The red LED is a speck in CorpFurniture's leds buffer. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/wall_cam_build.py.",
+      "last_converted": "2026-09-29T23:19:49Z",
+      "last_sig": "n1/-1/256/0.01/-/-"
     }
   }
 }
