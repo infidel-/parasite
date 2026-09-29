@@ -56,3 +56,23 @@ and monitors on it — the "four bare tables" bug the cubicle farm already had o
   rides existing batches (chair, workstation, desk-bench, phone), so no new batch; draw calls not A/B measured.
 
 Verdict: **landed.**
+
+## Corp reception counter: ends proud of the post closed, arrises rounded, phone rebuilt
+
+- **The counter is deeper than the post it is set into, on purpose** (front 0.8, ledge 1.05 off the
+  wall line against a post's `thick / 2` 0.667), and its ends at a masonry post emitted NOTHING —
+  right for the part inside the post, wrong for the 0.13 (body) and 0.38 (ledge) standing proud of
+  it. Reported off a face pick as protruding round the wall corner with a quad missing.
+  `CorpReception.ends` now emits, at a masonry end, only the across-run strips outside the post's
+  `slab`; at an open end the whole face, as before.
+- **Rounded top arrises** on the ledge (every open hand) and the worktop (all but the body hand):
+  `CorpFurniture.roundEdge` / `inset` made public, `roundEdge` takes its radius (`REC_ROUND` 0.06
+  here, `TABLE_ROUND` 0.05 for the boardroom as before). Faces stop `rad` short of the top; the strip
+  proud of a post runs to the top, since there is no band there to hand over to.
+- **The phone was four boxes at 48 tris**, reported as "really blocky". Rebuilt in
+  `reception_build.py`: a body rounded in plan with a sloped, chamfered top, a waisted lathe handset
+  front to back on two cradles along the slope, the key pad in the slope, a cord to the flank.
+  **362 tris**, 0 holes / 0 coplanar / 1 island. `REC_PHONE_H` 0.321 / `REC_PHONE_R` 1.4255 off the
+  new 0.458 x 0.437 x 0.161.
+
+Verdict: **landed.**

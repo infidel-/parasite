@@ -251,6 +251,9 @@ class CorpStyle
   // of the edge row the receptionist sits in
   public static inline var REC_WORK_U = -1.9;
   public static inline var REC_WORK_T = 0.1;
+  // the radius both slabs' open top arrises are rounded to (CorpFurniture.roundEdge), in
+  // TABLE_ROUND_SEG bands. Reported as a hard edge off the ledge's and the worktop's front faces
+  public static inline var REC_ROUND = 0.06;
   // the marble's world period: one 512 swatch over a CELL, the desk laminate's own density
   public static inline var REC_TILE = 4.0;
   // the workstation on the worktop, in from the body's room face: the screen at the back of the
@@ -261,8 +264,8 @@ class CorpStyle
   // THE COUNTER'S TRINKETS (render.corp.CorpReception.dress), hand-modelled and drawn at TWICE their
   // built height for the exec trinkets' reason: sized off the counter and not off the real object.
   // _R is half the glb's widest extent over its own height, the form CLUTTER_PROP_R keeps
-  public static inline var REC_PHONE_H = 0.31;
-  public static inline var REC_PHONE_R = 1.548;
+  public static inline var REC_PHONE_H = 0.321;
+  public static inline var REC_PHONE_R = 1.4255;
   // the board at THREE times: at two its WELCOME was 44 x 16 px from the rig camera on a counter
   // that is 28 units long, and a sign nobody can read is not a sign
   public static inline var REC_BOARD_H = 0.7053;

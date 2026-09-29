@@ -218,6 +218,7 @@ class CorpReception
       var workTop = CorpStyle.DESK_H;
       var workBot = workTop - CorpStyle.REC_WORK_T;
       var t = CorpStyle.REC_TILE;
+      var rad = CorpStyle.REC_ROUND;
       var front = CorpFurniture.buf(CorpStyle.RECEPTION_FRONT);
       var top = CorpFurniture.buf(CorpStyle.RECEPTION_TOP);
       var oak = CorpFurniture.buf(CorpStyle.COUNTER_FRONT);
@@ -228,23 +229,33 @@ class CorpReception
       // its room face in two strips, under the worktop and over it
       FacilityGeom.face(oak, b.x0, b.x1, b.z0, b.z1, back, 0.0, workBot, t);
       FacilityGeom.face(oak, b.x0, b.x1, b.z0, b.z1, back, workTop, bodyTop, t);
-      ends(front, b, e0, open0, open1, 0.0, bodyTop, t);
+      ends(m, r, front, b, 0.0, bodyTop, bodyTop, t);
 
-      // the LEDGE: its top, the overhang's underside, and its edges
+      // the LEDGE: its top with the arris rounded on every open hand, the overhang's underside,
+      // and its edges up to where the rounding takes over
       var l = rect(r, v, CorpStyle.REC_BACK_U, CorpStyle.REC_FRONT_U + CorpStyle.REC_LEDGE_OVER);
       var over = rect(r, v, CorpStyle.REC_FRONT_U, CorpStyle.REC_FRONT_U + CorpStyle.REC_LEDGE_OVER);
-      FacilityGeom.cap(top, l.x0, l.x1, l.z0, l.z1, CorpStyle.REC_LEDGE_H, t);
+      var ol = [for (dir in 0...4) dir == d || dir == back || (dir == e0 && open0) ||
+        (dir == e0 + 1 && open1)];
+      var li = CorpFurniture.inset(l, ol, rad);
+      FacilityGeom.cap(top, li.x0, li.x1, li.z0, li.z1, CorpStyle.REC_LEDGE_H, t);
+      CorpFurniture.roundEdge(top, l, ol, CorpStyle.REC_LEDGE_H, t, rad);
       FacilityGeom.capDown(top, over.x0, over.x1, over.z0, over.z1, bodyTop, t);
-      FacilityGeom.face(front, l.x0, l.x1, l.z0, l.z1, d, bodyTop, CorpStyle.REC_LEDGE_H, t);
-      FacilityGeom.face(front, l.x0, l.x1, l.z0, l.z1, back, bodyTop, CorpStyle.REC_LEDGE_H, t);
-      ends(front, l, e0, open0, open1, bodyTop, CorpStyle.REC_LEDGE_H, t);
+      FacilityGeom.face(front, l.x0, l.x1, l.z0, l.z1, d, bodyTop, CorpStyle.REC_LEDGE_H - rad, t);
+      FacilityGeom.face(front, l.x0, l.x1, l.z0, l.z1, back, bodyTop, CorpStyle.REC_LEDGE_H - rad,
+        t);
+      ends(m, r, front, l, bodyTop, CorpStyle.REC_LEDGE_H - rad, CorpStyle.REC_LEDGE_H, t);
 
-      // the WORKTOP, a slab off the body's room face with nothing under it but the knee space
+      // the WORKTOP, a slab off the body's room face with nothing under it but the knee space. Its
+      // hand against the body is the one arris that is not open
       var w = rect(r, v, CorpStyle.REC_WORK_U, CorpStyle.REC_BACK_U);
-      FacilityGeom.cap(top, w.x0, w.x1, w.z0, w.z1, workTop, t);
+      var ow = [for (dir in 0...4) dir == back || (dir == e0 && open0) || (dir == e0 + 1 && open1)];
+      var wi = CorpFurniture.inset(w, ow, rad);
+      FacilityGeom.cap(top, wi.x0, wi.x1, wi.z0, wi.z1, workTop, t);
+      CorpFurniture.roundEdge(top, w, ow, workTop, t, rad);
       FacilityGeom.capDown(top, w.x0, w.x1, w.z0, w.z1, workBot, t);
-      FacilityGeom.face(front, w.x0, w.x1, w.z0, w.z1, back, workBot, workTop, t);
-      ends(front, w, e0, open0, open1, workBot, workTop, t);
+      FacilityGeom.face(front, w.x0, w.x1, w.z0, w.z1, back, workBot, workTop - rad, t);
+      ends(m, r, front, w, workBot, workTop - rad, workTop, t);
 
       // and its contact: the body and the worktop's shadow on the floor, and a halo up each post
       FacilityDetail.ground(m, {
@@ -257,14 +268,36 @@ class CorpReception
       });
     }
 
-// the end faces of one box, on whichever of its two run ends is open
-  static function ends(b:MeshBuf, r:Rect, e0:Int, open0:Bool, open1:Bool, y0:Float, y1:Float,
-      t:Float):Void
+// the end faces of one box: whole on an open end, up to `y1` where the rounded arris takes over.
+// On an end that butts a corner post only the part standing PROUD of the post's two faces — the
+// counter is deeper than the post it is set into (its front stands out into the corridor on
+// purpose), and with no end at all there the ledge was reported as protruding round the wall corner
+// with a quad missing. That part has no rounded arris to hand over to, so it runs to `yTop`
+  static function ends(m:Facility, r:ReceptionRun, b:MeshBuf, box:Rect, y0:Float, y1:Float,
+      yTop:Float, t:Float):Void
     {
-      if (open0)
-        FacilityGeom.face(b, r.x0, r.x1, r.z0, r.z1, e0, y0, y1, t);
-      if (open1)
-        FacilityGeom.face(b, r.x0, r.x1, r.z0, r.z1, e0 + 1, y0, y1, t);
+      for (far in [false, true])
+        {
+          var dir = (r.alongX ? 2 : 0) + (far ? 1 : 0);
+          var c = endCell(r, far);
+          if (!FacilityModel.isWall(m, c.col, c.row))
+            {
+              FacilityGeom.face(b, box.x0, box.x1, box.z0, box.z1, dir, y0, y1, t);
+              continue;
+            }
+          // across the run: the box's extent, and the post's
+          var s = FacilityGeom.slab(m, c.col, c.row);
+          var a0 = (r.alongX ? box.z0 : box.x0);
+          var a1 = (r.alongX ? box.z1 : box.x1);
+          var p0 = (r.alongX ? s.z0 : s.x0);
+          var p1 = (r.alongX ? s.z1 : s.x1);
+          for (p in [[a0, Math.min(a1, p0)], [Math.max(a0, p1), a1]])
+            if (p[1] - p[0] > 0.001)
+              FacilityGeom.face(b,
+                (r.alongX ? box.x0 : p[0]), (r.alongX ? box.x1 : p[1]),
+                (r.alongX ? p[0] : box.z0), (r.alongX ? p[1] : box.z1),
+                dir, y0, yTop, t);
+        }
     }
 
 // is there masonry past this end of the run

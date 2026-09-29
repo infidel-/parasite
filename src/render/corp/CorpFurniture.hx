@@ -467,7 +467,7 @@ class CorpFurniture
       if (y0 > 0)
         {
           FacilityGeom.capDown(buf(top), r.x0, r.x1, r.z0, r.z1, y0, tile);
-          roundEdge(buf(side), r, open, h, sideTile);
+          roundEdge(buf(side), r, open, h, sideTile, CorpStyle.TABLE_ROUND);
         }
       for (dir in 0...4)
         {
@@ -503,13 +503,13 @@ class CorpFurniture
     }
 
 // a slab's rounded top arris: TABLE_ROUND_SEG bands on every open hand, each band the rect inset
-// along a quarter circle of radius TABLE_ROUND. Every band insets both open hands of a corner by the
+// along a quarter circle of radius `rad`. Every band insets both open hands of a corner by the
 // same amount, so two hands meet in a mitre there, and a CLOSED hand is never inset, so the band runs
 // on into the next cell's. Reported off a face pick on the fascia as a hard 90 degree edge
-  static function roundEdge(b:MeshBuf, r:Rect, open:Array<Bool>, h:Float, t:Float):Void
+  public static function roundEdge(b:MeshBuf, r:Rect, open:Array<Bool>, h:Float, t:Float,
+      rad:Float):Void
     {
       var n = CorpStyle.TABLE_ROUND_SEG;
-      var rad = CorpStyle.TABLE_ROUND;
       for (k in 0...n)
         {
           var a0 = Math.PI / 2 * k / n;
@@ -534,7 +534,7 @@ class CorpFurniture
     }
 
 // a rect pulled in by `d` on each open hand (FacilityGeom.ends' numbering: 0 -z, 1 +z, 2 -x, 3 +x)
-  static function inset(r:Rect, open:Array<Bool>, d:Float):Rect
+  public static function inset(r:Rect, open:Array<Bool>, d:Float):Rect
     {
       return {
         x0: r.x0 + (open[2] ? d : 0),
