@@ -107,6 +107,10 @@ class CorpStyle
   public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
   public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
   public static inline var TABLE_TOP = 'textures/corp/table-top.png';
+  // and the reception counter's two marbles, cut from one packed sheet (art/textures.json
+  // corp/reception-pack): the TOP of both tiers, and the corridor-side FRONT and the ledge's edges
+  public static inline var RECEPTION_TOP = 'textures/corp/reception-top.png';
+  public static inline var RECEPTION_FRONT = 'textures/corp/reception-front.png';
   // and the whiteboard's face, ONE authored composition mapped 0..1 over the board (a frame, a
   // marker tray, a sketch), so render.corp.CorpDeco locks the board's aspect to this 1024x768 source
   public static inline var WHITEBOARD = 'textures/corp/whiteboard.png';
@@ -223,6 +227,33 @@ class CorpStyle
   // 0x444444 / 120 is a tight glint and leaves the rest of the top wood
   public static inline var TABLE_SPECULAR = 0x444444;
   public static inline var TABLE_SHININESS = 120.0;
+
+  // THE RECEPTION COUNTER, which stands IN THE WALL LINE where the reception's wall onto the
+  // corridor was (render.corp.CorpReception). Every depth is off the WALL CELL's centre line, `u`
+  // positive toward the corridor; the cell is CELL 4.0 across, so all of it fits inside the one
+  // cell the wall stood in and the room keeps its whole edge row for the receptionist.
+  //
+  // TWO TIERS, the front desk's own silhouette: a tall body with a marble TRANSACTION LEDGE at
+  // 1.1 m on the visitor's side, and the receptionist's worktop at DESK_H behind it
+  public static inline var REC_LEDGE_H = 2.2;
+  // the ledge slab's thickness, and how far it overhangs the body's front
+  public static inline var REC_LEDGE_T = 0.1;
+  public static inline var REC_LEDGE_OVER = 0.25;
+  // the body's corridor face and its room face. the front stands 0.2 proud of an interior wall's
+  // own face (WALL_INNER / 2 = 0.6), so the counter reads as a thing set INTO the opening
+  public static inline var REC_FRONT_U = 0.8;
+  public static inline var REC_BACK_U = -0.2;
+  // the worktop's room edge, and its slab. -1.9 and not the cell boundary, so it stops just short
+  // of the edge row the receptionist sits in
+  public static inline var REC_WORK_U = -1.9;
+  public static inline var REC_WORK_T = 0.1;
+  // the marble's world period: one 512 swatch over a CELL, the desk laminate's own density
+  public static inline var REC_TILE = 4.0;
+  // the workstation on the worktop, in from the body's room face: the screen at the back of the
+  // top and the keyboard toward its edge. The worktop is 1.7 deep, where DESK_TOP_D is 3.30 — so
+  // not MON_BACK / KEY_FWD, which were fitted to the deeper top and put the keys off its edge
+  public static inline var REC_MON_IN = 0.5;
+  public static inline var REC_KEY_IN = 1.3;
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;

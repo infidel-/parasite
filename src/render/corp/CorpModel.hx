@@ -355,8 +355,11 @@ class CorpModel
           t == Const.TILE_FLOOR_EXEC_RUG ||
           t == Const.TILE_FLOOR_EXEC_RUG + 16)
         return EXEC;
+      // AND ITS COUNTER, which stands in the wall line on the reception's own floor: a fitting
+      // (see `fitOf`) and not a wall, so the corner posts either side end in faces of their own
       if (t == Const.TILE_FLOOR_RECEPTION ||
-          t == Const.TILE_FLOOR_RECEPTION + 16)
+          t == Const.TILE_FLOOR_RECEPTION + 16 ||
+          t == Const.TILE_CORP_RECEPTION_COUNTER)
         return RECEPTION;
       if (t == Const.TILE_FLOOR_MARBLE2 ||
           t == Const.TILE_FLOOR_MARBLE2 + 16)
@@ -392,7 +395,7 @@ class CorpModel
 
 // which piece of furniture a corp tile id stands, as one of CorpFurniture's codes.
 //
-// FOUR IDS AND NOTHING ELSE, and every one of them is a floor tile's UNWALKABLE TWIN (one tileset
+// FIVE IDS AND NOTHING ELSE, and all but the reception counter are a floor tile's UNWALKABLE TWIN (one tileset
 // row down, gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
 // uses to say "something stands here" without a tile of its own, and it is why the surface grid
 // cannot answer: a spine cell, a rack cell, a basin cell and an archive rank cell all paint their
@@ -420,6 +423,10 @@ class CorpModel
       // generator's word on which family stands there: the arch-shelf
       if (t == Const.TILE_ARCHIVE_HIGH)
         return CorpFurniture.FIT_ARCHIVE_HIGH;
+      // and the reception counter, which is a tile of its own and not a twin: it stands where a
+      // wall stood, on no room's floor, so there was no floor id to take a twin of
+      if (t == Const.TILE_CORP_RECEPTION_COUNTER)
+        return CorpFurniture.FIT_COUNTER;
       return 0;
     }
 
@@ -503,6 +510,10 @@ class CorpModel
       m.fit[4][13] = CorpFurniture.FIT_ARCHIVE;
       m.fit[6][12] = CorpFurniture.FIT_ARCHIVE;
       m.fit[6][13] = CorpFurniture.FIT_ARCHIVE;
+      // and a reception counter on the reception band (column 18), for its two marbles and the
+      // top's PHONG program
+      m.fit[8][18] = CorpFurniture.FIT_COUNTER;
+      m.fit[9][18] = CorpFurniture.FIT_COUNTER;
       FacilityModel.findStructures(m, false);
       FacilityModel.findWindows(m);
       // ONE DOOR OF EVERY LOOK, because a look is an image: render.facility.FacilityDoors builds a

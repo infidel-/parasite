@@ -175,6 +175,8 @@ class CorpProps
       for (c in CorpDeco.cells(area, CorpDeco.K_WORK))
         work.set(c.row * m.w + c.col, true);
       desks(m, chairs, mons, keys, work);
+      // and the receptionist behind each counter, on the same three batches
+      CorpReception.place(m, chairs, mons, keys);
       tables(m, benches, legs);
       boardChairs(m, chairs);
       // and the exec office's, whose workstation rides the two batches above

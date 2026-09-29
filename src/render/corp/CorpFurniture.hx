@@ -162,6 +162,9 @@ class CorpFurniture
   // and a rank of it the generator laid FULL HEIGHT, on the tile that blocks sight: the arch-shelf
   // family, where FIT_ARCHIVE in a rank is the racking
   public static inline var FIT_ARCHIVE_HIGH = 5;
+  // and the RECEPTION COUNTER, in the wall line where the reception's corridor wall was. Emitted by
+  // render.corp.CorpReception into these same buffers, per run and not per cell
+  public static inline var FIT_COUNTER = 6;
   // and the three rows of ARCH below, by name
   public static inline var ARCH_CASE = 0;
   public static inline var ARCH_SHELF = 1;
@@ -273,6 +276,7 @@ class CorpFurniture
               }
           }
       archives(m, n);
+      n.counters += CorpReception.build(m);
       // the casework the tower's own decoration objects stand for, into these SAME buffers so a
       // cabinet, a fridge and a vending machine cost no draw call of their own — see CorpDeco
       deco = {
@@ -293,7 +297,9 @@ class CorpFurniture
       // shadow.autoUpdate = false, so a map re-renders only when its slot changes owner
       for (tex in bufs.keys())
         {
-          if (tex == CorpStyle.TABLE_TOP)
+          // and the reception's marble top is polished stone, on the same highlight
+          if (tex == CorpStyle.TABLE_TOP ||
+              tex == CorpStyle.RECEPTION_TOP)
             glossy(scene, bufs.get(tex), tex);
           else
             FacilityGeom.add(scene, bufs.get(tex), tex, true, true);
