@@ -1773,9 +1773,14 @@ class CorpRooms
       // be opened from: a cabinet cell walled in by lockers and the desk run is a walkable tile
       // nothing reaches, and CorpConnect.openPockets tore the DESK out to get to it — measured as 199
       // security rooms in 3000 with no desk. The locker nearest the run's middle that has it
+      //
+      // AND NEVER IN A CORNER: the render turns it by its wall (render.world.ObjModels, WALL yaw), and
+      // a corner has two, the north one asked first -- a cabinet in the west column turned to face
+      // down its own locker run
       var cab = -1;
       for (i in 0...lockers.length)
         if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
+            !corner(room, lockers[i].x, lockers[i].y) &&
             (cab < 0 ||
             Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)))
           cab = i;
@@ -1819,6 +1824,17 @@ class CorpRooms
           if (dx != Std.int(n / 2))
             area.addDecoration(tx + dx, ty + 1, Const.CORP_CHAIR[0].row,
               area.random(Const.CORP_CHAIR[0].amount));
+        }
+      // AND THE WALL BEHIND IT IS MASONRY: render.corp.CorpSecurity hangs the video wall there and a
+      // pane cannot hang on partition glass, which CorpBuilding.makeWindows runs along most inner
+      // walls. A room of monitors does not look out onto the corridor anyway. The facade's own
+      // curtain wall is left alone, and a console under it goes without its screens
+      for (x in room.x1...room.x2 + 1)
+        {
+          var t = cells[x][room.y1 - 1];
+          if (t >= INNER_WINDOW &&
+              t <= INNER_WINDOWV3)
+            cells[x][room.y1 - 1] = BLDG_INNER_WALL;
         }
       return true;
     }

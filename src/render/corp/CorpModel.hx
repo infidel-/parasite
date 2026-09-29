@@ -447,8 +447,9 @@ class CorpModel
 
 // which piece of furniture a corp tile id stands, as one of CorpFurniture's codes.
 //
-// SIX IDS AND NOTHING ELSE, and all but the reception counter and the sight-blocking ranks are a floor tile's UNWALKABLE TWIN (one tileset
-// row down, gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
+// SEVEN IDS AND NOTHING ELSE, and all but the reception counter, the locker and the sight-blocking
+// ranks are a floor tile's UNWALKABLE TWIN (one tileset row down,
+// gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET). That is the whole trick the corp generator
 // uses to say "something stands here" without a tile of its own, and it is why the surface grid
 // cannot answer: a spine cell, a rack cell, a basin cell and an archive rank cell all paint their
 // room's own floor.
@@ -480,6 +481,10 @@ class CorpModel
       // wall stood, on no room's floor, so there was no floor id to take a twin of
       if (t == Const.TILE_CORP_RECEPTION_COUNTER)
         return CorpFurniture.FIT_COUNTER;
+      // and a security room's locker, a tile of its own for the counter's reason: its room's floor
+      // twin is already the rack
+      if (t == Const.TILE_CORP_LOCKER)
+        return CorpFurniture.FIT_LOCKER;
       return 0;
     }
 
@@ -565,6 +570,7 @@ class CorpModel
       m.fit[6][13] = CorpFurniture.FIT_ARCHIVE;
       // and a reception counter on the reception band (column 18), for its two marbles and the
       // top's PHONG program
+      m.fit[10][1] = CorpFurniture.FIT_LOCKER;
       m.fit[8][18] = CorpFurniture.FIT_COUNTER;
       m.fit[9][18] = CorpFurniture.FIT_COUNTER;
       FacilityModel.findStructures(m, false);

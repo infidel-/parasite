@@ -118,6 +118,8 @@ class CorpArea implements Area3D
       // prop's footprint is not known until its builder has run, and the attach above had to come
       // first because ContactMask.patch reads `on` when a floor material is created
       fit = CorpFurniture.build(scene, model, game.area);
+      // and the security room's video wall, its own emissive material, inside the same mask window
+      CorpSecurity.build(scene, model);
       // and the glb props ON that furniture and against the walls round it. AFTER the fittings
       // because a chair's seat cell and a printer's wall are both read off the same grid the
       // fittings were emitted from, and BEFORE the contact repaint below because every one of
@@ -172,6 +174,7 @@ class CorpArea implements Area3D
       ContactMask.repaint();
       doors = FacilityDoors.build(scene, model, game.area);
       props = render.world.ObjModels.build(scene, game, objYaw, objLift);
+      indoorProps();
       chunks.build(scene, pre);
       // the same pair of predicates the compound passes: a blocker is masonry that is not glazed,
       // and `carries` is what slab() insets against, so the reveal pulls back off exactly the floor
@@ -423,6 +426,12 @@ class CorpArea implements Area3D
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);
+      // the object props' own pass, FacilityArea's three lines: without it the ghost and hull twins
+      // drew every frame and a cabinet opened on this floor kept its shut batch too — the cull is
+      // what writes each batch's mask into its instance count
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
+      render.world.PropShader.tick(opts.dtMs);
+      render.world.PropGlow.tick(opts.dtMs);
     }
 
   public function setTactical(v:Bool):Void
@@ -479,5 +488,29 @@ class CorpArea implements Area3D
       doors = FacilityDoors.build(built, model, game.area);
       render.world.ObjModels.dispose(built, props);
       props = render.world.ObjModels.build(built, game, objYaw, objLift);
+      indoorProps();
+    }
+
+// THE OBJECT PROPS TAKE THE INDOOR LIGHT SWAP TOO, which render.corp.CorpProps.batch gives its own
+// behind the same loader callback and render.world.ObjModels, being every area kind's, does not. The
+// gun cabinet was the tower's first object glb, and its lid came out moonlit navy beside lockers of
+// the very same steel. The patch marks the path's shared material, so a rebuild re-patches nothing
+  function indoorProps():Void
+    {
+      for (b in props)
+        render.Models.get(b.model.path, function(_)
+          {
+            patchObj(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
+          });
+    }
+
+// patch one object prop row, IN CorpProps.batch's ORDER: the shared chain, then the indoor swap.
+// Public for render.corp.CorpWarm, which must spell the same program key (ObjModels.patchRow's note)
+  public static function patchObj(m:render.world.ObjModels.ObjModel, so:InstancedMesh,
+      gh:InstancedMesh, hu:InstancedMesh):Void
+    {
+      render.world.ObjModels.patchRow(m, so, gh, hu);
+      IndoorMask.patch(so.material);
+      IndoorMask.patch(gh.material);
     }
 }

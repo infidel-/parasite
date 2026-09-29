@@ -1589,6 +1589,9 @@ class FacilityStyle
   // 0x8294c0) and blue is the one accent that cannot read against it
   public static inline var DECO_LED_AMBER = 0xffb066;
   public static inline var DECO_LED_GREEN = 0x86ffa8;
+  // and a THIRD, a CCTV camera's recording light (render.corp.CorpSecurity.cams): its own mode on
+  // the same mesh, 8 on the blue channel, so it blinks for no draw call
+  public static inline var DECO_LED_RED = 0xff3a2a;
   // the HDR multiplier that carries a light over BLOOM_THRESHOLD, the same job GLOW does for the
   // ceiling panels
   public static inline var DECO_LED_GLOW = 2.6;

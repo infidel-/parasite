@@ -1850,15 +1850,22 @@ class FacilityDeco
       var uB = { value: new Color(FacilityStyle.DECO_LED_GREEN)
         .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
       var uC = { value: new Color(FacilityStyle.WORK_SCREEN_GLOW) };
+      var uD = { value: new Color(FacilityStyle.DECO_LED_RED)
+        .multiplyScalar(FacilityStyle.DECO_LED_GLOW) };
       var uScr = { value: FacilityStyle.DECO_SCREEN_RATE };
       var uScr2 = { value: FacilityStyle.DECO_SCREEN_RATE2 };
       var uScrD = { value: FacilityStyle.DECO_SCREEN_DEPTH };
       var uAnal = { value: FacilityStyle.DECO_ANAL_LED_RATE };
       var inject =
-        '  float decoAnal = step( 5.5, vColor.b );\n' +
-        '  float decoScr = step( 3.5, vColor.b ) * ( 1.0 - decoAnal );\n' +
-        '  float decoMode = step( 1.5, vColor.b ) * ( 1.0 - decoScr ) * ( 1.0 - decoAnal );\n' +
-        '  float decoHue = vColor.b - 2.0 * decoMode - 4.0 * decoScr - 6.0 * decoAnal;\n' +
+        // 8 AND UP IS A CAMERA'S RED RECORDING LIGHT, which blinks like a rack port: every mode
+        // flag below it is zero there, so it takes `decoBlink` and only the colour differs
+        '  float decoRed = step( 7.5, vColor.b );\n' +
+        '  float decoAnal = step( 5.5, vColor.b ) * ( 1.0 - decoRed );\n' +
+        '  float decoScr = step( 3.5, vColor.b ) * ( 1.0 - decoAnal ) * ( 1.0 - decoRed );\n' +
+        '  float decoMode = step( 1.5, vColor.b ) * ( 1.0 - decoScr ) * ( 1.0 - decoAnal ) *\n' +
+        '    ( 1.0 - decoRed );\n' +
+        '  float decoHue = vColor.b - 2.0 * decoMode - 4.0 * decoScr - 6.0 * decoAnal -\n' +
+        '    8.0 * decoRed;\n' +
         '  float decoBlink = 1.0 - decoLedDepth + decoLedDepth *\n' +
         '    step( 0.5, fract( decoLedTime * decoLedRate + vColor.g ) );\n' +
         '  float decoRun = pow( 1.0 -\n' +
@@ -1872,7 +1879,8 @@ class FacilityDeco
         '  float decoHead = abs( 2.0 * fract( decoLedTime * decoAnalRate ) - 1.0 );\n' +
         '  float decoScan = pow( max( 0.0, 1.0 - 2.0 *\n' +
         '    abs( fract( decoHead - vColor.g + 0.5 ) - 0.5 ) ), decoLedTail );\n' +
-        '  diffuseColor.rgb = mix( mix( decoLedA, decoLedB, decoHue ), decoLedC, decoScr ) *\n' +
+        '  diffuseColor.rgb = mix( mix( mix( decoLedA, decoLedB, decoHue ), decoLedC, decoScr ),\n' +
+        '    decoLedD, decoRed ) *\n' +
         '    ( vColor.r * mix( mix( mix( decoBlink, decoRun, decoMode ), decoFlick, decoScr ),\n' +
         '      decoScan, decoAnal ) );\n';
       var prev:Dynamic = mat.onBeforeCompile;
@@ -1890,6 +1898,7 @@ class FacilityDeco
           shader.uniforms.decoLedA = uA;
           shader.uniforms.decoLedB = uB;
           shader.uniforms.decoLedC = uC;
+          shader.uniforms.decoLedD = uD;
           shader.uniforms.decoScrRate = uScr;
           shader.uniforms.decoScrRate2 = uScr2;
           shader.uniforms.decoScrDepth = uScrD;
@@ -1906,6 +1915,7 @@ class FacilityDeco
             'uniform vec3 decoLedA;\n' +
             'uniform vec3 decoLedB;\n' +
             'uniform vec3 decoLedC;\n' +
+            'uniform vec3 decoLedD;\n' +
             StringTools.replace(shader.fragmentShader, '#include <color_fragment>', inject);
         };
       if (prev != null)

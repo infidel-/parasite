@@ -134,6 +134,7 @@ package three;
   public var isInstancedMesh:Bool;
   public function add(o:Object3D):Void;
   public function remove(o:Object3D):Void;
+  public function removeFromParent():Void; // detach from whatever holds it: the scene, or a Chunks group
   public function traverse(cb:Object3D->Void):Void;
   public function traverseVisible(cb:Object3D->Void):Void; // traverse, skipping every hidden subtree
   public function applyMatrix4(m:Matrix4):Void;

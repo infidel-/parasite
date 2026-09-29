@@ -230,6 +230,8 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpDesk, benches, CorpStyle.DESK_GLB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
       out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
+      // the CCTV cameras on the corridor's corners, off the same grid the LED pass reads
+      out.push(batch(scene, RenderConfig.MODELS.corpWallCam, CorpSecurity.cams(m), CorpStyle.CAM_H));
       // walnut, leather and brass: the brass is the only metal and it is trim, so no reflection
       out.push(batch(scene, RenderConfig.MODELS.corpExecDesk, ex.desk, CorpStyle.EXEC_DESK_H, false));
       out.push(batch(scene, RenderConfig.MODELS.corpExecDesk3, ex.desk3, CorpStyle.EXEC_DESK_H,

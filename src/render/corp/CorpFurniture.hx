@@ -165,6 +165,8 @@ class CorpFurniture
   // and the RECEPTION COUNTER, in the wall line where the reception's corridor wall was. Emitted by
   // render.corp.CorpReception into these same buffers, per run and not per cell
   public static inline var FIT_COUNTER = 6;
+  // and a security room's LOCKER BANK, off Const.TILE_CORP_LOCKER: see `locker`
+  public static inline var FIT_LOCKER = 7;
   // and the three rows of ARCH below, by name
   public static inline var ARCH_CASE = 0;
   public static inline var ARCH_SHELF = 1;
@@ -272,6 +274,9 @@ class CorpFurniture
                 case FIT_FIXTURE:
                   washroom(m, col, row, n);
 
+                case FIT_LOCKER:
+                  locker(m, col, row);
+
                 default:
               }
           }
@@ -310,6 +315,8 @@ class CorpFurniture
       // and no per-frame work beyond FacilityDeco.tick
       n.leds = Std.int(leds.idx.length / 6);
       n.cables = Std.int(cables.idx.length / 6);
+      // and the CCTV cameras' red recording lights, into the same blinking mesh
+      CorpSecurity.camLeds(m, leds);
       FacilityDeco.lamps(scene, leds);
       FacilityGeom.add(scene, cables, FacilityStyle.CABLE_TEX, true, false);
       bufs = null;
@@ -856,6 +863,96 @@ class CorpFurniture
         },
         h: h,
       });
+    }
+
+// one cell of a security room's LOCKER BANK against its wall: corp/locker-front mapped 0..1 over a
+// square front, the rack's own steel on its ends and lid. A column of them is ONE run: the ends
+// between two lockers are skipped, and the run takes one contact shadow off its first cell
+  static function locker(m:Facility, col:Int, row:Int):Void
+    {
+      var dir = lockerBack(m, col, row);
+      if (dir < 0)
+        return;
+      var r = lockerRect(m, col, row, dir);
+      FacilityGeom.cap(buf(CorpStyle.RACK_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
+        CorpStyle.RACK_TILE);
+      var side = buf(CorpStyle.RACK_SIDE);
+      for (f in 0...4)
+        if (f != dir &&
+            f != (dir ^ 1) &&
+            !lockerAt(m, col + dx(f), row + dz(f)))
+          FacilityGeom.face(side, r.x0, r.x1, r.z0, r.z1, f, 0, CorpStyle.LOCKER_H,
+            CorpStyle.RACK_TILE);
+      FacilityGeom.pane(buf(CorpStyle.LOCKER_FRONT), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0,
+        CorpStyle.LOCKER_H);
+      ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+      // ONE GROUND CALL PER RUN, from its first cell: halos that overlap along a wall compound
+      var ax = (dir < 2 ? 1 : 0);
+      var az = 1 - ax;
+      if (lockerAt(m, col - ax, row - az))
+        return;
+      var len = 1;
+      while (lockerAt(m, col + ax * len, row + az * len))
+        len++;
+      var end = lockerRect(m, col + ax * (len - 1), row + az * (len - 1), dir);
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: len,
+        alongX: dir < 2,
+        rect: {
+          x0: r.x0,
+          x1: end.x1,
+          z0: r.z0,
+          z1: end.z1,
+        },
+        h: CorpStyle.LOCKER_H,
+      });
+    }
+
+// the hand a locker's wall is on. ITS ROOM'S OWN COLUMN FIRST: gen.corp.CorpRooms.security lays the
+// bank down the west wall, and the bank's corner cell has the north wall on a hand too, which a
+// first-wall-found rule answers with, turning that one locker to face down its own run
+  static function lockerBack(m:Facility, col:Int, row:Int):Int
+    {
+      var room = CorpModel.securityRoom(m, col, row);
+      if (room != null)
+        {
+          if (col == room.x1 &&
+              FacilityModel.isWall(m, col - 1, row))
+            return 2;
+          if (col == room.x2 &&
+              FacilityModel.isWall(m, col + 1, row))
+            return 3;
+        }
+      for (dir in 0...4)
+        if (FacilityModel.isWall(m, col + dx(dir), row + dz(dir)))
+          return dir;
+      return -1;
+    }
+
+// a locker cell's footprint: the whole cell along its wall, LOCKER_D off the slab's room face
+  static function lockerRect(m:Facility, col:Int, row:Int, dir:Int):Rect
+    {
+      var sl = FacilityGeom.slab(m, col + dx(dir), row + dz(dir));
+      var c = CityConfig.cellToWorld(col, row);
+      var half = CorpStyle.LOCKER_W / 2;
+      var d = CorpStyle.LOCKER_D;
+      var x0 = (dir < 2 ? c.x - half : (dir == 2 ? sl.x1 : sl.x0 - d));
+      var z0 = (dir < 2 ? (dir == 0 ? sl.z1 : sl.z0 - d) : c.z - half);
+      return {
+        x0: x0,
+        x1: (dir < 2 ? c.x + half : x0 + d),
+        z0: z0,
+        z1: (dir < 2 ? z0 + d : c.z + half),
+      };
+    }
+
+// is a locker standing on this cell?
+  static inline function lockerAt(m:Facility, col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(m, col, row) &&
+        m.fit[row][col] == FIT_LOCKER;
     }
 
 // the cable drape from this cabinet's lid to the next one's along the rank.

@@ -494,6 +494,10 @@ typedef ObjModel = {
   tether:PropTether,  // live cord arcing to each AI this object holds, or null for one that holds
                       // none. the BINDING is the object's own (AreaObject.getLinkedAI), so nothing
                       // here knows what a preservator is
+  ?off:Array<Float>, // [x, z] off the cell centre in the prop's OWN frame, turned with its
+                      // yaw, or absent for a prop centred on its cell. Models.normalize recentres
+                      // every glb on its footprint, so a prop that must stand against the wall (or
+                      // whose two keys have different footprints) says here where it really goes
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -789,6 +793,52 @@ class ObjModels
       lamps: null, // nor does it carry an emissive map
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
+    },
+    // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
+    // the key and CorpArea.refreshObjects rebuilds this batch. Both stand against the masonry via
+    // `off`, and the open one also puts back the recentre its swung leaf costs (CorpStyle.GUN_CAB_*)
+    {
+      keys: [ 'gunCabinet' ],
+      path: RenderConfig.MODELS.corpGunCabinet,
+      h: render.corp.CorpStyle.GUN_CAB_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [ 0.0, -render.corp.CorpStyle.GUN_CAB_BACK ],
+    },
+    {
+      keys: [ 'gunCabinetOpen' ],
+      path: RenderConfig.MODELS.corpGunCabinetOpen,
+      h: render.corp.CorpStyle.GUN_CAB_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      // the carcass lands at MINUS the footprint centre once recentred, and Blender y is glTF -z,
+      // so the printed centre's x carries over as it is and its y flips
+      off: [
+        render.corp.CorpStyle.GUN_CAB_OPEN_X,
+        -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
+      ],
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -1320,10 +1370,13 @@ class ObjModels
             continue;
           var m = MODELS[i];
           var w = CityConfig.cellToWorld(o.x, o.y);
+          var yw = yaw(o.x, o.y, m.yaw);
+          var ox = (m.off != null ? m.off[0] : 0.0);
+          var oz = (m.off != null ? m.off[1] : 0.0);
           byRow[i].push({
-            x: w.x,
-            z: w.z,
-            yaw: yaw(o.x, o.y, m.yaw),
+            x: w.x + ox * Math.cos(yw) + oz * Math.sin(yw),
+            z: w.z - ox * Math.sin(yw) + oz * Math.cos(yw),
+            yaw: yw,
             // off the FLOOR under the cell and not off y = 0. the sewer and the compound are both
             // flat, so this was a constant for as long as those were the only two kinds building
             // props — the wilderness is a height field (render.world.WorldCtx.ground = WildHeight.at)
@@ -1401,7 +1454,7 @@ class ObjModels
         {
           for (p in [ b.solid, b.ghost, b.hull ])
             if (p.mesh != null)
-              scene.remove(p.mesh);
+              p.mesh.removeFromParent(); // a chunk group's, when the glb was cached at area build
           if (b.ghost.mesh != null)
             b.ghost.mesh.material.dispose();
           if (b.hull.mesh != null)

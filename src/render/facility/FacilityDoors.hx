@@ -202,7 +202,9 @@ class FacilityDoors
     {
       for (b in batches)
         {
-          scene.remove(b.prop.mesh);
+          // from its PARENT, not the scene: a leaf built before render.Chunks.build was swept into a
+          // chunk group, and scene.remove left it drawing under the rebuilt batch
+          b.prop.mesh.removeFromParent();
           b.prop.mesh.material.dispose();
         }
     }

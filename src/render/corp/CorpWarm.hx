@@ -48,6 +48,10 @@ class CorpWarm
       var board = MeshBufTools.make();
       FacilityGeom.pane(board, 0, 1, 0, 0, 0, 0, 1);
       FacilityGeom.add(sc, board, CorpStyle.WHITEBOARD, true, true);
+      // and the security room's video wall, the same way: its emissive lambert is a program of its own
+      var screens = MeshBufTools.make();
+      FacilityGeom.pane(screens, 0, 1, 0, 0, 0, 0, 1);
+      CorpSecurity.addScreens(sc, screens);
       // the two flat dressing materials, each its own alphaTest / mapped lambert and each a 1024
       // or 512 decoded on first entry
       CorpClutter.build(sc, model);
@@ -104,6 +108,8 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpTableLeg, h: CorpStyle.LEG_H },
         { path: RenderConfig.MODELS.corpBin, h: CorpStyle.BIN_H },
         { path: RenderConfig.MODELS.corpCase, h: render.corp.CorpDeco.CASE_CABINET[2] },
+        // and the CCTV camera, which the demo plate's two corridor walls may or may not seat
+        { path: RenderConfig.MODELS.corpWallCam, h: CorpStyle.CAM_H },
         // the exec office's seven, which the demo model cannot place (render.corp.CorpExec reads
         // the generator's decorations and the demo has none), so a path each here is their warm
         { path: RenderConfig.MODELS.corpExecDesk, h: CorpStyle.EXEC_DESK_H },
@@ -154,7 +160,26 @@ class CorpWarm
       return new js.lib.Promise(function(res, _)
         {
           var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
-          var left = paths.length;
+          // AND THE TOWER'S OBJECT PROPS (the gun cabinet, shut and open): all three variants each,
+          // through CorpArea.patchObj so the key is the one the floor asks for
+          var objs = [for (m in render.world.ObjModels.MODELS)
+            if (m.path.indexOf('models/corp/') == 0) m];
+          var C = RenderConfig.OBJMARK;
+          var left = paths.length + objs.length;
+          for (m in objs)
+            render.Models.get(m.path, function(_)
+              {
+                IndoorMask.attach(CorpStyle.INDOOR, model.w, model.h,
+                  function(col, row) return render.facility.FacilityModel.isInterior(model, col, row));
+                CorpArea.patchObj(m,
+                  render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh,
+                  render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
+                  render.Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
+                IndoorMask.detach();
+                left--;
+                if (left == 0)
+                  res(null);
+              });
           for (i in 0...paths.length)
             {
               var pr = paths[i];

@@ -132,6 +132,9 @@ class CorpSigns
       var logos = new Map<Int, Bool>();
       for (c in CorpReception.logoClear(m))
         logos.set(key(m, c.col, c.row, c.dir), true);
+      // and the security room's video wall
+      for (c in CorpSecurity.videoClear(m))
+        logos.set(key(m, c.col, c.row, c.dir), true);
       for (dir in 0...4)
         {
           // a run follows the WALL, so it advances along x for a wall in z and along z for one in x

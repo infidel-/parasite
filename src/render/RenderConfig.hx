@@ -847,6 +847,9 @@ class RenderConfig {
     // CorpDeco.CASE[K_CABINET][2]). Its height was then fixed TO the drawer art, 1.30 -> 2.00, so
     // two full-width courses land with no stretch; see art/models.json's note
     corpCase: 'models/corp/case-cabinet.glb',  // carcass, two proud drawers, brass label holders, 324
+    corpGunCabinet: 'models/corp/gun-cabinet.glb',            // security room, shut, 108
+    corpGunCabinetOpen: 'models/corp/gun-cabinet-open.glb',   // and open, leaf swung, 264
+    corpWallCam: 'models/corp/wall-cam.glb',                  // plate, arm, pitched bullet head, 124
     // AND THE RECORDS ROOM'S TWO, which stand in the ranks gen.corp.CorpRooms.archive lays and are
     // dealt one per rank (render.corp.CorpFurniture.archive). Both are glbs for the reason the
     // credenza is: a drawer standing proud of a carcass and a board standing proud of the binders

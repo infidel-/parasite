@@ -118,6 +118,9 @@ class CorpStyle
   // and the whiteboard's face, ONE authored composition mapped 0..1 over the board (a frame, a
   // marker tray, a sketch), so render.corp.CorpDeco locks the board's aspect to this 1024x768 source
   public static inline var WHITEBOARD = 'textures/corp/whiteboard.png';
+  // the security room's three: a locker bank's front, and its video wall's feeds (render.corp.CorpSecurity)
+  public static inline var LOCKER_FRONT = 'textures/corp/locker-front.png';
+  public static inline var CCTV_WALL = 'textures/corp/cctv-wall.png';
   public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
   public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
   // and the LID, which is its OWN surface and not the flank seen from above — the rule
@@ -311,6 +314,44 @@ class CorpStyle
   public static inline var RACK_D = 2.0;
   // and a wall machine's depth off the masonry (render.corp.CorpFurniture.machine)
   public static inline var MACHINE_D = 1.15;
+
+  // A SECURITY ROOM LOCKER BANK, one cell of it: the full cell along the wall so a column of them
+  // butts into one run, and exactly as tall -- corp/locker-front is a square composition mapped 0..1
+  // over the front (render.corp.CorpFurniture.locker)
+  public static inline var LOCKER_W = 4.0;
+  public static inline var LOCKER_H = LOCKER_W;
+  public static inline var LOCKER_D = 1.3;
+  // THE GUN CABINET, objects.GunCabinet's two glbs (models-src/corp/gun_cabinet_build.py): its
+  // height, and how far its carcass centre stands off the cell centre toward the wall -- its back on
+  // an inner wall slab's room face, WALL_INNER / 2 short of the wall cell's centre, less half its
+  // 1.3 depth. On a perimeter wall the back runs 0.4 into the masonry, where nothing sees it
+  public static inline var GUN_CAB_H = 3.6;
+  public static inline var GUN_CAB_BACK = 4.0 - WALL_INNER / 2 - 1.3 / 2;
+  // and the open glb's footprint centre, printed by the build script: the swung leaf moves it off the
+  // carcass, and Models.normalize recentres on it, so render.world.ObjModels' `off` puts it back
+  public static inline var GUN_CAB_OPEN_X = -0.2313;
+  public static inline var GUN_CAB_OPEN_Y = -1.1719;
+  // THE VIDEO WALL: one panel of corp/cctv-wall per console cell, hung on the north wall over it.
+  // Its aspect is the art's 1024x672 (1.524); the head stops under SIGN_Y's band's own top
+  public static inline var VIDEO_W = 3.6;
+  public static inline var VIDEO_H = VIDEO_W * 672 / 1024;
+  public static inline var VIDEO_Y0 = 2.5;
+  public static inline var VIDEO_PROUD = 0.06;
+  // how bright the feeds glow, on the emissive map that IS the art: the bezels are near black and
+  // stay dark, the monochrome feeds clear the bloom threshold
+  public static inline var VIDEO_EMISSIVE = 0.9;
+  // A CCTV CAMERA on the corridor's inside corners and the reception's (models-src/corp/
+  // wall_cam_build.py): the glb's height and depth off its own wall plate, the plate's mount height,
+  // how far along the wall from the corner, the turn toward the room, and one corner in how many
+  public static inline var CAM_H = 0.4203;
+  public static inline var CAM_D = 0.8807;
+  public static inline var CAM_Y = 5.0;
+  public static inline var CAM_SIDE = 0.8;
+  public static inline var CAM_TURN = 0.3;
+  public static inline var CAM_EVERY = 2;
+  // and its red recording light, a speck on the wall plate beside the arm, in the plate's own frame
+  public static final CAM_LED = [ 0.08, 0.36, 0.05 ];
+  public static inline var CAM_LED_SIZE = 0.07;
 
   // WHAT IS STACKED ON THE ARCHIVE'S CASEWORK, dealt per LEVEL of every unit — see
   // render.corp.CorpArchive. In world units, like the compound's DECO_BOX_* band and for its
