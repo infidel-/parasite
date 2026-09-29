@@ -4255,6 +4255,82 @@
       "built_linear": 0.0307,
       "built_srgb": 41.7
     },
+    "corp/reception-top": {
+      "src": "corp/reception-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A TEXTURE SHEET for one corporate reception front desk, split into FOUR EQUAL QUADRANTS by one perfectly straight VERTICAL line at exactly half the image width and one perfectly straight HORIZONTAL line at exactly half the image height. Hard butt joins on those two lines. NO gutters, NO borders, NO frames around the quadrants, NO drop shadows, NO separator lines, NO captions, NO numbering.\n\nTOP-LEFT - the COUNTER TOP, seen from DIRECTLY ABOVE in straight top-down orthographic view: a SEAMLESS TILEABLE swatch of deep charcoal grey MARBLE, one continuous stone with NO joints and NO slab edges, sparse soft thin PALE GREY-WHITE VEINS meandering diagonally, a faint cloudy mottling in the body. The pattern runs OFF all four edges of its quadrant and is cut flat by them. It is a REPEATING FIELD with NOTHING PLACED IN IT. HUE PERFECTLY NEUTRAL - no blue, no green, no brown cast.\n\nTOP-RIGHT - the COUNTER FRONT CLADDING, seen STRAIGHT ON in flat elevation: the SAME deep charcoal veined marble as the top-left, as vertical wall cladding, a SEAMLESS TILEABLE swatch of one continuous slab with NO joints, the pale veins running mostly VERTICALLY. The pattern runs OFF all four edges of its quadrant. A REPEATING FIELD with NOTHING PLACED IN IT. HUE PERFECTLY NEUTRAL.\n\nBOTTOM-LEFT - a small tabletop GREETING SIGN, seen STRAIGHT ON: a LANDSCAPE rectangular panel exactly TWICE AS WIDE AS IT IS TALL, square corners, centred in its quadrant with a clear empty margin of flat plain mid grey all round it. The panel face is matte white lacquer with a thin brushed-brass edge band, and across its middle, in LARGE, BOLD, CLEAN SANS-SERIF CAPITALS in dark charcoal, perfectly legible and filling most of the panel width, the single word: \"WELCOME\". Nothing else on the panel.\n\nBOTTOM-RIGHT - a corporate WALL LOGO PANEL, seen STRAIGHT ON: a LANDSCAPE rectangular panel exactly TWICE AS WIDE AS IT IS TALL, square corners, centred in its quadrant with a clear empty margin of flat plain mid grey all round it. The panel is dark anodised charcoal aluminium. On its left third, a simple bold geometric corporate EMBLEM in brushed brass: a ring cut through by one diagonal bar. On its right two thirds, in LARGE, BOLD, CLEAN SANS-SERIF CAPITALS in pale warm brass, perfectly legible, the single word: \"HEADQUARTERS\". Nothing else on the panel.\n\nEvery word listed above must be spelled EXACTLY as written, in capitals, large and cleanly legible. No other text anywhere in the image. [append textures.json style_corp then style]",
+      "prompt_exact": false,
+      "crop": [
+        24,
+        24,
+        464,
+        464
+      ],
+      "note": "the reception counter's TOP, both tiers: deep charcoal veined marble, horizontal, tiled off world x/z by render.corp.CorpReception. Cut from the sheet's top-left quadrant. Drop mean 51.3/53.0/54.0, wrap 6.23/6.18 against an interior 3.1 (packed norm). One gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier ($0.0569); seams measured at exactly 511/511, so the marble crops are exec-pack's own 24 px insets.",
+      "last_converted": "2026-09-29T20:00:04",
+      "built_linear": 0.0359,
+      "built_srgb": 52.8
+    },
+    "corp/reception-front": {
+      "src": "corp/reception-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "one region of the corp/reception-pack.png sheet - the whole prompt is on corp/reception-top.",
+      "prompt_exact": true,
+      "crop": [
+        536,
+        24,
+        464,
+        464
+      ],
+      "note": "the reception counter's corridor-side FRONT and end faces: the same marble as cladding, veins vertical. Cut from the top-right quadrant. Drop mean 48.9/50.3/51.3, wrap 4.43/6.91. One gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier ($0.0569); seams measured at exactly 511/511, so the marble crops are exec-pack's own 24 px insets.",
+      "last_converted": "2026-09-29T20:00:04",
+      "built_linear": 0.0329,
+      "built_srgb": 50.2
+    },
+    "corp/reception-board": {
+      "src": "corp/reception-pack.png",
+      "class": "tile",
+      "res": [
+        352,
+        128
+      ],
+      "needs_alpha": false,
+      "prompt": "one region of the corp/reception-pack.png sheet - the whole prompt is on corp/reception-top.",
+      "prompt_exact": true,
+      "crop": [
+        25,
+        677,
+        462,
+        168
+      ],
+      "note": "the greeting board's FACE, 'WELCOME' on white lacquer in a brass edge. The crop is the panel's MEASURED content rect (|rgb - margin grey| > 40): 462 x 168, aspect 2.75 though 2:1 was asked, so the board glb's face is built at 2.75 and not at the prompt's number. Packed into the trinket sheet by models-src/corp/reception_build.py. One gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier ($0.0569); seams measured at exactly 511/511, so the marble crops are exec-pack's own 24 px insets.",
+      "last_converted": "2026-09-29T20:00:04",
+      "built_linear": 0.4556,
+      "built_srgb": 162.9
+    },
+    "corp/reception-logo": {
+      "src": "corp/reception-pack.png",
+      "class": "tile",
+      "res": [
+        704,
+        256
+      ],
+      "needs_alpha": false,
+      "prompt": "one region of the corp/reception-pack.png sheet - the whole prompt is on corp/reception-top.",
+      "prompt_exact": true,
+      "crop": [
+        537,
+        676,
+        463,
+        169
+      ],
+      "note": "the reception's back-wall LOGO, brass ring-and-bar emblem and 'HEADQUARTERS' on dark anodised aluminium. A generic word and not the tower's name: corp names are rolled per area (const.NameConst corpA/corpB), and a baked one would be wrong in every tower but one. Measured content rect 463 x 169, aspect 2.74, so the wall pane is locked to it (CorpStyle.RECEPTION_LOGO_ASPECT). One gpt-image-2.5-sunburst 2x2 drop at the 1,756-token tier ($0.0569); seams measured at exactly 511/511, so the marble crops are exec-pack's own 24 px insets.",
+      "last_converted": "2026-09-29T20:00:04",
+      "built_linear": 0.0722,
+      "built_srgb": 63.0
+    },
     "corp/exec-clutter": {
       "src": "corp/exec-clutter.png",
       "class": "sprite",
