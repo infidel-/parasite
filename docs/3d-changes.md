@@ -98,3 +98,63 @@ batches — `desk-plant`, `rec-phone`, `rec-board`, `rec-bell` — carried `visi
   renders neutral 22,22,22.
 
 Verdict: **landed.** A glb patched in a load callback cannot trust a mask's `on` flag at build time.
+
+## Corp security room: seated console, wall racks, low wall machine, video wall, lockers, CCTV cams
+
+The probed "quad desk" at y 1.9 was not the desk: it was the lid of `CorpDeco.box` K_MACHINE, the
+last laminate casework in the tower. The console was a 3-cell SERVER run that `deskCell` sent to a
+worktop slab, and no monitor, keyboard or chair was ever seated on SERVER. Gen side:
+`docs/area-gen.md` "THE SECURITY ROOM".
+
+- **Console.** `CorpModel.securityDesk` joins `deskCell` and `CorpProps.desks`/`claims`/`manned`, so
+  the run is desk-bench glbs with monitors, keyboards and chairs. `securityPostDesk` (the middle
+  cell) gets no chair, because the guard stands there.
+- **Racks** on `TILE_RACK_HIGH` keep `FIT_RACK` (`wallFits` clears it on the 222 twin only), and
+  `CorpFurniture.rack`'s front search skips wall neighbours, so the east column faces the room.
+- **Wall machine** (`CorpFurniture.machine`): a half-height two-bay rack against the wall, from
+  `RACK_TOP`/`RACK_SIDE` and a cropped `RACK_FRONT` (uv v 0..0.5, `u` over 2 bays), with LEDs in the
+  blink mesh. It replaces the laminate box in the server room as well. **TRAP:** a wall prop lives in
+  the 1.4 margin between the cell edge and the slab face, so a search window sized to the cell
+  missed it.
+- **Video wall** (`CorpSecurity.build`): one `corp/cctv-wall` pane per console cell on the north
+  slab face + 0.06, its own emissive Lambert (map = emissiveMap), no shadows. `CorpSigns` keeps
+  framed art off those cells (`videoClear`).
+- **Lockers** (`FIT_LOCKER` 7): per-face emission (a `locker-front` pane, `RACK_SIDE` on free ends
+  only, a `RACK_TOP` cap) with one `FacilityDetail.ground` per run.
+- **Cams** (`CorpSecurity.cams`): the corridor and reception inside corners with a solid north wall,
+  hash-thinned 1 in `CAM_EVERY` 2, the `corp/wall-cam` glb (124 tris) turned 0.3 toward the floor.
+  The recording light is a new `FacilityDeco.blink` mode: blue > 7.5 means red (`DECO_LED_RED`), and
+  it rides the existing LED mesh.
+
+Calls A/B in the security view: video wall +1, lockers +1, cams +2. The machine and console ride
+existing batches and were not A/B measured. Warm: the screens material and the wall-cam path
+are in `CorpWarm`.
+
+Verdict: **landed.**
+
+## Corp object props: the gun cabinet glbs, and the per-frame pass the tower never ran
+
+The gun cabinet (`objects.GunCabinet`) is the tower's first `render.world.ObjModels` glb:
+`gunCabinet`/`gunCabinetOpen`, hand-modelled at 108/264 tris, with a WALL yaw.
+
+- **`ObjModel.off`**: a local [x, z] offset rotated by the yaw. The carcass stands in the margin
+  between its cell and the slab (`GUN_CAB_BACK`), and the open glb's footprint centre is
+  (-0.231, -1.172) off the shut one's. Without the offset, `Models.normalize`'s recentre would jump
+  the carcass when it opens.
+- **The lid rendered moonlit navy**: ObjModels batches took no indoor swap. `CorpArea.patchObj` now
+  applies `ObjModels.patchRow` and then `IndoorMask.patch`, in `CorpProps.batch`'s order, from
+  `indoorProps` and from `CorpWarm`. The warm covers all three variants of every `models/corp/` row.
+- **Cost +10 calls → +2.** `CorpArea.tick` never called `ObjModels.cull`, so the ghost (transparent)
+  and hull twins drew every frame. It now runs FacilityArea's three lines (cull, `PropShader.tick`,
+  `PropGlow.tick`).
+- **TRAP: `refreshObjects` left the OLD batches drawing, for doors as well.** `Chunks.build` sweeps
+  every mesh already in the scene into chunk groups, and a glb cached by the warm is instanced
+  SYNCHRONOUSLY at build time, so the props and door leaves ended up in chunk groups.
+  `scene.remove` was a no-op on them. After an open, the shut cabinet and a second set of door
+  leaves stayed on screen. `ObjModels.dispose` and `FacilityDoors.dispose` now call
+  `removeFromParent`, which fixes every area kind, and it was added to the `Object3D` extern.
+
+Verified live: after an open, only the open batch is in the scene, one door batch per texture, and
+the ghost/hull counts are 0.
+
+Verdict: **landed.**

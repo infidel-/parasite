@@ -1803,3 +1803,38 @@ guards the threshold cell itself (and the ring skips it), so the cell beside it 
 table is the one BLOCKING thing on the archive ring. `CorpRooms.besideDoor` (any 4-hand is `atDoor`)
 now keeps tables off it; cabinets there are walkable dressing and stay. Archive-only so far.
 300 corp seeds OK, orphanCells 0.
+
+## THE SECURITY ROOM: CONSOLE NORTH, RACKS EAST, LOCKERS WEST
+
+Reported as bland, with a rack mid-room and a laminate box for a desk. The room was `rackRows` at
+y1+1 plus a `deskRun`, so the rank was never on a wall and in a 4x4 it shared the desk's row.
+`CorpRooms.security` now gives every wall an owner, and nothing stands mid-room:
+
+- **the console** (`consoleRun`): up to `SECURITY_CONSOLE_MAX` 4 cells of `CORP_TABLE_3X1` centred on
+  row y1, `CORP_COMPUTERS` on each, a chair at y1+1 on every cell but the MIDDLE one, which is the
+  guard post (`securityPost`, read by `AreaGame.corpSpawnPoints` into
+  `importantGuardSpawnPoints`). It fails if a door opens onto y1 or y1+1, and the old mid-room
+  `deskRun` is the fallback. It also **bricks any inner window behind it** (row y1-1): the render
+  hangs a video wall there, and glazing has nothing to hang it on.
+- **the racks**: `wallColumn(x2)`, i.e. SERVER cells on the east wall that are not a door cell, not
+  beside one, and hold no object, laid as `RACK_HIGH` + `CORP_MACHINERY`.
+- **the lockers**: `wallColumn(x1)` capped at `SECURITY_LOCKERS_MAX` 4, as `Const.TILE_CORP_LOCKER`.
+  One of them goes to `state.area.add('gunCabinet', x, y)` instead: the one nearest the run's
+  middle that is not a room corner and has free SERVER floor at x+1. The cabinet is a WALKABLE tile
+  under a BLOCKING object, so a cabinet walled in by lockers and the desk read as a sealed pocket,
+  and `openPockets` tore the console out (199 rooms in 3000 seeds with no desk run).
+- **`columnsOpen` validates the set with `roomOpen(..., joined = true)`**: a flood from ONE door that
+  must reach every floor cell. Plain `roomOpen` passed a rack column that split the room between
+  two doors, since each half had its own door. While it fails, lockers go first, then the rack tail.
+
+**Opaque ids.** `rackRows` takes its tile from the caller now: the server room and security both lay
+`Const.TILE_RACK_HIGH` 15 (row 0's last spare slot, already walkable 0 and see-through 0), written
+as temp `CorpTemp.RACK_HIGH` 46 for `ARCHIVE_HIGH`'s reason. `TILE_CORP_LOCKER` is `OFFSET_ROW17 + 3`,
+and row 17 past index 1 is already unwalkable. The wall-dressing `CORP_MACHINERY` stays on the
+see-through 222 twin. New areas only, with no repair of old saves. The renderer reads the room
+through `CorpModel.securityRoom`, the ONE place it reads a generatorInfo role, since a SERVER
+floor alone cannot tell the security room from the server room.
+
+`GenCheck.securitySane` asserts a desk run, a walkable post, and at most one `gunCabinet` per room.
+3000 corp seeds OK. furn/security 22.2% -> **32.97%**, spawns/gunCabinet **0.71** per floor (the
+other ~29% of floors have no security room, or no cabinet cell passed the checks).
