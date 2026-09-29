@@ -340,7 +340,8 @@ class CorpProps
             // task chair on every clear hand of a 3x2 slab was four of them round one executive
             if (s != Surf.OPEN &&
                 s != Surf.CUBICLE &&
-                s != Surf.RECEPTION)
+                s != Surf.RECEPTION &&
+                !CorpModel.securityDesk(m, col, row))
               continue;
             var dir = backHand(m, col, row);
             if (dir < 0 ||
@@ -350,16 +351,20 @@ class CorpProps
             var c = CityConfig.cellToWorld(col, row);
             // the seat, in the cell in FRONT of the desk and pulled back toward it. it FACES the
             // desk, which is the hand the desk's back is on
+            // but not at a security console's middle cell, where its guard stands instead
             var cx = c.x + DC[dir ^ 1] * CorpStyle.CHAIR_OUT;
             var cz = c.z + DR[dir ^ 1] * CorpStyle.CHAIR_OUT;
-            chairs.push({
-              x: cx,
-              z: cz,
-              yaw: Math.atan2(DC[dir], DR[dir]) +
-                (((hash >>> 8) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CHAIR_YAW_JIT,
-            });
-            ContactMask.prop(cx - CorpStyle.CHAIR_W / 2, cx + CorpStyle.CHAIR_W / 2,
-              cz - CorpStyle.CHAIR_W / 2, cz + CorpStyle.CHAIR_W / 2);
+            if (!CorpModel.securityPostDesk(m, col, row))
+              {
+                chairs.push({
+                  x: cx,
+                  z: cz,
+                  yaw: Math.atan2(DC[dir], DR[dir]) +
+                    (((hash >>> 8) % 1000) / 1000 - 0.5) * 2 * CorpStyle.CHAIR_YAW_JIT,
+                });
+                ContactMask.prop(cx - CorpStyle.CHAIR_W / 2, cx + CorpStyle.CHAIR_W / 2,
+                  cz - CorpStyle.CHAIR_W / 2, cz + CorpStyle.CHAIR_W / 2);
+              }
             if (!manned(m, work, col, row, hash))
               continue;
             // and the workstation ON the top, which is the room's worktop height and not a
@@ -630,11 +635,12 @@ class CorpProps
 //
 // AND A CUBICLE IS ALWAYS MANNED. WORK_EVERY exists so an open-plan run does not read as a bank of
 // screens down a wall; a cubicle is one worker's own cell with a panel round it, and an empty one
-// reads as a farm nobody works in
+// reads as a farm nobody works in. Nor does a security console: a screen on every cell is what it is
   public static function manned(m:Facility, work:Map<Int, Bool>, col:Int, row:Int,
       hash:Int):Bool
     {
-      if (m.surf[row][col] == Surf.CUBICLE)
+      if (m.surf[row][col] == Surf.CUBICLE ||
+          CorpModel.securityDesk(m, col, row))
         return true;
       if (work != null &&
           work.keys().hasNext())
@@ -656,7 +662,8 @@ class CorpProps
       // an exec desk's workstation is render.corp.CorpExec's, and so is the claim on it
       if (s != Surf.OPEN &&
           s != Surf.CUBICLE &&
-          s != Surf.RECEPTION)
+          s != Surf.RECEPTION &&
+          !CorpModel.securityDesk(m, col, row))
         return [];
       var dir = backHand(m, col, row);
       if (dir < 0 ||

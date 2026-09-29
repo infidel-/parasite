@@ -309,6 +309,8 @@ class CorpStyle
   // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
   public static inline var RACK_H = 4.0;
   public static inline var RACK_D = 2.0;
+  // and a wall machine's depth off the masonry (render.corp.CorpFurniture.machine)
+  public static inline var MACHINE_D = 1.15;
 
   // WHAT IS STACKED ON THE ARCHIVE'S CASEWORK, dealt per LEVEL of every unit — see
   // render.corp.CorpArchive. In world units, like the compound's DECO_BOX_* band and for its

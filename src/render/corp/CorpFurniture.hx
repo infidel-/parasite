@@ -720,11 +720,16 @@ class CorpFurniture
       // the aisle is whichever neighbour is open floor, and the search order is not arbitrary: +z
       // FIRST, because this camera rests with no yaw of its own and a rank whose equipment face
       // looks any other way shows the player its back. The rows run across the room's short axis,
-      // so there is an aisle on at least one side by construction
+      // so there is an aisle on at least one side by construction.
+      //
+      // AND AN AISLE IS NOT A WALL. A rank never touches one, so "not a rack and on the plate" was
+      // enough; the security room's rack COLUMN stands against its east wall, and the end of the
+      // column found the masonry first and turned its equipment face into it
       var front = 1;
       for (dir in FRONTS)
         if (!rackAt(m, col + dx(dir), row + dz(dir)) &&
-            FacilityModel.inside(m, col + dx(dir), row + dz(dir)))
+            FacilityModel.inside(m, col + dx(dir), row + dz(dir)) &&
+            !FacilityModel.isWall(m, col + dx(dir), row + dz(dir)))
           {
             front = dir;
             break;
@@ -786,6 +791,71 @@ class CorpFurniture
       });
       drape(m, r, col, row);
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+    }
+
+// a WALL MACHINE: a half-height, two-bay server cabinet against the wall a room's dressing dealt
+// CORP_MACHINERY beside, in the rack's own three textures and LEDs, so it costs no draw call.
+//
+// IT WAS A BOX IN DESK LAMINATE, render.corp.CorpDeco's last one: a [1.70, 1.15, 1.90] carcass with
+// office desk drawers on its front and a desk top for a lid, reported off a face pick as
+// textures/corp/desk-top.png at y 1.9 in the security room. The front is corp/rack-front CROPPED,
+// not squeezed: that art is three cabinets of eight units over a cell-wide RACK_H face, so the
+// bottom half of its first two cabinets is exactly two bays of four units at the rack's own scale.
+// `dir` is the hand the masonry is on
+  public static function machine(m:Facility, col:Int, row:Int, dir:Int):Void
+    {
+      var sl = FacilityGeom.slab(m, col + dx(dir), row + dz(dir));
+      var c = CityConfig.cellToWorld(col, row);
+      var bays = MACHINE_BAYS / RACK_BAYS;
+      var half = (CELL - 2 * CorpStyle.FIT_INSET) * bays / 2;
+      var d = CorpStyle.MACHINE_D;
+      var x0 = (dir < 2 ? c.x - half : (dir == 2 ? sl.x1 : sl.x0 - d));
+      var x1 = (dir < 2 ? c.x + half : x0 + d);
+      var z0 = (dir < 2 ? (dir == 0 ? sl.z1 : sl.z0 - d) : c.z - half);
+      var z1 = (dir < 2 ? z0 + d : c.z + half);
+      var h = CorpStyle.RACK_H * MACHINE_UNITS;
+      FacilityGeom.cap(buf(CorpStyle.RACK_TOP), x0, x1, z0, z1, h, CorpStyle.RACK_TILE);
+      var side = buf(CorpStyle.RACK_SIDE);
+      for (f in 0...4)
+        if (f != dir &&
+            f != (dir ^ 1))
+          FacilityGeom.face(side, x0, x1, z0, z1, f, 0, h, CorpStyle.RACK_TILE);
+      var e = FacilityGeom.ends(x0, x1, z0, z1, dir ^ 1);
+      MeshBufTools.quad(buf(CorpStyle.RACK_FRONT),
+        [e[0], 0, e[1]], [e[2], 0, e[3]], [e[2], h, e[3]], [e[0], h, e[1]],
+        [0, 0, bays, 0, bays, MACHINE_UNITS, 0, MACHINE_UNITS]);
+      FacilityDeco.lights(leds, {
+        x0: x0,
+        x1: x1,
+        z0: z0,
+        z1: z1,
+        y: CorpStyle.LED_Y0,
+        h: CorpStyle.LED_H * MACHINE_UNITS,
+        dir: dir,
+        col: col,
+        row: row,
+        // the crop shows `bays` of the image across the whole face, so an image u is a face u
+        // over `bays`; the rack's own lerp, rescaled, and one column per bay shown
+        u0: CorpStyle.LED_U0 / bays,
+        u1: CorpStyle.LED_U0 / bays + (CorpStyle.LED_U1 - CorpStyle.LED_U0),
+        rows: Math.round(CorpStyle.LED_ROWS * MACHINE_UNITS),
+        cols: MACHINE_BAYS,
+        size: CorpStyle.LED_SIZE,
+      });
+      ContactMask.prop(x0, x1, z0, z1);
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: 1,
+        alongX: false,
+        rect: {
+          x0: x0,
+          x1: x1,
+          z0: z0,
+          z1: z1,
+        },
+        h: h,
+      });
     }
 
 // the cable drape from this cabinet's lid to the next one's along the rank.
@@ -1042,6 +1112,11 @@ class CorpFurniture
 
   // the order a rack looks for its aisle in: toward the camera, then the two sides, then away
   static final FRONTS = [ 1, 3, 2, 0 ];
+  // a wall machine's share of corp/rack-front: two of its three cabinets across, and the bottom
+  // half (four of its eight units) up
+  static inline var RACK_BAYS = 3;
+  static inline var MACHINE_BAYS = 2;
+  static inline var MACHINE_UNITS = 0.5;
 
   static inline function rackAt(m:Facility, col:Int, row:Int):Bool
     {
@@ -1255,7 +1330,8 @@ class CorpFurniture
       // its lone wall tables; the counter itself is a fitting in the wall line, not a table
       if (s == Surf.OPEN ||
           s == Surf.CUBICLE ||
-          s == Surf.RECEPTION)
+          s == Surf.RECEPTION ||
+          CorpModel.securityDesk(m, col, row))
         return true;
       if (s == Surf.KITCHEN ||
           s == Surf.WASHROOM)

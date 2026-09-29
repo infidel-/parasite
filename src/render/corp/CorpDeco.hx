@@ -98,12 +98,11 @@ class CorpDeco
   // and a bare counter cell, which is walkable floor with this name on it (Const.CORP_COUNTER)
   public static inline var K_COUNTER = 20;
 
-  // the casework, as (width along the wall, depth off it, height). every one is a real piece of
-  // office furniture at the compound's own scale, where a unit is half a metre: a 1.5 m credenza,
-  // a 1.7 m fridge, a 2.1 m vending machine
-  // THE CABINET'S ROW IS PUBLIC AND THE OTHERS ARE NOT, because it is the only one that stopped
-  // being geometry: render.corp.CorpProps stands a glb on its cells and sizes the contact footprint
-  // off THIS, so a second copy of the three numbers could drift from the model's own.
+  // the cabinet, as (width along the wall, depth off it, height), at the compound's own scale where
+  // a unit is half a metre. The last row of what was a casework table: every other piece is a glb
+  // or, for the wall machine, render.corp.CorpFurniture.machine. render.corp.CorpProps stands the
+  // cabinet's glb and sizes the contact footprint off THIS, so a second copy of the three numbers
+  // could drift from the model's own.
   //
   // its height was raised 1.30 -> 2.00 to land on the drawer art. corp/archive-drawers draws one
   // full-width drawer across the quadrant and three courses up, so a course is aspect 3.0, and a
@@ -112,10 +111,6 @@ class CorpDeco
   // 1 x 0.667. 2.00 is a real 1 m filing unit. models-src/corp/case_build.py copies it verbatim
   public static final CASE_CABINET = [3.00, 1.20, 2.00];
 
-  static final CASE:Map<Int, Array<Float>> = [
-    K_CABINET => CASE_CABINET,
-    K_MACHINE => [1.70, 1.15, 1.90],
-  ];
   // and the whiteboard, which is a PANEL on the wall and not a box: sill to head, proud of the slab
   static inline var BOARD_W = 3.20;
   static inline var BOARD_Y0 = 2.20;
@@ -239,52 +234,9 @@ class CorpDeco
               n.vendings++;
               continue;
             }
-          box(m, o.x, o.y, dir, CASE.get(k));
+          CorpFurniture.machine(m, o.x, o.y, dir);
           n.cabinets++;
         }
-    }
-
-// one casework box: a front, two ends and a lid, and NO back and NO bottom — the piece stands
-// against masonry and this camera never sees under it (docs/3d-geometry.md)
-  static function box(m:Facility, col:Int, row:Int, dir:Int, d:Array<Float>):Void
-    {
-      var sl = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
-      var w = CityConfig.cellToWorld(col, row);
-      var half = d[0] / 2;
-      var x0 = (dir < 2 ? w.x - half : (dir == 2 ? sl.x1 : sl.x0 - d[1]));
-      var x1 = (dir < 2 ? w.x + half : x0 + d[1]);
-      var z0 = (dir < 2 ? (dir == 0 ? sl.z1 : sl.z0 - d[1]) : w.z - half);
-      var z1 = (dir < 2 ? z0 + d[1] : w.z + half);
-      FacilityGeom.cap(CorpFurniture.buf(CorpStyle.DESK_TOP), x0, x1, z0, z1, d[2],
-        CorpStyle.DESK_TILE);
-      for (f in 0...4)
-        {
-          // THE BURIED HAND IS `dir` AND NOT `dir ^ 1`, which is the whole of "desk missing
-          // polygons". `dir` points TOWARD the masonry and the box grows AWAY from it — x0/z0
-          // above are taken off the wall slab's near face — so the plane at `dir` is the one
-          // against the wall and the plane at `dir ^ 1` is the one the player looks at. Skipping
-          // `dir ^ 1` left every cabinet, fridge and vending machine in the tower open-fronted
-          // (the material is FrontSide, so you see straight through into nothing) and painted the
-          // drawer-course art, corp/desk-front.png, on the face nobody can see. `board` five lines
-          // down and render.facility.FacilityDetail.halo both already had it the right way round
-          if (f == dir)
-            continue;
-          var isEnd = (f != (dir ^ 1));
-          FacilityGeom.face(CorpFurniture.buf(isEnd ? CorpStyle.DESK_SIDE : CorpStyle.DESK_FRONT),
-            x0, x1, z0, z1, f, 0, d[2],
-            isEnd ? CorpStyle.DESK_TILE : CorpStyle.DESK_FRONT_TILE);
-        }
-      ContactMask.prop(x0, x1, z0, z1);
-      FacilityDetail.stand({
-        col: col,
-        row: row,
-        dir: dir,
-        a0: (dir < 2 ? x0 : z0),
-        a1: (dir < 2 ? x1 : z1),
-        len: 1,
-        y: 0.0,
-        h: d[2],
-      });
     }
 
 // and the whiteboard, hung on the slab's own face the way CorpFurniture hangs a mirror. Its own art

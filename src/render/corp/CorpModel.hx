@@ -20,9 +20,54 @@ import render.particles.AtlasBox;
 // THE FLOOR TILE IS THE ROOM'S ROLE and `_Room.role` is only the refinement. gen.corp writes both,
 // but role is a field on generatorInfo that a save made before the block-tree port does not carry,
 // where the floor id is in the cell grid of every corp save there has ever been. So the surface
-// grid is read first and the role is never consulted here at all.
+// grid is read first and the role is consulted in ONE place, `securityRoom`: a security room lays
+// the server room's own floor and there is no free corp floor id left to split it off with, and
+// every save that holds a security room also carries its role (the kind came after the field).
 class CorpModel
 {
+// the security room this cell is in, or null. See the header: the one reader of _Room.role
+  public static function securityRoom(m:Facility, col:Int, row:Int):_Room
+    {
+      if (m.surf[row][col] != Surf.SERVER)
+        return null;
+      for (r in m.rooms)
+        if (r.role == gen.corp.CorpTemp.ROLE_SECURITY &&
+            col >= r.x1 &&
+            col <= r.x2 &&
+            row >= r.y1 &&
+            row <= r.y2)
+          return r;
+      return null;
+    }
+
+// is this worktop a cell of a security room's console? Seated and manned like an open-plan desk
+// (render.corp.CorpProps.desks), on the bench glb (CorpFurniture.deskCell)
+  public static function securityDesk(m:Facility, col:Int, row:Int):Bool
+    {
+      return m.table[row][col] &&
+        securityRoom(m, col, row) != null;
+    }
+
+// is this the console cell the guard stands in front of? No chair goes there. The same cell
+// gen.corp.CorpRooms.securityPost picks, the middle of the room's first row of worktop
+  public static function securityPostDesk(m:Facility, col:Int, row:Int):Bool
+    {
+      var r = securityRoom(m, col, row);
+      if (r == null)
+        return false;
+      for (y in r.y1...r.y2 + 1)
+        {
+          var run = [];
+          for (x in r.x1...r.x2 + 1)
+            if (m.table[y][x])
+              run.push(x);
+          if (run.length > 0)
+            return y == row &&
+              run[Std.int(run.length / 2)] == col;
+        }
+      return false;
+    }
+
 // build the model from an area's saved cells. `icon` is the atlas content box a bench decoration's
 // contact pool is measured off — see FacilityModel.fromArea, which this delegates to
   public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
