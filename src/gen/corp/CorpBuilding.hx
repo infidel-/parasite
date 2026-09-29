@@ -285,9 +285,10 @@ class CorpBuilding
       return false;
     }
 
-// every room the corridor reaches over the DOOR GRAPH — not the tiles — with `skip` shut off.
-// `skip` of -1 shuts nothing and gives the baseline. From room 0, doorsSane's own sentinel
-  static function reached(state: _CorpState, skip: Int): Map<Int, Bool>
+// every room the corridor reaches over the DOOR GRAPH — not the tiles — with `skip` shut off, and
+// every door in `shut` closed. `skip` of -1 shuts nothing and gives the baseline. From room 0,
+// doorsSane's own sentinel
+  static function reached(state: _CorpState, skip: Int, ?shut: Array<_Door>): Map<Int, Bool>
     {
       var seen = new Map<Int, Bool>();
       seen.set(0, true);
@@ -300,7 +301,9 @@ class CorpBuilding
               var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
               if (far < 0 ||
                   far == skip ||
-                  seen.exists(far))
+                  seen.exists(far) ||
+                  (shut != null &&
+                  shut.indexOf(d) >= 0))
                 continue;
               seen.set(far, true);
               open.push(far);
@@ -641,6 +644,73 @@ class CorpBuilding
           return true;
         }
       return false;
+    }
+
+// A ROOM'S FRONT, the wall a reception's counter replaces: the one that faces a corridor along its
+// whole length and comes nearest the lift door, as the ring cells alongside the room's floor (the
+// corner posts are not in it), or an empty list when no wall does both within `near` cells.
+// `dir` on each spot is the hand the wall faces out of the room, `dir90` the way the run goes.
+//
+// READ OFF THE CARVE BEFORE ANY TEMPLATE RUNS, while the corridor is still BLDG_CORRIDOR — which
+// is the only time the far side of a wall can be told apart from a room's floor
+  public static function frontWall(state: _CorpState, room: _Room, liftX: Int, liftY: Int,
+      near: Int): Array<_Spot>
+    {
+      var cells = state.area.getCells();
+      var best = [];
+      var bestD = near + 1;
+      for (dir in [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT])
+        {
+          var d = deltaMap[dir];
+          var horiz = (d.y != 0);
+          var run = [];
+          var dist = bestD;
+          for (i in 0...(horiz ? room.x2 - room.x1 + 1 : room.y2 - room.y1 + 1))
+            {
+              var x = (horiz ? room.x1 + i : (d.x < 0 ? room.x1 - 1 : room.x2 + 1));
+              var y = (horiz ? (d.y < 0 ? room.y1 - 1 : room.y2 + 1) : room.y1 + i);
+              if (cells[x + d.x][y + d.y] != BLDG_CORRIDOR)
+                {
+                  run = null;
+                  break;
+                }
+              var cd = Std.int(Math.abs(x - liftX) + Math.abs(y - liftY));
+              if (cd < dist)
+                dist = cd;
+              run.push({
+                x: x,
+                y: y,
+                dir: dir,
+                dir90: (horiz ? DIR_RIGHT : DIR_DOWN),
+              });
+            }
+          if (run != null &&
+              dist < bestD)
+            {
+              best = run;
+              bestD = dist;
+            }
+        }
+      return best;
+    }
+
+// the doors that stand in a room's front wall
+  public static function frontDoors(state: _CorpState, front: Array<_Spot>): Array<_Door>
+    {
+      return [for (d in state.doors) for (s in front) if (d.x == s.x && d.y == s.y) d];
+    }
+
+// can this front be shut — every door in it closed — with the corridor still reaching everything
+// it reaches now? The counter takes the whole wall, so a room whose only way in is that wall, or
+// one with a room behind it that is only reached THROUGH it, would be walled in by its own desk
+  public static function frontShuts(state: _CorpState, front: Array<_Spot>): Bool
+    {
+      var base = reached(state, -1);
+      var seen = reached(state, -1, frontDoors(state, front));
+      for (id in base.keys())
+        if (!seen.exists(id))
+          return false;
+      return true;
     }
 
 // which of these candidate cells have a CORRIDOR on their far side

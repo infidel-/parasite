@@ -381,6 +381,18 @@ class GenRun
           add('furnN/' + r.role, 1);
         }
 
+      // HOW CLOSE THE FRONT DESK IS, and how many rooms could have been it. `fronts` is what the
+      // reception's `must` reads, so a floor with none of them is a floor the carve gave no desk
+      var fronts = 0;
+      for (_ in gen.blocks.CorpBlocks.fronts)
+        fronts++;
+      add('reception/fronts', fronts);
+      add('reception/nofront', fronts == 0 ? 1 : 0);
+      for (r in state.rooms)
+        if (r.role == gen.corp.CorpTemp.ROLE_RECEPTION)
+          add('reception/lift', Std.int(Math.abs((r.x1 + r.x2) / 2 - gen.blocks.CorpBlocks.liftX)) +
+            Std.int(Math.abs((r.y1 + r.y2) / 2 - gen.blocks.CorpBlocks.liftY)));
+
       GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
       add('rooms', state.rooms.length);
       add('doors', state.doors.length);

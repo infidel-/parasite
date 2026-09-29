@@ -385,10 +385,14 @@ class GenCheck
 // Both halves are a spec given against a floor that met neither: the room was dealt on `fit`
 // alone with no reference to the elevator, and its "counter" was a borrowed copy of the
 // executive's 3x2 slab standing in the middle of the floor. `gen.blocks.CorpBlocks.liftX/liftY`
-// is the car's own cell and `gen.corp.CorpRooms.counter` lays the run on the room's y1 or y2 edge
-// row, so both are testable. RECEPTION_NEAR is the measured worst case plus slack — it is a
-// preference in the demand and not a `must` (a `must` cost a third of the towers their reception
-// outright), so this is the assert that the preference is actually winning
+// is the lift door's own cell and `gen.corp.CorpRooms.counter` lays the run on the room's y1 or y2
+// edge row, so both are testable. RECEPTION_NEAR bounds the room's CENTRE, which the demand's
+// `must` does not: that one bounds the nearest cell of its counter wall.
+//
+// THIS ASSERT WAS GREEN FOR A FLOOR THAT BROKE IT: `liftX/liftY` had all four `frontDir` cases
+// mirrored, so it and the demand both measured against the far end of the main corridor and agreed
+// with each other — a median 49.5 cells from the real car. An oracle that reads the generator's own
+// idea of a landmark cannot catch that landmark being wrong
   public function receptionSane(ctx: GenCtx, rooms: Array<_Room>)
     {
       for (r in rooms)
@@ -450,10 +454,10 @@ class GenCheck
         }
     }
 
-// how far the reception's centre may be from the lift car, in cells. MEASURED over 200 seeds with
-// the assert forced: worst 28, and the plate's own diagonal is 88 — so this is a real bound and
-// not a formality, and it is the `fit` preference in CorpBlocks that holds it
-  public static inline var RECEPTION_NEAR = 36;
+// how far the reception's centre may be from the lift door, in cells. MEASURED over 3,000 seeds
+// once the lift point was right and the demand had to front the corridor mouth: 7 to 12, worst 12
+// in 12 towers. The plate's own diagonal is 88
+  public static inline var RECEPTION_NEAR = 14;
 
 // EVERY WALKABLE CELL OF EVERY ROOM CAN BE WALKED TO — the general form of `storageSane` above,
 // and the check `reachable` is structurally incapable of being.

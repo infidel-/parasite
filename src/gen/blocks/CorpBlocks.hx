@@ -19,6 +19,8 @@ import gen.corp._CorpState;
 import game.AreaGenerator.DIR_UP;
 import game.AreaGenerator.DIR_DOWN;
 import game.AreaGenerator.DIR_LEFT;
+import game.AreaGenerator.DIR_RIGHT;
+import game.AreaGenerator._Spot;
 
 class CorpBlocks
 {
@@ -41,6 +43,8 @@ class CorpBlocks
   // the widest a reception may be dealt, on either axis. a front desk and a couple of chairs is
   // what it is; the floor's big rooms belong to the cubicle farm
   public static inline var RECEPTION_MAX = 6;
+  // how far from the lift door, in cells, the nearest cell of a reception's counter wall may be
+  public static inline var RECEPTION_MOUTH = 8;
 
   // the zone kinds a room pushes under itself. they write no cells of their own — the template
   // that pushed one has already laid it — and exist so the tree is a record of WHERE the furniture
@@ -113,6 +117,13 @@ class CorpBlocks
   public static var liftX = 0;
   public static var liftY = 0;
 
+  // THE ROOMS THAT CAN BE THE RECEPTION, each with the wall its counter replaces. Filled by
+  // `assign` before it deals, read by the reception demand's `must` and by the template, by the
+  // same static route as `blocked`. A room is in it when one of its walls faces the corridor along
+  // its whole length within RECEPTION_MOUTH of the lift door, and shutting every door in that wall
+  // still leaves the corridor reaching everything it reached before, the room itself included
+  public static var fronts: Map<Int, Array<_Spot>> = new Map();
+
 // what a tower floor must end up with.
 //
 // the minW/minH are what each template needs to produce the thing rather than a token of it: a
@@ -145,7 +156,12 @@ class CorpBlocks
         // nearest small room to the doors it is the reception FOR
         {
           kind: ROOM_RECEPTION,
-          min: 0,
+          // A MIN WHEREVER THERE IS A ROOM TO GIVE IT, read off `fronts` like the `must` below.
+          // At 0 it only ever dealt in the maxima pass, after the five `min: 1` kinds had picked —
+          // and those took the room fronting the lift in 15% of towers (dealt 0.82 a floor). As a
+          // min it is the most constrained demand there is (1.6 candidates a floor) and picks first.
+          // A floor the carve gave no front at all (3%) has no desk, which is the carve's outcome
+          min: (fronts.keys().hasNext() ? 1 : 0),
           max: 1,
           minW: 4,
           minH: 4,
@@ -158,12 +174,10 @@ class CorpBlocks
           //
           // DISTANCE IS THE OTHER WAY ROUND: a reception 64 cells from the car is not a
           // reception, so that one is a `must` and a floor with nothing near the lift gets no
-          // reception at all. Declaring first took the outliers from 82 towers in 3,000 to 6, and
-          // those 6 have no small rect near the car at any price — a carve outcome, not a
-          // ranking one
+          // reception at all. It is now stricter than a radius: the room must FRONT the corridor
+          // mouth, with a whole wall onto it for the counter to replace (`fronts`)
           must: function(b: _GenNode)
-            return Std.int(Math.abs((b.x1 + b.x2) / 2 - liftX)) +
-              Std.int(Math.abs((b.y1 + b.y2) / 2 - liftY)) <= GenCheck.RECEPTION_NEAR,
+            return fronts.exists(b.roomID),
           fit: function(b: _GenNode)
             return -(Std.int(Math.abs((b.x1 + b.x2) / 2 - liftX)) +
               Std.int(Math.abs((b.y1 + b.y2) / 2 - liftY)) +
@@ -309,16 +323,31 @@ class CorpBlocks
       // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
       blocked = gen.corp.CorpBuilding.passThrough(state);
       // and WHERE THE LIFT IS, for the reception demand's `fit`. The car is not on the grid yet —
-      // ElevatorBlock fills after this — but `frontDir` is, and the car stands at the middle of
-      // the plate's wall on that hand, which is all the demand needs
+      // ElevatorBlock fills after this — but `frontDir` is, and the lift door stands at the middle
+      // of the plate's wall on that hand, which is all the demand needs.
+      //
+      // `frontDir` IS THE WAY THE CORRIDOR RUNS INWARD, so the lift is on the OPPOSITE edge: DOWN
+      // means the top wall. All four cases were mirrored until the reception rework, which put
+      // "by the lift" at the far end of the main corridor by the stairs — a median 49.5 cells from
+      // the real car over 300 seeds, and the oracle was green because it read the same point
       liftX = Std.int((state.px1 + state.px2) / 2);
       liftY = Std.int((state.py1 + state.py2) / 2);
       switch (state.frontDir)
         {
-          case DIR_UP: liftY = state.py1;
-          case DIR_DOWN: liftY = state.py2;
-          case DIR_LEFT: liftX = state.px1;
+          case DIR_DOWN: liftY = state.py1;
+          case DIR_UP: liftY = state.py2;
+          case DIR_RIGHT: liftX = state.px1;
           default: liftX = state.px2;
+        }
+      // and WHICH ROOMS CAN FRONT THE LIFT: a wall onto the corridor near the door that can take
+      // the counter whole — see gen.corp.CorpBuilding.frontWall and frontShuts
+      fronts = new Map();
+      for (room in state.rooms)
+        {
+          var f = gen.corp.CorpBuilding.frontWall(state, room, liftX, liftY, RECEPTION_MOUTH);
+          if (f.length > 0 &&
+              gen.corp.CorpBuilding.frontShuts(state, f))
+            fronts.set(room.id, f);
         }
 
       // and DEAL UNTIL NOTHING IS WALLED IN BEHIND A TOILET. The pre-deal test names the rooms a
