@@ -64,8 +64,8 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION, TILE_FLOOR_EXEC_RUG), and
-    // row 18 their twins
+    // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION, TILE_FLOOR_EXEC_RUG) and the
+    // reception counter (TILE_CORP_RECEPTION_COUNTER, unwalkable), and row 18 their twins
     1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
@@ -142,6 +142,9 @@ class Default extends Tileset
         return super.getIcon(Const.TILE_FLOOR_MARBLE1);
       if (tileID == Const.TILE_FLOOR_RECEPTION + 16)
         return super.getIcon(Const.TILE_FLOOR_MARBLE1 + 16);
+      // the counter in the reception's wall is the marble desk it replaced
+      if (tileID == Const.TILE_CORP_RECEPTION_COUNTER)
+        return super.getIcon(Const.TILE_DARK_TABLE_MARBLE1_1X1);
       // and the exec rug is the boardroom's carpet, the one rug-like floor the tileset has
       if (tileID == Const.TILE_FLOOR_EXEC_RUG)
         return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING);

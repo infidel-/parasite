@@ -385,8 +385,8 @@ class GenCheck
 // Both halves are a spec given against a floor that met neither: the room was dealt on `fit`
 // alone with no reference to the elevator, and its "counter" was a borrowed copy of the
 // executive's 3x2 slab standing in the middle of the floor. `gen.blocks.CorpBlocks.liftX/liftY`
-// is the lift door's own cell and `gen.corp.CorpRooms.counter` lays the run on the room's y1 or y2
-// edge row, so both are testable. RECEPTION_NEAR bounds the room's CENTRE, which the demand's
+// is the lift door's own cell and `gen.corp.CorpRooms.counter` lays the run over the room's front
+// wall, `CorpBlocks.fronts`, so both are testable. RECEPTION_NEAR bounds the room's CENTRE, which the demand's
 // `must` does not: that one bounds the nearest cell of its counter wall.
 //
 // THIS ASSERT WAS GREEN FOR A FLOOR THAT BROKE IT: `liftX/liftY` had all four `frontDir` cases
@@ -404,12 +404,15 @@ class GenCheck
           ok(d <= RECEPTION_NEAR, 'corp reception at ' + r.x1 + ',' + r.y1 +
             ' is ' + d + ' cells from the lift at ' + gen.blocks.CorpBlocks.liftX + ',' +
             gen.blocks.CorpBlocks.liftY + ' (max ' + RECEPTION_NEAR + ')');
-          var counter = false;
-          for (x in r.x1...r.x2 + 1)
-            if (ctx.cells[x][r.y1] == Const.TILE_DARK_TABLE_MARBLE1_1X1 ||
-                ctx.cells[x][r.y2] == Const.TILE_DARK_TABLE_MARBLE1_1X1)
-              counter = true;
-          ok(counter, 'corp reception at ' + r.x1 + ',' + r.y1 + ' has no counter run');
+          // and the counter is its WHOLE front wall, post to post — which also says no door is
+          // left in it, since a door cell is floor and a door frame and not this id
+          var front = gen.blocks.CorpBlocks.fronts.get(r.id);
+          ok(front != null, 'corp reception at ' + r.x1 + ',' + r.y1 + ' has no front wall');
+          if (front == null)
+            continue;
+          for (c in front)
+            ok(ctx.cells[c.x][c.y] == Const.TILE_CORP_RECEPTION_COUNTER, 'corp reception at ' +
+              r.x1 + ',' + r.y1 + ' has no counter at ' + c.x + ',' + c.y);
         }
     }
 

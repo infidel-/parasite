@@ -1569,61 +1569,57 @@ class CorpRooms
         }
     }
 
-// a reception: the executive's marble and the same 3x2 slab, standing as a counter, with seating
-// and greenery round the walls
-// THE RECEPTION'S COUNTER IS ITS FRONT WALL, and it runs along the hand nearer the lift.
+// a reception: a marble counter where its wall onto the corridor was, facing the lift, a lane
+// behind it for the receptionist, and greenery round the other walls
 //
-// It used to borrow `execDesk`, which stands a 3 x 2 slab in the MIDDLE of the room — a reception
-// with an island in it, and the highest furniture-pocket rate on the floor (75.4% of its rooms held
-// floor the lift flood could not reach, because the slab and the wall dressings between them cut
-// the rect in half). A counter is one cell deep, it stands against the wall the visitor walks
-// toward, and the floor in front of it stays one piece.
+// THE COUNTER IS THE FRONT WALL ITSELF, laid over the ring cells from one corner post to the other
+// (gen.corp.CorpBuilding.frontWall picks the wall, gen.blocks.CorpBlocks.fronts carries it here).
+// The visitor stands in the corridor and the receptionist in the room; the room is entered by a
+// door in another wall, which CorpBuilding.frontShuts guaranteed before the room was dealt.
 //
-// IT IS LAID ON THE EDGE ROW ITSELF, not one cell in. One cell in leaves a back strip whose only
-// ways out are the two corners, and `decorateWalls` dresses a corner unconditionally — that strip
-// is a sealed pocket in every seed where it fits. On the row itself there is no strip.
-//
-// AND IT IS ALWAYS HORIZONTAL. `decorateWalls` dresses columns x1 and x2 and nothing else, so a
-// run held to x1+1 .. x2-1 can never be overwritten by the dressing that follows it; a vertical
-// counter would be. ponytail: the lift is then only followed on one axis, which for a room capped
-// at 6 x 6 is a cell or two of difference
+// IT USED TO BE A DESK RUN ON THE ROOM'S OWN EDGE ROW, always horizontal and facing whichever of
+// y1/y2 was nearer a lift point that was itself mirrored — so it usually faced away from the car
   static function counter(state: _CorpState, node: _GenNode, room: _Room)
     {
       var area = state.area;
       var cells = area.getCells();
-      var line = (gen.blocks.CorpBlocks.liftY < (room.y1 + room.y2) / 2 ? room.y1 : room.y2);
-      var lo = room.x1 + 1;
-      var hi = room.x2 - 1;
-      if (hi < lo)
-        return;
-      GenTree.add(node, CorpBlocks.ZONE_COUNTER_RUN, lo, line, hi, line);
-      var full = [
-        Const.CORP_COMPUTERS,
-        Const.CORP_TABLE_PHONE,
-        Const.CORP_TABLE_FILES,
-      ];
-      var deco = full.copy();
-      var n = 0;
-      for (x in lo...hi + 1)
+      var front = CorpBlocks.fronts.get(room.id);
+      var d = deltaMap[front[0].dir];
+      // THE DOORS IN IT GO, which is what the room was dealt on the promise of
+      for (door in CorpBuilding.frontDoors(state, front))
+        state.doors.remove(door);
+      for (s in front)
         {
-          if (atDoor(cells, x, line))
-            continue;
-          cells[x][line] = Const.TILE_DARK_TABLE_MARBLE1_1X1;
-          deco = addDecorationExt(state, x, line, deco, full);
-          n++;
+          cells[s.x][s.y] = RECEPTION_COUNTER;
+          // the lobby: the corridor straight out from the counter, across its width
+          for (k in 1...CORRIDOR_W + 1)
+            {
+              if (cells[s.x + d.x * k][s.y + d.y * k] != BLDG_CORRIDOR)
+                break;
+              cells[s.x + d.x * k][s.y + d.y * k] = RECEPTION;
+            }
+          // and the receptionist's LANE, the row behind it: `decorateWalls` dresses columns x1
+          // and x2 whole, which on a counter down a side wall would stand a cooler behind every
+          // cell of it
+          var lx = s.x - d.x;
+          var ly = s.y - d.y;
+          cells[lx][ly] = RECEPTION;
+          for (o in area.getObjectsAt(lx, ly))
+            area.removeObject(o);
         }
-      // and the receptionist's chair, in front of the middle of whatever run was actually laid
-      if (n > 0)
-        area.addDecoration(Std.int((lo + hi) / 2), line + (line == room.y1 ? 1 : -1),
-          Const.CORP_CHAIR[0].row, area.random(Const.CORP_CHAIR[0].amount));
+      var last = front[front.length - 1];
+      GenTree.add(node, CorpBlocks.ZONE_COUNTER_RUN, front[0].x, front[0].y, last.x, last.y);
+      // and the receptionist's chair, behind the middle of it
+      var mid = front[Std.int(front.length / 2)];
+      area.addDecoration(mid.x - d.x, mid.y - d.y,
+        Const.CORP_CHAIR[0].row, area.random(Const.CORP_CHAIR[0].amount));
     }
 
+// NO WHITEBOARD: the back wall is where the company's name hangs, facing the counter
   public static function reception(state: _CorpState, node: _GenNode, room: _Room)
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, RECEPTION);
-      counter(state, node, room);
-
       decorateWalls(state, room, [
           Const.CORP_TABLE_PHONE,
           Const.CORP_TABLE_MISC,
@@ -1631,11 +1627,13 @@ class CorpRooms
         ], [
           Const.CORP_PLANT,
           Const.CORP_COOLER,
-          Const.CORP_WHITEBOARD,
+          Const.CORP_CABINET,
         ],
         Const.TILE_DARK_TABLE_MARBLE1_1X1,
         Const.TILE_FLOOR_RECEPTION + UNWALKABLE_TILE_OFFSET,
         40, 40);
+      // AFTER the dressing, so the lane behind the counter is cleared of it
+      counter(state, node, room);
     }
 
 // a security post: the server room's floor, a bank of monitors on one wall and the machines that

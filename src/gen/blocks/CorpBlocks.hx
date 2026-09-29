@@ -340,12 +340,15 @@ class CorpBlocks
           default: liftX = state.px2;
         }
       // and WHICH ROOMS CAN FRONT THE LIFT: a wall onto the corridor near the door that can take
-      // the counter whole — see gen.corp.CorpBuilding.frontWall and frontShuts
+      // the counter whole — see gen.corp.CorpBuilding.frontWall and frontShuts. NO LONGER THAN
+      // RECEPTION_MAX + 1, because the counter IS the wall: uncapped, 136 towers in 3,000 laid one
+      // 8 to 10 cells long, a 20 m front desk. The cap costs 0.97 -> 0.93 receptions a floor
       fronts = new Map();
       for (room in state.rooms)
         {
           var f = gen.corp.CorpBuilding.frontWall(state, room, liftX, liftY, RECEPTION_MOUTH);
           if (f.length > 0 &&
+              f.length <= RECEPTION_MAX + 1 &&
               gen.corp.CorpBuilding.frontShuts(state, f))
             fronts.set(room.id, f);
         }

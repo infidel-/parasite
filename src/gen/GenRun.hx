@@ -390,8 +390,11 @@ class GenRun
       add('reception/nofront', fronts == 0 ? 1 : 0);
       for (r in state.rooms)
         if (r.role == gen.corp.CorpTemp.ROLE_RECEPTION)
-          add('reception/lift', Std.int(Math.abs((r.x1 + r.x2) / 2 - gen.blocks.CorpBlocks.liftX)) +
-            Std.int(Math.abs((r.y1 + r.y2) / 2 - gen.blocks.CorpBlocks.liftY)));
+          {
+            add('reception/lift', Std.int(Math.abs((r.x1 + r.x2) / 2 - gen.blocks.CorpBlocks.liftX)) +
+              Std.int(Math.abs((r.y1 + r.y2) / 2 - gen.blocks.CorpBlocks.liftY)));
+            add('reception/counter', gen.blocks.CorpBlocks.fronts.get(r.id).length);
+          }
 
       GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
       add('rooms', state.rooms.length);

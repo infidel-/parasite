@@ -247,6 +247,13 @@ class CorpBuilding
 // whatever was in the way added to `blocked`. 3 towers in 3000 need the second attempt
   public static function deadEnds(state: _CorpState): Array<Int>
     {
+      // THE RECEPTION'S FRONT IS WALKED AS SHUT, because its template will shut it — the counter
+      // takes the whole wall. A WC that is the reception's only other way in is otherwise a dead
+      // end this walk passes and gen.GenCheck.corpRoutesSane, reading the finished doors, does not
+      var shut = [];
+      for (r in state.rooms)
+        if (r.role == ROLE_RECEPTION)
+          shut = frontDoors(state, CorpBlocks.fronts.get(r.id));
       var seen = new Map<Int, Bool>();
       seen.set(0, true);
       var open = [0];
@@ -259,7 +266,8 @@ class CorpBuilding
             {
               var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
               if (far < 0 ||
-                  seen.exists(far))
+                  seen.exists(far) ||
+                  shut.indexOf(d) >= 0)
                 continue;
               seen.set(far, true);
               open.push(far);

@@ -1206,6 +1206,11 @@ class Const
   // render.corp.CorpRugs lays one oval over each room's rect of it. Its twin is the furniture that
   // stands on the rug
   public static var TILE_FLOOR_EXEC_RUG = OFFSET_ROW17 + 1;
+  // and the RECEPTION COUNTER, which is not a floor at all: it stands IN THE WALL LINE, where the
+  // reception's wall onto the corridor was, from one corner post to the other. Unwalkable and
+  // see-through, which is what row 17 already is past its two floors, so tiles.Default needs no
+  // new table entry. render.corp.CorpModel reads it as a wall the line carries through
+  public static var TILE_CORP_RECEPTION_COUNTER = OFFSET_ROW17 + 2;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

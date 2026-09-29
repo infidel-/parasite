@@ -69,6 +69,8 @@ class CorpTemp
   public static inline var ARCHIVE_HIGH = 43;
   // the reception's own floor, split off MARBLE1 so the exec office can change finish without it
   public static inline var RECEPTION = 44;
+  // and its counter, laid over the ring cells of its wall onto the corridor
+  public static inline var RECEPTION_COUNTER = 45;
 
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var BLDG_ROOM_ID_START = 100;
@@ -129,6 +131,7 @@ class CorpTemp
     ARCHIVE => Const.TILE_FLOOR_ARCHIVE,
     ARCHIVE_HIGH => Const.TILE_ARCHIVE_HIGH,
     RECEPTION => Const.TILE_FLOOR_RECEPTION,
+    RECEPTION_COUNTER => Const.TILE_CORP_RECEPTION_COUNTER,
     BLDG_WALL => Const.TILE_BUILDING,
     BLDG_ROOM => Const.TILE_FLOOR_CARPET,
     BLDG_CORRIDOR => Const.TILE_FLOOR_CARPET,

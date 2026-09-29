@@ -396,7 +396,9 @@ class CorpConnect
             {
               var t = ctx.getCellType(s.x + Const.dir4x[i], s.y + Const.dir4y[i]);
               if (t >= 0 &&
-                  (Const.isCorpTableTile(t) || Const.isCorpDeskBlock(t)))
+                  (Const.isCorpTableTile(t) ||
+                  Const.isCorpDeskBlock(t) ||
+                  t == Const.TILE_CORP_RECEPTION_COUNTER))
                 keep = true;
             }
           if (!keep)
