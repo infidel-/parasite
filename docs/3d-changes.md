@@ -76,3 +76,25 @@ Verdict: **landed.**
   new 0.458 x 0.437 x 0.161.
 
 Verdict: **landed.**
+
+## Corp glb batches take the indoor swap whenever their glb lands
+
+Reported as a dark blue desk plant on the reception ledge. The texture is neutral (pot 47,47,46),
+and so were the material, the vertex data and the fog. What was missing was the patch: four
+batches — `desk-plant`, `rec-phone`, `rec-board`, `rec-bell` — carried `visionMask` and no
+`indoorMask`, so they were lit by the outdoor rig (ambient `46536b`, hemisphere `56668c`, moon
+`8294c0`). Pot rendered `18,24,38`.
+
+- **Cause: the warm, and my reception counter in its demo model.** `CorpWarm` builds the demo plate
+  with `IndoorMask` attached and detaches it at the end, but `CorpProps.batch` patches in the glb's
+  LOAD CALLBACK, which lands after the detach. `VisionMask.patch` folds in the indoor swap only while
+  `IndoorMask.on`, the SOLID material is the path's shared template, and the patch marks it — so the
+  first patch wins for every tower after. Before `CorpModel.demo` carried a counter, the warm's
+  `CorpClutter.build` placed none of these four and its later per-path loop patched them correctly.
+- **Fix: `CorpProps.batch` calls `IndoorMask.patch` itself**, after `VisionMask.patchMesh` — a no-op
+  where it already went in, and a no-op for any fragment the mask reads as outdoor. The same reason
+  `render.particles.Sprites` patches unconditionally.
+- Verified live: no corp instanced batch left with `visionMask` and without `indoorMask`, and the pot
+  renders neutral 22,22,22.
+
+Verdict: **landed.** A glb patched in a load callback cannot trust a mask's `on` flag at build time.

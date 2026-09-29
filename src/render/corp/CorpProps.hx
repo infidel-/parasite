@@ -12,6 +12,7 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.ContactMask;
+import render.world.IndoorMask;
 import render.world.VisionMask;
 
 // what the pass placed, for __corp()
@@ -294,6 +295,14 @@ class CorpProps
         Models.get(path, function(_)
           {
             VisionMask.patchMesh(p.mesh);
+            // AND THE INDOOR SWAP WHETHER OR NOT A MASK IS ATTACHED RIGHT NOW. VisionMask folds it in
+            // only while IndoorMask.on, and this runs whenever the glb resolves: CorpWarm builds its
+            // demo plate, detaches the mask, and only THEN do its batches' glbs land. The material is
+            // the path's shared template and the first patch marks it, so a prop first seen by the
+            // warm lit by the moon and the night sky in every tower after — reported as a dark blue
+            // desk plant, once CorpModel.demo's reception counter started placing one. A fragment
+            // the mask calls outdoor reads it as a no-op, so the call is safe for any batch here
+            IndoorMask.patch(p.mesh.material);
             // the room reflected in it — and NOT on everything, which is what `env` is for. the
             // inject works on Lambert (PropEnv's own header says so, twice), so "only the ones
             // that stayed MeshStandard" was never true of it
