@@ -395,6 +395,11 @@ class AreaGame extends _SaveObject
 // NOTE: used in scenario spaceship generation part
   public function initSpawnPoints()
     {
+      if (info.id == AREA_CORP)
+        {
+          corpSpawnPoints();
+          return;
+        }
       if (info.id != AREA_FACILITY)
         return;
       clueSpawnPoints = [];
@@ -489,6 +494,27 @@ class AreaGame extends _SaveObject
         }
 //      trace(importantGuardSpawnPoints);
 //      trace(guardSpawnPoints);
+    }
+
+// a corp tower floor's one guard post: in front of the security room's console, off the finished
+// grid (gen.corp.CorpRooms.securityPost), so a tower saved before the room had a console still
+// gets a guard at its desk run
+  function corpSpawnPoints()
+    {
+      clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
+      if (generatorInfo == null)
+        return;
+      for (r in generatorInfo.rooms)
+        {
+          if (r.role != gen.corp.CorpTemp.ROLE_SECURITY)
+            continue;
+          var post = gen.corp.CorpRooms.securityPost(_cells, r);
+          if (post != null &&
+              post.y <= r.y2)
+            importantGuardSpawnPoints.push(post);
+        }
     }
 
 // the parking entry's two cells: the guard post at the mouth of the drive the cars come in by, and
