@@ -103,7 +103,7 @@ Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
 
 ## Verdict table
 
-Bodies in [`3d-changes.md`](3d-changes.md) and its dated predecessors (`3d-changes-2026-09c.md`
+Bodies in [`3d-changes.md`](3d-changes.md) and its dated predecessors (`3d-changes-2026-09e.md`
 back) — grep the change text.
 
 ### Perf and render engineering
@@ -1776,3 +1776,4 @@ overlay overdraw** — that instrumentation is the first step.
 | corp meeting room: table `TABLE_D_MAX` 2, fascia 0.26 -> 0.12 + underside cap, blade leg 36 -> 18 tris, shoe dropped, at the slab ends only, `boardChairs` down both long sides, `anyWall` glass fallback for dealt plants, whiteboard 0..1 face, table-top solo re-roll, `seamfix grout`/`tone` on wall/carpet | a plant gated on masonry like casework vanished against glass; a packed crop on a world-tiled top was the seam | **landed. +2 calls (whiteboard)** |
 | boardroom slab top arris rounded (`roundEdge`, r 0.05 x 3 bands, open hands only) and blade leg rounded (142 tris, rounds and foot at the patch centre) | a dashed line on the foot survived a UV fix and a shadow-side fix — it was sub-pixel rim aliasing at a close free-cam, invisible at the game camera | **landed. 0 calls** |
 | boardroom table polish: `table-top` on `MeshPhongMaterial` 0x444444 / 120 (`CorpFurniture.glossy`), demo carries a 2-cell meeting slab so it warms | `PropEnv` face lobe on a flat top is ONE value over the plane — at 0.3 the table went white; a view-anchored lobe glints only where normals vary | **landed. +1 program (warmed, 87 -> 88), 0 calls** |
+| corp reception counter in the wall line: `TILE_CORP_RECEPTION_COUNTER` read as floor + `FIT_COUNTER`, two-tier marble emitted by `CorpReception`, phone/board/bell glbs, logo pane | a `Wall` value would have had the posts carry into it and emit no end face (a hole to the ceiling); the logo walk left through the staff door until it stopped at `carries` | **landed. +11 calls (6 meshes + shadow draws), demo-warmed** |

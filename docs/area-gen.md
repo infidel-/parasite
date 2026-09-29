@@ -1538,6 +1538,9 @@ and only the fill number says which.**
 
 ## THE RECEPTION IS SMALL, IT IS BY THE LIFT, AND ITS COUNTER IS THE FRONT WALL
 
+> SUPERSEDED by "THE RECEPTION FRONTS THE CORRIDOR MOUTH, AND ITS COUNTER IS IN THE WALL LINE" —
+> every "by the lift" number below was measured against a MIRRORED lift point
+
 Spec given mid-pass. The room was dealt on `fit: smallest` with no reference to the elevator, and
 its "counter" was a borrowed `execDesk` — a 3 x 2 slab in the MIDDLE of the floor, which is also
 why reception measured the highest pocket rate in the tower at 75.4%.
@@ -1566,6 +1569,38 @@ why reception measured the highest pocket rate in the tower at 75.4%.
 
 Corp oracle green at 3,000 seeds with both new asserts on, `orphanCells 0.00`, facility green at
 3,000, corp digest stable across two runs.
+
+## THE RECEPTION FRONTS THE CORRIDOR MOUTH, AND ITS COUNTER IS IN THE WALL LINE
+
+Spec: "it has to be near the elevator", and its front wall replaced by a marble counter set between
+the wall corners like a window.
+
+- **`liftX/liftY` WAS MIRRORED on all four `frontDir` cases.** `frontDir` is the way the corridor runs
+  INWARD, so DOWN means the TOP wall — and `assign` put the point on the opposite edge, at the far
+  end of the main corridor by the stairs. `receptionSane` read the same point and stayed green:
+  measured against the real car over 300 seeds the reception was a **median 49.5 cells** away (max
+  68), none within 12. **An oracle that reads the generator's own idea of a landmark cannot catch
+  the landmark being wrong.**
+- **"Near" is now a SHAPE, not a radius: `CorpBlocks.fronts`**, filled in `assign` before the deal
+  (the `blocked` route). A room qualifies when one wall faces a corridor along its WHOLE length within
+  `RECEPTION_MOUTH` 8 of the lift door (`CorpBuilding.frontWall`), that wall is at most
+  `RECEPTION_MAX + 1` long, and shutting every door in it still leaves the corridor reaching
+  everything it did (`frontShuts`) — the counter takes the whole wall, so the room is entered by a
+  door on another wall.
+- **`min` is 1 wherever `fronts` is non-empty**, else 0. At `min: 0` the demand dealt only in the
+  maxima pass, after the five `min: 1` kinds had picked, and they took the room fronting the lift on
+  15% of floors (0.82 dealt). As a min it is the most constrained demand (1.5 candidates) and picks
+  first. **0.93 dealt a floor**; the 7% without are floors with no qualifying room. Uncapped it was
+  0.97 but 136 towers in 3,000 laid an 8-10 cell counter — a 20 m front desk.
+- **The counter is `TILE_CORP_RECEPTION_COUNTER`** (row 17, unwalkable + see-through already) over the
+  ring cells post to post; the doors in that wall are removed from the grid and from `state.doors`.
+  `deadEnds` walks the reception's front as SHUT, so a WC that is its only other way in re-deals.
+  The corridor straight out from it, across its width, takes `RECEPTION` floor: the lobby patch.
+  The row behind it is cleared of wall dressing (the receptionist's lane) and the chair goes there.
+- **Measured over 3,000 seeds:** 0 failures, 0 unreachable, `orphanCells` 0; centre-to-lift distance
+  **7-12, worst 12** (`RECEPTION_NEAR` 36 → 14); counter 4-7 cells, mean 5.1.
+- **The renderer reads the counter as FLOOR with a fitting on it**, not as a wall — see the
+  `3d-changes.md` entry "corp reception counter in the wall line".
 
 ## THE WINDOW RULE LIVES IN THE RENDERER, AND `makeWindows` WAS LEFT ALONE
 
