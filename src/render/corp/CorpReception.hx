@@ -121,8 +121,85 @@ class CorpReception
     {
       var rs = runs(m);
       for (r in rs)
-        body(m, r);
+        {
+          body(m, r);
+          logo(m, r);
+        }
       return rs.length;
+    }
+
+// THE COMPANY'S NAME ON THE WALL THE COUNTER FACES, as one 0..1 pane: what a visitor reads over the
+// receptionist's head. Hung on the wall straight across the room from the counter's middle, or the
+// nearest cell of that wall that is masonry — glazing and a doorway carry nothing
+  static function logo(m:Facility, r:ReceptionRun):Void
+    {
+      var w = logoCell(m, r);
+      if (w == null)
+        return;
+      var f = FacilityGeom.plane(FacilityGeom.slab(m, w.col, w.row), r.out,
+        CorpStyle.REC_LOGO_PROUD);
+      var c = CityConfig.cellToWorld(w.col, w.row);
+      var half = CorpStyle.REC_LOGO_W / 2;
+      var alongX = (r.out < 2);
+      FacilityGeom.pane(CorpFurniture.buf(CorpStyle.RECEPTION_LOGO),
+        (alongX ? c.x - half : f.x0), (alongX ? c.x + half : f.x1),
+        (alongX ? f.z0 : c.z - half), (alongX ? f.z1 : c.z + half),
+        r.out, CorpStyle.REC_LOGO_Y0,
+        CorpStyle.REC_LOGO_Y0 + CorpStyle.REC_LOGO_W / CorpStyle.RECEPTION_LOGO_ASPECT);
+    }
+
+// the masonry cell the logo hangs on: straight across the room from the counter's middle to the
+// wall line, then along it to the nearest SOLID cell, or null where there is none
+  static function logoCell(m:Facility, r:ReceptionRun):{ col:Int, row:Int }
+    {
+      var k = Std.int(r.len / 2);
+      var col = r.col + (r.alongX ? k : 0);
+      var row = r.row + (r.alongX ? 0 : k);
+      var dc = FacilityGeom.DC[r.out ^ 1];
+      var dr = FacilityGeom.DR[r.out ^ 1];
+      do
+        {
+          col += dc;
+          row += dr;
+        }
+      // THE WALL LINE AND NOT A WALL: a doorway is a hole in the line, and a walk that asked for
+      // masonry went straight out through the reception's own staff door and hung the logo on the
+      // far wall of the room next door
+      while (FacilityModel.inside(m, col, row) &&
+        !FacilityGeom.carries(m, col, row));
+      for (i in 0...3)
+        for (s in [1, -1])
+          {
+            var c = col + (r.alongX ? s * i : 0);
+            var w = row + (r.alongX ? 0 : s * i);
+            if (FacilityModel.isSolidWall(m, c, w))
+              return {
+                col: c,
+                row: w,
+              };
+          }
+      return null;
+    }
+
+// the room cells along each logo's wall that the tower's framed art keeps off, as (col, row) with
+// the hand the wall is on — render.corp.CorpSigns asks before it hangs a panel there
+  public static function logoClear(m:Facility):Array<{ col:Int, row:Int, dir:Int }>
+    {
+      var out = [];
+      for (r in runs(m))
+        {
+          var w = logoCell(m, r);
+          if (w == null)
+            continue;
+          var dir = r.out ^ 1;
+          for (i in -CorpStyle.REC_LOGO_CLEAR...CorpStyle.REC_LOGO_CLEAR + 1)
+            out.push({
+              col: w.col - FacilityGeom.DC[dir] + (r.alongX ? i : 0),
+              row: w.row - FacilityGeom.DR[dir] + (r.alongX ? 0 : i),
+              dir: dir,
+            });
+        }
+      return out;
     }
 
 // one counter: the tall body with its ledge on the corridor side, and the worktop on the room side.

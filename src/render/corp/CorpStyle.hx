@@ -111,6 +111,10 @@ class CorpStyle
   // corp/reception-pack): the TOP of both tiers, and the corridor-side FRONT and the ledge's edges
   public static inline var RECEPTION_TOP = 'textures/corp/reception-top.png';
   public static inline var RECEPTION_FRONT = 'textures/corp/reception-front.png';
+  // and the company's name on the reception's back wall, facing its counter: ONE composition mapped
+  // 0..1, so its height comes off the MEASURED crop's aspect (463 x 169) and never off a choice
+  public static inline var RECEPTION_LOGO = 'textures/corp/reception-logo.png';
+  public static inline var RECEPTION_LOGO_ASPECT = 463 / 169.0;
   // and the whiteboard's face, ONE authored composition mapped 0..1 over the board (a frame, a
   // marker tray, a sketch), so render.corp.CorpDeco locks the board's aspect to this 1024x768 source
   public static inline var WHITEBOARD = 'textures/corp/whiteboard.png';
@@ -273,6 +277,14 @@ class CorpStyle
   // notebook is the visitor book, with the fountain pen beside it, the business cards and a
   // lanyard badge for the visitor's pass on the ledge, the sticky notes on the worktop
   public static var REC_DECALS = [10, 11, 30, 23, 13];
+  // the logo on the back wall: its width (under a CELL, so one solid wall cell carries it), its
+  // bottom edge -- over any casework dressed under it, the whiteboard's own band -- and how proud
+  // of the wall it hangs
+  public static inline var REC_LOGO_W = 3.6;
+  public static inline var REC_LOGO_Y0 = 3.0;
+  public static inline var REC_LOGO_PROUD = 0.08;
+  // how many cells either side of the logo the tower's own framed art keeps off (CorpSigns)
+  public static inline var REC_LOGO_CLEAR = 2;
   // the two hand-modelled tables. built at WORLD SIZE, so render.Models.instanced (which scales by
   // HEIGHT alone) scales them by exactly 1 and every number in the build script is the game's
   public static inline var DESK_GLB_H = 1.5;

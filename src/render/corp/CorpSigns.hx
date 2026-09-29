@@ -128,6 +128,10 @@ class CorpSigns
       var seen = new Map<Int, Bool>();
       // one projector screen per boardroom and no more, keyed on the room it hangs in
       var screened = new Map<Int, Bool>();
+      // and the stretch of wall each reception's logo hangs on, which takes no framed art beside it
+      var logos = new Map<Int, Bool>();
+      for (c in CorpReception.logoClear(m))
+        logos.set(key(m, c.col, c.row, c.dir), true);
       for (dir in 0...4)
         {
           // a run follows the WALL, so it advances along x for a wall in z and along z for one in x
@@ -161,6 +165,8 @@ class CorpSigns
                     var at = Std.int((i + 0.5) * len / k);
                     var cc = col + sc * at;
                     var rr = row + sr * at;
+                    if (logos.exists(key(m, cc, rr, dir)))
+                      continue;
                     var slot = pick(m, cc, rr, len, screened);
                     quad(bufs[sheetOf(slot)], m, cc, rr, dir, slot);
                     n++;
