@@ -256,3 +256,26 @@ Verified live with the ghost forced onto the cabinet: carcass solid, leaf gone, 
 0 new draw calls; two new program keys (`cabdoor`, `cabdoorghost`), warmed through `patchObj`.
 
 Verdict: **landed.**
+
+## Corp lift shaft: the drop under the lift car is solid mechanical panelling, no lit bays
+
+Reported off a face pick: `corp facade textures/downtown/glass-dark.png` at (31, -38, -101), "outer
+walls under the elevator should not have glowing windows and should have another texture".
+
+- **What it was.** `gen.blocks.ElevatorBlock` hangs the 3x3 car OUTSIDE the wall ring, so its posts
+  and glazing are perimeter cells, and `CorpFacade.build` dropped each one to the street as curtain
+  wall with lit bays like the rest of the tower: a glowing glass column under a glass box.
+- **The test.** `CorpFacade.liftAt`: a perimeter cell with a `Surf.LIFT` cell anywhere in its 3x3.
+  The car floor is the only LIFT on the plate apart from the lift door. Diagonals count, so the corner
+  posts are included. The tower's own wall either side is two cells from the floor and keeps its
+  glazing.
+- **The look.** `downtown/wall-mechanical` (the penthouse bulkhead: dark panels, louvred vents),
+  reused, so there is no new art. `CorpStyle.SHAFT_TILE` 8, which is two cells per repeat; at
+  FACADE_TILE 4 the vents repeat at window pitch. The drop, its ledge cap and its notch faces go into
+  a separate `shaft` buffer with no `drop` bays.
+
+Measured live on area 5646: shaft mesh 26 quads over x 15..31, z -116..-96. No lit-bay or
+glass-dark vertex lies inside that box except on the tower's own x = 15 face, which is outside the
+shaft. +1 draw call (one more `add` mesh), plus one texture load the city already ships.
+
+Verdict: **landed.**
