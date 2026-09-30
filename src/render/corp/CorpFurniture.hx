@@ -1026,9 +1026,9 @@ class CorpFurniture
 // runs and not eight.
 //
 // SO A LONE CABINET CARRIES NO CABLE AT ALL, and that is the answer to "the cables are gone": there
-// is nothing to patch it to. A 5-wide room's rank is three cells with one DEALT gap in it
-// (gen.corp.CorpRooms.rackRows), and the row whose gap falls in the middle leaves two cabinets that
-// are not neighbours. Reported off a room holding one rack.
+// is nothing to patch it to. Ranks used to be dealt with a gap in them, and a gap in the middle of a
+// 5-wide room's rank left two cabinets that were not neighbours. Reported off a room holding one
+// rack; gen.corp.CorpRooms.servers lays each rank whole now, but old saves still carry the gaps.
 //
 // THE FAR END IS TAKEN AS ONE CELL ALONG rather than off the neighbour's own rect, and that is a
 // 0.12 approximation left deliberately: `rect` insets a hand only where the run really stops, so

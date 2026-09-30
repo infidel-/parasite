@@ -1214,91 +1214,32 @@ class CorpRooms
         }
     }
 
-// a server room: rows of racks with an aisle between them, and nothing soft in it
-// RANKS OF CABINETS across a room, one row every `pitch`, never touching the boundary ring and
-// always with one DEALT gap in each row — see the gap note inside. shared by the server room, the
-// archive and the security room, which are the same rank with three different cabinet frames
-  static function rackRows(state: _CorpState, node: _GenNode, room: _Room, tile: Int,
-      deco: _TileGroup, chance: Int, maxRows: Int, pitch: Int, clearDoors: Bool = false)
-    {
-      var area = state.area;
-      var cells = area.getCells();
-      var row = 0;
-      while (true)
-        {
-          row++;
-          if (row > maxRows)
-            break;
-          var ry = room.y1 + 1 + (row - 1) * pitch;
-          if (ry > room.y2 - 1)
-            break;
-          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
-          // ONE GAP IS DEALT AND THE REST ARE ROLLED. The row spans the whole interior width and
-          // the roll was the only thing that ever broke it — at 5 wide that is three cells, so
-          // one row in two came out solid and sealed the floor behind it off. The dealt gap is
-          // placed off the row index so consecutive ranks stagger rather than line up
-          var span = room.x2 - room.x1 - 1;
-          var gap = (span < 1 ? 0 : room.x1 + 1 + (row * 2 + 1) % span);
-          // AND A ROW THAT ROLLS ITSELF EMPTY IS NOT A ROW. The gap is dealt so a rank can never
-          // seal the floor; this is the same rule from the other end, because nothing stops the
-          // `chance` roll taking every survivor. At the dealt minimum of 4 on both axes there is
-          // exactly ONE rank and it has two or three eligible cells, so at `chance` 25 a 6x4 room
-          // comes out bare 1.6% of the time and a 7x4 one 0.4% — measured as 3 archives in 600
-          // seeds holding nothing at all (gen.GenCheck.archiveSane, which is what found it).
-          //
-          // `first` is the fallback and it is DETERMINISTIC: the row's leftmost eligible cell, so
-          // the same seed still builds the same floor
-          var first = -1;
-          var laid = 0;
-          for (x in room.x1 + 1...room.x2)
-            {
-              if (x == gap)
-                continue;
-              // A DOORWAY MAY NOT OPEN FLAT INTO A RANK, for `clearDoors`. The row spans the
-              // INTERIOR (x1+1 .. x2-1) so it can never overwrite a door cell itself — but a door
-              // in a side wall opens onto (x1, ry), and the cell beyond that is this rank's end.
-              // `CorpConnect.openPockets` would carve it back out and a repair is not a placement
-              // rule, which is the note `pods` carries one template over
-              if (clearDoors &&
-                  atDoor(cells, x, ry))
-                continue;
-              if (first < 0)
-                first = x;
-              if (area.chance(chance))
-                continue;
-              cells[x][ry] = tile;
-              addDecoration(state, x, ry, deco);
-              laid++;
-            }
-          if (laid == 0 &&
-              first >= 0)
-            {
-              cells[first][ry] = tile;
-              addDecoration(state, first, ry, deco);
-            }
-        }
-    }
-
+// a server room: solid ranks of racks with an aisle between them, and nothing else in it.
+//
+// ROW BY ROW, EACH RANK LAID WHOLE across the interior (x1+1 .. x2-1). It used to roll every cell
+// at 20% and deal one gap a rank, which read as cabinets scattered over the floor rather than rows
+// of them. The gap was there to keep the floor joined, and the room's two edge columns do that now
+// that nothing dresses its walls: the router benches went, and so did the wall machines, which
+// render.corp.CorpFurniture.machine drew as half-height racks against the wall. Ranks every
+// RACK_PITCH rows, RACK_ROWS_MAX of them at most, centred on the room's depth
   public static function servers(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var area = state.area;
-      var cells = area.getCells();
+      var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
-      // rack rows run across the room's SHORT axis and are reached from the aisle beside them,
-      // so a row is never more than one step from walkable floor
-      rackRows(state, node, room, RACK_HIGH, Const.CORP_MACHINERY, 20, RACK_ROWS_MAX, RACK_PITCH);
-
-      // one router bench and a bin by the door
-      decorateWalls(state, room, [
-          Const.CORP_TABLE_ROUTER,
-          Const.CORP_TABLE_MISC_LARGE,
-        ], [
-          Const.CORP_MACHINERY,
-          Const.CORP_TRASH,
-        ],
-        Const.TILE_DARK_TABLE_WOOD2_1X1,
-        Const.TILE_FLOOR_SERVER + UNWALKABLE_TILE_OFFSET,
-        30, 30);
+      var rows = Std.int((room.h - 1) / RACK_PITCH);
+      if (rows > RACK_ROWS_MAX)
+        rows = RACK_ROWS_MAX;
+      var y0 = room.y1 + 1 + Std.int((room.h - 1 - RACK_PITCH * rows) / 2);
+      for (i in 0...rows)
+        {
+          var ry = y0 + i * RACK_PITCH;
+          GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x1 + 1, ry, room.x2 - 1, ry);
+          for (x in room.x1 + 1...room.x2)
+            {
+              cells[x][ry] = RACK_HIGH;
+              addDecoration(state, x, ry, Const.CORP_MACHINERY);
+            }
+        }
     }
 
 // a washroom: a basin run down one wall and a row of stalls down the other
