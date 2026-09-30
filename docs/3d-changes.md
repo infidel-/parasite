@@ -242,7 +242,9 @@ Three reports, one pass.
   `CorpSecurity.door` splits them: the ghost discards everything but the leaf, and the solid
   discards the leaf of the one instance whose `instanceMatrix[3].xz` matches `uGhost`, which
   `ghostDoor` sets after `ObjModels.cull` from the batch's `solid.centres[ghostIdx]`. Leaf test =
-  `swing`'s (`position.z > GUN_CAB_LEAF_Z`).
+  `swing`'s (`position.z > GUN_CAB_LEAF_Z`). OPEN ONLY: "don't fade CLOSED door". A shut cabinet
+  stands in the wall's margin and hides nobody, so its row is `noGhost` (never takes the ghost
+  index) and keeps no door patch.
 - **TRAP found on the way: the cabinet sat 0.4 inside a perimeter wall.** Its `off` is written
   against a partition's room face (`GUN_CAB_BACK`), and the tower's perimeter is 2.0 thick against
   1.2. Cut open, the carcass showed the wall's own face where its back panel was, and shut, its

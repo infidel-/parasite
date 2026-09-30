@@ -501,6 +501,8 @@ typedef ObjModel = {
   ?ghostPart:Bool,    // the ghost fades only PART of the prop: the solid keeps drawing the placement
                       // under the player, and the row's own patch splits which faces each batch
                       // draws (render.corp.CorpSecurity.door). Absent for a prop that fades whole
+  ?noGhost:Bool,      // never fades at all: it stands clear of its cell (a shut gun cabinet in the
+                      // wall's margin) and hides nobody standing there
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -800,8 +802,9 @@ class ObjModels
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
     // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,
     // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, which
-    // also puts back the recentre their proud leaf costs (CorpStyle.GUN_CAB_*), and a player
-    // standing at one sees through its door alone (`ghostPart`)
+    // also puts back the recentre their proud leaf costs (CorpStyle.GUN_CAB_*). A shut one never
+    // fades (`noGhost`), and a player standing at an open one sees through its door alone
+    // (`ghostPart`), which swings through the cell
     {
       keys: [ 'gunCabinet' ],
       path: RenderConfig.MODELS.corpGunCabinet,
@@ -823,7 +826,7 @@ class ObjModels
         render.corp.CorpStyle.GUN_CAB_OPEN_X,
         -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
       ],
-      ghostPart: true,
+      noGhost: true,
     },
     {
       keys: [ 'gunCabinetOpen' ],
@@ -1498,7 +1501,8 @@ class ObjModels
           var idx = -1;
           for (i in 0...b.cells.length)
             if (b.cells[i].col == col &&
-                b.cells[i].row == row)
+                b.cells[i].row == row &&
+                b.model.noGhost != true)
               idx = i;
           if (idx >= 0)
             b.ghostIdx = idx;
