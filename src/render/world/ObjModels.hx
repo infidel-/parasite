@@ -498,6 +498,9 @@ typedef ObjModel = {
                       // yaw, or absent for a prop centred on its cell. Models.normalize recentres
                       // every glb on its footprint, so a prop that must stand against the wall (or
                       // whose two keys have different footprints) says here where it really goes
+  ?ghostPart:Bool,    // the ghost fades only PART of the prop: the solid keeps drawing the placement
+                      // under the player, and the row's own patch splits which faces each batch
+                      // draws (render.corp.CorpSecurity.door). Absent for a prop that fades whole
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -796,8 +799,9 @@ class ObjModels
     },
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
     // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,
-    // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, and the
-    // open one also puts back the recentre its proud leaf costs (CorpStyle.GUN_CAB_*)
+    // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, which
+    // also puts back the recentre their proud leaf costs (CorpStyle.GUN_CAB_*), and a player
+    // standing at one sees through its door alone (`ghostPart`)
     {
       keys: [ 'gunCabinet' ],
       path: RenderConfig.MODELS.corpGunCabinet,
@@ -815,7 +819,11 @@ class ObjModels
       lamps: null,
       arc: null,
       tether: null,
-      off: [ 0.0, -render.corp.CorpStyle.GUN_CAB_BACK ],
+      off: [
+        render.corp.CorpStyle.GUN_CAB_OPEN_X,
+        -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
+      ],
+      ghostPart: true,
     },
     {
       keys: [ 'gunCabinetOpen' ],
@@ -840,6 +848,7 @@ class ObjModels
         render.corp.CorpStyle.GUN_CAB_OPEN_X,
         -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
       ],
+      ghostPart: true,
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -1354,7 +1363,7 @@ class ObjModels
 // owns that rule, because only it knows what is solid. the returned batches MUST be handed to cull()
 // every frame — Models.instanced turns three's own frustum cull off, so nothing else trims their counts
   public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float,
-      ?lift:Int->Int->Float):Array<PropBatch>
+      ?lift:Int->Int->Float, ?wall:Int->Int->Float):Array<PropBatch>
     {
       active = true;
       // ONE BUCKET PER ROW, and not per model PATH as this used to key them. A path said the same
@@ -1373,7 +1382,11 @@ class ObjModels
           var w = CityConfig.cellToWorld(o.x, o.y);
           var yw = yaw(o.x, o.y, m.yaw);
           var ox = (m.off != null ? m.off[0] : 0.0);
-          var oz = (m.off != null ? m.off[1] : 0.0);
+          // `wall` is how much nearer the cell a WALL-yawed prop's masonry stands than the masonry
+          // its row's `off` was written against: only the area kind knows a perimeter wall is
+          // thicker than a partition, and a tower's is by 0.8
+          var oz = (m.off != null ? m.off[1] : 0.0) +
+            (m.yaw == WALL && wall != null ? wall(o.x, o.y) : 0.0);
           byRow[i].push({
             x: w.x + ox * Math.cos(yw) + oz * Math.sin(yw),
             z: w.z - ox * Math.sin(yw) + oz * Math.cos(yw),
@@ -1502,7 +1515,7 @@ class ObjModels
             {
               var g = i == b.ghostIdx && (idx >= 0 || b.t > 0);
               b.ghostMask[i] = g;
-              b.solidMask[i] = !g;
+              b.solidMask[i] = !g || b.model.ghostPart == true;
               b.hullMask[i] = tactical;
             }
           // one opacity for the batch is correct BECAUSE only one placement can be mid-fade. a true

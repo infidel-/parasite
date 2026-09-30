@@ -120,6 +120,7 @@ class CorpArea implements Area3D
       fit = CorpFurniture.build(scene, model, game.area);
       // and the security room's video wall, its own emissive material, inside the same mask window
       CorpSecurity.build(scene, model);
+      CorpSecurity.ground(model, game.area);
       // and the glb props ON that furniture and against the walls round it. AFTER the fittings
       // because a chair's seat cell and a printer's wall are both read off the same grid the
       // fittings were emitted from, and BEFORE the contact repaint below because every one of
@@ -173,7 +174,7 @@ class CorpArea implements Area3D
       // field and not a quad per fitting
       ContactMask.repaint();
       doors = FacilityDoors.build(scene, model, game.area);
-      props = render.world.ObjModels.build(scene, game, objYaw, objLift);
+      props = render.world.ObjModels.build(scene, game, objYaw, objLift, objWall);
       indoorProps();
       chunks.build(scene, pre);
       // the same pair of predicates the compound passes: a blocker is masonry that is not glazed,
@@ -378,6 +379,17 @@ class CorpArea implements Area3D
       return 0.0;
     }
 
+// how much nearer the cell a WALL prop's masonry stands than a partition's, which is what the rows'
+// `off` are written against: the gun cabinet sat 0.4 inside a perimeter wall, behind its lockers.
+// The wall is objYaw's, found in the same order
+  function objWall(col:Int, row:Int):Float
+    {
+      for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+        if (FacilityModel.isWall(model, col + d[0], row + d[1]))
+          return (FacilityGeom.thick(model, col + d[0], row + d[1]) - CorpStyle.WALL_INNER) / 2;
+      return 0.0;
+    }
+
 // which way an object prop faces from its cell — the compound's three branches unchanged
   function objYaw(col:Int, row:Int, mode:render.world.ObjModels.PropYaw):Float
     {
@@ -432,6 +444,7 @@ class CorpArea implements Area3D
       // drew every frame and a cabinet opened on this floor kept its shut batch too — the cull is
       // what writes each batch's mask into its instance count
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
+      CorpSecurity.ghostDoor(props);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
     }
@@ -490,7 +503,7 @@ class CorpArea implements Area3D
       doors = FacilityDoors.build(built, model, game.area);
       var open = openCabinets();
       render.world.ObjModels.dispose(built, props);
-      props = render.world.ObjModels.build(built, game, objYaw, objLift);
+      props = render.world.ObjModels.build(built, game, objYaw, objLift, objWall);
       indoorProps();
       // one more open than before is a door the player just opened: swing it (CorpSecurity.swing)
       if (openCabinets() > open)
@@ -534,6 +547,11 @@ class CorpArea implements Area3D
           CorpSecurity.swing(so.material, 0.0);
           CorpSecurity.swing(gh.material, 0.0);
           CorpSecurity.swing(hu.material, RenderConfig.OBJMARK.hullW);
+        }
+      if (m.ghostPart == true)
+        {
+          CorpSecurity.door(so.material, false);
+          CorpSecurity.door(gh.material, true);
         }
     }
 }

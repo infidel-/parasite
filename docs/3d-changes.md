@@ -226,3 +226,31 @@ Verified live: mid-swing frozen at 0.45 reads as a door at 45 degrees, 1.0 lands
 leaf stood. No new draw call, no new program family (same row, one more key suffix).
 
 Verdict: **landed.**
+
+## Security room: rack and cabinet wall contact, door-only ghost, cabinet off perimeter walls
+
+Three reports, one pass.
+
+- **No wall contact shadow on the racks or the cabinet.** A wall-backed rack laid `ContactMask.prop`
+  alone, the floor half. It now takes `FacilityDetail.ground` once per COLUMN from its first cell
+  (`CorpFurniture.rackGround`, the locker bank's rule; mid-room ranks keep the floor field). The
+  cabinet is an object prop that no fitting pass sees: `CorpSecurity.ground` lays its locker cell's
+  `lockerRect` narrowed to `GUN_CAB_W` 2.4, after `CorpSecurity.build` and before `halos`.
+- **"can you make only door transparent?"** The ghost faded the whole cabinet. Now the shut glb is
+  the open glb's geometry (leaf built shut, 264 tris), so the leaf is a separable part in both, and
+  a row flag `ObjModel.ghostPart` keeps the SOLID drawing the placement under the player.
+  `CorpSecurity.door` splits them: the ghost discards everything but the leaf, and the solid
+  discards the leaf of the one instance whose `instanceMatrix[3].xz` matches `uGhost`, which
+  `ghostDoor` sets after `ObjModels.cull` from the batch's `solid.centres[ghostIdx]`. Leaf test =
+  `swing`'s (`position.z > GUN_CAB_LEAF_Z`).
+- **TRAP found on the way: the cabinet sat 0.4 inside a perimeter wall.** Its `off` is written
+  against a partition's room face (`GUN_CAB_BACK`), and the tower's perimeter is 2.0 thick against
+  1.2. Cut open, the carcass showed the wall's own face where its back panel was, and shut, its
+  front stood 0.4 behind the lockers. `ObjModels.build` takes an optional `wall` hook now, added to
+  a WALL-yawed row's depth; `CorpArea.objWall` answers `(thick - WALL_INNER) / 2` off the wall
+  objYaw picks. Measured: the centre moved -172.75 -> -172.35, front flush with the locker bank.
+
+Verified live with the ghost forced onto the cabinet: carcass solid, leaf gone, dark interior.
+0 new draw calls; two new program keys (`cabdoor`, `cabdoorghost`), warmed through `patchObj`.
+
+Verdict: **landed.**

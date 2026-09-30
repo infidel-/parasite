@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import render.Models;
 import render.RenderConfig;
 import render.Textures;
+import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
 import render.facility.FacilityStyle;
@@ -62,6 +63,9 @@ class CorpSecurity
   // CorpArea.refreshObjects zeroes it when one opens, and `tick` swings it
   // ponytail: a second cabinet opened on one floor re-swings the first; per-instance when it matters
   public static var uSwing = { value: 1.0 };
+  // where the cabinet the player stands at is, world xz, or far off for none: its solid batch drops
+  // the leaf there and its ghost draws nothing else (`door`, `ghostDoor`)
+  static var uGhost = { value: new Vector2(1e6, 1e6) };
 
 // hang the video wall and the SECURITY headers over its room's doorways; answers how many panels
   public static function build(scene:Scene, m:Facility):Int
@@ -93,6 +97,94 @@ class CorpSecurity
       signs(sb, m);
       addGlow(scene, sb, CorpStyle.SECURITY_SIGN, CorpStyle.SEC_SIGN_EMISSIVE, 'corp security sign');
       return cells.length;
+    }
+
+// split the gun cabinet between its two batches for the ghost fade: the ghost draws the LEAF alone,
+// and the solid draws everything but the leaf of the placement at `uGhost`, so a player standing at
+// the cabinet sees through its door and not through the whole carcass. The leaf test is `swing`'s,
+// on the untouched `position`
+// Dynamic: three's onBeforeCompile hook is not in the extern, every shader patch here takes it so
+  public static function door(mat:Dynamic, ghost:Bool):Void
+    {
+      if (mat.onBeforeCompile != null &&
+          mat.onBeforeCompile.cabDoor == true)
+        return;
+      var leaf = 'position.z > float(' + CorpStyle.GUN_CAB_LEAF_Z + ')';
+      var prev:Dynamic = mat.onBeforeCompile;
+      // an OWN key only, IndoorMask.patch's reason
+      var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
+        mat.customProgramCacheKey : null;
+      var hook:Dynamic = function(shader:Dynamic, renderer:Dynamic)
+        {
+          if (prev != null)
+            prev(shader, renderer);
+          shader.uniforms.cabGhost = uGhost;
+          shader.vertexShader = 'uniform vec2 cabGhost;\nvarying float vCabCut;\n' +
+            StringTools.replace(shader.vertexShader, '#include <begin_vertex>',
+              '#include <begin_vertex>\n' +
+              (ghost ? '  vCabCut = (' + leaf + ') ? 0.0 : 1.0;' :
+                '  vCabCut = (' + leaf + ' &&\n' +
+                '    distance(instanceMatrix[3].xz, cabGhost) < 0.01) ? 1.0 : 0.0;'));
+          shader.fragmentShader = 'varying float vCabCut;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <clipping_planes_fragment>',
+              '#include <clipping_planes_fragment>\n' +
+              '  if (vCabCut > 0.5)\n' +
+              '    discard;');
+        };
+      if (prev != null)
+        for (f in Reflect.fields(prev))
+          Reflect.setField(hook, f, Reflect.field(prev, f));
+      hook.cabDoor = true;
+      mat.onBeforeCompile = hook;
+      mat.customProgramCacheKey = function()
+        return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
+          (ghost ? 'cabdoorghost' : 'cabdoor');
+      mat.needsUpdate = true;
+    }
+
+// point `door` at the cabinet placement a ghost batch is fading, after ObjModels.cull
+  public static function ghostDoor(props:Array<render.world.ObjModels.PropBatch>):Void
+    {
+      uGhost.value.set(1e6, 1e6);
+      for (b in props)
+        if (b.model.ghostPart == true &&
+            b.ghostIdx >= 0 &&
+            b.ghostMask[b.ghostIdx])
+          uGhost.value.set(b.solid.centres[b.ghostIdx].x, b.solid.centres[b.ghostIdx].z);
+    }
+
+// the gun cabinets' floor and wall contact. An object prop, so no fitting pass lays it: its locker
+// cell's footprint (CorpFurniture.lockerRect) narrowed to the cabinet's width, which it stands
+// centred on
+  public static function ground(m:Facility, area:game.AreaGame):Void
+    {
+      for (o in area.getObjects())
+        {
+          if (o.type != 'gunCabinet')
+            continue;
+          var dir = CorpFurniture.lockerBack(m, o.x, o.y);
+          var r = CorpFurniture.lockerRect(m, o.x, o.y, dir);
+          var c = CityConfig.cellToWorld(o.x, o.y);
+          var half = CorpStyle.GUN_CAB_W / 2;
+          if (dir < 2)
+            {
+              r.x0 = c.x - half;
+              r.x1 = c.x + half;
+            }
+          else
+            {
+              r.z0 = c.z - half;
+              r.z1 = c.z + half;
+            }
+          FacilityDetail.ground(m, {
+            col: o.x,
+            row: o.y,
+            len: 1,
+            alongX: false,
+            rect: r,
+            h: CorpStyle.GUN_CAB_H,
+          });
+        }
     }
 
 // advance the feeds' cut clock and the cabinet door, BASE_MS-relative like every timed anim

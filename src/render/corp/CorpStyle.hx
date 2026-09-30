@@ -348,16 +348,17 @@ class CorpStyle
   // THE GUN CABINET, objects.GunCabinet's two glbs (models-src/corp/gun_cabinet_build.py): its
   // height, and how far its carcass centre stands off the cell centre toward the wall -- its back on
   // an inner wall slab's room face, WALL_INNER / 2 short of the wall cell's centre, less half its
-  // 1.3 depth. On a perimeter wall the back runs 0.4 into the masonry, where nothing sees it
+  // 1.3 depth. A perimeter wall is thicker, and CorpArea.objWall brings the cabinet out to its face
   public static inline var GUN_CAB_H = 3.6;
+  public static inline var GUN_CAB_W = 2.4;
   public static inline var GUN_CAB_BACK = 4.0 - WALL_INNER / 2 - 1.3 / 2;
-  // and the open glb's footprint centre, printed by the build script: its leaf stands proud of the
+  // and both glbs' footprint centre, printed by the build script: their leaf stands proud of the
   // carcass, and Models.normalize recentres on it, so render.world.ObjModels' `off` puts it back
   public static inline var GUN_CAB_OPEN_X = 0.0;
   public static inline var GUN_CAB_OPEN_Y = -0.03;
-  // THE OPEN GLB'S LEAF IS BUILT SHUT and CorpSecurity.swing turns it, in the glb's own frame (glTF
-  // z is Blender -y): every vertex deeper than LEAF_Z is the leaf's, half way across the build
-  // script's LEAF_GAP, and it turns SWING radians about the hinge at its back left corner
+  // BOTH GLBS' LEAF IS BUILT SHUT and CorpSecurity.swing turns the open one's, in the glb's frame
+  // (glTF z is Blender -y): every vertex deeper than LEAF_Z is the leaf's, half way across the
+  // build script's LEAF_GAP, and it turns SWING radians about the hinge at its back left corner
   public static inline var GUN_CAB_LEAF_Z = 0.655;
   public static inline var GUN_CAB_HINGE_X = -1.2;
   public static inline var GUN_CAB_HINGE_Z = 0.66;

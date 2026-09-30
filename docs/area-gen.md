@@ -1813,9 +1813,9 @@ y1+1 plus a `deskRun`, so the rank was never on a wall and in a 4x4 it shared th
 - **the console** (`consoleRun`): up to `SECURITY_CONSOLE_MAX` 4 cells of `CORP_TABLE_3X1` centred on
   row y1, `CORP_COMPUTERS` on each, a chair at y1+1 on every cell but the MIDDLE one, which is the
   guard post (`securityPost`, read by `AreaGame.corpSpawnPoints` into
-  `importantGuardSpawnPoints`). It fails if a door opens onto y1 or y1+1, and the old mid-room
-  `deskRun` is the fallback. It also **bricks any inner window behind it** (row y1-1): the render
-  hangs a video wall there, and glazing has nothing to hang it on.
+  `importantGuardSpawnPoints`). A door in the north wall SPLITS the run: the desks stand either
+  side of it and the door's own cell stays floor (see below). The old mid-room `deskRun` is the
+  fallback only when the door leaves no cell.
 - **the racks**: `wallColumn(x2)`, i.e. SERVER cells on the east wall that are not a door cell, not
   beside one, and hold no object, laid as `RACK_HIGH` + `CORP_MACHINERY`.
 - **the lockers**: `wallColumn(x1)` capped at `SECURITY_LOCKERS_MAX` 4, as `Const.TILE_CORP_LOCKER`.
@@ -1876,4 +1876,14 @@ run cut short is not closed off). The old north-row brick-up in `consoleRun` is 
 The cabinet is walkable too (`GunCabinet.isWalkable`): it stands in the wall's margin like the
 lockers, and its door swings through whoever stands in front of it. Nothing in the room can seal the
 floor any more, so `columnsOpen` is gone; the cabinet still wants free SERVER floor at x+1 for its door.
+3000 corp seeds OK.
+
+### The console stands around a north-wall door
+
+"make them around the door": a door opening onto the console row used to fail `consoleRun`, and the
+fallback mid-room `deskRun` drew as bare tables (the render seats only the console). Now every cell
+of the centred window that is not `atDoor` takes a desk, each stretch between doors its own 3x1 run
+(end pieces on the stretch's ends, a lone cell the middle piece) and its own `ZONE_DESK_RUN`. The
+post is the middle of the desk LIST, which is `securityPost`'s own pick off the finished row, and
+takes no chair. The north-row brick-up went with it, the ring's unglazing covers it.
 3000 corp seeds OK.

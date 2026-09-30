@@ -756,7 +756,8 @@ class CorpFurniture
       // and its cell stays floor (Const.TILE_CORP_WALL_RACK is walkable)
       var back = front ^ 1;
       var d = CELL - CorpStyle.RACK_D - 2 * CorpStyle.FIT_INSET;
-      if (FacilityModel.isWall(m, col + dx(back), row + dz(back)))
+      var walled = FacilityModel.isWall(m, col + dx(back), row + dz(back));
+      if (walled)
         {
           var sl = FacilityGeom.slab(m, col + dx(back), row + dz(back));
           switch (back)
@@ -824,6 +825,39 @@ class CorpFurniture
       });
       drape(m, r, col, row);
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
+      if (walled)
+        rackGround(m, col, row, back, r);
+    }
+
+// a wall-backed rack column's floor and wall contact, ONE call per column from its first cell (the
+// locker bank's rule: halos that overlap along a wall compound). A mid-room rank has no wall to
+// halo and keeps the floor field alone
+  static function rackGround(m:Facility, col:Int, row:Int, back:Int, r:Rect):Void
+    {
+      var ax = (back < 2 ? 1 : 0);
+      var az = 1 - ax;
+      var at = function(c:Int, rw:Int)
+        return rackAt(m, c, rw) &&
+          FacilityModel.isWall(m, c + dx(back), rw + dz(back));
+      if (at(col - ax, row - az))
+        return;
+      var len = 1;
+      while (at(col + ax * len, row + az * len))
+        len++;
+      var end = rect(m, col + ax * (len - 1), row + az * (len - 1), CorpStyle.FIT_INSET, rackAt);
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: len,
+        alongX: back < 2,
+        rect: {
+          x0: r.x0,
+          x1: (ax == 1 ? end.x1 : r.x1),
+          z0: r.z0,
+          z1: (az == 1 ? end.z1 : r.z1),
+        },
+        h: CorpStyle.RACK_H,
+      });
     }
 
 // a WALL MACHINE: a half-height, two-bay server cabinet against the wall a room's dressing dealt
@@ -937,10 +971,11 @@ class CorpFurniture
       });
     }
 
-// the hand a locker's wall is on. ITS ROOM'S OWN COLUMN FIRST: gen.corp.CorpRooms.security lays the
-// bank down the west wall, and the bank's corner cell has the north wall on a hand too, which a
-// first-wall-found rule answers with, turning that one locker to face down its own run
-  static function lockerBack(m:Facility, col:Int, row:Int):Int
+// the hand a locker's wall is on, and the gun cabinet's (CorpSecurity.ground). ITS ROOM'S OWN
+// COLUMN FIRST: gen.corp.CorpRooms.security lays the bank down the west wall, and the bank's corner
+// cell has the north wall on a hand too, which a first-wall-found rule answers with, turning that
+// one locker to face down its own run
+  public static function lockerBack(m:Facility, col:Int, row:Int):Int
     {
       var room = CorpModel.securityRoom(m, col, row);
       if (room != null)
@@ -959,7 +994,7 @@ class CorpFurniture
     }
 
 // a locker cell's footprint: the whole cell along its wall, LOCKER_D off the slab's room face
-  static function lockerRect(m:Facility, col:Int, row:Int, dir:Int):Rect
+  public static function lockerRect(m:Facility, col:Int, row:Int, dir:Int):Rect
     {
       var sl = FacilityGeom.slab(m, col + dx(dir), row + dz(dir));
       var c = CityConfig.cellToWorld(col, row);

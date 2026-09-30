@@ -1798,8 +1798,10 @@ class CorpRooms
 
 // a security room's console: a desk run along the north wall with a workstation on every cell,
 // and a chair in front of all but the middle one, which is where the guard stands
-// (game.AreaGame.initSpawnPoints finds the post off this run). False if a doorway in that wall
-// opens onto it, and the caller falls back to the free-standing `deskRun`
+// (game.AreaGame.initSpawnPoints finds the post off this run). A DOORWAY IN THAT WALL SPLITS IT:
+// the desks stand either side of the door and its own cell stays floor. It used to fall back to a
+// free-standing `deskRun` mid-room, which drew as bare tables with no screen or chair. False only
+// when the door leaves no cell, and the caller falls back to that run still
   static function consoleRun(state: _CorpState, node: _GenNode, room: _Room): Bool
     {
       var area = state.area;
@@ -1808,35 +1810,33 @@ class CorpRooms
       var n = room.w - 2;
       if (n > SECURITY_CONSOLE_MAX)
         n = SECURITY_CONSOLE_MAX;
-      if (n < 1)
-        return false;
       var tx = room.x1 + Std.int((room.w - n) / 2);
       var ty = room.y1;
+      var desks = [];
       for (dx in 0...n)
-        if (atDoor(cells, tx + dx, ty) ||
-            atDoor(cells, tx + dx, ty + 1))
-          return false;
-      GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, tx, ty, tx + n - 1, ty);
+        if (!atDoor(cells, tx + dx, ty))
+          desks.push(tx + dx);
+      if (desks.length == 0)
+        return false;
+      // one 3x1 run per stretch between doors, its end pieces on the stretch's own ends
       var block = Const.CORP_TABLE_3X1;
-      for (dx in 0...n)
+      var post = desks[Std.int(desks.length / 2)];
+      for (x in desks)
         {
-          cells[tx + dx][ty] = (n == 1 ? block[1] : dx == 0 ? block[0] :
-            dx == n - 1 ? block[2] : block[1]);
-          addDecoration(state, tx + dx, ty, Const.CORP_COMPUTERS);
-          if (dx != Std.int(n / 2))
-            area.addDecoration(tx + dx, ty + 1, Const.CORP_CHAIR[0].row,
+          var left = (desks.indexOf(x - 1) >= 0);
+          var right = (desks.indexOf(x + 1) >= 0);
+          cells[x][ty] = (left == right ? block[1] : right ? block[0] : block[2]);
+          if (!left)
+            {
+              var end = x;
+              while (desks.indexOf(end + 1) >= 0)
+                end++;
+              GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, x, ty, end, ty);
+            }
+          addDecoration(state, x, ty, Const.CORP_COMPUTERS);
+          if (x != post)
+            area.addDecoration(x, ty + 1, Const.CORP_CHAIR[0].row,
               area.random(Const.CORP_CHAIR[0].amount));
-        }
-      // AND THE WALL BEHIND IT IS MASONRY: render.corp.CorpSecurity hangs the video wall there and a
-      // pane cannot hang on partition glass, which CorpBuilding.makeWindows runs along most inner
-      // walls. A room of monitors does not look out onto the corridor anyway. The facade's own
-      // curtain wall is left alone, and a console under it goes without its screens
-      for (x in room.x1...room.x2 + 1)
-        {
-          var t = cells[x][room.y1 - 1];
-          if (t >= INNER_WINDOW &&
-              t <= INNER_WINDOWV3)
-            cells[x][room.y1 - 1] = BLDG_INNER_WALL;
         }
       return true;
     }
