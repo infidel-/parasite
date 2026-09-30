@@ -865,11 +865,11 @@ class CorpStyle
   // bays line up with the street towers' beside it and with the plate's own window grid above it.
   // It replaces a FACADE_TILE of 20, which was fitted to art that carried two storeys per repeat
   public static inline var FACADE_TILE = 4.0;
-  // THE LIFT SHAFT under the car, which is not glazing: a solid run of downtown's rooftop
-  // mechanical panelling (the penthouse bulkhead's own art), with no lit bays, repeating every two
-  // cells so its vents read at a storey's scale and not a window's
-  public static inline var SHAFT = 'textures/downtown/wall-mechanical.png';
-  public static inline var SHAFT_TILE = 8.0;
+  // THE LIFT SHAFT under the car, which is not glazing: the exposed steel frame the glass car rides
+  // on, its own art (corp/lift-shaft) with no lit bays. The art is two X-braced bays square, so a
+  // repeat of two storeys (WALL_H 6) puts one bay on each storey
+  public static inline var SHAFT = 'textures/corp/lift-shaft.png';
+  public static inline var SHAFT_TILE = 12.0;
   // the soffit under the plate, a hair below the floor so nothing is coplanar with it
   public static inline var SOFFIT_Y = -0.03;
 

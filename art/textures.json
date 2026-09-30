@@ -4097,6 +4097,24 @@
       "built_linear": 0.0426,
       "built_srgb": 57.3
     },
+    "corp/lift-shaft": {
+      "src": "corp/lift-shaft.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        34,
+        30,
+        956,
+        956
+      ],
+      "prompt": "ONE seamless tileable texture filling the whole square image edge to edge, a straight-on FLAT FRONT ELEVATION in orthographic view, no perspective. The outside of an EXPOSED STEEL LIFT SHAFT FRAME on a modern office tower, the open structure a panoramic glass lift car rides up and down on. Exactly a 2 x 2 grid of SQUARE bays: dark charcoal painted steel I-beam COLUMNS run vertically, one centred exactly ON the left edge and one centred exactly ON the right edge (each cut in half by the frame, so they join into one column across the wrap) and one down the exact middle; horizontal steel floor BEAMS run across, one centred exactly ON the top edge and one centred exactly ON the bottom edge (each cut in half, joining across the wrap) and one across the exact middle. Every one of the four bays is crossed corner to corner by a slim diagonal steel X-BRACE with a small bolted gusset plate at each end and at the crossing. Behind the frame, deep in the shaft, a very dark near-black void with two slim vertical brushed-steel GUIDE RAILS and a few thin taut vertical hoist CABLES running straight through top to bottom. SEAMLESS AND TILEABLE: the image must wrap on all four edges with no visible seam; columns, beams, rails and cables all continue across the wrap. HUE: PERFECTLY NEUTRAL \u2014 the red, green and blue values are equal; no colour cast, no blue, no green, no magenta tint. NO glass, NO windows, NO lights, NO glow, NO lift car, no text, no logos, no sky, no ground. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "note": "the drop under the lift car (render.corp.CorpFacade.liftAt), tiled at CorpStyle.SHAFT_TILE 12 = two storeys of WALL_H 6, one X-braced bay per storey. The model did NOT centre the frame on the edges as asked: full columns stood at x 13-55 and 968-1010 and beams at y 14-45 and 977-1016, so the raw drop wraps as a doubled column and a doubled beam. The crop runs column centre to column centre (34..990, the measured 478 px bay period twice) and top beam centre to 956 below it, so each wrap cuts one member in half and rejoins it. The middle beam is drawn double (468-548) and the wrap one comes out single, so beams alternate main/secondary. Generated gpt-image-2.5-flare high, $0.0557; channel spread 5.8.",
+      "last_converted": "2026-10-01T01:34:29",
+      "built_linear": 0.0232,
+      "built_srgb": 35.6,
+      "lift": 0.87,
+      "last_lift": 0.87
+    },
     "corp/mirror": {
       "src": "corp/board-pack.png",
       "class": "tile",

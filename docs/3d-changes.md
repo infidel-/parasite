@@ -257,7 +257,7 @@ Verified live with the ghost forced onto the cabinet: carcass solid, leaf gone, 
 
 Verdict: **landed.**
 
-## Corp lift shaft: the drop under the lift car is solid mechanical panelling, no lit bays
+## Corp lift shaft: the drop under the lift car is an exposed steel frame, no lit bays
 
 Reported off a face pick: `corp facade textures/downtown/glass-dark.png` at (31, -38, -101), "outer
 walls under the elevator should not have glowing windows and should have another texture".
@@ -269,13 +269,20 @@ walls under the elevator should not have glowing windows and should have another
   The car floor is the only LIFT on the plate apart from the lift door. Diagonals count, so the corner
   posts are included. The tower's own wall either side is two cells from the floor and keeps its
   glazing.
-- **The look.** `downtown/wall-mechanical` (the penthouse bulkhead: dark panels, louvred vents),
-  reused, so there is no new art. `CorpStyle.SHAFT_TILE` 8, which is two cells per repeat; at
-  FACADE_TILE 4 the vents repeat at window pitch. The drop, its ledge cap and its notch faces go into
-  a separate `shaft` buffer with no `drop` bays.
+- **The look.** Its own art, `corp/lift-shaft`: the exposed steel frame a panoramic car rides on,
+  two X-braced bays square with guide rails and hoist cables in the void behind. Repeated at
+  `CorpStyle.SHAFT_TILE` 12, i.e. one bay per storey (WALL_H 6). The drop, its ledge cap and its
+  notch faces go into a separate `shaft` buffer with no `drop` bays.
+- **TRAP: the first pass borrowed `downtown/wall-mechanical`** (the penthouse bulkhead: louvred vent
+  panels) and was rejected on sight, because a lift shaft is not a rooftop plant room. This is
+  [`3d-textures.md`](3d-textures.md)'s "a new object wants new labels" rule biting again.
+- **TRAP: the model did not centre the frame on the edges** as the prompt asked, so the raw drop
+  wraps as a doubled column and a doubled beam. The column-to-column crop is `[34,30,956,956]`,
+  measured off the drop; the `textures.json` note has the numbers. It also needed `lift` 0.87 to land
+  at built sRGB 35.6 beside `downtown/glass-dark`'s 34.8. At 27.8 the frame sank into the night.
 
 Measured live on area 5646: shaft mesh 26 quads over x 15..31, z -116..-96. No lit-bay or
 glass-dark vertex lies inside that box except on the tower's own x = 15 face, which is outside the
-shaft. +1 draw call (one more `add` mesh), plus one texture load the city already ships.
+shaft. +1 draw call (one more `add` mesh) and one new 512 texture. One gen, $0.0557.
 
 Verdict: **landed.**
