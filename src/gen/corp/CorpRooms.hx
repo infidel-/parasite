@@ -1609,39 +1609,48 @@ class CorpRooms
       if (x1 < x0)
         return;
       var chairID = area.random(Const.CORP_CHAIR[0].amount);
-      var a = lo + 1;
       var banks = 0;
-      while (a + 2 <= hi &&
-          banks < BACK_OFFICE_BANKS)
+      // TWO ROWS BACK TO BACK where they fit, ONE where they do not. A back-to-back bank wants a
+      // chair row either side of it, and with the counter on y1 or y2 a 5-deep room has three rows
+      // left after the lane and the row in front of it — a chair short, so the middle came out bare.
+      // Reported from area 5646's 5x5 reception. A single row keeps only its first chair
+      for (depth in [2, 1])
         {
-          var blocked = new Map<Int, Bool>();
-          var ok = true;
-          for (x in x0...x1 + 1)
-            for (y in a...a + 2)
-              {
-                if (cells[x][y] != RECEPTION ||
-                    area.hasObjectAt(x, y) ||
-                    atDoor(cells, x, y))
-                  ok = false;
-                blocked.set(x * 1000 + y, true);
-              }
-          if (ok &&
-              roomOpen(state, room, blocked, RECEPTION))
+          var a = lo + 1;
+          while (a + (depth == 2 ? 2 : 0) <= hi &&
+              banks < BACK_OFFICE_BANKS)
             {
-              GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, x0, a, x1, a + 1);
+              var blocked = new Map<Int, Bool>();
+              var ok = true;
               for (x in x0...x1 + 1)
-                for (i in 0...2)
+                for (y in a...a + depth)
                   {
-                    cells[x][a + i] = Const.CORP_TABLE_3X1[1];
-                    addDecoration(state, x, a + i, Const.CORP_COMPUTERS);
-                    area.addDecoration(x, a + (i == 0 ? -1 : 2), Const.CORP_CHAIR[0].row,
-                      chairID);
+                    if (cells[x][y] != RECEPTION ||
+                        area.hasObjectAt(x, y) ||
+                        atDoor(cells, x, y))
+                      ok = false;
+                    blocked.set(x * 1000 + y, true);
                   }
-              banks++;
-              a += BACK_OFFICE_PITCH;
+              if (ok &&
+                  roomOpen(state, room, blocked, RECEPTION))
+                {
+                  GenTree.add(node, CorpBlocks.ZONE_DESK_RUN, x0, a, x1, a + depth - 1);
+                  for (x in x0...x1 + 1)
+                    for (i in 0...depth)
+                      {
+                        cells[x][a + i] = Const.CORP_TABLE_3X1[1];
+                        addDecoration(state, x, a + i, Const.CORP_COMPUTERS);
+                        area.addDecoration(x, a + (i == 0 ? -1 : 2), Const.CORP_CHAIR[0].row,
+                          chairID);
+                      }
+                  banks++;
+                  a += BACK_OFFICE_PITCH;
+                }
+              else
+                a++;
             }
-          else
-            a++;
+          if (banks > 0)
+            break;
         }
     }
 

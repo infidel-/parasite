@@ -383,8 +383,9 @@ class CorpStyle
   public static inline var CAM_SIDE = 0.8;
   public static inline var CAM_TURN = 0.3;
   public static inline var CAM_EVERY = 2;
-  // and its red recording light, a speck on the wall plate beside the arm, in the plate's own frame
-  public static final CAM_LED = [ 0.08, 0.36, 0.05 ];
+  // and its red recording light, a speck on the wall plate beside the arm, in the plate's own frame.
+  // the plate spans 0.08..0.42 up the glb; 0.36 sat at its top edge and read as floating over it
+  public static final CAM_LED = [ 0.08, 0.28, 0.05 ];
   public static inline var CAM_LED_SIZE = 0.07;
 
   // WHAT IS STACKED ON THE ARCHIVE'S CASEWORK, dealt per LEVEL of every unit — see
