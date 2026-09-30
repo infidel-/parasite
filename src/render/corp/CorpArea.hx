@@ -488,9 +488,22 @@ class CorpArea implements Area3D
       FacilityDoors.dispose(built, doors);
       model.doors = CorpModel.fromArea(game.area).doors;
       doors = FacilityDoors.build(built, model, game.area);
+      var open = openCabinets();
       render.world.ObjModels.dispose(built, props);
       props = render.world.ObjModels.build(built, game, objYaw, objLift);
       indoorProps();
+      // one more open than before is a door the player just opened: swing it (CorpSecurity.swing)
+      if (openCabinets() > open)
+        CorpSecurity.uSwing.value = 0.0;
+    }
+
+// how many gun cabinets stand open, off the open row's batch
+  function openCabinets():Int
+    {
+      for (b in props)
+        if (b.model.keys.indexOf('gunCabinetOpen') >= 0)
+          return b.cells.length;
+      return 0;
     }
 
 // THE OBJECT PROPS TAKE THE INDOOR LIGHT SWAP TOO, which render.corp.CorpProps.batch gives its own
@@ -514,5 +527,13 @@ class CorpArea implements Area3D
       render.world.ObjModels.patchRow(m, so, gh, hu);
       IndoorMask.patch(so.material);
       IndoorMask.patch(gh.material);
+      // the hull's offset is OBJMARK.hullW over the instance scale, which is 1: the glb is authored
+      // at GUN_CAB_H
+      if (m.keys.indexOf('gunCabinetOpen') >= 0)
+        {
+          CorpSecurity.swing(so.material, 0.0);
+          CorpSecurity.swing(gh.material, 0.0);
+          CorpSecurity.swing(hu.material, RenderConfig.OBJMARK.hullW);
+        }
     }
 }

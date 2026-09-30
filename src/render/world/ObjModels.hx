@@ -795,8 +795,9 @@ class ObjModels
       tether: null, // and it holds nothing
     },
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
-    // the key and CorpArea.refreshObjects rebuilds this batch. Both stand against the masonry via
-    // `off`, and the open one also puts back the recentre its swung leaf costs (CorpStyle.GUN_CAB_*)
+    // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,
+    // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, and the
+    // open one also puts back the recentre its proud leaf costs (CorpStyle.GUN_CAB_*)
     {
       keys: [ 'gunCabinet' ],
       path: RenderConfig.MODELS.corpGunCabinet,

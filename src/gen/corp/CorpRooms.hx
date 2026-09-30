@@ -1741,6 +1741,19 @@ class CorpRooms
     {
       var cells = state.area.getCells();
       drawBlock(cells, room.x1, room.y1, room.w, room.h, SERVER);
+      // NO GLAZING: a guard post is not a fishbowl, and the lockers and racks stood in front of the
+      // panes. The ring's windows go back to the wall they were cut into, curtain wall or partition
+      for (x in room.x1 - 1...room.x2 + 2)
+        for (y in room.y1 - 1...room.y2 + 2)
+          {
+            var t = cells[x][y];
+            if (t >= BLDG_WINDOW &&
+                t <= BLDG_WINDOWV3)
+              cells[x][y] = BLDG_WALL;
+            else if (t >= INNER_WINDOW &&
+                t <= INNER_WINDOWV3)
+              cells[x][y] = BLDG_INNER_WALL;
+          }
       if (!consoleRun(state, node, room))
         deskRun(state, node, room, [
             Const.CORP_COMPUTERS,
@@ -1750,23 +1763,20 @@ class CorpRooms
       var lockers = wallColumn(state, room, room.x1);
       if (lockers.length > SECURITY_LOCKERS_MAX)
         lockers = lockers.slice(0, SECURITY_LOCKERS_MAX);
-      // the gun cabinet stands on the floor: it is an object, objects.GunCabinet, and what makes its
-      // cell solid is the object and not the tile. So it needs FLOOR IN FRONT OF IT, to be opened
-      // from and so it never closes a pocket CorpConnect.openPockets would tear the desk out to
-      // reach. The locker nearest the run's middle that has it
+      // the gun cabinet is an object, objects.GunCabinet, on plain floor. Like a locker and a wall
+      // rack it stands in the wall's own margin and its cell stays walkable, so nothing here can seal
+      // the floor. It wants FLOOR IN FRONT OF IT for its door to swing into: the locker nearest the
+      // run's middle that has it
       //
       // AND NEVER IN A CORNER: the render turns it by its wall (render.world.ObjModels, WALL yaw), and
       // a corner has two, the north one asked first -- a cabinet in the west column turned to face
       // down its own locker run
-      // a LOCKER AND A WALL RACK ARE WALKABLE (each stands in the wall's own margin, clear of its
-      // cell), so only the cabinet can seal the floor: it takes the best cell that leaves it open
       var cab = -1;
       for (i in 0...lockers.length)
         if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
             !corner(room, lockers[i].x, lockers[i].y) &&
             (cab < 0 ||
-            Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)) &&
-            columnsOpen(state, room, [lockers[i]]))
+            Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)))
           cab = i;
       if (racks.length > 0)
         GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x2, racks[0].y, room.x2,
@@ -1864,14 +1874,5 @@ class CorpRooms
             !state.area.hasObjectAt(x, y))
           out.push({ x: x, y: y });
       return out;
-    }
-
-// does the room's floor still join its doorways with these cells taken?
-  static function columnsOpen(state: _CorpState, room: _Room, taken: Array<{ x:Int, y:Int }>): Bool
-    {
-      var blocked = new Map<Int, Bool>();
-      for (c in taken)
-        blocked.set(c.x * 1000 + c.y, true);
-      return roomOpen(state, room, blocked, SERVER, true);
     }
 }

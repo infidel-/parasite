@@ -200,3 +200,29 @@ Calls A/B at the security view: locker ends +1, locker lid +1, header +1; the vi
 `CorpWarm` pane (a second key beside the feed-patched wall).
 
 Verdict: **landed.**
+
+## Gun cabinet door swings open in the vertex shader
+
+"armory locker door open anim - we need it". The Open action flips the model key and
+`CorpArea.refreshObjects` rebuilds the batch, so the door POPPED from shut to swung.
+
+- **The open glb's leaf is built SHUT** (`gun_cabinet_build.py`), `LEAF_GAP` 0.01 proud of the
+  carcass front, so the swap itself shows nothing. Footprint centre (-0.231, -1.172) -> (0, -0.03),
+  `CorpStyle.GUN_CAB_OPEN_*`. 264 tris, unchanged.
+- **`CorpSecurity.swing`** turns every vertex deeper than `GUN_CAB_LEAF_Z` 0.655 (glb frame, glTF z =
+  Blender -y, half way across the gap) about the hinge (-1.2, 0.66) by `smoothstep(cabSwing) *
+  -1.745`, position after `<begin_vertex>` and objectNormal after `<beginnormal_vertex>`. Solid, ghost
+  and hull, all through `CorpArea.patchObj`, so the warm spells the same keys.
+- **TRAP: the hull is normal-inflated geometry** (`Models.hullGeo`, 0.06 out), which pushes the
+  carcass front past the leaf threshold. The test reads `position - normal * inflate`, with
+  `OBJMARK.hullW` for the hull (instance scale is 1, the glb is authored at `GUN_CAB_H`).
+- **Timing**: `uSwing` is set to 1 at area build (a cabinet found open is open) and zeroed by
+  `refreshObjects` when the open batch gains a placement; `tick` runs it over `GUN_CAB_SWING_TURNS` 3
+  (450 ms at BASE_MS 150; 1 turn was a blink). One uniform for every open cabinet: a second one
+  opened on the same floor re-swings the first.
+- Shadow depth is not patched: the leaf's shadow stays shut. Not visible at the ceiling lamps' angle.
+
+Verified live: mid-swing frozen at 0.45 reads as a door at 45 degrees, 1.0 lands where the old baked
+leaf stood. No new draw call, no new program family (same row, one more key suffix).
+
+Verdict: **landed.**

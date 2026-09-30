@@ -58,10 +58,16 @@ class CorpSecurity
 
 // the feed clock, in turns (RenderConfig.BASE_MS); advanced by `tick`
   static var uFeed = { value: 0.0 };
+  // the open gun cabinet's door, 0 shut .. 1 swung, one for every open cabinet on the floor:
+  // CorpArea.refreshObjects zeroes it when one opens, and `tick` swings it
+  // ponytail: a second cabinet opened on one floor re-swings the first; per-instance when it matters
+  public static var uSwing = { value: 1.0 };
 
 // hang the video wall and the SECURITY headers over its room's doorways; answers how many panels
   public static function build(scene:Scene, m:Facility):Int
     {
+      // a cabinet found open is open already, not opening
+      uSwing.value = 1.0;
       var b = MeshBufTools.make();
       var cells = videoCells(m);
       for (i in 0...cells.length)
@@ -89,10 +95,64 @@ class CorpSecurity
       return cells.length;
     }
 
-// advance the feeds' cut clock, BASE_MS-relative like every timed anim in the game
+// advance the feeds' cut clock and the cabinet door, BASE_MS-relative like every timed anim
   public static function tick(dtMs:Float):Void
     {
       uFeed.value += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      if (uSwing.value < 1.0)
+        uSwing.value = Math.min(1.0, uSwing.value + dtMs * RenderConfig.ANIM_SPEED /
+          (RenderConfig.BASE_MS * CorpStyle.GUN_CAB_SWING_TURNS));
+    }
+
+// swing the open gun cabinet's leaf about its hinge in the vertex shader (CorpStyle.GUN_CAB_*): the
+// glb builds it shut, so the Open action's model swap does not show, and the door then opens on
+// screen. `inflate` is the outline hull's normal offset, taken back off before the leaf test or the
+// hull's carcass front would read as leaf and swing too
+// Dynamic: three's onBeforeCompile hook is not in the extern, every shader patch here takes it so
+  public static function swing(mat:Dynamic, inflate:Float):Void
+    {
+      if (mat.onBeforeCompile != null &&
+          mat.onBeforeCompile.cabSwing == true)
+        return;
+      var S = CorpStyle;
+      var leaf = 'if ((position - normal * float(' + inflate + ')).z > float(' + S.GUN_CAB_LEAF_Z + '))\n';
+      var hinge = 'vec3(float(' + S.GUN_CAB_HINGE_X + '), 0.0, float(' + S.GUN_CAB_HINGE_Z + '))';
+      var prev:Dynamic = mat.onBeforeCompile;
+      // an OWN key only, IndoorMask.patch's reason
+      var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
+        mat.customProgramCacheKey : null;
+      var hook:Dynamic = function(shader:Dynamic, renderer:Dynamic)
+        {
+          if (prev != null)
+            prev(shader, renderer);
+          shader.uniforms.cabSwing = uSwing;
+          // a turn about +y, eased so the door leaves and lands softly
+          shader.vertexShader = 'uniform float cabSwing;\n' +
+            'mat3 cabTurn()\n' +
+            '{\n' +
+            '  float a = smoothstep(0.0, 1.0, cabSwing) * float(' + S.GUN_CAB_SWING + ');\n' +
+            '  float c = cos(a);\n' +
+            '  float s = sin(a);\n' +
+            '  return mat3(c, 0.0, -s, 0.0, 1.0, 0.0, s, 0.0, c);\n' +
+            '}\n' + shader.vertexShader;
+          // the normal BEFORE defaultnormal_vertex turns it into view space; a hull has none to turn
+          shader.vertexShader = StringTools.replace(shader.vertexShader,
+            '#include <beginnormal_vertex>',
+            '#include <beginnormal_vertex>\n' + leaf + '  objectNormal = cabTurn() * objectNormal;');
+          shader.vertexShader = StringTools.replace(shader.vertexShader,
+            '#include <begin_vertex>',
+            '#include <begin_vertex>\n' + leaf +
+            '  transformed = ' + hinge + ' + cabTurn() * (transformed - ' + hinge + ');');
+        };
+      if (prev != null)
+        for (f in Reflect.fields(prev))
+          Reflect.setField(hook, f, Reflect.field(prev, f));
+      hook.cabSwing = true;
+      mat.onBeforeCompile = hook;
+      mat.customProgramCacheKey = function()
+        return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
+          'cabswing' + inflate;
+      mat.needsUpdate = true;
     }
 
 // the lit SECURITY header over every doorway into a security room, on the lintel's face OUTSIDE

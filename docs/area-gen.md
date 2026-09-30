@@ -1864,3 +1864,16 @@ see-through, the locker's case. `CorpFurniture.rack` builds a wall-backed rack `
 which is the locker's depth and inside the wall's margin. So nothing in a security room seals the
 floor but the cabinet, and the rack pop loop is gone. The server room's mid-room ranks keep the
 opaque id, so they still block sight. 3000 corp seeds OK, spawns/gunCabinet 0.61, furn/security 11.87.
+
+### The security room has no windows; the gun cabinet is walkable
+
+Reported as "everything is in front of the window": a room on the tower's edge kept its curtain wall,
+and one beside an office kept its partition glass, so the racks and lockers stood against panes.
+`security` now bricks its whole wall ring first: every `BLDG_WINDOW*` back to `BLDG_WALL`, every
+`INNER_WINDOW*` back to `BLDG_INNER_WALL` (the render ignores the H1/H2/H3 frames, so a neighbour's
+run cut short is not closed off). The old north-row brick-up in `consoleRun` is a subset of it.
+
+The cabinet is walkable too (`GunCabinet.isWalkable`): it stands in the wall's margin like the
+lockers, and its door swings through whoever stands in front of it. Nothing in the room can seal the
+floor any more, so `columnsOpen` is gone; the cabinet still wants free SERVER floor at x+1 for its door.
+3000 corp seeds OK.

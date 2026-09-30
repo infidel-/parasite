@@ -73,13 +73,14 @@ class GunCabinet extends AreaObject
   public override function known(): Bool
     { return true; }
 
-// used from the cell beside it, since nothing can stand on it
+// used from the cell beside it as well as its own
   public override function canActivateNear(): Bool
     { return true; }
 
-// a steel cabinet is solid
+// it stands in the wall's margin like the lockers beside it, so the floor in front stays walkable
+// (its door swings through whoever stands there)
   public override function isWalkable(): Bool
-    { return false; }
+    { return true; }
 
 // the 3D prop, open or shut (render.world.ObjModels)
   public override function getModelKey(): String
@@ -96,7 +97,8 @@ class GunCabinet extends AreaObject
     }
 
 // update actions: open, then search, then one Get per weapon. THE GETS ARE HERE AND NOT IN
-// getItemActions, which PlayerArea only reads off the player's OWN cell and nobody stands on this
+// getItemActions, which PlayerArea only reads off the player's OWN cell, and a cabinet is used from
+// beside it too
   override function updateActionList()
     {
       if (game.player.state != PLR_STATE_HOST)

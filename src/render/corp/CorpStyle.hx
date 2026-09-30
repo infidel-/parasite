@@ -351,10 +351,19 @@ class CorpStyle
   // 1.3 depth. On a perimeter wall the back runs 0.4 into the masonry, where nothing sees it
   public static inline var GUN_CAB_H = 3.6;
   public static inline var GUN_CAB_BACK = 4.0 - WALL_INNER / 2 - 1.3 / 2;
-  // and the open glb's footprint centre, printed by the build script: the swung leaf moves it off the
+  // and the open glb's footprint centre, printed by the build script: its leaf stands proud of the
   // carcass, and Models.normalize recentres on it, so render.world.ObjModels' `off` puts it back
-  public static inline var GUN_CAB_OPEN_X = -0.2313;
-  public static inline var GUN_CAB_OPEN_Y = -1.1719;
+  public static inline var GUN_CAB_OPEN_X = 0.0;
+  public static inline var GUN_CAB_OPEN_Y = -0.03;
+  // THE OPEN GLB'S LEAF IS BUILT SHUT and CorpSecurity.swing turns it, in the glb's own frame (glTF
+  // z is Blender -y): every vertex deeper than LEAF_Z is the leaf's, half way across the build
+  // script's LEAF_GAP, and it turns SWING radians about the hinge at its back left corner
+  public static inline var GUN_CAB_LEAF_Z = 0.655;
+  public static inline var GUN_CAB_HINGE_X = -1.2;
+  public static inline var GUN_CAB_HINGE_Z = 0.66;
+  public static inline var GUN_CAB_SWING = -1.745;
+  // and how long the swing takes, in turns (RenderConfig.BASE_MS)
+  public static inline var GUN_CAB_SWING_TURNS = 3.0;
   // THE VIDEO WALL: one panel of corp/cctv-wall per console cell, hung on the north wall over it.
   // Its aspect is the art's 1024x672 (1.524); the head stops under SIGN_Y's band's own top
   public static inline var VIDEO_W = 3.6;
