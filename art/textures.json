@@ -4923,16 +4923,113 @@
         512,
         768
       ],
-      "prompt": "The INSIDE of an OPEN tall steel WEAPON CABINET, seen dead straight on in flat front elevation, no perspective, looking at its back panel, which FILLS THE WHOLE image edge to edge with nothing outside it. The back panel is dark gunmetal steel pegboard with a regular grid of small holes. Standing upright in grey foam cradles across the upper two thirds: THREE long guns side by side, stocks down and barrels up \u2014 a black pump-action shotgun, a black compact assault rifle and a second black shotgun, each clearly separated. Across the lower third a steel shelf holding two black pistols laid in grey foam cut-outs, a black stun baton lying horizontally, and two small olive ammunition boxes. Each weapon a flat, clean, readable silhouette in matte black with a thin lighter edge so it separates from the dark back panel. No door, no people, no text, no wall, no floor. VALUE: MEDIUM-DARK overall; the grey foam is the lightest thing. HUE: neutral greys, the ammunition boxes a muted olive. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt": "EDIT of the previous corp/gun-cabinet-inside drop (edit_image, the same 672x1008): REMOVE EVERY WEAPON AND EVERY AMMUNITION BOX. Keep the cabinet exactly as it is: the same dark gunmetal pegboard back panel, the same framing and proportions, the same steel shelf, the same straight-on view, value, colours and flat stylized look. Where the three long guns stood, leave the EMPTY grey foam cradles with their empty gun-shaped cut-outs and the empty steel retaining brackets and hooks. Where the pistols and the baton lay on the shelf, leave the EMPTY grey foam inserts showing their empty weapon-shaped cut-outs. The cabinet must read as an EMPTY armory rack with nothing in it. No new objects, no text. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
-      "lift": 0.834,
+      "lift": 0.809,
       "sat": 0.5,
-      "note": "the gun cabinet's back panel, seen through the open door (the gunCabinetOpen model). Same aspect and route as corp/gun-cabinet-door. Drop measured srgb 36/40/43, a 7.3 blue spread and linear 0.0183: lift 0.834 to 0.034 (a recess reads a step darker than the door face) and sat 0.5 against the cast, which a lift alone would have published.",
-      "last_converted": "2026-09-30T04:13:07",
-      "last_lift": 0.834,
+      "note": "the gun cabinet's back panel, seen through the open door (the gunCabinetOpen model): an EMPTY rack -- bare hooks, empty saddles and the empty foam cut-outs of two pistols and a baton -- because a painted weapon is one the player can see and not take (objects.GunCabinet's loot lives in its inventory, not in the art). An edit_image of the first roll that carried three long guns, pistols, a baton and ammunition (gpt-image-2.5-flare, high, $0.039). Same aspect and route as corp/gun-cabinet-door. sat 0.5 against the cast, lift re-solved onto the first roll's built 0.0368.",
+      "last_converted": "2026-09-30T20:57:11",
+      "last_lift": 0.809,
       "last_sat": 0.5,
       "built_linear": 0.0368,
-      "built_srgb": 52.5
+      "built_srgb": 52.7
+    },
+    "corp/locker-side": {
+      "src": "corp/security-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        40,
+        50,
+        431,
+        431
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no hinges, no labels, no panel borders, no edges, no corners, nothing that appears only once. TOP-LEFT, flat elevation: the SIDE PANEL of a steel staff locker, charcoal powder-coated sheet steel with a fine even powder-coat texture and horizontal pressed stiffening ribs, EXACTLY FOUR evenly spaced down the quadrant, each running the full width so they close across the left and right edges. TOP-RIGHT, from DIRECTLY ABOVE: the TOP of the same charcoal locker, the same powder coat, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the SIDE of a heavy secure weapon cabinet, thick gunmetal-grey powder-coated steel plate with a regular grid of small flush countersunk rivets, EXACTLY SIX across and six down so the grid closes across all four edges. BOTTOM-RIGHT, from DIRECTLY ABOVE: the TOP of the same weapon cabinet, the same gunmetal-grey plate with a faint fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the gunmetal a touch lighter than the charcoal. HUE: both steels PERFECTLY NEUTRAL grey. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "lift": 0.847,
+      "note": "the security room locker bank's free ENDS (render.corp.CorpFurniture.locker), its own steel and no longer corp/rack-side. security-pack TOP-LEFT: the ribs land at a measured 107.7 px period off rows 104/213/320/427, so the crop is FOUR WHOLE PERIODS (431 square, rows 50..481) and the rib rhythm closes across the wrap. lift solved onto corp/locker-front's built 0.0525, so the ends and the doors are one steel. 1k 2x2 packed gen (gpt-image-2.5-flare, high, $0.0555) shared by the four; each quadrant spread <= 4.3.",
+      "last_converted": "2026-09-30T20:56:51",
+      "last_lift": 0.847,
+      "built_linear": 0.0524,
+      "built_srgb": 64.5
+    },
+    "corp/locker-top": {
+      "src": "corp/security-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        522,
+        10,
+        490,
+        490
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no hinges, no labels, no panel borders, no edges, no corners, nothing that appears only once. TOP-LEFT, flat elevation: the SIDE PANEL of a steel staff locker, charcoal powder-coated sheet steel with a fine even powder-coat texture and horizontal pressed stiffening ribs, EXACTLY FOUR evenly spaced down the quadrant, each running the full width so they close across the left and right edges. TOP-RIGHT, from DIRECTLY ABOVE: the TOP of the same charcoal locker, the same powder coat, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the SIDE of a heavy secure weapon cabinet, thick gunmetal-grey powder-coated steel plate with a regular grid of small flush countersunk rivets, EXACTLY SIX across and six down so the grid closes across all four edges. BOTTOM-RIGHT, from DIRECTLY ABOVE: the TOP of the same weapon cabinet, the same gunmetal-grey plate with a faint fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the gunmetal a touch lighter than the charcoal. HUE: both steels PERFECTLY NEUTRAL grey. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "lift": 0.841,
+      "note": "the locker bank's LID, security-pack TOP-RIGHT, plain powder coat inset from the seams. lift solved onto corp/locker-front's built 0.0525. 1k 2x2 packed gen (gpt-image-2.5-flare, high, $0.0555) shared by the four; each quadrant spread <= 4.3.",
+      "last_converted": "2026-09-30T20:56:51",
+      "last_lift": 0.841,
+      "built_linear": 0.0525,
+      "built_srgb": 65.1
+    },
+    "corp/gun-cabinet-side": {
+      "src": "corp/security-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        75,
+        581,
+        364,
+        346
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no hinges, no labels, no panel borders, no edges, no corners, nothing that appears only once. TOP-LEFT, flat elevation: the SIDE PANEL of a steel staff locker, charcoal powder-coated sheet steel with a fine even powder-coat texture and horizontal pressed stiffening ribs, EXACTLY FOUR evenly spaced down the quadrant, each running the full width so they close across the left and right edges. TOP-RIGHT, from DIRECTLY ABOVE: the TOP of the same charcoal locker, the same powder coat, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the SIDE of a heavy secure weapon cabinet, thick gunmetal-grey powder-coated steel plate with a regular grid of small flush countersunk rivets, EXACTLY SIX across and six down so the grid closes across all four edges. BOTTOM-RIGHT, from DIRECTLY ABOVE: the TOP of the same weapon cabinet, the same gunmetal-grey plate with a faint fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the gunmetal a touch lighter than the charcoal. HUE: both steels PERFECTLY NEUTRAL grey. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "lift": 1.117,
+      "note": "the gun cabinet's FLANKS, packed into models-src/corp/gun-cabinet-sheet.png (never drawn as a label of its own). security-pack BOTTOM-LEFT: the rivets sit at a measured 90.9 px across and 86.6 px down, so the crop is four whole periods each way, 364 x 346 -- NOT SQUARE, a 5% squeeze onto 512 that round rivets hide, against a wrap that would otherwise break the grid. lift solved onto corp/gun-cabinet-door's built 0.0523. 1k 2x2 packed gen (gpt-image-2.5-flare, high, $0.0555) shared by the four; each quadrant spread <= 4.3.",
+      "last_converted": "2026-09-30T20:56:51",
+      "last_lift": 1.117,
+      "built_linear": 0.0524,
+      "built_srgb": 64.9
+    },
+    "corp/gun-cabinet-top": {
+      "src": "corp/security-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        522,
+        522,
+        490,
+        490
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no hinges, no labels, no panel borders, no edges, no corners, nothing that appears only once. TOP-LEFT, flat elevation: the SIDE PANEL of a steel staff locker, charcoal powder-coated sheet steel with a fine even powder-coat texture and horizontal pressed stiffening ribs, EXACTLY FOUR evenly spaced down the quadrant, each running the full width so they close across the left and right edges. TOP-RIGHT, from DIRECTLY ABOVE: the TOP of the same charcoal locker, the same powder coat, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the SIDE of a heavy secure weapon cabinet, thick gunmetal-grey powder-coated steel plate with a regular grid of small flush countersunk rivets, EXACTLY SIX across and six down so the grid closes across all four edges. BOTTOM-RIGHT, from DIRECTLY ABOVE: the TOP of the same weapon cabinet, the same gunmetal-grey plate with a faint fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the gunmetal a touch lighter than the charcoal. HUE: both steels PERFECTLY NEUTRAL grey. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "lift": 1.131,
+      "note": "the gun cabinet's LID, packed into the modelsheet like the flank. security-pack BOTTOM-RIGHT, brushed grain inset from the seams. lift solved onto corp/gun-cabinet-door's built 0.0523. 1k 2x2 packed gen (gpt-image-2.5-flare, high, $0.0555) shared by the four; each quadrant spread <= 4.3.",
+      "last_converted": "2026-09-30T20:56:51",
+      "last_lift": 1.131,
+      "built_linear": 0.0524,
+      "built_srgb": 65.0
+    },
+    "corp/security-sign": {
+      "src": "corp/security-sign.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        17,
+        130,
+        990,
+        161
+      ],
+      "res": [
+        1024,
+        166
+      ],
+      "prompt": "A wide rectangular BACKLIT SECURITY SIGN, a lightbox header that hangs over a doorway, seen dead straight on in flat front elevation, no perspective, centred, spanning nearly the FULL WIDTH of the image and about one quarter of the image tall, on a plain flat pure BLACK background with nothing else on it. The sign is a slim dark anodised aluminium frame around a face that glows: the single word \"SECURITY\" in large clean bold sans-serif capital letters, glowing warm AMBER-WHITE, on a dark charcoal face, the letters filling most of the face's height, evenly spaced and perfectly legible. A thin glowing amber rule runs under the word. No other text, no icons, no wall, no reflections, no glare, no bloom halo beyond the letters. VALUE: the face dark, the letters the brightest thing in the image. CORP SUBJECT \u2014 contemporary premium corporate interior, circa now: clean rectilinear forms, large unbroken planes, fine consistent reveals and shadow gaps, no ornament. The materials of this world are floor-to-ceiling glazing, dark anodised aluminium, brushed stainless, matte white lacquer, pale oak veneer, polished concrete, low-pile charcoal carpet tile with a visible modular grid, and acoustic felt. Everything is new, maintained and expensive \u2014 no rust, no chipping, no grime, no clutter of age, no decay. Where an accent colour appears it is WARM \u2014 amber, brass, tan \u2014 and never blue, because the scene light is already blue and a near-neutral albedo wears the lamp's hue. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the lit SECURITY header over a security room's corridor doorway (render.corp.CorpSecurity.signs). The drop is a 1024x640 solo gen (gpt-image-2.5-flare, high, $0.031) with the sign drawn across its upper half on black; the crop is the frame's measured bbox (x 17..1006, y 130..290, aspect 6.15) and res [1024, 166] keeps it. Its own EMISSIVE map like corp/cctv-wall: the face is near black, the letters carry it. No lift.",
+      "last_converted": "2026-09-30T20:57:26",
+      "built_linear": 0.2213,
+      "built_srgb": 79.9
     }
   }
 }

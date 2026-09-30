@@ -21,6 +21,7 @@ package three;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
   static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
+  static var ShaderChunk:haxe.DynamicAccess<String>; // the GLSL chunks `#include <name>` expands to, by name
   static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
   // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
   // single draw call, so each source's placement must already be baked into its verts (see geo.translate)

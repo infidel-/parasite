@@ -158,3 +158,43 @@ Verified live: after an open, only the open batch is in the scene, one door batc
 the ghost/hull counts are 0.
 
 Verdict: **landed.**
+
+## Security room pass two: own steel, racks on the wall, a lit header, feeds that cut
+
+Four reports off face picks.
+
+- **Reused textures.** The lockers wore `rack-side`/`rack-top`, and the cabinet's sheet packed the
+  same two. Both now have their own, from one packed 1k sheet (`corp/security-pack`, $0.0555):
+  ribbed charcoal locker ends and a plain lid, riveted gunmetal cabinet flanks and a brushed lid.
+  Each crop is WHOLE PERIODS of its pattern: ribs at a measured 107.7 px (431 square), rivets at
+  90.9 x 86.6 (364 x 346, a 5% squeeze that the round rivets hide). Each lift is solved onto its own
+  front's built value (0.0525 / 0.0523), and all four built within 0.0001. `LOCKER_TILE` = one tile
+  per locker height, so the four ribs sit on a bank as real pressings would. Cabinet `R_PLAIN` was
+  re-measured clear of the rivets (sd 1.59 against the cell's 4.46).
+- **Painted guns nobody can take.** `corp/gun-cabinet-inside` is an `edit_image` of the first roll:
+  empty hooks, saddles and foam cut-outs ($0.039). Lift re-solved 0.834 -> 0.809 onto the first
+  roll's built 0.0368.
+- **Racks against the wall.** `CorpFurniture.rack` pushes a slab to its AISLE, which is right in a
+  server room rank and left the security column a cell-deep gap from its wall. With masonry on its
+  back hand, the back now goes to the slab's room face (lockerRect's rule).
+- **SECURITY header** over every doorway into the room, on the lintel's outside face (the door
+  cell's slab IS the lintel, FacilityExit's plane). A 3.2 x 0.52 emissive pane at y 4.95, between the
+  4.2 door head and the 5.8 ceiling. The source is a 1024x640 gen on black, cropped to the frame's
+  measured bbox (990 x 161).
+- **Feeds cut between views** (`CorpSecurity.feeds`). Each panel's u carries its index in the whole
+  part. The shader re-deals each screen's feed off a hash of (panel, screen, epoch) every
+  `FEED_TURNS` 40, staggered per screen, with a `FEED_STATIC` 5% snow burst at each cut. The clock is
+  BASE_MS-relative (`CorpSecurity.tick`). Screens are the art's MEASURED cells: columns on thirds,
+  but the row gap is at 324 of 672, not the half. `textureGrad` samples off the continuous uv so the
+  jump at a screen edge does not drop to the smallest mip.
+- **TRAP: `onBeforeCompile` sees `#include <map_fragment>` UNEXPANDED.** A replace on
+  `texture2D( map, vMapUv )` matched nothing and compiled clean; the feed function was there and
+  never called. The chunk is swapped in expanded, from `THREE.ShaderChunk` (added to the extern),
+  with the sample replaced inside it. ANGLE also warns on dynamic `vec3[int]` indexing, so the screen
+  edges are selects.
+
+Calls A/B at the security view: locker ends +1, locker lid +1, header +1; the video wall is still
++1, with the animation inside the same draw. Warm: the header's plain emissive lambert has its own
+`CorpWarm` pane (a second key beside the feed-patched wall).
+
+Verdict: **landed.**

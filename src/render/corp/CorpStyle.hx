@@ -118,8 +118,12 @@ class CorpStyle
   // and the whiteboard's face, ONE authored composition mapped 0..1 over the board (a frame, a
   // marker tray, a sketch), so render.corp.CorpDeco locks the board's aspect to this 1024x768 source
   public static inline var WHITEBOARD = 'textures/corp/whiteboard.png';
-  // the security room's three: a locker bank's front, and its video wall's feeds (render.corp.CorpSecurity)
+  // the security room's own: a locker bank's front, ends and lid, its video wall's feeds
+  // (render.corp.CorpSecurity), and the lit header over its doorway
   public static inline var LOCKER_FRONT = 'textures/corp/locker-front.png';
+  public static inline var LOCKER_SIDE = 'textures/corp/locker-side.png';
+  public static inline var LOCKER_TOP = 'textures/corp/locker-top.png';
+  public static inline var SECURITY_SIGN = 'textures/corp/security-sign.png';
   public static inline var CCTV_WALL = 'textures/corp/cctv-wall.png';
   public static inline var RACK_FRONT = 'textures/corp/rack-front.png';
   public static inline var RACK_SIDE = 'textures/corp/rack-side.png';
@@ -321,6 +325,23 @@ class CorpStyle
   public static inline var LOCKER_W = 4.0;
   public static inline var LOCKER_H = LOCKER_W;
   public static inline var LOCKER_D = 1.3;
+  // THE VIDEO WALL'S FEEDS (render.corp.CorpSecurity.feeds): corp/cctv-wall's screen edges MEASURED
+  // off the source (dark bezel columns at 342 and 682 of 1024, the row gap at 324 of 672 -- not at
+  // the half), how many turns a screen holds a view, and the share of that spent in static at a cut
+  public static inline var FEED_COL1 = 342 / 1024;
+  public static inline var FEED_COL2 = 682 / 1024;
+  public static inline var FEED_ROW1 = 324 / 672;
+  public static inline var FEED_TURNS = 40.0;
+  public static inline var FEED_STATIC = 0.05;
+  // THE SECURITY HEADER over the room's doorways: corp/security-sign's measured 990 x 161 crop,
+  // centred between the door head (DOOR_H 4.0 + the kerb) and the ceiling (5.8)
+  public static inline var SEC_SIGN_W = 3.2;
+  public static inline var SEC_SIGN_H = SEC_SIGN_W * 161 / 990;
+  public static inline var SEC_SIGN_Y = 4.95;
+  public static inline var SEC_SIGN_EMISSIVE = 1.0;
+  // the ends' and lid's repeat: one tile per locker height, so corp/locker-side's four ribs sit on
+  // the bank as a real side panel's pressings would
+  public static inline var LOCKER_TILE = LOCKER_H;
   // THE GUN CABINET, objects.GunCabinet's two glbs (models-src/corp/gun_cabinet_build.py): its
   // height, and how far its carcass centre stands off the cell centre toward the wall -- its back on
   // an inner wall slab's room face, WALL_INNER / 2 short of the wall cell's centre, less half its

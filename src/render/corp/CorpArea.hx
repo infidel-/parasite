@@ -423,6 +423,8 @@ class CorpArea implements Area3D
       // the server room's blink clock, which is the compound's own shared uniform — see
       // render.facility.FacilityDeco.lights, emitted from CorpFurniture.rack
       render.facility.FacilityDeco.tick(opts.dtMs);
+      // and the video wall's feed cuts
+      CorpSecurity.tick(opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       for (p in glb)
         render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);

@@ -1561,8 +1561,8 @@
       "src": "corp/corp-gun-cabinet.glb",
       "tris": -1,
       "tex": 512,
-      "note": "the security room's gun cabinet SHUT (objects.GunCabinet, key gunCabinet), hand-modelled: 108 tris, 2.40 x 1.30 x 3.60 built at WORLD SIZE. One chamfered carcass whose front wears corp/gun-cabinet-door 0..1 -- the width is locked to that art's 0.667 aspect. Wears gun-cabinet-sheet.png (tools/modelsheet.py over the BUILT door, back-panel, rack-side and rack-top labels, the last two pre-tiled to 0.65x1.8 and 1.2x0.65), so NO baseColor and NO lift. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/gun_cabinet_build.py.",
-      "last_converted": "2026-09-29T23:33:54Z",
+      "note": "the security room's gun cabinet SHUT (objects.GunCabinet, key gunCabinet), hand-modelled: 108 tris, 2.40 x 1.30 x 3.60 built at WORLD SIZE. One chamfered carcass whose front wears corp/gun-cabinet-door 0..1 -- the width is locked to that art's 0.667 aspect. Wears gun-cabinet-sheet.png (tools/modelsheet.py over the BUILT door, back-panel, gun-cabinet-side and gun-cabinet-top labels, the last two pre-tiled to 0.65x1.8 and 1.2x0.65), so NO baseColor and NO lift. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/gun_cabinet_build.py.",
+      "last_converted": "2026-09-30T16:01:06Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/gun-cabinet-open": {
@@ -1570,7 +1570,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the same cabinet OPEN (key gunCabinetOpen): 264 tris, two flanks, a lid, a floor and a back panel wearing corp/gun-cabinet-inside, and the leaf swung 100 degrees about the hinge the door art draws on its left edge. Its footprint centre is (-0.231, -1.172) against the shut one's (0, 0), which render.world.ObjModels' `off` puts back after Models.normalize recentres it, or the carcass would jump when opened. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/gun_cabinet_build.py.",
-      "last_converted": "2026-09-29T23:33:54Z",
+      "last_converted": "2026-09-30T16:01:06Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "corp/wall-cam": {

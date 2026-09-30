@@ -66,8 +66,10 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION, TILE_FLOOR_EXEC_RUG) and the
-    // reception counter (TILE_CORP_RECEPTION_COUNTER, unwalkable), and row 18 their twins
-    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // reception counter (TILE_CORP_RECEPTION_COUNTER, unwalkable), the security room's locker
+    // (TILE_CORP_LOCKER, walkable: it stands in the wall's margin, clear of its cell), and row 18
+    // their twins
+    1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [

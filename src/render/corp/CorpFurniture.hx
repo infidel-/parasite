@@ -749,14 +749,39 @@ class CorpFurniture
       //
       // (this comment used to say the opposite — "pulled back off the aisle" — and the code has
       // always done this. Worth keeping straight, because `drape` reads these rects)
+      //
+      // UNLESS ITS BACK IS MASONRY: the security room's column stands against its east wall, and
+      // pushed to the aisle it left a cell-deep gap to the wall. There the back goes to the slab's
+      // room face, lockerRect's rule
+      var back = front ^ 1;
       var d = CELL - CorpStyle.RACK_D - 2 * CorpStyle.FIT_INSET;
-      switch (front)
+      if (FacilityModel.isWall(m, col + dx(back), row + dz(back)))
         {
-          case 0: r.z1 -= d;
-          case 1: r.z0 += d;
-          case 2: r.x1 -= d;
-          default: r.x0 += d;
+          var sl = FacilityGeom.slab(m, col + dx(back), row + dz(back));
+          switch (back)
+            {
+              case 0:
+                r.z0 = sl.z1;
+                r.z1 = sl.z1 + CorpStyle.RACK_D;
+              case 1:
+                r.z1 = sl.z0;
+                r.z0 = sl.z0 - CorpStyle.RACK_D;
+              case 2:
+                r.x0 = sl.x1;
+                r.x1 = sl.x1 + CorpStyle.RACK_D;
+              default:
+                r.x1 = sl.x0;
+                r.x0 = sl.x0 - CorpStyle.RACK_D;
+            }
         }
+      else
+        switch (front)
+          {
+            case 0: r.z1 -= d;
+            case 1: r.z0 += d;
+            case 2: r.x1 -= d;
+            default: r.x0 += d;
+          }
       var side = buf(CorpStyle.RACK_SIDE);
       FacilityGeom.cap(buf(CorpStyle.RACK_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.RACK_H,
         CorpStyle.RACK_TILE);
@@ -866,23 +891,24 @@ class CorpFurniture
     }
 
 // one cell of a security room's LOCKER BANK against its wall: corp/locker-front mapped 0..1 over a
-// square front, the rack's own steel on its ends and lid. A column of them is ONE run: the ends
-// between two lockers are skipped, and the run takes one contact shadow off its first cell
+// square front, its own corp/locker-side and corp/locker-top on its ends and lid. A column of them
+// is ONE run: the ends between two lockers are skipped, and the run takes one contact shadow off
+// its first cell
   static function locker(m:Facility, col:Int, row:Int):Void
     {
       var dir = lockerBack(m, col, row);
       if (dir < 0)
         return;
       var r = lockerRect(m, col, row, dir);
-      FacilityGeom.cap(buf(CorpStyle.RACK_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
-        CorpStyle.RACK_TILE);
-      var side = buf(CorpStyle.RACK_SIDE);
+      FacilityGeom.cap(buf(CorpStyle.LOCKER_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
+        CorpStyle.LOCKER_TILE);
+      var side = buf(CorpStyle.LOCKER_SIDE);
       for (f in 0...4)
         if (f != dir &&
             f != (dir ^ 1) &&
             !lockerAt(m, col + dx(f), row + dz(f)))
           FacilityGeom.face(side, r.x0, r.x1, r.z0, r.z1, f, 0, CorpStyle.LOCKER_H,
-            CorpStyle.RACK_TILE);
+            CorpStyle.LOCKER_TILE);
       FacilityGeom.pane(buf(CorpStyle.LOCKER_FRONT), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0,
         CorpStyle.LOCKER_H);
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);

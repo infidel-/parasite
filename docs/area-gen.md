@@ -1838,3 +1838,21 @@ floor alone cannot tell the security room from the server room.
 `GenCheck.securitySane` asserts a desk run, a walkable post, and at most one `gunCabinet` per room.
 3000 corp seeds OK. furn/security 22.2% -> **32.97%**, spawns/gunCabinet **0.71** per floor (the
 other ~29% of floors have no security room, or no cabinet cell passed the checks).
+
+### Security lockers are walkable; the cabinet picks before the racks
+
+Asked for as "allow movement in front of the lockers". A locker is `LOCKER_D` 1.3 deep and stands
+off the slab's room face, entirely in the wall's own 1.4 margin and clear of its cell. So
+`TILE_CORP_LOCKER` is walkable and see-through now (`tiles.Default` row 17). The table is static and
+not persisted, so old towers pick it up on load.
+
+That changes what can seal the room: only the cabinet and the racks. `security` picks the cabinet
+FIRST, as the room's feature: the best locker cell that leaves the floor open with the cabinet
+alone. The rack tail then pops until `columnsOpen(racks + cabinet)` holds. Racks first measured 0.40
+cabinets per floor, cabinet first **0.61**.
+
+The 0.71 quoted above was measured BEFORE the corner guard went in. 0.61 is the rate with it, and
+it is candidate-bound: a trace over 3000 seeds had the cabinet chosen in 1826 of 2998 security
+rooms, and never lost afterwards. The misses are small rooms (5x4, 4x5) whose only west-wall cells
+are corners or have no free floor beside them. 3000 corp seeds OK, furn/security 23.18 (lockers no
+longer count as sealed cells).

@@ -48,10 +48,15 @@ class CorpWarm
       var board = MeshBufTools.make();
       FacilityGeom.pane(board, 0, 1, 0, 0, 0, 0, 1);
       FacilityGeom.add(sc, board, CorpStyle.WHITEBOARD, true, true);
-      // and the security room's video wall, the same way: its emissive lambert is a program of its own
+      // and the security room's video wall, the same way: its emissive lambert, with the feed patch,
+      // is a program of its own
       var screens = MeshBufTools.make();
       FacilityGeom.pane(screens, 0, 1, 0, 0, 0, 0, 1);
       CorpSecurity.addScreens(sc, screens);
+      // and the doorway header, a plain emissive lambert with no feed patch: a second program key
+      var sign = MeshBufTools.make();
+      FacilityGeom.pane(sign, 0, 1, 0, 0, 0, 0, 1);
+      CorpSecurity.addGlow(sc, sign, CorpStyle.SECURITY_SIGN, CorpStyle.SEC_SIGN_EMISSIVE, 'corp security sign');
       // the two flat dressing materials, each its own alphaTest / mapped lambert and each a 1024
       // or 512 decoded on first entry
       CorpClutter.build(sc, model);

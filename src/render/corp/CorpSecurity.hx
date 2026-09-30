@@ -3,9 +3,11 @@ package render.corp;
 import three.Three;
 import citygen.CityConfig;
 import render.Models;
+import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
+import render.facility.FacilityStyle;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.MeshBuf;
@@ -54,42 +56,175 @@ class CorpSecurity
       }];
     }
 
-// hang the video wall; answers how many panels
+// the feed clock, in turns (RenderConfig.BASE_MS); advanced by `tick`
+  static var uFeed = { value: 0.0 };
+
+// hang the video wall and the SECURITY headers over its room's doorways; answers how many panels
   public static function build(scene:Scene, m:Facility):Int
     {
       var b = MeshBufTools.make();
       var cells = videoCells(m);
-      for (c in cells)
+      for (i in 0...cells.length)
         {
+          var c = cells[i];
           var s = FacilityGeom.slab(m, c.col, c.row - 1);
           var w = CityConfig.cellToWorld(c.col, c.row);
           var z = s.z1 + CorpStyle.VIDEO_PROUD;
+          var at = b.uv.length;
           FacilityGeom.pane(b, w.x - CorpStyle.VIDEO_W / 2, w.x + CorpStyle.VIDEO_W / 2, z, z, 1,
             CorpStyle.VIDEO_Y0, CorpStyle.VIDEO_Y0 + CorpStyle.VIDEO_H);
+          // the panel's index rides in u's whole part, which is what the feed shader deals its
+          // six screens off: u runs i..i+1 and the shader reads fract() of it
+          var k = at;
+          while (k < b.uv.length)
+            {
+              b.uv[k] += i;
+              k += 2;
+            }
         }
       addScreens(scene, b);
+      var sb = MeshBufTools.make();
+      signs(sb, m);
+      addGlow(scene, sb, CorpStyle.SECURITY_SIGN, CorpStyle.SEC_SIGN_EMISSIVE, 'corp security sign');
       return cells.length;
     }
 
-// the video wall's material: its art is its own emissive map. Public for render.corp.CorpWarm, which
-// has no security room to hang one in
+// advance the feeds' cut clock, BASE_MS-relative like every timed anim in the game
+  public static function tick(dtMs:Float):Void
+    {
+      uFeed.value += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+    }
+
+// the lit SECURITY header over every doorway into a security room, on the lintel's face OUTSIDE
+// the room: FacilityExit.quad's plane (the door cell's slab IS its lintel), at SIGN_Y between the
+// door head and the ceiling. Public for render.corp.CorpWarm
+  public static function signs(b:MeshBuf, m:Facility):Void
+    {
+      var h = CorpStyle.SEC_SIGN_W / 2;
+      var y0 = CorpStyle.SEC_SIGN_Y - CorpStyle.SEC_SIGN_H / 2;
+      var y1 = CorpStyle.SEC_SIGN_Y + CorpStyle.SEC_SIGN_H / 2;
+      for (d in m.doors)
+        for (sd in [-1, 1])
+          {
+            // the security room on this hand, and the sign on the other
+            if (CorpModel.securityRoom(m, d.col + (d.alongX ? 0 : sd),
+                d.row + (d.alongX ? sd : 0)) == null)
+              continue;
+            var s = FacilityGeom.slab(m, d.col, d.row);
+            var c = CityConfig.cellToWorld(d.col, d.row);
+            var e = FacilityStyle.MOUNT_PROUD;
+            if (d.alongX)
+              {
+                var z = (sd > 0 ? s.z0 - e : s.z1 + e);
+                FacilityGeom.pane(b, c.x - h, c.x + h, z, z, (sd > 0 ? 0 : 1), y0, y1);
+              }
+            else
+              {
+                var x = (sd > 0 ? s.x0 - e : s.x1 + e);
+                FacilityGeom.pane(b, x, x, c.z - h, c.z + h, (sd > 0 ? 2 : 3), y0, y1);
+              }
+          }
+    }
+
+// the video wall's material: its art is its own emissive map, and its six feeds CUT between views.
+// Public for render.corp.CorpWarm, which has no security room to hang one in
   public static function addScreens(scene:Scene, b:MeshBuf):Void
+    {
+      var mat = glow(CorpStyle.CCTV_WALL, CorpStyle.VIDEO_EMISSIVE);
+      feeds(mat);
+      add(scene, b, VisionMask.patch(mat), 'corp video wall');
+    }
+
+// a plain lit pane in `tex` (the doorway header). Public for render.corp.CorpWarm
+  public static function addGlow(scene:Scene, b:MeshBuf, tex:String, emissive:Float, name:String):Void
+    {
+      add(scene, b, VisionMask.patch(glow(tex, emissive)), name);
+    }
+
+// an emissive lambert whose art is its own emissive map, so only what is bright in it glows
+  static function glow(tex:String, emissive:Float):MeshLambertMaterial
+    {
+      var t = Textures.loadTexture(tex, 'wall', 1);
+      return new MeshLambertMaterial({
+        map: t,
+        emissiveMap: t,
+        emissive: new Color(0xffffff),
+        emissiveIntensity: emissive,
+        side: THREE.FrontSide,
+      });
+    }
+
+// one unshadowed mesh off a buffer, or nothing for an empty one
+  static function add(scene:Scene, b:MeshBuf, mat:Dynamic, name:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var tex = Textures.loadTexture(CorpStyle.CCTV_WALL, 'wall', 1);
-      var mat = VisionMask.patch(new MeshLambertMaterial({
-        map: tex,
-        emissiveMap: tex,
-        emissive: new Color(0xffffff),
-        emissiveIntensity: CorpStyle.VIDEO_EMISSIVE,
-        side: THREE.FrontSide,
-      }));
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
-      mesh.name = 'corp video wall';
+      mesh.name = name;
       mesh.receiveShadow = false;
       mesh.castShadow = false;
       scene.add(mesh);
+    }
+
+// THE FEEDS CUT: each of a panel's six screens shows one of the art's six feeds, re-dealt every
+// FEED_TURNS off a hash of (panel, screen, epoch), each screen on its own phase so the wall never
+// cuts all at once, and a FEED_STATIC burst of noise at each cut. The screens are the art's
+// MEASURED cells -- columns on thirds, but the rows split at 324 of 672 and not at the half -- so a
+// feed dealt into a screen of another height is fitted to it rather than cut off at a bezel.
+// textureGrad off the continuous uv, or the jump at every screen edge would pick the smallest mip
+  // Dynamic: three's onBeforeCompile hook is not in the extern, every shader patch here takes it so
+  static function feeds(mat:Dynamic):Void
+    {
+      var fn = 'uniform float feedClock;\n' +
+        'float feedHash( vec3 p ) {\n' +
+        '  return fract( sin( dot( p, vec3( 12.9898, 78.233, 37.719 ) ) ) * 43758.5453 );\n' +
+        '}\n' +
+        // a screen's left edge and width by column, top edge and height by row, in image space
+        'float feedX( float c ) { return c < 0.5 ? 0.0 : ( c < 1.5 ? ' + CorpStyle.FEED_COL1 + ' : ' +
+          CorpStyle.FEED_COL2 + ' ); }\n' +
+        'float feedW( float c ) { return c < 0.5 ? ' + CorpStyle.FEED_COL1 + ' : ( c < 1.5 ? ' +
+          (CorpStyle.FEED_COL2 - CorpStyle.FEED_COL1) + ' : ' + (1 - CorpStyle.FEED_COL2) + ' ); }\n' +
+        'float feedY( float r ) { return r < 0.5 ? 0.0 : ' + CorpStyle.FEED_ROW1 + '; }\n' +
+        'float feedH( float r ) { return r < 0.5 ? ' + CorpStyle.FEED_ROW1 + ' : ' +
+          (1 - CorpStyle.FEED_ROW1) + '; }\n' +
+        'vec4 feedTex( sampler2D tx, vec2 uv ) {\n' +
+        '  float panel = floor( uv.x );\n' +
+        // image space: x across, y DOWN from the art's top row (the texture is flipY)
+        '  vec2 p = vec2( uv.x - panel, 1.0 - uv.y );\n' +
+        '  float c0 = p.x < ' + CorpStyle.FEED_COL1 + ' ? 0.0 : ( p.x < ' + CorpStyle.FEED_COL2 +
+          ' ? 1.0 : 2.0 );\n' +
+        '  float r0 = p.y < ' + CorpStyle.FEED_ROW1 + ' ? 0.0 : 1.0;\n' +
+        '  vec2 local = vec2( ( p.x - feedX( c0 ) ) / feedW( c0 ), ( p.y - feedY( r0 ) ) / feedH( r0 ) );\n' +
+        '  float screen = c0 + r0 * 3.0;\n' +
+        '  float t = feedClock / float( ' + CorpStyle.FEED_TURNS + ' ) + feedHash( vec3( panel, screen, 0.5 ) );\n' +
+        '  float epoch = floor( t );\n' +
+        '  float src = floor( feedHash( vec3( panel, screen, epoch ) ) * 5.999 );\n' +
+        '  float sc = mod( src, 3.0 );\n' +
+        '  float sr = floor( src / 3.0 );\n' +
+        '  vec2 q = vec2( feedX( sc ) + local.x * feedW( sc ), feedY( sr ) + local.y * feedH( sr ) );\n' +
+        '  vec4 o = textureGrad( tx, vec2( q.x, 1.0 - q.y ), dFdx( uv ), dFdy( uv ) );\n' +
+        // the cut: a burst of grey snow over the screen's own area, bezels and all, for a moment
+        '  float snow = step( fract( t ), ' + CorpStyle.FEED_STATIC + ' );\n' +
+        '  float n = feedHash( vec3( floor( local * vec2( 48.0, 32.0 ) ), floor( feedClock * 8.0 ) ) );\n' +
+        '  o.rgb = mix( o.rgb, vec3( 0.04 + 0.14 * n ), snow );\n' +
+        '  return o;\n' +
+        '}\n';
+      mat.onBeforeCompile = function(shader:Dynamic, _)
+        {
+          shader.uniforms.feedClock = uFeed;
+          // the includes are still unexpanded here, so the two samples are swapped inside the
+          // chunks' own text and the chunk goes in expanded in its place
+          var f:String = shader.fragmentShader;
+          for (c in [
+              [ 'map_fragment', 'texture2D( map, vMapUv )', 'feedTex( map, vMapUv )' ],
+              [ 'emissivemap_fragment', 'texture2D( emissiveMap, vEmissiveMapUv )',
+                'feedTex( emissiveMap, vEmissiveMapUv )' ],
+            ])
+            f = StringTools.replace(f, '#include <' + c[0] + '>',
+              StringTools.replace(THREE.ShaderChunk.get(c[0]), c[1], c[2]));
+          shader.fragmentShader = fn + f;
+        };
+      mat.customProgramCacheKey = function() return 'corpfeeds';
     }
 
 // every CCTV camera on the plate, as the placement of its glb: on the NORTH wall of an inside corner

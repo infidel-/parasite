@@ -1746,20 +1746,33 @@ class CorpRooms
             Const.CORP_COMPUTERS,
             Const.CORP_TABLE_ROUTER,
           ]);
-      // the racks first: a lane beside a door is kept on both columns, and the lockers are the
-      // ones dropped when the two together would seal the floor
       var racks = wallColumn(state, room, room.x2);
       var lockers = wallColumn(state, room, room.x1);
       if (lockers.length > SECURITY_LOCKERS_MAX)
         lockers = lockers.slice(0, SECURITY_LOCKERS_MAX);
-      while (racks.length + lockers.length > 0 &&
-          !columnsOpen(state, room, racks.concat(lockers)))
-        {
-          if (lockers.length > 0)
-            lockers.pop();
-          else
-            racks.pop();
-        }
+      // the gun cabinet stands on the floor: it is an object, objects.GunCabinet, and what makes its
+      // cell solid is the object and not the tile. So it needs FLOOR IN FRONT OF IT, to be opened
+      // from and so it never closes a pocket CorpConnect.openPockets would tear the desk out to
+      // reach. The locker nearest the run's middle that has it
+      //
+      // AND NEVER IN A CORNER: the render turns it by its wall (render.world.ObjModels, WALL yaw), and
+      // a corner has two, the north one asked first -- a cabinet in the west column turned to face
+      // down its own locker run
+      // a LOCKER IS WALKABLE (it stands in the wall's own margin, clear of its cell), so only the
+      // cabinet and the racks can seal the floor. The cabinet is the room's feature and takes the
+      // best cell that leaves the floor open on its own; the rack tail then goes until it is open
+      var cab = -1;
+      for (i in 0...lockers.length)
+        if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
+            !corner(room, lockers[i].x, lockers[i].y) &&
+            (cab < 0 ||
+            Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)) &&
+            columnsOpen(state, room, [lockers[i]]))
+          cab = i;
+      var taken = (cab >= 0 ? [lockers[cab]] : []);
+      while (racks.length > 0 &&
+          !columnsOpen(state, room, racks.concat(taken)))
+        racks.pop();
       if (racks.length > 0)
         GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x2, racks[0].y, room.x2,
           racks[racks.length - 1].y);
@@ -1768,22 +1781,6 @@ class CorpRooms
           cells[c.x][c.y] = RACK_HIGH;
           addDecoration(state, c.x, c.y, Const.CORP_MACHINERY);
         }
-      // the gun cabinet stands on the floor: it is an object, objects.GunCabinet, and what makes its
-      // cell solid is the object and not the tile. So it needs FLOOR IN FRONT OF IT, and not only to
-      // be opened from: a cabinet cell walled in by lockers and the desk run is a walkable tile
-      // nothing reaches, and CorpConnect.openPockets tore the DESK out to get to it — measured as 199
-      // security rooms in 3000 with no desk. The locker nearest the run's middle that has it
-      //
-      // AND NEVER IN A CORNER: the render turns it by its wall (render.world.ObjModels, WALL yaw), and
-      // a corner has two, the north one asked first -- a cabinet in the west column turned to face
-      // down its own locker run
-      var cab = -1;
-      for (i in 0...lockers.length)
-        if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
-            !corner(room, lockers[i].x, lockers[i].y) &&
-            (cab < 0 ||
-            Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)))
-          cab = i;
       for (i in 0...lockers.length)
         {
           var c = lockers[i];
