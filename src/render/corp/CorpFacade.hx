@@ -8,6 +8,7 @@ import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityGeom.Notch;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.world.DowntownStyle;
 import render.world.MeshBuf.MeshBuf;
@@ -44,6 +45,7 @@ class CorpFacade
   public static function build(scene:Scene, m:Facility):{ clad:Int, soffit:Int, lit:Int }
     {
       var clad = MeshBufTools.make();
+      var shaft = MeshBufTools.make();
       var soff = MeshBufTools.make();
       var lit = MeshBufTools.make();
       var st = DowntownStyle.get();
@@ -86,13 +88,18 @@ class CorpFacade
             // slab would jog half a unit in and out at every window run's two ends. Taking the
             // ring plane puts the drop dead flush with the parapet band 6 units over it
             var sl = FacilityGeom.slab(m, col, row);
+            var lift = liftAt(m, col, row);
             for (dir in 0...4)
               {
                 if (!FacilityGeom.outward(m, col, row, dir))
                   continue;
                 var alongX = (dir < 2);
                 var p = alongX ? (dir == 0 ? s.z0 : s.z1) : (dir == 2 ? s.x0 : s.x1);
-                if (alongX)
+                if (lift)
+                  FacilityGeom.face(shaft, alongX ? s.x0 : p, alongX ? s.x1 : p,
+                    alongX ? p : s.z0, alongX ? p : s.z1, dir, CorpStyle.STREET_Y,
+                    FacilityStyle.WALL_BASE, CorpStyle.SHAFT_TILE);
+                else if (alongX)
                   drop(clad, lit, st, col, row, dir, s.x0, s.x1, p, p);
                 else
                   drop(clad, lit, st, col, row, dir, p, p, s.z0, s.z1);
@@ -105,7 +112,7 @@ class CorpFacade
                 // .FacilityGeom.band caps the identical step at the parapet with its `soffit`
                 // quad; this is that quad, the other way up. A SOLID cell's two insets are equal,
                 // so the rect comes out zero-wide and `cap` drops it
-                FacilityGeom.cap(clad,
+                FacilityGeom.cap(lift ? shaft : clad,
                   dir == 2 ? s.x0 : (dir == 3 ? sl.x1 : s.x0),
                   dir == 2 ? sl.x0 : (dir == 3 ? s.x1 : s.x1),
                   dir == 0 ? s.z0 : (dir == 1 ? sl.z1 : s.z0),
@@ -124,6 +131,17 @@ class CorpFacade
               {
                 if (FacilityModel.isIndoor(m, n.col, n.row))
                   continue;
+                // a notch is PARAPET_INSET wide, under a window's width, so it never carries a bay
+                if (lift)
+                  {
+                    FacilityGeom.face(shaft, n.dx == 3 ? n.x0 : n.x1, n.dx == 3 ? n.x0 : n.x1,
+                      n.z0, n.z1, n.dx, CorpStyle.STREET_Y, FacilityStyle.WALL_BASE,
+                      CorpStyle.SHAFT_TILE);
+                    FacilityGeom.face(shaft, n.x0, n.x1, n.dz == 1 ? n.z0 : n.z1,
+                      n.dz == 1 ? n.z0 : n.z1, n.dz, CorpStyle.STREET_Y, FacilityStyle.WALL_BASE,
+                      CorpStyle.SHAFT_TILE);
+                    continue;
+                  }
                 drop(clad, lit, st, col, row, n.dx,
                   n.dx == 3 ? n.x0 : n.x1, n.dx == 3 ? n.x0 : n.x1, n.z0, n.z1);
                 drop(clad, lit, st, col, row, n.dz,
@@ -132,6 +150,7 @@ class CorpFacade
           }
       nLit = Std.int(lit.idx.length / 6);
       add(scene, clad, st.walls[CorpStyle.FACADE_SLOT]);
+      add(scene, shaft, CorpStyle.SHAFT);
       add(scene, soff, CorpStyle.CAP);
       CorpStreet.addLit(scene, lit, st, CorpStyle.FACADE_SLOT);
       return {
@@ -189,6 +208,20 @@ class CorpFacade
               alongX ? pz0 : a, alongX ? pz0 : a + CELL,
               dir, (j0 + j) * CELL, (j0 + j + 1) * CELL);
           }
+    }
+
+// is this perimeter cell part of the lift car's ring? The car hangs off the tower's face (gen.blocks
+// .ElevatorBlock), and its floor is the only Surf.LIFT on the plate bar the door, so a post or a
+// pane touching it, diagonals included for the corner posts, is the car's and its drop is the SHAFT.
+// The tower's own wall either side of the car is two cells from the floor and stays glazing
+  static function liftAt(m:Facility, col:Int, row:Int):Bool
+    {
+      for (dr in -1...2)
+        for (dc in -1...2)
+          if (FacilityModel.inside(m, col + dc, row + dr) &&
+              m.surf[row + dr][col + dc] == Surf.LIFT)
+            return true;
+      return false;
     }
 
 // the parapet's plane on this cell: the cell rect pulled in by PARAPET_INSET on every hand where
