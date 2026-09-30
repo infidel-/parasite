@@ -1856,3 +1856,11 @@ it is candidate-bound: a trace over 3000 seeds had the cabinet chosen in 1826 of
 rooms, and never lost afterwards. The misses are small rooms (5x4, 4x5) whose only west-wall cells
 are corners or have no free floor beside them. 3000 corp seeds OK, furn/security 23.18 (lockers no
 longer count as sealed cells).
+
+Then "cells in front of server racks are still unwalkable": the security room's column was
+`TILE_RACK_HIGH`, the server room's opaque rank id, while the render had just moved the rack flush to
+the wall. The column is `Const.TILE_CORP_WALL_RACK` (`OFFSET_ROW17 + 4`) now: walkable and
+see-through, the locker's case. `CorpFurniture.rack` builds a wall-backed rack `RACK_WALL_D` 1.3 deep,
+which is the locker's depth and inside the wall's margin. So nothing in a security room seals the
+floor but the cabinet, and the rack pop loop is gone. The server room's mid-room ranks keep the
+opaque id, so they still block sight. 3000 corp seeds OK, spawns/gunCabinet 0.61, furn/security 11.87.

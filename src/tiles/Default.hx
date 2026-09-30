@@ -66,10 +66,10 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 17 - corpo floors past row 12 (Const.TILE_FLOOR_RECEPTION, TILE_FLOOR_EXEC_RUG) and the
-    // reception counter (TILE_CORP_RECEPTION_COUNTER, unwalkable), the security room's locker
-    // (TILE_CORP_LOCKER, walkable: it stands in the wall's margin, clear of its cell), and row 18
-    // their twins
-    1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // reception counter (TILE_CORP_RECEPTION_COUNTER, unwalkable), the security room's locker and
+    // wall rack (TILE_CORP_LOCKER, TILE_CORP_WALL_RACK, walkable: both stand in the wall's margin,
+    // clear of their cell), and row 18 their twins
+    1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
@@ -148,8 +148,9 @@ class Default extends Tileset
       // the counter in the reception's wall is the marble desk it replaced
       if (tileID == Const.TILE_CORP_RECEPTION_COUNTER)
         return super.getIcon(Const.TILE_DARK_TABLE_MARBLE1_1X1);
-      // a locker is the server floor's twin it stands on
-      if (tileID == Const.TILE_CORP_LOCKER)
+      // a locker and a wall rack are the server floor's twin they stand on
+      if (tileID == Const.TILE_CORP_LOCKER ||
+          tileID == Const.TILE_CORP_WALL_RACK)
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
       // and the exec rug is the boardroom's carpet, the one rug-like floor the tileset has
       if (tileID == Const.TILE_FLOOR_EXEC_RUG)

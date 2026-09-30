@@ -179,7 +179,8 @@ class CorpModel
               if (!FacilityModel.inside(m, col, row))
                 continue;
               if (m.fit[row][col] == CorpFurniture.FIT_RACK &&
-                  area.getCellType(col, row) != Const.TILE_RACK_HIGH)
+                  area.getCellType(col, row) != Const.TILE_RACK_HIGH &&
+                  area.getCellType(col, row) != Const.TILE_CORP_WALL_RACK)
                 m.fit[row][col] = 0;
             }
     }
@@ -425,6 +426,7 @@ class CorpModel
           t == Const.TILE_FLOOR_ARCHIVE + 16 ||
           t == Const.TILE_ARCHIVE_HIGH ||
           t == Const.TILE_RACK_HIGH ||
+          t == Const.TILE_CORP_WALL_RACK ||
           t == Const.TILE_CORP_LOCKER)
         return SERVER;
       if (t == Const.TILE_FLOOR_CONCRETE ||
@@ -463,7 +465,8 @@ class CorpModel
       // the old solo office dressed its corners with it — and a corner is a cell with a decoration
       // on it, which is exactly what a fitting of 0 leaves CorpDeco to draw
       if (t == Const.TILE_FLOOR_SERVER + 16 ||
-          t == Const.TILE_RACK_HIGH)
+          t == Const.TILE_RACK_HIGH ||
+          t == Const.TILE_CORP_WALL_RACK)
         return CorpFurniture.FIT_RACK;
       if (t == Const.TILE_FLOOR_MARBLE2 + 16)
         return CorpFurniture.FIT_FIXTURE;

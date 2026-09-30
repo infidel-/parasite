@@ -316,6 +316,9 @@ class CorpStyle
   // a server rack. 2 m tall and 1 m deep, standing against the aisle it is reached from
   public static inline var RACK_H = 4.0;
   public static inline var RACK_D = 2.0;
+  // and a rack against masonry (the security room's column): as deep as the wall's margin allows,
+  // the locker's depth, so it stands off its cell like the lockers across the room
+  public static inline var RACK_WALL_D = LOCKER_D;
   // and a wall machine's depth off the masonry (render.corp.CorpFurniture.machine)
   public static inline var MACHINE_D = 1.15;
 

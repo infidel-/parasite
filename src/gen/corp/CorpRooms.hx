@@ -1758,9 +1758,8 @@ class CorpRooms
       // AND NEVER IN A CORNER: the render turns it by its wall (render.world.ObjModels, WALL yaw), and
       // a corner has two, the north one asked first -- a cabinet in the west column turned to face
       // down its own locker run
-      // a LOCKER IS WALKABLE (it stands in the wall's own margin, clear of its cell), so only the
-      // cabinet and the racks can seal the floor. The cabinet is the room's feature and takes the
-      // best cell that leaves the floor open on its own; the rack tail then goes until it is open
+      // a LOCKER AND A WALL RACK ARE WALKABLE (each stands in the wall's own margin, clear of its
+      // cell), so only the cabinet can seal the floor: it takes the best cell that leaves it open
       var cab = -1;
       for (i in 0...lockers.length)
         if (cells[lockers[i].x + 1][lockers[i].y] == SERVER &&
@@ -1769,16 +1768,12 @@ class CorpRooms
             Math.abs(i - lockers.length / 2) < Math.abs(cab - lockers.length / 2)) &&
             columnsOpen(state, room, [lockers[i]]))
           cab = i;
-      var taken = (cab >= 0 ? [lockers[cab]] : []);
-      while (racks.length > 0 &&
-          !columnsOpen(state, room, racks.concat(taken)))
-        racks.pop();
       if (racks.length > 0)
         GenTree.add(node, CorpBlocks.ZONE_RACK_ROW, room.x2, racks[0].y, room.x2,
           racks[racks.length - 1].y);
       for (c in racks)
         {
-          cells[c.x][c.y] = RACK_HIGH;
+          cells[c.x][c.y] = Const.TILE_CORP_WALL_RACK;
           addDecoration(state, c.x, c.y, Const.CORP_MACHINERY);
         }
       for (i in 0...lockers.length)

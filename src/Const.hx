@@ -1226,9 +1226,12 @@ class Const
   // new table entry. render.corp.CorpModel reads it as floor with a fitting on it, so each corner
   // post ends in a face of its own
   public static var TILE_CORP_RECEPTION_COUNTER = OFFSET_ROW17 + 2;
-  // and a security room's STEEL LOCKER, one per cell down its west wall. Unwalkable and
-  // see-through, which row 17 already is past its two floors, so tiles.Default needs no entry
+  // and a security room's STEEL LOCKER, one per cell down its west wall. Walkable and
+  // see-through: it stands in the wall's own margin, clear of its cell
   public static var TILE_CORP_LOCKER = OFFSET_ROW17 + 3;
+  // and its SERVER RACK column down the east wall, walkable and see-through for the locker's
+  // reason. The server room's ranks stand mid-room and keep TILE_RACK_HIGH, which blocks sight
+  public static var TILE_CORP_WALL_RACK = OFFSET_ROW17 + 4;
   // and one receptionist per this many cells of it
   public static inline var RECEPTION_STATION_PITCH = 3;
 

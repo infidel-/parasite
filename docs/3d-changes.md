@@ -177,6 +177,8 @@ Four reports off face picks.
 - **Racks against the wall.** `CorpFurniture.rack` pushes a slab to its AISLE, which is right in a
   server room rank and left the security column a cell-deep gap from its wall. With masonry on its
   back hand, the back now goes to the slab's room face (lockerRect's rule).
+- **The wall column is walkable** (`Const.TILE_CORP_WALL_RACK`, gen side in `docs/area-gen.md`), so a
+  wall-backed rack is `RACK_WALL_D` 1.3 deep and stands in the wall's margin like the lockers.
 - **SECURITY header** over every doorway into the room, on the lintel's outside face (the door
   cell's slab IS the lintel, FacilityExit's plane). A 3.2 x 0.52 emissive pane at y 4.95, between the
   4.2 door head and the 5.8 ceiling. The source is a 1024x640 gen on black, cropped to the frame's

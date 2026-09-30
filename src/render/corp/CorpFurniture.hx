@@ -752,7 +752,8 @@ class CorpFurniture
       //
       // UNLESS ITS BACK IS MASONRY: the security room's column stands against its east wall, and
       // pushed to the aisle it left a cell-deep gap to the wall. There the back goes to the slab's
-      // room face, lockerRect's rule
+      // room face, lockerRect's rule, and it is RACK_WALL_D deep so it stands in the wall's margin
+      // and its cell stays floor (Const.TILE_CORP_WALL_RACK is walkable)
       var back = front ^ 1;
       var d = CELL - CorpStyle.RACK_D - 2 * CorpStyle.FIT_INSET;
       if (FacilityModel.isWall(m, col + dx(back), row + dz(back)))
@@ -762,16 +763,16 @@ class CorpFurniture
             {
               case 0:
                 r.z0 = sl.z1;
-                r.z1 = sl.z1 + CorpStyle.RACK_D;
+                r.z1 = sl.z1 + CorpStyle.RACK_WALL_D;
               case 1:
                 r.z1 = sl.z0;
-                r.z0 = sl.z0 - CorpStyle.RACK_D;
+                r.z0 = sl.z0 - CorpStyle.RACK_WALL_D;
               case 2:
                 r.x0 = sl.x1;
-                r.x1 = sl.x1 + CorpStyle.RACK_D;
+                r.x1 = sl.x1 + CorpStyle.RACK_WALL_D;
               default:
                 r.x1 = sl.x0;
-                r.x0 = sl.x0 - CorpStyle.RACK_D;
+                r.x0 = sl.x0 - CorpStyle.RACK_WALL_D;
             }
         }
       else
