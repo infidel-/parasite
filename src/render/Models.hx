@@ -28,6 +28,7 @@ typedef InstancedProp = {
   var mesh:InstancedMesh;      // null until the glb finishes loading
   var matrices:Array<Matrix4>; // full per-placement transforms (all instances)
   var centres:Array<Vector3>;  // per-placement world position, for the frustum test
+  @:optional var spheres:Array<Sphere>; // per-placement world bounding sphere, built by cullExact's first call
 };
 
 // the material a batch draws with. one InstancedMesh = one material, so a level that wants two looks
@@ -439,5 +440,71 @@ class Models {
         }
       prop.mesh.count = k;
       untyped prop.mesh.instanceMatrix.needsUpdate = true;
+    }
+
+// exact per-instance cull for a static casting batch: each placement's own world bounding sphere
+// (+ margin) against the frustum, visible instances packed first and the hidden ones after them, so
+// the buffer always holds ALL of them. the main pass draws the visible count; every SHADOW pass draws
+// the full set (spheres() hooks it), because a frozen spot or moon map rendered off the camera's
+// subset keeps that hole until it next refreshes. an empty batch leaves the render list unless
+// `keep` says a shadow map renders this frame. placements must not move after build: the spheres
+// are baked once, so a posed batch (the doors) stays on cull()
+  public static function cullExact(prop:InstancedProp, camera:PerspectiveCamera, margin:Float, keep:Bool):Void
+    {
+      var mesh = prop.mesh;
+      if (mesh == null)
+        return;
+      if (prop.spheres == null)
+        spheres(prop, margin);
+      camera.updateMatrixWorld();
+      _projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      _frustum.setFromProjectionMatrix(_projScreen);
+      var k = 0;
+      var j = prop.matrices.length;
+      for (i in 0...prop.matrices.length)
+        {
+          if (_frustum.intersectsSphere(prop.spheres[i]))
+            {
+              mesh.setMatrixAt(k, prop.matrices[i]);
+              k++;
+            }
+          else
+            {
+              j--;
+              mesh.setMatrixAt(j, prop.matrices[i]);
+            }
+        }
+      mesh.count = k;
+      mesh.visible = k > 0 || keep;
+      untyped mesh.instanceMatrix.needsUpdate = true;
+    }
+
+// builds every placement's world bounding sphere for cullExact, and hooks the batch's shadow draws to
+// the full instance count, handing the visible count back to the main pass after each one
+  static function spheres(prop:InstancedProp, margin:Float):Void
+    {
+      var mesh = prop.mesh;
+      if (mesh.geometry.boundingSphere == null)
+        mesh.geometry.computeBoundingSphere();
+      var bs:Sphere = mesh.geometry.boundingSphere;
+      prop.spheres = [];
+      for (m in prop.matrices)
+        {
+          var s = new Sphere();
+          s.center.copy(bs.center).applyMatrix4(m);
+          s.radius = bs.radius * m.getMaxScaleOnAxis() + margin;
+          prop.spheres.push(s);
+        }
+      var n = prop.matrices.length;
+      var shown = 0;
+      mesh.onBeforeShadow = function()
+        {
+          shown = mesh.count;
+          mesh.count = n;
+        };
+      mesh.onAfterShadow = function()
+        {
+          mesh.count = shown;
+        };
     }
 }

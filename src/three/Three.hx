@@ -89,6 +89,7 @@ package three;
   public function multiplyMatrices(a:Matrix4, b:Matrix4):Matrix4;
   public function copy(m:Matrix4):Matrix4;
   public function invert():Matrix4; // in place; world -> object frame for a picked hit
+  public function getMaxScaleOnAxis():Float; // largest axis scale, for a transformed bounding sphere's radius
 }
 
 @:native("THREE.Sphere") extern class Sphere {
@@ -133,6 +134,11 @@ package three;
   public var geometry:Dynamic;   // present on meshes; Dynamic for editor traversal
   public var material:Dynamic;
   public var isInstancedMesh:Bool;
+  // fired before each SHADOW-map draw of this object: (renderer, object, camera, shadowCamera, geometry,
+  // depthMaterial, group). three's own hook, a plain no-op until assigned
+  public var onBeforeShadow:Dynamic;
+  // fired after that draw, same args
+  public var onAfterShadow:Dynamic;
   public function add(o:Object3D):Void;
   public function remove(o:Object3D):Void;
   public function removeFromParent():Void; // detach from whatever holds it: the scene, or a Chunks group

@@ -286,3 +286,33 @@ glass-dark vertex lies inside that box except on the tower's own x = 15 face, wh
 shaft. +1 draw call (one more `add` mesh) and one new 512 texture. One gen, $0.0557.
 
 Verdict: **landed.**
+
+## Corp glb props cull per instance on their own bounding spheres
+
+From the corp perf report (live census, six investigations). `CorpStyle.PROP_CULL_R` was 120 and
+`Models.cull` treats it as the radius of a sphere at every placement, so it was a 30-cell MARGIN and
+not a draw distance: the chair batch drew 63 of 63 with none on screen, and 25-40 of the 34 batches
+per spot had nothing in view. Each of them also drew again into the moon map every frame.
+
+- **`Models.cullExact`**, corp only (the glb and clutter-prop batches). Each placement's own world
+  bounding sphere (geometry sphere × `getMaxScaleOnAxis`, baked once on first call) + `PROP_CULL_R`,
+  now **2**: it covers the sway shader and the moon throw of the tallest prop (arch-shelf, 4.8).
+- **Visible instances are packed first and the hidden ones AFTER them**, so the buffer always holds
+  the whole set. `onBeforeShadow` sets `count` to all of them and `onAfterShadow` hands the visible
+  count back: **every shadow pass draws the full set.** TRAP: the spot maps are frozen
+  (`autoUpdate = false`, refreshed on a slot swap), so a map that refreshed off the camera's subset
+  would keep that hole until the slot next changed owner. Measured before the fix: 2-4 of the 8 maps
+  per spot serve lamps whose casters are all off screen.
+- `mesh.visible = count > 0 || keep`, where `keep` means a shadow map renders this frame. This phase
+  keeps everything listed, because the moon still renders every frame.
+- `Models.cull` is unchanged. The doors pose their matrices every tick, so baked spheres cannot serve
+  them, and facility, city and ObjModels keep their radius.
+
+Measured on the RTX 3050 Ti laptop, A/B/A/B at one pose, 5 × 30 frames, medians (old = cull at 120):
+lift **194 → 169** calls, 1.09M → 655k tris; cubicle **164 → 138**, 1.19M → 679k; security
+**180 → 156**; lift tactical **218 → 193**. Submit was flat (the empty batches are still listed);
+GPU −1.0 ms in follow view, tactical within noise. Pixel diff against a control frame was zero at the
+cubicle, the cubicle in tactical, the lift and exec, and zero with all 8 spot maps forced to refresh
+at the cubicle and the kitchen.
+
+Verdict: **landed.**

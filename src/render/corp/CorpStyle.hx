@@ -42,8 +42,9 @@ class CorpStyle
   // only the lit glazing blooms
   public static inline var BLOOM_THRESHOLD = 0.72;
 
-  // how far a glb prop is still drawn from the camera, world units
-  public static inline var PROP_CULL_R = 120.0;
+  // margin on each glb prop's own bounding sphere in the per-instance cull, world units: covers the
+  // sway shader's displacement and the moon throw of the tallest prop (arch-shelf, 4.8)
+  public static inline var PROP_CULL_R = 2.0;
 
   // ---- art ---------------------------------------------------------------------------------
   //

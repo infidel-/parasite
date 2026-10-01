@@ -438,8 +438,14 @@ class CorpArea implements Area3D
       // and the video wall's feed cuts
       CorpSecurity.tick(opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
+      // the props draw only what the camera sees, but every shadow map still gets all of them (see
+      // cullExact). an empty batch stays listed on a frame a map renders, and the moon's renders
+      // every frame
+      var keep = true;
       for (p in glb)
-        render.Models.cull(p, opts.camera, CorpStyle.PROP_CULL_R);
+        render.Models.cullExact(p, opts.camera, CorpStyle.PROP_CULL_R, keep);
+      for (p in clutterProps)
+        render.Models.cullExact(p, opts.camera, CorpStyle.PROP_CULL_R, keep);
       // the object props' own pass, FacilityArea's three lines: without it the ghost and hull twins
       // drew every frame and a cabinet opened on this floor kept its shut batch too — the cull is
       // what writes each batch's mask into its instance count
