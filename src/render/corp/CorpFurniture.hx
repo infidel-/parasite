@@ -307,7 +307,9 @@ class CorpFurniture
               tex == CorpStyle.RECEPTION_TOP)
             glossy(scene, bufs.get(tex), tex);
           else
-            FacilityGeom.add(scene, bufs.get(tex), tex, true, true);
+            FacilityGeom.add(scene, bufs.get(tex), tex, true,
+              tex != CorpStyle.WHITEBOARD &&
+              tex != CorpStyle.MIRROR); // flat on the wall: no shadow to throw
         }
       // ONE additive mesh for every blinking speck in the room and ONE for every cable in it, both
       // shared with the compound: render.facility.FacilityDeco.lamps folds in the blink shader and

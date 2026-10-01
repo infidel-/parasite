@@ -317,7 +317,7 @@ class CorpProps
             // per fitting and eight of the pool's twelve slots cast. Those maps are static
             // (shadow.autoUpdate = false), so the second draw happens when a slot changes owner and
             // not every frame, and a chair with no shadow under it stood in mid air
-            p.mesh.castShadow = true;
+            p.mesh.castShadow = CorpStyle.SHADOWLESS.indexOf(path) < 0;
           });
       return p;
     }

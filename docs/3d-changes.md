@@ -362,3 +362,41 @@ Measured on the 3050 Ti laptop, the same 46-step corridor walk on a fresh cache:
 The 17.6 is `mouse.update` (13.5 ms) on one step, a separate cost, not chased.
 
 Verdict: **landed.**
+
+## Corp moon frozen, empty prop batches leave the list, small props stop casting
+
+- **The moon.** Corp builds the compound's rig (`FacilityScene.build`) and keeps its DirectionalLight
+  but never calls `SceneSetup.fitMoon`. The ortho box therefore sits at the world origin, over the
+  plate's SE corner (exec wing and lift on the old fixture), and at `INDOOR.direct` 0.22 its shadows
+  are faint. It was `autoUpdate`, so every frame it re-drew every caster on the floor: 42-47 calls,
+  ~0.5M tris. `CorpArea.scene` now freezes it (`autoUpdate = false`, `needsUpdate = true`). `tick`
+  re-renders it whenever the count of LANDED glb batches changes, because the loader resolves after
+  the first frame and a map frozen before the props arrive has none of them. Fitting it to the player
+  was measured too: same cost, plus faint moon shadows over the whole floor. Rejected.
+- **CORRECTION** to "the tower's furniture CASTS" (+26 calls, 133/107 at a held pose): no spot map
+  refreshes at a held pose, so that delta was this moon pass, not the ceiling spotlights.
+- **Empty batches.** With the moon frozen, `cullExact`'s `keep` is
+  `LampLights.lastShadowRenders > 0 || moon.shadow.needsUpdate`. On every other frame a batch with no
+  instance in view is `visible = false` and leaves the render list. That is the half of phase 1 that
+  moves `submit`: a zero-count batch still costs `renderBufferDirect` its state setup.
+- **Non-casting.** `CorpStyle.SHADOWLESS` lists plant, keyboard, exec plaque and photo, wall cam,
+  desk mug and bottle, kitchen coffee and microwave. Whiteboard and mirror (emitted, flat on the
+  wall) pass `casts = false`. Measured beforehand with all 8 spot maps forced and the moon off: 0 px
+  for the plant, ≤ 0.005% for the rest. The plant is 4,206 tris × 82, 60% of the prop triangles
+  that went into every map on refresh. Monitor (0.15%) and chairs (0.19%) keep casting.
+
+Measured on the 3050 Ti laptop (new fixture, slot 5: the autosave was deleted by a game over), old
+arm = moon live + everything casting + keep forced, A/B/A/B 5 × 30 medians:
+
+| spot | calls | tris | submit ms | GPU ms |
+|---|---|---|---|---|
+| lift 29,43 | 151 → **106** | 745k → 90k | 2.6 → 1.9 | 7.2 → 5.9 |
+| cubicle 48,10 | 123 → **81** | 810k → 155k | 2.4 → 1.7 | 5.1 → 4.2 |
+| security 9,39 | 140 → **95** | 748k → 93k | 2.6 → 1.9 | 4.7 → 3.8 |
+| exec 37,21 | 138 → **95** | 774k → 119k | 2.6 → 1.9 | 4.6 → 3.9 |
+| lift tactical | 152 → **107** | 763k → 108k | 2.7 → 2.2 | 4.7 → 4.2 |
+
+Pixel diff against a control frame was at or below noise at all five, and again with every spot map
+forced to refresh at the cubicle and exec.
+
+Verdict: **landed.**

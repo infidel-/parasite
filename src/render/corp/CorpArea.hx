@@ -44,6 +44,8 @@ class CorpArea implements Area3D
   var model:Facility;
   var chunks = new render.Chunks();
   var lampLights:LampLights;
+  var moon:DirectionalLight;                    // the rig's moon, its shadow map frozen (see scene())
+  var moonLanded = -1;                          // glb batches loaded when the moon's map last rendered
   var coneGroup:Object3D;
   var lampCorners:Map<Int,Int>;
   var shells:Array<Shell>;
@@ -76,6 +78,13 @@ class CorpArea implements Area3D
       lampLights = bundle.lampLights;
       coneGroup = bundle.coneGroup;
       lampCorners = bundle.lampCorners;
+      // the moon's map is FROZEN. nobody aims it here (no fitMoon: its box sits at the world origin
+      // over the plate's SE corner) and at INDOOR.direct 0.22 its shadows are faint, yet autoUpdate
+      // re-drew every caster on the floor into it every frame, 42 calls and ~0.5M tris. tick
+      // re-renders it when a glb batch lands, since the loader resolves after the first frame
+      moon = bundle.moon;
+      moon.shadow.autoUpdate = false;
+      moon.shadow.needsUpdate = true;
       return bundle;
     }
 
@@ -439,9 +448,21 @@ class CorpArea implements Area3D
       CorpSecurity.tick(opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       // the props draw only what the camera sees, but every shadow map still gets all of them (see
-      // cullExact). an empty batch stays listed on a frame a map renders, and the moon's renders
-      // every frame
-      var keep = true;
+      // cullExact), so an empty batch stays listed on a frame any map renders
+      var landed = 0;
+      for (p in glb)
+        if (p.mesh != null)
+          landed++;
+      for (p in clutterProps)
+        if (p.mesh != null)
+          landed++;
+      if (landed != moonLanded)
+        {
+          moonLanded = landed;
+          moon.shadow.needsUpdate = true;
+        }
+      var keep = LampLights.lastShadowRenders > 0 ||
+        moon.shadow.needsUpdate;
       for (p in glb)
         render.Models.cullExact(p, opts.camera, CorpStyle.PROP_CULL_R, keep);
       for (p in clutterProps)

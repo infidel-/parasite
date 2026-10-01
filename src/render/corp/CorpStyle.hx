@@ -756,6 +756,20 @@ class CorpStyle
   // the glb's own widest horizontal extent over its own height: mug 0.207/0.19, bottle 0.11/0.52,
   // plant 0.182/0.253, cam 0.104/0.17 (art/models.json's notes carry all eight numbers)
   public static var CLUTTER_PROP_R = [0.5447, 0.1058, 0.3597, 0.3059];
+  // glbs too small or too thin for their shadow to show: measured 0 px (plant) and <= 0.005% px
+  // (the rest) with all eight spot maps forced and the moon off. the plant is 4,206 tris x 82, 60% of
+  // every prop triangle the floor draws into each map it refreshes
+  public static var SHADOWLESS = [
+    RenderConfig.MODELS.corpPlant,
+    RenderConfig.MODELS.corpKeyboard,
+    RenderConfig.MODELS.corpExecPlaque,
+    RenderConfig.MODELS.corpExecPhoto,
+    RenderConfig.MODELS.corpWallCam,
+    RenderConfig.MODELS.corpDeskMug,
+    RenderConfig.MODELS.corpDeskBottle,
+    RenderConfig.MODELS.corpKitchenCoffee,
+    RenderConfig.MODELS.corpKitchenMicrowave,
+  ];
   public static var CLUTTER_PROP_PATH = [
     RenderConfig.MODELS.corpDeskMug,
     RenderConfig.MODELS.corpDeskBottle,
