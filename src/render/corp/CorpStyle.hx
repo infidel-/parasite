@@ -65,7 +65,9 @@ class CorpStyle
   // that tiles across a whole facade. The server room's raised-access panel is the one solo floor
   // for exactly that reason: its grid has to close, and a packed cell's wrap error is a visible
   // step in a panel joint.
-  public static inline var WALL_EXTERIOR = 'textures/corp/wall-curtain.png';
+  // PRECAST PANELS and not the curtain wall it shipped in: the plate's real windows are cut out of
+  // this wall, so a painted curtain wall beside them read as glazing with nothing behind it
+  public static inline var WALL_EXTERIOR = 'textures/corp/wall-exterior.png';
   // the corridor, the open plan, the cubicle farm and the server room share one painted
   // plasterboard: in a real tower they are the same wall, and a room reads by its FLOOR and its
   // furniture. the four that differ are the four with a material of their own

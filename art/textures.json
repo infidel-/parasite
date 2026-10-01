@@ -3749,6 +3749,17 @@
       "lift": 0.785,
       "last_lift": 0.785
     },
+    "corp/wall-exterior": {
+      "src": "corp/wall-exterior.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "A SEAMLESS TILEABLE texture of the OUTSIDE wall of a modern office tower floor, seen straight on in flat elevation, no perspective, filling the whole image edge to edge. Smooth dark architectural PRECAST CONCRETE cladding panels: a large unbroken plane of fine, even, matte cast concrete with a very faint subtle mottle and a few tiny pinholes. EXACTLY ONE crisp horizontal panel joint running straight across the exact MIDDLE of the image, and EXACTLY ONE crisp vertical panel joint running straight down the exact MIDDLE of the image, so the image holds four equal square panel quarters; each joint a slim dark recessed shadow gap. NO joints at the image edges - the edges are plain panel field so the pattern tiles seamlessly on both axes. VALUE: DARK, an exterior surface at night, clearly darker than any interior wall. HUE: PERFECTLY NEUTRAL dark grey - the red, green and blue values are equal; no blue cast, no green cast, no warm cast. No windows, no glass, no mullions, no bolts, no form-tie holes, no stains, no streaks, no weathering, no text, no signage. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "note": "replaces corp/wall-curtain on the plate's solid exterior wall (CorpStyle.WALL_EXTERIOR): a painted curtain wall beside the real cut windows read as fake glazing. gpt-image-2.5-flare high, raw 0.0319 linear / spread 0.2, no lift needed. Raw drop parked as Unused/wall-exterior-raw.png; the source is that drop with (1) a least-squares luminance plane removed (slope -1.33 x / -1.53 y per 1024) and (2) the column/row mean deviation inside 32 px of each edge subtracted (left band +1.5, right -1.3): wrap step 4.95/3.24 -> 0.0/0.0 against interior p95 1.3. Joints sit mid-image so the wrap is plain field.",
+      "last_converted": "2026-10-02T01:26:53",
+      "built_linear": 0.0319,
+      "built_srgb": 49.8
+    },
     "corp/wall-office": {
       "src": "corp/wall-office.png",
       "class": "tile",
