@@ -426,3 +426,22 @@ LED blink, which the control frame caught in another state. A/B/A/B where shut: 
 97 → 72, 109 → 84; submit −0.2…0.4 ms; GPU −0.7…1.1 ms.
 
 Verdict: **landed.**
+
+## Corp glbs on Lambert, and the street sun without its shadow: both rejected on sight
+
+Two GPU levers from the corp perf report, measured as runtime arms on the 3050 Ti laptop (slot 5)
+and shown side by side before any code.
+
+- **Lambert.** 31 of the 32 corp glb batches stay `MeshStandardMaterial` because the hand-modelled
+  set bakes `roughnessFactor` 0.72 and `Models.toLambert` keeps anything under 1 on Standard (only
+  the TRELLIS plant is Lambert). Swapping them changed 1.1-2.5% of pixels, slightly darker, max
+  30-61 levels. The visible loss is the ceiling lamps' sheen on glb surfaces, clearest as the lamp
+  pool on the exec walnut desk going flat. GPU −0.2…0.6 ms.
+- **Street sun `castShadow` off.** Every lit fragment samples the frozen street sun's 2048 map as
+  well as the spot maps. Off: the faint diagonal window-mullion shadows on the office floors go, and
+  so do the street buildings' sun shadows (11.5% of pixels at the lift, all small). GPU −0.3…0.6 ms.
+- Rejected by the user from the comparison sheets: neither margin is worth its look on this machine.
+  The route if either is revisited: `"roughness": 1` per corp `art/models.json` entry; for the sun,
+  bake the street shadows into vertex colour and drop the caster.
+
+Verdict: **rejected — look.**
