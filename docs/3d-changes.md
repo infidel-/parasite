@@ -482,3 +482,25 @@ pixel-identical at 4 of 5 spots; at the lift, 2 edge pixels at the end of one fl
 tie under the new draw order).
 
 Verdict: **landed.**
+
+## Corp facade ledges: capping on the glazing, shaft art folded on the lift
+
+The 0.5-wide ledge `CorpFacade.build` caps at WALL_BASE, where a glazed cell's slab (GLASS_T)
+stands half a unit inside the ring plane the drop hangs on. 96 quads on the probed plate.
+
+- **On the glazing (87) it wore the curtain wall**, via `FacilityGeom.cap` at FACADE_TILE 4: a
+  0.125-of-a-bay slice (64 px, cut through the middle of a window) laid flat on a sill with no
+  window under it. No mapping fixes that, so it moved to the SOFFIT's buffer (`CorpStyle.CAP`,
+  `corp/cap-alu`, the same capping as the plate's wall and window heads — prompted as the flat top
+  of a curtain-wall head), at WALL_TILE. Same merged mesh, so no draw call and no new layer.
+- **On the lift (9) it went into the shaft buffer at the FACADE tile**: lift-shaft at 4 against the
+  shaft face's 12, and `cap`'s planar x/z put the run in v on the two z hands, rotated 90° to the
+  face below. New `CorpFacade.ledge` folds the art over the edge: u = run coord / SHAFT_TILE as
+  `face` maps it, v = (WALL_BASE + distance in from the outer plane) / SHAFT_TILE. Live: the dir-2
+  ledge at x −91 reads u −2.000 at z −24 (the face's own u there), v −0.017 on the outer edge
+  (the face's top) → 0.025 inside.
+- **TRAP: `PolyProbe` reported every face of a `CorpMerge` mesh as its FIRST member's map** — it
+  read `mat.map`, which the merge leaves bound to member 0. The lift ledges and shaft faces said
+  `glass-dark`. The merge now keeps `userData.layerMaps` and the probe picks the face's `layer`.
+
+Verdict: **landed** (layers and UVs read back live; look not yet signed off).

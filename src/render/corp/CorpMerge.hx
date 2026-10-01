@@ -147,6 +147,7 @@ class CorpMerge
     {
       var first:Dynamic = list[0];
       var images:Array<Dynamic> = [];
+      var maps:Array<Dynamic> = [];
       var layerOf = new Map<String, Int>();
       var geos = [];
       for (o in list)
@@ -157,6 +158,7 @@ class CorpMerge
             {
               layerOf.set(name, images.length);
               images.push(m.material.map.image);
+              maps.push(m.material.map);
             }
           var g:Dynamic = m.geometry;
           var n:Int = g.attributes.position.count;
@@ -176,6 +178,9 @@ class CorpMerge
       mesh.castShadow = first.castShadow;
       mesh.receiveShadow = first.receiveShadow;
       mesh.renderOrder = first.renderOrder;
+      // the source map of each layer, for render.PolyProbe: the material's own `map` is the first
+      // member's, so without this every face of the merge reports and paints that one texture
+      mesh.userData.layerMaps = maps;
       // an identity parent may be a Chunks group, which culls as a 64-unit block: the merged mesh
       // spans the plate, so it goes to the top of the chain instead
       var parent:Object3D = first.parent;

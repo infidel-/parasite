@@ -111,13 +111,24 @@ class CorpFacade
                 // run, with the void under the plate visible through it. render.facility
                 // .FacilityGeom.band caps the identical step at the parapet with its `soffit`
                 // quad; this is that quad, the other way up. A SOLID cell's two insets are equal,
-                // so the rect comes out zero-wide and `cap` drops it
-                FacilityGeom.cap(lift ? shaft : clad,
-                  dir == 2 ? s.x0 : (dir == 3 ? sl.x1 : s.x0),
-                  dir == 2 ? sl.x0 : (dir == 3 ? s.x1 : s.x1),
-                  dir == 0 ? s.z0 : (dir == 1 ? sl.z1 : s.z0),
-                  dir == 0 ? sl.z0 : (dir == 1 ? s.z1 : s.z1),
-                  FacilityStyle.WALL_BASE, CorpStyle.FACADE_TILE);
+                // so the rect comes out zero-wide and `cap` drops it.
+                //
+                // IN THE CAPPING AND NOT THE CURTAIN WALL. It wore the cladding's art, which laid a
+                // 0.5-deep slice of a window flat on a sill with no window under it — no mapping
+                // fixes that. It is the aluminium the plate's wall and window heads wear (the
+                // soffit's own buffer, so no draw and no layer of its own). The lift's steel is a
+                // frame and folds over the edge, see `ledge`
+                var r:Rect = {
+                  x0: dir == 3 ? sl.x1 : s.x0,
+                  x1: dir == 2 ? sl.x0 : s.x1,
+                  z0: dir == 1 ? sl.z1 : s.z0,
+                  z1: dir == 0 ? sl.z0 : s.z1,
+                };
+                if (lift)
+                  ledge(shaft, r, dir, p);
+                else
+                  FacilityGeom.cap(soff, r.x0, r.x1, r.z0, r.z1, FacilityStyle.WALL_BASE,
+                    FacilityStyle.WALL_TILE);
               }
             // AND THE REENTRANT CORNERS, which are a 1 x 1 SLOT 114 UNITS TALL without this.
             //
@@ -208,6 +219,30 @@ class CorpFacade
               alongX ? pz0 : a, alongX ? pz0 : a + CELL,
               dir, (j0 + j) * CELL, (j0 + j + 1) * CELL);
           }
+    }
+
+// one lift-cell ledge, the shaft art FOLDED over the drop's top edge: u runs along the run exactly as
+// `face` maps it, and v carries on up from WALL_BASE by the distance in from the outer plane `p`, so
+// the steel turns the corner. FacilityGeom.cap maps by world x/z at whatever tile it is handed, which
+// put this at FACADE_TILE against the shaft's SHAFT_TILE and the run in v on the two z hands
+  static function ledge(b:MeshBuf, r:Rect, dir:Int, p:Float):Void
+    {
+      if (r.x1 - r.x0 < 0.01 ||
+          r.z1 - r.z0 < 0.01)
+        return;
+      var t = CorpStyle.SHAFT_TILE;
+      var y = FacilityStyle.WALL_BASE;
+      var alongX = (dir < 2);
+      inline function u(x:Float, z:Float):Float
+        return (alongX ? x : z) / t;
+      inline function v(x:Float, z:Float):Float
+        return (y + Math.abs((alongX ? z : x) - p)) / t;
+      MeshBufTools.quad(b, [r.x0, y, r.z1], [r.x1, y, r.z1], [r.x1, y, r.z0], [r.x0, y, r.z0], [
+        u(r.x0, r.z1), v(r.x0, r.z1),
+        u(r.x1, r.z1), v(r.x1, r.z1),
+        u(r.x1, r.z0), v(r.x1, r.z0),
+        u(r.x0, r.z0), v(r.x0, r.z0),
+      ]);
     }
 
 // is this perimeter cell part of the lift car's ring? The car hangs off the tower's face (gen.blocks

@@ -355,6 +355,11 @@ class PolyProbe {
         // one shared flipY (from whichever map exists) so an absent base map can't mirror the
         // emissive pane against it — maps + emissive of a material share a vertical convention
         var bmap:Dynamic = mat != null ? mat.map : null;
+        // a render.corp.CorpMerge mesh samples a texture array by a per-vertex `layer`, so its real
+        // map is that layer's source and not the material's own
+        var lm:Array<Dynamic> = (cast obj).userData.layerMaps;
+        if (lm != null)
+          bmap = lm[Std.int(g.attributes.layer.getX(a))];
         var emap:Dynamic = mat != null ? mat.emissiveMap : null;
         var refTex:Dynamic = bmap != null ? bmap : emap;
         var flipY:Bool = refTex != null && refTex.flipY == false ? false : true;
@@ -366,7 +371,7 @@ class PolyProbe {
         emisPane.lbl.style.display = emap != null ? 'block' : 'none';
         emisPane.src.style.display = emap != null ? 'block' : 'none';
         // caption: mesh + face (+ instance) + base/emissive texture facts + the 3 raw UVs
-        var tex:Dynamic = mat != null ? mat.map : null;
+        var tex:Dynamic = bmap;
         inline function dimOf(t:Dynamic, none:String)
           return t != null && t.image != null ? (t.image.width + 'x' + t.image.height) : none;
         var flip = tex != null ? (tex.flipY == false ? 'flipY=0' : 'flipY=1') : '';
