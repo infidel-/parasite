@@ -400,3 +400,29 @@ Pixel diff against a control frame was at or below noise at all five, and again 
 forced to refresh at the cubicle and exec.
 
 Verdict: **landed.**
+
+## Corp street and its blur pass gated on the view reaching past the plate
+
+The street is 24 calls of ring-wide meshes (15 opaque per-texture, lit bays, roof decals, crowd). Each
+spans the whole ring round the tower, so its bounding sphere always passes the frustum and it drew
+from every room. `StreetBlur`'s fullscreen pass ran with it, ~0.5 ms. Measured beforehand: street
+pixels on screen 0% at the corridor, exec, meeting and server rooms; 21% at the lift.
+
+- **`CorpArea.overPlate`.** The section of the view frustum by the floor plane (y = 0) is the convex
+  quad of the four screen-corner rays' hits, so every downward ray crosses the floor inside it. If
+  every cell in that quad's bounding rect (and the camera's own) is tower, every ray meets the floor
+  before anything below the plate's edge. The test is per cell (`isIndoor || carries`, the facade's
+  own predicate) and not the plate rect, because the rect holds the reentrant corner slots, which
+  are open to the street.
+- `tick` sets `street.group.visible` off it, never before `CorpStreet.settled()` (hiding the group
+  before its frozen shadow map is written writes the map empty) and never under the free cam.
+  `View` sets `streetBlur.pass.enabled` off `CorpArea.streetShown` each frame. The facade's own
+  blurred meshes stay outside the group: by the same argument they cannot show when the gate is shut.
+
+Measured on the 3050 Ti laptop, slot 5. The gate shut at exec 37,21, the plate 29,24 and archive
+15,16, and stayed open at the lift, cubicle, security, kitchen and both tactical views. Forced-open vs
+gated pixel diff: 0 at exec and the plate. At the archive the only difference was the server rack's
+LED blink, which the control frame caught in another state. A/B/A/B where shut: calls **97 → 72**,
+97 → 72, 109 → 84; submit −0.2…0.4 ms; GPU −0.7…1.1 ms.
+
+Verdict: **landed.**

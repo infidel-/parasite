@@ -1239,6 +1239,11 @@ class View {
       camera: camera,
       ui: uiOn,
     });
+    // the corp street's blur goes off with the street (CorpArea.overPlate): ~0.5 ms of fullscreen
+    // pass over a view that has no street in it
+    if (streetBlur != null)
+      streetBlur.pass.enabled = Std.isOfType(area3d, render.corp.CorpArea) &&
+        (cast area3d:render.corp.CorpArea).streetShown;
     // hand the lit lamps to the actor layer so it casts fake shadows only from lamps lit this frame,
     // plus whatever the area lights with no pool slot behind it (a facility's windows) — empty
     // everywhere else, so the concat only ever costs the one kind that has any

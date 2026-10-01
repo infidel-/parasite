@@ -60,6 +60,7 @@ class CorpArea implements Area3D
   var facade:{ clad:Int, soffit:Int, lit:Int }; // the nineteen storeys under the plate
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
   var crowd:CorpCrowd;                          // and the fake traffic and people on it
+  public var streetShown = true;                // the street is drawn this frame; View gates StreetBlur on it
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -244,6 +245,44 @@ class CorpArea implements Area3D
             return false;
           },
       };
+    }
+
+// does the view's whole footprint at floor level stand over the tower, so that nothing below the
+// plate's edge can show? the section of the view frustum by y = 0 is the convex quad of the four
+// screen-corner rays' hits, so every downward ray crosses the floor inside it: if every cell in that
+// quad's bounding rect (and the camera's own) is tower, every ray meets the floor first. the
+// per-cell test and not the plate rect, which holds the reentrant corner slots open to the street
+  static var _ray = new Vector3();
+  function overPlate(camera:PerspectiveCamera):Bool
+    {
+      camera.updateMatrixWorld();
+      var o = camera.position;
+      var x0 = o.x;
+      var x1 = o.x;
+      var z0 = o.z;
+      var z1 = o.z;
+      for (i in 0...4)
+        {
+          _ray.set(i == 1 || i == 2 ? 1 : -1, i < 2 ? -1 : 1, 0.5).unproject(camera);
+          var dy = _ray.y - o.y;
+          if (dy >= 0)
+            return false;
+          var t = -o.y / dy;
+          var x = o.x + (_ray.x - o.x) * t;
+          var z = o.z + (_ray.z - o.z) * t;
+          x0 = Math.min(x0, x);
+          x1 = Math.max(x1, x);
+          z0 = Math.min(z0, z);
+          z1 = Math.max(z1, z);
+        }
+      var lo = worldToCell(x0, z0);
+      var hi = worldToCell(x1, z1);
+      for (row in lo.row...hi.row + 1)
+        for (col in lo.col...hi.col + 1)
+          if (!FacilityModel.isIndoor(model, col, row) &&
+              !FacilityGeom.carries(model, col, row))
+            return false;
+      return true;
     }
 
 // the inverse of CityConfig.cellToWorld, clamped to the grid. cellToWorld puts cell `c` at
@@ -436,6 +475,12 @@ class CorpArea implements Area3D
       // street that stops when the player stops thinking is the whole feature missing
       crowd.tick(opts.dtMs);
       CorpStreet.settle();
+      // the street (24 calls, ring-wide meshes that never cull) and its blur pass only while the view
+      // can reach past the plate's edge
+      streetShown = opts.freeCam ||
+        !CorpStreet.settled() ||
+        !overPlate(opts.camera);
+      street.group.visible = streetShown;
       // AND THE DOOR LEAVES, which is not only their swing: FacilityDoors.pose writes into the
       // prop's own matrix array and render.Models.cull is what uploads it, so a tower that never
       // ticked them drew every leaf at the world origin and had a hole at every doorway — which

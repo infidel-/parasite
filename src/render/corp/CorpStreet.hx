@@ -705,6 +705,13 @@ class CorpStreet
       casters.push(m);
     }
 
+// has the street's frozen shadow map been written (settle() dropped the casters)? until then the
+// street must stay in the scene, or its map is written empty
+  public static inline function settled():Bool
+    {
+      return casters.length == 0;
+    }
+
   public static function begin():Void
     {
       casters = [];
