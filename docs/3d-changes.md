@@ -316,3 +316,27 @@ cubicle, the cubicle in tactical, the lift and exec, and zero with all 8 spot ma
 at the cubicle and the kitchen.
 
 Verdict: **landed.**
+
+## Corp lift's blank elevator sprites dropped; transparent DoubleSide quads draw in one pass
+
+Why the lift read ~200 calls against a room's ~165. Two causes, both measured live off a per-call census.
+
+- **The nine `elevator` objects painted nothing, at 36 calls.** `GenSpawner` spawns each lift cell as
+  `new Elevator(...)` with no image, so it falls back to `entities` cell (0,0), which is fully
+  transparent (alpha extrema 0,0). No `iconOff` hook covered `type == 'elevator'`, so `Actors`
+  painted an icon, a hatched silhouette and, in tactical, a ring per cell. `CorpDeco.draws` now
+  answers true for a corp elevator, and the mark and ring follow, because both are gated on `iconOff`.
+  The underground lab's elevators keep their art: the gate is `AREA_CORP` only.
+- **`forceSinglePass`** on the sprite pool (and `Sprites.warmupMeshes`, so `Warmup.splitDoubleSided`
+  stops warming a Front/Back pair the game no longer draws), the corp lamp floor/ceiling glow, the
+  deco LED glow and the player ring. Each is one flat quad with no self-overlap, and most are
+  additive, so the default back-then-front split was a second call for an identical image. The pool
+  keeps DoubleSide because `faceX` mirrors by negative scale.
+
+Measured on the 3050 Ti laptop, census after vs the phase 1 commit: lift **169 → 127**, lift
+tactical **193 → 133**, cubicle 138 → 133, security 156 → 147. A/B/A/B submit: lift 3.3 → 2.6 ms,
+lift tactical 4.1 → 2.7, security 3.3 → 2.8. Pixel diff below the control frame at the lift, lift
+tactical and the cubicle. No new program: the two first-use compiles seen while sweeping (glossy Phong
+furniture and the ring's plain basic program on first tactical) were first-use compiles before too.
+
+Verdict: **landed. The lift is a room now.**

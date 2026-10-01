@@ -548,6 +548,7 @@ class View {
         transparent: true,
         opacity: 0.9,
         side: THREE.DoubleSide,
+        forceSinglePass: true, // one flat ring: the back-then-front split is a second call
         depthWrite: false,
       }));
     ring.name = 'ui player ring';

@@ -1801,6 +1801,7 @@ class FacilityDeco
         vertexColors: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        forceSinglePass: true, // additive: order-free, so one pass draws the same
         blending: untyped THREE.AdditiveBlending,
       }))));
       // BELOW the actors, the call FacilityGlow's own header records: nothing in the sprite pool

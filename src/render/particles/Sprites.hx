@@ -210,6 +210,7 @@ class Sprites {
           transparent: true,
           depthWrite: false,
           side: THREE.DoubleSide,
+          forceSinglePass: true, // one quad, no self-overlap: the default back-then-front split is a second call
           roughness: 1,
           metalness: 0,
           map: tex,
@@ -394,7 +395,8 @@ class Sprites {
             unpremul(render.world.IndoorMask.patch(new MeshStandardMaterial({
               transparent: true,
               depthWrite: false,
-              side: THREE.DoubleSide,
+              side: THREE.DoubleSide, // faceX mirrors the quad by negative scale
+              forceSinglePass: true, // one quad, no self-overlap: the default back-then-front split is a second call
               roughness: 1,
               metalness: 0,
               // emissiveMap present from creation so the define is stable (no recompile when an

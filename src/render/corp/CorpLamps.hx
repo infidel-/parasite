@@ -326,6 +326,7 @@ class CorpLamps
         vertexColors: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        forceSinglePass: true, // additive: order-free, so one pass draws the same
         blending: untyped THREE.AdditiveBlending,
       })));
       mesh.name = 'corp lamps ' + (order > render.particles.Sprites.ORD_FIXTURE ?

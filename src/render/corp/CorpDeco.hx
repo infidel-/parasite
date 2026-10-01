@@ -123,14 +123,17 @@ class CorpDeco
 //
 // STATELESS, the contract render.facility.FacilityDoors.draws and FacilityDeco.draws both keep: the
 // answer is a property of the object's frame and of the area kind, so render.Actors can ask it
-// without a model and without this pass having run
+// without a model and without this pass having run. the lift's nine `elevator` objects are invisible
+// markers on a car that is all geometry, and their atlas cell is blank: drawn, each cost an icon and
+// a silhouette quad (and a ring in tactical) of nothing, 36 calls at the lift
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
         area.typeID == AREA_CORP &&
+        (o.type == 'elevator' ||
         o.type == 'decoration' &&
         o.imageRow >= 23 &&
-        o.imageRow <= 39;
+        o.imageRow <= 39);
     }
 
 // which of the seven a frame is. the columns come straight off the Const.CORP_* lists, which are
