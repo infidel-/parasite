@@ -445,3 +445,40 @@ and shown side by side before any code.
   bake the street shadows into vertex colour and drop the caster.
 
 Verdict: **rejected — look.**
+
+## Corp per-texture meshes merged onto texture arrays (`CorpMerge`)
+
+The open lead "walls cost 3 calls per box — a texture array would" (see `3d-render.md`), done for the
+corp floor. Every emitter here merges its quads into one mesh PER TEXTURE (`FacilityGeom.add` and
+`addFloor`, `CorpStreet.add`, `CorpFacade.add`), so a view drew ~10-13 wall meshes, 4-6 floors and
+24 street meshes that differ in nothing but their map.
+
+- **`render.corp.CorpMerge`** buckets every opaque, front-faced, plainly mapped lambert by program
+  (the patch chain's cache key), castShadow, receiveShadow, vertexColors, colour attribute, colour
+  and renderOrder. A parent at IDENTITY (the scene, any `Chunks` group) counts as one; the street
+  group, 114 units down, keeps its own buckets so the gate still hides them. Each bucket of 2+
+  becomes ONE mesh: the geometries concatenated (`mergeGeometries`) with a per-vertex `layer`, the
+  first member's material re-used, and a `DataArrayTexture` (512², sRGB, repeat, mips) sampled where
+  three samples `map`. The map stays bound, so USE_MAP, vMapUv and every mask patch are untouched,
+  and only the diffuse read moves. The rest are freed.
+- **Runs in `tick`**, once every candidate map has loaded (sizes are only known then) and
+  `CorpStreet.settled()` (the street's casters are the meshes being replaced). Signs2 (1024²), the
+  whiteboard (512x384) and the cable (256²) keep their own meshes. `CorpWarm` merges its demo plate
+  with a 1x1 single-layer array: the program is the same and the full blank array cost the warm
+  ~1.3 s (now 878 ms against ~700).
+- **TRAP: the opaque sort.** A plate-wide merged mesh sorts BEHIND the street by bounding-sphere
+  depth, so the street got fully shaded and then painted over: +0.6..0.9 ms GPU in the prototype.
+  `CorpStyle.OUTSIDE_ORDER` 1 pins the street and the facade after the interior.
+- **TRAP: Haxe hoists a method off a Dynamic receiver** when an arg is an array comprehension:
+  `g.setAttribute('layer', new X([for ...]))` compiled to `let f = g.setAttribute; ... f(...)`, and
+  three's method then ran with no `this`. Build the array first.
+- The CPU copy of each array is dropped in `onUpdate`, once the GPU has it.
+
+Live on slot 5: **55 meshes → 6** (street 15, shell 15, casting shell 11, floors 8, facade 3,
+archive vertex-coloured 3). Separate sessions on the 3050 Ti laptop (no in-session toggle once the
+originals are freed), merged vs unmerged: calls cubicle **81 → 55**, exec 70 → 52, lift
+**106 → 70**, kitchen 92 → 61, archive 77 → 56; submit −0.1…0.2 ms; GPU −0.4…1.0 ms. Screenshots
+pixel-identical at 4 of 5 spots; at the lift, 2 edge pixels at the end of one floor seam row (a depth
+tie under the new draw order).
+
+Verdict: **landed.**

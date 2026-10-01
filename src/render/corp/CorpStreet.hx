@@ -628,6 +628,7 @@ class CorpStreet
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.name = 'corp street ' + tex;
       mesh.receiveShadow = true;
+      mesh.renderOrder = CorpStyle.OUTSIDE_ORDER;
       casts(mesh);
       group.add(mesh);
     }

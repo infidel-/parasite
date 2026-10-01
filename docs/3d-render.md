@@ -141,7 +141,7 @@ back) — grep the change text.
 | Shadow box size (`MOON_SHADOW.halfExtent`) | best safe win ~21 calls; coverage-bound below 75 | **not a lever** |
 | BatchedMesh for roof details | **+4 calls, +2ms submit, −3ms idle** | **reverted — worse** |
 | Atlas the WALL textures like the decals | walls tile; an atlas cannot wrap inside a sub-rect | **rejected — wrong tool** |
-| Texture array for walls (3 calls/box → 1) | ~20 calls in one sample; enables the static merge | **open lead, unmeasured** |
+| Texture array for walls (3 calls/box → 1) | ~20 calls in one sample; enables the static merge | **open lead for the city; DONE for corp (`CorpMerge`)** |
 | Two-tier static city merge | ~3k → ~200 calls **in the debug free-cam only** | **open lead, deferred** |
 | Bloom as Off / Low / High | needs the pass rebuilt; raising the threshold saves nothing | **rejected** |
 | Pull the fog / view distance in | shorter sightlines — look/feel | **rejected** |
@@ -1792,3 +1792,4 @@ overlay overdraw** — that instrumentation is the first step.
 | corp moon frozen (render once, again when a glb batch lands); empty prop batches leave the list off-refresh; plant + 8 tiny props, whiteboard, mirror stop casting | the rig's moon was never aimed in corp (no `fitMoon`, box at the world origin) and re-drew every caster into a 2048 map every frame at 0.22 strength; the plant was 60% of the prop tris in every map | **landed. 3050: −42…45 calls, −650k tris, submit −0.5…0.7 ms, GPU −0.5…1.4 ms; 0 px incl. forced spot refresh** |
 | corp street + `StreetBlur` gated on `CorpArea.overPlate` (corner rays at y=0, every footprint cell tower) | ring-wide street meshes never cull and drew from every room, plus a ~0.5 ms blur pass; the plate rect is not the test, its reentrant corners are open slots | **landed. where shut: −25 calls, submit −0.2…0.4, GPU −0.7…1.1 ms; 0 px** |
 | corp glbs to Lambert; street sun `castShadow` off | the lamp sheen on glb surfaces (exec walnut desk) and the window-mullion floor shadows + street building shadows go, for −0.2…0.6 / −0.3…0.6 ms GPU on the 3050 | **rejected — look** |
+| corp per-texture meshes merged onto `DataArrayTexture`s (`CorpMerge`): one mesh per material bucket, per-vertex `layer` | the walls-3-calls open lead, done for corp: 55 meshes → 6. Street/facade pinned AFTER the interior (`OUTSIDE_ORDER`), else a plate-wide mesh sorts behind the street and it overdraws | **landed. 3050: cubicle 81 → 55, lift 106 → 70 calls; submit −0.1…0.2, GPU −0.4…1.0 ms; pixel-identical** |

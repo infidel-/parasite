@@ -42,6 +42,12 @@ class CorpStyle
   // only the lit glazing blooms
   public static inline var BLOOM_THRESHOLD = 0.72;
 
+  // the street's and the facade's opaque draw order: AFTER the interior's default 0. three sorts the
+  // opaque pass front to back by bounding-sphere depth, and a plate-wide mesh (render.corp.CorpMerge)
+  // sorts behind the street, so the street got shaded in full and then painted over by the floor:
+  // measured +0.6..0.9 ms GPU before this was pinned
+  public static inline var OUTSIDE_ORDER = 1;
+
   // margin on each glb prop's own bounding sphere in the per-instance cull, world units: covers the
   // sway shader's displacement and the moon throw of the tallest prop (arch-shelf, 4.8)
   public static inline var PROP_CULL_R = 2.0;

@@ -84,6 +84,8 @@ class CorpWarm
       // the door leaves, an INSTANCED mask-patched lambert — USE_INSTANCING is a program define, so
       // the merged shell above does not cover it. no area behind the demo model, so the leaf is shut
       FacilityDoors.build(sc, model, null);
+      // and the same meshes merged onto texture arrays, a program per bucket that none above covers
+      CorpMerge.merge(sc, true);
       IndoorMask.detach();
       ContactMask.detach();
       // park the moon's shadow box over the demo plate, so Warmup.compile's render actually runs

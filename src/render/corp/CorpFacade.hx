@@ -296,6 +296,7 @@ class CorpFacade
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.name = 'corp facade ' + tex;
       mesh.receiveShadow = true;
+      mesh.renderOrder = CorpStyle.OUTSIDE_ORDER;
       CorpStreet.casts(mesh);
       scene.add(mesh);
     }

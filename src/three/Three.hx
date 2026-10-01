@@ -23,6 +23,7 @@ package three;
   static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
   static var ShaderChunk:haxe.DynamicAccess<String>; // the GLSL chunks `#include <name>` expands to, by name
   static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
+  static var LinearMipmapLinearFilter:Dynamic; // Texture.minFilter — trilinear over the mip chain, three's default for a mapped texture
   // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
   // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
   static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
@@ -90,6 +91,7 @@ package three;
   public function copy(m:Matrix4):Matrix4;
   public function invert():Matrix4; // in place; world -> object frame for a picked hit
   public function getMaxScaleOnAxis():Float; // largest axis scale, for a transformed bounding sphere's radius
+  public var elements:js.lib.Float32Array; // the 16 entries, column-major
 }
 
 @:native("THREE.Sphere") extern class Sphere {
@@ -433,6 +435,13 @@ typedef RendererInfo = {
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
                                   // render.View.disposeScene deliberately leaves alone (it assumes cached ones)
+}
+// N same-size RGBA images as LAYERS of one texture, sampled `texture(sampler2DArray, vec3(u, v, layer))`:
+// each layer is its own full 0..1 space, so wrap, mips and anisotropy work per layer (an atlas cannot wrap
+// inside a sub-rect). flipY is not available on upload, so the data has to be written bottom row first
+@:native("THREE.DataArrayTexture") extern class DataArrayTexture extends Texture {
+  public function new(data:js.lib.Uint8Array, width:Int, height:Int, depth:Int);
+  public var onUpdate:Void->Void; // fired once the GPU upload has run
 }
 @:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {
   public function new(canvas:Dynamic);

@@ -61,6 +61,7 @@ class CorpArea implements Area3D
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
   var crowd:CorpCrowd;                          // and the fake traffic and people on it
   public var streetShown = true;                // the street is drawn this frame; View gates StreetBlur on it
+  var merged = false;                           // CorpMerge has collapsed the per-texture meshes
   var props:Array<render.world.ObjModels.PropBatch>;
   var built:Scene;
   var tactical = false;
@@ -477,6 +478,12 @@ class CorpArea implements Area3D
       CorpStreet.settle();
       // the street (24 calls, ring-wide meshes that never cull) and its blur pass only while the view
       // can reach past the plate's edge
+      // the per-texture shell, floor, facade and street meshes collapse into one mesh per material
+      // (CorpMerge), once every map has loaded and the street's frozen shadow is written (its
+      // casters are the meshes this replaces)
+      if (!merged &&
+          CorpStreet.settled())
+        merged = CorpMerge.merge(built, false) >= 0;
       streetShown = opts.freeCam ||
         !CorpStreet.settled() ||
         !overPlate(opts.camera);
