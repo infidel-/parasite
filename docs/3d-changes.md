@@ -340,3 +340,25 @@ tactical and the cubicle. No new program: the two first-use compiles seen while 
 furniture and the ring's plain basic program on first tactical) were first-use compiles before too.
 
 Verdict: **landed. The lift is a room now.**
+
+## Actor sprite crops read back from CPU-backed canvases (walk hitches, every area)
+
+Found while walking the corp corridor: on 3 of 46 steps the first frame after the step took
+31-53 ms, all of it `upd`, and the game's own `[street-perf] SPIKE 46ms … actors=410` agreed.
+
+- **Cause.** On a texture-cache miss (an NPC cell or skin variant seen for the first time),
+  `Sprites.tex` crops into a DEFAULT 2D canvas and `darkenCanvas` runs `getImageData`/`putImageData`,
+  because `DECAL.actorMul` is 0.7. A default canvas is GPU-backed, so each readback is a synchronous
+  GPU round trip: **~34 ms each** on the Radeon iGPU (the `drawImage` crop alone is 0.1 ms).
+  `patternWhiten` (x-ray `silTex`) and `boxOf` (`texContent`, `cellBox`) do the same.
+- **Fix.** `getContext('2d', { willReadFrequently: true })` on the six canvases that are read back
+  (`tex`, `silTex`, `texContent` scratch + crop, `cellBox`, `atlasTex`), the idiom `PolyProbe`
+  already uses. Same pixels, same `texCache`; only the backing moves to the CPU.
+- Not corp-specific code. Corp just hits it hardest: a crowd of ~400 actors over male/female × 3 skin
+  atlases misses the cache constantly on a walk.
+
+Measured on the 3050 Ti laptop, the same 46-step corridor walk on a fresh cache: `Sprites.tex` max
+**27.2 → 7.6 ms**, `silTex` **13.3 → 1.0 ms**, `texContent` 3.3 → 1.4 ms, max frame `upd` **53 → 17.6 ms**.
+The 17.6 is `mouse.update` (13.5 ms) on one step, a separate cost, not chased.
+
+Verdict: **landed.**

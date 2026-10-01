@@ -517,7 +517,7 @@ class Sprites {
       var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true }); // CPU-backed: every canvas here that gets read back (darkenCanvas, patternWhiten, boxOf) stalled ~34 ms per getImageData GPU-backed
       // mirror Entity.drawImage crop (the +1/-1 kludge avoids atlas bleed)
       cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       if (mul < 1.0)
@@ -569,7 +569,7 @@ class Sprites {
       var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       // same crop as tex() (the +1/-1 kludge avoids atlas bleed), then whiten + carve the pattern
       cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       patternWhiten(cx, t, t, fill, spacing, thick);
@@ -690,13 +690,13 @@ class Sprites {
       // draw the full cell to a scratch canvas, then scan its alpha for the opaque bounding box
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       var b = boxOf(cx, t);
       // tight-cropped texture holding just the content rect
       var tc:Dynamic = Browser.document.createElement('canvas');
       tc.width = b.w; tc.height = b.h;
-      var tcx = tc.getContext('2d');
+      var tcx = tc.getContext('2d', { willReadFrequently: true });
       tcx.drawImage(cv, b.x, b.y, b.w, b.h, 0, 0, b.w, b.h);
       if (mul < 1.0)
         darkenCanvas(tcx, b.w, b.h, mul);
@@ -724,7 +724,7 @@ class Sprites {
         return null;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       // the same source box texContent crops (the +1/-1 kludge avoids atlas bleed), so a box scanned
       // here and one scanned there are the same box
       cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
@@ -778,7 +778,7 @@ class Sprites {
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = img.naturalWidth;
       cv.height = img.naturalHeight;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       cx.drawImage(img, 0, 0);
       if (mul < 1.0)
         darkenCanvas(cx, cv.width, cv.height, mul);
