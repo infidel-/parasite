@@ -367,6 +367,33 @@ class GenRun
       add('walkableCells', nWalk);
       add('reachedCells', nSeen);
       add('orphanCells', nWalk - nSeen);
+      // and no exec owner sits with his BACK TO A DOOR of his room (CorpRooms.doorsBehind): he faces
+      // the desk cell beside his chair. a stat and not a failure, because a room with a door in
+      // every wall leaves him one behind whichever way he turns
+      var exec = Const.CORP_EXEC_CHAIR[0];
+      for (s in ctx.spawns)
+        if (s.type == 'decoration' &&
+            s.row == exec.row &&
+            s.col == exec.col)
+          for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+            {
+              if (!Const.isCorpTableTile(ctx.cells[s.x + d[0]][s.y + d[1]]))
+                continue;
+              add('exec/owners', 1);
+              for (r in state.rooms)
+                if (s.x >= r.x1 &&
+                    s.x <= r.x2 &&
+                    s.y >= r.y1 &&
+                    s.y <= r.y2 &&
+                    gen.corp.CorpRooms.doorsBehind(state, r, s.x, s.y, d[0], d[1]) > 0)
+                  {
+                    add('exec/backToDoor', 1);
+                    if (verbose)
+                      log('[gen] seed ' + seed + ': exec owner at ' + s.x + ',' + s.y +
+                        ' has a door behind him in ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2);
+                  }
+              break;
+            }
       // an armchair BLOCKS its cell. one on walkable floor had its twin eroded by
       // CorpConnect.openPockets, i.e. the template that seated it sealed part of its room off
       var chair = Const.CORP_ARMCHAIR[0];

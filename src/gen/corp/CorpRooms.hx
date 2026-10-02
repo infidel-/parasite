@@ -310,38 +310,45 @@ class CorpRooms
       cornerPlants(state, room, MARBLE1);
     }
 
-// the executive's own 3x2 desk, against whichever end wall has no door in it, with the visitors'
-// chairs on its far side
+// the executive's own desk, TURNED SO ITS OWNER FACES THE WAY IN: he sits against the wall behind
+// him, the desk in front and the visitors' chairs across it. Of the four ways he could face, one
+// with no door of the room behind him wins, and of those one with a door in the wall he faces.
+//
+// A DOOR IN BOTH END WALLS USED TO MEAN NO DESK AT ALL (382 bare exec offices in 600 seeds), then a
+// desk mid-room facing south with the north door at its owner's back. Turned a quarter he faces a
+// side wall with both doors beside him. Only a room with a door in every wall leaves one behind
+// him, and there the desk stands free mid-room, facing the way with the fewest
   static function execDesk(state: _CorpState, node: _GenNode, room: _Room)
     {
-      var hasNorthDoor = false, hasSouthDoor = false;
-      for (door in state.doors)
-        if (door.roomID1 == room.id ||
-            door.roomID2 == room.id)
-          {
-            if (door.y == room.y1 - 1)
-              hasNorthDoor = true;
-            if (door.y == room.y2 + 1)
-              hasSouthDoor = true;
-          }
-      var tx = room.x1 + Std.int(room.w / 2) - 1;
-      var ty = room.y1 + 1;
-      var cy = ty - 1;
-      if (hasNorthDoor)
+      // the owner's cell against the back wall for facing (fx, fy), `v` cells out from it, and
+      // centred across the room
+      var ownerAt = function(fx: Int, fy: Int, v: Int)
         {
-          ty = room.y2 - 2;
-          cy = ty + 2;
-        }
-      // A DOOR IN BOTH END WALLS USED TO MEAN NO DESK AT ALL, and 382 exec offices in 600 seeds
-      // came out as bare marble because of it — every zone-less room on a corp floor was one of
-      // these. There is a third place to put a desk and it is the obvious one: the middle of the
-      // room, free-standing, facing the way the occupant would sit. Nothing about an executive's
-      // desk requires a wall behind it
-      if (hasNorthDoor && hasSouthDoor)
+          return {
+            x: (fx == 0 ? room.x1 + Std.int(room.w / 2) : (fx > 0 ? room.x1 + v : room.x2 - v)),
+            y: (fy == 0 ? room.y1 + Std.int(room.h / 2) : (fy > 0 ? room.y1 + v : room.y2 - v)),
+          };
+        };
+      var best = null;
+      var bestScore = 0;
+      for (f in [ [ 0, 1 ], [ 0, -1 ], [ 1, 0 ], [ -1, 0 ] ])
         {
-          ty = room.y1 + Std.int((room.h - 2) / 2);
-          cy = ty - 1;
+          var o = ownerAt(f[0], f[1], 0);
+          var score = doorsBehind(state, room, o.x, o.y, f[0], f[1]) * 10 -
+            (doorsAhead(state, room, f[0], f[1]) > 0 ? 1 : 0);
+          if (best == null ||
+              score < bestScore)
+            {
+              best = f;
+              bestScore = score;
+            }
         }
+      var fx = best[0], fy = best[1];
+      // a door behind him whichever way he turns: out from the wall, mid-room
+      var depth = (fx == 0 ? room.h : room.w);
+      var o = ownerAt(fx, fy, (bestScore >= 9 ? Std.int((depth - 2) / 2) - 1 : 0));
+      // the desk's long axis, across the way he faces
+      var px = (fx == 0 ? 1 : 0), py = (fx == 0 ? 0 : 1);
       // THE VISITORS SIT ACROSS THE DESK FROM ITS OWNER, one at each end of the slab, and an
       // armchair BLOCKS its cell: the model is 2.5 of the cell's 4 wide, so two of them either side
       // of a walkable cell read as a wall with a gap you could not fit through. So the room is
@@ -349,27 +356,76 @@ class CorpRooms
       // owner's row (the visitors one row in) with whichever visitors still leave the room open
       for (deep in [ true, false ])
         {
-          var dty = (deep || cy < ty ? ty : ty + 1);
-          var vy = (cy < dty ? dty + (deep ? 2 : 1) : dty - 1);
+          var rows = (deep ? 2 : 1);
           var blocked = new Map<Int, Bool>();
-          for (dx in 0...3)
-            for (dy in 0...(deep ? 2 : 1))
-              blocked.set((tx + dx) * 1000 + dty + dy, true);
+          var x0 = o.x, y0 = o.y, x1 = o.x, y1 = o.y;
+          for (v in 1...rows + 1)
+            for (k in -1...2)
+              {
+                var x = o.x + fx * v + px * k, y = o.y + fy * v + py * k;
+                blocked.set(x * 1000 + y, true);
+                x0 = (x < x0 ? x : x0);
+                y0 = (y < y0 ? y : y0);
+                x1 = (x > x1 ? x : x1);
+                y1 = (y > y1 ? y : y1);
+              }
+          var vx = o.x + fx * (rows + 1), vy = o.y + fy * (rows + 1);
           var cands = [
-            for (vx in [ tx, tx + 2 ])
-              if (canSeat(state, room, vx, vy))
-                { x: vx, y: vy }
+            for (k in [ -1, 1 ])
+              if (canSeat(state, room, vx + px * k, vy + py * k))
+                { x: vx + px * k, y: vy + py * k }
           ];
           var visitors = fitVisitors(state, room, blocked, cands);
           if (deep &&
               (visitors.length < cands.length ||
               !roomOpen(state, room, blocked, MARBLE1)))
             continue;
-          execDeskAt(state, node, tx, dty, tx + 1, cy, deep);
+          // the bbox above took the owner's own cell in too: off it again
+          if (fx != 0)
+            {
+              x0 = (fx > 0 ? o.x + 1 : x0);
+              x1 = (fx > 0 ? x1 : o.x - 1);
+            }
+          else
+            {
+              y0 = (fy > 0 ? o.y + 1 : y0);
+              y1 = (fy > 0 ? y1 : o.y - 1);
+            }
+          execDeskAt(state, node, x0, y0, x1, y1, o.x, o.y);
           for (c in visitors)
             seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
           return;
         }
+    }
+
+// how many of the room's doors are BEHIND someone standing at (x,y) facing (fx,fy) — the rule every
+// exec office keeps: its owner never sits with his back to a way in. a door level with him (in a
+// side wall, on his own row) is beside him and does not count
+  public static function doorsBehind(state: _CorpState, room: _Room, x: Int, y: Int, fx: Int,
+      fy: Int): Int
+    {
+      var n = 0;
+      for (door in state.doors)
+        if ((door.roomID1 == room.id ||
+            door.roomID2 == room.id) &&
+            (door.x - x) * fx + (door.y - y) * fy < 0)
+          n++;
+      return n;
+    }
+
+// how many of the room's doors are in the wall someone facing (fx,fy) looks at
+  static function doorsAhead(state: _CorpState, room: _Room, fx: Int, fy: Int): Int
+    {
+      var n = 0;
+      for (door in state.doors)
+        if ((door.roomID1 == room.id ||
+            door.roomID2 == room.id) &&
+            ((fy > 0 && door.y == room.y2 + 1) ||
+            (fy < 0 && door.y == room.y1 - 1) ||
+            (fx > 0 && door.x == room.x2 + 1) ||
+            (fx < 0 && door.x == room.x1 - 1)))
+          n++;
+      return n;
     }
 
 // the visitor cells (of `cands`) that can take an armchair without sealing any of the room off,
@@ -389,11 +445,13 @@ class CorpRooms
       return out;
     }
 
-// lay the 3x2 desk block (or, not `deep`, the 3x1 run) with its top-left at (tx,ty) and its owner's
-// chair at (cx,cy), which is one of the cells over the middle of a long side. the monitor stands on
-// the desk cell next to the chair and the rest of the top takes a roll of desk things
-  static function execDeskAt(state: _CorpState, node: _GenNode, tx: Int, ty: Int, cx: Int, cy: Int,
-      deep: Bool = true)
+// lay the exec desk over the rect (x0,y0)..(x1,y1) — the 3x2 block either way round, or the 3x1
+// run — with its owner's chair at (cx,cy), beside the middle of a long side. the monitor stands on
+// the desk cell next to the chair and the rest of the top takes a roll of desk things. the 3x2
+// TILE GROUP only fits the block laid 3 across x; turned, it takes the plain worktop tile, which
+// render.corp.CorpExec reads the same (any exec worktop) and stands the same glb over, turned
+  static function execDeskAt(state: _CorpState, node: _GenNode, x0: Int, y0: Int, x1: Int, y1: Int,
+      cx: Int, cy: Int)
     {
       var cells = state.area.getCells();
       var full = [
@@ -403,25 +461,27 @@ class CorpRooms
         Const.CORP_TABLE_STATIONERY,
       ];
       var deco = full.copy();
-      var compx = cx;
-      var rows = (deep ? 2 : 1);
-      var compy = (cy < ty ? ty : ty + rows - 1);
-      GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + rows - 1);
+      // the desk cell in front of the chair
+      var compx = (cx < x0 ? x0 : (cx > x1 ? x1 : cx));
+      var compy = (cy < y0 ? y0 : (cy > y1 ? y1 : cy));
+      var group = (x1 - x0 == 2 &&
+        y1 - y0 == 1);
+      GenTree.add(node, CorpBlocks.ZONE_TABLE, x0, y0, x1, y1);
       addDecoration(state, cx, cy, Const.CORP_EXEC_CHAIR);
       addDecoration(state, compx, compy, Const.CORP_COMPUTERS);
       var left = full.length;
-      for (dy in 0...rows)
-        for (dx in 0...3)
+      for (y in y0...y1 + 1)
+        for (x in x0...x1 + 1)
           {
-            cells[tx + dx][ty + dy] = (deep ? Const.DARK_TABLE_MARBLE1_3X2[dy][dx] :
+            cells[x][y] = (group ? Const.DARK_TABLE_MARBLE1_3X2[y - y0][x - x0] :
               Const.TILE_DARK_TABLE_MARBLE1_1X1);
-            if (tx + dx == compx &&
-                ty + dy == compy)
+            if (x == compx &&
+                y == compy)
               continue;
             if (state.area.chance(40) &&
                 left > 0)
               {
-                deco = addDecorationExt(state, tx + dx, ty + dy, deco, full);
+                deco = addDecorationExt(state, x, y, deco, full);
                 left--;
               }
           }
@@ -468,9 +528,19 @@ class CorpRooms
           else if (state.area.chance(50))
             deco = addDecorationExt(state, x, y, deco, full);
         }
-      // the chair on the far side of the middle cell from the room's first wall
+      // the chair beside the middle cell, on whichever side leaves no door at its owner's back
+      // (doorsBehind), the far side from the room's first wall when both or neither do
       var mx = (alongX ? sx + Std.int(len / 2) : sx + 1);
       var my = (alongX ? sy + 1 : sy + Std.int(len / 2));
+      var fx = (alongX ? 0 : -1), fy = (alongX ? -1 : 0);
+      var ax = mx + 2 * fx, ay = my + 2 * fy;
+      if (ax >= room.x1 &&
+          ay >= room.y1 &&
+          doorsBehind(state, room, ax, ay, -fx, -fy) < doorsBehind(state, room, mx, my, fx, fy))
+        {
+          mx = ax;
+          my = ay;
+        }
       addDecoration(state, mx, my, Const.CORP_EXEC_CHAIR);
     }
 
@@ -503,98 +573,114 @@ class CorpRooms
       for (flip in [ false, true ])
         for (v0 in lounge)
           for (dv in desk)
-            {
-              var at = function(u: Int, v: Int)
-                {
-                  var x = (alongX ? (flip ? room.x2 - u : room.x1 + u) : room.x1 + v);
-                  var y = (alongX ? room.y1 + v : (flip ? room.y2 - u : room.y1 + u));
-                  return { x: x, y: y };
-                };
-              // every cell the suite stands on, solid or seat, has to be the room's bare floor and
-              // not a doorway
-              var solid = [];
-              for (u in len - 3...len)
-                for (v in v0...v0 + 2)
-                  solid.push(at(u, v));
-              var deskCells = [];
-              var owner = null;
-              var visitors = [];
-              if (alongX)
-                {
-                  for (u in du...du + 3)
-                    for (v in dv...dv + 2)
-                      deskCells.push(at(u, v));
-                  owner = at(du + 1, dv - 1);
-                  visitors = [ at(du, dv + 2), at(du + 2, dv + 2) ];
-                }
-              else
-                {
-                  for (u in du...du + 2)
-                    for (v in dv...dv + 3)
-                      deskCells.push(at(u, v));
-                  owner = at(du - 1, dv + 1);
-                  // and at 7 long the visitors' row would stand back to back with the lounge's
-                  // armchairs, so a room that short keeps the row as its lane instead
-                  if (len > SUITE_LEN_Y)
-                    visitors = [ at(du + 2, dv), at(du + 2, dv + 2) ];
-                }
-              var ok = true;
-              var blocked = new Map<Int, Bool>();
-              for (c in solid.concat(deskCells).concat([ owner ]))
-                if (cells[c.x][c.y] != MARBLE1 ||
-                    atDoor(cells, c.x, c.y))
-                  ok = false;
-              for (c in solid.concat(deskCells))
-                blocked.set(c.x * 1000 + c.y, true);
-              // AND IT MAY NOT SEAL ANY OF THE ROOM OFF. A placement that does is not caught by the
-              // oracle — gen.corp.CorpConnect.openPockets erodes whatever walls the pocket in, and
-              // what it erodes is the furniture: measured on the first build, a 9 x 4 suite came
-              // back with the desk's first column and both door-end plants eaten
-              if (!ok ||
-                  !roomOpen(state, room, blocked, MARBLE1))
-                continue;
-
-              // the desk, off its top-left cell whichever way round the room is
-              var tx = room.x2, ty = room.y2;
-              for (c in deskCells)
-                {
-                  if (c.x < tx)
-                    tx = c.x;
-                  if (c.y < ty)
-                    ty = c.y;
-                }
-              execDeskAt(state, node, tx, ty, owner.x, owner.y);
-              // the armchairs block, so a visitor that would seal a cell off stays out
-              for (c in fitVisitors(state, room, blocked,
-                  [ for (c in visitors) if (canSeat(state, room, c.x, c.y)) c ]))
-                seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
-
-              // the lounge, and the rug under it: the rug runs one lane wider than the furniture
-              // on each side, so the whole group stands ON it rather than beside its edge
-              var twin = Const.TILE_FLOOR_EXEC_RUG + UNWALKABLE_TILE_OFFSET;
-              for (u in len - 3...len)
-                for (v in v0 - 1...v0 + 3)
+            for (side in [ false, true ])
+              {
+                var at = function(u: Int, v: Int)
                   {
-                    var c = at(u, v);
-                    if (cells[c.x][c.y] == MARBLE1)
-                      cells[c.x][c.y] = Const.TILE_FLOOR_EXEC_RUG;
+                    var x = (alongX ? (flip ? room.x2 - u : room.x1 + u) : room.x1 + v);
+                    var y = (alongX ? room.y1 + v : (flip ? room.y2 - u : room.y1 + u));
+                    return { x: x, y: y };
+                  };
+                // every cell the suite stands on, solid or seat, has to be the room's bare floor
+                // and not a doorway
+                var solid = [];
+                for (u in len - 3...len)
+                  for (v in v0...v0 + 2)
+                    solid.push(at(u, v));
+                var deskCells = [];
+                var owner = null;
+                var visitors = [];
+                if (alongX)
+                  {
+                    for (u in du...du + 3)
+                      for (v in dv...dv + 2)
+                        deskCells.push(at(u, v));
+                    owner = at(du + 1, (side ? dv + 2 : dv - 1));
+                    var vv = (side ? dv - 1 : dv + 2);
+                    visitors = [ at(du, vv), at(du + 2, vv) ];
                   }
-              var l0 = at(len - 3, v0), l1 = at(len - 1, v0 + 1);
-              GenTree.add(node, CorpBlocks.ZONE_LOUNGE,
-                Std.int(Math.min(l0.x, l1.x)), Std.int(Math.min(l0.y, l1.y)),
-                Std.int(Math.max(l0.x, l1.x)), Std.int(Math.max(l0.y, l1.y)));
-              for (v in v0...v0 + 2)
-                {
-                  var groups = [ Const.CORP_ARMCHAIR, Const.CORP_TABLE_LOW, Const.CORP_SOFA ];
-                  for (i in 0...3)
+                else
+                  {
+                    for (u in du...du + 2)
+                      for (v in dv...dv + 3)
+                        deskCells.push(at(u, v));
+                    owner = at((side ? du + 2 : du - 1), dv + 1);
+                    // and at 7 long the visitors' row would stand back to back with the lounge's
+                    // armchairs, so a room that short keeps the row as its lane instead. turned
+                    // round, they sit against the end wall and the owner's row is the lane
+                    if (side)
+                      visitors = [ at(du - 1, dv), at(du - 1, dv + 2) ];
+                    else if (len > SUITE_LEN_Y)
+                      visitors = [ at(du + 2, dv), at(du + 2, dv + 2) ];
+                  }
+                // THE OWNER NEVER SITS WITH HIS BACK TO A DOOR (doorsBehind): the desk is tried
+                // with his chair on its other long side before the placement is given up
+                var fx = 0, fy = 0;
+                for (c in deskCells)
+                  if (Math.abs(c.x - owner.x) + Math.abs(c.y - owner.y) == 1)
                     {
-                      var c = at(len - 3 + i, v);
-                      cells[c.x][c.y] = twin;
-                      addDecoration(state, c.x, c.y, groups[i]);
+                      fx = c.x - owner.x;
+                      fy = c.y - owner.y;
                     }
-                }
-              return true;
-            }
+                if (doorsBehind(state, room, owner.x, owner.y, fx, fy) > 0)
+                  continue;
+                var ok = true;
+                var blocked = new Map<Int, Bool>();
+                for (c in solid.concat(deskCells).concat([ owner ]))
+                  if (cells[c.x][c.y] != MARBLE1 ||
+                      atDoor(cells, c.x, c.y))
+                    ok = false;
+                for (c in solid.concat(deskCells))
+                  blocked.set(c.x * 1000 + c.y, true);
+                // AND IT MAY NOT SEAL ANY OF THE ROOM OFF. A placement that does is not caught by
+                // the oracle — gen.corp.CorpConnect.openPockets erodes whatever walls the pocket in,
+                // and what it erodes is the furniture: measured on the first build, a 9 x 4 suite
+                // came back with the desk's first column and both door-end plants eaten
+                if (!ok ||
+                    !roomOpen(state, room, blocked, MARBLE1))
+                  continue;
+
+                // the desk, off its top-left cell whichever way round the room is
+                var tx = room.x2, ty = room.y2;
+                for (c in deskCells)
+                  {
+                    if (c.x < tx)
+                      tx = c.x;
+                    if (c.y < ty)
+                      ty = c.y;
+                  }
+                execDeskAt(state, node, tx, ty, tx + 2, ty + 1, owner.x, owner.y);
+                // the armchairs block, so a visitor that would seal a cell off stays out
+                for (c in fitVisitors(state, room, blocked,
+                    [ for (c in visitors) if (canSeat(state, room, c.x, c.y)) c ]))
+                  seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
+
+                // the lounge, and the rug under it: the rug runs one lane wider than the furniture
+                // on each side, so the whole group stands ON it rather than beside its edge
+                var twin = Const.TILE_FLOOR_EXEC_RUG + UNWALKABLE_TILE_OFFSET;
+                for (u in len - 3...len)
+                  for (v in v0 - 1...v0 + 3)
+                    {
+                      var c = at(u, v);
+                      if (cells[c.x][c.y] == MARBLE1)
+                        cells[c.x][c.y] = Const.TILE_FLOOR_EXEC_RUG;
+                    }
+                var l0 = at(len - 3, v0), l1 = at(len - 1, v0 + 1);
+                GenTree.add(node, CorpBlocks.ZONE_LOUNGE,
+                  Std.int(Math.min(l0.x, l1.x)), Std.int(Math.min(l0.y, l1.y)),
+                  Std.int(Math.max(l0.x, l1.x)), Std.int(Math.max(l0.y, l1.y)));
+                for (v in v0...v0 + 2)
+                  {
+                    var groups = [ Const.CORP_ARMCHAIR, Const.CORP_TABLE_LOW, Const.CORP_SOFA ];
+                    for (i in 0...3)
+                      {
+                        var c = at(len - 3 + i, v);
+                        cells[c.x][c.y] = twin;
+                        addDecoration(state, c.x, c.y, groups[i]);
+                      }
+                  }
+                return true;
+              }
       return false;
     }
 

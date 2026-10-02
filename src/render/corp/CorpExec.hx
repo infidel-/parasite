@@ -295,9 +295,10 @@ class CorpExec
       var w = d.col1 - d.col0 + 1, h = d.row1 - d.row0 + 1;
       var long = (w > h ? w : h);
       var short = (w > h ? h : w);
-      // a glb per EXACT footprint and nothing for any other: the 3x2 block is laid 3 across x and
-      // 2 down z by its tiles, and a desk the pocket repair ate into is not stretched over its stub
-      var list = (w == 3 && h == 2 ? out.desk :
+      // a glb per EXACT footprint and nothing for any other: the 3x2 block either way round (the
+      // generator turns it to face its owner at the door, and the yaw below turns the glb with it),
+      // and a desk the pocket repair ate into is not stretched over its stub
+      var list = (short == 2 && long == 3 ? out.desk :
         (short == 1 && long == 3 ? out.desk3 : (short == 1 && long == 2 ? out.desk2 : null)));
       if (list == null)
         return;
