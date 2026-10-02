@@ -352,6 +352,18 @@ class GenRun
       add('walkableCells', nWalk);
       add('reachedCells', nSeen);
       add('orphanCells', nWalk - nSeen);
+      // an armchair BLOCKS its cell. one on walkable floor had its twin eroded by
+      // CorpConnect.openPockets, i.e. the template that seated it sealed part of its room off
+      var chair = Const.CORP_ARMCHAIR[0];
+      for (s in ctx.spawns)
+        if (s.type == 'decoration' &&
+            s.row == chair.row &&
+            s.col == chair.col)
+          {
+            add('exec/armchairs', 1);
+            check.ok(walkAll[ctx.cells[s.x][s.y]] != 1, 'armchair at ' + s.x + ',' + s.y +
+              ' stands on walkable floor');
+          }
       if (verbose && nSeen < nWalk)
         for (yy in 0...h)
           {

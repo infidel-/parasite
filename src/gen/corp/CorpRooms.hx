@@ -342,19 +342,58 @@ class CorpRooms
           ty = room.y1 + Std.int((room.h - 2) / 2);
           cy = ty - 1;
         }
-      execDeskAt(state, node, tx, ty, tx + 1, cy);
-      // THE VISITORS SIT ACROSS THE DESK FROM ITS OWNER, one at each end of the slab. A chair is a
-      // walkable decoration like every seat in the tower, so it costs the room no lane; it only
-      // needs a free cell of the room's own floor that is not a doorway
-      var vy = (cy < ty ? ty + 2 : ty - 1);
-      for (vx in [ tx, tx + 2 ])
-        seat(state, room, vx, vy, Const.CORP_ARMCHAIR);
+      // THE VISITORS SIT ACROSS THE DESK FROM ITS OWNER, one at each end of the slab, and an
+      // armchair BLOCKS its cell: the model is 2.5 of the cell's 4 wide, so two of them either side
+      // of a walkable cell read as a wall with a gap you could not fit through. So the room is
+      // flooded first — the 3x2 slab when both visitors fit round it, else the 3x1 run on the
+      // owner's row (the visitors one row in) with whichever visitors still leave the room open
+      for (deep in [ true, false ])
+        {
+          var dty = (deep || cy < ty ? ty : ty + 1);
+          var vy = (cy < dty ? dty + (deep ? 2 : 1) : dty - 1);
+          var blocked = new Map<Int, Bool>();
+          for (dx in 0...3)
+            for (dy in 0...(deep ? 2 : 1))
+              blocked.set((tx + dx) * 1000 + dty + dy, true);
+          var cands = [
+            for (vx in [ tx, tx + 2 ])
+              if (canSeat(state, room, vx, vy))
+                { x: vx, y: vy }
+          ];
+          var visitors = fitVisitors(state, room, blocked, cands);
+          if (deep &&
+              (visitors.length < cands.length ||
+              !roomOpen(state, room, blocked, MARBLE1)))
+            continue;
+          execDeskAt(state, node, tx, dty, tx + 1, cy, deep);
+          for (c in visitors)
+            seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
+          return;
+        }
     }
 
-// lay the 3x2 desk block with its top-left at (tx,ty) and its owner's chair at (cx,cy), which is
-// one of the two cells over the middle of a long side. the monitor stands on the desk cell next to
-// the chair and the rest of the top takes a roll of desk things
-  static function execDeskAt(state: _CorpState, node: _GenNode, tx: Int, ty: Int, cx: Int, cy: Int)
+// the visitor cells (of `cands`) that can take an armchair without sealing any of the room off,
+// each one added to `blocked` as it is kept
+  static function fitVisitors(state: _CorpState, room: _Room, blocked: Map<Int, Bool>,
+      cands: Array<{ x: Int, y: Int }>): Array<{ x: Int, y: Int }>
+    {
+      var out = [];
+      for (c in cands)
+        {
+          blocked.set(c.x * 1000 + c.y, true);
+          if (roomOpen(state, room, blocked, MARBLE1))
+            out.push(c);
+          else
+            blocked.remove(c.x * 1000 + c.y);
+        }
+      return out;
+    }
+
+// lay the 3x2 desk block (or, not `deep`, the 3x1 run) with its top-left at (tx,ty) and its owner's
+// chair at (cx,cy), which is one of the cells over the middle of a long side. the monitor stands on
+// the desk cell next to the chair and the rest of the top takes a roll of desk things
+  static function execDeskAt(state: _CorpState, node: _GenNode, tx: Int, ty: Int, cx: Int, cy: Int,
+      deep: Bool = true)
     {
       var cells = state.area.getCells();
       var full = [
@@ -365,15 +404,17 @@ class CorpRooms
       ];
       var deco = full.copy();
       var compx = cx;
-      var compy = (cy < ty ? ty : ty + 1);
-      GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + 1);
+      var rows = (deep ? 2 : 1);
+      var compy = (cy < ty ? ty : ty + rows - 1);
+      GenTree.add(node, CorpBlocks.ZONE_TABLE, tx, ty, tx + 2, ty + rows - 1);
       addDecoration(state, cx, cy, Const.CORP_EXEC_CHAIR);
       addDecoration(state, compx, compy, Const.CORP_COMPUTERS);
       var left = full.length;
-      for (dy in 0...2)
+      for (dy in 0...rows)
         for (dx in 0...3)
           {
-            cells[tx + dx][ty + dy] = Const.DARK_TABLE_MARBLE1_3X2[dy][dx];
+            cells[tx + dx][ty + dy] = (deep ? Const.DARK_TABLE_MARBLE1_3X2[dy][dx] :
+              Const.TILE_DARK_TABLE_MARBLE1_1X1);
             if (tx + dx == compx &&
                 ty + dy == compy)
               continue;
@@ -523,7 +564,9 @@ class CorpRooms
                     ty = c.y;
                 }
               execDeskAt(state, node, tx, ty, owner.x, owner.y);
-              for (c in visitors)
+              // the armchairs block, so a visitor that would seal a cell off stays out
+              for (c in fitVisitors(state, room, blocked,
+                  [ for (c in visitors) if (canSeat(state, room, c.x, c.y)) c ]))
                 seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
 
               // the lounge, and the rug under it: the rug runs one lane wider than the furniture
@@ -564,17 +607,25 @@ class CorpRooms
       return out;
     }
 
-// seat one chair on a free cell of the room's own floor, if there is one there
-  static function seat(state: _CorpState, room: _Room, x: Int, y: Int, group: _TileGroup)
+// can a chair stand here: a free cell of the room's own floor that is not a doorway
+  static function canSeat(state: _CorpState, room: _Room, x: Int, y: Int): Bool
     {
       var cells = state.area.getCells();
-      if (x < room.x1 ||
-          x > room.x2 ||
-          y < room.y1 ||
-          y > room.y2 ||
-          cells[x][y] != MARBLE1 ||
-          atDoor(cells, x, y))
+      return x >= room.x1 &&
+        x <= room.x2 &&
+        y >= room.y1 &&
+        y <= room.y2 &&
+        cells[x][y] == MARBLE1 &&
+        !atDoor(cells, x, y);
+    }
+
+// seat one armchair on a free cell of the room's own floor, if there is one there. the cell takes
+// the marble's unwalkable twin (the FINAL id: the temp MARBLE1 + 16 has no final tile)
+  static function seat(state: _CorpState, room: _Room, x: Int, y: Int, group: _TileGroup)
+    {
+      if (!canSeat(state, room, x, y))
         return;
+      state.area.getCells()[x][y] = Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET;
       addDecoration(state, x, y, group);
     }
 
