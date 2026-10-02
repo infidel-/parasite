@@ -263,15 +263,18 @@ class CorpConnect
           // forever, clearWayToReached succeeds every round on the room's own furniture, and the
           // `||` chain therefore never reaches the allowDuplicate pass at all. That is one sealed
           // room in 1000 and eight pieces of furniture deleted trying to reach it
-          if (!allowDuplicate)
-            {
-              var far = roomAtCell(state, fx, fy);
-              if (far != 0 &&
-                  hasDoorBetween(state, room.id, far))
-                continue;
-            }
-
           var far = roomAtCell(state, fx, fy);
+          if (!allowDuplicate &&
+              far != 0 &&
+              hasDoorBetween(state, room.id, far))
+            continue;
+          // and never a door between the SECURITY ROOM and another room: it has one door, onto a
+          // corridor (gen.blocks.CorpBlocks.lone), and a repair is not allowed to undo that
+          if (far != 0 &&
+              (room.role == ROLE_SECURITY ||
+              roleOfRoom(state, far) == ROLE_SECURITY))
+            continue;
+
           // and on the duplicate pass, RETIRE the door that is already there. Reaching here means
           // the pair is joined by a door the player cannot use — something is standing in front of
           // it, or the room behind it is itself sealed — so the old record is not a live connection
@@ -300,6 +303,15 @@ class CorpConnect
           return true;
         }
       return false;
+    }
+
+// the role of the room with this id, or null for none
+  static function roleOfRoom(state: _CorpState, id: Int): String
+    {
+      for (r in state.rooms)
+        if (r.id == id)
+          return r.role;
+      return null;
     }
 
 // what a blocking furniture cell becomes when it is taken away, or -1 when it cannot be.

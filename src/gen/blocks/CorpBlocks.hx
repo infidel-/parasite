@@ -124,6 +124,12 @@ class CorpBlocks
   // still leaves the corridor reaching everything it reached before, the room itself included
   public static var fronts: Map<Int, Array<_Spot>> = new Map();
 
+  // THE ROOMS THAT CAN BE THE SECURITY ROOM: one door and no other, and that door onto a corridor.
+  // A guard post is not a room you walk through to reach somebody's office, nor one you enter
+  // through it — measured before this, most floors' security room had a second door into an exec
+  // office next door. Filled by `assign` off the door graph, read by the demand's `must`
+  public static var lone: Map<Int, Bool> = new Map();
+
 // what a tower floor must end up with.
 //
 // the minW/minH are what each template needs to produce the thing rather than a token of it: a
@@ -257,6 +263,7 @@ class CorpBlocks
           minW: 4,
           minH: 4,
           fit: smallest,
+          must: function(b) return lone.exists(b.roomID),
         },
         {
           // 5 AND NOT 4 ON EITHER AXIS, which is a number the oracle set. A rank spans the interior
@@ -322,6 +329,27 @@ class CorpBlocks
         }
       // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
       blocked = gen.corp.CorpBuilding.passThrough(state);
+      // and WHICH ROOMS HAVE ONE DOOR, ONTO A CORRIDOR, for the security demand's `must`
+      lone = new Map();
+      var cells = state.area.getCells();
+      for (room in state.rooms)
+        {
+          var n = 0, corridor = false;
+          for (d in state.doors)
+            {
+              if (d.roomID1 != room.id &&
+                  d.roomID2 != room.id)
+                continue;
+              n++;
+              var delta = game.AreaGenerator.deltaMap[d.dir];
+              if (d.roomID1 == room.id &&
+                  cells[d.x + delta.x][d.y + delta.y] == gen.corp.CorpTemp.BLDG_CORRIDOR)
+                corridor = true;
+            }
+          if (n == 1 &&
+              corridor)
+            lone.set(room.id, true);
+        }
       // and WHERE THE LIFT IS, for the reception demand's `fit`. The car is not on the grid yet —
       // ElevatorBlock fills after this — but `frontDir` is, and the lift door stands at the middle
       // of the plate's wall on that hand, which is all the demand needs.

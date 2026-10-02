@@ -441,6 +441,35 @@ class GenCheck
                 s.y <= r.y2)
               cabs++;
           ok(cabs <= 1, at + ' holds ' + cabs + ' gun cabinets');
+          // AND IT HAS ONE WAY IN, FROM THE CORRIDOR: a guard post is not a room you walk through
+          // to reach another, nor one you enter through somebody's office
+          var doors = 0;
+          for (s in ctx.spawns)
+            {
+              if (s.type != 'door')
+                continue;
+              for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+                {
+                  var ix = s.x + d[0], iy = s.y + d[1];
+                  if (ix < r.x1 ||
+                      ix > r.x2 ||
+                      iy < r.y1 ||
+                      iy > r.y2)
+                    continue;
+                  doors++;
+                  var ox = s.x - d[0], oy = s.y - d[1];
+                  var inRoom = null;
+                  for (r2 in rooms)
+                    if (ox >= r2.x1 &&
+                        ox <= r2.x2 &&
+                        oy >= r2.y1 &&
+                        oy <= r2.y2)
+                      inRoom = r2;
+                  ok(inRoom == null, at + ' has a door at ' + s.x + ',' + s.y + ' into room ' +
+                    (inRoom == null ? '' : inRoom.role + ' ' + inRoom.x1 + ',' + inRoom.y1));
+                }
+            }
+          ok(doors == 1, at + ' has ' + doors + ' doors, want 1');
         }
     }
 
