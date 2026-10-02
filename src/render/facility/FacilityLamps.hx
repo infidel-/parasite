@@ -342,7 +342,7 @@ class FacilityLamps
       // under that size is unchanged — nx and ny both fall to 1 and the single point lands back on
       // the centre the old expression picked. the (i + 0.5) / n form is the one the park line above
       // already uses to spread a fixed count along a run instead of taking it off the head
-      var ceilings = [];
+      var ceilings:Array<LampPost> = [];
       for (r in m.rooms)
         {
           if (!lit(m, r))
@@ -405,7 +405,7 @@ class FacilityLamps
       //
       // aimed STRAIGHT DOWN, like a mast head and unlike a sewer wall bracket: a hood over a door
       // is a downlight and pools at its own feet, a foot and a half out from the masonry
-      var doors = [];
+      var doors:Array<LampPost> = [];
       // the hood each of those bulbs hangs under, kept in step with `doors` so the cone below can
       // ride the housing's centre line rather than its lens plane
       var hoods:Array<FacilityGlow.DoorLamp> = [];
@@ -496,11 +496,15 @@ class FacilityLamps
           // the outward normal read as a heading, the same atan2(x, z) the mast heads take
           yaws: [for (h in hoods) Math.atan2(h.nx, h.nz)],
         }));
+      // only the masts throw a spot shadow anyone can see; the rest never take the casting slot
+      var corr = corridors(m);
+      for (lp in ceilings.concat(corr).concat(doors))
+        lp.noCast = true;
       return {
         masts: masts,
         park: park,
         ceilings: ceilings,
-        corridors: corridors(m),
+        corridors: corr,
         doors: doors,
         prop: prop,
         cones: cones,

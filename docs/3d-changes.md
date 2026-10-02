@@ -585,3 +585,29 @@ two-pass from no-cull gave the same scatter for each. A wrongly culled shaft wou
 contiguous patch.
 
 Verdict: **landed.**
+
+## Facility spot shadows: only the masts take casting slots (`LampPost.noCast`)
+
+The facility's 12-slot pool routed ceiling, corridor and door fixtures into the 8 casting slots the
+same way it routed masts. Those lights throw no visible shadow: all 8 spot shadows at intensity 0
+change 0.000–0.006% of pixels at every indoor spot. Meanwhile the one-transposition routing sort never
+converges while the player moves, so a walk re-rendered 1.74–1.90 spot maps on 90–97% of frames
+(lab-report §C).
+
+- `LampPost` gets an optional `noCast`. `LampLights` ranks a noCast post after every casting one, so the
+  casting slots go to the nearest masts. A noCast post that still lands in a casting slot (fewer lit
+  masts than slots) has its shadow intensity held at 0 and its map never marked dirty. The fade edge
+  ignores a noCast boundary lamp. `FacilityLamps` marks the ceilings, corridors and doors. City,
+  sewer and wild never set it.
+- **One casting slot was tried and rejected on look.** It is the Radeon's GPU lever (−12…15% at park;
+  each slot is a PCF lookup in every lit fragment, and 2 slots cost almost what 8 do). But two masts at
+  equal distance put the shadow-fade ramp at 0, and the pole streaks the masts throw into each other's
+  pools go: gate 0.79% of pixels, 0.2% by >16 levels. Kept at 8.
+
+Measured on the Radeon, slot 6:
+- **Walk** (setPath (40,19) → S2 corridor, 48 cells): **0 spot-map renders** against the report's
+  1.74–1.90 per frame on the same route.
+- **Pixel diff** against the old routing: gate 0, office110/lab115 0.001–0.002%, park 0.006% (control
+  noise 0.002–0.055%).
+
+Verdict: **landed** (masts-only); **rejected — look** (1 casting slot).

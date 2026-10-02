@@ -188,11 +188,20 @@ class LampLights {
       // (see the refresh below), so the number of hand-offs per frame has to be bounded. the ordering
       // is only a routing heuristic — letting it converge over a few frames costs nothing, and the
       // array stays a valid permutation at every step, so no lamp is ever served twice or dropped
+      //
+      // a noCast post ranks after every casting one, so the caster slots go to the nearest posts that
+      // can actually throw a shadow
+      function rank(lp:LampPost):Int
+        {
+          if (lp == null)
+            return 0x7fffffff;
+          return lp.noCast == true ? 0x40000000 + d2(lp) : d2(lp);
+        }
       var swapped = -1;
       for (i in 0...lights.length - 1)
         {
-          var da = owners[i] == null ? 0x7fffffff : d2(owners[i]);
-          var db = owners[i + 1] == null ? 0x7fffffff : d2(owners[i + 1]);
+          var da = rank(owners[i]);
+          var db = rank(owners[i + 1]);
           if (da <= db)
             continue;
           var o = owners[i];
@@ -218,8 +227,9 @@ class LampLights {
           // mark this caster's shadow dirty when its owner lamp actually changes (posts never move,
           // so the depth map is otherwise valid); the re-render is dispatched below — this frame if
           // the change came from a swap, else round-robin
-          if (i < casters && owners[i] != prevOwners[i])
-            shadowDirty[i] = true;
+          if (i < casters &&
+              owners[i] != prevOwners[i])
+            shadowDirty[i] = o != null && o.noCast != true;
           if (o != null)
             {
               o.flick = fl; // read by LampShadows so the fake ground shadow breathes with the bulb
@@ -244,7 +254,8 @@ class LampLights {
       // re-render both here, in the same frame the lights moved. the one-swap gate caps this at 2
       if (swapped >= 0)
         for (i in swapped...(swapped + 2))
-          if (i < casters)
+          if (i < casters &&
+              shadowDirty[i])
             {
               untyped lights[i].shadow.needsUpdate = true;
               shadowDirty[i] = false;
@@ -279,12 +290,15 @@ class LampLights {
       // popping. no boundary lamp (fewer lit than casters+1) -> full-strength shadows, nothing to fade.
       // the incremental sort above means owners[casters] is the boundary lamp within a few frames
       // rather than exactly this one — this is a ramp, so converging into it is the same as being in it
-      var edge = (casters < lights.length && owners[casters] != null) ? Math.sqrt(d2(owners[casters])) : 1e9;
+      var edge = (casters < lights.length &&
+        owners[casters] != null &&
+        owners[casters].noCast != true) ? Math.sqrt(d2(owners[casters])) : 1e9;
       for (i in 0...casters)
         {
           var o = owners[i];
           var s = 0.0;
-          if (o != null)
+          if (o != null &&
+              o.noCast != true)
             {
               s = (edge - Math.sqrt(d2(o))) / L.shadowFadeBand;
               s = s < 0 ? 0 : (s > 1 ? 1 : s);
