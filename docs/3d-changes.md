@@ -519,7 +519,7 @@ clutter, lamps, doors, city lamp batches, wild props and `ObjModels` solid/ghost
 - Checked: nothing else in the game writes `visible` on a culled batch (the facility roof fade and
   `Occlusion` act on shell meshes), and the warm scenes never run `cull`, so no program is skipped.
 
-Measured on the 3050 Ti in one session, slot 6, interleaved old/new (old = the shipped `cull` plus
+Measured on the Radeon iGPU (ANGLE D3D11, canvas 1040x647) in one session, slot 6, interleaved old/new (old = the shipped `cull` plus
 `visible = true`), 4 rounds × 40 frames, 60 fps gate: calls and tris identical at every spot.
 
 | spot | submit old → new (mean ms) |
@@ -528,5 +528,26 @@ Measured on the 3050 Ti in one session, slot 6, interleaved old/new (old = the s
 | park | 4.67 → 3.33 |
 | office110 | 4.51 → 3.70 |
 | lab115 | 4.78 → 2.75 |
+
+Verdict: **landed.**
+
+## Hand-modelled facility, wild and scenario-a glbs back to Lambert (`roughness: 1`)
+
+`models-src/facility/buildlib.py` bakes `Roughness 0.72, Metallic 0` into every glb it builds, and
+`Models.toLambert` keeps MeshStandard for anything under roughness 1, so 54 props shipped on the PBR
+path with nobody having asked for specular: 47 facility (indoor kit plus booth, barrier, park bench and
+fence, lot cone and reel, roof clutter), the 4 wild trees and bushes, and scenario-a case/console/slot
+(lab-report §G). All carry the same material, a dielectric with F0 ≈ 0.04, so all lose the same weak
+lobe: nothing visible under the indoor lamps (office and lab pixel-identical), the faint blue moon glint
+outdoors (park 6% darker).
+
+- Fix at the manifest, not the lib: `"roughness": 1` on the 54 entries in `art/models.json`, rebaked by
+  `make models`. Corp shares `buildlib.py` and keeps 0.72 (the walnut desk's lamp sheen, rejected
+  before); the ship (0.80) keeps its sheen by choice; habitat is intentional.
+- Live: the only MeshStandard instanced mesh left in the facility is the ship.
+
+Measured on the Radeon (ANGLE D3D11, canvas 1040x647), slot 6, across a reload (so indicative): park
+GPU median **7.29 → 4.74 ms**, office110 5.13 → 4.61 ms. The report's same-session A/B was −21…23% at
+park.
 
 Verdict: **landed.**
