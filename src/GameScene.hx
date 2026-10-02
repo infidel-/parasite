@@ -211,12 +211,14 @@ class GameScene
 
       else if (game.location == LOCATION_AREA)
         {
+          game.ui.resumeQueue();
           hide3D();
           game.scene.area.draw();
         }
 
       else if (game.location == LOCATION_REGION)
         {
+          game.ui.resumeQueue();
           // leaving a city area: let the zoom-in outro finish (it covers the region); its
           // completion (on3DExitDone) covers to black, then draws/generates the region under
           // black. don't draw the region now — that would run the heavy first-draw gen stall
@@ -272,7 +274,10 @@ class GameScene
       if (_enter3D)
         return;
       if (game.area.id == _view3dArea && view3d.running)
-        return;
+        {
+          game.ui.resumeQueue();
+          return;
+        }
       // cover to black, then build the city + arm the zoom-out intro UNDER black (the geometry
       // build + async texture decode is the enter stall), then reveal as the intro plays
       _enter3D = true;
@@ -323,6 +328,8 @@ class GameScene
                   if (warmEl != null)
                     warmEl.classList.add('off');
                   fader.reveal(FADE_MS);
+                  // and only now the windows the entry fired (held by Game.setLocation)
+                  game.ui.resumeQueue();
                 };
               view3d.onFirstFrame(reveal);
               Browser.window.setTimeout(reveal, 5000);

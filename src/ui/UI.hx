@@ -868,8 +868,27 @@ class UI
         return;*/
       uiQueue.add(ev);
 
-      // no windows open, work on event immediately
-      if (state == UISTATE_DEFAULT)
+      // no windows open, work on event immediately (unless held for an area entry)
+      if (state == UISTATE_DEFAULT &&
+          !uiQueuePaused)
+        closeWindow();
+    }
+
+// hold queued windows (area entry: they wait for the 3D reveal instead of popping under the fade
+// and the warmup screen)
+  public function pauseQueue()
+    {
+      uiQueuePaused = true;
+    }
+
+// release held windows, opening the first one if the UI is idle
+  public function resumeQueue()
+    {
+      if (!uiQueuePaused)
+        return;
+      uiQueuePaused = false;
+      if (state == UISTATE_DEFAULT &&
+          uiQueue.length > 0)
         closeWindow();
     }
 

@@ -374,6 +374,9 @@ class Game extends _SaveObject
           area = region.getXY(playerRegion.x, playerRegion.y);
           if (newarea != null) // enter specified area
              area = newarea;
+          // windows the entry fires wait for the 3D reveal (GameScene.draw3D resumes the queue)
+          if (scene.is3DArea())
+            ui.pauseQueue();
           area.enter();
           // mod event: entered area
           ModEventRegistry.fire(ModEventRegistry.AREA_ENTER, {
