@@ -326,6 +326,7 @@ class FacilityGlow
         vertexColors: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        forceSinglePass: true,
         blending: untyped THREE.AdditiveBlending,
       })));
       mesh.name = 'facility glow';

@@ -19,6 +19,9 @@ import render.choreo.Choreo;
 class View {
   var game:Game;
   var canvas:Dynamic;
+  // the canvas's client rect, cached: reading it every frame forced a style recalc over the whole HUD
+  // (~0.12-0.15 ms). dropped on resize and whenever the canvas is shown or hidden
+  var canvasRect:Dynamic = null;
   var core:SceneSetup.Core;
   var renderer:WebGLRenderer;
   var camera:PerspectiveCamera;
@@ -659,6 +662,7 @@ class View {
         rig.reset();
         rig.startIntro();  // enter effect: start closest, zoom out to the resting target
         canvas.style.display = 'block';
+        canvasRect = null;
         if (!running)
           {
             running = true;
@@ -772,6 +776,7 @@ class View {
     pathLine = null;
     tactical = false;
     if (canvas != null) canvas.style.display = 'none';
+    canvasRect = null;
   }
 
 // free the current build's GPU resources: actor pools, then the scene graph geometry/materials,
@@ -913,8 +918,7 @@ class View {
       tip.hide();
       return;
     }
-    var rect:Dynamic = canvas.getBoundingClientRect();
-    var hit = actors.pickTarget(svMouseX, svMouseY, rect);
+    var hit = actors.pickTarget(svMouseX, svMouseY, clientRect());
     if (hit == null) {
       tip.hide();
       return;
@@ -931,6 +935,14 @@ class View {
     else tip.showBeamAt(hit.px, hit.py, id, tip.getObjectText(hit.obj));
   }
 
+// the canvas's client rect, read once and kept until a resize or a show/hide drops it
+  function clientRect():Dynamic
+    {
+      if (canvasRect == null)
+        canvasRect = canvas.getBoundingClientRect();
+      return canvasRect;
+    }
+
 // pick the city cell under a client-px cursor: unproject the cursor to a world ray, intersect the
 // ground plane at the player's floor height, take that cell, then refine once at that cell's own
 // floor height (curb cells sit a step up). returns {x:-1,y:-1} for the horizon / off-grid, which
@@ -940,7 +952,7 @@ class View {
       var miss = { x: -1, y: -1 };
       if (camera == null)
         return miss;
-      var rect:Dynamic = canvas.getBoundingClientRect();
+      var rect = clientRect();
       var ndcX = (clientX - rect.left) / rect.width * 2 - 1;
       var ndcY = -((clientY - rect.top) / rect.height * 2 - 1);
       // unproject a near-plane point to world, then the ray dir is (world - camera pos)
@@ -1117,6 +1129,7 @@ class View {
 
 // forward a resize to the renderer/camera
   public function resize(w:Float, h:Float):Void {
+    canvasRect = null;
     if (renderer == null) return;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();

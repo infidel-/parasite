@@ -26,6 +26,7 @@ typedef LampSet = {
   corridors:Array<LampPost>, // the corridor fixtures, which no room rect can reach — see `corridors`
   doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
+  cones:Array<LightCone.ConeSet>, // the mast and door shafts, frustum-culled per instance per frame
 };
 
 // where one mast stands, world: its footing on the grid vertex and the surface height under it
@@ -439,7 +440,8 @@ class FacilityLamps
       // the cone of lit air under each head. one instanced draw, in the scene's coneGroup so the
       // debug 5 / 0 keys price and hide it here exactly as they do on a street
       var L = RenderConfig.LAMP_LIGHT;
-      LightCone.instanced({
+      var cones = [];
+      cones.push(LightCone.instanced({
         group: coneGroup,
         bulbs: [for (p in masts) { x: p.x, z: p.z }],
         bulbY: bulbY,
@@ -447,7 +449,7 @@ class FacilityLamps
         topR: RenderConfig.LAMP_CONE.topR,
         color: FacilityStyle.LAMP_COLOR,
         startFrac: FacilityStyle.LAMP_CONE_START,
-      });
+      }));
       // and the door lamps' own shafts, which have to be a SECOND batch: LightCone takes its tint
       // as one uniform per batch, and the whole point of these is that they are not the mast's
       // white. that is the one draw call this fitting costs.
@@ -479,7 +481,7 @@ class FacilityLamps
       // FULL one would have put half of it inside the building
       var doorY = FacilityStyle.DOOR_LAMP_Y + FacilityStyle.DOOR_LAMP_H / 2;
       if (doors.length > 0)
-        LightCone.instanced({
+        cones.push(LightCone.instanced({
           group: coneGroup,
           bulbs: [for (h in hoods) {
             x: h.x - h.nx * (FacilityStyle.DOOR_LAMP_D - FacilityStyle.DOOR_LENS_EPS),
@@ -493,7 +495,7 @@ class FacilityLamps
           arc: Math.PI,
           // the outward normal read as a heading, the same atan2(x, z) the mast heads take
           yaws: [for (h in hoods) Math.atan2(h.nx, h.nz)],
-        });
+        }));
       return {
         masts: masts,
         park: park,
@@ -501,6 +503,7 @@ class FacilityLamps
         corridors: corridors(m),
         doors: doors,
         prop: prop,
+        cones: cones,
       };
     }
 

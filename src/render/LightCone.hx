@@ -11,6 +11,8 @@ typedef ConeSet = {
   var matrices:Array<Matrix4>; // every instance's transform, in build order
   var phases:Array<Float>;     // per-instance flicker phase; empty = a steady set
   var on:Array<Bool>;          // per-instance: was it packed into the draw last pulse()
+  @:optional var centres:Array<Vector3>; // per-instance mid-shaft point, for cull(); built by instanced()
+  @:optional var cullR:Float;            // the shaft's bounding radius about that point
 };
 
 // a cheap volumetric light shaft: a hollow additive cone shell hung under a lamp's bulb, outlining
@@ -57,7 +59,14 @@ class LightCone {
       var bulbs = o.bulbs;
       var bulbY = o.bulbY;
       var radius = o.radius;
-      var set:ConeSet = { mesh: null, matrices: [], phases: o.phases != null ? o.phases : [], on: [] };
+      var set:ConeSet = {
+        mesh: null,
+        matrices: [],
+        phases: o.phases != null ? o.phases : [],
+        on: [],
+        centres: [],
+        cullR: 0,
+      };
       if (bulbs.length == 0)
         return set;
       var C = RenderConfig.LAMP_CONE;
@@ -84,6 +93,9 @@ class LightCone {
         opacity: C.opacity,
         depthWrite: false,
         side: THREE.DoubleSide,
+        // both faces in one draw: additive blending is order-free, and three's two-pass split also
+        // rebuilds the program key twice per frame per mesh
+        forceSinglePass: true,
         blending: untyped THREE.AdditiveBlending,
         alphaMap: gradient(),
       });
@@ -111,11 +123,25 @@ class LightCone {
           inst.setMatrixAt(i, mtx);
           set.matrices.push(mtx); // kept so pulse() can repack a subset of them
           set.on.push(true);
+          set.centres.push(new Vector3(bulbs[i].x, h / 2, bulbs[i].z));
         }
+      set.cullR = Math.sqrt(h * h / 4 + radius * radius);
       untyped inst.instanceMatrix.needsUpdate = true;
       o.group.add(inst);
       set.mesh = inst;
       return set;
+    }
+
+// per-frame frustum cull for a STEADY set, per instance: its mesh-wide cull is off (the batch spans
+// the area from the origin), so without this every shaft drew from everywhere. never on a set that
+// pulse() repacks — the two would fight over the packed prefix
+  public static function cull(set:ConeSet, camera:PerspectiveCamera):Void
+    {
+      Models.cull({
+        mesh: set.mesh,
+        matrices: set.matrices,
+        centres: set.centres,
+      }, camera, set.cullR);
     }
 
 // per-frame on/off for a FLICKERING set: an instance whose bulb is in its dark stretch is left out of

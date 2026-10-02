@@ -774,6 +774,10 @@ class FacilityArea implements Area3D
       lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R);
+      // the shafts too: their mesh-wide cull is off (frustumCulled false), so a batch spanning the
+      // compound drew every cone from everywhere — 0 px indoors and at the lot, at full cost
+      for (c in lamps.cones)
+        render.LightCone.cull(c, opts.camera);
       for (p in green)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R);
       // and the roof's four batches, which take the frustum test with a MASK on top of it: a

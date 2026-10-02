@@ -656,6 +656,9 @@ class FacilityRoof
         map: render.Textures.loadTexture(FacilityStyle.ROOF_CLUTTER_TEX, 'wall', 1),
         alphaTest: FacilityStyle.CLUTTER_CUT,
         side: THREE.DoubleSide,
+        // one draw for both faces: it is alpha-CUT and writes depth, so the back/front split three
+        // makes for a transparent double-sided material buys nothing but a second program-key rebuild
+        forceSinglePass: true,
       });
       mat.transparent = true;
       mat.opacity = 1.0;

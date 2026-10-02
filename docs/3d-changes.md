@@ -551,3 +551,37 @@ GPU median **7.29 → 4.74 ms**, office110 5.13 → 4.61 ms. The report's same-s
 park.
 
 Verdict: **landed.**
+
+## Facility shafts, glow and roof clutter draw in one pass; shafts cull per instance; pickCell rect cached
+
+Three transparent DoubleSide materials took three's two-pass path (back faces, then front), and
+three sets `needsUpdate` before each side pass, so getParameters and the program key were rebuilt
+twice per mesh per frame (~35–45 µs each, lab-report §E). `forceSinglePass` now goes on the light-cone
+material (`LightCone.instanced`, every area), the facility glow (`FacilityGlow`) and the roof clutter
+(`FacilityRoof.pack`). The cones and glow are additive, so order-free. The roof clutter is alpha-CUT
+and writes depth, so one pass gives the same fragments.
+
+- **The facility's two cone batches (masts, door lamps) drew every shaft from everywhere:**
+  `frustumCulled = false`, because the mesh-wide sphere sits at the origin. `ConeSet` now carries
+  per-shaft mid-points plus a bounding radius, and the new `LightCone.cull` packs the visible ones
+  through `Models.cull`. That is for steady sets only; a `pulse()`d set would fight it over the
+  packed prefix. `FacilityLamps.LampSet.cones` hands them to the tick.
+- `View.pickCell` / `updateHoverTooltip` read `getBoundingClientRect()` every frame, forcing a style
+  recalc over the HUD. The rect is now cached in `View.clientRect()` and dropped on resize and on canvas
+  show/hide. Checked: a resize re-reads it once, then no reads for the next second.
+
+Measured on the Radeon (canvas 1040x647), slot 6, interleaved old/new (old = two-pass on the 5
+materials + full cone pack), 4×40 frames:
+
+| spot | calls | tris | submit (mean ms) |
+|---|---|---|---|
+| office110 | 129 → 124 | 56.5k → 54.3k | 3.23 → 3.02 |
+| park | 116 → 111 | 206k → 204k | 2.93 → 2.72 |
+| parking | 58 → 53 | 21.4k → 19.2k | 1.67 → 1.52 |
+
+Pixel diff old vs new: gate 0. Office110, park and overlookT: 0.001–0.005% of pixels, scattered over the
+whole frame, against a control-vs-control noise of 0.002–0.06% (fireflies, HUD pulse). Splitting
+two-pass from no-cull gave the same scatter for each. A wrongly culled shaft would be one faint
+contiguous patch.
+
+Verdict: **landed.**
