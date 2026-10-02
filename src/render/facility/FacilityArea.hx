@@ -99,7 +99,7 @@ class FacilityArea implements Area3D
   var game:Game;
   var model:Facility;
   var chunks = new render.Chunks();
-  var moon:DirectionalLight;                    // shadow-casting moon, repositioned each frame
+  var moon:DirectionalLight;                    // shadow-casting moon, its map frozen between moonTick's renders
   var lampLights:LampLights;                    // the shared live spotlight pool, ticked each frame
   var lamps:FacilityLamps.LampSet;              // the outdoor masts and the ceiling fixtures
   var lampPosts:Array<LampPost>;                // both families as one candidate list for the pool
@@ -150,6 +150,11 @@ class FacilityArea implements Area3D
   var lastCol = -1;                             // the cell the targets were last recomputed for
   var lastRow = -1;
   var lastVis = -1;                             // and the visibility revision, so an opened door counts
+  var moonX = Math.NaN;                         // the moon box's snapped focus, world x/z (NaN = not yet placed)
+  var moonZ = Math.NaN;
+  var moonFocus = new Vector3();                // ^ as the point fitMoon aims at
+  var moonLanded = -1;                          // glb batches landed at the moon's last render
+  var casters:Array<render.Models.InstancedProp>; // every glb batch moonTick counts landings over, built on first use
 
   public function new(game:Game, model:Facility)
     {
@@ -162,6 +167,9 @@ class FacilityArea implements Area3D
     {
       var bundle = FacilityScene.build(renderer, lampPool);
       moon = bundle.moon;
+      // frozen: moonTick re-renders it only when something it holds has changed
+      moon.shadow.autoUpdate = false;
+      moon.shadow.needsUpdate = true;
       lampLights = bundle.lampLights;
       coneGroup = bundle.coneGroup;
       // held BY REFERENCE and filled later, in build(). render.View.buildFrom hands this same map to
@@ -724,24 +732,30 @@ class FacilityArea implements Area3D
   public function tick(opts:Area3DTickOpts):Void
     {
       // the reveal runs through the outro as well: the camera is still looking at the area during
-      // the pull-out, and a roof snapping back on mid-fade is exactly when it would show
-      ease(opts.dtMs);
+      // the pull-out, and a roof snapping back on mid-fade is exactly when it would show. a roof
+      // fading or a leaf turning both change what the frozen moon map holds
+      var changed = ease(opts.dtMs);
       // the leaves turn through the outro too, for the reason the reveal does: the camera is still
       // on the area during the pull-out, and a door snapping shut mid-swing is exactly when it shows
-      FacilityDoors.tick(doors, opts);
+      if (FacilityDoors.swing(doors, opts))
+        changed = true;
       // and the park's grass keeps moving through it for the same reason. this is the whole per-frame
       // cost of the tuft layer — one shared uniform, advanced once, read by every blade in the mesh
       render.wild.WildGrass.tick(opts.dtMs);
       // and the server racks' lights, which are the same one shared uniform advanced once — and
       // through the outro for the third time, because the camera is still on the compound
       FacilityDeco.tick(opts.dtMs);
+      // whether a shadow map renders this frame, which every cull below then feeds the full set
+      var all = !opts.outro &&
+        moonTick(opts, changed);
+      FacilityDoors.cull(doors, opts, all);
       // the object props, and the whole block is ABOVE the outro gate for the reason everything
       // else above it is: the camera is still looking at the compound through the pull-out. a
       // player who left standing ON one would otherwise stay behind a see-through hull for the
       // length of the shot, and a shared idle clock freezing mid-shot is exactly when it shows.
       // cull() reads opts.outro itself; the outline shells are a tactical READOUT, so a hidden HUD
       // takes them with it
-      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui, all);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
       // their glbs arrive over a loader callback, so there is no build-time moment to catch them.
@@ -752,7 +766,6 @@ class FacilityArea implements Area3D
       FacilityRig.tick(rig, opts.dtMs);
       if (opts.outro)
         return;
-      SceneSetup.fitMoon(moon, opts.player);
       // recompute what should be revealed only when the player's CELL moves or a sightline changes.
       // area.visRev is what makes the second half work: opening a door does not move the player but
       // it does open a view into a room
@@ -768,34 +781,30 @@ class FacilityArea implements Area3D
       // what the player cannot see, off the SMOOTHED position and not opts.playerCol/Row — see
       // VisionMask's own note on why the logical cell is the wrong origin
       VisionMask.update(game, opts.player.x, opts.player.z);
-      // the pool: the nearest bulbs claim the 12 live spotlights, masts and ceiling fixtures
-      // competing in one list. nothing here flickers, so this is the whole per-frame cost of the
-      // lighting pass — no cone repack (render.LightCone.pulse) and no glow rebuild
-      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
-      render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R);
+      render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R, null, all);
       // the shafts too: their mesh-wide cull is off (frustumCulled false), so a batch spanning the
       // compound drew every cone from everywhere — 0 px indoors and at the lot, at full cost
       for (c in lamps.cones)
         render.LightCone.cull(c, opts.camera);
       for (p in green)
-        render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R);
+        render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R, null, all);
       // and the roof's four batches, which take the frustum test with a MASK on top of it: a
       // condenser standing on a deck that has faded off would be left hanging over an open room
       render.Models.cull(roof.ac, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.acOf, reveal));
+        FacilityRoof.mask(roof.acOf, reveal), all);
       render.Models.cull(roof.dish, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.dishOf, reveal));
+        FacilityRoof.mask(roof.dishOf, reveal), all);
       render.Models.cull(roof.hatchB, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.hatchOf, reveal));
+        FacilityRoof.mask(roof.hatchOf, reveal), all);
       render.Models.cull(roof.jboxB, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.jboxOf, reveal));
+        FacilityRoof.mask(roof.jboxOf, reveal), all);
       render.Models.cull(roof.ventB, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.ventOf, reveal));
+        FacilityRoof.mask(roof.ventOf, reveal), all);
       render.Models.cull(roof.ductB, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.ductOf, reveal));
+        FacilityRoof.mask(roof.ductOf, reveal), all);
       render.Models.cull(roof.tankB, opts.camera, FacilityStyle.PROP_CULL_R,
-        FacilityRoof.mask(roof.tankOf, reveal));
+        FacilityRoof.mask(roof.tankOf, reveal), all);
     }
 
 // which structures should be open. INSIDE is the obvious half; the other is looking in through a
@@ -849,10 +858,11 @@ class FacilityArea implements Area3D
 // question about where it is, which a build-time split by normal cannot see. the height it was
 // buying back is paid for instead by FacilityStyle.WALL_T: an occluder's reach drops from 4 + 4.9
 // units of z to 2 + 4.9
-  function ease(dtMs:Float):Void
+  function ease(dtMs:Float):Bool
     {
       if (shells == null)
-        return;
+        return false;
+      var moved = false;
       var step = dtMs / (RenderConfig.BASE_MS * FacilityStyle.REVEAL_MULT);
       for (i in 0...shells.length)
         {
@@ -861,6 +871,7 @@ class FacilityArea implements Area3D
             {
               reveal[i] = t;
               apply(shells[i].roof, 1.0 - t * (1.0 - FacilityStyle.ROOF_FADE));
+              moved = true;
             }
           // the glazing on the SAME clock as the roof: they are two halves of one transition, and a
           // pane still glowing after the ceiling has gone reads as a lag rather than as a fade
@@ -871,6 +882,56 @@ class FacilityArea implements Area3D
               shells[i].glaze.value = d;
             }
         }
+      return moved;
+    }
+
+// the moon's box follows the player on a FacilityStyle.MOON_SNAP-cell grid and its map stays frozen
+// between renders: tracking the smoothed position exactly re-rendered a 2048 map every frame, 7-22
+// calls of it. it renders again when the box moves, a glb batch lands or `changed` says a roof faded
+// or a leaf turned. NOT on area.visRev: that bumps on every player step, and keyed on it the map
+// re-rendered on 68 of 450 walk frames for nothing.
+// ponytail: an opened container's shut/open batch swap waits for the next snap to show in the map;
+// key it off ObjModels' masks if that ever reads. also ticks the lamp pool, whose maps
+// are frozen the same way. returns whether ANY shadow map renders this frame — the culls then pack
+// every placement, because a frozen map drawn off the camera's subset keeps that hole until it next
+// renders (measured: 5.5% of the park's pixels wrong viewed 4 cells off the render point)
+  function moonTick(opts:Area3DTickOpts, changed:Bool):Bool
+    {
+      var snap = FacilityStyle.MOON_SNAP * citygen.CityConfig.CELL;
+      var sx = Math.round(opts.player.x / snap) * snap;
+      var sz = Math.round(opts.player.z / snap) * snap;
+      if (sx != moonX ||
+          sz != moonZ)
+        {
+          moonX = sx;
+          moonZ = sz;
+          moonFocus.set(sx, opts.player.y, sz);
+          SceneSetup.fitMoon(moon, moonFocus);
+          changed = true;
+        }
+      if (casters == null)
+        casters = green.concat([ roof.ac, roof.dish, roof.hatchB, roof.jboxB, roof.ventB, roof.ductB,
+          roof.tankB, lamps.prop ]);
+      var landed = 0;
+      for (p in casters)
+        if (p.mesh != null)
+          landed++;
+      for (b in props)
+        if (b.solid.mesh != null)
+          landed++;
+      if (landed != moonLanded)
+        {
+          moonLanded = landed;
+          changed = true;
+        }
+      if (changed)
+        moon.shadow.needsUpdate = true;
+      // the pool: the nearest bulbs claim the 12 live spotlights, masts and ceiling fixtures
+      // competing in one list. nothing here flickers, so this is the whole per-frame cost of the
+      // lighting pass — no cone repack (render.LightCone.pulse) and no glow rebuild
+      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      return moon.shadow.needsUpdate ||
+        LampLights.lastShadowRenders > 0;
     }
 
 // one value's move toward its target, clamped so it lands on it exactly. two things ease on this

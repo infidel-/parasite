@@ -611,3 +611,34 @@ Measured on the Radeon, slot 6:
   noise 0.002–0.055%).
 
 Verdict: **landed** (masts-only); **rejected — look** (1 casting slot).
+
+## Facility moon snapped to a 4-cell grid and frozen; full caster set on render frames
+
+`fitMoon` tracked the smoothed player exactly, and the moon's 2048 map re-rendered every frame:
+7–22 calls, 2k–128k tris (lab-report §D). The box now moves in `FacilityStyle.MOON_SNAP` (4-cell) steps
+(`FacilityArea.moonTick`), and `moon.shadow.autoUpdate` is off. The map renders again when the box
+snaps, a glb batch lands (object-prop solids included), a roof eases (`ease` now reports it) or a door
+leaf turns (`FacilityDoors.tick` split into `swing`, which reports movement, and `cull`).
+
+- **The full caster set on render frames.** A frozen map drawn off the camera's subset keeps the hole
+  (report: park 5.5% of pixels wrong viewed 4 cells off). `Models.cull` and `ObjModels.cull` take an
+  optional `all` that skips the frustum test, and the facility passes it on any frame a moon or spot map
+  renders. The main pass draws the off-screen instances that frame too, which is harmless. Masks still
+  apply, so a faded roof's clutter stays out. Unlike corp's `cullExact`, this needs no sphere bake and
+  keeps the masks and the doors.
+- **TRAP: `area.visRev` is not a sightline-change signal.** `AreaGame.updateVisibility` bumps it on every
+  player step. Used as a trigger, it re-rendered the map on 68 of 450 walk frames.
+- An opened container's shut/open batch swap waits for the next snap to show in the map (`ponytail:`
+  in `moonTick`).
+- **TRAP for whoever reuses the report's harness:** `a4/setup.js`'s undo sets `moon.shadow.autoUpdate =
+  true`. Every run after the first walk measured an unfrozen moon until that line was removed.
+
+Measured on the Radeon, slot 6, god mode on (the walk dies otherwise):
+- **Walk** (49 cells): moon calls **11.3 → 2.4 per frame**, max submit 7.2 ms (no render-frame spike).
+- **Steady state:** shadow calls 10–17 → **0**. Interleaved against `autoUpdate = true`: office110
+  124 → 110 calls, submit −0.21 ms; parking 52 → 42, −0.17 ms; park 111 → 94 calls and 204k → 138k tris,
+  submit +0.12 ms (within park's run-to-run spread).
+- **Frozen vs a forced fresh render:** at 6 spots after arrival, and at two walk ends after up to 2
+  cells inside a snap, every diff is at or under control noise (max 0.021% vs noise 0.042%).
+
+Verdict: **landed.**

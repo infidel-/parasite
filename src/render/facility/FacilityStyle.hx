@@ -3015,6 +3015,10 @@ class FacilityStyle
   // bounding-sphere radius render.Models.cull tests each mast against. the head reaches 0.67 units
   // off the mast and the thing is LAMP_H tall, so half the height plus that clears it
   public static inline var LAMP_CULL_R = 3.6;
+  // the moon's shadow box moves in steps of this many cells and its map is frozen between them. the
+  // box has >= 8.5 cells of slack around the follow view and >= 6 around the tactical one, so a
+  // 4-cell step never lets the view reach its edge
+  public static inline var MOON_SNAP = 4;
   // where the light shaft starts along the bulb->ground axis (render.LightConeOpts.startFrac). the
   // street's own value is -0.1, which lifts the cone a tenth of the bulb height ABOVE the bulb —
   // right for a lamp whose glowing hood sits over its light position, wrong here, where LAMP_HEAD_Y

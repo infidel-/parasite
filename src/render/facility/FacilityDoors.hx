@@ -163,7 +163,16 @@ class FacilityDoors
 // per-frame: ease every opening toward its live state, turn its two leaves, and cull
   public static function tick(batches:Array<DoorBatch>, opts:Area3DTickOpts):Void
     {
+      swing(batches, opts);
+      cull(batches, opts, false);
+    }
+
+// ease every leaf toward its door's open state and pose the ones that moved. returns whether any did,
+// which is what tells a frozen shadow map that a leaf it holds has gone somewhere else
+  public static function swing(batches:Array<DoorBatch>, opts:Area3DTickOpts):Bool
+    {
       var step = opts.dtMs / (RenderConfig.BASE_MS * FacilityStyle.DOOR_SWING_MULT);
+      var moved = false;
       for (b in batches)
         {
           for (c in 0...b.open.length)
@@ -177,9 +186,17 @@ class FacilityDoors
               else continue;
               b.open[c] = t;
               pose(b, c);
+              moved = true;
             }
-          Models.cull(b.prop, opts.camera, FacilityStyle.DOOR_CULL_R);
         }
+      return moved;
+    }
+
+// the leaves' frustum cull; `all` packs every leaf for a frame a frozen shadow map renders on
+  public static function cull(batches:Array<DoorBatch>, opts:Area3DTickOpts, all:Bool):Void
+    {
+      for (b in batches)
+        Models.cull(b.prop, opts.camera, FacilityStyle.DOOR_CULL_R, null, all);
     }
 
 // write one opening's two leaf matrices from its eased state. composes in place, so nothing here

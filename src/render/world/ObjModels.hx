@@ -1482,8 +1482,9 @@ class ObjModels
 // per-frame prop pass: fade the prop the player is STANDING on to see-through so its body does not
 // hide the sprite (the tunnel camera looks near straight down and the exit ladder is a whole cell
 // tall), show the outline shells while the tactical view is up, then repack all three batches for the
-// frustum cull. call once per frame from the area kind's tick
-  public static function cull(batches:Array<PropBatch>, opts:Area3DTickOpts, tactical:Bool):Void
+// frustum cull. call once per frame from the area kind's tick. `all` packs every placement instead of
+// the camera's subset, for a frame on which a frozen shadow map renders (see Models.cull)
+  public static function cull(batches:Array<PropBatch>, opts:Area3DTickOpts, tactical:Bool, ?all:Bool):Void
     {
       var G = RenderConfig.PROP_GHOST;
       // the leave-outro despawns the area and reports cell 0/0 — a LEGAL grid cell, so it must not be
@@ -1526,8 +1527,8 @@ class ObjModels
           // cross-dissolve is impossible here and must not be attempted: the solid material is shared
           // by every other placement, so dimming it would dim every copy of the prop in the level
           b.ghost.mesh.material.opacity = 1 - b.t * (1 - G.alpha);
-          Models.cull(b.solid, opts.camera, CULL_R, b.solidMask);
-          Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask);
+          Models.cull(b.solid, opts.camera, CULL_R, b.solidMask, all);
+          Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask, all);
           Models.cull(b.hull, opts.camera, CULL_R, b.hullMask);
         }
     }

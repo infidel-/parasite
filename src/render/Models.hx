@@ -415,11 +415,13 @@ class Models {
 // the camera frustum (plus a per-instance radius margin) into the front of the buffer and cap count.
 // without this a single InstancedMesh draws every instance whenever any one is on screen.
 // `mask` (optional, indexed like the placements) additionally drops instances the caller wants held
-// back this frame — a lamp mid-outage swaps between the lit and the dead batch that way, for free
+// back this frame — a lamp mid-outage swaps between the lit and the dead batch that way, for free.
+// `all` skips the frustum test and packs every masked instance: a frame on which a FROZEN shadow map
+// renders has to see every caster, or that map keeps the hole until its next render
   static var _frustum = new Frustum();
   static var _projScreen = new Matrix4();
   static var _sph = new Sphere();
-  public static function cull(prop:InstancedProp, camera:PerspectiveCamera, radius:Float, ?mask:Array<Bool>):Void
+  public static function cull(prop:InstancedProp, camera:PerspectiveCamera, radius:Float, ?mask:Array<Bool>, ?all:Bool):Void
     {
       if (prop.mesh == null)
         return;
@@ -433,7 +435,8 @@ class Models {
           if (mask != null && !mask[i])
             continue;
           _sph.center.copy(prop.centres[i]);
-          if (!_frustum.intersectsSphere(_sph))
+          if (all != true &&
+              !_frustum.intersectsSphere(_sph))
             continue;
           prop.mesh.setMatrixAt(k, prop.matrices[i]);
           k++;
