@@ -799,6 +799,31 @@ class ObjModels
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
     },
+    // THE CORP STAIRS, a switchback over the stairs cell and the sealed one to its right: the well
+    // sinks under the floor (`sink`) into the hole CorpModel cuts there, and `off` puts back the
+    // footprint centre and the window correction (CorpStyle.STAIRS_*), Blender y flipped
+    {
+      keys: [ 'stairs' ],
+      path: RenderConfig.MODELS.corpStairs,
+      h: render.corp.CorpStyle.STAIRS_H,
+      sink: render.corp.CorpStyle.STAIRS_SINK,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        render.corp.CorpStyle.STAIRS_X,
+        -render.corp.CorpStyle.STAIRS_Y - render.corp.CorpStyle.STAIRS_WALL,
+      ],
+    },
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
     // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,
     // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, which

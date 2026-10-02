@@ -281,6 +281,10 @@ class FacilityModel
   // game.FacilityAreaGenerator.PARK_PATH_W wide; this is that with slack, and low enough that a
   // compound's own pavement never reads as one
   static inline var PATH_MAX = 4;
+  // the `fit` code of a cell with NO FLOOR: a stairwell, whose own model closes the hole under it.
+  // the floor pass skips that cell's cap and nothing else -- the strips its neighbours' walls hand it
+  // stay, so the hole is exactly the cell. high so no area kind's own furniture code meets it
+  public static inline var FIT_HOLE = 99;
 
 // build the model from an area's saved cells.
 //

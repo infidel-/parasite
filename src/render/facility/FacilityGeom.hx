@@ -699,8 +699,10 @@ class FacilityGeom
               }
             if (flatDeck)
               cap(roof, x0, x1, z0, z1, FacilityStyle.ROOF_Y, FacilityStyle.ROOF_TILE);
-            cap(floorBuf(m, col, row, floors),
-              x0, x1, z0, z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
+            // a stairwell's cell takes no floor: its model is the hole (FacilityModel.FIT_HOLE)
+            if (m.fit[row][col] != FacilityModel.FIT_HOLE)
+              cap(floorBuf(m, col, row, floors),
+                x0, x1, z0, z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
           }
 
       // one pane per RUN and not per cell, so the art's three panes span the whole opening exactly

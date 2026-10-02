@@ -849,6 +849,7 @@ class RenderConfig {
     corpCase: 'models/corp/case-cabinet.glb',  // carcass, two proud drawers, brass label holders, 324
     corpGunCabinet: 'models/corp/gun-cabinet.glb',            // security room, shut, 108
     corpGunCabinetOpen: 'models/corp/gun-cabinet-open.glb',   // and open, leaf swung, 264
+    corpStairs: 'models/corp/stairs.glb',                     // switchback over two cells, 924
     corpWallCam: 'models/corp/wall-cam.glb',                  // plate, arm, pitched bullet head, 124
     // AND THE RECORDS ROOM'S TWO, which stand in the ranks gen.corp.CorpRooms.archive lays and are
     // dealt one per rank (render.corp.CorpFurniture.archive). Both are glbs for the reason the

@@ -5059,6 +5059,70 @@
       "last_converted": "2026-09-30T20:57:26",
       "built_linear": 0.2213,
       "built_srgb": 79.9
+    },
+    "corp/stairs-tread": {
+      "src": "corp/stairs-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no screws, no labels, no panel borders, no corners, nothing that appears only once. TOP-LEFT, from DIRECTLY ABOVE: the TOP of an office STAIR TREAD \u2014 the upper three quarters of the quadrant is dark charcoal low-pile carpet with a fine even fibre grain, the bottom quarter is a brushed anodised aluminium anti-slip NOSING BAND with fine parallel grooves running left to right; the boundary between carpet and nosing is one straight horizontal line. ONLY HORIZONTAL BANDS: every column of this quadrant is identical, so it tiles seamlessly left to right. TOP-RIGHT, flat elevation: the RISER and side STRINGER of the same stair, a plain dark anodised aluminium sheet with a faint fine grain, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the WALL of a stairwell, smooth polished light-grey concrete with faint even trowel mottling, completely plain. BOTTOM-RIGHT, flat elevation: a BRUSHED STAINLESS STEEL handrail surface, mid grey with a fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the carpet the darkest, the concrete and stainless the lightest. HUE: everything PERFECTLY NEUTRAL grey \u2014 no colour cast, no blue. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-02T23:39:13",
+      "built_linear": 0.0562,
+      "built_srgb": 58.2
+    },
+    "corp/stairs-riser": {
+      "src": "corp/stairs-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        520,
+        8,
+        496,
+        496
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no screws, no labels, no panel borders, no corners, nothing that appears only once. TOP-LEFT, from DIRECTLY ABOVE: the TOP of an office STAIR TREAD \u2014 the upper three quarters of the quadrant is dark charcoal low-pile carpet with a fine even fibre grain, the bottom quarter is a brushed anodised aluminium anti-slip NOSING BAND with fine parallel grooves running left to right; the boundary between carpet and nosing is one straight horizontal line. ONLY HORIZONTAL BANDS: every column of this quadrant is identical, so it tiles seamlessly left to right. TOP-RIGHT, flat elevation: the RISER and side STRINGER of the same stair, a plain dark anodised aluminium sheet with a faint fine grain, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the WALL of a stairwell, smooth polished light-grey concrete with faint even trowel mottling, completely plain. BOTTOM-RIGHT, flat elevation: a BRUSHED STAINLESS STEEL handrail surface, mid grey with a fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the carpet the darkest, the concrete and stainless the lightest. HUE: everything PERFECTLY NEUTRAL grey \u2014 no colour cast, no blue. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-02T23:39:13",
+      "built_linear": 0.0562,
+      "built_srgb": 67.0
+    },
+    "corp/stairs-well": {
+      "src": "corp/stairs-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        8,
+        520,
+        496,
+        496
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no screws, no labels, no panel borders, no corners, nothing that appears only once. TOP-LEFT, from DIRECTLY ABOVE: the TOP of an office STAIR TREAD \u2014 the upper three quarters of the quadrant is dark charcoal low-pile carpet with a fine even fibre grain, the bottom quarter is a brushed anodised aluminium anti-slip NOSING BAND with fine parallel grooves running left to right; the boundary between carpet and nosing is one straight horizontal line. ONLY HORIZONTAL BANDS: every column of this quadrant is identical, so it tiles seamlessly left to right. TOP-RIGHT, flat elevation: the RISER and side STRINGER of the same stair, a plain dark anodised aluminium sheet with a faint fine grain, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the WALL of a stairwell, smooth polished light-grey concrete with faint even trowel mottling, completely plain. BOTTOM-RIGHT, flat elevation: a BRUSHED STAINLESS STEEL handrail surface, mid grey with a fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the carpet the darkest, the concrete and stainless the lightest. HUE: everything PERFECTLY NEUTRAL grey \u2014 no colour cast, no blue. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-02T23:39:13",
+      "built_linear": 0.26,
+      "built_srgb": 138.7
+    },
+    "corp/stairs-rail": {
+      "src": "corp/stairs-pack.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        520,
+        520,
+        496,
+        496
+      ],
+      "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. Every quadrant is a PLAIN MATERIAL SWATCH with NO placed features: no handles, no screws, no labels, no panel borders, no corners, nothing that appears only once. TOP-LEFT, from DIRECTLY ABOVE: the TOP of an office STAIR TREAD \u2014 the upper three quarters of the quadrant is dark charcoal low-pile carpet with a fine even fibre grain, the bottom quarter is a brushed anodised aluminium anti-slip NOSING BAND with fine parallel grooves running left to right; the boundary between carpet and nosing is one straight horizontal line. ONLY HORIZONTAL BANDS: every column of this quadrant is identical, so it tiles seamlessly left to right. TOP-RIGHT, flat elevation: the RISER and side STRINGER of the same stair, a plain dark anodised aluminium sheet with a faint fine grain, completely plain, one unbroken plane. BOTTOM-LEFT, flat elevation: the WALL of a stairwell, smooth polished light-grey concrete with faint even trowel mottling, completely plain. BOTTOM-RIGHT, flat elevation: a BRUSHED STAINLESS STEEL handrail surface, mid grey with a fine brushed grain running left to right, completely plain. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: all four MEDIUM-DARK in one narrow band, the carpet the darkest, the concrete and stainless the lightest. HUE: everything PERFECTLY NEUTRAL grey \u2014 no colour cast, no blue. [append textures.json style_corp then style]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-02T23:39:13",
+      "built_linear": 0.2062,
+      "built_srgb": 124.5
     }
   }
 }

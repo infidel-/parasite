@@ -707,3 +707,30 @@ submit office110 4.51 → 2.28 ms, park 4.67 → 2.09, parking 3.67 → 1.20; ca
 58 → 37; steady-state shadow calls 7–17 → 0; park GPU 7.3 → 4.7 ms.
 
 Verdict: **landed.**
+
+## The corp stairs: a two-cell switchback glb and a floor HOLE (`FacilityModel.FIT_HOLE`)
+
+The stairs were a flat ground-decal sprite (frame 9). Now a hand-modelled glb
+(`models-src/corp/stairs_build.py`, **924 tris**, `check` holes 0 / coplanar 0 / islands 1 /
+texel_off 0) over TWO cells: a 7-riser flight UP on the stairs cell (3.4 of 4.0 wide, run on to 3.6
+into the strip before the end window, ~30°) and a 6-riser flight DOWN into a well on the sealed cell
+to its right (`gen.corp.CorpTemp.stairsTwin`, `TILE_FLOOR_CARPET + 16`). Art is one packed gen,
+`corp/stairs-pack` → tread (carpet + alu nosing band), riser, well concrete, rail stainless.
+
+- **The hole is ONE floor cap.** `CorpModel.fitOf` answers the twin with `FacilityModel.FIT_HOLE`
+  (99) and `FacilityGeom` skips that cell's own cap only; the strips the neighbouring walls hand the
+  cell keep their floor, so the hole is exactly the cell and independent of wall thickness.
+- **Everything under the floor is built OVERSIZE** (well walls 0.4 thick, the down flight starting
+  0.4 under the front neighbour, running 1.0 under the back strip): the neighbours' floors hide it,
+  so the hole stays closed whichever way the placement lands, and no wall-thickness case has to fit.
+- **Trap: the WALL yaw's `wall()` correction.** The stairs always face the end WINDOW, so
+  `CorpArea.objWall` shifts the prop by `(GLASS_T − WALL_INNER)/2` = −0.1; `CorpStyle.STAIRS_WALL`
+  takes it back out in the row's `off`, with the bbox centre (2.3025, 0.4) and `sink` 2.8 / 7.8784.
+- **Trap: the post/bar flank gap.** An 0.08 post under a 0.1 bar leaves 0.01 per side — exactly
+  `check`'s threshold, 12 coplanar pairs. Post 0.06.
+- Ghost fade on the stairs cell keeps the well dark (no void through the hole); no `noGhost`.
+
+Seen in game at zoom 0 and 0.6: up flight, rails, nosings and the well read; no gap at the hole's
+edges. Calls not measured: one more instanced batch on a corp floor.
+
+Verdict: **landed.**

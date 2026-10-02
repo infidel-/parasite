@@ -1634,6 +1634,14 @@
       "note": "a wall-mounted CCTV camera for the tower's corridor corners (render.corp.CorpProps), hand-modelled: 124 tris, 0.26 x 0.88 x 0.42 -- a plate, an arm and a bullet head pitched 24 degrees down under a sun hood. Built ~1.6x a real one, the trinket rule. Wears corp/clutter-pack like the desk webcam (the same polymer, steel and amber at the same scale), so NO baseColor and NO lift; tex 256 as the other clutter-pack props. The red LED is a speck in CorpFurniture's leds buffer. buildlib.check: holes 0, coplanar 0, islands 1. models-src/corp/wall_cam_build.py.",
       "last_converted": "2026-09-29T23:33:55Z",
       "last_sig": "n1/-1/256/0.01/-/-"
+    },
+    "corp/stairs": {
+      "src": "corp/corp-stairs.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the corp floor's stairs (objects.Stairs, key stairs), hand-modelled: 924 tris, a switchback over TWO cells -- a 7-riser flight UP on the stairs cell (3.4 wide, narrower than the cell) and a 6-riser flight DOWN into a well over the sealed twin cell to its right (gen.corp.CorpTemp.stairsTwin), whose floor cap render.corp.CorpModel leaves out (FacilityModel.FIT_HOLE). Everything below the floor runs on past the hole under the neighbours' floors so the well stays closed. Built at WORLD SIZE, origin on the stairs cell centre; its footprint centre and its 2.8 under the floor are put back by CorpStyle.STAIRS_*. Wears stairs-sheet.png (tools/modelsheet.py over the BUILT corp/stairs-tread, -riser, -well and -rail labels), so NO baseColor and NO lift; each tread top takes the tread cell whole so the nosing lands on the edge you step off. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/corp/stairs_build.py.",
+      "last_converted": "2026-10-02T18:48:18Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
     }
   }
 }

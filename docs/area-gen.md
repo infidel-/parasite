@@ -81,7 +81,10 @@ area
 
 **The STAIRS are not a block and the lift is.** The test is whether anything about the thing is
 laid out: a lift is a fixed 3x3 assembly with a determined door, floor and glazing, and stairs are
-one cell with a model on it. A spawn intent is the right size for the second.
+one object with a model on it. A spawn intent is the right size for the second. The model takes TWO
+cells: the stairs' and the sealed one on its right facing the end wall (`CorpTemp.stairsTwin`,
+written LAST in `CorpBuilding.build`, since an earlier write is not corridor to the inner-wall pass);
+`AreaGame.migrateCorpStairs` seals it on older saves.
 
 **A zone writes no cells of its own.** The template that pushed it has already laid them; the node
 is there so the finished tree records WHERE the furniture went, which is what `--stats` counts.
