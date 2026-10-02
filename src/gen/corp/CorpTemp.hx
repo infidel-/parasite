@@ -117,6 +117,17 @@ class CorpTemp
   // OFFSET_ROW13), which is how the furniture cells are addressed
   public static inline var UNWALKABLE_TILE_OFFSET = 16;
 
+// the stairs' second cell: beside the stairs cell (x,y), on the right hand of someone facing the end
+// wall cell (wx,wy) — which is the +x side of the stairs model. game.AreaGame's load migration
+// asks the same thing of an old save
+  public static function stairsTwin(x: Int, y: Int, wx: Int, wy: Int): { x: Int, y: Int }
+    {
+      return {
+        x: x - (wy - y),
+        y: y + (wx - x),
+      };
+    }
+
 // the temp id -> final tile id map, used by CorpGen.finalizeTiles
   public static var finalTiles: Map<Int, Int> = [
     ROAD => Const.TILE_ROAD_UNWALKABLE,

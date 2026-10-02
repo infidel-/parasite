@@ -184,6 +184,35 @@ class AreaGame extends _SaveObject
       Inventory.loadOrphanCount += orphan.length;
 
       migrateCityGrid();
+      migrateCorpStairs();
+    }
+
+// save migration: corp stairs took ONE cell before the 3D model, which stands over two. seal the
+// second (gen.corp.CorpTemp.stairsTwin, beside the stairs facing the end wall) on floors saved
+// with it still walkable carpet
+  function migrateCorpStairs()
+    {
+      if (info.id != AREA_CORP ||
+          !isGenerated)
+        return;
+      for (o in _objects)
+        {
+          if (o.type != 'stairs')
+            continue;
+          for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+            {
+              var t = getCellType(o.x + d[0], o.y + d[1]);
+              if (t != Const.TILE_BUILDING &&
+                  !(t >= Const.TILE_CORP_WINDOW1 &&
+                  t <= Const.TILE_CORP_WINDOWV3))
+                continue;
+              var twin = gen.corp.CorpTemp.stairsTwin(o.x, o.y, o.x + d[0], o.y + d[1]);
+              if (getCellType(twin.x, twin.y) == Const.TILE_FLOOR_CARPET)
+                setCellType(twin.x, twin.y,
+                  Const.TILE_FLOOR_CARPET + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET);
+              break;
+            }
+        }
     }
 
 // save migration: older saves shrank city areas below the CityGen grid (GRID=100), leaving

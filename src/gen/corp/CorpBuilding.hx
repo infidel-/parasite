@@ -212,6 +212,13 @@ class CorpBuilding
       // and last, deal each room its kind. AFTER makeWindows, because that pass clears every room
       // back to bare floor before it draws the glazing and would wipe a template that ran first
       CorpBlocks.assign(state, node);
+
+      // and the stairs' SECOND CELL, which the model's down flight stands over: beside the stairs on
+      // the right hand of someone facing the end wall, sealed as the corridor carpet's unwalkable
+      // twin. LAST, because it is corridor to every pass above — written before the walls went up,
+      // the room cell behind it was never walled off from the corridor
+      var twin = stairsTwin(sx, sy, sx + delta.x, sy + delta.y);
+      cells[twin.x][twin.y] = Const.TILE_FLOOR_CARPET + UNWALKABLE_TILE_OFFSET;
     }
 
 // THE ROOMS A WC OR A SERVER ROOM MUST NOT BE DEALT TO: something else's only route runs through

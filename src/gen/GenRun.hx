@@ -311,6 +311,21 @@ class GenRun
         'lift has ' + ctx.countSpawns('elevator') + ' cells, want 9');
       check.ok(ctx.countSpawns('stairs') == 1,
         'corp floor has ' + ctx.countSpawns('stairs') + ' stairs, want 1');
+      // and the stairs take TWO cells: the stairs object against the end wall, and its sealed twin
+      // on the right hand facing that wall (CorpTemp.stairsTwin), where the model's down flight is
+      for (s in ctx.spawns)
+        if (s.type == 'stairs')
+          for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+            {
+              var t = ctx.cells[s.x + d[0]][s.y + d[1]];
+              if (t != Const.TILE_BUILDING &&
+                  !(t >= Const.TILE_CORP_WINDOW1 &&
+                  t <= Const.TILE_CORP_WINDOWV3))
+                continue;
+              var twin = gen.corp.CorpTemp.stairsTwin(s.x, s.y, s.x + d[0], s.y + d[1]);
+              check.ok(ctx.cells[twin.x][twin.y] == Const.TILE_FLOOR_CARPET + 16,
+                'stairs at ' + s.x + ',' + s.y + ' have no sealed twin at ' + twin.x + ',' + twin.y);
+            }
       // and every room carries the role its dealt kind says it does
       for (n in rooms)
         {
