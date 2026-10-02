@@ -794,3 +794,37 @@ the corridor, its twin); the stairs cell stays walkable and floored, under the u
 
 Verdict: **landed.** Calls not measured (still one instanced batch).
 
+
+## Lamp families weighted by how much of the texel is lamp (`PropGlow` lamps)
+
+Reported: the facility spaceship flickers, "showing yellow glowies", when the camera moves back, and
+so does the study console.
+
+- **Cause.** `PropGlow`'s lamp term matches the emissive MARKER map by normalised hue and then added
+  the family's full HDR colour (`color * glow * base`) to any texel whose max channel passed the 0.004
+  NaN gate. Value was thrown away by design so a `--modulate`d marker still matched. But mipmapping
+  makes value carry COVERAGE: a minified map averages each lamp into the black texels and gutter
+  round it, the hue survives the average, and a texel that is a tenth lamp lit as a whole lamp.
+  The lit area therefore grows with distance, and trilinear blending between two mip levels flips
+  texels in and out as the camera moves. The flicker was those texels changing.
+- **Measured off the shipped maps** (2x2 box mip chain, the family's own tol). Every lit mip-0 texel
+  is the flat marker value (ship 224, console 240). Share of matched texels at value ≤ 0.5:
+  - ship amber: 0% at mip 0, 18% at mip 2, 27% at mip 3, 42% at mip 4, 62% at mip 5.
+  - ship cyan: the same shape.
+  - console violet: 33-59% across mips 2-4.
+  - matched share of the ship texture: 3.7% at mip 0 → 5.8% at mip 4 → 12.9% at mip 6.
+- **Fix.** One line in the shader: `lw *= min(lmx / 0.85, 1.0)`. A fully covered texel still lights
+  at 100% because both markers are over 0.85, and a blended texel lights in proportion to its
+  coverage, so the emitted energy matches the lamp's true area at every mip. No uniform, no change to
+  the program cache key, no draw call.
+- **Measured live**, pinned free-cam over the ship (rig offset (0, 40.16, 16), and 2.5x that for
+  "pulled back"). Yellow-speck pixels on the hull, entrance excluded:
+  - before: near 5.0 and far 35.5 per 10k px (7x denser at range).
+  - after: near 1.4 and far 5.2.
+  - At range the entrance went from a blob back to its slotted shape. Near-pose bloom on the entrance
+    is unchanged to the eye, and the console readout is unchanged at both poses.
+- **Trap.** The `art/models.json` console note and this shader's own comment called the term "flat
+  over every matched texel" as if that were a property of the art. It holds only at mip 0. Any rule
+  about how a marker map lights has to hold at the mip the camera actually samples.
+
+Verdict: **bug, fixed.**

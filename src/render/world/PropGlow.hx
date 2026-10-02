@@ -549,7 +549,15 @@ class PropGlow
         // another's texels — and a three upgrade that starts decoding cannot silently kill this
         '    float ld = min( distance( lhue, propLampHue[ i ] ),\n' +
         '      distance( lhue, propLampHueL[ i ] ) );\n' +
-        '    float lw = 1.0 - smoothstep( propLampTol * 0.6, propLampTol, ld );\n' +
+        // and WEIGHTED BY HOW MUCH OF THE TEXEL IS LAMP, which is what the hue alone cannot say. A
+        // minified map averages a lamp into the black round it and the hue survives the average, so
+        // an unweighted match gave a texel that is a tenth lamp the whole family's HDR colour: the
+        // lit area grew with distance and trilinear flipped it in and out — "yellow glowies" all
+        // over the hull when the camera pulled back. Every shipped marker is painted flat at its
+        // own value (ship 224, console 240, both over 0.85), so a covered texel still lights fully.
+        // ponytail: one floor for every marker; a per-family uniform if a darker marker ever ships
+        '    float lw = ( 1.0 - smoothstep( propLampTol * 0.6, propLampTol, ld ) ) *\n' +
+        '      min( lmx / 0.85, 1.0 );\n' +
         '    vec4 lb = propLampBeat[ i ];\n' +
         // the beat, per family: its own rate, its own phase offset, and the per-INSTANCE phase on
         // top so two ships in one area never breathe together. `lb.x` is the steady floor the
