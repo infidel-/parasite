@@ -201,6 +201,7 @@ package three;
   public function setRenderTarget(target:Dynamic):Void; // bind an offscreen WebGLRenderTarget (null = default framebuffer); its color space is baked into every program's cacheKey
   public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
   public function compileAsync(scene:Scene, camera:Dynamic):Dynamic; // like compile() but parallel + non-blocking (KHR_parallel_shader_compile); returns a Promise resolving when programs are ready
+  public function initTexture(texture:Texture):Void; // upload a texture to the GPU now instead of on the first draw that samples it
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {

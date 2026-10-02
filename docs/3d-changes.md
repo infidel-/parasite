@@ -642,3 +642,34 @@ Measured on the Radeon, slot 6, god mode on (the walk dies otherwise):
   cells inside a snap, every diff is at or under control noise (max 0.021% vs noise 0.042%).
 
 Verdict: **landed.**
+
+## First-visit hitches: prime render of the fresh build, warm draws everything, maps upload on load
+
+A fresh-reload tour of 14 facility spots (lab-report §H harness) still spiked on first visits after the
+perf work above:
+
+| spot | before | after | what it was |
+|---|---|---|---|
+| hangar | 378 ms | 4 | rig cable program, 340 ms (never in the warm scene: it needs the real area's ship) |
+| office110 | 124 | 84 | the instanced decal program (left), plus clutter-sheet uploads |
+| washroom102 | 71 | 5 | stall panel's first draw, no new program (ANGLE links lazily), plus 10 uploads |
+| gate | 50 | 4 | lit window band program |
+| parking | 56 | 56 | UI path-line dot first draw (left) |
+| park | 43 | 56 | firefly program (left) |
+
+Three changes:
+- **`View.prime`.** Right after `buildFrom` builds the area, before any tick has culled a batch or a
+  chunk, it renders the composer once with `frustumCulled` off on everything and
+  `shadowMap.autoUpdate` off, behind the load cover. Every material the real build holds compiles
+  and links there. Shadows sit the frame out because a frozen moon map would otherwise bake casters the
+  culls are about to drop.
+- **`Warmup.compile`'s trailing render draws everything**, for the same lazy-link reason.
+- **`Textures.loadTexture` uploads on image load** (`renderer.initTexture`, with `Textures.renderer`
+  set in `View.ensureCore`). Every call makes a NEW Texture, so no warm upload ever served the real
+  build. Tour uploads went from 71 calls / 146 ms to 51 / 35 ms.
+
+Left: the instanced decal program (office110, patched per area on first paint), the firefly program
+(park), the UI path-line dot and the sprite pool's first draw. Tour run-to-run spread is wide
+(office110 94–152 ms on unchanged code), so read single spikes loosely.
+
+Verdict: **landed** (hangar, washroom and gate hitches gone; decal and firefly open).

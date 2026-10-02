@@ -14,11 +14,19 @@ import js.html.CanvasElement;
 // surface and being told which file to go and repaint is the whole point of that tool
 class Textures {
   static var loader = new TextureLoader();
+  // the persistent renderer, once render.View has made it: a loaded map is uploaded the moment its
+  // image lands rather than on the first frame something draws with it. every loadTexture call is a
+  // NEW Texture, so a warm scene's upload never served the real build, and a fresh tour paid 71
+  // uploads, 3-15 ms each, on the frames the player first looked at a room
+  public static var renderer:WebGLRenderer;
 
   public static function loadTexture(path:String, kind:String, repeat:Float = 1):Texture {
     var tex:Texture = null;
     var undef = js.Lib.undefined; // three checks `onLoad !== undefined`, so null would be called
-    tex = loader.load(path, undef, undef, function(_) {
+    tex = loader.load(path, function(t:Texture) {
+      if (renderer != null)
+        renderer.initTexture(t);
+    }, undef, function(_) {
       Browser.console.warn('[textures] "$path" missing — using procedural fallback for $kind');
       tex.image = proceduralCanvas(kind);
       tex.needsUpdate = true;

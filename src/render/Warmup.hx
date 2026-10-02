@@ -108,7 +108,21 @@ class Warmup
       return p.then(function(_)
         {
           renderer.setRenderTarget(null);
+          // nothing frustum-culled for this one render: compileAsync compiles but does not LINK on
+          // ANGLE (that waits for the first draw), and a map uploads only when something draws with
+          // it — so a warm that only drew the frustum left both to the first real frame they showed in
+          var culled:Array<Object3D> = [];
+          sc.traverse(function(o:Object3D)
+            {
+              if (o.frustumCulled)
+                {
+                  culled.push(o);
+                  o.frustumCulled = false;
+                }
+            });
           comp.render();
+          for (o in culled)
+            o.frustumCulled = true;
           comp.dispose();
           hold.push(sc);
           return null;

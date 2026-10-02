@@ -269,6 +269,7 @@ class View {
     if (core != null) return;
     core = SceneSetup.createCore(canvas, game.config.vidRenderScale / 100);
     renderer = core.renderer;
+    Textures.renderer = renderer;
     setExposure(game.config.vidBrightness); // the renderer is persistent, so this is the only place it needs applying
     camera = core.camera;
     rig = new CameraRig(game, camera);
@@ -698,7 +699,7 @@ class View {
         renderer.compileAsync(scene, camera).then(function(_)
           {
             warming = false;
-            composer.render();
+            prime();
             // remove the meshes (no per-frame draw cost) but DON'T dispose the materials — they are
             // retained in GasCloud3D.warmMats so their compiled programs stay cached for real bursts
             for (m in gasWarm)
@@ -710,8 +711,36 @@ class View {
           });
       }
     else
-      present();
+      {
+        prime();
+        present();
+      }
   }
+
+// draw the fresh build ONCE with nothing frustum-culled, behind the load cover and before any tick
+// has culled a batch or a chunk: every material it holds compiles AND LINKS here, and every map
+// uploads, instead of on the frame the player first looks at it. measured on a fresh tour: the
+// hangar rig's cable program cost 340 ms there, the gate's lit window band 45 ms, the washroom's stall
+// panel 27 ms with no new program at all (ANGLE links lazily, on first draw), plus 3-15 ms per first
+// texture upload. the shadow maps sit this frame out: with everything forced in, a frozen map would
+// bake casters the culls are about to drop
+  function prime():Void
+    {
+      var culled:Array<Object3D> = [];
+      scene.traverse(function(o:Object3D)
+        {
+          if (o.frustumCulled)
+            {
+              culled.push(o);
+              o.frustumCulled = false;
+            }
+        });
+      renderer.shadowMap.autoUpdate = false;
+      composer.render();
+      renderer.shadowMap.autoUpdate = true;
+      for (o in culled)
+        o.frustumCulled = true;
+    }
 
 // begin leaving: play the zoom-in outro over the frozen last frame, then hand off. the game
 // area is already despawned by the time this fires (so the outro reads no game state). called
