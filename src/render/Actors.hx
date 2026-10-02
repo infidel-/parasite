@@ -105,6 +105,7 @@ class Actors {
   static inline var TURN_SPEED = 2.0;                  // facing flip eases at this * base speed (full turn ~1 BASE_MS)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
   static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
+  static inline var DOC_YAW = 0.52;                    // a clue document lies up to this far off square (~30 deg), id-hashed
 
   public function new(game:Game, actorGroup:Group, camera:PerspectiveCamera)
     {
@@ -221,6 +222,10 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
+            // a clue document left on a worktop: a small stable turn off square, so a desk of them
+            // reads as papers put down rather than stamped. yaw only — an offset walks it off the bench
+            else if (Std.isOfType(o, objects.Document))
+              yaw = jitter(o.id, 1) * DOC_YAW;
             // a fitting the area kind stands OFF A WALL FACE rather than on its cell centre. the two
             // cannot both fire — a corpse does not lie on an impassable fitting cell — and the hook
             // answers null for every other cell and in every other area kind, so nothing is allocated
