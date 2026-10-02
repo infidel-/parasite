@@ -363,7 +363,7 @@ class CorpStyle
   // stairs OBJECT's cell, one off the end wall, which Models.normalize recentres away and ObjModels'
   // `off` puts back. that cell has no wall beside it, so CorpArea.objWall corrects nothing and the
   // well lands on its cells exactly
-  public static inline var STAIRS_H = 11.2261;
+  public static inline var STAIRS_H = 11.1861;
   public static inline var STAIRS_SINK = 6.6 / STAIRS_H;
   public static inline var STAIRS_X = 2.0;
   public static inline var STAIRS_Y = 2.54;

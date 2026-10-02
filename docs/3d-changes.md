@@ -778,10 +778,16 @@ the corridor, its twin); the stairs cell stays walkable and floored, under the u
   143 × 477 px/unit (grain stretched 3.3:1) beside the stringer's tiled 243 × 243, and a 3.5-deep
   landing wore a 0.74-deep nosing. Split: the label's carpet square TILES like every other face
   (~186 px/unit, laid before `grid_cut`) and its ribbed band is a 0.14 nosing STRIP of its own,
-  mapped whole — the ribs run along u, so its length stretch is invisible. 2,396 tris (+568),
-  `texel_worst` 1.89 → 1.43.
-- **The well's DARKNESS is COLOR_0**, baked by depth in the build (1 at the floor, smoothstep to 0
-  at −5.5): the bottom of the next flight down reads as black and not as a wall, for no draw call
+  mapped whole — the ribs run along u, so its length stretch is invisible.
+- **Trap: a tread is not flush unless it is flush on THREE sides.** The slabs ran 0.27 short of the
+  up body's flank (half-width 1.7 on a body to −2.0) and their nosing 0.04 proud of the riser, and
+  at 0.06 thick they read as a second step laid on the first. Now 0.02 thick, flush over the riser,
+  and the body's own span plus 0.012 at each end — not 0: a slab end exactly on the body's STEPPED
+  flank is a non-convex face, and `check`'s separating-axis overlap test reported 40 false pairs
+  there. Each landing is one slab over both lanes, the carpet tiling so its shape turns nothing.
+  2,376 tris, `check` 0 / 0 / 1 / 0.
+- **The well's DARKNESS is COLOR_0**, baked by depth in the build (1 at the floor, (1 − z/−4.5)² to
+  0 at −4.5, falling fastest at the top: a smoothstep to −5.5 left the first metre of the well lit): the bottom of the next flight down reads as black and not as a wall, for no draw call
   and no texture (three's `USE_COLOR`, carried by `Models.toLambert`). Blender's exporter only
   writes a colour attribute a material reads, so the script passes `export_vertex_color="ACTIVE"`;
   `make models` keeps it (no `ao` on this entry to overwrite it).
