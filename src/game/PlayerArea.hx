@@ -281,15 +281,23 @@ class PlayerArea extends _SaveObject
 // do a player action
 // action energy availability is checked when the list is formed
 // all item-pickup actions offered by objects on the player's own tile (body loot + loose
-// pickups). used both to group them (one Get vs submenu) and to fill the open submenu
+// pickups), plus those of a pickup next to it that is worked from beside it. used both to group them (one Get vs submenu) and to fill the open submenu
   public function getTileItemActions(): Array<_PlayerAction>
     {
       // no known() gate: unknown items are grabbable too (they show as their unknown name,
       // same as loot on a searched body). each object's getItemActions() applies its own rule
       var list: Array<_PlayerAction> = [];
-      for (o in game.area.getObjectsAt(x, y))
-        for (a in o.getItemActions())
-          list.push(a);
+      // a pickup that is worked from BESIDE it counts too: a clue document or a ship part lying on a
+      // lab table sits on a tile nobody can stand on. the radius-2 + chebyshev pair is the object
+      // loop's own, for its own reason (no integer radius reaches the diagonals alone)
+      for (o in game.area.getObjectsInRadius(x, y, 2, false))
+        {
+          if (Std.int(Math.max(Math.abs(o.x - x), Math.abs(o.y - y))) > 1 ||
+              ((o.x != x || o.y != y) && !o.canActivateNear()))
+            continue;
+          for (a in o.getItemActions())
+            list.push(a);
+        }
       return list;
     }
 
