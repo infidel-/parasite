@@ -488,8 +488,8 @@ class CorpModel
       // twin is already the rack
       if (t == Const.TILE_CORP_LOCKER)
         return CorpFurniture.FIT_LOCKER;
-      // and the corridor carpet's twin, which is the stairs' second cell and nothing else
-      // (gen.corp.CorpTemp.stairsTwin): the down flight's well, so no floor there
+      // and the corridor carpet's twin, which is the stairs' well and nothing else
+      // (gen.corp.CorpTemp.stairsCells): no floor there
       if (t == Const.TILE_FLOOR_CARPET + 16)
         return FacilityModel.FIT_HOLE;
       return 0;

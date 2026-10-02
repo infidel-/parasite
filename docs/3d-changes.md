@@ -710,6 +710,8 @@ Verdict: **landed.**
 
 ## The corp stairs: a two-cell switchback glb and a floor HOLE (`FacilityModel.FIT_HOLE`)
 
+> SUPERSEDED by "The corp stairs as a 2x2 U-stairwell, cut away"
+
 The stairs were a flat ground-decal sprite (frame 9). Now a hand-modelled glb
 (`models-src/corp/stairs_build.py`, **924 tris**, `check` holes 0 / coplanar 0 / islands 1 /
 texel_off 0) over TWO cells: a 7-riser flight UP on the stairs cell (3.4 of 4.0 wide, run on to 3.6
@@ -734,3 +736,31 @@ Seen in game at zoom 0 and 0.6: up flight, rails, nosings and the well read; no 
 edges. Calls not measured: one more instanced batch on a corp floor.
 
 Verdict: **landed.**
+
+## The corp stairs as a 2x2 U-stairwell, cut away
+
+Reported on the two-cell model: the down flight ended on a WALL, the corridor cell in front of the
+well covered its lower half, and the window cell's floor strip (1.5 wide, laid by `floorStrips` off
+the twin's own floor) hung in mid-air over the well's back. Now a real U-stair over FOUR cells
+(`models-src/corp/stairs_build.py`, **1,828 tris**, `check` 0 / 0 / 1 / 0): both flights start at
+the corridor edge and run to the window, 6 treads at 0.45 × 1.0 then a landing at ±3.15 that spans
+BOTH lanes; off the down landing the next flight down doubles back UNDER the up flight, off the up
+landing the next flight up doubles back OVER the down flight and is cut after 3 steps (a section, or
+it roofs the down flight over). Sealed cells: `gen.corp.CorpTemp.stairsCells` (twin, the cell toward
+the corridor, its twin); the stairs cell stays walkable and floored, under the up flight's body.
+
+- **The well stops ON the cell edges now.** The old oversize ran the well 1.4 under the window strip,
+  which is exactly what hung. With the walls on the edges every wall cell's strip is a LEDGE round the
+  well instead, so `FacilityGeom` needed no change: no strip skipping.
+- **Trap: a FINAL id written before finalize is read as a ROOM ID.** Sealing the well before the
+  doors (so no room opens onto it) with `TILE_FLOOR_CARPET + 16` = 215 broke 86 seeds — room ids
+  are stamped from 100 up, so doors named "room 215" and later passes reopened the well. A temp id
+  of its own, `CorpTemp.BLDG_WELL` (47, mapped in `finalTiles`), and `doorSpots` refusing any spot
+  touching it: 3000 seeds clean, with a new oracle check that no door spawn touches a well cell.
+- **The game camera's yaw is fixed** (`CameraRig` orbits ±`orbitYawMax` only), so a floor is seen
+  from the corridor, from the window side or from either flank; checked all four with the free cam.
+  From the corridor the down landing sits under the stub, visible but unlit at −3.15.
+- `CorpStyle.STAIRS_*`: h 11.2261, sink 6.6 / h, bbox centre (2.0, −1.4).
+
+Verdict: **landed.** Calls not measured (still one instanced batch).
+

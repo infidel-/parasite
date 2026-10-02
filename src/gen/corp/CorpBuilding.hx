@@ -201,6 +201,14 @@ class CorpBuilding
               nextTo(cells, x, y, BLDG_CORRIDOR))
             cells[x][y] = BLDG_INNER_WALL;
 
+      // and the stairs' well, the three cells round the stairs cell the model's flights stand over
+      // (stairsCells), sealed as BLDG_WELL, which finalises to the corridor carpet's unwalkable twin.
+      // AFTER the walls, or the room cell behind them is never walled off from the corridor, and
+      // BEFORE the doors, or a room gets its door onto the well -- and a security room its second
+      // one from CorpConnect's repair
+      for (c in stairsCells(sx, sy, sx + delta.x, sy + delta.y))
+        cells[c.x][c.y] = BLDG_WELL;
+
       // halve whatever came out oversized
       subdivideLargeRooms(state, bx, by, bw, bh);
       replaceTiles(cells, bx, by, bw, bh, BLDG_ROOM_MARKED, BLDG_ROOM);
@@ -212,13 +220,6 @@ class CorpBuilding
       // and last, deal each room its kind. AFTER makeWindows, because that pass clears every room
       // back to bare floor before it draws the glazing and would wipe a template that ran first
       CorpBlocks.assign(state, node);
-
-      // and the stairs' SECOND CELL, which the model's down flight stands over: beside the stairs on
-      // the right hand of someone facing the end wall, sealed as the corridor carpet's unwalkable
-      // twin. LAST, because it is corridor to every pass above — written before the walls went up,
-      // the room cell behind it was never walled off from the corridor
-      var twin = stairsTwin(sx, sy, sx + delta.x, sy + delta.y);
-      cells[twin.x][twin.y] = Const.TILE_FLOOR_CARPET + UNWALKABLE_TILE_OFFSET;
     }
 
 // THE ROOMS A WC OR A SERVER ROOM MUST NOT BE DEALT TO: something else's only route runs through
@@ -441,6 +442,13 @@ class CorpBuilding
                 cnt++;
             }
           if (cnt > 2)
+            continue;
+          // and none onto the stairs' well
+          var well = false;
+          for (i in 0...Const.dir4x.length)
+            if (cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]] == BLDG_WELL)
+              well = true;
+          if (well)
             continue;
           out.push(s);
         }

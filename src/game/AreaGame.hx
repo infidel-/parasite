@@ -187,9 +187,9 @@ class AreaGame extends _SaveObject
       migrateCorpStairs();
     }
 
-// save migration: corp stairs took ONE cell before the 3D model, which stands over two. seal the
-// second (gen.corp.CorpTemp.stairsTwin, beside the stairs facing the end wall) on floors saved
-// with it still walkable carpet
+// save migration: corp stairs took ONE cell before the 3D model, which stands over four. seal the
+// other three (gen.corp.CorpTemp.stairsCells, beside and in front of the stairs facing the end wall)
+// on floors saved with them still walkable carpet
   function migrateCorpStairs()
     {
       if (info.id != AREA_CORP ||
@@ -206,10 +206,10 @@ class AreaGame extends _SaveObject
                   !(t >= Const.TILE_CORP_WINDOW1 &&
                   t <= Const.TILE_CORP_WINDOWV3))
                 continue;
-              var twin = gen.corp.CorpTemp.stairsTwin(o.x, o.y, o.x + d[0], o.y + d[1]);
-              if (getCellType(twin.x, twin.y) == Const.TILE_FLOOR_CARPET)
-                setCellType(twin.x, twin.y,
-                  Const.TILE_FLOOR_CARPET + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET);
+              for (c in gen.corp.CorpTemp.stairsCells(o.x, o.y, o.x + d[0], o.y + d[1]))
+                if (getCellType(c.x, c.y) == Const.TILE_FLOOR_CARPET)
+                  setCellType(c.x, c.y,
+                    Const.TILE_FLOOR_CARPET + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET);
               break;
             }
         }

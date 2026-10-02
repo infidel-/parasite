@@ -74,6 +74,9 @@ class CorpTemp
   // a server rack, which blocks sight: Const.TILE_RACK_HIGH is 15, under the chem-lab band, so it
   // goes through this map the way ARCHIVE_HIGH does
   public static inline var RACK_HIGH = 46;
+  // the stairs' well (stairsCells): a temp id of its own from the walls on, so no pass reads it as
+  // corridor or, finalised early, as a room id -- the carpet's twin is 215, inside their range
+  public static inline var BLDG_WELL = 47;
 
   // room ids are stamped into the grid as marks, above every temp id so the two never collide
   public static inline var BLDG_ROOM_ID_START = 100;
@@ -128,6 +131,23 @@ class CorpTemp
       };
     }
 
+// the cells the stairs model's well seals, beside and in front of the stairs cell (x,y) whose end
+// wall is (wx,wy): its twin, the cell toward the corridor, and that one's twin. The stairs cell itself
+// stays walkable, it is where the object is used
+  public static function stairsCells(x: Int, y: Int, wx: Int, wy: Int): Array<{ x: Int, y: Int }>
+    {
+      var fx = x - (wx - x);
+      var fy = y - (wy - y);
+      return [
+        stairsTwin(x, y, wx, wy),
+        {
+          x: fx,
+          y: fy,
+        },
+        stairsTwin(fx, fy, x, y),
+      ];
+    }
+
 // the temp id -> final tile id map, used by CorpGen.finalizeTiles
   public static var finalTiles: Map<Int, Int> = [
     ROAD => Const.TILE_ROAD_UNWALKABLE,
@@ -147,6 +167,7 @@ class CorpTemp
     RECEPTION => Const.TILE_FLOOR_RECEPTION,
     RECEPTION_COUNTER => Const.TILE_CORP_RECEPTION_COUNTER,
     RACK_HIGH => Const.TILE_RACK_HIGH,
+    BLDG_WELL => Const.TILE_FLOOR_CARPET + UNWALKABLE_TILE_OFFSET,
     BLDG_WALL => Const.TILE_BUILDING,
     BLDG_ROOM => Const.TILE_FLOOR_CARPET,
     BLDG_CORRIDOR => Const.TILE_FLOOR_CARPET,

@@ -799,7 +799,7 @@ class ObjModels
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
     },
-    // THE CORP STAIRS, a switchback over the stairs cell and the sealed one to its right: the well
+    // THE CORP STAIRS, a U-stairwell over the stairs cell and the three sealed round it: the well
     // sinks under the floor (`sink`) into the hole CorpModel cuts there, and `off` puts back the
     // footprint centre and the window correction (CorpStyle.STAIRS_*), Blender y flipped
     {
