@@ -3019,6 +3019,9 @@ class FacilityStyle
   // box has >= 8.5 cells of slack around the follow view and >= 6 around the tactical one, so a
   // 4-cell step never lets the view reach its edge
   public static inline var MOON_SNAP = 4;
+  // the merged meshes' range-cull block, in cells. 8 measured best in the prototype; a block test
+  // is ~nothing, and smaller blocks only fragment the one range a mesh draws
+  public static inline var RANGE_BLOCK = 8;
   // where the light shaft starts along the bulb->ground axis (render.LightConeOpts.startFrac). the
   // street's own value is -0.1, which lifts the cone a tenth of the bulb height ABOVE the bulb —
   // right for a lamp whose glowing hood sits over its light position, wrong here, where LAMP_HEAD_Y

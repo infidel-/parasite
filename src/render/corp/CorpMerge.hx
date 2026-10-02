@@ -67,12 +67,14 @@ class CorpMerge
     }
 
 // can this mesh join a bucket at all: an opaque, front-faced, plainly mapped lambert at its parent's
-// origin, over the attribute set every emitter writes
+// origin, over the attribute set every emitter writes, that its owner has not held back with
+// `userData.noMerge` (a mesh something else still hides or fades on its own)
   static function fits(m:Dynamic):Bool
     {
       if (m.isMesh != true ||
           m.isInstancedMesh == true ||
           m.visible != true ||
+          m.userData.noMerge == true ||
           Std.isOfType(m.material, Array))
         return false;
       var mat:Dynamic = m.material;

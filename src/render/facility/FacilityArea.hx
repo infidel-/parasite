@@ -155,6 +155,7 @@ class FacilityArea implements Area3D
   var moonFocus = new Vector3();                // ^ as the point fitMoon aims at
   var moonLanded = -1;                          // glb batches landed at the moon's last render
   var casters:Array<render.Models.InstancedProp>; // every glb batch moonTick counts landings over, built on first use
+  var ranges:Array<render.RangeCull.RangeMesh>; // the merged meshes, range-culled per frame; null until merge() lands
 
   public function new(game:Game, model:Facility)
     {
@@ -787,6 +788,10 @@ class FacilityArea implements Area3D
       // compound drew every cone from everywhere — 0 px indoors and at the lot, at full cost
       for (c in lamps.cones)
         render.LightCone.cull(c, opts.camera);
+      if (ranges == null)
+        merge();
+      else
+        render.RangeCull.cull(ranges, opts.camera, all);
       for (p in green)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R, null, all);
       // and the roof's four batches, which take the frustum test with a MASK on top of it: a
@@ -883,6 +888,26 @@ class FacilityArea implements Area3D
             }
         }
       return moved;
+    }
+
+// the compound's per-texture meshes onto texture arrays, one mesh per material (render.corp.CorpMerge),
+// then each cut into FacilityStyle.RANGE_BLOCK-cell blocks for the range cull. waits until every
+// candidate's map has loaded. the roofs stay out: they fade and hide on their own, per structure
+  function merge():Void
+    {
+      for (s in shells)
+        for (m in s.roof)
+          m.userData.noMerge = true;
+      if (render.corp.CorpMerge.merge(built, false) < 0)
+        return;
+      ranges = [];
+      built.traverse(function(o:Object3D)
+        {
+          if (o.userData.layerMaps != null)
+            ranges.push(render.RangeCull.build(cast o, FacilityStyle.RANGE_BLOCK * citygen.CityConfig.CELL));
+        });
+      // the merged casters replace their members in the frozen map
+      moon.shadow.needsUpdate = true;
     }
 
 // the moon's box follows the player on a FacilityStyle.MOON_SNAP-cell grid and its map stays frozen

@@ -104,6 +104,7 @@ package three;
   public function new();
   public function setFromProjectionMatrix(m:Matrix4):Frustum;
   public function intersectsSphere(s:Sphere):Bool;
+  public function intersectsBox(b:Box3):Bool; // is any part of this world-space box inside the frustum
 }
 
 @:native("THREE.Color") extern class Color {
@@ -160,6 +161,7 @@ package three;
   public function setFromObject(o:Object3D):Box3;
   public function getSize(target:Vector3):Vector3;
   public function getCenter(target:Vector3):Vector3;
+  public function expandByPoint(p:Vector3):Box3; // grow the box to contain this point (a fresh Box3 is empty)
 }
 
 @:native("THREE.Scene") extern class Scene extends Object3D {

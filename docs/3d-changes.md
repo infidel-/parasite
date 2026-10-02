@@ -673,3 +673,37 @@ Left: the instanced decal program (office110, patched per area on first paint), 
 (office110 94–152 ms on unchanged code), so read single spikes loosely.
 
 Verdict: **landed** (hangar, washroom and gate hitches gone; decal and firefly open).
+
+## Facility per-texture meshes merged (`CorpMerge`) and range-culled inside the merge (`RangeCull`)
+
+61 of the facility's 87 non-instanced meshes were compound-wide merges (radius 50–176). `Chunks` skips
+anything over 64, so they drew from everywhere, and the generous spheres were where most of the
+zero-pixel draws came from (lab-report §B). Chunking them was measured worse (office110T 153 → 298
+calls). What landed:
+
+- **`CorpMerge.merge` on the facility** (`FacilityArea.merge`, retried each tick until every map has
+  loaded): 44 meshes → 4 (walls/casework/signage/ground, floors, casters, non-fading decks). Roof
+  members are held back with the new `userData.noMerge` (checked in `CorpMerge.fits`), because they
+  fade and hide per structure. `FacilityWarm` runs `CorpMerge.merge(sc, true)` so the `|layers`
+  programs are warm.
+- **`render.RangeCull`**: each merged mesh's index is re-sorted IN PLACE by 8-cell block
+  (`FacilityStyle.RANGE_BLOCK`), keeping each block's index span and world box. Per frame it draws from
+  the first block in frame to the last, or leaves the list when none is. A **casting** mesh's
+  `onBeforeShadow`/`onAfterShadow` put the full range back for every shadow pass. On a shadow-render
+  frame (`all`) an empty caster stays listed. Calls can only go down and sort order is untouched.
+- Skipped from the prototype: the roof-on gate. It is not pixel-clean, and with a clean margin it is
+  worth 0…−4 calls.
+
+Measured on the Radeon (canvas 1040x647), slot 6:
+- **Calls**, merged against the phase-5 state (cross-reload; calls are deterministic): office110 110 → 84,
+  park 94 → 76, parking 42 → 37.
+- **Range cull against merge-only**, interleaved: same calls, tris −9…−16k, **GPU −0.4…−0.9 ms**
+  (office110 5.04 → 4.58, parking 4.17 → 3.30, hangar 6.67 → 5.75), submit 0…−0.24 ms.
+- **Pixel diff** range against no-range: 0–0.007% (control 0–0.19%). The moon map re-rendered with and
+  without the range cull is the same within noise at park/office110/gate/overlookT.
+
+**Whole stack** (§A–§H, this session's entries; Radeon, cross-session against the phase-1 "old" arm):
+submit office110 4.51 → 2.28 ms, park 4.67 → 2.09, parking 3.67 → 1.20; calls 129 → 84, 116 → 76,
+58 → 37; steady-state shadow calls 7–17 → 0; park GPU 7.3 → 4.7 ms.
+
+Verdict: **landed.**

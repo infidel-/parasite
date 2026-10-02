@@ -121,6 +121,9 @@ class FacilityWarm
       var fx = new Group();
       sc.add(fx);
       new render.particles.MuzzleLights(fx);
+      // and the merged buckets the live compound collapses into once its maps land (FacilityArea.merge):
+      // each is its bucket's program plus the texture-array patch, a key nothing above compiles
+      render.corp.CorpMerge.merge(sc, true);
       // and off again: the glb callbacks below re-attach around themselves, and nothing else in this
       // process may warm with an indoor swap the area it belongs to does not render with
       IndoorMask.detach();
