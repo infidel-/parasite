@@ -439,6 +439,9 @@ class Models {
           k++;
         }
       prop.mesh.count = k;
+      // an empty batch leaves the render list: at count 0 three still binds its program, uniforms and
+      // VAO and skips only the draw, ~20-25 us a batch, and 32-57 of them sat empty every facility frame
+      prop.mesh.visible = k > 0;
       untyped prop.mesh.instanceMatrix.needsUpdate = true;
     }
 

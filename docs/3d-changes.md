@@ -504,3 +504,29 @@ stands half a unit inside the ring plane the drop hangs on. 96 quads on the prob
   `glass-dark`. The merge now keeps `userData.layerMaps` and the probe picks the face's `layer`.
 
 Verdict: **landed** (layers and UVs read back live; look not yet signed off).
+
+## Empty instanced batches leave the render list (`Models.cull`)
+
+`Models.cull` capped `count` at the visible instance count but left the mesh `visible`, so a batch
+with nothing in frame still went through three's full per-object setup — program, uniforms, VAO —
+and was skipped only at the draw. It counts as **0 calls**, which is why no census ever showed it:
+the facility had 32–57 such batches every frame (lab-report §A). One line now sets
+`visible = count > 0` after the pack. It covers every caller at once: facility glbs and roof
+clutter, lamps, doors, city lamp batches, wild props and `ObjModels` solid/ghost/hull.
+
+- Shadows are unaffected: a `cull` batch only ever cast its camera subset, so an empty one cast
+  nothing. `cullExact` keeps its own `keep` rule.
+- Checked: nothing else in the game writes `visible` on a culled batch (the facility roof fade and
+  `Occlusion` act on shell meshes), and the warm scenes never run `cull`, so no program is skipped.
+
+Measured on the 3050 Ti in one session, slot 6, interleaved old/new (old = the shipped `cull` plus
+`visible = true`), 4 rounds × 40 frames, 60 fps gate: calls and tris identical at every spot.
+
+| spot | submit old → new (mean ms) |
+|---|---|
+| parking | 3.67 → 2.06 |
+| park | 4.67 → 3.33 |
+| office110 | 4.51 → 3.70 |
+| lab115 | 4.78 → 2.75 |
+
+Verdict: **landed.**
