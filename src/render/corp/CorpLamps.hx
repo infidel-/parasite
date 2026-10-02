@@ -131,12 +131,14 @@ class CorpLamps
           {
             // the circulation surface AND the lift lobby, and never a doorway: a door cell carries
             // the corridor's own finish whichever way it faces (FacilityGeom paints its reveal in
-            // it), and is a piece of circulation rather than somewhere to hang a fitting
+            // it), and is a piece of circulation rather than somewhere to hang a fitting. nor over
+            // the stairs' well, where the flights climb into it
             var s = m.surf[row][col];
             if (!FacilityModel.inside(m, col, row) ||
                 (s != Surf.CARPET && s != Surf.LIFT) ||
                 !FacilityModel.isInterior(m, col, row) ||
                 FacilityModel.isDoor(m, col, row) ||
+                m.fit[row][col] == FacilityModel.FIT_HOLE ||
                 near(seen, col, row))
               continue;
             seen.push({

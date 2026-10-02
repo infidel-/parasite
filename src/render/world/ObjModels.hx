@@ -799,9 +799,10 @@ class ObjModels
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
     },
-    // THE CORP STAIRS, a U-stairwell over the stairs cell and the three sealed round it: the well
-    // sinks under the floor (`sink`) into the hole CorpModel cuts there, and `off` puts back the
-    // footprint centre and the window correction (CorpStyle.STAIRS_*), Blender y flipped
+    // THE CORP STAIRS, a U-stairwell over the four sealed cells of its well, the object on the one
+    // off the end wall: the well sinks under the floor (`sink`) into the hole CorpModel cuts there,
+    // and `off` puts back the footprint centre off the object's cell (CorpStyle.STAIRS_*), Blender
+    // y flipped. no window correction: the object has no wall beside it
     {
       keys: [ 'stairs' ],
       path: RenderConfig.MODELS.corpStairs,
@@ -821,7 +822,7 @@ class ObjModels
       tether: null,
       off: [
         render.corp.CorpStyle.STAIRS_X,
-        -render.corp.CorpStyle.STAIRS_Y - render.corp.CorpStyle.STAIRS_WALL,
+        -render.corp.CorpStyle.STAIRS_Y,
       ],
     },
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips

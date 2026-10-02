@@ -760,7 +760,20 @@ the corridor, its twin); the stairs cell stays walkable and floored, under the u
 - **The game camera's yaw is fixed** (`CameraRig` orbits ±`orbitYawMax` only), so a floor is seen
   from the corridor, from the window side or from either flank; checked all four with the free cam.
   From the corridor the down landing sits under the stub, visible but unlit at −3.15.
-- `CorpStyle.STAIRS_*`: h 11.2261, sink 6.6 / h, bbox centre (2.0, −1.4).
+- **All four cells are sealed and the object stands OFF the wall**, on the corridor-side cell of
+  the up lane, used from any of its eight neighbours (`Stairs.canActivateNear`; the AI's leave-area
+  command targets those neighbours too). With no wall beside it the WALL yaw finds the end wall
+  ACROSS the well instead (`CorpArea.objYaw`: a hole cell whose right-hand twin is a hole too, then
+  the wall — the twin test is what tells the end window from the side wall past the twin), and
+  `objWall`'s glass correction is 0, so `STAIRS_WALL` is gone. `CorpStyle.STAIRS_*`: h 11.2261,
+  sink 6.6 / h, bbox centre (2.0, 2.54) off the object's cell.
+- **Trap: a flat face takes u on its LONGEST edge** (`buildlib.frame`). The up landing's tread was
+  3.46 wide by 3.64 deep and wore its art 90° against the landing beside it; it now spans the body's
+  full 3.76.
+- **Trap: the window's glass is INSET behind its slab face.** The up landing ran to 3.6, 0.1 into
+  the slab, and showed through the pane: it stops at 3.48 now.
+- **No corridor lamp over the well** (`CorpLamps.corridors` skips `FIT_HOLE`): a panel hung over the
+  flights.
 
 Verdict: **landed.** Calls not measured (still one instanced batch).
 

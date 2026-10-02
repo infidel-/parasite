@@ -77,4 +77,8 @@ class Stairs extends AreaObject
 
   public override function known() :Bool
     { return true; }
+
+// the corp stairs stand over a sealed well, so they are used from beside it
+  public override function canActivateNear(): Bool
+    { return true; }
 }

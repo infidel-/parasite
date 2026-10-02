@@ -457,8 +457,29 @@ class CorpArea implements Area3D
               return Math.PI / 2;
             if (FacilityModel.isWall(model, col + 1, row))
               return -Math.PI / 2;
+            // and the stairs, which stand one cell off their end wall over a sealed well: the wall
+            // two cells off, across a well cell whose right-hand twin (gen.corp.CorpTemp.stairsTwin)
+            // is well too -- which is what tells the end wall from the side wall past the twin
+            var dirs = [ [ 0, -1, 0.0 ], [ 0, 1, Math.PI ], [ -1, 0, Math.PI / 2 ],
+              [ 1, 0, -Math.PI / 2 ] ];
+            for (d in dirs)
+              {
+                var dx = Std.int(d[0]);
+                var dy = Std.int(d[1]);
+                if (hole(col + dx, row + dy) &&
+                    hole(col + dx - dy, row + dy + dx) &&
+                    FacilityModel.isWall(model, col + 2 * dx, row + 2 * dy))
+                  return d[2];
+              }
             return 0;
         }
+    }
+
+// whether a cell is the stairs' well (FacilityModel.FIT_HOLE)
+  function hole(col:Int, row:Int):Bool
+    {
+      return FacilityModel.inside(model, col, row) &&
+        model.fit[row][col] == FacilityModel.FIT_HOLE;
     }
 
 // the per-frame world tick. no occlusion, no reveal ease and, in this phase, no lamps to pool —

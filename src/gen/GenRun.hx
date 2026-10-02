@@ -311,28 +311,34 @@ class GenRun
         'lift has ' + ctx.countSpawns('elevator') + ' cells, want 9');
       check.ok(ctx.countSpawns('stairs') == 1,
         'corp floor has ' + ctx.countSpawns('stairs') + ' stairs, want 1');
-      // and the stairs take FOUR cells: the stairs object against the end wall, and the three of its
-      // well sealed round it (CorpTemp.stairsCells), where the model's flights are
+      // and the stairs take FOUR sealed cells (CorpTemp.stairsCells), where the model's flights
+      // are, with the object one cell off the end window and the window two cells off it
       for (s in ctx.spawns)
         if (s.type == 'stairs')
-          for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
-            {
-              var t = ctx.cells[s.x + d[0]][s.y + d[1]];
-              if (t != Const.TILE_BUILDING &&
-                  !(t >= Const.TILE_CORP_WINDOW1 &&
-                  t <= Const.TILE_CORP_WINDOWV3))
-                continue;
-              for (c in gen.corp.CorpTemp.stairsCells(s.x, s.y, s.x + d[0], s.y + d[1]))
-                {
-                  check.ok(ctx.cells[c.x][c.y] == Const.TILE_FLOOR_CARPET + 16,
-                    'stairs at ' + s.x + ',' + s.y + ' have an open well cell at ' + c.x + ',' + c.y);
-                  // and no door opens onto the well
-                  for (o in ctx.spawns)
-                    check.ok(o.type != 'door' ||
-                      Math.abs(o.x - c.x) + Math.abs(o.y - c.y) != 1,
-                      'door at ' + o.x + ',' + o.y + ' opens onto the stairs well');
-                }
-            }
+          {
+            var found = false;
+            for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+              {
+                var t = ctx.cells[s.x + 2 * d[0]][s.y + 2 * d[1]];
+                if (!(t >= Const.TILE_CORP_WINDOW1 &&
+                    t <= Const.TILE_CORP_WINDOWV3))
+                  continue;
+                found = true;
+                for (c in gen.corp.CorpTemp.stairsCells(s.x + d[0], s.y + d[1], s.x + 2 * d[0],
+                    s.y + 2 * d[1]))
+                  {
+                    check.ok(ctx.cells[c.x][c.y] == Const.TILE_FLOOR_CARPET + 16,
+                      'stairs at ' + s.x + ',' + s.y + ' have an open well cell at ' + c.x + ',' +
+                        c.y);
+                    // and no door opens onto the well
+                    for (o in ctx.spawns)
+                      check.ok(o.type != 'door' ||
+                        Math.abs(o.x - c.x) + Math.abs(o.y - c.y) != 1,
+                        'door at ' + o.x + ',' + o.y + ' opens onto the stairs well');
+                  }
+              }
+            check.ok(found, 'stairs at ' + s.x + ',' + s.y + ' stand two cells off no end window');
+          }
       // and every room carries the role its dealt kind says it does
       for (n in rooms)
         {

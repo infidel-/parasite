@@ -359,15 +359,14 @@ class CorpStyle
   // an inner wall slab's room face, WALL_INNER / 2 short of the wall cell's centre, less half its
   // 1.3 depth. A perimeter wall is thicker, and CorpArea.objWall brings the cabinet out to its face
   // THE STAIRS, objects.Stairs' glb (models-src/corp/stairs_build.py): its height from the well's
-  // floor to the handrail's top, how much of it is under the floor, and its footprint centre off the
-  // stairs cell's centre, which Models.normalize recentres away and ObjModels' `off` puts back.
-  // the stairs always face the corridor's end WINDOW, so CorpArea.objWall's glass correction is a
-  // constant and STAIRS_WALL takes it back out: the well has to land on its cell exactly
+  // floor to the stairs' top, how much of it is under the floor, and its footprint centre off the
+  // stairs OBJECT's cell, one off the end wall, which Models.normalize recentres away and ObjModels'
+  // `off` puts back. that cell has no wall beside it, so CorpArea.objWall corrects nothing and the
+  // well lands on its cells exactly
   public static inline var STAIRS_H = 11.2261;
   public static inline var STAIRS_SINK = 6.6 / STAIRS_H;
   public static inline var STAIRS_X = 2.0;
-  public static inline var STAIRS_Y = -1.4;
-  public static inline var STAIRS_WALL = (render.facility.FacilityStyle.GLASS_T - WALL_INNER) / 2;
+  public static inline var STAIRS_Y = 2.54;
   public static inline var GUN_CAB_H = 3.6;
   public static inline var GUN_CAB_W = 2.4;
   public static inline var GUN_CAB_BACK = 4.0 - WALL_INNER / 2 - 1.3 / 2;

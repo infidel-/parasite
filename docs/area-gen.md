@@ -82,11 +82,12 @@ area
 **The STAIRS are not a block and the lift is.** The test is whether anything about the thing is
 laid out: a lift is a fixed 3x3 assembly with a determined door, floor and glazing, and stairs are
 one object with a model on it. A spawn intent is the right size for the second. The model takes FOUR
-cells: the stairs' and the three of its well (`CorpTemp.stairsCells`: the twin on its right facing
-the end wall, the cell toward the corridor and that one's twin), written as the temp `BLDG_WELL`
+sealed cells (`CorpTemp.stairsCells`: the one against the end wall, its twin on the right facing
+the wall, the cell toward the corridor and that one's twin), and the object stands on the third, off
+the wall, used from beside it (`Stairs.canActivateNear`). They are written as the temp `BLDG_WELL`
 AFTER the inner-wall pass (or the room behind is never walled off) and BEFORE `makeDoors` (or a room
 opens onto the well). Not the final carpet twin: 215 is inside the room-id range and reads as a room.
-`AreaGame.migrateCorpStairs` seals them on older saves.
+`AreaGame.migrateCorpStairs` seals them on older saves and steps the object off the wall.
 
 **A zone writes no cells of its own.** The template that pushed it has already laid them; the node
 is there so the finished tree records WHERE the furniture went, which is what `--stats` counts.

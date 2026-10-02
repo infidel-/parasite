@@ -131,14 +131,17 @@ class CorpTemp
       };
     }
 
-// the cells the stairs model's well seals, beside and in front of the stairs cell (x,y) whose end
-// wall is (wx,wy): its twin, the cell toward the corridor, and that one's twin. The stairs cell itself
-// stays walkable, it is where the object is used
+// the four cells the stairs model's well seals, from its cell (x,y) against the end wall (wx,wy):
+// that one, its twin, the cell toward the corridor the stairs object stands on, and that one's twin
   public static function stairsCells(x: Int, y: Int, wx: Int, wy: Int): Array<{ x: Int, y: Int }>
     {
       var fx = x - (wx - x);
       var fy = y - (wy - y);
       return [
+        {
+          x: x,
+          y: y,
+        },
         stairsTwin(x, y, wx, wy),
         {
           x: fx,

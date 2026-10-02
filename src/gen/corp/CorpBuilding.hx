@@ -159,7 +159,9 @@ class CorpBuilding
         }
 
       // the stairs, in the corner of the corridor's far end. ONE OBJECT AND NOT A BLOCK: nothing
-      // about it is laid out, it is a single cell with a model on it
+      // about it is laid out, it is a single cell with a model on it. (sx,sy) is the well's cell
+      // against the end wall and the object stands one cell toward the corridor, off the wall, used
+      // from beside it (objects.Stairs.canActivateNear) since the whole well is sealed
       var sx = x, sy = y;
       switch (frontWall.dir)
         {
@@ -176,7 +178,7 @@ class CorpBuilding
             sx++;
             sy--;
         }
-      area.add('stairs', sx, sy);
+      area.add('stairs', sx - delta.x, sy - delta.y);
 
       // and the window at the far end of the corridor, so the walk in from the lift ends on the
       // city rather than on a blank wall
@@ -201,8 +203,8 @@ class CorpBuilding
               nextTo(cells, x, y, BLDG_CORRIDOR))
             cells[x][y] = BLDG_INNER_WALL;
 
-      // and the stairs' well, the three cells round the stairs cell the model's flights stand over
-      // (stairsCells), sealed as BLDG_WELL, which finalises to the corridor carpet's unwalkable twin.
+      // and the stairs' well, the four cells the model's flights stand over (stairsCells), sealed
+      // as BLDG_WELL, which finalises to the corridor carpet's unwalkable twin.
       // AFTER the walls, or the room cell behind them is never walled off from the corridor, and
       // BEFORE the doors, or a room gets its door onto the well -- and a security room its second
       // one from CorpConnect's repair

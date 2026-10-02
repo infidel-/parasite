@@ -187,9 +187,10 @@ class AreaGame extends _SaveObject
       migrateCorpStairs();
     }
 
-// save migration: corp stairs took ONE cell before the 3D model, which stands over four. seal the
-// other three (gen.corp.CorpTemp.stairsCells, beside and in front of the stairs facing the end wall)
-// on floors saved with them still walkable carpet
+// save migration: corp stairs took ONE walkable cell against the end wall before the 3D model,
+// which stands over four sealed ones with the object one cell off the wall. seal the four
+// (gen.corp.CorpTemp.stairsCells) and step the object back onto its cell. a stairs object with no
+// wall beside it is already there, so this runs once
   function migrateCorpStairs()
     {
       if (info.id != AREA_CORP ||
@@ -210,6 +211,8 @@ class AreaGame extends _SaveObject
                 if (getCellType(c.x, c.y) == Const.TILE_FLOOR_CARPET)
                   setCellType(c.x, c.y,
                     Const.TILE_FLOOR_CARPET + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET);
+              o.x -= d[0];
+              o.y -= d[1];
               break;
             }
         }
