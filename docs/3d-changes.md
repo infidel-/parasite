@@ -774,6 +774,17 @@ the corridor, its twin); the stairs cell stays walkable and floored, under the u
   the slab, and showed through the pane: it stops at 3.48 now.
 - **No corridor lamp over the well** (`CorpLamps.corridors` skips `FIT_HOLE`): a panel hung over the
   flights.
+- **Trap: a tread label mapped WHOLE is a density per tread.** On a 3.46 × 1.04 tread the art ran
+  143 × 477 px/unit (grain stretched 3.3:1) beside the stringer's tiled 243 × 243, and a 3.5-deep
+  landing wore a 0.74-deep nosing. Split: the label's carpet square TILES like every other face
+  (~186 px/unit, laid before `grid_cut`) and its ribbed band is a 0.14 nosing STRIP of its own,
+  mapped whole — the ribs run along u, so its length stretch is invisible. 2,396 tris (+568),
+  `texel_worst` 1.89 → 1.43.
+- **The well's DARKNESS is COLOR_0**, baked by depth in the build (1 at the floor, smoothstep to 0
+  at −5.5): the bottom of the next flight down reads as black and not as a wall, for no draw call
+  and no texture (three's `USE_COLOR`, carried by `Models.toLambert`). Blender's exporter only
+  writes a colour attribute a material reads, so the script passes `export_vertex_color="ACTIVE"`;
+  `make models` keeps it (no `ao` on this entry to overwrite it).
 
 Verdict: **landed.** Calls not measured (still one instanced batch).
 
