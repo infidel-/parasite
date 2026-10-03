@@ -1310,7 +1310,11 @@ class CorpFurniture
                 continue;
               if (!FacilityModel.isWall(m, col + dx(dir), row + dz(dir)))
                 continue;
-              var f = FacilityGeom.plane(FacilityGeom.slab(m, col, row), dir, MIRROR_EPS);
+              // the WALL cell's slab, on its room side. It was the basin cell's own slab, i.e. the
+              // cell boundary, which floats the mirror the slab's inset off the masonry — reported
+              // from the game as a mirror hanging in the air
+              var wall = FacilityGeom.slab(m, col + dx(dir), row + dz(dir));
+              var f = FacilityGeom.plane(wall, dir ^ 1, MIRROR_EPS);
               FacilityGeom.face(buf(CorpStyle.MIRROR), f.x0, f.x1, f.z0, f.z1, dir ^ 1,
                 CorpStyle.MIRROR_Y0, CorpStyle.MIRROR_Y1, CorpStyle.MIRROR_TILE);
               n.mirrors++;

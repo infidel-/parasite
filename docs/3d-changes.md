@@ -992,3 +992,18 @@ Reported as "toilet lacks sinks". Two faults, one of them in the generator.
   That is the one new batch. The emitted slab's two labels stay drawn by others, so nothing came back.
 
 Verdict: **landed.**
+
+## Corp washroom mirror hung off the WALL cell's slab, not the basin cell's
+
+Reported by a pick at local z -20.06 as "mirror hangs in the air in front of the washroom".
+
+- **Cause.** `CorpFurniture.washroom` took `FacilityGeom.plane(slab(m, col, row), dir, ...)`, which is
+  the BASIN cell's own slab. A room cell carries no inset, so its plane is the cell boundary
+  (-20.0, then MIRROR_EPS past it). A corp wall slab sits INSIDE its cell, so its room face is
+  inset by `(CELL - thick) / 2`, and the mirror floated that far off the masonry. The comment above
+  the loop already said "on the slab's face, not the cell boundary"; the call did the opposite.
+- **Fix.** `plane(slab(m, wall cell), dir ^ 1, MIRROR_EPS)`: the wall slab's room side.
+- **Measured.** Area 6475 washroom at 16,45, close render: the mirror band is flat on the tiles and the
+  vanity taps stand in front of it. Same quads in the same buffer, so +0 calls.
+
+Verdict: **bug, fixed.**
