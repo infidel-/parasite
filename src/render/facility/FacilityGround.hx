@@ -29,16 +29,11 @@ typedef GreenProp = {
   // table at 0 for exactly this reason, a run of made objects at visibly different sizes reads as
   // broken rather than as varied
   scaleJit:Float,
-  // how far the prop is SUNK below the ground it stands on, as a fraction of its own height. a
-  // generated canopy tapers to a ragged fringe of holes and spikes where its trunk ought to be, and
-  // burying that fringe is cheaper and better-looking than any amount of regeneration. 0 for
-  // anything whose base is a real footprint
-  sink:Float,
   // does this prop have an AUTHORED FRONT? a plant takes a full random turn, a bench is turned to
   // face the path beside it — see `green`, which is where the two yaws part company
   faces:Bool,
   // WHICH OF THE ROWS SHARING THIS TILE this is, and how many share it. one tile id, several
-  // meshes: the generator writes one Const.TILE_BUSH for every shrub in the park, and the three
+  // meshes: the generator writes one Const.TILE_BUSH for every shrub in the park, and the two
   // hand-modelled silhouettes are dealt off a hash of the CELL, so the variety costs the generator
   // nothing, the save nothing and a re-entry nothing (the hash is the cell's, not a roll). 1 means
   // the row is the only one for its tile and the test costs a comparison
@@ -83,29 +78,13 @@ class FacilityGround
   public static final BENCH_PATH = FacilityStyle.BENCH_BLENDER ?
     RenderConfig.MODELS.facilityBenchParkHand : RenderConfig.MODELS.facilityBenchPark;
 
-  // and the park's PLANTING (FacilityStyle.PLANT_BLENDER), resolved here for the same reason. the
-  // shrub is the one prop in the compound where the flag changes the number of BATCHES, so the rows
-  // it deals live in their own table and GREEN concatenates it — see BUSHES below
-  public static final CONIFER_PATH = FacilityStyle.PLANT_BLENDER ?
-    RenderConfig.MODELS.wildTreeConiferHand : RenderConfig.MODELS.wildTreeConifer;
-  // and the broadleaf. it is the one plant whose `sink` depends on which branch is live, so the
-  // depth lives here beside the path rather than in the row: the generated glb's canopy runs all
-  // the way down and ends in a ragged fringe that stands proud of the lawn, and BROADLEAF_SINK
-  // buries it. The hand-modelled one ends in a closed cap 3.33 units up — there is nothing to bury,
-  // and burying it would eat a third of the clearance the tree's 9.5 height exists to buy
-  public static final BROADLEAF_PATH = FacilityStyle.PLANT_BLENDER ?
-    RenderConfig.MODELS.wildTreeBroadleafHand : RenderConfig.MODELS.wildTreeBroadleafFull;
-  public static final BROADLEAF_SINK = FacilityStyle.PLANT_BLENDER ?
-    0.0 : render.wild.WildStyle.BROADLEAF_SINK;
-
-  // THE SHRUBS, which are ONE row generated and TWO hand-modelled, and the only place a _BLENDER
-  // flag changes the number of batches the compound draws. Each hand row carries its OWN height
-  // rather than a shared one, because render.Models.instanced scales by HEIGHT alone. A THIRD,
-  // SPRAWLING SHRUB WAS BUILT AND REMOVED: the squash on one axis was the only thing separating it
-  // from the dome IN PLAN, which is the axis this camera mostly sees, and it read either as a
-  // pancake or as the dome. `casts` stays false on all of them for the reason
-  // GreenProp.casts gives: a shrub is drawn into the moon's shadow map as often as into the frame
-  static final BUSHES:Array<GreenProp> = FacilityStyle.PLANT_BLENDER ? [
+  // THE SHRUBS, which are TWO hand-modelled rows sharing one tile, dealt by a hash of the cell. Each
+  // row carries its OWN height rather than a shared one, because render.Models.instanced scales by
+  // HEIGHT alone. A THIRD, SPRAWLING SHRUB WAS BUILT AND REMOVED: the squash on one axis was the only
+  // thing separating it from the dome IN PLAN, which is the axis this camera mostly sees, and it read
+  // either as a pancake or as the dome. `casts` stays false on both for the reason GreenProp.casts
+  // gives: a shrub is drawn into the moon's shadow map as often as into the frame
+  static final BUSHES:Array<GreenProp> = [
     {
       tile: Const.TILE_BUSH,
       path: RenderConfig.MODELS.wildBushDomeHand,
@@ -114,7 +93,6 @@ class FacilityGround
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: false,
-      sink: 0.0,
       variant: 0,
       variants: 2,
     },
@@ -126,22 +104,8 @@ class FacilityGround
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: false,
-      sink: 0.0,
       variant: 1,
       variants: 2,
-    },
-  ] : [
-    {
-      tile: Const.TILE_BUSH,
-      path: RenderConfig.MODELS.wildBushLow,
-      h: 1.1,
-      jitter: 0.28,
-      scaleJit: FacilityStyle.PLANT_SCALE_JIT,
-      faces: false,
-      casts: false,
-      sink: 0.0,
-      variant: 0,
-      variants: 1,
     },
   ];
 
@@ -155,27 +119,23 @@ class FacilityGround
   public static final GREEN:Array<GreenProp> = [
     {
       tile: Const.TILE_TREE1,
-      path: CONIFER_PATH,
+      path: RenderConfig.MODELS.wildTreeConiferHand,
       h: 7.5,
       jitter: 0.20,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: true,
-      sink: 0.0,
       variant: 0,
       variants: 1,
     },
     {
       tile: Const.TILE_TREE1 + 2,
-      path: BROADLEAF_PATH,
+      path: RenderConfig.MODELS.wildTreeBroadleafHand,
       h: 9.5,
       jitter: 0.22,
       scaleJit: FacilityStyle.PLANT_SCALE_JIT,
       faces: false,
       casts: true,
-      // how far it is buried is a property of the MESH and not of either area, which is why both
-      // the path and this are resolved together above — see BROADLEAF_SINK
-      sink: BROADLEAF_SINK,
       variant: 0,
       variants: 1,
     },
@@ -194,7 +154,6 @@ class FacilityGround
       scaleJit: 0.0,
       faces: true,
       casts: true,
-      sink: 0.0,
       variant: 0,
       variants: 1,
     },
@@ -366,7 +325,7 @@ class FacilityGround
                 var hy = FacilityModel.mix((col * 24036583) ^ (row * 32582657));
                 // ONE TILE, SEVERAL MESHES: the cell's own hash says which of the rows sharing this
                 // tile draws it, and the loop below it does NOT break on a match — so without this
-                // test every shrub cell would be pushed into all three batches at once. A FOURTH
+                // test every shrub cell would be pushed into both batches at once. A FOURTH
                 // hash and not one of the three above, because those are spent on where the plant
                 // sits and how big it is, and a shrub's SPECIES correlating with its size is the
                 // kind of pattern the eye finds immediately
@@ -387,12 +346,8 @@ class FacilityGround
                   // beside it, and a bench facing the shrubbery is the whole failure mode
                   yaw: (GREEN[i].faces ? facing(m, col, row) : (hy % 6283) / 1000.0),
                   // the park lies a kerb BELOW the pavement, and nothing here places a prop anywhere
-                  // else — every entry in GREEN is keyed on a grass tile. `sink` then buries a
-                  // fraction of the prop's own height under that, and it has to ride the instance
-                  // SCALE with it: the ragged fringe being buried shrinks when the tree does, so a
-                  // fixed burial would leave a small broadleaf standing on its own torn edge. the
-                  // reasoning render.wild.WildProps.sit carries for the same glb
-                  y: surfY(Surf.GRASS) - GREEN[i].sink * GREEN[i].h * s,
+                  // else — every entry in GREEN is keyed on a grass tile
+                  y: surfY(Surf.GRASS),
                   scale: s,
                 });
               }
@@ -480,9 +435,9 @@ class FacilityGround
       return 0.0;
     }
 
-// one axis of a plant's jitter, CANCELLED when it leans at a cell that is not lawn. bush-low is
-// 2.10 world units across (its own aspect 1.91 at h 1.1, so a radius of 1.05) and the jitter reaches
-// 0.28 of a 4-unit cell = 1.12, which is 2.17 against a half-cell of 2.0 — at full lean a bush
+// one axis of a plant's jitter, CANCELLED when it leans at a cell that is not lawn. the generated
+// shrub this was measured on was 2.10 world units across (the hand-modelled dome is 2.0, built to it)
+// and the jitter reaches 0.28 of a 4-unit cell = 1.12, which is 2.17 against a half-cell of 2.0 — at full lean a bush
 // crossed its own boundary and came out over the park path, or past the railing, which stands
 // FENCE_INSET inside that boundary. leaning INWARD is untouched, so an edge cell keeps half its
 // spread and only the direction that would overhang is given up

@@ -130,80 +130,6 @@
       "last_sig": "n1/-1/512/0.005/-/-/bc0.47,0.47,0.47,1/ao0.36,-,-,-",
       "ao": 0.36
     },
-    "wild/tree-conifer": {
-      "src": "wild/tree-conifer.glb",
-      "tris": -1,
-      "tex": 1024,
-      "error": 0.005,
-      "seed": 286963498,
-      "note": "wilderness: a dark conifer, the forest band's bulk tree (render.wild.WildProps). REGENERATED 2026-08-23 with mesh_cluster {1,0,1,PI/2} + remesh_project 0.9, and both the mesh and the entry are a different animal from what this row used to describe. 4,880 tris, split 1.27 - the CLEANEST of any tree here - and 2 connected components at 51.2%/48.8%, which is the canopy and the trunk as two solid shells, NOT the blob cloud that number would mean on a foliage prop (see wild/bush-low). tex 512 = 54 texels/tri. bbox widest/height 0.34, so h 7.5 draws 2.55 world units across. MR map pure green (0/216/0), no dropMR. NO baseColor, and its absence is the result: the retired mesh baked at 41/84/69, twice as green as red, and under the 0x8294c0 moon a stand of them rendered as saturated TEAL - it needed the repo's first per-channel correction, 0.55/0.35/0.45. This one bakes at 54/58/50, near-neutral and already at the prop family's 46-52, because the fix moved to the REFERENCE: it asks for 'muted desaturated dark grey-green, mid-value, not vivid green' in as many words. Correcting saturation at the source beats correcting it at the bake. TWO REFERENCE ROLLS ARE IN Unused/ and the comparison is the lesson: tree-conifer-scalloped-src.png asked for a lumpy tiered spruce outline and TRELLIS resolved every tier as its own blob - 38 components, split 4.70, worse than anything shipped in this repo. The smooth cone that shipped looked too geometric as a 2D image and was nearly rejected for it; at a camera 18-55 units up the silhouettes are indistinguishable and only the topology differs. Judge a reference by what it will REMESH into, not by how it reads flat TEX RAISED 512 -> 1024, and the reason is that texels/tri CANNOT SEE THIS. That band (~43-55) was written for the decimate-a-100k-master route, where the atlas and the tri count shrink together. This prop is `tris: -1` - generated AT the budget - so Runware baked a 2048 atlas for a 4.9k-tri mesh, about 862 texels/tri at source, and 512 threw away ~16x the texels while still reporting a healthy 53/tri. The metric that catches it is TEXELS PER WORLD UNIT, area weighted over the mesh at the height the game draws it: 44 at 512, 87 at 1024, off 76 u2 of surface at h 7.5. Ground, walkway and lawn tile at 512/GROUND_TILE 9.0 = 57 and the grass tuft sprite runs 171, so at 512 this prop was the softest thing in the frame by a wide margin - reported as 'blurry compared to grass/ground/walkway'. Anisotropy was ruled out first and is NOT the fix: forcing every glb map 1 -> 4 moved 0.25% of pixels by more than 2 in a frozen A/B.",
-      "last_converted": "2026-08-23T18:22:00Z",
-      "last_sig": "n1/-1/1024/0.005/-/-"
-    },
-    "wild/tree-broadleaf-full": {
-      "src": "wild/tree-broadleaf-full.glb",
-      "tris": -1,
-      "tex": 1024,
-      "error": 0.005,
-      "seed": 633200386,
-      "baseColor": [
-        0.33,
-        0.16,
-        0.33,
-        1
-      ],
-      "note": "wilderness: a broadleaf tree in full leaf, a deep rounded dome crown on a THICK BARE TRUNK - the third of the four tree tiles (render.wild.WildProps). REGENERATED, and the brief was CLEARANCE: the original crown skirted down to ~22% of its height, so at h 5.8 its lowest leaves sat 1.3 world units up and the player's 3-unit sprite walked head-first into the foliage. The number that matters is where the crown FLARES, measured by binning the glb's vertices along Y - here 0.35 of the height (trunk holds 13-16% of max radius below that, crown is at 90% by 0.45) - because the height an actor walks under is that fraction times h, and it is the only reason h is 9.5. Two retired attempts sit in Unused/ and both are worth reading: -lowcrown is the original, and -parasol is what asking for a crown 'clearly wider than it is tall' produces - a 45%-deep disc on a 7%-radius stick that cleared the player fine at h 6.5 and read as an UMBRELLA from every angle, not a tree. The prompt that works names the fractions: thick bare trunk through the bottom 40%, crown a deep rounded dome in the top 60% about half again as wide as it is tall, whole tree taller than wide. generated AT the budget (decimationTarget 5000 -> 4,866 tris), tris -1, tex 512 = 53 texels/tri. split 2.82 so it can never be decimated offline. 20 connected components with the largest at 91.8%, the 19 extras specks off the crown edge. bbox widest/height 0.71 - it is now the NARROWEST-for-its-height tree of the four, so h 9.5 still only draws 6.7 world units across, LESS than the 7.15 the parasol took at h 6.5. MR map pure green (0/249/0, metal max 12), no dropMR - re-read on the regeneration rather than carried forward. baseColor is per-channel for the conifer's old reason: baked at 85/126/84, the brightest tree bake here, and a blue moon on a green albedo is what turned the first conifers teal. 0.33/0.16/0.33 LINEAR lands it at 48/51/48. ALSO the one prop of 23 whose base atlas arrived with an ALPHA CHANNEL - 35.4% of texels at alpha < 8, the UV gutter - which made the tex resize scatter saturated primaries over the whole tree: 2.949% of the built 512 at saturation > 0.75, every one of them at alpha < 128. tools/models.mjs now flattens that channel before the resize and the map comes out matching the source, so nothing here has to work around it TEX RAISED 512 -> 1024, and the reason is that texels/tri CANNOT SEE THIS. That band (~43-55) was written for the decimate-a-100k-master route, where the atlas and the tri count shrink together. This prop is `tris: -1` - generated AT the budget - so Runware baked a 2048 atlas for a 4.9k-tri mesh, about 862 texels/tri at source, and 512 threw away ~16x the texels while still reporting a healthy 53/tri. The metric that catches it is TEXELS PER WORLD UNIT, area weighted over the mesh at the height the game draws it: 25 at 512 - less than HALF the ground - and 49 at 1024, off 292 u2 of canopy at h 9.5, which is why this one is the worst of the three. Ground, walkway and lawn tile at 512/GROUND_TILE 9.0 = 57 and the grass tuft sprite runs 171, so at 512 this prop was the softest thing in the frame by a wide margin - reported as 'blurry compared to grass/ground/walkway'. Anisotropy was ruled out first and is NOT the fix: forcing every glb map 1 -> 4 moved 0.25% of pixels by more than 2 in a frozen A/B.",
-      "last_sig": "n1/-1/1024/0.005/-/-/bc0.33,0.16,0.33,1",
-      "last_converted": "2026-08-24T10:04:00Z"
-    },
-    "wild/tree-dead": {
-      "src": "wild/tree-dead.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "seed": 1466505024,
-      "baseColor": [
-        0.5,
-        0.5,
-        0.5,
-        1
-      ],
-      "note": "wilderness: a dead standing snag, one thick trunk with four blunt broken limbs - the fourth tree tile (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,784 tris), tris -1, tex 512 = 55 texels/tri. THE BEST-BEHAVED SUBJECT OF THE BATCH: split 1.93 and ONE connected component at 100%, which is what a hard-surfaced subject with no foliage gives. bbox widest/height 0.47, so h 5.6 draws 2.6 across - a snag is deliberately shorter and narrower than the living trees. MR map pure green (0/212/0), no dropMR. baseColor is UNIFORM 0.5 and not per-channel on purpose: baked at 80/68/55 it is the one warm thing in the area, and a per-channel fit would neutralise exactly the quality that makes dead wood read as dead wood. 0.5 keeps the hue and lands it near 60/52/42, avg 51, in the prop family",
-      "last_sig": "n1/-1/512/0.005/-/-/bc0.5,0.5,0.5,1",
-      "last_converted": "2026-08-23T18:18:51Z"
-    },
-    "wild/tree-broadleaf": {
-      "src": "wild/tree-broadleaf.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "seed": 1914397698,
-      "baseColor": [
-        0.2,
-        0.2,
-        0.2,
-        1
-      ],
-      "note": "wilderness: a bare broadleaf tree, no foliage — the plains band's lone tree (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,934 tris), tris -1: 5,094 verts over 2,351 positions = 2.17x. tex 512 = 54 texels/tri. the reference asks for a FEW thick solid limbs and no fine twigs: a true branch network is all holes, the failure the split-ratio rule names. baked at mean sRGB 128/121/102 (avg 117), 2.3x the prop family's 46-52, so baseColor 0.2 LINEAR lands it near 48. MR map pure green, no dropMR",
-      "last_converted": "2026-08-23T14:42:03Z",
-      "last_sig": "n1/-1/512/0.005/-/-/bc0.2,0.2,0.2,1"
-    },
-    "wild/bush-low": {
-      "src": "wild/bush-low.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "baseColor": [
-        0.26,
-        0.28,
-        0.52,
-        1
-      ],
-      "note": "wilderness: a low scrubby bush, the TILE_BUSH cell (render.wild.WildProps). REPLACED BY HAND 2026-08-23 - the shipped mesh was generated by the user in the Runware web playground and is NOT reproducible from this repo: its reference lives only on Runware's CDN, there is no <label>-src.png beside it, and the `seed` this entry used to carry belonged to the retired mesh and has been dropped. The retired one and its reference are in Unused/. 4,955 tris over 4,280 verts / 2,395 unique positions = 1.79x, tex 512 = 85 texels/tri. MR map re-read on THIS mesh and pure green (0/248/0, metalness max 18/255), so still no dropMR - re-read it after every regeneration rather than carrying the old verdict forward, the way the preservator's came back cyan on its own. baseColor REFITTED and this is why the entry had to be revisited at all: the 0.11/0.13/0.22 it carried was fitted to the retired mesh's baked mean sRGB 117/124/82, and this one bakes at 84/96/61 - the same factors would have landed it near 29/35/30, a third under the prop family's 46-52, i.e. the prop would have been silently too dark. 0.26/0.28/0.52 LINEAR puts it back near 44/50/44. THE LESSON: baseColor is fitted to a specific bake, so a replaced glb invalidates it. WHY THE RETIRED MESH WAS REPLACED, measured: 96 CONNECTED COMPONENTS with the largest holding only 24.3% of vertices - a cloud of separate leaf blobs with air between them, which is what 'mostly empty' looks like as a number. This one is 8 components at 98.7%. THE CAUSE WAS THE SETTINGS, NOT THE REFERENCE, and the probe in Unused/bush-low-gappy-probe.glb is the proof: that exact retired reference, unmodified, re-run with mesh_cluster {1,0,1,PI/2} + remesh_project 0.9, comes back 1 component at 100% and split 1.68. 96 -> 1 on one variable. The tidy story that TRELLIS resolves every dark gap in the art as real air fits the data and is still wrong; meshCluster's smoothStrength and thresholdConeHalfAngleRad reach the dual-contour remesh, not just the atlas. Count components on any new prop, and read the gate as few components each holding a substantial share - the shipped conifer is 2 at 51/49 (canopy plus trunk) and that is fine. Also still true of the retired mesh and worth keeping: THE CAMERA ANGLE OF THE REFERENCE IS LOAD-BEARING - its FIRST reference was a three-quarter view FROM ABOVE and TRELLIS returned a PANCAKE, bbox 0.985 x 0.040 x 0.936, 25x wider than tall. render.Models.instanced scales by HEIGHT ALONE, so h 1.1 multiplied it by 28 and put 218 dark discs ~27 world units across over the area; it read as a landmass, not as a bad prop. PASS 7: baked AO. `ao` is FITTED so the bake costs 20% of the prop's LEVEL and no more (mean COLOR_0 = 0.80, one step from `ao * 0.20 / (1 - mean)`), because every prop here was value-fitted and a flat 0.55 drops some of them 37%. Shipped ao 0.55.",
-      "last_converted": "2026-08-23T16:59:06Z",
-      "last_sig": "n1/-1/512/0.005/-/-/bc0.26,0.28,0.52,1/ao0.55,-,-,-",
-      "ao": 0.55
-    },
     "wild/bush-bramble": {
       "src": "wild/bush-bramble.glb",
       "tris": -1,
@@ -216,89 +142,6 @@
       "last_converted": "2026-08-23T19:08:55Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/lf0.78/ao0.55,-,-,-",
       "ao": 0.55
-    },
-    "wild/rock-boulder": {
-      "src": "wild/rock-boulder.glb",
-      "tris": 1200,
-      "tex": 256,
-      "error": 0.005,
-      "seed100k": 1941390287,
-      "baseColor": [
-        0.15,
-        0.15,
-        0.15,
-        1
-      ],
-      "note": "wilderness: a single weathered boulder, the scattered rock (render.wild.WildProps). 54,048 verts over 48,602 unique positions = 1.11x, the CLEANEST subject generated here — below even the drum's 1.31x — so boulder.glb is both the 100k master (97,202 tris) and the game source, and meshopt really does reach its target: 97,202 -> 1,548 against 1200, where the drum's 1.31x floored at 4,826. tex 256 and not the 512 every other prop here takes, precisely BECAUSE of that: 1,548 tris at 512 would be 165 texels/tri against the ~43 a TRELLIS 2048 export is authored at, i.e. a map four times larger than the geometry can show. 256 lands it at 42. baked at mean sRGB 110/132/139 (avg 127), and baseColor is 0.15 rather than the ~0.25 that arithmetic alone asks for. the arithmetic was not wrong, the CONTEXT is: a rock is one large smooth upward-facing surface catching the full moon term, while the ground around it is broken up by grass and by its own mottle — so at the family's nominal 50 it still read as pale blue ice, the brightest thing in the frame by a distance. 0.15 lands it near 50 in albedo and finally at the ground's level on screen, which is the number that matters",
-      "last_converted": "2026-08-23T14:42:33Z",
-      "last_sig": "n1/1200/256/0.005/-/-/bc0.15,0.15,0.15,1"
-    },
-    "wild/rock-cluster": {
-      "src": "wild/rock-cluster.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "seed": 223706091,
-      "seed100k": 1824230806,
-      "baseColor": [
-        0.18,
-        0.18,
-        0.18,
-        1
-      ],
-      "note": "wilderness: three fused angular slabs, the mountain band's rock (render.wild.WildProps). generated AT the budget (decimationTarget 5000 -> 4,736 tris), tris -1, tex 512 for 54 texels/tri. THE ~2x LINE IS NOT A CLIFF, and this is the measurement that shows it: at decimationTarget 100000 it came back 82,526 verts over 47,470 positions = 1.74x — comfortably UNDER the line — and meshopt still stalled at 20,433 tris against a 1200 target, four times the boulder's landing point and unusable for a prop scattered by the hundred. so that master was deleted (reproduce from rock-cluster-src.png at decimation_target 100000 with seed100k). read the ratio as a gradient: 1.11x reached 1,548, 1.31x floored at 4,826, 1.74x at 20,433. baked at mean sRGB 89/100/105 (avg 98), and baseColor 0.18 rather than the ~0.3 the arithmetic asks for, for exactly the reason its boulder sibling above carries 0.15: a big smooth upward face under the only directional light in the area outruns its own albedo number PASS 7: baked AO. `ao` is FITTED so the bake costs 20% of the prop's LEVEL and no more (mean COLOR_0 = 0.80, one step from `ao * 0.20 / (1 - mean)`), because every prop here was value-fitted and a flat 0.55 drops some of them 37%. Shipped ao 0.55.",
-      "last_converted": "2026-08-23T14:50:23Z",
-      "last_sig": "n1/-1/512/0.005/-/-/bc0.18,0.18,0.18,1/ao0.55,-,-,-",
-      "ao": 0.55
-    },
-    "wild/log-fallen": {
-      "src": "wild/log-fallen.glb",
-      "tris": 1200,
-      "tex": 384,
-      "error": 0.05,
-      "seed100k": 314983066,
-      "baseColor": [
-        0.24,
-        0.3,
-        0.45,
-        1
-      ],
-      "note": "wilderness: a fallen trunk, the FOREST band's variant of a TILE_ROCK cell (render.wild.WildBand). 100k master + offline decimate: 94,566 tris, 59,201 verts over 47,278 positions = 1.25x, 1 component at 100%, landing at 3,112 tris. error 0.05 is the knee of its sweep (0.005 -> 3,644, 0.05 -> 3,112, 0.3 -> 3,112, i.e. flat past 0.05) and tex 384 rather than 512 is sized for THAT count: 47 texels/tri against the ~43 a TRELLIS 2048 export is authored at, where 512 would have been 84 - a map twice as large as the geometry can show. TWO EARLIER ROLLS OF A RICHER REFERENCE BOTH CAME BACK IN THREE PIECES (largest 54.3% and 55.8%, two big blobs of ~26k and ~22k verts each) - that reference had a torn root plate of thin broken roots AND a long strip of bark peeled off to bare wood, and re-rolling it on a fresh seed reproduced the split exactly, so it was the ART and not the roll. repainting it as ONE plain solid trunk - same bark all over, no peel, no roots, no separate parts - took it to 1 component in a single run. baked at mean sRGB 97/87/73, warm; baseColor per-channel pulls it back to the family's 46-52 without leaving it brown",
-      "last_converted": "2026-08-24T13:12:24Z",
-      "last_sig": "n1/1200/384/0.05/-/-/bc0.24,0.3,0.45,1"
-    },
-    "wild/rock-outcrop": {
-      "src": "wild/rock-outcrop.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "seed": 833603916,
-      "seed100k": 1597190133,
-      "baseColor": [
-        0.22,
-        0.17,
-        0.16,
-        1
-      ],
-      "note": "wilderness: a low wedge of fractured bedrock, the MOUNTAIN band's variant of a TILE_ROCK cell (render.wild.WildBand). generated AT the budget (decimationTarget 5000 -> 4,981 tris), tris -1, tex 512 for 52 texels/tri, 2 components at 97.2%. the 100k master route WORKED here and was still wrong for this prop: 1.45x split, 1 component, but meshopt floored at 7,670 tris (error 0.05, flat to 0.3) and the mountain band scatters ~200 of these per area - 1.5M triangles before culling against a whole area's 334k. so the ratio said yes and the SCATTER said no; reproduce the master from rock-outcrop-src.png at decimation_target 100000 with seed100k if it is ever wanted as a landmark. its reference came back BRIGHT (subject luma p50 122 against the 69-77 that bakes correctly) and baked at mean sRGB 102/112/115, which is the harmless direction: baseColor multiplies DOWN and the arithmetic still lands inside the family",
-      "last_converted": "2026-08-24T13:16:48Z",
-      "last_sig": "n1/-1/512/0.005/-/-/bc0.22,0.17,0.16,1"
-    },
-    "wild/rock-large": {
-      "src": "wild/rock-large.glb",
-      "tris": 10000,
-      "tex": 1024,
-      "error": 0.005,
-      "seed100k": 427019730,
-      "baseColor": [
-        0.25,
-        0.25,
-        0.25,
-        1
-      ],
-      "note": "wilderness: the 2x2 LARGE ROCK, one instance per Const.TILE_ROCK_LARGE rect (render.wild.WildProps.bigRocks), ~8 per mountain area. the CAMERA ANGLE OF THE REFERENCE IS THE WHOLE STORY HERE and it cost a re-shoot: the first roll asked for a boulder 'seen from a low three-quarter angle' and gpt drew it from well above, which came back 0.845 x 0.317 x 1.001 - widest/height 3.16, a PANCAKE, the same failure bush-low hit at 0.985 x 0.040 x 0.936. re-prompted as a strict side elevation at horizon height, 'the full height clearly visible as a tall silhouette, almost none of its top surface visible', and the same subject came back 0.973 x 0.597 x 1.001 = 1.68, a boulder taller than an actor. the pure elevation looked WRONG as a 2D image (a flat cutout with no depth cue at all, nothing like rock-cluster's three-quarter reference) and was baked anyway because a re-bake is $0.015 against $0.43 for another reference - which is the order these two steps belong in. attempt A kept in Unused/ as rock-large-a. split 1.09x, the cleanest subject in this repo, below even rock-boulder's 1.11x, so the offline route decimates. COMPONENTS READ 2 AT 50/50 AND propstat CALLS THAT A REJECT, WRONGLY: both components span the entire bbox, their mean radii agree to 0.6%, and every vertex of one is within 0.34% of the bbox diagonal of a vertex of the other (below one edge length) - it is ONE closed surface partitioned into two vertex-disjoint patches along a seam, not a blob cloud. the gate reads count and largest share and cannot tell the two apart; rock-boulder by contrast is genuinely 1 component and rock-outcrop's second piece is a 70-vert speck 29% of the diagonal away. tex 1024 at ~10k tris is ~105 texels/tri, about double the 43-55 band every scatter prop holds, and that is deliberate: texels-per-triangle is a proxy for texels-per-screen-PIXEL, and this prop is 8.4 world units across against rock-boulder's 3.3, so it carries 16x the boulder's texels over ~7x the screen area - less than twice as dense per pixel. the rule cut rock-boulder from 165 to 42 because a small prop cannot show the map; the largest prop in the area is the case where it can. baked neutral at mean sRGB 88/89/90, and baseColor goes BELOW the arithmetic for the same reason the boulder's does, harder: this is the biggest smooth upward-facing surface in the game and it catches the full moon term",
-      "last_converted": "2026-08-24T18:24:44Z",
-      "last_sig": "n1/10000/1024/0.005/-/-/bc0.25,0.25,0.25,1"
     },
     "habitat/biomineral": {
       "src": "habitat/biomineral.glb",
@@ -361,23 +204,6 @@
       "last_converted": "2026-08-22T17:45:22Z",
       "last_sig": "n1/-1/512/0.005/-/-/rf0.3/ao0.3,-,-,-",
       "ao": 0.3
-    },
-    "wild/guard-rail": {
-      "src": "wild/guard-rail.glb",
-      "tris": 1200,
-      "tex": 512,
-      "error": 0.05,
-      "seed100k": 1798857033,
-      "dropMR": true,
-      "baseColor": [
-        0.16,
-        0.17,
-        0.17,
-        1
-      ],
-      "note": "wilderness: a W-beam highway guard rail, instanced along the shoulder of the corridor game.AreaGenerator.placeHighway lays (render.wild.WildProps.rails). the only prop out here with an AUTHORED FRONT, so its yaw is locked to the corridor axis where every other wilderness row takes a full random turn. 100k master + offline decimate: 1.33x split, so the offline route works. COMPONENTS READ 11 AT 56.7% AND THE GATE CALLS THAT A REJECT - it is not one: the top two pieces are 27,691 and 17,327 verts, 92% of the mesh between them, and they are the BEAM and the POSTS, which on a real rail are bolted rather than welded. that is the shipped conifer's 2-at-51/49 shape (canopy plus trunk), not the 96-at-24% blob cloud the gate exists to catch; the nine remaining specks share 8%. its reference needed the in-code correction rather than a re-prompt: gpt returned it at subject p50 121 against the 69-77 that bakes correctly, and propstat's REPORTED p50 cannot be trusted on this subject at all - grey steel against the #5a5d63 backdrop sits so close in value that brightening the subject pushes parts of it OUT of the distance-from-backdrop mask (coverage 6.8% -> 5.4% between two lifts), the same too-close-to-its-own-key failure the grass texture hit. lift's INTERNAL core mask (alpha > 0.9) is the trustworthy one and was targeted at 73. baked at mean sRGB 112/110/109, neutral, so baseColor is a straight darken. its MR came back metal 255 across the whole map - dropMR, or it renders BLACK under key 1 rather than chrome. meshopt floors at 4,782 from 97,692 whatever error asks for - swept 0.05 and 0.3 for the identical count, so the seam network is the floor here and not the cap, exactly the drum shape (1.31x -> 4,826). error stays at the lower value because it costs nothing and keeps the silhouette",
-      "last_converted": "2026-08-25T08:25:24Z",
-      "last_sig": "n1/1200/512/0.05/-/-/noMR/bc0.16,0.17,0.17,1"
     },
     "facility/lamp-post": {
       "src": "facility/lamp-post-100k.glb",

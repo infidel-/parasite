@@ -1392,14 +1392,6 @@ class FacilityStyle
   // about the five-star base it names first: five arms at 72 degrees is a loop index, not a
   // silhouette a generator has to find, and the bake was a REJECT at 9 components / 61.8% regardless
   public static inline var CHAIR_BLENDER = true;
-  // and the PARK PLANTING: the conifer at 680 authored triangles against 4,880 generated ones, and
-  // the shrub at 192/372/276 against 4,955 — the largest triangle saving of the whole set, because
-  // the park deals 163 shrubs and a dozen trees per compound. It is also the only one of these flags
-  // that changes the COUNT of batches: the generated shrub is one row of FacilityGround.GREEN and
-  // the hand-modelled one is THREE, dealt by a hash of the cell, so one tile id draws three
-  // silhouettes and the generator writes nothing new. The WILDERNESS keeps the generated pair — it
-  // draws them at other sizes against other ground, and nothing here has measured that
-  public static inline var PLANT_BLENDER = true;
   // the two ROUND low fittings — the hazard drum and the waste bin — which are instanced glbs and
   // not geometry (render.facility.FacilityDeco.placeRound). ONE height and ONE footprint for both:
   // 1.8 is already what the tunnels give the same drum glb (render.sewer.SewerStyle) and what BIN_H

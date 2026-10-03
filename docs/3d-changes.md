@@ -1098,3 +1098,43 @@ sine mottle), so the same idea went onto it at no cost in draw calls or material
   The hollow left of the player and the crest at centre now read as landform.
 
 Verdict: **landed. +0 calls.**
+
+## Wilderness props are hand-modelled: every TRELLIS glb out here but the bramble
+
+Asked for as: remove the TRELLIS guard rail and make a Blender one, use the facility's hand trees and
+bushes in the wilderness too, and redo the rocks, logs and dead trees in Blender.
+
+- **What.** The scatter now draws the park's own hand planting: the conifer (824 tris), the in-leaf
+  broadleaf (800) and both shrubs. The shrub tile deals dome and upright off a band list, as
+  `BUSH_DOME` and a new `BUSH_UPRIGHT` row appended at index 14. Eight more were built in
+  `models-src/wild`:
+
+  | Build script | Models | Tris (old TRELLIS) |
+  |---|---|---|
+  | `guard_rail_build.py` | W-beam on two posts, amber reflector caps | 384 (4,782) |
+  | `deadwood_build.py` | snag / bare broadleaf / log | 240 / 420 / 116 (4,784 / 4,934 / 3,112) |
+  | `rock_build.py` | boulder / cluster / outcrop / 2x2 | 170 / 490 / 488 / 728 (1,548 / 4,736 / 4,981 / 10,000) |
+
+  Each was sized to the aspect of the glb it replaced, within 0.07 (the bare broadleaf, 0.91 against
+  0.84, is the loosest), so no `h` or `r` in `WildStyle.PROPS` moved. The eleven old glbs went to
+  `models-src/wild/Unused/`, and `FacilityStyle.PLANT_BLENDER` went with its dead branch. Two
+  `sink` fields went too, because nothing is buried any more.
+- **Art.** Two pack4 gens:
+  - `rock-sheet.png`: granite, lichen, dead bark, deadwood.
+  - `rail-sheet.png`: galvanised beam, post steel, grime, amber reflector.
+
+  Both went through `sheet_build.py`, which now takes a sheet name and a LUMA target. A luma target
+  is levelled by a flat scalar, so the hue holds. The rocks and the rail tile in-cell
+  (`grid_cut` + `tile_uv`, TILE 2.0). The wood bookmatches its bark up the limb, at the same ~127
+  texels a unit.
+- **Measured.** Same forest save and pose:
+  - Frame triangles went **787k → 161.5k**.
+  - Calls went 66 → 68 (one more shrub batch).
+  - No console errors.
+  - `buildlib.check` read 0 holes / 0 coplanar / 1 island / `texel_off` 0 on all eight.
+- **Trap.** A vertex set taken before `bmesh.ops.bisect_plane` is not a stable fence. Chipping blob
+  N of a multi-blob rock cut into the earlier blobs too, and `check` read 26 coplanar pairs at gap 0
+  on the cluster: slivers of old blobs lying on the new cut. The fix is to build each blob in its own
+  bmesh and append it with `from_mesh`.
+
+Verdict: **landed. -80% frame triangles on a forest frame; +2 calls.**

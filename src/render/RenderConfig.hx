@@ -671,20 +671,16 @@ class RenderConfig {
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
     // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. FOUR trees,
     // one per tile ID the 2D generator rolls (Const.TILE_TREE1 + 0..3), so the variant already written
-    // into the saved grid picks the model. all arrived AT the budget; the two rocks are hard surfaces
-    // and decimate offline — see their models.json notes
-    wildTreeConifer: 'models/wild/tree-conifer.glb',              // dark conifer, one solid cone
+    // into the saved grid picks the model. every one of them is HAND-MODELLED in models-src/wild
+    // (*_build.py) except the bramble, which is still the TRELLIS bake — see the models.json notes
     wildTreeBroadleaf: 'models/wild/tree-bare-hand.glb',          // bare broadleaf, thick forked limbs, no foliage
-    wildTreeBroadleafFull: 'models/wild/tree-broadleaf-full.glb', // broadleaf in leaf, broad solid dome
     wildTreeDead: 'models/wild/tree-dead-hand.glb',               // dead snag, ragged top, broken bare limbs
     wildRockBoulder: 'models/wild/rock-boulder-hand.glb',         // low weathered boulder, chipped facets
     wildRockCluster: 'models/wild/rock-cluster-hand.glb',         // three angular slabs fused into one mass
-    wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
     wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
-    // and the HAND-MODELLED park planting behind FacilityStyle.PLANT_BLENDER — the conifer restated
-    // as three lobed skirts over a bole, and the one shrub dome dealt out into three silhouettes.
-    // the FACILITY's park draws these; the wilderness keeps the generated pair above, which is what
-    // the flag is for (render.facility.FacilityGround.GREEN)
+    // the planting, shared by the wilderness scatter and the facility's park
+    // (render.facility.FacilityGround.GREEN): the conifer as five lobed skirts over a bole, and the
+    // shrub dealt out into two silhouettes
     wildTreeConiferHand: 'models/wild/tree-conifer-hand.glb',     // lobed conifer, 824 tris against 4,880
     wildTreeBroadleafHand: 'models/wild/tree-broadleaf-hand.glb', // broadleaf, one deep lobed crown, 800 against 4,866
     wildBushDomeHand: 'models/wild/bush-dome-hand.glb',           // shrub dome, one lathe plus an off-centre crown

@@ -15,10 +15,6 @@ typedef WildProp = {
                  // this is the one field that decides how a prop meets uneven land
   jitter:Float,  // per-instance scale spread, as a fraction of h either side of 1.0. a hundred
                  // identical trees is wallpaper, and this is the cheapest thing that breaks it
-  ?sink:Float,   // how far the prop is BURIED below the ground it sits on, as a fraction of its own
-                 // height, on top of whatever the slope correction takes. for a mesh whose bottom is
-                 // not a real footprint but the ragged end of a generated surface. absent on every
-                 // row whose base is solid, which is most of them
 };
 
 // art + dimensions for the 3D wilderness — the render.world.CityStyle of open ground. there is one
@@ -86,11 +82,12 @@ class WildStyle
 
   // --- the props (render.wild.WildProps) ---
   // `h` IS NOT A FREE NUMBER: render.Models.instanced scales a prop by HEIGHT ALONE, so a row's world
-  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured, in that order: conifer 0.34,
-  // broadleaf 0.84, broadleaf-full 0.71, dead 0.47, boulder 3.67, cluster 1.31, bush 1.91,
-  // bramble 2.86. the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67
-  // aspect made it 5.5 units across, well over a cell, and the bush's first mesh came back at 25
-  // (see its models.json note).
+  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured on the hand-modelled set, in
+  // table order: conifer 0.44, bare broadleaf 0.91, broadleaf 0.71, dead 0.52, boulder 3.74, cluster
+  // 1.34, dome shrub 1.82, bramble 2.86, log 3.80, outcrop 2.05, large 1.69, rail 2.50, upright shrub
+  // 1.65. each rebuild was sized to the aspect of the TRELLIS glb it replaced, so no `h` or `r` moved.
+  // the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67 aspect made
+  // it 5.5 units across, well over a cell.
   //
   // the trees are 25% taller than they went in at (6.0 / 5.2), by request. that puts the conifer 4.8
   // world units across and the broadleaf 5.5, both over the 4-unit cell — which is CORRECT for a
@@ -102,15 +99,8 @@ class WildStyle
   // that 3 units is also a CLEARANCE the canopies have to respect, which the first pass missed: a
   // crown that skirts down the trunk puts leaves at head height however tall the tree is, and the
   // player walks into the green. the fix belongs in the MODEL — a crown confined to the top of its
-  // own bbox — and `h` then scales the clearance with it. see the broadleaf-full row below, which is
+  // own bbox — and `h` then scales the clearance with it. see the in-leaf broadleaf row below, which is
   // the only `h` here set by that number rather than by look
-  // how far wild/tree-broadleaf-full is buried below the ground it stands on, as a fraction of its
-  // own height. its canopy runs to the very bottom of the model and ends in a ragged fringe of holes
-  // and spikes where a trunk ought to be — TRELLIS was never given a trunk to build, so no
-  // regeneration fixes it and no `r` hides it (that one only tilts a prop into a SLOPE, and it is
-  // worst on flat ground). burying the fringe costs nothing. read by WildProps.sit for the scatter
-  // and by render.facility.FacilityGround.GREEN for the same glb in a park
-  public static inline var BROADLEAF_SINK = 0.09;
 
   public static var PROPS:Array<WildProp> = [
     {
@@ -126,16 +116,13 @@ class WildStyle
       jitter: 0.22,
     },
     // the only prop out here whose `h` is set by CLEARANCE rather than by look, and the tallest thing
-    // in the area because of it. measured on the glb by binning vertices along Y: a bare trunk holding
-    // 13-16% of the max radius up to 0.30 of the height, then the crown flares to 59% at 0.35 and is
-    // at 90% by 0.45. so the height an actor walks under is 0.35 * h, and 3.0 of that is spoken for by
-    // the actor billboard — 9.5 leaves 3.32. the original mesh had no such number at all: its canopy
-    // skirted down to ~22% of its height and the player walked head-first into the foliage.
+    // in the area because of it. the hand-modelled crown closes in a cap 3.33 units up
+    // (models-src/wild/broadleaf_build.py: the bole is bare through the bottom 0.35 of the height), so
+    // 9.5 leaves the 3.0 actor billboard clear. the first generated mesh had no such number at all:
+    // its canopy skirted down to ~22% of its height and the player walked head-first into the foliage.
     //
     // being TALL is not what costs footprint here, the bbox is: at aspect 0.71 this is the narrowest
-    // tree of the four for its height, so 9.5 draws 6.7 world units across — LESS than the 7.15 the
-    // first replacement took at h 6.5, and less than the 6.3 of the original at 5.8 is close to.
-    // models.json carries the whole record, including the two retired meshes in Unused/
+    // tree of the four for its height, so 9.5 draws 6.7 world units across
     {
       path: RenderConfig.MODELS.wildTreeBroadleafHand,
       h: 9.5,
@@ -166,7 +153,7 @@ class WildStyle
       r: 0.80,
       jitter: 0.28,
     },
-    // the second bush, and the widest prop out here: aspect 2.86 against bush-low's 1.91, so a lower
+    // the second bush, and the widest prop out here: aspect 2.86 against the dome's 1.82, so a lower
     // `h` still draws WIDER — 2.9 world units across at 1.0. that is the shape difference doing the
     // work, a sprawling bramble beside a rounded scrub, rather than two domes at two sizes
     {
@@ -271,7 +258,7 @@ class WildStyle
   // is made of them, a forest floor mostly is not
   // instance cull radius, in world units: a margin around a prop's centre so nothing pops at the
   // frame edge. sized to the tallest prop, since render.Models.cull tests ONE sphere radius for every
-  // batch. it went 7.0 -> 9.0 with the broadleaf-full's h, which is the standing tie: raise the
+  // batch. it went 7.0 -> 9.0 with the in-leaf broadleaf's h, which is the standing tie: raise the
   // tallest prop and this has to follow it or that prop pops in at the frame edge
   public static inline var PROP_CULL_R = 9.0;
 
