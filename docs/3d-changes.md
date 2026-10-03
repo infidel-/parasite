@@ -1112,7 +1112,7 @@ bushes in the wilderness too, and redo the rocks, logs and dead trees in Blender
   | Build script | Models | Tris (old TRELLIS) |
   |---|---|---|
   | `guard_rail_build.py` | W-beam on two posts, amber reflector caps | 384 (4,782) |
-  | `deadwood_build.py` | snag / bare broadleaf (both wind-twisted, crooked, unlike limbs) / log | 400 / 716 / 116 (4,784 / 4,934 / 3,112) |
+  | `deadwood_build.py` | snag / bare broadleaf (both wind-twisted, crooked, unlike limbs) / log | 400 / 588 / 116 (4,784 / 4,934 / 3,112) |
   | `rock_build.py` | boulder / cluster / outcrop / 2x2 | 170 / 490 / 488 / 728 (1,548 / 4,736 / 4,981 / 10,000) |
 
   Each was sized to the aspect of the glb it replaced, within 0.07 (the bare broadleaf, 0.91 against

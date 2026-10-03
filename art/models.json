@@ -1056,16 +1056,16 @@
       "tex": 512,
       "note": "the dead snag, replacing the TRELLIS wild/tree-dead (4,784 tris): a flared trunk broken off ragged at the top and three UNLIKE broken limbs stripped to bare deadwood (a heavy one drooping past horizontal low down, a thin one climbing steep, a thick stub near the top), all WIND-TWISTED: each ring turns 0.32 rad a unit up the trunk (0.9 on the limbs) so the bark spirals, and the axis crooks by up to 0.45 (limbs 0.22) with the limbs rooted on the bent axis. Rings every 0.5 rather than 1.0 so the bend is a curve, not a kinked pipe. 400 tris, 5.6 tall (WildStyle h) at aspect 0.47 against the old 0.47. Hand-modelled off models-src/wild/deadwood_build.py: one tapered-limb primitive with bark bookmatched up its length at SCALE 2.0 (~127 texels a unit, the rocks' and the rail's density) and a jagged broken tip in pale deadwood. Art is rock-sheet.png cells 2/3 (sheet_build.py off rock-sheet-gen.png, levelled by a FLAT scalar onto the old glbs' shipped luma, bark 47 / deadwood 53). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
       "roughness": 1,
-      "last_converted": "2026-10-03T18:35:55Z",
+      "last_converted": "2026-10-03T18:41:39Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "wild/tree-bare-hand": {
       "src": "wild/tree-bare-hand.glb",
       "tris": -1,
       "tex": 512,
-      "note": "the bare broadleaf, replacing the TRELLIS wild/tree-broadleaf (4,934 tris): a flared, wind-twisted, crooked trunk forking into three UNLIKE limbs (deadwood_build.BARE_LIMBS: a steep leader, a long low spreading limb, a short one snapped early, each leaving the trunk at its own height and thickness) that fork again, every fork rooted on its parent's BENT axis at 0.78 of the parent's radius there (KNEE_K: a 6-sided limb's faces stand at 0.866, so 0.9 put root-cap corners through them, reported as holes). A parent with a fork off its TIP closes in a rounded bark dome (DOME) that fills the knee's outer wedge. The first cut dealt three copies 120 degrees apart at one pitch and length and read as a candelabra. 716 tris, 6.5 tall (WildStyle h) at aspect 0.76 against the old 0.84: narrower, so its footprint is inside the old one. Hand-modelled off models-src/wild/deadwood_build.py: one tapered-limb primitive with bark bookmatched up its length at SCALE 2.0 (~127 texels a unit, the rocks' and the rail's density) and a jagged broken tip in pale deadwood. Art is rock-sheet.png cells 2/3 (sheet_build.py off rock-sheet-gen.png, levelled by a FLAT scalar onto the old glbs' shipped luma, bark 47 / deadwood 53). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
+      "note": "the bare broadleaf, replacing the TRELLIS wild/tree-broadleaf (4,934 tris): a flared, wind-twisted, crooked trunk forking into three UNLIKE limbs (deadwood_build.BARE_LIMBS: a steep leader, a long low spreading limb, a short one snapped early, each leaving the trunk at its own height and thickness) that fork again, every fork rooted on its parent's BENT axis at 0.78 of the parent's radius there (KNEE_K: a 6-sided limb's faces stand at 0.866, so 0.9 put root-cap corners through them, reported as holes). A limb and the limb that CONTINUES it off its tip are ONE tube (deadwood_build.chain: rings swept along a neighbour-averaged path, radius tapering through the knee, bark bookmatched up the whole length), because two tubes at a knee never matched — different side counts, radii and bark density, so the grain stopped dead and every cap, sleeve or dome over the seam was reported from the game. The trunk grows on into the leader the same way. The first cut dealt three copies 120 degrees apart at one pitch and length and read as a candelabra. 588 tris, 6.5 tall (WildStyle h) at aspect 0.77 against the old 0.84: narrower, so its footprint is inside the old one. Hand-modelled off models-src/wild/deadwood_build.py: one tapered-limb primitive with bark bookmatched up its length at SCALE 2.0 (~127 texels a unit, the rocks' and the rail's density) and a jagged broken tip in pale deadwood. Art is rock-sheet.png cells 2/3 (sheet_build.py off rock-sheet-gen.png, levelled by a FLAT scalar onto the old glbs' shipped luma, bark 47 / deadwood 53). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
       "roughness": 1,
-      "last_converted": "2026-10-03T18:35:55Z",
+      "last_converted": "2026-10-03T18:41:39Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "wild/log-fallen-hand": {
@@ -1074,7 +1074,7 @@
       "tex": 512,
       "note": "the fallen trunk, replacing the TRELLIS wild/log-fallen (3,112 tris): a tapering log lying along x, broken at both ends, with one snapped branch stub kept under the trunk's crown so the 0.9 height is the log's own. 116 tris, aspect 3.80 against the old 3.83. Hand-modelled off models-src/wild/deadwood_build.py: one tapered-limb primitive with bark bookmatched up its length at SCALE 2.0 (~127 texels a unit, the rocks' and the rail's density) and a jagged broken tip in pale deadwood. Art is rock-sheet.png cells 2/3 (sheet_build.py off rock-sheet-gen.png, levelled by a FLAT scalar onto the old glbs' shipped luma, bark 47 / deadwood 53). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
       "roughness": 1,
-      "last_converted": "2026-10-03T18:35:55Z",
+      "last_converted": "2026-10-03T18:41:39Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "wild/rock-boulder-hand": {
