@@ -115,6 +115,7 @@ class CorpStyle
   public static inline var COUNTER_FRONT = 'textures/corp/counter-front.png';
   public static inline var VANITY_TOP = 'textures/corp/vanity-top.png';
   public static inline var STALL_PANEL = 'textures/corp/stall-panel.png';
+  public static inline var STALL_EDGE = 'textures/corp/stall-edge.png';
   public static inline var TABLE_TOP = 'textures/corp/table-top.png';
   // and the reception counter's two marbles, cut from one packed sheet (art/textures.json
   // corp/reception-pack): the TOP of both tiers, and the corridor-side FRONT and the ledge's edges

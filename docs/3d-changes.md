@@ -1020,6 +1020,8 @@ Verdict: **landed.**
 
 ## Corp WC cubicle: a plain grey panel, half as thick (`corp/stall-panel`, `STALL_T` 0.3 → 0.15)
 
+> SUPERSEDED by Corp WC cubicle: the panel art on the broad faces, plain laminate on the lid and ends
+
 Reported off a pick on a panel's top as "should just be gray", plus "make the stall walls 50% thinner".
 
 - **Cause.** The label was the whole laminate quadrant of `wet-pack`, which is an authored panel with
@@ -1037,3 +1039,33 @@ Reported off a pick on a panel's top as "should just be gray", plus "make the st
 - `STALL_T` 0.15. Every panel is emitted ±T/2 about its line, so nothing else moves.
 
 Verdict: **landed.**
+
+## Corp WC cubicle: the panel art on the broad faces, plain laminate on the lid and ends
+
+The entry above misread the report. The pick was on a panel's LID, and "should just be gray" meant
+the lid, not the panel. The broad faces were fine.
+
+- **Fix.** `corp/stall-panel` is back to the whole wet-pack quadrant (74.4 srgb). The detrended plain
+  patch is a label of its own, **`corp/stall-edge`**, at the panel's lift 1.324 (75.2 srgb), so it
+  reads as the same laminate. `CorpFurniture.panel` puts STALL_PANEL on the two broad faces
+  (whichever axis the rect is longer on) and STALL_EDGE on the two narrow ends and the lid: one
+  texture per face. That is +1 shell buffer. `STALL_T` 0.15 stays.
+- **Trap.** `tools/textures.py`'s staleness test covers lift, sat, cells, glass and regrid, but **not
+  `crop`**. Reverting a label's crop left the derived art in `app/` while the build said nothing.
+  Delete the built png to force it.
+
+Verdict: **landed.**
+
+## Corp washroom floor: a grout line across the wrap (`corp/floor-washroom`)
+
+Reported off a pick in the washroom as "floor texture is not fully seamless".
+
+- **Cause.** The 1024 solo source draws its 5 px grout at 337..341 and 682..686, three tiles a repeat,
+  and **nothing at 0/1024**. Every repeat therefore laid one double-width tile. On screen the lines
+  ran 240 / 123 / 240 / 122 px apart where they should be even.
+- **Fix.** Cols and rows 1022..2 are a copy of the 337..341 line, so the crossings come along with
+  it. They are painted over the pristine drop, parked in `textures-src/corp/Unused/`, and the
+  manifest note records it. The built mean is unchanged (93.8 → 94.0).
+- **Measured.** A top-down render of the area 6475 washroom shows every grout line evenly spaced.
+
+Verdict: **bug, fixed.**

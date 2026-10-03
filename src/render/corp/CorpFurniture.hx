@@ -1331,7 +1331,6 @@ class CorpFurniture
       // cell's own FIT_INSET 0.12 plus the unit of the WALL CELL that belongs to the room — see
       // `wallFaceAt`), and no door on the cubicle at all
       var alongX = FacilityModel.isWall(m, col, row - 1) || FacilityModel.isWall(m, col, row + 1);
-      var b = buf(CorpStyle.STALL_PANEL);
       var t = CorpStyle.STALL_T / 2;
       // which hand the masonry is on, and so which one the player walks up to
       var back = (alongX
@@ -1351,10 +1350,10 @@ class CorpFurniture
           // way back to the masonry, because `r` was widened onto it above
           if (alongX != (dir >= 2))
             continue;
-          panel(b, side(r, dir, 2 * t), 0, CorpStyle.STALL_H);
+          panel(side(r, dir, 2 * t), 0, CorpStyle.STALL_H);
         }
       // the back, on the masonry hand
-      panel(b, side(r, back, 2 * t), 0, CorpStyle.STALL_H);
+      panel(side(r, back, 2 * t), 0, CorpStyle.STALL_H);
       // and the LEAF, inset a reveal at each jamb and stopped short of the floor.
       //
       // ponytail: every leaf is shut. One standing ajar wants a box turned off the axes, which is
@@ -1372,17 +1371,22 @@ class CorpFurniture
           leaf.z0 += e;
           leaf.z1 -= e;
         }
-      panel(b, leaf, CorpStyle.STALL_DOOR_GAP, CorpStyle.STALL_H);
+      panel(leaf, CorpStyle.STALL_DOOR_GAP, CorpStyle.STALL_H);
       n.stalls++;
       ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
     }
 
-// one upright box of panelling: four faces and a lid, in the one buffer
-  static function panel(b:MeshBuf, p:Rect, y0:Float, y1:Float):Void
+// one upright box of cubicle panelling: its two broad faces wear the panel art, and its two narrow
+// ends and its lid the plain laminate — the panel art is an authored sheet with a stainless rail and a
+// centre seam, and laid over a 0.15 strip it drew slices of both, reported off a pick on the lid
+  static function panel(p:Rect, y0:Float, y1:Float):Void
     {
+      var broadZ = (p.x1 - p.x0 > p.z1 - p.z0);
       for (dir in 0...4)
-        FacilityGeom.face(b, p.x0, p.x1, p.z0, p.z1, dir, y0, y1, CorpStyle.PARTITION_TILE);
-      FacilityGeom.cap(b, p.x0, p.x1, p.z0, p.z1, y1, CorpStyle.PARTITION_TILE);
+        FacilityGeom.face(buf(broadZ == (dir < 2) ? CorpStyle.STALL_PANEL : CorpStyle.STALL_EDGE),
+          p.x0, p.x1, p.z0, p.z1, dir, y0, y1, CorpStyle.PARTITION_TILE);
+      FacilityGeom.cap(buf(CorpStyle.STALL_EDGE), p.x0, p.x1, p.z0, p.z1, y1,
+        CorpStyle.PARTITION_TILE);
     }
 
 // one cubicle panel, standing on a boundary between two cells: four faces, the trim rail on top,
