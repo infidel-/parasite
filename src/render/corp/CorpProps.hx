@@ -23,6 +23,7 @@ typedef CorpPropSet = {
   var coolers:Int;
   var printers:Int;
   var pans:Int;        // WC pans, one per stall
+  var basins:Int;      // washroom vanities, one per basin cell
   var desks:Int;       // bench desk modules, one per open-plan / cubicle worktop cell
   var legs:Int;        // blade legs, one per boardroom / executive slab cell
   var bins:Int;        // waste bins, one per CORP_TRASH decoration
@@ -143,6 +144,7 @@ class CorpProps
         coolers: 0,
         printers: 0,
         pans: 0,
+        basins: 0,
         desks: 0,
         legs: 0,
         bins: 0,
@@ -211,10 +213,13 @@ class CorpProps
       };
       CorpKitchen.place(m, area, kt);
       stalls(m, pans);
+      var vans = [];
+      basins(m, vans);
       standing(m, floors, area);
       n.chairs = chairs.length;
       n.monitors = mons.length;
       n.pans = pans.length;
+      n.basins = vans.length;
       n.plants = floors[0].length;
       n.coolers = floors[1].length;
       n.printers = floors[2].length;
@@ -227,6 +232,7 @@ class CorpProps
       out.push(batch(scene, RenderConfig.MODELS.corpMonitor, mons, CorpStyle.MON_H));
       out.push(batch(scene, RenderConfig.MODELS.corpKeyboard, keys, CorpStyle.KEY_H));
       out.push(batch(scene, RenderConfig.MODELS.corpWc, pans, CorpStyle.WC_H));
+      out.push(batch(scene, RenderConfig.MODELS.corpVanity, vans, CorpStyle.VANITY_GLB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpDesk, benches, CorpStyle.DESK_GLB_H));
       out.push(batch(scene, RenderConfig.MODELS.corpTableLeg, legs, CorpStyle.LEG_H));
       out.push(batch(scene, RenderConfig.MODELS.corpBin, binp, CorpStyle.BIN_H));
@@ -507,6 +513,73 @@ class CorpProps
             var pw = (dir < 2 ? CorpStyle.WC_W : CorpStyle.WC_D) / 2;
             var pd = (dir < 2 ? CorpStyle.WC_D : CorpStyle.WC_W) / 2;
             ContactMask.prop(x - pw, x + pw, z - pd, z + pd);
+          }
+    }
+
+// a vanity on every basin cell, backed onto the run's wall: the fixture cells that ARE a run, by the
+// same contiguity test as `stalls`. the glb is the full cell wide, so a run butts into one worktop,
+// and the contact is laid once per run
+  static function basins(m:Facility, vans:Array<Models.PropPlace>):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            if (!CorpFurniture.fixture(m, col, row) ||
+                !CorpFurniture.run(m, col, row))
+              continue;
+            var alongX = CorpFurniture.fixture(m, col - 1, row) ||
+              CorpFurniture.fixture(m, col + 1, row);
+            // a run is taken from its first cell only
+            if (CorpFurniture.fixture(m, col - (alongX ? 1 : 0), row - (alongX ? 0 : 1)))
+              continue;
+            var dir = -1;
+            for (d in (alongX ? [0, 1] : [2, 3]))
+              if (FacilityModel.isWall(m, col + DC[d], row + DR[d]))
+                {
+                  dir = d;
+                  break;
+                }
+            if (dir < 0)
+              continue;
+            var sc = (alongX ? 1 : 0);
+            var sr = (alongX ? 0 : 1);
+            var len = 0;
+            var first = null;
+            var last = null;
+            while (CorpFurniture.fixture(m, col + sc * len, row + sr * len))
+              {
+                var cc = col + sc * len;
+                var cr = row + sr * len;
+                // off the wall's own slab face, the unit's back on it -- `stalls`' offset
+                var sl = FacilityGeom.slab(m, cc + DC[dir], cr + DR[dir]);
+                var off = CorpStyle.VANITY_D / 2 + CorpStyle.PROP_GAP;
+                var c = CityConfig.cellToWorld(cc, cr);
+                var p = {
+                  x: (dir == 2 ? sl.x1 + off : (dir == 3 ? sl.x0 - off : c.x)),
+                  z: (dir == 0 ? sl.z1 + off : (dir == 1 ? sl.z0 - off : c.z)),
+                  yaw: Math.atan2(DC[dir ^ 1], DR[dir ^ 1]),
+                };
+                vans.push(p);
+                if (first == null)
+                  first = p;
+                last = p;
+                len++;
+              }
+            var ha = CELL / 2;
+            var hd = CorpStyle.VANITY_D / 2;
+            FacilityDetail.ground(m, {
+              col: col,
+              row: row,
+              len: len,
+              alongX: alongX,
+              rect: {
+                x0: first.x - (alongX ? ha : hd),
+                x1: last.x + (alongX ? ha : hd),
+                z0: first.z - (alongX ? hd : ha),
+                z1: last.z + (alongX ? hd : ha),
+              },
+              h: CorpStyle.VANITY_H,
+            });
           }
     }
 

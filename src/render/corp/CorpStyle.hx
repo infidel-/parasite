@@ -521,6 +521,10 @@ class CorpStyle
   public static inline var KITCHEN_CHAIR_JITTER = 0.14;
   public static inline var COUNTER_D = 1.32;
   public static inline var SINK_H = 2.5308;
+  // the washroom vanity (models-src/corp/vanity_build.py): the sink counter at VANITY_H, its mesh
+  // topping out at the gooseneck, and as deep as the kitchen's
+  public static inline var VANITY_GLB_H = 2.4308;
+  public static inline var VANITY_D = 1.32;
   public static inline var CAB_H = 1.4;
   public static inline var CAB_W = 3.94;
   public static inline var CAB_D = 0.74;

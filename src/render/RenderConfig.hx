@@ -889,6 +889,7 @@ class RenderConfig {
     corpKitchenTable: 'models/corp/kitchen-table.glb',       // beech on four steel legs, 376
     corpKitchenChair: 'models/corp/kitchen-chair.glb',       // terracotta shell, four legs, 412
     corpKitchenCounter: 'models/corp/kitchen-counter.glb',   // one cell of base unit, 452
+    corpVanity: 'models/corp/vanity.glb',                    // washroom basin cell, glazed bowl, 896
     corpKitchenSink: 'models/corp/kitchen-sink.glb',         // the unit with bowl and tap, 884
     corpKitchenCab: 'models/corp/kitchen-wall-cab.glb',      // the wall cabinet over it, 336
     corpKitchenFridge: 'models/corp/kitchen-fridge.glb',     // fridge-freezer with notes, 552

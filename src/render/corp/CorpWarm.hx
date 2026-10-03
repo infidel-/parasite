@@ -108,6 +108,7 @@ class CorpWarm
         { path: RenderConfig.MODELS.corpMonitor, h: CorpStyle.MON_H },
         { path: RenderConfig.MODELS.corpKeyboard, h: CorpStyle.KEY_H },
         { path: RenderConfig.MODELS.corpWc, h: CorpStyle.WC_H },
+        { path: RenderConfig.MODELS.corpVanity, h: CorpStyle.VANITY_GLB_H },
         { path: RenderConfig.MODELS.corpPlant, h: CorpStyle.PLANT_H },
         { path: RenderConfig.MODELS.corpCooler, h: CorpStyle.COOLER_H },
         { path: RenderConfig.MODELS.corpPrinter, h: CorpStyle.PRINTER_H },

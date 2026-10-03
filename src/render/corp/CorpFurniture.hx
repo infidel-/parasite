@@ -1296,17 +1296,10 @@ class CorpFurniture
       var r = rect(m, col, row, CorpStyle.FIT_INSET, fixture);
       if (run(m, col, row))
         {
-          // the basin counter, and the mirror band on the masonry behind it
+          // the mirror band on the masonry behind the basin. THE COUNTER ITSELF IS A GLB NOW
+          // (render.corp.CorpProps.basins, corp/vanity): this emitted a closed slab of vanity-top
+          // with no bowl and no tap, reported as a washroom without sinks
           var alongX = fixture(m, col - 1, row) || fixture(m, col + 1, row);
-          FacilityGeom.cap(buf(CorpStyle.VANITY_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.VANITY_H,
-            CorpStyle.COUNTER_TILE);
-          for (dir in 0...4)
-            {
-              if (fixture(m, col + dx(dir), row + dz(dir)))
-                continue;
-              FacilityGeom.face(buf(CorpStyle.COUNTER_FRONT), r.x0, r.x1, r.z0, r.z1, dir, 0,
-                CorpStyle.VANITY_H, CorpStyle.COUNTER_TILE);
-            }
           n.basins++;
           // the mirror goes on whichever face looks at masonry, which is the run's own back. it
           // hangs on FacilityGeom.slab's face and not on the cell boundary — a corp wall slab is a
@@ -1322,7 +1315,6 @@ class CorpFurniture
                 CorpStyle.MIRROR_Y0, CorpStyle.MIRROR_Y1, CorpStyle.MIRROR_TILE);
               n.mirrors++;
             }
-          ContactMask.prop(r.x0, r.x1, r.z0, r.z1);
           return;
         }
       // A WC CUBICLE: two dividers, the back panel against the masonry and a door leaf on the

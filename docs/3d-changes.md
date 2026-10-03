@@ -967,3 +967,28 @@ of 0.28 and 0.32 of a tile) as "the L corner does not blend with the tables".
   Lab benches checked live in lab 108: unchanged.
 
 Verdict: **bug, fixed.**
+
+## Corp washroom vanity as a glb per basin cell (`corp/vanity`, `CorpProps.basins`)
+
+Reported as "toilet lacks sinks". Two faults, one of them in the generator.
+
+- **Generator.** `CorpRooms.toilet` centred the basin run blind and skipped the cell under a doorway,
+  so a door in the middle of the basin wall split a three-basin run into two LONE fixtures.
+  `CorpFurniture.washroom` tells a basin from a WC cubicle by contiguity alone, so both came out as
+  cubicles: area 6475 room 106, four stalls and no sink. The run now slides to the most central span
+  with no cell at a doorway (`clearSpan`, every hand via `atDoor`), two cells minimum, swapping walls
+  with the stalls when its own wall cannot fit two. `GenCheck.corpWashroomSane` asserts it: **20
+  failures in 3000 corp seeds before, 0 after.**
+- **Render.** Even an intact run was a closed slab of vanity-top over counter-front, with no bowl and
+  no tap. The `CORP_TAP` decoration the generator lays on it has no renderer outside the kitchen.
+  It is now `models-src/corp/vanity_build.py`, kitchen_build's sink counter cloned at `VANITY_H`
+  1.7: **896 tris, 4.0 x 1.32 x 2.43**, a glazed bowl, a gooseneck tap and wood doors. `check` reads
+  0/0/1/0. Each cell stands one against the run's wall with `stalls`' slab offset, a run butts
+  into one worktop, and `FacilityDetail.ground` runs once per run. The mirror stays emitted.
+- **Sheet** `vanity-sheet.png` is pasted from art the tower already owns: counter-front's middle
+  door panel (between its grooves, so a door does not repeat the slab's painted ones), vanity-top,
+  the kitchen counter's steel and dark, and the corp WC's glaze. No `baseColor`/`lift`.
+- **Measured.** Area 6475 washroom at 16,45, same follow pose: **69 → 70 dc, 123.7k → 126.4k tris**.
+  That is the one new batch. The emitted slab's two labels stay drawn by others, so nothing came back.
+
+Verdict: **landed.**

@@ -1554,6 +1554,14 @@
       "last_converted": "2026-09-27T23:38:00Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
+    "corp/vanity": {
+      "src": "corp/corp-vanity.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "one washroom basin cell, 896 tris, 4.0 x 1.32 x 2.43: kitchen_build's sink counter cloned at VANITY_H 1.7 -- a vanity-top stone top the full cell wide round a lathed glazed bowl, a gooseneck tap, two wood doors with steel pulls over a dark kick, 65 cm deep against its wall. Butted cell to cell into one worktop; replaced CorpFurniture.washroom's emitted slab, which had no bowl or tap. Wears vanity-sheet (pasted from corp counter-front, vanity-top, kitchen-counter-sheet and toilet-sheet, see the script header). Hand-modelled (models-src/corp/vanity_build.py), holes 0, coplanar 0, islands 1, texel_off 0. Carries NO baseColor/lift.",
+      "last_converted": "2026-10-03T12:26:52Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
     "corp/kitchen-sink": {
       "src": "corp/corp-kitchen-sink.glb",
       "tris": -1,
