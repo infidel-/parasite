@@ -2612,7 +2612,9 @@ class FacilityStyle
   // how far each strand's two ends are thrown off the unit's own centre, world units — the bundle
   // SPLAYS at both ends instead of leaving and arriving as one thick cord
   public static inline var GEN_CABLE_SPLAY = 0.35;
-  // each strand lies this much higher than the one before, so two that cross never share a plane
+  // each strand into one generator lies this much higher than the one before, so two that cross
+  // never share a plane. not under ~0.01: the camera's near plane is 0.1 and the far zoom stops
+  // resolving a smaller step
   public static inline var GEN_CABLE_LIFT = 0.012;
 
   // === the study rig's own leads (render.facility.FacilityRig)

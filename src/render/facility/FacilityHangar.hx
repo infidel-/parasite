@@ -159,9 +159,14 @@ class FacilityHangar
 //
 // INTO THE SAME BORROWED BUFFER as the fan, so the bundles are the compound's one cable mesh and cost
 // no draw call. Everything about a strand is rolled off its own seed — whether the bundle takes a
-// third, where each end is thrown, which way it bows, how it kinks (StripOpts.mess) — and each lies
-// GEN_CABLE_LIFT over the last, because a messy bundle crosses itself and two crossing ribbons in one
-// plane z-fight
+// third, where each end is thrown, which way it bows, how it kinks (StripOpts.mess).
+//
+// AND NO TWO STRANDS INTO ONE GENERATOR SHARE A HEIGHT, because two crossing ribbons in one plane
+// z-fight. The count runs PER GENERATOR and not per bundle: every bundle feeding one converges and
+// crosses the others at its end, and numbering strands within their own bundle put strand 1 of every
+// bundle at the same 0.092 — reported from the game as exactly that. It starts one step ABOVE
+// PODIUM_CABLE_Y, which is the fan's own height. GEN_CABLE_LIFT is the depth buffer's floor and not
+// a look: the near plane is 0.1, so a step under ~0.01 is not resolved at the far zoom
   static function power(b:MeshBuf, m:Facility, si:Int):Int
     {
       var gens = [];
@@ -181,6 +186,8 @@ class FacilityHangar
               x: (r0.x0 + r0.x1) / 2,
               z: (r0.z0 + r0.z1) / 2,
               seed: FacilityModel.mix((cc * 92821) ^ (rr * 68917)),
+              // strands landed on this generator so far, i.e. the next free layer over the floor
+              layer: 0,
             };
             if (k == _FittingKind.FIT_GENERATOR)
               gens.push(p);
@@ -212,7 +219,8 @@ class FacilityHangar
               // each end thrown its own way off the unit's centre, -1..1 of the splay on both axes
               var j = function(k:Int):Float
                 return (((s >>> k) % 1000) / 500.0 - 1.0) * sp;
-              var y = FacilityStyle.PODIUM_CABLE_Y + i * FacilityStyle.GEN_CABLE_LIFT;
+              g.layer++;
+              var y = FacilityStyle.PODIUM_CABLE_Y + g.layer * FacilityStyle.GEN_CABLE_LIFT;
               FacilityCable.strip(b, {
                 a: [ r.x + j(1), y, r.z + j(5) ],
                 c: [ g.x + j(9), y, g.z + j(13) ],
