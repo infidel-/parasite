@@ -828,3 +828,33 @@ so does the study console.
   about how a marker map lights has to hold at the mip the camera actually samples.
 
 Verdict: **bug, fixed.**
+
+## The scenario console and slots lost their lamps to the Lambert switch (`PropGlow.patch` guard)
+
+Reported right after the coverage weighting above as "you killed purple glow on the terminals". It was
+not that commit.
+
+- **Cause.** af943d92 (2026-10-02) put the scenario console, case and slot on `"roughness": 1`, so
+  `Models.toLambert` swaps their materials for `MeshLambertMaterial`. `PropGlow.patch` returned early
+  on anything that is not `isMeshStandardMaterial`, so the lamp families stopped on both props.
+  Nothing reported it: no error, no warning, just a flat violet marker at emissiveStrength 0.35 where
+  the haloing, breathing screen and sockets had been. That entry's "indoors nothing" was measured on
+  specular alone. Live, the console and slot materials carried no `propLampFull` uniform; the ship,
+  still Standard at roughness 0.80, did.
+- **Fix.** The guard accepts Lambert too. Lambert's fragment shader has `<emissivemap_fragment>`,
+  `totalEmissiveRadiance`, `diffuseColor` and `normal`, which is everything the patch reads, so it
+  compiles unchanged. Every shine and eyes row is a habitat prop, and those stay Standard, so no other
+  prop changes. Facility warm went from 107 to 108 programs, so the new program is warm before area
+  entry.
+- **And the coverage floor became per family** (`PropLamp.full`, uniform `propLampFull`). The console
+  map ships at 512, and its glyph strokes are 1-2 texels: 38% of its matched texels are partial at
+  mip 0. Glow energy kept at 0.85 is 72% at mip 0, 59% at mip 1, 57% at mip 2 and 50% at mip 3. Its
+  peak was tuned to 1.31 against `BLOOM_THRESHOLD` 0.9, so it would never cross. The ship's two
+  families set `full: 0.85` (its marker is flat 224, so it keeps 100% at mip 0 and 86% at mip 2). The
+  console and slots omit it, which means hue-only as before. Their bleed stays inside the readout
+  rather than landing on a hull.
+- **Trap.** The A/B in the entry above showed the console "unchanged" because the lamp term was not
+  running on it in either leg. An unchanged prop in an A/B is a reason to check that the patch is on
+  the material (`renderer.properties.get(mat).uniforms`), not a pass.
+
+Verdict: **bug, fixed.** Console screen and slot sockets halo and breathe again, seen at a pinned close-up.

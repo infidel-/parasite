@@ -351,6 +351,10 @@ typedef PropLamp = {
   pulseRate:Float, // its speed as a BASE_MS multiplier. DELIBERATELY unrelated between families: the
                    // whole point of the column is that they never land together
   phase:Float,     // offset in turns, 0..1, so two families sharing a rate still never do
+  ?full:Float,     // the texel VALUE at which this family counts as wholly lit; under it the glow
+                   // scales with value, i.e. with how much of a minified texel is lamp. set it to
+                   // the marker's own flat value on a sparse map, where a mip's bleed lands on
+                   // bare hull. absent is hue-only, for art too fine to survive the weighting
 };
 
 // every lamp family on one prop, plus the one threshold that tells them apart
@@ -616,6 +620,9 @@ class ObjModels
             pulse: 0.30,
             pulseRate: 0.17,
             phase: 0.0,
+            // the painted marker is flat at 224, so 0.85 lights a covered texel fully and fades
+            // the mip bleed that sprinkled amber over the hull when the camera pulled back
+            full: 0.85,
           },
           // the hull lamp discs, spread right round the azimuth, which is what makes the ship read
           // as running rather than as lit from one side. the FASTER of the two and the one that
@@ -630,6 +637,7 @@ class ObjModels
             pulse: 0.55,
             pulseRate: 0.41,
             phase: 0.37,
+            full: 0.85,
           },
           // THERE WAS A THIRD FAMILY AND IT IS GONE ON PURPOSE: a near-white lens in the crown,
           // which is the one part of this ship the game's camera looks straight down at. It never

@@ -100,8 +100,12 @@ class PropGlow
           mat.onBeforeCompile.propGlow == true)
         return;
       // totalEmissiveRadiance only exists in a LIT material's fragment shader. the tactical outline
-      // hull is a MeshBasicMaterial and has none — and must not glow anyway, it is a UI marker
-      if (mat.isMeshStandardMaterial != true)
+      // hull is a MeshBasicMaterial and has none — and must not glow anyway, it is a UI marker.
+      // LAMBERT IS LIT TOO, and has every anchor this patch reads: it used to be Standard-only, and
+      // the day the scenario console and slots went to Lambert (`"roughness": 1` in art/models.json)
+      // their lamps went dark with nothing in the frame or the console to say so
+      if (mat.isMeshStandardMaterial != true &&
+          mat.isMeshLambertMaterial != true)
         return;
       if (geo.boundingBox == null)
         geo.computeBoundingBox();
@@ -123,6 +127,7 @@ class PropGlow
       var lampHueL = [];
       var lampCol = [];
       var lampBeat = [];
+      var lampFull = [];
       if (hasL)
         for (row in l.list)
           {
@@ -142,6 +147,8 @@ class PropGlow
             lampHueL.push(new Vector3(lr / lm, lg / lm, lb / lm));
             lampCol.push(new Color(row.color).multiplyScalar(row.glow));
             lampBeat.push(new Vector4(row.base, row.pulse, row.pulseRate, row.phase));
+            // absent is hue-only: a floor this low puts every texel past the 0.004 gate at 1
+            lampFull.push(row.full != null ? row.full : 1e-4);
           }
       // the eye tables, resolved to LOCAL units once here rather than per fragment. `eyeC` is centre +
       // radius, `eyeF` the unit direction the eye faces (which is what the near-hemisphere clip and
@@ -236,6 +243,7 @@ class PropGlow
         lampHueL: { value: lampHueL },
         lampCol: { value: lampCol },
         lampBeat: { value: lampBeat },
+        lampFull: { value: lampFull },
         // clamped away from 0 because it is a smoothstep WIDTH, like the two eye terms above
         lampTol: { value: hasL ? Math.max(l.tol, 1e-3) : 1.0 },
       };
@@ -282,6 +290,7 @@ class PropGlow
           'uniform vec3 propLampHueL[ ' + l.list.length + ' ];\n' +
           'uniform vec3 propLampCol[ ' + l.list.length + ' ];\n' +
           'uniform vec4 propLampBeat[ ' + l.list.length + ' ];\n' +
+          'uniform float propLampFull[ ' + l.list.length + ' ];\n' +
           'uniform float propLampTol;\n' : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
@@ -549,15 +558,15 @@ class PropGlow
         // another's texels — and a three upgrade that starts decoding cannot silently kill this
         '    float ld = min( distance( lhue, propLampHue[ i ] ),\n' +
         '      distance( lhue, propLampHueL[ i ] ) );\n' +
-        // and WEIGHTED BY HOW MUCH OF THE TEXEL IS LAMP, which is what the hue alone cannot say. A
-        // minified map averages a lamp into the black round it and the hue survives the average, so
-        // an unweighted match gave a texel that is a tenth lamp the whole family's HDR colour: the
-        // lit area grew with distance and trilinear flipped it in and out — "yellow glowies" all
-        // over the hull when the camera pulled back. Every shipped marker is painted flat at its
-        // own value (ship 224, console 240, both over 0.85), so a covered texel still lights fully.
-        // ponytail: one floor for every marker; a per-family uniform if a darker marker ever ships
+        // and WEIGHTED BY HOW MUCH OF THE TEXEL IS LAMP, per family, where the family asks for it
+        // (PropLamp.full). A minified map averages a lamp into the black round it and the hue
+        // survives the average, so on a hull with sparse lamps an unweighted match gave a texel that
+        // is a tenth lamp the whole family's HDR colour — "yellow glowies" over the ship when the
+        // camera pulled back. NOT EVERY FAMILY: the console's glyph strokes are a texel or two wide
+        // in a 512 map, so weighting them by coverage dropped the screen's peak under the bloom
+        // threshold and its halo went with it; there the bleed stays inside the readout anyway
         '    float lw = ( 1.0 - smoothstep( propLampTol * 0.6, propLampTol, ld ) ) *\n' +
-        '      min( lmx / 0.85, 1.0 );\n' +
+        '      min( lmx / propLampFull[ i ], 1.0 );\n' +
         '    vec4 lb = propLampBeat[ i ];\n' +
         // the beat, per family: its own rate, its own phase offset, and the per-INSTANCE phase on
         // top so two ships in one area never breathe together. `lb.x` is the steady floor the
@@ -613,6 +622,7 @@ class PropGlow
               shader.uniforms.propLampHueL = u.lampHueL;
               shader.uniforms.propLampCol = u.lampCol;
               shader.uniforms.propLampBeat = u.lampBeat;
+              shader.uniforms.propLampFull = u.lampFull;
               shader.uniforms.propLampTol = u.lampTol;
             }
           if (hasE)
