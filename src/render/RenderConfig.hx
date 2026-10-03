@@ -966,7 +966,7 @@ class RenderConfig {
     facilityBooth: 'models/facility/booth-hand.glb',           // kiosk shell, sill and head reveals, aerial
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
-    wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long
+    wildGuardRail: 'models/wild/guard-rail-hand.glb',             // W-beam on two posts, hand-modelled, one cell long
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch

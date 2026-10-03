@@ -89,13 +89,12 @@ class WildProps
 //
 // the second run is free where it matters — render.Models.instanced keeps one InstancedMesh per PROPS
 // row, so both runs are the SAME draw call and only the instance count moves. what it does cost is
-// triangles, and this prop is the area's largest single consumer of them (see docs/3d-render.md): if
-// the wilderness ever needs a triangle back, its castShadow is the lever, not this.
+// triangles — 384 a segment since the hand-modelled rail, against the generated one's 4,782.
 //
 // the yaw is LOCKED to the corridor axis, alone among the props out here. every other row deals a full
 // turn because a rock and a tree have no authored front; a crash barrier has one, and a run of them at
-// random angles is a scrapyard. the far run adds PI so both face the road — correct by intent and
-// invisible in fact, since the glb is 0.05 deep against 0.40 tall and draws 0.2 world units thick.
+// random angles is a scrapyard. the far run adds PI so both face the road: the W-beam on the road
+// side, its posts and spacers behind it (models-src/wild/guard_rail_build.py).
 // no sit() call either — `sit` sinks a prop by its footprint against the SLOPE, and the shoulder cell
 // it stands on has just been graded, so the correction it would apply is the one thing this prop must
 // not have: a rail follows the road, level across

@@ -1215,6 +1215,15 @@
       "last_converted": "2026-09-16T19:34:56Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
+    "wild/guard-rail-hand": {
+      "src": "wild/guard-rail-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the highway W-beam rail, hand-modelled off models-src/wild/guard_rail_build.py, replacing the TRELLIS wild/guard-rail (4,782 tris, a 40-component bake at ~200 instances an area, the wilderness's largest single triangle cost). 384 tris, 4.0 x 0.43 x 1.6 at world size, aspect exactly 2.50 so WildStyle's h 1.6 still tiles one segment per CELL; flat square beam ends, posts at x +/-1 so none lands on a join. buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. THE ART IS ITS OWN PACK4 (rail-sheet.png off rail-sheet-gen.png through sheet_build.py, levelled by a FLAT scalar so the hue holds): galvanised beam on the road face, grimed galvanised on its back and ends, painted steel posts and spacers, an amber reflector on each post cap levelled deliberately OUT of the 46-52 family at luma 95. tile_uv at TILE 2.0, so 128 texels a unit. No baseColor/lift/sat. roughness 1 keeps it on the Lambert path.",
+      "roughness": 1,
+      "last_converted": "2026-10-03T14:29:48Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
     "facility/barrier-hand": {
       "src": "facility/barrier-hand.glb",
       "tris": -1,
