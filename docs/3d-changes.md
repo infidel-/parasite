@@ -945,3 +945,25 @@ Reported by pick next to the new generator ("sprite pool 5, canvas 51x58") and n
 
 Verdict: **bug, fixed.** Live: 0 visible sprite-pool quads within a cell of the 8 facility fittings in
 the regenerated Dogwood Heights compound.
+
+## Desk L corner: the overhang is asked of the RECT, not of the cell (`FacilityTables.lipped`)
+
+Reported by pick on four edge-band faces of office 113's L desk (desk-top.png, v 0.35..0.4, u spans
+of 0.28 and 0.32 of a tile) as "the L corner does not blend with the tables".
+
+- **Cause.** `build` grew each slab by `BENCH_LIP` on a side only when the NEIGHBOUR CELL was not a
+  table. An L corner is two rects, the leg and the stub, and each one's open front faces a bench
+  cell, namely the other arm. So the leg's front and the stub's side took no lip, while the next
+  cell of each arm, with bare floor in front, did. Both arms came out with a `BENCH_LIP` jog at the
+  corner cell, and the slivers the user picked are the edge band's `exposed` spans filling it.
+- **Fix.** `lipped(m, cell, si, col, row, dir)`: a side grows when `exposed` returns any span on
+  it, except the side a door leaf swings past (`facesDoor`, unchanged). A full lab bench next to
+  another full cell is fully met, so nothing grows there, the same as before. At the L, the leg's
+  grown front overlaps the stub by `BENCH_LIP`, the same coplanar overlap the concave-corner note
+  in `build` already accepts. The stub's in-cell face toward the leg is now fully met, so it stops
+  growing into the leg as well.
+- **Measured.** Seed 616109408, office 113, before/after crop at 4x: both arm fronts are one
+  straight line through the corner cell. Same buffers and quad count, so +0 calls and +0 programs.
+  Lab benches checked live in lab 108: unchanged.
+
+Verdict: **bug, fixed.**

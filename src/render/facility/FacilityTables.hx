@@ -139,14 +139,16 @@ class FacilityTables
                 // overhang edge-on (see `facesDoor`). The generator no longer lays a bench block
                 // beside a doorway at all, so this only fires on areas that were already in a save
                 // when that changed — the tiles are persisted and nothing migrates them
-                var ox0 = facesDoor(m, col, row, 2) ||
-                  FacilityModel.isTable(m, col - 1, row) ? x0 : x0 - FacilityStyle.BENCH_LIP;
-                var ox1 = facesDoor(m, col, row, 3) ||
-                  FacilityModel.isTable(m, col + 1, row) ? x1 : x1 + FacilityStyle.BENCH_LIP;
-                var oz0 = facesDoor(m, col, row, 0) ||
-                  FacilityModel.isTable(m, col, row - 1) ? z0 : z0 - FacilityStyle.BENCH_LIP;
-                var oz1 = facesDoor(m, col, row, 1) ||
-                  FacilityModel.isTable(m, col, row + 1) ? z1 : z1 + FacilityStyle.BENCH_LIP;
+                //
+                // AND "CARRIES ON" IS ASKED OF THE RECT, NOT OF THE CELL. An L corner's leg has a
+                // bench cell in front of it — the other arm — and so took no lip, while the arm's
+                // next cell along did: the two fronts stood BENCH_LIP apart and the edge band filled
+                // the jog with a sliver, reported from the game as the corner not blending with
+                // the desks. A side with any of its face exposed grows
+                var ox0 = lipped(m, cell, si, col, row, 2) ? x0 - FacilityStyle.BENCH_LIP : x0;
+                var ox1 = lipped(m, cell, si, col, row, 3) ? x1 + FacilityStyle.BENCH_LIP : x1;
+                var oz0 = lipped(m, cell, si, col, row, 0) ? z0 - FacilityStyle.BENCH_LIP : z0;
+                var oz1 = lipped(m, cell, si, col, row, 1) ? z1 + FacilityStyle.BENCH_LIP : z1;
                 FacilityGeom.cap(bTop, ox0, ox1, oz0, oz1, FacilityStyle.BENCH_H,
                   FacilityStyle.BENCH_TOP_TILE);
                 // and the round pool of shade under whatever the generator stood on this worktop —
@@ -376,6 +378,15 @@ class FacilityTables
         z1: (hand == 1 ? s.z1 - d : s.z1),
         hand: s.hand,
       };
+    }
+
+// does slab `si` overhang on its `dir` side? yes wherever any of that face is exposed, except the
+// side a door leaf swings past
+  static function lipped(m:Facility, cell:Array<TableSlab>, si:Int, col:Int, row:Int,
+      dir:Int):Bool
+    {
+      return (!facesDoor(m, col, row, dir) &&
+        exposed(m, cell, si, col, row, dir).length > 0);
     }
 
 // the spans of slab `si`'s `dir` face that nothing meets, along that face's own free axis.
