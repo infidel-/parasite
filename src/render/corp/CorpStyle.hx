@@ -218,9 +218,9 @@ class CorpStyle
   // of it instead of floating in a cell of its own. emitted +-T/2 about the boundary, so nothing
   // else moves with it
   public static inline var PARTITION_T = 0.1;
-  // a WC cubicle's own divider, 1.9 m, and a 15 cm panel
+  // a WC cubicle's own divider, 1.9 m, and a 7.5 cm panel: 15 cm read as masonry between two pans
   public static inline var STALL_H = 3.8;
-  public static inline var STALL_T = 0.3;
+  public static inline var STALL_T = 0.15;
   // the leaf that closes a cubicle, and the two gaps that say it is a door and not a wall: it
   // stops STALL_DOOR_GAP short of the floor, the way every public cubicle in the world does, and
   // leaves a reveal at each jamb so the divider reads THROUGH the opening

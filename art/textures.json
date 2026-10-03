@@ -4130,22 +4130,17 @@
       "last_lift": 1.811
     },
     "corp/stall-panel": {
-      "src": "corp/wet-pack.png",
+      "src": "corp/stall-panel.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        512,
-        511,
-        510,
-        510
-      ],
+      "note": "DERIVED, not a drop: wet-pack.png cut to [520, 551, 240, 240], a PLAIN patch inside the laminate quadrant's left panel (below its stainless rail, quadrant rows 0..27, and left of its centre seam, cols 255..257), then each row's and column's luma drift subtracted. The quadrant carries a baked 4.4-count top-to-bottom gradient, so no window of it tiles, and the wrap at PARTITION_TILE drew a band across every panel; edges now match within 0.02. The whole quadrant put a rail and a seam on every face of a thin panel, its top included -- reported as 'should just be gray'. The prompt below is the SHEET's.",
       "prompt": "A PACKED SHEET of FOUR separate seamless tileable material textures as a 2x2 grid of equal square quadrants, each filling itself edge to edge and nothing else. TOP-LEFT, from DIRECTLY ABOVE: a kitchen worktop, dark charcoal engineered stone, honed, a very fine even pale aggregate fleck, no veining, completely plain. TOP-RIGHT, flat elevation: the CABINET FRONTS of a kitchen base run, pale oak veneer in EXACTLY THREE equal vertical door fronts side by side separated by narrow crisp recessed shadow gaps so the rhythm closes across the left and right edges, one slim full-height recessed finger pull per door, a fine straight vertical grain. BOTTOM-LEFT, from DIRECTLY ABOVE: a washroom vanity top, pale warm grey honed stone, a very fine even grain and a faint soft drift of figure, completely plain. BOTTOM-RIGHT, flat elevation: a WC cubicle partition panel, matte mid-grey compact laminate, one unbroken plane, a slim satin stainless trim rail along the very TOP edge only and a single fine vertical shadow-gap reveal at the centre. Each quadrant tiles seamlessly against ITSELF on both axes. VALUE: the two stone tops the DARKER pair, the oak and the laminate the LIGHTER pair, all in one narrow band. HUE: the oak a restrained warm tan; the two stones and the laminate close to NEUTRAL. [append textures.json style_corp then style]",
       "prompt_exact": true,
-      "last_converted": "2026-09-20T16:22:42",
-      "built_linear": 0.0707,
-      "built_srgb": 74.4,
-      "lift": 1.324,
-      "last_lift": 1.324
+      "last_converted": "2026-10-03T17:45:56",
+      "built_linear": 0.1102,
+      "built_srgb": 93.2,
+      "lift": 1.1,
+      "last_lift": 1.1
     },
     "corp/table-top": {
       "src": "corp/table-top.png",

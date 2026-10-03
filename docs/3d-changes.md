@@ -1017,3 +1017,23 @@ wall, so the glass still reads as its own plane. The stainless edges lift with i
 no reflection: no cube, no planar pass, and the mirror is not on PropEnv.
 
 Verdict: **landed.**
+
+## Corp WC cubicle: a plain grey panel, half as thick (`corp/stall-panel`, `STALL_T` 0.3 → 0.15)
+
+Reported off a pick on a panel's top as "should just be gray", plus "make the stall walls 50% thinner".
+
+- **Cause.** The label was the whole laminate quadrant of `wet-pack`, which is an authored panel with
+  a stainless rail along its top and a shadow-gap seam down its centre. `CorpFurniture.panel` maps
+  that one texture onto all five faces of a thin box at `PARTITION_TILE`, so every edge strip and
+  every top carried slices of rail and seam.
+- **First fix, and its trap.** Cropping a plain 240² patch of the left panel kills the rail and the
+  seam, but **a window cut out of a tileable sheet does not tile on its own**. The quadrant carries a
+  baked top-to-bottom gradient of **4.4 counts over any 240 rows**. The best of every window
+  scanned was still 4.40 top to bottom, and the 2.8 wrap drew a band across every panel.
+- **Fix.** A DERIVED source, `textures-src/corp/stall-panel.png`: that crop, with each row's and
+  each column's luma drift subtracted. Opposite edges now match within **0.02**, the grain stays
+  (std 1.55), and the recipe is in the manifest note. `lift` 1.1 → **93.2 srgb**, under the wall's
+  106 so a back panel does not melt into the masonry it stands on.
+- `STALL_T` 0.15. Every panel is emitted ±T/2 about its line, so nothing else moves.
+
+Verdict: **landed.**
