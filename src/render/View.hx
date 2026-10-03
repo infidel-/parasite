@@ -151,6 +151,13 @@ class View {
         Inspector.emit(out, '[area room]', (s != null ? s : 'Not in area.'));
         if (s != null)
           out.textContent += '\n(copied)';
+        // a flash and not a panel: gone half a second later, unless B has written its own report since
+        var shown = out.textContent;
+        Browser.window.setTimeout(function()
+          {
+            if (out.textContent == shown)
+              out.textContent = '';
+          }, 500);
       }
       // 7/8/9: perf A/B + readouts (shadow-sampling toggle, peak reset, scene dump) — see render.StreetPerf
       else if (debug.on && perf != null)
