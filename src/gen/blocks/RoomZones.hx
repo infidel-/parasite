@@ -203,8 +203,13 @@ class RoomZones
 // constrained, and which of the two picked first would rest on the sort being stable. `must` = "be
 // the longest" gives the cubicles exactly one legal home, so they are dealt first by the rule that
 // is already there, and the basins then take the roomiest of what is left — which is the old
-// longest-first ranking, arrived at rather than hand-written
-  public static function washroom(bays: Array<_GenNode>): Array<_GenDemand>
+// longest-first ranking, arrived at rather than hand-written.
+//
+// A WHOLE WASHROOM — one too small for the T, dealt once and not per half — takes up to TWO of each,
+// which is what its two halves would have had between them. Dealt as one half it came back with a
+// single cubicle run and a single basin and was reported as bare. The second cubicle run takes any
+// wall of two cells or more; the first is still the longest, because pass 1 deals roomiest-first
+  public static function washroom(bays: Array<_GenNode>, whole: Bool): Array<_GenDemand>
     {
       var longest = 0;
       for (b in bays)
@@ -217,7 +222,7 @@ class RoomZones
         {
           kind: RoomBlock.STALL_RUN,
           min: 1,
-          max: 1,
+          max: (whole ? 2 : 1),
           minW: 1,
           minH: 1,
           // two cells at least, which is where the washroom's old "a run of one is not a counter"
@@ -225,13 +230,14 @@ class RoomZones
           must: function(b: _GenNode)
             {
               var len = GenTree.width(b) * GenTree.height(b);
-              return (len >= 2 && len == longest);
+              return (len >= 2 &&
+                (whole || len == longest));
             },
         },
         {
           kind: RoomBlock.BASIN_RUN,
           min: 1,
-          max: 1,
+          max: (whole ? 2 : 1),
           minW: 1,
           minH: 1,
         },

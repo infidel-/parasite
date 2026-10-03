@@ -96,7 +96,8 @@ class FacilityToilet
               }
           if (bays.length == 0)
             continue;
-          Quota.deal(bays, RoomZones.washroom(bays), RoomBlock.SLOT, state.area.rng);
+          Quota.deal(bays, RoomZones.washroom(bays, split.stem < 0), RoomBlock.SLOT,
+            state.area.rng);
         }
     }
 
