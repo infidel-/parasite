@@ -114,7 +114,7 @@ class WildStyle
 
   public static var PROPS:Array<WildProp> = [
     {
-      path: RenderConfig.MODELS.wildTreeConifer,
+      path: RenderConfig.MODELS.wildTreeConiferHand,
       h: 7.5,
       r: 0.30,
       jitter: 0.20,
@@ -137,11 +137,10 @@ class WildStyle
     // first replacement took at h 6.5, and less than the 6.3 of the original at 5.8 is close to.
     // models.json carries the whole record, including the two retired meshes in Unused/
     {
-      path: RenderConfig.MODELS.wildTreeBroadleafFull,
+      path: RenderConfig.MODELS.wildTreeBroadleafHand,
       h: 9.5,
       r: 0.37,
       jitter: 0.22,
-      sink: BROADLEAF_SINK,
     },
     {
       path: RenderConfig.MODELS.wildTreeDead,
@@ -162,7 +161,7 @@ class WildStyle
       jitter: 0.25,
     },
     {
-      path: RenderConfig.MODELS.wildBushLow,
+      path: RenderConfig.MODELS.wildBushDomeHand,
       h: 1.1,
       r: 0.80,
       jitter: 0.28,
@@ -236,6 +235,14 @@ class WildStyle
       r: 1.25,
       jitter: 0.0,
     },
+    // the park's second hand-modelled shrub, three canes each with a crown — the dome's partner on a
+    // bush tile, as it is in render.facility.FacilityGround.BUSHES. appended so no index above moves
+    {
+      path: RenderConfig.MODELS.wildBushUprightHand,
+      h: 1.13,
+      r: 0.80,
+      jitter: 0.28,
+    },
   ];
   // indices into PROPS, named where the model builder picks them. the four trees are FIRST and in
   // order, because render.wild.WildModel maps Const.TILE_TREE1 + 0..3 straight onto them
@@ -245,7 +252,7 @@ class WildStyle
   public static inline var TREE_DEAD = 3;
   public static inline var ROCK_BOULDER = 4;
   public static inline var ROCK_CLUSTER = 5;
-  public static inline var BUSH_LOW = 6;
+  public static inline var BUSH_DOME = 6;
   public static inline var BUSH_BRAMBLE = 7;
   public static inline var ROCK_BOULDER_SMALL = 8;
   public static inline var ROCK_CLUSTER_SMALL = 9;
@@ -253,6 +260,7 @@ class WildStyle
   public static inline var ROCK_OUTCROP = 11;
   public static inline var ROCK_LARGE = 12;
   public static inline var GUARD_RAIL = 13;
+  public static inline var BUSH_UPRIGHT = 14;
   // WHICH of these a bush, rock or tree tile means is per-band (render.wild.WildBand) — the band holds
   // weighted lists of these indices rather than a chance constant per pair
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
