@@ -858,3 +858,21 @@ not that commit.
   the material (`renderer.properties.get(mat).uniforms`), not a pass.
 
 Verdict: **bug, fixed.** Console screen and slot sockets halo and breathe again, seen at a pinned close-up.
+
+## The hangar's cable fan only runs from machines, nearest first (`FacilityHangar.fan`)
+
+Reported: cables running from the ship to waste bins and drums, while machinery on both sides of the
+pad had none.
+
+- **Cause.** `fan` ran a lead from every cell of the shed with `deco != 0`, scanning row by row and
+  stopping at `CABLE_RUN_MAX` 8. `deco` holds every fitting kind, including the bins and drums
+  `HangarBlock.slot` places on spare floor. So the top rows (drums, bins and a corner rack) used up
+  the 8 runs before the scan reached the west and east machine banks.
+- **Fix.** Candidates are now only `FIT_RACK`, `FIT_RACK_LOW`, `FIT_MACHINE`, `FIT_MACHINE_LOW` and
+  `FIT_ANALYSER`, sorted by distance to the podium and capped as before. The four carved banks are
+  8 cells, so they take the whole cap ahead of the corner racks. Same mesh, so no change in draw
+  calls.
+- Seen live at a pinned top-down view of the Dogwood Heights hangar: all four banks wired, no lead to
+  any bin or drum.
+
+Verdict: **bug, fixed.**

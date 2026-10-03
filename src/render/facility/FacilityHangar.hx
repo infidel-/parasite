@@ -92,19 +92,23 @@ class FacilityHangar
 // EVERY MACHINE AND NOT THE FOUR THE GENERATOR CARVES, because this cannot see the tree — it reads
 // `deco` off the finished grid the way every pass here does. That is the better question anyway: a
 // rack bay against a wall is machinery too, and a fan that reaches the walls is what makes the shed
-// read as one rig rather than a podium with four boxes near it. The RUN_MAX cap is what keeps a
-// large shed from drawing twenty
+// read as one rig rather than a podium with four boxes near it.
+//
+// MACHINES ONLY, AND NEAREST FIRST. `deco` also carries the bins and drums HangarBlock.slot dresses
+// the spare floor with, and a row-major scan under the RUN_MAX cap spent the whole budget on whatever
+// stood in the top rows — reported as leads from the ship to a waste bin while the machine banks on
+// either side stood unplugged. Nearest first hands the cap to the four carved banks before a wall rack
   static function fan(b:MeshBuf, m:Facility, col:Int, row:Int):Int
     {
       var mid = CityConfig.cellToWorld(col, row);
       var r = FacilityStyle.PODIUM_H * 0.5 * 5.60 * FacilityStyle.PODIUM_CABLE_R;
       var si = m.owner[row][col];
-      var n = 0;
+      var ends = [];
       for (rr in 0...m.h)
         for (cc in 0...m.w)
           {
-            if (m.deco[rr][cc] == 0 ||
-                m.owner[rr][cc] != si)
+            if (m.owner[rr][cc] != si ||
+                !machine(m.deco[rr][cc] - 1))
               continue;
             // OUT OF THE UNIT AND NOT OUT OF THE MIDDLE OF ITS CELL. render.facility.FacilityDeco
             // slides every fitting back onto its wall FACE, so a DECO_RACK_D 1.2 rack in a 4.0 cell
@@ -113,29 +117,50 @@ class FacilityHangar
             // The rect's own centre is INSIDE the box, so the ribbon's first span is hidden by the
             // thing it comes out of, which is what a cable under a cabinet looks like
             var r0 = FacilityDeco.rectOf(m, cc, rr, m.deco[rr][cc] - 1);
-            var a = { x: (r0.x0 + r0.x1) / 2, z: (r0.z0 + r0.z1) / 2 };
-            var dx = mid.x - a.x, dz = mid.z - a.z;
-            var d = Math.sqrt(dx * dx + dz * dz);
+            var x = (r0.x0 + r0.x1) / 2, z = (r0.z0 + r0.z1) / 2;
+            var d = Math.sqrt((mid.x - x) * (mid.x - x) + (mid.z - z) * (mid.z - z));
             if (d < r + CELL * 0.5)
               continue;
-            // the run STOPS AT THE RIM and not at the centre: the last span has to arrive at the
-            // port band the lower step wears, and a ribbon carried to the middle of the dais would
-            // run up over the tread everything else is keeping clear of
-            var seed = FacilityModel.mix((cc * 70001) ^ (rr * 30011));
-            FacilityCable.strip(b, {
-              a: [ a.x, FacilityStyle.PODIUM_CABLE_Y, a.z ],
-              c: [ mid.x - dx / d * r, FacilityStyle.PODIUM_CABLE_Y, mid.z - dz / d * r ],
-              n: [ 0.0, 1.0, 0.0 ],
-              side: null,
-              bow: FacilityStyle.PODIUM_CABLE_BOW,
-              wave: FacilityStyle.PODIUM_CABLE_WAVE,
-              seed: seed,
+            ends.push({
+              x: x,
+              z: z,
+              d: d,
+              seed: FacilityModel.mix((cc * 70001) ^ (rr * 30011)),
             });
-            n++;
-            if (n >= FacilityStyle.CABLE_RUN_MAX)
-              return n;
           }
+      ends.sort(function(p, q) return Reflect.compare(p.d, q.d));
+      var n = 0;
+      for (e in ends)
+        {
+          if (n >= FacilityStyle.CABLE_RUN_MAX)
+            break;
+          var dx = mid.x - e.x, dz = mid.z - e.z;
+          // the run STOPS AT THE RIM and not at the centre: the last span has to arrive at the
+          // port band the lower step wears, and a ribbon carried to the middle of the dais would
+          // run up over the tread everything else is keeping clear of
+          FacilityCable.strip(b, {
+            a: [ e.x, FacilityStyle.PODIUM_CABLE_Y, e.z ],
+            c: [ mid.x - dx / e.d * r, FacilityStyle.PODIUM_CABLE_Y, mid.z - dz / e.d * r ],
+            n: [ 0.0, 1.0, 0.0 ],
+            side: null,
+            bow: FacilityStyle.PODIUM_CABLE_BOW,
+            wave: FacilityStyle.PODIUM_CABLE_WAVE,
+            seed: e.seed,
+          });
+          n++;
+        }
       return n;
+    }
+
+// is this fitting kind a MACHINE a lead could come out of? racks, machine casings and the analyser —
+// not a bin, a drum or a shelf
+  static function machine(kind:Int):Bool
+    {
+      return kind == _FittingKind.FIT_RACK ||
+        kind == _FittingKind.FIT_RACK_LOW ||
+        kind == _FittingKind.FIT_MACHINE ||
+        kind == _FittingKind.FIT_MACHINE_LOW ||
+        kind == _FittingKind.FIT_ANALYSER;
     }
 
 // the shed's floor decals: one roll per bare concrete cell of this structure.
