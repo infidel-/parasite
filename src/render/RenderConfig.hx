@@ -674,9 +674,9 @@ class RenderConfig {
     // into the saved grid picks the model. all arrived AT the budget; the two rocks are hard surfaces
     // and decimate offline — see their models.json notes
     wildTreeConifer: 'models/wild/tree-conifer.glb',              // dark conifer, one solid cone
-    wildTreeBroadleaf: 'models/wild/tree-broadleaf.glb',          // bare broadleaf, thick limbs, no foliage
+    wildTreeBroadleaf: 'models/wild/tree-bare-hand.glb',          // bare broadleaf, thick forked limbs, no foliage
     wildTreeBroadleafFull: 'models/wild/tree-broadleaf-full.glb', // broadleaf in leaf, broad solid dome
-    wildTreeDead: 'models/wild/tree-dead.glb',                    // dead snag, blunt broken limbs
+    wildTreeDead: 'models/wild/tree-dead-hand.glb',               // dead snag, ragged top, broken bare limbs
     wildRockBoulder: 'models/wild/rock-boulder.glb',              // single weathered boulder
     wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
     wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
@@ -691,7 +691,7 @@ class RenderConfig {
     wildBushUprightHand: 'models/wild/bush-upright-hand.glb',     // upright shrub, three canes each with a crown
     // the two BAND props: what a TILE_ROCK cell means in the forest and in the mountains respectively
     // (render.wild.WildBand), where plains keeps the two rocks above
-    wildLogFallen: 'models/wild/log-fallen.glb',                  // fallen trunk, bark all over, broken at both ends
+    wildLogFallen: 'models/wild/log-fallen-hand.glb',             // fallen trunk, broken at both ends, one stub
     wildRockOutcrop: 'models/wild/rock-outcrop.glb',              // low wedge of fractured bedrock
     // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
     // rect it is placed on (render.wild.WildProps.bigRocks)
