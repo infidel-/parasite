@@ -1069,3 +1069,32 @@ Reported off a pick in the washroom as "floor texture is not fully seamless".
 - **Measured.** A top-down render of the area 6475 washroom shows every grout line evenly spaced.
 
 Verdict: **bug, fixed.**
+
+## Wilderness hollows darken by depth (`WildHeight.shade`)
+
+Asked for as "darken the lower parts of the ground for a better 3D look, like the corp stairs". The
+stairwell bakes depth into `COLOR_0`. The wilderness ground already had a vertex-colour channel (the
+sine mottle), so the same idea went onto it at no cost in draw calls or materials.
+
+- **What.** `WildHeight.shade(x, z)` normalises the height by the field's own peak
+  (`1.9 * reliefAmp`, so every band shades over the same fraction of its range) and falls
+  quadratically from the crest to `1 - SHADE_DEPTH` at the trough. It is then **divided by its own
+  mid-height value**, so the frame's mean level holds and only the contrast moves.
+- **Every drape takes it.** The ground multiplies it into its mottle. Patches, verge, asphalt, road
+  paint and grass tufts each got a `color` attribute plus `vertexColors`, so no layer sits bright
+  over a dark hollow. The grass material is shared with `FacilityLawn`, which writes no colour
+  attribute (a missing one reads black), so only `WildGrass.build` turns `vertexColors` on. That is
+  a settable field on the `MeshLambertMaterial` extern now.
+- **First cut too weak.** The shade ran only across the bottom 60% of the range at depth 0.45, which
+  moved a forest frame (reliefAmp 0.73) by about 2 luma at most and was invisible. The second cut
+  runs the full range at 0.6 and normalises at mid-height.
+- **Measured.** Same save and pose, column means across the frame (sRGB luma):
+
+  | | Range | Frame mean |
+  |---|---|---|
+  | Flat (shade off) | 10.0–15.0 | 12.7 |
+  | Shade at 0.6 | 9.4–16.7 | 13.0 |
+
+  The hollow left of the player and the crest at centre now read as landform.
+
+Verdict: **landed. +0 calls.**

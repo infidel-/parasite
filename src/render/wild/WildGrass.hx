@@ -38,6 +38,9 @@ class WildGrass
     {
       var B = render.Chunks.CELLS;
       var mat = material();
+      // the hollow shade (WildHeight.shade), wilderness only: the facility lawn shares material() and
+      // writes no colour attribute, and a missing one reads as black
+      mat.vertexColors = true;
       var row = 0;
       while (row < m.h)
         {
@@ -127,6 +130,19 @@ class WildGrass
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
       geo.setAttribute('aWind', new Float32BufferAttribute(wind, 2));
+      // the hollow shade per vertex, off the vertex's own x/z — a tuft is 1.5 across, so its corners
+      // land on the turf's value at its root
+      var colr = [];
+      var i = 0;
+      while (i < pos.length)
+        {
+          var k = WildHeight.shade(pos[i], pos[i + 2]);
+          colr.push(k);
+          colr.push(k);
+          colr.push(k);
+          i += 3;
+        }
+      geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
       // receives, never casts. a shadow-casting grass field would double the depth pass over hundreds

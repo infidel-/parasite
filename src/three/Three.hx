@@ -357,6 +357,9 @@ typedef RendererInfo = {
   // whether a drawn fragment writes depth. it has to follow `opacity` down: a faded surface that
   // still wrote depth would reject everything behind it however faint it drew
   public var depthWrite:Bool;
+  // multiply the geometry's `color` attribute into the base colour. settable after construction so a
+  // shared material builder (render.wild.WildGrass.material) can turn it on for one caller only
+  public var vertexColors:Bool;
   public var userData:Dynamic;
 }
 // a lambert with a Blinn-Phong highlight: the ceiling spots reflect in it as a glint that moves with

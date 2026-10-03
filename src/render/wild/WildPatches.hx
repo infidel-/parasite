@@ -81,6 +81,7 @@ class WildPatches
       var mat = render.world.VisionMask.patch(tag(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         alphaMap: mask,
+        vertexColors: true,
         transparent: true,
         opacity: WildStyle.PATCH_ALPHA,
         alphaTest: WildStyle.PATCH_ALPHA * 0.5,
@@ -122,6 +123,7 @@ class WildPatches
       var pos = [];
       var nor = [];
       var uv = [];
+      var colr = [];
       var idx = [];
       for (dr in 0...ch)
         for (dc in 0...cw)
@@ -172,6 +174,11 @@ class WildPatches
                       WildHeight.pushNormal(nor, p[0], p[1]);
                       uv.push(p[0] / WildStyle.PATCH_TILE);
                       uv.push(p[1] / WildStyle.PATCH_TILE);
+                      // the hollow shade the turf under it takes, or the patch glows in a dip
+                      var k = WildHeight.shade(p[0], p[1]);
+                      colr.push(k);
+                      colr.push(k);
+                      colr.push(k);
                     }
                   idx.push(base);
                   idx.push(base + 2);
@@ -187,6 +194,7 @@ class WildPatches
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
       mesh.renderOrder = render.particles.Sprites.ORD_DECAL - 1; // under blood and debris: this is ground, not a decal

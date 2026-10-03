@@ -64,6 +64,10 @@ class WildStyle
   // makes the extra polygons pay: dry patches and damp hollows drift across the surface with no
   // second texture, no splat shader and no extra draw call
   public static inline var TINT_AMP = 0.18;
+  // the hollow shade (render.wild.WildHeight.shade): how dark the very bottom of a trough goes against
+  // the crest, as a fraction taken off. on the same vertex colour channel as the mottle and multiplied
+  // into it
+  public static inline var SHADE_DEPTH = 0.6;
 
   // --- the grass layer (render.wild.WildGrass) ---
   // the tuft COUNT per cell and the tuft HEIGHT are per-band (render.wild.WildBand): open plains grow
