@@ -677,8 +677,8 @@ class RenderConfig {
     wildTreeBroadleaf: 'models/wild/tree-bare-hand.glb',          // bare broadleaf, thick forked limbs, no foliage
     wildTreeBroadleafFull: 'models/wild/tree-broadleaf-full.glb', // broadleaf in leaf, broad solid dome
     wildTreeDead: 'models/wild/tree-dead-hand.glb',               // dead snag, ragged top, broken bare limbs
-    wildRockBoulder: 'models/wild/rock-boulder.glb',              // single weathered boulder
-    wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
+    wildRockBoulder: 'models/wild/rock-boulder-hand.glb',         // low weathered boulder, chipped facets
+    wildRockCluster: 'models/wild/rock-cluster-hand.glb',         // three angular slabs fused into one mass
     wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
     wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
     // and the HAND-MODELLED park planting behind FacilityStyle.PLANT_BLENDER — the conifer restated
@@ -692,10 +692,10 @@ class RenderConfig {
     // the two BAND props: what a TILE_ROCK cell means in the forest and in the mountains respectively
     // (render.wild.WildBand), where plains keeps the two rocks above
     wildLogFallen: 'models/wild/log-fallen-hand.glb',             // fallen trunk, broken at both ends, one stub
-    wildRockOutcrop: 'models/wild/rock-outcrop.glb',              // low wedge of fractured bedrock
+    wildRockOutcrop: 'models/wild/rock-outcrop-hand.glb',         // low wedge of stacked tilted bedrock
     // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
     // rect it is placed on (render.wild.WildProps.bigRocks)
-    wildRockLarge: 'models/wild/rock-large.glb',                  // 2x2 boulder, one solid domed mass
+    wildRockLarge: 'models/wild/rock-large-hand.glb',             // 2x2 boulder, domed mass with a shoulder
     // the facility compound's own lamp, instanced along the walkway kerb, the lot edge and the park
     // path (render.facility.FacilityLamps). it carries NO emissive map where the two street lamps
     // above both do — the glowing head is an additive quad in the area's merged glow mesh instead
