@@ -64,6 +64,8 @@ class FacilityGen
       FacilityBays.cars(state);
       // convert temp tiles to ingame ones
       finalizeTiles(state);
+      // the floor in front of a wall-hugging fitting is the fitting's own cell, so hand it back
+      FacilityRooms.clearFittings(state);
       // and last, once every wall, door and piece of furniture is on the grid in its final form,
       // make sure every room can actually be walked into
       FacilityConnect.connectRooms(state);

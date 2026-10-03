@@ -431,7 +431,7 @@ class HangarBlock
           if (!bare(state, c.x, c.y))
             continue;
           FacilityRooms.placeFitting(state, c.x, c.y, kind);
-          state.area.getCells()[c.x][c.y] = floorUnder(state, c.x, c.y);
+          state.area.getCells()[c.x][c.y] = Const.TILE_FLOOR_CONCRETE_UNWALKABLE;
         }
     }
 
@@ -474,26 +474,8 @@ class HangarBlock
             continue;
           var fr = Deco.pick(area, Deco.MOUNT_FLOOR_LOW, Deco.BLOCK_LAB);
           area.addDecoration(c.x, c.y, fr.row, fr.col);
-          cells[c.x][c.y] = floorUnder(state, c.x, c.y);
+          cells[c.x][c.y] = Const.TILE_FLOOR_CONCRETE_UNWALKABLE;
         }
-    }
-
-// the floor left under a fitting just stood on this cell: walkable when it backs onto masonry,
-// unwalkable concrete when it stands in the open.
-//
-// A FITTING AGAINST THE SHELL IS DRAWN IN THE WALL'S RECESS, NOT ON ITS OWN CELL. The wall slab is
-// WALL_T thick centred in a 4-unit cell, so its face stands a whole unit back from the boundary, and
-// render.facility.FacilityDeco stands a 1.2-deep rack or drum off that face — 0.2 of it reaches its
-// own cell and the rest of the cell is bare concrete. Marked unwalkable, that read as empty floor the
-// player could not step on, which is how it was reported. Only TEMP_BUILDING_WALL counts: the shutter
-// is not masonry a rack backs onto, and a fitting with nothing behind it stands mid-cell and blocks
-  static function floorUnder(state: _FacilityState, x: Int, y: Int): Int
-    {
-      var cells = state.area.getCells();
-      for (i in 0...Const.dir4x.length)
-        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == TEMP_BUILDING_WALL)
-          return TEMP_CONCRETE;
-      return Const.TILE_FLOOR_CONCRETE_UNWALKABLE;
     }
 
 // may something stand on this hangar cell? bare concrete, nothing on it, and clear of the one real

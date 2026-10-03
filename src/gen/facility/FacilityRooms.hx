@@ -795,6 +795,71 @@ class FacilityRooms
       state.area.getCells()[x][y] = Const.TILE_FLOOR_TILE_UNWALKABLE;
     }
 
+// give the floor back under every fitting the renderer draws in a wall's recess.
+//
+// A FITTING AGAINST A WALL STANDS IN THE WALL CELL, NOT ON ITS OWN. A wall slab is centred in its
+// 4-unit cell, so its face stands 1.0-1.4 units back from the boundary, and
+// render.facility.FacilityDeco stands a 1.2-deep rack, cabinet or drum off that face — a sliver of
+// it reaches its own cell and the rest is bare floor. Stamped unwalkable, that read as empty floor
+// nobody could step on, which is how it was reported in the hangar, the offices and the labs.
+//
+// RUN AFTER finalizeTiles AND NOT AT PLACEMENT, because every room pass before it treats
+// TEMP_BUILDING_ROOM as a free cell and the unwalkable stamp is what keeps a bench off a cabinet.
+// The wall test is FacilityDeco.wall's on final ids: masonry for anything, and glazing or the shutter
+// as well for the LOW list, which the renderer pushes against any wall face. A fitting with no wall
+// on any hand stands mid-cell and keeps its block
+  public static function clearFittings(state: _FacilityState)
+    {
+      var cells = state.area.getCells();
+      for (s in state.area.spawns)
+        {
+          if (s.type != 'decoration')
+            continue;
+          var kind = Const.fittingOf(s.row, s.col);
+          if (!standsClear(kind))
+            continue;
+          var low = Const.isLowFitting(kind);
+          var backed = false;
+          for (i in 0...Const.dir4x.length)
+            {
+              var t = cells[s.x + Const.dir4x[i]][s.y + Const.dir4y[i]];
+              if (t == Const.TILE_BUILDING ||
+                  (low &&
+                   (t == Const.TILE_HANGAR_DOOR ||
+                    t == Const.TILE_WINDOW_HIGH ||
+                    (t >= Const.TILE_WINDOWH1 && t <= Const.TILE_WINDOWV3))))
+                backed = true;
+            }
+          if (!backed)
+            continue;
+          var t = cells[s.x][s.y];
+          if (t == Const.TILE_FLOOR_TILE_UNWALKABLE)
+            cells[s.x][s.y] = Const.TILE_FLOOR_TILE;
+          else if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
+            cells[s.x][s.y] = Const.TILE_FLOOR_CONCRETE;
+          else if (t == Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET ||
+                   t == Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET)
+            cells[s.x][s.y] = t - UNWALKABLE_TILE_OFFSET;
+        }
+    }
+
+// does this fitting, stood against a wall, leave its own cell's centre clear?
+//
+// ponytail: a hand list off the render depths, measured live as the gap between the drawn rect and
+// the cell centre — 1.08..1.68 for every kind here, 0.08..0.68 for the machines, the analyser, the
+// basin and the stall. A new kind or a deeper model wants a line here; deriving it from FacilityStyle
+// would put the renderer in the headless generator
+  static function standsClear(kind: _FittingKind): Bool
+    {
+      return switch (kind)
+        {
+          case FIT_SHELVING, FIT_BOOKCASE, FIT_RACK, FIT_RACK_LOW, FIT_CABINET,
+            FIT_DRUM_STEEL, FIT_DRUM_BIO, FIT_DRUM_RAD, FIT_BIN, FIT_SOFA, FIT_TABLE_LOW,
+            FIT_PALLET_RACK, FIT_PALLET_STACK, FIT_DRUM_PALLET: true;
+          default: false;
+        }
+    }
+
 // add decoration from a list
   public static function addDecoration(state: _FacilityState, x: Int, y: Int,
       infos: Array<_TileRow>)
