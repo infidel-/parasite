@@ -141,6 +141,10 @@ class View {
         scaleIdx = (scaleIdx + 1) % RENDER_SCALES.length;
         setRenderScale(RENDER_SCALES[scaleIdx]);
       }
+      // R: the console's `area room` — what the generator built under the player, logged and copied
+      // to the clipboard (console.AreaRoom). only with no tool up: paint and edit own R themselves
+      else if (debug.on && e.code == 'KeyR' && Tools.mode == 'none')
+        game.console.run('area room');
       // 7/8/9: perf A/B + readouts (shadow-sampling toggle, peak reset, scene dump) — see render.StreetPerf
       else if (debug.on && perf != null)
         perf.onKey(e.code);
