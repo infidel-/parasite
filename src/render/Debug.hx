@@ -118,12 +118,14 @@ class Debug {
         '</div>';
     // inline styling so it reads without the prototype's stylesheet
     d.innerHTML =
-      '<style>#check.ok{color:#6f6}#check.bad{color:#f66}' +
+      '<style>#check.ok{color:#6f6}#check.bad{color:#f66}#binfo:empty{display:none}' +
       '#cyclers button{background:#222;color:#cde;border:1px solid #555;font:11px monospace;cursor:pointer;margin-left:2px}</style>' +
       '<div style="position:fixed;inset:0;z-index:300;pointer-events:none;font-family:monospace;color:#fff">' +
       '<div style="position:absolute;top:4px;left:8px;font-size:12px"><span id="mode"></span> <span id="editind"></span> <span id="check"></span></div>' +
       '<div id="cyclers" style="position:absolute;bottom:26px;right:8px;font-size:11px;text-align:right;pointer-events:auto">' + cyc + '</div>' +
-      '<div id="binfo" style="position:absolute;top:26px;left:8px;white-space:pre;font-size:11px;color:#9f9;max-width:44vw"></div>' +
+      // BELOW the perf HUD (render.StreetPerf, fixed top-left above everything), which it used to sit
+      // under and be unreadable through
+      '<div id="binfo" style="position:absolute;top:160px;left:8px;white-space:pre;font-size:11px;color:#9f9;max-width:44vw;background:#000a;padding:6px 8px"></div>' +
       '<div id="poly" style="position:absolute;top:26px;right:8px;background:#000c;padding:6px;font-size:12px;pointer-events:auto;display:none"></div>' +
       '<div id="polybar" style="position:absolute;bottom:6px;right:8px;font-size:12px">' +
       '<span id="poly-dirty" style="display:none;color:#fc6">CLASSES UPDATED — Ctrl+C to copy</span> ' +
