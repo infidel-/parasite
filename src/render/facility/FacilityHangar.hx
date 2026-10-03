@@ -273,8 +273,12 @@ class FacilityHangar
             var c = CityConfig.cellToWorld(col, row);
             var sz = FacilityStyle.HANGAR_CLUTTER_SZ +
               ((h >> 7) % 1000 / 1000.0 - 0.5) * 2 * FacilityStyle.HANGAR_CLUTTER_SZ_VAR;
-            emit(b, c.x, c.z, sz, (h >> 17) % 6283 / 1000.0,
-              PICK[(h >> 3) % PICK.length]);
+            var idx = PICK[(h >> 3) % PICK.length];
+            // free spin for what was dropped, a quarter turn for what is set into the floor
+            var yaw = (FacilityStyle.HANGAR_CLUTTER_GRID.indexOf(idx) >= 0 ?
+              ((h >> 17) % 4) * Math.PI / 2 :
+              (h >> 17) % 6283 / 1000.0);
+            emit(b, c.x, c.z, sz, yaw, idx);
             n++;
           }
       return n;

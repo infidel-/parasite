@@ -2665,6 +2665,10 @@ class FacilityStyle
   // and are left in, the same judgement CLUTTER_SKIP's own comment records against condemning a
   // cell by one number alone
   public static var HANGAR_CLUTTER_SKIP:Array<Int> = [ 7, 23 ];
+  // the cells that are BUILT INTO the floor rather than dropped on it — the two drain gratings — and
+  // so only ever turn by a quarter: a grating at 37 degrees to the shed's own tile grid reads as a
+  // sticker, where a dropped chain or a rag at any angle reads as dropped
+  public static var HANGAR_CLUTTER_GRID:Array<Int> = [ 24, 25 ];
 
   // a rooftop condenser unit's world HEIGHT, and through render.Models.instanced its footprint too.
   // the hand-modelled glb ROOF_BLENDER draws is built AT this height (bbox 2.778 x 2.200 x 1.770),
