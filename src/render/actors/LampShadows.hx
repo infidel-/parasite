@@ -307,10 +307,17 @@ class LampShadows {
         // CHAIR_OUT off it. What is left is doubly covered now: every corp fitting and glb batch
         // casts a real shadow off the ceiling spotlights, and a workstation carries a
         // FacilityDetail contact pool as well — which is why the monitor had three
+        //
+        // AND A FACILITY FITTING IS THE THIRD, the corp case over again. render.facility
+        // .FacilityDeco.draws suppresses the icon of every frame Const.FACILITY_DECO lists, and the
+        // glb standing there draws nothing into this pass — so the analyser and the hangar
+        // generator each laid a blurred blob of an atlas cell nothing draws (8/5 and 18/3, the
+        // latter a stale 2D-era row), picked in the game as "sprite pool N" beside the prop
         if (o.entity != null &&
             !o.isGroundDecal() &&
             o.type != 'burning_barrel' &&
             !render.corp.CorpDeco.draws(game.area, o) &&
+            !render.facility.FacilityDeco.draws(game.area, o) &&
             render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0)
           actorShadow(o.entity, barrelLights, lampOut, lampIn);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)

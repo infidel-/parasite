@@ -918,3 +918,30 @@ to them by messy runs as a new cable setting.
 
 Verdict: **landed.** Seen live on a regenerated Dogwood Heights hangar: two gensets off the racked
 corners, each taking an L of racks' bundles across the floor.
+
+## Facility glb fittings stop casting a fake shadow of their unused atlas icon (`LampShadows`)
+
+Reported by pick next to the new generator ("sprite pool 5, canvas 51x58") and next to an analyser
+("sprite pool 1, canvas 72x73"), as a fake shadow coming off a 3D object.
+
+- **Cause.** `LampShadows.castShadows` runs `actorShadow` on every non-decal object. That function
+  blurs the object's ATLAS cell into a black silhouette (`Sprites.shadowContent`) and
+  `CastShadows.project` lays it on the floor at the object's pose. The corp fix ("dark round
+  shadows of nothing") excluded `CorpDeco.draws` objects, and nothing excluded the facility's
+  equivalent, `FacilityDeco.draws`. So every fitting Const.FACILITY_DECO lists cast a shadow of an
+  icon nothing draws. Row 18/3 is a stale 2D-era row, so the generator cast the outline of whatever
+  old art sits in that cell.
+- **Measured.** The canvases are the icon's alpha box plus `shadowSoftPx * 2` (6) px of padding on
+  each side, against `app/img/entities64.png`, the atlas the game actually loads (the 512-wide copy
+  under assets/ is stale and has those cells empty): 18/3 content 39x46 → 51x58, 8/5 content
+  60x61 → 72x73, both exact.
+- **Fix.** `!FacilityDeco.draws(area, o)` in the caster condition. `floor_drain` and office-desk
+  bench decorations also answer `draws`, and both were already excluded (ground decal / spriteScale
+  under 1), so they don't change.
+- **What remains under a fitting:** the `ContactMask.prop` floor pool (and the wall halo where there is
+  a wall). The glb batches themselves are `castShadow = false` by design (`FacilityDeco.fittings`:
+  a casting instanced batch is a second draw call in the shadow pass), so a free-standing fitting
+  like the generator now has a contact pool and no cast shadow.
+
+Verdict: **bug, fixed.** Live: 0 visible sprite-pool quads within a cell of the 8 facility fittings in
+the regenerated Dogwood Heights compound.
