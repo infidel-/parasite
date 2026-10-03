@@ -519,6 +519,30 @@ class GenCheck
         }
     }
 
+// A CORP WASHROOM HAS A SINK: at least two fixture cells side by side along a row.
+//
+// render.corp.CorpFurniture.washroom tells a basin from a WC cubicle by contiguity alone, so a lone
+// fixture is a cubicle whatever the template meant by it. The basin run used to be centred blind
+// and skip the cell under a doorway, which split a three-basin run into two lone fixtures — a
+// washroom of four stalls and no sink, reported from area 6475 at 44,16
+  public function corpWashroomSane(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      var fixture = Const.TILE_FLOOR_MARBLE2 + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET;
+      for (r in rooms)
+        {
+          if (r.role != gen.corp.CorpTemp.ROLE_TOILET)
+            continue;
+          var basin = false;
+          for (x in r.x1...r.x2)
+            for (y in r.y1...r.y2 + 1)
+              if (ctx.cells[x][y] == fixture &&
+                  ctx.cells[x + 1][y] == fixture)
+                basin = true;
+          ok(basin, 'corp washroom at ' + r.x1 + ',' + r.y1 + ' (' + r.w + 'x' + r.h +
+            ') has no basin run: no two fixtures side by side');
+        }
+    }
+
 // how far the reception's centre may be from the lift door, in cells. MEASURED over 3,000 seeds
 // once the lift point was right and the demand had to front the corridor mouth: 7 to 12, worst 12
 // in 12 towers. The plate's own diagonal is 88

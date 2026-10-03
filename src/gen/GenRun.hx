@@ -361,6 +361,7 @@ class GenRun
       check.floorReachable(ctx, state.rooms);
       check.receptionSane(ctx, state.rooms);
       check.archiveSane(ctx, state.rooms);
+      check.corpWashroomSane(ctx, state.rooms);
       check.securitySane(ctx, state.rooms);
 
       // how much of the walkable grid the lift flood actually covered, and WHERE it stopped. a

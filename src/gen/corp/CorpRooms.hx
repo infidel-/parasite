@@ -140,14 +140,16 @@ class CorpRooms
       return groups;
     }
 
-// dress the four corners of a room, each with either a small table or a full-height unit
+// dress the four corners of a room with `group`'s decorations on the room's own unwalkable twin.
+// NO SMALL TABLE ANY MORE: the washroom, its one caller, took one in 40% of its corners, and a lone
+// table cell on WASHROOM is the last thing render.corp.CorpFurniture.worktop still emits as a slab of
+// quads — reported as "one remaining quad table". And never over a cell already holding the
+// twin: the stall run's two ends ARE the corners, and the bin landed on them and took the stall
   public static function decorateCorners(state: _CorpState, room: _Room,
-      small: Array<_TileGroup>, big: Array<_TileGroup>,
-      smallFloorID: Int, bigFloorID: Int, smallChance: Int)
+      group: Array<_TileGroup>, floorID: Int)
     {
       var cells = state.area.getCells();
-      var deco = small.copy();
-      var decoBig = big.copy();
+      var deco = group.copy();
       var corners = [
         { x: room.x1, y: room.y1 },
         { x: room.x2, y: room.y1 },
@@ -157,18 +159,11 @@ class CorpRooms
       for (c in corners)
         {
           // and never the cell a doorway opens onto — see `atDoor`
-          if (atDoor(cells, c.x, c.y))
+          if (atDoor(cells, c.x, c.y) ||
+              cells[c.x][c.y] == floorID)
             continue;
-          if (state.area.chance(smallChance))
-            {
-              cells[c.x][c.y] = smallFloorID;
-              deco = addDecorationExt(state, c.x, c.y, deco, small);
-            }
-          else
-            {
-              cells[c.x][c.y] = bigFloorID;
-              decoBig = addDecorationExt(state, c.x, c.y, decoBig, big);
-            }
+          cells[c.x][c.y] = floorID;
+          deco = addDecorationExt(state, c.x, c.y, deco, group);
         }
     }
 
@@ -1387,48 +1382,84 @@ class CorpRooms
       drawBlock(cells, room.x1, room.y1, room.w, room.h, MARBLE2);
       var fixture = Const.TILE_FLOOR_MARBLE2 + UNWALKABLE_TILE_OFFSET;
 
-      // the basins are a continuous counter along the top wall, BASIN_MAX of them, centred
+      // the basins are a continuous counter along the top wall, BASIN_MAX of them, as central as
+      // the doorways allow. NO CELL OF IT AT A DOORWAY: the run used to be centred blind and skip
+      // the cell under a door, and a run split by its own doorway is two LONE fixtures, which
+      // render.corp.CorpFurniture.washroom draws as WC cubicles — a washroom with four stalls and
+      // no sink, reported at 44,16. Two is the floor for the same reason; a wall that cannot fit
+      // two swaps with the stalls' one
+      var by = room.y1;
+      var sy = room.y2;
       var bn = (room.w < BASIN_MAX ? room.w : BASIN_MAX);
-      var bx = room.x1 + Std.int((room.w - bn) / 2);
-      GenTree.add(node, CorpBlocks.ZONE_BASIN_RUN, bx, room.y1, bx + bn - 1, room.y1);
-      for (x in bx...bx + bn)
+      var bx = -1;
+      while (bn >= 2)
         {
-          if (cells[x][room.y1 - 1] == BLDG_INNER_DOOR)
-            continue;
-          cells[x][room.y1] = fixture;
-          addDecoration(state, x, room.y1, Const.CORP_TAP);
+          bx = clearSpan(cells, room, bn, room.y1);
+          if (bx >= 0)
+            break;
+          bx = clearSpan(cells, room, bn, room.y2);
+          if (bx >= 0)
+            {
+              by = room.y2;
+              sy = room.y1;
+              break;
+            }
+          bn--;
+        }
+      if (bx >= 0)
+        {
+          GenTree.add(node, CorpBlocks.ZONE_BASIN_RUN, bx, by, bx + bn - 1, by);
+          for (x in bx...bx + bn)
+            {
+              cells[x][by] = fixture;
+              addDecoration(state, x, by, Const.CORP_TAP);
+            }
         }
 
-      // and the stalls are separate cells along the bottom one, every other cell so each has its
+      // and the stalls are separate cells along the other one, every other cell so each has its
       // own doorway
       // STALL_MAX of them, and the span they need is every other cell — so 3 stalls want 5 cells
       var sn = STALL_MAX;
       while (sn > 1 && 2 * sn - 1 > room.w)
         sn--;
       var sx = room.x1 + Std.int((room.w - (2 * sn - 1)) / 2);
-      GenTree.add(node, CorpBlocks.ZONE_STALL_RUN, sx, room.y2, sx + 2 * sn - 2, room.y2);
+      GenTree.add(node, CorpBlocks.ZONE_STALL_RUN, sx, sy, sx + 2 * sn - 2, sy);
       var x = sx;
       while (x <= sx + 2 * sn - 2)
         {
-          if (cells[x][room.y2 + 1] != BLDG_INNER_DOOR)
+          if (!atDoor(cells, x, sy))
             {
-              cells[x][room.y2] = fixture;
-              addDecoration(state, x, room.y2, Const.CORP_TABLE_TOILET_PAPER);
+              cells[x][sy] = fixture;
+              addDecoration(state, x, sy, Const.CORP_TABLE_TOILET_PAPER);
             }
           x += 2;
         }
 
-      // a bin and a paper dispenser on the end walls
+      // a bin or a plant in each free corner
       decorateCorners(state, room, [
-          Const.CORP_TABLE_TISSUE,
-          Const.CORP_TABLE_CLEANING,
-        ], [
           Const.CORP_TRASH,
           Const.CORP_PLANT,
         ],
-        Const.TILE_DARK_TABLE_MARBLE1_1X1,
-        fixture,
-        40);
+        fixture);
+    }
+
+// the left end of the most central `n`-cell span along row `y` of a room with no doorway beside any
+// of its cells, or -1 when the row has none
+  static function clearSpan(cells: Array<Array<Int>>, room: _Room, n: Int, y: Int): Int
+    {
+      var mid = room.x1 + Std.int((room.w - n) / 2);
+      var best = -1;
+      for (x0 in room.x1...room.x2 - n + 2)
+        {
+          var clear = true;
+          for (x in x0...x0 + n)
+            if (atDoor(cells, x, y))
+              clear = false;
+          if (clear &&
+              (best < 0 || Math.abs(x0 - mid) < Math.abs(best - mid)))
+            best = x0;
+        }
+      return best;
     }
 
 // --- the kinds the floor was missing.
