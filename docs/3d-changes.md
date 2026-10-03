@@ -1007,3 +1007,13 @@ Reported by a pick at local z -20.06 as "mirror hangs in the air in front of the
   vanity taps stand in front of it. Same quads in the same buffer, so +0 calls.
 
 Verdict: **bug, fixed.**
+
+## Corp mirror lifted to a grey: `corp/mirror` lift 1.187 → 0.72
+
+Reported as "make it gray, not so dark". The band was built at **54.8 srgb**, a black sheet against
+wall-washroom at 105.9. It is a gamma `lift` alone, since the art is neutral and only its value was
+wrong. 0.774 measured 92.7 (glass band 87.3), and **0.72 gives 99.5 / linear 0.1305**: one step under the
+wall, so the glass still reads as its own plane. The stainless edges lift with it. There is still
+no reflection: no cube, no planar pass, and the mirror is not on PropEnv.
+
+Verdict: **landed.**
