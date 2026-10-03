@@ -21,6 +21,9 @@ class FacilityToilet
   // at most 7x7 here, so two full walls would deal 14 and the place would read as a cell block
   public static inline var TOILET_STALL_MAX = 8;
 
+  // the narrowest room, on either axis, that takes the T partition. below it the room is one space
+  static inline var TOILET_SPLIT_MIN = 5;
+
   // how many cubicles THIS washroom has ranked out so far. a running total and not a parameter,
   // because the two halves are dealt in two passes and the runs are filled a tree level after that —
   // there is no one call the budget could be threaded through. Reset by `zones` at the top of each
@@ -246,8 +249,10 @@ class FacilityToilet
 // there rather than one slab (see its FIT_PARTITION branch) — without that the stem stops
 // (CELL - PART_T) / 2 short of the bar and the T has a hole in it.
 //
-// A ROOM TOO SMALL FOR A T FALLS BACK to the old single line: the bar needs three cells to have a
-// middle that is not one of its own passages, and the stem needs a cell to stand in past it
+// A ROOM UNDER TOILET_SPLIT_MIN ON EITHER AXIS GETS NO PARTITION AT ALL. A T in a 4-wide room is a
+// bar of two slabs and a stem leaving one cell either side of it — two halves too narrow to hold a
+// cubicle run and a basin each, reported from the game as half-broken. The single centre line this
+// used to fall back to was worse: open at both ends, so it divided nothing
   static function toiletPartition(state: _FacilityState, room: _Room): _ToiletSplit
     {
       // which wall the door is in, as the hand pointing INTO the room off it. the door cell itself is
@@ -272,14 +277,20 @@ class FacilityToilet
           if (side >= 0)
             break;
         }
+      if (side < 0 ||
+          room.w < TOILET_SPLIT_MIN ||
+          room.h < TOILET_SPLIT_MIN)
+        return {
+          pass: [],
+          vertical: false,
+          bar: -1,
+          lobby: -1,
+          stem: -1,
+        };
       // the BAR is parallel to that wall, so it runs on the axis the hand is NOT on
       var vertical = (side >= 2);
       var barLen = (vertical ? room.h : room.w);
       var deep = (vertical ? room.w : room.h);
-      if (side < 0 ||
-          barLen < 3 ||
-          deep < 3)
-        return toiletLine(state, room);
       // one cell in from the entrance wall, which leaves exactly one cell of lobby against it
       var bar = (vertical ?
         (side == 3 ? room.x1 + 1 : room.x2 - 1) :
@@ -328,39 +339,7 @@ class FacilityToilet
       };
     }
 
-// the single centre line the T falls back to on a room with no room for one. the shape this family
-// shipped with, kept whole rather than special-cased inside the T: both ends open, no stem, and so no
-// halves — `stem` comes back -1 and roomToilet furnishes the room as one space
-  static function toiletLine(state: _FacilityState, room: _Room): _ToiletSplit
-    {
-      var vertical = (room.w >= room.h);
-      var bar = (vertical ?
-        room.x1 + Std.int(room.w / 2) :
-        room.y1 + Std.int(room.h / 2));
-      var len = (vertical ? room.h : room.w);
-      var pass = [];
-      for (i in 0...len)
-        {
-          var x = (vertical ? bar : room.x1 + i);
-          var y = (vertical ? room.y1 + i : bar);
-          if (i == 0 ||
-              i == len - 1)
-            {
-              pass.push({ x: x, y: y });
-              continue;
-            }
-          partitionCell(state, x, y);
-        }
-      return {
-        pass: pass,
-        vertical: vertical,
-        bar: bar,
-        lobby: -1,
-        stem: -1,
-      };
-    }
-
-// one cell of either line. a cell already taken — a doorway's clearance, an object — is simply
+// one cell of the T. a cell already taken — a doorway's clearance, an object — is simply
 // skipped: a wider gap in the middle of a partition is still a washroom, where a slab standing in a
 // doorway is not
   static function partitionCell(state: _FacilityState, x: Int, y: Int)
