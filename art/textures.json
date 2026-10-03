@@ -3511,6 +3511,86 @@
       "built_linear": 0.0473,
       "built_srgb": 59.0
     },
+    "facility/generator-panel": {
+      "src": "facility/generator-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.911,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nThese are the surfaces of ONE military-surplus diesel POWER GENERATOR set. Its casing is OLIVE DRAB painted sheet steel, and that olive drab MUST stay clearly saturated and read as olive green \u2014 not grey, not brown, not black.\n\nTOP-LEFT quarter - ENCLOSURE PANEL, seen face on: flat matte OLIVE DRAB painted sheet steel with a very subtle grain, one narrow recessed vertical panel seam slightly off centre, a sparse row of round rivet heads along the top edge, and a small recessed flush latch handle. Light scuffs and a few chipped paint edges, no rust.\n\nTOP-RIGHT quarter - INTAKE LOUVRE BANK, seen face on: an OLIVE DRAB painted panel filled with a regular repeating stack of horizontal stamped intake louvre slats, each slat casting a thin hard shadow into a near-black slot behind it.\n\nBOTTOM-LEFT quarter - CONTROL PANEL, seen STRAIGHT ON: a dark charcoal recessed control box set into olive drab steel, carrying two round analogue gauges with warm AMBER dial faces and thin needles, one large round RED emergency stop push button, a small rotary start key switch, and a row of four stubby black breaker toggles. The AMBER dials and the RED button MUST stay clearly saturated and read as those colours. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - SKID BASE CHANNEL, seen face on: a dark gunmetal steel C-channel skid rail running horizontally, with two rectangular forklift pocket openings that are near-black inside, a row of heavy hex bolt heads, oil-stained scuffs along the bottom edge.\n\nKeep all four quarters in the same dark worn industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        5,
+        5,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the hangar's POWER GENERATOR wears (facility/deco-generator, models-src/facility/generator_build.py). FOUR LABELS OFF ONE 1k GEN, the analyser's route and its reason: four surfaces of one machine drawn side by side land in one family for free. OLIVE DRAB, asked for saturated and kept: the user's pick, so a genset reads as military surplus parked in a defense lab's shed and not as one more grey-green cabinet. Crops sit inside the 507-515 seam band and the 0-3 / 1020+ rim. LIFT FITTED TO THE ANALYSER standing in the same shed (its four built at linear 0.039-0.049), so the two machines read at one value. -- the enclosure: flanks, ends and roof.",
+      "last_converted": "2026-10-03T09:52:06",
+      "last_lift": 0.911,
+      "built_linear": 0.0582,
+      "built_srgb": 61.7
+    },
+    "facility/generator-louvre": {
+      "src": "facility/generator-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.938,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nThese are the surfaces of ONE military-surplus diesel POWER GENERATOR set. Its casing is OLIVE DRAB painted sheet steel, and that olive drab MUST stay clearly saturated and read as olive green \u2014 not grey, not brown, not black.\n\nTOP-LEFT quarter - ENCLOSURE PANEL, seen face on: flat matte OLIVE DRAB painted sheet steel with a very subtle grain, one narrow recessed vertical panel seam slightly off centre, a sparse row of round rivet heads along the top edge, and a small recessed flush latch handle. Light scuffs and a few chipped paint edges, no rust.\n\nTOP-RIGHT quarter - INTAKE LOUVRE BANK, seen face on: an OLIVE DRAB painted panel filled with a regular repeating stack of horizontal stamped intake louvre slats, each slat casting a thin hard shadow into a near-black slot behind it.\n\nBOTTOM-LEFT quarter - CONTROL PANEL, seen STRAIGHT ON: a dark charcoal recessed control box set into olive drab steel, carrying two round analogue gauges with warm AMBER dial faces and thin needles, one large round RED emergency stop push button, a small rotary start key switch, and a row of four stubby black breaker toggles. The AMBER dials and the RED button MUST stay clearly saturated and read as those colours. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - SKID BASE CHANNEL, seen face on: a dark gunmetal steel C-channel skid rail running horizontally, with two rectangular forklift pocket openings that are near-black inside, a row of heavy hex bolt heads, oil-stained scuffs along the bottom edge.\n\nKeep all four quarters in the same dark worn industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        518,
+        5,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the hangar's POWER GENERATOR wears (facility/deco-generator, models-src/facility/generator_build.py). FOUR LABELS OFF ONE 1k GEN, the analyser's route and its reason: four surfaces of one machine drawn side by side land in one family for free. OLIVE DRAB, asked for saturated and kept: the user's pick, so a genset reads as military surplus parked in a defense lab's shed and not as one more grey-green cabinet. Crops sit inside the 507-515 seam band and the 0-3 / 1020+ rim. LIFT FITTED TO THE ANALYSER standing in the same shed (its four built at linear 0.039-0.049), so the two machines read at one value. -- the intake louvre bank on the long sides.",
+      "last_converted": "2026-10-03T09:52:06",
+      "last_lift": 0.938,
+      "built_linear": 0.0457,
+      "built_srgb": 49.7
+    },
+    "facility/generator-control": {
+      "src": "facility/generator-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.826,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nThese are the surfaces of ONE military-surplus diesel POWER GENERATOR set. Its casing is OLIVE DRAB painted sheet steel, and that olive drab MUST stay clearly saturated and read as olive green \u2014 not grey, not brown, not black.\n\nTOP-LEFT quarter - ENCLOSURE PANEL, seen face on: flat matte OLIVE DRAB painted sheet steel with a very subtle grain, one narrow recessed vertical panel seam slightly off centre, a sparse row of round rivet heads along the top edge, and a small recessed flush latch handle. Light scuffs and a few chipped paint edges, no rust.\n\nTOP-RIGHT quarter - INTAKE LOUVRE BANK, seen face on: an OLIVE DRAB painted panel filled with a regular repeating stack of horizontal stamped intake louvre slats, each slat casting a thin hard shadow into a near-black slot behind it.\n\nBOTTOM-LEFT quarter - CONTROL PANEL, seen STRAIGHT ON: a dark charcoal recessed control box set into olive drab steel, carrying two round analogue gauges with warm AMBER dial faces and thin needles, one large round RED emergency stop push button, a small rotary start key switch, and a row of four stubby black breaker toggles. The AMBER dials and the RED button MUST stay clearly saturated and read as those colours. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - SKID BASE CHANNEL, seen face on: a dark gunmetal steel C-channel skid rail running horizontally, with two rectangular forklift pocket openings that are near-black inside, a row of heavy hex bolt heads, oil-stained scuffs along the bottom edge.\n\nKeep all four quarters in the same dark worn industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        5,
+        518,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the hangar's POWER GENERATOR wears (facility/deco-generator, models-src/facility/generator_build.py). FOUR LABELS OFF ONE 1k GEN, the analyser's route and its reason: four surfaces of one machine drawn side by side land in one family for free. OLIVE DRAB, asked for saturated and kept: the user's pick, so a genset reads as military surplus parked in a defense lab's shed and not as one more grey-green cabinet. Crops sit inside the 507-515 seam band and the 0-3 / 1020+ rim. LIFT FITTED TO THE ANALYSER standing in the same shed (its four built at linear 0.039-0.049), so the two machines read at one value. -- the control end: gauges, stop button, key and breakers. Mapped 0..1 on its own face, so that face is cut to this cell's square aspect.",
+      "last_converted": "2026-10-03T09:52:06",
+      "last_lift": 0.826,
+      "built_linear": 0.0489,
+      "built_srgb": 54.4
+    },
+    "facility/generator-skid": {
+      "src": "facility/generator-pack4.png",
+      "class": "tile",
+      "res": 500,
+      "needs_alpha": false,
+      "lift": 0.782,
+      "prompt_exact": true,
+      "prompt": "A 2 x 2 grid of FOUR SEPARATE SEAMLESS TILEABLE TEXTURES, each occupying exactly one quarter of the square image. Draw a thin dark 2-pixel separating band along the centre horizontal and centre vertical lines so the four quarters do not bleed into each other. Do not draw any labels, numbers, text or frames.\n\nEach quarter must be independently SEAMLESS AND TILEABLE within its own quarter.\n\nThese are the surfaces of ONE military-surplus diesel POWER GENERATOR set. Its casing is OLIVE DRAB painted sheet steel, and that olive drab MUST stay clearly saturated and read as olive green \u2014 not grey, not brown, not black.\n\nTOP-LEFT quarter - ENCLOSURE PANEL, seen face on: flat matte OLIVE DRAB painted sheet steel with a very subtle grain, one narrow recessed vertical panel seam slightly off centre, a sparse row of round rivet heads along the top edge, and a small recessed flush latch handle. Light scuffs and a few chipped paint edges, no rust.\n\nTOP-RIGHT quarter - INTAKE LOUVRE BANK, seen face on: an OLIVE DRAB painted panel filled with a regular repeating stack of horizontal stamped intake louvre slats, each slat casting a thin hard shadow into a near-black slot behind it.\n\nBOTTOM-LEFT quarter - CONTROL PANEL, seen STRAIGHT ON: a dark charcoal recessed control box set into olive drab steel, carrying two round analogue gauges with warm AMBER dial faces and thin needles, one large round RED emergency stop push button, a small rotary start key switch, and a row of four stubby black breaker toggles. The AMBER dials and the RED button MUST stay clearly saturated and read as those colours. No text, no numerals, no tick labels on the dials.\n\nBOTTOM-RIGHT quarter - SKID BASE CHANNEL, seen face on: a dark gunmetal steel C-channel skid rail running horizontally, with two rectangular forklift pocket openings that are near-black inside, a row of heavy hex bolt heads, oil-stained scuffs along the bottom edge.\n\nKeep all four quarters in the same dark worn industrial family so they read as one machine. [append textures.json style]",
+      "crop": [
+        518,
+        518,
+        500,
+        500
+      ],
+      "note": "cell of the pack4 sheet the hangar's POWER GENERATOR wears (facility/deco-generator, models-src/facility/generator_build.py). FOUR LABELS OFF ONE 1k GEN, the analyser's route and its reason: four surfaces of one machine drawn side by side land in one family for free. OLIVE DRAB, asked for saturated and kept: the user's pick, so a genset reads as military surplus parked in a defense lab's shed and not as one more grey-green cabinet. Crops sit inside the 507-515 seam band and the 0-3 / 1020+ rim. LIFT FITTED TO THE ANALYSER standing in the same shed (its four built at linear 0.039-0.049), so the two machines read at one value. -- the skid base rail under the enclosure, forklift pockets and bolts.",
+      "last_converted": "2026-10-03T09:52:06",
+      "last_lift": 0.782,
+      "built_linear": 0.0432,
+      "built_srgb": 52.0
+    },
     "scenario-a/case-shell": {
       "src": "scenario-a/case-pack4.png",
       "class": "tile",

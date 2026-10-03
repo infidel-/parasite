@@ -973,6 +973,15 @@
       "last_converted": "2026-09-16T09:56:28Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
+    "facility/deco-generator": {
+      "src": "facility/deco-generator.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "the hangar's POWER GENERATOR, hand-modelled (models-src/facility/generator_build.py) -- a skid-mounted diesel genset standing on the OPEN FLOOR, 2-3 per shed (gen.blocks.HangarBlock.generators), which the corner server racks are cabled to with messy runs (render.facility.FacilityHangar). 1,024 tris, 3.04 x 1.58 x 2.36, holes 0, coplanar 0, islands 1. It LIES DOWN where everything else in the shed stands up, and its silhouette is its ROOF -- a muffler along the roof and an exhaust stack with a rain cap -- because the camera looks down at it. Wears its own pack4 sheet (facility/generator-pack4.png: enclosure panel, intake louvre, control panel, skid rail), OLIVE DRAB by the user's pick, packed into models-src/facility/generator-sheet.png by tools/modelsheet.py; one density for the whole model (scale = skid length) except the control face, which maps its cell whole because it is a composition. roughness 1 so it rides the Lambert path like the rest of the hand-modelled facility.",
+      "roughness": 1,
+      "last_converted": "2026-10-03T09:00:29Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
     "facility/drum-steel-hand": {
       "src": "facility/drum-steel-hand.glb",
       "tris": -1,
