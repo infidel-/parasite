@@ -1459,12 +1459,15 @@ class FacilityDeco
                 }
           var prop = Models.instanced(scene, r.path, places, r.h, SOLID);
           out.push(prop);
-          // NOT CASTING and mask-patched, the drums' own two findings — see `drums` below
+          // NOT CASTING and mask-patched, the drums' own two findings — see `drums` below. THE
+          // GENERATOR IS THE EXCEPTION, asked for: it stands on the open floor with no wall behind
+          // it, so a contact pool alone left it looking pasted on. Two or three instances in one
+          // shed, so the cost is the one shadow-pass call that batch adds while it is in view
           if (places.length > 0)
             Models.get(r.path, function(_)
               {
                 VisionMask.patchMesh(prop.mesh);
-                prop.mesh.castShadow = false;
+                prop.mesh.castShadow = (r.kind == _FittingKind.FIT_GENERATOR);
               });
         }
       return out;
