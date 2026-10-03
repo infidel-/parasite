@@ -159,7 +159,7 @@ class GunCabinet extends AreaObject
     {
       isOpen = true;
       game.log('You open the gun cabinet.');
-      game.scene.sounds.play('door-cabinet-open', {
+      game.scene.sounds.play('door-metal-open1', {
         x: x,
         y: y,
         canDelay: true,
