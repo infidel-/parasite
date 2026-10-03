@@ -265,6 +265,11 @@ class GenCheck
           var mine = [for (d in doors) if (d.roomID1 == r.id) d];
           ok(mine.length == 1, 'washroom at ' + r.x1 + ',' + r.y1 + ' cut ' + mine.length +
             ' doors of its own, not 1');
+          // and NOBODY ELSE'S door opens into it: a room reached only through the toilets is the
+          // fault gen.facility.FacilityConnect.sealWashroom exists to stop
+          var theirs = [for (d in doors) if (d.roomID2 == r.id && d.roomID1 != r.id) d];
+          ok(theirs.length == 0, 'washroom at ' + r.x1 + ',' + r.y1 + ' has ' + theirs.length +
+            ' door(s) from a neighbouring room into it');
           // roomID 0 is the sentinel for "a corridor, or outdoors" — doorsSane's own note
           for (d in mine)
             ok(d.roomID2 == 0,

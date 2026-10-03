@@ -141,7 +141,35 @@ class FacilityConnect
           cells[door.x][door.y] = TEMP_BUILDING_INNER_WALL;
           doors.remove(door);
         }
+      linkClusters(state);
+    }
 
+// make this room the washroom's way in and nobody else's: wall up every NEIGHBOUR'S door into it, and
+// give whatever that strands a way in of its own.
+//
+// makeDoors rolls each room's door over its whole ring and roles are dealt two passes later, so a
+// lab's only door can land in the wall it shares with the room that then becomes the washroom —
+// reported from the game as a laboratory reached only through the toilets, with a corridor along its
+// other wall. FacilityRooms.washroomDoor already ignores such a door, because it is not the
+// washroom's own; this is what stops it surviving the pick
+  public static function sealWashroom(state: _FacilityState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      for (door in state.doors.copy())
+        if (door.roomID2 == room.id &&
+            door.roomID1 != room.id)
+          {
+            cells[door.x][door.y] = TEMP_BUILDING_INNER_WALL;
+            state.doors.remove(door);
+          }
+      linkClusters(state);
+    }
+
+// let every set of rooms that cannot reach a corridor in: a door onto a corridor where one of its
+// rooms has the wall for it, and a door into a room that is already reached where none has. Never
+// into the washroom — it is entered from a corridor and passed through by nobody
+  static function linkClusters(state: _FacilityState)
+    {
       // group the rooms into everything-can-reach-everything sets
       var clusters = roomClusters(state);
 
@@ -157,6 +185,9 @@ class FacilityConnect
             }
           else pending.push(c);
         }
+      for (r in state.rooms)
+        if (r.role == ROLE_TOILET)
+          reachable.remove(r.id);
 
       // and let every other set in.
       //

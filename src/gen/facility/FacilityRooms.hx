@@ -86,7 +86,10 @@ class FacilityRooms
       // roll was the easy way to express usually". A lab building HAS a toilet; the only thing that
       // can stop it now is no candidate passing, measured at 1.6% of structures
       if (wash >= 0)
-        cand[wash].role = ROLE_TOILET;
+        {
+          cand[wash].role = ROLE_TOILET;
+          FacilityConnect.sealWashroom(state, cand[wash]);
+        }
       // and the store, dealt on the same shape and for the same reason the washroom is: it wants
       // something no other template needs — one wall run long enough to stand racking against — and
       // a room that has none is passed over rather than furnished badly. ONE PER BUILDING: a lab
