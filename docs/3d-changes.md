@@ -876,3 +876,45 @@ pad had none.
   any bin or drum.
 
 Verdict: **bug, fixed.**
+
+## Hangar power generators, and MESSY cable bundles from the corner racks (`FIT_GENERATOR`, `StripOpts.mess`)
+
+Asked for: a power generator glb, two or three of them in the shed, with the corner machines cabled
+to them by messy runs as a new cable setting.
+
+- **The prop.** `models-src/facility/generator_build.py`, hand-modelled like the rest of the shed's
+  machines (rack, machine cube, analyser, podium). A skid, an olive drab enclosure, intake louvres
+  on the long sides, a radiator grille on the -x end, a control box on the +x end, and a muffler,
+  exhaust stack and filler cap on the roof. It lies DOWN where the others stand up, and the roof
+  furniture carries its silhouette.
+  - 1,024 tris, 3.04 x 1.58 x 2.36. `check`: holes 0, coplanar 0, islands 1.
+  - Wears its own pack4 sheet (`facility/generator-pack4.png`, one 1k gen, $0.056): panel, louvre,
+    control, skid.
+  - Lifts fitted to the analyser in the same shed: built sRGB 50-62 against its 48-60. propstat on
+    the built glb: sampled 61/64/51 against the analyser's 59/65/59, chroma 13.6 against 5.7.
+  - One density for the whole model (`scale` = the skid's length). The control face is the
+    exception: it maps its cell whole because the cell is a composition.
+- **Placement.** `gen.blocks.HangarBlock.generators` carves 2-3 on the OPEN FLOOR, each inset two
+  cells off a corner. Corners holding a rack bay go first, then the rest in a rolled order.
+  - A generator needs bare neighbours all round and one clear cell between it and the pad (so the
+    pad's walkable ring survives), the machine banks and other generators.
+  - The carve has to read the pad and bank NODES by rect: none of them is filled yet at carve time,
+    so the grid still shows concrete where they will stand.
+  - The first cut used a 2-cell pad margin. The corner insets sit exactly 2 off the pad, so that
+    margin rejected them: **1.34 per shed. At 1 it is 2.49**. All 3000 seeds pass, reachability
+    included.
+  - Frame key 18/3, `blocks: ['hangar']`, which is no room role: nothing rolls it and
+    `GenCheck.decoBlocks` makes no claim on it.
+- **The cables.** `FacilityHangar.power` throws a bundle of 2-3 strands from every rack unit in the
+  shed to the nearest generator. The bundles go into the fan's borrowed buffer, so 0 draw calls.
+  - Each strand rolls its own splay at both ends (±0.35), bow size and side, and kink.
+  - Each strand lies 0.012 above the one before, because a messy bundle crosses itself and two
+    ribbons in one plane z-fight.
+  - `StripOpts.mess` is world units of extra wander: two harmonics at seeded frequencies
+    (5-9 and 11-17 half-waves) on a sqrt taper, so the tangle reaches almost to the plugs, at
+    `CABLE_MESS_STEPS` 4x the segments so a kink is a curve and not a corner.
+- **Saves.** New compounds only, the user's call: a hangar generated before this has no
+  generators, and its racks stay unplugged.
+
+Verdict: **landed.** Seen live on a regenerated Dogwood Heights hangar: two gensets off the racked
+corners, each taking an L of racks' bundles across the floor.

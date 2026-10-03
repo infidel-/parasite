@@ -954,6 +954,7 @@ class RenderConfig {
     facilityPalletRack: 'models/facility/deco-pallet-rack.glb',   // two bays, three beam levels
     facilityPalletStack: 'models/facility/deco-pallet-stack.glb', // wrapped cartons on a pallet
     facilityDrumPallet: 'models/facility/deco-drum-pallet.glb',   // four drums on a pallet
+    facilityGenerator: 'models/facility/deco-generator.glb',      // the hangar's olive genset
     // and the parking entry's checkpoint, which is here for the THIRD time and by a different route
     // each time. Generated it was a 40-component bake with the hazard bands merged to orange on tan;
     // emitted it was 56 triangles of quad with no arris on it anywhere; these are hand-modelled to

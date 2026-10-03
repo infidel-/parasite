@@ -290,6 +290,10 @@ class FacilityWarm
                 path: RenderConfig.MODELS.facilityDrumPallet,
                 h: FacilityStyle.DECO_DRUM_PALLET_H,
               },
+              {
+                path: RenderConfig.MODELS.facilityGenerator,
+                h: FacilityStyle.DECO_GENERATOR_H,
+              },
             ]);
           // and the two that stand on the ROOF, which are the only props here that are NOT
           // mask-patched — they follow the deck they stand on, which takes no mask either (see the

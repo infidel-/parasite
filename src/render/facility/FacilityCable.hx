@@ -1102,7 +1102,11 @@ class FacilityCable
           gz /= gl;
         }
       var hw = FacilityStyle.CABLE_W / 2;
-      var n = FacilityStyle.CABLE_STEPS;
+      var mess = (o.mess != null ? o.mess : 0.0);
+      var n = FacilityStyle.CABLE_STEPS * (mess > 0 ? FacilityStyle.CABLE_MESS_STEPS : 1);
+      // the mess's two harmonics, rolled off the seed so no two strands of a bundle kink alike
+      var k1 = 5 + (o.seed >>> 4) % 5, k2 = 11 + (o.seed >>> 9) % 7;
+      var ph2 = ((o.seed >>> 13) % 1000) / 1000 * 2 * Math.PI;
       var px = 0.0, py = 0.0, pz = 0.0;
       for (i in 0...n + 1)
         {
@@ -1110,6 +1114,11 @@ class FacilityCable
           // zero at both ends, so the run stays glued to what it is bolted to
           var taper = 4 * t * (1 - t);
           var off = sg * amp * taper * (o.bow + o.wave * Math.sin(t * 3 * Math.PI + ph));
+          // the mess rides a taper that rises FAST, so the tangle reaches almost to the plugs
+          // instead of bunching in the middle of the span — and still lands on 0 at both ends
+          if (mess > 0)
+            off += amp * Math.sqrt(taper) * mess *
+              (0.6 * Math.sin(t * k1 * Math.PI + ph2) + 0.4 * Math.sin(t * k2 * Math.PI + ph));
           // the drop rides the SAME parabola, which is the shape a span under its own weight takes
           // anyway — a catenary and 4t(1-t) differ by less than a texel over six cells
           var dn = sag * taper;

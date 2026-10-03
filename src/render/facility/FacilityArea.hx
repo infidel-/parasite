@@ -86,6 +86,8 @@ class FacilityArea implements Area3D
       RenderConfig.MODELS.facilityPalletRack,
       RenderConfig.MODELS.facilityPalletStack,
       RenderConfig.MODELS.facilityDrumPallet,
+      // and the hangar's power generator, appended with its row in FacilityDeco.fittings
+      RenderConfig.MODELS.facilityGenerator,
       // and the hangar's study podium, last because `green` pushes it last. ONE instance per shed
       // and usually one shed, so it is the smallest batch in the list — and the only one standing
       // on Surf.CONCRETE (render.facility.FacilityHangar)

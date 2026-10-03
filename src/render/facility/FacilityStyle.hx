@@ -1312,6 +1312,12 @@ class FacilityStyle
   public static inline var DECO_DRUM_PALLET_W = 1.8;
   public static inline var DECO_DRUM_PALLET_D = 1.8;
   public static inline var DECO_DRUM_PALLET_H = 1.4;
+  // the hangar's power generator, models-src/facility/generator_build.py as MEASURED off the evaluated
+  // mesh: the skid's plan and the height to the stack's rain cap. H is what Models.instanced scales
+  // by, so it has to BE the mesh's height or the footprint stops matching rectOf
+  public static inline var DECO_GENERATOR_W = 3.04;
+  public static inline var DECO_GENERATOR_D = 1.58;
+  public static inline var DECO_GENERATOR_H = 2.36;
   // the racking's three DECK levels as a fraction of its height, which is models-src/facility/
   // storerack_build.py's own BEAM_Z + DECK_T over RACK_H and must stay it: this is what
   // render.facility.FacilityClutter stands a crate on, and a stale copy floats every one of them.
@@ -2098,6 +2104,9 @@ class FacilityStyle
   // segments per run. the sag is a parabola and the wander a single sine, so this is only about how
   // straight the polyline looks — 10 puts a vertex every 1.2 units on a 3-cell run
   public static inline var CABLE_STEPS = 10;
+  // and how many times that a MESSY run takes (StripOpts.mess): its two fast harmonics kink up to
+  // eight times along a span, and at ten segments a kink is a corner
+  public static inline var CABLE_MESS_STEPS = 4;
   // the longest run between two panels, in cells. a run is rejected outright if it crosses a cell
   // carrying any fitting, so this is the cap and not the rule.
   //
@@ -2591,6 +2600,20 @@ class FacilityStyle
   // and how high off the floor the ribbon lies. above CABLE_FLOOR_Y's 0.05 because the hangar floor
   // carries its own decal family and a run crossing one has to read as lying OVER it
   public static inline var PODIUM_CABLE_Y = 0.08;
+
+  // the hangar's corner server racks to the nearest power generator (render.facility.FacilityHangar
+  // .power): a BUNDLE per rack unit, thrown across the floor rather than dressed. Each strand rolls
+  // its own count, splay, bow side and mess off its seed, so no two bundles tangle alike
+  public static inline var GEN_CABLE_STRANDS = 2;      // strands per rack unit, plus a rolled third
+  public static inline var GEN_CABLE_THIRD_PCT = 50;
+  public static inline var GEN_CABLE_MESS = 0.32;      // StripOpts.mess, world units
+  public static inline var GEN_CABLE_BOW = 0.7;
+  public static inline var GEN_CABLE_WAVE = 0.3;
+  // how far each strand's two ends are thrown off the unit's own centre, world units — the bundle
+  // SPLAYS at both ends instead of leaving and arriving as one thick cord
+  public static inline var GEN_CABLE_SPLAY = 0.35;
+  // each strand lies this much higher than the one before, so two that cross never share a plane
+  public static inline var GEN_CABLE_LIFT = 0.012;
 
   // === the study rig's own leads (render.facility.FacilityRig)
   //

@@ -79,6 +79,7 @@ class FacilityHangar
             yaw: 0.0,
           });
           out.runs += fan(cable, m, p.col, p.row);
+          out.runs += power(cable, m, m.owner[p.row][p.col]);
           out.clutter += floor(b, m, p.col, p.row);
         }
       out.podium = Models.instanced(scene, RenderConfig.MODELS.facilityHangarPodium, places,
@@ -148,6 +149,82 @@ class FacilityHangar
             seed: e.seed,
           });
           n++;
+        }
+      return n;
+    }
+
+// the corner server racks to the power generators: a messy BUNDLE from every rack unit in this shed
+// to the generator nearest it (gen.blocks.HangarBlock.generators stands one off each racked corner
+// first, so nearest is almost always its own).
+//
+// INTO THE SAME BORROWED BUFFER as the fan, so the bundles are the compound's one cable mesh and cost
+// no draw call. Everything about a strand is rolled off its own seed — whether the bundle takes a
+// third, where each end is thrown, which way it bows, how it kinks (StripOpts.mess) — and each lies
+// GEN_CABLE_LIFT over the last, because a messy bundle crosses itself and two crossing ribbons in one
+// plane z-fight
+  static function power(b:MeshBuf, m:Facility, si:Int):Int
+    {
+      var gens = [];
+      var racks = [];
+      for (rr in 0...m.h)
+        for (cc in 0...m.w)
+          {
+            if (m.owner[rr][cc] != si)
+              continue;
+            var k = m.deco[rr][cc] - 1;
+            if (k != _FittingKind.FIT_GENERATOR &&
+                k != _FittingKind.FIT_RACK &&
+                k != _FittingKind.FIT_RACK_LOW)
+              continue;
+            var r0 = FacilityDeco.rectOf(m, cc, rr, k);
+            var p = {
+              x: (r0.x0 + r0.x1) / 2,
+              z: (r0.z0 + r0.z1) / 2,
+              seed: FacilityModel.mix((cc * 92821) ^ (rr * 68917)),
+            };
+            if (k == _FittingKind.FIT_GENERATOR)
+              gens.push(p);
+            else
+              racks.push(p);
+          }
+      if (gens.length == 0)
+        return 0;
+      var n = 0;
+      for (r in racks)
+        {
+          var g = gens[0];
+          var best = Math.POSITIVE_INFINITY;
+          for (q in gens)
+            {
+              var d = (q.x - r.x) * (q.x - r.x) + (q.z - r.z) * (q.z - r.z);
+              if (d < best)
+                {
+                  best = d;
+                  g = q;
+                }
+            }
+          var strands = FacilityStyle.GEN_CABLE_STRANDS +
+            (r.seed % 100 < FacilityStyle.GEN_CABLE_THIRD_PCT ? 1 : 0);
+          for (i in 0...strands)
+            {
+              var s = FacilityModel.mix(r.seed ^ ((i + 1) * 40503));
+              var sp = FacilityStyle.GEN_CABLE_SPLAY;
+              // each end thrown its own way off the unit's centre, -1..1 of the splay on both axes
+              var j = function(k:Int):Float
+                return (((s >>> k) % 1000) / 500.0 - 1.0) * sp;
+              var y = FacilityStyle.PODIUM_CABLE_Y + i * FacilityStyle.GEN_CABLE_LIFT;
+              FacilityCable.strip(b, {
+                a: [ r.x + j(1), y, r.z + j(5) ],
+                c: [ g.x + j(9), y, g.z + j(13) ],
+                n: [ 0.0, 1.0, 0.0 ],
+                side: null,
+                bow: FacilityStyle.GEN_CABLE_BOW * (0.5 + ((s >>> 17) % 100) / 100.0),
+                wave: FacilityStyle.GEN_CABLE_WAVE,
+                mess: FacilityStyle.GEN_CABLE_MESS,
+                seed: s,
+              });
+              n++;
+            }
         }
       return n;
     }

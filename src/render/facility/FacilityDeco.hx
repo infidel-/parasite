@@ -293,6 +293,7 @@ class FacilityDeco
           case _FittingKind.FIT_PALLET_RACK: FacilityStyle.DECO_PALLET_RACK_H;
           case _FittingKind.FIT_PALLET_STACK: FacilityStyle.DECO_PALLET_STACK_H;
           case _FittingKind.FIT_DRUM_PALLET: FacilityStyle.DECO_DRUM_PALLET_H;
+          case _FittingKind.FIT_GENERATOR: FacilityStyle.DECO_GENERATOR_H;
           default: 0.0;
         };
     }
@@ -530,6 +531,11 @@ class FacilityDeco
           w = FacilityStyle.DECO_DRUM_PALLET_W;
           d = FacilityStyle.DECO_DRUM_PALLET_D;
         }
+      else if (kind == _FittingKind.FIT_GENERATOR)
+        {
+          w = FacilityStyle.DECO_GENERATOR_W;
+          d = FacilityStyle.DECO_GENERATOR_D;
+        }
       var cx = (col + 0.5) * CELL - half;
       var cz = (row + 0.5) * CELL - half;
       var dir = wall(m, col, row, Const.isLowFitting(kind));
@@ -696,7 +702,7 @@ class FacilityDeco
           // emitted for them either — and a case is still required, because `default` below is the
           // rack and an unlisted kind is drawn as one
           case _FittingKind.FIT_PALLET_RACK | _FittingKind.FIT_PALLET_STACK |
-               _FittingKind.FIT_DRUM_PALLET:
+               _FittingKind.FIT_DRUM_PALLET | _FittingKind.FIT_GENERATOR:
           case _FittingKind.FIT_SOFA | _FittingKind.FIT_TABLE_LOW:
           // the hangar's second machine: modelled from the start like those two, so it emits nothing
           // — but it DOES blink, and its lamps are the painted lenses of its port plate rather than
@@ -1422,6 +1428,13 @@ class FacilityDeco
           kind: _FittingKind.FIT_DRUM_PALLET,
           path: RenderConfig.MODELS.facilityDrumPallet,
           h: FacilityStyle.DECO_DRUM_PALLET_H,
+          on: true,
+        },
+        // and the hangar's power generator, appended on the same terms
+        {
+          kind: _FittingKind.FIT_GENERATOR,
+          path: RenderConfig.MODELS.facilityGenerator,
+          h: FacilityStyle.DECO_GENERATOR_H,
           on: true,
         },
       ];

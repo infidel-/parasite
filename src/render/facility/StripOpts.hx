@@ -25,6 +25,11 @@ typedef StripOpts = {
   ?sag:Float,
   // plus a slow sine on top of it, same units, so two runs are not parallel curves
   wave:Float,
+  // MESSY: world units of fast, seeded wander on top of the bow and the wave — two higher harmonics
+  // at rolled frequencies, carried right up to the plugs, on CABLE_MESS_STEPS times the segments a
+  // tidy run takes so the kinks are curves and not corners. A lead somebody threw across a floor
+  // rather than one dressed along it. omitted (0) for every tidy run
+  ?mess:Float,
   // the wander's phase, rolled ONCE off FacilityModel.mix and baked. nothing here ticks
   seed:Int,
 };

@@ -424,6 +424,19 @@ class Const
         { row: 18, col: 2 },
       ],
     },
+    // and the hangar's power generator, on the store trio's terms: a KEY on the free tail of row 18
+    // that nothing draws. Its block is 'hangar', which is no room role, so no random roll anywhere
+    // can deal one and gen.GenCheck.decoBlocks has no claim to check — gen.blocks.HangarBlock carves
+    // them itself, by kind
+    {
+      id: 'generator',
+      kind: FIT_GENERATOR,
+      mount: [ 'floor-high' ],
+      blocks: [ 'hangar' ],
+      frames: [
+        { row: 18, col: 3 },
+      ],
+    },
   ];
 
   // how often a high floor decoration comes out as one of the fittings above rather than as one of

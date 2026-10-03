@@ -40,7 +40,10 @@ area
   │   │                      50/50 per BANK: the cube (FIT_MACHINE) or the tall analyser console
   │   ├ hangar-rack-bay      a corner run of server racks
   │   ├ hangar-console       a run of worktop the workstation pass stands computers on
-  │   └ hangar-slot          the filler: floor clutter, and mostly nothing
+  │   ├ hangar-slot          the filler: floor clutter, and mostly nothing
+  │   └ hangar-generator     2-3 power generators on the OPEN FLOOR, two cells in off a corner.
+  │                          CARVED after the deal (racked corners first, a clear cell all round
+  │                          and off the pad/banks), mean 2.49 per shed over 3000 seeds
   └ yard                     the filler kind: whatever nothing claimed
 
 building

@@ -65,4 +65,8 @@ enum abstract _FittingKind(Int) from Int to Int
   var FIT_PALLET_RACK = 17;
   var FIT_PALLET_STACK = 18;
   var FIT_DRUM_PALLET = 19;
+  // the hangar's POWER GENERATOR: a skid-mounted genset standing on the OPEN FLOOR, the one fitting
+  // with no wall behind it by design. gen.blocks.HangarBlock carves two or three per shed and
+  // render.facility.FacilityHangar cables the corner server racks to them
+  var FIT_GENERATOR = 20;
 }

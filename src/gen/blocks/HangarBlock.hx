@@ -53,6 +53,7 @@ class HangarBlock
   public static inline var RACK_BAY = 'hangar-rack-bay';
   public static inline var CONSOLE = 'hangar-console';
   public static inline var SLOT = 'hangar-slot';
+  public static inline var GENERATOR = 'hangar-generator';
 
   // the study pad, on a side. ODD, so it has a true centre cell for the podium to stand on, and 5
   // against a 14x12 floor leaves a 4-cell annulus on x and 3 on y — enough for the cable fan to
@@ -75,6 +76,17 @@ class HangarBlock
   // gen.blocks.RoomBlock.SLOT_FILL_PCT's 70 on purpose: a hangar is mostly floor, and the brief for
   // this one is "some empty space"
   static inline var SLOT_FILL_PCT = 30;
+
+  // the power generators on the open floor: at least two, a third this often, never more than three.
+  // the corner server racks are cabled to them (render.facility.FacilityHangar), so a corner holding
+  // racks gets the one nearest it first
+  static inline var GEN_MIN = 2;
+  static inline var GEN_MAX = 3;
+  static inline var GEN_THIRD_PCT = 50;
+  // how far into the floor off its corner a generator stands, in cells on both axes. 2 leaves the
+  // ring a corner rack bay stands on and a walkable lane inside it, and stops short of the machine
+  // banks the pad carves at the compass points
+  static inline var GEN_INSET = 2;
 
   // the pad's rect and the interior's, for the walk. MODULE STATE, the same shape and for the same
   // reason as gen.facility.FacilityToilet's stall budget: the pad is carved in one pass and the
@@ -187,6 +199,9 @@ class HangarBlock
           case SLOT:
             slot(state, node);
 
+          case GENERATOR:
+            standing(state, node, FIT_GENERATOR);
+
           default:
         }
     }
@@ -235,6 +250,96 @@ class HangarBlock
       Quota.deal(bays, HangarZones.demands(state, node, bays), SLOT, state.area.rng);
       for (b in bays)
         node.children.push(b);
+      generators(state, node, bays);
+    }
+
+// stand two or three power generators on the open floor, one inset off a corner each.
+//
+// CARVED AND NOT DEALT, for the machine banks' reason: they stand on the FLOOR and not in a wall
+// bay, and gen.Quota only deals bays. And carved AFTER the deal, because which corners carry server
+// racks is what decides which corners get one first — a rack is cabled to its nearest generator, and
+// a generator off a corner with nothing in it would be cabled to nothing
+  static function generators(state: _FacilityState, node: _GenNode, bays: Array<_GenNode>)
+    {
+      var corners = [
+        { x: node.x1, y: node.y1, dx: 1, dy: 1 },
+        { x: node.x2, y: node.y1, dx: -1, dy: 1 },
+        { x: node.x1, y: node.y2, dx: 1, dy: -1 },
+        { x: node.x2, y: node.y2, dx: -1, dy: -1 },
+      ];
+      var racked = function(c: { x: Int, y: Int, dx: Int, dy: Int }): Bool
+        {
+          for (b in bays)
+            if (b.kind == RACK_BAY &&
+                c.x >= b.x1 &&
+                c.x <= b.x2 &&
+                c.y >= b.y1 &&
+                c.y <= b.y2)
+              return true;
+          return false;
+        };
+      // racked corners first, the rest after them in a rolled order
+      var order = [ for (c in corners) if (racked(c)) c ];
+      var rest = [ for (c in corners) if (!racked(c)) c ];
+      while (rest.length > 0)
+        order.push(rest.splice(state.area.random(rest.length), 1)[0]);
+      var racks = 0;
+      for (c in corners)
+        if (racked(c))
+          racks++;
+      var want = Std.int(Math.min(GEN_MAX, Math.max(GEN_MIN, racks) +
+        (state.area.chance(GEN_THIRD_PCT) ? 1 : 0)));
+      var n = 0;
+      for (c in order)
+        {
+          if (n >= want)
+            break;
+          // the inset cell, and one step further along either axis when that one is taken
+          for (o in [ [ 0, 0 ], [ 1, 0 ], [ 0, 1 ] ])
+            {
+              var x = c.x + c.dx * (GEN_INSET + o[0]);
+              var y = c.y + c.dy * (GEN_INSET + o[1]);
+              if (!clear(state, node, x, y))
+                continue;
+              var g = GenTree.add(node, GENERATOR, x, y, x, y);
+              g.roomID = node.roomID;
+              n++;
+              break;
+            }
+        }
+    }
+
+// may a generator stand here? bare, inside the floor, with nothing standing on any of its eight
+// neighbours, and a clear cell between it and anything the pad carved — the pad itself, so the
+// walkable ring the rig's console and slots are worked from stays whole, a machine bank, or another
+// generator.
+// It is the only fitting in the compound with no wall behind it, so the lane round all four sides of
+// it is what keeps the floor walkable. The carved nodes are asked by RECT because none of them has
+// been filled yet — `bare` alone would see concrete where a bank is about to stand
+  static function clear(state: _FacilityState, node: _GenNode, x: Int, y: Int): Bool
+    {
+      if (x <= node.x1 ||
+          y <= node.y1 ||
+          x >= node.x2 ||
+          y >= node.y2)
+        return false;
+      for (dy in -1...2)
+        for (dx in -1...2)
+          if (!bare(state, x + dx, y + dy))
+            return false;
+      for (c in node.children)
+        {
+          var m = 1;
+          if ((c.kind == PAD ||
+               c.kind == MACHINE ||
+               c.kind == GENERATOR) &&
+              x >= c.x1 - m &&
+              x <= c.x2 + m &&
+              y >= c.y1 - m &&
+              y <= c.y2 + m)
+            return false;
+        }
+      return true;
     }
 
 // one machine bank, if both its cells are inside the floor and still bare
