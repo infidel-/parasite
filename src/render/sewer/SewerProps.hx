@@ -197,7 +197,7 @@ class SewerProps
 
 // does an exit ladder stand on or beside this cell? a pile in the exit's own cell would sit inside
 // the prop, and the ring around it is where the player lands and where the shaft pools its light
-  static function nearExit(m:Sewer, col:Int, row:Int):Bool
+  public static function nearExit(m:Sewer, col:Int, row:Int):Bool
     {
       for (l in m.lamps)
         {

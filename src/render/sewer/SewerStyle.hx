@@ -150,8 +150,9 @@ class SewerStyle
   public static inline var TOP_VALVE = 'textures/sewer/top-valve-1.png';
   public static inline var TOP_RUBBLE = 'textures/sewer/top-rubble-1.png';
   public static inline var TOP_MOSS = 'textures/sewer/top-moss-1.png';
-  public static inline var FLOOR_PUDDLE = 'textures/sewer/floor-puddle-1.png';
-  public static inline var FLOOR_PUDDLE_2 = 'textures/sewer/floor-puddle-2.png';
+  // NO puddle decals. the two Lambert puddles (sewer/floor-puddle-1/2, still registered and still
+  // building) are replaced by render.sewer.SewerWater's pools — matte art at 0.3 opacity could only
+  // ever read as a faint dark smear
   public static inline var FLOOR_GRATE = 'textures/sewer/floor-grate-1.png';
   public static inline var FLOOR_STAIN = 'textures/sewer/floor-stain-1.png';
 
@@ -166,9 +167,29 @@ class SewerStyle
   public static inline var LEDGE_PCT = 22;      // % of solid cells that get a ledge-top prop
   public static inline var LEDGE_MARGIN = 0.3;  // keep a prop this far inside the cell (never overhangs the drop)
   public static inline var LEDGE_DECAL_Y = 0.03; // clear of the cap, so a prop never z-fights the ledge
-  public static inline var FLOOR_PCT = 16;      // % of eligible floor cells that get a decal
+  public static inline var FLOOR_PCT = 8;       // % of eligible floor cells that get a decal (16 when 2 of 4 types were puddles)
   public static inline var FLOOR_MARGIN = 0.2;  // decals sit inside their own cell, never across a wall
   public static inline var FLOOR_DECAL_Y = 0.01; // UNDER the contact shadows at SHADOW_Y, so a puddle at a wall foot still darkens
+
+  // --- standing water (render.sewer.SewerWater) ---
+  public static inline var WATER_POOLS = 'textures/sewer/water-pools.png';   // 3 pool cut-outs on one packed sheet
+  public static inline var WATER_STREAM = 'textures/sewer/water-stream.png'; // the same sheet's flowing swatch, tiles along u
+  // per atlas cell: [u0, vTop, u1, vBottom], the chroma-key bbox measured off the drop + 4 px. a pool
+  // quad takes its cell's own aspect, so nothing is stretched
+  public static var POOL_RECTS:Array<Array<Float>> = [
+    [0.0225, 0.9678, 0.4766, 0.5264], // wide, lobed
+    [0.5283, 0.9844, 0.9766, 0.5244], // long kidney
+    [0.0439, 0.4619, 0.4570, 0.0537], // round, with a satellite splash
+  ];
+  public static inline var POOL_PCT = 6;          // % of floor cells that get a scatter pool (halved in rooms)
+  public static inline var LAMP_POOL_PCT = 55;    // % of corridor-node lamps with a pool in their glint
+  public static inline var LAMP_POOL_SOUTH = 3.0; // lamp pool centre south of its bulb: between the near (4.2) and far (2.0) glint
+  public static inline var POOL_MIN = 3.0;        // smallest pool quad, world units (the art fills ~half of it)
+  public static inline var POOL_MAX = 7.0;        // largest; a lamp pool starts here and shrinks to fit
+  public static inline var POOL_MARGIN = 0.3;     // a pool's footprint keeps this far off any wall
+  public static inline var POOL_Y = 0.015;        // over the floor decals at FLOOR_DECAL_Y, under the contact shadows at SHADOW_Y
+  public static inline var POOL_ROUGH = 0.4;      // a BROAD sheen: the mirror point of a bulb wanders ~5 units with the camera, and a tight glint (0.1) misses a 4-unit pool more often than not
+  public static inline var POOL_ALPHA = 0.92;     // near opaque: the glint is scaled by alpha too
 
   // --- wall detail decals (render.sewer.SewerDetail) ---
   // RenderConfig.WALLDECAL_PCT is 35, but that is per whole building FACE; a sewer face is a single
