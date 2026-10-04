@@ -110,6 +110,17 @@ class SewerModel
       return inside(m, col, row) && m.floor[row][col];
     }
 
+// does an exit ladder on this cell stand against a wall? north, west or east — never south, which
+// would put the ladder behind its own wall from this camera (game.SewerAreaGenerator.wallSpot). ONE
+// answer for the prop's yaw and standoff (SewerArea) and its shaft lamp (SewerScene), so the ladder
+// and the light over it cannot disagree about where it stands
+  public static function exitWalled(m:Sewer, col:Int, row:Int):Bool
+    {
+      return !isFloor(m, col, row - 1) ||
+        !isFloor(m, col - 1, row) ||
+        !isFloor(m, col + 1, row);
+    }
+
 // NO sludge channel. a `channel` grid used to mark the centre line of every 3-wide tunnel and
 // SewerGeom laid a muck tile there instead of walkway; the gutter is off, so the grid, the per-build
 // O(w*h*9) pass that filled it and the two rules that read it are gone with it. if it comes back,

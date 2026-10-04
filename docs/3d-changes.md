@@ -1156,6 +1156,10 @@ Reported as: the sewer exit is fully white now.
   - Headless, over 100 generated levels: **145 exits, N 103 / W 22 / E 20 / S 0 / free 0**.
   - Seen live, flush on a north wall and climbing onto the cap.
   - Old saves keep centred exits, which draw free-standing and unturned, exactly as before.
+- **Shadow and brackets, from the first look in game.**
+  - The shaft lamp's 2.0 south step was written for a centred ladder. Against a wall it put the lamp 3.8 off, and the ladder projected at NDC y 1.45 in the spot's shadow camera (72 degree cone, pointed straight down), so it was neither lit nor shadowed. A walled exit's lamp now stays over the cell, 1.8 in front of the ladder (`SewerModel.exitWalled`, one answer shared by the yaw, the standoff and the lamp). The ladder is inside that camera up to z ~3.1.
+  - A/B on the ladder's `castShadow`, shadow maps forced: **705 px darkened, by up to 110**, a rail-and-rung shadow on the wall behind it.
+  - The upper bracket pair at 2.75 hung in front of the cap chamfer: the vertical face can stop at 3.0 - `CAP_SAG` 0.4 - `CAP_CHAMFER` 0.25 = 2.35. It moved to 2.15.
 - **Trap.** A sewer room is 5x5 and a tunnel is 3 wide and centred, so a tunnel mouth takes EVERY middle cell of a side. Scanning the middle three only, 12 of 92 exits found no wall and fell back to the centre. The corners always keep theirs, which is also why north comes out heavy: a corner is north first, for the generator's tally and the renderer's yaw alike.
 
 Verdict: **landed. White exit fixed at the source; 5,000 → 528 tris; every new exit is wall-backed.**

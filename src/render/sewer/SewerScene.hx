@@ -75,11 +75,16 @@ class SewerScene
       for (l in m.lamps)
         {
           var w = CityConfig.cellToWorld(l.col, l.row);
-          // an EXIT's light steps south off its own cell, so the ladder prop standing there is not
-          // inside its own shaft and the pool lands on the walkway in front of it. cone and spotlight
-          // move together — they are independent arrays, but a shaft whose lit floor pool sat
-          // elsewhere would read as two different lights
-          var z = w.z + (l.exit ? SewerStyle.EXIT_LAMP_SOUTH : 0.0);
+          // an EXIT's light pools on the walkway in FRONT of its ladder. a walled exit's ladder is
+          // already off the centre, on the masonry (SewerArea.objWall), so the shaft stays over the
+          // cell: 1.8 in front, which puts the ladder inside the 72 degree cone, lit and SHADOWING
+          // onto the wall behind it. stepped south as well it stood 3.8 off, outside the cone and
+          // its shadow camera both. a free-standing one (an old save's centred exit) still steps
+          // south, so the prop is not inside its own shaft. cone and spotlight move together — they
+          // are independent arrays, but a shaft whose lit floor pool sat elsewhere would read as two
+          // different lights
+          var z = w.z + (l.exit && !SewerModel.exitWalled(m, l.col, l.row) ?
+            SewerStyle.EXIT_LAMP_SOUTH : 0.0);
           bulbs.push({ x: w.x, z: z });
           lampPosts.push({
             x: w.x,

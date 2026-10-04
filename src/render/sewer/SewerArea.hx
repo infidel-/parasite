@@ -120,9 +120,7 @@ class SewerArea implements Area3D
 // ObjModels' local +z is the prop's front. 0 in the open, where objYaw left it unturned
   function objWall(col:Int, row:Int):Float
     {
-      if (SewerModel.isFloor(model, col, row - 1) &&
-          SewerModel.isFloor(model, col - 1, row) &&
-          SewerModel.isFloor(model, col + 1, row))
+      if (!SewerModel.exitWalled(model, col, row))
         return 0.0;
       return -(CityConfig.CELL / 2 - SewerStyle.EXIT_DEPTH / 2);
     }

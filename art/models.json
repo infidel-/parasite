@@ -33,9 +33,9 @@
       "tris": -1,
       "tex": 512,
       "error": 0.005,
-      "note": "the sewer/habitat exit ladder, hand-modelled off models-src/sewer/ladder_build.py, replacing the TRELLIS exit (5,000 tris in 17 components, a FLAT grey 198 bake at sd 1 with a 0.7-metal MR map, which rendered WHITE once props went Lambert and the metal went with the path). 528 tris, 1.28 x 0.395 x 4.0 at world size (ObjModels h 4.0, scale 1): rails 1.1 apart, 7 rungs at 0.5, two bracket pairs into wall plates under WALL_H 3.0, plates' backs ON the wall plane so SewerStyle.EXIT_DEPTH is 0.395. buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. THE ART IS ITS OWN PACK4 (ladder-sheet.png off ladder-sheet-gen.png through models-src/wild/sheet_build.py, levelled by a FLAT scalar onto the sewer family's 41-48): rail iron 46, hand-worn rung iron 56 so the rungs read, bracket scale 44, damp-grimed rail 40 under z 1.0. tile_uv at TILE 2.0. No baseColor/lift/sat. roughness 1 keeps it on the Lambert path.",
+      "note": "the sewer/habitat exit ladder, hand-modelled off models-src/sewer/ladder_build.py, replacing the TRELLIS exit (5,000 tris in 17 components, a FLAT grey 198 bake at sd 1 with a 0.7-metal MR map, which rendered WHITE once props went Lambert and the metal went with the path). 528 tris, 1.28 x 0.395 x 4.0 at world size (ObjModels h 4.0, scale 1): rails 1.1 apart, 7 rungs at 0.5, two bracket pairs into wall plates at z 0.75 and 2.15 (the upper pair under the wall's 2.35 worst-case slope, CAP_SAG 0.4 + CAP_CHAMFER 0.25 — at 2.75 it hung in front of the chamfer), plates' backs ON the wall plane so SewerStyle.EXIT_DEPTH is 0.395. buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. THE ART IS ITS OWN PACK4 (ladder-sheet.png off ladder-sheet-gen.png through models-src/wild/sheet_build.py, levelled by a FLAT scalar onto the sewer family's 41-48): rail iron 46, hand-worn rung iron 56 so the rungs read, bracket scale 44, damp-grimed rail 40 under z 1.0. tile_uv at TILE 2.0. No baseColor/lift/sat. roughness 1 keeps it on the Lambert path.",
       "roughness": 1,
-      "last_converted": "2026-10-04T13:35:06Z",
+      "last_converted": "2026-10-04T13:45:55Z",
       "last_sig": "n1/-1/512/0.005/-/-/rf1"
     },
     "sewer/block": {
