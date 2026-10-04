@@ -507,6 +507,10 @@ typedef ObjModel = {
                       // draws (render.corp.CorpSecurity.door). Absent for a prop that fades whole
   ?noGhost:Bool,      // never fades at all: it stands clear of its cell (a shut gun cabinet in the
                       // wall's margin) and hides nobody standing there
+  ?noCast:Bool,       // casts NO fake atlas-silhouette shadow (render.actors.LampShadows): the prop
+                      // always stands under a casting light of its own, or off its cell, so a flat
+                      // copy of the 2D icon at the cell centre only doubles its real shadow. Absent
+                      // for a prop that can stand where nothing casts (a habitat organ)
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -806,6 +810,8 @@ class ObjModels
       lamps: null, // nor does it carry an emissive map
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
+      noCast: true, // its shaft lamp stays over the cell and shadows it onto the wall for real; the
+                    // fake one was the 2D ladder lying flat at the cell centre
     },
     // THE CORP STAIRS, a U-stairwell over the four sealed cells of its well, the object on the one
     // off the end wall: the well sinks under the floor (`sink`) into the hole CorpModel cuts there,
@@ -832,6 +838,8 @@ class ObjModels
         render.corp.CorpStyle.STAIRS_X,
         -render.corp.CorpStyle.STAIRS_Y,
       ],
+      noCast: true, // a stairwell sunk into its own well, standing OFF the object's cell: a 2D stairs
+                    // icon laid flat on that cell is a shadow of nothing
     },
     // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
     // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,

@@ -313,15 +313,29 @@ class LampShadows {
         // glb standing there draws nothing into this pass — so the analyser and the hangar
         // generator each laid a blurred blob of an atlas cell nothing draws (8/5 and 18/3, the
         // latter a stale 2D-era row), picked in the game as "sprite pool N" beside the prop
+        //
+        // AND A ROW FLAGGED `noCast` IS THE FOURTH: the sewer/habitat exit ladder and the corp
+        // stairwell. each has a real shadow of its own (the ladder's shaft lamp stays over its cell)
+        // or stands off its cell, so the atlas copy was the 2D ladder / stairs lying flat at the
+        // cell centre — picked in the game as "sprite pool 3" on a habitat exit
         if (o.entity != null &&
             !o.isGroundDecal() &&
             o.type != 'burning_barrel' &&
             !render.corp.CorpDeco.draws(game.area, o) &&
             !render.facility.FacilityDeco.draws(game.area, o) &&
-            render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0)
+            render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0 &&
+            !noCast(o))
           actorShadow(o.entity, barrelLights, lampOut, lampIn);
       if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
         actorShadow(game.playerArea.entity, barrelLights, lampOut, lampIn);
+    }
+
+// is this object drawn as a prop whose row opts out of the fake atlas shadow?
+  static inline function noCast(o:objects.AreaObject):Bool
+    {
+      var p = render.world.ObjModels.propFor(o.getModelKey());
+      return p != null &&
+        p.noCast == true;
     }
 
 // cast one actor's shadows: fetch its black silhouette once, then project it away from the barrels
