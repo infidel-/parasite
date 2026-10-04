@@ -2,6 +2,7 @@ package render.sewer;
 
 import three.Three;
 import citygen.CityConfig;
+import render.RenderConfig;
 import render.Textures;
 import render.sewer.SewerModel.Sewer;
 import render.world.MeshBuf.MeshBuf;
@@ -25,25 +26,46 @@ typedef SewerPool = {
   cell:Int,
 };
 
+// one spine point of a trickle
+typedef SewerStreamPoint = {
+  // world x
+  x:Float,
+  // world z
+  z:Float,
+  // half width here, world units (taper and jitter already applied)
+  hw:Float,
+  // opacity here: 0 at the very ends, 1 along the run
+  a:Float,
+};
+
 // everything the water pass places, split from the build so a layout can be read without a scene —
 // parasiteHx['render.sewer.SewerWater'].layout(SewerModel.demo())
 typedef SewerWaterLayout = {
-  // standing pools
+  // standing pools, the trickles' sinks among them
   pools:Array<SewerPool>,
+  // trickles, each a spine from a wall foot to its pool
+  streams:Array<Array<SewerStreamPoint>>,
 };
 
-// standing water on the walkway. the third attempt at water down here, and the first that is not
-// darker albedo: the sludge gutter read as a dark stripe and the Lambert puddles as faint smears,
-// because a Lambert surface under this much ambient can only say "water" by being darker, and darker
-// reads as a pit. this is a MeshStandardMaterial at low roughness, so the overhead shafts and the
-// wall brackets put a real glint on it — the one thing that reads as liquid at this pitch — while
-// its albedo sits at 0.8x the walkway's. a node lamp's glint lands toward the camera by
-// bulbY / tan(pitch), ~4.2 units at the near pose and ~2.0 at the far one, so the lamp pools are
-// pushed south off their lamp by LAMP_POOL_SOUTH to sit under it at both.
-// derived from the cell grid like every other sewer pass: deterministic, persisted nowhere
+// standing water on the walkway, and the trickles that feed it. the third attempt at water down
+// here, and the first that is not darker albedo: the sludge gutter read as a dark stripe and the
+// Lambert puddles as faint smears, because a Lambert surface under this much ambient can only say
+// "water" by being darker, and darker reads as a pit. this is MeshStandardMaterial, so the overhead
+// shafts and the wall brackets put a real sheen on it — the one thing that reads as liquid at this
+// pitch — while its albedo sits at 0.85x the walkway's. a node lamp's mirror point lands toward the
+// camera by bulbY / tan(pitch), ~4.2 units at the near pose and ~2.0 at the far one, so the lamp
+// pools are pushed south off their lamp by LAMP_POOL_SOUTH to sit under it at both.
+// a trickle starts under a SEEPAGE stain (SewerDetail.seepAt), so the stain runs down the wall and
+// the water carries on across the floor into a pool; it is never a corridor-long centreline, which
+// is what the gutter was. derived from the cell grid like every other sewer pass: deterministic,
+// persisted nowhere
 class SewerWater
 {
   static inline var CELL = CityConfig.CELL;
+
+  // the live trickle texture, whose offset tick() scrolls. the LAST build's, which is the real
+  // level's: the warm scene is built first and thrown away
+  static var flow:Texture = null;
 
 // the water meshes into the scene
   public static function build(scene:Scene, m:Sewer):Void
@@ -56,16 +78,16 @@ class SewerWater
           var r = R[p.cell];
           quad(pools, p, [r[0], r[3], r[2], r[3], r[2], r[1], r[0], r[1]]);
         }
-      // built even when the level rolled no pool: the warm demo tunnel may well roll none, and a
-      // mesh that is never added is a program that compiles on the first real entry instead. an
-      // empty index range submits no draw call
+      // both meshes are built even when the level rolled nothing: the warm demo tunnel may well
+      // roll none, and a mesh that is never added is a program that compiles on the first real
+      // entry instead. an empty index range submits no draw call
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(pools.pos, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(pools.uv, 2));
       geo.setIndex(pools.idx);
       geo.computeVertexNormals();
       // nearly opaque on purpose: three multiplies the specular by the fragment alpha too, so the
-      // 0.3 the old puddles ran at would have kept a third of the glint. the albedo is what keeps
+      // 0.3 the old puddles ran at would have kept a third of the sheen. the albedo is what keeps
       // it from reading as a hole, not the blend
       var mesh = new Mesh(geo, VisionMask.patch(new MeshStandardMaterial({
         map: Textures.loadTexture(SewerStyle.WATER_POOLS, 'roof'),
@@ -82,15 +104,64 @@ class SewerWater
       })));
       mesh.receiveShadow = true;
       scene.add(mesh);
+
+      // the trickles: one merged strip, the flowing swatch along it
+      var pos:Array<Float> = [];
+      var uv:Array<Float> = [];
+      var col:Array<Float> = [];
+      var idx:Array<Int> = [];
+      for (s in lay.streams)
+        strip(s, pos, uv, col, idx);
+      var sgeo = new BufferGeometry();
+      sgeo.setAttribute('position', new Float32BufferAttribute(pos, 3));
+      sgeo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      sgeo.setAttribute('color', new Float32BufferAttribute(col, 4));
+      sgeo.setIndex(idx);
+      sgeo.computeVertexNormals();
+      flow = Textures.loadTexture(SewerStyle.WATER_STREAM, 'roof');
+      var smesh = new Mesh(sgeo, VisionMask.patch(new MeshStandardMaterial({
+        map: flow,
+        roughness: SewerStyle.POOL_ROUGH,
+        metalness: 0.0,
+        vertexColors: true, // rgb 1, alpha carries the soft edges and the two end fades
+        transparent: true,
+        opacity: SewerStyle.POOL_ALPHA,
+        depthWrite: false,
+        side: THREE.FrontSide,
+        polygonOffset: true,
+        polygonOffsetFactor: -3, // over the pool it runs into
+        polygonOffsetUnits: -3,
+      })));
+      smesh.receiveShadow = true;
+      scene.add(smesh);
     }
 
-// where every pool goes. two sources: one under most corridor-node lamps (where the glint is), and a
-// sparse per-2x2-block scatter for the rest of the walkway
+// scroll the trickles toward their pools. the map's own offset, so no shader patch and nothing to
+// chain against VisionMask's
+  public static function tick(dtMs:Float):Void
+    {
+      if (flow != null)
+        flow.offset.x -= dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS * SewerStyle.STREAM_FLOW;
+    }
+
+// where every pool and trickle goes. three sources, each kept clear of the ones before it: a pool
+// under most corridor-node lamps (where the sheen is), a trickle off some seepage stains with a
+// pool at its end, and a sparse per-2x2-block scatter for the rest of the walkway
   public static function layout(m:Sewer):SewerWaterLayout
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var pools:Array<SewerPool> = [];
-      // the lamp pools first, so the scatter can keep clear of them
+      var streams:Array<Array<SewerStreamPoint>> = [];
+      // is (cx,cz) clear of every pool placed so far? two overlapping translucent pools
+      // double-darken where they meet
+      function clear(cx:Float, cz:Float):Bool
+        {
+          for (p in pools)
+            if (Math.abs(p.x - cx) < 2 * CELL &&
+                Math.abs(p.z - cz) < 2 * CELL)
+              return false;
+          return true;
+        }
       for (l in m.lamps)
         {
           if (l.exit)
@@ -101,7 +172,32 @@ class SewerWater
           var w = CityConfig.cellToWorld(l.col, l.row);
           place(m, pools, w.x, w.z + SewerStyle.LAMP_POOL_SOUTH, SewerStyle.POOL_MAX, hh);
         }
-      var lampPools = pools.length;
+      // trickles: north, west and east walls only. a south wall stands between the camera and its
+      // own foot (SewerProps.CAM_DIR), so a trickle off it would start out of sight
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          for (dir in [0, 2, 3])
+            {
+              var off = SewerDetail.seepAt(m, col, row, dir);
+              if (off == null ||
+                  SewerProps.nearExit(m, col, row))
+                continue;
+              var hh = SewerModel.mix((col * 50331653) ^ (row * 25165843) ^ (dir * 12582917));
+              if (hh % 100 >= SewerStyle.STREAM_PCT)
+                continue;
+              var s = stream(m, col, row, dir, off, hh, clear);
+              if (s == null)
+                continue;
+              // the sink first: no pool, no trickle — water running into the floor and stopping
+              // reads as a painted stripe
+              var end = s[s.length - 1];
+              var fx = dir == 0 ? 0.0 : (dir == 2 ? 1.0 : -1.0);
+              var fz = dir == 0 ? 1.0 : 0.0;
+              var r = SewerStyle.STREAM_POOL * 0.3;
+              if (!place(m, pools, end.x + fx * r, end.z + fz * r, SewerStyle.STREAM_POOL, hh >> 3))
+                continue;
+              streams.push(s);
+            }
       for (brow in 0...Std.int((m.h + 1) / 2))
         for (bcol in 0...Std.int((m.w + 1) / 2))
           {
@@ -112,10 +208,10 @@ class SewerWater
             for (dr in 0...2)
               for (dc in 0...2)
                 {
-                  var col = bc + dc;
-                  var row = br + dr;
-                  if (SewerModel.isFloor(m, col, row))
-                    cells.push({ col: col, row: row });
+                  var c = bc + dc;
+                  var r = br + dr;
+                  if (SewerModel.isFloor(m, c, r))
+                    cells.push({ col: c, row: r });
                 }
             if (cells.length == 0)
               continue;
@@ -130,13 +226,7 @@ class SewerWater
               continue;
             var cx = cell.col * CELL - half + CELL / 2;
             var cz = cell.row * CELL - half + CELL / 2;
-            // clear of every lamp pool: two overlapping translucent pools double-darken where they meet
-            var clear = true;
-            for (i in 0...lampPools)
-              if (Math.abs(pools[i].x - cx) < 2 * CELL &&
-                  Math.abs(pools[i].z - cz) < 2 * CELL)
-                clear = false;
-            if (!clear)
+            if (!clear(cx, cz))
               continue;
             var h2 = SewerModel.mix(hh ^ 0x2545F491);
             var size = SewerStyle.POOL_MIN + ((h2 >> 3) % 1000) / 1000.0 * (SewerStyle.POOL_MAX - SewerStyle.POOL_MIN);
@@ -145,12 +235,149 @@ class SewerWater
           }
       return {
         pools: pools,
+        streams: streams,
       };
     }
 
-// one pool at (cx,cz), shrunk until its rotated footprint lies on floor cells only; dropped if
-// even POOL_MIN does not fit. the cell and the yaw come off the hash, the aspect off the atlas cell
-  static function place(m:Sewer, pools:Array<SewerPool>, cx:Float, cz:Float, size:Float, hh:Int):Void
+// one trickle's spine, out from the foot of wall face `dir` of (col,row) at the stain's lateral
+// offset, or null where it cannot run: too short a floor run ahead, a point off the walkway, or
+// its pool would land on one already placed. the meander is a hash random walk, so it is the same
+// trickle every reload
+  static function stream(m:Sewer, col:Int, row:Int, dir:Int, off:Float, hh:Int,
+    clear:Float->Float->Bool):Array<SewerStreamPoint>
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var x0 = col * CELL - half;
+      var z0 = row * CELL - half;
+      // flow direction (into the cell, away from the wall) and the source point at the wall foot
+      var fx = dir == 0 ? 0.0 : (dir == 2 ? 1.0 : -1.0);
+      var fz = dir == 0 ? 1.0 : 0.0;
+      var sx = dir == 0 ? x0 + CELL / 2 + off : (dir == 2 ? x0 : x0 + CELL);
+      var sz = dir == 0 ? z0 : z0 + CELL / 2 + off;
+      // free floor straight ahead, in whole cells, and the run the trickle may take of it: it has
+      // to stop a pool short of the far wall
+      var run = 0;
+      while (SewerModel.isFloor(m, col + Std.int(fx) * (run + 1), row + Std.int(fz) * (run + 1)))
+        run++;
+      var len = SewerStyle.STREAM_MIN + ((hh >> 7) % 1000) / 1000.0 * (SewerStyle.STREAM_MAX - SewerStyle.STREAM_MIN);
+      var room = (run + 1) * CELL - SewerStyle.STREAM_POOL;
+      if (len > room)
+        len = room;
+      if (len < SewerStyle.STREAM_MIN ||
+          !clear(sx + fx * len, sz + fz * len))
+        return null;
+      // lateral axis, perpendicular to the flow
+      var lx = -fz;
+      var lz = fx;
+      var n = Math.ceil(len / SewerStyle.STREAM_STEP);
+      var pts:Array<SewerStreamPoint> = [];
+      var wander = 0.0;
+      var h = hh;
+      for (i in 0...n + 1)
+        {
+          var t = i / n;
+          // the walk: a small step per point toward a clamped wander, zero at the wall so the
+          // trickle leaves the stain where the stain is
+          h = SewerModel.mix(h ^ 0x68E31DA4);
+          if (i > 0)
+            wander += ((h % 1000) / 1000.0 - 0.5) * 2 * SewerStyle.STREAM_WALK;
+          var amp = SewerStyle.STREAM_WANDER;
+          if (wander > amp)
+            wander = amp;
+          if (wander < -amp)
+            wander = -amp;
+          var d = t * len;
+          var x = sx + fx * d + lx * wander;
+          var z = sz + fz * d + lz * wander;
+          // a thread at the wall that opens to full width over the first quarter, with a
+          // per-point jitter so the two edges are not parallel
+          var hw = SewerStyle.STREAM_W / 2 * (0.35 + 0.65 * Math.min(1.0, t * 4)) *
+            (1 + (((h >> 10) % 1000) / 1000.0 - 0.5) * 2 * SewerStyle.STREAM_JITTER);
+          // off the walkway anywhere along the strip's edges = no trickle at all (the first point
+          // sits ON the wall line, so it is tested a hair inside)
+          var e = i == 0 ? 0.05 : 0.0;
+          if (!onFloor(m, x + fx * e + lx * hw, z + fz * e + lz * hw) ||
+              !onFloor(m, x + fx * e - lx * hw, z + fz * e - lz * hw))
+            return null;
+          // fade in over the first step out of the grime band, and out across the pool it runs into
+          var a = Math.min(1.0, d / SewerStyle.STREAM_STEP);
+          var tail = (len - d) / SewerStyle.STREAM_FADE;
+          if (tail < a)
+            a = tail;
+          pts.push({
+            x: x,
+            z: z,
+            hw: hw,
+            a: a,
+          });
+        }
+      return pts;
+    }
+
+// is a world point over a floor cell?
+  static inline function onFloor(m:Sewer, x:Float, z:Float):Bool
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      return SewerModel.isFloor(m, Math.floor((x + half) / CELL), Math.floor((z + half) / CELL));
+    }
+
+// one trickle as a strip four vertices across — edge, inner, inner, edge, alpha 0/1/1/0 — so both
+// edges are soft. u runs down the spine in world units over STREAM_TILE, v takes a band of the
+// swatch exactly as wide as the strip at that same scale, so the texture is never stretched. the
+// miter is SlimeTrail.rebuild's: the perpendicular of the averaged tangent at each point
+  static function strip(s:Array<SewerStreamPoint>, pos:Array<Float>, uv:Array<Float>, col:Array<Float>, idx:Array<Int>):Void
+    {
+      var y = SewerStyle.STREAM_Y;
+      var T = SewerStyle.STREAM_TILE;
+      var base = Std.int(pos.length / 3);
+      var u = 0.0;
+      for (i in 0...s.length)
+        {
+          var p = s[i];
+          var a = s[i > 0 ? i - 1 : i];
+          var b = s[i < s.length - 1 ? i + 1 : i];
+          var tx = b.x - a.x;
+          var tz = b.z - a.z;
+          var tl = Math.sqrt(tx * tx + tz * tz);
+          // the perpendicular in XZ
+          var px = -tz / tl;
+          var pz = tx / tl;
+          if (i > 0)
+            u += Math.sqrt((p.x - s[i - 1].x) * (p.x - s[i - 1].x) + (p.z - s[i - 1].z) * (p.z - s[i - 1].z)) / T;
+          for (k in 0...4)
+            {
+              var f = [-1.0, -SewerStyle.STREAM_CORE, SewerStyle.STREAM_CORE, 1.0][k];
+              pos.push(p.x + px * p.hw * f);
+              pos.push(y);
+              pos.push(p.z + pz * p.hw * f);
+              uv.push(u);
+              uv.push(0.5 + p.hw * f / T);
+              col.push(1.0);
+              col.push(1.0);
+              col.push(1.0);
+              col.push(k == 0 || k == 3 ? 0.0 : p.a);
+            }
+          if (i == 0)
+            continue;
+          // three quads between this row of four and the last, wound so the normal comes out +Y
+          var r0 = base + (i - 1) * 4;
+          var r1 = base + i * 4;
+          for (k in 0...3)
+            {
+              idx.push(r0 + k);
+              idx.push(r0 + k + 1);
+              idx.push(r1 + k);
+              idx.push(r0 + k + 1);
+              idx.push(r1 + k + 1);
+              idx.push(r1 + k);
+            }
+        }
+    }
+
+// one pool at (cx,cz), shrunk until its rotated footprint lies on floor cells only; false (and no
+// pool) if even POOL_MIN does not fit. the cell and the yaw come off the hash, the aspect off the
+// atlas cell
+  static function place(m:Sewer, pools:Array<SewerPool>, cx:Float, cz:Float, size:Float, hh:Int):Bool
     {
       var R = SewerStyle.POOL_RECTS;
       var cell = (hh >> 9) % R.length;
@@ -173,10 +400,11 @@ class SewerWater
                 ang: ang,
                 cell: cell,
               });
-              return;
+              return true;
             }
           size *= 0.85;
         }
+      return false;
     }
 
 // does an ex x ez box centred at (cx,cz), grown by POOL_MARGIN, cover floor cells only?

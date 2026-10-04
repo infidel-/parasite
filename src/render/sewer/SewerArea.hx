@@ -159,6 +159,8 @@ class SewerArea implements Area3D
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
+      // and the trickles' flow, above the gate for the same reason
+      SewerWater.tick(opts.dtMs);
       // the exit ladders take their patches here rather than in ObjModels, which the city shares:
       // their glb arrives over a loader callback, so there is no build-time moment to catch. each
       // patch marks its own hook and early-outs on the next pass, so this is a couple of reads once

@@ -190,6 +190,21 @@ class SewerStyle
   public static inline var POOL_Y = 0.015;        // over the floor decals at FLOOR_DECAL_Y, under the contact shadows at SHADOW_Y
   public static inline var POOL_ROUGH = 0.4;      // a BROAD sheen: the mirror point of a bulb wanders ~5 units with the camera, and a tight glint (0.1) misses a 4-unit pool more often than not
   public static inline var POOL_ALPHA = 0.92;     // near opaque: the glint is scaled by alpha too
+  // trickles: off a seepage stain on a N/W/E wall, across the walkway, into a pool of their own
+  public static inline var STREAM_PCT = 70;       // % of seepage-stained faces that run a trickle
+  public static inline var STREAM_MIN = 3.0;      // shortest trickle, world units (shorter than this = none)
+  public static inline var STREAM_MAX = 9.0;      // longest; cut to stop a pool short of the far wall
+  public static inline var STREAM_POOL = 4.0;     // the sink pool's starting size
+  public static inline var STREAM_STEP = 0.5;     // spine spacing, world units
+  public static inline var STREAM_WALK = 0.12;    // meander step per spine point
+  public static inline var STREAM_WANDER = 0.6;   // furthest the meander strays off the straight line
+  public static inline var STREAM_W = 0.9;        // full width, world units (~a fifth of a cell)
+  public static inline var STREAM_JITTER = 0.2;   // per-point width jitter, so the edges are not parallel
+  public static inline var STREAM_CORE = 0.45;    // inner vertex pair as a fraction of the half width: the soft edge is the rest
+  public static inline var STREAM_FADE = 1.2;     // length of the fade out across the sink pool
+  public static inline var STREAM_TILE = 3.0;     // world units per texture repeat, both axes, so the swatch is never stretched
+  public static inline var STREAM_Y = 0.017;      // over the pools at POOL_Y, under the contact shadows at SHADOW_Y
+  public static inline var STREAM_FLOW = 0.03;    // texture repeats scrolled per BASE_MS: ~0.6 world units a second
 
   // --- wall detail decals (render.sewer.SewerDetail) ---
   // RenderConfig.WALLDECAL_PCT is 35, but that is per whole building FACE; a sewer face is a single
