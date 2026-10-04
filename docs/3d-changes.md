@@ -1163,3 +1163,19 @@ Reported as: the sewer exit is fully white now.
 - **Trap.** A sewer room is 5x5 and a tunnel is 3 wide and centred, so a tunnel mouth takes EVERY middle cell of a side. Scanning the middle three only, 12 of 92 exits found no wall and fell back to the centre. The corners always keep theirs, which is also why north comes out heavy: a corner is north first, for the generator's tally and the renderer's yaw alike.
 
 Verdict: **landed. White exit fixed at the source; 5,000 → 528 tris; every new exit is wall-backed.**
+
+## Sewer water: wet pools and trickles (`render.sewer.SewerWater`)
+
+Asked for: shallow pools and small ribbon streams in the sewers. The third attempt at water down here.
+
+- **Why the first two failed, and the same reason both times.** The sludge gutter read as a dark stripe and the puddle decals (Lambert, opacity 0.30/0.35, art prompted "matte, NO reflections") as faint smears. Every tunnel surface is Lambert under ambient 3.95 + hemi 1.89, so water could only be drawn as DARKER albedo, which reads as a pit. What says liquid at this pitch is the sheen — and blood decals already ship one (`BLOOD.wetRough`).
+- **What.** One packed 1k sheet (`sewer/water-sheet.png`, sunburst, `high`): three pool cut-outs plus a left-to-right flowing swatch. It ships as two labels: `sewer/water-pools` (chroma, `res` 1024, runtime uv rects per cell, so 1 material for every pool) and `sewer/water-stream` (tile, `crop` searched for the best horizontal wrap, wrapH **3.69** against an interior 1.3). Both meshes are `MeshStandardMaterial`, roughness 0.4, opacity 0.92, VisionMask-patched, built from `SewerGround.build` so the warm demo compiles them.
+  - **Pools:** under 55% of the corridor-node lamps (pushed 3.0 south, into the glint), and a 6%-per-cell scatter (halved in rooms). They shrink until the rotated footprint lies on floor and keep clear of each other.
+  - **Trickles:** off a SEEPAGE-stained N/W/E face (`SewerDetail.seepAt`, now the one home of the per-face decal roll). 70% of those faces run 3-9 units out, and only if a pool fits at the end. A strip is 4 verts across (alpha 0/1/1/0), u in world units over `STREAM_TILE`, and the flow is a CPU `map.offset.x` scroll from `SewerArea.tick` (0.6 u/s), so there is no shader patch to chain.
+- **Measured live, habitat.** 6 pools + 1 trickle (15 spine points), **0 samples off the floor** for either. Old puddle meshes 0. Warm went **94 → 95 programs**, even though the demo tunnel rolls 0 trickles (4 pools): the stream mesh is added EMPTY on purpose, and an empty index range submits no call.
+- **Trap 1: a lift fitted on the whole cut-out is fitted on the rim.** The silt rim is 0.105 linear, 1.6x the water's 0.065. Fitting the mean to 0.8x floor (lift 1.23) put the WATER at 0.65x and it read as a dark cloud. Re-fitted on blue-dominant pixels only (74% of the cut): **1.12 → 0.85x**.
+- **Trap 2: a pale key leaves a pale outline.** `#5a5d63` was unusable (the rim sits within 24 of it), so the sheet was keyed on its own `#c8c8c8`. At `tol` 24 the LANCZOS blend of rim into key survived as a white ring round every pool; **`tol` 90 cut 4,125 px** and the ring went.
+- **Trap 3: a tight glint misses.** A node bulb's mirror point lands at `bulb + 0.156 × (camera − bulb)` in xz (5.6 / (30.4 + 5.6) at this rig). That is ~3u off the bulb whenever the player is off to one side, so roughness 0.1 put the lobe just outside a 4.3u pool. A flat 0.05-albedo test quad showed it plainly: invisible at 0.1 and at 1.0, a broad sheen on the near edge at 0.45. Shipped **0.4**.
+- **What it does NOT do.** Away from a lamp a pool sits at 0.85x the walkway and is quiet, and a trickle is a faint thread. That is the lighting, not a bug. The knobs are `POOL_ROUGH`, the pools' `lift`, and `LAMP_POOL_PCT`.
+
+Verdict: **landed. Water reads as wet where a lamp reaches it; puddle decals retired (−2 meshes), pools +1, trickles +1.**

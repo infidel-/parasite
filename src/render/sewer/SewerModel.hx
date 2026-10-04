@@ -127,6 +127,8 @@ class SewerModel
 // note what the pass had to learn: a full floor 8-neighbourhood alone floods a hall with sludge
 // (true of every interior cell of any open space), so it also required the run to be exactly 3 cells
 // wide across one axis, and room cells were excluded because a room floor stays dry
+// standing water is render.sewer.SewerWater now: pools, and short trickles off a wall seepage stain
+// into them — never a corridor-long centreline, which is what read as a stripe
 
 // lights at 3x3 corridor corners and intersections — the same placement rule the 2D atmosphere
 // lighting uses (lighting.SewerAreaLighting.addSewerCorridorLayoutSources), so a tunnel lights up
