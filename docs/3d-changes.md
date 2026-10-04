@@ -1179,3 +1179,29 @@ Asked for: shallow pools and small ribbon streams in the sewers. The third attem
 - **What it does NOT do.** Away from a lamp a pool sits at 0.85x the walkway and is quiet, and a trickle is a faint thread. That is the lighting, not a bug. The knobs are `POOL_ROUGH`, the pools' `lift`, and `LAMP_POOL_PCT`.
 
 Verdict: **landed. Water reads as wet where a lamp reaches it; puddle decals retired (−2 meshes), pools +1, trickles +1.**
+
+## Sewer water surface shader: ripples, varied roughness, tamed glint (`SewerWater.surface`)
+
+Asked: the pools carried "a very even white specular highlight". Cause: a flat plane at one roughness
+(0.4) under one overhead shaft draws the same smooth GGX disc on every pool, and the `9db4d4` shaft at
+intensity 45 drove it to near-white. A/B with the patch neutralised (amp 0, rough 0.4 everywhere, no
+tint or knee) reproduced exactly that: a white cloud-shaped blob filling the lit half of the pool.
+
+One `onBeforeCompile`, applied BEFORE `VisionMask.patch` so the mask chains over it (own key
+`sewerWater`), on both the pool and the trickle material:
+- **ripples**: four directional sines in WORLD xz (λ 0.9-2.3u, unrelated angles), analytic
+  gradient → shading normal. World space, not uv: the pools are atlas cells drawn at 3-7u, so a
+  normal map on their uv would ripple at a different scale per pool. Amplitude is damped to 0.25x on
+  slow value-noise "scum" patches.
+- **roughness**: 0.18 on water, 0.65 on the silt rim (albedo luminance 0.07..0.10 linear) and up to
+  60% of the way there on the scum patches. The ripple tilt is what lets a smooth surface still find
+  the glint — the trap that forced the first cut to a uniform 0.4 (the mirror point wanders ~5u).
+- **highlight**: `directSpecular *= 0x8f9a7a`, then a Reinhard knee on the peak channel (cap 0.9):
+  asymptotic, so no flat plateau; hue-preserving, where a per-channel clamp bleaches it.
+- clock: `uTime` in BASE_MS turns off `SewerWater.tick` (measured 6.55/s against 6.67 expected);
+  phase rate 0.06 rad/turn pools, 0.15 trickles.
+
+Tuned live via the shared uniform objects: amp 0.25 / cap 0.6 gave faint diagonal bands; **0.35 /
+0.9** gives bright broken caustic-like squiggles across the lit half. Warm 95 → 95 (the patched
+material replaces the plain one), 0 programs with diagnostics, +0 calls. An unlit pool or trickle is
+unchanged: still only the sheen says "water", and there is none without a lamp.

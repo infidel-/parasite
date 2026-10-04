@@ -188,7 +188,6 @@ class SewerStyle
   public static inline var POOL_MAX = 7.0;        // largest; a lamp pool starts here and shrinks to fit
   public static inline var POOL_MARGIN = 0.3;     // a pool's footprint keeps this far off any wall
   public static inline var POOL_Y = 0.015;        // over the floor decals at FLOOR_DECAL_Y, under the contact shadows at SHADOW_Y
-  public static inline var POOL_ROUGH = 0.4;      // a BROAD sheen: the mirror point of a bulb wanders ~5 units with the camera, and a tight glint (0.1) misses a 4-unit pool more often than not
   public static inline var POOL_ALPHA = 0.92;     // near opaque: the glint is scaled by alpha too
   // trickles: off a seepage stain on a N/W/E wall, across the walkway, into a pool of their own
   public static inline var STREAM_PCT = 70;       // % of seepage-stained faces that run a trickle
@@ -205,6 +204,18 @@ class SewerStyle
   public static inline var STREAM_TILE = 3.0;     // world units per texture repeat, both axes, so the swatch is never stretched
   public static inline var STREAM_Y = 0.017;      // over the pools at POOL_Y, under the contact shadows at SHADOW_Y
   public static inline var STREAM_FLOW = 0.03;    // texture repeats scrolled per BASE_MS: ~0.6 world units a second
+  // the water SURFACE shader (SewerWater.surface): ripples, roughness by material, a tamed highlight
+  public static inline var WATER_RIPPLE = 0.35;   // pool ripple slope (rise/run) at full strength: what breaks the glint up
+  public static inline var STREAM_RIPPLE = 0.5;   // the trickles run choppier than standing water
+  public static inline var WATER_RATE = 0.06;     // ripple phase, radians per BASE_MS: a slow crawl, not a boil
+  public static inline var STREAM_RATE = 0.15;
+  public static inline var WATER_SMOOTH = 0.18;   // roughness on open water. the ripples spread the glint; this keeps each one crisp
+  public static inline var WATER_ROUGH = 0.65;    // roughness on the silt rim and the scum patches
+  public static inline var WATER_SILT_LO = 0.07;  // albedo luminance (linear) where water turns to silt...
+  public static inline var WATER_SILT_HI = 0.10;  // ...and where it is all silt
+  public static inline var WATER_SCUM = 0.6;      // how matte the still patches go, 0..1 toward WATER_ROUGH
+  public static inline var WATER_SPEC_TINT = 0x8f9a7a; // murky green-grey on the highlight: sewer water is not clean glass
+  public static inline var WATER_SPEC_CAP = 0.9;  // soft knee on the highlight's peak channel, so it never clips to flat white
 
   // --- wall detail decals (render.sewer.SewerDetail) ---
   // RenderConfig.WALLDECAL_PCT is 35, but that is per whole building FACE; a sewer face is a single

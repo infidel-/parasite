@@ -8,6 +8,7 @@ import render.sewer.SewerModel.Sewer;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
+import render.world.PropShader.ShaderPatch;
 
 // one shallow pool on the walkway: a cell of the water-pools atlas, centred at (x,z), w x d world
 // units, turned `ang` about the vertical
@@ -66,6 +67,15 @@ class SewerWater
   // the live trickle texture, whose offset tick() scrolls. the LAST build's, which is the real
   // level's: the warm scene is built first and thrown away
   static var flow:Texture = null;
+  // the ripple clock in BASE_MS turns, and the knobs every water material shares. uniform objects
+  // three keeps BY REFERENCE, so a live edit of .value reaches both meshes at once
+  static var uTime = { value: 0.0 };
+  static var uSmooth = { value: SewerStyle.WATER_SMOOTH };
+  static var uRough = { value: SewerStyle.WATER_ROUGH };
+  static var uSilt = { value: new Vector2(SewerStyle.WATER_SILT_LO, SewerStyle.WATER_SILT_HI) };
+  static var uScum = { value: SewerStyle.WATER_SCUM };
+  static var uTint = { value: new Color(SewerStyle.WATER_SPEC_TINT) };
+  static var uCap = { value: SewerStyle.WATER_SPEC_CAP };
 
 // the water meshes into the scene
   public static function build(scene:Scene, m:Sewer):Void
@@ -89,9 +99,9 @@ class SewerWater
       // nearly opaque on purpose: three multiplies the specular by the fragment alpha too, so the
       // 0.3 the old puddles ran at would have kept a third of the sheen. the albedo is what keeps
       // it from reading as a hole, not the blend
-      var mesh = new Mesh(geo, VisionMask.patch(new MeshStandardMaterial({
+      var mesh = new Mesh(geo, VisionMask.patch(surface(new MeshStandardMaterial({
         map: Textures.loadTexture(SewerStyle.WATER_POOLS, 'roof'),
-        roughness: SewerStyle.POOL_ROUGH,
+        roughness: SewerStyle.WATER_SMOOTH,
         metalness: 0.0,
         transparent: true,
         opacity: SewerStyle.POOL_ALPHA,
@@ -101,7 +111,7 @@ class SewerWater
         polygonOffset: true,
         polygonOffsetFactor: -2,
         polygonOffsetUnits: -2,
-      })));
+      }), SewerStyle.WATER_RIPPLE, SewerStyle.WATER_RATE)));
       mesh.receiveShadow = true;
       scene.add(mesh);
 
@@ -119,9 +129,9 @@ class SewerWater
       sgeo.setIndex(idx);
       sgeo.computeVertexNormals();
       flow = Textures.loadTexture(SewerStyle.WATER_STREAM, 'roof');
-      var smesh = new Mesh(sgeo, VisionMask.patch(new MeshStandardMaterial({
+      var smesh = new Mesh(sgeo, VisionMask.patch(surface(new MeshStandardMaterial({
         map: flow,
-        roughness: SewerStyle.POOL_ROUGH,
+        roughness: SewerStyle.WATER_SMOOTH,
         metalness: 0.0,
         vertexColors: true, // rgb 1, alpha carries the soft edges and the two end fades
         transparent: true,
@@ -131,17 +141,115 @@ class SewerWater
         polygonOffset: true,
         polygonOffsetFactor: -3, // over the pool it runs into
         polygonOffsetUnits: -3,
-      })));
+      }), SewerStyle.STREAM_RIPPLE, SewerStyle.STREAM_RATE)));
       smesh.receiveShadow = true;
       scene.add(smesh);
     }
 
-// scroll the trickles toward their pools. the map's own offset, so no shader patch and nothing to
-// chain against VisionMask's
+// scroll the trickles toward their pools (the map's own offset) and run the ripple clock
   public static function tick(dtMs:Float):Void
     {
+      uTime.value += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       if (flow != null)
         flow.offset.x -= dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS * SewerStyle.STREAM_FLOW;
+    }
+
+// the water SURFACE, folded into a material before VisionMask.patch so the mask's hook chains over
+// this one. a flat plane at one roughness drew the same smooth white disc on every pool, so three
+// things change, all in the fragment shader:
+//   ripples — four directional waves in WORLD xz (so every pool ripples at the same scale whatever
+//             its size, which an atlas-uv normal map could not), gradient taken analytically, tilt
+//             the shading normal. the glint breaks into broken streaks that crawl, and the tilt is
+//             also what lets a smooth surface still FIND the glint: the mirror point of a bulb
+//             wanders ~5 units with the camera, and a flat 0.1 surface missed a 4-unit pool more
+//             often than not (why the first cut ran a uniform 0.4)
+//   roughness — glassy on the water, matte on the silt rim (read off the albedo's luminance) and on
+//             slow low-frequency SCUM patches, where the ripples also die down
+//   highlight — tinted murky and passed through a soft knee on its peak channel, so a lamp straight
+//             overhead stays a coloured glint instead of clipping to flat white
+// `amp` is the ripple slope at full strength, `rate` the wave phase speed in radians per BASE_MS.
+// `mat` is Dynamic for the reason PropShader.patch gives: the material externs declare no
+// onBeforeCompile / customProgramCacheKey
+  static function surface(mat:Dynamic, amp:Float, rate:Float):Dynamic
+    {
+      var uAmp = { value: amp };
+      var uRate = { value: rate };
+      mat.onBeforeCompile = function(shader:ShaderPatch, renderer:Dynamic)
+        {
+          shader.uniforms.waterTime = uTime;
+          shader.uniforms.waterAmp = uAmp;
+          shader.uniforms.waterRate = uRate;
+          shader.uniforms.waterSmooth = uSmooth;
+          shader.uniforms.waterRough = uRough;
+          shader.uniforms.waterSilt = uSilt;
+          shader.uniforms.waterScum = uScum;
+          shader.uniforms.waterTint = uTint;
+          shader.uniforms.waterCap = uCap;
+          shader.vertexShader = 'varying vec2 vWaterXZ;\n' +
+            StringTools.replace(shader.vertexShader, '#include <project_vertex>',
+              '#include <project_vertex>\n' +
+              '  vWaterXZ = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;');
+          var f = shader.fragmentShader;
+          // after <normal_fragment_maps>: `normal` exists and <lights_physical_fragment>, which reads
+          // roughnessFactor, has not run yet — one anchor serves both
+          f = StringTools.replace(f, '#include <normal_fragment_maps>',
+            '#include <normal_fragment_maps>\n' +
+            '  {\n' +
+            '  vec2 wp = vWaterXZ;\n' +
+            '  float wt = waterTime * waterRate;\n' +
+            // 1 = open rippling water, 0 = a still scum patch. drifts slower than the waves
+            '  float wCalm = waterNoise( wp * 0.45 + vec2( wt * 0.07, -wt * 0.05 ) );\n' +
+            // a·k·cos(k d·p + s t)·d per wave; wavelengths 0.9..2.3 units at unrelated angles so the
+            // sum never settles into a visible plaid
+            '  vec2 wg = waterWave( wp, vec2( 0.80, 0.60 ), 2.7, 1.00, wt * 1.3 ) +\n' +
+            '    waterWave( wp, vec2( -0.47, 0.88 ), 3.9, 0.70, -wt * 1.9 ) +\n' +
+            '    waterWave( wp, vec2( 0.96, -0.28 ), 5.3, 0.50, wt * 2.3 ) +\n' +
+            '    waterWave( wp, vec2( -0.60, -0.80 ), 7.1, 0.35, -wt * 2.9 );\n' +
+            // 5.3 ~ half the summed a·k, so a typical slope lands near waterAmp
+            '  vec2 wSlope = wg * waterAmp / 5.3 * mix( 0.25, 1.0, wCalm );\n' +
+            '  normal = normalize( ( viewMatrix * vec4( normalize( vec3( -wSlope.x, 1.0, -wSlope.y ) ), 0.0 ) ).xyz );\n' +
+            '  float wSilt = smoothstep( waterSilt.x, waterSilt.y,\n' +
+            '    dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) );\n' +
+            '  roughnessFactor = mix( waterSmooth, waterRough, max( wSilt, ( 1.0 - wCalm ) * waterScum ) );\n' +
+            '  }');
+          // a Reinhard knee on the peak channel: asymptotic to waterCap, so no plateau of flat
+          // colour, and hue-preserving where a per-channel clamp would bleach it
+          f = StringTools.replace(f, '#include <lights_fragment_end>',
+            '#include <lights_fragment_end>\n' +
+            '  {\n' +
+            '  vec3 wS = reflectedLight.directSpecular * waterTint;\n' +
+            '  reflectedLight.directSpecular = wS / ( 1.0 + max( wS.r, max( wS.g, wS.b ) ) / waterCap );\n' +
+            '  }');
+          shader.fragmentShader = 'uniform float waterTime;\n' +
+            'uniform float waterAmp;\n' +
+            'uniform float waterRate;\n' +
+            'uniform float waterSmooth;\n' +
+            'uniform float waterRough;\n' +
+            'uniform vec2 waterSilt;\n' +
+            'uniform float waterScum;\n' +
+            'uniform vec3 waterTint;\n' +
+            'uniform float waterCap;\n' +
+            'varying vec2 vWaterXZ;\n' +
+            'float waterHash( vec2 p ) { return fract( sin( dot( p, vec2( 127.1, 311.7 ) ) ) * 43758.5453 ); }\n' +
+            'float waterNoise( vec2 p )\n' +
+            '{\n' +
+            '  vec2 i = floor( p );\n' +
+            '  vec2 u = fract( p );\n' +
+            '  u = u * u * ( 3.0 - 2.0 * u );\n' +
+            '  return mix( mix( waterHash( i ), waterHash( i + vec2( 1.0, 0.0 ) ), u.x ),\n' +
+            '    mix( waterHash( i + vec2( 0.0, 1.0 ) ), waterHash( i + vec2( 1.0, 1.0 ) ), u.x ), u.y );\n' +
+            '}\n' +
+            'vec2 waterWave( vec2 p, vec2 d, float k, float a, float ph )\n' +
+            '{\n' +
+            '  return a * k * cos( k * dot( d, p ) + ph ) * d;\n' +
+            '}\n' +
+            f;
+        };
+      // three keys programs on base params, not on the hook: without a key of its own this program
+      // could be handed to a plain Standard material. VisionMask.patch chains this key into its own
+      mat.customProgramCacheKey = function()
+        return 'sewerWater';
+      return mat;
     }
 
 // where every pool and trickle goes. three sources, each kept clear of the ones before it: a pool
