@@ -1,6 +1,7 @@
 package render.sewer;
 
 import three.Three;
+import citygen.CityConfig;
 import game.Game;
 import render.Area3D;
 import render.Area3DTickOpts;
@@ -73,7 +74,7 @@ class SewerArea implements Area3D
       // the object props, as real geometry instead of their sprites: the exit ladders, and in a
       // habitat its four grown objects. only tunnel areas ever hold either — WorldConst declares
       // `exit: 'sewer_exit'` on AREA_SEWERS alone and game.Habitat only ever builds into AREA_HABITAT
-      props = render.world.ObjModels.build(scene, game, objYaw);
+      props = render.world.ObjModels.build(scene, game, objYaw, null, objWall);
       // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
       // the builders above made them; this only has to exist before the first sample.
       // the blocker predicate is isFloor and NOT area.canSeeThrough, which is object-aware and would
@@ -85,7 +86,9 @@ class SewerArea implements Area3D
 
 // which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
 // WALL turns its back on the adjacent wall (an exit ladder is bracketed to masonry) or stays unturned
-// in the open; dir order matches SewerGeom.side (0 north, 1 south, 2 west, 3 east).
+// in the open — north, then west, then east, and NEVER south: the camera looks north, so a ladder
+// backed onto a south wall would stand behind it (game.SewerAreaGenerator.wallSpot never puts one
+// there; this keeps an old save's centred exit from turning its back on the camera either).
 // HASHED takes a full-circle turn hashed off the cell, so four of a prop in one level are not four
 // clones — and because the hash is the CELL, a level looks the same every time it is entered rather
 // than re-rolling on re-entry. No habitat organ takes it any more: each was generated from a single
@@ -104,14 +107,24 @@ class SewerArea implements Area3D
           case WALL:
             if (!SewerModel.isFloor(model, col, row - 1))
               return 0;
-            if (!SewerModel.isFloor(model, col, row + 1))
-              return Math.PI;
             if (!SewerModel.isFloor(model, col - 1, row))
               return Math.PI / 2;
             if (!SewerModel.isFloor(model, col + 1, row))
               return -Math.PI / 2;
             return 0;
         }
+    }
+
+// how far a WALL-yawed prop steps back from its cell centre onto the masonry objYaw turned it from:
+// the wall face is CELL / 2 off the centre, and the glb is recentred on its bbox. negative, because
+// ObjModels' local +z is the prop's front. 0 in the open, where objYaw left it unturned
+  function objWall(col:Int, row:Int):Float
+    {
+      if (SewerModel.isFloor(model, col, row - 1) &&
+          SewerModel.isFloor(model, col - 1, row) &&
+          SewerModel.isFloor(model, col + 1, row))
+        return 0.0;
+      return -(CityConfig.CELL / 2 - SewerStyle.EXIT_DEPTH / 2);
     }
 
 // rebuild the prop batches, after an object was added to or removed from the area we are already
@@ -124,7 +137,7 @@ class SewerArea implements Area3D
       if (props == null)
         return;
       render.world.ObjModels.dispose(sceneRef, props);
-      props = render.world.ObjModels.build(sceneRef, game, objYaw);
+      props = render.world.ObjModels.build(sceneRef, game, objYaw, null, objWall);
     }
 
 // every light down here is a pooled fixture — a manhole shaft or a wall bracket — so the fake

@@ -349,6 +349,11 @@ class SewerStyle
   // would read as two different lights. the lamp's col/row stay the exit cell: that is what
   // LampLights gates player distance on
   public static inline var EXIT_LAMP_SOUTH = 2.0;
+  // the ladder glb's depth, rail front to the wall plates' backs, at its drawn size (scale 1). it is
+  // recentred on its bbox, so standing it on the wall face — CELL / 2 off the cell centre, exactly,
+  // the walls have no inset — takes CELL / 2 - EXIT_DEPTH / 2 of offset (SewerArea.objWall).
+  // MEASURED off models-src/sewer/ladder_build.py, which prints it: re-read it on any rebuild
+  public static inline var EXIT_DEPTH = 0.395;
 
   // --- 3D clutter scattered against the walls (render.sewer.SewerProps) ---
   // the first CONVEX geometry down here. the shell is a concave box and everything dressing it is

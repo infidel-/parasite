@@ -1138,3 +1138,24 @@ bushes in the wilderness too, and redo the rocks, logs and dead trees in Blender
   bmesh and append it with `from_mesh`.
 
 Verdict: **landed. -80% frame triangles on a forest frame; +2 calls.**
+
+## Sewer / habitat exit ladder is hand-modelled, against a N/W/E room wall
+
+Reported as: the sewer exit is fully white now.
+
+- **Cause.** The TRELLIS exit (`models-src/sewer/exit.glb`, Aug 12) baked a FLAT base colour: grey 198, sd 1, nothing in it. Its MR map was 0.7 metal. It read dark only while props drew PBR, because a metal puts its colour into a reflection there was no env map for. `Models.toLambert` (Aug 31) drops metalness for any entry without `roughness` < 1, so the bare 198 drew near-white under the shaft lamp.
+- **What.** `models-src/sewer/ladder_build.py` builds the replacement on the `buildlib` route:
+  - two 8-sided smooth rails 1.1 apart and 7 rungs at a 0.5 pitch;
+  - two bracket pairs, bars buried into wall plates, both under `WALL_H` 3.0;
+  - rails running on to `h` 4.0, so the ladder climbs past the ledge.
+  It is **528 tris** (5,000), 1.28 x 0.395 x 4.0 at world size. `check` reads 0 holes / 0 coplanar / 1 island, `texel_off` 0, worst 1.04. `art/models.json` keeps the `sewer/exit` key, so no path, row or warm entry moved.
+- **Art.** Its own pack4, `ladder-sheet.png`: rail iron, hand-worn rung iron, bracket scale, and grimed rail under z 1.0. It went through `sheet_build.py` onto luma 46 / 56 / 44 / 40 against the sewer family's measured 41-48. The rung sits a step brighter on purpose, so the rungs are what read. The built glb measures luma ~47 at chroma 27, with no `baseColor`, and `roughness` 1 keeps it on Lambert.
+- **Placement.** Exits used to sit at room CENTRES, standing free about 2 units off any wall.
+  - `SewerAreaGenerator.wallSpot` now puts each one on a random north, west or east side, never south: the camera looks north, so a south-wall ladder would stand behind its wall. Each side is scanned from its middle outward to the corners.
+  - `SewerArea.objWall` steps a walled exit `CELL/2 - EXIT_DEPTH/2` onto the masonry. `objYaw` lost its south branch.
+  - Headless, over 100 generated levels: **145 exits, N 103 / W 22 / E 20 / S 0 / free 0**.
+  - Seen live, flush on a north wall and climbing onto the cap.
+  - Old saves keep centred exits, which draw free-standing and unturned, exactly as before.
+- **Trap.** A sewer room is 5x5 and a tunnel is 3 wide and centred, so a tunnel mouth takes EVERY middle cell of a side. Scanning the middle three only, 12 of 92 exits found no wall and fell back to the centre. The corners always keep theirs, which is also why north comes out heavy: a corner is north first, for the generator's tally and the renderer's yaw alike.
+
+Verdict: **landed. White exit fixed at the source; 5,000 → 528 tris; every new exit is wall-backed.**
