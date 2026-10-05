@@ -516,11 +516,11 @@ class InfoHud
           setShown(hostname, true);
           hostnameText.innerHTML = (host.isHuman ? host.getNameCapped() : host.AName());
           var badges = '';
-          // breaking point: an attribute at 1, the next degradation of it collapses the host
-          if (host.baseAttrs.strength <= 1 ||
-              host.baseAttrs.constitution <= 1 ||
-              host.baseAttrs.intellect <= 1 ||
-              host.baseAttrs.psyche <= 1)
+          // near breaking: an attribute at 2 or less, a degradation or two of it collapses the host
+          if (host.baseAttrs.strength <= 2 ||
+              host.baseAttrs.constitution <= 2 ||
+              host.baseAttrs.intellect <= 2 ||
+              host.baseAttrs.psyche <= 2)
             badges += Icon.breaking;
           if (host.affinity >= 100)
             badges += Icon.affinity;

@@ -7,6 +7,6 @@ class Icon
   public static var affinity = '<span class="icon-affinity icon-svg">' + ui.UISvg.badgeAffinity() + '</span>';
   public static var consent = '<span class="icon-consent icon-svg">' + ui.UISvg.badgeConsent() + '</span>';
   public static var cultist = '<span class="icon-cultist icon-svg">' + ui.UISvg.badgeCultist() + '</span>';
-  public static var breaking = '<span class="icon-breaking icon-svg evolution-tip" data-tip="Breaking: one more degradation and this host collapses.">' + ui.UISvg.badgeBreaking() + '</span>';
+  public static var breaking = '<span class="icon-breaking icon-svg evolution-tip" data-tip="Breaking: further degradation will soon collapse this host.">' + ui.UISvg.badgeBreaking() + '</span>';
 
 }
