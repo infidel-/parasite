@@ -49,7 +49,8 @@ class Sounds
             game.ui.state == UISTATE_OPTIONS ||
             game.ui.state == UISTATE_PEDIA ||
             game.ui.state == UISTATE_PRESETS ||
-            game.ui.state == UISTATE_MODS)
+            game.ui.state == UISTATE_MODS ||
+            game.ui.state == UISTATE_SAVES)
           {
             if (menuMusic.playState == 0)
               menuMusic.play();
@@ -82,6 +83,28 @@ class Sounds
               aboutMusic.play();
             else if (aboutMusic.paused)
               aboutMusic.resume();
+            return;
+          }
+        // not started yet (boot warmup, autosave prompt, a load in progress): silence
+        else if (!game.isStarted)
+          {
+            if (menuMusic.playState == 1 &&
+                !menuMusic.paused)
+              menuMusic.pause();
+            if (aboutMusic.playState == 1 &&
+                !aboutMusic.paused)
+              aboutMusic.pause();
+            if (music.playState == 1 && !music.paused)
+              music.pause();
+            if (ambient.state != SOUND_STOPPED &&
+                !ambient.sound.muted)
+              ambient.sound.mute();
+            if (ambientNext.state != SOUND_STOPPED &&
+                !ambientNext.sound.muted)
+              ambientNext.sound.mute();
+            if (fireLoop != null &&
+                !fireLoop.muted)
+              fireLoop.mute();
             return;
           }
         else

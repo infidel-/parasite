@@ -905,7 +905,17 @@ class Game extends _SaveObject
         obj: {
           text: buf.toString(),
           func: function(yes: Bool) {
-            if (!yes) return;
+            if (!yes)
+              {
+                // a cancelled boot load has no world to return to: the caller already closed
+                // the menu, so reopen it after YesNo's dismiss() has closed this dialog
+                if (!self.isStarted)
+                  js.Browser.window.setTimeout(function() {
+                    self.ui.canvas.style.visibility = 'hidden';
+                    self.ui.state = UISTATE_MAINMENU;
+                  }, 0);
+                return;
+              }
             if (Loader.load(self, slotID))
               self.applyLoaded();
           }
