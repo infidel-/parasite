@@ -114,7 +114,12 @@ class EvolutionManager extends _SaveObject
             {
               if (val == 1)
                 {
-                  player.log('Your host degrades to a breaking point and might expire soon.', COLOR_ALERT);
+                  game.message({
+                    title: 'Host Failing',
+                    titleCol: 'red',
+                    text: 'My host degrades to a breaking point: its ' + attr +
+                      ' is down to 1. One more loss there and it collapses.',
+                  });
                   game.goals.complete(GOAL_TUTORIAL_DEGRADE);
                 }
               else player.log('Your host degrades.');
@@ -127,7 +132,7 @@ class EvolutionManager extends _SaveObject
               player.host.recalc();
               player.host.health = 0;
 
-              player.onHostDeath('You host has degraded completely.');
+              player.onHostDeath('Your host has degraded completely.');
 
               return;
             }

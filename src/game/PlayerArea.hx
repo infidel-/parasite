@@ -1350,6 +1350,15 @@ class PlayerArea extends _SaveObject
       nextAction();
     }
 
+// stop the repeating action, if any
+  public function clearAction()
+    {
+      if (currentAction == null)
+        return;
+      currentAction = null;
+      game.ui.hud.hideOverlay();
+    }
+
 // create a path to given x,y and start moving on it
   public function setPath(destx: Int, desty: Int)
     {

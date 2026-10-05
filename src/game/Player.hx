@@ -8,7 +8,7 @@ import const.*;
 
 class Player extends _SaveObject
 {
-  static var _ignoredFields = [ 'command' ];
+  static var _ignoredFields = [ 'command', 'dyingWarnedHost' ];
   var game: Game; // game state link
 
   public var difficulty: _Difficulty; // survival difficulty
@@ -32,6 +32,7 @@ class Player extends _SaveObject
   public var host: AI; // invaded host
   public var hostID: Int;
   public var hostControl(default, set): Int; // amount of turns until you lose control of the host
+  var dyingWarnedHost: AI; // host already warned about running out of energy (transient)
 
 
   public function new(g: Game)
@@ -189,6 +190,24 @@ class Player extends _SaveObject
 
           // evolution can kill host (change state)
           evolutionManager.turn(time);
+        }
+
+      // host close to expiring at the full drain: warn once per host
+      if (state == PLR_STATE_HOST &&
+          dyingWarnedHost != host)
+        {
+          var turnsLeft = __Math.hostSurvivalTurns(0);
+          if (turnsLeft >= 0 &&
+              turnsLeft <= __Math.HOST_LOW_TURNS)
+            {
+              dyingWarnedHost = host;
+              game.message({
+                title: 'Host Failing',
+                titleCol: 'red',
+                text: 'My host is running out of energy. It will expire in ' + turnsLeft +
+                  (turnsLeft == 1 ? ' turn.' : ' turns.'),
+              });
+            }
         }
 
       // location-specific turn

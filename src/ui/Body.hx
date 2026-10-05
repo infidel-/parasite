@@ -130,14 +130,15 @@ class Body extends UIWindow
         return;
       var energyPT = __Math.growthEnergyPerTurn();
       var gpPT = __Math.gpPerTurn();
-      var survive = (energyPT > 0 ? Std.int(game.player.host.energy / energyPT) : 0);
+      var survive = __Math.hostSurvivalTurns(game.player.host.organs.isGrowing ? 0 : energyPT);
       statsEl.innerHTML =
         '<span class="statchip evolution-tip energy" data-tip="Energy spent per turn while growing body features">' +
           UISvg.bolt() + energyPT + '<i>/t</i></span>' +
         '<span class="statchip evolution-tip gp" data-tip="Growth points gained per turn">' +
           UISvg.star() + gpPT + '<i>/t</i></span>' +
-        '<span class="statchip evolution-tip host" data-tip="Turns the host survives while growing">' +
-          UISvg.clockSmall() + survive + '</span>';
+        '<span class="statchip evolution-tip host' + (survive >= 0 && survive <= __Math.HOST_LOW_TURNS ? ' low' : '') +
+          '" data-tip="Turns the host survives while growing">' +
+          UISvg.clockSmall() + (survive < 0 ? '&infin;' : '' + survive) + '</span>';
     }
 
 // inventory cells: key chip + item thumb + name/[active] + inline actions

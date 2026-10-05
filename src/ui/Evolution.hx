@@ -149,6 +149,7 @@ class Evolution extends UIWindow
     {
       var ept = __Math.epPerTurn();
       var energyPerTurn = __Math.evolutionEnergyPerTurn();
+      var survive = __Math.hostSurvivalTurns(game.player.evolutionManager.isActive ? 0 : energyPerTurn);
 
       // stat chips: energy/turn, ep/turn, host survival turns
       stats.innerHTML =
@@ -156,8 +157,9 @@ class Evolution extends UIWindow
           UISvg.bolt() + energyPerTurn + '<i>/t</i></span>' +
         '<span class="statchip evolution-tip ep" data-tip="Evolution points gained per turn">' +
           UISvg.star() + ept + '<i>/t</i></span>' +
-        '<span class="statchip evolution-tip host" data-tip="Turns the host survives while evolving">' +
-          UISvg.clockSmall() + Std.int(game.player.host.energy / energyPerTurn) + '</span>';
+        '<span class="statchip evolution-tip host' + (survive >= 0 && survive <= __Math.HOST_LOW_TURNS ? ' low' : '') +
+          '" data-tip="Turns the host survives while evolving">' +
+          UISvg.clockSmall() + (survive < 0 ? '&infin;' : '' + survive) + '</span>';
 
       // cards
       impByID = new Map();

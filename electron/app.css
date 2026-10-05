@@ -7737,6 +7737,13 @@ select {
 #window-body .statchip.energy svg { color: var(--text-color-energy); }
 #window-body .statchip.gp svg { color: var(--gp); }
 #window-body .statchip.host svg { color: var(--text-color-time); }
+/* host survival chip at or under __Math.HOST_LOW_TURNS: alert red */
+#window-evolution .statchip.host.low,
+#window-evolution .statchip.host.low svg,
+#window-body .statchip.host.low,
+#window-body .statchip.host.low svg {
+  color: var(--text-color-alert);
+}
 
 /* three equal columns by content weight (smalls | host | features-scroller) */
 .body-cols {

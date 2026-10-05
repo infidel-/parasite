@@ -7,6 +7,16 @@ import ai.AI;
 class __Math
 {
   public static var game: Game; // game link (set on init)
+  public static inline var HOST_LOW_TURNS = 10; // host survival turns at or under which it reads as dying
+
+
+// turns the host survives at its current full drain plus `extra` per turn (a process not yet
+// running, priced by the window that would start it); -1 when the host is not losing energy
+  public static function hostSurvivalTurns(extra: Int): Int
+    {
+      var drain = extra - fullHostEnergyPerTurn(1);
+      return (drain > 0 ? Std.int(game.player.host.energy / drain) : -1);
+    }
 
 
 // parasite energy per turn (spent or acquired)

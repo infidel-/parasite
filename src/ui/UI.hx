@@ -826,6 +826,12 @@ class UI
       var stateChanged = (_state != vstate);
       if (stateChanged)
         game.scene.clearPath();
+      // a window stops a repeating action too, or it keeps passing turns behind the window
+      // (no playerArea yet at the boot menu: it is built on the first restart)
+      if (stateChanged &&
+          vstate != UISTATE_DEFAULT &&
+          game.playerArea != null)
+        game.playerArea.clearAction();
       var wasWindowOpen = (_state != UISTATE_DEFAULT);
       if (_state != UISTATE_DEFAULT)
         {
