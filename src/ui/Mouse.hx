@@ -173,6 +173,10 @@ class Mouse
           // try to attack
           if (canAttack(ai))
             {
+              // melee out of reach: the cursor shows blocked, so the click must not spend a turn
+              if (!game.playerArea.getCurrentWeapon().isRanged &&
+                  !ai.isNear(game.playerArea.x, game.playerArea.y))
+                return;
               game.playerArea.attackAction(ai);
               return;
             }
