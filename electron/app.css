@@ -1793,6 +1793,23 @@ hr {
   z-index: 2;
   pointer-events: auto; /* #hud is pointer-events:none; re-enable the toggle */
 }
+.hud-compact-btn.evolution-tip {
+  position: absolute; /* .evolution-tip's position:relative is declared later, beat it */
+}
+/* the toggle is only 22px wide, so centre the bubble arrow on it */
+.hud-compact-btn.evolution-tip::before {
+  right: 6px;
+}
+/* the info panel hugs the screen's left edge - a right-anchored bubble runs off it,
+   so hang this one off the left instead */
+#hud-info .hud-compact-btn.evolution-tip::after {
+  left: 0;
+  right: auto;
+}
+#hud-info .hud-compact-btn.evolution-tip::before {
+  left: 6px;
+  right: auto;
+}
 .hud-compact-btn:hover {
   opacity: 1;
   background: rgba(120, 130, 150, 0.12);
@@ -2163,7 +2180,7 @@ hr {
   right: 26px;
   width: fit-content;
   max-width: 370px;
-  padding: 11px 15px;
+  padding: 11px 38px 11px 15px; /* right gutter clears the compact toggle */
   background-color: var(--hud-panel);
 }
 #hud-goals .hud-grp {
@@ -2243,6 +2260,51 @@ hr {
   color: var(--blue-gray);
   margin-top: 4px;
   line-height: 1.3;
+}
+/* compact objectives: drop the notes, keep the diamond + title line */
+#hud-goals.hud-compact .hud-od {
+  display: none;
+}
+#hud-goals.hud-compact .hud-grp {
+  margin-bottom: 12px;
+}
+/* the collapse toggle rides the panel's bottom-right corner, under the list */
+#hud-goals .goals-collapse {
+  top: auto;
+  bottom: 8px;
+  font-size: 15px;
+  line-height: 1;
+}
+/* the eyebrow word is the whole panel once collapsed, so it only shows there */
+#hud-goals .hud-eyebrow {
+  display: none;
+  margin-bottom: 0;
+}
+/* fully collapsed: just the word and the +, same chrome as the debug overlay */
+#hud-goals.hud-collapsed {
+  min-width: 0;
+  padding: 7px 32px 6px 12px;
+}
+#hud-goals.hud-collapsed .hud-eyebrow {
+  display: flex;
+}
+#hud-goals.hud-collapsed .hud-eyebrow::after {
+  display: none; /* the trailing hairline stretches, keeping the panel body-wide */
+}
+#hud-goals.hud-collapsed .hud-grp {
+  display: none;
+}
+#hud-goals.hud-collapsed .evolution-tip:not(.goals-collapse) {
+  display: none; /* nothing left to compact */
+}
+/* short panel: centre the toggle on the single row instead of pinning it low */
+#hud-goals.hud-collapsed .goals-collapse {
+  top: 50%;
+  bottom: auto;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
 }
 /* goal appears: row slides + flashes in from the panel edge, diamond pops */
 @keyframes hud-goal-arrive {
