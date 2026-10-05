@@ -205,8 +205,9 @@ class SewerStyle
   public static inline var STREAM_Y = 0.017;      // over the pools at POOL_Y, under the contact shadows at SHADOW_Y
   public static inline var STREAM_FLOW = 0.03;    // texture repeats scrolled per BASE_MS: ~0.6 world units a second
   // the water SURFACE shader (SewerWater.surface): ripples, roughness by material, a tamed highlight
-  public static inline var WATER_RIPPLE = 0.35;   // pool ripple slope (rise/run) at full strength: what breaks the glint up
-  public static inline var STREAM_RIPPLE = 0.5;   // the trickles run choppier than standing water
+  public static inline var WATER_RIPPLE = 0.05;   // pool ripple slope (rise/run) at full strength: a still, ankle-deep film, never waves
+  public static inline var STREAM_RIPPLE = 0.1;   // the trickles run a little choppier than standing water
+  public static inline var WATER_SCALE = 4.0;    // ripple units per world unit: a cell (4u) is one person, so a puddle's ripples are a fraction of a unit, not one
   public static inline var WATER_RATE = 0.06;     // ripple phase, radians per BASE_MS: a slow crawl, not a boil
   public static inline var STREAM_RATE = 0.15;
   public static inline var WATER_SMOOTH = 0.18;   // roughness on open water. the ripples spread the glint; this keeps each one crisp

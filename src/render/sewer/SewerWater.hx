@@ -76,6 +76,7 @@ class SewerWater
   static var uScum = { value: SewerStyle.WATER_SCUM };
   static var uTint = { value: new Color(SewerStyle.WATER_SPEC_TINT) };
   static var uCap = { value: SewerStyle.WATER_SPEC_CAP };
+  static var uScale = { value: SewerStyle.WATER_SCALE };
 
 // the water meshes into the scene
   public static function build(scene:Scene, m:Sewer):Void
@@ -157,9 +158,9 @@ class SewerWater
 // the water SURFACE, folded into a material before VisionMask.patch so the mask's hook chains over
 // this one. a flat plane at one roughness drew the same smooth white disc on every pool, so three
 // things change, all in the fragment shader:
-//   ripples — four directional waves in WORLD xz (so every pool ripples at the same scale whatever
-//             its size, which an atlas-uv normal map could not), gradient taken analytically, tilt
-//             the shading normal. the glint breaks into broken streaks that crawl, and the tilt is
+//   ripples — drifting value noise in WORLD xz (so every pool ripples at the same scale whatever
+//             its size, which an atlas-uv normal map could not), slope by forward difference, tilt
+//             the shading normal. a SHALLOW human-sized puddle: fine and gentle, never waves. the glint breaks into broken streaks that crawl, and the tilt is
 //             also what lets a smooth surface still FIND the glint: the mirror point of a bulb
 //             wanders ~5 units with the camera, and a flat 0.1 surface missed a 4-unit pool more
 //             often than not (why the first cut ran a uniform 0.4)
@@ -185,6 +186,7 @@ class SewerWater
           shader.uniforms.waterScum = uScum;
           shader.uniforms.waterTint = uTint;
           shader.uniforms.waterCap = uCap;
+          shader.uniforms.waterScale = uScale;
           shader.vertexShader = 'varying vec2 vWaterXZ;\n' +
             StringTools.replace(shader.vertexShader, '#include <project_vertex>',
               '#include <project_vertex>\n' +
@@ -195,18 +197,16 @@ class SewerWater
           f = StringTools.replace(f, '#include <normal_fragment_maps>',
             '#include <normal_fragment_maps>\n' +
             '  {\n' +
-            '  vec2 wp = vWaterXZ;\n' +
+            '  vec2 wp = vWaterXZ * waterScale;\n' +
             '  float wt = waterTime * waterRate;\n' +
             // 1 = open rippling water, 0 = a still scum patch. drifts slower than the waves
             '  float wCalm = waterNoise( wp * 0.45 + vec2( wt * 0.07, -wt * 0.05 ) );\n' +
-            // a·k·cos(k d·p + s t)·d per wave; wavelengths 0.9..2.3 units at unrelated angles so the
-            // sum never settles into a visible plaid
-            '  vec2 wg = waterWave( wp, vec2( 0.80, 0.60 ), 2.7, 1.00, wt * 1.3 ) +\n' +
-            '    waterWave( wp, vec2( -0.47, 0.88 ), 3.9, 0.70, -wt * 1.9 ) +\n' +
-            '    waterWave( wp, vec2( 0.96, -0.28 ), 5.3, 0.50, wt * 2.3 ) +\n' +
-            '    waterWave( wp, vec2( -0.60, -0.80 ), 7.1, 0.35, -wt * 2.9 );\n' +
-            // 5.3 ~ half the summed a·k, so a typical slope lands near waterAmp
-            '  vec2 wSlope = wg * waterAmp / 5.3 * mix( 0.25, 1.0, wCalm );\n' +
+            // the surface height is two drifting octaves of value noise, slope by forward difference.
+            // NOT sines: a shallow puddle has no waves, and summed sines at puddle scale drew a
+            // regular plaid (measured: a chain-mail grid at 5 ripple units per world unit)
+            '  float wh = waterHeight( wp, wt );\n' +
+            '  vec2 wSlope = vec2( waterHeight( wp + vec2( 0.1, 0.0 ), wt ) - wh,\n' +
+            '    waterHeight( wp + vec2( 0.0, 0.1 ), wt ) - wh ) * 10.0 * waterAmp * mix( 0.25, 1.0, wCalm );\n' +
             '  normal = normalize( ( viewMatrix * vec4( normalize( vec3( -wSlope.x, 1.0, -wSlope.y ) ), 0.0 ) ).xyz );\n' +
             '  float wSilt = smoothstep( waterSilt.x, waterSilt.y,\n' +
             '    dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) );\n' +
@@ -229,6 +229,7 @@ class SewerWater
             'uniform float waterScum;\n' +
             'uniform vec3 waterTint;\n' +
             'uniform float waterCap;\n' +
+            'uniform float waterScale;\n' +
             'varying vec2 vWaterXZ;\n' +
             'float waterHash( vec2 p ) { return fract( sin( dot( p, vec2( 127.1, 311.7 ) ) ) * 43758.5453 ); }\n' +
             'float waterNoise( vec2 p )\n' +
@@ -239,9 +240,10 @@ class SewerWater
             '  return mix( mix( waterHash( i ), waterHash( i + vec2( 1.0, 0.0 ) ), u.x ),\n' +
             '    mix( waterHash( i + vec2( 0.0, 1.0 ) ), waterHash( i + vec2( 1.0, 1.0 ) ), u.x ), u.y );\n' +
             '}\n' +
-            'vec2 waterWave( vec2 p, vec2 d, float k, float a, float ph )\n' +
+            'float waterHeight( vec2 p, float t )\n' +
             '{\n' +
-            '  return a * k * cos( k * dot( d, p ) + ph ) * d;\n' +
+            '  return waterNoise( p + vec2( t, 0.6 * t ) ) +\n' +
+            '    0.5 * waterNoise( p * 2.03 + vec2( -0.8 * t, 1.1 * t ) );\n' +
             '}\n' +
             f;
         };

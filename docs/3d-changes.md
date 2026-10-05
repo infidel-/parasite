@@ -1205,3 +1205,22 @@ Tuned live via the shared uniform objects: amp 0.25 / cap 0.6 gave faint diagona
 0.9** gives bright broken caustic-like squiggles across the lit half. Warm 95 → 95 (the patched
 material replaces the plain one), 0 programs with diagnostics, +0 calls. An unlit pool or trickle is
 unchanged: still only the sheen says "water", and there is none without a lamp.
+
+## Sewer water ripples at PUDDLE scale: shallow noise film, not waves
+
+Feedback on the shader above: "scale is wrong, that's supposed to be a human-sized puddle", "which is
+also not deep at all". The four sines ran at λ 0.9-2.3 WORLD units against a 4-unit cell that is
+one person, so a 3-7u pool carried ripples half a body long: the look of deep water.
+- `WATER_SCALE` (ripple units per world unit) was added first. At **5** the same sines drew a
+  regular **chain-mail plaid**: summed sines interfere into a visible grid once several periods fit
+  in a pool.
+- **Sines replaced by two drifting octaves of value noise**, slope by forward difference (3 height
+  evaluations, about 24 hashes per fragment on a few hundred pixels). That is irregular by
+  construction.
+- Live A/B on the lamp pool: scale 3 / slope 0.12 mottled; 5 / 0.08 grainy "crumpled foil";
+  **4 / 0.05** a still, thin film with a soft irregular glint, which is what ankle-deep water does.
+  Trickles 0.1.
+- Roughness split, tint and knee unchanged. Warm 95 flat, 0 failed programs.
+
+Trap: the earlier amp 0.35 "caustic squiggles" looked good in a crop and was wrong in kind. Judge
+water against the size of the actor standing next to it, not on its own.
