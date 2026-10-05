@@ -431,6 +431,15 @@ class UISvg
         '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg>';
     }
 
+// host-status badge: cracked heart (breaking point — one more degradation and the host collapses)
+// the hudHeart silhouette split into two halves along a zig-zag gap that runs notch to tip
+  public static function badgeBreaking(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+        '<path d="M11.6 19.9 3.6 11.9A4.9 4.9 0 0 1 10.5 5L11.4 5.9 10 10 12.2 12.8 10.4 15.8Z"/>' + // left half
+        '<path d="M12.6 5.9 13.5 5A4.9 4.9 0 0 1 20.4 11.9L12.4 19.9 11.7 15.8 13.5 12.8 11.3 10Z"/></svg>'; // right half
+    }
+
 // host-status badge: interlocking rings (affinity / symbiosis bond)
   public static function badgeAffinity(): String
     {

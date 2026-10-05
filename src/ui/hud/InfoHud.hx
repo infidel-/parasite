@@ -36,6 +36,7 @@ class InfoHud
   var hostname: DivElement;
   var hostnameText: SpanElement;
   var hostnameBadges: SpanElement;
+  var badgesHTML: String = null; // last badge row written (skip identical rewrites)
   var extraWrap: DivElement;
   var regionContext: DivElement; // area notes + team info
   var evoStrip: DivElement; // evolution direction + organs
@@ -515,13 +516,24 @@ class InfoHud
           setShown(hostname, true);
           hostnameText.innerHTML = (host.isHuman ? host.getNameCapped() : host.AName());
           var badges = '';
+          // breaking point: an attribute at 1, the next degradation of it collapses the host
+          if (host.baseAttrs.strength <= 1 ||
+              host.baseAttrs.constitution <= 1 ||
+              host.baseAttrs.intellect <= 1 ||
+              host.baseAttrs.psyche <= 1)
+            badges += Icon.breaking;
           if (host.affinity >= 100)
             badges += Icon.affinity;
           if (host.chat.consent >= 100)
             badges += Icon.consent;
           if (host.isPlayerCultist())
             badges += Icon.cultist;
-          hostnameBadges.innerHTML = badges;
+          // rewrite only on change: a fresh node would restart the breaking badge's pulse every update
+          if (badges != badgesHTML)
+            {
+              badgesHTML = badges;
+              hostnameBadges.innerHTML = badges;
+            }
           updateBar(bars['hh'], 'hh', host.health, host.maxHealth);
           var hpt = __Math.fullHostEnergyPerTurn(time);
           var hdelta = '';
