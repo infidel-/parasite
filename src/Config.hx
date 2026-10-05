@@ -65,7 +65,7 @@ class Config
       extendedInfo = Const.isDebug;
       alwaysCenterCamera = true;
       laptopKeyboard = false;
-      fullscreen = false;
+      fullscreen = true;
       skipTutorial = false;
       shiftLongActions = true;
       compactHud = false;
@@ -118,7 +118,7 @@ class Config
       map['compactGoals'] = '0';
       map['collapsedGoals'] = '0';
       map['hudDebugCollapsed'] = '0';
-      map['fullscreen'] = '0';
+      map['fullscreen'] = '1';
       map['skipTutorial'] = '0';
       map['spoonEvolutionBasic'] = '0';
       map['spoonHabitats'] = '0';
