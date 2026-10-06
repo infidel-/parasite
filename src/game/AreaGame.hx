@@ -610,18 +610,24 @@ class AreaGame extends _SaveObject
         _cells[x][y] == Const.TILE_ALLEY_UNWALKABLE;
     }
 
-// is this cell open lot? false off the grid. BOTH asphalt ids: Const.TILE_ALLEY is the yard and the
-// gaps between plots, Const.TILE_PARKING is the car park, and render.facility.FacilityModel reads
-// both back as Surf.LOT. The two rows inside the gate's mouth are car park, so a test on the alley
-// alone drew no booth at all
+// is this cell open lot? false off the grid. Const.TILE_ALLEY is the yard and the gaps between
+// plots, Const.TILE_PARKING is the car park, and the two Const.TILE_PARKING_CAR ids are a parked
+// car's footprint — render.facility.FacilityModel reads all four back as Surf.LOT. The two rows
+// inside the gate's mouth are car park, so a test on the alley alone drew no booth at all; and the
+// far flank's bay is the one gen.facility.FacilityBays parks in first, so a test without the car
+// ids drew the booth and left its cell walkable
   inline function isLot(x: Int, y: Int): Bool
     {
-      return x >= 0 &&
-        y >= 0 &&
-        x < width &&
-        y < height &&
-        (_cells[x][y] == Const.TILE_ALLEY ||
-         _cells[x][y] == Const.TILE_PARKING);
+      if (x < 0 ||
+          y < 0 ||
+          x >= width ||
+          y >= height)
+        return false;
+      var t = _cells[x][y];
+      return t == Const.TILE_ALLEY ||
+        t == Const.TILE_PARKING ||
+        t == Const.TILE_PARKING_CAR ||
+        t == Const.TILE_PARKING_CAR_ORIGIN;
     }
 
 // which way the main road lies from this cell, or 0 if it is further off than the sidewalk band is
