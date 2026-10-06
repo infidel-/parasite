@@ -249,6 +249,12 @@ class Badges {
           // alerted: slow scale breath on the red "!" — a live, sustained threat
           else if (b.svg == 'alerted')
             sc *= 1 + 0.10 * breath;
+          // breaking: the "!" breath plus a glow swell, like the HUD's pulsing cracked heart
+          else if (b.svg == 'breaking')
+            {
+              sc *= 1 + 0.10 * breath;
+              em = 0.8 + 0.5 * (0.5 + 0.5 * breath);
+            }
           // question: slower, subtler breath on the "?" — amplitude grows with suspicion (alert1<2<3),
           // staying under the fully-alerted "!" (0.10)
           else if (b.svg == 'alert1')
@@ -338,6 +344,7 @@ class Badges {
       if (key == 'slime') return '#6fca6f';       // green — slime / slow
       if (key == 'bleeding') return '#f26a6a';    // red — blood
       if (key == 'blacknoise') return '#a45fe0';  // parasite purple — black noise
+      if (key == 'breaking') return '#f26a6a';    // danger-red — host close to collapsing (--text-color-alert)
       if (key == 'multieffect') return '#eaebed'; // white — generic multiple
       return '#eaebed';
     }

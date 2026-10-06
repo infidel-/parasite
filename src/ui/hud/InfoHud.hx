@@ -516,11 +516,8 @@ class InfoHud
           setShown(hostname, true);
           hostnameText.innerHTML = (host.isHuman ? host.getNameCapped() : host.AName());
           var badges = '';
-          // near breaking: an attribute at 2 or less, a degradation or two of it collapses the host
-          if (host.baseAttrs.strength <= 2 ||
-              host.baseAttrs.constitution <= 2 ||
-              host.baseAttrs.intellect <= 2 ||
-              host.baseAttrs.psyche <= 2)
+          // close to collapsing from degradation
+          if (game.player.isHostBreaking())
             badges += Icon.breaking;
           if (host.affinity >= 100)
             badges += Icon.affinity;

@@ -25,6 +25,12 @@ class Reactions {
       c.actors.playFx(e, new Shake(RenderConfig.BASE_MS, CityConfig.CELL * 0.07, 0));
     }
 
+// breaking hit: the player's host flashes red once and shakes as it nears collapse
+  public static function breakingFlash(c:Choreo, e:Entity):Void
+    {
+      c.actors.playFx(e, new render.anim.BreakShake());
+    }
+
 // snapshot a dying actor into a fade-out ghost (before its entity is nulled)
   public static function deathFade(c:Choreo, e:Entity):Void
     {

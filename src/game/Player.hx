@@ -443,6 +443,20 @@ class Player extends _SaveObject
         host.isAgreeable());
     }
 
+// returns true if the host is close to collapsing from degradation. base attributes never start
+// under 2 (AIData clamps them), so: any at 2 or less while evolving (the only time degradation
+// runs), or at 1 at any time (only degradation reaches it)
+  public function isHostBreaking(): Bool
+    {
+      if (state != PLR_STATE_HOST)
+        return false;
+      var a = host.baseAttrs;
+      var min = Std.int(Math.min(Math.min(a.strength, a.constitution),
+        Math.min(a.intellect, a.psyche)));
+      return (min <= 1 ||
+        (min <= 2 && evolutionManager.isActive));
+    }
+
 // returns true when player is in mission area
   public inline function inMissionArea(): Bool
     {

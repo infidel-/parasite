@@ -964,12 +964,19 @@ class Actors {
       var wx = a.x + a.offx;
       var wz = a.z + a.offz;
       var sc = baseScale;
+      var em = RenderConfig.FLAME.litColor;
       if (a.fx != null)
         {
           wx += a.fx.offx;
           wy += a.fx.offy;
           wz += a.fx.offz;
           sc *= a.fx.scale;
+          // an effect's own glow (a hit flash) replaces the lamp flicker while it is lit
+          if (a.fx.glowInt > 0)
+            {
+              em = a.fx.glow;
+              emInt = Math.max(emInt, a.fx.glowInt);
+            }
         }
       // object marks ride the exact same pose, painted before the icon they frame. BOTH are carved
       // from the sprite's ATLAS CELL, so a prop-backed object gets neither: the outline would trace
@@ -1002,7 +1009,7 @@ class Actors {
         scale: sc,
         flat: flat,
         order: order,
-        emissive: RenderConfig.FLAME.litColor,
+        emissive: em,
         emissiveInt: emInt,
         faceX: a.face,
         yaw: yaw,

@@ -1224,3 +1224,23 @@ one person, so a 3-7u pool carried ripples half a body long: the look of deep wa
 
 Trap: the earlier amp 0.35 "caustic squiggles" looked good in a crop and was wrong in kind. Judge
 water against the size of the actor standing next to it, not on its own.
+
+## Actor hit flash: `Effect` got a GLOW channel (host breaking: red flash + shake)
+
+When degradation brings the player's host close to collapse (`Player.isHostBreaking` turns true
+inside `EvolutionManager.turnDegrade`), the host sprite flashes red once and shakes, and a red
+cracked-heart badge joins its badge row.
+- `render.anim.Effect` gained `glow` (color) and `glowInt` (intensity), refreshed per frame like the
+  offsets. `Actors.drawActor` paints `emissive: fx.glow, emissiveInt: max(lamp, fx.glowInt)` while
+  it is lit; otherwise the flame flicker as before. Sprite quads are created with `emissiveMap = the
+  sprite`, so the define is stable: no recompile, no new program, +0 calls.
+- `BreakShake extends Shake`: `glowInt = peak * sin(pi k)` over `BASE_MS * 3`, jitter 0.09 CELL.
+- Emissive MULTIPLIES the sprite's own texels. `#f26a6a` (the HUD alert red) at 1.6 turned a yellow
+  face orange and a white shirt pink; raising the peak to 2.4 only saturated toward the same hues.
+  `#ff2a2a` at **2.0** reads red on skin and cloth alike.
+
+Trap: CDP `take_screenshot` returned frames seconds after the eval that started the flash. Three
+captures of a 450ms flash (and one of a 4s one) showed nothing, which looked like a dead emissive
+path until a 30s stretch (`RenderConfig.BREAKING.ms` patched live, it is not inlined) showed it.
+Verify a one-shot effect by sampling `actors.get(e).fx` per rAF, or stretch it, never by a single
+screenshot.

@@ -552,6 +552,8 @@ class UISvg
             return effectBleeding();
           case 'blacknoise':
             return effectBlackNoise();
+          case 'breaking':
+            return badgeBreaking();
           case 'npc':
             return badgeNpc('#d98a10');            // timeline npc — saturated timeline amber (bloom desaturates toward accent #f7af46)
           case 'missiontarget':

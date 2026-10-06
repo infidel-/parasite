@@ -94,6 +94,7 @@ class EvolutionManager extends _SaveObject
   function turnDegrade(time: Int)
     {
       var list = [ 'strength', 'constitution', 'intellect', 'psyche' ];
+      var wasBreaking = player.isHostBreaking();
 
       // reduce attributes in loop
       var chance = 100;
@@ -134,6 +135,11 @@ class EvolutionManager extends _SaveObject
         }
 
       player.host.recalc();
+
+      // degradation just brought the host close to collapsing: flash it red + shake it
+      if (!wasBreaking &&
+          player.isHostBreaking())
+        game.scene.view3d.playBreakingFlash(player.host.entity);
     }
 
 

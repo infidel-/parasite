@@ -581,6 +581,15 @@ public function show()
               svg: effectSvg(eff.col),
             });
         }
+      // the player's host close to collapsing from degradation: the cracked heart after the effects
+      // (svg-only, no atlas cell — the 2D view does not draw it)
+      if (game.player.host == this &&
+          game.player.isHostBreaking())
+        out.push({
+          col: Const.FRAME_EMPTY,
+          row: Const.ROW_EFFECT,
+          svg: 'breaking',
+        });
       return out;
     }
 

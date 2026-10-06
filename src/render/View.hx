@@ -885,6 +885,13 @@ class View {
         render.choreo.Reactions.resistShake(choreo, e);
     }
 
+// breaking hit (host flashes red + shakes as it nears collapse) — see render.choreo.Reactions
+  public function playBreakingFlash(e:Entity):Void
+    {
+      if (running)
+        render.choreo.Reactions.breakingFlash(choreo, e);
+    }
+
 // melee choreography (attacker lunge -> impact beat: sound + shake + blood) — see render.choreo.Melee
   public function playMelee(atkE:Entity, tgtE:Entity,
       atkCol:Int, atkRow:Int, tgtCol:Int, tgtRow:Int,

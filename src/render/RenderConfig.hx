@@ -240,6 +240,14 @@ class RenderConfig {
     shakeMs: 150.0,      // target hit-shake duration
     shakeAmp: 0.10,      // target hit-shake amplitude, as a fraction of a CELL
   };
+  // host breaking hit: the player's host flashes red once and shakes when degradation brings it
+  // close to collapsing (render.anim.BreakShake)
+  public static final BREAKING = {
+    ms: BASE_MS * 3.0,   // flash + shake duration
+    shakeAmp: 0.09,      // jitter amplitude, as a fraction of a CELL
+    color: 0xff2a2a,     // flash color: purer than --text-color-alert, as it multiplies the sprite's own colors
+    glow: 2.0,           // flash peak self-glow intensity
+  };
   // attack-FX sprite visuals: a glowing procedural rasterized-SVG shape — melee swings spawned at
   // the strike apex (keyed by the weapon's _AttackEffect) and impact marks stamped on a struck
   // target. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep (roll swept over the
