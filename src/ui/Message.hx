@@ -16,6 +16,9 @@ class Message extends UIWindow
   var imgWrap: DivElement;
   var imgEl: ImageElement;
   var text: DivElement;
+  var current: _MessageParams; // latest params; stale image loads are dropped
+  var loading: Bool; // image preload in flight, content not applied yet
+  var showSkip: Null<Bool>; // show() deferred until the image loads (its skipAnimation)
 
   public function new(g: Game)
     {
@@ -48,21 +51,54 @@ class Message extends UIWindow
     {
       var o: _MessageParams = cast obj;
       o.text = '<span class=narrative>' + o.text + '</span>';
+      current = o;
+      showSkip = null;
 
-      // preload image if present. onerror fallback keeps the window from
-      // showing prior message content when the image 404s (mod assets, typos)
+      // preload image if present; show() waits for it so the window never opens
+      // with the previous message's art and text. onerror still opens it (mod
+      // assets, typos), just without the image
       if (o.img != null)
         {
+          loading = true;
           var img = new js.html.Image();
           img.onload = function() {
-            setParamsInternal(o, true);
+            loaded(o, true);
           };
           img.onerror = function(_) {
-            setParamsInternal(o, false);
+            loaded(o, false);
           };
           img.src = AssetPath.resolve('img/' + o.img + '.jpg');
         }
-      else setParamsInternal(o, false);
+      else
+        {
+          loading = false;
+          setParamsInternal(o, false);
+        }
+    }
+
+// apply preloaded params and run the show() deferred while the image loaded
+  function loaded(o: _MessageParams, hasImage: Bool)
+    {
+      if (o != current)
+        return;
+      loading = false;
+      setParamsInternal(o, hasImage);
+      if (showSkip != null)
+        {
+          super.show(showSkip);
+          showSkip = null;
+        }
+    }
+
+// show window, deferred until the image has loaded
+  public override function show(?skipAnimation: Bool = false)
+    {
+      if (loading)
+        {
+          showSkip = skipAnimation;
+          return;
+        }
+      super.show(skipAnimation);
     }
 
 // internal method to set html content
@@ -88,6 +124,7 @@ class Message extends UIWindow
 
   override function hide(?skipAnimation: Bool = false)
     {
+      showSkip = null;
       animatedHide();
     }
 }
