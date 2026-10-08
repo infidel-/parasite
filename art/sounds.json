@@ -1,0 +1,8 @@
+{
+  "_doc": "make sounds: sounds-src/<variant file> -> app/sound/<key><digit>.mp3. Entries are written by the fal-sfx MCP (generate_sfx) and carry every prompt; lufs overrides default_lufs per entry. last_* keys are bake state. A key that matches any mp3 the pipeline did not write is refused. Targets measured 2026-10-08 with ebur128: ambient-fire.mp3 (the positional loop peer) -26.4 LUFS, ambient-corp1.mp3 bed -42.1, object-elevator -29.6, attack-pistol1 -16.3.",
+  "style": "clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+  "default_lufs": -26,
+  "default_bitrate": "128k",
+  "seam_ms": 500,
+  "sounds": {}
+}

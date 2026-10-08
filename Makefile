@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -39,6 +39,12 @@ git-diff:
 # symlink to the asset store; the sources are NOT committed, the manifest IS.
 tex:
 	python3 tools/textures.py
+
+# sound pipeline: sounds-src/<area>/*.wav (fal-sfx MCP takes) -> app/sound/<name><N>.mp3, mono,
+# one static gain to the manifest's LUFS, loops seamed. never touches a sound it did not make.
+# sounds-src is a symlink; the wavs are NOT committed, art/sounds.json IS
+sounds:
+	python3 tools/sounds.py
 
 # adopt freshly generated gpt drops into textures-src/ without baking
 adopt:
