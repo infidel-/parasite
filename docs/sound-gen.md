@@ -172,11 +172,36 @@ were raised 6 dB after listening, because they sat far under the one-shots.
 - **Corp has no vents**: `BLDG_VENT` is never laid by the corp generator, so `corp/vent` had no
   source on any floor. The loop moved to the facility.
 
-### Facility: `render/facility/FacilityArea.tick`
+### Facility: `render/facility/FacilitySounds.hx`, driven from `FacilityArea.tick`
 
-`facility/vent` (range 3) off its `vent` objects, which stand on WALL cells, so each is heard from
-the floor on either side. The bed is still the old `ambient-facility1` through `setAmbient`.
-`facility/washroom` is baked and waiting for a facility washroom bed.
+The clone of `CorpSounds`, with the outdoors split off. Facility's `AreaInfo.ambient` is
+`AMBIENT_NONE`; the 2D underground lab still plays `ambient-facility` through `setAmbient`.
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `facility/vent` | `vent` objects, on WALL cells | loop | 3 |
+| `corp/rack` (reused) | `m.deco` `FIT_RACK`, `FIT_RACK_LOW` | loop | 5 |
+| `facility/machine` | `FIT_MACHINE`, `FIT_ANALYSER` | loop | 3 |
+| `facility/generator` | `FIT_GENERATOR` (hangar, 2-3) | loop | 6 |
+| `corp/fridge` (reused) | `decoration` frames 8/0 (fridge), 8/1 (freezer) of `FIT_CABINET` | loop, duty 40/60 | 3 |
+| `corp/drip` (reused) | `m.tableSink` (lab sinks) + `FIT_BASIN` | event, gap 16 s | 2 |
+| `facility/drain` | `m.drain` (`floor_drain` objects) | event, gap 40 s | 2 |
+| `facility/birds` | tree tiles `TILE_TREE1..TILE_BUSH-1` (~280 cells) | event, gap 20 s, 3 variants | 6 |
+| `facility/car` | `Surf.ROAD` (~260 cells) | event, gap 45 s, 3 variants | 8 |
+| `corp/flush` (reused) | none: the washroom bed's event | event, gap 80 s | — |
+| `facility/pa` | none: at the summed level of the four INDOOR beds, so never outdoors | event, gap 180 s | — |
+
+- **Beds**: `ambient-facility` (corridor, doorways: indoor and in no room rect), `facility/lab`
+  (every room rect, offices and stores included — asked for), `facility/washroom` (`ROLE_TOILET`),
+  `facility/hangar` (`FacilityModel.inHangar`, asked FIRST: the hangar is a room rect with a null
+  role, like a lab), `facility/park` (`Surf.GRASS`), `facility/exterior` (any other outdoor cell).
+  Baked at -36, DB -4 = the corridor's measured **-40.0**. Measured at slider 100: each bed 62.2 in
+  its own zone, the others 0-0.9 (the tail of the fade); corridor 98.6.
+- **A reused corp key shares its DB gain**: tuning `corp/rack` in either area moves both.
+- **An event over a DENSE cell set plays mostly far away.** It picks a random in-range cell, and with
+  ~280 tree cells most are 4-6 away: birds measured **0.1-0.5** next to a tree, against drip **7.9**.
+  Ceiling of the random pick; weight it to the nearest when that matters.
+- Earmarked runners-up in `unused/facility/`: `exterior-sonilo1` for a wilderness spot near a road.
 
 ## Levels (measured with ebur128, 2026-10-08)
 
@@ -233,3 +258,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 |---|---|---|---|---|
 | 2026-10-09 | corp | rack, vending, cooler, printer, cctv, elevator, vent (20 s loops, 5 models) | rack, vending: elevenlabs · cooler, elevator, vent: sonilo · cctv: cassette · printer: dropped (too distinct for a loop) | $2.146 |
 | 2026-10-09 | corp | cubicle, washroom, window, fridge (loops) · flush, phone, drip (one-shots) | cubicle, window, drip: elevenlabs · fridge, washroom: cassette · flush: sonilo (baked -36, "must be quieter") · phone: elevenlabs, third roll (the first take CLIPPED: 0 dBFS, 11 clipped samples, audibly distorted; a softer "gentle low-volume warble, no distortion" brief fixed it) · washroom sonilo kept for the facility | $0.58 |
+| 2026-10-10 | facility | lab, hangar, park, exterior (beds) · machine, generator (loops) · drain, pa, birds, car (one-shots) | lab, hangar, exterior, machine, generator: elevenlabs · park, pa: sonilo · drain: cassette + elevenlabs (2 variants) · birds, car: all three as variants 1-3 · pa cassette CLIPPED (0 dBFS, peak count 6), out unheard · exterior sonilo kept for the wilderness | $0.67 |

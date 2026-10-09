@@ -354,6 +354,305 @@
       "last_outputs": [
         "corp/phone1.mp3"
       ]
+    },
+    "facility/lab": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/lab-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "laboratory room tone, steady hum of lab equipment, fume hood extraction air, fluorescent light buzz, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:35",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "facility/lab1.mp3"
+      ]
+    },
+    "facility/hangar": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/hangar-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "large empty aircraft hangar interior room tone, wind pressing on huge steel bay doors, low rumble, big reverberant metal space, constant, no events, secret research compound, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:36",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "facility/hangar1.mp3"
+      ]
+    },
+    "facility/park": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/park-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "small landscaped park, breeze in tree leaves, occasional distant birds, constant, no events, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:36",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "facility/park1.mp3"
+      ]
+    },
+    "facility/exterior": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/exterior-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open asphalt yard and parking lot, steady wind, distant city road traffic hum, constant, no events, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:36",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "facility/exterior1.mp3"
+      ]
+    },
+    "facility/machine": {
+      "area": "facility",
+      "loop": true,
+      "variants": [
+        {
+          "file": "facility/machine-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "industrial laboratory machine running, steady electric motor whir and mechanical hum, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:37",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "facility/machine1.mp3"
+      ]
+    },
+    "facility/generator": {
+      "area": "facility",
+      "loop": true,
+      "variants": [
+        {
+          "file": "facility/generator-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "diesel power generator running, steady engine drone and mechanical rumble, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:37",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "facility/generator1.mp3"
+      ]
+    },
+    "facility/drain": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/drain-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "floor drain gurgle, water glugging down a metal grate drain pipe, single event, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/drain-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "floor drain gurgle, water glugging down a metal grate drain pipe, single event, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:37",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "facility/drain1.mp3",
+        "facility/drain2.mp3"
+      ]
+    },
+    "facility/pa": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/pa-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "public address chime followed by a muffled unintelligible announcement over ceiling loudspeakers in a distant corridor, reverberant, words not understandable, secret research laboratory interior, realistic field recording, no music",
+          "duration": 6.965986,
+          "seed": null,
+          "cost": 0.0126,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:38",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "facility/pa1.mp3"
+      ]
+    },
+    "facility/birds": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/birds-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a few small birds chirping in a tree, short burst, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/birds-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a few small birds chirping in a tree, short burst, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0054,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/birds-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a few small birds chirping in a tree, short burst, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:38",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "facility/birds1.mp3",
+        "facility/birds2.mp3",
+        "facility/birds3.mp3"
+      ]
+    },
+    "facility/car": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/car-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/car-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.037188,
+          "seed": null,
+          "cost": 0.0108,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/car-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T01:34:39",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "facility/car1.mp3",
+        "facility/car2.mp3",
+        "facility/car3.mp3"
+      ]
     }
   }
 }
