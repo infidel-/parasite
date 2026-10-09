@@ -28,12 +28,14 @@ class Go
             goArea(arr);
           case 'block':
             goBlock(arr);
+          case 'sound':
+            goSound(arr);
           case 'event':
             goEvent(arr);
           case 'xy':
             goXY(arr);
           case '':
-            log('Usage: go [area [x] [y]|block [kind]|event [index]|xy [x] [y]]');
+            log('Usage: go [area [x] [y]|block [kind]|sound [kind]|event [index]|xy [x] [y]]');
           default:
             log('Unknown go target: ' + sub + '.');
         }
@@ -102,6 +104,61 @@ class Go
       var c = b.cells[Std.random(b.cells.length)];
       log('Teleporting to ' + kind + ' ' + (hits.length > 1 ?
         '(' + (i + 1) + ' of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
+      game.playerArea.moveTo(c.x, c.y);
+      game.scene.updateCamera();
+      game.scene.draw();
+    }
+
+// go to a random looping sound source of a given kind: go sound [kind]. the sources are the ones
+// the 3D view registered for this area (render.SoundSources), so a contiguous run — a rack row, a
+// lift — is one source, and it never picks the one the player is already standing at
+  function goSound(arr: Array<String>)
+    {
+      var all = render.SoundSources.sources;
+      if (all.length == 0)
+        {
+          log('No sound sources here.');
+          return;
+        }
+      if (arr.length < 3)
+        {
+          var census = [for (k in render.SoundSources.kinds())
+            k + ' ' + Lambda.count(all, function(s) return render.SoundSources.label(s.key) == k)];
+          log('Usage: go sound [kind]. On this map: ' + census.join(', ') + '.');
+          return;
+        }
+      var kind = arr[2];
+      var hits = [for (s in all) if (render.SoundSources.label(s.key) == kind) s];
+      if (hits.length == 0)
+        {
+          log('No ' + kind + ' on this map. Try: ' + render.SoundSources.kinds().join(', ') + '.');
+          return;
+        }
+      var px = game.playerArea.x;
+      var py = game.playerArea.y;
+      var pick = [for (s in hits) if (!Lambda.exists(s.cells, function(c)
+        return Math.abs(c.col - px) <= 1 && Math.abs(c.row - py) <= 1)) s];
+      if (pick.length == 0)
+        {
+          log('You are already at the only ' + kind + ' on this map.');
+          return;
+        }
+      var i = Std.random(pick.length);
+      // a walkable cell on or touching the source: a rack is solid, a cooler can be stood on
+      var spots = [];
+      for (c in pick[i].cells)
+        for (dy in -1...2)
+          for (dx in -1...2)
+            if (game.area.isWalkable(c.col + dx, c.row + dy))
+              spots.push({ x: c.col + dx, y: c.row + dy });
+      if (spots.length == 0)
+        {
+          log('No standable cell next to that ' + kind + '.');
+          return;
+        }
+      var c = spots[Std.random(spots.length)];
+      log('Teleporting to ' + kind + ' ' + (pick.length > 1 ?
+        '(' + (i + 1) + ' of ' + pick.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
       game.playerArea.moveTo(c.x, c.y);
       game.scene.updateCamera();
       game.scene.draw();
