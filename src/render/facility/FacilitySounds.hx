@@ -119,7 +119,8 @@ class FacilitySounds
 // which bed plays at the player's cell: the hangar by its structure (it is a room rect with no
 // role, like a lab), then the room rects the generator saved — a washroom by its role, every other
 // room the lab's tone, offices and stores included — then a doorway or a corridor, which is in no
-// rect, and the outdoors split by surface into the park's grass and everything else
+// rect, and the outdoors split into the park — its grass and the paths through it — and everything
+// else
   function bedAt(pc:Int, pr:Int):Int
     {
       if (FacilityModel.inHangar(m, pc, pr))
@@ -129,7 +130,8 @@ class FacilitySounds
         return (room.role == FacilityTemp.ROLE_TOILET ? BED_WASHROOM : 1);
       if (FacilityModel.isIndoor(m, pc, pr))
         return 0;
-      return (m.surf[pr][pc] == Surf.GRASS ? BED_PARK : BED_EXTERIOR);
+      return (m.surf[pr][pc] == Surf.GRASS ||
+        FacilityModel.isParkPath(m, pc, pr) ? BED_PARK : BED_EXTERIOR);
     }
 
 // per frame: the loops and events, then the beds crossfaded over four BASE_MS so a doorway step is

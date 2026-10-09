@@ -194,7 +194,8 @@ The clone of `CorpSounds`, with the outdoors split off. Facility's `AreaInfo.amb
 - **Beds**: `ambient-facility` (corridor, doorways: indoor and in no room rect), `facility/lab`
   (every room rect, offices and stores included — asked for), `facility/washroom` (`ROLE_TOILET`),
   `facility/hangar` (`FacilityModel.inHangar`, asked FIRST: the hangar is a room rect with a null
-  role, like a lab), `facility/park` (`Surf.GRASS`), `facility/exterior` (any other outdoor cell).
+  role, like a lab), `facility/park` (`Surf.GRASS` and the paths through it, `FacilityModel.isParkPath` — asked
+  for: the path is the park, not the exterior), `facility/exterior` (any other outdoor cell).
   Baked at -36, DB -4 = the corridor's measured **-40.0**. Measured at slider 100: each bed 62.2 in
   its own zone, the others 0-0.9 (the tail of the fade); corridor 98.6.
 - **A reused corp key shares its DB gain**: tuning `corp/rack` in either area moves both.
