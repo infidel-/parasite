@@ -106,7 +106,7 @@ class LampShadows {
                   frac = f;
               }
           }
-      game.scene.sounds.updateFireLoop(frac);
+      game.scene.sounds.updateLoop('ambient-fire', frac, game.config.effectsVolume);
     }
 
 // warm emissive intensity a nearby barrel throws onto an actor at pose a: strongest barrel within

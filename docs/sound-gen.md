@@ -76,6 +76,36 @@ cut at its first `.`. The bake refuses anything else.
 - **Bake state:** `last_converted`, `last_sig` and `last_outputs`. A key rebuilds when a wav is newer,
   when `lufs`, bitrate, `loop` or `seam_ms` changes, or when an output is missing.
 
+## In game: positional object loops
+
+A looping sound tied to world objects goes through `Sounds.updateLoop(key, frac, base)`. It is lazy:
+the loop is created on its first audible frame, then never stopped, only set to volume 0 so that
+crossing the edge of a range does not restart it. `onEnterArea` zeroes every loop. The barrel fire
+(`ambient-fire`, on `effectsVolume`) and the corp machines (on `ambientVolume`) share it.
+
+- **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
+
+  | key | sources | silent at (path cells) |
+  |---|---|---|
+  | `corp/rack` | `fit == CorpFurniture.FIT_RACK` | 5 |
+  | `corp/elevator` | `elevator` objects | 4 |
+  | `corp/vent` | `vent` objects | 3 |
+  | `corp/vending` | `CorpDeco.cells(K_VENDING)` | 3 |
+  | `corp/cctv` | `CorpSecurity.videoCells` | 3 |
+  | `corp/cooler` | `CorpDeco.cells(K_COOLER)` | 2 |
+
+- **WALLS AND CLOSED DOORS BREAK IT: the distance is a PATH, not a straight line.**
+  - Every frame a search runs out to 5 cells from the player's cell: 8-way, a diagonal costs 1.41,
+    and a diagonal may not cut past a blocked corner.
+  - A cell passes sound when `area.canSeeThrough` says so AND it holds no closed `Door`.
+  - **A glass door is see-through when shut**, so the door is checked on its own.
+  - A source is reached through its own cell or one step on from any cell around it. A machine is
+    usually a cell that sound does not pass, and is heard from the floor in front of it.
+- **Level:** full at one step away, falling in a straight line to silent at the range, then eased
+  over 2 x `BASE_MS` (raw dt). A step, or a door closing, fades the sound rather than cutting it.
+  Only the nearest source of each kind counts.
+- **Ceilings:** no panning, and a wall is all or nothing (no partial muffling).
+
 ## The old-sound guard
 
 **`make sounds` never touches a sound it did not make.** Its output lives in the area folders, so it

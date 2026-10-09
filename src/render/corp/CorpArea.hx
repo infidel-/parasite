@@ -60,6 +60,7 @@ class CorpArea implements Area3D
   var facade:{ clad:Int, soffit:Int, lit:Int }; // the nineteen storeys under the plate
   var street:CorpStreet.CorpStreetSet;          // and the city at the bottom of them
   var crowd:CorpCrowd;                          // and the fake traffic and people on it
+  var loops:CorpSounds;                         // the machine hums, faded by path distance
   public var streetShown = true;                // the street is drawn this frame; View gates StreetBlur on it
   var merged = false;                           // CorpMerge has collapsed the per-texture meshes
   var props:Array<render.world.ObjModels.PropBatch>;
@@ -185,6 +186,7 @@ class CorpArea implements Area3D
       // field and not a quad per fitting
       ContactMask.repaint();
       doors = FacilityDoors.build(scene, model, game.area);
+      loops = new CorpSounds(game, model);
       props = render.world.ObjModels.build(scene, game, objYaw, objLift, objWall);
       indoorProps();
       chunks.build(scene, pre);
@@ -496,6 +498,7 @@ class CorpArea implements Area3D
       // CorpCrowd's header — ambient city life is RenderConfig's own documented exception, and a
       // street that stops when the player stops thinking is the whole feature missing
       crowd.tick(opts.dtMs);
+      loops.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       CorpStreet.settle();
       // the street (24 calls, ring-wide meshes that never cull) and its blur pass only while the view
       // can reach past the plate's edge

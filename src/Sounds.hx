@@ -18,7 +18,7 @@ class Sounds
   var aboutMusic: SMSound;
   var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
-  var fireLoop: SMSound; // looping positional fire sound near burning barrels (volume set per frame)
+  var loops: Map<String, SMSound>; // looping positional sounds by key (barrel fire, corp machines), volume set per frame
   var ambientLocation: _SoundAmbientLocation;
   var initDone: Bool;
 
@@ -67,9 +67,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 !ambientNext.sound.muted)
               ambientNext.sound.mute();
-            if (fireLoop != null &&
-                !fireLoop.muted)
-              fireLoop.mute();
+            for (l in loops)
+              if (!l.muted)
+                l.mute();
             return;
           }
         else if (game.ui.state == UISTATE_ABOUT)
@@ -102,9 +102,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 !ambientNext.sound.muted)
               ambientNext.sound.mute();
-            if (fireLoop != null &&
-                !fireLoop.muted)
-              fireLoop.mute();
+            for (l in loops)
+              if (!l.muted)
+                l.mute();
             return;
           }
         else
@@ -125,9 +125,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 ambientNext.sound.muted)
               ambientNext.sound.unmute();
-            if (fireLoop != null &&
-                fireLoop.muted)
-              fireLoop.unmute();
+            for (l in loops)
+              if (l.muted)
+                l.unmute();
           }
         ambientTick(ambient);
         ambientTick(ambientNext);
@@ -136,7 +136,7 @@ class Sounds
       music = null;
       menuMusic = null;
       aboutMusic = null;
-      fireLoop = null;
+      loops = new Map();
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -336,9 +336,9 @@ class Sounds
 // after entering area
   public function onEnterArea()
     {
-      // barrels are per-area; silence any fire loop so it does not bleed into the next area/region
-      if (fireLoop != null)
-        fireLoop.setVolume(0);
+      // sources are per-area; silence every loop so none bleeds into the next area/region
+      for (l in loops)
+        l.setVolume(0);
       var oldType = locationType;
       // check for area-specific music
       if (game.location == LOCATION_AREA)
@@ -476,27 +476,32 @@ class Sounds
         }
     }
 
-// drive the looping fire sound from the render loop: frac is 0 (silent, out of range) .. 1 (full,
-// on top of a barrel); lazy-creates the loop on first audible frame, keeps it looping silently
-// otherwise so there is no start/stop thrash as the player crosses the radius
-  public function updateFireLoop(frac: Float)
+// drive one looping positional sound from the render loop: frac is 0 (silent, out of range) .. 1
+// (full) of the base volume. lazy-creates the loop on its first audible frame, then keeps it looping
+// silently so there is no start/stop thrash as the player crosses the edge of its range
+  public function updateLoop(key: String, frac: Float, base: Int)
     {
 #if !free
-      if (fireLoop == null)
+      var loop = loops[key];
+      if (loop == null)
         {
-          if (frac <= 0)
+          // its first variant: ambient-fire.mp3 has none, corp/vent1.mp3 has one
+          var v = sounds[key];
+          if (frac <= 0 ||
+              v == null)
             return;
-          fireLoop = SoundManager.createSound({
-            id: 'ambient-fire',
-            url: AssetPath.resolve('sound/ambient-fire.mp3'),
+          loop = SoundManager.createSound({
+            id: key,
+            url: AssetPath.resolve('sound/' + key + (v[0] >= 0 ? '' + v[0] : '') + '.mp3'),
             volume: 0,
             loops: 10000,
           });
-          fireLoop.play();
+          loops[key] = loop;
+          loop.play();
         }
-      var vol = frac <= 0 ? 0 : Std.int(game.config.effectsVolume * frac);
-      if (fireLoop.volume != vol)
-        fireLoop.setVolume(vol);
+      var vol = frac <= 0 ? 0 : Std.int(base * frac);
+      if (loop.volume != vol)
+        loop.setVolume(vol);
 #end
     }
 
