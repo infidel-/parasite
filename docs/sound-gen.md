@@ -43,9 +43,11 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
    - For a bake-off pass `register: false` and `area: "<area>/_bakeoff/<name>"`. Keep the losers out
      of the manifest, or `make sounds` ships them as variants.
 2. **Adopt the winner.** Move it to `sounds-src/<area>/<name>-<model>1.wav`, add its entry to
-   `art/sounds.json` (or re-run it with `register` on), and delete the `_bakeoff` folder.
+   `art/sounds.json` (or re-run it with `register` on). **Move the losers to
+   `sounds-src/unused/<area>/`, never delete them** (asked for: a runner-up is often right somewhere
+   else, as the washroom's sonilo take is for the facility).
 3. **Bake with `make sounds`** (`tools/sounds.py`). Each variant becomes
-   `app/sound/<area>/<name><N>.mp3`, and the game key is **`<area>/<name>`** (`corp/vent`):
+   `app/sound/<area>/<name><N>.mp3`, and the game key is **`<area>/<name>`** (`corp/rack`):
    - N is the take's POSITION in the entry, and the `-<model>` part is dropped, so takes from two
      models can sit in one key without colliding;
    - the audio is downmixed to mono (nothing in the game pans);
@@ -68,7 +70,7 @@ cut at its first `.`. The bake refuses anything else.
 ### Manifest (`art/sounds.json`, tracked)
 
 - **Top level:** `style`, `default_lufs` (-26), `default_bitrate` (128k), `seam_ms` (500), `sounds{}`.
-- **Keyed by the game key `<area>/<name>`** (`corp/vent`), so two areas can each have a `vent`.
+- **Keyed by the game key `<area>/<name>`** (`facility/vent`), so two areas can each have a `vent`.
 - **Per key:** `area`, `loop`, optional `lufs`, and `variants[]`. Each variant holds `file`, `model`,
   `endpoint`, `prompt`, `duration`, `seed`, `cost`, `native_loop` and `generated`.
 - **`native_loop`** is true only when ElevenLabs was sent its `loop` flag. A native loop is never
@@ -76,70 +78,103 @@ cut at its first `.`. The bake refuses anything else.
 - **Bake state:** `last_converted`, `last_sig` and `last_outputs`. A key rebuilds when a wav is newer,
   when `lufs`, bitrate, `loop` or `seam_ms` changes, or when an output is missing.
 
-## In game: positional object loops
+## In game: positional sounds
 
-A looping sound tied to world objects goes through `Sounds.updateLoop(key, frac, base)`. It is lazy:
-the loop is created on its first audible frame, then never stopped, only set to volume 0 so that
-crossing the edge of a range does not restart it. `onEnterArea` zeroes every loop. The barrel fire
-(`ambient-fire`, on `effectsVolume`), the corp machines and the corp beds (on `ambientVolume`) share it.
-Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `updateLoop` multiplies in
-the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-2.0 dB** (rack, cctv and elevator -6.0),
-fire and the corridor bed 0, the cooler -10.0. History: the machines went in at -8 (cooler -16) and were
-raised 6 dB after listening, because they sat far under the one-shots. The volume is clamped at
-100, so a gain over 0 dB is lost at a full slider: so a loop that should be tunable UP gets its headroom from the bake: `corp/room` is baked at
-**-36** LUFS and pulled to -42 (level with the corridor bed's -42.1) by `DB` **-6.0**. Reported as
-"the room bed does not change when I scroll": it sat at 0 dB and 100%, so every notch up was
-clamped. The corridor bed is a shipped file at 0 dB and can only be tuned DOWN. It is tuned in sound mode (`Shift+S` in street-debug, see
-[`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste back into `DB`.
+### Where a sound is heard from: `src/SoundPath.hx`
 
-- **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
+Every positional sound, loop or one-shot, measures the PATH from the player, not the straight line.
+- A search runs out from the player's cell: 8-way, a diagonal costs 1.41, and a diagonal may not cut
+  past a blocked corner.
+- A cell passes sound when `area.canSeeThrough` says so AND it holds no closed `Door`. **A glass door
+  is see-through when shut**, so the door is checked on its own (`SoundPath.doorsOf`, built once per
+  area by a caller that searches every frame).
+- **Distance is to the source's FACE.** A source cell that passes sound is 0 itself (a cooler, a
+  vending machine: both walkable). A blocked source (a rack, a vent in a wall, a shut door) gives 0
+  to the passable cells around it. Measured with the old rule (full at d ≤ 1): standing on the
+  cooler and next to it both played 100%, reported as "adjacent sounds the same as one tile away".
 
-  | key | sources | silent at (path cells) |
-  |---|---|---|
-  | `corp/rack` | `fit == CorpFurniture.FIT_RACK` | 5 |
-  | `corp/elevator` | `elevator` objects | 4 |
-  | `corp/vent` | `vent` objects | 3 |
-  | `corp/vending` | `CorpDeco.cells(K_VENDING)` | 3 |
-  | `corp/cctv` | `CorpSecurity.videoCells` | 3 |
-  | `corp/cooler` | `CorpDeco.cells(K_COOLER)` | 2 |
+### One-shots: `Sounds.playNow` with `x,y`
 
-- **WALLS AND CLOSED DOORS BREAK IT: the distance is a PATH, not a straight line.**
-  - Every frame a search runs out to 5 cells from the player's cell: 8-way, a diagonal costs 1.41,
-    and a diagonal may not cut past a blocked corner.
-  - A cell passes sound when `area.canSeeThrough` says so AND it holds no closed `Door`.
-  - **A glass door is see-through when shut**, so the door is checked on its own.
-  - **Distance is measured to the source's FACE.** A source cell that passes sound is 0 itself; a
-    cooler or a vending machine can be STOOD ON (both walkable). A blocked source (a rack) gives 0 to
-    the passable cells around it.
-    - Measured, with the old rule (full at d ≤ 1): standing on the cooler and standing next to it both
-      played 100%, reported as "adjacent sounds the same as one tile away".
+~22 call sites go through it: AI barks (`AI.emitSound`), shots, splats, doors, arrivals, phone and radio.
+- Within `listenRadius` (10) by a way round: `effectsVolume × (1 - d/10)`, linear as before.
+- **No way round: the straight line through the wall at -18 dB** (`SoundPath.MUFFLE` 0.126). Asked
+  for: a fight behind a shut door is dull, not silent.
+- Past 10 straight-line cells: silent, **except the alert cues** `ai-arrive-*`, `ai-phone`,
+  `ai-radio`, which keep the old 10% floor (they warn of police and calls). It used to be 10% for
+  everything, through every wall.
+- Measured at effects 50: open way, 3 cells → **40**; same distance behind a wall → **4.4**; 12 cells
+  → nothing; `ai-phone` at 12 → **5**. `debugSoundEnabled` prints the path and the fraction.
+- `opts.volume` (0-100) skips all of it: a caller that worked its level out itself.
+
+### Loops: `render/AreaSounds.hx`
+
+A loop goes through `Sounds.updateLoop(key, frac, base)`. It is lazy: created on its first audible
+frame, then never stopped, only set to volume 0, so crossing the edge of a range does not restart it.
+`onEnterArea` zeroes every loop. The barrel fire (`ambient-fire`, on `effectsVolume`) uses it
+directly; everything else is an `AreaSounds` kind on `ambientVolume`.
 - **Level:** `(1 - d/range)^2`, squared because linear amplitude barely moves near the source.
-  - Measured on the cooler (range 2, -8 dB at the time, slider 100): on it **39.7**, next to it **10.0**, one
-    more tile **0**.
-  - The level is eased over 2 x `BASE_MS` (raw dt), so a step, or a door closing, fades the sound
-    rather than cutting it.
-  - Only the nearest source of each kind counts.
-- **Ceilings:** no panning, and a wall is all or nothing (no partial muffling).
-- **Corp beds: `ambient-corp` in corridors, `corp/room` in rooms**, both driven by `CorpSounds`
-  and crossfaded over 4 x `BASE_MS`.
-  - The test is `generatorInfo.getRoomAt(cell) == null`, so doorways count as corridor. The
-    reception IS a room rect but plays the corridor bed (its counter replaces the front wall, so it is
-    open to the corridor). The lift's 9 cells are in no room rect but count as a ROOM (asked for: no corridor bed
-    in the lift).
+  Measured on the cooler (range 2, -8 dB at the time, slider 100): on it **39.7**, next to it
+  **10.0**, one more tile **0**. Only the nearest source of each kind counts.
+- Eased over 2 x `BASE_MS` (raw dt), so a step, or a door closing, fades rather than cuts.
+- **`duty`** cycles a kind on and off (each phase 0.5-1.5x its mean): the fridge's compressor.
+- **Ceilings:** no panning, and a wall is all or nothing for a LOOP (no partial muffling).
+
+### Intermittent ambience: `AreaSounds` events
+
+A one-shot every `gap` seconds or so (each roll 0.5-1.5x), from a random one of its cells within
+`range` by PATH, at `ambientVolume × (1 - d/range)^2 × gain` through `AreaSounds.once`. A roll with
+no cell in reach plays nothing, so an event is never heard through a wall.
+- **AN EVENT IS THE ROOM, NOT AN ACTION.** Asked for, and refused for microwave, kettle, coffee
+  machine, toaster, printer and an at-the-stall flush: those are something SOMEONE DOES, and with
+  nobody there doing it they read as a ghost. A phone ringing unanswered, a tap dripping and a toilet
+  flushing behind the wall are things a building does by itself.
+- **A ring must not sound like `ai-phone`**, which means "someone just called the police".
+
+### Tuning: `render/SoundSources.hx` `DB`, the one table
+
+`updateLoop` and `once` multiply in the kind's gain from `DB`, tuned in sound mode (`Shift+S` in
+street-debug, see [`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste
+back. The volume is clamped at 100, so a gain over 0 dB is lost at a full slider: a kind that should
+be tunable UP gets its headroom from the bake — the beds are baked at **-36** LUFS and pulled to
+-42 (level with the corridor bed's -42.1) by **-6.0**. Reported as "the room bed does not change
+when I scroll": it sat at 0 dB and 100%, so every notch up was clamped. The corridor bed is a shipped
+file at 0 dB and can only be tuned DOWN. History: the corp machines went in at -8 (cooler -16) and
+were raised 6 dB after listening, because they sat far under the one-shots.
+
+### Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `corp/rack` | `fit == CorpFurniture.FIT_RACK` (server room and security wall racks) | loop | 5 |
+| `corp/elevator` | `elevator` objects | loop | 4 |
+| `corp/vending` | `CorpDeco.cells(K_VENDING)` | loop | 3 |
+| `corp/cctv` | `CorpSecurity.videoCells` | loop | 3 |
+| `corp/cooler` | `CorpDeco.cells(K_COOLER)` | loop | 2 |
+| `corp/window` | outer glazing, `TILE_CORP_WINDOW1..V3` (~120 cells a floor) | loop | 2 |
+| `corp/fridge` | `CorpDeco.cells(K_FRIDGE)` | loop, duty 40 s on / 60 s off | 3 |
+| `corp/phone` | `CorpDeco.cells(K_PHONE)` (`CORP_TABLE_PHONE`, ~13 a floor) | event, gap 60 s | 4 |
+| `corp/drip` | `K_TAP` cells plus washroom basins (a fixture in a run) | event, gap 16 s | 2 |
+| `corp/flush` | none: the washroom bed's own event, at the bed's level | event, gap 80 s | — |
+
+- **Beds**, crossfaded one-hot over 4 x `BASE_MS`, picked off `generatorInfo.getRoomAt`:
+  `ambient-corp` (corridor), `corp/room`, `corp/cubicle` (`ROLE_CUBICLE`, the computers' hum) and
+  `corp/washroom` (`ROLE_TOILET`, the pipes).
+  - Doorways are in no room rect, so they are corridor. The reception IS a room rect but plays the
+    corridor bed: its counter replaces the front wall. The lift's 9 cells are in no rect but count
+    as a ROOM (asked for: no corridor bed in the lift). A room whose save has no `role` takes `room`.
   - Corp's `AreaInfo.ambient` is `AMBIENT_NONE`. **Never alternate `setAmbient` for this:** SM2's
     `createSound` with an id that already exists returns THE SAME object, so a fade-in and a fade-out
     fight over one sound.
   - Measured: stepping from a corridor into a cubicle, the corridor bed went 0.93 → 0.54 (300 ms) →
     0.04 (1.8 s).
+- **Corp has no vents**: `BLDG_VENT` is never laid by the corp generator, so `corp/vent` had no
+  source on any floor. The loop moved to the facility.
 
-## The old-sound guard
+### Facility: `render/facility/FacilityArea.tick`
 
-**`make sounds` never touches a sound it did not make.** Its output lives in the area folders, so it
-can never land on the 220 shipped files, which sit flat in `app/sound/`. Inside an area folder, a key
-is REFUSED when any `<key>.mp3` or `<key><digit>.mp3` already there is missing from that entry's own
-`last_outputs`. That covers a mod's sound and an entry renamed onto a taken key. Nothing in `app/sound/` is
-ever deleted. One consequence: a take dropped from an entry leaves its old mp3 behind, and the game
-still plays it. Delete it by hand.
+`facility/vent` (range 3) off its `vent` objects, which stand on WALL cells, so each is heard from
+the floor on either side. The bed is still the old `ambient-facility1` through `setAmbient`.
+`facility/washroom` is baked and waiting for a facility washroom bed.
 
 ## Levels (measured with ebur128, 2026-10-08)
 
@@ -169,6 +204,11 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 
 ## Traps
 
+- **A take can come back CLIPPED, and the bake cannot fix it.** The first elevenlabs phone peaked at
+  0 dBFS with 11 clipped samples (`astats` "Peak count") and was audibly distorted; the bake's gain
+  and limiter only move a broken waveform up or down. Screen every take's peak and peak count
+  before the user listens: a take at 0 dBFS with a peak count over ~2 is OUT.
+
 - **ElevenLabs' `pcm_44100` is NOT headerless on fal.** fal wraps it in a RIFF header (`audio/L16`,
   2 channels). Decoding it as raw s16le mono made a 1 s take **2.00 s** long and an octave low.
 - **A key may not end in a digit or contain a `.`.** The game reads a trailing digit as the variant
@@ -190,3 +230,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | date | area | sounds | winners | cost |
 |---|---|---|---|---|
 | 2026-10-09 | corp | rack, vending, cooler, printer, cctv, elevator, vent (20 s loops, 5 models) | rack, vending: elevenlabs · cooler, elevator, vent: sonilo · cctv: cassette · printer: dropped (too distinct for a loop) | $2.146 |
+| 2026-10-09 | corp | cubicle, washroom, window, fridge (loops) · flush, phone, drip (one-shots) | cubicle, window, drip: elevenlabs · fridge, washroom: cassette · flush: sonilo (baked -36, "must be quieter") · phone: re-rolled, elevenlabs take CLIPPED (0 dBFS, 11 clipped samples, audibly distorted) · washroom sonilo kept for the facility | $0.53 |

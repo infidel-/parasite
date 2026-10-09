@@ -166,6 +166,171 @@
       "last_outputs": [
         "corp/room1.mp3"
       ]
+    },
+    "corp/cubicle": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/cubicle-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open-plan office floor room tone, many desktop computer fans and faint hard drive hum blended into one steady drone, soft air conditioning, constant, no events, no typing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:36",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "corp/cubicle1.mp3"
+      ]
+    },
+    "corp/washroom": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/washroom-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "office washroom room tone, quiet trickle of water running through pipes inside the tiled walls, faint extractor fan, constant, no events, no flushing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 29.953741,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:36",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "corp/washroom1.mp3"
+      ]
+    },
+    "corp/window": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/window-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "high-rise office window, soft wind pressing on tall glass panes, very distant muffled city traffic far below, constant, no events, no sirens, no horns, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:37",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp/window1.mp3"
+      ]
+    },
+    "corp/fridge": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/fridge-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "kitchen fridge-freezer running, steady low refrigeration compressor hum with faint coolant gurgle, constant, no events, no door, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 29.953741,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:37",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp/fridge1.mp3"
+      ]
+    },
+    "corp/flush": {
+      "area": "corp",
+      "loop": false,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/flush-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a toilet flushing far away in another stall behind tiled walls, muffled distant whoosh of water then cistern refilling fading out, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 6.037188,
+          "seed": null,
+          "cost": 0.0108,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:38",
+      "last_sig": "-36/128k/False/500",
+      "last_outputs": [
+        "corp/flush1.mp3"
+      ]
+    },
+    "corp/drip": {
+      "area": "corp",
+      "loop": false,
+      "variants": [
+        {
+          "file": "corp/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling from a tap into a stainless steel sink, one small clear drip, quiet, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 2,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:38",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "corp/drip1.mp3"
+      ]
+    },
+    "facility/washroom": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/washroom-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "office washroom room tone, quiet trickle of water running through pipes inside the tiled walls, faint extractor fan, constant, no events, no flushing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 30.000181,
+          "seed": null,
+          "cost": 0.054,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "the corp washroom bake-off's runner-up, kept for the facility washroom"
+        }
+      ],
+      "last_converted": "2026-10-09T23:46:38",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "facility/washroom1.mp3"
+      ]
     }
   }
 }
