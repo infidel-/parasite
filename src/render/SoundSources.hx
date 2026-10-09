@@ -49,7 +49,7 @@ class SoundSources
     'facility/lab' => -6.0,
     'facility/washroom' => -5.0,
     'facility/hangar' => -4.0,
-    'facility/park' => -4.0,
+    'facility/park' => -8.0,
     'facility/exterior' => -4.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
