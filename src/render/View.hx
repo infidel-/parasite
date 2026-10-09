@@ -559,6 +559,7 @@ class View {
     rig.setOffsets(a.cameraOffsets());      // the rig outlives the scene, so re-assert it per build
     SoundSources.sources = []; // the area kind registers its own while it builds
     SoundSources.beds = [];
+    SoundSources.events = [];
     a.build(scene);
     debug.onRebuild(); // fresh area: reset cycler indices + counts
     tacticalGrid = new TacticalGrid(scene, game.area);

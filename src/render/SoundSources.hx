@@ -30,8 +30,15 @@ class SoundSources
     'corp/vending' => -2.0,
     'corp/cctv' => -6.0,
     'corp/cooler' => -10.0,
+    'corp/window' => -6.0,
+    'corp/fridge' => -6.0,
+    'corp/phone' => -10.0,
+    'corp/drip' => -10.0,
+    'corp/flush' => -10.0,
     'ambient-corp' => 0.0,
     'corp/room' => -6.0,
+    'corp/cubicle' => -6.0,
+    'corp/washroom' => -6.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];
@@ -39,6 +46,9 @@ class SoundSources
   public static var sources:Array<SoundSource> = [];
   // the current area's beds: kinds that play everywhere, with no source to stand at
   public static var beds:Array<String> = [];
+  // and its sourceless one-shots, which play off a bed rather than from a place (the washroom's
+  // distant flush)
+  public static var events:Array<String> = [];
 
 // a kind's linear gain off its dB (1 for a kind not in the table)
   public static function gain(key:String):Float

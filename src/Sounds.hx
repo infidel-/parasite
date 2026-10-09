@@ -572,9 +572,11 @@ class Sounds
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-      var volume:Float = game.config.effectsVolume;
+      var volume:Float = (opts.volume != null ? opts.volume : game.config.effectsVolume);
       var how = '';
-      if (opts.x != null && opts.y != null)
+      if (opts.volume == null &&
+          opts.x != null &&
+          opts.y != null)
         {
           // the way round within the listen radius, else muffled through the wall (SoundPath); past
           // the radius only an alert cue — police arriving, a call, a radio — is still faintly heard

@@ -97,6 +97,9 @@ class CorpDeco
   public static inline var K_COFFEE = 19;
   // and a bare counter cell, which is walkable floor with this name on it (Const.CORP_COUNTER)
   public static inline var K_COUNTER = 20;
+  // and the desk phone (Const.CORP_TABLE_PHONE), which draws nothing of its own — the desk clutter
+  // carries phones of its own — and has a kind only so render.corp.CorpSounds can ring it
+  public static inline var K_PHONE = 21;
 
   // the cabinet, as (width along the wall, depth off it, height), at the compound's own scale where
   // a unit is half a metre. The last row of what was a casework table: every other piece is a glb
@@ -160,7 +163,8 @@ class CorpDeco
           case 30: (col < 9 ? K_CHAIR : (col < 11 ? K_TAP : K_EXEC_CHAIR));
           // CORP_TABLE_KETTLE, then CORP_TABLE_MICROWAVE
           case 37: (col < 8 ? K_KETTLE : K_MICROWAVE);
-          case 25: (col == 10 ? K_ARMCHAIR : (col == 11 ? K_SOFA : K_NONE));
+          // CORP_TABLE_PHONE, then the armchair and the sofa
+          case 25: (col >= 6 && col < 10 ? K_PHONE : (col == 10 ? K_ARMCHAIR : (col == 11 ? K_SOFA : K_NONE)));
           case 26: (col == 11 ? K_TABLE_LOW : K_NONE);
           default: K_NONE;
         };

@@ -140,13 +140,14 @@ class SoundDebug
           l.textContent = line(s.key);
           l.style.color = (s.key == selected ? '#ff6' : '#7f7');
         }
-      // the panel: the beds on top, then every kind with a source, clickable
+      // the panel: the beds on top, then the sourceless one-shots, then every kind with a source,
+      // clickable
       var keys = [];
       for (s in builtFor)
         if (keys.indexOf(s.key) < 0)
           keys.push(s.key);
       keys.sort(Reflect.compare);
-      keys = SoundSources.beds.concat(keys);
+      keys = SoundSources.beds.concat(SoundSources.events).concat(keys);
       var html = '';
       for (k in keys)
         html += '<div data-key="' + k + '" style="cursor:pointer;color:' +
