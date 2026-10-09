@@ -29,7 +29,7 @@ class SoundSources
     'corp/vent' => -8.0,
     'corp/vending' => -8.0,
     'corp/cctv' => -8.0,
-    'corp/cooler' => -8.0,
+    'corp/cooler' => -16.0,
     'ambient-corp' => 0.0,
     'corp/room' => 0.0,
   ];

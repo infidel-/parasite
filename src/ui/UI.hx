@@ -212,8 +212,8 @@ class UI
       // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
       // listeners) — suppress ALL game input while it is active. backtick toggles it off via
       // render.View's own listener, so exiting still works. sound mode is the exception: its levels
-      // follow the player, so the player has to be able to walk while it is up — all but S, which
-      // toggles the mode and would otherwise also shoot the target
+      // follow the player, so the player has to be able to walk while it is up — all but S: Shift+S
+      // toggles the mode and plain S flies the camera, and either would otherwise shoot the target
       if (game.location == LOCATION_AREA &&
           game.scene.view3d != null &&
           game.scene.view3d.debugActive() &&

@@ -6,11 +6,12 @@ import citygen.CityConfig;
 import render.SoundSources.SoundSource;
 import render.world.WorldCtx;
 
-// sound mode (S, inside street-debug): a thin green ring at each looping sound source's range, a
+// sound mode (Shift+S, inside street-debug; plain S is the fly cam's): a thin green ring at each looping sound source's range, a
 // small label over it (kind, base dB, the volume it is playing now) and a panel of every kind. click
 // a label or a panel row to select its kind; the wheel moves that kind's base dB (1 dB a notch,
 // Shift 0.1) in render.SoundSources.DB, and every kind changed this session goes to the clipboard as
-// paste-ready lines. the levels follow the PLAYER, so entering the mode drops the fly cam
+// paste-ready lines. the levels follow the PLAYER, who walks on the arrows while the mode is up;
+// the fly cam keeps WASD
 class SoundDebug
 {
   static var group:Group;
@@ -29,23 +30,18 @@ class SoundDebug
   public static function attach(camera:PerspectiveCamera, dom:Dynamic):Void
     {
       Tools.legend('sound',
-        'S  leave sound mode\n' +
+        'Shift+S  leave sound mode   arrows  walk the player (the levels follow them)\n' +
         'LMB  select a source label (or a row of the panel)\n' +
         'wheel  base dB of the selected kind +-1   Shift+wheel  +-0.1   (changes -> clipboard)');
       Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
         if (!Tools.enabled ||
             e.code != 'KeyS' ||
+            !e.shiftKey ||
             e.ctrlKey ||
             e.metaKey ||
             e.altKey)
           return;
-        if (active())
-          Tools.setMode('none');
-        else
-          {
-            Tools.setMode('sound');
-            Tools.freeCam.deactivate();
-          }
+        Tools.setMode(active() ? 'none' : 'sound');
       });
       var downX = 0.0;
       var downY = 0.0;

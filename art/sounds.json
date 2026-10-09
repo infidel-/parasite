@@ -142,6 +142,30 @@
       "last_outputs": [
         "corp/vent1.mp3"
       ]
+    },
+    "corp/room": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -48,
+      "variants": [
+        {
+          "file": "corp/room-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "office room tone, steady HVAC air hum from ceiling vents, low electrical hum, constant, no events, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T19:40",
+          "bakeoff": "won over sonilo/cassette (the first elevenlabs take, prompted 'quiet... faint', came back silent), 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T20:22:57",
+      "last_sig": "-48/128k/True/500",
+      "last_outputs": [
+        "corp/room1.mp3"
+      ]
     }
   }
 }

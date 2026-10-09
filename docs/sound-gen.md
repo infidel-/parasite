@@ -84,7 +84,7 @@ crossing the edge of a range does not restart it. `onEnterArea` zeroes every loo
 (`ambient-fire`, on `effectsVolume`), the corp machines and the corp beds (on `ambientVolume`) share it.
 Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `updateLoop` multiplies in
 the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-8.0 dB**,
-fire and the beds 0. It is tuned in sound mode (`S` in street-debug, see
+fire and the beds 0 (the cooler -16.0 after listening). It is tuned in sound mode (`Shift+S` in street-debug, see
 [`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste back into `DB`.
 
 - **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
