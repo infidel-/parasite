@@ -331,6 +331,29 @@
       "last_outputs": [
         "facility/washroom1.mp3"
       ]
+    },
+    "corp/phone": {
+      "area": "corp",
+      "loop": false,
+      "variants": [
+        {
+          "file": "corp/phone-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an office desk telephone ringing in an empty room, gentle low-volume electronic warble ring, two or three rings with natural pauses, soft and clean, no distortion, unanswered, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 5,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:49",
+          "bakeoff": "third elevenlabs roll, take 3; the first roll clipped, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-09T23:53:02",
+      "last_sig": "-26/128k/False/500",
+      "last_outputs": [
+        "corp/phone1.mp3"
+      ]
     }
   }
 }
