@@ -268,7 +268,7 @@ class MainElectron
     }
 
 // every .mp3 under the sound dir as a rel forward-slash path: the shipped flat files plus the
-// per-area folders `make sounds` writes (sound/corp/corp-vent1.mp3 -> 'corp/corp-vent1.mp3')
+// per-area folders `make sounds` writes (sound/corp/vent1.mp3 -> 'corp/vent1.mp3')
   static function listSoundFiles(dir: String, prefix: String): Array<String>
     {
       var out: Array<String> = [];

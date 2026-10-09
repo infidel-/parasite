@@ -35,7 +35,7 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
 
 ## The pipeline
 
-1. **Generate with `generate_sfx`** (`~/git/fal-sfx-mcp`): `model`, `prompt`, `name` (the game key),
+1. **Generate with `generate_sfx`** (`~/git/fal-sfx-mcp`): `model`, `prompt`, `name` (the sound's name inside its area, NO area prefix: `vent`, not `corp-vent`),
    `area`, `duration`, `loop`, plus optional `seed` and `variants` (1-4).
    - It writes `sounds-src/<area>/<name>-<model><N>.wav`, 16-bit 44.1k, and never overwrites a file.
    - With `register` on (the default) it appends the take to `art/sounds.json` with its prompt,
@@ -45,7 +45,7 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
 2. **Adopt the winner.** Move it to `sounds-src/<area>/<name>-<model>1.wav`, add its entry to
    `art/sounds.json` (or re-run it with `register` on), and delete the `_bakeoff` folder.
 3. **Bake with `make sounds`** (`tools/sounds.py`). Each variant becomes
-   `app/sound/<area>/<name><N>.mp3`, and the game key is **`<area>/<name>`** (`corp/corp-vent`):
+   `app/sound/<area>/<name><N>.mp3`, and the game key is **`<area>/<name>`** (`corp/vent`):
    - N is the take's POSITION in the entry, and the `-<model>` part is dropped, so takes from two
      models can sit in one key without colliding;
    - the audio is downmixed to mono (nothing in the game pans);
@@ -68,6 +68,7 @@ cut at its first `.`. The bake refuses anything else.
 ### Manifest (`art/sounds.json`, tracked)
 
 - **Top level:** `style`, `default_lufs` (-26), `default_bitrate` (128k), `seam_ms` (500), `sounds{}`.
+- **Keyed by the game key `<area>/<name>`** (`corp/vent`), so two areas can each have a `vent`.
 - **Per key:** `area`, `loop`, optional `lufs`, and `variants[]`. Each variant holds `file`, `model`,
   `endpoint`, `prompt`, `duration`, `seed`, `cost`, `native_loop` and `generated`.
 - **`native_loop`** is true only when ElevenLabs was sent its `loop` flag. A native loop is never

@@ -2,7 +2,7 @@
 """Sound build: sounds-src/<area>/*.wav (generated takes) -> app/sound/<area>/<name><N>.mp3.
 
 Driven by art/sounds.json (tracked; the wavs it points at are not). Each entry is one game sound
-key with its variants (one wav each, written by the fal-sfx MCP). For each variant it:
+key ('<area>/<name>') with its variants (one wav each, written by the fal-sfx MCP). For each variant it:
   1. downmixes to mono (nothing in the game pans),
   2. a one-shot: trims leading silence; a loop the model did not loop itself: crossfades the tail
      into the head (equal power, seam_ms) so the file wraps without a click,
@@ -106,14 +106,15 @@ def foreign(area, name, owned, out_dir):
     return [f"{area}/{f}" for f in files if pat.fullmatch(f) and f"{area}/{f}" not in owned]
 
 
-def convert(name, e, info, src_dir, out_dir):
-    """bake one entry when due. returns True if built."""
+def convert(key, e, info, src_dir, out_dir):
+    """bake one entry when due. returns True if built. key is the game's own '<area>/<name>'."""
     # the game key's variant digit is the take's POSITION in the entry, not the digit in its file
     # name: the wav is <key>-<model><N>.wav, and two models' first takes are both N=1
     area = e["area"]
+    name = key.split("/")[-1]
     # one level, no dot: the game lists one folder deep and cuts a key at its first '.'
-    if not re.fullmatch(r"[a-z0-9_-]+", area):
-        warn(f"{name}: REFUSED, area '{area}' must be one plain folder name")
+    if not re.fullmatch(r"[a-z0-9_-]+", area) or key != f"{area}/{name}":
+        warn(f"{key}: REFUSED, key must be '<area>/<name>' with area one plain folder name")
         return False
     outs = [
         (os.path.join(src_dir, v["file"]), f"{area}/{name}{i + 1}.mp3", v.get("native_loop", False))
@@ -121,11 +122,11 @@ def convert(name, e, info, src_dir, out_dir):
     ]
     clash = foreign(area, name, set(e.get("last_outputs", [])), out_dir)
     if clash:
-        warn(f"{name}: REFUSED, would join or overwrite sounds this pipeline did not make: {', '.join(sorted(clash))}")
+        warn(f"{key}: REFUSED, would join or overwrite sounds this pipeline did not make: {', '.join(sorted(clash))}")
         return False
     missing = [s for s, _o, _n in outs if not os.path.exists(s)]
     if missing:
-        warn(f"{name}: source missing {', '.join(os.path.relpath(m, src_dir) for m in missing)}")
+        warn(f"{key}: source missing {', '.join(os.path.relpath(m, src_dir) for m in missing)}")
         return False
 
     lufs = e.get("lufs", info["default_lufs"])
@@ -189,9 +190,9 @@ def check():
         info = {
             "default_lufs": -26, "default_bitrate": "128k", "seam_ms": 500,
             "sounds": {
-                "hum": {"area": "t", "loop": True, "variants": var("hum-sonilo1.wav") + var("hum-elevenlabs1.wav")},
-                "ping": {"area": "t", "loop": False, "variants": var("ping1.wav")},
-                "old": {"area": "t", "loop": False, "variants": var("old1.wav")},
+                "t/hum": {"area": "t", "loop": True, "variants": var("hum-sonilo1.wav") + var("hum-elevenlabs1.wav")},
+                "t/ping": {"area": "t", "loop": False, "variants": var("ping1.wav")},
+                "t/old": {"area": "t", "loop": False, "variants": var("old1.wav")},
             },
         }
         path = os.path.join(d, "sounds.json")
@@ -205,11 +206,11 @@ def check():
         assert abs(probe_duration(hum) - 3.5) < 0.1, probe_duration(hum)
         assert probe_duration(os.path.join(out, "t", "ping1.mp3")) < 1.2
         assert open(os.path.join(out, "t", "old1.mp3"), "rb").read() == b"shipped"
-        assert "last_converted" not in res["sounds"]["old"]
-        assert res["sounds"]["hum"]["last_outputs"] == ["t/hum1.mp3", "t/hum2.mp3"]
+        assert "last_converted" not in res["sounds"]["t/old"]
+        assert res["sounds"]["t/hum"]["last_outputs"] == ["t/hum1.mp3", "t/hum2.mp3"]
         # a second run builds nothing: the entry now owns its output and is up to date
         warnings.clear()
-        assert not convert("hum", res["sounds"]["hum"], res, src, out)
+        assert not convert("t/hum", res["sounds"]["t/hum"], res, src, out)
     print("check ok")
 
 
