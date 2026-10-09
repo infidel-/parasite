@@ -73,6 +73,7 @@ class CorpModel
   public static function fromArea(area:AreaGame, ?icon:(Int, Int)->AtlasBox):Facility
     {
       var m = FacilityModel.fromArea(area, icon, CorpStyle.shell());
+      basins(area, m);
       washroomWindows(m);
       doorWindows(m);
       runsOfThree(m);
@@ -85,6 +86,20 @@ class CorpModel
       wallFits(area, m);
       archiveWalls(area, m);
       return m;
+    }
+
+// A WASHROOM BASIN IS A TAP ON WALKABLE FLOOR, read here into the fitting the twin used to say:
+// gen.corp.CorpRooms.toilet stopped sealing the run, because the vanity is a shallow unit against
+// the wall and its whole cell read as bare tiles nobody could step on. Every pass downstream asks
+// m.fit, so a basin on either form builds the same. A kitchen tap stands on wood and stays a tap
+  static function basins(area:AreaGame, m:Facility):Void
+    {
+      for (o in area.getObjects())
+        if (o.type == 'decoration' &&
+            FacilityModel.inside(m, o.x, o.y) &&
+            area.getCellType(o.x, o.y) == Const.TILE_FLOOR_MARBLE2 &&
+            CorpDeco.kindOf(o.imageRow, o.imageCol) == CorpDeco.K_TAP)
+          m.fit[o.y][o.x] = CorpFurniture.FIT_FIXTURE;
     }
 
 // THE ARCHIVE'S WALL CABINETS ARE A DECORATION ON WALKABLE FLOOR, not a twin: a 1.2-deep cabinet

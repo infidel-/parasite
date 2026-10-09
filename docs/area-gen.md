@@ -580,6 +580,12 @@ downstream complains — the oracle only checks reachability, and a walled cell 
 **The rule now lives in ONE list, `CorpRooms.WALL_HUGGERS`**: `addDecorationExt` gives any of them
 its floor back, in every template at once. A new wall-standing decoration goes in that list. A
 template that deals one directly (`addDecoration`) must not write the twin at all.
+- **The fifth report was the washroom BASIN RUN** ("tiles in front of sink are unwalkable"): the
+  vanity is a shallow unit against the wall, and `toilet` sealed its whole cell. A basin is now a
+  `CORP_TAP` on the walkable marble, which `render.corp.CorpModel.basins` reads back into
+  `FIT_FIXTURE` (a save from before keeps the twin, which `fitOf` still answers), and
+  `GenCheck.corpWashroomSane` takes either form. The WC STALLS keep the twin: a stall fills its cell.
+  `decorateCorners` now also skips a corner something already stands on, since a run's end can be one.
 - **The one exception is a boxed-in CORNER.** `decorateWalls` forces a corner even straight after
   a dressed cell, and on a wall with a counter or a rack along the corner's row, that corner has
   walls on two hands, the counter on the third and the dressed cell on the fourth. Walkable, it is

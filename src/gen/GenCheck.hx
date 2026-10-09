@@ -525,9 +525,19 @@ class GenCheck
 // fixture is a cubicle whatever the template meant by it. The basin run used to be centred blind
 // and skip the cell under a doorway, which split a three-basin run into two lone fixtures — a
 // washroom of four stalls and no sink, reported from area 6475 at 44,16
+//
+// A BASIN IS A TAP ON THE WALKABLE FLOOR now (gen.corp.CorpRooms.toilet), the twin being for the
+// stalls, which fill their cell; a save from before stands its basins on the twin, which still counts
   public function corpWashroomSane(ctx: GenCtx, rooms: Array<_Room>)
     {
       var fixture = Const.TILE_FLOOR_MARBLE2 + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET;
+      var taps = new Map<Int, Bool>();
+      for (s in ctx.spawns)
+        if (s.type == 'decoration' &&
+            isTap(s.row, s.col))
+          taps[s.x * 1000 + s.y] = true;
+      var isBasin = function(x: Int, y: Int) return (ctx.cells[x][y] == fixture ||
+        (ctx.cells[x][y] == Const.TILE_FLOOR_MARBLE2 && taps[x * 1000 + y]));
       for (r in rooms)
         {
           if (r.role != gen.corp.CorpTemp.ROLE_TOILET)
@@ -535,12 +545,23 @@ class GenCheck
           var basin = false;
           for (x in r.x1...r.x2)
             for (y in r.y1...r.y2 + 1)
-              if (ctx.cells[x][y] == fixture &&
-                  ctx.cells[x + 1][y] == fixture)
+              if (isBasin(x, y) &&
+                  isBasin(x + 1, y))
                 basin = true;
           ok(basin, 'corp washroom at ' + r.x1 + ',' + r.y1 + ' (' + r.w + 'x' + r.h +
             ') has no basin run: no two fixtures side by side');
         }
+    }
+
+// is this entities64 frame one of Const.CORP_TAP's?
+  static function isTap(row: Int, col: Int): Bool
+    {
+      for (t in Const.CORP_TAP)
+        if (t.row == row &&
+            col >= t.col &&
+            col < t.col + t.amount)
+          return true;
+      return false;
     }
 
 // how far the reception's centre may be from the lift door, in cells. MEASURED over 3,000 seeds

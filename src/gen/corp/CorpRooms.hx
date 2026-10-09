@@ -158,9 +158,11 @@ class CorpRooms
       ];
       for (c in corners)
         {
-          // and never the cell a doorway opens onto — see `atDoor`
+          // and never the cell a doorway opens onto — see `atDoor` — nor one something already
+          // stands on: a basin run's end is a corner, and it keeps its floor
           if (atDoor(cells, c.x, c.y) ||
-              cells[c.x][c.y] == floorID)
+              cells[c.x][c.y] == floorID ||
+              state.area.hasObjectAt(c.x, c.y))
             continue;
           cells[c.x][c.y] = floorID;
           deco = addDecorationExt(state, c.x, c.y, deco, group);
@@ -1408,12 +1410,13 @@ class CorpRooms
         }
       if (bx >= 0)
         {
+          // ON THE WALKABLE FLOOR, the tap marking the cell, which is what render.corp.CorpModel
+          // .basins reads a basin off: the vanity is a shallow unit against the wall, and on the
+          // twin its whole cell read as bare tiles the player could not step on — the fifth wall
+          // hugger to come back as that report (docs/area-gen.md on the unwalkable twin)
           GenTree.add(node, CorpBlocks.ZONE_BASIN_RUN, bx, by, bx + bn - 1, by);
           for (x in bx...bx + bn)
-            {
-              cells[x][by] = fixture;
-              addDecoration(state, x, by, Const.CORP_TAP);
-            }
+            addDecoration(state, x, by, Const.CORP_TAP);
         }
 
       // and the stalls are separate cells along the other one, every other cell so each has its
