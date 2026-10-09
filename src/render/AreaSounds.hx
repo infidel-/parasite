@@ -79,11 +79,17 @@ class AreaSounds
     }
 
 // play one one-shot of a kind at `frac` of the ambient slider and the kind's tuned gain, and record
-// the volume for sound mode. ambient and not effects: an office phone is the room, not an action
-  public static function once(game:Game, key:String, frac:Float):Void
+// the volume and the cell it came from for sound mode. ambient and not effects: an office phone is
+// the room, not an action
+  public static function once(game:Game, key:String, frac:Float, ?cell:{ col:Int, row:Int }):Void
     {
       var vol = Math.min(100, game.config.ambientVolume * frac * SoundSources.gain(key));
       SoundSources.vol[key] = vol;
+      SoundSources.pings[key] = {
+        t: haxe.Timer.stamp(),
+        col: (cell == null ? null : cell.col),
+        row: (cell == null ? null : cell.row),
+      };
       game.scene.sounds.play(key, {
         volume: vol,
         always: true,
@@ -119,6 +125,7 @@ class AreaSounds
                 }
               if (!running[i])
                 aim = 0;
+              SoundSources.resting[kind.key] = !running[i];
             }
           level[i] += (aim - level[i]) * k;
           game.scene.sounds.updateLoop(kind.key, level[i], game.config.ambientVolume);
@@ -130,15 +137,11 @@ class AreaSounds
             continue;
           var e = events[i];
           wait[i] = roll(e.gap);
-          var near = [];
-          for (s in e.cells)
-            {
-              var d = path.reach(s.col, s.row);
-              if (d < e.range)
-                near.push(d);
-            }
-          if (near.length > 0)
-            once(game, e.key, Math.pow(1 - near[Std.random(near.length)] / e.range, 2));
+          var near = [for (s in e.cells) if (path.reach(s.col, s.row) < e.range) s];
+          if (near.length == 0)
+            continue;
+          var s = near[Std.random(near.length)];
+          once(game, e.key, Math.pow(1 - path.reach(s.col, s.row) / e.range, 2), s);
         }
     }
 }

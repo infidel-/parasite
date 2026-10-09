@@ -25,7 +25,7 @@ class SoundSources
   public static var DB:Map<String, Float> = [
     'ambient-fire' => 0.0,
     'corp/rack' => -6.0,
-    'corp/elevator' => -6.0,
+    'corp/elevator' => -10.0,
     'facility/vent' => -2.0,
     'corp/vending' => -2.0,
     'corp/cctv' => -6.0,
@@ -38,10 +38,15 @@ class SoundSources
     'ambient-corp' => 0.0,
     'corp/room' => -6.0,
     'corp/cubicle' => -6.0,
-    'corp/washroom' => -6.0,
+    'corp/washroom' => -9.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];
+  // when each intermittent kind last played (haxe.Timer.stamp) and from which cell — none for a
+  // sourceless one — so render.SoundDebug can blink the source that just sounded
+  public static var pings:Map<String, { t:Float, ?col:Int, ?row:Int }> = [];
+  // the kinds with a duty cycle that are in their rest phase now (a fridge whose compressor is off)
+  public static var resting:Map<String, Bool> = [];
   // the current area's sources; cleared by render.View before each area build
   public static var sources:Array<SoundSource> = [];
   // the current area's beds: kinds that play everywhere, with no source to stand at

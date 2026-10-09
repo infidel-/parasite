@@ -30,6 +30,8 @@ class SoundDebug
   // the overlay is up (sticky, see the header), and whether street-debug was on last frame
   static var shown = load();
   static var wasEnabled = false;
+  // how long, in seconds, an intermittent's label stays lit after it plays
+  static inline var BLINK = 0.6;
   static inline var LS_KEY = 'soundDebug';
   static var _v = new Vector3();
 
@@ -158,7 +160,9 @@ class SoundDebug
           Tools.mode == 'none')
         Tools.setMode('sound');
       wasEnabled = Tools.enabled;
-      var on = shown;
+      // and never over a menu or a game window, which the 3D view keeps rendering under
+      var on = (shown &&
+        game.Game.inst.ui.state == _UIState.UISTATE_DEFAULT);
       if (layer == null)
         {
           if (!on)
@@ -191,8 +195,13 @@ class SoundDebug
           l.style.display = 'block';
           l.style.left = ((_v.x * 0.5 + 0.5) * Viewport.w) + 'px';
           l.style.top = ((-_v.y * 0.5 + 0.5) * Viewport.h) + 'px';
-          l.textContent = line(s.key);
-          l.style.color = (s.key == selected ? '#ff6' : '#7f7');
+          // an intermittent one blinks white for a moment on the source that just sounded
+          var p = SoundSources.pings[s.key];
+          var lit = (p != null &&
+            haxe.Timer.stamp() - p.t < BLINK &&
+            Lambda.exists(s.cells, function(c) return c.col == p.col && c.row == p.row));
+          l.textContent = (lit ? '\u266A ' : '') + line(s.key);
+          l.style.color = (lit ? '#fff' : (s.key == selected ? '#ff6' : '#7f7'));
         }
       // the panel: the beds on top, then the sourceless one-shots, then every kind with a source,
       // clickable
@@ -204,8 +213,14 @@ class SoundDebug
       keys = SoundSources.beds.concat(SoundSources.events).concat(keys);
       var html = '';
       for (k in keys)
-        html += '<div data-key="' + k + '" style="cursor:pointer;color:' +
-          (k == selected ? '#ff6' : '#7f7') + '">' + line(k) + '</div>';
+        {
+          var p = SoundSources.pings[k];
+          var lit = (p != null &&
+            haxe.Timer.stamp() - p.t < BLINK);
+          html += '<div data-key="' + k + '" style="cursor:pointer;color:' +
+            (lit ? '#fff' : (k == selected ? '#ff6' : '#7f7')) + '">' + (lit ? '\u266A ' : '') +
+            line(k) + '</div>';
+        }
       if (haxe.Timer.stamp() < flashUntil)
         html += '<div style="color:#6f6">✓ copied</div>';
       if (panel.innerHTML != html)
@@ -214,13 +229,14 @@ class SoundDebug
       panel.style.pointerEvents = (active() ? 'auto' : 'none');
     }
 
-// a kind's readout: short name, base dB, volume playing now
+// a kind's readout: short name, base dB, volume playing now (an intermittent's: its last play), and
+// whether a duty-cycled one is resting
   static function line(key:String):String
     {
       var db = SoundSources.DB[key];
       var v = SoundSources.vol[key];
       return SoundSources.label(key) + ' ' + fmt(db == null ? 0 : db) + ' dB ' +
-        Math.round(v == null ? 0 : v) + '%';
+        Math.round(v == null ? 0 : v) + '%' + (SoundSources.resting[key] ? ' resting' : '');
     }
 
 // the label layer and the kind panel

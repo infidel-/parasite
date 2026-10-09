@@ -54,6 +54,11 @@ class CorpSounds
                 t <= Const.TILE_CORP_WINDOWV3)
               windows.push({ col: col, row: row });
           }
+      // a washroom basin's run carries a tap decoration too: one cell, one chance to drip
+      var drips = CorpDeco.cells(area, CorpDeco.K_TAP);
+      for (b in basins)
+        if (!Lambda.exists(drips, function(c) return c.col == b.col && c.row == b.row))
+          drips.push(b);
       lifts = [];
       for (o in area.getObjects())
         if (o.type == 'elevator')
@@ -73,7 +78,7 @@ class CorpSounds
         },
       ], [
         { key: 'corp/phone', range: 4, gap: 60, cells: CorpDeco.cells(area, CorpDeco.K_PHONE) },
-        { key: 'corp/drip', range: 2, gap: 16, cells: CorpDeco.cells(area, CorpDeco.K_TAP).concat(basins) },
+        { key: 'corp/drip', range: 2, gap: 16, cells: drips },
       ]);
       bed = [for (_ in BEDS) 0.0];
       flushWait = FLUSH_GAP * Math.random();
