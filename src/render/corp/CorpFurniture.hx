@@ -350,11 +350,10 @@ class CorpFurniture
         return CorpStyle.KITCHEN_TABLE_H;
       if (m.table[c.row][c.col])
         return topH(m.surf[c.row][c.col]);
-      // a basin's tap stands ON the vanity for the same reason; a WC pan stands on the floor, and
-      // `fit` cannot tell the two apart — so this asks the same contiguity test the emitter does
-      if (m.fit[c.row][c.col] == FIT_FIXTURE &&
-          run(m, c.col, c.row))
-        return CorpStyle.VANITY_H;
+      // A BASIN CELL IS FLOOR. it used to answer VANITY_H so its tap would stand on the counter, but
+      // the tap draws nothing in a washroom and the run is WALKABLE now (gen.corp.CorpRooms.toilet):
+      // the vanity is a shallow unit against the wall, and the player stepping in front of it was
+      // lifted onto its top
       return 0.0;
     }
 
