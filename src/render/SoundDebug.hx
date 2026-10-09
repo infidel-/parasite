@@ -11,7 +11,12 @@ import render.world.WorldCtx;
 // a label or a panel row to select its kind; the wheel moves that kind's base dB (1 dB a notch,
 // Shift 0.1) in render.SoundSources.DB, and every kind changed this session goes to the clipboard as
 // paste-ready lines. the levels follow the PLAYER, who walks on the arrows while the mode is up;
-// the fly cam keeps WASD
+// the fly cam keeps WASD.
+//
+// THE OVERLAY IS STICKY, the mode is not: once Shift+S has turned it on, the rings, labels and panel
+// stay up through leaving street-debug, an area change and a reload (localStorage), and entering
+// street-debug again resumes the mode. Only Shift+S in the mode turns it off. Selecting and the
+// wheel stay the mode's, so outside street-debug the wheel is the camera's again
 class SoundDebug
 {
   static var group:Group;
@@ -22,9 +27,49 @@ class SoundDebug
   static var selected:String;
   static var changed:Map<String, Bool> = [];
   static var flashUntil = 0.0;
+  // the overlay is up (sticky, see the header), and whether street-debug was on last frame
+  static var shown = load();
+  static var wasEnabled = false;
+  static inline var LS_KEY = 'soundDebug';
   static var _v = new Vector3();
 
   public static inline function active():Bool return Tools.mode == 'sound';
+
+// the sticky flag off localStorage, which can be missing or throw (a private window, cleared data)
+  static function load():Bool
+    {
+      try
+        {
+          return Browser.window.localStorage.getItem(LS_KEY) == '1';
+        }
+      catch (e:Dynamic) // trust boundary: the browser's storage, which may refuse access
+        {
+          return false;
+        }
+    }
+
+// show or drop the overlay, remembered across reloads
+  static function show(on:Bool):Void
+    {
+      shown = on;
+      try
+        {
+          Browser.window.localStorage.setItem(LS_KEY, on ? '1' : '0');
+        }
+      catch (e:Dynamic) // trust boundary: the browser's storage, which may refuse access
+        {
+        }
+    }
+
+// hide the overlay while no 3D area renders (render.View.teardown): frame() is not called there,
+// so nothing else would take the labels down over the region map. the next frame re-shows it
+  public static function hide():Void
+    {
+      if (layer != null)
+        layer.style.display = 'none';
+      if (group != null)
+        group.visible = false;
+    }
 
 // install the key, click and wheel handlers once (render.Debug.attachTools)
   public static function attach(camera:PerspectiveCamera, dom:Dynamic):Void
@@ -41,7 +86,9 @@ class SoundDebug
             e.metaKey ||
             e.altKey)
           return;
-        Tools.setMode(active() ? 'none' : 'sound');
+        var off = active();
+        show(!off);
+        Tools.setMode(off ? 'none' : 'sound');
       });
       var downX = 0.0;
       var downY = 0.0;
@@ -100,11 +147,18 @@ class SoundDebug
       return (r < 0 ? '-' : '+') + s;
     }
 
-// per frame from render.View: hide everything out of the mode, else (re)build the rings when the
-// source list changed and re-project the labels
+// per frame from render.View: resume the mode on entering street-debug with the overlay up, hide
+// everything while it is down, else (re)build the rings when the source list changed and
+// re-project the labels
   public static function frame(scene:Scene, camera:PerspectiveCamera):Void
     {
-      var on = active();
+      if (shown &&
+          Tools.enabled &&
+          !wasEnabled &&
+          Tools.mode == 'none')
+        Tools.setMode('sound');
+      wasEnabled = Tools.enabled;
+      var on = shown;
       if (layer == null)
         {
           if (!on)
@@ -156,6 +210,8 @@ class SoundDebug
         html += '<div style="color:#6f6">✓ copied</div>';
       if (panel.innerHTML != html)
         panel.innerHTML = html;
+      // clickable only in the mode: out of street-debug it must not eat clicks meant for the HUD
+      panel.style.pointerEvents = (active() ? 'auto' : 'none');
     }
 
 // a kind's readout: short name, base dB, volume playing now
@@ -167,10 +223,11 @@ class SoundDebug
         Math.round(v == null ? 0 : v) + '%';
     }
 
-// the label layer and the kind panel, inside #view-debug
+// the label layer and the kind panel
   static function makeDom():Void
     {
-      var root = Browser.document.getElementById('view-debug');
+      // on the body and not in #view-debug, which hides with street-debug while the overlay stays
+      var root = Browser.document.body;
       layer = Browser.document.createDivElement();
       layer.style.cssText = 'position:fixed;inset:0;z-index:301;pointer-events:none;' +
         'font:10px monospace;text-shadow:0 0 2px #000,0 0 2px #000';

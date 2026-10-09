@@ -76,7 +76,8 @@ proves it inline. When a lesson invalidates an old bullet, replace it rather tha
   - What it shows:
     - a thin green ring at each source's range;
     - a label over each source: kind, base dB, and the volume its loop plays NOW on the 0-100 sound-manager scale;
-    - a kind panel top-right.
+    - a kind panel top-right: beds first, then sourceless events (the washroom's flush), then the kinds.
+  - **THE OVERLAY IS STICKY** (asked for): once on, the rings, labels and panel stay up through leaving street-debug, an area change and a reload (`localStorage` `soundDebug`), and entering street-debug again resumes the mode. Only `Shift+S` inside the mode turns it off. Out of street-debug the panel takes no clicks and the wheel is the camera's again. `View.teardown` hides it over the region map.
   - **It lets game input through**, so the player walks on the arrows or numpad while the fly cam keeps WASD. Plain S is the fly cam's "back", which is why the toggle is Shift+S. The levels follow the PLAYER (path distance, see [`sound-gen.md`](sound-gen.md)), never the camera. S itself is held back from the game, where it would shoot the target.
   - Select a kind by clicking its label (under 4 px of drag, nearest within 30 px) or its panel row. The wheel moves that kind's `SoundSources.DB` by ±1 dB, Shift ±0.1 (Windows delivers Shift+wheel as `deltaX`).
   - Every kind changed this session goes to the clipboard as `corp/vending -6.3 dB` lines, ready to paste into the `DB` table. Runtime changes are NOT persisted; a reload resets them.

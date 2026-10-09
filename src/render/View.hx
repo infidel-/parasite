@@ -812,6 +812,7 @@ class View {
     exiting = false;
     shownKey = -2;
     if (debug.on) setDebug(false);
+    SoundDebug.hide();
     disposeBuild();
     scene = null;
     composer = null;
@@ -1309,7 +1310,7 @@ class View {
       camera: camera,
       ui: uiOn,
     });
-    // sound mode's rings and labels (render.SoundDebug); hides itself out of the mode
+    // sound mode's rings and labels (render.SoundDebug); hides itself while its overlay is down
     SoundDebug.frame(scene, camera);
     // the corp street's blur goes off with the street (CorpArea.overPlate): ~0.5 ms of fullscreen
     // pass over a view that has no street in it
