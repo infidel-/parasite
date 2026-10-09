@@ -81,7 +81,7 @@ class Debug {
   static inline var BASE_LEGEND =
     '`  toggle debug off     F  fly on/off\n' +
     'FLY: WASD move   Space/Q up·down   LMB-drag look   numpad rotate   Shift slow\n' +
-    'B  inspect building   P  probe polygon   E  UV editor   T  paint emissive   R  area room';
+    'B  inspect building   P  probe polygon   E  UV editor   T  paint emissive   R  area room   S  sounds';
 
 // the lighting keys are owned by render.View and fire in every mode, so they ride under
 // whichever legend is showing rather than being listed once in one of them
@@ -147,6 +147,7 @@ class Debug {
     Inspector.attach(getScene, getCamera(), canvas, getCity, getSeed);
     PolyProbe.attach(getScene, getCamera(), canvas);
     PolyPaint.attach(getScene, getCamera(), canvas);
+    SoundDebug.attach(getCamera(), canvas);
     Tools.listen(refreshHelp);
     wireCyclers();
     attachDbg();

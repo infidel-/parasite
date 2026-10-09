@@ -211,10 +211,14 @@ class UI
     {
       // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
       // listeners) — suppress ALL game input while it is active. backtick toggles it off via
-      // render.View's own listener, so exiting still works
+      // render.View's own listener, so exiting still works. sound mode is the exception: its levels
+      // follow the player, so the player has to be able to walk while it is up — all but S, which
+      // toggles the mode and would otherwise also shoot the target
       if (game.location == LOCATION_AREA &&
           game.scene.view3d != null &&
-          game.scene.view3d.debugActive())
+          game.scene.view3d.debugActive() &&
+          (!render.SoundDebug.active() ||
+          e.code == 'KeyS'))
         return;
 
       // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
@@ -744,10 +748,11 @@ class UI
       if (cannotMove())
         return false;
 
-      // street-debug mode owns numpad/arrows for the 3D fly camera
+      // street-debug mode owns numpad/arrows for the 3D fly camera (not in sound mode: see onKey)
       if (game.location == LOCATION_AREA &&
           game.scene.view3d != null &&
-          game.scene.view3d.debugActive())
+          game.scene.view3d.debugActive() &&
+          !render.SoundDebug.active())
         return false;
 
       // area mode

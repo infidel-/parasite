@@ -557,6 +557,7 @@ class View {
     lampLights = bundle.lampLights;
     rig.setLampCorners(bundle.lampCorners); // so the follow slide bends past lamp posts too
     rig.setOffsets(a.cameraOffsets());      // the rig outlives the scene, so re-assert it per build
+    SoundSources.sources = []; // the area kind registers its own while it builds
     a.build(scene);
     debug.onRebuild(); // fresh area: reset cycler indices + counts
     tacticalGrid = new TacticalGrid(scene, game.area);
@@ -1306,6 +1307,8 @@ class View {
       camera: camera,
       ui: uiOn,
     });
+    // sound mode's rings and labels (render.SoundDebug); hides itself out of the mode
+    SoundDebug.frame(scene, camera);
     // the corp street's blur goes off with the street (CorpArea.overPlate): ~0.5 ms of fullscreen
     // pass over a view that has no street in it
     if (streetBlur != null)

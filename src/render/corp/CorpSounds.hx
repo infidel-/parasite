@@ -3,6 +3,7 @@ package render.corp;
 import game.Game;
 import objects.Door;
 import render.RenderConfig;
+import render.SoundSources;
 import render.facility.FacilityModel.Facility;
 
 // the looping machine sounds of a corp floor (sound/corp/*.mp3, see docs/sound-gen.md). each kind
@@ -66,6 +67,8 @@ class CorpSounds
         CorpSecurity.videoCells(m),
         CorpDeco.cells(area, CorpDeco.K_COOLER),
       ];
+      for (i in 0...KINDS.length)
+        SoundSources.put(KINDS[i].key, sources[i], KINDS[i].range);
       level = [for (_ in KINDS) 0.0];
       dist = [for (_ in 0...(2 * R + 1) * (2 * R + 1)) FAR];
     }

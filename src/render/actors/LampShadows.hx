@@ -90,6 +90,8 @@ class LampShadows {
 // called every frame so it silences on walk-away; lazy no-op when no barrel has ever been near
   public function driveFireLoop():Void
     {
+      render.SoundSources.put('ambient-fire', [for (b in curBarrels) { col: b.col, row: b.row }],
+        RenderConfig.FLAME.soundRangeCells);
       var range = RenderConfig.FLAME.soundRangeCells * CityConfig.CELL;
       var pa = actors.get(game.playerArea.entity);
       var frac = 0.0;
