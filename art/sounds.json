@@ -146,7 +146,7 @@
     "corp/room": {
       "area": "corp",
       "loop": true,
-      "lufs": -42,
+      "lufs": -36,
       "variants": [
         {
           "file": "corp/room-elevenlabs1.wav",
@@ -161,8 +161,8 @@
           "bakeoff": "won over sonilo/cassette (the first elevenlabs take, prompted 'quiet... faint', came back silent), 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T22:28:31",
-      "last_sig": "-42/128k/True/500",
+      "last_converted": "2026-10-09T22:37:08",
+      "last_sig": "-36/128k/True/500",
       "last_outputs": [
         "corp/room1.mp3"
       ]

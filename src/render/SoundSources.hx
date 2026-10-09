@@ -31,7 +31,7 @@ class SoundSources
     'corp/cctv' => -2.0,
     'corp/cooler' => -10.0,
     'ambient-corp' => 0.0,
-    'corp/room' => 0.0,
+    'corp/room' => -6.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];
@@ -52,9 +52,9 @@ class SoundSources
   public static function label(key:String):String
     {
       if (key == 'ambient-corp')
-        return 'corridor bed';
+        return 'bed - corridor';
       if (beds.indexOf(key) >= 0)
-        return key.substr(key.lastIndexOf('/') + 1) + ' bed';
+        return 'bed - ' + key.substr(key.lastIndexOf('/') + 1);
       var s = key.substr(key.lastIndexOf('/') + 1);
       return (StringTools.startsWith(s, 'ambient-') ? s.substr(8) : s);
     }

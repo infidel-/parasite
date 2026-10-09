@@ -86,8 +86,10 @@ Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `u
 the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-2.0 dB**,
 fire and the beds 0, the cooler -10.0. History: the machines went in at -8 (cooler -16) and were
 raised 6 dB after listening, because they sat far under the one-shots. The volume is clamped at
-100, so a gain over 0 dB is lost at a full slider: raise a bed with its bake `lufs`, not with `DB`
-(`corp/room` went -48 → **-42** LUFS this way, level with the corridor bed's -42.1). It is tuned in sound mode (`Shift+S` in street-debug, see
+100, so a gain over 0 dB is lost at a full slider: so a loop that should be tunable UP gets its headroom from the bake: `corp/room` is baked at
+**-36** LUFS and pulled to -42 (level with the corridor bed's -42.1) by `DB` **-6.0**. Reported as
+"the room bed does not change when I scroll": it sat at 0 dB and 100%, so every notch up was
+clamped. The corridor bed is a shipped file at 0 dB and can only be tuned DOWN. It is tuned in sound mode (`Shift+S` in street-debug, see
 [`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste back into `DB`.
 
 - **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
