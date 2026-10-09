@@ -19,6 +19,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | HAND-MODELLING one in Blender (the brief is a number) over the `blender` MCP | [`docs/3d-models.md`](docs/3d-models.md) § Hand-modelling in Blender over MCP — skill `3d-art` |
 | BUILDING that thing out of quads instead of a glb — a fitting, a box, a run | [`docs/3d-geometry.md`](docs/3d-geometry.md) — the per-FACE texture split, the 0..1 aspect lock, wiring and warm |
 | dressing or enhancing a 3D area | skill `3d-enhance` |
+| generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
 
 **A NEW FINDING GOES IN THE DOC, NOT HERE.** This file went 1.7 KB → 61 KB in six months and 75% of
 that was two sections that are now docs. One line here when it must fire unprompted, the numbers and

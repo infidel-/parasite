@@ -8,7 +8,8 @@ key with its variants (one wav each, written by the fal-sfx MCP). For each varia
      into the head (equal power, seam_ms) so the file wraps without a click,
   3. applies one static gain onto the entry's lufs (default_lufs else) and a -1 dBFS limiter —
      static, not loudnorm's dynamic mode, so a loop's level does not breathe,
-  4. encodes mp3 at default_bitrate to app/sound/<name><N>.mp3, N the variant's own digit,
+  4. encodes mp3 at default_bitrate to app/sound/<name><N>.mp3, N the variant's position in the
+     entry (1-9) — the wav's own <key>-<model><N> name is dropped,
   5. rewrites sounds.json with last_converted / last_sig / last_outputs.
 
 It never touches a sound it did not make: an entry whose key matches any mp3 in app/sound that is
@@ -104,10 +105,12 @@ def foreign(name, owned, out_dir):
 
 def convert(name, e, info, src_dir, out_dir):
     """bake one entry when due. returns True if built."""
-    outs = []
-    for v in e["variants"]:
-        digit = re.search(r"(\d)\.wav$", v["file"]).group(1)
-        outs.append((os.path.join(src_dir, v["file"]), f"{name}{digit}.mp3", v.get("native_loop", False)))
+    # the game key's variant digit is the take's POSITION in the entry, not the digit in its file
+    # name: the wav is <key>-<model><N>.wav, and two models' first takes are both N=1
+    outs = [
+        (os.path.join(src_dir, v["file"]), f"{name}{i + 1}.mp3", v.get("native_loop", False))
+        for i, v in enumerate(e["variants"][:9])
+    ]
     clash = foreign(name, set(e.get("last_outputs", [])), out_dir)
     if clash:
         warn(f"{name}: REFUSED, would join or overwrite sounds this pipeline did not make: {', '.join(sorted(clash))}")
@@ -166,7 +169,8 @@ def check():
         src, out = os.path.join(d, "src"), os.path.join(d, "out")
         os.makedirs(os.path.join(src, "t"))
         os.makedirs(out)
-        ff(["-f", "lavfi", "-i", "anoisesrc=d=4:c=pink:a=0.3", "-ac", "2", os.path.join(src, "t", "hum1.wav")])
+        ff(["-f", "lavfi", "-i", "anoisesrc=d=4:c=pink:a=0.3", "-ac", "2", os.path.join(src, "t", "hum-sonilo1.wav")])
+        ff(["-f", "lavfi", "-i", "anoisesrc=d=4:c=brown:a=0.3", os.path.join(src, "t", "hum-elevenlabs1.wav")])
         ff(["-f", "lavfi", "-i", "anullsrc=d=0.5", "-f", "lavfi", "-i", "sine=f=440:d=1",
             "-filter_complex", "[0][1]concat=n=2:v=0:a=1", os.path.join(src, "t", "ping1.wav")])
         ff(["-f", "lavfi", "-i", "sine=f=200:d=1", os.path.join(src, "t", "old1.wav")])
@@ -175,7 +179,7 @@ def check():
         info = {
             "default_lufs": -26, "default_bitrate": "128k", "seam_ms": 500,
             "sounds": {
-                "hum": {"area": "t", "loop": True, "variants": var("hum1.wav")},
+                "hum": {"area": "t", "loop": True, "variants": var("hum-sonilo1.wav") + var("hum-elevenlabs1.wav")},
                 "ping": {"area": "t", "loop": False, "variants": var("ping1.wav")},
                 "old": {"area": "t", "loop": False, "variants": var("old1.wav")},
             },
@@ -192,7 +196,7 @@ def check():
         assert probe_duration(os.path.join(out, "ping1.mp3")) < 1.2
         assert open(os.path.join(out, "old1.mp3"), "rb").read() == b"shipped"
         assert "last_converted" not in res["sounds"]["old"]
-        assert res["sounds"]["hum"]["last_outputs"] == ["hum1.mp3"]
+        assert res["sounds"]["hum"]["last_outputs"] == ["hum1.mp3", "hum2.mp3"]
         # a second run builds nothing: the entry now owns its output and is up to date
         warnings.clear()
         assert not convert("hum", res["sounds"]["hum"], res, src, out)

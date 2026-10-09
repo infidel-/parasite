@@ -4,5 +4,144 @@
   "default_lufs": -26,
   "default_bitrate": "128k",
   "seam_ms": 500,
-  "sounds": {}
+  "sounds": {
+    "corp-cctv": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-cctv-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "security room wall of monitors, thin high-pitched electrical whine with faint screen static hiss, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:21",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-cctv1.mp3"
+      ]
+    },
+    "corp-cooler": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-cooler-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "office water cooler, very quiet electrical hum with an occasional deep bubble glug from the water bottle, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:21",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-cooler1.mp3"
+      ]
+    },
+    "corp-elevator": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-elevator-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "elevator shaft heard through closed lift doors, deep mechanical hum, distant motor and steel cable creaks, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:59",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:22",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-elevator1.mp3"
+      ]
+    },
+    "corp-rack": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-rack-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "server room rack cabinets, steady cooling fan whir and air rush, faint hard drive seek chatter, low electrical hum, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-08T22:57",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:22",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-rack1.mp3"
+      ]
+    },
+    "corp-vending": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-vending-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "vending machine idling, steady refrigeration compressor hum with a faint fluorescent tube buzz behind the glass, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:23",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-vending1.mp3"
+      ]
+    },
+    "corp-vent": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/corp-vent-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "air ventilation duct, hollow steady draft of moving air through a metal shaft, low rumble, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:59",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-09T18:07:23",
+      "last_sig": "-26/128k/True/500",
+      "last_outputs": [
+        "corp-vent1.mp3"
+      ]
+    }
+  }
 }
