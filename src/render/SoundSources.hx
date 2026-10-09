@@ -24,11 +24,11 @@ class SoundSources
   // debug mode, which copies the changed lines to the clipboard to be pasted back here
   public static var DB:Map<String, Float> = [
     'ambient-fire' => 0.0,
-    'corp/rack' => -2.0,
+    'corp/rack' => -6.0,
     'corp/elevator' => -2.0,
     'corp/vent' => -2.0,
     'corp/vending' => -2.0,
-    'corp/cctv' => -2.0,
+    'corp/cctv' => -6.0,
     'corp/cooler' => -10.0,
     'ambient-corp' => 0.0,
     'corp/room' => -6.0,

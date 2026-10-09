@@ -83,8 +83,8 @@ the loop is created on its first audible frame, then never stopped, only set to 
 crossing the edge of a range does not restart it. `onEnterArea` zeroes every loop. The barrel fire
 (`ambient-fire`, on `effectsVolume`), the corp machines and the corp beds (on `ambientVolume`) share it.
 Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `updateLoop` multiplies in
-the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-2.0 dB**,
-fire and the beds 0, the cooler -10.0. History: the machines went in at -8 (cooler -16) and were
+the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-2.0 dB** (rack and cctv -6.0),
+fire and the corridor bed 0, the cooler -10.0. History: the machines went in at -8 (cooler -16) and were
 raised 6 dB after listening, because they sat far under the one-shots. The volume is clamped at
 100, so a gain over 0 dB is lost at a full slider: so a loop that should be tunable UP gets its headroom from the bake: `corp/room` is baked at
 **-36** LUFS and pulled to -42 (level with the corridor bed's -42.1) by `DB` **-6.0**. Reported as
@@ -122,8 +122,9 @@ clamped. The corridor bed is a shipped file at 0 dB and can only be tuned DOWN. 
 - **Ceilings:** no panning, and a wall is all or nothing (no partial muffling).
 - **Corp beds: `ambient-corp` in corridors, `corp/room` in rooms**, both driven by `CorpSounds`
   and crossfaded over 4 x `BASE_MS`.
-  - The test is `generatorInfo.getRoomAt(cell) == null`, so doorways, the lift and the reception
-    lobby count as corridor.
+  - The test is `generatorInfo.getRoomAt(cell) == null`, so doorways and the reception lobby count
+    as corridor. The lift's 9 cells are in no room rect but count as a ROOM (asked for: no corridor bed
+    in the lift).
   - Corp's `AreaInfo.ambient` is `AMBIENT_NONE`. **Never alternate `setAmbient` for this:** SM2's
     `createSound` with an id that already exists returns THE SAME object, so a fade-in and a fade-out
     fight over one sound.

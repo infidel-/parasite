@@ -180,8 +180,10 @@ class CorpSounds
           game.scene.sounds.updateLoop(KINDS[i].key, level[i], game.config.ambientVolume);
         }
       // the bed: corridor or room by the room rects the generator saved (a doorway is in none, so
-      // it is corridor), crossfaded over four BASE_MS so a doorway step is a fade, never a cut
-      var inRoom = (game.area.generatorInfo.getRoomAt(pc, pr) != null);
+      // it is corridor; the lift is in none either but counts as a room), crossfaded over four
+      // BASE_MS so a doorway step is a fade, never a cut
+      var inRoom = (game.area.generatorInfo.getRoomAt(pc, pr) != null ||
+        Lambda.exists(sources[1], function(c) return c.col == pc && c.row == pr));
       var kb = Math.min(1, dtMs / (RenderConfig.BASE_MS * 4));
       for (i in 0...BEDS.length)
         {
