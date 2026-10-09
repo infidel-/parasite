@@ -24,12 +24,12 @@ class SoundSources
   // debug mode, which copies the changed lines to the clipboard to be pasted back here
   public static var DB:Map<String, Float> = [
     'ambient-fire' => 0.0,
-    'corp/rack' => -8.0,
-    'corp/elevator' => -8.0,
-    'corp/vent' => -8.0,
-    'corp/vending' => -8.0,
-    'corp/cctv' => -8.0,
-    'corp/cooler' => -16.0,
+    'corp/rack' => -2.0,
+    'corp/elevator' => -2.0,
+    'corp/vent' => -2.0,
+    'corp/vending' => -2.0,
+    'corp/cctv' => -2.0,
+    'corp/cooler' => -10.0,
     'ambient-corp' => 0.0,
     'corp/room' => 0.0,
   ];
@@ -47,9 +47,14 @@ class SoundSources
       return (db == null ? 1.0 : Math.pow(10, db / 20));
     }
 
-// a kind's short name for labels and `go sound`: corp/vending -> vending, ambient-fire -> fire
+// a kind's short name for labels and `go sound`: corp/vending -> vending, ambient-fire -> fire;
+// a bed says it is one, since its key names the area and not the place it plays
   public static function label(key:String):String
     {
+      if (key == 'ambient-corp')
+        return 'corridor bed';
+      if (beds.indexOf(key) >= 0)
+        return key.substr(key.lastIndexOf('/') + 1) + ' bed';
       var s = key.substr(key.lastIndexOf('/') + 1);
       return (StringTools.startsWith(s, 'ambient-') ? s.substr(8) : s);
     }

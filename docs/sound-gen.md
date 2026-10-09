@@ -83,8 +83,11 @@ the loop is created on its first audible frame, then never stopped, only set to 
 crossing the edge of a range does not restart it. `onEnterArea` zeroes every loop. The barrel fire
 (`ambient-fire`, on `effectsVolume`), the corp machines and the corp beds (on `ambientVolume`) share it.
 Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `updateLoop` multiplies in
-the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-8.0 dB**,
-fire and the beds 0 (the cooler -16.0 after listening). It is tuned in sound mode (`Shift+S` in street-debug, see
+the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-2.0 dB**,
+fire and the beds 0, the cooler -10.0. History: the machines went in at -8 (cooler -16) and were
+raised 6 dB after listening, because they sat far under the one-shots. The volume is clamped at
+100, so a gain over 0 dB is lost at a full slider: raise a bed with its bake `lufs`, not with `DB`
+(`corp/room` went -48 → **-42** LUFS this way, level with the corridor bed's -42.1). It is tuned in sound mode (`Shift+S` in street-debug, see
 [`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste back into `DB`.
 
 - **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
@@ -109,7 +112,7 @@ fire and the beds 0 (the cooler -16.0 after listening). It is tuned in sound mod
     - Measured, with the old rule (full at d ≤ 1): standing on the cooler and standing next to it both
       played 100%, reported as "adjacent sounds the same as one tile away".
 - **Level:** `(1 - d/range)^2`, squared because linear amplitude barely moves near the source.
-  - Measured on the cooler (range 2, -8 dB, slider 100): on it **39.7**, next to it **10.0**, one
+  - Measured on the cooler (range 2, -8 dB at the time, slider 100): on it **39.7**, next to it **10.0**, one
     more tile **0**.
   - The level is eased over 2 x `BASE_MS` (raw dt), so a step, or a door closing, fades the sound
     rather than cutting it.

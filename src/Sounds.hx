@@ -503,7 +503,8 @@ class Sounds
           loops[key] = loop;
           loop.play();
         }
-      var vol = (frac <= 0 ? 0 : base * frac * render.SoundSources.gain(key));
+      // a gain above 0 dB can push past the manager's 100 ceiling
+      var vol = (frac <= 0 ? 0 : Math.min(100, base * frac * render.SoundSources.gain(key)));
       render.SoundSources.vol[key] = vol;
       if (loop.volume != vol)
         loop.setVolume(vol);
