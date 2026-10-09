@@ -40,8 +40,10 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
    - It writes `sounds-src/<area>/<name>-<model><N>.wav`, 16-bit 44.1k, and never overwrites a file.
    - With `register` on (the default) it appends the take to `art/sounds.json` with its prompt,
      model, endpoint, seed, measured duration and cost.
-   - For a bake-off pass `register: false` and `area: "<area>/_bakeoff/<name>"`. Keep the losers out
-     of the manifest, or `make sounds` ships them as variants.
+   - For a bake-off pass `register: false` and `area: "<area>/_bakeoff"` — FLAT, **never a
+     sub-folder per sound** (asked for: one folder to listen through). The file names already say
+     the sound and the model. Keep the losers out of the manifest, or `make sounds` ships them as
+     variants.
 2. **Adopt the winner.** Move it to `sounds-src/<area>/<name>-<model>1.wav`, add its entry to
    `art/sounds.json` (or re-run it with `register` on). **Move the losers to
    `sounds-src/unused/<area>/`, never delete them** (asked for: a runner-up is often right somewhere
