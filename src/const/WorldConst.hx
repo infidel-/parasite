@@ -281,7 +281,8 @@ class WorldConst
       // *** corpo building floor
       AREA_CORP => {
         id: AREA_CORP,
-        ambient: AMBIENT_CORP,
+        // the bed is render.corp.CorpSounds' own: ambient-corp in corridors, corp/room in rooms
+        ambient: AMBIENT_NONE,
         type: 'corp',
         name: 'Corporate HQ',
         pediaArticle: 'areaCorp',

@@ -26,7 +26,12 @@ class CorpSounds
     { key: 'corp/cooler', range: 2 },
   ];
 
+  // the two beds: the corridor's, and the quieter one inside any room
+  static var BEDS = ['ambient-corp', 'corp/room'];
+
   var game:Game;
+  // each bed's eased level, 0..1, in BEDS order
+  var bed:Array<Float>;
   // source cells per kind, in KINDS order
   var sources:Array<Array<{ col:Int, row:Int }>>;
   // the floor's doors by cell (row * area width + col): a door object never moves, only opens
@@ -70,6 +75,8 @@ class CorpSounds
       for (i in 0...KINDS.length)
         SoundSources.put(KINDS[i].key, sources[i], KINDS[i].range);
       level = [for (_ in KINDS) 0.0];
+      bed = [0.0, 0.0];
+      SoundSources.beds = BEDS.copy();
       dist = [for (_ in 0...(2 * R + 1) * (2 * R + 1)) FAR];
     }
 
@@ -171,6 +178,15 @@ class CorpSounds
           var aim = Math.pow(Math.max(0, 1 - d / range), 2);
           level[i] += (aim - level[i]) * k;
           game.scene.sounds.updateLoop(KINDS[i].key, level[i], game.config.ambientVolume);
+        }
+      // the bed: corridor or room by the room rects the generator saved (a doorway is in none, so
+      // it is corridor), crossfaded over four BASE_MS so a doorway step is a fade, never a cut
+      var inRoom = (game.area.generatorInfo.getRoomAt(pc, pr) != null);
+      var kb = Math.min(1, dtMs / (RenderConfig.BASE_MS * 4));
+      for (i in 0...BEDS.length)
+        {
+          bed[i] += ((inRoom == (i == 1) ? 1.0 : 0.0) - bed[i]) * kb;
+          game.scene.sounds.updateLoop(BEDS[i], bed[i], game.config.ambientVolume);
         }
     }
 }

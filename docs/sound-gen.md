@@ -81,7 +81,11 @@ cut at its first `.`. The bake refuses anything else.
 A looping sound tied to world objects goes through `Sounds.updateLoop(key, frac, base)`. It is lazy:
 the loop is created on its first audible frame, then never stopped, only set to volume 0 so that
 crossing the edge of a range does not restart it. `onEnterArea` zeroes every loop. The barrel fire
-(`ambient-fire`, on `effectsVolume`) and the corp machines (on `ambientVolume`) share it.
+(`ambient-fire`, on `effectsVolume`), the corp machines and the corp beds (on `ambientVolume`) share it.
+Volume is a FLOAT on the 0-100 scale (SM2's HTML5 path takes a fraction), and `updateLoop` multiplies in
+the kind's gain from **`render/SoundSources.hx` `DB`, the one tuned table**: corp machines **-8.0 dB**,
+fire and the beds 0. It is tuned in sound mode (`S` in street-debug, see
+[`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste back into `DB`.
 
 - **Corp: `render/corp/CorpSounds.hx`, driven from `CorpArea.tick`.**
 
@@ -99,12 +103,27 @@ crossing the edge of a range does not restart it. `onEnterArea` zeroes every loo
     and a diagonal may not cut past a blocked corner.
   - A cell passes sound when `area.canSeeThrough` says so AND it holds no closed `Door`.
   - **A glass door is see-through when shut**, so the door is checked on its own.
-  - A source is reached through its own cell or one step on from any cell around it. A machine is
-    usually a cell that sound does not pass, and is heard from the floor in front of it.
-- **Level:** full at one step away, falling in a straight line to silent at the range, then eased
-  over 2 x `BASE_MS` (raw dt). A step, or a door closing, fades the sound rather than cutting it.
-  Only the nearest source of each kind counts.
+  - **Distance is measured to the source's FACE.** A source cell that passes sound is 0 itself; a
+    cooler or a vending machine can be STOOD ON (both walkable). A blocked source (a rack) gives 0 to
+    the passable cells around it.
+    - Measured, with the old rule (full at d ≤ 1): standing on the cooler and standing next to it both
+      played 100%, reported as "adjacent sounds the same as one tile away".
+- **Level:** `(1 - d/range)^2`, squared because linear amplitude barely moves near the source.
+  - Measured on the cooler (range 2, -8 dB, slider 100): on it **39.7**, next to it **10.0**, one
+    more tile **0**.
+  - The level is eased over 2 x `BASE_MS` (raw dt), so a step, or a door closing, fades the sound
+    rather than cutting it.
+  - Only the nearest source of each kind counts.
 - **Ceilings:** no panning, and a wall is all or nothing (no partial muffling).
+- **Corp beds: `ambient-corp` in corridors, `corp/room` in rooms**, both driven by `CorpSounds`
+  and crossfaded over 4 x `BASE_MS`.
+  - The test is `generatorInfo.getRoomAt(cell) == null`, so doorways, the lift and the reception
+    lobby count as corridor.
+  - Corp's `AreaInfo.ambient` is `AMBIENT_NONE`. **Never alternate `setAmbient` for this:** SM2's
+    `createSound` with an id that already exists returns THE SAME object, so a fade-in and a fade-out
+    fight over one sound.
+  - Measured: stepping from a corridor into a cubicle, the corridor bed went 0.93 → 0.54 (300 ms) →
+    0.04 (1.8 s).
 
 ## The old-sound guard
 
@@ -147,7 +166,12 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
   2 channels). Decoding it as raw s16le mono made a 1 s take **2.00 s** long and an octave low.
 - **A key may not end in a digit or contain a `.`.** The game reads a trailing digit as the variant
   and cuts the name at the first dot. `generate_sfx` refuses such a name.
-- **One ElevenLabs take came back silent** (`cctv`, **-63 LUFS**). Measure before listening.
+- **ElevenLabs returns SILENCE for a prompt that asks for quiet.** It happened on 2 of 10 takes:
+  - `cctv` ("thin... faint") came back at **-63 LUFS**;
+  - the room tone ("quiet... soft... faint") at **-65.3**; re-rolled with those words dropped, it
+    came back at **-37.7**.
+
+  Loudness is the bake's job: brief the CHARACTER, never the level. Measure before listening.
 - **ffmpeg 4.4's `alimiter` auto-levels by default.** The bake passes `level=0`, or the limiter would
   push the gain back up after the static gain had set it.
 - **The seam crossfade survives the mp3 encode, but the browser loop may not.** SoundManager

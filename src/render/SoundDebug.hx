@@ -144,8 +144,8 @@ class SoundDebug
           l.textContent = line(s.key);
           l.style.color = (s.key == selected ? '#ff6' : '#7f7');
         }
-      // the panel: every kind in the area, clickable
-      var keys = [];
+      // the panel: every kind in the area, beds included, clickable
+      var keys = SoundSources.beds.copy();
       for (s in builtFor)
         if (keys.indexOf(s.key) < 0)
           keys.push(s.key);

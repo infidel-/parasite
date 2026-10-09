@@ -30,11 +30,15 @@ class SoundSources
     'corp/vending' => -8.0,
     'corp/cctv' => -8.0,
     'corp/cooler' => -8.0,
+    'ambient-corp' => 0.0,
+    'corp/room' => 0.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];
   // the current area's sources; cleared by render.View before each area build
   public static var sources:Array<SoundSource> = [];
+  // the current area's beds: kinds that play everywhere, with no source to stand at
+  public static var beds:Array<String> = [];
 
 // a kind's linear gain off its dB (1 for a kind not in the table)
   public static function gain(key:String):Float
