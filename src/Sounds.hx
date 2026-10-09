@@ -486,7 +486,7 @@ class Sounds
       var loop = loops[key];
       if (loop == null)
         {
-          // its first variant: ambient-fire.mp3 has none, corp/vent1.mp3 has one
+          // its first variant: ambient-fire.mp3 has none, facility/vent1.mp3 has one
           var v = sounds[key];
           if (frac <= 0 ||
               v == null)
@@ -572,18 +572,28 @@ class Sounds
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-      var volume = game.config.effectsVolume;
+      var volume:Float = game.config.effectsVolume;
+      var how = '';
       if (opts.x != null && opts.y != null)
         {
-          var dist = game.playerArea.distance(opts.x, opts.y);
-          var radius = game.player.vars.listenRadius;// / 2;
-          if (dist < radius)
-            volume = Std.int(volume * (radius - dist) / radius);
-          else volume = Std.int(volume * 0.1); // make silent instead?
+          // the way round within the listen radius, else muffled through the wall (SoundPath); past
+          // the radius only an alert cue — police arriving, a call, a radio — is still faintly heard
+          var path = new SoundPath(game.player.vars.listenRadius);
+          path.search(game.area, SoundPath.doorsOf(game.area), game.playerArea.x, game.playerArea.y);
+          var frac = path.level(opts.x, opts.y);
+          if (frac <= 0 &&
+              (StringTools.startsWith(key, 'ai-arrive-') ||
+              StringTools.startsWith(key, 'ai-phone') ||
+              StringTools.startsWith(key, 'ai-radio')))
+            frac = 0.1;
+          volume *= frac;
+          how = ', path ' + Math.round(path.reach(opts.x, opts.y) * 10) / 10 + ', frac ' + Math.round(frac * 1000) / 1000;
+          if (volume <= 0)
+            return;
         }
       var id = key + '|' + Std.random(4); // make it so sounds can repeat
       if (game.player != null && game.player.vars.debugSoundEnabled)
-        game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
+        game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')' + how);
       SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({
         id: id,
@@ -677,7 +687,7 @@ typedef SMSoundOptions = {
   @:optional var id: String;
   @:optional var loops: Int;
   var url: String;
-  @:optional var volume: Int; // self-explanatory. 0-100, the latter being the max.
+  @:optional var volume: Float; // 0-100, the latter being the max; the HTML5 path takes a fraction
   @:optional var onfinish: Void -> Void; // callback function for "sound finished playing"
   @:optional var whileplaying: Void -> Void; // callback during play (position update)
 /**

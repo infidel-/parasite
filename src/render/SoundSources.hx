@@ -26,7 +26,7 @@ class SoundSources
     'ambient-fire' => 0.0,
     'corp/rack' => -6.0,
     'corp/elevator' => -6.0,
-    'corp/vent' => -2.0,
+    'facility/vent' => -2.0,
     'corp/vending' => -2.0,
     'corp/cctv' => -6.0,
     'corp/cooler' => -10.0,

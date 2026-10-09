@@ -43,7 +43,7 @@ class HostBridge
 // exception log append (writes one line to session log-YYYY-MM-DD.txt)
   public static function logAppend(line: String): Void h().log.append(line);
 
-// sound asset listing: rel forward-slash .mp3 paths, area sub-folders included (corp/vent1.mp3)
+// sound asset listing: rel forward-slash .mp3 paths, area sub-folders included (facility/vent1.mp3)
   public static function listSounds(): Array<String> return h().assets.listSounds();
 
 // mod scan list (manifests resolved + validated in main)

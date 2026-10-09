@@ -120,12 +120,12 @@
         "corp/vending1.mp3"
       ]
     },
-    "corp/vent": {
-      "area": "corp",
+    "facility/vent": {
+      "area": "facility",
       "loop": true,
       "variants": [
         {
-          "file": "corp/vent-sonilo1.wav",
+          "file": "facility/vent-sonilo1.wav",
           "model": "sonilo",
           "endpoint": "sonilo/v1.1/text-to-sound-effects",
           "prompt": "air ventilation duct, hollow steady draft of moving air through a metal shaft, low rumble, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
@@ -137,10 +137,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:22:20",
+      "last_converted": "2026-10-09T23:30:06",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp/vent1.mp3"
+        "facility/vent1.mp3"
       ]
     },
     "corp/room": {
