@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sound build: sounds-src/<area>/*.wav (generated takes) -> app/sound/<name><N>.mp3.
+"""Sound build: sounds-src/<area>/*.wav (generated takes) -> app/sound/<area>/<name><N>.mp3.
 
 Driven by art/sounds.json (tracked; the wavs it points at are not). Each entry is one game sound
 key with its variants (one wav each, written by the fal-sfx MCP). For each variant it:
@@ -8,12 +8,13 @@ key with its variants (one wav each, written by the fal-sfx MCP). For each varia
      into the head (equal power, seam_ms) so the file wraps without a click,
   3. applies one static gain onto the entry's lufs (default_lufs else) and a -1 dBFS limiter —
      static, not loudnorm's dynamic mode, so a loop's level does not breathe,
-  4. encodes mp3 at default_bitrate to app/sound/<name><N>.mp3, N the variant's position in the
-     entry (1-9) — the wav's own <key>-<model><N> name is dropped,
+  4. encodes mp3 at default_bitrate to app/sound/<area>/<name><N>.mp3, N the variant's position
+     in the entry (1-9) — the wav's own <key>-<model><N> name is dropped. the game's sound key is
+     then '<area>/<name>' (the main process lists one level of area folders),
   5. rewrites sounds.json with last_converted / last_sig / last_outputs.
 
-It never touches a sound it did not make: an entry whose key matches any mp3 in app/sound that is
-not in its own last_outputs is refused (the 220 shipped sounds, a mod's, a renamed entry's), and
+It never touches a sound it did not make: an entry whose key matches any mp3 in its area folder
+that is not in its own last_outputs is refused (the 220 shipped sounds, a mod's, a renamed entry's), and
 nothing in app/sound is ever deleted. It never generates audio; that is the fal-sfx MCP.
 
 Usage: python3 tools/sounds.py [--check]   (run from repo root; `make sounds` wraps it)
@@ -28,7 +29,7 @@ from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC_DIR = os.path.join(ROOT, "sounds-src")
-# served from the electron app dir, one flat folder: the game's sound scan does not recurse
+# served from the electron app dir: shipped sounds flat, ours in one folder per area
 OUT_DIR = os.path.join(ROOT, "parasite", "resources", "app", "sound")
 INFO = os.path.join(ROOT, "art", "sounds.json")
 
@@ -97,21 +98,28 @@ def bake(src, out, loop, native, seam, lufs, bitrate):
         ff(["-i", tmp, "-af", chain, "-ac", "1", "-ar", "44100", "-c:a", "libmp3lame", "-b:a", bitrate, out])
 
 
-def foreign(name, owned, out_dir):
-    """mp3s in out_dir that the game would read as this key and that this entry did not write."""
+def foreign(area, name, owned, out_dir):
+    """mp3s in the area folder that the game would read as this key and that this entry did not write."""
     pat = re.compile(re.escape(name) + r"\d?\.mp3$")
-    return [f for f in os.listdir(out_dir) if pat.fullmatch(f) and f not in owned]
+    d = os.path.join(out_dir, area)
+    files = os.listdir(d) if os.path.isdir(d) else []
+    return [f"{area}/{f}" for f in files if pat.fullmatch(f) and f"{area}/{f}" not in owned]
 
 
 def convert(name, e, info, src_dir, out_dir):
     """bake one entry when due. returns True if built."""
     # the game key's variant digit is the take's POSITION in the entry, not the digit in its file
     # name: the wav is <key>-<model><N>.wav, and two models' first takes are both N=1
+    area = e["area"]
+    # one level, no dot: the game lists one folder deep and cuts a key at its first '.'
+    if not re.fullmatch(r"[a-z0-9_-]+", area):
+        warn(f"{name}: REFUSED, area '{area}' must be one plain folder name")
+        return False
     outs = [
-        (os.path.join(src_dir, v["file"]), f"{name}{i + 1}.mp3", v.get("native_loop", False))
+        (os.path.join(src_dir, v["file"]), f"{area}/{name}{i + 1}.mp3", v.get("native_loop", False))
         for i, v in enumerate(e["variants"][:9])
     ]
-    clash = foreign(name, set(e.get("last_outputs", [])), out_dir)
+    clash = foreign(area, name, set(e.get("last_outputs", [])), out_dir)
     if clash:
         warn(f"{name}: REFUSED, would join or overwrite sounds this pipeline did not make: {', '.join(sorted(clash))}")
         return False
@@ -132,6 +140,7 @@ def convert(name, e, info, src_dir, out_dir):
     )
     if not fresh:
         return False
+    os.makedirs(os.path.join(out_dir, area), exist_ok=True)
     for s, o, native in outs:
         bake(s, os.path.join(out_dir, o), e["loop"], native, info["seam_ms"] / 1000, lufs, info["default_bitrate"])
         print(f"  built {o}")
@@ -174,7 +183,8 @@ def check():
         ff(["-f", "lavfi", "-i", "anullsrc=d=0.5", "-f", "lavfi", "-i", "sine=f=440:d=1",
             "-filter_complex", "[0][1]concat=n=2:v=0:a=1", os.path.join(src, "t", "ping1.wav")])
         ff(["-f", "lavfi", "-i", "sine=f=200:d=1", os.path.join(src, "t", "old1.wav")])
-        open(os.path.join(out, "old1.mp3"), "wb").write(b"shipped")
+        os.makedirs(os.path.join(out, "t"))
+        open(os.path.join(out, "t", "old1.mp3"), "wb").write(b"shipped")
         var = lambda f: [{"file": f"t/{f}", "native_loop": False}]
         info = {
             "default_lufs": -26, "default_bitrate": "128k", "seam_ms": 500,
@@ -187,16 +197,16 @@ def check():
         path = os.path.join(d, "sounds.json")
         json.dump(info, open(path, "w"))
         res = run(path, src, out)
-        hum = os.path.join(out, "hum1.mp3")
+        hum = os.path.join(out, "t", "hum1.mp3")
         ch = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=channels", "-of", "csv=p=0", hum],
                             capture_output=True, text=True).stdout.strip()
         assert ch == "1", ch
         assert abs(loudness(hum) - -26) < 1, loudness(hum)
         assert abs(probe_duration(hum) - 3.5) < 0.1, probe_duration(hum)
-        assert probe_duration(os.path.join(out, "ping1.mp3")) < 1.2
-        assert open(os.path.join(out, "old1.mp3"), "rb").read() == b"shipped"
+        assert probe_duration(os.path.join(out, "t", "ping1.mp3")) < 1.2
+        assert open(os.path.join(out, "t", "old1.mp3"), "rb").read() == b"shipped"
         assert "last_converted" not in res["sounds"]["old"]
-        assert res["sounds"]["hum"]["last_outputs"] == ["hum1.mp3", "hum2.mp3"]
+        assert res["sounds"]["hum"]["last_outputs"] == ["t/hum1.mp3", "t/hum2.mp3"]
         # a second run builds nothing: the entry now owns its output and is up to date
         warnings.clear()
         assert not convert("hum", res["sounds"]["hum"], res, src, out)

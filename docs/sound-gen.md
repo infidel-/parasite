@@ -44,7 +44,8 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
      of the manifest, or `make sounds` ships them as variants.
 2. **Adopt the winner.** Move it to `sounds-src/<area>/<name>-<model>1.wav`, add its entry to
    `art/sounds.json` (or re-run it with `register` on), and delete the `_bakeoff` folder.
-3. **Bake with `make sounds`** (`tools/sounds.py`). Each variant becomes `app/sound/<name><N>.mp3`:
+3. **Bake with `make sounds`** (`tools/sounds.py`). Each variant becomes
+   `app/sound/<area>/<name><N>.mp3`, and the game key is **`<area>/<name>`** (`corp/corp-vent`):
    - N is the take's POSITION in the entry, and the `-<model>` part is dropped, so takes from two
      models can sit in one key without colliding;
    - the audio is downmixed to mono (nothing in the game pans);
@@ -57,8 +58,12 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
    mono output, target loudness within 1 LU, the seam length, two models' takes landing as variants 1
    and 2, and the old-sound refusal.
 
-The game picks the new mp3 up with no code change. `ModRegistry.mergedSoundList` scans `app/sound/`
-flat, and `Sounds.hx` groups `<key><digit>.mp3` into one key with random variants.
+The game picks the new mp3 up with no further code change. The main process's
+`MainElectron.listSoundFiles` lists `app/sound/` plus its sub-folders, as forward-slash paths. This is
+a MAIN-process handler, so a change to it needs an app restart; `make reload` does not pick it up.
+`Sounds.hx` then groups `<area>/<key><digit>.mp3` into one key with random variants, and plays it
+from `sound/<area>/<key><N>.mp3`. **`area` is one plain folder name with no dot**, because the key is
+cut at its first `.`. The bake refuses anything else.
 
 ### Manifest (`art/sounds.json`, tracked)
 
@@ -72,9 +77,10 @@ flat, and `Sounds.hx` groups `<key><digit>.mp3` into one key with random variant
 
 ## The old-sound guard
 
-**`make sounds` never touches a sound it did not make.** A key is REFUSED when any `<key>.mp3` or
-`<key><digit>.mp3` already in `app/sound/` is missing from that entry's own `last_outputs`. That covers
-the 220 shipped files, a mod's sound, and an entry renamed onto a taken key. Nothing in `app/sound/` is
+**`make sounds` never touches a sound it did not make.** Its output lives in the area folders, so it
+can never land on the 220 shipped files, which sit flat in `app/sound/`. Inside an area folder, a key
+is REFUSED when any `<key>.mp3` or `<key><digit>.mp3` already there is missing from that entry's own
+`last_outputs`. That covers a mod's sound and an entry renamed onto a taken key. Nothing in `app/sound/` is
 ever deleted. One consequence: a take dropped from an entry leaves its old mp3 behind, and the game
 still plays it. Delete it by hand.
 

@@ -22,10 +22,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:21",
+      "last_converted": "2026-10-09T18:19:42",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-cctv1.mp3"
+        "corp/corp-cctv1.mp3"
       ]
     },
     "corp-cooler": {
@@ -45,10 +45,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:21",
+      "last_converted": "2026-10-09T18:19:42",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-cooler1.mp3"
+        "corp/corp-cooler1.mp3"
       ]
     },
     "corp-elevator": {
@@ -68,10 +68,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:22",
+      "last_converted": "2026-10-09T18:19:43",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-elevator1.mp3"
+        "corp/corp-elevator1.mp3"
       ]
     },
     "corp-rack": {
@@ -91,10 +91,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:22",
+      "last_converted": "2026-10-09T18:19:43",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-rack1.mp3"
+        "corp/corp-rack1.mp3"
       ]
     },
     "corp-vending": {
@@ -114,10 +114,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:23",
+      "last_converted": "2026-10-09T18:19:43",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-vending1.mp3"
+        "corp/corp-vending1.mp3"
       ]
     },
     "corp-vent": {
@@ -137,10 +137,10 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-09T18:07:23",
+      "last_converted": "2026-10-09T18:19:44",
       "last_sig": "-26/128k/True/500",
       "last_outputs": [
-        "corp-vent1.mp3"
+        "corp/corp-vent1.mp3"
       ]
     }
   }

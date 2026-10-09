@@ -267,6 +267,26 @@ class MainElectron
       return null;
     }
 
+// every .mp3 under the sound dir as a rel forward-slash path: the shipped flat files plus the
+// per-area folders `make sounds` writes (sound/corp/corp-vent1.mp3 -> 'corp/corp-vent1.mp3')
+  static function listSoundFiles(dir: String, prefix: String): Array<String>
+    {
+      var out: Array<String> = [];
+      var entries: Array<String>;
+      try { entries = Fs.readdirSync(dir); }
+      catch (e: Dynamic) { return out; }
+      for (name in entries)
+        {
+          var rel = (prefix.length == 0) ? name : (prefix + '/' + name);
+          if (StringTools.endsWith(name, '.mp3'))
+            out.push(rel);
+          else if (name.indexOf('.') < 0 &&
+              Fs.statSync(Path.join(dir, name)).isDirectory())
+            out = out.concat(listSoundFiles(Path.join(dir, name), rel));
+        }
+      return out;
+    }
+
 // recursively walk <rootDir>/assets/ and collect rel forward-slash paths
 // for files with mod-allowed extensions (.png, .mp3). returns [] if no assets dir
   static function walkAssets(rootDir: String): Array<String>
@@ -870,14 +890,7 @@ class MainElectron
 
       // sound asset listing
       IpcMain.on('host:assets:listSounds', function(e) {
-        try
-          {
-            untyped e.returnValue = Fs.readdirSync(soundDir());
-          }
-        catch (err: Dynamic)
-          {
-            untyped e.returnValue = [];
-          }
+        untyped e.returnValue = listSoundFiles(soundDir(), '');
       });
 
       // window control
