@@ -124,31 +124,34 @@ class CorpSounds
         }
     }
 
-// path distance to a source: its own cell, or one step on from any cell around it — a machine or a
-// rack is usually a cell sound does not pass, and is heard from the floor in front of it
+// path distance to a source's FACE: its own cell when sound passes it (a cooler, a vending
+// machine — the player can stand there), else the passable cells around it (a rack is solid, and
+// the floor in front of it is as close as the player gets). either way the nearest point is 0
   function reach(pc:Int, pr:Int, s:{ col:Int, row:Int }):Float
     {
       var n = 2 * R + 1;
+      var own = passes(s.col, s.row);
       var best = FAR;
       for (dr in -1...2)
         for (dc in -1...2)
           {
             var c = s.col + dc - pc + R;
             var r = s.row + dr - pr + R;
-            if (c < 0 ||
+            if ((own && (dc != 0 || dr != 0)) ||
+                c < 0 ||
                 r < 0 ||
                 c >= n ||
                 r >= n)
               continue;
-            var d = dist[r * n + c] + (dc == 0 && dr == 0 ? 0.0 : (dc != 0 && dr != 0 ? 1.4142 : 1.0));
-            if (d < best)
-              best = d;
+            if (dist[r * n + c] < best)
+              best = dist[r * n + c];
           }
       return best;
     }
 
-// per frame: search from the player's cell, aim each kind at full when the nearest source is a
-// step away and at silence at its range, and ease the level there over two BASE_MS so a step or
+// per frame: search from the player's cell, aim each kind at full at the nearest source's face and
+// at silence at its range — squared, (1 - d/range)^2, so one step off a 3-cell source is already
+// -7 dB and not -3.5 — and ease the level there over two BASE_MS so a step or
 // a door closing fades rather than cuts. raw dtMs: like the fire loop, sound is not an animation
 // ponytail: no panning and no partial muffling, a wall is all or nothing; upgrade by keeping a
 // fraction of the level when the only path is through a closed door
@@ -162,7 +165,7 @@ class CorpSounds
           for (s in sources[i])
             d = Math.min(d, reach(pc, pr, s));
           var range = KINDS[i].range;
-          var aim = Math.max(0, Math.min(1, (range - d) / (range - 1)));
+          var aim = Math.pow(Math.max(0, 1 - d / range), 2);
           level[i] += (aim - level[i]) * k;
           game.scene.sounds.updateLoop(KINDS[i].key, level[i], game.config.ambientVolume);
         }

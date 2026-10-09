@@ -477,8 +477,9 @@ class Sounds
     }
 
 // drive one looping positional sound from the render loop: frac is 0 (silent, out of range) .. 1
-// (full) of the base volume. lazy-creates the loop on its first audible frame, then keeps it looping
-// silently so there is no start/stop thrash as the player crosses the edge of its range
+// (full) of the base volume, times the kind's tuned gain (render.SoundSources). lazy-creates the
+// loop on its first audible frame, then keeps it looping silently so there is no start/stop thrash
+// as the player crosses the edge of its range
   public function updateLoop(key: String, frac: Float, base: Int)
     {
 #if !free
@@ -489,7 +490,10 @@ class Sounds
           var v = sounds[key];
           if (frac <= 0 ||
               v == null)
-            return;
+            {
+              render.SoundSources.vol[key] = 0;
+              return;
+            }
           loop = SoundManager.createSound({
             id: key,
             url: AssetPath.resolve('sound/' + key + (v[0] >= 0 ? '' + v[0] : '') + '.mp3'),
@@ -499,7 +503,8 @@ class Sounds
           loops[key] = loop;
           loop.play();
         }
-      var vol = frac <= 0 ? 0 : Std.int(base * frac);
+      var vol = (frac <= 0 ? 0 : base * frac * render.SoundSources.gain(key));
+      render.SoundSources.vol[key] = vol;
       if (loop.volume != vol)
         loop.setVolume(vol);
 #end
@@ -700,11 +705,11 @@ typedef SMSoundOptions = {
 typedef SMSound = {
   var id: String;
   var url: String;
-  var volume(default, null): Int;
+  var volume(default, null): Float; // 0-100; the HTML5 path takes a fraction, so no rounding
   var paused(default, null): Bool;
   var muted(default, null): Bool;
   var playState: Int; // 0 - stopped, 1 - playing
-  public function setVolume(vol: Int): Void;
+  public function setVolume(vol: Float): Void;
   public function stop(): Void;
   public function play(): Void;
   public function mute(): Void;
