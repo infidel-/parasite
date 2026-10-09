@@ -337,7 +337,6 @@ class Actors {
       // the grown props' core + fireflies. its own pools, so it does not have to sit inside the
       // sprites/beams/sparks frame below — it is here for locality with the other world-anchored FX
       propFX.update(dtMs);
-      lampShadows.driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();

@@ -11,7 +11,8 @@ class WorldConst
       // *** wilderness around city
       AREA_GROUND => {
         id: AREA_GROUND,
-        ambient: AMBIENT_WILDERNESS,
+        // the beds are render.wild.WildSounds' own, per terrain band and on the highway
+        ambient: AMBIENT_NONE,
         type: 'wilderness',
         name: 'Uninhabited area',
         pediaArticle: 'areaUninhabited',
@@ -39,7 +40,8 @@ class WorldConst
       // *** low-class, low population - outskirts and suburbs
       AREA_CITY_LOW => {
         id: AREA_CITY_LOW,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Low-density city area',
         pediaArticle: 'areaCity',
@@ -71,7 +73,8 @@ class WorldConst
       // *** mid-class, mid population - residential districts
       AREA_CITY_MEDIUM => {
         id: AREA_CITY_MEDIUM,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Medium-density city area',
         pediaArticle: 'areaCity',
@@ -104,7 +107,8 @@ class WorldConst
       // *** high-class, high population - downtown and commercial district
       AREA_CITY_HIGH => {
         id: AREA_CITY_HIGH,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Downtown district',
         pediaArticle: 'areaCity',

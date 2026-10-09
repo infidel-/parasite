@@ -27,6 +27,8 @@ class CityArea implements Area3D
   var coneFlick:render.LightCone.ConeSet;                 // flickering lamps' cones, repacked per frame
   var lampMask:Array<Bool>;                               // draw mask for lampProp — first entries are the flickering lamps
   var lampMaskDead:Array<Bool>;                           // its complement for lampPropDead (same posts, dark material)
+  var flickCells:Array<{ col:Int, row:Int }>;            // the flickering lamps' cells, in coneFlick order
+  var sounds:CitySounds;                                  // the tier's beds, the street's loops and one-shots
 
   public function new(game:Game, city:City, seed:Int)
     {
@@ -49,6 +51,7 @@ class CityArea implements Area3D
       coneFlick = bundle.coneFlick;
       lampMask = bundle.lampMask;
       lampMaskDead = bundle.lampMaskDead;
+      flickCells = bundle.flickCells;
       return bundle;
     }
 
@@ -66,6 +69,7 @@ class CityArea implements Area3D
       World.build(scene, cityModel, seed, style);
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
+      sounds = new CitySounds(game, cityModel, flickCells, coneFlick);
     }
 
 // per-frame world tick: moon shadow box, window switches, occlusion fade, chunk cull and the
@@ -79,6 +83,7 @@ class CityArea implements Area3D
           occlusion.update(opts.camPos, opts.player, null, false, opts.dtMs);
           return;
         }
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       // keep the moon's shadow box centered on the player so building/lamp shadows track the view
       SceneSetup.fitMoon(moon, opts.player);
       // someone in the city flips a light: run the window switch countdowns BEFORE the occlusion

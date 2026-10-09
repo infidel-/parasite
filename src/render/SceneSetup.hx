@@ -35,6 +35,7 @@ typedef SceneBundle = {
   coneFlick:render.LightCone.ConeSet, // the flickering lamps' cone batch, repacked per frame so a cone goes dark with its bulb
   lampMask:Array<Bool>,     // per-instance draw mask for lampProp — entries 0..n-1 are the flickering lamps, cleared while one is out
   lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
+  ?flickCells:Array<{ col:Int, row:Int }>, // city only: the flickering lamps' cells, in coneFlick order (render.CitySounds' buzz)
   wallGlow:render.LightCone.ConeSet, // sewer only (null in a city): the wall lamps' emissive quads, repacked
                                      // like coneFlick so a fixture stops glowing AND blooming while its bulb is out
   propLights:render.particles.PropLights, // sewer only (null in a city): fixed point-light pool for the
@@ -190,6 +191,7 @@ class SceneSetup {
     var placements:Array<Models.PropPlace> = [];
     var dead:Array<Models.PropPlace> = [];
     var flickPlace:Array<Models.PropPlace> = []; // posts of the flickering lamps — in BOTH batches, see below
+    var flickCells:Array<{ col:Int, row:Int }> = []; // and their cells, for the buzz
     // cones are split by fate: the steady ones are built once and never touched, the flickering ones
     // keep their phases so LightCone.pulse can drop a cone whose bulb is in its dark stretch
     var bulbs:Array<{ x:Float, z:Float }> = [];
@@ -216,6 +218,7 @@ class SceneSetup {
             {
               flickPlace.push({ x: px, z: pz, yaw: yaw });
               bulbsFlick.push({ x: bx, z: bz });
+              flickCells.push({ col: lamp.col, row: lamp.row });
               phasesFlick.push(phase);
             }
           else
@@ -297,6 +300,7 @@ class SceneSetup {
       coneFlick: coneFlick,
       lampMask: lampMask,
       lampMaskDead: lampMaskDead,
+      flickCells: flickCells,
       wallGlow: null, // no wall-mounted fixtures on a street
       // no object prop in a city lights, and an unused slot is not free: three unrolls the point-light
       // loop into every lit material, so a pool here would cost the street frame a full light

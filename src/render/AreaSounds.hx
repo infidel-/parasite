@@ -13,6 +13,9 @@ typedef AreaLoop = {
   // seconds it runs and rests, each roll 0.5-1.5x of these: a fridge's compressor cuts in and out.
   // omitted, it never rests
   ?duty:{ on:Float, off:Float },
+  // is source i sounding right now: a flickering lamp's buzz stops while its bulb is out. omitted,
+  // every source always is
+  ?gate:Int->Bool,
 };
 
 // one intermittent kind: a one-shot played every `gap` seconds or so (each roll 0.5-1.5x) from a
@@ -115,8 +118,10 @@ class AreaSounds
         {
           var kind = kinds[i];
           var d = 1e9;
-          for (s in kind.cells)
-            d = Math.min(d, path.reach(s.col, s.row));
+          for (si in 0...kind.cells.length)
+            if (kind.gate == null ||
+                kind.gate(si))
+              d = Math.min(d, path.reach(kind.cells[si].col, kind.cells[si].row));
           var aim = Math.pow(Math.max(0, 1 - d / kind.range), 2);
           if (kind.duty != null)
             {

@@ -30,6 +30,7 @@ class WildArea implements Area3D
   var objProps:Array<render.world.ObjModels.PropBatch>;
   var sceneRef:Scene;                        // held for refreshObjects, which rebuilds those batches
   var tactical = false;                      // tactical view up: the props draw their outline shells
+  var sounds:WildSounds;                     // the band's bed, the highway's, the night one-shots
 
   public function new(game:Game, model:Wild)
     {
@@ -104,6 +105,7 @@ class WildArea implements Area3D
       // the scene root by Chunks' own size guard, which is right — they are frustum-culled per
       // INSTANCE in tick() instead
       chunks.build(scene, pre);
+      sounds = new WildSounds(game, model);
       // the vision mask's texture and world->uv transform. the builders above patched their own
       // materials as they made them; this only has to exist before the first sample.
       //
@@ -184,6 +186,7 @@ class WildArea implements Area3D
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)
         return;
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       SceneSetup.fitMoon(moon, opts.player);
       // what the player cannot see, off the SMOOTHED position and not opts.playerCol/Row — see
       // VisionMask's own note on why the logical cell is the wrong origin. out here the sweep is

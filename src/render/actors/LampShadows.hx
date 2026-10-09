@@ -85,32 +85,6 @@ class LampShadows {
           }
     }
 
-// drive the looping fire sound off the nearest visible barrel: world distance from the player's
-// smooth pose to the closest barrel, mapped to 0 (>= soundRangeCells away) .. 1 (on top of it).
-// called every frame so it silences on walk-away; lazy no-op when no barrel has ever been near
-  public function driveFireLoop():Void
-    {
-      render.SoundSources.put('ambient-fire', [for (b in curBarrels) { col: b.col, row: b.row }],
-        RenderConfig.FLAME.soundRangeCells);
-      var range = RenderConfig.FLAME.soundRangeCells * CityConfig.CELL;
-      var pa = actors.get(game.playerArea.entity);
-      var frac = 0.0;
-      if (pa != null)
-        for (b in curBarrels)
-          {
-            var dx = pa.x - b.x;
-            var dz = pa.z - b.z;
-            var d = Math.sqrt(dx * dx + dz * dz);
-            if (d < range)
-              {
-                var f = 1 - d / range;
-                if (f > frac)
-                  frac = f;
-              }
-          }
-      game.scene.sounds.updateLoop('ambient-fire', frac, game.config.effectsVolume);
-    }
-
 // warm emissive intensity a nearby barrel throws onto an actor at pose a: strongest barrel within
 // light range, pulsing with the flicker, fading to 0 at the range edge. 0 when none in range
   public function litAt(a:Actor):Float
