@@ -410,6 +410,11 @@ class Sounds
           ambient.state = SOUND_STOPPED;
         }
 
+      // an area with no bed of its own drives its own (render.corp.CorpSounds): fade out and stop
+      // here, or the fallback below starts the city's street under the tower
+      if (st == AMBIENT_NONE)
+        return;
+
       // start playing next with fade in
       var key = null;
       if (st == AMBIENT_CITY)
