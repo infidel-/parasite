@@ -77,7 +77,7 @@ class CorpSounds
           duty: { on: 40, off: 60 },
         },
       ], [
-        { key: 'corp/phone', range: 4, gap: 60, cells: CorpDeco.cells(area, CorpDeco.K_PHONE) },
+        { key: 'corp/phone', range: 4, gap: 60, cells: CorpClutter.phoneCells(m, area) },
         { key: 'corp/drip', range: 2, gap: 16, cells: drips },
       ]);
       bed = [for (_ in BEDS) 0.0];

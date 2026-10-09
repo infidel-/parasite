@@ -37,6 +37,10 @@ import render.world.VisionMask;
 // already deliberately copied in four places rather than shared.
 class CorpClutter
 {
+  // the desk phones' boxes by cell (CorpExec.key), set by `deskPhones` for `build`'s own pass, so
+  // `cell` keeps its decals off them
+  static var phoneSlots:Map<Int, ClutterSlot> = new Map();
+
 // every decal on the plate as TWO merged meshes, one per sheet. returns how many landed — a merged
 // mesh has no instance count and this is the only handle on the family
   public static function build(scene:Scene, m:Facility, ?area:game.AreaGame):{ n:Int,
@@ -47,6 +51,8 @@ class CorpClutter
       // the exec office's own PACK16, and what its desks already carry — see CorpExec.claims
       var exec = MeshBufTools.make();
       var execClaims = CorpExec.claims(m, area);
+      // the desk phones, ahead of everything that rolls: their boxes go on the claims below
+      var phones = deskPhones(m, area, execClaims);
       // and the staff kitchen's, off its counters and its dining tables — see CorpKitchen.tops
       var kitchen = MeshBufTools.make();
       // and the handful of cells that are PROPS rather than decals — see CorpStyle.CLUTTER_PROP_OF
@@ -118,6 +124,9 @@ class CorpClutter
         }
       for (p in rec.plants)
         props[CorpStyle.CLUTTER_PLANT].push(p);
+      // and the desk phones join the counter's, one batch for both
+      for (p in phones)
+        rec.phones.push(p);
       add(scene, desk, CorpStyle.CLUTTER_DESK_TEX);
       add(scene, util, CorpStyle.CLUTTER_UTIL_TEX);
       add(scene, exec, CorpStyle.CLUTTER_EXEC_TEX);
@@ -168,6 +177,87 @@ class CorpClutter
         s == Surf.SERVER;
     }
 
+// the worktop cells the generator dealt a desk phone on (Const.CORP_TABLE_PHONE, CorpDeco.K_PHONE). the
+// decoration draws nothing of its own, so these are where `deskPhones` stands one and where
+// render.corp.CorpSounds rings one
+  public static function phoneCells(m:Facility, area:game.AreaGame):Array<{ col:Int, row:Int }>
+    {
+      return [for (c in CorpDeco.cells(area, CorpDeco.K_PHONE))
+        if (FacilityModel.inside(m, c.col, c.row) &&
+            m.table[c.row][c.col] &&
+            !CorpKitchen.cell(m, c.col, c.row))
+          c];
+    }
+
+// A DESK PHONE ON EVERY CELL THE GENERATOR DEALT ONE, the reception counter's own glb at the
+// worktop's top: the phone RINGS (render.corp.CorpSounds), and a ring from a desk with nothing on it
+// was reported. Placed before the scatter rolls, clear of the workstation, and turned away from the
+// screen to face whoever sits there. Its box goes on the cell's claims — `execClaims` for an exec
+// desk, `phoneSlots` for the rest — so no decal lands under it
+  static function deskPhones(m:Facility, area:game.AreaGame,
+      execClaims:Map<Int, Array<ClutterSlot>>):Array<Models.PropPlace>
+    {
+      phoneSlots = new Map();
+      var out = [];
+      var rad = CorpStyle.REC_PHONE_R * CorpStyle.REC_PHONE_H;
+      var span = CityConfig.CELL / 2 - CorpStyle.FIT_INSET;
+      var r = span - rad - CorpStyle.CLUTTER_INSET;
+      for (p in phoneCells(m, area))
+        {
+          var k = CorpExec.key(m, p.col, p.row);
+          var exec = (m.surf[p.row][p.col] == Surf.EXEC);
+          if (exec &&
+              !execClaims.exists(k))
+            execClaims.set(k, []);
+          var spots = (exec ? execClaims.get(k) : CorpProps.claims(m, p.col, p.row));
+          var c = CityConfig.cellToWorld(p.col, p.row);
+          var g = FacilityModel.mix((p.col * 1103515245) ^ (p.row * 12345) ^ 0x2f6b);
+          // away from the first thing claimed, which is the screen, give or take a third of a radian
+          var yaw = (spots.length > 0 ?
+            Math.atan2(c.x - spots[0].x, c.z - spots[0].z) :
+            (g % 628) * 0.01) + ((g >>> 10) % 70 - 35) * 0.01;
+          var box = ClutterSlotTools.turned(c.x, c.z, 2 * rad, 2 * rad, yaw);
+          var ok = false;
+          for (t in 0...CorpStyle.CLUTTER_TRIES)
+            {
+              var hh = FacilityModel.mix(g ^ ((t + 1) * 83492791));
+              box.x = c.x + (((hh % 1000) / 1000) * 2 - 1) * r;
+              box.z = c.z + ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * r;
+              ok = !hits(spots, box);
+              if (ok)
+                break;
+            }
+          if (!ok)
+            continue;
+          var y = (exec ? CorpStyle.EXEC_DESK_H : CorpFurniture.topH(m.surf[p.row][p.col]));
+          out.push({
+            x: box.x,
+            z: box.z,
+            yaw: yaw,
+            y: y,
+          });
+          FacilityDetail.deck({
+            cx: box.x,
+            cz: box.z,
+            hw: rad,
+            hd: rad,
+            yaw: yaw,
+            y: y,
+            plate: {
+              x0: c.x - span,
+              x1: c.x + span,
+              z0: c.z - span,
+              z1: c.z + span,
+            },
+          });
+          if (exec)
+            spots.push(box);
+          else
+            phoneSlots.set(k, box);
+        }
+      return out;
+    }
+
 // one worktop cell's worth. returns how many actually landed, which is not the rolled count: an
 // item that cannot find room in CLUTTER_TRIES attempts is dropped rather than pushed somewhere it
 // does not fit.
@@ -187,6 +277,8 @@ class CorpClutter
       // neither pass has to run before the other — and one oracle is what keeps a document tray
       // from landing under the screen
       var spots = CorpProps.claims(m, col, row);
+      if (phoneSlots.exists(CorpExec.key(m, col, row)))
+        spots.push(phoneSlots.get(CorpExec.key(m, col, row)));
       var c = CityConfig.cellToWorld(col, row);
       // the worktop is the cell pulled in by CorpFurniture's own inset, and a corp run is never
       // thinned the way a compound bench is (CorpFurniture.worktop fills its cell), so the rect is

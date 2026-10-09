@@ -1244,3 +1244,25 @@ captures of a 450ms flash (and one of a 4s one) showed nothing, which looked lik
 path until a 30s stretch (`RenderConfig.BREAKING.ms` patched live, it is not inlined) showed it.
 Verify a one-shot effect by sampling `actors.get(e).fx` per rAF, or stretch it, never by a single
 screenshot.
+
+## Corp desk phones: the reception phone glb on every `CORP_TABLE_PHONE` cell (`CorpClutter.deskPhones`)
+
+The generator deals `Const.CORP_TABLE_PHONE` onto exec, small-office, boardroom and reception wall
+desks, and nothing drew it: rows 23-39 are suppressed (`CorpDeco.draws`) and the desk clutter sheet's
+own phone lands at random. Invisible until the phone started RINGING (`corp/phone`,
+render.corp.CorpSounds), reported as "phone 5% on the exec desk, I see no phone there".
+- `CorpDeco.K_PHONE` (row 25, cols 6-9). `CorpClutter.phoneCells` = those decorations on a worktop
+  (`m.table`) that is not a kitchen counter; the sound rings off the same list, so every ring has a
+  phone and every phone can ring.
+- `deskPhones` runs before any decal rolls: the cell's claims (`CorpProps.claims`, or
+  `CorpExec.claims` on an exec desk), rejection-sampled like a decal, footprint
+  `REC_PHONE_R x REC_PHONE_H` (0.46 radius), top = `CorpFurniture.topH(surf)` or `EXEC_DESK_H`.
+  Yaw faces AWAY from the first claim (the screen), so it turns to whoever sits there, ±0.35 rad.
+- Its box joins the claims (`execClaims`, else `phoneSlots` read by `cell`), so no decal lands under
+  it; a `FacilityDetail.deck` pool for the contact shadow, like the promoted desk props.
+- **Into `rec.phones`: the reception counter's batch.** Same glb, same height, so **+0 draw calls**
+  (77-78 dc before and after on the same floor), and the path was already warmed (`CorpWarm`).
+
+Measured on a regenerated floor: 6 markers, 6 phones drawn (1 boardroom, 4 exec, 1 office). Trap:
+a phone on a cell with no claims (a boardroom slab) has no screen to turn from, so it takes the cell
+hash's yaw; that is right for a shared table and would be wrong on a desk.
