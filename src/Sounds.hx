@@ -44,13 +44,7 @@ class Sounds
       Browser.window.setInterval(function () {
         if (!initDone)
           return;
-        if (game.ui.state == UISTATE_MAINMENU ||
-            game.ui.state == UISTATE_NEWGAME ||
-            game.ui.state == UISTATE_OPTIONS ||
-            game.ui.state == UISTATE_PEDIA ||
-            game.ui.state == UISTATE_PRESETS ||
-            game.ui.state == UISTATE_MODS ||
-            game.ui.state == UISTATE_SAVES)
+        if (inMenu())
           {
             if (menuMusic.playState == 0)
               menuMusic.play();
@@ -143,6 +137,18 @@ class Sounds
         useHTML5Audio: true,
         onready: init,
       });
+    }
+
+// is a menu up over the game: the menu music plays and the world's loops are muted
+  public function inMenu():Bool
+    {
+      return game.ui.state == UISTATE_MAINMENU ||
+        game.ui.state == UISTATE_NEWGAME ||
+        game.ui.state == UISTATE_OPTIONS ||
+        game.ui.state == UISTATE_PEDIA ||
+        game.ui.state == UISTATE_PRESETS ||
+        game.ui.state == UISTATE_MODS ||
+        game.ui.state == UISTATE_SAVES;
     }
 
 // init sounds and music

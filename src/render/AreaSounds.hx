@@ -80,9 +80,12 @@ class AreaSounds
 
 // play one one-shot of a kind at `frac` of the ambient slider and the kind's tuned gain, and record
 // the volume and the cell it came from for sound mode. ambient and not effects: an office phone is
-// the room, not an action
+// the room, not an action. nothing under a menu: the area still ticks there, and the menu mutes
+// only the loops
   public static function once(game:Game, key:String, frac:Float, ?cell:{ col:Int, row:Int }):Void
     {
+      if (game.scene.sounds.inMenu())
+        return;
       var vol = Math.min(100, game.config.ambientVolume * frac * SoundSources.gain(key));
       SoundSources.vol[key] = vol;
       SoundSources.pings[key] = {
