@@ -169,7 +169,9 @@ class WorldConst
       // *** facility
       AREA_FACILITY => {
         id: AREA_FACILITY,
-        ambient: AMBIENT_FACILITY,
+        // the bed is render.facility.FacilitySounds' own: ambient-facility in corridors, a bed per
+        // room kind and two outdoors
+        ambient: AMBIENT_NONE,
         type: 'facility',
         name: 'Facility',
         pediaArticle: 'areaLab',

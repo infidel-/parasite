@@ -39,6 +39,18 @@ class SoundSources
     'corp/room' => -6.0,
     'corp/cubicle' => -6.0,
     'corp/washroom' => -9.0,
+    'facility/machine' => 0.0,
+    'facility/generator' => 0.0,
+    'facility/drain' => -10.0,
+    'facility/pa' => -10.0,
+    'facility/birds' => -10.0,
+    'facility/car' => -10.0,
+    'ambient-facility' => 0.0,
+    'facility/lab' => -4.0,
+    'facility/washroom' => -4.0,
+    'facility/hangar' => -4.0,
+    'facility/park' => -4.0,
+    'facility/exterior' => -4.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];

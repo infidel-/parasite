@@ -115,7 +115,7 @@ class FacilityArea implements Area3D
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
-  var loops:render.AreaSounds;                  // the vents' air, faded by path distance
+  var sounds:FacilitySounds;                    // the machines, drips and beds, by path distance
   // objects that draw as a real glb instead of their sprite (the alien ship set piece). NOT in
   // `green`: that array is index-aligned with GREEN plus EXTRA and culled on one radius, while a
   // PropBatch is a solid/ghost/hull triple with its own masks and its own ghost ease
@@ -373,15 +373,8 @@ class FacilityArea implements Area3D
       for (p in FacilityEntry.build(scene, model))
         green.push(p);
       doors = FacilityDoors.build(scene, model, game.area);
-      // the vents' loop: an objects.Vent stands on a WALL cell, so it is heard from the floor
-      // either side of it
-      loops = new render.AreaSounds(game, [
-        {
-          key: 'facility/vent',
-          range: 3,
-          cells: [for (o in game.area.getObjects()) if (o.type == 'vent') { col: o.x, row: o.y }],
-        },
-      ]);
+      // the compound's sounds: after the sinks, which they read their drips off
+      sounds = new FacilitySounds(game, model);
       // and the objects that draw as real geometry rather than as their atlas sprite: the alien
       // ship on the hangar's study podium, its console and its slots. AFTER the doors and before the
       // lights, which is where it belongs rather than being load-bearing — the batches read nothing
@@ -779,7 +772,7 @@ class FacilityArea implements Area3D
       FacilityRig.tick(rig, opts.dtMs);
       if (opts.outro)
         return;
-      loops.tick(opts.playerCol, opts.playerRow, opts.dtMs);
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       // recompute what should be revealed only when the player's CELL moves or a sightline changes.
       // area.visRev is what makes the second half work: opening a door does not move the player but
       // it does open a view into a room
