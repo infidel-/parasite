@@ -8,19 +8,20 @@ import render.RenderConfig;
 import render.SoundSources;
 import render.facility.FacilityModel;
 
-// the sounds of a military base (sound/military/*.mp3, see docs/sound-gen.md): the tower lamps'
-// buzz, the wind in the fence, an engine idling in the motor pool, a radio left on by the safe and
-// the hangar's generator, faded by path distance in render.AreaSounds; the beds crossfaded by where
-// the player stands, the margin outside the fence wearing its terrain band's own wild bed; and the
-// far one-shots no source owns — a jet, a helicopter, the range — heard loudest in the open.
-// render.facility.FacilitySounds trimmed to what a base has, and played INSTEAD of it
+// the sounds of a military base (sound/military/*.mp3, see docs/sound-gen.md): the barracks vents,
+// the tower lamps' buzz, the wind in the fence, an engine idling in the motor pool, a radio left on
+// by the safe and the hangar's generator, faded by path distance in render.AreaSounds, and a truck
+// passing on the road; the beds crossfaded by where the player stands, the margin outside the fence
+// wearing its terrain band's own wild bed; and the far one-shots no source owns — a jet, a
+// helicopter, the range — heard loudest in the open. render.facility.FacilitySounds trimmed to what
+// a base has, in its own sounds, and played INSTEAD of it
 class MilitarySounds
 {
   // the beds: a building's, the hangar's shed, the yard inside the fence, and the margin outside it
   // (the band's, appended in `new`)
   static var BEDS = [
     'military/indoor',
-    'facility/hangar',
+    'military/hangar',
     'military/yard',
   ];
   static inline var BED_HANGAR = 1;
@@ -69,11 +70,11 @@ class MilitarySounds
           }
       loops = new AreaSounds(game, [
         {
-          key: 'facility/vent',
+          key: 'military/vent',
           range: 3,
           cells: [for (o in area.getObjects()) if (o.type == 'vent') { col: o.x, row: o.y }],
         },
-        { key: 'facility/generator', range: 6, cells: generators },
+        { key: 'military/generator', range: 6, cells: generators },
         { key: 'military/floodlight', range: 4, cells: towers },
         { key: 'military/fence', range: 2, cells: fence },
         // ponytail: every humvee idles, one engine sound however many are parked
@@ -84,7 +85,7 @@ class MilitarySounds
           cells: [for (o in area.getObjects()) if (o.type == 'safe') { col: o.x, row: o.y }],
         },
       ], [
-        { key: 'facility/car', range: 8, gap: 45, cells: road },
+        { key: 'military/truck', range: 8, gap: 45, cells: road },
       ]);
       var band = switch (Terrain.bandAtArea(game.region.mapSeed, area.x, area.y))
         {

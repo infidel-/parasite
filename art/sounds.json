@@ -2132,6 +2132,138 @@
         "military/range1.mp3",
         "military/range2.mp3"
       ]
+    },
+    "military/hangar": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/hangar-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a large military aircraft hangar at night, cavernous reverberant steel shed room tone, wind pressing on the big bay doors, faint ticking of a cooling aircraft, a distant generator hum through the walls, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/hangar-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "inside a large military aircraft hangar at night, cavernous reverberant steel shed room tone, wind pressing on the big bay doors, faint ticking of a cooling aircraft, a distant generator hum through the walls, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T23:58:00",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/hangar1.mp3",
+        "military/hangar2.mp3"
+      ]
+    },
+    "military/generator": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/generator-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a trailer-mounted military diesel field generator running outdoors at night, heavy steady engine drone, rattling sheet-metal housing, exhaust chug, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:01",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/generator1.mp3"
+      ]
+    },
+    "military/vent": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/vent-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "old military barracks ventilation grille at night, steady low airflow through a dented sheet-steel duct, faint metallic rattle of a loose louvre, hollow concrete building, constant, no events, close-miked, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/vent-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "old military barracks ventilation grille at night, steady low airflow through a dented sheet-steel duct, faint metallic rattle of a loose louvre, hollow concrete building, constant, no events, close-miked, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:02",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/vent1.mp3",
+        "military/vent2.mp3"
+      ]
+    },
+    "military/truck": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/truck-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single heavy military cargo truck driving past on a road at a distance at night, diesel engine growl and gear whine passing by left to right, outdoors beside a fenced army base in the countryside, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/truck-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single heavy military cargo truck driving past on a road at a distance at night, diesel engine growl and gear whine passing by left to right, outdoors beside a fenced army base in the countryside, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.0126,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:02",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/truck1.mp3",
+        "military/truck2.mp3"
+      ]
     }
   }
 }

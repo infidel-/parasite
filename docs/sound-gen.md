@@ -226,14 +226,16 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
 | `military/fence` | `TILE_MIL_FENCE`, `TILE_MIL_FENCE_TORN` (the whole ring) | loop | 2 |
 | `military/idle` | `TILE_MIL_HUMVEE` origins (every parked humvee) | loop | 5 |
 | `military/radio` | the `safe` object (one per base, in the HQ armory) | loop, 2 variants | 4 |
-| `facility/generator`, `facility/vent` (reused) | `FIT_GENERATOR` in the hangar, `vent` objects | loop | 6, 3 |
-| `facility/car` (reused) | `Surf.ROAD` past the gate | event, gap 45 s | 8 |
+| `military/generator` | `FIT_GENERATOR` in the hangar | loop, gain -9 (the facility's -3 picked as too loud) | 6 |
+| `military/vent` | `vent` objects | loop, 2 variants | 3 |
+| `military/truck` | `Surf.ROAD` past the gate | event, 2 variants, gap 45 s | 8 |
 | `military/jet`, `city/helicopter` (reused), `military/range` | none: far one-shots, gaps 150 / 200 / 120 s | event, 2 variants each (heli: city's) | — |
 
-- **Beds**: `military/indoor` (any roof that is not the hangar), `facility/hangar` (reused),
+- **Beds**: `military/indoor` (any roof that is not the hangar), `military/hangar` (2 variants),
   `military/yard` (open ground inside the fence), and the margin outside the fence wears its terrain
   band's own wild bed (`wild/forest`, `wild/plains`, `wild/mountain`), split by
-  `AreaGame.isOutsideBase`. Indoor and yard are baked at -36, like every bed.
+  `AreaGame.isOutsideBase`. Indoor, hangar and yard are baked at -36, like every bed.
+- The helicopter is the only key still borrowed (`city/helicopter`).
 - **A far one-shot is loudest in the open**: full on the yard and margin beds, 0.4 under a roof.
 - Measured at slider 100 on a fresh base: each bed 63.1 in its own zone; fence 7.9 one cell off the
   ring; radio 14.1 beside the safe; idle 10.6 at the motor pool; floodlight 2.7 three cells off a
@@ -370,3 +372,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-10 | city | medium-street (bed, replaces `ambient-city`) | elevenlabs | $0.09 |
 | 2026-10-10 | sewer, wild | tunnel, chamber (beds) · manhole, trickle, pipe (loops) · drip, rats, knock, cover, rumble, surge (one-shots) · forest re-roll | chamber, drip, manhole, pipe, surge: elevenlabs · knock, rats, rumble, trickle: elevenlabs + sonilo (knock sonilo and trickle elevenlabs had screened CLIPPED, picked by ear) · tunnel: cassette + elevenlabs · cover: dropped · forest elevenlabs came back -52 LUFS ("barely any wind"), re-rolled; sonilo won | $0.77 |
 | 2026-10-10 | military | yard, indoor (beds) · floodlight, fence, idle, radio (loops) · jet, range (far one-shots) | fence, floodlight, yard: elevenlabs · idle: sonilo · indoor, jet, radio, range: elevenlabs + sonilo · radio, range, jet cassette had screened CLIPPED (296 / 2,567 clipped samples, 0 dBFS), lost by ear anyway · yard sonilo kept as a day bed | $0.68 |
+| 2026-10-10 | military | hangar (bed) · generator, vent (loops) · truck (one-shot); replacing the facility's | generator: elevenlabs (gain -9, "make quieter") · hangar, truck: elevenlabs + sonilo (hangar sonilo fades out 39 dB at its tail, picked by ear anyway) · vent: cassette + sonilo | $0.31 |

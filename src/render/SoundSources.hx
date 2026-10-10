@@ -59,6 +59,11 @@ class SoundSources
     'military/radio' => -12.0,
     'military/jet' => -10.0,
     'military/range' => -14.0,
+    'military/hangar' => -4.0,
+    // the facility's -3 less six: picked as too loud
+    'military/generator' => -9.0,
+    'military/vent' => -14.0,
+    'military/truck' => -10.0,
     'ambient-city' => 0.0,
     'city/slums-main' => -4.0,
     'city/slums-street' => -4.0,
