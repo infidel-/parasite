@@ -290,6 +290,46 @@ laid it.
   use, so the old record is not a live connection, and two live doors is what `doorsSane` rejects
   and what a mission's "lock the first door of this room" silently misses.
 
+### The military base, after the 2D one went
+
+The old base was 40-50² of walkway with solid building rects and five sewer hatches. It is now a
+fenced block tree inside a wild margin, entered and left on foot. `make gen --type military`.
+
+| file | what it is |
+|---|---|
+| `game/MilitaryAreaGenerator.hx` | the LIVE adapter: the band's `AreaGenerator.wildMix`, a ctx, `MilitaryGen.build`, the drain |
+| `gen/military/MilitaryGen.hx` | `build()` and the public grid helpers (`fence`, `fenceOf`, `outside`, `vehicle`) |
+| `gen/blocks/MilitaryBlocks.hx` | the split profile (12/26/32) and the quota inside the fence |
+| `gen/military/MilitaryRooms.hx` | the armory: the safe once per base, the gun cabinet, up to 5 lockers |
+
+**The order of `build()` is load-bearing**:
+1. Blank the grid to `TEMP_ALLEY`.
+2. Plan and walk the tree inside the fence rect. BUILDING and HANGAR delegate to `FacilityGen.fill`.
+3. `finalizeTiles`. **Everything after it writes FINAL ids**, because the finalize remaps every id
+   under 112 and the wild tiles live there.
+4. `perimeter`: the ring, the 2x2 corner towers, and 1-2 `TILE_MIL_FENCE_TORN` breaches off the gate side.
+5. `road`.
+6. `margin`.
+7. `gate`: the 4-wide mouth, which `AreaGame.gate()` and `FacilityEntry.find` derive exactly as on a
+   compound.
+8. `connectRooms`.
+
+The quota is two buildings (HQ and barracks), a hangar (deep, `fit` away from the gate), a square
+helipad, a motor pool near the gate, 1-2 tent camps and 0-2 container depots. The rest is yard.
+
+**Nothing downstream reads the tree.** The fence is re-derived from the grid by `fenceOf` (the bbox
+of fence/torn/tower cells). `AreaGame.isOutsideBase` is that bbox, and the RING COUNTS AS OUTSIDE.
+That one helper answers the leave rule, the spawn point and the margin bed. A base saved with no
+fence tile is the 2D format and regenerates on load.
+
+**Vehicles are footprints.** `MilitaryGen.vehicle` stamps `TILE_MIL_VEHICLE` (solid) over
+`Const.MIL_*_SIZE` and names the model by its ORIGIN tile, so the renderer derives only a pose.
+
+**Every building room is themed.** `assignRoomThemes` returned early when no room was a candidate,
+and seed 242 shipped with no armory at all. A military floor falls through: every role-null room
+becomes a cabinet room, and the first one is the armory when no store exists. The oracle asserts at
+least 1 safe and lockers + cabinets >= 2.
+
 ### The one permitted `gen/` → `game/` edge
 
 `gen/facility/` imports `game.AreaGenerator`'s pure static grid helpers — `drawBlock`, `drawChunk`,
