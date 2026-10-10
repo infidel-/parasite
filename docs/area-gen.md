@@ -319,8 +319,14 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
    derivation does not see them.
 8. `connectRooms`.
 
-The quota is two buildings (HQ and barracks), a hangar (deep, `fit` away from the gate), a square
-helipad, a motor pool near the gate, 1-2 tent camps and 0-2 container depots. The rest is yard.
+The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` away from the gate),
+a square helipad, a motor pool near the gate, 1-2 tent camps, 0-2 container depots, and an ENTRY yard.
+The rest is yard.
+- **ENTRY** is a `must` on the gate side's edge, smallest first, filled as yard. `gate()` puts the
+  mouth, booth and pedestrian gap inside its span, so the drive opens onto open ground; a building
+  straight behind the boom read as a wall at the end of it.
+- `GenCheck.militarySane` asserts the boom's columns are walkable for 9 rows in.
+- The `must` failed 3 seeds in 2000 at 30 splits, so `MAX_PLAN_TRIES` is 60 (mean 3.5 splits).
 
 **Nothing downstream reads the tree.** The fence is re-derived from the grid by `fenceOf` (the bbox
 of fence/torn/tower cells). `AreaGame.isOutsideBase` is that bbox, and the RING COUNTS AS OUTSIDE.

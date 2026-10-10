@@ -894,6 +894,9 @@ class GenCheck
 // the base's perimeter: the fence ring re-derives to the rect the generator laid, every cell of it
 // is chain-link, a tower, the gate or an opening, and the only openings are the 1-2 torn panels and
 // the one pedestrian gap beside the boom. And every vehicle and container stands whole
+  // how many rows in from the gate's fence line the drive has to stay open
+  static inline var APPROACH = 9;
+
   public function militarySane(ctx: GenCtx, gateNorth: Bool)
     {
       var f = gen.military.MilitaryGen.fence(ctx.width, ctx.height, gateNorth);
@@ -961,6 +964,16 @@ class GenCheck
       ok(ctx.countSpawns('locker') + ctx.countSpawns('gunCabinet') >= 2,
         'the armories hold ' + ctx.countSpawns('locker') + ' lockers and ' +
         ctx.countSpawns('gunCabinet') + ' gun cabinets, want 2+ between them');
+
+      // and the drive behind the boom is open ground: the boom's own columns, APPROACH rows in
+      // from the fence, walkable all the way (a building straight behind the gate read as a wall)
+      var fenceY = (gateNorth ? f.y1 : f.y2);
+      var step = (gateNorth ? 1 : -1);
+      for (x in f.x1...f.x2 + 1)
+        if (ctx.cells[x][fenceY] == Const.TILE_ALLEY_UNWALKABLE)
+          for (k in 1...APPROACH + 1)
+            ok(tiles.Default.TILE_WALKABLE[ctx.cells[x][fenceY + step * k]] == 1,
+              'the drive behind the gate is blocked at ' + x + ',' + (fenceY + step * k));
     }
 
 // the base can be got into: every torn panel and the pedestrian gap have the rim flood on their

@@ -317,9 +317,17 @@ class MilitaryGen
       var area = state.area;
       var cells = area.getCells();
       var fenceY = (state.mainRoadNorth ? f.y1 : f.y2);
-      // the mouth stays clear of the towers by BREACH_CORNER, booth and pedestrian gap included
-      var span = f.x2 - f.x1 + 1 - BREACH_CORNER * 2 - RoadBlock.ENTRY_W - 2;
-      var x0 = f.x1 + BREACH_CORNER + 1 + area.random(span);
+      // the mouth stays clear of the towers by BREACH_CORNER, booth and pedestrian gap included, and
+      // opens onto the entry yard (MilitaryBlocks.ENTRY), the booth's bay and the gap inside it too
+      var lo = f.x1 + BREACH_CORNER + 1;
+      var hi = f.x2 - BREACH_CORNER - RoadBlock.ENTRY_W - 2;
+      for (n in area.root.children)
+        if (n.kind == MilitaryBlocks.ENTRY)
+          {
+            lo = Std.int(Math.max(lo, n.x1 + 1));
+            hi = Std.int(Math.min(hi, n.x2 - RoadBlock.ENTRY_W));
+          }
+      var x0 = lo + area.random(hi - lo + 1);
       drawBlock(cells, x0, vergeRow(state), RoadBlock.ENTRY_W, 1, Const.TILE_ALLEY);
       drawBlock(cells, x0, fenceY, RoadBlock.ENTRY_W, 1, Const.TILE_ALLEY_UNWALKABLE);
       cells[x0 + RoadBlock.ENTRY_W][fenceY] = Const.TILE_WALKWAY;

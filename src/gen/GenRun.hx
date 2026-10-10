@@ -294,7 +294,11 @@ class GenRun
 
       // the plots, asked of the tree the generator walked
       var blocks = ctx.root.children;
-      var demands = gen.blocks.MilitaryBlocks.demands(state.mainRoadNorth);
+      var north = state.mainRoadNorth;
+      var edge = (north ? ctx.height : -1);
+      for (b in blocks)
+        edge = (north ? Std.int(Math.min(edge, b.y1)) : Std.int(Math.max(edge, b.y2)));
+      var demands = gen.blocks.MilitaryBlocks.demands(north, edge);
       check.splitSane(blocks, gen.blocks.MilitaryBlocks.splitProfile());
       check.inBounds(blocks, ctx.width, ctx.height);
       check.noOverlap(blocks);

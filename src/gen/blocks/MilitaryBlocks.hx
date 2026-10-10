@@ -15,10 +15,14 @@ class MilitaryBlocks
   public static inline var DEPOT = 'depot';
   public static inline var MOTORPOOL = 'motorpool';
   public static inline var HELIPAD = 'helipad';
+  // the open yard the gate opens onto, filled as yard: a building straight behind the boom read as
+  // a wall at the end of the drive
+  public static inline var ENTRY = 'entry';
 
   // how many splits to try before giving up on housing the whole quota. 16 still failed one 70x60
-  // base in 2000; the underground lab retries 30 for the same reason
-  public static inline var MAX_PLAN_TRIES = 30;
+  // base in 2000; the underground lab retries 30 for the same reason. The entry yard's must (a plot
+  // on the gate's edge) failed 3 in 2000 at 30, none at 60, mean 3.5 splits
+  public static inline var MAX_PLAN_TRIES = 60;
   // how many splits the last plan() needed, for the oracle's `planTries` mean
   public static var lastPlanTries = 0;
 
@@ -28,7 +32,7 @@ class MilitaryBlocks
       rng: Void -> Float): Array<_GenNode>
     {
       var p = splitProfile();
-      var ds = demands(gateNorth);
+      var ds = demands(gateNorth, (gateNorth ? y1 : y2));
       var blocks = null;
       for (i in 0...MAX_PLAN_TRIES)
         {
@@ -61,19 +65,33 @@ class MilitaryBlocks
       };
     }
 
-// what a base must end up with
-  public static function demands(gateNorth: Bool): Array<_GenDemand>
+// what a base must end up with. `edge` is the plotted rect's row on the gate side
+  public static function demands(gateNorth: Bool, edge: Int): Array<_GenDemand>
     {
       // distance from the gate's edge, so "deep in the base" reads the same whichever side it is on
       var fromGate = function(b: _GenNode) return (gateNorth ? b.y1 : -b.y1);
       return [
-        // the HQ and the barracks, on the lab building's own minimum
+        // the HQ and the barracks, on the lab building's own minimum, as deep as they will go: the
+        // front row is where the entry yard has to find a plot
         {
           kind: FacilityBlocks.BUILDING,
           min: 2,
           max: 2,
           minW: 18,
           minH: 16,
+          fit: fromGate,
+        },
+        // the yard the gate opens onto, on the gate side's edge (a MUST, the facility parking lot's
+        // lesson: a preference loses to whatever was dealt first) and as small as will do, so it
+        // leaves the big front plots to the rest
+        {
+          kind: ENTRY,
+          min: 1,
+          max: 1,
+          minW: 8,
+          minH: 5,
+          must: function(b: _GenNode) return (gateNorth ? b.y1 == edge : b.y2 == edge),
+          fit: function(b: _GenNode) return -GenTree.width(b) * GenTree.height(b),
         },
         // the hangar, deep in the base. its floor carries the plane (Const.MIL_PLANE_SIZE) with a
         // lane round it, so the plot has to be bigger than the bare shed would be
