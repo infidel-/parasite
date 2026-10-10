@@ -81,7 +81,6 @@ class SewerSounds
           cells: [for (d in SewerDebris.build(m)) { col: d.col, row: d.row }],
         },
         { key: 'sewer/knock', range: 6, gap: 45, cells: pipes },
-        { key: 'sewer/cover', range: 8, gap: 40, cells: exits },
       ]);
       far = [
         { key: 'sewer/rumble', gap: 90, wait: 0 },

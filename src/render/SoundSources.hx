@@ -93,7 +93,6 @@ class SoundSources
     'sewer/drip' => -10.0,
     'sewer/rats' => -10.0,
     'sewer/knock' => -10.0,
-    'sewer/cover' => -10.0,
     'sewer/rumble' => -10.0,
     'sewer/surge' => -10.0,
   ];

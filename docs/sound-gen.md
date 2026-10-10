@@ -59,7 +59,7 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
    - a one-shot has its leading silence trimmed;
    - a loop that the model did not loop natively gets an equal-power (`qsin`) crossfade from its tail
      into its head, `seam_ms` long, so the file comes out that much shorter;
-   - a 40 Hz high-pass, 6 dB/octave (one pole), cuts rumble (asked for, 2026-10-10). A loop is
+   - a 40 Hz high-pass, 12 dB/octave (two poles; one pole was too gentle, asked for), cuts rumble. A loop is
      filtered as two copies back to back and the second kept, so the filter's state at the head is
      what the tail left: measured on `city/warehouse`, the wrap step stayed 51 against a p99
      sample-to-sample step of 406, and the length unchanged;
@@ -259,6 +259,30 @@ beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_N
   `wild/rockfall` (`TILE_ROCK`/`ROCK_LARGE`, 6, gap 35). `wild/gust` was baked and dropped ("bad
   everywhere").
 
+### Sewers: `render/sewer/SewerSounds.hx`, driven from `SewerArea.tick`
+
+`AREA_SEWERS` only, and it is `AMBIENT_NONE`. `SewerArea` also renders `AREA_HABITAT`, which keeps
+`ambient-habitat` through `setAmbient` (`sounds` stays null there). A sewer area exists only as a
+mission map, off the region grid: to test one, `region.createArea('AREA_SEWERS')` then
+`setLocation(LOCATION_REGION)`, `setLocation(LOCATION_AREA, area)` (`go area` cannot reach it).
+
+| key | sources | type | range |
+|---|---|---|---|
+| `sewer/tunnel` / `sewer/chamber` | beds, one-hot on `model.room` (the 5x5 rooms) | bed | — |
+| `sewer/manhole` | `sewer_exit` objects: the street seeping down the shaft | loop | 5 |
+| `sewer/trickle` | midpoint of each `SewerWater.layout(m).streams` spine | loop | 2 |
+| `sewer/pipe` | `SewerProps.places` for `sewerPipe` + `sewerCable` | loop | 3 |
+| `city/lampbuzz` (reused) | flickering wall lamps (`phase > 0`), gated on `wallGlow.on` | loop | 2 |
+| `sewer/drip` | `layout.pools` | event, gap 12 s | 4 |
+| `sewer/rats` | `SewerDebris.build(m)` litter (~250 cells) | event, gap 30 s | 5 |
+| `sewer/knock` | pipe and cable props | event, gap 45 s | 6 |
+| `sewer/rumble`, `sewer/surge` | none | event, gap 90 / 60 s | — |
+
+- Wall lamp `i` is `lampPosts[m.lamps.length + i]` and `wallGlow.on[i]`: the wall posts follow the
+  node posts, pushed in the glow set's order. Measured: the lamps are dark ~20% of the time, and the
+  buzz eased 0.43 → 0 through an outage and back to 1.
+- `sewer/cover` (a car over the manhole cover) was baked and dropped.
+
 ## Levels (measured with ebur128, 2026-10-08)
 
 | file | LUFS | role |
@@ -317,3 +341,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-10 | facility | lab, hangar, park, exterior (beds) · machine, generator (loops) · drain, pa, birds, car (one-shots) | lab, hangar, exterior, machine, generator: elevenlabs · park, pa: sonilo · drain: cassette + elevenlabs (2 variants) · birds, car: all three as variants 1-3 · pa cassette CLIPPED (0 dBFS, peak count 6), out unheard · exterior sonilo kept for the wilderness | $0.67 |
 | 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it, sonilo won · wild: coyote, forest, rockfall: elevenlabs · mountain: elevenlabs, then swapped for sonilo (raw -56.7 LUFS, baked up 20 dB) · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |
 | 2026-10-10 | city | medium-street (bed, replaces `ambient-city`) | elevenlabs | $0.09 |
+| 2026-10-10 | sewer, wild | tunnel, chamber (beds) · manhole, trickle, pipe (loops) · drip, rats, knock, cover, rumble, surge (one-shots) · forest re-roll | chamber, drip, manhole, pipe, surge: elevenlabs · knock, rats, rumble, trickle: elevenlabs + sonilo (knock sonilo and trickle elevenlabs had screened CLIPPED, picked by ear) · tunnel: cassette + elevenlabs · cover: dropped · forest elevenlabs came back -52 LUFS ("barely any wind"), re-rolled | $0.77 |

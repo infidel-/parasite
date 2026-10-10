@@ -22,8 +22,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:10",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:21",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/cctv1.mp3"
       ]
@@ -45,8 +45,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:10",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:21",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/cooler1.mp3"
       ]
@@ -68,8 +68,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:11",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/elevator1.mp3"
       ]
@@ -91,8 +91,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:12",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/rack1.mp3"
       ]
@@ -114,8 +114,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:13",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/vending1.mp3"
       ]
@@ -137,8 +137,8 @@
           "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:13",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/vent1.mp3"
       ]
@@ -161,8 +161,8 @@
           "bakeoff": "won over sonilo/cassette (the first elevenlabs take, prompted 'quiet... faint', came back silent), 2026-10-09"
         }
       ],
-      "last_converted": "2026-10-10T16:26:14",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:24",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/room1.mp3"
       ]
@@ -185,8 +185,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:14",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:24",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/cubicle1.mp3"
       ]
@@ -209,8 +209,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:15",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:25",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/washroom1.mp3"
       ]
@@ -232,8 +232,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:15",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:25",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/window1.mp3"
       ]
@@ -255,8 +255,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:16",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "corp/fridge1.mp3"
       ]
@@ -279,8 +279,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:16",
-      "last_sig": "-36/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-36/128k/False/500/hp40x2",
       "last_outputs": [
         "corp/flush1.mp3"
       ]
@@ -302,8 +302,8 @@
           "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:17",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "corp/drip1.mp3"
       ]
@@ -326,8 +326,8 @@
           "bakeoff": "the corp washroom bake-off's runner-up, kept for the facility washroom"
         }
       ],
-      "last_converted": "2026-10-10T16:26:17",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:27",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/washroom1.mp3"
       ]
@@ -349,8 +349,8 @@
           "bakeoff": "third elevenlabs roll, take 3; the first roll clipped, losers in sounds-src/unused/corp"
         }
       ],
-      "last_converted": "2026-10-10T16:26:18",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:27",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "corp/phone1.mp3"
       ]
@@ -373,8 +373,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:18",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:28",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/lab1.mp3"
       ]
@@ -397,8 +397,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:18",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:28",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/hangar1.mp3"
       ]
@@ -421,8 +421,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:19",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:29",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/park1.mp3"
       ]
@@ -445,8 +445,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:20",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:29",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/exterior1.mp3"
       ]
@@ -468,8 +468,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:20",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:30",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/machine1.mp3"
       ]
@@ -491,8 +491,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:21",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:30",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "facility/generator1.mp3"
       ]
@@ -526,8 +526,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:21",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:31",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "facility/drain1.mp3",
         "facility/drain2.mp3"
@@ -550,8 +550,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:21",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:31",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "facility/pa1.mp3"
       ]
@@ -597,8 +597,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:22",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:32",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "facility/car1.mp3",
         "facility/car2.mp3",
@@ -622,8 +622,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:22",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:32",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "wild/coyote1.mp3"
       ]
@@ -646,8 +646,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:23",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:32",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "wild/forest1.mp3"
       ]
@@ -670,11 +670,11 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, swapped in from unused for the elevenlabs take, losers in sounds-src/unused/wild"
         }
       ],
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "wild/mountain1.mp3"
       ],
-      "last_converted": "2026-10-10T16:40:46"
+      "last_converted": "2026-10-10T17:40:33"
     },
     "wild/owl": {
       "area": "wild",
@@ -705,8 +705,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:24",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:33",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "wild/owl1.mp3",
         "wild/owl2.mp3"
@@ -729,8 +729,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:24",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:34",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "wild/rockfall1.mp3"
       ]
@@ -764,8 +764,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:25",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:34",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "wild/twig1.mp3",
         "wild/twig2.mp3"
@@ -789,8 +789,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:25",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "wild/plains1.mp3"
       ]
@@ -812,8 +812,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
         }
       ],
-      "last_converted": "2026-10-10T16:26:25",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "facility/birds1.mp3"
       ]
@@ -835,8 +835,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:26",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/diner1.mp3"
       ]
@@ -859,8 +859,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:26",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:36",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/downtown-alley1.mp3"
       ]
@@ -883,8 +883,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:27",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:36",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/downtown-main1.mp3"
       ]
@@ -907,8 +907,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:27",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/downtown-street1.mp3"
       ]
@@ -930,8 +930,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:28",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/horn1.mp3"
       ]
@@ -953,8 +953,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:28",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/rats1.mp3"
       ]
@@ -976,8 +976,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:28",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:38",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/sewer1.mp3"
       ]
@@ -1011,8 +1011,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:29",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/bottle1.mp3",
         "city/bottle2.mp3"
@@ -1047,8 +1047,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:29",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:39",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/can1.mp3",
         "city/can2.mp3"
@@ -1083,8 +1083,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:30",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:39",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/garage1.mp3",
         "city/garage2.mp3"
@@ -1119,8 +1119,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:30",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:40",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/helicopter1.mp3",
         "city/helicopter2.mp3"
@@ -1155,8 +1155,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:32",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:41",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/lampbuzz1.mp3",
         "city/lampbuzz2.mp3"
@@ -1191,8 +1191,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:33",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:42",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/laundromat1.mp3",
         "city/laundromat2.mp3"
@@ -1228,8 +1228,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:34",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:43",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/medium-alley1.mp3",
         "city/medium-alley2.mp3"
@@ -1265,8 +1265,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:35",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:44",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/medium-main1.mp3",
         "city/medium-main2.mp3"
@@ -1301,8 +1301,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:36",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:44",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/screendoor1.mp3",
         "city/screendoor2.mp3"
@@ -1337,8 +1337,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:36",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:45",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/shopbell1.mp3",
         "city/shopbell2.mp3"
@@ -1374,8 +1374,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:37",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:46",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/slums-main1.mp3",
         "city/slums-main2.mp3"
@@ -1411,8 +1411,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:38",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:47",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/slums-street1.mp3",
         "city/slums-street2.mp3"
@@ -1447,8 +1447,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:39",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:48",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/store1.mp3",
         "city/store2.mp3"
@@ -1483,8 +1483,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:40",
-      "last_sig": "-26/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:49",
+      "last_sig": "-26/128k/True/500/hp40x2",
       "last_outputs": [
         "city/warehouse1.mp3",
         "city/warehouse2.mp3"
@@ -1519,8 +1519,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:41",
-      "last_sig": "-26/128k/False/500/hp40",
+      "last_converted": "2026-10-10T17:40:50",
+      "last_sig": "-26/128k/False/500/hp40x2",
       "last_outputs": [
         "city/crackle1.mp3",
         "city/crackle2.mp3"
@@ -1544,8 +1544,8 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T16:26:41",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:50",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "wild/road1.mp3"
       ]
@@ -1568,8 +1568,8 @@
           "bakeoff": "bake-off 2026-10-10 (third roll): elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:26:42",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:51",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/slums-alley1.mp3"
       ]
@@ -1592,10 +1592,307 @@
           "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
         }
       ],
-      "last_converted": "2026-10-10T16:29:17",
-      "last_sig": "-36/128k/True/500/hp40",
+      "last_converted": "2026-10-10T17:40:51",
+      "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "city/medium-street1.mp3"
+      ]
+    },
+    "sewer/chamber": {
+      "area": "sewer",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "sewer/chamber-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "large brick sewer chamber room tone, wide reverberant space, distant water running somewhere, deep hollow air, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:52",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/chamber1.mp3"
+      ]
+    },
+    "sewer/drip": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling into a shallow puddle, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:52",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/drip1.mp3"
+      ]
+    },
+    "sewer/manhole": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/manhole-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "city street heard from below through a manhole cover, muffled traffic passing above, wind whistling through the cover slots, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/manhole1.mp3"
+      ]
+    },
+    "sewer/pipe": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/pipe-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "hollow hum of water flowing inside an old iron pipe along a wall, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/pipe1.mp3"
+      ]
+    },
+    "sewer/surge": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/surge-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a distant rush of water surging through a large pipe somewhere in the tunnels, then fading, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/surge1.mp3"
+      ]
+    },
+    "sewer/knock": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/knock-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old iron pipe knocking from water hammer, then metal ticking as it settles, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/knock-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "an old iron pipe knocking from water hammer, then metal ticking as it settles, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 3.993832,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:54",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/knock1.mp3",
+        "sewer/knock2.mp3"
+      ]
+    },
+    "sewer/rats": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/rats-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a couple of rats squeaking and scurrying past, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/rats-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a couple of rats squeaking and scurrying past, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:54",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/rats1.mp3",
+        "sewer/rats2.mp3"
+      ]
+    },
+    "sewer/rumble": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/rumble-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a heavy truck passing overhead, low rumble through the ceiling, grit trickling down, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/rumble-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy truck passing overhead, low rumble through the ceiling, grit trickling down, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 6.965986,
+          "seed": null,
+          "cost": 0.0125,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:55",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/rumble1.mp3",
+        "sewer/rumble2.mp3"
+      ]
+    },
+    "sewer/trickle": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/trickle-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "water trickling steadily down a wet brick wall into a shallow puddle, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/trickle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "water trickling steadily down a wet brick wall into a shallow puddle, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:56",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/trickle1.mp3",
+        "sewer/trickle2.mp3"
+      ]
+    },
+    "sewer/tunnel": {
+      "area": "sewer",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "sewer/tunnel-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "narrow brick sewer tunnel room tone, hollow low drone, distant running water, close stone echo, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/tunnel-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "narrow brick sewer tunnel room tone, hollow low drone, distant running water, close stone echo, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:57",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/tunnel1.mp3",
+        "sewer/tunnel2.mp3"
       ]
     }
   }

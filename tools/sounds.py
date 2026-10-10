@@ -6,7 +6,7 @@ key ('<area>/<name>') with its variants (one wav each, written by the fal-sfx MC
   1. downmixes to mono (nothing in the game pans),
   2. a one-shot: trims leading silence; a loop the model did not loop itself: crossfades the tail
      into the head (equal power, seam_ms) so the file wraps without a click,
-  3. high-passes at 40 Hz, 6 dB/octave (one pole): rumble nothing in the game needs. a loop is
+  3. high-passes at 40 Hz, 12 dB/octave (two poles): rumble nothing in the game needs. a loop is
      filtered as two copies back to back and the second kept, so the filter starts the file in the
      state the file's own end left it in and the wrap stays seamless,
   4. applies one static gain onto the entry's lufs (default_lufs else) and a -1 dBFS limiter —
@@ -92,7 +92,7 @@ def shape(src, tmp, loop, native, seam):
 
 
 # the rumble cut, measured after so the gain lands on the filtered level
-HIGHPASS = "highpass=f=40:poles=1"
+HIGHPASS = "highpass=f=40:poles=2"
 
 
 def highpass(src, out, loop):
@@ -150,7 +150,7 @@ def convert(key, e, info, src_dir, out_dir):
         return False
 
     lufs = e.get("lufs", info["default_lufs"])
-    sig = f"{lufs}/{info['default_bitrate']}/{e['loop']}/{info['seam_ms']}/hp40"
+    sig = f"{lufs}/{info['default_bitrate']}/{e['loop']}/{info['seam_ms']}/hp40x2"
     last = e.get("last_converted")
     newest = max(datetime.fromtimestamp(os.path.getmtime(s)).replace(microsecond=0) for s, _o, _n in outs)
     fresh = (
