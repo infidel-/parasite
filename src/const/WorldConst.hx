@@ -206,7 +206,8 @@ class WorldConst
       // *** mission sewers
       AREA_SEWERS => {
         id: AREA_SEWERS,
-        ambient: AMBIENT_HABITAT,
+        // the beds are render.sewer.SewerSounds'
+        ambient: AMBIENT_NONE,
         type: 'sewers',
         name: 'Sewers',
         pediaArticle: 'areaHabitat', // unused

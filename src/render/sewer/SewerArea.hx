@@ -28,6 +28,7 @@ class SewerArea implements Area3D
   var sceneRef:Scene;                    // held for refreshObjects, which rebuilds the prop batches
   var props:Array<render.world.ObjModels.PropBatch>; // object props: solid / ghost / outline batches
   var tactical = false;                  // tactical view up: the props draw their outline shells
+  var sounds:SewerSounds;                // the sewers' beds, loops and one-shots; null in a habitat
 
   public function new(game:Game, model:Sewer)
     {
@@ -82,6 +83,9 @@ class SewerArea implements Area3D
       // and that is a fact about the masonry
       VisionMask.attach(SewerStyle.MASK, model.w, model.h,
         function(col, row) return !SewerModel.isFloor(model, col, row));
+      // the habitat shares this renderer and keeps its own bed through setAmbient
+      sounds = (game.area.typeID == _AreaType.AREA_SEWERS ?
+        new SewerSounds(game, model, lampPosts, wallGlow) : null);
     }
 
 // which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw.
@@ -171,6 +175,8 @@ class SewerArea implements Area3D
       // nothing else to fade and no window switches underground; the outro needs no world tick at all
       if (opts.outro)
         return;
+      if (sounds != null)
+        sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       // what the player cannot see. driven by the SMOOTHED position and not opts.playerCol/Row: the
       // logical cell snaps to the destination the moment an action resolves, so a cell-keyed mask
       // swung its shadows from a cell the billboard had not reached and held them there for the whole
