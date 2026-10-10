@@ -145,7 +145,9 @@ class FacilityEntry
   public static function build(scene:Scene, m:Facility):Array<Models.InstancedProp>
     {
       var gate = find(m);
-      if (gate == null)
+      // a military base emits its own checkpoint (render.military.MilitaryYard)
+      if (gate == null ||
+          m.kind == 'military')
         return [empty(), empty()];
       // both stand on asphalt, which lies a kerb below the pavement (FacilityStyle.KERB_DROP)
       var y = FacilityGround.surfY(Surf.LOT);
@@ -156,7 +158,7 @@ class FacilityEntry
       if (!FacilityStyle.ENTRY_BLENDER)
         {
           booth(scene, gate, y);
-          barrier(scene, gate, y);
+          barrier(scene, gate, y, FacilityStyle.BARRIER_CAB_TEX, FacilityStyle.BARRIER_ARM_TEX);
           return [empty(), empty()];
         }
       return [barrierProp(scene, gate, y), boothProp(scene, gate, y)];
@@ -291,7 +293,7 @@ class FacilityEntry
 // the mouth runs along X — the hole is read as a span of COLUMNS with the lot a ROW step away — and
 // that is not a new assumption: `find` only ever tests the row direction for the lot, `boothCol` and
 // `lampCol` are column steps either side, and the prop this replaces stood on a hardcoded yaw of PI
-  static function barrier(scene:Scene, gate:Gate, y:Float):Void
+  public static function barrier(scene:Scene, gate:Gate, y:Float, cabTex:String, armTex:String):Void
     {
       // the row of the hole that faces the LOT: a car meets the barrier on its way in, not out on
       // the kerb behind it
@@ -334,7 +336,7 @@ class FacilityEntry
       // culled from the light's side and every ray through it exits into open asphalt. The cabinet
       // above needs none because it stands ON the ground, where those rays land under the box itself
       FacilityGeom.capDown(arm, cx1, tip, az0, az1, ay0, FacilityStyle.BARRIER_ARM_TILE);
-      FacilityGeom.add(scene, cab, FacilityStyle.BARRIER_CAB_TEX, true, true);
+      FacilityGeom.add(scene, cab, cabTex, true, true);
       // and the bands are PHASED so the free end lands on a whole white one. world-aligned UVs put
       // the band grid on the world and the tip wherever the gate's arithmetic leaves it, which cut
       // the last band in half — reported from the game as the bar ending split red/white. the art is
@@ -342,7 +344,7 @@ class FacilityEntry
       // the end of a white band, and shifting the map by the fraction it falls short is a pure phase
       // change: same period, same texel density, nothing stretched
       var u = tip / FacilityStyle.BARRIER_ARM_TILE;
-      addArm(scene, arm, Math.ceil(u) - u);
+      addArm(scene, arm, Math.ceil(u) - u, armTex);
     }
 
 // the boom's own mesh, and the TWO reasons it is not a plain FacilityGeom.add. The hazard art is
@@ -351,9 +353,9 @@ class FacilityEntry
 // `lift`, a gamma, does not (see FacilityStyle.BARRIER_TINT). And the band grid needs phasing by
 // `uPhase` so the tip ends on white; `Textures.loadTexture` builds a fresh Texture per call, so the
 // offset is this mesh's own and nothing else samples it
-  static function addArm(scene:Scene, b:MeshBuf, uPhase:Float):Void
+  static function addArm(scene:Scene, b:MeshBuf, uPhase:Float, armTex:String):Void
     {
-      var tex = Textures.loadTexture(FacilityStyle.BARRIER_ARM_TEX, 'wall', 1);
+      var tex = Textures.loadTexture(armTex, 'wall', 1);
       tex.offset.x = uPhase;
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: tex,

@@ -1425,3 +1425,38 @@ the janitor's kit and corp's locker art. They are now dealt as their own kinds
 
 **Verdict:** landed.
 
+## The military base's yard, gate and roofs are its own: no facility glb left in a base
+
+**What changed:** a live inventory of the base still found facility kit:
+- the 7 roof glbs (condenser, dish, hatch, isolator, vent, duct, tank) and the roof-litter atlas;
+- the lot's cones, tyres and reels, and 66 facility lamp posts;
+- the facility booth and barrier glbs;
+- the corridor exit-sign and wall-point sheets.
+
+`render.military.MilitaryYard` emits the base's own on the SAME spots each pass already derives:
+- `FacilityEntry.find` → a sandbagged guard post with a corrugated roof and a whip aerial, plus
+  `FacilityEntry.barrier`, made public and given its textures, in `military/boom-arm`;
+- `FacilityDebris.spots`, split out of `place` → ammo crate stacks and octagonal fuel drums;
+- `FacilityLamps`' places → steel floodlight masts with a crossbar and two lamp boxes, at the glow's
+  own `reach`/`bulbY`;
+- `FacilityRoof`'s deck lists and `*Of` owners → per structure, a sandbag nest, water tanks, an
+  aerial and plain steel service kit. These go onto each deck via `addDeck`, so they fade with it.
+- The gate gets `TILE_MIL_JERSEY` jersey barriers, stamped by the generator (unwalkable).
+- `ShellTex` gains `exitSign`/`wallPoints`/`roofClutter`.
+
+**Numbers:**
+- Art: one packed sheet (boom bands, crate lid, drum top, drum side) and three `edit_image` repaints
+  with the layout kept. The roof litter's alpha was re-applied from the facility source.
+- Levels were fitted to each facility counterpart's built linear.
+- `make gen --type military`: 2000 seeds clean.
+- No new glbs and no warm change.
+
+**Traps:**
+- A crop change does not make `tools/textures.py` rebuild: it keys on the source mtime and the
+  lift. Drop `last_converted` to force it.
+- An unset `res` builds a 2:1 crop square, so set `res` to the crop's aspect.
+- The jersey long faces were wound inward on the first pass. Check `(p1-p0)×(p2-p0)` against the
+  face's outward side: `FacilityGeom.face`'s dir 1 is the reference.
+
+**Verdict:** landed.
+

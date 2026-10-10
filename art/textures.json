@@ -6287,18 +6287,163 @@
       "needs_alpha": false,
       "crop": [
         516,
+        642,
+        504,
+        252
+      ],
+      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a wooden ammunition crate side, rope handles, lot band [append textures.json style]",
+      "prompt_exact": false,
+      "note": "an ammo crate's long side, 0..1 over a 2:1 face (render.military.MilitaryYard.CRATE_W x CRATE_H): the quadrant's middle band, rope handles and lot band, cut to 504x252 so nothing is stretched.",
+      "built_linear": 0.0506,
+      "built_srgb": 57.4,
+      "lift": 0.942,
+      "last_lift": 0.942,
+      "res": [
+        512,
+        256
+      ],
+      "last_converted": "2026-10-10T20:59:51"
+    },
+    "military/exit-sign": {
+      "src": "military/exit-sign.png",
+      "class": "tile",
+      "res": [
+        252,
+        336
+      ],
+      "needs_alpha": false,
+      "prompt": "[edit_image of facility/exit-sign.png, layout kept, gpt-image-2.5-sunburst high] the military base version: olive drab steel and stencil paint. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's own exit-sign, a layout-preserving repaint of facility/exit-sign (same cells, same aspect), drawn in a base through FacilityStyle's exit-sign constant's military twin. lift 0.821: raw 0.0889 to 0.137, facility/exit-sign's built linear.",
+      "last_converted": "2026-10-10T21:13:26",
+      "built_srgb": 77.9,
+      "built_linear": 0.1193,
+      "lift": 0.821,
+      "last_lift": 0.821
+    },
+    "military/wall-points": {
+      "src": "military/wall-points.png",
+      "class": "tile",
+      "res": 384,
+      "needs_alpha": false,
+      "prompt": "[edit_image of facility/wall-points.png, layout kept, gpt-image-2.5-sunburst high] the military base version: olive drab steel and stencil paint. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's own wall-points, a layout-preserving repaint of facility/wall-points (same cells, same aspect), drawn in a base through FacilityStyle's wall-points constant's military twin. lift 0.837: raw 0.0554 to 0.0888, facility/wall-points's built linear.",
+      "last_converted": "2026-10-10T21:14:08",
+      "built_srgb": 71.9,
+      "built_linear": 0.0821,
+      "lift": 0.837,
+      "last_lift": 0.837
+    },
+    "military/roof-clutter": {
+      "src": "military/roof-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.03
+      },
+      "regrid": {
+        "grid": 8,
+        "cut": 200
+      },
+      "prompt_exact": false,
+      "prompt": "[edit_image of facility/roof-clutter.png, layout kept, gpt-image-2.5-sunburst high] the military base version: olive drab steel and stencil paint. [append textures.json style]",
+      "note": "the base's own roof-clutter, a layout-preserving repaint of facility/roof-clutter (same cells, same aspect, the facility source's alpha re-applied), drawn in a base through FacilityStyle's roof-clutter constant's military twin.",
+      "last_converted": "2026-10-10T21:16:23",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.03
+      },
+      "last_regrid": {
+        "grid": 8,
+        "cut": 200
+      },
+      "built_srgb": 44.5,
+      "built_linear": 0.0293
+    },
+    "military/boom-arm": {
+      "src": "military/mil-pack-l.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "prompt": "[quadrant of military/mil-pack-l.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE six vertical bands red/white, red left white right, uniform top to bottom [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's boom bar (FacilityEntry.barrier in a base). Cropped to the WHOLE quadrant and not inset: the six bands are the period, and the arm's tip phasing needs red-first white-last at the crop's own edges, as facility/barrier-arm. lift 0.816: raw 0.2387 to 0.3108.",
+      "last_converted": "2026-10-10T21:16:10",
+      "built_linear": 0.2868,
+      "built_srgb": 133.0,
+      "lift": 0.816,
+      "last_lift": 0.816
+    },
+    "military/crate-lid": {
+      "src": "military/mil-pack-l.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        205,
+        504,
+        296
+      ],
+      "prompt": "[quadrant of military/mil-pack-l.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an olive ammo crate lid from above [append textures.json style]",
+      "prompt_exact": false,
+      "note": "an ammo crate's top, 0..1 over CRATE_W x CRATE_D, cut to 504x296 (latches and lot band kept) (render.military.MilitaryYard). lift 0.916: raw 0.0464 to 0.06.",
+      "built_linear": 0.0582,
+      "built_srgb": 62.5,
+      "lift": 0.916,
+      "last_lift": 0.916,
+      "res": [
+        512,
+        304
+      ],
+      "last_converted": "2026-10-10T21:16:10"
+    },
+    "military/drum-top": {
+      "src": "military/mil-pack-l.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "prompt": "[quadrant of military/mil-pack-l.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an olive fuel drum's round top from above [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a fuel drum's lid, 0..1 over its octagonal cap (MilitaryYard); the corners outside the circle never draw. lift 0.848: raw 0.0362 to 0.06.",
+      "last_converted": "2026-10-10T21:16:10",
+      "built_linear": 0.0552,
+      "built_srgb": 59.7,
+      "lift": 0.848,
+      "last_lift": 0.848
+    },
+    "military/drum-side": {
+      "src": "military/mil-pack-l.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
         516,
         504,
         504
       ],
-      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a wooden ammunition crate side, rope handles, lot band [append textures.json style]",
+      "prompt": "[quadrant of military/mil-pack-l.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE olive fuel drum side, two hoops, stencil band [append textures.json style]",
       "prompt_exact": false,
-      "note": "an ammo crate's long side, 0..1 (render.military, Phase C yard clutter). lift 0.942: raw 0.0416 to 0.05.",
-      "last_converted": "2026-10-10T20:59:51",
-      "built_linear": 0.0486,
-      "built_srgb": 56.9,
-      "lift": 0.942,
-      "last_lift": 0.942
+      "note": "a fuel drum's sides, one period round the octagon (MilitaryYard). lift 0.909: raw 0.0452 to 0.06.",
+      "last_converted": "2026-10-10T21:16:10",
+      "built_linear": 0.0574,
+      "built_srgb": 62.9,
+      "lift": 0.909,
+      "last_lift": 0.909
     }
   }
 }

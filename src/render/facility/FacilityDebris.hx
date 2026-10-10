@@ -123,7 +123,9 @@ class FacilityDebris
   public static function props(scene:Scene, m:Facility):Array<Models.InstancedProp>
     {
       var places = [for (_ in PROPS) new Array<Models.PropPlace>()];
-      place(m, places);
+      // a military base stands its own yard clutter on these spots (render.military.MilitaryYard)
+      if (m.kind != 'military')
+        place(m, places);
       var out = [];
       for (i in 0...PROPS.length)
         {
@@ -143,6 +145,26 @@ class FacilityDebris
   static function place(m:Facility, places:Array<Array<Models.PropPlace>>):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
+      for (c in spots(m))
+        {
+          var h = FacilityModel.mix((c.col * 27644437) ^ (c.row * 67867979));
+          places[h % PROPS.length].push({
+            x: (c.col + 0.5) * CELL - half,
+            z: (c.row + 0.5) * CELL - half,
+            // a FREE turn, where the parked cars and the roof condensers both take a quarter. those
+            // are manufactured objects standing square to something; a cone knocked over by a wheel
+            // and a drum rolled against a wall are dropped, and dropped things lie any way up
+            yaw: ((h >> 8) % 6283) / 1000.0,
+            // the lot lies a kerb below the pavement, like everything else standing on the asphalt
+            y: FacilityGround.surfY(Surf.LOT),
+          });
+        }
+    }
+
+// the lot cells junk may stand on, thinned to FacilityStyle.LOT_PROP_MAX. public for
+// render.military.MilitaryYard, which stands its own clutter on the same spots
+  public static function spots(m:Facility):Array<{ col:Int, row:Int }>
+    {
       var cand = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -160,20 +182,7 @@ class FacilityDebris
       var step = Std.int(Math.ceil(cand.length / FacilityStyle.LOT_PROP_MAX));
       if (step > 1)
         cand = [for (i in 0...cand.length) if (i % step == 0) cand[i]];
-      for (c in cand)
-        {
-          var h = FacilityModel.mix((c.col * 27644437) ^ (c.row * 67867979));
-          places[h % PROPS.length].push({
-            x: (c.col + 0.5) * CELL - half,
-            z: (c.row + 0.5) * CELL - half,
-            // a FREE turn, where the parked cars and the roof condensers both take a quarter. those
-            // are manufactured objects standing square to something; a cone knocked over by a wheel
-            // and a drum rolled against a wall are dropped, and dropped things lie any way up
-            yaw: ((h >> 8) % 6283) / 1000.0,
-            // the lot lies a kerb below the pavement, like everything else standing on the asphalt
-            y: FacilityGround.surfY(Surf.LOT),
-          });
-        }
+      return cand;
     }
 
 // is this cell asphalt the compound would let junk lie on?

@@ -162,6 +162,7 @@ class MilitaryGeom
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);
       MilitaryInterior.build(m, area);
+      MilitaryYard.build(scene, m, area);
       // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
       // ponytail: drawn shut whatever their state, an open one is told by its tooltip
       for (o in area.getObjects())

@@ -58,7 +58,7 @@ class FacilityPoint
       var list = places(m);
       for (p in list)
         quad(b, m, p);
-      add(scene, b);
+      add(scene, b, m.tex.wallPoints);
       return list.length;
     }
 
@@ -232,12 +232,12 @@ class FacilityPoint
 // none — and NOT the exit signage's both-off, because these are fittings and not lights: nothing
 // here has an emissiveMap and the art is opaque, so there is no alphaTest to set and no sorted pass
 // to order against anything
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, sheet:String):Void
     {
       if (b.idx.length == 0)
         return;
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.POINT_TEX, 'wall', 1),
+        map: Textures.loadTexture(sheet, 'wall', 1),
         side: THREE.FrontSide,
       })));
       mesh.receiveShadow = true;

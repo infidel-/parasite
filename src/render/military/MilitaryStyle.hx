@@ -38,6 +38,9 @@ class MilitaryStyle
   public static inline var GRIME = 'textures/military/grime.png';
   public static inline var CABLE = 'textures/military/cable.png';
   public static inline var ELEC = 'textures/military/electrical-pack.png';
+  public static inline var EXIT_SIGN = 'textures/military/exit-sign.png';
+  public static inline var WALL_POINTS = 'textures/military/wall-points.png';
+  public static inline var ROOF_CLUTTER = 'textures/military/roof-clutter.png';
 
   // the inside: one floor per room kind and one wall face per surface it looks into
   public static inline var FLOOR_BARRACKS = 'textures/military/floor-barracks.png';
@@ -108,6 +111,9 @@ class MilitaryStyle
       t.grime = GRIME;
       t.cable = CABLE;
       t.elec = ELEC;
+      t.exitSign = EXIT_SIGN;
+      t.wallPoints = WALL_POINTS;
+      t.roofClutter = ROOF_CLUTTER;
       t.mastColor = MAST_COLOR;
       t.lampColor = LAMP_COLOR;
       t.doorLampColor = DOOR_LAMP_COLOR;

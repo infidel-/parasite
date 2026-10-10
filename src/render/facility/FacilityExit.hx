@@ -49,7 +49,7 @@ class FacilityExit
       var dist = [for (_ in 0...m.h) [for (_ in 0...m.w) -1]];
       var n = terminals(b, m, dist);
       n += directionals(b, m, route(m, dist));
-      add(scene, b);
+      add(scene, b, m.tex.exitSign);
       return n;
     }
 
@@ -282,11 +282,11 @@ class FacilityExit
 //
 // it neither casts nor receives. casting is meaningless — the moon is outside and the roof is over
 // it — and receiving would put a wall's own shadow across a thing that is supposed to be a light
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, sheet:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var tex = Textures.loadTexture(FacilityStyle.EXIT_TEX, 'wall', 1);
+      var tex = Textures.loadTexture(sheet, 'wall', 1);
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: tex,
         emissiveMap: tex,

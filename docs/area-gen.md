@@ -311,7 +311,9 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 5. `road`.
 6. `margin`.
 7. `gate`: the 4-wide mouth, which `AreaGame.gate()` and `FacilityEntry.find` derive exactly as on a
-   compound.
+   compound. Two `TILE_MIL_JERSEY` barriers stand on the pavement each side of it, leaving the
+   pedestrian gap's own cell open. They read as pavement (`Surf.WALKWAY`), so the mouth
+   derivation does not see them.
 8. `connectRooms`.
 
 The quota is two buildings (HQ and barracks), a hangar (deep, `fit` away from the gate), a square

@@ -72,7 +72,7 @@ class Default extends Tileset
     1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 19 - the military base (Const.TILE_MIL_*): fence, TORN fence (walkable), tower, tent,
-    // container x2, vehicle footprint x5, and the helipad (walkable)
+    // container x2, vehicle footprint x5, the helipad (walkable) and a jersey barrier
     0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
     // board walkable: it marks a wall)

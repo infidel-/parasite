@@ -318,6 +318,9 @@ class MilitaryGen
       drawBlock(cells, x0, vergeRow(state), RoadBlock.ENTRY_W, 1, Const.TILE_ALLEY);
       drawBlock(cells, x0, fenceY, RoadBlock.ENTRY_W, 1, Const.TILE_ALLEY_UNWALKABLE);
       cells[x0 + RoadBlock.ENTRY_W][fenceY] = Const.TILE_WALKWAY;
+      // jersey barriers on the pavement flanking the mouth, the pedestrian gap's own cell left open
+      for (x in [ x0 - 2, x0 - 1, x0 + RoadBlock.ENTRY_W + 1, x0 + RoadBlock.ENTRY_W + 2 ])
+        cells[x][vergeRow(state)] = Const.TILE_MIL_JERSEY;
     }
 
 // the verge's row

@@ -521,7 +521,8 @@ class FacilityModel
       // vehicles and the helipad stand on the yard's asphalt
       if (t == Const.TILE_MIL_FENCE ||
           t == Const.TILE_MIL_FENCE_TORN ||
-          t == Const.TILE_MIL_TOWER)
+          t == Const.TILE_MIL_TOWER ||
+          t == Const.TILE_MIL_JERSEY)
         return WALKWAY;
       if (t >= Const.OFFSET_ROW19)
         return LOT;

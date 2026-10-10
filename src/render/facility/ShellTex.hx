@@ -77,6 +77,11 @@ typedef ShellTex = {
   @:optional var grime: String;
   @:optional var cable: String;
   @:optional var elec: String;
+  // the corridor exit signage, the fire point / electrical panel sheet and the roofs' flat litter
+  // atlas, each in the facility's own cell layout
+  @:optional var exitSign: String;
+  @:optional var wallPoints: String;
+  @:optional var roofClutter: String;
   // the light colours: the outdoor masts and their cones, the indoor fixtures and the window spill
   // they cast, and the bulkhead lamps over exterior doors
   @:optional var mastColor: Int;

@@ -242,8 +242,21 @@ class FacilityRoof
           deck.shade = MeshBufTools.make();
           fill(m, si, deck, out);
           FacilityGeom.addDeck(scene, deck.cab, m.tex.cable, true, shells[si]);
-          pack(scene, deck.pack, shells[si]);
+          pack(scene, deck.pack, shells[si], m.tex.roofClutter);
           shade(scene, deck.shade, shells[si]);
+        }
+      // a military base stands its own kit on the same spots, emitted onto each deck so it fades
+      // with it, and draws none of the compound's
+      if (m.kind == 'military')
+        {
+          render.military.MilitaryYard.roof(scene, deck, out, shells);
+          deck.ac = [];
+          deck.dish = [];
+          deck.hatch = [];
+          deck.jbox = [];
+          deck.vent = [];
+          deck.duct = [];
+          deck.tank = [];
         }
       out.ac = Models.instanced(scene, acPath(), deck.ac, FacilityStyle.ROOF_AC_H, SOLID);
       out.dish = Models.instanced(scene, dishPath(), deck.dish, FacilityStyle.ROOF_DISH_H, SOLID);
@@ -648,12 +661,12 @@ class FacilityRoof
 // product crosses the cut — the trap render.facility.FacilityArea.ease records against the window
 // panes. A cut at half the ease is exactly where `mask` already drops the condensers, so the whole
 // of what stands on a roof leaves together instead of one family lingering
-  static function pack(scene:Scene, b:render.world.MeshBuf.MeshBuf, shell:Shell):Void
+  static function pack(scene:Scene, b:render.world.MeshBuf.MeshBuf, shell:Shell, sheet:String):Void
     {
       if (b.idx.length == 0)
         return;
       var mat = new MeshLambertMaterial({
-        map: render.Textures.loadTexture(FacilityStyle.ROOF_CLUTTER_TEX, 'wall', 1),
+        map: render.Textures.loadTexture(sheet, 'wall', 1),
         alphaTest: FacilityStyle.CLUTTER_CUT,
         side: THREE.DoubleSide,
         // one draw for both faces: it is alpha-CUT and writes depth, so the back/front split three

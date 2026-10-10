@@ -1272,6 +1272,8 @@ class Const
   public static var TILE_MIL_PLANE = OFFSET_ROW19 + 10;
   // the helipad's painted concrete square. Walkable
   public static var TILE_MIL_PAD = OFFSET_ROW19 + 11;
+  // a concrete jersey barrier on the pavement either side of the gate mouth. Unwalkable, see-through
+  public static var TILE_MIL_JERSEY = OFFSET_ROW19 + 12;
   // container length, and each vehicle kind's footprint as [ w, h ] in cells
   public static inline var MIL_CONTAINER_LEN = 3;
   public static var MIL_TANK_SIZE = [ 2, 4 ];

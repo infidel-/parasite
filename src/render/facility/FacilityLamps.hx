@@ -430,6 +430,12 @@ class FacilityLamps
           });
         }
 
+      // a military base stands its own floodlight masts on the same spots, emitted
+      if (m.kind == 'military')
+        {
+          render.military.MilitaryYard.masts(scene, places, reach, bulbY);
+          places = [];
+        }
       var prop = Models.instanced(scene, RenderConfig.MODELS.facilityLamp, places,
         FacilityStyle.LAMP_H, SOLID);
       // the mask has to go on behind the loader callback — the mesh does not exist until the glb
