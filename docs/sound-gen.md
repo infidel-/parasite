@@ -27,6 +27,9 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
   were good, but a print run repeating every 20 s reads as a broken record, not a room. An occasional
   bubble in a cooler hum passes; a recognisable action does not. Brief an object loop as a STEADY
   state.
+- **THE WORLD IS ALWAYS NIGHT** (there is no day/night cycle): every outdoor brief ends in "at
+  night". The facility's first birds were a daytime chirp and were re-rolled as night birds.
+- **No sirens, no dog barks, no voices** in an ambience: they read as a real alert or an actor.
 - **Write the brief per sound, plus the area's style tail.** `art/sounds.json`'s `style` is appended
   verbatim, like `textures.json`'s. Corp uses: *"clean modern corporate office building interior,
   close-miked, dry, realistic field recording, no music, no voices"*.
@@ -112,8 +115,11 @@ Every positional sound, loop or one-shot, measures the PATH from the player, not
 
 A loop goes through `Sounds.updateLoop(key, frac, base)`. It is lazy: created on its first audible
 frame, then never stopped, only set to volume 0, so crossing the edge of a range does not restart it.
-`onEnterArea` zeroes every loop. The barrel fire (`ambient-fire`, on `effectsVolume`) uses it
-directly; everything else is an `AreaSounds` kind on `ambientVolume`.
+`onEnterArea` zeroes every loop. Every loop is an `AreaSounds` kind on `ambientVolume`, the barrel
+fire included. A kind with several variants (`city/store1/2`) picks one AT RANDOM when its loop is
+created and keeps it for the session, since the loop is never dropped.
+- **`gate`** (optional) counts a source only while it returns true: the slums' failing lamps buzz
+  only while lit (`LightCone.ConeSet.on`).
 - **Level:** `(1 - d/range)^2`, squared because linear amplitude barely moves near the source.
   Measured on the cooler (range 2, -8 dB at the time, slider 100): on it **39.7**, next to it
   **10.0**, one more tile **0**. Only the nearest source of each kind counts.
@@ -186,7 +192,7 @@ The clone of `CorpSounds`, with the outdoors split off. Facility's `AreaInfo.amb
 | `corp/fridge` (reused) | `decoration` frames 8/0 (fridge), 8/1 (freezer) of `FIT_CABINET` | loop, duty 40/60 | 3 |
 | `corp/drip` (reused) | `m.tableSink` (lab sinks) + `FIT_BASIN` | event, gap 16 s | 2 |
 | `facility/drain` | `m.drain` (`floor_drain` objects) | event, gap 40 s | 2 |
-| `facility/birds` | tree tiles `TILE_TREE1..TILE_BUSH-1` (~280 cells) | event, gap 20 s, 3 variants | 6 |
+| `facility/birds` | tree tiles `TILE_TREE1..TILE_BUSH-1` (~280 cells) | event, gap 20 s, night birds | 6 |
 | `facility/car` | `Surf.ROAD` (~260 cells) | event, gap 45 s, 3 variants | 8 |
 | `corp/flush` (reused) | none: the washroom bed's event | event, gap 80 s | — |
 | `facility/pa` | none: at the summed level of the four INDOOR beds, so never outdoors | event, gap 180 s | — |
@@ -202,7 +208,49 @@ The clone of `CorpSounds`, with the outdoors split off. Facility's `AreaInfo.amb
 - **An event over a DENSE cell set plays mostly far away.** It picks a random in-range cell, and with
   ~280 tree cells most are 4-6 away: birds measured **0.1-0.5** next to a tree, against drip **7.9**.
   Ceiling of the random pick; weight it to the nearest when that matters.
-- Earmarked runners-up in `unused/facility/`: `exterior-sonilo1` for a wilderness spot near a road.
+- `exterior-sonilo1` became the wilderness's `wild/road`. The day birds are in `unused/facility/`
+  as `birds-*-day.wav`.
+
+### City: `render/CitySounds.hx`, driven from `CityArea.tick`
+
+Each tier (`area.typeID`: slums `AREA_CITY_LOW`, medium, downtown `AREA_CITY_HIGH`) has its own three
+beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_NONE`.
+- **Beds**, one-hot over 4 x `BASE_MS`, off `city.tiles`: MAIN = a Road cell inside some 4x4 all-Road
+  square (only the 4-wide main road has one) or a Walkway next to one; STREET = any other Road or
+  Walkway; ALLEY = Alley. Keys `city/<tier>-main|street|alley`, tiers `slums`/`medium`/`downtown`;
+  the medium street is the old `ambient-city`. Baked -36, DB -4.
+
+| key | sources | type | range |
+|---|---|---|---|
+| `city/diner`, `city/store`, `city/laundromat` | open cells 4-adjacent to an OPEN shop (`Building.shop` 0, 1, 3, `shopOpen`) | loop | 3 |
+| `city/warehouse` | around `WorldCtx.style.isSpecial(b.facade)`, ONE IN THREE by position | loop | 4 |
+| `city/sewer` | `sewer_hatch` objects | loop | 2 |
+| `city/lampbuzz` | `SceneBundle.flickCells`, gated on the flicker (slums) | loop | 2 |
+| `ambient-fire` | `burning_barrel` objects (was `LampShadows.driveFireLoop`: straight-line, on screen only, effects slider) | loop | 4 |
+| slums: `city/bottle`, `city/can`, `city/rats` | Alley cells | event, gap 40/35/30 s | 6/6/4 |
+| slums: `city/crackle` | barrels | event, gap 8 s | 4 |
+| slums: `city/screendoor` | none | event, gap 70 s | — |
+| medium: `facility/car` (reused) | Road | event, gap 30 s | 8 |
+| medium: `city/shopbell`, `city/garage` | open shops / open garages (shop 2) | event, gap 40/25 s | 4/5 |
+| medium: `city/horn` | none | event, gap 60 s | — |
+| downtown: `facility/car` (reused) | Road | event, gap 15 s | 8 |
+| downtown: `city/horn`, `city/helicopter` | none | event, gap 25/240 s | — |
+
+- **Warehouses are thinned to one in three** (`(col*31 + row*17) % 3`): a medium city has ~40 of 220
+  buildings, and all of them humming covered most of the streets.
+- `city/busbrake` was baked and dropped ("bad"). The slums alley was re-rolled: the first takes had
+  a metallic rattle (the brief said "shacks" and "gutters"); the brief now says dilapidated brick.
+
+### Wilderness: `render/wild/WildSounds.hx`, driven from `WildArea.tick`
+
+`AREA_GROUND` is `AMBIENT_NONE`. The band is `Terrain.bandAtArea` (as `WildBand.use`).
+- **Beds**: `wild/forest`, `wild/plains`, `wild/mountain`, and `wild/road` within 4 cells of the
+  highway's centreline (`WildRoad.distTo`) where the area has one — the facility exterior's sonilo
+  take, earmarked for it. Baked -36, DB -4.
+- **Events**: `facility/car` on road cells (8, gap 45) in every band; forest `wild/owl` (trees, 8, gap
+  40) and `wild/twig` (trees and bushes, 3, gap 25); plains `wild/coyote` (none, gap 120); mountain
+  `wild/rockfall` (`TILE_ROCK`/`ROCK_LARGE`, 6, gap 35). `wild/gust` was baked and dropped ("bad
+  everywhere").
 
 ## Levels (measured with ebur128, 2026-10-08)
 
@@ -260,3 +308,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-09 | corp | rack, vending, cooler, printer, cctv, elevator, vent (20 s loops, 5 models) | rack, vending: elevenlabs · cooler, elevator, vent: sonilo · cctv: cassette · printer: dropped (too distinct for a loop) | $2.146 |
 | 2026-10-09 | corp | cubicle, washroom, window, fridge (loops) · flush, phone, drip (one-shots) | cubicle, window, drip: elevenlabs · fridge, washroom: cassette · flush: sonilo (baked -36, "must be quieter") · phone: elevenlabs, third roll (the first take CLIPPED: 0 dBFS, 11 clipped samples, audibly distorted; a softer "gentle low-volume warble, no distortion" brief fixed it) · washroom sonilo kept for the facility | $0.58 |
 | 2026-10-10 | facility | lab, hangar, park, exterior (beds) · machine, generator (loops) · drain, pa, birds, car (one-shots) | lab, hangar, exterior, machine, generator: elevenlabs · park, pa: sonilo · drain: cassette + elevenlabs (2 variants) · birds, car: all three as variants 1-3 · pa cassette CLIPPED (0 dBFS, peak count 6), out unheard · exterior sonilo kept for the wilderness | $0.67 |
+| 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it · wild: coyote, forest, mountain, rockfall: elevenlabs · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |

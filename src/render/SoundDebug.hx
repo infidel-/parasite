@@ -7,7 +7,8 @@ import render.SoundSources.SoundSource;
 import render.world.WorldCtx;
 
 // sound mode (Shift+S, inside street-debug; plain S is the fly cam's): a thin green ring at each looping sound source's range, a
-// small label over it (kind, base dB, the volume it is playing now) and a panel of every kind. click
+// small label over it (kind, base dB, the volume it is playing now) and a panel of every kind. the
+// play button before a label or a row plays that kind's current variant once (again to stop); click
 // a label or a panel row to select its kind; the wheel moves that kind's base dB (1 dB a notch,
 // Shift 0.1) in render.SoundSources.DB, and every kind changed this session goes to the clipboard as
 // paste-ready lines. the levels follow the PLAYER, who walks on the arrows while the mode is up;
@@ -78,7 +79,7 @@ class SoundDebug
     {
       Tools.legend('sound',
         'Shift+S  leave sound mode   arrows  walk the player (the levels follow them)\n' +
-        'LMB  select a source label (or a row of the panel)\n' +
+        'LMB  select a source label (or a row of the panel)   \u25B6  play its current variant\n' +
         'wheel  base dB of the selected kind +-1   Shift+wheel  +-0.1   (changes -> clipboard)');
       Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
         if (!Tools.enabled ||
@@ -178,7 +179,8 @@ class SoundDebug
           group.parent != scene ||
           builtFor != SoundSources.sources)
         rebuild(scene);
-      // labels: one per source, over its centre
+      // labels: one per source, over its centre, a play button and the readout
+      var playing = game.Game.inst.scene.sounds.previewing();
       for (i in 0...builtFor.length)
         {
           var s = builtFor[i];
@@ -200,7 +202,10 @@ class SoundDebug
           var lit = (p != null &&
             haxe.Timer.stamp() - p.t < BLINK &&
             Lambda.exists(s.cells, function(c) return c.col == p.col && c.row == p.row));
-          l.textContent = (lit ? '\u266A ' : '') + line(s.key);
+          var btn:js.html.Element = cast l.firstChild;
+          btn.textContent = button(s.key, playing);
+          btn.style.pointerEvents = (active() ? 'auto' : 'none');
+          l.lastChild.textContent = (lit ? '\u266A ' : '') + line(s.key);
           l.style.color = (lit ? '#fff' : (s.key == selected ? '#ff6' : '#7f7'));
         }
       // the panel: the beds on top, then the sourceless one-shots, then every kind with a source,
@@ -218,8 +223,8 @@ class SoundDebug
           var lit = (p != null &&
             haxe.Timer.stamp() - p.t < BLINK);
           html += '<div data-key="' + k + '" style="cursor:pointer;color:' +
-            (lit ? '#fff' : (k == selected ? '#ff6' : '#7f7')) + '">' + (lit ? '\u266A ' : '') +
-            line(k) + '</div>';
+            (lit ? '#fff' : (k == selected ? '#ff6' : '#7f7')) + '"><span data-play="' + k + '">' +
+            button(k, playing) + '</span> ' + (lit ? '\u266A ' : '') + line(k) + '</div>';
         }
       if (haxe.Timer.stamp() < flashUntil)
         html += '<div style="color:#6f6">✓ copied</div>';
@@ -227,6 +232,12 @@ class SoundDebug
         panel.innerHTML = html;
       // clickable only in the mode: out of street-debug it must not eat clicks meant for the HUD
       panel.style.pointerEvents = (active() ? 'auto' : 'none');
+    }
+
+// the play button's glyph: stop while this kind's preview plays
+  static inline function button(key:String, playing:String):String
+    {
+      return (key == playing ? '\u25A0' : '\u25B6');
     }
 
 // a kind's readout: short name, base dB, volume playing now (an intermittent's: its last play), and
@@ -252,6 +263,12 @@ class SoundDebug
         'font-size:11px;line-height:1.5;pointer-events:auto';
       panel.addEventListener('click', function(e:js.html.MouseEvent) {
         var t:js.html.Element = cast e.target;
+        var play = t.getAttribute('data-play');
+        if (play != null)
+          {
+            game.Game.inst.scene.sounds.preview(play);
+            return;
+          }
         var k = t.getAttribute('data-key');
         if (k != null)
           selected = k;
@@ -294,10 +311,18 @@ class SoundDebug
       for (l in labels)
         l.remove();
       labels = [];
-      for (_ in builtFor)
+      for (i in 0...builtFor.length)
         {
           var l = Browser.document.createDivElement();
           l.style.cssText = 'position:absolute;transform:translate(-50%,-50%);white-space:nowrap';
+          // the play button takes its own clicks, so it never reaches the canvas's select
+          var btn = Browser.document.createSpanElement();
+          btn.style.cssText = 'cursor:pointer;padding-right:3px';
+          btn.addEventListener('click', function(e:js.html.MouseEvent) {
+            game.Game.inst.scene.sounds.preview(builtFor[i].key);
+          });
+          l.appendChild(btn);
+          l.appendChild(Browser.document.createSpanElement());
           layer.appendChild(l);
           labels.push(l);
         }

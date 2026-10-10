@@ -19,6 +19,8 @@ class Sounds
   var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
   var loops: Map<String, SMSound>; // looping positional sounds by key (barrel fire, corp machines), volume set per frame
+  var previewSound: SMSound; // sound mode's play button: the one play it started, and its kind
+  var previewKey: String;
   var ambientLocation: _SoundAmbientLocation;
   var initDone: Bool;
 
@@ -497,7 +499,8 @@ class Sounds
       var loop = loops[key];
       if (loop == null)
         {
-          // its first variant: ambient-fire.mp3 has none, facility/vent1.mp3 has one
+          // a random variant, kept for the session since the loop is only ever silenced, never
+          // dropped: ambient-fire.mp3 has none, city/store1/2.mp3 have two
           var v = sounds[key];
           if (frac <= 0 ||
               v == null)
@@ -505,9 +508,11 @@ class Sounds
               render.SoundSources.vol[key] = 0;
               return;
             }
+          var pick = v[Std.random(v.length)];
+          lastVariant[key] = pick;
           loop = SoundManager.createSound({
             id: key,
-            url: AssetPath.resolve('sound/' + key + (v[0] >= 0 ? '' + v[0] : '') + '.mp3'),
+            url: AssetPath.resolve('sound/' + key + (pick >= 0 ? '' + pick : '') + '.mp3'),
             volume: 0,
             loops: 10000,
           });
@@ -520,6 +525,39 @@ class Sounds
       if (loop.volume != vol)
         loop.setVolume(vol);
 #end
+    }
+
+// sound mode's play button: one play of a kind's current variant — the one its loop runs or the
+// last one-shot played, else its first — at the ambient slider and the kind's tuned gain. pressed
+// again while that kind still plays, it stops it
+  public function preview(key: String)
+    {
+#if !free
+      var playing = previewing();
+      if (playing != null)
+        previewSound.stop();
+      if (playing == key)
+        return;
+      var v = sounds[key];
+      if (v == null)
+        return;
+      var pick = (lastVariant[key] != null ? lastVariant[key] : v[0]);
+      SoundManager.destroySound('preview');
+      previewKey = key;
+      previewSound = SoundManager.createSound({
+        id: 'preview',
+        url: AssetPath.resolve('sound/' + key + (pick >= 0 ? '' + pick : '') + '.mp3'),
+        volume: Math.min(100, game.config.ambientVolume * render.SoundSources.gain(key)),
+      });
+      previewSound.play();
+#end
+    }
+
+// the kind the play button is playing now, or null
+  public function previewing(): String
+    {
+      return (previewSound != null &&
+        previewSound.playState == 1 ? previewKey : null);
     }
 
 // play given sound from the library

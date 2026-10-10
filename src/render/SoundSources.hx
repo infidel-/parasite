@@ -73,19 +73,17 @@ class SoundSources
     'city/crackle' => -10.0,
     'city/horn' => -10.0,
     'city/shopbell' => -10.0,
-    'city/garage' => -10.0,
+    'city/garage' => -14.0,
     'city/helicopter' => -10.0,
-    'city/busbrake' => -10.0,
     'ambient-wilderness' => 0.0,
     'wild/forest' => -4.0,
     'wild/plains' => -4.0,
     'wild/mountain' => -4.0,
     'wild/road' => -4.0,
     'wild/owl' => -10.0,
-    'wild/twig' => -10.0,
+    'wild/twig' => -14.0,
     'wild/coyote' => -10.0,
     'wild/rockfall' => -10.0,
-    'wild/gust' => -10.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];

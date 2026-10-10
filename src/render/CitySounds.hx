@@ -47,18 +47,13 @@ class CitySounds
       main = mainCells();
       // the cells by ground kind
       var road = [];
-      var mainRoad = [];
       var alley = [];
       for (row in 0...city.tiles.length)
         for (col in 0...city.tiles[row].length)
           {
             var t:Tile = city.tiles[row][col];
             if (t == Tile.Road)
-              {
-                road.push({ col: col, row: row });
-                if (main[row][col])
-                  mainRoad.push({ col: col, row: row });
-              }
+              road.push({ col: col, row: row });
             else if (t == Tile.Alley)
               alley.push({ col: col, row: row });
           }
@@ -103,7 +98,6 @@ class CitySounds
         {
           events = [
             { key: 'facility/car', range: 8, gap: 15, cells: road },
-            { key: 'city/busbrake', range: 8, gap: 60, cells: mainRoad },
           ];
           far = [
             { key: 'city/horn', gap: 25, wait: 0 },

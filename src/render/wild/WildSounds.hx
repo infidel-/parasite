@@ -65,7 +65,7 @@ class WildSounds
       var events:Array<AreaEvent> = [
         { key: 'facility/car', range: 8, gap: 45, cells: road },
       ];
-      far = [ { key: 'wild/gust', gap: 50, wait: 0 } ];
+      far = [];
       if (band == 'forest')
         {
           events.push({ key: 'wild/owl', range: 8, gap: 40, cells: trees });
