@@ -79,12 +79,12 @@ class SoundSources
     'ambient-wilderness' => 0.0,
     'wild/forest' => -4.0,
     'wild/plains' => -4.0,
-    'wild/mountain' => -4.0,
+    'wild/mountain' => -8.0,
     'wild/road' => -4.0,
     'wild/owl' => -10.0,
     'wild/twig' => -14.0,
     'wild/coyote' => -10.0,
-    'wild/rockfall' => -10.0,
+    'wild/rockfall' => -14.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];
