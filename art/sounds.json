@@ -634,23 +634,23 @@
       "lufs": -36,
       "variants": [
         {
-          "file": "wild/forest-elevenlabs1.wav",
-          "model": "elevenlabs",
-          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
-          "prompt": "dense forest, wind moving through the tree canopy, leaves rustling, occasional distant creaking trunks, constant, no events, wilderness at night, realistic field recording, no music, no voices",
-          "duration": 22.0,
+          "file": "wild/forest-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "still forest at night, crickets and night insects chirping, soft leaf rustle, a branch creaking now and then, barely any wind, constant, no events, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
           "seed": null,
-          "cost": 0.044,
-          "native_loop": true,
+          "cost": 0.0396,
+          "native_loop": false,
           "generated": "2026-10-10T00:00",
-          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+          "bakeoff": "bake-off 2026-10-10 (re-roll, \"too windy\"): elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
         }
       ],
-      "last_converted": "2026-10-10T17:40:32",
       "last_sig": "-36/128k/True/500/hp40x2",
       "last_outputs": [
         "wild/forest1.mp3"
-      ]
+      ],
+      "last_converted": "2026-10-10T18:06:32"
     },
     "wild/mountain": {
       "area": "wild",
