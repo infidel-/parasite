@@ -19,6 +19,7 @@ class Sounds
   var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
   var loops: Map<String, SMSound>; // looping positional sounds by key (barrel fire, corp machines), volume set per frame
+  var shots: Map<String, SMSound>; // the area's ambient one-shots still playing (a far jet), stopped when a menu comes up
   var previewSound: SMSound; // sound mode's play button: the one play it started, and its kind
   var previewKey: String;
   var ambientLocation: _SoundAmbientLocation;
@@ -66,6 +67,7 @@ class Sounds
             for (l in loops)
               if (!l.muted)
                 l.mute();
+            stopShots();
             return;
           }
         else if (game.ui.state == UISTATE_ABOUT)
@@ -101,6 +103,7 @@ class Sounds
             for (l in loops)
               if (!l.muted)
                 l.mute();
+            stopShots();
             return;
           }
         else
@@ -133,6 +136,7 @@ class Sounds
       menuMusic = null;
       aboutMusic = null;
       loops = new Map();
+      shots = new Map();
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
@@ -657,9 +661,20 @@ class Sounds
         id: id,
         url: AssetPath.resolve('sound/' + key + '.mp3'),
         volume: volume,
+        onfinish: (opts.ambient ? function () shots.remove(id) : null),
       });
+      if (opts.ambient)
+        shots[id] = sound;
       sound.play();
 #end
+    }
+
+// stop the area's ambient one-shots still playing
+  function stopShots()
+    {
+      for (s in shots)
+        s.stop();
+      shots.clear();
     }
 
 /**

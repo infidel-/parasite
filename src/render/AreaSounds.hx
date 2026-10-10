@@ -99,6 +99,7 @@ class AreaSounds
       game.scene.sounds.play(key, {
         volume: vol,
         always: true,
+        ambient: true,
       });
     }
 
