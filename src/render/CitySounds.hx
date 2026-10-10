@@ -117,7 +117,8 @@ class CitySounds
         f.wait = f.gap * Math.random();
       loops = new AreaSounds(game, [
         { key: 'city/diner', range: 3, cells: shops[0] },
-        { key: 'city/store', range: 3, cells: shops[1] },
+        // the slums' corner stores are all broken: no fridges, no sign
+        { key: 'city/store', range: 3, cells: (tier == _AreaType.AREA_CITY_LOW ? [] : shops[1]) },
         { key: 'city/laundromat', range: 3, cells: shops[3] },
         { key: 'city/warehouse', range: 4, cells: warehouses },
         { key: 'city/sewer', range: 2, cells: hatches },

@@ -222,7 +222,7 @@ beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_N
 
 | key | sources | type | range |
 |---|---|---|---|
-| `city/diner`, `city/store`, `city/laundromat` | open cells 4-adjacent to an OPEN shop (`Building.shop` 0, 1, 3, `shopOpen`) | loop | 3 |
+| `city/diner`, `city/store`, `city/laundromat` | open cells 4-adjacent to an OPEN shop (`Building.shop` 0, 1, 3, `shopOpen`) | loop | 3; no store in the slums (asked for: its stores are all broken) |
 | `city/warehouse` | around `WorldCtx.style.isSpecial(b.facade)`, ONE IN THREE by position | loop | 4 |
 | `city/sewer` | `sewer_hatch` objects | loop | 2 |
 | `city/lampbuzz` | `SceneBundle.flickCells`, gated on the flicker (slums) | loop | 2 |
@@ -236,6 +236,8 @@ beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_N
 | downtown: `facility/car` (reused) | Road | event, gap 15 s | 8 |
 | downtown: `city/horn`, `city/helicopter` | none | event, gap 25/240 s | — |
 
+- **The play button's preview follows the wheel** (`Sounds.previewRetune`): asked for, the dB moved and
+  the sound playing did not.
 - **Warehouses are thinned to one in three** (`(col*31 + row*17) % 3`): a medium city has ~40 of 220
   buildings, and all of them humming covered most of the streets.
 - `city/busbrake` was baked and dropped ("bad"). The slums alley was re-rolled: the first takes had
@@ -308,4 +310,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-09 | corp | rack, vending, cooler, printer, cctv, elevator, vent (20 s loops, 5 models) | rack, vending: elevenlabs · cooler, elevator, vent: sonilo · cctv: cassette · printer: dropped (too distinct for a loop) | $2.146 |
 | 2026-10-09 | corp | cubicle, washroom, window, fridge (loops) · flush, phone, drip (one-shots) | cubicle, window, drip: elevenlabs · fridge, washroom: cassette · flush: sonilo (baked -36, "must be quieter") · phone: elevenlabs, third roll (the first take CLIPPED: 0 dBFS, 11 clipped samples, audibly distorted; a softer "gentle low-volume warble, no distortion" brief fixed it) · washroom sonilo kept for the facility | $0.58 |
 | 2026-10-10 | facility | lab, hangar, park, exterior (beds) · machine, generator (loops) · drain, pa, birds, car (one-shots) | lab, hangar, exterior, machine, generator: elevenlabs · park, pa: sonilo · drain: cassette + elevenlabs (2 variants) · birds, car: all three as variants 1-3 · pa cassette CLIPPED (0 dBFS, peak count 6), out unheard · exterior sonilo kept for the wilderness | $0.67 |
-| 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it · wild: coyote, forest, mountain, rockfall: elevenlabs · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |
+| 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it, sonilo won · wild: coyote, forest, mountain, rockfall: elevenlabs · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |

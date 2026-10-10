@@ -553,6 +553,13 @@ class Sounds
 #end
     }
 
+// sound mode's wheel moved a kind's dB: the preview playing it follows
+  public function previewRetune(key: String)
+    {
+      if (previewing() == key)
+        previewSound.setVolume(Math.min(100, game.config.ambientVolume * render.SoundSources.gain(key)));
+    }
+
 // the kind the play button is playing now, or null
   public function previewing(): String
     {

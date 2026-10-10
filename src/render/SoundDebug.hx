@@ -133,6 +133,7 @@ class SoundDebug
         var db = SoundSources.DB[selected];
         SoundSources.DB[selected] = Math.round(((db == null ? 0 : db) + step) * 10) / 10;
         changed[selected] = true;
+        game.Game.inst.scene.sounds.previewRetune(selected);
         var keys = [for (k in changed.keys()) k];
         keys.sort(Reflect.compare);
         StreetPerf.copyText([for (k in keys) k + ' ' + fmt(SoundSources.DB[k]) + ' dB'].join('\n'));

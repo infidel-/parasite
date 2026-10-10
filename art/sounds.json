@@ -1549,6 +1549,30 @@
       "last_outputs": [
         "wild/road1.mp3"
       ]
+    },
+    "city/slums-alley": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/slums-alley-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "narrow back alley between dilapidated crumbling brick buildings, wind blowing through, water dripping onto wet ground, old paper litter rustling, constant, no events, no metal, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10 (third roll): elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T16:14:50",
+      "last_sig": "-36/128k/True/500",
+      "last_outputs": [
+        "city/slums-alley1.mp3"
+      ]
     }
   }
 }
