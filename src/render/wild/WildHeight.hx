@@ -108,7 +108,9 @@ class WildHeight
 // than the ground under it
   public static function shade(x:Float, z:Float):Float
     {
-      var hn = at(x, z) / ((A_AMP + B_AMP) * WildBand.reliefAmp);
+      // flat (a military base's margin zeroes the relief) is mid-range, which shades exactly 1
+      var amp = (A_AMP + B_AMP) * WildBand.reliefAmp;
+      var hn = (amp > 0 ? at(x, z) / amp : 0.0);
       var s = Math.min(1.0, Math.max(0.0, (hn + 1.0) / 2.0));
       return (1.0 - WildStyle.SHADE_DEPTH * (1.0 - s) * (1.0 - s)) / (1.0 - WildStyle.SHADE_DEPTH * 0.25);
     }

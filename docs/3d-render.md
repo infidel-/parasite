@@ -810,6 +810,7 @@ back) — grep the change text.
 | **The military base wears its OWN shell, ground, paint, grime, cables and night rig** (`MilitaryStyle.shell()`/`rig()`; 13 facility constants moved onto `ShellTex`) | 3 packed sheets + 11 layout-preserving `edit_image` repaints with the source's alpha re-applied, **$0.85**; values fitted to each facility counterpart's built linear | **landed** |
 | **The military base's rooms are its OWN** (barracks, mess, briefing, HQ, latrine, armory; `MilitaryInterior` emits row-20 furniture; the lockers and gun cabinet wear new art) | 6 packed sheets, **$0.33**; 25 labels fitted to the facility interior's built linear; furniture is quads into `MilitaryGeom`'s per-texture buffers, adding about 10 calls in a furnished room | **landed** |
 | **The military base's yard, gate and roofs are its OWN** (`MilitaryYard`: guard post, own-band boom, jersey barriers, crate stacks and fuel drums, floodlight masts, roof kit; exit, wall-point and roof-litter sheets via `ShellTex`) | 1 packed sheet + 3 layout-kept repaints, **$0.23**; every facility glb that stood in a base (7 roof, 3 lot, the lamp post, booth, barrier) is now emitted quads on the same spots | **landed** |
+| **Military base fix pass: towers inside the corners, closed fence corners, base meshes cast, margin patches** | chainlink cropped to whole diamond periods (203.9 x 226.2 px); posts halved; `WildHeight.shade` NaN at zero relief blacked the whole frame through bloom | **landed** |
 
 ### FX, UI and the view itself
 

@@ -9,12 +9,14 @@ import render.facility.FacilityModel.Surf;
 import render.wild.WildBand;
 import render.wild.WildHeight;
 import render.wild.WildModel;
+import render.wild.WildPatches;
 import render.wild.WildProps;
 import render.wild.WildStyle;
 
 // a military base's WILD MARGIN, the ground outside its fence: the terrain band's trees, bushes,
 // rocks and thickets, planted by the wilderness's own scatter (render.wild.WildProps) off the same
-// tile grid the wilderness reads, so a base in the forest band stands in that forest's wood.
+// tile grid the wilderness reads, so a base in the forest band stands in that forest's wood, and
+// the band's ground patches (render.wild.WildPatches) over the margin's cells only.
 //
 // FLAT, where the wilderness rolls: its relief is zeroed for the build, so every prop sits at 0 —
 // which is the height render.facility.FacilityGround lays Surf.WILD at. Everything that is not
@@ -31,7 +33,8 @@ class MilitaryMargin
       WildHeight.use(game.area.id);
     }
 
-// plant the margin. returns the batches, which the area's tick culls
+// plant the margin and lay the band's dead-grass and bare-earth patches over it. returns the
+// batches, which the area's tick culls
   public static function build(scene:Scene, area:AreaGame, m:Facility):Array<InstancedProp>
     {
       var w = WildModel.fromArea(area);
@@ -40,6 +43,7 @@ class MilitaryMargin
         for (col in 0...w.w)
           if (m.surf[row][col] != Surf.WILD)
             w.prop[row][col] = WildModel.OCCUPIED;
+      WildPatches.build(scene, w, function(col, row) return m.surf[row][col] == Surf.WILD);
       return WildProps.build(scene, w);
     }
 

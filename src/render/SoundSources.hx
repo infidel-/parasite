@@ -53,7 +53,6 @@ class SoundSources
     'facility/exterior' => -4.0,
     'military/indoor' => -4.0,
     'military/yard' => -4.0,
-    'military/floodlight' => -10.0,
     'military/fence' => -10.0,
     'military/idle' => -8.0,
     'military/radio' => -12.0,

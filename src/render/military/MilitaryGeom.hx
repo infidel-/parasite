@@ -47,11 +47,14 @@ class MilitaryGeom
   static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
   static inline var TEX_PAD_MARK = 'textures/military/helipad-h.png';
 
-  // the fence: two cells high, one sheet of eight diamonds per CHAIN_TILE units, and a post at
-  // every cell edge
+  // the fence: two cells high, the chain-link world-tiled at its crop's own aspect (CHAIN_TILE
+  // across, CHAIN_V up: military/chainlink's 1020x905, five by four whole diamonds), and a post on
+  // every POST_EVERY-th cell edge plus wherever a run stops or turns
   public static inline var FENCE_H = CELL * 2;
   static inline var CHAIN_TILE = 4.0;
+  static inline var CHAIN_V = CHAIN_TILE * 905 / 1020;
   static inline var POST_W = 0.35;
+  static inline var POST_EVERY = 2;
   // the razor-wire coil along its top: v 0..1 over WIRE_H, u at the 1024x640 source's own aspect
   static inline var WIRE_H = 1.6;
   static inline var WIRE_TILE = WIRE_H * 1.6;
@@ -65,11 +68,19 @@ class MilitaryGeom
   static inline var DECK_Y = FENCE_H + 2.0;
   static inline var DECK_T = 0.5;
   static inline var PARAPET_H = 2.2;
+  static inline var PARAPET_T = 0.2;
   static inline var ROOF_Y = DECK_Y + 5.0;
   static inline var ROOF_T = 0.4;
   static inline var ROOF_OVER = 0.6;
   static inline var OLIVE_TILE = 4.0;
   static inline var SANDBAG_H = 2.4;
+  // its steel ladder, standing off the face toward the middle of the base, ground to over the
+  // parapet
+  static inline var LADDER_W = 0.9;
+  static inline var LADDER_OFF = 0.2;
+  static inline var RAIL_W = 0.1;
+  static inline var RUNG_T = 0.08;
+  static inline var RUNG_STEP = 0.6;
 
   // a tent over its 2x3 cells: walls to the eave, a ridge along its long axis
   static inline var TENT_INSET = 0.4;
@@ -120,14 +131,13 @@ class MilitaryGeom
         x1: -1,
         z1: -1,
       };
-      var f = gen.military.MilitaryGen.fenceOf(area.getCells(), area.width, area.height);
       for (row in 0...area.height)
         for (col in 0...area.width)
           {
             var t = area.getCellType(col, row);
             if (t == Const.TILE_MIL_FENCE ||
                 t == Const.TILE_MIL_FENCE_TORN)
-              fence(area, col, row, (row == f.y1 || row == f.y2), t == Const.TILE_MIL_FENCE_TORN);
+              fence(area, col, row, t == Const.TILE_MIL_FENCE_TORN);
             else if (t == Const.TILE_MIL_TOWER &&
                 area.getCellType(col - 1, row) != t &&
                 area.getCellType(col, row - 1) != t)
@@ -171,8 +181,9 @@ class MilitaryGeom
           locker(m, o.x, o.y, (o.type == 'locker' ? TEX_LOCKER : TEX_GUNS));
         else if (o.type == 'safe')
           safe(m, o.x, o.y);
+      // they all cast: a jersey, a tent or a tower under the moon with no shadow read as pasted on
       for (tex in opaque.keys())
-        FacilityGeom.add(scene, opaque.get(tex), tex, true, false);
+        FacilityGeom.add(scene, opaque.get(tex), tex, true, true);
       for (tex in cut.keys())
         addCut(scene, cut.get(tex), tex);
     }
@@ -188,14 +199,48 @@ class MilitaryGeom
          o.type == 'safe');
     }
 
-// one cell of the perimeter: its chain-link (the torn panel's lower half on a breach), the coil of
-// razor wire along its top, and a post at its low edge, plus its high edge where the run stops
-  static function fence(area:AreaGame, col:Int, row:Int, alongX:Bool, torn:Bool):Void
+// one cell of the perimeter and its posts. a straight cell spans its whole width along the line;
+// a CORNER cell is two half-runs, one toward each neighbour, so the ring turns the corner closed
+  static function fence(area:AreaGame, col:Int, row:Int, torn:Bool):Void
     {
       var c = CityConfig.cellToWorld(col, row);
-      var a0 = (alongX ? c.x : c.z) - CELL / 2;
+      var w = isFence(area, col - 1, row);
+      var e = isFence(area, col + 1, row);
+      var n = isFence(area, col, row - 1);
+      var s = isFence(area, col, row + 1);
+      var h = CELL / 2;
+      if ((w || e) &&
+          (n || s))
+        {
+          run(true, c.z, (w ? c.x - h : c.x), (w ? c.x : c.x + h), false);
+          run(false, c.x, (n ? c.z - h : c.z), (n ? c.z : c.z + h), false);
+          post(true, c.z, c.x);
+          return;
+        }
+      var alongX = (w || e);
+      var a0 = (alongX ? c.x : c.z) - h;
       var a1 = a0 + CELL;
       var p = (alongX ? c.z : c.x);
+      run(alongX, p, a0, a1, torn);
+      if (!(alongX ? w : n) ||
+          (alongX ? col : row) % POST_EVERY == 0)
+        post(alongX, p, a0);
+      if (!(alongX ? e : s))
+        post(alongX, p, a1);
+    }
+
+// is this cell part of the ring?
+  static inline function isFence(area:AreaGame, col:Int, row:Int):Bool
+    {
+      var t = area.getCellType(col, row);
+      return t == Const.TILE_MIL_FENCE ||
+        t == Const.TILE_MIL_FENCE_TORN;
+    }
+
+// the chain-link (the torn panel's lower half on a breach) and the razor wire over a0..a1 along a
+// line at `p` across it
+  static function run(alongX:Bool, p:Float, a0:Float, a1:Float, torn:Bool):Void
+    {
       var lo = 0.0;
       if (torn)
         {
@@ -203,16 +248,9 @@ class MilitaryGeom
           lo = CELL;
         }
       upright(buf(TEX_CHAIN, true), alongX, p, a0, a1, lo, FENCE_H, a0 / CHAIN_TILE,
-        a1 / CHAIN_TILE, lo / CHAIN_TILE, FENCE_H / CHAIN_TILE);
+        a1 / CHAIN_TILE, lo / CHAIN_V, FENCE_H / CHAIN_V);
       upright(buf(TEX_WIRE, true), alongX, p, a0, a1, FENCE_H, FENCE_H + WIRE_H, a0 / WIRE_TILE,
         a1 / WIRE_TILE, 0, 1);
-      post(alongX, p, a0);
-      var nc = col + (alongX ? 1 : 0);
-      var nr = row + (alongX ? 0 : 1);
-      var nt = area.getCellType(nc, nr);
-      if (nt != Const.TILE_MIL_FENCE &&
-          nt != Const.TILE_MIL_FENCE_TORN)
-        post(alongX, p, a1);
     }
 
 // one see-through upright quad on a fence line, at `p` across it and a0..a1 along it
@@ -257,19 +295,30 @@ class MilitaryGeom
       for (dir in 0...4)
         FacilityGeom.face(sand, x0, x1, z0, z1, dir, 0, SANDBAG_H, SANDBAG_H);
       FacilityGeom.cap(sand, x0, x1, z0, z1, SANDBAG_H, SANDBAG_H);
-      // the four legs, then the deck slab, the parapet round it, the roof posts and the roof
+      // the four legs from the ground, then the deck slab, the parapet round it, the roof posts and
+      // the roof
       for (cx in [ x0, x1 - LEG_W ])
         for (cz in [ z0, z1 - LEG_W ])
           {
-            box(buf(TEX_CONCRETE), cx, cx + LEG_W, cz, cz + LEG_W, SANDBAG_H, DECK_Y - DECK_T,
-              OLIVE_TILE);
+            box(buf(TEX_CONCRETE), cx, cx + LEG_W, cz, cz + LEG_W, 0, DECK_Y - DECK_T, OLIVE_TILE);
             box(olive, cx, cx + LEG_W, cz, cz + LEG_W, DECK_Y + PARAPET_H, ROOF_Y, OLIVE_TILE);
           }
+      // the parapet: its outside from under the slab, its inside from the deck and its rim, so from
+      // in the tower it is a wall and not the far side seen through a hole
+      var top = DECK_Y + PARAPET_H;
+      var t = PARAPET_T;
       for (dir in 0...4)
-        FacilityGeom.face(olive, x0, x1, z0, z1, dir, DECK_Y - DECK_T, DECK_Y + PARAPET_H,
-          OLIVE_TILE);
+        {
+          FacilityGeom.face(olive, x0, x1, z0, z1, dir, DECK_Y - DECK_T, top, OLIVE_TILE);
+          faceIn(olive, x0 + t, x1 - t, z0 + t, z1 - t, dir, DECK_Y, top, OLIVE_TILE);
+        }
+      FacilityGeom.cap(olive, x0, x1, z0, z0 + t, top, OLIVE_TILE);
+      FacilityGeom.cap(olive, x0, x1, z1 - t, z1, top, OLIVE_TILE);
+      FacilityGeom.cap(olive, x0, x0 + t, z0 + t, z1 - t, top, OLIVE_TILE);
+      FacilityGeom.cap(olive, x1 - t, x1, z0 + t, z1 - t, top, OLIVE_TILE);
       FacilityGeom.capDown(olive, x0, x1, z0, z1, DECK_Y - DECK_T, OLIVE_TILE);
-      FacilityGeom.cap(buf(TEX_APRON), x0, x1, z0, z1, DECK_Y, PAD_TILE);
+      FacilityGeom.cap(buf(TEX_APRON), x0 + t, x1 - t, z0 + t, z1 - t, DECK_Y, PAD_TILE);
+      ladder(x0, x1, z0, z1, ((x0 + x1) / 2 < 0 ? 3 : 2));
       var o = ROOF_OVER;
       for (dir in 0...4)
         FacilityGeom.face(olive, x0 - o, x1 + o, z0 - o, z1 + o, dir, ROOF_Y, ROOF_Y + ROOF_T,
@@ -289,6 +338,37 @@ class MilitaryGeom
         },
         h: SANDBAG_H,
       });
+    }
+
+// a rect's side in `dir`, wound to face INTO the rect: a parapet's inside
+  static function faceIn(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int, y0:Float,
+      y1:Float, t:Float):Void
+    {
+      var e = FacilityGeom.ends(x0, x1, z0, z1, dir);
+      var us = (dir < 2 ? e[0] : e[1]) / t;
+      var ue = (dir < 2 ? e[2] : e[3]) / t;
+      MeshBufTools.quad(b, [e[2], y0, e[3]], [e[0], y0, e[1]], [e[0], y1, e[1]], [e[2], y1, e[3]],
+        [ue, y0 / t, us, y0 / t, us, y1 / t, ue, y1 / t]);
+    }
+
+// a steel ladder standing off a tower's `dir` face (2 the -x one, 3 the +x one), from the ground to
+// a rung over the parapet
+  static function ladder(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Void
+    {
+      var b = buf(TEX_STEEL);
+      var lx = (dir == 3 ? x1 + LADDER_OFF : x0 - LADDER_OFF);
+      var cz = (z0 + z1) / 2;
+      var w = LADDER_W / 2;
+      var r = RAIL_W / 2;
+      var top = DECK_Y + PARAPET_H + RUNG_STEP;
+      for (rz in [ cz - w, cz + w ])
+        box(b, lx - r, lx + r, rz - r, rz + r, 0, top, CELL);
+      var y = RUNG_STEP;
+      while (y < top)
+        {
+          box(b, lx - r, lx + r, cz - w, cz + w, y, y + RUNG_T, CELL);
+          y += RUNG_STEP;
+        }
     }
 
 // a tent over the rect of tent cells whose top-left cell this is: canvas walls to the eave, two

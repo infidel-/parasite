@@ -307,7 +307,8 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 2. Plan and walk the tree inside the fence rect. BUILDING and HANGAR delegate to `FacilityGen.fill`.
 3. `finalizeTiles`. **Everything after it writes FINAL ids**, because the finalize remaps every id
    under 112 and the wild tiles live there.
-4. `perimeter`: the ring, the 2x2 corner towers, and 1-2 `TILE_MIL_FENCE_TORN` breaches off the gate side.
+4. `perimeter`: the closed ring, a 2x2 tower one cell INSIDE each corner (on the EDGE lot, so it
+   never meets a plot), and 1-2 `TILE_MIL_FENCE_TORN` breaches off the gate side.
 5. `road`.
 6. `margin`: 16 cells (`MARGIN`) on the three non-road sides, so the area is 90-100 x 70-80. Scatter is
    rolled on the margin's own cells (a whole-area roll lost about half of them inside the fence) at the

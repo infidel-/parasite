@@ -5404,13 +5404,22 @@
       "needs_alpha": true,
       "prompt": "A seamless tileable CHAIN-LINK fence mesh, seen dead straight on: a regular diamond grid of galvanised steel wire, exactly EIGHT diamonds across the image and EIGHT down, the wire THICK (about one fortieth of the image width), twisted knuckles where the wires cross. Dull pale grey steel. Runs off all four edges. ONLY the wire is drawn. [gpt-image-2.5-flare high, background transparent] [append textures.json style]",
       "prompt_exact": false,
-      "note": "perimeter fence panes (render.military.MilitaryGeom), alphaTest, world-tiled. Opaque fraction 0.148.",
-      "res": 512,
-      "last_converted": "2026-10-10T19:28:35",
+      "note": "perimeter fence panes (render.military.MilitaryGeom), alphaTest, world-tiled. Opaque fraction 0.148. Cropped to 5 x 4 whole diamond periods (203.9 x 226.2 px, measured by shift correlation) so it wraps both ways; mapped at that aspect (MilitaryGeom.CHAIN_V).",
+      "res": [
+        512,
+        454
+      ],
       "built_linear": 0.1042,
-      "built_srgb": 91.2,
+      "built_srgb": 91.3,
       "lift": 1.25,
-      "last_lift": 1.25
+      "last_lift": 1.25,
+      "crop": [
+        0,
+        0,
+        1020,
+        905
+      ],
+      "last_converted": "2026-10-10T19:28:35"
     },
     "military/chainlink-torn": {
       "src": "military/chainlink-torn.png",

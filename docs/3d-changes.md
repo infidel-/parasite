@@ -1460,3 +1460,31 @@ the janitor's kit and corp's locker art. They are now dealt as their own kinds
 
 **Verdict:** landed.
 
+
+## Military base fix pass: towers inside the corners, closed fence corners, base meshes cast, margin patches
+
+**Changed:**
+- `MilitaryGen.perimeter` stands each 2x2 tower ONE CELL INSIDE its corner, on the EDGE lot, and
+  the ring runs unbroken behind it. On the corner, the tower's inset left a gap each side of its
+  legs that read as a way through.
+- `MilitaryGeom.fence` is neighbour-driven: a straight cell spans its width, a CORNER cell is two
+  half-runs at a right angle. Posts fall on every second cell edge plus each end and corner (half
+  as many).
+- `military/chainlink` is cropped to 1020x905, five by four whole diamonds. The pure periods are
+  203.9 x 226.2 px, measured by shift correlation of the alpha; the obvious 113 px is a half-step of
+  the centred lattice and correlates at 0.002. It is mapped at that aspect (`CHAIN_V`), so it now
+  wraps vertically.
+- Tower: legs from the ground (they started on top of the sandbag ring), a parapet with an inside
+  face and a rim (single-sided, it read as a hole from in the tower), and an emitted steel ladder on
+  the face toward the base's middle.
+- Every `MilitaryGeom` opaque buffer casts (`FacilityGeom.add(.., true, true)`); jerseys, tents,
+  towers and crates read pasted on under the moon. The shadow map was already on in the base: moon
+  2048 plus eight lamp spots at 512.
+- `MilitaryMargin` lays `WildPatches` over the margin only, through a new `keep` cell filter.
+
+**Trap:** `WildHeight.shade` divided by `reliefAmp`, which the base zeroes. Every patch vertex
+colour came out NaN, and the NaN spread through the bloom chain and blacked the WHOLE frame, HUD
+aside, while the renderer kept drawing 77 calls. Found by hiding every alpha-mapped mesh at
+runtime. Flat now reads mid-range, a shade of exactly 1.
+
+**Verdict:** landed. Military gen clean on 500 seeds.

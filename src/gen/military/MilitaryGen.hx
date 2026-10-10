@@ -38,7 +38,7 @@ class MilitaryGen
   // and one more on the gate side, so the booth's row stays open lot past a building's 2-cell apron
   static inline var EDGE = 2;
   static inline var GATE_EDGE = 3;
-  // the corner watchtower, on a side
+  // the corner watchtower, on a side. it fits the EDGE lot inside the ring, so it never meets a plot
   public static inline var TOWER = 2;
   // how far a torn fence panel stays from a corner
   static inline var BREACH_CORNER = 4;
@@ -256,7 +256,7 @@ class MilitaryGen
       area.getCells()[x][y] = origin;
     }
 
-// the chain-link ring, a watchtower in each corner, and one or two torn panels on the three sides
+// the chain-link ring, a watchtower inside each corner, and one or two torn panels on the three sides
 // the gate is not on
   static function perimeter(state: _FacilityState, f: _Rect)
     {
@@ -272,10 +272,13 @@ class MilitaryGen
           cells[f.x1][y] = Const.TILE_MIL_FENCE;
           cells[f.x2][y] = Const.TILE_MIL_FENCE;
         }
-      drawBlock(cells, f.x1, f.y1, TOWER, TOWER, Const.TILE_MIL_TOWER);
-      drawBlock(cells, f.x2 - TOWER + 1, f.y1, TOWER, TOWER, Const.TILE_MIL_TOWER);
-      drawBlock(cells, f.x1, f.y2 - TOWER + 1, TOWER, TOWER, Const.TILE_MIL_TOWER);
-      drawBlock(cells, f.x2 - TOWER + 1, f.y2 - TOWER + 1, TOWER, TOWER, Const.TILE_MIL_TOWER);
+      // the towers stand just INSIDE each corner, on the clear lot EDGE keeps there, and the ring runs
+      // unbroken round the corner behind them: a tower ON the corner left a gap either side of its
+      // legs that read as a way through
+      drawBlock(cells, f.x1 + 1, f.y1 + 1, TOWER, TOWER, Const.TILE_MIL_TOWER);
+      drawBlock(cells, f.x2 - TOWER, f.y1 + 1, TOWER, TOWER, Const.TILE_MIL_TOWER);
+      drawBlock(cells, f.x1 + 1, f.y2 - TOWER, TOWER, TOWER, Const.TILE_MIL_TOWER);
+      drawBlock(cells, f.x2 - TOWER, f.y2 - TOWER, TOWER, TOWER, Const.TILE_MIL_TOWER);
 
       // the breaches. 0 west, 1 east, 2 the side away from the gate
       var sides = [ 0, 1, 2 ];

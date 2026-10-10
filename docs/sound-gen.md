@@ -222,7 +222,6 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
 
 | key | sources | type | range (path cells) |
 |---|---|---|---|
-| `military/floodlight` | `TILE_MIL_TOWER` cells (the corner towers' lamps) | loop | 4 |
 | `military/fence` | `TILE_MIL_FENCE`, `TILE_MIL_FENCE_TORN` (the whole ring) | loop | 2 |
 | `military/idle` | `TILE_MIL_HUMVEE` origins (every parked humvee) | loop | 5 |
 | `military/radio` | the `safe` object (one per base, in the HQ armory) | loop, 2 variants | 4 |
@@ -234,12 +233,15 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
 - **Beds**: `military/indoor` (any roof that is not the hangar), `military/hangar` (2 variants),
   `military/yard` (open ground inside the fence), and the margin outside the fence wears its terrain
   band's own wild bed (`wild/forest`, `wild/plains`, `wild/mountain`), split by
-  `AreaGame.isOutsideBase`. Indoor, hangar and yard are baked at -36, like every bed.
+  `AreaGame.isOutsideBase`. Within 4 rows of the road's centreline it is the wilderness highway's
+  `wild/road` instead, as in `WildSounds`. Indoor, hangar and yard are baked at -36, like every bed.
 - The helicopter is the only key still borrowed (`city/helicopter`).
 - **A far one-shot is loudest in the open**: full on the yard and margin beds, 0.4 under a roof.
-- Measured at slider 100 on a fresh base: each bed 63.1 in its own zone; fence 7.9 one cell off the
-  ring; radio 14.1 beside the safe; idle 10.6 at the motor pool; floodlight 2.7 three cells off a
-  tower.
+- Measured at slider 100 on a fresh base: each bed 63.1 in its own zone (road 62.7 on the road,
+  plains 0.4 there); fence 7.9 one cell off the ring; radio 14.1 beside the safe; idle 10.6 at the
+  motor pool.
+- **`military/floodlight` was cut** on the user's ear after it shipped; its take stays in
+  `sounds-src/military/` and its entry in `art/sounds.json`, unplayed.
 - **The klaxon from the plan was dropped unheard**: an alarm-like one-shot reads as a real alert, and
   alerts are a gameplay state in a base.
 - `yard-sonilo1-day.wav` in `unused/military/` was judged good for a DAY base. There is no day yet.
