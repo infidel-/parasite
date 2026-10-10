@@ -234,7 +234,9 @@ class MilitaryRooms
                   k += 2;
                   continue;
                 }
-              break;
+              // a blocked cell (a doorway's neighbour, a corner pocket) ends nothing: the rest of
+              // the wall may still take a desk. It used to break, and most offices got one or none
+              k++;
             }
         }
     }

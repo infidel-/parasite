@@ -78,7 +78,7 @@ class MilitaryGeom
   static inline var PARAPET_H = 2.2;
   static inline var PARAPET_T = 0.2;
   static inline var ROOF_Y = DECK_Y + 5.0;
-  static inline var ROOF_T = 0.4;
+  static inline var ROOF_T = 0.2;
   static inline var ROOF_OVER = 0.6;
   static inline var OLIVE_TILE = 4.0;
   // the ring of sandbags round its foot: how far out past the legs, and how many courses

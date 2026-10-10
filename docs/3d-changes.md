@@ -1548,3 +1548,19 @@ periods a turn. Seamless by construction, square texels. Both raw drops are park
 
 **Verdict:** landed. `buildlib.check`: 0 holes and 0 coplanar on both. The mast's one `texel_off`
 is the lens, which takes its whole cell by design.
+
+## Military base fix round 3, quick fixes: no floating bags, no mast in a tower, a clear gate approach
+
+**Changed:**
+- `MilitaryBags.ring` keeps each side's bag centres per course, and lays a bag above the first
+  course only where its centre is over one below. The door test is per bag, so the gap fell
+  differently on each course and left top-course bags beside the ladder doorway hanging. A
+  regenerated base measured 0 unsupported of 236 ground and 72 roof bags.
+- `FacilityLamps` skips a lit-line hit on or beside `TILE_MIL_TOWER` in a base. Tower cells read as
+  WALKWAY, so the scan stood a mast in the tower's ladder. Now 0 of 31 masts are within a cell of a
+  tower.
+- `MilitaryYard` keeps the yard clutter 4 cells clear of the gate's hole, so no crate stack stands
+  in front of the boom.
+- The tower roof slab is 0.2 thick, from 0.4.
+
+**Verdict:** landed.

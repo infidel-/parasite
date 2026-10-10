@@ -219,6 +219,10 @@ class FacilityLamps
             if ((col + row) % FacilityStyle.LAMP_SPACING != 0)
               continue;
             var s = m.surf[row][col];
+            // a base's towers stand on pavement too, and a mast there stood in the ladder
+            if (m.kind == 'military' &&
+                nearTower(area, col, row))
+              continue;
             // a park cell already holding a tree or a bush is occupied — the greenery is placed off
             // the same tile grid (render.facility.FacilityGround.green), so this is the same test
             if (s == Surf.GRASS &&
@@ -709,6 +713,16 @@ class FacilityLamps
             };
         }
       return null;
+    }
+
+// is this cell a military base's watchtower, or beside one?
+  static function nearTower(area:game.AreaGame, col:Int, row:Int):Bool
+    {
+      for (dr in -1...2)
+        for (dc in -1...2)
+          if (area.getCellType(col + dc, row + dr) == Const.TILE_MIL_TOWER)
+            return true;
+      return false;
     }
 
 // does the scan already stand a mast on this cell?

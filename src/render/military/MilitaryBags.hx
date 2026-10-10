@@ -31,26 +31,33 @@ class MilitaryBags
   public static function ring(out:Array<PropPlace>, r:Rect, y:Float, courses:Int,
       ?door:BagDoor):Void
     {
+      // each side's bag centres on the course below, which the next course has to stand on
+      var below:Array<Array<Float>> = [ null, null, null, null ];
       for (k in 0...courses)
         {
           var cy = y + k * H;
           var odd = (k % 2 == 1);
           // the two runs along x take the corners, the two along z fit between them
-          run(out, true, r.z0 + W / 2, r.x0, r.x1, cy, odd, 0, door);
-          run(out, true, r.z1 - W / 2, r.x0, r.x1, cy, odd, 1, door);
-          run(out, false, r.x0 + W / 2, r.z0 + W, r.z1 - W, cy, odd, 2, door);
-          run(out, false, r.x1 - W / 2, r.z0 + W, r.z1 - W, cy, odd, 3, door);
+          below = [
+            run(out, true, r.z0 + W / 2, r.x0, r.x1, cy, odd, 0, door, below[0]),
+            run(out, true, r.z1 - W / 2, r.x0, r.x1, cy, odd, 1, door, below[1]),
+            run(out, false, r.x0 + W / 2, r.z0 + W, r.z1 - W, cy, odd, 2, door, below[2]),
+            run(out, false, r.x1 - W / 2, r.z0 + W, r.z1 - W, cy, odd, 3, door, below[3]),
+          ];
         }
     }
 
-// one course of one side: bags end to end over a0..a1 at `p` across it. The span is split into
-// whole bags, so a bag stands a little long or short of its model; an ODD course is offset half a
-// bag, its two end bags pushed back inside the span, which is the running bond
+// one course of one side: bags end to end over a0..a1 at `p` across it, returning their centres.
+// The span is split into whole bags, so a bag stands a little long or short of its model; an ODD
+// course is offset half a bag, its two end bags pushed back inside the span, which is the running
+// bond. Above the first course a bag goes down only where its centre is over one in `below`: the
+// door's gap falls differently on each course, and the top bags beside it were left over nothing
   static function run(out:Array<PropPlace>, alongX:Bool, p:Float, a0:Float, a1:Float, y:Float,
-      odd:Bool, dir:Int, door:BagDoor):Void
+      odd:Bool, dir:Int, door:BagDoor, below:Array<Float>):Array<Float>
     {
+      var laid = [];
       if (a1 - a0 < L / 2)
-        return;
+        return laid;
       var n = Std.int(Math.max(1, Math.round((a1 - a0) / L)));
       var pitch = (a1 - a0) / n;
       for (i in 0...(odd ? n + 1 : n))
@@ -62,6 +69,10 @@ class MilitaryBags
               a + L / 2 > door.a0 &&
               a - L / 2 < door.a1)
             continue;
+          if (below != null &&
+              !over(below, a))
+            continue;
+          laid.push(a);
           var h = FacilityModel.mix((Std.int(a * 97) * 27644437) ^ (Std.int(p * 131) * 67867979) ^
             Std.int(y * 53));
           var turn = ((h % 1000) / 1000 - 0.5) * 2 * TURN;
@@ -74,6 +85,16 @@ class MilitaryBags
             y: y,
           });
         }
+      return laid;
+    }
+
+// does a bag centred at `a` rest on one of the bags centred at `below`?
+  static function over(below:Array<Float>, a:Float):Bool
+    {
+      for (b in below)
+        if (Math.abs(a - b) <= L / 2)
+          return true;
+      return false;
     }
 
 // one batch of bags

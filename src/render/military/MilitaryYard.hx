@@ -58,6 +58,9 @@ class MilitaryYard
   static inline var JERSEY_H = 1.1;
   static inline var JERSEY_GAP = 0.15;
 
+  // how many cells round the gate's hole the yard clutter keeps clear of
+  static inline var GATE_CLEAR = 4;
+
   // an ammo crate: its long side is military/crate-side's 2:1 crop and its lid crate-lid's 504x296
   static inline var CRATE_W = 2.2;
   static inline var CRATE_H = CRATE_W / 2;
@@ -91,8 +94,14 @@ class MilitaryYard
           post(m, gate.boothCol, gate.mouthRow, y);
           FacilityEntry.barrier(scene, gate, y, TEX_STEEL, TEX_ARM);
         }
+      // and none on the approach: a crate stack in front of the boom reads as a roadblock nobody set
       for (c in FacilityDebris.spots(m))
-        clutter(m, c.col, c.row, y);
+        if (gate == null ||
+            c.col < gate.col - GATE_CLEAR ||
+            c.col > gate.col + gate.w - 1 + GATE_CLEAR ||
+            c.row < gate.row - GATE_CLEAR ||
+            c.row > gate.row + gate.h - 1 + GATE_CLEAR)
+          clutter(m, c.col, c.row, y);
     }
 
 // the guard post standing on the booth's bay
