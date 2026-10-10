@@ -85,6 +85,17 @@ class Loader
       game.scene.sounds.loadPost();
       for (cult in game.cults)
         cult.loadPost();
+      // a save made standing in a military base from before the fenced base: walk out and back in so
+      // it is built anew and the player arrives outside the fence, the way the console's `area regen`
+      // does it. every other old base was thrown away in AreaGame.loadPost
+      if (game.location == LOCATION_AREA &&
+          game.area.isOldBase())
+        {
+          var area = game.area;
+          game.setLocation(LOCATION_REGION);
+          area.regenerate();
+          game.setLocation(LOCATION_AREA, area);
+        }
       rebuildAIDataMaxID(game);
       // camera + first render are deferred to applyLoaded (one tick later) so the
       // fader's cover transition can paint before the 3D city build stalls the thread

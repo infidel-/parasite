@@ -18,7 +18,7 @@ class AreaGame extends _SaveObject
     'region', 'events', 'npc', 'parent',
     'info', 'clueSpawnPoints', '_decalCells',
     'spawnCells', '_boothX', '_boothY',
-    'genTree', 'genSeed',
+    'genTree', 'genSeed', '_baseFence',
   ];
   var game: Game;
   var region: RegionGame;
@@ -71,6 +71,8 @@ class AreaGame extends _SaveObject
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
+  // a military base's fence ring, re-derived from the grid on first ask (baseFence). not saved
+  var _baseFence: gen.military.MilitaryGen._Rect;
   // the cell the parking entry's guard booth stands on, or -1,-1 where there is no gate. the booth
   // is render-only geometry with no tile of its own, so this is the only thing that knows it is
   // solid; transient, because initSpawnPoints re-derives it from the cell grid on every load (see
@@ -185,6 +187,69 @@ class AreaGame extends _SaveObject
 
       migrateCityGrid();
       migrateCorpStairs();
+      // save migration: a military base generated before the fenced base existed is thrown away, so
+      // the next entry builds the new one. the one the player stands in is walked out of and back
+      // into by Loader instead, once the whole load chain has run
+      if (isOldBase() &&
+          !(game.location == LOCATION_AREA &&
+            game.area == this))
+        regenerate();
+    }
+
+// is this a military base generated before the fenced base existed (a save from the 2D era)? its
+// grid has no fence ring
+  public function isOldBase(): Bool
+    {
+      return typeID == AREA_MILITARY_BASE &&
+        isGenerated &&
+        baseFence() == null;
+    }
+
+// a military base's fence ring, or null in any other area
+  function baseFence(): gen.military.MilitaryGen._Rect
+    {
+      if (typeID != AREA_MILITARY_BASE)
+        return null;
+      if (_baseFence == null)
+        _baseFence = gen.military.MilitaryGen.fenceOf(_cells, width, height);
+      return _baseFence;
+    }
+
+// is this cell outside a military base's fence? the ring itself counts, which is where its gate and
+// its breaches are. false in any other area
+  public function isOutsideBase(x: Int, y: Int): Bool
+    {
+      var f = baseFence();
+      return f != null &&
+        (x <= f.x1 ||
+         x >= f.x2 ||
+         y <= f.y1 ||
+         y >= f.y2);
+    }
+
+// may the player leave a military base from this cell: outside the fence, with nobody alerted
+  public function canLeaveBase(x: Int, y: Int): Bool
+    {
+      if (!isOutsideBase(x, y))
+        return false;
+      for (ai in _ai)
+        if (ai.state == AI_STATE_ALERT)
+          return false;
+      return true;
+    }
+
+// a random empty cell in a military base's wild margin, off the fence ring: where the player arrives
+// on foot, with no sewers to come up through
+  function findOutsideLocation(): _Point
+    {
+      var f = baseFence();
+      for (i in 0...200)
+        {
+          var p = findEmptyLocation();
+          if (gen.military.MilitaryGen.outside(f, p.x, p.y))
+            return p;
+        }
+      return findEmptyLocation();
     }
 
 // save migration: corp stairs took ONE walkable cell against the end wall before the 3D model,
@@ -278,7 +343,9 @@ class AreaGame extends _SaveObject
       // find location to appear
       // at game start always appear on empty location
       var loc = null;
-      if (!info.isInhabited || game.turns == 0)
+      if (typeID == AREA_MILITARY_BASE)
+        loc = findOutsideLocation();
+      else if (!info.isInhabited || game.turns == 0)
         loc = findEmptyLocation();
       else
         {
@@ -432,7 +499,8 @@ class AreaGame extends _SaveObject
           corpSpawnPoints();
           return;
         }
-      if (info.id != AREA_FACILITY)
+      if (info.id != AREA_FACILITY &&
+          info.id != AREA_MILITARY_BASE)
         return;
       clueSpawnPoints = [];
       guardSpawnPoints = [];
@@ -523,6 +591,13 @@ class AreaGame extends _SaveObject
           _boothX = gate.boothX;
           _boothY = gate.boothY;
           recalcTile(_boothX, _boothY);
+          // and a base's SECOND rifleman, inside the pedestrian gap past the boom's far end
+          // (gen.military.MilitaryGen.gate)
+          if (info.id == AREA_MILITARY_BASE)
+            importantGuardSpawnPoints.push({
+              x: gate.postX + gen.blocks.RoadBlock.ENTRY_W,
+              y: gate.postY,
+            });
         }
 //      trace(importantGuardSpawnPoints);
 //      trace(guardSpawnPoints);
@@ -764,6 +839,7 @@ class AreaGame extends _SaveObject
       generatorInfo = null;
       genTree = null;
       genSeed = -1;
+      _baseFence = null;
       _pathEngine = null;
       _boothX = -1;
       _boothY = -1;
@@ -791,6 +867,7 @@ class AreaGame extends _SaveObject
       // clear map
       _cells = [];
       tiles = [];
+      _baseFence = null;
       var baseTile = Const.TILE_WALKWAY;
       if (typeID == AREA_GROUND)
         baseTile = Const.TILE_GRASS;
@@ -2365,15 +2442,25 @@ class AreaGame extends _SaveObject
 // guards stand on their post and do not despawn when unseen
   function spawnGuards()
     {
+      // a base's posts are manned by soldiers, and the gate's by riflemen
+      var base = (info.id == AREA_MILITARY_BASE);
+      var type = (base ? 'soldier' : 'security');
       // large chance on important points
       for (pt in importantGuardSpawnPoints)
         {
-          if (Std.random(100) > 75)
+          // and a base's gate is never left unmanned: its booth post always gets its rifleman
+          if (Std.random(100) > 75 &&
+              !(base &&
+                pt.x == _boothX + 1 &&
+                pt.y == _boothY))
             continue;
-          var ai = spawnAI('security', pt.x, pt.y);
+          var ai = spawnAI(type, pt.x, pt.y);
           ai.isGuard = true;
           ai.guardTargetX = pt.x;
           ai.guardTargetY = pt.y;
+          if (base &&
+              !ai.inventory.has('assaultRifle'))
+            ai.inventory.addID('assaultRifle');
         }
 
       // small chance on normal points
@@ -2381,7 +2468,7 @@ class AreaGame extends _SaveObject
         {
           if (Std.random(100) > 10)
             continue;
-          var ai = spawnAI('security', pt.x, pt.y);
+          var ai = spawnAI(type, pt.x, pt.y);
           ai.isGuard = true;
           ai.guardTargetX = pt.x;
           ai.guardTargetY = pt.y;
@@ -2718,6 +2805,8 @@ class Test {
           // unlike the wilderness above, this one is LIVE the day it lands: a facility declares
           // commonAI 5, so the turn spawner runs here and reads the rect every turn
           case 'facility': render.RenderConfig.CAMERA_FACILITY;
+          // a base is drawn by the facility renderer under the facility's camera
+          case 'militaryBase': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)
@@ -2743,7 +2832,34 @@ class Test {
         rect.x2 = width;
       if (rect.y2 > height)
         rect.y2 = height;
-      return rect;
+      return insideBase(rect);
+    }
+
+// a military base's soldiers spawn INSIDE the fence, so the spawn rect is clipped to it: the margin
+// is where the player comes and goes unseen. with the player out of sight of the fence the clip is
+// empty and the whole of the inside is used instead, which is still out of their view. any other
+// area's rect is handed back as it is
+  function insideBase(rect: { x1: Int, y1: Int, x2: Int, y2: Int }): { x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      var f = baseFence();
+      if (f == null)
+        return rect;
+      // the inside, in the rect's own convention: x2/y2 exclusive
+      var r = {
+        x1: Std.int(Math.max(rect.x1, f.x1 + 1)),
+        y1: Std.int(Math.max(rect.y1, f.y1 + 1)),
+        x2: Std.int(Math.min(rect.x2, f.x2)),
+        y2: Std.int(Math.min(rect.y2, f.y2)),
+      };
+      if (r.x1 >= r.x2 ||
+          r.y1 >= r.y2)
+        return {
+          x1: f.x1 + 1,
+          y1: f.y1 + 1,
+          x2: f.x2,
+          y2: f.y2,
+        };
+      return r;
     }
 
 // recount the walkable cells in the spawn region (the AI budget input). called on every

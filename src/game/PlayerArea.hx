@@ -900,6 +900,10 @@ class PlayerArea extends _SaveObject
 // NOTE: this is for displaying the leave area action, the actual checks are done in leaveAreaAction and can be different
   function canLeaveArea(): Bool
     {
+      // a military base is left on foot from outside its fence, with nobody alerted
+      if (game.area.typeID == AREA_MILITARY_BASE)
+        return state != PLR_STATE_ATTACHED &&
+          game.area.canLeaveBase(x, y);
       return state != PLR_STATE_ATTACHED &&
         !game.area.info.isInhabited &&
         (!game.area.isHabitat || !hasHabitatExit());
@@ -947,6 +951,15 @@ class PlayerArea extends _SaveObject
               game.actionFailed('You cannot leave the habitat with a mold.');
               return false;
             }
+        }
+      // and out of a military base only from outside the fence, unseen
+      if (game.area.typeID == AREA_MILITARY_BASE &&
+          !game.area.canLeaveBase(x, y))
+        {
+          game.actionFailed(game.area.isOutsideBase(x, y) ?
+            'You cannot slip away while the soldiers are alerted.' :
+            'You have to get outside the fence first.');
+          return false;
         }
       if (!game.area.canLeave())
         return false;
