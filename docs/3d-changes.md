@@ -1564,3 +1564,25 @@ is the lens, which takes its whole cell by design.
 - The tower roof slab is 0.2 thick, from 0.4.
 
 **Verdict:** landed.
+
+## Military base: its own steels, off the green window-head
+
+**Changed:** every `TEX_STEEL` in MilitaryGeom/Yard/Interior was `MilitaryStyle.WINDOW_HEAD`. It is an
+olive lintel strip, and it covered bunk posts, table legs, desk sides, file cabinets, lockers, the
+safe, the barrier cabinet, the guard post, roof kit and crate ends. The user picked it off five
+different objects. New sheet `mil-pack-n` (one packed gen, gpt-image-2.5 sunburst high), each cell
+listed with what it now covers:
+- `enamel` (raw 0.096 linear, no lift): bunk posts, table legs, desk sides;
+- `gunmetal` (raw 0.025, lift 0.84 → 0.042): file cabinets, the safe, the barrier cabinet. At 0.025 a
+  solid side read as a hole against the office floor's 0.110;
+- `chequer`: roof hatches;
+- `cot-top`: reserved for the medical bay.
+
+The rest moved onto existing textures:
+- `galvanized`: guard-post frame, aerials, vents, duct, junction boxes;
+- `mast-paint` (olive enamel, matching their olive fronts): locker sides and tops;
+- `crate-side` planks: footlocker sides and crate ends.
+
+`window-head` is left only on the shell's real window heads.
+
+**Verdict:** landed.

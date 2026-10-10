@@ -46,7 +46,9 @@ class MilitaryGeom
   static inline var TEX_SAFE = 'textures/military/safe-front.png';
   static inline var TEX_LOCKER = 'textures/military/locker-front.png';
   static inline var TEX_GUNS = 'textures/military/gunrack-front.png';
-  static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
+  // the lockers' olive enamel (their fronts are olive) and the safe's gunmetal
+  static inline var TEX_OLIVE_STEEL = 'textures/military/mast-paint.png';
+  static inline var TEX_GUNMETAL = 'textures/military/gunmetal.png';
   static inline var TEX_PAD_MARK = 'textures/military/helipad-h.png';
 
   // the fence: two cells high, the chain-link world-tiled at its crop's own aspect (CHAIN_TILE
@@ -568,12 +570,12 @@ class MilitaryGeom
       if (dir < 0)
         return;
       var r = CorpFurniture.lockerRect(m, col, row, dir);
-      FacilityGeom.cap(buf(TEX_STEEL), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
+      FacilityGeom.cap(buf(TEX_OLIVE_STEEL), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
         CorpStyle.LOCKER_TILE);
       for (f in 0...4)
         if (f != dir &&
             f != (dir ^ 1))
-          FacilityGeom.face(buf(TEX_STEEL), r.x0, r.x1, r.z0, r.z1, f, 0,
+          FacilityGeom.face(buf(TEX_OLIVE_STEEL), r.x0, r.x1, r.z0, r.z1, f, 0,
             CorpStyle.LOCKER_H, CorpStyle.LOCKER_TILE);
       FacilityGeom.pane(buf(front), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, CorpStyle.LOCKER_H);
       FacilityDetail.ground(m, {
@@ -605,7 +607,7 @@ class MilitaryGeom
           case 2: { x0: cell.x0, x1: cell.x0 + SAFE_D, z0: cz - hw, z1: cz + hw };
           default: { x0: cell.x1 - SAFE_D, x1: cell.x1, z0: cz - hw, z1: cz + hw };
         };
-      var steel = buf(TEX_STEEL);
+      var steel = buf(TEX_GUNMETAL);
       for (f in 0...4)
         if (f != dir &&
             f != (dir ^ 1))

@@ -28,7 +28,11 @@ class MilitaryYard
 {
   static inline var CELL = CityConfig.CELL;
 
-  static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
+  // the base's own steels: galvanised for bare outdoor steel, gunmetal for the barrier's cabinet,
+  // chequer plate for the roof hatches
+  static inline var TEX_GALV = 'textures/military/galvanized.png';
+  static inline var TEX_GUNMETAL = 'textures/military/gunmetal.png';
+  static inline var TEX_CHEQUER = 'textures/military/chequer.png';
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_ARM = 'textures/military/boom-arm.png';
@@ -92,7 +96,7 @@ class MilitaryYard
       if (gate != null)
         {
           post(m, gate.boothCol, gate.mouthRow, y);
-          FacilityEntry.barrier(scene, gate, y, TEX_STEEL, TEX_ARM);
+          FacilityEntry.barrier(scene, gate, y, TEX_GUNMETAL, TEX_ARM);
         }
       // and none on the approach: a crate stack in front of the boom reads as a roadblock nobody set
       for (c in FacilityDebris.spots(m))
@@ -123,7 +127,7 @@ class MilitaryYard
         a0: c.z - DOOR_W / 2,
         a1: c.z + DOOR_W / 2,
       });
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var steel = MilitaryGeom.buf(TEX_GALV);
       var eave = y + EAVE;
       for (px in [ x0 + BAG_T, x1 - BAG_T - POST_W ])
         for (pz in [ z0 + BAG_T, z1 - BAG_T - POST_W ])
@@ -295,11 +299,11 @@ class MilitaryYard
       });
     }
 
-// one ammo crate: the authored side on both long faces, plain olive steel ends, the lid on top
+// one ammo crate: the authored side on both long faces, its planks on the ends, the lid on top
   static function crate(x0:Float, x1:Float, z0:Float, z1:Float, y:Float, turn:Bool):Void
     {
       var side = MilitaryGeom.buf(TEX_CRATE_SIDE);
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var ends = MilitaryGeom.buf(TEX_CRATE_SIDE);
       for (d in 0...4)
         {
           // the long faces are the two across the crate's short axis
@@ -307,7 +311,7 @@ class MilitaryYard
           if (long)
             FacilityGeom.pane(side, x0, x1, z0, z1, d, y, y + CRATE_H);
           else
-            FacilityGeom.face(steel, x0, x1, z0, z1, d, y, y + CRATE_H, CELL);
+            FacilityGeom.face(ends, x0, x1, z0, z1, d, y, y + CRATE_H, CELL);
         }
       var t = y + CRATE_H;
       // turned, the image's long axis follows z: a quarter ROTATION of the map, never a mirror
@@ -342,7 +346,7 @@ class MilitaryYard
 
 // the roofs' kit on FacilityRoof's own spots, each piece onto its structure's deck so it fades with
 // it: the first plant spot on a building is a sandbag nest, the rest water tanks; the dish pad an
-// antenna mast; the hatch, isolator boxes, vents and duct run plain olive steel
+// antenna mast; the isolator boxes, vents and duct bare galvanised steel and the hatch chequer plate
   public static function roof(scene:Scene, deck:RoofDeck, out:Roof, shells:Array<Shell>):Void
     {
       var bufs = new Map<String, render.world.MeshBuf.MeshBuf>();
@@ -380,15 +384,15 @@ class MilitaryYard
                 out.bagOf.push(si);
               continue;
             }
-          tank(buf(si, TEX_OLIVE), buf(si, TEX_STEEL), p.x, p.z, p.y);
+          tank(buf(si, TEX_OLIVE), buf(si, TEX_GALV), p.x, p.z, p.y);
         }
       for (i in 0...deck.tank.length)
-        tank(buf(out.tankOf[i], TEX_OLIVE), buf(out.tankOf[i], TEX_STEEL), deck.tank[i].x,
+        tank(buf(out.tankOf[i], TEX_OLIVE), buf(out.tankOf[i], TEX_GALV), deck.tank[i].x,
           deck.tank[i].z, deck.tank[i].y);
       for (i in 0...deck.dish.length)
         {
           var p = deck.dish[i];
-          var b = buf(out.dishOf[i], TEX_STEEL);
+          var b = buf(out.dishOf[i], TEX_GALV);
           var h = AERIAL_W / 2;
           MilitaryGeom.box(b, p.x - AERIAL_BASE, p.x + AERIAL_BASE, p.z - AERIAL_BASE,
             p.z + AERIAL_BASE, p.y, p.y + 0.3, CELL);
@@ -400,14 +404,16 @@ class MilitaryYard
               MilitaryGeom.box(b, p.x - w, p.x + w, p.z - h, p.z + h, y, y + h * 2, CELL);
             }
         }
-      // the small steel kit: [ list, owners, w, d, h ], a quarter turn swapping w and d
-      var kit:Array<{ at:Array<Models.PropPlace>, of:Array<Int>, w:Float, d:Float, h:Float }> = [
+      // the small steel kit: [ list, owners, w, d, h, art ], a quarter turn swapping w and d
+      var kit:Array<{ at:Array<Models.PropPlace>, of:Array<Int>, w:Float, d:Float, h:Float,
+        tex:String }> = [
         {
           at: deck.hatch,
           of: out.hatchOf,
           w: FacilityStyle.HATCH_W,
           d: FacilityStyle.HATCH_D,
           h: 0.6,
+          tex: TEX_CHEQUER,
         },
         {
           at: deck.jbox,
@@ -415,6 +421,7 @@ class MilitaryYard
           w: 0.6,
           d: 0.4,
           h: 0.8,
+          tex: TEX_GALV,
         },
         {
           at: deck.vent,
@@ -422,6 +429,7 @@ class MilitaryYard
           w: 0.6,
           d: 0.6,
           h: 0.9,
+          tex: TEX_GALV,
         },
         {
           at: deck.duct,
@@ -429,6 +437,7 @@ class MilitaryYard
           w: CELL,
           d: FacilityStyle.ROOF_DUCT_PLAN_D,
           h: FacilityStyle.ROOF_DUCT_PLAN_D,
+          tex: TEX_GALV,
         },
       ];
       for (k in kit)
@@ -438,7 +447,7 @@ class MilitaryYard
             var turn = (Math.abs(Math.sin(p.yaw)) > 0.5);
             var hw = (turn ? k.d : k.w) / 2;
             var hd = (turn ? k.w : k.d) / 2;
-            MilitaryGeom.box(buf(k.of[i], TEX_STEEL), p.x - hw, p.x + hw, p.z - hd, p.z + hd, p.y,
+            MilitaryGeom.box(buf(k.of[i], k.tex), p.x - hw, p.x + hw, p.z - hd, p.z + hd, p.y,
               p.y + k.h, CELL);
           }
       for (key in bufs.keys())

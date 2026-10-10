@@ -22,7 +22,11 @@ class MilitaryInterior
 {
   static inline var CELL = CityConfig.CELL;
 
-  static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
+  // the base's own steels (mil-pack-n): grey enamel for furniture frames, gunmetal for cabinets
+  static inline var TEX_ENAMEL = 'textures/military/enamel.png';
+  static inline var TEX_GUNMETAL = 'textures/military/gunmetal.png';
+  // a footlocker's sides are the crate's olive planks: it is a wooden box
+  static inline var TEX_PLANKS = 'textures/military/crate-side.png';
   static inline var TEX_STAINLESS = 'textures/military/steel.png';
   static inline var TEX_BLANKET = 'textures/military/blanket.png';
   static inline var TEX_LAMINATE = 'textures/military/laminate.png';
@@ -172,7 +176,7 @@ class MilitaryInterior
             {
               r = across(back(m, col, row, cell, dir, FILE_D), dir >= 2, FILE_W);
               h = FILE_W;
-              front(r, dir, TEX_FILE, FILE_W);
+              front(r, dir, TEX_FILE, FILE_W, TEX_GUNMETAL);
             }
           else if (t == Const.TILE_MIL_STALL)
             {
@@ -202,7 +206,7 @@ class MilitaryInterior
 // a two-deck bunk over its rect: a post at each corner and the two blanketed decks between them
   static function bunk(r:Rect):Void
     {
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var steel = MilitaryGeom.buf(TEX_ENAMEL);
       var bed = MilitaryGeom.buf(TEX_BLANKET);
       for (px in [ r.x0, r.x1 - POST_W ])
         for (pz in [ r.z0, r.z1 - POST_W ])
@@ -212,12 +216,12 @@ class MilitaryInterior
           y + DECK_T, CELL);
     }
 
-// a footlocker: an olive box, its stencilled lid 0..1 over the top
+// a footlocker: an olive plank box, its stencilled lid 0..1 over the top
   static function footlocker(r:Rect):Void
     {
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var planks = MilitaryGeom.buf(TEX_PLANKS);
       for (d in 0...4)
-        FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, d, 0, FOOT_H, CELL);
+        FacilityGeom.face(planks, r.x0, r.x1, r.z0, r.z1, d, 0, FOOT_H, CELL);
       MeshBufTools.quad(MilitaryGeom.buf(TEX_FOOT_LID), [r.x0, FOOT_H, r.z1], [r.x1, FOOT_H, r.z1],
         [r.x1, FOOT_H, r.z0], [r.x0, FOOT_H, r.z0], [0, 0, 1, 0, 1, 1, 0, 1]);
     }
@@ -230,7 +234,7 @@ class MilitaryInterior
       FacilityGeom.cap(top, r.x0, r.x1, r.z0, r.z1, y, CELL, !alongX);
       for (d in 0...4)
         FacilityGeom.face(top, r.x0, r.x1, r.z0, r.z1, d, y - TOP_T, y, CELL);
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var steel = MilitaryGeom.buf(TEX_ENAMEL);
       var inset = LEG_W * 2;
       if (alongX)
         for (lx in [ r.x0 + inset, r.x1 - inset - LEG_W ])
@@ -244,7 +248,7 @@ class MilitaryInterior
   static function desk(r:Rect, dir:Int):Void
     {
       table(r, dir < 2, TEX_LAMINATE, TABLE_H);
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var steel = MilitaryGeom.buf(TEX_ENAMEL);
       if (dir < 2)
         for (sx in [ r.x0, r.x1 - DESK_SIDE ])
           MilitaryGeom.box(steel, sx, sx + DESK_SIDE, r.z0, r.z1, 0, TABLE_H - TOP_T, CELL);
@@ -253,10 +257,10 @@ class MilitaryInterior
           MilitaryGeom.box(steel, r.x0, r.x1, sz, sz + DESK_SIDE, 0, TABLE_H - TOP_T, CELL);
     }
 
-// a steel box with an authored front facing out of its wall
-  static function front(r:Rect, dir:Int, tex:String, h:Float):Void
+// a box with an authored front facing out of its wall and `side` on the rest
+  static function front(r:Rect, dir:Int, tex:String, h:Float, side:String):Void
     {
-      var steel = MilitaryGeom.buf(TEX_STEEL);
+      var steel = MilitaryGeom.buf(side);
       for (d in 0...4)
         if (d != dir &&
             d != (dir ^ 1))

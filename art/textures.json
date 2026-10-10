@@ -6544,6 +6544,76 @@
       "lift": 1.064,
       "last_converted": "2026-10-11T01:17:10",
       "last_lift": 1.064
+    },
+    "military/enamel": {
+      "src": "military/mil-pack-n.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-n.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE neutral mid-grey enamel steel, fine scuffs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's painted steel furniture frames: bunk posts, table legs, desk sides (render.military.MilitaryInterior), world-tiled.",
+      "last_converted": "2026-10-11T02:23:22",
+      "built_linear": 0.0959,
+      "built_srgb": 87.2
+    },
+    "military/gunmetal": {
+      "src": "military/mil-pack-n.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-n.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE dark gunmetal painted steel, vertical brushed grain [append textures.json style]",
+      "prompt_exact": false,
+      "note": "cabinet and safe bodies: lockers' sides and top, the safe, file cabinets, the barrier cabinet (render.military.*), world-tiled. lift 0.84: raw 0.0249 to 0.045, between the locker front's 0.061 and the old steel's 0.036; at 0.025 a solid cabinet side reads as a hole against the office floor's 0.110.",
+      "built_linear": 0.0416,
+      "built_srgb": 57.7,
+      "lift": 0.84,
+      "last_converted": "2026-10-11T02:23:22",
+      "last_lift": 0.84
+    },
+    "military/chequer": {
+      "src": "military/mil-pack-n.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-n.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE steel chequer plate, eight rows of lozenges [append textures.json style]",
+      "prompt_exact": false,
+      "note": "roof hatches (render.military.MilitaryYard.roof), world-tiled.",
+      "last_converted": "2026-10-11T02:23:22",
+      "built_linear": 0.041,
+      "built_srgb": 54.8
+    },
+    "military/cot-top": {
+      "src": "military/mil-pack-n.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-n.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an army cot from above, white sheet, olive blanket, pillow [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a medical bay cot's top, 0..1 (render.military.MilitaryInterior).",
+      "last_converted": "2026-10-11T02:23:22",
+      "built_linear": 0.0822,
+      "built_srgb": 69.4
     }
   }
 }
