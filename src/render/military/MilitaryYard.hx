@@ -36,10 +36,6 @@ class MilitaryYard
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_ARM = 'textures/military/boom-arm.png';
-  static inline var TEX_CRATE_SIDE = 'textures/military/crate-side.png';
-  static inline var TEX_CRATE_LID = 'textures/military/crate-lid.png';
-  static inline var TEX_DRUM_SIDE = 'textures/military/drum-side.png';
-  static inline var TEX_DRUM_TOP = 'textures/military/drum-top.png';
 
   // the guard post over the booth's bay: a ring of POST_BAGS courses of sandbags, a post at each
   // inner corner, a corrugated roof over the lot, and a whip aerial off one corner
@@ -65,21 +61,20 @@ class MilitaryYard
   // how many cells round the gate's hole the yard clutter keeps clear of
   static inline var GATE_CLEAR = 4;
 
-  // an ammo crate: its long side is military/crate-side's 2:1 crop and its lid crate-lid's 504x296
+  // the hand-modelled ammo crate (models-src/military/yardkit_build.py): its body CRATE_W x CRATE_D,
+  // and the height a stack steps by, lid and battens included
   static inline var CRATE_W = 2.2;
-  static inline var CRATE_H = CRATE_W / 2;
   static inline var CRATE_D = CRATE_W * 296 / 504;
-  // a fuel drum, an octagon
+  public static inline var CRATE_STEP = 1.195;
+  // and its fuel drum
   static inline var DRUM_R = 0.6;
-  static inline var DRUM_H = 1.6;
-  static inline var DRUM_SIDES = 8;
+  public static inline var DRUM_H = 1.6;
 
   // the roof kit: a sandbag nest, water tanks, the aerial mast
   static inline var NEST_HALF = 1.8;
   static inline var NEST_BAGS = 4;
-  static inline var TANK_R = 1.0;
-  static inline var TANK_H = 2.0;
-  static inline var TANK_PLINTH = 0.3;
+  // the hand-modelled water tank, legs to manway
+  public static inline var TANK_H = 2.79;
   static inline var AERIAL_W = 0.14;
   static inline var AERIAL_H = 7.0;
   static inline var AERIAL_BASE = 0.5;
@@ -265,7 +260,12 @@ class MilitaryYard
           for (i in 0...n)
             {
               var o = (i % 2 == 1 ? 0.12 : 0.0);
-              crate(c.x - hw + o, c.x + hw + o, c.z - hd - o, c.z + hd - o, y + i * CRATE_H, turn);
+              MilitaryGeom.crates.push({
+                x: c.x + o,
+                z: c.z - o,
+                yaw: (turn ? Math.PI / 2 : 0.0),
+                y: y + i * CRATE_STEP,
+              });
             }
           r = {
             x0: c.x - hw,
@@ -273,14 +273,20 @@ class MilitaryYard
             z0: c.z - hd - 0.12,
             z1: c.z + hd,
           };
-          top = n * CRATE_H;
+          top = n * CRATE_STEP;
         }
       else
         {
           var n = 1 + (h >> 4) % 3;
           var at = [ [ 0.0, 0.0 ], [ -0.7, 0.0, 0.7, 0.25 ], [ -0.7, -0.5, 0.7, -0.4, 0.0, 0.7 ] ][n - 1];
+          // each turned off the hash, so the stencil does not face the same way on every drum
           for (i in 0...n)
-            drum(c.x + at[i * 2], c.z + at[i * 2 + 1], y);
+            MilitaryGeom.drums.push({
+              x: c.x + at[i * 2],
+              z: c.z + at[i * 2 + 1],
+              yaw: ((h >> (12 + i * 3)) % 8) * Math.PI / 4,
+              y: y,
+            });
           r = {
             x0: c.x - 0.7 - DRUM_R,
             x1: c.x + 0.7 + DRUM_R,
@@ -299,53 +305,9 @@ class MilitaryYard
       });
     }
 
-// one ammo crate: the authored side on both long faces, its planks on the ends, the lid on top
-  static function crate(x0:Float, x1:Float, z0:Float, z1:Float, y:Float, turn:Bool):Void
-    {
-      var side = MilitaryGeom.buf(TEX_CRATE_SIDE);
-      var ends = MilitaryGeom.buf(TEX_CRATE_SIDE);
-      for (d in 0...4)
-        {
-          // the long faces are the two across the crate's short axis
-          var long = (turn ? d >= 2 : d < 2);
-          if (long)
-            FacilityGeom.pane(side, x0, x1, z0, z1, d, y, y + CRATE_H);
-          else
-            FacilityGeom.face(ends, x0, x1, z0, z1, d, y, y + CRATE_H, CELL);
-        }
-      var t = y + CRATE_H;
-      // turned, the image's long axis follows z: a quarter ROTATION of the map, never a mirror
-      var uv:Array<Float> = (turn ? [0, 1, 0, 0, 1, 0, 1, 1] : [0, 0, 1, 0, 1, 1, 0, 1]);
-      MeshBufTools.quad(MilitaryGeom.buf(TEX_CRATE_LID), [x0, t, z1], [x1, t, z1], [x1, t, z0],
-        [x0, t, z0], uv);
-    }
-
-// one fuel drum: an octagon, the side art once round it, the round lid fanned over the top
-  static function drum(cx:Float, cz:Float, y:Float):Void
-    {
-      var side = MilitaryGeom.buf(TEX_DRUM_SIDE);
-      var lid = MilitaryGeom.buf(TEX_DRUM_TOP);
-      var t = y + DRUM_H;
-      for (i in 0...DRUM_SIDES)
-        {
-          var a = i * Math.PI * 2 / DRUM_SIDES;
-          var b = (i + 1) * Math.PI * 2 / DRUM_SIDES;
-          var x0 = cx + Math.cos(a) * DRUM_R;
-          var z0 = cz + Math.sin(a) * DRUM_R;
-          var x1 = cx + Math.cos(b) * DRUM_R;
-          var z1 = cz + Math.sin(b) * DRUM_R;
-          var u0 = 1 - i / DRUM_SIDES;
-          var u1 = 1 - (i + 1) / DRUM_SIDES;
-          MeshBufTools.quad(side, [x1, y, z1], [x0, y, z0], [x0, t, z0], [x1, t, z1],
-            [u1, 0, u0, 0, u0, 1, u1, 1]);
-          MeshBufTools.tri(lid, [cx, t, cz], [x1, t, z1], [x0, t, z0],
-            [0.5, 0.5, 0.5 + Math.cos(b) / 2, 0.5 - Math.sin(b) / 2, 0.5 + Math.cos(a) / 2,
-              0.5 - Math.sin(a) / 2]);
-        }
-    }
-
 // the roofs' kit on FacilityRoof's own spots, each piece onto its structure's deck so it fades with
-// it: the first plant spot on a building is a sandbag nest, the rest water tanks; the dish pad an
+// it: the first plant spot on a building is a sandbag nest, the rest water tanks (a glb, so handed
+// back on deck.tank); the dish pad an
 // antenna mast; the isolator boxes, vents and duct bare galvanised steel and the hatch chequer plate
   public static function roof(scene:Scene, deck:RoofDeck, out:Roof, shells:Array<Shell>):Void
     {
@@ -358,6 +320,8 @@ class MilitaryYard
           return bufs.get(k);
         };
       var nested = new Map<Int, Bool>();
+      var tanks:Array<Models.PropPlace> = [];
+      var tankOf:Array<Int> = [];
       // the nests' bags, one batch over every roof, each bag owned by its structure so it hides
       // with that roof (FacilityRoof.mask)
       var bags:Array<Models.PropPlace> = [];
@@ -384,11 +348,13 @@ class MilitaryYard
                 out.bagOf.push(si);
               continue;
             }
-          tank(buf(si, TEX_OLIVE), buf(si, TEX_GALV), p.x, p.z, p.y);
+          tanks.push(p);
+          tankOf.push(si);
         }
-      for (i in 0...deck.tank.length)
-        tank(buf(out.tankOf[i], TEX_OLIVE), buf(out.tankOf[i], TEX_GALV), deck.tank[i].x,
-          deck.tank[i].z, deck.tank[i].y);
+      // the facility's own tank spots and every plant spot past the nest stand the base's water
+      // tank, handed back on deck.tank for FacilityRoof to batch and mask like the compound's
+      deck.tank = tanks.concat(deck.tank);
+      out.tankOf = tankOf.concat(out.tankOf);
       for (i in 0...deck.dish.length)
         {
           var p = deck.dish[i];
@@ -456,32 +422,44 @@ class MilitaryYard
           FacilityGeom.addDeck(scene, bufs.get(key), key.substr(sp + 1), true,
             shells[Std.parseInt(key.substr(0, sp))]);
         }
-      out.bagB = MilitaryBags.batch(scene, bags);
+      out.bagB = unmasked(MilitaryBags.batch(scene, bags), RenderConfig.MODELS.militarySandbag);
     }
 
-// a roof water tank: an olive corrugated octagon on a steel plinth, a steel lid
-  static function tank(side:render.world.MeshBuf.MeshBuf, steel:render.world.MeshBuf.MeshBuf,
-      cx:Float, cz:Float, y:Float):Void
+// give a ROOF batch its own copy of the glb's material. SOLID batches share the template's, and the
+// ground batches of the same glb (and View's warm-up) vision-mask it, which chains render.world
+// .IndoorMask on as well: a bag or a tank standing on a roof over an interior was then lit by the
+// indoor rig and the player's line of sight, and came out near black. A clone drops both hooks
+// (Material.clone copies no onBeforeCompile), so the roof kit lights like the facility's own
+  public static function unmasked(prop:InstancedProp, path:String):InstancedProp
     {
-      MilitaryGeom.box(steel, cx - TANK_R, cx + TANK_R, cz - TANK_R, cz + TANK_R, y, y + TANK_PLINTH,
-        CELL);
-      var y0 = y + TANK_PLINTH;
-      var t = y0 + TANK_H;
-      for (i in 0...DRUM_SIDES)
+      Models.get(path, function(_)
         {
-          var a = i * Math.PI * 2 / DRUM_SIDES;
-          var b = (i + 1) * Math.PI * 2 / DRUM_SIDES;
-          var x0 = cx + Math.cos(a) * TANK_R;
-          var z0 = cz + Math.sin(a) * TANK_R;
-          var x1 = cx + Math.cos(b) * TANK_R;
-          var z1 = cz + Math.sin(b) * TANK_R;
-          // world-tiled round the rim, so the corrugation keeps its pitch
-          var u0 = -i * TANK_R * 0.765 / OLIVE_TILE;
-          var u1 = -(i + 1) * TANK_R * 0.765 / OLIVE_TILE;
-          MeshBufTools.quad(side, [x1, y0, z1], [x0, y0, z0], [x0, t, z0], [x1, t, z1],
-            [u1, y0 / OLIVE_TILE, u0, y0 / OLIVE_TILE, u0, t / OLIVE_TILE, u1, t / OLIVE_TILE]);
-          MeshBufTools.tri(steel, [cx, t, cz], [x1, t, z1], [x0, t, z0],
-            [cx / CELL, cz / CELL, x1 / CELL, z1 / CELL, x0 / CELL, z0 / CELL]);
-        }
+          if (prop.mesh != null)
+            prop.mesh.material = prop.mesh.material.clone();
+        });
+      return prop;
+    }
+
+// the yard kit's glbs, for View's warm-up
+  public static function warmProps():Array<{ path:String, h:Float }>
+    {
+      return [
+        {
+          path: RenderConfig.MODELS.militaryCrate,
+          h: CRATE_STEP,
+        },
+        {
+          path: RenderConfig.MODELS.militaryDrum,
+          h: DRUM_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryContainer,
+          h: MilitaryGeom.CONT_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryWaterTank,
+          h: TANK_H,
+        },
+      ];
     }
 }

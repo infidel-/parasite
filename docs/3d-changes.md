@@ -1586,3 +1586,33 @@ The rest moved onto existing textures:
 `window-head` is left only on the shell's real window heads.
 
 **Verdict:** landed.
+
+## Military base: the yard kit hand-modelled (drum, crate, container, roof tank) and a sharp mast
+
+**Changed:** four emitted props became glbs from `models-src/military/yardkit_build.py` (headless
+Blender), each one instanced batch:
+- **drum** (636 tris): the facility drum's 20-sided smooth profile at 0.6 x 1.6. Its hoops sit on
+  drum-side's painted bead rows (0.330 and 0.725 up), the side is wrapped twice and the lid is
+  mapped radially. It replaces an 8-sided can.
+- **crate** (112 tris): broken edges, an overhanging lid slab, and the lid's two battens raised on
+  the painted ones (columns 39-85 and 428-474).
+- **container** (716 tris): castings, posts and rails round corrugated sides, back and roof. Each rib
+  is one painted period of container-side (88 px), and the door end has two proud lock bars. Its
+  432 open edges are the skins' borders, hidden by the frame.
+- **water tank** (628 tris): a galvanised lathe with hoops, a coned lid and a manway, on four
+  gunmetal legs with a pipe. It replaces the olive octagon.
+
+**Mast:** tex 512 → 1024, and the pole now maps the paint cell twice (split at 2.95). That takes it
+from 43 to 171 texels per world unit. The head readback is still -0.3542 against -0.354.
+
+**Trap — roof glbs came out near black.** `FacilityWarm` vision-masks every extra glb it warms, and
+a SOLID batch shares the template's material. The vision mask chains `IndoorMask`, so the roof
+sandbags and the roof tank were lit by the indoor rig over their building's interior. The fix is
+`MilitaryYard.unmasked`: each roof batch takes a material clone, which carries no `onBeforeCompile`.
+The ground kit now gets `VisionMask.patchMesh` explicitly instead of by accident.
+
+**Generator fix:** the Phase 2 entry yard took the depot's plot on 90x70 bases (0.22 depots a base
+to 0). The first depot is now dealt before a second camp, and `GenCheck.quotaMet` caps a kind at
+the larger `max` of its rows. 2000 seeds pass, at 0.76 depots and 1.45 camps a base.
+
+**Verdict:** landed.

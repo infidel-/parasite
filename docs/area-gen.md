@@ -327,6 +327,9 @@ The rest is yard.
   straight behind the boom read as a wall at the end of it.
 - `GenCheck.militarySane` asserts the boom's columns are walkable for 9 rows in.
 - The `must` failed 3 seeds in 2000 at 30 splits, so `MAX_PLAN_TRIES` is 60 (mean 3.5 splits).
+- The entry yard took the depot's plot on 90x70 bases (0.22 depots a base to 0). So DEPOT has two
+  rows: max 1 before CAMP and max 2 after. The rows share one count, and `GenCheck.quotaMet` caps a
+  kind at its rows' largest `max`.
 
 **Nothing downstream reads the tree.** The fence is re-derived from the grid by `fenceOf` (the bbox
 of fence/torn/tower cells). `AreaGame.isOutsideBase` is that bbox, and the RING COUNTS AS OUTSIDE.

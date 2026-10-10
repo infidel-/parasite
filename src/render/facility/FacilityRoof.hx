@@ -265,7 +265,6 @@ class FacilityRoof
           deck.jbox = [];
           deck.vent = [];
           deck.duct = [];
-          deck.tank = [];
         }
       out.ac = Models.instanced(scene, acPath(), deck.ac, FacilityStyle.ROOF_AC_H, SOLID);
       out.dish = Models.instanced(scene, dishPath(), deck.dish, FacilityStyle.ROOF_DISH_H, SOLID);
@@ -277,8 +276,13 @@ class FacilityRoof
         FacilityStyle.ROOF_VENT_H, SOLID);
       out.ductB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofDuctHand, deck.duct,
         FacilityStyle.ROOF_DUCT_H, SOLID);
-      out.tankB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofTankHand, deck.tank,
-        FacilityStyle.ROOF_TANK_H, SOLID);
+      // a base's tanks are its own water tank, handed back on deck.tank by MilitaryYard.roof
+      out.tankB = (m.kind == 'military' ?
+        render.military.MilitaryYard.unmasked(Models.instanced(scene,
+          RenderConfig.MODELS.militaryWaterTank, deck.tank, render.military.MilitaryYard.TANK_H,
+          SOLID), RenderConfig.MODELS.militaryWaterTank) :
+        Models.instanced(scene, RenderConfig.MODELS.facilityRoofTankHand, deck.tank,
+          FacilityStyle.ROOF_TANK_H, SOLID));
       return out;
     }
 

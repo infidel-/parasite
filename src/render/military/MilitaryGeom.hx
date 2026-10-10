@@ -40,8 +40,6 @@ class MilitaryGeom
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_CANVAS = 'textures/military/tent-canvas.png';
-  static inline var TEX_CONT_SIDE = 'textures/military/container-side.png';
-  static inline var TEX_CONT_DOOR = 'textures/military/container-door.png';
   static inline var TEX_APRON = 'textures/military/apron.png';
   static inline var TEX_SAFE = 'textures/military/safe-front.png';
   static inline var TEX_LOCKER = 'textures/military/locker-front.png';
@@ -104,8 +102,7 @@ class MilitaryGeom
   // 508x546 crop (military/container-door)
   static inline var CONT_INSET = 0.2;
   static inline var CONT_W = CELL - CONT_INSET * 2;
-  static inline var CONT_H = CONT_W * 546 / 508;
-  static inline var CONT_TILE = 4.0;
+  public static inline var CONT_H = CONT_W * 546 / 508;
 
   // the camo net over a parked vehicle, on four poles, and how far past the footprint it reaches
   static inline var NET_Y = 6.4;
@@ -130,15 +127,22 @@ class MilitaryGeom
   static var cut:Map<String, MeshBuf>;
   // and the sandbags on the ground, one instanced batch (render.military.MilitaryBags)
   public static var bags:Array<PropPlace>;
+  // and the instanced yard kit: MilitaryYard's crates and drums, this file's containers
+  public static var crates:Array<PropPlace>;
+  public static var drums:Array<PropPlace>;
+  static var containers:Array<PropPlace>;
 
 // emit the whole base. runs BEFORE ContactMask.repaint in render.facility.FacilityArea.build: every
 // unit here registers its footprint with the contact shadow. returns the ground's sandbag batch,
 // which the area's tick culls
-  public static function build(scene:Scene, m:Facility, area:AreaGame):InstancedProp
+  public static function build(scene:Scene, m:Facility, area:AreaGame):Array<InstancedProp>
     {
       opaque = new Map();
       cut = new Map();
       bags = [];
+      crates = [];
+      drums = [];
+      containers = [];
       var parked = 0;
       // the pad's square, off its cells, for the marking
       var pad = {
@@ -202,7 +206,34 @@ class MilitaryGeom
         FacilityGeom.add(scene, opaque.get(tex), tex, true, true);
       for (tex in cut.keys())
         addCut(scene, cut.get(tex), tex);
-      return MilitaryBags.batch(scene, bags);
+      // the yard kit, each batch under the player's line of sight like every other ground prop
+      var kit = [
+        {
+          prop: MilitaryBags.batch(scene, bags),
+          path: RenderConfig.MODELS.militarySandbag,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryCrate, crates,
+            MilitaryYard.CRATE_STEP, SOLID),
+          path: RenderConfig.MODELS.militaryCrate,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryDrum, drums, MilitaryYard.DRUM_H,
+            SOLID),
+          path: RenderConfig.MODELS.militaryDrum,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryContainer, containers, CONT_H,
+            SOLID),
+          path: RenderConfig.MODELS.militaryContainer,
+        },
+      ];
+      for (k in kit)
+        {
+          var p = k.prop;
+          Models.get(k.path, function(_) VisionMask.patchMesh(p.mesh));
+        }
+      return [for (k in kit) k.prop];
     }
 
 // does the base draw this object as geometry instead of its sprite? stateless, like
@@ -520,20 +551,20 @@ class MilitaryGeom
         [r0 / t, 0, r0 / t, len / t, r1 / t, len / t, r1 / t, 0]);
     }
 
-// a shipping container from its origin cell: corrugated sides and lid along its length, the door
-// art on its west end and the corrugation on its east one
+// a shipping container from its origin cell, the hand-modelled one (models-src/military/
+// yardkit_build.py) along its length with the door on its west end
   static function container(m:Facility, col:Int, row:Int):Void
     {
       var x0 = col * CELL - half() + CONT_INSET;
       var z0 = row * CELL - half() + CONT_INSET;
       var x1 = x0 + Const.MIL_CONTAINER_LEN * CELL - CONT_INSET * 2;
       var z1 = z0 + CONT_W;
-      var side = buf(TEX_CONT_SIDE);
-      FacilityGeom.face(side, x0, x1, z0, z1, 0, 0, CONT_H, CONT_TILE);
-      FacilityGeom.face(side, x0, x1, z0, z1, 1, 0, CONT_H, CONT_TILE);
-      FacilityGeom.face(side, x0, x1, z0, z1, 3, 0, CONT_H, CONT_TILE);
-      FacilityGeom.cap(side, x0, x1, z0, z1, CONT_H, CONT_TILE);
-      FacilityGeom.pane(buf(TEX_CONT_DOOR), x0, x1, z0, z1, 2, 0, CONT_H);
+      containers.push({
+        x: (x0 + x1) / 2,
+        z: (z0 + z1) / 2,
+        yaw: 0.0,
+        y: 0.0,
+      });
       FacilityDetail.ground(m, {
         col: col,
         row: row,

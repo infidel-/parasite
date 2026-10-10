@@ -122,7 +122,17 @@ class MilitaryBlocks
           minH: 6,
           fit: function(b: _GenNode) return -fromGate(b),
         },
-        // the tent camp, one required and a second allowed out of what would be yard
+        // a container depot, never required, but its FIRST plot dealt before a second camp: with the
+        // entry yard taking a plot, a 90x70 base otherwise never got one (0.22 a base to 0). The
+        // two DEPOT rows share one count (gen.Quota), so this one stops at 1
+        {
+          kind: DEPOT,
+          min: 0,
+          max: 1,
+          minW: 8,
+          minH: 5,
+        },
+        // the tent camp, one required and a second allowed out of what is left
         {
           kind: CAMP,
           min: 1,
@@ -130,7 +140,7 @@ class MilitaryBlocks
           minW: 8,
           minH: 6,
         },
-        // and a container depot, never required
+        // and a second depot out of whatever the camps leave
         {
           kind: DEPOT,
           min: 0,

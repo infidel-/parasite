@@ -414,7 +414,8 @@ class View {
           case 'facility': render.facility.FacilityWarm.build(renderer, camera, game.config.vidLampLights);
           // a base is a compound drawn by the facility renderer, with the wilderness's scatter in its
           // margin (render.military.MilitaryMargin), so it warms the compound and those glbs with it
-          // and its own kit: the sandbag, the floodlight mast, and the street lamps past its fence
+          // and its own kit: the sandbag, the floodlight mast, the street lamps past its fence, and
+          // the yard's drums, crates, containers and the roofs' water tanks
           case 'militaryBase': render.facility.FacilityWarm.build(renderer, camera,
             game.config.vidLampLights, render.military.MilitaryMargin.warmProps()
             .concat(render.military.MilitaryVehicles.warmProps())
@@ -431,7 +432,7 @@ class View {
                 path: RenderConfig.MODELS.streetLamp,
                 h: citygen.CityConfig.CELL * 1.6,
               },
-            ]));
+            ]).concat(render.military.MilitaryYard.warmProps()));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };

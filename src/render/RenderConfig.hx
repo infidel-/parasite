@@ -741,6 +741,10 @@ class RenderConfig {
     // and its hand-modelled kit (models-src/military/basekit_build.py)
     militarySandbag: 'models/military/sandbag-hand.glb',  // one bag, long axis local x, one course high
     militaryMast: 'models/military/mast-hand.glb',        // floodlight mast on the facility lamp's head contract
+    militaryDrum: 'models/military/drum-hand.glb',        // fuel drum, lid up
+    militaryCrate: 'models/military/crate-hand.glb',      // ammo crate, long axis local x, lid and battens on top
+    militaryContainer: 'models/military/container-hand.glb', // 20 ft container, long axis local x, door at -x
+    militaryWaterTank: 'models/military/water-tank-hand.glb', // roof water tank on its legs
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled

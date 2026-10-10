@@ -63,11 +63,17 @@ class GenCheck
 // every demand's min is met and no demand's max is exceeded. the check the whole quota exists for
   public function quotaMet(blocks: Array<_GenNode>, demands: Array<_GenDemand>)
     {
+      // a kind may have two rows (a military depot's first plot is dealt before a second camp and
+      // the rest after it): they share one count in gen.Quota, so the cap is the larger max
+      var cap = new Map<String, Int>();
+      for (d in demands)
+        cap.set(d.kind, (cap.exists(d.kind) ? Std.int(Math.max(cap.get(d.kind), d.max)) : d.max));
       for (d in demands)
         {
           var n = Quota.count(blocks, d.kind);
           ok(n >= d.min, 'quota short: "' + d.kind + '" got ' + n + ', needs ' + d.min);
-          ok(n <= d.max, 'quota over: "' + d.kind + '" got ' + n + ', max ' + d.max);
+          ok(n <= cap.get(d.kind), 'quota over: "' + d.kind + '" got ' + n + ', max ' +
+            cap.get(d.kind));
         }
     }
 

@@ -1625,16 +1625,52 @@
       "tex": 512,
       "roughness": 1,
       "note": "ONE SANDBAG, HAND-MODELLED (models-src/military/basekit_build.py), 76 tris: a rounded 8-point section swept 1.2 along x, swelling to the middle and pinched at the tied ends, 0.6 wide (one wall thickness) and 0.32 high (one course). render.military.MilitaryBags stacks it in running bond; it replaces the sandbag sheet, which did not wrap. Wears mil-m-sheet's burlap cell (the built, lifted label), 0 holes / 0 coplanar / texel_off 0.",
-      "last_converted": "2026-10-10T20:25:12Z",
+      "last_converted": "2026-10-10T21:33:35Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/mast-hand": {
       "src": "military/mast-hand.glb",
       "tris": -1,
-      "tex": 512,
+      "tex": 1024,
       "roughness": 1,
-      "note": "THE FLOODLIGHT MAST, HAND-MODELLED (models-src/military/basekit_build.py), 428 tris: a 12-sided tapered pole on a galvanised flange, a collar, a swept outreach arm and a pitched floodlight head. ON THE FACILITY LAMP'S CONTRACT so FacilityLamps' cone lands on its head: LAMP_H 5.9 tall, head centre at LAMP_HEAD_Y * LAMP_H up and LAMP_HEAD_Z * LAMP_H toward local +z from the BBOX centre (Models.normalize recentres on it); read back off the mesh at 0.3542 against 0.354. One density for the whole piece (a cell per 5.9 units); texel_off 1 is the lens, which takes its whole cell.",
-      "last_converted": "2026-10-10T20:25:12Z",
+      "note": "THE FLOODLIGHT MAST, HAND-MODELLED (models-src/military/basekit_build.py), 428 tris: a 12-sided tapered pole on a galvanised flange, a collar, a swept outreach arm and a pitched floodlight head. ON THE FACILITY LAMP'S CONTRACT so FacilityLamps' cone lands on its head: LAMP_H 5.9 tall, head centre at LAMP_HEAD_Y * LAMP_H up and LAMP_HEAD_Z * LAMP_H toward local +z from the BBOX centre (Models.normalize recentres on it); read back off the mesh at 0.3542 against 0.354. One density for the whole piece (a cell per 5.9 units); texel_off 1 is the lens, which takes its whole cell. TEX 1024 AND A CELL PER HALF POLE: at tex 512 with one cell per pole the paint sampled 43 texels per world unit, reported as blurry for no reason; now 171.",
+      "last_converted": "2026-10-10T21:33:35Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/drum-hand": {
+      "src": "military/drum-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE FUEL DRUM, HAND-MODELLED (models-src/military/yardkit_build.py), 636 tris: models-src/facility/drum_build.py's twenty-sided smooth profile at the base's 0.6 x 1.6, a rolled chime each end and two rolling hoops on drum-side's own bead lines (0.330 and 0.725 up), the side art wrapped twice round and drum-top radially over the lid. Replaces an emitted eight-sided can reported as very 1996 blocky. Sheet models-src/military/mil-y-sheet.png (drum-side, drum-top, crate-side, crate-lid, built labels). Drawn by render.military.MilitaryYard.clutter at h 1.6.",
+      "last_converted": "2026-10-10T21:33:14Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/crate-hand": {
+      "src": "military/crate-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE AMMO CRATE, HAND-MODELLED (models-src/military/yardkit_build.py), 112 tris: the old 2.2 x 1.1 x 1.29 box with every edge broken, an overhanging lid slab, and the two battens crate-lid paints RAISED on it (columns 39-85 and 428-474). Ends wear the lid's clean planks. Replaces an emitted box reported as wanting more polygons. Sheet mil-y-sheet.png. Drawn by render.military.MilitaryYard.clutter at h 1.195, stacked at that pitch.",
+      "last_converted": "2026-10-10T21:33:14Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/container-hand": {
+      "src": "military/container-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE SHIPPING CONTAINER, HAND-MODELLED (models-src/military/yardkit_build.py), 716 tris: a frame of eight gunmetal castings, posts, and rails round CORRUGATED sides, back and roof, each rib one painted period of container-side (88 px) so the pressed and painted ribs agree, and the door end in container-door with its two lock bars proud. 432 open edges are the corrugated skins' borders, hidden behind the posts and rails by construction. Replaces an emitted box reported as too boring. Sheet mil-c-sheet.png (container-side, container-door, gunmetal, galvanized). Tex 1024 so a rib is 128 texels per world unit. Drawn by render.military.MilitaryGeom.container at h CONT_H.",
+      "last_converted": "2026-10-10T21:33:14Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/water-tank-hand": {
+      "src": "military/water-tank-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE ROOF WATER TANK, HAND-MODELLED (models-src/military/yardkit_build.py), 628 tris: a galvanised 18-sided lathe with two stiffening hoops, a coned lid and a manway, on four gunmetal legs with an outlet pipe down between them. Replaces an emitted olive octagon reported as unreadable. Sheet mil-c-sheet.png. Drawn on a base's roofs through FacilityRoof's tank batch at h 2.79.",
+      "last_converted": "2026-10-10T21:33:14Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     }
   }
