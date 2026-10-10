@@ -136,7 +136,9 @@ class RoomBlock
     {
       if (room.role == ROLE_TOILET)
         return WASHROOM;
-      if (room.role == ROLE_CABINET)
+      // a military armory with no racking is an office with lockers in it
+      if (room.role == ROLE_CABINET ||
+          room.role == ROLE_ARMORY)
         return OFFICE;
       if (room.role == ROLE_STORAGE)
         return STORAGE;

@@ -39,6 +39,7 @@ class FacilityGen
       var state: _FacilityState = {
         area: ctx,
         mainRoadNorth: ctx.chance(50),
+        military: false,
         rooms: null,
         doors: null,
         allRooms: [],
@@ -84,7 +85,7 @@ class FacilityGen
 // generateBuilding, by gen.blocks.RoomBlock through a walk of their own, because a room's contents
 // have to be standing before the building's last pass runs; the area walk meets them again a level
 // later and must do nothing when it does
-  static function fill(state: _FacilityState, node: _GenNode)
+  public static function fill(state: _FacilityState, node: _GenNode)
     {
       var cells = state.area.getCells();
       var w = GenTree.width(node);
@@ -151,7 +152,7 @@ class FacilityGen
     }
 
 // replace all temp tiles into final ones
-  static function finalizeTiles(state: _FacilityState)
+  public static function finalizeTiles(state: _FacilityState)
     {
       var area = state.area;
       var cells = area.getCells();

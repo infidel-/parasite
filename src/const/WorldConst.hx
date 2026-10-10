@@ -146,10 +146,10 @@ class WorldConst
         type: 'militaryBase',
         name: 'Military base',
         pediaArticle: 'areaMilitary',
-        exit: 'sewer_hatch',
+        exit: '-',
         alertnessMod: 1.5,
-        width: 50,
-        height: 50,
+        width: 80,
+        height: 70,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
@@ -165,9 +165,7 @@ class WorldConst
         ai: [
           'soldier' => 100,
         ],
-        objects: [
-          { id: 'sewer_hatch', amount: 5 }
-        ]
+        objects: []
       },
 
       // *** facility

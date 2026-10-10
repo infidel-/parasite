@@ -71,6 +71,9 @@ class Default extends Tileset
     // clear of their cell), and row 18 their twins
     1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 19 - the military base (Const.TILE_MIL_*): fence, TORN fence (walkable), tower, tent,
+    // container x2, vehicle footprint x5, and the helipad (walkable)
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -106,6 +109,9 @@ class Default extends Tileset
     // row 17-18 - corpo floors and their twins
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 19 - the military base: a tent and a container block sight, the chain-link, the tower's
+    // legs and a parked vehicle do not
+    1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
 
 // load default tileset image
@@ -162,6 +168,9 @@ class Default extends Tileset
           tileID == Const.TILE_ARCHIVE_HIGH ||
           tileID == Const.TILE_RACK_HIGH)
         return super.getIcon(Const.TILE_FLOOR_CONCRETE);
+      // the military base's row has no art of its own: it is always drawn in 3D
+      if (tileID >= Const.OFFSET_ROW19)
+        return super.getIcon(Const.TILE_ALLEY);
       return super.getIcon(tileID);
     }
 

@@ -90,6 +90,9 @@ class FacilityTemp
   // 31x24 building cannot flip it — but a store in a SMALL structure could, and that is the number
   // to look at if a lab building ever comes back drawn as a hangar
   public static inline var ROLE_STORAGE = 'storage';
+  // a military building's armory when no room could take racking: an office with lockers in it
+  // (gen.military.MilitaryRooms). A base's store is its armory otherwise
+  public static inline var ROLE_ARMORY = 'armory';
   // a floor tile's unwalkable twin sits exactly one tileset row below it (Const.OFFSET_ROW12 ->
   // OFFSET_ROW13), which is how game.CorpAreaGenerator addresses the pair too
   public static inline var UNWALKABLE_TILE_OFFSET = 16;

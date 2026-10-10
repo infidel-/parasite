@@ -777,6 +777,17 @@ class AreaGame extends _SaveObject
         return;
 //      game.debug('Area.generate()');
 
+      // a military base created before the fenced base existed carries the old 40-50 cell grid, which
+      // cannot hold one (gen.blocks.MilitaryBlocks): roll it to the base's own size the first time it
+      // is generated, as setType would have
+      if (typeID == AREA_MILITARY_BASE &&
+          (width < info.width - 10 ||
+           height < info.height - 10))
+        {
+          width = info.width - 10 + 10 * Std.random(2);
+          height = info.height - 10 + 10 * Std.random(2);
+        }
+
       // clear map
       _cells = [];
       tiles = [];

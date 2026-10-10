@@ -891,6 +891,119 @@ class GenCheck
         ': the boom across the gate mouth is walked through');
     }
 
+// the base's perimeter: the fence ring re-derives to the rect the generator laid, every cell of it
+// is chain-link, a tower, the gate or an opening, and the only openings are the 1-2 torn panels and
+// the one pedestrian gap beside the boom. And every vehicle and container stands whole
+  public function militarySane(ctx: GenCtx, gateNorth: Bool)
+    {
+      var f = gen.military.MilitaryGen.fence(ctx.width, ctx.height, gateNorth);
+      var g = gen.military.MilitaryGen.fenceOf(ctx.cells, ctx.width, ctx.height);
+      ok(g != null &&
+         g.x1 == f.x1 &&
+         g.y1 == f.y1 &&
+         g.x2 == f.x2 &&
+         g.y2 == f.y2,
+        'the fence ring does not re-derive to the rect it was laid on');
+      var torn = 0;
+      var gaps = 0;
+      for (x in f.x1...f.x2 + 1)
+        for (y in f.y1...f.y2 + 1)
+          {
+            if (x != f.x1 &&
+                x != f.x2 &&
+                y != f.y1 &&
+                y != f.y2)
+              continue;
+            var t = ctx.cells[x][y];
+            if (t == Const.TILE_MIL_FENCE_TORN)
+              torn++;
+            else if (t == Const.TILE_WALKWAY)
+              gaps++;
+            else ok(t == Const.TILE_MIL_FENCE ||
+              t == Const.TILE_MIL_TOWER ||
+              t == Const.TILE_ALLEY_UNWALKABLE,
+              'fence ring cell ' + x + ',' + y + ' is tile ' + t);
+          }
+      ok(torn >= 1 && torn <= 2, torn + ' torn fence panels, want 1-2');
+      ok(gaps == 1, gaps + ' pedestrian gaps by the gate, want 1');
+
+      // every vehicle origin carries its whole footprint, and every container its length
+      var sizes = [
+        Const.TILE_MIL_TANK => Const.MIL_TANK_SIZE,
+        Const.TILE_MIL_HUMVEE => Const.MIL_HUMVEE_SIZE,
+        Const.TILE_MIL_HELI => Const.MIL_HELI_SIZE,
+        Const.TILE_MIL_PLANE => Const.MIL_PLANE_SIZE,
+      ];
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          {
+            var t = ctx.cells[x][y];
+            if (sizes.exists(t))
+              {
+                var sz = sizes.get(t);
+                var n = 0;
+                for (dx in 0...sz[0])
+                  for (dy in 0...sz[1])
+                    if (ctx.getCellType(x + dx, y + dy) == Const.TILE_MIL_VEHICLE ||
+                        (dx == 0 && dy == 0))
+                      n++;
+                ok(n == sz[0] * sz[1], 'vehicle ' + t + ' at ' + x + ',' + y + ' is not whole');
+              }
+            else if (t == Const.TILE_MIL_CONTAINER_ORIGIN)
+              for (dx in 1...Const.MIL_CONTAINER_LEN)
+                ok(ctx.getCellType(x + dx, y) == Const.TILE_MIL_CONTAINER,
+                  'container at ' + x + ',' + y + ' is short');
+          }
+      ok(count(ctx, Const.TILE_MIL_HELI) == 1, 'no helicopter');
+      ok(count(ctx, Const.TILE_MIL_PLANE) == 1, 'no plane in the hangar');
+      ok(count(ctx, Const.TILE_MIL_TANK) >= 1, 'no tank in the motor pool');
+      ok(ctx.countSpawns('safe') == 1, ctx.countSpawns('safe') + ' safes, want 1');
+      ok(ctx.countSpawns('locker') + ctx.countSpawns('gunCabinet') >= 2,
+        'the armories hold ' + ctx.countSpawns('locker') + ' lockers and ' +
+        ctx.countSpawns('gunCabinet') + ' gun cabinets, want 2+ between them');
+    }
+
+// the base can be got into: every torn panel and the pedestrian gap have the rim flood on their
+// outside AND their inside, so each is a way in and not a hole onto a wall. reads lastSeen, so it
+// runs after reachable()
+  public function militaryReach(ctx: GenCtx)
+    {
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          {
+            var t = ctx.cells[x][y];
+            if (t != Const.TILE_MIL_FENCE_TORN &&
+                !(t == Const.TILE_WALKWAY &&
+                  (ctx.getCellType(x - 1, y) == Const.TILE_ALLEY_UNWALKABLE)))
+              continue;
+            ok(lastSeen[x][y], 'opening ' + x + ',' + y + ' cannot be walked to');
+            var n = 0;
+            for (i in 0...Const.dir4x.length)
+              {
+                var xx = x + Const.dir4x[i];
+                var yy = y + Const.dir4y[i];
+                if (xx >= 0 &&
+                    yy >= 0 &&
+                    xx < ctx.width &&
+                    yy < ctx.height &&
+                    lastSeen[xx][yy])
+                  n++;
+              }
+            ok(n >= 2, 'opening ' + x + ',' + y + ' leads nowhere');
+          }
+    }
+
+// how many cells of the grid hold this tile
+  static function count(ctx: GenCtx, tile: Int): Int
+    {
+      var n = 0;
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          if (ctx.cells[x][y] == tile)
+            n++;
+      return n;
+    }
+
 // a cell of the gate MOUTH: the hole through the pavement band, either id. game.AreaGame.isMouth,
 // verbatim — the row of the hole the boom lies across is Const.TILE_ALLEY_UNWALKABLE, and a box
 // taken over the alley alone reads the mouth one row short and then fails its own depth test

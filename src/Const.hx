@@ -1248,6 +1248,37 @@ class Const
   // and one receptionist per this many cells of it
   public static inline var RECEPTION_STATION_PITCH = 3;
 
+  // === row 19 - the military base (gen.military.MilitaryGen). No 2D art: a base always renders in
+  // 3D, and tiles.Default.getIcon aliases every one of these to a surface that exists
+  public static var OFFSET_ROW19 = 304;
+  // the perimeter chain-link, two cells high. Unwalkable and see-through
+  public static var TILE_MIL_FENCE = OFFSET_ROW19 + 0;
+  // a torn panel of it, which a host can squeeze through. Walkable and see-through
+  public static var TILE_MIL_FENCE_TORN = OFFSET_ROW19 + 1;
+  // a corner watchtower's 2x2 footprint. Unwalkable, see-through between its legs
+  public static var TILE_MIL_TOWER = OFFSET_ROW19 + 2;
+  // a canvas tent, unenterable. Unwalkable and opaque
+  public static var TILE_MIL_TENT = OFFSET_ROW19 + 3;
+  // a shipping container, MIL_CONTAINER_LEN cells along x from its ORIGIN cell (the west one), so
+  // two containers end to end or stacked side by side never read as one. Unwalkable and opaque
+  public static var TILE_MIL_CONTAINER = OFFSET_ROW19 + 4;
+  public static var TILE_MIL_CONTAINER_ORIGIN = OFFSET_ROW19 + 5;
+  // a parked vehicle's footprint, and its ORIGIN (top-left) cell, one id per kind, which is what
+  // names the model. Every footprint is long along y. Unwalkable and see-through, like a parked car
+  public static var TILE_MIL_VEHICLE = OFFSET_ROW19 + 6;
+  public static var TILE_MIL_TANK = OFFSET_ROW19 + 7;
+  public static var TILE_MIL_HUMVEE = OFFSET_ROW19 + 8;
+  public static var TILE_MIL_HELI = OFFSET_ROW19 + 9;
+  public static var TILE_MIL_PLANE = OFFSET_ROW19 + 10;
+  // the helipad's painted concrete square. Walkable
+  public static var TILE_MIL_PAD = OFFSET_ROW19 + 11;
+  // container length, and each vehicle kind's footprint as [ w, h ] in cells
+  public static inline var MIL_CONTAINER_LEN = 3;
+  public static var MIL_TANK_SIZE = [ 2, 4 ];
+  public static var MIL_HUMVEE_SIZE = [ 2, 3 ];
+  public static var MIL_HELI_SIZE = [ 3, 7 ];
+  public static var MIL_PLANE_SIZE = [ 8, 7 ];
+
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;
   public static var TILE_CORP_INNER_WINDOW1 = OFFSET_ROW13 + 0;

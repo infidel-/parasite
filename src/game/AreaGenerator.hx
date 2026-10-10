@@ -69,7 +69,7 @@ class AreaGenerator
       if (info.type == 'city')
         city.generate(state, area, info);
       else if (info.type == 'militaryBase')
-        generateBuildings(game, area, info);
+        MilitaryAreaGenerator.generate(game, area);
       else if (info.type == 'facility')
         facility.generate(area, info);
       else if (info.type == 'wilderness')
@@ -269,7 +269,7 @@ class AreaGenerator
 // the camera and the player hides the player. it went in at 0.12 / 60% trees and that kept the actor
 // under a crown; 0.10 / 50% still reads as a wood against the plains' 0.025, and takes ~25% of the
 // triangles off with it
-  static function wildMix(band: _TerrainBand): _WildMix
+  public static function wildMix(band: _TerrainBand): _WildMix
     {
       if (band == TERRAIN_FOREST)
         return {
@@ -445,65 +445,6 @@ class AreaGenerator
 
           area.setCellType(x, y, t);
         }
-    }
-
-
-// generate buildings
-  static function generateBuildings(game: Game, area: AreaGame, info: AreaInfo)
-    {
-      // buildings
-      for (y in 1...area.height)
-        for (x in 1...area.width)
-          {
-            if (Math.random() > info.buildingChance)
-              continue;
-
-            // size
-            var sx = 5 + Std.random(10);
-            var sy = 5 + Std.random(10);
-
-            if (x + sx > area.width - 1)
-              sx = area.width - 1 - x;
-            if (y + sy > area.height - 1)
-              sy = area.height - 1 - y;
-
-            if (sx < 2)
-              continue;
-            if (sy < 2)
-              continue;
-
-//            var cell = get(x,y);
-
-            // check for adjacent buildings
-            var ok = true;
-            for (dy in -2...sy + 3)
-              for (dx in -2...sx + 3)
-                {
-                  if (dx == 0 && dy == 0)
-                    continue;
-                  //var cell = get(x + dx, y + dy);
-                  var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == Const.TILE_BUILDING)
-                    {
-                      ok = false;
-                      break;
-                    }
-                }
-
-            if (!ok)
-              continue;
-  
-            // draw a building rect
-            for (dy in 0...sy)
-              for (dx in 0...sx)
-                {
-                  var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == -1)
-                    continue;
-
-                  area.setCellType(x + dx, y + dy, Const.TILE_BUILDING);
-                }
-          }
     }
 
 

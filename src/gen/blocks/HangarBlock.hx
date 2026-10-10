@@ -216,6 +216,16 @@ class HangarBlock
     {
       var w = GenTree.width(node);
       var h = GenTree.height(node);
+      // a military hangar holds an AIRCRAFT and nothing of the lab's: the plane's footprint, centred,
+      // and the floor's power generators around it
+      if (state.military)
+        {
+          gen.military.MilitaryGen.vehicle(state.area, Const.TILE_MIL_PLANE, Const.MIL_PLANE_SIZE,
+            node.x1 + Std.int((w - Const.MIL_PLANE_SIZE[0]) / 2),
+            node.y1 + Std.int((h - Const.MIL_PLANE_SIZE[1]) / 2));
+          generators(state, node, []);
+          return;
+        }
       // the pad, centred. a floor too small to carry it and still have a wall run gets none, which
       // is the washroom's rule again: no candidate passing is survivable, relaxing onto it is not
       if (w < PAD_SZ + 4 ||

@@ -25,6 +25,9 @@ class GenRun
   // world tables and the AI mixes with them, and two Ints are not worth that
   static inline var AREA_W = 75;
   static inline var AREA_H = 60;
+  // and const.WorldConst's AREA_MILITARY_BASE, copied for the same reason
+  static inline var MIL_W = 80;
+  static inline var MIL_H = 70;
 
 // the size a facility is ACTUALLY generated at.
 //
@@ -72,6 +75,8 @@ class GenRun
             checkFacilityArea(seed, check, verbose);
           else if (type == 'corp')
             checkCorpArea(seed, check, verbose);
+          else if (type == 'military')
+            checkMilitaryArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -268,6 +273,99 @@ class GenRun
       if (verbose)
         log('[gen] seed ' + seed + ' rooms=' + state.allRooms.length +
           ' doors=' + state.allDoors.length + ' spawns=' + ctx.spawns.length);
+    }
+
+// generate a whole military base and assert the structure the game reads back out of it.
+//
+// THE SAME REAL GENERATOR the live path calls, gen.military.MilitaryGen.build. The terrain band the
+// margin grows out of needs the region, so it is rolled here off the seed, one of the three
+  static function checkMilitaryArea(seed: Int, check: GenCheck, verbose: Bool)
+    {
+      var sizeRng = Rng.mulberry32(seed);
+      var w = (forceW > 0 ? forceW : dim(MIL_W, sizeRng));
+      var h = (forceH > 0 ? forceH : dim(MIL_H, sizeRng));
+      var bands = [ map.Terrain._TerrainBand.TERRAIN_FOREST, map.Terrain._TerrainBand.TERRAIN_PLAINS,
+        map.Terrain._TerrainBand.TERRAIN_MOUNTAIN ];
+      var band = bands[Rng.int(sizeRng, bands.length)];
+      var ctx = new GenCtx(w, h, seed);
+      var state = gen.military.MilitaryGen.build(ctx, game.AreaGenerator.wildMix(band), 0.5);
+      if (has('--digest'))
+        log('seed ' + seed + ' ' + w + 'x' + h + ' ' + digest(ctx, state));
+
+      // the plots, asked of the tree the generator walked
+      var blocks = ctx.root.children;
+      var demands = gen.blocks.MilitaryBlocks.demands(state.mainRoadNorth);
+      check.splitSane(blocks, gen.blocks.MilitaryBlocks.splitProfile());
+      check.inBounds(blocks, ctx.width, ctx.height);
+      check.noOverlap(blocks);
+      check.quotaMet(blocks, demands);
+      check.blocksFit(blocks, demands);
+      add('planTries', gen.blocks.MilitaryBlocks.lastPlanTries);
+      for (b in blocks)
+        add('blocks/' + b.kind, 1);
+      GenTree.walk(ctx.root, function(n) add('nodes/' + n.kind, 1));
+
+      check.tilesKnown(ctx);
+      check.roomsSane(ctx, state.allRooms);
+      check.doorsSane(ctx, state.allRooms, state.allDoors);
+      check.spawnsSane(ctx);
+      check.gate(ctx);
+      check.militarySane(ctx, state.mainRoadNorth);
+      var cut = check.reachable(ctx, state.allRooms);
+      check.ok(cut.length == 0, cut.length + ' room(s) cannot be walked into, first is ' +
+        (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
+      check.militaryReach(ctx);
+
+      add('rooms', state.allRooms.length);
+      for (s in ctx.spawns)
+        add('spawns/' + s.type, 1);
+      for (x in 0...w)
+        for (y in 0...h)
+          {
+            var t = ctx.cells[x][y];
+            if (t >= Const.OFFSET_ROW19)
+              add('tiles/' + (t - Const.OFFSET_ROW19), 1);
+          }
+      if (verbose)
+        {
+          log('[gen] seed ' + seed + ' ' + w + 'x' + h + ' gateNorth=' + state.mainRoadNorth +
+            ' rooms=' + state.allRooms.length);
+          for (b in blocks)
+            log('   ' + b.kind + ' ' + b.x1 + ',' + b.y1 + '..' + b.x2 + ',' + b.y2);
+          printMilitary(ctx);
+        }
+    }
+
+// the finished grid as one character per cell, the base's own alphabet
+  static function printMilitary(ctx: GenCtx)
+    {
+      for (y in 0...ctx.height)
+        {
+          var line = '';
+          for (x in 0...ctx.width)
+            {
+              var t = ctx.cells[x][y];
+              line += (ctx.hasObjectAt(x, y) ? 'o' :
+                t == Const.TILE_ROAD ? '=' :
+                t == Const.TILE_WALKWAY ? ':' :
+                t == Const.TILE_ALLEY ? ' ' :
+                t == Const.TILE_ALLEY_UNWALKABLE ? '_' :
+                t == Const.TILE_GRASS ? ',' :
+                t == Const.TILE_BUSH ? 'b' :
+                t == Const.TILE_ROCK || t == Const.TILE_ROCK_LARGE ? 'R' :
+                t >= Const.TILE_TREE1 && t < Const.TILE_BUSH || t == Const.TILE_TREE_CLUSTER ? 'T' :
+                t == Const.TILE_MIL_FENCE ? '#' :
+                t == Const.TILE_MIL_FENCE_TORN ? '%' :
+                t == Const.TILE_MIL_TOWER ? 'W' :
+                t == Const.TILE_MIL_TENT ? 'A' :
+                t == Const.TILE_MIL_CONTAINER || t == Const.TILE_MIL_CONTAINER_ORIGIN ? 'C' :
+                t == Const.TILE_MIL_VEHICLE ? 'v' :
+                t >= Const.TILE_MIL_TANK && t <= Const.TILE_MIL_PLANE ? 'V' :
+                t == Const.TILE_MIL_PAD ? '+' :
+                tiles.Default.TILE_WALKABLE[t] == 1 ? '.' : 'X');
+            }
+          log(line);
+        }
     }
 
 // generate a whole corp tower floor and assert the structure the game reads back out of it.

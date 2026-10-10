@@ -54,6 +54,11 @@ class GenSpawner
               // a security room's gun cabinet, gen.corp.CorpRooms.security
               case 'gunCabinet':
                 new GunCabinet(game, area.id, s.x, s.y);
+              // a military armory's lockers and its safe, gen.military.MilitaryRooms.armory
+              case 'locker':
+                new Locker(game, area.id, s.x, s.y);
+              case 'safe':
+                new Safe(game, area.id, s.x, s.y);
               default:
                 trace('GenSpawner.drain(): unknown spawn type "' + s.type + '" at ' +
                   s.x + ',' + s.y);

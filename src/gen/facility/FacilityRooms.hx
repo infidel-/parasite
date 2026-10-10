@@ -44,7 +44,9 @@ class FacilityRooms
       var cells = state.area.getCells();
       var cand = [for (room in state.rooms)
         if (room.w <= ROOM_SIZE && room.h <= ROOM_SIZE) room];
-      if (cand.length == 0)
+      // a base deals every room whatever its size (offices and an armory), so it goes on past this
+      if (cand.length == 0 &&
+          !state.military)
         return;
       // THE WASHROOM IS PICKED FIRST AND PICKED FOR ITS WALL AND ITS DOOR. Its light wells need one
       // wall that is exterior masonry end to end, and a room in the middle of a building has none —
@@ -101,6 +103,29 @@ class FacilityRooms
             room.role = ROLE_STORAGE;
             break;
           }
+      // a military building has no laboratories: every room the washroom and the armory did not take
+      // is an office, the big ones included
+      if (state.military)
+        {
+          var store = false;
+          for (room in state.rooms)
+            {
+              if (room.role == null)
+                room.role = ROLE_CABINET;
+              if (room.role == ROLE_STORAGE)
+                store = true;
+            }
+          // and a building with no wall long enough for racking still gets its armory, as an
+          // office with the lockers down its walls
+          if (!store)
+            for (room in state.rooms)
+              if (room.role == ROLE_CABINET)
+                {
+                  room.role = ROLE_ARMORY;
+                  break;
+                }
+          return;
+        }
       var cabinets = 0;
       for (i in 0...cand.length)
         {
@@ -122,6 +147,11 @@ class FacilityRooms
         {
           if (room.role == ROLE_CABINET)
             roomCabinet(state, room);
+          else if (room.role == ROLE_ARMORY)
+            {
+              gen.military.MilitaryRooms.armory(state, room);
+              roomCabinet(state, room);
+            }
           else if (room.role == ROLE_TOILET)
             FacilityToilet.roomToilet(state, room);
           else if (room.role == ROLE_STORAGE)
@@ -251,6 +281,10 @@ class FacilityRooms
 // of racking, a rolled bay of pallets and one bare aisle — so the template's whole job is the floor
   static function roomStorage(state: _FacilityState, room: _Room)
     {
+      // a military store is the ARMORY, and its lockers go in before the floor is painted, while
+      // roomWallRuns can still tell bare floor from the racking
+      if (state.military)
+        gen.military.MilitaryRooms.armory(state, room);
       paintRoomFloor(state, room, Const.TILE_FLOOR_CONCRETE,
         Const.TILE_FLOOR_CONCRETE_UNWALKABLE);
     }

@@ -14,6 +14,10 @@ typedef _FacilityState = {
   // it; gen.GenSpawner turns the spawns into real objects afterwards
   var area: GenCtx;
   var mainRoadNorth: Bool;
+  // is this a military base (gen.military.MilitaryGen) rather than a lab compound? the shared
+  // building and hangar passes read it to deal offices and an armory instead of labs, and an aircraft
+  // instead of the study pad
+  var military: Bool;
 
   // temp state: the CURRENT structure's rooms and doors. every pass inside
   // FacilityBuilding.generateBuilding (fixDoors, makeDoorToCorridor, makeWindows,

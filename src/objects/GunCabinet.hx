@@ -29,7 +29,7 @@ class GunCabinet extends AreaObject
     {
       super(g, vaid, vx, vy);
       init();
-      inventory.addID(rollLoot());
+      inventory.addID(rollLoot(loot()));
       initPost(false);
     }
 
@@ -53,20 +53,24 @@ class GunCabinet extends AreaObject
       super.initPost(onLoad);
     }
 
-// one weapon id off the weighted LOOT table
-  static function rollLoot(): String
+// what this container can hold, weighted. objects.Locker and objects.Safe hand back their own
+  function loot(): Array<{ id: String, weight: Int }>
+    { return LOOT; }
+
+// one item id off a weighted loot table
+  static function rollLoot(table: Array<{ id: String, weight: Int }>): String
     {
       var total = 0;
-      for (l in LOOT)
+      for (l in table)
         total += l.weight;
       var roll = Std.random(total);
-      for (l in LOOT)
+      for (l in table)
         {
           roll -= l.weight;
           if (roll < 0)
             return l.id;
         }
-      return LOOT[0].id;
+      return table[0].id;
     }
 
 // a gun cabinet is plain to see; there is nothing to learn about it
@@ -108,7 +112,7 @@ class GunCabinet extends AreaObject
           game.ui.hud.addAction({
             id: 'openCabinet',
             type: ACTION_OBJECT,
-            name: 'Open cabinet',
+            name: 'Open ' + name,
             energy: 5,
             obj: this
           });
@@ -119,7 +123,7 @@ class GunCabinet extends AreaObject
           game.ui.hud.addAction({
             id: 'searchCabinet',
             type: ACTION_OBJECT,
-            name: 'Search cabinet',
+            name: 'Search ' + name,
             energy: 10,
             obj: this
           });
@@ -158,7 +162,7 @@ class GunCabinet extends AreaObject
   function openAction()
     {
       isOpen = true;
-      game.log('You open the gun cabinet.');
+      game.log('You open the ' + name + '.');
       game.scene.sounds.play('door-metal-open1', {
         x: x,
         y: y,
@@ -174,14 +178,14 @@ class GunCabinet extends AreaObject
       isSearched = true;
       if (inventory.length() == 0)
         {
-          game.log('The gun cabinet is empty.');
+          game.log('The ' + name + ' is empty.');
           return;
         }
       for (item in inventory)
         {
           var name = (game.player.knowsItem(item.id) ?
             item.name : item.info.unknown);
-          game.log('You find ' + Const.col('inventory-item', name) + ' in the gun cabinet.');
+          game.log('You find ' + Const.col('inventory-item', name) + ' in the ' + this.name + '.');
         }
     }
 
@@ -193,7 +197,7 @@ class GunCabinet extends AreaObject
           {
             var name = (game.player.knowsItem(item.info.id) ?
               item.name : item.info.unknown);
-            game.player.log('You take the ' + name + ' out of the gun cabinet.');
+            game.player.log('You take the ' + name + ' out of the ' + this.name + '.');
             game.player.host.inventory.add(item);
             inventory.remove(id);
             break;
