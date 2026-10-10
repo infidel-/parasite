@@ -6453,6 +6453,97 @@
       "built_srgb": 62.9,
       "lift": 0.909,
       "last_lift": 0.909
+    },
+    "military/burlap": {
+      "src": "military/mil-pack-m.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-m.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE coarse woven burlap sacking, faded khaki-olive, damp stains [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a sandbag's cloth (models-src/sandbag_build.py UVs it), tiling. lift 1.242: raw 0.0805 to 0.0437, the sandbag sheet it replaces's built linear.",
+      "built_linear": 0.0465,
+      "built_srgb": 54.5,
+      "lift": 1.242,
+      "last_converted": "2026-10-11T00:41:47",
+      "last_lift": 1.242
+    },
+    "military/galvanized": {
+      "src": "military/mil-pack-m.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-m.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE dull galvanised steel pipe, zinc spangle, vertical weathering streaks [append textures.json style]",
+      "prompt_exact": false,
+      "note": "fence posts and tower ladders (render.military.MilitaryGeom), world-tiled. lift 1.254: raw 0.1647 to 0.1042, chainlink's built linear.",
+      "built_linear": 0.1056,
+      "built_srgb": 90.6,
+      "lift": 1.254,
+      "last_converted": "2026-10-11T00:41:47",
+      "last_lift": 1.254
+    },
+    "military/mast-paint": {
+      "src": "military/mil-pack-m.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-m.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE olive drab enamel steel, paint chips to primer, thin rust streaks [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the floodlight mast's pole and bracket (models-src/mast_build.py), tiling. lift 0.921: raw 0.0391 to 0.0505, military/wall-olive's built linear.",
+      "built_linear": 0.0489,
+      "built_srgb": 58.6,
+      "lift": 0.921,
+      "last_converted": "2026-10-11T00:41:47",
+      "last_lift": 0.921
+    },
+    "military/floodlight-front": {
+      "src": "military/mil-pack-m.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-m.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a rectangular floodlight head's front, cast frame, lens, reflector and bulb [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the floodlight head's lens face, 0..1 (models-src/mast_build.py).",
+      "last_converted": "2026-10-11T00:41:47",
+      "built_linear": 0.0953,
+      "built_srgb": 80.2
+    },
+    "military/razor-coil": {
+      "src": "military/razor-coil.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "res": [
+        512,
+        204
+      ],
+      "prompt": "[gpt-image-2.5-sunburst high, background transparent, came back OPAQUE on a dark painted ground] A seamless tileable pattern of RAZOR WIRE strands for wrapping round a cylinder: exactly FOUR identical PARALLEL straight DIAGONAL strands at exactly 45 degrees, evenly spaced, wrapping on both axes; each a thin flat steel band with small double-edged blade barbs at short even intervals; dull pale galvanised grey. ONLY the wire drawn. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the razor-wire coil's tube (render.military.MilitaryGeom.coil): u 0..1 round one turn, v at COIL_LV. BUILT by tools/razorcoil.py from the raw drop parked in textures-src/unused/military/razor-coil-raw.png: its strand spacing and barb phase drift (no crop wrapped: seam step 0.08 against 0.007 inside), so one strand is cut out and laid back as four interleaved helices, 12 whole barb periods a turn, square texels. Alpha keyed off luminance 72-86 (ground and glow under, wire over; an edit_image re-cut came back half-transparent everywhere, parked beside it). lift 1.064: raw 0.1195 to 0.1042, chainlink's built linear.",
+      "built_linear": 0.1043,
+      "built_srgb": 90.6,
+      "lift": 1.064,
+      "last_converted": "2026-10-11T01:17:10",
+      "last_lift": 1.064
     }
   }
 }

@@ -1488,3 +1488,28 @@ aside, while the renderer kept drawing 77 calls. Found by hiding every alpha-map
 runtime. Flat now reads mid-range, a shade of exactly 1.
 
 **Verdict:** landed. Military gen clean on 500 seeds.
+
+## Military base fence: galvanised pipe posts and a razor-wire COIL that reads round from any side
+
+**Changed:**
+- Fence posts are 8-sided galvanised pipes (`MilitaryGeom.pipe`, `military/galvanized`) instead of
+  boxes in the tower's olive sheeting; the tower ladder's rails are the same pipe.
+- The razor wire is an 8-sided alpha-cut TUBE, 1.12 across (30% under the old 1.6 strip), resting on
+  the fence top. Its art is a HELIX: u is one turn round the tube, v repeats every 1.4 world units,
+  and four interleaved strands put a loop every 0.35. Seen through the tube, the front strands and
+  the back ones slope opposite ways and cross like a concertina coil's, from every camera angle;
+  the flat strip read as a painted band from above.
+- Art: `mil-pack-m` (burlap, galvanised steel, olive mast paint, floodlight front) plus one solo
+  alpha gen, **$0.17** with the failed re-cut. Lifts were fitted to the family: galvanised and coil
+  to the chainlink's 0.104, burlap to the old sandbag's 0.0437, mast paint to the olive sheeting's
+  0.0505.
+
+**Trap:** the coil drop's spacing and barb phase drifted, so no crop of it wrapped (row seam step
+0.08 against 0.007 inside). It also came back OPAQUE on a dark ground despite
+`background:"transparent"`, and an `edit_image` re-cut returned a half-transparent ground (alpha
+mean 0.36, no clear pixels). `tools/razorcoil.py` keys alpha off luminance (72-86; the drop is
+cleanly bimodal), rotates one strand flat, and lays it back as the helix with 12 whole barb
+periods a turn. Seamless by construction, square texels. Both raw drops are parked in
+`textures-src/unused/military/`.
+
+**Verdict:** landed.

@@ -32,7 +32,8 @@ class MilitaryGeom
   // corp's scale (CorpStyle.LOCKER_*), in the base's own olive
   static inline var TEX_CHAIN = 'textures/military/chainlink.png';
   static inline var TEX_TORN = 'textures/military/chainlink-torn.png';
-  static inline var TEX_WIRE = 'textures/military/razor-wire.png';
+  static inline var TEX_COIL = 'textures/military/razor-coil.png';
+  static inline var TEX_GALV = 'textures/military/galvanized.png';
   static inline var TEX_NET = 'textures/military/camo-net.png';
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
@@ -53,11 +54,17 @@ class MilitaryGeom
   public static inline var FENCE_H = CELL * 2;
   static inline var CHAIN_TILE = 4.0;
   static inline var CHAIN_V = CHAIN_TILE * 905 / 1020;
-  static inline var POST_W = 0.35;
+  static inline var POST_R = 0.16;
   static inline var POST_EVERY = 2;
-  // the razor-wire coil along its top: v 0..1 over WIRE_H, u at the 1024x640 source's own aspect
-  static inline var WIRE_H = 1.6;
-  static inline var WIRE_TILE = WIRE_H * 1.6;
+  // the razor-wire coil along its top: an alpha-cut tube of WIRE_SIDES faces whose art is a helix
+  // (tools/razorcoil.py), so the front strands and the back ones seen through it cross like a coil's
+  // from any side. u 0..1 is one turn round it, v repeats every COIL_LV along it, both the tool's
+  static inline var WIRE_D = 1.12;
+  static inline var WIRE_SIDES = 8;
+  static inline var COIL_LV = 1.4;
+  // the posts and ladders are round galvanised pipe, world-tiled at this
+  static inline var GALV_TILE = 2.0;
+  static inline var PIPE_SIDES = 8;
   // the alpha cut every see-through face here takes
   static inline var CUT = 0.3;
 
@@ -249,8 +256,7 @@ class MilitaryGeom
         }
       upright(buf(TEX_CHAIN, true), alongX, p, a0, a1, lo, FENCE_H, a0 / CHAIN_TILE,
         a1 / CHAIN_TILE, lo / CHAIN_V, FENCE_H / CHAIN_V);
-      upright(buf(TEX_WIRE, true), alongX, p, a0, a1, FENCE_H, FENCE_H + WIRE_H, a0 / WIRE_TILE,
-        a1 / WIRE_TILE, 0, 1);
+      coil(alongX, p, a0, a1);
     }
 
 // one see-through upright quad on a fence line, at `p` across it and a0..a1 along it
@@ -265,12 +271,60 @@ class MilitaryGeom
           [u1, v0, u0, v0, u0, v1, u1, v1]);
     }
 
-// a fence post at `a` along the line
+// the razor-wire tube over a0..a1, its underside resting on the fence's top
+  static function coil(alongX:Bool, p:Float, a0:Float, a1:Float):Void
+    {
+      var b = buf(TEX_COIL, true);
+      var r = WIRE_D / 2;
+      var cy = FENCE_H + r;
+      var at = function(a:Float, ang:Float):Array<Float>
+        {
+          var s = Math.cos(ang) * r;
+          var y = cy + Math.sin(ang) * r;
+          return (alongX ? [ a, y, p + s ] : [ p + s, y, a ]);
+        };
+      for (i in 0...WIRE_SIDES)
+        {
+          var t0 = i * Math.PI * 2 / WIRE_SIDES;
+          var t1 = (i + 1) * Math.PI * 2 / WIRE_SIDES;
+          var u0 = i / WIRE_SIDES;
+          var u1 = (i + 1) / WIRE_SIDES;
+          // wound outward on either axis: swapping x for z mirrors the winding
+          if (alongX)
+            MeshBufTools.quad(b, at(a0, t0), at(a1, t0), at(a1, t1), at(a0, t1),
+              [u0, a0 / COIL_LV, u0, a1 / COIL_LV, u1, a1 / COIL_LV, u1, a0 / COIL_LV]);
+          else
+            MeshBufTools.quad(b, at(a1, t0), at(a0, t0), at(a0, t1), at(a1, t1),
+              [u0, a1 / COIL_LV, u0, a0 / COIL_LV, u1, a0 / COIL_LV, u1, a1 / COIL_LV]);
+        }
+    }
+
+// a fence post at `a` along the line, a galvanised pipe up to the coil's middle
   static function post(alongX:Bool, p:Float, a:Float):Void
     {
-      var h = POST_W / 2;
-      box(buf(TEX_OLIVE), (alongX ? a - h : p - h), (alongX ? a + h : p + h),
-        (alongX ? p - h : a - h), (alongX ? p + h : a + h), 0, FENCE_H + WIRE_H, OLIVE_TILE);
+      pipe(buf(TEX_GALV), (alongX ? a : p), (alongX ? p : a), POST_R, 0, FENCE_H + WIRE_D / 2);
+    }
+
+// an upright round pipe of PIPE_SIDES faces and its lid, world-tiled at GALV_TILE
+  public static function pipe(b:MeshBuf, cx:Float, cz:Float, r:Float, y0:Float, y1:Float):Void
+    {
+      var step = Math.PI * 2 / PIPE_SIDES;
+      var du = r * 2 * Math.sin(step / 2) / GALV_TILE;
+      for (i in 0...PIPE_SIDES)
+        {
+          var a = i * step;
+          var c = (i + 1) * step;
+          var x0 = cx + Math.cos(a) * r;
+          var z0 = cz + Math.sin(a) * r;
+          var x1 = cx + Math.cos(c) * r;
+          var z1 = cz + Math.sin(c) * r;
+          MeshBufTools.quad(b, [x1, y0, z1], [x0, y0, z0], [x0, y1, z0], [x1, y1, z1],
+            [(i + 1) * du, y0 / GALV_TILE, i * du, y0 / GALV_TILE, i * du, y1 / GALV_TILE,
+              (i + 1) * du, y1 / GALV_TILE]);
+          MeshBufTools.tri(b, [cx, y1, cz], [x1, y1, z1], [x0, y1, z0],
+            [cx / GALV_TILE, cz / GALV_TILE, x1 / GALV_TILE, z1 / GALV_TILE, x0 / GALV_TILE,
+              z0 / GALV_TILE]);
+        }
     }
 
 // an upright box's four sides and its top, world-tiled. no bottom: the camera never sees one
@@ -355,18 +409,18 @@ class MilitaryGeom
 // a rung over the parapet
   static function ladder(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Void
     {
-      var b = buf(TEX_STEEL);
+      var b = buf(TEX_GALV);
       var lx = (dir == 3 ? x1 + LADDER_OFF : x0 - LADDER_OFF);
       var cz = (z0 + z1) / 2;
       var w = LADDER_W / 2;
       var r = RAIL_W / 2;
       var top = DECK_Y + PARAPET_H + RUNG_STEP;
       for (rz in [ cz - w, cz + w ])
-        box(b, lx - r, lx + r, rz - r, rz + r, 0, top, CELL);
+        pipe(b, lx, rz, r, 0, top);
       var y = RUNG_STEP;
       while (y < top)
         {
-          box(b, lx - r, lx + r, cz - w, cz + w, y, y + RUNG_T, CELL);
+          box(b, lx - r, lx + r, cz - w, cz + w, y, y + RUNG_T, GALV_TILE);
           y += RUNG_STEP;
         }
     }
