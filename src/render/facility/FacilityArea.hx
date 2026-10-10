@@ -116,7 +116,8 @@ class FacilityArea implements Area3D
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
   var roof:FacilityRoof.Roof;
   var doors:Array<FacilityDoors.DoorBatch>;     // the swinging leaves, one batch per look
-  var sounds:FacilitySounds;                    // the machines, drips and beds, by path distance
+  var sounds:{ function tick(pc:Int, pr:Int, dtMs:Float):Void; }; // the machines, drips and beds,
+                                                // by path distance: a base's own, else the compound's
   // objects that draw as a real glb instead of their sprite (the alien ship set piece). NOT in
   // `green`: that array is index-aligned with GREEN plus EXTRA and culled on one radius, while a
   // PropBatch is a solid/ghost/hull triple with its own masks and its own ghost ease
@@ -383,7 +384,8 @@ class FacilityArea implements Area3D
         green.push(p);
       doors = FacilityDoors.build(scene, model, game.area);
       // the compound's sounds: after the sinks, which they read their drips off
-      sounds = new FacilitySounds(game, model);
+      sounds = (game.area.typeID == AREA_MILITARY_BASE ?
+        new render.military.MilitarySounds(game, model) : new FacilitySounds(game, model));
       // and the objects that draw as real geometry rather than as their atlas sprite: the alien
       // ship on the hangar's study podium, its console and its slots. AFTER the doors and before the
       // lights, which is where it belongs rather than being load-bearing — the batches read nothing

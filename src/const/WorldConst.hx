@@ -142,7 +142,7 @@ class WorldConst
       // *** military base
       AREA_MILITARY_BASE => {
         id: AREA_MILITARY_BASE,
-        ambient: AMBIENT_MILITARY,
+        ambient: AMBIENT_NONE,
         type: 'militaryBase',
         name: 'Military base',
         pediaArticle: 'areaMilitary',
