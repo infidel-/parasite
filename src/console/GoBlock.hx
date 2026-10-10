@@ -56,7 +56,8 @@ class GoBlock
         return [];
       if (game.area.typeID == AREA_CORP)
         return corp(game);
-      if (game.area.typeID != AREA_FACILITY)
+      if (game.area.typeID != AREA_FACILITY &&
+          game.area.typeID != AREA_MILITARY_BASE)
         return [];
       var m = FacilityModel.fromArea(game.area);
       var out = [];

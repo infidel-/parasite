@@ -373,7 +373,7 @@ class View {
 // wilderness has never had one, so everything that is not a city, a wilderness, a facility or a
 // corp tower renders through the tunnel view and warms as one
   static inline function warmKey(kind:String):String
-    return (kind == 'facility' || kind == 'corp' ? kind : 'sewer');
+    return (kind == 'facility' || kind == 'corp' || kind == 'militaryBase' ? kind : 'sewer');
 
 // would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
 // commits to putting the warmup screen back up — a kind already warmed is a call-through and a
@@ -412,6 +412,10 @@ class View {
       var chain:js.lib.Promise<Dynamic> = switch (key)
         {
           case 'facility': render.facility.FacilityWarm.build(renderer, camera, game.config.vidLampLights);
+          // a base is a compound drawn by the facility renderer, with the wilderness's scatter in its
+          // margin (render.military.MilitaryMargin), so it warms the compound and those glbs with it
+          case 'militaryBase': render.facility.FacilityWarm.build(renderer, camera,
+            game.config.vidLampLights, render.military.MilitaryMargin.warmProps());
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };
@@ -474,6 +478,9 @@ class View {
       var key = gridKey(area.id, 2);
       if ((running || warming) && shownKey == key)
         return;
+      // a military base's margin reads the terrain band, and the model's ground takes its texture
+      if (area.typeID == AREA_MILITARY_BASE)
+        render.military.MilitaryMargin.use(game);
       buildFrom(new render.facility.FacilityArea(game,
         render.facility.FacilityModel.fromArea(area, iconBox)), key);
     }

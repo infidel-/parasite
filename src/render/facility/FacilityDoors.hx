@@ -240,7 +240,9 @@ class FacilityDoors
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
-        (area.typeID == AREA_FACILITY || area.typeID == AREA_CORP) &&
+        (area.typeID == AREA_FACILITY ||
+         area.typeID == AREA_CORP ||
+         area.typeID == AREA_MILITARY_BASE) &&
         o.type == 'door';
     }
 

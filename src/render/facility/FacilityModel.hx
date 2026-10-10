@@ -35,6 +35,10 @@ enum abstract Surf(Int) from Int to Int
   var SERVER = 17;   // the server room
   var LIFT = 18;     // the lift car's own floor
   var RECEPTION = 20; // the front desk by the lift, split off EXEC so each keeps its own finish
+  // a military base's WILD MARGIN outside its fence: the terrain band's ground, and its trees, bushes
+  // and rocks (render.military.MilitaryMargin). A base has no park, so every one of its grass cells
+  // is this and not GRASS, which is what keeps the park's railing, kerbs and benches off it
+  var WILD = 21;
 }
 
 
@@ -311,6 +315,10 @@ class FacilityModel
           {
             var t = area.getCellType(col, row);
             m.surf[row][col] = opts.surfOf(t);
+            // a base has no park: its grass is the wild margin outside the fence
+            if (m.surf[row][col] == GRASS &&
+                area.typeID == AREA_MILITARY_BASE)
+              m.surf[row][col] = WILD;
             m.wall[row][col] = opts.wallOf(t);
             // a worktop's SHAPE is not read at all — the generator deals 3x1 and 1x3 runs, a 1x1
             // and a 2x3 or 3x2 island, and FacilityTables recovers every one of them from
@@ -481,6 +489,22 @@ class FacilityModel
           t == Const.TILE_GRASS_UNWALKABLE ||
           (t >= Const.TILE_TREE1 && t <= Const.TILE_BUSH))
         return GRASS;
+      // the wilderness obstacles only a base's margin carries
+      if (t == Const.TILE_ROCK ||
+          t == Const.TILE_ROCK_LARGE ||
+          t == Const.TILE_TREE_CLUSTER)
+        return WILD;
+      // and the base's own row, BEFORE the row-8 catch-all below, which would read it as room floor.
+      // the fence and its towers stand on a concrete footing strip, which is pavement: as asphalt the
+      // whole fence line read as part of the gate mouth (FacilityPaint.isEntry takes any lot cell
+      // within the pavement band of the road) and no checkpoint was found. Tents, containers,
+      // vehicles and the helipad stand on the yard's asphalt
+      if (t == Const.TILE_MIL_FENCE ||
+          t == Const.TILE_MIL_FENCE_TORN ||
+          t == Const.TILE_MIL_TOWER)
+        return WALKWAY;
+      if (t >= Const.OFFSET_ROW19)
+        return LOT;
       if (t >= Const.TILE_FLOOR_TILE_GRATE1 && t <= Const.TILE_FLOOR_TILE_GRATE3)
         return GRATE;
       if (t == Const.TILE_FLOOR_LINO)

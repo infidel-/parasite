@@ -235,7 +235,8 @@ class GameScene
 
 // is the current area rendered in 3D? city streets, the underground tunnels (sewers share their
 // generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid), the open
-// wilderness, the facility compound and the corp tower floor
+// wilderness, the facility compound, the corp tower floor and the military base (drawn by the
+// facility renderer)
   public inline function is3DArea(): Bool
     {
       return game.area != null &&
@@ -244,6 +245,7 @@ class GameScene
          game.area.info.type == 'habitat' ||
          game.area.info.type == 'wilderness' ||
          game.area.info.type == 'facility' ||
+         game.area.info.type == 'militaryBase' ||
          game.area.info.type == 'corp');
     }
 
@@ -303,7 +305,8 @@ class GameScene
             {
               if (game.area.info.type == 'wilderness')
                 view3d.showWild(game.area);
-              else if (game.area.info.type == 'facility')
+              else if (game.area.info.type == 'facility' ||
+                  game.area.info.type == 'militaryBase')
                 view3d.showFacility(game.area);
               else if (game.area.info.type == 'corp')
                 view3d.showCorp(game.area);

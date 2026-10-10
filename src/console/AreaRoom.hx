@@ -72,7 +72,7 @@ class AreaRoom
       return switch (typeID)
         {
           case AREA_CORP: CorpBlocks.kindOf(room);
-          case AREA_FACILITY: RoomBlock.kindOf(room);
+          case AREA_FACILITY, AREA_MILITARY_BASE: RoomBlock.kindOf(room);
           default: '?';
         }
     }

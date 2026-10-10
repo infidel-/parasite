@@ -1266,3 +1266,31 @@ render.corp.CorpSounds), reported as "phone 5% on the exec desk, I see no phone 
 Measured on a regenerated floor: 6 markers, 6 phones drawn (1 boardroom, 4 exec, 1 office). Trap:
 a phone on a cell with no claims (a boardroom slab) has no screen to turn from, so it takes the cell
 hash's yaw; that is right for a shared table and would be wrong on a desk.
+
+## The military base renders through the FACILITY renderer (`View.showFacility`, `Surf.WILD`, `MilitaryMargin`)
+
+`AREA_MILITARY_BASE` was the last 2D area besides the underground lab. Its new generator
+(`gen.military.MilitaryGen`) lays a lab compound's buildings and hangar inside a fence ring, so it is
+drawn by `render.facility.FacilityArea` with no `Area3D` of its own: `GameScene.is3DArea` and
+`draw3D` route `'militaryBase'` to `showFacility`; it warms under its own `warmKey`
+(`FacilityWarm.build` plus `MilitaryMargin.warmProps()`, **108 programs, 3.5s**, once per session).
+- **`Surf.WILD`**: a base has no park, so `FacilityModel.fromArea` turns every `GRASS` cell of a base
+  into WILD, and `surfOf` maps the margin's rocks and thickets there. The park's railing, kerbs, bins
+  and plants all test `GRASS` and so never touch it. WILD sits at **y 0**, not `-KERB_DROP`, because
+  the wilderness scatter planted on it sits on a flat field at 0.
+- **`MilitaryMargin`** reuses `WildModel.fromArea` and `WildProps.build` with
+  `WildBand.reliefAmp = 0`. Every non-WILD cell is marked `OCCUPIED`, so neither the scatter nor
+  `WildProps.small`'s loose stones land inside the fence; `road = null`, so no guard rail runs the
+  base's road. The ground takes `WildBand.cur.ground`, the band's own turf.
+- The base's row-19 tiles read as `LOT` (tents, containers, vehicles, pad), BEFORE the `OFFSET_ROW8`
+  catch-all that would have made them room floor and roofed them.
+
+Trap: the fence ring went in as `LOT` too, and `FacilityPaint.isEntry` takes ANY lot cell within the
+pavement band of the road. The fence line on the gate side is two rows off the road, so the whole
+fence joined the gate mouth, its bounding box spanned the base, and `FacilityEntry.find` returned
+null: no booth, no barrier. The fence, its torn panels and its towers now stand on a `WALKWAY`
+footing strip, and the gate builds (`barrier-hand.glb:1`, `booth-hand.glb:1`). The facility's
+`FacilityLamps` stand masts along that strip as perimeter lights.
+
+Measured on an 80x60 base from a high free-cam pose: **111-130 calls, 330-400k triangles**; at the
+gate from outside **111 calls, 330k**.

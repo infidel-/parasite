@@ -167,12 +167,13 @@ class FacilityGround
       var walkway = MeshBufTools.make();
       var lot = MeshBufTools.make();
       var grass = MeshBufTools.make();
+      var wild = MeshBufTools.make();
       var curbs:Array<KerbSeg> = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
             var s = m.surf[row][col];
-            var b = surfBuf(s, road, walkway, lot, grass);
+            var b = surfBuf(s, road, walkway, lot, grass, wild);
             if (b == null)
               continue;
             var x0 = col * CELL - half, x1 = x0 + CELL;
@@ -233,7 +234,7 @@ class FacilityGround
             for (sp in FacilityGeom.floorStrips(m, col, row))
               {
                 var s = m.surf[sp.row][sp.col];
-                var b = surfBuf(s, road, walkway, lot, grass);
+                var b = surfBuf(s, road, walkway, lot, grass, wild);
                 if (b == null)
                   continue;
                 quad(b, sp.x0, sp.x1, sp.z0, sp.z1, surfY(s));
@@ -243,6 +244,8 @@ class FacilityGround
       add(scene, walkway, FacilityStyle.GROUND_WALKWAY);
       add(scene, lot, FacilityStyle.GROUND_LOT);
       add(scene, grass, FacilityStyle.GROUND_GRASS);
+      // a military base's margin, in its terrain band's own ground (render.wild.WildBand.use has run)
+      add(scene, wild, render.wild.WildBand.cur.ground);
       // the kerb edging, in its own mesh because it is the one outdoor surface with a texture of its
       // own. the pavement is the RAISED side here where a street's is the raised side over a road at
       // zero, so the pair goes in the other way up — see FacilityStyle.KERB_DROP
@@ -254,7 +257,9 @@ class FacilityGround
     }
 
 // the height a surface's floor lies at. only the pavement and the indoor floors hold 0, and
-// FacilityStyle.KERB_DROP says at length why it is those and not the three outdoors ones
+// FacilityStyle.KERB_DROP says at length why it is those and not the three outdoors ones. A base's
+// wild margin is the fourth at 0, because the wilderness scatter planted on it sits on a flat field
+// at 0 (render.military.MilitaryMargin)
   public static inline function surfY(s:Surf):Float
     return (s == Surf.ROAD || s == Surf.GRASS || s == Surf.LOT
       ? -FacilityStyle.KERB_DROP : 0.0);
@@ -272,7 +277,8 @@ class FacilityGround
     }
 
 // the outdoor buffer a surface belongs in, or null if the surface is not outdoors at all
-  static function surfBuf(s:Surf, road:MeshBuf, walkway:MeshBuf, lot:MeshBuf, grass:MeshBuf):MeshBuf
+  static function surfBuf(s:Surf, road:MeshBuf, walkway:MeshBuf, lot:MeshBuf, grass:MeshBuf,
+      wild:MeshBuf):MeshBuf
     {
       return switch (s)
         {
@@ -280,6 +286,7 @@ class FacilityGround
           case Surf.WALKWAY: walkway;
           case Surf.LOT: lot;
           case Surf.GRASS: grass;
+          case Surf.WILD: wild;
           default: null;
         };
     }

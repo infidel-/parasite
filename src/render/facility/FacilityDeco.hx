@@ -118,7 +118,8 @@ class FacilityDeco
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       if (area == null ||
-          area.typeID != AREA_FACILITY)
+          (area.typeID != AREA_FACILITY &&
+           area.typeID != AREA_MILITARY_BASE))
         return false;
       // the drain has geometry of its own now (see `drain`), so its icon must stop being laid flat
       // under it — two coplanar copies of the same art, the sharp one 0.04 under the blurred one
@@ -177,7 +178,8 @@ class FacilityDeco
   static inline function onBench(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
-        area.typeID == AREA_FACILITY &&
+        (area.typeID == AREA_FACILITY ||
+         area.typeID == AREA_MILITARY_BASE) &&
         o.type == 'decoration' &&
         Const.isTableDeco(o.imageRow);
     }

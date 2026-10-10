@@ -23,7 +23,8 @@ import render.world.VisionMask;
 class FacilityWarm
 {
 // build the throwaway compound, wait for every prop glb, then compile
-  public static function build(renderer:WebGLRenderer, camera:PerspectiveCamera, lampPool:Int):Dynamic
+  public static function build(renderer:WebGLRenderer, camera:PerspectiveCamera, lampPool:Int,
+      ?extra:Array<{ path:String, h:Float }>):Dynamic
     {
       var model = FacilityModel.demo();
       // the indoor mask goes over the warm model, for the SAME reason the vision mask makes this scene
@@ -336,6 +337,10 @@ class FacilityWarm
               h: FacilityStyle.ROOF_TANK_H,
             },
           ];
+          // and whatever else the kind being warmed stands outdoors (a military base's wild margin)
+          if (extra != null)
+            for (e in extra)
+              facProps.push(e);
           // and the OBJECT props, in all three variants — `transparent` and BackSide are both in
           // three's own program cache key, so the ghost and the outline hull each compile a program
           // of their own and without this they land on the first step onto a prop and the first

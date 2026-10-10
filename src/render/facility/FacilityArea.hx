@@ -110,6 +110,7 @@ class FacilityArea implements Area3D
   var lampCorners:Map<Int,Int>;                 // filled at build: grid vertex -> lamp dir, so a slide bends
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's plants, then EXTRA (railing, bins)
+  var margin:Array<render.Models.InstancedProp> = []; // a military base's wild margin, culled like green
   var hangar:FacilityHangar.Hangar; // the shed's podium, its cable fan and its floor decals
   // what stands on the roofs. NOT in `green`, and that is the one thing separating it: `green` is
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
@@ -356,6 +357,8 @@ class FacilityArea implements Area3D
       // has no shed with a study pad in it, which is a row with a count of 0 and keeps the array
       // index-aligned with EXTRA either way
       green.push(hangar.podium);
+      if (game.area.typeID == AREA_MILITARY_BASE)
+        margin = render.military.MilitaryMargin.build(scene, game.area, model);
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
       // the same construction-order fact recorded above and what this quad's larger eps says it
@@ -799,6 +802,8 @@ class FacilityArea implements Area3D
       else
         render.RangeCull.cull(ranges, opts.camera, all);
       for (p in green)
+        render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R, null, all);
+      for (p in margin)
         render.Models.cull(p, opts.camera, FacilityStyle.PROP_CULL_R, null, all);
       // and the roof's four batches, which take the frustum test with a MASK on top of it: a
       // condenser standing on a deck that has faded off would be left hanging over an open room
