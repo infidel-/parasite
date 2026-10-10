@@ -732,6 +732,12 @@ class RenderConfig {
     // one prop in the compound the silhouette-vs-surface test says yes to outright — a car is nothing
     // but its outline, where the booth and the barrier beside it are boxes and a stripe pattern
     facilityCar: 'models/facility/car.glb',               // modern compact hatchback, four wheels, dark glass
+    // a military base's hardware, parked on the footprints gen.military.MilitaryGen stamps
+    // (render.military.MilitaryVehicles)
+    militaryTank: 'models/military/tank.glb',             // main battle tank, along local z
+    militaryHumvee: 'models/military/humvee.glb',         // light utility 4x4, along local x
+    militaryHeli: 'models/military/heli.glb',             // utility helicopter, four-blade rotor
+    militaryPlane: 'models/military/plane.glb',           // high-wing twin turboprop, span along local z
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled

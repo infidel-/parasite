@@ -415,7 +415,8 @@ class View {
           // a base is a compound drawn by the facility renderer, with the wilderness's scatter in its
           // margin (render.military.MilitaryMargin), so it warms the compound and those glbs with it
           case 'militaryBase': render.facility.FacilityWarm.build(renderer, camera,
-            game.config.vidLampLights, render.military.MilitaryMargin.warmProps());
+            game.config.vidLampLights, render.military.MilitaryMargin.warmProps()
+            .concat(render.military.MilitaryVehicles.warmProps()));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };

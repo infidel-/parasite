@@ -1326,3 +1326,32 @@ re-cut with `edit_image` (48%). Total **$0.39**.
 Trap: at one chain-link sheet per 2 units the mesh did not render at all from the gameplay distance.
 The mips average the 13 px wire's alpha under the cut; one sheet per 4 units and a 0.3 cut fixed it
 (`docs/3d-geometry.md`, Alpha-cut faces).
+
+## The military base's hardware is GENERATED (`render.military.MilitaryVehicles`)
+
+Tank and humvees in the motor pool, a helicopter on the pad, a plane in the hangar: carried by
+their outline, so TRELLIS glbs by the `facility/car` route, generated AT the budget
+(`decimation_target` 10000, ships `tris: -1`), one instanced batch per model posed off the origin
+tile `MilitaryGen.vehicle` stamped, centred on its `Const.MIL_*_SIZE` footprint.
+- References: gpt-image-2.5-sunburst high, `style_prop`, isometric on `#5a5d63`. Three came back
+  under the p50 69-77 band (tank 65, humvee 59, heli 54) and were fixed in code with `propstat
+  --lift`, not re-rolled. The humvee needed `--lift 84` and lost its green doing it (chroma 8.6).
+- `propstat` called all four COMPONENTS REJECT (largest 61-65%). They are not, for the car's reason:
+  wheels, tracks, rotor and skids are separate pieces of one hard object.
+- **Two lie across their footprint**: the humvee along local x, and the plane's WINGSPAN along local
+  z. Both take a quarter turn. Read it off a top-down silhouette of the glb before posing, not off
+  the reference.
+- Heights fitted to the footprints off `widest/height`: tank 4.9, humvee 3.8, heli 9.0, plane 7.5.
+  The plane is under the hangar vault's crown.
+- Values: outdoor ones at 46-56 through a flat `baseColor`. The plane is INDOORS, so it goes to 77-86
+  (0.6, not propstat's 0.23). The heli's flat 0.16 shipped LIME (42/54/35) beside the tank's olive.
+  Its cast is the whole body, so per-channel 0.18/0.13/0.14 is right (0.16/0.11/0.16 went grey).
+- **Trap**: a vehicle's footprint tiles mapped to LOT surf, which would lay an asphalt patch inside
+  the hangar under the plane. `FacilityModel.fromArea` now gives each footprint cell the surf of the
+  cell west of it (left to right, so a run carries it in). The heli footprint takes the apron too.
+- Camo nets over EVERY vehicle hid the whole motor pool from the camera (five camo sheets, nothing
+  under them). Now every other vehicle gets one.
+- **Helipad marking**: one alphaTest quad over the pad's square. gpt ignored `background:
+  "transparent"` and painted the pad (a flat 44/47/51 slab). It is keyed on that measured colour
+  (`class: chroma`, tol 40) instead of re-cut; the chips key out as holes. Lift 1.4: at sRGB 121 it
+  was the brightest thing in the night frame, glowing through the vision mask; now 93.

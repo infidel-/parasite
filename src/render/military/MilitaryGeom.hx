@@ -41,6 +41,7 @@ class MilitaryGeom
   static inline var TEX_SANDBAG = 'textures/military/sandbag.png';
   static inline var TEX_APRON = 'textures/military/apron.png';
   static inline var TEX_SAFE = 'textures/military/safe-front.png';
+  static inline var TEX_PAD_MARK = 'textures/military/helipad-h.png';
 
   // the fence: two cells high, one sheet of eight diamonds per CHAIN_TILE units, and a post at
   // every cell edge
@@ -88,6 +89,9 @@ class MilitaryGeom
   // the helipad's concrete, a whisker over the lot it is laid on
   static inline var PAD_Y = 0.02;
   static inline var PAD_TILE = 8.0;
+  // the marking over it, inset off the pad's edge and a whisker over the concrete
+  static inline var MARK_INSET = 0.5;
+  static inline var MARK_Y = PAD_Y * 2;
 
   // the armory safe, against its wall, its front locked to the 510x546 crop (military/safe-front)
   static inline var SAFE_W = 1.8;
@@ -104,6 +108,14 @@ class MilitaryGeom
     {
       opaque = new Map();
       cut = new Map();
+      var parked = 0;
+      // the pad's square, off its cells, for the marking
+      var pad = {
+        x0: area.width,
+        z0: area.height,
+        x1: -1,
+        z1: -1,
+      };
       var f = gen.military.MilitaryGen.fenceOf(area.getCells(), area.width, area.height);
       for (row in 0...area.height)
         for (col in 0...area.width)
@@ -122,18 +134,29 @@ class MilitaryGeom
               tent(m, area, col, row);
             else if (t == Const.TILE_MIL_CONTAINER_ORIGIN)
               container(m, col, row);
-            else if (t == Const.TILE_MIL_TANK)
-              net(col, row, Const.MIL_TANK_SIZE);
-            else if (t == Const.TILE_MIL_HUMVEE)
-              net(col, row, Const.MIL_HUMVEE_SIZE);
+            // a net over every OTHER vehicle in the pool: netted all, the pool read from the
+            // camera as five camo sheets with nothing under them
+            else if (t == Const.TILE_MIL_TANK ||
+                t == Const.TILE_MIL_HUMVEE)
+              {
+                if (parked++ % 2 == 1)
+                  net(col, row, (t == Const.TILE_MIL_TANK ? Const.MIL_TANK_SIZE :
+                    Const.MIL_HUMVEE_SIZE));
+              }
             else if (t == Const.TILE_MIL_PAD)
               {
-                var x0 = col * CELL - half();
-                var z0 = row * CELL - half();
-                FacilityGeom.cap(buf(TEX_APRON), x0, x0 + CELL, z0, z0 + CELL,
-                  -FacilityStyle.KERB_DROP + PAD_Y, PAD_TILE);
+                apron(col, row, [ 1, 1 ]);
+                pad.x0 = Std.int(Math.min(pad.x0, col));
+                pad.z0 = Std.int(Math.min(pad.z0, row));
+                pad.x1 = Std.int(Math.max(pad.x1, col));
+                pad.z1 = Std.int(Math.max(pad.z1, row));
               }
+            // the helicopter stands on the pad, so its footprint is pad too
+            else if (t == Const.TILE_MIL_HELI)
+              apron(col, row, Const.MIL_HELI_SIZE);
           }
+      if (pad.x1 >= 0)
+        mark(pad.x0, pad.z0, pad.x1, pad.z1);
       // the armory: the lockers and the safe the generator stood against its walls
       for (o in area.getObjects())
         if (o.type == 'locker')
@@ -439,6 +462,27 @@ class MilitaryGeom
         rect: r,
         h: SAFE_H,
       });
+    }
+
+// the helipad's concrete over a rect of cells from its top-left one, a whisker over the lot
+  static function apron(col:Int, row:Int, size:Array<Int>):Void
+    {
+      var x0 = col * CELL - half();
+      var z0 = row * CELL - half();
+      FacilityGeom.cap(buf(TEX_APRON), x0, x0 + size[0] * CELL, z0, z0 + size[1] * CELL,
+        -FacilityStyle.KERB_DROP + PAD_Y, PAD_TILE);
+    }
+
+// the helipad's painted ring and H over its square of cells, upright with the grid
+  static function mark(c0:Int, r0:Int, c1:Int, r1:Int):Void
+    {
+      var x0 = c0 * CELL - half() + MARK_INSET;
+      var z0 = r0 * CELL - half() + MARK_INSET;
+      var x1 = (c1 + 1) * CELL - half() - MARK_INSET;
+      var z1 = (r1 + 1) * CELL - half() - MARK_INSET;
+      var y = -FacilityStyle.KERB_DROP + MARK_Y;
+      MeshBufTools.quad(buf(TEX_PAD_MARK, true), [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        [0, 0, 1, 0, 1, 1, 0, 1]);
     }
 
 // half the city grid's span, the world offset of cell (0, 0)'s low corner

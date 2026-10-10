@@ -339,6 +339,18 @@ class FacilityModel
             if (t == Const.TILE_FLOOR_CONCRETE_UNWALKABLE)
               solid[row][col] = true;
           }
+      // a parked vehicle's footprint wears the ground it is parked on: the plane's the hangar's
+      // floor, the tank's the motor pool's lot. a footprint is a rect, so the cell west of each run
+      // carries it in, and left to right that cell has already been rewritten itself
+      if (area.typeID == AREA_MILITARY_BASE)
+        for (row in 0...m.h)
+          for (col in 1...m.w)
+            {
+              var t = area.getCellType(col, row);
+              if (t >= Const.TILE_MIL_VEHICLE &&
+                  t <= Const.TILE_MIL_PLANE)
+                m.surf[row][col] = m.surf[row][col - 1];
+            }
       findStructures(m, opts.hangars);
       // both of these are about the SHED and nothing else, so a kind with no hangars skips them.
       // it is not only wasted work: `shedFloor` repaints every lab tile inside a hangar-flagged

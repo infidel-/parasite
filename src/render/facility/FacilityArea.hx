@@ -361,7 +361,8 @@ class FacilityArea implements Area3D
       // every unit of it registers a contact shadow with
       if (game.area.typeID == AREA_MILITARY_BASE)
         {
-          margin = render.military.MilitaryMargin.build(scene, game.area, model);
+          margin = render.military.MilitaryMargin.build(scene, game.area, model)
+            .concat(render.military.MilitaryVehicles.build(scene, model, game.area));
           render.military.MilitaryGeom.build(scene, model, game.area);
         }
       // and now that every family that stands something against a WALL has placed, the halos those
