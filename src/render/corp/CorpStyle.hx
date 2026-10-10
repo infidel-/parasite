@@ -4,6 +4,7 @@ import Const;
 import render.RenderConfig;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Surf;
+import render.facility.FacilityStyle;
 import render.facility.ShellOpts;
 
 // ONE CAR on the traffic sheet: where its picture is, and how big it is drawn.
@@ -1253,6 +1254,16 @@ class CorpStyle
   public static inline var CAR_SPEED_JIT = 0.6;
 
 // the tower's own ShellOpts: how CorpModel reads a saved corp grid, and what the shell is dressed
+
+// the tower's night rig: the compound's fill under its own sky and much tighter fog (FOG_NEAR)
+  public static function rig():render.facility.FacilityRigOpts
+    {
+      var r = FacilityStyle.rig();
+      r.sky = SKY;
+      r.near = FOG_NEAR;
+      r.far = FOG_FAR;
+      return r;
+    }
 // in. the shape FacilityStyle.shell() has, and the reason both exist
   public static function shell(): ShellOpts
     {
@@ -1298,6 +1309,8 @@ class CorpStyle
           sill: LIFT_SILL,
           door: [DOOR_GLASS, DOOR_OFFICE, DOOR_STEEL, DOOR_PRIVATE, DOOR_LIFT],
           circ: Surf.CARPET,
+          // a tower door that opens outdoors still wears the compound's bulkhead hood, as it always has
+          hood: FacilityStyle.DOOR_LAMP_TEX,
         },
         surfOf: CorpModel.surfOf,
         fitOf: CorpModel.fitOf,

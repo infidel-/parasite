@@ -35,8 +35,7 @@ class CorpWarm
       IndoorMask.attach(CorpStyle.INDOOR, model.w, model.h,
         function(col, row) return render.facility.FacilityModel.isInterior(model, col, row));
       ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
-      var bundle = FacilityScene.build(renderer, lampPool,
-        CorpStyle.SKY, CorpStyle.FOG_NEAR, CorpStyle.FOG_FAR);
+      var bundle = FacilityScene.build(renderer, lampPool, CorpStyle.rig());
       var sc = bundle.scene;
       FacilityGeom.build(sc, model);
       // the nine fitting materials, which the shell above covers none of: each is its own mapped

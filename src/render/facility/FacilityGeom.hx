@@ -146,7 +146,7 @@ class FacilityGeom
       // surface — the compound's only spotlights that cast hang BELOW the hood's own top and aim
       // straight down. the buffer is empty in a compound with no exterior door and `add` emits no
       // mesh then
-      add(scene, g.hood, FacilityStyle.DOOR_LAMP_TEX, true, false);
+      add(scene, g.hood, m.tex.hood, true, false);
       return out;
     }
 
@@ -806,7 +806,7 @@ class FacilityGeom
       // gable are the same object here: the exterior cladding carrying on ABOVE the wall head, in
       // this same buffer, in this same course, staying put when the lid over the player's head
       // fades. only the shape differs, a band round a box against a segment under an arch
-      var wallTex = st.hangar ? FacilityStyle.WALL_HANGAR : m.tex.wallOut;
+      var wallTex = st.hangar ? m.tex.hangarWall : m.tex.wallOut;
       if (st.hangar)
         FacilityRoof.crescents(m, si, wOut);
       var shell:Shell = {

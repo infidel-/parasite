@@ -5471,6 +5471,386 @@
       "built_srgb": 93.2,
       "lift": 1.4,
       "last_lift": 1.4
+    },
+    "military/wall-exterior": {
+      "src": "military/mil-pack-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-c.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: painted concrete blocks in running bond, six courses, muted sand-khaki [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the military base's building cladding (MilitaryStyle.shell wallOut). Seams at exactly 512. lift 1.534: fitted to its facility counterpart's built linear 0.0327 (raw 0.1075).",
+      "last_converted": "2026-10-10T20:25:46",
+      "built_linear": 0.0363,
+      "built_srgb": 49.1,
+      "lift": 1.534,
+      "last_lift": 1.534
+    },
+    "military/roof": {
+      "src": "military/mil-pack-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-c.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: flat roof, dark grey-olive bitumen felt with fine gravel [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's roof deck (MilitaryStyle.shell roof). lift 1.125: fitted to its facility counterpart's built linear 0.0275 (raw 0.041).",
+      "last_converted": "2026-10-10T20:25:46",
+      "built_linear": 0.0286,
+      "built_srgb": 44.4,
+      "lift": 1.125,
+      "last_lift": 1.125
+    },
+    "military/coping": {
+      "src": "military/mil-pack-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-c.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: precast concrete coping cap from above, plain pale grey [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the parapet coping (MilitaryStyle.shell coping). lift 1.474: fitted to its facility counterpart's built linear 0.084 (raw 0.1863).",
+      "last_converted": "2026-10-10T20:25:46",
+      "built_linear": 0.0874,
+      "built_srgb": 80.9,
+      "lift": 1.474,
+      "last_lift": 1.474
+    },
+    "military/window-head": {
+      "src": "military/mil-pack-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-c.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: flat olive painted steel plate, no ribs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the band capping a window run (MilitaryStyle.shell head); no ribs, the facility head's reason. lift 1.122: fitted to its facility counterpart's built linear 0.0352 (raw 0.0507).",
+      "res": 256,
+      "last_converted": "2026-10-10T20:25:46",
+      "built_linear": 0.0361,
+      "built_srgb": 48.7,
+      "lift": 1.122,
+      "last_lift": 1.122
+    },
+    "military/ground-road": {
+      "src": "military/mil-pack-d.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-d.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: worn dark asphalt road, patched repairs, no lines [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the road past the gate (MilitaryStyle ground ROAD). lift 0.953: fitted to its facility counterpart's built linear 0.0329 (raw 0.0278).",
+      "last_converted": "2026-10-10T20:26:31",
+      "built_linear": 0.0315,
+      "built_srgb": 48.6,
+      "lift": 0.953,
+      "last_lift": 0.953
+    },
+    "military/ground-walkway": {
+      "src": "military/mil-pack-d.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-d.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: broom-finished concrete footpath, light warm grey [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the walkway round the buildings and the fence footing (MilitaryStyle ground WALKWAY). lift 1.178: fitted to its facility counterpart's built linear 0.068 (raw 0.1021).",
+      "last_converted": "2026-10-10T20:26:31",
+      "built_linear": 0.0689,
+      "built_srgb": 72.8,
+      "lift": 1.178,
+      "last_lift": 1.178
+    },
+    "military/ground-kerb": {
+      "src": "military/mil-pack-d.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-d.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: precast concrete kerb top, mid grey [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the kerb faces and tops (MilitaryStyle kerb). lift 1.356: fitted to its facility counterpart's built linear 0.0551 (raw 0.118).",
+      "res": 128,
+      "last_converted": "2026-10-10T20:26:31",
+      "built_linear": 0.0575,
+      "built_srgb": 67.1,
+      "lift": 1.356,
+      "last_lift": 1.356
+    },
+    "military/roof-hangar": {
+      "src": "military/mil-pack-d.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-d.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: corrugated galvanised steel roof sheeting, dull dark grey-green, ten vertical ribs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the hangar's barrel vault (MilitaryStyle vault).",
+      "last_converted": "2026-10-10T20:26:31",
+      "built_linear": 0.0399,
+      "built_srgb": 54.1
+    },
+    "military/door-shutter": {
+      "src": "military/mil-pack-e.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-e.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: roll-up shutter, twelve horizontal olive slats [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the hangar's roll-up door runs (MilitaryStyle.shell shutter). lift 1.073: fitted to its facility counterpart's built linear 0.0274 (raw 0.035).",
+      "last_converted": "2026-10-10T20:27:09",
+      "built_linear": 0.0279,
+      "built_srgb": 41.3,
+      "lift": 1.073,
+      "last_lift": 1.073
+    },
+    "military/wall-hangar": {
+      "src": "military/mil-pack-e.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        525,
+        8,
+        494,
+        494
+      ],
+      "prompt": "[quadrant of military/mil-pack-e.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: dark galvanised corrugated steel cladding, sixteen fine vertical ribs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the hangar's walls (MilitaryStyle hangarWall). CROP FITTED TO 13 RIB PERIODS (38 px each, autocorrelation 0.88): the 504 crop wrapped at 23.3 against an inner step of 5.4, a rib phase break at the edge; 494 from x 525 wraps at 7.1.",
+      "last_converted": "2026-10-10T20:27:09",
+      "built_linear": 0.042,
+      "built_srgb": 53.5
+    },
+    "military/door-lamp": {
+      "src": "military/mil-pack-e.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-e.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: cast steel lamp housing, matte olive drab [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the hood of the bulkhead lamp over an exterior door (MilitaryStyle doorLamp). lift 0.777: fitted to its facility counterpart's built linear 0.0825 (raw 0.0403).",
+      "res": 256,
+      "last_converted": "2026-10-10T20:27:09",
+      "built_linear": 0.0771,
+      "built_srgb": 72.9,
+      "lift": 0.777,
+      "last_lift": 0.777
+    },
+    "military/cable": {
+      "src": "military/mil-pack-e.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-e.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: olive rubber field cable, cylinder-shaded across, uniform along [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the base's wall cable runs (MilitaryStyle cable). lift 0.925: fitted to its facility counterpart's built linear 0.0388 (raw 0.0298).",
+      "res": 256,
+      "last_converted": "2026-10-10T20:27:09",
+      "built_linear": 0.0367,
+      "built_srgb": 47.7,
+      "lift": 0.925,
+      "last_lift": 0.925
+    },
+    "military/window-ribbon-lit": {
+      "src": "military/window-ribbon-lit.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "edit of facility/window-ribbon-lit: olive-drab steel frame, warm-lit wired glass [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the 3-cell window unit (MilitaryStyle.shell pane). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; the edit came back opaque and the FACILITY SOURCE'S OWN ALPHA was re-applied onto it (the raw edit is in military/Unused/<label>-raw.png), so the cut is the measured one, not a re-cut. Its aspect is therefore the facility's WINDOW_ASPECT 2.90. lift 1.114: fitted to its facility counterpart's built linear 0.0832 (raw 0.1074).",
+      "last_converted": "2026-10-10T20:36:13",
+      "built_linear": 0.0855,
+      "built_srgb": 69.8,
+      "lift": 1.114,
+      "last_lift": 1.114
+    },
+    "military/window-ribbon-2tile-lit": {
+      "src": "military/window-ribbon-2tile-lit.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "edit of facility/window-ribbon-2tile-lit [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the 2-cell window unit (pane2). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; the edit came back opaque and the FACILITY SOURCE'S OWN ALPHA was re-applied onto it (the raw edit is in military/Unused/<label>-raw.png), so the cut is the measured one, not a re-cut. The edit painted a black box where the facility drop is empty; the alpha cuts it away. Aspect = WINDOW_ASPECT_2 1.963. lift 1.239: fitted to its facility counterpart's built linear 0.0833 (raw 0.1346).",
+      "last_converted": "2026-10-10T20:36:13",
+      "built_linear": 0.0893,
+      "built_srgb": 69.2,
+      "lift": 1.239,
+      "last_lift": 1.239
+    },
+    "military/window-high": {
+      "src": "military/window-high.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "edit of facility/window-high: olive frame, frosted wired glass [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the latrine light well (paneHigh). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; the frame landed on the facility crop (x 130..893, y 384..619) so the crop is the same. lift 0.508: fitted to its facility counterpart's built linear 0.3952 (raw 0.161).",
+      "res": [
+        512,
+        158
+      ],
+      "crop": [
+        130,
+        384,
+        763,
+        235
+      ],
+      "last_converted": "2026-10-10T20:29:55",
+      "built_linear": 0.3733,
+      "built_srgb": 159.3,
+      "lift": 0.508,
+      "last_lift": 0.508
+    },
+    "military/door-entrance": {
+      "src": "military/door-entrance.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "edit of facility/door-glass: olive steel, wired-glass slit, push bars [append textures.json style]",
+      "prompt_exact": false,
+      "note": "Look.GLASS, the front and side doors (door[0]). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; one image holds the pair, left leaf u 0..0.5. lift 1.088: fitted to its facility counterpart's built linear 0.0206 (raw 0.0282).",
+      "last_converted": "2026-10-10T20:30:36",
+      "built_linear": 0.0212,
+      "built_srgb": 36.2,
+      "lift": 1.088,
+      "last_lift": 1.088
+    },
+    "military/door-inner": {
+      "src": "military/door-inner.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "edit of facility/door-cabinet: khaki-grey steel, wired vision panels [append textures.json style]",
+      "prompt_exact": false,
+      "note": "Look.CABINET, the commonest inner door (door[1]). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; vision panels kept: no door here blocks sight.",
+      "last_converted": "2026-10-10T20:31:21",
+      "built_linear": 0.0839,
+      "built_srgb": 76.9
+    },
+    "military/door-heavy": {
+      "src": "military/door-heavy.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "edit of facility/door-metal: riveted olive steel, hazard strip [append textures.json style]",
+      "prompt_exact": false,
+      "note": "Look.METAL, hangar side door, armory (door[2], door[4]). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over;  lift 1.076: fitted to its facility counterpart's built linear 0.0298 (raw 0.0382).",
+      "last_converted": "2026-10-10T20:32:08",
+      "built_linear": 0.0302,
+      "built_srgb": 43.3,
+      "lift": 1.076,
+      "last_lift": 1.076
+    },
+    "military/door-private": {
+      "src": "military/door-private.png",
+      "class": "window",
+      "needs_alpha": false,
+      "prompt": "edit of facility/door-private: painted plywood, stencil plates [append textures.json style]",
+      "prompt_exact": false,
+      "note": "Look.PRIVATE, office and latrine (door[3]). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over;  lift 0.924: fitted to its facility counterpart's built linear 0.0729 (raw 0.0587).",
+      "last_converted": "2026-10-10T20:32:55",
+      "built_linear": 0.0712,
+      "built_srgb": 71.1,
+      "lift": 0.924,
+      "last_lift": 0.924
+    },
+    "military/floor-hazard": {
+      "src": "military/floor-hazard.png",
+      "class": "tile",
+      "needs_alpha": true,
+      "prompt": "edit of facility/floor-hazard: worn yellow stripes [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the keep-clear zone inside every exterior door (MilitaryStyle zone). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; the edit came back opaque and the FACILITY SOURCE'S OWN ALPHA was re-applied onto it (the raw edit is in military/Unused/<label>-raw.png), so the cut is the measured one, not a re-cut. lift 1.616: fitted to its facility counterpart's built linear 0.1 (raw 0.2405).",
+      "res": 256,
+      "last_converted": "2026-10-10T20:36:13",
+      "built_linear": 0.1093,
+      "built_srgb": 73.1,
+      "lift": 1.616,
+      "last_lift": 1.616
+    },
+    "military/electrical-pack": {
+      "src": "military/electrical-pack.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "edit of facility/electrical-pack: olive drab field kit, same 64 cells [append textures.json style]",
+      "prompt_exact": false,
+      "note": "PACK64 of military electrical kit for FacilityCable's wall and floor kit (MilitaryStyle elec). REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; EVERY CELL STAYS IN ITS SLOT, which is the point: FacilityCable picks cells by index. the edit came back opaque and the FACILITY SOURCE'S OWN ALPHA was re-applied onto it (the raw edit is in military/Unused/<label>-raw.png), so the cut is the measured one, not a re-cut.",
+      "res": 1024,
+      "last_converted": "2026-10-10T20:36:14",
+      "built_linear": 0.0739,
+      "built_srgb": 66.5
+    },
+    "military/grime": {
+      "src": "military/grime.png",
+      "class": "tile",
+      "needs_alpha": true,
+      "prompt": "edit of decals/grime-2: brown mud splash [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the wall grime band (MilitaryStyle grime): dried mud and dust. REPAINTED from the facility source by edit_image (gpt-image-2.5-sunburst, 'keep the composition EXACTLY ... repaint as military'), so the layout the code measured carries over; the edit came back opaque and the FACILITY SOURCE'S OWN ALPHA was re-applied onto it (the raw edit is in military/Unused/<label>-raw.png), so the cut is the measured one, not a re-cut. lift 1.089: fitted to its facility counterpart's built linear 0.0277 (raw 0.0371).",
+      "last_converted": "2026-10-10T20:36:14",
+      "built_linear": 0.0283,
+      "built_srgb": 44.0,
+      "lift": 1.089,
+      "last_lift": 1.089
+    },
+    "military/ground-paint": {
+      "src": "military/ground-paint.png",
+      "class": "tile",
+      "needs_alpha": true,
+      "prompt": "derived from city/ground-road-paint, yellow [append textures.json style]",
+      "prompt_exact": false,
+      "note": "yellow line paint (MilitaryStyle paint). NOT an image gen: the edit inverted the city art's meaning (it painted grey ground with yellow flecks, where city/ground-road-paint is solid paint with key-grey chips), so this is city/ground-road-paint's own luma tinted to 196/158/52 with its chroma-key alpha (0x5a5d63, tol 24) baked in. A colour change of a chip pattern, nothing else. lift 1.414: fitted to its facility counterpart's built linear 0.2405 (raw 0.3649).",
+      "res": 128,
+      "last_converted": "2026-10-10T20:36:28",
+      "built_linear": 0.2493,
+      "built_srgb": 110.0,
+      "lift": 1.414,
+      "last_lift": 1.414
     }
   }
 }

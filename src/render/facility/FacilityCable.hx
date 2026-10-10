@@ -141,8 +141,8 @@ class FacilityCable
       var runs = drops(cab, pack, m, socks) + links(cab, pack, m, socks);
       var us = units(pack, cab, m, all);
       var scat = scatter(pack, m, us);
-      add(scene, pack);
-      FacilityGeom.add(scene, cab, FacilityStyle.CABLE_TEX, true, false);
+      add(scene, pack, m.tex.elec);
+      FacilityGeom.add(scene, cab, m.tex.cable, true, false);
       return {
         mounts: all,
         // every ribbon in the compound: the machine drops, the socket-to-socket runs along the
@@ -1148,12 +1148,12 @@ class FacilityCable
 // against the floor under it, and leaving `transparent` false keeps VisionMask on its darkening
 // branch rather than the alpha-scaling one (the trap FacilityGeom.addPane records). Sharing that
 // material is also why this family costs no new program
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.ELEC_TEX, 'wall', 1),
+        map: Textures.loadTexture(tex, 'wall', 1),
         alphaTest: FacilityStyle.ELEC_CUT,
         side: THREE.DoubleSide,
       })));

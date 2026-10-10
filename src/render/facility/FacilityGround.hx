@@ -240,9 +240,9 @@ class FacilityGround
                 quad(b, sp.x0, sp.x1, sp.z0, sp.z1, surfY(s));
               }
           }
-      add(scene, road, FacilityStyle.GROUND_ROAD);
-      add(scene, walkway, FacilityStyle.GROUND_WALKWAY);
-      add(scene, lot, FacilityStyle.GROUND_LOT);
+      add(scene, road, m.tex.road);
+      add(scene, walkway, m.tex.walkway);
+      add(scene, lot, m.tex.lot);
       add(scene, grass, FacilityStyle.GROUND_GRASS);
       // a military base's margin, in its terrain band's own ground (render.wild.WildBand.use has run)
       add(scene, wild, render.wild.WildBand.cur.ground);
@@ -252,7 +252,7 @@ class FacilityGround
       var border = MeshBufTools.make();
       Kerb.emit(border, curbs, RenderConfig.WALKWAY_BORDER_W, RenderConfig.WALKWAY_BORDER_TILE,
         0.0, -FacilityStyle.KERB_DROP);
-      add(scene, border, FacilityStyle.GROUND_BORDER);
+      add(scene, border, m.tex.kerb);
       FacilityPaint.build(scene, m);
     }
 

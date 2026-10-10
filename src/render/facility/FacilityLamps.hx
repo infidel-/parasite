@@ -321,7 +321,7 @@ class FacilityLamps
             // where a sewer wall bracket rakes metres out along the wall
             tx: px + DC[h.dir] * reach,
             tz: pz + DR[h.dir] * reach,
-            color: FacilityStyle.LAMP_COLOR,
+            color: m.tex.mastColor,
             col: h.col,
             row: h.row,
             phase: 0.0,
@@ -387,7 +387,7 @@ class FacilityLamps
                   y: FacilityStyle.ROOF_Y - FacilityStyle.CEIL_DROP,
                   tx: c.x,
                   tz: c.z,
-                  color: FacilityStyle.LAMP_COLOR,
+                  color: m.tex.mastColor,
                   col: col,
                   row: row,
                   phase: 0.0,
@@ -421,7 +421,7 @@ class FacilityLamps
             y: l.y,
             tx: l.x,
             tz: l.z,
-            color: FacilityStyle.DOOR_LAMP_COLOR,
+            color: m.tex.doorLampColor,
             col: d.col,
             row: d.row,
             phase: 0.0,
@@ -447,7 +447,7 @@ class FacilityLamps
         bulbY: bulbY,
         radius: bulbY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul,
         topR: RenderConfig.LAMP_CONE.topR,
-        color: FacilityStyle.LAMP_COLOR,
+        color: m.tex.mastColor,
         startFrac: FacilityStyle.LAMP_CONE_START,
       }));
       // and the door lamps' own shafts, which have to be a SECOND batch: LightCone takes its tint
@@ -490,7 +490,7 @@ class FacilityLamps
           bulbY: doorY,
           radius: doorY * Math.tan(L.angle) * RenderConfig.LAMP_CONE.radiusMul,
           topR: RenderConfig.LAMP_CONE.topR,
-          color: FacilityStyle.DOOR_LAMP_COLOR,
+          color: m.tex.doorLampColor,
           startFrac: FacilityStyle.LAMP_CONE_START,
           arc: Math.PI,
           // the outward normal read as a heading, the same atan2(x, z) the mast heads take
@@ -559,7 +559,7 @@ class FacilityLamps
               // straight down, like a room fixture and unlike a sewer wall bracket
               tx: x,
               tz: z,
-              color: FacilityStyle.LAMP_COLOR,
+              color: m.tex.lampColor,
               // the CELL and not the shifted point: this pair is what render.particles.LampLights
               // sorts the pool on and what render.world.IndoorMask.indoorAt reads to keep this lamp
               // out of the outdoor fake-shadow list

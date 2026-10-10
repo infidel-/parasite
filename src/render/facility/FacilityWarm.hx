@@ -42,7 +42,7 @@ class FacilityWarm
           ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
         }
       mask();
-      var bundle = FacilityScene.build(renderer, lampPool);
+      var bundle = FacilityScene.build(renderer, lampPool, FacilityStyle.rig());
       var sc = bundle.scene;
       FacilityGround.build(sc, model);
       // the park's two dressing layers, which are TWO program permutations neither of the four ground

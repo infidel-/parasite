@@ -57,4 +57,29 @@ typedef ShellTex = {
   // in it whichever way the opening faces, because a doorway belongs to the circulation and not to
   // either space it joins, and it is the fallback finish for a cell whose own surface has no art
   var circ: Surf;
+  // the hood of the bulkhead lamp over an exterior door
+  var hood: String;
+  // ---- the OUTDOORS, which only a compound and a military base have. A corp tower is all indoor
+  // and never reaches the passes that read these, so it leaves them out. Every one was a facility
+  // constant at its emitter until the base needed the same emitters in its own art
+  // the hangar's cladding and its barrel vault
+  @:optional var hangarWall: String;
+  @:optional var vault: String;
+  // the four outdoor grounds the lot is laid in, and the kerb edging between them
+  @:optional var road: String;
+  @:optional var walkway: String;
+  @:optional var lot: String;
+  @:optional var kerb: String;
+  // the line paint, and the keep-clear hatch inside an exterior door
+  @:optional var paint: String;
+  @:optional var zone: String;
+  // the damp band at a wall's foot, the cable runs and the wall/floor electrical kit sheet
+  @:optional var grime: String;
+  @:optional var cable: String;
+  @:optional var elec: String;
+  // the light colours: the outdoor masts and their cones, the indoor fixtures and the window spill
+  // they cast, and the bulkhead lamps over exterior doors
+  @:optional var mastColor: Int;
+  @:optional var lampColor: Int;
+  @:optional var doorLampColor: Int;
 }

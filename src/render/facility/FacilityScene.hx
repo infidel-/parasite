@@ -18,12 +18,15 @@ import render.particles.LampLights;
 // every program key and already running their per-fragment loop with no bulbs to show for it
 class FacilityScene
 {
-// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city).
-// `sky`/`near`/`far` default to the compound's own — the CORP TOWER passes its three and takes the
-// whole rig unchanged, which is the only thing that differs between the two kinds up here
+// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city),
+// lit by one area kind's rig: the compound's FacilityStyle.rig(), the corp tower's sky and fog over
+// that same fill, the military base's own
   public static function build(renderer:WebGLRenderer, lampPool:Int,
-      sky = FacilityStyle.SKY, near = FacilityStyle.FOG_NEAR, far = FacilityStyle.FOG_FAR):SceneSetup.SceneBundle
+      rig:FacilityRigOpts):SceneSetup.SceneBundle
     {
+      var sky = rig.sky;
+      var near = rig.near;
+      var far = rig.far;
       var scene = new Scene();
       scene.background = new Color(sky);
       // background and fog are the SAME colour, which render.world.VisionMask depends on: its blue
@@ -38,15 +41,12 @@ class FacilityScene
           scene.add(l);
           return l;
         }
-      // fill. the facility runs DARKER than the wilderness because its art is brighter: the lab
-      // floor measures 0.0607 linear and the corridor lino 0.0750, against the wilderness turf's
-      // 0.0503, and the interior is what fills the frame the moment the roof fades. the outdoor
-      // surfaces are the city's own asphalt and pavement, which were painted for the city's fill
-      var ambient = add(new AmbientLight(0x46536b, 1.35));
-      var hemi = add(new HemisphereLight(0x56668c, 0x18211c, 1.1));
+      // fill, in the rig's colours (FacilityStyle.rig says why the compound's runs dark)
+      var ambient = add(new AmbientLight(rig.ambient, 1.35));
+      var hemi = add(new HemisphereLight(rig.hemiSky, rig.hemiGround, 1.1));
       // the moon is the only directional term, so it is the whole of what gives a wall a lit side
       // and a shadow — the one cue that a building is standing on the lot rather than printed on it
-      var moon = cast(add(new DirectionalLight(0x8294c0, 1.6)), DirectionalLight);
+      var moon = cast(add(new DirectionalLight(rig.moon, 1.6)), DirectionalLight);
       moon.position.set(-1, 2, 1.5);
       var MS = RenderConfig.MOON_SHADOW;
       moon.castShadow = true;

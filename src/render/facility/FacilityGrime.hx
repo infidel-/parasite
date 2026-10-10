@@ -89,7 +89,7 @@ class FacilityGrime
                 n += 2;
               }
           }
-      add(scene, b);
+      add(scene, b, m.tex.grime);
       return n;
     }
 
@@ -125,11 +125,11 @@ class FacilityGrime
 // `transparent` is set AFTER VisionMask.patch, the same order render.facility.FacilityGeom.addPane
 // needs and for the same reason: the mask reads that flag at patch time to choose its branch, and
 // set first it would fade a hidden band OUT rather than sinking it toward the fog with its wall
-  static function add(scene:Scene, b:MeshBuf):Void
+  static function add(scene:Scene, b:MeshBuf, tex:String):Void
     {
       if (b.idx.length == 0)
         return;
-      var t = Textures.loadTexture(FacilityStyle.GRIME, 'wall');
+      var t = Textures.loadTexture(tex, 'wall');
       t.premultiplyAlpha = true;
       t.wrapT = THREE.ClampToEdgeWrapping;
       t.needsUpdate = true;

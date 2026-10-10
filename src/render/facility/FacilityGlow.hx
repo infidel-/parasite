@@ -49,12 +49,18 @@ class FacilityGlow
   // GLOW` exactly — and it is right whatever colour space `new Color` works in, both terms being in
   // the same one
   static var WARM:Array<Float> = null;
+  // the build's fixture and bulkhead colours, off its shell (ShellTex.lampColor, doorLampColor)
+  static var lampColor = FacilityStyle.LAMP_COLOR;
+  static var doorLampColor = FacilityStyle.DOOR_LAMP_COLOR;
 
 // build the whole glow layer, and return the openings as fake-shadow sources — see `opening`. the
 // room pair asks render.facility.FacilityLamps the same `lit` question the fixtures were placed off,
 // so a panel and its bulb cannot drift apart
   public static function build(scene:Scene, m:Facility):Array<LampPost>
     {
+      lampColor = m.tex.lampColor;
+      doorLampColor = m.tex.doorLampColor;
+      WARM = null;
       var b = MeshBufTools.make();
       var lamps = [];
       for (r in m.rooms)
@@ -185,8 +191,8 @@ class FacilityGlow
     {
       if (WARM == null)
         {
-          var a = new Color(FacilityStyle.LAMP_COLOR);
-          var w = new Color(FacilityStyle.DOOR_LAMP_COLOR);
+          var a = new Color(lampColor);
+          var w = new Color(doorLampColor);
           WARM = [w.r / a.r, w.g / a.g, w.b / a.b];
         }
       MeshBufTools.quad(b, p0, p1, p2, p3, [0, 0, 1, 0, 1, 1, 0, 1]);
@@ -214,7 +220,7 @@ class FacilityGlow
         y: FacilityStyle.SPILL_Y,
         tx: c.x,
         tz: c.z,
-        color: FacilityStyle.LAMP_COLOR,
+        color: lampColor,
         col: col,
         row: row,
         phase: 0.0,
@@ -318,7 +324,7 @@ class FacilityGlow
       // glow the player cannot see is cut to a true zero rather than merely dimmed. without it every
       // lit room in the compound would shine through its own walls
       var mesh = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
-        color: new Color(FacilityStyle.LAMP_COLOR).multiplyScalar(FacilityStyle.GLOW),
+        color: new Color(lampColor).multiplyScalar(FacilityStyle.GLOW),
         transparent: true,
         // square corners: a spill patch is cut by the straight jambs of the opening it falls out of,
         // and the default rounded box left it reading as a blob

@@ -87,13 +87,16 @@ class FacilityPaint
       var b = MeshBufTools.make();
       lanes(b, m);
       bays(b, m);
-      add(scene, b, FacilityStyle.PAINT_COLOR, FacilityStyle.GROUND_PAINT, 0);
+      add(scene, b, FacilityStyle.PAINT_COLOR, m.tex.paint, 0);
       var hz = MeshBufTools.make();
       keepClear(hz, m);
-      add(scene, hz, FacilityStyle.ZONE_COLOR, FacilityStyle.ZONE_TEX, FacilityStyle.ZONE_CUT);
+      add(scene, hz, FacilityStyle.ZONE_COLOR, m.tex.zone, FacilityStyle.ZONE_CUT);
       var mk = MeshBufTools.make();
       indoor(mk, m);
-      add(scene, mk, FacilityStyle.MARK_COLOR, FacilityStyle.GROUND_PAINT, 0);
+      // the aisle marks are the white paint TINTED yellow; a base's paint is already yellow, so it
+      // takes them untinted rather than yellow on yellow
+      add(scene, mk, (m.kind == 'military' ? FacilityStyle.PAINT_COLOR : FacilityStyle.MARK_COLOR),
+        m.tex.paint, 0);
     }
 
 // the keep-clear hatch inside every door that leads outdoors, and the list it works off is

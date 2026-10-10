@@ -171,7 +171,8 @@ class FacilityArea implements Area3D
 // night sky, fog closing the far edge, fill + a moon, and the empty live lamp pool
   public function scene(renderer:WebGLRenderer, lampPool:Int):SceneSetup.SceneBundle
     {
-      var bundle = FacilityScene.build(renderer, lampPool);
+      var bundle = FacilityScene.build(renderer, lampPool,
+        (model.kind == 'military' ? render.military.MilitaryStyle.rig() : FacilityStyle.rig()));
       moon = bundle.moon;
       // frozen: moonTick re-renders it only when something it holds has changed
       moon.shadow.autoUpdate = false;

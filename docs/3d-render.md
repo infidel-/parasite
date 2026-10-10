@@ -807,6 +807,7 @@ back) — grep the change text.
 | **The military base renders through the FACILITY renderer** (`View.showFacility`, `Surf.WILD` margin, `MilitaryMargin`) | the last 2D area besides the lab, no new `Area3D`; whole-base overview **111-130 calls, 330-400k tris**; the fence line read as gate mouth until its footing became `WALKWAY` | **landed** |
 | **The military base's furniture is EMITTED** (`MilitaryGeom`: chain-link, razor wire, towers, tents, containers, camo nets, helipad, armory lockers and safe) | two packed 1k sheets + four solo alpha gens, **$0.39**; a whole-perimeter fence is **3 alpha-cut meshes**; the tower went emitted, not Blender | **landed** |
 | **The military base's hardware is GENERATED** (`MilitaryVehicles`: tank, humvee, helicopter, plane; one instanced batch each) + the helipad marking | four TRELLIS glbs at the budget (~9.5k tris each, **$0.26** all in); a vehicle footprint inherits the ground west of it, so the hangar plane stands on hangar floor | **landed** |
+| **The military base wears its OWN shell, ground, paint, grime, cables and night rig** (`MilitaryStyle.shell()`/`rig()`; 13 facility constants moved onto `ShellTex`) | 3 packed sheets + 11 layout-preserving `edit_image` repaints with the source's alpha re-applied, **$0.85**; values fitted to each facility counterpart's built linear | **landed** |
 
 ### FX, UI and the view itself
 

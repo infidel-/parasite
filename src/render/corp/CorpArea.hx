@@ -76,8 +76,7 @@ class CorpArea implements Area3D
 // the compound's rig with the tower's sky and its much tighter fog — see CorpStyle.FOG_NEAR
   public function scene(renderer:WebGLRenderer, lampPool:Int):SceneSetup.SceneBundle
     {
-      var bundle = FacilityScene.build(renderer, lampPool,
-        CorpStyle.SKY, CorpStyle.FOG_NEAR, CorpStyle.FOG_FAR);
+      var bundle = FacilityScene.build(renderer, lampPool, CorpStyle.rig());
       lampLights = bundle.lampLights;
       coneGroup = bundle.coneGroup;
       lampCorners = bundle.lampCorners;

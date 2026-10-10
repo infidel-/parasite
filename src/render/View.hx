@@ -483,7 +483,8 @@ class View {
       if (area.typeID == AREA_MILITARY_BASE)
         render.military.MilitaryMargin.use(game);
       buildFrom(new render.facility.FacilityArea(game,
-        render.facility.FacilityModel.fromArea(area, iconBox)), key);
+        render.facility.FacilityModel.fromArea(area, iconBox,
+        (area.typeID == AREA_MILITARY_BASE ? render.military.MilitaryStyle.shell() : null))), key);
     }
 
 // show the 3D corp tower floor for an area, on the same terms as the two above: the grid is the

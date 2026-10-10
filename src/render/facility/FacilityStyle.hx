@@ -3448,6 +3448,21 @@ class FacilityStyle
           // metal leaf so the array is the length the emitter indexes and nothing here changes
           door: [DOOR_GLASS, DOOR_CABINET, DOOR_METAL, DOOR_PRIVATE, DOOR_METAL],
           circ: FacilityModel.Surf.LINO,
+          hood: DOOR_LAMP_TEX,
+          hangarWall: WALL_HANGAR,
+          vault: ROOF_HANGAR,
+          road: GROUND_ROAD,
+          walkway: GROUND_WALKWAY,
+          lot: GROUND_LOT,
+          kerb: GROUND_BORDER,
+          paint: GROUND_PAINT,
+          zone: ZONE_TEX,
+          grime: GRIME,
+          cable: CABLE_TEX,
+          elec: ELEC_TEX,
+          mastColor: LAMP_COLOR,
+          lampColor: LAMP_COLOR,
+          doorLampColor: DOOR_LAMP_COLOR,
         },
         surfOf: FacilityModel.surfOf,
         // a compound's furniture is all either a worktop (`table`) or a decoration with a fitting
@@ -3461,6 +3476,23 @@ class FacilityStyle
       };
     }
 
-  // how many slots a per-Surf array holds. one more than the highest Surf value
-  public static inline var SURF_SLOTS = 21;
+  // how many slots a per-Surf array holds. one more than the highest Surf value, which is WILD (21)
+  public static inline var SURF_SLOTS = 22;
+
+// the compound's night rig (render.facility.FacilityScene.build): its sky and fog, and the fill.
+// the facility runs DARKER than the wilderness because its art is brighter: the lab floor measures
+// 0.0607 linear and the corridor lino 0.0750, against the wilderness turf's 0.0503, and the
+// interior is what fills the frame the moment the roof fades
+  public static function rig():FacilityRigOpts
+    {
+      return {
+        sky: SKY,
+        near: FOG_NEAR,
+        far: FOG_FAR,
+        ambient: 0x46536b,
+        hemiSky: 0x56668c,
+        hemiGround: 0x18211c,
+        moon: 0x8294c0,
+      };
+    }
 }

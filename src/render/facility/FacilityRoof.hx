@@ -241,7 +241,7 @@ class FacilityRoof
           deck.pack = MeshBufTools.make();
           deck.shade = MeshBufTools.make();
           fill(m, si, deck, out);
-          FacilityGeom.addDeck(scene, deck.cab, FacilityStyle.CABLE_TEX, true, shells[si]);
+          FacilityGeom.addDeck(scene, deck.cab, m.tex.cable, true, shells[si]);
           pack(scene, deck.pack, shells[si]);
           shade(scene, deck.shade, shells[si]);
         }
@@ -1086,7 +1086,7 @@ class FacilityRoof
           tri(b, k, k + 1, k + 3);
           tri(b, k, k + 3, k + 2);
         }
-      FacilityGeom.addDeck(scene, b, FacilityStyle.ROOF_HANGAR, true, shell);
+      FacilityGeom.addDeck(scene, b, m.tex.vault, true, shell);
       return {
         structure: si,
         span: s.span,

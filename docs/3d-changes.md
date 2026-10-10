@@ -1355,3 +1355,40 @@ tile `MilitaryGen.vehicle` stamped, centred on its `Const.MIL_*_SIZE` footprint.
   "transparent"` and painted the pad (a flat 44/47/51 slab). It is keyed on that measured colour
   (`class: chroma`, tol 40) instead of re-cut; the chips key out as holes. Lift 1.4: at sRGB 121 it
   was the brightest thing in the night frame, glowing through the vision mask; now 93.
+
+## The military base wears its OWN art: `MilitaryStyle.shell()` and `rig()`
+
+Reported from the game as "why did you fully reuse facility?": the base had gone 3D through the
+facility renderer with no `ShellOpts` at all, so it wore the lab's cladding, glazing, doors, roofs,
+hangar and lamps, plus the CITY's asphalt, pavement, kerbs and road paint. Corp had already proved
+the route (share the emitters, share no art), so the fix is that route finished:
+- **13 constants were still hardcoded at their emitters** and are now `@:optional` `ShellTex`
+  fields: the hangar wall and vault, road/walkway/lot/kerb, paint, keep-clear zone, grime, cable,
+  electrical pack, and the mast/fixture/bulkhead light colours. The door-lamp `hood` is REQUIRED,
+  because corp reaches `FacilityGeom.build` too. `FacilityScene.build`'s sky/fog arguments plus its
+  three hardcoded fill colours became `FacilityRigOpts` (`FacilityStyle.rig()`, `CorpStyle.rig()`,
+  `MilitaryStyle.rig()`). `FacilityGlow` caches its lamp/door ratio, so the cache resets per build.
+- **Two kinds of art.** Plain tiles were three packed sheets: block wall, felt roof, coping and head;
+  asphalt, footpath, kerb and the vault's ribs; shutter slats, hangar cladding, lamp hood and cable.
+  **Anything whose LAYOUT the code measured was repainted from its own facility source by
+  `edit_image`** ("keep the composition EXACTLY"), with the source's alpha re-applied afterwards
+  (the raw edits are kept in `military/Unused/`):
+  - the two window units, so `WINDOW_ASPECT` 2.90 and 1.963 hold untouched;
+  - the high light well, which still lands on its crop;
+  - the four door pairs;
+  - the hazard hatch;
+  - the PACK64 electrical sheet, where every cell stayed in its slot;
+  - the grime band.
+
+  Not one aspect or cell index had to change.
+- **Trap: the edit INVERTED the road paint.** `city/ground-road-paint` is solid paint with key-grey
+  chips, and the edit painted grey ground with yellow flecks. It is a colour change of a chip pattern,
+  so it was done in code (the source luma tinted to 196/158/52) and not re-rolled.
+- **Values**: each label's lift is the gamma that takes its raw build to its facility counterpart's
+  built linear. The raw values were up to 3.3x off (block wall 0.1075 against 0.0327, yellow hatch
+  0.24 against 0.07); all landed within 10%. The base's indoor aisle marks lose `MARK_COLOR`, which
+  would have tinted the yellow paint yellow again.
+- **The warm is unchanged on purpose**: a program keys on material FEATURES, not on which texture
+  or light colour, so the facility demo already compiles everything the base's art draws with.
+- The hangar cladding's crop was cut to 13 whole rib periods (494 px): the 504 crop wrapped at
+  23.3 against an inner step of 5.4.
