@@ -12,11 +12,10 @@ import render.SoundSources;
 // barrel fires), faded by path distance in render.AreaSounds
 class CitySounds
 {
-  // the beds per tier: the main road, a side street, an alley. the medium street is the old
-  // ambient-city bed, which every tier used to play
+  // the beds per tier: the main road, a side street, an alley
   static var BEDS:Map<_AreaType, Array<String>> = [
     _AreaType.AREA_CITY_LOW => ['city/slums-main', 'city/slums-street', 'city/slums-alley'],
-    _AreaType.AREA_CITY_MEDIUM => ['city/medium-main', 'ambient-city', 'city/medium-alley'],
+    _AreaType.AREA_CITY_MEDIUM => ['city/medium-main', 'city/medium-street', 'city/medium-alley'],
     _AreaType.AREA_CITY_HIGH => ['city/downtown-main', 'city/downtown-street', 'city/downtown-alley'],
   ];
   static inline var MAIN = 0;

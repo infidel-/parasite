@@ -1573,6 +1573,30 @@
       "last_outputs": [
         "city/slums-alley1.mp3"
       ]
+    },
+    "city/medium-street": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/medium-street-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "side street in an ordinary city neighbourhood, steady traffic one block away, a car passing at a distance now and then, faint hum of the city, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T16:29:17",
+      "last_sig": "-36/128k/True/500/hp40",
+      "last_outputs": [
+        "city/medium-street1.mp3"
+      ]
     }
   }
 }

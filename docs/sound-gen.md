@@ -221,8 +221,9 @@ Each tier (`area.typeID`: slums `AREA_CITY_LOW`, medium, downtown `AREA_CITY_HIG
 beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_NONE`.
 - **Beds**, one-hot over 4 x `BASE_MS`, off `city.tiles`: MAIN = a Road cell inside some 4x4 all-Road
   square (only the 4-wide main road has one) or a Walkway next to one; STREET = any other Road or
-  Walkway; ALLEY = Alley. Keys `city/<tier>-main|street|alley`, tiers `slums`/`medium`/`downtown`;
-  the medium street is the old `ambient-city`. Baked -36, DB -4.
+  Walkway; ALLEY = Alley. Keys `city/<tier>-main|street|alley`, tiers `slums`/`medium`/`downtown`.
+  Baked -36, DB -4. The medium street was the old shipped `ambient-city` until it got its own bake
+  (asked for); `ambient-city` now plays nowhere in 3D.
 
 | key | sources | type | range |
 |---|---|---|---|
@@ -315,3 +316,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-09 | corp | cubicle, washroom, window, fridge (loops) · flush, phone, drip (one-shots) | cubicle, window, drip: elevenlabs · fridge, washroom: cassette · flush: sonilo (baked -36, "must be quieter") · phone: elevenlabs, third roll (the first take CLIPPED: 0 dBFS, 11 clipped samples, audibly distorted; a softer "gentle low-volume warble, no distortion" brief fixed it) · washroom sonilo kept for the facility | $0.58 |
 | 2026-10-10 | facility | lab, hangar, park, exterior (beds) · machine, generator (loops) · drain, pa, birds, car (one-shots) | lab, hangar, exterior, machine, generator: elevenlabs · park, pa: sonilo · drain: cassette + elevenlabs (2 variants) · birds, car: all three as variants 1-3 · pa cassette CLIPPED (0 dBFS, peak count 6), out unheard · exterior sonilo kept for the wilderness | $0.67 |
 | 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it, sonilo won · wild: coyote, forest, mountain, rockfall: elevenlabs · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |
+| 2026-10-10 | city | medium-street (bed, replaces `ambient-city`) | elevenlabs | $0.09 |
