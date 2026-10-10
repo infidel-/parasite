@@ -331,6 +331,26 @@ class GenRun
             if (t >= Const.OFFSET_ROW19)
               add('tiles/' + (t - Const.OFFSET_ROW19), 1);
           }
+      // how furnished each kind of room comes out: its floor cells, the ones something stands on (an
+      // unwalkable furniture tile or an object), and how many of that kind have nothing at all
+      for (r in state.allRooms)
+        {
+          var cells = 0;
+          var used = 0;
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              {
+                cells++;
+                if (tiles.Default.TILE_WALKABLE[ctx.cells[x][y]] == 0 ||
+                    Lambda.exists(ctx.spawns, function(s) return s.x == x && s.y == y))
+                  used++;
+              }
+          add('room/' + r.role, 1);
+          add('roomCells/' + r.role, cells);
+          add('roomUsed/' + r.role, used);
+          if (used == 0)
+            add('roomEmpty/' + r.role, 1);
+        }
       if (verbose)
         {
           log('[gen] seed ' + seed + ' ' + w + 'x' + h + ' gateNorth=' + state.mainRoadNorth +
@@ -378,6 +398,12 @@ class GenRun
                 t == Const.TILE_MIL_FILE ? 'F' :
                 t == Const.TILE_MIL_STALL ? 'S' :
                 t == Const.TILE_MIL_TROUGH ? 'U' :
+                t == Const.TILE_MIL_RADIO_RACK ? 'Q' :
+                t == Const.TILE_MIL_CONSOLE ? 'O' :
+                t == Const.TILE_MIL_SHELF ? 'H' :
+                t == Const.TILE_MIL_CRATES ? 'c' :
+                t == Const.TILE_MIL_COT ? 'z' :
+                t == Const.TILE_MIL_MED_CABINET ? 'E' :
                 tiles.Default.TILE_WALKABLE[t] == 1 ? '.' : 'X');
             }
           log(line);

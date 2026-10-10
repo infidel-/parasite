@@ -816,6 +816,7 @@ back) — grep the change text.
 | **Military base fix round 3, quick fixes: no floating bags, no mast in a tower, a clear gate approach** | a bag above course 0 needs a bag under its centre (0 unsupported of 308); tower cells are WALKWAY, so the lamp scan skips them | **landed** |
 | **Military base: its own steels, off the green window-head** | one packed sheet (enamel, gunmetal lift 0.84, chequer, cot top) plus galvanized/mast-paint/crate-side reuse replaces window-head on every steel surface | **landed** |
 | **Military base: the yard kit hand-modelled (drum, crate, container, roof tank) and a sharp mast** | four Blender glbs replace emitted boxes; the mast goes 43 → 171 texels/unit; roof batches clone their material, because warm's vision-mask patch chained IndoorMask and blacked them out | **landed** |
+| **Military base rooms: comms, supply and medical, and the existing kinds fuller** | mil-pack-o (rack, shelf, medical cabinet, console/cot 2:1 bands); `art()` orients authored tops; rooms 18-30% → 24-35% furnished | **landed** |
 
 ### FX, UI and the view itself
 

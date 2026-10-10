@@ -26,7 +26,20 @@ class MilitaryRooms
   // an HQ office's desks (each two cells along its wall, one per this many cells of perimeter)
   // and filing cabinets
   static inline var DESK_PER = 8;
-  static inline var FILES_MAX = 2;
+  static inline var FILES_MAX = 4;
+  // free-standing pieces in a room's middle: an office's desk pairs, an armory's or a store's crate
+  // stacks
+  static inline var DESK_ISLANDS = 2;
+  static inline var CRATE_ISLANDS = 4;
+  // a comms room's radio racks and two-cell consoles
+  static inline var RACKS_MAX = 4;
+  static inline var CONSOLES_MAX = 2;
+  // a store's shelves
+  static inline var SHELVES_MAX = 10;
+  // a medical bay's cots and cabinets
+  static inline var COTS_MAX = 6;
+  static inline var COT_ISLANDS = 2;
+  static inline var MEDCABS_MAX = 2;
   // a latrine's cubicles and trough cells
   static inline var STALLS_MAX = 4;
   static inline var TROUGH_MAX = 3;
@@ -39,8 +52,17 @@ class MilitaryRooms
         {
           case ROLE_ARMORY:
             armory(state, room);
+            islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
           case ROLE_HQ:
             office(state, room);
+          case ROLE_COMMS:
+            comms(state, room);
+          case ROLE_SUPPLY:
+            supply(state, room);
+            floor = Const.TILE_MIL_FLOOR_BARRACKS;
+          case ROLE_MEDICAL:
+            medical(state, room);
+            islands(state, room, 1, 1, Const.TILE_MIL_COT, COT_ISLANDS);
           case ROLE_BRIEFING:
             briefing(state, room);
             floor = Const.TILE_MIL_FLOOR_BRIEFING;
@@ -68,8 +90,15 @@ class MilitaryRooms
       var depth = (alongX ? room.h : room.w);
       // the two long walls are runs 0/1 (top, bottom) on a wide room and 2/3 (left, right) on a tall one
       var walls = (alongX ? [ 0, 1 ] : [ 2, 3 ]);
+      // one row of bunks out from the first wall; a room deep enough for an aisle past them still lays
+      // a row ALONG the wall facing it (bunksAlong), where it used to stand empty
+      var facing = -1;
       if (depth < BUNK_DEPTH * 2 + 1)
-        walls = [ walls[0] ];
+        {
+          if (depth >= BUNK_DEPTH + 2)
+            facing = walls[0] ^ 1;
+          walls = [ walls[0] ];
+        }
       // too shallow to stand them out from the wall: lay them ALONG it instead
       if (depth < BUNK_DEPTH + 1)
         {
@@ -111,6 +140,8 @@ class MilitaryRooms
               last = at;
             }
         }
+      if (facing >= 0)
+        bunksAlong(state, runs[facing]);
     }
 
 // a shallow barracks' bunks, each two cells along the wall with its footlocker after it and a
@@ -238,6 +269,141 @@ class MilitaryRooms
               // the wall may still take a desk. It used to break, and most offices got one or none
               k++;
             }
+        }
+      // and desk pairs in the middle, along the room's long axis
+      var alongX = (room.w >= room.h);
+      islands(state, room, (alongX ? 2 : 1), (alongX ? 1 : 2), Const.TILE_MIL_DESK, DESK_ISLANDS);
+    }
+
+// the radio room: racks down its longest wall, two-cell consoles along the one facing it (or the
+// sides), and a desk pair in the middle where it fits
+  static function comms(state: _FacilityState, room: _Room)
+    {
+      var runs = FacilityRooms.roomWallRuns(state, room);
+      var best = longest(runs);
+      var racks = 0;
+      for (c in runs[best])
+        if (racks < RACKS_MAX &&
+            free(state, c.x, c.y))
+          {
+            stand(state, c.x, c.y, Const.TILE_MIL_RADIO_RACK);
+            racks++;
+          }
+      // the facing wall first, then the two side walls: a facing wall of windows and a door takes none
+      var consoles = 0;
+      for (w in [ best ^ 1 ].concat(best < 2 ? [ 2, 3 ] : [ 0, 1 ]))
+        {
+          var face = runs[w];
+          var k = 0;
+          while (k + 1 < face.length &&
+              consoles < CONSOLES_MAX)
+            {
+              var c = face[k];
+              var n = face[k + 1];
+              if (Math.abs(n.x - c.x) + Math.abs(n.y - c.y) == 1 &&
+                  free(state, c.x, c.y) &&
+                  free(state, n.x, n.y))
+                {
+                  stand(state, c.x, c.y, Const.TILE_MIL_CONSOLE);
+                  stand(state, n.x, n.y, Const.TILE_MIL_CONSOLE);
+                  consoles++;
+                  k += 3;
+                }
+              else
+                k++;
+            }
+        }
+      var alongX = (room.w >= room.h);
+      islands(state, room, (alongX ? 2 : 1), (alongX ? 1 : 2), Const.TILE_MIL_DESK, 1);
+    }
+
+// the store: shelves round its walls and crate stacks in its middle
+  static function supply(state: _FacilityState, room: _Room)
+    {
+      var shelves = 0;
+      for (run in FacilityRooms.roomWallRuns(state, room))
+        for (c in run)
+          if (shelves < SHELVES_MAX &&
+              free(state, c.x, c.y))
+            {
+              stand(state, c.x, c.y, Const.TILE_MIL_SHELF);
+              shelves++;
+            }
+      islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
+    }
+
+// the medical bay: a cot on every other cell of its longest wall and the one facing it, each one
+// cell long out from the wall, and the cabinets on a side wall (fill adds cots in the middle)
+  static function medical(state: _FacilityState, room: _Room)
+    {
+      var runs = FacilityRooms.roomWallRuns(state, room);
+      var best = longest(runs);
+      var cots = 0;
+      for (w in [ best, best ^ 1 ])
+        for (k in 0...runs[w].length)
+          {
+            var c = runs[w][k];
+            if (k % 2 == 0 &&
+                cots < COTS_MAX &&
+                free(state, c.x, c.y))
+              {
+                stand(state, c.x, c.y, Const.TILE_MIL_COT);
+                cots++;
+              }
+          }
+      var cabs = 0;
+      for (w in (best < 2 ? [ 2, 3 ] : [ 0, 1 ]))
+        for (c in runs[w])
+          if (cabs < MEDCABS_MAX &&
+              free(state, c.x, c.y))
+            {
+              stand(state, c.x, c.y, Const.TILE_MIL_MED_CABINET);
+              cabs++;
+            }
+    }
+
+// the index of the longest of roomWallRuns' four runs
+  static function longest(runs: Array<Array<{ x: Int, y: Int }>>): Int
+    {
+      var best = 0;
+      for (i in 1...4)
+        if (runs[i].length > runs[best].length)
+          best = i;
+      return best;
+    }
+
+// up to `max` free-standing blocks of `tile`, bw x bh cells, nearest the room's middle first. Each
+// keeps a whole ring of bare floor round it, so it cuts nothing off, and two never touch
+  static function islands(state: _FacilityState, room: _Room, bw: Int, bh: Int, tile: Int, max: Int)
+    {
+      var cells = state.area.getCells();
+      var spots = [];
+      for (x in room.x1 + 1...room.x2 - bw + 1)
+        for (y in room.y1 + 1...room.y2 - bh + 1)
+          spots.push({
+            x: x,
+            y: y,
+            d: Std.int(Math.pow(x * 2 + bw - room.x1 - room.x2, 2) +
+              Math.pow(y * 2 + bh - room.y1 - room.y2, 2)),
+          });
+      spots.sort(function(a, b) return a.d - b.d);
+      var n = 0;
+      for (s in spots)
+        {
+          if (n >= max)
+            break;
+          var ok = true;
+          for (x in s.x - 1...s.x + bw + 1)
+            for (y in s.y - 1...s.y + bh + 1)
+              if (cells[x][y] != TEMP_BUILDING_ROOM ||
+                  state.area.hasObjectAt(x, y))
+                ok = false;
+          if (!ok)
+            continue;
+          for (x in s.x...s.x + bw)
+            for (y in s.y...s.y + bh)
+              stand(state, x, y, tile);
+          n++;
         }
     }
 

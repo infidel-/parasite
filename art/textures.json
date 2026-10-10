@@ -6599,21 +6599,101 @@
       "built_srgb": 54.8
     },
     "military/cot-top": {
-      "src": "military/mil-pack-n.png",
+      "src": "military/mil-pack-o.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        784,
+        504,
+        236
+      ],
+      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored 2:1 strip from above: an army cot, pillow at the left end, olive blanket [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a medical bay cot's top, 0..1, its length out from the wall, the pillow at the wall (render.military.MilitaryInterior). Moved off mil-pack-n's square cell, which would have stretched 2x over the one-cell cot.",
+      "res": [
+        512,
+        240
+      ],
+      "last_converted": "2026-10-11T02:50:20",
+      "built_linear": 0.0902,
+      "built_srgb": 67.6
+    },
+    "military/radio-rack": {
+      "src": "military/mil-pack-o.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a radio rack cabinet front, four olive field radios [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a comms room's radio rack front, 0..1 over the rack's wall-facing front (render.military.MilitaryInterior). lift 0.903: raw 0.0362 to 0.05, to the gunmetal family's level; raw it read as a hole in the wall like the old 0.036 steel.",
+      "built_linear": 0.0467,
+      "built_srgb": 54.9,
+      "lift": 0.903,
+      "last_converted": "2026-10-11T02:50:20",
+      "last_lift": 0.903
+    },
+    "military/shelf-front": {
+      "src": "military/mil-pack-o.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a steel storage shelf front, three shelves of boxes, blankets and ammo cans [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a supply store's shelf front, 0..1 (render.military.MilitaryInterior).",
+      "last_converted": "2026-10-11T02:50:20",
+      "built_linear": 0.0502,
+      "built_srgb": 55.0
+    },
+    "military/medcab-front": {
+      "src": "military/mil-pack-o.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a white medical cabinet front, two doors with red crosses, a drawer row [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a medical bay's cabinet front, 0..1 (render.military.MilitaryInterior). lift 1.846: raw 0.395 to 0.18, white enamel kept the brightest thing in a room but under 1.3x the office wall's 0.146; raw it was 2.7x and read as a lamp.",
+      "built_linear": 0.1936,
+      "built_srgb": 116.7,
+      "lift": 1.846,
+      "last_converted": "2026-10-11T02:50:20",
+      "last_lift": 1.846
+    },
+    "military/console-top": {
+      "src": "military/mil-pack-o.png",
       "class": "tile",
       "needs_alpha": false,
       "crop": [
         516,
         516,
         504,
-        504
+        256
       ],
-      "prompt": "[quadrant of military/mil-pack-n.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an army cot from above, white sheet, olive blanket, pillow [append textures.json style]",
+      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored 2:1 strip from above: a radio operator's console desktop, two radios, handset, log [append textures.json style]",
       "prompt_exact": false,
-      "note": "a medical bay cot's top, 0..1 (render.military.MilitaryInterior).",
-      "last_converted": "2026-10-11T02:23:22",
-      "built_linear": 0.0822,
-      "built_srgb": 69.4
+      "note": "a comms console's top, 0..1 per cell, the strip's length along the wall (render.military.MilitaryInterior).",
+      "res": [
+        512,
+        260
+      ],
+      "last_converted": "2026-10-11T02:50:20",
+      "built_linear": 0.1005,
+      "built_srgb": 76.0
     }
   }
 }

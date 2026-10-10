@@ -1616,3 +1616,34 @@ to 0). The first depot is now dealt before a second camp, and `GenCheck.quotaMet
 the larger `max` of its rows. 2000 seeds pass, at 0.76 depots and 1.45 camps a base.
 
 **Verdict:** landed.
+
+## Military base rooms: comms, supply and medical, and the existing kinds fuller
+
+**Changed:** a new sheet, `mil-pack-o` (one packed gen), covers three new room kinds:
+- **comms room:** radio rack fronts, and a console strip over each console cell with its radios at
+  the wall end;
+- **supply store:** shelf fronts;
+- **medical bay:** white cabinet fronts, and cots whose pillows sit at the wall.
+
+The bottom-right cell is two 2:1 bands, the console top and the cot. A square cot cell would have
+stretched 2x over the one-cell cot, so the mil-pack-n cot moved here.
+
+**Levels fitted:**
+- radio rack raw 0.036 → lift 0.903 → 0.047; at raw it read as a hole in the wall;
+- medical cabinet raw 0.395 → lift 1.846 → 0.194; raw was 2.7x the office wall's 0.146 and read as
+  a lamp.
+
+**Emitters in `MilitaryInterior`:**
+- rack, shelf and cabinet are square `front()`s, one per cell even in a row;
+- the console is a gunmetal desk with an `art()` strip per cell;
+- the cot is an enamel frame with its strip;
+- a supply or armory crate stack is the yard's crate glb, one or two per cell;
+- a free-standing desk pair is a `table()`, and a free-standing cot lies along x.
+
+`art()` maps an authored top with u along a given axis and v a quarter-turn from it, so nothing
+reads mirrored from above.
+
+**Fill:** office 23 → 32%, armory 18 → 24%, comms 27%, supply 35%, medical 21% (area-gen.md has
+the stat).
+
+**Verdict:** landed.

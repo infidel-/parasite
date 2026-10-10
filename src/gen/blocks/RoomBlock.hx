@@ -144,7 +144,10 @@ class RoomBlock
           room.role == ROLE_MESS ||
           room.role == ROLE_BRIEFING ||
           room.role == ROLE_HQ ||
-          room.role == ROLE_LATRINE)
+          room.role == ROLE_LATRINE ||
+          room.role == ROLE_COMMS ||
+          room.role == ROLE_SUPPLY ||
+          room.role == ROLE_MEDICAL)
         return MILITARY;
       if (room.role == ROLE_CABINET)
         return OFFICE;

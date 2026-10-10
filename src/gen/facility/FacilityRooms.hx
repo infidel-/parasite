@@ -150,6 +150,11 @@ class FacilityRooms
       if (hq &&
           rest.length > 0)
         rest.shift().role = ROLE_ARMORY;
+      // then one of each of the building's own specialists, each only while a room of the plain kind
+      // is left over for it: the HQ's comms room, the barracks building's medical bay and store
+      for (role in (hq ? [ ROLE_COMMS ] : [ ROLE_MEDICAL, ROLE_SUPPLY ]))
+        if (rest.length > 1)
+          rest.shift().role = role;
       for (room in rest)
         room.role = (hq ? ROLE_HQ : ROLE_BARRACKS);
     }

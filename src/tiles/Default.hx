@@ -77,6 +77,8 @@ class Default extends Tileset
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
     // board walkable: it marks a wall)
     1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+    // row 21 - its comms, supply and medical furniture, none walkable
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -117,6 +119,8 @@ class Default extends Tileset
     1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     // row 20 - the base's interior: nothing in a room stands above eye height but a cubicle
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1,
+    // row 21 - nor in its comms room, store or medical bay: racks and shelves stand at a wall
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   ];
 
 // load default tileset image

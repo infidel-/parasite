@@ -300,7 +300,7 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 | `game/MilitaryAreaGenerator.hx` | the LIVE adapter: the band's `AreaGenerator.wildMix`, a ctx, `MilitaryGen.build`, the drain |
 | `gen/military/MilitaryGen.hx` | `build()` and the public grid helpers (`fence`, `fenceOf`, `outside`, `vehicle`) |
 | `gen/blocks/MilitaryBlocks.hx` | the split profile (12/26/32) and the quota inside the fence |
-| `gen/military/MilitaryRooms.hx` | every room's furniture by kind, as `Const` row-20 tiles (and the armory's objects) |
+| `gen/military/MilitaryRooms.hx` | every room's furniture by kind, as `Const` row-20/21 tiles (and the armory's objects) |
 
 **The order of `build()` is load-bearing**:
 1. Blank the grid to `TEMP_ALLEY`.
@@ -344,6 +344,8 @@ washroom's own tests:
 - the latrine first;
 - then the biggest room left is the briefing room (HQ) or the mess hall (barracks block);
 - then the HQ's armory;
+- then one specialist each, only while a plain room is left over: the HQ's COMMS room, and the
+  barracks block's MEDICAL bay and SUPPLY store;
 - the rest are HQ offices or barracks.
 
 The HQ is the building dealt while no safe stands. `RoomBlock.MILITARY` glazes the room with no
@@ -356,6 +358,26 @@ that would leave a bare neighbour with no OTHER bare neighbour. Counting the doo
 what sealed seed 455's whole office: a desk and a cabinet boxed in the cell inside the door. The
 military run now calls `GenCheck.floorReachable`, which it lacked, and 24 of 400 seeds failed on it
 before the guard went in. The oracle also asserts at least 1 safe and lockers + cabinets >= 2.
+
+**Rooms were reported empty, and the stat now says how full.** `--stats` prints `roomCells/<role>`
+and `roomUsed/<role>` (cells holding an unwalkable tile or an object) and `roomEmpty/<role>`.
+
+| room | before | after | what changed |
+|---|---|---|---|
+| office | 23% | 32% | wall runs no longer stop at the first blocked cell, FILES_MAX 2 → 4, plus centre desk pairs |
+| armory | 18% | 24% | crate stacks in the middle |
+| comms | — | 27% | racks on the longest wall, two-cell consoles facing them (side walls when that is windows) |
+| supply | — | 35% | shelves on the walls, crate stacks in the middle |
+| medical | — | 21% | cots on two walls and in the middle, cabinets on a side wall |
+
+- `MilitaryRooms.islands` is the free-standing pass: a block nearest the room's centre, with a whole
+  ring of bare floor round it.
+- A 5-6 deep barracks also lays bunks along the wall facing its row.
+- The new pieces are `Const` row 21; `tiles.Default` gives them unwalkable, see-through.
+- Comms and medical take the HQ floor and the store takes barracks boards. WASH would hang the
+  latrine's men/women signs on the door (`FacilityPlacard`), and CONCRETE counts toward
+  `FacilityModel`'s hangar majority.
+- 2000 seeds pass `floorReachable`.
 
 ### The one permitted `gen/` → `game/` edge
 

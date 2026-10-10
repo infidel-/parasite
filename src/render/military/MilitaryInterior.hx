@@ -37,6 +37,12 @@ class MilitaryInterior
   static inline var TEX_FILE = 'textures/military/file-front.png';
   static inline var TEX_FOOT_LID = 'textures/military/footlocker-lid.png';
   static inline var TEX_BOARD = 'textures/military/map-board.png';
+  // the comms room, the store and the medical bay (mil-pack-o)
+  static inline var TEX_RACK = 'textures/military/radio-rack.png';
+  static inline var TEX_SHELF = 'textures/military/shelf-front.png';
+  static inline var TEX_MEDCAB = 'textures/military/medcab-front.png';
+  static inline var TEX_CONSOLE = 'textures/military/console-top.png';
+  static inline var TEX_COT = 'textures/military/cot-top.png';
 
   // a table's top and how wide it stands across its cell; the lab worktop is BENCH_H 2.0
   static inline var TABLE_H = 1.9;
@@ -71,6 +77,20 @@ class MilitaryInterior
   static inline var STALL_H = CELL * 510 / 512;
   static inline var STALL_D = CELL * 0.95;
   static inline var STALL_T = 0.1;
+  // the wall-backed fronts, each a SQUARE crop so its height is its width, and their depth
+  static inline var RACK_W = 3.0;
+  static inline var RACK_D = 1.6;
+  static inline var SHELF_W = 3.6;
+  static inline var SHELF_D = 1.5;
+  static inline var MEDCAB_W = 2.6;
+  static inline var MEDCAB_D = 1.3;
+  // a console's depth off its wall: military/console-top's 504x256 strip over a cell's length
+  static inline var CONSOLE_D = CELL * 256 / 504;
+  // a cot, one cell long out from its wall: military/cot-top's 504x236 strip, its frame's height
+  static inline var COT_L = 3.6;
+  static inline var COT_W = COT_L * 236 / 504;
+  static inline var COT_H = 1.0;
+  static inline var COT_LEG = 0.12;
   // the map board, a square, hung off the wall face
   static inline var BOARD_W = 3.2;
   static inline var BOARD_Y = 1.4;
@@ -88,12 +108,19 @@ class MilitaryInterior
         for (col in 0...area.width)
           {
             var t = area.getCellType(col, row);
-            if (t < Const.TILE_MIL_BUNK ||
-                t > Const.TILE_MIL_TROUGH ||
+            if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH) &&
+                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_MED_CABINET) ||
                 taken[row][col])
               continue;
-            // the run: along x if the next cell is the same, down z otherwise
+            // the run: along x if the next cell is the same, down z otherwise. A rack, a shelf, a
+            // cabinet, a cot and a crate stack are one piece per cell however many stand in a row
             var len = 1;
+            if (single(t))
+              {
+                taken[row][col] = true;
+                piece(m, t, col, row, 1, false);
+                continue;
+              }
             while (area.getCellType(col + len, row) == t &&
                 !taken[row][col + len])
               len++;
@@ -146,6 +173,22 @@ class MilitaryInterior
           h = BENCH_H;
           table(r, alongX, TEX_BENCH, BENCH_H);
         }
+      else if (t == Const.TILE_MIL_CRATES)
+        {
+          // one or two of the yard's crates, turned off the cell's hash
+          var hash = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
+          var turn = (hash % 2 == 1);
+          var n = 1 + (hash >> 4) % 2;
+          for (i in 0...n)
+            MilitaryGeom.crates.push({
+              x: (cell.x0 + cell.x1) / 2,
+              z: (cell.z0 + cell.z1) / 2,
+              yaw: (turn ? Math.PI / 2 : 0.0) + (i == 1 ? 0.12 : 0.0),
+              y: i * MilitaryYard.CRATE_STEP,
+            });
+          r = across(cell, !turn, MilitaryYard.CRATE_D);
+          h = n * MilitaryYard.CRATE_STEP;
+        }
       else
         {
           // the rest stand against a wall: the side of the run's first cell that is one, along the
@@ -155,8 +198,35 @@ class MilitaryInterior
             if (dir < 0 &&
                 FacilityModel.isWall(m, col + DX[d], row + DZ[d]))
               dir = d;
+          // a desk pair or a cot out in the middle of a room has no wall: the desk is a table, and
+          // the cot lies along the run's axis with its pillow to the west or north
+          if (dir < 0 &&
+              t == Const.TILE_MIL_DESK)
+            {
+              r = across(cell, alongX, TABLE_W);
+              h = TABLE_H;
+              table(r, alongX, TEX_LAMINATE, TABLE_H);
+            }
+          else if (dir < 0 &&
+              t == Const.TILE_MIL_COT)
+            {
+              r = across(across(cell, true, COT_W), false, COT_L);
+              h = COT_H;
+              cot(r, 2);
+            }
           if (dir < 0)
-            return;
+            {
+              if (r != null)
+                FacilityDetail.ground(m, {
+                  col: col,
+                  row: row,
+                  len: len,
+                  alongX: alongX,
+                  rect: r,
+                  h: h,
+                });
+              return;
+            }
           if (t == Const.TILE_MIL_COUNTER ||
               t == Const.TILE_MIL_TROUGH)
             {
@@ -177,6 +247,32 @@ class MilitaryInterior
               r = across(back(m, col, row, cell, dir, FILE_D), dir >= 2, FILE_W);
               h = FILE_W;
               front(r, dir, TEX_FILE, FILE_W, TEX_GUNMETAL);
+            }
+          else if (t == Const.TILE_MIL_RADIO_RACK ||
+              t == Const.TILE_MIL_SHELF ||
+              t == Const.TILE_MIL_MED_CABINET)
+            {
+              var w = (t == Const.TILE_MIL_RADIO_RACK ? RACK_W : t == Const.TILE_MIL_SHELF ? SHELF_W :
+                MEDCAB_W);
+              var d = (t == Const.TILE_MIL_RADIO_RACK ? RACK_D : t == Const.TILE_MIL_SHELF ? SHELF_D :
+                MEDCAB_D);
+              r = across(back(m, col, row, cell, dir, d), dir >= 2, w);
+              h = w;
+              front(r, dir, (t == Const.TILE_MIL_RADIO_RACK ? TEX_RACK : t == Const.TILE_MIL_SHELF ?
+                TEX_SHELF : TEX_MEDCAB), w, (t == Const.TILE_MIL_RADIO_RACK ? TEX_GUNMETAL :
+                TEX_ENAMEL));
+            }
+          else if (t == Const.TILE_MIL_CONSOLE)
+            {
+              r = back(m, col, row, cell, dir, CONSOLE_D);
+              h = TABLE_H;
+              console(r, dir, len);
+            }
+          else if (t == Const.TILE_MIL_COT)
+            {
+              r = across(back(m, col, row, cell, dir, COT_L), dir >= 2, COT_W);
+              h = COT_H;
+              cot(r, dir);
             }
           else if (t == Const.TILE_MIL_STALL)
             {
@@ -267,6 +363,78 @@ class MilitaryInterior
           FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, d, 0, h, CELL);
       FacilityGeom.cap(steel, r.x0, r.x1, r.z0, r.z1, h, CELL);
       FacilityGeom.pane(MilitaryGeom.buf(tex), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, h);
+    }
+
+// a radio console against its wall: a desk run on two gunmetal side panels, the console strip over
+// each cell's top, its length along the wall and its radios at the wall end
+  static function console(r:Rect, dir:Int, len:Int):Void
+    {
+      var steel = MilitaryGeom.buf(TEX_GUNMETAL);
+      for (d in 0...4)
+        FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, d, TABLE_H - TOP_T, TABLE_H, CELL);
+      if (dir < 2)
+        for (sx in [ r.x0, r.x1 - DESK_SIDE ])
+          MilitaryGeom.box(steel, sx, sx + DESK_SIDE, r.z0, r.z1, 0, TABLE_H - TOP_T, CELL);
+      else
+        for (sz in [ r.z0, r.z1 - DESK_SIDE ])
+          MilitaryGeom.box(steel, r.x0, r.x1, sz, sz + DESK_SIDE, 0, TABLE_H - TOP_T, CELL);
+      // the strip's u runs along the wall so its v points AT it (see `art`)
+      var top = MilitaryGeom.buf(TEX_CONSOLE);
+      for (i in 0...len)
+        {
+          var c:Rect = (dir < 2 ? {
+            x0: r.x0 + i * CELL,
+            x1: r.x0 + (i + 1) * CELL,
+            z0: r.z0,
+            z1: r.z1,
+          } : {
+            x0: r.x0,
+            x1: r.x1,
+            z0: r.z0 + i * CELL,
+            z1: r.z0 + (i + 1) * CELL,
+          });
+          art(top, c, TABLE_H, -DZ[dir], DX[dir]);
+        }
+    }
+
+// a cot lying out from its wall at `dir`: four enamel legs, a rail round it, and the cot strip over
+// the top with its pillow at the wall
+  static function cot(r:Rect, dir:Int):Void
+    {
+      var steel = MilitaryGeom.buf(TEX_ENAMEL);
+      for (px in [ r.x0, r.x1 - COT_LEG ])
+        for (pz in [ r.z0, r.z1 - COT_LEG ])
+          MilitaryGeom.box(steel, px, px + COT_LEG, pz, pz + COT_LEG, 0, COT_H, CELL);
+      for (d in 0...4)
+        FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, d, COT_H - 0.25, COT_H, CELL);
+      art(MilitaryGeom.buf(TEX_COT), r, COT_H, -DX[dir], -DZ[dir]);
+    }
+
+// an authored top over a rect at height y, the art's u along (ox, oz) and its v a quarter turn from
+// it, so the image reads unmirrored from above: u across the screen and v up it when u is east
+  static function art(b:render.world.MeshBuf.MeshBuf, r:Rect, y:Float, ox:Float, oz:Float):Void
+    {
+      var cx = (r.x0 + r.x1) / 2;
+      var cz = (r.z0 + r.z1) / 2;
+      var lu = Math.abs(ox) * (r.x1 - r.x0) + Math.abs(oz) * (r.z1 - r.z0);
+      var lv = Math.abs(oz) * (r.x1 - r.x0) + Math.abs(ox) * (r.z1 - r.z0);
+      var uv:Array<Float> = [];
+      for (p in [ [ r.x0, r.z1 ], [ r.x1, r.z1 ], [ r.x1, r.z0 ], [ r.x0, r.z0 ] ])
+        {
+          uv.push(0.5 + ((p[0] - cx) * ox + (p[1] - cz) * oz) / lu);
+          uv.push(0.5 + ((p[0] - cx) * oz - (p[1] - cz) * ox) / lv);
+        }
+      MeshBufTools.quad(b, [r.x0, y, r.z1], [r.x1, y, r.z1], [r.x1, y, r.z0], [r.x0, y, r.z0], uv);
+    }
+
+// one piece per cell, never merged into a run
+  static inline function single(t:Int):Bool
+    {
+      return t == Const.TILE_MIL_RADIO_RACK ||
+        t == Const.TILE_MIL_SHELF ||
+        t == Const.TILE_MIL_MED_CABINET ||
+        t == Const.TILE_MIL_COT ||
+        t == Const.TILE_MIL_CRATES;
     }
 
 // a row of cubicles: a partition at every cell edge out from the wall, and a door 0..1 across each

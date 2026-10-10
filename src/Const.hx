@@ -1303,6 +1303,16 @@ class Const
   public static var TILE_MIL_FILE = OFFSET_ROW20 + 13;
   public static var TILE_MIL_STALL = OFFSET_ROW20 + 14;
   public static var TILE_MIL_TROUGH = OFFSET_ROW20 + 15;
+  // === row 21 - the base's second interior row: the comms room's radio rack and console, the supply
+  // store's shelf and crate stack, the medical bay's cot and cabinet (render.military
+  // .MilitaryInterior). Every one blocks and none blocks sight
+  public static var OFFSET_ROW21 = 336;
+  public static var TILE_MIL_RADIO_RACK = OFFSET_ROW21 + 0;
+  public static var TILE_MIL_CONSOLE = OFFSET_ROW21 + 1;
+  public static var TILE_MIL_SHELF = OFFSET_ROW21 + 2;
+  public static var TILE_MIL_CRATES = OFFSET_ROW21 + 3;
+  public static var TILE_MIL_COT = OFFSET_ROW21 + 4;
+  public static var TILE_MIL_MED_CABINET = OFFSET_ROW21 + 5;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

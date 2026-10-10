@@ -64,7 +64,7 @@ class MilitaryYard
   // the hand-modelled ammo crate (models-src/military/yardkit_build.py): its body CRATE_W x CRATE_D,
   // and the height a stack steps by, lid and battens included
   static inline var CRATE_W = 2.2;
-  static inline var CRATE_D = CRATE_W * 296 / 504;
+  public static inline var CRATE_D = CRATE_W * 296 / 504;
   public static inline var CRATE_STEP = 1.195;
   // and its fuel drum
   static inline var DRUM_R = 0.6;

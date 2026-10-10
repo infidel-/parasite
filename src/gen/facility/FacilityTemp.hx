@@ -99,6 +99,11 @@ class FacilityTemp
   public static inline var ROLE_BRIEFING = 'briefing';
   public static inline var ROLE_HQ = 'hq';
   public static inline var ROLE_LATRINE = 'latrine';
+  // and the three a base deals once each where it has the rooms: the HQ's radio room, and the
+  // barracks building's store and medical bay
+  public static inline var ROLE_COMMS = 'comms';
+  public static inline var ROLE_SUPPLY = 'supply';
+  public static inline var ROLE_MEDICAL = 'medical';
   // a floor tile's unwalkable twin sits exactly one tileset row below it (Const.OFFSET_ROW12 ->
   // OFFSET_ROW13), which is how game.CorpAreaGenerator addresses the pair too
   public static inline var UNWALKABLE_TILE_OFFSET = 16;
