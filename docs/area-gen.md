@@ -309,7 +309,9 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
    under 112 and the wild tiles live there.
 4. `perimeter`: the ring, the 2x2 corner towers, and 1-2 `TILE_MIL_FENCE_TORN` breaches off the gate side.
 5. `road`.
-6. `margin`.
+6. `margin`: 16 cells (`MARGIN`) on the three non-road sides, so the area is 90-100 x 70-80. Scatter is
+   rolled on the margin's own cells (a whole-area roll lost about half of them inside the fence) at the
+   band's density, floored at `MARGIN_DENSITY_MIN` 0.06, because the plains' 0.025 read as bare grass.
 7. `gate`: the 4-wide mouth, which `AreaGame.gate()` and `FacilityEntry.find` derive exactly as on a
    compound. Two `TILE_MIL_JERSEY` barriers stand on the pavement each side of it, leaving the
    pedestrian gap's own cell open. They read as pavement (`Surf.WALKWAY`), so the mouth

@@ -26,8 +26,8 @@ class GenRun
   static inline var AREA_W = 75;
   static inline var AREA_H = 60;
   // and const.WorldConst's AREA_MILITARY_BASE, copied for the same reason
-  static inline var MIL_W = 80;
-  static inline var MIL_H = 70;
+  static inline var MIL_W = 100;
+  static inline var MIL_H = 80;
 
 // the size a facility is ACTUALLY generated at.
 //

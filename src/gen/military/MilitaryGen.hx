@@ -29,7 +29,7 @@ import gen.facility._FacilityState;
 class MilitaryGen
 {
   // cells of wild margin between the fence and the area edge, on the three sides the road is not on
-  public static inline var MARGIN = 6;
+  public static inline var MARGIN = 16;
   // the verge between the road and the fence on the gate side. ONE row and not the compound's two:
   // the fence line itself is the mouth's second row, so the hole through verge and fence together is
   // the compound's 4x2 mouth and gate() reads it unchanged
@@ -52,6 +52,8 @@ class MilitaryGen
   // parks at most: a plot full of them read as a vehicle lot, not a base's motor pool
   static inline var TANK_PCT = 30;
   static inline var VEHICLES_MAX = 5;
+  // the margin's least scatter density: the plains' own 0.025 left the margin reading as bare grass
+  static inline var MARGIN_DENSITY_MIN = 0.06;
 
 // generate a whole base into a context. `mix` and `depth` are the terrain band's scatter and how
 // deep into the band the area sits (game.AreaGenerator.wildMix, map.Terrain.depthAt), passed in
@@ -337,15 +339,16 @@ class MilitaryGen
     {
       var area = state.area;
       var cells = area.getCells();
-      var n = 0;
+      var spots = [];
       for (x in 0...area.width)
         for (y in 0...area.height)
           if (outside(f, x, y) &&
               cells[x][y] == Const.TILE_ALLEY)
             {
               cells[x][y] = Const.TILE_GRASS;
-              n++;
+              spots.push(x * area.height + y);
             }
+      var n = spots.length;
       var scale = 0.8 + 0.4 * depth;
 
       // the large obstacles first, while the margin is still bare grass
@@ -373,12 +376,14 @@ class MilitaryGen
             }
         }
 
-      // then the single-cell scatter, one roll across tree / bush / rock as the wilderness does
-      var stuff = Std.int(n * mix.density * scale);
+      // then the single-cell scatter, one roll across tree / bush / rock as the wilderness does. Rolled
+      // on the margin's own cells: a roll over the whole area lost every one that landed in the fence
+      var stuff = Std.int(n * Math.max(mix.density, MARGIN_DENSITY_MIN) * scale);
       for (i in 0...stuff)
         {
-          var x = area.random(area.width);
-          var y = area.random(area.height);
+          var spot = spots[area.random(n)];
+          var x = Std.int(spot / area.height);
+          var y = spot % area.height;
           if (!free(area, f, x, y))
             continue;
           var roll = area.random(100);
