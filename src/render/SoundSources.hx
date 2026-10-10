@@ -54,7 +54,7 @@ class SoundSources
     'ambient-city' => 0.0,
     'city/slums-main' => -4.0,
     'city/slums-street' => -4.0,
-    'city/slums-alley' => 8.0,
+    'city/slums-alley' => -14.0,
     'city/medium-main' => -4.0,
     'city/medium-alley' => -4.0,
     'city/downtown-main' => -4.0,

@@ -59,6 +59,10 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
    - a one-shot has its leading silence trimmed;
    - a loop that the model did not loop natively gets an equal-power (`qsin`) crossfade from its tail
      into its head, `seam_ms` long, so the file comes out that much shorter;
+   - a 40 Hz high-pass, 6 dB/octave (one pole), cuts rumble (asked for, 2026-10-10). A loop is
+     filtered as two copies back to back and the second kept, so the filter's state at the head is
+     what the tail left: measured on `city/warehouse`, the wrap step stayed 51 against a p99
+     sample-to-sample step of 406, and the length unchanged;
    - one static gain is applied to `lufs` (`default_lufs` if unset), followed by a -1 dBFS limiter;
    - the result is encoded at `default_bitrate`.
 4. **Self-check** with `python3 tools/sounds.py --check`. On synthetic audio in a temp dir it asserts:

@@ -6,12 +6,15 @@ key ('<area>/<name>') with its variants (one wav each, written by the fal-sfx MC
   1. downmixes to mono (nothing in the game pans),
   2. a one-shot: trims leading silence; a loop the model did not loop itself: crossfades the tail
      into the head (equal power, seam_ms) so the file wraps without a click,
-  3. applies one static gain onto the entry's lufs (default_lufs else) and a -1 dBFS limiter —
+  3. high-passes at 40 Hz, 6 dB/octave (one pole): rumble nothing in the game needs. a loop is
+     filtered as two copies back to back and the second kept, so the filter starts the file in the
+     state the file's own end left it in and the wrap stays seamless,
+  4. applies one static gain onto the entry's lufs (default_lufs else) and a -1 dBFS limiter —
      static, not loudnorm's dynamic mode, so a loop's level does not breathe,
-  4. encodes mp3 at default_bitrate to app/sound/<area>/<name><N>.mp3, N the variant's position
+  5. encodes mp3 at default_bitrate to app/sound/<area>/<name><N>.mp3, N the variant's position
      in the entry (1-9) — the wav's own <key>-<model><N> name is dropped. the game's sound key is
      then '<area>/<name>' (the main process lists one level of area folders),
-  5. rewrites sounds.json with last_converted / last_sig / last_outputs.
+  6. rewrites sounds.json with last_converted / last_sig / last_outputs.
 
 It never touches a sound it did not make: an entry whose key matches any mp3 in its area folder
 that is not in its own last_outputs is refused (the 220 shipped sounds, a mod's, a renamed entry's), and
@@ -88,10 +91,27 @@ def shape(src, tmp, loop, native, seam):
     ff(["-i", src, "-filter_complex", graph, "-map", "[o]", "-c:a", "pcm_s16le", tmp])
 
 
+# the rumble cut, measured after so the gain lands on the filtered level
+HIGHPASS = "highpass=f=40:poles=1"
+
+
+def highpass(src, out, loop):
+    if not loop:
+        ff(["-i", src, "-af", HIGHPASS, "-c:a", "pcm_s16le", out])
+        return
+    n = int(ff(["-i", src, "-af", "astats=measure_overall=Number_of_samples:measure_perchannel=0", "-f", "null", "-"])
+        .split("Number of samples:")[-1].split()[0].split(".")[0])
+    ff(["-i", src, "-i", src, "-filter_complex",
+        f"[0][1]concat=n=2:v=0:a=1,{HIGHPASS},atrim=start_sample={n},asetpts=PTS-STARTPTS[o]",
+        "-map", "[o]", "-c:a", "pcm_s16le", out])
+
+
 def bake(src, out, loop, native, seam, lufs, bitrate):
     with tempfile.TemporaryDirectory() as d:
-        tmp = os.path.join(d, "shaped.wav")
-        shape(src, tmp, loop, native, seam)
+        shaped = os.path.join(d, "shaped.wav")
+        shape(src, shaped, loop, native, seam)
+        tmp = os.path.join(d, "filtered.wav")
+        highpass(shaped, tmp, loop)
         gain = lufs - loudness(tmp)
         # level=0: 4.4's alimiter auto-levels the output back up by default
         chain = f"volume={gain:.2f}dB,alimiter=limit=0.891:level=0"
@@ -130,7 +150,7 @@ def convert(key, e, info, src_dir, out_dir):
         return False
 
     lufs = e.get("lufs", info["default_lufs"])
-    sig = f"{lufs}/{info['default_bitrate']}/{e['loop']}/{info['seam_ms']}"
+    sig = f"{lufs}/{info['default_bitrate']}/{e['loop']}/{info['seam_ms']}/hp40"
     last = e.get("last_converted")
     newest = max(datetime.fromtimestamp(os.path.getmtime(s)).replace(microsecond=0) for s, _o, _n in outs)
     fresh = (
