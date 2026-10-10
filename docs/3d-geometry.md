@@ -116,6 +116,11 @@ the unit reads as a wire cage with slabs in it. Re-measure after every re-roll o
   where a transparent twin sorts against every other see-through thing in the level for nothing.
 - Leave `transparent` false so `VisionMask.patch` compiles its darkening branch rather than the
   alpha-scaling one (the trap `FacilityGeom.addPane` records).
+- **A THIN-WIRE CUT VANISHES WITH DISTANCE, and the tile size is the knob, not the cut.** The mip
+  chain AVERAGES alpha, so a wire 13 px wide in a 512 sheet drawn at 256 texels per world unit
+  (`military/chainlink` at one sheet per 2 units) is under the cut by the time the camera is 60 units
+  off: the whole perimeter rendered as bare posts. One sheet per **4** units (128 texels/unit) with
+  the cut at **0.3** reads at the gameplay distance. Size an alpha-cut mesh for the mip it is SEEN at.
 - **Honest member width reads as WIRE.** Real angle iron at ~4.6% of the image width is 0.077 world
   units of steel, and on screen that is a wire cage. The frame was regenerated at 12% uprights and
   5% rails: opaque fraction **26% → 39%**. Measure the opaque fraction, not the intent.

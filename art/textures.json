@@ -5253,6 +5253,208 @@
       "last_converted": "2026-10-02T23:39:13",
       "built_linear": 0.2062,
       "built_srgb": 124.5
+    },
+    "military/tent-canvas": {
+      "src": "military/mil-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: heavy military tent CANVAS - coarse olive-drab cotton duck, faint water staining, uniform, no seams. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.military.MilitaryGeom tent roof and gable faces, world-tiled. Seams measured at exactly 512 on both axes; crop inset 4 px.",
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-10T19:27:29",
+      "built_linear": 0.0387,
+      "built_srgb": 50.0
+    },
+    "military/wall-olive": {
+      "src": "military/mil-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: corrugated steel wall sheeting painted dull military olive, eight rounded vertical ribs running off top and bottom. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "tower parapet sheeting (render.military.MilitaryGeom). Eight ribs per 504 crop.",
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-10T19:27:29",
+      "built_linear": 0.0505,
+      "built_srgb": 56.6
+    },
+    "military/wall-concrete": {
+      "src": "military/mil-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: smooth poured concrete wall painted pale sandy grey-beige, no joints. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "plain painted concrete (render.military.MilitaryGeom, tower legs and the safe's sides).",
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-10T19:27:29",
+      "built_linear": 0.0579,
+      "built_srgb": 64.7,
+      "lift": 1.6,
+      "last_lift": 1.6
+    },
+    "military/container-side": {
+      "src": "military/mil-pack-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: shipping container side wall, six deep trapezoidal vertical corrugations, faded dark military green, rust streaks. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.military.MilitaryGeom container sides and lid, world-tiled along the length.",
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-10T19:27:29",
+      "built_linear": 0.0319,
+      "built_srgb": 45.3
+    },
+    "military/sandbag": {
+      "src": "military/mil-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: wall of stacked burlap sandbags in running bond, four courses, muted khaki brown. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "sandbag walls (render.military.MilitaryGeom): v 0..1 over the wall's height (FOUR courses), u world-tiled at that height. The sheet's top row ends at y 473-480 (measured), so the crop stops at 472.",
+      "crop": [
+        0,
+        0,
+        472,
+        472
+      ],
+      "last_converted": "2026-10-10T19:28:10",
+      "built_linear": 0.0437,
+      "built_srgb": 54.7
+    },
+    "military/apron": {
+      "src": "military/mil-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: plain light grey concrete apron paving from above, tyre scuffs and oil spots, no joints. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "helipad / motor pool concrete (render.military.MilitaryGeom). Row seam measured at 478-480.",
+      "crop": [
+        516,
+        4,
+        468,
+        468
+      ],
+      "last_converted": "2026-10-10T19:28:10",
+      "built_linear": 0.0482,
+      "built_srgb": 60.8,
+      "lift": 1.1,
+      "last_lift": 1.1
+    },
+    "military/container-door": {
+      "src": "military/mil-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: the door end of a steel shipping container, two doors with locking bars, faded military green. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "ONE authored image mapped 0..1 over a container's end face: its aspect 508/546 = 0.9304 is MilitaryGeom.CONTAINER_H's coupling. Bounds measured off the drop: frame x 0..508, top frame from y 478.",
+      "crop": [
+        0,
+        478,
+        508,
+        546
+      ],
+      "last_converted": "2026-10-10T19:28:10",
+      "built_linear": 0.0329,
+      "built_srgb": 46.4,
+      "lift": 0.92,
+      "last_lift": 0.92
+    },
+    "military/safe-front": {
+      "src": "military/mil-pack-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of military/mil-pack-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: the front of a heavy steel office safe, dial and three-spoke handle, dark gunmetal green-grey. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "ONE authored image mapped 0..1 over the safe's front: aspect 510/546 = 0.9341, MilitaryGeom.SAFE_H's coupling. Safe frame measured from x 514.",
+      "crop": [
+        514,
+        478,
+        510,
+        546
+      ],
+      "last_converted": "2026-10-10T19:28:10",
+      "built_linear": 0.0678,
+      "built_srgb": 70.7,
+      "lift": 0.68,
+      "last_lift": 0.68
+    },
+    "military/chainlink": {
+      "src": "military/chainlink.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "A seamless tileable CHAIN-LINK fence mesh, seen dead straight on: a regular diamond grid of galvanised steel wire, exactly EIGHT diamonds across the image and EIGHT down, the wire THICK (about one fortieth of the image width), twisted knuckles where the wires cross. Dull pale grey steel. Runs off all four edges. ONLY the wire is drawn. [gpt-image-2.5-flare high, background transparent] [append textures.json style]",
+      "prompt_exact": false,
+      "note": "perimeter fence panes (render.military.MilitaryGeom), alphaTest, world-tiled. Opaque fraction 0.148.",
+      "res": 512,
+      "last_converted": "2026-10-10T19:28:35",
+      "built_linear": 0.1042,
+      "built_srgb": 91.2,
+      "lift": 1.25,
+      "last_lift": 1.25
+    },
+    "military/chainlink-torn": {
+      "src": "military/chainlink-torn.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "ONE square panel of CHAIN-LINK fence mesh filling the image, eight diamonds across, thick wire; a large ragged HOLE cut and peeled open in the lower middle, from the bottom edge to just above the centre, cut ends curling. Dull pale grey steel. ONLY the wire is drawn. [gpt-image-2.5-flare high, background transparent] [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the torn panel on a breach cell, mapped 0..1 over one cell's span of the fence (render.military.MilitaryGeom).",
+      "res": 512,
+      "last_converted": "2026-10-10T19:28:56",
+      "built_linear": 0.1091,
+      "built_srgb": 92.6,
+      "lift": 1.25,
+      "last_lift": 1.25
+    },
+    "military/camo-net": {
+      "src": "military/camo-net.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "A seamless tileable military CAMOUFLAGE NET from directly above: thin dark cord mesh with leaf-shaped garnish strips in olive, brown and black covering about half the area. ONLY the net and garnish. [gpt-image-2.5-flare high transparent, then RE-CUT by edit_image sunburst transparent: 'keep the garnish and cord exactly, remove everything else'] [append textures.json style]",
+      "prompt_exact": false,
+      "note": "camo net over the motor pool (render.military.MilitaryGeom), alphaTest. The first drop came back 90% opaque with its gaps painted dark (parked in military/Unused/camo-net-uncut.png); the re-cut is 48% opaque.",
+      "res": 512,
+      "last_converted": "2026-10-10T19:30:52",
+      "built_linear": 0.0506,
+      "built_srgb": 58.2,
+      "lift": 1.35,
+      "sat": 0.7,
+      "last_lift": 1.35,
+      "last_sat": 0.7
+    },
+    "military/razor-wire": {
+      "src": "military/razor-wire.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "A horizontal run of coiled RAZOR WIRE (concertina) seen side-on, one continuous coil of overlapping loops running edge to edge so it tiles left to right, about seven loops across. Thin dull grey steel with barbs. ONLY the wire. 1024x640. [gpt-image-2.5-flare high, background transparent] [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the coil along the fence top (render.military.MilitaryGeom), alphaTest, u world-tiled, v 0..1. Opaque fraction 0.066.",
+      "res": 512,
+      "last_converted": "2026-10-10T19:29:40",
+      "built_linear": 0.0663,
+      "built_srgb": 73.2,
+      "lift": 1.15,
+      "last_lift": 1.15
     }
   }
 }

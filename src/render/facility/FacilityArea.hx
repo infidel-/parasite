@@ -357,8 +357,13 @@ class FacilityArea implements Area3D
       // has no shed with a study pad in it, which is a row with a count of 0 and keeps the array
       // index-aligned with EXTRA either way
       green.push(hangar.podium);
+      // a military base's margin, and its own furniture: before the halos and the repaint, which
+      // every unit of it registers a contact shadow with
       if (game.area.typeID == AREA_MILITARY_BASE)
-        margin = render.military.MilitaryMargin.build(scene, game.area, model);
+        {
+          margin = render.military.MilitaryMargin.build(scene, game.area, model);
+          render.military.MilitaryGeom.build(scene, model, game.area);
+        }
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
       // the same construction-order fact recorded above and what this quad's larger eps says it

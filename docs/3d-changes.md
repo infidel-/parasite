@@ -1294,3 +1294,35 @@ footing strip, and the gate builds (`barrier-hand.glb:1`, `booth-hand.glb:1`). T
 
 Measured on an 80x60 base from a high free-cam pose: **111-130 calls, 330-400k triangles**; at the
 gate from outside **111 calls, 330k**.
+
+## The military base's furniture is EMITTED (`render.military.MilitaryGeom`)
+
+Everything a base stands on its row-19 tiles is axis-aligned slabs or a rhythm of a material, so all
+of it is quads plus a tiling texture, one mesh per texture: the opaque ones through
+`FacilityGeom.add`, the three see-through ones (chain-link, razor wire, camo net) as opaque
+`alphaTest` DoubleSide, the `FacilityCable.add` material, so no new program.
+- **Fence**: two cells high (`FENCE_H` = 2 x CELL), a pane per ring cell on the cell's centre line, a
+  post at every cell edge, the razor coil along the top (v 0..1 over 1.6, u at the 1024x640 source's
+  aspect). A breach cell takes `military/chainlink-torn` 0..1 over its lower CELL x CELL. The gate
+  mouth and the pedestrian gap carry no pane.
+- **Watchtower** over its 2x2: concrete legs, an olive deck, parapet, roof posts and an overhanging
+  roof, a sandbag ring at its foot. EMITTED and not hand-modelled in Blender as the plan said: its
+  read is boxes, and the route needs no running Blender.
+- **Tent**: canvas walls to a 2.2 eave and two slopes to a 5.6 ridge along its long axis, gables
+  as degenerate quads; the slope's v runs its own length so the canvas is not squashed by the pitch.
+- **Container**: 3 cells from its origin, corrugated sides and lid, `military/container-door` 0..1 on
+  its west end, its height locked to that crop (`CONT_H = CONT_W * 546 / 508`).
+- **Camo net** on four poles over every tank and humvee footprint, 0.6 past it; **helipad** concrete
+  as a cap 0.02 over the lot; **armory lockers** through `CorpFurniture.lockerBack/lockerRect` in the
+  corp art, the **safe** a squat box with `military/safe-front` (lift 0.68, the indoor value); both
+  objects' sprites go through `MilitaryGeom.draws` in `Actors.iconOff`.
+
+Art: `military/mil-pack-a` (canvas, olive corrugation, painted concrete, container ribs; seams
+measured at exactly 512) and `mil-pack-b` (sandbags, apron, container door end, safe front; seams at
+x 511/508 and y 478-480, crops cut to them) on gpt-image-2.5-sunburst, plus four solo
+`background:"transparent"` gens. The camo net came back **90% opaque** with its gaps painted and was
+re-cut with `edit_image` (48%). Total **$0.39**.
+
+Trap: at one chain-link sheet per 2 units the mesh did not render at all from the gameplay distance.
+The mips average the 13 px wire's alpha under the cut; one sheet per 4 units and a 0.3 cut fixed it
+(`docs/3d-geometry.md`, Alpha-cut faces).
