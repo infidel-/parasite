@@ -1513,3 +1513,38 @@ periods a turn. Seamless by construction, square texels. Both raw drops are park
 `textures-src/unused/military/`.
 
 **Verdict:** landed.
+
+## Military base: hand-modelled sandbags stacked in courses, a floodlight mast on the lamp contract, city lamps outside
+
+**Changed:**
+- **Sandbags.** One bag (`models-src/military/basekit_build.py`, 76 tris): a rounded section swept
+  1.2 along x, swelling to the middle and pinched at the tied ends, one course (0.32) high. It
+  replaces the sandbag sheet on emitted slabs, which did not wrap. `MilitaryBags.ring` stacks it
+  round a rect in running bond: odd courses are offset half a bag, each bag is turned ±0.07 and
+  nudged ±0.05 off a hash, and a door side is left open.
+  - Placed at the tower foot (3 courses, open at the ladder), the guard post (5) and the roof
+    nests (4).
+  - Two batches: ground bags (`MilitaryGeom.build` returns them; culled with the margin and added
+    to the shadow casters) and roof bags (`Roof.bagB`/`bagOf`, masked with their roof like the
+    tanks). A generated base had 322 and 76.
+- **Floodlight mast** (428 tris): a tapered 12-sided pole on a galvanised flange, a collar, a swept
+  outreach arm and a pitched head wearing the lens art. It is on the FACILITY LAMP'S head contract
+  (LAMP_H tall, head at `LAMP_HEAD_Y`/`LAMP_HEAD_Z` of it), so `FacilityLamps` draws it in place of
+  `facilityLamp` and its cone lands on the head. The emitted box mast put a lamp either side of the
+  cone's one bulb, reported as cones not lining up.
+- **Outside the fence the lamps are the city's** `streetLamp`, with the bulb at `LAMP_LIGHT.dz`.
+  That is 15 on a generated base, against 33 masts.
+- The model sheet is `tools/modelsheet.py` over the BUILT labels, so the fitted lifts ride along.
+
+**Traps:**
+- `Models.normalize` recentres a glb on its BBOX, so the head offset is measured from the bbox
+  centre and not the pole. The flange behind and the head's own reach in front both move that
+  centre, and the head went 0.708 → 0.672 out to land at 0.3542 against the contract's 0.354. The
+  script reads it back off the built mesh.
+- `isOutsideBase` counts the RING as outside. 20 of the first 35 "street" lamps stood on fence
+  footing lighting the yard; the ring tiles are excluded.
+- Blender was not running and the MCP's CLI tool could not find it. The build ran headless
+  through interop: `blender.exe -b --factory-startup --python-expr`.
+
+**Verdict:** landed. `buildlib.check`: 0 holes and 0 coplanar on both. The mast's one `texel_off`
+is the lens, which takes its whole cell by design.

@@ -111,6 +111,7 @@ class FacilityArea implements Area3D
   var shells:Array<FacilityGeom.Shell>;         // per structure: what the reveal fades
   var green:Array<render.Models.InstancedProp>; // the park's plants, then EXTRA (railing, bins)
   var margin:Array<render.Models.InstancedProp> = []; // a military base's wild margin, culled like green
+  var bags:Array<render.Models.InstancedProp> = []; // a military base's ground sandbags, in `margin` too, and they cast
   var hangar:FacilityHangar.Hangar; // the shed's podium, its cable fan and its floor decals
   // what stands on the roofs. NOT in `green`, and that is the one thing separating it: `green` is
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
@@ -365,7 +366,8 @@ class FacilityArea implements Area3D
         {
           margin = render.military.MilitaryMargin.build(scene, game.area, model)
             .concat(render.military.MilitaryVehicles.build(scene, model, game.area));
-          render.military.MilitaryGeom.build(scene, model, game.area);
+          bags = [ render.military.MilitaryGeom.build(scene, model, game.area) ];
+          margin = margin.concat(bags);
         }
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
@@ -802,6 +804,7 @@ class FacilityArea implements Area3D
       VisionMask.update(game, opts.player.x, opts.player.z);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       render.Models.cull(lamps.prop, opts.camera, FacilityStyle.LAMP_CULL_R, null, all);
+      render.Models.cull(lamps.street, opts.camera, FacilityStyle.LAMP_CULL_R, null, all);
       // the shafts too: their mesh-wide cull is off (frustumCulled false), so a batch spanning the
       // compound drew every cone from everywhere — 0 px indoors and at the lot, at full cost
       for (c in lamps.cones)
@@ -830,6 +833,8 @@ class FacilityArea implements Area3D
         FacilityRoof.mask(roof.ductOf, reveal), all);
       render.Models.cull(roof.tankB, opts.camera, FacilityStyle.PROP_CULL_R,
         FacilityRoof.mask(roof.tankOf, reveal), all);
+      render.Models.cull(roof.bagB, opts.camera, FacilityStyle.PROP_CULL_R,
+        FacilityRoof.mask(roof.bagOf, reveal), all);
     }
 
 // which structures should be open. INSIDE is the obvious half; the other is looking in through a
@@ -956,7 +961,7 @@ class FacilityArea implements Area3D
         }
       if (casters == null)
         casters = green.concat([ roof.ac, roof.dish, roof.hatchB, roof.jboxB, roof.ventB, roof.ductB,
-          roof.tankB, lamps.prop ]);
+          roof.tankB, roof.bagB, lamps.prop, lamps.street ]).concat(bags);
       var landed = 0;
       for (p in casters)
         if (p.mesh != null)

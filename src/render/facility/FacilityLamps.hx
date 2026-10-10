@@ -26,6 +26,7 @@ typedef LampSet = {
   corridors:Array<LampPost>, // the corridor fixtures, which no room rect can reach — see `corridors`
   doors:Array<LampPost>,     // the bulkhead lamp over each exterior door — the one WARM light here
   prop:Models.InstancedProp, // the mast batch, frustum-culled per frame
+  street:Models.InstancedProp, // a military base's city street lamps outside its fence; empty elsewhere
   cones:Array<LightCone.ConeSet>, // the mast and door shafts, frustum-culled per instance per frame
 };
 
@@ -203,6 +204,8 @@ class FacilityLamps
       var masts = [];
       var park = [];
       var places:Array<Models.PropPlace> = [];
+      // a military base's lamps outside its fence are the city's street lamps, not its masts
+      var streetPlaces:Array<Models.PropPlace> = [];
       var bulbY = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Y;
       var reach = FacilityStyle.LAMP_H * FacilityStyle.LAMP_HEAD_Z;
       // the scan COLLECTS rather than places, because the park line cannot be settled cell by cell:
@@ -300,7 +303,16 @@ class FacilityLamps
           var p = mastAt(m, h);
           var px = p.x;
           var pz = p.z;
-          places.push({
+          // and its bulb hangs that lamp's own distance out (RenderConfig.LAMP_LIGHT.dz), at the
+          // same height. NOT the ring itself, which isOutsideBase counts as outside: a mast on the
+          // fence's footing lights the yard
+          var t = area.getCellType(h.col, h.row);
+          var street = (m.kind == 'military' &&
+            area.isOutsideBase(h.col, h.row) &&
+            t != Const.TILE_MIL_FENCE &&
+            t != Const.TILE_MIL_FENCE_TORN);
+          var out = (street ? RenderConfig.LAMP_LIGHT.dz : reach);
+          (street ? streetPlaces : places).push({
             x: px,
             z: pz,
             // the head hangs off the mast toward the surface being lit, so the yaw is the aim
@@ -314,13 +326,13 @@ class FacilityLamps
             y: p.y,
           });
           var post:LampPost = {
-            x: px + DC[h.dir] * reach,
-            z: pz + DR[h.dir] * reach,
+            x: px + DC[h.dir] * out,
+            z: pz + DR[h.dir] * out,
             y: bulbY,
             // straight down: the head is a shrouded DOWNlight, so it pools at its own feet
             // where a sewer wall bracket rakes metres out along the wall
-            tx: px + DC[h.dir] * reach,
-            tz: pz + DR[h.dir] * reach,
+            tx: px + DC[h.dir] * out,
+            tz: pz + DR[h.dir] * out,
             color: m.tex.mastColor,
             col: h.col,
             row: h.row,
@@ -430,19 +442,20 @@ class FacilityLamps
           });
         }
 
-      // a military base stands its own floodlight masts on the same spots, emitted
-      if (m.kind == 'military')
-        {
-          render.military.MilitaryYard.masts(scene, places, reach, bulbY);
-          places = [];
-        }
-      var prop = Models.instanced(scene, RenderConfig.MODELS.facilityLamp, places,
-        FacilityStyle.LAMP_H, SOLID);
+      // a military base stands its own floodlight mast on the same spots, built on this lamp's head
+      // contract (models-src/military/basekit_build.py), so the cone below lands on its head
+      var prop = Models.instanced(scene, (m.kind == 'military' ? RenderConfig.MODELS.militaryMast :
+        RenderConfig.MODELS.facilityLamp), places, FacilityStyle.LAMP_H, SOLID);
+      var street = Models.instanced(scene, RenderConfig.MODELS.streetLamp, streetPlaces,
+        CityConfig.CELL * 1.6, SOLID);
       // the mask has to go on behind the loader callback — the mesh does not exist until the glb
       // resolves — and only when the batch actually placed something, or an empty batch's material
       // is patched and warmed for nothing (the same shape FacilityGround.green takes)
       if (places.length > 0)
-        Models.get(RenderConfig.MODELS.facilityLamp, function(_) VisionMask.patchMesh(prop.mesh));
+        Models.get((m.kind == 'military' ? RenderConfig.MODELS.militaryMast :
+          RenderConfig.MODELS.facilityLamp), function(_) VisionMask.patchMesh(prop.mesh));
+      if (streetPlaces.length > 0)
+        Models.get(RenderConfig.MODELS.streetLamp, function(_) VisionMask.patchMesh(street.mesh));
       // the cone of lit air under each head. one instanced draw, in the scene's coneGroup so the
       // debug 5 / 0 keys price and hide it here exactly as they do on a street
       var L = RenderConfig.LAMP_LIGHT;
@@ -513,6 +526,7 @@ class FacilityLamps
         corridors: corr,
         doors: doors,
         prop: prop,
+        street: street,
         cones: cones,
       };
     }

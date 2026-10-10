@@ -1618,6 +1618,24 @@
       "note": "high-wing twin turboprop parked INSIDE a military base's hangar on its Const.MIL_PLANE_SIZE footprint (render.military.MilitaryVehicles). 9,570 tris, split 1.61x, 20 components largest 61.6%, bbox 0.774 x 0.311 x 1.002 - THE WINGSPAN LIES ALONG LOCAL Z and the fuselage along x, so a quarter turn puts the span across the footprint's 8-cell x. Atlas 99/110/82; an INDOOR prop wants ~78 against the repainted floor, not 49, so baseColor 0.6 rather than propstat's 0.23. Generated AT the budget (decimation_target 10000, the facility/car route) and ships tris -1. Reference: gpt-image-2.5-sunburst high, style_prop, isometric on #5a5d63, then propstat --lift to subject p50 ~72 (archived as -src.png). COMPONENTS READS REJECT and is not one, the facility/car reason: wheels, tracks, rotor and skids are separate pieces of a hard object; the largest is the hull at 60%+ against the shipped car's 32.6%.",
       "last_converted": "2026-10-10T14:43:46Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.6,0.6,0.6,1"
+    },
+    "military/sandbag-hand": {
+      "src": "military/sandbag-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "ONE SANDBAG, HAND-MODELLED (models-src/military/basekit_build.py), 76 tris: a rounded 8-point section swept 1.2 along x, swelling to the middle and pinched at the tied ends, 0.6 wide (one wall thickness) and 0.32 high (one course). render.military.MilitaryBags stacks it in running bond; it replaces the sandbag sheet, which did not wrap. Wears mil-m-sheet's burlap cell (the built, lifted label), 0 holes / 0 coplanar / texel_off 0.",
+      "last_converted": "2026-10-10T20:25:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/mast-hand": {
+      "src": "military/mast-hand.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "THE FLOODLIGHT MAST, HAND-MODELLED (models-src/military/basekit_build.py), 428 tris: a 12-sided tapered pole on a galvanised flange, a collar, a swept outreach arm and a pitched floodlight head. ON THE FACILITY LAMP'S CONTRACT so FacilityLamps' cone lands on its head: LAMP_H 5.9 tall, head centre at LAMP_HEAD_Y * LAMP_H up and LAMP_HEAD_Z * LAMP_H toward local +z from the BBOX centre (Models.normalize recentres on it); read back off the mesh at 0.3542 against 0.354. One density for the whole piece (a cell per 5.9 units); texel_off 1 is the lens, which takes its whole cell.",
+      "last_converted": "2026-10-10T20:25:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
     }
   }
 }

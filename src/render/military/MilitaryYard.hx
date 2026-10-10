@@ -21,16 +21,14 @@ import render.world.MeshBuf.MeshBufTools;
 
 // a military base's yard, emitted where the compound stands glbs: the checkpoint (a sandbagged guard
 // post, the boom in the base's own bands, and the jersey barriers gen.military.MilitaryGen stamps
-// on the pavement either side of the mouth), the clutter on the lot's edge spots
-// (FacilityDebris.spots: ammo crate stacks and fuel drums), and the floodlight masts on
-// FacilityLamps' own spots. All of it is slabs and prisms, so it is quads into MilitaryGeom's
-// per-texture buffers (the masts, built after those are flushed, take one mesh of their own)
+// on the pavement either side of the mouth), and the clutter on the lot's edge spots
+// (FacilityDebris.spots: ammo crate stacks and fuel drums). All of it is slabs and prisms, so it is
+// quads into MilitaryGeom's per-texture buffers, bar the sandbags (render.military.MilitaryBags)
 class MilitaryYard
 {
   static inline var CELL = CityConfig.CELL;
 
   static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
-  static inline var TEX_SANDBAG = 'textures/military/sandbag.png';
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_ARM = 'textures/military/boom-arm.png';
@@ -39,12 +37,11 @@ class MilitaryYard
   static inline var TEX_DRUM_SIDE = 'textures/military/drum-side.png';
   static inline var TEX_DRUM_TOP = 'textures/military/drum-top.png';
 
-  // the guard post over the booth's bay: a sandbag ring, a post at each inner corner, a corrugated
-  // roof over the lot, and a whip aerial off one corner
+  // the guard post over the booth's bay: a ring of POST_BAGS courses of sandbags, a post at each
+  // inner corner, a corrugated roof over the lot, and a whip aerial off one corner
   static inline var POST_HALF = 2.0;
-  static inline var BAG_T = 0.7;
-  static inline var BAG_H = 1.6;
-  static inline var BAG_TILE = 2.4;
+  static inline var POST_BAGS = 5;
+  static inline var BAG_T = MilitaryBags.W;
   static inline var DOOR_W = 1.4;
   static inline var POST_W = 0.2;
   static inline var EAVE = 3.2;
@@ -72,7 +69,7 @@ class MilitaryYard
 
   // the roof kit: a sandbag nest, water tanks, the aerial mast
   static inline var NEST_HALF = 1.8;
-  static inline var NEST_H = 1.2;
+  static inline var NEST_BAGS = 4;
   static inline var TANK_R = 1.0;
   static inline var TANK_H = 2.0;
   static inline var TANK_PLINTH = 0.3;
@@ -81,15 +78,6 @@ class MilitaryYard
   static inline var AERIAL_BASE = 0.5;
   static inline var AERIAL_BAR = 0.8;
 
-  // the floodlight mast: a square pole, a crossbar across the aim, a lamp box under each end
-  static inline var MAST_W = 0.3;
-  static inline var MAST_BACK = 0.37;
-  static inline var MAST_OVER = 0.6;
-  static inline var BAR_W = 1.8;
-  static inline var BAR_T = 0.15;
-  static inline var LAMP_W = 0.55;
-  static inline var LAMP_H = 0.4;
-  static inline var LAMP_D = 0.35;
 
 // the checkpoint and the yard clutter, into MilitaryGeom's buffers. runs inside MilitaryGeom.build,
 // so before ContactMask.repaint like everything there
@@ -115,14 +103,17 @@ class MilitaryYard
       var x1 = c.x + POST_HALF;
       var z0 = c.z - POST_HALF;
       var z1 = c.z + POST_HALF;
-      var bags = MilitaryGeom.buf(TEX_SANDBAG);
-      var top = y + BAG_H;
       // the ring, its way in on the far side from the mouth (the booth is on its low-column flank)
-      MilitaryGeom.box(bags, x0, x1, z0, z0 + BAG_T, y, top, BAG_TILE);
-      MilitaryGeom.box(bags, x0, x1, z1 - BAG_T, z1, y, top, BAG_TILE);
-      MilitaryGeom.box(bags, x1 - BAG_T, x1, z0 + BAG_T, z1 - BAG_T, y, top, BAG_TILE);
-      MilitaryGeom.box(bags, x0, x0 + BAG_T, z0 + BAG_T, c.z - DOOR_W / 2, y, top, BAG_TILE);
-      MilitaryGeom.box(bags, x0, x0 + BAG_T, c.z + DOOR_W / 2, z1 - BAG_T, y, top, BAG_TILE);
+      MilitaryBags.ring(MilitaryGeom.bags, {
+        x0: x0,
+        x1: x1,
+        z0: z0,
+        z1: z1,
+      }, y, POST_BAGS, {
+        dir: 2,
+        a0: c.z - DOOR_W / 2,
+        a1: c.z + DOOR_W / 2,
+      });
       var steel = MilitaryGeom.buf(TEX_STEEL);
       var eave = y + EAVE;
       for (px in [ x0 + BAG_T, x1 - BAG_T - POST_W ])
@@ -354,6 +345,9 @@ class MilitaryYard
           return bufs.get(k);
         };
       var nested = new Map<Int, Bool>();
+      // the nests' bags, one batch over every roof, each bag owned by its structure so it hides
+      // with that roof (FacilityRoof.mask)
+      var bags:Array<Models.PropPlace> = [];
       for (i in 0...deck.ac.length)
         {
           var p = deck.ac[i];
@@ -361,17 +355,20 @@ class MilitaryYard
           if (!nested.exists(si))
             {
               nested.set(si, true);
-              var bags = buf(si, TEX_SANDBAG);
               var o = NEST_HALF;
-              var t = BAG_T;
-              MilitaryGeom.box(bags, p.x - o, p.x + o, p.z - o, p.z - o + t, p.y, p.y + NEST_H, BAG_TILE);
-              MilitaryGeom.box(bags, p.x - o, p.x + o, p.z + o - t, p.z + o, p.y, p.y + NEST_H, BAG_TILE);
-              MilitaryGeom.box(bags, p.x - o, p.x - o + t, p.z - o + t, p.z + o - t, p.y, p.y + NEST_H,
-                BAG_TILE);
-              MilitaryGeom.box(bags, p.x + o - t, p.x + o, p.z - o + t, p.z - DOOR_W / 2, p.y,
-                p.y + NEST_H, BAG_TILE);
-              MilitaryGeom.box(bags, p.x + o - t, p.x + o, p.z + DOOR_W / 2, p.z + o - t, p.y,
-                p.y + NEST_H, BAG_TILE);
+              var n = bags.length;
+              MilitaryBags.ring(bags, {
+                x0: p.x - o,
+                x1: p.x + o,
+                z0: p.z - o,
+                z1: p.z + o,
+              }, p.y, NEST_BAGS, {
+                dir: 3,
+                a0: p.z - DOOR_W / 2,
+                a1: p.z + DOOR_W / 2,
+              });
+              for (_ in n...bags.length)
+                out.bagOf.push(si);
               continue;
             }
           tank(buf(si, TEX_OLIVE), buf(si, TEX_STEEL), p.x, p.z, p.y);
@@ -441,6 +438,7 @@ class MilitaryYard
           FacilityGeom.addDeck(scene, bufs.get(key), key.substr(sp + 1), true,
             shells[Std.parseInt(key.substr(0, sp))]);
         }
+      out.bagB = MilitaryBags.batch(scene, bags);
     }
 
 // a roof water tank: an olive corrugated octagon on a steel plinth, a steel lid
@@ -467,45 +465,5 @@ class MilitaryYard
           MeshBufTools.tri(steel, [cx, t, cz], [x1, t, z1], [x0, t, z0],
             [cx / CELL, cz / CELL, x1 / CELL, z1 / CELL, x0 / CELL, z0 / CELL]);
         }
-    }
-
-// the floodlight masts on FacilityLamps' spots, one mesh. `reach` is how far the head hangs toward
-// what it lights and `bulbY` its height, both FacilityLamps' own, so the glow it hangs there lands
-// on the lamps
-  public static function masts(scene:Scene, places:Array<Models.PropPlace>, reach:Float,
-      bulbY:Float):Void
-    {
-      var b = MeshBufTools.make();
-      for (p in places)
-        {
-          // the aim is one of the four axes (the yaw FacilityLamps derives off a step direction)
-          var ax = Math.round(Math.sin(p.yaw));
-          var az = Math.round(Math.cos(p.yaw));
-          var px = p.x - ax * MAST_BACK;
-          var pz = p.z - az * MAST_BACK;
-          var hw = MAST_W / 2;
-          MilitaryGeom.box(b, px - hw, px + hw, pz - hw, pz + hw, p.y, bulbY + MAST_OVER, CELL);
-          var hx = p.x + ax * reach;
-          var hz = p.z + az * reach;
-          // the crossbar from the pole out over the head, and a lamp under each end of it, across
-          // the aim
-          var across = BAR_W / 2;
-          var ex = (ax == 0 ? across : 0.0);
-          var ez = (az == 0 ? across : 0.0);
-          var barY = bulbY + LAMP_H;
-          MilitaryGeom.box(b, Math.min(px, hx) - Math.max(ex, BAR_T), Math.max(px, hx) +
-            Math.max(ex, BAR_T), Math.min(pz, hz) - Math.max(ez, BAR_T), Math.max(pz, hz) +
-            Math.max(ez, BAR_T), barY, barY + BAR_T, CELL);
-          for (s in [ -1, 1 ])
-            {
-              var lx = hx + s * ex * 0.75;
-              var lz = hz + s * ez * 0.75;
-              var lw = (ax == 0 ? LAMP_W : LAMP_D) / 2;
-              var ld = (az == 0 ? LAMP_W : LAMP_D) / 2;
-              MilitaryGeom.box(b, lx - lw, lx + lw, lz - ld, lz + ld, bulbY, barY, CELL);
-              FacilityGeom.capDown(b, lx - lw, lx + lw, lz - ld, lz + ld, bulbY, CELL);
-            }
-        }
-      FacilityGeom.add(scene, b, TEX_STEEL, true, true);
     }
 }

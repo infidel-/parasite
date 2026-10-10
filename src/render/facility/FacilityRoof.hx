@@ -128,6 +128,8 @@ typedef Roof = {
   ventB:Models.InstancedProp,
   ductB:Models.InstancedProp,
   tankB:Models.InstancedProp,
+  // a military base's sandbag nests (render.military.MilitaryYard.roof); empty anywhere else
+  bagB:Models.InstancedProp,
   // index-aligned with each batch's own placements: which structure that instance stands on
   acOf:Array<Int>,
   dishOf:Array<Int>,
@@ -136,6 +138,7 @@ typedef Roof = {
   ventOf:Array<Int>,
   ductOf:Array<Int>,
   tankOf:Array<Int>,
+  bagOf:Array<Int>,
   props:Array<RoofProp>,
   hatches:Int,
   vaults:Array<Vault>,
@@ -208,6 +211,11 @@ class FacilityRoof
         ventB: null,
         ductB: null,
         tankB: null,
+        bagB: {
+          mesh: null,
+          matrices: [],
+          centres: [],
+        },
         acOf: [],
         dishOf: [],
         hatchOf: [],
@@ -215,6 +223,7 @@ class FacilityRoof
         ventOf: [],
         ductOf: [],
         tankOf: [],
+        bagOf: [],
         props: [],
         hatches: 0,
         vaults: [],

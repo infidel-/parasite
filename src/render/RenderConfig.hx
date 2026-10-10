@@ -738,6 +738,9 @@ class RenderConfig {
     militaryHumvee: 'models/military/humvee.glb',         // light utility 4x4, along local x
     militaryHeli: 'models/military/heli.glb',             // utility helicopter, four-blade rotor
     militaryPlane: 'models/military/plane.glb',           // high-wing twin turboprop, span along local z
+    // and its hand-modelled kit (models-src/military/basekit_build.py)
+    militarySandbag: 'models/military/sandbag-hand.glb',  // one bag, long axis local x, one course high
+    militaryMast: 'models/military/mast-hand.glb',        // floodlight mast on the facility lamp's head contract
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled

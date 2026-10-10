@@ -13,6 +13,8 @@ import render.facility.FacilityStyle;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
+import render.Models.PropPlace;
+import render.Models.InstancedProp;
 
 // a military base's own furniture, emitted as quads off the saved grid (gen.military.MilitaryGen's
 // row-19 tiles) and off its armory objects: the chain-link perimeter with its posts and razor wire,
@@ -40,7 +42,6 @@ class MilitaryGeom
   static inline var TEX_CANVAS = 'textures/military/tent-canvas.png';
   static inline var TEX_CONT_SIDE = 'textures/military/container-side.png';
   static inline var TEX_CONT_DOOR = 'textures/military/container-door.png';
-  static inline var TEX_SANDBAG = 'textures/military/sandbag.png';
   static inline var TEX_APRON = 'textures/military/apron.png';
   static inline var TEX_SAFE = 'textures/military/safe-front.png';
   static inline var TEX_LOCKER = 'textures/military/locker-front.png';
@@ -80,7 +81,9 @@ class MilitaryGeom
   static inline var ROOF_T = 0.4;
   static inline var ROOF_OVER = 0.6;
   static inline var OLIVE_TILE = 4.0;
-  static inline var SANDBAG_H = 2.4;
+  // the ring of sandbags round its foot: how far out past the legs, and how many courses
+  static inline var BAGS_OUT = 0.5;
+  static inline var TOWER_BAGS = 3;
   // its steel ladder, standing off the face toward the middle of the base, ground to over the
   // parapet
   static inline var LADDER_W = 0.9;
@@ -123,13 +126,17 @@ class MilitaryGeom
   // the buffers being filled, one per texture
   static var opaque:Map<String, MeshBuf>;
   static var cut:Map<String, MeshBuf>;
+  // and the sandbags on the ground, one instanced batch (render.military.MilitaryBags)
+  public static var bags:Array<PropPlace>;
 
 // emit the whole base. runs BEFORE ContactMask.repaint in render.facility.FacilityArea.build: every
-// unit here registers its footprint with the contact shadow
-  public static function build(scene:Scene, m:Facility, area:AreaGame):Void
+// unit here registers its footprint with the contact shadow. returns the ground's sandbag batch,
+// which the area's tick culls
+  public static function build(scene:Scene, m:Facility, area:AreaGame):InstancedProp
     {
       opaque = new Map();
       cut = new Map();
+      bags = [];
       var parked = 0;
       // the pad's square, off its cells, for the marking
       var pad = {
@@ -193,6 +200,7 @@ class MilitaryGeom
         FacilityGeom.add(scene, opaque.get(tex), tex, true, true);
       for (tex in cut.keys())
         addCut(scene, cut.get(tex), tex);
+      return MilitaryBags.batch(scene, bags);
     }
 
 // does the base draw this object as geometry instead of its sprite? stateless, like
@@ -344,11 +352,20 @@ class MilitaryGeom
       var x1 = x0 + CELL * gen.military.MilitaryGen.TOWER - TOWER_INSET * 2;
       var z1 = z0 + CELL * gen.military.MilitaryGen.TOWER - TOWER_INSET * 2;
       var olive = buf(TEX_OLIVE);
-      // the sandbag ring at its foot, round the legs
-      var sand = buf(TEX_SANDBAG);
-      for (dir in 0...4)
-        FacilityGeom.face(sand, x0, x1, z0, z1, dir, 0, SANDBAG_H, SANDBAG_H);
-      FacilityGeom.cap(sand, x0, x1, z0, z1, SANDBAG_H, SANDBAG_H);
+      // the ladder's side, and the ring of bags round the legs with a way in at the ladder
+      var side = ((x0 + x1) / 2 < 0 ? 3 : 2);
+      var cz = (z0 + z1) / 2;
+      var o = BAGS_OUT;
+      MilitaryBags.ring(bags, {
+        x0: x0 - o,
+        x1: x1 + o,
+        z0: z0 - o,
+        z1: z1 + o,
+      }, 0, TOWER_BAGS, {
+        dir: side,
+        a0: cz - LADDER_W,
+        a1: cz + LADDER_W,
+      });
       // the four legs from the ground, then the deck slab, the parapet round it, the roof posts and
       // the roof
       for (cx in [ x0, x1 - LEG_W ])
@@ -372,8 +389,8 @@ class MilitaryGeom
       FacilityGeom.cap(olive, x1 - t, x1, z0 + t, z1 - t, top, OLIVE_TILE);
       FacilityGeom.capDown(olive, x0, x1, z0, z1, DECK_Y - DECK_T, OLIVE_TILE);
       FacilityGeom.cap(buf(TEX_APRON), x0 + t, x1 - t, z0 + t, z1 - t, DECK_Y, PAD_TILE);
-      ladder(x0, x1, z0, z1, ((x0 + x1) / 2 < 0 ? 3 : 2));
-      var o = ROOF_OVER;
+      ladder(x0, x1, z0, z1, side);
+      o = ROOF_OVER;
       for (dir in 0...4)
         FacilityGeom.face(olive, x0 - o, x1 + o, z0 - o, z1 + o, dir, ROOF_Y, ROOF_Y + ROOF_T,
           OLIVE_TILE);
@@ -385,12 +402,12 @@ class MilitaryGeom
         len: 1,
         alongX: true,
         rect: {
-          x0: x0,
-          x1: x1,
-          z0: z0,
-          z1: z1,
+          x0: x0 - BAGS_OUT,
+          x1: x1 + BAGS_OUT,
+          z0: z0 - BAGS_OUT,
+          z1: z1 + BAGS_OUT,
         },
-        h: SANDBAG_H,
+        h: TOWER_BAGS * MilitaryBags.H,
       });
     }
 

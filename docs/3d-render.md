@@ -812,6 +812,7 @@ back) — grep the change text.
 | **The military base's yard, gate and roofs are its OWN** (`MilitaryYard`: guard post, own-band boom, jersey barriers, crate stacks and fuel drums, floodlight masts, roof kit; exit, wall-point and roof-litter sheets via `ShellTex`) | 1 packed sheet + 3 layout-kept repaints, **$0.23**; every facility glb that stood in a base (7 roof, 3 lot, the lamp post, booth, barrier) is now emitted quads on the same spots | **landed** |
 | **Military base fix pass: towers inside the corners, closed fence corners, base meshes cast, margin patches** | chainlink cropped to whole diamond periods (203.9 x 226.2 px); posts halved; `WildHeight.shade` NaN at zero relief blacked the whole frame through bloom | **landed** |
 | **Military base fence: galvanised pipe posts and a razor-wire COIL that reads round from any side** | an 8-sided alpha tube whose art is a helix built by `tools/razorcoil.py` from one cut strand (the drop wrapped neither way and ignored `transparent`); **$0.17** | **landed** |
+| **Military base: hand-modelled sandbags stacked in courses, a floodlight mast on the lamp contract, city lamps outside** | 76-tri bag in running bond (398 on a base, two batches), 428-tri mast whose head lands on FacilityLamps' cone; `Models.normalize` recentres on the bbox, so the head offset is from the bbox centre | **landed** |
 
 ### FX, UI and the view itself
 
