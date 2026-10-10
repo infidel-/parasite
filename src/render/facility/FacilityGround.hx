@@ -582,6 +582,9 @@ class FacilityGround
 // than out in the aisle (FacilityDebris.place)
   static function indoorBins(m:Facility, places:Array<Models.PropPlace>):Void
     {
+      // a military base's corridors and latrines take none of the compound's bins
+      if (m.kind == 'military')
+        return;
       for (row in 0...m.h)
         for (col in 0...m.w)
           {

@@ -1392,3 +1392,36 @@ the route (share the emitters, share no art), so the fix is that route finished:
   or light colour, so the facility demo already compiles everything the base's art draws with.
 - The hangar cladding's crop was cut to 13 whole rib periods (494 px): the 504 crop wrapped at
   23.3 against an inner step of 5.4.
+
+## The military base's rooms are its own: barracks, mess, briefing, HQ, latrine, armory
+
+**What changed:** the base's rooms had worn the lab's interior: lab floors and walls, a desk quota,
+the janitor's kit and corp's locker art. They are now dealt as their own kinds
+(`FacilityRooms.militaryThemes`) and furnished by `gen.military.MilitaryRooms`.
+
+- The furniture is 5 floor tiles plus 11 furniture tiles on `Const` row 20.
+- `render.military.MilitaryInterior` emits the furniture into `MilitaryGeom`'s per-texture buffers,
+  one texture per face, with one `FacilityDetail.ground` per run.
+- New `Surf` values BARRACKS/MESS/BRIEFING/HQ (22-25), with `SURF_SLOTS` 26. The latrine is WASH
+  and the corridor is LINO, each in the base's own art.
+- `isIndoor` is now `>= TILE && != WILD`, because the new surfaces sit above WILD.
+- `MilitaryStyle.shell()` swaps every interior floor and wall face.
+- The lockers, the gun cabinet (no longer corp's glb, via the `ObjModels` gate) and the safe's
+  steel wear the base's art.
+- The janitor's kit and the indoor bins are gated off in a base.
+
+**Numbers:**
+- Art: 6 packed 1k sheets at $0.055 each: floors, wall faces, furniture materials, and two sheets
+  of authored fronts (map board, cubicle door, filing cabinet, locker, gun rack, footlocker lid).
+- Each of the 25 labels was fitted (`g = ln(target)/ln(raw)`) to its facility counterpart's built
+  linear. Furniture targets ~78 sRGB indoors.
+- `make gen --type military`: 3000 seeds clean.
+- Live: a briefing-room frame draws 55 calls and 24k tris.
+
+**Traps:**
+- A run is the longest straight line of one tile, x tried first, with taken cells marked. Two desks
+  on two walls meet at the room's corner, and a both-axes origin test drops the second one.
+- `area regen` re-entered the base with no 3D scene. Reload the forced autosave (slot 0) instead.
+
+**Verdict:** landed.
+

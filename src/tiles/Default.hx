@@ -74,6 +74,9 @@ class Default extends Tileset
     // row 19 - the military base (Const.TILE_MIL_*): fence, TORN fence (walkable), tower, tent,
     // container x2, vehicle footprint x5, and the helipad (walkable)
     0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+    // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
+    // board walkable: it marks a wall)
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -112,6 +115,8 @@ class Default extends Tileset
     // row 19 - the military base: a tent and a container block sight, the chain-link, the tower's
     // legs and a parked vehicle do not
     1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 20 - the base's interior: nothing in a room stands above eye height but a cubicle
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1,
   ];
 
 // load default tileset image

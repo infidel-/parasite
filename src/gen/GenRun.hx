@@ -314,6 +314,7 @@ class GenRun
       var cut = check.reachable(ctx, state.allRooms);
       check.ok(cut.length == 0, cut.length + ' room(s) cannot be walked into, first is ' +
         (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
+      check.floorReachable(ctx, state.allRooms);
       check.militaryReach(ctx);
 
       add('rooms', state.allRooms.length);
@@ -362,6 +363,16 @@ class GenRun
                 t == Const.TILE_MIL_VEHICLE ? 'v' :
                 t >= Const.TILE_MIL_TANK && t <= Const.TILE_MIL_PLANE ? 'V' :
                 t == Const.TILE_MIL_PAD ? '+' :
+                t == Const.TILE_MIL_BUNK ? 'B' :
+                t == Const.TILE_MIL_FOOTLOCKER ? 'f' :
+                t == Const.TILE_MIL_MESS_TABLE || t == Const.TILE_MIL_BRIEF_TABLE ? 'm' :
+                t == Const.TILE_MIL_BENCH ? 'n' :
+                t == Const.TILE_MIL_COUNTER ? 'K' :
+                t == Const.TILE_MIL_MAP_BOARD ? 'M' :
+                t == Const.TILE_MIL_DESK ? 'D' :
+                t == Const.TILE_MIL_FILE ? 'F' :
+                t == Const.TILE_MIL_STALL ? 'S' :
+                t == Const.TILE_MIL_TROUGH ? 'U' :
                 tiles.Default.TILE_WALKABLE[t] == 1 ? '.' : 'X');
             }
           log(line);

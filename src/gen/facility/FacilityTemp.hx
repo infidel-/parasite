@@ -90,9 +90,15 @@ class FacilityTemp
   // 31x24 building cannot flip it — but a store in a SMALL structure could, and that is the number
   // to look at if a lab building ever comes back drawn as a hangar
   public static inline var ROLE_STORAGE = 'storage';
-  // a military building's armory when no room could take racking: an office with lockers in it
-  // (gen.military.MilitaryRooms). A base's store is its armory otherwise
+  // a military building's armory: lockers, the gun cabinet and the HQ's safe (gen.military
+  // .MilitaryRooms). A base deals no store
   public static inline var ROLE_ARMORY = 'armory';
+  // and the rest of a military building's rooms (gen.military.MilitaryRooms)
+  public static inline var ROLE_BARRACKS = 'barracks';
+  public static inline var ROLE_MESS = 'mess';
+  public static inline var ROLE_BRIEFING = 'briefing';
+  public static inline var ROLE_HQ = 'hq';
+  public static inline var ROLE_LATRINE = 'latrine';
   // a floor tile's unwalkable twin sits exactly one tileset row below it (Const.OFFSET_ROW12 ->
   // OFFSET_ROW13), which is how game.CorpAreaGenerator addresses the pair too
   public static inline var UNWALKABLE_TILE_OFFSET = 16;
@@ -112,7 +118,9 @@ class FacilityTemp
           if (tile == Const.TILE_FLOOR_WOOD1 ||
               tile == Const.TILE_FLOOR_WOOD1 + UNWALKABLE_TILE_OFFSET ||
               tile == Const.TILE_FLOOR_MARBLE1 ||
-              tile == Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET)
+              tile == Const.TILE_FLOOR_MARBLE1 + UNWALKABLE_TILE_OFFSET ||
+              tile == Const.TILE_MIL_FLOOR_HQ ||
+              tile == Const.TILE_MIL_FLOOR_LATRINE)
             return true;
         }
       return false;

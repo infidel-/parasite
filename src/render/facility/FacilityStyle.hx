@@ -3476,8 +3476,8 @@ class FacilityStyle
       };
     }
 
-  // how many slots a per-Surf array holds. one more than the highest Surf value, which is WILD (21)
-  public static inline var SURF_SLOTS = 22;
+  // how many slots a per-Surf array holds. one more than the highest Surf value, which is HQ (25)
+  public static inline var SURF_SLOTS = 26;
 
 // the compound's night rig (render.facility.FacilityScene.build): its sky and fog, and the fill.
 // the facility runs DARKER than the wilderness because its art is brighter: the lab floor measures

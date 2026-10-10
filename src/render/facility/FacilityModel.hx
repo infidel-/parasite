@@ -39,6 +39,14 @@ enum abstract Surf(Int) from Int to Int
   // and rocks (render.military.MilitaryMargin). A base has no park, so every one of its grass cells
   // is this and not GRASS, which is what keeps the park's railing, kerbs and benches off it
   var WILD = 21;
+  // and a military base's own room floors, read off Const's row-20 floor tiles
+  // (render.military.MilitaryStyle.surfOf). ABOVE WILD, so isIndoor skips that one value rather
+  // than ending its range at RECEPTION. The latrine is WASH and the corridor LINO, each in the base's
+  // own art; these are the kinds a lab building has no surface for
+  var BARRACKS = 22;
+  var MESS = 23;
+  var BRIEFING = 24;
+  var HQ = 25;
 }
 
 
@@ -581,11 +589,12 @@ class FacilityModel
       // a RANGE and not a list, which the Surf enum is ordered to allow: everything from TILE up
       // is an indoor floor and everything below it is ground the weather falls on. Listing them
       // was fine at six and is a maintenance trap at fourteen — a corp surface left out of the
-      // list is a room with no floor mesh and no structure to belong to. The top of the range is
-      // the HIGHEST value, which stopped being OPEN when RECEPTION was added
+      // list is a room with no floor mesh and no structure to belong to. It has NO top any more:
+      // a base's WILD margin is the one value up there that is ground, and the base's own room
+      // floors were added above it, so it is the range minus that one
       var s:Int = m.surf[row][col];
       return s >= (Surf.TILE : Int) &&
-        s <= (Surf.RECEPTION : Int);
+        s != (Surf.WILD : Int);
     }
 
 // is this cell inside the HANGAR — the one structure floored in concrete?

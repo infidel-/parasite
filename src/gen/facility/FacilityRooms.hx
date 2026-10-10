@@ -41,12 +41,15 @@ class FacilityRooms
     {
       // a big room is a laboratory: the bench runs, the island and the aisle markings all want the
       // space, and a compound of nothing but small offices reads as an office block
+      if (state.military)
+        {
+          militaryThemes(state);
+          return;
+        }
       var cells = state.area.getCells();
       var cand = [for (room in state.rooms)
         if (room.w <= ROOM_SIZE && room.h <= ROOM_SIZE) room];
-      // a base deals every room whatever its size (offices and an armory), so it goes on past this
-      if (cand.length == 0 &&
-          !state.military)
+      if (cand.length == 0)
         return;
       // THE WASHROOM IS PICKED FIRST AND PICKED FOR ITS WALL AND ITS DOOR. Its light wells need one
       // wall that is exterior masonry end to end, and a room in the middle of a building has none —
@@ -103,29 +106,6 @@ class FacilityRooms
             room.role = ROLE_STORAGE;
             break;
           }
-      // a military building has no laboratories: every room the washroom and the armory did not take
-      // is an office, the big ones included
-      if (state.military)
-        {
-          var store = false;
-          for (room in state.rooms)
-            {
-              if (room.role == null)
-                room.role = ROLE_CABINET;
-              if (room.role == ROLE_STORAGE)
-                store = true;
-            }
-          // and a building with no wall long enough for racking still gets its armory, as an
-          // office with the lockers down its walls
-          if (!store)
-            for (room in state.rooms)
-              if (room.role == ROLE_CABINET)
-                {
-                  room.role = ROLE_ARMORY;
-                  break;
-                }
-          return;
-        }
       var cabinets = 0;
       for (i in 0...cand.length)
         {
@@ -140,18 +120,50 @@ class FacilityRooms
         }
     }
 
-// fill rooms with content
+// a military building's rooms, dealt on the same terms as a lab building's and from the same
+// tests, but out of the base's own kinds. The FIRST building dealt is the HQ — its armory takes the
+// base's one safe, so a building dealt with no safe yet standing is still the first — and every
+// other one is a barracks block:
+// - the latrine first, on the washroom's own two tests (an exterior wall, one door onto a corridor);
+// - then the biggest room left is the HQ's briefing room or the block's mess hall;
+// - the HQ takes its armory next and makes every other room an office; the block makes them barracks
+  static function militaryThemes(state: _FacilityState)
+    {
+      var cells = state.area.getCells();
+      var rooms = state.rooms.copy();
+      rooms.sort(function(a, b) return a.w * a.h - b.w * b.h);
+      for (room in rooms)
+        if (room.w <= ROOM_SIZE &&
+            room.h <= ROOM_SIZE &&
+            exteriorWall(cells, room) != null &&
+            washroomDoor(state, cells, room))
+          {
+            room.role = ROLE_LATRINE;
+            FacilityConnect.sealWashroom(state, room);
+            break;
+          }
+      var hq = (state.area.countSpawns('safe') == 0);
+      var rest = [for (room in rooms) if (room.role == null) room];
+      rest.reverse();
+      if (rest.length > 1)
+        rest.shift().role = (hq ? ROLE_BRIEFING : ROLE_MESS);
+      if (hq &&
+          rest.length > 0)
+        rest.shift().role = ROLE_ARMORY;
+      for (room in rest)
+        room.role = (hq ? ROLE_HQ : ROLE_BARRACKS);
+    }
+
+// fill rooms with content. a military building's are furnished at the room level instead
+// (gen.blocks.RoomBlock.fill, gen.military.MilitaryRooms.fill)
   public static function generateRoomContents(state: _FacilityState)
     {
+      if (state.military)
+        return;
       for (room in state.rooms)
         {
           if (room.role == ROLE_CABINET)
             roomCabinet(state, room);
-          else if (room.role == ROLE_ARMORY)
-            {
-              gen.military.MilitaryRooms.armory(state, room);
-              roomCabinet(state, room);
-            }
           else if (room.role == ROLE_TOILET)
             FacilityToilet.roomToilet(state, room);
           else if (room.role == ROLE_STORAGE)
@@ -281,10 +293,6 @@ class FacilityRooms
 // of racking, a rolled bay of pallets and one bare aisle — so the template's whole job is the floor
   static function roomStorage(state: _FacilityState, room: _Room)
     {
-      // a military store is the ARMORY, and its lockers go in before the floor is painted, while
-      // roomWallRuns can still tell bare floor from the racking
-      if (state.military)
-        gen.military.MilitaryRooms.armory(state, room);
       paintRoomFloor(state, room, Const.TILE_FLOOR_CONCRETE,
         Const.TILE_FLOOR_CONCRETE_UNWALKABLE);
     }

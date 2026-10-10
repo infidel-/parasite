@@ -5851,6 +5851,454 @@
       "built_srgb": 110.0,
       "lift": 1.414,
       "last_lift": 1.414
+    },
+    "military/floor-barracks": {
+      "src": "military/mil-pack-f.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-f.png, PACK4, gpt-image-2.5-sunburst high] worn varnished wooden boards, six across, vertical [append textures.json style]",
+      "prompt_exact": false,
+      "note": "barracks room floor (Surf.BARRACKS, MilitaryStyle.shell). lift 0.816: raw 0.0594 to 0.1, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:47:31",
+      "built_linear": 0.0947,
+      "built_srgb": 82.8,
+      "lift": 0.816,
+      "last_lift": 0.816
+    },
+    "military/floor-mess": {
+      "src": "military/mil-pack-f.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-f.png, PACK4, gpt-image-2.5-sunburst high] terracotta quarry tiles, 4x4, dark grout [append textures.json style]",
+      "prompt_exact": false,
+      "note": "mess hall floor (Surf.MESS). lift 0.826: raw 0.0616 to 0.1, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:47:31",
+      "built_linear": 0.0945,
+      "built_srgb": 84.7,
+      "lift": 0.826,
+      "last_lift": 0.826
+    },
+    "military/floor-corridor": {
+      "src": "military/mil-pack-f.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-f.png, PACK4, gpt-image-2.5-sunburst high] speckled grey-green linoleum [append textures.json style]",
+      "prompt_exact": false,
+      "note": "corridor and doorway floor (Surf.LINO in a base). lift 0.93: raw 0.1023 to 0.12, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:47:31",
+      "built_linear": 0.117,
+      "built_srgb": 92.6,
+      "lift": 0.93,
+      "last_lift": 0.93
+    },
+    "military/floor-office": {
+      "src": "military/mil-pack-f.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-f.png, PACK4, gpt-image-2.5-sunburst high] grey vinyl tiles, 4x4 [append textures.json style]",
+      "prompt_exact": false,
+      "note": "HQ office and armory floor (Surf.HQ, OFFICE, TILE in a base). lift 1.132: raw 0.1422 to 0.11, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:47:31",
+      "built_linear": 0.1103,
+      "built_srgb": 92.0,
+      "lift": 1.132,
+      "last_lift": 1.132
+    },
+    "military/floor-briefing": {
+      "src": "military/mil-pack-g.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-g.png, PACK4, gpt-image-2.5-sunburst high] dark olive carpet tiles, 4x4 [append textures.json style]",
+      "prompt_exact": false,
+      "note": "briefing room floor (Surf.BRIEFING). lift 0.732: raw 0.0317 to 0.08, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:13",
+      "built_linear": 0.0727,
+      "built_srgb": 71.5,
+      "lift": 0.732,
+      "last_lift": 0.732
+    },
+    "military/floor-latrine": {
+      "src": "military/mil-pack-g.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-g.png, PACK4, gpt-image-2.5-sunburst high] grey terrazzo [append textures.json style]",
+      "prompt_exact": false,
+      "note": "latrine floor (Surf.WASH in a base).",
+      "last_converted": "2026-10-10T20:48:13",
+      "built_linear": 0.1189,
+      "built_srgb": 94.1
+    },
+    "military/floor-hangar": {
+      "src": "military/mil-pack-g.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-g.png, PACK4, gpt-image-2.5-sunburst high] stained grey concrete, oil and tyre marks [append textures.json style]",
+      "prompt_exact": false,
+      "note": "hangar floor (Surf.CONCRETE in a base). lift 1.292: raw 0.075 to 0.0352, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:13",
+      "built_linear": 0.0373,
+      "built_srgb": 52.7,
+      "lift": 1.292,
+      "last_lift": 1.292
+    },
+    "military/wall-corridor": {
+      "src": "military/mil-pack-g.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-g.png, PACK4, gpt-image-2.5-sunburst high] painted concrete blocks, six courses, institutional green [append textures.json style]",
+      "prompt_exact": false,
+      "note": "corridor wall face (wallInto LINO). lift 0.713: raw 0.0635 to 0.14, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:13",
+      "built_linear": 0.1329,
+      "built_srgb": 96.5,
+      "lift": 0.713,
+      "last_lift": 0.713
+    },
+    "military/wall-room": {
+      "src": "military/mil-pack-h.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-h.png, PACK4, gpt-image-2.5-sunburst high] painted concrete blocks, six courses, pale cream [append textures.json style]",
+      "prompt_exact": false,
+      "note": "barracks and mess wall face, and the default (wallInto). lift 1.335: raw 0.2353 to 0.145, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:55",
+      "built_linear": 0.1474,
+      "built_srgb": 101.0,
+      "lift": 1.335,
+      "last_lift": 1.335
+    },
+    "military/wall-latrine": {
+      "src": "military/mil-pack-h.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-h.png, PACK4, gpt-image-2.5-sunburst high] glazed ceramic tiles 8x8, off-white [append textures.json style]",
+      "prompt_exact": false,
+      "note": "latrine wall face (wallInto WASH). lift 1.456: raw 0.2718 to 0.15, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:55",
+      "built_linear": 0.1538,
+      "built_srgb": 103.8,
+      "lift": 1.456,
+      "last_lift": 1.456
+    },
+    "military/wall-office": {
+      "src": "military/mil-pack-h.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-h.png, PACK4, gpt-image-2.5-sunburst high] painted plaster, pale khaki [append textures.json style]",
+      "prompt_exact": false,
+      "note": "HQ office and briefing wall face (wallInto HQ, BRIEFING, OFFICE). lift 1.199: raw 0.1998 to 0.145, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:55",
+      "built_linear": 0.1458,
+      "built_srgb": 100.5,
+      "lift": 1.199,
+      "last_lift": 1.199
+    },
+    "military/bench-wood": {
+      "src": "military/mil-pack-h.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-h.png, PACK4, gpt-image-2.5-sunburst high] pale pine planks, five, horizontal [append textures.json style]",
+      "prompt_exact": false,
+      "note": "mess and briefing benches (render.military.MilitaryInterior). lift 1.342: raw 0.1465 to 0.076, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:48:55",
+      "built_linear": 0.0789,
+      "built_srgb": 73.9,
+      "lift": 1.342,
+      "last_lift": 1.342
+    },
+    "military/blanket": {
+      "src": "military/mil-pack-i.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-i.png, PACK4, gpt-image-2.5-sunburst high] olive wool army blanket, two stripes [append textures.json style]",
+      "prompt_exact": false,
+      "note": "bunk mattresses (MilitaryInterior). lift 0.894: raw 0.043 to 0.06, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:49:35",
+      "built_linear": 0.0572,
+      "built_srgb": 63.0,
+      "lift": 0.894,
+      "last_lift": 0.894
+    },
+    "military/laminate": {
+      "src": "military/mil-pack-i.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-i.png, PACK4, gpt-image-2.5-sunburst high] grey speckled laminate [append textures.json style]",
+      "prompt_exact": false,
+      "note": "mess tables and HQ desk tops (MilitaryInterior).",
+      "last_converted": "2026-10-10T20:49:35",
+      "built_linear": 0.097,
+      "built_srgb": 87.2
+    },
+    "military/steel": {
+      "src": "military/mil-pack-i.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-i.png, PACK4, gpt-image-2.5-sunburst high] brushed stainless steel [append textures.json style]",
+      "prompt_exact": false,
+      "note": "serving counter and latrine trough (MilitaryInterior). lift 1.062: raw 0.1144 to 0.1, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:49:35",
+      "built_linear": 0.0999,
+      "built_srgb": 88.7,
+      "lift": 1.062,
+      "last_lift": 1.062
+    },
+    "military/darkwood": {
+      "src": "military/mil-pack-i.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-i.png, PACK4, gpt-image-2.5-sunburst high] dark stained hardwood, grain horizontal [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the briefing table (MilitaryInterior). lift 0.798: raw 0.0234 to 0.05, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:49:35",
+      "built_linear": 0.045,
+      "built_srgb": 58.3,
+      "lift": 0.798,
+      "last_lift": 0.798
+    },
+    "military/stall-panel": {
+      "src": "military/mil-pack-j.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-j.png, PACK4, gpt-image-2.5-sunburst high] painted steel, pale grey-green [append textures.json style]",
+      "prompt_exact": false,
+      "note": "latrine cubicle partitions (MilitaryInterior).",
+      "last_converted": "2026-10-10T20:50:17",
+      "built_linear": 0.107,
+      "built_srgb": 88.3
+    },
+    "military/map-board": {
+      "src": "military/mil-pack-j.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        513,
+        0,
+        511,
+        511
+      ],
+      "prompt": "[quadrant of military/mil-pack-j.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a framed military map board with pins and notes [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the briefing room's wall map, mapped 0..1 over a SQUARE board (MilitaryInterior.BOARD). Frame measured from x 513, y 0.",
+      "last_converted": "2026-10-10T20:50:17",
+      "built_linear": 0.0983,
+      "built_srgb": 80.6
+    },
+    "military/stall-door": {
+      "src": "military/mil-pack-j.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        0,
+        514,
+        512,
+        510
+      ],
+      "prompt": "[quadrant of military/mil-pack-j.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a toilet cubicle door front [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a latrine cubicle's door, 0..1 over its front; the stall's height is locked to this crop's aspect (512/510). Frame measured x 0..512 from y 514. lift 0.915: raw 0.0895 to 0.11, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:50:17",
+      "built_linear": 0.1074,
+      "built_srgb": 87.1,
+      "lift": 0.915,
+      "last_lift": 0.915
+    },
+    "military/file-front": {
+      "src": "military/mil-pack-j.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        513,
+        513,
+        511,
+        511
+      ],
+      "prompt": "[quadrant of military/mil-pack-j.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a two-drawer steel filing cabinet front [append textures.json style]",
+      "prompt_exact": false,
+      "note": "an HQ filing cabinet's front, 0..1 over a SQUARE face (MilitaryInterior.FILE_W). Cabinet frame measured from x 513, y 513. lift 0.877: raw 0.053 to 0.076, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
+      "last_converted": "2026-10-10T20:50:17",
+      "built_linear": 0.0725,
+      "built_srgb": 71.8,
+      "lift": 0.877,
+      "last_lift": 0.877
+    },
+    "military/locker-front": {
+      "src": "military/mil-pack-k.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a tall steel personal locker front, louvres, padlock hasp, olive drab [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a base locker's front, 0..1 over its square face (render.military.MilitaryGeom.locker); replaces the corp locker art the base wore. lift 0.848: raw 0.0398 to 0.065.",
+      "last_converted": "2026-10-10T20:59:51",
+      "built_linear": 0.0611,
+      "built_srgb": 64.8,
+      "lift": 0.848,
+      "last_lift": 0.848
+    },
+    "military/gunrack-front": {
+      "src": "military/mil-pack-k.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a steel weapons locker front, mesh doors, rifles, bar lock [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the armory's gun cabinet in a base, an emitted box with this 0..1 on its front (MilitaryGeom), replacing corp's hand-modelled gun cabinet glb. lift 0.73: raw 0.0212 to 0.06.",
+      "last_converted": "2026-10-10T20:59:51",
+      "built_linear": 0.0514,
+      "built_srgb": 59.3,
+      "lift": 0.73,
+      "last_lift": 0.73
+    },
+    "military/footlocker-lid": {
+      "src": "military/mil-pack-k.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a wooden army footlocker lid from above, corner caps, stencil [append textures.json style]",
+      "prompt_exact": false,
+      "note": "a footlocker's lid, 0..1 over its top (render.military.MilitaryInterior). lift 0.883: raw 0.0452 to 0.065.",
+      "last_converted": "2026-10-10T20:59:51",
+      "built_linear": 0.0617,
+      "built_srgb": 64.6,
+      "lift": 0.883,
+      "last_lift": 0.883
+    },
+    "military/crate-side": {
+      "src": "military/mil-pack-k.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a wooden ammunition crate side, rope handles, lot band [append textures.json style]",
+      "prompt_exact": false,
+      "note": "an ammo crate's long side, 0..1 (render.military, Phase C yard clutter). lift 0.942: raw 0.0416 to 0.05.",
+      "last_converted": "2026-10-10T20:59:51",
+      "built_linear": 0.0486,
+      "built_srgb": 56.9,
+      "lift": 0.942,
+      "last_lift": 0.942
     }
   }
 }

@@ -35,6 +35,9 @@ class RoomBlock
   public static inline var OFFICE = 'room-office';
   public static inline var WASHROOM = 'room-washroom';
   public static inline var STORAGE = 'room-storage';
+  // every room of a military building, whatever its kind: glazed like a laboratory, then furnished
+  // by gen.military.MilitaryRooms off its role instead of a quota of the compound's zones
+  public static inline var MILITARY = 'room-military';
   // and what a room divides into. BAY is what the glazing pass pushes — an undealt bay of floor
   // under one bay of window — and gen.Quota then turns every one of them into one of the rest
   public static inline var BAY = 'bay';
@@ -136,9 +139,14 @@ class RoomBlock
     {
       if (room.role == ROLE_TOILET)
         return WASHROOM;
-      // a military armory with no racking is an office with lockers in it
-      if (room.role == ROLE_CABINET ||
-          room.role == ROLE_ARMORY)
+      if (room.role == ROLE_ARMORY ||
+          room.role == ROLE_BARRACKS ||
+          room.role == ROLE_MESS ||
+          room.role == ROLE_BRIEFING ||
+          room.role == ROLE_HQ ||
+          room.role == ROLE_LATRINE)
+        return MILITARY;
+      if (room.role == ROLE_CABINET)
         return OFFICE;
       if (room.role == ROLE_STORAGE)
         return STORAGE;
@@ -176,6 +184,13 @@ class RoomBlock
           case LAB, OFFICE:
             clear(state, room);
             glaze(state, room, node, true);
+
+          // windows, and nothing dealt into the bays they leave: the room's own kind stands its
+          // furniture, after the glazing so it can keep off the ribbon
+          case MILITARY:
+            clear(state, room);
+            glaze(state, room, node, true);
+            gen.military.MilitaryRooms.fill(state, room);
 
           // A STORE DEALS LIKE THE OTHER TWO AND GLAZES LIKE THE WASHROOM, and that pairing is the
           // whole of what makes its racking possible. `solid` refuses a cell next to a ribbon window
@@ -274,7 +289,8 @@ class RoomBlock
           if (cap != null)
             caps.push(cap);
         }
-      Quota.deal(bays, RoomZones.demands(state, room, node.kind), SLOT, state.area.rng);
+      if (node.kind != MILITARY)
+        Quota.deal(bays, RoomZones.demands(state, room, node.kind), SLOT, state.area.rng);
       // the caps are pushed LAST so the breadth-first walk reaches them after every bench and slot
       // of this room: whether a lone window becomes a vent depends on the floor inside it still
       // being bare once the clutter has been dealt

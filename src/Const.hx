@@ -1279,6 +1279,29 @@ class Const
   public static var MIL_HELI_SIZE = [ 3, 7 ];
   public static var MIL_PLANE_SIZE = [ 8, 7 ];
 
+  // === row 20 - the military base's INTERIOR (gen.military.MilitaryRooms): five room floors, each the
+  // whole record of its room's kind the way the facility's floor tiles are, then the furniture,
+  // which render.military.MilitaryInterior emits off these ids. The floors are walkable; every
+  // piece of furniture blocks but a map board, which marks the wall cell it hangs over
+  public static var OFFSET_ROW20 = 320;
+  public static var TILE_MIL_FLOOR_BARRACKS = OFFSET_ROW20 + 0;
+  public static var TILE_MIL_FLOOR_MESS = OFFSET_ROW20 + 1;
+  public static var TILE_MIL_FLOOR_BRIEFING = OFFSET_ROW20 + 2;
+  public static var TILE_MIL_FLOOR_HQ = OFFSET_ROW20 + 3;
+  public static var TILE_MIL_FLOOR_LATRINE = OFFSET_ROW20 + 4;
+  // a bunk is two cells running out from its wall, the head against it; its footlocker the third
+  public static var TILE_MIL_BUNK = OFFSET_ROW20 + 5;
+  public static var TILE_MIL_FOOTLOCKER = OFFSET_ROW20 + 6;
+  public static var TILE_MIL_MESS_TABLE = OFFSET_ROW20 + 7;
+  public static var TILE_MIL_BENCH = OFFSET_ROW20 + 8;
+  public static var TILE_MIL_COUNTER = OFFSET_ROW20 + 9;
+  public static var TILE_MIL_BRIEF_TABLE = OFFSET_ROW20 + 10;
+  public static var TILE_MIL_MAP_BOARD = OFFSET_ROW20 + 11;
+  public static var TILE_MIL_DESK = OFFSET_ROW20 + 12;
+  public static var TILE_MIL_FILE = OFFSET_ROW20 + 13;
+  public static var TILE_MIL_STALL = OFFSET_ROW20 + 14;
+  public static var TILE_MIL_TROUGH = OFFSET_ROW20 + 15;
+
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;
   public static var TILE_CORP_INNER_WINDOW1 = OFFSET_ROW13 + 0;

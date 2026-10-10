@@ -207,7 +207,8 @@ class FacilityBuilding
           // their own zones, so there are no bench cells to keep clear and nothing for a clue to
           // land on in either of them
           if (room.role != ROLE_TOILET &&
-              room.role != ROLE_STORAGE)
+              room.role != ROLE_STORAGE &&
+              !state.military)
             FacilityRooms.clearTableSpots(state, room);
         }
 

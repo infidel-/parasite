@@ -158,7 +158,9 @@ class FacilityJanitor
 // that face by a unit and the prop stands off the end of the wall it is leaning on
   static function wall(m:Facility, col:Int, row:Int):Int
     {
-      if (!FacilityModel.inside(m, col, row) ||
+      // a military base's corridors and latrines are not the compound's: none of its janitorial kit
+      if (m.kind == 'military' ||
+          !FacilityModel.inside(m, col, row) ||
           (m.surf[row][col] != Surf.LINO &&
            m.surf[row][col] != Surf.WASH) ||
           FacilityModel.isTable(m, col, row) ||

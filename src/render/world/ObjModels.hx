@@ -1421,7 +1421,9 @@ class ObjModels
       for (o in game.area.getObjects())
         {
           var i = rowFor(o.getModelKey());
-          if (i < 0)
+          // a base emits its gun cabinet as geometry, in its own art
+          if (i < 0 ||
+              render.military.MilitaryGeom.draws(game.area, o))
             continue;
           var m = MODELS[i];
           var w = CityConfig.cellToWorld(o.x, o.y);

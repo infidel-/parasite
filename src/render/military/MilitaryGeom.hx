@@ -17,7 +17,8 @@ import render.world.VisionMask;
 // a military base's own furniture, emitted as quads off the saved grid (gen.military.MilitaryGen's
 // row-19 tiles) and off its armory objects: the chain-link perimeter with its posts and razor wire,
 // the corner watchtowers, the tents, the shipping containers, the camo nets over the motor pool, the
-// helipad's concrete, and the armory's lockers and safe.
+// helipad's concrete, and the armory's lockers, gun cabinet and safe. The rooms' furniture is
+// render.military.MilitaryInterior, into these same buffers.
 //
 // every one of them is axis-aligned slabs or a rhythm of a material, so all of it is geometry plus a
 // tiling texture rather than a glb (docs/3d-geometry.md): ONE MESH PER TEXTURE, the opaque ones
@@ -27,8 +28,8 @@ class MilitaryGeom
 {
   static inline var CELL = CityConfig.CELL;
 
-  // the art (textures.json military/*). the lockers wear the corp security room's own, being the
-  // same steel lockers at the same scale
+  // the art (textures.json military/*). the lockers and the gun cabinet are corp's steel boxes at
+  // corp's scale (CorpStyle.LOCKER_*), in the base's own olive
   static inline var TEX_CHAIN = 'textures/military/chainlink.png';
   static inline var TEX_TORN = 'textures/military/chainlink-torn.png';
   static inline var TEX_WIRE = 'textures/military/razor-wire.png';
@@ -41,6 +42,9 @@ class MilitaryGeom
   static inline var TEX_SANDBAG = 'textures/military/sandbag.png';
   static inline var TEX_APRON = 'textures/military/apron.png';
   static inline var TEX_SAFE = 'textures/military/safe-front.png';
+  static inline var TEX_LOCKER = 'textures/military/locker-front.png';
+  static inline var TEX_GUNS = 'textures/military/gunrack-front.png';
+  static inline var TEX_STEEL = MilitaryStyle.WINDOW_HEAD;
   static inline var TEX_PAD_MARK = 'textures/military/helipad-h.png';
 
   // the fence: two cells high, one sheet of eight diamonds per CHAIN_TILE units, and a post at
@@ -157,10 +161,13 @@ class MilitaryGeom
           }
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);
-      // the armory: the lockers and the safe the generator stood against its walls
+      MilitaryInterior.build(m, area);
+      // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
+      // ponytail: drawn shut whatever their state, an open one is told by its tooltip
       for (o in area.getObjects())
-        if (o.type == 'locker')
-          locker(m, o.x, o.y);
+        if (o.type == 'locker' ||
+            o.type == 'gunCabinet')
+          locker(m, o.x, o.y, (o.type == 'locker' ? TEX_LOCKER : TEX_GUNS));
         else if (o.type == 'safe')
           safe(m, o.x, o.y);
       for (tex in opaque.keys())
@@ -176,6 +183,7 @@ class MilitaryGeom
       return area != null &&
         area.typeID == AREA_MILITARY_BASE &&
         (o.type == 'locker' ||
+         o.type == 'gunCabinet' ||
          o.type == 'safe');
     }
 
@@ -227,7 +235,7 @@ class MilitaryGeom
     }
 
 // an upright box's four sides and its top, world-tiled. no bottom: the camera never sees one
-  static function box(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y0:Float, y1:Float,
+  public static function box(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y0:Float, y1:Float,
       t:Float):Void
     {
       for (dir in 0...4)
@@ -400,23 +408,22 @@ class MilitaryGeom
           box(buf(TEX_OLIVE), px, px + POLE_W, pz, pz + POLE_W, 0, NET_Y, OLIVE_TILE);
     }
 
-// one armory locker, the corp security room's emitter on the base's object: its wall, its cell's
-// footprint off the slab, the corp art
-  static function locker(m:Facility, col:Int, row:Int):Void
+// one armory locker or the gun cabinet, the corp security room's emitter on the base's object: its
+// wall, its cell's footprint off the slab, an olive steel box with `front` on its face
+  static function locker(m:Facility, col:Int, row:Int, front:String):Void
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)
         return;
       var r = CorpFurniture.lockerRect(m, col, row, dir);
-      FacilityGeom.cap(buf(CorpStyle.LOCKER_TOP), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
+      FacilityGeom.cap(buf(TEX_STEEL), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
         CorpStyle.LOCKER_TILE);
       for (f in 0...4)
         if (f != dir &&
             f != (dir ^ 1))
-          FacilityGeom.face(buf(CorpStyle.LOCKER_SIDE), r.x0, r.x1, r.z0, r.z1, f, 0,
+          FacilityGeom.face(buf(TEX_STEEL), r.x0, r.x1, r.z0, r.z1, f, 0,
             CorpStyle.LOCKER_H, CorpStyle.LOCKER_TILE);
-      FacilityGeom.pane(buf(CorpStyle.LOCKER_FRONT), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0,
-        CorpStyle.LOCKER_H);
+      FacilityGeom.pane(buf(front), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, CorpStyle.LOCKER_H);
       FacilityDetail.ground(m, {
         col: col,
         row: row,
@@ -446,12 +453,12 @@ class MilitaryGeom
           case 2: { x0: cell.x0, x1: cell.x0 + SAFE_D, z0: cz - hw, z1: cz + hw };
           default: { x0: cell.x1 - SAFE_D, x1: cell.x1, z0: cz - hw, z1: cz + hw };
         };
-      var steel = buf(CorpStyle.LOCKER_SIDE);
+      var steel = buf(TEX_STEEL);
       for (f in 0...4)
         if (f != dir &&
             f != (dir ^ 1))
           FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, f, 0, SAFE_H, CorpStyle.LOCKER_TILE);
-      FacilityGeom.cap(buf(CorpStyle.LOCKER_TOP), r.x0, r.x1, r.z0, r.z1, SAFE_H,
+      FacilityGeom.cap(steel, r.x0, r.x1, r.z0, r.z1, SAFE_H,
         CorpStyle.LOCKER_TILE);
       FacilityGeom.pane(buf(TEX_SAFE), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, SAFE_H);
       FacilityDetail.ground(m, {
@@ -490,7 +497,7 @@ class MilitaryGeom
     return (CityConfig.GRID * CELL) / 2;
 
 // the buffer for a texture, opaque or alpha-cut
-  static function buf(tex:String, ?isCut:Bool = false):MeshBuf
+  public static function buf(tex:String, ?isCut:Bool = false):MeshBuf
     {
       var map = (isCut ? cut : opaque);
       if (!map.exists(tex))

@@ -300,7 +300,7 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 | `game/MilitaryAreaGenerator.hx` | the LIVE adapter: the band's `AreaGenerator.wildMix`, a ctx, `MilitaryGen.build`, the drain |
 | `gen/military/MilitaryGen.hx` | `build()` and the public grid helpers (`fence`, `fenceOf`, `outside`, `vehicle`) |
 | `gen/blocks/MilitaryBlocks.hx` | the split profile (12/26/32) and the quota inside the fence |
-| `gen/military/MilitaryRooms.hx` | the armory: the safe once per base, the gun cabinet, up to 5 lockers |
+| `gen/military/MilitaryRooms.hx` | every room's furniture by kind, as `Const` row-20 tiles (and the armory's objects) |
 
 **The order of `build()` is load-bearing**:
 1. Blank the grid to `TEMP_ALLEY`.
@@ -325,10 +325,23 @@ fence tile is the 2D format and regenerates on load.
 **Vehicles are footprints.** `MilitaryGen.vehicle` stamps `TILE_MIL_VEHICLE` (solid) over
 `Const.MIL_*_SIZE` and names the model by its ORIGIN tile, so the renderer derives only a pose.
 
-**Every building room is themed.** `assignRoomThemes` returned early when no room was a candidate,
-and seed 242 shipped with no armory at all. A military floor falls through: every role-null room
-becomes a cabinet room, and the first one is the armory when no store exists. The oracle asserts at
-least 1 safe and lockers + cabinets >= 2.
+**Rooms are the base's own kinds, not the lab's.** `FacilityRooms.militaryThemes` deals them on the
+washroom's own tests:
+- the latrine first;
+- then the biggest room left is the briefing room (HQ) or the mess hall (barracks block);
+- then the HQ's armory;
+- the rest are HQ offices or barracks.
+
+The HQ is the building dealt while no safe stands. `RoomBlock.MILITARY` glazes the room with no
+quota and hands it to `MilitaryRooms.fill`. That stands the furniture and paints the room's floor
+tile LAST, while `roomWallRuns` can still tell bare floor from furniture. `generateRoomContents`
+and `clearTableSpots` skip a base.
+
+**Furniture never seals a cell.** `MilitaryRooms.free` refuses a cell beside a doorway, and a cell
+that would leave a bare neighbour with no OTHER bare neighbour. Counting the doorway as an exit is
+what sealed seed 455's whole office: a desk and a cabinet boxed in the cell inside the door. The
+military run now calls `GenCheck.floorReachable`, which it lacked, and 24 of 400 seeds failed on it
+before the guard went in. The oracle also asserts at least 1 safe and lockers + cabinets >= 2.
 
 ### The one permitted `gen/` → `game/` edge
 
