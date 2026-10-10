@@ -215,6 +215,33 @@ The clone of `CorpSounds`, with the outdoors split off. Facility's `AreaInfo.amb
 - `exterior-sonilo1` became the wilderness's `wild/road`. The day birds are in `unused/facility/`
   as `birds-*-day.wav`.
 
+### Military base: `render/military/MilitarySounds.hx`, driven from `FacilityArea.tick`
+
+Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility renderer. The base's
+`AreaInfo.ambient` is `AMBIENT_NONE`, so the old `ambient-military` bed no longer plays.
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `military/floodlight` | `TILE_MIL_TOWER` cells (the corner towers' lamps) | loop | 4 |
+| `military/fence` | `TILE_MIL_FENCE`, `TILE_MIL_FENCE_TORN` (the whole ring) | loop | 2 |
+| `military/idle` | `TILE_MIL_HUMVEE` origins (every parked humvee) | loop | 5 |
+| `military/radio` | the `safe` object (one per base, in the HQ armory) | loop, 2 variants | 4 |
+| `facility/generator`, `facility/vent` (reused) | `FIT_GENERATOR` in the hangar, `vent` objects | loop | 6, 3 |
+| `facility/car` (reused) | `Surf.ROAD` past the gate | event, gap 45 s | 8 |
+| `military/jet`, `city/helicopter` (reused), `military/range` | none: far one-shots, gaps 150 / 200 / 120 s | event, 2 variants each (heli: city's) | — |
+
+- **Beds**: `military/indoor` (any roof that is not the hangar), `facility/hangar` (reused),
+  `military/yard` (open ground inside the fence), and the margin outside the fence wears its terrain
+  band's own wild bed (`wild/forest`, `wild/plains`, `wild/mountain`), split by
+  `AreaGame.isOutsideBase`. Indoor and yard are baked at -36, like every bed.
+- **A far one-shot is loudest in the open**: full on the yard and margin beds, 0.4 under a roof.
+- Measured at slider 100 on a fresh base: each bed 63.1 in its own zone; fence 7.9 one cell off the
+  ring; radio 14.1 beside the safe; idle 10.6 at the motor pool; floodlight 2.7 three cells off a
+  tower.
+- **The klaxon from the plan was dropped unheard**: an alarm-like one-shot reads as a real alert, and
+  alerts are a gameplay state in a base.
+- `yard-sonilo1-day.wav` in `unused/military/` was judged good for a DAY base. There is no day yet.
+
 ### City: `render/CitySounds.hx`, driven from `CityArea.tick`
 
 Each tier (`area.typeID`: slums `AREA_CITY_LOW`, medium, downtown `AREA_CITY_HIGH`) has its own three
@@ -342,3 +369,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-10 | city, wild | 8 city beds, 6 city loops, 10 city one-shots, 3 wild beds, 5 wild one-shots, night birds | city: diner, downtown alley/main/street, horn, rats, sewer: elevenlabs · bottle, can, garage, helicopter, lampbuzz, laundromat, medium alley/main, screendoor, shopbell, slums main/street, store, warehouse: elevenlabs + sonilo (2 variants; bottle, horn, garage elevenlabs and can, helicopter sonilo had screened CLIPPED and were picked by ear anyway) · crackle: cassette + sonilo · busbrake: dropped · slums alley: re-rolled (metallic), "quiet" in the brief gave elevenlabs -60 / sonilo -53 LUFS, re-rolled again without it, sonilo won · wild: coyote, forest, rockfall: elevenlabs · mountain: elevenlabs, then swapped for sonilo (raw -56.7 LUFS, baked up 20 dB) · owl, twig: elevenlabs + sonilo · plains: cassette · gust: dropped · birds: elevenlabs | $2.17 |
 | 2026-10-10 | city | medium-street (bed, replaces `ambient-city`) | elevenlabs | $0.09 |
 | 2026-10-10 | sewer, wild | tunnel, chamber (beds) · manhole, trickle, pipe (loops) · drip, rats, knock, cover, rumble, surge (one-shots) · forest re-roll | chamber, drip, manhole, pipe, surge: elevenlabs · knock, rats, rumble, trickle: elevenlabs + sonilo (knock sonilo and trickle elevenlabs had screened CLIPPED, picked by ear) · tunnel: cassette + elevenlabs · cover: dropped · forest elevenlabs came back -52 LUFS ("barely any wind"), re-rolled; sonilo won | $0.77 |
+| 2026-10-10 | military | yard, indoor (beds) · floodlight, fence, idle, radio (loops) · jet, range (far one-shots) | fence, floodlight, yard: elevenlabs · idle: sonilo · indoor, jet, radio, range: elevenlabs + sonilo · radio, range, jet cassette had screened CLIPPED (296 / 2,567 clipped samples, 0 dBFS), lost by ear anyway · yard sonilo kept as a day bed | $0.68 |

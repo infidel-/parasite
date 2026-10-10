@@ -1894,6 +1894,244 @@
         "sewer/tunnel1.mp3",
         "sewer/tunnel2.mp3"
       ]
+    },
+    "military/fence": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/fence-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "steady night breeze rattling a long chain-link fence, soft metallic jingle and faint creak of the wire mesh, constant, no distinct events, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/fence1.mp3"
+      ]
+    },
+    "military/floodlight": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/floodlight-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "high-power floodlight on a watchtower, steady electrical ballast buzz and transformer hum, constant, no events, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/floodlight1.mp3"
+      ]
+    },
+    "military/yard": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/yard-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open yard inside a fenced military base at night, distant diesel generator hum, soft wind across the concrete, a far-off engine idling, steady and calm, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/yard1.mp3"
+      ]
+    },
+    "military/idle": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/idle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "parked military utility vehicle with its diesel engine idling, steady low rumble and soft exhaust putter, constant, no revving, no door slams, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:59",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/idle1.mp3"
+      ]
+    },
+    "military/indoor": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/indoor-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a concrete military base building at night, room tone, steady fluorescent light hum, distant ventilation, empty corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/indoor-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "inside a concrete military base building at night, room tone, steady fluorescent light hum, distant ventilation, empty corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T20:09:00",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/indoor1.mp3",
+        "military/indoor2.mp3"
+      ]
+    },
+    "military/jet": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/jet-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military jet passing high and far overhead at night, a distant muffled roar slowly rising and fading away, heard from the ground, realistic field recording, no music, no voices",
+          "duration": 10.0,
+          "seed": null,
+          "cost": 0.02,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/jet-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military jet passing high and far overhead at night, a distant muffled roar slowly rising and fading away, heard from the ground, realistic field recording, no music, no voices",
+          "duration": 10.0,
+          "seed": null,
+          "cost": 0.018,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:01",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/jet1.mp3",
+        "military/jet2.mp3"
+      ]
+    },
+    "military/radio": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/radio-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military field radio set left switched on in an empty office, steady soft static hiss with faint electronic crackle, constant, no speech, no beeps, indoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/radio-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military field radio set left switched on in an empty office, steady soft static hiss with faint electronic crackle, constant, no speech, no beeps, indoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:01",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/radio1.mp3",
+        "military/radio2.mp3"
+      ]
+    },
+    "military/range": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/range-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a firing range very far away at night, a few muffled distant rifle shots with long echoes across open country, faint and remote, realistic field recording, no music, no voices",
+          "duration": 8.0,
+          "seed": null,
+          "cost": 0.016,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/range-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a firing range very far away at night, a few muffled distant rifle shots with long echoes across open country, faint and remote, realistic field recording, no music, no voices",
+          "duration": 8.0,
+          "seed": null,
+          "cost": 0.0144,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:02",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/range1.mp3",
+        "military/range2.mp3"
+      ]
     }
   }
 }
