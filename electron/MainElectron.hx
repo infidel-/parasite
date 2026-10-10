@@ -454,9 +454,15 @@ class MainElectron
 
 // best-effort require of steamworks.js native module. failure = log + null.
 // expected misses: dep not installed, ABI mismatch with current Electron build.
-// caller must check steamworks != null before steamInit()
+// caller must check steamworks != null before steamInit(). a .steam-disabled sentinel in cwd (game
+// install dir, like .debug) skips it outright: no overlay, no init, no workshop, no steam_appid.txt
   static function loadSteamworks()
     {
+      if (Fs.existsSync(Path.join(Node.process.cwd(), '.steam-disabled')))
+        {
+          mlog('[steam] .steam-disabled found, steam not initialised');
+          return;
+        }
       try {
         steamworks = js.Syntax.code("require('steamworks.js')");
         mlog('[steam] steamworks.js loaded');
@@ -471,6 +477,7 @@ class MainElectron
 // Steam client launching the binary (per mod-design.md §12 dev-build note)
   static function writeSteamAppidFile()
     {
+      if (steamworks == null) return;
       try {
         var exeDir = Path.dirname(App.getPath('exe'));
         var p = Path.join(exeDir, 'steam_appid.txt');
