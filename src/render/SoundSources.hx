@@ -61,7 +61,7 @@ class SoundSources
     'city/downtown-main' => -4.0,
     'city/downtown-street' => -4.0,
     'city/downtown-alley' => -4.0,
-    'city/diner' => -4.0,
+    'city/diner' => -16.0,
     'city/store' => -19.0,
     'city/laundromat' => -4.0,
     'city/warehouse' => -14.0,

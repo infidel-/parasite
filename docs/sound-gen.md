@@ -227,7 +227,7 @@ beds and its own one-shots; the loops are shared. All three tiers are `AMBIENT_N
 
 | key | sources | type | range |
 |---|---|---|---|
-| `city/diner`, `city/store`, `city/laundromat` | open cells 4-adjacent to an OPEN shop (`Building.shop` 0, 1, 3, `shopOpen`) | loop | 3; no store in the slums (asked for: its stores are all broken) |
+| `city/diner`, `city/store`, `city/laundromat` | open cells 4-adjacent to an OPEN shop (`Building.shop` 0, 1, 3, `shopOpen`) | loop | 3; no diner or store in the slums (asked for: they are all broken) |
 | `city/warehouse` | around `WorldCtx.style.isSpecial(b.facade)`, ONE IN THREE by position | loop | 4 |
 | `city/sewer` | `sewer_hatch` objects | loop | 2 |
 | `city/lampbuzz` | `SceneBundle.flickCells`, gated on the flicker (slums) | loop | 2 |
