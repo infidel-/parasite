@@ -1302,7 +1302,7 @@ class Const
   public static var TILE_MIL_DESK = OFFSET_ROW20 + 12;
   public static var TILE_MIL_FILE = OFFSET_ROW20 + 13;
   public static var TILE_MIL_STALL = OFFSET_ROW20 + 14;
-  public static var TILE_MIL_TROUGH = OFFSET_ROW20 + 15;
+  public static var TILE_MIL_SINKS = OFFSET_ROW20 + 15;
   // === row 21 - the base's second interior row: the comms room's radio rack and console, the supply
   // store's shelf and crate stack, the medical bay's cot and cabinet, then the standing props the
   // rooms' leftover bays take (gen.military.MilitaryRooms.slot): a gun locker, ammo cans, jerrycans,

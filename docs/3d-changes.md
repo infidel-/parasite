@@ -1934,3 +1934,32 @@ decals"; a base door's reveal in the corridor's board on its room side.
 rifle diagram in slot 4 was refused by moderation (illicit).
 
 **Verdict:** landed. 0 new programs (the flag's compiles at load); +1 call where boards show.
+
+## Military base: latrine basins and toilets, crate stacks apart, console desks off the wall, bench and desk edges, latrine wall on whole tiles
+
+**Reported:** two armory crates intersecting; bench end faces wanting the uv "rotated 90 degs" and a
+side "without hole"; a comms lead through the table ("more space between table and wall?"); an office
+desk's top and its edge "should be the same"; `room-hq` "boring and almost the same as briefing"; the
+latrine's emitted trough ("add sinks"), its wall "not seamless", its cubicles with no toilets.
+
+**Changed:**
+- **Sink and toilet glbs** (`roomkit_build.py`, mil-p's enamel-white and gunmetal, 484 / 584 tris,
+  every `check` gate 0): a pedestal basin two to a sink cell (`TILE_MIL_SINKS`, the trough's id) and a
+  toilet against the wall in each cubicle. Laid at `SAN_TILE` 1.5 with the grid moved (`laid`) so
+  each sits in one cell: cut down its middle, `tile_uv` bookmatched the chips into mirrored pairs.
+- **`CRATE_GAP` 0.08 → 0.24**: two 0.03 lid overhangs plus two crates turned 0.06 toward each other
+  (2 × 1.13 × 0.06). Footprint test on the live save: 10 of 20 in-cell pairs overlap at 0.08, 0 at 0.24.
+- **`CONSOLE_GAP` 0.24**: the lead is `MOUNT_PROUD + CABLE_EPS` (0.13) off the wall, so a flush desk
+  top ran through it. `back(..., gap)`, and `powered` takes the same rect.
+- **Bench**: end faces axes 8 (the five plank ends across), the grid dropped `BENCH_DROP` 0.3885 so
+  the 0.12 sides take rows 240-270 of bench-wood (mid-plank) instead of 79-126, the gap at row 100.
+- **Desk top**: every face of the top slab on the top's cell (it was the body's olive on the edges).
+- **`military/wall-latrine` crop `[512, 1, 441, 441]`**: six whole 73.5 px grout pitches. The old
+  504 quadrant ended mid-pitch, a double-width tile at every repeat.
+- **`room-hq`, `desk-run`, `file-run`, `ROLE_HQ` removed**: the HQ's leftover rooms are barracks.
+
+**Trap:** `buildlib.check` caught the wall-plate tap as a floating island and a handle bar 0.01 off
+its stem's face; both fixed in the script, not waived.
+
+**Verdict:** landed. Two new batches +2 calls (measured by layer-masking them, 59 → 57), the steel
+trough buffer gone -1; 0 new programs (121). 2000 seeds OK.

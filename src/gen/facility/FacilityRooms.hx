@@ -126,7 +126,8 @@ class FacilityRooms
 // other one is a barracks block:
 // - the latrine first, on the washroom's own two tests (an exterior wall, one door onto a corridor);
 // - then the biggest room left is the HQ's briefing room or the block's mess hall;
-// - the HQ takes its armory next and makes every other room an office; the block makes them barracks
+// - the HQ takes its armory next, and every other room left is a barracks room in either. The HQ's
+//   were offices, reported as "boring and almost the same as briefing"
   static function militaryThemes(state: _FacilityState)
     {
       FacilityConnect.sealRooms(state);
@@ -157,7 +158,7 @@ class FacilityRooms
         if (rest.length > 1)
           rest.shift().role = role;
       for (room in rest)
-        room.role = (hq ? ROLE_HQ : ROLE_BARRACKS);
+        room.role = ROLE_BARRACKS;
     }
 
 // fill rooms with content. a military building's are furnished at the room level instead

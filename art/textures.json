@@ -6035,19 +6035,19 @@
       "class": "tile",
       "needs_alpha": false,
       "crop": [
-        516,
-        4,
-        504,
-        504
+        512,
+        1,
+        441,
+        441
       ],
       "prompt": "[quadrant of military/mil-pack-h.png, PACK4, gpt-image-2.5-sunburst high] glazed ceramic tiles 8x8, off-white [append textures.json style]",
       "prompt_exact": false,
-      "note": "latrine wall face (wallInto WASH). lift 1.456: raw 0.2718 to 0.15, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
-      "last_converted": "2026-10-10T20:48:55",
-      "built_linear": 0.1538,
-      "built_srgb": 103.8,
+      "note": "latrine wall face (wallInto WASH). lift 1.456: raw 0.2718 to 0.15, the interior level of its facility counterpart (indoor ~78 sRGB for furniture). THE CROP IS SIX WHOLE TILES, reported from the game as not seamless: the quadrant [516, 4, 504, 504] cut the grout grid mid-pitch (73.5 px), so every repeat showed a tile and a sliver merged into one double-width tile. [512, 1, 441, 441] runs from the quadrant's first grout line (cols 512-513) into its seventh (cols 950-952), and from the first row line (rows 1-2) into the seventh (rows 439-440), so the two halves meet at the wrap as one 5 px line like the rest; a square crop, so the 1.16x resize is uniform",
+      "built_linear": 0.153,
+      "built_srgb": 103.4,
       "lift": 1.456,
-      "last_lift": 1.456
+      "last_lift": 1.456,
+      "last_converted": "2026-10-10T20:48:55"
     },
     "military/wall-office": {
       "src": "military/mil-pack-h.png",

@@ -29,7 +29,6 @@ class MilitaryZones
 {
   // the room kinds, one per role FacilityRooms.militaryThemes deals
   public static inline var ARMORY = 'room-armory';
-  public static inline var HQ = 'room-hq';
   public static inline var COMMS = 'room-comms';
   public static inline var SUPPLY = 'room-supply';
   public static inline var MEDICAL = 'room-medical';
@@ -42,8 +41,6 @@ class MilitaryZones
   // middle less a cell all round
   public static inline var BUNK_ROW = 'bunk-row';
   public static inline var BUNK_ALONG = 'bunk-along';
-  public static inline var DESK_RUN = 'desk-run';
-  public static inline var FILE_RUN = 'file-run';
   public static inline var DESK_ISLAND = 'desk-island';
   public static inline var RACK_RUN = 'rack-run';
   public static inline var CONSOLE_RUN = 'console-run';
@@ -57,7 +54,7 @@ class MilitaryZones
   public static inline var TABLE_ROWS = 'table-rows';
   public static inline var BOARD = 'map-board';
   public static inline var CUBICLES = 'cubicles';
-  public static inline var TROUGH_RUN = 'trough-run';
+  public static inline var SINK_RUN = 'sink-run';
   public static inline var GUN_CABINET = 'gun-cabinet';
   public static inline var SAFE = 'safe-spot';
   public static inline var LOCKER_RUN = 'locker-run';
@@ -83,7 +80,6 @@ class MilitaryZones
 
   static var KIND_OF = [
     ROLE_ARMORY => ARMORY,
-    ROLE_HQ => HQ,
     ROLE_COMMS => COMMS,
     ROLE_SUPPLY => SUPPLY,
     ROLE_MEDICAL => MEDICAL,
@@ -92,9 +88,9 @@ class MilitaryZones
     ROLE_BARRACKS => BARRACKS,
     ROLE_LATRINE => LATRINE,
   ];
-  static var ZONES = [ BUNK_ROW, BUNK_ALONG, DESK_RUN, FILE_RUN, DESK_ISLAND, RACK_RUN, CONSOLE_RUN,
+  static var ZONES = [ BUNK_ROW, BUNK_ALONG, DESK_ISLAND, RACK_RUN, CONSOLE_RUN,
     SHELVING, SHELF_ROW, CRATE_ISLAND, COT_RUN, CABINET_RUN, COT_ISLAND, COUNTER_RUN, TABLE_ROWS, BOARD, CUBICLES,
-    TROUGH_RUN, GUN_CABINET, SAFE, LOCKER_RUN, SLOT, FLOOR ];
+    SINK_RUN, GUN_CABINET, SAFE, LOCKER_RUN, SLOT, FLOOR ];
 
 // the room kind a military role builds, or null for any other role
   public static function kindOf(role: String): String
@@ -196,17 +192,6 @@ class MilitaryZones
               wall(LOCKER_RUN, 0, 2, 1),
             ];
 
-          // desks along the walls with the filing on the shortest bay, and desk pairs in the middle.
-          // An office with no bay two cells long is filing only
-          case HQ:
-            var desks = Lambda.exists([ 0, 1, 2, 3 ], function(w) return reach(w, 2));
-            return [
-              wall(DESK_RUN, (desks ? 1 : 0), 1, 2, function(b) return len(b)),
-              wall(FILE_RUN, (desks ? 0 : 1), 1, 1, function(b) return -len(b)),
-              floor(DESK_ISLAND),
-              wall(DESK_RUN, 0, MANY, 2),
-            ];
-
           // the racks down the longest wall, the consoles facing them, a desk pair in the middle
           case COMMS:
             return [
@@ -304,12 +289,12 @@ class MilitaryZones
               },
             ];
 
-          // the cubicles down the longest wall and the trough facing them
+          // the cubicles down the longest wall and the basins facing them
           case LATRINE:
             return [
               wall(CUBICLES, 1, 1, 1, function(b)
                 return (RoomBlock.tagged(b, TAG_BEST) ? 100 : 0) + len(b)),
-              wall(TROUGH_RUN, 0, 1, 1, function(b)
+              wall(SINK_RUN, 0, 1, 1, function(b)
                 return (RoomBlock.tagged(b, TAG_FACE) ? 100 : 0) + len(b)),
             ];
 

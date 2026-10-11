@@ -998,7 +998,7 @@ class GenCheck
             for (y in r.y1...r.y2 + 1)
             {
               var t = ctx.cells[x][y];
-              var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH ||
+              var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_SINKS ||
                 t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW);
               ok(mil ||
                 tiles.Default.TILE_WALKABLE[t] == 1,

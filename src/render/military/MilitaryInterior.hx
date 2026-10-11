@@ -27,10 +27,10 @@ import three.Three;
 // it is hand-modelled glbs (models-src/military/roomkit_build.py), one instanced batch per model:
 // bunks, footlockers, cots, office desks and filing cabinets, folding chairs at every desk, the
 // store's shelf units, the medical cabinets, mess and briefing tables and their benches, the serving
-// counter, and the comms room's racks, operator desks and radios with their lamps blinking. The
-// latrine's cubicles and trough and the briefing room's map board and wall boards stay quads into
-// render.military.MilitaryGeom's per-texture buffers: partitions, a basin slab and pictures on a
-// wall. One `shade` per RUN, every piece and every chair.
+// counter, the comms room's racks, operator desks and radios with their lamps blinking, and the
+// latrine's basins and toilets. The latrine's cubicles and the briefing room's map board and wall
+// boards stay quads into render.military.MilitaryGeom's per-texture buffers: partitions and pictures
+// on a wall. One `shade` per RUN, every piece and every chair.
 //
 // THE ROOMS WERE ALL EMITTED SLABS and were reported from the game as "very empty and emitted": a
 // rack was a box wearing a picture of radios, a console a slab with radios and a log painted into its
@@ -43,7 +43,6 @@ class MilitaryInterior
 {
   static inline var CELL = CityConfig.CELL;
 
-  static inline var TEX_STAINLESS = 'textures/military/steel.png';
   static inline var TEX_STALL = 'textures/military/stall-panel.png';
   static inline var TEX_STALL_DOOR = 'textures/military/stall-door.png';
   static inline var TEX_BOARD = 'textures/military/map-board.png';
@@ -92,6 +91,10 @@ class MilitaryInterior
   static inline var RACK_TOP_W = RACK_W - 0.3;
   static inline var RACK_TOP_D = RACK_D - 0.3;
   static inline var CONSOLE_D = 2.0;
+  // and how far off its wall it stands: flush, the lead from the socket up to its radio ran through
+  // its top, which a cable MOUNT_PROUD + CABLE_EPS off the face is in front of ("cable goes through the
+  // table, should probably be more space between table and wall")
+  static inline var CONSOLE_GAP = 0.24;
   static inline var RADIO_BIG_H = 1.0158;
   static inline var RADIO_SMALL_H = 0.6527;
   // the rooms' standing props (gen.military.MilitaryRooms.slot) and the armory's pieces, bbox
@@ -133,10 +136,14 @@ class MilitaryInterior
   static inline var COT_FREE_L = 1.3;
   // a chair's centre out in front of its desk's front edge, half under it
   static inline var CHAIR_OUT = 0.3;
-  // the latrine's emitted pieces: the trough's depth off its wall and height, and a cubicle's door
-  // (military/stall-door's 512x510) over the cell's whole width
-  static inline var TROUGH_D = 1.6;
-  static inline var TROUGH_H = 1.8;
+  // the latrine's basin (two to a cell, this far either side of its middle) and toilet, bbox depth and
+  // height as roomkit_build.py measures them
+  static inline var SINK_D = 1.122;
+  static inline var SINK_H = 2.57;
+  static inline var SINK_STEP = 1.0;
+  static inline var TOILET_D = 1.75;
+  static inline var TOILET_H = 1.97;
+  // and its emitted cubicles, a door (military/stall-door's 512x510) over the cell's whole width
   static inline var STALL_H = CELL * 510 / 512;
   static inline var STALL_D = CELL * 0.95;
   static inline var STALL_T = 0.1;
@@ -154,10 +161,12 @@ class MilitaryInterior
   static inline var BOARD_PX = 170.0;
   static inline var BOARDS_Y = 3.2;
   // a crate stack's height off the cell's hash, two stacks side by side per cell, and the gap
-  // between them: one or two crates read as an empty armory ("stack them higher")
+  // between them: one or two crates read as an empty armory ("stack them higher"). The gap clears
+  // both lids' 0.03 overhang and two crates turned the full 0.06 toward each other (2 x 1.13 x 0.06):
+  // at 0.08 they met ("two crates intersect")
   static inline var CRATES_MIN = 2;
   static inline var CRATES_MAX = 4;
-  static inline var CRATE_GAP = 0.08;
+  static inline var CRATE_GAP = 0.24;
   // where a radio stands on its desk in the desk's own frame: along it, and its back in from the
   // desk's back edge, close to the wall so its power lead runs up the wall into it: at 0.25 the lead
   // stopped behind the desk under its top ("cable does not go up to actual radio")
@@ -237,6 +246,8 @@ class MilitaryInterior
         { path: md.militaryWaterCooler, h: COOLER_H },
         { path: md.militaryIvStand, h: IV_H },
         { path: md.militaryStretcher, h: STRETCHER_H },
+        { path: md.militarySink, h: SINK_H },
+        { path: md.militaryToilet, h: TOILET_H },
         { path: md.militaryLocker, h: LOCKER_H },
         { path: md.militaryGunCabinet, h: LOCKER_H },
         { path: md.militarySafe, h: SAFE_H },
@@ -261,7 +272,7 @@ class MilitaryInterior
         for (col in 0...area.width)
           {
             var t = area.getCellType(col, row);
-            if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH) &&
+            if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_SINKS) &&
                 !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW) ||
                 taken[row][col])
               continue;
@@ -311,7 +322,8 @@ class MilitaryInterior
         x1: x0 + CELL,
         z0: z0,
         z1: z0 + CELL,
-      }, dir, [ RACK_D, CONSOLE_D, COOLER_D ][k]), dir >= 2, [ RACK_W, TOP_L, COOLER_W ][k]);
+      }, dir, [ RACK_D, CONSOLE_D, COOLER_D ][k], (k == 1 ? CONSOLE_GAP : 0.0)), dir >= 2,
+        [ RACK_W, TOP_L, COOLER_W ][k]);
       if (k != 1)
         return {
           x0: r.x0,
@@ -522,12 +534,17 @@ class MilitaryInterior
                     (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, YAW[dir], 0.0);
                 }
             }
-          else if (t == Const.TILE_MIL_TROUGH)
+          else if (t == Const.TILE_MIL_SINKS)
             {
-              r = back(m, col, row, cell, dir, TROUGH_D);
-              h = TROUGH_H;
-              MilitaryGeom.box(MilitaryGeom.buf(TEX_STAINLESS), r.x0, r.x1, r.z0, r.z1, 0, h,
-                CELL);
+              // two basins to a cell, backed onto the wall
+              r = back(m, col, row, cell, dir, SINK_D);
+              h = SINK_H;
+              for (i in 0...len)
+                for (k in [ -1, 1 ])
+                  {
+                    var p = stood(cut(r, dir < 2, i, 1), dir, k * SINK_STEP, 0.0, 0.0);
+                    put(md.militarySink, p.x, p.z, p.yaw, 0.0);
+                  }
             }
           else if (t == Const.TILE_MIL_DESK)
             {
@@ -565,7 +582,7 @@ class MilitaryInterior
             }
           else if (t == Const.TILE_MIL_CONSOLE)
             {
-              r = back(m, col, row, cell, dir, CONSOLE_D);
+              r = back(m, col, row, cell, dir, CONSOLE_D, CONSOLE_GAP);
               h = TABLE_H;
               console(r, dir, len, col + row);
             }
@@ -608,6 +625,13 @@ class MilitaryInterior
               r = back(m, col, row, cell, dir, STALL_D);
               h = STALL_H;
               stalls(r, dir, len);
+              // and a toilet in each, its cistern to the wall: they stood empty behind their doors
+              var w = back(m, col, row, cell, dir, TOILET_D);
+              for (i in 0...len)
+                {
+                  var p = stood(cut(w, dir < 2, i, 1), dir, 0.0, 0.0, 0.0);
+                  put(md.militaryToilet, p.x, p.z, p.yaw, 0.0);
+                }
             }
           else if (t == Const.TILE_MIL_MAP_BOARD)
             {
@@ -937,16 +961,17 @@ class MilitaryInterior
         }
     }
 
-// a run's cells cut to `d` off the room face of the wall on side `dir`
-  static function back(m:Facility, col:Int, row:Int, cell:Rect, dir:Int, d:Float):Rect
+// a run's cells cut to `d` off the room face of the wall on side `dir`, `gap` clear of it
+  static function back(m:Facility, col:Int, row:Int, cell:Rect, dir:Int, d:Float,
+      gap:Float = 0.0):Rect
     {
       var sl = FacilityGeom.slab(m, col + DX[dir], row + DZ[dir]);
       return switch (dir)
         {
-          case 0: { x0: cell.x0, x1: cell.x1, z0: sl.z1, z1: sl.z1 + d };
-          case 1: { x0: cell.x0, x1: cell.x1, z0: sl.z0 - d, z1: sl.z0 };
-          case 2: { x0: sl.x1, x1: sl.x1 + d, z0: cell.z0, z1: cell.z1 };
-          default: { x0: sl.x0 - d, x1: sl.x0, z0: cell.z0, z1: cell.z1 };
+          case 0: { x0: cell.x0, x1: cell.x1, z0: sl.z1 + gap, z1: sl.z1 + gap + d };
+          case 1: { x0: cell.x0, x1: cell.x1, z0: sl.z0 - gap - d, z1: sl.z0 - gap };
+          case 2: { x0: sl.x1 + gap, x1: sl.x1 + gap + d, z0: cell.z0, z1: cell.z1 };
+          default: { x0: sl.x0 - gap - d, x1: sl.x0 - gap, z0: cell.z0, z1: cell.z1 };
         };
     }
 

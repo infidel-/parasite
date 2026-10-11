@@ -347,14 +347,17 @@ washroom's own tests:
 - then the HQ's armory;
 - then one specialist each, only while a plain room is left over: the HQ's COMMS room, and the
   barracks block's MEDICAL bay and SUPPLY store;
-- the rest are HQ offices or barracks.
+- the rest are barracks, in the HQ as well as the block.
 
-The HQ is the building dealt while no safe stands.
+The HQ is the building dealt while no safe stands. Its leftover rooms were offices (`room-hq`: desk
+runs, filing, desk pairs), reported as "boring and almost the same as briefing", and the kind, its
+`desk-run`/`file-run` zones and `ROLE_HQ` are gone: 3.91 barracks a base now. `Surf.HQ`, the office
+floor tile and the filing cabinet's render branch stay, since saves made before still hold them.
 
 **A role is a room KIND and a room is ZONES, as in a laboratory.** All nine roles used to be one
 node kind, `room-military`, furnished by loops off `room.role`: the tree could not say what a room
 held and nothing asserted it. Now `RoomBlock.kindOf` returns `MilitaryZones.kindOf(role)`
-(`room-armory`, `room-hq`, `room-comms`, `room-supply`, `room-medical`, `room-briefing`, `room-mess`,
+(`room-armory`, `room-comms`, `room-supply`, `room-medical`, `room-briefing`, `room-mess`,
 `room-barracks`, `room-latrine`), and `glaze` hands the room to `MilitaryZones.deal` in place of the
 laboratory's deal. That:
 - takes the glazing's window bays back off the node;
@@ -370,16 +373,15 @@ laboratory's deal. That:
 | kind | zones (core first) |
 |---|---|
 | armory | gun-cabinet, safe-spot (the base's one), crate-island (runs of 3, else 2, down the long axis), locker-run ×2 |
-| hq | desk-run, file-run (shortest bay), desk-island, desk-run × the rest |
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×2 (longest and facing), cabinet-run (an end wall), cot-island |
 | mess / briefing | counter-run / map-board (an end wall), table-rows |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
-| latrine | cubicles, trough-run |
+| latrine | cubicles (a toilet in each), sink-run (two basins a cell) |
 
-A min is only asked when the room can hold it: an office with no bay two cells long is filing only,
-and a barracks falls back to the other long wall and then the end walls. 2000 seeds, 0 `unmet`.
+A min is only asked when the room can hold it: a barracks falls back to the other long wall and then
+the end walls. 2000 seeds, 0 `unmet`.
 
 **A WALL BAY NEVER TOUCHES GLASS.** `roomWallRuns` only tests the cell straight behind each cell, so a
 corner cell with the next wall's first pane beside it passed. The comms room stood a radio rack there,
@@ -394,8 +396,8 @@ the room props stand.
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
 the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a gun locker (armory
 only, `TILE_MIL_GUN_LOCKER`: furniture wearing the gun cabinet's glb, no loot. It was a rifle rack,
-reported from the barracks as not belonging there and then from the armory as "looks like crap"), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
-(HQ, mess, comms), an IV stand and a stretcher (medical). Two traps, both caught by `floorReachable`:
+reported from the barracks as not belonging there and then from the armory as "looks like crap"), ammo cans (armory, store), jerrycans (store), a flag stand (briefing), a water cooler
+(mess, comms), an IV stand and a stretcher (medical). Two traps, both caught by `floorReachable`:
 - the slots are walked in wall order like every bay, so a rifle rack on the top wall stood BEFORE the
   bunk row off the left wall, which then boxed two cells in behind it. `MilitaryZones.deal` moves the
   slot bays to the end of the room's children;
@@ -436,7 +438,7 @@ wall and tile in front is unwalkable, tile 58,40": the front rule above answered
 wall shelf is 1.5 deep and stands against the slab's face, which is a unit into the WALL's cell, so
 it covers half a unit of its own and the player sees a whole tile of bare boards before it they
 cannot step on. `tiles.Default.TILE_WALKABLE` now passes every piece one cell deep at a wall: the
-radio rack, wall shelf, filing and medical cabinets, the trough and the six standing props. Not the
+radio rack, wall shelf, filing and medical cabinets, the basins and the six standing props. Not the
 console (its chair fills the cell), a crate stack, a cot, a stretcher, a bunk, a table or a store's
 shelf row, which is a separate tile for exactly this reason. `roomUsed` counts a walkable piece as
 used. A save from before has its rows as wall-shelf tiles, which now walk through.

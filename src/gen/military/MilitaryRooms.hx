@@ -25,13 +25,7 @@ class MilitaryRooms
   public static inline var LOCKERS_MAX = 5;
   // wall lockers in one barracks room, between the bunks
   static inline var BARRACKS_LOCKERS = 3;
-  // an HQ office's desks (each two cells along its wall, one per this many cells of perimeter)
-  // and filing cabinets
-  static inline var DESK_PER = 8;
-  static inline var FILES_MAX = 4;
-  // free-standing pieces in a room's middle: an office's desk pairs, an armory's or a store's crate
-  // stacks
-  static inline var DESK_ISLANDS = 2;
+  // free-standing pieces in a room's middle: an armory's or a store's crate stacks
   static inline var CRATE_ISLANDS = 4;
   // a comms room's radio racks and two-cell consoles
   static inline var RACKS_MAX = 4;
@@ -40,9 +34,9 @@ class MilitaryRooms
   static inline var COTS_MAX = 6;
   static inline var COT_ISLANDS = 2;
   static inline var MEDCABS_MAX = 2;
-  // a latrine's cubicles and trough cells
+  // a latrine's cubicles and basin cells (two basins to a cell)
   static inline var STALLS_MAX = 4;
-  static inline var TROUGH_MAX = 3;
+  static inline var SINKS_MAX = 3;
   // the mark a zone gets when it stood nothing, counted by gen.GenRun
   public static inline var TAG_EMPTY = 'empty';
 
@@ -55,11 +49,8 @@ class MilitaryRooms
         {
           case BUNK_ROW: bunkRow(state, room, node);
           case BUNK_ALONG: bunksAlong(state, cells);
-          case DESK_RUN: deskRun(state, room, cells);
-          case FILE_RUN: fileRun(state, room, cells);
           case DESK_ISLAND: islands(state, room, (room.w >= room.h ? 2 : 1),
-            (room.w >= room.h ? 1 : 2), Const.TILE_MIL_DESK,
-            (room.role == ROLE_COMMS ? 1 : DESK_ISLANDS));
+            (room.w >= room.h ? 1 : 2), Const.TILE_MIL_DESK, 1);
           case RACK_RUN: line(state, room, cells, Const.TILE_MIL_RADIO_RACK, RACKS_MAX, 1);
           case CONSOLE_RUN: consoleRun(state, room, cells);
           case SHELVING: shelving(state, cells);
@@ -74,7 +65,7 @@ class MilitaryRooms
             room.role == ROLE_MESS);
           case BOARD: board(state, cells);
           case CUBICLES: line(state, room, cells, Const.TILE_MIL_STALL, STALLS_MAX, 1);
-          case TROUGH_RUN: line(state, room, cells, Const.TILE_MIL_TROUGH, TROUGH_MAX, 1);
+          case SINK_RUN: line(state, room, cells, Const.TILE_MIL_SINKS, SINKS_MAX, 1);
           case GUN_CABINET: gunCabinet(state, room, cells);
           case SAFE: safe(state, room, cells);
           case LOCKER_RUN: lockers(state, room, cells);
@@ -96,7 +87,6 @@ class MilitaryRooms
           case ROLE_ARMORY: [ Const.TILE_MIL_GUN_LOCKER, Const.TILE_MIL_AMMO_CANS ];
           case ROLE_SUPPLY: [ Const.TILE_MIL_JERRYCANS, Const.TILE_MIL_AMMO_CANS ];
           case ROLE_MEDICAL: [ Const.TILE_MIL_IV_STAND, Const.TILE_MIL_STRETCHER ];
-          case ROLE_HQ: [ Const.TILE_MIL_FLAG, Const.TILE_MIL_WATER_COOLER ];
           case ROLE_BRIEFING: [ Const.TILE_MIL_FLAG ];
           case ROLE_MESS, ROLE_COMMS: [ Const.TILE_MIL_WATER_COOLER ];
           default: [];
@@ -299,52 +289,6 @@ class MilitaryRooms
           at += row + 1;
         }
       return n;
-    }
-
-// one wall bay of an office: a desk every two cells, a cell clear after each, and a filing cabinet
-// on a cell a desk does not fit. A desk for every eight cells of the room's perimeter, one at least
-  static function deskRun(state: _FacilityState, room: _Room, run: Array<{ x: Int, y: Int }>): Int
-    {
-      var desks = Std.int(tilesIn(state, room, Const.TILE_MIL_DESK) / 2);
-      var files = tilesIn(state, room, Const.TILE_MIL_FILE);
-      var desksMax = Std.int(Math.max(1, (room.w + room.h) * 2 / DESK_PER));
-      var n = 0;
-      var k = 0;
-      while (k < run.length)
-        {
-          var c = run[k];
-          var e = (k + 1 < run.length ? run[k + 1] : null);
-          if (desks < desksMax &&
-              e != null &&
-              free(state, c.x, c.y) &&
-              free(state, e.x, e.y))
-            {
-              stand(state, c.x, c.y, Const.TILE_MIL_DESK);
-              stand(state, e.x, e.y, Const.TILE_MIL_DESK);
-              desks++;
-              n++;
-              k += 3;
-              continue;
-            }
-          if (files < FILES_MAX &&
-              free(state, c.x, c.y))
-            {
-              stand(state, c.x, c.y, Const.TILE_MIL_FILE);
-              files++;
-              n++;
-              k += 2;
-              continue;
-            }
-          // a blocked cell (a corner pocket) ends nothing: the rest of the bay may still take a desk
-          k++;
-        }
-      return n;
-    }
-
-// an office's filing: a cabinet on every other cell of the bay
-  static function fileRun(state: _FacilityState, room: _Room, run: Array<{ x: Int, y: Int }>): Int
-    {
-      return line(state, room, run, Const.TILE_MIL_FILE, FILES_MAX, 2);
     }
 
 // a comms room's two-cell consoles along one bay, a cell clear between them
@@ -605,7 +549,7 @@ class MilitaryRooms
         {
           var b = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
           if (b == TEMP_BUILDING_ROOM ||
-              b >= Const.TILE_MIL_BUNK && b <= Const.TILE_MIL_TROUGH ||
+              b >= Const.TILE_MIL_BUNK && b <= Const.TILE_MIL_SINKS ||
               b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_SHELF_ROW)
             continue;
           walls++;
@@ -623,7 +567,6 @@ class MilitaryRooms
   public static function facing(t: Int): Bool
     {
       return t == Const.TILE_MIL_SHELF ||
-        t == Const.TILE_MIL_FILE ||
         t == Const.TILE_MIL_MED_CABINET ||
         t == Const.TILE_MIL_RADIO_RACK ||
         t >= Const.TILE_MIL_GUN_LOCKER &&

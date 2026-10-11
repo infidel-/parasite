@@ -753,7 +753,7 @@ class RenderConfig {
     militaryBunk: 'models/military/bunk-hand.glb',        // two-deck bunk, two cells along local x, head at -x
     militaryCot: 'models/military/cot-hand.glb',          // camp cot along local x, pillow at -x
     militaryFootlocker: 'models/military/footlocker-hand.glb', // plank trunk, long axis x, hasp at +z
-    militaryOfficeDesk: 'models/military/office-desk-hand.glb', // HQ desk, one cell long, pedestal at -x
+    militaryOfficeDesk: 'models/military/office-desk-hand.glb', // office desk, one cell long, pedestal at -x
     militaryFileCabinet: 'models/military/file-cabinet-hand.glb', // two-drawer filing cabinet
     militaryChair: 'models/military/chair-hand.glb',      // folding chair, the sitter facing +z
     militaryShelf: 'models/military/shelf-unit-hand.glb', // store shelf unit with its cartons
@@ -769,6 +769,8 @@ class RenderConfig {
     militaryWaterCooler: 'models/military/water-cooler-hand.glb', // water cooler, its tap at +z
     militaryIvStand: 'models/military/iv-stand-hand.glb', // IV stand with its bag
     militaryStretcher: 'models/military/stretcher-hand.glb', // stretcher on two trestles along x, head at -x
+    militarySink: 'models/military/sink-hand.glb',        // latrine pedestal basin, its tap at the back (-z)
+    militaryToilet: 'models/military/toilet-hand.glb',    // latrine toilet, the bowl at +z, cistern at -z
     militaryLocker: 'models/military/locker-hand.glb',    // armory locker bank, one cell wide, doors at +z
     militaryGunCabinet: 'models/military/gun-cabinet-hand.glb', // gun cabinet, doors at +z
     militarySafe: 'models/military/safe-hand.glb',        // the HQ safe, its door at +z

@@ -97,7 +97,6 @@ class FacilityTemp
   public static inline var ROLE_BARRACKS = 'barracks';
   public static inline var ROLE_MESS = 'mess';
   public static inline var ROLE_BRIEFING = 'briefing';
-  public static inline var ROLE_HQ = 'hq';
   public static inline var ROLE_LATRINE = 'latrine';
   // and the three a base deals once each where it has the rooms: the HQ's radio room, and the
   // barracks building's store and medical bay

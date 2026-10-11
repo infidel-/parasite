@@ -407,7 +407,7 @@ class GenRun
                 t == Const.TILE_MIL_DESK ? 'D' :
                 t == Const.TILE_MIL_FILE ? 'F' :
                 t == Const.TILE_MIL_STALL ? 'S' :
-                t == Const.TILE_MIL_TROUGH ? 'U' :
+                t == Const.TILE_MIL_SINKS ? 'U' :
                 t == Const.TILE_MIL_RADIO_RACK ? 'Q' :
                 t == Const.TILE_MIL_CONSOLE ? 'O' :
                 t == Const.TILE_MIL_SHELF ? 'H' :
