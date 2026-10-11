@@ -321,6 +321,9 @@ class GenRun
       check.floorReachable(ctx, state.allRooms);
       check.militaryReach(ctx);
       check.militaryRooms(ctx, state.allRooms);
+      // doors from one room straight into another, which FacilityConnect.sealRooms walls up and
+      // linkClusters cuts back only for a room with no corridor wall
+      add('roomDoors', Lambda.count(state.allDoors, function(d) return d.roomID2 != 0));
       // which zones keep coming out bare
       GenTree.walk(ctx.root, function(n)
         if (gen.blocks.RoomBlock.tagged(n, gen.military.MilitaryRooms.TAG_EMPTY))

@@ -253,11 +253,12 @@ class FacilityDetail
               default: t.x0;
             };
         }
+      var k = FacilityStyle.GROUND_POOL_SCALE * (o.pool != null ? o.pool : 1.0);
       deck({
         cx: cx,
         cz: cz,
-        hw: hw * FacilityStyle.GROUND_POOL_SCALE,
-        hd: hd * FacilityStyle.GROUND_POOL_SCALE,
+        hw: hw * k,
+        hd: hd * k,
         yaw: 0.0,
         y: 0.0,
         plate: {

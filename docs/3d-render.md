@@ -822,6 +822,7 @@ back) — grep the change text.
 | **Military base rooms: wall sockets and machine leads** (FacilityCable on base room surfaces, `m.fit` from `MilitaryStyle.fitOf`, drops off `MilitaryInterior.powered`) | 20 sockets a base, none behind furniture; lockers are objects, stamped into `m.fit` before the cable pass | **landed** |
 | **Military base rooms: barracks gear in 3D, bed and locker-top clutter, art fixes** (`MilitaryClutter` `LidKind`/`kit`/`SOLID`, outline-traced boot and canteen glbs, `buildlib.turned`, `ShellTex.capRoof`) | 1 packed gen $0.055; lids found by footprint, not centre (lockers stand in the wall cell); window-run tops roofed in the deck plane closes the pier slit; +3 calls | **landed** |
 | ^ **gear LOFTED through its traced outline, not extruded** (`loft`/`skin`, side art projected where \|n.y\| > 0.6) + footlocker pool core `FOOT_SHADOW` past the box + `SMALL` decal scale | an extruded outline read as a wooden cut-out; a level top ring pinched a slanted boot collar to a point; a pool at the box's own size put its dark core under the box (rim 3-10/255 → 15-21) | **landed** |
+| ^ **gear rims tiled in world space, store shelving shaded in COLOR_0 and stood in back-to-back rows** (`cut`+`tile_uv`, `export(colors=True)`, `MilitaryInterior.backing`, `FacilityGroundOpts.pool`) | fitted rim faces sampled one spot of the cell and read as flat colour; cartons 0.78 → 1.0 up the rows, 0.70 at the foot, board pools 0.45; 772 tris, +1 program, 0 calls; floor gear pool x0.7 | **landed** |
 
 ### FX, UI and the view itself
 

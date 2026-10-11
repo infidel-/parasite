@@ -1016,6 +1016,29 @@ class GenCheck
                     w == Const.TILE_WINDOW_HIGH),
                     r.role + ' piece at ' + x + ',' + y + ' stands beside a window');
                 }
+              // and a piece reached from its front has a walkable cell there, the far side from a
+              // wall it backs onto: jerrycans stood with a crate stack before them, ammo cans before
+              // a shelf
+              if (!gen.military.MilitaryRooms.facing(t))
+                continue;
+              var walls = 0;
+              var open = false;
+              for (i in 0...Const.dir4x.length)
+                {
+                  var bx = x + Const.dir4x[i];
+                  var by = y + Const.dir4y[i];
+                  if (bx >= r.x1 &&
+                      bx <= r.x2 &&
+                      by >= r.y1 &&
+                      by <= r.y2)
+                    continue;
+                  walls++;
+                  if (tiles.Default.TILE_WALKABLE[ctx.cells[x - Const.dir4x[i]][y - Const.dir4y[i]]] == 1)
+                    open = true;
+                }
+              ok(walls == 0 ||
+                open,
+                r.role + ' piece at ' + x + ',' + y + ' has nothing to stand on in front of it');
             }
     }
 

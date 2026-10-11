@@ -258,8 +258,8 @@ class MilitaryInterior
 
 // a base room piece that draws power, as the footprint render.facility.FacilityCable drops a lead off:
 // a radio rack, an operator desk, a water cooler. null for anything else. Off `m.fit` (MilitaryStyle
-// .fitOf) and the walls alone, so either pass may run first. ponytail: the backing wall is the first
-// solid side, which on a console run's corner cell may be the end wall rather than the run's
+// .fitOf) and the walls alone, so either pass may run first. ponytail: the backing wall is `backing`'s
+// for a single, which on a console run's corner cell may be the end wall rather than the run's
   public static function powered(m:Facility, col:Int, row:Int):DecoRect
     {
       var t = m.fit[row][col];
@@ -267,11 +267,7 @@ class MilitaryInterior
         .indexOf(t);
       if (k < 0)
         return null;
-      var dir = -1;
-      for (d in 0...4)
-        if (dir < 0 &&
-            FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
-          dir = d;
+      var dir = backing(m, col, row, [ 0, 1, 2, 3 ]);
       if (dir < 0)
         return null;
       var x0 = col * CELL - half();
@@ -403,11 +399,7 @@ class MilitaryInterior
           // the rest stand against a wall: the side of the run's first cell that is plain masonry,
           // along the run for a run, any side for a single. NEVER A WINDOW: isWall counts one, and
           // a corner rack found the glass first and stood with its back to it
-          var dir = -1;
-          for (d in (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])))
-            if (dir < 0 &&
-                FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
-              dir = d;
+          var dir = backing(m, col, row, (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])));
           // a desk pair or a cot out in the middle of a room has no wall: the desks stand side by
           // side facing the same way with a chair at each, and the cot lies with its head west
           if (dir < 0 &&
@@ -416,6 +408,24 @@ class MilitaryInterior
               r = across(cell, alongX, DESK_D);
               h = TABLE_H;
               seated(r, (alongX ? 0 : 2), len, md.militaryOfficeDesk, DESK_D);
+            }
+          else if (dir < 0 &&
+              t == Const.TILE_MIL_SHELF)
+            {
+              // a store's row out in its floor: two units back to back, one facing each aisle, the
+              // row running down whichever axis its neighbours along it are not open floor on
+              var ew = (m.fit[row][col - 1] == 0 &&
+                m.fit[row][col + 1] == 0);
+              var cx = (cell.x0 + cell.x1) / 2;
+              var cz = (cell.z0 + cell.z1) / 2;
+              r = across(across(cell, !ew, SHELF_D * 2), ew, SHELF_W);
+              h = SHELF_W;
+              for (d in (ew ? [ 2, 3 ] : [ 0, 1 ]))
+                {
+                  // backing toward the middle from the far side of it, as if that were its wall
+                  var o = (d == 0 || d == 2 ? 1 : -1) * SHELF_D / 2;
+                  put(md.militaryShelf, cx + (ew ? o : 0.0), cz + (ew ? 0.0 : o), YAW[d], 0.0);
+                }
             }
           else if (dir < 0 &&
               t == Const.TILE_MIL_COT)
@@ -743,6 +753,24 @@ class MilitaryInterior
           case 2: { x0: sl.x1, x1: sl.x1 + d, z0: cell.z0, z1: cell.z1 };
           default: { x0: sl.x0 - d, x1: sl.x0, z0: cell.z0, z1: cell.z1 };
         };
+    }
+
+// the wall a piece backs onto, of the `dirs` that are plain masonry: one with open floor in front of it
+// first. A shelf in a store's corner found the end wall first and stood facing into the next shelf
+// along, its front against that one's side
+  static function backing(m:Facility, col:Int, row:Int, dirs:Array<Int>):Int
+    {
+      var dir = -1;
+      for (d in dirs)
+        if (FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
+          {
+            if (m.fit[row - DZ[d]][col - DX[d]] == 0 &&
+                !FacilityModel.isWall(m, col - DX[d], row - DZ[d]))
+              return d;
+            if (dir < 0)
+              dir = d;
+          }
+      return dir;
     }
 
 // a rect narrowed to `w` round its centre ACROSS a run along x (so in z), or across one along z

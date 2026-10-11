@@ -36,8 +36,6 @@ class MilitaryRooms
   // a comms room's radio racks and two-cell consoles
   static inline var RACKS_MAX = 4;
   static inline var CONSOLES_MAX = 2;
-  // a store's shelves
-  static inline var SHELVES_MAX = 10;
   // a medical bay's cots and cabinets
   static inline var COTS_MAX = 6;
   static inline var COT_ISLANDS = 2;
@@ -64,7 +62,8 @@ class MilitaryRooms
             (room.role == ROLE_COMMS ? 1 : DESK_ISLANDS));
           case RACK_RUN: line(state, room, cells, Const.TILE_MIL_RADIO_RACK, RACKS_MAX, 1);
           case CONSOLE_RUN: consoleRun(state, room, cells);
-          case SHELVING: line(state, room, cells, Const.TILE_MIL_SHELF, SHELVES_MAX, 1);
+          case SHELVING: shelving(state, cells);
+          case SHELF_ROW: shelfRows(state, room);
           case CRATE_ISLAND: islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
           case COT_RUN: line(state, room, cells, Const.TILE_MIL_COT, COTS_MAX, 2);
           case CABINET_RUN: line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
@@ -121,7 +120,7 @@ class MilitaryRooms
             {
               var c = run[mid + (k % 2 == 0 ? Std.int(k / 2) : -Std.int(k / 2) - 1)];
               if (c == null ||
-                  !free(state, c.x, c.y))
+                  !walled(state, c.x, c.y))
                 continue;
               // a prop in a bay is the one piece a zone does not plan round, and the first build
               // stood a barracks' rifle rack in the aisle its bunk rows left (3208 floor cells
@@ -386,13 +385,65 @@ class MilitaryRooms
           var c = run[k];
           if (k % step == 0 &&
               have < max &&
-              free(state, c.x, c.y))
+              walled(state, c.x, c.y))
             {
               stand(state, c.x, c.y, tile);
               have++;
               n++;
             }
         }
+      return n;
+    }
+
+// a store's wall shelving: a unit on every cell of the bay but its two ends, which take a crate stack
+// each ("stacks of crates near all"). A bay of two cells or less is shelving only
+  static function shelving(state: _FacilityState, run: Array<{ x: Int, y: Int }>): Int
+    {
+      var n = 0;
+      for (k in 0...run.length)
+        {
+          var c = run[k];
+          if (!walled(state, c.x, c.y))
+            continue;
+          stand(state, c.x, c.y, (run.length > 2 &&
+            (k == 0 || k == run.length - 1) ? Const.TILE_MIL_CRATES : Const.TILE_MIL_SHELF));
+          n++;
+        }
+      return n;
+    }
+
+// a store's free-standing shelving down the middle of its floor ("supply room need to have shelving
+// unit rows as well"): a row along the room's long axis on every other line across it from the second
+// in off each long wall, so each has an aisle either side, from the second cell in off each end wall,
+// so a cross aisle is kept at both. A row is shelving back to back (render.military.MilitaryInterior
+// stands two units in each cell, one facing each aisle) with a crate stack on its far end. A room too
+// narrow for one takes crate stacks instead
+  static function shelfRows(state: _FacilityState, room: _Room): Int
+    {
+      var alongX = (room.w >= room.h);
+      var a0 = (alongX ? room.x1 : room.y1) + 2;
+      var a1 = (alongX ? room.x2 : room.y2) - 2;
+      var n = 0;
+      var b = (alongX ? room.y1 : room.x1) + 2;
+      while (b <= (alongX ? room.y2 : room.x2) - 2)
+        {
+          var row = [for (a in a0...a1 + 1) (alongX ? { x: a, y: b } : { x: b, y: a })];
+          if (row.length >= 2 &&
+              Lambda.foreach(row, function(c) return free(state, c.x, c.y)))
+            {
+              for (k in 0...row.length)
+                stand(state, row[k].x, row[k].y, (k == row.length - 1 &&
+                  row.length >= 3 ? Const.TILE_MIL_CRATES : Const.TILE_MIL_SHELF));
+              if (!sealsOff(state, room))
+                n += row.length;
+              else
+                for (c in row)
+                  stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
+            }
+          b += 2;
+        }
+      if (n == 0)
+        return islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
       return n;
     }
 
@@ -469,8 +520,10 @@ class MilitaryRooms
     }
 
 // may furniture stand on this cell: still bare room floor with nothing on it, no doorway beside
-// it, and no bare neighbour that it would leave with no other bare floor beside it — the one-cell
-// pocket two pieces meeting at a corner close
+// it, no bare neighbour that it would leave with no other bare floor beside it — the one-cell
+// pocket two pieces meeting at a corner close — and no neighbour reached from its front that it
+// would leave nothing to stand on there: the ammo cans stood in front of a shelf ("tile in front of
+// the shelving units as well")
   static function free(state: _FacilityState, x: Int, y: Int): Bool
     {
       var cells = state.area.getCells();
@@ -482,7 +535,9 @@ class MilitaryRooms
           var nx = x + Const.dir4x[i];
           var ny = y + Const.dir4y[i];
           var t = cells[nx][ny];
-          if (isDoor(t))
+          if (isDoor(t) ||
+              facing(t) &&
+              !faces(state, nx, ny, x, y))
             return false;
           if (t != TEMP_BUILDING_ROOM)
             continue;
@@ -501,6 +556,49 @@ class MilitaryRooms
             return false;
         }
       return true;
+    }
+
+// may a piece reached from its front go on this cell: free, with a bare cell in front of it. The
+// jerrycans stood with a crate stack in front of them ("tile in front of cans should be walkable")
+  static function walled(state: _FacilityState, x: Int, y: Int): Bool
+    {
+      return free(state, x, y) &&
+        faces(state, x, y, x, y);
+    }
+
+// has the piece on (x, y) a bare cell to face, (ox, oy) counted as taken: the far side from a wall it
+// backs onto. One out in the room backs onto nothing and needs none
+  static function faces(state: _FacilityState, x: Int, y: Int, ox: Int, oy: Int): Bool
+    {
+      var cells = state.area.getCells();
+      var walls = 0;
+      for (i in 0...Const.dir4x.length)
+        {
+          var b = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (b == TEMP_BUILDING_ROOM ||
+              b >= Const.TILE_MIL_BUNK && b <= Const.TILE_MIL_TROUGH ||
+              b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_STRETCHER)
+            continue;
+          walls++;
+          var fx = x - Const.dir4x[i];
+          var fy = y - Const.dir4y[i];
+          if ((fx != ox || fy != oy) &&
+              cells[fx][fy] == TEMP_BUILDING_ROOM)
+            return true;
+        }
+      return walls == 0;
+    }
+
+// is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack or one of
+// the rooms' standing props
+  public static function facing(t: Int): Bool
+    {
+      return t == Const.TILE_MIL_SHELF ||
+        t == Const.TILE_MIL_FILE ||
+        t == Const.TILE_MIL_MED_CABINET ||
+        t == Const.TILE_MIL_RADIO_RACK ||
+        t >= Const.TILE_MIL_RIFLE_RACK &&
+        t <= Const.TILE_MIL_IV_STAND;
     }
 
 // is this temp id a doorway of any kind?

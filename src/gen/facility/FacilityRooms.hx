@@ -129,6 +129,7 @@ class FacilityRooms
 // - the HQ takes its armory next and makes every other room an office; the block makes them barracks
   static function militaryThemes(state: _FacilityState)
     {
+      FacilityConnect.sealRooms(state);
       var cells = state.area.getCells();
       var rooms = state.rooms.copy();
       rooms.sort(function(a, b) return a.w * a.h - b.w * b.h);

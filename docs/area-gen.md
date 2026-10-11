@@ -372,7 +372,7 @@ laboratory's deal. That:
 | armory | gun-cabinet, safe-spot (the base's one), crate-island, locker-run ×2 |
 | hq | desk-run, file-run (shortest bay), desk-island, desk-run × the rest |
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island |
-| supply | shelving, crate-island, shelving ×2 |
+| supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×2 (longest and facing), cabinet-run (an end wall), cot-island |
 | mess / briefing | counter-run / map-board (an end wall), table-rows |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
@@ -409,6 +409,31 @@ medical 9.6, mess 15.4, supply 8.9 cells a room.
 `--stats` also prints `nodes/<zone>` and `zoneEmpty/<zone>`. A desk-island is empty in a room too
 narrow for one, about 1.3 a base.
 
+**A store is shelving ROWS, not crates in the middle** ("looks way empty because a few crates are in
+the middle"). `shelf-row` is the store's floor zone: a row along the room's long axis on every other
+line across it from the second in off each long wall, so each has an aisle either side, from the
+second cell in off each end wall, so a cross aisle stays at both. A row is shelving with a crate
+stack on its far end, and `MilitaryInterior` stands TWO units back to back in each of its cells, one
+facing each aisle. It goes back to bare floor if it would split the room (`sealsOff`), and a room
+too narrow for one takes crate islands instead (`zoneEmpty/shelf-row` 0.07 a base). Wall shelving
+puts a crate stack on each end of its bay. Supply fill 8.9 → 9.3 cells a room; the rest of the base
+moved by under 0.9.
+
+**A piece reached from its front keeps a bare cell there** (shelf, filing cabinet, medical cabinet,
+radio rack and the standing props, `MilitaryRooms.facing`). Jerrycans stood with a crate stack in
+front of them and ammo cans in front of a corner shelf. `walled` (line, slot, wall shelving) wants a
+bare cell on the far side from some wall the piece backs onto, and `free` refuses a cell that would
+take a facing neighbour's LAST one, so every filler respects it. The corner shelf was half the bug:
+the render tried the end wall first and stood it facing into the shelf beside it, so
+`MilitaryInterior.backing` now prefers a wall with open floor in front. `GenCheck.militaryRooms`
+asserts every such piece against a wall has a walkable front.
+
+**Rooms open onto corridors, not into each other.** `makeDoors` rolls each room's door over its whole
+ring, so one landed in the wall a barracks shares with the store ("supply room <-> barracks door
+should not be there"). `FacilityConnect.sealRooms`, the base's first theming step, walls up every
+room-to-room door and runs `linkClusters`, which cuts a corridor door for whatever that strands and a
+room door only for a room with no corridor wall at all (`roomDoors`, 0.44 a base).
+
 **Furniture never seals a cell.** `MilitaryRooms.free` refuses a cell beside a doorway, and a cell
 that would leave a bare neighbour with no OTHER bare neighbour. Counting the doorway as an exit is
 what sealed seed 455's whole office: a desk and a cabinet boxed in the cell inside the door. The
@@ -423,7 +448,7 @@ and `roomUsed/<role>` (cells holding an unwalkable tile or an object) and `roomE
 | office | 23% | 32% | wall runs no longer stop at the first blocked cell, FILES_MAX 2 → 4, plus centre desk pairs |
 | armory | 18% | 24% | crate stacks in the middle |
 | comms | — | 27% | racks on the longest wall, two-cell consoles facing them (side walls when that is windows) |
-| supply | — | 35% | shelves on the walls, crate stacks in the middle |
+| supply | — | 35% | shelves on the walls, crate stacks in the middle (now shelving rows, above) |
 | medical | — | 21% | cots on two walls and in the middle, cabinets on a side wall |
 
 - `MilitaryRooms.islands` is the free-standing pass: a block nearest the room's centre, with a whole

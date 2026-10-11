@@ -1814,3 +1814,35 @@ that left a slit at z = the boundary, over the glazing band, with nothing in it.
   watch 0.25, dog tags 0.45, socks 0.4; cards measured 0.45 across.
 
 **Verdict:** landed.
+
+## Military base: gear rims tiled, store shelving shaded and in rows, smaller boot pool
+
+**Reported:**
+- boots and canteen: "also need different texture mapping", "blank single color won't do", on the
+  toe, heel, collar and the cover's rim; "make hole deeper";
+- a floor pair of boots: "contact shadow too large, reduce 30%";
+- the shelf unit: frame "replace with darker"; "boxes need contact shadow and lower boxes need to be
+  darker like we do on all shelving units";
+- the store: "looks way empty because a few crates are in the middle".
+
+**Changed:**
+- **Gear rims tile in world space.** Every face off the projected art was FITTED (`tag …, 5` with a
+  scale), so each took the same few texels of the cell's middle and read as one flat colour. A
+  per-piece `cut()` (`grid_cut` on that piece's faces only) and `buildlib.tile_uv` now lay boot
+  leather (0.6 a tile), the canteen cover's plain middle (0.18) and canvas (1.0) continuous across
+  faces. Boots 1,016 → 1,104 tris, canteen 416 → 552, rucksack 512 → 548. Boot pit 0.06 → 0.2.
+- **Shelf shading is baked into COLOR_0**, the facility's own numbers (`DECO_BOX_AO_LOW` 0.78 →
+  1.0 up the rows, `_FOOT` 0.70 at each carton's base), and each board's top is cut round every
+  carton so a pool runs 0.45 → 1.0 over 0.1 out from it. `buildlib.export(colors=True)` writes the
+  active colour attribute, `models.mjs` passes it through, `Models.toLambert` keeps `vertexColors`.
+  One program permutation, no draw call. Cutting the whole board went 228 → 1,316 tris; tops only,
+  772. Frame `enamel` (87) → `gunmetal` (57) in mil-s-sheet cell 0.
+- **Store rows render back to back:** a `TILE_MIL_SHELF` with no wall stands two units in its cell,
+  one facing each aisle, the row's axis off which neighbours are open floor.
+- **`backing` prefers a wall with open floor in front.** A corner shelf tried the end wall first and
+  faced into its neighbour's side. `powered` uses it too, so leads still find the same wall.
+- **`FacilityGroundOpts.pool`** scales the floor pool; floor gear passes `GEAR_POOL` 0.7.
+
+**Trap:** board pools barely read on gunmetal at 57; the cartons' darker feet carry the contact.
+
+**Verdict:** landed.

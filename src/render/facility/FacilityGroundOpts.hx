@@ -18,4 +18,6 @@ typedef FacilityGroundOpts = {
   rect:FacilityGeom.Rect,
   // and how tall it stands off the floor
   h:Float,
+  // the floor pool's size against GROUND_POOL_SCALE's own, 1 when absent
+  ?pool:Float,
 }

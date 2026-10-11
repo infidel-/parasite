@@ -130,6 +130,9 @@ class MilitaryClutter
     },
   ];
   static inline var GEAR_TURN = 0.35;
+  // the floor pool under a piece of gear against FacilityDetail.ground's own: a pair of boots' pool
+  // was asked 30% smaller
+  static inline var GEAR_POOL = 0.7;
   // the barracks sheet's cells that are GEAR, not decals: the boots, the rucksack and the canteen
   static var SOLID:Map<Int, Int> = [
     1 => 0,
@@ -375,6 +378,7 @@ class MilitaryClutter
                 z1: z + t.hd,
               },
               h: p.h,
+              pool: GEAR_POOL,
             });
           else
             FacilityDetail.deck({

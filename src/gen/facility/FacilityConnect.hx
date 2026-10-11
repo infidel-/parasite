@@ -165,6 +165,22 @@ class FacilityConnect
       linkClusters(state);
     }
 
+// wall up every door from one room straight into another, and give whatever that strands a way in of
+// its own. A military building's rooms open onto its corridors: a barracks walked through into the
+// store next door was reported as a door that should not be there. linkClusters still cuts a door
+// into a neighbour for a room with no corridor wall at all, the one case it is the only way in
+  public static function sealRooms(state: _FacilityState)
+    {
+      var cells = state.area.getCells();
+      for (door in state.doors.copy())
+        if (door.roomID2 != 0)
+          {
+            cells[door.x][door.y] = TEMP_BUILDING_INNER_WALL;
+            state.doors.remove(door);
+          }
+      linkClusters(state);
+    }
+
 // let every set of rooms that cannot reach a corridor in: a door onto a corridor where one of its
 // rooms has the wall for it, and a door into a room that is already reached where none has. Never
 // into the washroom — it is entered from a corridor and passed through by nobody

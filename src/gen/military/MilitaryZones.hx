@@ -48,6 +48,7 @@ class MilitaryZones
   public static inline var RACK_RUN = 'rack-run';
   public static inline var CONSOLE_RUN = 'console-run';
   public static inline var SHELVING = 'shelving';
+  public static inline var SHELF_ROW = 'shelf-row';
   public static inline var CRATE_ISLAND = 'crate-island';
   public static inline var COT_RUN = 'cot-run';
   public static inline var CABINET_RUN = 'cabinet-run';
@@ -92,7 +93,7 @@ class MilitaryZones
     ROLE_LATRINE => LATRINE,
   ];
   static var ZONES = [ BUNK_ROW, BUNK_ALONG, DESK_RUN, FILE_RUN, DESK_ISLAND, RACK_RUN, CONSOLE_RUN,
-    SHELVING, CRATE_ISLAND, COT_RUN, CABINET_RUN, COT_ISLAND, COUNTER_RUN, TABLE_ROWS, BOARD, CUBICLES,
+    SHELVING, SHELF_ROW, CRATE_ISLAND, COT_RUN, CABINET_RUN, COT_ISLAND, COUNTER_RUN, TABLE_ROWS, BOARD, CUBICLES,
     TROUGH_RUN, GUN_CABINET, SAFE, LOCKER_RUN, SLOT, FLOOR ];
 
 // the room kind a military role builds, or null for any other role
@@ -217,10 +218,12 @@ class MilitaryZones
               floor(DESK_ISLAND),
             ];
 
+          // shelving down the longest wall and up to two more, and back-to-back rows of it down the
+          // middle: a few crate stacks out on the floor "looks way empty"
           case SUPPLY:
             return [
               wall(SHELVING, 1, 1, 1, function(b) return len(b)),
-              floor(CRATE_ISLAND),
+              floor(SHELF_ROW),
               wall(SHELVING, 0, 2, 1),
             ];
 
