@@ -6,11 +6,13 @@ import render.Models;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.facility.FacilityDeco;
+import render.facility.ClutterSlot;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.military.MilitaryClutter.MilitaryLid;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import three.Three;
@@ -115,6 +117,10 @@ class MilitaryInterior
   static inline var RADIO_BACK = 0.25;
   static inline var RADIO_BIG_D = 0.93;
   static inline var RADIO_SMALL_D = 0.73;
+  static inline var RADIO_BIG_W = 1.5;
+  static inline var RADIO_SMALL_W = 1.1;
+  // a desk's and a table's top along its length (roomkit_build.py's CELL - 0.1)
+  static inline var TOP_L = 3.9;
   // the lamp sockets the art paints, in each glb's normalized frame (x across, y up from the base, z
   // out of the bbox centre toward the face), printed by roomkit_build.py's `leds`
   static var RACK_LEDS = [
@@ -148,6 +154,8 @@ class MilitaryInterior
   static var places:Map<String, Array<PropPlace>>;
   static var grid:AreaGame;
   static var leds:MeshBuf;
+  // and the furniture tops render.military.MilitaryClutter lays its decals on
+  public static var lids:Array<MilitaryLid>;
 
 // every glb the rooms stand and the height it is drawn at: the batches, and View's warm-up
   public static function warmProps():Array<{ path:String, h:Float }>
@@ -192,6 +200,7 @@ class MilitaryInterior
       for (k in warmProps())
         places.set(k.path, []);
       leds = MeshBufTools.make();
+      lids = [];
       var taken = [for (_ in 0...area.height) [for (_ in 0...area.width) false]];
       for (row in 0...area.height)
         for (col in 0...area.width)
@@ -278,6 +287,8 @@ class MilitaryInterior
             (face < 2 ? FOOT_W : FOOT_D));
           h = FOOT_H;
           put(md.militaryFootlocker, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], 0.0);
+          top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], FOOT_W, FOOT_D - 0.1, FOOT_H, 0, 2,
+            []);
         }
       else if (t == Const.TILE_MIL_MESS_TABLE ||
           t == Const.TILE_MIL_BRIEF_TABLE ||
@@ -292,6 +303,9 @@ class MilitaryInterior
             {
               var c = cut(r, alongX, i, 1);
               put(path, (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), 0.0);
+              if (!bench)
+                top((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), TOP_L, TABLE_W,
+                  TABLE_H, 2, 4, []);
             }
         }
       else if (t == Const.TILE_MIL_CRATES)
@@ -390,6 +404,9 @@ class MilitaryInterior
                 md.militaryRadioRack), (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
               if (t == Const.TILE_MIL_RADIO_RACK)
                 lamps(RACK_LEDS, r, dir, 0.0, 0.0, 0.0, col, row);
+              else if (t == Const.TILE_MIL_FILE ||
+                  t == Const.TILE_MIL_MED_CABINET)
+                top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], w, d, w, 0, 1, []);
             }
           else if (t == Const.TILE_MIL_CONSOLE)
             {
@@ -458,6 +475,7 @@ class MilitaryInterior
           var p = stood(c, dir, 0.0, 0.0, 0.0);
           put(path, p.x, p.z, p.yaw, 0.0);
           chair(c, dir, 0.0, depth);
+          top(p.x, p.z, p.yaw, TOP_L, depth, TABLE_H, 1, 3, []);
         }
     }
 
@@ -484,6 +502,14 @@ class MilitaryInterior
           var x = (big ? RADIO_BIG_X : RADIO_SMALL_X);
           var q = stood(c, dir, x, back, TABLE_H);
           put((big ? md.militaryRadioBig : md.militaryRadioSmall), q.x, q.z, q.yaw, TABLE_H);
+          top(p.x, p.z, p.yaw, TOP_L, CONSOLE_D, TABLE_H, 1, 3, [
+            {
+              x: x,
+              z: back,
+              hw: (big ? RADIO_BIG_W : RADIO_SMALL_W) / 2,
+              hd: (big ? RADIO_BIG_D : RADIO_SMALL_D) / 2,
+            }
+          ]);
           lamps((big ? BIG_LEDS : SMALL_LEDS), c, dir, x, back, TABLE_H, Std.int(c.x0 * 7),
             Std.int(c.z0 * 7));
         }
@@ -497,6 +523,26 @@ class MilitaryInterior
         z: z,
         yaw: yaw,
         y: y,
+      });
+    }
+
+// a furniture top for render.military.MilitaryClutter: centre, turn (stood's), extents along its own
+// x and z, height, the decal count's range and what already stands on it in its own frame
+  static function top(x:Float, z:Float, yaw:Float, w:Float, d:Float, y:Float, min:Int, max:Int,
+      claims:Array<ClutterSlot>):Void
+    {
+      lids.push({
+        x: x,
+        z: z,
+        yaw: yaw,
+        w: w,
+        d: d,
+        y: y,
+        min: min,
+        max: max,
+        col: Std.int((x + half()) / CELL),
+        row: Std.int((z + half()) / CELL),
+        claims: claims,
       });
     }
 

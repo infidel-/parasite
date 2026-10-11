@@ -6861,6 +6861,204 @@
       "last_converted": "2026-10-11T16:20:18",
       "built_linear": 0.1254,
       "built_srgb": 98.1
+    },
+    "military/hq-clutter": {
+      "src": "military/hq-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the headquarters office of a worn military base - used, scuffed, olive drab, khaki, grey steel, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe headquarters office: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A stack of three manila folders, slightly fanned.\n2. An open manila folder with typed pages inside.\n3. A clipboard holding a typed form.\n4. A black desk telephone with a coiled cord.\n5. A rubber stamp beside a small square ink pad.\n6. A wire paper tray holding a stack of papers.\n7. A pencil and a black fountain pen lying side by side.\n8. A grey stapler.\n9. A folded paper map.\n10. A small round ashtray with two cigarette butts.\n11. A stack of white envelopes tied with string.\n12. A thick olive ring binder lying closed.\n13. A plastic ID card on a lanyard.\n14. A desk blotter pad with a dark leather edge.\n15. A spiral notepad with handwritten smudge lines.\n16. A pair of reading glasses folded.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the headquarters office's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. The drop came back UNCUT (a painted backdrop under every object, lanes alpha 100-180), so one edit_image pass (sunburst, transparent: keep the objects, remove everything else) re-cut it; the raw drop is textures-src/military/Unused/hq-clutter-raw-drop.png. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/hq-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:03",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0868,
+      "built_srgb": 74.9
+    },
+    "military/comms-clutter": {
+      "src": "military/comms-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the radio communications room of a worn military base - used, scuffed, olive drab, khaki, grey steel, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe radio communications room: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. An open logbook with ruled columns of smudge lines.\n2. A pair of radio headphones with a coiled cord.\n3. A radio handset microphone with a coiled cord.\n4. A thick spiral-bound codebook lying closed.\n5. A frequency chart sheet with a printed grid.\n6. A clipboard message pad with a pencil on it.\n7. A spare olive radio battery pack.\n8. A coiled black signal cable.\n9. A brass morse telegraph key on a small wooden base.\n10. A notepad with a grid of smudge marks.\n11. A small map sheet with red pins stuck in it.\n12. A pair of small earphones on a thin cord.\n13. A red folder with a black diagonal band.\n14. A thin grey radio manual lying open.\n15. Three loose sheets of teletype paper.\n16. A folded paper message form.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the radio communications room's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/comms-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:04",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0783,
+      "built_srgb": 72.7
+    },
+    "military/briefing-clutter": {
+      "src": "military/briefing-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the briefing room of a worn military base - used, scuffed, olive drab, khaki, grey steel, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe briefing room: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A rolled-up map tied with a cord.\n2. An unrolled topographic map with contour lines.\n3. A long wooden pointer stick.\n4. A stack of black and white aerial reconnaissance photographs.\n5. A clear acetate overlay sheet with red grease pencil marks.\n6. A red grease pencil and a black one.\n7. A brass lensatic compass, open.\n8. A clear plastic protractor.\n9. A closed olive ring binder.\n10. A notepad with a pen lying on it.\n11. Three manila folders fanned.\n12. A single typed briefing sheet.\n13. A pair of binoculars.\n14. A small stack of index cards.\n15. A wooden ruler.\n16. A khaki field cap lying flat.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the briefing room's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/briefing-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:04",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0836,
+      "built_srgb": 76.6
+    },
+    "military/mess-clutter": {
+      "src": "military/mess-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the mess hall of a worn military base - used, scuffed, olive drab, khaki, grey steel, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe mess hall: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A steel compartment food tray with mashed potatoes, peas and stew.\n2. An empty steel compartment food tray with smears of food.\n3. A fork, a knife and a spoon side by side.\n4. A white plate with a slice of bread and butter.\n5. A crumpled paper napkin.\n6. An opened olive ration box with pouches inside.\n7. A green apple.\n8. An olive canteen lying on its side.\n9. An open aluminium mess kit with a spoon in it.\n10. A small pile of bread crumbs and a crust.\n11. A flattened empty tin can.\n12. A salt and a pepper shaker lying on their sides.\n13. A folded dish towel.\n14. A small tray of four boiled eggs.\n15. A torn ketchup packet.\n16. A chocolate bar in olive wrapping, half open.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the mess hall's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/mess-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:05",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0916,
+      "built_srgb": 78.8
+    },
+    "military/barracks-clutter": {
+      "src": "military/barracks-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the barracks of a worn military base - used, scuffed, olive drab, khaki, grey steel, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe barracks: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A neatly folded olive uniform shirt.\n2. A pair of black combat boots side by side.\n3. A round olive steel helmet seen from above.\n4. An olive rucksack lying flat.\n5. A pair of dog tags on a ball chain.\n6. A fanned hand of playing cards.\n7. A dog-eared comic magazine with no lettering.\n8. An open shaving kit with a razor and brush.\n9. A folded khaki towel.\n10. An open handwritten letter and a small photograph.\n11. A pair of rolled olive socks.\n12. A coiled khaki web belt with a buckle.\n13. An olive canteen lying on its side.\n14. A folded black beret.\n15. A crumpled cigarette pack and a lighter.\n16. A steel wristwatch.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the barracks's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. The drop came back UNCUT (a painted backdrop under every object, lanes alpha 100-180), so one edit_image pass (sunburst, transparent: keep the objects, remove everything else) re-cut it; the raw drop is textures-src/military/Unused/barracks-clutter-raw-drop.png. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/barracks-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:05",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0899,
+      "built_srgb": 74.9
+    },
+    "military/armory-clutter": {
+      "src": "military/armory-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the armory of a worn military base - used, scuffed, olive drab, khaki, grey steel, gunmetal and brass. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe armory.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. An assault rifle lying flat.\n2. A black pistol lying flat.\n3. Three rifle magazines lying side by side.\n4. A coiled belt of brass machine gun ammunition.\n5. An open rifle cleaning kit with rods and a cloth.\n6. A tan leather pistol holster.\n7. A round olive steel helmet seen from above.\n8. An olive body armour vest lying flat.\n9. A combat knife in its sheath.\n10. An open ammunition box full of brass cartridges.\n11. A bayonet.\n12. A rifle scope.\n13. A pair of binoculars.\n14. An orange flare pistol.\n15. An olive smoke grenade canister lying on its side.\n16. A small pile of loose brass cartridges.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the armory's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. The drop came back UNCUT (a painted backdrop under every object, lanes alpha 100-180), so one edit_image pass (sunburst, transparent: keep the objects, remove everything else) re-cut it; the raw drop is textures-src/military/Unused/armory-clutter-raw-drop.png. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/armory-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:06",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0987,
+      "built_srgb": 78.9
+    },
+    "military/supply-clutter": {
+      "src": "military/supply-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the supply store of a worn military base - used, scuffed, olive drab, khaki, grey steel, cardboard, manila and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe supply store: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. An open cardboard box with packets inside.\n2. A stack of folded olive blankets.\n3. A coil of hemp rope.\n4. A folded olive tarpaulin.\n5. A steel toolbox seen from above.\n6. A clipboard with an inventory sheet.\n7. An empty folded burlap sandbag.\n8. An olive canvas duffel bag.\n9. A loose wooden crate lid.\n10. A pile of brown ration pouches.\n11. A pack of four batteries.\n12. An olive flashlight.\n13. A roll of grey duct tape.\n14. A coil of steel wire.\n15. A pair of leather work gloves.\n16. A flattened cardboard box.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the supply store's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/supply-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:06",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0762,
+      "built_srgb": 73.6
+    },
+    "military/medical-clutter": {
+      "src": "military/medical-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the field medical bay of a worn military base - used, scuffed, olive drab, khaki, grey steel, white cloth and white paper. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe field medical bay: printed pages carry only abstract grey smudge bars standing in for text.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. An open first aid kit with supplies inside.\n2. Three white bandage rolls.\n3. A sealed gauze pack.\n4. A steel tray with two syringes.\n5. An amber pill bottle lying on its side with a few pills.\n6. A pair of scissors and steel forceps.\n7. A coiled stethoscope.\n8. A small pile of used gauze with faint dark stains.\n9. A steel kidney dish with surgical instruments.\n10. A clipboard with a medical chart.\n11. A pair of white rubber gloves.\n12. A padded wooden splint.\n13. A coiled clear IV tube.\n14. A glass thermometer.\n15. An olive medic bag with a white cross patch.\n16. A folded white sheet.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the field medical bay's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. The drop came back UNCUT (a painted backdrop under every object, lanes alpha 100-180), so one edit_image pass (sunburst, transparent: keep the objects, remove everything else) re-cut it; the raw drop is textures-src/military/Unused/medical-clutter-raw-drop.png. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/medical-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:07",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0981,
+      "built_srgb": 78.2
+    },
+    "military/latrine-clutter": {
+      "src": "military/latrine-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate objects arranged as a strict 4 x 4 grid, 4 rows of 4 objects. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every object must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels, numbers or text - only the 16 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale to each other, each filling most of the middle of its cell. These belong in the latrine and washroom of a worn military base - used, scuffed, olive drab, khaki, grey steel, white soap and cloth. NO LOGOS, NO LETTERING, NO WRITTEN WORDS ANYthe latrine and washroom.\n\nThe sixteen objects, in reading order (left to right, then top to bottom):\n1. A roll of toilet paper lying on its side.\n2. A bar of soap.\n3. A crumpled khaki towel.\n4. A safety razor and a shaving brush.\n5. A toothbrush and a tube of toothpaste.\n6. A black comb.\n7. A crumpled paper towel.\n8. A grey mop head.\n9. A wooden scrub brush.\n10. A small dark puddle of water.\n11. A plunger lying flat.\n12. A spray bottle lying on its side.\n13. A grey cleaning rag.\n14. A folded newspaper with abstract grey smudge bars and no lettering.\n15. A pair of rubber shower sandals.\n16. A small steel mirror.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of the latrine and washroom's flat clutter (render.military.MilitaryClutter), gpt-image-2.5-sunburst high, background transparent. tools/pack16.py --cols 4 --rows 4 --cell 256 --valign center re-pasted it onto the exact grid (the cut drop is Unused/latrine-clutter-cut.png). sat and the cap are corp/exec-clutter's.",
+      "last_converted": "2026-10-11T16:44:07",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0827,
+      "built_srgb": 76.6
     }
   }
 }

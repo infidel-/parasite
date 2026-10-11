@@ -818,6 +818,7 @@ back) — grep the change text.
 | **Military base: the yard kit hand-modelled (drum, crate, container, roof tank) and a sharp mast** | four Blender glbs replace emitted boxes; the mast goes 43 → 171 texels/unit; roof batches clone their material, because warm's vision-mask patch chained IndoorMask and blacked them out | **landed** |
 | **Military base rooms: comms, supply and medical, and the existing kinds fuller** | mil-pack-o (rack, shelf, medical cabinet, console/cot 2:1 bands); `art()` orients authored tops; rooms 18-30% → 24-35% furnished | **landed** |
 | **Military base rooms: every piece of furniture hand-modelled, blinking machinery, standing props** | 27 Blender glbs on MilitaryInterior's footprints, one batch each; lamps measured off the art and printed in the glb frame by the build script; three packed gens $0.165; latrine and map board stay quads | **landed** |
+| **Military base rooms: flat clutter, one pack16 per room kind** (`MilitaryClutter`, lids recorded by `MilitaryInterior`) | 9 sheets, $0.75 incl. 4 `edit_image` re-cuts (sunburst transparent cut only 5 of 9); per-role floor picks; one mesh per kind | **landed** |
 
 ### FX, UI and the view itself
 

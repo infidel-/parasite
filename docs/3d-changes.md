@@ -1681,3 +1681,34 @@ equal-width parts and flanks 0.01 apart all count as shared planes; staggered by
 **Cost:** about +7 to +12 calls in a furnished room's view (58 → 65-70 in the comms room, unpinned).
 
 **Verdict:** landed.
+
+## Military base rooms: flat clutter, one pack16 per room kind
+
+**Changed:** `render.military.MilitaryClutter` lays flat decals in the base's rooms, cut from
+`textures/military/<role>-clutter`, a 4x4 pack16 per room kind (9 sheets). The sheet a room deals
+from is its `generatorInfo` role, so a mess hall never gets a rifle. Reported as "empty fucking
+table" and a console with its radios and log PAINTED into its top.
+- **Lids:** `MilitaryInterior` records a `MilitaryLid` as it stands each desk, operator desk, mess
+  or briefing table, footlocker, filing cabinet and medical cabinet. A comms desk's lid carries its
+  radio set as a claim box, so nothing lands under the glb.
+- **Counts:** desks take 1-3, tables 2-4, lockers and cabinets 0-2 / 0-1. Rejection-sampled in the
+  lid's own frame (FacilityClutter's sampler and `ClutterSlotTools.hits`).
+- **Floor:** 15% of a room's bare cells, from a per-role `FLOOR_PICK` list only. A telephone or a
+  stapler on an office floor read as dropped; boots, a puddle, crumbs or cartridges read as litter.
+- **Size:** 1.1 + 0.4 units on a lid, 1.4 + 0.4 on the floor. 0.9 read as crumbs on a 3.9 x 2.8
+  table.
+
+**Art:** 9 gens + 4 re-cuts, $0.75. **gpt-image-2.5 sunburst with `background:"transparent"` cut
+only 5 of 9 drops:**
+- hq and barracks came back UNCUT, with lane alpha p50 183 / 107;
+- medical carried a wash to ~50;
+- armory had a haze bridge of 85-180 between two subjects that `pack16.py` refused.
+
+One `edit_image` pass each (sunburst, transparent, "keep the objects, remove everything else")
+brought every lane p50 to 0. Then pack16 at `--valign center`. The built sheets are 0.076-0.099
+linear against the tops they lie on (laminate 0.097, enamel 0.096), and corp/exec-clutter's sat 0.5
+and cap 0.1 were used unchanged.
+
+**Cost:** one merged mesh per room kind, at most 9 calls a base and 2-4 in a room's view.
+
+**Verdict:** landed.
