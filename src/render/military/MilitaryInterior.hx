@@ -7,6 +7,7 @@ import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.facility.FacilityDeco;
 import render.facility.ClutterSlot;
+import render.facility.FacilityDeco.DecoRect;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
@@ -232,6 +233,43 @@ class MilitaryInterior
             piece(m, t, col, row, len, alongX);
           }
       FacilityDeco.lamps(scene, leds);
+    }
+
+// a base room piece that draws power, as the footprint render.facility.FacilityCable drops a lead off:
+// a radio rack, an operator desk, a water cooler. null for anything else. Off `m.fit` (MilitaryStyle
+// .fitOf) and the walls alone, so either pass may run first. ponytail: the backing wall is the first
+// solid side, which on a console run's corner cell may be the end wall rather than the run's
+  public static function powered(m:Facility, col:Int, row:Int):DecoRect
+    {
+      var t = m.fit[row][col];
+      var k = [ Const.TILE_MIL_RADIO_RACK, Const.TILE_MIL_CONSOLE, Const.TILE_MIL_WATER_COOLER ]
+        .indexOf(t);
+      if (k < 0)
+        return null;
+      var dir = -1;
+      for (d in 0...4)
+        if (dir < 0 &&
+            FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
+          dir = d;
+      if (dir < 0)
+        return null;
+      var x0 = col * CELL - half();
+      var z0 = row * CELL - half();
+      var r = across(back(m, col, row, {
+        x0: x0,
+        x1: x0 + CELL,
+        z0: z0,
+        z1: z0 + CELL,
+      }, dir, [ RACK_D, CONSOLE_D, COOLER_D ][k]), dir >= 2, [ RACK_W, TOP_L, COOLER_W ][k]);
+      return {
+        x0: r.x0,
+        x1: r.x1,
+        z0: r.z0,
+        z1: r.z1,
+        dir: dir,
+        hasWall: true,
+        h: [ RACK_H, TABLE_H, COOLER_H ][k],
+      };
     }
 
 // this build's glbs, one instanced batch each, for render.military.MilitaryGeom.build to mask and hand

@@ -3,6 +3,7 @@ package render.facility;
 import three.Three;
 import citygen.CityConfig;
 import render.Textures;
+import render.facility.FacilityDeco.DecoRect;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.world.ContactMask;
@@ -272,11 +273,13 @@ class FacilityCable
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
+            // a laboratory fitting by its deco kind, or a base room's powered piece by its tile
             var kind = m.deco[row][col] - 1;
             if (!feeds(kind))
-              continue;
-            var q = FacilityDeco.rectOf(m, col, row, kind);
-            if (!q.hasWall)
+              kind = m.fit[row][col];
+            var q = machine(m, col, row, kind);
+            if (q == null ||
+                !q.hasWall)
               continue;
             // BESIDE it and never under it: a socket under a machine is behind the machine
             var sc = (q.dir < 2 ? 1 : 0);
@@ -449,6 +452,17 @@ class FacilityCable
         kind == _FittingKind.FIT_RACK_LOW;
     }
 
+// the footprint of the machine a lead drops off: a laboratory fitting by its deco kind, or a military
+// base room's radio rack, operator desk or water cooler by its tile, which render.military
+// .MilitaryStyle deals into `m.fit`. null for anything with nothing to plug in
+  static function machine(m:Facility, col:Int, row:Int, kind:Int):DecoRect
+    {
+      if (feeds(kind))
+        return FacilityDeco.rectOf(m, col, row, kind);
+      return (kind >= Const.OFFSET_ROW20 ? render.military.MilitaryInterior.powered(m, col, row) :
+        null);
+    }
+
 // may a socket hang on the `dir` wall of this room cell at all: the placards' own predicate, plus a
 // cell with nothing standing AGAINST that wall.
 //
@@ -467,12 +481,15 @@ class FacilityCable
 //
 // `true` widens the surface gate to a researcher's OFFICE: the room the compound's other electrical
 // kit stays out of for no reason at all — an office has sockets and a skirting run like every other
-// room, and the desks and the workstations on them are what they feed
+// room, and the desks and the workstations on them are what they feed. And a military base's room floors
+// with it, where `m.fit` is what says a bunk or a desk stands on the cell: a base's furniture is
+// tiles and not decoration, so `m.deco` is 0 under every piece of it
   static inline function bare(m:Facility, col:Int, row:Int, dir:Int):Bool
     {
       return FacilityModel.inside(m, col, row) &&
         FacilityPlacard.hangs(m, col, row, dir, true) &&
-        m.deco[row][col] == 0;
+        m.deco[row][col] == 0 &&
+        m.fit[row][col] == 0;
     }
 
 // and is it far enough from every mount already dealt. FacilityPoint.places' own thinning, measured
@@ -551,7 +568,7 @@ class FacilityCable
         {
           if (p.mkind < 0)
             continue;
-          var q = FacilityDeco.rectOf(m, p.mcol, p.mrow, p.mkind);
+          var q = machine(m, p.mcol, p.mrow, p.mkind);
           var sl = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
           // AT A THIRD OF ITS HEIGHT AND NOT ON ITS LID. The lid was the first anchor and the game
           // reported what it looks like: these fittings are SPRITES and a sprite does not fill its

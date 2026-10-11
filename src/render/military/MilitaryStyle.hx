@@ -60,6 +60,9 @@ class MilitaryStyle
   public static inline var MAST_COLOR = 0xffb066;
   public static inline var LAMP_COLOR = 0xc4d0b4;
   public static inline var DOOR_LAMP_COLOR = 0xffa040;
+  // a fit grid cell an object stands on (`objects`): not 0, under FacilityModel.FIT_HOLE and under
+  // every tile id fitOf deals
+  public static inline var FIT_OBJECT = 1;
 
 // the base's ShellOpts: the compound's reading of the grid in the base's own art
   public static function shell():ShellOpts
@@ -68,6 +71,7 @@ class MilitaryStyle
       var t = o.tex;
       o.kind = 'military';
       o.surfOf = surfOf;
+      o.fitOf = fitOf;
       // every floor slot the base can reach, each in its own art. TILE and OFFICE are the lab
       // building's room surfaces and a base deals neither, but a cell the theme pass leaves on them
       // still gets the office floor rather than the laboratory's
@@ -118,6 +122,26 @@ class MilitaryStyle
       t.lampColor = LAMP_COLOR;
       t.doorLampColor = DOOR_LAMP_COLOR;
       return o;
+    }
+
+// the lockers, the gun cabinet and the safe the generator stands as objects, marked FIT_OBJECT in the
+// fit grid fitOf filled, for render.facility.FacilityCable's socket test
+  public static function objects(m:Facility, area:game.AreaGame):Void
+    {
+      for (o in area.getObjects())
+        if (o.type == 'locker' ||
+            o.type == 'gunCabinet' ||
+            o.type == 'safe')
+          m.fit[o.y][o.x] = FIT_OBJECT;
+    }
+
+// tile id -> fitting: every piece of room furniture is its own tile id, so render.facility
+// .FacilityCable hangs no socket behind a bunk and drops a lead off a radio rack (MilitaryInterior
+// .powered). The floors and everything outside the rooms are 0
+  public static function fitOf(t:Int):Int
+    {
+      return (t > Const.TILE_MIL_FLOOR_LATRINE &&
+        t <= Const.TILE_MIL_STRETCHER ? t : 0);
     }
 
 // tile id -> surface, the compound's reading plus the base's own row-20 room floors. Its

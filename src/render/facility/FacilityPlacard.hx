@@ -140,17 +140,23 @@ class FacilityPlacard
 // PUBLIC because render.facility.FacilityCable's panels want the same three facts and a third copy of
 // this test is a third place to get the carries-both-ways half wrong. It is a pure function of the
 // saved grid, so either family may run first — FacilityPoint.places' own discipline
-// `office` widens the surface gate to a researcher's office as well, and ONLY the electrical family
-// passes it: an office is a room with sockets and skirting runs in it like any other, but the eight
-// plates on the two sheets here are laboratory hazard signage — a biohazard trefoil over a desk is
-// the exact failure the Surf.TILE gate exists to prevent
+// `office` widens the surface gate to a researcher's office and a military base's room floors as well,
+// and ONLY the electrical family passes it: an office or a barracks is a room with sockets and
+// skirting runs in it like any other, but the eight plates on the two sheets here are laboratory
+// hazard signage — a biohazard trefoil over a desk is the exact failure the Surf.TILE gate exists to
+// prevent
   public static function hangs(m:Facility, col:Int, row:Int, dir:Int, ?office:Bool):Bool
     {
       if (!FacilityModel.inside(m, col, row))
         return false;
       var s = m.surf[row][col];
       if (s != Surf.TILE &&
-          !(office == true && s == Surf.OFFICE))
+          !(office == true &&
+            (s == Surf.OFFICE ||
+             s == Surf.BARRACKS ||
+             s == Surf.MESS ||
+             s == Surf.BRIEFING ||
+             s == Surf.HQ)))
         return false;
       if (!FacilityModel.isSolidWall(m, col + DC[dir], row + DR[dir]))
         return false;

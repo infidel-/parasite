@@ -312,6 +312,10 @@ class FacilityArea implements Area3D
       // thing into it — the pole it runs from is FacilityLamps.gateMast, which is pure arithmetic
       // over the grid and needs no mast to have been built yet
       FacilityEntry.cable(model, workCable);
+      // a base's lockers, gun cabinet and safe are OBJECTS and not tiles, so its fit grid is told of
+      // them before a socket is hung: one stood behind a barracks locker
+      if (game.area.typeID == AREA_MILITARY_BASE)
+        render.military.MilitaryStyle.objects(model, game.area);
       elec = FacilityCable.build(scene, model, workCable);
       green = FacilityGround.green(scene, model, game.area);
       // the park railing and the litter bins ride the same array as the plants, which is not

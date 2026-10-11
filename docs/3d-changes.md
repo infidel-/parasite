@@ -1712,3 +1712,31 @@ and cap 0.1 were used unchanged.
 **Cost:** one merged mesh per room kind, at most 9 calls a base and 2-4 in a room's view.
 
 **Verdict:** landed.
+
+## Military base rooms: wall sockets and machine leads
+
+**Changed:** the base's rooms get `FacilityCable`'s sockets, the same `strip` cables, and the
+`military/electrical-pack` and `military/cable` art `MilitaryStyle.shell` already dealt. No gen.
+
+**Why none showed:** the base's rooms had none for two reasons:
+- `bare()` gates on `FacilityPlacard.hangs`, which accepts only `Surf.TILE`/`OFFICE`, and a base
+  room is BARRACKS/MESS/BRIEFING/HQ;
+- `feeds()` only read `m.deco`, which a base never fills.
+
+**The fix:**
+- `hangs(…, true)` (the electrical family's flag, and only theirs) also takes the four base room
+  surfaces.
+- `MilitaryStyle.fitOf` deals every room furniture tile into `m.fit`, so `bare()` can add
+  `m.fit == 0` and stops hanging a plate behind a bunk or a desk.
+- `FacilityCable.machine()` dispatches a drop's anchor: a lab fitting through `FacilityDeco.rectOf`,
+  a base's radio rack, operator desk or water cooler through `MilitaryInterior.powered` (a
+  `DecoRect` off `m.fit` and the walls, so no ordering between the passes).
+
+**Trap:** the armory's lockers, gun cabinet and safe are OBJECTS and not tiles, so `fitOf` cannot see
+them. A socket hung behind a barracks locker. `MilitaryStyle.objects` stamps `FIT_OBJECT` on their
+cells before `FacilityCable.build`.
+
+**Measured on one base:** 20 room sockets, 0 behind furniture or an object, both reachable machines
+fed (comms console, radio rack). The water coolers stand between two windows and take no plate.
+
+**Verdict:** landed.
