@@ -228,9 +228,15 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
 | `military/generator` | `FIT_GENERATOR` in the hangar | loop, gain -9 (the facility's -3 picked as too loud) | 6 |
 | `military/vent` | `vent` objects | loop, 2 variants | 3 |
 | `military/truck` | `Surf.ROAD` past the gate | event, 2 variants, gap 45 s | 8 |
+| `military/drip` | `TILE_MIL_SINKS` (the latrine's basins) | event, 2 variants, gap 16 s | 2 |
+| `military/squelch` | `TILE_MIL_RADIO_RACK` (the comms room's racks) | event, 2 variants, gap 25 s, DB -12 | 4 |
+| `military/flush` | none: the latrine bed's own event, at the bed's level | event, 2 variants, gap 80 s, baked -36 | — |
 | `military/jet`, `city/helicopter` (reused), `military/range` | none: far one-shots, gaps 150 / 200 / 120 s | event, 2 variants each (heli: city's) | — |
 
-- **Beds**: `military/indoor` (any roof that is not the hangar), `military/hangar` (2 variants),
+- **Beds**: `military/latrine` and `military/comms` (`ROLE_LATRINE` / `ROLE_COMMS` off
+  `generatorInfo.getRoomAt`, asked for: "latrine needs its sounds, bed, sink and events ... so does
+  comms"; DB -5 / -6, measured 56.2 and 50.1 at slider 100 in their rooms, indoor bed 0.0 there),
+  `military/indoor` (any other roof that is not the hangar), `military/hangar` (2 variants),
   `military/yard` (open ground inside the fence), and the margin outside the fence wears its terrain
   band's own wild bed (`wild/forest`, `wild/plains`, `wild/mountain`), split by
   `AreaGame.isOutsideBase`. Within 4 rows of the road's centreline it is the wilderness highway's
@@ -375,3 +381,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-10 | sewer, wild | tunnel, chamber (beds) · manhole, trickle, pipe (loops) · drip, rats, knock, cover, rumble, surge (one-shots) · forest re-roll | chamber, drip, manhole, pipe, surge: elevenlabs · knock, rats, rumble, trickle: elevenlabs + sonilo (knock sonilo and trickle elevenlabs had screened CLIPPED, picked by ear) · tunnel: cassette + elevenlabs · cover: dropped · forest elevenlabs came back -52 LUFS ("barely any wind"), re-rolled; sonilo won | $0.77 |
 | 2026-10-10 | military | yard, indoor (beds) · floodlight, fence, idle, radio (loops) · jet, range (far one-shots) | fence, floodlight, yard: elevenlabs · idle: sonilo · indoor, jet, radio, range: elevenlabs + sonilo · radio, range, jet cassette had screened CLIPPED (296 / 2,567 clipped samples, 0 dBFS), lost by ear anyway · yard sonilo kept as a day bed | $0.68 |
 | 2026-10-10 | military | hangar (bed) · generator, vent (loops) · truck (one-shot); replacing the facility's | generator: elevenlabs (gain -9, "make quieter") · hangar, truck: elevenlabs + sonilo (hangar sonilo fades out 39 dB at its tail, picked by ear anyway) · vent: cassette + sonilo | $0.31 |
+| 2026-10-11 | military | latrine, comms (beds) · drip, flush, squelch (one-shots) | latrine: sonilo · comms: elevenlabs · flush: elevenlabs ×2, both screened CLIPPED (16 and 8.5 peaks, the second a "no distortion" re-roll) and picked by ear ("both 11labs are ok") · squelch: elevenlabs (re-roll) + sonilo (re-roll, 3 peaks at 0 dBFS); both first takes CLIPPED (15.5, 5) · drip: cassette + elevenlabs · flush cassette CLIPPED (36), re-rolled clean, lost | $0.29 |

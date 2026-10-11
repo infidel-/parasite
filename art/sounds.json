@@ -2264,6 +2264,163 @@
         "military/truck1.mp3",
         "military/truck2.mp3"
       ]
+    },
+    "military/latrine": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/latrine-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "old military barracks latrine at night, tiled concrete washroom room tone, steady trickle of water through old pipes inside the walls, hollow echo off the tiles, faint fluorescent tube hum, constant, no flushing, no events, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:44",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/latrine1.mp3"
+      ]
+    },
+    "military/comms": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/comms-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "military radio room at night, steady hum of racks of old radio equipment and their cooling fans, soft constant static hiss from receivers left on, faint electronic whine, concrete room, constant, no speech, no beeps, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:45",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/comms1.mp3"
+      ]
+    },
+    "military/flush": {
+      "area": "military",
+      "loop": false,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/flush-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old high-cistern toilet flushing in a cubicle of a military barracks latrine, heard from behind the partition, a heavy rush of water then the cistern gurgling as it refills and fades out, tiled concrete room, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/flush-elevenlabs2.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old high-cistern toilet flushing in a cubicle of a military barracks latrine, heard from behind the partition, a muffled rush of water then the cistern gurgling as it refills and fades out, soft and clean with no distortion, tiled concrete room, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:45",
+      "last_sig": "-36/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/flush1.mp3",
+        "military/flush2.mp3"
+      ]
+    },
+    "military/squelch": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/squelch-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military radio receiver in an empty radio room breaking squelch, a short gentle burst of soft crackling static and a soft click as the squelch closes again, clean with no distortion, no speech, indoors at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/squelch-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military radio receiver in an empty radio room breaking squelch, a short gentle burst of soft crackling static and a soft click as the squelch closes again, clean with no distortion, no speech, indoors at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0054,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:46",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/squelch1.mp3",
+        "military/squelch2.mp3"
+      ]
+    },
+    "military/drip": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/drip-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a single water drop falling from a leaky old tap into an enamel washbasin, one small clear drip with a faint echo in a tiled room, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling from a leaky old tap into an enamel washbasin, one small clear drip with a faint echo in a tiled room, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:46",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/drip1.mp3",
+        "military/drip2.mp3"
+      ]
     }
   }
 }
