@@ -115,6 +115,9 @@ class MilitaryInterior
   static inline var COOLER_W = 0.9;
   static inline var COOLER_D = 1.125;
   static inline var COOLER_H = 3.34;
+  // and its wall halo's: the cabinet's top, the bottle on it stands off the wall ("make water cooler
+  // contact shadow lower")
+  static inline var COOLER_HALO_H = 1.9;
   static inline var IV_W = 1.17;
   static inline var IV_D = 1.0511;
   static inline var IV_H = 3.5;
@@ -154,6 +157,7 @@ class MilitaryInterior
   static inline var STALL_H = CELL * 510 / 512;
   static inline var STALL_D = CELL * 0.95;
   static inline var STALL_T = 0.1;
+  static inline var STALL_DOOR_T = 0.05;
   // the map board, a square, hung off the wall face
   static inline var BOARD_W = 3.2;
   static inline var BOARD_Y = 1.4;
@@ -610,7 +614,7 @@ class MilitaryInterior
               var w = [ AMMO_W, JERRY_W, FLAG_W, COOLER_W, IV_W ][k];
               var d = [ AMMO_D, JERRY_D, FLAG_D, COOLER_D, IV_D ][k];
               r = across(back(m, col, row, cell, dir, d), dir >= 2, w);
-              h = [ AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_HALO_H ][k];
+              h = [ AMMO_H, JERRY_H, FLAG_H, COOLER_HALO_H, IV_HALO_H ][k];
               put([ md.militaryAmmoCans, md.militaryJerrycans, md.militaryFlag, md.militaryWaterCooler,
                 md.militaryIvStand ][k], (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
             }
@@ -964,11 +968,24 @@ class MilitaryInterior
             MilitaryGeom.box(panel, r.x0, r.x1, a, a + STALL_T, 0, STALL_H, CELL);
           if (i == len)
             break;
+          // the door, a slab STALL_DOOR_T thick across the open side, its outer face and its inner
+          // one: one-sided it was a hole seen from inside the cubicle ("these quads should have other
+          // side as well")
           var b = a0 + i * CELL;
-          if (alongX)
-            FacilityGeom.pane(doors, b, b + CELL, r.z0, r.z1, dir ^ 1, 0, STALL_H);
-          else
-            FacilityGeom.pane(doors, r.x0, r.x1, b, b + CELL, dir ^ 1, 0, STALL_H);
+          var o = dir ^ 1;
+          var door:Rect = (alongX ? {
+            x0: b,
+            x1: b + CELL,
+            z0: (o == 0 ? r.z0 : r.z1 - STALL_DOOR_T),
+            z1: (o == 0 ? r.z0 + STALL_DOOR_T : r.z1),
+          } : {
+            x0: (o == 2 ? r.x0 : r.x1 - STALL_DOOR_T),
+            x1: (o == 2 ? r.x0 + STALL_DOOR_T : r.x1),
+            z0: b,
+            z1: b + CELL,
+          });
+          for (d in [ o, dir ])
+            FacilityGeom.pane(doors, door.x0, door.x1, door.z0, door.z1, d, 0, STALL_H);
         }
     }
 

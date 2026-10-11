@@ -63,8 +63,9 @@ class SoundSources
     'military/generator' => -9.0,
     'military/vent' => -14.0,
     'military/truck' => -10.0,
-    'military/latrine' => -5.0,
-    'military/comms' => -6.0,
+    // set by ear in the game: both read too loud at -5 and -6
+    'military/latrine' => -9.0,
+    'military/comms' => -12.0,
     'military/drip' => -10.0,
     'military/flush' => -10.0,
     'military/squelch' => -12.0,
