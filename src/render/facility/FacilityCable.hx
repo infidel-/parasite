@@ -574,7 +574,8 @@ class FacilityCable
           // reported what it looks like: these fittings are SPRITES and a sprite does not fill its
           // quad's top corners, so a cable leaving at q.h leaves from a point outside the drawn
           // object and hangs in the air beside it. Down the body it is inside the art of all four
-          var y = FacilityGround.surfY(Surf.TILE) + q.h * FacilityStyle.CABLE_LID_H;
+          var y = FacilityGround.surfY(Surf.TILE) +
+            (q.lead != null ? q.lead : q.h * FacilityStyle.CABLE_LID_H);
           var dir = p.dir ^ 1;
           var e = FacilityStyle.MOUNT_PROUD + FacilityStyle.CABLE_EPS;
           // toward the socket, which is the hand the machine's cell is NOT on
@@ -682,7 +683,13 @@ class FacilityCable
 // the wall test is isSolidWall and NOT `hangs`, and the two are not the same test twice: `hangs` asks
 // whether the wall line CARRIES ON PAST the cell both ways, which a fixed-width plate needs because it
 // would otherwise hang past the masonry it is bolted to. A cable passing THROUGH a cell has nothing to
-// hang past and only needs masonry to run along
+// hang past and only needs masonry to run along.
+//
+// AND THE CELL ITSELF MUST BE FLOOR: a military base's rooms stand wall to wall along one outer wall,
+// so a socket each side of a partition is two cells apart on one unbroken wall line, and the run went
+// through the partition ("cable goes into the wall... and into the other wall socket"). A base's
+// furniture breaks one too, the way a fitting does: a bunk's head or a shelf stands where the cable
+// would run
   static function joins(m:Facility, p:Mount, q:Mount):Bool
     {
       var d = along(q) - along(p);
@@ -695,7 +702,9 @@ class FacilityCable
           var c = p.col + sc * i;
           var r = p.row + sr * i;
           if (!FacilityModel.isSolidWall(m, c + DC[p.dir], r + DR[p.dir]) ||
-              m.deco[r][c] != 0)
+              FacilityModel.isWall(m, c, r) ||
+              m.deco[r][c] != 0 ||
+              m.fit[r][c] != 0)
             return false;
         }
       return true;

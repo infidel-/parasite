@@ -28,7 +28,7 @@ enum LidKind
   FOOTLOCKER;
   // a filing or medical cabinet's top, 0-1
   CABINET;
-  // a store shelf unit's top board, 1-2
+  // a store shelf unit's top board or a radio rack's top, 1-2
   SHELF;
   // a bunk deck's blanket or a cot's canvas, 0-2
   BED;
@@ -132,6 +132,9 @@ class MilitaryClutter
     },
   ];
   static inline var GEAR_TURN = 0.35;
+  // the gear that may lie on its back half the time, its straps or its flat side down ("allow
+  // canteens and backpacks to also lie on their back"): the rucksack and the canteen, not the boots
+  static inline var GEAR_LIES = 1;
   // the floor pool under a piece of gear against FacilityDetail.ground's own: a pair of boots' pool
   // was asked 30% smaller
   static inline var GEAR_POOL = 0.7;
@@ -338,15 +341,24 @@ class MilitaryClutter
 
 // one piece of gear `k` stood on the lid, rejection-sampled round `spots` like a decal and claimed in
 // it: square to the lid give or take GEAR_TURN (either way round, but a locker's facing out), or any
-// way at all on a floor (`loose`). Its box in the lid's frame, or null when it found no room
+// way at all on a floor (`loose`). From GEAR_LIES on it lies on its back half the time, pitched a
+// quarter turn so its depth is its height and its height runs along the lid. Its box in the lid's
+// frame, or null when it found no room
   static function gear(l:MilitaryLid, spots:Array<ClutterSlot>, k:Int, h:Int, loose:Bool):ClutterSlot
     {
       var p = GEAR[k];
       var t = ((h >>> 3) % 1000) / 1000;
-      // a locker's faces the way its doors do, or a rucksack up there showed the room its straps
+      var lie = (k >= GEAR_LIES &&
+        (h >>> 23) % 2 == 0);
+      // its footprint across, and how tall it stands
+      var pd = (lie ? p.h : p.d);
+      var ph = (lie ? p.d : p.h);
+      // a locker's faces the way its doors do, or a rucksack up there showed the room its straps; one
+      // on its back may lie either way along the lid
       var flip = (l.kind == LOCKER ? 0 : (h >>> 13) % 2);
-      var yaw = (loose ? t * 2 * Math.PI : flip * Math.PI + (t * 2 - 1) * GEAR_TURN);
-      var box = ClutterSlotTools.turned(0.0, 0.0, p.w, p.d, yaw);
+      var yaw = (loose ? t * 2 * Math.PI : flip * Math.PI + (t * 2 - 1) * GEAR_TURN) +
+        (lie ? ((h >>> 24) % 2) * Math.PI / 2 : 0.0);
+      var box = ClutterSlotTools.turned(0.0, 0.0, p.w, pd, yaw);
       var rx = l.w / 2 - box.hw - INSET;
       var rz = l.d / 2 - box.hd - INSET;
       if (rx < 0 ||
@@ -363,10 +375,19 @@ class MilitaryClutter
           var lc = Math.cos(l.yaw), ls = Math.sin(l.yaw);
           var x = l.x + box.x * lc + box.z * ls;
           var z = l.z - box.x * ls + box.z * lc;
-          MilitaryInterior.put(p.path, x, z, l.yaw + yaw, l.y);
+          // pitched back about its base's centre it lies half its depth down and its height out
+          // toward its local -z, so it is lifted by the one and its place moved back by half the other
+          var a = l.yaw + yaw;
+          MilitaryInterior.place(p.path, {
+            x: x + (lie ? p.h / 2 * Math.sin(a) : 0.0),
+            z: z + (lie ? p.h / 2 * Math.cos(a) : 0.0),
+            yaw: a,
+            y: l.y + (lie ? p.d / 2 : 0.0),
+            pitch: (lie ? -Math.PI / 2 : null),
+          });
           // and its shadow ("do these chests throw shadows? they should. and boots as well"): on a
           // floor the one call for anything standing there, on a top a round pool kept on the lid
-          var t = ClutterSlotTools.turned(x, z, p.w, p.d, l.yaw + yaw);
+          var t = ClutterSlotTools.turned(x, z, p.w, pd, a);
           var f = ClutterSlotTools.turned(l.x, l.z, l.w, l.d, l.yaw);
           if (l.kind == UNDER)
             FacilityDetail.ground(fac, {
@@ -380,7 +401,7 @@ class MilitaryClutter
                 z0: z - t.hd,
                 z1: z + t.hd,
               },
-              h: p.h,
+              h: ph,
               pool: GEAR_POOL,
             });
           else
@@ -388,8 +409,8 @@ class MilitaryClutter
               cx: x,
               cz: z,
               hw: p.w / 2,
-              hd: p.d / 2,
-              yaw: l.yaw + yaw,
+              hd: pd / 2,
+              yaw: a,
               y: l.y,
               plate: {
                 x0: l.x - f.hw,

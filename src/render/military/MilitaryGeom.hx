@@ -608,7 +608,7 @@ class MilitaryGeom
       // its top takes clutter, 2D and a piece of gear ("top of the locker needs clutter spots")
       MilitaryInterior.top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], LOCKER_TOP_W,
         LOCKER_TOP_D, MilitaryInterior.LOCKER_H, LOCKER, []);
-      FacilityDetail.ground(m, {
+      MilitaryInterior.shade(m, {
         col: col,
         row: row,
         len: 1,
@@ -638,7 +638,7 @@ class MilitaryGeom
         };
       MilitaryInterior.put(RenderConfig.MODELS.militarySafe, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
         MilitaryInterior.YAW[dir], 0.0);
-      FacilityDetail.ground(m, {
+      MilitaryInterior.shade(m, {
         col: col,
         row: row,
         len: 1,

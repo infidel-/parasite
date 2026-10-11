@@ -19,6 +19,8 @@ typedef PropPlace = {
   ?y:Float,    // signed offset off the floor; absent = 0, which is where normalize() puts the base
   ?scale:Float, // multiplier on the batch's target height; absent = 1. a batch is ONE glb drawn many
                 // times, so without this a stand of trees is one tree repeated
+  ?pitch:Float, // turn about the prop's own x axis before its yaw, radians; absent = 0. it turns about
+                // the base's centre, so a prop laid on its back is lifted and recentred by the caller
 };
 
 // handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
@@ -381,6 +383,7 @@ class Models {
           untyped inst.frustumCulled = false;
           var q = new Quaternion(), scl = new Vector3(s, s, s);
           var up = new Vector3(0, 1, 0);
+          var side = new Vector3(1, 0, 0), qx = new Quaternion(), off = new Vector3();
           for (i in 0...placements.length)
             {
               var pl = placements[i];
@@ -397,6 +400,14 @@ class Models {
                 ry * ps + (pl.y != null ? pl.y : 0.0),
                 pl.z + (-rx * sin + rz * cos) * ps);
               q.setFromAxisAngle(up, pl.yaw);
+              // a pitched prop: world = T · Ry(yaw) · Rx(pitch) · S · T(recenter), the recenter turned
+              // by both
+              if (pl.pitch != null)
+                {
+                  q.multiply(qx.setFromAxisAngle(side, pl.pitch));
+                  off.set(rx * ps, ry * ps, rz * ps).applyQuaternion(q);
+                  pos.set(pl.x + off.x, off.y + (pl.y != null ? pl.y : 0.0), pl.z + off.z);
+                }
               var mtx = new Matrix4();
               mtx.compose(pos, q, scl);
               inst.setMatrixAt(i, mtx);

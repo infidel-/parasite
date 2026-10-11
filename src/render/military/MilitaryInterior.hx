@@ -9,11 +9,13 @@ import render.facility.FacilityDeco;
 import render.facility.ClutterSlot;
 import render.facility.FacilityDeco.DecoRect;
 import render.facility.FacilityDetail;
+import render.facility.FacilityGroundOpts;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityGround;
+import render.facility.FacilityStyle;
 import render.military.MilitaryClutter.LidKind;
 import render.military.MilitaryClutter.MilitaryLid;
 import render.world.MeshBuf.MeshBuf;
@@ -27,7 +29,7 @@ import three.Three;
 // counter, and the comms room's racks, operator desks and radios with their lamps blinking. The
 // latrine's cubicles and trough and the briefing room's map board stay quads into
 // render.military.MilitaryGeom's per-texture buffers: partitions, a basin slab and a picture on a
-// wall. One FacilityDetail.ground per RUN.
+// wall. One `shade` per RUN, every piece and every chair.
 //
 // THE ROOMS WERE ALL EMITTED SLABS and were reported from the game as "very empty and emitted": a
 // rack was a box wearing a picture of radios, a console a slab with radios and a log painted into its
@@ -55,6 +57,8 @@ class MilitaryInterior
   static inline var FOOT_W = 2.6;
   static inline var FOOT_D = 1.775;
   static inline var FOOT_H = 1.0;
+  // how far past a piece's footprint the core of its floor pool reaches (`shade`), or the darkest of
+  // the ramp sits under the piece and the rim the camera sees came out 3-10/255
   static inline var FOOT_SHADOW = 0.2;
   static inline var DESK_D = 2.2;
   static inline var TABLE_H = 1.9;
@@ -74,10 +78,16 @@ class MilitaryInterior
   static inline var MEDCAB_D = 1.34;
   static inline var COUNTER_D = 2.36;
   static inline var COUNTER_H = 2.0;
-  static inline var CHAIR_H = 2.1549;
+  static inline var CHAIR_H = 2.1565;
+  static inline var CHAIR_W = 1.0;
+  static inline var CHAIR_D = 1.07;
   static inline var RACK_W = 2.8;
   static inline var RACK_D = 1.545;
   static inline var RACK_H = 3.5;
+  // its top clear of the chamfered rim and the units proud of its front, which clutter may lie on
+  // ("add clutter slots on top")
+  static inline var RACK_TOP_W = RACK_W - 0.3;
+  static inline var RACK_TOP_D = RACK_D - 0.3;
   static inline var CONSOLE_D = 2.0;
   static inline var RADIO_BIG_H = 1.0158;
   static inline var RADIO_SMALL_H = 0.6527;
@@ -134,11 +144,12 @@ class MilitaryInterior
   static inline var BOARD_W = 3.2;
   static inline var BOARD_Y = 1.4;
   static inline var BOARD_OFF = 0.05;
-  // where a radio stands on its desk in the desk's own frame: along it, and its centre in from the
-  // desk's back edge, so the face looks into the room with a hand's width of desk in front of it
+  // where a radio stands on its desk in the desk's own frame: along it, and its back in from the
+  // desk's back edge, close to the wall so its power lead runs up the wall into it: at 0.25 the lead
+  // stopped behind the desk under its top ("cable does not go up to actual radio")
   static inline var RADIO_BIG_X = 0.75;
   static inline var RADIO_SMALL_X = -0.85;
-  static inline var RADIO_BACK = 0.25;
+  static inline var RADIO_BACK = 0.08;
   static inline var RADIO_BIG_D = 0.93;
   static inline var RADIO_SMALL_D = 0.73;
   static inline var RADIO_BIG_W = 1.5;
@@ -164,6 +175,8 @@ class MilitaryInterior
   // a lamp's world size (the art's sockets are 16 px of a 509-px 2.4 face, 0.075) and how far proud
   // of its face the additive quad floats
   static inline var LED_SIZE = 0.1;
+  // and the keypad set's, 30% smaller: its sockets are a column down a face a third the size
+  static inline var SMALL_LED_SIZE = LED_SIZE * 0.7;
   static inline var LED_EPS = 0.03;
 
   // the step from a cell to its wall on each side: -z, +z, -x, +x (CorpFurniture.lockerRect's)
@@ -174,9 +187,10 @@ class MilitaryInterior
   // and the one that points a bed's local -x (its head) AT the wall on each side
   static var HEAD = [ -Math.PI / 2, Math.PI / 2, 0.0, Math.PI ];
 
-  // this build's places, per glb path, the lamps, and the area the tiles are read off
+  // this build's places, per glb path, the lamps, and the area the tiles are read off and its model
   static var places:Map<String, Array<PropPlace>>;
   static var grid:AreaGame;
+  static var fac:Facility;
   static var leds:MeshBuf;
   // and the furniture tops render.military.MilitaryClutter lays its decals on
   public static var lids:Array<MilitaryLid>;
@@ -223,6 +237,7 @@ class MilitaryInterior
   public static function build(scene:Scene, m:Facility, area:AreaGame):Void
     {
       grid = area;
+      fac = m;
       places = new Map();
       for (k in warmProps())
         places.set(k.path, []);
@@ -283,14 +298,30 @@ class MilitaryInterior
         z0: z0,
         z1: z0 + CELL,
       }, dir, [ RACK_D, CONSOLE_D, COOLER_D ][k]), dir >= 2, [ RACK_W, TOP_L, COOLER_W ][k]);
+      if (k != 1)
+        return {
+          x0: r.x0,
+          x1: r.x1,
+          z0: r.z0,
+          z1: r.z1,
+          dir: dir,
+          hasWall: true,
+          h: [ RACK_H, TABLE_H, COOLER_H ][k],
+        };
+      // an operator desk's lead goes up the wall into the radio on it, `console`'s set for the cell,
+      // and not under the desk top ("cable does not go up to actual radio")
+      var big = ((col + row) % 2 == 0);
+      var p = stood(r, dir, (big ? RADIO_BIG_X : RADIO_SMALL_X), 0.0, 0.0);
+      var hw = (big ? RADIO_BIG_W : RADIO_SMALL_W) / 2;
       return {
-        x0: r.x0,
-        x1: r.x1,
-        z0: r.z0,
-        z1: r.z1,
+        x0: (dir < 2 ? p.x - hw : r.x0),
+        x1: (dir < 2 ? p.x + hw : r.x1),
+        z0: (dir < 2 ? r.z0 : p.z - hw),
+        z1: (dir < 2 ? r.z1 : p.z + hw),
         dir: dir,
         hasWall: true,
-        h: [ RACK_H, TABLE_H, COOLER_H ][k],
+        h: TABLE_H,
+        lead: TABLE_H + (big ? RADIO_BIG_H : RADIO_SMALL_H) / 2,
       };
     }
 
@@ -351,19 +382,6 @@ class MilitaryInterior
           put(md.militaryFootlocker, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], 0.0);
           top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], FOOT_W, FOOT_D - 0.1, FOOT_H,
             FOOTLOCKER, []);
-          // a pool round its foot as well as the contact field, which a box this wide spreads to
-          // nothing: past GROUND_POOL_MAX FacilityDetail.ground lays none ("do these chests throw
-          // shadows? they should"). Its core taken FOOT_SHADOW past the box, or the darkest of the
-          // ramp sits under the box and the rim the camera sees came out 3-10/255
-          FacilityDetail.pool({
-            cx: (r.x0 + r.x1) / 2,
-            cz: (r.z0 + r.z1) / 2,
-            hw: FOOT_W / 2 + FOOT_SHADOW,
-            hd: FOOT_D / 2 + FOOT_SHADOW,
-            yaw: YAW[face ^ 1],
-            y: FacilityGround.surfY(m.surf[row][col]),
-            plate: cell,
-          });
         }
       else if (t == Const.TILE_MIL_MESS_TABLE ||
           t == Const.TILE_MIL_BRIEF_TABLE ||
@@ -405,14 +423,27 @@ class MilitaryInterior
           // along the run for a run, any side for a single. NEVER A WINDOW: isWall counts one, and
           // a corner rack found the glass first and stood with its back to it
           var dir = backing(m, col, row, (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])));
-          // a desk pair or a cot out in the middle of a room has no wall: the desks stand side by
-          // side facing the same way with a chair at each, and the cot lies with its head west
+          // a desk island or a cot out in the middle of a room has no wall: the desks stand back to
+          // back, a row facing each aisle with a chair at each ("when tables are in the center, spawn
+          // two back to back"), their pair 0.2 over the island's ring each side, and the cot lies
+          // with its head west
           if (dir < 0 &&
               t == Const.TILE_MIL_DESK)
             {
-              r = across(cell, alongX, DESK_D);
+              r = across(cell, alongX, DESK_D * 2);
               h = TABLE_H;
-              seated(r, (alongX ? 0 : 2), len, md.militaryOfficeDesk, DESK_D);
+              var mid = (alongX ? (r.z0 + r.z1) / 2 : (r.x0 + r.x1) / 2);
+              for (d in (alongX ? [ 0, 1 ] : [ 2, 3 ]))
+                {
+                  // each backed onto the middle as if that were its wall
+                  var far = (d == 0 || d == 2);
+                  seated({
+                    x0: (alongX || !far ? r.x0 : mid),
+                    x1: (alongX || far ? r.x1 : mid),
+                    z0: (!alongX || !far ? r.z0 : mid),
+                    z1: (!alongX || far ? r.z1 : mid),
+                  }, d, len, md.militaryOfficeDesk, DESK_D);
+                }
             }
           else if (dir < 0 &&
               (t == Const.TILE_MIL_SHELF_ROW ||
@@ -447,7 +478,7 @@ class MilitaryInterior
           if (dir < 0)
             {
               if (r != null)
-                FacilityDetail.ground(m, {
+                shade(m, {
                   col: col,
                   row: row,
                   len: len,
@@ -497,7 +528,11 @@ class MilitaryInterior
                 md.militaryShelf : t == Const.TILE_MIL_MED_CABINET ? md.militaryMedCabinet :
                 md.militaryRadioRack), (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
               if (t == Const.TILE_MIL_RADIO_RACK)
-                lamps(RACK_LEDS, r, dir, 0.0, 0.0, 0.0, col, row);
+                {
+                  lamps(RACK_LEDS, r, dir, 0.0, 0.0, 0.0, col, row);
+                  top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], RACK_TOP_W, RACK_TOP_D, RACK_H,
+                    SHELF, []);
+                }
               else if (t == Const.TILE_MIL_FILE ||
                   t == Const.TILE_MIL_MED_CABINET)
                 top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], w, d, w, CABINET, []);
@@ -554,13 +589,55 @@ class MilitaryInterior
               return;
             }
         }
-      FacilityDetail.ground(m, {
+      shade(m, {
         col: col,
         row: row,
         len: len,
         alongX: alongX,
         rect: r,
         h: h,
+      });
+    }
+
+// THE ONE SHADOW CALL for a piece standing on a room floor: FacilityDetail.ground, and a floor pool
+// round any piece too big for that one's, its core FOOT_SHADOW past the footprint. Past
+// GROUND_POOL_MAX the contact field carries it alone and spreads a footprint this wide to nothing:
+// the footlocker had one written out by hand ("do these chests throw shadows? they should"), and the
+// desks, tables and chairs went without ("ALL 3d objects should throw shadows by default"). Its plate
+// is the run's cells, out to the slab face where a wall stands beside them and a cell further where
+// floor does, so a desk pair over its island's ring is not cut off at the island's edge
+  public static function shade(m:Facility, o:FacilityGroundOpts):Void
+    {
+      FacilityDetail.ground(m, o);
+      var r = o.rect;
+      if (Math.max(r.x1 - r.x0, r.z1 - r.z0) <= FacilityStyle.GROUND_POOL_MAX)
+        return;
+      var n = (o.len > 1 ? o.len : 1);
+      var c0 = o.col, r0 = o.row;
+      var c1 = o.col + (o.alongX ? n - 1 : 0), r1 = o.row + (o.alongX ? 0 : n - 1);
+      var lo = CityConfig.cellToWorld(c0, r0);
+      var hi = CityConfig.cellToWorld(c1, r1);
+      // one side's edge: the wall's room face where masonry stands beside the run, else a cell on
+      inline function edge(d:Int, col:Int, row:Int, open:Float):Float
+        {
+          if (!FacilityModel.isWall(m, col + DX[d], row + DZ[d]))
+            return open;
+          var sl = FacilityGeom.slab(m, col + DX[d], row + DZ[d]);
+          return [ sl.z1, sl.z0, sl.x1, sl.x0 ][d];
+        }
+      FacilityDetail.pool({
+        cx: (r.x0 + r.x1) / 2,
+        cz: (r.z0 + r.z1) / 2,
+        hw: (r.x1 - r.x0) / 2 + FOOT_SHADOW,
+        hd: (r.z1 - r.z0) / 2 + FOOT_SHADOW,
+        yaw: 0.0,
+        y: FacilityGround.surfY(m.surf[o.row][o.col]),
+        plate: {
+          x0: edge(2, c0, r0, lo.x - CELL * 1.5),
+          x1: edge(3, c1, r1, hi.x + CELL * 1.5),
+          z0: edge(0, c0, r0, lo.z - CELL * 1.5),
+          z1: edge(1, c1, r1, hi.z + CELL * 1.5),
+        },
       });
     }
 
@@ -583,6 +660,23 @@ class MilitaryInterior
     {
       var p = stood(c, dir, ox, depth / 2 + CHAIR_OUT, 0.0);
       put(RenderConfig.MODELS.militaryChair, p.x, p.z, p.yaw + Math.PI, 0.0);
+      // and its shadow, on the floor cell it stands in: in front of its desk, never in a wall margin
+      var at = CityConfig.worldToCell(p.x, p.z);
+      var hw = (dir < 2 ? CHAIR_W : CHAIR_D) / 2;
+      var hd = (dir < 2 ? CHAIR_D : CHAIR_W) / 2;
+      shade(fac, {
+        col: at.col,
+        row: at.row,
+        len: 1,
+        alongX: true,
+        rect: {
+          x0: p.x - hw,
+          x1: p.x + hw,
+          z0: p.z - hd,
+          z1: p.z + hd,
+        },
+        h: CHAIR_H,
+      });
     }
 
 // a comms console run against its wall: an operator desk per cell with a chair at it, and on each a
@@ -601,6 +695,16 @@ class MilitaryInterior
           var x = (big ? RADIO_BIG_X : RADIO_SMALL_X);
           var q = stood(c, dir, x, back, TABLE_H);
           put((big ? md.militaryRadioBig : md.militaryRadioSmall), q.x, q.z, q.yaw, TABLE_H);
+          // its shadow on the desk top, the gear's round pool
+          FacilityDetail.deck({
+            cx: q.x,
+            cz: q.z,
+            hw: (big ? RADIO_BIG_W : RADIO_SMALL_W) / 2,
+            hd: (big ? RADIO_BIG_D : RADIO_SMALL_D) / 2,
+            yaw: q.yaw,
+            y: TABLE_H,
+            plate: c,
+          });
           top(p.x, p.z, p.yaw, TOP_L, CONSOLE_D, TABLE_H, DESK, [
             {
               x: x,
@@ -617,12 +721,18 @@ class MilitaryInterior
 // one glb place, for render.military.MilitaryGeom's armory pieces as well as this file's
   public static inline function put(path:String, x:Float, z:Float, yaw:Float, y:Float):Void
     {
-      places.get(path).push({
+      place(path, {
         x: x,
         z: z,
         yaw: yaw,
         y: y,
       });
+    }
+
+// and one already made, for render.military.MilitaryClutter's gear laid on its back
+  public static inline function place(path:String, p:PropPlace):Void
+    {
+      places.get(path).push(p);
     }
 
 // a furniture top for render.military.MilitaryClutter: centre, turn (stood's), extents along its own
@@ -697,7 +807,7 @@ class MilitaryInterior
       var c = Math.cos(p.yaw);
       var s = Math.sin(p.yaw);
       var g = FacilityModel.mix((col * 971658137) ^ (row * 1266489917));
-      var e = LED_SIZE / 2;
+      var e = (at == SMALL_LEDS ? SMALL_LED_SIZE : LED_SIZE) / 2;
       for (i in 0...at.length)
         {
           var l = at[i];

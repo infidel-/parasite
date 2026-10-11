@@ -1871,3 +1871,34 @@ that left a slit at z = the boundary, over the glazing band, with nothing in it.
 in front" off what they see, and a piece in the wall's margin leaves its own cell looking empty.
 
 **Verdict:** landed.
+
+## Military base: every room piece shadowed, desk islands back to back, leads up to the radios, gear lying on its back
+
+**Reported:**
+- "tables and chairs do not throw shadows? cmon ALL 3d objects should throw shadows by default";
+- a socket-to-socket cable "goes into the wall... and into the other wall socket";
+- the operator desks' leads: "cable does not go up to actual radio";
+- the folding chair's back and uprights "intersect so that back sticks out", and the back's slope;
+- the office desk's back "very uniform for all polygons";
+- "when tables are in the center, spawn two back to back"; "allow canteens and backpacks to also
+  lie on their back"; clutter on the rack tops; the keypad set's lamps 30% smaller.
+
+**Changed:**
+- **`MilitaryInterior.shade`** is the one shadow call for a room piece: `FacilityDetail.ground`, plus
+  a `FacilityDetail.pool` past `GROUND_POOL_MAX`, core `FOOT_SHADOW` past the footprint. Plate goes
+  to the slab face at a wall and one cell further at open floor. Every run, the armory lockers and
+  safe, and each chair (in its own cell) use it. Radios lay a `deck` pool on their desk.
+- **`FacilityCable.joins`** rejects a run whose in-between cell is a wall or holds a base piece
+  (`m.fit`). Rooms along one outer wall share an unbroken wall line, so two sockets either side of a
+  partition were "joined" through it.
+- **`DecoRect.lead`**: the operator desk's lead climbs to its radio, mid-height of the set, over the
+  radio's own width. `RADIO_BACK` 0.25 → 0.08, so the lead meets its back.
+- **Chair back** raked with its uprights (`CHAIR_RAKE` 0.15) on their front face. **Desk** body
+  olive, tiled in world space (`DESK_TILE` 2.0). 212 tris.
+- **`PropPlace.pitch`**: canteen and rucksack lie on their back half the time, lifted half their
+  depth and moved back half their height.
+
+**Trap:** a fitted per-face map gives every face the cell's SAME middle; on a near-flat swatch that
+is one patch stamped on every polygon.
+
+**Verdict:** landed. +1.4k tris on the comms view, 0 new meshes or programs.

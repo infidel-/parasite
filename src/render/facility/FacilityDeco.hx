@@ -31,6 +31,9 @@ typedef DecoRect = {
   hasWall:Bool,
   // how tall it stands
   h:Float,
+  // and the height a power lead leaves it at, when that is not FacilityStyle.CABLE_LID_H of `h`: a
+  // military operator desk's goes up to the radio standing on it
+  ?lead:Float,
 };
 
 // one hazard-barrel livery and the fitting kind that deals it. all three share a mesh and differ
