@@ -191,7 +191,7 @@ class MilitaryGeom
           }
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);
-      MilitaryInterior.build(m, area);
+      MilitaryInterior.build(scene, m, area);
       MilitaryYard.build(scene, m, area);
       // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
       // ponytail: drawn shut whatever their state, an open one is told by its tooltip
@@ -226,6 +226,27 @@ class MilitaryGeom
           prop: Models.instanced(scene, RenderConfig.MODELS.militaryContainer, containers, CONT_H,
             SOLID),
           path: RenderConfig.MODELS.militaryContainer,
+        },
+        // the comms room's kit (MilitaryInterior)
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioRack, MilitaryInterior.racks,
+            MilitaryInterior.RACK_H, SOLID),
+          path: RenderConfig.MODELS.militaryRadioRack,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioDesk, MilitaryInterior.desks,
+            MilitaryInterior.CONSOLE_H, SOLID),
+          path: RenderConfig.MODELS.militaryRadioDesk,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioBig,
+            MilitaryInterior.radiosBig, MilitaryInterior.RADIO_BIG_H, SOLID),
+          path: RenderConfig.MODELS.militaryRadioBig,
+        },
+        {
+          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioSmall,
+            MilitaryInterior.radiosSmall, MilitaryInterior.RADIO_SMALL_H, SOLID),
+          path: RenderConfig.MODELS.militaryRadioSmall,
         },
       ];
       for (k in kit)

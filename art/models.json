@@ -1672,6 +1672,42 @@
       "note": "THE ROOF WATER TANK, HAND-MODELLED (models-src/military/yardkit_build.py), 628 tris: a galvanised 18-sided lathe with two stiffening hoops, a coned lid and a manway, on four gunmetal legs with an outlet pipe down between them. Replaces an emitted olive octagon reported as unreadable. Sheet mil-c-sheet.png. Drawn on a base's roofs through FacilityRoof's tank batch at h 2.79.",
       "last_converted": "2026-10-10T21:33:14Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/radio-rack-hand": {
+      "src": "military/radio-rack-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE COMMS ROOM'S RADIO RACK, HAND-MODELLED (models-src/military/roomkit_build.py), 164 tris: a chamfered gunmetal cabinet 2.8 x 1.5 x 3.5 on a recessed plinth, its four radio units stood PROUD of the front (one strip of military/rack-units each) and five louvres over them. Replaces an emitted box wearing a picture of four radios. Its lamp sockets are printed back by the script's `leds` for render.military.MilitaryInterior's blinking specks. Sheet mil-r-sheet.png.",
+      "last_converted": "2026-10-11T07:07:28Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/radio-desk-hand": {
+      "src": "military/radio-desk-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE OPERATOR DESK, HAND-MODELLED (roomkit_build.py), 152 tris: one cell of a comms console run, 3.9 x 2.0 x 1.9 (the old console's TABLE_H), a plain lino top, a three-drawer pedestal, a side panel and a modesty panel. Replaces a steel slab with radios and a log PAINTED into its top; the radios are now models and the clutter decals. Sheet mil-d-sheet.png.",
+      "last_converted": "2026-10-11T07:07:28Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/radio-big-hand": {
+      "src": "military/radio-big-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE FIELD TRANSCEIVER, HAND-MODELLED (roomkit_build.py), 148 tris: an olive crackle case 1.5 x 0.9 on four feet, radio-faces' RT-196 strip set into its front and a carry handle bowed over it. Stands on the operator desk. Sheet mil-r-sheet.png.",
+      "last_converted": "2026-10-11T07:07:28Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/radio-small-hand": {
+      "src": "military/radio-small-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE KEYPAD RADIO SET, HAND-MODELLED (roomkit_build.py), 172 tris: a gunmetal case 1.1 x 0.7, radio-faces' PRC-118 strip in its front, a handset lying across two cradle lugs on top. Stands on the operator desk. Sheet mil-r-sheet.png.",
+      "last_converted": "2026-10-11T07:07:28Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
     }
   }
 }

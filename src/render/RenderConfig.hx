@@ -745,6 +745,11 @@ class RenderConfig {
     militaryCrate: 'models/military/crate-hand.glb',      // ammo crate, long axis local x, lid and battens on top
     militaryContainer: 'models/military/container-hand.glb', // 20 ft container, long axis local x, door at -x
     militaryWaterTank: 'models/military/water-tank-hand.glb', // roof water tank on its legs
+    // the rooms' hand-modelled kit (models-src/military/roomkit_build.py), each facing local +z
+    militaryRadioRack: 'models/military/radio-rack-hand.glb', // comms rack, four radio units proud of its front
+    militaryRadioDesk: 'models/military/radio-desk-hand.glb', // operator desk, one cell long, pedestal at local -x
+    militaryRadioBig: 'models/military/radio-big-hand.glb',   // field transceiver, carry handle on top
+    militaryRadioSmall: 'models/military/radio-small-hand.glb', // keypad radio set, handset on top
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled
