@@ -116,7 +116,7 @@ class FacilityToilet
 // either side of a passage; ranking the pieces separately is what the runs really are. One cell
 // still holds a basin — `basinRun` deals 1 + random(2) — and gen.blocks.RoomZones asks the CUBICLES
 // for two, which is where the old minimum belonged
-  static function spans(run: Array<{ x: Int, y: Int }>): Array<Array<{ x: Int, y: Int }>>
+  public static function spans(run: Array<{ x: Int, y: Int }>): Array<Array<{ x: Int, y: Int }>>
     {
       var out: Array<Array<{ x: Int, y: Int }>> = [];
       var cur: Array<{ x: Int, y: Int }> = [];

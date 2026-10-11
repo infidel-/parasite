@@ -320,6 +320,11 @@ class GenRun
         (cut.length > 0 ? cut[0].x1 + ',' + cut[0].y1 + '..' + cut[0].x2 + ',' + cut[0].y2 : ''));
       check.floorReachable(ctx, state.allRooms);
       check.militaryReach(ctx);
+      check.militaryRooms(ctx, state.allRooms);
+      // which zones keep coming out bare
+      GenTree.walk(ctx.root, function(n)
+        if (gen.blocks.RoomBlock.tagged(n, gen.military.MilitaryRooms.TAG_EMPTY))
+          add('zoneEmpty/' + n.kind, 1));
 
       add('rooms', state.allRooms.length);
       for (s in ctx.spawns)

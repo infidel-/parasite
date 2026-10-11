@@ -54,7 +54,7 @@ class GenSpawner
               // a security room's gun cabinet, gen.corp.CorpRooms.security
               case 'gunCabinet':
                 new GunCabinet(game, area.id, s.x, s.y);
-              // a military armory's lockers and its safe, gen.military.MilitaryRooms.armory
+              // a military armory's lockers and its safe, gen.military.MilitaryRooms.gunCabinet/safe/lockers
               case 'locker':
                 new Locker(game, area.id, s.x, s.y);
               case 'safe':

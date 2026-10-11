@@ -300,7 +300,8 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 | `game/MilitaryAreaGenerator.hx` | the LIVE adapter: the band's `AreaGenerator.wildMix`, a ctx, `MilitaryGen.build`, the drain |
 | `gen/military/MilitaryGen.hx` | `build()` and the public grid helpers (`fence`, `fenceOf`, `outside`, `vehicle`) |
 | `gen/blocks/MilitaryBlocks.hx` | the split profile (12/26/32) and the quota inside the fence |
-| `gen/military/MilitaryRooms.hx` | every room's furniture by kind, as `Const` row-20/21 tiles (and the armory's objects) |
+| `gen/military/MilitaryZones.hx` | the room kinds (one per role), the bays a room divides into, and each kind's zone quota |
+| `gen/military/MilitaryRooms.hx` | each zone's furniture, as `Const` row-20/21 tiles (and the armory's objects) |
 
 **The order of `build()` is load-bearing**:
 1. Blank the grid to `TEMP_ALLEY`.
@@ -348,10 +349,50 @@ washroom's own tests:
   barracks block's MEDICAL bay and SUPPLY store;
 - the rest are HQ offices or barracks.
 
-The HQ is the building dealt while no safe stands. `RoomBlock.MILITARY` glazes the room with no
-quota and hands it to `MilitaryRooms.fill`. That stands the furniture and paints the room's floor
-tile LAST, while `roomWallRuns` can still tell bare floor from furniture. `generateRoomContents`
-and `clearTableSpots` skip a base.
+The HQ is the building dealt while no safe stands.
+
+**A role is a room KIND and a room is ZONES, as in a laboratory.** All nine roles used to be one
+node kind, `room-military`, furnished by loops off `room.role`: the tree could not say what a room
+held and nothing asserted it. Now `RoomBlock.kindOf` returns `MilitaryZones.kindOf(role)`
+(`room-armory`, `room-hq`, `room-comms`, `room-supply`, `room-medical`, `room-briefing`, `room-mess`,
+`room-barracks`, `room-latrine`), and `glaze` hands the room to `MilitaryZones.deal` in place of the
+laboratory's deal. That:
+- takes the glazing's window bays back off the node;
+- pushes one BAY per straight span of each wall run (`roomWallRuns`, cut by `FacilityToilet.spans`),
+  tagged with its wall, `long`/`short`, and `best` (the longest usable wall) or `face` (the one facing
+  it), plus one `floor` bay for the middle less a cell all round;
+- deals the kind's quota with `Quota.deal`, leftovers to `mil-slot`, and tags the room `unmet` when a
+  min fell short;
+- pushes `mil-floor` LAST of its zones. It paints the floor once they have stood their furniture,
+  while `roomWallRuns` can still tell bare floor from furniture, and before the vent caps `glaze`
+  pushes next.
+
+| kind | zones (core first) |
+|---|---|
+| armory | gun-cabinet, safe-spot (the base's one), crate-island, locker-run ×2 |
+| hq | desk-run, file-run (shortest bay), desk-island, desk-run × the rest |
+| comms | rack-run (longest wall), console-run ×2 (facing it), desk-island |
+| supply | shelving, crate-island, shelving ×2 |
+| medical | cot-run ×2 (longest and facing), cabinet-run (an end wall), cot-island |
+| mess / briefing | counter-run / map-board (an end wall), table-rows |
+| barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
+| latrine | cubicles, trough-run |
+
+A min is only asked when the room can hold it: an office with no bay two cells long is filing only,
+and a barracks falls back to the other long wall and then the end walls. 2000 seeds, 0 `unmet`.
+
+**A WALL BAY NEVER TOUCHES GLASS.** `roomWallRuns` only tests the cell straight behind each cell, so a
+corner cell with the next wall's first pane beside it passed. The comms room stood a radio rack there,
+and `MilitaryInterior` then backed it ONTO the glass, because `isWall` counts a window and the window
+was the first side it tried. The bays drop any cell with a window or a doorway of any kind beside it,
+and the render picks the backing wall with `isSolidWall`. `GenCheck.militaryRooms` asserts no piece
+of a base room has a window beside it, no room met its quota short, and every room cell is floor or
+the base's own furniture (no lab tile or decoration through a filler). It cost 2.3 cells of a
+barracks (16.2 → 13.9), the corner bunks beside a window, and the mil-slot bays left over are where
+the room props stand.
+
+`--stats` also prints `nodes/<zone>` and `zoneEmpty/<zone>`. A desk-island is empty in a room too
+narrow for one, about 1.3 a base.
 
 **Furniture never seals a cell.** `MilitaryRooms.free` refuses a cell beside a doorway, and a cell
 that would leave a bare neighbour with no OTHER bare neighbour. Counting the doorway as an exit is

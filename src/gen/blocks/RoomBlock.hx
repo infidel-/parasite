@@ -26,6 +26,8 @@ import gen.facility.FacilityRooms;
 import gen.facility.FacilityToilet;
 import gen.facility._FacilityState;
 import gen.facility.FacilityTemp.*;
+import gen.military.MilitaryRooms;
+import gen.military.MilitaryZones;
 
 class RoomBlock
 {
@@ -35,9 +37,8 @@ class RoomBlock
   public static inline var OFFICE = 'room-office';
   public static inline var WASHROOM = 'room-washroom';
   public static inline var STORAGE = 'room-storage';
-  // every room of a military building, whatever its kind: glazed like a laboratory, then furnished
-  // by gen.military.MilitaryRooms off its role instead of a quota of the compound's zones
-  public static inline var MILITARY = 'room-military';
+  // a military building's rooms are a kind per role and live in gen.military.MilitaryZones, with
+  // the zones they divide into
   // and what a room divides into. BAY is what the glazing pass pushes — an undealt bay of floor
   // under one bay of window — and gen.Quota then turns every one of them into one of the rest
   public static inline var BAY = 'bay';
@@ -139,16 +140,9 @@ class RoomBlock
     {
       if (room.role == ROLE_TOILET)
         return WASHROOM;
-      if (room.role == ROLE_ARMORY ||
-          room.role == ROLE_BARRACKS ||
-          room.role == ROLE_MESS ||
-          room.role == ROLE_BRIEFING ||
-          room.role == ROLE_HQ ||
-          room.role == ROLE_LATRINE ||
-          room.role == ROLE_COMMS ||
-          room.role == ROLE_SUPPLY ||
-          room.role == ROLE_MEDICAL)
-        return MILITARY;
+      var military = MilitaryZones.kindOf(room.role);
+      if (military != null)
+        return military;
       if (room.role == ROLE_CABINET)
         return OFFICE;
       if (room.role == ROLE_STORAGE)
@@ -188,12 +182,6 @@ class RoomBlock
             clear(state, room);
             glaze(state, room, node, true);
 
-          // windows, and nothing dealt into the bays they leave: the room's own kind stands its
-          // furniture, after the glazing so it can keep off the ribbon
-          case MILITARY:
-            clear(state, room);
-            glaze(state, room, node, true);
-            gen.military.MilitaryRooms.fill(state, room);
 
           // A STORE DEALS LIKE THE OTHER TWO AND GLAZES LIKE THE WASHROOM, and that pairing is the
           // whole of what makes its racking possible. `solid` refuses a cell next to a ribbon window
@@ -244,7 +232,16 @@ class RoomBlock
           case VENT_CAP:
             ventCap(state, room, node);
 
+          // a base room glazes like a laboratory and then deals its OWN zones over its own bays
+          // (MilitaryZones.deal, from `glaze`), each filled by gen.military.MilitaryRooms
           default:
+            if (MilitaryZones.isRoom(node.kind))
+              {
+                clear(state, room);
+                glaze(state, room, node, true);
+              }
+            else if (MilitaryZones.isZone(node.kind))
+              MilitaryRooms.fill(state, room, node);
         }
     }
 
@@ -292,7 +289,9 @@ class RoomBlock
           if (cap != null)
             caps.push(cap);
         }
-      if (node.kind != MILITARY)
+      if (MilitaryZones.isRoom(node.kind))
+        MilitaryZones.deal(state, room, node, bays);
+      else
         Quota.deal(bays, RoomZones.demands(state, room, node.kind), SLOT, state.area.rng);
       // the caps are pushed LAST so the breadth-first walk reaches them after every bench and slot
       // of this room: whether a lone window becomes a vent depends on the floor inside it still
@@ -856,7 +855,7 @@ class RoomBlock
     }
 
 // is this cell next to a window?
-  static function nextToWindow(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+  public static function nextToWindow(cells: Array<Array<Int>>, x: Int, y: Int): Bool
     {
       for (i in 0...Const.dir4x.length)
         {

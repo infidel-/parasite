@@ -982,6 +982,43 @@ class GenCheck
               'the drive behind the gate is blocked at ' + x + ',' + (fenceY + step * k));
     }
 
+// the base's rooms: every room met its kind's zone quota (gen.military.MilitaryZones tags one that
+// fell short), every cell of a room is floor or the base's own furniture (no laboratory tile and no
+// decoration leaking in through a filler), and nothing a room holds stands beside a window — the
+// comms room's radio rack in front of the glass is what this was written for
+  public function militaryRooms(ctx: GenCtx, rooms: Array<_Room>)
+    {
+      GenTree.walk(ctx.root, function(n)
+        if (gen.military.MilitaryZones.isRoom(n.kind))
+          ok(!gen.blocks.RoomBlock.tagged(n, gen.military.MilitaryZones.TAG_UNMET),
+            n.kind + ' at ' + n.x1 + ',' + n.y1 + ' fell short of its zone quota'));
+      for (r in rooms)
+        if (gen.military.MilitaryZones.kindOf(r.role) != null)
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+            {
+              var t = ctx.cells[x][y];
+              var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH ||
+                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_MED_CABINET);
+              ok(mil ||
+                tiles.Default.TILE_WALKABLE[t] == 1,
+                r.role + ' room cell ' + x + ',' + y + ' is foreign tile ' + t);
+              for (s in ctx.getObjectsAt(x, y))
+                ok(s.type != 'decoration',
+                  r.role + ' room cell ' + x + ',' + y + ' holds a decoration');
+              if (!mil &&
+                  !ctx.hasObjectAt(x, y))
+                continue;
+              for (i in 0...Const.dir4x.length)
+                {
+                  var w = ctx.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]);
+                  ok(!(w >= Const.TILE_WINDOWH1 && w <= Const.TILE_WINDOWV3 ||
+                    w == Const.TILE_WINDOW_HIGH),
+                    r.role + ' piece at ' + x + ',' + y + ' stands beside a window');
+                }
+            }
+    }
+
 // the base can be got into: every torn panel and the pedestrian gap have the rim flood on their
 // outside AND their inside, so each is a way in and not a hole onto a wall. reads lastSeen, so it
 // runs after reachable()

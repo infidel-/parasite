@@ -191,12 +191,13 @@ class MilitaryInterior
         }
       else
         {
-          // the rest stand against a wall: the side of the run's first cell that is one, along the
-          // run for a run, any side for a single
+          // the rest stand against a wall: the side of the run's first cell that is plain masonry,
+          // along the run for a run, any side for a single. NEVER A WINDOW: isWall counts one, and
+          // a corner rack found the glass first and stood with its back to it
           var dir = -1;
           for (d in (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])))
             if (dir < 0 &&
-                FacilityModel.isWall(m, col + DX[d], row + DZ[d]))
+                FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
               dir = d;
           // a desk pair or a cot out in the middle of a room has no wall: the desk is a table, and
           // the cot lies along the run's axis with its pillow to the west or north

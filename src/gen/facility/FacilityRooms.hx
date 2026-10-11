@@ -160,7 +160,7 @@ class FacilityRooms
     }
 
 // fill rooms with content. a military building's are furnished at the room level instead
-// (gen.blocks.RoomBlock.fill, gen.military.MilitaryRooms.fill)
+// (gen.military.MilitaryZones.deal, then gen.military.MilitaryRooms.fill per zone)
   public static function generateRoomContents(state: _FacilityState)
     {
       if (state.military)
