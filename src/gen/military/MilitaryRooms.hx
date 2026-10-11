@@ -31,7 +31,7 @@ class MilitaryRooms
   static inline var RACKS_MAX = 4;
   static inline var CONSOLES_MAX = 2;
   // a medical bay's cots and cabinets
-  static inline var COTS_MAX = 6;
+  static inline var COTS_MAX = 10;
   static inline var COT_ISLANDS = 2;
   static inline var MEDCABS_MAX = 2;
   // a latrine's cubicles and basin cells (two basins to a cell)
@@ -49,16 +49,16 @@ class MilitaryRooms
         {
           case BUNK_ROW: bunkRow(state, room, node);
           case BUNK_ALONG: bunksAlong(state, cells);
-          case DESK_ISLAND: islands(state, room, (room.w >= room.h ? 2 : 1),
-            (room.w >= room.h ? 1 : 2), Const.TILE_MIL_DESK, 1);
+          case DESK_ISLAND: deskIsland(state, room);
           case RACK_RUN: line(state, room, cells, Const.TILE_MIL_RADIO_RACK, RACKS_MAX, 1);
           case CONSOLE_RUN: consoleRun(state, room, cells);
           case SHELVING: shelving(state, cells);
           case SHELF_ROW: shelfRows(state, room);
           case CRATE_ISLAND: crateIslands(state, room);
-          case COT_RUN: line(state, room, cells, Const.TILE_MIL_COT, COTS_MAX, 2);
+          case COT_RUN: line(state, room, cells, Const.TILE_MIL_COT, COTS_MAX,
+            (MilitaryZones.wallOf(node) < 2 ? 1 : 2));
           case CABINET_RUN: line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
-          case COT_ISLAND: islands(state, room, 1, 1, Const.TILE_MIL_COT, COT_ISLANDS);
+          case COT_ISLAND: cotIsland(state, room);
           case COUNTER_RUN: line(state, room, cells, Const.TILE_MIL_COUNTER, 99, 1);
           case TABLE_ROWS: tableRows(state, room, (room.w >= room.h),
             (room.role == ROLE_MESS ? Const.TILE_MIL_MESS_TABLE : Const.TILE_MIL_BRIEF_TABLE),
@@ -110,7 +110,8 @@ class MilitaryRooms
             {
               var c = run[mid + (k % 2 == 0 ? Std.int(k / 2) : -Std.int(k / 2) - 1)];
               if (c == null ||
-                  !walled(state, c.x, c.y))
+                  !walled(state, c.x, c.y) ||
+                  glass(state, c.x, c.y, tile))
                 continue;
               // a prop in a bay is the one piece a zone does not plan round, and the first build
               // stood a barracks' rifle rack in the aisle its bunk rows left (3208 floor cells
@@ -120,7 +121,8 @@ class MilitaryRooms
                 return 1;
               stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
             }
-          return 1;
+          // and if it found no cell here the next one tries: a medical bay's IV stand will not stand
+          // in front of glass, and its stretcher, which lies under the sill, went without
         }
       return 1;
     }
@@ -329,7 +331,8 @@ class MilitaryRooms
           var c = run[k];
           if (k % step == 0 &&
               have < max &&
-              walled(state, c.x, c.y))
+              walled(state, c.x, c.y) &&
+              !glass(state, c.x, c.y, tile))
             {
               stand(state, c.x, c.y, tile);
               have++;
@@ -400,6 +403,30 @@ class MilitaryRooms
               return n;
           }
       return islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
+    }
+
+// a comms room's desks back to back in its middle, three cells long where the ring still fits round
+// them and two where it does not: the 5x5 room had "space for one more doubled table"
+  static function deskIsland(state: _FacilityState, room: _Room): Int
+    {
+      for (k in [ 3, 2 ])
+        {
+          var n = islands(state, room, (room.w >= room.h ? k : 1), (room.w >= room.h ? 1 : k),
+            Const.TILE_MIL_DESK, 1);
+          if (n > 0)
+            return n;
+        }
+      return 0;
+    }
+
+// a medical bay's cots out in its middle, two side by side where they fit (the render lies each one
+// down the screen), single ones where they do not
+  static function cotIsland(state: _FacilityState, room: _Room): Int
+    {
+      var n = islands(state, room, 2, 1, Const.TILE_MIL_COT, COT_ISLANDS);
+      if (n > 0)
+        return n;
+      return islands(state, room, 1, 1, Const.TILE_MIL_COT, COT_ISLANDS);
     }
 
 // the rows of shelving a store's floor has room for along x or along z, two cells or longer: one on
@@ -560,6 +587,21 @@ class MilitaryRooms
             return true;
         }
       return walls == 0;
+    }
+
+// would `tile` on this cell stand in front of a window: only a medical bay's bays reach the glass, and
+// only what lies under the sill may go there
+  static function glass(state: _FacilityState, x: Int, y: Int, tile: Int): Bool
+    {
+      return !low(tile) &&
+        RoomBlock.nextToWindow(state.area.getCells(), x, y);
+    }
+
+// does this piece lie under a window's sill: a cot, a stretcher
+  public static inline function low(t: Int): Bool
+    {
+      return t == Const.TILE_MIL_COT ||
+        t == Const.TILE_MIL_STRETCHER;
     }
 
 // is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack or one of

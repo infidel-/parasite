@@ -454,10 +454,11 @@ class FacilityRooms
     }
 
 // the cells of each wall of this room a piece of standing furniture may take: on the room's edge,
-// backed by SOLID masonry (a high fitting against glazing is dropped by the renderer), clear of every
-// doorway and of whatever is standing there already. one array per wall, longest run wins
-  public static function roomWallRuns(state: _FacilityState,
-      room: _Room): Array<Array<{ x: Int, y: Int }>>
+// backed by SOLID masonry (a high fitting against glazing is dropped by the renderer), or by a window
+// too with `glass` (a military medical bay's cots, which lie under the sill), clear of every doorway
+// and of whatever is standing there already. one array per wall, longest run wins
+  public static function roomWallRuns(state: _FacilityState, room: _Room,
+      glass: Bool = false): Array<Array<{ x: Int, y: Int }>>
     {
       var area = state.area;
       var cells = area.getCells();
@@ -476,7 +477,10 @@ class FacilityRooms
               var x = w.x + w.dx * i, y = w.y + w.dy * i;
               var back = cells[x + w.nx][y + w.ny];
               if (cells[x][y] != TEMP_BUILDING_ROOM ||
-                  (back != TEMP_BUILDING_WALL && back != TEMP_BUILDING_INNER_WALL) ||
+                  (back != TEMP_BUILDING_WALL && back != TEMP_BUILDING_INNER_WALL &&
+                    !(glass &&
+                    back >= TEMP_BUILDING_WINDOW &&
+                    back <= TEMP_BUILDING_WINDOWV3)) ||
                   nextTo(cells, x, y, TEMP_BUILDING_INNER_DOOR) ||
                   area.hasObjectAt(x, y))
                 continue;

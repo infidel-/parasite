@@ -30,6 +30,9 @@ typedef Mount = {
   mcol:Int,
   mrow:Int,
   mkind:Int,
+  // how far ALONG its wall it sits off its cell's centre, world units: 0, but for a socket on a
+  // machine's own wall cell in the gap beside it, half a cell over (see `sockets`)
+  off:Float,
   // whether a cable is already plugged into it. ONE CABLE PER MOUNT, and it is a fact about the ART
   // and not a density rule: the sheet's socket cells draw ONE outlet, so a second lead arriving at
   // the same plate is a lead plugged into nothing. Claimed in order — the machine drops first, then
@@ -95,6 +98,12 @@ class FacilityCable
 {
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
+  // how much narrower than its cell a machine has to be for a gap socket beside it: the socket art's
+  // ~1.0 of its SOCK_W quad, so the plate shows between two radio racks (1.2 apart)
+  static inline var SOCK_GAP = 1.0;
+  // half that art, and how far a socket beside one sits off its side, centre to side: that and a margin
+  static inline var SOCK_ART = 0.5;
+  static inline var SOCK_CLEAR = SOCK_ART + 0.1;
 
   // the outward normal of the face a mount hangs on, by the FACE direction (dir ^ 1) rather than by
   // the hand the masonry is on: the quad looks BACK at the cell, so these are the four ways round
@@ -284,14 +293,46 @@ class FacilityCable
             // BESIDE it and never under it: a socket under a machine is behind the machine
             var sc = (q.dir < 2 ? 1 : 0);
             var sr = (q.dir < 2 ? 0 : 1);
-            // the near hands first, so a lead stays as short as the wall allows
-            for (s in [-1, 1, -2, 2])
+            // the near hands first, so a lead stays as short as the wall allows; then, for a piece
+            // narrower than its cell, BESIDE it on its own wall cell (the 0.5s below), SOCK_CLEAR
+            // past its side or at most on the cell edge, the gap between two racks; and only then two
+            // cells out. A run of four radio racks had one free cell at its end and three racks
+            // unwired, and a water cooler on a pier between two windows none ("we need to spawn
+            // sockets for all ... we can spawn sockets on the same wall tile"); and a lead two cells
+            // out ran behind the rack between, flush to the wall.
+            //
+            // AN OPERATOR DESK TAKES ITS OWN CELL LAST, the plate then under the radio and behind the
+            // desk: two consoles side by side had one free cell between their runs and the second
+            // went unwired. Its footprint here is the radio's (`lead`), off its desk's middle
+            var narrow = ((q.dir < 2 ? q.x1 - q.x0 : q.z1 - q.z0) <= CityConfig.CELL - SOCK_GAP);
+            var hands = (!narrow ? [-1.0, 1.0, -2.0, 2.0] : q.lead == null ?
+              [-1.0, 1.0, -0.5, 0.5, -2.0, 2.0] : [-1.0, 1.0, -2.0, 2.0, -0.5, 0.5]);
+            for (s in hands)
               {
-                var c = col + sc * s;
-                var r = row + sr * s;
+                var k = Std.int(s);
+                if (k != s)
+                  {
+                    // beside it, SOCK_CLEAR off its side, and on its own cell's edge at the most:
+                    // no other mount may hang on that stretch of wall yet
+                    var d = (s < 0 ? -1 : 1);
+                    var p = sock(m, col, row, q.dir, col, row, kind);
+                    var c0 = CityConfig.cellToWorld(col, row);
+                    p.off = Math.max(-CityConfig.CELL / 2, Math.min(CityConfig.CELL / 2,
+                      (q.dir < 2 ? (q.x0 + q.x1) / 2 - c0.x : (q.z0 + q.z1) / 2 - c0.z) +
+                      d * ((q.dir < 2 ? q.x1 - q.x0 : q.z1 - q.z0) / 2 + SOCK_CLEAR)));
+                    if (spills(p) &&
+                        !past(m, p, d) ||
+                        !clear(out, p))
+                      continue;
+                    out.push(p);
+                    break;
+                  }
+                var c = col + sc * k;
+                var r = row + sr * k;
                 if (!bare(m, c, r, q.dir) ||
-                    !walled(m, col, row, q.dir, sc * s, sr * s) ||
-                    !spaced(out, c, r, 1))
+                    !walled(m, col, row, q.dir, sc * k, sr * k) ||
+                    !spaced(out, c, r, 1) ||
+                    !behind(m, col, row, sc * k, sr * k, kind))
                   continue;
                 out.push(sock(m, c, r, q.dir, col, row, kind));
                 break;
@@ -337,6 +378,50 @@ class FacilityCable
       return true;
     }
 
+// may a lead run along the wall behind the cell between a machine and a socket two cells out: nothing
+// stands there flush to the wall but more of the machine itself (a console run, 0.24 off it). A lead
+// from the third of four radio racks to the free cell past the fourth ran through the fourth
+  static function behind(m:Facility, col:Int, row:Int, dc:Int, dr:Int, kind:Int):Bool
+    {
+      var f = m.fit[row + Std.int(dr / 2)][col + Std.int(dc / 2)];
+      return (dc + dr) * (dc + dr) < 4 ||
+        f == 0 ||
+        f == kind;
+    }
+
+// may a socket slid to its cell's edge hang over it: the wall behind the neighbour carries on, and the
+// neighbour is room floor, or the end wall of the room with its face clear of the art — a rack in a
+// room's corner has 1.6 of wall between its side and that face, the end wall being a unit thinner than
+// its cell. Never a doorway
+  static function past(m:Facility, p:Mount, d:Int):Bool
+    {
+      var nc = p.col + (p.dir < 2 ? d : 0);
+      var nr = p.row + (p.dir < 2 ? 0 : d);
+      if (!FacilityModel.isSolidWall(m, nc + DC[p.dir], nr + DR[p.dir]) ||
+          FacilityModel.isDoor(m, nc, nr))
+        return false;
+      if (!FacilityModel.isWall(m, nc, nr))
+        return true;
+      var n = FacilityGeom.slab(m, nc, nr);
+      var c = at(p);
+      var edge = (p.dir < 2 ? c.x : c.z) + d * SOCK_ART;
+      return (p.dir < 2 ? (d < 0 ? edge >= n.x1 : edge <= n.x0) :
+        (d < 0 ? edge >= n.z1 : edge <= n.z0));
+    }
+
+// is the stretch of wall a gap socket would hang on clear of every mount already dealt on that wall
+// line: no two plates nearer than one plate's width, whichever cell either was dealt to
+  static function clear(out:Array<Mount>, p:Mount):Bool
+    {
+      var at = along(p) * CityConfig.CELL + p.off;
+      for (q in out)
+        if (q.dir == p.dir &&
+            line(q) == line(p) &&
+            Math.abs(along(q) * CityConfig.CELL + q.off - at) < FacilityStyle.SOCK_W)
+          return false;
+      return true;
+    }
+
 // one socket, with the sheet cell its ROOM picked. see the header: the roll is on the room and not
 // on the cell, so a room is fitted throughout with one pattern
   static inline function sock(m:Facility, col:Int, row:Int, dir:Int, mcol:Int, mrow:Int,
@@ -352,6 +437,7 @@ class FacilityCable
         mcol: mcol,
         mrow: mrow,
         mkind: mkind,
+        off: 0.0,
         used: false,
       };
     }
@@ -427,6 +513,7 @@ class FacilityCable
                 mcol: -1,
                 mrow: -1,
                 mkind: -1,
+                off: 0.0,
                 used: false,
               });
             }
@@ -521,11 +608,11 @@ class FacilityCable
 // these are flat plates. The placards and the fire points hang the same way and take none either
   static function mount(b:MeshBuf, m:Facility, p:Mount):Void
     {
-      var s = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
+      var s = span(m, p);
       var e = FacilityStyle.MOUNT_PROUD;
       var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
       var h = w / 2;
-      var c = CityConfig.cellToWorld(p.col, p.row);
+      var c = at(p);
       var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);
       // the face looks BACK at the cell the mount hangs beside, so it is the opposite of the side the
       // masonry is on
@@ -538,6 +625,40 @@ class FacilityCable
         }
       var x = (dir == 2 ? s.x0 - e : s.x1 + e);
       pane(b, x, x, Math.max(c.z - h, s.z0), Math.min(c.z + h, s.z1), dir, y - h, y + h, p.cell);
+    }
+
+// a mount's centre on its floor cell, slid `off` along its wall
+  static function at(p:Mount):{ x:Float, z:Float }
+    {
+      var c = CityConfig.cellToWorld(p.col, p.row);
+      return {
+        x: c.x + (p.dir < 2 ? p.off : 0.0),
+        z: c.z + (p.dir < 2 ? 0.0 : p.off),
+      };
+    }
+
+// does a socket slid along its wall reach past its own cell's edge
+  static inline function spills(p:Mount):Bool
+    {
+      return Math.abs(p.off) + FacilityStyle.SOCK_W / 2 > CityConfig.CELL / 2;
+    }
+
+// the slab a mount hangs on, and for a socket that spills past its cell the neighbour's too, so the
+// plate is not clamped off at the cell edge it reaches over
+  static function span(m:Facility, p:Mount):FacilityGeom.Rect
+    {
+      var s = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
+      if (!spills(p))
+        return s;
+      var d = (p.off < 0 ? -1 : 1);
+      var n = FacilityGeom.slab(m, p.col + DC[p.dir] + (p.dir < 2 ? d : 0),
+        p.row + DR[p.dir] + (p.dir < 2 ? 0 : d));
+      return {
+        x0: Math.min(s.x0, n.x0),
+        x1: Math.max(s.x1, n.x1),
+        z0: Math.min(s.z0, n.z0),
+        z1: Math.max(s.z1, n.z1),
+      };
     }
 
 // FacilityGeom.pane with the pack's cell opened up. v is flipped, the trap FacilitySink.emit records:
@@ -578,8 +699,10 @@ class FacilityCable
             (q.lead != null ? q.lead : q.h * FacilityStyle.CABLE_LID_H);
           var dir = p.dir ^ 1;
           var e = FacilityStyle.MOUNT_PROUD + FacilityStyle.CABLE_EPS;
-          // toward the socket, which is the hand the machine's cell is NOT on
-          var s = (p.dir < 2 ? (p.col > p.mcol ? 1 : -1) : (p.row > p.mrow ? 1 : -1));
+          // toward the socket, which is the hand the machine's cell is NOT on, or for a gap socket on
+          // the machine's own cell the hand it slid to
+          var s = (p.off != 0 ? (p.off > 0 ? 1 : -1) :
+            (p.dir < 2 ? (p.col > p.mcol ? 1 : -1) : (p.row > p.mrow ? 1 : -1)));
           var d = FacilityStyle.CABLE_LID_D;
           var a = (dir < 2 ?
             [q.x0 + (q.x1 - q.x0) * (s > 0 ? 1 - d : d), y, (dir == 0 ? sl.z0 - e : sl.z1 + e)] :
@@ -797,7 +920,7 @@ class FacilityCable
   static function anchor(m:Facility, p:Mount, s:Int):Array<Float>
     {
       var sl = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
-      var c = CityConfig.cellToWorld(p.col, p.row);
+      var c = at(p);
       var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
       var h = (p.fit ? w * FacilityStyle.SOCK_LEAD : 0.0);
       var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);

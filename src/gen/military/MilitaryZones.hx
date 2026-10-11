@@ -12,7 +12,9 @@
 // so a corner cell with the ribbon's first pane beside it passed, and the comms room stood a radio
 // rack in front of the window (the render then backed it ONTO the glass, the window being the first
 // wall it found). A cell with a window on any side, or a doorway of any kind, is cut out of the run
-// before it is split into bays.
+// before it is split into bays. EXCEPT IN A MEDICAL BAY, whose cots lie under the sill: "they're
+// allowed in front of the windows". gen.military.MilitaryRooms keeps every taller piece off the glass
+// there itself.
 
 package gen.military;
 
@@ -119,9 +121,11 @@ class MilitaryZones
       for (b in glazed)
         node.children.remove(b);
       var cells = state.area.getCells();
-      var runs = [for (run in FacilityRooms.roomWallRuns(state, room))
+      var glass = (node.kind == MEDICAL);
+      var runs = [for (run in FacilityRooms.roomWallRuns(state, room, glass))
         [for (c in run)
-          if (!RoomBlock.nextToWindow(cells, c.x, c.y) &&
+          if ((glass ||
+              !RoomBlock.nextToWindow(cells, c.x, c.y)) &&
               !nextToDoor(cells, c.x, c.y)) c]];
       var best = 0;
       for (i in 1...4)
@@ -212,15 +216,15 @@ class MilitaryZones
               wall(SHELVING, 0, 2, 1),
             ];
 
-          // cots along the longest wall and the one facing it, the cabinets on an end wall
+          // cots along the top and bottom walls first, where they lie down the screen and stand
+          // side by side, a cot to a cell ("on adjacent tiles - but vertically for better
+          // readability"), the cabinets on a side wall
           case MEDICAL:
             return [
-              wall(COT_RUN, 1, 2, 1, function(b)
-                return (RoomBlock.tagged(b, TAG_BEST) ? 100 : 0) +
-                  (RoomBlock.tagged(b, TAG_FACE) ? 50 : 0) + len(b)),
+              wall(COT_RUN, 1, 3, 1, function(b)
+                return (wallOf(b) < 2 ? 100 : 0) + len(b)),
               wall(CABINET_RUN, 0, 1, 1, function(b)
-                return (RoomBlock.tagged(b, TAG_BEST) ||
-                  RoomBlock.tagged(b, TAG_FACE) ? 0 : 100)),
+                return (wallOf(b) >= 2 ? 100 : 0)),
               floor(COT_ISLAND),
             ];
 

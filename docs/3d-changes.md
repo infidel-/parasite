@@ -1963,3 +1963,32 @@ its stem's face; both fixed in the script, not waived.
 
 **Verdict:** landed. Two new batches +2 calls (measured by layer-masking them, 59 → 57), the steel
 trough buffer gone -1; 0 new programs (121). 2000 seeds OK.
+
+## Military base: a socket for every machine, medical cots at the glass and down the screen, cot pillow ticking, IV stand halo, barracks boards across the wrap, no floor clutter at doorways
+
+**Reported:** a comms room's four racks with one plugged in ("we can spawn sockets on the same wall
+tile"); a medical bay wanting "more beds ... allowed in front of the windows ... on adjacent tiles -
+but vertically", +15%; the cot pillow's rounded edges taking "black" and its top "one large black
+double line"; the IV stand's wall halo too large; the barracks floor missing "one hole" at the repeat;
+medical clutter right in front of a door.
+
+**Changed:**
+- **`FacilityCable.sockets`**: a machine narrower than its cell by `SOCK_GAP` 1.0 tries a socket
+  BESIDE it on its own wall cell (`Mount.off`, `SOCK_CLEAR` 0.6 past its side, at most on the cell
+  edge: the 1.2 gap between two racks) before reaching two cells out, and a reach two cells out may
+  not pass behind a flush piece (`behind`). Over the cell edge it needs the wall behind the neighbour,
+  or the end wall's face clear of the art (`past`: a corner rack has 1.6 of wall). An operator desk
+  takes its own cell last, under the radio. 8 regenerated bases: racks 28/28, consoles 22/22, coolers
+  16/16 fed; the cooler on a pier between two windows had none.
+- **Cots** drawn at `COT_SCALE` 1.15 (4.03 long), island ones down the screen two side by side; a cot
+  or stretcher backs onto glass on the masonry's face line (`sill`). The gen side is in area-gen.md.
+- **Pillow** (`roomkit_build.py`): unwrapped alone at `PILLOW_S` 1.45 against the cot's 3.6, its
+  window centred on the white band at 0.445 of the ticking cell. The cell's middle (0.5) sat 8 px
+  off a stripe, so every one-column edge face took it at the lower mips. Top 1 stripe → 4; `check`
+  reports those 54 faces as `texel_off` (2.48x), on purpose.
+- **IV stand** halo cast to `IV_HALO_H` 0.9, the base, not its 3.5 pole.
+- **`military/floor-barracks`**: own src through `tools/seamfix.py boards` (see 3d-textures.md), built
+  82.5 against 82.8 sRGB.
+- **`MilitaryClutter`** floor decals skip `FacilityModel.nearDoor` cells.
+
+**Verdict:** landed. No new mesh, batch or program: the plates ride the electrical pack mesh.

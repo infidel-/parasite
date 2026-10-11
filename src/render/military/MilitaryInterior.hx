@@ -2,6 +2,7 @@ package render.military;
 
 import citygen.CityConfig;
 import game.AreaGame;
+import gen.military.MilitaryRooms;
 import render.Models;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
@@ -52,9 +53,12 @@ class MilitaryInterior
   // is drawn at, which is its own so it lands at scale 1
   static inline var BUNK_H = 3.4;
   static inline var BUNK_W = 2.74;
-  static inline var COT_L = 3.5;
-  static inline var COT_W = 1.6657;
-  static inline var COT_H = 1.1146;
+  // the cot drawn 15% over its model ("scale these beds +15%"): 4.03 long, still inside a cell off the
+  // wall's face
+  static inline var COT_SCALE = 1.15;
+  static inline var COT_L = 3.5 * COT_SCALE;
+  static inline var COT_W = 1.6657 * COT_SCALE;
+  static inline var COT_H = 1.1146 * COT_SCALE;
   static inline var FOOT_W = 2.6;
   static inline var FOOT_D = 1.775;
   static inline var FOOT_H = 1.0;
@@ -114,6 +118,9 @@ class MilitaryInterior
   static inline var IV_W = 1.17;
   static inline var IV_D = 1.0511;
   static inline var IV_H = 3.5;
+  // and the height its wall halo is cast to: the wheeled base and the foot of the pole, since a halo the
+  // stand's whole height and width read as a slab's ("wall contact shadow too large for iv stand")
+  static inline var IV_HALO_H = 0.9;
   static inline var STRETCHER_L = 3.6;
   static inline var STRETCHER_W = 1.33;
   static inline var STRETCHER_H = 0.9956;
@@ -131,9 +138,9 @@ class MilitaryInterior
   static inline var BLANKET_X = 1.09;
   static inline var BLANKET_L = 5.2;
   static inline var BLANKET_W = 2.46;
-  static inline var COT_TOP = 0.955;
-  static inline var COT_FREE_X = -0.1;
-  static inline var COT_FREE_L = 1.3;
+  static inline var COT_TOP = 0.955 * COT_SCALE;
+  static inline var COT_FREE_X = -0.1 * COT_SCALE;
+  static inline var COT_FREE_L = 1.3 * COT_SCALE;
   // a chair's centre out in front of its desk's front edge, half under it
   static inline var CHAIR_OUT = 0.3;
   // the latrine's basin (two to a cell, this far either side of its middle) and toilet, bbox depth and
@@ -456,12 +463,15 @@ class MilitaryInterior
         {
           // the rest stand against a wall: the side of the run's first cell that is plain masonry,
           // along the run for a run, any side for a single. NEVER A WINDOW: isWall counts one, and
-          // a corner rack found the glass first and stood with its back to it
-          var dir = backing(m, col, row, (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])));
+          // a corner rack found the glass first and stood with its back to it. Except what lies under
+          // the sill, a medical bay's cots and stretcher, which gen.military.MilitaryRooms stands
+          // there on purpose
+          var dir = backing(m, col, row, (len == 1 ? [ 0, 1, 2, 3 ] : (alongX ? [ 0, 1 ] : [ 2, 3 ])),
+            MilitaryRooms.low(t));
           // a desk island or a cot out in the middle of a room has no wall: the desks stand back to
           // back, a row facing each aisle with a chair at each ("when tables are in the center, spawn
           // two back to back"), their pair 0.2 over the island's ring each side, and the cot lies
-          // with its head west
+          // down the screen, its head north, so two side by side read as two
           if (dir < 0 &&
               t == Const.TILE_MIL_DESK)
             {
@@ -504,11 +514,11 @@ class MilitaryInterior
           else if (dir < 0 &&
               t == Const.TILE_MIL_COT)
             {
-              r = across(across(cell, true, COT_W), false, COT_L);
+              r = across(across(cell, true, COT_L), false, COT_W);
               h = COT_H;
-              put(md.militaryCot, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, 0.0, 0.0);
-              beds((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, 0.0, FacilityGround.surfY(m.surf[row][col]),
-                true);
+              put(md.militaryCot, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[0], 0.0);
+              beds((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[0],
+                FacilityGround.surfY(m.surf[row][col]), true);
             }
           if (dir < 0)
             {
@@ -600,21 +610,22 @@ class MilitaryInterior
               var w = [ AMMO_W, JERRY_W, FLAG_W, COOLER_W, IV_W ][k];
               var d = [ AMMO_D, JERRY_D, FLAG_D, COOLER_D, IV_D ][k];
               r = across(back(m, col, row, cell, dir, d), dir >= 2, w);
-              h = [ AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_H ][k];
+              h = [ AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_HALO_H ][k];
               put([ md.militaryAmmoCans, md.militaryJerrycans, md.militaryFlag, md.militaryWaterCooler,
                 md.militaryIvStand ][k], (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
             }
           else if (t == Const.TILE_MIL_STRETCHER)
             {
               // out from the wall like a cot, its head at it
-              r = across(back(m, col, row, cell, dir, STRETCHER_L), dir >= 2, STRETCHER_W);
+              r = across(back(m, col, row, cell, dir, STRETCHER_L, sill(m, col, row, dir)), dir >= 2,
+                STRETCHER_W);
               h = STRETCHER_H;
               put(md.militaryStretcher, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir], 0.0);
             }
           else if (t == Const.TILE_MIL_COT)
             {
               // its head at the wall
-              r = across(back(m, col, row, cell, dir, COT_L), dir >= 2, COT_W);
+              r = across(back(m, col, row, cell, dir, COT_L, sill(m, col, row, dir)), dir >= 2, COT_W);
               h = COT_H;
               put(md.militaryCot, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir], 0.0);
               beds((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir],
@@ -815,7 +826,7 @@ class MilitaryInterior
     {
       var c = Math.cos(yaw), s = Math.sin(yaw);
       if (cot)
-        top(x + COT_FREE_X * c, z - COT_FREE_X * s, yaw, COT_FREE_L, COT_W - 0.22, COT_TOP, BED, []);
+        top(x + COT_FREE_X * c, z - COT_FREE_X * s, yaw, COT_FREE_L, COT_W - 0.25, COT_TOP, BED, []);
       else
         for (deck in BLANKET_Y)
           top(x + BLANKET_X * c, z - BLANKET_X * s, yaw, BLANKET_L, BLANKET_W, deck, BED, []);
@@ -975,14 +986,16 @@ class MilitaryInterior
         };
     }
 
-// the wall a piece backs onto, of the `dirs` that are plain masonry: one with open floor in front of it
-// first. A shelf in a store's corner found the end wall first and stood facing into the next shelf
-// along, its front against that one's side
-  static function backing(m:Facility, col:Int, row:Int, dirs:Array<Int>):Int
+// the wall a piece backs onto, of the `dirs` that are plain masonry (or glazing, with `glass`): one with
+// open floor in front of it first. A shelf in a store's corner found the end wall first and stood
+// facing into the next shelf along, its front against that one's side
+  static function backing(m:Facility, col:Int, row:Int, dirs:Array<Int>, glass:Bool = false):Int
     {
       var dir = -1;
       for (d in dirs)
-        if (FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]))
+        if (FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]) ||
+            glass &&
+            FacilityModel.isWall(m, col + DX[d], row + DZ[d]))
           {
             if (m.fit[row - DZ[d]][col - DX[d]] == 0 &&
                 !FacilityModel.isWall(m, col - DX[d], row - DZ[d]))
@@ -991,6 +1004,14 @@ class MilitaryInterior
               dir = d;
           }
       return dir;
+    }
+
+// how far off its wall a piece backed onto it at `dir` stands: on a window, the line of the masonry's
+// face either side, the glazing being set (WALL_T - GLASS_T) / 2 deeper into the wall
+  static function sill(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      return (FacilityModel.isSolidWall(m, col + DX[dir], row + DZ[dir]) ? 0.0 :
+        (FacilityStyle.WALL_T - FacilityStyle.GLASS_T) / 2);
     }
 
 // a rect narrowed to `w` round its centre ACROSS a run along x (so in z), or across one along z

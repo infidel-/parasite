@@ -190,7 +190,8 @@ class MilitaryClutter
                   f.z - f.hd < z.z + CELL / 2 - EPS)
                 n += lid(b, l, room.role);
             }
-          // and its bare floor, the odd cell
+          // and its bare floor, the odd cell, never the one inside a doorway, which is walked over
+          // ("dont spawn clutter right in front of doors")
           var pick = FLOOR_PICK.get(room.role);
           if (pick == null)
             continue;
@@ -198,7 +199,8 @@ class MilitaryClutter
             for (col in room.x1...room.x2 + 1)
               {
                 if (!area.isWalkable(col, row) ||
-                    area.getObjectsAt(col, row).length > 0)
+                    area.getObjectsAt(col, row).length > 0 ||
+                    FacilityModel.nearDoor(m, col, row))
                   continue;
                 var h = FacilityModel.mix((col * 374761393) ^ (row * 40503));
                 if (h % 100 >= FLOOR_PCT)

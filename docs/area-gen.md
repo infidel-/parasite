@@ -373,9 +373,9 @@ laboratory's deal. That:
 | kind | zones (core first) |
 |---|---|
 | armory | gun-cabinet, safe-spot (the base's one), crate-island (runs of 3, else 2, down the long axis), locker-run ×2 |
-| comms | rack-run (longest wall), console-run ×2 (facing it), desk-island |
+| comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (3 cells back to back where the ring fits, else 2) |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
-| medical | cot-run ×2 (longest and facing), cabinet-run (an end wall), cot-island |
+| medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), cabinet-run (a side wall), cot-island (two side by side, else one) |
 | mess / briefing | counter-run / map-board (an end wall), table-rows |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
 | latrine | cubicles (a toilet in each), sink-run (two basins a cell) |
@@ -393,6 +393,18 @@ the base's own furniture (no lab tile or decoration through a filler). It cost 2
 barracks (16.2 → 13.9), the corner bunks beside a window, and the mil-slot bays left over are where
 the room props stand.
 
+**Except a medical bay's cots, which lie under the sill** ("they're allowed in front of the windows and
+they can be on adjacent tiles - but vertically for better readability"). For a medical room `deal`
+asks `roomWallRuns(state, room, true)`, which also takes a cell with a window BEHIND it, and keeps the
+cells with one beside them. `MilitaryRooms.glass` keeps every piece but the `low` ones (cot,
+stretcher) off those cells in `line` and `slot`, and `GenCheck.militaryRooms` exempts the same two.
+The cots go on the top and bottom walls first, where `MilitaryInterior` lies them down the screen,
+and stand on every cell there; on a side wall they lie across it and keep every other cell. The
+island cots stand two side by side, also down the screen. `MilitaryInterior` backs a low piece onto
+glass (`backing(..., glass)`) and stands it on the masonry's face line, (WALL_T - GLASS_T) / 2 out
+from the glazing (`sill`). Medical fill 9.5 → 15.7 cells a room. A `mil-slot` whose first prop finds
+no cell now tries the next (the IV stand will not go in front of glass; the stretcher went without).
+
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
 the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a gun locker (armory
 only, `TILE_MIL_GUN_LOCKER`: furniture wearing the gun cabinet's glb, no loot. It was a rifle rack,
@@ -406,11 +418,13 @@ reported from the barracks as not belonging there and then from the armory as "l
   still ONE piece (`sealsOff`). "Reachable from some doorway" was tried first and failed on seed 10:
   two adjacent barracks each split by a prop left pockets that only opened onto each other.
 
-Fill after the props (2000 seeds): armory 10.9, barracks 15.7, briefing 11.3, comms 7.4, HQ 16.4,
-medical 9.6, mess 15.4, supply 8.9 cells a room.
+Fill after the props (2000 seeds): armory 11.5, barracks 29.7 a base, briefing 12.3, comms 7.8,
+latrine 10.4, medical 15.7, mess 15.5, supply 9.4 cells a room. The comms desk island stands three
+cells long where its ring still fits ("one more doubled table can be spawned in the center" of a 5x5
+room), two where it does not.
 
 `--stats` also prints `nodes/<zone>` and `zoneEmpty/<zone>`. A desk-island is empty in a room too
-narrow for one, about 1.3 a base.
+narrow for one, 0.08 a base.
 
 **A store is shelving ROWS, not crates in the middle** ("looks way empty because a few crates are in
 the middle"). `shelf-row` is the store's floor zone: a row on every other line across the room from

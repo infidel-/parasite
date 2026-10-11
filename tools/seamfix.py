@@ -107,6 +107,32 @@ def grout(a):
   return out
 
 
+def boards(a):
+  g = a.astype(float).mean(2)
+  h, w = g.shape
+  # the gaps between the boards; the last one, touching the right edge, is the first one again
+  cp = g.mean(0)
+  runs = dark_runs(cp, np.median(cp) - 12)
+  cuts = [s for s, e in runs if s < w - 4]
+  bands = [a[:, cuts[i]:(cuts[i + 1] if i + 1 < len(cuts) else runs[-1][0])] for i in range(len(cuts))]
+  # each board's wrap cut becomes a butt joint, the gap line laid on its side, and the board is
+  # rolled down by its own share of the height so the ends stagger and the image wraps through
+  # the uncut middle of every board
+  s, e = runs[1]
+  joint = a[:, s - 1:e + 1].transpose(1, 0, 2)
+  out = []
+  for k, b in enumerate(bands):
+    b = b.copy()
+    jw = b.shape[1]
+    half = joint.shape[0] // 2
+    for i in range(joint.shape[0]):
+      b[(i - half) % h] = joint[i, k * jw:(k + 1) * jw] if (k + 1) * jw <= h else joint[i, :jw]
+    out.append(np.roll(b, int(h * ((k * 0.618) % 1)), 0))
+  stack = np.concatenate(out, 1)
+  n = min(stack.shape[0], stack.shape[1])
+  return np.asarray(Image.fromarray(stack[:n, :n]).resize((w, w), Image.LANCZOS))
+
+
 FEATHER = 0.25
 
 
@@ -121,7 +147,11 @@ def tone(a):
 if __name__ == '__main__':
   mode, src, dst = sys.argv[1:4]
   a = np.asarray(Image.open(src).convert('RGB'))
-  out = {'planks': planks, 'grout': grout, 'tone': tone}[mode](a)
+  # an optional x,y,w,h: one cell of a packed sheet
+  if len(sys.argv) > 4:
+    x, y, cw, ch = [int(v) for v in sys.argv[4].split(',')]
+    a = a[y:y + ch, x:x + cw]
+  out = {'planks': planks, 'grout': grout, 'tone': tone, 'boards': boards}[mode](a)
   Image.fromarray(out).save(dst)
   o = out.astype(float)
   print('%s wrapH %.1f wrapV %.1f' % (dst, np.abs(o[:, 0] - o[:, -1]).mean(), np.abs(o[0] - o[-1]).mean()))
