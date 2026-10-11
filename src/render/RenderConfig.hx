@@ -773,6 +773,9 @@ class RenderConfig {
     militaryLocker: 'models/military/locker-hand.glb',    // armory locker bank, one cell wide, doors at +z
     militaryGunCabinet: 'models/military/gun-cabinet-hand.glb', // gun cabinet, doors at +z
     militarySafe: 'models/military/safe-hand.glb',        // the HQ safe, its door at +z
+    militaryBoots: 'models/military/boots-hand.glb',      // a pair of combat boots, toes at -x
+    militaryCanteen: 'models/military/canteen-hand.glb',  // a canteen in its cover, upright, flanks at +-z
+    militaryRucksack: 'models/military/rucksack-hand.glb', // a rucksack standing, its front at +z
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled

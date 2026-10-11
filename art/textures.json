@@ -5550,7 +5550,7 @@
       ],
       "prompt": "[quadrant of military/mil-pack-c.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: flat olive painted steel plate, no ribs [append textures.json style]",
       "prompt_exact": false,
-      "note": "the band capping a window run (MilitaryStyle.shell head); no ribs, the facility head's reason. lift 1.122: fitted to its facility counterpart's built linear 0.0352 (raw 0.0507).",
+      "note": "a window reveal's soffit, sill and jambs (MilitaryStyle.shell head). It no longer caps the run's wall top, which ShellTex.capRoof roofs in the deck plane; no ribs, the facility head's reason. lift 1.122: fitted to its facility counterpart's built linear 0.0352 (raw 0.0507).",
       "res": 256,
       "last_converted": "2026-10-10T20:25:46",
       "built_linear": 0.0361,
@@ -6245,8 +6245,8 @@
       ],
       "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a tall steel personal locker front, louvres, padlock hasp, olive drab [append textures.json style]",
       "prompt_exact": false,
-      "note": "a base locker's front, 0..1 over its square face (render.military.MilitaryGeom.locker); replaces the corp locker art the base wore. lift 0.848: raw 0.0398 to 0.065.",
-      "last_converted": "2026-10-10T20:59:51",
+      "note": "a base locker's front, 0..1 over its square face (render.military.MilitaryGeom.locker); replaces the corp locker art the base wore. lift 0.848: raw 0.0398 to 0.065. Its nameplate read PVT. WILSON on every locker and was SMEARED in the source (mil-pack-k x 204-306, y 160-180: an eighth-width box resample and back, feathered in), the raw drop kept as textures-src/military/Unused/mil-pack-k-raw-drop.png.",
+      "last_converted": "2026-10-11T18:27:27",
       "built_linear": 0.0611,
       "built_srgb": 64.8,
       "lift": 0.848,
@@ -6265,7 +6265,7 @@
       "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a steel weapons locker front, mesh doors, rifles, bar lock [append textures.json style]",
       "prompt_exact": false,
       "note": "the armory's gun cabinet in a base, an emitted box with this 0..1 on its front (MilitaryGeom), replacing corp's hand-modelled gun cabinet glb. lift 0.73: raw 0.0212 to 0.06.",
-      "last_converted": "2026-10-10T20:59:51",
+      "last_converted": "2026-10-11T18:27:27",
       "built_linear": 0.0514,
       "built_srgb": 59.3,
       "lift": 0.73,
@@ -6284,7 +6284,7 @@
       "prompt": "[quadrant of military/mil-pack-k.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a wooden army footlocker lid from above, corner caps, stencil [append textures.json style]",
       "prompt_exact": false,
       "note": "a footlocker's lid, 0..1 over its top (render.military.MilitaryInterior). lift 0.883: raw 0.0452 to 0.065.",
-      "last_converted": "2026-10-10T20:59:51",
+      "last_converted": "2026-10-11T18:27:27",
       "built_linear": 0.0617,
       "built_srgb": 64.6,
       "lift": 0.883,
@@ -6311,7 +6311,7 @@
         512,
         256
       ],
-      "last_converted": "2026-10-10T20:59:51"
+      "last_converted": "2026-10-11T18:27:27"
     },
     "military/exit-sign": {
       "src": "military/exit-sign.png",
@@ -6861,6 +6861,82 @@
       "last_converted": "2026-10-11T16:20:18",
       "built_linear": 0.1254,
       "built_srgb": 98.1
+    },
+    "military/boot-side": {
+      "src": "military/mil-pack-s.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        504,
+        504
+      ],
+      "prompt": "[cell of military/mil-pack-s.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a black leather combat boot in strict side profile, toe left, on flat grey #5a5d63 [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the barracks boots' two flanks (models-src/military/roomkit_build.py), the side profile traced off this art (BOOT_PROFILE, grey #5a5d63 outside it never sampled). lift 0.797: raw 0.0204 (boot pixels only) to 0.045, dark leather that still reads against the barracks floor.",
+      "lift": 0.797,
+      "last_converted": "2026-10-11T18:20:30",
+      "last_lift": 0.797,
+      "built_linear": 0.1065,
+      "built_srgb": 86.9
+    },
+    "military/boot-leather": {
+      "src": "military/mil-pack-s.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        4,
+        502,
+        502
+      ],
+      "prompt": "[cell of military/mil-pack-s.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE worn black boot leather, matte, creases and scuffs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the boots' toe, heel, collar and sole rims (models-src/military/roomkit_build.py). lift 0.806: raw 0.0213 to 0.045, boot-side's level.",
+      "lift": 0.806,
+      "last_converted": "2026-10-11T18:20:30",
+      "last_lift": 0.806,
+      "built_linear": 0.0406,
+      "built_srgb": 56.2
+    },
+    "military/rucksack": {
+      "src": "military/mil-pack-s.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        26,
+        516,
+        452,
+        504
+      ],
+      "prompt": "[cell of military/mil-pack-s.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an olive canvas rucksack front, top flap with two strapped buckles, a front pocket [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the rucksack's front, whole (models-src/military/roomkit_build.py). Cropped inside the drawn pack's side bulges at x 24 and 480 of the quadrant. lift 0.94: raw 0.0519 to 0.062, the locker front's level.",
+      "lift": 0.94,
+      "last_converted": "2026-10-11T18:20:30",
+      "last_lift": 0.94,
+      "built_linear": 0.0599,
+      "built_srgb": 63.4
+    },
+    "military/canteen": {
+      "src": "military/mil-pack-s.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        518,
+        518,
+        502,
+        502
+      ],
+      "prompt": "[cell of military/mil-pack-s.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an olive canteen in its wool cover, strict side view, black cap, on flat grey #5a5d63 [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the canteen's two flanks (models-src/military/roomkit_build.py), its outline traced off this art (CANTEEN_PROFILE). lift 0.871: raw 0.0411 (canteen pixels only) to 0.062.",
+      "lift": 0.871,
+      "last_converted": "2026-10-11T18:20:30",
+      "last_lift": 0.871,
+      "built_linear": 0.1017,
+      "built_srgb": 86.4
     },
     "military/hq-clutter": {
       "src": "military/hq-clutter.png",

@@ -6,6 +6,7 @@ import game.AreaGame;
 import render.Textures;
 import render.facility.ClutterSlot;
 import render.facility.ClutterSlot.ClutterSlotTools;
+import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGround;
 import render.facility.FacilityModel;
@@ -15,9 +16,29 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
+// what a furniture top is, which sets how many decals it rolls, off which cells of its room's sheet,
+// and whether a piece of the barracks gear may stand on it
+enum LidKind
+{
+  // a desk or the operator desk, 1-3
+  DESK;
+  // a mess or briefing table, 2-4
+  TABLE;
+  // a footlocker's lid, 0-2
+  FOOTLOCKER;
+  // a filing or medical cabinet's top, 0-1
+  CABINET;
+  // a bunk deck's blanket or a cot's canvas, 0-2
+  BED;
+  // the floor under a bunk or a cot, 0-2 off the room's FLOOR_PICK
+  UNDER;
+  // a locker's or the gun cabinet's top, 0-1, and a piece of gear half the time
+  LOCKER;
+}
+
 // one furniture top a base room's clutter may lie on, recorded by render.military.MilitaryInterior
 // as it stands the piece: the lid's centre and turn, its extents in its own frame (w along local x,
-// d along local z), its height, how many decals it takes, and what already stands on it
+// d along local z), its height, what kind of top it is, and what already stands on it
 typedef MilitaryLid = {
   // centre, world
   x:Float,
@@ -29,9 +50,8 @@ typedef MilitaryLid = {
   d:Float,
   // the top's height off the floor
   y:Float,
-  // the most decals it rolls, and the fewest it keeps
-  max:Int,
-  min:Int,
+  // the decal count and the cells it rolls
+  kind:LidKind,
   // the cell it stands on, for its room and its rolls
   col:Int,
   row:Int,
@@ -52,11 +72,20 @@ typedef MilitaryLid = {
 // FacilityModel.mix on the cell, nothing is saved and nothing blocks. Its emit and add are that file's
 // and FacilityStore's, copied for FacilityStore's reason, and the sheet is 4 wide where theirs is 8.
 //
-// ONE MERGED MESH PER SHEET, so a base pays at most one call per room kind it has
+// ONE MERGED MESH PER SHEET, so a base pays at most one call per room kind it has.
+//
+// AND THE BARRACKS GEAR STANDS: its sheet's boots, rucksack and canteen were reported as wanting to be
+// 3D, so a roll landing on one of those cells stands that glb instead (`SOLID`), on whatever top or
+// floor it rolled for. Rolled off the sheet alone that is 3 cells in 16 and a barracks came out with no
+// rucksack in it, so a top that takes gear (`kit`: a bunk's bedding, a footlocker, the floor under a
+// bunk, and a locker in any room) also stands one piece of it half the time
 class MilitaryClutter
 {
   // the sheets' grid
   static inline var COLS = 4;
+  static inline var CELL = CityConfig.CELL;
+  // how far a top must reach into a room to be its
+  static inline var EPS = 0.05;
   // a decal's drawn size and its spread, against a 256-px cell: 1.5 units is 171 texels per unit.
   // 0.9 read as crumbs on a 3.9 x 2.8 mess table
   static inline var SZ = 1.1;
@@ -78,6 +107,35 @@ class MilitaryClutter
   ];
   // how far a lid's decal stays in from its edge
   static inline var INSET = 0.12;
+  // the gear, models-src/military/roomkit_build.py's footprints (local x by local z) and heights, and
+  // how far a piece on a top turns off square
+  static var GEAR = [
+    {
+      path: RenderConfig.MODELS.militaryBoots,
+      w: 0.69,
+      d: 0.49,
+      h: MilitaryInterior.BOOTS_H,
+    },
+    {
+      path: RenderConfig.MODELS.militaryRucksack,
+      w: 1.0,
+      d: 0.53,
+      h: MilitaryInterior.RUCKSACK_H,
+    },
+    {
+      path: RenderConfig.MODELS.militaryCanteen,
+      w: 0.29,
+      d: 0.16,
+      h: MilitaryInterior.CANTEEN_H,
+    },
+  ];
+  static inline var GEAR_TURN = 0.35;
+  // the barracks sheet's cells that are GEAR, not decals: the boots, the rucksack and the canteen
+  static var SOLID:Map<Int, Int> = [
+    1 => 0,
+    3 => 1,
+    12 => 2,
+  ];
 
 // every decal in the base's rooms, one mesh per room kind. returns how many landed
   public static function build(scene:Scene, m:Facility, area:AreaGame, lids:Array<MilitaryLid>):Int
@@ -94,13 +152,19 @@ class MilitaryClutter
               b = MeshBufTools.make();
               bufs.set(room.role, b);
             }
-          // the room's furniture tops
+          // the room's furniture tops: those whose footprint reaches into it, because a locker stands in
+          // its wall cell's margin and its centre is not in the room at all
+          var a = CityConfig.cellToWorld(room.x1, room.y1);
+          var z = CityConfig.cellToWorld(room.x2, room.y2);
           for (l in lids)
-            if (l.col >= room.x1 &&
-                l.col <= room.x2 &&
-                l.row >= room.y1 &&
-                l.row <= room.y2)
-              n += lid(b, l);
+            {
+              var f = ClutterSlotTools.turned(l.x, l.z, l.w, l.d, l.yaw);
+              if (f.x + f.hw > a.x - CELL / 2 + EPS &&
+                  f.x - f.hw < z.x + CELL / 2 - EPS &&
+                  f.z + f.hd > a.z - CELL / 2 + EPS &&
+                  f.z - f.hd < z.z + CELL / 2 - EPS)
+                n += lid(b, l, room.role);
+            }
           // and its bare floor, the odd cell
           var pick = FLOOR_PICK.get(room.role);
           if (pick == null)
@@ -115,9 +179,43 @@ class MilitaryClutter
                 if (h % 100 >= FLOOR_PCT)
                   continue;
                 var c = CityConfig.cellToWorld(col, row);
-                emit(b, c.x, c.z, FLOOR_SZ + ((h >> 7) % 1000 / 1000.0) * SZ_VAR,
-                  (h >> 17) % 6283 / 1000.0, pick[(h >> 3) % pick.length],
-                  FacilityGround.surfY(m.surf[row][col]) + FacilityStyle.CLUTTER_Y);
+                var idx = pick[(h >> 3) % pick.length];
+                var y = FacilityGround.surfY(m.surf[row][col]);
+                if (solid(room.role, idx) < 0)
+                  {
+                    emit(b, c.x, c.z, FLOOR_SZ + ((h >> 7) % 1000 / 1000.0) * SZ_VAR,
+                      (h >> 17) % 6283 / 1000.0, idx, y + FacilityStyle.CLUTTER_Y);
+                    n++;
+                    continue;
+                  }
+                // a piece of gear in the cell, standing on the floor like any other piece
+                var g = gear({
+                  x: c.x,
+                  z: c.z,
+                  yaw: 0.0,
+                  w: CELL - 1.0,
+                  d: CELL - 1.0,
+                  y: y,
+                  kind: UNDER,
+                  col: col,
+                  row: row,
+                  claims: [],
+                }, [], solid(room.role, idx), h, true);
+                if (g == null)
+                  continue;
+                FacilityDetail.ground(m, {
+                  col: col,
+                  row: row,
+                  len: 1,
+                  alongX: true,
+                  rect: {
+                    x0: c.x + g.x - g.hw,
+                    x1: c.x + g.x + g.hw,
+                    z0: c.z + g.z - g.hd,
+                    z1: c.z + g.z + g.hd,
+                  },
+                  h: GEAR[solid(room.role, idx)].h,
+                });
                 n++;
               }
         }
@@ -128,17 +226,45 @@ class MilitaryClutter
 
 // one lid's worth, rejection-sampled in the lid's own frame round what already stands on it, then
 // turned into the world. An item that finds no room in CLUTTER_TRIES is dropped
-  static function lid(b:MeshBuf, l:MilitaryLid):Int
+  static function lid(b:MeshBuf, l:MilitaryLid, role:String):Int
     {
+      // its height in the seed too, or a bunk's two decks roll the same bedding
       var g = FacilityModel.mix((l.col * 1103515245) ^ (l.row * 12345) ^
-        Std.int(l.x * 31 + l.z * 17));
-      var want = l.min + g % (l.max - l.min + 1);
+        Std.int(l.x * 31 + l.z * 17 + l.y * 53));
+      var range = switch (l.kind)
+        {
+          case DESK: [ 1, 3 ];
+          case TABLE: [ 2, 4 ];
+          case CABINET, LOCKER: [ 0, 1 ];
+          default: [ 0, 2 ];
+        };
+      var want = range[0] + g % (range[1] - range[0] + 1);
+      var pick = (l.kind == UNDER ? FLOOR_PICK.get(role) : null);
+      if (l.kind == UNDER &&
+          pick == null)
+        return 0;
       var spots = l.claims.copy();
       var lc = Math.cos(l.yaw), ls = Math.sin(l.yaw);
       var n = 0;
+      // the gear first, half the time where the top takes any: it is the bigger piece, so it claims
+      // before the decals roll
+      var k = kit(l.kind, role);
+      if (k.length > 0 &&
+          (g >>> 9) % 2 == 0 &&
+          gear(l, spots, k[(g >>> 17) % k.length], g, l.kind == UNDER) != null)
+        n++;
       for (i in 0...want)
         {
           var h = FacilityModel.mix(g ^ ((i + 1) * 40503));
+          var idx = (pick != null ? pick[(h >>> 22) % pick.length] : (h >>> 22) % (COLS * COLS));
+          // gear in place of its decal, where it fits
+          if (solid(role, idx) >= 0)
+            {
+              if (fits(l.kind, solid(role, idx)) &&
+                  gear(l, spots, solid(role, idx), h, l.kind == UNDER) != null)
+                n++;
+              continue;
+            }
           var sz = Math.min(SZ + ((h % 1000) / 1000) * SZ_VAR,
             Math.min(l.w, l.d) * FacilityStyle.CLUTTER_SLOT_FILL);
           var rx = l.w / 2 - sz * 0.5 - INSET;
@@ -162,11 +288,68 @@ class MilitaryClutter
             continue;
           spots.push(box);
           // the lid's frame into the world, MilitaryInterior.stood's turn, which is emit's backwards
-          emit(b, l.x + box.x * lc + box.z * ls, l.z - box.x * ls + box.z * lc, sz, yaw - l.yaw,
-            (h >>> 22) % (COLS * COLS), l.y + FacilityStyle.CLUTTER_Y);
+          emit(b, l.x + box.x * lc + box.z * ls, l.z - box.x * ls + box.z * lc, sz, yaw - l.yaw, idx,
+            l.y + FacilityStyle.CLUTTER_Y);
           n++;
         }
       return n;
+    }
+
+// the GEAR a top of this kind may stand: any locker's, and in the barracks the bedding, a footlocker's
+// lid and the floor under a bunk
+  static function kit(kind:LidKind, role:String):Array<Int>
+    {
+      if (kind != LOCKER &&
+          role != 'barracks')
+        return [];
+      return [for (k in 0...GEAR.length) if (fits(kind, k)) k];
+    }
+
+// may gear `k` stand on a top of this kind? no boots on a blanket, and only boots under a bunk: the
+// 1.21 rucksack stood through its 0.9 bottom deck, and a canteen down there is lost
+  static inline function fits(kind:LidKind, k:Int):Bool
+    {
+      return !(kind == BED && k == 0) &&
+        !(kind == UNDER && k > 0);
+    }
+
+// which GEAR piece a cell of this role's sheet stands as, -1 for a decal
+  static inline function solid(role:String, idx:Int):Int
+    {
+      return (role == 'barracks' &&
+        SOLID.exists(idx) ? SOLID.get(idx) : -1);
+    }
+
+// one piece of gear `k` stood on the lid, rejection-sampled round `spots` like a decal and claimed in
+// it: square to the lid give or take GEAR_TURN (either way round, but a locker's facing out), or any
+// way at all on a floor (`loose`). Its box in the lid's frame, or null when it found no room
+  static function gear(l:MilitaryLid, spots:Array<ClutterSlot>, k:Int, h:Int, loose:Bool):ClutterSlot
+    {
+      var p = GEAR[k];
+      var t = ((h >>> 3) % 1000) / 1000;
+      // a locker's faces the way its doors do, or a rucksack up there showed the room its straps
+      var flip = (l.kind == LOCKER ? 0 : (h >>> 13) % 2);
+      var yaw = (loose ? t * 2 * Math.PI : flip * Math.PI + (t * 2 - 1) * GEAR_TURN);
+      var box = ClutterSlotTools.turned(0.0, 0.0, p.w, p.d, yaw);
+      var rx = l.w / 2 - box.hw - INSET;
+      var rz = l.d / 2 - box.hd - INSET;
+      if (rx < 0 ||
+          rz < 0)
+        return null;
+      for (i in 0...FacilityStyle.CLUTTER_TRIES)
+        {
+          var hh = FacilityModel.mix(h ^ ((i + 1) * 668265263));
+          box.x = (((hh % 1000) / 1000) * 2 - 1) * rx;
+          box.z = ((((hh >>> 10) % 1000) / 1000) * 2 - 1) * rz;
+          if (ClutterSlotTools.hits(spots, box.x, box.z, box.hw, box.hd))
+            continue;
+          spots.push(box);
+          var lc = Math.cos(l.yaw), ls = Math.sin(l.yaw);
+          MilitaryInterior.put(p.path, l.x + box.x * lc + box.z * ls, l.z - box.x * ls + box.z * lc,
+            l.yaw + yaw, l.y);
+          return box;
+        }
+      return null;
     }
 
 // one pack16 cell as a yawed quad lying flat at height `y`, v flipped (FacilityClutter.emit's)

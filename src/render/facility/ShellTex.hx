@@ -36,6 +36,11 @@ typedef ShellTex = {
   var paneHigh: String;
   // the aluminium capping that closes a window run's reveal
   var head: String;
+  // true where a window run's wall TOP is roofed like solid wall's, in `roof` at the deck plane, rather
+  // than capped in `head` sunk HEAD_DROP under a fading band of deck. The military base: its capping
+  // read as a strip of other art 0.02 under the roof at every glazed cell, and the step left a slit at
+  // each pier where the run's top met the masonry's ("not on the same Y AND of different textures")
+  @:optional var capRoof: Bool;
   // the roof deck and the coping cap along its edge
   var roof: String;
   var coping: String;

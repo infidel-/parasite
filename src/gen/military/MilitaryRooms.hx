@@ -88,13 +88,13 @@ class MilitaryRooms
     }
 
 // the standing props a room of this role takes in the bays its zones left over, in the order it takes
-// them, one of each at most
+// them, one of each at most. The barracks takes none: its rifle rack was reported as not belonging
+// there, the weapons are the armory's
   static function propsOf(role: String): Array<Int>
     {
       return switch (role)
         {
           case ROLE_ARMORY: [ Const.TILE_MIL_RIFLE_RACK, Const.TILE_MIL_AMMO_CANS ];
-          case ROLE_BARRACKS: [ Const.TILE_MIL_RIFLE_RACK ];
           case ROLE_SUPPLY: [ Const.TILE_MIL_JERRYCANS, Const.TILE_MIL_AMMO_CANS ];
           case ROLE_MEDICAL: [ Const.TILE_MIL_IV_STAND, Const.TILE_MIL_STRETCHER ];
           case ROLE_HQ: [ Const.TILE_MIL_FLAG, Const.TILE_MIL_WATER_COOLER ];

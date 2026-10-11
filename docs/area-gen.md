@@ -392,8 +392,8 @@ barracks (16.2 → 13.9), the corner bunks beside a window, and the mil-slot bay
 the room props stand.
 
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
-the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a rifle rack (armory,
-barracks), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
+the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a rifle rack (armory
+only: one stood in the barracks and was reported as not belonging there), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
 (HQ, mess, comms), an IV stand and a stretcher (medical). Two traps, both caught by `floorReachable`:
 - the slots are walked in wall order like every bay, so a rifle rack on the top wall stood BEFORE the
   bunk row off the left wall, which then boxed two cells in behind it. `MilitaryZones.deal` moves the

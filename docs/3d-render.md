@@ -820,6 +820,7 @@ back) — grep the change text.
 | **Military base rooms: every piece of furniture hand-modelled, blinking machinery, standing props** | 27 Blender glbs on MilitaryInterior's footprints, one batch each; lamps measured off the art and printed in the glb frame by the build script; three packed gens $0.165; latrine and map board stay quads | **landed** |
 | **Military base rooms: flat clutter, one pack16 per room kind** (`MilitaryClutter`, lids recorded by `MilitaryInterior`) | 9 sheets, $0.75 incl. 4 `edit_image` re-cuts (sunburst transparent cut only 5 of 9); per-role floor picks; one mesh per kind | **landed** |
 | **Military base rooms: wall sockets and machine leads** (FacilityCable on base room surfaces, `m.fit` from `MilitaryStyle.fitOf`, drops off `MilitaryInterior.powered`) | 20 sockets a base, none behind furniture; lockers are objects, stamped into `m.fit` before the cable pass | **landed** |
+| **Military base rooms: barracks gear in 3D, bed and locker-top clutter, art fixes** (`MilitaryClutter` `LidKind`/`kit`/`SOLID`, outline-traced boot and canteen glbs, `buildlib.turned`, `ShellTex.capRoof`) | 1 packed gen $0.055; lids found by footprint, not centre (lockers stand in the wall cell); window-run tops roofed in the deck plane closes the pier slit; +3 calls | **landed** |
 
 ### FX, UI and the view itself
 

@@ -10,6 +10,7 @@ import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityStyle;
+import render.military.MilitaryClutter.LidKind;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -114,6 +115,10 @@ class MilitaryGeom
   // the armory safe's footprint against its wall (models-src/military/roomkit_build.py's safe-hand)
   static inline var SAFE_W = 1.8;
   static inline var SAFE_D = 1.6;
+  // and the top of a locker bank or the gun cabinet clutter lies on: its 4.0 x 1.34 lid less the
+  // rounding and a margin
+  static inline var LOCKER_TOP_W = 3.8;
+  static inline var LOCKER_TOP_D = 1.14;
 
   // the buffers being filled, one per texture
   static var opaque:Map<String, MeshBuf>;
@@ -185,7 +190,6 @@ class MilitaryGeom
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);
       MilitaryInterior.build(scene, m, area);
-      MilitaryClutter.build(scene, m, area, MilitaryInterior.lids);
       MilitaryYard.build(scene, m, area);
       // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
       // ponytail: drawn shut whatever their state, an open one is told by its tooltip
@@ -196,6 +200,8 @@ class MilitaryGeom
             RenderConfig.MODELS.militaryGunCabinet));
         else if (o.type == 'safe')
           safe(m, o.x, o.y);
+      // after the lockers, whose tops are lids too
+      MilitaryClutter.build(scene, m, area, MilitaryInterior.lids);
       // they all cast: a jersey, a tent or a tower under the moon with no shadow read as pasted on
       for (tex in opaque.keys())
         FacilityGeom.add(scene, opaque.get(tex), tex, true, true);
@@ -599,6 +605,9 @@ class MilitaryGeom
         return;
       var r = CorpFurniture.lockerRect(m, col, row, dir);
       MilitaryInterior.put(path, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], 0.0);
+      // its top takes clutter, 2D and a piece of gear ("top of the locker needs clutter spots")
+      MilitaryInterior.top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], LOCKER_TOP_W,
+        LOCKER_TOP_D, MilitaryInterior.LOCKER_H, LOCKER, []);
       FacilityDetail.ground(m, {
         col: col,
         row: row,

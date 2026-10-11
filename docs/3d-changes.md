@@ -1740,3 +1740,43 @@ cells before `FacilityCable.build`.
 fed (comms console, radio rack). The water coolers stand between two windows and take no plate.
 
 **Verdict:** landed.
+
+## Military base rooms: barracks gear in 3D, bed and locker-top clutter, art fixes
+
+**Changed:** the barracks sheet's boots, rucksack and canteen stand as Blender glbs (`boots-hand`
+360 tris, `rucksack-hand` 176, `canteen-hand` 160, one packed gen `mil-pack-s`, $0.055).
+`MilitaryLid.min/max` became a `LidKind`, and bunks (both decks' blankets and the floor under),
+cots (canvas and under) and every locker or gun cabinet top are lids.
+
+**How the gear is made:** the boot and the canteen were drawn on flat grey #5a5d63. Their outlines
+were traced off the art (mask at 40, opened 5 px, inset 3, row envelope, Douglas-Peucker 1.2-1.6
+px) and extruded, so each flank wears its drawing exactly where it was drawn. `buildlib.turned`
+wears a rect a quarter turn, which is what the mattress ticking needed.
+
+**How the gear is dealt:** a roll landing on one of those three cells stands the glb instead
+(`SOLID`). That alone is 3 cells in 16, and the first base came out with no rucksack at all. So a top
+that takes gear (`kit`) also stands one piece half the time, before its decals roll.
+
+**Traps, all hit live:**
+- a locker stands in its wall cell's margin, so its lid's centre is not in the room; rooms now take
+  any lid whose footprint reaches in;
+- a bunk's two decks shared one seed and rolled the same bedding, so the lid height goes in it;
+- a 1.21 rucksack under a 0.9 bottom deck stood through it, so only boots go under (`fits`);
+- a locker's rucksack faced the wall half the time and showed its straps; it now faces out.
+
+**Art fixes:**
+- the locker leaf is cropped to its own top and bottom lines (rows 11-503);
+- its arrises are gunmetal;
+- the PVT. WILSON plate is smeared in `mil-pack-k`, with the raw drop in `Unused/`;
+- the footlocker's window is centred on its stencil line, and its lid band sits on a plank with no
+  lettering;
+- the barracks lost its rifle rack.
+
+**The hole:** a window run's top was `head` art sunk `HEAD_DROP` 0.02 under the roof. At every pier
+that left a slit at z = the boundary, over the glazing band, with nothing in it. `ShellTex.capRoof`
+(military only) roofs the run's top in the deck plane like solid wall, with no fading band. Measured:
+0 of 136 window-head triangles left at 5.98.
+
+**Cost:** +3 calls in a barracks view (84 against 81 with the three batches' layers off).
+
+**Verdict:** landed.

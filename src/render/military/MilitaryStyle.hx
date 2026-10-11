@@ -100,6 +100,7 @@ class MilitaryStyle
       t.paneHigh = WINDOW_HIGH;
       t.head = WINDOW_HEAD;
       t.roof = ROOF;
+      t.capRoof = true;
       t.coping = COPING;
       t.shutter = DOOR_SHUTTER;
       t.door = [DOOR_ENTRANCE, DOOR_INNER, DOOR_HEAVY, DOOR_PRIVATE, DOOR_HEAVY];

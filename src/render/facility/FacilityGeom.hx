@@ -549,7 +549,7 @@ class FacilityGeom
               {
                 var s = slab(m, col, row);
                 var e = (CELL - thick(m, col, row)) / 2;
-                var glazed = (m.wall[row][col] == Wall.WINDOW);
+                var glazed = (m.wall[row][col] == Wall.WINDOW && m.tex.capRoof != true);
                 var shutter = (m.wall[row][col] == Wall.SHUTTER);
                 capTop(rim, head, m, col, row, glazed);
                 // and over glazing a SECOND band, the deck's own art in the FADING buffer, directly

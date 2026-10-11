@@ -13,6 +13,8 @@ import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityGround;
+import render.military.MilitaryClutter.LidKind;
 import render.military.MilitaryClutter.MilitaryLid;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
@@ -98,6 +100,21 @@ class MilitaryInterior
   static inline var STRETCHER_H = 0.9956;
   public static inline var LOCKER_H = 4.0;
   public static inline var SAFE_H = 1.9271;
+  // the barracks gear render.military.MilitaryClutter stands about
+  public static inline var BOOTS_H = 0.5387;
+  public static inline var RUCKSACK_H = 1.2137;
+  public static inline var CANTEEN_H = 0.46;
+  // the bedding a bunk's and a cot's clutter lies on, off roomkit_build.py: the bunk 7.74 long, its
+  // blanket 5.3 x 2.56 at 0.37 over each deck and centred 1.09 toward the foot (+x); the cot's canvas
+  // bare between its pillow and its folded blanket, 1.3 x 1.45 at 0.955 and 0.1 toward the head
+  static inline var BUNK_L = 7.74;
+  static var BLANKET_Y = [ 1.27, 3.07 ];
+  static inline var BLANKET_X = 1.09;
+  static inline var BLANKET_L = 5.2;
+  static inline var BLANKET_W = 2.46;
+  static inline var COT_TOP = 0.955;
+  static inline var COT_FREE_X = -0.1;
+  static inline var COT_FREE_L = 1.3;
   // a chair's centre out in front of its desk's front edge, half under it
   static inline var CHAIR_OUT = 0.3;
   // the latrine's emitted pieces: the trough's depth off its wall and height, and a cubicle's door
@@ -190,6 +207,9 @@ class MilitaryInterior
         { path: md.militaryLocker, h: LOCKER_H },
         { path: md.militaryGunCabinet, h: LOCKER_H },
         { path: md.militarySafe, h: SAFE_H },
+        { path: md.militaryBoots, h: BOOTS_H },
+        { path: md.militaryRucksack, h: RUCKSACK_H },
+        { path: md.militaryCanteen, h: CANTEEN_H },
       ];
     }
 
@@ -308,6 +328,8 @@ class MilitaryInterior
             {
               var c = cut(r, alongX, k * 2, Std.int(Math.min(2, len)));
               put(md.militaryBunk, (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, yaw, 0.0);
+              beds((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, yaw, FacilityGround.surfY(m.surf[row][col]),
+                false);
             }
         }
       else if (t == Const.TILE_MIL_FOOTLOCKER)
@@ -325,8 +347,8 @@ class MilitaryInterior
             (face < 2 ? FOOT_W : FOOT_D));
           h = FOOT_H;
           put(md.militaryFootlocker, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], 0.0);
-          top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], FOOT_W, FOOT_D - 0.1, FOOT_H, 0, 2,
-            []);
+          top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], FOOT_W, FOOT_D - 0.1, FOOT_H,
+            FOOTLOCKER, []);
         }
       else if (t == Const.TILE_MIL_MESS_TABLE ||
           t == Const.TILE_MIL_BRIEF_TABLE ||
@@ -343,7 +365,7 @@ class MilitaryInterior
               put(path, (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), 0.0);
               if (!bench)
                 top((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), TOP_L, TABLE_W,
-                  TABLE_H, 2, 4, []);
+                  TABLE_H, TABLE, []);
             }
         }
       else if (t == Const.TILE_MIL_CRATES)
@@ -387,6 +409,8 @@ class MilitaryInterior
               r = across(across(cell, true, COT_W), false, COT_L);
               h = COT_H;
               put(md.militaryCot, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, 0.0, 0.0);
+              beds((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, 0.0, FacilityGround.surfY(m.surf[row][col]),
+                true);
             }
           if (dir < 0)
             {
@@ -444,7 +468,7 @@ class MilitaryInterior
                 lamps(RACK_LEDS, r, dir, 0.0, 0.0, 0.0, col, row);
               else if (t == Const.TILE_MIL_FILE ||
                   t == Const.TILE_MIL_MED_CABINET)
-                top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], w, d, w, 0, 1, []);
+                top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], w, d, w, CABINET, []);
             }
           else if (t == Const.TILE_MIL_CONSOLE)
             {
@@ -477,6 +501,8 @@ class MilitaryInterior
               r = across(back(m, col, row, cell, dir, COT_L), dir >= 2, COT_W);
               h = COT_H;
               put(md.militaryCot, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir], 0.0);
+              beds((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir],
+                FacilityGround.surfY(m.surf[row][col]), true);
             }
           else if (t == Const.TILE_MIL_STALL)
             {
@@ -513,7 +539,7 @@ class MilitaryInterior
           var p = stood(c, dir, 0.0, 0.0, 0.0);
           put(path, p.x, p.z, p.yaw, 0.0);
           chair(c, dir, 0.0, depth);
-          top(p.x, p.z, p.yaw, TOP_L, depth, TABLE_H, 1, 3, []);
+          top(p.x, p.z, p.yaw, TOP_L, depth, TABLE_H, DESK, []);
         }
     }
 
@@ -540,7 +566,7 @@ class MilitaryInterior
           var x = (big ? RADIO_BIG_X : RADIO_SMALL_X);
           var q = stood(c, dir, x, back, TABLE_H);
           put((big ? md.militaryRadioBig : md.militaryRadioSmall), q.x, q.z, q.yaw, TABLE_H);
-          top(p.x, p.z, p.yaw, TOP_L, CONSOLE_D, TABLE_H, 1, 3, [
+          top(p.x, p.z, p.yaw, TOP_L, CONSOLE_D, TABLE_H, DESK, [
             {
               x: x,
               z: back,
@@ -565,8 +591,9 @@ class MilitaryInterior
     }
 
 // a furniture top for render.military.MilitaryClutter: centre, turn (stood's), extents along its own
-// x and z, height, the decal count's range and what already stands on it in its own frame
-  static function top(x:Float, z:Float, yaw:Float, w:Float, d:Float, y:Float, min:Int, max:Int,
+// x and z, height, what kind of top it is and what already stands on it in its own frame. Public for
+// render.military.MilitaryGeom's lockers
+  public static function top(x:Float, z:Float, yaw:Float, w:Float, d:Float, y:Float, kind:LidKind,
       claims:Array<ClutterSlot>):Void
     {
       lids.push({
@@ -576,12 +603,24 @@ class MilitaryInterior
         w: w,
         d: d,
         y: y,
-        min: min,
-        max: max,
+        kind: kind,
         col: Std.int((x + half()) / CELL),
         row: Std.int((z + half()) / CELL),
         claims: claims,
       });
+    }
+
+// a bunk's or a cot's tops at its centre and turn: the bedding of each deck, and the floor at `y`
+// under it. Asked for from the game as clutter spots "on top and bottom and under"
+  static function beds(x:Float, z:Float, yaw:Float, y:Float, cot:Bool):Void
+    {
+      var c = Math.cos(yaw), s = Math.sin(yaw);
+      if (cot)
+        top(x + COT_FREE_X * c, z - COT_FREE_X * s, yaw, COT_FREE_L, COT_W - 0.22, COT_TOP, BED, []);
+      else
+        for (deck in BLANKET_Y)
+          top(x + BLANKET_X * c, z - BLANKET_X * s, yaw, BLANKET_L, BLANKET_W, deck, BED, []);
+      top(x, z, yaw, (cot ? COT_L - 0.5 : BUNK_L - 0.4), (cot ? COT_W : BUNK_W) - 0.3, y, UNDER, []);
     }
 
 // cells `i` to `i + n` of a run's rect, along x or z
