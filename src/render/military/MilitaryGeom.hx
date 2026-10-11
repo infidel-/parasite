@@ -227,28 +227,9 @@ class MilitaryGeom
             SOLID),
           path: RenderConfig.MODELS.militaryContainer,
         },
-        // the comms room's kit (MilitaryInterior)
-        {
-          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioRack, MilitaryInterior.racks,
-            MilitaryInterior.RACK_H, SOLID),
-          path: RenderConfig.MODELS.militaryRadioRack,
-        },
-        {
-          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioDesk, MilitaryInterior.desks,
-            MilitaryInterior.CONSOLE_H, SOLID),
-          path: RenderConfig.MODELS.militaryRadioDesk,
-        },
-        {
-          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioBig,
-            MilitaryInterior.radiosBig, MilitaryInterior.RADIO_BIG_H, SOLID),
-          path: RenderConfig.MODELS.militaryRadioBig,
-        },
-        {
-          prop: Models.instanced(scene, RenderConfig.MODELS.militaryRadioSmall,
-            MilitaryInterior.radiosSmall, MilitaryInterior.RADIO_SMALL_H, SOLID),
-          path: RenderConfig.MODELS.militaryRadioSmall,
-        },
       ];
+      // and the rooms' furniture (MilitaryInterior)
+      kit = kit.concat(MilitaryInterior.batches(scene));
       for (k in kit)
         {
           var p = k.prop;

@@ -6598,44 +6598,6 @@
       "built_linear": 0.041,
       "built_srgb": 54.8
     },
-    "military/cot-top": {
-      "src": "military/mil-pack-o.png",
-      "class": "tile",
-      "needs_alpha": false,
-      "crop": [
-        516,
-        784,
-        504,
-        236
-      ],
-      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored 2:1 strip from above: an army cot, pillow at the left end, olive blanket [append textures.json style]",
-      "prompt_exact": false,
-      "note": "a medical bay cot's top, 0..1, its length out from the wall, the pillow at the wall (render.military.MilitaryInterior). Moved off mil-pack-n's square cell, which would have stretched 2x over the one-cell cot.",
-      "res": [
-        512,
-        240
-      ],
-      "last_converted": "2026-10-11T02:50:20",
-      "built_linear": 0.0902,
-      "built_srgb": 67.6
-    },
-    "military/shelf-front": {
-      "src": "military/mil-pack-o.png",
-      "class": "tile",
-      "needs_alpha": false,
-      "crop": [
-        516,
-        4,
-        504,
-        504
-      ],
-      "prompt": "[cell of military/mil-pack-o.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a steel storage shelf front, three shelves of boxes, blankets and ammo cans [append textures.json style]",
-      "prompt_exact": false,
-      "note": "a supply store's shelf front, 0..1 (render.military.MilitaryInterior).",
-      "last_converted": "2026-10-11T02:50:20",
-      "built_linear": 0.0502,
-      "built_srgb": 55.0
-    },
     "military/medcab-front": {
       "src": "military/mil-pack-o.png",
       "class": "tile",
@@ -6736,6 +6698,80 @@
       "last_converted": "2026-10-11T11:43:51",
       "built_linear": 0.0551,
       "built_srgb": 61.2
+    },
+    "military/ticking": {
+      "src": "military/mil-pack-q.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        4,
+        500,
+        500
+      ],
+      "prompt": "[cell of military/mil-pack-q.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE mattress ticking, off-white with slate-blue stripes [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the bunks' and the cots' mattresses and pillows (models-src/military/roomkit_build.py). lift 2.008: raw 0.348 to 0.12: a pale sheet above the blanket 0.057, under the room wall 0.146.",
+      "last_converted": "2026-10-11T16:08:17",
+      "built_linear": 0.1388,
+      "built_srgb": 95.0,
+      "lift": 2.008,
+      "last_lift": 2.008
+    },
+    "military/enamel-white": {
+      "src": "military/mil-pack-q.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        519,
+        4,
+        500,
+        500
+      ],
+      "prompt": "[cell of military/mil-pack-q.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE white enamel sheet steel, chipped [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the medical bay's white steel: the cabinet's body, the IV stand, the stretcher's frame (roomkit_build.py). lift 2.464: raw 0.499 to 0.18, the medcab-front it stands with.",
+      "last_converted": "2026-10-11T16:08:17",
+      "built_linear": 0.1859,
+      "built_srgb": 116.0,
+      "lift": 2.464,
+      "last_lift": 2.464
+    },
+    "military/supply-box": {
+      "src": "military/mil-pack-q.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        2,
+        516,
+        506,
+        505
+      ],
+      "prompt": "[cell of military/mil-pack-q.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: an olive drab carton side, RATIONS stencil, tape [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the cartons on a store's shelf unit, their fronts (roomkit_build.py).",
+      "last_converted": "2026-10-11T16:08:17",
+      "built_linear": 0.0739,
+      "built_srgb": 69.9
+    },
+    "military/steam-pans": {
+      "src": "military/mil-pack-q.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        513,
+        513,
+        511,
+        511
+      ],
+      "prompt": "[cell of military/mil-pack-q.png, PACK4, gpt-image-2.5-sunburst high] four steam-table pans from above: mashed potatoes, green beans, stew, rice [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the mess counter's sunk wells, one pan each (roomkit_build.py). Food measured inside the label at x 22-233 / 274-489, y 22-203 / 242-486. lift 1.279: raw 0.165 to 0.10, the counter steel.",
+      "last_converted": "2026-10-11T16:08:17",
+      "built_linear": 0.1132,
+      "built_srgb": 77.8,
+      "lift": 1.279,
+      "last_lift": 1.279
     }
   }
 }

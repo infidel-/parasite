@@ -750,6 +750,19 @@ class RenderConfig {
     militaryRadioDesk: 'models/military/radio-desk-hand.glb', // operator desk, one cell long, pedestal at local -x
     militaryRadioBig: 'models/military/radio-big-hand.glb',   // field transceiver, carry handle on top
     militaryRadioSmall: 'models/military/radio-small-hand.glb', // keypad radio set, handset on top
+    militaryBunk: 'models/military/bunk-hand.glb',        // two-deck bunk, two cells along local x, head at -x
+    militaryCot: 'models/military/cot-hand.glb',          // camp cot along local x, pillow at -x
+    militaryFootlocker: 'models/military/footlocker-hand.glb', // plank trunk, long axis x, hasp at +z
+    militaryOfficeDesk: 'models/military/office-desk-hand.glb', // HQ desk, one cell long, pedestal at -x
+    militaryFileCabinet: 'models/military/file-cabinet-hand.glb', // two-drawer filing cabinet
+    militaryChair: 'models/military/chair-hand.glb',      // folding chair, the sitter facing +z
+    militaryShelf: 'models/military/shelf-unit-hand.glb', // store shelf unit with its cartons
+    militaryMedCabinet: 'models/military/medcab-hand.glb', // white medical cabinet
+    militaryMessTable: 'models/military/mess-table-hand.glb', // one cell of mess table along x
+    militaryBriefTable: 'models/military/brief-table-hand.glb', // the same in darkwood
+    militaryBench: 'models/military/bench-hand.glb',      // one cell of bench along x
+    militaryCounter: 'models/military/counter-hand.glb',  // one cell of serving counter, pans at the top
+    militaryCounter2: 'models/military/counter2-hand.glb', // and its other two pans
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled
