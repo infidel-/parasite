@@ -30,6 +30,7 @@ class MilitaryRooms
   // a comms room's radio racks and two-cell consoles
   static inline var RACKS_MAX = 4;
   static inline var CONSOLES_MAX = 2;
+  static inline var DESK_ISLANDS = 2;
   // a medical bay's cots and cabinets
   static inline var COTS_MAX = 10;
   static inline var COT_ISLANDS = 2;
@@ -59,6 +60,10 @@ class MilitaryRooms
             (MilitaryZones.wallOf(node) < 2 ? 1 : 2));
           case CABINET_RUN: line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
           case COT_ISLAND: cotIsland(state, room);
+          // "add a table for the doctor into medical (normal table)": an office desk and its chair, the
+          // rest of its bay the cabinets'
+          case DOC_DESK: line(state, room, cells, Const.TILE_MIL_DESK, 1, 1) +
+            line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
           case COUNTER_RUN: line(state, room, cells, Const.TILE_MIL_COUNTER, 99, 1);
           case TABLE_ROWS: tableRows(state, room, (room.w >= room.h),
             (room.role == ROLE_MESS ? Const.TILE_MIL_MESS_TABLE : Const.TILE_MIL_BRIEF_TABLE),
@@ -406,17 +411,16 @@ class MilitaryRooms
     }
 
 // a comms room's desks back to back in its middle, three cells long where the ring still fits round
-// them and two where it does not: the 5x5 room had "space for one more doubled table"
+// them and two where it does not: the 5x5 room had "space for one more doubled table". Up to
+// DESK_ISLANDS of them, two sharing the aisle between them: an 8x6 room "has enough room for second
+// row of doubled tables"
   static function deskIsland(state: _FacilityState, room: _Room): Int
     {
+      var n = 0;
       for (k in [ 3, 2 ])
-        {
-          var n = islands(state, room, (room.w >= room.h ? k : 1), (room.w >= room.h ? 1 : k),
-            Const.TILE_MIL_DESK, 1);
-          if (n > 0)
-            return n;
-        }
-      return 0;
+        n += islands(state, room, (room.w >= room.h ? k : 1), (room.w >= room.h ? 1 : k),
+          Const.TILE_MIL_DESK, DESK_ISLANDS - n);
+      return n;
     }
 
 // a medical bay's cots out in its middle, two side by side where they fit (the render lies each one

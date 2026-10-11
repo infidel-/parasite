@@ -1009,13 +1009,13 @@ class GenCheck
               if (!mil &&
                   !ctx.hasObjectAt(x, y))
                 continue;
-              // nothing beside a window but what lies under its sill: a medical bay's cots, its stretcher
+              // nothing beside a window but what lies under its sill: a medical bay's cots, its
+              // stretcher. A latrine's light well is up under the ceiling, and everything stands under it
               for (i in 0...Const.dir4x.length)
                 {
                   var w = ctx.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]);
                   ok(gen.military.MilitaryRooms.low(t) ||
-                    !(w >= Const.TILE_WINDOWH1 && w <= Const.TILE_WINDOWV3 ||
-                    w == Const.TILE_WINDOW_HIGH),
+                    !(w >= Const.TILE_WINDOWH1 && w <= Const.TILE_WINDOWV3),
                     r.role + ' piece at ' + x + ',' + y + ' stands beside a window');
                 }
               // and a piece reached from its front has bare walkable floor there, the far side from

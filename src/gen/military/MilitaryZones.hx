@@ -52,6 +52,7 @@ class MilitaryZones
   public static inline var COT_RUN = 'cot-run';
   public static inline var CABINET_RUN = 'cabinet-run';
   public static inline var COT_ISLAND = 'cot-island';
+  public static inline var DOC_DESK = 'doc-desk';
   public static inline var COUNTER_RUN = 'counter-run';
   public static inline var TABLE_ROWS = 'table-rows';
   public static inline var BOARD = 'map-board';
@@ -91,8 +92,8 @@ class MilitaryZones
     ROLE_LATRINE => LATRINE,
   ];
   static var ZONES = [ BUNK_ROW, BUNK_ALONG, DESK_ISLAND, RACK_RUN, CONSOLE_RUN,
-    SHELVING, SHELF_ROW, CRATE_ISLAND, COT_RUN, CABINET_RUN, COT_ISLAND, COUNTER_RUN, TABLE_ROWS, BOARD, CUBICLES,
-    SINK_RUN, GUN_CABINET, SAFE, LOCKER_RUN, SLOT, FLOOR ];
+    SHELVING, SHELF_ROW, CRATE_ISLAND, COT_RUN, CABINET_RUN, COT_ISLAND, DOC_DESK, COUNTER_RUN,
+    TABLE_ROWS, BOARD, CUBICLES, SINK_RUN, GUN_CABINET, SAFE, LOCKER_RUN, SLOT, FLOOR ];
 
 // the room kind a military role builds, or null for any other role
   public static function kindOf(role: String): String
@@ -218,11 +219,13 @@ class MilitaryZones
 
           // cots along the top and bottom walls first, where they lie down the screen and stand
           // side by side, a cot to a cell ("on adjacent tiles - but vertically for better
-          // readability"), the cabinets on a side wall
+          // readability"), the doctor's desk and the cabinets on the side walls
           case MEDICAL:
             return [
               wall(COT_RUN, 1, 3, 1, function(b)
                 return (wallOf(b) < 2 ? 100 : 0) + len(b)),
+              wall(DOC_DESK, 0, 1, 1, function(b)
+                return (wallOf(b) >= 2 ? 100 : 0)),
               wall(CABINET_RUN, 0, 1, 1, function(b)
                 return (wallOf(b) >= 2 ? 100 : 0)),
               floor(COT_ISLAND),

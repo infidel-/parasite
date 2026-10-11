@@ -373,9 +373,9 @@ laboratory's deal. That:
 | kind | zones (core first) |
 |---|---|
 | armory | gun-cabinet, safe-spot (the base's one), crate-island (runs of 3, else 2, down the long axis), locker-run ×2 |
-| comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (3 cells back to back where the ring fits, else 2) |
+| comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (up to two, 3 cells back to back where the ring fits, else 2; two share the aisle between them) |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
-| medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), cabinet-run (a side wall), cot-island (two side by side, else one) |
+| medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
 | mess / briefing | counter-run / map-board (an end wall), table-rows |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
 | latrine | cubicles (a toilet in each), sink-run (two basins a cell) |
@@ -405,6 +405,13 @@ glass (`backing(..., glass)`) and stands it on the masonry's face line, (WALL_T 
 from the glazing (`sill`). Medical fill 9.5 → 15.7 cells a room. A `mil-slot` whose first prop finds
 no cell now tries the next (the IV stand will not go in front of glass; the stretcher went without).
 
+**A latrine takes no ribbon: it gets the washroom's light wells** ("latrines should not have normal
+windows"). `RoomBlock`'s military branch runs `FacilityToilet.toiletWindows` (a well on every other
+cell of one exterior wall, `TEMP_BUILDING_WINDOW_HIGH`) and glazes with `glass` false, as a store
+does. A well is outside `nextToWindow`'s range, so every wall cell is a bay, and the render backs a
+piece onto one (`MilitaryInterior.backing` accepts `Wall.WINDOW_HIGH`). `GenCheck.militaryRooms`
+stopped counting `TILE_WINDOW_HIGH` as a window it had never met. Latrine fill 10.4 → 12.3 cells.
+
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
 the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a gun locker (armory
 only, `TILE_MIL_GUN_LOCKER`: furniture wearing the gun cabinet's glb, no loot. It was a rifle rack,
@@ -421,7 +428,9 @@ reported from the barracks as not belonging there and then from the armory as "l
 Fill after the props (2000 seeds): armory 11.5, barracks 29.7 a base, briefing 12.3, comms 7.8,
 latrine 10.4, medical 15.7, mess 15.5, supply 9.4 cells a room. The comms desk island stands three
 cells long where its ring still fits ("one more doubled table can be spawned in the center" of a 5x5
-room), two where it does not.
+room), two where it does not, and a room with the floor for it takes a second, the two sharing the
+aisle between them (an 8x6 room "has enough room for second row of doubled tables"): `islands`
+already lets two rings overlap, since a ring cell stays bare. Comms fill 7.8 → 8.1.
 
 `--stats` also prints `nodes/<zone>` and `zoneEmpty/<zone>`. A desk-island is empty in a room too
 narrow for one, 0.08 a base.

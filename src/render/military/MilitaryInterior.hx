@@ -16,6 +16,7 @@ import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
+import render.facility.FacilityModel.Wall;
 import render.facility.FacilityGround;
 import render.facility.FacilityStyle;
 import render.military.MilitaryClutter.LidKind;
@@ -1003,14 +1004,16 @@ class MilitaryInterior
         };
     }
 
-// the wall a piece backs onto, of the `dirs` that are plain masonry (or glazing, with `glass`): one with
-// open floor in front of it first. A shelf in a store's corner found the end wall first and stood
-// facing into the next shelf along, its front against that one's side
+// the wall a piece backs onto, of the `dirs` that are plain masonry, a latrine's light well up under the
+// ceiling (or glazing, with `glass`): one with open floor in front of it first. A shelf in a store's
+// corner found the end wall first and stood facing into the next shelf along, its front against that
+// one's side
   static function backing(m:Facility, col:Int, row:Int, dirs:Array<Int>, glass:Bool = false):Int
     {
       var dir = -1;
       for (d in dirs)
         if (FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]) ||
+            m.wall[row + DZ[d]][col + DX[d]] == Wall.WINDOW_HIGH ||
             glass &&
             FacilityModel.isWall(m, col + DX[d], row + DZ[d]))
           {

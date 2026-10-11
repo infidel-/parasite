@@ -233,12 +233,16 @@ class RoomBlock
             ventCap(state, room, node);
 
           // a base room glazes like a laboratory and then deals its OWN zones over its own bays
-          // (MilitaryZones.deal, from `glaze`), each filled by gen.military.MilitaryRooms
+          // (MilitaryZones.deal, from `glaze`), each filled by gen.military.MilitaryRooms. All but the
+          // latrine, which takes the washroom's light wells ("latrines should not have normal windows")
           default:
             if (MilitaryZones.isRoom(node.kind))
               {
                 clear(state, room);
-                glaze(state, room, node, true);
+                var latrine = (node.kind == MilitaryZones.LATRINE);
+                if (latrine)
+                  FacilityToilet.toiletWindows(state.area.getCells(), room);
+                glaze(state, room, node, !latrine);
               }
             else if (MilitaryZones.isZone(node.kind))
               MilitaryRooms.fill(state, room, node);
