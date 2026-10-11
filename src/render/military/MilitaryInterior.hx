@@ -50,6 +50,7 @@ class MilitaryInterior
   static inline var TEX_MIRROR = 'textures/military/mirror.png';
   static inline var TEX_BOARD = 'textures/military/map-board.png';
   static inline var TEX_BOARDS = 'textures/military/briefing-boards.png';
+  static inline var TEX_POSTERS = 'textures/military/mess-posters.png';
 
   // each glb's footprint as roomkit_build.py measures its bbox (along x, across), and the height it
   // is drawn at, which is its own so it lands at scale 1
@@ -185,6 +186,11 @@ class MilitaryInterior
   // BOARDS_Y up the wall: over a bench and a table edge, under the 6.0 wall top
   static var BOARDS = [
     [ 22, 61, 498, 424 ], [ 524, 62, 1003, 423 ], [ 81, 464, 440, 950 ], [ 586, 464, 944, 949 ],
+  ];
+  // and the mess hall's propaganda posters ("add some propaganda wall decals into mess hall"), WASTE
+  // NOT, LOOSE LIPS, SERVE WITH PRIDE and KEEP FIT, measured the same way
+  static var POSTERS = [
+    [ 54, 7, 459, 502 ], [ 567, 6, 968, 503 ], [ 55, 515, 459, 1012 ], [ 566, 516, 970, 1013 ],
   ];
   static inline var BOARD_PX = 170.0;
   static inline var BOARDS_Y = 3.2;
@@ -330,7 +336,8 @@ class MilitaryInterior
               taken[row + (alongX ? 0 : i)][col + (alongX ? i : 0)] = true;
             piece(m, t, col, row, len, alongX);
           }
-      boards(m);
+      boards(m, Surf.BRIEFING, TEX_BOARDS, BOARDS);
+      boards(m, Surf.MESS, TEX_POSTERS, POSTERS);
       FacilityDeco.lamps(scene, leds);
     }
 
@@ -876,27 +883,26 @@ class MilitaryInterior
       top(x, z, yaw, (cot ? COT_L - 0.5 : BUNK_L - 0.4), (cot ? COT_W : BUNK_W) - 0.3, y, UNDER, []);
     }
 
-// the briefing room's boards: one on every other cell of its plain walls, none on the map board's,
-// a flag stand's or a doorway's, one to a cell, each of the four by the cell's hash. The room was
-// reported as wanting "more 2d decals - some bulletin boards or something"
-  static function boards(m:Facility):Void
+// a room's wall pictures, one sheet of four cut-outs: one on every other cell of its plain walls, none
+// on a cell holding a piece (the map board, a flag stand, the counter, a water cooler) or a doorway's,
+// one to a cell, each of the four by the cell's hash. The briefing room was reported as wanting "more
+// 2d decals - some bulletin boards or something", and the mess hall its propaganda
+  static function boards(m:Facility, surf:Surf, tex:String, boxes:Array<Array<Int>>):Void
     {
-      var b = MilitaryGeom.buf(TEX_BOARDS, true);
+      var b = MilitaryGeom.buf(tex, true);
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
-            var t = grid.getCellType(col, row);
-            if (m.surf[row][col] != Surf.BRIEFING ||
+            if (m.surf[row][col] != surf ||
                 (col + row) % 2 != 0 ||
-                t == Const.TILE_MIL_MAP_BOARD ||
-                t == Const.TILE_MIL_FLAG)
+                m.fit[row][col] != 0)
               continue;
             for (d in 0...4)
               {
                 if (!FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]) ||
                     FacilityModel.isDoor(m, col + DX[d], row + DZ[d]))
                   continue;
-                var px = BOARDS[FacilityModel.mix((col * 73856093) ^ (row * 19349663)) % BOARDS.length];
+                var px = boxes[FacilityModel.mix((col * 73856093) ^ (row * 19349663)) % boxes.length];
                 var w = (px[2] - px[0]) / BOARD_PX;
                 var hh = (px[3] - px[1]) / BOARD_PX / 2;
                 var x0 = col * CELL - half();

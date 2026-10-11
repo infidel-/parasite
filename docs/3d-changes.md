@@ -1992,3 +1992,36 @@ medical clutter right in front of a door.
 - **`MilitaryClutter`** floor decals skip `FacilityModel.nearDoor` cells.
 
 **Verdict:** landed. No new mesh, batch or program: the plates ride the electrical pack mesh.
+
+## Military base: latrine urinals, showers and mirrors, stall doors two-faced, mess propaganda posters, cooler bottle and halo, counter grain
+
+**Reported:** a 7x7 latrine "pretty empty for such a large room" (urinals, a shower bay, a centre
+bench and mirrors over the basins were picked); the stall door's quads having no other side; the mess
+wanting "propaganda wall decals ... new pack4"; the water cooler's top showing "black" and its wall
+halo too high; the counter's short top strips wanting the texture "rotate 90degs".
+
+**Changed:**
+- **`urinal-hand` (372 tris) and `shower-hand` (320)** in `roomkit_build.py` on the mil-p sheet, no
+  gen. The urinal hangs, so its steel modesty screen stands on the floor: without it z_min was 0.56
+  and `Models` would have stood the bowl on the floor. Shower `check` first came back with 3 coplanar
+  pairs, the soap dish lip 0.005 off the dish's front and sides; pushed 0.02 proud. Both holes 0,
+  coplanar 0, texel_off 0. One a cell (`single`); the urinal shades to `URINAL_HALO_H` 2.55, the
+  shower not at all, and `MilitaryInterior.drains` hands `MilitaryClutter` a spot 1.1 off the wall
+  under each rose for the latrine sheet's puddle.
+- **Mirrors**: `military/mirror` (one solo gen, 768x1024, built 384x512, 63 sRGB), a pane per basin
+  0.84 x 1.12 from 2.68 up, under the light well's 3.87 sill. Light wells: area-gen.md.
+- **Stall doors**: a `STALL_DOOR_T` 0.05 slab across the open side, a face out and a face in.
+- **`boards(m, surf, tex, boxes)`**: the briefing pass with the sheet a parameter; the mess hangs
+  `military/mess-posters` (pack4, alpha cut, boxes at alpha > 128, built 109 sRGB against the boards'
+  85: paper). A cell holding any piece (`m.fit`) takes none, which is the map board and flag rule.
+- **Cooler**: the bottle wore the whole cell bottom-up, so the top cone sat on the navy round the drawn
+  neck (face lum 0.12). `BOTTLE_BANDS` gives the neck, shoulder, body and base each their band of the
+  upright art, run down the bottle: top 0.25+. `COOLER_HALO_H` 1.9, the cabinet top.
+- **Counter**: the three short top strips take `bl.turned(K_STEEL)`.
+
+**Measured:** one regenerated base: 8 mirror quads, 18 door faces (9 doors), 5 posters, 5 urinals, 5
+showers, 5 puddles.
+
+**Verdict:** landed. +4 meshes: the urinal and shower batches, the mirror buffer and the poster cut
+buffer, one draw each in view. 0 new programs (121).
+
