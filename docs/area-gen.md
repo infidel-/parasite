@@ -410,14 +410,16 @@ medical 9.6, mess 15.4, supply 8.9 cells a room.
 narrow for one, about 1.3 a base.
 
 **A store is shelving ROWS, not crates in the middle** ("looks way empty because a few crates are in
-the middle"). `shelf-row` is the store's floor zone: a row along the room's long axis on every other
-line across it from the second in off each long wall, so each has an aisle either side, from the
-second cell in off each end wall, so a cross aisle stays at both. A row is shelving with a crate
-stack on its far end, and `MilitaryInterior` stands TWO units back to back in each of its cells, one
-facing each aisle. It goes back to bare floor if it would split the room (`sealsOff`), and a room
-too narrow for one takes crate islands instead (`zoneEmpty/shelf-row` 0.07 a base). Wall shelving
-puts a crate stack on each end of its bay. Supply fill 8.9 → 9.3 cells a room; the rest of the base
-moved by under 0.9.
+the middle"). `shelf-row` is the store's floor zone: a row on every other line across the room from
+the second in off each side wall, so each has an aisle either side, from the second cell in off each
+end wall, so a cross aisle stays at both. `MilitaryRooms.lines` lays them out both ways and
+`shelfRows` takes the way that stands MORE shelving, the more rows on a tie: a 7x6 store along its
+long axis has room for one row of 3, across it for two of 2 ("there's enough space for two rows
+here"). A row is `Const.TILE_MIL_SHELF_ROW` with a crate stack on its far end when it is 3 or longer,
+and `MilitaryInterior` stands TWO units back to back in each of its cells, one facing each aisle.
+It goes back to bare floor if it would split the room (`sealsOff`), and a room too narrow for one
+takes crate islands instead (`zoneEmpty/shelf-row` 0.07 a base). Wall shelving puts a crate stack on
+each end of its bay. Supply fill 8.9 → 9.3 cells a room; the rest of the base moved by under 0.9.
 
 **A piece reached from its front keeps a bare cell there** (shelf, filing cabinet, medical cabinet,
 radio rack and the standing props, `MilitaryRooms.facing`). Jerrycans stood with a crate stack in
@@ -426,7 +428,17 @@ bare cell on the far side from some wall the piece backs onto, and `free` refuse
 take a facing neighbour's LAST one, so every filler respects it. The corner shelf was half the bug:
 the render tried the end wall first and stood it facing into the shelf beside it, so
 `MilitaryInterior.backing` now prefers a wall with open floor in front. `GenCheck.militaryRooms`
-asserts every such piece against a wall has a walkable front.
+asserts every such piece against a wall has bare walkable floor in front, not another piece.
+
+**And its OWN cell is walkable** — the corp's `WALL_HUGGERS` lesson, reported here as "is near the
+wall and tile in front is unwalkable, tile 58,40": the front rule above answered the wrong cell. A
+wall shelf is 1.5 deep and stands against the slab's face, which is a unit into the WALL's cell, so
+it covers half a unit of its own and the player sees a whole tile of bare boards before it they
+cannot step on. `tiles.Default.TILE_WALKABLE` now passes every piece one cell deep at a wall: the
+radio rack, wall shelf, filing and medical cabinets, the trough and the six standing props. Not the
+console (its chair fills the cell), a crate stack, a cot, a stretcher, a bunk, a table or a store's
+shelf row, which is a separate tile for exactly this reason. `roomUsed` counts a walkable piece as
+used. A save from before has its rows as wall-shelf tiles, which now walk through.
 
 **Rooms open onto corridors, not into each other.** `makeDoors` rolls each room's door over its whole
 ring, so one landed in the wall a barracks shares with the store ("supply room <-> barracks door
@@ -454,7 +466,8 @@ and `roomUsed/<role>` (cells holding an unwalkable tile or an object) and `roomE
 - `MilitaryRooms.islands` is the free-standing pass: a block nearest the room's centre, with a whole
   ring of bare floor round it.
 - A 5-6 deep barracks also lays bunks along the wall facing its row.
-- The new pieces are `Const` row 21; `tiles.Default` gives them unwalkable, see-through.
+- The new pieces are `Const` row 21; `tiles.Default` gives them see-through, and unwalkable unless
+  they stand at a wall (above).
 - Comms and medical take the HQ floor and the store takes barracks boards. WASH would hang the
   latrine's men/women signs on the door (`FacilityPlacard`), and CONCRETE counts toward
   `FacilityModel`'s hangar majority.

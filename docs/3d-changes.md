@@ -1846,3 +1846,28 @@ that left a slit at z = the boundary, over the glazing band, with nothing in it.
 **Trap:** board pools barely read on gunmetal at 57; the cartons' darker feet carry the contact.
 
 **Verdict:** landed.
+
+## Military base: canteen cap off the drawn cap, shelf-top clutter, wall pieces stand on walkable cells
+
+**Reported:**
+- the canteen's neck and cap rim: "should be the same texture as" the front's drawn cap;
+- a wall shelf and the jerrycans: "is near the wall and tile in front is unwalkable, tile 58,40";
+- the store: "there's enough space for two rows here"; "shelving tops should have clutter spots".
+
+**Changed:**
+- **Canteen neck and cap tile a square of the drawn cap's ribbed plastic** (`bl.sub` 0.45-0.515 x
+  0.07-0.135 of the cell), not gunmetal. That square is 33 px, so at the cover's 0.18 tile it came
+  out at a fifth of the cover's texels (`texel_off` 24, worst 6.52). The neck is cut finer at its
+  own `CAP_TILE` (0.034) and tiled in a first `tile_uv` pass, with the cover's faces held back from
+  it: `texel_off` 0, worst 1.23. 552 → 716 tris.
+- **Shelf tops are clutter lids** (`LidKind.SHELF`, 1-2 decals off the room's sheet) at the top
+  board's face, `SHELF_W - 0.02`, inside the uprights, on wall shelving and on both units of a row.
+  Same mesh per room kind: 0 calls.
+- **Wall pieces' own cells are walkable** (`tiles.Default`, see area-gen.md). A 1.5 shelf against
+  the slab covers half a unit of its own cell, the rest is bare boards. Store rows are a separate
+  unwalkable `TILE_MIL_SHELF_ROW`, and stand two rows across a 7x6 store instead of one down it.
+
+**Trap:** the front-cell rule of the last round answered the wrong cell. The player reads "the tile
+in front" off what they see, and a piece in the wall's margin leaves its own cell looking empty.
+
+**Verdict:** landed.

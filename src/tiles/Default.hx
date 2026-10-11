@@ -75,10 +75,15 @@ class Default extends Tileset
     // container x2, vehicle footprint x5, the helipad (walkable) and a jersey barrier
     0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
-    // board walkable: it marks a wall)
-    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-    // row 21 - its comms, supply and medical furniture and the rooms' standing props, none walkable
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // board walkable: it marks a wall). The file cabinet and the latrine trough ARE: like the corp
+    // locker they stand in the wall's margin, and a cell of bare boards in front of one that could
+    // not be stepped on was reported from the game
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
+    // row 21 - its comms, supply and medical furniture and the rooms' standing props. Walkable for
+    // the same reason, everything one cell deep at a wall: the radio rack, the wall shelf ("tile in
+    // front is unwalkable"), the medical cabinet and the six standing props. Not the console and its
+    // chair, a crate stack, a cot or a stretcher, which fill their cell, nor a store's shelf row
+    1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0

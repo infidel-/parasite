@@ -65,6 +65,11 @@ class MilitaryInterior
   static inline var FILE_D = 1.84;
   static inline var SHELF_W = 3.6;
   static inline var SHELF_D = 1.5;
+  // its top board's face (roomkit_build.py: a hair under the uprights) and the part of it clear of
+  // the four uprights, which clutter may lie on ("shelving tops should have clutter spots")
+  static inline var SHELF_TOP = SHELF_W - 0.02;
+  static inline var SHELF_TOP_W = SHELF_W - 0.3;
+  static inline var SHELF_TOP_D = SHELF_D - 0.2;
   static inline var MEDCAB_W = 2.6;
   static inline var MEDCAB_D = 1.34;
   static inline var COUNTER_D = 2.36;
@@ -229,7 +234,7 @@ class MilitaryInterior
           {
             var t = area.getCellType(col, row);
             if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH) &&
-                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_STRETCHER) ||
+                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW) ||
                 taken[row][col])
               continue;
             // the run: along x if the next cell is the same, down z otherwise. A rack, a shelf, a
@@ -410,7 +415,8 @@ class MilitaryInterior
               seated(r, (alongX ? 0 : 2), len, md.militaryOfficeDesk, DESK_D);
             }
           else if (dir < 0 &&
-              t == Const.TILE_MIL_SHELF)
+              (t == Const.TILE_MIL_SHELF_ROW ||
+              t == Const.TILE_MIL_SHELF))
             {
               // a store's row out in its floor: two units back to back, one facing each aisle, the
               // row running down whichever axis its neighbours along it are not open floor on
@@ -425,6 +431,8 @@ class MilitaryInterior
                   // backing toward the middle from the far side of it, as if that were its wall
                   var o = (d == 0 || d == 2 ? 1 : -1) * SHELF_D / 2;
                   put(md.militaryShelf, cx + (ew ? o : 0.0), cz + (ew ? 0.0 : o), YAW[d], 0.0);
+                  top(cx + (ew ? o : 0.0), cz + (ew ? 0.0 : o), YAW[d], SHELF_TOP_W, SHELF_TOP_D,
+                    SHELF_TOP, SHELF, []);
                 }
             }
           else if (dir < 0 &&
@@ -493,6 +501,9 @@ class MilitaryInterior
               else if (t == Const.TILE_MIL_FILE ||
                   t == Const.TILE_MIL_MED_CABINET)
                 top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], w, d, w, CABINET, []);
+              else if (t == Const.TILE_MIL_SHELF)
+                top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], SHELF_TOP_W, SHELF_TOP_D,
+                  SHELF_TOP, SHELF, []);
             }
           else if (t == Const.TILE_MIL_CONSOLE)
             {

@@ -999,7 +999,7 @@ class GenCheck
             {
               var t = ctx.cells[x][y];
               var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH ||
-                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_STRETCHER);
+                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW);
               ok(mil ||
                 tiles.Default.TILE_WALKABLE[t] == 1,
                 r.role + ' room cell ' + x + ',' + y + ' is foreign tile ' + t);
@@ -1016,9 +1016,10 @@ class GenCheck
                     w == Const.TILE_WINDOW_HIGH),
                     r.role + ' piece at ' + x + ',' + y + ' stands beside a window');
                 }
-              // and a piece reached from its front has a walkable cell there, the far side from a
-              // wall it backs onto: jerrycans stood with a crate stack before them, ammo cans before
-              // a shelf
+              // and a piece reached from its front has bare walkable floor there, the far side from
+              // a wall it backs onto: jerrycans stood with a crate stack before them, ammo cans before
+              // a shelf. Not another piece, even one that is walkable itself for standing in the
+              // wall's margin
               if (!gen.military.MilitaryRooms.facing(t))
                 continue;
               var walls = 0;
@@ -1033,7 +1034,9 @@ class GenCheck
                       by <= r.y2)
                     continue;
                   walls++;
-                  if (tiles.Default.TILE_WALKABLE[ctx.cells[x - Const.dir4x[i]][y - Const.dir4y[i]]] == 1)
+                  var f = ctx.cells[x - Const.dir4x[i]][y - Const.dir4y[i]];
+                  if (tiles.Default.TILE_WALKABLE[f] == 1 &&
+                      !(f > Const.TILE_MIL_FLOOR_LATRINE && f <= Const.TILE_MIL_SHELF_ROW))
                     open = true;
                 }
               ok(walls == 0 ||

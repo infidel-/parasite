@@ -340,7 +340,8 @@ class GenRun
               add('tiles/' + (t - Const.OFFSET_ROW19), 1);
           }
       // how furnished each kind of room comes out: its floor cells, the ones something stands on (an
-      // unwalkable furniture tile or an object), and how many of that kind have nothing at all
+      // unwalkable furniture tile, a base's piece walkable or not, or an object), and how many of
+      // that kind have nothing at all
       for (r in state.allRooms)
         {
           var cells = 0;
@@ -350,6 +351,7 @@ class GenRun
               {
                 cells++;
                 if (tiles.Default.TILE_WALKABLE[ctx.cells[x][y]] == 0 ||
+                    ctx.cells[x][y] > Const.TILE_MIL_FLOOR_LATRINE && ctx.cells[x][y] <= Const.TILE_MIL_SHELF_ROW ||
                     Lambda.exists(ctx.spawns, function(s) return s.x == x && s.y == y))
                   used++;
               }
@@ -409,6 +411,7 @@ class GenRun
                 t == Const.TILE_MIL_RADIO_RACK ? 'Q' :
                 t == Const.TILE_MIL_CONSOLE ? 'O' :
                 t == Const.TILE_MIL_SHELF ? 'H' :
+                t == Const.TILE_MIL_SHELF_ROW ? 'h' :
                 t == Const.TILE_MIL_CRATES ? 'c' :
                 t == Const.TILE_MIL_COT ? 'z' :
                 t == Const.TILE_MIL_MED_CABINET ? 'E' :

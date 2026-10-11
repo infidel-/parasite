@@ -142,7 +142,7 @@ class MilitaryStyle
   public static function fitOf(t:Int):Int
     {
       return (t > Const.TILE_MIL_FLOOR_LATRINE &&
-        t <= Const.TILE_MIL_STRETCHER ? t : 0);
+        t <= Const.TILE_MIL_SHELF_ROW ? t : 0);
     }
 
 // tile id -> surface, the compound's reading plus the base's own row-20 room floors. Its

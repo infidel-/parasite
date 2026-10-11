@@ -412,39 +412,52 @@ class MilitaryRooms
       return n;
     }
 
-// a store's free-standing shelving down the middle of its floor ("supply room need to have shelving
-// unit rows as well"): a row along the room's long axis on every other line across it from the second
-// in off each long wall, so each has an aisle either side, from the second cell in off each end wall,
-// so a cross aisle is kept at both. A row is shelving back to back (render.military.MilitaryInterior
-// stands two units in each cell, one facing each aisle) with a crate stack on its far end. A room too
-// narrow for one takes crate stacks instead
+// a store's free-standing shelving out in its floor ("supply room need to have shelving unit rows as
+// well"), down whichever axis stands more of it, the more rows on a tie: a 7x6 store takes two short
+// rows across it and not one long one down it ("there's enough space for two rows here"). A row is
+// shelving back to back (Const.TILE_MIL_SHELF_ROW: render.military.MilitaryInterior stands two
+// units in each cell, one facing each aisle) with a crate stack on its far end when it is three or
+// longer. A room too narrow for one takes crate stacks instead
   static function shelfRows(state: _FacilityState, room: _Room): Int
     {
-      var alongX = (room.w >= room.h);
-      var a0 = (alongX ? room.x1 : room.y1) + 2;
-      var a1 = (alongX ? room.x2 : room.y2) - 2;
+      var a = lines(room, room.w >= room.h);
+      var b = lines(room, room.w < room.h);
+      var na = (a.length == 0 ? 0 : a.length * a[0].length);
+      var nb = (b.length == 0 ? 0 : b.length * b[0].length);
       var n = 0;
-      var b = (alongX ? room.y1 : room.x1) + 2;
-      while (b <= (alongX ? room.y2 : room.x2) - 2)
-        {
-          var row = [for (a in a0...a1 + 1) (alongX ? { x: a, y: b } : { x: b, y: a })];
-          if (row.length >= 2 &&
-              Lambda.foreach(row, function(c) return free(state, c.x, c.y)))
-            {
-              for (k in 0...row.length)
-                stand(state, row[k].x, row[k].y, (k == row.length - 1 &&
-                  row.length >= 3 ? Const.TILE_MIL_CRATES : Const.TILE_MIL_SHELF));
-              if (!sealsOff(state, room))
-                n += row.length;
-              else
-                for (c in row)
-                  stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
-            }
-          b += 2;
-        }
+      for (row in (nb > na || nb == na && b.length > a.length ? b : a))
+        if (Lambda.foreach(row, function(c) return free(state, c.x, c.y)))
+          {
+            for (k in 0...row.length)
+              stand(state, row[k].x, row[k].y, (k == row.length - 1 &&
+                row.length >= 3 ? Const.TILE_MIL_CRATES : Const.TILE_MIL_SHELF_ROW));
+            if (!sealsOff(state, room))
+              n += row.length;
+            else
+              for (c in row)
+                stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
+          }
       if (n == 0)
         return islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
       return n;
+    }
+
+// the rows of shelving a store's floor has room for along x or along z, two cells or longer: one on
+// every other line across the room from the second in off each side wall, so each has an aisle either
+// side, from the second cell in off each end wall, so a cross aisle is kept at both
+  static function lines(room: _Room, alongX: Bool): Array<Array<{ x: Int, y: Int }>>
+    {
+      var a0 = (alongX ? room.x1 : room.y1) + 2;
+      var a1 = (alongX ? room.x2 : room.y2) - 2;
+      var rows = [];
+      var b = (alongX ? room.y1 : room.x1) + 2;
+      while (a1 > a0 &&
+          b <= (alongX ? room.y2 : room.x2) - 2)
+        {
+          rows.push([for (a in a0...a1 + 1) (alongX ? { x: a, y: b } : { x: b, y: a })]);
+          b += 2;
+        }
+      return rows;
     }
 
 // the map board on the middle cell of its bay. It hangs on the wall, so its cell only has to be
@@ -577,7 +590,7 @@ class MilitaryRooms
           var b = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
           if (b == TEMP_BUILDING_ROOM ||
               b >= Const.TILE_MIL_BUNK && b <= Const.TILE_MIL_TROUGH ||
-              b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_STRETCHER)
+              b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_SHELF_ROW)
             continue;
           walls++;
           var fx = x - Const.dir4x[i];

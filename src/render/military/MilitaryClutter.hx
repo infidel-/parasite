@@ -28,6 +28,8 @@ enum LidKind
   FOOTLOCKER;
   // a filing or medical cabinet's top, 0-1
   CABINET;
+  // a store shelf unit's top board, 1-2
+  SHELF;
   // a bunk deck's blanket or a cot's canvas, 0-2
   BED;
   // the floor under a bunk or a cot, 0-2 off the room's FLOOR_PICK
@@ -241,6 +243,7 @@ class MilitaryClutter
           case DESK: [ 1, 3 ];
           case TABLE: [ 2, 4 ];
           case CABINET, LOCKER: [ 0, 1 ];
+          case SHELF: [ 1, 2 ];
           default: [ 0, 2 ];
         };
       var want = range[0] + g % (range[1] - range[0] + 1);
