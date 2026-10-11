@@ -107,6 +107,9 @@ class MilitaryClutter
     'medical' => [ 1, 7, 15 ],
     'latrine' => [ 0, 2, 7, 9, 12, 14 ],
   ];
+  // the latrine sheet's puddle, laid under every shower's rose (MilitaryInterior.drains) at the floor
+  // size
+  static inline var PUDDLE = 9;
   // how far a lid's decal stays in from its edge
   static inline var INSET = 0.12;
   // the gear, models-src/military/roomkit_build.py's footprints (local x by local z) and heights, and
@@ -199,6 +202,7 @@ class MilitaryClutter
             for (col in room.x1...room.x2 + 1)
               {
                 if (!area.isWalkable(col, row) ||
+                    area.getCellType(col, row) == Const.TILE_MIL_SHOWER ||
                     area.getObjectsAt(col, row).length > 0 ||
                     FacilityModel.nearDoor(m, col, row))
                   continue;
@@ -231,6 +235,16 @@ class MilitaryClutter
                   n++;
               }
         }
+      var wet = bufs.get('latrine');
+      if (wet != null)
+        for (p in MilitaryInterior.drains)
+          {
+            var at = CityConfig.worldToCell(p.x, p.z);
+            var h = FacilityModel.mix((at.col * 374761393) ^ (at.row * 40503));
+            emit(wet, p.x, p.z, FLOOR_SZ + (h % 1000 / 1000.0) * SZ_VAR, (h >> 11) % 6283 / 1000.0, PUDDLE,
+              FacilityGround.surfY(m.surf[at.row][at.col]) + FacilityStyle.CLUTTER_Y);
+            n++;
+          }
       for (role in bufs.keys())
         add(scene, bufs.get(role), 'textures/military/' + role + '-clutter.png');
       return n;

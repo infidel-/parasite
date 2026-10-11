@@ -82,7 +82,8 @@ class MilitarySounds
               fence.push(c);
             else if (t == Const.TILE_MIL_HUMVEE)
               idle.push(c);
-            else if (t == Const.TILE_MIL_SINKS)
+            else if (t == Const.TILE_MIL_SINKS ||
+                t == Const.TILE_MIL_SHOWER)
               sinks.push(c);
             else if (t == Const.TILE_MIL_RADIO_RACK)
               racks.push(c);

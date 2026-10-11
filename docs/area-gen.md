@@ -378,7 +378,7 @@ laboratory's deal. That:
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
 | mess / briefing | counter-run / map-board (an end wall), table-rows |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
-| latrine | cubicles (a toilet in each), sink-run (two basins a cell) |
+| latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first), bench-island (3 cells where the ring fits, else 2) |
 
 A min is only asked when the room can hold it: a barracks falls back to the other long wall and then
 the end walls. 2000 seeds, 0 `unmet`.
@@ -411,6 +411,9 @@ cell of one exterior wall, `TEMP_BUILDING_WINDOW_HIGH`) and glazes with `glass` 
 does. A well is outside `nextToWindow`'s range, so every wall cell is a bay, and the render backs a
 piece onto one (`MilitaryInterior.backing` accepts `Wall.WINDOW_HIGH`). `GenCheck.militaryRooms`
 stopped counting `TILE_WINDOW_HIGH` as a window it had never met. Latrine fill 10.4 → 12.3 cells.
+With the urinals, showers (row 21 +14/+15, both walkable, stood in the wall's margin) and the bench
+it is 23.0 ("pretty empty for such a large room"). The bench is the one that rarely lands: 1.48 of a
+base's 1.98 latrines are too small for it and its ring once the four walls are taken.
 
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
 the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a gun locker (armory

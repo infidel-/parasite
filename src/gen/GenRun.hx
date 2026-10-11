@@ -351,7 +351,7 @@ class GenRun
               {
                 cells++;
                 if (tiles.Default.TILE_WALKABLE[ctx.cells[x][y]] == 0 ||
-                    ctx.cells[x][y] > Const.TILE_MIL_FLOOR_LATRINE && ctx.cells[x][y] <= Const.TILE_MIL_SHELF_ROW ||
+                    ctx.cells[x][y] > Const.TILE_MIL_FLOOR_LATRINE && ctx.cells[x][y] <= Const.TILE_MIL_SHOWER ||
                     Lambda.exists(ctx.spawns, function(s) return s.x == x && s.y == y))
                   used++;
               }
@@ -422,6 +422,8 @@ class GenRun
                 t == Const.TILE_MIL_WATER_COOLER ? 'w' :
                 t == Const.TILE_MIL_IV_STAND ? 'i' :
                 t == Const.TILE_MIL_STRETCHER ? 's' :
+                t == Const.TILE_MIL_URINAL ? 'u' :
+                t == Const.TILE_MIL_SHOWER ? '=' :
                 tiles.Default.TILE_WALKABLE[t] == 1 ? '.' : 'X');
             }
           log(line);

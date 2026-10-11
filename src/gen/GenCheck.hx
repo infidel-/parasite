@@ -999,7 +999,7 @@ class GenCheck
             {
               var t = ctx.cells[x][y];
               var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_SINKS ||
-                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW);
+                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHOWER);
               ok(mil ||
                 tiles.Default.TILE_WALKABLE[t] == 1,
                 r.role + ' room cell ' + x + ',' + y + ' is foreign tile ' + t);
@@ -1038,7 +1038,7 @@ class GenCheck
                   walls++;
                   var f = ctx.cells[x - Const.dir4x[i]][y - Const.dir4y[i]];
                   if (tiles.Default.TILE_WALKABLE[f] == 1 &&
-                      !(f > Const.TILE_MIL_FLOOR_LATRINE && f <= Const.TILE_MIL_SHELF_ROW))
+                      !(f > Const.TILE_MIL_FLOOR_LATRINE && f <= Const.TILE_MIL_SHOWER))
                     open = true;
                 }
               ok(walls == 0 ||

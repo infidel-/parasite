@@ -35,9 +35,11 @@ class MilitaryRooms
   static inline var COTS_MAX = 10;
   static inline var COT_ISLANDS = 2;
   static inline var MEDCABS_MAX = 2;
-  // a latrine's cubicles and basin cells (two basins to a cell)
-  static inline var STALLS_MAX = 4;
-  static inline var SINKS_MAX = 3;
+  // a latrine's cubicles, basin cells (two basins to a cell), urinals and showers
+  static inline var STALLS_MAX = 6;
+  static inline var SINKS_MAX = 4;
+  static inline var URINALS_MAX = 4;
+  static inline var SHOWERS_MAX = 3;
   // the mark a zone gets when it stood nothing, counted by gen.GenRun
   public static inline var TAG_EMPTY = 'empty';
 
@@ -71,6 +73,9 @@ class MilitaryRooms
           case BOARD: board(state, cells);
           case CUBICLES: line(state, room, cells, Const.TILE_MIL_STALL, STALLS_MAX, 1);
           case SINK_RUN: line(state, room, cells, Const.TILE_MIL_SINKS, SINKS_MAX, 1);
+          case URINAL_RUN: line(state, room, cells, Const.TILE_MIL_URINAL, URINALS_MAX, 1);
+          case SHOWER_RUN: line(state, room, cells, Const.TILE_MIL_SHOWER, SHOWERS_MAX, 1);
+          case BENCH_ISLAND: benchIsland(state, room);
           case GUN_CABINET: gunCabinet(state, room, cells);
           case SAFE: safe(state, room, cells);
           case LOCKER_RUN: lockers(state, room, cells);
@@ -423,6 +428,20 @@ class MilitaryRooms
       return n;
     }
 
+// a latrine's bench down its middle along the long axis, three cells where the ring fits round it,
+// else two
+  static function benchIsland(state: _FacilityState, room: _Room): Int
+    {
+      for (k in [ 3, 2 ])
+        {
+          var n = islands(state, room, (room.w >= room.h ? k : 1), (room.w >= room.h ? 1 : k),
+            Const.TILE_MIL_BENCH, 1);
+          if (n > 0)
+            return n;
+        }
+      return 0;
+    }
+
 // a medical bay's cots out in its middle, two side by side where they fit (the render lies each one
 // down the screen), single ones where they do not
   static function cotIsland(state: _FacilityState, room: _Room): Int
@@ -581,7 +600,7 @@ class MilitaryRooms
           var b = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
           if (b == TEMP_BUILDING_ROOM ||
               b >= Const.TILE_MIL_BUNK && b <= Const.TILE_MIL_SINKS ||
-              b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_SHELF_ROW)
+              b >= Const.TILE_MIL_RADIO_RACK && b <= Const.TILE_MIL_SHOWER)
             continue;
           walls++;
           var fx = x - Const.dir4x[i];
@@ -608,13 +627,14 @@ class MilitaryRooms
         t == Const.TILE_MIL_STRETCHER;
     }
 
-// is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack or one of
-// the rooms' standing props
+// is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack, a urinal
+// or one of the rooms' standing props
   public static function facing(t: Int): Bool
     {
       return t == Const.TILE_MIL_SHELF ||
         t == Const.TILE_MIL_MED_CABINET ||
         t == Const.TILE_MIL_RADIO_RACK ||
+        t == Const.TILE_MIL_URINAL ||
         t >= Const.TILE_MIL_GUN_LOCKER &&
         t <= Const.TILE_MIL_IV_STAND;
     }

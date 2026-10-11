@@ -771,6 +771,8 @@ class RenderConfig {
     militaryStretcher: 'models/military/stretcher-hand.glb', // stretcher on two trestles along x, head at -x
     militarySink: 'models/military/sink-hand.glb',        // latrine pedestal basin, its tap at the back (-z)
     militaryToilet: 'models/military/toilet-hand.glb',    // latrine toilet, the bowl at +z, cistern at -z
+    militaryUrinal: 'models/military/urinal-hand.glb',    // latrine urinal, wall-hung, its screen on the floor
+    militaryShower: 'models/military/shower-hand.glb',    // latrine shower, riser and rose, the grate under it
     militaryLocker: 'models/military/locker-hand.glb',    // armory locker bank, one cell wide, doors at +z
     militaryGunCabinet: 'models/military/gun-cabinet-hand.glb', // gun cabinet, doors at +z
     militarySafe: 'models/military/safe-hand.glb',        // the HQ safe, its door at +z

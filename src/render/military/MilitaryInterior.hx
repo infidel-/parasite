@@ -47,6 +47,7 @@ class MilitaryInterior
 
   static inline var TEX_STALL = 'textures/military/stall-panel.png';
   static inline var TEX_STALL_DOOR = 'textures/military/stall-door.png';
+  static inline var TEX_MIRROR = 'textures/military/mirror.png';
   static inline var TEX_BOARD = 'textures/military/map-board.png';
   static inline var TEX_BOARDS = 'textures/military/briefing-boards.png';
 
@@ -154,6 +155,21 @@ class MilitaryInterior
   static inline var SINK_STEP = 1.0;
   static inline var TOILET_D = 1.75;
   static inline var TOILET_H = 1.97;
+  // its urinal (wall-hung, its screen on the floor) and shower, the same way, the urinal's wall halo to
+  // its hood's top, and the shower's puddle out from the wall's face, between the rose and the grate
+  static inline var URINAL_W = 1.265;
+  static inline var URINAL_D = 1.138;
+  static inline var URINAL_H = 3.536;
+  static inline var URINAL_HALO_H = 2.55;
+  static inline var SHOWER_W = 0.93;
+  static inline var SHOWER_D = 1.551;
+  static inline var SHOWER_H = 4.339;
+  static inline var SHOWER_PUDDLE = 1.1;
+  // a mirror over each basin, military/mirror's 3:4 drawn whole, its top under a light well's sill
+  // (FacilityStyle.WINDOW_HIGH_SILL 3.87)
+  static inline var MIRROR_W = 0.84;
+  static inline var MIRROR_H = MIRROR_W * 4 / 3;
+  static inline var MIRROR_Y = 2.68;
   // and its emitted cubicles, a door (military/stall-door's 512x510) over the cell's whole width
   static inline var STALL_H = CELL * 510 / 512;
   static inline var STALL_D = CELL * 0.95;
@@ -227,8 +243,10 @@ class MilitaryInterior
   static var grid:AreaGame;
   static var fac:Facility;
   static var leds:MeshBuf;
-  // and the furniture tops render.military.MilitaryClutter lays its decals on
+  // and the furniture tops render.military.MilitaryClutter lays its decals on, and the spots under the
+  // showers it lays a puddle on
   public static var lids:Array<MilitaryLid>;
+  public static var drains:Array<PropPlace>;
 
 // every glb the rooms stand and the height it is drawn at: the batches, and View's warm-up
   public static function warmProps():Array<{ path:String, h:Float }>
@@ -260,6 +278,8 @@ class MilitaryInterior
         { path: md.militaryStretcher, h: STRETCHER_H },
         { path: md.militarySink, h: SINK_H },
         { path: md.militaryToilet, h: TOILET_H },
+        { path: md.militaryUrinal, h: URINAL_H },
+        { path: md.militaryShower, h: SHOWER_H },
         { path: md.militaryLocker, h: LOCKER_H },
         { path: md.militaryGunCabinet, h: LOCKER_H },
         { path: md.militarySafe, h: SAFE_H },
@@ -279,13 +299,14 @@ class MilitaryInterior
         places.set(k.path, []);
       leds = MeshBufTools.make();
       lids = [];
+      drains = [];
       var taken = [for (_ in 0...area.height) [for (_ in 0...area.width) false]];
       for (row in 0...area.height)
         for (col in 0...area.width)
           {
             var t = area.getCellType(col, row);
             if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_SINKS) &&
-                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHELF_ROW) ||
+                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_SHOWER) ||
                 taken[row][col])
               continue;
             // the run: along x if the next cell is the same, down z otherwise. A rack, a shelf, a
@@ -560,6 +581,7 @@ class MilitaryInterior
                     var p = stood(cut(r, dir < 2, i, 1), dir, k * SINK_STEP, 0.0, 0.0);
                     put(md.militarySink, p.x, p.z, p.yaw, 0.0);
                   }
+              mirrors(m, col, row, cell, dir, len);
             }
           else if (t == Const.TILE_MIL_DESK)
             {
@@ -648,6 +670,22 @@ class MilitaryInterior
                   var p = stood(cut(w, dir < 2, i, 1), dir, 0.0, 0.0, 0.0);
                   put(md.militaryToilet, p.x, p.z, p.yaw, 0.0);
                 }
+            }
+          else if (t == Const.TILE_MIL_URINAL)
+            {
+              // hung on the wall, its halo the hood's height
+              r = across(back(m, col, row, cell, dir, URINAL_D), dir >= 2, URINAL_W);
+              h = URINAL_HALO_H;
+              put(md.militaryUrinal, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
+            }
+          else if (t == Const.TILE_MIL_SHOWER)
+            {
+              // pipes on the wall and a grate on the floor, nothing a contact shadow reads on
+              var c = across(back(m, col, row, cell, dir, SHOWER_D), dir >= 2, SHOWER_W);
+              put(md.militaryShower, (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, YAW[dir], 0.0);
+              var b = back(m, col, row, cell, dir, 0.0);
+              drains.push(stood(b, dir, 0.0, SHOWER_PUDDLE, 0.0));
+              return;
             }
           else if (t == Const.TILE_MIL_MAP_BOARD)
             {
@@ -950,6 +988,22 @@ class MilitaryInterior
         t == Const.TILE_MIL_CRATES ||
         t == Const.TILE_MIL_FOOTLOCKER ||
         t >= Const.TILE_MIL_GUN_LOCKER;
+    }
+
+// a mirror on the wall over each of a basin run's basins, military/mirror's whole 3:4 on a pane
+  static function mirrors(m:Facility, col:Int, row:Int, cell:Rect, dir:Int, len:Int):Void
+    {
+      var b = MilitaryGeom.buf(TEX_MIRROR);
+      var face = back(m, col, row, cell, dir, BOARD_OFF);
+      for (i in 0...len)
+        for (k in [ -1, 1 ])
+          {
+            var c = cut(face, dir < 2, i, 1);
+            var o = (dir < 2 ? (c.x0 + c.x1) / 2 : (c.z0 + c.z1) / 2) + k * SINK_STEP;
+            FacilityGeom.pane(b, (dir < 2 ? o - MIRROR_W / 2 : c.x0), (dir < 2 ? o + MIRROR_W / 2 : c.x1),
+              (dir < 2 ? c.z0 : o - MIRROR_W / 2), (dir < 2 ? c.z1 : o + MIRROR_W / 2), dir ^ 1, MIRROR_Y,
+              MIRROR_Y + MIRROR_H);
+          }
     }
 
 // a row of cubicles: a partition at every cell edge out from the wall, and a door 0..1 across each

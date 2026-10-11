@@ -7137,6 +7137,33 @@
       },
       "built_linear": 0.0827,
       "built_srgb": 76.6
+    },
+    "military/mirror": {
+      "src": "military/mirror.png",
+      "class": "tile",
+      "res": [
+        384,
+        512
+      ],
+      "needs_alpha": false,
+      "prompt": "[gpt-image-2.5-sunburst high, 768x1024, background opaque] A rectangular wall mirror in a plain brushed-steel frame, portrait, seen exactly straight on from the front with no perspective, the frame filling the WHOLE image edge to edge so the outer edge of the steel frame touches all four sides of the picture. The frame is a narrow flat steel band with four small screw heads, one in each corner. The glass shows only a dim, soft, blurred, desaturated reflection of a grey tiled washroom wall opposite, with faint lighter streaks running diagonally across the glass, a little dark tarnish creeping in at the corners and a few small water spots. No people, no figures, no objects in the reflection, no text, no lettering. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the latrine's mirror over each basin (render.military.MilitaryInterior.mirrors), ONE image mapped 0..1 over a pane of its own 3:4 aspect, so nothing is stretched. The frame fills the image edge to edge (edge columns lum 59-64, the steel), so no crop.",
+      "last_converted": "2026-10-12T01:36:16",
+      "built_linear": 0.0523,
+      "built_srgb": 63.2
+    },
+    "military/mess-posters": {
+      "src": "military/mess-posters.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "A 2x2 grid of four separate items, exactly one centred in each quadrant, each an isolated cut-out seen straight on from the front with no perspective, each filling about 85% of its quadrant, with a clear empty gap between the four. Each item is a portrait propaganda poster for the mess hall of a military base, printed in a 1940s screen-print look: bold flat shapes in two or three inks on worn off-white paper, a strip of tape at each top corner, frayed and scuffed edges. TOP-LEFT: the headline \"WASTE NOT\" in bold block capitals across the top, and below it a steel mess tray holding a slice of bread, a scoop of beans and a tin mug. TOP-RIGHT: the headline \"LOOSE LIPS\" in bold block capitals, and below it a soldier in a helmet seen in profile holding one finger to the lips. BOTTOM-LEFT: the headline \"SERVE WITH PRIDE\" in bold block capitals, and below it a soldier saluting in front of a flag bearing a single white star in a circle. BOTTOM-RIGHT: the headline \"KEEP FIT\" in bold block capitals, and below it a squad of soldiers in plain T-shirts running in a line. The four headlines are the ONLY readable words; any smaller print is illegible scribble marks. No weapons anywhere. Muted olive, khaki, faded brick red and off-white paper tones, worn. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the mess hall's propaganda posters, ONE LABEL, FOUR CELLS the runtime crops (military/briefing-boards' shape): render.military.MilitaryInterior.boards hangs one per other free wall cell of a mess, an alpha-cut pane each mapped to its poster's MEASURED box (alpha > 128): WASTE NOT 54,7-459,502, LOOSE LIPS 567,6-968,503, SERVE WITH PRIDE 55,515-459,1012, KEEP FIT 566,516-970,1013 (all ~0.81). gpt-image-2.5 sunburst high, background transparent, 22.3% alpha 0. Readable headlines asked for (\"4 themes, bold slogans\"); no weapons, the briefing sheet's rifle poster was refused by moderation.",
+      "last_converted": "2026-10-12T01:37:00",
+      "built_linear": 0.2024,
+      "built_srgb": 109.1
     }
   }
 }
