@@ -763,6 +763,16 @@ class RenderConfig {
     militaryBench: 'models/military/bench-hand.glb',      // one cell of bench along x
     militaryCounter: 'models/military/counter-hand.glb',  // one cell of serving counter, pans at the top
     militaryCounter2: 'models/military/counter2-hand.glb', // and its other two pans
+    militaryRifleRack: 'models/military/rifle-rack-hand.glb', // rifle rack, six rifles, its back at -z
+    militaryAmmoCans: 'models/military/ammo-cans-hand.glb', // stack of five ammo cans
+    militaryJerrycans: 'models/military/jerrycans-hand.glb', // three jerrycans and one across them
+    militaryFlag: 'models/military/flag-stand-hand.glb',  // flag stand, the flag facing +z
+    militaryWaterCooler: 'models/military/water-cooler-hand.glb', // water cooler, its tap at +z
+    militaryIvStand: 'models/military/iv-stand-hand.glb', // IV stand with its bag
+    militaryStretcher: 'models/military/stretcher-hand.glb', // stretcher on two trestles along x, head at -x
+    militaryLocker: 'models/military/locker-hand.glb',    // armory locker bank, one cell wide, doors at +z
+    militaryGunCabinet: 'models/military/gun-cabinet-hand.glb', // gun cabinet, doors at +z
+    militarySafe: 'models/military/safe-hand.glb',        // the HQ safe, its door at +z
     // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
     // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
     // geometry, the same call the guard booth's rebuild settled

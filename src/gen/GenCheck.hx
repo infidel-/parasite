@@ -999,7 +999,7 @@ class GenCheck
             {
               var t = ctx.cells[x][y];
               var mil = (t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH ||
-                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_MED_CABINET);
+                t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_STRETCHER);
               ok(mil ||
                 tiles.Default.TILE_WALKABLE[t] == 1,
                 r.role + ' room cell ' + x + ',' + y + ' is foreign tile ' + t);

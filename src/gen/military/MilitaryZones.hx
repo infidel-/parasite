@@ -160,6 +160,11 @@ class MilitaryZones
       Quota.deal(bays, want, SLOT, state.area.rng);
       if (!Quota.satisfied(bays, want))
         node.tags = [ TAG_UNMET ];
+      // the leftover bays LAST: a slot stands a prop no zone planned round, and walked in wall order
+      // a rifle rack on the top wall went down before the bunk row off the left one, which then
+      // boxed two cells in behind it
+      node.children = [for (c in node.children) if (c.kind != SLOT) c]
+        .concat([for (c in node.children) if (c.kind == SLOT) c]);
       // the floor is painted after every zone has stood its furniture, and before the vent caps
       // glaze pushes next: a cap reads the floor inside its window, and painted it reads as not bare
       var f = GenTree.add(node, FLOOR, room.x1, room.y1, room.x2, room.y2);

@@ -391,6 +391,21 @@ the base's own furniture (no lab tile or decoration through a filler). It cost 2
 barracks (16.2 → 13.9), the corner bunks beside a window, and the mil-slot bays left over are where
 the room props stand.
 
+**The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
+the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a rifle rack (armory,
+barracks), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
+(HQ, mess, comms), an IV stand and a stretcher (medical). Two traps, both caught by `floorReachable`:
+- the slots are walked in wall order like every bay, so a rifle rack on the top wall stood BEFORE the
+  bunk row off the left wall, which then boxed two cells in behind it. `MilitaryZones.deal` moves the
+  slot bays to the end of the room's children;
+- a prop is a piece no zone planned round, so `free`'s local pocket test is not enough: one stood in
+  a barracks' aisle (3208 cells cut off over 500 seeds). It stays only if the room's bare floor is
+  still ONE piece (`sealsOff`). "Reachable from some doorway" was tried first and failed on seed 10:
+  two adjacent barracks each split by a prop left pockets that only opened onto each other.
+
+Fill after the props (2000 seeds): armory 10.9, barracks 15.7, briefing 11.3, comms 7.4, HQ 16.4,
+medical 9.6, mess 15.4, supply 8.9 cells a room.
+
 `--stats` also prints `nodes/<zone>` and `zoneEmpty/<zone>`. A desk-island is empty in a room too
 narrow for one, about 1.3 a base.
 

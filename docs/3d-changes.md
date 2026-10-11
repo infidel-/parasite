@@ -1647,3 +1647,37 @@ reads mirrored from above.
 the stat).
 
 **Verdict:** landed.
+
+## Military base rooms: every piece of furniture hand-modelled, blinking machinery, standing props
+
+**Changed:** the rooms were reported as "all very empty and emitted inside": a radio rack was a box
+wearing a picture of radios, a console a slab with radios and a log PAINTED into its top, a shelf a
+box wearing a picture of shelves. `models-src/military/roomkit_build.py` now builds 27 glbs on
+MilitaryInterior's own footprints, one instanced batch each:
+- comms: the rack (four units proud of its front, louvres), the operator desk, two radio sets;
+- the rest: bunk (960 tris), cot, footlocker, office desk, filing cabinet, folding chair (stood
+  render-side at every desk), shelf unit with cartons, medical cabinet, mess and briefing tables,
+  bench, and the serving counter with pans sunk in its top (two variants);
+- standing props in the bays a room's zones leave (`MilitaryRooms.slot`): rifle rack, ammo cans,
+  jerrycans, flag stand, water cooler, IV stand, stretcher;
+- the armory's lockers, gun cabinet and safe.
+
+Only the latrine's cubicles, its trough and the map board stay quads.
+
+**Blink:** the rack and radio art paints UNLIT lamp sockets; the script measures them off the sheet
+and prints them in the normalized glb frame (`leds`), and `MilitaryInterior.lamps` hangs one
+additive `quadRGB` speck on each into `FacilityDeco.lamps`' mesh, +1 call, the shared clock.
+Measured on screen: every speck lands on its socket.
+
+**Art:** three packed gens, $0.165: p (rack units, radio faces, plain lino desk top, radio case),
+q (ticking, white enamel, ration carton, steam pans), r (jerrycan, ammo can, flag, bottle and IV
+bag). Sheets packed from built labels; `console-top`, `radio-rack`, `shelf-front` and `cot-top`
+retired. A 3x3 and a 3x2 model sheet work with `buildlib.cell(i, cols, rows)` unchanged.
+
+**Traps:** a carton front wearing the square art whole was stretched 1.6x: each front takes a band
+cut to its own aspect about the stencil. Rods of equal radius meeting at a post, end faces of
+equal-width parts and flanks 0.01 apart all count as shared planes; staggered by 0.015+.
+
+**Cost:** about +7 to +12 calls in a furnished room's view (58 → 65-70 in the comms room, unpinned).
+
+**Verdict:** landed.

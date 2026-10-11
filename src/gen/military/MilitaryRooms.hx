@@ -80,10 +80,101 @@ class MilitaryRooms
           case SAFE: safe(state, room, cells);
           case LOCKER_RUN: lockers(state, room, cells);
           case FLOOR: floor(state, room);
+          case SLOT: slot(state, room, node, cells);
           default: 1;
         }
       if (n == 0)
         node.tags = (node.tags == null ? [] : node.tags).concat([ TAG_EMPTY ]);
+    }
+
+// the standing props a room of this role takes in the bays its zones left over, in the order it takes
+// them, one of each at most
+  static function propsOf(role: String): Array<Int>
+    {
+      return switch (role)
+        {
+          case ROLE_ARMORY: [ Const.TILE_MIL_RIFLE_RACK, Const.TILE_MIL_AMMO_CANS ];
+          case ROLE_BARRACKS: [ Const.TILE_MIL_RIFLE_RACK ];
+          case ROLE_SUPPLY: [ Const.TILE_MIL_JERRYCANS, Const.TILE_MIL_AMMO_CANS ];
+          case ROLE_MEDICAL: [ Const.TILE_MIL_IV_STAND, Const.TILE_MIL_STRETCHER ];
+          case ROLE_HQ: [ Const.TILE_MIL_FLAG, Const.TILE_MIL_WATER_COOLER ];
+          case ROLE_BRIEFING: [ Const.TILE_MIL_FLAG ];
+          case ROLE_MESS, ROLE_COMMS: [ Const.TILE_MIL_WATER_COOLER ];
+          default: [];
+        };
+    }
+
+// a leftover wall bay of a base room: the next of the room's standing props it does not have yet, on
+// the free cell nearest the bay's middle. The rooms were reported as empty, and these bays are where
+// nothing stood. A leftover floor bay takes nothing: the middle of a room is where it is walked
+  static function slot(state: _FacilityState, room: _Room, node: _GenNode,
+      run: Array<{ x: Int, y: Int }>): Int
+    {
+      if (RoomBlock.tagged(node, TAG_FLOOR))
+        return 1;
+      for (tile in propsOf(room.role))
+        {
+          if (tilesIn(state, room, tile) > 0)
+            continue;
+          var mid = Std.int(run.length / 2);
+          for (k in 0...run.length)
+            {
+              var c = run[mid + (k % 2 == 0 ? Std.int(k / 2) : -Std.int(k / 2) - 1)];
+              if (c == null ||
+                  !free(state, c.x, c.y))
+                continue;
+              // a prop in a bay is the one piece a zone does not plan round, and the first build
+              // stood a barracks' rifle rack in the aisle its bunk rows left (3208 floor cells
+              // cut off over 500 seeds): it stays only if every bare cell can still be walked to
+              stand(state, c.x, c.y, tile);
+              if (!sealsOff(state, room))
+                return 1;
+              stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
+            }
+          return 1;
+        }
+      return 1;
+    }
+
+// is the room's bare floor no longer ONE piece? Reachable from some doorway is not enough: two rooms
+// side by side each split by a prop left a pocket in each that only opened onto the other's (seed 10)
+  static function sealsOff(state: _FacilityState, room: _Room): Bool
+    {
+      var cells = state.area.getCells();
+      var seen = new Map<Int, Bool>();
+      var open = [];
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if (open.length == 0 &&
+              cells[x][y] == TEMP_BUILDING_ROOM)
+            {
+              seen.set(x * 1000 + y, true);
+              open.push({ x: x, y: y });
+            }
+      while (open.length > 0)
+        {
+          var c = open.pop();
+          for (i in 0...Const.dir4x.length)
+            {
+              var x = c.x + Const.dir4x[i];
+              var y = c.y + Const.dir4y[i];
+              if (x < room.x1 ||
+                  x > room.x2 ||
+                  y < room.y1 ||
+                  y > room.y2 ||
+                  cells[x][y] != TEMP_BUILDING_ROOM ||
+                  seen.exists(x * 1000 + y))
+                continue;
+              seen.set(x * 1000 + y, true);
+              open.push({ x: x, y: y });
+            }
+        }
+      for (x in room.x1...room.x2 + 1)
+        for (y in room.y1...room.y2 + 1)
+          if (cells[x][y] == TEMP_BUILDING_ROOM &&
+              !seen.exists(x * 1000 + y))
+            return true;
+      return false;
     }
 
 // paint the room's floor once its zones have stood their furniture, by its role. An armory whose

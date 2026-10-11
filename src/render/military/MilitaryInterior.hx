@@ -70,6 +70,31 @@ class MilitaryInterior
   static inline var CONSOLE_D = 2.0;
   static inline var RADIO_BIG_H = 1.0158;
   static inline var RADIO_SMALL_H = 0.6527;
+  // the rooms' standing props (gen.military.MilitaryRooms.slot) and the armory's pieces, bbox
+  // across x by depth and height, each stood with its back to its wall
+  static inline var RIFLE_W = 2.8;
+  static inline var RIFLE_D = 0.81;
+  static inline var RIFLE_H = 2.6;
+  static inline var AMMO_W = 2.08;
+  static inline var AMMO_D = 1.12;
+  static inline var AMMO_H = 1.3413;
+  static inline var JERRY_W = 1.47;
+  static inline var JERRY_D = 1.2;
+  static inline var JERRY_H = 2.548;
+  static inline var FLAG_W = 2.2;
+  static inline var FLAG_D = 0.9;
+  static inline var FLAG_H = 3.95;
+  static inline var COOLER_W = 0.9;
+  static inline var COOLER_D = 1.125;
+  static inline var COOLER_H = 3.34;
+  static inline var IV_W = 1.17;
+  static inline var IV_D = 1.0511;
+  static inline var IV_H = 3.5;
+  static inline var STRETCHER_L = 3.6;
+  static inline var STRETCHER_W = 1.33;
+  static inline var STRETCHER_H = 0.9956;
+  public static inline var LOCKER_H = 4.0;
+  public static inline var SAFE_H = 1.9271;
   // a chair's centre out in front of its desk's front edge, half under it
   static inline var CHAIR_OUT = 0.3;
   // the latrine's emitted pieces: the trough's depth off its wall and height, and a cubicle's door
@@ -115,7 +140,7 @@ class MilitaryInterior
   static var DX = [ 0, 0, -1, 1 ];
   static var DZ = [ -1, 1, 0, 0 ];
   // the turn that faces a glb's local +z away from the wall on each side
-  static var YAW = [ 0.0, Math.PI, Math.PI / 2, -Math.PI / 2 ];
+  public static var YAW = [ 0.0, Math.PI, Math.PI / 2, -Math.PI / 2 ];
   // and the one that points a bed's local -x (its head) AT the wall on each side
   static var HEAD = [ -Math.PI / 2, Math.PI / 2, 0.0, Math.PI ];
 
@@ -146,6 +171,16 @@ class MilitaryInterior
         { path: md.militaryRadioDesk, h: TABLE_H },
         { path: md.militaryRadioBig, h: RADIO_BIG_H },
         { path: md.militaryRadioSmall, h: RADIO_SMALL_H },
+        { path: md.militaryRifleRack, h: RIFLE_H },
+        { path: md.militaryAmmoCans, h: AMMO_H },
+        { path: md.militaryJerrycans, h: JERRY_H },
+        { path: md.militaryFlag, h: FLAG_H },
+        { path: md.militaryWaterCooler, h: COOLER_H },
+        { path: md.militaryIvStand, h: IV_H },
+        { path: md.militaryStretcher, h: STRETCHER_H },
+        { path: md.militaryLocker, h: LOCKER_H },
+        { path: md.militaryGunCabinet, h: LOCKER_H },
+        { path: md.militarySafe, h: SAFE_H },
       ];
     }
 
@@ -163,7 +198,7 @@ class MilitaryInterior
           {
             var t = area.getCellType(col, row);
             if (!(t >= Const.TILE_MIL_BUNK && t <= Const.TILE_MIL_TROUGH) &&
-                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_MED_CABINET) ||
+                !(t >= Const.TILE_MIL_RADIO_RACK && t <= Const.TILE_MIL_STRETCHER) ||
                 taken[row][col])
               continue;
             // the run: along x if the next cell is the same, down z otherwise. A rack, a shelf, a
@@ -362,6 +397,25 @@ class MilitaryInterior
               h = TABLE_H;
               console(r, dir, len, col + row);
             }
+          else if (t >= Const.TILE_MIL_RIFLE_RACK &&
+              t <= Const.TILE_MIL_IV_STAND)
+            {
+              var k = t - Const.TILE_MIL_RIFLE_RACK;
+              var w = [ RIFLE_W, AMMO_W, JERRY_W, FLAG_W, COOLER_W, IV_W ][k];
+              var d = [ RIFLE_D, AMMO_D, JERRY_D, FLAG_D, COOLER_D, IV_D ][k];
+              r = across(back(m, col, row, cell, dir, d), dir >= 2, w);
+              h = [ RIFLE_H, AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_H ][k];
+              put([ md.militaryRifleRack, md.militaryAmmoCans, md.militaryJerrycans, md.militaryFlag,
+                md.militaryWaterCooler, md.militaryIvStand ][k], (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
+                YAW[dir], 0.0);
+            }
+          else if (t == Const.TILE_MIL_STRETCHER)
+            {
+              // out from the wall like a cot, its head at it
+              r = across(back(m, col, row, cell, dir, STRETCHER_L), dir >= 2, STRETCHER_W);
+              h = STRETCHER_H;
+              put(md.militaryStretcher, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, HEAD[dir], 0.0);
+            }
           else if (t == Const.TILE_MIL_COT)
             {
               // its head at the wall
@@ -435,8 +489,8 @@ class MilitaryInterior
         }
     }
 
-// one glb place
-  static inline function put(path:String, x:Float, z:Float, yaw:Float, y:Float):Void
+// one glb place, for render.military.MilitaryGeom's armory pieces as well as this file's
+  public static inline function put(path:String, x:Float, z:Float, yaw:Float, y:Float):Void
     {
       places.get(path).push({
         x: x,
@@ -512,7 +566,8 @@ class MilitaryInterior
         t == Const.TILE_MIL_MED_CABINET ||
         t == Const.TILE_MIL_COT ||
         t == Const.TILE_MIL_CRATES ||
-        t == Const.TILE_MIL_FOOTLOCKER;
+        t == Const.TILE_MIL_FOOTLOCKER ||
+        t >= Const.TILE_MIL_RIFLE_RACK;
     }
 
 // a row of cubicles: a partition at every cell edge out from the wall, and a door 0..1 across each

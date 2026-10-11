@@ -41,12 +41,6 @@ class MilitaryGeom
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_CANVAS = 'textures/military/tent-canvas.png';
   static inline var TEX_APRON = 'textures/military/apron.png';
-  static inline var TEX_SAFE = 'textures/military/safe-front.png';
-  static inline var TEX_LOCKER = 'textures/military/locker-front.png';
-  static inline var TEX_GUNS = 'textures/military/gunrack-front.png';
-  // the lockers' olive enamel (their fronts are olive) and the safe's gunmetal
-  static inline var TEX_OLIVE_STEEL = 'textures/military/mast-paint.png';
-  static inline var TEX_GUNMETAL = 'textures/military/gunmetal.png';
   static inline var TEX_PAD_MARK = 'textures/military/helipad-h.png';
 
   // the fence: two cells high, the chain-link world-tiled at its crop's own aspect (CHAIN_TILE
@@ -117,9 +111,8 @@ class MilitaryGeom
   static inline var MARK_INSET = 0.5;
   static inline var MARK_Y = PAD_Y * 2;
 
-  // the armory safe, against its wall, its front locked to the 510x546 crop (military/safe-front)
+  // the armory safe's footprint against its wall (models-src/military/roomkit_build.py's safe-hand)
   static inline var SAFE_W = 1.8;
-  static inline var SAFE_H = SAFE_W * 546 / 510;
   static inline var SAFE_D = 1.6;
 
   // the buffers being filled, one per texture
@@ -198,7 +191,8 @@ class MilitaryGeom
       for (o in area.getObjects())
         if (o.type == 'locker' ||
             o.type == 'gunCabinet')
-          locker(m, o.x, o.y, (o.type == 'locker' ? TEX_LOCKER : TEX_GUNS));
+          locker(m, o.x, o.y, (o.type == 'locker' ? RenderConfig.MODELS.militaryLocker :
+            RenderConfig.MODELS.militaryGunCabinet));
         else if (o.type == 'safe')
           safe(m, o.x, o.y);
       // they all cast: a jersey, a tent or a tower under the moon with no shadow read as pasted on
@@ -596,40 +590,32 @@ class MilitaryGeom
     }
 
 // one armory locker or the gun cabinet, the corp security room's emitter on the base's object: its
-// wall, its cell's footprint off the slab, an olive steel box with `front` on its face
-  static function locker(m:Facility, col:Int, row:Int, front:String):Void
+// an armory locker bank or the gun cabinet, as its glb with its back to its wall
+  static function locker(m:Facility, col:Int, row:Int, path:String):Void
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)
         return;
       var r = CorpFurniture.lockerRect(m, col, row, dir);
-      FacilityGeom.cap(buf(TEX_OLIVE_STEEL), r.x0, r.x1, r.z0, r.z1, CorpStyle.LOCKER_H,
-        CorpStyle.LOCKER_TILE);
-      for (f in 0...4)
-        if (f != dir &&
-            f != (dir ^ 1))
-          FacilityGeom.face(buf(TEX_OLIVE_STEEL), r.x0, r.x1, r.z0, r.z1, f, 0,
-            CorpStyle.LOCKER_H, CorpStyle.LOCKER_TILE);
-      FacilityGeom.pane(buf(front), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, CorpStyle.LOCKER_H);
+      MilitaryInterior.put(path, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], 0.0);
       FacilityDetail.ground(m, {
         col: col,
         row: row,
         len: 1,
         alongX: dir < 2,
         rect: r,
-        h: CorpStyle.LOCKER_H,
+        h: MilitaryInterior.LOCKER_H,
       });
     }
 
-// the HQ's safe: a squat steel box against its wall, the dial and handle on its front
+// the HQ's safe: its glb against its wall, on the locker's footprint narrowed to its width round the
+// cell's centre and cut to its depth off the wall
   static function safe(m:Facility, col:Int, row:Int):Void
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)
         return;
       var cell = CorpFurniture.lockerRect(m, col, row, dir);
-      // the locker's footprint, narrowed to the safe's width round the cell's centre and cut to its
-      // depth off the wall
       var cx = (cell.x0 + cell.x1) / 2;
       var cz = (cell.z0 + cell.z1) / 2;
       var hw = SAFE_W / 2;
@@ -640,21 +626,15 @@ class MilitaryGeom
           case 2: { x0: cell.x0, x1: cell.x0 + SAFE_D, z0: cz - hw, z1: cz + hw };
           default: { x0: cell.x1 - SAFE_D, x1: cell.x1, z0: cz - hw, z1: cz + hw };
         };
-      var steel = buf(TEX_GUNMETAL);
-      for (f in 0...4)
-        if (f != dir &&
-            f != (dir ^ 1))
-          FacilityGeom.face(steel, r.x0, r.x1, r.z0, r.z1, f, 0, SAFE_H, CorpStyle.LOCKER_TILE);
-      FacilityGeom.cap(steel, r.x0, r.x1, r.z0, r.z1, SAFE_H,
-        CorpStyle.LOCKER_TILE);
-      FacilityGeom.pane(buf(TEX_SAFE), r.x0, r.x1, r.z0, r.z1, dir ^ 1, 0, SAFE_H);
+      MilitaryInterior.put(RenderConfig.MODELS.militarySafe, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
+        MilitaryInterior.YAW[dir], 0.0);
       FacilityDetail.ground(m, {
         col: col,
         row: row,
         len: 1,
         alongX: dir < 2,
         rect: r,
-        h: SAFE_H,
+        h: MilitaryInterior.SAFE_H,
       });
     }
 

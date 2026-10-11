@@ -1679,7 +1679,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE COMMS ROOM'S RADIO RACK, HAND-MODELLED (models-src/military/roomkit_build.py), 164 tris: a chamfered gunmetal cabinet 2.8 x 1.5 x 3.5 on a recessed plinth, its four radio units stood PROUD of the front (one strip of military/rack-units each) and five louvres over them. Replaces an emitted box wearing a picture of four radios. Its lamp sockets are printed back by the script's `leds` for render.military.MilitaryInterior's blinking specks. Sheet mil-r-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:57Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/radio-desk-hand": {
@@ -1688,7 +1688,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE OPERATOR DESK, HAND-MODELLED (roomkit_build.py), 152 tris: one cell of a comms console run, 3.9 x 2.0 x 1.9 (the old console's TABLE_H), a plain lino top, a three-drawer pedestal, a side panel and a modesty panel. Replaces a steel slab with radios and a log PAINTED into its top; the radios are now models and the clutter decals. Sheet mil-d-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/radio-big-hand": {
@@ -1697,7 +1697,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE FIELD TRANSCEIVER, HAND-MODELLED (roomkit_build.py), 148 tris: an olive crackle case 1.5 x 0.9 on four feet, radio-faces' RT-196 strip set into its front and a carry handle bowed over it. Stands on the operator desk. Sheet mil-r-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/radio-small-hand": {
@@ -1706,7 +1706,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE KEYPAD RADIO SET, HAND-MODELLED (roomkit_build.py), 172 tris: a gunmetal case 1.1 x 0.7, radio-faces' PRC-118 strip in its front, a handset lying across two cradle lugs on top. Stands on the operator desk. Sheet mil-r-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/bunk-hand": {
@@ -1715,7 +1715,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE TWO-DECK BUNK, HAND-MODELLED (models-src/military/roomkit_build.py), 960 tris: two cells long (7.74 x 2.74 x 3.4), four tube posts, rails at each deck and over the top, a rounded ticking mattress on each deck with the blanket over its foot end and a pillow at its head (local -x). Replaces emitted posts and two blanket slabs. Sheet mil-b-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/cot-hand": {
@@ -1724,7 +1724,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE CAMP COT, HAND-MODELLED (models-src/military/roomkit_build.py), 388 tris: tent canvas on two tube rails over X legs and floor bars, a pillow at local -x and a folded blanket at +x, COT_L x COT_W. Sheet mil-b-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/footlocker-hand": {
@@ -1733,7 +1733,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE FOOTLOCKER, HAND-MODELLED (models-src/military/roomkit_build.py), 188 tris: a plank trunk FOOT_W x FOOT_D x FOOT_H with every edge broken, an overhanging lid wearing footlocker-lid whole, a hasp on its front (local +z) and a rope handle each end. Sheet mil-f-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/office-desk-hand": {
@@ -1742,7 +1742,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE HQ OFFICE DESK, HAND-MODELLED (models-src/military/roomkit_build.py), 152 tris: the operator desk's shape at DESK_D 2.2 on the office sheet, a laminate top, an enamel pedestal with olive drawer fronts. Sheet mil-o-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/file-cabinet-hand": {
@@ -1751,7 +1751,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE FILING CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: an olive steel body on a recessed plinth, its two drawers stood proud, each wearing its half of file-front. Sheet mil-o-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/chair-hand": {
@@ -1760,7 +1760,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE FOLDING CHAIR, HAND-MODELLED (models-src/military/roomkit_build.py), 192 tris: tube legs, an olive steel seat at 1.1 and a back panel, facing local +z. Stood render-side at every desk, operator desk and briefing seat. Sheet mil-o-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/shelf-unit-hand": {
@@ -1769,7 +1769,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE STORE'S SHELF UNIT, HAND-MODELLED (models-src/military/roomkit_build.py), 228 tris: four angle uprights, five boards, ten cartons on the four shelves, each front a band of supply-box cut to its own aspect about the stencil. Replaces an emitted box wearing a picture of shelves. Sheet mil-s-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/medcab-hand": {
@@ -1778,7 +1778,7 @@
       "roughness": 1,
       "tex": 512,
       "note": "THE MEDICAL CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 68 tris: a white enamel body on a plinth, medcab-front's doors stood proud of it. Sheet mil-s-sheet.png.",
-      "last_converted": "2026-10-11T11:13:26Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "military/mess-table-hand": {
@@ -1787,7 +1787,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE MESS TABLE, HAND-MODELLED (models-src/military/roomkit_build.py), 128 tris: one cell of a mess row, a laminate top TABLE_W across on two trestles and a stretcher; cells end to end read as tables set end to end. Sheet mil-t-sheet.png.",
-      "last_converted": "2026-10-11T11:13:27Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/brief-table-hand": {
@@ -1796,7 +1796,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE BRIEFING TABLE, HAND-MODELLED (models-src/military/roomkit_build.py), 128 tris: the mess table's shape with the darkwood top. Sheet mil-t-sheet.png.",
-      "last_converted": "2026-10-11T11:13:27Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/bench-hand": {
@@ -1805,7 +1805,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE BENCH, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: a bench-wood seat one cell long on two slab legs and a stretcher. Sheet mil-t-sheet.png.",
-      "last_converted": "2026-10-11T11:13:27Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/counter-hand": {
@@ -1814,7 +1814,7 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE SERVING COUNTER, HAND-MODELLED (models-src/military/roomkit_build.py), 152 tris: one cell of a mess counter, stainless on a gunmetal kick plinth, two wells sunk in its top with a pan each (mashed potatoes, rice), a tray rail along its front. Sheet mil-k-sheet.png.",
-      "last_converted": "2026-10-11T11:13:27Z",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/counter2-hand": {
@@ -1823,7 +1823,97 @@
       "roughness": 1,
       "tex": 1024,
       "note": "THE SERVING COUNTER's other pans (models-src/military/roomkit_build.py), 152 tris: green beans and stew, dealt by turns with counter-hand. Sheet mil-k-sheet.png.",
-      "last_converted": "2026-10-11T11:13:27Z",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/jerrycans-hand": {
+      "src": "military/jerrycans-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE STORE'S JERRYCANS, HAND-MODELLED (models-src/military/roomkit_build.py), 704 tris: three cans standing side by side and one lying across their tops, each chamfered, its flanks jerrycan whole and three carry handles on top. Sheet mil-p-sheet.png (3x3).",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/ammo-cans-hand": {
+      "src": "military/ammo-cans-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "A STACK OF AMMO CANS, HAND-MODELLED (models-src/military/roomkit_build.py), 340 tris: four on the floor and one on top, each long flank a band of ammo-can about its CAL .50 stencil, a latch and a carry handle on each lid. Sheet mil-p-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/flag-stand-hand": {
+      "src": "military/flag-stand-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE FLAG STAND, HAND-MODELLED (models-src/military/roomkit_build.py), 212 tris: a weighted gunmetal base, a pole with a finial, a crossbar and the unit flag hanging from it (flag whole both faces). HQ and briefing rooms. Sheet mil-p-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/water-cooler-hand": {
+      "src": "military/water-cooler-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE WATER COOLER, HAND-MODELLED (models-src/military/roomkit_build.py), 332 tris: a white enamel cabinet with a tap recess and a drip tray, its blue bottle upturned on top, the bottle art's middle wrapped round a 16-sided lathe. Mess and comms rooms. Sheet mil-p-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/iv-stand-hand": {
+      "src": "military/iv-stand-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 512,
+      "note": "THE IV STAND, HAND-MODELLED (models-src/military/roomkit_build.py), 304 tris: five spokes on casters, a white pole, a hook bar and a bag (iv-bag both faces) with its line. Medical bay. Sheet mil-p-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "military/stretcher-hand": {
+      "src": "military/stretcher-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE FIELD STRETCHER, HAND-MODELLED (models-src/military/roomkit_build.py), 252 tris: tent canvas between two olive poles that run past it as handles, on two A-frame trestles. Medical bay. Sheet mil-p-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/rifle-rack-hand": {
+      "src": "military/rifle-rack-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE RIFLE RACK, HAND-MODELLED (models-src/military/roomkit_build.py), 444 tris: a butt trough, a back panel and a notched top bar, six rifles standing in it (darkwood stock and handguard, gunmetal receiver, magazine and barrel). Armory and barracks. Sheet mil-a-sheet.png (3x2).",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/locker-hand": {
+      "src": "military/locker-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE ARMORY LOCKER BANK, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: one cell wide (CorpStyle.LOCKER_W), two narrow lockers on a plinth, each door the middle half of locker-front. Replaces an emitted box wearing one 4-wide door. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/gun-cabinet-hand": {
+      "src": "military/gun-cabinet-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE GUN CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 68 tris: the locker bank's body with gunrack-front's mesh doors stood proud. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "military/safe-hand": {
+      "src": "military/safe-hand.glb",
+      "tris": -1,
+      "roughness": 1,
+      "tex": 1024,
+      "note": "THE HQ SAFE, HAND-MODELLED (models-src/military/roomkit_build.py), 168 tris: a gunmetal body rounded in two segments on four feet, safe-front's door stood proud. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-11T11:23:58Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     }
   }
