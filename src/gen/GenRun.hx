@@ -415,7 +415,7 @@ class GenRun
                 t == Const.TILE_MIL_CRATES ? 'c' :
                 t == Const.TILE_MIL_COT ? 'z' :
                 t == Const.TILE_MIL_MED_CABINET ? 'E' :
-                t == Const.TILE_MIL_RIFLE_RACK ? 'r' :
+                t == Const.TILE_MIL_GUN_LOCKER ? 'r' :
                 t == Const.TILE_MIL_AMMO_CANS ? 'a' :
                 t == Const.TILE_MIL_JERRYCANS ? 'j' :
                 t == Const.TILE_MIL_FLAG ? 'g' :

@@ -18,4 +18,8 @@ typedef FacilityPoolOpts = {
   // and that surface's own extent, world — the quad is shrunk to stay inside it rather than hanging
   // a gradient off the front of a shelf
   plate:FacilityGeom.Rect,
+  // a FIXED world width for the falloff past the footprint, which is then the ramp's opaque core:
+  // FacilityDetail.pool lays nine quads instead of one. Left out, the falloff is POOL_GROW of the half
+  // extent, right for a box on a shelf and 1.8 units past the end of a 12-unit table run
+  ?fade:Float,
 }

@@ -666,17 +666,27 @@ class FacilityGeom
                 // the lobby wrapping round into the car. So each jamb is emitted in two halves,
                 // split on the LEAF PLANE, which the pocket slot stands LIFT_POCKET_EPS proud of
                 // and hides
+                //
+                // A BASE'S ROOM DOOR IS TWO FINISHES THE SAME WAY: the half on the room's side of the
+                // leaf takes the room's wall, an office's paint and not the corridor's board ("inner
+                // part of the door wall should be" wall-office). Military only: the lab keeps its
+                // reveals one circulation finish
                 var lift = (m.doors[di].look == Look.LIFT);
                 var car = (lift &&
                   m.tex.wallInto[Surf.LIFT] != null ?
                   liftSide(m, col, row, m.doors[di].alongX) : -1);
-                if (car < 0)
+                var room = (!lift &&
+                  m.kind == 'military' ?
+                  roomSide(m, col, row, m.doors[di].alongX) : -1);
+                var side = (car >= 0 ? car : room);
+                if (side < 0)
                   jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE,
                     FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
                 else
                   for (k in 0...2)
-                    jamb(k == 0 ? soffit : wIn[Surf.LIFT], m.doors[di].alongX,
-                      leafHalf(s, m.doors[di].alongX, car, k == 1), FacilityStyle.WALL_BASE,
+                    jamb((k == 0 ? soffit : (car >= 0 ? wIn[Surf.LIFT] :
+                      look(col + DC[side], row + DR[side]))), m.doors[di].alongX,
+                      leafHalf(s, m.doors[di].alongX, side, k == 1), FacilityStyle.WALL_BASE,
                       FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
                 // A LIFT OPENING TAKES TWO DETAILS ON TOP OF THAT, and it is the one Look that
                 // does: the reveal had no track, no threshold, nothing saying a door slides there.
@@ -1315,6 +1325,22 @@ class FacilityGeom
           var r = row + DR[dir];
           if (FacilityModel.inside(m, c, r) &&
               m.surf[r][c] == Surf.LIFT)
+            return dir;
+        }
+      return -1;
+    }
+
+// which hand of a door cell is a ROOM wearing a wall finish other than the circulation's, as a dir
+// across the opening, or -1: a corridor's door onto the yard, or onto a room in the corridor's own board
+  static function roomSide(m:Facility, col:Int, row:Int, alongX:Bool):Int
+    {
+      for (k in 0...2)
+        {
+          var dir = (alongX ? k : 2 + k);
+          var c = col + DC[dir];
+          var r = row + DR[dir];
+          if (FacilityModel.isIndoor(m, c, r) &&
+              m.tex.wallInto[m.surf[r][c]] != m.tex.wallInto[m.tex.circ])
             return dir;
         }
       return -1;

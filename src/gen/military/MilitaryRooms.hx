@@ -64,7 +64,7 @@ class MilitaryRooms
           case CONSOLE_RUN: consoleRun(state, room, cells);
           case SHELVING: shelving(state, cells);
           case SHELF_ROW: shelfRows(state, room);
-          case CRATE_ISLAND: islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
+          case CRATE_ISLAND: crateIslands(state, room);
           case COT_RUN: line(state, room, cells, Const.TILE_MIL_COT, COTS_MAX, 2);
           case CABINET_RUN: line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
           case COT_ISLAND: islands(state, room, 1, 1, Const.TILE_MIL_COT, COT_ISLANDS);
@@ -93,7 +93,7 @@ class MilitaryRooms
     {
       return switch (role)
         {
-          case ROLE_ARMORY: [ Const.TILE_MIL_RIFLE_RACK, Const.TILE_MIL_AMMO_CANS ];
+          case ROLE_ARMORY: [ Const.TILE_MIL_GUN_LOCKER, Const.TILE_MIL_AMMO_CANS ];
           case ROLE_SUPPLY: [ Const.TILE_MIL_JERRYCANS, Const.TILE_MIL_AMMO_CANS ];
           case ROLE_MEDICAL: [ Const.TILE_MIL_IV_STAND, Const.TILE_MIL_STRETCHER ];
           case ROLE_HQ: [ Const.TILE_MIL_FLAG, Const.TILE_MIL_WATER_COOLER ];
@@ -442,6 +442,22 @@ class MilitaryRooms
       return n;
     }
 
+// a store's or an armory's crate stacks in its middle. An armory's are runs down the room's long axis,
+// the longest that fits with its ring, its middle being its only free floor: one cell each read as
+// "pretty empty". Single cells where no run fits
+  static function crateIslands(state: _FacilityState, room: _Room): Int
+    {
+      if (room.role == ROLE_ARMORY)
+        for (k in [ 3, 2 ])
+          {
+            var n = islands(state, room, (room.w > room.h ? k : 1), (room.w > room.h ? 1 : k),
+              Const.TILE_MIL_CRATES, CRATE_ISLANDS);
+            if (n > 0)
+              return n;
+          }
+      return islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
+    }
+
 // the rows of shelving a store's floor has room for along x or along z, two cells or longer: one on
 // every other line across the room from the second in off each side wall, so each has an aisle either
 // side, from the second cell in off each end wall, so a cross aisle is kept at both
@@ -610,7 +626,7 @@ class MilitaryRooms
         t == Const.TILE_MIL_FILE ||
         t == Const.TILE_MIL_MED_CABINET ||
         t == Const.TILE_MIL_RADIO_RACK ||
-        t >= Const.TILE_MIL_RIFLE_RACK &&
+        t >= Const.TILE_MIL_GUN_LOCKER &&
         t <= Const.TILE_MIL_IV_STAND;
     }
 

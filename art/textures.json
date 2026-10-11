@@ -6195,6 +6195,20 @@
       "built_linear": 0.0983,
       "built_srgb": 80.6
     },
+    "military/briefing-boards": {
+      "src": "military/briefing-boards.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "A 2x2 grid of four separate items, exactly one centred in each quadrant, each an isolated cut-out seen straight on from the front with no perspective, each filling about 85% of its quadrant, with a clear empty gap between the four. TOP-LEFT: a cork bulletin board in a plain dark wooden frame, landscape, covered in pinned paper memos, two small photos, a typed duty roster sheet and a folded map scrap, coloured push-pins. TOP-RIGHT: a whiteboard in a thin aluminium frame with a pen tray along its bottom, landscape, a hand-drawn planning sketch in red, blue and black marker: arrows, rectangles with crosses, a dashed line and a small grid. BOTTOM-LEFT: a framed organisation chart, portrait, an olive header band and a tree of small rectangular boxes joined by lines, each with a tiny portrait silhouette. BOTTOM-RIGHT: a framed first-aid training poster, portrait, a bold olive header band, a simple human figure outline with a red cross and numbered step panels below. All writing is illegible scribble marks, no readable words or letters. Muted olive, khaki and off-white paper tones, worn. STYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "the briefing room's wall boards, ONE LABEL, FOUR CELLS the runtime crops (corp/traffic's shape): render.military.MilitaryInterior hangs a board per free wall cell of a briefing room, one alpha-cut pane each mapped to its board's MEASURED box (alpha > 128): corkboard 22,61-498,424 (1.311), whiteboard 524,62-1003,423 (1.327, its pen tray inside the box), org chart 81,464-440,950 (0.739), first-aid poster 586,464-944,949 (0.738). The bottom pair start at y 464, not 512: the model did not keep the grid. gpt-image-2.5 sunburst high, background transparent, 33.5% alpha 0; a rifle-diagram poster in slot 4 was refused by moderation (illicit) and became the first-aid one. lift 1.3: the cork board at 0.093 linear on the map board's 0.098, the charts 0.104-0.115, the whiteboard 0.216 (white, kept brightest).",
+      "last_converted": "2026-10-11T21:23:52",
+      "built_linear": 0.1269,
+      "built_srgb": 85.0,
+      "lift": 1.3,
+      "last_lift": 1.3
+    },
     "military/stall-door": {
       "src": "military/mil-pack-j.png",
       "class": "tile",
@@ -6812,21 +6826,15 @@
       "last_lift": 0.864
     },
     "military/flag": {
-      "src": "military/mil-pack-r.png",
+      "src": "military/flag-cut.png",
       "class": "tile",
-      "needs_alpha": false,
-      "crop": [
-        0,
-        516,
-        507,
-        508
-      ],
+      "needs_alpha": true,
       "prompt": "[cell of military/mil-pack-r.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: a dark olive unit flag, white star in a ring, gold fringe [append textures.json style]",
       "prompt_exact": false,
-      "note": "the HQ and briefing room flag stand's cloth (roomkit_build.py).",
-      "last_converted": "2026-10-11T16:20:18",
-      "built_linear": 0.0438,
-      "built_srgb": 46.8
+      "note": "the HQ and briefing room flag stand's cloth (roomkit_build.py), ALPHA-CUT below its fringe braid: its lower end was the drop's dark backdrop and read as a straight black band ('should be transparency'). flag-cut.png is mil-pack-r.png's flag cell (crop 0,516,507,508) cut by hand: per column, below the braid's top (the first row from y 400 with R > 70 and R > 1.4 B, the side hems taking the nearest column's) plus 6 px, alpha ramps 0..255 over max channel 38..52, so the gold tassels stay and the gaps and band go. 3.8% alpha 0. Regenerate the pack and this cut has to be redone.",
+      "last_converted": "2026-10-11T21:31:24",
+      "built_linear": 0.0455,
+      "built_srgb": 47.9
     },
     "military/water-bottle": {
       "src": "military/mil-pack-r.png",

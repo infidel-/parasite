@@ -444,6 +444,11 @@ class FacilityDetail
 // uv is cut off the IDEAL reach — so the falloff stops where the plate does and nowhere else
   static function pooled(b:MeshBuf, o:FacilityPoolOpts):Void
     {
+      if (o.fade != null)
+        {
+          sliced(b, o);
+          return;
+        }
       var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
       var a = Math.abs(s);
       var ax = o.hw * c + o.hd * a;
@@ -467,6 +472,40 @@ class FacilityDetail
         [o.cx + lx[1] * c + lz[0] * s, y, o.cz - lx[1] * s + lz[0] * c],
         [o.cx + lx[0] * c + lz[0] * s, y, o.cz - lx[0] * s + lz[0] * c],
         [u[0], v[1], u[1], v[1], u[1], v[0], u[0], v[0]]);
+    }
+
+// `pooled` with its falloff a FIXED `fade` past the footprint, as nine quads: the ramp's opaque core
+// (uv HALO_FADE .. 1 - HALO_FADE) laid over the footprint and its rim kept `fade` wide on every side.
+// One quad cannot do it, its rim is POOL_GROW of the half extent: 1.8 units past the end of a 3-cell
+// table run ("why are these contact shadows so large? they're way outside of the tables/benches").
+// The core is flat and each rim strip only varies across itself, so neither stretch shows. Cut per
+// side by the plate, `pooled`'s way
+  static function sliced(b:MeshBuf, o:FacilityPoolOpts):Void
+    {
+      var c = Math.cos(o.yaw), s = Math.sin(o.yaw);
+      var a = Math.abs(s);
+      var ax = o.hw * c + o.hd * a;
+      var az = o.hw * a + o.hd * c;
+      var f = [
+        Math.min(o.fade, Math.max(0, o.cx - ax - o.plate.x0)),
+        Math.min(o.fade, Math.max(0, o.plate.x1 - o.cx - ax)),
+        Math.min(o.fade, Math.max(0, o.cz - az - o.plate.z0)),
+        Math.min(o.fade, Math.max(0, o.plate.z1 - o.cz - az)),
+      ];
+      var e = FacilityStyle.HALO_FADE;
+      var lx = [-(o.hw + f[0]), -o.hw, o.hw, o.hw + f[1]];
+      var lz = [-(o.hd + f[2]), -o.hd, o.hd, o.hd + f[3]];
+      var u = [e * (1 - f[0] / o.fade), e, 1 - e, 1 - e * (1 - f[1] / o.fade)];
+      var v = [e * (1 - f[2] / o.fade), e, 1 - e, 1 - e * (1 - f[3] / o.fade)];
+      var y = o.y + FacilityStyle.POOL_EPS;
+      inline function at(i:Int, j:Int):Array<Float>
+        return [o.cx + lx[i] * c + lz[j] * s, y, o.cz - lx[i] * s + lz[j] * c];
+      for (i in 0...3)
+        for (j in 0...3)
+          if (lx[i + 1] - lx[i] > 0.001 &&
+              lz[j + 1] - lz[j] > 0.001)
+            MeshBufTools.quad(b, at(i, j + 1), at(i + 1, j + 1), at(i + 1, j), at(i, j),
+              [u[i], v[j + 1], u[i + 1], v[j + 1], u[i + 1], v[j], u[i], v[j]]);
     }
 
 // one strip: the whole height of one notch face, opaque where that face meets its perpendicular twin

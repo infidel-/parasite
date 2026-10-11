@@ -369,7 +369,7 @@ laboratory's deal. That:
 
 | kind | zones (core first) |
 |---|---|
-| armory | gun-cabinet, safe-spot (the base's one), crate-island, locker-run ×2 |
+| armory | gun-cabinet, safe-spot (the base's one), crate-island (runs of 3, else 2, down the long axis), locker-run ×2 |
 | hq | desk-run, file-run (shortest bay), desk-island, desk-run × the rest |
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
@@ -392,8 +392,9 @@ barracks (16.2 → 13.9), the corner bunks beside a window, and the mil-slot bay
 the room props stand.
 
 **The bays no zone wanted (`mil-slot`) take the room's STANDING PROPS**, one of each at most, on
-the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a rifle rack (armory
-only: one stood in the barracks and was reported as not belonging there), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
+the free cell nearest the bay's middle (`MilitaryRooms.slot`, row 21 +6..+12): a gun locker (armory
+only, `TILE_MIL_GUN_LOCKER`: furniture wearing the gun cabinet's glb, no loot. It was a rifle rack,
+reported from the barracks as not belonging there and then from the armory as "looks like crap"), ammo cans (armory, store), jerrycans (store), a flag stand (HQ, briefing), a water cooler
 (HQ, mess, comms), an IV stand and a stretcher (medical). Two traps, both caught by `floorReachable`:
 - the slots are walked in wall order like every bay, so a rifle rack on the top wall stood BEFORE the
   bunk row off the left wall, which then boxed two cells in behind it. `MilitaryZones.deal` moves the

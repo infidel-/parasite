@@ -14,6 +14,7 @@ import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.facility.FacilityGround;
 import render.facility.FacilityStyle;
 import render.military.MilitaryClutter.LidKind;
@@ -27,8 +28,8 @@ import three.Three;
 // bunks, footlockers, cots, office desks and filing cabinets, folding chairs at every desk, the
 // store's shelf units, the medical cabinets, mess and briefing tables and their benches, the serving
 // counter, and the comms room's racks, operator desks and radios with their lamps blinking. The
-// latrine's cubicles and trough and the briefing room's map board stay quads into
-// render.military.MilitaryGeom's per-texture buffers: partitions, a basin slab and a picture on a
+// latrine's cubicles and trough and the briefing room's map board and wall boards stay quads into
+// render.military.MilitaryGeom's per-texture buffers: partitions, a basin slab and pictures on a
 // wall. One `shade` per RUN, every piece and every chair.
 //
 // THE ROOMS WERE ALL EMITTED SLABS and were reported from the game as "very empty and emitted": a
@@ -46,6 +47,7 @@ class MilitaryInterior
   static inline var TEX_STALL = 'textures/military/stall-panel.png';
   static inline var TEX_STALL_DOOR = 'textures/military/stall-door.png';
   static inline var TEX_BOARD = 'textures/military/map-board.png';
+  static inline var TEX_BOARDS = 'textures/military/briefing-boards.png';
 
   // each glb's footprint as roomkit_build.py measures its bbox (along x, across), and the height it
   // is drawn at, which is its own so it lands at scale 1
@@ -57,9 +59,10 @@ class MilitaryInterior
   static inline var FOOT_W = 2.6;
   static inline var FOOT_D = 1.775;
   static inline var FOOT_H = 1.0;
-  // how far past a piece's footprint the core of its floor pool reaches (`shade`), or the darkest of
-  // the ramp sits under the piece and the rim the camera sees came out 3-10/255
-  static inline var FOOT_SHADOW = 0.2;
+  // how far past a piece's footprint its floor pool fades out (`shade`), the same on every piece: a
+  // fraction of the footprint put the rim 1.8 past the end of a table run ("why are these contact
+  // shadows so large? they're way outside of the tables/benches")
+  static inline var POOL_FADE = 0.4;
   static inline var DESK_D = 2.2;
   static inline var TABLE_H = 1.9;
   static inline var TABLE_W = 2.8;
@@ -93,9 +96,6 @@ class MilitaryInterior
   static inline var RADIO_SMALL_H = 0.6527;
   // the rooms' standing props (gen.military.MilitaryRooms.slot) and the armory's pieces, bbox
   // across x by depth and height, each stood with its back to its wall
-  static inline var RIFLE_W = 2.8;
-  static inline var RIFLE_D = 0.81;
-  static inline var RIFLE_H = 2.6;
   static inline var AMMO_W = 2.08;
   static inline var AMMO_D = 1.12;
   static inline var AMMO_H = 1.3413;
@@ -144,6 +144,20 @@ class MilitaryInterior
   static inline var BOARD_W = 3.2;
   static inline var BOARD_Y = 1.4;
   static inline var BOARD_OFF = 0.05;
+  // the briefing room's other boards (`boards`): each one's box on its 1024 sheet (x0, y0, x1, y1 px
+  // at alpha > 128, the corkboard, the whiteboard, the org chart and the first-aid poster), drawn at
+  // BOARD_PX sheet pixels a unit so none is stretched and the portrait two stand taller, centred
+  // BOARDS_Y up the wall: over a bench and a table edge, under the 6.0 wall top
+  static var BOARDS = [
+    [ 22, 61, 498, 424 ], [ 524, 62, 1003, 423 ], [ 81, 464, 440, 950 ], [ 586, 464, 944, 949 ],
+  ];
+  static inline var BOARD_PX = 170.0;
+  static inline var BOARDS_Y = 3.2;
+  // a crate stack's height off the cell's hash, two stacks side by side per cell, and the gap
+  // between them: one or two crates read as an empty armory ("stack them higher")
+  static inline var CRATES_MIN = 2;
+  static inline var CRATES_MAX = 4;
+  static inline var CRATE_GAP = 0.08;
   // where a radio stands on its desk in the desk's own frame: along it, and its back in from the
   // desk's back edge, close to the wall so its power lead runs up the wall into it: at 0.25 the lead
   // stopped behind the desk under its top ("cable does not go up to actual radio")
@@ -217,7 +231,6 @@ class MilitaryInterior
         { path: md.militaryRadioDesk, h: TABLE_H },
         { path: md.militaryRadioBig, h: RADIO_BIG_H },
         { path: md.militaryRadioSmall, h: RADIO_SMALL_H },
-        { path: md.militaryRifleRack, h: RIFLE_H },
         { path: md.militaryAmmoCans, h: AMMO_H },
         { path: md.militaryJerrycans, h: JERRY_H },
         { path: md.militaryFlag, h: FLAG_H },
@@ -273,6 +286,7 @@ class MilitaryInterior
               taken[row + (alongX ? 0 : i)][col + (alongX ? i : 0)] = true;
             piece(m, t, col, row, len, alongX);
           }
+      boards(m);
       FacilityDeco.lamps(scene, leds);
     }
 
@@ -403,19 +417,28 @@ class MilitaryInterior
         }
       else if (t == Const.TILE_MIL_CRATES)
         {
-          // one or two of the yard's crates, turned off the cell's hash
+          // two stacks of the yard's crates side by side, CRATES_MIN to CRATES_MAX high each, turned
+          // off the cell's hash and every crate a whisker askew on the one under it
           var hash = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
           var turn = (hash % 2 == 1);
-          var n = 1 + (hash >> 4) % 2;
-          for (i in 0...n)
-            MilitaryGeom.crates.push({
-              x: (cell.x0 + cell.x1) / 2,
-              z: (cell.z0 + cell.z1) / 2,
-              yaw: (turn ? Math.PI / 2 : 0.0) + (i == 1 ? 0.12 : 0.0),
-              y: i * MilitaryYard.CRATE_STEP,
-            });
-          r = across(cell, !turn, MilitaryYard.CRATE_D);
-          h = n * MilitaryYard.CRATE_STEP;
+          var tall = 0;
+          for (k in 0...2)
+            {
+              var n = CRATES_MIN + (hash >>> (4 + k * 3)) % (CRATES_MAX - CRATES_MIN + 1);
+              var o = (k == 0 ? -1 : 1) * (MilitaryYard.CRATE_D + CRATE_GAP) / 2;
+              for (i in 0...n)
+                MilitaryGeom.crates.push({
+                  x: (cell.x0 + cell.x1) / 2 + (turn ? o : 0.0),
+                  z: (cell.z0 + cell.z1) / 2 + (turn ? 0.0 : o),
+                  yaw: (turn ? Math.PI / 2 : 0.0) + (((hash >>> (10 + k * 4 + i)) % 3) - 1) * 0.06,
+                  y: i * MilitaryYard.CRATE_STEP,
+                });
+              tall = Std.int(Math.max(tall, n));
+            }
+          var deep = MilitaryYard.CRATE_D * 2 + CRATE_GAP;
+          r = across(across(cell, true, (turn ? MilitaryYard.CRATE_W : deep)), false,
+            (turn ? deep : MilitaryYard.CRATE_W));
+          h = tall * MilitaryYard.CRATE_STEP;
         }
       else
         {
@@ -546,17 +569,23 @@ class MilitaryInterior
               h = TABLE_H;
               console(r, dir, len, col + row);
             }
-          else if (t >= Const.TILE_MIL_RIFLE_RACK &&
+          else if (t == Const.TILE_MIL_GUN_LOCKER)
+            {
+              // the armory's gun cabinet as furniture, placed, topped and shadowed as the object one
+              // is. It was a rifle rack ("looks like crap ... remove it, use gun lockers")
+              MilitaryGeom.locker(m, col, row, md.militaryGunCabinet);
+              return;
+            }
+          else if (t >= Const.TILE_MIL_AMMO_CANS &&
               t <= Const.TILE_MIL_IV_STAND)
             {
-              var k = t - Const.TILE_MIL_RIFLE_RACK;
-              var w = [ RIFLE_W, AMMO_W, JERRY_W, FLAG_W, COOLER_W, IV_W ][k];
-              var d = [ RIFLE_D, AMMO_D, JERRY_D, FLAG_D, COOLER_D, IV_D ][k];
+              var k = t - Const.TILE_MIL_AMMO_CANS;
+              var w = [ AMMO_W, JERRY_W, FLAG_W, COOLER_W, IV_W ][k];
+              var d = [ AMMO_D, JERRY_D, FLAG_D, COOLER_D, IV_D ][k];
               r = across(back(m, col, row, cell, dir, d), dir >= 2, w);
-              h = [ RIFLE_H, AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_H ][k];
-              put([ md.militaryRifleRack, md.militaryAmmoCans, md.militaryJerrycans, md.militaryFlag,
-                md.militaryWaterCooler, md.militaryIvStand ][k], (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
-                YAW[dir], 0.0);
+              h = [ AMMO_H, JERRY_H, FLAG_H, COOLER_H, IV_H ][k];
+              put([ md.militaryAmmoCans, md.militaryJerrycans, md.militaryFlag, md.militaryWaterCooler,
+                md.militaryIvStand ][k], (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[dir], 0.0);
             }
           else if (t == Const.TILE_MIL_STRETCHER)
             {
@@ -600,7 +629,7 @@ class MilitaryInterior
     }
 
 // THE ONE SHADOW CALL for a piece standing on a room floor: FacilityDetail.ground, and a floor pool
-// round any piece too big for that one's, its core FOOT_SHADOW past the footprint. Past
+// round any piece too big for that one's, opaque over the footprint and gone POOL_FADE past it. Past
 // GROUND_POOL_MAX the contact field carries it alone and spreads a footprint this wide to nothing:
 // the footlocker had one written out by hand ("do these chests throw shadows? they should"), and the
 // desks, tables and chairs went without ("ALL 3d objects should throw shadows by default"). Its plate
@@ -628,10 +657,11 @@ class MilitaryInterior
       FacilityDetail.pool({
         cx: (r.x0 + r.x1) / 2,
         cz: (r.z0 + r.z1) / 2,
-        hw: (r.x1 - r.x0) / 2 + FOOT_SHADOW,
-        hd: (r.z1 - r.z0) / 2 + FOOT_SHADOW,
+        hw: (r.x1 - r.x0) / 2,
+        hd: (r.z1 - r.z0) / 2,
         yaw: 0.0,
         y: FacilityGround.surfY(m.surf[o.row][o.col]),
+        fade: POOL_FADE,
         plate: {
           x0: edge(2, c0, r0, lo.x - CELL * 1.5),
           x1: edge(3, c1, r1, hi.x + CELL * 1.5),
@@ -768,6 +798,50 @@ class MilitaryInterior
       top(x, z, yaw, (cot ? COT_L - 0.5 : BUNK_L - 0.4), (cot ? COT_W : BUNK_W) - 0.3, y, UNDER, []);
     }
 
+// the briefing room's boards: one on every other cell of its plain walls, none on the map board's,
+// a flag stand's or a doorway's, one to a cell, each of the four by the cell's hash. The room was
+// reported as wanting "more 2d decals - some bulletin boards or something"
+  static function boards(m:Facility):Void
+    {
+      var b = MilitaryGeom.buf(TEX_BOARDS, true);
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          {
+            var t = grid.getCellType(col, row);
+            if (m.surf[row][col] != Surf.BRIEFING ||
+                (col + row) % 2 != 0 ||
+                t == Const.TILE_MIL_MAP_BOARD ||
+                t == Const.TILE_MIL_FLAG)
+              continue;
+            for (d in 0...4)
+              {
+                if (!FacilityModel.isSolidWall(m, col + DX[d], row + DZ[d]) ||
+                    FacilityModel.isDoor(m, col + DX[d], row + DZ[d]))
+                  continue;
+                var px = BOARDS[FacilityModel.mix((col * 73856093) ^ (row * 19349663)) % BOARDS.length];
+                var w = (px[2] - px[0]) / BOARD_PX;
+                var hh = (px[3] - px[1]) / BOARD_PX / 2;
+                var x0 = col * CELL - half();
+                var z0 = row * CELL - half();
+                var r = across(back(m, col, row, {
+                  x0: x0,
+                  x1: x0 + CELL,
+                  z0: z0,
+                  z1: z0 + CELL,
+                }, d, BOARD_OFF), d >= 2, w);
+                // FacilityGeom.pane's quad, its uv the board's box on the sheet
+                var e = FacilityGeom.ends(r.x0, r.x1, r.z0, r.z1, d ^ 1);
+                var u0 = px[0] / 1024, u1 = px[2] / 1024;
+                var v0 = 1 - px[3] / 1024, v1 = 1 - px[1] / 1024;
+                MeshBufTools.quad(b,
+                  [e[0], BOARDS_Y - hh, e[1]], [e[2], BOARDS_Y - hh, e[3]],
+                  [e[2], BOARDS_Y + hh, e[3]], [e[0], BOARDS_Y + hh, e[1]],
+                  [u0, v0, u1, v0, u1, v1, u0, v1]);
+                break;
+              }
+          }
+    }
+
 // cells `i` to `i + n` of a run's rect, along x or z
   static function cut(r:Rect, alongX:Bool, i:Int, n:Int):Rect
     {
@@ -835,7 +909,7 @@ class MilitaryInterior
         t == Const.TILE_MIL_COT ||
         t == Const.TILE_MIL_CRATES ||
         t == Const.TILE_MIL_FOOTLOCKER ||
-        t >= Const.TILE_MIL_RIFLE_RACK;
+        t >= Const.TILE_MIL_GUN_LOCKER;
     }
 
 // a row of cubicles: a partition at every cell edge out from the wall, and a door 0..1 across each

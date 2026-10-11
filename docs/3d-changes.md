@@ -1902,3 +1902,35 @@ in front" off what they see, and a piece in the wall's margin leaves its own cel
 is one patch stamped on every polygon.
 
 **Verdict:** landed. +1.4k tris on the comms view, 0 new meshes or programs.
+
+## Military base: pools a fixed fade past the footprint, armory crate stacks, gun locker, briefing boards, flag fringe cut
+
+**Reported:** table and bench contact shadows "way outside of the tables/benches"; the armory "pretty
+empty", wanting crate stacks in the middle "stacked higher"; the rifle rack "looks like crap ... use
+gun lockers"; bench planks "with dark holes. reduce scale"; bench and table legs darker; the flag's
+lower end "dark black and straight, should be transparency"; the briefing room wanting "more 2d
+decals"; a base door's reveal in the corridor's board on its room side.
+
+**Changed:**
+- **`FacilityPoolOpts.fade`**: `FacilityDetail.pool` lays nine quads, the ramp's opaque core over
+  the footprint and a rim a FIXED world width past it. One quad's rim is `POOL_GROW` of the half
+  extent: 1.8 past the end of a 3-cell table run, 0.66 across it. `MilitaryInterior.shade` passes
+  `POOL_FADE` 0.4 with the core on the footprint, replacing the last entry's `FOOT_SHADOW` core.
+- **Armory crate islands** run 3, then 2, cells down the room's long axis; each crate cell holds two
+  stacks of 2-4. Over 2000 seeds, armory fill goes 10.69 → 11.54 cells; `zoneEmpty/crate-island` 0.01.
+- **`TILE_MIL_GUN_LOCKER`** (the rifle rack's id) draws the gun cabinet glb through
+  `MilitaryGeom.locker`, as furniture with no loot. The rifle-rack glb is gone.
+- **Bench** tiled in world space at `BENCH_TILE` 1.3 from the seat's corner, five planks across;
+  128 tris. **mil-t-sheet**'s fourth cell is gunmetal, not enamel, which is on eight sheets.
+- **Flag** on its own `mil-p-cut` material, alphaMode MASK (`buildlib.material(clip)`, Alpha → Math
+  Round). The fringe is hand-cut per column below its braid (`flag-cut.png`), and `modelsheet.py`
+  keeps RGBA when a cell is cut.
+- **Briefing boards**: one pack4 gen ($0.055), one 1024 label with `lift` 1.3, four measured boxes at
+  `BOARD_PX` 170. Hung on every other plain-wall cell as one alpha-cut mesh: +1 call.
+- **Base door reveals** are split on the leaf plane like a lift's: room half in the room's finish
+  (military only). Verified off the merged shell's layer map: wall-office and wall-corridor halves.
+
+**Trap:** the sheet's grid drifted (bottom pair at y 464, not 512), so the boxes are measured. A
+rifle diagram in slot 4 was refused by moderation (illicit).
+
+**Verdict:** landed. 0 new programs (the flag's compiles at load); +1 call where boards show.

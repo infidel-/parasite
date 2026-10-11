@@ -763,7 +763,6 @@ class RenderConfig {
     militaryBench: 'models/military/bench-hand.glb',      // one cell of bench along x
     militaryCounter: 'models/military/counter-hand.glb',  // one cell of serving counter, pans at the top
     militaryCounter2: 'models/military/counter2-hand.glb', // and its other two pans
-    militaryRifleRack: 'models/military/rifle-rack-hand.glb', // rifle rack, six rifles, its back at -z
     militaryAmmoCans: 'models/military/ammo-cans-hand.glb', // stack of five ammo cans
     militaryJerrycans: 'models/military/jerrycans-hand.glb', // three jerrycans and one across them
     militaryFlag: 'models/military/flag-stand-hand.glb',  // flag stand, the flag facing +z

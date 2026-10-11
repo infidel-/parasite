@@ -596,9 +596,9 @@ class MilitaryGeom
           box(buf(TEX_OLIVE), px, px + POLE_W, pz, pz + POLE_W, 0, NET_Y, OLIVE_TILE);
     }
 
-// one armory locker or the gun cabinet, the corp security room's emitter on the base's object: its
-// an armory locker bank or the gun cabinet, as its glb with its back to its wall
-  static function locker(m:Facility, col:Int, row:Int, path:String):Void
+// an armory locker bank or the gun cabinet, as its glb with its back to its wall, on its object's cell
+// or on a gun locker tile (render.military.MilitaryInterior)
+  public static function locker(m:Facility, col:Int, row:Int, path:String):Void
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)

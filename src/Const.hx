@@ -1305,7 +1305,7 @@ class Const
   public static var TILE_MIL_TROUGH = OFFSET_ROW20 + 15;
   // === row 21 - the base's second interior row: the comms room's radio rack and console, the supply
   // store's shelf and crate stack, the medical bay's cot and cabinet, then the standing props the
-  // rooms' leftover bays take (gen.military.MilitaryRooms.slot): a rifle rack, ammo cans, jerrycans,
+  // rooms' leftover bays take (gen.military.MilitaryRooms.slot): a gun locker, ammo cans, jerrycans,
   // a flag stand, a water cooler, an IV stand and a stretcher (render.military.MilitaryInterior),
   // and a store's free-standing row of shelving back to back. None blocks sight, and the ones that
   // stand against a wall in its margin, clear of most of their cell, do not block either (see
@@ -1317,7 +1317,7 @@ class Const
   public static var TILE_MIL_CRATES = OFFSET_ROW21 + 3;
   public static var TILE_MIL_COT = OFFSET_ROW21 + 4;
   public static var TILE_MIL_MED_CABINET = OFFSET_ROW21 + 5;
-  public static var TILE_MIL_RIFLE_RACK = OFFSET_ROW21 + 6;
+  public static var TILE_MIL_GUN_LOCKER = OFFSET_ROW21 + 6;
   public static var TILE_MIL_AMMO_CANS = OFFSET_ROW21 + 7;
   public static var TILE_MIL_JERRYCANS = OFFSET_ROW21 + 8;
   public static var TILE_MIL_FLAG = OFFSET_ROW21 + 9;

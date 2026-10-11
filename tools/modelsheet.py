@@ -73,7 +73,9 @@ def main():
         sheet.paste(tiled(im, ru, rv, a.cell),
                     ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
         print(f"  cell {i}: {p}  repeat {ru}x{rv}")
-    sheet.convert("RGB").save(a.out)
+    # RGBA only when a cell is cut (military/flag's fringe), so an opaque sheet stays the RGB it was
+    cut = sheet.getchannel("A").getextrema()[0] < 255
+    (sheet if cut else sheet.convert("RGB")).save(a.out)
     print(f"{a.out}  {sheet.width}x{sheet.height}  {len(a.src)} cells of {a.cell}")
     return 0
 
