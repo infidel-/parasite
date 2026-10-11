@@ -112,19 +112,19 @@ class MilitaryClutter
   static var GEAR = [
     {
       path: RenderConfig.MODELS.militaryBoots,
-      w: 0.69,
-      d: 0.49,
+      w: 0.68,
+      d: 0.5,
       h: MilitaryInterior.BOOTS_H,
     },
     {
       path: RenderConfig.MODELS.militaryRucksack,
       w: 1.0,
-      d: 0.53,
+      d: 0.55,
       h: MilitaryInterior.RUCKSACK_H,
     },
     {
       path: RenderConfig.MODELS.militaryCanteen,
-      w: 0.29,
+      w: 0.28,
       d: 0.16,
       h: MilitaryInterior.CANTEEN_H,
     },
@@ -136,10 +136,27 @@ class MilitaryClutter
     3 => 1,
     12 => 2,
   ];
+  // the cells drawn SMALLER than the sheet's SZ, as a fraction of it: every cell fills the same 70%
+  // of its square, so a hand of cards came out half a metre across ("cards need to be smaller. and
+  // cigarette pack and watch"). Taken to their real size at the half-metre unit: the cards' fan 15
+  // cm, a cigarette pack and lighter 12, a watch on its strap 10, the dog tags' chain 20, rolled
+  // socks 18
+  static var SMALL:Map<String, Map<Int, Float>> = [
+    'barracks' => [
+      4 => 0.45,
+      5 => 0.35,
+      10 => 0.4,
+      14 => 0.3,
+      15 => 0.25,
+    ],
+  ];
+  // the facility the gear grounds itself on, for the build
+  static var fac:Facility;
 
 // every decal in the base's rooms, one mesh per room kind. returns how many landed
   public static function build(scene:Scene, m:Facility, area:AreaGame, lids:Array<MilitaryLid>):Int
     {
+      fac = m;
       var n = 0;
       var bufs = new Map<String, MeshBuf>();
       for (room in area.generatorInfo.rooms)
@@ -183,13 +200,13 @@ class MilitaryClutter
                 var y = FacilityGround.surfY(m.surf[row][col]);
                 if (solid(room.role, idx) < 0)
                   {
-                    emit(b, c.x, c.z, FLOOR_SZ + ((h >> 7) % 1000 / 1000.0) * SZ_VAR,
-                      (h >> 17) % 6283 / 1000.0, idx, y + FacilityStyle.CLUTTER_Y);
+                    emit(b, c.x, c.z, (FLOOR_SZ + ((h >> 7) % 1000 / 1000.0) * SZ_VAR) *
+                      small(room.role, idx), (h >> 17) % 6283 / 1000.0, idx, y + FacilityStyle.CLUTTER_Y);
                     n++;
                     continue;
                   }
                 // a piece of gear in the cell, standing on the floor like any other piece
-                var g = gear({
+                if (gear({
                   x: c.x,
                   z: c.z,
                   yaw: 0.0,
@@ -200,23 +217,8 @@ class MilitaryClutter
                   col: col,
                   row: row,
                   claims: [],
-                }, [], solid(room.role, idx), h, true);
-                if (g == null)
-                  continue;
-                FacilityDetail.ground(m, {
-                  col: col,
-                  row: row,
-                  len: 1,
-                  alongX: true,
-                  rect: {
-                    x0: c.x + g.x - g.hw,
-                    x1: c.x + g.x + g.hw,
-                    z0: c.z + g.z - g.hd,
-                    z1: c.z + g.z + g.hd,
-                  },
-                  h: GEAR[solid(room.role, idx)].h,
-                });
-                n++;
+                }, [], solid(room.role, idx), h, true) != null)
+                  n++;
               }
         }
       for (role in bufs.keys())
@@ -266,7 +268,7 @@ class MilitaryClutter
               continue;
             }
           var sz = Math.min(SZ + ((h % 1000) / 1000) * SZ_VAR,
-            Math.min(l.w, l.d) * FacilityStyle.CLUTTER_SLOT_FILL);
+            Math.min(l.w, l.d) * FacilityStyle.CLUTTER_SLOT_FILL) * small(role, idx);
           var rx = l.w / 2 - sz * 0.5 - INSET;
           var rz = l.d / 2 - sz * 0.5 - INSET;
           if (rx <= 0 ||
@@ -313,6 +315,14 @@ class MilitaryClutter
         !(kind == UNDER && k > 0);
     }
 
+// how much smaller than the sheet's size this role's cell draws, 1 for most
+  static inline function small(role:String, idx:Int):Float
+    {
+      var k = SMALL.get(role);
+      return (k != null &&
+        k.exists(idx) ? k.get(idx) : 1.0);
+    }
+
 // which GEAR piece a cell of this role's sheet stands as, -1 for a decal
   static inline function solid(role:String, idx:Int):Int
     {
@@ -345,8 +355,42 @@ class MilitaryClutter
             continue;
           spots.push(box);
           var lc = Math.cos(l.yaw), ls = Math.sin(l.yaw);
-          MilitaryInterior.put(p.path, l.x + box.x * lc + box.z * ls, l.z - box.x * ls + box.z * lc,
-            l.yaw + yaw, l.y);
+          var x = l.x + box.x * lc + box.z * ls;
+          var z = l.z - box.x * ls + box.z * lc;
+          MilitaryInterior.put(p.path, x, z, l.yaw + yaw, l.y);
+          // and its shadow ("do these chests throw shadows? they should. and boots as well"): on a
+          // floor the one call for anything standing there, on a top a round pool kept on the lid
+          var t = ClutterSlotTools.turned(x, z, p.w, p.d, l.yaw + yaw);
+          var f = ClutterSlotTools.turned(l.x, l.z, l.w, l.d, l.yaw);
+          if (l.kind == UNDER)
+            FacilityDetail.ground(fac, {
+              col: l.col,
+              row: l.row,
+              len: 1,
+              alongX: true,
+              rect: {
+                x0: x - t.hw,
+                x1: x + t.hw,
+                z0: z - t.hd,
+                z1: z + t.hd,
+              },
+              h: p.h,
+            });
+          else
+            FacilityDetail.deck({
+              cx: x,
+              cz: z,
+              hw: p.w / 2,
+              hd: p.d / 2,
+              yaw: l.yaw + yaw,
+              y: l.y,
+              plate: {
+                x0: l.x - f.hw,
+                x1: l.x + f.hw,
+                z0: l.z - f.hd,
+                z1: l.z + f.hd,
+              },
+            });
           return box;
         }
       return null;

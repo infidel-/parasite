@@ -55,6 +55,7 @@ class MilitaryInterior
   static inline var FOOT_W = 2.6;
   static inline var FOOT_D = 1.775;
   static inline var FOOT_H = 1.0;
+  static inline var FOOT_SHADOW = 0.2;
   static inline var DESK_D = 2.2;
   static inline var TABLE_H = 1.9;
   static inline var TABLE_W = 2.8;
@@ -102,7 +103,7 @@ class MilitaryInterior
   public static inline var SAFE_H = 1.9271;
   // the barracks gear render.military.MilitaryClutter stands about
   public static inline var BOOTS_H = 0.5387;
-  public static inline var RUCKSACK_H = 1.2137;
+  public static inline var RUCKSACK_H = 1.2252;
   public static inline var CANTEEN_H = 0.46;
   // the bedding a bunk's and a cot's clutter lies on, off roomkit_build.py: the bunk 7.74 long, its
   // blanket 5.3 x 2.56 at 0.37 over each deck and centred 1.09 toward the foot (+x); the cot's canvas
@@ -349,6 +350,19 @@ class MilitaryInterior
           put(md.militaryFootlocker, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], 0.0);
           top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, YAW[face ^ 1], FOOT_W, FOOT_D - 0.1, FOOT_H,
             FOOTLOCKER, []);
+          // a pool round its foot as well as the contact field, which a box this wide spreads to
+          // nothing: past GROUND_POOL_MAX FacilityDetail.ground lays none ("do these chests throw
+          // shadows? they should"). Its core taken FOOT_SHADOW past the box, or the darkest of the
+          // ramp sits under the box and the rim the camera sees came out 3-10/255
+          FacilityDetail.pool({
+            cx: (r.x0 + r.x1) / 2,
+            cz: (r.z0 + r.z1) / 2,
+            hw: FOOT_W / 2 + FOOT_SHADOW,
+            hd: FOOT_D / 2 + FOOT_SHADOW,
+            yaw: YAW[face ^ 1],
+            y: FacilityGround.surfY(m.surf[row][col]),
+            plate: cell,
+          });
         }
       else if (t == Const.TILE_MIL_MESS_TABLE ||
           t == Const.TILE_MIL_BRIEF_TABLE ||

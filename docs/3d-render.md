@@ -821,6 +821,7 @@ back) — grep the change text.
 | **Military base rooms: flat clutter, one pack16 per room kind** (`MilitaryClutter`, lids recorded by `MilitaryInterior`) | 9 sheets, $0.75 incl. 4 `edit_image` re-cuts (sunburst transparent cut only 5 of 9); per-role floor picks; one mesh per kind | **landed** |
 | **Military base rooms: wall sockets and machine leads** (FacilityCable on base room surfaces, `m.fit` from `MilitaryStyle.fitOf`, drops off `MilitaryInterior.powered`) | 20 sockets a base, none behind furniture; lockers are objects, stamped into `m.fit` before the cable pass | **landed** |
 | **Military base rooms: barracks gear in 3D, bed and locker-top clutter, art fixes** (`MilitaryClutter` `LidKind`/`kit`/`SOLID`, outline-traced boot and canteen glbs, `buildlib.turned`, `ShellTex.capRoof`) | 1 packed gen $0.055; lids found by footprint, not centre (lockers stand in the wall cell); window-run tops roofed in the deck plane closes the pier slit; +3 calls | **landed** |
+| ^ **gear LOFTED through its traced outline, not extruded** (`loft`/`skin`, side art projected where \|n.y\| > 0.6) + footlocker pool core `FOOT_SHADOW` past the box + `SMALL` decal scale | an extruded outline read as a wooden cut-out; a level top ring pinched a slanted boot collar to a point; a pool at the box's own size put its dark core under the box (rim 3-10/255 → 15-21) | **landed** |
 
 ### FX, UI and the view itself
 

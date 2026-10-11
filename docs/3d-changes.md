@@ -1743,6 +1743,8 @@ fed (comms console, radio rack). The water coolers stand between two windows and
 
 ## Military base rooms: barracks gear in 3D, bed and locker-top clutter, art fixes
 
+> The gear's straight extrusion is SUPERSEDED by "Military base gear: lofted, not extruded; footlocker and gear shadows"
+
 **Changed:** the barracks sheet's boots, rucksack and canteen stand as Blender glbs (`boots-hand`
 360 tris, `rucksack-hand` 176, `canteen-hand` 160, one packed gen `mil-pack-s`, $0.055).
 `MilitaryLid.min/max` became a `LidKind`, and bunks (both decks' blankets and the floor under),
@@ -1778,5 +1780,37 @@ that left a slit at z = the boundary, over the glazing band, with nothing in it.
 0 of 136 window-head triangles left at 5.98.
 
 **Cost:** +3 calls in a barracks view (84 against 81 with the three batches' layers off).
+
+**Verdict:** landed.
+
+## Military base gear: lofted, not extruded; footlocker and gear shadows
+
+**Reported:**
+- the boots: "top looks dumb, needs to be curved, not flat", "square???", "do you know how boots
+  look?";
+- the canteens: "flat middles... like someone cut out flask form from a piece of wood";
+- a footlocker's arris through its stencil;
+- "do these chests throw shadows? they should. and boots as well";
+- the cards, the cigarette pack and the watch were half a metre across.
+
+**Changed:**
+- **Gear is lofted, not extruded.** The boots, canteen and rucksack are now `loft()`ed through
+  their outlines: a superellipse ring at each height spans the outline there, with a heel taper and
+  a sole lip on the boot and a lens across the canteen. The side art is PROJECTED onto faces whose
+  |n.y| > 0.6, which caps the stretch at 1.7x round the curve, and the edge band takes the rim
+  tile. Boots 360 → 1,016 tris, canteen 160 → 416, rucksack 176 → 512, all instanced.
+- **The boot collar slants.** Taken level at the very top, the ring pinched to the tongue's tip
+  and the shaft came to a point. The ring is now taken at the back's height, its front raised to the
+  tongue's, and it stays open: a lip and a sunken floor.
+- **Footlocker arris:** the body chamfer is on the plain plank. On the stencil window it was a 2 px
+  strip through the letters.
+- **Shadows:** the ceiling lamps are `noCast` and the indoor rig is 82% ambient, so the lever is
+  `FacilityDetail`, not a shadow map.
+  - A footlocker is past `GROUND_POOL_MAX`, so it got the field alone. It now gets a `pool` whose
+    core is taken `FOOT_SHADOW` 0.2 past the box. At the box's own size the ramp's dark core sat
+    under the box, and the visible rim measured 3-10/255; it now measures 15-21.
+  - Gear grounds itself: `ground` on a floor, a round `deck` pool kept on the lid on a top.
+- **Small decals:** the `SMALL` per-cell scale on the barracks sheet. Cards 0.35, cigarettes 0.3,
+  watch 0.25, dog tags 0.45, socks 0.4; cards measured 0.45 across.
 
 **Verdict:** landed.
