@@ -30,14 +30,17 @@ Worked examples of the emitted route: `FacilityTables.hx`, `FacilityEntry.hx`.
 ## A prop → `docs/3d-models.md`
 
 1. `generate_image` (gpt-image-2) — ONE modern object, centred, whole, clear of the frame edges,
-   **isometric from above one corner**, on flat solid grey `#5a5d63`, canonical **`style_prop`**
+   **isometric from above one corner**, on flat pure **black** `#000000`, canonical **`style_prop`**
    string appended verbatim — a reference image is an OBJECT, so it takes the prop string and never
    `style`, which is the surface one and carries the "muted desaturated palette" clause that shipped
-   9 of 38 props grey. Name the object's colour and say it must stay saturated.
+   9 of 38 props grey. Name the object's colour and say it must stay saturated, and keep its darks
+   above ~40 (a part within ~30 of the black backdrop keys out with it).
 2. `python3 tools/propstat.py <ref>.png` — subject value against the p50 **69-77** that bakes
    correctly, frame margin, backdrop colour. Fix in code (`--lift`, `--fit`) before re-prompting.
 3. `image_to_3d` (`runware-trellis-2`) — omit `remesh_project`/`mesh_cluster`, the defaults are now
    the playground's. Organic or hollow subject: `decimation_target` at the game budget + `"tris": -1`.
+   **`meshy_image_to_3d` (same server) is $0.80 a run: ONLY when the user asks for Meshy in their own
+   words** — never as a fallback, a re-roll or a comparison (`docs/3d-models.md` § The Meshy route).
 4. `python3 tools/propstat.py <prop>.glb` — components, split ratio, albedo, texels/tri **and
    texels per world unit at the `h` the game draws it**. Then the `models.json` entry, `make models`,
    and **re-measure the built glb**.

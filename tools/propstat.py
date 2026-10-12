@@ -42,7 +42,8 @@ What a .glb reports and why each number is there:
 
 What a .png reports: subject value against the p50 69-77 the references that bake correctly
 sit at, the frame margin (a subject touching the edge comes back a blob), and the bbox
-aspect, which is the w/h the mesh will land near.
+aspect, which is the w/h the mesh will land near. The backdrop is read off the frame's border,
+so a reference on black (the rule) and an old one on grey both measure.
 """
 import io
 import json
@@ -68,9 +69,21 @@ def srgb(v):
 # glTF component type -> numpy dtype, and element type -> component count
 CT = {5120: 'i1', 5121: 'u1', 5122: 'i2', 5123: 'u2', 5125: 'u4', 5126: 'f4'}
 NC = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
-# the flat grey both pipelines generate on, and the tolerance that separates subject from it
-BG = np.array([0x5a, 0x5d, 0x63], np.float64)
+# the tolerance that separates the subject from its backdrop, and the border ring that backdrop is
+# read off. A reference goes on flat BLACK now (it was #5a5d63 grey, and an olive-grey vehicle on grey
+# gave the generator nothing to segment on), and gpt never paints exactly what it is asked for, so the
+# backdrop is MEASURED per image rather than assumed: whatever colour it is, a centred subject clear
+# of the edges leaves the outer ring pure backdrop
 BG_TOL = 60.0
+BG_RING = 16
+
+
+# the backdrop this reference was actually painted on: the median of its outer BG_RING pixels
+def bg_of(im):
+    r = BG_RING
+    ring = np.concatenate([im[:r].reshape(-1, 3), im[-r:].reshape(-1, 3),
+                           im[:, :r].reshape(-1, 3), im[:, -r:].reshape(-1, 3)])
+    return np.median(ring, axis=0)
 
 
 # split a .glb into its JSON and BIN chunks
@@ -134,9 +147,9 @@ def components(uidx, tri):
     return np.sort(counts)[::-1]
 
 
-# subject mask + luminance for a reference painted on the flat grey
+# subject mask + luminance for a reference painted on a flat backdrop
 def subject(im):
-    d = np.abs(im - BG).sum(axis=2)
+    d = np.abs(im - bg_of(im)).sum(axis=2)
     m = d > BG_TOL
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
     return m, lum
@@ -316,21 +329,21 @@ def stat_png(path):
     print('  frame margin   l %d r %d t %d b %d   -> %s' % (
         *mar, 'ok' if min(mar) > 20 else 'TOUCHING THE EDGE, comes back a blob'))
     bg = im[~m]
-    print('  backdrop       mean %d/%d/%d  (asked for 90/93/99)   subject margin %.0f' % (
-        *bg.mean(axis=0).round(), bg.mean() - p50))
+    print('  backdrop       mean %d/%d/%d  (measured off the border; ask for flat black)   subject margin %.0f' % (
+        *bg.mean(axis=0).round(), abs(bg.mean() - p50)))
 
 
 # soft subject coverage, ramped across the antialiased edge so a composite leaves no halo.
 #
-# keyed against the backdrop gpt ACTUALLY PAINTED, not against the BG it was asked for. gpt vignettes:
-# asked for 90/93/99 it delivers ~76/80/84, which is 42 away in this metric -- past the ramp's foot,
-# so keying on nominal BG leaves the whole backdrop ~24% opaque. Uniform, that residue is invisible
-# and `lift` shipped four props with it; `fit` pastes a SUB-RECT and the same residue draws a hard
-# rectangle border round the pasted region, which is a segmentation edge that is not on the object
+# keyed against the backdrop gpt ACTUALLY PAINTED (bg_of), not against the one it was asked for. gpt
+# vignettes: asked for grey 90/93/99 it delivered ~76/80/84, which is 42 away in this metric -- past
+# the ramp's foot, so keying on the nominal colour left the whole backdrop ~24% opaque. Uniform, that
+# residue is invisible and `lift` shipped four props with it; `fit` pastes a SUB-RECT and the same
+# residue draws a hard rectangle border round the pasted region, which is a segmentation edge that is
+# not on the object. ON BLACK the ramp's foot is the risk the other way: a subject part within ~30 of
+# the backdrop (a tyre, an intake) keys out, so a reference keeps its darks above ~40
 def key(im):
-    d = np.abs(im - BG).sum(axis=2)
-    bg = np.median(im[d < 30], axis=0) if (d < 30).any() else BG
-    return np.clip((np.abs(im - bg).sum(axis=2) - 30.0) / 50.0, 0, 1)
+    return np.clip((np.abs(im - bg_of(im)).sum(axis=2) - 30.0) / 50.0, 0, 1)
 
 
 # gamma the subject to a target median and re-lay it on a truly flat backdrop. holds the
@@ -344,7 +357,7 @@ def lift(path, out, target):
     # a gamma rather than a scale: it lifts the darks hardest and leaves the few light texels
     # alone, so the subject keeps its own value range instead of flattening
     gam = np.log(target / 255.0) / np.log(p50 / 255.0)
-    px = 255.0 * np.power(np.clip(im, 0, 255) / 255.0, gam) * alpha + BG * (1 - alpha)
+    px = 255.0 * np.power(np.clip(im, 0, 255) / 255.0, gam) * alpha + bg_of(im) * (1 - alpha)
     Image.fromarray(np.clip(px, 0, 255).astype(np.uint8)).save(out)
     print('  subject p50 %.0f -> %.0f  (gamma %.3f), backdrop flattened -> %s' % (
         p50, target, gam, out))
@@ -367,7 +380,7 @@ def fit(path, out, margin):
     sw, sh = int(round(w * s)), int(round(h * s))
     rgba = Image.fromarray(np.dstack([im, alpha * 255.0]).astype(np.uint8), 'RGBA')
     small = rgba.resize((sw, sh), Image.LANCZOS)
-    canvas = Image.new('RGB', (w, h), tuple(int(v) for v in BG))
+    canvas = Image.new('RGB', (w, h), tuple(int(v) for v in bg_of(im)))
     canvas.paste(small, ((w - sw) // 2, (h - sh) // 2), small)
     canvas.save(out)
     print('  scaled %.3f about the centre for a %dpx margin, backdrop flattened -> %s'
