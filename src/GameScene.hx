@@ -284,6 +284,7 @@ class GameScene
       // build + async texture decode is the enter stall), then reveal as the intro plays
       _enter3D = true;
       _view3dArea = game.area.id;
+      view3d.stale = true;
       fader.cover(FADE_MS, function()
         {
           // the boot pre-warm covers the CITY only, because waiting for the tunnels' and the
@@ -316,6 +317,7 @@ class GameScene
                 view3d.show(game.area.cityGenSeed);
               else view3d.showCity(reconstructCity());
               _enter3D = false;
+              view3d.stale = false;
               // reveal only once the view has PRESENTED a frame: the first composer.render
               // compiles every scene shader (a multi-second stall on a cold driver cache) and
               // would otherwise run over an already-revealed, never-drawn black canvas.

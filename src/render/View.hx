@@ -66,6 +66,10 @@ class View {
   var svMouseX:Float = 0;                                 // last cursor client px over #view (AI-hover tooltip anchor)
   var svMouseY:Float = 0;
   var shownKey:Int = -2; // identity of the currently-built area: the city seed, or -(area id + 3) for a sewer (-2 = nothing built)
+  // the game moved to another area under the running view (a restart, a load) and the next build has
+  // not landed yet: the loop ticks the shown area frozen, as the outro does, so its sounds stop
+  // driving their loops after Sounds.onEnterArea silenced them. set and cleared by GameScene.draw3D
+  public var stale = false;
   var last = 0.0;
   var _warmed = false;    // did the full shader pre-warm run for this GL context? only the first city build pays it; later builds reuse the warm program cache (reset on page reload = fresh instance)
   var warming = false;    // that warm is in flight: the scene is built but `running` waits on it, so show() must not treat this build as absent and rebuild over it
@@ -1336,7 +1340,7 @@ class View {
       playerCol: game.playerArea.x,
       playerRow: game.playerArea.y,
       dtMs: dtMs,
-      outro: false,
+      outro: stale,
       freeCam: freeing,
       camera: camera,
       ui: uiOn,
