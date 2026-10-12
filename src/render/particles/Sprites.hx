@@ -492,6 +492,18 @@ class Sprites {
               ix: 0,
               iy: 0,
             };
+          // and the wall vent, the same single cell: its 64 px icon is 38 px of grille, 23 texels a
+          // unit on a 1.78 cover, and read as a flat dark plate ("vent is an old entities64 one").
+          // The 256 source fills its image edge to edge where the icon was inset in its cell, so
+          // FacilityStyle.MOUNT_SCALE is what keeps the grille its old size
+          if (iy == Const.ROW_OBJECT2 &&
+              ix == Const.FRAME_VENTILATION)
+            return {
+              img: game.scene.images.ventHD,
+              t: Const.VENT_HD_CELL,
+              ix: 0,
+              iy: 0,
+            };
         }
       return {
         img: game.scene.images.getImage(imageName, male),

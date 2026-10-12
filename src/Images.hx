@@ -30,6 +30,7 @@ class Images
   public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
   public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
+  public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
   public var tileset: Image;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -65,6 +66,9 @@ class Images
       cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
       // and the sewer hatch lid, the same route again for a single cell
       hatchHD = loadHatchHD();
+      // and the wall vent's grille, the same again
+      ventHD = new Image();
+      ventHD.src = AssetPath.resolve('textures/facility/vent.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
       undergroundLabTileset = new UndergroundLab();

@@ -2229,3 +2229,29 @@ tank, so a Meshy prop always goes through the offline decimate unless someone de
 
 **Verdict:** landed. Same batches and programs (120). The tank reads clean in the motor pool, turret,
 gun and running gear whole, its long axis on the footprint's.
+
+## Wall vents in HD, sockets kept off vent walls, a floor unit's wall halo halved
+
+**Reported (military):** "vent is an old entities64 one. don't we have a new one from facility?", "vent
+intersects with outlet ... shouldn't happen", and of a fan heater's wall halo "make the wall contact
+shadow shorter".
+
+**Changed:**
+- **The 3D vent is the 256 px `facility/vent`**, the source its 64 px icon was cut from.
+  `Sprites.atlasFor` redirects the `objects.Vent` frame (row 16, col 1) to that whole image, the sewer
+  hatch's single-cell route (`Images.ventHD`, `Const.VENT_HD_CELL`). The icon held 38 px of grille,
+  23 texels per unit on the 1.78-unit cover; the HD art gives 144, and the louvres now read. It fills its
+  image edge to edge where the icon was inset, so `MOUNT_SCALE` 1.0 → 38/64 keeps the grille's size.
+  The mark and outline crop the same source, so they match it. This covers every area that hangs vents.
+- **`Facility.vent`** marks each wall cell that holds a Vent (filled in `findDeco`).
+  `FacilityCable.vented` rejects a room socket, a gap socket beside a machine, and a corridor fitting on
+  either face of that masonry: the grille hangs on both faces at `MOUNT_Y`.
+- **`UNIT_HALO_H` 0.5:** a floor unit's wall halo is now half the art's height. The unit stands
+  `UNIT_OFF` 0.9 clear of the face, so a halo as tall as the art (2.0, grown to 2.34) rose over a squat
+  heater from the camera's pitch and read as a slab of shade.
+
+**Measured:** the vent's sprite cache entry is 256 wide (it was 64). The outlet that sat under the vent at
+45,35 is gone from that wall. The fan's halo quad runs y −0.17..1.17, against −0.33..2.34 before.
+
+**Verdict:** landed. +0 calls and +0 programs: the vent is still one pooled sprite and the halo is still
+one quad in the shared halo mesh.

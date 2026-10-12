@@ -645,6 +645,9 @@ class Const
   // cell, so it needs no index table and no coordinate arithmetic (render.particles.Sprites.atlasFor
   // and art/textures.json city/sewer-hatch)
   public static inline var HATCH_HD_CELL = 256;
+  // and the wall vent's, the same one-image route: art/textures.json facility/vent, the source its 64
+  // px icon was cut from, drawn whole and edge to edge
+  public static inline var VENT_HD_CELL = 256;
 
   public static inline var CLUE_PACK_CELL = 170;
   public static inline var CLUE_PACK_COLS = 6;

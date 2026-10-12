@@ -322,7 +322,8 @@ class FacilityCable
                       d * ((q.dir < 2 ? q.x1 - q.x0 : q.z1 - q.z0) / 2 + SOCK_CLEAR)));
                     if (spills(p) &&
                         !past(m, p, d) ||
-                        !clear(out, p))
+                        !clear(out, p) ||
+                        vented(m, col, row, q.dir))
                       continue;
                     out.push(p);
                     break;
@@ -499,6 +500,7 @@ class FacilityCable
             {
               if (!FacilityTables.hugs(m, col, row, dir) ||
                   taken.exists(key(m, col, row, dir)) ||
+                  vented(m, col, row, dir) ||
                   !FacilityPoint.runsOn(m, col, row, dir) ||
                   !spaced(out, col, row, FacilityStyle.FIT_SPACING))
                 continue;
@@ -576,7 +578,19 @@ class FacilityCable
       return FacilityModel.inside(m, col, row) &&
         FacilityPlacard.hangs(m, col, row, dir, true) &&
         m.deco[row][col] == 0 &&
-        m.fit[row][col] == 0;
+        m.fit[row][col] == 0 &&
+        !vented(m, col, row, dir);
+    }
+
+// does the masonry this cell's `dir` hand looks at carry a vent. Its grille hangs on both faces at
+// MOUNT_Y, 1.78 across, so a plate on either face of that wall cell is drawn through it ("vent
+// intersects with outlet. shouldn't happen")
+  static inline function vented(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      var c = col + DC[dir];
+      var r = row + DR[dir];
+      return FacilityModel.inside(m, c, r) &&
+        m.vent[r][c];
     }
 
 // and is it far enough from every mount already dealt. FacilityPoint.places' own thinning, measured
@@ -1002,7 +1016,7 @@ class FacilityCable
             a1: (p.dir < 2 ? b[0] : b[2]) + hw,
             len: 1,
             y: b[1],
-            h: FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_FILL_H,
+            h: FacilityStyle.UNIT_SZ * FacilityStyle.UNIT_FILL_H * FacilityStyle.UNIT_HALO_H,
           });
           // and the FLOOR under it, which it had nothing on at all. a footprint goes to the field
           // every builder that stands something indoors feeds — no quad, no mesh, no draw call — and

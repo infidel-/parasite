@@ -276,6 +276,9 @@ typedef Facility = {
   // grate TILE on one cell of every chemistry lab and then stands a drain on it only 30% of the
   // time, so the surface says where a drain COULD be and the object says where one is
   drain:Array<Array<Bool>>,
+  // which WALL cells carry an objects.Vent, whose grille hangs on both faces of the masonry
+  // (FacilityGeom.wallMounts): nothing else may be bolted over it (render.facility.FacilityCable)
+  vent:Array<Array<Bool>>,
   // the generator's room rects, straight off area.generatorInfo. used for the ceiling-light pass
   rooms:Array<_Room>,
   // the centre cell of every hangar STUDY PAD — the square of unwalkable concrete
@@ -485,6 +488,7 @@ class FacilityModel
         tableTaken: [for (_ in 0...h) [for (_ in 0...w) false]],
         tableSink: [for (_ in 0...h) [for (_ in 0...w) false]],
         drain: [for (_ in 0...h) [for (_ in 0...w) false]],
+        vent: [for (_ in 0...h) [for (_ in 0...w) false]],
         rooms: [],
         pads: [],
       };
@@ -957,6 +961,12 @@ class FacilityModel
           if (o.type == 'floor_drain')
             {
               m.drain[o.y][o.x] = true;
+              continue;
+            }
+          // and the vents, the same way
+          if (o.type == 'vent')
+            {
+              m.vent[o.y][o.x] = true;
               continue;
             }
           if (o.type != 'decoration')

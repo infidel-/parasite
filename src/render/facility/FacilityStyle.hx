@@ -1696,12 +1696,13 @@ class FacilityStyle
   // same nudge a bullet hole takes, and for the same reason: the quad has to clear the opaque wall
   // behind it rather than z-fight it.
   //
-  // the SCALE is of the quad and the art fills 38 of its 64 atlas pixels, so the grille itself comes
-  // out 1.78 units wide. at the game's scale (WALL_H 6.0 is one 3 m storey, so a unit is half a
-  // metre) that is a 0.9 m cover spanning 0.53-1.47 m up the wall — a duct low enough to slither
-  // into, which is what the object does
+  // the SCALE is of the quad, and the 3D vent is the 256 px facility/vent drawn edge to edge
+  // (render.particles.Sprites.atlasFor), so 38/64 — the fraction of its cell the old 64 px icon
+  // filled — keeps the grille 1.78 units wide. at the game's scale (WALL_H 6.0 is one 3 m storey, so
+  // a unit is half a metre) that is a 0.9 m cover spanning 0.55-1.45 m up the wall — a duct low
+  // enough to slither into, which is what the object does
   public static inline var MOUNT_Y = 2.0;
-  public static inline var MOUNT_SCALE = 1.0;
+  public static inline var MOUNT_SCALE = 38 / 64;
   public static inline var MOUNT_PROUD = 0.12;
 
   // ---- the lobby notice board ------------------------------------------------------------------
@@ -2032,6 +2033,11 @@ class FacilityStyle
   // which is the same fact CABLE_LID_H is a third rather than a lid for
   public static inline var UNIT_FILL_W = 0.64;
   public static inline var UNIT_FILL_H = 0.77;
+  // and how far up the wall the halo behind one reaches, against the art's height: half of it. The
+  // unit stands UNIT_OFF 0.9 clear of the face, so a halo the art's full 2.0 tall stood over the
+  // top of a squat fan heater from the camera's pitch and read as a slab of shade on the wall
+  // ("make the wall contact shadow shorter")
+  public static inline var UNIT_HALO_H = 0.5;
   // how far its base stands off the wall's slab FACE, world units. it is parked against the wall and
   // not stood in the middle of its cell: the cell is 4.0 and its own face is a unit in from the cell
   // edge, so this leaves the lane down the middle of the room clear
