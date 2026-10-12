@@ -2220,8 +2220,9 @@ brightness/saturation even more + i've removed decimation".
   `sat` 0.8 and `baseColor` 0.37 put its atlas at the old tank's olive, 53/64/43. The user then asked
   for the plane's step darker and greyer: `sat` 0.55 and `baseColor` 0.27, atlas 47/53/42 at chroma
   11.5, hull in frame 11/23/9 → 8/16/8. `roughness` 1.
-- **`military/plane`**: `sat` 0.5 and `baseColor` 0.55 (from 0.7/0.77). Atlas 73/84/65; in the hangar it
-  is now luma 65-71 and chroma 22-24, from 75-97 and 31-46. 189,544 tris, undecimated.
+- **`military/plane`**: `sat` 0.5 and `baseColor` 0.55 (from 0.7/0.77) took it from luma 75-97, chroma 31-46
+  in the hangar to 65-71 / 22-24; asked darker again, `baseColor` 0.4 lands atlas 62/72/55 and the frame at
+  luma 51-56, chroma 19-20 on a 30-luma floor. 189,544 tris, undecimated.
 
 **The trap:** `polyCount` is not a ceiling. The same setting returned 189k for the plane and 707k for the
 tank, so a Meshy prop always goes through the offline decimate unless someone decides otherwise.
