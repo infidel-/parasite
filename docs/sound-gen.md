@@ -236,7 +236,10 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
 - **Beds**: `military/latrine` and `military/comms` (`ROLE_LATRINE` / `ROLE_COMMS` off
   `generatorInfo.getRoomAt`, asked for: "latrine needs its sounds, bed, sink and events ... so does
   comms"; DB -5 / -6, measured 56.2 and 50.1 at slider 100 in their rooms, indoor bed 0.0 there),
-  `military/indoor` (any other roof that is not the hangar), `military/hangar` (2 variants),
+  `military/room` (any other room rect under a roof; asked for as "default room bed, quieter one than
+  corridor", the ElevenLabs take of a bake-off, DB -10 = the corridor's -4 less six: measured 31.6 in
+  a barracks against the corridor's 63.1), `military/indoor` (the rest of the roof: corridors and
+  doorways, which are in no room rect), `military/hangar` (2 variants),
   `military/yard` (open ground inside the fence), and the margin outside the fence wears its terrain
   band's own wild bed (`wild/forest`, `wild/plains`, `wild/mountain`), split by
   `AreaGame.isOutsideBase`. Within 4 rows of the road's centreline it is the wilderness highway's

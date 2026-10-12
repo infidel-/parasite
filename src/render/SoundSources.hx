@@ -66,6 +66,8 @@ class SoundSources
     // set by ear in the game: both read too loud at -5 and -6
     'military/latrine' => -9.0,
     'military/comms' => -12.0,
+    // the corridor's -4 less six: a room is quieter than the corridor outside it (asked for)
+    'military/room' => -10.0,
     'military/drip' => -10.0,
     'military/flush' => -10.0,
     'military/squelch' => -12.0,

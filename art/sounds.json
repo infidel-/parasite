@@ -2421,6 +2421,30 @@
         "military/drip1.mp3",
         "military/drip2.mp3"
       ]
+    },
+    "military/room": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/room-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a small closed room of a concrete military base building at night, quiet still room tone, the corridor's ventilation heard only faintly and muffled through a closed door, a very soft low electrical hum, much quieter and more intimate than the corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-12T23:40",
+          "bakeoff": "bake-off 2026-10-12: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T23:13:01",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/room1.mp3"
+      ]
     }
   }
 }

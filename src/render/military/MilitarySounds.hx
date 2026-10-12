@@ -19,9 +19,10 @@ import render.facility.FacilityModel;
 // base has, in its own sounds, and played INSTEAD of it
 class MilitarySounds
 {
-  // the beds: a building's, the hangar's shed, the yard inside the fence, the road past the gate
-  // (the wilderness highway's), the latrine's pipes, the comms room's sets, and the margin outside the
-  // fence (the band's, appended in `new`)
+  // the beds: a building's corridors, the hangar's shed, the yard inside the fence, the road past the
+  // gate (the wilderness highway's), the latrine's pipes, the comms room's sets, any other room
+  // (quieter than the corridor, asked for), and the margin outside the fence (the band's, appended in
+  // `new`)
   static var BEDS = [
     'military/indoor',
     'military/hangar',
@@ -29,13 +30,15 @@ class MilitarySounds
     'wild/road',
     'military/latrine',
     'military/comms',
+    'military/room',
   ];
   static inline var BED_HANGAR = 1;
   static inline var BED_YARD = 2;
   static inline var BED_ROAD = 3;
   static inline var BED_LATRINE = 4;
   static inline var BED_COMMS = 5;
-  static inline var BED_MARGIN = 6;
+  static inline var BED_ROOM = 6;
+  static inline var BED_MARGIN = 7;
   // a toilet flushing behind the latrine's partitions, every this many seconds or so: the facility
   // washroom's gap
   static inline var FLUSH_GAP = 80.0;
@@ -151,8 +154,9 @@ class MilitarySounds
     }
 
 // which bed plays at the player's cell: the hangar by its structure, the latrine and the comms room by
-// the room rects the generator saved, any other roof the building's, and the open split by the fence,
-// the outside again by the road
+// the room rects the generator saved, any other room rect under a roof the room bed, the rest of the
+// roof (corridors, doorways) the building's, and the open split by the fence, the outside again by the
+// road
   function bedAt(pc:Int, pr:Int):Int
     {
       if (FacilityModel.inHangar(m, pc, pr))
@@ -165,7 +169,7 @@ class MilitarySounds
           room.role == FacilityTemp.ROLE_COMMS)
         return BED_COMMS;
       if (FacilityModel.isIndoor(m, pc, pr))
-        return 0;
+        return (room != null ? BED_ROOM : 0);
       if (!game.area.isOutsideBase(pc, pr))
         return BED_YARD;
       return (Math.abs(pr - roadRow) <= ROAD_REACH ? BED_ROAD : BED_MARGIN);
