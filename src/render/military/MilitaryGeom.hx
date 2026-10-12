@@ -190,11 +190,21 @@ class MilitaryGeom
                 pad.x1 = Std.int(Math.max(pad.x1, col));
                 pad.z1 = Std.int(Math.max(pad.z1, row));
               }
-            // the helicopter stands on the pad, so its footprint is pad too
+            // the helicopter stands on the pad, so its footprint is pad too: its origin and its
+            // hull's cells, the ring round the hull being pad cells of their own (a save from before
+            // the ring has the whole footprint hull, and gets it all)
             else if (t == Const.TILE_MIL_HELI)
-              apron(col, row, Const.MIL_HELI_SIZE);
+              {
+                for (i in 0...Const.MIL_HELI_SIZE[0])
+                  for (j in 0...Const.MIL_HELI_SIZE[1])
+                    if (i + j == 0 ||
+                        area.getCellType(col + i, row + j) == Const.TILE_MIL_VEHICLE)
+                      apron(col + i, row + j, [ 1, 1 ]);
+              }
             else if (t == Const.TILE_MIL_DRUMS)
               MilitaryYard.wallDrums(m, col, row);
+            else if (t == Const.TILE_MIL_STORES)
+              MilitaryYard.stores(m, area, col, row);
           }
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);

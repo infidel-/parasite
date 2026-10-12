@@ -253,12 +253,18 @@ class GenCheck
 // room's role. So the filter states the intent and this states the outcome.
 //
 // gen.facility.FacilityToilet lays its T against the FIRST door of the room and models no second
-// one, so a washroom with two of them comes back with a partition sealing half of itself
+// one, so a washroom with two of them comes back with a partition sealing half of itself.
+//
+// A BASE'S LATRINE AND ITS MEDICAL BAY ARE HELD TO THE SAME (gen.facility.FacilityConnect.passedBy):
+// the latrine is picked on the washroom's own door test, and the bay "should have a single door
+// into corridor"
   public function washroomSane(rooms: Array<_Room>, doors: Array<_Door>)
     {
       for (r in rooms)
         {
-          if (r.role != gen.facility.FacilityTemp.ROLE_TOILET)
+          if (r.role != gen.facility.FacilityTemp.ROLE_TOILET &&
+              r.role != gen.facility.FacilityTemp.ROLE_LATRINE &&
+              r.role != gen.facility.FacilityTemp.ROLE_MEDICAL)
             continue;
           // NOT FILTERED ON `skip`, which is bookkeeping and not a state: fixDoors deletes the
           // door it drops from the list outright and sets `skip` on the one it KEEPS, so a skipped
@@ -269,17 +275,17 @@ class GenCheck
           // rejected 21.8% of lab structures as washroom-less for a door the washroom never cut,
           // and closing that gap is what makes a toilet guaranteed rather than a 60% roll
           var mine = [for (d in doors) if (d.roomID1 == r.id) d];
-          ok(mine.length == 1, 'washroom at ' + r.x1 + ',' + r.y1 + ' cut ' + mine.length +
+          ok(mine.length == 1, r.role + ' at ' + r.x1 + ',' + r.y1 + ' cut ' + mine.length +
             ' doors of its own, not 1');
           // and NOBODY ELSE'S door opens into it: a room reached only through the toilets is the
           // fault gen.facility.FacilityConnect.sealWashroom exists to stop
           var theirs = [for (d in doors) if (d.roomID2 == r.id && d.roomID1 != r.id) d];
-          ok(theirs.length == 0, 'washroom at ' + r.x1 + ',' + r.y1 + ' has ' + theirs.length +
+          ok(theirs.length == 0, r.role + ' at ' + r.x1 + ',' + r.y1 + ' has ' + theirs.length +
             ' door(s) from a neighbouring room into it');
           // roomID 0 is the sentinel for "a corridor, or outdoors" — doorsSane's own note
           for (d in mine)
             ok(d.roomID2 == 0,
-              'washroom at ' + r.x1 + ',' + r.y1 + ' has a door at ' + d.x + ',' + d.y +
+              r.role + ' at ' + r.x1 + ',' + r.y1 + ' has a door at ' + d.x + ',' + d.y +
               ' onto room ' + d.roomID2 + ' and not a corridor');
         }
     }
@@ -937,11 +943,11 @@ class GenCheck
       ok(gaps == 1, gaps + ' pedestrian gaps by the gate, want 1');
 
       // every vehicle origin carries its whole footprint, the plane its outline (Const.MIL_PLANE_MASK,
-      // nose north or south) and nothing else, and every container its length
+      // nose north or south) and the helicopter its hull inside a ring of pad (Const.MIL_HELI_RING)
+      // and nothing else, and every container its length
       var sizes = [
         Const.TILE_MIL_TANK => Const.MIL_TANK_SIZE,
         Const.TILE_MIL_HUMVEE => Const.MIL_HUMVEE_SIZE,
-        Const.TILE_MIL_HELI => Const.MIL_HELI_SIZE,
       ];
       for (x in 0...ctx.width)
         for (y in 0...ctx.height)
@@ -961,6 +967,22 @@ class GenCheck
                         fits[1] = false;
                     }
                 ok(fits[0] || fits[1], 'plane at ' + x + ',' + y + ' does not match its outline');
+              }
+            else if (t == Const.TILE_MIL_HELI)
+              {
+                var sz = Const.MIL_HELI_SIZE;
+                var ring = Const.MIL_HELI_RING;
+                for (dx in 0...sz[0])
+                  for (dy in 0...sz[1])
+                    {
+                      var hull = (dx >= ring &&
+                        dx < sz[0] - ring &&
+                        dy >= ring &&
+                        dy < sz[1] - ring);
+                      ok((ctx.getCellType(x + dx, y + dy) == Const.TILE_MIL_VEHICLE) == hull,
+                        'helicopter at ' + x + ',' + y + ': cell ' + dx + ',' + dy +
+                        (hull ? ' of its hull is open' : ' of its ring is hull'));
+                    }
               }
             else if (sizes.exists(t))
               {
@@ -1007,6 +1029,13 @@ class GenCheck
         if (gen.military.MilitaryZones.isRoom(n.kind))
           ok(!gen.blocks.RoomBlock.tagged(n, gen.military.MilitaryZones.TAG_UNMET),
             n.kind + ' at ' + n.x1 + ',' + n.y1 + ' fell short of its zone quota'));
+      // and no room too small to furnish: gen.facility.FacilityBuilding.mergeSmallRooms knocks each
+      // through into a neighbour ("don't allow 4x4 or less rooms, they can't contain anything useful")
+      var small = gen.facility.FacilityBuilding.SMALL_ROOM;
+      for (r in rooms)
+        ok(r.w > small ||
+          r.h > small,
+          r.role + ' room at ' + r.x1 + ',' + r.y1 + ' is ' + r.w + 'x' + r.h);
       for (r in rooms)
         if (gen.military.MilitaryZones.kindOf(r.role) != null)
           for (x in r.x1...r.x2 + 1)

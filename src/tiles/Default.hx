@@ -72,10 +72,10 @@ class Default extends Tileset
     1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 19 - the military base (Const.TILE_MIL_*): fence, TORN fence (walkable), tower, tent,
-    // container x2, vehicle footprint x5 (the plane's origin walkable: its corner of the footprint is
-    // open floor, Const.MIL_PLANE_MASK), the helipad (walkable), a jersey barrier and a hangar's
-    // fuel drums
-    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+    // container x2, vehicle footprint x5 (the helicopter's and the plane's origins walkable: their
+    // corners of the footprint are open ground, Const.MIL_HELI_RING and MIL_PLANE_MASK), the helipad
+    // (walkable), a jersey barrier, a hangar's fuel drums and a camp's stores
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0,
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
     // board walkable: it marks a wall). The mess counter, the file cabinet and the latrine trough
     // ARE: like the corp locker they stand in the wall's margin, and a cell of bare boards in front

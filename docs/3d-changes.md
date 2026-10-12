@@ -2088,3 +2088,33 @@ did not seem to "throw shadows"; the helipad's "circles cut off on the sides".
 **Verdict:** landed. Measured with `onBeforeRender`: the five roof batches draw 1 call each. They
 replace two emitted deck meshes per building (galvanised, chequer), so +1 on a two-building base.
 0 new programs (121).
+
+## Military base: twin-jet replaces the turboprop, camp stores, heli hull ring, container rails turned, roof dressing after the deck, cable trunks closed at the corners
+
+**Reported:** "plane fixes produced holes and errors. let's generate the airplane with turbines"; the
+container rails' "strips look bad there"; "add more crates and barrels to camp, to the tent sides";
+the helicopter's whole 3x7 unwalkable; "roof water allows seeing through inside the bldg"; roof
+cables with "holes on corners".
+
+**Changed:**
+- **Plane**: one gen (2.5 sunburst high, `style_prop`, lifted to p50 72) and one TRELLIS run at
+  `decimation_target` 10000: 9,838 tris, solid nacelles, T-tail, gear. It came back ~43° off in plan,
+  squared by its mirror plane (`plane_jet_align.py`, see 3d-models.md). Drawn at h 8.3: the fin is at
+  the tail end and 8.3 clears the shallowest vault (16x11) by 0.34, span 23.5 against the turboprop's
+  27.7. `MIL_PLANE_MASK`'s wing row is `.xxxxxx.` (tips stop in the second column), and `PLANE_LOW` is
+  one fuselage rect (−2.0..2.4 x −9.9..6.2): the gear sits in its blisters. baseColor 0.5.
+- **Container rails**: a `turned` rect anchored on a rib's outer flat (`RAIL_U`), so the side art runs
+  along each rail instead of laying the ribs across it. Gates unchanged.
+- **Camp stores** (`MilitaryYard.stores`, `Const.TILE_MIL_STORES`): a crate stack 1-3 high, 2-3 drums,
+  or a stack and a drum, along the tent's long side 0.15 off the cell edge, a pool per pile. 8.5 cells
+  a base.
+- **Helicopter**: only its 1x5 hull is solid, so the origin draws an apron cell and each hull cell
+  draws one; the ring is pad cells with aprons of their own. An old save's 3x7 hull still gets them all.
+- **Roof dressing** (`FacilityRoof.pack`, every compound): `renderOrder` 1. The deck of a fading roof
+  draws in the transparent pass too, ordered by bounding centre, and a dressing sorted first blended
+  its soft edge texels over the room under the roof and wrote their depth there.
+- **Roof cable trunks** run half a cable past each end spur's line. Stopping on its centre line left
+  the outer quarter of every L's corner open (measured: trunk end −74.25 against spur −74.19 ± 0.063).
+
+**Verdict:** landed. Draw calls are unchanged: the stores go into the existing crate and drum batches,
+and the plane is still one instanced batch. No new programs (121).

@@ -704,6 +704,11 @@ class FacilityRoof
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.receiveShadow = true;
       mesh.castShadow = false;
+      // AFTER the deck, which a fading roof also draws in the transparent pass: three orders that pass
+      // by each mesh's bounding centre, and a dressing sorted first blended its soft-edged texels over
+      // the room under the roof and wrote their depth, so the deck never covered them ("roof water
+      // allows seeing through inside the bldg")
+      mesh.renderOrder = 1;
       scene.add(mesh);
       shell.roof.push(mesh);
     }
@@ -1026,11 +1031,13 @@ class FacilityRoof
                 y: y,
               });
             }
+          // and half a cable past each end, so an end spur's corner is square: stopped on the spur's
+          // centre line it left the outer quarter of the L open ("holes on corners")
           seg(segs, {
             ax: 1,
             line: tx,
-            a0: z0,
-            a1: z1,
+            a0: z0 - hw,
+            a1: z1 + hw,
             y: y,
           });
         }

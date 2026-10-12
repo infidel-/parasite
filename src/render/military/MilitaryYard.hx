@@ -74,6 +74,12 @@ class MilitaryYard
   // a hangar's drums along its wall: the step between two, and how far the row stands off the face
   static inline var DRUM_STEP = 1.3;
   static inline var DRUM_GAP = 0.08;
+  // a camp's stores: how far their near face stands off the cell's edge against the tent (its canvas
+  // is MilitaryGeom.TENT_INSET further in), and where a crate stack and a drum sharing a cell sit
+  // off its middle, along the tent
+  static inline var STORE_GAP = 0.15;
+  static inline var STORE_CRATE_AT = 0.8;
+  static inline var STORE_DRUM_AT = 1.3;
 
   // the roof kit: a sandbag nest, water tanks, the aerial mast
   static inline var NEST_HALF = 1.8;
@@ -379,6 +385,74 @@ class MilitaryYard
           z1: c.z + e,
         }),
         h: DRUM_H,
+      });
+    }
+
+// a camp's stores on one cell beside a tent (Const.TILE_MIL_STORES), run along the tent's long side
+// a hand off its canvas: a crate stack one to three high, two or three drums, or a crate stack and a
+// drum. Which, how high and which end off the cell's hash
+  public static function stores(m:Facility, area:AreaGame, col:Int, row:Int):Void
+    {
+      var h = FacilityModel.mix((col * 15485863) ^ (row * 32452843));
+      var c = CityConfig.cellToWorld(col, row);
+      var y = FacilityGround.surfY(m.surf[row][col]);
+      // 1 when the tent is west of the cell and the stores stand out east of it
+      var out = (area.getCellType(col - 1, row) == Const.TILE_MIL_TENT ? 1 : -1);
+      var near = c.x - out * CELL / 2 + out * STORE_GAP;
+      var kind = h % 3;
+      var end = ((h >> 2) % 2 == 0 ? 1 : -1);
+      if (kind != 1)
+        {
+          var n = 1 + (h >> 4) % (kind == 0 ? 3 : 2);
+          var z = (kind == 0 ? c.z + ((h >> 6) % 3 - 1) * 0.3 : c.z - end * STORE_CRATE_AT);
+          var x = near + out * CRATE_D / 2;
+          for (i in 0...n)
+            MilitaryGeom.crates.push({
+              x: x,
+              z: z + (i % 2 == 1 ? 0.1 : 0.0),
+              yaw: Math.PI / 2,
+              y: y + i * CRATE_STEP,
+            });
+          pile(m, col, row, near, near + out * CRATE_D, z - CRATE_W / 2, z + CRATE_W / 2 + 0.1,
+            n * CRATE_STEP);
+        }
+      if (kind != 0)
+        {
+          var n = (kind == 1 ? 2 + (h >> 4) % 2 : 1);
+          var x = near + out * DRUM_R;
+          var z0 = 1e9, z1 = -1e9;
+          for (i in 0...n)
+            {
+              var z = (kind == 1 ? c.z + (i - (n - 1) / 2) * DRUM_STEP : c.z + end * STORE_DRUM_AT);
+              MilitaryGeom.drums.push({
+                x: x,
+                z: z,
+                yaw: ((h >> (8 + i * 3)) % 8) * Math.PI / 4,
+                y: y,
+              });
+              z0 = Math.min(z0, z - DRUM_R);
+              z1 = Math.max(z1, z + DRUM_R);
+            }
+          pile(m, col, row, near, near + out * DRUM_R * 2, z0, z1, DRUM_H);
+        }
+    }
+
+// the contact shadow under one pile of stores, its x span given either way round
+  static function pile(m:Facility, col:Int, row:Int, xa:Float, xb:Float, z0:Float, z1:Float,
+      top:Float):Void
+    {
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: 1,
+        alongX: false,
+        rect: {
+          x0: Math.min(xa, xb),
+          x1: Math.max(xa, xb),
+          z0: z0,
+          z1: z1,
+        },
+        h: top,
       });
     }
 

@@ -324,14 +324,22 @@ The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` 
 a square helipad, a motor pool near the gate, 1-2 tent camps, 1-2 container depots, and an ENTRY yard.
 The rest is yard.
 - **The hangar holds the plane and fuel drums** (`HangarBlock.zones`' military branch). The plane is
-  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 18 of the 8x7 footprint's 56
-  cells), nose to the bay doors; the full rect was "too much is unwalkable ... a TON of empty tiles".
+  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 16 of the 8x7 footprint's 56
+  cells since the twin-jet, whose wing tips stop in the second column), nose to the bay doors; the
+  full rect was "too much is unwalkable ... a TON of empty tiles".
   Its origin corner is walkable and `MilitaryVehicles.planeNorth` reads the nose back off the stamp.
   `GenCheck` asserts the outline in one of the two turns. Drums (`TILE_MIL_DRUMS`) take 60% of the wall
   run's cells off the bay-door wall and out of the side door's bay, each kept only while the floor is
   one piece (`HangarBlock.split`): a 10-wide shed's wing passes its tips one cell off each wall, and
   the first build's oracle failed on unreachable hangar floor there and in corners. No generators: with the
   footprint solid none ever fitted. Hangar fill 56 → 35%.
+- **The helicopter's hull is 1x5 inside its 3x7** ("a whole 1 tile can be removed from all sides"):
+  `helipad` stamps `TILE_MIL_VEHICLE` inside a `Const.MIL_HELI_RING` of pad, and the origin corner,
+  like the plane's, is walkable. 21 → 5 solid cells a base; `GenCheck` asserts hull and ring.
+- **A camp's tents have stores against their long sides** (`TILE_MIL_STORES`, unwalkable,
+  see-through): east of a tent 70% of the time and west of it 45%, never in the plot's edge cells and
+  never on both sides of one lane. A pair a row apart on the two sides pinched a lane shut on the
+  diagonal in the first build's live base. 8.5 cells a base.
 - **ENTRY** is a `must` on the gate side's edge, smallest first, filled as yard. `gate()` puts the
   mouth, booth and pedestrian gap inside its span, so the drive opens onto open ground; a building
   straight behind the boom read as a wall at the end of it.
@@ -387,7 +395,7 @@ laboratory's deal. That:
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (up to two, 3 cells back to back where the ring fits, else 2; two share the aisle between them) |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
-| mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`) |
+| mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`; along whichever axis seats more, `messRows`) |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows; a GLASS bay of either too) |
 | latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first, a tiled separator wall each side of a shower), bench-island (3 cells where the ring fits, else 2) |
 
@@ -500,7 +508,21 @@ used. A save from before has its rows as wall-shelf tiles, which now walk throug
 ring, so one landed in the wall a barracks shares with the store ("supply room <-> barracks door
 should not be there"). `FacilityConnect.sealRooms`, the base's first theming step, walls up every
 room-to-room door and runs `linkClusters`, which cuts a corridor door for whatever that strands and a
-room door only for a room with no corridor wall at all (`roomDoors`, 0.44 a base).
+room door only for a room with no corridor wall at all (`roomDoors`, 0.33 a base).
+
+**The latrine and the medical bay are entered from a corridor and through nothing else**
+(`FacilityConnect.passedBy`, "should have a single door into corridor"). The bay had two corridor doors
+in the live base. It is now the biggest room left with a corridor door of its own and no door to or
+from another room (`FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up the rest. Neither
+`linkClusters` nor `connectRooms` cuts a door into either, and `GenCheck.washroomSane` holds both to
+the lab washroom's terms. Without the "no room door" test, 23 seeds in 2000 traced a stranded cluster.
+4 still do, and the end-of-generation `connectRooms` lets each in elsewhere.
+
+**No room is 4x4 or smaller** ("they can't contain anything useful"). Before doors are cut,
+`FacilityBuilding.mergeSmallRooms` knocks each one through into the smallest neighbour that matches it
+edge to edge. One walled in by corridors (7 seeds in 2000) opens onto the corridor that runs the length
+of one of its walls, as an alcove (`alcove`). 12.49 → 11.89 rooms a base, all of the drop barracks;
+`GenCheck.militaryRooms` asserts it.
 
 **Furniture never seals a cell.** `MilitaryRooms.free` refuses a cell beside a doorway, and a cell
 that would leave a bare neighbour with no OTHER bare neighbour. Counting the doorway as an exit is

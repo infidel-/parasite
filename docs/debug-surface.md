@@ -61,8 +61,9 @@ proves it inline. When a lesson invalidates an old bullet, replace it rather tha
     SEPARATELY as of `Const.TILE_PARKING` — both are `Surf.LOT`, and the car park's own tile is what
     tells them apart; before it they were one block called `lot`. A MILITARY BASE's plots are lot to
     the surface too, so `helipad`, `motorpool`, `depot` and `camp` are read back off the tiles that
-    stand in them (pad and helicopter, vehicle origins plus footprint, containers, tents), each clump's
-    box grown a cell, and `yard` is what they leave; the entry yard stands nothing and stays `yard`.
+    stand in them (pad and helicopter, vehicle origins plus footprint, containers, tents and their
+    stores), each clump's box grown a cell, and `yard` is what they leave; the entry yard stands
+    nothing and stays `yard`.
   - **The only block of a kind that already holds you lands you somewhere else in it**, more than 10
     cells away (`GO_FAR`), instead of refusing: a base's `yard` is most of its lot, and run from
     anywhere on it the command used to say you were already there.

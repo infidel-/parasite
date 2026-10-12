@@ -46,6 +46,11 @@ class MilitaryGen
   static inline var TENT_W = 2;
   static inline var TENT_H = 3;
   static inline var TENT_LANE = 2;
+  // how often a tent has stores against its east side, and against its west side (only where the
+  // tent west of it stood none against the lane, so a lane between two tents keeps a column clear:
+  // one on each side a row apart pinched it shut on the diagonal)
+  static inline var STORES_EAST_PCT = 70;
+  static inline var STORES_WEST_PCT = 45;
   // how often a container slot in the depot actually holds one ("make more containers")
   static inline var CONTAINER_PCT = 95;
   // how often a motor pool's next vehicle is another tank rather than a humvee, and how many it
@@ -160,10 +165,13 @@ class MilitaryGen
         }
     }
 
-// a grid of tents, a lane between each, one cell in from the plot's edge
+// a grid of tents, a lane between each, one cell in from the plot's edge, and stores against the
+// tents' long sides ("add more crates and barrels to camp, to the tent sides"), a cell of either:
+// never in the plot's edge cells, nor on both sides of one lane
   static function camp(state: _FacilityState, node: _GenNode)
     {
-      var cells = state.area.getCells();
+      var area = state.area;
+      var cells = area.getCells();
       var y = node.y1 + 1;
       while (y + TENT_H - 1 <= node.y2 - 1)
         {
@@ -171,6 +179,19 @@ class MilitaryGen
           while (x + TENT_W - 1 <= node.x2 - 1)
             {
               drawBlock(cells, x, y, TENT_W, TENT_H, Const.TILE_MIL_TENT);
+              var sy = y + area.random(TENT_H);
+              var lane = true;
+              for (k in 0...TENT_H)
+                if (cells[x - TENT_LANE][y + k] == Const.TILE_MIL_STORES)
+                  lane = false;
+              if (x > node.x1 + 1 &&
+                  lane &&
+                  area.chance(STORES_WEST_PCT))
+                cells[x - 1][sy] = Const.TILE_MIL_STORES;
+              sy = y + area.random(TENT_H);
+              if (x + TENT_W <= node.x2 - 1 &&
+                  area.chance(STORES_EAST_PCT))
+                cells[x + TENT_W][sy] = Const.TILE_MIL_STORES;
               x += TENT_W + TENT_LANE;
             }
           y += TENT_H + TENT_LANE;
@@ -244,9 +265,14 @@ class MilitaryGen
       var px = node.x1 + Std.int((w - side) / 2);
       var py = node.y1 + Std.int((h - side) / 2);
       drawBlock(cells, px, py, side, side, Const.TILE_MIL_PAD);
+      // the hull's cells only: the ring of the footprint round it stays pad
       var size = Const.MIL_HELI_SIZE;
-      vehicle(area, Const.TILE_MIL_HELI, size, px + Std.int((side - size[0]) / 2),
-        py + Std.int((side - size[1]) / 2));
+      var ring = Const.MIL_HELI_RING;
+      var x = px + Std.int((side - size[0]) / 2);
+      var y = py + Std.int((side - size[1]) / 2);
+      drawBlock(cells, x + ring, y + ring, size[0] - ring * 2, size[1] - ring * 2,
+        Const.TILE_MIL_VEHICLE);
+      cells[x][y] = Const.TILE_MIL_HELI;
     }
 
 // stamp one vehicle's footprint, its origin (top-left) cell naming the model

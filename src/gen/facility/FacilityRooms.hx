@@ -153,12 +153,51 @@ class FacilityRooms
           rest.length > 0)
         rest.shift().role = ROLE_ARMORY;
       // then one of each of the building's own specialists, each only while a room of the plain kind
-      // is left over for it: the HQ's comms room, the barracks building's medical bay and store
+      // is left over for it: the HQ's comms room, the barracks building's medical bay and store. The
+      // bay keeps one door onto a corridor and no other (FacilityConnect.oneDoor)
       for (role in (hq ? [ ROLE_COMMS ] : [ ROLE_MEDICAL, ROLE_SUPPLY ]))
         if (rest.length > 1)
-          rest.shift().role = role;
+          {
+            var i = (role == ROLE_MEDICAL ? bay(state, cells, rest) : 0);
+            var room = rest.splice(i, 1)[0];
+            room.role = role;
+            if (role == ROLE_MEDICAL)
+              FacilityConnect.oneDoor(state, room);
+          }
       for (room in rest)
         room.role = ROLE_BARRACKS;
+    }
+
+// which of these rooms (biggest first) is the medical bay: the first with a door of its own onto a
+// corridor and none into or from another room, then the first with the corridor door, then the
+// first. FacilityConnect.oneDoor walls up every other door, and a neighbour reached through one of
+// them is stranded (23 cluster traces in 2000 seeds before the room-door test)
+  static function bay(state: _FacilityState, cells: Array<Array<Int>>, rooms: Array<_Room>): Int
+    {
+      var best = 0;
+      var score = -1;
+      for (k in 0...rooms.length)
+        {
+          var id = rooms[k].id;
+          var corridor = false;
+          var linked = false;
+          for (d in state.doors)
+            {
+              if (d.roomID1 == id &&
+                  FacilityConnect.ontoCorridor(cells, d))
+                corridor = true;
+              else if (d.roomID1 == id ||
+                  d.roomID2 == id)
+                linked = true;
+            }
+          var s = (corridor ? 2 : 0) + (linked ? 0 : 1);
+          if (s > score)
+            {
+              best = k;
+              score = s;
+            }
+        }
+      return best;
     }
 
 // fill rooms with content. a military building's are furnished at the room level instead

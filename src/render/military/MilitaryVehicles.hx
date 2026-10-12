@@ -58,26 +58,25 @@ class MilitaryVehicles
       h: 9.0,
       turn: false,
     },
-    // the plane as big as the vault lets it be: at 7.5 it was a 12 m light twin beside the crew ("plane
-    // scale looks a little wrong"), and filling its footprint's span at 9.6 put the T-tail through the
-    // roof. Its fin stands two and a half cells off the middle of the floor, under the arch's fall, and
-    // 8.6 clears it by 0.31 in the shallowest vault a base deals (16x11: an arch over 42 rising 3.78)
+    // the jet as big as the vault lets it be ("plane scale looks a little wrong" at a 12 m light
+    // twin). Its T-tail's fin stands at the tail end, 9.4 off the middle of the floor and under the
+    // arch's fall, and 8.3 clears it by 0.34 in the shallowest vault a base deals (16x11: an arch over
+    // 42 rising 3.78) with the footprint's half-cell centring against it: a 23.5 span, 20.7 long
     {
       tile: Const.TILE_MIL_PLANE,
       size: Const.MIL_PLANE_SIZE,
       path: RenderConfig.MODELS.militaryPlane,
-      h: 8.6,
+      h: 8.3,
       turn: true,
     },
   ];
 
   // what of the plane comes down near the floor, world units off its footprint's centre nose north,
-  // [ x0, x1, z0, z1 ], measured off the glb at its h: the fuselage and the two main wheels. Its
-  // contact shadow is these and not the footprint, which laid a black block 8x7 cells under the wings
+  // [ x0, x1, z0, z1 ], measured off the glb at its h: the fuselage under 1.6, its main gear in
+  // blisters on its flanks and the nose gear all inside it. Its contact shadow is this and not the
+  // footprint, which laid a black block 8x7 cells under the wings
   static var PLANE_LOW = [
-    [ -1.45, 1.45, -10.75, 8.7 ],
-    [ -3.7, -2.7, -1.5, -0.4 ],
-    [ 2.7, 3.7, -1.5, -0.4 ],
+    [ -2.0, 2.4, -9.9, 6.2 ],
   ];
 
 // every vehicle in the base, one instanced batch per model. runs before ContactMask.repaint, like

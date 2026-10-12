@@ -67,9 +67,8 @@ class MilitaryRooms
           case DOC_DESK: line(state, room, cells, Const.TILE_MIL_DESK, 1, 1) +
             line(state, room, cells, Const.TILE_MIL_MED_CABINET, MEDCABS_MAX, 1);
           case COUNTER_RUN: line(state, room, cells, Const.TILE_MIL_COUNTER, 99, 1);
-          case TABLE_ROWS: tableRows(state, room, (room.w >= room.h),
-            (room.role == ROLE_MESS ? Const.TILE_MIL_MESS_TABLE : Const.TILE_MIL_BRIEF_TABLE),
-            room.role == ROLE_MESS);
+          case TABLE_ROWS: (room.role == ROLE_MESS ? messRows(state, room) :
+            tableRows(state, room, (room.w >= room.h), Const.TILE_MIL_BRIEF_TABLE, false));
           case BOARD: board(state, cells);
           case CUBICLES: line(state, room, cells, Const.TILE_MIL_STALL, STALLS_MAX, 1);
           case SINK_RUN: line(state, room, cells, Const.TILE_MIL_SINKS, SINKS_MAX, 1);
@@ -308,6 +307,34 @@ class MilitaryRooms
           at += row + 1;
         }
       return n;
+    }
+
+// a mess hall's rows along whichever axis seats more, the long one on a tie. A square hall with its
+// doorways in both ends of one axis got a single cross-section of that one, where the other runs on
+// to its far wall ("should've been vertical table column plus two bench columns")
+  static function messRows(state: _FacilityState, room: _Room): Int
+    {
+      var cells = state.area.getCells();
+      var save = function()
+        return [for (x in room.x1...room.x2 + 1) [for (y in room.y1...room.y2 + 1) cells[x][y]]];
+      var load = function(a: Array<Array<Int>>)
+        {
+          for (x in room.x1...room.x2 + 1)
+            for (y in room.y1...room.y2 + 1)
+              cells[x][y] = a[x - room.x1][y - room.y1];
+        }
+      var bare = save();
+      var long = (room.w >= room.h);
+      var n = tableRows(state, room, !long, Const.TILE_MIL_MESS_TABLE, true);
+      var turned = save();
+      load(bare);
+      var m = tableRows(state, room, long, Const.TILE_MIL_MESS_TABLE, true);
+      if (n > m)
+        {
+          load(turned);
+          return n;
+        }
+      return m;
     }
 
 // carry one band of a mess hall's rows (`at`..`at + row - 1` across the room) from its end cell on to

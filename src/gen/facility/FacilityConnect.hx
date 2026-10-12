@@ -165,6 +165,39 @@ class FacilityConnect
       linkClusters(state);
     }
 
+// leave a room ONE way in: its first door of its own onto a corridor, every other door in its walls
+// walled up, and whatever that strands let in elsewhere. A base's medical bay ("should have a single
+// door into corridor"); sealWashroom is the neighbours' half of this, for a room picked for having
+// only the one door already
+  public static function oneDoor(state: _FacilityState, room: _Room)
+    {
+      var cells = state.area.getCells();
+      var kept = false;
+      for (door in state.doors.copy())
+        {
+          if (door.roomID1 != room.id &&
+              door.roomID2 != room.id)
+            continue;
+          if (!kept &&
+              door.roomID1 == room.id &&
+              ontoCorridor(cells, door))
+            {
+              kept = true;
+              continue;
+            }
+          cells[door.x][door.y] = TEMP_BUILDING_INNER_WALL;
+          state.doors.remove(door);
+        }
+      linkClusters(state);
+    }
+
+// does a door open onto a corridor from the room that cut it: its `dir` points out of that room
+  public static function ontoCorridor(cells: Array<Array<Int>>, door: _Door): Bool
+    {
+      var delta = deltaMap[door.dir];
+      return cells[door.x + delta.x][door.y + delta.y] == TEMP_BUILDING_CORRIDOR;
+    }
+
 // wall up every door from one room straight into another, and give whatever that strands a way in of
 // its own. A military building's rooms open onto its corridors: a barracks walked through into the
 // store next door was reported as a door that should not be there. linkClusters still cuts a door
@@ -202,7 +235,7 @@ class FacilityConnect
           else pending.push(c);
         }
       for (r in state.rooms)
-        if (r.role == ROLE_TOILET)
+        if (passedBy(r.role))
           reachable.remove(r.id);
 
       // and let every other set in.
@@ -607,7 +640,7 @@ class FacilityConnect
             {
               var far = roomAtCell(state, fx, fy);
               if (hasDoorBetween(state, room.id, far) ||
-                  isRole(state, far, ROLE_TOILET))
+                  passedBy(roleOf(state, far)))
                 continue;
             }
           // every indoor floor id sits at or above the chem-lab band; the road, pavement, alley and
@@ -715,10 +748,25 @@ class FacilityConnect
 // roomByID, which holds only the building being generated and answers null at the end of generation
   static function isRole(state: _FacilityState, roomID: Int, role: String): Bool
     {
+      return roleOf(state, roomID) == role;
+    }
+
+// the role of a recorded room, or null for a corridor or one with none
+  static function roleOf(state: _FacilityState, roomID: Int): String
+    {
       for (r in state.allRooms)
         if (r.id == roomID)
-          return (r.role == role);
-      return false;
+          return r.role;
+      return null;
+    }
+
+// is a room of this role entered from a corridor and walked through by nobody: a lab's washroom, a
+// base's latrine and its medical bay ("should have a single door into corridor")
+  static inline function passedBy(role: String): Bool
+    {
+      return role == ROLE_TOILET ||
+        role == ROLE_LATRINE ||
+        role == ROLE_MEDICAL;
     }
 
 // which recorded room holds this cell, or 0 for a corridor or the outdoors. by rect and not by the

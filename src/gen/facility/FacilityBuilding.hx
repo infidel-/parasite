@@ -22,6 +22,8 @@ class FacilityBuilding
   // bounded in aspect, so the buildings are squarer and their rooms came out 60 cells against the
   // 45 they used to average. This is the constant that puts them back
   static inline var SUBDIVIDE_OVER = 1.2;
+  // the biggest room on both axes a military building knocks through into a neighbour
+  public static inline var SMALL_ROOM = 4;
 
 // generate a single building over its plot
   public static function generateBuilding(state: _FacilityState, node: _GenNode)
@@ -171,6 +173,10 @@ class FacilityBuilding
             TEMP_BUILDING_ROOM_MARKED, TEMP_BUILDING_ROOM);
         }
 
+      // a base has no use for a room 4x4 or smaller ("they can't contain anything useful")
+      if (state.military)
+        mergeSmallRooms(cells, bx, by, bw, bh);
+
       // make doors
       FacilityConnect.makeDoors(state, bx, by, bw, bh);
 
@@ -281,6 +287,107 @@ class FacilityBuilding
             markRoom(cells, newRoom, TEMP_BUILDING_ROOM_MARKED);
             rooms++;
           }
+    }
+
+// rid a military building of every room that fits in SMALL_ROOM x SMALL_ROOM, the smallest first:
+// knocked through into a neighbour that lines up with it, else opened onto a corridor as an alcove
+// of it. Over again until none is left that can go either way
+  static function mergeSmallRooms(cells: Array<Array<Int>>, bx: Int, by: Int, bw: Int, bh: Int)
+    {
+      var changed = true;
+      while (changed)
+        {
+          var rooms = [];
+          for (y in by + 1...by + bh)
+            for (x in bx + 1...bx + bw)
+              if (cells[x][y] == TEMP_BUILDING_ROOM)
+                {
+                  var r = getRoom(cells, x, y);
+                  markRoom(cells, r, TEMP_BUILDING_ROOM_MARKED);
+                  rooms.push(r);
+                }
+          replaceTiles(cells, bx, by, bw, bh, TEMP_BUILDING_ROOM_MARKED, TEMP_BUILDING_ROOM);
+          rooms.sort(function(a, b) return a.w * a.h - b.w * b.h);
+          changed = false;
+          for (r in rooms)
+            if (r.w <= SMALL_ROOM &&
+                r.h <= SMALL_ROOM &&
+                (knock(cells, r, rooms) || alcove(cells, r)))
+              {
+                changed = true;
+                break;
+              }
+        }
+    }
+
+// knock a room through into the smallest neighbour across one inner wall that matches it edge to edge,
+// so the two make one rectangle
+  static function knock(cells: Array<Array<Int>>, r: _Room, rooms: Array<_Room>): Bool
+    {
+      var wall = null;
+      var best = -1;
+      for (n in rooms)
+        {
+          // the wall between as its first cell and step, when n lines up with r across it
+          var rows = (n.y1 == r.y1 &&
+            n.y2 == r.y2);
+          var cols = (n.x1 == r.x1 &&
+            n.x2 == r.x2);
+          var line = (rows && n.x1 == r.x2 + 2 ? [ r.x2 + 1, r.y1, 0, 1 ] :
+            rows && n.x2 == r.x1 - 2 ? [ r.x1 - 1, r.y1, 0, 1 ] :
+            cols && n.y1 == r.y2 + 2 ? [ r.x1, r.y2 + 1, 1, 0 ] :
+            cols && n.y2 == r.y1 - 2 ? [ r.x1, r.y1 - 1, 1, 0 ] : null);
+          if (line == null ||
+              (best >= 0 && n.w * n.h >= best))
+            continue;
+          var len = (line[2] == 1 ? r.w : r.h);
+          var inner = true;
+          for (i in 0...len)
+            if (cells[line[0] + line[2] * i][line[1] + line[3] * i] != TEMP_BUILDING_INNER_WALL)
+              inner = false;
+          if (!inner)
+            continue;
+          best = n.w * n.h;
+          wall = [ line[0], line[1], line[2], line[3], len ];
+        }
+      if (wall == null)
+        return false;
+      for (i in 0...wall[4])
+        cells[wall[0] + wall[2] * i][wall[1] + wall[3] * i] = TEMP_BUILDING_ROOM;
+      return true;
+    }
+
+// open a room onto a corridor that runs the whole length of one of its walls, wall and floor turned
+// corridor: a room walled in by corridors on every side has no neighbour to take in (7 seeds in 2000)
+  static function alcove(cells: Array<Array<Int>>, r: _Room): Bool
+    {
+      // each wall as its first cell, the step along it and the step out across it
+      var sides = [
+        [ r.x1, r.y1 - 1, 1, 0, 0, -1 ],
+        [ r.x1, r.y2 + 1, 1, 0, 0, 1 ],
+        [ r.x1 - 1, r.y1, 0, 1, -1, 0 ],
+        [ r.x2 + 1, r.y1, 0, 1, 1, 0 ],
+      ];
+      for (s in sides)
+        {
+          var len = (s[2] == 1 ? r.w : r.h);
+          var open = true;
+          for (i in 0...len)
+            {
+              var x = s[0] + s[2] * i;
+              var y = s[1] + s[3] * i;
+              if (cells[x][y] != TEMP_BUILDING_INNER_WALL ||
+                  cells[x + s[4]][y + s[5]] != TEMP_BUILDING_CORRIDOR)
+                open = false;
+            }
+          if (!open)
+            continue;
+          for (i in 0...len)
+            cells[s[0] + s[2] * i][s[1] + s[3] * i] = TEMP_BUILDING_CORRIDOR;
+          markRoom(cells, r, TEMP_BUILDING_CORRIDOR);
+          return true;
+        }
+      return false;
     }
 
 // calc distance from this point to end of the main corridor

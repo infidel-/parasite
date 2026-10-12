@@ -399,6 +399,7 @@ class GenRun
                 t == Const.TILE_MIL_PAD ? '+' :
                 t == Const.TILE_MIL_JERSEY ? 'J' :
                 t == Const.TILE_MIL_DRUMS ? 'd' :
+                t == Const.TILE_MIL_STORES ? 'k' :
                 t == Const.TILE_MIL_BUNK ? 'B' :
                 t == Const.TILE_MIL_FOOTLOCKER ? 'f' :
                 t == Const.TILE_MIL_MESS_TABLE || t == Const.TILE_MIL_BRIEF_TABLE ? 'm' :

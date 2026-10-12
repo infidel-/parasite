@@ -144,7 +144,7 @@ class GoBlock
         MilitaryBlocks.HELIPAD => [ Const.TILE_MIL_PAD, Const.TILE_MIL_HELI ],
         MilitaryBlocks.MOTORPOOL => [ Const.TILE_MIL_TANK, Const.TILE_MIL_HUMVEE ],
         MilitaryBlocks.DEPOT => [ Const.TILE_MIL_CONTAINER, Const.TILE_MIL_CONTAINER_ORIGIN ],
-        MilitaryBlocks.CAMP => [ Const.TILE_MIL_TENT ],
+        MilitaryBlocks.CAMP => [ Const.TILE_MIL_TENT, Const.TILE_MIL_STORES ],
       ];
       var all = [];
       for (kind in kinds.keys())
