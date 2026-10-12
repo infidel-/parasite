@@ -857,6 +857,20 @@ class FacilityArea implements Area3D
         }
       if (here >= 0)
         return;
+      // a TALL shed from behind: two storeys and a vault stand between the camera and a player in the
+      // strip north of one, so standing there opens it as walking in does.
+      // ponytail: assumes the default camera facing north; an RMB orbit does not move the strip
+      for (i in 0...model.structures.length)
+        {
+          var st = model.structures[i];
+          if (st.hangar &&
+              model.hangarH > FacilityStyle.WALL_H &&
+              col >= st.ox1 &&
+              col <= st.ox2 &&
+              row < st.oy1 &&
+              row >= st.oy1 - FacilityStyle.HANGAR_BEHIND)
+            target[i] = 1.0;
+        }
       var reach = FacilityStyle.PEEK_CELLS;
       for (w in model.windows)
         {

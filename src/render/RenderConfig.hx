@@ -737,7 +737,7 @@ class RenderConfig {
     militaryTank: 'models/military/tank.glb',             // main battle tank, along local z
     militaryHumvee: 'models/military/humvee.glb',         // light utility 4x4, along local x
     militaryHeli: 'models/military/heli.glb',             // utility helicopter, four-blade rotor
-    militaryPlane: 'models/military/plane.glb',           // high-wing twin turboprop, span along local z
+    militaryPlane: 'models/military/plane.glb',           // high-wing twin-jet transport, span along local z
     // and its hand-modelled kit (models-src/military/basekit_build.py)
     militarySandbag: 'models/military/sandbag-hand.glb',  // one bag, long axis local x, one course high
     militaryMast: 'models/military/mast-hand.glb',        // floodlight mast on the facility lamp's head contract

@@ -2481,6 +2481,12 @@ class FacilityStyle
   // having line of sight to it reveals that structure, and the vision mask then governs how much of
   // the inside is actually drawn
   public static inline var PEEK_CELLS = 3;
+  // and how many rows north of a TALL shed (Facility.hangarH over WALL_H, a base's) open it from
+  // outside, the camera looking north. A face hides about 0.48 of its height behind it at the live
+  // pitch (camera forward y -0.90 over a horizontal 0.44), so the 12-high wall head hides 5.8 units,
+  // a cell and a half, and a player sprite standing up out of the second row is still half under the
+  // vault's fall. Three rows opens it for anyone the shed could hide
+  public static inline var HANGAR_BEHIND = 3;
 
   // bounding-sphere radius render.Models.cull tests each park plant against, world units. ONE radius
   // per batch, so the TALLEST prop sets it — the broadleaf in leaf at h 9.5, the same number the

@@ -125,20 +125,31 @@ class HangarBlock
               cells[x][y] = TEMP_BUILDING_WALL;
           }
 
-      // draw fake doors
-      var len = 0;
+      // draw fake doors. A military shed's is ONE roll-up door its plane's footprint wide, in front of
+      // the plane: the compound's three-cell bays between posts opened 12 units against a 27.8 span
+      // ("hangar doors are too small for the plane to pass through")
       var y = (state.mainRoadNorth ? (by + bh - 1) : by);
-      for (x in bx + 1...bx + bw - 1)
+      if (state.military)
         {
-          if (len < 0)
+          var px = planeCol(bx + 1, bw - 2);
+          for (x in px...px + Const.MIL_PLANE_SIZE[0])
+            cells[x][y] = TEMP_HANGAR_DOOR;
+        }
+      else
+        {
+          var len = 0;
+          for (x in bx + 1...bx + bw - 1)
             {
+              if (len < 0)
+                {
+                  len++;
+                  continue;
+                }
+              cells[x][y] = TEMP_HANGAR_DOOR;
               len++;
-              continue;
+              if (len == 3)
+                len = -1;
             }
-          cells[x][y] = TEMP_HANGAR_DOOR;
-          len++;
-          if (len == 3)
-            len = -1;
         }
 
       // draw side door
@@ -225,8 +236,7 @@ class HangarBlock
       // none ever fitted
       if (state.military)
         {
-          gen.military.MilitaryGen.plane(state.area,
-            node.x1 + Std.int((w - Const.MIL_PLANE_SIZE[0]) / 2),
+          gen.military.MilitaryGen.plane(state.area, planeCol(node.x1, w),
             node.y1 + Std.int((h - Const.MIL_PLANE_SIZE[1]) / 2), !state.mainRoadNorth);
           var bays = [];
           walls(node, bays);
@@ -269,6 +279,14 @@ class HangarBlock
       for (b in bays)
         node.children.push(b);
       generators(state, node, bays);
+    }
+
+// the column a military hangar's plane stands its footprint from: centred on a floor starting at x1, w
+// wide. One place, because the door in front of it is cut off the same column before the plane is
+// stamped
+  static inline function planeCol(x1: Int, w: Int): Int
+    {
+      return x1 + Std.int((w - Const.MIL_PLANE_SIZE[0]) / 2);
     }
 
 // fuel drums along one bay of a military hangar's wall run ("add fuel drums to the wall slots"), on most

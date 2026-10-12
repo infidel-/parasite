@@ -2091,6 +2091,8 @@ replace two emitted deck meshes per building (galvanised, chequer), so +1 on a t
 
 ## Military base: twin-jet replaces the turboprop, camp stores, heli hull ring, container rails turned, roof dressing after the deck, cable trunks closed at the corners
 
+> SUPERSEDED in part (the jet's size, the dressing's renderOrder) by Military base: roof pools after the deck, hangar drums on the hangar floor, two-storey hangar fading its upper storey, plane-wide door, jet at 27.8
+
 **Reported:** "plane fixes produced holes and errors. let's generate the airplane with turbines"; the
 container rails' "strips look bad there"; "add more crates and barrels to camp, to the tent sides";
 the helicopter's whole 3x7 unwalkable; "roof water allows seeing through inside the bldg"; roof
@@ -2118,3 +2120,35 @@ cables with "holes on corners".
 
 **Verdict:** landed. Draw calls are unchanged: the stores go into the existing crate and drum batches,
 and the plane is still one instanced batch. No new programs (121).
+
+## Military base: roof pools after the deck, hangar drums on the hangar floor, two-storey hangar fading its upper storey, plane-wide door, jet at 27.8
+
+**Reported:** "still holes under every roof object ... but now they're square mostly"; "hangar floor in
+front of barrels is different (hole again?). also it should be walkable"; "hangar doors are too small
+for the plane to pass through. i think that military hangar should be double the height", then "can we
+make taller walls a part of the roof? we don't really need to see them while inside".
+
+**Changed:**
+- **Roof pools** (`FacilityRoof.shade`, every compound): `renderOrder` 1, with the dressing (`pack`) and
+  the deck cable at 2. `FacilityArea.apply` sets `depthWrite` on everything in `Shell.roof`, and the
+  pool mesh's bounding centre sat a unit off the deck's (46,−91 against 46,−90). Sorted first from the
+  south, each quad wrote depth over its clear rim too, and the deck under it was rejected. Each quad is
+  12% wider than its prop, so the result was a hard square frame round the hatch, duct, isolators,
+  vents and bags. Reproduced live by forcing that order. The opposite order is clean, and a 0.2-grid
+  raycast found no real gap in the deck.
+- **Hangar drums**: `MilitaryStyle.surfOf` maps `TILE_MIL_DRUMS` to CONCRETE. The row-19 catch-all
+  painted each drum cell as yard apron sunk KERB_DROP. The tile is walkable now (wall margin), and
+  `HangarBlock.split` is gone.
+- **Two-storey hangar**: `ShellOpts.hangarH`, 12 for a base and WALL_H for the compound. The vault and
+  crescents spring from it. `FacilityGeom.storey` emits the outward faces of the ring, shutters and
+  side door from WALL_H to hangarH. Both meshes are made through `add` (vision-masked, casting) and
+  then faded with the vault through `Shell.roof`. The crescents ride that band too. Inside it reads one
+  storey as before; outside the seam lands on WALL_TILE's repeat.
+- **Door**: one shutter the plane's footprint wide (8 cells), cut off the same column as the plane
+  (`planeCol`), with cladding either side. The compound keeps its 3+1 bays.
+- **Jet**: h 8.3 → 9.8, so a 27.8 span and 24.5 long. The mask is re-measured top-down (≥ 1/5 of a
+  cell; the measure reproduces the old mask exactly at 8.3): wing row `xxxxxxxx`, tail in the last
+  row. `PLANE_LOW` scales with it.
+- **Behind fade**: a tall shed opens while the player is within `HANGAR_BEHIND` (3) rows north of it.
+
+**Verdict:** landed. +2 calls with the hangar shut (65 against 63), none inside. No new programs.

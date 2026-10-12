@@ -324,15 +324,20 @@ The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` 
 a square helipad, a motor pool near the gate, 1-2 tent camps, 1-2 container depots, and an ENTRY yard.
 The rest is yard.
 - **The hangar holds the plane and fuel drums** (`HangarBlock.zones`' military branch). The plane is
-  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 16 of the 8x7 footprint's 56
-  cells since the twin-jet, whose wing tips stop in the second column), nose to the bay doors; the
-  full rect was "too much is unwalkable ... a TON of empty tiles".
+  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 20 of the 8x7 footprint's 56
+  cells since the jet went to 27.8, its wing row the whole 8 and its tail in the last row), nose to the
+  door; the full rect was "too much is unwalkable ... a TON of empty tiles".
   Its origin corner is walkable and `MilitaryVehicles.planeNorth` reads the nose back off the stamp.
-  `GenCheck` asserts the outline in one of the two turns. Drums (`TILE_MIL_DRUMS`) take 60% of the wall
-  run's cells off the bay-door wall and out of the side door's bay, each kept only while the floor is
-  one piece (`HangarBlock.split`): a 10-wide shed's wing passes its tips one cell off each wall, and
-  the first build's oracle failed on unreachable hangar floor there and in corners. No generators: with the
-  footprint solid none ever fitted. Hangar fill 56 → 35%.
+  `GenCheck` asserts the outline in one of the two turns.
+- **A military shed has ONE roll-up door, the plane's footprint wide** (8 cells, cladding either side),
+  cut off the same column the plane is stamped from (`HangarBlock.planeCol`). The compound's 3-cell bays
+  between posts opened 12 units against the jet's span ("too small for the plane to pass through").
+  The compound keeps its bays.
+- **Drums** (`TILE_MIL_DRUMS`) take 60% of the wall run's cells off the door wall and out of the side
+  door's bay. They are WALKABLE: the cluster stands in the wall's margin and the cell's floor is the
+  hangar's (`MilitaryStyle.surfOf` maps them to CONCRETE; the row-19 catch-all had painted yard
+  apron). The old `split` guard, which kept a drum only while the floor stayed one piece, went with the
+  walkability. No generators: with the footprint solid none ever fitted. Hangar fill 56 → 35%.
 - **The helicopter's hull is 1x5 inside its 3x7** ("a whole 1 tile can be removed from all sides"):
   `helipad` stamps `TILE_MIL_VEHICLE` inside a `Const.MIL_HELI_RING` of pad, and the origin corner,
   like the plane's, is walkable. 21 → 5 solid cells a base; `GenCheck` asserts hull and ring.
