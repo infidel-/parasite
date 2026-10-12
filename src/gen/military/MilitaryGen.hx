@@ -59,6 +59,11 @@ class MilitaryGen
   static inline var VEHICLES_MAX = 5;
   // the margin's least scatter density: the plains' own 0.025 left the margin reading as bare grass
   static inline var MARGIN_DENSITY_MIN = 0.06;
+  // the yard piles: every PILE_STEP-th lot edge cell on the diagonal stride, thinned to PILE_MAX, none
+  // within PILE_GATE_CLEAR of the mouth (a crate stack in front of the boom reads as a roadblock)
+  static inline var PILE_STEP = 3;
+  static inline var PILE_MAX = 14;
+  static inline var PILE_GATE_CLEAR = 4;
 
 // generate a whole base into a context. `mix` and `depth` are the terrain band's scatter and how
 // deep into the band the area sits (game.AreaGenerator.wildMix, map.Terrain.depthAt), passed in
@@ -97,6 +102,7 @@ class MilitaryGen
       margin(state, f, mix, depth);
       gate(state, f);
       FacilityConnect.connectRooms(state);
+      piles(state, f);
       return state;
     }
 
@@ -378,6 +384,86 @@ class MilitaryGen
       // jersey barriers on the pavement flanking the mouth, the pedestrian gap's own cell left open
       for (x in [ x0 - 2, x0 - 1, x0 + RoadBlock.ENTRY_W + 1, x0 + RoadBlock.ENTRY_W + 2 ])
         cells[x][vergeRow(state)] = Const.TILE_MIL_JERSEY;
+    }
+
+// the yard's piles of stores, ammo crates or fuel drums, on the lot's edge inside the fence: a cell
+// of plain asphalt backing onto anything that is not asphalt. They were render-only scatter on
+// walkable lot and the player walked through them; a pile is its own unwalkable tile now, and one
+// whose walkable neighbours would not stay connected round it (a door, a one-cell lane) is skipped
+  static function piles(state: _FacilityState, f: _Rect)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      var mouth = [];
+      for (x in 0...area.width)
+        for (y in 0...area.height)
+          if (cells[x][y] == Const.TILE_ALLEY_UNWALKABLE)
+            mouth.push({ x: x, y: y });
+      var cand = [];
+      for (y in f.y1 + 1...f.y2)
+        for (x in f.x1 + 1...f.x2)
+          {
+            if (cells[x][y] != Const.TILE_ALLEY ||
+                (x * 3 + y) % PILE_STEP != 0 ||
+                area.hasObjectAt(x, y) ||
+                !onLotEdge(cells, x, y) ||
+                Lambda.exists(mouth, function(m) return
+                  Math.abs(m.x - x) <= PILE_GATE_CLEAR &&
+                  Math.abs(m.y - y) <= PILE_GATE_CLEAR))
+              continue;
+            cand.push({ x: x, y: y });
+          }
+      // thinned by a stride over the whole list, so the allowance is not spent on the north kerb
+      var step = Std.int(Math.ceil(cand.length / PILE_MAX));
+      for (i in 0...cand.length)
+        if (i % Std.int(Math.max(1, step)) == 0 &&
+            keepsLinked(cells, cand[i].x, cand[i].y))
+          cells[cand[i].x][cand[i].y] = Const.TILE_MIL_PILE;
+    }
+
+// does this asphalt cell back onto something that is not asphalt: a kerb, a wall, a tent?
+  static function onLotEdge(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      for (i in 0...Const.dir4x.length)
+        {
+          var t = cells[x + Const.dir4x[i]][y + Const.dir4y[i]];
+          if (t != Const.TILE_ALLEY &&
+              t != Const.TILE_PARKING &&
+              t != Const.TILE_PARKING_CAR &&
+              t != Const.TILE_PARKING_CAR_ORIGIN)
+            return true;
+        }
+      return false;
+    }
+
+// would blocking this cell keep its walkable neighbours connected round it? they have to form one
+// 4-linked run in the ring of eight, which is what keeps a door, a lane or a pocket reachable
+  static function keepsLinked(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      var open = [];
+      for (dx in -1...2)
+        for (dy in -1...2)
+          if ((dx != 0 ||
+              dy != 0) &&
+              walk[cells[x + dx][y + dy]] == 1)
+            open.push({ x: dx, y: dy });
+      if (open.length == 0)
+        return true;
+      var seen = [ open[0] ];
+      var stack = [ open[0] ];
+      while (stack.length > 0)
+        {
+          var c = stack.pop();
+          for (o in open)
+            if (seen.indexOf(o) < 0 &&
+                Math.abs(o.x - c.x) + Math.abs(o.y - c.y) == 1)
+              {
+                seen.push(o);
+                stack.push(o);
+              }
+        }
+      return seen.length == open.length;
     }
 
 // the verge's row

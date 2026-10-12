@@ -8,8 +8,10 @@ import render.corp.CorpFurniture;
 import render.corp.CorpStyle;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
+import render.facility.FacilityGround;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.military.MilitaryClutter.LidKind;
 import render.world.MeshBuf.MeshBuf;
@@ -209,6 +211,8 @@ class MilitaryGeom
               MilitaryYard.wallDrums(m, col, row);
             else if (t == Const.TILE_MIL_STORES)
               MilitaryYard.stores(m, area, col, row);
+            else if (t == Const.TILE_MIL_PILE)
+              MilitaryYard.clutter(m, col, row, FacilityGround.surfY(Surf.LOT));
           }
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);

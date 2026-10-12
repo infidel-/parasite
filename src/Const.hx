@@ -1313,6 +1313,9 @@ class Const
   // a tent camp's stores against a tent's long side: a crate stack, fuel drums, or both. Unwalkable,
   // see-through
   public static var TILE_MIL_STORES = OFFSET_ROW19 + 14;
+  // a pile of yard stores on the lot's edge, an ammo crate stack or fuel drums (gen.military
+  // .MilitaryGen.piles). Unwalkable, see-through
+  public static var TILE_MIL_PILE = OFFSET_ROW19 + 15;
   // container length, and each vehicle kind's footprint as [ w, h ] in cells
   public static inline var MIL_CONTAINER_LEN = 3;
   public static var MIL_TANK_SIZE = [ 2, 4 ];

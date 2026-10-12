@@ -4,7 +4,6 @@ import three.Three;
 import citygen.CityConfig;
 import game.AreaGame;
 import render.Models;
-import render.facility.FacilityDebris;
 import render.facility.FacilityDetail;
 import render.facility.FacilityEntry;
 import render.facility.FacilityGeom;
@@ -22,8 +21,8 @@ import render.world.MeshBuf.MeshBufTools;
 
 // a military base's yard, emitted where the compound stands glbs: the checkpoint (a sandbagged guard
 // post, the boom in the base's own bands, and the jersey barriers gen.military.MilitaryGen stamps
-// on the pavement either side of the mouth), and the clutter on the lot's edge spots
-// (FacilityDebris.spots: ammo crate stacks and fuel drums). All of it is slabs and prisms, so it is
+// on the pavement either side of the mouth), and the yard piles the generator stamps on the lot's edge
+// (Const.TILE_MIL_PILE: ammo crate stacks and fuel drums). All of it is slabs and prisms, so it is
 // quads into MilitaryGeom's per-texture buffers, bar the sandbags (render.military.MilitaryBags)
 class MilitaryYard
 {
@@ -56,9 +55,6 @@ class MilitaryYard
   static inline var JERSEY_FOOT = 0.15;
   static inline var JERSEY_H = 1.1;
   static inline var JERSEY_GAP = 0.15;
-
-  // how many cells round the gate's hole the yard clutter keeps clear of
-  static inline var GATE_CLEAR = 4;
 
   // the hand-modelled ammo crate (models-src/military/yardkit_build.py): its body CRATE_W x CRATE_D,
   // and the height a stack steps by, lid and battens included
@@ -122,14 +118,6 @@ class MilitaryYard
           post(m, gate.boothCol, gate.mouthRow, y);
           FacilityEntry.barrier(scene, gate, y, TEX_GUNMETAL, TEX_ARM);
         }
-      // and none on the approach: a crate stack in front of the boom reads as a roadblock nobody set
-      for (c in FacilityDebris.spots(m))
-        if (gate == null ||
-            c.col < gate.col - GATE_CLEAR ||
-            c.col > gate.col + gate.w - 1 + GATE_CLEAR ||
-            c.row < gate.row - GATE_CLEAR ||
-            c.row > gate.row + gate.h - 1 + GATE_CLEAR)
-          clutter(m, c.col, c.row, y);
     }
 
 // the guard post standing on the booth's bay
@@ -272,8 +260,9 @@ class MilitaryYard
         }
     }
 
-// one lot edge spot: a stack of ammo crates or a cluster of fuel drums, picked off the cell's hash
-  static function clutter(m:Facility, col:Int, row:Int, y:Float):Void
+// one yard pile (Const.TILE_MIL_PILE): a stack of ammo crates or a cluster of fuel drums, picked off
+// the cell's hash. Public for render.military.MilitaryGeom's tile pass
+  public static function clutter(m:Facility, col:Int, row:Int, y:Float):Void
     {
       var h = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
       var c = CityConfig.cellToWorld(col, row);

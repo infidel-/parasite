@@ -75,7 +75,7 @@ class Default extends Tileset
     // container x2, vehicle footprint x5 (the helicopter's and the plane's origins walkable: their
     // corners of the footprint are open ground, Const.MIL_HELI_RING and MIL_PLANE_MASK), the helipad
     // (walkable), a jersey barrier, a hangar's fuel drums (walkable: they stand in the wall's margin,
-    // clear of their cell) and a camp's stores
+    // clear of their cell), a camp's stores and a yard pile
     0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0,
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
     // board walkable: it marks a wall). The mess counter, the file cabinet and the latrine trough

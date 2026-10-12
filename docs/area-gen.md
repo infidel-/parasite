@@ -362,6 +362,16 @@ of fence/torn/tower cells). `AreaGame.isOutsideBase` is that bbox, and the RING 
 That one helper answers the leave rule, the spawn point and the margin bed. A base saved with no
 fence tile is the 2D format and regenerates on load.
 
+**Yard piles are tiles, not scatter.** The crate stacks and drum clusters on the lot's edge were
+render-only (`FacilityDebris.spots` drawn by `MilitaryYard.clutter`) over walkable asphalt, and the
+player walked through them. `MilitaryGen.piles` now stamps `Const.TILE_MIL_PILE` (unwalkable,
+see-through) LAST, after `connectRooms`. A pile goes on a `TILE_ALLEY` cell inside the fence that backs
+onto anything not asphalt (a kerb, a wall, a container, a tent row). It keeps the old diagonal stride
+and cap (`PILE_STEP` 3, `PILE_MAX` 14) and stays `PILE_GATE_CLEAR` 4 off the boom row. It is skipped
+unless its walkable 8-neighbours stay one 4-linked run round it (`keepsLinked`), which is what keeps a
+door or a one-cell lane open. The render draws the tile and nothing else, so a base saved before has
+no yard piles until it is regenerated. 1000 seeds pass, 14 piles a base.
+
 **Vehicles are footprints.** `MilitaryGen.vehicle` stamps `TILE_MIL_VEHICLE` (solid) over
 `Const.MIL_*_SIZE` and names the model by its ORIGIN tile, so the renderer derives only a pose.
 

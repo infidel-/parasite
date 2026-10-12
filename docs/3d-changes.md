@@ -2290,3 +2290,21 @@ footlocker 1.0, bench and cot 1.1 (+0.2), bunk top deck 3.07. Spawning keeps ≤
   cover alone.
 
 **Verdict:** landed. +0 calls: the clues are pooled sprites and the claims only move decals.
+
+## Military yard piles drawn off a tile instead of render-only lot spots
+
+**Reported (military):** "barrels and crates on the outside can be passed through".
+
+**Changed:** `MilitaryYard.build` stopped scattering crate stacks and drum clusters on
+`FacilityDebris.spots`, which are render-only and sit on walkable asphalt. It now draws
+`Const.TILE_MIL_PILE` cells, which `gen.military.MilitaryGen.piles` stamps as unwalkable (see
+`docs/area-gen.md`). The crate/drum pick is unchanged: `MilitaryYard.clutter`, keyed off the cell's hash.
+
+**Measured (Riley Fort, regenerated):** 14 pile tiles, 0 walkable. All 14 carry their kit, and no crate
+or drum instance stands on a walkable cell. A step east into a pile is refused.
+
+**The trap:** the lot spots were thinned in RENDER space (`surf == LOT`, where a container or a tent is
+LOT through the row-19 catch-all). So the grid version had to choose its own edge rule; it counts a
+container or tent as an edge. A base saved before the change keeps no yard piles until it is regenerated.
+
+**Verdict:** landed. +0 calls: the same instanced crate and drum batches.
