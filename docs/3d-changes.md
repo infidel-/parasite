@@ -2217,7 +2217,9 @@ brightness/saturation even more + i've removed decimation".
 - **`military/tank`**: the TRELLIS tank's reference re-laid on black, then one Meshy run. 707,032 tris
   at polyCount 100000, 1 component, split 1.15x → decimated to 29,996. It lies along local x, so
   `MilitaryVehicles` turns it (`turn` true); h 4.9 keeps it 15.0 long and 5.4 wide under the net's 6.4.
-  `sat` 0.8 and `baseColor` 0.37 put its atlas at 53/64/43, the old tank's olive. `roughness` 1.
+  `sat` 0.8 and `baseColor` 0.37 put its atlas at the old tank's olive, 53/64/43. The user then asked
+  for the plane's step darker and greyer: `sat` 0.55 and `baseColor` 0.27, atlas 47/53/42 at chroma
+  11.5, hull in frame 11/23/9 → 8/16/8. `roughness` 1.
 - **`military/plane`**: `sat` 0.5 and `baseColor` 0.55 (from 0.7/0.77). Atlas 73/84/65; in the hangar it
   is now luma 65-71 and chroma 22-24, from 75-97 and 31-46. 189,544 tris, undecimated.
 

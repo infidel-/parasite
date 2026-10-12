@@ -1564,17 +1564,17 @@
       "tris": 30000,
       "tex": 1024,
       "baseColor": [
-        0.37,
-        0.37,
-        0.37,
+        0.27,
+        0.27,
+        0.27,
         1
       ],
-      "note": "modern main battle tank parked in a military base's motor pool, on its Const.MIL_TANK_SIZE footprint, every other vehicle under a camo net (render.military.MilitaryVehicles), drawn at h 4.9: 15.0 long with its gun, 5.4 wide, under the net's 6.4. MESHY 6, the first run through the runware-trellis-2 MCP's meshy_image_to_3d ($0.80, task c6e20fae-0e04-487c-9614-37cb1f15c38d, seed 1575967160), off the TRELLIS tank's reference re-laid on black (tank-meshy-src.png, subject 24.2% of frame against 10.9% on the old grey). ASKED FOR polyCount 100000 AND CAME BACK 707,032 tris (the plane, same setting, came back 189,544): Meshy's count is a target it can overshoot several times. 1 component at 100%, split 1.15x, already square, so it decimates offline to 29,996 (tris 30000; the plane's undecimated 189k was the user's call there). bbox 1.898 x 0.618 x 0.686, LIES ALONG LOCAL X where the TRELLIS tank lay along z, so MilitaryVehicles turns it. Bake 83/105/64 chroma 40.9: sat 0.8 and a flat baseColor 0.37 land it at atlas 53/64/43, chroma 20, level with the TRELLIS tank it replaces (75/79/54 through 0.5, about 55/58/39). roughness 1: Meshy ships 0.8, which keeps PBR. tank.glb (TRELLIS) is kept.",
+      "note": "modern main battle tank parked in a military base's motor pool, on its Const.MIL_TANK_SIZE footprint, every other vehicle under a camo net (render.military.MilitaryVehicles), drawn at h 4.9: 15.0 long with its gun, 5.4 wide, under the net's 6.4. MESHY 6, the first run through the runware-trellis-2 MCP's meshy_image_to_3d ($0.80, task c6e20fae-0e04-487c-9614-37cb1f15c38d, seed 1575967160), off the TRELLIS tank's reference re-laid on black (tank-meshy-src.png, subject 24.2% of frame against 10.9% on the old grey). ASKED FOR polyCount 100000 AND CAME BACK 707,032 tris (the plane, same setting, came back 189,544): Meshy's count is a target it can overshoot several times. 1 component at 100%, split 1.15x, already square, so it decimates offline to 29,996 (tris 30000; the plane's undecimated 189k was the user's call there). bbox 1.898 x 0.618 x 0.686, LIES ALONG LOCAL X where the TRELLIS tank lay along z, so MilitaryVehicles turns it. Bake 83/105/64 chroma 40.9: sat 0.8 and baseColor 0.37 put it level with the TRELLIS tank it replaces (atlas 53/64/43, chroma 20), and the user asked for it darker and greyer, the plane's step: sat 0.55 and a flat baseColor 0.27 land it at atlas 47/53/42, chroma 11.5, and in the motor pool frame the hull went 11/23/9 -> 8/16/8. roughness 1: Meshy ships 0.8, which keeps PBR. tank.glb (TRELLIS) is kept.",
       "last_converted": "2026-10-12T17:25:54Z",
-      "last_sig": "n1/30000/1024/0.01/-/-/bc0.37,0.37,0.37,1/st0.8/rf1",
+      "last_sig": "n1/30000/1024/0.01/-/-/bc0.27,0.27,0.27,1/st0.55/rf1",
       "error": 0.01,
       "roughness": 1,
-      "sat": 0.8
+      "sat": 0.55
     },
     "military/humvee": {
       "src": "military/humvee.glb",
