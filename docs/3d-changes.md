@@ -2152,3 +2152,29 @@ make taller walls a part of the roof? we don't really need to see them while ins
 - **Behind fade**: a tall shed opens while the player is within `HANGAR_BEHIND` (3) rows north of it.
 
 **Verdict:** landed. +2 calls with the hangar shut (65 against 63), none inside. No new programs.
+
+## Military base: container stacks fade off the camera -> player sightline
+
+**Reported:** "high stacks of containers cover player. can we make them transparent?"
+
+**Changed:**
+- **`render.military.MilitaryStacks`** owns the depot. The containers are still one SOLID batch, and
+  every stack also gets its own GHOST twin over its 2-3 placements (`Models.instanced` GHOST:
+  transparent, depthWrite off, the same clone ObjModels uses for a prop the player stands on).
+- **The test is the street's** (`Occlusion.segHitsBox`, now public): camera to the sprite's centre and
+  to its top (leaned back by `Sprites.TILT`), against each stack's world box up to `CONT_H * n`. A hit
+  takes the stack out of the solid batch's cull mask and eases its twin to `PROP_GHOST.alpha` 0.3 on
+  `PROP_GHOST.lerp`. It traces the ray, not cells, so an RMB orbit is covered. The fly cam fades nothing.
+- **A twin PER STACK**, not one ghost batch: opacity is per material, and walking a lane hands one stack
+  to the next while the first is still easing back. A twin at t 0 is `visible = false`, so a depot
+  nobody stands behind costs what it did. The twins cast, so a fading stack keeps its moon shadow, and
+  they are in the moon's landed-caster count.
+- **Warm**: `FacilityWarm.build` takes `ghosts`, warmed GHOST + VisionMask inside `mask()` like the solid
+  kit. `transparent` is in three's program key.
+
+**Measured (Stokes AFS, 29 stacks):** lane cell behind a 3-high stack: that stack alone fades, player
+fully visible; one row back (two north of the stack) nothing fades and the player is clear. Moving to
+the next stack hands over (old one snaps solid, new one fades). 51 → 52 calls while one stack fades,
+programs 120 → 120 on the first fade after a reload.
+
+**Verdict:** landed. +1 call per fading stack, 0 programs.

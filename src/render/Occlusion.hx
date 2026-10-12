@@ -650,7 +650,7 @@ class Occlusion {
 
 // does segment a->b pass through the box (strictly between the endpoints)? slab clip. grow
 // inflates the XZ slabs, widening the corridor (used to fade near-line, not just strict, hits)
-  static function segHitsBox(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
+  public static function segHitsBox(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
     x0:Float, x1:Float, z0:Float, z1:Float, y1:Float, grow:Float = 0.0):Bool
     {
       var t = [0.0, 1.0];

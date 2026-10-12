@@ -22,9 +22,10 @@ import render.world.VisionMask;
 // the first facility entry
 class FacilityWarm
 {
-// build the throwaway compound, wait for every prop glb, then compile
+// build the throwaway compound, wait for every prop glb, then compile. `ghosts` are the outdoor props
+// a kind also draws see-through (a base's container stacks, render.military.MilitaryStacks)
   public static function build(renderer:WebGLRenderer, camera:PerspectiveCamera, lampPool:Int,
-      ?extra:Array<{ path:String, h:Float }>):Dynamic
+      ?extra:Array<{ path:String, h:Float }>, ?ghosts:Array<{ path:String, h:Float }>):Dynamic
     {
       var model = FacilityModel.demo();
       // the indoor mask goes over the warm model, for the SAME reason the vision mask makes this scene
@@ -348,7 +349,10 @@ class FacilityWarm
           // filter here is a second place to keep in step with render.world.ObjModels.MODELS
           var objModels = render.world.ObjModels.MODELS;
           var C = RenderConfig.OBJMARK;
-          var left = green.length + facProps.length + roofProps.length + objModels.length;
+          if (ghosts == null)
+            ghosts = [];
+          var left = green.length + facProps.length + roofProps.length + objModels.length +
+            ghosts.length;
           var done = function()
             {
               left--;
@@ -379,6 +383,20 @@ class FacilityWarm
                 {
                   mask();
                   VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
+                  IndoorMask.detach();
+                  ContactMask.detach();
+                  done();
+                });
+            }
+          // the GHOST twin is a program of its own (`transparent` is in three's key), patched the
+          // way the solid one is
+          for (i in 0...ghosts.length)
+            {
+              var p = ghosts[i];
+              render.Models.get(p.path, function(_)
+                {
+                  mask();
+                  VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, GHOST).mesh);
                   IndoorMask.detach();
                   ContactMask.detach();
                   done();

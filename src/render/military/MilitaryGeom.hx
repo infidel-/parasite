@@ -136,10 +136,13 @@ class MilitaryGeom
   public static var crates:Array<PropPlace>;
   public static var drums:Array<PropPlace>;
   static var containers:Array<PropPlace>;
+  // and the stacks they stand in, which the depot fades off the player's sightline
+  static var stacks:Array<MilitaryStacks.Stack>;
+  public static var depot:MilitaryStacks;
 
 // emit the whole base. runs BEFORE ContactMask.repaint in render.facility.FacilityArea.build: every
 // unit here registers its footprint with the contact shadow. returns the ground's sandbag batch,
-// which the area's tick culls
+// which the area's tick culls, and leaves the container stacks in `depot`, which it ticks
   public static function build(scene:Scene, m:Facility, area:AreaGame):Array<InstancedProp>
     {
       opaque = new Map();
@@ -148,6 +151,7 @@ class MilitaryGeom
       crates = [];
       drums = [];
       containers = [];
+      stacks = [];
       var parked = 0;
       // the pad's square, off its cells, for the marking
       var pad = {
@@ -242,12 +246,9 @@ class MilitaryGeom
             SOLID),
           path: RenderConfig.MODELS.militaryDrum,
         },
-        {
-          prop: Models.instanced(scene, RenderConfig.MODELS.militaryContainer, containers, CONT_H,
-            SOLID),
-          path: RenderConfig.MODELS.militaryContainer,
-        },
       ];
+      // the containers are their own, solid until one stands between the camera and the player
+      depot = new MilitaryStacks(scene, containers, stacks);
       // and the rooms' furniture (MilitaryInterior)
       kit = kit.concat(MilitaryInterior.batches(scene));
       for (k in kit)
@@ -584,6 +585,17 @@ class MilitaryGeom
       var z1 = z0 + CONT_W;
       var hash = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
       var n = CONT_STACK_MIN + hash % (CONT_STACK_MAX - CONT_STACK_MIN + 1);
+      stacks.push({
+        x0: x0,
+        x1: x1,
+        z0: z0,
+        z1: z1,
+        y1: CONT_H * n,
+        first: containers.length,
+        n: n,
+        ghost: null,
+        t: 0.0,
+      });
       for (i in 0...n)
         {
           var h = (i == 0 ? 0 : hash >>> (3 + i * 7));
