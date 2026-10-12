@@ -3476,6 +3476,7 @@ class FacilityStyle
         // a compound's partitions ARE blockwork, so the interior is the same WALL_T as the shell
         wallIn: WALL_T,
         hangars: true,
+        hangarH: WALL_H,
       };
     }
 

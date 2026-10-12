@@ -1324,6 +1324,7 @@ class CorpStyle
         // and NO hangars: the lift car is nine cells of concrete in a ring of its own, which the
         // concrete-majority test would call a shed and arch a barrel vault over
         hangars: false,
+        hangarH: FacilityStyle.WALL_H,
       };
     }
 }

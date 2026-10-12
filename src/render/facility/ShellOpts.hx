@@ -40,4 +40,8 @@ typedef ShellOpts = {
   // ring of posts and glazing, so the same test calls a lift a hangar and arches a barrel vault
   // over it
   var hangars: Bool;
+  // the wall head a hangar's vault springs from, world units. FacilityStyle.WALL_H for a compound,
+  // whose shed is a storey like its labs; a military base's is twice that, so its plane clears the
+  // doors, and everything over WALL_H fades with the vault (FacilityGeom.storey)
+  var hangarH: Float;
 }

@@ -817,8 +817,15 @@ class FacilityGeom
       // this same buffer, in this same course, staying put when the lid over the player's head
       // fades. only the shape differs, a band round a box against a segment under an arch
       var wallTex = st.hangar ? m.tex.hangarWall : m.tex.wallOut;
+      // a tall shed's second storey, gables included, in buffers of their own that fade with the
+      // vault (see `storey`)
+      var tall = (st.hangar && m.hangarH > FacilityStyle.WALL_H);
+      var bandClad = MeshBufTools.make();
+      var bandShut = MeshBufTools.make();
+      if (tall)
+        storey(m, si, g, bandClad, bandShut);
       if (st.hangar)
-        FacilityRoof.crescents(m, si, wOut);
+        FacilityRoof.crescents(m, si, (tall ? bandClad : wOut));
       var shell:Shell = {
         roof: [],
         glaze: { value: 0.0 },
@@ -838,6 +845,11 @@ class FacilityGeom
       add(scene, wOut, wallTex, true, true);
       if (m.tex.shutter != null)
         add(scene, shut, m.tex.shutter, true, true);
+      // the band in the walls' own material, vision mask and casting included, so nothing changes at
+      // WALL_H from the lot but the fade
+      fades(add(scene, bandClad, wallTex, true, true), shell);
+      if (m.tex.shutter != null)
+        fades(add(scene, bandShut, m.tex.shutter, true, true), shell);
       if (m.tex.pocket != null)
         add(scene, pocket, m.tex.pocket, true, false);
       if (m.tex.sill != null)
@@ -1154,6 +1166,53 @@ class FacilityGeom
       capDown(cope, lo, hi, a0(P_COPE), a1(P_COPE), y1, ct);
       if (soffit)
         capDown(wOut, p < pi ? p : pi, p < pi ? pi : p, a0(P_OUT), a1(P_OUT), y0, wt);
+    }
+
+// a tall shed's second storey (Facility.hangarH over WALL_H, the base's hangar): the outward faces of
+// its wall ring, roll-up doors and side door between WALL_H and hangarH, the shutter cells into
+// `shut` and the rest into `clad`.
+//
+// THEY ARE ROOF AND NOT WALL: the caller fades both with the vault, so inside the shed is a storey
+// tall as it always was ("we don't really need to see them while inside") and from the lot it stands
+// two, its shutters over the plane's tail. OUTWARD only: from outside the vault covers the inside of
+// the ring, and from inside the band has faded. No cap either — the vault springs from the outer
+// plane at hangarH and covers it — and the rim at WALL_H stays where it was, for the inside.
+// The courses carry straight on: both textures are world-aligned, and WALL_TILE is WALL_H
+  static function storey(m:Facility, si:Int, g:FacilityShellOpts, clad:MeshBuf, shut:MeshBuf):Void
+    {
+      var st = m.structures[si];
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si ||
+                !FacilityModel.isWall(m, col, row) &&
+                g.doorAt[row][col] < 0)
+              continue;
+            var s = slab(m, col, row);
+            var shutter = (m.wall[row][col] == Wall.SHUTTER);
+            for (dir in 0...4)
+              {
+                var nc = col + DC[dir];
+                var nr = row + DR[dir];
+                if (FacilityModel.inside(m, nc, nr) &&
+                    m.owner[nr][nc] == si)
+                  continue;
+                face(shutter ? shut : clad, s.x0, s.x1, s.z0, s.z1, dir, FacilityStyle.WALL_H,
+                  m.hangarH, shutter ? FacilityStyle.SHUTTER_TILE : FacilityStyle.WALL_TILE);
+              }
+          }
+    }
+
+// hand a mesh `add` built to the structure's fading buffer, so FacilityArea.apply eases it with the
+// roof. null (an empty buffer) is nothing to fade
+  static function fades(mesh:Mesh, shell:Shell):Void
+    {
+      if (mesh == null)
+        return;
+      mesh.material.transparent = true;
+      mesh.material.opacity = 1.0;
+      shell.roof.push(mesh);
     }
 
 // the parapet ring for one structure: the exterior cladding continuing PARAPET_H above the roof
@@ -1574,11 +1633,12 @@ class FacilityGeom
 // merge a buffer into one lit mesh. every one of these is OPAQUE now: the walls stopped fading with
 // the roof, so nothing here needs `transparent` and nothing here pays for the sorted pass.
 // public for render.facility.FacilityEntry, whose booth is a shell like any other — walls in the
-// same cladding, a roof in the same felt, and no reason to carry a second copy of this
-  public static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Void
+// same cladding, a roof in the same felt, and no reason to carry a second copy of this. returns the
+// mesh (null for an empty buffer), which `fades` turns transparent for a tall shed's second storey
+  public static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Mesh
     {
       if (b.idx.length == 0)
-        return;
+        return null;
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,
@@ -1588,6 +1648,7 @@ class FacilityGeom
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
       scene.add(mesh);
+      return mesh;
     }
 
 // the same merge as `add`, for a surface the contact shadow lies ON — the three interior floors and

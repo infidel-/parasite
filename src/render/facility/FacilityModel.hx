@@ -200,6 +200,8 @@ typedef Facility = {
   tex:ShellTex,
   // how thick this kind draws an INTERIOR wall — see ShellOpts.wallIn. read by FacilityGeom.thick
   wallIn:Float,
+  // the wall head a hangar's vault springs from — see ShellOpts.hangarH
+  hangarH:Float,
   w:Int,
   h:Int,
   surf:Array<Array<Surf>>,
@@ -463,6 +465,7 @@ class FacilityModel
       return {
         kind: opts.kind,
         wallIn: opts.wallIn,
+        hangarH: opts.hangarH,
         tex: opts.tex,
         w: w,
         h: h,

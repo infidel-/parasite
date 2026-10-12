@@ -1166,6 +1166,10 @@ class FacilityRoof
 // STAYS when the player walks in, which is what the parapet ring one building over already does:
 // walls do not fade, only the lid over your head does.
 //
+// EXCEPT OVER A TALL SHED (Facility.hangarH over WALL_H, the base's): there the caller hands the
+// fading band FacilityGeom.storey fills, the cladding over the first storey, because a crescent left
+// standing would hang over walls that have faded down to WALL_H under it
+//
 // loose quads on purpose, unlike the arch: a crescent is PLANAR, so there is no curvature for a
 // shared-vertex grid to smooth
   public static function crescents(m:Facility, si:Int, b:render.world.MeshBuf.MeshBuf):Void
@@ -1182,14 +1186,14 @@ class FacilityRoof
           var a = (end == 0 ? s.a0 : s.a1);
           for (i in 0...n)
             {
-              var q0 = pt(a, FacilityStyle.ROOF_Y, s.cs[i]);
+              var q0 = pt(a, m.hangarH, s.cs[i]);
               var q1 = pt(a, s.ys[i], s.cs[i]);
               var q2 = pt(a, s.ys[i + 1], s.cs[i + 1]);
-              var q3 = pt(a, FacilityStyle.ROOF_Y, s.cs[i + 1]);
+              var q3 = pt(a, m.hangarH, s.cs[i + 1]);
               // u on the CROSS axis and v on y, both over WALL_TILE — FacilityGeom.face's own
               // mapping for a wall running this way, which is what makes the join invisible
               var u0 = s.cs[i] / t, u1 = s.cs[i + 1] / t;
-              var w = FacilityStyle.ROOF_Y / t;
+              var w = m.hangarH / t;
               // wound to look OUT along the ridge, so the far end takes the cycle backwards
               if (end == 0)
                 MeshBufTools.quad(b, q0, q1, q2, q3,
@@ -1205,7 +1209,8 @@ class FacilityRoof
 //
 // THE SECTION IS A CIRCULAR SEGMENT: for a chord S and a segment height H the tangent-chord angle
 // gives tan(theta / 2) = H / (S / 2), so theta = 2 * atan(2H / S) is HALF the subtended angle,
-// R = (S / 2) / sin(theta), and the centre sits at ROOF_Y + H - R, well below the springing
+// R = (S / 2) / sin(theta), and the centre sits at the springing (Facility.hangarH) + H - R, well
+// below it
   public static function section(m:Facility, si:Int):Arc
     {
       var r0 = ring(m, si);
@@ -1220,7 +1225,7 @@ class FacilityRoof
       var rise = Math.min(span * FacilityStyle.HANGAR_RISE_FRAC, FacilityStyle.HANGAR_RISE_MAX);
       var theta = 2 * Math.atan(2 * rise / span);
       var r = (span / 2) / Math.sin(theta);
-      var cy = FacilityStyle.ROOF_Y + rise - r;
+      var cy = m.hangarH + rise - r;
       var n = FacilityStyle.HANGAR_ARC_SEG;
       // WHICH WAY THE ARC IS WALKED IS NOT COSMETIC. the two orientations map (along, cross) onto
       // (x, z) with opposite handedness, so one winding rule would emit an upward-facing vault for

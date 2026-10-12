@@ -63,6 +63,11 @@ class MilitaryStyle
   // a fit grid cell an object stands on (`objects`): not 0, under FacilityModel.FIT_HOLE and under
   // every tile id fitOf deals
   public static inline var FIT_OBJECT = 1;
+  // the hangar's wall head: two storeys, so the shutters stand over the jet's 9.8 tail ("hangar doors
+  // are too small for the plane to pass through ... military hangar should be double the height").
+  // Only the first storey is a wall: the second fades with the vault (FacilityGeom.storey), so inside
+  // the shed reads as tall as it always did ("we don't really need to see them while inside")
+  public static inline var HANGAR_H = 2 * FacilityStyle.WALL_H;
 
 // the base's ShellOpts: the compound's reading of the grid in the base's own art
   public static function shell():ShellOpts
@@ -70,6 +75,7 @@ class MilitaryStyle
       var o = FacilityStyle.shell();
       var t = o.tex;
       o.kind = 'military';
+      o.hangarH = HANGAR_H;
       o.surfOf = surfOf;
       o.fitOf = fitOf;
       // every floor slot the base can reach, each in its own art. TILE and OFFICE are the lab
