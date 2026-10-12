@@ -628,6 +628,26 @@ class Const
     { row: 49, col: 1 },
     { row: 49, col: 2 },
     { row: 49, col: 3 },
+    // sheet 5 — NOT a bench family: the military base's clue paperwork (textures/military/clue-pack,
+    // Images.loadDecoPacks names it), riding this table only because it is the same 4x4 of 256 px.
+    // entities64 grew 50 -> 52 rows for it; twelve papers on row 50, four books on row 51
+    // (MIL_DOCUMENTS, MIL_BOOKS). Not in isTableDeco, so no bench hook ever treats them as fittings
+    { row: 50, col: 0 },
+    { row: 50, col: 1 },
+    { row: 50, col: 2 },
+    { row: 50, col: 3 },
+    { row: 50, col: 4 },
+    { row: 50, col: 5 },
+    { row: 50, col: 6 },
+    { row: 50, col: 7 },
+    { row: 50, col: 8 },
+    { row: 50, col: 9 },
+    { row: 50, col: 10 },
+    { row: 50, col: 11 },
+    { row: 51, col: 0 },
+    { row: 51, col: 1 },
+    { row: 51, col: 2 },
+    { row: 51, col: 3 },
   ];
 
   // ---- the clue pack: the reports and books a facility hands out --------------------------------
@@ -806,6 +826,13 @@ class Const
   ];
   public static var CHEM_LABS_BOOKS = [
     { row: 19, amount: 11 },
+  ];
+  // and the military base's, drawn off FACILITY_DECO_HD's fifth sheet
+  public static var MIL_DOCUMENTS = [
+    { row: 50, amount: 12 },
+  ];
+  public static var MIL_BOOKS = [
+    { row: 51, amount: 4 },
   ];
 
   // row 21,22 - spaceship

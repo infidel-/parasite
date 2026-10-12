@@ -106,11 +106,18 @@ class Images
 
   function loadDecoPacks(): Array<Image>
     {
+      var paths = [
+        'facility/bench-pack1',
+        'facility/bench-pack2',
+        'facility/bench-pack3',
+        'facility/bench-pack4',
+        'military/clue-pack',
+      ];
       var out = [];
       for (i in 0...Const.decoPackCount())
         {
           var img = new Image();
-          img.src = AssetPath.resolve('textures/facility/bench-pack' + (i + 1) + '.png');
+          img.src = AssetPath.resolve('textures/' + paths[i] + '.png');
           out.push(img);
         }
       return out;
