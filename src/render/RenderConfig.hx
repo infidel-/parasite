@@ -745,6 +745,12 @@ class RenderConfig {
     militaryCrate: 'models/military/crate-hand.glb',      // ammo crate, long axis local x, lid and battens on top
     militaryContainer: 'models/military/container-hand.glb', // 20 ft container, long axis local x, door at -x
     militaryWaterTank: 'models/military/water-tank-hand.glb', // roof water tank on its legs
+    // the roofs' own kit (models-src/military/roofkit_build.py), on FacilityRoof's spots and batches
+    militaryRoofHatch: 'models/military/roof-hatch-hand.glb', // access hatch, hinges at local +z
+    militaryRoofJbox: 'models/military/roof-jbox-hand.glb',   // isolator on struts, door to local -z
+    militaryRoofVent: 'models/military/roof-vent-hand.glb',   // mushroom extract vent
+    militaryRoofDuct: 'models/military/roof-duct-hand.glb',   // one cell of round duct along local x
+    militaryRoofAerial: 'models/military/roof-aerial-hand.glb', // lattice aerial mast on the dish spot
     // the rooms' hand-modelled kit (models-src/military/roomkit_build.py), each facing local +z
     militaryRadioRack: 'models/military/radio-rack-hand.glb', // comms rack, four radio units proud of its front
     militaryRadioDesk: 'models/military/radio-desk-hand.glb', // operator desk, one cell long, pedestal at local -x

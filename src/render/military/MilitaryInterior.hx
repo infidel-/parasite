@@ -69,6 +69,10 @@ class MilitaryInterior
   // fraction of the footprint put the rim 1.8 past the end of a table run ("why are these contact
   // shadows so large? they're way outside of the tables/benches")
   static inline var POOL_FADE = 0.4;
+  // and how many times it is laid over itself: one is the halo mesh's HALO_ALPHA 0.32, which on the
+  // mess hall's red tile left a bench and its table with no shadow at all ("doesn't look like benches
+  // throw shadows"); two is 0.54
+  static inline var POOL_LAYERS = 2;
   static inline var DESK_D = 2.2;
   static inline var TABLE_H = 1.9;
   static inline var TABLE_W = 2.8;
@@ -471,6 +475,16 @@ class MilitaryInterior
               if (!bench)
                 top((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), TOP_L, TABLE_W,
                   TABLE_H, TABLE, []);
+              else
+                {
+                  // a thing left on the seat, and on every other cell one dropped under it ("all
+                  // benches should have clutter spots on top and under")
+                  top((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2), TOP_L - 0.3,
+                    BENCH_W - 0.2, BENCH_H, SEAT, []);
+                  if (i % 2 == 0)
+                    top((c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, (alongX ? 0.0 : Math.PI / 2),
+                      TOP_L - 0.8, BENCH_W - 0.2, FacilityGround.surfY(m.surf[row][col]), UNDER, []);
+                }
             }
         }
       else if (t == Const.TILE_MIL_CRATES)
@@ -746,7 +760,7 @@ class MilitaryInterior
           var sl = FacilityGeom.slab(m, col + DX[d], row + DZ[d]);
           return [ sl.z1, sl.z0, sl.x1, sl.x0 ][d];
         }
-      FacilityDetail.pool({
+      var pool:render.facility.FacilityPoolOpts = {
         cx: (r.x0 + r.x1) / 2,
         cz: (r.z0 + r.z1) / 2,
         hw: (r.x1 - r.x0) / 2,
@@ -760,7 +774,9 @@ class MilitaryInterior
           z0: edge(0, c0, r0, lo.z - CELL * 1.5),
           z1: edge(1, c1, r1, hi.z + CELL * 1.5),
         },
-      });
+      };
+      for (_ in 0...POOL_LAYERS)
+        FacilityDetail.pool(pool);
     }
 
 // a run of desks backed onto the wall at `dir` (or standing free, facing the way `dir` faces), one

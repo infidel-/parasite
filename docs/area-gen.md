@@ -321,7 +321,7 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 8. `connectRooms`.
 
 The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` away from the gate),
-a square helipad, a motor pool near the gate, 1-2 tent camps, 0-2 container depots, and an ENTRY yard.
+a square helipad, a motor pool near the gate, 1-2 tent camps, 1-2 container depots, and an ENTRY yard.
 The rest is yard.
 - **The hangar holds the plane and fuel drums** (`HangarBlock.zones`' military branch). The plane is
   stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 18 of the 8x7 footprint's 56
@@ -339,7 +339,9 @@ The rest is yard.
 - The `must` failed 3 seeds in 2000 at 30 splits, so `MAX_PLAN_TRIES` is 60 (mean 3.5 splits).
 - The entry yard took the depot's plot on 90x70 bases (0.22 depots a base to 0). So DEPOT has two
   rows: max 1 before CAMP and max 2 after. The rows share one count, and `GenCheck.quotaMet` caps a
-  kind at its rows' largest `max`.
+  kind at its rows' largest `max`. The first row is a `min 1` ("make more containers": 0.76 depots a
+  base → 1.05, mean plan splits 3.5 → 6.5, none unmet over 2000), and a depot slot holds a container
+  95% of the time. The render stacks each 2-3 high (`MilitaryGeom.container`).
 
 **Nothing downstream reads the tree.** The fence is re-derived from the grid by `fenceOf` (the bbox
 of fence/torn/tower cells). `AreaGame.isOutsideBase` is that bbox, and the RING COUNTS AS OUTSIDE.
@@ -386,7 +388,7 @@ laboratory's deal. That:
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
 | mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`) |
-| barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
+| barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows; a GLASS bay of either too) |
 | latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first, a tiled separator wall each side of a shower), bench-island (3 cells where the ring fits, else 2) |
 
 A min is only asked when the room can hold it: a barracks falls back to the other long wall and then
@@ -417,7 +419,10 @@ no cell now tries the next (the IV stand will not go in front of glass; the stre
 **And a barracks' bunks and a mess hall's rows stand BESIDE glass** ("has one more slot for bed near
 the window", "can be in front of the windows"). A barracks keeps the cells with a window beside them
 (not behind: `roomWallRuns` still drops those), so a bunk stands side-on to the glass; its wall
-lockers stay off them. A mess's table rows run on from their end cell to the end wall with no doorway
+lockers stay off them. The cells BEHIND which a window stands come back as their own bays tagged
+`g<wall>` and not `w<wall>`, so `bunk-along` is the only zone that asks for one: a bunk laid along the
+glass with its footlocker after it ("allow bed+chest along the windows as well", nodes/bunk-along
+0.69 → 1.21 a base). A bunk row never backs onto the glass. A mess's table rows run on from their end cell to the end wall with no doorway
 in it (`MilitaryRooms.runOn`), a whole cross-section at a time while every cell is `free`, taken back
 if the floor seals; the near end keeps its two cells. `MilitaryRooms.besideGlass` is the set
 `GenCheck` exempts: the `low` pieces, a bunk, a footlocker, a mess table and a bench.

@@ -46,8 +46,8 @@ class MilitaryGen
   static inline var TENT_W = 2;
   static inline var TENT_H = 3;
   static inline var TENT_LANE = 2;
-  // how often a container slot in the depot actually holds one
-  static inline var CONTAINER_PCT = 85;
+  // how often a container slot in the depot actually holds one ("make more containers")
+  static inline var CONTAINER_PCT = 95;
   // how often a motor pool's next vehicle is another tank rather than a humvee, and how many it
   // parks at most: a plot full of them read as a vehicle lot, not a base's motor pool
   static inline var TANK_PCT = 30;

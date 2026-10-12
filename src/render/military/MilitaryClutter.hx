@@ -24,6 +24,8 @@ enum LidKind
   DESK;
   // a mess or briefing table, 2-4
   TABLE;
+  // a bench's seat, 0-1
+  SEAT;
   // a footlocker's lid, 0-2
   FOOTLOCKER;
   // a filing or medical cabinet's top, 0-1
@@ -261,7 +263,7 @@ class MilitaryClutter
         {
           case DESK: [ 1, 3 ];
           case TABLE: [ 2, 4 ];
-          case CABINET, LOCKER: [ 0, 1 ];
+          case CABINET, LOCKER, SEAT: [ 0, 1 ];
           case SHELF: [ 1, 2 ];
           default: [ 0, 2 ];
         };

@@ -252,30 +252,38 @@ class FacilityRoof
           fill(m, si, deck, out);
           FacilityGeom.addDeck(scene, deck.cab, m.tex.cable, true, shells[si]);
           pack(scene, deck.pack, shells[si], m.tex.roofClutter);
-          shade(scene, deck.shade, shells[si]);
+          // a base lays its own, fitted to its own kit: these are the compound's footprints, and
+          // under the base's smaller pieces they showed as dark slabs, reported as holes in the roof
+          if (m.kind != 'military')
+            shade(scene, deck.shade, shells[si]);
         }
-      // a military base stands its own kit on the same spots, emitted onto each deck so it fades
-      // with it, and draws none of the compound's
-      if (m.kind == 'military')
+      // a military base stands its own kit on the same spots and in the same batches, so it fades
+      // with its deck the same way: a sandbag nest and water tanks on the plant spots, and its own
+      // hatch, isolators, vents, duct and an aerial mast for the dish (models-src/military/
+      // roofkit_build.py)
+      var mil = (m.kind == 'military');
+      if (mil)
         {
           render.military.MilitaryYard.roof(scene, deck, out, shells);
           deck.ac = [];
-          deck.dish = [];
-          deck.hatch = [];
-          deck.jbox = [];
-          deck.vent = [];
-          deck.duct = [];
         }
+      var md = RenderConfig.MODELS;
+      var batch = function(path:String, places:Array<Models.PropPlace>, h:Float):Models.InstancedProp
+        {
+          var prop = Models.instanced(scene, path, places, h, SOLID);
+          return (mil ? render.military.MilitaryYard.unmasked(prop, path) : prop);
+        };
       out.ac = Models.instanced(scene, acPath(), deck.ac, FacilityStyle.ROOF_AC_H, SOLID);
-      out.dish = Models.instanced(scene, dishPath(), deck.dish, FacilityStyle.ROOF_DISH_H, SOLID);
-      out.hatchB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofHatchHand, deck.hatch,
-        FacilityStyle.ROOF_HATCH_H, SOLID);
-      out.jboxB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofJboxHand, deck.jbox,
-        FacilityStyle.ROOF_JBOX_H, SOLID);
-      out.ventB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofVentHand, deck.vent,
-        FacilityStyle.ROOF_VENT_H, SOLID);
-      out.ductB = Models.instanced(scene, RenderConfig.MODELS.facilityRoofDuctHand, deck.duct,
-        FacilityStyle.ROOF_DUCT_H, SOLID);
+      out.dish = batch((mil ? md.militaryRoofAerial : dishPath()), deck.dish,
+        (mil ? render.military.MilitaryYard.AERIAL_H : FacilityStyle.ROOF_DISH_H));
+      out.hatchB = batch((mil ? md.militaryRoofHatch : md.facilityRoofHatchHand), deck.hatch,
+        (mil ? render.military.MilitaryYard.HATCH_H : FacilityStyle.ROOF_HATCH_H));
+      out.jboxB = batch((mil ? md.militaryRoofJbox : md.facilityRoofJboxHand), deck.jbox,
+        (mil ? render.military.MilitaryYard.JBOX_H : FacilityStyle.ROOF_JBOX_H));
+      out.ventB = batch((mil ? md.militaryRoofVent : md.facilityRoofVentHand), deck.vent,
+        (mil ? render.military.MilitaryYard.VENT_H : FacilityStyle.ROOF_VENT_H));
+      out.ductB = batch((mil ? md.militaryRoofDuct : md.facilityRoofDuctHand), deck.duct,
+        (mil ? render.military.MilitaryYard.DUCT_H : FacilityStyle.ROOF_DUCT_H));
       // a base's tanks are its own water tank, handed back on deck.tank by MilitaryYard.roof
       out.tankB = (m.kind == 'military' ?
         render.military.MilitaryYard.unmasked(Models.instanced(scene,
@@ -475,6 +483,7 @@ class FacilityRoof
             FacilityStyle.ROOF_DISH_PLAN / 2, 0.0);
           out.pools++;
         }
+      var nest = null;
       for (cell in plant)
         {
           var c = CityConfig.cellToWorld(cell.col, cell.row);
@@ -500,6 +509,8 @@ class FacilityRoof
               out.pools++;
               continue;
             }
+          if (nest == null)
+            nest = cell;
           deck.ac.push({
             x: c.x,
             z: c.z,
@@ -524,7 +535,9 @@ class FacilityRoof
       // every ungrouped unit within ROOF_JBOX_REACH of ITSELF and not of the growing group, so a
       // group cannot creep across the deck one member at a time. `runs` then lays the group's whole
       // network as a shared trunk and a spur each, whatever the deck measures
-      var left = plant.copy();
+      // a base's first condenser spot is its sandbag nest (render.military.MilitaryYard.roof), and
+      // a nest takes no power: its spur ran in under the bags
+      var left = [for (c in plant) if (m.kind != 'military' || c != nest) c];
       while (left.length > 0)
         {
           var seed = left.shift();
@@ -1034,7 +1047,7 @@ class FacilityRoof
 // 2.78 footprint cannot reach the edge of it. Nothing here needs the rect the other one takes.
 //
 // the yaw is the prop's own, so a quarter-turned condenser's shadow turns with it
-  static function pool(b:render.world.MeshBuf.MeshBuf, x:Float, z:Float, hw:Float, hd:Float,
+  public static function pool(b:render.world.MeshBuf.MeshBuf, x:Float, z:Float, hw:Float, hd:Float,
       yaw:Float):Void
     {
       var rw = hw * (1 + FacilityStyle.POOL_GROW);
@@ -1056,7 +1069,7 @@ class FacilityRoof
 // that file: the mesh goes into Shell.roof so a shadow leaves with the deck it lies on, and
 // FacilityArea.apply SETS material.opacity from the deck's ease every frame — a 0.5 left on the
 // material would be overwritten with 1.0 the first frame the player is outside
-  static function shade(scene:Scene, b:render.world.MeshBuf.MeshBuf, shell:Shell):Void
+  public static function shade(scene:Scene, b:render.world.MeshBuf.MeshBuf, shell:Shell):Void
     {
       if (b.idx.length == 0)
         return;

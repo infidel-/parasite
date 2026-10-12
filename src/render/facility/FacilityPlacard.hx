@@ -313,9 +313,12 @@ class FacilityPlacard
               // the masonry the plate is bolted to, and the corridor cell it hangs over
               var wc = d.col + sc * side, wr = d.row + sr * side;
               var cc = wc - dc * d.inDir, cr = wr - dr * d.inDir;
+              // and not on a face an exit sign hangs on: the two overlap by 0.4 at the same cell
+              // ("two wall decals intersect"), and the plate takes the door's other side instead
               if (!FacilityModel.isSolidWall(m, wc, wr) ||
                   !FacilityModel.inside(m, cc, cr) ||
-                  m.surf[cr][cc] != Surf.LINO)
+                  m.surf[cr][cc] != Surf.LINO ||
+                  FacilityExit.hung.exists((wr * m.w + wc) * 4 + (face ^ 1)))
                 continue;
               var cell = (wash ? (put == 0 ? FacilityStyle.SIGN_MEN : FacilityStyle.SIGN_WOMEN) :
                 (FacilityModel.mix((d.col * 374761393) ^ (d.row * 40503)) % 2 == 0 ?

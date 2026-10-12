@@ -122,12 +122,13 @@ class MilitaryBlocks
           minH: 6,
           fit: function(b: _GenNode) return -fromGate(b),
         },
-        // a container depot, never required, but its FIRST plot dealt before a second camp: with the
-        // entry yard taking a plot, a 90x70 base otherwise never got one (0.22 a base to 0). The
-        // two DEPOT rows share one count (gen.Quota), so this one stops at 1
+        // a container depot, REQUIRED ("make more containers": 0.76 a base had one), its plot dealt
+        // before a second camp: with the entry yard taking a plot, a 90x70 base otherwise never got
+        // one (0.22 a base to 0). The two DEPOT rows share one count (gen.Quota), so this one stops
+        // at 1
         {
           kind: DEPOT,
-          min: 0,
+          min: 1,
           max: 1,
           minW: 8,
           minH: 5,

@@ -5,6 +5,9 @@ import game.Game;
 
 class Go
 {
+  // how far `go block` lands from you when the only block of a kind is the one you stand in
+  static inline var GO_FAR = 10;
+
   public var console: Console;
   var game: Game;
 
@@ -91,17 +94,21 @@ class Go
         }
       // NOT THE ONE YOU ARE STANDING IN: run it from inside a room and the roll used to put you
       // back in the same room one time in N, which read as the command doing nothing
-      var here = [for (i in 0...hits.length) if (holds(hits[i], game.playerArea.x,
-        game.playerArea.y)) i];
+      var x = game.playerArea.x;
+      var y = game.playerArea.y;
+      var here = [for (i in 0...hits.length) if (holds(hits[i], x, y)) i];
       var pick = [for (i in 0...hits.length) if (here.indexOf(i) < 0) i];
-      if (pick.length == 0)
+      var i = (pick.length > 0 ? pick[Std.random(pick.length)] : here[0]);
+      // the only one holds you: somewhere ELSE in it, where it has an elsewhere. A base's yard is
+      // every bare cell of its lot, and run from anywhere on it this said you were already there
+      var cells = (pick.length > 0 ? hits[i].cells :
+        [for (c in hits[i].cells) if (Math.abs(c.x - x) + Math.abs(c.y - y) > GO_FAR) c]);
+      if (cells.length == 0)
         {
           log('You are already in the only ' + kind + ' on this map.');
           return;
         }
-      var i = pick[Std.random(pick.length)];
-      var b = hits[i];
-      var c = b.cells[Std.random(b.cells.length)];
+      var c = cells[Std.random(cells.length)];
       log('Teleporting to ' + kind + ' ' + (hits.length > 1 ?
         '(' + (i + 1) + ' of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
       game.playerArea.moveTo(c.x, c.y);

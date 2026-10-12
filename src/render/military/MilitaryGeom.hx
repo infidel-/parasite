@@ -8,6 +8,7 @@ import render.corp.CorpFurniture;
 import render.corp.CorpStyle;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
+import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityStyle;
 import render.military.MilitaryClutter.LidKind;
@@ -98,6 +99,12 @@ class MilitaryGeom
   static inline var CONT_INSET = 0.2;
   static inline var CONT_W = CELL - CONT_INSET * 2;
   public static inline var CONT_H = CONT_W * 546 / 508;
+  // and how high the depot stacks them ("make more containers and 2-3 containers high stacks"), each
+  // one above its first nudged and turned a whisker off the one under it, as a crane sets them down
+  static inline var CONT_STACK_MIN = 2;
+  static inline var CONT_STACK_MAX = 3;
+  static inline var CONT_NUDGE = 0.12;
+  static inline var CONT_TURN = 0.015;
 
   // the camo net over a parked vehicle, on four poles, and how far past the footprint it reaches
   static inline var NET_Y = 6.4;
@@ -556,20 +563,27 @@ class MilitaryGeom
         [r0 / t, 0, r0 / t, len / t, r1 / t, len / t, r1 / t, 0]);
     }
 
-// a shipping container from its origin cell, the hand-modelled one (models-src/military/
-// yardkit_build.py) along its length with the door on its west end
+// a stack of shipping containers on an origin cell, the hand-modelled one (models-src/military/
+// yardkit_build.py) along its length with the door on its west end, CONT_STACK_MIN to CONT_STACK_MAX
+// high off the cell's hash
   static function container(m:Facility, col:Int, row:Int):Void
     {
       var x0 = col * CELL - half() + CONT_INSET;
       var z0 = row * CELL - half() + CONT_INSET;
       var x1 = x0 + Const.MIL_CONTAINER_LEN * CELL - CONT_INSET * 2;
       var z1 = z0 + CONT_W;
-      containers.push({
-        x: (x0 + x1) / 2,
-        z: (z0 + z1) / 2,
-        yaw: 0.0,
-        y: 0.0,
-      });
+      var hash = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
+      var n = CONT_STACK_MIN + hash % (CONT_STACK_MAX - CONT_STACK_MIN + 1);
+      for (i in 0...n)
+        {
+          var h = (i == 0 ? 0 : hash >>> (3 + i * 7));
+          containers.push({
+            x: (x0 + x1) / 2 + ((h % 21) / 10 - 1) * CONT_NUDGE,
+            z: (z0 + z1) / 2 + (((h >>> 5) % 21) / 10 - 1) * CONT_NUDGE * 0.5,
+            yaw: (((h >>> 10) % 3) - 1) * CONT_TURN,
+            y: i * CONT_H,
+          });
+        }
       FacilityDetail.ground(m, {
         col: col,
         row: row,
@@ -581,7 +595,7 @@ class MilitaryGeom
           z0: z0,
           z1: z1,
         },
-        h: CONT_H,
+        h: CONT_H * n,
       });
     }
 

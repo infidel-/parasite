@@ -10,6 +10,7 @@ import render.facility.FacilityEntry;
 import render.facility.FacilityGeom;
 import render.facility.FacilityGeom.Rect;
 import render.facility.FacilityGeom.Shell;
+import render.facility.FacilityRoof;
 import render.facility.FacilityRoof.Roof;
 import render.facility.FacilityRoof.RoofDeck;
 import render.facility.FacilityStyle;
@@ -28,11 +29,9 @@ class MilitaryYard
 {
   static inline var CELL = CityConfig.CELL;
 
-  // the base's own steels: galvanised for bare outdoor steel, gunmetal for the barrier's cabinet,
-  // chequer plate for the roof hatches
+  // the base's own steels: galvanised for bare outdoor steel, gunmetal for the barrier's cabinet
   static inline var TEX_GALV = 'textures/military/galvanized.png';
   static inline var TEX_GUNMETAL = 'textures/military/gunmetal.png';
-  static inline var TEX_CHEQUER = 'textures/military/chequer.png';
   static inline var TEX_OLIVE = 'textures/military/wall-olive.png';
   static inline var TEX_CONCRETE = 'textures/military/wall-concrete.png';
   static inline var TEX_ARM = 'textures/military/boom-arm.png';
@@ -81,10 +80,28 @@ class MilitaryYard
   static inline var NEST_BAGS = 4;
   // the hand-modelled water tank, legs to manway
   public static inline var TANK_H = 2.79;
-  static inline var AERIAL_W = 0.14;
-  static inline var AERIAL_H = 7.0;
-  static inline var AERIAL_BASE = 0.5;
-  static inline var AERIAL_BAR = 0.8;
+  // and models-src/military/roofkit_build.py's, each its built height, so render.Models.instanced
+  // scales it by 1: the hatch, the isolator, the vent, one cell of duct and the aerial
+  public static inline var HATCH_H = 0.4971;
+  public static inline var JBOX_H = 1.15;
+  public static inline var VENT_H = 1.03;
+  public static inline var DUCT_H = 0.9;
+  public static inline var AERIAL_H = 7.7;
+  // their footprints as half extents along local x and z, for the pools under them: the hatch's lid,
+  // the isolator's base plates, the vent's flashing, a duct cell's sleepers, the mast's base plate,
+  // and the round tank's, small enough that the square pool's corners stay under its 1.0 radius
+  static var KIT_HALF = [
+    [ 1.29, 1.09 ],
+    [ 0.375, 0.3 ],
+    [ 0.35, 0.35 ],
+    [ CELL / 2, 0.4 ],
+    [ 0.6, 0.6 ],
+  ];
+  static inline var TANK_POOL = 0.62;
+  // how much of a footprint a roof pool spans before FacilityRoof.pool grows it 40%: its dark core
+  // ends inside the piece and only the falloff shows past its edge. The compound's own pools, laid at
+  // the compound's footprints round the base's smaller kit, read as holes cut in the roof
+  static inline var POOL_FIT = 0.8;
 
 
 // the checkpoint and the yard clutter, into MilitaryGeom's buffers. runs inside MilitaryGeom.build,
@@ -365,19 +382,18 @@ class MilitaryYard
       });
     }
 
-// the roofs' kit on FacilityRoof's own spots, each piece onto its structure's deck so it fades with
-// it: the first plant spot on a building is a sandbag nest, the rest water tanks (a glb, so handed
-// back on deck.tank); the dish pad an
-// antenna mast; the isolator boxes, vents and duct bare galvanised steel and the hatch chequer plate
+// the roofs' kit on FacilityRoof's own spots: the first plant spot on a building is a sandbag nest
+// and the rest water tanks (a glb, handed back on deck.tank); the hatch, isolators, vents, duct and
+// the aerial on the dish spot are FacilityRoof's own batches drawing roofkit_build.py's glbs. Every
+// piece's contact pool is laid here, fitted to the piece, into one fading mesh per deck
   public static function roof(scene:Scene, deck:RoofDeck, out:Roof, shells:Array<Shell>):Void
     {
-      var bufs = new Map<String, render.world.MeshBuf.MeshBuf>();
-      var buf = function(si:Int, tex:String):render.world.MeshBuf.MeshBuf
+      var pools = new Map<Int, render.world.MeshBuf.MeshBuf>();
+      var pool = function(si:Int, x:Float, z:Float, hw:Float, hd:Float, yaw:Float):Void
         {
-          var k = si + ' ' + tex;
-          if (!bufs.exists(k))
-            bufs.set(k, MeshBufTools.make());
-          return bufs.get(k);
+          if (!pools.exists(si))
+            pools.set(si, MeshBufTools.make());
+          FacilityRoof.pool(pools.get(si), x, z, hw, hd, yaw);
         };
       var nested = new Map<Int, Bool>();
       var tanks:Array<Models.PropPlace> = [];
@@ -406,82 +422,42 @@ class MilitaryYard
               });
               for (_ in n...bags.length)
                 out.bagOf.push(si);
+              // a pool under each of its walls and none in the middle, where the condenser's lay
+              // ("holes under sandbags"): the two along x whole, the -x one between them, and the
+              // +x one either side of its gap
+              var w = MilitaryBags.W / 2 * POOL_FIT;
+              var side = (o - MilitaryBags.W) * POOL_FIT;
+              pool(si, p.x, p.z - o + MilitaryBags.W / 2, o * POOL_FIT, w, 0.0);
+              pool(si, p.x, p.z + o - MilitaryBags.W / 2, o * POOL_FIT, w, 0.0);
+              pool(si, p.x - o + MilitaryBags.W / 2, p.z, w, side, 0.0);
+              var gap = (o - MilitaryBags.W - DOOR_W / 2) / 2;
+              for (k in [ -1, 1 ])
+                pool(si, p.x + o - MilitaryBags.W / 2, p.z + k * (DOOR_W / 2 + gap), w,
+                  gap * POOL_FIT, 0.0);
               continue;
             }
           tanks.push(p);
           tankOf.push(si);
+          pool(si, p.x, p.z, TANK_POOL * POOL_FIT, TANK_POOL * POOL_FIT, 0.0);
         }
       // the facility's own tank spots and every plant spot past the nest stand the base's water
       // tank, handed back on deck.tank for FacilityRoof to batch and mask like the compound's
+      for (i in 0...deck.tank.length)
+        pool(out.tankOf[i], deck.tank[i].x, deck.tank[i].z, TANK_POOL * POOL_FIT, TANK_POOL * POOL_FIT,
+          0.0);
       deck.tank = tanks.concat(deck.tank);
       out.tankOf = tankOf.concat(out.tankOf);
-      for (i in 0...deck.dish.length)
-        {
-          var p = deck.dish[i];
-          var b = buf(out.dishOf[i], TEX_GALV);
-          var h = AERIAL_W / 2;
-          MilitaryGeom.box(b, p.x - AERIAL_BASE, p.x + AERIAL_BASE, p.z - AERIAL_BASE,
-            p.z + AERIAL_BASE, p.y, p.y + 0.3, CELL);
-          MilitaryGeom.box(b, p.x - h, p.x + h, p.z - h, p.z + h, p.y, p.y + AERIAL_H, CELL);
-          for (k in 1...4)
-            {
-              var y = p.y + AERIAL_H * k / 4;
-              var w = AERIAL_BAR * (1 - k / 5);
-              MilitaryGeom.box(b, p.x - w, p.x + w, p.z - h, p.z + h, y, y + h * 2, CELL);
-            }
-        }
-      // the small steel kit: [ list, owners, w, d, h, art ], a quarter turn swapping w and d
-      var kit:Array<{ at:Array<Models.PropPlace>, of:Array<Int>, w:Float, d:Float, h:Float,
-        tex:String }> = [
-        {
-          at: deck.hatch,
-          of: out.hatchOf,
-          w: FacilityStyle.HATCH_W,
-          d: FacilityStyle.HATCH_D,
-          h: 0.6,
-          tex: TEX_CHEQUER,
-        },
-        {
-          at: deck.jbox,
-          of: out.jboxOf,
-          w: 0.6,
-          d: 0.4,
-          h: 0.8,
-          tex: TEX_GALV,
-        },
-        {
-          at: deck.vent,
-          of: out.ventOf,
-          w: 0.6,
-          d: 0.6,
-          h: 0.9,
-          tex: TEX_GALV,
-        },
-        {
-          at: deck.duct,
-          of: out.ductOf,
-          w: CELL,
-          d: FacilityStyle.ROOF_DUCT_PLAN_D,
-          h: FacilityStyle.ROOF_DUCT_PLAN_D,
-          tex: TEX_GALV,
-        },
-      ];
-      for (k in kit)
-        for (i in 0...k.at.length)
+      // and under the rest of the kit, each on its own spot and turn
+      var kit = [ deck.hatch, deck.jbox, deck.vent, deck.duct, deck.dish ];
+      var of = [ out.hatchOf, out.jboxOf, out.ventOf, out.ductOf, out.dishOf ];
+      for (k in 0...kit.length)
+        for (i in 0...kit[k].length)
           {
-            var p = k.at[i];
-            var turn = (Math.abs(Math.sin(p.yaw)) > 0.5);
-            var hw = (turn ? k.d : k.w) / 2;
-            var hd = (turn ? k.w : k.d) / 2;
-            MilitaryGeom.box(buf(k.of[i], k.tex), p.x - hw, p.x + hw, p.z - hd, p.z + hd, p.y,
-              p.y + k.h, CELL);
+            var p = kit[k][i];
+            pool(of[k][i], p.x, p.z, KIT_HALF[k][0] * POOL_FIT, KIT_HALF[k][1] * POOL_FIT, p.yaw);
           }
-      for (key in bufs.keys())
-        {
-          var sp = key.indexOf(' ');
-          FacilityGeom.addDeck(scene, bufs.get(key), key.substr(sp + 1), true,
-            shells[Std.parseInt(key.substr(0, sp))]);
-        }
+      for (si in pools.keys())
+        FacilityRoof.shade(scene, pools.get(si), shells[si]);
       out.bagB = unmasked(MilitaryBags.batch(scene, bags), RenderConfig.MODELS.militarySandbag);
     }
 
@@ -519,6 +495,26 @@ class MilitaryYard
         {
           path: RenderConfig.MODELS.militaryWaterTank,
           h: TANK_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryRoofHatch,
+          h: HATCH_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryRoofJbox,
+          h: JBOX_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryRoofVent,
+          h: VENT_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryRoofDuct,
+          h: DUCT_H,
+        },
+        {
+          path: RenderConfig.MODELS.militaryRoofAerial,
+          h: AERIAL_H,
         },
       ];
     }

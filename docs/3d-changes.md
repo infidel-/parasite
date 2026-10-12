@@ -2055,3 +2055,36 @@ separator wall"; the urinal's drain "should go up to the back"; floor-mess "not 
 
 **Verdict:** landed. +0 calls: drums ride the yard drum batch, the separator buffer merges into the
 shell's array mesh (`corp merged 20`). 0 new programs (121).
+
+## Military base: roof kit hand-modelled on FacilityRoof's batches, fitted roof pools, tank lid planar UVs, container stacks, bench clutter and doubled run pools, helipad regenerated
+
+**Reported:** the roof hatch "looks like emitted shit PLUS two holes near it", the duct "hole under plus
+needs to be smoother, just a long brick", the aerial "emitted again? make blender model. and fix
+hole", "holes under sandbags", the water tank's "u,v map stretched. AGAIN holes under"; "make more
+containers and 2-3 containers high stacks"; benches "should have clutter spots on top and under" and
+did not seem to "throw shadows"; the helipad's "circles cut off on the sides".
+
+**Changed:**
+- **The holes were contact pools.** FacilityRoof.fill laid the compound's footprints (a 2.78 condenser
+  pool under a sandbag nest's empty middle, a 1.5 dish pool round a 1.0 mast base) at a hard 0.5
+  core. A base now skips them and `MilitaryYard.roof` lays its own, at 0.8 of each piece's footprint so
+  the core ends inside it: four under a nest's walls and none in its middle, the tank's small enough
+  that the square stays under its 1.0 radius. The nest's spot is also unwired (its spur ran in under
+  the bags).
+- **Roof kit**: `models-src/military/roofkit_build.py`, sheet `mil-h-sheet.png` (chequer, galvanized,
+  gunmetal, mast-paint) at one cell per 4 units: hatch 148 tris, isolator 188, mushroom vent 320, one
+  cell of round duct on saddles 492, lattice aerial 1,028. All gates 0. They ride FacilityRoof's own
+  hatch/jbox/vent/duct/dish batches with military paths, so the per-structure fade mask is unchanged.
+- **Tank lid**: faces with normal.z > 0.6 laid by `disc_uv` from above. A lathe reads v off z, so the
+  0.5-wide cone took 0.1 of the art across its slope.
+- **Containers**: `CONT_STACK_MIN/MAX` 2-3 per origin, nudged and turned a whisker. Depot required
+  (`min 1`, 0.76 → 1.05 a base), `CONTAINER_PCT` 85 → 95. Example base: 78 containers on 31 origins.
+- **Benches**: a `SEAT` lid (0-1) and an `UNDER` lid on every other cell. The run pools were present
+  but only 0.32 (HALO_ALPHA) on the mess's red tile, so `POOL_LAYERS` 2 lays them twice (0.54).
+- **Helipad**: one solo gen with the ring inside a ~5% margin, keyed on its painted asphalt, lift 1.6.
+- **Door plates** (`FacilityPlacard.rooms`, every kind) skip a wall face an exit sign hangs on
+  (`FacilityExit.hung`) and take the door's other side: the two overlapped by 0.4 on one cell.
+
+**Verdict:** landed. Measured with `onBeforeRender`: the five roof batches draw 1 call each. They
+replace two emitted deck meshes per building (galvanised, chequer), so +1 on a two-building base.
+0 new programs (121).

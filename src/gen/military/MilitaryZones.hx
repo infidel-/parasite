@@ -40,6 +40,11 @@ class MilitaryZones
   public static inline var BARRACKS = 'room-barracks';
   public static inline var LATRINE = 'room-latrine';
 
+  // the step from a room's wall cell out to its wall, per wall as roomWallRuns numbers them: top,
+  // bottom, left, right
+  static var OUT_X = [ 0, 0, -1, 1 ];
+  static var OUT_Y = [ -1, 1, 0, 0 ];
+
   // and the zones they divide into. A wall zone is one bay of one wall, a floor zone the room's
   // middle less a cell all round
   public static inline var BUNK_ROW = 'bunk-row';
@@ -158,6 +163,27 @@ class MilitaryZones
               b.tags.push(TAG_FACE);
             bays.push(b);
           }
+      // and a barracks' GLASS bays, the cells backed by a window, tagged 'g' and not 'w' so the one
+      // demand that asks for them is the bunk laid ALONG the wall: side-on to the glass with its
+      // footlocker after it ("allow bed+chest along the windows as well if we have space")
+      if (node.kind == BARRACKS)
+        {
+          var lit = FacilityRooms.roomWallRuns(state, room, true);
+          for (w in 0...4)
+            for (span in FacilityToilet.spans([for (c in lit[w])
+                if (glassBacked(cells, c.x + OUT_X[w], c.y + OUT_Y[w]) &&
+                  !nextToDoor(cells, c.x, c.y)) c]))
+              {
+                var a = span[0];
+                var z = span[span.length - 1];
+                var b = GenTree.add(node, RoomBlock.BAY, Std.int(Math.min(a.x, z.x)),
+                  Std.int(Math.min(a.y, z.y)), Std.int(Math.max(a.x, z.x)),
+                  Std.int(Math.max(a.y, z.y)));
+                b.roomID = room.id;
+                b.tags = [ 'g' + w ];
+                bays.push(b);
+              }
+        }
       if (room.w >= 3 &&
           room.h >= 3)
         {
@@ -300,8 +326,10 @@ class MilitaryZones
                     (rowsOk ?
                       depth >= BUNK_DEPTH + 2 &&
                       depth < BUNK_DEPTH * 2 + 1 &&
-                      RoomBlock.tagged(b, 'w' + (first ^ 1)) :
-                      RoomBlock.tagged(b, 'w' + lay))),
+                      (RoomBlock.tagged(b, 'w' + (first ^ 1)) ||
+                      RoomBlock.tagged(b, 'g' + (first ^ 1))) :
+                      RoomBlock.tagged(b, 'w' + lay) ||
+                      RoomBlock.tagged(b, 'g' + lay))),
               },
             ];
 
@@ -370,6 +398,14 @@ class MilitaryZones
         if (RoomBlock.tagged(b, 'w' + w))
           return w;
       return -1;
+    }
+
+// is this wall cell glass: the window a room cell beside it is backed by
+  static inline function glassBacked(cells: Array<Array<Int>>, x: Int, y: Int): Bool
+    {
+      var t = FacilityBuilding.at(cells, x, y);
+      return (t >= TEMP_BUILDING_WINDOW &&
+        t <= TEMP_BUILDING_WINDOWV3);
     }
 
 // is there a doorway of any kind beside this cell?

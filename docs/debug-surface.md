@@ -59,7 +59,13 @@ proves it inline. When a lesson invalidates an old bullet, replace it rather tha
     from the SHAPE of the unwalkable concrete; the room ZONES (`bay`, `slot`, `lounge`, `stall-run`,
     `hangar-machine`) leave no mark of their own on the grid and are not offered. `parking` and `yard` come back
     SEPARATELY as of `Const.TILE_PARKING` — both are `Surf.LOT`, and the car park's own tile is what
-    tells them apart; before it they were one block called `lot`.
+    tells them apart; before it they were one block called `lot`. A MILITARY BASE's plots are lot to
+    the surface too, so `helipad`, `motorpool`, `depot` and `camp` are read back off the tiles that
+    stand in them (pad and helicopter, vehicle origins plus footprint, containers, tents), each clump's
+    box grown a cell, and `yard` is what they leave; the entry yard stands nothing and stays `yard`.
+  - **The only block of a kind that already holds you lands you somewhere else in it**, more than 10
+    cells away (`GO_FAR`), instead of refusing: a base's `yard` is most of its lot, and run from
+    anywhere on it the command used to say you were already there.
   - Two traps it cost to find, both measured: a structure's `ox*` box reaches PAST the wall ring on at
     least one hand (the shed at 3,4..15,28 has `ox1` 2, whose whole column is the pavement), so the
     INTERIOR box is what to sample; and the hangar floor is recorded as one role-less `_Room`, which

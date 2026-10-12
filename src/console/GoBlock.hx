@@ -23,6 +23,7 @@ import game.Game;
 import gen.blocks.CorpBlocks;
 import gen.blocks.FacilityBlocks;
 import gen.blocks.HangarBlock;
+import gen.blocks.MilitaryBlocks;
 import gen.blocks.RoomBlock;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
@@ -39,8 +40,20 @@ typedef _GoBlock = {
   var cells: Array<{ x: Int, y: Int }>;
 }
 
+// a box of cells, both corners inclusive
+typedef _Rect = {
+  var x1: Int;
+  var y1: Int;
+  var x2: Int;
+  var y2: Int;
+}
+
 class GoBlock
 {
+  // how far apart two tiles may stand and still be one plot: the depot's and the camp's lanes are
+  // two cells
+  static inline var PLOT_REACH = 3;
+
 // every block of the current map. empty off a facility compound or a corp tower, which are the
 // only area types whose layout is a block tree.
 //
@@ -59,7 +72,11 @@ class GoBlock
       if (game.area.typeID != AREA_FACILITY &&
           game.area.typeID != AREA_MILITARY_BASE)
         return [];
-      var m = FacilityModel.fromArea(game.area);
+      // a base's own shell, whose surfOf knows its room floors: the compound's reads every one of
+      // them as lot, and `yard` came back with the barracks in it ("says i'm in the yard already
+      // while i'm in building")
+      var m = FacilityModel.fromArea(game.area, null,
+        (game.area.typeID == AREA_MILITARY_BASE ? render.military.MilitaryStyle.shell() : null));
       var out = [];
       // the two kinds of structure, on the INTERIOR box and not the one the roof spans. `ox*` is
       // the outer box and it reaches PAST the wall ring on at least one hand — measured on the
@@ -97,9 +114,85 @@ class GoBlock
       // car park now, so the yard is whatever else answers Surf.LOT — the gaps between plots
       // included, which is what the filler kind always was
       surface(out, game, m, FacilityBlocks.PARKING, Surf.LOT, true);
+      // a base's own plots before its yard, which is then what they leave of the lot
+      var plots = (game.area.typeID == AREA_MILITARY_BASE ? military(out, game) : []);
       surface(out, game, m, FacilityBlocks.YARD, Surf.LOT, false);
+      var yard = out[out.length - 1];
+      if (plots.length > 0 &&
+          yard.kind == FacilityBlocks.YARD)
+        yard.cells = [for (c in yard.cells) if (!Lambda.exists(plots, function(r)
+          return (c.x >= r.x1 &&
+            c.x <= r.x2 &&
+            c.y >= r.y1 &&
+            c.y <= r.y2))) c];
       surface(out, game, m, FacilityBlocks.ROAD, Surf.ROAD);
       return out;
+    }
+
+// a MILITARY BASE's plots, which are lot to the surface grid and so all came back as one `yard`
+// ("what's the helicopter/humvees/outdoors block then?"). Each is read back off the tiles that stand
+// in it: the pad and its helicopter, the motor pool's vehicles (origin cell plus footprint), the
+// depot's containers and the camp's tents, each clump's box grown by the lane round it. Returns the
+// boxes, for the yard to leave out. The entry yard stands nothing and stays yard.
+//
+// ponytail: a clump is every tile within PLOT_REACH of the first box it touches, with no merge of two
+// boxes that grow into each other; two camps a lane apart come back as two
+  static function military(out: Array<_GoBlock>, game: Game): Array<_Rect>
+    {
+      var area = game.area;
+      var kinds = [
+        MilitaryBlocks.HELIPAD => [ Const.TILE_MIL_PAD, Const.TILE_MIL_HELI ],
+        MilitaryBlocks.MOTORPOOL => [ Const.TILE_MIL_TANK, Const.TILE_MIL_HUMVEE ],
+        MilitaryBlocks.DEPOT => [ Const.TILE_MIL_CONTAINER, Const.TILE_MIL_CONTAINER_ORIGIN ],
+        MilitaryBlocks.CAMP => [ Const.TILE_MIL_TENT ],
+      ];
+      var all = [];
+      for (kind in kinds.keys())
+        {
+          var boxes: Array<_Rect> = [];
+          for (y in 0...area.height)
+            for (x in 0...area.width)
+              {
+                var t = area.getCellType(x, y);
+                if (kinds.get(kind).indexOf(t) < 0)
+                  continue;
+                // a vehicle's origin names its footprint, the rest of which is plain vehicle tile
+                var size = (t == Const.TILE_MIL_TANK ? Const.MIL_TANK_SIZE :
+                  t == Const.TILE_MIL_HUMVEE ? Const.MIL_HUMVEE_SIZE : [ 1, 1 ]);
+                var box = null;
+                for (b in boxes)
+                  if (x >= b.x1 - PLOT_REACH &&
+                      x <= b.x2 + PLOT_REACH &&
+                      y >= b.y1 - PLOT_REACH &&
+                      y <= b.y2 + PLOT_REACH)
+                    box = b;
+                if (box == null)
+                  {
+                    box = {
+                      x1: x,
+                      y1: y,
+                      x2: x,
+                      y2: y,
+                    };
+                    boxes.push(box);
+                  }
+                box.x1 = Std.int(Math.min(box.x1, x));
+                box.y1 = Std.int(Math.min(box.y1, y));
+                box.x2 = Std.int(Math.max(box.x2, x + size[0] - 1));
+                box.y2 = Std.int(Math.max(box.y2, y + size[1] - 1));
+              }
+          for (b in boxes)
+            {
+              add(out, game, kind, b.x1 - 1, b.y1 - 1, b.x2 + 1, b.y2 + 1);
+              all.push({
+                x1: b.x1 - 1,
+                y1: b.y1 - 1,
+                x2: b.x2 + 1,
+                y2: b.y2 + 1,
+              });
+            }
+        }
+      return all;
     }
 
 // the same walk over a CORP TOWER, which is the other area kind the block tree builds. it is much

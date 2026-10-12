@@ -41,11 +41,15 @@ class FacilityExit
 {
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
+  // the wall faces the last build hung a sign on, keyed (row * w + col) * 4 + face, for
+  // FacilityPlacard.rooms: a door plate on the same face hung through the exit sign over it
+  public static var hung:Map<Int, Bool> = new Map();
 
 // every sign in the compound, merged into one mesh. returns how many went in, for __facility()
   public static function build(scene:Scene, m:Facility):Int
     {
       var b = MeshBufTools.make();
+      hung = new Map();
       var dist = [for (_ in 0...m.h) [for (_ in 0...m.w) -1]];
       var n = terminals(b, m, dist);
       n += directionals(b, m, route(m, dist));
@@ -246,6 +250,7 @@ class FacilityExit
   static function quad(b:MeshBuf, m:Facility, col:Int, row:Int, dir:Int, v0:Float,
       mirror:Bool):Void
     {
+      hung.set((row * m.w + col) * 4 + dir, true);
       var s = FacilityGeom.slab(m, col, row);
       var e = FacilityStyle.MOUNT_PROUD;
       var h = FacilityStyle.EXIT_W / 2;

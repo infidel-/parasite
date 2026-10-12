@@ -5468,18 +5468,18 @@
     "military/helipad-h": {
       "src": "military/helipad-h.png",
       "class": "chroma",
-      "chroma": "0x2c2f33",
+      "chroma": "0x2d2f33",
       "tol": 40,
       "needs_alpha": true,
       "res": 512,
-      "prompt": "A painted HELIPAD MARKING seen from directly above, filling the image edge to edge: one thick worn yellow CIRCLE ring touching all four image edges, and inside it a big bold white capital letter H in the exact centre, thick block strokes. Road paint on concrete, scuffed and chipped. ONLY the ring and the H are drawn. [gpt-image-2.5-flare high, background transparent] [append textures.json style]",
+      "prompt": "A painted HELIPAD MARKING seen from directly above, centred in the image: one thick worn yellow CIRCLE ring that sits COMPLETELY INSIDE the image with a clear empty margin of about six percent between the ring's outer edge and every image edge \u2014 the whole ring is visible, nothing is cut off by the frame \u2014 and inside the ring a big bold white capital letter H in the exact centre, thick block strokes. Road paint, scuffed and chipped, small chips missing from the paint. ONLY the ring and the H are drawn, nothing else. [gpt-image-2.5-sunburst high, background transparent] [append textures.json style]",
       "prompt_exact": false,
-      "note": "the helipad's marking, one alphaTest quad over the pad's square (render.military.MilitaryGeom). gpt ignored background:transparent and painted the pad itself (amin 235, a flat 44/47/51 slab, 99th-percentile spread 12 and max 34), so it is keyed on that measured colour at tol 40 instead of re-cut: the ring is 115/100/48 and the H ~190, both far outside it, and the chips in the paint key out as holes, which is what a chip is. lift 1.4: built at sRGB 121 against the apron's 61 it was the brightest thing in the night frame, glowing through the vision mask.",
-      "last_converted": "2026-10-10T19:50:08",
-      "built_linear": 0.1456,
-      "built_srgb": 93.2,
-      "lift": 1.4,
-      "last_lift": 1.4
+      "note": "the helipad's marking, one alphaTest quad over the pad's square (render.military.MilitaryGeom). REGENERATED: the first prompt asked for the ring touching all four image edges, so the frame clipped it flat on every side ('helipad has circles cut off on the sides'); this one keeps a ~5% margin (ring outer edge at 55..968 of 1024). gpt again ignored background:transparent and painted the asphalt (alpha 246-249 everywhere, a flat 45/47/51 slab, 99th-percentile spread 8 and max 23), so it is keyed on that measured colour at tol 40: the ring is ~175/142/60 and the H ~166, far outside it, and the chips key out as holes, which is what a chip is. lift 1.4 kept from the first roll: built at sRGB 121 against the apron's 61 that one was the brightest thing in the night frame. Re-fitted to lift 1.6 for this roll: at 1.4 it built sRGB 107 against the first roll's 93.",
+      "last_converted": "2026-10-12T15:58:44",
+      "built_linear": 0.1525,
+      "built_srgb": 96.0,
+      "lift": 1.6,
+      "last_lift": 1.6
     },
     "military/wall-exterior": {
       "src": "military/mil-pack-c.png",
