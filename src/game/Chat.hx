@@ -60,8 +60,9 @@ class Chat extends _SaveObject
           event.notesKnown())
         return;
       // 30% chance unless it's police
-      // police always has some clues
+      // police and military officers always have some clues
       if (ai.type != 'police' &&
+          ai.type != 'officer' &&
           Std.random(100) > 30)
         return;
       ai.chat.eventID = event.id;

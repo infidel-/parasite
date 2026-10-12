@@ -2739,7 +2739,7 @@ class Test {
   public static var aiTypes = [
     'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
     'choir of discord (choir)', 'dog', 'firmus', 'mordax',
-    'police (cop)', 'prostitute (pro)', 'soldier',
+    'officer', 'police (cop)', 'prostitute (pro)', 'soldier',
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];

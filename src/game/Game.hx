@@ -986,6 +986,8 @@ class Game extends _SaveObject
         ai = new DogAI(this, x, y);
       else if (type == 'police' || type == 'cop')
         ai = new PoliceAI(this, x, y);
+      else if (type == 'officer')
+        ai = new OfficerAI(this, x, y);
       else if (type == 'prostitute' || type == 'pro')
         ai = new ProstituteAI(this, x, y);
       else if (type == 'security' || type == 'sec')

@@ -1238,6 +1238,7 @@ public function show()
         type == 'police' ||
         type == 'security' ||
         type == 'soldier' ||
+        type == 'officer' ||
         type == 'agent' ||
         type == 'blackops'
       );

@@ -12,6 +12,8 @@ class DefaultLogic
 {
   public static var game: Game;
   static var SEARCH_AREA_MAX_RADIUS = 3;
+  // how much faster base soldiers and officers grow suspicious of an outsider
+  static inline var MILITARY_SUSPICION = 1.5;
 
 // run AI logic turn
   public static function turn(ai: AI)
@@ -50,6 +52,20 @@ class DefaultLogic
         }
     }
 
+// is this a soldier or an officer on a military base watching someone not in uniform?
+  static function isMilitaryOutsider(ai: AI): Bool
+    {
+      if (game.area.typeID != AREA_MILITARY_BASE ||
+          (ai.type != 'soldier' &&
+           ai.type != 'officer'))
+        return false;
+      if (game.player.state != PLR_STATE_HOST)
+        return true;
+      var host = game.player.host;
+      return (host.type != 'soldier' &&
+        host.type != 'officer');
+    }
+
 // AI vision: called in idle and movement to target states
   static function visionIdle(ai: AI)
     {
@@ -80,16 +96,16 @@ class DefaultLogic
           // if player is on a host, check for organs
           if (game.player.state == PLR_STATE_HOST)
             {
-              // organ: camouflage layer
+              // organ: camouflage layer (the HOST's, not the watcher's)
               var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
-              var o = ai.organs.get(IMP_CAMO_LAYER);
+              var o = game.player.host.organs.getActive(IMP_CAMO_LAYER);
               if (o != null)
                 baseAlertness = o.params.alertness;
               else baseAlertness = params.alertness;
 
               // organ: protective cover
               var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
-              var o = ai.organs.get(IMP_PROT_COVER);
+              var o = game.player.host.organs.getActive(IMP_PROT_COVER);
               if (o != null)
                 alertnessBonus += o.params.alertness;
               else alertnessBonus += params.alertness;
@@ -98,8 +114,20 @@ class DefaultLogic
               if (game.player.host.inventory.hasVisibleWeapon())
                 alertnessBonus += 10;
             }
-          ai.alertness += Std.int(baseAlertness * (AI.VIEW_DISTANCE + 1 - distance)) +
-            alertnessBonus;
+          var gain: Float = baseAlertness * (AI.VIEW_DISTANCE + 1 - distance);
+          // base personnel are trained to spot anyone out of uniform
+          if (isMilitaryOutsider(ai))
+            {
+              gain *= MILITARY_SUSPICION;
+              ai.traceAI('DefaultLogic', 'military outsider x' + MILITARY_SUSPICION);
+              if (game.player.state == PLR_STATE_HOST &&
+                  game.player.host.isHuman)
+                {
+                  game.goals.receive(GOAL_MILITARY_OUTSIDER, SILENT_ALL);
+                  game.goals.complete(GOAL_MILITARY_OUTSIDER);
+                }
+            }
+          ai.alertness += Std.int(gain) + alertnessBonus;
           game.profile.addPediaArticle('npcAlertness');
         }
       else ai.alertness -= 5;

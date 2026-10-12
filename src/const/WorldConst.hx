@@ -163,7 +163,8 @@ class WorldConst
         isHighRisk: true,
         blocksRegionRoad1: true,
         ai: [
-          'soldier' => 100,
+          'soldier' => 90,
+          'officer' => 10,
         ],
         objects: []
       },

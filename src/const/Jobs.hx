@@ -1411,6 +1411,38 @@ class Jobs
           maxIncome: 34000,
           isRare: false,
         },
+        {
+          group: GROUP_COMBAT,
+          type: 'officer',
+          names: [
+            'lieutenant',
+            'second lieutenant',
+            'captain',
+            'staff officer',
+            'intelligence officer',
+            'signals officer',
+            'logistics officer',
+            'adjutant'
+          ],
+          level: 1,
+          minIncome: 6000,
+          maxIncome: 8000,
+          isRare: false,
+        },
+        {
+          group: GROUP_COMBAT,
+          type: 'officer',
+          names: [
+            'major',
+            'lieutenant colonel',
+            'executive officer',
+            'operations officer'
+          ],
+          level: 2,
+          minIncome: 9000,
+          maxIncome: 12000,
+          isRare: false,
+        },
 
         {
           group: GROUP_COMBAT,

@@ -191,6 +191,16 @@ class Goals
       note: 'You need to grow the camouflage layer body feature.',
     },
 
+    // fake goal: the first time base personnel eye an outsider host (ai.DefaultLogic.visionIdle)
+    GOAL_MILITARY_OUTSIDER => {
+      id: GOAL_MILITARY_OUTSIDER,
+      isHidden: true,
+      name: '-',
+      note: '-',
+      messageComplete: 'These are trained professionals. Anyone out of place draws their eye at once. I must blend in better.',
+      imageComplete: 'pedia/area_military',
+    },
+
     // ========================= dopamine branch
 
     GOAL_EVOLVE_DOPAMINE => {
