@@ -14,7 +14,8 @@
 // wall it found). A cell with a window on any side, or a doorway of any kind, is cut out of the run
 // before it is split into bays. EXCEPT IN A MEDICAL BAY, whose cots lie under the sill: "they're
 // allowed in front of the windows". gen.military.MilitaryRooms keeps every taller piece off the glass
-// there itself.
+// there itself. And a barracks keeps a cell with a window BESIDE it (not behind it), where a bunk stands
+// side-on to the glass: "has one more slot for bed near the window".
 
 package gen.military;
 
@@ -127,9 +128,13 @@ class MilitaryZones
         node.children.remove(b);
       var cells = state.area.getCells();
       var glass = (node.kind == MEDICAL);
+      // a barracks' bunks stand beside a window, though never backed onto one: the runs are still
+      // cut off the glass-backed cells
+      var beside = (glass ||
+        node.kind == BARRACKS);
       var runs = [for (run in FacilityRooms.roomWallRuns(state, room, glass))
         [for (c in run)
-          if ((glass ||
+          if ((beside ||
               !RoomBlock.nextToWindow(cells, c.x, c.y)) &&
               !nextToDoor(cells, c.x, c.y)) c]];
       var best = 0;

@@ -186,6 +186,8 @@ class MilitaryGeom
             // the helicopter stands on the pad, so its footprint is pad too
             else if (t == Const.TILE_MIL_HELI)
               apron(col, row, Const.MIL_HELI_SIZE);
+            else if (t == Const.TILE_MIL_DRUMS)
+              MilitaryYard.wallDrums(m, col, row);
           }
       if (pad.x1 >= 0)
         mark(pad.x0, pad.z0, pad.x1, pad.z1);

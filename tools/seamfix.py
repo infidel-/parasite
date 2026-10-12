@@ -16,6 +16,12 @@ that a blend cannot fix, because a blend ghosts the joints:
           copied onto the edge columns. Also the slat wall (corp/wall-meeting): same fault, a
           batten groove missing at the wrap.
 
+  grid    a stack-bond floor of square tiles (military/floor-mess's quarry tiles) whose quadrant drew
+          the grout lines inside it at an even pitch but none at its edges, so the crop's first and
+          last tiles merged into one double-width tile across every wrap. Each axis is resampled
+          piecewise so the inner lines land on exact quarters of the output, the virtual line one
+          pitch out from each end on its edges, and the middle line is copied onto the wrap.
+
 And one seam that IS tonal, where a blend is the right tool because there is nothing to ghost:
 
   tone    a plain field (cut-pile carpet) whose wrap shows a low-frequency tone step. The image is
@@ -24,7 +30,7 @@ And one seam that IS tonal, where a blend is the right tool because there is not
           the edges, a linear ramp over FEATHER of the size between. Joints or grain would double
           in the ramp; a pile field does not.
 
-Usage: python3 tools/seamfix.py planks|grout|tone <src.png> <out.png>
+Usage: python3 tools/seamfix.py planks|grout|tone|boards|grid <src.png> <out.png> [x,y,w,h]
 """
 import sys
 import numpy as np
@@ -133,6 +139,45 @@ def boards(a):
   return np.asarray(Image.fromarray(stack[:n, :n]).resize((w, w), Image.LANCZOS))
 
 
+GRID_OUT = 512
+
+
+def grid(a):
+  g = a.astype(float).mean(2)
+  h = w = GRID_OUT
+  out = a
+
+  def axis(profile, n):
+    # the inner grout lines, then one pitch out past each end
+    runs = [r for r in dark_runs(profile, np.median(profile) - 12) if r[0] > 2 and r[1] < n - 2]
+    c = [(s + e - 1) / 2 for s, e in runs]
+    p = (c[-1] - c[0]) / (len(c) - 1)
+    k = len(c) + 1
+    anchors = [c[0] - p] + c + [c[-1] + p]
+    # output position of each anchor: the k tiles evenly over GRID_OUT, line 0 on the wrap
+    dst = [GRID_OUT * i / k for i in range(k + 1)]
+    src = np.interp(np.arange(GRID_OUT) + 0.5, dst, anchors) - 0.5
+    return np.clip(src, 0, n - 1), int(round(GRID_OUT * (k // 2) / k)), max(e - s for s, e in runs)
+
+  sx, mx, wx = axis(g.mean(0), g.shape[1])
+  sy, my, wy = axis(g.mean(1), g.shape[0])
+  # bilinear resample on both axes
+  def resample(img, idx, ax):
+    i0 = np.floor(idx).astype(int)
+    i1 = np.minimum(i0 + 1, img.shape[ax] - 1)
+    f = (idx - i0).reshape([-1 if d == ax else 1 for d in range(img.ndim)])
+    return np.take(img, i0, ax) * (1 - f) + np.take(img, i1, ax) * f
+  o = resample(resample(out.astype(float), sx, 1), sy, 0)
+  # the middle line, with its bevels, copied onto the wrap: columns first, then rows over them
+  hx = wx // 2 + 3
+  for i in range(-hx, hx + 1):
+    o[:, i % w] = o[:, mx + i]
+  hy = wy // 2 + 3
+  for i in range(-hy, hy + 1):
+    o[i % h, :] = o[my + i, :]
+  return np.clip(o + 0.5, 0, 255).astype(np.uint8)
+
+
 FEATHER = 0.25
 
 
@@ -151,7 +196,7 @@ if __name__ == '__main__':
   if len(sys.argv) > 4:
     x, y, cw, ch = [int(v) for v in sys.argv[4].split(',')]
     a = a[y:y + ch, x:x + cw]
-  out = {'planks': planks, 'grout': grout, 'tone': tone, 'boards': boards}[mode](a)
+  out = {'planks': planks, 'grout': grout, 'tone': tone, 'boards': boards, 'grid': grid}[mode](a)
   Image.fromarray(out).save(dst)
   o = out.astype(float)
   print('%s wrapH %.1f wrapV %.1f' % (dst, np.abs(o[:, 0] - o[:, -1]).mean(), np.abs(o[0] - o[-1]).mean()))

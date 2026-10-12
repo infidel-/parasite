@@ -166,6 +166,12 @@ class MilitaryInterior
   static inline var SHOWER_D = 1.551;
   static inline var SHOWER_H = 4.339;
   static inline var SHOWER_PUDDLE = 1.1;
+  // and the shower bay's separator walls, the latrine's own tiles over a half-height wall out from the
+  // back wall at each side of a shower ("upgrade to full shower block with separator wall for a little
+  // privacy"), tiled at the wall's own period so the courses run on round the corner
+  static inline var SHOWER_SEP_D = 2.6;
+  static inline var SHOWER_SEP_T = 0.2;
+  static inline var SHOWER_SEP_H = 4.0;
   // a mirror over each basin, military/mirror's 3:4 drawn whole, its top under a light well's sill
   // (FacilityStyle.WINDOW_HIGH_SILL 3.87)
   static inline var MIRROR_W = 0.84;
@@ -692,6 +698,7 @@ class MilitaryInterior
               put(md.militaryShower, (c.x0 + c.x1) / 2, (c.z0 + c.z1) / 2, YAW[dir], 0.0);
               var b = back(m, col, row, cell, dir, 0.0);
               drains.push(stood(b, dir, 0.0, SHOWER_PUDDLE, 0.0));
+              separators(m, col, row, cell, dir);
               return;
             }
           else if (t == Const.TILE_MIL_MAP_BOARD)
@@ -1010,6 +1017,45 @@ class MilitaryInterior
               (dir < 2 ? c.z0 : o - MIRROR_W / 2), (dir < 2 ? c.z1 : o + MIRROR_W / 2), dir ^ 1, MIRROR_Y,
               MIRROR_Y + MIRROR_H);
           }
+    }
+
+// a shower's separator walls, one at each side of its cell along its wall: not where the room's own
+// wall already is, and not on the side the next shower along stands it from (each takes its low side)
+  static function separators(m:Facility, col:Int, row:Int, cell:Rect, dir:Int):Void
+    {
+      var tiled = MilitaryGeom.buf(MilitaryStyle.WALL_LATRINE);
+      var alongX = (dir < 2);
+      var r = back(m, col, row, cell, dir, SHOWER_SEP_D);
+      for (e in [ -1, 1 ])
+        {
+          var nc = col + (alongX ? e : 0);
+          var nr = row + (alongX ? 0 : e);
+          if (FacilityModel.isWall(m, nc, nr) ||
+              e > 0 &&
+              grid.getCellType(nc, nr) == Const.TILE_MIL_SHOWER)
+            continue;
+          var a = (alongX ? (e < 0 ? cell.x0 : cell.x1) : (e < 0 ? cell.z0 : cell.z1));
+          var w:Rect = (alongX ? {
+            x0: a - SHOWER_SEP_T / 2,
+            x1: a + SHOWER_SEP_T / 2,
+            z0: r.z0,
+            z1: r.z1,
+          } : {
+            x0: r.x0,
+            x1: r.x1,
+            z0: a - SHOWER_SEP_T / 2,
+            z1: a + SHOWER_SEP_T / 2,
+          });
+          MilitaryGeom.box(tiled, w.x0, w.x1, w.z0, w.z1, 0, SHOWER_SEP_H, FacilityStyle.WALL_TILE);
+          FacilityDetail.ground(m, {
+            col: col,
+            row: row,
+            len: 1,
+            alongX: !alongX,
+            rect: w,
+            h: SHOWER_SEP_H,
+          });
+        }
     }
 
 // a row of cubicles: a partition at every cell edge out from the wall, and a door 0..1 across each

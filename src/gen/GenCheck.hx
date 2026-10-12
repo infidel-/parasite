@@ -936,18 +936,33 @@ class GenCheck
       ok(torn >= 1 && torn <= 2, torn + ' torn fence panels, want 1-2');
       ok(gaps == 1, gaps + ' pedestrian gaps by the gate, want 1');
 
-      // every vehicle origin carries its whole footprint, and every container its length
+      // every vehicle origin carries its whole footprint, the plane its outline (Const.MIL_PLANE_MASK,
+      // nose north or south) and nothing else, and every container its length
       var sizes = [
         Const.TILE_MIL_TANK => Const.MIL_TANK_SIZE,
         Const.TILE_MIL_HUMVEE => Const.MIL_HUMVEE_SIZE,
         Const.TILE_MIL_HELI => Const.MIL_HELI_SIZE,
-        Const.TILE_MIL_PLANE => Const.MIL_PLANE_SIZE,
       ];
       for (x in 0...ctx.width)
         for (y in 0...ctx.height)
           {
             var t = ctx.cells[x][y];
-            if (sizes.exists(t))
+            if (t == Const.TILE_MIL_PLANE)
+              {
+                var mask = Const.MIL_PLANE_MASK;
+                var fits = [ true, true ];
+                for (j in 0...mask.length)
+                  for (i in 0...mask[j].length)
+                    {
+                      var on = (ctx.getCellType(x + i, y + j) == Const.TILE_MIL_VEHICLE);
+                      if (on != (mask[j].charAt(i) == 'x'))
+                        fits[0] = false;
+                      if (on != (mask[mask.length - 1 - j].charAt(mask[j].length - 1 - i) == 'x'))
+                        fits[1] = false;
+                    }
+                ok(fits[0] || fits[1], 'plane at ' + x + ',' + y + ' does not match its outline');
+              }
+            else if (sizes.exists(t))
               {
                 var sz = sizes.get(t);
                 var n = 0;
@@ -1009,12 +1024,14 @@ class GenCheck
               if (!mil &&
                   !ctx.hasObjectAt(x, y))
                 continue;
-              // nothing beside a window but what lies under its sill: a medical bay's cots, its
-              // stretcher. A latrine's light well is up under the ceiling, and everything stands under it
+              // nothing beside a window but what lies under its sill (a medical bay's cots, its
+              // stretcher), a barracks bunk side-on and a mess hall's rows run on to the glass
+              // (gen.military.MilitaryRooms.besideGlass). A latrine's light well is up under the
+              // ceiling, and everything stands under it
               for (i in 0...Const.dir4x.length)
                 {
                   var w = ctx.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]);
-                  ok(gen.military.MilitaryRooms.low(t) ||
+                  ok(gen.military.MilitaryRooms.besideGlass(t) ||
                     !(w >= Const.TILE_WINDOWH1 && w <= Const.TILE_WINDOWV3),
                     r.role + ' piece at ' + x + ',' + y + ' stands beside a window');
                 }

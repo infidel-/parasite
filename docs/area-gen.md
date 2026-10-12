@@ -323,6 +323,15 @@ fenced block tree inside a wild margin, entered and left on foot. `make gen --ty
 The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` away from the gate),
 a square helipad, a motor pool near the gate, 1-2 tent camps, 0-2 container depots, and an ENTRY yard.
 The rest is yard.
+- **The hangar holds the plane and fuel drums** (`HangarBlock.zones`' military branch). The plane is
+  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 18 of the 8x7 footprint's 56
+  cells), nose to the bay doors; the full rect was "too much is unwalkable ... a TON of empty tiles".
+  Its origin corner is walkable and `MilitaryVehicles.planeNorth` reads the nose back off the stamp.
+  `GenCheck` asserts the outline in one of the two turns. Drums (`TILE_MIL_DRUMS`) take 60% of the wall
+  run's cells off the bay-door wall and out of the side door's bay, each kept only while the floor is
+  one piece (`HangarBlock.split`): a 10-wide shed's wing passes its tips one cell off each wall, and
+  the first build's oracle failed on unreachable hangar floor there and in corners. No generators: with the
+  footprint solid none ever fitted. Hangar fill 56 → 35%.
 - **ENTRY** is a `must` on the gate side's edge, smallest first, filled as yard. `gate()` puts the
   mouth, booth and pedestrian gap inside its span, so the drive opens onto open ground; a building
   straight behind the boom read as a wall at the end of it.
@@ -372,13 +381,13 @@ laboratory's deal. That:
 
 | kind | zones (core first) |
 |---|---|
-| armory | gun-cabinet, safe-spot (the base's one), crate-island (runs of 3, else 2, down the long axis), locker-run ×2 |
+| armory | gun-cabinet, safe-spot (the base's one), crate-island (ONE block down the long axis, 2 deep where it fits and as long as its ring lets it, else 1 deep), locker-run ×2 |
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (up to two, 3 cells back to back where the ring fits, else 2; two share the aisle between them) |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
-| mess / briefing | counter-run / map-board (an end wall), table-rows |
+| mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`) |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
-| latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first), bench-island (3 cells where the ring fits, else 2) |
+| latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first, a tiled separator wall each side of a shower), bench-island (3 cells where the ring fits, else 2) |
 
 A min is only asked when the room can hold it: a barracks falls back to the other long wall and then
 the end walls. 2000 seeds, 0 `unmet`.
@@ -405,6 +414,14 @@ glass (`backing(..., glass)`) and stands it on the masonry's face line, (WALL_T 
 from the glazing (`sill`). Medical fill 9.5 → 15.7 cells a room. A `mil-slot` whose first prop finds
 no cell now tries the next (the IV stand will not go in front of glass; the stretcher went without).
 
+**And a barracks' bunks and a mess hall's rows stand BESIDE glass** ("has one more slot for bed near
+the window", "can be in front of the windows"). A barracks keeps the cells with a window beside them
+(not behind: `roomWallRuns` still drops those), so a bunk stands side-on to the glass; its wall
+lockers stay off them. A mess's table rows run on from their end cell to the end wall with no doorway
+in it (`MilitaryRooms.runOn`), a whole cross-section at a time while every cell is `free`, taken back
+if the floor seals; the near end keeps its two cells. `MilitaryRooms.besideGlass` is the set
+`GenCheck` exempts: the `low` pieces, a bunk, a footlocker, a mess table and a bench.
+
 **A latrine takes no ribbon: it gets the washroom's light wells** ("latrines should not have normal
 windows"). `RoomBlock`'s military branch runs `FacilityToilet.toiletWindows` (a well on every other
 cell of one exterior wall, `TEMP_BUILDING_WINDOW_HIGH`) and glazes with `glass` false, as a store
@@ -429,7 +446,10 @@ reported from the barracks as not belonging there and then from the armory as "l
   two adjacent barracks each split by a prop left pockets that only opened onto each other.
 
 Fill after the props (2000 seeds): armory 11.5, barracks 29.7 a base, briefing 12.3, comms 7.8,
-latrine 10.4, medical 15.7, mess 15.5, supply 9.4 cells a room. The comms desk island stands three
+latrine 10.4, medical 15.7, mess 15.5, supply 9.4 cells a room. With the armory's one deep block (its
+ring may hold a locker or the safe: each stands in its wall's margin on a walkable cell, and the safe
+in a ring corner kept the run two cells short), the bunks beside glass and the mess rows run on:
+armory 18.1, barracks 34.6, mess 21.3. The comms desk island stands three
 cells long where its ring still fits ("one more doubled table can be spawned in the center" of a 5x5
 room), two where it does not, and a room with the floor for it takes a second, the two sharing the
 aisle between them (an 8x6 room "has enough room for second row of doubled tables"): `islands`
@@ -464,7 +484,9 @@ wall and tile in front is unwalkable, tile 58,40": the front rule above answered
 wall shelf is 1.5 deep and stands against the slab's face, which is a unit into the WALL's cell, so
 it covers half a unit of its own and the player sees a whole tile of bare boards before it they
 cannot step on. `tiles.Default.TILE_WALKABLE` now passes every piece one cell deep at a wall: the
-radio rack, wall shelf, filing and medical cabinets, the basins and the six standing props. Not the
+radio rack, wall shelf, filing and medical cabinets, the basins, the six standing props and the mess
+counter (2.36 deep, so 65% of its cell read as bare tiles: "counter has unwalkable tile in front of
+it"; `facing` keeps its front clear). Not the
 console (its chair fills the cell), a crate stack, a cot, a stretcher, a bunk, a table or a store's
 shelf row, which is a separate tile for exactly this reason. `roomUsed` counts a walkable piece as
 used. A save from before has its rows as wall-shelf tiles, which now walk through.

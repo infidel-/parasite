@@ -1264,7 +1264,9 @@ class Const
   public static var TILE_MIL_CONTAINER = OFFSET_ROW19 + 4;
   public static var TILE_MIL_CONTAINER_ORIGIN = OFFSET_ROW19 + 5;
   // a parked vehicle's footprint, and its ORIGIN (top-left) cell, one id per kind, which is what
-  // names the model. Every footprint is long along y. Unwalkable and see-through, like a parked car
+  // names the model. Every footprint is long along y. Unwalkable and see-through, like a parked car,
+  // but for the plane's origin: its footprint is solid only under the outline (MIL_PLANE_MASK), the
+  // corner it is named from is open floor and walkable
   public static var TILE_MIL_VEHICLE = OFFSET_ROW19 + 6;
   public static var TILE_MIL_TANK = OFFSET_ROW19 + 7;
   public static var TILE_MIL_HUMVEE = OFFSET_ROW19 + 8;
@@ -1274,12 +1276,27 @@ class Const
   public static var TILE_MIL_PAD = OFFSET_ROW19 + 11;
   // a concrete jersey barrier on the pavement either side of the gate mouth. Unwalkable, see-through
   public static var TILE_MIL_JERSEY = OFFSET_ROW19 + 12;
+  // a cluster of fuel drums against a hangar wall. Unwalkable, see-through
+  public static var TILE_MIL_DRUMS = OFFSET_ROW19 + 13;
   // container length, and each vehicle kind's footprint as [ w, h ] in cells
   public static inline var MIL_CONTAINER_LEN = 3;
   public static var MIL_TANK_SIZE = [ 2, 4 ];
   public static var MIL_HUMVEE_SIZE = [ 2, 3 ];
   public static var MIL_HELI_SIZE = [ 3, 7 ];
   public static var MIL_PLANE_SIZE = [ 8, 7 ];
+  // which cells of the plane's footprint it covers from above, nose north, a row per string and 'x'
+  // solid: its outline over a fifth of a cell or more at the height render.military.MilitaryVehicles
+  // draws it, the wing's tips included. The rest of the 8x7 is hangar floor ("you made full square
+  // while there's a TON of empty tiles"). Nose south is the same turned a half
+  public static var MIL_PLANE_MASK = [
+    '........',
+    '...xx...',
+    '..xxxx..',
+    'xxxxxxxx',
+    '...xx...',
+    '...xx...',
+    '........',
+  ];
 
   // === row 20 - the military base's INTERIOR (gen.military.MilitaryRooms): five room floors, each the
   // whole record of its room's kind the way the facility's floor tiles are, then the furniture,

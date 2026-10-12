@@ -72,13 +72,15 @@ class Default extends Tileset
     1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 19 - the military base (Const.TILE_MIL_*): fence, TORN fence (walkable), tower, tent,
-    // container x2, vehicle footprint x5, the helipad (walkable) and a jersey barrier
-    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+    // container x2, vehicle footprint x5 (the plane's origin walkable: its corner of the footprint is
+    // open floor, Const.MIL_PLANE_MASK), the helipad (walkable), a jersey barrier and a hangar's
+    // fuel drums
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
     // row 20 - the base's interior (Const.TILE_MIL_FLOOR_* walkable, the furniture not, the map
-    // board walkable: it marks a wall). The file cabinet and the latrine trough ARE: like the corp
-    // locker they stand in the wall's margin, and a cell of bare boards in front of one that could
-    // not be stepped on was reported from the game
-    1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1,
+    // board walkable: it marks a wall). The mess counter, the file cabinet and the latrine trough
+    // ARE: like the corp locker they stand in the wall's margin, and a cell of bare boards in front
+    // of one that could not be stepped on was reported from the game, twice
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1,
     // row 21 - its comms, supply and medical furniture and the rooms' standing props. Walkable for
     // the same reason, everything one cell deep at a wall: the radio rack, the wall shelf ("tile in
     // front is unwalkable"), the medical cabinet, the six standing props, a latrine's urinal and its

@@ -5875,21 +5875,15 @@
       "last_converted": "2026-10-11T23:44:18"
     },
     "military/floor-mess": {
-      "src": "military/mil-pack-f.png",
+      "src": "military/floor-mess.png",
       "class": "tile",
       "needs_alpha": false,
-      "crop": [
-        516,
-        4,
-        504,
-        504
-      ],
       "prompt": "[quadrant of military/mil-pack-f.png, PACK4, gpt-image-2.5-sunburst high] terracotta quarry tiles, 4x4, dark grout [append textures.json style]",
       "prompt_exact": false,
-      "note": "mess hall floor (Surf.MESS). lift 0.826: raw 0.0616 to 0.1, the interior level of its facility counterpart (indoor ~78 sRGB for furniture).",
-      "last_converted": "2026-10-10T20:47:31",
-      "built_linear": 0.0945,
-      "built_srgb": 84.7,
+      "note": "mess hall floor (Surf.MESS). lift 0.826: raw 0.0616 to 0.1, the interior level of its facility counterpart (indoor ~78 sRGB for furniture). THE WRAP WAS REBUILT BY SCRIPT, reported from the game as not seamless: the quadrant drew its three inner grout lines at an even ~128 px pitch and none at its edges, so the [516,4,504,504] crop's first and last tiles merged into one 244 px tile at every repeat. tools/seamfix.py grid resamples each axis piecewise so the inner lines land on exact quarters of 512 and the virtual line a pitch out from each end on the edges (the last tile stretched 4.5% where the quadrant ran out), then copies the middle line onto the wrap. Rebuild with: python3 tools/seamfix.py grid textures-src/military/mil-pack-f.png textures-src/military/floor-mess.png 512,0,510,510",
+      "last_converted": "2026-10-12T06:22:31",
+      "built_linear": 0.094,
+      "built_srgb": 84.5,
       "lift": 0.826,
       "last_lift": 0.826
     },

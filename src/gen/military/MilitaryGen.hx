@@ -256,6 +256,24 @@ class MilitaryGen
       area.getCells()[x][y] = origin;
     }
 
+// stamp the plane: solid only where Const.MIL_PLANE_MASK says its outline covers, nose north or turned
+// a half to the south, and its origin on the footprint's top-left corner, which the outline never
+// reaches. render.military.MilitaryVehicles reads which way it faces back off the stamp
+  public static function plane(area: GenCtx, x: Int, y: Int, north: Bool)
+    {
+      var cells = area.getCells();
+      var mask = Const.MIL_PLANE_MASK;
+      for (j in 0...mask.length)
+        for (i in 0...mask[j].length)
+          if (mask[j].charAt(i) == 'x')
+            {
+              var cx = (north ? x + i : x + mask[j].length - 1 - i);
+              var cy = (north ? y + j : y + mask.length - 1 - j);
+              cells[cx][cy] = Const.TILE_MIL_VEHICLE;
+            }
+      cells[x][y] = Const.TILE_MIL_PLANE;
+    }
+
 // the chain-link ring, a watchtower inside each corner, and one or two torn panels on the three sides
 // the gate is not on
   static function perimeter(state: _FacilityState, f: _Rect)

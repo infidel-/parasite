@@ -215,8 +215,10 @@ class MilitaryRooms
           // the cell straight after a bunk is the gap between two, where a wall locker goes
           if (at - last == 1)
             {
+              // not beside a window: a bunk stands side-on to one, a wall locker would stand in it
               if (lockers < BARRACKS_LOCKERS &&
-                  free(state, c.x, c.y))
+                  free(state, c.x, c.y) &&
+                  !RoomBlock.nextToWindow(state.area.getCells(), c.x, c.y))
                 {
                   state.area.add('locker', c.x, c.y);
                   lockers++;
@@ -296,11 +298,76 @@ class MilitaryRooms
                     n++;
                   }
               }
+          // a mess's rows run on to the end wall away from its doorway, in front of the glass if that
+          // is what is there ("should go up to the opposite wall from entrance and can be in front of
+          // the windows"). The near end keeps its two cells to walk round
+          if (many)
+            n += runOn(state, room, alongX, at, row, table, benches);
           if (!many)
             break;
           at += row + 1;
         }
       return n;
+    }
+
+// carry one band of a mess hall's rows (`at`..`at + row - 1` across the room) from its end cell on to
+// the end wall that has no doorway in it, a whole cross-section at a time while every cell of one is
+// free, and take it back if it seals any floor off. The end wall is the one facing a doorway in the
+// other, else the one without the counter; neither, when both have a doorway
+  static function runOn(state: _FacilityState, room: _Room, alongX: Bool, at: Int, row: Int,
+      table: Int, benches: Bool): Int
+    {
+      var cells = state.area.getCells();
+      var len = (alongX ? room.w : room.h);
+      var span = (alongX ? room.h : room.w);
+      // what the cell at (along, across) is, off the room's low corner
+      var cellAt = function(i: Int, j: Int): Int
+        return cells[alongX ? room.x1 + i : room.x1 + j][alongX ? room.y1 + j : room.y1 + i];
+      var door = [ false, false ];
+      var counter = [ false, false ];
+      for (j in 0...span)
+        for (e in 0...2)
+          {
+            if (isDoor(cellAt(e == 0 ? -1 : len, j)))
+              door[e] = true;
+            if (cellAt(e == 0 ? 0 : len - 1, j) == Const.TILE_MIL_COUNTER)
+              counter[e] = true;
+          }
+      var end = (door[0] != door[1] ? (door[0] ? 1 : 0) :
+        (door[0] ? -1 : (counter[0] ? 1 : 0)));
+      if (end < 0)
+        return 0;
+      var placed = [];
+      var i = (end == 1 ? len - 2 : 1);
+      while (i >= 0 &&
+          i < len)
+        {
+          var ok = true;
+          for (j in 0...row)
+            {
+              var x = (alongX ? room.x1 + i : room.x1 + at + j);
+              var y = (alongX ? room.y1 + at + j : room.y1 + i);
+              if (!free(state, x, y))
+                ok = false;
+            }
+          if (!ok)
+            break;
+          for (j in 0...row)
+            {
+              var x = (alongX ? room.x1 + i : room.x1 + at + j);
+              var y = (alongX ? room.y1 + at + j : room.y1 + i);
+              stand(state, x, y, (benches && j != 1 ? Const.TILE_MIL_BENCH : table));
+              placed.push({ x: x, y: y });
+            }
+          i += (end == 1 ? 1 : -1);
+        }
+      if (sealsOff(state, room))
+        {
+          for (c in placed)
+            stand(state, c.x, c.y, TEMP_BUILDING_ROOM);
+          return 0;
+        }
+      return placed.length;
     }
 
 // a comms room's two-cell consoles along one bay, a cell clear between them
@@ -399,19 +466,27 @@ class MilitaryRooms
       return n;
     }
 
-// a store's or an armory's crate stacks in its middle. An armory's are runs down the room's long axis,
-// the longest that fits with its ring, its middle being its only free floor: one cell each read as
-// "pretty empty". Single cells where no run fits
+// a store's or an armory's crate stacks in its middle. An armory's is ONE block down the room's long
+// axis, two cells deep where that fits and as long as its ring lets it, its middle being its only free
+// floor: one cell each read as "pretty empty", and a run of three as short of what the room had
+// ("row of crates two-wide if possible ... there's full two tiles more it can be lengthier"). Single
+// cells where no run fits
   static function crateIslands(state: _FacilityState, room: _Room): Int
     {
       if (room.role == ROLE_ARMORY)
-        for (k in [ 3, 2 ])
-          {
-            var n = islands(state, room, (room.w > room.h ? k : 1), (room.w > room.h ? 1 : k),
-              Const.TILE_MIL_CRATES, CRATE_ISLANDS);
-            if (n > 0)
-              return n;
-          }
+        {
+          var along = (room.w > room.h);
+          var most = (along ? room.w : room.h) - 2;
+          for (deep in [ 2, 1 ])
+            for (k in 0...most - 1)
+              {
+                var l = most - k;
+                var n = islands(state, room, (along ? l : deep), (along ? deep : l),
+                  Const.TILE_MIL_CRATES, 1);
+                if (n > 0)
+                  return n;
+              }
+        }
       return islands(state, room, 1, 1, Const.TILE_MIL_CRATES, CRATE_ISLANDS);
     }
 
@@ -480,7 +555,9 @@ class MilitaryRooms
     }
 
 // up to `max` free-standing blocks of `tile`, bw x bh cells, nearest the room's middle first. Each
-// keeps a whole ring of bare floor round it, so it cuts nothing off, and two never touch
+// keeps a whole ring of bare floor round it, so it cuts nothing off, and two never touch. The ring may
+// hold an armory's locker, safe or gun cabinet: each is an object in its wall's margin and its cell
+// stays walkable, and the safe in a ring corner kept the armory's crates two cells short
   static function islands(state: _FacilityState, room: _Room, bw: Int, bh: Int, tile: Int,
       max: Int): Int
     {
@@ -504,6 +581,10 @@ class MilitaryRooms
           for (x in s.x - 1...s.x + bw + 1)
             for (y in s.y - 1...s.y + bh + 1)
               if (cells[x][y] != TEMP_BUILDING_ROOM ||
+                  x >= s.x &&
+                  x < s.x + bw &&
+                  y >= s.y &&
+                  y < s.y + bh &&
                   state.area.hasObjectAt(x, y))
                 ok = false;
           if (!ok)
@@ -627,11 +708,25 @@ class MilitaryRooms
         t == Const.TILE_MIL_STRETCHER;
     }
 
-// is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack, a urinal
-// or one of the rooms' standing props
+// may this piece stand beside a window: what lies under its sill, a barracks bunk and its footlocker
+// side-on to one ("has one more slot for bed near the window" — their runs are cut off glass-backed
+// cells, so a head never meets the glass), and a mess hall's tables and benches, whose rows run on to
+// its end wall ("can be in front of the windows")
+  public static inline function besideGlass(t: Int): Bool
+    {
+      return low(t) ||
+        t == Const.TILE_MIL_BUNK ||
+        t == Const.TILE_MIL_FOOTLOCKER ||
+        t == Const.TILE_MIL_MESS_TABLE ||
+        t == Const.TILE_MIL_BENCH;
+    }
+
+// is this a piece one cell deep that is reached from its front: a shelf, a cabinet, a rack, a urinal,
+// a mess counter or one of the rooms' standing props
   public static function facing(t: Int): Bool
     {
       return t == Const.TILE_MIL_SHELF ||
+        t == Const.TILE_MIL_COUNTER ||
         t == Const.TILE_MIL_MED_CABINET ||
         t == Const.TILE_MIL_RADIO_RACK ||
         t == Const.TILE_MIL_URINAL ||

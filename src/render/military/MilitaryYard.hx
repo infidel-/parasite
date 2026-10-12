@@ -66,9 +66,15 @@ class MilitaryYard
   public static inline var CRATE_W = 2.2;
   public static inline var CRATE_D = CRATE_W * 296 / 504;
   public static inline var CRATE_STEP = 1.195;
+  // the step out of a cell toward each of its four walls: north, south, west, east
+  static var DX = [ 0, 0, -1, 1 ];
+  static var DZ = [ -1, 1, 0, 0 ];
   // and its fuel drum
   static inline var DRUM_R = 0.6;
   public static inline var DRUM_H = 1.6;
+  // a hangar's drums along its wall: the step between two, and how far the row stands off the face
+  static inline var DRUM_STEP = 1.3;
+  static inline var DRUM_GAP = 0.08;
 
   // the roof kit: a sandbag nest, water tanks, the aerial mast
   static inline var NEST_HALF = 1.8;
@@ -302,6 +308,60 @@ class MilitaryYard
         alongX: true,
         rect: r,
         h: top,
+      });
+    }
+
+// a hangar's fuel drums on one cell of its wall run (Const.TILE_MIL_DRUMS): two or three in a row
+// along the wall beside it, a hair off its face, each nudged and turned off the hash
+  public static function wallDrums(m:Facility, col:Int, row:Int):Void
+    {
+      var h = FacilityModel.mix((col * 27644437) ^ (row * 67867979));
+      var c = CityConfig.cellToWorld(col, row);
+      var y = FacilityGround.surfY(m.surf[row][col]);
+      var dir = 0;
+      while (dir < 3 &&
+          !FacilityModel.isWall(m, col + DX[dir], row + DZ[dir]))
+        dir++;
+      var sl = FacilityGeom.slab(m, col + DX[dir], row + DZ[dir]);
+      var off = DRUM_R + DRUM_GAP;
+      // the row's line: x for a wall north or south, z for one west or east
+      var along = (dir < 2);
+      var line = switch (dir)
+        {
+          case 0: sl.z1 + off;
+          case 1: sl.z0 - off;
+          case 2: sl.x1 + off;
+          default: sl.x0 - off;
+        };
+      var n = 2 + h % 2;
+      for (i in 0...n)
+        {
+          var a = (i - (n - 1) / 2) * DRUM_STEP + ((h >> (4 + i * 2)) % 3 - 1) * 0.08;
+          MilitaryGeom.drums.push({
+            x: (along ? c.x + a : line),
+            z: (along ? line : c.z + a),
+            yaw: ((h >> (12 + i * 3)) % 8) * Math.PI / 4,
+            y: y,
+          });
+        }
+      var e = (n - 1) / 2 * DRUM_STEP + DRUM_R;
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: 1,
+        alongX: along,
+        rect: (along ? {
+          x0: c.x - e,
+          x1: c.x + e,
+          z0: line - DRUM_R,
+          z1: line + DRUM_R,
+        } : {
+          x0: line - DRUM_R,
+          x1: line + DRUM_R,
+          z0: c.z - e,
+          z1: c.z + e,
+        }),
+        h: DRUM_H,
       });
     }
 

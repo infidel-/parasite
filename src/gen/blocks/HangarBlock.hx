@@ -77,6 +77,9 @@ class HangarBlock
   // this one is "some empty space"
   static inline var SLOT_FILL_PCT = 30;
 
+  // how often a cell of a military hangar's wall run takes a fuel drum cluster
+  static inline var DRUM_PCT = 60;
+
   // the power generators on the open floor: at least two, a third this often, never more than three.
   // the corner server racks are cabled to them (render.facility.FacilityHangar), so a corner holding
   // racks gets the one nearest it first
@@ -216,14 +219,19 @@ class HangarBlock
     {
       var w = GenTree.width(node);
       var h = GenTree.height(node);
-      // a military hangar holds an AIRCRAFT and nothing of the lab's: the plane's footprint, centred,
-      // and the floor's power generators around it
+      // a military hangar holds an AIRCRAFT and nothing of the lab's: the plane, centred and nose to
+      // the bay doors (pushed in tail first, so it is towed out nose first), and fuel drums in the wall
+      // runs. No generators: the floor round the plane is its lane, and with the whole footprint solid
+      // none ever fitted
       if (state.military)
         {
-          gen.military.MilitaryGen.vehicle(state.area, Const.TILE_MIL_PLANE, Const.MIL_PLANE_SIZE,
+          gen.military.MilitaryGen.plane(state.area,
             node.x1 + Std.int((w - Const.MIL_PLANE_SIZE[0]) / 2),
-            node.y1 + Std.int((h - Const.MIL_PLANE_SIZE[1]) / 2));
-          generators(state, node, []);
+            node.y1 + Std.int((h - Const.MIL_PLANE_SIZE[1]) / 2), !state.mainRoadNorth);
+          var bays = [];
+          walls(node, bays);
+          for (b in bays)
+            drums(state, node, b);
           return;
         }
       // the pad, centred. a floor too small to carry it and still have a wall run gets none, which
@@ -261,6 +269,74 @@ class HangarBlock
       for (b in bays)
         node.children.push(b);
       generators(state, node, bays);
+    }
+
+// fuel drums along one bay of a military hangar's wall run ("add fuel drums to the wall slots"), on most
+// of its cells. Never on the wall the bay doors are in, where they read as parked across a door, nor in
+// the one real door's bay
+  static function drums(state: _FacilityState, node: _GenNode, b: _GenNode)
+    {
+      var shutter = (state.mainRoadNorth ? node.y2 : node.y1);
+      if (RoomBlock.tagged(b, RoomBlock.TAG_DOOR) ||
+          b.y1 == shutter &&
+          b.y2 == shutter)
+        return;
+      var cells = state.area.getCells();
+      for (c in RoomBlock.cellsOf(b))
+        if (bare(state, c.x, c.y) &&
+            state.area.chance(DRUM_PCT))
+          {
+            // kept only while the floor is still one piece: a narrow shed's wing passes its tips one
+            // ring cell off each wall, and a corner between two clusters is a pocket
+            cells[c.x][c.y] = Const.TILE_MIL_DRUMS;
+            if (split(state, node))
+              cells[c.x][c.y] = TEMP_CONCRETE;
+          }
+    }
+
+// is a military hangar's open floor (bare concrete and the plane's walkable origin) no longer one
+// piece?
+  static function split(state: _FacilityState, node: _GenNode): Bool
+    {
+      var cells = state.area.getCells();
+      var open = function(x: Int, y: Int)
+        return (x >= node.x1 &&
+          x <= node.x2 &&
+          y >= node.y1 &&
+          y <= node.y2 &&
+          (cells[x][y] == TEMP_CONCRETE ||
+          cells[x][y] == Const.TILE_MIL_PLANE));
+      var seen = new Map<Int, Bool>();
+      var todo = [];
+      var n = 0;
+      for (x in node.x1...node.x2 + 1)
+        for (y in node.y1...node.y2 + 1)
+          if (open(x, y))
+            {
+              n++;
+              if (todo.length == 0)
+                {
+                  seen.set(x * 1000 + y, true);
+                  todo.push({ x: x, y: y });
+                }
+            }
+      var reached = 0;
+      while (todo.length > 0)
+        {
+          var c = todo.pop();
+          reached++;
+          for (i in 0...Const.dir4x.length)
+            {
+              var x = c.x + Const.dir4x[i];
+              var y = c.y + Const.dir4y[i];
+              if (!open(x, y) ||
+                  seen.exists(x * 1000 + y))
+                continue;
+              seen.set(x * 1000 + y, true);
+              todo.push({ x: x, y: y });
+            }
+        }
+      return reached < n;
     }
 
 // stand two or three power generators on the open floor, one inset off a corner each.

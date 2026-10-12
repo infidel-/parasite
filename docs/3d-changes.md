@@ -2025,3 +2025,33 @@ showers, 5 puddles.
 **Verdict:** landed. +4 meshes: the urinal and shower batches, the mirror buffer and the poster cut
 buffer, one draw each in view. 0 new programs (121).
 
+
+## Military base: plane propellers rebuilt, plane at vault scale with a footprint of its outline, hangar fuel drums, shower separator walls, urinal drain to the back, mess floor grid
+
+**Reported:** the plane's "propellers has these 'things' in front", its "GIANT contact shadow" ("or
+whatever the black block is"), its scale "a little wrong", "too much is unwalkable in hangar - you made
+full square"; "add fuel drums to the wall slots in hangar"; the shower to be "full shower block with
+separator wall"; the urinal's drain "should go up to the back"; floor-mess "not seamless".
+
+**Changed:**
+- **Propellers**: TRELLIS whisked each prop forward into spikes. `models-src/military/plane_props.py`
+  deletes the 429 faces ahead of each nacelle off `plane-trellis.glb` (the untouched generation) and
+  turns a spinner and four pitched slabs on the nacelle axis, UV'd to the deleted blades' darkest texel
+  and white tips on their brightest. 9,570 → 9,353 tris. Normals recalculated on the NEW faces only:
+  over the whole mesh `recalc_face_normals` flipped TRELLIS's open shells and lit the wing roots white.
+- **Scale**: h 7.5 → 8.6. Filling the footprint's span (9.6) put the T-tail through the roof: the fin
+  stands ~10.5 off the floor's middle, where a 42-wide vault rising 3.78 is down to ~8.7. 8.6 clears
+  the shallowest hangar a base deals (16x11) by 0.31, measured off the glb's verts against
+  `FacilityRoof.section` for every size and both noses.
+- **Footprint**: `Const.MIL_PLANE_MASK`, cells the outline covers 20%+ from above at 8.6: 18 of 56.
+  Nose to the bay doors; the origin corner is walkable. The contact shadow is `PLANE_LOW` (fuselage,
+  main wheels) and not the 8x7 rect.
+- **Drums**: `TILE_MIL_DRUMS` (row 19 +13) on 60% of the wall-run cells off the bay-door wall, kept
+  only while the floor stays one piece. Two or three yard drums in a row on the wall face.
+- **Shower separators**: a 0.2 x 2.6 x 4.0 box at each side of a shower, in `wall-latrine` at
+  WALL_TILE so the courses run round the corner.
+- **Urinal**: bowl set back 0.045, the drain's flat edge past the hood face. **floor-mess**: own src
+  through `seamfix grid` (3d-textures.md).
+
+**Verdict:** landed. +0 calls: drums ride the yard drum batch, the separator buffer merges into the
+shell's array mesh (`corp merged 20`). 0 new programs (121).
