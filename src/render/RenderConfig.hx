@@ -734,7 +734,7 @@ class RenderConfig {
     facilityCar: 'models/facility/car.glb',               // modern compact hatchback, four wheels, dark glass
     // a military base's hardware, parked on the footprints gen.military.MilitaryGen stamps
     // (render.military.MilitaryVehicles)
-    militaryTank: 'models/military/tank.glb',             // main battle tank, along local z
+    militaryTank: 'models/military/tank.glb',             // main battle tank, along local x
     militaryHumvee: 'models/military/humvee.glb',         // light utility 4x4, along local x
     militaryHeli: 'models/military/heli.glb',             // utility helicopter, four-blade rotor
     militaryPlane: 'models/military/plane.glb',           // high-wing twin-jet transport, span along local z

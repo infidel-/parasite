@@ -2200,3 +2200,29 @@ showed it at 59/109/37, chroma 72 on a 30-luma floor. `sat` 0.7 lands the atlas 
 roughness 0.8, which keeps PBR; `roughness` 1 puts it back on Lambert.
 
 **Verdict:** landed. 0 calls, 0 programs (120 → 120). Military 2000 seeds OK.
+
+## Military base: the Meshy tank replaces the TRELLIS one, the plane darker still, Meshy wired into the MCP
+
+**Reported:** "let's wire up meshy to our runware mcp ... NEVER do it unless i explicitly say that", "let's
+try redoing tank with it", "generating source images for 3d on black background", then "reduce the plane
+brightness/saturation even more + i've removed decimation".
+
+**Changed:**
+- **`meshy_image_to_3d`** in `~/git/runware-trellis-2-mcp`: `meshy:meshy@6`, `inputs.images` as an array,
+  polyCount 100000, pose none, remesh, removeLighting, symmetry auto. $0.80 a run, and the tool's own
+  description says never unasked. `resume_task_uuid` collects a submitted task without billing again.
+- **3D references go on flat black** (`docs/3d-models.md`). `propstat` reads the backdrop off the frame's
+  border, so grey and black references both measure. The same tank pixels key as 10.9% of the frame
+  on grey and 24.2% on black.
+- **`military/tank`**: the TRELLIS tank's reference re-laid on black, then one Meshy run. 707,032 tris
+  at polyCount 100000, 1 component, split 1.15x → decimated to 29,996. It lies along local x, so
+  `MilitaryVehicles` turns it (`turn` true); h 4.9 keeps it 15.0 long and 5.4 wide under the net's 6.4.
+  `sat` 0.8 and `baseColor` 0.37 put its atlas at 53/64/43, the old tank's olive. `roughness` 1.
+- **`military/plane`**: `sat` 0.5 and `baseColor` 0.55 (from 0.7/0.77). Atlas 73/84/65; in the hangar it
+  is now luma 65-71 and chroma 22-24, from 75-97 and 31-46. 189,544 tris, undecimated.
+
+**The trap:** `polyCount` is not a ceiling. The same setting returned 189k for the plane and 707k for the
+tank, so a Meshy prop always goes through the offline decimate unless someone decides otherwise.
+
+**Verdict:** landed. Same batches and programs (120). The tank reads clean in the motor pool, turret,
+gun and running gear whole, its long axis on the footprint's.

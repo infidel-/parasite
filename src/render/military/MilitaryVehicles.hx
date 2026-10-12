@@ -37,12 +37,14 @@ class MilitaryVehicles
   // one row per model. the heights are fitted to the footprints off each glb's bbox (widest/height),
   // see their notes
   static var KINDS:Array<VehicleKind> = [
+    // the Meshy tank lies along local x (the TRELLIS one lay along z), 15.0 long with its gun and 5.4
+    // wide at this height, inside the 2x4 and under the camo net's 6.4
     {
       tile: Const.TILE_MIL_TANK,
       size: Const.MIL_TANK_SIZE,
       path: RenderConfig.MODELS.militaryTank,
       h: 4.9,
-      turn: false,
+      turn: true,
     },
     {
       tile: Const.TILE_MIL_HUMVEE,
