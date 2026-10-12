@@ -58,25 +58,25 @@ class MilitaryVehicles
       h: 9.0,
       turn: false,
     },
-    // the jet at the turboprop's old size, a 27.8 span and 24.5 long ("plane scale looks a little
-    // wrong" at a 12 m light twin). The vault capped it at 8.3 while it sprang from WALL_H; a base's
-    // hangar is two storeys now (MilitaryStyle.HANGAR_H 12) and the T-tail's 9.8 stands under its
-    // shutters and its springing. The footprint is the 8x7 still, its wing row the whole 8 wide
+    // the jet at the turboprop's old size, a 28.0 span and 27.0 long ("plane scale looks a little
+    // wrong" at a 12 m light twin): the length is what sets it, the footprint's 7 rows less half a
+    // unit at each end. The T-tail's 9.0 stands under the two-storey hangar's shutters and springing
+    // (MilitaryStyle.HANGAR_H 12). The footprint is the 8x7 still, its wing row the whole 8 wide
     {
       tile: Const.TILE_MIL_PLANE,
       size: Const.MIL_PLANE_SIZE,
       path: RenderConfig.MODELS.militaryPlane,
-      h: 9.8,
+      h: 9.0,
       turn: true,
     },
   ];
 
   // what of the plane comes down near the floor, world units off its footprint's centre nose north,
-  // [ x0, x1, z0, z1 ], measured off the glb at h 8.3 and scaled with it to 9.8: the fuselage under
-  // 1.9, its main gear in blisters on its flanks and the nose gear all inside it. Its contact shadow is this and not the
+  // [ x0, x1, z0, z1 ], measured off the glb at h 9.0: everything under 1.75, which is the fuselage
+  // from the nose gear back past its main gear blisters. Its contact shadow is this and not the
   // footprint, which laid a black block 8x7 cells under the wings
   static var PLANE_LOW = [
-    [ -2.36, 2.83, -11.69, 7.32 ],
+    [ -2.35, 2.35, -12.6, 5.77 ],
   ];
 
 // every vehicle in the base, one instanced batch per model. runs before ContactMask.repaint, like

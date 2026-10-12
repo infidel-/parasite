@@ -324,8 +324,9 @@ The quota is two buildings (HQ and barracks, `fit` deep), a hangar (deep, `fit` 
 a square helipad, a motor pool near the gate, 1-2 tent camps, 1-2 container depots, and an ENTRY yard.
 The rest is yard.
 - **The hangar holds the plane and fuel drums** (`HangarBlock.zones`' military branch). The plane is
-  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 20 of the 8x7 footprint's 56
-  cells since the jet went to 27.8, its wing row the whole 8 and its tail in the last row), nose to the
+  stamped by its OUTLINE (`MilitaryGen.plane`, `Const.MIL_PLANE_MASK`: 22 of the 8x7 footprint's 56
+  cells for the Meshy jet at 28.0 x 27.0, its nose in the first row, its wing row the whole 8 and its
+  tail in the last), nose to the
   door; the full rect was "too much is unwalkable ... a TON of empty tiles".
   Its origin corner is walkable and `MilitaryVehicles.planeNorth` reads the nose back off the stamp.
   `GenCheck` asserts the outline in one of the two turns.

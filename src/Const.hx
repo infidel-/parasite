@@ -1294,12 +1294,12 @@ class Const
   public static var MIL_PLANE_SIZE = [ 8, 7 ];
   // which cells of the plane's footprint it covers from above, nose north, a row per string and 'x'
   // solid: its outline over a fifth of a cell or more at the height render.military.MilitaryVehicles
-  // draws it, the wing's tips included (the jet's span is 27.8, so its tips reach the outer columns
-  // by a quarter, and its 24.5 length puts the tail in the last row). The rest of the 8x7 is hangar
-  // floor ("you made full square while there's a TON of empty tiles"). Nose south is the same turned
-  // a half
+  // draws it, the wing's tips included (the jet's span is 28.0, so its tips reach the outer columns
+  // by a quarter, and its 27.0 length puts the nose in the first row and the tail in the last). The
+  // rest of the 8x7 is hangar floor ("you made full square while there's a TON of empty tiles"). Nose
+  // south is the same turned a half
   public static var MIL_PLANE_MASK = [
-    '........',
+    '...xx...',
     '...xx...',
     '..xxxx..',
     'xxxxxxxx',

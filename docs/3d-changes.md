@@ -2178,3 +2178,25 @@ the next stack hands over (old one snaps solid, new one fades). 51 → 52 calls 
 programs 120 → 120 on the first fade after a reload.
 
 **Verdict:** landed. +1 call per fading stack, 0 programs.
+
+## Military base: the Meshy jet replaces the TRELLIS one
+
+**Reported:** "generated a new plane - plane_jet_meshy. put it into the game instead of the old one"
+(made by the user in Meshy off the TRELLIS reference re-laid on black).
+
+**Changed:**
+- **`military/plane`** now builds from `jet-meshy.glb`: `plane_jet_align.py` on the drop (mirror error
+  0.0023, yaw −180, so Meshy already had it square), then the offline decimate at `tris` 15000.
+  189,544 → 15,000 tris, 3 components (hull, two nacelles), tex 1024.
+- **Drawn at h 9.0**, not 9.8: this one is longer for its height (1.829 : 0.610 against 1.082 : 0.433),
+  so the footprint's 7 rows set the size. 28.0 span, 27.0 long, half a unit clear at each end.
+- **`MIL_PLANE_MASK`** gains the nose row (`...xx...` at 0.26 coverage): 22 cells. `planeNorth` still
+  reads the turn off row 2, and an old stamp still reads right.
+- **`PLANE_LOW`** re-measured, everything under 1.75 at h 9.0: `[ -2.35, 2.35, -12.6, 5.77 ]`.
+
+**The trap:** Meshy bakes a LIME olive (atlas 87/116/57, chroma 58.9). At baseColor 0.77 alone the hangar
+showed it at 59/109/37, chroma 72 on a 30-luma floor. `sat` 0.7 lands the atlas at 83/101/68 (sampled
+71/83/61, chroma 22). That is level with the TRELLIS jet's 84/87/59 through its 0.5. Meshy also ships
+roughness 0.8, which keeps PBR; `roughness` 1 puts it back on Lambert.
+
+**Verdict:** landed. 0 calls, 0 programs (120 → 120). Military 2000 seeds OK.
