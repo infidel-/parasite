@@ -1,6 +1,7 @@
 package render;
 
 import game.Game;
+import game.AreaGame;
 import objects.Door;
 import render.RenderConfig;
 
@@ -35,6 +36,9 @@ typedef AreaEvent = {
 class AreaSounds
 {
   var game:Game;
+  // the area this was built for, never game.area: a restart swaps that for the new game's start
+  // area while the view still ticks this one under the fade
+  var area:AreaGame;
   var kinds:Array<AreaLoop>;
   var events:Array<AreaEvent>;
   // the area's doors by cell, built once: a door object never moves, only opens
@@ -53,6 +57,7 @@ class AreaSounds
   public function new(game:Game, kinds:Array<AreaLoop>, ?events:Array<AreaEvent>)
     {
       this.game = game;
+      area = game.area;
       this.kinds = kinds;
       this.events = (events == null ? [] : events);
       var r = 0.0;
@@ -67,7 +72,7 @@ class AreaSounds
           SoundSources.put(e.key, e.cells, e.range);
         }
       path = new SoundPath(Math.ceil(r));
-      doors = SoundPath.doorsOf(game.area);
+      doors = SoundPath.doorsOf(area);
       level = [for (_ in kinds) 0.0];
       // a duty cycle starts anywhere in itself, so two floors' fridges do not cut in together
       running = [for (_ in kinds) Math.random() < 0.5];
@@ -112,7 +117,7 @@ class AreaSounds
 // keeping a fraction of the level when the only path is through a closed door
   public function tick(pc:Int, pr:Int, dtMs:Float):Void
     {
-      path.search(game.area, doors, pc, pr);
+      path.search(area, doors, pc, pr);
       var sec = dtMs / 1000;
       var k = Math.min(1, dtMs / (RenderConfig.BASE_MS * 2));
       for (i in 0...kinds.length)

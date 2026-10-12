@@ -1,6 +1,7 @@
 package render.corp;
 
 import game.Game;
+import game.AreaGame;
 import gen.corp.CorpTemp;
 import render.AreaSounds;
 import render.RenderConfig;
@@ -20,6 +21,9 @@ class CorpSounds
   static inline var FLUSH_GAP = 80.0;
 
   var game:Game;
+  // the area this was built for, never game.area: a restart swaps that for the new game's start
+  // area, which has no generatorInfo, while the view still ticks this one under the fade
+  var area:AreaGame;
   var loops:AreaSounds;
   // the lift's cells, which count as a room for the beds
   var lifts:Array<{ col:Int, row:Int }>;
@@ -31,7 +35,7 @@ class CorpSounds
   public function new(game:Game, m:Facility)
     {
       this.game = game;
-      var area = game.area;
+      area = game.area;
       var racks = [];
       var basins = [];
       for (row in 0...m.h)
@@ -94,7 +98,7 @@ class CorpSounds
     {
       if (Lambda.exists(lifts, function(c) return c.col == pc && c.row == pr))
         return 1;
-      var room = game.area.generatorInfo.getRoomAt(pc, pr);
+      var room = area.generatorInfo.getRoomAt(pc, pr);
       if (room == null ||
           room.role == CorpTemp.ROLE_RECEPTION)
         return 0;

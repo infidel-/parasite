@@ -1,6 +1,7 @@
 package render.military;
 
 import game.Game;
+import game.AreaGame;
 import gen.facility.FacilityTemp;
 import map.Terrain;
 import render.AreaSounds;
@@ -48,6 +49,9 @@ class MilitarySounds
   static inline var FAR_INDOOR = 0.4;
 
   var game:Game;
+  // the area this was built for, never game.area: a restart swaps that for the new game's start
+  // area, which has no generatorInfo, while the view still ticks this one under the fade
+  var area:AreaGame;
   var m:Facility;
   var loops:AreaSounds;
   // the beds in play, BEDS plus the margin's band bed
@@ -65,7 +69,7 @@ class MilitarySounds
     {
       this.game = game;
       this.m = m;
-      var area = game.area;
+      area = game.area;
       // the sources off the saved grid and the model's fittings
       var generators = [];
       var fence = [];
@@ -161,7 +165,7 @@ class MilitarySounds
     {
       if (FacilityModel.inHangar(m, pc, pr))
         return BED_HANGAR;
-      var room = game.area.generatorInfo.getRoomAt(pc, pr);
+      var room = area.generatorInfo.getRoomAt(pc, pr);
       if (room != null &&
           room.role == FacilityTemp.ROLE_LATRINE)
         return BED_LATRINE;
@@ -170,7 +174,7 @@ class MilitarySounds
         return BED_COMMS;
       if (FacilityModel.isIndoor(m, pc, pr))
         return (room != null ? BED_ROOM : 0);
-      if (!game.area.isOutsideBase(pc, pr))
+      if (!area.isOutsideBase(pc, pr))
         return BED_YARD;
       return (Math.abs(pr - roadRow) <= ROAD_REACH ? BED_ROAD : BED_MARGIN);
     }

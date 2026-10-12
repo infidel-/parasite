@@ -1,6 +1,7 @@
 package render.facility;
 
 import game.Game;
+import game.AreaGame;
 import gen.facility.FacilityTemp;
 import render.AreaSounds;
 import render.RenderConfig;
@@ -33,6 +34,9 @@ class FacilitySounds
   static inline var PA_GAP = 180.0;
 
   var game:Game;
+  // the area this was built for, never game.area: a restart swaps that for the new game's start
+  // area, which has no generatorInfo, while the view still ticks this one under the fade
+  var area:AreaGame;
   var m:Facility;
   var loops:AreaSounds;
   // each bed's eased level, 0..1, in BEDS order
@@ -45,7 +49,7 @@ class FacilitySounds
     {
       this.game = game;
       this.m = m;
-      var area = game.area;
+      area = game.area;
       // the fitted kinds off the model's grid, the sinks off theirs, the trees and the road off
       // the tiles
       var racks = [];
@@ -125,7 +129,7 @@ class FacilitySounds
     {
       if (FacilityModel.inHangar(m, pc, pr))
         return 3;
-      var room = game.area.generatorInfo.getRoomAt(pc, pr);
+      var room = area.generatorInfo.getRoomAt(pc, pr);
       if (room != null)
         return (room.role == FacilityTemp.ROLE_TOILET ? BED_WASHROOM : 1);
       if (FacilityModel.isIndoor(m, pc, pr))
