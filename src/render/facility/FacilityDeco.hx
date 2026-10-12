@@ -94,6 +94,9 @@ typedef DrumProp = {
 class FacilityDeco
 {
   static inline var CELL = CityConfig.CELL;
+  // a military base clue's sprite against the full billboard: a 2.2-deep desk top took a full-size
+  // sheet of paper from edge to edge
+  static inline var MIL_CLUE_SCALE = 0.6;
 
   // the four cell-edge directions, in render.facility.FacilityGeom's own numbering:
   // 0 = -z, 1 = +z, 2 = -x, 3 = +x
@@ -172,6 +175,11 @@ class FacilityDeco
 // atlas ROW and of nothing else, so render.Actors can ask it without a model
   public static function spriteScale(area:game.AreaGame, o:objects.AreaObject):Float
     {
+      // and a military base's clue paperwork, sized to the desk tops and the clutter round it
+      if (area != null &&
+          area.typeID == AREA_MILITARY_BASE &&
+          o.type == 'document')
+        return MIL_CLUE_SCALE;
       return onBench(area, o) ? FacilityStyle.DECO_TABLE_SCALE : 1.0;
     }
 

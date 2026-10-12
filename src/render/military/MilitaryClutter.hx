@@ -165,11 +165,25 @@ class MilitaryClutter
   ];
   // the facility the gear grounds itself on, for the build
   static var fac:Facility;
+  // how far a clue's centre stays in from its top's edge, and the half-size of the patch round it no
+  // decal may roll on
+  static inline var CLUE_INSET = 0.55;
+  static inline var CLUE_CLEAR = 0.8;
+  // how much a unit of gap between a cell centre and a top outweighs a unit of the top's height when
+  // picking the top a clue spot lies on: any top covering the centre beats one beside it
+  static inline var CLUE_GAP_WEIGHT = 100.0;
+  // how far over a bed's top a clue floats: a cot's folded blanket and pillow stand above the canvas
+  // lid and cut a strip off the paper, which then drew as its through-wall mark
+  static inline var CLUE_BED_LIFT = 0.2;
+  // where the clues game.AreaGame lays on the base's furniture rest, by cell (key): the top's point
+  // nearest the cell centre and its height. read by the actor pose through groundY and standOff
+  static var rests = new Map<Int, { x:Float, z:Float, y:Float }>();
 
 // every decal in the base's rooms, one mesh per room kind. returns how many landed
   public static function build(scene:Scene, m:Facility, area:AreaGame, lids:Array<MilitaryLid>):Int
     {
       fac = m;
+      reserve(area, lids);
       var n = 0;
       var bufs = new Map<String, MeshBuf>();
       for (room in area.generatorInfo.rooms)
@@ -250,6 +264,87 @@ class MilitaryClutter
       for (role in bufs.keys())
         add(scene, bufs.get(role), 'textures/military/' + role + '-clutter.png');
       return n;
+    }
+
+// keep each clue spot (game.AreaGame.clueSpawnPoints) bare on the top its cell holds: the point
+// nearest the cell centre, inset from the edge, claimed in the lid's frame before any decal rolls,
+// and remembered for the clue drawn there. A cell's top is the NEAREST lid to its centre, the HIGHEST
+// of those covering it: a bunk's two decks are one lid each, both spanning its two cells, and a clue
+// on the lower one lay under the upper and drew as its through-wall mark. The blanket also stops
+// short of the pillow cell, whose clue then lies at the blanket's head end
+  static function reserve(area:AreaGame, lids:Array<MilitaryLid>):Void
+    {
+      rests.clear();
+      for (pt in area.clueSpawnPoints)
+        {
+          var c = CityConfig.cellToWorld(pt.x, pt.y);
+          var best:MilitaryLid = null;
+          var bestScore = CELL / 2 * CLUE_GAP_WEIGHT;
+          for (l in lids)
+            {
+              if (l.kind == UNDER ||
+                  l.kind == SHELF ||
+                  l.kind == LOCKER)
+                continue;
+              // how far the centre lies outside the top, weighted far over its height
+              var f = ClutterSlotTools.turned(l.x, l.z, l.w, l.d, l.yaw);
+              var gap = Math.max(0.0, Math.abs(c.x - f.x) - f.hw) +
+                Math.max(0.0, Math.abs(c.z - f.z) - f.hd);
+              var score = gap * CLUE_GAP_WEIGHT - l.y;
+              if (score < bestScore)
+                {
+                  best = l;
+                  bestScore = score;
+                }
+            }
+          if (best == null)
+            continue;
+          // the cell centre in the lid's frame (emit's turn, backwards), held inside the top
+          var lc = Math.cos(best.yaw), ls = Math.sin(best.yaw);
+          var dx = c.x - best.x, dz = c.z - best.z;
+          var rx = Math.max(0.0, best.w / 2 - CLUE_INSET);
+          var rz = Math.max(0.0, best.d / 2 - CLUE_INSET);
+          var lx = Math.max(-rx, Math.min(rx, dx * lc - dz * ls));
+          var lz = Math.max(-rz, Math.min(rz, dx * ls + dz * lc));
+          best.claims.push({
+            x: lx,
+            z: lz,
+            hw: CLUE_CLEAR,
+            hd: CLUE_CLEAR,
+          });
+          rests.set(key(pt.x, pt.y), {
+            x: best.x + lx * lc + lz * ls,
+            z: best.z - lx * ls + lz * lc,
+            y: best.y + (best.kind == BED ? CLUE_BED_LIFT : 0.0),
+          });
+        }
+    }
+
+  static inline function key(col:Int, row:Int):Int
+    {
+      return (row << 16) | col;
+    }
+
+// a clue spot's top height, else the compound's own ground. the base's render.world.WorldCtx.ground
+  public static function groundY(m:Facility, x:Float, z:Float):Float
+    {
+      var c = CityConfig.worldToCell(x, z);
+      var r = rests.get(key(c.col, c.row));
+      return (r != null ? r.y : render.facility.FacilityTables.groundY(m, x, z));
+    }
+
+// a clue spot's resting point off its cell centre, else the compound's own. the base's
+// render.world.WorldCtx.standOff
+  public static function standOff(m:Facility, col:Int, row:Int):{ x:Float, z:Float }
+    {
+      var r = rests.get(key(col, row));
+      if (r == null)
+        return render.facility.FacilityDeco.standOff(m, col, row);
+      var c = CityConfig.cellToWorld(col, row);
+      return {
+        x: r.x - c.x,
+        z: r.z - c.z,
+      };
     }
 
 // one lid's worth, rejection-sampled in the lid's own frame round what already stands on it, then

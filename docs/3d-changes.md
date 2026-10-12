@@ -2255,3 +2255,38 @@ shadow shorter".
 
 **Verdict:** landed. +0 calls and +0 programs: the vent is still one pooled sprite and the halo is still
 one quad in the shared halo mesh.
+
+## Military clues on the base's furniture tops, off their own pack16
+
+**Reported (military):** the base "still uses old clues (readables) art and spawns them on random floors";
+clues should lie mostly on empty clutter spots, with a floor drop rare ("somebody dropped important paper").
+
+**Changed:**
+- **Art:** `military/clue-pack`, a pack16 of 12 papers and 4 books, redirected as `Const.FACILITY_DECO_HD`'s
+  fifth sheet (entities64 rows 50-51, `Const.MIL_DOCUMENTS`/`MIL_BOOKS`). It builds at 102 sRGB, against the
+  facility clue sheet's 96.
+- **Spots:** `AreaGame.isMilitaryClueSpot` takes a desk, a brief or mess table, a file or med cabinet, a
+  footlocker, a bunk, a cot or a bench seat. The cell has to be reachable from a walkable cell of its own
+  room, in any of the 8 directions (`PlayerArea` picks up at Chebyshev 1), and it keeps a stable 40% hash
+  share. There is no object check, so the list comes out the same on every entry.
+- **Reserve:** `MilitaryClutter.reserve` picks each spot's top: the lid nearest the cell centre, the
+  highest of those that cover it. It clamps the centre into that top, inset 0.55, claims a 1.6 square
+  in the lid's frame before any decal rolls, and keeps `{x, z, y}` in `rests`.
+- **Hooks:** the base's `WorldCtx.ground` and `standOff` answer `rests` first. The `Actors` Document branch
+  takes `standOff` on a base only, so facility clues stay yaw-only. `FacilityDeco.spriteScale` draws a
+  base Document at `MIL_CLUE_SCALE` 0.6.
+
+**Measured (base1):** 25 spots, 25 rests; offsets stay inside their cell (max 1.35). Tops land at desk 1.9,
+footlocker 1.0, bench and cot 1.1 (+0.2), bunk top deck 3.07. Spawning keeps ≤4 clues on spots, ≤1 on the floor.
+
+**The traps:**
+- **Desk-only spots gave 4 per base.** A base has about 4 desks and 4 mess tables, and benches box the
+  tables in. Bunks, cots and seats are what fill the pool.
+- **Lowest-lid-wins put bunk clues on the LOWER deck.** They drew as the through-wall mark under the
+  upper deck.
+- **A cot's folded blanket stands above its canvas lid** and cut a strip off the paper. BED tops lift
+  `CLUE_BED_LIFT` 0.2.
+- **A bunk's blanket lid stops short of the pillow cell,** so a top is chosen by nearest-gap and not by
+  cover alone.
+
+**Verdict:** landed. +0 calls: the clues are pooled sprites and the claims only move decals.

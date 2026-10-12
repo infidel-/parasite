@@ -58,6 +58,11 @@ class AreaGame extends _SaveObject
   var _alertness: Float; // actual alertness storage
 
   public static var _maxID: Int = 0; // area id counter
+  // the share of a military base's furniture tops kept bare for clues, the most clues lying on
+  // them at once, and the chance a spawn pass drops one more on a room floor instead (at most one)
+  static inline var MIL_CLUE_SPOT_PCT = 40;
+  static inline var MIL_MAX_CLUES = 4;
+  static inline var MIL_FLOOR_CLUE_PCT = 10;
 
   // these are empty until the area has been generated
   // when player leaves the area, ai list is emptied, cells and objects are saved
@@ -489,6 +494,50 @@ class AreaGame extends _SaveObject
       FacilityAreaGenerator.repairRooms(this);
     }
 
+// can a clue lie on this military base cell? a furniture top render.military.MilitaryClutter
+// dresses (a desk, a table, a cabinet, a footlocker, a bunk or cot, a bench seat), reachable from a
+// walkable cell of its own room, and only a stable share of those, so the rest keep their clutter
+  function isMilitaryClueSpot(x: Int, y: Int): Bool
+    {
+      var t = _cells[x][y];
+      if (t != Const.TILE_MIL_DESK &&
+          t != Const.TILE_MIL_BRIEF_TABLE &&
+          t != Const.TILE_MIL_MESS_TABLE &&
+          t != Const.TILE_MIL_FILE &&
+          t != Const.TILE_MIL_MED_CABINET &&
+          t != Const.TILE_MIL_FOOTLOCKER &&
+          t != Const.TILE_MIL_BUNK &&
+          t != Const.TILE_MIL_COT &&
+          t != Const.TILE_MIL_BENCH)
+        return false;
+      var h = ((x * 73856093) ^ (y * 19349663)) & 0x7fffffff;
+      if ((h >>> 3) % 100 >= MIL_CLUE_SPOT_PCT ||
+          generatorInfo == null)
+        return false;
+      // picked up from any of the eight cells round it (PlayerArea), but never through a wall
+      for (r in generatorInfo.rooms)
+        {
+          if (x < r.x1 ||
+              x > r.x2 ||
+              y < r.y1 ||
+              y > r.y2)
+            continue;
+          for (i in 0...Const.dirx.length)
+            {
+              var nx = x + Const.dirx[i];
+              var ny = y + Const.diry[i];
+              if (nx >= r.x1 &&
+                  nx <= r.x2 &&
+                  ny >= r.y1 &&
+                  ny <= r.y2 &&
+                  isWalkable(nx, ny))
+                return true;
+            }
+          return false;
+        }
+      return false;
+    }
+
 // init spawn points list after generation or loading
 // necessary for more optimal clue/guard spawns in facilities
 // NOTE: used in scenario spaceship generation part
@@ -508,6 +557,14 @@ class AreaGame extends _SaveObject
       for (y in 0...height)
         for (x in 0...width)
           {
+            // a base's furniture tops, with no object check: the list has to come out the same on
+            // every entry, since render.military.MilitaryClutter keeps its clutter off these spots
+            if (info.id == AREA_MILITARY_BASE)
+              {
+                if (isMilitaryClueSpot(x, y))
+                  clueSpawnPoints.push({ x: x, y: y });
+                continue;
+              }
             // tables only
             if (!Const.isTableTile(_cells[x][y]))
               continue;
@@ -2309,29 +2366,33 @@ class AreaGame extends _SaveObject
             removeObject(o);
           }
 
-      // labs
-      if (info.id == AREA_FACILITY)
+      // labs and military bases: on the spots initSpawnPoints kept for them
+      if (info.id == AREA_FACILITY ||
+          info.id == AREA_MILITARY_BASE)
         {
-          var maxSpawn = 4 - cnt;
+          var mil = (info.id == AREA_MILITARY_BASE);
+          var maxSpawn = (mil ? MIL_MAX_CLUES : 4) - cnt;
           if (maxSpawn <= 0)
             return;
+
+          // somebody on the base dropped an important paper: one on a room floor at most
+          if (mil &&
+              Std.random(100) < MIL_FLOOR_CLUE_PCT &&
+              !hasFloorClue())
+            {
+              var loc = findFloorClueLocation();
+              if (loc != null)
+                {
+                  spawnDocument(e, loc.x, loc.y);
+                  maxSpawn--;
+                }
+            }
 
           // get all close clue spawn points
           var spawns = [];
           for (pt in clueSpawnPoints)
             {
-              // must be on screen
-              if (!inVisibleRect(pt.x, pt.y))
-                continue;
-
-              // must not be visible to player as a parasite
-              if (game.player.state != PLR_STATE_HOST &&
-                  Const.distanceSquared(game.playerArea.x, game.playerArea.y, pt.x, pt.y) < 6 * 6)
-                continue;
-
-              // must not be visible to player when possessing a host
-              if (game.player.state == PLR_STATE_HOST &&
-                  isVisible(game.playerArea.x, game.playerArea.y, pt.x, pt.y))
+              if (!isClueSpotUnseen(pt.x, pt.y))
                 continue;
 
               // already an object there
@@ -2340,40 +2401,15 @@ class AreaGame extends _SaveObject
 
               spawns.push(pt);
             }
-          if (spawns.length == 0)
-            {
-//              trace('cannot spawn clue, no spots');
-              return;
-            }
 
           // spawn items
           for (_ in 0...maxSpawn)
             {
               if (spawns.length == 0)
                 return;
-              var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
-
-              // find empty clue location
               var loc = spawns[Std.random(spawns.length)];
               spawns.remove(loc);
-
-              // spawn object
-              var tiles = null;
-              if (info.id == 'paper')
-                tiles = Const.CHEM_LABS_DOCUMENTS[Std.random(Const.CHEM_LABS_DOCUMENTS.length)];
-              else if (info.id == 'book')
-                tiles = Const.CHEM_LABS_BOOKS[Std.random(Const.CHEM_LABS_BOOKS.length)];
-              var o = new Document(game, this.id, loc.x, loc.y,
-                tiles.row, Std.random(tiles.amount));
-              o.name = info.names[Std.random(info.names.length)];
-              o.item = {
-                game: game,
-                id: info.id,
-                name: o.name,
-                info: info,
-                event: e
-              };
-              addObject(o);
+              spawnDocument(e, loc.x, loc.y);
             }
         }
 
@@ -2391,7 +2427,6 @@ class AreaGame extends _SaveObject
               case AREA_CITY_LOW:
                 maxClues = 1;
               default:
-                // military bases
                 maxClues = 5;
             }
           var maxSpawn = maxClues - cnt;
@@ -2419,6 +2454,78 @@ class AreaGame extends _SaveObject
               addObject(o);
             }
         }
+    }
+
+// is this clue spot on screen and out of the player's sight?
+  function isClueSpotUnseen(x: Int, y: Int): Bool
+    {
+      // must be on screen
+      if (!inVisibleRect(x, y))
+        return false;
+
+      // must not be visible to player as a parasite
+      if (game.player.state != PLR_STATE_HOST &&
+          Const.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
+        return false;
+
+      // must not be visible to player when possessing a host
+      if (game.player.state == PLR_STATE_HOST &&
+          isVisible(game.playerArea.x, game.playerArea.y, x, y))
+        return false;
+      return true;
+    }
+
+// lay one clue document for this event: a report 80% of the time, else a book, off the labs' or
+// the military base's own art
+  function spawnDocument(e: scenario.Event, x: Int, y: Int)
+    {
+      var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
+      var mil = (this.info.id == AREA_MILITARY_BASE);
+      var list = (info.id == 'paper' ?
+        (mil ? Const.MIL_DOCUMENTS : Const.CHEM_LABS_DOCUMENTS) :
+        (mil ? Const.MIL_BOOKS : Const.CHEM_LABS_BOOKS));
+      var tiles = list[Std.random(list.length)];
+      var o = new Document(game, this.id, x, y, tiles.row, Std.random(tiles.amount));
+      o.name = info.names[Std.random(info.names.length)];
+      o.item = {
+        game: game,
+        id: info.id,
+        name: o.name,
+        info: info,
+        event: e
+      };
+      addObject(o);
+    }
+
+// is a clue already lying on a walkable cell, i.e. dropped on a floor rather than left on furniture?
+  function hasFloorClue(): Bool
+    {
+      for (o in _objects)
+        if (o.item != null &&
+            o.item.info.type == 'readable' &&
+            isWalkable(o.x, o.y))
+          return true;
+      return false;
+    }
+
+// a free, unseen floor cell inside one of the base's rooms for a dropped clue, or null
+  function findFloorClueLocation(): { x: Int, y: Int }
+    {
+      if (generatorInfo == null ||
+          generatorInfo.rooms.length == 0)
+        return null;
+      // ponytail: random probes, a full scan of every room if this misses too often
+      for (_ in 0...20)
+        {
+          var r = generatorInfo.rooms[Std.random(generatorInfo.rooms.length)];
+          var x = r.x1 + Std.random(r.x2 - r.x1 + 1);
+          var y = r.y1 + Std.random(r.y2 - r.y1 + 1);
+          if (isWalkable(x, y) &&
+              !hasObjectAt(x, y) &&
+              isClueSpotUnseen(x, y))
+            return { x: x, y: y };
+        }
+      return null;
     }
 
 // decrease area alertness

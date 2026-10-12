@@ -562,6 +562,14 @@ and `roomUsed/<role>` (cells holding an unwalkable tile or an object) and `roomE
   `FacilityModel`'s hangar majority.
 - 2000 seeds pass `floorReachable`.
 
+**Clues lie on the furniture, so nothing here reserves them.** The base deals no bare spots at
+generation; a clue spot is DERIVED on every entry (`AreaGame.isMilitaryClueSpot`). It is a desk, a
+table, a cabinet, a footlocker, a bunk, a cot or a bench seat, reachable from its own room's floor in
+any of 8 directions, and only a stable 40% hash share of those. `render.military.MilitaryClutter` reads
+the same list and keeps its decals off each spot. Mess and brief tables are mostly boxed in by
+benches, so on base1 the 25 spots are bunks, cots and seats more than desks. A floor clue is the
+rare extra (10% a spawn pass, one at a time, inside a room).
+
 ### The one permitted `gen/` → `game/` edge
 
 `gen/facility/` imports `game.AreaGenerator`'s pure static grid helpers — `drawBlock`, `drawChunk`,

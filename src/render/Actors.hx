@@ -225,7 +225,17 @@ class Actors {
             // a clue document left on a worktop: a small stable turn off square, so a desk of them
             // reads as papers put down rather than stamped. yaw only — an offset walks it off the bench
             else if (Std.isOfType(o, objects.Document))
-              yaw = jitter(o.id, 1) * DOC_YAW;
+              {
+                yaw = jitter(o.id, 1) * DOC_YAW;
+                // except on a military base, whose desks are narrower than their cell: there it lies
+                // where render.military.MilitaryClutter kept its top bare (WorldCtx.standOff)
+                var so = (game.area.typeID == AREA_MILITARY_BASE ? WorldCtx.standOff(o.x, o.y) : null);
+                if (so != null)
+                  {
+                    ox = so.x;
+                    oz = so.z;
+                  }
+              }
             // a fitting the area kind stands OFF A WALL FACE rather than on its cell centre. the two
             // cannot both fire — a corpse does not lie on an impassable fitting cell — and the hook
             // answers null for every other cell and in every other area kind, so nothing is allocated

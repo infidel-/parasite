@@ -198,7 +198,9 @@ class FacilityArea implements Area3D
       // and 0 everywhere else. setting these is not optional either way — the kind that sets one owns
       // it, or the next area inherits the previous one's ground height and climb arc (WorldCtx)
       WorldCtx.tiles = null;
-      WorldCtx.ground = function(x, z) return FacilityTables.groundY(model, x, z);
+      WorldCtx.ground = (model.kind == 'military' ?
+        function(x, z) return render.military.MilitaryClutter.groundY(model, x, z) :
+        function(x, z) return FacilityTables.groundY(model, x, z));
       // and the compound HAS something to climb: the park railing is render-only, so an actor walks
       // straight through it into the lawn and this arc is the whole of what says the bar is there —
       // the same contract the wilderness's guard rail runs on
@@ -211,7 +213,9 @@ class FacilityArea implements Area3D
       WorldCtx.wallFace = function(col, row, dir) return FacilityGeom.wallFace(model, col, row, dir);
       // and the one area kind that does not stand its props on the cell centre: a fitting is pushed
       // off the WALL FACE, so the actor pose behind it has to be pushed with it
-      WorldCtx.standOff = function(col, row) return FacilityDeco.standOff(model, col, row);
+      WorldCtx.standOff = (model.kind == 'military' ?
+        function(col, row) return render.military.MilitaryClutter.standOff(model, col, row) :
+        function(col, row) return FacilityDeco.standOff(model, col, row));
       WorldCtx.buildings = [];
       WorldCtx.seed = -1;
       // the indoor lighting mask, and it goes BEFORE the builders where the vision mask goes after.
