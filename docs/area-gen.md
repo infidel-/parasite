@@ -395,7 +395,7 @@ laboratory's deal. That:
 | comms | rack-run (longest wall), console-run ×2 (facing it), desk-island (up to two, 3 cells back to back where the ring fits, else 2; two share the aisle between them) |
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
-| mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`; along whichever axis seats more, `messRows`) |
+| mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`; along whichever axis seats more, `messRows`; four deep, one bench along the table) |
 | barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows; a GLASS bay of either too) |
 | latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first, a tiled separator wall each side of a shower), bench-island (3 cells where the ring fits, else 2) |
 
@@ -517,6 +517,11 @@ from another room (`FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up 
 `linkClusters` nor `connectRooms` cuts a door into either, and `GenCheck.washroomSane` holds both to
 the lab washroom's terms. Without the "no room door" test, 23 seeds in 2000 traced a stranded cluster.
 4 still do, and the end-of-generation `connectRooms` lets each in elsewhere.
+
+**The briefing room or the mess hall is the biggest room left that is 5 deep both ways**
+(`FacilityRooms.HALL_DEEP`), else the biggest. The first regenerated base dealt a 16x4 hall, and four
+deep `tableRows` stood a line of tables with no bench. Four deep now gets one bench along the table,
+with an aisle either side. Mess hall use 21.1 → 21.5%.
 
 **No room is 4x4 or smaller** ("they can't contain anything useful"). Before doors are cut,
 `FacilityBuilding.mergeSmallRooms` knocks each one through into the smallest neighbour that matches it

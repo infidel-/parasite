@@ -268,7 +268,9 @@ class MilitaryRooms
 
 // the rows of a mess hall or the one table of a briefing room. Cells from 2 in off the end walls
 // (a cell for the counter or the board and one to walk past it) and from 1 in off the side walls;
-// across that band a row is bench, table, bench, then an aisle when `many` asks for another
+// across that band a row is bench, table, bench, then an aisle when `many` asks for another. Four
+// deep it is one bench and the table, an aisle either side: the table alone stood a 16x4 hall's whole
+// length with nothing to sit on
   static function tableRows(state: _FacilityState, room: _Room, alongX: Bool, table: Int,
       many: Bool): Int
     {
@@ -277,8 +279,8 @@ class MilitaryRooms
       if (len < 5 ||
           span < 3)
         return 0;
-      var benches = (span >= 5);
-      var row = (benches ? 3 : 1);
+      var benches = (span >= 4);
+      var row = (span >= 5 ? 3 : (benches ? 2 : 1));
       // where the band starts across the room: centred when there is one row
       var first = (many ? 1 : Std.int((span - row) / 2));
       var at = first;

@@ -31,6 +31,9 @@ class FacilityRooms
   // and not a store. A candidate failing this is simply not made one — the washroom's own precedent,
   // where relaxing onto the fault was rejected
   static inline var STORE_RUN_MIN = 4;
+  // how deep a base's briefing room or mess hall wants to be on both axes: a bench, the table and a
+  // bench with an aisle either side (gen.military.MilitaryRooms.tableRows)
+  static inline var HALL_DEEP = 5;
 
 // hand each room of this structure a template.
 //
@@ -147,8 +150,21 @@ class FacilityRooms
       var hq = (state.area.countSpawns('safe') == 0);
       var rest = [for (room in rooms) if (room.role == null) room];
       rest.reverse();
+      // the briefing room or the mess hall: the biggest room left that is HALL_DEEP deep, where its
+      // table takes a bench either side, else the biggest. A 16x4 hall was the biggest and stood a
+      // line of tables
       if (rest.length > 1)
-        rest.shift().role = (hq ? ROLE_BRIEFING : ROLE_MESS);
+        {
+          var i = 0;
+          for (k in 0...rest.length)
+            if (rest[k].w >= HALL_DEEP &&
+                rest[k].h >= HALL_DEEP)
+              {
+                i = k;
+                break;
+              }
+          rest.splice(i, 1)[0].role = (hq ? ROLE_BRIEFING : ROLE_MESS);
+        }
       if (hq &&
           rest.length > 0)
         rest.shift().role = ROLE_ARMORY;
