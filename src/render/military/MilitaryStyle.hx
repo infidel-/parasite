@@ -160,6 +160,12 @@ class MilitaryStyle
         return Surf.HQ;
       if (t == Const.TILE_MIL_FLOOR_LATRINE)
         return Surf.WASH;
+      // a hangar's fuel drums stand on its floor. Left to the row-19 catch-all they were LOT, a
+      // square of yard apron sunk KERB_DROP into the shed's concrete at every drum cell ("hangar floor
+      // in front of barrels is different (hole again?)"). Not off the west neighbour like a parked
+      // vehicle's footprint: on the west wall that neighbour IS the wall
+      if (t == Const.TILE_MIL_DRUMS)
+        return Surf.CONCRETE;
       if (t >= Const.OFFSET_ROW20)
         return Surf.TILE;
       return FacilityModel.surfOf(t);

@@ -285,58 +285,8 @@ class HangarBlock
       for (c in RoomBlock.cellsOf(b))
         if (bare(state, c.x, c.y) &&
             state.area.chance(DRUM_PCT))
-          {
-            // kept only while the floor is still one piece: a narrow shed's wing passes its tips one
-            // ring cell off each wall, and a corner between two clusters is a pocket
-            cells[c.x][c.y] = Const.TILE_MIL_DRUMS;
-            if (split(state, node))
-              cells[c.x][c.y] = TEMP_CONCRETE;
-          }
-    }
-
-// is a military hangar's open floor (bare concrete and the plane's walkable origin) no longer one
-// piece?
-  static function split(state: _FacilityState, node: _GenNode): Bool
-    {
-      var cells = state.area.getCells();
-      var open = function(x: Int, y: Int)
-        return (x >= node.x1 &&
-          x <= node.x2 &&
-          y >= node.y1 &&
-          y <= node.y2 &&
-          (cells[x][y] == TEMP_CONCRETE ||
-          cells[x][y] == Const.TILE_MIL_PLANE));
-      var seen = new Map<Int, Bool>();
-      var todo = [];
-      var n = 0;
-      for (x in node.x1...node.x2 + 1)
-        for (y in node.y1...node.y2 + 1)
-          if (open(x, y))
-            {
-              n++;
-              if (todo.length == 0)
-                {
-                  seen.set(x * 1000 + y, true);
-                  todo.push({ x: x, y: y });
-                }
-            }
-      var reached = 0;
-      while (todo.length > 0)
-        {
-          var c = todo.pop();
-          reached++;
-          for (i in 0...Const.dir4x.length)
-            {
-              var x = c.x + Const.dir4x[i];
-              var y = c.y + Const.dir4y[i];
-              if (!open(x, y) ||
-                  seen.exists(x * 1000 + y))
-                continue;
-              seen.set(x * 1000 + y, true);
-              todo.push({ x: x, y: y });
-            }
-        }
-      return reached < n;
+          // walkable: the drums stand in the wall's margin, so a cluster never cuts the floor
+          cells[c.x][c.y] = Const.TILE_MIL_DRUMS;
     }
 
 // stand two or three power generators on the open floor, one inset off a corner each.

@@ -1744,11 +1744,12 @@ class FacilityGeom
 //
 // `tex` is a parameter because render.facility.FacilityRoof's access hatches come through here too:
 // they stand on the fading deck, so a hatch that did not fade with it would be left hanging in the
-// air the moment the player stepped inside, and `Shell.roof` is what FacilityArea.apply eases
-  public static function addDeck(scene:Scene, b:MeshBuf, tex:String, fades:Bool, shell:Shell):Void
+// air the moment the player stepped inside, and `Shell.roof` is what FacilityArea.apply eases.
+// returns the mesh, null for an empty buffer
+  public static function addDeck(scene:Scene, b:MeshBuf, tex:String, fades:Bool, shell:Shell):Mesh
     {
       if (b.idx.length == 0)
-        return;
+        return null;
       var mat = new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'roof', 1),
         side: THREE.FrontSide,
@@ -1765,6 +1766,7 @@ class FacilityGeom
       scene.add(mesh);
       if (fades)
         shell.roof.push(mesh);
+      return mesh;
     }
 
 // one merged buffer as a BufferGeometry.

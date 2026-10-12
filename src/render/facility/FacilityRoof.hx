@@ -250,7 +250,10 @@ class FacilityRoof
           deck.pack = MeshBufTools.make();
           deck.shade = MeshBufTools.make();
           fill(m, si, deck, out);
-          FacilityGeom.addDeck(scene, deck.cab, m.tex.cable, true, shells[si]);
+          // the cable is dressing too, drawn after the deck for `pack`'s reason
+          var cab = FacilityGeom.addDeck(scene, deck.cab, m.tex.cable, true, shells[si]);
+          if (cab != null)
+            cab.renderOrder = 2;
           pack(scene, deck.pack, shells[si], m.tex.roofClutter);
           // a base lays its own, fitted to its own kit: these are the compound's footprints, and
           // under the base's smaller pieces they showed as dark slabs, reported as holes in the roof
@@ -707,8 +710,9 @@ class FacilityRoof
       // AFTER the deck, which a fading roof also draws in the transparent pass: three orders that pass
       // by each mesh's bounding centre, and a dressing sorted first blended its soft-edged texels over
       // the room under the roof and wrote their depth, so the deck never covered them ("roof water
-      // allows seeing through inside the bldg")
-      mesh.renderOrder = 1;
+      // allows seeing through inside the bldg"). 2 and not 1: the contact shadows (`shade`) are 1, and a
+      // tar patch on a condenser's cell draws over its shadow rather than being cut by it
+      mesh.renderOrder = 2;
       scene.add(mesh);
       shell.roof.push(mesh);
     }
@@ -1092,6 +1096,12 @@ class FacilityRoof
       var mesh = new Mesh(FacilityGeom.geom(b), mat);
       mesh.castShadow = false;
       mesh.receiveShadow = false;
+      // AFTER the deck and under the dressing (`pack`, the cable). FacilityArea.apply turns
+      // depthWrite ON for everything in Shell.roof, and this mesh's bounding centre sits a unit off
+      // the deck's: sorted first from the south, the whole quad, its clear rim too, wrote depth at
+      // ROOF_POOL_Y and the deck under it was rejected — a square hole framing every hatch, duct and
+      // isolator ("holes under every roof object ... now they're square")
+      mesh.renderOrder = 1;
       scene.add(mesh);
       shell.roof.push(mesh);
     }

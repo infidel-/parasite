@@ -1277,7 +1277,8 @@ class Const
   public static var TILE_MIL_PAD = OFFSET_ROW19 + 11;
   // a concrete jersey barrier on the pavement either side of the gate mouth. Unwalkable, see-through
   public static var TILE_MIL_JERSEY = OFFSET_ROW19 + 12;
-  // a cluster of fuel drums against a hangar wall. Unwalkable, see-through
+  // a cluster of fuel drums against a hangar wall. Walkable (they stand in the wall's margin, the rest
+  // of the cell is the hangar's floor), see-through
   public static var TILE_MIL_DRUMS = OFFSET_ROW19 + 13;
   // a tent camp's stores against a tent's long side: a crate stack, fuel drums, or both. Unwalkable,
   // see-through
