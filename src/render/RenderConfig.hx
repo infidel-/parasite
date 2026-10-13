@@ -595,6 +595,14 @@ class RenderConfig {
     grow: 1.0,          // silhouette scale vs the sprite
     emissive: 0.9,       // silhouette self-glow (legibility at night)
   };
+  // the hover outline (render.View.hover): a ring round the sprite the cursor is on, cyan for an AI —
+  // the "?" cursor's own, clear of the alert ramp above and of the object green below — and OBJMARK's
+  // green for an object. a prop-backed object wears its OBJMARK hull shell instead
+  public static final HOVER = {
+    aiColor: 0x73f3ff,   // the AI ring (--ui-cursor-help's ring in app.css)
+    width: 0.06,         // ring width in WORLD units, OBJMARK.hullW's, so the ring round an AI, an item
+                         // and the shell round a prop are one weight whatever the sprite's scale
+  };
   // world-object marks (render.Actors object pass), the object twin of XRAY above: a glowing ring
   // hugging the object's sprite while the TACTICAL view is up (the icons are tiny at that zoom), and
   // a patterned silhouette wherever a building hides the object from the camera (GreaterDepth, like
@@ -606,7 +614,8 @@ class RenderConfig {
     color: 0x35dd7a,     // emerald green — clear of the AI colors, the cool-blue footprint dashes, and
                          // bluer/colder than the path line's yellow-green slime (PATH.color 0x7ddc46)
     emissive: 0.9,       // silhouette/ring self-glow (legibility at night), as XRAY.emissive
-    outlinePx: 1.5,      // tactical ring width (crop px; fractional is fine, the dilation is canvas-drawn)
+    outlinePx: 1.5,      // tactical ring width (crop px of a 64 px cell, scaled to a bigger one; fractional
+                         // is fine, the dilation is canvas-drawn)
     fill: 'dots',        // occluded-silhouette pattern: the AI keeps 'scan'
     hatchSpacing: 6,     // pattern period (crop px)
     hatchThick: 2,       // pattern dot width (crop px)

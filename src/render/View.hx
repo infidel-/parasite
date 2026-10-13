@@ -1276,6 +1276,7 @@ class View {
         freeCam: false,
         camera: camera,
         ui: game.ui.hud.isVisible(),
+        hover: null,
       });
       if (running && composer != null) {
         renderer.info.reset();
@@ -1355,6 +1356,7 @@ class View {
       freeCam: freeing,
       camera: camera,
       ui: uiOn,
+      hover: (hover != null ? hover.obj : null),
     });
     // sound mode's rings and labels (render.SoundDebug); hides itself while its overlay is down
     SoundDebug.frame(scene, camera);

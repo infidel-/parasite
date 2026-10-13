@@ -2308,3 +2308,41 @@ LOT through the row-19 catch-all). So the grid version had to choose its own edg
 container or tent as an edge. A base saved before the change keeps no yard piles until it is regenerated.
 
 **Verdict:** landed. +0 calls: the same instanced crate and drum batches.
+
+## Hover outline: cyan ring round the AI under the cursor, green ring or hull round the object
+
+**Asked:** the Ctrl-hover tooltip becomes the default, and what it is on gets outlined (cyan for an
+AI, green for an object).
+
+**Changed:**
+- `View.updateHover` picks once a frame, before `area3d.tick` (`Actors.pickTarget`, into
+  `View.hover`). The tooltip, the outline and `ui.Mouse`'s cursor and click all read that one result.
+- Sprites: `Actors.paintRing`, factored out of `paintObjMark`. It draws `Sprites.outlineTex` at the
+  resolved pose (`faceX` for an AI), coloured `RenderConfig.HOVER.aiColor` 0x73f3ff (the "?" cursor's
+  ring) or `OBJMARK.color`. Its width is `HOVER.width` 0.06 in WORLD units (`OBJMARK.hullW`, the prop
+  shell's). `Actors.hoverPx` turns that into cell pixels off the resting scale, so an AI's ring, a
+  0.6-scale clue's ring and a prop's shell are one weight. The first cut was 2 px per 64 px cell, which
+  drew the full-size AI ring 1.6x as wide as the clue's ("ai outline should be as thin as object's").
+- Props: `ObjModels.cull` shows the hovered placement's `HULL` shell (`ObjModels.hovered`, gated on
+  `opts.ui`).
+- The base's lockers, gun cabinet and safe sit in `MilitaryInterior`'s plain batches and had no shell.
+  `MilitaryGeom.shells` builds HULL batches over their placements, and `FacilityArea` culls them with the
+  same rule, so tactical outlines them now too.
+
+**Measured (James Armory, same cursor pose, hover toggled):**
+- AI ring and clue ring each cost **+1 call, +2 tris**.
+- The locker shell costs **+1 call**.
+- `programs` held at **120** before and after the first hover of each kind.
+
+**The traps:**
+- **A white ring tinted by emissive washes to white under scene light.** The first soldier ring read
+  white, not cyan. `outlineTex` now takes a `fill` (keyed into its cache). Hover rings are filled with
+  their own colour; the tactical ring stays white.
+- **`outlinePx` was in pixels of whatever cell it got.** A 1.5 px ring on a 256 px pack cell at
+  `MIL_CLUE_SCALE` came to 0.01 world. It now scales by `t / 64`, which also widens the tactical ring
+  on the 170 and 256 px clue cells to match the 64 px items.
+- **The pick anchored props at the cell centre.** The base gun cabinet stands 2.4 off its cell, and
+  the corp one is pushed off by its row's `off`, so hovering either body missed. `pickTarget` now takes
+  the pose offset, `ObjModels.standsAt` (the solid batch's centre) and `MilitaryGeom.standsAt`.
+
+**Verdict:** landed.

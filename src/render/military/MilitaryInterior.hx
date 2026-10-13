@@ -856,15 +856,18 @@ class MilitaryInterior
         }
     }
 
-// one glb place, for render.military.MilitaryGeom's armory pieces as well as this file's
-  public static inline function put(path:String, x:Float, z:Float, yaw:Float, y:Float):Void
+// one glb place, for render.military.MilitaryGeom's armory pieces as well as this file's. returns it,
+// for the armory's outline shells
+  public static inline function put(path:String, x:Float, z:Float, yaw:Float, y:Float):PropPlace
     {
-      place(path, {
+      var p = {
         x: x,
         z: z,
         yaw: yaw,
         y: y,
-      });
+      };
+      place(path, p);
+      return p;
     }
 
 // and one already made, for render.military.MilitaryClutter's gear laid on its back

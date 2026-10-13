@@ -113,6 +113,7 @@ class FacilityArea implements Area3D
   var margin:Array<render.Models.InstancedProp> = []; // a military base's wild margin, culled like green
   var yardKit:Array<render.Models.InstancedProp> = []; // a military base's instanced bags, crates, drums and containers, in `margin` too, and they cast
   var depot:render.military.MilitaryStacks = null; // its container stacks, NOT in `margin`: they fade off the sightline
+  var armory:Array<render.military.MilitaryGeom.ArmoryShell> = []; // its lockers', gun cabinet's and safe's outline shells
   var hangar:FacilityHangar.Hangar; // the shed's podium, its cable fan and its floor decals
   // what stands on the roofs. NOT in `green`, and that is the one thing separating it: `green` is
   // culled by the frustum alone, while these two also have to go when the deck they stand on fades
@@ -379,6 +380,7 @@ class FacilityArea implements Area3D
           margin = margin.concat(yardKit);
           depot = render.military.MilitaryGeom.depot;
           yardKit = yardKit.concat(depot.batches());
+          armory = render.military.MilitaryGeom.armory;
         }
       // and now that every family that stands something against a WALL has placed, the halos those
       // things lay on the masonry behind them. after the damp band and the corner strips, which is
@@ -787,6 +789,7 @@ class FacilityArea implements Area3D
       // cull() reads opts.outro itself; the outline shells are a tactical READOUT, so a hidden HUD
       // takes them with it
       render.world.ObjModels.cull(props, opts, tactical && opts.ui, all);
+      render.military.MilitaryGeom.cullShells(armory, opts, tactical && opts.ui);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
       // their glbs arrive over a loader callback, so there is no build-time moment to catch them.

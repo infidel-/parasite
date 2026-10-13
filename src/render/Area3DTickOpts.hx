@@ -28,4 +28,6 @@ typedef Area3DTickOpts = {
   camera:PerspectiveCamera,
   // HUD up (Shift+Space hides it): the props' tactical outline shells are UI and go with it
   ui:Bool,
+  // the object the hover pick is on (render.View.hover), or null: its outline shell shows too
+  hover:objects.AreaObject,
 };

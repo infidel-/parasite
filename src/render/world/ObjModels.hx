@@ -527,6 +527,8 @@ class ObjModels
   // the sewer lamp shadow maps are STATIC (re-rendered only when a caster changes owner), so a prop
   // packed out at the wrong moment would lose its shadow from that map until the next hand-off
   static inline var CULL_R = CityConfig.CELL * 3;
+  // the batches the last build() made: the live area's, which is the only one drawing (see standsAt)
+  static var built:Array<PropBatch> = [];
 
   // does the area kind on screen BUILD these batches at all?
   //
@@ -1477,6 +1479,7 @@ class ObjModels
             t: 0.0,
           });
         }
+      built = out;
       return out;
     }
 
@@ -1523,6 +1526,31 @@ class ObjModels
         }
     }
 
+// where the prop of this row standing on this cell actually is (a WALL-yawed one is pushed off its
+// cell by its row's `off`), for render.Actors.pickTarget, or null. read off the last build, which is
+// the live area's: the pick only asks about objects the live view draws
+  public static function standsAt(col:Int, row:Int, m:ObjModel):Vector3
+    {
+      for (b in built)
+        if (b.model == m)
+          for (i in 0...b.cells.length)
+            if (b.cells[i].col == col &&
+                b.cells[i].row == row)
+              return b.solid.centres[i];
+      return null;
+    }
+
+// is the hover pick on the object standing at this cell? its outline shell shows then as it does in
+// the tactical view, and goes with the HUD like the tooltip does. render.military.MilitaryGeom's
+// armory shells ask it too
+  public static inline function hovered(opts:Area3DTickOpts, cell:{ col:Int, row:Int }):Bool
+    {
+      return (opts.ui &&
+        opts.hover != null &&
+        opts.hover.x == cell.col &&
+        opts.hover.y == cell.row);
+    }
+
 // per-frame prop pass: fade the prop the player is STANDING on to see-through so its body does not
 // hide the sprite (the tunnel camera looks near straight down and the exit ladder is a whole cell
 // tall), show the outline shells while the tactical view is up, then repack all three batches for the
@@ -1565,7 +1593,9 @@ class ObjModels
               var g = i == b.ghostIdx && (idx >= 0 || b.t > 0);
               b.ghostMask[i] = g;
               b.solidMask[i] = !g || b.model.ghostPart == true;
-              b.hullMask[i] = tactical;
+              b.hullMask[i] = tactical ||
+                (hovered(opts, b.cells[i]) &&
+                 modelFor(opts.hover.getModelKey()) == b.model);
             }
           // one opacity for the batch is correct BECAUSE only one placement can be mid-fade. a true
           // cross-dissolve is impossible here and must not be attempted: the solid material is shared

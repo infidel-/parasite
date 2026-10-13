@@ -19,6 +19,14 @@ import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 import render.Models.PropPlace;
 import render.Models.InstancedProp;
+import render.Area3DTickOpts;
+
+// one armory glb's outline shells, for MilitaryGeom.cullShells
+typedef ArmoryShell = {
+  hull:InstancedProp,                   // the HULL batch over every placement of this glb
+  cells:Array<{ col:Int, row:Int }>,    // the object cell of each placement, index-aligned with it
+  mask:Array<Bool>,                     // which placements show this frame, repacked by cullShells
+};
 
 // a military base's own furniture, emitted as quads off the saved grid (gen.military.MilitaryGen's
 // row-19 tiles) and off its armory objects: the chain-link perimeter with its posts and razor wire,
@@ -141,6 +149,10 @@ class MilitaryGeom
   // and the stacks they stand in, which the depot fades off the player's sightline
   static var stacks:Array<MilitaryStacks.Stack>;
   public static var depot:MilitaryStacks;
+  // the armory objects' outline shells (see shells()), which the area's tick masks and culls
+  public static var armory:Array<ArmoryShell> = [];
+  // and their frustum-cull radius, render.world.ObjModels' for its props
+  static inline var SHELL_CULL_R = CityConfig.CELL * 3;
 
 // emit the whole base. runs BEFORE ContactMask.repaint in render.facility.FacilityArea.build: every
 // unit here registers its footprint with the contact shadow. returns the ground's sandbag batch,
@@ -220,13 +232,7 @@ class MilitaryGeom
       MilitaryYard.build(scene, m, area);
       // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
       // ponytail: drawn shut whatever their state, an open one is told by its tooltip
-      for (o in area.getObjects())
-        if (o.type == 'locker' ||
-            o.type == 'gunCabinet')
-          locker(m, o.x, o.y, (o.type == 'locker' ? RenderConfig.MODELS.militaryLocker :
-            RenderConfig.MODELS.militaryGunCabinet));
-        else if (o.type == 'safe')
-          safe(m, o.x, o.y);
+      armory = shells(scene, m, area);
       // after the lockers, whose tops are lids too
       MilitaryClutter.build(scene, m, area, MilitaryInterior.lids);
       // they all cast: a jersey, a tent or a tower under the moon with no shadow read as pasted on
@@ -640,13 +646,14 @@ class MilitaryGeom
 
 // an armory locker bank or the gun cabinet, as its glb with its back to its wall, on its object's cell
 // or on a gun locker tile (render.military.MilitaryInterior)
-  public static function locker(m:Facility, col:Int, row:Int, path:String):Void
+  public static function locker(m:Facility, col:Int, row:Int, path:String):PropPlace
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)
-        return;
+        return null;
       var r = CorpFurniture.lockerRect(m, col, row, dir);
-      MilitaryInterior.put(path, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], 0.0);
+      var p = MilitaryInterior.put(path, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir],
+        0.0);
       // its top takes clutter, 2D and a piece of gear ("top of the locker needs clutter spots")
       MilitaryInterior.top((r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2, MilitaryInterior.YAW[dir], LOCKER_TOP_W,
         LOCKER_TOP_D, MilitaryInterior.LOCKER_H, LOCKER, []);
@@ -658,15 +665,84 @@ class MilitaryGeom
         rect: r,
         h: MilitaryInterior.LOCKER_H,
       });
+      return p;
+    }
+
+// stand the armory's objects, each with the outline shell an object prop wears (Models HULL, see
+// render.world.ObjModels): their glbs go into render.military.MilitaryInterior's plain batches, so
+// nothing else outlines them. one shell batch per glb, its cells in step with its placements
+  static function shells(scene:Scene, m:Facility, area:AreaGame):Array<ArmoryShell>
+    {
+      var md = RenderConfig.MODELS;
+      var byPath = new Map<String, { places:Array<PropPlace>, cells:Array<{ col:Int, row:Int }> }>();
+      for (o in area.getObjects())
+        {
+          var path = switch (o.type)
+            {
+              case 'locker': md.militaryLocker;
+              case 'gunCabinet': md.militaryGunCabinet;
+              case 'safe': md.militarySafe;
+              default: null;
+            };
+          if (path == null)
+            continue;
+          var p = (o.type == 'safe' ? safe(m, o.x, o.y) : locker(m, o.x, o.y, path));
+          if (p == null)
+            continue;
+          if (!byPath.exists(path))
+            byPath.set(path, {
+              places: [],
+              cells: [],
+            });
+          byPath.get(path).places.push(p);
+          byPath.get(path).cells.push({
+            col: o.x,
+            row: o.y,
+          });
+        }
+      // at the height MilitaryInterior instances the solid at, or the shell would not fit it
+      var C = RenderConfig.OBJMARK;
+      return [for (k in MilitaryInterior.warmProps())
+        if (byPath.exists(k.path))
+          {
+            hull: Models.instanced(scene, k.path, byPath.get(k.path).places, k.h, HULL(C.color, C.hullW)),
+            cells: byPath.get(k.path).cells,
+            mask: [for (_ in byPath.get(k.path).cells) false],
+          }];
+    }
+
+// where the armory object on this cell stands (its glb backs onto the wall, off the cell centre), for
+// render.Actors.pickTarget, or null. ask it only on a base (see draws): `armory` is the last base's
+  public static function standsAt(col:Int, row:Int):Vector3
+    {
+      for (s in armory)
+        for (i in 0...s.cells.length)
+          if (s.cells[i].col == col &&
+              s.cells[i].row == row)
+            return s.hull.centres[i];
+      return null;
+    }
+
+// show the armory's shells as render.world.ObjModels.cull shows a prop's: in the tactical view and
+// under the cursor. once per frame from the area's tick
+  public static function cullShells(shells:Array<ArmoryShell>, opts:Area3DTickOpts, tactical:Bool):Void
+    {
+      for (s in shells)
+        {
+          for (i in 0...s.cells.length)
+            s.mask[i] = tactical ||
+              render.world.ObjModels.hovered(opts, s.cells[i]);
+          Models.cull(s.hull, opts.camera, SHELL_CULL_R, s.mask);
+        }
     }
 
 // the HQ's safe: its glb against its wall, on the locker's footprint narrowed to its width round the
 // cell's centre and cut to its depth off the wall
-  static function safe(m:Facility, col:Int, row:Int):Void
+  static function safe(m:Facility, col:Int, row:Int):PropPlace
     {
       var dir = CorpFurniture.lockerBack(m, col, row);
       if (dir < 0)
-        return;
+        return null;
       var cell = CorpFurniture.lockerRect(m, col, row, dir);
       var cx = (cell.x0 + cell.x1) / 2;
       var cz = (cell.z0 + cell.z1) / 2;
@@ -678,7 +754,7 @@ class MilitaryGeom
           case 2: { x0: cell.x0, x1: cell.x0 + SAFE_D, z0: cz - hw, z1: cz + hw };
           default: { x0: cell.x1 - SAFE_D, x1: cell.x1, z0: cz - hw, z1: cz + hw };
         };
-      MilitaryInterior.put(RenderConfig.MODELS.militarySafe, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
+      var p = MilitaryInterior.put(RenderConfig.MODELS.militarySafe, (r.x0 + r.x1) / 2, (r.z0 + r.z1) / 2,
         MilitaryInterior.YAW[dir], 0.0);
       MilitaryInterior.shade(m, {
         col: col,
@@ -688,6 +764,7 @@ class MilitaryGeom
         rect: r,
         h: MilitaryInterior.SAFE_H,
       });
+      return p;
     }
 
 // the helipad's concrete over a rect of cells from its top-left one, a whisker over the lot

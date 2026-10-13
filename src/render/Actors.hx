@@ -31,6 +31,8 @@ typedef ActorOpts = {
   @:optional var walls:Array<render.world.WorldCtx.WallMount>; // the object is mounted IN a wall (a
                                     // vent grille): hang it on the faces instead of standing it on
                                     // the cell, one pass each (see WorldCtx.wallMounts)
+  @:optional var ring:Null<Int>;    // the cursor is on it: its hover outline in this colour
+                                    // (render.View.hover, RenderConfig.HOVER)
 }
 
 // what the hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
@@ -101,6 +103,9 @@ class Actors {
   var _pObj = 0.0; var _pAI = 0.0; var _pPass = 0.0;   // accumulated ms: objects, AI, my passes
 
   static final NO_OPTS:ActorOpts = {};                 // shared empty override set (read-only) for a bare drawActor
+  static final HOVER_AI:ActorOpts = {                    // the AI the cursor is on: its cyan ring (read-only)
+    ring: RenderConfig.HOVER.aiColor,
+  };
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
   static inline var TURN_SPEED = 2.0;                  // facing flip eases at this * base speed (full turn ~1 BASE_MS)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
@@ -199,6 +204,9 @@ class Actors {
       lastState = st;
 
       var tp = haxe.Timer.stamp();
+      // what the cursor is on (render.View.hover, picked ahead of this pass): it is outlined, and
+      // like every other mark it goes with the HUD
+      var hov = (uiOn ? game.scene.view3d.hover : null);
       // objects (sewer hatches etc.): static, but still fade. parasite keeps seeing
       // sensable objects outside LOS
       for (o in game.area.getObjects())
@@ -277,6 +285,7 @@ class Actors {
               // cheerful in a dark lab. asked the same way, 1.0 for everything else
               texSat: render.facility.FacilityDeco.spriteSat(game.area, o),
               mark: o.visible() && uiOn,
+              ring: (hov != null && hov.obj == o ? RenderConfig.OBJMARK.color : null),
               iconOff: render.world.ObjModels.propFor(o.getModelKey()) != null ||
                 render.facility.FacilityDoors.draws(game.area, o) ||
                 render.facility.FacilityDeco.draws(game.area, o) ||
@@ -296,7 +305,7 @@ class Actors {
             var vis =
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
-            drawActor(ai.entity, vis, dtMs);
+            drawActor(ai.entity, vis, dtMs, (hov != null && hov.ai == ai ? HOVER_AI : null));
             if (vis &&
                 uiOn)
               {
@@ -584,7 +593,21 @@ class Actors {
           var m = render.world.ObjModels.propFor(o.getModelKey());
           var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
           var fy = WorldCtx.floorY(a.col, a.row);
-          var d = projSeg(a.x, a.z, fy, fy + top, rect, clientX, clientY);
+          // where it is DRAWN, which is not always its cell centre: the resting offset is part of the
+          // pose (a fitting off its wall face, a clue on a desk top — LampShadows reads it the same
+          // way), and a prop stands where its placement put it — a WALL-yawed one is pushed off the
+          // cell by its row's `off`, and a base's armory glb backs onto its wall, 2.4 off the centre
+          var ax = a.x + a.offx;
+          var az = a.z + a.offz;
+          var c = (render.military.MilitaryGeom.draws(game.area, o) ?
+            render.military.MilitaryGeom.standsAt(o.x, o.y) :
+            (m != null ? render.world.ObjModels.standsAt(o.x, o.y, m) : null));
+          if (c != null)
+            {
+              ax = c.x;
+              az = c.z;
+            }
+          var d = projSeg(ax, az, fy, fy + top, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
@@ -899,6 +922,8 @@ class Actors {
                   yaw: 0.0,
                   order: Sprites.ORD_ACTOR,
                   faceRotY: wm.rotY,
+                  ring: o.ring,
+                  ringPx: hoverPx(wm.scale),
                 });
               if (o.iconOff == true)
                 continue;
@@ -1005,7 +1030,25 @@ class Actors {
           flat: flat,
           yaw: yaw,
           order: order,
+          ring: o.ring,
+          ringPx: hoverPx(baseScale),
         });
+      // an AI the cursor is on carries no marks, so its outline is painted here, at the same resolved
+      // pose: it rides a shake or a lunge with the sprite, mirrored with it
+      else if (o.ring != null &&
+          o.iconOff != true)
+        paintRing({
+          e: e,
+          op: a.op,
+          x: wx,
+          y: wy,
+          z: wz,
+          scale: sc,
+          flat: flat,
+          yaw: yaw,
+          order: order,
+          faceX: a.face,
+        }, o.ring, hoverPx(baseScale), o.ring);
       // an object drawn as a real 3D prop has no icon quad — it would stand inside the prop
       if (o.iconOff == true)
         return;
@@ -1028,7 +1071,8 @@ class Actors {
     }
 
 // paint the two teal marks over a world object's own sprite pose: the outline ring (only while the
-// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette.
+// tactical view is up — the icon art stays readable inside it — or the cursor is on it) and the
+// through-wall silhouette.
 // NOT called for an object backed by a 3D prop — both marks are carved from the ATLAS CELL, so they
 // would trace the 2D art around a prop that looks nothing like it (see the call site),
 // which depthFunc = GreaterDepth restricts to wherever a building hides the object from the camera,
@@ -1039,26 +1083,10 @@ class Actors {
     {
       var C = RenderConfig.OBJMARK;
       var e = o.e;
-      if (tactical)
-        {
-          var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, C.outlinePx, e.skinColor);
-          if (ring != null)
-            sprites.paint({
-              x: o.x,
-              y: o.y,
-              z: o.z,
-              tex: ring.tex,
-              op: o.op,
-              scale: o.scale * ring.scale,
-              flat: o.flat,
-              faceRotY: o.faceRotY,
-              order: o.order,
-              emissive: C.color,
-              emissiveInt: C.emissive,
-              yaw: o.yaw,
-              shadow: false,
-            });
-        }
+      if (o.ring != null)
+        paintRing(o, o.ring, o.ringPx, o.ring);
+      else if (tactical)
+        paintRing(o, C.color, C.outlinePx, 0xffffff);
       var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
         C.fill, C.hatchSpacing, C.hatchThick, e.skinColor);
       if (sil == null)
@@ -1077,6 +1105,44 @@ class Actors {
         emissiveInt: C.emissive,
         yaw: o.yaw,
         depthFunc: THREE.GreaterDepth,
+        shadow: false,
+      });
+    }
+
+// the hover ring's width for a sprite drawn at this scale, in the 64 px-cell pixels outlineTex takes:
+// HOVER.width is in world units, so a small item's ring is not thinner than an AI's. off the RESTING
+// scale and not an effect's, which would key a new ring texture every frame of a lunge
+  static inline function hoverPx(scale:Float):Float
+    {
+      return RenderConfig.HOVER.width * 64 / (Sprites.SIZE * scale);
+    }
+
+// the glowing band hugging a sprite's silhouette at its pose (Sprites.outlineTex): the tactical
+// view's object ring and the hover outline, `px` wide in a 64 px cell's pixels and glowing `color`.
+// `fill` is the band's own colour: the hover outline is filled with its glow, or the scene light
+// washed the cyan round an AI to white. a UI overlay like the rest of the marks, so it samples no
+// shadow, and it shares the sprite's renderOrder: the band lies only OUTSIDE the silhouette, so it
+// never covers the sprite it frames
+  function paintRing(o:ObjMarkOpts, color:Int, px:Float, fill:Int):Void
+    {
+      var e = o.e;
+      var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, px, e.skinColor, fill);
+      if (ring == null)
+        return;
+      sprites.paint({
+        x: o.x,
+        y: o.y,
+        z: o.z,
+        tex: ring.tex,
+        op: o.op,
+        scale: o.scale * ring.scale,
+        flat: o.flat,
+        faceRotY: o.faceRotY,
+        faceX: o.faceX,
+        order: o.order,
+        emissive: color,
+        emissiveInt: RenderConfig.OBJMARK.emissive,
+        yaw: o.yaw,
         shadow: false,
       });
     }

@@ -594,10 +594,15 @@ class Sprites {
 // its 8 neighbour offsets to dilate the alpha outward, then punched back out at the centre and
 // flooded white — what is left is a tintable band hugging the silhouette. the inset is what keeps
 // the ring inside the crop for art that fills the frame; the returned scale undoes it at paint
-// time. null until the atlas image decodes (retry next frame, like tex())
-  public function outlineTex(imageName:String, ix:Int, iy:Int, male:Bool, px:Float, skin:Int = 0):OutlineSprite
+// time. `px` is in pixels of a 64 px cell and grows with a bigger one, so a ring is as wide in the
+// world round a 128 px actor or a 256 px pack cell as round a 64 px item. `fill` is the band's own
+// colour: white leaves it all to the paint-time emissive tint, which the scene light then washes
+// toward white, so a ring that must read as its colour is filled with it. null until the atlas image
+// decodes (retry next frame, like tex())
+  public function outlineTex(imageName:String, ix:Int, iy:Int, male:Bool, px:Float, skin:Int = 0,
+      fill:Int = 0xffffff):OutlineSprite
     {
-      var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin;
+      var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin + ':' + fill;
       if (outlineCache.exists(key)) return outlineCache.get(key);
       var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
@@ -606,6 +611,7 @@ class Sprites {
           img.naturalWidth <= 0)
         return null;
       var t = src.t;
+      px *= t / 64;
       var dw = t - 2 * px;                                 // inset content edge (fractional px allowed)
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
@@ -623,10 +629,10 @@ class Sprites {
       // punch the sprite itself back out, leaving only the band outside its silhouette
       cx.globalCompositeOperation = 'destination-out';
       cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, px, px, dw, dw);
-      // flood what remains white, so the paint-time emissive tint owns the color (the soft alpha
-      // edge survives — source-in multiplies the fill by the ring's own alpha)
+      // flood what remains with the fill, white by default so the paint-time emissive tint owns the
+      // color (the soft alpha edge survives — source-in multiplies the fill by the ring's own alpha)
       cx.globalCompositeOperation = 'source-in';
-      cx.fillStyle = '#ffffff';
+      cx.fillStyle = '#' + StringTools.hex(fill, 6);
       cx.fillRect(0, 0, t, t);
       cx.globalCompositeOperation = 'source-over';
       var tex = mkTex(cv);
