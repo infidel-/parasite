@@ -1061,6 +1061,30 @@ class RenderConfig {
     // and its freight lift (models-src/lab/lift_build.py, render.lab.LabLift)
     labLiftDeck: 'models/lab/lift-deck.glb',                // the car, lowered in on arrival
     labLiftShaft: 'models/lab/lift-shaft.glb',              // guide rails, head frame, sheave, ropes
+    // its furniture, one cell wide and front to +z (models-src/lab/labkit_build.py, render.lab.LabInterior)
+    labBench: 'models/lab/lab-bench.glb',                   // epoxy-top lab table, drawer pedestal
+    labWorkbench: 'models/lab/lab-workbench.glb',           // butcher-block bench, upstand, vice
+    labDesk: 'models/lab/lab-desk.glb',                     // computer desk under the facility workstation
+    labShelf: 'models/lab/lab-shelf.glb',                   // tall stocked shelving
+    labShelfLow: 'models/lab/lab-shelf-low.glb',            // low closed bookcase
+    labShelfRow: 'models/lab/lab-shelf-row.glb',            // a store's free-standing double-sided row
+    labCrate: 'models/lab/lab-crate.glb',                   // one stencilled crate, stacked by placement
+    labLocker: 'models/lab/lab-locker.glb',                 // a bank of three lockers
+    labSeat: 'models/lab/lab-seat.glb',                     // two waiting-room seats on a beam
+    labHazmat: 'models/lab/lab-hazmat.glb',                 // suit rack: pegboard, hanger rail, boot plate
+    labFridge: 'models/lab/lab-fridge.glb',                 // specimen refrigerator
+    labDrum: 'models/lab/lab-drum.glb',                     // one biohazard chemical drum
+    // and its box machines (models-src/lab/boxkit_build.py), front to +z, centred on the footprint
+    labBoxSr203: 'models/lab/lab-box-sr203.glb',
+    labBoxVault: 'models/lab/lab-box-vault.glb',
+    labBoxDrawercab: 'models/lab/lab-box-drawercab.glb',
+    labBoxRadlocker: 'models/lab/lab-box-radlocker.glb',
+    labBoxDrawers: 'models/lab/lab-box-drawers.glb',
+    labBoxColdbank: 'models/lab/lab-box-coldbank.glb',
+    labBoxPowerbox: 'models/lab/lab-box-powerbox.glb',
+    labBoxLeverbox: 'models/lab/lab-box-leverbox.glb',      // hung on the wall at 1.3, conduit up
+    labBoxControlbox: 'models/lab/lab-box-controlbox.glb',  // on a post at the wall, conduit up
+    labContainer: 'models/lab/lab-container.glb',           // the store's sealed biohazard container
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements

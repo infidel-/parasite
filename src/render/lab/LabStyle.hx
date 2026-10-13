@@ -95,6 +95,10 @@ class LabStyle
   public static inline var LIFT_MULT = 16.0;
   public static inline var LIFT_CULL_R = 10.0;
 
+  // ---- the furniture and the box machines (render.lab.LabInterior): a piece's cull radius about its
+  // placement, the container's half-diagonal and its height
+  public static inline var PIECE_CULL_R = 9.0;
+
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)
   public static inline var DARK = 0x040608;

@@ -7713,6 +7713,414 @@
       "last_converted": "2026-10-14T00:41:36",
       "built_linear": 0.0307,
       "built_srgb": 45.6
+    },
+    "lab/kit-epoxy": {
+      "src": "lab/kit-steel.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-steel.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: laboratory table top, dark slate epoxy worktop with ring stains and splash marks [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles.",
+      "crop": [
+        2,
+        2,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:42:30",
+      "built_linear": 0.0292,
+      "built_srgb": 47.6
+    },
+    "lab/kit-carcass": {
+      "src": "lab/kit-steel.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-steel.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: furniture steel carcass, powder-coated cold blue-grey sheet steel [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles.",
+      "crop": [
+        514,
+        2,
+        508,
+        508
+      ],
+      "last_converted": "2026-10-14T01:42:30",
+      "built_linear": 0.0513,
+      "built_srgb": 64.7
+    },
+    "lab/kit-drawers": {
+      "src": "lab/kit-steel.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-steel.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: a 4x4 grid of steel drawer fronts with recessed pulls and label slots [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles at the drawer pitch.",
+      "crop": [
+        2,
+        516,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:42:30",
+      "built_linear": 0.0359,
+      "built_srgb": 52.1
+    },
+    "lab/kit-butcher": {
+      "src": "lab/kit-steel.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-steel.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: heavy workbench top, butcher-block hardwood strips, oiled and gouged [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles.",
+      "crop": [
+        514,
+        516,
+        508,
+        508
+      ],
+      "last_converted": "2026-10-14T01:42:30",
+      "built_linear": 0.0289,
+      "built_srgb": 45.6
+    },
+    "lab/kit-shelfplate": {
+      "src": "lab/kit-storage.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-storage.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: perforated galvanised steel shelf plate, regular round holes [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:43:19",
+      "built_linear": 0.0798,
+      "built_srgb": 78.1
+    },
+    "lab/kit-stocked": {
+      "src": "lab/kit-storage.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-storage.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: a stocked lab shelf front, binders, sample boxes and specimen tubs [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. One shelf row and parts of the two either side; mapped by band.",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:43:19",
+      "built_linear": 0.0443,
+      "built_srgb": 52.2
+    },
+    "lab/kit-lockers": {
+      "src": "lab/kit-storage.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-storage.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: four narrow olive-grey steel locker doors with vents, padlock latches, number plates [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Four doors across: a one-cell bank wears half.",
+      "crop": [
+        2,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:43:19",
+      "built_linear": 0.0467,
+      "built_srgb": 57.1
+    },
+    "lab/kit-crate": {
+      "src": "lab/kit-storage.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-storage.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: olive-drab stencilled plywood crate panel, rope-handle cut-out, corner battens [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. One crate face, mapped 0..1.",
+      "crop": [
+        516,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:43:19",
+      "built_linear": 0.045,
+      "built_srgb": 55.5
+    },
+    "lab/kit-vinyl": {
+      "src": "lab/kit-misc.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-misc.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: cracked dark teal quilted vinyl seat upholstery [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:06",
+      "built_linear": 0.0307,
+      "built_srgb": 45.3
+    },
+    "lab/kit-pegboard": {
+      "src": "lab/kit-misc.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-misc.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: pale yellow-grey steel pegboard with a hazard band, the hazmat rack backboard [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Tiles horizontally.",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:06",
+      "built_linear": 0.166,
+      "built_srgb": 104.5
+    },
+    "lab/kit-fridge": {
+      "src": "lab/kit-misc.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-misc.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: ONE PANEL: a specimen refrigerator door, frosted window over sample racks, handle, readout [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Mapped 0..1 over the fridge front.",
+      "crop": [
+        2,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:06",
+      "built_linear": 0.142,
+      "built_srgb": 91.8
+    },
+    "lab/kit-drum": {
+      "src": "lab/kit-misc.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-misc.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: mustard chemical drum side, two rolling hoops, biohazard trefoil [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/labkit_build.py. Lathe-mapped round the drum.",
+      "crop": [
+        516,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:06",
+      "built_linear": 0.1049,
+      "built_srgb": 76.9
+    },
+    "lab/kit-corrugated": {
+      "src": "lab/kit-container.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-container.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: vertically corrugated oxide-red container side wall [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/container_build.py. Tiles.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:54",
+      "built_linear": 0.0344,
+      "built_srgb": 50.5
+    },
+    "lab/kit-doors": {
+      "src": "lab/kit-container.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-container.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: ONE PANEL: container door end, two doors, four locking bars, lock box, hazard stripe [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/container_build.py. Mapped 0..1 over the door end.",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:54",
+      "built_linear": 0.0334,
+      "built_srgb": 48.7
+    },
+    "lab/kit-roof": {
+      "src": "lab/kit-container.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-container.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: pressed oxide-red container roof panel, transverse ribs, water stains [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/container_build.py. Tiles.",
+      "crop": [
+        2,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:54",
+      "built_linear": 0.0359,
+      "built_srgb": 52.6
+    },
+    "lab/kit-biopanel": {
+      "src": "lab/kit-container.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-container.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: ONE PANEL: corrugated side panel with a stencilled biohazard trefoil and BIO-07 [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/container_build.py. Mapped 0..1 on the long sides' middle panel.",
+      "crop": [
+        516,
+        516,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:44:54",
+      "built_linear": 0.0441,
+      "built_srgb": 53.8
+    },
+    "lab/box-vault": {
+      "src": "lab/kit-boxes-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: ONE PANEL: heavy steel specimen vault front, round door, spoked wheel [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the vault.",
+      "crop": [
+        2,
+        2,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:45:51",
+      "built_linear": 0.03,
+      "built_srgb": 45.8
+    },
+    "lab/box-coldbank": {
+      "src": "lab/kit-boxes-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: ONE PANEL: quarantine cold-storage bank, three frosted hatches with readouts [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the cold bank.",
+      "crop": [
+        518,
+        2,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:45:51",
+      "built_linear": 0.1184,
+      "built_srgb": 90.4
+    },
+    "lab/box-drawercab": {
+      "src": "lab/kit-boxes-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: ONE PANEL: specimen drawer cabinet, 5x6 numbered drawers [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the drawer cabinet (and the one-cell drawers, by half).",
+      "crop": [
+        2,
+        510,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T01:45:51",
+      "built_linear": 0.0466,
+      "built_srgb": 53.6
+    },
+    "lab/box-powerbox": {
+      "src": "lab/kit-boxes-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: ONE PANEL: power distribution box, breakers, two rotary isolators, warnings [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the power box.",
+      "crop": [
+        520,
+        512,
+        502,
+        502
+      ],
+      "last_converted": "2026-10-14T01:45:51",
+      "built_linear": 0.031,
+      "built_srgb": 44.8
+    },
+    "lab/box-sr203": {
+      "src": "lab/kit-boxes-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: ONE PANEL: SR-203 sealed sample cube front, bolted hatch, amber lamp [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the SR-203 cube.",
+      "crop": [
+        2,
+        2,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:46:41",
+      "built_linear": 0.0257,
+      "built_srgb": 41.8
+    },
+    "lab/box-radlocker": {
+      "src": "lab/kit-boxes-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: ONE PANEL: yellow radiation storage locker door, trefoil, padlocked latch [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the radiation locker.",
+      "crop": [
+        516,
+        2,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:46:41",
+      "built_linear": 0.1161,
+      "built_srgb": 77.4
+    },
+    "lab/box-leverbox": {
+      "src": "lab/kit-boxes-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: ONE PANEL: lever junction box, three red pull levers, cable glands [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the lever box.",
+      "crop": [
+        2,
+        512,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:46:41",
+      "built_linear": 0.0493,
+      "built_srgb": 58.4
+    },
+    "lab/box-controlbox": {
+      "src": "lab/kit-boxes-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-boxes-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: ONE PANEL: control box, green monochrome screen, push buttons, key switch, stop button [append textures.json style]",
+      "prompt_exact": false,
+      "note": "packed into a model sheet by tools/modelsheet.py for models-src/lab/boxkit_build.py. Front of the control box.",
+      "crop": [
+        518,
+        512,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T01:46:41",
+      "built_linear": 0.0234,
+      "built_srgb": 38.9
     }
   }
 }
