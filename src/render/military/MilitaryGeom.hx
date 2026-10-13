@@ -710,6 +710,10 @@ class MilitaryGeom
           });
           byPath.get(path).objects.push(cast o);
         }
+      // and what lies inside the lockers and the safe, behind their leaves
+      MilitaryClutter.insides(scene,
+        (byPath.exists(md.militaryLocker) ? byPath.get(md.militaryLocker).places : []),
+        (byPath.exists(md.militarySafe) ? byPath.get(md.militarySafe).places : []));
       MilitaryDoors.reset();
       var out = [];
       // at the height MilitaryInterior instances the solid at, or the shell would not fit it

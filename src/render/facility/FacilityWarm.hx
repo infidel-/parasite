@@ -77,6 +77,11 @@ class FacilityWarm
       // a hitch whether or not anything had to compile. The demo model's two bench blocks take a sink
       // each and have cells left over, so this really does emit
       FacilityClutter.build(sc, model);
+      // and a base armory's inside clutter, that same cut lambert with vertexColors (its pockets' depth
+      // shading, render.military.MilitaryClutter.insides), which three folds into the key
+      if (ghosts != null &&
+          Lambda.exists(ghosts, function(g) return g.doors == true))
+        render.military.MilitaryClutter.warmInside(sc);
       // the room furniture, which is TWO program permutations the shell above does not cover — the
       // three families share one lambert but the shelving's is DOUBLE_SIDED, which three folds into
       // the program key — plus the rack lights' own patched additive material. the demo model stamps

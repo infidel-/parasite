@@ -3,6 +3,7 @@ package render.military;
 import three.Three;
 import citygen.CityConfig;
 import game.AreaGame;
+import render.Models.PropPlace;
 import render.Textures;
 import render.facility.ClutterSlot;
 import render.facility.ClutterSlot.ClutterSlotTools;
@@ -61,6 +62,24 @@ typedef MilitaryLid = {
   row:Int,
   // boxes in the lid's own frame already taken, the comms desk's radio set
   claims:Array<ClutterSlot>,
+};
+
+// one pocket behind an armory piece's leaves (models-src/military/roomkit_build.py's THE INSIDES), in
+// its placed glb's frame, and what lies in it (MilitaryClutter.insides)
+typedef ArmoryPocket = {
+  // its two side walls, local x
+  x0:Float,
+  x1:Float,
+  // its mouth and its back wall, local z
+  mouth:Float,
+  back:Float,
+  // the height of its floor, of its shelf's top and of the shelf's underside
+  floor:Float,
+  shelf:Float,
+  under:Float,
+  // the inside sheet's cells that lie flat in it, and how far one turns off square
+  flat:Array<Int>,
+  turn:Float,
 };
 
 // the small FLAT things lying about a base's rooms: paperwork on the HQ desks, trays and cutlery on
@@ -178,6 +197,66 @@ class MilitaryClutter
   // where the clues game.AreaGame lays on the base's furniture rest, by cell (key): the top's point
   // nearest the cell centre and its height. read by the actor pose through groundY and standOff
   static var rests = new Map<Int, { x:Float, z:Float, y:Float }>();
+
+  // THE INSIDES of the armory's lockers and safe: their own pack16, cells 0-5 laid on a locker's floor
+  // and hat shelf, 6-9 hung on its walls, 10-15 in the safe ("add some random 2d decals in lockers and
+  // safe", "we also want some locker wall clutter"). The pockets are roomkit_build.py's, less the bbox
+  // centre render.Models.normalize takes off each glb (locker 0.03, safe 0.035, on z)
+  static inline var INSIDE_TEX = 'textures/military/locker-clutter.png';
+  static var LOCKER_POCKETS:Array<ArmoryPocket> = [
+    {
+      x0: -1.82,
+      x1: -0.10,
+      mouth: 0.62,
+      back: -0.43,
+      floor: 0.31,
+      shelf: 3.25,
+      under: 3.2,
+      flat: [ 0, 1, 2, 3, 4, 5 ],
+      turn: 0.6,
+    },
+    {
+      x0: 0.10,
+      x1: 1.82,
+      mouth: 0.62,
+      back: -0.43,
+      floor: 0.31,
+      shelf: 3.25,
+      under: 3.2,
+      flat: [ 0, 1, 2, 3, 4, 5 ],
+      turn: 0.6,
+    },
+  ];
+  static var SAFE_POCKET:ArmoryPocket = {
+    x0: -0.70,
+    x1: 0.70,
+    mouth: 0.765,
+    back: -0.435,
+    floor: 0.28,
+    shelf: 1.0286,
+    under: 0.9786,
+    flat: [ 10, 11, 12, 13, 14, 15 ],
+    turn: 0.3,
+  };
+  // the cells a locker hangs on its walls
+  static var LOCKER_WALL = [ 6, 7, 8, 9 ];
+  // each cell's drawn size, the 70% its art fills taken to the real thing at the half-metre unit: a
+  // folded shirt 30 cm, a photo 12, a ring of keys 14
+  static var INSIDE_SZ = [ 0.9, 0.85, 0.55, 0.75, 0.6, 0.65, 0.4, 0.45, 0.5, 0.65, 0.6, 0.85, 0.75, 0.4,
+    0.55, 0.65 ];
+  // how far a thing keeps off a pocket's walls, and a picture's lowest edge over the floor, its
+  // stand-off from the wall, how far a side wall's keeps from the mouth and how far it tilts
+  static inline var INSIDE_GAP = 0.06;
+  static inline var HANG_Y = 1.3;
+  static inline var HANG_OFF = 0.01;
+  static inline var HANG_MOUTH = 0.15;
+  static inline var HANG_ROLL = 0.25;
+  // what a pocket keeps of its colour at its mouth and at its back: roomkit_build.py's POCKET_MOUTH and
+  // POCKET_DARK, which its walls carry in COLOR_0, so a thing lying in it darkens as the floor under it
+  static inline var POCKET_MOUTH = 0.55;
+  static inline var POCKET_DARK = 0.12;
+  // the inside mesh being built
+  static var inside:MeshBuf;
 
 // every decal in the base's rooms, one mesh per room kind. returns how many landed
   public static function build(scene:Scene, m:Facility, area:AreaGame, lids:Array<MilitaryLid>):Int
@@ -558,8 +637,137 @@ class MilitaryClutter
         [u0, v0, u1, v0, u1, v1, u0, v1]);
     }
 
-// one sheet's decals as one mesh, FacilityClutter.add's material and for its reasons
-  static function add(scene:Scene, b:MeshBuf, tex:String):Void
+// the small things in the armory's lockers and its safe, one mesh off their own sheet: on a pocket's
+// floor and its shelf, and on a locker's walls under the shelf, every one shaded down the pocket's
+// depth as its walls are. Behind shut leaves they are simply not seen
+  public static function insides(scene:Scene, lockers:Array<PropPlace>, safes:Array<PropPlace>):Void
+    {
+      inside = MeshBufTools.make();
+      for (p in lockers)
+        for (k in 0...LOCKER_POCKETS.length)
+          {
+            var q = LOCKER_POCKETS[k];
+            var h = FacilityModel.mix(Std.int(p.x * 131) ^ (Std.int(p.z * 197) << 8) ^
+              ((k + 1) * 40503));
+            lay(p, q, q.floor, h % 3, h);
+            lay(p, q, q.shelf, (h >>> 4) % 2, FacilityModel.mix(h + 1));
+            hang(p, q, (h >>> 6) % 3, FacilityModel.mix(h + 2));
+          }
+      // a safe is never empty
+      for (p in safes)
+        {
+          var q = SAFE_POCKET;
+          var h = FacilityModel.mix(Std.int(p.x * 131) ^ (Std.int(p.z * 197) << 8));
+          lay(p, q, q.floor, 1 + h % 2, h);
+          lay(p, q, q.shelf, 1 + (h >>> 4) % 2, FacilityModel.mix(h + 1));
+        }
+      add(scene, inside, INSIDE_TEX, true);
+    }
+
+// one inside quad, for render.facility.FacilityWarm: the room sheets' cut lambert with vertexColors,
+// which three folds into the program key
+  public static function warmInside(scene:Scene):Void
+    {
+      inside = MeshBufTools.make();
+      square({
+        x: 0.0,
+        z: 0.0,
+        yaw: 0.0,
+        y: 0.0,
+      }, SAFE_POCKET, [ 0.0, SAFE_POCKET.floor, 0.0 ], [ 1.0, 0.0, 0.0 ], [ 0.0, 0.0, -1.0 ], 0.3, 10);
+      add(scene, inside, INSIDE_TEX, true);
+    }
+
+// up to `n` flat things on a pocket surface at height `y`, one to each of n equal slots across it
+  static function lay(p:PropPlace, q:ArmoryPocket, y:Float, n:Int, h:Int):Void
+    {
+      var span = (q.x1 - q.x0) / Math.max(1, n);
+      for (i in 0...n)
+        {
+          h = FacilityModel.mix(h + i + 1);
+          var idx = q.flat[h % q.flat.length];
+          var a = (unit(h, 4) * 2 - 1) * q.turn;
+          var c = Math.cos(a), sn = Math.sin(a);
+          var reach = Math.abs(c) + Math.abs(sn);
+          var sz = Math.min(INSIDE_SZ[idx], Math.min(span, q.mouth - q.back) / reach - INSIDE_GAP * 2);
+          var he = sz / 2 * reach;
+          var x0 = q.x0 + i * span + he + INSIDE_GAP;
+          var x1 = q.x0 + (i + 1) * span - he - INSIDE_GAP;
+          var z0 = q.back + he + INSIDE_GAP;
+          var z1 = q.mouth - he - INSIDE_GAP;
+          if (sz <= 0 ||
+              x1 < x0 ||
+              z1 < z0)
+            continue;
+          var at = [ x0 + (x1 - x0) * unit(h, 12), y + FacilityStyle.CLUTTER_Y,
+            z0 + (z1 - z0) * unit(h, 20) ];
+          square(p, q, at, [ c, 0.0, -sn ], [ -sn, 0.0, -c ], sz / 2, idx);
+        }
+    }
+
+// up to `n` pictures on a locker pocket's walls under its shelf, each on a wall of its own: the back,
+// or a side wall toward the mouth
+  static function hang(p:PropPlace, q:ArmoryPocket, n:Int, h:Int):Void
+    {
+      var first = h % 3;
+      for (i in 0...n)
+        {
+          h = FacilityModel.mix(h + i + 1);
+          var wall = (first + i) % 3;
+          var idx = LOCKER_WALL[h % LOCKER_WALL.length];
+          var hs = INSIDE_SZ[idx] / 2;
+          var y = q.floor + HANG_Y + hs +
+            (q.under - INSIDE_GAP - q.floor - HANG_Y - hs * 2) * unit(h, 4);
+          var along = unit(h, 20);
+          // the wall's inward normal, and the picture's centre on it
+          var nx = (wall == 1 ? 1.0 : wall == 2 ? -1.0 : 0.0);
+          var nz = (wall == 0 ? 1.0 : 0.0);
+          var room = hs + INSIDE_GAP;
+          var at = (wall == 0 ?
+            [ q.x0 + room + (q.x1 - q.x0 - room * 2) * along, y, q.back + HANG_OFF ] :
+            [ (wall == 1 ? q.x0 + HANG_OFF : q.x1 - HANG_OFF), y,
+              q.back + room + (q.mouth - q.back - room - hs - HANG_MOUTH) * along ]);
+          // its right as it is looked at from inside the pocket, and up, tilted together
+          var r = (unit(h, 12) * 2 - 1) * HANG_ROLL;
+          var c = Math.cos(r), sn = Math.sin(r);
+          square(p, q, at, [ nz * c, sn, -nx * c ], [ -nz * sn, c, nx * sn ], hs, idx);
+        }
+    }
+
+// one square of the inside sheet's cell `idx` round `at`, its right `u` and its up `v`, all in the
+// placed glb's frame: into the world on the placement's turn, each corner shaded at its depth
+  static function square(p:PropPlace, q:ArmoryPocket, at:Array<Float>, u:Array<Float>, v:Array<Float>,
+      hs:Float, idx:Int):Void
+    {
+      var cs = Math.cos(p.yaw), sn = Math.sin(p.yaw);
+      var local = [for (k in [ [ -1, -1 ], [ 1, -1 ], [ 1, 1 ], [ -1, 1 ] ])
+        [for (j in 0...3) at[j] + (u[j] * k[0] + v[j] * k[1]) * hs]];
+      var w = [for (l in local)
+        [ p.x + l[0] * cs + l[2] * sn, p.y + l[1], p.z - l[0] * sn + l[2] * cs ]];
+      var cc = idx % COLS, cr = Std.int(idx / COLS);
+      var u0 = cc / COLS, u1 = (cc + 1) / COLS;
+      var v0 = 1 - (cr + 1) / COLS, v1 = 1 - cr / COLS;
+      MeshBufTools.quadC(inside, w[0], w[1], w[2], w[3], [ u0, v0, u1, v0, u1, v1, u0, v1 ],
+        [for (l in local) dark(q, l[2])]);
+    }
+
+// what a pocket keeps of its colour at local depth z, roomkit_build.py's `shade`: POCKET_MOUTH at its
+// mouth, falling straight to POCKET_DARK at its back
+  static inline function dark(q:ArmoryPocket, z:Float):Float
+    {
+      var t = Math.max(0.0, Math.min(1.0, (q.mouth - z) / (q.mouth - q.back)));
+      return POCKET_MOUTH + (POCKET_DARK - POCKET_MOUTH) * t;
+    }
+
+// a 0..1 roll off bits `s` up of hash `h`
+  static inline function unit(h:Int, s:Int):Float
+    {
+      return ((h >>> s) % 1000) / 1000;
+    }
+
+// one sheet's decals as one mesh, FacilityClutter.add's material and for its reasons; `colors` takes
+// the buffer's per-vertex tint (the insides' depth shading)
+  static function add(scene:Scene, b:MeshBuf, tex:String, ?colors:Bool):Void
     {
       if (b.idx.length == 0)
         return;
@@ -567,6 +775,7 @@ class MilitaryClutter
         map: Textures.loadTexture(tex, 'wall', 1),
         alphaTest: FacilityStyle.CLUTTER_CUT,
         side: THREE.DoubleSide,
+        vertexColors: colors == true,
       })));
       mesh.receiveShadow = true;
       mesh.castShadow = false;

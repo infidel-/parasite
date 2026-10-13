@@ -2388,6 +2388,8 @@ ghosting and hovering compiled **0** new programs after entry.
 
 ## Military armory insides: a real pocket behind every leaf
 
+> Its darkness (quadratic, 1 → 0.45) and the safe's drawer back are SUPERSEDED by "Military armory insides darker, and clutter in them"
+
 **Asked:** "instead of darkness, add geom walls and darkness-like-on-corpo-stairs to insides of
 lockers/safes. also shelves and back wall texture" — an opened piece showed its flat body front at 0.15.
 
@@ -2418,5 +2420,34 @@ lockers/safes. also shelves and back wall texture" — an opened piece showed it
 
 **Measured (James Armory, regenerated):** pocket faces all face inward (68 / 26 / 34); opening, ghosting,
 hovering and tactical compiled **0** new door programs after entry (one unrelated `decalInstanceAlpha`).
+
+**Verdict:** landed.
+
+## Military armory insides darker, and clutter in them
+
+**Asked:** "safe inside back texture contains drawers which looks dumb", "the insides aren't darkened
+enough", then "just add some random 2d decals in lockers and safe - new pack16" with "some locker wall
+clutter as well".
+
+**Changed:**
+- `roomkit_build.py` `shade` is PER FACE CORNER now: a face is the pocket's by its centre, so the pocket
+  starts at `POCKET_MOUTH` 0.55 right against a frame at 1 and falls STRAIGHT to `POCKET_DARK` 0.12. A
+  straight fall interpolates exactly across one quad, so the depth rings went: **tris 160 / 112 / 212**.
+- The safe's back is plain `cabinet-inner`; `military/safe-back` is gone and `mil-a-sheet` holds 8.
+- New pack16 `military/locker-clutter` (gpt-image-2.5 sunburst high, transparent, $0.056; `pack16.py
+  --valign center`, seams 254/514/771 x 250/496/753): `MilitaryClutter.insides` lays cells 0-5 on a
+  locker's floor (0-2) and hat shelf (0-1), hangs 6-9 on its walls under the shelf (0-2, back or a side,
+  tilted), and fills the safe's floor and shelf from 10-15 (1-2 each). Each lies in one of n slots across
+  its surface, sized to the real thing.
+- **The clutter is shaded down the pocket's depth per vertex** (`quadC`, `dark`): a uniform tint was
+  wrong by 2-3x somewhere on every floor. That is `vertexColors`, a program key, so `FacilityWarm`
+  builds one inside quad when its ghost rows hold armory doors (`warmInside`).
+
+**Measured (James Armory):** 77 inside decals, **+1 call** (66 → 67 hiding the mesh), **0** new programs
+after entry, opening, standing on a piece and tactical (the one `decalInstanceAlpha` that compiles is
+unrelated). COLOR_0 on the built glbs: leaves and frame 1, pocket 0.55 → 0.12, nothing else.
+
+**The trap:** the pocket offsets are `roomkit_build.py`'s numbers less the bbox centre
+`Models.normalize` takes off (locker 0.03, safe 0.035 on z); move a leaf's depth and they move with it.
 
 **Verdict:** landed.

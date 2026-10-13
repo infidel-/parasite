@@ -6302,31 +6302,12 @@
       ],
       "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: the felt back board of an empty rifle rack, six padded cradles on a top rail, six notches on a bottom rail [append textures.json style]",
       "prompt_exact": false,
-      "note": "the back board inside a base gun cabinet (roomkit_build.py, mil-a-sheet cell 6), ONE authored image 0..1 over the 3.7 x 3.55 face. mil-pack-t TOP-RIGHT from x 520: the quadrant's own 8 px frame strip (512..519) is cut off. lift 0.72: raw 0.0271 to 0.066, ABOVE the armory family (gunmetal 0.042, gunrack-front 0.051) on purpose: the back of a pocket keeps 0.3 of its colour (roomkit_build.py POCKET_DARK), and at 0.042 the felt read as a black void in the game where a rack should be.",
+      "note": "the back board inside a base gun cabinet (roomkit_build.py, mil-a-sheet cell 6), ONE authored image 0..1 over the 3.7 x 3.55 face. mil-pack-t TOP-RIGHT from x 520: the quadrant's own 8 px frame strip (512..519) is cut off. lift 0.72: raw 0.0271 to 0.066, ABOVE the armory family (gunmetal 0.042, gunrack-front 0.051) on purpose: the back of a pocket keeps POCKET_DARK of its colour (roomkit_build.py, 0.12 now), and at 0.042 the felt read as a black void in the game where a rack should be.",
       "last_converted": "2026-10-13T17:09:40",
       "built_linear": 0.0661,
       "built_srgb": 67.4,
       "lift": 0.72,
       "last_lift": 0.72
-    },
-    "military/safe-back": {
-      "src": "military/mil-pack-t.png",
-      "class": "tile",
-      "needs_alpha": false,
-      "crop": [
-        4,
-        516,
-        504,
-        504
-      ],
-      "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: the back wall inside a steel safe, three columns and four rows of deposit drawers with brass pulls [append textures.json style]",
-      "prompt_exact": false,
-      "note": "the back wall inside the base safe (roomkit_build.py, mil-a-sheet cell 7), ONE authored image 0..1 over its square face, its painted frame kept as the box's inner edge. lift 0.893: raw 0.0349 to 0.0472.",
-      "last_converted": "2026-10-13T17:09:40",
-      "built_linear": 0.0472,
-      "built_srgb": 57.4,
-      "lift": 0.893,
-      "last_lift": 0.893
     },
     "military/cabinet-inner": {
       "src": "military/mil-pack-t.png",
@@ -7151,6 +7132,18 @@
       },
       "built_linear": 0.0987,
       "built_srgb": 78.9
+    },
+    "military/locker-clutter": {
+      "src": "military/locker-clutter.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "[PACK16, gpt-image-2.5-sunburst high, background transparent; armory-clutter's prompt shape] the personal things inside a soldier's locker and the base safe, reading order: 1 folded olive T-shirt, 2 folded khaki towel, 3 rolled web belt, 4 leather work gloves, 5 field manual, 6 shaving-kit pouch, 7 family photo, 8 pin-up postcard, 9 square shaving mirror, 10 handwritten letter, 11 banded banknote stacks, 12 manila folder stamped CLASSIFIED, 13 two sealed envelopes, 14 ring of keys, 15 passport and ID card, 16 medals in an open case [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the clutter INSIDE the armory's lockers and safe (render.military.MilitaryClutter.insides): cells 0-5 on a locker's floor and hat shelf, 6-9 on its walls, 10-15 in the safe. pack16.py --valign center off the raw drop (seams x 254/514/771, y 250/496/753, scale 1.10), parked in Unused/locker-clutter-raw-drop.png. Unlifted: the pocket darkens it per vertex like its own walls.",
+      "last_converted": "2026-10-13T18:12:47",
+      "built_linear": 0.1324,
+      "built_srgb": 88.6
     },
     "military/supply-clutter": {
       "src": "military/supply-clutter.png",
