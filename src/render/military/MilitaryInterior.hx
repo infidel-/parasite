@@ -428,10 +428,11 @@ class MilitaryInterior
       var h = 0.0;
       if (t == Const.TILE_MIL_BUNK)
         {
-          // two cells to a bunk, its head at whichever end of the run meets a wall
+          // two cells to a bunk, its head at whichever end of the run meets a wall, glass included:
+          // a bunk row stands against a window too (gen.military.MilitaryZones.deal)
           r = across(cell, alongX, BUNK_W);
           h = BUNK_H;
-          var low = FacilityModel.isSolidWall(m, col - (alongX ? 1 : 0), row - (alongX ? 0 : 1));
+          var low = FacilityModel.isWall(m, col - (alongX ? 1 : 0), row - (alongX ? 0 : 1));
           var yaw = (alongX ? (low ? 0.0 : Math.PI) : (low ? -Math.PI / 2 : Math.PI / 2));
           for (k in 0...Std.int(Math.max(1, len / 2)))
             {

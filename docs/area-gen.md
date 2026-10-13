@@ -412,7 +412,7 @@ laboratory's deal. That:
 | supply | shelving (crate stacks on each bay's two ends), shelf-row, shelving ×2 |
 | medical | cot-run ×3 (top and bottom walls first, a cot to a cell there, every other cell on a side wall), doc-desk (an office desk and its chair on a side wall, the rest of the bay cabinets), cabinet-run (a side wall), cot-island (two side by side, else one) |
 | mess / briefing | counter-run / map-board (an end wall), table-rows (a mess's run on to the end wall away from the doorway, else away from the counter: `runOn`; along whichever axis seats more, `messRows`; four deep, one bench along the table) |
-| barracks | bunk-row (out from a long wall; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows; a GLASS bay of either too) |
+| barracks | bunk-row (out from a long wall, glass included; both when 7+ deep), bunk-along (the facing wall at 5-6 deep, or the first wall that takes three when too shallow for rows) |
 | latrine | cubicles ×6 (a toilet in each), sink-run ×4 (two basins a cell, a mirror over each), urinal-run ×4 and shower-run ×3 (the end walls first, a tiled separator wall each side of a shower), bench-island (3 cells where the ring fits, else 2) |
 
 A min is only asked when the room can hold it: a barracks falls back to the other long wall and then
@@ -441,12 +441,14 @@ from the glazing (`sill`). Medical fill 9.5 → 15.7 cells a room. A `mil-slot` 
 no cell now tries the next (the IV stand will not go in front of glass; the stretcher went without).
 
 **And a barracks' bunks and a mess hall's rows stand BESIDE glass** ("has one more slot for bed near
-the window", "can be in front of the windows"). A barracks keeps the cells with a window beside them
-(not behind: `roomWallRuns` still drops those), so a bunk stands side-on to the glass; its wall
-lockers stay off them. The cells BEHIND which a window stands come back as their own bays tagged
-`g<wall>` and not `w<wall>`, so `bunk-along` is the only zone that asks for one: a bunk laid along the
-glass with its footlocker after it ("allow bed+chest along the windows as well", nodes/bunk-along
-0.69 → 1.21 a base). A bunk row never backs onto the glass. A mess's table rows run on from their end cell to the end wall with no doorway
+the window", "can be in front of the windows"). **A barracks takes the glass-backed cells as well, as a
+medical bay does** (`roomWallRuns(state, room, true)`): a 6x4 barracks whose bunk wall was windows but
+for two masonry cells stood ONE bunk, with "clearly room for two more" either side of it. A bunk row now
+stands against the glass and a bunk laid along it with its footlocker after it ("allow bed+chest along
+the windows as well"); the `g<wall>` glass bays that alone took the latter are gone, the wall bays hold
+both. Its wall lockers stay off the glass, and `MilitaryInterior` puts a bunk's head at a window as at
+masonry (`isWall`). 1000 seeds: barracks fill **33.9 → 42.2** cells a base, `zoneEmpty/bunk-row`
+**0.3 → 0**, lockers 9.9 → 10.9. A mess's table rows run on from their end cell to the end wall with no doorway
 in it (`MilitaryRooms.runOn`), a whole cross-section at a time while every cell is `free`, taken back
 if the floor seals; the near end keeps its two cells. `MilitaryRooms.besideGlass` is the set
 `GenCheck` exempts: the `low` pieces, a bunk, a footlocker, a mess table and a bench.
