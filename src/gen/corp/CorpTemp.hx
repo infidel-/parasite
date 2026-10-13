@@ -97,6 +97,11 @@ class CorpTemp
   // the main corridor's width in cells, and a side corridor's
   public static inline var CORRIDOR_W = 3;
   public static inline var SIDE_CORRIDOR_W = 2;
+  // the shorter corridors parallel to the main one (CorpBuilding.parallelCorridors): how many a
+  // floor tries, how often one runs flush against the outer wall, and how often one spans two bays
+  public static inline var PARALLEL_CORRIDORS = 2;
+  public static inline var PARALLEL_FLUSH_PCT = 35;
+  public static inline var PARALLEL_LONG_PCT = 30;
   // the tower floor plate, as a fraction of the area. it is one building and there is no split at
   // the area level: what the quota deals is ROOMS, not plots
   public static inline var PLATE_FRAC = 0.75;

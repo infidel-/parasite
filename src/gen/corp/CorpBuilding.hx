@@ -12,7 +12,8 @@
 //
 // what is unchanged is the carve itself: a main corridor driven in from the lift, side corridors
 // rolled off it every ROOM_SIZE cells, rooms flooded out of what is left and halved while they are
-// over ROOM_SIZE * 1.5.
+// over ROOM_SIZE * 1.5. What was added is a couple of shorter corridors PARALLEL to the main one,
+// laid between the side corridors (parallelCorridors).
 
 package gen.corp;
 
@@ -195,6 +196,10 @@ class CorpBuilding
           cells[x][y + 1] = BLDG_WINDOWV2;
           cells[x][y + 2] = BLDG_WINDOWV3;
         }
+
+      // a couple of shorter corridors parallel to the main one, between the side corridors
+      parallelCorridors(state, node, (frontWall.dir == DIR_UP || frontWall.dir == DIR_DOWN ?
+        frontDoor.x : frontDoor.y) - 1, frontWall.dir);
 
       // every floor cell touching a corridor becomes the rooms' shared wall
       for (y in by + 1...by + bh + 1)
@@ -922,6 +927,131 @@ class CorpBuilding
               else if (t == INNER_WINDOWV1)
                 cells[x][y] = INNER_WINDOW;
             }
+        }
+    }
+
+// a few SHORTER corridors parallel to the main one, each across one bay between two side corridors
+// (or a side corridor and the outer wall), now and then two bays and the side corridor between.
+//
+// IT ENDS ON A CORRIDOR OR ON THE RING, NEVER IN THE MIDDLE OF THE FLOOR, and that is the rule the
+// whole carve rests on: getRoom reads a room as the rectangle off its top-left cell, so a stub that
+// stopped mid-bay would leave an L that came out as two rooms with open floor between them. The side
+// corridors run from the main one to the ring, so the bays read beside the main corridor are the
+// bays at any distance from it.
+//
+// it stands a room clear of the main corridor (ROOM_SIZE of floor between the two inner walls), and
+// either a room clear of the outer wall too or flush against it, never a sliver in between. Flush,
+// its outer wall is glazed like the rooms' on that wall.
+//
+// NO WINDOW WHERE IT ENDS ON THE RING: a corridor end is two cells across, and
+// render.corp.CorpModel.runsOfThree trims every corp run to whole three-bay panes, so a two-cell
+// opening is masonry by the time the floor is entered (sealWindows writes it back into the grid).
+// `m0` is the main corridor's first cell across, `dir` the way it runs in from the lift
+  static function parallelCorridors(state: _CorpState, node: _GenNode, m0: Int, dir: Int)
+    {
+      var area = state.area;
+      var cells = area.getCells();
+      // the plate in (along, across) terms: along the main corridor, and across it
+      var vertical = (dir == DIR_UP || dir == DIR_DOWN);
+      function get(a: Int, b: Int): Int
+        return (vertical ? cells[b][a] : cells[a][b]);
+      function put(a: Int, b: Int, t: Int)
+        {
+          if (vertical)
+            cells[b][a] = t;
+          else cells[a][b] = t;
+        }
+      var a0 = (vertical ? node.y1 : node.x1) + 1;
+      var a1 = (vertical ? node.y2 : node.x2) - 1;
+      var lo = (vertical ? node.x1 : node.y1) + 1;
+      var hi = (vertical ? node.x2 : node.y2) - 1;
+
+      // each hand: the cell beside the main corridor, the way out to the ring, how many cells of
+      // floor that is, and its bays — the runs of bare floor between the side corridors
+      var hands = [
+        {
+          edge: m0 - 1,
+          step: -1,
+          len: m0 - lo,
+          bays: [],
+          used: [],
+        },
+        {
+          edge: m0 + CORRIDOR_W,
+          step: 1,
+          len: hi - m0 - CORRIDOR_W + 1,
+          bays: [],
+          used: [],
+        },
+      ];
+      for (h in hands)
+        {
+          var s = -1;
+          for (a in a0...a1 + 2)
+            {
+              var room = (a <= a1 && get(a, h.edge) == BLDG_ROOM);
+              if (room &&
+                  s < 0)
+                s = a;
+              else if (!room &&
+                  s >= 0)
+                {
+                  h.bays.push({
+                    s: s,
+                    e: a - 1,
+                  });
+                  h.used.push(false);
+                  s = -1;
+                }
+            }
+        }
+
+      // the flush glazing runs along the plate
+      var sideTiles = (vertical ? windowTilesList[1] : windowTilesList[0]);
+      for (k in 0...PARALLEL_CORRIDORS)
+        {
+          var h = hands[area.random(hands.length)];
+          var free = [for (i in 0...h.bays.length) if (!h.used[i]) i];
+          if (free.length == 0)
+            continue;
+          var i = free[area.random(free.length)];
+          var s = h.bays[i].s;
+          var e = h.bays[i].e;
+          h.used[i] = true;
+          if (i + 1 < h.bays.length &&
+              !h.used[i + 1] &&
+              area.chance(PARALLEL_LONG_PCT))
+            {
+              e = h.bays[i + 1].e;
+              h.used[i + 1] = true;
+            }
+
+          // how far out: a room clear of the main corridor and of the ring, or flush
+          var flush = h.len - SIDE_CORRIDOR_W;
+          var far = h.len - ROOM_SIZE - 3;
+          var o = (far < ROOM_SIZE + 2 || area.chance(PARALLEL_FLUSH_PCT) ? flush :
+            ROOM_SIZE + 2 + area.random(far - ROOM_SIZE - 1));
+          var b0 = h.edge + h.step * o;
+          var bLo = (h.step > 0 ? b0 : b0 - 1);
+          for (a in s...e + 1)
+            for (b in bLo...bLo + SIDE_CORRIDOR_W)
+              if (get(a, b) == BLDG_ROOM)
+                put(a, b, BLDG_CORRIDOR);
+
+          // and flush, the ring beside it glazed, straight on across the side corridors it meets.
+          // the plate's corner stops the run by itself: the cell inward of it is the end wall
+          if (o != flush)
+            continue;
+          var ring = h.edge + h.step * h.len;
+          var inner = ring - h.step;
+          var g0 = s;
+          var g1 = e;
+          while (get(g0 - 1, inner) == BLDG_CORRIDOR)
+            g0--;
+          while (get(g1 + 1, inner) == BLDG_CORRIDOR)
+            g1++;
+          for (a in g0...g1 + 1)
+            put(a, ring, sideTiles[a == g0 ? 0 : (a == g1 ? 2 : 1)]);
         }
     }
 

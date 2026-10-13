@@ -2220,3 +2220,49 @@ of the centred window that is not `atDoor` takes a desk, each stretch between do
 post is the middle of the desk LIST, which is `securityPost`'s own pick off the finished row, and
 takes no chair. The north-row brick-up went with it, the ring's unglazing covers it.
 3000 corp seeds OK.
+
+## SHORTER CORRIDORS PARALLEL TO THE MAIN ONE, AND A CORRIDOR ENDS ON A CORRIDOR
+
+("a couple shorter corridors parallel to the main, including sometimes directly adjacent to outer
+wall, but at least a room away from main".) `CorpBuilding.parallelCorridors` runs after the main
+corridor and its side corridors are carved and before the inner-wall pass. It makes
+`PARALLEL_CORRIDORS` (2) tries. Each try:
+- picks a hand of the main corridor;
+- picks a bay on that hand that no earlier try took. A bay is the bare floor between two side
+  corridors, or between one and the outer wall;
+- at `PARALLEL_LONG_PCT` (30), takes the next bay as well, across the side corridor between them.
+
+Every new corridor is `SIDE_CORRIDOR_W` wide.
+
+- **It ends on a corridor or on the ring, never mid-floor.**
+  - `AreaGenerator.getRoom` reads a room as the rectangle off its top-left cell. A stub that
+    stopped mid-bay would leave an L, which comes out as two rooms with open floor between them.
+  - A bay always ends on a corridor or the ring, because every side corridor runs from the main
+    corridor to the outer wall. That is also why the bays can be read off the cells beside the main
+    corridor: they are the same at any distance from it.
+- **The offset `o`** counts bare-floor cells from the main corridor's edge.
+  - `o >= ROOM_SIZE + 2`, so the room between keeps ROOM_SIZE of floor inside its two inner walls.
+  - The outer side is either flush (`o = len - 2`) or keeps ROOM_SIZE as well
+    (`o <= len - ROOM_SIZE - 3`).
+  - Flush at `PARALLEL_FLUSH_PCT` (35), and always when that range is empty. A 50-tall floor with
+    the lift on a short wall has 16-cell hands, and flush is all that fits.
+- **A flush corridor's ring is glazed** as one frame run, carried straight on across the
+  side-corridor caps it meets. `CorpModel.runsOfThree` then trims it to whole panes like any room
+  wall.
+- **No window where a corridor ends on the ring.**
+  - A corridor end is 2 cells across. `runsOfThree` turns any run shorter than 3 to masonry, and
+    `CorpModel.sealWindows` writes that back into the grid on entry.
+  - A 2-cell end window was tried, for these corridors and for the side corridors' 60% roll (which
+    writes ONE cell, `loneWindows`' case). Both passed the oracle and both were wall again once the
+    floor was entered, so both were dropped.
+
+**Measured over 3000 floors:**
+- 2.0 placed per floor: 48% flush (the 35% roll plus the forced ones), 22% spanning two bays.
+- Rooms 29.36 → 28.32 and doors 36.57 → 34.55.
+- Rooms with no door of their own onto a corridor: 1.09 → 0.89 per floor. Exec rooms 3.0% → 2.4%,
+  reception 34% → 31%.
+- 3000/3000 green. The digests change.
+- `PARALLEL_CORRIDORS = 0` gives the old stream back (rooms 29.36, doors 36.57).
+
+**Where a bay is only 5 cells**, the parallel corridor is a short rung between two adjacent side
+corridors. The floor then reads as a grid rather than a comb.
