@@ -54,7 +54,7 @@ class AreaGenerator
       city = new CityAreaGenerator(game, this);
       corp = new CorpAreaGenerator(game);
       sewers = new SewerAreaGenerator(game, this);
-      undergroundLab = new UndergroundLabAreaGenerator(game, this);
+      undergroundLab = new UndergroundLabAreaGenerator(game);
     }
 
 // generate area

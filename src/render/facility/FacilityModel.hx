@@ -47,6 +47,14 @@ enum abstract Surf(Int) from Int to Int
   var MESS = 23;
   var BRIEFING = 24;
   var HQ = 25;
+  // the UNDERGROUND LAB's rooms, one per role gen.lab deals, and the 2x3 pads the mission stands its
+  // clone vats on. its corridor and doorways are LINO, the circulation surface every kind shares
+  var LAB_ENTRANCE = 26;
+  var LAB_VAT = 27;
+  var LAB_WORKSHOP = 28;
+  var LAB_STORAGE = 29;
+  var LAB_RESEARCH = 30;
+  var LAB_PAD = 31;
 }
 
 
@@ -202,6 +210,9 @@ typedef Facility = {
   wallIn:Float,
   // the wall head a hangar's vault springs from — see ShellOpts.hangarH
   hangarH:Float,
+  // the flat ceiling deck and the parapet ring — see ShellOpts.deck / ShellOpts.parapet
+  deck:Bool,
+  parapet:Bool,
   w:Int,
   h:Int,
   surf:Array<Array<Surf>>,
@@ -469,6 +480,8 @@ class FacilityModel
         kind: opts.kind,
         wallIn: opts.wallIn,
         hangarH: opts.hangarH,
+        deck: opts.deck,
+        parapet: opts.parapet,
         tex: opts.tex,
         w: w,
         h: h,
@@ -902,6 +915,14 @@ class FacilityModel
 // which way the wall runs, and which side to swing into
   static function findDoors(m:Facility, area:AreaGame):Void
     {
+      // every door cell first, so the axis test below can read a doorway's OTHER cell as wall line:
+      // the lab cuts its doorways two cells wide, and each cell of one has a door beside it on the
+      // run axis and open floor across it, so the wall-on-both-hands test alone read every lab
+      // doorway as lying across its own wall
+      for (o in area.getObjects())
+        if (o.type == 'door' &&
+            inside(m, o.x, o.y))
+          m.door[o.y][o.x] = true;
       for (o in area.getObjects())
         {
           if (o.type != 'door' ||
@@ -909,7 +930,8 @@ class FacilityModel
             continue;
           // the wall line is whichever axis has wall on both sides of the cell. a front door's pier
           // counts as that wall, which is why this reads the grid rather than the door's own dir
-          var alongX = isWall(m, o.x - 1, o.y) && isWall(m, o.x + 1, o.y);
+          var alongX = (isWall(m, o.x - 1, o.y) || isDoor(m, o.x - 1, o.y)) &&
+            (isWall(m, o.x + 1, o.y) || isDoor(m, o.x + 1, o.y));
           var dc = alongX ? 0 : 1;
           var dr = alongX ? 1 : 0;
           var a = isIndoor(m, o.x - dc, o.y - dr);

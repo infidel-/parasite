@@ -2480,3 +2480,30 @@ against the tile grid):
 calls `stand()` directly. Guard the drain, not the call sites.
 
 **Verdict:** landed.
+
+## Underground lab shell: the facility emitters under a bedrock cap, two-cell sliding doors
+
+**Changed:** the underground lab (the last 2D area) is a SHELL KIND like the corp tower:
+`render.lab.LabModel` reads gen.lab's grid through `FacilityModel.fromArea` with `LabStyle.shell()`,
+and `FacilityGeom.build` emits it. Three things the shared emitter had hardcoded became data:
+`ShellOpts.deck` and `ShellOpts.parapet` (the lab takes neither — a ceiling deck would lid the level and
+a parapet would stand up out of the rock; `m.kind != 'corp'` was the old deck test), and
+`FacilityGeom.floorBuf`'s fallback (`TILE` where the kind paints it, else `tex.circ`, which is what the
+corp special case already meant). `LabGeom` caps every rock cell at `ROOF_Y` in row runs, ROCK_MARGIN 14
+cells past the grid, plus each wall cell's rock-side strip outside its slab. `LabDoors` slides two
+CELL-wide leaves apart per two-cell doorway (one image per leaf, its twin the mirror); the jambs skip the
+boundary a doorway shares with its twin (`loEnd`/`hiEnd`), and `findDoors` reads the twin as wall line.
+`LabScene` is the tunnels' moonless rig (both pools), so the lab shares the sewer's light counts.
+
+**Measured** (seed 756345235, slot 1): one structure of 554 cells, 5 openings with their looks dealt off
+the rooms, rock cap 292-297 quads. 37 dc at the gameplay camera on the lift (shell only). First-entry
+compiles: **2 → 0** — the actor billboard pool and the player ring compiled on entry because no warm
+carried them under a moonless light set; `Warmup.actorLayer` now parks them (and the gas, beams,
+sparks, PropFX core) for CityWarm and LabWarm alike (lab warm 66 → 79 programs, entry diff 0).
+
+**The trap:** the rock cap is NOT vision-masked (the roof's reason): masked, every rock cell sits at
+the fog colour and the rooms float in a void. And a rock cell must not be a `Wall` — as SOLID every one
+would emit a wall head and claim a structure's ring.
+
+**Verdict:** landed. Lamps, furniture and the lift/vat models are later phases; the shell reads near
+black under the fill alone, which is the lamps' job and not the art's.

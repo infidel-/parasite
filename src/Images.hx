@@ -34,7 +34,6 @@ class Images
   public var tileset: Image;
   var defaultTileset: Default;
   var sewerTileset: Sewers;
-  var undergroundLabTileset: UndergroundLab;
 
   public function new(s: GameScene)
     {
@@ -71,7 +70,6 @@ class Images
       ventHD.src = AssetPath.resolve('textures/facility/vent.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
-      undergroundLabTileset = new UndergroundLab();
       tileset = defaultTileset.image;
       }
 
@@ -151,8 +149,6 @@ class Images
         {
           case AREA_SEWERS:
             return sewerTileset;
-          case AREA_UNDERGROUND_LAB:
-            return undergroundLabTileset;
           default:
             return defaultTileset;
         }

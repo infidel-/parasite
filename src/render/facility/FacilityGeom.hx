@@ -454,8 +454,9 @@ class FacilityGeom
       // is unaffected: it caps the wall head, and the vault springs from the outer plane above it
       // a CORP floor gets none either, and for the opposite reason: the player is always inside
       // it, so a deck would be permanently faded out — dead geometry in the sorted pass. the read
-      // of "a storey" comes from the parapet band instead
-      var flatDeck = !st.hangar && m.kind != 'corp';
+      // of "a storey" comes from the parapet band instead. Nor does the underground lab, whose
+      // ceiling is the bedrock (ShellOpts.deck)
+      var flatDeck = !st.hangar && m.deck;
       // floors, one buffer per surface. a hangar rolls no lab tile and a lab building no concrete,
       // so most of these come back empty and emit no mesh at all
       //
@@ -679,9 +680,15 @@ class FacilityGeom
                   m.kind == 'military' ?
                   roomSide(m, col, row, m.doors[di].alongX) : -1);
                 var side = (car >= 0 ? car : room);
+                // and NO JAMB WHERE THE OPENING CARRIES ON: the lab's doorways are two cells wide,
+                // and each cell's slab reaches the boundary it shares with its twin, so an
+                // unconditional pair stood a reveal across the middle of every lab doorway
+                var ax = m.doors[di].alongX;
+                var loEnd = !FacilityModel.isDoor(m, col - (ax ? 1 : 0), row - (ax ? 0 : 1));
+                var hiEnd = !FacilityModel.isDoor(m, col + (ax ? 1 : 0), row + (ax ? 0 : 1));
                 if (side < 0)
                   jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE,
-                    FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+                    FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE, loEnd, hiEnd);
                 else
                   for (k in 0...2)
                     jamb((k == 0 ? soffit : (car >= 0 ? wIn[Surf.LIFT] :
@@ -830,7 +837,7 @@ class FacilityGeom
         roof: [],
         glaze: { value: 0.0 },
         paraCells: st.hangar ? 0 : ringCells(m, si),
-        paraQuads: st.hangar ? 0 : parapet(m, si, wOut, cope),
+        paraQuads: (st.hangar || !m.parapet) ? 0 : parapet(m, si, wOut, cope),
       };
       // one flush per SURFACE, off the model's own art table. a slot with no texture is a surface
       // this kind does not have, and a slot with one whose buffer is empty emits no mesh — so the
@@ -883,7 +890,7 @@ class FacilityGeom
       // kind really paints rather than Surf.TILE, which a corp floor has none of
       var s = surfUnder(m, col, row);
       if (m.tex.floor[s] == null)
-        s = (m.kind == 'corp' ? Surf.CARPET : Surf.TILE);
+        s = (m.tex.floor[Surf.TILE] != null ? Surf.TILE : m.tex.circ);
       return floors[s];
     }
 

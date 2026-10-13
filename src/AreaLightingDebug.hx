@@ -357,18 +357,13 @@ class AreaLightingDebug
           return;
         }
 
-      var tileset = areaLighting.scene.images.getTileset(area.getTilesetTypeID());
-      var undergroundLab: UndergroundLab = null;
-      if (Std.isOfType(tileset, UndergroundLab))
-        undergroundLab = cast tileset;
       var tileID = area.getCellType(x, y);
       var tile = area.getTiles()[x][y];
       var decorationInfo: Array<String> = [];
       if (tile != null &&
           tile.decoration != null)
         for (decoration in tile.decoration)
-          decorationInfo.push(getTileLightDebugDecorationInfo(areaLighting,
-            area, undergroundLab, tileID, decoration));
+          decorationInfo.push(getTileLightDebugDecorationInfo(decoration));
 
       var objectInfo: Array<String> = [];
       for (o in area.getObjectsAt(x, y))
@@ -382,35 +377,16 @@ class AreaLightingDebug
         objectInfo.join(',') : '-'));
     }
 
-// build one debug string for a decoration entry using tile-aware layer resolution
-  static function getTileLightDebugDecorationInfo(areaLighting: AreaLighting,
-      area: AreaGame, undergroundLab: UndergroundLab, tileID: Int,
-      decoration: tiles.Decoration): String
+// build one debug string for a decoration entry
+  static function getTileLightDebugDecorationInfo(decoration: tiles.Decoration): String
     {
       var iconInfo = '-';
       if (decoration.icon != null)
         iconInfo = decoration.icon.row + ',' + decoration.icon.col;
       var tagInfo = (decoration.tag != null ? decoration.tag : '-');
-      var layerKind = 'layer';
-      if (undergroundLab != null)
-        layerKind = (undergroundLab.isWallTile(tileID) ? 'wallLayer' : 'floorLayer');
-      return layerKind + '=' + decoration.layerID +
+      return 'layer=' + decoration.layerID +
         ',icon=' + iconInfo +
-        ',tag=' + tagInfo +
-        ',source=' + getTileLightDebugDecorationSourceID(
-          areaLighting, area, undergroundLab, tileID, decoration);
-    }
-
-// resolve one debug-friendly decoration source id for a tile decoration
-  static function getTileLightDebugDecorationSourceID(areaLighting: AreaLighting,
-      area: AreaGame, undergroundLab: UndergroundLab, tileID: Int,
-      decoration: tiles.Decoration): String
-    {
-      if (undergroundLab == null ||
-          decoration.icon == null)
-        return '-';
-      return UndergroundLabAreaLighting.getDebugDecorationSourceID(
-        undergroundLab, tileID, decoration);
+        ',tag=' + tagInfo;
     }
 
 // collect deduplicated light source marker centers for debug overlay

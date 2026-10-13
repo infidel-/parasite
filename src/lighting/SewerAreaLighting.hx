@@ -18,6 +18,22 @@ typedef _BaseOrganShadowGroup = {
 
 class SewerAreaLighting
 {
+  // the two large stamps the tunnels share: a portal's red glow and a plain white lamp
+  static var LIGHT_LARGE_RED: _AtmosphereLightMeta = {
+    radiusTiles: 2.4,
+    intensity: 0.88,
+    tintR: 255,
+    tintG: 48,
+    tintB: 48,
+  };
+  static var LIGHT_LARGE_WHITE: _AtmosphereLightMeta = {
+    radiusTiles: 2.4,
+    intensity: 0.88,
+    tintR: 255,
+    tintG: 255,
+    tintB: 255,
+  };
+
 // build sewer atmosphere light stamps
   public static function buildLightStamps(scene: GameScene, area: AreaGame,
       areaLighting: AreaLighting): Array<_AreaLightStamp>
@@ -180,7 +196,7 @@ class SewerAreaLighting
           var centerX = (x1 + x2 + 1) / 2.0;
           var centerY = (y1 + y2 + 1) / 2.0;
           areaLighting.pushLightStamp(area, stamps, centerX, centerY,
-            UndergroundLab.ATMOS_LIGHT_LARGE_RED, 'summoning-portal', true);
+            LIGHT_LARGE_RED, 'summoning-portal', true);
         }
     }
 
@@ -199,7 +215,7 @@ class SewerAreaLighting
             'habitat-exit' : 'sewer-exit');
           areaLighting.pushLightStamp(area, stamps,
             o.x + 0.5, o.y + 0.5,
-            UndergroundLab.ATMOS_LIGHT_LARGE_WHITE, stampKind, true);
+            LIGHT_LARGE_WHITE, stampKind, true);
         }
     }
 
@@ -393,6 +409,6 @@ class SewerAreaLighting
 // get corridor color profile for layout light sources
   static function getLayoutCorridorLight(): _AtmosphereLightMeta
     {
-      return UndergroundLab.ATMOS_LIGHT_LARGE_WHITE;
+      return LIGHT_LARGE_WHITE;
     }
 }

@@ -236,7 +236,8 @@ class FacilityDoors
 // AREA_FACILITY on the grounds that "the corporate and underground-lab generators deal objects.Door
 // too and nothing draws leaves for those". render.corp.CorpArea has called build() since the tower
 // got its own four pairs, so every corp doorway had real leaves standing in it AND the old tile
-// image lying across its threshold. The underground lab still draws none and is still excluded
+// image lying across its threshold. The underground lab slides leaves of its own and answers for
+// them itself (render.lab.LabArea.draws)
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&

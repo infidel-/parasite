@@ -7237,6 +7237,346 @@
       "last_converted": "2026-10-12T01:37:00",
       "built_linear": 0.2024,
       "built_srgb": 109.1
+    },
+    "lab/floor-entrance": {
+      "src": "lab/floors-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: lift lobby floor, dark gunmetal diamond-tread deck plate, two square plates across, bolted seams. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. Seams measured at x 512 / y 510.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:09:58",
+      "built_linear": 0.0351,
+      "built_srgb": 51.2
+    },
+    "lab/floor-vat": {
+      "src": "lab/floors-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: clone vat hall floor, sealed dark green-grey epoxy with recessed steel drain channels in a square grid. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. One channel cross per tile.",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:09:58",
+      "built_linear": 0.0507,
+      "built_srgb": 60.2
+    },
+    "lab/floor-corridor": {
+      "src": "lab/floors-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: corridor floor, dark steel anti-slip bar grating, vertical bars, darkness through the gaps. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. The circulation surface (Surf.LINO) and every door cell.",
+      "crop": [
+        2,
+        514,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:09:58",
+      "built_linear": 0.0301,
+      "built_srgb": 38.6
+    },
+    "lab/floor-workshop": {
+      "src": "lab/floors-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: workshop floor, scuffed dark steel plates two across, oil stains, bolted seams. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. ",
+      "crop": [
+        516,
+        514,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:09:58",
+      "built_linear": 0.036,
+      "built_srgb": 52.2
+    },
+    "lab/floor-storage": {
+      "src": "lab/floors-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: storage floor, dark grey concrete slab with worn yellow stencilled grid lines, two squares across. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. The quadrant drew its yellow lines INSIDE (centres x 26/256/485, y 24/253/489) and none at the edges, so a plain crop doubled the line at every wrap; cropped line-centre to line-centre so each wrap closes one line out of two halves (seamfix grid by hand).",
+      "crop": [
+        25,
+        25,
+        462,
+        462
+      ],
+      "last_converted": "2026-10-14T00:10:47",
+      "built_linear": 0.054,
+      "built_srgb": 63.3
+    },
+    "lab/floor-research": {
+      "src": "lab/floors-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: research lab floor, clean dark blue-grey speckled vinyl sheet, welded seams. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. ",
+      "crop": [
+        514,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:10:47",
+      "built_linear": 0.0461,
+      "built_srgb": 61.2
+    },
+    "lab/floor-pad": {
+      "src": "lab/floors-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: vat plinth deck, heavy dark steel grate with a dense grid of square holes. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. Surf.LAB_PAD, the clone vats' 2x3 pads.",
+      "crop": [
+        2,
+        514,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-14T00:10:47",
+      "built_linear": 0.0321,
+      "built_srgb": 43.8
+    },
+    "lab/lift-lining": {
+      "src": "lab/floors-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/floors-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: lift shaft wall lining, riveted dark steel plates in vertical strips, two across. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab lift shaft lining (phase 3).",
+      "crop": [
+        514,
+        514,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:10:47",
+      "built_linear": 0.0343,
+      "built_srgb": 51.1
+    },
+    "lab/wall-entrance": {
+      "src": "lab/walls-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: lift lobby wall, riveted dark blue-grey steel bulkhead panels two across, rib band at one third height. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). Seams measured at x 513 / y 514; each panel frames its own uprights, so the doubled upright at the wrap matches the one in the middle.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:11:37",
+      "built_linear": 0.0346,
+      "built_srgb": 52.0
+    },
+    "lab/wall-vat": {
+      "src": "lab/walls-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: clone vat hall wall, dark grey-green containment panels two across, green gasket in every vertical seam, kick plate. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). Gaskets measured at quadrant x 10.5/265.5/498.5: a plain crop put one at each edge and doubled it at every wrap, so the crop runs gasket-centre to gasket-centre (488) and drops the top 24 rows to stay square.",
+      "crop": [
+        524,
+        24,
+        488,
+        488
+      ],
+      "last_converted": "2026-10-14T00:11:37",
+      "built_linear": 0.0438,
+      "built_srgb": 56.6
+    },
+    "lab/wall-corridor": {
+      "src": "lab/walls-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: corridor wall, dark steel with a bundle of horizontal pipes and conduits across at mid height, brackets. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). ",
+      "crop": [
+        2,
+        518,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:11:37",
+      "built_linear": 0.0367,
+      "built_srgb": 52.2
+    },
+    "lab/wall-workshop": {
+      "src": "lab/walls-a.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-a.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: workshop wall, dull dark olive perforated steel pegboard two panels across, steel skirting. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). ",
+      "crop": [
+        517,
+        518,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:11:37",
+      "built_linear": 0.0515,
+      "built_srgb": 58.8
+    },
+    "lab/wall-storage": {
+      "src": "lab/walls-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: storage wall, corrugated steel sheeting, vertical corrugations, dull dark red-brown primer. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). Seams measured at x 512 / y 511.",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:12:27",
+      "built_linear": 0.0301,
+      "built_srgb": 48.3
+    },
+    "lab/wall-research": {
+      "src": "lab/walls-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: research lab wall, smooth dark grey-blue laminate panels two across, thin reveal joints. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). ",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:12:27",
+      "built_linear": 0.0323,
+      "built_srgb": 51.1
+    },
+    "lab/rock": {
+      "src": "lab/walls-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: bedrock seen from directly above, rough dark grey-brown fractured facets, pale mineral veins. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab.LabGeom: the bedrock cap over every rock cell, at the wall head, and the cladding on the faces that look into it.",
+      "crop": [
+        2,
+        515,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:12:27",
+      "built_linear": 0.0389,
+      "built_srgb": 54.3
+    },
+    "lab/coping": {
+      "src": "lab/walls-b.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/walls-b.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: the flat top of a thick wall from directly above, smooth dark grey poured concrete, fine pitting. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab shell wall head (ShellTex.roof/coping).",
+      "crop": [
+        516,
+        515,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:12:27",
+      "built_linear": 0.0545,
+      "built_srgb": 65.7
+    },
+    "lab/door-blast": {
+      "src": "lab/doors.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/doors.png, PACK4 door leaves, gpt-image-2.5-sunburst high] TOP-LEFT: blast door leaf, dark gunmetal, three reinforcing ribs, hazard chevrons across the lower quarter, cyan strip down the meeting edge. Right edge is the meeting stile, left edge slides into the wall. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab.LabDoors: ONE leaf, mapped 0..1 over a CELL x DOOR_H (4 x 4) leaf; its twin is the mirror. Leaf boxes measured off the dark gap at x 507-512 / y 509-514; crops square inside them.",
+      "crop": [
+        0,
+        1,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:13:16",
+      "built_linear": 0.0457,
+      "built_srgb": 53.3
+    },
+    "lab/door-service": {
+      "src": "lab/doors.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/doors.png, PACK4 door leaves, gpt-image-2.5-sunburst high] TOP-RIGHT: service door leaf, plain dark grey steel, recessed panel, dark glass vision slot top right, kick plate. Right edge is the meeting stile, left edge slides into the wall. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab.LabDoors: ONE leaf, mapped 0..1 over a CELL x DOOR_H (4 x 4) leaf; its twin is the mirror. Leaf boxes measured off the dark gap at x 507-512 / y 509-514; crops square inside them.",
+      "crop": [
+        515,
+        0,
+        509,
+        509
+      ],
+      "last_converted": "2026-10-14T00:13:16",
+      "built_linear": 0.063,
+      "built_srgb": 68.8
+    },
+    "lab/door-research": {
+      "src": "lab/doors.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/doors.png, PACK4 door leaves, gpt-image-2.5-sunburst high] BOTTOM-LEFT: research door leaf, dark blue-grey steel, tall narrow dark wired-glass window by the meeting edge. Right edge is the meeting stile, left edge slides into the wall. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab.LabDoors: ONE leaf, mapped 0..1 over a CELL x DOOR_H (4 x 4) leaf; its twin is the mirror. Leaf boxes measured off the dark gap at x 507-512 / y 509-514; crops square inside them.",
+      "crop": [
+        0,
+        516,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:13:16",
+      "built_linear": 0.0364,
+      "built_srgb": 52.6
+    },
+    "lab/door-vat": {
+      "src": "lab/doors.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/doors.png, PACK4 door leaves, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: vat containment door leaf, dark olive-green steel, large faded yellow biohazard trefoil, green seal gasket down the meeting edge. Right edge is the meeting stile, left edge slides into the wall. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "render.lab.LabDoors: ONE leaf, mapped 0..1 over a CELL x DOOR_H (4 x 4) leaf; its twin is the mirror. Leaf boxes measured off the dark gap at x 507-512 / y 509-514; crops square inside them.",
+      "crop": [
+        514,
+        514,
+        510,
+        510
+      ],
+      "last_converted": "2026-10-14T00:13:16",
+      "built_linear": 0.0439,
+      "built_srgb": 52.1
     }
   }
 }

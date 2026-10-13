@@ -44,4 +44,11 @@ typedef ShellOpts = {
   // whose shed is a storey like its labs; a military base's is twice that, so its plane clears the
   // doors, and everything over WALL_H fades with the vault (FacilityGeom.storey)
   var hangarH: Float;
+  // does a structure get the FLAT CEILING deck over its floor? a compound's labs do; a corp floor's
+  // would be permanently faded (the player is always inside it), and an underground lab's would be a
+  // lid on a level whose bedrock is the ceiling
+  var deck: Bool;
+  // and the PARAPET ring standing PARAPET_H over the wall head along every outward wall. the read of
+  // "a storey" on a compound and a tower; in the lab it would stand up out of the bedrock
+  var parapet: Bool;
 }

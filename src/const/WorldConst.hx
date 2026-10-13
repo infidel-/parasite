@@ -239,8 +239,10 @@ class WorldConst
         pediaArticle: 'areaLab',
         exit: 'elevator',
         alertnessMod: 1.0,
-        width: 45,
-        height: 35,
+        // the size gen.lab is planned and checked against (tools/genrun.mjs --type lab), and an
+        // EXACT size: game.AreaGame.setType does not roll it down
+        width: 56,
+        height: 32,
         canEnter: true,
         isInhabited: true,
         commonAI: 0,

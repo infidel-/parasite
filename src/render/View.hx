@@ -382,7 +382,8 @@ class View {
 // wilderness has never had one, so everything that is not a city, a wilderness, a facility or a
 // corp tower renders through the tunnel view and warms as one
   static inline function warmKey(kind:String):String
-    return (kind == 'facility' || kind == 'corp' || kind == 'militaryBase' ? kind : 'sewer');
+    return (kind == 'facility' || kind == 'corp' || kind == 'militaryBase' ||
+      kind == 'undergroundLab' ? kind : 'sewer');
 
 // would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
 // commits to putting the warmup screen back up — a kind already warmed is a call-through and a
@@ -450,6 +451,7 @@ class View {
               },
             ]));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
+          case 'undergroundLab': render.lab.LabWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };
       chain.then(function(_)
@@ -487,10 +489,10 @@ class View {
 // but a key that COLLIDED would let a rebuild of another kind read as a warm re-show of this one —
 // so each kind takes its own residue class rather than a parity. it was 2 residues while there were
 // two such kinds and both were spent; a third needed the stride, not another offset. the corp tower
-// took the fourth, so a FIFTH grid kind needs the stride widening again
+// took the fourth and the underground lab the fifth, which is what widened it to 8
   static inline function gridKey(id:Int, kind:Int):Int
     {
-      return -(id * 4 + kind + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
+      return -(id * 8 + kind + 3); // outside the seed range (seeds are >= 0, -1 = seedless city)
     }
 
 // show the 3D sewer/habitat tunnels for an area, built from its saved tile grid (no seed — the
@@ -531,6 +533,33 @@ class View {
       // being see-through in the TILE grid too — see CorpModel.sealWindows
       render.corp.CorpModel.sealWindows(area, model);
       buildFrom(new render.corp.CorpArea(game, model), key);
+    }
+
+// the player's marker ring. a function and not inline in the build so render.Warmup.actorLayer
+// warms the very material the game draws
+  public static function playerRing():Mesh
+    {
+      var ring = new Mesh(
+        new RingGeometry(CityConfig.CELL * 0.398, CityConfig.CELL * 0.448, 40),
+        new MeshBasicMaterial({
+          color: 0xb46bff,
+          transparent: true,
+          opacity: 0.9,
+          side: THREE.DoubleSide,
+          forceSinglePass: true, // one flat ring: the back-then-front split is a second call
+          depthWrite: false,
+        }));
+      ring.name = 'ui player ring';
+      return ring;
+    }
+
+// show the 3D underground lab for an area, built from its saved grid like every grid kind above
+  public function showLab(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 4);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.lab.LabArea(game, render.lab.LabModel.fromArea(area)), key);
     }
 
 // the opaque box of one bench decoration's art, which the facility model places its contact pool
@@ -607,17 +636,7 @@ class View {
     pathLine = new PathLine(game, scene);
 
     // player marker ring + the group holding all actor billboards
-    ring = new Mesh(
-      new RingGeometry(CityConfig.CELL * 0.398, CityConfig.CELL * 0.448, 40),
-      new MeshBasicMaterial({
-        color: 0xb46bff,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide,
-        forceSinglePass: true, // one flat ring: the back-then-front split is a second call
-        depthWrite: false,
-      }));
-    ring.name = 'ui player ring';
+    ring = playerRing();
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 0.06;
     scene.add(ring);

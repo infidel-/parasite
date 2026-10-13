@@ -924,6 +924,13 @@ class AreaGame extends _SaveObject
           width = info.width - 10 + 10 * Std.random(2);
           height = info.height - 10 + 10 * Std.random(2);
         }
+      // and an underground lab created before gen.lab took it carries the 2D generator's 45x35, which
+      // the grown plate does not fit: it is generated at its exact size, as setType now creates one
+      if (typeID == AREA_UNDERGROUND_LAB)
+        {
+          width = info.width;
+          height = info.height;
+        }
 
       // clear map
       _cells = [];
@@ -1443,7 +1450,10 @@ class AreaGame extends _SaveObject
       // habitat and city areas use exact info dims. city especially: the 3D street renderer
       // rebuilds the full CityGen grid (GRID=100) from the seed, so shrinking the walkable
       // grid would leave visible-but-unreachable streets past the cut edge
+      // and the underground lab, whose generator (gen.lab) plans a grown floor plate against its
+      // exact size: two corridors' worth of rolled shrinkage would leave no room for the rooms
       if (typeID == AREA_HABITAT ||
+          typeID == AREA_UNDERGROUND_LAB ||
           isCity())
         {
           width = info.width;

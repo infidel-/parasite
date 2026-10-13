@@ -55,26 +55,9 @@ class CityWarm
       // program — so the warm scene must carry it or every MeshStandard program compiles at the wrong
       // light count and recompiles on entry. this is the 5-light count (every non-barrel city); the
       // 10-light AREA_CITY_LOW variant is warmed by the second compile pass below (FlameLights added)
-      new render.particles.MuzzleLights(g);
-      for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
-        g.add(m);
-      for (m in render.particles.Sprites.warmupMeshes())    // actor billboards (MeshStandard + map/emissiveMap)
-        g.add(m);
-      // beams + hit sparks: spawn once via the REAL code so the exact materials get built (no config to
-      // drift). streak (no map) + glow (map) cover both MeshBasic variants; beams share streak's program
-      var beams = new render.particles.Beams(g);
-      beams.quad(0, 0, 0, 1, 0, 0, 0xffffff, 1);
-      var sparks = new render.particles.Sparks(g, camera);
-      sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
-      sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
-      // the grown props' writhing core: a plain additive quad EXCEPT for its uv-disturbance patch,
-      // which carries a customProgramCacheKey of its own — so it is a program glowQuad's does not
-      // cover and would otherwise compile on the first habitat entry. its fireflies ARE glowQuad's
-      // material and need nothing. warmed in the CITY scene deliberately: MeshBasic takes no light
-      // count, so the program does not vary by area, and this scene is the one bound to the
-      // composer's linear target below (which the cache key DOES bake in)
-      for (m in render.actors.PropFX.warmupMeshes())
-        g.add(m);
+      // the actor billboards, the gas, the beams and sparks, the grown props' core and the player ring
+      // — see Warmup.actorLayer. the grown props' core is warmed here for the first habitat entry
+      Warmup.actorLayer(g, camera);
       // park the moon's shadow box over the city so the composer pass below actually runs the shadow
       // depth pass — otherwise the box sits at world origin, the city-wide shadow caster falls outside it,
       // no depth material renders, and the position-only shadow programs compile on the first real frame

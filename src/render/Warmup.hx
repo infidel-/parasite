@@ -12,6 +12,33 @@ class Warmup
 {
   public static var hold:Array<Scene> = []; // every warm scene ever built, retained so its materials' programs stay cached
 
+// the ACTOR LAYER and the on-demand effects every real scene carries, parked in `g` so a kind's warm
+// compiles them under ITS light counts: NUM_DIR / NUM_POINT / NUM_SPOT_LIGHTS are in every program
+// key, basics included, so the city's warm covers none of them for a moonless kind. Measured on the
+// first underground-lab entry: the billboard pool's MeshStandard and the player ring compiled on the
+// entry frame. The muzzle-flash pool comes first because Actors adds it to every scene
+  public static function actorLayer(g:Group, camera:PerspectiveCamera):Void
+    {
+      new render.particles.MuzzleLights(g);
+      for (m in render.particles.GasCloud3D.warmupMeshes()) // gas puffs (explicit front/back MeshStandard)
+        g.add(m);
+      for (m in render.particles.Sprites.warmupMeshes())    // actor billboards (MeshStandard + map/emissiveMap)
+        g.add(m);
+      // beams + hit sparks: spawn once via the REAL code so the exact materials get built (no config to
+      // drift). streak (no map) + glow (map) cover both MeshBasic variants; beams share streak's program
+      var beams = new render.particles.Beams(g);
+      beams.quad(0, 0, 0, 1, 0, 0, 0xffffff, 1);
+      var sparks = new render.particles.Sparks(g, camera);
+      sparks.streak(0, 0, 0, 1, 0, 0, 1, 0.2, 0xffffff, 1);
+      sparks.glowQuad(0, 0, 0, 1, 0xffffff, 1);
+      // the grown props' writhing core: a plain additive quad EXCEPT for its uv-disturbance patch,
+      // which carries a customProgramCacheKey of its own
+      for (m in render.actors.PropFX.warmupMeshes())
+        g.add(m);
+      // and the player's marker ring, View's own
+      g.add(render.View.playerRing());
+    }
+
 // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
 // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
 // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).

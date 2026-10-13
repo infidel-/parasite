@@ -8,8 +8,8 @@
 //
 // what it is NOT is a solver. There is no backtracking: if a greedy pass cannot satisfy a min it
 // says so and returns what it has, rather than searching. The caller's answer to that is to re-split
-// with a different seed, which is how game.UndergroundLabAreaGenerator already handles an
-// unsatisfiable layout (buildLabLayout retries up to 30 candidates) and costs nothing at this size.
+// with a different seed, which is how gen.lab.LabPlan handles an unsatisfiable layout (it draws up
+// to 30 candidates) and costs nothing at this size.
 
 package gen;
 

@@ -16,6 +16,10 @@ import tiles.*;
 
 class AreaLighting
 {
+// base darkness alpha applied before light cutouts (higher = darker)
+  static var ATMOS_BASE_ALPHA = 0.50;
+// edge darkening alpha used by the radial vignette (higher = darker)
+  static var ATMOS_VIGNETTE_ALPHA = 0.10;
 // atmosphere lightmap pixels per world tile
   static var ATMOS_LIGHTMAP_TILE_SIZE = 16;
 // minimum interval between dynamic lightmap rebuilds in milliseconds
@@ -283,8 +287,7 @@ class AreaLighting
     {
       return (area != null &&
         area.info != null &&
-        (area.info.id == AREA_UNDERGROUND_LAB ||
-         area.getTilesetTypeID() == AREA_SEWERS));
+        area.getTilesetTypeID() == AREA_SEWERS);
     }
 
 // get cached static atmosphere light stamps for an area
@@ -297,10 +300,7 @@ class AreaLighting
       if (stamps != null)
         return stamps;
 
-      if (area.info.id == AREA_UNDERGROUND_LAB)
-        stamps = UndergroundLabAreaLighting.buildLightStamps(scene, area,
-          this);
-      else if (area.getTilesetTypeID() == AREA_SEWERS)
+      if (area.getTilesetTypeID() == AREA_SEWERS)
         stamps = SewerAreaLighting.buildLightStamps(scene, area, this);
       else stamps = [];
       areaLightStampsByAreaID.set(area.id, stamps);
@@ -898,12 +898,6 @@ class AreaLighting
   function collectProjectedShadowCasters(area: AreaGame): Array<_ProjectedShadowCaster>
     {
       var tileset = scene.images.getTileset(area.getTilesetTypeID());
-      if (Std.isOfType(tileset, UndergroundLab))
-        {
-          var undergroundLab: UndergroundLab = cast tileset;
-          return UndergroundLabAreaLighting.collectProjectedShadowCasters(area,
-            undergroundLab);
-        }
       if (Std.isOfType(tileset, Sewers))
         return SewerAreaLighting.collectProjectedShadowCasters(scene, area);
       return [];
@@ -1427,7 +1421,7 @@ class AreaLighting
       cache: Array<Array<Int>>, ctx: CanvasRenderingContext2D)
     {
       ctx.save();
-      ctx.fillStyle = 'rgba(8, 12, 18, ' + UndergroundLab.ATMOS_BASE_ALPHA + ')';
+      ctx.fillStyle = 'rgba(8, 12, 18, ' + ATMOS_BASE_ALPHA + ')';
 
       var rect = area.getVisibleRect();
       for (y in rect.y1...rect.y2)
@@ -1467,7 +1461,7 @@ class AreaLighting
   function fillDarkBase(mapCtx: CanvasRenderingContext2D,
       mapWidth: Int, mapHeight: Int)
     {
-      mapCtx.fillStyle = 'rgba(8, 12, 18, ' + UndergroundLab.ATMOS_BASE_ALPHA + ')';
+      mapCtx.fillStyle = 'rgba(8, 12, 18, ' + ATMOS_BASE_ALPHA + ')';
       mapCtx.fillRect(0, 0, mapWidth, mapHeight);
 
       var cx = mapWidth / 2;
@@ -1477,7 +1471,7 @@ class AreaLighting
         cx, cy, radius);
       vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
       vignette.addColorStop(1,
-        'rgba(0, 0, 0, ' + UndergroundLab.ATMOS_VIGNETTE_ALPHA + ')');
+        'rgba(0, 0, 0, ' + ATMOS_VIGNETTE_ALPHA + ')');
       mapCtx.fillStyle = vignette;
       mapCtx.fillRect(0, 0, mapWidth, mapHeight);
     }

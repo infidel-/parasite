@@ -290,7 +290,8 @@ class Actors {
                 render.facility.FacilityDoors.draws(game.area, o) ||
                 render.facility.FacilityDeco.draws(game.area, o) ||
                 render.military.MilitaryGeom.draws(game.area, o) ||
-                render.corp.CorpDeco.draws(game.area, o),
+                render.corp.CorpDeco.draws(game.area, o) ||
+                render.lab.LabArea.draws(game.area, o),
             });
             if (vis && uiOn)
               badges.drawObjTarget(o);

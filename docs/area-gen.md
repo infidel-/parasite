@@ -656,8 +656,8 @@ vat 29 (of 224, the pads' kept ring being most of it) / workshop 21 cells.
 above holds and `make gen` keeps working.
 
 Moving those 13 helpers into a `gen/Grid.hx` is the obvious follow-up and is deliberately not done:
-`AreaGenerator` still serves the wilderness, city, sewers and underground lab, so it is four more
-generators' blast radius for no benefit yet.
+`AreaGenerator` still serves the wilderness, city and sewers, so it is three more generators' blast
+radius for no benefit yet.
 
 ### Decorations are dealt by PLACE, not by a hardcoded list
 
@@ -915,7 +915,7 @@ function for which rect suits it. That roll is gone (see "A lab building always 
 
 **An unsatisfiable split is re-rolled, not repaired.** `FacilityBlocks.plan()` splits, deals, and
 starts over with a fresh split if any `min` went unmet, up to `MAX_PLAN_TRIES`. Same shape as
-`UndergroundLabAreaGenerator.buildLabLayout`'s 30 attempts. `Quota.deal` is silent on failure for
+`gen.lab.LabPlan`'s 30 draws. `Quota.deal` is silent on failure for
 this reason — ask `Quota.satisfied` instead.
 
 **The south wall rarely carries wall decoration.** The tactical camera looks NORTH, so anything

@@ -40,8 +40,8 @@ class FacilityBlocks
   public static inline var EDGE_MARGIN = 2;
 
   // how many splits to try before giving up on housing the whole quota. a split is cheap and an
-  // unsatisfiable one is thrown away whole rather than patched, the same shape
-  // game.UndergroundLabAreaGenerator.buildLabLayout uses (MAX_LAYOUT_ATTEMPTS = 30). Measured over
+  // unsatisfiable one is thrown away whole rather than patched, the same shape gen.lab.LabPlan uses
+  // (30 draws). Measured over
   // 2000 seeds with the profile below, the first attempt succeeds ~96% of the time, so this is deep
   // enough that failing every attempt is not a thing that happens
   public static inline var MAX_PLAN_TRIES = 12;

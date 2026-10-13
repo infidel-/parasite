@@ -1325,6 +1325,10 @@ class CorpStyle
         // concrete-majority test would call a shed and arch a barrel vault over
         hangars: false,
         hangarH: FacilityStyle.WALL_H,
+        // no deck — the player never leaves the plate, so it would be permanently faded — and the
+        // parapet band is what reads as the storey instead
+        deck: false,
+        parapet: true,
       };
     }
 }
