@@ -91,6 +91,8 @@ package three;
   public function copy(m:Matrix4):Matrix4;
   public function invert():Matrix4; // in place; world -> object frame for a picked hit
   public function getMaxScaleOnAxis():Float; // largest axis scale, for a transformed bounding sphere's radius
+  public function clone():Matrix4;                    // a new matrix with this one's entries
+  public function makeScale(x:Float, y:Float, z:Float):Matrix4; // in place; a pure scale (0,0,0 hides an instance)
   public var elements:js.lib.Float32Array; // the 16 entries, column-major
 }
 

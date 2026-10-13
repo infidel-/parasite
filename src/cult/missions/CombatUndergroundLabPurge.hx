@@ -218,8 +218,13 @@ class CombatUndergroundLabPurge extends Combat
         }
 
       if (vatObjectIDs.length == 0)
-        if (!spawnCloneVats(vatRoom, hints))
-          throw 'Underground lab purge mission failed to place ' + REQUIRED_VAT_COUNT + ' vats.';
+        {
+          if (!spawnCloneVats(vatRoom, hints))
+            throw 'Underground lab purge mission failed to place ' + REQUIRED_VAT_COUNT + ' vats.';
+          // the vats are drawn by the 3D view (render.lab.LabVats), which places them at build: one
+          // rebuild for the whole set rather than one per part
+          game.scene.updateObjects3D();
+        }
 
       isInitialized = true;
     }

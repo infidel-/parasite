@@ -7577,6 +7577,142 @@
       "last_converted": "2026-10-14T00:13:16",
       "built_linear": 0.0439,
       "built_srgb": 52.1
+    },
+    "lab/vat-console": {
+      "src": "lab/kit-vat.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-vat.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: ONE AUTHORED PANEL: the sloped control surface of a vat console, two dull green readout screens, square buttons, keypad, red purge lever. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/vat_build.py, packed into models-src/lab/vat-sheet.png by tools/modelsheet.py. Seams at 511/511. Mapped 0..1 over the console's sloped top.",
+      "crop": [
+        2,
+        2,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:40:49",
+      "built_linear": 0.0301,
+      "built_srgb": 45.0
+    },
+    "lab/vat-metal": {
+      "src": "lab/kit-vat.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-vat.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: vat housing metal, dark gunmetal machined steel, faint brushed grain, sparse bolt heads. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/vat_build.py, packed into models-src/lab/vat-sheet.png by tools/modelsheet.py. Seams at 511/511. ",
+      "crop": [
+        515,
+        2,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:40:49",
+      "built_linear": 0.0343,
+      "built_srgb": 51.2
+    },
+    "lab/vat-glass": {
+      "src": "lab/kit-vat.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-vat.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: thick containment glass, pale cold green-grey tint, faint vertical streaks. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the vat glass glb's own map (render.lab.LabVats draws it transparent).",
+      "crop": [
+        2,
+        515,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:40:49",
+      "built_linear": 0.1567,
+      "built_srgb": 104.5
+    },
+    "lab/vat-fluid": {
+      "src": "lab/kit-vat.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-vat.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: cloning growth medium, murky luminous green liquid, suspended bubbles and pale specks. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the vat fluid glb's own map, also its emissive (render.lab.LabVats).",
+      "crop": [
+        515,
+        515,
+        507,
+        507
+      ],
+      "last_converted": "2026-10-14T00:40:49",
+      "built_linear": 0.0506,
+      "built_srgb": 54.3
+    },
+    "lab/lift-deck": {
+      "src": "lab/kit-lift.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-lift.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: lift platform deck from above, dark steel herringbone bar-tread plate. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/lift_build.py, packed into models-src/lab/lift-sheet.png by tools/modelsheet.py. Seams at 512/510. ",
+      "crop": [
+        2,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:41:36",
+      "built_linear": 0.0376,
+      "built_srgb": 51.9
+    },
+    "lab/lift-hazard": {
+      "src": "lab/kit-lift.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-lift.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: diagonal yellow and black hazard stripes at 45 degrees, eight pairs across, chipped. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/lift_build.py, packed into models-src/lab/lift-sheet.png by tools/modelsheet.py. Seams at 512/510. ",
+      "crop": [
+        516,
+        2,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:41:36",
+      "built_linear": 0.0925,
+      "built_srgb": 66.8
+    },
+    "lab/lift-rail": {
+      "src": "lab/kit-lift.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-lift.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-LEFT: lift guide rail steel, dark oily steel channel with one bolt column up the middle. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/lift_build.py, packed into models-src/lab/lift-sheet.png by tools/modelsheet.py. Seams at 512/510. ",
+      "crop": [
+        2,
+        514,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:41:36",
+      "built_linear": 0.0293,
+      "built_srgb": 46.7
+    },
+    "lab/lift-cable": {
+      "src": "lab/kit-lift.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/kit-lift.png, PACK4, gpt-image-2.5-sunburst high] BOTTOM-RIGHT: five twisted steel wire ropes running vertically side by side, dark greasy grey. [append textures.json style]",
+      "prompt_exact": false,
+      "note": "models-src/lab/lift_build.py, packed into models-src/lab/lift-sheet.png by tools/modelsheet.py. Seams at 512/510. ",
+      "crop": [
+        516,
+        514,
+        506,
+        506
+      ],
+      "last_converted": "2026-10-14T00:41:36",
+      "built_linear": 0.0307,
+      "built_srgb": 45.6
     }
   }
 }

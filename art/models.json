@@ -2018,6 +2018,83 @@
       "note": "THE ROOF AERIAL MAST, HAND-MODELLED (models-src/military/roofkit_build.py), 1028 tris: a square lattice tapering from 0.9 to 0.32 over 6.2, X-braced every level, on a base plate, with a pole on top carrying a crossarm, two whips and a panel antenna on one face. Replaces an emitted pole with three crossbars ('emitted again? make blender model'). Sheet mil-h-sheet.png. Drawn on the dish spot through FacilityRoof's dish batch at h 7.7.",
       "last_converted": "2026-10-12T11:10:02Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "lab/vat-frame": {
+      "src": "lab/vat-frame.glb",
+      "tris": -1,
+      "tex": 1024,
+      "roughness": 1,
+      "note": "hand-modelled in Blender, models-src/lab/vat_build.py; re-run it (blender --background --python), never hand-edit the glb. The clone vat's opaque frame over the mission's 2x3 footprint: plinth grate, base ring, four posts, an OPEN cap ring, two feed pipes down the back and the sloped purge console on the front row. 892 tris, 7.8 x 11.8 x 9.86, holes 0 / coplanar 0 / 1 island. THE CAP WAS A DOME and came out of the first live look as the whole problem: the gameplay camera looks almost straight down, so four closed domes read as four black discs with the medium and the clone hidden under them. A ring leaves the green column's top open to the camera. Wears vat-sheet.png (lab/vat-console, lab/vat-metal, lab/floor-pad, lab/lift-rail packed by tools/modelsheet.py), so no baseColor/lift/sat. tex 1024 because the console panel is the one authored cell and reads at the gameplay camera.",
+      "last_converted": "2026-10-13T20:38:00Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "lab/vat-glass": {
+      "src": "lab/vat-glass.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "hand-modelled in Blender, models-src/lab/vat_build.py; re-run it (blender --background --python), never hand-edit the glb. The vat's open glass cylinder, r 3.25 x 7.0, 64 tris. Its UVs run past 0..1 (5 repeats round, one per 3.5 up) on its own one-image sheet, so the map WRAPS. render.lab.LabVats draws it transparent and double-sided over the fluid.",
+      "last_converted": "2026-10-13T20:38:00Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "lab/vat-fluid": {
+      "src": "lab/vat-fluid.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "hand-modelled in Blender, models-src/lab/vat_build.py; re-run it (blender --background --python), never hand-edit the glb. The vat's growth medium, a closed cylinder r 3.12 x 6.7 with its base at 0, so render.lab.LabVats drains it by scaling its height. 124 tris, wrapping UVs on its own one-image sheet.",
+      "last_converted": "2026-10-13T20:38:00Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "lab/lift-deck": {
+      "src": "lab/lift-deck.glb",
+      "tris": -1,
+      "tex": 1024,
+      "roughness": 1,
+      "note": "hand-modelled in Blender, models-src/lab/lift_build.py; re-run it (blender --background --python), never hand-edit the glb. The freight lift's car: tread deck with a hazard border, guard rail along the north and west wall sides, call post, rope clamps. 428 tris, 7.8 x 7.8 x 2.74, holes 0 / coplanar 0 / 1 island. render.lab.LabLift lowers it in on arrival. Wears lift-sheet.png (lab/lift-deck, -hazard, -rail, -cable).",
+      "last_converted": "2026-10-13T20:22:05Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "lab/lift-shaft": {
+      "src": "lab/lift-shaft.glb",
+      "tris": -1,
+      "tex": 1024,
+      "roughness": 1,
+      "note": "hand-modelled in Blender, models-src/lab/lift_build.py; re-run it (blender --background --python), never hand-edit the glb. The lift's fixed shaft: four guide rails against the wall faces, the head frame, the sheave and two ropes. 812 tris, 9.8 x 9.8 x 9.87, symmetric in plan so normalize() needs no offset. texel_off 148 is the ROPES, mapped at 0.9 units a tile against the rest's 4.0 on purpose: the cable cell draws five ropes, so one rope is a 0.16 slice of it.",
+      "last_converted": "2026-10-13T20:22:05Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+    },
+    "lab/clone": {
+      "src": "lab/clone.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.3,
+        0.3,
+        0.3,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D vat sprite's creature (models-src/lab/clone-src.png): the tentacled clone floating in an intact vat, drawn inside lab/vat-fluid by render.lab.LabVats. Generated AT the budget (decimation_target 6000, 5,842 tris). propstat REJECTs it at 6 components / 52.7%: the body and the tentacle crown come back as two pieces, and inside the fluid and the glass nothing reads the join. baseColor 0.3 takes the atlas's luma ~143 to the indoor ~78 band.",
+      "last_converted": "2026-10-13T19:43:33Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.3,0.3,0.3,1"
+    },
+    "lab/clone-slumped": {
+      "src": "lab/clone-slumped.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.45,
+        0.45,
+        0.45,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D drained-vat sprite's heap (models-src/lab/clone-slumped-src.png): the clone collapsed on the vat floor once the vat is purged. 5,930 tris at decimation_target 6000, 82.4% in one component (a loose tentacle loop is the rest). baseColor 0.45 takes luma ~114 to ~78.",
+      "last_converted": "2026-10-13T19:44:03Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.45,0.45,0.45,1"
     }
   }
 }

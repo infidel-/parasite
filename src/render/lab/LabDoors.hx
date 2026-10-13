@@ -164,7 +164,7 @@ class LabDoors
 // per-frame: ease every opening toward its door's live state, pose what moved, and cull
   public static function tick(batches:Array<LabDoorBatch>, opts:Area3DTickOpts):Void
     {
-      var step = opts.dtMs / (RenderConfig.BASE_MS * LabStyle.DOOR_MULT);
+      var step = opts.dtMs * RenderConfig.ANIM_SPEED / (RenderConfig.BASE_MS * LabStyle.DOOR_MULT);
       for (b in batches)
         {
           for (c in 0...b.open.length)

@@ -39,6 +39,11 @@ class LabArea implements Area3D
   var doors:Array<LabDoors.LabDoorBatch>;
   var rock = 0;                               // the bedrock cap's quad count, for __lab()
   var props:Array<render.world.ObjModels.PropBatch>;
+  var vats:LabVats.LabVatSet;
+  var lift:LabLift.LabLiftSet;
+  // each vat's eased drain, keyed on its root object. the AREA's and not the batch's, so a rebuild of
+  // the batches (refreshObjects) carries a drain on from where it was (LabVats)
+  var drain = new Map<Int,Float>();
   var built:Scene;
   var tactical = false;
 
@@ -63,7 +68,8 @@ class LabArea implements Area3D
       // the hooks a shell kind shares with the compound; climbArc and the rest CLEARED, since the kind
       // that sets one owns clearing it (WorldCtx)
       WorldCtx.tiles = null;
-      WorldCtx.ground = null;
+      // the lift's car, which comes down the shaft on arrival with whoever is standing on it
+      WorldCtx.ground = function(x, z) return LabLift.ground(lift, x, z);
       WorldCtx.climbArc = null;
       WorldCtx.wallMounts = function(col, row) return FacilityGeom.wallMounts(model, col, row);
       WorldCtx.wallFace = function(col, row, dir) return FacilityGeom.wallFace(model, col, row, dir);
@@ -86,6 +92,11 @@ class LabArea implements Area3D
       doors = LabDoors.build(scene, model, game.area);
       props = render.world.ObjModels.build(scene, game, objYaw, objLift, objWall);
       chunks.build(scene, pre);
+      // the vats and the lift AFTER the chunks: an instanced batch sits at the origin, and a glb
+      // already cached would be bucketed into the chunk there and culled with it
+      posts = [];
+      vats = LabVats.build(scene, game, drain, posts);
+      lift = LabLift.build(scene, model);
       // a blocker is masonry or rock: anything that is not floor. `carries` is what slab() insets
       // against, so the reveal pulls back off exactly the floor the masonry left open
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -95,7 +106,7 @@ class LabArea implements Area3D
     }
 
 // console debug helper (permanent) — what this lab actually built.
-//   __lab() -> { rooms, surfs, doors, rock, objProps, shadows }
+//   __lab() -> { structures, rooms, surfs, doors, lift, vats, rock, objProps, shadows }
 //
 // the same reasoning as __corp(): the door leaves and the object props are instanced batches with
 // no userData.cls, parasiteHx is statics-only so the Facility record is unreachable from JS, and
@@ -137,6 +148,13 @@ class LabArea implements Area3D
             rooms: model.rooms,
             surfs: [for (k in surfs.keys()) { surf: k, cells: surfs.get(k) }],
             doors: leaves,
+            lift: {
+              col: lift.col,
+              row: lift.row,
+              t: lift.t,
+              y: lift.y,
+            },
+            vats: LabVats.dbg(vats),
             rock: rock,
             objProps: [for (b in props) {
               path: b.model.path,
@@ -191,6 +209,8 @@ class LabArea implements Area3D
       lampLights.update(posts, opts.playerCol, opts.playerRow, opts.dtMs);
       propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
       LabDoors.tick(doors, opts);
+      LabVats.tick(vats, opts);
+      LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       render.world.PropShader.tick(opts.dtMs);
@@ -244,14 +264,20 @@ class LabArea implements Area3D
       doors = LabDoors.build(built, model, game.area);
       render.world.ObjModels.dispose(built, props);
       props = render.world.ObjModels.build(built, game, objYaw, objLift, objWall);
+      LabVats.dispose(vats);
+      for (p in vats.posts)
+        posts.remove(p);
+      vats = LabVats.build(built, game, drain, posts);
     }
 
 // does this area draw this object as real geometry, so the actor layer must not also lay its 2D
-// icon? the lab's door leaves (LabDoors)
+// icon? the lab's door leaves (LabDoors), its lift (LabLift) and the mission's vats (LabVats)
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
         area.typeID == AREA_UNDERGROUND_LAB &&
-        o.type == 'door';
+        (o.type == 'door' ||
+         o.type == 'elevator' ||
+         o.type == 'clone_vat');
     }
 }

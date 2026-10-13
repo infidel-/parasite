@@ -57,6 +57,44 @@ class LabStyle
   // out, plus the leaf's own height for the sphere
   public static inline var DOOR_CULL_R = 10.0;
 
+  // ---- the clone vats (render.lab.LabVats, models-src/lab/vat_build.py). every height is the glb's
+  // measured one, so Models.instanced draws each part at scale 1 and the script's numbers hold
+  public static inline var VAT_H = 9.8636;         // the frame, slab to the feed pipes' crown
+  // the cylinder's axis north of the 2x3 footprint's centre: on the back 2x2's centre (AXIS_Y)
+  public static inline var VAT_AXIS = 2.0;
+  public static inline var VAT_GLASS_Y = 1.0;      // the base ring's top, where glass and medium stand
+  public static inline var VAT_GLASS_H = 7.0;
+  public static inline var VAT_FLUID_H = 6.7;
+  public static inline var VAT_GLASS_OPACITY = 0.22;
+  public static inline var VAT_FLUID_OPACITY = 0.62;
+  // the medium lights itself through its own map, times this colour
+  public static inline var VAT_FLUID_GLOW = 0x2f7a24;
+  // the clone floats CLONE_FLOAT clear of the ring, CLONE_H from its feet to its tentacles' tips
+  public static inline var CLONE_H = 5.0;
+  public static inline var CLONE_FLOAT = 0.6;
+  public static inline var CLONE_YAW = 0.0;
+  public static inline var CLONE_SLUMP_H = 1.4;
+  // the heap replaces the floating clone once the level is under this fraction of the clone's height
+  public static inline var CLONE_SLUMP_AT = 0.35;
+  // a purged vat drains over this many BASE_MS
+  public static inline var VAT_DRAIN_MULT = 20.0;
+  // each vat's own green lamp, inside the glass, faded out with its level
+  public static inline var VAT_LAMP_Y = 5.0;
+  public static inline var VAT_LAMP_COLOR = 0x52ff6e;
+  public static inline var VAT_LAMP_MUL = 1.6;
+  // a vat's cull radius about its placement: the frame is 7.8 x 11.8 and 10.3 tall
+  public static inline var VAT_CULL_R = 12.0;
+
+  // ---- the lift (render.lab.LabLift, models-src/lab/lift_build.py)
+  public static inline var LIFT_SHAFT_H = 9.87;    // the shaft glb's measured height
+  public static inline var LIFT_DECK_GLB_H = 2.74; // the car glb's, guard rail and clamps included
+  public static inline var LIFT_DECK_H = 0.25;     // the deck's tread, which is what anyone stands on
+  // the car comes down from this far up the shaft on arrival, over this many BASE_MS. 5.5 keeps its
+  // rope clamps under the sheave the whole way
+  public static inline var LIFT_DROP = 5.5;
+  public static inline var LIFT_MULT = 16.0;
+  public static inline var LIFT_CULL_R = 10.0;
+
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)
   public static inline var DARK = 0x040608;

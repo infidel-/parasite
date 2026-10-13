@@ -1051,6 +1051,16 @@ class RenderConfig {
     scenarioCase: 'models/scenario-a/case.glb',             // orange transport case, overhanging lid
     scenarioConsole: 'models/scenario-a/console.glb',       // lectern: column and a canted head
     scenarioSlot: 'models/scenario-a/slot.glb',             // receptacle, socket plate facing up
+    // the underground lab's clone vat, three hand-modelled parts and the two TRELLIS clones that
+    // float in it and lie in it drained (models-src/lab/vat_build.py, render.lab.LabVats)
+    labVatFrame: 'models/lab/vat-frame.glb',                // plinth, ring, posts, cap, pipes, console
+    labVatGlass: 'models/lab/vat-glass.glb',                // open glass cylinder, drawn transparent
+    labVatFluid: 'models/lab/vat-fluid.glb',                // growth medium, base at 0 so it drains by y-scale
+    labClone: 'models/lab/clone.glb',                       // the tentacled clone, floating upright
+    labCloneSlumped: 'models/lab/clone-slumped.glb',        // the same clone heaped on a drained vat's floor
+    // and its freight lift (models-src/lab/lift_build.py, render.lab.LabLift)
+    labLiftDeck: 'models/lab/lift-deck.glb',                // the car, lowered in on arrival
+    labLiftShaft: 'models/lab/lift-shaft.glb',              // guide rails, head frame, sheave, ropes
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
