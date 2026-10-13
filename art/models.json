@@ -1889,8 +1889,8 @@
       "tris": -1,
       "roughness": 1,
       "tex": 1024,
-      "note": "THE ARMORY LOCKER BANK, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: one cell wide (CorpStyle.LOCKER_W), two narrow lockers on a plinth, each door the middle half of locker-front. Replaces an emitted box wearing one 4-wide door. Sheet mil-a-sheet.png.",
-      "last_converted": "2026-10-12T01:21:39Z",
+      "note": "THE ARMORY LOCKER BANK, HAND-MODELLED (models-src/military/roomkit_build.py), 192 tris: one cell wide (CorpStyle.LOCKER_W), two narrow lockers on a plinth, each door the middle half of locker-front, and behind each leaf a pocket (cabinet-inner walls, a locker-back pegboard, a hat shelf) darkened by depth in COLOR_0. Replaces an emitted box wearing one 4-wide door. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-13T12:25:27Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/gun-cabinet-hand": {
@@ -1898,8 +1898,8 @@
       "tris": -1,
       "roughness": 1,
       "tex": 1024,
-      "note": "THE GUN CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: the locker bank's body with gunrack-front's mesh doors stood proud, two leaves split on the art's seam so render.military.MilitaryDoors swings each off its own hinge. Sheet mil-a-sheet.png.",
-      "last_converted": "2026-10-13T10:57:41Z",
+      "note": "THE GUN CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 128 tris: the locker bank's body with gunrack-front's mesh doors stood proud, two leaves split on the art's seam so render.military.MilitaryDoors swings each off its own hinge; behind them one pocket backed by gunrack-back, darkened by depth in COLOR_0. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-13T12:25:27Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/safe-hand": {
@@ -1907,8 +1907,8 @@
       "tris": -1,
       "roughness": 1,
       "tex": 1024,
-      "note": "THE HQ SAFE, HAND-MODELLED (models-src/military/roomkit_build.py), 168 tris: a gunmetal body rounded in two segments on four feet, safe-front's door stood proud. Sheet mil-a-sheet.png.",
-      "last_converted": "2026-10-12T01:21:39Z",
+      "note": "THE HQ SAFE, HAND-MODELLED (models-src/military/roomkit_build.py), 228 tris: a gunmetal body rounded in two segments on four feet, safe-front's door stood proud, and behind it a thick-walled pocket with safe-back's drawers and a shelf, darkened by depth in COLOR_0. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-13T12:25:27Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/boots-hand": {

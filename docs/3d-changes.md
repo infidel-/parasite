@@ -2349,6 +2349,8 @@ AI, green for an object).
 
 ## Military armory doors: lockers, gun cabinet and safe swing open, leaves fade under the player
 
+> The body-front darkening (`CAVITY`) and the sunk leaf are SUPERSEDED by "Military armory insides: a real pocket behind every leaf"
+
 **Asked:** an opened base locker showed nothing ("we need armory-like code, with opening and
 transparency when player is on this tile"), the corp security cabinet's behaviour.
 
@@ -2381,5 +2383,40 @@ ghosting and hovering compiled **0** new programs after entry.
   mixing leaf and body vertices.
 - **The hull's seam vertices are pushed across x = 0**, so the hinge side is read off the deflated
   position.
+
+**Verdict:** landed.
+
+## Military armory insides: a real pocket behind every leaf
+
+**Asked:** "instead of darkness, add geom walls and darkness-like-on-corpo-stairs to insides of
+lockers/safes. also shelves and back wall texture" — an opened piece showed its flat body front at 0.15.
+
+**Changed:**
+- `roomkit_build.py` (THE INSIDES): each opening is bisected out of the body front and extruded 1.05
+  (safe 1.2) into the body: four walls on `military/cabinet-inner`, a back on its own art, shelves
+  (a locker's hat shelf, the safe's middle one). Hand-modelled, not emitted: the leaves already swing
+  in this glb's shader. **Tris: locker 80 → 192, gun cabinet 80 → 128, safe 168 → 228; +0 calls**,
+  the insides are the same mesh.
+- **The darkness is COLOR_0**, the corp stairwell's way (`shade`): 1 at the mouth, `POCKET_DARK` at the
+  back, quadratic over `POCKET_CUTS` 2 rings so the curve survives interpolation.
+- New pack4 `military/mil-pack-t` (gpt-image-2.5 sunburst high, $0.055): locker pegboard (crop on 13
+  whole 36.5 px hole periods), empty rifle rack, 3x4 deposit drawers, plain inner enamel. `mil-a-sheet`
+  went 3x2 → 3x3 (darkwood, unused, dropped); built still 341 px a cell at `tex` 1024.
+- `MilitaryDoors` lost `CAVITY`, `frontZ`, `gap`, `y0/y1`; `leafZ`/`hingeZ` 0.655/0.66 (safe 0.805/0.81).
+
+**The traps:**
+- **A leaf told by depth alone breaks the moment the body front has vertices.** The leaves sank 0.01
+  into the front, under `leafZ` 0.63; the frame round a pocket put **64** vertices on that plane inside
+  `half`, and they would have swung. The leaves now stand `LEAF_OUT` 0.01 proud, so `check` reports
+  them as islands, by design. CPU replica on the built glbs: exactly 48 / 48 / 24 leaf vertices.
+- **POCKET_DARK 0.3 turned the rack's felt into a black void** (0.042 linear art x 0.3, then the lamp).
+  0.45, and the rack lifted 0.859 → 0.72 (built 0.066, over the family on purpose).
+- **An inverted hull is wrong on a concave mesh.** The pocket walls whose backs face the camera, pushed
+  `hullW` into the opening, drew a dotted green band inside every mouth in tactical. The 'h' patch
+  discards where COLOR_0 < 1: the pocket is never silhouette.
+- `extrude_face_region` KEEPS the face it extrudes; it is deleted, or the mouth stays shut.
+
+**Measured (James Armory, regenerated):** pocket faces all face inward (68 / 26 / 34); opening, ghosting,
+hovering and tactical compiled **0** new door programs after entry (one unrelated `decalInstanceAlpha`).
 
 **Verdict:** landed.

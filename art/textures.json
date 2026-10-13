@@ -6273,6 +6273,80 @@
       "lift": 0.73,
       "last_lift": 0.73
     },
+    "military/locker-back": {
+      "src": "military/mil-pack-t.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        3,
+        1,
+        474,
+        478
+      ],
+      "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE olive drab steel pegboard, a square grid of round perforations [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the back panel inside each of a base locker bank's two lockers (models-src/military/roomkit_build.py, mil-a-sheet cell 5), aspect-fitted over the 1:2 face. mil-pack-t TOP-LEFT: the holes land at a measured 36.5 px period (cols 21..495, rows 19..497), so the crop is THIRTEEN WHOLE PERIODS from mid-gap and the grid closes across the wrap.",
+      "last_converted": "2026-10-13T17:09:40",
+      "built_linear": 0.064,
+      "built_srgb": 64.8
+    },
+    "military/gunrack-back": {
+      "src": "military/mil-pack-t.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        520,
+        4,
+        500,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: the felt back board of an empty rifle rack, six padded cradles on a top rail, six notches on a bottom rail [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the back board inside a base gun cabinet (roomkit_build.py, mil-a-sheet cell 6), ONE authored image 0..1 over the 3.7 x 3.55 face. mil-pack-t TOP-RIGHT from x 520: the quadrant's own 8 px frame strip (512..519) is cut off. lift 0.72: raw 0.0271 to 0.066, ABOVE the armory family (gunmetal 0.042, gunrack-front 0.051) on purpose: the back of a pocket keeps 0.3 of its colour (roomkit_build.py POCKET_DARK), and at 0.042 the felt read as a black void in the game where a rack should be.",
+      "last_converted": "2026-10-13T17:09:40",
+      "built_linear": 0.0661,
+      "built_srgb": 67.4,
+      "lift": 0.72,
+      "last_lift": 0.72
+    },
+    "military/safe-back": {
+      "src": "military/mil-pack-t.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        4,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] ONE authored image: the back wall inside a steel safe, three columns and four rows of deposit drawers with brass pulls [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the back wall inside the base safe (roomkit_build.py, mil-a-sheet cell 7), ONE authored image 0..1 over its square face, its painted frame kept as the box's inner edge. lift 0.893: raw 0.0349 to 0.0472.",
+      "last_converted": "2026-10-13T17:09:40",
+      "built_linear": 0.0472,
+      "built_srgb": 57.4,
+      "lift": 0.893,
+      "last_lift": 0.893
+    },
+    "military/cabinet-inner": {
+      "src": "military/mil-pack-t.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "crop": [
+        516,
+        516,
+        504,
+        504
+      ],
+      "prompt": "[quadrant of military/mil-pack-t.png, PACK4, gpt-image-2.5-sunburst high] TILEABLE plain matte pale olive-grey enamel steel, faint scratches [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the inside walls and shelves of a base locker, gun cabinet and safe (roomkit_build.py, mil-a-sheet cell 8), fitted face by face; their depth darkening is the glbs' COLOR_0, not this. lift 1.134: raw 0.0899 to 0.0659, the pale enamel brought down onto locker-front's 0.061 so the mouth of the box does not glow against its own door.",
+      "last_converted": "2026-10-13T17:09:40",
+      "built_linear": 0.0659,
+      "built_srgb": 67.8,
+      "lift": 1.134,
+      "last_lift": 1.134
+    },
     "military/footlocker-lid": {
       "src": "military/mil-pack-k.png",
       "class": "tile",

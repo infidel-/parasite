@@ -13,17 +13,13 @@ import render.world.VisionMask;
 // build script's -y), measured off the built glbs of models-src/military/roomkit_build.py's locker,
 // gun_cabinet and safe
 typedef DoorLeaves = {
-  leafZ:Float,   // a vertex past this depth and within `half` of the centre is a leaf's: under the leaves' back face, which sinks 0.01 into the body front, and over the arrises' inner edge
-  gap:Float,     // no leaf comes within this of x = 0 (the bank's divider, the cabinet's seam); -1 for a door across it
+  leafZ:Float,   // a vertex past this depth and within `half` of the centre is a leaf's: between the body front and the leaves' back face, which stands roomkit_build.py's LEAF_OUT off it
   half:Float,    // the leaves' outer edge, |x|, short of the body front's own corners
   hingeZ:Float,  // the leaves' back face, which they turn about
   hingeL:Float,  // the hinge x of the leaf left of the centre, off the art's hinges
   turnL:Float,   // and its turn: -1 hinged on its left edge, 1 on its right
   hingeR:Float,  // the hinge x of the leaf right of it
   turnR:Float,   // and its turn
-  frontZ:Float,  // the body front behind the leaves, which an open piece shows dark
-  y0:Float,      // the leaves' bottom
-  y1:Float,      // and their top
 };
 
 // the military armory's lockers, gun cabinet and safe OPENING: render.corp.CorpSecurity's swing and
@@ -35,9 +31,9 @@ typedef DoorLeaves = {
 // own placement by its instance matrix's translation — which render.Models.cull repacks freely, so a
 // per-instance attribute would lose its place. A shut piece is simply not in the table.
 //
-// AN OPEN PIECE SHOWS A CAVITY: the glbs are solid boxes with the leaves stood proud, so the body
-// front a leaf swings off is darkened to the inside of a steel box. And the player standing at an open
-// one sees through its leaves alone, which swing through the cell: the solid drops them there and the
+// AN OPEN PIECE SHOWS ITS INSIDE: each glb has a pocket behind its leaves, walls, a back, shelves, all
+// darkened by depth in its own COLOR_0 (roomkit_build.py's THE INSIDES), so nothing here shades it. And
+// the player standing at an open one sees through its leaves alone, which swing through the cell: the solid drops them there and the
 // GHOST twin (`variants`) draws only them, faded as render.world.ObjModels.cull fades a prop
 class MilitaryDoors
 {
@@ -45,8 +41,6 @@ class MilitaryDoors
   static inline var SWING = 1.745;
   // and how long it takes, in turns (RenderConfig.BASE_MS), the corp cabinet's too
   static inline var SWING_TURNS = 3.0;
-  // what an open piece's body front keeps of its colour behind the leaves
-  static inline var CAVITY = 0.15;
   // the open pieces the shader tells apart at once.
   // ponytail: a base with more open pieces than this draws the rest shut; it is one loop bound
   static inline var OPEN_MAX = 24;
@@ -70,47 +64,35 @@ class MilitaryDoors
       // two narrow lockers, each leaf hinged on its own left edge like the art
       if (path == md.militaryLocker)
         return {
-          leafZ: 0.63,
-          gap: 0.04,
+          leafZ: 0.655,
           half: 1.88,
-          hingeZ: 0.64,
+          hingeZ: 0.66,
           hingeL: -1.88,
           turnL: -1.0,
           hingeR: 0.04,
           turnR: -1.0,
-          frontZ: 0.65,
-          y0: 0.25,
-          y1: 3.9,
         };
       // a double door on its outer hinges
       if (path == md.militaryGunCabinet)
         return {
-          leafZ: 0.63,
-          gap: 0.01,
+          leafZ: 0.655,
           half: 1.9,
-          hingeZ: 0.64,
+          hingeZ: 0.66,
           hingeL: -1.9,
           turnL: -1.0,
           hingeR: 1.9,
           turnR: 1.0,
-          frontZ: 0.65,
-          y0: 0.25,
-          y1: 3.9,
         };
       // one door across the middle, hinged on the left
       if (path == md.militarySafe)
         return {
-          leafZ: 0.787,
-          gap: -1.0,
+          leafZ: 0.805,
           half: 0.82,
-          hingeZ: 0.79,
+          hingeZ: 0.81,
           hingeL: -0.82,
           turnL: -1.0,
           hingeR: -0.82,
           turnR: -1.0,
-          frontZ: 0.8,
-          y0: 0.16,
-          y1: 1.847,
         };
       return null;
     }
@@ -245,12 +227,11 @@ class MilitaryDoors
     }
 
 // turn the leaves of the placements uOpen lists about their hinges in the vertex shader, eased so a
-// door leaves and lands softly. `mode` is the batch: 's' the solid, which also darkens the body front
-// an open piece's leaves uncover and drops the leaves of the one at uGhost; 'g' its ghost, which draws
-// those leaves alone; 'h' the outline hull, whose normal offset comes back off before the leaf test,
-// or the shell round the body front would read as leaf (CorpSecurity.swing's reason). The hull's
-// offset is OBJMARK.hullW over the instance scale, which is 1: the glbs are authored at the heights
-// MilitaryInterior draws them at
+// door leaves and lands softly. `mode` is the batch: 's' the solid, which drops the leaves of the one
+// at uGhost; 'g' its ghost, which draws those leaves alone; 'h' the outline hull, whose normal offset
+// comes back off before the leaf test, or the shell round the body front would read as leaf
+// (CorpSecurity.swing's reason). The hull's offset is OBJMARK.hullW over the instance scale, which is
+// 1: the glbs are authored at the heights MilitaryInterior draws them at
 // Dynamic: three's onBeforeCompile hook is not in the extern, every shader patch here takes it so
   static function patch(mat:Dynamic, l:DoorLeaves, mode:String):Void
     {
@@ -259,9 +240,8 @@ class MilitaryDoors
         return;
       var inflate = (mode == 'h' ? RenderConfig.OBJMARK.hullW : 0.0);
       // per material, so the three glbs share one program
-      var leaf = { value: new Vector4(l.leafZ, l.gap, l.half, l.hingeZ) };
+      var leaf = { value: new Vector3(l.leafZ, l.half, l.hingeZ) };
       var hinge = { value: new Vector4(l.hingeL, l.turnL, l.hingeR, l.turnR) };
-      var cav = { value: new Vector3(l.frontZ, l.y0, l.y1) };
       var prev:Dynamic = mat.onBeforeCompile;
       // an OWN key only, IndoorMask.patch's reason
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
@@ -274,17 +254,14 @@ class MilitaryDoors
           shader.uniforms.milGhost = uGhost;
           shader.uniforms.milLeaf = leaf;
           shader.uniforms.milHinge = hinge;
-          shader.uniforms.milCav = cav;
           var p = 'position - normal * float(' + inflate + ')';
           shader.vertexShader =
             'uniform vec3 milOpen[' + OPEN_MAX + '];\n' +
             'uniform vec2 milGhost;\n' +
-            'uniform vec4 milLeaf;\n' +
+            'uniform vec3 milLeaf;\n' +
             'uniform vec4 milHinge;\n' +
             'varying float vMilLeaf;\n' +
             'varying float vMilAt;\n' +
-            'varying float vMilOpen;\n' +
-            'varying vec3 vMilPos;\n' +
             'float milSwing()\n' +
             '{\n' +
             '  for (int i = 0; i < ' + OPEN_MAX + '; i++)\n' +
@@ -294,7 +271,7 @@ class MilitaryDoors
             '}\n' +
             'bool milIsLeaf(vec3 p)\n' +
             '{\n' +
-            '  return p.z > milLeaf.x && abs(p.x) < milLeaf.z + 0.01;\n' +
+            '  return p.z > milLeaf.x && abs(p.x) < milLeaf.y + 0.01;\n' +
             '}\n' +
             'mat3 milTurn(vec3 p)\n' +
             '{\n' +
@@ -317,22 +294,31 @@ class MilitaryDoors
             '  vec3 milP = ' + p + ';\n' +
             '  vMilLeaf = milIsLeaf(milP) ? 1.0 : 0.0;\n' +
             '  vMilAt = distance(instanceMatrix[3].xz, milGhost) < float(' + AT + ') ? 1.0 : 0.0;\n' +
-            '  vMilOpen = milSwing();\n' +
-            '  vMilPos = milP;\n' +
             '  if (vMilLeaf > 0.5)\n' +
             '    {\n' +
-            '      vec3 milH = vec3(milP.x < 0.0 ? milHinge.x : milHinge.z, 0.0, milLeaf.w);\n' +
+            '      vec3 milH = vec3(milP.x < 0.0 ? milHinge.x : milHinge.z, 0.0, milLeaf.z);\n' +
             '      transformed = milH + milTurn(milP) * (transformed - milH);\n' +
             '    }');
+          // THE HULL DROPS THE POCKETS. An inverted hull outlines a convex box; a pocket is concave,
+          // and its walls whose backs face the camera, pushed hullW into the opening, drew a green
+          // band along the inside of every mouth. COLOR_0 under 1 is the pocket (roomkit_build.py's
+          // `shade`), and no pocket is ever part of the silhouette
           if (mode == 'h')
-            return;
+            {
+              shader.vertexShader = 'attribute vec4 color;\nvarying float vMilIn;\n' +
+                StringTools.replace(shader.vertexShader, '#include <begin_vertex>',
+                  '#include <begin_vertex>\n' +
+                  '  vMilIn = step(color.r, 0.999);');
+              shader.fragmentShader = 'varying float vMilIn;\n' +
+                StringTools.replace(shader.fragmentShader, '#include <clipping_planes_fragment>',
+                  '#include <clipping_planes_fragment>\n' +
+                  '  if (vMilIn > 0.001)\n' +
+                  '    discard;');
+              return;
+            }
           shader.fragmentShader =
-            'uniform vec4 milLeaf;\n' +
-            'uniform vec3 milCav;\n' +
             'varying float vMilLeaf;\n' +
             'varying float vMilAt;\n' +
-            'varying float vMilOpen;\n' +
-            'varying vec3 vMilPos;\n' +
             StringTools.replace(shader.fragmentShader, '#include <clipping_planes_fragment>',
               '#include <clipping_planes_fragment>\n' +
               (mode == 'g' ?
@@ -340,20 +326,6 @@ class MilitaryDoors
                 '    discard;' :
                 '  if (vMilLeaf > 0.5 && vMilAt > 0.5)\n' +
                 '    discard;'));
-          if (mode == 'g')
-            return;
-          // the body front inside the leaves' outline, the divider and the seam left standing
-          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
-            '#include <map_fragment>',
-            '#include <map_fragment>\n' +
-            '  if (vMilOpen > 0.0 &&\n' +
-            '      vMilLeaf < 0.5 &&\n' +
-            '      abs(vMilPos.z - milCav.x) < 0.004 &&\n' +
-            '      abs(vMilPos.x) > milLeaf.y &&\n' +
-            '      abs(vMilPos.x) < milLeaf.z &&\n' +
-            '      vMilPos.y > milCav.y &&\n' +
-            '      vMilPos.y < milCav.z)\n' +
-            '    diffuseColor.rgb *= mix(1.0, float(' + CAVITY + '), smoothstep(0.0, 0.3, vMilOpen));');
         };
       if (prev != null)
         for (f in Reflect.fields(prev))
