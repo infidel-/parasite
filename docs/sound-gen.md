@@ -144,7 +144,7 @@ no cell in reach plays nothing, so an event is never heard through a wall.
 
 ### Tuning: `render/SoundSources.hx` `DB`, the one table
 
-`updateLoop` and `once` multiply in the kind's gain from `DB`, tuned in sound mode (`Shift+S` in
+`updateLoop` and `once` multiply in the kind's gain from `DB`, tuned in sound mode (`X` in
 street-debug, see [`debug-surface.md`](debug-surface.md)), which copies the changed lines to paste
 back. The volume is clamped at 100, so a gain over 0 dB is lost at a full slider: a kind that should
 be tunable UP gets its headroom from the bake — the beds are baked at **-36** LUFS and pulled to

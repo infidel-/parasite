@@ -6,7 +6,7 @@ import citygen.CityConfig;
 import render.SoundSources.SoundSource;
 import render.world.WorldCtx;
 
-// sound mode (Shift+S, inside street-debug; plain S is the fly cam's): a thin green ring at each looping sound source's range, a
+// sound mode (X, inside street-debug): a thin green ring at each looping sound source's range, a
 // small label over it (kind, base dB, the volume it is playing now) and a panel of every kind. the
 // play button before a label or a row plays that kind's current variant once (again to stop); click
 // a label or a panel row to select its kind; the wheel moves that kind's base dB (1 dB a notch,
@@ -14,9 +14,9 @@ import render.world.WorldCtx;
 // paste-ready lines. the levels follow the PLAYER, who walks on the arrows while the mode is up;
 // the fly cam keeps WASD.
 //
-// THE OVERLAY IS STICKY, the mode is not: once Shift+S has turned it on, the rings, labels and panel
+// THE OVERLAY IS STICKY, the mode is not: once X has turned it on, the rings, labels and panel
 // stay up through leaving street-debug, an area change and a reload (localStorage), and entering
-// street-debug again resumes the mode. Only Shift+S in the mode turns it off. Selecting and the
+// street-debug again resumes the mode. Only X in the mode turns it off. Selecting and the
 // wheel stay the mode's, so outside street-debug the wheel is the camera's again
 class SoundDebug
 {
@@ -78,13 +78,13 @@ class SoundDebug
   public static function attach(camera:PerspectiveCamera, dom:Dynamic):Void
     {
       Tools.legend('sound',
-        'Shift+S  leave sound mode   arrows  walk the player (the levels follow them)\n' +
+        'X  leave sound mode   arrows  walk the player (the levels follow them)\n' +
         'LMB  select a source label (or a row of the panel)   \u25B6  play its current variant\n' +
         'wheel  base dB of the selected kind +-1   Shift+wheel  +-0.1   (changes -> clipboard)');
       Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
         if (!Tools.enabled ||
-            e.code != 'KeyS' ||
-            !e.shiftKey ||
+            e.code != 'KeyX' ||
+            e.shiftKey ||
             e.ctrlKey ||
             e.metaKey ||
             e.altKey)
