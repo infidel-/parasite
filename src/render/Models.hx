@@ -223,8 +223,9 @@ class Models {
         });
     }
 
-// find the first mesh (has geometry) in a subtree — the source for instancing
-  static function firstMesh(root:Object3D):Object3D
+// find the first mesh (has geometry) in a subtree — the source for instancing, and for
+// render.military.MilitaryDoors, which patches the material every SOLID batch of a path shares
+  public static function firstMesh(root:Object3D):Object3D
     {
       var found:Object3D = null;
       root.traverse(function(o)

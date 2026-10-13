@@ -1898,8 +1898,8 @@
       "tris": -1,
       "roughness": 1,
       "tex": 1024,
-      "note": "THE GUN CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 68 tris: the locker bank's body with gunrack-front's mesh doors stood proud. Sheet mil-a-sheet.png.",
-      "last_converted": "2026-10-12T01:21:39Z",
+      "note": "THE GUN CABINET, HAND-MODELLED (models-src/military/roomkit_build.py), 80 tris: the locker bank's body with gunrack-front's mesh doors stood proud, two leaves split on the art's seam so render.military.MilitaryDoors swings each off its own hinge. Sheet mil-a-sheet.png.",
+      "last_converted": "2026-10-13T10:57:41Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "military/safe-hand": {

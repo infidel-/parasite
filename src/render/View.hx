@@ -442,12 +442,13 @@ class View {
                 h: citygen.CityConfig.CELL * 1.6,
               },
             ]).concat(render.military.MilitaryYard.warmProps())
-              .concat(render.military.MilitaryInterior.warmProps()), [
+              .concat(render.military.MilitaryInterior.warmProps()),
+              render.military.MilitaryDoors.warmRows().concat([
               {
                 path: RenderConfig.MODELS.militaryContainer,
                 h: render.military.MilitaryGeom.CONT_H,
               },
-            ]);
+            ]));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };

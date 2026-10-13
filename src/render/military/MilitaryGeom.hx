@@ -21,11 +21,15 @@ import render.Models.PropPlace;
 import render.Models.InstancedProp;
 import render.Area3DTickOpts;
 
-// one armory glb's outline shells, for MilitaryGeom.cullShells
+// one armory glb's outline shells and ghost leaves, for MilitaryGeom.cullShells and MilitaryDoors
 typedef ArmoryShell = {
   hull:InstancedProp,                   // the HULL batch over every placement of this glb
+  ghost:InstancedProp,                  // and its GHOST twin, drawing the leaves of the open one the player stands at
   cells:Array<{ col:Int, row:Int }>,    // the object cell of each placement, index-aligned with it
-  mask:Array<Bool>,                     // which placements show this frame, repacked by cullShells
+  objects:Array<objects.GunCabinet>,    // and its object, whose isOpen swings its leaves
+  swing:Array<Float>,                   // how far each placement's leaves have swung, 0 shut .. 1 open
+  mask:Array<Bool>,                     // which placements' shells show this frame, repacked by cullShells
+  ghostMask:Array<Bool>,                // and which one's leaves the ghost draws, set by MilitaryDoors.tick
 };
 
 // a military base's own furniture, emitted as quads off the saved grid (gen.military.MilitaryGen's
@@ -230,8 +234,8 @@ class MilitaryGeom
         mark(pad.x0, pad.z0, pad.x1, pad.z1);
       MilitaryInterior.build(scene, m, area);
       MilitaryYard.build(scene, m, area);
-      // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls.
-      // ponytail: drawn shut whatever their state, an open one is told by its tooltip
+      // the armory: the lockers, the gun cabinet and the safe the generator stood against its walls,
+      // their leaves swung open by MilitaryDoors
       armory = shells(scene, m, area);
       // after the lockers, whose tops are lids too
       MilitaryClutter.build(scene, m, area, MilitaryInterior.lids);
@@ -266,6 +270,8 @@ class MilitaryGeom
           var p = k.prop;
           Models.get(k.path, function(_) VisionMask.patchMesh(p.mesh));
         }
+      // and the armory's leaves onto those solids, after the vision mask (MilitaryDoors.patchSolids)
+      MilitaryDoors.patchSolids();
       return [for (k in kit) k.prop];
     }
 
@@ -669,12 +675,14 @@ class MilitaryGeom
     }
 
 // stand the armory's objects, each with the outline shell an object prop wears (Models HULL, see
-// render.world.ObjModels): their glbs go into render.military.MilitaryInterior's plain batches, so
-// nothing else outlines them. one shell batch per glb, its cells in step with its placements
+// render.world.ObjModels) and the ghost its open leaves fade into (MilitaryDoors): their glbs go into
+// render.military.MilitaryInterior's plain batches, so nothing else outlines them. one shell batch
+// per glb, its cells and objects in step with its placements
   static function shells(scene:Scene, m:Facility, area:AreaGame):Array<ArmoryShell>
     {
       var md = RenderConfig.MODELS;
-      var byPath = new Map<String, { places:Array<PropPlace>, cells:Array<{ col:Int, row:Int }> }>();
+      var byPath = new Map<String, { places:Array<PropPlace>, cells:Array<{ col:Int, row:Int }>,
+        objects:Array<objects.GunCabinet> }>();
       for (o in area.getObjects())
         {
           var path = switch (o.type)
@@ -693,22 +701,36 @@ class MilitaryGeom
             byPath.set(path, {
               places: [],
               cells: [],
+              objects: [],
             });
           byPath.get(path).places.push(p);
           byPath.get(path).cells.push({
             col: o.x,
             row: o.y,
           });
+          byPath.get(path).objects.push(cast o);
         }
+      MilitaryDoors.reset();
+      var out = [];
       // at the height MilitaryInterior instances the solid at, or the shell would not fit it
-      var C = RenderConfig.OBJMARK;
-      return [for (k in MilitaryInterior.warmProps())
-        if (byPath.exists(k.path))
-          {
-            hull: Models.instanced(scene, k.path, byPath.get(k.path).places, k.h, HULL(C.color, C.hullW)),
-            cells: byPath.get(k.path).cells,
-            mask: [for (_ in byPath.get(k.path).cells) false],
-          }];
+      for (k in MilitaryInterior.warmProps())
+        {
+          var b = byPath.get(k.path);
+          if (b == null)
+            continue;
+          var v = MilitaryDoors.variants(scene, k.path, b.places, k.h);
+          out.push({
+            hull: v.hull,
+            ghost: v.ghost,
+            cells: b.cells,
+            objects: b.objects,
+            // one found open was opened before, not now
+            swing: [for (o in b.objects) o.isOpen ? 1.0 : 0.0],
+            mask: [for (_ in b.cells) false],
+            ghostMask: [for (_ in b.cells) false],
+          });
+        }
+      return out;
     }
 
 // where the armory object on this cell stands (its glb backs onto the wall, off the cell centre), for
@@ -724,15 +746,18 @@ class MilitaryGeom
     }
 
 // show the armory's shells as render.world.ObjModels.cull shows a prop's: in the tactical view and
-// under the cursor. once per frame from the area's tick
+// under the cursor; and swing its open leaves and fade the ones the player stands at (MilitaryDoors).
+// once per frame from the area's tick
   public static function cullShells(shells:Array<ArmoryShell>, opts:Area3DTickOpts, tactical:Bool):Void
     {
+      MilitaryDoors.tick(shells, opts);
       for (s in shells)
         {
           for (i in 0...s.cells.length)
             s.mask[i] = tactical ||
               render.world.ObjModels.hovered(opts, s.cells[i]);
           Models.cull(s.hull, opts.camera, SHELL_CULL_R, s.mask);
+          Models.cull(s.ghost, opts.camera, SHELL_CULL_R, s.ghostMask);
         }
     }
 

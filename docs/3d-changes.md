@@ -2346,3 +2346,40 @@ AI, green for an object).
   the pose offset, `ObjModels.standsAt` (the solid batch's centre) and `MilitaryGeom.standsAt`.
 
 **Verdict:** landed.
+
+## Military armory doors: lockers, gun cabinet and safe swing open, leaves fade under the player
+
+**Asked:** an opened base locker showed nothing ("we need armory-like code, with opening and
+transparency when player is on this tile"), the corp security cabinet's behaviour.
+
+**Changed:**
+- `render.military.MilitaryDoors` turns the leaves in the vertex shader (`CorpSecurity.swing`'s
+  turn, 100 degrees over 3 turns). The base's three glbs sit in `MilitaryInterior`'s plain batches,
+  one material whether open or shut, so the open ones are a UNIFORM TABLE (`uOpen`, 24 x world xz +
+  swing) matched on `instanceMatrix[3].xz`. `Models.cull` repacks instances, so an attribute would lose
+  its place. The leaf test, hinges and body front are per-material uniforms (`MilitaryDoors.leaves`),
+  so the three glbs share each program.
+- An open piece darkens the body front behind its leaves (`CAVITY` 0.15): the glbs are solid boxes.
+- Standing on an open piece: the solid discards its leaves at `uGhost`, a GHOST twin draws only them,
+  eased by `PROP_GHOST` as `ObjModels.cull` eases a prop (`ArmoryShell.ghost`). The HULL shell swings.
+- The gun cabinet's single 3.8-wide door became two leaves split on the art's seam
+  (`roomkit_build.py` `gun_cabinet`, `GUN_SEAM` 0.01, one glb exported headless): 68 → 80 tris.
+- An object's hover ring is now painted as the tactical one is (white glowing `OBJMARK.color`). The
+  green-filled ring read as a second green. The AI ring keeps its own fill.
+
+**Measured (James Armory):** **+1 call** while standing on an open piece (79 → 80), 0 off it. Three
+programs (`mildoors`/`mildoorg`/`mildoorh`) all compiled inside the `militaryBase` warm; opening,
+ghosting and hovering compiled **0** new programs after entry.
+
+**The traps:**
+- **Patch ORDER on a shared material is the program key.** The solid is the path's template material,
+  patched by the vision mask in both the game and `FacilityWarm`'s `extra` loop. The door patch has to
+  follow it in both (`MilitaryGeom.build` after the kit loop, `FacilityWarm` ghosts `doors` rows), or
+  the key reads `mildoor…visMask` in one and `visMask…mildoor` in the other.
+- **A leaf's back face sinks 0.01 into the body front**, so depth alone does not tell a leaf vertex.
+  The test is depth AND `|x| < half`, checked on the built glbs: exactly the door boxes, no triangle
+  mixing leaf and body vertices.
+- **The hull's seam vertices are pushed across x = 0**, so the hinge side is read off the deflated
+  position.
+
+**Verdict:** landed.

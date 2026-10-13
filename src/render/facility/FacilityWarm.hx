@@ -22,10 +22,12 @@ import render.world.VisionMask;
 // the first facility entry
 class FacilityWarm
 {
-// build the throwaway compound, wait for every prop glb, then compile. `ghosts` are the outdoor props
-// a kind also draws see-through (a base's container stacks, render.military.MilitaryStacks)
+// build the throwaway compound, wait for every prop glb, then compile. `ghosts` are the props a kind
+// also draws see-through (a base's container stacks, render.military.MilitaryStacks), and a `doors`
+// one is an armory piece whose leaves swing, outline hull and all (render.military.MilitaryDoors)
   public static function build(renderer:WebGLRenderer, camera:PerspectiveCamera, lampPool:Int,
-      ?extra:Array<{ path:String, h:Float }>, ?ghosts:Array<{ path:String, h:Float }>):Dynamic
+      ?extra:Array<{ path:String, h:Float }>,
+      ?ghosts:Array<{ path:String, h:Float, ?doors:Bool }>):Dynamic
     {
       var model = FacilityModel.demo();
       // the indoor mask goes over the warm model, for the SAME reason the vision mask makes this scene
@@ -396,7 +398,15 @@ class FacilityWarm
               render.Models.get(p.path, function(_)
                 {
                   mask();
-                  VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, GHOST).mesh);
+                  // an armory piece: its solid's leaves after the vision mask the `extra` loop above
+                  // put on it, which is the game's order, then its patched ghost and hull
+                  if (p.doors == true)
+                    {
+                      render.military.MilitaryDoors.patchSolid(p.path);
+                      render.military.MilitaryDoors.variants(sc, p.path, place, p.h);
+                    }
+                  else
+                    VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h, GHOST).mesh);
                   IndoorMask.detach();
                   ContactMask.detach();
                   done();
