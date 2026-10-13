@@ -166,9 +166,9 @@ class FacilityConnect
     }
 
 // leave a room ONE way in: its first door of its own onto a corridor, every other door in its walls
-// walled up, and whatever that strands let in elsewhere. A base's medical bay ("should have a single
-// door into corridor") and comms room; sealWashroom is the neighbours' half of this, for a room
-// picked for having only the one door already
+// walled up, and whatever that strands let in elsewhere. Every room of a base but its latrine and
+// barracks (gen.facility.FacilityRooms.militaryThemes); sealWashroom is the neighbours' half of
+// this, for a room picked for having only the one door already
   public static function oneDoor(state: _FacilityState, room: _Room)
     {
       var cells = state.area.getCells();
@@ -802,15 +802,20 @@ class FacilityConnect
       return null;
     }
 
-// is a room of this role entered from a corridor and walked through by nobody: a lab's washroom, a
-// base's latrine, its medical bay ("should have a single door into corridor") and its comms room
-// ("should only have a corridor door")
-  static inline function passedBy(role: String): Bool
+// is a room of this role entered from a corridor and walked through by nobody: a lab's washroom,
+// and every room of a base but its barracks ("should have a single door into corridor", "should
+// only have a corridor door", "supply, armory, mess, briefing also need the same"). gen.GenCheck
+// .washroomSane holds each to it
+  public static inline function passedBy(role: String): Bool
     {
       return role == ROLE_TOILET ||
         role == ROLE_LATRINE ||
         role == ROLE_MEDICAL ||
-        role == ROLE_COMMS;
+        role == ROLE_COMMS ||
+        role == ROLE_SUPPLY ||
+        role == ROLE_ARMORY ||
+        role == ROLE_MESS ||
+        role == ROLE_BRIEFING;
     }
 
 // which recorded room holds this cell, or 0 for a corridor or the outdoors. by rect and not by the

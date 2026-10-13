@@ -131,6 +131,9 @@ class FacilityRooms
 // - then the biggest room left is the HQ's briefing room or the block's mess hall;
 // - the HQ takes its armory next, and every other room left is a barracks room in either. The HQ's
 //   were offices, reported as "boring and almost the same as briefing"
+// Every kind but the barracks is entered from a corridor and through nothing else ("supply, armory,
+// mess, briefing also need the same only from corridor rule"): each takes the first room `bay`
+// allows, keeps one door (FacilityConnect.oneDoor), and is passed over where no room can
   static function militaryThemes(state: _FacilityState)
     {
       FacilityConnect.sealRooms(state);
@@ -150,70 +153,59 @@ class FacilityRooms
       var hq = (state.area.countSpawns('safe') == 0);
       var rest = [for (room in rooms) if (room.role == null) room];
       rest.reverse();
+      var deal = function(role: String, deep: Bool): _Room
+        {
+          var i = bay(state, cells, rest, deep);
+          if (i < 0)
+            return null;
+          var room = rest.splice(i, 1)[0];
+          room.role = role;
+          FacilityConnect.oneDoor(state, room);
+          return room;
+        }
       // the briefing room or the mess hall: the biggest room left that is HALL_DEEP deep, where its
       // table takes a bench either side, else the biggest. A 16x4 hall was the biggest and stood a
       // line of tables
-      if (rest.length > 1)
-        {
-          var i = 0;
-          for (k in 0...rest.length)
-            if (rest[k].w >= HALL_DEEP &&
-                rest[k].h >= HALL_DEEP)
-              {
-                i = k;
-                break;
-              }
-          rest.splice(i, 1)[0].role = (hq ? ROLE_BRIEFING : ROLE_MESS);
-        }
+      var hall = (rest.length > 1 ? deal((hq ? ROLE_BRIEFING : ROLE_MESS), true) : null);
+      // and the HQ's armory, which it cannot go without: it holds the base's one safe. Where no room
+      // is left for it, it takes the hall's and the hall looks again (3 bases in 3000 had no safe)
       if (hq &&
-          rest.length > 0)
-        rest.shift().role = ROLE_ARMORY;
+          rest.length > 0 &&
+          deal(ROLE_ARMORY, false) == null &&
+          hall != null)
+        {
+          hall.role = ROLE_ARMORY;
+          if (rest.length > 1)
+            deal(ROLE_BRIEFING, true);
+        }
       // then one of each of the building's own specialists, each only while a room of the plain kind
-      // is left over for it: the HQ's comms room, the barracks building's medical bay and store. The
-      // bay and the comms room keep one door onto a corridor and no other (FacilityConnect.oneDoor),
-      // and are passed over where no room can
+      // is left over for it: the HQ's comms room, the barracks building's medical bay and store
       for (role in (hq ? [ ROLE_COMMS ] : [ ROLE_MEDICAL, ROLE_SUPPLY ]))
         if (rest.length > 1)
-          {
-            var one = (role == ROLE_MEDICAL || role == ROLE_COMMS);
-            var i = (one ? bay(state, cells, rest) : 0);
-            if (i < 0)
-              continue;
-            var room = rest.splice(i, 1)[0];
-            room.role = role;
-            if (one)
-              FacilityConnect.oneDoor(state, room);
-          }
+          deal(role, false);
       for (room in rest)
         room.role = ROLE_BARRACKS;
     }
 
-// which of these rooms (biggest first) may be the medical bay or the comms room, or -1: one with a
-// door of its own onto a corridor whose other doors can be walled up stranding nobody behind them
-// (FacilityConnect.strands), one with no door into or from another room first. oneDoor walls up the
-// rest, and a stranded neighbour was let back in through the room itself at the end: 173 comms rooms
-// in 3000 bases walked through. With no such room the building goes without
-  static function bay(state: _FacilityState, cells: Array<Array<Int>>, rooms: Array<_Room>): Int
+// which of these rooms (biggest first) may be a room entered from a corridor and nothing else, or
+// -1: the first with a door of its own onto a corridor whose other doors can be walled up stranding
+// nobody behind them (FacilityConnect.strands), and of those one HALL_DEEP deep both ways first when
+// `deep`. oneDoor walls up the rest, and a stranded neighbour was let back in through the room
+// itself at the end: 173 comms rooms in 3000 bases walked through
+  static function bay(state: _FacilityState, cells: Array<Array<Int>>, rooms: Array<_Room>,
+      deep: Bool): Int
     {
       var best = -1;
       for (k in 0...rooms.length)
         {
-          var id = rooms[k].id;
-          var corridor = false;
-          var linked = false;
-          for (d in state.doors)
-            {
-              if (d.roomID1 == id &&
-                  FacilityConnect.ontoCorridor(cells, d))
-                corridor = true;
-              else if (d.roomID1 == id ||
-                  d.roomID2 == id)
-                linked = true;
-            }
-          if (!corridor ||
-              FacilityConnect.strands(state, rooms[k]))
+          var r = rooms[k];
+          if (!Lambda.exists(state.doors, function(d) return d.roomID1 == r.id &&
+                FacilityConnect.ontoCorridor(cells, d)) ||
+              FacilityConnect.strands(state, r))
             continue;
-          if (!linked)
+          if (!deep ||
+              (r.w >= HALL_DEEP &&
+              r.h >= HALL_DEEP))
             return k;
           if (best < 0)
             best = k;

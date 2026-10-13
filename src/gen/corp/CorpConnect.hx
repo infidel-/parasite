@@ -269,10 +269,13 @@ class CorpConnect
               hasDoorBetween(state, room.id, far))
             continue;
           // and never a door between the SECURITY ROOM and another room: it has one door, onto a
-          // corridor (gen.blocks.CorpBlocks.lone), and a repair is not allowed to undo that
+          // corridor (gen.blocks.CorpBlocks.lone), and a repair is not allowed to undo that. Nor
+          // a WC, a server room or an archive, for the same (gen.corp.CorpBuilding.sealDeadEnds)
           if (far != 0 &&
               (room.role == ROLE_SECURITY ||
-              roleOfRoom(state, far) == ROLE_SECURITY))
+              roleOfRoom(state, far) == ROLE_SECURITY ||
+              CorpBuilding.deadEnd(room.role) ||
+              CorpBuilding.deadEnd(roleOfRoom(state, far))))
             continue;
 
           // and on the duplicate pass, RETIRE the door that is already there. Reaching here means

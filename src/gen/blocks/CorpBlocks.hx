@@ -103,8 +103,10 @@ class CorpBlocks
         }
     }
 
-  // the rooms a WC or a server room must not be dealt to: something else's only route runs through
-  // them. Filled by `assign` off the door graph and read by the two demands' own `must`, which
+  // the rooms a WC, a server room or an archive must not be dealt to: something else's only route
+  // runs through them, or they have no door of their own onto a corridor (they are entered from one
+  // and through nothing else, gen.corp.CorpBuilding.sealDeadEnds). Filled by `assign` off the door
+  // graph and read by the three demands' own `must`, which
   // Quota.deal and gen.GenCheck.blocksFit both honour. A static because a _GenDemand carries no
   // state of its own and both readers are the same area's own pass — see
   // gen.corp.CorpBuilding.passThrough, which is where the fault it is for is written up
@@ -282,6 +284,7 @@ class CorpBlocks
           minW: 5,
           minH: 5,
           fit: smallest,
+          must: function(b) return !blocked.exists(b.roomID),
         },
         // and the private office takes EVERYTHING ELSE, which is what makes the filler branch
         // unreachable: it is declared last, its max is a number nothing reaches, and at 3 x 3 it
@@ -329,7 +332,8 @@ class CorpBlocks
         }
       // WHAT IS BEHIND WHAT, before anything is dealt — see gen.corp.CorpBuilding.passThrough
       blocked = gen.corp.CorpBuilding.passThrough(state);
-      // and WHICH ROOMS HAVE ONE DOOR, ONTO A CORRIDOR, for the security demand's `must`
+      // and WHICH ROOMS HAVE ONE DOOR, ONTO A CORRIDOR, for the security demand's `must`; a room
+      // with no door of its own onto one is no WC, server room or archive either
       lone = new Map();
       var cells = state.area.getCells();
       for (room in state.rooms)
@@ -349,6 +353,8 @@ class CorpBlocks
           if (n == 1 &&
               corridor)
             lone.set(room.id, true);
+          if (!corridor)
+            blocked.set(room.id, true);
         }
       // and WHERE THE LIFT IS, for the reception demand's `fit`. The car is not on the grid yet —
       // ElevatorBlock fills after this — but `frontDir` is, and the lift door stands at the middle

@@ -528,15 +528,20 @@ should not be there"). `FacilityConnect.sealRooms`, the base's first theming ste
 room-to-room door and runs `linkClusters`, which cuts a corridor door for whatever that strands and a
 room door only for a room with no corridor wall at all (`roomDoors`, 0.33 a base).
 
-**The latrine, the medical bay and the comms room are entered from a corridor and through nothing
-else** (`FacilityConnect.passedBy`; "should have a single door into corridor", "should only have a
-corridor door"). The bay had two corridor doors in the live base. The bay and the comms room are the
-biggest room left with a corridor door of its own whose other doors can be walled up stranding
-nobody (`FacilityConnect.strands`, a door-graph walk from the corridor without the room), one with no
-door to or from another room first (`FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up the
-rest. **With no such room the building goes without** (comms 0.74 → 0.72 a base, medical 1.00).
-Neither `linkClusters` nor `connectRooms` cuts a door into any of them, and `GenCheck.washroomSane`
-holds all three to the lab washroom's terms.
+**Every room of a base but its barracks is entered from a corridor and through nothing else**
+(`FacilityConnect.passedBy`; "should have a single door into corridor", "should only have a corridor
+door", "supply, armory, mess, briefing also need the same"). The latrine keeps the washroom's own
+test. The rest take the first room left (the hall a 5-deep one first) with a corridor door of its own
+whose other doors can be walled up stranding nobody (`FacilityConnect.strands`, a door-graph walk
+from the corridor without the room; `FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up the
+rest. Neither `linkClusters` nor `connectRooms` cuts a door into any of them, and
+`GenCheck.washroomSane` holds them all to the lab washroom's terms.
+
+**With no such room the building goes without** — measured over 3000 bases, buildings with no room
+for the kind: supply 90 of 2238, comms 76 of 2224, medical 11 of 2995, briefing 8, mess 5 of ~3000.
+Per base: supply 0.75 → 0.72, comms 0.74 → 0.72, the rest unchanged. **Except the armory**, which
+holds the base's one safe (passed over, 3 bases in 3000 had none and the next building dealt itself a
+second HQ): with no room left it takes the hall's, and the hall looks again (8 HQs in 3000).
 
 The comms room was dealt the biggest room left with no door test at all, and `washroomSane` only ran in
 the FACILITY runner, so nothing saw it: asserted on the base, 173 bases in 3000 failed (a comms room
@@ -1380,6 +1385,17 @@ two-room cut whatever the other turns out to be, and left **997 of 3000 towers w
 server room at all**. So the pair is not predicted: `assign` deals, walks the routes, and re-deals
 with whatever was in the way added to `blocked`. Three towers in 3000 take the second attempt and
 none has taken a third. 3000/3000 corp green, 3000/3000 facility green, 200 digests identical twice.
+
+**The WC, the server room and the archive are entered from a corridor and through nothing else**
+("corpo - toilet, archive, servers"): the archive is a dead end too (`CorpBuilding.deadEnd`), a room
+with no door of its own onto a corridor goes into `blocked`, so the three `must`s deal none of them
+one, and after the deal `CorpBuilding.sealDeadEnds` walls up every door of theirs but the first of
+their own onto a corridor wherever that strands nobody. `CorpConnect`'s repair cuts no door into
+them, as it cuts none into the security room, and `corpRoutesSane` asserts no door joins one to
+another room. Before: 72% of toilets, 71% of server rooms and 77% of archives had one, and 9% / 7% /
+8% had no corridor door at all. Measured over 3000 towers the deal never had to give way (`relaxed`
+0): every floor has its toilet and server room on those terms. The archive, min 0, pays: 1.79 → 1.67 a
+floor. 2.45 doors a floor walled up.
 
 ## A lab building always has a toilet, and the door test was counting the wrong doors
 

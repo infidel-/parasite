@@ -222,6 +222,44 @@ class CorpBuilding
       // and last, deal each room its kind. AFTER makeWindows, because that pass clears every room
       // back to bare floor before it draws the glazing and would wipe a template that ran first
       CorpBlocks.assign(state, node);
+      sealDeadEnds(state);
+    }
+
+// leave every WC, server room and archive ONE way in, its first door of its own onto a corridor
+// ("corpo - toilet, archive, servers" are entered from a corridor and through nothing else), where
+// walling up the rest strands nobody. The deal gave each one a room with a corridor door of its own
+// that nothing else is reached through (CorpBlocks.assign), so it strands nobody but on a floor
+// whose deal had to give way
+  static function sealDeadEnds(state: _CorpState)
+    {
+      var cells = state.area.getCells();
+      var front = receptionFront(state);
+      var base = reached(state, -1, front);
+      for (r in state.rooms)
+        {
+          if (!isDeadEnd(state, r.id))
+            continue;
+          var kept = false;
+          for (d in state.doors.copy())
+            {
+              if (d.roomID1 != r.id &&
+                  d.roomID2 != r.id)
+                continue;
+              if (!kept &&
+                  d.roomID1 == r.id &&
+                  d.roomID2 == 0)
+                {
+                  kept = true;
+                  continue;
+                }
+              var seen = reached(state, -1, front.concat([ d ]));
+              if (Lambda.exists(state.rooms, function(o) return base.exists(o.id) &&
+                    !seen.exists(o.id)))
+                continue;
+              cells[d.x][d.y] = BLDG_INNER_WALL;
+              state.doors.remove(d);
+            }
+        }
     }
 
 // THE ROOMS A WC OR A SERVER ROOM MUST NOT BE DEALT TO: something else's only route runs through
@@ -260,10 +298,7 @@ class CorpBuilding
       // THE RECEPTION'S FRONT IS WALKED AS SHUT, because its template will shut it — the counter
       // takes the whole wall. A WC that is the reception's only other way in is otherwise a dead
       // end this walk passes and gen.GenCheck.corpRoutesSane, reading the finished doors, does not
-      var shut = [];
-      for (r in state.rooms)
-        if (r.role == ROLE_RECEPTION)
-          shut = frontDoors(state, CorpBlocks.fronts.get(r.id));
+      var shut = receptionFront(state);
       var seen = new Map<Int, Bool>();
       seen.set(0, true);
       var open = [0];
@@ -294,13 +329,31 @@ class CorpBuilding
       return [];
     }
 
+// the doors the reception's template will shut, its counter taking the whole wall, or none
+  static function receptionFront(state: _CorpState): Array<_Door>
+    {
+      for (r in state.rooms)
+        if (r.role == ROLE_RECEPTION)
+          return frontDoors(state, CorpBlocks.fronts.get(r.id));
+      return [];
+    }
+
 // is this room one nobody should have to walk THROUGH?
   static function isDeadEnd(state: _CorpState, roomID: Int): Bool
     {
       for (r in state.rooms)
         if (r.id == roomID)
-          return r.role == ROLE_TOILET || r.role == ROLE_SERVERS;
+          return deadEnd(r.role);
       return false;
+    }
+
+// is a room of this role entered from a corridor and through nothing else: a WC, a server room and
+// an archive (sealDeadEnds), read by gen.corp.CorpConnect's repair and gen.GenCheck.corpRoutesSane
+  public static inline function deadEnd(role: String): Bool
+    {
+      return role == ROLE_TOILET ||
+        role == ROLE_SERVERS ||
+        role == ROLE_ARCHIVE;
     }
 
 // every room the corridor reaches over the DOOR GRAPH — not the tiles — with `skip` shut off, and

@@ -255,17 +255,14 @@ class GenCheck
 // gen.facility.FacilityToilet lays its T against the FIRST door of the room and models no second
 // one, so a washroom with two of them comes back with a partition sealing half of itself.
 //
-// A BASE'S LATRINE, ITS MEDICAL BAY AND ITS COMMS ROOM ARE HELD TO THE SAME
-// (gen.facility.FacilityConnect.passedBy): the latrine is picked on the washroom's own door test, the
-// bay "should have a single door into corridor" and the comms room "should only have a corridor door"
+// EVERY ROOM OF A BASE BUT ITS BARRACKS IS HELD TO THE SAME (gen.facility.FacilityConnect.passedBy):
+// the latrine is picked on the washroom's own door test, the rest by FacilityRooms.bay ("should have
+// a single door into corridor", "supply, armory, mess, briefing also need the same")
   public function washroomSane(rooms: Array<_Room>, doors: Array<_Door>)
     {
       for (r in rooms)
         {
-          if (r.role != gen.facility.FacilityTemp.ROLE_TOILET &&
-              r.role != gen.facility.FacilityTemp.ROLE_LATRINE &&
-              r.role != gen.facility.FacilityTemp.ROLE_MEDICAL &&
-              r.role != gen.facility.FacilityTemp.ROLE_COMMS)
+          if (!gen.facility.FacilityConnect.passedBy(r.role))
             continue;
           // NOT FILTERED ON `skip`, which is bookkeeping and not a state: fixDoors deletes the
           // door it drops from the list outright and sets `skip` on the one it KEEPS, so a skipped
@@ -309,7 +306,18 @@ class GenCheck
 // filtered on `skip`, for the reason washroomSane records — a skipped door is a live door
   public function corpRoutesSane(rooms: Array<_Room>, doors: Array<_Door>)
     {
-      var dead = [gen.corp.CorpTemp.ROLE_TOILET, gen.corp.CorpTemp.ROLE_SERVERS];
+      var dead = [gen.corp.CorpTemp.ROLE_TOILET, gen.corp.CorpTemp.ROLE_SERVERS,
+        gen.corp.CorpTemp.ROLE_ARCHIVE];
+      // and each of them is entered from a corridor and through nothing else: no door joins it to
+      // another room ("corpo - toilet, archive, servers", gen.corp.CorpBuilding.sealDeadEnds)
+      for (r in rooms)
+        if (Lambda.has(dead, r.role))
+          for (d in doors)
+            if ((d.roomID1 == r.id &&
+                d.roomID2 != 0) ||
+                d.roomID2 == r.id)
+              ok(false, 'corp ' + r.role + ' at ' + r.x1 + ',' + r.y1 + ' has a door at ' + d.x + ',' +
+                d.y + ' to room ' + (d.roomID1 == r.id ? d.roomID2 : d.roomID1) + ', not a corridor');
       var roleOf = new Map<Int, String>();
       for (r in rooms)
         roleOf.set(r.id, r.role);
@@ -333,7 +341,7 @@ class GenCheck
         }
       for (r in rooms)
         ok(seen.exists(r.id), 'corp room ' + r.id + ' at ' + r.x1 + ',' + r.y1 + ' (' + r.role +
-          ') is reached only through a toilet or the server room');
+          ') is reached only through a toilet, the server room or an archive');
     }
 
 // a store can be walked all the way through, and its door opens onto floor.
