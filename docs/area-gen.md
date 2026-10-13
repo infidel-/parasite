@@ -2226,8 +2226,9 @@ takes no chair. The north-row brick-up went with it, the ring's unglazing covers
 ("a couple shorter corridors parallel to the main, including sometimes directly adjacent to outer
 wall, but at least a room away from main".) `CorpBuilding.parallelCorridors` runs after the main
 corridor and its side corridors are carved and before the inner-wall pass. It makes
-`PARALLEL_CORRIDORS` (2) tries. Each try:
-- picks a hand of the main corridor;
+`PARALLEL_CORRIDORS_MIN`..`_MAX` (3-4) tries. Each try:
+- takes the next hand of the main corridor, alternating from a random first one, so both sides get
+  theirs ("3-4, so that we have them on both sides"; measured: no floor of 3000 one-sided);
 - picks a bay on that hand that no earlier try took. A bay is the bare floor between two side
   corridors, or between one and the outer wall;
 - at `PARALLEL_LONG_PCT` (30), takes the next bay as well, across the side corridor between them.
@@ -2256,13 +2257,16 @@ Every new corridor is `SIDE_CORRIDOR_W` wide.
     writes ONE cell, `loneWindows`' case). Both passed the oracle and both were wall again once the
     floor was entered, so both were dropped.
 
-**Measured over 3000 floors:**
+**Measured over 3000 floors, at 3-4 tries:** rooms 27.62 and doors 33.08; the quota kinds hold and
+the exec filler takes the loss (16.85 → 16.14). 3000/3000 green.
+
+**At the first cut, 2 tries on a random hand:**
 - 2.0 placed per floor: 48% flush (the 35% roll plus the forced ones), 22% spanning two bays.
 - Rooms 29.36 → 28.32 and doors 36.57 → 34.55.
 - Rooms with no door of their own onto a corridor: 1.09 → 0.89 per floor. Exec rooms 3.0% → 2.4%,
   reception 34% → 31%.
 - 3000/3000 green. The digests change.
-- `PARALLEL_CORRIDORS = 0` gives the old stream back (rooms 29.36, doors 36.57).
+- 0 tries gave the old stream back (rooms 29.36, doors 36.57).
 
 **Where a bay is only 5 cells**, the parallel corridor is a short rung between two adjacent side
 corridors. The floor then reads as a grid rather than a comb.

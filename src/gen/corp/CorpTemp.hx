@@ -98,8 +98,10 @@ class CorpTemp
   public static inline var CORRIDOR_W = 3;
   public static inline var SIDE_CORRIDOR_W = 2;
   // the shorter corridors parallel to the main one (CorpBuilding.parallelCorridors): how many a
-  // floor tries, how often one runs flush against the outer wall, and how often one spans two bays
-  public static inline var PARALLEL_CORRIDORS = 2;
+  // floor tries, alternating hands, how often one runs flush against the outer wall, and how often
+  // one spans two bays
+  public static inline var PARALLEL_CORRIDORS_MIN = 3;
+  public static inline var PARALLEL_CORRIDORS_MAX = 4;
   public static inline var PARALLEL_FLUSH_PCT = 35;
   public static inline var PARALLEL_LONG_PCT = 30;
   // the tower floor plate, as a fraction of the area. it is one building and there is no split at

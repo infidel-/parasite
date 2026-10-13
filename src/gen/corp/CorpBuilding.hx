@@ -1008,9 +1008,11 @@ class CorpBuilding
 
       // the flush glazing runs along the plate
       var sideTiles = (vertical ? windowTilesList[1] : windowTilesList[0]);
-      for (k in 0...PARALLEL_CORRIDORS)
+      // the hands take turns from a random one, so both sides of the main corridor get theirs
+      var first = area.random(hands.length);
+      for (k in 0...PARALLEL_CORRIDORS_MIN + area.random(PARALLEL_CORRIDORS_MAX - PARALLEL_CORRIDORS_MIN + 1))
         {
-          var h = hands[area.random(hands.length)];
+          var h = hands[(first + k) % hands.length];
           var free = [for (i in 0...h.bays.length) if (!h.used[i]) i];
           if (free.length == 0)
             continue;
