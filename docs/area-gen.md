@@ -204,6 +204,7 @@ FacilityConnect.connectRooms()          every room is walk-in-able
 | `gen/blocks/CorpBlocks.hx` | the corp floor's node kinds, its room quota, and `assign()` |
 | `gen/blocks/ElevatorBlock.hx` | the lift core — car, posts, glazing, door |
 | `gen/blocks/OfficeBlock.hx` | the corp ROOM level: which template fills a dealt room |
+| `gen/blocks/LabBlocks.hx` | the underground lab's node kinds and room roles |
 
 ### The facility, after the split
 
@@ -596,6 +597,55 @@ benches, so on base1 the 25 spots are bunks, cots and seats more than desks. Spa
 the lab) keeps at most 2 about, lays one on 25% of the turns short of them, and fills a room only
 to 1, or to 2 on a 30% roll, so a barracks of bunks no longer draws most of them. A floor clue is the
 rare extra (10% of those spawns, one at a time, inside a room).
+
+### The underground lab, after the 2D one went
+
+`make gen args="--type lab"`. The 2D level was four rooms on spurs, laid by arithmetic with
+`Std.random`, and its furniture was ~170 TILE DECORATIONS that nothing could assert. It is now the
+corp's shape cut into bedrock: one plate, no `Subdivide`, the rooms carved off a corridor.
+
+```
+area                       bedrock (TILE_LAB_ROCK), generated at exactly 56x32
+└ plate                    LabPlan: lobby W, 2-high corridor, vat chamber E, three service rooms on
+  │                        the corridor (two on one side, one on the other), every bedrock cell
+  │                        8-adjacent to floor walled
+  ├ lift                   2x2 TILE_LAB_LIFT in the lobby's NW corner, 4 'labLift' spawns; its
+  │                        neighbours are KEPT bare
+  ├ corridor               leaf; dressed render-side
+  ├ door x5                linked two-cell pairs, 'labDoor' spawns (part 0/1, vertical)
+  └ room-entrance | room-vat | room-workshop | room-storage | room-research   one of each
+    └ zones over the bays (LabZones): hazmat-rack, kiosk, seat-row, locker-run, gurney-bay ·
+      vat-pad x4 (CARVED first), console-run, machine-bank, specimen-run, vat-island ·
+      workbench-run, machine-wall, crate-stack, machine-island · container, cold-bank, shelving,
+      shelf-row · bench-run, bookcase-run, fridge-run, analyser · lab-slot
+```
+
+| file | what it is |
+|---|---|
+| `gen/lab/LabGen.hx` | `build()`, the walk, the lift and doorway fills. Writes FINAL ids: every lab id already says what it is, so there is no temp alphabet and no finalize |
+| `gen/lab/LabPlan.hx` | the plate, ≤30 draws |
+| `gen/lab/LabZones.hx` | bays, the vat pads, each room kind's quota |
+| `gen/lab/LabRooms.hx` | each zone's furniture and machines, `free`/`walled`/`sealsOff` ported from the base |
+| `gen/lab/LabKinds.hx` | the 66 machine kinds (APPEND ONLY: an index is a saved tile id), `alongX`, `selfCheck` |
+
+- **The mission's contract is unchanged**: `missionHints` carries the vat room, its doorway's upper
+  cell and the four 2x3 anchors at the 2D formula's cells, and the guards' post (`vatDoorX-1`) is
+  corridor. `GenCheck.labSane` asserts all of it.
+- **A machine is a footprint named by its ORIGIN** (`Const.TILE_LAB_MACHINE0 + index`, the vehicle
+  pattern) at its 3D size, not the 2D sprite's: a sprite draws its height over the row above, so a
+  2x2 cabinet sprite is a cabinet 2 long and 1 deep. Its TURN is not saved: `LabKinds.alongX` reads it
+  off the cell `depth` along from the origin, which is inside an along-x rect and is exactly the RING
+  cell beside an along-y one. Every machine keeps a ring of bare floor or masonry
+  (`LabRooms.machine`), so that cell is never another machine. **The first probe, `len - 1` along,
+  was wrong**: on a 3x1 it reached past the ring into the next machine (516 failures in 3000).
+- **Zones fill in their quota's order, not wall order.** Walked bay by bay, a store's cold bank on
+  the top wall took the corners its container on the side wall needed, and 10% of stores stood none.
+- **Rarest kind first.** Each zone deals the kind the level has stood least (`_LabState.used`, a
+  seeded roll breaking ties), so a level shows ~32 of the 66 kinds.
+- **A wall zone with no fit of its own avoids the south wall** (the camera sees its pieces' backs).
+
+3000 seeds: 34.7 machines and 31.7 kinds a level, rooms used entrance 17 / research 24 / storage 31 /
+vat 29 (of 224, the pads' kept ring being most of it) / workshop 21 cells.
 
 ### The one permitted `gen/` → `game/` edge
 

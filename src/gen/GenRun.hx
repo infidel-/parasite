@@ -28,6 +28,10 @@ class GenRun
   // and const.WorldConst's AREA_MILITARY_BASE, copied for the same reason
   static inline var MIL_W = 100;
   static inline var MIL_H = 80;
+  // and AREA_UNDERGROUND_LAB's, which is generated at exactly this size: the mission sets it and
+  // game.AreaGame.setType leaves the lab's dimensions alone
+  static inline var LAB_W = 56;
+  static inline var LAB_H = 32;
 
 // the size a facility is ACTUALLY generated at.
 //
@@ -63,6 +67,7 @@ class GenRun
       // the decoration table's own invariants, checked once before any seed runs: unique frames and
       // a non-empty list for every place the facility asks for. it throws rather than reports
       Deco.selfCheck();
+      gen.lab.LabKinds.selfCheck();
 
       log('[gen] ' + type + ': seeds ' + seed0 + '..' + (seed0 + count - 1));
       var failures = [];
@@ -77,6 +82,8 @@ class GenRun
             checkCorpArea(seed, check, verbose);
           else if (type == 'military')
             checkMilitaryArea(seed, check, verbose);
+          else if (type == 'lab')
+            checkLabArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -652,6 +659,138 @@ class GenRun
             log('   ' + n.kind + ' ' + n.x1 + ',' + n.y1 + '..' + n.x2 + ',' + n.y2 +
               ' (' + GenTree.width(n) + 'x' + GenTree.height(n) + ')');
         }
+    }
+
+// generate a whole underground lab and assert what the game and the mission read back out of it
+  static function checkLabArea(seed: Int, check: GenCheck, verbose: Bool)
+    {
+      var w = (forceW > 0 ? forceW : LAB_W);
+      var h = (forceH > 0 ? forceH : LAB_H);
+      var ctx = new GenCtx(w, h, seed);
+      var state = gen.lab.LabGen.build(ctx);
+      if (has('--digest'))
+        log('seed ' + seed + ' ' + w + 'x' + h + ' ' + labDigest(ctx, state));
+
+      check.tilesKnown(ctx);
+      check.roomsSane(ctx, state.rooms);
+      check.doorsSane(ctx, state.rooms, state.doors);
+      check.spawnsSane(ctx);
+      check.labSane(ctx, state);
+      // the level is entered by its LIFT, so that is where the flood starts
+      var lift = [for (s in ctx.spawns) if (s.type == 'labLift') { x: s.x, y: s.y }];
+      var cut = check.reachable(ctx, state.rooms, lift);
+      check.ok(cut.length == 0, cut.length + ' lab room(s) cannot be walked into, first is ' +
+        (cut.length > 0 ? cut[0].role + ' ' + cut[0].x1 + ',' + cut[0].y1 : ''));
+      check.floorReachable(ctx, state.rooms);
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (y in 0...h)
+        for (x in 0...w)
+          if (walk[ctx.cells[x][y]] == 1)
+            check.ok(check.lastSeen[x][y], 'lab floor at ' + x + ',' + y + ' that nothing can walk to');
+
+      add('planTries', state.tries);
+      GenTree.walk(ctx.root, function(n)
+        {
+          add('nodes/' + n.kind, 1);
+          if (gen.lab.LabZones.tagged(n, gen.lab.LabRooms.TAG_EMPTY))
+            add('zoneEmpty/' + n.kind, 1);
+        });
+      // which machines, and how many kinds a level shows
+      var kinds = 0;
+      for (i in 0...state.used.length)
+        if (state.used[i] > 0)
+          {
+            kinds++;
+            add('machine/' + gen.lab.LabKinds.MACHINES[i].name, state.used[i]);
+            add('machines', state.used[i]);
+          }
+      add('machineKinds', kinds);
+      // how furnished each kind of room comes out: its cells, and the ones something stands on
+      for (r in state.rooms)
+        {
+          var used = 0;
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              if (ctx.cells[x][y] >= Const.TILE_LAB_BENCH)
+                used++;
+          add('roomCells/' + r.role, r.w * r.h);
+          add('roomUsed/' + r.role, used);
+        }
+      if (verbose)
+        {
+          log('[gen] seed ' + seed + ' ' + w + 'x' + h + ' tries=' + state.tries + ' kinds=' +
+            kinds);
+          for (r in state.rooms)
+            log('   ' + r.role + ' ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2);
+          printLab(ctx);
+        }
+    }
+
+// the finished level as one character per cell
+  static function printLab(ctx: GenCtx)
+    {
+      for (y in 0...ctx.height)
+        {
+          var line = '';
+          for (x in 0...ctx.width)
+            {
+              var t = ctx.cells[x][y];
+              line += (t == Const.TILE_LAB_ROCK ? ' ' :
+                t == Const.TILE_LAB_WALL ? '#' :
+                t == Const.TILE_LAB_CORRIDOR ? ':' :
+                t == Const.TILE_LAB_LIFT ? 'L' :
+                t == Const.TILE_LAB_VAT_PAD ? 'V' :
+                t == Const.TILE_LAB_DOOR ? 'D' :
+                t == Const.TILE_LAB_BENCH ? 'b' :
+                t == Const.TILE_LAB_WORKBENCH ? 'w' :
+                t == Const.TILE_LAB_CONSOLE ? 'c' :
+                t == Const.TILE_LAB_SHELF ? 'H' :
+                t == Const.TILE_LAB_SHELF_LOW ? 'h' :
+                t == Const.TILE_LAB_LOCKER ? 'k' :
+                t == Const.TILE_LAB_HAZMAT ? 'z' :
+                t == Const.TILE_LAB_SEAT ? 's' :
+                t == Const.TILE_LAB_FRIDGE ? 'f' :
+                t == Const.TILE_LAB_DRUMS ? 'd' :
+                t == Const.TILE_LAB_CRATES ? 'x' :
+                t == Const.TILE_LAB_PLANT ? 'p' :
+                t == Const.TILE_LAB_BIN ? 'n' :
+                t == Const.TILE_LAB_SHELF_ROW ? '=' :
+                t == Const.TILE_LAB_MACHINE ? 'm' :
+                t >= Const.TILE_LAB_MACHINE0 ? 'M' : '.');
+            }
+          log(line);
+        }
+    }
+
+// one lab in one line, the same FNV-1a over the same things as the compound's digest
+  static function labDigest(ctx: GenCtx, state: gen.lab._LabState): String
+    {
+      var h = -2128831035;
+      inline function eat(v: Int)
+        {
+          h = h ^ v;
+          h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) | 0;
+        }
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          eat(ctx.cells[x][y]);
+      for (s in ctx.spawns)
+        {
+          for (i in 0...s.type.length)
+            eat(s.type.charCodeAt(i));
+          eat(s.x);
+          eat(s.y);
+          eat(s.part == null ? -1 : s.part);
+        }
+      for (r in state.rooms)
+        {
+          eat(r.id);
+          eat(r.x1);
+          eat(r.y1);
+          eat(r.x2);
+          eat(r.y2);
+        }
+      return StringTools.hex(h >>> 0, 8);
     }
 
 // one corp floor in one line, the same FNV-1a over the same things as the compound's digest. a

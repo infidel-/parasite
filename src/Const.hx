@@ -1389,6 +1389,52 @@ class Const
   public static var TILE_MIL_URINAL = OFFSET_ROW21 + 14;
   public static var TILE_MIL_SHOWER = OFFSET_ROW21 + 15;
 
+  // === row 22 - the UNDERGROUND LAB's shell (gen.lab.LabGen): the bedrock the level is cut into, its
+  // walls, the corridor, the five room floors (each the whole record of its room's kind, as on the
+  // base), the lift car, the vat pads and the doorway cells. None has 2D art: the lab is always drawn
+  // in 3D (render.lab)
+  public static var OFFSET_ROW22 = 352;
+  public static var TILE_LAB_ROCK = OFFSET_ROW22 + 0;
+  public static var TILE_LAB_WALL = OFFSET_ROW22 + 1;
+  public static var TILE_LAB_CORRIDOR = OFFSET_ROW22 + 2;
+  public static var TILE_LAB_FLOOR_ENTRANCE = OFFSET_ROW22 + 3;
+  public static var TILE_LAB_FLOOR_VAT = OFFSET_ROW22 + 4;
+  public static var TILE_LAB_FLOOR_WORKSHOP = OFFSET_ROW22 + 5;
+  public static var TILE_LAB_FLOOR_STORAGE = OFFSET_ROW22 + 6;
+  public static var TILE_LAB_FLOOR_RESEARCH = OFFSET_ROW22 + 7;
+  // the 2x2 the lift car stands on, under its four objects.Elevator parts
+  public static var TILE_LAB_LIFT = OFFSET_ROW22 + 8;
+  // a vat's 2x3 plinth, laid before the mission stands a objects.mission.CloneVat on it
+  public static var TILE_LAB_VAT_PAD = OFFSET_ROW22 + 9;
+  // a cell of a two-cell doorway, under its objects.Door
+  public static var TILE_LAB_DOOR = OFFSET_ROW22 + 10;
+  // === row 23 - its furniture, a cell per piece (gen.lab.LabRooms): the benches, the computer desks,
+  // the wall shelving, lockers, suit racks, seats and fridges (walkable: each stands in its wall's
+  // margin, see tiles.Default.TILE_WALKABLE), drums, crate stacks, a store's shelf rows, the plants
+  // and bins the leftover bays take, and the footprint every machine stands on
+  public static var OFFSET_ROW23 = 368;
+  public static var TILE_LAB_BENCH = OFFSET_ROW23 + 0;
+  public static var TILE_LAB_WORKBENCH = OFFSET_ROW23 + 1;
+  public static var TILE_LAB_CONSOLE = OFFSET_ROW23 + 2;
+  public static var TILE_LAB_SHELF = OFFSET_ROW23 + 3;
+  public static var TILE_LAB_SHELF_LOW = OFFSET_ROW23 + 4;
+  public static var TILE_LAB_LOCKER = OFFSET_ROW23 + 5;
+  public static var TILE_LAB_HAZMAT = OFFSET_ROW23 + 6;
+  public static var TILE_LAB_SEAT = OFFSET_ROW23 + 7;
+  public static var TILE_LAB_FRIDGE = OFFSET_ROW23 + 8;
+  public static var TILE_LAB_DRUMS = OFFSET_ROW23 + 9;
+  public static var TILE_LAB_CRATES = OFFSET_ROW23 + 10;
+  public static var TILE_LAB_PLANT = OFFSET_ROW23 + 11;
+  public static var TILE_LAB_BIN = OFFSET_ROW23 + 12;
+  public static var TILE_LAB_SHELF_ROW = OFFSET_ROW23 + 13;
+  // a machine's footprint, every cell of it but the ORIGIN (its low corner), which names the kind
+  public static var TILE_LAB_MACHINE = OFFSET_ROW23 + 14;
+  // === rows 24-28 - one ORIGIN id per machine kind, `TILE_LAB_MACHINE0 + index` into
+  // gen.lab.LabKinds.MACHINES, the way a parked vehicle is named by its origin tile. The kind table
+  // is append-only: an index is a saved tile id
+  public static var OFFSET_ROW24 = 384;
+  public static var TILE_LAB_MACHINE0 = OFFSET_ROW24 + 0;
+
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;
   public static var TILE_CORP_INNER_WINDOW1 = OFFSET_ROW13 + 0;

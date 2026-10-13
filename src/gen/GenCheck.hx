@@ -1132,6 +1132,143 @@ class GenCheck
           }
     }
 
+// the underground lab: every room kind once, its lift and its five doorways whole, the vat chamber
+// the mission reads (four bare pads round a kept ring, a doorway with corridor outside it for the
+// guards), the store's containers, and every machine a footprint the render can read back. A
+// machine's TURN is not saved: render.lab takes it off the footprint, and that only works while no
+// two footprints touch and a wall machine has its long side on masonry, so both are asserted here
+  public function labSane(ctx: GenCtx, state: gen.lab._LabState)
+    {
+      var c = ctx.cells;
+      var roles = [for (r in state.rooms) r.role];
+      for (role in [ gen.blocks.LabBlocks.ROLE_ENTRANCE, gen.blocks.LabBlocks.ROLE_VAT ]
+          .concat(gen.blocks.LabBlocks.SERVICE))
+        ok(roles.filter(function(r) return r == role).length == 1,
+          'lab has ' + roles.filter(function(r) return r == role).length + ' ' + role + ' rooms');
+      GenTree.walk(ctx.root, function(n)
+        ok(!gen.lab.LabZones.tagged(n, gen.lab.LabZones.TAG_UNMET),
+          n.kind + ' at ' + n.x1 + ',' + n.y1 + ' fell short of its quota'));
+
+      // the lift: four parts on a 2x2 of lift floor, part = row * 2 + column
+      var lift = [for (s in ctx.spawns) if (s.type == 'labLift') s];
+      ok(lift.length == 4, 'lab lift has ' + lift.length + ' parts, want 4');
+      if (lift.length == 4)
+        for (s in lift)
+          ok(c[s.x][s.y] == Const.TILE_LAB_LIFT &&
+            s.x - lift[0].x == s.part % 2 &&
+            s.y - lift[0].y == Std.int(s.part / 2),
+            'lab lift part ' + s.part + ' at ' + s.x + ',' + s.y + ' is out of place');
+
+      // the doorways: linked pairs on doorway cells, room floor on one side and corridor on the other
+      var doors = [for (s in ctx.spawns) if (s.type == 'labDoor') s];
+      ok(doors.length == 10, 'lab has ' + doors.length + ' door cells, want 10');
+      var i = 0;
+      while (i + 1 < doors.length)
+        {
+          var a = doors[i];
+          var b = doors[i + 1];
+          ok(a.part == 0 &&
+            b.part == 1 &&
+            b.x == a.x + (a.vertical ? 0 : 1) &&
+            b.y == a.y + (a.vertical ? 1 : 0),
+            'lab doorway at ' + a.x + ',' + a.y + ' is not a linked pair');
+          for (d in [ a, b ])
+            {
+              ok(c[d.x][d.y] == Const.TILE_LAB_DOOR, 'lab door at ' + d.x + ',' + d.y +
+                ' stands on ' + c[d.x][d.y]);
+              var dx = (d.vertical ? 1 : 0);
+              var dy = (d.vertical ? 0 : 1);
+              var one = c[d.x - dx][d.y - dy];
+              var two = c[d.x + dx][d.y + dy];
+              ok((one == Const.TILE_LAB_CORRIDOR) != (two == Const.TILE_LAB_CORRIDOR) &&
+                gen.lab.LabRooms.isOpen(one) &&
+                gen.lab.LabRooms.isOpen(two),
+                'lab door at ' + d.x + ',' + d.y + ' does not join a room to the corridor');
+            }
+          i += 2;
+        }
+
+      // the vat chamber: four 2x3 pads where the hints say, the ring round them bare, and the
+      // corridor two cells high outside its doorway, where the guards are posted
+      ok(state.vatAnchors.length == 4, 'vat chamber has ' + state.vatAnchors.length + ' pads');
+      for (a in state.vatAnchors)
+        for (x in a.x...a.x + 2)
+          for (y in a.y...a.y + 3)
+            ok(c[x][y] == Const.TILE_LAB_VAT_PAD, 'vat pad cell ' + x + ',' + y + ' holds ' +
+              c[x][y]);
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          if (state.keep[x][y])
+            ok(c[x][y] < Const.TILE_LAB_BENCH, 'kept cell ' + x + ',' + y + ' holds furniture ' +
+              c[x][y]);
+      var vd = state.vatDoor;
+      ok(c[vd.x][vd.y] == Const.TILE_LAB_DOOR &&
+        c[vd.x - 1][vd.y] == Const.TILE_LAB_CORRIDOR &&
+        c[vd.x - 1][vd.y + 1] == Const.TILE_LAB_CORRIDOR,
+        'vat doorway at ' + vd.x + ',' + vd.y + ' has no corridor outside it for its guards');
+
+      // the machines: every origin's footprint reads back one way, nothing else of one touches it,
+      // a wall machine has a long side on masonry, and every footprint cell belongs to one origin
+      var owned = [for (x in 0...ctx.width) [for (y in 0...ctx.height) false]];
+      var containers = 0;
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          {
+            var k = gen.lab.LabKinds.kindAt(c[x][y]);
+            if (k == null)
+              continue;
+            if (k.name == 'container')
+              containers++;
+            var alongX = gen.lab.LabKinds.alongX(c, x, y, k);
+            var rw = (alongX ? k.len : k.depth);
+            var rh = (alongX ? k.depth : k.len);
+            var backed = false;
+            for (xx in x - 1...x + rw + 1)
+              for (yy in y - 1...y + rh + 1)
+                {
+                  var inRect = (xx >= x &&
+                    xx < x + rw &&
+                    yy >= y &&
+                    yy < y + rh);
+                  if (inRect)
+                    {
+                      ok((xx == x && yy == y) || c[xx][yy] == Const.TILE_LAB_MACHINE,
+                        k.name + ' at ' + x + ',' + y + ' has a hole at ' + xx + ',' + yy);
+                      owned[xx][yy] = true;
+                    }
+                  else
+                    ok(!gen.lab.LabKinds.isMachine(c[xx][yy]),
+                      k.name + ' at ' + x + ',' + y + ' touches another machine at ' + xx + ',' +
+                        yy);
+                }
+            if (!k.wall)
+              continue;
+            // a long side on masonry: the row above or below an along-x rect, the column beside an
+            // along-y one. A square one may back onto any of its four sides
+            for (ax in (k.len == k.depth ? [ true, false ] : [ alongX ]))
+              for (side in [ -1, 1 ])
+                {
+                  var all = true;
+                  for (j in 0...k.len)
+                    {
+                      var wx = (ax ? x + j : (side < 0 ? x - 1 : x + rw));
+                      var wy = (ax ? (side < 0 ? y - 1 : y + rh) : y + j);
+                      if (c[wx][wy] != Const.TILE_LAB_WALL)
+                        all = false;
+                    }
+                  if (all)
+                    backed = true;
+                }
+            ok(backed, k.name + ' at ' + x + ',' + y + ' is a wall machine with no wall behind it');
+          }
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          if (c[x][y] == Const.TILE_LAB_MACHINE)
+            ok(owned[x][y], 'machine footprint at ' + x + ',' + y + ' belongs to no origin');
+      ok(containers >= 1 &&
+        containers <= 2, 'lab store has ' + containers + ' containers, want 1-2');
+    }
+
 // how many cells of the grid hold this tile
   static function count(ctx: GenCtx, tile: Int): Int
     {

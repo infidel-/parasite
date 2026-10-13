@@ -88,6 +88,22 @@ class Default extends Tileset
     // shower, which is stood in. Not the console and its chair, a crate stack, a cot or a
     // stretcher, which fill their cell, nor a store's shelf row
     1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1,
+    // row 22 - the underground lab's shell (Const.TILE_LAB_*): bedrock and wall, then the corridor,
+    // the five room floors, the lift car, the vat pads and the doorway cells, all walkable
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    // row 23 - its furniture. The wall shelving, low shelves, lockers, suit racks, seats and fridges
+    // ARE walkable, each one cell deep in its wall's margin (the corp's WALL_HUGGERS lesson), and so
+    // are a plant and a bin; the benches, desks, drums, crates, shelf rows and machine footprints fill
+    // their cells
+    0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0,
+    // rows 24-28 - one machine origin per gen.lab.LabKinds.MACHINES entry, walkable only for the six
+    // `stand` units hung in the wall's margin (tube console, lever box, control box, drawers,
+    // radiation locker, kiosk). LabKinds.selfCheck holds this table to the kind list
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -131,6 +147,16 @@ class Default extends Tileset
     // row 21 - nor in its comms room, store or medical bay, nor its standing props: racks and shelves
     // stand at a wall
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    // row 22 - the underground lab: bedrock and wall block sight, the floors do not
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    // row 23 - nothing in a lab room stands above eye height, as on the base
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+    // rows 24-28 - nor does a machine
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
 
 // load default tileset image

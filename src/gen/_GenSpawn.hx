@@ -25,4 +25,9 @@ typedef _GenSpawn = {
   @:optional var col: Int;
   // a door's OPEN frame, on the same row as its closed one
   @:optional var col2: Int;
+  // which part of a multi-cell object this is: the underground lab's lift car (0..3, row by row) or
+  // one of its two-cell doorways (0 the upper or left cell, 1 the other, linked to it)
+  @:optional var part: Int;
+  // a lab doorway's two cells run down (true) or across (false)
+  @:optional var vertical: Bool;
 }

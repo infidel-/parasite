@@ -13,6 +13,7 @@ package gen;
 import game.AreaGame;
 import game.Game;
 import objects.*;
+import tiles.UndergroundLab;
 
 class GenSpawner
 {
@@ -23,6 +24,8 @@ class GenSpawner
 // at all — so this does not re-check, it just builds
   public static function drain(game: Game, area: AreaGame, ctx: GenCtx)
     {
+      // a lab doorway's first door, linked to the second when it comes
+      var half: Door = null;
       for (s in ctx.spawns)
         {
           var o: AreaObject = switch (s.type)
@@ -59,6 +62,20 @@ class GenSpawner
                 new Locker(game, area.id, s.x, s.y);
               case 'safe':
                 new Safe(game, area.id, s.x, s.y);
+              // the underground lab's lift car, four parts on the lab's own atlas, and its two-cell
+              // doorways, gen.lab.LabGen
+              case 'labLift':
+                new Elevator(game, area.id, s.x, s.y, -1, s.part, UndergroundLab.OBJECTS_IMAGE);
+              case 'labDoor':
+                var d = labDoor(game, area, s);
+                if (s.part == 0)
+                  half = d;
+                else
+                  {
+                    d.linkedDoorID = half.id;
+                    half.linkedDoorID = d.id;
+                  }
+                d;
               default:
                 trace('GenSpawner.drain(): unknown spawn type "' + s.type + '" at ' +
                   s.x + ',' + s.y);
@@ -67,5 +84,21 @@ class GenSpawner
           if (o != null)
             area.addObject(o);
         }
+    }
+
+// one door of a lab doorway, with the lab atlas's frames for its half of the pair
+  static function labDoor(game: Game, area: AreaGame, s: _GenSpawn): Door
+    {
+      return (s.vertical ?
+        (s.part == 0 ?
+          new Door(game, area.id, s.x, s.y, UndergroundLab.DOOR_VERTICAL_CLOSED_UPPER,
+            UndergroundLab.DOOR_VERTICAL_OPEN_UPPER, UndergroundLab.OBJECTS_IMAGE) :
+          new Door(game, area.id, s.x, s.y, UndergroundLab.DOOR_VERTICAL_CLOSED_LOWER,
+            UndergroundLab.DOOR_VERTICAL_OPEN_LOWER, UndergroundLab.OBJECTS_IMAGE)) :
+        (s.part == 0 ?
+          new Door(game, area.id, s.x, s.y, UndergroundLab.DOOR_HORIZONTAL_CLOSED_LEFT,
+            UndergroundLab.DOOR_HORIZONTAL_OPEN_LEFT, UndergroundLab.OBJECTS_IMAGE) :
+          new Door(game, area.id, s.x, s.y, UndergroundLab.DOOR_HORIZONTAL_CLOSED_RIGHT,
+            UndergroundLab.DOOR_HORIZONTAL_OPEN_RIGHT, UndergroundLab.OBJECTS_IMAGE)));
     }
 }
