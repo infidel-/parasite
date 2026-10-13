@@ -847,7 +847,8 @@ class Game extends _SaveObject
       // a load that then fails leaves the game sitting there wiped — still isStarted, still
       // GAMESTATE_RUNNING, so every other test below passes. The next autosave then wrote an EMPTY
       // world over the reserved slot and destroyed the save the failed load had been reading. A
-      // successful load restores isInited from the save itself, so nothing legitimate is blocked
+      // successful load restores isInited from the save itself, so nothing legitimate is blocked --
+      // and so does a load that throws partway, which is why Loader.load clears it again on failure
       if (!isInited ||
           !isStarted ||
           state != GAMESTATE_RUNNING ||

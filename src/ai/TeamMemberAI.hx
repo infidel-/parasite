@@ -10,6 +10,30 @@ class TeamMemberAI extends HumanAI
     {
       super(g, vx, vy);
       init();
+      // who it passes for, by the area it spawns in. HERE AND NOT IN init(): the loader calls init()
+      // on every AI it restores, and a load from the main menu has no game.area yet -- every save
+      // holding a team member failed to load. the save restores all four fields anyway
+      if (game.area.typeID == AREA_FACILITY)
+        {
+          type = 'scientist';
+          name.unknown = 'random scientist';
+          name.unknownCapped = 'Random scientist';
+        }
+      else if (game.area.typeID == AREA_MILITARY_BASE)
+        {
+          type = 'soldier';
+          name.unknown = 'soldier';
+          name.unknownCapped = 'Soldier';
+        }
+      else
+        {
+          type = 'civilian';
+          name.unknown = 'random civilian';
+          name.unknownCapped = 'Random civilian';
+        }
+      var jobData = game.jobs.getRandom(type);
+      job = jobData.name;
+      income = jobData.income;
       // skill traits for team members
       addTraitFromGroup('skill');
       if (Std.random(100) < 50)
@@ -60,27 +84,6 @@ class TeamMemberAI extends HumanAI
   public override function init()
     {
       super.init();
-      if (game.area.typeID == AREA_FACILITY)
-        {
-          type = 'scientist';
-          name.unknown = 'random scientist';
-          name.unknownCapped = 'Random scientist';
-        }
-      else if (game.area.typeID == AREA_MILITARY_BASE)
-        {
-          type = 'soldier';
-          name.unknown = 'soldier';
-          name.unknownCapped = 'Soldier';
-        }
-      else
-        {
-          type = 'civilian';
-          name.unknown = 'random civilian';
-          name.unknownCapped = 'Random civilian';
-        }
-      var jobData = game.jobs.getRandom(type);
-      job = jobData.name;
-      income = jobData.income;
       soundsID = 'team';
       isAggressive = true;
       isTeamMember = true;

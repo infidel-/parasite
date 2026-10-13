@@ -48,6 +48,10 @@ class Loader
       }
       catch (e: Dynamic)
         {
+          // isInited is a saved field, so a throw partway through loadObject has already set it back
+          // to true over a half-restored game whose region and area (not saved) still point at the
+          // old world. cleared here or Game.autosave's wiped-game guard passes and writes that mix
+          game.isInited = false;
           game.ui.onError('load game: ' + e, '', -1, -1, {
             stack: haxe.CallStack.toString(haxe.CallStack.exceptionStack()),
           });
@@ -61,6 +65,7 @@ class Loader
       if (game.region == null ||
           game.area == null)
         {
+          game.isInited = false;
           game.ui.onError('load game: save names region ' + Std.string(game.region) +
             ' / area ' + Std.string(game.area) + ', which the loaded world does not hold',
             '', -1, -1, null);
