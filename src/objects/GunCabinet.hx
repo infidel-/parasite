@@ -21,11 +21,12 @@ class GunCabinet extends AreaObject
     { id: 'assaultRifle', weight: 10 },
   ];
   // and a military base armory's: the soldier's rifle (ai.SoldierAI), the officer's pistol
-  // (ai.OfficerAI) and the shotgun, none of the security guard's stun kit
+  // (ai.OfficerAI), the shotgun and a kevlar vest, none of the security guard's stun kit
   public static var MIL_LOOT: Array<{ id: String, weight: Int }> = [
     { id: 'assaultRifle', weight: 45 },
     { id: 'pistol', weight: 30 },
     { id: 'combatShotgun', weight: 25 },
+    { id: 'kevlarArmor', weight: 20 },
   ];
 
   public var inventory: Inventory; // what it holds
@@ -117,9 +118,9 @@ class GunCabinet extends AreaObject
       } ];
     }
 
-// update actions: open, then search, then one Get per weapon. THE GETS ARE HERE AND NOT IN
-// getItemActions, which PlayerArea only reads off the player's OWN cell, and a cabinet is used from
-// beside it too
+// update actions: open, then search, then its Get, or one action opening the pickup submenu on what
+// it holds when that is several. THE GETS ARE HERE AND NOT IN getItemActions, or a row of lockers
+// pooled into the tile's one submenu with whatever lies on the floor
   override function updateActionList()
     {
       if (game.player.state != PLR_STATE_HOST)
@@ -146,14 +147,32 @@ class GunCabinet extends AreaObject
           });
           return;
         }
+      var gets = takeActions();
+      if (gets.length == 1)
+        game.ui.hud.addAction(gets[0]);
+      else if (gets.length > 1)
+        game.ui.hud.addAction({
+          id: 'takeMenu',
+          type: ACTION_OBJECT,
+          name: 'Take from ' + name + '… ' + Const.col('inventory-item', '(' + gets.length + ')'),
+          isVirtual: true,
+          obj: this
+        });
+    }
+
+// one Get per item it holds, none while the host's hands are full: its action, or the pickup
+// submenu's list (ui.hud.ActionsHud)
+  public function takeActions(): Array<_PlayerAction>
+    {
+      var list: Array<_PlayerAction> = [];
+      if (game.player.host.inventory.length() >=
+          game.player.host.maxItems)
+        return list;
       for (item in inventory)
         {
-          if (game.player.host.inventory.length() >=
-              game.player.host.maxItems)
-            break;
           var name = (game.player.knowsItem(item.id) ?
             item.name : item.info.unknown);
-          game.ui.hud.addAction({
+          list.push({
             id: 'get.' + item.id,
             type: ACTION_OBJECT,
             name: 'Get ' + Const.col('inventory-item', name),
@@ -161,6 +180,7 @@ class GunCabinet extends AreaObject
             obj: this
           });
         }
+      return list;
     }
 
 // ACTION: action handling
@@ -170,6 +190,11 @@ class GunCabinet extends AreaObject
         openAction();
       else if (action.id == 'searchCabinet')
         searchAction();
+      else if (action.id == 'takeMenu')
+        {
+          game.ui.hud.pickupFrom = this;
+          game.ui.hud.state = HUD_PICKUP_MENU;
+        }
       else if (action.id.substr(0, 4) == 'get.')
         getAction(action.id.substr(4));
       return true;

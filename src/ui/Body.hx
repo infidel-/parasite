@@ -141,7 +141,7 @@ class Body extends UIWindow
           UISvg.clockSmall() + (survive < 0 ? '&infin;' : '' + survive) + '</span>';
     }
 
-// inventory cells: key chip + item thumb + name/[active] + inline actions
+// inventory cells: key chip + item thumb + [worn]/name/[active] + inline actions
   function updateInventory()
     {
       listInventoryActions = [];
@@ -161,11 +161,12 @@ class Body extends UIWindow
       var buf = new StringBuf();
       var activeMarked = false;
       var hasItems = false;
-      for (item in inv)
+      for (item in inv.withWorn())
         {
           hasItems = true;
           var knows = game.player.knowsItem(item.id);
-          var name = (knows ? item.name : item.info.unknown);
+          var name = (item == inv.clothing ? Const.smallgray('[worn]') + ' ' : '') +
+            (knows ? item.name : item.info.unknown);
           var isActive = (item.id == inv.weaponID && !activeMarked);
           if (isActive)
             activeMarked = true;

@@ -15,6 +15,7 @@ class HUD
   var game: Game;
   var ui: UI;
   public var state: _HUDState;
+  public var pickupFrom: objects.GunCabinet; // the container HUD_PICKUP_MENU lists, or null for the tile's pickups
   var blinkingText: DivElement;
   var overlay: DivElement;
   public var container: DivElement;

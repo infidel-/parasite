@@ -13,7 +13,7 @@ class FullBodyArmor extends ItemInfo
       id = 'fullBodyArmor';
       name = 'full-body armor';
       type = 'clothing';
-      unknown = 'ARMOR BUG!';
+      unknown = 'bulky plated garment';
       armor = {
         canAttach: false,
         damage: 8,

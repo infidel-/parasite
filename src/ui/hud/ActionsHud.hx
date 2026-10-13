@@ -58,11 +58,12 @@ class ActionsHud
           hud.command.updateActions();
           return;
         }
-      // ground-items submenu: the full list of tile pickups + a Back item. nothing else
-      // (no movement, no other actions) is offered while it is open
+      // ground-items submenu: the full list of tile pickups (or of one container's items) + a Back
+      // item. nothing else (no movement, no other actions) is offered while it is open
       if (hud.state == HUD_PICKUP_MENU)
         {
-          for (a in game.playerArea.getTileItemActions())
+          for (a in (hud.pickupFrom != null ? hud.pickupFrom.takeActions() :
+              game.playerArea.getTileItemActions()))
             addAction(a);
           addAction({
             id: 'pickupMenu.abort',

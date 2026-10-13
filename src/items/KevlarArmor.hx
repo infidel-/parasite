@@ -13,7 +13,7 @@ class KevlarArmor extends ItemInfo
       id = 'kevlarArmor';
       name = 'kevlar armor';
       type = 'clothing';
-      unknown = 'ARMOR BUG!';
+      unknown = 'padded garment';
       armor = {
         canAttach: true,
         damage: 4,

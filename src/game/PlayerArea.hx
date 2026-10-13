@@ -371,6 +371,7 @@ class PlayerArea extends _SaveObject
       // open the ground-items submenu (several pickups on the tile)
       else if (action.id == 'pickupMenu')
         {
+          game.ui.hud.pickupFrom = null;
           game.ui.hud.state = HUD_PICKUP_MENU;
           game.updateHUD();
         }
