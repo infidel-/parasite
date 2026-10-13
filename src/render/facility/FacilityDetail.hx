@@ -346,44 +346,60 @@ class FacilityDetail
 // floor is hidden by the floor itself. `u` is taken off the UNCLAMPED span, so a clamp CUTS the
 // falloff rather than squeezing it — the stretch this repo does not do.
 //
-// THE CLAMP IS THE WHOLE RUN'S MASONRY, not the first cell's. `slab` is per cell and a cell is 4
-// units, so clamping a 4-cell casework run to it would cut the run to a quarter of itself — the two
-// END slabs bound it instead, and for the single-cell case they are the same slab
+// ONE QUAD PER UNBROKEN STRETCH OF MASONRY behind the run, cell by cell: a window or a doorway in
+// the wall cuts the halo, and a thing in front of glass casts none on it ("should be no contact
+// shadows on windows" — 15 of a tower's 476 sat on its inner glazing, from builders that stand a
+// thing without ground()'s solid-wall test, and runs that cross a pane). A stretch's clamp is its
+// own two end slabs, since `slab` is per cell and a cell is 4 units
   static function halo(b:MeshBuf, m:Facility, o:FacilityHaloOpts):Void
     {
-      var sc = (o.dir < 2 ? o.len - 1 : 0);
-      var sr = (o.dir < 2 ? 0 : o.len - 1);
-      var s = FacilityGeom.slab(m, o.col + DC[o.dir], o.row + DR[o.dir]);
-      var t = FacilityGeom.slab(m, o.col + sc + DC[o.dir], o.row + sr + DR[o.dir]);
-      var p = FacilityGeom.plane(s, o.dir ^ 1, FacilityStyle.HALO_EPS);
+      var ax = (o.dir < 2 ? 1 : 0);
+      var az = 1 - ax;
+      // the wall cell behind each cell of the run, from one before it to one past it
+      inline function wall(i:Int):{ col:Int, row:Int }
+        return {
+          col: o.col + ax * i + DC[o.dir],
+          row: o.row + az * i + DR[o.dir],
+        };
+      var solid = [for (i in -1...o.len + 1) masonryAt(m, wall(i).col, wall(i).row)];
+      var i = 0;
+      while (i < o.len)
+        {
+          if (!solid[i + 1])
+            {
+              i++;
+              continue;
+            }
+          var j = i;
+          while (j + 1 < o.len &&
+              solid[j + 2])
+            j++;
+          // AND ON INTO THE NEXT MASONRY CELL ALONG, at either end of the run: a thing in a room
+          // corner reaches past its own cell into the corner's wall cell, and a clamp to its own slab
+          // alone cut the halo to nothing (a corner bin had none). Only the CLAMP widens — the plane
+          // stays the stretch's own, since a corner cell's slab is its bounding box and its room face
+          // stands out in the room
+          var first = wall(i == 0 && solid[0] ? -1 : i);
+          var last = wall(j == o.len - 1 && solid[o.len + 1] ? o.len : j);
+          var s = FacilityGeom.slab(m, wall(i).col, wall(i).row);
+          var u = FacilityGeom.slab(m, first.col, first.row);
+          var t = FacilityGeom.slab(m, last.col, last.row);
+          stretch(b, o, FacilityGeom.plane(s, o.dir ^ 1, FacilityStyle.HALO_EPS),
+            Math.min(o.dir < 2 ? u.x0 : u.z0, o.dir < 2 ? t.x0 : t.z0),
+            Math.max(o.dir < 2 ? u.x1 : u.z1, o.dir < 2 ? t.x1 : t.z1));
+          i = j + 1;
+        }
+    }
+
+// a halo's quad on plane `p`, clamped along the wall to lo..hi
+  static function stretch(b:MeshBuf, o:FacilityHaloOpts, p:FacilityGeom.Rect, lo:Float, hi:Float):Void
+    {
       var ga = grow(o.a1 - o.a0);
       var gy = grow(o.h);
       var qa0 = o.a0 - ga;
       var qa1 = o.a1 + ga;
       var qy0 = o.y - gy;
       var qy1 = o.y + o.h + gy;
-      // AND ON INTO THE NEXT MASONRY CELL ALONG, either end: a thing in a room corner reaches past
-      // its own cell into the corner's wall cell, and a clamp to its own slab alone cut the halo to
-      // nothing (a corner bin had none). Only the CLAMP widens — the plane stays `s`'s, since a
-      // corner cell's slab is its bounding box and its room face stands out in the room
-      var ax = (o.dir < 2 ? 1 : 0);
-      var az = 1 - ax;
-      var lo = Math.min(o.dir < 2 ? s.x0 : s.z0, o.dir < 2 ? t.x0 : t.z0);
-      var hi = Math.max(o.dir < 2 ? s.x1 : s.z1, o.dir < 2 ? t.x1 : t.z1);
-      var bc = o.col - ax + DC[o.dir];
-      var br = o.row - az + DR[o.dir];
-      if (masonryAt(m, bc, br))
-        {
-          var u = FacilityGeom.slab(m, bc, br);
-          lo = Math.min(lo, o.dir < 2 ? u.x0 : u.z0);
-        }
-      var ec = o.col + sc + ax + DC[o.dir];
-      var er = o.row + sr + az + DR[o.dir];
-      if (masonryAt(m, ec, er))
-        {
-          var u = FacilityGeom.slab(m, ec, er);
-          hi = Math.max(hi, o.dir < 2 ? u.x1 : u.z1);
-        }
       var ca0 = Math.max(qa0, lo);
       var ca1 = Math.min(qa1, hi);
       if (ca1 - ca0 < 0.01)

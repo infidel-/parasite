@@ -2451,3 +2451,32 @@ unrelated). COLOR_0 on the built glbs: leaves and frame 1, pocket 0.55 → 0.12,
 `Models.normalize` takes off (locker 0.03, safe 0.035 on z); move a leaf's depth and they move with it.
 
 **Verdict:** landed.
+
+## No wall halo on glass: one quad per stretch of masonry
+
+**Reported:** a contact shadow on a corp inner window (polygon probe: `contact shadows`, cell 9,30,
+2 units up, a plant at 9,31 in front of the pane): "should be no contact shadows on windows".
+
+**Cause:** `FacilityDetail.ground` already skips a hand whose wall is not SOLID, but eight builders
+call `FacilityDetail.stand` directly (CorpProps, CorpKitchen, FacilityDeco ×2, FacilityKit,
+FacilityTables, FacilityJanitor, FacilityCable) and never asked, and a multi-cell run was one quad
+clamped between its two END slabs, so a pane in the middle of the run was covered too.
+
+**Changed:** `halo` is the one choke point every standing silhouette drains through, so the test
+lives there. It walks the wall cell behind each cell of the run and draws ONE QUAD PER UNBROKEN
+STRETCH of masonry (solid, not a doorway), each clamped to its own end slabs. The corner extension
+into the next wall cell along still applies, but only at the run's two ends. `u` still comes off the
+unclamped span, so a cut ends the falloff rather than squeezing it. The emitter is split out as
+`stretch`.
+
+**Measured** (counted live: wall quads in the `contact shadows` meshes, sampled along their run
+against the tile grid):
+- corp tower 336: **476 → 461 quads, 15 → 0 on glass.** The drop equals the glass count, so no solid
+  halo was lost.
+- military base: 242 quads, 0 on glass. Lab compound: 253 quads, 0 on glass.
+- Same mesh and same material: **+0 calls, +0 programs** by construction.
+
+**The trap:** the solid-wall test was written once, in `ground()`, and every builder that predates it
+calls `stand()` directly. Guard the drain, not the call sites.
+
+**Verdict:** landed.
