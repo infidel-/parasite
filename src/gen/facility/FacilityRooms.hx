@@ -170,28 +170,32 @@ class FacilityRooms
         rest.shift().role = ROLE_ARMORY;
       // then one of each of the building's own specialists, each only while a room of the plain kind
       // is left over for it: the HQ's comms room, the barracks building's medical bay and store. The
-      // bay keeps one door onto a corridor and no other (FacilityConnect.oneDoor)
+      // bay and the comms room keep one door onto a corridor and no other (FacilityConnect.oneDoor),
+      // and are passed over where no room can
       for (role in (hq ? [ ROLE_COMMS ] : [ ROLE_MEDICAL, ROLE_SUPPLY ]))
         if (rest.length > 1)
           {
-            var i = (role == ROLE_MEDICAL ? bay(state, cells, rest) : 0);
+            var one = (role == ROLE_MEDICAL || role == ROLE_COMMS);
+            var i = (one ? bay(state, cells, rest) : 0);
+            if (i < 0)
+              continue;
             var room = rest.splice(i, 1)[0];
             room.role = role;
-            if (role == ROLE_MEDICAL)
+            if (one)
               FacilityConnect.oneDoor(state, room);
           }
       for (room in rest)
         room.role = ROLE_BARRACKS;
     }
 
-// which of these rooms (biggest first) is the medical bay: the first with a door of its own onto a
-// corridor and none into or from another room, then the first with the corridor door, then the
-// first. FacilityConnect.oneDoor walls up every other door, and a neighbour reached through one of
-// them is stranded (23 cluster traces in 2000 seeds before the room-door test)
+// which of these rooms (biggest first) may be the medical bay or the comms room, or -1: one with a
+// door of its own onto a corridor whose other doors can be walled up stranding nobody behind them
+// (FacilityConnect.strands), one with no door into or from another room first. oneDoor walls up the
+// rest, and a stranded neighbour was let back in through the room itself at the end: 173 comms rooms
+// in 3000 bases walked through. With no such room the building goes without
   static function bay(state: _FacilityState, cells: Array<Array<Int>>, rooms: Array<_Room>): Int
     {
-      var best = 0;
-      var score = -1;
+      var best = -1;
       for (k in 0...rooms.length)
         {
           var id = rooms[k].id;
@@ -206,12 +210,13 @@ class FacilityRooms
                   d.roomID2 == id)
                 linked = true;
             }
-          var s = (corridor ? 2 : 0) + (linked ? 0 : 1);
-          if (s > score)
-            {
-              best = k;
-              score = s;
-            }
+          if (!corridor ||
+              FacilityConnect.strands(state, rooms[k]))
+            continue;
+          if (!linked)
+            return k;
+          if (best < 0)
+            best = k;
         }
       return best;
     }

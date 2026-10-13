@@ -312,6 +312,8 @@ class GenRun
       check.tilesKnown(ctx);
       check.roomsSane(ctx, state.allRooms);
       check.doorsSane(ctx, state.allRooms, state.allDoors);
+      // the latrine, the medical bay and the comms room: one door, onto a corridor
+      check.washroomSane(state.allRooms, state.allDoors);
       check.spawnsSane(ctx);
       check.gate(ctx);
       check.militarySane(ctx, state.mainRoadNorth);

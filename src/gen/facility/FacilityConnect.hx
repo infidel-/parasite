@@ -167,8 +167,8 @@ class FacilityConnect
 
 // leave a room ONE way in: its first door of its own onto a corridor, every other door in its walls
 // walled up, and whatever that strands let in elsewhere. A base's medical bay ("should have a single
-// door into corridor"); sealWashroom is the neighbours' half of this, for a room picked for having
-// only the one door already
+// door into corridor") and comms room; sealWashroom is the neighbours' half of this, for a room
+// picked for having only the one door already
   public static function oneDoor(state: _FacilityState, room: _Room)
     {
       var cells = state.area.getCells();
@@ -189,6 +189,48 @@ class FacilityConnect
           state.doors.remove(door);
         }
       linkClusters(state);
+    }
+
+// would leaving this room one way in strand another of the building: one reached from a corridor
+// over the door graph with it, and not without it (never through a room nobody passes through).
+// oneDoor walls such a neighbour in, and connectRooms' last pass then cuts it a way in through the
+// very room that was to have one door: 173 comms rooms in 3000 bases walked through
+  public static function strands(state: _FacilityState, room: _Room): Bool
+    {
+      var all = doorReach(state, -1);
+      var without = doorReach(state, room.id);
+      for (r in state.rooms)
+        if (r.id != room.id &&
+            all.exists(r.id) &&
+            !without.exists(r.id))
+          return true;
+      return false;
+    }
+
+// every room of the building reached from a corridor (room 0) over the door graph, never into room
+// `skip` and never on through a room nobody passes through. By the building's own roles: it is not
+// in allRooms (roleOf) until it is finished
+  static function doorReach(state: _FacilityState, skip: Int): Map<Int, Bool>
+    {
+      var role = [for (r in state.rooms) r.id => r.role];
+      var seen = [ 0 => true ];
+      var open = [ 0 ];
+      while (open.length > 0)
+        {
+          var id = open.pop();
+          for (d in state.doors)
+            {
+              var far = (d.roomID1 == id ? d.roomID2 : (d.roomID2 == id ? d.roomID1 : -1));
+              if (far < 0 ||
+                  far == skip ||
+                  seen.exists(far))
+                continue;
+              seen.set(far, true);
+              if (!passedBy(role.get(far)))
+                open.push(far);
+            }
+        }
+      return seen;
     }
 
 // does a door open onto a corridor from the room that cut it: its `dir` points out of that room
@@ -761,12 +803,14 @@ class FacilityConnect
     }
 
 // is a room of this role entered from a corridor and walked through by nobody: a lab's washroom, a
-// base's latrine and its medical bay ("should have a single door into corridor")
+// base's latrine, its medical bay ("should have a single door into corridor") and its comms room
+// ("should only have a corridor door")
   static inline function passedBy(role: String): Bool
     {
       return role == ROLE_TOILET ||
         role == ROLE_LATRINE ||
-        role == ROLE_MEDICAL;
+        role == ROLE_MEDICAL ||
+        role == ROLE_COMMS;
     }
 
 // which recorded room holds this cell, or 0 for a corridor or the outdoors. by rect and not by the

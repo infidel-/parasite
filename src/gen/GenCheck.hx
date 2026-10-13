@@ -255,16 +255,17 @@ class GenCheck
 // gen.facility.FacilityToilet lays its T against the FIRST door of the room and models no second
 // one, so a washroom with two of them comes back with a partition sealing half of itself.
 //
-// A BASE'S LATRINE AND ITS MEDICAL BAY ARE HELD TO THE SAME (gen.facility.FacilityConnect.passedBy):
-// the latrine is picked on the washroom's own door test, and the bay "should have a single door
-// into corridor"
+// A BASE'S LATRINE, ITS MEDICAL BAY AND ITS COMMS ROOM ARE HELD TO THE SAME
+// (gen.facility.FacilityConnect.passedBy): the latrine is picked on the washroom's own door test, the
+// bay "should have a single door into corridor" and the comms room "should only have a corridor door"
   public function washroomSane(rooms: Array<_Room>, doors: Array<_Door>)
     {
       for (r in rooms)
         {
           if (r.role != gen.facility.FacilityTemp.ROLE_TOILET &&
               r.role != gen.facility.FacilityTemp.ROLE_LATRINE &&
-              r.role != gen.facility.FacilityTemp.ROLE_MEDICAL)
+              r.role != gen.facility.FacilityTemp.ROLE_MEDICAL &&
+              r.role != gen.facility.FacilityTemp.ROLE_COMMS)
             continue;
           // NOT FILTERED ON `skip`, which is bookkeeping and not a state: fixDoors deletes the
           // door it drops from the list outright and sets `skip` on the one it KEEPS, so a skipped

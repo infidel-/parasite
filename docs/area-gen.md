@@ -528,13 +528,21 @@ should not be there"). `FacilityConnect.sealRooms`, the base's first theming ste
 room-to-room door and runs `linkClusters`, which cuts a corridor door for whatever that strands and a
 room door only for a room with no corridor wall at all (`roomDoors`, 0.33 a base).
 
-**The latrine and the medical bay are entered from a corridor and through nothing else**
-(`FacilityConnect.passedBy`, "should have a single door into corridor"). The bay had two corridor doors
-in the live base. It is now the biggest room left with a corridor door of its own and no door to or
-from another room (`FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up the rest. Neither
-`linkClusters` nor `connectRooms` cuts a door into either, and `GenCheck.washroomSane` holds both to
-the lab washroom's terms. Without the "no room door" test, 23 seeds in 2000 traced a stranded cluster.
-4 still do, and the end-of-generation `connectRooms` lets each in elsewhere.
+**The latrine, the medical bay and the comms room are entered from a corridor and through nothing
+else** (`FacilityConnect.passedBy`; "should have a single door into corridor", "should only have a
+corridor door"). The bay had two corridor doors in the live base. The bay and the comms room are the
+biggest room left with a corridor door of its own whose other doors can be walled up stranding
+nobody (`FacilityConnect.strands`, a door-graph walk from the corridor without the room), one with no
+door to or from another room first (`FacilityRooms.bay`), and `FacilityConnect.oneDoor` walls up the
+rest. **With no such room the building goes without** (comms 0.74 → 0.72 a base, medical 1.00).
+Neither `linkClusters` nor `connectRooms` cuts a door into any of them, and `GenCheck.washroomSane`
+holds all three to the lab washroom's terms.
+
+The comms room was dealt the biggest room left with no door test at all, and `washroomSane` only ran in
+the FACILITY runner, so nothing saw it: asserted on the base, 173 bases in 3000 failed (a comms room
+entered only from the barracks behind it, or walked through to reach one). The strand test is what
+the "corridor door" test alone missed: walling up a comms room's link stranded the barracks behind it,
+and `connectRooms`' duplicate pass then cut it a way back in through the comms room or the latrine.
 
 **The briefing room or the mess hall is the biggest room left that is 5 deep both ways**
 (`FacilityRooms.HALL_DEEP`), else the biggest. The first regenerated base dealt a 16x4 hall, and four
