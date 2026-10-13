@@ -1083,8 +1083,10 @@ class Actors {
     {
       var C = RenderConfig.OBJMARK;
       var e = o.e;
+      // the hover ring painted as the tactical one is, white glowing its green: filled with the green
+      // itself it read as a second, darker green
       if (o.ring != null)
-        paintRing(o, o.ring, o.ringPx, o.ring);
+        paintRing(o, o.ring, o.ringPx, 0xffffff);
       else if (tactical)
         paintRing(o, C.color, C.outlinePx, 0xffffff);
       var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
