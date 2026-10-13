@@ -308,7 +308,8 @@ public function onMouseLeave()
         resetRegionTooltipHover();
     }
 
-// returns true if area inspect mode is active (Ctrl held: hover an AI or an object for a tooltip)
+// returns true if area inspect mode is active: hovering an AI or an object shows what is known
+// about it, unless a window or a mode is up, or the world is moving under a still cursor
   public function isInspectMode(): Bool
     {
       return (
@@ -316,8 +317,8 @@ public function onMouseLeave()
         ui.state == UISTATE_DEFAULT &&
         state == HUD_DEFAULT &&
         !game.isInputLocked() &&
-        game.scene.controlPressed &&
-        game.config.mouseEnabled
+        game.config.mouseEnabled &&
+        !game.scene.mouse.hoverPaused()
       );
     }
 

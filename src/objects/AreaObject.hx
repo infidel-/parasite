@@ -8,7 +8,7 @@ import entities.ObjectEntity;
 import game.Game;
 import game._Item;
 
-// one key/value row of an object's Ctrl-hover tooltip (see ui.AreaTooltip). plain strings and not
+// one key/value row of an object's hover tooltip (see ui.AreaTooltip). plain strings and not
 // numbers: a row is whatever that object wants to say about itself, and the panel only lays it out
 typedef TooltipRow = {
   name: String,  // left-hand key
@@ -155,7 +155,7 @@ class AreaObject extends _SaveObject
   public dynamic function getLinkedAI(): Array<AI>
     { return []; }
 
-// dynamic: extra rows for this object's Ctrl-hover tooltip, beneath its name. only asked when the
+// dynamic: extra rows for this object's hover tooltip, beneath its name. only asked when the
 // player knows what the object is — an unknown one has nothing to say about itself
   public dynamic function getTooltipRows(): Array<TooltipRow>
     { return []; }

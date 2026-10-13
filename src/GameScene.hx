@@ -17,7 +17,6 @@ class GameScene
   public var view3d: render.View; // 3D area view (city streets + the underground tunnels)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
-  public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
   var isFullScreen: Bool; // game is in fullscreen mode?
@@ -53,7 +52,6 @@ class GameScene
       isFocused = true; // may not be true but we want the game to play immediately
       isFullScreen = false;
       game = g;
-      controlPressed = false;
       shiftPressed = false;
       cameraTileX1 = 0;
       cameraTileY1 = 0;

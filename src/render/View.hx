@@ -65,6 +65,8 @@ class View {
   public var running(default, null):Bool = false;
   var svMouseX:Float = 0;                                 // last cursor client px over #view (AI-hover tooltip anchor)
   var svMouseY:Float = 0;
+  var svMouseIn:Bool = false;                             // is the cursor over #view at all (not on a HUD panel)
+  public var hover:Actors.PickHit = null;                 // this frame's hover pick (see updateHover)
   var shownKey:Int = -2; // identity of the currently-built area: the city seed, or -(area id + 3) for a sewer (-2 = nothing built)
   // the game moved to another area under the running view (a restart, a load) and the next build has
   // not landed yet: the loop ticks the shown area frozen, as the outro does, so its sounds stop
@@ -180,11 +182,14 @@ class View {
     canvas.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       svMouseX = e.clientX;
       svMouseY = e.clientY;
+      svMouseIn = true;
       game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
       game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
       if (running && !debug.on && game.location == LOCATION_AREA)
         game.scene.mouse.onMove();
     });
+    // off the view, onto a HUD panel or out of the window: nothing is hovered any more
+    canvas.addEventListener('mouseleave', function(_) svMouseIn = false);
     // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
     // LMB only; RMB owns camera orbit (handled below) and is left to onClick's own button gating
     canvas.addEventListener('click', function(e:js.html.MouseEvent) {
@@ -1001,17 +1006,21 @@ class View {
         render.choreo.Reactions.bindBodyFadeIn(choreo, e, id, ground);
     }
 
-// drive the hover tooltip while inspecting (Ctrl held): pick the AI or object nearest the cursor
-// and anchor the DOM panel at its projected px. runs every frame so the beam tracks the
-// follow-camera. the 2D AreaTooltip stands down while this view runs (see AreaTooltip.update)
+// pick the AI or object nearest the cursor, once a frame and before anything draws: the tooltip,
+// the outline and the cursor art (ui.Mouse) all read this one result. null with the cursor off the
+// view, with nothing near it, or while hover info is held back (HUD.isInspectMode)
+  function updateHover():Void {
+    hover = (svMouseIn &&
+      game.ui.hud.isInspectMode() ?
+      actors.pickTarget(svMouseX, svMouseY, clientRect()) : null);
+  }
+
+// drive the hover tooltip: anchor the DOM panel at the hover pick's projected px. runs every frame
+// so the beam tracks the follow-camera. the 2D AreaTooltip stands down while this view runs (see
+// AreaTooltip.update)
   function updateHoverTooltip():Void {
     var tip = game.ui.hud.areaTooltip;
-    // not inspecting (no Ctrl / window open / mouse off): make sure it's hidden
-    if (!game.ui.hud.isInspectMode()) {
-      tip.hide();
-      return;
-    }
-    var hit = actors.pickTarget(svMouseX, svMouseY, clientRect());
+    var hit = hover;
     if (hit == null) {
       tip.hide();
       return;
@@ -1330,6 +1339,8 @@ class View {
     if (tactical &&
         uiOn)
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
+    // what the cursor is on, ahead of the area tick and the actor pass that outline it
+    updateHover();
     // the world tick for this area kind: occlusion fades, window switches, chunk culling and the
     // live lamp pool (see render.CityArea / render.SewerArea)
     area3d.tick({

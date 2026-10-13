@@ -33,7 +33,7 @@ typedef ActorOpts = {
                                     // the cell, one pass each (see WorldCtx.wallMounts)
 }
 
-// what the Ctrl-hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
+// what the hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
 // client px the tooltip beam anchors to. one result rather than two pick calls because the two
 // candidate sets compete for the same nearest-anchor slot — an AI standing in front of a prop has
 // to be able to win, which two independent searches could not decide between. see Actors.pickTarget

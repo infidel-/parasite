@@ -124,7 +124,7 @@ class BeamTooltip
 // this is a different target and the caller has to go the long way round. it exists purely so a
 // per-frame driver need not build html that showBeamAt would throw away on an unchanged id: an
 // object's rows re-scan the area's whole AI list, and a debug block walks the host's inventory,
-// skills and organs — all of it 60 times a second while Ctrl is held, for a panel already on screen
+// skills and organs — all of it 60 times a second while something is hovered, for a panel already on screen
   public function trackAnchor(cx: Float, cy: Float, id: Int): Bool
     {
       if (!visible ||

@@ -160,14 +160,6 @@ class UI
 // key releases
   function onKeyUp(e: KeyboardEvent)
     {
-      if (e.key == 'Control' &&
-          game.scene.controlPressed)
-        {
-          game.scene.controlPressed = false;
-          game.scene.mouse.update(true);
-          hud.updateAreaTooltip();
-        }
-
       if (hud.consoleVisible())
         return;
 
@@ -220,16 +212,6 @@ class UI
           (!render.SoundDebug.active() ||
           e.code == 'KeyS'))
         return;
-
-      // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
-      if (e.key == 'Control' &&
-          !game.scene.controlPressed &&
-          !hud.consoleVisible())
-        {
-          game.scene.controlPressed = true;
-          game.scene.mouse.update(true);
-          hud.updateAreaTooltip();
-        }
 
       if (hud.consoleVisible())
         return;

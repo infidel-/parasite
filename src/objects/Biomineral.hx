@@ -44,7 +44,7 @@ class Biomineral extends HabitatObject
 
 // the habitat's whole balance sheet, which this organ is the source of. it used to be an onMoveTo
 // log line, and blocking the tile above is what took that away — there is no longer any moving onto
-// it. the Ctrl-hover tooltip is a better home anyway: these are numbers you check, not an event
+// it. the hover tooltip is a better home anyway: these are numbers you check, not an event
   public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
     {
       var h = game.area.habitat;
