@@ -53,6 +53,14 @@ class Readable extends ItemInfo
           return false;
         }
 
+      // a paper found before there is a timeline to piece together (a military base's safe): reading
+      // it would complete the first clue goal ahead of the goal that unlocks the timeline
+      if (!game.player.vars.timelineEnabled)
+        {
+          itemFailed("You cannot make sense of this yet.");
+          return false;
+        }
+
       if (item.id == 'book' && !game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
@@ -64,13 +72,14 @@ class Readable extends ItemInfo
 
       game.log('You study the contents of the ' + item.name + ' and destroy it.');
       var cnt = 0;
-      cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
+      var event = item.getEvent();
+      cnt += (game.timeline.learnClues(event, true) ? 1 : 0);
       if (item.id == 'book')
-        cnt += (game.timeline.learnClues(item.event, true) ? 1 : 0);
+        cnt += (game.timeline.learnClues(event, true) ? 1 : 0);
       if (Std.random(100) < 30)
-        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
+        cnt += (game.timeline.learnSingleClue(event, true) ? 1 : 0);
       if (Std.random(100) < 10)
-        cnt += (game.timeline.learnSingleClue(item.event, true) ? 1 : 0);
+        cnt += (game.timeline.learnSingleClue(event, true) ? 1 : 0);
 
       if (cnt == 0)
         game.player.log('You have not been able to gain any clues.',

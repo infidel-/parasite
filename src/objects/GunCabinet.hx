@@ -20,6 +20,13 @@ class GunCabinet extends AreaObject
     { id: 'combatShotgun', weight: 15 },
     { id: 'assaultRifle', weight: 10 },
   ];
+  // and a military base armory's: the soldier's rifle (ai.SoldierAI), the officer's pistol
+  // (ai.OfficerAI) and the shotgun, none of the security guard's stun kit
+  public static var MIL_LOOT: Array<{ id: String, weight: Int }> = [
+    { id: 'assaultRifle', weight: 45 },
+    { id: 'pistol', weight: 30 },
+    { id: 'combatShotgun', weight: 25 },
+  ];
 
   public var inventory: Inventory; // what it holds
   public var isOpen: Bool; // is its door open?
@@ -29,7 +36,7 @@ class GunCabinet extends AreaObject
     {
       super(g, vaid, vx, vy);
       init();
-      inventory.addID(rollLoot(loot()));
+      fill();
       initPost(false);
     }
 
@@ -53,9 +60,19 @@ class GunCabinet extends AreaObject
       super.initPost(onLoad);
     }
 
-// what this container can hold, weighted. objects.Locker and objects.Safe hand back their own
+// put in what it holds: one item off its loot table. objects.Safe adds its papers
+  function fill()
+    {
+      inventory.addID(rollLoot(loot()));
+    }
+
+// what this container can hold, weighted: a corp tower's or a military base's. objects.Locker and
+// objects.Safe hand back their own
   function loot(): Array<{ id: String, weight: Int }>
-    { return LOOT; }
+    {
+      return (game.region.get(areaID).typeID == AREA_MILITARY_BASE ?
+        MIL_LOOT : LOOT);
+    }
 
 // one item id off a weighted loot table
   static function rollLoot(table: Array<{ id: String, weight: Int }>): String

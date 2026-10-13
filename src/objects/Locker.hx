@@ -10,7 +10,6 @@ class Locker extends GunCabinet
     { id: 'kevlarArmor', weight: 25 },
     { id: 'knife', weight: 20 },
     { id: 'cigarettes', weight: 20 },
-    { id: 'radio', weight: 15 },
     { id: 'pistol', weight: 10 },
     { id: 'alcohol', weight: 10 },
   ];
