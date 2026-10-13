@@ -58,11 +58,15 @@ class AreaGame extends _SaveObject
   var _alertness: Float; // actual alertness storage
 
   public static var _maxID: Int = 0; // area id counter
-  // the share of a military base's furniture tops kept bare for clues, the most clues lying on
-  // them at once, and the chance a spawn pass drops one more on a room floor instead (at most one)
+  // the share of a military base's furniture tops kept bare for clues
   static inline var MIL_CLUE_SPOT_PCT = 40;
-  static inline var MIL_MAX_CLUES = 4;
-  static inline var MIL_FLOOR_CLUE_PCT = 10;
+  // a lab's or a base's clues: the most lying about at once, the chance a turn short of them lays
+  // one, the chance that one may go into a room already holding one, and the chance it is dropped
+  // on a room floor instead (at most one there)
+  static inline var CLUE_MAX = 2;
+  static inline var CLUE_SPAWN_PCT = 25;
+  static inline var CLUE_ROOM_SECOND_PCT = 30;
+  static inline var CLUE_FLOOR_PCT = 10;
 
   // these are empty until the area has been generated
   // when player leaves the area, ai list is emptied, cells and objects are saved
@@ -2366,51 +2370,36 @@ class AreaGame extends _SaveObject
             removeObject(o);
           }
 
-      // labs and military bases: on the spots initSpawnPoints kept for them
+      // labs and military bases: now and then one more, on the spots initSpawnPoints kept for them,
+      // and seldom a second in a room, or a barracks full of bunks drew most of them
       if (info.id == AREA_FACILITY ||
           info.id == AREA_MILITARY_BASE)
         {
-          var mil = (info.id == AREA_MILITARY_BASE);
-          var maxSpawn = (mil ? MIL_MAX_CLUES : 4) - cnt;
-          if (maxSpawn <= 0)
+          if (cnt >= CLUE_MAX ||
+              Std.random(100) >= CLUE_SPAWN_PCT)
             return;
+          var full = (Std.random(100) < CLUE_ROOM_SECOND_PCT ? 2 : 1);
 
-          // somebody on the base dropped an important paper: one on a room floor at most
-          if (mil &&
-              Std.random(100) < MIL_FLOOR_CLUE_PCT &&
+          // somebody dropped an important paper: one on a room floor at most
+          var loc = null;
+          if (Std.random(100) < CLUE_FLOOR_PCT &&
               !hasFloorClue())
+            loc = findFloorClueLocation(full);
+
+          // else a free, unseen spot in a room short of clues
+          if (loc == null)
             {
-              var loc = findFloorClueLocation();
-              if (loc != null)
-                {
-                  spawnDocument(e, loc.x, loc.y);
-                  maxSpawn--;
-                }
-            }
-
-          // get all close clue spawn points
-          var spawns = [];
-          for (pt in clueSpawnPoints)
-            {
-              if (!isClueSpotUnseen(pt.x, pt.y))
-                continue;
-
-              // already an object there
-              if (hasObjectAt(pt.x, pt.y))
-                continue;
-
-              spawns.push(pt);
-            }
-
-          // spawn items
-          for (_ in 0...maxSpawn)
-            {
+              var spawns = [];
+              for (pt in clueSpawnPoints)
+                if (isClueSpotUnseen(pt.x, pt.y) &&
+                    !hasObjectAt(pt.x, pt.y) &&
+                    roomClues(pt.x, pt.y) < full)
+                  spawns.push(pt);
               if (spawns.length == 0)
                 return;
-              var loc = spawns[Std.random(spawns.length)];
-              spawns.remove(loc);
-              spawnDocument(e, loc.x, loc.y);
+              loc = spawns[Std.random(spawns.length)];
             }
+          spawnDocument(e, loc.x, loc.y);
         }
 
       // default - generic algorithm for streets
@@ -2508,8 +2497,21 @@ class AreaGame extends _SaveObject
       return false;
     }
 
-// a free, unseen floor cell inside one of the base's rooms for a dropped clue, or null
-  function findFloorClueLocation(): { x: Int, y: Int }
+// how many clues lie in the room holding this cell
+  function roomClues(x: Int, y: Int): Int
+    {
+      var r = generatorInfo.getRoomAt(x, y);
+      var n = 0;
+      for (o in _objects)
+        if (o.item != null &&
+            o.item.info.type == 'readable' &&
+            generatorInfo.getRoomAt(o.x, o.y) == r)
+          n++;
+      return n;
+    }
+
+// a free, unseen floor cell for a dropped clue inside a room holding fewer than `full`, or null
+  function findFloorClueLocation(full: Int): { x: Int, y: Int }
     {
       if (generatorInfo == null ||
           generatorInfo.rooms.length == 0)
@@ -2522,7 +2524,8 @@ class AreaGame extends _SaveObject
           var y = r.y1 + Std.random(r.y2 - r.y1 + 1);
           if (isWalkable(x, y) &&
               !hasObjectAt(x, y) &&
-              isClueSpotUnseen(x, y))
+              isClueSpotUnseen(x, y) &&
+              roomClues(x, y) < full)
             return { x: x, y: y };
         }
       return null;

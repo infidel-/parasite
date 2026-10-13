@@ -577,8 +577,10 @@ generation; a clue spot is DERIVED on every entry (`AreaGame.isMilitaryClueSpot`
 table, a cabinet, a footlocker, a bunk, a cot or a bench seat, reachable from its own room's floor in
 any of 8 directions, and only a stable 40% hash share of those. `render.military.MilitaryClutter` reads
 the same list and keeps its decals off each spot. Mess and brief tables are mostly boxed in by
-benches, so on base1 the 25 spots are bunks, cots and seats more than desks. A floor clue is the
-rare extra (10% a spawn pass, one at a time, inside a room).
+benches, so on base1 the 25 spots are bunks, cots and seats more than desks. Spawning (shared with
+the lab) keeps at most 2 about, lays one on 25% of the turns short of them, and fills a room only
+to 1, or to 2 on a 30% roll, so a barracks of bunks no longer draws most of them. A floor clue is the
+rare extra (10% of those spawns, one at a time, inside a room).
 
 ### The one permitted `gen/` → `game/` edge
 
