@@ -133,6 +133,21 @@ class LabStyle
   public static inline var TOP_MARGIN = 0.15;
   public static inline var TOP_PAIR = 45;
   public static inline var TOP_JITTER = 0.08;
+  // a bench-top glass shell's look (LabInterior.glass): a faint tint that writes no depth, the vat
+  // glass's own recipe at a stronger opacity, since a jar is far smaller than a vat
+  public static inline var TOP_GLASS_OPACITY = 0.3;
+  // a bench-top status light (LabInterior.leds): its world size, and how far proud of its face
+  public static inline var TOP_LED_SZ = 0.035;
+  public static inline var TOP_LED_EPS = 0.004;
+  // a bunsen burner's gas flame (LabFlames): its rest height and width, the glow under it, their
+  // peak additive opacities, and the two blues — the outer layer's and the hot inner cone's
+  public static inline var FLAME_H = 0.34;
+  public static inline var FLAME_W = 0.13;
+  public static inline var FLAME_GLOW_W = 0.42;
+  public static inline var FLAME_A = 0.7;
+  public static inline var FLAME_GLOW_A = 0.28;
+  public static inline var FLAME_TIP = 0x2c5cff;
+  public static inline var FLAME_HOT = 0xa8dcff;
   public static inline var DECAL_CUT = 0.5;
   // the slurry a drained vat leaves (render.lab.LabVats, lab/floor-marks cell 8): how wide it has
   // spread once the vat is empty, how far in front of the footprint's centre it pools — out past the

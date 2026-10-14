@@ -11,6 +11,7 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
+import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
 // one batch's art: the glb, the height it is drawn at, its depth across the wall it backs onto (at
@@ -25,6 +26,18 @@ typedef LabPieceArt = {
   ?turn:Float,
   ?w:Float,         // its width along the footprint, when it is shorter than the footprint (a
                     // generated machine keeps its own proportions); the footprint's otherwise
+  ?glass:LabPieceArt,             // a see-through shell drawn as its own transparent batch at the
+                                  // same place and turn (a jar's wall, a box's panes)
+  ?flame:LabAnchor,               // where a burner's gas flame stands on it (LabFlames)
+  ?leds:Array<LabAnchor>,         // its blinking status lights, each facing the piece's front
+};
+
+// a point on a piece in its own frame, in world units at the height the piece is drawn: x to its
+// right, y up off its foot, z toward its front, from its footprint's centre
+typedef LabAnchor = {
+  x:Float,
+  y:Float,
+  z:Float,
 };
 
 // what a build plans before the batches exist: every placement, by path
@@ -32,6 +45,8 @@ typedef LabInteriorPlan = {
   places:Map<String, Array<Models.PropPlace>>,
   heights:Map<String, Float>,
   lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
+  flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
+  leds:Array<{ x:Float, y:Float, z:Float, yaw:Float }>, // the kit's status lights, in the world
 };
 
 // the underground lab's furniture and its box machines: everything the generator stands as a Const
@@ -197,30 +212,44 @@ class LabInterior
           gen('suittorn', LabStyle.SUIT_H, 0.61, 1.27),
         ],
         // what stands on a bench top, by the lid's sheet: [0] every room's but the workshop's, [1] the
-        // workshop's. Each row's d and w are its glb's own footprint at that height
+        // workshop's
         tops: [
           [
-            gen('top-microscope', 0.95, 0.33, 0.47),
-            gen('top-bunsen', 0.85, 0.40, 0.70),
-            gen('top-mortar', 0.42, 0.39, 0.43),
-            gen('top-tuberack', 0.38, 0.15, 0.56),
-            gen('top-desklamp', 1.20, 0.93, 0.39),
-            gen('top-aidcase', 0.36, 0.76, 0.93),
-            gen('top-radio', 0.75, 0.64, 0.36),
-            gen('top-bottles', 0.62, 0.72, 0.75),
-            gen('top-labelprinter', 0.42, 0.51, 0.67),
-            gen('top-specbox', 0.62, 0.35, 0.50),
-            gen('top-embryojar', 0.78, 0.37, 0.37),
-            gen('top-minifuge', 0.48, 0.53, 0.48),
-            gen('top-pipette', 0.62, 0.36, 0.34),
+            bench('microscope', 1.0, 0.32, 0.47),
+            fire(bench('bunsen', 0.5, 0.34, 0.576), {
+              x: -0.118,
+              y: 0.5,
+              z: 0.0,
+            }),
+            bench('mortar', 0.391, 0.472, 0.436),
+            bench('tuberack', 0.42, 0.18, 0.58),
+            bench('desklamp', 0.639, 0.483, 0.423),
+            bench('aidcase', 0.3, 0.538, 0.7),
+            bench('radio', 0.761, 0.356, 0.524),
+            bench('bottles', 0.56, 0.364, 0.54),
+            blink(bench('labelprinter', 0.34, 0.483, 0.46), {
+              x: 0.186,
+              y: 0.058,
+              z: 0.171,
+            }),
+            glazed(bench('specbox', 0.63, 0.37, 0.52), bench('specbox-glass', 0.41, 0.29, 0.44, 0.095)),
+            glazed(bench('embryojar', 0.635, 0.348, 0.348, 0.095), bench('embryojar-glass', 0.65, 0.33, 0.33)),
+            blink(bench('minifuge', 0.325, 0.441, 0.43), {
+              x: 0.098,
+              y: 0.143,
+              z: 0.207,
+            }),
+            bench('pipette', 0.63, 0.3, 0.3),
           ],
           [
-            gen('top-welder', 0.85, 0.79, 0.69),
-            gen('top-drillpress', 1.50, 0.70, 0.53),
-            gen('top-armkit', 0.95, 0.48, 0.82),
-            gen('top-cleaner', 0.50, 0.51, 0.61),
-            gen('top-grinder', 0.50, 0.49, 0.86),
-            gen('top-toolbox', 0.60, 0.77, 0.53),
+            bench('welder', 0.79, 0.774, 0.784),
+            bench('drillpress', 1.4, 0.713, 0.46),
+            bench('armkit', 0.622, 0.48, 0.564),
+            bench('cleaner', 0.404, 0.412, 0.5),
+            bench('grinder', 0.347, 0.32, 0.59),
+            bench('toolbox', 0.462, 0.403, 0.584),
+            bench('multimeter', 0.126, 0.45, 0.44),
+            bench('hvcases', 0.492, 0.465, 0.584),
           ],
         ],
       };
@@ -236,6 +265,39 @@ class LabInterior
         d: d,
         y: y,
       };
+    }
+
+// one bench-top row, hand-modelled at world scale (models-src/lab/top_build.py), so its height, depth
+// and width ARE the glb's own: models/lab/lab-top-<name>.glb, lifted `y` off the lid when it is a
+// body standing inside its own glass
+  static function bench(name:String, h:Float, d:Float, w:Float, ?y:Float):LabPieceArt
+    {
+      return {
+        path: 'models/lab/lab-top-' + name + '.glb',
+        h: h,
+        d: d,
+        w: w,
+        y: y,
+      };
+    }
+
+// a row with its glass shell, its burner's flame or its status light, returned for the table
+  static function glazed(a:LabPieceArt, g:LabPieceArt):LabPieceArt
+    {
+      a.glass = g;
+      return a;
+    }
+
+  static function fire(a:LabPieceArt, at:LabAnchor):LabPieceArt
+    {
+      a.flame = at;
+      return a;
+    }
+
+  static function blink(a:LabPieceArt, at:LabAnchor):LabPieceArt
+    {
+      a.leds = [at];
+      return a;
     }
 
 // one generated row: models/lab/<name>.glb
@@ -257,6 +319,8 @@ class LabInterior
         places: new Map(),
         heights: new Map(),
         lids: [],
+        flames: [],
+        leds: [],
       };
       var A = art();
       // the grid as gen.lab.LabKinds.alongX reads it, column-major
@@ -290,7 +354,32 @@ class LabInterior
 // that does not cast, and an instanced caster is a second call whenever it is in view
   public static function build(scene:Scene, p:LabInteriorPlan):Array<Models.InstancedProp>
     {
+      leds(scene, p.leds);
       return [for (path in p.places.keys()) batch(scene, path, p.places.get(path), p.heights.get(path))];
+    }
+
+// the kit's status lights: one speck each in render.facility.FacilityDeco's own blinking mesh, a rack
+// port's square wave on its own hashed phase, burning that mesh's green. The compound's material and
+// clock, so the whole lab's lights are one draw call and nothing new to compile
+  static function leds(scene:Scene, at:Array<{ x:Float, y:Float, z:Float, yaw:Float }>):Void
+    {
+      if (at.length == 0)
+        return;
+      var b = MeshBufTools.make();
+      var s = LabStyle.TOP_LED_SZ / 2;
+      for (l in at)
+        {
+          // proud of the face along the piece's front, `r` across it
+          var nx = Math.sin(l.yaw), nz = Math.cos(l.yaw);
+          var rx = Math.cos(l.yaw), rz = -Math.sin(l.yaw);
+          var cx = l.x + nx * LabStyle.TOP_LED_EPS, cz = l.z + nz * LabStyle.TOP_LED_EPS;
+          var h = FacilityModel.mix(Std.int(l.x * 977) ^ (Std.int(l.z * 131) << 10));
+          MeshBufTools.quadRGB(b,
+            [cx - rx * s, l.y - s, cz - rz * s], [cx + rx * s, l.y - s, cz + rz * s],
+            [cx + rx * s, l.y + s, cz + rz * s], [cx - rx * s, l.y + s, cz - rz * s],
+            [0, 0, 1, 0, 1, 1, 0, 1], 1.0, (h % 1000) / 1000, 1.0);
+        }
+      render.facility.FacilityDeco.lamps(scene, b);
     }
 
 // one of every piece at the origin, for render.lab.LabWarm. Returns the paths to wait on
@@ -300,6 +389,13 @@ class LabInterior
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
         .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits)
         .concat(A.tops[0]).concat(A.tops[1]);
+      all = all.concat([for (a in all) if (a.glass != null) a.glass]);
+      leds(scene, [{
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        yaw: 0.0,
+      }]);
       for (a in all)
         batch(scene, a.path, [{
           x: 0.0,
@@ -329,12 +425,28 @@ class LabInterior
         }
     }
 
+// a glass shell's look, set once on the shared template material (only the lab draws these paths):
+// render.lab.LabVats.dress's vat glass, a faint double-sided tint that writes no depth, so what the
+// body holds inside it (an embryo, a specimen) shows through
+  // Dynamic: the loaded glb's material, which the three extern types as Dynamic on Object3D — it is
+  // Models.toLambert's MeshLambertMaterial
+  static function glass(mat:Dynamic):Void
+    {
+      mat.transparent = true;
+      mat.opacity = LabStyle.TOP_GLASS_OPACITY;
+      mat.depthWrite = false;
+      mat.side = THREE.DoubleSide;
+      mat.needsUpdate = true;
+    }
+
 // one batch
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>, h:Float):Models.InstancedProp
     {
       var prop = Models.instanced(scene, path, places, h, SOLID);
       Models.get(path, function(_)
         {
+          if (StringTools.endsWith(path, '-glass.glb'))
+            glass(prop.mesh.material);
           VisionMask.patchMesh(prop.mesh);
           prop.mesh.castShadow = false;
         });
@@ -489,8 +601,27 @@ class LabInterior
             r: r,
           });
           // the lid's frame into the world as LabDecals.lid turns it
-          put(p, a, l.x + lx * cs + lz * sn, l.z - lx * sn + lz * cs,
-            l.yaw + ((h >>> (20 + i * 4)) % 9 - 4) * LabStyle.TOP_JITTER, l.y);
+          var x = l.x + lx * cs + lz * sn, z = l.z - lx * sn + lz * cs;
+          var yaw = l.yaw + ((h >>> (20 + i * 4)) % 9 - 4) * LabStyle.TOP_JITTER;
+          put(p, a, x, z, yaw, l.y);
+          if (a.glass != null)
+            put(p, a.glass, x, z, yaw, l.y);
+          var c = Math.cos(yaw), sy = Math.sin(yaw);
+          if (a.flame != null)
+            p.flames.push({
+              x: x + a.flame.x * c + a.flame.z * sy,
+              y: l.y + a.flame.y,
+              z: z - a.flame.x * sy + a.flame.z * c,
+              phase: (h % 628) / 100,
+            });
+          if (a.leds != null)
+            for (e in a.leds)
+              p.leds.push({
+                x: x + e.x * c + e.z * sy,
+                y: l.y + e.y,
+                z: z - e.x * sy + e.z * c,
+                yaw: yaw,
+              });
           side = -side;
         }
     }

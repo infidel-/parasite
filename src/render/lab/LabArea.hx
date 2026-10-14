@@ -46,6 +46,7 @@ class LabArea implements Area3D
   var elec:render.facility.FacilityCable.ElecCounts;
   var lamps:LabLamps.LabLampSet;
   var wall:LabWall.LabWallSet;
+  var flames:LabFlames.LabFlameSet;
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
   var mission:cult.missions.CombatUndergroundLabPurge;
@@ -116,6 +117,7 @@ class LabArea implements Area3D
       vats = LabVats.build(scene, game, drain, posts);
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
       furniture = LabInterior.build(scene, interior);
+      flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
       decals = LabDecals.build(scene, model, tile, interior.lids);
       // the compound's sockets, leads and floor units, the one family the lab borrows: LabModel marks
@@ -266,6 +268,9 @@ class LabArea implements Area3D
       LabLamps.tick(lamps, opts, alarmed, dead);
       LabInterior.dim(furniture, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabWall.tick(wall, alarmed, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
+      LabFlames.tick(flames, opts.dtMs);
+      // the kit's status lights blink on the compound's LED clock (LabInterior.leds)
+      render.facility.FacilityDeco.tick(opts.dtMs);
       for (f in furniture)
         render.Models.cull(f, opts.camera, LabStyle.PIECE_CULL_R);
       LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);

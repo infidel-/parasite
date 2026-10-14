@@ -179,6 +179,8 @@ SEALED and the north wall's ALERT, programs unchanged.
 
 ## Lab bench tops: standing kit at the lid's back ends, the flat clutter kept round it
 
+> SUPERSEDED (the art, not the placement) by Lab bench-top kit rebuilt by hand: 21 Blender pieces on their own PACK4 sheets
+
 **Changed:** `LabInterior.kit` stands one piece off `art().tops` (research list or workshop list, by
 the lid's room) at a hashed end of every bench lid's back edge, and a second at the other end on 45
 in a hundred. Each piece's circle (half its larger footprint side) goes into the lid's `keeps`, which
@@ -198,5 +200,40 @@ dot.
   turn is all the placement does about it.
 - ~4,800 tris each at the 5000 floor, for objects 0.4-1.5 tall: this route costs ten times what a
   hand-modelled tabletop piece does.
+
+**Verdict:** landed.
+
+## Lab bench-top kit rebuilt by hand: 21 Blender pieces on their own PACK4 sheets
+
+**Changed:** the 19 TRELLIS bench-top glbs (`LabInterior.kit`'s first set) are replaced by 21 pieces
+hand-modelled through `models-src/lab/top_build.py`, ONE MODULE PER PIECE in `models-src/lab/tops/`.
+Each wears its own sheet `textures-src/lab/tops-<name>.png`: a gpt-image-2.5 `edit_image` taking the
+piece's own TRELLIS reference as input, four 512 cells painted for that piece's faces (a dead-on panel,
+a wrap, a disc from above, a swatch), `style_prop` appended. `top_build.py -- compare <name>` renders
+the TRELLIS glb beside the piece from the preview's isometric and from the game's steep camera; seven
+sub-agents iterated on that render, two to four pieces each, with no paid tools. Extras on the game side:
+- the bunsen's flame is FX, not geometry: `LabFlames`, the burning barrel's two frontal flame layers
+  and glow, burning blue (the barrel's sprite as an ALPHA MAP under a flat blue, since its own colour
+  is orange and a tint only darkens it), VisionMask-patched;
+- the label printer and the centrifuge each carry a status light in `FacilityDeco.lamps`' blinking mesh
+  (one speck, the compound's clock and material);
+- the embryo jar and the specimen box split into a body and a `-glass` shell, drawn as its own batch,
+  transparent, double-sided and depth-free (the vat glass's recipe), so the embryo and the specimen show;
+- screen glow on six pieces off an emissive map cut from the piece's own sheet by rect
+  (`models-src/lab/_topemi.py`), dimmed with the lab's death by `LabInterior.dim`.
+
+**Measured:** 68-2,498 tris a piece (TRELLIS: ~4,800 each), every one holes 0 / coplanar 0 /
+islands 1. Seed 9: 14 kinds on 11 lids, 2 jars behind glass; with the research list stacked in-page, 3
+burners (9 flame quads) and 3 status lights. Programs 87 -> 90 warmed, entry diff 0. 21 sheets, ~$1.32.
+
+**The traps:**
+- A model sheet painted from the TRELLIS reference is what makes a hand-built piece read as that
+  object; the first pass in flat colours was rejected as simpler and different.
+- The steep camera decides the pose: a microscope facing it hides its arm behind the stage, an arm kit
+  reaching at it foreshortens to one bar, a lamp built in one plane reads as a column. Each is turned.
+- A jar's label at mid height hides what is in it: the camera sees the embryo ~0.12 above where it
+  sits, so the label band moved to the foot.
+- `Models.normalize` centres a glb on its bbox, so every anchor (flame, LED) and every glass shell is
+  stated from the bbox centre, and a shell's base offset is restored by the row's `y`.
 
 **Verdict:** landed.
