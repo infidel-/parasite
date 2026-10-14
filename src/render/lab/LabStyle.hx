@@ -98,6 +98,14 @@ class LabStyle
   // ---- the furniture and the box machines (render.lab.LabInterior): a piece's cull radius about its
   // placement, the container's half-diagonal and its height
   public static inline var PIECE_CULL_R = 9.0;
+  // the suits on a hazmat rack: their height, the rail's height off the floor and its reach out of the
+  // rack's centre (models-src/lab/labkit_build.py hazmat, rail at 4.0 over a rack whose foot is 0.4
+  // up, 0.47 in front of its centre), how many hang on one rack and how far apart
+  public static inline var SUIT_H = 3.3;
+  public static inline var SUIT_HOOK = 3.6;
+  public static inline var SUIT_RAIL = 0.47;
+  public static inline var SUIT_N = 3;
+  public static inline var SUIT_GAP = 1.22;
 
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)

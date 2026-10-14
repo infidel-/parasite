@@ -12,13 +12,18 @@ import render.facility.FacilityModel.Facility;
 import render.facility.FacilityStyle;
 import render.world.VisionMask;
 
-// one batch's art: the glb, the height it is drawn at (its own measured one, so it draws at scale 1),
-// its depth across the wall it backs onto, and how far off the floor its lowest point hangs
+// one batch's art: the glb, the height it is drawn at, its depth across the wall it backs onto (at
+// that height and after `turn`), how far off the floor its lowest point hangs, and the turn that
+// brings a GENERATED glb's front round to +z — TRELLIS keeps whatever yaw the reference implied, so a
+// machine can come back facing its own flank (docs/3d-models.md)
 typedef LabPieceArt = {
   path:String,
   h:Float,
   d:Float,
   ?y:Float,
+  ?turn:Float,
+  ?w:Float,         // its width along the footprint, when it is shorter than the footprint (a
+                    // generated machine keeps its own proportions); the footprint's otherwise
 };
 
 // what a build plans before the batches exist: every placement, by path
@@ -44,6 +49,7 @@ typedef LabInteriorPlan = {
 class LabInterior
 {
   static inline var CELL = CityConfig.CELL;
+  static var HALF_PI = Math.PI / 2;
   static var DC = [0, 0, -1, 1];
   static var DR = [-1, 1, 0, 0];
 
@@ -56,11 +62,13 @@ class LabInterior
     drum:LabPieceArt,
     crate:LabPieceArt,
     work:Array<LabPieceArt>,
+    plants:Array<LabPieceArt>,
+    suits:Array<LabPieceArt>,
   } = null;
 
-// the art tables: the furniture by Const row-23 tile (PLANT and BIN are generated props, Phase 5's
-// batch), the store's free-standing rows, the drums and the crates, and the machines this pass draws
-// by gen.lab.LabKinds name — the generated ones join that table
+// the art tables: the furniture by Const row-23 tile (a PLANT is one of the generated pots by hash),
+// the store's free-standing rows, the drums and the crates, the machines by gen.lab.LabKinds name —
+// hand-modelled and generated alike — and the suits a hazmat rack hangs
   static function art():{
     furniture:Map<Int, LabPieceArt>,
     machines:Map<String, LabPieceArt>,
@@ -68,6 +76,8 @@ class LabInterior
     drum:LabPieceArt,
     crate:LabPieceArt,
     work:Array<LabPieceArt>,
+    plants:Array<LabPieceArt>,
+    suits:Array<LabPieceArt>,
   }
     {
       if (tables != null)
@@ -96,6 +106,62 @@ class LabInterior
           'leverbox' => row(M.labBoxLeverbox, 4.7, 1.0, 1.3),
           'controlbox' => row(M.labBoxControlbox, 6.0, 1.2),
           'container' => row(M.labContainer, 5.22, 6.56),
+          // the generated ones (TRELLIS, art/models.json lab/<name>): height, depth, width, and the
+          // turn that brings the front round where it came back on a flank
+          'reactor' => gen('reactor', 4.5, 6.64, 6.35),
+          'screenwall' => gen('screenwall', 5.0, 2.23, 4.16, -HALF_PI),
+          'hatchbox' => gen('hatchbox', 4.4, 3.08, 3.68, -HALF_PI),
+          'dialtank' => gen('dialtank', 3.6, 3.36, 3.35),
+          'autopsy' => gen('autopsy', 3.4, 2.82, 2.48),
+          'tube' => gen('tube', 4.6, 2.08, 2.76),
+          'tubeempty' => gen('tubeempty', 4.6, 2.46, 2.5),
+          'trolley' => gen('trolley', 2.4, 1.38, 2.4),
+          'instconsole' => gen('instconsole', 3.2, 1.48, 4.86),
+          'restraint' => gen('restraint', 3.4, 2.27, 2.32),
+          'switchrack' => gen('switchrack', 4.6, 1.79, 2.98, -HALF_PI),
+          'scanner' => gen('scanner', 4.0, 1.99, 2.39),
+          'terminal' => gen('terminal', 3.4, 2.3, 3.26),
+          'holo' => gen('holo', 3.6, 2.25, 4.02),
+          'tubeconsole' => gen('tubeconsole', 3.0, 1.12, 2.4),
+          'joystick' => gen('joystick', 2.6, 2.68, 4.94, -HALF_PI),
+          'monitorstack' => gen('monitorstack', 4.4, 1.44, 2.32, -HALF_PI),
+          'pipecapsule' => gen('pipecapsule', 2.8, 1.54, 5.47),
+          'clamp' => gen('clamp', 3.6, 6.87, 6.87),
+          'tentacle' => gen('tentacle', 4.4, 3.5, 3.95),
+          'bioscreen' => gen('bioscreen', 4.0, 2.89, 4.29, -HALF_PI),
+          'cryopod' => gen('cryopod', 2.65, 3.63, 3.4),
+          'probe' => gen('probe', 2.75, 3.41, 3.63),
+          'stasis' => gen('stasis', 5.0, 1.8, 2.63, -HALF_PI),
+          'capsule' => gen('capsule', 2.3, 3.58, 7.3),
+          'robochair' => gen('robochair', 3.4, 2.79, 1.8),
+          'winconsole' => gen('winconsole', 3.0, 2.67, 4.18),
+          'upw' => gen('upw', 4.6, 1.95, 3.97),
+          'booth' => gen('booth', 5.2, 2.93, 3.62),
+          'incinerator' => gen('incinerator', 4.0, 3.26, 4.66),
+          'analysis' => gen('analysis', 3.0, 4.21, 4.23),
+          'bioprinter' => gen('bioprinter', 4.8, 2.16, 3.28),
+          'specimencase' => gen('specimencase', 4.0, 1.96, 5.23),
+          'ambertanks' => gen('ambertanks', 4.8, 2.81, 4.74),
+          'processor' => gen('processor', 4.8, 3.17, 5.26),
+          'incubator' => gen('incubator', 4.4, 2.49, 4.19),
+          'brainscan' => gen('brainscan', 3.8, 1.96, 3.82, Math.PI),
+          'cryobank' => gen('cryobank', 5.2, 3.02, 5.16),
+          'centrifuge' => gen('centrifuge', 4.4, 7.25, 7.26),
+          'embryonic' => gen('embryonic', 5.4, 1.92, 4.86, -HALF_PI),
+          'gestation' => gen('gestation', 3.2, 5.62, 5.64),
+          'rack8' => gen('rack8', 4.4, 1.83, 5.93),
+          'rack6' => gen('rack6', 4.4, 1.78, 4.57),
+          'canisters' => gen('canisters', 4.6, 2.32, 4.61),
+          'generator' => gen('generator', 4.8, 2.6, 5.27),
+          'press' => gen('press', 4.3, 2.28, 3.66),
+          'robotarm' => gen('robotarm', 4.8, 2.84, 3.07),
+          'kiosk' => gen('kiosk', 4.0, 0.98, 1.42, -HALF_PI),
+          'cagecase' => gen('cagecase', 2.4, 1.49, 2.61),
+          'sheetcage' => gen('sheetcage', 3.2, 3.4, 3.82),
+          'gurney' => gen('gurney', 2.6, 2.28, 4.05, -HALF_PI),
+          'tarpcrate' => gen('tarpcrate', 3.0, 2.29, 3.13),
+          'gurneys' => gen('gurneys', 3.0, 1.72, 3.22),
+          'palletcrate' => gen('palletcrate', 1.85, 3.61, 3.52),
         ],
         shelfRow: row(M.labShelfRow, 4.6, 2.4),
         drum: row(M.labDrum, 1.84, 1.26),
@@ -107,6 +173,18 @@ class LabInterior
             FacilityStyle.WORK_SCREEN_H, FacilityStyle.WORK_FOOT_D),
           row(M.facilityTower, FacilityStyle.WORK_TOWER_H, FacilityStyle.WORK_TOWER_D),
           row(M.facilityKeyboard, FacilityStyle.WORK_KEY_H, FacilityStyle.WORK_KEY_D),
+        ],
+        // a PLANT cell's pot, one of these by hash
+        plants: [
+          gen('plant2', 3.0, 2.3, 2.24),
+          gen('plant3', 3.2, 1.69, 1.73),
+          gen('plant5', 3.2, 1.58, 1.5),
+          gen('plant6', 2.6, 1.97, 2.14),
+        ],
+        // what hangs on a hazmat rack's rail, and the one left in a heap under it
+        suits: [
+          gen('suit', LabStyle.SUIT_H, 0.63, 1.25),
+          gen('suitfloor', 1.0, 1.86, 2.24),
         ],
       };
       return tables;
@@ -120,6 +198,18 @@ class LabInterior
         h: h,
         d: d,
         y: y,
+      };
+    }
+
+// one generated row: models/lab/<name>.glb
+  static function gen(name:String, h:Float, d:Float, w:Float, ?turn:Float):LabPieceArt
+    {
+      return {
+        path: 'models/lab/' + name + '.glb',
+        h: h,
+        d: d,
+        w: w,
+        turn: turn,
       };
     }
 
@@ -137,7 +227,9 @@ class LabInterior
         for (col in 0...m.w)
           {
             var t = cells[col][r];
-            var a = A.furniture.get(t);
+            var a = (t == Const.TILE_LAB_PLANT ?
+              A.plants[FacilityModel.mix((col * 83492791) ^ (r * 73856093)) % A.plants.length] :
+              A.furniture.get(t));
             if (a != null)
               furniture(p, m, tile, col, r, t, a);
             else if (t == Const.TILE_LAB_SHELF_ROW)
@@ -168,7 +260,7 @@ class LabInterior
     {
       var A = art();
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
-        .concat([for (a in A.machines) a]).concat(A.work);
+        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits);
       for (a in all)
         batch(scene, a.path, [{
           x: 0.0,
@@ -201,7 +293,7 @@ class LabInterior
       p.places.get(a.path).push({
         x: x,
         z: z,
-        yaw: yaw,
+        yaw: yaw + (a.turn != null ? a.turn : 0.0),
         y: (y != null ? y : 0.0) + (a.y != null ? a.y : 0.0),
       });
     }
@@ -254,6 +346,8 @@ class LabInterior
       put(p, a, c.x + DC[d] * back, c.z + DR[d] * back, away(d));
       if (t == Const.TILE_LAB_CONSOLE)
         work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);
+      if (t == Const.TILE_LAB_HAZMAT)
+        suits(p, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row);
       // a run's shadow once, from its first cell (lowest col/row) along the wall
       var alongX = (d < 2);
       if (tile(col - (alongX ? 1 : 0), row - (alongX ? 0 : 1)) == t &&
@@ -294,6 +388,29 @@ class LabInterior
       put(p, w[0], x - ox * 0.4, z - oz * 0.4, away(d), top);
       put(p, w[2], x + ox * 0.55, z + oz * 0.55, away(d), top);
       put(p, w[1], x + sx * 1.35 - ox * 0.2, z + sz * 1.35 - oz * 0.2, away(d), top);
+    }
+
+// a hazmat rack's suits: up to SUIT_N on its rail at hashed gaps, and now and then one dropped in a
+// heap in front of it. The rail is SUIT_RAIL out from the rack's centre and the suit's hook is its top
+  static function suits(p:LabInteriorPlan, x:Float, z:Float, d:Int, col:Int, row:Int):Void
+    {
+      var S = art().suits;
+      var h = FacilityModel.mix((col * 19349663) ^ (row * 83492791));
+      var ox = -DC[d], oz = -DR[d];
+      var sx = -oz, sz = ox;
+      var out = LabStyle.SUIT_RAIL;
+      var y = LabStyle.SUIT_HOOK - LabStyle.SUIT_H;
+      for (i in 0...LabStyle.SUIT_N)
+        {
+          // a hook in four is empty
+          if ((h >>> (i * 3)) % 4 == 0)
+            continue;
+          var s = (i - (LabStyle.SUIT_N - 1) / 2) * LabStyle.SUIT_GAP;
+          var yaw = away(d) + (((h >>> (i * 3 + 12)) % 7) - 3) * 0.05;
+          put(p, S[0], x + ox * out + sx * s, z + oz * out + sz * s, yaw, y);
+        }
+      if ((h >>> 24) % 3 == 0)
+        put(p, S[1], x + ox * (out + 1.4), z + oz * (out + 1.4), away(d) + ((h >>> 26) % 4) * 0.7);
     }
 
 // a store's free-standing shelf row: on its cell's centre, its faces across the row's run
@@ -418,7 +535,7 @@ class LabInterior
       if (a.y != null)
         return;
       // facing along z, its long side runs along x, and the other way round
-      var long = (alongX ? fw : fh) * CELL - 0.4;
+      var long = (a.w != null ? a.w : (alongX ? fw : fh) * CELL - 0.4);
       var facesZ = (d >= 0 ? d < 2 : alongX);
       var w = (facesZ ? long : a.d);
       var dd = (facesZ ? a.d : long);
