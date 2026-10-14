@@ -42,6 +42,7 @@ class LabArea implements Area3D
   var vats:LabVats.LabVatSet;
   var lift:LabLift.LabLiftSet;
   var furniture:Array<render.Models.InstancedProp>;
+  var decals:{ grime:Int, marks:Int, tops:Int };
   // each vat's eased drain, keyed on its root object. the AREA's and not the batch's, so a rebuild of
   // the batches (refreshObjects) carries a drain on from where it was (LabVats)
   var drain = new Map<Int,Float>();
@@ -89,10 +90,11 @@ class LabArea implements Area3D
       // the furniture and the box machines: placed now, so their contact shadows are in the field
       // before it is painted; their batches come after the chunks (LabInterior)
       var area = game.area;
-      var interior = LabInterior.plan(model, function(col, row)
+      var tile = function(col, row)
         {
           return (col < 0 || row < 0 || col >= model.w || row >= model.h ? -1 : area.getCellType(col, row));
-        });
+        };
+      var interior = LabInterior.plan(model, tile);
       // the collector every pass that stands something against a wall fills; draining it is what
       // CLEARS it, so a kind that never calls it hands its list to whichever area drains next
       FacilityDetail.halos(scene, model);
@@ -106,6 +108,8 @@ class LabArea implements Area3D
       vats = LabVats.build(scene, game, drain, posts);
       lift = LabLift.build(scene, model);
       furniture = LabInterior.build(scene, interior);
+      // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
+      decals = LabDecals.build(scene, model, tile, interior.lids);
       // a blocker is masonry or rock: anything that is not floor. `carries` is what slab() insets
       // against, so the reveal pulls back off exactly the floor the masonry left open
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -115,7 +119,8 @@ class LabArea implements Area3D
     }
 
 // console debug helper (permanent) — what this lab actually built.
-//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, objProps, shadows }
+//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, objProps,
+//     shadows }
 //
 // the same reasoning as __corp(): the door leaves and the object props are instanced batches with
 // no userData.cls, parasiteHx is statics-only so the Facility record is unreachable from JS, and
@@ -169,6 +174,7 @@ class LabArea implements Area3D
               count: f.matrices.length,
             }],
             rock: rock,
+            decals: decals,
             objProps: [for (b in props) {
               path: b.model.path,
               count: b.solid.matrices.length,

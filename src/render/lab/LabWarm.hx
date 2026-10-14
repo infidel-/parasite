@@ -31,6 +31,7 @@ class LabWarm
       // the vats, the lift and the furniture, one of each part: every glb is its own material and so
       // its own program, and the glass and the medium are transparent, which is a key of its own on top
       var paths = LabVats.warm(sc).concat(LabLift.warm(sc)).concat(LabInterior.warm(sc));
+      LabDecals.warm(sc);
       // the actor layer under the lab's moonless light set (Warmup.actorLayer)
       var fx = new Group();
       sc.add(fx);

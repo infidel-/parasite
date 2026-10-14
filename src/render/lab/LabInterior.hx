@@ -9,6 +9,7 @@ import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.world.VisionMask;
 
@@ -30,6 +31,7 @@ typedef LabPieceArt = {
 typedef LabInteriorPlan = {
   places:Map<String, Array<Models.PropPlace>>,
   heights:Map<String, Float>,
+  lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
 };
 
 // the underground lab's furniture and its box machines: everything the generator stands as a Const
@@ -219,6 +221,7 @@ class LabInterior
       var p:LabInteriorPlan = {
         places: new Map(),
         heights: new Map(),
+        lids: [],
       };
       var A = art();
       // the grid as gen.lab.LabKinds.alongX reads it, column-major
@@ -348,6 +351,9 @@ class LabInterior
         work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);
       if (t == Const.TILE_LAB_HAZMAT)
         suits(p, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row);
+      if (t == Const.TILE_LAB_BENCH ||
+          t == Const.TILE_LAB_WORKBENCH)
+        top(p, m, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row, t == Const.TILE_LAB_WORKBENCH);
       // a run's shadow once, from its first cell (lowest col/row) along the wall
       var alongX = (d < 2);
       if (tile(col - (alongX ? 1 : 0), row - (alongX ? 0 : 1)) == t &&
@@ -373,6 +379,31 @@ class LabInterior
           z1: cz + hd,
         },
         h: a.h,
+      });
+    }
+
+// a bench's top for render.lab.LabDecals, in the piece's own frame (models-src/lab/labkit_build.py): the
+// lab table's whole epoxy top, the workbench's butcher block short of its back upstand and clear of
+// the vice on its front corner. A workshop's tops deal off the workshop sheet, every other room's
+// off the research one
+  static function top(p:LabInteriorPlan, m:Facility, x:Float, z:Float, d:Int, col:Int, row:Int,
+      heavy:Bool):Void
+    {
+      var yaw = away(d);
+      var off = (heavy ? 0.1 : 0.0);
+      p.lids.push({
+        x: x + Math.sin(yaw) * off,
+        z: z + Math.cos(yaw) * off,
+        yaw: yaw,
+        w: (heavy ? 3.6 : 3.8),
+        d: (heavy ? 2.1 : 2.2),
+        y: (heavy ? 2.0 : 1.96),
+        workshop: (m.surf[row][col] == Surf.LAB_WORKSHOP),
+        keep: (heavy ? {
+          x: 1.45,
+          z: 0.95,
+          r: 0.45,
+        } : null),
       });
     }
 

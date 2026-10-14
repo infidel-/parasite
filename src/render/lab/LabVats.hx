@@ -7,7 +7,11 @@ import objects.mission.CloneVat;
 import render.Area3DTickOpts;
 import render.Models;
 import render.RenderConfig;
+import render.Textures;
+import render.facility.FacilityGeom;
+import render.facility.FacilityModel;
 import render.particles.LampPost;
+import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
 // the clone vats: every 2x3 objects.mission.CloneVat group the mission spawned, drawn as FIVE batches
@@ -32,6 +36,9 @@ typedef LabVatSet = {
   drain:Map<Int,Float>,                  // root object ID -> eased drain, 0 full to 1 empty
   base:Array<Array<Matrix4>>,            // [clone, slumped, fluid] untouched placement matrices,
                                          // taken once each glb lands; null until then
+  spill:InstancedMesh,                   // the slurry each vat leaves on the floor, spreading with
+                                         // its drain (lab/floor-marks cell 8); null with no vats
+  spillAt:Array<{ x:Float, z:Float, yaw:Float }>,
 };
 
 class LabVats
@@ -109,6 +116,11 @@ class LabVats
         yaw: LabStyle.CLONE_YAW,
         y: LabStyle.VAT_GLASS_Y,
       }];
+      var spillAt = [for (v in roots) {
+        x: frame[roots.indexOf(v)].x,
+        z: frame[roots.indexOf(v)].z + LabStyle.SPILL_OUT,
+        yaw: (FacilityModel.mix(v.x * 7349 ^ v.y * 1931) % 64) * Math.PI / 32,
+      }];
       var set:LabVatSet = {
         roots: roots,
         frame: batch(scene, RenderConfig.MODELS.labVatFrame, frame, LabStyle.VAT_H, 0),
@@ -121,6 +133,8 @@ class LabVats
         posts: posts,
         drain: drain,
         base: null,
+        spill: spill(scene, roots.length),
+        spillAt: spillAt,
       };
       return set;
     }
@@ -139,6 +153,7 @@ class LabVats
       batch(scene, RenderConfig.MODELS.labCloneSlumped, at, LabStyle.CLONE_SLUMP_H, 0);
       batch(scene, RenderConfig.MODELS.labVatFluid, at, LabStyle.VAT_FLUID_H, 1);
       batch(scene, RenderConfig.MODELS.labVatGlass, at, LabStyle.VAT_GLASS_H, 2);
+      spill(scene, 1);
       return [
         RenderConfig.MODELS.labVatFrame,
         RenderConfig.MODELS.labClone,
@@ -146,6 +161,29 @@ class LabVats
         RenderConfig.MODELS.labVatFluid,
         RenderConfig.MODELS.labVatGlass,
       ];
+    }
+
+// the slurry: one flat quad off lab/floor-marks' cell 8, an instance per vat, every one hidden until
+// its vat starts to drain (pose). Flat at SPILL_Y over the floor, on LabDecals' cut-out material
+  static function spill(scene:Scene, n:Int):InstancedMesh
+    {
+      if (n == 0)
+        return null;
+      var b = MeshBufTools.make();
+      MeshBufTools.quad(b, [-0.5, 0.0, 0.5], [0.5, 0.0, 0.5], [0.5, 0.0, -0.5], [-0.5, 0.0, -0.5],
+        [0.0, 0.25, 0.25, 0.25, 0.25, 0.5, 0.0, 0.5]);
+      var mesh = new InstancedMesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
+        map: Textures.loadTexture(LabStyle.DECAL_MARKS_TEX, 'wall', 1),
+        alphaTest: LabStyle.DECAL_CUT,
+        side: THREE.DoubleSide,
+      })), n);
+      for (i in 0...n)
+        mesh.setMatrixAt(i, _zero);
+      mesh.name = 'lab vat spill';
+      // the instances spread the whole lab; three's per-mesh cull would take the unit quad's sphere
+      mesh.frustumCulled = false;
+      scene.add(mesh);
+      return mesh;
     }
 
 // one batch, its material made what the part needs before the vision mask reads it
@@ -264,6 +302,20 @@ class LabVats
       else
         h.copy(set.base[1][i]);
       set.posts[i].mul = LabStyle.VAT_LAMP_MUL * level;
+      // the slurry spreads as the level falls, turned about the vertical by its hash
+      var a = set.spillAt[i];
+      var sc = LabStyle.SPILL_SZ * (1 - level);
+      var e = _m.elements;
+      _m.makeScale(1, 1, 1);
+      e[0] = sc * Math.cos(a.yaw);
+      e[2] = -sc * Math.sin(a.yaw);
+      e[8] = sc * Math.sin(a.yaw);
+      e[10] = sc * Math.cos(a.yaw);
+      e[12] = a.x;
+      e[13] = LabStyle.SPILL_Y;
+      e[14] = a.z;
+      set.spill.setMatrixAt(i, (level >= 1 ? _zero : _m));
+      set.spill.instanceMatrix.needsUpdate = true;
     }
 
 // every vat's state, for __lab()
@@ -284,5 +336,7 @@ class LabVats
       for (p in [ set.frame, set.clone, set.slumped, set.fluid, set.glass ])
         if (p.mesh != null)
           p.mesh.removeFromParent();
+      if (set.spill != null)
+        set.spill.removeFromParent();
     }
 }

@@ -8121,6 +8121,94 @@
       "last_converted": "2026-10-14T01:46:41",
       "built_linear": 0.0234,
       "built_srgb": 38.9
+    },
+    "lab/floor-decals": {
+      "src": "lab/floor-decals-grid.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate floor marks arranged as a strict 4 x 4 grid, 4 rows of 4. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every mark must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No mark may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels or numbers - only the 16 marks. Nothing may touch the outer edges of the frame.\n\nEach mark is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no cast shadow. They are the grime and damage found on the floor of an abandoned secret underground cloning laboratory.\n\nThe sixteen marks, in reading order (left to right, then top to bottom):\n1. A splashed puddle of glowing green slime with a few droplets around it.\n2. A puddle of brown sludge with a ragged edge.\n3. A puddle of dark purple ooze.\n4. A puddle of black oil with a faint sheen ring.\n5. A thin grey watery puddle.\n6. A pale blue chemical spill with crystallised edges.\n7. Three parallel deep claw scratches gouged in a curve.\n8. Four short parallel claw scratches, straight.\n9. A wide cluster of crossing claw gouges.\n10. A long jagged crack with small branching cracks.\n11. A scatter of broken glass shards and a snapped test tube.\n12. A scatter of dark debris: bolts, a torn glove, paper scraps.\n13. A round steel floor drain with a slotted grate.\n14. A square steel floor hatch with four bolts and a recessed handle.\n15. A trail of slimy green footprints of bare clawed feet.\n16. A long dark smear where something was dragged, streaked with green.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of floor grime for render.lab.LabDecals, dealt flat on the lab floors by hash. The first drop named the floor in its brief and came back UNCUT (alpha min 214, 0% at 0) \u2014 the docs/3d-textures.md trap \u2014 and one edit_image transparent pass re-cut it (66.5% at 0); tools/pack16.py --valign center after.",
+      "last_converted": "2026-10-14T05:42:59",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0776,
+      "built_srgb": 69.1
+    },
+    "lab/floor-marks": {
+      "src": "lab/floor-marks-grid.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate painted floor markings arranged as a strict 4 x 4 grid, 4 rows of 4. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every marking must fit ENTIRELY inside the MIDDLE 70% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No marking may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines or frames - only the 16 markings. Nothing may touch the outer edges of the frame.\n\nEach marking is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no cast shadow. They are worn, scuffed, half-faded paint and stencil markings of an abandoned secret underground cloning laboratory.\n\nThe sixteen markings, in reading order (left to right, then top to bottom):\n1. A worn white stencilled code \"LAB-042\".\n2. A worn yellow stencilled code \"LAB-042\" with a short arrow.\n3. A worn white stencilled code \"SEC-9\".\n4. A large faded black-and-yellow biohazard trefoil stencil.\n5. A small square steel floor grate glowing faint sickly green from below.\n6. A row of three yellow-and-black hazard chevrons.\n7. A long worn yellow lane arrow.\n8. A quarter arc of a yellow-and-black hazard ring, as painted round a machine.\n9. A green slurry spill with a pale crust, spreading from one side.\n10. A yellow box-junction cross-hatch square.\n11. A worn red painted \"NO ENTRY\" circle with a bar.\n12. A taped yellow outline square with one corner peeled.\n13. A dark oil stain under where a machine stood.\n14. A brown chemical burn scorch with a pale centre.\n15. A worn white painted footprint pair with a \"STAND HERE\" stencil.\n16. A short length of yellow-and-black striped floor tape.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 of painted floor markings for render.lab.LabDecals: stencils, hazard paint, the glowing grate and the drained-vat slurry spill (cell 8). Came back uncut like floor-decals (alpha min 238) and was re-cut by one edit_image transparent pass (70.8% at 0); tools/pack16.py --valign center after.",
+      "last_converted": "2026-10-14T05:42:59",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0859,
+      "built_srgb": 68.1
+    },
+    "lab/bench-research": {
+      "src": "lab/bench-research-grid.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 36 small separate objects arranged as a strict 6 x 6 grid, 6 rows of 6 objects. Imagine the square image cut into 36 equal cells of 170 by 170 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other. Do not draw any grid lines, frames, labels or numbers - only the 36 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale, each filling most of the middle of its cell. They are FLAT things left behind by researchers in an abandoned secret cloning laboratory. Printed pages carry only abstract grey smudge bars standing in for text.\n\nThe thirty-six objects, in reading order (left to right, then top to bottom):\n1. A stack of printed research papers. 2. A single sheet with a printed DNA diagram. 3. A clipboard with a checklist. 4. A closed dark lab notebook. 5. An open lab notebook with sketches. 6. A manila folder stamped with a red biohazard mark.\n7. A glass petri dish with a green colony. 8. A glass petri dish with red growths. 9. Two empty petri dishes overlapping. 10. A plastic syringe. 11. Two syringes side by side. 12. A used syringe with a red tip.\n13. An X-ray film of a strange elongated skull. 14. An X-ray film of a ribcage with extra ribs. 15. A dark tissue sample tray with six small pink samples. 16. A photograph of a pale clone in a tank. 17. A Polaroid of a tentacled creature. 18. A pinned dissection sketch of a creature.\n19. A white staff ID card on a blue lanyard. 20. A pair of blue nitrile gloves. 21. A pair of safety goggles. 22. A paper face mask. 23. A spill of pills from a tipped bottle. 24. A tray of glass slides.\n25. Three loose glass vials of green, amber and blue fluid. 26. A rack of six small sample tubes, seen from above. 27. A pipette lying flat. 28. A pair of steel forceps and a scalpel. 29. A small digital scale display. 30. A crumpled bloodied lab coat sleeve.\n31. A spiral notepad with scribbled formulas. 32. A torn page with a frantic scrawled warning in red. 33. A coffee-stained page of graph paper. 34. A small cassette dictaphone. 35. A pocket calculator. 36. A box of disposable gloves.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 6,
+        "cap": 0.1
+      },
+      "note": "PACK36 (6x6) of flat research clutter laid on the lab's benches and desks by render.lab.LabClutter. Cut clean on the first drop (43% at 0); tools/pack16.py --cols 6 --rows 6 --cell 170 --valign center.",
+      "last_converted": "2026-10-14T05:43:00",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 6,
+        "cap": 0.1
+      },
+      "built_linear": 0.0796,
+      "built_srgb": 73.2
+    },
+    "lab/bench-workshop": {
+      "src": "lab/bench-workshop-grid.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 36 small separate objects arranged as a strict 6 x 6 grid, 6 rows of 6 objects. Imagine the square image cut into 36 equal cells of 170 by 170 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell, leaving a clear empty margin of at least 20% of the cell on all four sides. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other. Do not draw any grid lines, frames, labels or numbers - only the 36 objects. Nothing may touch the outer edges of the frame.\n\nEach object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep the objects at roughly similar scale, each filling most of the middle of its cell. They are FLAT things left lying around by technicians in the workshop of an abandoned secret underground laboratory. Printed pages carry only abstract smudge bars standing in for text.\n\nThe thirty-six objects, in reading order (left to right, then top to bottom):\n1. A blue blueprint sheet of a machine. 2. A blueprint of a containment tank. 3. A rolled-up blueprint. 4. A wiring diagram sheet. 5. A greasy repair manual, open. 6. A clipboard with a work order.\n7. A scatter of screws and nuts. 8. A scatter of washers and bolts. 9. A coil of red and black wire. 10. A coil of copper wire. 11. A tangle of ribbon cable. 12. A loose length of thick black power cable.\n13. A green circuit board. 14. A burnt circuit board. 15. Two small chips and a capacitor. 16. A soldering iron. 17. A reel of solder. 18. A pair of wire cutters.\n19. An oily rag. 20. A crumpled grease-stained cloth. 21. A wrench. 22. A pair of pliers. 23. A screwdriver set in a fold-out pouch. 24. A hex key set fanned out.\n25. A small steel offcut and metal shavings. 26. A bent metal bracket. 27. A broken servo motor. 28. A fuse and two spare fuses. 29. A roll of grey duct tape. 30. A roll of yellow-and-black hazard tape.\n31. A cracked handheld multimeter. 32. A tape measure. 33. A small spring and gears. 34. A pair of safety glasses. 35. A pair of heavy work gloves. 36. A spilled box of rivets.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 6,
+        "cap": 0.1
+      },
+      "note": "PACK36 (6x6) of flat workshop clutter laid on the lab's workbenches by render.lab.LabClutter. The first drop came back washed (2.1% at 0) and one edit_image transparent pass re-cut it (58.2% at 0); tools/pack16.py --cols 6 --rows 6 --cell 170 --valign center.",
+      "last_converted": "2026-10-14T05:43:00",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 6,
+        "cap": 0.1
+      },
+      "built_linear": 0.0866,
+      "built_srgb": 71.6
     }
   }
 }

@@ -107,6 +107,34 @@ class LabStyle
   public static inline var SUIT_N = 3;
   public static inline var SUIT_GAP = 1.22;
 
+  // ---- the flat cut-outs (render.lab.LabDecals): the four pack sheets; a floor cell's odds, in
+  // thousandths, of a grime decal and of a painted mark; their sizes (base + up to VAR); the height
+  // they lie at over the floor; the bench tops' item size and lift; the tries an item gets to find
+  // room on its top; and the alpha cut
+  public static inline var DECAL_GRIME_TEX = 'textures/lab/floor-decals.png';
+  public static inline var DECAL_MARKS_TEX = 'textures/lab/floor-marks.png';
+  public static inline var DECAL_RESEARCH_TEX = 'textures/lab/bench-research.png';
+  public static inline var DECAL_WORKSHOP_TEX = 'textures/lab/bench-workshop.png';
+  public static inline var GRIME_RATE = 80;
+  public static inline var MARK_RATE = 40;
+  public static inline var GRIME_SZ = 1.8;
+  public static inline var GRIME_SZ_VAR = 1.0;
+  public static inline var MARK_SZ = 2.0;
+  public static inline var MARK_SZ_VAR = 0.6;
+  public static inline var DECAL_Y = 0.02;
+  public static inline var TOP_SZ = 0.75;
+  public static inline var TOP_SZ_VAR = 0.3;
+  public static inline var TOP_LIFT = 0.008;
+  public static inline var DECAL_TRIES = 8;
+  public static inline var DECAL_CUT = 0.5;
+  // the slurry a drained vat leaves (render.lab.LabVats, lab/floor-marks cell 8): how wide it has
+  // spread once the vat is empty, how far in front of the footprint's centre it pools — out past the
+  // plinth's front edge (6 units), which covers the whole 2x3 and hid a spill centred under it — and
+  // its height over the floor (over the grime)
+  public static inline var SPILL_SZ = 7.0;
+  public static inline var SPILL_OUT = 7.0;
+  public static inline var SPILL_Y = 0.03;
+
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)
   public static inline var DARK = 0x040608;
