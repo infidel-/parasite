@@ -134,6 +134,14 @@ class Door extends AreaObject
       openCol = closedCol + 1;
     }
 
+// the key a leaf moving plays: the underground lab's pneumatic leaves have their own pair
+  function soundKey(open: Bool): String
+    {
+      if (game.area.typeID == AREA_UNDERGROUND_LAB)
+        return 'lab/door-' + (open ? 'open' : 'close');
+      return 'door-' + sound + '-' + (open ? 'open' : 'close');
+    }
+
 // resolve door sound type from closed icon style
   function resolveDoorSound(): String
     {
@@ -199,8 +207,7 @@ class Door extends AreaObject
 
       // play sound
       if (playSound)
-        game.scene.sounds.play('door-' + sound + '-' +
-          (newOpen ? 'open' : 'close'), {
+        game.scene.sounds.play(soundKey(newOpen), {
             x: x,
             y: y,
             canDelay: true,

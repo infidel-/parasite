@@ -85,7 +85,9 @@ class Elevator extends AreaObject
         return false;
 
       var leavingAreaID = game.area.id;
-      game.scene.sounds.play('object-elevator');
+      // the underground lab's freight lift has its own departure
+      game.scene.sounds.play(game.area.typeID == AREA_UNDERGROUND_LAB ? 'lab/depart' :
+        'object-elevator');
       if (missionID >= 0)
         game.log("You leave the mission site.");
       else

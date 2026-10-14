@@ -233,7 +233,7 @@ class WorldConst
       // *** mission underground laboratory
       AREA_UNDERGROUND_LAB => {
         id: AREA_UNDERGROUND_LAB,
-        ambient: AMBIENT_FACILITY,
+        ambient: AMBIENT_NONE,
         type: 'undergroundLab',
         name: 'Underground Laboratory',
         pediaArticle: 'areaLab',

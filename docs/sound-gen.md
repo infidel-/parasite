@@ -255,6 +255,45 @@ Played INSTEAD of `FacilitySounds` in a base, which is drawn by the facility ren
   alerts are a gameplay state in a base.
 - `yard-sonilo1-day.wav` in `unused/military/` was judged good for a DAY base. There is no day yet.
 
+### Underground lab: `render/lab/LabSounds.hx`, driven from `LabArea.tick`
+
+The lab is `AMBIENT_NONE`; everything it sounds like is here. `LabSounds` holds the area it was built
+for, and `LabArea` hands it the rebuilt vat set (`setVats`) so the vat cells refill in place.
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `lab/bubble` | the four vat roots, gated off as each is purged | loop | 4 |
+| `lab/cryo` | cryobank, cold bank, cryo pod, stasis pod, SR-203 | loop | 3 |
+| `lab/centrifuge` | the centrifuge cylinder | loop | 4 |
+| `lab/incubator` | incubators, embryonic unit, specimen racks and cases, bio-printer, gestation ring | loop | 3 |
+| `lab/console` | the console machines and every computer desk | loop | 3 |
+| `lab/buzz` | the sputtering ceiling fixtures (`LabLamps` phase != 0) | loop | 2 |
+| `lab/vent` | the corridor's strip-light cells (the lab has no vent objects) | loop | 3 |
+| `lab/lift` | the lift car's cell | loop, ungated | 4 |
+| `lab/klaxon` | every door, gated on the lead's alarm (`leadTriggerDone`) | loop | 8 |
+| `lab/drip` | the vat cells | event, 2 variants, gap 14 s | 3 |
+| `lab/knock`, `lab/hiss` | the pump machines (reactor, piped capsule, UPW, dial tank, switch rack); hiss also the cryo set | event, gaps 30 / 25 s | 5 / 4 |
+| `lab/thump` | the caged units (hatch box, tentacle console, sheeted cage, cage case, capsule) | event, gap 40 s | 4 |
+| `lab/shaft` | the lift | event, 2 variants, gap 35 s | 6 |
+
+- **Beds**, one-hot over 4 x `BASE_MS` off `generatorInfo.getRoomAt`: `lab/lobby`, `lab/vat`,
+  `lab/workshop`, `lab/storage`, `lab/research` by room role, `lab/corridor` anywhere else (corridor,
+  doorways), and `lab/dead` in the vat chamber once the lab has died. All baked at -36.
+- **The lab dies** when all four vats are purged: every machine loop is gated off, the vat chamber's
+  bed crossfades to `lab/dead`, `lab/powerdown` (2 variants) plays once area-wide, and the tannoy
+  (`lab/pa`, every ~180 s at the beds' level) stops. The klaxon keeps going: it is on battery.
+- **One-shots off the lab's state**: `lab/purge` and `lab/drain` at a vat as it is purged;
+  `lab/arrive` once as the car starts down on entry; `lab/depart` replaces `object-elevator` when
+  `Elevator.onAction` leaves the lab; `lab/door-open` / `lab/door-close` replace the door kinds
+  (`Door.soundKey`).
+- **Cut on the user's ear before shipping**: `lab/incinerator` ("it's off") and `lab/pump` ("too loud,
+  no need"); every take of both is in `sounds-src/unused/lab/`. The pump machines still knock and hiss.
+- **"Very quiet" is the raw take, not the bake**: research came back at -49.9 LUFS and vat at -46.4,
+  and the bake lifted both to -36.4 like every other bed.
+- Measured at slider 100, seed 9: each bed 50 in its own room; bubble 17 beside a vat; console 9-14,
+  cryo 9, incubator 9 in range; klaxon 5 at the vat pads, far from a door. Purging all four fired
+  purge + drain four times, powerdown once, and swapped the vat bed for dead.
+
 ### City: `render/CitySounds.hx`, driven from `CityArea.tick`
 
 Each tier (`area.typeID`: slums `AREA_CITY_LOW`, medium, downtown `AREA_CITY_HIGH`) has its own three
@@ -385,3 +424,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-10 | military | yard, indoor (beds) · floodlight, fence, idle, radio (loops) · jet, range (far one-shots) | fence, floodlight, yard: elevenlabs · idle: sonilo · indoor, jet, radio, range: elevenlabs + sonilo · radio, range, jet cassette had screened CLIPPED (296 / 2,567 clipped samples, 0 dBFS), lost by ear anyway · yard sonilo kept as a day bed | $0.68 |
 | 2026-10-10 | military | hangar (bed) · generator, vent (loops) · truck (one-shot); replacing the facility's | generator: elevenlabs (gain -9, "make quieter") · hangar, truck: elevenlabs + sonilo (hangar sonilo fades out 39 dB at its tail, picked by ear anyway) · vent: cassette + sonilo | $0.31 |
 | 2026-10-11 | military | latrine, comms (beds) · drip, flush, squelch (one-shots) | latrine: sonilo · comms: elevenlabs · flush: elevenlabs ×2, both screened CLIPPED (16 and 8.5 peaks, the second a "no distortion" re-roll) and picked by ear ("both 11labs are ok") · squelch: elevenlabs (re-roll) + sonilo (re-roll, 3 peaks at 0 dBFS); both first takes CLIPPED (15.5, 5) · drip: cassette + elevenlabs · flush cassette CLIPPED (36), re-rolled clean, lost | $0.29 |
+| 2026-10-13 | lab | lobby, corridor, vat, workshop, storage, research, dead (beds) · bubble, pump, cryo, centrifuge, incubator, console, buzz, vent, lift, incinerator, klaxon (loops) · drip, knock, hiss, thump, shaft, pa, purge, drain, powerdown, arrive, depart, door-open, door-close (one-shots) | arrive, buzz, centrifuge, dead, depart, door-open, door-close, knock, pa, purge: sonilo · bubble, console, corridor (sonilo "fine but not so horror"), cryo, drain, hiss, klaxon, lift, lobby, research, storage, thump, vat, vent, workshop: elevenlabs · drip, powerdown, shaft: elevenlabs + sonilo · incubator: cassette · incinerator, pump: cut | $2.02 |

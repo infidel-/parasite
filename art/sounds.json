@@ -2445,6 +2445,719 @@
       "last_outputs": [
         "military/room1.mp3"
       ]
+    },
+    "lab/arrive": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/arrive-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy freight lift platform descending a shaft and stopping, an electric motor whine and cable rattle that slows, then a heavy clunk as it lands, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 7.99,
+          "seed": null,
+          "cost": 0.0144,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:04",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/arrive1.mp3"
+      ]
+    },
+    "lab/buzz": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/buzz-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a failing fluorescent tube light, an unsteady electrical buzz with crackling flicker, close, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:04",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/buzz1.mp3"
+      ]
+    },
+    "lab/centrifuge": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/centrifuge-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a large laboratory centrifuge spinning steadily at speed, a smooth whirring whine over a low rotor hum, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:05",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/centrifuge1.mp3"
+      ]
+    },
+    "lab/dead": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/dead-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a cloning vat hall after its power has died, almost silent, a faint tick of cooling metal, water dripping far off in the dark, cold dead air, very quiet, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:05",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/dead1.mp3"
+      ]
+    },
+    "lab/depart": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/depart-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy freight lift platform starting to rise, the clunk of a brake releasing, then an electric motor whine and cable rattle as it climbs away, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.04,
+          "seed": null,
+          "cost": 0.0109,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/depart1.mp3"
+      ]
+    },
+    "lab/door-open": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/door-open-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel blast door sliding open on a pneumatic piston, a sharp hiss of air and a metallic slide ending in a thud, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/door-open1.mp3"
+      ]
+    },
+    "lab/door-close": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/door-close-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel blast door sliding shut on a pneumatic piston, a hiss of air, a metallic slide and a solid sealing clunk, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/door-close1.mp3"
+      ]
+    },
+    "lab/knock": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/knock-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single deep metallic knock in a steel pipe as pressure shifts, a hollow clank ringing briefly along the pipe, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.97,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/knock1.mp3"
+      ]
+    },
+    "lab/pa": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/pa-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a wordless public address chime from a cheap ceiling speaker, a three-note electronic tone and a soft click, no speech, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/pa1.mp3"
+      ]
+    },
+    "lab/purge": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/purge-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy industrial valve releasing, a loud clunk followed by a rushing hiss of fluid flushed out under pressure, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/purge1.mp3"
+      ]
+    },
+    "lab/bubble": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/bubble-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a glass cloning vat full of thick green fluid, slow steady bubbling of air rising through the liquid, a soft gloopy bubbling over a faint low pump hum, close, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:08",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/bubble1.mp3"
+      ]
+    },
+    "lab/console": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/console-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a bank of old computer consoles and monitoring screens, a steady soft electronic hum with quiet data-processing chirps blended into it, cooling fans, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:08",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/console1.mp3"
+      ]
+    },
+    "lab/corridor": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/corridor-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a long steel-walled service corridor of an underground laboratory, a steady low ventilation rush through ceiling ducts, a faint electrical hum from conduits along the walls, a slight hollow echo, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/corridor1.mp3"
+      ]
+    },
+    "lab/cryo": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/cryo-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cryogenic storage cabinet, a steady cold hiss of venting coolant over the deep hum of a compressor, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/cryo1.mp3"
+      ]
+    },
+    "lab/drain": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/drain-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a large tank of thick fluid draining through a floor outlet, a deep glugging gurgle that slows and ends in a last sucking slurp, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/drain1.mp3"
+      ]
+    },
+    "lab/hiss": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/hiss-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a short hiss of a pressure relief valve venting, then stopping, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:10",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/hiss1.mp3"
+      ]
+    },
+    "lab/klaxon": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/klaxon-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a laboratory lockdown alarm, a repeating two-tone electronic klaxon whooping steadily over an industrial wall speaker, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:10",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/klaxon1.mp3"
+      ]
+    },
+    "lab/lift": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/lift-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a freight lift's electric motor idling at the top of its shaft, heard from the bottom of the shaft, a steady low motor hum with a faint cable creak, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:11",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/lift1.mp3"
+      ]
+    },
+    "lab/lobby": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/lobby-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "the lift lobby of an abandoned underground laboratory, cold still room tone, a distant ventilation drone through steel ducts, the faint creak of lift cables settling far above, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:11",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/lobby1.mp3"
+      ]
+    },
+    "lab/research": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/research-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a research laboratory room, a soft hum of computers and analysis equipment, faint instrument fans, a quiet clinical room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:12",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/research1.mp3"
+      ]
+    },
+    "lab/storage": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/storage-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cold storage room, the steady drone of refrigeration compressors and cold-room fans, a faint icy hiss of coolant, a closed steel room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:12",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/storage1.mp3"
+      ]
+    },
+    "lab/thump": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/thump-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single heavy dull thump from inside a sealed steel containment unit, as if something struck it from within, a short metallic resonance, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:13",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/thump1.mp3"
+      ]
+    },
+    "lab/vat": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/vat-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cloning vat hall, the deep steady hum of pumps and life-support machinery, a soft churn of thick fluid circulating through pipes, faint electronic tones of monitors, a large hard room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:13",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/vat1.mp3"
+      ]
+    },
+    "lab/vent": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/vent-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an air vent in a steel wall, a steady breathy rush of air through a metal grille, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/vent1.mp3"
+      ]
+    },
+    "lab/workshop": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/workshop-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a machine workshop room, the low steady hum of an idling generator cabinet and a power distribution box, a faint electrical buzz, a hard room with steel benches, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/workshop1.mp3"
+      ]
+    },
+    "lab/drip": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single drop of thick fluid dripping from a pipe onto a steel floor grate, one small wet drip with a faint echo, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/drip-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single drop of thick fluid dripping from a pipe onto a steel floor grate, one small wet drip with a faint echo, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/drip1.mp3",
+        "lab/drip2.mp3"
+      ]
+    },
+    "lab/powerdown": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/powerdown-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a laboratory losing power, a whole bank of machines spinning down together, the electrical hum dropping in pitch and fading to silence, a final relay clack, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/powerdown-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a laboratory losing power, a whole bank of machines spinning down together, the electrical hum dropping in pitch and fading to silence, a final relay clack, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.04,
+          "seed": null,
+          "cost": 0.0109,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:15",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/powerdown1.mp3",
+        "lab/powerdown2.mp3"
+      ]
+    },
+    "lab/shaft": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/shaft-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a heavy steel cable clanking and settling far up a deep lift shaft, a distant echoing metallic clank, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/shaft-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel cable clanking and settling far up a deep lift shaft, a distant echoing metallic clank, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:16",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/shaft1.mp3",
+        "lab/shaft2.mp3"
+      ]
+    },
+    "lab/incubator": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/incubator-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a laboratory incubator cabinet, a soft steady fan hum and a faint electrical whir, gentle, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:16",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/incubator1.mp3"
+      ]
     }
   }
 }

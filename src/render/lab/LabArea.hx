@@ -50,6 +50,7 @@ class LabArea implements Area3D
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
   var mission:cult.missions.CombatUndergroundLabPurge;
+  var sounds:LabSounds;
   // each vat's eased drain, keyed on its root object. the AREA's and not the batch's, so a rebuild of
   // the batches (refreshObjects) carries a drain on from where it was (LabVats)
   var drain = new Map<Int,Float>();
@@ -116,6 +117,7 @@ class LabArea implements Area3D
       posts = lamps.all.copy();
       vats = LabVats.build(scene, game, drain, posts);
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
+      sounds = new LabSounds(game, model, vats, lamps, lift);
       furniture = LabInterior.build(scene, interior);
       flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
@@ -271,6 +273,7 @@ class LabArea implements Area3D
       LabFlames.tick(flames, opts.dtMs);
       // the kit's status lights blink on the compound's LED clock (LabInterior.leds)
       render.facility.FacilityDeco.tick(opts.dtMs);
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs, lift, alarmed, dead);
       for (f in furniture)
         render.Models.cull(f, opts.camera, LabStyle.PIECE_CULL_R);
       LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);
@@ -331,6 +334,7 @@ class LabArea implements Area3D
       for (p in vats.posts)
         posts.remove(p);
       vats = LabVats.build(built, game, drain, posts);
+      sounds.setVats(vats);
     }
 
 // does this area draw this object as real geometry, so the actor layer must not also lay its 2D
