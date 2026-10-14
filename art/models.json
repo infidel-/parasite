@@ -2077,7 +2077,7 @@
         1
       ],
       "note": "TRELLIS off an edit_image of the 2D vat sprite's creature (models-src/lab/clone-src.png): the tentacled clone floating in an intact vat, drawn inside lab/vat-fluid by render.lab.LabVats. Generated AT the budget (decimation_target 6000, 5,842 tris). propstat REJECTs it at 6 components / 52.7%: the body and the tentacle crown come back as two pieces, and inside the fluid and the glass nothing reads the join. baseColor 0.3 takes the atlas's luma ~143 to the indoor ~78 band.",
-      "last_converted": "2026-10-13T19:43:33Z",
+      "last_converted": "2026-10-14T18:53:10Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.3,0.3,0.3,1"
     },
     "lab/clone-slumped": {
@@ -2093,7 +2093,7 @@
         1
       ],
       "note": "TRELLIS off an edit_image of the 2D drained-vat sprite's heap (models-src/lab/clone-slumped-src.png): the clone collapsed on the vat floor once the vat is purged. 5,930 tris at decimation_target 6000, 82.4% in one component (a loose tentacle loop is the rest). baseColor 0.45 takes luma ~114 to ~78.",
-      "last_converted": "2026-10-13T19:44:03Z",
+      "last_converted": "2026-10-14T18:32:54Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.45,0.45,0.45,1"
     },
     "lab/lab-bench": {
