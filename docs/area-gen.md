@@ -643,6 +643,9 @@ area                       bedrock (TILE_LAB_ROCK), generated at exactly 56x32
 - **Rarest kind first.** Each zone deals the kind the level has stood least (`_LabState.used`, a
   seeded roll breaking ties), so a level shows ~32 of the 66 kinds.
 - **A wall zone with no fit of its own avoids the south wall** (the camera sees its pieces' backs).
+- **A kind with no 3D art is not dealt.** A machine footprint with no glb draws nothing and still
+  blocks its cells, so `LabRooms.LOBBY_FLOOR` leaves out `incbin` and `scanframe` until their glbs
+  exist (their indexes stay in `LabKinds`: append only). Put them back in the list when they ship.
 
 3000 seeds: 34.7 machines and 31.7 kinds a level, rooms used entrance 17 / research 24 / storage 31 /
 vat 29 (of 224, the pads' kept ring being most of it) / workshop 21 cells.
