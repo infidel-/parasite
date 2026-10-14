@@ -216,10 +216,10 @@ class LabInterior
         tops: [
           [
             bench('microscope', 1.0, 0.32, 0.47),
-            fire(bench('bunsen', 0.5, 0.34, 0.576), {
-              x: -0.118,
+            fire(bench('bunsen', 0.5, 0.355, 0.64), {
+              x: -0.15,
               y: 0.5,
-              z: 0.0,
+              z: 0.0075,
             }),
             bench('mortar', 0.391, 0.472, 0.436),
             bench('tuberack', 0.42, 0.18, 0.58),

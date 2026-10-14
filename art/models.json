@@ -3274,7 +3274,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/microscope.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-microscope.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.31 takes the sheet's luma (Ylin 0.247) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:33:05Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.31,0.31,0.31,1"
     },
     "lab/lab-top-bunsen": {
@@ -3290,7 +3290,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/bunsen.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-bunsen.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.41 takes the sheet's luma (Ylin 0.184) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:30:39Z",
+      "last_converted": "2026-10-14T18:02:42Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.41,0.41,0.41,1"
     },
     "lab/lab-top-mortar": {
@@ -3306,7 +3306,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/mortar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-mortar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.22 takes the sheet's luma (Ylin 0.342) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:34:14Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.22,0.22,0.22,1"
     },
     "lab/lab-top-tuberack": {
@@ -3322,7 +3322,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/tuberack.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-tuberack.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.24 takes the sheet's luma (Ylin 0.323) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:30:41Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.24,0.24,0.24,1"
     },
     "lab/lab-top-desklamp": {
@@ -3340,7 +3340,7 @@
       "emissiveSrc": "lab/lab-top-desklamp-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/desklamp.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-desklamp.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.57 takes the sheet's luma (Ylin 0.134) to the indoor ~78. Glows off models-src/lab/lab-top-desklamp-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:30:44Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-desklamp-emissive.png@1.6/noMR/bc0.57,0.57,0.57,1"
     },
     "lab/lab-top-aidcase": {
@@ -3356,7 +3356,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/aidcase.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-aidcase.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.63 takes the sheet's luma (Ylin 0.121) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:15:14Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/lab-top-radio": {
@@ -3372,7 +3372,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/radio.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-radio.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.064) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:27:49Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
     "lab/lab-top-bottles": {
@@ -3388,7 +3388,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/bottles.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-bottles.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.25 takes the sheet's luma (Ylin 0.306) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:27:31Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.25,0.25,0.25,1"
     },
     "lab/lab-top-labelprinter": {
@@ -3406,7 +3406,7 @@
       "emissiveSrc": "lab/lab-top-labelprinter-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/labelprinter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-labelprinter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.39 takes the sheet's luma (Ylin 0.196) to the indoor ~78. Glows off models-src/lab/lab-top-labelprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:27:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-labelprinter-emissive.png@1.6/noMR/bc0.39,0.39,0.39,1"
     },
     "lab/lab-top-specbox": {
@@ -3422,7 +3422,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.79 takes the sheet's luma (Ylin 0.097) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:30:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.79,0.79,0.79,1"
     },
     "lab/lab-top-specbox-glass": {
@@ -3432,7 +3432,7 @@
       "error": 0.005,
       "dropMR": true,
       "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
-      "last_converted": "2026-10-14T16:30:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
     },
     "lab/lab-top-embryojar": {
@@ -3448,7 +3448,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.179) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:30:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
     },
     "lab/lab-top-embryojar-glass": {
@@ -3458,7 +3458,7 @@
       "error": 0.005,
       "dropMR": true,
       "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
-      "last_converted": "2026-10-14T16:30:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
     },
     "lab/lab-top-minifuge": {
@@ -3476,7 +3476,7 @@
       "emissiveSrc": "lab/lab-top-minifuge-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/minifuge.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-minifuge.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.23 takes the sheet's luma (Ylin 0.335) to the indoor ~78. Glows off models-src/lab/lab-top-minifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:30:33Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-minifuge-emissive.png@1.6/noMR/bc0.23,0.23,0.23,1"
     },
     "lab/lab-top-pipette": {
@@ -3492,7 +3492,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/pipette.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-pipette.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.14 takes the sheet's luma (Ylin 0.564) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:33:25Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.14,0.14,0.14,1"
     },
     "lab/lab-top-welder": {
@@ -3510,7 +3510,7 @@
       "emissiveSrc": "lab/lab-top-welder-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/welder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-welder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.59 takes the sheet's luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-top-welder-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:39:10Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-welder-emissive.png@1.6/noMR/bc0.59,0.59,0.59,1"
     },
     "lab/lab-top-drillpress": {
@@ -3526,7 +3526,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/drillpress.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-drillpress.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.71 takes the sheet's luma (Ylin 0.108) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:38:55Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.71,0.71,0.71,1"
     },
     "lab/lab-top-armkit": {
@@ -3542,7 +3542,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/armkit.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-armkit.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.37 takes the sheet's luma (Ylin 0.205) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:33:25Z",
+      "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.37,0.37,0.37,1"
     },
     "lab/lab-top-cleaner": {
@@ -3560,7 +3560,7 @@
       "emissiveSrc": "lab/lab-top-cleaner-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/cleaner.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-cleaner.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.35 takes the sheet's luma (Ylin 0.220) to the indoor ~78. Glows off models-src/lab/lab-top-cleaner-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:33:25Z",
+      "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-cleaner-emissive.png@1.6/noMR/bc0.35,0.35,0.35,1"
     },
     "lab/lab-top-grinder": {
@@ -3576,7 +3576,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/grinder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-grinder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.074) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:39:15Z",
+      "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
     "lab/lab-top-toolbox": {
@@ -3592,7 +3592,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/toolbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-toolbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.83 takes the sheet's luma (Ylin 0.092) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:39:17Z",
+      "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.83,0.83,0.83,1"
     },
     "lab/lab-top-multimeter": {
@@ -3610,7 +3610,7 @@
       "emissiveSrc": "lab/lab-top-multimeter-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/tops/multimeter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-multimeter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.175) to the indoor ~78. Glows off models-src/lab/lab-top-multimeter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T16:39:19Z",
+      "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-multimeter-emissive.png@1.6/noMR/bc0.43,0.43,0.43,1"
     },
     "lab/lab-top-hvcases": {
@@ -3626,7 +3626,7 @@
         1
       ],
       "note": "hand-modelled in Blender, models-src/lab/tops/hvcases.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-hvcases.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.055) to the indoor ~78. ",
-      "last_converted": "2026-10-14T16:39:21Z",
+      "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     }
   }
