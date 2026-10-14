@@ -28,6 +28,9 @@ typedef LabPieceArt = {
                     // generated machine keeps its own proportions); the footprint's otherwise
   ?glass:LabPieceArt,             // a see-through shell drawn as its own transparent batch at the
                                   // same place and turn (a jar's wall, a box's panes)
+  ?ox:Float,                      // a glass shell's own centre off its body's, to the body's right,
+  ?oz:Float,                      // and toward its front: Models.normalize centres every glb on its
+                                  // own bbox, and a shell over part of a machine is not centred on it
   ?flame:LabAnchor,               // where a burner's gas flame stands on it (LabFlames)
   ?leds:Array<LabAnchor>,         // its blinking status lights, each facing the piece's front
 };
@@ -113,7 +116,7 @@ class LabInterior
           Const.TILE_LAB_HAZMAT => row(M.labHazmat, 4.2, 1.1),
           Const.TILE_LAB_SEAT => row(M.labSeat, 2.1, 1.195),
           Const.TILE_LAB_FRIDGE => row(M.labFridge, 4.4, 2.0),
-          Const.TILE_LAB_BIN => gen('bin', 2.6, 1.59, 2.06, -HALF_PI),
+          Const.TILE_LAB_BIN => gen('bin', 2.660, 2.170, 2.100),
         ],
         machines: [
           'sr203' => row(M.labBoxSr203, 3.0, 2.84),
@@ -126,50 +129,209 @@ class LabInterior
           'leverbox' => row(M.labBoxLeverbox, 4.7, 1.0, 1.3),
           'controlbox' => row(M.labBoxControlbox, 6.0, 1.2),
           'container' => row(M.labContainer, 5.22, 6.56),
-          // the generated ones (TRELLIS, art/models.json lab/<name>): height, depth, width, and the
-          // turn that brings the front round where it came back on a flank
-          'reactor' => gen('reactor', 4.5, 6.64, 6.35),
-          'screenwall' => gen('screenwall', 5.0, 2.23, 4.16, -HALF_PI),
-          'hatchbox' => gen('hatchbox', 4.4, 3.08, 3.68, -HALF_PI),
-          'dialtank' => gen('dialtank', 3.6, 3.36, 3.35),
-          'autopsy' => gen('autopsy', 3.4, 2.82, 2.48),
-          'tube' => gen('tube', 4.6, 2.08, 2.76),
-          'restraint' => gen('restraint', 3.4, 2.27, 2.32),
-          'switchrack' => gen('switchrack', 4.6, 1.79, 2.98, -HALF_PI),
-          'terminal' => gen('terminal', 3.4, 2.3, 3.26),
-          'holo' => gen('holo', 3.6, 2.25, 4.02),
-          'monitorstack' => gen('monitorstack', 4.4, 1.44, 2.32, -HALF_PI),
-          'pipecapsule' => gen('pipecapsule', 2.8, 1.54, 5.47),
-          'tentacle' => gen('tentacle', 4.4, 3.5, 3.95),
-          'bioscreen' => gen('bioscreen', 4.0, 2.89, 4.29, -HALF_PI),
-          'cryopod' => gen('cryopod', 2.65, 3.63, 3.4),
-          'stasis' => gen('stasis', 5.0, 1.8, 2.63, -HALF_PI),
-          'upw' => gen('upw', 4.6, 1.95, 3.97),
-          'incinerator' => gen('incinerator', 4.0, 3.26, 4.66),
-          'bioprinter' => gen('bioprinter', 4.8, 2.16, 3.28),
-          'specimencase' => gen('specimencase', 4.0, 1.96, 5.23),
-          'ambertanks' => gen('ambertanks', 4.8, 2.81, 4.74),
-          'processor' => gen('processor', 4.8, 3.17, 5.26),
-          'incubator' => gen('incubator', 4.4, 2.49, 4.19),
-          'brainscan' => gen('brainscan', 3.8, 1.96, 3.82, Math.PI),
-          'cryobank' => gen('cryobank', 5.2, 3.02, 5.16),
-          'centrifuge' => gen('centrifuge', 4.4, 7.25, 7.26),
-          'embryonic' => gen('embryonic', 5.4, 1.92, 4.86, -HALF_PI),
-          'gestation' => gen('gestation', 3.2, 5.62, 5.64),
-          'rack8' => gen('rack8', 4.4, 1.83, 5.93),
-          'rack6' => gen('rack6', 4.4, 1.78, 4.57),
-          'canisters' => gen('canisters', 4.6, 2.32, 4.61),
-          'generator' => gen('generator', 4.8, 2.6, 5.27),
-          'press' => gen('press', 4.3, 2.28, 3.66),
-          'robotarm' => gen('robotarm', 4.8, 2.84, 3.07),
-          'kiosk' => gen('kiosk', 4.0, 0.98, 1.42, -HALF_PI),
-          'cagecase' => gen('cagecase', 2.4, 1.49, 2.61),
-          'sheetcage' => gen('sheetcage', 3.2, 3.4, 3.82),
-          'gurney' => gen('gurney', 2.6, 2.28, 4.05, -HALF_PI),
-          'tarpcrate' => gen('tarpcrate', 3.0, 2.29, 3.13),
-          'gurneys' => gen('gurneys', 3.0, 1.72, 3.22),
-          'palletcrate' => gen('palletcrate', 1.85, 3.61, 3.52),
-          'scanframe' => gen('scanframe', 2.8, 3.55, 5.31),
+          // the hand-modelled machines (models-src/lab/mach/<name>.py, art/models.json lab/<name>), at
+          // the size they were built: height, depth, width; a glass shell and status lights where they
+          // have them
+          'reactor' => glazed(gen('reactor', 4.340, 7.200, 7.200),
+            shell('reactor-glass', 1.300, 5.040, 5.040, 2.680, 0.000, 0.000)),
+          'screenwall' => lit(gen('screenwall', 5.000, 2.225, 5.270), [
+            {
+              x: -2.475,
+              y: 3.7,
+              z: 1.11,
+            },
+            {
+              x: 1.815,
+              y: 0.25,
+              z: 0.99,
+            },
+            {
+              x: 1.895,
+              y: 4.92,
+              z: 0.81,
+            },
+            {
+              x: -2.035,
+              y: 3.71,
+              z: 1.0,
+            },
+            {
+              x: -2.035,
+              y: 2.71,
+              z: 1.0,
+            },
+            {
+              x: -2.035,
+              y: 1.71,
+              z: 1.0,
+            },
+            {
+              x: -2.035,
+              y: 0.71,
+              z: 1.0,
+            },
+            {
+              x: -0.535,
+              y: 3.71,
+              z: 1.0,
+            },
+            {
+              x: -0.535,
+              y: 2.71,
+              z: 1.0,
+            },
+            {
+              x: -0.535,
+              y: 1.71,
+              z: 1.0,
+            },
+            {
+              x: -0.535,
+              y: 0.71,
+              z: 1.0,
+            },
+            {
+              x: 0.965,
+              y: 3.71,
+              z: 1.0,
+            },
+            {
+              x: 0.965,
+              y: 2.71,
+              z: 1.0,
+            },
+            {
+              x: 0.965,
+              y: 1.71,
+              z: 1.0,
+            },
+            {
+              x: 0.965,
+              y: 0.71,
+              z: 1.0,
+            },
+          ]),
+          'hatchbox' => glazed(gen('hatchbox', 4.350, 3.324, 4.300),
+            shell('hatchbox-glass', 1.620, 0.100, 1.620, 1.990, -0.200, 1.558)),
+          'dialtank' => gen('dialtank', 3.580, 3.446, 3.400),
+          'switchrack' => gen('switchrack', 4.870, 2.162, 4.760),
+          'holo' => lit(gen('holo', 3.800, 3.582, 4.824), [
+            {
+              x: 1.411,
+              y: 1.853,
+              z: 1.509,
+            },
+          ]),
+          'monitorstack' => lit(gen('monitorstack', 5.044, 2.480, 3.474), [
+            {
+              x: 1.243,
+              y: 4.915,
+              z: 1.135,
+            },
+            {
+              x: 0.713,
+              y: 2.805,
+              z: 1.145,
+            },
+          ]),
+          'pipecapsule' => gen('pipecapsule', 3.305, 2.687, 6.600),
+          'tentacle' => gen('tentacle', 5.304, 3.596, 5.320),
+          'bioscreen' => gen('bioscreen', 3.960, 3.520, 5.120),
+          'upw' => gen('upw', 4.620, 2.950, 4.810),
+          'tube' => glazed(gen('tube', 4.620, 3.200, 3.200),
+            shell('tube-glass', 2.660, 2.240, 2.240, 0.980, 0.000, 0.000)),
+          'autopsy' => gen('autopsy', 4.030, 3.560, 5.160),
+          'terminal' => gen('terminal', 3.800, 2.680, 5.530),
+          'restraint' => gen('restraint', 3.770, 3.264, 3.200),
+          'cryopod' => glazed(gen('cryopod', 3.010, 3.400, 5.400),
+            shell('cryopod-glass', 0.820, 1.966, 2.520, 2.370, -0.850, 0.000)),
+          'stasis' => lit(gen('stasis', 5.070, 2.680, 2.850), [
+            {
+              x: 0.8,
+              y: 3.43,
+              z: 1.2,
+            },
+            {
+              x: -0.82,
+              y: 1.91,
+              z: 1.2,
+            },
+          ]),
+          'bioprinter' => gen('bioprinter', 5.470, 4.645, 5.300),
+          'brainscan' => gen('brainscan', 4.534, 2.700, 5.584),
+          'centrifuge' => gen('centrifuge', 3.950, 7.200, 7.200),
+          'embryonic' => lit(gen('embryonic', 5.570, 2.210, 6.600), [
+            {
+              x: -1.48,
+              y: 4.91,
+              z: 0.965,
+            },
+            {
+              x: 1.656,
+              y: 4.91,
+              z: 0.965,
+            },
+          ]),
+          'gestation' => gen('gestation', 3.493, 7.360, 7.200),
+          'incubator' => lit(glazed(gen('incubator', 5.180, 2.580, 5.200),
+            shell('incubator-glass', 3.840, 0.040, 3.840, 0.520, 0.000, 1.100)), [
+            {
+              x: 0.318,
+              y: 4.82,
+              z: 0.21,
+            },
+            {
+              x: 2.21,
+              y: 0.46,
+              z: 1.275,
+            },
+          ]),
+          'ambertanks' => lit(glazed(gen('ambertanks', 4.920, 3.230, 6.250),
+            shell('ambertanks-glass', 2.670, 2.700, 5.650, 1.080, 0.050, -0.115)), [
+            {
+              x: 0.375,
+              y: 4.0,
+              z: 1.55,
+            },
+          ]),
+          'specimencase' => lit(glazed(gen('specimencase', 4.860, 3.080, 7.700),
+            shell('specimencase-glass', 3.050, 0.040, 6.490, 1.025, 0.000, 1.360)), [
+            {
+              x: -3.01,
+              y: 0.8,
+              z: 1.5,
+            },
+            {
+              x: -2.89,
+              y: 0.8,
+              z: 1.5,
+            },
+            {
+              x: -2.77,
+              y: 0.8,
+              z: 1.5,
+            },
+          ]),
+          'processor' => gen('processor', 4.820, 3.400, 6.680),
+          'cryobank' => glazed(gen('cryobank', 5.480, 4.875, 8.620),
+            shell('cryobank-glass', 2.460, 0.410, 4.460, 2.220, -0.140, 2.148)),
+          'rack8' => gen('rack8', 4.490, 2.600, 7.570),
+          'rack6' => gen('rack6', 4.550, 2.833, 6.760),
+          'canisters' => gen('canisters', 5.360, 2.327, 5.160),
+          'generator' => glazed(gen('generator', 4.889, 2.845, 7.340),
+            shell('generator-glass', 0.984, 0.030, 2.149, 0.880, 1.534, 1.303)),
+          'press' => gen('press', 4.320, 2.600, 3.520),
+          'robotarm' => gen('robotarm', 5.349, 2.020, 2.724),
+          'incinerator' => gen('incinerator', 4.960, 3.554, 4.622),
+          'kiosk' => gen('kiosk', 4.000, 1.260, 1.900),
+          'cagecase' => glazed(gen('cagecase', 2.944, 3.474, 5.420),
+            shell('cagecase-glass', 1.880, 2.900, 5.000, 0.000, 0.000, 0.077)),
+          'sheetcage' => gen('sheetcage', 3.300, 3.514, 6.280),
+          'gurney' => gen('gurney', 2.724, 2.320, 5.420),
+          'gurneys' => gen('gurneys', 3.077, 2.219, 5.340),
+          'tarpcrate' => gen('tarpcrate', 2.988, 3.408, 5.348),
+          'palletcrate' => gen('palletcrate', 1.958, 3.323, 5.800),
+          'scanframe' => gen('scanframe', 2.860, 3.280, 7.400),
         ],
         shelfRow: row(M.labShelfRow, 4.6, 2.4),
         drum: row(M.labDrum, 1.84, 1.26),
@@ -187,9 +349,9 @@ class LabInterior
           gen('plant2', 3.0, 2.3, 2.24),
           gen('plant3', 3.2, 1.69, 1.73),
           gen('plant5', 3.2, 1.58, 1.5),
-          gen('plant6', 2.6, 1.97, 2.14),
-          gen('plant1', 3.0, 2.59, 2.47),
-          gen('plant4', 2.4, 2.78, 2.9),
+          gen('plant6', 2.499, 1.920, 2.476),
+          gen('plant1', 2.829, 2.964, 2.892),
+          gen('plant4', 2.270, 2.317, 2.210),
         ],
         // what hangs on a hazmat rack's rail, and the one left in a heap under it
         suits: [
@@ -274,6 +436,22 @@ class LabInterior
       return a;
     }
 
+// a machine's glass shell: models/lab/<name>.glb at height h, `y` off the floor, its centre `ox` to the
+// body's right and `oz` toward its front
+  static function shell(name:String, h:Float, d:Float, w:Float, y:Float, ox:Float,
+      oz:Float):LabPieceArt
+    {
+      return {
+        path: 'models/lab/' + name + '.glb',
+        h: h,
+        d: d,
+        w: w,
+        y: y,
+        ox: ox,
+        oz: oz,
+      };
+    }
+
   static function fire(a:LabPieceArt, at:LabAnchor):LabPieceArt
     {
       a.flame = at;
@@ -283,6 +461,12 @@ class LabInterior
   static function blink(a:LabPieceArt, at:LabAnchor):LabPieceArt
     {
       a.leds = [at];
+      return a;
+    }
+
+  static function lit(a:LabPieceArt, at:Array<LabAnchor>):LabPieceArt
+    {
+      a.leds = at;
       return a;
     }
 
@@ -445,11 +629,15 @@ class LabInterior
       phase:Float):Void
     {
       put(p, a, x, z, yaw, y);
-      if (a.glass != null)
-        put(p, a.glass, x, z, yaw, y);
-      // the anchors are in the piece's own frame, so they turn with the yaw it is drawn at
+      // the shell's offset and the anchors are in the piece's own frame, so they turn with its yaw
       var t = yaw + (a.turn != null ? a.turn : 0.0);
       var c = Math.cos(t), sy = Math.sin(t);
+      var g = a.glass;
+      if (g != null)
+        {
+          var ox = (g.ox != null ? g.ox : 0.0), oz = (g.oz != null ? g.oz : 0.0);
+          put(p, g, x + ox * c + oz * sy, z - ox * sy + oz * c, yaw, y);
+        }
       if (a.flame != null)
         p.flames.push({
           x: x + a.flame.x * c + a.flame.z * sy,

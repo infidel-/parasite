@@ -47,6 +47,8 @@ probed the long axis: check both axes when w == d.
 
 ## Lab machinery generated: 60 TRELLIS glbs off the 2D sprites, dropMR on all of them
 
+> SUPERSEDED (all but the clones, plants 2/3/5 and the suits) by Lab machines rebuilt by hand: 46 Blender pieces off their references, ten agents in parallel
+
 **Changed:** 66 kinds were briefed. Each 2D sprite crop went through `edit_image` (gpt-image-25
 sunburst, `style_prop`, flat black, isometric) and then TRELLIS at decimation 6000. 60 shipped as
 `lab/<kind>`, value-fitted to indoor luma ~78 (sheeted pieces ~100, hazmat suits ~95). Fronts are
@@ -130,6 +132,8 @@ death (`LabInterior.dim`).
 **Verdict:** landed. The fixture glbs and the LOCKDOWN wall screens wait on texture credits.
 
 ## Lab's last six machines generated; the room props finally dealt
+
+> SUPERSEDED (all but the clones, plants 2/3/5 and the suits) by Lab machines rebuilt by hand: 46 Blender pieces off their references, ten agents in parallel
 
 **Changed:** incbin, scanframe, bin, plant1, plant4 and suittorn went through the same pipeline as the
 other sixty (sprite → `edit_image` gpt-image-25 sunburst `style_prop` → TRELLIS 6000, `dropMR`,
@@ -235,5 +239,34 @@ burners (9 flame quads) and 3 status lights. Programs 87 -> 90 warmed, entry dif
   sits, so the label band moved to the foot.
 - `Models.normalize` centres a glb on its bbox, so every anchor (flame, LED) and every glass shell is
   stated from the bbox centre, and a shell's base offset is restored by the row's `y`.
+
+**Verdict:** landed.
+
+## Lab machines rebuilt by hand: 46 Blender pieces off their references, ten agents in parallel
+
+**Changed:** every TRELLIS machine the user rejected on sight (all of the vat room's, the research
+bay's, the store's, the workshop's and the lobby's, plants 1/4/6) is a hand-modelled Blender piece:
+`models-src/lab/mach/<name>.py` through `top_build.py kit=mach`, one module per piece, each wearing its
+OWN PACK4 sheet (an `edit_image` off its own `-src.png`), and 27 of 46 a second sheet laid beside it
+as one atlas. Ten sub-agents built them in parallel off one brief, each generating its own sheets
+under a cap (2 a piece, one re-roll) and iterating on `turn` / `compare` renders against the src.
+Fourteen kinds stop being dealt (`LabKinds` rooms `[]`): half the research bay's (a second empty
+tube, the trolley, four consoles of one look, the scanner, clamp, probe, capsule, robot chair, booth,
+analysis station) and the lobby's incinerator bin. Machines now carry glass shells and status lights
+as the bench kit does (`LabInterior.dress`); a shell's own offset comes off the two glbs (`shell`).
+
+**Measured:** 928-4,068 tris a body (TRELLIS: ~5,800 each), every object holes 0 / coplanar 0 /
+islands 1 and no inside-out shell. 10 glass shells, 41 emissive maps cut off their own sheets, 28
+status lights. 73 image gens, ~$3.9. Programs 90 warmed, entry diff 0. Oracle 3,000 seeds clean.
+
+**The traps:**
+- The full 2048 x 1024 atlases baked at 3.5-4.5 MB a glb, and every glass shell carried a copy of
+  its body's. At the closest zoom the lab shows ~37 px a world unit; half size (1024 / 512 / 256 a
+  shell) still gives ~51, at ~0.5-1.3 MB and below the TRELLIS set's VRAM.
+- A lathe profile run top-down is inside out and `check` still reads 0/0/1 (the press's ram): the
+  winding check sums each closed shell's signed volume after merging the export's seam-split verts.
+- The workbench previews draw glass opaque: a tube's creature and a pod's embryo only show in game.
+- A 2x1 footprint does not make a 2:1 thing: the first cryopod filled 6.5 as a low slab with a small
+  dome, and the src is a fat rounded pod; rebuilt at 5.4 x 3.4 with the canopy over half its lid.
 
 **Verdict:** landed.
